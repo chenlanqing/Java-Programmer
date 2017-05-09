@@ -1,0 +1,1 @@
+1.bin/nutch crawl urls -dir data -thread 100 -depth 5 topN

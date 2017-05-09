@@ -1,0 +1,84 @@
+一.xml文件读写：
+	DOM、DOM4J、SAX、XStream
+1.XML是什么?
+	XML是一种简单的基于文本的语言，它被设计为储存和运输以纯文本格式的数据。它代表着可扩展标记语言。以下是一些XML的显着特征。
+	XML是一种标记语言。
+	XML是一种标记语言就像HTML一样。
+	XML标签不是像HTML那样预定义。
+	可以定义自己的标签，这就是为什么它被称为可扩展的语言。
+	XML标签被设计成自描述性的;
+	XML是W3C推荐用于数据存储和传输。
+	(1).优势:
+		技术无关 - 作为普通文本，XML是技术独立。它可以用于由任何技术进行数据的存储和传输的目的。
+		人类可读 - XML使用简单的文本格式。它是人类可读和可以理解的。
+		可扩展性 - 在XML，自定义标签可以创建和很容易使用
+		允许验证 - 使用XSD，DTD和XML结构可以很容易地验证。
+	(2).缺点:
+		冗余的语法 - 通常XML文件中包含大量的重复计算。
+		冗余 - 作为一个冗长的语言，XML文件大小增加了传输和存储成本。
+2.Dom解析：Documet Object Model
+	是将XML数据读取到内存中,生成一颗完整的树,容易操作树结构的每一级数据,但是占用内存高,效率低;
+	DOM是用与平台和语言无关的方式表示XML文档的官方W3C标准。DOM是以层次结构组织的节点或信息片断的集合；
+	
+◆示例:解析如下xml
+	<?xml version="1.0" encoding="UTF-8" ?>
+	<datasources>
+		<!-- 本地数据库 -->
+		<datasource name="local">
+			<user>clq</user>
+			<password>clq323</password>
+			<url>jdbc:oracle:thin:@localhost:1521:xe</url>
+			<driver>oracle.jdbc.OracleDriver</driver>
+		</datasource>
+		<!-- 远程数据库 -->
+		<datasource name="remote">
+			<user>netctosspr</user>
+			<password>clq323</password>
+			<url>jdbc:oracle:thin:@192.168.0.199:1521:xe</url>
+			<driver>oracle:jdbc:OracleDriver</driver>
+		</datasource>
+	</datasources>
+	
+3.DOM4j解析:需加入jar包
+	DOM4J应用于 Java 平台，采用了 Java 集合框架并完全支持 DOM，SAX 和 JAXP
+	
+	
+	
+	
+	
+	
+	
+	
+	
+二、properties文件读写：
+1、注意乱码问题：
+Properties prop=new Properties();         
+prop.load(new InputStreamReader(Client.class.getClassLoader().getResourceAsStream("config.properties"), "UTF-8")); 	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	

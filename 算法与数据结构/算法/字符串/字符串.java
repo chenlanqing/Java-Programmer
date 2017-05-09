@@ -1,0 +1,379 @@
+1.理解引用与引用传递:
+	1.1.引用的本质:
+		(1).对象存在于堆内存中
+		(2).引用是变量，存在于栈内存中；也可能存在于堆内存中,变量的值是对象的起始地址
+		(3).引用的值，就是堆内存对象的起始地址,地址的值是无符号整形
+		(4).引用本身也有地址
+		(5).通常称为“引用指向对象”
+		==> 注意：Java 中的引用（指针）不能指向基本类型
+	1.2.引用传递的本质:还是传值,具体步骤	
+		(1).在栈中开辟形参引用
+		(2).把实参引用的值传递给形参引用
+2.String,StringBuilder,StringBuffer
+
+3.找到一个字符串中最后一个单词的长度:
+	(1).给定句子，只由字母、空格组成，返回最后一个单词的长度；所谓单词，就是不含空格的字符序列
+	(2).禁止使用 split(),是否算法:
+		将指针放在最后,往前移,首先去除空格,碰到字母加1,继续前移,如果碰到空格,循环结束
+	(3).实现:时间复杂度 O(N),空间复杂度 O(1)
+		public int lengthOfLastWord(String s){
+			if(s == null || s.length()== 0){
+				return 0;
+			}
+			int count = 0,
+				i = s.length() - 1;
+			for(;i>=0;i--){
+				if(s.charAt(i) == ' '){
+					
+				}else{
+					break;
+				}
+			}
+			for(;i>=0;i--){
+				if(s.charAt(i) == ' '){
+					break;
+				}else{
+					count++;
+				}			
+			}
+			return count;
+		}
+4.同分异构体:Anagram
+	(1).同分异构体:
+		化学中的同分异构体:化学式（分子式）相同,结构式不同
+			甲醚	C2H6O	CH3OCH3
+			乙醇	C2H6O	CH3CH2OH
+	(2).问题描述:
+		给定字符串s和字符串t，判断t是否为s的Anagram。
+		假设字符串只含有小写字母
+		s = "anagram", t = "nagaram", return true.
+		s = "rat", t = "car", return false.
+	(3).思路:
+		==>总体思想：
+			想办法把s与t写成形如a2b0c4…z1的分子式形式
+			判断2个分子式是否相同
+		==>具体思路：
+			建立2个长度为26的数组，分别代表s与t的分子式
+			分别遍历s与t，填充相应的分子式
+			如果2个分子式，每个字母出现的次数都相同，就返回 true，否则返回 false
+	(4).实现:时间复杂度 O(N),空间复杂度 O(1)
+		public boolean isAnagram(String s, String t) {
+			if (s == null && t == null) {
+				return true;
+			} else if (s == null && t != null) {
+				return false;
+			} else if (s != null && t == null) {
+				return false;
+			} else {
+				// 两个字符串的长度必须一致
+				if(s.length() != t.length()){
+					return false;
+				}
+				int n = s.length(), 
+					twentySix = 26;
+				int[] sCount = new int[twentySix];
+				int[] tCount = new int[twentySix];
+				for (int i = 0; i < n; i++) {
+					/**
+					 * 哈希表：
+					 * 从0位置开始计算，26个字母索引为 0~25
+					 */
+					sCount[s.charAt(i) - 'a']++;
+					tCount[t.charAt(i) - 'a']++;
+				}
+				for (int i = 0; i < twentySix; i++) {
+					if (sCount[i] != tCount[i]) {
+						return false;
+					}
+				}
+				return true;
+			}
+		}
+	(5).扩展问题:
+		交换字母
+			anbagrbam --> anbargbam
+			anbagrbam --> ambagrban
+		最小变换步数
+
+5.反转单词顺序:(使用 Java实现下,不考虑空间复杂度)
+	(1).问题描述:输入一个英文句子，反转句子中单词的顺序，要求单词不变。
+		为了简便，假设：句子只含有字母、空格，且句子首尾没有空格
+		为了格式美观，假设：每一对相邻单词之间，空格数目都相等
+		例如输入字符串"Thank you very much"，则输出"much very you Thank"。
+		==>额外要求：
+		时间复杂度为 O(N)，空间复杂度为O(1)
+		用 C 语言实现，不得使用 Java 字符串的split方法
+	(2).思路:使用双指针;
+		先旋转单个单词,然后将整个句子旋转即可
+	(3).C语言实现:
+		#include <stdio.h>
+		#include <stdlib.h>
+		#include <string.h>
+		void reverse(char* s, int start, int end){
+		    char t;
+		    for(; start<end; start++,end--) {
+		        t = s[start];
+		        s[start]=s[end];
+		        s[end]=t;
+		    }
+		}
+		void reverseWords(char* s){
+		    if(s == NULL || strlen(s) <= 1) {
+		        return ;
+		    }
+		    int n = strlen(s);
+		    int i = 0;
+		    int j;
+		    while(i < n){
+		        j = i;
+		        while(j < n){
+		            if(s[j]== ' '){
+		                break;
+		            }else{
+		                j++;
+		            }
+		        }
+		        reverse(s, i , j-1);
+		        while(j<n && s[j]==' '){
+		            j++;
+		        }
+		        i=j;
+		    }
+		    reverse(s, 0, n-1);
+		}
+		int main(int argc, char* argv){
+		    char *s=(char*)malloc(50*sizeof(char));
+		    gets(s);
+		    reverseWords(s);
+		    printf("%s\n",s);
+		    return 0;
+		}
+	(4).思考题:
+		leetCode 151：Reverse Words in a String
+		除了时间、空间、C语言的限制之外，对结果还有以下要求：
+		去除首尾空格
+		相邻单词之间只有一个空格
+
+	(5).Java 实现:
+		public void swap(char[] arr, int start, int end) {
+			char temp;
+			for (; start < end; start++, end--) {
+				temp = arr[start];
+				arr[start] = arr[end];
+				arr[end] = temp;
+			}
+		}
+
+		public String reverseWords(char[] arr) {
+			// 首先整体旋转数组
+			swap(arr, 0, arr.length - 1);
+			int n = arr.length,
+				i = 0,
+				j;
+			while (i < arr.length) {
+				j = i;
+				while(j<n){
+					if(arr[j] == ' '){
+						break;
+					}else{
+						j++;
+					}
+				}
+				swap(arr, i, j-1);
+				while(j<n&&arr[j]==' '){
+					j++;
+				}
+				i=j;
+			}
+			return String.valueOf(arr);
+		}
+		public String reverseSentence(String A, int n) {
+			if (A == null || A == "") {
+				return A;
+			}
+			char[] arr = A.toCharArray();
+			return reverseWords(arr);
+		}
+6.数一数读一读:
+	(1).问题描述:Count And Say
+		比如：
+		“1211”，有1个1、1个2、2个1，所以下一个字符串为“111221”；
+		“111221”，有3个1、2个2、1个1，所以下一个字符串为“312211”。
+		统计每个数字出现的次数，并把本次得到的结果字符串作为下一次的当前字符串。
+		如此循环往复，那么执行n次之后是什么？
+	(2).思路分析:伪代码
+		统计每个数字出现的次数，并把本次得到的结果字符串作为下一次的当前字符串
+		p=“332211”  // 当前字符串
+		str=“”  //结果字符串
+		count=1  //临时变量，记录数字出现的次数
+		temp=p[0]  //临时变量，记录上一个数字
+		for(j=1;j<p.length();j++){
+			if(p[j]==temp)  count++;
+			else{
+				str+=count+temp;
+				count=1;
+				temp=p[j];
+				}
+		}
+		str+=count+temp;
+		p=str
+	(3).代码实现:时间复杂度为 O(N^3)，空间复杂度为O(N^2)
+		public String countAndSay(int n) {
+			if (n <= 0) {
+				return "";
+			}
+			if (n == 1) {
+				return "1";
+			}
+			if (n == 2) {
+				return "11";
+			}
+			String str = "11";
+			StringBuilder s = new StringBuilder();
+			for (int i = 3; i <= n; i++) {
+				int count = 1;
+				char temp = str.charAt(0);
+				for (int j = 1; j < str.length(); j++) {
+					if (str.charAt(j) == temp) {
+						count++;
+					} else {
+						s.append(count).append(temp);
+						count = 1;
+						temp = str.charAt(j);
+					}
+				}
+				s.append(count).append(temp);
+				str = s.toString();
+				s.delete(0, s.length());
+			}
+			return str;
+		}
+
+7.模式匹配:
+	(1).模式匹配的概念:
+		给定文本串S（Source）、模式串P（Pattern），查找S中与P相同的所有子串
+		为了简便，只需找出子串出现的第一个位置，即为String类的indexOf方法		
+	(2).问题描述
+		返回needle在haystack中的第一个出现位置，如果没找到，返回-1。不允许直接使用indexOf方法！
+	(3).BF 算法的思路
+		Brute Force（暴力匹配）算法思想：
+		双指针,		
+	(4).代码实现:时间复杂度为 O(m*n),空间复杂度 O(1)
+		public int strStr(String haystack, String needle) {
+			if (needle == null) {
+				return -1;
+			}
+			if (needle.length() == 0) {
+				return 0;
+			}
+			int i = haystack.length(), 
+				j = needle.length();
+			for (int m = 0; m < i; m++) {
+				int count = 0;
+				for (int n = 0; n < j && (m + n) < i; n++) {
+					if (haystack.charAt(m + n) != needle.charAt(n)) {
+						break;
+					} else {
+						count++;
+					}
+					if (count == j) {
+						return m;
+					}
+				}
+			}
+			return -1;
+		}
+
+8.KMP 算法:模式匹配的经典算法实现
+	(1).KMP 的概念
+	(2).问题描述	
+	(3).代码实现
+
+
+9.替换字符串问题:
+	(1).问题描述:请编写一个方法，将字符串中的空格全部替换为“%20”。假定该字符串有足够的空间存放新增的字符，
+		并且知道字符串的真实长度(小于等于1000)，同时保证字符串由大小写的英文字母组成	
+	(2).思路:
+		a b c
+		首先遍历字符串,找出其中的空格数量:2;
+		扩容字符串,字符串最终的长度为: arr.length() + 2 * 2;
+		从尾部开始填充数据,Java 中使用 字符数组来实现
+	(3).实现:
+		public String replaceSpace(String iniString, int length) {
+			if (iniString == null || iniString.length() == 0 || iniString.length() != length) {
+				return iniString;
+			}
+			int count = 0;
+			for (int i = 0; i < length; i++) {
+				if (iniString.charAt(i) == ' ') {
+					count++;
+				}
+			}
+			int len = count * 2 + length;
+			char[] arr = new char[len];
+			len--;
+			for (int i = length - 1; i >= 0; i--) {
+				if(iniString.charAt(i) != ' '){
+					arr[len--] = iniString.charAt(i);
+				}else{
+					arr[len--] = '0';
+					arr[len--] = '2';
+					arr[len--] = '%';
+				}
+			}
+			return String.valueOf(arr);
+		}
+10.括号合法匹配问题:
+	(1).问题描述:对于一个字符串，请设计一个算法，判断其是否为一个合法的括号串
+		"(()())",6 ==> true, 	"()a()()",7 ==>false, 	"()(()()",7==>false
+	(2).思路:
+		①.定义变量count,代表 '(' 出现的次数 和 ')'出现的次数的差;
+		②.遍历过程中如果碰到 '(', count++;
+		③.遍历过程中如果碰到 ')', count--;
+		④.遍历的过程中如果 count < 0,则直接返回 false
+		⑤.如果一直遍历没有出现情况4,则一直遍历下去;
+		⑥.遍历完成后,如果count==0,则返回 true,否则返回 false;
+	(3).实现:
+		public boolean chkParenthesis(String A, int n) {
+	        if (A == null || n == 0) {
+	            return false;
+	        }
+	        char[] chas = A.toCharArray();
+	        int status = 0;
+	        for (int i = 0; i < n; i++) {
+	            if (chas[i] != ')' && chas[i] != '(') {
+	                return false;
+	            }
+	            if (chas[i] == ')' && --status < 0) {
+	                return false;
+	            }
+	            if (chas[i] == '(') {
+	                status++;
+	            }
+	        }
+	        return status == 0;
+	    }
+
+11.最长无重复子串:
+	(1).问题描述:对于一个字符串,请设计一个高效算法，找到字符串的最长无重复字符的子串长度
+
+	(2).思路:求出以str中每个字符串结尾的情况下,最长无重复子串的长度,并在其中找出最大值返回;
+		哈希表:统计了每种字符串之前出现的位置
+		整型变量:代表以s[i-1]结尾的情况下,最长无重复子串的长度
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
