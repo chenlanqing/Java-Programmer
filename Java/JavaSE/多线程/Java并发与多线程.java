@@ -173,7 +173,6 @@
 			可以使用 isDaemon() 方法来检查线程是否是守护线程(方法返回 true) 或者是使用者线程 (方法返回 false)
 		(3).典型的守护线程是垃圾回收线程,当进程中没有非守护线程时,则垃圾回收线程也就没有存在的必要了
 			守护线程的作用是为其他线程的运行提供便利服务,最典型的应用:GC
-		
 	2.11.异常处理:
 		当一个非检查异常被抛出，默认的行为是在控制台写下stack trace并退出程序
 		(1).必须实现一个类来处理非检查异常。这个类必须实现 UncaughtExceptionHandler 接口并实现在接口
@@ -225,6 +224,16 @@
 		(3).优先级具有随机性:
 			也就是优先级较高的线程不一定每次都先执行完
 			不要把线程的优先级与运行结果的顺序作为衡量的标准,线程优先级与打印顺序无关
+	2.17.线程的生命周期:
+		(1).新建态(New):通过线程的创建方式创建线程后,进入新建态态;
+		(2).就绪(Runnable):调用 Tread 的start 方法,就会为线程分配私有的方法栈,程序计数器资源,如果得到CPU资源,线程就转为运行状态.
+		(3).运行(Running):就绪态得到CPU资源后转为运行态,执行run方法.在调用 yield 方法后,线程由运行转为就绪
+		(4).阻塞(Bolcking):线程因为某种原因放弃CPU使用权,暂时停止运行.直到线程进入就绪状态,才有机会转到运行状态.阻塞的情况分三种:
+			A.等待阻塞 -- 通过调用线程的wait()方法，让线程等待某工作的完成。
+		    B.同步阻塞 -- 线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
+		    C.其他阻塞 -- 通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态.
+		    			当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
+		(5).死亡状态(Dead):线程执行完了或者因异常退出了run()方法,该线程结束生命周期
 3.竞态条件与临界区:
 	3.1.在同一程序中运行多个线程本身不会导致问题,问题在于多个线程访问了相同的资源:
 		如果多个线程对这些相同资源进行了"写操作"才会引发线程安全问题;
@@ -631,7 +640,7 @@
 	8.6.多个线程等待相同信号:
 	8.7.不要在字符串常量或全局对象中调用wait()
 		在wait()/notify()机制中，不要使用全局对象，字符串常量等。应该使用对应唯一的对象
-9.ThreadLocal 类:
+11.ThreadLocal 类:
 	存放每个线程的共享变量,解决变量在不同线程间的隔离性
 	/**
 	 * 参考资料
@@ -639,18 +648,18 @@
 	 * http://www.importnew.com/16112.html
 	 * http://www.importnew.com/17849.html
 	 */
-	9.1.创建 ThreadLocal 对象:private ThreadLocal myThreadLocal = new ThreadLocal();
+	11.1.创建 ThreadLocal 对象:private ThreadLocal myThreadLocal = new ThreadLocal();
 		每个线程仅需要实例化一次即可
 		虽然不同的线程执行同一段代码时,访问同一个ThreadLocal变量，但是每个线程只能看到私有的ThreadLocal实例
-	9.2.访问 ThreadLocal 对象:
+	11.2.访问 ThreadLocal 对象:
 		(1).一旦创建了一个ThreadLocal对象，你就可以通过以下方式来存储此对象的值:
 			myThreadLocal.set("a thread local value");
 		(2).可以直接读取一个 ThreadLocal 对象的值:
 			String threadLocalValue = (String) myThreadLocal.get();
-	9.3.ThreadLocal 泛型:
+	11.3.ThreadLocal 泛型:
 		可以创建一个泛型化的ThreadLocal对象,当你从此ThreadLocal实例中获取值的时候，就不必要做强制类型转换
 		private ThreadLocal myThreadLocal1 = new ThreadLocal<String>();
-	9.4.初始化 ThreadLocal:
+	11.4.初始化 ThreadLocal:
 		(1).由于ThreadLocal对象的set()方法设置的值只对当前线程可见,那有什么方法可以为
 			ThreadLocal 对象设置的值对所有线程都可见?
 			通过 ThreadLocal 子类的实现，并覆写initialValue()方法，就可以为 ThreadLocal 对象指定一个初始化值
@@ -660,7 +669,7 @@
 			       return "This is the initial value";
 			   }
 			};
-	9.5.完整的 ThreadLocal 实例:
+	11.5.完整的 ThreadLocal 实例:
 		public class ThreadLocalExample {
 		    public static class MyRunnable implements Runnable {
 		        private ThreadLocal<Integer> threadLocal = new ThreadLocal<Integer>();
@@ -686,13 +695,13 @@
 		    }
 
 		}
-	9.6.InheritableThreadLocal:ThreadLocal的子类。为了解决ThreadLocal实例内部每个线程都只能看到自己的私有值，
+	11.6.InheritableThreadLocal:ThreadLocal的子类。为了解决ThreadLocal实例内部每个线程都只能看到自己的私有值，
 		所以 InheritableThreadLocal 允许一个线程创建的所有子线程访问其父线程的值
-10.深入理解 ThreadLocal:
-	10.1.理解 ThreadLocal:
+12.深入理解 ThreadLocal:
+	12.1.理解 ThreadLocal:
 		ThreadLocal 在每个线程中对该变量会创建一个副本,即每个线程内部都会有一个该变量,且在线程内部任何地方都可以使用,
 		线程之间互不影响，这样一来就不存在线程安全问题,也不会严重影响程序执行性能;
-	10.2.深入解析 ThreadLocal 类:
+	12.2.深入解析 ThreadLocal 类:
 		(1).public T get() { }:用来获取ThreadLocal在当前线程中保存的变量副本
 		(2).public void set(T value) { }:用来设置当前线程中变量的副本
 		(3).public void remove() { }:用来移除当前线程中变量的副本
@@ -711,11 +720,11 @@
 			 		return Thread.currentThread().getId();
 			 	};
 			};
-	10.3.ThreadLocal 的应用场景:
+	12.3.ThreadLocal 的应用场景:
 		(1).最常见的 ThreadLocal 使用场景为 用来解决 数据库连接、Session 管理等
-11.死锁:两个或更多线程阻塞着等待其它处于死锁状态的线程所持有的锁
-	11.1.死锁通常发生在多个线程同时但以不同的顺序请求同一组锁的时候
-	11.2.死锁程序:
+13.死锁:两个或更多线程阻塞着等待其它处于死锁状态的线程所持有的锁
+	13.1.死锁通常发生在多个线程同时但以不同的顺序请求同一组锁的时候
+	13.2.死锁程序:
 		public class DeadLock{
 			public void method1(){
 				synchronized(Integer.class){
@@ -734,7 +743,7 @@
 				}
 			}
 		}
-	11.3.避免死锁:
+	13.3.避免死锁:
 		(1).加锁顺序:如果能确保所有的线程都是按照相同的顺序获得锁，那么死锁就不会发生
 			按照顺序加锁是一种有效的死锁预防机制。
 			但是,这种方式需要你事先知道所有可能会用到的锁(并对这些锁做适当的排序)，但总有些时候是无法预知的
@@ -752,13 +761,13 @@
 				 然有回退和等待，但是如果有大量的线程竞争同一批锁，它们还是会重复地死锁
 				B.一个更好的方案是给这些线程设置优先级，让一个(或几个)线程回退，
 				剩下的线程就像没发生死锁一样继续保持着它们需要的锁
-	11.4.监测是否有死锁现象:
+	13.4.监测是否有死锁现象:
 		(1).执行 jps 命令,可以得到运行的线程 3244,再执行 jstack命令
 		jstack -l 3244;
-12.饥饿和公平:
-	12.1.饥饿:如果一个线程因为CPU时间全部被其他线程抢走而得不到CPU运行时间，这种状态被称之为“饥饿”
+14.饥饿和公平:
+	14.1.饥饿:如果一个线程因为CPU时间全部被其他线程抢走而得不到CPU运行时间，这种状态被称之为“饥饿”
 		解决饥饿的方案被称之为“公平性” – 即所有线程均能公平地获得运行机会
-	12.2.Java 中导致饥饿的原因:
+	14.2.Java 中导致饥饿的原因:
 		(1).高优先级线程吞噬所有的低优先级线程的CPU时间:
 			优先级越高的线程获得的CPU时间越多，线程优先级值设置在1到10之间，而这些优先级值所表示行为的准确解释则
 			依赖于你的应用运行平台,对大多数应用来说,你最好是不要改变其优先级值;
@@ -766,40 +775,43 @@
 		(3).线程在等待一个本身也处于永久等待完成的对象(比如调用这个对象的wait方法)
 			如果多个线程处在wait()方法执行上，而对其调用notify()不会保证哪一个线程会获得唤醒，
 			任何线程都有可能处于继续等待的状态;
-	12.3.在Java中实现公平性方案:
+	14.3.在Java中实现公平性方案:
 		(1).使用锁，而不是同步块:为了提高等待线程的公平性，我们使用锁方式来替代同步块
 		(2).公平锁。
 		(3).注意性能方面
 	
-13.锁:
+15.锁:
 	(1).同步锁:通过synchronized关键字来进行同步
 		同步锁的原理是,对于每一个对象,有且仅有一个同步锁:不同的线程能共同访问该同步锁.
 		但是,在同一个时间点,该同步锁能且只能被一个线程获取到
 	(2).JUC包中的锁，包括:Lock 接口,ReadWriteLock 接口,LockSupport 阻塞原语,Condition 条件,
 		AbstractOwnableSynchronizer/AbstractQueuedSynchronizer/AbstractQueuedLongSynchronizer 三个抽象类,
 		ReentrantLock 独占锁,ReentrantReadWriteLock 读写锁.由于 CountDownLatch，CyclicBarrier 和 Semaphore 也是通过AQS来实现的
+	(3).可重入锁:synchronized 和 ReentrantLock 都是可重入锁,锁基于线程的分配,而不是基于方法调用的分配.
+		线程可以进入任何一个它已经拥有的锁所同步着的代码块.
+		可重入锁是用来最大的作用是用来解决死锁的;
 
-14.闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
-	14.1.CountDownLatch:
+16.闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
+	16.1.CountDownLatch:
 		(1).是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待
 		// http://www.cnblogs.com/skywang12345/p/3533887.html
 		CountDownLatch 包含了sync对象,sync是 Sync 类型.CountDownLatch 的 Sync 是实例类,它继承于 AQS
-	14.2.CyclicBarrier:
+	16.2.CyclicBarrier:
 		(1).是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
 			因为该 barrier 在释放等待线程后可以重用,所以称它为循环 的 barrier;
 			CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象trip",它是通过独占锁实现的
-	14.3.CountDownLatch 与 CyclicBarrier 两者的区别：
+	16.3.CountDownLatch 与 CyclicBarrier 两者的区别：
 		(1).CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行;
 			CyclicBarrier 则是允许N个线程相互等待;
 		(2).CountDownLatch 的计数器无法被重置
 			CyclicBarrier 的计数器可以被重置后使用,因此它被称为是循环的barrier;
-	14.4.Semaphore:是一个计数信号量,它的本质是一个"共享锁";
+	16.4.Semaphore:是一个计数信号量,它的本质是一个"共享锁";
 		(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
 			当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
 			线程可以通过release()来释放它所持有的信号量许可
 		(2).Semaphore 包含了sync对象,sync是 Sync 类型;而且,Sync 也是一个继承于 AQS 的抽象类.
 			Sync 也包括"公平信号量" FairSync 和"非公平信号量" NonfairSync
-15.Callable
+16.Callable
 	Callable是类似于Runnable的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
 		 Callable和Runnable有几点不同： 
 		 (1).Callable规定的方法是call()，而Runnable规定的方法是run().
@@ -808,14 +820,14 @@
 		 (4).运行Callable任务可拿到一个Future对象， Future表示异步计算的结果。
 		 	它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
 		 	通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果。
-16.Lock 锁:
-	16.1.ReentrantLock 类(可重入锁),又称为独占锁.
-		16.1.1.ReentrantLock 基本:
+17.Lock 锁:
+	17.1.ReentrantLock 类(可重入锁),又称为独占锁.
+		17.1.1.ReentrantLock 基本:
 			(1).在同一个时间点只能被一个线程持有,而可重入即可以被单个线程多次获取.
 			(2).ReentrantLock 分为"公平锁"和"非公平锁",区别在于获取锁的机制上是否公平.
 			(3).ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程.公平锁的机制下,线程依次排队获取,
 				而"非公平锁"在锁是可获取状态时,不管自己是不是在队列的开头都会获取锁.
-		16.1.2.ReentrantLock 函数列表:
+		17.1.2.ReentrantLock 函数列表:
 			// 创建一个 ReentrantLock ，默认是“非公平锁”。
 			ReentrantLock()
 			// 创建策略是fair的 ReentrantLock。fair为true表示是公平锁，fair为false表示是非公平锁。
@@ -857,13 +869,15 @@
 			boolean tryLock(long timeout, TimeUnit unit)
 			// 试图释放此锁。
 			void unlock()
-		16.1.3.
-	16.2.Condition
+		17.1.3.公平锁:
+
+		17.1.4.非公平锁:
+	17.2.Condition
 		(1).在使用 notify 和 notifyAll 方法进行通知时,被通知的线程是由JVM随机选择的.但是 ReentrantLock 集合
 			Condition 类就实现选择性通知.线程可以注册在指定的 Condition 中,从而可以有选择性的进行线程通知
 		(2).synchronized 就相当于整个 Lock 对象中只有一个单一的 Condition 对象,所有的线程都注册在它的一个
 			对象上,线程开始 notifyAll 时,需要通知所有的 waitin线程,没有选择权;
-	16.3.
+	17.3.
 三.多线程与并发涉及算法
 1.CAS:Compare and Swap-比较与交换
 http://www.cnblogs.com/Mainz/p/3546347.html
