@@ -1,12 +1,69 @@
-一.Web
-1.Cookie 和 Session 区别
-	https://my.oschina.net/kevinair/blog/192829
-	1.1.Cookie:
-
-
+一.J2EE
+1.Cookie 和 Session 区别: https://my.oschina.net/kevinair/blog/192829
+	Session 与 Cookie 的作用都是为了保持访问用户与后端服务器的交互状态
+	1.1.Cookie:是服务器在本地机器上存储的小段文本并随每一个请求发送至同一个服务器,网络服务器用HTTP头向客户端
+		发送cookies,在客户终端,浏览器解析这些cookies并将它们保存为一个本地文件.
+		(1).c当一个用户通过 HTTP 协议访问一个服务器的时候,这个服务器会将一些 Key/Value 键值对返回给客户端浏览器,
+			并给这些数据加上一些限制条件,在条件符合时这个用户下次访问这个服务器的时候,数据又被完整地带回给服务器;
+		(2).cookie的内容主要包括:名字、值、过期时间、路径和域.路径与域一起构成cookie的作用范围.
+			若不设置过期时间,则表示这个cookie的生命期为浏览器会话期间,关闭浏览器窗口,cookie就消失.
+			这种生命期为浏览器会话期的cookie被称为会话cookie.会话cookie一般是存储在内存中的;
+		(3).若设置了过期时间,浏览器就会把cookie保存到硬盘上,关闭后再次打开浏览器,
+			这些cookie仍然有效直到超过设定的过期时间,存储在硬盘上的cookie可以在不同的浏览器进程间共享
+	1.2.Session:session机制采用的是一种在服务器端保持状态的解决方案.由于采用服务器端保持状态的方案在客户端也需要
+		保存一个标识,所以session机制可能需要借助于cookie机制来达到保存标识的目的.
+		(1).session是针对每一个用户的,变量的值保存在服务器上,用一个sessionID来区分是哪个用户session变量,这个值是
+			通过用户的浏览器在访问的时候返回给服务器,当客户禁用cookie时,这个值也可能设置为由get来返回给服务器.
+		(2).就安全性来说,服务器端的session机制更安全些,因为它不会任意读取客户存储的信息.
+		(3).当程序需要为某个客户端的请求创建一个session时,服务器首先检查这个客户端的请求里是否已包含了一个
+			session标识(称为sessionId),如果已包含则说明以前已经为此客户端创建过session,服务器就按照sessionId
+			把这个session检索出来使用(检索不到,会新建一个),如果客户端请求不包含session id,则为此客户端创建一个
+			session并且生成一个与此session相关联的session id，session id的值应该是一个既不会重复，又不容易被找
+			到规律以仿造的字符串,这个session id将被在本次响应中返回给客户端保存
+			保存这个session id的方式可以采用cookie，这样在交互过程中浏览器可以自动的按照规则把这个标识发挥给服务器
+	1.3.Cookie 与 Session 都能够进行会话跟踪,但是完成的原理不太一样:
+		(1).存取方式不同:
+			Cookie 中只能保管ASCII字符串,假如需求存取Unicode字符或者二进制数据,需求先进行编码;也不能直接存储Java对象;
+			Session 中能够存取任何类型的数据,包括而不限于 String、Integer、List、Map 等;
+			单个cookie保存的数据不能超过4K,很多浏览器都限制一个站点最多保存20个cookie
+		(2).隐私策略的不同:
+			Cookie 存储在客户端阅读器中,对客户端是可见的,客户端的一些程序可能会窥探、复制以至修正Cookie中的内容;
+			Session 存储在服务器上,对客户端是透明的,不存在敏感信息泄露的风险;
+		(3).有效期上的不同:
+			Cookie 设置过期时间可以很大,保证长期有效.
+			Session 依赖于名为JSESSIONID的Cookie,而Cookie JSESSIONID 的过期时间默许为–1,只需关闭了阅读器该Session就会失效
+		(4).服务器压力的不同:
+			Cookie 保管在客户端,不占用服务器资源,假如并发阅读的用户十分多,Cookie 是很好的选择
+			Session 是保管在服务器端的,每个用户都会产生一个Session.假如并发访问的用户十分多,会产生十分多的Session,耗费大量的内存
+		(5).浏览器支持的不同:
+			Cookie 是需要客户端浏览器支持的.假如客户端禁用了Cookie,或者不支持Cookie,则会话跟踪会失效;
+				假如客户端浏览器不支持Cookie，需要运用Session以及URL地址重写
+		(6).跨域支持上的不同:
+			Cookie 支持跨域名访问
+			Session 则不会支持跨域名访问.Session 仅在他所在的域名内有效
 2.掌握JSP内置对象、动作及相关特点和工作原理
-
-
+	2.1.JSP 预先定义了9个这样的对象分别为:request、response、session、application、out、pagecontext、config、page、exception
+		(1).request:是 javax.servlet.HttpServletRequest 类型的对象.该对象代表了客户端的请求信息,主要用于接受通过HTTP协议
+			传送到服务器的数据(包括头信息,系统信息,请求方式及请求参数等).request对象的作用域为一次请求.
+		(2).response:代表的是客户端的响应,主要是将JSP容器处理过的对象传回到客户端,response对象作用域只在JSP页面内有效.
+		(3).session:是由服务器自动创建的与用户请求相关的对象.
+			服务器为每个用户都生成一个session对象,用于保存该用户的信息,跟踪用户的操作状态.
+			session对象内部使用Map类来保存数据,因此保存数据的格式为 "Key/value";
+		(4).application:可将信息保存在服务器中,直到服务器关闭,否则application对象中保存的信息会在整个应用中都有效.
+			与session对象相比,application对象生命周期更长,类似于系统的"全局变量";
+		(5).out:用于在Web浏览器内输出信息,并且管理应用服务器上的输出缓冲区.
+		(6).pageContext:是取得任何范围的参数,通过它可以获取 JSP 页面的 out、request、reponse、session、application 等对象.
+			pageContext对象的创建和初始化都是由容器来完成的,在JSP页面中可以直接使用 pageContext对象.
+		(7).config:主要作用是取得服务器的配置信息.通过 pageConext对象的 getServletConfig() 方法可以获取一个config对象.
+			当一个Servlet 初始化时,容器把某些信息通过 config对象传递给这个 Servlet.
+		(8).page:代表JSP本身,只有在JSP页面内才是合法的.page隐含对象本质上包含当前Servlet接口引用的变量,类似于Java编程中的 this 指针.
+		(9).exception:exception 对象的作用是显示异常信息,只有在包含 isErrorPage="true" 的页面中才可以被使用,
+			在一般的JSP页面中使用该对象将无法编译JSP文件
+	2.2.四大作用域:
+		(1).page:当前页面有效,有 out, response,pageContext,config,papge,exception
+		(2).request:当前请求有效,有 request,
+		(3).session:当前会话有效,有 session
+		(4).application:所有进程中有效,有 application
 3.掌握Servlet的特点和工作原理
 
 4.掌握AJAX的工作原理
