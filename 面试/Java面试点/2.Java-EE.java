@@ -65,12 +65,122 @@
 		(3).session:当前会话有效,有 session
 		(4).application:所有进程中有效,有 application
 3.掌握Servlet的特点和工作原理
+	3.1.Servlet 与 Servlet 容器:
+		(1).两者关系有点像枪和子弹的关系,枪是为子弹而生,而子弹又让枪有了杀伤力.
+			从技术角度来说是为了解耦,通过标准化接口来相互协作.
+		(2).以Tomcat如何管理Servlet容器来说:
+			Tomcat 的容器等级中,Context 容器是直接管理 Servlet 在容器中的包装类 Wrapper,所以 Context 容器
+			如何运行将直接影响 Servlet 的工作方式.
+			一个 Context 对应一个 Web 工程
+	3.2.Servlet 容器的启动过程:
+		Tomcat7 也开始支持嵌入式功能,增加了一个启动类 org.apache.catalina.startup.Tomcat.
+		将 Servlet 包装成 StandardWrapper 并作为子容器添加到 Context 中,其它的所有 web.xml 属性都被解析到 Context 中,
+		所以说 Context 容器才是真正运行 Servlet 的 Servlet 容器
+	3.3.Servlet 对象创建:
+		(1).如果 Servlet 的 load-on-startup 配置项大于 0,那么在 Context 容器启动的时候就会被实例化.
+			在 conf 下的 web.xml 文件中定义了一些默认的配置项,其定义了两个 Servlet,分别是:
+			org.apache.catalina.servlets.DefaultServlet 和 org.apache.jasper.servlet.JspServlet 它们的 load-on-startup 
+			分别是 1 和 3,也就是当 Tomcat 启动时这两个 Servlet 就会被启动
+	3.4.Servlet 是如何运行的?
+		servlet容器为servlet运行提供了网络相关的服务：
+		比如在浏览器地址栏输入地址:	http://ip:port/web01/hello
+		Step1:浏览器依据ip,port建立与servlet容器(servlet容器也是一个简单的服务器)之间的链接
+		Step2:浏览器将请求参数,请求资源路径等等打包(需按照http协议的要求)
+		Step3:浏览器将请求数据包发送给servlet容器
+		Step4:容器收到请求之后,对请求的数据包进行解析(拆包),
+			然后将解析之后的结果封装request对象上,同时容器还会创建一个response对象
+		Step5:容器依据请求资源路径("/web01/hello")找到应用所在的文件夹,
+			然后依据web.xml找到对应的servlet配置(servlet的类名),然后容器创建该servlet对象
+		Step6:容器调用servlet对象的service方法(会将事先创建好的request,response作为参数传递进来)
+		Step7:servlet可以通过请求request对象获得请求参数,
+			进行相应的处理,然后将处理结果缓存到response对象上
+		Step8:容器从response对象上获取之前处理的结果,然后打包发送给浏览器.
+		Step9:浏览器拆包(解析容器返回的响应数据包),依据获取的数据生成相应的页面;
+	3.5..servlet的生命周期的四个阶段
+		(1).实例化
+			a.什么是实例化:容器调用servlet构造器创建一个servlet对象;
+			  在默认情况下,不管有多少请求,容器只会创建一个servlet对象.
+			b.什么时候实例化?
+			  情况1:在默认情况下,容器收到请求之后才会创建servlet对象;
+			  情况2:容器在启动时,就将某些servlet对象创建;这些servlet必须在web.xml中
+			  配置一个参数:<load-on-startup>配置,其参数值越小,优先级越高,0为最高优先级
+			  例如:<load-on-startup>1</load-on-startup>
+		(2).初始化
+			a.什么是初始化
+				容器创建好servlet对象之后,会立即调用init方法;
+			b.怎么样实现初始化处理逻辑?
+				(1).一般情况下,不需要写init方法,因为GenericServlet类依据实现了innit方法:
+					//将容器创建的ServletConfig对象保存下来,
+					//并且提供了getServletConfig方法来获得该对象
+					//调用了一个空的init方法,(该init方法用于子类去override)
+					//建议override无参的init方法
+				(2).如果要实现自己的初始化处理逻辑,只要override init()方法
+				(3).初始化方法只会执行一次
+				(4).ServletConfig对象可以用来访问servlet的初始化参数
+		(3).就绪/调用:service方法调用多次,init方法,构造器都只调用一次
+			a.什么是就绪
+				servlet容器收到请求之后,会调用servlet对象的service方法来处理请求
+			b.如何编写业务逻辑?
+				方式一.override HttpServlet的service方法:
+					HttpServlet的service方法实现:
+						依据请求类型调用doGet()或者doPost()方法,
+						这两方法在默认情况下就只是简单的抛出异常,需要子类去override;
+				方式二.override HttpServlet的doGet()或者doPost()方法;
+		(4).销毁:
+			a.什么是销毁:容器依据自身的算法,是否销毁servlet对象
+				容器在销毁之前,会调用servlet对象的destroy()方法;
+			b.destroy方法只会执行一次;
+4.转发和重定向:
+	4.1.转发:
+		(1).指的是web组件(jsp/servlet)将未完成的处理通过容器交给另一个web组件继续完成.
+			常见的情况:一个servlet获得数据之后转发给一个jsp,由jsp来复杂展现这些数据;
+			A转发给B:两个组件会共用同一个request和response对象
+		(2).如何转发?
+			step1:绑定数据到request对象上
+				request.setAttribute(String name,Object obj);
+				//依据绑定名称找到绑定值,如果值不存在,返回null;
+				Object request.getAttribute(String name);
+			step2:获得转发器
+				RequestDispatcher rd = request.getRequestDispatcher(String uri);
+				-----uri表示转发的目的地地址
+			step3:转发
+				rd.forward(request,response);
+		(3).转发的特点:
+				a.转发之后,浏览器地址栏的地址不变
+				b.转发的目的地只限于同一个应用
+		(4).转发需要注意的问题:
+			a.转发之前,不能够调用out.close()或者out.flush;
+			b.转发之前,容器会清空response对象上的缓存数据.
+	4.2.重定向:
+		(1).服务器发送一个302状态和一个location消息头(值是一个地址,称为重定向地址)
+			当浏览器收到之后,会立即向重定向地址发请求;
+		(2).如何重定向:
+			response.sendRedirect(String url);	其中url表示重定向地址
+		(3).特点:
+			重定向是任意的
+			重定向之后,浏览器地址栏的地址会变成重定向地址
+		(4).需要注意两个问题:
+			A.重定向之前,不能调用out.close()方法;
+			B.重定向之前会先清空response上缓存的数据
+	4.3.两者区别:
+		(1).转发所涉及的各个组件可以共享同一个request对象和同一个response对象,而重定向不可以;
+			当容器收到请求会创建request和response,当容器发送响应之后会立即删除request和response,
+			换言之,request和response的生存时间很短暂(一次请求与响应之间)
+		(2).转发的目的地地址必须是同一个应用内部某个地址,而重定向地址不限;
+		(3).转发之后,浏览器地址栏地址不变;而重定向会变成重定向地址;
+		(4).转发是一件事未做完,而重定向是一件事已经做完再做另一件事;
+5.JSP 指令:
+	5.1.<%@include%> 和 <jsp:include>:
+		(1).<%@include%>:页面请求之前预编译,所有代码包含进来之后,一起进行处理,把所有代码合在一起,编译成一个 Servlet
+		(2).<jsp:include>:所有代码分别处理,在页面被请求的时候才编译,被编译成多个servlet,页面语法相对独立,处理完成之后
+			再将代码的显示结果(处理结果)组合进来.如果被包含文件是动态的,那么就会生成两个Servlet
+	5.2.
+	
+6.掌握AJAX的工作原理
 
-4.掌握AJAX的工作原理
+7.Tomcat 服务器:架构,原理,调优等
 
-5.Tomcat 服务器:架构,原理,调优等
-
-6.Nginx
+8.Nginx
 二.Spring/SpringMVC
 1.为什么选择使用 Spring 框架
 	(1).Spring 采用的是层次结构,有超过20个模块可以选择.可以自由取舍.
@@ -138,10 +248,11 @@
 		(4).constructor:这个同byType类似.不过是应用于构造函数的参数.如果在BeanFactory中不是恰好有一个bean
 		与构造函数参数相同类型，则抛出一个严重的错误。
 		(5).autodetect:如果有默认的构造方法,通过 construct的方式自动装配,否则使用 byType的方式自动装配
+9.Spring 事务处理
 
+10.SpringMVC 请求过程
 
-9.SpringMVC 请求过程
-10.MVC 理解.
+11.MVC 理解.
 
 三.Mybatis
 1.Hibernate 与 Mybatis 区别
