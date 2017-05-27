@@ -140,9 +140,8 @@
 		|R-tree索引 	|支持		 |不支持	  |不支持      |
 		|Full-text索引 	|不支持		 |暂不支持	  |不支持      |
 		+------------------------------------------------------+
-6.MySQL 的explain 分析函数,数据库慢执行的指标;
-7.ER 模型是怎么样的
-8.锁:共享锁,互斥锁,死锁.如何会发生死锁,如何解决死锁问题
+7.MySQL 的explain 分析函数,数据库慢执行的指标;
+8.ER 模型是怎么样的
 9.MySQL 的数据库引擎:MyISAM 和 InnoDB 引擎的区别:
 	9.1.主要区别:
 		(1).MyISAM 是非事务安全型的, InnoDB 是事务安全型的;
@@ -156,7 +155,12 @@
 		(2).InnoDB 用于事务处理应用程序,具有众多特性,包括ACID事务支持.如果应用中需要执行大量的insert或update操作,
 			则应该使用 InnoDB,这样可以提高多用户并发操作的性能
 10.MySQL 主从与读写分离技术
-11.数据库的连接池原理
+11.数据库的连接池
+	11.1.什么是数据库连接池:
+		数据库连接池(Connection pooling)是程序启动时建立足够的数据库连接,并将这些连接组成一个连接池,
+		由程序动态地对池中的连接进行申请、使用、释放.
+		因为创建数据库连接是一个很耗时的操作.也容易对数据库造成安全隐患
+
 12.如何设计数据库表字段?从哪些方面考虑
 13.表分区? 
 	13.1.表分区:
@@ -249,7 +253,68 @@
 			整形支持:tinyint,smallint,mediumint,int,bigint;不支持decimal和float
 			时间类型支持:date,datetime
 			字符类型支持:char,varchar,binary,varbinary;不支持text,blob
-		(3).
+		13.9.1.RANGE COLUMNS分区:
+			(1).日期字段分区:
+				create table members(
+				  id int,
+				  joined date not NULL
+				)
+				  partition by range columns(joined)(
+				    partition a values less than('1980-01-01'),
+				    partition b values less than('1990-01-01'),
+				    partition c values less than('2000-01-01'),
+				    partition d values less than('2010-01-01'),
+				    partition e values less than MAXVALUE
+				  );
+			(2).多个字段组合分区:
+				CREATE TABLE rcx (
+				    a INT,
+				    b INT
+				    )
+				PARTITION BY RANGE COLUMNS(a,b) (
+				     PARTITION p0 VALUES LESS THAN (5,10),
+				     PARTITION p1 VALUES LESS THAN (10,20),
+				     PARTITION p2 VALUES LESS THAN (15,30),
+				     PARTITION p3 VALUES LESS THAN (MAXVALUE,MAXVALUE)
+				);
+				注意:多字段的分区键比较是基于数组的比较.
+					①.它先用插入的数据的第一个字段值和分区的第一个值进行比较,如果插入的第一个值小于分区的第一个值
+						那么就不需要比较第二个值就属于该分区
+					②.如果第一个值等于分区的第一个值,开始比较第二个值同样如果第二个值小于分区的第二个值那么就属于该分区.
+			==> RANGE COLUMN的多列分区第一列的分区值一定是顺序增长的,不能出现交叉值,第二列的值随便,例如以下分区就会报错:
+				PARTITION BY RANGE COLUMNS(a,b) (
+				     PARTITION p0 VALUES LESS THAN (5,10),
+				     PARTITION p1 VALUES LESS THAN (10,20),
+				     PARTITION p2 VALUES LESS THAN (8,30), -- p2 中第一列比p1第一列的要小,所以报错
+				     PARTITION p3 VALUES LESS THAN (MAXVALUE,MAXVALUE)
+				);
+		13.9.2.LIST COLUMNS分区:
+			(1).非整型字段分区:
+				create table listvar (
+				  id    int      not null,
+				  hired datetime not null
+				)
+				  partition by list columns (hired)
+				  (
+				  	partition a values in ('1990-01-01 10:00:00', '1991-01-01 10:00:00'),
+				  	partition b values in ('1992-01-01 10:00:00'),
+				  	partition c values in ('1993-01-01 10:00:00'),
+				  	partition d values in ('1994-01-01 10:00:00')
+				  );
+				LIST COLUMNS分区对分整形字段进行分区就无需使用函数对字段处理成整形,所以对非整形字段进行分区建议选择COLUMNS分区
+			(2).多字段分区:
+				create table listvardou (
+				  id    int      not null,
+				  hired datetime not null
+				)
+				  partition by list columns (id, hired)
+				  (
+					  partition a values in ( (1, '1990-01-01 10:00:00'), (1, '1991-01-01 10:00:00') ),
+					  partition b values in ( (2, '1992-01-01 10:00:00') ),
+					  partition c values in ( (3, '1993-01-01 10:00:00') ),
+					  partition d values in ( (4, '1994-01-01 10:00:00') )
+				  );
+
 	13.10.HASH分区:
 		(1).主要用来分散热点读,确保数据在预先确定个数的分区中尽可能平均分布.
 		(2).MySQL支持两种Hash分区:常规Hash分区和线性Hash分区
@@ -298,6 +363,9 @@
 				同时,如果删除了分区导致分区不能覆盖所有值,那么插入数据的时候会报错.
 			(2).Hash分区和Key分区:
 				alter table table_name coalesce partition 2; --将分区缩减到2个
+		13.13.3.移出分区:
+			alter table members remove partitioning;
+			使用remove移除分区是仅仅移除分区的定义.并不会删除数据和 drop PARTITION 不一样,后者会连同数据一起删除
 	13.14.分区查询:
 		(1).查询某张表一共有多少个分区:
 			SELECT
@@ -321,6 +389,47 @@
 			1 row in set
 			上面的结果:partitions:p1 表示数据在p1分区进行检索
 14.数据库水平拆分和垂直拆分、分库/分表? 分库/分表中主键问题? 
+	-- Cobar:http://blog.csdn.net/shagoo/article/details/8191346
+
 15.纵表的用途
+16.锁.
+	(1).表级锁:开销小,加锁快; 不会出现死锁; 锁定粒度大,发生锁冲突的概率最高,并发度最低.
+		MyISAM和MEMORY存储引擎采用表级锁
+	(2).行级锁:开销大,加锁慢; 会出现死锁; 锁定粒度最小,发生锁冲突的概率最低,并发度也最高.
+		InnoDB存储引擎既支持行级锁,也支持表级锁,默认情况下为行级锁
+	(3).页面锁:开销和加锁时间界于表锁和行锁之间; 会出现死锁; 锁定粒度界于表锁和行锁之间,并发度一般.
+		BDB存储引擎采用的是页面锁,但也支持表级锁
+17.死锁:
+	17.1.什么是死锁:
+		是指两个或两个以上的进程在执行过程中,因争夺资源而造成的一种互相等待的现象,若无外力作用,它们都将无法推进下去.
+		此时称系统处于死锁状态或系统产生了死锁,这些永远在互相等竺的进程称为死锁进程.
+		表级锁不会产生死锁.所以解决死锁主要还是针对于最常用的InnoDB.
+		==> 死锁的关键在于:两个(或以上)的Session加锁的顺序不一致.
+	17.2.死锁产生原因:
+		死锁一般是事务相互等待对方资源,最后形成环路造成的
+	17.3.分析死锁日志:SHOW ENGINE INNODB STATUS;
+	17.4.死锁案例:
+		-- http://blog.jobbole.com/99208/
+		(1).不同表相同记录行锁冲突:事务A和事务B操作两张表，但出现循环等待锁情况
+		(2).相同表记录行锁冲突.这种情况比较常见:
+			遇到两个job在执行数据批量更新时,jobA处理的的id列表为[1,2,3,4],
+			而job处理的id列表为[8,9,10,4,2],这样就造成了死锁
+		(3).不同索引锁冲突:
+			事务A在执行时,除了在二级索引加锁外,还会在聚簇索引上加锁,在聚簇索引上加锁的顺序是[1,4,2,3,5],
+			而事务B执行时,只在聚簇索引上加锁,加锁顺序是[1,2,3,4,5],这样就造成了死锁的可能性.	
+		(4).gap锁冲突:
+			innodb在RR级别下,如下的情况也会产生死锁	
+	17.5.避免死锁:
+		(1).以固定的顺序访问表和行.比如两个job批量更新的情形,简单方法是对id列表先排序,后执行,这样就避免了交叉等待锁的情形;
+			又比如将两个事务的sql顺序调整为一致,也能避免死锁.
+		(2).大事务拆小.大事务更倾向于死锁,如果业务允许,将大事务拆小.
+		(3).在同一个事务中,尽可能做到一次锁定所需要的所有资源,减少死锁概率
+		(4).降低隔离级别.如果业务允许,将隔离级别调低也是较好的选择,比如将隔离级别从RR调整为RC,可以避免掉很多因为gap锁造成的死锁
+		(5).为表添加合理的索引.可以看到如果不走索引将会为表的每一行记录添加上锁,死锁的概率大大增大
+	17.6.定位死锁问题:
+		(1).通过应用业务日志定位到问题代码,找到相应的事务对应的sql;
+		(2).确定数据库隔离级别
+18.
+
 
 

@@ -1,17 +1,57 @@
-1.Java 类初始化过程:
-	(1).首先，初始化父类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化； 
-	(2).然后，初始化子类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化； 
-	(3).其次，初始化父类的普通成员变量和代码块，在执行父类的构造方法；
-	(4).最后，初始化子类的普通成员变量和代码块，在执行子类的构造方法；
-	Java中赋值顺序： 
-		(1).父类的静态变量赋值 
-		(2).自身的静态变量赋值 
-		(3).父类成员变量赋值 
-		(4).父类块赋值 
-		(5).父类构造函数赋值 
-		(6).自身成员变量赋值 
-		(7).自身块赋值 
-		(8).自身构造函数赋值
+1.Java 代码执行顺序:
+	1.1.Java 类初始化过程:
+		(1).首先,初始化父类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化； 
+		(2).然后,初始化子类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化； 
+		(3).其次,初始化父类的普通成员变量和代码块,在执行父类的构造方法；
+		(4).最后,初始化子类的普通成员变量和代码块,在执行子类的构造方法；
+		Java 中赋值顺序： 
+			(1).父类的静态变量赋值 
+			(2).自身的静态变量赋值 
+			(3).父类成员变量赋值 
+			(4).父类块赋值 
+			(5).父类构造函数赋值 
+			(6).自身成员变量赋值 
+			(7).自身块赋值 
+			(8).自身构造函数赋值
+	1.2.Java 代码执行顺序:
+		public class TestExecuteCode {
+		    public static void main(String[] args) {
+		        System.out.println(new B().getValue());
+		    }
+		    static class A {
+		        protected int value;
+		        public A(int v){
+		            setValue(v);
+		        }
+		        public void setValue(int value) { this.value = value;}
+		        public int getValue() {
+		            try {
+		                value++;
+		                return value;
+		            } finally {
+		                this.setValue(value);
+		                System.out.println(value);
+		            }
+		        }
+		    }
+		    static class B extends A {
+		        public B(){
+		            super(5);
+		            setValue(getValue() - 3);
+		        }
+		        public void setValue(int value) {super.setValue(2 * value);}
+		    }
+		}
+	==> 执行结果:22,34,17
+		(1).子类 B 中重写了父类 A 中的setValue方法:
+				super(5) // 调用了父类构造器,其中构造函数里面的setValue(value),调用的是子类的setValue方法
+			finally块中的
+				this.setValue(value) //调用的也是子类的setValue方法
+			而子类setValue方法中的
+				super.setValue(2*value); //调用的是父类A的setValue方法
+		(2).try...catch...finally块中有return返回值的情况
+			finally 块中虽然改变了value的值，但 try 块中返回的应该是 return 之前存储的值.
+	==> 父类执行时如果有子类的方法重写了父类的方法,调用的子类的重写方法
 2.非运算:
 	-n = ~n+1  =>  -n-1 = ~n
 

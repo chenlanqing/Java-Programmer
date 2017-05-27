@@ -2,6 +2,7 @@
  * 参考资料:
  * 	http://ifeve.com/java-concurrency-thread-directory/
  *  线程池:http://www.importnew.com/19011.html
+ * http://www.cnblogs.com/skywang12345/p/java_threads_category.html
  * 
  */
 一.并发与多线程简介:
@@ -159,21 +160,7 @@
 		Thread.join():当前线程调用某个线程的这个方法时，它会暂停当前线程，直到被调用线程执行完成
 		Thread.join(long miseconds);	这方法让调用线程等待特定的毫秒数。
 		Thread.join(long milliseconds, long nanos)第二个版本的join方法和第一个很像,只不过它接收一个毫秒数和一个纳秒数
-	2.10.守护线程:守护线程优先级非常低,通常在程序里没有其他线程运行时才会执行;
-		当守护线程是唯一在运行的线程时,JVM 会结束守护线程并终止程序;
-		(1).守护线程通常用于在同一程序里给普通线程(也叫使用者线程)提供服务
-			它们通常无限循环的等待服务请求或执行线程任务
-			JAVA 中最典型的这种类型代表就是垃圾回收器
-			public class Daemon extends Thread{
-				public Daemon(){
-					setDaemon(true);//在这个构造函数,用setDaemon() 方法让此线程成为守护线程
-				}
-			}
-		(2).只能在start() 方法之前可以调用 setDaemon() 方法。一旦线程运行了，就不能修改守护状态。
-			可以使用 isDaemon() 方法来检查线程是否是守护线程(方法返回 true) 或者是使用者线程 (方法返回 false)
-		(3).典型的守护线程是垃圾回收线程,当进程中没有非守护线程时,则垃圾回收线程也就没有存在的必要了
-			守护线程的作用是为其他线程的运行提供便利服务,最典型的应用:GC
-	2.11.异常处理:
+	2.10.异常处理:
 		当一个非检查异常被抛出，默认的行为是在控制台写下stack trace并退出程序
 		(1).必须实现一个类来处理非检查异常。这个类必须实现 UncaughtExceptionHandler 接口并实现在接口
 			内已声明的 uncaughtException() 方法:
@@ -193,14 +180,14 @@
 			如果有,JVM 使用 Thread 对象和 Exception 作为参数调用此方法;
 			如果没有定义,那么 JVM 会寻找默认非捕捉异常 handle
 			如果线程没有捕捉未捕获异常的处理者,那么 JVM会 把异常的 stack trace 写入操控台并结束任务;
-	2.12.本地线程变量:ThreadLocal(详情查看第 9 点)
+	2.11.本地线程变量:ThreadLocal(详情查看第 9 点)
 		(1).本地线程变量为每个使用这些变量的线程储存属性值。可以用 get() 方法读取值和使用 set() 方法改变值
-	2.13.线程组:可以把线程分组
+	2.12.线程组:可以把线程分组
 		Java 提供 ThreadGroup 类来组织线程.
 		ThreadGroup 对象可以由 Thread 对象组成和由另外的 ThreadGroup 对象组成,生成线程树结构
-	2.14.用线程工厂创建线程:线程对象工厂 ThreadFactory
-	2.15.join()和yield()方法:
-		2.15.1.join()方法:
+	2.13.用线程工厂创建线程:线程对象工厂 ThreadFactory
+	2.14.join()和yield()方法:
+		2.14.1.join()方法:
 			(1).等待该线程终止,指的是主线程等待子线程的终止,子线程调用了join()方法后面的代码,
 				只有等到子线程结束了才能执行;
 				让调用该方法的thread完成 run 方法的里面的东西后,在执行 join 方法后面的代码
@@ -210,13 +197,13 @@
 			(3).在执行 join 的过程中,如果当前线程对象被中断,则当前线程出现异常;
 			(3).join(long) 内部是使用 wait(long)方法来实现的,所以join(long)方法具有释放锁的特点,
 				而 sleep(long)不释放锁的
-		2.15.2.yield()方法:
+		2.14.2.yield()方法:
 			(1).使当前线程从执行状态(运行状态)变为可执行状态(就绪状态),调用yield的时候锁并没有被释放
 				放弃当前的CPU资源,将它让给其他的任务去占用CPU执行时间,放弃的时间不确定
 				将CPU让给其他资源导致速度变慢,一般是把机会给到线程池拥有相同优先级的线程
-		2.15.3.两者的区别:
+		2.14.3.两者的区别:
 			(1).join 是 final 的实例方法,yield是原生静态方法
-	2.16.线程的优先级:
+	2.15.线程的优先级:
 		(1).线程的优先级具有继承性,比如A线程启动B线程,则B线程的优先级与A是一样的;
 		(2).优先级具有规则性:
 			线程的优先级与代码执行顺序无关,CPU 尽量将执行资源让给优先级比较高的线程
@@ -224,6 +211,21 @@
 		(3).优先级具有随机性:
 			也就是优先级较高的线程不一定每次都先执行完
 			不要把线程的优先级与运行结果的顺序作为衡量的标准,线程优先级与打印顺序无关
+	2.16.守护线程:守护线程优先级非常低,通常在程序里没有其他线程运行时才会执行;
+		当守护线程是唯一在运行的线程时,JVM 会结束守护线程并终止程序;
+		(1).守护线程通常用于在同一程序里给普通线程(也叫使用者线程)提供服务
+			它们通常无限循环的等待服务请求或执行线程任务
+			JAVA 中最典型的这种类型代表就是垃圾回收器
+			public class Daemon extends Thread{
+				public Daemon(){
+					setDaemon(true);//在这个构造函数,用setDaemon() 方法让此线程成为守护线程
+				}
+			}
+		(2).只能在start() 方法之前可以调用 setDaemon() 方法。一旦线程运行了，就不能修改守护状态。
+			可以使用 isDaemon() 方法来检查线程是否是守护线程(方法返回 true) 或者是使用者线程 (方法返回 false)
+		(3).典型的守护线程是垃圾回收线程,当进程中没有非守护线程时,则垃圾回收线程也就没有存在的必要了
+			守护线程的作用是为其他线程的运行提供便利服务,最典型的应用:GC
+			当只有守护线程运行时，JVM会自动退出
 	2.17.线程的生命周期:
 		(1).新建态(New):通过线程的创建方式创建线程后,进入新建态态;
 		(2).就绪(Runnable):调用 Tread 的start 方法,就会为线程分配私有的方法栈,程序计数器资源,如果得到CPU资源,线程就转为运行状态.
@@ -617,8 +619,7 @@
 		一个线程发送数据到输出管道,另一个线程从输入管道中读取数据,实现不同线程间通信
 		使用代码 inputStream.connect(outputStream) 或者 outputStream.connect(inputStream) 的作用
 		使两个Stream之间产生通信链接,这样才可以将数据进行输出与输入
-
-	8.3.wait(),notify()和notifyAll():java.lang.Object 类定义了三个方法
+	10.5.wait(),notify()和notifyAll():java.lang.Object 类定义了三个方法
 		(1).一个线程一旦调用了任意对象的wait()方法，就会变为非运行状态，直到另一个线程调用了同一个对象的notify()方法。
 			为了调用wait()或者notify()，线程必须先获得那个对象的锁,也就是说线程必须在同步块里调用wait()或者notify()
 		(2).不管是等待线程还是唤醒线程都在同步块里调用wait()和notify()。这是强制性的！一个线程如果没有持有对象锁,
@@ -629,16 +630,16 @@
 			被唤醒的线程必须重新获得监视器对象的锁，才可以退出wait()的方法调用，因为wait方法调用运行在同步块里面
 			如果多个线程被notifyAll()唤醒,那么在同一时刻将只有一个线程可以退出wait()方法,
 				因为每个线程在退出wait()前必须获得监视器对象的锁
-	8.4.丢失的信号(Missed Signals):
+	10.6.丢失的信号(Missed Signals):
 		(1).notify()和notifyAll()方法不会保存调用它们的方法，因为当这两个方法被调用时,
 			有可能没有线程处于等待状态,通知信号过后便丢弃了,
 			如果一个线程先于被通知线程调用wait()前调用了notify()，等待的线程将错过这个信号
-	8.5.假唤醒:
+	10.7.假唤醒:
 		(1).由于莫名其妙的原因,线程有可能在没有调用过notify()和notifyAll()的情况下醒来.这就是所谓的假唤醒(spurious wakeups)
 		(2).为了防止假唤醒，保存信号的成员变量将在一个while循环里接受检查,而不是在if表达式里.这样的一个while循环叫做自旋锁
 			注意:这种做法要慎重,目前的JVM实现自旋会消耗CPU,如果长时间不调用doNotify方法,doWait方法会一直自旋,CPU会消耗太大
-	8.6.多个线程等待相同信号:
-	8.7.不要在字符串常量或全局对象中调用wait()
+	10.8.多个线程等待相同信号:
+	10.9.不要在字符串常量或全局对象中调用wait()
 		在wait()/notify()机制中，不要使用全局对象，字符串常量等。应该使用对应唯一的对象
 11.ThreadLocal 类:
 	存放每个线程的共享变量,解决变量在不同线程间的隔离性
@@ -779,55 +780,76 @@
 		(1).使用锁，而不是同步块:为了提高等待线程的公平性，我们使用锁方式来替代同步块
 		(2).公平锁。
 		(3).注意性能方面
-	
-15.锁:
-	(1).同步锁:通过synchronized关键字来进行同步
+三.JUC(java.util.concurrent)包
+1.JUC 原子类:
+	目的是对相应的数据进行原子操作.所谓原子操作,是指操作过程不会被中断,保证数据操作是以原子方式进行的
+	(1).基本类型: AtomicInteger, AtomicLong, AtomicBoolean ;
+		JDK8 新增: DoubleAdder, LongAdder
+	(2).数组类型: AtomicIntegerArray, AtomicLongArray, AtomicReferenceArray ;
+	(3).引用类型: AtomicReference, AtomicStampedRerence, AtomicMarkableReference ;
+	(4).对象的属性修改类型: AtomicIntegerFieldUpdater, AtomicLongFieldUpdater, AtomicReferenceFieldUpdater
+	1.1.AtomicLong:
+		(1).AtomicLong 是作用是对长整形进行原子操作.
+			在32位操作系统中,64位的 long 和 double 变量由于会被JVM当作两个分离的32位来进行操作,所以不具有原子性.
+			而使用 AtomicLong 能让 long 的操作保持原子型.
+2.锁的相关概念:
+	2.1.同步锁:通过synchronized关键字来进行同步
 		同步锁的原理是,对于每一个对象,有且仅有一个同步锁:不同的线程能共同访问该同步锁.
 		但是,在同一个时间点,该同步锁能且只能被一个线程获取到
-	(2).JUC包中的锁，包括:Lock 接口,ReadWriteLock 接口,LockSupport 阻塞原语,Condition 条件,
+	2.2.JUC 包中的锁，包括:Lock 接口,ReadWriteLock 接口,LockSupport 阻塞原语,Condition 条件,
 		AbstractOwnableSynchronizer/AbstractQueuedSynchronizer/AbstractQueuedLongSynchronizer 三个抽象类,
 		ReentrantLock 独占锁,ReentrantReadWriteLock 读写锁.由于 CountDownLatch，CyclicBarrier 和 Semaphore 也是通过AQS来实现的
-	(3).可重入锁:synchronized 和 ReentrantLock 都是可重入锁,锁基于线程的分配,而不是基于方法调用的分配.
+	2.3.可重入锁:synchronized 和 ReentrantLock 都是可重入锁,锁基于线程的分配,而不是基于方法调用的分配.
 		线程可以进入任何一个它已经拥有的锁所同步着的代码块.
 		可重入锁是用来最大的作用是用来解决死锁的;
-
-16.闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
-	16.1.CountDownLatch:
+	2.4.AQS(AbstractQueuedSynchronizer)类:
+		是java中管理"锁"的抽象类,锁的许多公共方法都是在这个类中实现.
+		AQS 是独占锁(例如:ReentrantLock)和共享锁(例如:Semaphore)的公共父类.
+		AQS 锁的分类:
+		(1).独占锁: 锁在一个时间点只能被一个线程锁占有.根据锁的获取机制,它又划分为"公平锁"和"非公平锁".
+			公平锁,是按照通过CLH等待线程按照先来先得的规则,公平的获取锁;
+			非公平锁,则当线程要获取锁时,它会无视CLH等待队列而直接获取锁.
+			独占锁的典型实例子是 ReentrantLock,此外,ReentrantReadWriteLock.WriteLock 也是独占锁
+		(2).共享锁:能被多个线程同时拥有,能被共享的锁.
+			JUC 包中的 ReentrantReadWriteLock.ReadLock,CyclicBarrier,CountDownLatch 和 Semaphore 都是共享锁.
+	2.5.CLH 队列-Craig, Landin, and Hagersten lock queue
+		CLH 队列是 AQS 中"等待锁"的线程队列.在多线程中,为了保护竞争资源不被多个线程同时操作而起来错误,常常需要通过锁来保护这些资源
+		在独占锁中,竞争资源在一个时间点只能被一个线程锁访问;而其它线程则需要等待.CLH 就是管理这些"等待锁"的线程的队列.
+		CLH 是一个非阻塞的 FIFO 队列.也就是说往里面插入或移除一个节点的时候,在并发条件下不会阻塞,
+		而是通过自旋锁和 CAS 保证节点插入和移除的原子性
+	2.6.CAS:Compare And Swap
+		是比较并交换函数,它是原子操作函数;即通过 CAS 操作的数据都是以原子方式进行的.
+3.闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
+	3.1.CountDownLatch:
 		(1).是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待
 		// http://www.cnblogs.com/skywang12345/p/3533887.html
 		CountDownLatch 包含了sync对象,sync是 Sync 类型.CountDownLatch 的 Sync 是实例类,它继承于 AQS
-	16.2.CyclicBarrier:
+	3.2.CyclicBarrier:
 		(1).是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
 			因为该 barrier 在释放等待线程后可以重用,所以称它为循环 的 barrier;
 			CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象trip",它是通过独占锁实现的
-	16.3.CountDownLatch 与 CyclicBarrier 两者的区别：
+	3.3.CountDownLatch 与 CyclicBarrier 两者的区别：
 		(1).CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行;
 			CyclicBarrier 则是允许N个线程相互等待;
 		(2).CountDownLatch 的计数器无法被重置
 			CyclicBarrier 的计数器可以被重置后使用,因此它被称为是循环的barrier;
-	16.4.Semaphore:是一个计数信号量,它的本质是一个"共享锁";
+	3.4.Semaphore:是一个计数信号量,它的本质是一个"共享锁";
 		(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
 			当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
 			线程可以通过release()来释放它所持有的信号量许可
 		(2).Semaphore 包含了sync对象,sync是 Sync 类型;而且,Sync 也是一个继承于 AQS 的抽象类.
 			Sync 也包括"公平信号量" FairSync 和"非公平信号量" NonfairSync
-16.Callable
-	Callable是类似于Runnable的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
-		 Callable和Runnable有几点不同： 
-		 (1).Callable规定的方法是call()，而Runnable规定的方法是run().
-		 (2).Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。 
-		 (3).call()方法可抛出异常，而run()方法是不能抛出异常的。
-		 (4).运行Callable任务可拿到一个Future对象， Future表示异步计算的结果。
-		 	它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
-		 	通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果。
-17.Lock 锁:
-	17.1.ReentrantLock 类(可重入锁),又称为独占锁.
-		17.1.1.ReentrantLock 基本:
+4.Lock 锁:
+	4.1.ReentrantLock 类(可重入锁),又称为独占锁.
+		4.1.1.ReentrantLock 基本:
 			(1).在同一个时间点只能被一个线程持有,而可重入即可以被单个线程多次获取.
 			(2).ReentrantLock 分为"公平锁"和"非公平锁",区别在于获取锁的机制上是否公平.
-			(3).ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程.公平锁的机制下,线程依次排队获取,
+			(3).ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程."公平锁"的机制下,线程依次排队获取,
 				而"非公平锁"在锁是可获取状态时,不管自己是不是在队列的开头都会获取锁.
-		17.1.2.ReentrantLock 函数列表:
+				ReentrantLock中,包含了Sync对象.而且,Sync 是 AQS 的子类;更重要的是,Sync 有两个子类 FairSync(公平锁)和 
+				NonFairSync(非公平锁).ReentrantLock 是一个独占锁,至于它到底是公平锁还是非公平锁,
+				就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"
+		4.1.2.ReentrantLock 函数列表:
 			// 创建一个 ReentrantLock ，默认是“非公平锁”。
 			ReentrantLock()
 			// 创建策略是fair的 ReentrantLock。fair为true表示是公平锁，fair为false表示是非公平锁。
@@ -869,15 +891,25 @@
 			boolean tryLock(long timeout, TimeUnit unit)
 			// 试图释放此锁。
 			void unlock()
-		17.1.3.公平锁:
-
-		17.1.4.非公平锁:
-	17.2.Condition
+		4.1.3.公平锁:是按照通过CLH等待线程按照先来先得的规则,公平的获取锁
+			4.1.3.1.获取公平锁:获取锁是通过lock()函数
+				(1).lock():是在ReentrantLock.java的FairSync类中实现
+		4.1.4.非公平锁:则当线程要获取锁时,它会无视CLH等待队列而直接获取锁.
+	4.2.Condition
 		(1).在使用 notify 和 notifyAll 方法进行通知时,被通知的线程是由JVM随机选择的.但是 ReentrantLock 集合
 			Condition 类就实现选择性通知.线程可以注册在指定的 Condition 中,从而可以有选择性的进行线程通知
 		(2).synchronized 就相当于整个 Lock 对象中只有一个单一的 Condition 对象,所有的线程都注册在它的一个
 			对象上,线程开始 notifyAll 时,需要通知所有的 waitin线程,没有选择权;
-	17.3.
+	4.3.
+5.Callable 
+	5.1.Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
+		Callable 和 Runnable 有几点不同： 
+		(1).Callable规定的方法是call()，而Runnable规定的方法是run().
+		(2).Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。 
+		(3).call()方法可抛出异常，而run()方法是不能抛出异常的。
+		(4).运行Callable任务可拿到一个Future对象， Future表示异步计算的结果。
+			它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
+			通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果。
 三.多线程与并发涉及算法
 1.CAS:Compare and Swap-比较与交换
 http://www.cnblogs.com/Mainz/p/3546347.html

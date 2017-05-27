@@ -1,13 +1,6 @@
 目录:
 	1.Java内部类
 	2.HashMap vs. TreeMap vs. Hashtable vs. LinkedHashMap
-	3.打印文件目录列表
-	4.native关键字
-	5.协变式重写和泛型重载
-	6.Java 序列化
-	7.Java 垃圾回收机制
-	8.关于 try...catch...finally
-
 一.Java内部类:
 1.为什么使用内部类?
 使用内部类最吸引人的原因是：每个内部类都能独立地继承一个（接口的）实现，所以无论外围类是否已经继承了某个（接口的）实现，
@@ -140,7 +133,7 @@
 二.HashMap vs. TreeMap vs. Hashtable vs. LinkedHashMap
 (1).HashMap,TreeMap,HashTable父接口都是Map,LinkedHashMap是HashMap的子类;
 (2).HashMap:如果HashMap的key是自定义的对象,则需要重写equals()和hashcode()方法:
-◆★原因是:HashMap不允许两个相同的元素;默认情况下,在Object类下实现的equals()和hashcode()方法被使用,
+◆★原因是:HashMap 不允许两个相同的元素;默认情况下,在Object类下实现的equals()和hashcode()方法被使用,
 默认的hashcode()方法给出不同的整数为不同的对象,并在equals()方法中,只有当两个引用指向的是同一个对象时才返回true
 		public class HashMapDemo {
 			public static void main(String[] args) {
@@ -248,7 +241,8 @@
 			}
 		}
 
-(4).LinkedHashMap与HashMap的不同区别是:LinkedHashMap保留了插入顺序
+(4).LinkedHashMap 与 HashMap 的不同区别是:LinkedHashMap 保留了插入顺序.
+
 (5).HashMap,HashTable,TreeMap:
 	A:迭代顺序:HashMap,HashTable不会保证元素的顺序,但是TreeMap是有序的;
 	B:key-value空值:HashMap的key-value都可以为空(只有一个key为 null,因为不能存在两个相同的key),
