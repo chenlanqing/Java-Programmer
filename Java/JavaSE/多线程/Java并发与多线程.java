@@ -2,7 +2,7 @@
  * 参考资料:
  * 	http://ifeve.com/java-concurrency-thread-directory/
  *  线程池:http://www.importnew.com/19011.html
- * http://www.cnblogs.com/skywang12345/p/java_threads_category.html
+ *  http://www.cnblogs.com/skywang12345/p/java_threads_category.html
  * 
  */
 一.并发与多线程简介:
@@ -819,29 +819,9 @@
 		而是通过自旋锁和 CAS 保证节点插入和移除的原子性
 	2.6.CAS:Compare And Swap
 		是比较并交换函数,它是原子操作函数;即通过 CAS 操作的数据都是以原子方式进行的.
-3.闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
-	3.1.CountDownLatch:
-		(1).是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待
-		// http://www.cnblogs.com/skywang12345/p/3533887.html
-		CountDownLatch 包含了sync对象,sync是 Sync 类型.CountDownLatch 的 Sync 是实例类,它继承于 AQS
-	3.2.CyclicBarrier:
-		(1).是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
-			因为该 barrier 在释放等待线程后可以重用,所以称它为循环 的 barrier;
-			CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象trip",它是通过独占锁实现的
-	3.3.CountDownLatch 与 CyclicBarrier 两者的区别：
-		(1).CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行;
-			CyclicBarrier 则是允许N个线程相互等待;
-		(2).CountDownLatch 的计数器无法被重置
-			CyclicBarrier 的计数器可以被重置后使用,因此它被称为是循环的barrier;
-	3.4.Semaphore:是一个计数信号量,它的本质是一个"共享锁";
-		(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
-			当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
-			线程可以通过release()来释放它所持有的信号量许可
-		(2).Semaphore 包含了sync对象,sync是 Sync 类型;而且,Sync 也是一个继承于 AQS 的抽象类.
-			Sync 也包括"公平信号量" FairSync 和"非公平信号量" NonfairSync
-4.Lock 锁:
-	4.1.ReentrantLock 类(可重入锁),又称为独占锁.
-		4.1.1.ReentrantLock 基本:
+3.独占锁:
+	3.1.ReentrantLock 类(可重入锁),又称为独占锁.
+		3.1.1.ReentrantLock 基本:
 			(1).在同一个时间点只能被一个线程持有,而可重入即可以被单个线程多次获取.
 			(2).ReentrantLock 分为"公平锁"和"非公平锁",区别在于获取锁的机制上是否公平.
 			(3).ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程."公平锁"的机制下,线程依次排队获取,
@@ -849,7 +829,7 @@
 				ReentrantLock中,包含了Sync对象.而且,Sync 是 AQS 的子类;更重要的是,Sync 有两个子类 FairSync(公平锁)和 
 				NonFairSync(非公平锁).ReentrantLock 是一个独占锁,至于它到底是公平锁还是非公平锁,
 				就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"
-		4.1.2.ReentrantLock 函数列表:
+		3.1.2.ReentrantLock 函数列表:
 			// 创建一个 ReentrantLock ，默认是“非公平锁”。
 			ReentrantLock()
 			// 创建策略是fair的 ReentrantLock。fair为true表示是公平锁，fair为false表示是非公平锁。
@@ -891,33 +871,190 @@
 			boolean tryLock(long timeout, TimeUnit unit)
 			// 试图释放此锁。
 			void unlock()
-		4.1.3.公平锁:是按照通过CLH等待线程按照先来先得的规则,公平的获取锁
-			4.1.3.1.获取公平锁:获取锁是通过lock()函数
+		3.1.3.公平锁:是按照通过CLH等待线程按照先来先得的规则,公平的获取锁
+			3.1.3.1.获取公平锁:获取锁是通过lock()函数
 				(1).lock():是在ReentrantLock.java的FairSync类中实现
-		4.1.4.非公平锁:则当线程要获取锁时,它会无视CLH等待队列而直接获取锁.
-	4.2.Condition
-		(1).在使用 notify 和 notifyAll 方法进行通知时,被通知的线程是由JVM随机选择的.但是 ReentrantLock 集合
-			Condition 类就实现选择性通知.线程可以注册在指定的 Condition 中,从而可以有选择性的进行线程通知
-		(2).synchronized 就相当于整个 Lock 对象中只有一个单一的 Condition 对象,所有的线程都注册在它的一个
-			对象上,线程开始 notifyAll 时,需要通知所有的 waitin线程,没有选择权;
-	4.3.
+		3.1.4.非公平锁:则当线程要获取锁时,它会无视CLH等待队列而直接获取锁.
+4.共享锁:读写锁:ReentrantReadWriteLock, 闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
+	4.1.ReentrantReadWriteLock 读写锁:
+		// TODO 
+		4.1.1.ReadWriteLock,读写锁,维护了一对锁:读取锁和写入锁.
+			读取锁-只用于读取数据操作,是"共享锁",能被多个线程同时获取;
+			写入锁-用于写入操作,是"独占锁",只能被一个线程获取.
+			==> 不能同时存在读取锁和写入锁
+			ReadWriteLock 是一个接口,ReentrantReadWriteLock 是它的实现类.ReentrantReadWriteLock 包括内部类 ReadLock 和 WriteLock
+		4.1.2.
+			// 返回用于读取操作的锁。
+			ReentrantReadWriteLock.ReadLock readLock()
+			// 返回用于写入操作的锁。
+			ReentrantReadWriteLock.WriteLock writeLock()
+	4.2.CountDownLatch:
+		(1).是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待
+		// http://www.cnblogs.com/skywang12345/p/3533887.html
+		CountDownLatch 包含了sync对象,sync是 Sync 类型.CountDownLatch 的 Sync 是实例类,它继承于 AQS
+		通过"共享锁"实现
+		CountDownLatch 中3个核心函数: CountDownLatch(int count), await(), countDown()
+	4.3.CyclicBarrier:
+		(1).是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
+			因为该 barrier 在释放等待线程后可以重用,所以称它为循环 的 barrier;
+			CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象trip",它是通过独占锁实现的
+	4.4.CountDownLatch 与 CyclicBarrier 两者的区别：
+		(1).CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行;
+			CyclicBarrier 则是允许N个线程相互等待;
+		(2).CountDownLatch 的计数器无法被重置
+			CyclicBarrier 的计数器可以被重置后使用,因此它被称为是循环的barrier;
+	4.5.Semaphore:是一个计数信号量,它的本质是一个"共享锁";
+		(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
+			当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
+			线程可以通过release()来释放它所持有的信号量许可
+		(2).Semaphore 包含了sync对象,sync是 Sync 类型;而且,Sync 也是一个继承于 AQS 的抽象类.
+			Sync 也包括"公平信号量" FairSync 和"非公平信号量" NonfairSync
+		(3)."公平信号量"和"非公平信号量"的释放信号量的机制是一样的!不同的是它们获取信号量的机制.
+5.Condition
+	(1).在使用 notify 和 notifyAll 方法进行通知时,被通知的线程是由JVM随机选择的.但是 ReentrantLock 集合
+		Condition 类就实现选择性通知.线程可以注册在指定的 Condition 中,从而可以有选择性的进行线程通知
+	(2).synchronized 就相当于整个 Lock 对象中只有一个单一的 Condition 对象,所有的线程都注册在它的一个
+		对象上,线程开始 notifyAll 时,需要通知所有的 waitin线程,没有选择权;
+		Object 中的 wait(),notify(),notifyAll()方法是和"同步锁"(synchronized关键字)捆绑使用的.
+		而Condition是需要与"互斥锁"/"共享锁"捆绑使用的
+	(3).函数列表:
+		// 造成当前线程在接到信号或被中断之前一直处于等待状态。
+		void await()
+		// 造成当前线程在接到信号、被中断或到达指定等待时间之前一直处于等待状态。
+		boolean await(long time, TimeUnit unit)
+		// 造成当前线程在接到信号、被中断或到达指定等待时间之前一直处于等待状态。
+		long awaitNanos(long nanosTimeout)
+		// 造成当前线程在接到信号之前一直处于等待状态。
+		void awaitUninterruptibly()
+		// 造成当前线程在接到信号、被中断或到达指定最后期限之前一直处于等待状态。
+		boolean awaitUntil(Date deadline)
+		// 唤醒一个等待线程。
+		void signal()
+		// 唤醒所有等待线程。
+		void signalAll()
+6.LockSupport:是用来创建锁和其他同步类的基本线程阻塞原语.
+	park() 和 unpark() 的作用分别是阻塞线程和解除阻塞线程,
+	而且park()和unpark()不会遇到"Thread.suspend 和 Thread.resume所可能引发的死锁"问题.
+	因为park() 和 unpark()有许可的存在;调用 park() 的线程和另一个试图将其 unpark() 的线程之间的竞争将保持活性.
+	函数列表:
+	// 返回提供给最近一次尚未解除阻塞的 park 方法调用的 blocker 对象，如果该调用不受阻塞，则返回 null。
+	static Object getBlocker(Thread t)
+	// 为了线程调度，禁用当前线程，除非许可可用。
+	static void park()
+	// 为了线程调度，在许可可用之前禁用当前线程。
+	static void park(Object blocker)
+	// 为了线程调度禁用当前线程，最多等待指定的等待时间，除非许可可用。
+	static void parkNanos(long nanos)
+	// 为了线程调度，在许可可用前禁用当前线程，并最多等待指定的等待时间。
+	static void parkNanos(Object blocker, long nanos)
+	// 为了线程调度，在指定的时限前禁用当前线程，除非许可可用。
+	static void parkUntil(long deadline)
+	// 为了线程调度，在指定的时限前禁用当前线程，除非许可可用。
+	static void parkUntil(Object blocker, long deadline)
+	// 如果给定线程的许可尚不可用，则使其可用。
+	static void unpark(Thread thread)
+	==> LockSupport 是通过调用 Unsafe 函数中的接口实现阻塞和解除阻塞的
+	==> park和wait的区别:wait让线程阻塞前,必须通过synchronized获取同步锁
 5.Callable 
 	5.1.Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
 		Callable 和 Runnable 有几点不同： 
 		(1).Callable规定的方法是call()，而Runnable规定的方法是run().
 		(2).Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。 
 		(3).call()方法可抛出异常，而run()方法是不能抛出异常的。
-		(4).运行Callable任务可拿到一个Future对象， Future表示异步计算的结果。
+		(4).运行 Callable 任务可拿到一个 Future 对象,Future 表示异步计算的结果。
 			它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
-			通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果。
-三.多线程与并发涉及算法
-1.CAS:Compare and Swap-比较与交换
-http://www.cnblogs.com/Mainz/p/3546347.html
-http://www.cnblogs.com/549294286/p/3766717.html
-http://blog.csdn.net/heyutao007/article/details/19975665
-http://www.importnew.com/20472.html
+			通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果.
+三.JUC 中集合类:
+1.JUC 集合类:
+	(1).List 和 Set:
+		CopyOnWriteArrayList, CopyOnWriteArraySet 和 ConcurrentSkipListSet
+	(2).Map:
+		ConcurrentHashMap 和 ConcurrentSkipListMap
+	(3).Queue:
+		ArrayBlockingQueue, LinkedBlockingQueue, LinkedBlockingDeque,
+		ConcurrentLinkedQueue 和 ConcurrentLinkedDeque
+2.CopyOnWriteArrayList:
+	2.1.基本:相当于线程安全的 ArrayList,和 ArrayList 一样,是个可变数组;不同的是,具有以下几个特性:
+		(1).最适合于应用程序:List 大小通常保持很小,只读操作远多于可变操作,需要在遍历期间防止线程间的冲突;
+		(2).线程安全的
+		(3).因为通常要复制整个基础数组,所以可变操作(add()、set() 和 remove() 等等)的开销很大.
+		(4).迭代器支持hasNext(), next()等不可变操作，但不支持可变 remove()等操作;
+		(5).使用迭代器进行遍历的速度很快,并且不会与其他线程发生冲突.在构造迭代器时,迭代器依赖于不变的数组快照
+	2.2.签名:
+		public class CopyOnWriteArrayList<E>  implements List<E>, RandomAccess, Cloneable, Serializable{}
+		(1).包含了成员lock.每一个CopyOnWriteArrayList都和一个互斥锁lock绑定,通过lock,实现了对CopyOnWriteArrayList的互斥访问
+		(2).CopyOnWriteArrayList 本质上通过数组实现的
+	2.3.实现原理:
+		(1).动态数组:内部存在一个 volatile 数组来保存数据.在"添加/删除/修改"数据时,都会新建一个数组,
+			并将更新后的数据拷贝到新建的数组中,最后再将该数组赋值给 volatile数组.
+			由于它在“添加/修改/删除”数据时,都会新建数组,所以涉及到修改数据的操作,CopyOnWriteArrayList 效率很
+			低;但是单单只是进行遍历查找的话,效率比较高;
+		(2).线程安全:是通过volatile和互斥锁来实现的
+			A.CopyOnWriteArrayList 是通过"volatile数组"来保存数据的;
+			  一个线程读取volatile数组时,总能看到其它线程对该volatile变量最后的写入.
+			  通过volatile提供了"读取到的数据总是最新的"这个机制的保证.
+			B.通过互斥锁来保护数据.在"添加/修改/删除"数据时,会先"获取互斥锁",再修改完毕之后,
+			  先将数据更新到"volatile数组"中,然后再"释放互斥锁"
+3.CopyOnWriteArraySet:
+	3.1.线程安全的无序的集合,可以将它理解成线程安全的HashSet.CopyOnWriteArraySet 和 HashSet 虽然都继承于共同的
+		父类 AbstractSet;但是 HashSet 是通过 HashMap 来实现的,而 CopyOnWriteArraySet 是通过 CopyOnWriteArrayList
+		来实现的.
+		特性同 CopyOnWriteArrayList
+	3.2.实现:
+		(1).CopyOnWriteArraySet 继承于 AbstractSet,这就意味着它是一个集合;
+		(2).CopyOnWriteArraySet 包含 CopyOnWriteArrayList 对象,它是通过 CopyOnWriteArrayList 实现的,
+			而 CopyOnWriteArrayList 中允许有重复的元素,但是,CopyOnWriteArraySet 是一个集合不能有重复元素.
+			CopyOnWriteArrayList 额外提供了addIfAbsent()和addAllAbsent()这两个添加元素的API,
+			通过这些API来添加元素时,只有当元素不存在时才执行添加操作
+4.ConcurrentHashMap:
+	参考: /Java/Java源码解读/ConcurrentHashMap.java
+5.ConcurrentSkipListMap:线程安全的有序的哈希表 // http://www.cnblogs.com/skywang12345/p/3498556.html
+	(1).ConcurrentSkipListMap 和 TreeMap,它们虽然都是有序的哈希表;但是 ConcurrentSkipListMap 是线程安全的,
+		TreeMap 是线程不安全的;另外 ConcurrentSkipListMap 是通过跳表来实现的,而 TreeMap 是通过红黑树实现的.
+	==> 跳表:平衡树的一种替代的数据结构,和红黑树不相同的是,跳表对于树的平衡的实现是基于一种随机化的算法的,
+		这样也就是说跳表的插入和删除的工作是比较简单的.
+	(2).
 
+6.ConcurrentSkipListSet: // http://www.cnblogs.com/skywang12345/p/3498556.html
 
+7.ArrayBlockingQueue: // http://www.cnblogs.com/skywang12345/p/3498652.html
+
+8.LinkedBlockingQueue: // http://www.cnblogs.com/skywang12345/p/3503458.html
+
+9.LinkedBlockingDeque: // http://www.cnblogs.com/skywang12345/p/3503480.html
+
+10.ConcurrentLinkedQueue: // http://www.cnblogs.com/skywang12345/p/3498995.html
+
+四.多线程与并发核心结构与算法
+1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
+	
+2.CAS:Compare and Swap-比较与交换
+	/*
+	http://www.cnblogs.com/Mainz/p/3546347.html
+	http://www.cnblogs.com/549294286/p/3766717.html
+	http://www.importnew.com/20472.html
+	*/
+	2.1.CAS:cpu指令,在大多数处理器架构,包括 IA32,Space 中采用的都是 CAS 指令.CAS 语义:
+		我认为V的值应该为A,如果是,那么将V的值更新为B;否则不修改并告诉V的值实际为多少.
+	2.2.CAS 是乐观锁技术:
+		当多个线程尝试使用CAS同时更新同一个变量时,只有其中一个线程能更新变量的值,而其它线程都失败,
+		失败的线程并不会被挂起,而是被告知这次竞争中失败,并可以再次尝试.
+		CAS 有3个操作数:内存值V,旧的预期值A,要修改的新值B.
+		当且仅当预期值A和内存值V相同时,将内存值V修改为B,否则什么都不做.
+		==> CAS 操作是基于共享数据不会被修改的假设.
+	2.3.CAS 开销:有cache miss的情况,问题变的比较复杂
+	2.4.Java 中 CAS 的实现:
+		(1).JDK1.5 之前,需要编写明确的代码来执行CAS操作.在JDK1.5 之后,引入了底层的支持.
+		并且JVM把它们编译为底层硬件提供的最有效的方法,在运行CAS的平台上,运行时把它们编译为相应的机器指令
+		如果处理器/CPU不支持CAS指令，那么JVM将使用自旋锁
+
+	2.5.ABA 问题:
+		// http://www.cnblogs.com/549294286/p/3766717.html
+		在运用CAS做Lock-Free操作中有一个经典的ABA问题.
+		线程1准备用CAS将变量的值由A替换为B,在此之前,线程2将变量的值由A替换为C,又由C替换为A,
+		然后线程1执行CAS时发现变量的值仍然为A，所以CAS成功。但实际上这时的现场已经和最初不同了，
+		尽管CAS成功，但可能存在潜藏的问题
+	2.6.Unsafe 是CAS的核心类
 
 
 

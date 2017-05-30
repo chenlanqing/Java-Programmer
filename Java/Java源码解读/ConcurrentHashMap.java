@@ -1,5 +1,6 @@
 /**
  * http://www.importnew.com/16147.html
+ * https://www.ibm.com/developerworks/cn/java/java-lo-concurrenthashmap/
  */
 一.基于 JDK6 ConcurrentHashMap 的技术原理:
 1.ConcurrentHashMap 的锁分段技术:
@@ -30,6 +31,14 @@
 		ConcurrentHashMap 是一个并发散列映射表的实现，它允许完全并发的读取,并且支持给定数量的并发更新
 	(2).用分离锁实现多个线程间的更深层次的共享访问,用 HashEntery 对象的不变性来降低执行读操作的线程在遍历链表期间对加锁的需求
 		通过对同一个 Volatile 变量的写 / 读访问，协调不同线程间读 / 写操作的内存可见性
+
+****************************************************************************************************
+1.ConcurrentHashMap, HashMap, HashTable 之间的关系:
+	(1).ConcurrentHashMap 是线程安全的哈希表;HashMap 是非线程安全的哈希表,常用于单线程程序中
+	(2).HashTable 是线程安全的,它是通过 synchronized 来保证线程安全的.在多线程环境下,HashTable 效率较低;
+	(3).ConcurrentHashMap 是通过锁分段来保证线程安全的,ConcurrentHashMap 将哈希表分成许多片段(Segment),
+		每一个片段除了保存哈希表之外,本质上也是"可重入锁".多个线程对同一个片段访问时是互斥的,
+		但是对于不同片段的访问却是同步的.
 
 
 
