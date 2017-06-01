@@ -1,0 +1,2 @@
+MySQL 分区表原理及使用详解: http://www.codeceo.com/article/mysql-partition.html
+MySQL 查询优化: http://blog.jobbole.com/87989/

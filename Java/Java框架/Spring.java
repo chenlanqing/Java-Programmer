@@ -484,7 +484,7 @@
 		类B有事务方法:buy();
 		buyMany()方法调用了 buy()方法
 	*/
-	5.2.传播行为:REQUIRED(Spring事务的默认传播行为)
+	5.2.传播行为:REQUIRED(Spring 事务的默认传播行为)
 		buy()方法被 buyMany()方法调用,其会默认在 buyMany()方法中现有的事务中运行, 
 		因此 buyMany()方法的开始和终止边界内只有一个事务. 如果buyMany()方法出现异常或buy()方法出现异常,
 		则全部回滚,或全部成功后全部提交
@@ -520,6 +520,7 @@
 		(1).事务的回滚规则可以通过 @Transactional 注解的 rollbackFor 和 noRollbackFor 属性来定义. 
 		这两个属性被声明为 Class[] 类型的, 因此可以为这两个属性指定多个异常类.
 		rollbackFor:  遇到时必须进行回滚
+			rollback-for="Exception"
 		noRollbackFor: 一组异常类，遇到时必须不回滚	
 	6.5.事务超时和只读属性：
 		(1).由于事务可以在行和表上获得锁,  因此长事务会占用资源, 并对整体性能产生影响. 
@@ -533,6 +534,16 @@
 		不可重复读:在同一个事务中,多次读取同一数据返回的结果有所不同;
 		虚读(幻读):一个事务读取了几行记录后,另一个事务插入一些记录,幻读就发生了,在后来的查询中,
 					第一个事务就会发现有些原来没有的记录
+	6.7.事务的状态:
+		调用 PlatformTransactionManager 接口的getTransaction()的方法得到的是 TransactionStatus 接口的一个实现;
+		这个接口描述的是一些处理事务提供简单的控制事务执行和查询事务状态的方法
+		public interface TransactionStatus{
+		    boolean isNewTransaction(); // 是否是新的事物
+		    boolean hasSavepoint(); // 是否有恢复点
+		    void setRollbackOnly();  // 设置为只回滚
+		    boolean isRollbackOnly(); // 是否为只回滚
+		    boolean isCompleted; // 是否已完成
+		} 
 7.xml方式配置Spring事务:使用AOP来实现的,即使用动态代理
 	7.1.步骤:
 		(1).配置事务管理器,包括配置hibernate、mybatis等:

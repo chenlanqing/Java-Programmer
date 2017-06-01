@@ -178,9 +178,6 @@
 	
 6.掌握AJAX的工作原理
 
-7.Tomcat 服务器:架构,原理,调优等
-
-8.Nginx
 二.Spring/SpringMVC
 1.为什么选择使用 Spring 框架
 	(1).Spring 采用的是层次结构,有超过20个模块可以选择.可以自由取舍.
@@ -248,14 +245,58 @@
 		(4).constructor:这个同byType类似.不过是应用于构造函数的参数.如果在BeanFactory中不是恰好有一个bean
 		与构造函数参数相同类型，则抛出一个严重的错误。
 		(5).autodetect:如果有默认的构造方法,通过 construct的方式自动装配,否则使用 byType的方式自动装配
-9.Spring 事务处理
+9.Spring 事务:[参考:/Java知识点/Java/Java框架/Spring.java]
+	9.1.核心接口:org.springframework.transaction.PlatformTransactionManager
+		Spring 并不直接管理事务,而是提供了多种事务管理器,将事务管理职责给ORM持久层框架的事务来实现.
+	9.2.基本事务属性的定义:TransactionDefinition 定义了一些基本的事务属性.
+		事务属性包含:传播行为,隔离级别,回滚规则,事务超时,是否只读
+		public interface TransactionDefinition {
+		    int getPropagationBehavior(); // 返回事务的传播行为
+		    int getIsolationLevel(); // 返回事务的隔离级别，事务管理器根据它来控制另外一个事务可以看到本事务内的哪些数据
+		    int getTimeout();  // 返回事务必须在多少秒内完成
+		    boolean isReadOnly(); // 事务是否只读，事务管理器能够根据这个返回值进行优化，确保事务是只读的
+		} 
+		9.2.1.传播行为:当事务方法被另一个事务方法调用时,必须指定事务应该如何传播
 
 10.SpringMVC 请求过程
 
-11.MVC 理解.
-
+11.MVC 理解? MVP, MVVM
+	11.1.MVC:主要还是采用封装(分层)的思想,来降低耦合度,从而使我们的系统更加的灵活,扩展性更好
+		(1).视图(View):用户界面,主要是将数据呈现在用户面前
+		(2).控制器(Controller):负责从视图读取数据,控制用户输入,并向模型发送数据
+		(3).模型(Model):数据保存,负责在数据库中存取数据.主要囊括了整个项目中的数据、业务逻辑和业务规则.
+			M 层一般要对输入的数据进行过滤、验证和规范化处理
+	11.2.MVC 优点:
+		(1).开发人员可以只关注整个结构中的其中某一层;
+	    (2).可以很容易的用新的实现来替换原有层次的实现;
+	    (3).可以降低层与层之间的依赖;
+	    (4).有利于标准化;
+	    (5).利于各层逻辑的复用;
+	11.3.MVC 缺点:
+		(1).增加了系统结构和实现的复杂性.对于简单的界面,严格遵循MVC,使模型、视图与控制器分离,会增加结构的复杂性,
+			并可能产生过多的更新操作,降低运行效率;
+		(2).视图与控制器间的过于紧密的连接.视图与控制器是相互分离.但确是联系紧密的部件.视图没有控制器的存在;
+		(3).视图对模型数据的低效率访问.依据模型操作接口的不同,视图可能需要多次调用才能获得足够的显示数据
+	11.4.MVP:由 MVC 衍变而来的,是把View层从低层模型分离出来,常用于构建UI.
+		M:代表的是将会显示在view(UI)中的数据
+		V:是显示数据(model)并且将用户指令(events)传送到presenter以便作用于那些数据的一个接口
+		P:扮演的是"中间人"的作用(就如 MVC中的controller),且presenter同时引用view和model
+	11.5.MVVM:MVVM 模式是根据MVP模式来的,可以简单的说,MVVM 模式就是WPF版的MVP模式
+		采用双向绑定.
+		MVVM 的出现主要是为了解决在开发过程中Controller越来越庞大的问题,变得难以维护.
+		在MVC的基础上,把C拆出一个ViewModel专门负责数据处理的事情,就是 MVVM.
+		View - 用来呈现用户界面
+		ViewManger - 用来处理View的常规事件，负责管理View
+		Controller - 负责ViewManger和ViewModel之间的绑定，负责控制器本身的生命周期。
+		ViewModel - 存放各种业务逻辑和网络请求
+		Model - 用来呈现数据
 三.Mybatis
 1.Hibernate 与 Mybatis 区别
 
-四.Web 安全
+四.WEB 服务器:
+1.Tomcat 服务器:架构,原理,调优等
+
+2.Nginx
+
+五.Web 安全
 1.WEB 攻击 // http://www.cnblogs.com/Mainz/archive/2012/11/01/2749874.html
