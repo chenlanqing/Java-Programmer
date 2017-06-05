@@ -3,7 +3,7 @@ http://www.hollischuang.com/archives/205
 1.单例类只能有一个实例、单例类必须自己创建自己的唯一实例、单例类必须给所有其他对象提供这一实例。
 	如：配置文件、线程池、工具类、缓存、日志对象
 	在应用中如果有两个或者两个以上的实例会引起错误，又或者我换句话说，就是这些类,
-	在整个应用中，同一时刻，有且只能有一种状态
+	在整个应用中,同一时刻,有且只能有一种状态
 2.创建单例的方法:懒汉，恶汉，双重校验锁，枚举和静态内部类
 	2.1.懒汉式，线程不安全
 		(1).是否 Lazy 初始化：是
@@ -152,10 +152,10 @@ http://www.hollischuang.com/archives/205
 			    }  
 			}  
 			注意:在 Java 5 以前的版本使用了 volatile 的双检锁还是有问题的
-				Java 5 以前的 JMM （Java 内存模型）是存在缺陷的,即时将变量声明成 volatile 也不能完全避免重排序,
+				Java 5 以前的 JMM (Java 内存模型)是存在缺陷的,即时将变量声明成 volatile 也不能完全避免重排序,
 				主要是 volatile 变量前后的代码仍然存在重排序问题
 	2.8.总结:有两个问题需要注意
-		(1).如果单例由不同的类装载器装入，那便有可能存在多个单例类的实例。假定不是远端存取，例如一些servlet容器
+		(1).如果单例由不同的类装载器装入,那便有可能存在多个单例类的实例.假定不是远端存取,例如一些servlet容器
 			对每个servlet使用完全不同的类装载器，这样的话如果有两个servlet访问一个单例类，它们就都会有各自的实例
 		==> 解决方案:
 			private static Class getClass(String classname)throws ClassNotFoundException {
@@ -176,7 +176,7 @@ http://www.hollischuang.com/archives/205
 			            return INSTANCE;     
 			   }    
 			} 
-3.写单例时需要注意序列化对单例的破坏: http://www.hollischuang.com/archives/1144
+3.写单例时需要注意序列化对单例的破坏: // http://www.hollischuang.com/archives/1144
 	防止反射与反序列化
 	3.1.在反序列化的过程中到底发生了什么,使得反序列化后的单例不是唯一的?
 		分析一下 ObjectInputputStream 的readObject 方法执行情况到底是怎样的
@@ -223,7 +223,12 @@ http://www.hollischuang.com/archives/205
 	     */
 	    public class Singleton implements Serializable{
 	        private volatile static Singleton singleton;
-	        private Singleton (){}
+	        private Singleton (){
+	        	// 防止反射创建新的实例
+	        	if (singleton != null){
+		            throw new IllegalArgumentException("cannot exist two instance");
+		        }
+	        }
 	        public static Singleton getSingleton() {
 	            if (singleton == null) {
 	                synchronized (Singleton.class) {
