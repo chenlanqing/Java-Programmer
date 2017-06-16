@@ -300,3 +300,26 @@
 
 五.Web 安全
 1.WEB 攻击 // http://www.cnblogs.com/Mainz/archive/2012/11/01/2749874.html
+
+六.Maven:
+// http://www.kuqin.com/shuoit/20141102/342970.html
+1.查看Maven项目中依赖树结构
+	(1).查看依赖jar包Tree结构并输出到文件:
+		mvn dependency:tree -Doutput=output.txt  
+		mvn dependency:tree -Dverbose -Dincludes=asm:asm 就会出来asm依赖包的分析信息
+2.Maven 解决依赖冲突:
+	2.1.造成冲突的原因:
+		如果项目中存在对同一jar不同版本依赖的时候,maven 2根据最近原则,默认引用最靠近项目版本的jar;
+		maven 2.0.9会根据最先声明原则来引用相应版本的jar;无论那种方式,都会出现jar包冲突.
+		==> gradle依赖:会依赖最新版本的jar
+	2.2.解决办法:
+		mvn dependency:tree -Dverbose -Doutput=output.txt  根据导出的文件肥西
+
+
+
+
+
+
+
+
+

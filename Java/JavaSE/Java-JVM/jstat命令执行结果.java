@@ -61,12 +61,12 @@ C:\Users\BlueFish>jstat -gccapacity 2120
   	OC      当前老年代大小
   	MCMN    最小元数据容量
   	MCMX    最大元数据容量
-  	MC     当前元数据空间大小
-  	CCSMN：最小压缩类空间大小
-  	CCSMX：最大压缩类空间大小
-  	CCSC：当前压缩类空间大小
-  	YGC：年轻代gc次数
-  	FGC：老年代GC次数
+  	MC     	当前元数据空间大小
+  	CCSMN	最小压缩类空间大小
+  	CCSMX	最大压缩类空间大小
+  	CCSC	当前压缩类空间大小
+  	YGCT	年轻代gc次数
+  	FGCT	老年代GC次数
 5.
 
 
