@@ -258,8 +258,20 @@
 		} 
 		9.2.1.传播行为:当事务方法被另一个事务方法调用时,必须指定事务应该如何传播
 
-10.SpringMVC 请求过程
-
+10.SpringMVC 请求过程:
+	(1).用户向服务器发起请求,请求被前端控制器 DispatcherServlet 捕获;
+	(2).DispatcherServlet 对请求URL进行解析,得到请求资源标识符.然后根据该URI,调用 HandlerMapping 获得
+		该 Handler 配置的所有相关的对象(包括 Handler 对象以及 Handler 对象对应的拦截器),
+		最后以 HandlerExecutionChain 对象的形式返回
+	(3).根据获得的 Handler,选择一个合适的 HandlerAdapter;
+	(4).提取Request中的模型数据,填充Handler入参,开始执行Handler(Controller);根据你的配置,Spring 将帮你做一些额外的工作
+		HttpMessageConveter:将请求消息(如Json、xml等数据)转换成一个对象,将对象转换为指定的响应信息
+      	数据转换:对请求消息进行数据转换.如String转换成 Integer、Double 等
+      	数据根式化:对请求消息进行数据格式化.如将字符串转换成格式化数字或格式化日期等
+      	数据验证:验证数据的有效性(长度、格式等)验证结果存储到BindingResult或Error中
+	(5).Handler 执行完成后,向 DispatcherServlet 返回一个ModelAndView对象
+	(6).根据返回的ModelAndView,选择一个适合的ViewResolver 返回给DispatcherServlet
+	(7).ViewResolver 结合Model和View,来渲染视图,将渲染结果返回给客户端
 11.MVC 理解? MVP, MVVM
 	11.1.MVC:主要还是采用封装(分层)的思想,来降低耦合度,从而使我们的系统更加的灵活,扩展性更好
 		(1).视图(View):用户界面,主要是将数据呈现在用户面前
@@ -290,9 +302,67 @@
 		Controller - 负责ViewManger和ViewModel之间的绑定，负责控制器本身的生命周期。
 		ViewModel - 存放各种业务逻辑和网络请求
 		Model - 用来呈现数据
-三.Mybatis
+12.Spring MCV 优缺点:相对于 Struts2 来说
+	(1).核心控制器:核心控制器的主要用途是处理所有的请求,然后对那些特殊的请求(控制器)统一的进行处理(字符编码、文件上传、
+		参数接受、异常处理等等),SpringMVC 核心控制器是 Servlet,而 Struts2 是 Filter
+	(2).Spring MVC 相对来说比较简单,容易上手;
+		Struts2 有一些新的技术点:拦截器,值栈,OGNL 表达式,学习成本高;
+	(3).一般在项目中都会使用到 Spring,而 SpringMVC 又是 Spring 中的一个模块,spring对于SpringMVC的控制器管理更加简单方便,
+		而且提供了全 注解方式进行管理,各种功能的注解都比较全面,使用简单;
+		struts2需要采用XML很多的配置参数来管理
+	(4).性能上 SpringMVC 稍微比Struts2快.SpringMVC 是基于方法的设计,而 Sturts2 是基于类.
+		每次发一次请求都会实例一个action,每个action都会被注入属性,而SpringMVC基于方法,粒度更细.
+		SpringMVC 是方法级别的拦截,拦截到方法后根据参数上的注解,把request数据注入进去,
+		在SpringMVC中，一个方法对应一个request上下文
+	(5).Struts2 有以自己的interceptor机制,SpringMVC 用的是独立的AOP方式.这样导致Struts2的配置文件量还是比SpringMVC大
+	(6).SpringMVC 的验证也是一个亮点,支持JSR303,处理ajax的请求更是方便,只需一个注解 @ResponseBody,然后直接返回响应文本即可
+13.SpringMVC 前端控制器:DispatcherServlet
+	13.1.前端控制器设计模式的实现,提供 Spring Web MVC 的集中访问点,而且负责职责的分派
+		(1).文件上传解析,如果请求类型是multipart将通过 MultipartResolver 进行文件上传解析;
+		(2).通过HandlerMapping,将请求映射到处理器(返回一个HandlerExecutionChain,它包括一个处理器、多个
+			HandlerInterceptor 拦截器);
+		(3).通过 HandlerAdapter 支持多种类型的处理器(HandlerExecutionChain 中的处理器)
+		(4).通过 ViewResolver 解析逻辑视图名到具体视图实现
+		(5).本地化解析
+		(6).渲染具体的视图等
+		(7).如果执行过程中遇到异常将交给 HandlerExceptionResolver 来解析
+	13.2.DispatcherServlet 默认配置:
+		在 DispatcherServlet.properties(和DispatcherServlet类在一个包下),而且是当Spring配置文件中没有
+		指定配置时使用的默认策略.DispatcherServlet 默认使用 WebApplicationContext 作为上下文
+三.ORM 框架:
 1.Hibernate 与 Mybatis 区别
-
+	1.1.Hibernate 的优点:
+		(1).hibernate是全自动,hibernate完全可以通过对象关系模型实现对数据库的操作,拥有完整的JavaBean对象与数据库
+			的映射结构来自动生成sql.
+		(2).功能强大,数据库无关性好,O/R映射能力强,需要写的代码很少,开发速度很快.
+		(3).有更好的二级缓存机制,可以使用第三方缓存.
+		(4).数据库移植性良好.
+		(5).hibernate拥有完整的日志系统,hibernate日志系统非常健全,涉及广泛,包括sql记录).关系异常).优化警告).
+			缓存提示).脏数据警告等
+	1.2.Hibernate的缺点:
+		(1).学习门槛高,精通门槛更高,程序员如何设计O/R映射,在性能和对象模型之间如何取得平衡,以及怎样用好Hibernate
+			方面需要的经验和能力都很强才行
+		(2).hibernate的sql很多都是自动生成的,无法直接维护sql；虽然有hql查询,但功能还是不及sql强大,见到报表等变态需
+			求时,hql查询要虚,也就是说hql查询是有局限的；hibernate虽然也支持原生sql查询,但开发模式上却与orm不同,
+			需要转换思维,因此使用上有些不方便.总之写sql的灵活度上hibernate不及mybatis.
+	1.3.Mybatis的优点:
+		(1).易于上手和掌握,提供了数据库查询的自动对象绑定功能,而且延续了很好的SQL使用经验,对于没有那么高的对象模型
+			要求的项目来说,相当完美.
+		(2).sql写在xml里,便于统一管理和优化, 解除sql与程序代码的耦合.
+		(3).提供映射标签,支持对象与数据库的orm字段关系映射
+		(4). 提供对象关系映射标签,支持对象关系组建维护
+		(5).提供xml标签,支持编写动态sql.
+		(6).速度相对于Hibernate的速度较快
+	1.4.Mybatis的缺点:
+		(1).关联表多时,字段多的时候,sql工作量很大.
+		(2).sql依赖于数据库,导致数据库移植性差.
+		(3).由于xml里标签id必须唯一,导致DAO中方法不支持方法重载.
+		(4).对象关系映射标签和字段映射标签仅仅是对映射关系的描述,具体实现仍然依赖于sql.
+		(5).DAO 层过于简单,对象组装的工作量较大.
+		(6).不支持级联更新).级联删除.
+		(7).Mybatis 的日志除了基本记录功能外,其它功能薄弱很多.
+		(8).编写动态sql时,不方便调试,尤其逻辑复杂时.
+		(9).提供的写动态sql的xml标签功能简单,编写动态sql仍然受限,且可读性低
 四.WEB 服务器:
 1.Tomcat 服务器:架构,原理,调优等
 
