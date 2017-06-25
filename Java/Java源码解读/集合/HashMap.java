@@ -5,7 +5,7 @@
  * Java HashMap工作原理及实现:(JDK8)
  * 	http://yikun.github.io/2015/04/01/Java-HashMap%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E5%AE%9E%E7%8E%B0/
  */
-
+HashMap 是基于一个数组和多个链表来实现的
 
 HashMap:继承 AbstractMap, 实现了 Map, Cloneable, Serializable
 1.HashMap 的特点:
