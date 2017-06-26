@@ -45,7 +45,20 @@
 	12.2.HashMap 如何扩容:
 		http://blog.csdn.net/aichuanwendang/article/details/53317351
 13.TreeMap, LinkedHashMap 的底层实现区别? 
+	参考:Java/Java源码解读/集合/LinkedHashMap.java 和 TreeMap.java
 14.TreeMap 和 LinkedHashMap 是如何保证它的顺序的
+	14.1.TreeMap 里通过红黑树来实现的,根据其键的自然顺序进行排序,或者根据创建映射时提供的 Comparator 进行排序.
+		TreeMap 中的key-value对总是处于有序状态
+	14.2.LinkedHashMap 是 HashMap 的子类,内部维护了一个双向链表来保证有序.可以按照插入顺序遍历
+		static class Entry<K,V> extends HashMap.Node<K,V> {
+	        Entry<K,V> before, after;
+	        Entry(int hash, K key, V value, Node<K,V> next) {
+	            super(hash, key, value, next);
+	        }
+	    }
+	    然后定义了一个before与after用来存储当前key的上一个值引用和下一个值的引用.
+	    LinkedHashMap 还可以根据近期访问某个键值对的顺序(从近期访问最少到近期访问最多的顺序)来遍历元素,
+	    这可让需要利用LRU方法进行缓存结果的用户提供一个新的解决方案
 15.Collection 包结构的组成,Map、Set 等内部接口的特点与用法
 16.Collection 与 Map 的继承关系?List,Set,Map 的区别?
 17.PriorityQueue,WeakHashMap,EnumMap 的用途及区别

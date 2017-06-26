@@ -25,3 +25,24 @@
 9.贪心算法
 10.分治算法
 11.Hoffman 编码
+12.缓存调度算法:FIFO,LRU,LFU
+	12.1.FIFO:First in First out,先进先出
+
+	12.2.LRU:Least Recently Used,即最近最久未使用的意思.
+		// http://blog.csdn.net/beiyeqingteng/article/details/7010411
+		(1).算法根据数据的历史访问记录来进行淘汰数据,其核心思想是"如果数据最近被访问过,那么将来被访问的几率也更高"
+		(2).实现1:使用 LinkedHashMap,
+			一是它本身已经实现了按照访问顺序的存储.
+			二是 LinkedHashMap 本身有一个方法用于判断是否需要移除最不常读取的数,原始方法默认不需要移除
+		(3).实现2:链表+HashMap
+	12.3.LFU:Least Frequently Used,最近最少使用算法
+
+
+
+
+
+
+
+
+
+
