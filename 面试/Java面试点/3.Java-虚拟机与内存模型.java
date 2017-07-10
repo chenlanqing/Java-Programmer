@@ -144,7 +144,24 @@
 		(3).新生代做的是复制清理、from survivor、to survivor是干啥用的、老年代做的是标记清理、标记清理后碎片要不要整理、
 			复制清理和标记清理有有什么优劣势
 		(4).
-
+34.内存泄露与内存溢出实例:
+	(1).内存泄露:
+		Vector v = new Vector(10);
+        for (int i = 1; i < 10000000; i++) {
+            Object o = new Object();
+            v.add(o);
+            o = null;
+        }
+    (2).内存溢出:
+    	内存中加载的数据量过于庞大，如一次从数据库取出过多数据；
+    	集合类中有对对象的引用，使用完后未清空，使得JVM不能回收；
+    	代码中存在死循环或循环产生过多重复的对象实体；
+    	使用的第三方软件中的BUG；
+    	启动参数内存值设定的过小；
+    	ArrayList list=new ArrayList();
+        while(true){
+            list.add(new Heap());
+        }
 
 
 
