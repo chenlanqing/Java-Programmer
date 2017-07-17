@@ -110,9 +110,47 @@ MySQL
 	4.自动增长:auto_increment,为每条记录提供一个唯一标识
 			列名 primary key auto_increment
 	
-	
-	
-	
+****************************************************************************************************
+一.MySQL 存储引擎	
+1.MySQL 的数据库引擎:MyISAM 和 InnoDB 引擎的区别:
+	1.1.主要区别:
+		(1).MyISAM 是非事务安全型的, InnoDB 是事务安全型的;
+		(2).MyISAM 锁的粒度是表级锁, InnoDB 是支持行级锁的;
+		(3).MyISAM 支持全文本索引,而InnoDB不支持全文索引
+		(4).MyISAM 相对简单,所以在效率上要优于 InnoDB,小型应用可以考虑使用 MyISAM;
+			MyISAM 更小的表空间
+		(5).MyISAM 表是保存成文件的形式,在跨平台的数据转移中使用MyISAM存储会省去不少的麻烦;
+		(6).InnoDB 表比 MyISAM 表更安全,可以在保证数据不丢失的情况下,切换非事务表到事务表；
+	1.2.适用场景:
+		(1).MyISAM 管理非事务表,它提供高速存储和检索,以及全文搜索能力,如果应用中需要执行大量的select查询,那么MyISAM是更好的选择
+		(2).InnoDB 用于事务处理应用程序,具有众多特性,包括ACID事务支持.如果应用中需要执行大量的insert或update操作,
+			则应该使用 InnoDB,这样可以提高多用户并发操作的性能
+	==> 阿里巴巴大部分 mysql 数据库其实使用的 percona 的原型加以修改
+2.查看数据库引擎:
+	(1).查看引擎:
+		mysql> show engines;
+		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+		| Engine             | Support | Comment                                                        | Transactions | XA   | Savepoints |
+		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+		| FEDERATED          | NO      | Federated MySQL storage engine                                 | NULL         | NULL | NULL       |
+		| MRG_MYISAM         | YES     | Collection of identical MyISAM tables                          | NO           | NO   | NO         |
+		| MyISAM             | YES     | MyISAM storage engine                                          | NO           | NO   | NO         |
+		| BLACKHOLE          | YES     | /dev/null storage engine (anything you write to it disappears) | NO           | NO   | NO         |
+		| CSV                | YES     | CSV storage engine                                             | NO           | NO   | NO         |
+		| MEMORY             | YES     | Hash based, stored in memory, useful for temporary tables      | NO           | NO   | NO         |
+		| ARCHIVE            | YES     | Archive storage engine                                         | NO           | NO   | NO         |
+		| InnoDB             | DEFAULT | Supports transactions, row-level locking, and foreign keys     | YES          | YES  | YES        |
+		| PERFORMANCE_SCHEMA | YES     | Performance Schema                                             | NO           | NO   | NO         |
+		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
+
+	(2).查看存储引擎:
+		mysql> show variables like '%storage_engine%';
+		+------------------------+--------+
+		| Variable_name          | Value  |
+		+------------------------+--------+
+		| default_storage_engine | InnoDB |
+		| storage_engine         | InnoDB |
+		+------------------------+--------+
 	
 	
 	
