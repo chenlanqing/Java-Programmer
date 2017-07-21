@@ -125,7 +125,11 @@
 	3.3.Cloneable 克隆
 
 	3.4.EventListener 事件监听
-
+4.for(;;)和while(true)的区别
+	(1).大多数时候开启优化两者之间性能没有什么区别。
+	(2).while(true)比 for(;;)编译后的指令多。
+	(3).while(true)每次编译器都要判断一下 true
+	(4).for(;;)比 while(true)敲的字符数更少
 
 
 
