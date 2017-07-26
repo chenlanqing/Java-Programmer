@@ -70,7 +70,8 @@
 21.Collections.sort()排序内部原理,如何优化?
 22.两个线程并发访问map中同一条链,一个线程在尾部删除,一个线程在前面遍历查找,问为什么前面的线程还能正确的查找到
 后面被另一个线程删除的节点
-23.WeakHashMap 会发生内存泄露
+23.WeakHashMap 会发生内存泄露:
+	// http://blog.csdn.net/u013256816/article/details/50916504
 24.用 HashMap 怎么去实现 ConcurrentHashMap:Collections.synchronizedMap(map)
 25.那些线程安全的队列:ConcurrentLinkedQueue, ConcurrentLinkedDeque 以及 BlockingQueue 系列
 
