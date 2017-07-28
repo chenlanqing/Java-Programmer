@@ -110,8 +110,7 @@ MySQL
 	4.自动增长:auto_increment,为每条记录提供一个唯一标识
 			列名 primary key auto_increment
 	
-****************************************************************************************************
-一.MySQL 存储引擎	
+五.MySQL 存储引擎	
 1.MySQL 的数据库引擎:MyISAM 和 InnoDB 引擎的区别:
 	1.1.主要区别:
 		(1).MyISAM 是非事务安全型的, InnoDB 是事务安全型的;
@@ -151,6 +150,74 @@ MySQL
 		| default_storage_engine | InnoDB |
 		| storage_engine         | InnoDB |
 		+------------------------+--------+
-	
+
+六.SQL 执行顺序:
+--http://www.cnblogs.com/Qian123/p/5666569.html
+-- http://blog.csdn.net/bitcarmanlee/article/details/51004767
+1.一般SQL的写的顺序:
+	SELECT 
+	DISTINCT <select_list>
+	FROM <left_table> <join_type> JOIN <right_table>
+	ON <join_condition>
+	WHERE <where_condition>
+	GROUP BY <group_by_list>
+	HAVING <having_condition>
+	ORDER BY <order_by_condition>
+	LIMIT <limit_number>
+2.数据执行的顺序:前面括号的数据表示执行顺序
+	(7)     SELECT 
+	(8)     DISTINCT <select_list>
+	(1)     FROM <left_table>
+	(3)     <join_type> JOIN <right_table>
+	(2)     ON <join_condition>
+	(4)     WHERE <where_condition>
+	(5)     GROUP BY <group_by_list>
+	(6)     HAVING <having_condition>
+	(9)     ORDER BY <order_by_condition>
+	(10)    LIMIT <limit_number>
+	FROM:对FROM子句中的前两个表执行笛卡尔积(Cartesian product)(交叉联接), 生成虚拟表VT1
+	ON:对VT1应用ON筛选器.只有那些使<join_condition>为真的行才被插入VT2.
+	OUTER(JOIN):如果指定了OUTER JOIN(相对于CROSS JOIN 或(INNER JOIN),保留表(preserved table:左外部联接把左表标记为保留表, 右外部联接把右表标记为保留表, 完全外部联接把两个表都标记为保留表)中未找到匹配的行将作为外部行添加到 VT2,生成VT3.如果FROM子句包含两个以上的表, 则对上一个联接生成的结果表和下一个表重复执行步骤1到步骤3, 直到处理完所有的表为止.
+	WHERE:对VT3应用WHERE筛选器.只有使<where_condition>为true的行才被插入VT4.
+	GROUP BY:按GROUP BY子句中的列列表对VT4中的行分组, 生成VT5.
+	CUBE|ROLLUP:把超组(Suppergroups)插入VT5,生成VT6.
+	HAVING:对VT6应用HAVING筛选器.只有使<having_condition>为true的组才会被插入VT7.
+	SELECT:处理SELECT列表, 产生VT8.
+	DISTINCT:将重复的行从VT8中移除, 产生VT9.
+	ORDER BY:将VT9中的行按ORDER BY 子句中的列列表排序, 生成游标(VC10).
+	TOP:从VC10的开始处选择指定数量或比例的行, 生成表VT11,并返回调用者;
+	==> 除非你确定要有序行,否则不要指定ORDER BY 子句
+七.7中join理论:"参考图片: SQL-Joins-1.jpg,SQL-Joins-2.jpg"
+假设两张表:emp, dept. emp表中的deptId为dept表中的主键.
+MySQL 不支持 full join
+1.内连接:
+	(1).select * from emp inner join dept on emp.deptId=dept.id;
+		查询两张表中共有的数据.
+		等同于:
+		select * from emp, dept where emp.deptId=dept.id
+2.左外连接:
+	(1).select * from emp a left join dept b on a.deptId=b.id
+		查询emp独有的数据和查询emp与dept共有的数据
+3.左连接:
+	(1).select * from emp a left join dept b on a.deptId=b.id where b.id is null;
+		查询emp独有的数据
+4.右外连接:
+	(1).select * from emp a right join dept b on a.deptId=b.id;
+		查询dept独有的数据和查询emp与dept共有的数据
+5.右外连接:
+	(1).select * from emp a right join dept b on a.deptId=b.id where a.id is null;
+		查询dept独有的数据
+6.全连接:
+	(1).select * from emp a left join dept b on a.deptId=b.id 
+		union 
+		select * from emp a right join dept b on a.deptId=b.id;
+		查询所有emp和dept独有和共有的数据
+7.全连接(去除共有数据):
+	(1).select * from emp a left join dept b on a.deptId=b.id where b.id is null 
+		union 
+		select * from emp a right join dept b on a.deptId=b.id where a.id is null;
+		去除两张表的共有数据,查询emp和dept分别独有的数据
+
+
 	
 	

@@ -1,5 +1,6 @@
 #使用的数据库是 sakila
 #文件地址:http://dev.mysql.com/doc/sakila/en/sakila-installation.html
+#http://www.cnblogs.com/Qian123/p/5666569.html
 1.数据库优化的目的:
 	(1).避免页面访问出错:
 		数据库连接超时
