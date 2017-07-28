@@ -215,10 +215,14 @@
 			(4).尽量少使用 text 类型,非用不可时最好考虑分表
 		12.1.2.使用 int 类存储日期和时间,利用 from_unixtime(),unix_timestamp()两个函数来进行转换
 			from_unixtime() 将 int 类型的时间戳转换为日期格式
+				select from_unixtime(timestr) from test
 			unix_timestamp() 将正常的日期时间转换为 int 类型
+				insert into test(timestr) values (unix_timestamp('2014-06-01 13:12:00'))
 		12.1.3.使用 bigint 来存储 ip地址,利用 inet_aton(),inet_ntoa()两个函数来进行转换;
-			inet_aton():将正常的ip地址转换为 bigint 类型
+			inet_aton():将正常的ip地址转换为 bigint 类型:
+				INSERT INTO ip_add(name, ip) VALUE('ss', inet_aton('192.168.139.129'));
 			inet_ntoa():将 bigint 类型的数据转换为正常的ip地址
+				SELECT name, inet_ntoa(ip) ip FROM ip_add
 	12.2.表的范式化和反范式化:
 		(1).范式化:是指数据库的设计范式,目前一般指第三设计范式,也就是要求数据表中不存在非关键字段对任意候选
 			关键字段的传递函数依赖则符合第三范式
