@@ -1,3 +1,6 @@
+-- 数据库原理 http://blog.csdn.net/albertfly/article/details/51318995
+-- http://coding-geek.com/how-databases-work/
+-- http://blog.codinglabs.org/articles/theory-of-mysql-index.html
 MySQL
 一.概念
 	1.Mysql是基于C/S架构的;
@@ -187,7 +190,7 @@ MySQL
 	ORDER BY:将VT9中的行按ORDER BY 子句中的列列表排序, 生成游标(VC10).
 	TOP:从VC10的开始处选择指定数量或比例的行, 生成表VT11,并返回调用者;
 	==> 除非你确定要有序行,否则不要指定ORDER BY 子句
-七.7中join理论:"参考图片: SQL-Joins-1.jpg,SQL-Joins-2.jpg"
+七.连接:"参考图片: SQL-Joins-1.jpg,SQL-Joins-2.jpg"
 假设两张表:emp, dept. emp表中的deptId为dept表中的主键.
 MySQL 不支持 full join
 1.内连接:
@@ -217,6 +220,28 @@ MySQL 不支持 full join
 		union 
 		select * from emp a right join dept b on a.deptId=b.id where a.id is null;
 		去除两张表的共有数据,查询emp和dept分别独有的数据
+8.union 和 union all:联合查询
+	8.1.union:
+		用于合并两个或多个 SELECT 语句的结果集,并消去表中任何重复行. union 内部的 SELECT 语句必须拥有
+		相同数量的列,列也必须拥有相似的数据类型,每条 SELECT 语句中的列的顺序必须相同
+		(1).基本语法:
+			select column_name from table1
+			union
+			select column_name from table2
+	8.2.union all:
+		用途同 union all, 但是不消除重复行.
+		SELECT column_name FROM table1
+		UNION ALL
+		SELECT column_name FROM table2
+	8.3.union 使用注意事项:
+		如果子句中有 order by 或 limit, 需要用括号括起来,推荐放到所有子句之后,即对最终合并的结果来排序或筛选
+		在子句中,order by 需要配合limit使用才有意义.如果不配合limit使用,会被语法分析器优化分析时去除
+		(1).如下语句:
+			select * from emp a left join dept b on a.deptId=b.id order by id desc 
+			union 
+			select * from emp a right join dept b on a.deptId=b.id order by id desc;
+			==> 报错:1221 - Incorrect usage of UNION and ORDER BY
+
 
 
 	
