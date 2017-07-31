@@ -55,7 +55,7 @@
 			(3).当线程在执行一个 Java 方法时，该计数器记录的是正在执行的虚拟机字节码指令的地址，当线程在执行的是 Native 
 			方法(调用本地操作系统方法)时，该计数器的值为空;
 			(4).该内存区域是唯一一个在 Java 虚拟机规范中没有规定任何 OOM(内存溢出：OutOfMemoryError)情况的区域
-		2.2.2.Java 虚拟机栈:该区域也是线程私有的，它的生命周期也与线程相同
+		2.2.2.Java 虚拟机栈:该区域也是线程私有的,它的生命周期也与线程相同
 			2.2.2.1.虚拟机栈特征:
 				(1).虚拟机栈描述的是Java方法执行的内存模型:
 					每个方法被执行的时候都会同时创建一个栈帧,栈它是用于支持续虚拟机进行方法调用和方法执行的数据结构
@@ -138,10 +138,34 @@
 		Java 中一般不会产生内存泄露,因为有垃圾回收器自动回收垃圾,但这也不绝对,当我们 new {}了对象,并保存了其引用，
 		但是后面一直没用它,而垃圾回收器又不会去回收它,这边会造成内存泄露
 	3.3.内存溢出测试方法:
-		(1).Java堆:无限循环的创建对象,在List中保存引用,以不被垃圾收集器回收;
-		(2).方法区:生成大量的动态类,或无限循环调用 String 的intern()方法产生不同的String对象实例,并在List中保存其引用,
+		3.3.1.Java堆:无限循环的创建对象,在List中保存引用,以不被垃圾收集器回收;
+			/**
+			 * VM Args: -Xms20m -Xmx20m -XX:+HeapDumpOnOutOfMemoryError 
+			 */
+			public class HeapOOM {
+				static class OOMObject{}
+				public static void main(String[] args) {
+					List<OOMObject> list = new ArrayList<>();
+					while(true){
+						list.add(new OOMObject());
+					}
+				}
+			}
+			-XX:+HeapDumpOnOutOfMemoryError:可以让虚拟机在出现内存溢出时Dump当前的内存堆转储快照,事后可以进行分析.
+			运行代码:
+			java.lang.OutOfMemoryError: Java heap space
+			Dumping heap to java_pid5148.hprof ...
+			Heap dump file created [27980413 bytes in 0.370 secs]
+			Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
+			(1).解决异常,一般是通过内存映像分析工具对dump出来的堆转储快照进行分析,重点是确认内存中的对象是否是必要的,
+				也就是先分清楚是内存泄漏还是内存溢出.
+			(2).如果是内存溢出,可以进一步通过工具查看泄漏对象到GC Roots 的引用链.
+			(3).如果不存在泄漏,换而言之,就是内存中的对象确实都还必须存活着,那就应当检查虚拟机的堆参数(Xmx 和 Xms),
+				与机器物理内存对比是否还可以调大,从代码上检查是否存在某些对象生命周期过长,持有状态时间过长的情况,
+				尝试减少程序运行期的内存消耗
+		3.3.2.方法区:生成大量的动态类,或无限循环调用 String 的intern()方法产生不同的String对象实例,并在List中保存其引用,
 			以不被垃圾收集器回收;
-		(3).虚拟机栈和本地方法栈:
+		3.3.3.虚拟机栈和本地方法栈:由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈,,栈容量只由 -Xss 参数设置
 			单线程:递归调用一个简单的方法,如不累积方法,会抛出 StackOverflowError
 			多线程:无限循环的创建线程,并为每个线程无限循环的增加内存,会抛出 OutOfMemoryError
 	3.4.通过参数优化虚拟机内存的参数如下所示:
@@ -197,11 +221,13 @@
 			除了上面两个指定大小的选项以外，还有两个与 GC 相关的属性:
 			-XX:MinMetaspaceFreeRatio,在GC之后,最小的Metaspace剩余空间容量的百分比,减少为分配空间所导致的垃圾收集
 			-XX:MaxMetaspaceFreeRatio,在GC之后,最大的Metaspace剩余空间容量的百分比,减少为释放空间所导致的垃圾收集
-4.对象实例化分析:
-	Object obj = new Object();
-	这段代码的执行会涉及 Java 栈、Java 堆、方法区三个最重要的内存区域;
+4.对象访问与内存分配:
+	// https://segmentfault.com/a/1190000009740021
 	4.1.假设该语句出现在方法体中:
-		obj 会作为引用类型的数据保存Java栈的本地变量中,而会在Java堆中保存该引用的实例化对象.
+		Object obj = new Object();
+		这段代码的执行会涉及 Java 栈、Java 堆、方法区三个最重要的内存区域;
+		obj 会作为引用类型的数据保存Java栈的本地变量中,表示一个reference类型数据.
+		new Object()作为实例对象数据存储在堆中,保存该引用的实例化对象.
 		Java 堆中还必须包含能查到此对象类型的地址信息(如对象类型,父类,实现的接口,方法等),这些类型数据保存在方法区中;
 	4.2.访问Java堆栈中具体对象的位置:
 		(1).使用句柄池访问:

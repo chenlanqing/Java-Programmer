@@ -593,7 +593,22 @@
 		(1).尽量在 try 或者 catch 中使用 return 语句.通过 finally 块中达到对 try 或者 catch 返回值修改是不可行的;
 		(2).finally 块中避免使用 return 语句，因为 finally 块中如果使用 return 语句，
 			会显示的消化掉 try、catch 块中的异常信息，屏蔽了错误的发生;
-		(3).finally 块中避免再次抛出异常，否则整个包含 try 语句块的方法会抛出异常，并且会消化掉 try、catch 块中的异常;
+		(3).finally 块中避免再次抛出异常,如果 try 或者 catch 中抛出的异常信息会被覆盖掉.
+			public static void main(String[] args) throws Exception {
+					test1();
+				}
+			public static void test1()throws Exception {
+				try{
+					int[] arr = new int[5];
+					arr[5] = 10;// 这里会抛出: ArrayIndexOutOfBoundsException
+				} finally {
+					System.out.println(1/0);// 这里会抛出: ArithmeticException
+				}
+			}
+			上述代码最终抛出的异常信息为:
+			Exception in thread "main" java.lang.ArithmeticException: / by zero
+				at com.exe1.TestSort.test1(TestSort.java:14)
+				at com.exe1.TestSort.main(TestSort.java:6)
 
 九.Java 四舍五入:
 1.目前 Java 支持7中舍入法

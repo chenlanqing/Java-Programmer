@@ -648,6 +648,10 @@
 	 * http://www.importnew.com/14398.html
 	 * http://www.importnew.com/16112.html
 	 * http://www.importnew.com/17849.html
+	 * https://vence.github.io/2016/05/28/threadlocal-info/
+	 * https://segmentfault.com/a/1190000000537475
+	 * http://www.jianshu.com/p/33c5579ef44f
+	 * https://toutiao.io/posts/nic1qr/preview
 	 */
 	11.1.创建 ThreadLocal 对象:private ThreadLocal myThreadLocal = new ThreadLocal();
 		每个线程仅需要实例化一次即可
@@ -696,8 +700,51 @@
 		    }
 
 		}
-	11.6.InheritableThreadLocal:ThreadLocal的子类。为了解决ThreadLocal实例内部每个线程都只能看到自己的私有值，
-		所以 InheritableThreadLocal 允许一个线程创建的所有子线程访问其父线程的值
+	11.6.InheritableThreadLocal:ThreadLocal的子类.为了解决ThreadLocal实例内部每个线程都只能看到自己的私有值，
+		所以 InheritableThreadLocal 允许一个线程创建的所有子线程访问其父线程的值.
+	11.7.ThreadLocal 在什么情况下会发生内存泄露:
+		// http://blog.jobbole.com/104364/
+		11.7.1.ThreadLocal 的实现:
+			每个 Thread 维护一个 ThreadLocalMap 映射表,这个映射表的 key 是 ThreadLocal 实例本身,value 是真正需要存储的 Object.
+			就是说 ThreadLocal 本身并不存储值,它只是作为一个 key 来让线程从 ThreadLocalMap 获取 value.
+			ThreadLocalMap 是使用 ThreadLocal 的弱引用作为 Key 的,弱引用的对象在 GC 时会被回收.
+		11.7.2.为什么会内存泄漏:
+			(1).ThreadLocalMap 使用 ThreadLocal 的弱引用作为key,如果一个 ThreadLocal 没有外部强引用来引用它,那么系统 GC 的时候,
+				这个 ThreadLocal 势必会被回收,这样一来,ThreadLocalMap 中就会出现key为 null 的 Entry,就没有办法访问这些key为null的
+				Entry 的value.如果当前线程再迟迟不结束的话,这些key为null的Entry的value就会一直存在一条强引用链:
+				Thread Ref -> Thread -> ThreaLocalMap -> Entry -> value永远无法回收,造成内存泄漏.
+				只有thead退出以后,value的强引用链条才会断掉
+			(2).ThreadLocalMap 的设计中已经考虑到这种情况,加上了一些防护措施:在ThreadLocal的get(),set(),remove()的时候都会清除线程
+				ThreadLocalMap 里所有key为null的value
+			(3).但是这些被动的预防措施并不能保证不会内存泄漏:
+				==> 使用线程池的时候,这个线程执行任务结束,ThreadLocal 对象被回收了,线程放回线程池中不销毁,这个线程一直不被使用,导致内存泄漏;
+				==> 分配使用了ThreadLocal又不再调用get(),set(),remove()方法,那么这个期间就会发生内存泄漏
+		11.7.3.为什么使用弱引用:
+			(1).key 使用强引用:
+				引用的 ThreadLocal 的对象被回收了,但是 ThreadLocalMap 还持有 ThreadLocal 的强引用,
+				如果没有手动删除,ThreadLocal 不会被回收,导致 Entry 内存泄漏
+			(2).key 使用弱引用:
+				引用的 ThreadLocal 的对象被回收了,由于 ThreadLocalMap 持有 ThreadLocal 的弱引用,
+				即使没有手动删除,ThreadLocal 也会被回收.value在下一次ThreadLocalMap调用set,get的时候会被清除
+			==> 对比上述情况可以发现:
+				由于 ThreadLocalMap 的生命周期跟 Thread 一样长,如果都没有手动删除对应key,都会导致内存泄漏,但是使用弱引用可以多一层保障:
+				弱引用ThreadLocal不会内存泄漏,对应的value在下一次ThreadLocalMap调用set,get,remove的时候会被清除
+			==> ThreadLocal内存泄漏的根源是:
+				由于ThreadLocalMap的生命周期跟Thread一样长,如果没有手动删除对应key就会导致内存泄漏,而不是因为弱引用
+		11.7.4.ThreadLocal 最佳实践:如何避免内存泄漏:
+			每次使用完 ThreadLocal,都调用它的remove()方法,清除数据.
+			在使用线程池的情况下,没有及时清理 ThreadLocal,不仅是内存泄漏的问题,更严重的是可能导致业务逻辑出现问题.
+	11.8.ThreadLocal 的应用场景:
+		使用场合主要解决多线程中数据数据因并发产生不一致问题
+		11.8.1.最常见的 ThreadLocal 使用场景为 用来解决 数据库连接、Session 管理等.
+		11.8.2.参数传递:
+			场景:如果方法一层一层调用,调用了很多层,但是有个别参数只需要第一层方法和最后一层方式使用,如何传递?
+			可以使用 ThreadLocal 来操作.
+			public class ThreadLocalCache {
+			    public static ThreadLocal<User> userThreadLocal = new ThreadLocal<>();
+			}
+			在拦截器或者AOP 中设置需要传输的参数
+			==> 注意:在请求结束后一定要调用 remove 方法,移出不必要的键值对,以免造成内存泄漏.
 12.深入理解 ThreadLocal:
 	12.1.理解 ThreadLocal:
 		ThreadLocal 在每个线程中对该变量会创建一个副本,即每个线程内部都会有一个该变量,且在线程内部任何地方都可以使用,
@@ -721,8 +768,81 @@
 			 		return Thread.currentThread().getId();
 			 	};
 			};
-	12.3.ThreadLocal 的应用场景:
-		(1).最常见的 ThreadLocal 使用场景为 用来解决 数据库连接、Session 管理等
+	12.4.变量:
+		private final int threadLocalHashCode = nextHashCode();
+		// 即将分配的下一个ThreadLocal实例的threadLocalHashCode 的值
+		private static AtomicInteger nextHashCode = new AtomicInteger();
+		// 表示了连续分配的两个ThreadLocal实例的threadLocalHashCode值的增量
+		private static final int HASH_INCREMENT = 0x61c88647;
+		12.4.1.哈希策略:
+			所有 ThreadLocal 对象共享一个AtomicInteger对象nextHashCode用于计算hashcode,一个新对象产生时它的
+			hashcode就确定了,算法是从0开始,以 HASH_INCREMENT = 0x61c88647 为间隔递增.
+			这是ThreadLocal唯一需要同步的地方
+		12.4.1.0x61c88647 这个魔数是怎么确定的呢?
+			ThreadLocalMap 的初始长度为16,每次扩容都增长为原来的2倍,即它的长度始终是2的n次方,
+			上述算法中使用 0x61c88647 可以让hash的结果在2的n次方内尽可能均匀分布,减少冲突的概率.
+	12.5.ThreadLocalMap:
+		(1).义在 ThreadLocal 类内部的私有类,它是采用"开放定址法"解决冲突的hashmap.
+			key是 ThreadLocal 对象.当调用某个ThreadLocal对象的get或put方法时,首先会从当前线程中取出
+			ThreadLocalMap,然后查找对应的value.
+			ThreadLocalMap 实例是作为 java.lang.Thread 的成员变量存储的,每个线程有唯一的一个 threadLocalMap
+			public T get() {
+			    Thread t = Thread.currentThread();
+			    ThreadLocalMap map = getMap(t);     //拿到当前线程的ThreadLocalMap
+			    if (map != null) {
+			        ThreadLocalMap.Entry e = map.getEntry(this);    // 以该ThreadLocal对象为key取value
+			        if (e != null)
+			            return (T)e.value;
+			    }
+			    return setInitialValue();
+			}
+			ThreadLocalMap getMap(Thread t) {
+			    return t.threadLocals;
+			}
+		(2).将 ThreadLocalMap 作为 Thread 类的成员变量的好处是:
+			当线程死亡时,threadLocalMap被回收的同时,保存的"线程局部变量"如果不存在其它引用也可以同时被回收.
+			同一个线程下,可以有多个treadLocal实例,保存多个"线程局部变量".
+			同一个threadLocal实例,可以有多个线程使用,保存多个线程的"线程局部变量".
+	12.6.碰撞解决与神奇的 0x61c88647:既然 ThreadLocal 用map就避免不了冲突的产生
+		12.6.1.碰撞的类型:
+			(1).只有一个ThreadLocal实例的时候,当向thread-local变量中设置多个值的时产生的碰撞,
+				碰撞解决是通过开放定址法,且是线性探测(linear-probe)
+			(2).多个ThreadLocal实例的时候,最极端的是每个线程都new一个ThreadLocal实例,此时利用特殊的
+				哈希码0x61c88647大大降低碰撞的几率, 同时利用开放定址法处理碰撞
+		12.6.2.神奇的0x61c88647:注意 0x61c88647 的利用主要是为了多个ThreadLocal实例的情况下用的.
+			private final int threadLocalHashCode = nextHashCode();
+			每当创建ThreadLocal实例时这个值都会累加 0x61c88647.为了让哈希码能均匀的分布在2的N次方的数组里,即Entry[] table
+			==> threadLocalHashCode 的使用:
+				private void set(ThreadLocal<?> key, Object value) {
+		            Entry[] tab = table;
+		            int len = tab.length;
+		            int i = key.threadLocalHashCode & (len-1);
+					...		           
+		        }
+	            key.threadLocalHashCode & (len-1)
+	            ThreadLocalMap 中 Entry[] table 的大小必须是2的N次方呀(len = 2^N), 那 len-1 
+	            的二进制表示就是低位连续的N个1,那 key.threadLocalHashCode & (len-1) 的值就是
+	            threadLocalHashCode 的低N位.产生的哈希码分布真的是很均匀,而且没有任何冲突啊
+	            可以使用python验证:
+	            	import sys
+	            	HASH_INCREMENT = 0x61c88647
+	            	def magic_hash(n):
+	            		for i in range(n):
+	            			nextHashCode = i * HASH_INCREMENT + HASH_INCREMENT;
+	            			result = nextHashCode & (n-1)
+	            			sys.stdout.write(str(result))
+	            			sys.stdout.write("\t")
+	            		print()
+	            	magic_hash(16)
+	            	magic_hash(64)
+	12.7.ThreadLocal 和 synchronized:
+		(1).ThreadLocal 和 synchronized 都用于解决多线程并发访问.
+		(2).ThreadLocal 与 synchronized 有本质的区别:
+			synchronized 是利用锁的机制,使变量或代码块在某一时该只能被一个线程访问.
+			ThreadLocal 为每一个线程都提供了变量的副本,使得每个线程在某一时间访问到的并不是同一个对象,
+				这样就隔离了多个线程对数据的数据共享
+		(3).synchronized 用于线程间的数据共享,而 ThreadLocal 则用于线程间的数据隔离
+
 13.死锁:两个或更多线程阻塞着等待其它处于死锁状态的线程所持有的锁
 	13.1.死锁通常发生在多个线程同时但以不同的顺序请求同一组锁的时候
 	13.2.死锁程序:
