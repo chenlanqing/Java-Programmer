@@ -745,6 +745,51 @@
 			}
 			在拦截器或者AOP 中设置需要传输的参数
 			==> 注意:在请求结束后一定要调用 remove 方法,移出不必要的键值对,以免造成内存泄漏.
+		11.8.3.父子线程数据传递:InheritableThreadLocal 
+			(1).该类继承自 ThreadLocal
+				public class InheritableThreadLocal<T> extends ThreadLocal<T> {
+				    protected T childValue(T parentValue) {
+				        return parentValue;
+				    }
+				    /**
+				     * 重写Threadlocal类中的getMap方法，在原Threadlocal中是返回
+				     *t.theadLocals，而在这么却是返回了inheritableThreadLocals，因为
+				     * Thread类中也有一个要保存父子传递的变量
+				     */
+				    ThreadLocalMap getMap(Thread t) {
+				       return t.inheritableThreadLocals;
+				    }
+				    /**
+				     * 同理，在创建ThreadLocalMap的时候不是给t.threadlocal赋值
+				     *而是给inheritableThreadLocals变量赋值
+				     * 
+				     */
+				    void createMap(Thread t, T firstValue) {
+				        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
+				    }
+				}
+			(2).InheritableThreadLocal 是如何实现在子线程中能拿到当前父线程中的值的呢?
+				创建线程时,init(....)方法里有如下代码:
+				if (parent.inheritableThreadLocals != null)
+			       //这句话的意思大致不就是，copy父线程parent的map，创建一个新的map赋值给当前线程的inheritableThreadLocals。
+		           	this.inheritableThreadLocals = ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+		        拷贝 parentMap 的数据,在copy过程中是浅拷贝,key和value都是原来的引用地址
+		        A.在创建 InheritableThreadLocal 对象的时候赋值给线程的 t.inheritableThreadLocals 变量
+		        B.在创建新线程的时候会check父线程中t.inheritableThreadLocals变量是否为 null,如果不为null则copy一份
+		        	ThradLocalMap 到子线程的t.inheritableThreadLocals成员变量中去
+		        C.因为复写了getMap(Thread)和CreateMap()方法,所以get值得时候,就可以在getMap(t)的时候就会从
+		        	t.inheritableThreadLocals中拿到map对象,从而实现了可以拿到父线程ThreadLocal中的值
+		    (3).InheritableThreadLocal 问题:在线程池中,会缓存之前使用过的线程
+		    	①.问题场景:
+		    		有两个线程A,B, 如果A线程先执行后,将InheritableThreadLocal中的value已经被更新了,
+		    		由于B是获取到缓存线程,直接从t.InheritableThreadLocal 中获得值,而此时获取的值是 A 线程修改过后的值,
+		    		而不是原来父线程的值.
+		    	②.造成问题的原因:
+		    		线程在执行完毕的时候并没有清除ThreadLocal中的值,导致后面的任务重用现在的localMap
+		    	③.解决方案:
+		    		在使用完这个线程的时候清除所有的localMap,在submit新任务的时候在重新重父线程中copy所有的Entry.
+		    		然后重新给当前线程的t.inhertableThreadLocal赋值
+		    		阿里巴巴有一套解决方案:transmittable-thread-local // https://github.com/chenlanqing/transmittable-thread-local
 12.深入理解 ThreadLocal:
 	12.1.理解 ThreadLocal:
 		ThreadLocal 在每个线程中对该变量会创建一个副本,即每个线程内部都会有一个该变量,且在线程内部任何地方都可以使用,

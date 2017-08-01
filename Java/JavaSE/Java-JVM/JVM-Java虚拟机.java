@@ -864,6 +864,34 @@
 		    int a=110;
 		    static int b =112;
 		}
+	6.11.Tomcat 类加载体系:// http://www.cnblogs.com/xing901022/p/4574961.html
+		6.11.1.tomcat 加载器:
+			(1).Bootstrap 引导类加载器:加载JVM启动所需的类,以及标准扩展类()位于jre/lib/ext下)
+			(2).System 系统类加载器:
+				加载tomcat启动的类,比如bootstrap.jar,通常在catalina.bat或者catalina.sh中指定.
+				位于CATALINA_HOME/bin下
+			(3).Common 通用类加载器:
+				加载tomcat使用以及应用通用的一些类,位于CATALINA_HOME/lib下,比如servlet-api.jar
+			(4).webapp 应用类加载器:
+				每个应用在部署后，都会创建一个唯一的类加载器。该类加载器会加载位于 WEB-INF/lib下的
+				jar文件中的class和 WEB-INF/classes下的class文件
+		6.11.2.tomcat 类加载顺序:
+			当应用需要到某个类时，则会按照下面的顺序进行类加载：
+		　　(1).使用bootstrap引导类加载器加载
+		　　(2).使用system系统类加载器加载
+		　　(3).使用应用类加载器在WEB-INF/classes中加载
+		　　(4).使用应用类加载器在WEB-INF/lib中加载
+		　　(5).使用common类加载器在CATALINA_HOME/lib中加载.
+		6.11.3.tomcat 如何隔离多个应用:
+			tomcat部署了多个应用,而多个应用都采用自定义的类加载器,
+			所以即便是同一个类使用不同的类加载机制最终也是不一样的类.
+		6.11.4.如何破坏双亲委托:
+			(1).webappClassLoader上面有一个common的类加载器,它是所有webappClassLoader的父加载器,
+				多个应用汇存在公有的类库,而公有的类库都会使用commonclassloader来实现.
+			(2).如果不是公有的类呢,这些类就会使用webappClassLoader加载,而webappClassLoader的实现并没有走双亲委派的模式
+			(3).加载本类的classloader未知时,为了隔离不同的调用者,即类的隔离,采用了上下文类加载的模式加载类.
+			(4).当前高层的接口在低层去实现,而高层的类有需要低层的类加载的时候,这个时候,需要使用上下文类加载器去实现
+		
 7.字节码执行引擎:
 	7.1.物理机的执行引擎是直接建立在处理器、硬件、指令集和操作系统层面上的;
 		虚拟机的执行引擎是字节实现的,可以自行制定指令集和执行引擎的结果体系,能够执行不被硬件直接支持的指令集格式;
