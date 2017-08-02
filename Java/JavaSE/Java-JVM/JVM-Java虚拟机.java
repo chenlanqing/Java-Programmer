@@ -139,9 +139,7 @@
 		但是后面一直没用它,而垃圾回收器又不会去回收它,这边会造成内存泄露
 	3.3.内存溢出测试方法:
 		3.3.1.Java堆:无限循环的创建对象,在List中保存引用,以不被垃圾收集器回收;
-			/**
-			 * VM Args: -Xms20m -Xmx20m -XX:+HeapDumpOnOutOfMemoryError 
-			 */
+			// VM Args: -Xms20m -Xmx20m -XX:+HeapDumpOnOutOfMemoryError 
 			public class HeapOOM {
 				static class OOMObject{}
 				public static void main(String[] args) {
@@ -163,11 +161,98 @@
 			(3).如果不存在泄漏,换而言之,就是内存中的对象确实都还必须存活着,那就应当检查虚拟机的堆参数(Xmx 和 Xms),
 				与机器物理内存对比是否还可以调大,从代码上检查是否存在某些对象生命周期过长,持有状态时间过长的情况,
 				尝试减少程序运行期的内存消耗
-		3.3.2.方法区:生成大量的动态类,或无限循环调用 String 的intern()方法产生不同的String对象实例,并在List中保存其引用,
-			以不被垃圾收集器回收;
-		3.3.3.虚拟机栈和本地方法栈:由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈,,栈容量只由 -Xss 参数设置
+		3.3.2.方法区和运行时常量池:生成大量的动态类,或无限循环调用 String 的intern()方法产生不同的String对象实例,
+			并在List中保存其引用,以不被垃圾收集器回收;
+			(1).JDK1.6以及之前的版本,由于常量池分配在永久代中,我们可以通过 -XX:PermSize 和 -XX:MaxPermSize 限制方法区的
+				的大小,从而简介限制其中常量池的容量;
+			(2).方法区存放 Class 相关信息,如类名、访问修饰符、常量池、字段描述、方法描述等.对于这些区域的测试,基本思路是:
+				运行时产生大量的类去填满方法区,直到溢出.
+				当前很多主类框架,如图Spring等,在对类进行增强时,都会用到CGLib这类字节码技术,增强的类越多,就需要越大的
+				方法区来保证动态生存的 Class 可以载入内存.
+				常见大量生存类的场景:大量JSP或者动态产生JSP文件的应用,基于OSGI的应用
+		3.3.3.虚拟机栈和本地方法栈:由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈,栈容量只由 -Xss 参数设置
 			单线程:递归调用一个简单的方法,如不累积方法,会抛出 StackOverflowError
 			多线程:无限循环的创建线程,并为每个线程无限循环的增加内存,会抛出 OutOfMemoryError
+			(1).使用 -Xss 参数减少栈内存容量,结果抛出 StackOverflowError,异常时输出的堆栈深度相应缩小.
+				定义了大量本地变量,增大此方法帧中本地变量表的长度,结果抛出 StackOverflowError,异常时输出的堆栈深度相应缩小.
+				// VM Args:-Xss128k
+				public class StackSOF {
+					private int stackLength = 1;
+					public void stackLeak(){
+						stackLength++;
+						stackLeak();
+					}
+					public static void main(String[] args)throws Throwable {
+						StackSOF oom = new StackSOF();
+						try{
+							oom.stackLeak();
+						} catch(Throwable e){
+							System.out.println("stack length:"+ oom.stackLength);
+							throw e;
+						}
+					}
+				}
+				==> 运行结果:
+					stack length:995
+					Exception in thread "main" java.lang.StackOverflowError
+						at demo1.StackSOF.stackLeak(StackSOF.java:11)
+						at demo1.StackSOF.stackLeak(StackSOF.java:12)
+						at demo1.StackSOF.stackLeak(StackSOF.java:12)
+				==> 结论:在单个线程下,无论是由于栈桢太大还是虚拟机栈容量太小,当内存无法分配时,虚拟机抛出的都是
+					StackOverflowError 异常.
+			(2).创建线程导致内存溢出:
+				// VM Args:-Xss2M
+				public class StackOOM {
+					private void dontStop(){
+						while(true){}
+					}
+					public void stackLeadByThread(){
+						while(true){
+							Thread thread = new Thread(new Runnable() {
+								public void run() {dontStop();}
+							});
+							thread.start();
+						}
+					}
+					public static void main(String[] args) {
+						StackOOM oom = new StackOOM();
+						oom.stackLeadByThread();
+					}
+				}
+				运行结果:
+				Exception in thread "main" java.lang.OutOfMemoryError: unable to create new native thread {}
+			①.不断创建线程的方式可以产生栈内存溢出异常.每个线程的栈分配的内存越大,越容易产生内存溢出异常.
+			原因如下:
+				操作系统分配给每个进程的内存是有限制的.虚拟机提供了参数来控制Java堆和方法区这两部分内存的最大值.
+				剩余的内存为2GB(操作系统限制)减去Xmx(最大堆容量),再减去MaxPermSize(最大方法区容量),程序计数器
+				消耗内存很小,可以忽略掉.如果虚拟机进程本身耗费的内存不计算在内,剩下的内存就由虚拟机栈和本地方法
+				栈"瓜分"了.每个线程分配到栈容量越大,可以建立的线程数量自然就越小,建立线程时就越容易把剩下内存耗尽.
+			②.在开发多线程应用时需要特别注意,出现 StackOverflowError 异常有时错误可以阅读,相对来说,比较容易找到
+				问题所在.而且,如果使用虚拟机默认参数,栈深度在大多数情况下达到1000-2000完全没有问题.
+				对于正常的方法调用(包括递归),这个深深度完全够用.
+				如果建立过多线程导致内存溢出,在不能减少线程数或者更换64位虚拟机的情况下,只能通过减少
+				最大堆或减少栈容量来换取更多的线程.
+		3.3.4.本机直接内存溢出:
+			DirectMemory 容量可通过 -XX:MaxDirectMemorySize 指定,如果不指定,则默认与Java堆最大值(-Xmx指定)一样.
+			使用 Unsafe 来操作.
+			// VM Args:-Xmx20M -XX:MaxDirectMemorySize=10M
+			public class DirectMemoryOOM {
+				private static final int _1MB = 1024 * 1024;
+				public static void main(String[] args)throws Exception {
+					Field unsafeField = Unsafe.class.getDeclaredFields()[0];
+					unsafeField.setAccessible(true);
+					Unsafe unsafe = (Unsafe) unsafeField.get(null);
+					while(true){
+						unsafe.allocateMemory(_1MB);
+					}
+				}
+			}
+			运行结果:
+				Exception in thread "main" java.lang.OutOfMemoryError
+					at sun.misc.Unsafe.allocateMemory(Native Method)
+					at demo1.DirectMemoryOOM.main(DirectMemoryOOM.java:21)
+			由直接内存导致的内存溢出,一个明显的特征是在 Heap Dump 文件中不会看见明显的异常,如果发现OOM后dump文件很小,
+			而程序又间接或直接使用了NIO,可以考虑检查是不是直接内存的问题.
 	3.4.通过参数优化虚拟机内存的参数如下所示:
 		Xms:初始Heap大小
 		Xmx:java heap最大值
