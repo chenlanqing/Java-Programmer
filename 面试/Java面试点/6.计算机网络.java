@@ -87,7 +87,9 @@
 			再发送FIN报文给对方来表示你同意现在可以关闭连接了,所以它这里的ACK报文和FIN报文多数情况下都是分开发送的
 4.http是无状态通信,http的请求方式有哪些,可以自己定义新的请求方式么:
 	GET,POST,PUT,DELETE
-5.socket通信，以及长连接，分包，连接异常断开的处理。
+5.长连接与短连接? 分包如何处? 连接异常.
+	// http://www.cnblogs.com/0201zcr/p/4694945.html
+	// http://www.cnblogs.com/cswuyg/p/3653263.html
 6.socket通信模型的使用，AIO 和 NIO。
 7.socket框架netty的使用，以及NIO的实现原理，为什么是异步非阻塞。
 8.同步和异步,阻塞和非阻塞。

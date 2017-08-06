@@ -134,7 +134,27 @@
 	(1).timeout 0: 表示超时时间,单位为毫秒
 	(2).-r: 只读,其是只读模式,如果一台机器与集群中的过半机器失去联系,如果需要其还能处理读服务,加上该选项
 	(3).-server ip:port 服务器的ip和端口
-
+		stat path [watch]
+		set path data [version]
+		ls path [watch]
+		delquota [-n|-b] path
+		ls2 path [watch]
+		setAcl path acl
+		setquota -n|-b val path  设置配额,-n 表示数据节点个数,-b 节点数据长度限制,如果超过限制,不会报错,会在日志中打印
+		history 
+		redo cmdno
+		printwatches on|off
+		delete path [version]
+		sync path
+		listquota path
+		rmr path
+		get path [watch]
+		create [-s] [-e] path data acl
+		addauth scheme auth
+		quit 
+		getAcl path
+		close 
+		connect host:port
 
 
 
