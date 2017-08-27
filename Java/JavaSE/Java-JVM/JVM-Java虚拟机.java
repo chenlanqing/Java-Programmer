@@ -1309,6 +1309,8 @@
 		11.7.1.JConsole:Java 监视与管理控制台(Java Monitoring and Management Console):
 			(1).用法:一种基于 JMX 的可视化监视\管理工具,它管理部分的功能是针对 JMX MBean 进行管理的
 		11.7.2.VisualVM:多合一故障处理工具
+	12.8.内存分析工具:
+		https://www.zybuluo.com/frank-shaw/note/206287
 13.JVM 虚拟机调优:
 	13.1.在高性能硬件上的程序部署:
 		(1).对于用户交互性强、对停顿时间敏感的系统,可以给Java虚拟机分配超大堆的前提是有把握把应用程序的FullGC

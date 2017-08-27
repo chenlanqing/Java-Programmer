@@ -645,13 +645,12 @@
 	存放每个线程的共享变量,解决变量在不同线程间的隔离性
 	/**
 	 * 参考资料
-	 * http://www.importnew.com/14398.html
-	 * http://www.importnew.com/16112.html
-	 * http://www.importnew.com/17849.html
-	 * https://vence.github.io/2016/05/28/threadlocal-info/
+	 * http://www.importnew.com/14398.html, http://www.importnew.com/16112.html
+	 * http://www.cnblogs.com/dolphin0520/p/3920407.html, https://vence.github.io/2016/05/28/threadlocal-info/
 	 * https://segmentfault.com/a/1190000000537475
 	 * http://www.jianshu.com/p/33c5579ef44f
 	 * https://toutiao.io/posts/nic1qr/preview
+	 * http://blog.brucefeng.info/post/threadlocal-resultin-fullgc?utm_source=tuicool&utm_medium=referral
 	 */
 	11.1.创建 ThreadLocal 对象:private ThreadLocal myThreadLocal = new ThreadLocal();
 		每个线程仅需要实例化一次即可
@@ -1192,7 +1191,13 @@
 
 四.多线程与并发核心结构与算法
 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
-	
+	/**
+	 * 参考地址
+	 * http://www.cnblogs.com/xrq730/p/7056614.html
+	 * https://muyinchen.github.io/tags/%E5%B9%B6%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/
+	 * http://blog.csdn.net/pfnie/article/details/53191892
+	 * 
+	 */
 2.CAS:Compare and Swap-比较与交换
 	/*
 	http://www.cnblogs.com/Mainz/p/3546347.html
