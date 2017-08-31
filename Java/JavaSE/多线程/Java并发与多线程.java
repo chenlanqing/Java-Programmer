@@ -3,6 +3,7 @@
  * 	http://ifeve.com/java-concurrency-thread-directory/
  *  线程池:http://www.importnew.com/19011.html
  *  http://www.cnblogs.com/skywang12345/p/java_threads_category.html
+ *  http://blog.csdn.net/chenssy/article/category/6701493/2
  * 
  */
 一.并发与多线程简介:
@@ -513,6 +514,7 @@
 				却是公共堆栈中的变量值;
 				造成这样的原因就是私有堆栈中的值和公共堆栈的值不同步造成的
 	8.3.volatile保证原子性吗? volatile也无法保证对变量的任何操作都是原子性的
+		// http://www.cnblogs.com/Mainz/p/3556430.html
 		JVM 只保证从主内存中加载到工作内存的值是最新的;
 		(1).原子性:在Java中，对基本数据类型的变量的读取和赋值操作是原子性操作,即这些操作是不可被中断的,
 			要么执行，要么不执行
@@ -998,7 +1000,6 @@
 			ReentrantLock()
 			// 创建策略是fair的 ReentrantLock。fair为true表示是公平锁，fair为false表示是非公平锁。
 			ReentrantLock(boolean fair)
-
 			// 查询当前线程保持此锁的次数。
 			int getHoldCount()
 			// 返回目前拥有此锁的线程，如果此锁不被任何线程拥有，则返回 null。
@@ -1039,6 +1040,8 @@
 			3.1.3.1.获取公平锁:获取锁是通过lock()函数
 				(1).lock():是在ReentrantLock.java的FairSync类中实现
 		3.1.4.非公平锁:则当线程要获取锁时,它会无视CLH等待队列而直接获取锁.
+		3.1.5.非公平锁获取:
+
 4.共享锁:读写锁:ReentrantReadWriteLock, 闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
 	4.1.ReentrantReadWriteLock 读写锁:
 		// TODO 
@@ -1189,7 +1192,7 @@
 
 10.ConcurrentLinkedQueue: // http://www.cnblogs.com/skywang12345/p/3498995.html
 
-四.多线程与并发核心结构与算法
+四.JUC 包核心类与算法
 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
 	/**
 	 * 参考地址
@@ -1198,14 +1201,53 @@
 	 * http://blog.csdn.net/pfnie/article/details/53191892
 	 * 
 	 */
+	1.1.设计思想:AQS 是构建锁或者其他同步组件的基础框架,是JUC并发包中的核心基础组件
+		(1).仅从 AQS 本身来说,它仅仅提供独占锁和共享锁两种方式, AQS 本身不存在所谓的公平和非公平锁.
+		(2).AQS 基于模板模式设计, 其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种,所以 AQS 没有抽象方法,所有方法都有默认实现
+		(3).AQS 是继承自 AbstractOwnableSynchronizer(AOS),AOS 里面只有一个属性:exclusiveOwnerThread--用来标识当前占有锁的线程,加上该属性的get和set方法.
+			==> ??为什么需要将持有锁的线程的标识向上抽取?
+			AOS 有段注释如下:
+				同步器是需要被线程互斥访问的,AOS 提供了一个基本概念,那就是创建锁时赋予一个对于这个锁的所有权.AOS 本身不会去管理或者使用这些信息.
+				然而子类或者工具类在适当的时候会去维护这些信息来控制和监听访问控制权.
+			AQS 是在1.5产生, 而 AOS 是在1.6之后才产生的.也就是说在 AQS 的整个声明过程中,都没有用到 AOS 中声明的属性或者方法,这些属性或者方法
+			是在 AQS 的子类中才用的到.也就是在 1.6之后对子类进行增强.为什么不把 AOS 声明的属性直接放到 AQS 中?可能是因为 AQS 不需要这些属性,
+			不对 AQS 做过多侵入.
+	1.2.基本数据结构:Node
+		(1).AQS 的等待队列是 CLH 队列,CLH 经常用于自旋锁,AQS 的等待队列用于阻塞同步器;
+		(2).每个节点持有一个 "state" 字段用于是否一条线程应当阻塞的追踪, 但是 state 字段并不保证加锁;
+		(3).一条线程如果处于队列头的下一个节点,那么它会尝试 acquire, 但是 acquire 并不保证成功,只是有权利去竞争
+		(4).要进入队列,你只需要自动将它拼接在队列尾部即可;要从队列中移出,你只需要设置 header字段;
+	1.3.AQS 对外公开的方法不需要子类实现的:
+		AQS 仅仅只是提供独占锁和共享锁两种方式,但是每种方式都有响应中断和不响应中断的区别,所以说AQS锁的更细粒度的划分为:
+			(1).acquire:不响应中断的独占锁
+			(2).acquireInterruptibly: 响应中断的独占锁
+			(3).acquireShared:不响应中断的共享锁
+			(4).acquireSharedInterruptibly:响应中断的共享锁
+		释放锁的方式只有两种:
+			release:独占锁的释放
+			releaseShared:共享锁的释放
+		上述方法都是 final 的,
+	1.4.AQS 子类需要实现的方法:
+		AQS 是基于模板模式的实现,不过其模板模式的实现有些特别,整个类中没有抽象方法,取而代之的是需要子类去实现那些方法通过一个方法体
+		抛出 UnsupportedOperationException 异常来让子类直到.AQS 一共有五处方法供子类实现:
+		(1).tryAcquire:尝试在独占模式下acquire,方法应当查询在独占模式下对象的 state 字段是否允许 acquire, 如果允许,那么可以 acquire.
+			方法通常在线程中执行 acquire 调用,如果方法失败了, acquire 方法会将线程加入等待队列(如果线程还没有加入等待队列)直到它被其他线程发出的信号释放.
+		(2).tryRelease:尝试在独占模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
+		(3).tryAcquireShared:尝试在共享模式下 acquire, 方法应当查询在共享模式下对象的 state 字段是否允许 acquire,如果允许,那么可以 acquire,
+			方法通常在线程中执行 acquire 调用,如果方法失败了, acquire 方法会将线程加入等待队列(如果线程还没有加入等待队列)直到它被其他线程发出的信号释放.
+		(4).tryReleaseShared:尝试在共享模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
+		(5).isHeldExclusively:当前同步器是否在独占模式下被线程占用,一般该方法表示是否被当前线程独占.
+		==> 关于 acquire 理解:
+	1.4.
 2.CAS:Compare and Swap-比较与交换
 	/*
-	http://www.cnblogs.com/Mainz/p/3546347.html
-	http://www.cnblogs.com/549294286/p/3766717.html
-	http://www.importnew.com/20472.html
-	*/
+	 * 非阻塞同步算法与CAS(Compare and Swap)无锁算法: http://www.cnblogs.com/Mainz/p/3546347.html
+	 * Java CAS 和ABA问题: http://www.cnblogs.com/549294286/p/3766717.html、http://www.importnew.com/20472.html
+	 * Unsafe与CAS: http://www.cnblogs.com/xrq730/p/4976007.html 
+	 * http://www.cnblogs.com/xrq730/category/1021774.html
+	 */
 	2.1.CAS:cpu指令,在大多数处理器架构,包括 IA32,Space 中采用的都是 CAS 指令.CAS 语义:
-		我认为V的值应该为A,如果是,那么将V的值更新为B;否则不修改并告诉V的值实际为多少.
+		CAS 有3个操作数,内存值 V,旧的预期值 A, 要修改的新值 B,当且仅当预期值 A 和内存值 V 相同时,将内存值修改为 B 并返回 true,否则什么都不做并返回 false
 	2.2.CAS 是乐观锁技术:
 		当多个线程尝试使用CAS同时更新同一个变量时,只有其中一个线程能更新变量的值,而其它线程都失败,
 		失败的线程并不会被挂起,而是被告知这次竞争中失败,并可以再次尝试.
@@ -1216,17 +1258,45 @@
 	2.4.Java 中 CAS 的实现:
 		(1).JDK1.5 之前,需要编写明确的代码来执行CAS操作.在JDK1.5 之后,引入了底层的支持.
 		并且JVM把它们编译为底层硬件提供的最有效的方法,在运行CAS的平台上,运行时把它们编译为相应的机器指令
-		如果处理器/CPU不支持CAS指令，那么JVM将使用自旋锁
+		如果处理器/CPU 不支持CAS指令,那么JVM将使用自旋锁
 
 	2.5.ABA 问题:
 		// http://www.cnblogs.com/549294286/p/3766717.html
-		在运用CAS做Lock-Free操作中有一个经典的ABA问题.
-		线程1准备用CAS将变量的值由A替换为B,在此之前,线程2将变量的值由A替换为C,又由C替换为A,
-		然后线程1执行CAS时发现变量的值仍然为A，所以CAS成功。但实际上这时的现场已经和最初不同了，
-		尽管CAS成功，但可能存在潜藏的问题
-	2.6.Unsafe 是CAS的核心类
-
-
+		(1)问题:在运用CAS做Lock-Free 操作中有一个经典的ABA问题.
+			线程1准备用CAS将变量的值由A替换为B,在此之前,线程2将变量的值由A替换为C,又由C替换为A,然后线程1执行CAS时发现变量的值仍然为A，所以CAS成功.
+			但实际上这时的现场已经和最初不同了,尽管CAS成功,但可能存在潜藏的问题
+		(2).解决思路是:每次变量更新的时候把变量的版本号加 1,那么 A-B-A 就会变成 A1-B2-A3,只要变量被某一线程修改过,改变量对应的版本号就会发生递增变化.
+			==> 可以参考:AtomicStampedReference#compareAndSet 方法:
+				public boolean compareAndSet(V expectedReference, V newReference, int expectedStamp, int newStamp) {
+				    Pair<V> current = pair;
+				    return expectedReference == current.reference && expectedStamp == current.stamp && 
+				            ((newReference == current.reference && newStamp == current.stamp) || casPair(current, Pair.of(newReference, newStamp)));
+				}
+				该类检查了当前引用与当前标志是否与预期相同,如果全部相等,才会以原子方式将该引用和该标志的值设为新的更新值
+	2.6.Unsafe 是CAS的核心类:
+		(1).Java 无法直接访问底层操作系统,而是通过本地 native 方法来访问.不过 JVM 还是开了个后门,JDK 中有一个类 Unsafe,它提供了硬件级别的原子操作
+		对于 Unsafe 类的使用都是受限制的,只有授信的代码才能获得该类的实例	
+		(2).对 CAS 的实现:
+			public final native boolean compareAndSwapObject(Object paramObject1, long paramLong, Object paramObject2, Object paramObject3);
+			public final native boolean compareAndSwapInt(Object paramObject, long paramLong, int paramInt1, int paramInt2);
+			public final native boolean compareAndSwapLong(Object paramObject, long paramLong1, long paramLong2, long paramLong3);
+		(3).可以查看原子类的实现,比如:AtomicInteger#addAndGet 方法的实现:
+			==> JDK7:在addAndGet作一部分操作,然后调用compareAndSet,由该方法调用 Unsafe#getAndAddInt
+				public final int addAndGet(int delta) {
+				    for (;;) {
+				        int current = get();
+				        int next = current + delta;
+				        if (compareAndSet(current, next))
+				            return next;
+				    }
+				}
+				public final boolean compareAndSet(int expect, int update) {
+			        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
+			    }
+			==> JDK8:直接调用 Unsafe#getAndAddInt
+				public final int addAndGet(int delta) {
+			        return unsafe.getAndAddInt(this, valueOffset, delta) + delta;
+			    }
 
 
 

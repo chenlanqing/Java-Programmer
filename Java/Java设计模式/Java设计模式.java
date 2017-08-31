@@ -1,6 +1,7 @@
 Java 设计模式
 // http://www.cnblogs.com/zuoxiaolong/p/pattern26.html
 // http://www.jasongj.com/design_pattern/summary/
+// http://www.cnblogs.com/wangjq/category/389973.html
 1.OOP 基本特性:
 	(1).封装:也就是把客观事物封装成抽象的类,并且类可以把自己的属性和方法只让可信的类操作,对不可信的进行信息隐藏.
 	(2).继承:是指这样一种能力,它可以使用现有的类的所有功能,并在无需重新编写原来类的情况下对这些功能进行扩展.
