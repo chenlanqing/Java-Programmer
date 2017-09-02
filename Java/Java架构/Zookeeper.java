@@ -130,36 +130,99 @@
 
 四.客户端使用:
 1.zkCli.sh 使用:
-	./zkCli.sh -timeout 0 -r -server ip:port
-	(1).timeout 0: 表示超时时间,单位为毫秒
-	(2).-r: 只读,其是只读模式,如果一台机器与集群中的过半机器失去联系,如果需要其还能处理读服务,加上该选项
-	(3).-server ip:port 服务器的ip和端口
-		stat path [watch]
-		set path data [version]
-		ls path [watch]
-		delquota [-n|-b] path
-		ls2 path [watch]
-		setAcl path acl
-		setquota -n|-b val path  设置配额,-n 表示数据节点个数,-b 节点数据长度限制,如果超过限制,不会报错,会在日志中打印
-		history 
-		redo cmdno
-		printwatches on|off
-		delete path [version]
-		sync path
-		listquota path
-		rmr path
-		get path [watch]
-		create [-s] [-e] path data acl
-		addauth scheme auth
-		quit 
-		getAcl path
-		close 
-		connect host:port
-
-
-
-
-
+	1.1.使用方法:
+		./zkCli.sh -timeout 0 -r -server ip:port
+		(1).timeout 0: 表示超时时间,单位为毫秒
+		(2).-r: 只读,其是只读模式,如果一台机器与集群中的过半机器失去联系,如果需要其还能处理读服务,加上该选项
+		(3).-server ip:port 服务器的ip和端口
+	1.2.常用命令:h 可以查看
+		(1).stat path [watch]:path节点的状态信息
+			cZxid = 0x100000016						--> 创建时的事务ID
+			ctime = Sun Aug 06 09:47:58 CST 2017 	--> 创建时间
+			mZxid = 0x10000002a						--> 最后一次更新是的事务ID
+			mtime = Sat Sep 02 19:33:15 CST 2017	--> 修改时间
+			pZxid = 0x10000001d						--> 子节点列表最后一次修改事务的ID:为当前节点添加子节点,或者删除子节点
+			cversion = 4							--> 子节点版本号
+			dataVersion = 2							-->	数据版本号
+			aclVersion = 0							--> ACL权限版本好
+			ephemeralOwner = 0x0					-->	创建临时节点的版本号,如果是持久节点,该值为0
+			dataLength = 3							-->	当前节点存放数据的长度
+			numChildren = 4							-->	当前节点的子节点长度
+		(2).set path data [version]:修改,version 版本号,每次修改,dataVersion 字段都增加1
+			如果添加版本号,所添加的版本号需要跟上一次查询的结果出来的一致
+		(3).ls path [watch]:列出当前path下的节点个数
+		(4).delquota [-n|-b] path:删除配额信息
+		(5).ls2 path [watch]:列出当前path下节点个数和path节点的状态
+		(6).setAcl path acl
+		(7).setquota -n|-b val path:设置配额,如果超过限制,不会报错,会在日志文件 zookeeper.out 中打印
+			-n 表示数据节点个数,表示包含当前节点的节点个数
+			-b 节点数据长度限制;
+			==> 超过配额日志提示:Quota exceeded: /node_4 count=4 limit=3
+		(8).history:查看客户端执行的历史命令
+			[zk: 192.168.139.129:2181(CONNECTED) 33] history
+			23 - delete /node_4
+			24 - ls /
+			25 - create /node_4 4
+			26 - setquota -n 3 /node_4
+			27 - create /node_4/node_4_1 41
+			28 - create /node_4/node_4_2 41
+			29 - create /node_4/node_4_2 41
+			30 - create /node_4/node_4_3 41
+			31 - ls /node_4
+			32 - listquota /node_4
+			33 - history
+		(9).redo cmdno:重复执行历史命令,cmdno 对应 history 命令的签名的数字,如23
+		(11).printwatches on|off
+		(12).delete path [version]:只能删除没有子节点的节点
+		(13).sync path
+		(14).listquota path:查看指定节点的配额信息
+			count --> 表示节点个数, bytes --> 表示数据长度
+			Output quota for /node_4 count=3,bytes=-1 -->配额信息, -1 表示没有限制
+			Output stat for /node_4 count=4,bytes=7	--> 当前节点的状态
+		(15).rmr path:删除含有子节点的节点,递归删除所有子节点和当前节点
+		(16).get path [watch]:获取当前节点存储的内容和状态信息
+		(17).create [-s] [-e] path data acl
+			==> -s 表示顺序节点; -e 表示是临时节点,只存在当前会话; data 数据的值
+		(18).addauth scheme auth
+		(19).quit 
+		(20).getAcl path
+		(21).close:关闭连接其他的 zookeeper 服务
+		(22).connect host:port --> 连接其他 zookeeper 服务
+2.Java 中 zookeeper 的使用:
+	2.1.连接:
+		ZooKeeper zookeeper = new ZooKeeper("192.168.139.129:2181", 5000, new MyWatcher());
+		(1).第一个参数:zookeeper服务器地址和端口;
+		(2).第二个参数:表示超时时间
+		(3).Watcher:zookeeper的时间监听器,一般由Java端实现该接口
+	2.2.创建节点:
+	2.3.修改节点:
+	2.4.删除节点:
+	2.5.查询节点是否存在
+	2.6.ACL 权限控制:
+		2.6.1.权限模式:ip, digest
+		2.6.2.授权对象:
+			ip权限模式:  具体的ip地址
+			digest权限模式: username:Base64(SHA-1(username:password))
+	 	2.6.3.权限(permission): 
+	 		CREATE(C), DELETE(D),READ(R), WRITE(W), ADMIN(A)
+	 	2.6.4.权限组合: scheme + ID + permission
+	 		(1).setAcl /node_4 ip:192.168.139.129:crdwa --> 给节点4设置所有权限
+	 		(2).setAcl /node_4 digest:jike:qndFHmJXEbheIbz+nbBQIbL2/vA=:crdwa
+	 			jike:qndFHmJXEbheIbz+nbBQIbL2/vA= 由 DigestAuthenticationProvider.generateDigest("jike:123456")生成
+	 	2.6.5.Java 中设置权限:
+	 		(1).通过 ACL 构造相应的构造器
+		 		ACL aclIp = new ACL(Perms.READ,new Id("ip","192.168.1.105"));
+				ACL aclDigest = new ACL(Perms.READ|Perms.WRITE,
+					new Id("digest",DigestAuthenticationProvider.generateDigest("jike:123456")));
+				ArrayList<ACL> acls = new ArrayList<ACL>();
+				acls.add(aclDigest);
+				acls.add(aclIp);					
+				String path = zookeeper.create("/node_4", "123".getBytes(), acls, CreateMode.PERSISTENT);
+			(2).通过 Ids(org.apache.zookeeper.ZooDefs.Ids)类
+				OPEN_ACL_UNSAFE, READ_ACL_UNSAFE, CREATOR_ALL_ACL
+				如果是 CREATOR_ALL_ACL, 需要按照如下方式写:
+				zookeeper.addAuthInfo("digest", "jike:123456".getBytes());			
+				String path = zookeeper.create("/node_4", "123".getBytes(), Ids.CREATOR_ALL_ACL, CreateMode.PERSISTENT);
 
 
 
