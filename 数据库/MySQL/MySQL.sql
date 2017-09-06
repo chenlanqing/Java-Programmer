@@ -149,7 +149,8 @@ MySQL
 	ORDER BY:将VT9中的行按ORDER BY 子句中的列列表排序, 生成游标(VC10).
 	TOP:从VC10的开始处选择指定数量或比例的行, 生成表VT11,并返回调用者;
 	==> 除非你确定要有序行,否则不要指定ORDER BY 子句
-
+3.SQL性能下降的原因:
+	
 六.高级查询:"参考图片: SQL-Joins-1.jpg,SQL-Joins-2.jpg"
 1.连接:
 	场景:假设两张表:emp, dept. emp表中的deptId为dept表中的主键.
