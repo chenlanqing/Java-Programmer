@@ -270,11 +270,97 @@
 		HTTP Status 504 (网关超时)	-->服务器作为网关或代理,但是没有及时从上游服务器收到请求.
 		HTTP Status 505 (HTTP 版本不受支持)	--> 服务器不支持请求中所用的 HTTP 协议版本.
 22.跨域问题:
-	22.1.什么是跨域:
+	// https://segmentfault.com/a/1190000011145364
+	22.1.什么是跨域:跨域是指一个域下的文档或脚本试图去请求另一个域下的资源
 		是因为JavaScript同源策略的限制,a.com 域名下的js无法操作b.com或是c.a.com域名下的对象.
 		当两个域具有相同的协议(如http), 相同的端口(如80),相同的host(如www.example.org),那么我们就可以认为它们是相同的域,
 		比如 "http://www.example.org/index.html"和"http://www.example.org/sub/index.html"是同域,
 		而 "http://www.example.org", "https://www.example.org", "http://www.example.org:8080", "http://sub.example.org"
 		中的任何两个都将构成跨域;
-	22.2.如何解决跨域问题
+	22.2.广义的跨域:
+		(1).资源跳转:A 链接,重定向,表单提交
+		(2).资源嵌入:<link>,<script>,<img>,<frame>等dom标签,还有样式中的background:url(),@font-face等文件外链;
+		(3).脚本请求:js发起的ajax请求,dom和js的跨域操作;
+		我们常说的跨域是狭义的,是由浏览器同源策略限制的一类请求场景
+	22.3.什么是同源策略:(SOP-Same Origin Policy)
+		(1).同源策略是一种约定,是浏览器最核心的也是最基本的安全功能,如果缺少同源策略很容易收到XSS,CSRF 攻击.
+			所谓同源,即"协议+域名+端口"三者相同,即使是两个不同的域名指向同一个IP地址,也非同源
+		(2).同源策略限制以下行为:
+			cookie,localString 和indexDb无法读取;
+			dom和js对象无法获得
+			ajax请求不能发送
+	22.4.常见跨域场景:
+		URL                                      说明                    是否允许通信
+		http://www.domain.com/a.js
+		http://www.domain.com/b.js         同一域名，不同文件或路径           允许
+		http://www.domain.com/lab/c.js
+
+		http://www.domain.com:8000/a.js
+		http://www.domain.com/b.js         同一域名，不同端口                不允许
+		 
+		http://www.domain.com/a.js
+		https://www.domain.com/b.js        同一域名，不同协议                不允许
+		 
+		http://www.domain.com/a.js
+		http://192.168.4.12/b.js           域名和域名对应相同ip              不允许
+		 
+		http://www.domain.com/a.js
+		http://x.domain.com/b.js           主域相同，子域不同                不允许
+		http://domain.com/c.js
+		 
+		http://www.domain1.com/a.js
+		http://www.domain2.com/b.js        不同域名                         不允许
+	22.5.常见跨域解决方案:
+		22.5.1.通过jsonp跨域:
+			(1).通常为了减轻web服务器的负载,我们把js、css、img等静态资源分离到另一台独立域名的服务器上,在html页面中再通过相应的标签从不同域名
+				下加载静态资源,而被浏览器允许.基于此原理.我们可以通过动态创建script.再请求一个带参网址实现跨域通信.
+			(2).原生实现:
+				<script>
+				    var script = document.createElement('script');
+				    script.type = 'text/javascript';
+				    // 传参并指定回调执行函数为onBack
+				    script.src = 'http://www.domain2.com:8080/login?user=admin&callback=onBack';
+				    document.head.appendChild(script);
+				    // 回调执行函数
+				    function onBack(res) {
+				        alert(JSON.stringify(res));
+				    }
+				 </script>
+				 服务端返回如下:
+				 onBack({"status": true, "user": "admin"})
+			(3).jQuery实现:
+				$.ajax({
+				    url: 'http://www.domain2.com:8080/login',
+				    type: 'get',
+				    dataType: 'jsonp',  // 请求方式为jsonp
+				    jsonpCallback: "onBack",    // 自定义回调函数名
+				    data: {}
+				});
+			(4).缺点:只能实现get一种请求
+		22.5.2.document.domain + iframe跨域:此方案仅限主域相同,子域不同的跨域应用场景
+			(1).实现原理:两个页面都通过js强制设置document.domain为基础主域,就实现了同域.
+			(2).父窗口:(http://www.domain.com/a.html)
+				<iframe id="iframe" src="http://child.domain.com/b.html"></iframe>
+				<script>
+				    document.domain = 'domain.com';
+				    var user = 'admin';
+				</script>
+			(3)子窗口:(http://child.domain.com/b.html)
+				<script>
+				    document.domain = 'domain.com';
+				    // 获取父窗口中变量
+				    alert('get js data from parent ---> ' + window.parent.user);
+				</script>
+		22.5.3.location.hash + iframe:
+			(1).实现原理:a欲与b跨域相互通信,通过中间页c来实现. 三个页面.不同域之间利用iframe的location.hash传值.相同域之间直接js访问来通信
+			(2).具体实现:A域:a.html ---> B域:b.html ---> A域:c.html,a与b不同域只能通过hash值单向通信,b与c也不同域也只能单向通信,但c与a同域,
+				所以c可通过parent.parent访问a页面所有对象
+			(3).
+		22.5.4.window.name + iframe跨域
+		22.5.5.postMessage跨域
+		22.5.6.跨域资源共享（CORS）
+		22.5.7.nginx代理跨域
+		22.5.8.nodejs中间件代理跨域
+		22.5.9.WebSocket 协议跨域
+
 
