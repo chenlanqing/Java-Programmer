@@ -11,6 +11,12 @@
 2.从几个方面优化:
 	硬件 > 系统设置 > 数据库表结构 > SQL及索引
 	成本往右越低,效果往右越好
+	(1).MySQL 查询优化器:MySQL有专门的优化 select 语句的优化器模块,通过计算分析系统中收集到的统计信息,
+		为客户端请求的query提供其认为的最优执行计划.
+	(2).MySQL 场景瓶颈:
+		CPU:CPU在饱和一般发生在数据装入内存或从磁盘上读取数据的时候;
+		IO:磁盘I/O瓶颈发生在装入数据远远大于内存的容量
+		服务器硬件性能瓶颈:top,free,iostat 和 vmstat 查看系统的性能状态
 3.使用MySQL慢查询日志对有效率问题的SQL进行监控
 	show variables	like 'slow_query_log';
 	set global slow_query_log_file='/home/mysql/sql_log/mysql_slow_log'; -- 慢查询日志存储的硬盘位置
@@ -34,6 +40,12 @@
 			注意pt-query-digest分析中的rows examine
 		(3).未命中索引的SQL
 			注意pt-query-digest分钟中的rows examine和rows send 的对比
+
+
+
+
+
+******************************************************************************************************************
 6.分析SQL查询:使用 explain 查询SQL的执行计划
 	explain select * from customer;
 	+----+-------------+----------+------+---------------+------+---------+------+------+-------+
