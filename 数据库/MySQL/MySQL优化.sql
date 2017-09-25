@@ -40,24 +40,87 @@
 			注意pt-query-digest分析中的rows examine
 		(3).未命中索引的SQL
 			注意pt-query-digest分钟中的rows examine和rows send 的对比
-
-
-
-
-
-******************************************************************************************************************
 6.分析SQL查询:使用 explain 查询SQL的执行计划
 	explain select * from customer;
+	id -> 表的读取顺序
+	select_type -> 数据读取操作的操作类型
 	+----+-------------+----------+------+---------------+------+---------+------+------+-------+
 	| id | select_type | table    | type | possible_keys | key  | key_len | ref  | rows | Extra |
 	+----+-------------+----------+------+---------------+------+---------+------+------+-------+
 	|  1 | SIMPLE      | customer | ALL  | NULL          | NULL | NULL    | NULL |  646 |       |
 	+----+-------------+----------+------+---------------+------+---------+------+------+-------+
-	6.1.字段语义:
+	6.1.id:select的查询序列号,包含一组数字,表示在查询中执行 select 子句或者操作表的顺序
+		(1).id相同,执行顺序由上而下
+		mysql> explain select film.* from film left join film_actor fa on film.film_id = fa.film_id
+			left join actor on fa.actor_id=actor.actor_id where first_name = 'sandra';
+		+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
+		| id | select_type | table | type   | possible_keys          | key     | key_len | ref                   | rows | Extra                    |
+		+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
+		|  1 | SIMPLE      | actor | ALL    | PRIMARY                | NULL    | NULL    | NULL                  |  200 | Using where              |
+		|  1 | SIMPLE      | fa    | ref    | PRIMARY,idx_fk_film_id | PRIMARY | 2       | sakila.actor.actor_id |   13 | Using where; Using index |
+		|  1 | SIMPLE      | film  | eq_ref | PRIMARY                | PRIMARY | 2       | sakila.fa.film_id     |    1 |                          |
+		+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
+		(2).id不同,如果是子查询,id的序号会递增,id值越大优先级越高,越先被执行
+		mysql> explain select title,release_year,length from film where film_id in(
+					select film_id from film_actor WHERE actor_id in (
+						select actor_id from actor where first_name='sandra'
+					)
+				);
+		+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
+		| id | select_type        | table      | type            | possible_keys  | key            | key_len | ref  | rows | Extra                    |
+		+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
+		|  1 | PRIMARY            | film       | ALL             | NULL           | NULL           | NULL    | NULL | 1128 | Using where              |
+		|  2 | DEPENDENT SUBQUERY | film_actor | index_subquery  | idx_fk_film_id | idx_fk_film_id | 2       | func |    2 | Using index; Using where |
+		|  3 | DEPENDENT SUBQUERY | actor      | unique_subquery | PRIMARY        | PRIMARY        | 2       | func |    1 | Using where              |
+		+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
+		(3).id相同不同,同时存在,DERIVED-衍生,
+		如下中 table 为 <derived2> 表示是根据id为2衍生的表格
+		mysql> explain select title,	release_year,	length from film left join (
+				select film_id from film_actor where actor_id in (
+						select actor_id from actor where first_name = 'sandra'
+					)
+				)s on film.film_id = s.film_id;
+		+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
+		| id | select_type        | table      | type            | possible_keys | key            | key_len | ref  | rows | Extra                    |
+		+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
+		|  1 | PRIMARY            | film       | ALL             | NULL          | NULL           | NULL    | NULL | 1128 |                          |
+		|  1 | PRIMARY            | <derived2> | ALL             | NULL          | NULL           | NULL    | NULL |   56 |                          |
+		|  2 | DERIVED            | film_actor | index           | NULL          | idx_fk_film_id | 2       | NULL | 5143 | Using where; Using index |
+		|  3 | DEPENDENT SUBQUERY | actor      | unique_subquery | PRIMARY       | PRIMARY        | 2       | func |    1 | Using where              |
+		+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
+	6.2.select_type:查询类型,主要用于区别普通查询,联合查询,子查询等复杂查询,主要有以下值:
+		(1).SIMPLE:简单的select查询,查询中不包含子查询或者union
+		(2).PRIMARY:查询中若包含任何复杂的子查询,最外层的查询则被标记为 primary
+		(3).SUBQUERY:在 select 或者 where 列表中包含了子查询
+		(4).DERIVED:在 from 列表中包含的子查询被标记为 DERIVED,MySQL 会递归执行这些子查询,把结果放在临时表中
+		(5).UNION:若第二个 select 出现在 union 之后,则被标记为union;
+			若 union 包含在 from 子句的子查询中, 外层 select 将被标记为 DERIVED
+		(6).UNION RESULT:从 union 中获取结果的 select
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 		(1).table:显示这一行的数据是关于哪张表的
-		(2).type:这是重要的列,显示连接使用了何种类型.从最好到最差的连接类型为 const、eq_reg、ref、range、indexhe和all
-		(3).possible_keys：显示可能应用在这张表中的索引.如果为空,没有可能的索引.可以为相关的域从where语句中选择一个合适的语句
-		(4).key:实际使用的索引.如果为 null，则没有使用索引。很少的情况下，mysql会选择优化不足的索引.这种情况下,可以在
+		(2).type:这是重要的列,显示连接使用了何种类型.
+			从最好到最差的连接类型为 const、eq_reg、ref、range、indexhe和all
+		(3).possible_keys:显示可能应用在这张表中的索引.如果为空,没有可能的索引.可以为相关的域从 where 
+			语句中选择一个合适的语句
+		(4).key:实际使用的索引.如果为 null，则没有使用索引.很少的情况下,mysql会选择优化不足的索引.这种情况下,可以在
 			select 语句中使用use index(indexname)来强制使用一个索引或者用ignore index（indexname）来强制mysql忽略索引
 		(5).key_len:使用的索引的长度。在不损失精确性的情况下，长度越短越好.
 		(6).ref:显示索引的哪一列被使用了，如果可能的话，是一个常数;
@@ -86,6 +149,12 @@
 		range:这个连接类型使用索引返回一个范围中的行，比如使用>或<查找东西时发生的情况
 		index: 这个连接类型对前面的表中的每一个记录联合进行完全扫描（比all更好，因为索引一般小于表数据）
 		all:这个连接类型对于前面的每一个记录联合进行完全扫描，这一般比较糟糕，应该尽量避免
+
+
+
+
+******************************************************************************************************************
+
 7.count和max优化:
 	7.1.max 优化:
 		(1).explain select max(payment_date) from payment;
