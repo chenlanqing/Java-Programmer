@@ -1,3 +1,4 @@
+// https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000
 1.版本控制:是一种记录一个或若干文件内容变化,以便将来查阅特定版本修订情况的系统
 	1.1.本地版本控制系统
 	1.2.集中化的版本控制系统:一个单一的集中管理的服务器,保存所有文件的修订版本
@@ -48,6 +49,15 @@
 			git help <verb>
 			git <verb> --help
 			man git-<verb>
+	2.7.工作区和暂存区
+		2.7.1.工作区:当前工程的工作目录
+		2.7.2.版本库:工作区内有一个隐藏目录 .git, 这个是 Git 的版本库.
+			版本库中最重要的是 stage 的暂存区,还有Git为我们自动创建的第一个分支master,以及指向master的一个指针叫 HEAD
+			(1).往 git 版本库中添加的时候,分两步执行的:
+				第一步是用git add把文件添加进去,实际上就是把文件修改添加到暂存区;
+				第二步是用git commit提交更改,实际上就是把暂存区的所有内容提交到当前分支;
+				因为我们创建Git版本库时,Git 自动为我们创建了唯一一个master分支,所以,现在,git commit就是往master分支上提交更改
+		2.7.3.暂存区:Git 和其他版本控制系统如SVN的一个不同之处
 3.Git 基础:
 	3.1.获取项目的 Git 仓库:
 		3.1.1.在工作目录中初始化新仓库
@@ -75,16 +85,16 @@
 			    *.[oa] // 告诉 Git 忽略所有以 .o 或 .a 结尾的文件
 			    *~ // 第二行告诉 Git 忽略所有以波浪符（~）结尾的文件
 			(1).文件 .gitignore 的格式规范如下：
-				所有空行或者以注释符号 ＃ 开头的行都会被 Git 忽略。
-				可以使用标准的 glob 模式匹配。
-				匹配模式最后跟反斜杠（/）说明要忽略的是目录。
-				要忽略指定模式以外的文件或目录，可以在模式前加上惊叹号（!）取反。
+				所有空行或者以注释符号 # 开头的行都会被 Git 忽略.
+				可以使用标准的 glob 模式匹配.
+				匹配模式最后跟反斜杠（/）说明要忽略的是目录.
+				要忽略指定模式以外的文件或目录，可以在模式前加上惊叹号（!）取反.
 			# 此为注释 – 将被 Git 忽略
 		    # 忽略所有 .a 结尾的文件
 		    *.a
 		    # 但 lib.a 除外
 		    !lib.a
-		    # 仅仅忽略项目根目录下的 TODO 文件，不包括 subdir/TODO
+		    # 仅仅忽略项目根目录下的 TODO 文件, 不包括 subdir/TODO
 		    /TODO
 		    # 忽略 build/ 目录下的所有文件
 		    build/
@@ -121,7 +131,7 @@
 	3.3.查看提交历史:git log
 		3.3.1.git log 选项:
 			(1).-p 选项展开显示每次提交的内容差异;
-			(2).-2 则仅显示最近的两次更新;
+			(2).-2 则仅显示最近的两次更新; -1 表示获取最新一次提交的日志
 			(3).-stat 仅显示简要的增改行数统计;每个提交都列出了修改过的文件，以及其中添加和移除的行数，并在最后列出所有增减行数小计
 			(4).--pretty 可以指定使用完全不同于默认格式的方式展示提交历史
 				$ git log --pretty=oneline
@@ -160,6 +170,12 @@
 			    --relative-date 使用较短的相对时间显示（比如，“2 weeks ago”）。
 			    --graph 显示 ASCII 图形表示的分支合并历史。
 			    --pretty 使用其他格式显示历史提交信息。可用的选项包括 oneline，short，full，fuller 和 format（后跟指定格式)
+			(7).git reflog用来记录你的每一次命令:
+				$ git reflog
+				ea34578 HEAD@{0}: reset: moving to HEAD^
+				3628164 HEAD@{1}: commit: append GPL
+				ea34578 HEAD@{2}: commit: add distributed
+				cb926e7 HEAD@{3}: commit (initial): wrote a readme file
 		3.3.2.限制输出长度
 			(1).Git 在输出所有提交时会自动调用分页程序（less），要看更早的更新只需翻到下页即可
 			(2).按照时间作限制的选项，比如 --since 和 --until.下面的命令列出所有最近两周内的提交:
@@ -178,6 +194,12 @@
 				提交的但未合并的测试脚本(位于项目的 t/ 目录下的文件)
 		3.3.3.使用图形化工具查阅提交历史				
 	3.4.撤销操作:
+		[root@localhost learngit]# git log --pretty=oneline
+		2a5d1b802fcc17febc4ff822b2cd2280851362e9 modify
+		88115cedc87f946094ddc6919360fee30eb4e981 appedn GPL
+		2be76a2b59f30dcd5418a8e384cfbdfabcc4fa3d add distributed
+		d72d4a771920928ba6ade32d3b7c5ef0101cfeea write a readme file
+		2a5d1b802fcc17febc4ff822b2cd2280851362e9 ==> commit id(版本号)
 		3.4.1.修改最后一次提交:
 			提交完了才发现漏掉了几个文件没有加,或者提交信息写错了.想要撤消刚才的提交操作,可以使用 --amend 选项重新提交	
 				$ git commit --amend
@@ -186,9 +208,18 @@
 			    $ git add forgotten_file
 			    $ git commit --amend // 第二个提交命令修正了第一个的提交内容
 		3.4.2.取消已经暂存的文件:git reset HEAD <file>... 的方式取消暂存
+			命令既可以回退版本,也可以把暂存区的修改回退到工作区
 			git status 命令的输出中有相应的提示信息
+			(1).git reset HEAD <file>从缓存中取消
+			(2).git reset --hard HEAD^ :从当前版本回退到上一个版本
+			(3).git reset --hard 2a5d1b802fcc17febc4ff822b2cd2280851362e9 ==> 回退到之前的某一个版本
+				HEAD 指向的版本就是当前版本
 		3.4.3.取消对文件的修改:git checkout -- <file>
-			注意:在用这条命令前，请务必确定真的不再需要保留刚才的修改
+			注意:在用这条命令前,请务必确定真的不再需要保留刚才的修改
+		==> 总结:
+			场景1:当你改乱了工作区某个文件的内容,想直接丢弃工作区的修改时,用命令git checkout -- file。
+			场景2:当你不但改乱了工作区某个文件的内容,还添加到了暂存区时,想丢弃修改,分两步,第一步用命令git reset HEAD file,就回到了场景1,第二步按场景1操作.
+			场景3:已经提交了不合适的修改到版本库时,想要撤销本次提交,参考版本回退一节,不过前提是没有推送到远程库
 	3.5.远程仓库的使用:远程仓库是指托管在网络上的项目仓库
 		3.5.1.查看当前的远程库:
 			git remote 命令，它会列出每个远程库的简短名字
@@ -203,12 +234,18 @@
 			git push [remote-name] [branch-name]
 			(1).如果要把本地的 master 分支推送到 origin 服务器上(再次说明下,克隆操作会自动使用默认的 master 和 origin 名字),
 				可以运行下面的命令：$ git push origin master
-			(2).如果在你推数据前，已经有其他人推送了若干更新，那你的推送操作就会被驳回。你必须先把他们的更新抓取到本地，
+			(2).如果在你推数据前,已经有其他人推送了若干更新,那你的推送操作就会被驳回。你必须先把他们的更新抓取到本地，
 				合并到自己的项目中，然后才可以再次推送
+				git push -u origin master ==> 
+				-u Git 不但会把本地的master分支内容推送的远程新的master分支,
+				还会把本地的master分支和远程的master分支关联起来,在以后的推送或者拉取时就可以简化命令
 		3.5.5.查看远程仓库信息: git remote show [remote-name] 查看某个远程仓库的详细信息
 		3.5.6.远程仓库的删除和重命名:
 			在新版 Git 中可以用 git remote rename 命令修改某个远程仓库在本地的简称	
 			$ git remote rename pb paul
+		3.5.7.远程仓库创建 sshkey:
+			(1).ssh-keygen -t rsa -C "youremail@example.com",直接回车,
+				生存的目录 .ssh 里包含两个文件:id_rsa是私钥,不能泄露出去;id_rsa.pub是公钥
 	3.6.打标签:
 		3.6.1.列显已有的标签
 			列出现有标签的命令非常简单，直接运行 git tag 即可
@@ -230,15 +267,162 @@
 			(6).后期加注标签:
 				$ git tag -a v1.2 9fceb02
 			(7).分享标签,git push 并不会把标签传送到远端服务器上,只有通过显式命令才能分享标签到远端仓库.其命令格式如同推送分支
-				
-
-
-
-
-
-
-
-
+			(8).默认标签是打在最新提交的commit上的,如果需要在之前的打标,方法是找到历史提交的commit id,然后打上就可以了:
+				$ git log --pretty=oneline --abbrev-commit
+				6a5819e merged bug fix 101
+				cc17032 fix bug 101
+				7825a50 merge with no-ff
+				6224937 add merge
+				59bc1cb conflict fixed
+				400b400 & simple
+				75a857c AND simple
+				fec145a branch test
+				d17efd8 remove test.txt
+				比方说要对add merge这次提交打标签,它对应的commit id是6224937,敲入命令:
+				$ git tag v0.9 6224937
+			(9).
+				命令git push origin <tagname>可以推送一个本地标签;
+				命令git push origin --tags可以推送全部未推送过的本地标签;
+				命令git tag -d <tagname>可以删除一个本地标签;
+				命令git push origin :refs/tags/<tagname>可以删除一个远程标签.
+	3.7.分支管理:
+		3.7.1.创建分支与合并分支:
+			(1).创建dev分支,并切换到dev分支:
+				git checkout -b dev ==> git checkout命令加上-b参数表示创建并切换,相当于下面两条命令:
+					$ git branch dev
+					$ git checkout dev
+					Switched to branch 'dev'
+			(2).查看当前分支:当前分支前面会标一个*号
+				$ git branch
+				* dev
+				  master
+			(3).切换分支:
+				git checkout master
+			(4).合并分支:把某个分支合并到主干上, git merge dev 命令用于合并指定分支到当前分支
+				[root@localhost learngit]# git merge dev
+				更新 433a4cc..03782e3
+				Fast-forward 
+				 readme.txt | 1 +
+				 1 file changed, 1 insertion(+)
+				==> Fast-forward 合并是"快进模式",也就是直接把master指向dev的当前提交,所以合并速度非常快
+			(5).删除分支:
+				$ git branch -d dev
+				Deleted branch dev (was fec145a).
+			查看分支:git branch
+			创建分支:git branch <name>
+			切换分支:git checkout <name>
+			创建+切换分支:git checkout -b <name>
+			合并某分支到当前分支:git merge <name>
+			删除分支:git branch -d <name>	
+		3.7.2.冲突解决:
+			(1).合并发生冲突:
+				[root@localhost learngit]# git merge feature1
+				自动合并 readme.txt
+				冲突（内容）：合并冲突于 readme.txt
+				自动合并失败，修正冲突然后提交修正的结果。
+			(2).查看文件状态,显示冲突:
+				[root@localhost learngit]# git status
+				# 位于分支 master
+				# 您的分支领先 'origin/master' 共 2 个提交。
+				#   （使用 "git push" 来发布您的本地提交）
+				#
+				# 您有尚未合并的路径。
+				#   （解决冲突并运行 "git commit"）
+				#
+				# 未合并的路径：
+				#   （使用 "git add <file>..." 标记解决方案）
+				#
+				#	双方修改：     readme.txt
+				#
+				修改尚未加入提交（使用 "git add" 和/或 "git commit -a"）
+			(3).修改冲突文件后,可以直接提交
+			(4).用 git log --graph 命令可以看到分支合并图
+				[root@localhost learngit]# git log --graph --pretty=oneline --abbrev-commit
+				*   6a52e55 conflict fixed
+				|\  
+				| * 4dba686 AND simple
+				* | 9e8d96e & simple
+				|/  
+				* 03782e3 brach test
+				* 433a4cc delete java file
+				* 293127e add java file
+				* 40056fc test
+				* 2a5d1b8 modify
+				* 88115ce appedn GPL
+				* 2be76a2 add distributed
+				* d72d4a7 write a readme file
+		3.7.3.分支管理策略:合并分支时,如果可能,Git 会用 Fast forward 模式,但这种模式下,删除分支后,会丢掉分支信息.
+				如果要强制禁用Fast forward模式,Git 就会在merge时生成一个新的commit,这样,从分支历史上就可以看出分支信息.
+				[root@localhost learngit]# git merge --no-ff -m "merge with no diff" dev
+				Merge made by the 'recursive' strategy.
+				 readme.txt | 2 +-
+				 1 file changed, 1 insertion(+), 1 deletion(-)
+				(1).master分支应该是非常稳定的,也就是仅用来发布新版本,平时不能在上面干活;
+				(2).dev分支是不稳定的,到某个时候,比如1.0版本发布时,再把dev分支合并到master上,在master分支发布1.0版本;
+				(3).合并分支时,加上 --no-ff 参数就可以用普通模式合并,合并后的历史有分支,能看出来曾经做过合并,而fast forward合并就看不出来曾经做过合并
+		3.7.4.Bug 分支:
+			(1).git stash:把当前工作现场"储藏"起来，等以后恢复现场后继续工作
+				$ git stash
+				Saved working directory and index state WIP on dev: 6224937 add merge
+				HEAD is now at 6224937 add merge
+			(2).先确定要在哪个分支上修复bug,假定需要在master分支上修复,就从master创建临时分支:
+				$ git checkout master ==> 切换到 master分支
+				$ git checkout -b issue-101 ==> 创建分支
+				修复完成后,切换到master分支,并完成合并最后删除 issue-101分支
+				# git stash list => 查看工作区域
+				stash@{0}: WIP on dev: 0b12ec6 add no diff merge
+				如果恢复到之前的工作区域:
+				一是用git stash apply恢复,但是恢复后,stash内容并不删除,你需要用git stash drop来删除;
+				另一种方式是用git stash pop,恢复的同时把stash内容也删了;
+			(3).如果要丢弃一个没有被合并过的分支,可以通过 git branch -D <name>强行删除
+		3.7.5.多人协作:
+			(1).查看远程仓库:
+				[root@localhost learngit]# git remote
+				origin
+				[root@localhost learngit]# git remote -v
+				origin	https://github.com/chenlanqing/learngit.git (fetch)
+				origin	https://github.com/chenlanqing/learngit.git (push)
+				如果没有推送权限,就看不到push的地址
+			(2).推送分支:把该分支上的所有本地提交推送到远程库,推送时,要指定本地分支,这样,Git 就会把该分支推送到远程库对应的远程分支上
+				$ git push origin master
+				如果要推送其他分支,比如dev,就改成:
+				$ git push origin dev
+			(3).并不是一定要把本地分支往远程推送,那么,哪些分支需要推送,哪些不需要呢?
+				master分支是主分支,因此要时刻与远程同步;
+				dev分支是开发分支,团队所有成员都需要在上面工作,所以也需要与远程同步;
+				bug分支只用于在本地修复bug,就没必要推到远程了,除非老板要看看你每周到底修复了几个bug;
+				feature分支是否推到远程,取决于你是否和你的小伙伴合作在上面开发
+			查看远程库信息，使用git remote -v；
+			本地新建的分支如果不推送到远程，对其他人就是不可见的;
+			从本地推送分支，使用git push origin branch-name,如果推送失败,先用git pull抓取远程的新提交；
+			在本地创建和远程分支对应的分支，使用git checkout -b branch-name origin/branch-name,本地和远程分支的名称最好一致；
+			建立本地分支和远程分支的关联,使用 git branch --set-upstream branch-name origin/branch-name；
+			从远程抓取分支,使用git pull,如果有冲突,要先处理冲突
+4.自定义git：
+	4.1.忽略文件:在工作区目录下新建文件一个特殊的.gitignore文件,然后把要忽略的文件名填进去,Git 就会自动忽略这些文件
+		// https://github.com/github/gitignore
+		4.1.1.忽略文件的原则是:
+			(1).忽略操作系统自动生成的文件,比如缩略图等;
+			(2).忽略编译生成的中间文件、可执行文件等,也就是如果一个文件是通过另一个文件自动生成的;那自动生成的文件就没必要放进版本库;比如Java编译产生的.class文件；
+			(3).忽略你自己的带有敏感信息的配置文件,比如存放口令的配置文件
+		4.1.2.在windows环境下,发现文件添加不了,原因是这个文件被.gitignore忽略了.
+			如果你确实想添加该文件,可以用-f强制添加到Git:
+			git add -f readme.txt
+		4.1.3.git check-ignore命令检查 .gitignore 文件规则是不是有问题	
+			[root@localhost learngit]# git check-ignore -v test.iml 
+			.gitignore:3:*.iml	test.iml
+			==> .gitignore 第3行规则忽略了该文件,可以知道需要修改哪个规则
+	4.2.配置别名:
+		$ git config --global alias.st status
+		可以用 git.st  替代  git status
+		$ git config --global alias.co checkout
+		$ git config --global alias.ci commit
+		$ git config --global alias.br branch
+		-- 配置 git log 为 git lg,并设置相应的颜色显示
+		$ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+		[root@localhost learngit]# git lg
+	4.3.配置文件:配置Git的时候,加上--global是针对当前用户起作用的;如果不加,那只针对当前的仓库起作用
+		每个仓库的Git配置文件都放在.git/config文件中
 
 
 
