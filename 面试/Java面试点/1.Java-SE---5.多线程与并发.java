@@ -57,6 +57,8 @@
 
 7.线程池?如果让你设计一个线程池,如何设计,应该有哪些方法?
 	// http://www.cnblogs.com/skywang12345/p/3509903.html
+	// http://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io
+	// http://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A
 	7.1.Java 线程池:
 		(1).Executor:它是"执行者"接口,它是来执行任务的.准确的说:Executor 提供了execute()接口来执行已提交的 Runnable 任务的对象;
 			Executor 存在的目的是提供一种将"任务提交"与"任务如何运行"分离开来的机制:
