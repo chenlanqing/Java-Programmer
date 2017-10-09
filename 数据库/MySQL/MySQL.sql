@@ -274,7 +274,7 @@ MySQL
 		mysql中查看事务隔离级别:select @@tx_isolation;
 			set  [glogal | session]  transaction isolation level 隔离级别名称;
 		    set tx_isolation=’隔离级别名称;’
-
+			查看当前数据库的事务隔离级别:show variables like 'tx_isolation'
 2.数据库水平拆分(分表)和垂直拆分(分库)
     -- Cobar:http://blog.csdn.net/shagoo/article/details/8191346
 	2.1.数据切分(Sharing):基本思想是把一个数据库切成多个部分放到不同的数据库上,从而缓解单一数据库的性能问题.
@@ -361,10 +361,42 @@ MySQL
 			此值高则说明存在着较为严重的表级锁定争用情况;
 		==> MyISAM 的读写锁调度是写优先,这也是 MyISAM 不适合做写为主表的引擎.
 			因为写锁后,其他线程不能做任何操作,大量的更新会使查询很难得到锁,从而造成永远阻塞
-4.
-
-
-
+4.行锁:
+	4.1.行锁偏向 InnoDB 存储引擎,开销大,加锁慢;会出现死锁;锁的粒度最小,发生锁冲突的概率最低,并发度也最高;
+		InnoDB 与 MyISAM 最大不同点是:支持事务和采用了行级锁;
+	4.2.索引失效后无索引行由行锁升级为表锁.
+	4.3.间隙锁:
+		(1).当用范围条件而不是相等条件检索数据,并请求共享或排他锁时,InnoDB 会给符合条件的已有数据记录的索引
+			项加锁;对于键值在条件范围内但并不存在的记录,叫做"间隙"
+			InnoDB 也会对这个"间隙"加锁,这种锁机制就是所谓的间隙锁;
+		(2).危害:
+			因为在查询的执行过程通过范围查找的话,它会锁定整个范围内所得索引键值,即使这个键值不存在;
+			间隙锁有一个比较致命的弱点:就是当锁定一个范围键值之后,即使某些不存在的键值也会被无辜的锁定,
+			而造成在锁定的时候无法插入锁定键值范围内的任何数据.在某些场景下可能会对性能造成很大的危害.
+	4.4.如何手动锁定一行:
+		begin:
+		select xxx for update 锁定某一行后,其他的操作会被阻塞,直到锁定行的会话commit
+	4.5.InnoDB 存储引擎由于实现了行级锁,虽然在锁定机制的实现方面锁带来的性能损耗可能会比表级锁定会更高些,
+		但是在整体并发处理能力方面要远远优于 MyISAM 的表级锁定.当系统并发量较高时,InnoDB的整体性能和
+		MyISAM 相比会有比较明显的优势;
+		但是 InnoDB 的行级锁定同样有脆弱的一面,当我们使用不当时,可能会让 InnoDB 的整体性能表现不仅不能比
+		MyISAM 高,甚至可能更差
+	4.6.行级锁分析:
+		mysql> show status like 'innodb_row_lock%';
+		+-------------------------------+-------+
+		| Variable_name                 | Value |
+		+-------------------------------+-------+
+		| Innodb_row_lock_current_waits | 0     |
+		| Innodb_row_lock_time          | 41389 |
+		| Innodb_row_lock_time_avg      | 13796 |
+		| Innodb_row_lock_time_max      | 20024 |
+		| Innodb_row_lock_waits         | 3     |
+		+-------------------------------+-------+
+		Innodb_row_lock_current_waits:当前正在等待的锁定数量;
+		Innodb_row_lock_time:从系统启动到现在锁定的总时间长度;(******)
+		Innodb_row_lock_time_avg:每次等待所花平均时间;(******)
+		Innodb_row_lock_time_max:从系统启动到现在等待最长的一次所花的时间
+		Innodb_row_lock_waits:等待总次数(******)
 
 
 
