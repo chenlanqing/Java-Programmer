@@ -194,10 +194,50 @@
 		(1).第一个参数:zookeeper服务器地址和端口;
 		(2).第二个参数:表示超时时间
 		(3).Watcher:zookeeper的时间监听器,一般由Java端实现该接口
+			并实现方法:
+			public void process(WatchedEvent event);
 	2.2.创建节点:
+		(1).同步创建节点:
+			public String create(final String path, byte data[], List<ACL> acl, CreateMode createMode)
+			path --> 路径
+			data --> 数据
+			acl --> 对应路径的权限
+			creatMode --> 创建模式,持久还是临时,异或是有序节点
+		(2). public void create(final String path, byte data[], List<ACL> acl,
+            	CreateMode createMode,  StringCallback cb, Object ctx)
+			path --> 路径
+			data --> 数据
+			acl --> 对应路径的权限
+			creatMode --> 创建模式,持久还是临时,异或是有序节点
+			cb --> 回调函数, 实现的是 interface StringCallback extends AsyncCallback{
+				public void processResult(int rc, String path, Object ctx, String name);
+			}
+			ctx --> 回调函数的上下文,对应 StringCallback 中的 ctx
 	2.3.修改节点:
+		(1).同步修改:
+			public Stat setData(final String path, byte data[], int version)
+			path --> 需要修改的路径
+			data --> 修改的数据
+			version --> 版本号
+		(2).异步修改:
+			public void setData(final String path, byte data[], int version, StatCallback cb, Object ctx)
+			cb --> 回调函数 实现的是 interface StatCallback extends AsyncCallback {
+		        public void processResult(int rc, String path, Object ctx, Stat stat);
+		    }
+		    ctx --> 回调上下文数据
 	2.4.删除节点:
-	2.5.查询节点是否存在
+		(1).同步删除:
+			public void delete(final String path, int version)
+		(2).异步删除:
+			public void delete(final String path, int version, VoidCallback cb, Object ctx)
+	2.5.查询节点:
+		2.5.1.查询子节点:
+			(1).同步:
+				public List<String> getChildren(String path, boolean watch)
+				path --> 获取的路径
+				watch --> 是否关注节点的变化
+			(2).异步:
+				public void getChildren(String path, boolean watch, Children2Callback cb, Object ctx)
 	2.6.ACL 权限控制:
 		2.6.1.权限模式:ip, digest
 		2.6.2.授权对象:
@@ -223,7 +263,31 @@
 				如果是 CREATOR_ALL_ACL, 需要按照如下方式写:
 				zookeeper.addAuthInfo("digest", "jike:123456".getBytes());			
 				String path = zookeeper.create("/node_4", "123".getBytes(), Ids.CREATOR_ALL_ACL, CreateMode.PERSISTENT);
-
+3.ZkClient 客户端的使用:
+	ZkClient 是Github上一个开源的ZooKeeper客户端.ZkClient 在ZooKeeper原生API接口之上进行了包装,
+	是一个更加易用的ZooKeeper客户端.同时,ZkClient 在内部实现了诸如Session超时重连、Watcher反复注册等功能
+	(1).订阅节点变化:
+		zkClient.subscribeChildChanges("/node_2", new IZkChildListener() {
+			public void handleChildChange(String parentPath, List<String> currentChilds)
+					throws Exception {
+				System.out.println(parentPath);
+				System.out.println(currentChilds);
+			}
+		});
+	(2).订阅节点数据的变化:
+		==> 注意其序列化器使用:BytesPushThroughSerializer
+		zkClient.subscribeDataChanges("/node_2", new IZkDataListener() {
+			public void handleDataDeleted(String dataPath) throws Exception {
+				System.out.println(dataPath);
+			}
+			public void handleDataChange(String dataPath, Object data) throws Exception {
+				System.out.println(dataPath + ":" + data.toString());
+			}
+		});
+	4.
+五.实战:
+1.master 选举:
+	
 
 
 

@@ -8,8 +8,8 @@
 		阻塞造成数据无法提交
 	(2).增加数据库稳定性
 	(3).优化用户体验
-2.从几个方面优化:
-	硬件 > 系统设置 > 数据库表结构 > SQL及索引
+2.影响 mysql 性能的因素::
+	硬件 > 系统设置 > 数据库参数配置 > 数据库表结构 > SQL及索引; 
 	成本往右越低,效果往右越好
 	(1).MySQL 查询优化器:MySQL有专门的优化 select 语句的优化器模块,通过计算分析系统中收集到的统计信息,
 		为客户端请求的query提供其认为的最优执行计划.
@@ -17,12 +17,23 @@
 		CPU:CPU在饱和一般发生在数据装入内存或从磁盘上读取数据的时候;
 		IO:磁盘I/O瓶颈发生在装入数据远远大于内存的容量
 		服务器硬件性能瓶颈:top,free,iostat 和 vmstat 查看系统的性能状态
-3.使用MySQL慢查询日志对有效率问题的SQL进行监控
+3.MySQL 性能优化:
+	3.1.服务器硬件对性能的优化:
+		3.1.1.CPU:(目前不支持多CPU对同一sql进行处理)
+			(1).64位的CPU一定要工作在64位的系统上;
+			(2).对于并发比较高的场景CPU的数量(核数)比频率重要;
+			(3).对于CPU密集型场景和复杂SQL则频率越高越好;
+		3.1.2.内存:
+			(1).选择主板所能使用的最高频率内存;
+			(2).内存的大小对性能很重要,所以尽可能大;
+		3.1.3.I/O子系统:
+			PCIe > SSD > Raid10 >  磁盘 > SAN(网络存储)
+4.慢查询日志包含的内容:
+	使用MySQL慢查询日志对有效率问题的SQL进行监控
 	show variables	like 'slow_query_log';
 	set global slow_query_log_file='/home/mysql/sql_log/mysql_slow_log'; -- 慢查询日志存储的硬盘位置
 	set global log_queries_not_using_indexes=on; -- 是否将未使用索引的sql记录到慢查询日志中
 	set global long_query_time=1; --将超过多少秒的sql记录到慢查询日志中
-4.慢查询日志包含的内容:
 	(1).执行SQL的主机信息:
 		# User@Host: root[root] @ localhost [127.0.0.1]
 	(2).SQL的执行信息:
@@ -859,7 +870,6 @@
 	14.5.执行存储过程:
 		call insert_dept(10,100)
 		call insert_emp(100000,500000);
-
 
 
 
