@@ -28,6 +28,10 @@
 		在Java中只需要如此写:
 		@Value("${cupSize}")
 	  	private String cupSize;
+	(5).属性配置相关注解:
+		@Component
+		@Value
+		@ConfigurationProperties
 3.Controller:
 	(1).@Controller :处理 http请求,必须配合模板来使用
 	(2).@RestController: Spring4 之后新加的注解, 原来返回 json需要@ResponseBody 配合 @Controller
