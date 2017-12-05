@@ -168,6 +168,16 @@ HashMap:继承 AbstractMap, 实现了 Map, Cloneable, Serializable
 	所谓快速失败就是在并发集合中，其进行迭代操作时，若有其他线程对其结构性的修改，这是迭代器会立马感知到，并且立刻抛出
 	ConcurrentModificationException异常，而不是等待迭代完成之后才告诉你已经出错
 4.HashMap 的哈希函数的设计原理:
+	(1).HashMap 的初始长度是 16,并且每次自动扩展或是手动初始化时长度必须是2的幂.
+	(2).之所以 HashMap 的初始长度是 16,是为了服务于 key映射到 index 的hash算法.
+	(3).如何实现一个尽量均匀分布的 hash 函数呢?可以通过 key 的hashcode值来做某种运算.
+		index =  HashCode(Key) &  (Length - 1) 	 其中  length是 HashMap 的长度
+		hash算法的最终得到的index结果,完全取决.
+		使用位运算的效果等同于取模,但是却大大提升了性能.
+	(4).为什么是 16? 可以试试,如果是10会产生什么结果?
+		当 HashMap 长度等于10 的时候,有些 index 结果出现的几率会更大,而有些index的结果永远不会出现.这显然不符合Hash算法均匀分布的原则.
+		而16或者其他2的幂,Length - 1的值是所有二进制位全为1,这种情况下,index的结果等于 hashCode 后几位的值.只要输入hashcode本身是均匀分布的,hash算法等于均匀的
+
 
 四.HashMap 的存取实现:
 1.public V put(K key, V value)方法:
@@ -276,7 +286,7 @@ HashMap:继承 AbstractMap, 实现了 Map, Cloneable, Serializable
 			因此，当碰撞很厉害的时候n很大，O(n)的速度显然是影响速度的。
 		因此在Java 8中,利用红黑树替换链表，这样复杂度就变成了O(1)+O(logn)了，这样在n很大的时候,能够比较理想的解决这个问题;
 
-4.的实现
+4.resize 的实现
 	4.1.JDK6的实现:void resize( int newCapacity)resize
 		(1).获取当前数组的容量,如果容量已经是默认最大容量 MAXIMUM_CAPACITY,则将临界值改为 Integer.MAX_VALUE
 			if (oldCapacity == MAXIMUM_CAPACITY) {
@@ -298,8 +308,16 @@ HashMap:继承 AbstractMap, 实现了 Map, Cloneable, Serializable
 		(2).扩充HashMap的时候，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0就好了，是0的话索引没变，
 		是1的话索引变成“原索引+oldCap”
 
-
-
+五.高并发下 HashMap 的使用的问题:
+1.Hashmap 在插入元素过多的时候需要进行 resize,resize的条件是:size >=  capacity * loadFactor。
+2.Hashmap 的 resize 包含扩容和 reHash两个步骤,reHash在并发的情况下可能会形成链表环.
+	当调用Get查找一个不存在的Key,而这个Key的Hash结果恰好等于某个值的时候,由于位置该值带有环形链表,所以程序将会进入死循环
+3.为什么扩容时需要 rehash:长度扩大以后,Hash 的规则也随之改变.
+	回顾一下Hash公式:
+	index =  HashCode（Key） &  （Length - 1） 
+	当原数组长度为8时,Hash 运算是 和 111B做与运算;
+	新数组长度为16,Hash 运算是和1111B做与运算.
+	Hash 结果显然不同
 *********************************************************************************************************************
 1.get和put的原理?JDK8
 	通过对key的hashCode()进行hashing，并计算下标( n-1 & hash)，从而获得buckets的位置。
