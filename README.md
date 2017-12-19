@@ -19,4 +19,4 @@
 
 [1]:https://github.com/chenlanqing/learningNote/tree/master/Java/JavaEE
 [2]:https://github.com/chenlanqing/learningNote/tree/master/Java/JavaSE
-[3]:https://github.com/chenlanqing/learningNote/tree/master/Java/Java%E5%B8%B8%E7%94%A8%E5%B7%A5%E5%85%B7%E7%B1%BB
+[3]:https://github.com/chenlanqing/learningNote/tree/master/Java/Java常用工具类
