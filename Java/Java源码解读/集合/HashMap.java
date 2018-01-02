@@ -308,7 +308,7 @@ HashMap:继承 AbstractMap, 实现了 Map, Cloneable, Serializable
 		(2).扩充HashMap的时候，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0就好了，是0的话索引没变，
 		是1的话索引变成“原索引+oldCap”
 
-五.高并发下 HashMap 的使用的问题:
+五.高并发下 HashMap 的使用的问题:
 1.Hashmap 在插入元素过多的时候需要进行 resize,resize的条件是:size >=  capacity * loadFactor。
 2.Hashmap 的 resize 包含扩容和 reHash两个步骤,reHash在并发的情况下可能会形成链表环.
 	当调用Get查找一个不存在的Key,而这个Key的Hash结果恰好等于某个值的时候,由于位置该值带有环形链表,所以程序将会进入死循环
