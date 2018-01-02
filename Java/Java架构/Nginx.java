@@ -124,8 +124,72 @@ cd /opt; mkdir app download log work backup
 			    sub_filter '<img src="http://127.0.0.1:8080/' '<img src="https://$host/';
 			    sub_filter_once on;
 			}
-	4.4.连接限制:
-		(1).
+	4.4.请求限制
+		4.4.1.连接频率限制:
+			(1).模块名称:ngx_http_limit_conn_module
+			(2).用途:限制并发连接次数
+			(3).安装模块:
+			(4).配置语法:
+				A.limit_conn_zone:key表示限制的条件,比如ip,为其开辟size空间
+					Syntax:	limit_conn_zone key zone=name:size;
+					Default:	—
+					Context:	http
+				B.limit_conn: 这里zone是上述limit_conn_zone中name值,number表示并发的限制
+					Syntax:	limit_conn zone number;
+					Default:	—
+					Context:	http, server, location
+			(5).配置示例:
+				limit_conn_zone $binary_remote_addr zone=perip:10m;
+				limit_conn_zone $server_name zone=perserver:10m;
+				server {
+				    ...
+				    limit_conn perip 10;
+				    limit_conn perserver 100;
+				}
+		4.4.2.请求限制:
+			(1).模块名称:ngx_http_limit_req_module
+			(2).用途:限制客户端请求次数,或者速度等
+			(3).安装模块:
+			(4).配置语法:
+				A.limit_req_zone:
+					Syntax:	limit_req_zone key zone=name:size rate=rate;
+					Default:	—
+					Context:	http
+				B.limit_req: 
+					Syntax:	limit_req zone=name [burst=number] [nodelay];
+					Default:	—
+					Context:	http, server, location
+			(5).配置示例:
+				limit_req_zone $binary_remote_addr zone=perip:10m rate=1r/s;
+				limit_req_zone $server_name zone=perserver:10m rate=10r/s;
+				server {
+				    ...
+				    limit_req zone=perip burst=5 nodelay;
+				    limit_req zone=perserver burst=10;
+				}
+		4.4.3.整个配置示例:修改 /nginx/conf.d/default.conf 配置文件
+			limit_conn_zone $binary_remote_addr zone=conn_zone:1m;
+			limit_req_zone $binary_remote_addr zone=req_zone:1m rate=1r/s;
+			server {
+			    listen       80;
+			    server_name  localhost;
+
+			    #charset koi8-r;
+			    #access_log  /var/log/nginx/host.access.log  main;
+
+			    location / {
+			        root   /usr/share/nginx/html;
+			        #limit_conn conn_zone 1;
+			        #limit_req zone=req_zone burst=3 nodelay;
+			        #limit_req zone=req_zone burst=3;
+			        #limit_req zon e=req_zone;
+			        index  index.html index.htm;
+			    }
+			    ...
+			}
+	4.5
+
+5.
 
 			
 
