@@ -1,3 +1,22 @@
+********************************************************************Category***************************************************************************
+一.Java 内部类
+二.HashMap vs. TreeMap vs. Hashtable vs. LinkedHashMap
+三.按照目录结构打印当前目录及子目录
+四.Java 关键字:native,transient,final 的意义:
+五.协变式重写和泛型重载:
+六.Java 序列化
+七.泛型
+八.关于 try...catch...finally
+九.Java 四舍五入
+十.Java 中保留小数位数的处理
+十一.Java 中 length 和 length() 的区别
+十二.数组
+十三.switch
+十四.抽象类与接口
+十五.基本类型与引用类型:静态代码与构造代码块执行顺序\多态问题
+十六.反射与注解
+十七.比较器:Comparale and Comparator
+********************************************************************Content***************************************************************************
 一.Java 内部类:
 1.为什么使用内部类?
 使用内部类最吸引人的原因是：每个内部类都能独立地继承一个（接口的）实现，所以无论外围类是否已经继承了某个（接口的）实现，
@@ -1117,10 +1136,14 @@
     		但是非常遗憾这个内部类 ArrayList 并没有提供 add 的实现方法
     	size：元素数量、toArray：转换为数组，实现了数组的浅拷贝、get：获得指定元素、contains：是否包含某元素
 十三.switch:
-1.JDK7 之后,switch 的参数可以是 String 类型了;到目前为止 switch 支持的数据类型:byte short int char String 枚举类型
+1.JDK7 之后,switch 的参数可以是 String 类型了;到目前为止 switch 支持的数据类型:byte(Byte)、short(Short)、int(Integer)、char(Character)、String、枚举类型
 2.switch 对整型的支持:switch 对 int 的判断是直接比较整数的值
+	由于 byte 的存储范围小于 int,可以向 int 类型进行隐式转换,所以 switch 可以作用在 byte 类型变量上;
+	由于 long 的存储范围大于 int,不能向 int 进行隐式转换,只能强制转换,所以 switch 不可以作用在 long 类型变量上.
+	对于包装类型,其使用的时候都是通过 byteValue,shortValue等来转换为基本类型
 3.switch 对字符型支持的实现:
-	对 char 类型进行比较的时候，实际上比较的是 Ascii 码，编译器会把 char 型变量转换成对应的 int 型变量
+	对 char 类型进行比较的时候,实际上比较的是 Ascii 码，编译器会把 char 型变量转换成对应的 int 型变量.
+	对于包装类型Character,其需要转换为基本类型char,转换方法:charValue
 4.switch 对字符串支持的实现c
 	4.1.代码片段1:
 		public class switchDemoString {
@@ -1462,6 +1485,272 @@
 	    7--B and B
 	    8--B and B
 	    9--A and D
+
+十六.反射与注解
+1.Java 注解:Annotation(JDK5.0+)
+	1.1.内置注解,如:
+		@Override:重写
+		@Deprecated:过时
+		@SuppressWarnings:取消警告
+		(1).注解分为:
+			按运行机制:源码注解,编译时注解,运行时注解
+			按照来源注解:JDK,第三方,自定义注解;
+	1.2.自定义注解:使用 @interface 自定义注解时,自动集成了 Annotation 接口,要点如下:
+		(1).@interface 用来声明一个注解: public @interface 注解名{};
+		(2).其中的每一个方法实际上是声明了一个配置参数:
+			①.方法的名称就是参数的名称,无参无异常;
+			②.返回值类型就是参数的类型(返回值只能是基本类型,Class, String, Enum);
+			③.可以通过 default 来声明参数的默认值
+			④.如果只有一个参数成员,一般参数名为:value;
+			⑤.没有成员的注解是标识注解;
+		// 注意:注解元素必须要有值,在定义注解元素时经常使用空字符串,0作为默认值
+
+	1.3.元注解:负责注解其他注解, Java 定义了四个标准的 meta-annotation 类型,用来提供对其他 annotation 类型作说明
+		(1).@Target
+			用于描述注解的使用范围:@Target(value= ElementType.TYPE)
+			包 -----> PACKAGE
+			类.接口.枚举.Annotation类型 -----> TYPE
+			方法参数 -----> PARAMETER
+			局部变量 -----> LOCAL VARIABLE
+		(2).@Retention
+			表示需要在什么级别保存该注释信息,用于描述注解的生命周期:(RetentionPolicy)
+			SOURCE --- 在源文件有效(即源文件保留)
+			CLASS --- 在class文件中有效
+			RUNTIME --- 在运行时有效(可被反射读取)
+		(3).@Documented:生成文档的时候会生成注解的注释
+		(4).@Inherited:允许子类继承
+	1.4.解析注解:通过反射获取类、函数或成员上的运行时注解信息,从而实现动态控制程序运行的逻辑;
+	1.5.注解处理器:
+		注解处理器是一个在javac中的，用来编译时扫描和处理的注解的工具;
+		一个注解的注解处理器，以Java代码（或者编译过的字节码）作为输入，生成文件（通常是.java文件）作为输出。
+		这具体的含义什么呢？你可以生成Java代码！这些生成的Java代码是在生成的.java文件中，所以你不能修改已经存在的Java类，
+		例如向已有的类中添加方法。这些生成的Java文件，会同其他普通的手动编写的Java源代码一样被javac编译;
+		(1).虚处理器 AbstractProcessor:
+2.Java 动态加载与静态加载:
+	(1).编译时加载类是静态加载类:new 创建对象是静态加载类,在编译时刻时需要加载所有的可能使用到的类;
+	(2).运行时刻加载类是动态加载(Class.forName(""));
+3.反射机制:(Reflection)运行时加载,探知使用编译期间完全未知的类;
+	反射:将一个Java类中的所有信息映射成相应的Java类;
+	【一个类只有一个Class对象,这个对象包含了完整类的结构】
+	(1).Class 类[java.lang.Class]:反射的根源,各种类型----表示Java中的同一类事物
+		(1.1)Class 类获取: .class, getClass, Class.forName(String className);
+		Field : 属性相关类,获取所有属性(包括 private),getDeclaredFields();
+		Method : 方法相关类,getDeclaredMethods(); method.invoke()方法执行时,如果第一个参数为 null,则表示反射的方法为静态方法
+		Constructor : 构造器相关类,getDeclaredConstructors();
+		如果需要访问私有的,则需setAccessible(true;
+	(2).反射机制性能问题：反射会降低程序的效率
+		如果在开发中确实需要使用到反射,可以将setAccessible设为 true :即取消Java语言访问检查;
+	(3).反射操作泛型:
+		(①).Java 采用泛型擦除的机制来引入泛型.Java中的泛型仅仅是给编译器使用的,确保数据的安全性和免去强制类型转换的麻烦;
+			但是一旦编译完成,所有和泛型有关的类型全部擦除;
+		(②).为了通过反射操作泛型,Java有 ParameterizedType,GenericArrayType,TypeVariable,WildcardType 几种类型来代表不能
+			被归一到Class类中的类型但是又和原始类型齐名的类型;
+			Type 是 Java 编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型
+			ParameterizedType : 参数化类型
+			GenericArrayType : 元素类型是参数化类型或者类型变量的数组类型
+			TypeVariable : 各种类型变量的公共父接口
+			WildcardType : 表示一种通配符类型表达式;
+	(4).反射操作注解:
+		getAnnotation(Class<A> annotationClass);
+		getAnnotations();
+	(5).反射操作:
+		(①).使用反射调用类的main方法：
+			Method method = Demo.class.getMethod("main",String[].class);
+			method.invoke(null, (Object)new String[]{"111","222","333"});
+		★★注意:传入参数时不能直接传一个数组,jdk为了兼容1.5版本以下的,会将其拆包;
+		因此这里将其强转或者直接将String数组放入Object数组也可以	
+		(②).数组的反射:
+			◆一个问题:
+			int[] a1 = new int[]{1,2,3};
+			String[] a2 = new String[]{"a","b","c"};
+			System.out.println(Arrays.asList(a1)); // 输出: [[I@24c98b07]
+			System.out.println(Arrays.asList(a2)); // 输出:[a, b, c]
+			原因:
+				在jdk1.4:asList(Object[] a);
+				在jdk1.5:asList(T... a);
+				int数组在编译运行时不会被认为为一个Object数组,因此其将按照一个数组对象来处理;
+			◆基本类型的一维数组可以被当作Object类型处理,不能被当作Object[]类型使用;
+				非基本类型的一维数组既可以当作Object类型使用,也可以当作Object[]类型使用;
+			◆Array 工具类可完成数组的反射操作;
+	(6).反射的应用:实现框架功能
+		使用类加载器加载文件
+4.动态编译:Java6.0引入动态编译
+	4.1.动态编译的两种方法：
+		(1).通过Runtime调用javac,启动新的进程去操作;
+		(2).通过Javacompiler动态编译;
+	4.2.Javacompiler 动态编译:
+		JavaCompiler compile = ToolProvider.getSystemJavaCompiler();
+		int result = compile.run(null, null, null, "F:/class/HelloWorld.java");
+		 /*
+		  * run(InputStream in, OutputStream out, OutputStream err, String... arguments);
+		  * 第一个参数: 为Java编译器提供参数;
+		  * 第二个参数: 得到Java编译器输出的信息;
+		  * 第三个参数: 接受编译器的错误信息;
+		  * 第四个参数: 可变参数,能传入一个或多个Java源文件
+		  * 返回值: 0 表示编译成功, 1 表示编译失败;
+		  */
+	4.3.动态运行动态编译的Java类		
+5.动态执行Javascript(JDK6.0以上)
+	5.1.脚本引擎:Java 应该程序可以通过一套固定的接口与脚本引擎交互,从而可以在Java平台上调用各种脚本语言;
+	5.2.js接口:Rhino 引擎,使用Java语言的javascript开源实现;		
+6.Java 字节码操作
+	6.1.Java  动态操作:字节码操作,反射
+		字节码操作:动态生存新的类;
+		优势:比反射开销小,性能高;	
+	6.2.常见的字节码操作类库:
+		(1).BCEL:apache
+		(2).ASM:轻量级的字节码操作框架,涉及到jvm底层的操作和指令
+		(3).CGLIB:基于asm实现
+		(4).javaasist:性能比较差,使用简单
+	6.3.Javasist:	
+7.反射存在问题:
+	7.1.反射慢的原因:
+		(1).编译器不能对代码对优化.
+		(2).所有的反射操作都需要类似查表的操作,参数需要封装,解封装,异常也重新封装,rethrow等等
+	7.2.优化方式:
+		(1).灵活运用API,如果只是寻找某个方法,不要使用 getMethods() 后在遍历筛选,而是直接用
+			getMethod(methodName)来根据方法名获取方法;
+		(2).使用缓存:需要多次动态创建一个类的实例的时候.
+		(3).使用代码动态生成技术,通过调用代理类的方式来模拟反射
+
+十七.比较器:Comparale and Comparator
+1.区别:
+	(1).Comparable & Comparator 都是用来实现集合中元素的比较、排序的:
+		Comparable 是在集合内部定义的方法实现的排序;
+		Comparator 是在集合外部实现的排序
+		所以,如想实现排序,就需要在集合外定义 Comparator 接口的方法或在集合内实现 Comparable 接口的方法
+	(2).Comparator 位于包 java.util下，而 Comparable 位于包 java.lang下
+	(3).Comparable 是一个对象本身就已经支持自比较所需要实现的接口(如 String、Integer 自己就可以完成比较大小操作,已经实现了Comparable接口);
+	(4).Comparator 是一个专用的比较器,当这个对象不支持自比较或者自比较函数不能满足你的要求时,你可以写一个比较器来完成两个对象之间大小的比较;
+	(5).可以说一个是自已完成比较,一个是外部程序实现比较的差别而已
+	(6).用 Comparator 是策略模式(strategy design pattern)，就是不改变对象自身;
+		Comparable 而用一个策略对象(strategy object)来改变它的行为
+	(7).有时在实现 Comparator 接口时,并没有实现equals方法,可程序并没有报错.原因是实现该接口的类也是Object类的子类，
+		而Object类已经实现了equals方法
+2.Comparable:
+	一个实现了 Comparable 接口的类,可以让其自身的对象和其他对象进行比较。
+	也就是说:同一个类的两个对象之间要想比较，对应的类就要实现 Comparable 接口，并实现compareTo()方法
+3.Comparator:在一些情况下，你不希望修改一个原有的类，但是你还想让他可以比较，Comparator接口可以实现这样的功能。
+	(1).通过使用Comparator接口，你可以针对其中特定的属性/字段来进行比较。比如，当我们要比较两个人的时候，
+	我可能通过年龄比较、也可能通过身高比较。这种情况使用Comparable就无法实现（因为要实现Comparable接口，
+	其中的compareTo方法只能有一个，无法实现多种比较）
+	(2).通过实现Comparator接口同样要重写一个方法：compare()。接下来的例子就通过这种方式来比较HDTV的大小。
+	其实Comparator通常用于排序。Java中的Collections和Arrays中都包含排序的sort方法，该方法可以接收一个Comparator
+	的实例（比较器）来进行排序:
+			class HDTV {
+			    private int size;
+			    private String brand;
+			    public HDTV(int size, String brand) {
+			        this.size = size;
+			        this.brand = brand;
+			    }
+			    public int getSize() {
+			        return size;
+			    }
+			    public void setSize(int size) {
+			        this.size = size;
+			    }
+			    public String getBrand() {
+			        return brand;
+			    }
+			    public void setBrand(String brand) {
+			        this.brand = brand;
+			    }
+			}
+			class SizeComparator implements Comparator<HDTV> {
+			    @Override
+			    public int compare(HDTV tv1, HDTV tv2) {
+			        int tv1Size = tv1.getSize();
+			        int tv2Size = tv2.getSize();
+
+			        if (tv1Size > tv2Size) {
+			            return 1;
+			        } else if (tv1Size < tv2Size) {
+			            return -1;
+			        } else {
+			            return 0;
+			        }
+			    }
+			}
+			public class Main {
+			    public static void main(String[] args) {
+			        HDTV tv1 = new HDTV(55, "Samsung");
+			        HDTV tv2 = new HDTV(60, "Sony");
+			        HDTV tv3 = new HDTV(42, "Panasonic");
+			        ArrayList<HDTV> al = new ArrayList<HDTV>();
+			        al.add(tv1);
+			        al.add(tv2);
+			        al.add(tv3);
+			        Collections.sort(al, new SizeComparator());
+			        for (HDTV a : al) {
+			            System.out.println(a.getBrand());
+			        }
+			    }
+			}
+	(3).经常会使用 Collections.reverseOrder()来获取一个倒序的 Comparator:
+		ArrayList<Integer> al = new ArrayList<Integer>();
+		al.add(3);
+		al.add(1);
+		al.add(2);
+		System.out.println(al);
+		Collections.sort(al);
+		System.out.println(al);
+		Comparator<Integer> comparator = Collections.reverseOrder();
+		Collections.sort(al,comparator);
+		System.out.println(al);
+4.如何选择:
+	(1).一个类如果实现 Comparable 接口，那么他就具有了可比较性，意思就是说它的实例之间相互直接可以进行比较
+	(2).通常在两种情况下会定义一个实现 Comparator 类
+		可以把一个Comparator的子类传递给Collections.sort()、Arrays.sort()等方法，用于自定义排序规则。
+		用于初始化特定的数据结构。常见的有可排序的Set（TreeSet）和可排序的Map（TreeMap）
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -361,6 +361,23 @@
 				③.常量池中的每一项常量都是一个表,共有11种(JDK1.7之前)结构各不相同的表结构数据,每种表开始的第一位
 					是一个u1类型的标志位(1-12，缺少2),代表当前这个常量属于的常量类型,在JDK1.7之后,为了更好的支持
 					动态语言调用,又额外的增加了3中
+					+-----------------------------------------------------------------------+
+					|类型								|标志		|描述					|
+					|CONSTANT_Utf8_info					|1			|UTF-8编码的字符串		|	
+					|CONSTANT_Integer_info				|3			|整型字面量				|
+					|CONSTANT_Float_info				|4			|浮点型字面量			|
+					|CONSTANT_Long_info					|5			|长整型字面量			|
+					|CONSTANT_Double_info				|6			|双精度浮点型字面量		|
+					|CONSTANT_Class_info				|7			|类或接口的符号引用		|
+					|CONSTANT_String_info				|8			|字符串类型字面量		|
+					|CONSTANT_Fieldref_info				|9			|字段的符号引用 		|
+					|CONSTANT_Methodref_info			|10			|类中方法的符号引用		|
+					|CONSTANT_InterfaceMethodref_info	|11			|接口中方法的符号引用	|
+					|CONSTANT_NameAndType_info			|12			|字段,方法的部分符号引用|
+					|CONSTANT_Methodhandle_info			|15			|表示方法句柄			|
+					|CONSTANT_MethodType_info			|16			|标识方法类型			|
+					|CONSTANT_InvokeDynamic_info		|18			|表示一个动态方法调用点	|
+					+-----------------------------------------------------------------------+
 			(3).access_flag:在常量池结束之后,紧接着的"2个字节"代表访问标志,
 				这个标志用于识别一些类或接口层次的访问信息,包括:Class 是类还是接口,是否定义为 public 或 abstract 类型,
 				如果是的话是否声明为 final.
