@@ -1284,16 +1284,27 @@
 		http://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html
 十五.基本类型与引用类型
 1.基本类型与引用类型的比较
-	如下四个变量,哪两个比较为 false
-	Integer i01 = 59;
-	int i02 = 59;
-	Integer i03 =Integer.valueOf(59);
-	Integer i04 = new Integer(59);
-	(1).Integer 为了节省空间和内存会在内存中缓存 -128~127 之间的数字;
-	(2).valueOf():调用该方法时,内部实现作了个判断,判断当前传入的值是否在 -128~127 之间且 IntergCache 是否已存在该对象
-		如果存在,则直接返回引用,如果不存在,则创建一个新对象
-	(3).基本类型存在内存的栈中,与引用类型比较时, 引用类型会自动装箱,比较数值而不比较内存地址;
-2.关于 String+ 和 StringBuffer 的比较:在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)，
+	1.1.如下四个变量,哪两个比较为 false
+		Integer i01 = 59;
+		int i02 = 59;
+		Integer i03 =Integer.valueOf(59);
+		Integer i04 = new Integer(59);
+		(1).Integer 为了节省空间和内存会在内存中缓存 -128~127 之间的数字;
+		(2).valueOf():调用该方法时,内部实现作了个判断,判断当前传入的值是否在 -128~127 之间且 IntergCache 是否已存在该对象
+			如果存在,则直接返回引用,如果不存在,则创建一个新对象
+		(3).基本类型存在内存的栈中,与引用类型比较时, 引用类型会自动装箱,比较数值而不比较内存地址;
+	1.2.自动装箱拆箱机制是编译特性还是虚拟机运行时特性？分别是怎么实现的？
+		(1).自动装箱机制是编译时自动完成替换的.装箱阶段自动替换为了 valueOf 方法,拆箱阶段自动替换为了 xxxValue 方法;
+		(2).对于 Integer 类型的 valueOf 方法参数如果是 -128~127 之间的值会直接返回内部缓存池中已经存在对象的引用,参数是其他范围值则返回新建对象;
+		(3).而 Double 类型与 Integer 类型类似,一样会调用 Double 的 valueOf 方法,但是 Double 的区别在于不管传入的参数值是多少都会 new 一个对象来表
+			达该数值(因为在指定范围内浮点型数据个数是不确定的,整型等个数是确定的,所以可以 Cache)
+		==> 注意:Integer、Short、Byte、Character、Long 的 valueOf 方法实现类似,而 Double 和 Float 比较特殊,每次返回新包装对象,
+			对于两边都是包装类型的:== 比较的是引用,	equals 比较的是值;
+			对于两边有一边是表达式(包含算数运算): == 比较的是数值(自动触发拆箱过程),对于包装类型 equals 方法不会进行类型转换;
+	1.3.Integer i = 1; i += 1; 做了哪些操作:
+		(1).Integer i = 1; 做了自动装箱:使用 valueOf() 方法将 int 装箱为 Integer 类型
+		(2).i += 1; 先将 Integer 类型的 i 自动拆箱成 int(使用 intValue() 方法将 Integer 拆箱为 int),完成加法运行之后的 i 再装箱成 Integer 类型
+2.关于 String+ 和 StringBuffer 的比较:在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)
 	效率其实比 Stringbuffer更快
 	public class Main{	    
 	    public static void main(String[] args){

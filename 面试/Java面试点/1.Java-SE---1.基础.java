@@ -61,7 +61,12 @@
 	5.2.强制类型转换:是指必须书写代码才能完成的类型转换,该类类型转换很可能存在精度的损失
 		转换规则:从存储范围大的类型到存储范围小的类型.
 		具体规则为：double → float → long → int → short(char) → byte
-
+6.Java 是否存在使得语句 i > j || i <= j 结果为 false 的 i、j 值?
+	存在,Java 的数值 NaN 代表 not a number,无法用于比较.
+	例如: 
+		i =  Double.NaN; 
+		j = i; 
+		i == j 的结果依旧为 false
 二.泛型:
 1.泛型的优缺点
 	8.1.优点:
