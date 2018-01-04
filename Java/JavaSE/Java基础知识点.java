@@ -631,7 +631,29 @@
 		②.序列化数据非常简洁,紧凑,与XML相比,其序列化之后的数据量约为1/3到1/10;
 		③.解析速度非常快，比对应的XML快约20-100倍;
 		④.提供了非常友好的动态库，使用非常简介，反序列化只需要一行代码;
+7.JSON 序列化:
+	7.1.关于Map转json输出顺序问题:
+		Map<String, String> map = new LinkedHashMap<String, String>();
+		map.put("b", "2");
+		map.put("a", "1");
+		map.put("c", "3");
+		System.out.println(JSON.toJSON(map));// {"a":"1","b":"2","c":"3"}
 
+		Map<String, String> map1 = new LinkedHashMap<String, String>();
+		map1.put("b", "2");
+		map1.put("a", "1");
+		map1.put("c", "3");
+        Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+        System.out.println(gson.toJson(map1)); // {"b":"2","a":"1","c":"3"}
+        (1).使用fastjson或者jdk自带的序列化,默认是无序输出的,如果需要使用fastJson输出有序的json:JSONObject,构造的时候使用 new JSONObject(true)
+        	JSONObject object = new JSONObject(true);
+	        Map<String, String> map2 = new LinkedHashMap<String, String>();
+	        map2.put("b", "2");
+	        map2.put("a", "1");
+	        map2.put("c", "3");
+	        object.putAll(map2);
+	        System.out.println(JSONObject.toJSON(object));// {"b":"2","a":"1","c":"3"}
+	    (2).Gson 保证了你插入的顺序,就是正常的Map迭代操作
 七.泛型:
 1.JDK1.5 引入的新特性,允许在定义类和接口的时候使用类型参数(type parameter),泛型最主要的应用是在
 	JDK 5中的新集合类框架中;

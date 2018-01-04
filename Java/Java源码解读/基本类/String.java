@@ -4,6 +4,8 @@
  * http://www.importnew.com/12845.html
  * http://blog.csdn.net/gaopeng0071/article/details/11741027
  */
+String 核心点:字符串的堆栈和常量池
+
 一.三个问题:
 1.Java 内存具体指哪块内存?这块内存区域为什么要进行划分?是如何划分的?划分之后每块区域的作用是什么?如何设置各个区域的大小?
 2.String 类型在执行连接操作时,效率为什么会比 StringBuffer 或者 StringBuilder 低? StringBuffer 和 StringBuilder 有什么联系和区别?
@@ -305,7 +307,7 @@ private static final ObjectStreamField[] serialPersistentFields = new ObjectStre
 	    return (beginIndex == 0) ? this : new String(value, beginIndex, subLen);
 	}
 	(1).直到Java 1.7版本之前,substring会保存一份原字符串的字符数组的引用,这意味着,如果你从1GB大小的
-	字符串里截取了5个字符,而这5个字符也会阻止那1GB内存被回收,因为这个引用是强引用.
+		字符串里截取了5个字符,而这5个字符也会阻止那1GB内存被回收,因为这个引用是强引用.
 	(2).到了Java 1.7,这个问题被解决了,原字符串的字符数组已经不再被引用,但是这个改变也使得substring()
 		创建字符串的操作更加耗时,以前的开销是O(1),现在最坏情况是O(n)
 	4.1.JDK6中的substring
@@ -321,6 +323,7 @@ private static final ObjectStreamField[] serialPersistentFields = new ObjectStre
 				x = x.substring(x, y) + ""
 	4.2.JDK 7 中的substring:
 		上面提到的问题,在jdk 7中得到解决.在jdk 7 中,substring方法会在堆内存中创建一个新的数组
+	4.3. substring 方法实现里面有个 index == 0 的判断,当 index 等于 0 就直接返回当前对象,否则新 new() 一个 sub 的对象返回
 5.replaceFirst、replaceAll、replace
 	String replaceFirst(String regex, String replacement)
 	String replaceAll(String regex, String replacement)
