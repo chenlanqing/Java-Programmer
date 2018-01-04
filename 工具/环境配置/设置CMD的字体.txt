@@ -1,0 +1,22 @@
+1.查看系统的字体：
+	HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsNT\CurrentVersion\fonts
+	
+2.修改：
+	HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsNT\CurrentVersion\Console\TrueTypeFont
+	
+	添加字体
+	
+3.修改：
+	HKEY_CURRENT_USER\Console
+	
+	修改 %SystemRoot%_system32_cmd.exe 的属性
+	
+	FaceName的值为Courier New，修改code page值为437，这个code page表示美国，因此无法显示中文的，可以常识修改为95001 utf－8的格式，
+	如果需要改回简体中文地区，请修改为936.
+	附上微软的code page：
+	930 (日文) (Codepage 300 加 290) * 
+	932 (日文) (Codepage 301 加 897) 
+	933 (韩文) (Codepage 834 加 833) * 
+	934 (韩文) (Codepage 926 加 891) 
+	938 (繁体中文) (Codepage 927 加 904) 
+	936 (简体中文) (Codepage 928 加 903) 
