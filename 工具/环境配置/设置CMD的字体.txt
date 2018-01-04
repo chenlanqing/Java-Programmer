@@ -1,22 +1,22 @@
-1.²é¿´ÏµÍ³µÄ×ÖÌå£º
+1.æŸ¥çœ‹ç³»ç»Ÿçš„å­—ä½“ï¼š
 	HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsNT\CurrentVersion\fonts
 	
-2.ĞŞ¸Ä£º
+2.ä¿®æ”¹ï¼š
 	HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsNT\CurrentVersion\Console\TrueTypeFont
 	
-	Ìí¼Ó×ÖÌå
+	æ·»åŠ å­—ä½“
 	
-3.ĞŞ¸Ä£º
+3.ä¿®æ”¹ï¼š
 	HKEY_CURRENT_USER\Console
 	
-	ĞŞ¸Ä %SystemRoot%_system32_cmd.exe µÄÊôĞÔ
+	ä¿®æ”¹ %SystemRoot%_system32_cmd.exe çš„å±æ€§
 	
-	FaceNameµÄÖµÎªCourier New£¬ĞŞ¸Äcode pageÖµÎª437£¬Õâ¸öcode page±íÊ¾ÃÀ¹ú£¬Òò´ËÎŞ·¨ÏÔÊ¾ÖĞÎÄµÄ£¬¿ÉÒÔ³£Ê¶ĞŞ¸ÄÎª95001 utf£­8µÄ¸ñÊ½£¬
-	Èç¹ûĞèÒª¸Ä»Ø¼òÌåÖĞÎÄµØÇø£¬ÇëĞŞ¸ÄÎª936.
-	¸½ÉÏÎ¢ÈíµÄcode page£º
-	930 (ÈÕÎÄ) (Codepage 300 ¼Ó 290) * 
-	932 (ÈÕÎÄ) (Codepage 301 ¼Ó 897) 
-	933 (º«ÎÄ) (Codepage 834 ¼Ó 833) * 
-	934 (º«ÎÄ) (Codepage 926 ¼Ó 891) 
-	938 (·±ÌåÖĞÎÄ) (Codepage 927 ¼Ó 904) 
-	936 (¼òÌåÖĞÎÄ) (Codepage 928 ¼Ó 903) 
+	FaceNameçš„å€¼ä¸ºCourier Newï¼Œä¿®æ”¹code pageå€¼ä¸º437ï¼Œè¿™ä¸ªcode pageè¡¨ç¤ºç¾å›½ï¼Œå› æ­¤æ— æ³•æ˜¾ç¤ºä¸­æ–‡çš„ï¼Œå¯ä»¥å¸¸è¯†ä¿®æ”¹ä¸º95001 utfï¼8çš„æ ¼å¼ï¼Œ
+	å¦‚æœéœ€è¦æ”¹å›ç®€ä½“ä¸­æ–‡åœ°åŒºï¼Œè¯·ä¿®æ”¹ä¸º936.
+	é™„ä¸Šå¾®è½¯çš„code pageï¼š
+	93 (æ—¥æ–‡) (Codepage 300 åŠ  290) * 
+	932 (æ—¥æ–‡) (Codepage 301 åŠ  897) 
+	933 (éŸ©æ–‡) (Codepage 834 åŠ  833) * 
+	934 (éŸ©æ–‡) (Codepage 926 åŠ  891) 
+	938 (ç¹ä½“ä¸­æ–‡) (Codepage 927 åŠ  904) 
+	936 (ç®€ä½“ä¸­æ–‡) (Codepage 928 åŠ  903) 
