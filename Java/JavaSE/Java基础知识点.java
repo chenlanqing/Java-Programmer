@@ -364,9 +364,33 @@
 	3.6.知识点:
 		(1).final 成员变量必须在声明的时候初始化或者在构造器中初始化，否则就会报编译错误;
 		(2).接口中声明的所有变量本身是 final 的;
-		(3).final 和 abstract 这两个关键字是反相关的，final 类就不可能是 abstract 的;
+		(3).final 和 abstract 这两个关键字是反相关的,final 类就不可能是 abstract 的;
 		(4).final 方法在编译阶段绑定，称为静态绑定(static binding)
 		(5).将类、方法、变量声明为 final 能够提高性能，这样 JVM 就有机会进行估计，然后优化;
+4.instanceof:
+	4.1.一些使用注意事项
+		(1).只能用于对象的判断,不能用于基本类型的判断;
+		(2).若左操作数是 null 则结果直接返回 false,不再运算右操作数是什么类	    
+		    (String)null instanceof String; // false;
+		    因为 null 没有类型,所以即使做类型转换还是 null
+		(3).instanceof 的右操作符必须是一个接口或者类:
+			"demo" instanceof null; // 编译错误
+		(4).数组类型也可以使用 instanceof 判断:
+			String[] str = new String[10];
+			str instanceof String[]; //  true
+	4.2.instanceof 与 clazz.isInstance(obj):
+		(1).instanceof 运算符用来在运行时指出对象是否是特定类的一个实例,通过返回一个布尔值来指出这个对象是否是这个特定类或者是它的子类的一个实例.
+			result = object instanceof class
+			但是 instanceof 在 java 的编译状态和运行状态是有区别的,在编译状态中 class可以是 object 对象的父类、自身类、子类，在这三种情况下 
+			java 编译时不会报错,在运行转态中 class 可以是 object 对象的父类、自身类但不能是子类;{}当为父类、自生类的情况下 result 结果为 true,
+			为子类的情况下为 false;
+		(2).clazz.isInstance(obj):表明这个对象能不能被转化为这个类
+			一个对象能被转化为本身类所继承类(父类的父类等)和实现的接口(接口的父接口)强转;
+	4.3.instanceof 与 clazz.getClass():
+		(1).instanceof 进行类型检查规则是你属于该类吗？或者你属于该类的派生类吗？
+		(2).clazz.getClass():获得类型信息采用 == 来进行检查是否相等的操作是严格比较，不存在继承方面的考虑;
+	4.4.instanceof 实现原理:???
+
 五.协变式重写和泛型重载:
 1.协变式重写
 	1.1.在Java1.4及以前,子类方法如果要覆盖超类的某个方法,必须具有完全相同的方法签名,包括返回值也必须完全一样;
@@ -785,6 +809,9 @@
 			Exception in thread "main" java.lang.ArithmeticException: / by zero
 				at com.exe1.TestSort.test1(TestSort.java:14)
 				at com.exe1.TestSort.main(TestSort.java:6)
+	3.在 try 里面通过 System.exit(0) 来退出 JVM 的情况下 finally 块中的代码才不会执行.
+		其他 return 等情况都会调用，所以在不终止 JVM 的情况下 finally 中的代码一定会执行.
+
 
 九.Java 四舍五入:
 1.目前 Java 支持7中舍入法
@@ -1382,7 +1409,7 @@
 		(3).其次,初始化父类的普通成员变量和代码块,在执行父类的构造方法；
 		(4).最后,初始化子类的普通成员变量和代码块,在执行子类的构造方法；
 	3.2.不要在构造器里调用可能被重载的虚方法,
-		父类构造器执行的时候，调用了子类的重载方法，然而子类的类字段还在刚初始化的阶段，刚完成内存布局:
+		父类构造器执行的时候,调用了子类的重载方法,然而子类的类字段还在刚初始化的阶段，刚完成内存布局:
 		public class Base{
 		    private String baseName = "base";
 		    public Base(){
@@ -1478,7 +1505,8 @@
 		System.out.println(b3+b6);
 6.多态问题:当超类对象引用变量引用子类对象时，被引用对象的类型而不是引用变量的类型决定了调用谁的成员方法，
 	但是这个被调用的方法必须是在超类中定义过的，也就是说被子类覆盖的方法
-	[http://wiki.jikexueyuan.com/project/java-enhancement/java-three.html]
+	[http://blog.csdn.net/clqyhy/article/details/78978785
+	http://blog.csdn.net/simon901/article/details/25078397]
 	优先级由高到低依次为：this.show(O)、super.show(O)、this.show((super)O)、super.show((super)O)
 		public class A {
 	        public String show(D obj) {return ("A and D");}
@@ -1497,27 +1525,24 @@
 	            B b = new B();
 	            C c = new C();
 	            D d = new D();
-	            System.out.println("1--" + a1.show(b));
-	            System.out.println("2--" + a1.show(c));
-	            System.out.println("3--" + a1.show(d));
-	            System.out.println("4--" + a2.show(b));
-	            System.out.println("5--" + a2.show(c));
-	            System.out.println("6--" + a2.show(d));
-	            System.out.println("7--" + b.show(b));
-	            System.out.println("8--" + b.show(c));
-	            System.out.println("9--" + b.show(d));      
+	            System.out.println("1--" + a1.show(b)); //  1--A and A
+	            System.out.println("2--" + a1.show(c)); //  2--A and A
+	            System.out.println("3--" + a1.show(d)); //  3--A and D
+	            System.out.println("4--" + a2.show(b)); //  4--B and A
+	            System.out.println("5--" + a2.show(c)); //  5--B and A
+	            System.out.println("6--" + a2.show(d)); //  6--A and D
+	            System.out.println("7--" + b.show(b));  //  7--B and B
+	            System.out.println("8--" + b.show(c));  //  8--B and B
+	            System.out.println("9--" + b.show(d));  //  9--A and D    
 	        }
 	    }
-	          运行结果：
-	    1--A and A
-	    2--A and A
-	    3--A and D
-	    4--B and A
-	    5--B and A
-	    6--A and D
-	    7--B and B
-	    8--B and B
-	    9--A and D
+	(1).多态是对象在不同时刻表现出来的多种状态,是一种编译时期状态和运行时期状态不一致的现象.
+	(2).在编写或者分析代码时记住如下口诀:
+		成员变量:编译看左,运行看左(因为无法重写);
+		成员方法:编译看左,运行看右(因为普通成员方法可以重写,变量不可以);
+		静态方法:编译看左,运行看左(因为属于类);
+	    ==> 当父类变量引用子类对象时 Base base = new Child();在这个引用变量 base 指向的对象中他的成员变量和静态方法与父类是一致的,
+	    	他的非静态方法在编译时是与父类一致的,运行时却与子类一致(发生了复写);
 
 十六.反射与注解
 1.Java 注解:Annotation(JDK5.0+)
