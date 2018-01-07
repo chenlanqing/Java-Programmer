@@ -189,7 +189,26 @@ cd /opt; mkdir app download log work backup
 			}
 	4.5
 
-5.
+********************************************************************************************************************
+一.静态资源web服务:
+1.文件读取:
+	(1).配置语法:
+		Syntax:	sendfile on | off;
+		Default: sendfile off;
+		Context: http, server, location, if in location
+		引用: --with-file-aio 异步文件读取
+2.tcp_nopush
+	Syntax:	tcp_nopush on | off;
+	Default: tcp_nopush off;
+	Context: http, server, location
+	注意: sendfile 开启的情况下,提高网络包的传输效率
+3.tcp_nodelay:
+	Syntax:	tcp_nodelay on | off;
+	Default: tcp_nodelay on;
+	Context: http, server, location
+	在keeplive连接下,提高网络包的传输实时性
+
+
 
 			
 
