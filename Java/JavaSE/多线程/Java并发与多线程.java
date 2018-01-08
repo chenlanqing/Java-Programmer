@@ -871,6 +871,8 @@
 		(1).AtomicLong 是作用是对长整形进行原子操作.
 			在32位操作系统中,64位的 long 和 double 变量由于会被JVM当作两个分离的32位来进行操作,所以不具有原子性.
 			而使用 AtomicLong 能让 long 的操作保持原子型.
+			long foo = 65465498L;  ==> 非原子操作,Java 会分两步写入 long 变量,先写32位,再写后32位,就非线程安全的.
+			private volatile long foo;  ==> 原子性操作
 2.锁的相关概念:
 	2.1.同步锁:通过synchronized关键字来进行同步
 		同步锁的原理是,对于每一个对象,有且仅有一个同步锁:不同的线程能共同访问该同步锁.
@@ -1105,14 +1107,13 @@
 
 10.ConcurrentLinkedQueue: // http://www.cnblogs.com/skywang12345/p/3498995.html
 
-四.JUC 包核心类与算法
+四.JUC 包核心与算法
 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
 	/**
 	 * 参考地址
 	 * http://www.cnblogs.com/xrq730/p/7056614.html
 	 * https://muyinchen.github.io/tags/%E5%B9%B6%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/
 	 * http://blog.csdn.net/pfnie/article/details/53191892
-	 * 
 	 */
 	1.1.设计思想:AQS 是构建锁或者其他同步组件的基础框架,是JUC并发包中的核心基础组件
 		(1).仅从 AQS 本身来说,它仅仅提供独占锁和共享锁两种方式, AQS 本身不存在所谓的公平和非公平锁.
@@ -1151,7 +1152,7 @@
 		(4).tryReleaseShared:尝试在共享模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
 		(5).isHeldExclusively:当前同步器是否在独占模式下被线程占用,一般该方法表示是否被当前线程独占.
 		==> 关于 acquire 理解:
-	1.4.
+	
 2.CAS:Compare and Swap-比较与交换
 	/*
 	 * 非阻塞同步算法与CAS(Compare and Swap)无锁算法: http://www.cnblogs.com/Mainz/p/3546347.html
@@ -1161,56 +1162,96 @@
 	 */
 	2.1.CAS:cpu指令,在大多数处理器架构,包括 IA32,Space 中采用的都是 CAS 指令.CAS 语义:
 		CAS 有3个操作数,内存值 V,旧的预期值 A, 要修改的新值 B,当且仅当预期值 A 和内存值 V 相同时,将内存值修改为 B 并返回 true,否则什么都不做并返回 false
-	2.2.CAS 是乐观锁技术:
-		当多个线程尝试使用CAS同时更新同一个变量时,只有其中一个线程能更新变量的值,而其它线程都失败,
-		失败的线程并不会被挂起,而是被告知这次竞争中失败,并可以再次尝试.
-		CAS 有3个操作数:内存值V,旧的预期值A,要修改的新值B.
-		当且仅当预期值A和内存值V相同时,将内存值V修改为B,否则什么都不做.
-		==> CAS 操作是基于共享数据不会被修改的假设.
-	2.3.CAS 开销:有cache miss的情况,问题变的比较复杂
-	2.4.Java 中 CAS 的实现:
-		(1).JDK1.5 之前,需要编写明确的代码来执行CAS操作.在JDK1.5 之后,引入了底层的支持.
-		并且JVM把它们编译为底层硬件提供的最有效的方法,在运行CAS的平台上,运行时把它们编译为相应的机器指令
-		如果处理器/CPU 不支持CAS指令,那么JVM将使用自旋锁
-
-	2.5.ABA 问题:
-		// http://www.cnblogs.com/549294286/p/3766717.html
-		(1)问题:在运用CAS做Lock-Free 操作中有一个经典的ABA问题.
-			线程1准备用CAS将变量的值由A替换为B,在此之前,线程2将变量的值由A替换为C,又由C替换为A,然后线程1执行CAS时发现变量的值仍然为A，所以CAS成功.
-			但实际上这时的现场已经和最初不同了,尽管CAS成功,但可能存在潜藏的问题
-		(2).解决思路是:每次变量更新的时候把变量的版本号加 1,那么 A-B-A 就会变成 A1-B2-A3,只要变量被某一线程修改过,改变量对应的版本号就会发生递增变化.
-			==> 可以参考:AtomicStampedReference#compareAndSet 方法:
-				public boolean compareAndSet(V expectedReference, V newReference, int expectedStamp, int newStamp) {
-				    Pair<V> current = pair;
-				    return expectedReference == current.reference && expectedStamp == current.stamp && 
-				            ((newReference == current.reference && newStamp == current.stamp) || casPair(current, Pair.of(newReference, newStamp)));
-				}
-				该类检查了当前引用与当前标志是否与预期相同,如果全部相等,才会以原子方式将该引用和该标志的值设为新的更新值
-	2.6.Unsafe 是CAS的核心类:
-		(1).Java 无法直接访问底层操作系统,而是通过本地 native 方法来访问.不过 JVM 还是开了个后门,JDK 中有一个类 Unsafe,它提供了硬件级别的原子操作
-		对于 Unsafe 类的使用都是受限制的,只有授信的代码才能获得该类的实例	
-		(2).对 CAS 的实现:
-			public final native boolean compareAndSwapObject(Object paramObject1, long paramLong, Object paramObject2, Object paramObject3);
-			public final native boolean compareAndSwapInt(Object paramObject, long paramLong, int paramInt1, int paramInt2);
-			public final native boolean compareAndSwapLong(Object paramObject, long paramLong1, long paramLong2, long paramLong3);
-		(3).可以查看原子类的实现,比如:AtomicInteger#addAndGet 方法的实现:
-			==> JDK7:在addAndGet作一部分操作,然后调用compareAndSet,由该方法调用 Unsafe#getAndAddInt
-				public final int addAndGet(int delta) {
-				    for (;;) {
-				        int current = get();
-				        int next = current + delta;
-				        if (compareAndSet(current, next))
-				            return next;
+		CAS 是乐观锁技术:当多个线程尝试使用CAS同时更新同一个变量时,只有其中一个线程能更新变量的值,而其它线程都失败,失败的线程并不会被挂起,
+		而是被告知这次竞争中失败,并可以再次尝试.CAS 有3个操作数:内存值V,旧的预期值A,要修改的新值B.当且仅当预期值A和内存值V相同时,将内存值V修改为B,否则什么都不做.
+		CAS 操作是基于共享数据不会被修改的假设.
+	2.2.Java 中 CAS 的实现:
+		伪代码:
+		do{   
+		       备份旧数据；  
+		       基于旧数据构造新数据；  
+		}while(!CAS( 内存地址，备份的旧数据，新数据 ))  
+		JDK1.5 之前,需要编写明确的代码来执行CAS操作.在JDK1.5 之后,引入了底层的支持.并且JVM把它们编译为底层硬件提供的最有效的方法,
+		在运行CAS的平台上,运行时把它们编译为相应的机器指令,如果处理器/CPU 不支持CAS指令,那么JVM将使用自旋锁;
+		2.2.1.Unsafe 是 CAS 实现的核心类:
+			(1).Java 无法直接访问底层操作系统,而是通过本地 native 方法来访问.不过 JVM 还是开了个后门,JDK 中有一个类 Unsafe,它提供了硬件级别的原子操作
+				对于 Unsafe 类的使用都是受限制的,只有授信的代码才能获得该类的实例	
+			(2).对 CAS 的实现:
+				public final native boolean compareAndSwapObject(Object paramObject1, long paramLong, Object paramObject2, Object paramObject3);
+				public final native boolean compareAndSwapInt(Object paramObject, long paramLong, int paramInt1, int paramInt2);
+				public final native boolean compareAndSwapLong(Object paramObject, long paramLong1, long paramLong2, long paramLong3);
+			(3).可以查看原子类的实现,比如:AtomicInteger#addAndGet 方法的实现:
+				==> JDK7:在addAndGet作一部分操作,然后调用compareAndSet,由该方法调用 Unsafe#getAndAddInt
+					public final int addAndGet(int delta) {
+					    for (;;) {
+					        int current = get();
+					        int next = current + delta;
+					        if (compareAndSet(current, next))
+					            return next;
+					    }
+					}
+					public final boolean compareAndSet(int expect, int update) {
+				        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
 				    }
-				}
-				public final boolean compareAndSet(int expect, int update) {
-			        return unsafe.compareAndSwapInt(this, valueOffset, expect, update);
-			    }
-			==> JDK8:直接调用 Unsafe#getAndAddInt
-				public final int addAndGet(int delta) {
-			        return unsafe.getAndAddInt(this, valueOffset, delta) + delta;
-			    }
-
+				==> JDK8:直接调用 Unsafe#getAndAddInt
+					public final int addAndGet(int delta) {
+				        return unsafe.getAndAddInt(this, valueOffset, delta) + delta;
+				    }
+		2.2.2.Unsafe 方法实现:使用 C++ 来实现的.
+			注意:对应于windows操作系统,X86 处理器
+			sun.misc.Unsafe 类的compareAndSwapInt()方法的源代码
+			public final native boolean compareAndSwapInt(Object o, long offset, int expected, int x);
+			该方法是本地方法,这个本地方法在openjdk中依次调用的c++代码主要有三个文件:
+			openjdk/openjdk/hotspot/src/share/vm/prims/unsafe.cpp
+			openjdk/openjdk/hotspot/src/share/vm/runtime/atomic.cpp
+			openjdk/openjdk/hotspot/src/os_cpu/windows_x86/vm/atomic_windows_x86.inline.hpp
+			对应部分源码片段:
+			inline jint     Atomic::cmpxchg    (jint     exchange_value, volatile jint*     dest, jint     compare_value) {
+			  // alternative for InterlockedCompareExchange
+			  int mp = os::is_MP();
+			  __asm {
+			    mov edx, dest
+			    mov ecx, exchange_value
+			    mov eax, compare_value
+			    LOCK_IF_MP(mp)
+			    cmpxchg dword ptr [edx], ecx
+			  }
+			}
+			==> 如上面源代码所示,程序会根据当前处理器的类型来决定是否为cmpxchg指令添加lock前缀.
+				如果程序是在多处理器上运行,就为cmpxchg指令加上lock前缀(lock cmpxchg)
+			==> lock前缀说明:
+				Ⅰ.确保对内存的读-改-写操作原子执行
+				Ⅱ.禁止该指令与之前和之后的读和写指令重排序
+				Ⅲ.把写缓冲区中的所有数据刷新到内存中
+	2.3.CAS 使用场景:
+		(1).原子类的实现;
+		(2).AbstractQueuedSynchronizer(AQS)
+	2.4.CAS 缺点:
+		2.4.1.ABA 问题:
+			// http://www.cnblogs.com/549294286/p/3766717.html
+			(1)问题:在运用CAS做Lock-Free 操作中有一个经典的ABA问题.
+				线程1准备用CAS将变量的值由A替换为B,在此之前,线程2将变量的值由A替换为C,又由C替换为A,然后线程1执行CAS时发现变量的值仍然为A，所以CAS成功.
+				但实际上这时的现场已经和最初不同了,尽管CAS成功,但可能存在潜藏的问题
+			(2).解决思路是:每次变量更新的时候把变量的版本号加 1,那么 A-B-A 就会变成 A1-B2-A3,只要变量被某一线程修改过,改变量对应的版本号就会发生递增变化.
+				==> 可以参考:AtomicStampedReference#compareAndSet 方法:
+					public boolean compareAndSet(V expectedReference, V newReference, int expectedStamp, int newStamp) {
+					    Pair<V> current = pair;
+					    return expectedReference == current.reference && expectedStamp == current.stamp && 
+					            ((newReference == current.reference && newStamp == current.stamp) || casPair(current, Pair.of(newReference, newStamp)));
+					}
+				该类检查了当前引用与当前标志是否与预期相同,如果全部相等,才会以原子方式将该引用和该标志的值设为新的更新值
+		2.4.2.CPU 开销较大:
+			在并发量比较高的情况下,如果许多线程反复尝试更新某一个变量,却又一直更新不成功,循环往复,会给CPU带来很大的压力;
+			主要是自旋CAS操作如果长时间不成功,会给CPU带来非常大的执行开销.
+		2.4.3.不能保证代码块的原子性:
+			CAS 机制所保证的只是一个变量的原子性操作,而不能保证整个代码块的原子性.比如需要保证3个变量共同进行原子性的更新.就不得不使用 synchronized;
+	2.5.CAS 与 synchronized 的区别:
+		(1).synchronized 关键字会让没有得到锁资源的线程进入 BLOCKED 状态,而后在争夺到锁资源后恢复为 RUNNABLE 状态,
+			这个过程中涉及到操作系统用户模式和内核模式的转换,代价比较高;
+			尽管Java1.6为Synchronized做了优化,增加了从偏向锁到轻量级锁再到重量级锁的过度,但是在最终转变为重量级锁之后,性能仍然较低.
+		(2).从锁的分类来看,CAS 属于乐观锁,乐观地认为程序中的并发情况不那么严重,所以让线程不断去尝试更新;
+			而 synchronized 属于悲观锁,悲观地认为程序中的并发情况严重,所以严防死守;
+		(3).两者没有绝对的好坏,关键看使用场景.在1.6版本后,synchronized 变为重量级锁之前也是采用 CAS 机制.
 
 
 

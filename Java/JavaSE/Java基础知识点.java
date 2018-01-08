@@ -1301,8 +1301,10 @@
 	3.1.语法层面上:
 		(1).抽象类可以提供成员方法的实现细节,而接口中只能存在 public abstract 方法；
 		(2).抽象类中的成员变量可以是各种类型的,而接口中的成员变量只能是 public static final 类型的
-		???(3).接口中不能含有静态代码块以及静态方法,而抽象类可以有静态代码块和静态方法;
-		???(4).接口和抽象类不能实例化,接口中不能有构造,抽象类可以有构造方法;
+		(3).JDK1.7以前的版本接口中不能含有静态方法.JDK1.8之后可以有实现的静态方法,但是不能有未实现的静态方法.
+			接口中不能存在的是静态代码块.且如果接口中包含了静态方法,则接口无法不能重写该静态方法.
+			而抽象类可以有静态代码块和静态方法;
+		(4).接口和抽象类不能实例化,接口中不能有构造,抽象类可以有构造方法;
 		(5).一个类只能继承一个抽象类,而一个类却可以实现多个接口;
 		(6).接口和抽象类都可以包含内部类(抽象类)或者内部接口
 	3.2.设计层面上:
@@ -1327,11 +1329,47 @@
 				return a - b; 
 			}
 		}
-	4.2.如果实现一个接口,默认方法可以不用覆盖重写实现,实现类默认可以直接调用该默认方法;
-		实现类无法重写接口中的静态方法;
-		注意:在声明一个默认方法前，请仔细思考是不是真的有必要使用默认方法，因为默认方法会带给程序歧义,
-			并且在复杂的继承体系中容易产生编译错误
+		接口中非 default 和 static 的方法不能有方法体;
+	4.2.如果实现一个接口,默认方法可以不用覆盖重写实现,实现类默认可以直接调用该默认方法;实现类无法重写接口中的静态方法;
+		注意:在声明一个默认方法前,请仔细思考是不是真的有必要使用默认方法,因为默认方法会带给程序歧义,并且在复杂的继承体系中容易产生编译错误
 		http://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html
+		(1).如果一个类实现两个接口,两个接口中有同样签名的 default 方法,编译报错:
+			public interface DefaultMethodDemo1 {
+			    default void add(){}
+			}
+			public interface DefaultMethodDemo2 {
+			    default void add(){}
+			}
+			public class SubClassDemo implements DefaultMethodDemo1, DefaultMethodDemo2 {}
+			==> 编译错误:SubClassDemo inherited unrelated defaults for add() from type DefaultMethodDemo1 and DefaultMethodDemo2
+			因为相当于你在类里面定义了两个同样签名的方法
+		(2).如果一个类继承一个抽象类和实现一个接口,抽象类定义了一个和接口的默认方法相同的抽象方法,则在类中需要实现该方法.
+			public interface DefaultMethodDemo2 {
+			    default void add(){}
+			}
+			public abstract class DefaultMethodDemo1 {
+			    abstract void add();
+			}
+			public class SubClassDemo extends DefaultMethodDemo1 implements DefaultMethodDemo2{
+			    @Override
+			    public void add() {}
+			}
+		(3).抽象类、接口存在同样的签名方法,抽象类有实现体但是不是 public 修饰的,编译报错.
+			但如果子类实现对应的方法,则编译通过
+		(4).一个声明在类里面的方法优先于任何默认方法,优先选取最具体的实现;
+			public interface A {
+			    default void hello(){System.out.println("Interface A hello : A");}
+			}
+			public interface B extends A {
+			    default void hello(){System.out.println("Interface B hello : B");}
+			}
+			public class C implements A, B {
+			    public static void main(String[] args) {new C().hello();}
+			}
+			输出结果:Interface B hello : B
+	4.3.接口的 default 方法不能重写 Object 的方法,但是可以对 Object 类的方法进行重载.
+		因为若可以会很难确定什么时候该调用接口默认的方法
+
 十五.基本类型与引用类型
 1.基本类型与引用类型的比较
 	1.1.如下四个变量,哪两个比较为 false
