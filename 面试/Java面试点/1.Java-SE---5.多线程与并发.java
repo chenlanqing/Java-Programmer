@@ -1,3 +1,5 @@
+https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483826&idx=1&sn=310192f9fd2a0d8213c7187e4db4d6bc&chksm=96cd41fea1bac8e8c45beb49903583883a5678559b735a03477a83d8690a514c8dfc27a46447&scene=38#wechat_redirect
+
 1.创建多线程的方式? 创建线程几种方式的不同之处? 线程的生命周期? 线程的状态是如何的?
 	1.1.创建线程的方式:
 		(1).继承 Thread
@@ -88,6 +90,7 @@
 		(3).提高线程的可管理性
 	7.4.设计一个线程池:
 		http://www.cnblogs.com/absfree/p/5357118.html
+	7.5.线程池中的coreNum和maxNum有什么不同?
 
 8.volatile 关键字如何保证内存可见性:
 9.synchronized 与 Lock 的区别
