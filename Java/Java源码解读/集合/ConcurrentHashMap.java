@@ -1,6 +1,10 @@
 /**
  * http://www.importnew.com/16147.html
  * https://www.ibm.com/developerworks/cn/java/java-lo-concurrenthashmap/
+ * https://mp.weixin.qq.com/s/HUvHUBRqp4I4ShyUJr5xDw
+ * https://mp.weixin.qq.com/s/V4KzR7A4Kq5ioCbF4oeiIw
+ * https://mp.weixin.qq.com/s/8XLqCwWQimAIr__S_BfrHA
+ * https://mp.weixin.qq.com/s/8MCq-i0AMqaJRQIecJl2WA
  */
 三个方法研究:
 ConcurrentHashMap 的锁分段技术;

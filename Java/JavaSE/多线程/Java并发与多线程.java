@@ -393,6 +393,7 @@
 		http://blog.csdn.net/shandian000/article/details/54927876
 		http://www.cnblogs.com/paddix/p/5367116.html
 		http://www.cnblogs.com/javaminer/p/3889023.html
+		http://cmsblogs.com/?p=2071
 	可以通过反编译字节码 -->javap -c SyncDemo.class
 	7.1.同步代码块的实现:
 		同步代码块是使用 monitorenter 和 monitorexit 指令来实现的.
@@ -1112,8 +1113,7 @@
 	/**
 	 * 参考地址
 	 * http://www.cnblogs.com/xrq730/p/7056614.html
-	 * https://muyinchen.github.io/tags/%E5%B9%B6%E5%8F%91%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/
-	 * http://blog.csdn.net/pfnie/article/details/53191892
+	 * http://blog.csdn.net/pfnie/article/category/7161421
 	 */
 	1.1.设计思想:AQS 是构建锁或者其他同步组件的基础框架,是JUC并发包中的核心基础组件
 		(1).仅从 AQS 本身来说,它仅仅提供独占锁和共享锁两种方式, AQS 本身不存在所谓的公平和非公平锁.
@@ -1126,13 +1126,8 @@
 			AQS 是在1.5产生, 而 AOS 是在1.6之后才产生的.也就是说在 AQS 的整个声明过程中,都没有用到 AOS 中声明的属性或者方法,这些属性或者方法
 			是在 AQS 的子类中才用的到.也就是在 1.6之后对子类进行增强.为什么不把 AOS 声明的属性直接放到 AQS 中?可能是因为 AQS 不需要这些属性,
 			不对 AQS 做过多侵入.
-	1.2.基本数据结构:Node
-		(1).AQS 的等待队列是 CLH 队列,CLH 经常用于自旋锁,AQS 的等待队列用于阻塞同步器;
-		(2).每个节点持有一个 "state" 字段用于是否一条线程应当阻塞的追踪, 但是 state 字段并不保证加锁;
-		(3).一条线程如果处于队列头的下一个节点,那么它会尝试 acquire, 但是 acquire 并不保证成功,只是有权利去竞争
-		(4).要进入队列,你只需要自动将它拼接在队列尾部即可;要从队列中移出,你只需要设置 header字段;
-	1.3.AQS 对外公开的方法不需要子类实现的:
-		AQS 仅仅只是提供独占锁和共享锁两种方式,但是每种方式都有响应中断和不响应中断的区别,所以说AQS锁的更细粒度的划分为:
+	1.2.AQS 对外公开的方法不需要子类实现的:
+		(1).AQS 仅仅只是提供独占锁和共享锁两种方式,但是每种方式都有响应中断和不响应中断的区别,所以说AQS锁的更细粒度的划分为:
 			(1).acquire:不响应中断的独占锁
 			(2).acquireInterruptibly: 响应中断的独占锁
 			(3).acquireShared:不响应中断的共享锁
@@ -1140,10 +1135,12 @@
 		释放锁的方式只有两种:
 			release:独占锁的释放
 			releaseShared:共享锁的释放
-		上述方法都是 final 的,
-	1.4.AQS 子类需要实现的方法:
-		AQS 是基于模板模式的实现,不过其模板模式的实现有些特别,整个类中没有抽象方法,取而代之的是需要子类去实现那些方法通过一个方法体
-		抛出 UnsupportedOperationException 异常来让子类直到.AQS 一共有五处方法供子类实现:
+		上述方法都是 final 的.
+	1.3.AQS 是基于模板模式的实现,不过其模板模式的实现有些特别,整个类中没有抽象方法,取而代之的是需要子类去实现那些方法通过一个方法体.
+		在上面的方法都调用了与之相对应的try方法.在这里需要注意的一点是,acquire和acquireInterruptibly在 AQS 中调用的是同一个try方法;
+		acquireShared和acquireSharedInterruptibly也是调用相同的try方法,并且try方法在AQS中都提供了空实现.		
+		抛出 UnsupportedOperationException 异常来让子类直到.作者暗示着子类应该去重写这些try方法,至于如何去重写try方法,完全是子类的自由
+		AQS 一共有五处方法供子类实现:
 		(1).tryAcquire:尝试在独占模式下acquire,方法应当查询在独占模式下对象的 state 字段是否允许 acquire, 如果允许,那么可以 acquire.
 			方法通常在线程中执行 acquire 调用,如果方法失败了, acquire 方法会将线程加入等待队列(如果线程还没有加入等待队列)直到它被其他线程发出的信号释放.
 		(2).tryRelease:尝试在独占模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
@@ -1151,8 +1148,14 @@
 			方法通常在线程中执行 acquire 调用,如果方法失败了, acquire 方法会将线程加入等待队列(如果线程还没有加入等待队列)直到它被其他线程发出的信号释放.
 		(4).tryReleaseShared:尝试在共享模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
 		(5).isHeldExclusively:当前同步器是否在独占模式下被线程占用,一般该方法表示是否被当前线程独占.
-		==> 关于 acquire 理解:
-	
+	1.3.基本数据结构:Node
+		1.3.1.关于 Node 需要注意点:
+			(1).AQS 的等待队列是 CLH 队列,CLH 经常用于自旋锁,AQS 中的CLH可以简单的理解为"等待锁的线程队列";
+			(2).每个节点持有一个 "status" 字段用于是否一条线程应当阻塞的追踪, 但是 state 字段并不保证加锁;
+			(3).一条线程所在节点如果它处于队列头的下一个节点,那么它会尝试 acquire, 但是 acquire 并不保证成功,只是有权利去竞争
+			(4).要进入队列,你只需要自动将它拼接在队列尾部即可;要从队列中移出,你只需要设置 header字段;
+		1.3.2.
+		
 2.CAS:Compare and Swap-比较与交换
 	/*
 	 * 非阻塞同步算法与CAS(Compare and Swap)无锁算法: http://www.cnblogs.com/Mainz/p/3546347.html
