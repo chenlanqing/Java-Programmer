@@ -562,7 +562,8 @@
 	/**
 	 * 参考资料
 	 * http://www.importnew.com/14398.html, http://www.importnew.com/16112.html
-	 * http://www.cnblogs.com/dolphin0520/p/3920407.html, https://vence.github.io/2016/05/28/threadlocal-info/
+	 * http://www.cnblogs.com/dolphin0520/p/3920407.html, 
+	 * https://vence.github.io/2016/05/28/threadlocal-info/
 	 * https://segmentfault.com/a/1190000000537475
 	 * http://www.jianshu.com/p/33c5579ef44f
 	 * https://toutiao.io/posts/nic1qr/preview

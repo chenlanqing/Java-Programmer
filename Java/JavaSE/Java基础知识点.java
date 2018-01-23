@@ -16,6 +16,7 @@
 十五.基本类型与引用类型:静态代码与构造代码块执行顺序\多态问题
 十六.反射与注解
 十七.比较器:Comparale and Comparator
+十八.枚举类
 ********************************************************************Content***************************************************************************
 一.Java 内部类:
 1.为什么使用内部类?
@@ -233,6 +234,16 @@
 		System.out.println(list2.getClass().getName()); // com.demo.normal.OutClass$1
 		System.out.println(list3.getClass().getName()); // com.demo.normal.OutClass$2
 		System.out.println(list4.getClass().getName()); // com.demo.normal.OutClass$3
+	(8).匿名内部类为什么不能直接使用构造方法?
+		因为类是匿名的,而且每次创建的匿名内部类同时被实例化后只能使用一次,所以就无从创建一个同名的构造方法了,但是可以直接调用父类的构造方法.
+		实质上类是有构造方法的,是通过编译器在编译时生成的,看如下代码:
+		public class InnerClass{}
+		public class OutClass{
+		    InnerClass inner = new InnerClass(){};
+		}
+		编译之后使用命令 javap 可以很明显看到内部类的字节码中编译器为我们生成了参数为外部类引用的构造方法,
+		其构造方法和普通类的构造方法没有区别,都是执行 <init> 方式;
+
 二.HashMap vs. TreeMap vs. Hashtable vs. LinkedHashMap
 (1).HashMap,TreeMap,HashTable父接口都是Map,LinkedHashMap是HashMap的子类;
 (2).HashMap:如果HashMap的key是自定义的对象,则需要重写equals()和hashcode()方法:
@@ -1321,7 +1332,10 @@
 		(1).switch 中只能使用整型,hashCode()方法返回的是int,而不是long
 		(2).进行 switch 的实际是哈希值,然后通过使用equals方法比较进行安全检查,这个检查是必要的,因为哈希可能会发生碰撞
 		(3).其实 switch 只支持一种数据类型,那就是整型,其他数据类型都是转换成整型之后在使用 switch 的
-
+5.枚举类:
+	枚举类型之所以能够使用,因为编译器层面实现了,编译器会将枚举 switch 转换为类似 switch(s.ordinal()) { case Status.START.ordinal() } 形式,
+	所以实质还是 int 参数类型.
+	可以通过查看反编译字节码来查看
 十四.抽象类与接口:抽象类与接口是 Java 语言中对抽象概念进行定义的两种机制
 /**
  * 参考文章:
@@ -1886,12 +1900,87 @@
 	(1).一个类如果实现 Comparable 接口,那么他就具有了可比较性,意思就是说它的实例之间相互直接可以进行比较
 	(2).通常在两种情况下会定义一个实现 Comparator 类
 		可以把一个Comparator的子类传递给Collections.sort()、Arrays.sort()等方法,用于自定义排序规则。
-		用于初始化特定的数据结构。常见的有可排序的Set(TreeSet)和可排序的Map(TreeMap)
+		用于初始化特定的数据结构。常见的有可排序的Set(TreeSet)和可排序的Map(TreeMap);
 
+十八.枚举类:
+1.枚举类概念:枚举类是JDK1.5之后出现的,允许用常量来表示特定的数据片断,而且全部都以类型安全的形式来表示
+	1.1.枚举类特点
+		1).枚举类是一种特殊的Java类;
+		2).枚举类中声明的每一个枚举值代表枚举类的一个实例对象;
+		3).与java普通类一样,在声明枚举类时可以声明属性,方法,构造方法,但是枚举类必须是私有的
+		4).枚举可以实现接口或继承抽象方法
+		5).在JDK5之后,switch语句,可以接受int,byte,char,short外,还可以接受枚举类型
+		6).若枚举类只有一个枚举值,则可以当作单例设计模式
+	1.2.枚举类的一些方法
+		values():获得所有的枚举类
+		valueOf(String str):将一个字符串转为枚举类;
+	1.3.枚举类基类:
+		public abstract class Enum<E extends Enum<E>> implements Comparable<E>, Serializable{}
+		定义枚举类:
+		public enum Status{
+			START(),
+			STOP(),
+			RUNNING();
+		}
+		==> 除了 toString 方法,其余方法都不可重写.要么是 final 方法要么是私有方法.
+	1.4.Java 枚举类比较使用 == 或者 equals()都一样,因为枚举类 Enum 的 equals()方法的默认实现是通过 == 来比较的.
+		在 Enum 中 equals 和 hashCode 方法都是 final, 所以在枚举类中不可实现这两个方法.
+		类似的 Enum 的 compareTo 方法比较的是 Enum 的 ordinal 顺序大小;
+		类似的还有 Enum 的 name 方法和 toString 方法一样都返回的是 Enum 的 name 值.
 
-
-
-
+2.枚举类本质:
+	枚举类本质是通过普通类来实现的,只是编译器进行了相应的处理,每个枚举类编译之后的字节码实质都是继承自 java.lang.Enum 的枚举类类型同名普通类.
+	而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象,所有枚举常量都通过静态代码块进行初始化实例赋值.
+	==> 如下代码:
+		public enum Status{
+			START(),
+			STOP(),
+			RUNNING();
+		}
+		编译之后通过 javap -v 查看字节码文件:
+		.......
+		public final class Status extends java.lang.Enum<Status>
+		.......
+		{
+			// 枚举类型值都成了status类型类的静态常量成员属性
+			public static final Status start;
+		  	public static final Status stop;		    
+		  	public static final Status running;
+		    // 静态代码块
+		    static{};
+		}
+	==> 所以从某种意义上可以说 JDK 1.5 后引入的枚举类型是上面枚举常量类的代码封装而已
+3.枚举类与常量:
+	3.1.区别:
+		(1).枚举相对于常量类来说定义更简单,其不需要定义枚举值,而常量类中每个常量必须手动添加值.
+		(2).枚举作为参数使用时可以避免在编译时避免弱类型错误,而常量类中的常量作为参数使用时无法避免类型错误.
+		(3).枚举类自动具备内置方法,如 values() 方法可以获得所有值的集合遍历,ordinal 方法可以获得排序值,compareTo方法可以给予ordinal比较,
+			而常量类不具备这些方法.
+		(4).枚举的缺点是不能被继承(编译后生成的类是 final class{}),也不能通过 extends 继承其他类(枚举编译后实质是继承了 Enum 类,java是单继承的).
+			但是定义的枚举类也通过 implements 实现其他接口.
+		(5).枚举值定义完毕后除非重构,否则无法做扩展,而常量类可以随意继承.
+	3.2.Java 枚举会比静态常量更消耗内存吗?// TODO 查看资料
+		会更消耗,一般场景下不仅编译后的字节码会比静态常量多,而且运行时也会比静态常量需要更多的内存,不过这个多取决于场景和枚举的规模等等
+4.枚举类是如何保证线程安全的:
+	 Java 类加载与初始化是 JVM 保证线程安全,而 Java enum{} 枚举在编译器编译后的字节码实质是一个 final 类,每个枚举类型是这个 final 类中的
+	 一个静态常量属性，其属性初始化是在该 final 类的 static 块中进行,而 static 的常量属性和代码块都是在类加载时初始化完成的,
+	 所以自然就是 JVM 保证了并发安全
+5.枚举与单例模式:
+	(1).除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了 Serializable 接口后就不再是单例了,
+		因为每次调用 readObject() 方法返回的都是一个新创建出来的对象(当然可以通过使用 readResolve() 方法来避免).
+	(2).Java 规范中保证了每一个枚举类型及其定义的枚举变量在 JVM 中都是唯一的,在枚举类型的序列化和反序列化上 Java 做了特殊处理.
+		序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中,反序列化时则是通过 java.lang.Enum 的 valueOf 方法来根据名字查找枚举对象
+		同时禁用了 writeObject、readObject、readObjectNoData、writeReplace 和 readResolve 等方法
+	(3).Java 枚举序列化需要注意的点:
+		如果我们枚举被序列化本地持久化了,那我们就不能删除原来枚举类型中定义的任何枚举对象,否则程序在运行过程中反序列化时 JVM 就会找不到
+		与某个名字对应的枚举对象了,所以我们要尽量避免多枚举对象序列化的使用
+6.迭代器和枚举器区别:
+	(1).Enumeration<E> 枚举器接口是1.0开始提供,适用于传统类,而 Iterator<E>迭代器接口是1.2提供,适用于 Collections
+	(2).Enumeration 只有两个方法接口,我们只能读取集合的数据而不能对数据进行修改.
+		而 Iterator 有三个方法接口,除了能读取集合的数据外也能对数据进行删除操作
+	(3).Enumeration 不支持 fail-fast 机制，而 Iterator 支持 fail-fast 机制
+		(一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生 fail-fast 机制,譬如 ConcurrentModificationException 异常)
+	尽量使用 Iterator 迭代器而不是 Enumeration 枚举器
 
 
 
