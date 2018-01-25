@@ -876,6 +876,7 @@
 			long foo = 65465498L;  ==> 非原子操作,Java 会分两步写入 long 变量,先写32位,再写后32位,就非线程安全的.
 			private volatile long foo;  ==> 原子性操作
 2.锁的相关概念:
+	// https://www.cnblogs.com/charlesblc/p/5994162.html
 	2.1.同步锁:通过synchronized关键字来进行同步
 		同步锁的原理是,对于每一个对象,有且仅有一个同步锁:不同的线程能共同访问该同步锁.
 		但是,在同一个时间点,该同步锁能且只能被一个线程获取到
@@ -1038,7 +1039,7 @@
 	// 如果给定线程的许可尚不可用，则使其可用。
 	static void unpark(Thread thread)
 	==> LockSupport 是通过调用 Unsafe 函数中的接口实现阻塞和解除阻塞的
-	==> park和wait的区别:wait让线程阻塞前,必须通过synchronized获取同步锁
+	==> park和wait的区别:wait让线程阻塞前,必须通过synchronized获取同步锁; park 面向对象不同; 实现机制不一样,因此两者没有交集;
 5.Callable 
 	5.1.Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
 		Callable 和 Runnable 有几点不同： 
@@ -1111,52 +1112,7 @@
 
 四.JUC 包核心与算法
 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
-	/**
-	 * 参考地址
-	 * http://www.cnblogs.com/xrq730/p/7056614.html
-	 * http://blog.csdn.net/pfnie/article/category/7161421
-	 */
-	1.1.设计思想:AQS 是构建锁或者其他同步组件的基础框架,是JUC并发包中的核心基础组件
-		(1).仅从 AQS 本身来说,它仅仅提供独占锁和共享锁两种方式, AQS 本身不存在所谓的公平和非公平锁.
-		(2).AQS 基于模板模式设计, 其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种,所以 AQS 没有抽象方法,所有方法都有默认实现
-		(3).AQS 是继承自 AbstractOwnableSynchronizer(AOS),AOS 里面只有一个属性:exclusiveOwnerThread--用来标识当前占有锁的线程,加上该属性的get和set方法.
-			==> ??为什么需要将持有锁的线程的标识向上抽取?
-			AOS 有段注释如下:
-				同步器是需要被线程互斥访问的,AOS 提供了一个基本概念,那就是创建锁时赋予一个对于这个锁的所有权.AOS 本身不会去管理或者使用这些信息.
-				然而子类或者工具类在适当的时候会去维护这些信息来控制和监听访问控制权.
-			AQS 是在1.5产生, 而 AOS 是在1.6之后才产生的.也就是说在 AQS 的整个声明过程中,都没有用到 AOS 中声明的属性或者方法,这些属性或者方法
-			是在 AQS 的子类中才用的到.也就是在 1.6之后对子类进行增强.为什么不把 AOS 声明的属性直接放到 AQS 中?可能是因为 AQS 不需要这些属性,
-			不对 AQS 做过多侵入.
-	1.2.AQS 对外公开的方法不需要子类实现的:
-		(1).AQS 仅仅只是提供独占锁和共享锁两种方式,但是每种方式都有响应中断和不响应中断的区别,所以说AQS锁的更细粒度的划分为:
-			(1).acquire:不响应中断的独占锁
-			(2).acquireInterruptibly: 响应中断的独占锁
-			(3).acquireShared:不响应中断的共享锁
-			(4).acquireSharedInterruptibly:响应中断的共享锁
-		释放锁的方式只有两种:
-			release:独占锁的释放
-			releaseShared:共享锁的释放
-		上述方法都是 final 的.
-	1.3.AQS 是基于模板模式的实现,不过其模板模式的实现有些特别,整个类中没有抽象方法,取而代之的是需要子类去实现那些方法通过一个方法体.
-		在上面的方法都调用了与之相对应的try方法.在这里需要注意的一点是,acquire和acquireInterruptibly在 AQS 中调用的是同一个try方法;
-		acquireShared和acquireSharedInterruptibly也是调用相同的try方法,并且try方法在AQS中都提供了空实现.		
-		抛出 UnsupportedOperationException 异常来让子类直到.作者暗示着子类应该去重写这些try方法,至于如何去重写try方法,完全是子类的自由
-		AQS 一共有五处方法供子类实现:
-		(1).tryAcquire:尝试在独占模式下acquire,方法应当查询在独占模式下对象的 state 字段是否允许 acquire, 如果允许,那么可以 acquire.
-			方法通常在线程中执行 acquire 调用,如果方法失败了, acquire 方法会将线程加入等待队列(如果线程还没有加入等待队列)直到它被其他线程发出的信号释放.
-		(2).tryRelease:尝试在独占模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
-		(3).tryAcquireShared:尝试在共享模式下 acquire, 方法应当查询在共享模式下对象的 state 字段是否允许 acquire,如果允许,那么可以 acquire,
-			方法通常在线程中执行 acquire 调用,如果方法失败了, acquire 方法会将线程加入等待队列(如果线程还没有加入等待队列)直到它被其他线程发出的信号释放.
-		(4).tryReleaseShared:尝试在共享模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
-		(5).isHeldExclusively:当前同步器是否在独占模式下被线程占用,一般该方法表示是否被当前线程独占.
-	1.3.基本数据结构:Node
-		1.3.1.关于 Node 需要注意点:
-			(1).AQS 的等待队列是 CLH 队列,CLH 经常用于自旋锁,AQS 中的CLH可以简单的理解为"等待锁的线程队列";
-			(2).每个节点持有一个 "status" 字段用于是否一条线程应当阻塞的追踪, 但是 state 字段并不保证加锁;
-			(3).一条线程所在节点如果它处于队列头的下一个节点,那么它会尝试 acquire, 但是 acquire 并不保证成功,只是有权利去竞争
-			(4).要进入队列,你只需要自动将它拼接在队列尾部即可;要从队列中移出,你只需要设置 header字段;
-		1.3.2.
-		
+	参考源码:[/Java/Java源码解读/thread/AbstractQueuedSynchronizer.java]
 2.CAS:Compare and Swap-比较与交换
 	/*
 	 * 非阻塞同步算法与CAS(Compare and Swap)无锁算法: http://www.cnblogs.com/Mainz/p/3546347.html
