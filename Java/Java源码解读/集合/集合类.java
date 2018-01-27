@@ -1,3 +1,4 @@
+// http://www.cnblogs.com/nullllun/category/1143471.html
 一.集合
 1.集合框架:Java 中的集合框架定义了一套规范，用来表示、操作集合，使具体操作与实现细节解耦
 2.设计理念:

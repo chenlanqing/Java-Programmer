@@ -77,8 +77,14 @@
 		volatile Thread thread;
 
 2.不响应中断的独占锁:
-
-
+	public final void acquire(int arg) {
+        if (!tryAcquire(arg) && acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+            selfInterrupt();
+    }
+    (1).tryAcquire 由子类实现本身不会阻塞线程,如果返回 true, 则线程继续,如果返回 false 那么就加入阻塞队列阻塞线程,并等待前继结点释放锁
+    (2).acquireQueued返回true,说明当前线程被中断唤醒后获取到锁,重置其interrupt status为true
+    	acquireQueued方法中会保证忽视中断,只有tryAcquire成功了才返回
+    (3).addWaiter 入队操作,并返回当前线程所在节点.	
 
 
 
