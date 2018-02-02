@@ -5,6 +5,7 @@
  * Java内存分配- http://www.codeceo.com/article/java-object-memory.html
  * JVM 调优:http://www.codeceo.com/article/twitter-jvm-performance.html
  */
+0.虚拟机历史:(阅读书籍:《深入理解Java虚拟机》)
 1.Java 代码编译和执行的整个过程: // http://www.codeceo.com/article/java-complie-run.html
 	1.1.包含三个重要机制:
 		(1).Java 源码编译机制:Java 源码编译有三个过程:
