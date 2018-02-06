@@ -6,6 +6,9 @@
  * JVM 调优:http://www.codeceo.com/article/twitter-jvm-performance.html
  */
 0.虚拟机历史:(阅读书籍:《深入理解Java虚拟机》)
+	0.1.Sun Classic:世界上第一款商用Java虚拟机,在JDK1.2之前是 Sun JDK中唯一的虚拟机,在JDK1.2时,它与HotSpot虚拟机共存,
+		但默认的是Classic VM,在JDK1.3时成为默认虚拟机,直到1.4之后才完全退出历史舞台.
+	0.2.Sun HotSpot VM:Sun JDK 和 Open JDK 中自带的虚拟机
 1.Java 代码编译和执行的整个过程: // http://www.codeceo.com/article/java-complie-run.html
 	1.1.包含三个重要机制:
 		(1).Java 源码编译机制:Java 源码编译有三个过程:
@@ -390,7 +393,7 @@
 				②.类索引,父类索引和接口索引集合都按照顺序排列在访问标志之后,类索引和父类索引两个 u2 类型的索引值表示:
 					它们各自执行一个类型为 CONSTANT_Class_info 的类描述符常量,通过该常量中的索引值找到定义在
 					CONSTANT_Utf8_info 类型的常量中的全限定名字符串;
-					而接口索引集合就用来描述这个类实现了哪些接口,这些被实现的接口将按 implements 语句(如果这个类本身是个接口,
+					而接口索引集合就用来描述这个类实现了哪些接口,这些被实现的接口将按 implements{} 语句(如果这个类本身是个接口,
 					则应当是 extends 语句)后的接口顺序从左到右排列在接口的索引集合中
 			(5).fields:字段表用于描述接口或类中声明的变量;字段包括了类级变量或实例级变量,但不包含在方法内声明的变量;
 				字段的名字、数据类型、修饰符等都是无法固定的,只能引用常量池中的常量来描述
