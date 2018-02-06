@@ -243,7 +243,11 @@ http://www.hollischuang.com/archives/205
 	            return singleton;
 	        }
 	    }
-
+4.单例与JVM垃圾回收:当一个单例的对象长久不用时,会不会被jvm的垃圾收集机制回收?(Hotspot 虚拟机)
+	// 参考文章:http://blog.csdn.net/zhengzhb/article/details/7331354
+	4.1.分析思路:
+		(1).Hotspot 垃圾收集算法:GC Root
+		(2).方法区的垃圾收集方法,JVM卸载类的判断方法
 
 
 

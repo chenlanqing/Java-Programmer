@@ -401,10 +401,10 @@
 	native 关键字可以应用于方法,以指示该方法是用 Java 以外的语言实现的
 2.transient:
 	transient 关键字可以应用于类的成员变量,以便指出该成员变量不应在包含它的类实例已序列化时被序列化
-	Java 的 serialization 提供了一种持久化对象实例的机制。当持久化对象时,可能有一个特殊的对象数据成员,
+	Java 的 serialization 提供了一种持久化对象实例的机制.当持久化对象时,可能有一个特殊的对象数据成员,
 	我们不想用serialization机制来保存它,为了在一个特定对象的一个域上关闭serialization,可以在这个域前加上关键字 transient.   
 	transient 是 Java 语言的关键字,用来表示一个域不是该对象串行化的一部分。当一个对象被串行化的时候,
-	transient 型变量的值不包括在串行化的表示中,然而非 transient 型的变量是被包括进去的。  
+	transient 型变量的值不包括在串行化的表示中,然而非 transient 型的变量是被包括进去的.
 3.final:(部分内容参考: "JMM-Java内存管理模型与并发.java")
 	/**
 	 * http://www.importnew.com/18586.html
@@ -604,39 +604,52 @@
 		是一种语法规则,与多态无关,与面向对象也无关。(注:严格来说,重载是编译时多态,即静态多态。
 		但是,Java中提到的多态,在不特别说明的情况下都指动态多态)
 六.Java 序列化:序列化是一种对象持久化的手段
-1.Java 对象序列化是 JDK 1.1 中引入的一组开创性特性之一,用于作为一种将 Java 对象的状态转换为字节数组,
-	以便存储或传输的机制,以后,仍可以将字节数组转换回 Java 对象原有的状态
-	(1).对象序列化保存的是对象的"状态",即它的成员变量。由此可知,对象序列化不会关注类中的"静态变量";
-	(2).在 Java 中,只要一个类实现了 java.io.Serializable 接口,那么它就可以被序列化;
-		实现 Externalizable,自己要对序列化内容进行控制,控制哪些属性可以被序列化,哪些不能被序列化
-	(3).通过 ObjectOutputStream 和 ObjectInputStream 对对象进行序列化及反序列化;
-	(4).虚拟机是否允许反序列化,不仅取决于类路径和功能代码是否一致,一个非常重要的一点是两个类的序列化 ID 是否一致,
-		就是 private static final long serialVersionUID
-	(5).要想将父类对象也序列化,就需要让父类也实现 Serializable 接口;
-		如果父类实现了 Serializable 接口,子类但没有实现 Serializable 接口,子类拥有一切可序列化相关的特性,子类可以序列化;
-		如果子类实现 Serializable 接口,父类不实现,根据父类序列化规则,父类的字段数据将不被序列化,从而达到部分序列化的功能;
-		在反序列化时仍会调用父类的构造器,只能调用父类的无参构造函数作为默认的父对象
-	(6).transient 关键字的作用是控制变量的序列化,在变量声明前加上该关键字,可以阻止该变量被序列化到文件中,
+1.Java 对象序列化是 JDK 1.1 中引入的一组开创性特性之一,用于作为一种将 Java 对象的状态转换为字节数组,以便存储或传输的机制,以后,
+	仍可以将字节数组转换回 Java 对象原有的状态
+	1.1.基本点:
+		(1).对象序列化保存的是对象的"状态",即它的成员变量。由此可知,对象序列化不会关注类中的"静态变量";
+		(2).在 Java 中,只要一个类实现了 java.io.Serializable 接口,那么它就可以被序列化;
+			实现 Externalizable,自己要对序列化内容进行控制,控制哪些属性可以被序列化,哪些不能被序列化
+		(3).通过 ObjectOutputStream 和 ObjectInputStream 对对象进行序列化及反序列化;
+		(4).虚拟机是否允许反序列化,不仅取决于类路径和功能代码是否一致,一个非常重要的一点是两个类的序列化 ID 是否一致,
+			就是 private static final long serialVersionUID;
+		(5).transient 关键字的作用是控制变量的序列化,在变量声明前加上该关键字,可以阻止该变量被序列化到文件中,
 		在被反序列化后,transient 变量的值被设为初始值,如 int 型的是 0,对象型的是 null
-	(7).Java 序列化机制为了节省磁盘空间,具有特定的存储规则,当写入文件的为同一对象时,并不会再将对象的内容进行存储,
-	而只是再次存储一份引用,上面增加的 5 字节的存储空间就是新增引用和一些控制信息的空间。反序列化时,恢复引用关系
-	该存储规则极大的节省了存储空间;
-		ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("result.obj"));
-		Test test = new Test();
-		test.i = 1;
-		out.writeObject(test);
-		out.flush();
-		test.i = 2;
-		out.writeObject(test);
-		out.close();
-		ObjectInputStream oin = new ObjectInputStream(new FileInputStream(
-							"result.obj"));
-		Test t1 = (Test) oin.readObject();
-		Test t2 = (Test) oin.readObject();
-		System.out.println(t1.i);// 1
-		System.out.println(t2.i);// 1
-		// 结果两个输出的都是 1, 原因就是第一次写入对象以后,第二次再试图写的时候,虚拟机根据引用关系
-		// 知道已经有一个相同对象已经写入文件,因此只保存第二次写的引用,所以读取时,都是第一次保存的对象
+		(6).Java 序列化机制为了节省磁盘空间,具有特定的存储规则,当写入文件的为同一对象时,并不会再将对象的内容进行存储,
+			而只是再次存储一份引用,上面增加的 5 字节的存储空间就是新增引用和一些控制信息的空间.反序列化时,恢复引用关系
+			该存储规则极大的节省了存储空间;
+				ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("result.obj"));
+				Test test = new Test();
+				test.i = 1;
+				out.writeObject(test);
+				out.flush();
+				test.i = 2;
+				out.writeObject(test);
+				out.close();
+				ObjectInputStream oin = new ObjectInputStream(new FileInputStream(
+									"result.obj"));
+				Test t1 = (Test) oin.readObject();
+				Test t2 = (Test) oin.readObject();
+				System.out.println(t1.i);// 1
+				System.out.println(t2.i);// 1
+				// 结果两个输出的都是 1, 原因就是第一次写入对象以后,第二次再试图写的时候,虚拟机根据引用关系
+				// 知道已经有一个相同对象已经写入文件,因此只保存第二次写的引用,所以读取时,都是第一次保存的对象
+	1.2.子类与父类序列化:
+		(1).要想将父类对象也序列化,就需要让父类也实现 Serializable 接口;
+		(2).如果父类实现了 Serializable 接口,子类但没有实现 Serializable 接口,子类拥有一切可序列化相关的特性,子类可以序列化;
+		(3).如果子类实现 Serializable 接口,父类不实现,根据父类序列化规则,父类的字段数据将不被序列化,从而达到部分序列化的功能;
+		(4).在反序列化时仍会调用父类的构造器,只能调用父类的无参构造函数作为默认的父对象.如果父类没有默认构造方法则在反序列化时会出异常.
+		(5).如果父类实现了 Serializable 接口,要让子类不可序列化,可以在子类中写如下代码:(其实违反了里氏替换原则)
+			private void writeObject(java.io.ObjectOutputStream out) throws IOException{
+		        throw new NotSerializableException("不可写");
+		    }
+		    private void readObject(java.io.ObjectInputStream in) throws IOException{
+		        throw new NotSerializableException("不可读");
+		    }
+		(6).序列化与反序列化时子类和父类构造方法调用关系:
+			序列化时子类递归调用父类的构造函数,反序列化作用于子类对象时如果其父类没有实现序列化接口则其父类的默认无参构造函数会被调用.
+			如果父类实现了序列化接口则不会调用构造方法.
+
 2.在序列化过程中,如果被序列化的类中定义了writeObject 和 readObject 方法,
 	虚拟机会试图调用对象类里的 writeObject 和 readObject 方法,进行用户自定义的序列化和反序列化。
 	如果没有这样的方法,则默认调用是 ObjectOutputStream 的 defaultWriteObject 方法以及
@@ -644,14 +657,12 @@
 	用户自定义的 writeObject 和 readObject 方法可以允许用户控制序列化的过程,比如可以在序列化的过程中动态改变序列化的数值;
 	2.1.ArrayList 使用上述实现:为什么ArrayList要用这种方式来实现序列化呢?
 		(1).为什么 transient Object[] elementData;
-			ArrayList 实际上是动态数组,每次在放满以后自动增长设定的长度值,如果数组自动增长长度设为100,
-			而实际只放了一个元素,那就会序列化 99 个 null 元素。为了保证在序列化的时候不会将这么多 null 同时进行序列化,
-			ArrayList 把元素数组设置为 transient
+			ArrayList 实际上是动态数组,每次在放满以后自动增长设定的长度值,如果数组自动增长长度设为100,而实际只放了一个元素,
+			那就会序列化 99 个 null 元素。为了保证在序列化的时候不会将这么多 null 同时进行序列化,ArrayList 把元素数组设置为 transient
 		(2).为什么要写方法:writeObject and readObject
-			前面提到为了防止一个包含大量空对象的数组被序列化,为了优化存储,所以,ArrayList 使用 transient 来声明elementData
-			作为一个集合,在序列化过程中还必须保证其中的元素可以被持久化下来,
-			所以,通过重写writeObject 和 readObject方法的方式把其中的元素保留下来
-			writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中。
+			前面提到为了防止一个包含大量空对象的数组被序列化,为了优化存储,所以,ArrayList 使用 transient 来声明elementData作为一个集合,
+			在序列化过程中还必须保证其中的元素可以被持久化下来,所以,通过重写writeObject 和 readObject方法的方式把其中的元素保留下来
+			writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中.
 			readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
 	2.2.如何自定义的序列化和反序列化策略
 		可以通过在被序列化的类中增加writeObject 和 readObject方法。那么问题又来了;
@@ -681,8 +692,20 @@
                     throw new NotSerializableException(cl.getName());
                 }
             }
-		在进行序列化操作时,会判断要被序列化的类是否是 Enum、Array 和 Serializable 类型,
-		如果不是则直接抛出 NotSerializableException
+		在进行序列化操作时,会判断要被序列化的类是否是 Enum、Array 和 Serializable 类型,如果不是则直接抛出 NotSerializableException
+	2.4.writeReplace() 和 readResolve():
+		Serializable 除过提供了 writeObject 和 readObject 标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve),
+		2.4.1.writeReplace:序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象,
+			该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法,直到该方法不再返回另一个对象为止,程序最后将调用该对象的 
+			writeObject() 方法来保存该对象的状态.
+			(1).实现了 writeReplace 的序列化类就不要再实现 writeObject 了,因为该类的 writeObject 方法就不会被调用了.
+			(2).实现 writeReplace 的返回对象必须是可序列化的对象;
+			(3).通过 writeReplace 序列化替换的对象在反序列化中无论实现哪个方法都是无法恢复原对象的.
+			(4).所以 writeObject 只和 readObject 配合使用,一旦实现了 writeReplace 在写入时进行替换就不再需要 writeObject 和 readObject 了.
+		2.4.2.readResolve:方法可以实现保护性复制整个对象,会紧挨着序列化类实现的 readObject() 之后被调用,该方法的返回值会代替原来反序列化的对象
+			而原来序列化类中 readObject() 反序列化的对象将会立即丢弃.
+			readObject() 方法在序列化单例类时尤其有用,单例序列化都应该提供 readResolve() 方法,这样才可以保证反序列化的对象依然正常.
+
 3.private static final long serialVersionUID:每个可序列化类相关联
 	(1).该序列号在反序列化过程中用于验证序列化对象的发送者和接收者是否为该对象加载了与序列化兼容的类;
 	(2).如果接收者加载的该对象的类的 serialVersionUID 与对应的发送者的类的版本号不同,
@@ -699,9 +722,12 @@
 			无法反序化旧有实例,并在反序列化时抛出一个异常。如果你添加了serialVersionUID,在反序列旧有实例时,
 			新添加或更改的字段值将设为初始化值(对象为null,基本类型为相应的初始默认值),字段被删除将不设置
 4.反序列化:
-	(1).实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法,完全基于字节,
-		如果是子类继承父类的序列化,那么将调用父类的构造方法;
-	(2).实现 Externalizable  接口的对象在反序列化时会调用构造方法
+	(1).实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法,完全基于字节,如果是子类继承父类的序列化,那么将调用父类的构造方法;
+	(2).实现 Externalizable  接口的对象在反序列化时会调用构造方法.该接口继承自 Serializable,使用该接口后基于 Serializable 接口的序列化机制就会失效,
+		因为 Externalizable 不会主动序列化,当使用该接口时序列化的细节需要由我们自己去实现.
+		使用 Externalizable 主动进行序列化时当读取对象时会调用被序列化类的无参构方法去创建一个新的对象,然后再将被保存对象的字段值分别填充到新对象中.
+		所以 所以实现 Externalizable 接口的类必须提供一个无参 public 的构造方法,
+		readExternal 方法必须按照与 writeExternal 方法写入值时相同的顺序和类型来读取属性值.
 
 5.序列化实现对象的拷贝:
 	内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中,再从字节流中将其读出来,这样就可以创建一个新的对象了,
@@ -776,6 +802,11 @@
 	        object.putAll(map2);
 	        System.out.println(JSONObject.toJSON(object));// {"b":"2","a":"1","c":"3"}
 	    (2).Gson 保证了你插入的顺序,就是正常的Map迭代操作
+8.序列化安全:
+	(1).序列化在传输中是不安全的:因为序列化二进制格式完全编写在文档中且完全可逆,所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容,
+		故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中.
+	(2).要解决序列化安全问题的核心原理就是避免在序列化中传递敏感数据,所以可以使用关键字 transient 修饰敏感数据的变量.
+		或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
 七.泛型:
 1.JDK1.5 引入的新特性,允许在定义类和接口的时候使用类型参数(type parameter),泛型最主要的应用是在
 	JDK 5中的新集合类框架中;

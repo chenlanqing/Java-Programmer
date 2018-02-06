@@ -329,6 +329,7 @@
 	13.2.DispatcherServlet 默认配置:
 		在 DispatcherServlet.properties(和DispatcherServlet类在一个包下),而且是当Spring配置文件中没有
 		指定配置时使用的默认策略.DispatcherServlet 默认使用 WebApplicationContext 作为上下文
+14.Spring 中容器中如何进行垃圾回收处理?是否会对设置为单例的对象进行回收?
 三.ORM 框架:
 1.Hibernate 与 Mybatis 区别
 	1.1.Hibernate 的优点:

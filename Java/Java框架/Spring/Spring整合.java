@@ -83,7 +83,7 @@
 			<property name="mappingLocations" 
 				value="classpath:com/atguigu/spring/hibernate/entities/*.hbm.xml"></property>
 		</bean>
-
+		*/
 		<!-- 配置 Spring 的声明式事务 -->
 		<!-- ①. 配置事务管理器 -->
 		<bean id="transactionManager" class="org.springframework.orm.hibernate4.HibernateTransactionManager">
