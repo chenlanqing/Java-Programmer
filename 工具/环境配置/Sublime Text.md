@@ -1,0 +1,59 @@
+* http://blog.jobbole.com/88648/
+
+## 常用快捷键：
+	Ctrl + Enter 在当前行下面新增一行然后跳至该行；
+	Ctrl + Shift + Enter 在当前行上面增加一行并跳至该行
+	Ctrl + ←/→  进行逐词移动，相应的，
+	Ctrl + Shift + ←/→ 进行逐词选择
+	Ctrl + ↑/↓  移动当前显示区域，
+	Ctrl + Shift + ↑/↓ 移动当前行
+	Ctrl + D  选择当前光标所在的词并高亮该词所有出现的位置，
+	再次Ctrl + D选择该词出现的下一个位置，在多重选词的过程中，
+	使用Ctrl + K进行跳过，使用Ctrl + U进行回退，使用Esc退出多重编辑;
+	Ctrl + Shift + L 可以将当前选中区域打散，然后进行同时编辑
+	Ctrl + J  可以把当前选中区域合并为一行
+	
+	使用Shift + ←/→或Ctrl + D选中关键字，然后F3跳到其下一个出现位置，
+		Shift + F3跳到其上一个出现位置，此外还可以用Alt + F3选中其出现的所有位置
+	
+	
+	Alt + C切换大小写敏感（Case-sensitive）模式，Alt + W切换整字匹配（Whole matching）模式
+	使用Ctrl + Shift + F开启多文件搜索&替换
+	
+	Ctrl + P会列出当前打开的文件（或者是当前文件夹的文件），输入文件名然后Enter跳转至该文件
+	
+	Ctrl + R会列出当前文件中的符号（例如类名和函数名，但无法深入到变量名），输入符号名称Enter即可以跳转到该处。此外，还可以使用F12快速跳转到当前光标所在符号的定义处（Jump to Definition）。
+	
+	Ctrl + G然后输入行号以跳转到指定行
+	
+	在Ctrl + P匹配到文件后，我们可以进行后续输入以跳转到更精确的位置：
+		@ 符号跳转：输入@symbol跳转到symbol符号所在的位置
+		# 关键字跳转：输入#keyword跳转到keyword所在的位置
+		: 行号跳转：输入:12跳转到文件的第12行。
+	
+	
+	输入框不跟随:解决方法是安装IMESupport插件，之后重启Sublime Text问题就解决了
+		在GitHub页面下载该项目的ZIP包，解压出来将文件夹名称改为IMESupport，放到Sublime Text的插件目录重启软件即可。插件目录可通过菜单->preferences->packages来打开
+		
+	侧栏列出了当前打开的文件和文件夹的文件，使用Ctrl + K, Ctrl + B显示或隐藏侧栏，使用Ctrl + P快速跳转到文件夹里的文件
+	
+	Ctrl + [向左缩进，Ctrl + ]向右缩进，此外Ctrl + Shift + V可以以当前缩进粘贴代码（非常实用）
+	
+	利用Ctrl + M可以快速的在起始括号和结尾括号间切换，Ctrl + Shift + M则可以快速选择括号间的内容，
+		对于缩进型语言（例如Python）则可以使用Ctrl + Shift + J。
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
