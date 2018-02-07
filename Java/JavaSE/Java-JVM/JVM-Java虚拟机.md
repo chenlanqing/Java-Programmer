@@ -1,15 +1,16 @@
-/**
- * http://www.importnew.com/19946.html
- * Java虚拟机内存优化实践-http://www.codeceo.com/article/java-jvm-memory.html
- * 深入理解JVM内幕：从基本结构到Java 7新特性-http://www.importnew.com/1486.html
- * Java内存分配- http://www.codeceo.com/article/java-object-memory.html
- * JVM 调优:http://www.codeceo.com/article/twitter-jvm-performance.html
- */
-0.虚拟机历史:(阅读书籍:《深入理解Java虚拟机》)
+参考文章：
+* [Java内存区域与内存溢出](http://www.importnew.com/19946.html)
+* [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
+* [深入理解JVM内幕：从基本结构到Java 7新特性](http://www.importnew.com/1486.html)
+* [Java内存分配](http://www.codeceo.com/article/java-object-memory.html)
+* [JVM 调优](http://www.codeceo.com/article/twitter-jvm-performance.html)
+
+## 0.虚拟机历史:(阅读书籍:《深入理解Java虚拟机》)
 	0.1.Sun Classic:世界上第一款商用Java虚拟机,在JDK1.2之前是 Sun JDK中唯一的虚拟机,在JDK1.2时,它与HotSpot虚拟机共存,
 		但默认的是Classic VM,在JDK1.3时成为默认虚拟机,直到1.4之后才完全退出历史舞台.
 	0.2.Sun HotSpot VM:Sun JDK 和 Open JDK 中自带的虚拟机
-1.Java 代码编译和执行的整个过程: // http://www.codeceo.com/article/java-complie-run.html
+## 1.Java 代码编译和执行的整个过程: 
+	* http://www.codeceo.com/article/java-complie-run.html
 	1.1.包含三个重要机制:
 		(1).Java 源码编译机制:Java 源码编译有三个过程:
 			==> 分析和输入到符号表
@@ -37,7 +38,7 @@
 			放方法执行过程中产生的中间结果;
 	1.2.JVM 运行原理:类加载器 classloader + 执行引擎 execution engine + 运行时数据区域 runtime data area
 		类加载器将 class 文件加载到{JVM}中的运行时数据区域,其不负责类的执行,由执行引擎执行;
-2.Java 内存区域
+## 2.Java 内存区域
 	2.1.Java 虚拟机:
 		虚拟机: 模拟某种计算机体系机构,执行特定指令集的软件
 		2.1.1.进程虚拟机:JVM 等
@@ -136,7 +137,7 @@
 		2.2.7.直接内存:其并不是虚拟机运行时数据区的一部分,也不是Java虚拟机规范中定义的内存区域
 			它直接从操作系统中分配,因此不受Java堆大小的限制,但是会受到本机总内存的大小及处理器寻址空间的限制,
 			因此它也可能导致 OutOfMemoryError 异常出现
-3.内存溢出与内存泄漏:
+## 3.内存溢出与内存泄漏:
 	3.1.内存溢出:指程序所需要的内存超出了系统所能分配的内存(包括动态扩展)的上限
 	3.2.内存泄漏:指分配出去的内存没有被回收回来,由于失去了对该内存区域的控制,因而造成了资源的浪费;
 		Java 中一般不会产生内存泄露,因为有垃圾回收器自动回收垃圾,但这也不绝对,当我们 new {}了对象,并保存了其引用,
@@ -310,8 +311,8 @@
 			除了上面两个指定大小的选项以外,还有两个与 GC 相关的属性:
 			-XX:MinMetaspaceFreeRatio,在GC之后,最小的Metaspace剩余空间容量的百分比,减少为分配空间所导致的垃圾收集
 			-XX:MaxMetaspaceFreeRatio,在GC之后,最大的Metaspace剩余空间容量的百分比,减少为释放空间所导致的垃圾收集
-4.对象访问与内存分配:
-	// https://segmentfault.com/a/1190000009740021
+## 4.对象访问与内存分配:
+	* https://segmentfault.com/a/1190000009740021
 	4.1.假设该语句出现在方法体中:
 		Object obj = new Object();
 		这段代码的执行会涉及 Java 栈、Java 堆、方法区三个最重要的内存区域;
@@ -325,7 +326,8 @@
 		(2).直接使用指针:
 			最大好处是速度快,节省了一次指针定位的时间开销.
 
-5.Class 类文件结构: // http://www.importnew.com/19987.html
+## 5.Class 类文件结构: 
+	* http://www.importnew.com/19987.html
 	5.1.平台无关性:虚拟机并不关心 Class 的来源是什么语言,只要它符合一定的结构,就可以在 Java 中运行
 		Java 语言中的各种变量,关键字和运算符的语义最终都是由多条字节码命令组合而成的,
 	5.2.类文件结构:
@@ -475,15 +477,14 @@
 					它用于记录生成这个Class文件的源码文件名称
 				(7.9)Synthetic:类,方法表,字段表;标示类,方法,字段等是编译器自动生成的;
 					该属性代表此字段,方法并不是Java源代码直接生成的,而是由编译器自行添加的,如this和实例构造器、类构造器等
-6.虚拟机类加载机制:
+## 6.虚拟机类加载机制:
 	类加载机制:
 		虚拟机把描述类的数据从Class文件加载到内存,并对数据进行校验、转换解析和初始化,最终形成可以被虚拟机直接使用的
 		Java 类型.
-	/**
-	 * 参考文章:
+	
 	 * http://www.hollischuang.com/archives/201
 	 * http://www.hollischuang.com/archives/199
-	 */
+	 
 	6.1.ClassLoader:用来动态加载class文件到内存当中用的;
 		从 Java 虚拟机的角度来讲,只存在两种不同的类加载器:一种是启动类加载器,这个类加载器是使用C++语言实现的(仅限于
 			HotSpot 虚拟机),是虚拟机自身的一部分,另一种就是所有其他的类加载器,都是由Java语言实现的,独立于虚拟机外部,
@@ -716,7 +717,7 @@
 		它们被视为不同的类.J2EE 使用多个类加载器加载不同地方的类,例如WAR文件由 Web-app 类加载器加载,而 EJB-JAR
 		中的类由另外的类加载器加载.有些服务器也支持热部署,这也由类加载器实现.你也可以使用类加载器来加载数据库或者
 		其他持久层的数据
-	// http://www.importnew.com/18548.html
+	* http://www.importnew.com/18548.html
 	6.8.Java 类类生命周期:加载(Loading)、验证(Verification)、准备(Preparation)、解析(Resolution)、初始化(Initialization)、
 		使用(Using)和卸载(Unloading)7个阶段,准备、验证、解析3个部分统称为连接,
 		其中"类加载"的过程包括了加载、验证、准备、解析、初始化五个阶段,
@@ -862,7 +863,7 @@
 				即使运行时会执行 early resolution,但程序不会显示的在第一次判断出错误时抛出错误,而会在对应的类第一次主
 				动使用的时候抛出错误！
 	6.9.Java 类的初始化: 类的初始化也是延迟的,直到类第一次被主动使用(active use),JVM 才会初始化类
-			// http://www.importnew.com/20040.html
+			* http://www.importnew.com/20040.html
 			(1).初始化过程的主要操作是"执行静态代码块"和"初始化静态域".
 				在一个类被初始化之前,它的"直接父类"也需要被初始化.
 				但是,一个接口的初始化,不会引起其父接口的初始化.
@@ -945,7 +946,8 @@
 				(2).主要区别:
 					当一个类在初始化时,要求其父类全部已经初始化过了;但是一个接口在初始化时,并不要求其父接口全部
 					都完成了初始化,只有在真正使用到父接口的时候(如引用接口中定义的常量).才会初始化该父接口.
-	6.10.如下例子:http://www.importnew.com/18566.html
+	6.10.如下例子:
+		* http://www.importnew.com/18566.html
 		public class StaticTest{
 		    public static void main(String[] args){
 		        staticFunction();
@@ -1010,7 +1012,7 @@
 			(3).加载本类的classloader未知时,为了隔离不同的调用者,即类的隔离,采用了上下文类加载的模式加载类.
 			(4).当前高层的接口在低层去实现,而高层的类有需要低层的类加载的时候,这个时候,需要使用上下文类加载器去实现
 		
-7.字节码执行引擎:
+## 7.字节码执行引擎:
 	7.1.物理机的执行引擎是直接建立在处理器、硬件、指令集和操作系统层面上的;
 		虚拟机的执行引擎是字节实现的,可以自行制定指令集和执行引擎的结果体系,能够执行不被硬件直接支持的指令集格式;
 		不同虚拟机实现里,执行引擎在执行Java代码时可能会解释执行和编译执行
@@ -1022,7 +1024,8 @@
 	7.4.动态类型语言支持:
 		7.4.1.动态类型语言:关键特征是它的类型检查的主体过程是在运行期而不是编译期
 
-8.方法调用:多态性实现机制——静态分派与动态分派:// http://www.importnew.com/20071.html
+## 8.方法调用:多态性实现机制——静态分派与动态分派://
+    * http://www.importnew.com/20071.html
 	8.1.方法解析:
 		(1).Class 文件的编译过程不包含传统编译中的连接步骤,一切方法调用在Class 文件里面存储的都只是符号引用,
 			而不是方法在实际运行时内存布局中入口地址.这个特性使得Java可以在类运行期间才能确定某些目标方法的直接引用,
@@ -1106,13 +1109,15 @@
 		8.4.4.运行阶段虚拟机的选择即动态分派的过程:由于编译器已经决定了目标方法的签名,虚拟机此时不会关系传递过来的参数,
 			因为此时参数的静态类型、实际类型都对方法的选择不会构成任何影响,唯一可以影响虚拟机选择的因素是此方法的
 			接受者的实际类型.所以动态分派为单分派类型.
-9.Java 语法糖: // http://www.importnew.com/20093.html
+## 9.Java 语法糖: 
+    * http://www.importnew.com/20093.html
 	9.1.语法糖:指在计算机中添加的某种语法,这种语法对语言的功能并没有影响,但是更方便程序员使用.
 		Java 中的语法糖主要有泛型、变长参数、条件编译、自动装拆箱、内部类等;虚拟机并不支持这些语法,它们在编译阶段就还原回了
 		简单的基础语法结构,这个过程称为解语法糖
 	9.2.泛型在编译阶段会被擦除
 		
-10.Java 编译:// http://www.importnew.com/20109.html
+## 10.Java 编译:
+    * http://www.importnew.com/20109.html
 	10.1.无论是物理机还是虚拟机,大部分程序代码从开始编译到最终转化成物理机的目标代码或虚拟机能执行的指令集之前,
 		都会按如下步骤进行:
 		程序源码 --> 词法分析 --> 单词流 --> 语法分析 --> 抽象语法树
@@ -1250,10 +1255,11 @@
 					执行字节码,直到提交的请求被编译器编译完成为止;
 					当编译工作完成后,下一次调用该方法或代码时,就会使用已编译的版本
 	==> Javac 字节码编译器与虚拟机内的 JIT 编译器的执行过程合起来其实就等同于一个传统的编译器所执行的编译过程				
-11.Java 垃圾收集机制 :// http://www.importnew.com/20129.html
-	参考文件:/Java-GC垃圾回收机制.java
+## 11.Java 垃圾收集机制 :
+* http://www.importnew.com/20129.html
+	参考文件:/Java-GC垃圾回收机制.md
 
-12.虚拟机监控及故障处理
+## 12.虚拟机监控及故障处理
 	12.1.jps:虚拟机进程状况工具(JVM Process Status Tool)
 		(1).功能:列出正在运行的虚拟机进程,并显示虚拟机执行主类名称以及这些进程的本地虚拟机唯一ID(LVMID)
 			对于本地虚拟机进程来说,LVMID 与操作系统的进程ID是一致的,使用 windows 任务管理和UNINX的ps命令
@@ -1344,7 +1350,7 @@
 		11.7.2.VisualVM:多合一故障处理工具
 	12.8.内存分析工具:
 		https://www.zybuluo.com/frank-shaw/note/206287
-13.JVM 虚拟机调优:
+## 13.JVM 虚拟机调优:
 	13.1.在高性能硬件上的程序部署:
 		(1).对于用户交互性强、对停顿时间敏感的系统,可以给Java虚拟机分配超大堆的前提是有把握把应用程序的FullGC
 			频率控制的足够低,至少不要影响到用户.可以通过在深夜执行定时任务的方式触发 Full GC 甚至自动重启应用
@@ -1359,9 +1365,9 @@
 	13.5.服务器JVM进程崩溃
 	13.6.不恰当数据结果导致内存占用过大
 	13.7.由windows虚拟内存导致的长时间停顿
-14.JVM 优化技术:
+## 14.JVM 优化技术:
 	14.1.逃逸分析:
-		https://my.oschina.net/hosee/blog/638573
+		* https://my.oschina.net/hosee/blog/638573
 		(1).逃逸分析的基本行为就是分析对象动态作用域:当一个对象在方法中被定义之后,它可能被外部所引用.
 			例如作为调用参数传递到其他地方中,称为方法逃逸
 			public static StringBuffer craeteStringBuffer(String s1, String s2) {
@@ -1375,60 +1381,3 @@
 		    }
 	14.2.
 15.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
