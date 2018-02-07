@@ -1,5 +1,5 @@
-1.du -sh ./*  ==> ²é¿´µ±Ç°Ä¿ÏÂËùÓĞÎÄ¼şµÄÏêÏ¸ĞÅÏ¢,°üÀ¨´óĞ¡;
+1.du -sh ./*  ==> æŸ¥çœ‹å½“å‰ç›®ä¸‹æ‰€æœ‰æ–‡ä»¶çš„è¯¦ç»†ä¿¡æ¯,åŒ…æ‹¬å¤§å°;
 
-2.ps -aux|grep configserver ==>²é¿´µ±Ç°»úÆ÷ÉÏµÄ configserverµÄÏêÏ¸ĞÅÏ¢
+2.ps -aux|grep configserver ==>æŸ¥çœ‹å½“å‰æœºå™¨ä¸Šçš„ configserverçš„è¯¦ç»†ä¿¡æ¯
 
-3./etc/init.d/iptables stop ¹Ø±Õ·À»ğÇ½
+3./etc/init.d/iptables stop å…³é—­é˜²ç«å¢™

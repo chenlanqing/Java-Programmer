@@ -1049,7 +1049,7 @@
 		(4).运行 Callable 任务可拿到一个 Future 对象,Future 表示异步计算的结果。
 			它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
 			通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果.
-三.JUC 中集合类:
+四.JUC 中集合类:
 1.JUC 集合类:
 	(1).List 和 Set:
 		CopyOnWriteArrayList, CopyOnWriteArraySet 和 ConcurrentSkipListSet
@@ -1110,7 +1110,7 @@
 
 10.ConcurrentLinkedQueue: // http://www.cnblogs.com/skywang12345/p/3498995.html
 
-四.JUC 包核心与算法
+五.JUC 包核心与算法
 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
 	参考源码:[/Java/Java源码解读/thread/AbstractQueuedSynchronizer.java]
 2.CAS:Compare and Swap-比较与交换
