@@ -1,13 +1,13 @@
 # 一.Java 内部类:
 ## 1.为什么使用内部类?
-使用内部类最吸引人的原因是:每个内部类都能独立地继承一个(接口的)实现,所以无论外围类是否已经继承了某个(接口的)实现,对于内部类都没有影响
+	使用内部类最吸引人的原因是:每个内部类都能独立地继承一个(接口的)实现,所以无论外围类是否已经继承了某个(接口的)实现,对于内部类都没有影响
 #### 1.1.使用内部类最大的优点就在于它能够非常好的解决多重继承的问题,使用内部类还能够为我们带来如下特性:
 	(1).内部类可以用多个实例,每个实例都有自己的状态信息,并且与其他外围对象的信息相互独。
 	(2).在单个外围类中,可以让多个内部类以不同的方式实现同一个接口,或者继承同一个类。
 	(3).创建内部类对象的时刻并不依赖于外围类对象的创建。
 	(4).内部类并没有令人迷惑的"is-a"关系,他就是一个独立的实体。
 	(5).内部类提供了更好的封装,除了该外围类,其他类都不能访问。
-    
+
 ## 2.内部类分类:
 ### (一).成员内部类:
 	public class Outer{
@@ -53,7 +53,7 @@
 	1.外部类是不能直接使用内部类的成员和方法的,可先创建内部类的对象,然后通过内部类的对象来访问其成员变量和方法;
 	2.如果外部类和内部类具有相同的成员变量或方法,内部类默认访问自己的成员变量或方法,如果要访问外部类的成员变量,可以使用 this 关键字,如:Outer.this.name
 ### (二).静态内部类: 是 static 修饰的内部类,
-	1.静态内部类不能直接访问外部类的非静态成员,但可以通过 new 外部类().成员 的方式访问 
+	1.静态内部类不能直接访问外部类的非静态成员,但可以通过 new 外部类().成员 的方式访问
 	2.如果外部类的静态成员与内部类的成员名称相同,可通过"类名.静态成员"访问外部类的静态成员；
 	如果外部类的静态成员与内部类的成员名称不相同,则可通过"成员名"直接调用外部类的静态成员
 	3.创建静态内部类的对象时,不需要外部类的对象,可以直接创建 内部类 对象名 = new 内部类();
@@ -78,19 +78,20 @@
 	就会出现内部类未加载时却试图在内存中创建的 static 属性和方法,这自然是错误的,类都不存在却希望操作它的属性和方法.
 	从另一个角度讲非 static 的内部类在实例化的时候才会加载(不自动跟随主类加载),而static 的语义是类能直接通过类名访问类的 static
 	属性或者方法,所以如果没有实例化非 static  的内部类就等于非 static 的内部类没有被加载,所以无从谈起通过类名访问 static 属性或者方法.
-### (三).方法内部类:访问仅限于方法内或者该作用域内	
+### (三).方法内部类:访问仅限于方法内或者该作用域内
 	(1).局部内部类就像是方法里面的一个局部变量一样,是不能有 public、protected、private 以及 static 修饰符的
 	(2).只能访问方法中定义的 final 类型的局部变量,因为:当方法被调用运行完毕之后,局部变量就已消亡了.但内部类对象可能还存在,
         直到没有被引用时才会消亡.此时就会出现一种情况,就是内部类要访问一个不存在的局部变量;
 		==>使用final修饰符不仅会保持对象的引用不会改变,而且编译器还会持续维护这个对象在回调方法中的生命周期.
 		局部内部类并不是直接调用方法传进来的参数,而是内部类将传进来的参数通过自己的构造器备份到了自己的内部,
 		自己内部的方法调用的实际是自己的属性而不是外部类方法的参数;防止被篡改数据,而导致内部类得到的值不一致
-		/*
-		 使用的形参为何要为 final???
-		 在内部类中的属性和外部方法的参数两者从外表上看是同一个东西,但实际上却不是,所以他们两者是可以任意变化的,
-		 也就是说在内部类中我对属性的改变并不会影响到外部的形参,而然这从程序员的角度来看这是不可行的,
-		 毕竟站在程序的角度来看这两个根本就是同一个,如果内部类该变了,而外部方法的形参却没有改变这是难以理解
-		 和不可接受的,所以为了保持参数的一致性,就规定使用 final 来避免形参的不改变
+		```
+		/**
+		 * 使用的形参为何要为 final???
+		 * 在内部类中的属性和外部方法的参数两者从外表上看是同一个东西,但实际上却不是,所以他们两者是可以任意变化的,
+		 * 也就是说在内部类中我对属性的改变并不会影响到外部的形参,而然这从程序员的角度来看这是不可行的,
+		 * 毕竟站在程序的角度来看这两个根本就是同一个,如果内部类该变了,而外部方法的形参却没有改变这是难以理解
+		 * 和不可接受的,所以为了保持参数的一致性,就规定使用 final 来避免形参的不改变
 		 */
 		public class Outer{
 			public void Show(){
@@ -111,10 +112,12 @@
 				o.show();
 			}
 		}
+		```
 	(3).注意:在JDK8版本之中,方法内部类中调用方法中的局部变量,可以不需要修饰为 final,匿名内部类也是一样的,主要是JDK8之后增加了 Effectively final 功能
 		反编译jdk8编译之后的class文件,发现内部类引用外部的局部变量都是 final 修饰的
 		参考文章:http://docs.oracle.com/javase/tutorial/java/javaOO/localclasses.html
 		如下代码:
+		```
 		public class OutClass {
 			private int out = 1;
 			public void func(int param) {
@@ -166,6 +169,7 @@
 					......
 		}
 		......
+		```
 ### (四).匿名内部类:
 	(1).匿名内部类是直接使用 new 来生成一个对象的引用;
 	(2).对于匿名内部类的使用它是存在一个缺陷的,就是它仅能被使用一次,创建匿名内部类时它会立即创建一个该类的实例,
@@ -182,7 +186,7 @@
 	                public int getNumber(){
 	                    return number;
 	                }
-	            };        /* 注意：分号不能省 */
+	            };        // 注意：分号不能省
 	        }
 	        public static void main(String[] args) {
 	            OuterClass out = new OuterClass();
@@ -237,13 +241,13 @@
 				Dog d1 = new Dog("red");
 				Dog d2 = new Dog("black");
 				Dog d3 = new Dog("white");
-				Dog d4 = new Dog("white"); 
+				Dog d4 = new Dog("white");
 				hashMap.put(d1, 10);
 				hashMap.put(d2, 15);
 				hashMap.put(d3, 5);
-				hashMap.put(d4, 20); 
+				hashMap.put(d4, 20);
 				//print size
-				System.out.println(hashMap.size()); 
+				System.out.println(hashMap.size());
 				//loop HashMap
 				for (Entry<Dog, Integer> entry : hashMap.entrySet()) {
 					System.out.println(entry.getKey().toString() + " - " + entry.getValue());
@@ -251,11 +255,11 @@
 			}
 		}
 		class Dog {
-			String color; 
+			String color;
 			Dog(String c) {
 				color = c;
 			}
-			public String toString(){	
+			public String toString(){
 				return color + " dog";
 			}
 			public boolean equals(Object o) {
@@ -263,40 +267,40 @@
 			}
 			public int hashCode() {
 				return color.length();
-			}	
+			}
 		}
 
 ```
 ##### (3).TreeMap:是按照key来排序的,因此如果自定义对象作为key必须能够相互比较,因此其必须实现Comparable接口,
 如我们使用String作为key,是因为String已经实现了Comparable接口,如例子:
-	
+
 ```
 class Dog {
-			String color; 
+			String color;
 			Dog(String c) {
 				color = c;
 			}
 			public boolean equals(Object o) {
 				return ((Dog) o).color.equals(this.color);
-			} 
+			}
 			public int hashCode() {
 				return color.length();
 			}
-			public String toString(){	
+			public String toString(){
 				return color + " dog";
 			}
-		} 
+		}
 		public class TestTreeMap {
 			public static void main(String[] args) {
 				Dog d1 = new Dog("red");
 				Dog d2 = new Dog("black");
 				Dog d3 = new Dog("white");
-				Dog d4 = new Dog("white"); 
+				Dog d4 = new Dog("white");
 				TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
 				treeMap.put(d1, 10);
 				treeMap.put(d2, 15);
 				treeMap.put(d3, 5);
-				treeMap.put(d4, 20); 
+				treeMap.put(d4, 20);
 				for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
 					System.out.println(entry.getKey() + " - " + entry.getValue());
 				}
@@ -314,7 +318,7 @@ class Dog {
 				color = c;
 				size = s;
 			}		 
-			public String toString(){	
+			public String toString(){
 				return color + " dog";
 			}		 
 			@Override
@@ -322,18 +326,18 @@ class Dog {
 				return  o.size - this.size;
 			}
 		}
-		 
+
 		public class TestTreeMap {
 			public static void main(String[] args) {
 				Dog d1 = new Dog("red", 30);
 				Dog d2 = new Dog("black", 20);
 				Dog d3 = new Dog("white", 10);
-				Dog d4 = new Dog("white", 10); 
+				Dog d4 = new Dog("white", 10);
 				TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
 				treeMap.put(d1, 10);
 				treeMap.put(d2, 15);
 				treeMap.put(d3, 5);
-				treeMap.put(d4, 20); 
+				treeMap.put(d4, 20);
 				for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
 					System.out.println(entry.getKey() + " - " + entry.getValue());
 				}
@@ -350,7 +354,7 @@ class Dog {
 		HashTable的key-value不允许为 null;
 		TreeMap因为key是有序,因此key不能为 null,value可以为 null;
 
-		
+
 2.HashCode与HashSet关系:
 
 # 三.按照目录结构打印当前目录及子目录
@@ -393,10 +397,8 @@ class Dog {
 	transient 是 Java 语言的关键字,用来表示一个域不是该对象串行化的一部分。当一个对象被串行化的时候,
 	transient 型变量的值不包括在串行化的表示中,然而非 transient 型的变量是被包括进去的.
 ### 3.final:
-	/**
 	 * http://www.importnew.com/18586.html
-	 * http://www.importnew.com/7553.html
-	 */
+	 * http://www.importnew.com/7553.html	 
 	3.1.含义:
 		final 在Java中是一个保留的关键字,可以声明成员变量、方法、类以及本地变量.一旦你将引用声明作 final,
 		你将不能改变这个引用了,编译器会检查代码,如果你试图将变量再次初始化的话,编译器会报编译错误;
@@ -466,7 +468,7 @@ class Dog {
 	4.2.instanceof 与 clazz.isInstance(obj):
 		(1).instanceof 运算符用来在运行时指出对象是否是特定类的一个实例,通过返回一个布尔值来指出这个对象是否是这个特定类或者是它的子类的一个实例.
 			result = object instanceof class
-			但是 instanceof 在 java 的编译状态和运行状态是有区别的,在编译状态中 class可以是 object 对象的父类、自身类、子类,在这三种情况下 
+			但是 instanceof 在 java 的编译状态和运行状态是有区别的,在编译状态中 class可以是 object 对象的父类、自身类、子类,在这三种情况下
 			java 编译时不会报错,在运行转态中 class 可以是 object 对象的父类、自身类但不能是子类;{}当为父类、自生类的情况下 result 结果为 true,
 			为子类的情况下为 false;
 		(2).clazz.isInstance(obj):表明这个对象能不能被转化为这个类
@@ -491,7 +493,7 @@ class Dog {
 			e.address = address.clone();
 			return e;
 		}
-	
+
 ## 2.泛型重载:
 	(1).Java的方法重载一般指在同一个类中的两个同名方法,规则很简单：两个方法必须具有不同的方法签名;
 	换句话说:就是这两个方法的参数必须不相同,使得编译器能够区分开这两个重载的方法;
@@ -509,7 +511,7 @@ class Dog {
 	都是List类型.也就是,擦除后的方法签名如下：
 		int sum(List)
 		String sum(List)
-	
+
 	(2).Java允许这两个方法进行重载,虽然它们的方法签名相同,只有返回值类型不同,这在两个普通方法的重载中是不允许的;
 		当然了,如果两个泛型方法的参数在擦除后相同,而且返回值类型也完全一样,那编译肯定是不能通过的;
 		// 类似地,一个类不能同时继承两个具有相同擦除类型的父类,也不能同时实现两个具有相同擦除的接口。
@@ -582,7 +584,7 @@ class Dog {
 		④.重载对于传入的参数类型只认了引用的类型,并没有去解析实际对象的类型.
 			如果重载是一种多态的话,它这里应该去解析实际对象的类型并调用ArrayList的方法
 ## 5.重写:
-    涉及到继承这个概念中的问题,子类继承了父类的方法,但是它可能需要有不同的操作行为,就需要在子类中重写这个父类方法.父类如果将方法声明为 final 的就可保证所有子类的调用此方法时调用的都是父类的方法;	
+    涉及到继承这个概念中的问题,子类继承了父类的方法,但是它可能需要有不同的操作行为,就需要在子类中重写这个父类方法.父类如果将方法声明为 final 的就可保证所有子类的调用此方法时调用的都是父类的方法;
 ## 6.两者的比较:
 	(1).重载是一个编译期概念、重写是一个运行期间概念;
 	(2).重载遵循所谓"编译期绑定",即在编译时根据参数变量的类型判断应该调用哪个方法。
@@ -684,7 +686,7 @@ class Dog {
 	2.4.writeReplace() 和 readResolve():
 		Serializable 除过提供了 writeObject 和 readObject 标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve),
 		2.4.1.writeReplace:序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象,
-			该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法,直到该方法不再返回另一个对象为止,程序最后将调用该对象的 
+			该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法,直到该方法不再返回另一个对象为止,程序最后将调用该对象的
 			writeObject() 方法来保存该对象的状态.
 			(1).实现了 writeReplace 的序列化类就不要再实现 writeObject 了,因为该类的 writeObject 方法就不会被调用了.
 			(2).实现 writeReplace 的返回对象必须是可序列化的对象;
@@ -798,6 +800,10 @@ class Dog {
 # 七.泛型:
 ## 1.JDK1.5 引入的新特性：
     允许在定义类和接口的时候使用类型参数(type parameter),泛型最主要的应用是在JDK 5中的新集合类框架中;
+	其本质是参参数化类型
+	==> 为什么要有泛型?
+		* 在1.5之前没有泛型的情况下,只能通过对类型 Object 的引用来实现参数的任意化,其带来的缺点是需要显示强制转换,而强制转换在编译期不做检查,
+		  容易把代码流到运行时.使用泛型的好处是在编译时检查类型安全,提高了代码重用率, 避免产生 ClassCastException
 ## 2.类型擦除(type erasure):
     使用泛型的时候加上的类型参数,会被编译器在编译的时候去掉,这个过程就称为类型擦除.
 	2.1.Java 中的泛型基本上都是在编译器这个层次来实现的,在生成的 Java 字节代码中是不包含泛型中的类型信息的;		
@@ -812,21 +818,21 @@ class Dog {
 		    for (Object obj : list) {        
 		        System.out.println(obj);    
 		    }    
-		    list.add(1); 
-		//这个操作在当前方法的上下文是合法的。 
+		    list.add(1);
+		//这个操作在当前方法的上下文是合法的。
 		}
 		public void test() {    
 		    List<String> strs = new ArrayList<String>();    
-		    inspect(strs); 
-		//编译错误 
+		    inspect(strs);
+		// 编译错误
 		}
-		/**
-		 * 假设这样的做法是允许的,那么在inspect方法就可以通过list.add(1)来向集合中添加一个数字。这样在test方法看来,
-		 * 其声明为List<String>的集合中却被添加了一个Integer类型的对象。这显然是违反类型安全的原则的,
-		 * 在某个时候肯定会抛出ClassCastException
-		 */
+
+		 // 假设这样的做法是允许的,那么在inspect方法就可以通过list.add(1)来向集合中添加一个数字。这样在test方法看来,
+		 // 其声明为List<String>的集合中却被添加了一个Integer类型的对象。这显然是违反类型安全的原则的,
+		 // 在某个时候肯定会抛出ClassCastException
+
 ## 3.通配符与上下界:
-	3.1.在使用泛型类的时候,既可以指定一个具体的类型,也可以用通配符?来表示未知类型,如 List<?> 
+	3.1.在使用泛型类的时候,既可以指定一个具体的类型,也可以用通配符?来表示未知类型,如 List<?>
  	3.2.通配符所代表的其实是一组类型,但具体的类型是未知的,但是 List<?>并不等同于 List<Object>
  		List<Object> 实际上确定了 List 中包含的是 Object 及其子类,在使用的时候都可以通过 Object 来进行引用。
  		而 List<?>则其中所包含的元素类型是不确定;
@@ -841,7 +847,7 @@ class Dog {
 	 				List<? extends Season> list = new LinkedList<Season>();
 	 				list.add(new Spring()); //  编译错误
 	 			}
-	 			
+
 	 		}
 	 		class Season{}
 	 		class Spring extends Season{}
@@ -875,14 +881,14 @@ class Dog {
 	(3).由于类型擦除机制,类型参数并不能用来创建对象或是作为静态变量的类型
 		class ClassTest<X extends Number, Y, Z> {    
 		    private X x;    
-		    private static Y y; 
+		    private static Y y;
 		//编译错误,不能用在静态变量中    
 		    public X getFirst() {		        
 		//正确用法        
 		        return x;    
 		    }    
 		    public void wrong() {        
-		        Z z = new Z(); 
+		        Z z = new Z();
 		//编译错误,不能创建对象    
 		    }
 		}
@@ -897,7 +903,7 @@ class Dog {
 		try{
 			return true;
 		} catch (Exception e) {
-			
+
 		} finally {
 			return false;
 		}
@@ -1002,25 +1008,17 @@ class Dog {
 	public static String format3(double value) {
 	    NumberFormat nf = NumberFormat.getNumberInstance();
 	    nf.setMaximumFractionDigits(2);
-	    /*
-	     * setMinimumFractionDigits设置成2
-	     * 如果不这么做,那么当value的值是100.00的时候返回100
-	     * 而不是100.00
-	     */
+	    // setMinimumFractionDigits设置成2,如果不这么做,那么当value的值是100.00的时候返回100,而不是100.00
 	    nf.setMinimumFractionDigits(2);
 	    nf.setRoundingMode(RoundingMode.HALF_UP);
-	    /*
-	     * 如果想输出的格式用逗号隔开,可以设置成true
-	     */
+	    // 如果想输出的格式用逗号隔开,可以设置成true
 	    nf.setGroupingUsed(false);
 	    return nf.format(value);
 	}
 
 ## 4.使用 java.util.Formatter,保留小数点后两位
 	public static String format4(double value) {
-	    /*
-	     * %.2f % 表示 小数点前任意位数 2 表示两位小数 格式后的结果为 f 表示浮点型
-	     */
+	    // %.2f % 表示 小数点前任意位数 2 表示两位小数 格式后的结果为 f 表示浮点型
 	    return new Formatter().format("%.2f", value).toString();
 	}
 
@@ -1028,10 +1026,10 @@ class Dog {
 	public static String format5(double value) {
 	    return String.format("%.2f", value).toString();
 	}
-	5.1.对浮点数进行格式化:占位符格式为： %[index$][标识]*[最小宽度][.精度]转换符
+	5.1.对浮点数进行格式化:占位符格式为： %[index$][标识] * [最小宽度][.精度]转换符
 		ouble num = 123.4567899;
-		System.out.print(String.format("%f %n", num)); // 123.456790 
-		System.out.print(String.format("%a %n", num)); // 0x1.edd3c0bb46929p6 
+		System.out.print(String.format("%f %n", num)); // 123.456790
+		System.out.print(String.format("%a %n", num)); // 0x1.edd3c0bb46929p6
 		System.out.print(String.format("%g %n", num)); // 123.457
 		(1).可用标识符
 			-,在最小宽度内左对齐,不可以与0标识一起使用。
@@ -1050,7 +1048,7 @@ class Dog {
 			g,浮点数型(比%f,%a长度短些,显示6位有效数字,且会进行四舍五入)
 
 # 十一.Java 中 length 和 length() 的区别:
-    1.获取数组的长度是使用属性 length,获取字符串长度是使用方法 length() 
+    1.获取数组的长度是使用属性 length,获取字符串长度是使用方法 length()
     2.为什么数组有length属性?
 	(1).数组是一个容器对象,其中包含固定数量的同一类型的值.一旦数组被创建,那么数组的长度就是固定的了.
 		数组的长度可以作为final实例变量的长度。因此,长度可以被视为一个数组的属性
@@ -1125,18 +1123,18 @@ class Dog {
 				 * 数组具有这种特性：
 				 * 如果有两个类A和B,如果B继承(extends)了A,那么A[]类型的引用就可以指向B[]类型的对象
 				 * 测试数组的特殊特性对参数传递的便利性
-				 */
+				 * /
 				private static void test3() {
 					String[] a = new String[3];
 					doArray(a);
 				}
 				private static void doArray(Object[] objs){
-					
+
 				}
 				private static void doArray1(Object obj){
 					//不能用Object接收数组,因为这样无法对数组的元素进行访问
 					// obj[1]  //错误
-					
+
 					//如果在方法内部对obj转型到数组,存在类型转换异常的风险
 					// Object[] objs = (Object[]) obj;
 				}
@@ -1148,42 +1146,42 @@ class Dog {
 				}
 				/**
 				 * 测试数组的集成关系, 并且他的继承关系是否和数组中元素的类型有关
-				 */
+				 * /
 				private static void test2() {
-					
+
 					//1		在test1()中已经测试得到以下结论: 数组也是对象, 数组的顶层父类是Object, 所以可以向上转型
 					int[] a = new int[8];
 					Object obj = a ; //数组的父类也是Object,可以将a向上转型到Object
-					
+
 					//2		那么能向下转型吗?
 					int[] b = (int[])obj;  //可以进行向下转型
-					
+
 					//3		能使用instanceof关键字判定吗?
 					if(obj instanceof int[]){  //可以用instanceof关键字进行类型判定
 						System.out.println("obj的真实类型是int[]");
 					}
-					
+
 					//4  	下面代码成立吗?
 					String[] s = new String[5];
 					Object[] obja = s;   //成立,说明可以用Object[]的引用来接收String[]的对象
-					
+
 					//5		那么String[] 的直接父类是Object[] 还是 Object?
 					System.out.println(s.getClass().getSuperclass().getName());
 					//打印结果为java.lang.Object,说明String[] 的直接父类是 Object而不是Object[]
-					
+
 					//6	  下面成立吗?  Father是Son的直接父类
 					Son[] sons = new Son[3];
 					Father[] fa = sons;  //成立
-					
+
 					//7		那么Son[] 的直接父类是Father[] 还是  Object[] 或者是Object?
 					System.out.println(sons.getClass().getSuperclass().getName());
 					//打印结果为java.lang.Object,说明Son[]的直接父类是Object
-					
+
 					/**
 					 * 做一下总结, 如果A是B的父类, 那么A[] 类型的引用可以指向 B[]类型的变量
 					 * 但是B[]的直接父类是Object, 所有数组的父类都是Object
-					 */
-					
+					 * /
+
 					//8		上面的结论可以扩展到二维数组
 					Son[][] sonss = new Son[2][4];
 					Father[][] fathers = sonss;
@@ -1191,7 +1189,7 @@ class Dog {
 					//将Son[][]数组看成是一维数组, 这是个数组中的元素为Son[]
 					//因为Father[]类型的引用可以指向Son[]类型的对象
 					//所以,根据上面的结论,Father[][]的引用可以指向Son[][]类型的对象
-					
+
 					/**
 					 * 扩展结论:
 					 * 因为Object是所有引用类型的父类
@@ -1199,13 +1197,13 @@ class Dog {
 					 * Object[] objs = new String[1];
 					 * Object[] objs = new Son[1];
 					 *
-					 */
-					
+					 * /
+
 					//9		下面的代码成立吗?
 					int[] aa = new int[4];
 					//Object[] objaa = aa;  //错误的,不能通过编译
 					//这是错误的, 因为Object不是int的父类,在这里自动装箱不起作用
-					
+
 					//10 	这样可以吗？
 					Object[] objss = {"aaa", 1, 2.5};//成立
 				}
@@ -1213,46 +1211,46 @@ class Dog {
 				/**
 				 * 测试在java语言中,数组是不是对象
 				 * 如果是对象, 那么他的类型是什么?
-				 */
+				 * /
 				private static void test1() {
 					int[] a = new int[4];
 					//a.length;  //对属性的引用不能当成语句
 					int len = a.length;  //数组中保存一个字段, 表示数组的长度
-					
+
 					//以下方法说明数组可以调用方法,java中的数组是对象.这些方法是Object中的方法,所以可以肯定,数组的最顶层父类也是Object
 					a.clone();
 					a.toString();
-					
-					
+
+
 					/**
 					 * java是强类型的语言,一个对象总会有一个特定的类型,例如 Person p = new Person();
 					 * 对象p(确切的说是引用)的类型是Person类, 这个Person类是我们自己编写的
 					 * 那么数组的类型是什么呢? 下面使用反射的方式进行验证
-					 */
+					 * /
 					int[] a1 = {1, 2, 3, 4};
 					System.out.println(a1.getClass().getName());
 					//打印出的数组类的名字为[I
-					
+
 					String[] s = new String[2];
 					System.out.println(s.getClass().getName());
 					//打印出的数组类的名字为  [Ljava.lang.String;
-					
+
 					String[][] ss = new String[2][3];
 					System.out.println(ss.getClass().getName());
 					//打印出的数组类的名字为    [[Ljava.lang.String;
-					
+
 					/**
 					 * 所以,数组也是有类型的,只不过这个类型不是有程序员自己定义的类, 也不是jdk里面
 					 * 的类, 而是虚拟机在运行时专门创建的类
 					 * 类型的命名规则是:
 					 * 		每一维度用一个[表示;
 					 * 		[后面是数组中元素的类型(包括基本数据类型和引用数据类型)
-					 * 
+					 *
 					 * 在java语言层面上,s是数组,也是一个对象,那么他的类型应该是String[],
 					 * 但是在JVM中,他的类型为[java.lang.String
-					 * 
+					 *
 					 * 顺便说一句普通的类在JVM里的类型为 包名+类名, 也就是全限定名
-					 */
+					 * /
 				}				
 				public static class Father {
 				}				
@@ -1283,7 +1281,7 @@ class Dog {
 ## 6.数组复制问题:
 	所以通过 Arrays.copyOf() 方法产生的数组是一个浅拷贝。同时数组的 clone() 方法也是,集合的 clone() 方法也是,
 	所以我们在使用拷贝方法的同时一定要注意浅拷贝这问题
-## 7.数组转换为 List: 
+## 7.数组转换为 List:
     asList 返回的是一个长度不可变的列表。数组是多长,转换成的列表就是多长,
 	我们是无法通过 add、remove 来增加或者减少其长度的
 	public static void main(String[] args) {
@@ -1403,14 +1401,14 @@ class Dog {
 	2.5.针对接口的默认修饰符看如下代码:
 		(1).接口定义如下:
 			public interface A{
-				String name; // 编译错误:The blank final field name may not have been initialized,即需要初始化	
+				String name; // 编译错误:The blank final field name may not have been initialized,即需要初始化
 				// Illegal modifier for the interface method add; only public & abstract are permitted
 				// 非法字符,只有public 和 abstract 被允许使用
 				protected int add(int a, int b);
 			}
 		(2).再看如下定义,编译如下代码,查看其字节码:
 			public interface A{
-				String name = "Hello";	
+				String name = "Hello";
 				int add(int a, int b);
 			}
 			如下,编译器默认都给加上了修饰符(javap -verbose A.class)
@@ -1450,9 +1448,9 @@ class Dog {
 		public interface Demo {
 			default int add(int a, int b){
 				return a + b;
-			}	
+			}
 			static int sub(int a, int b){
-				return a - b; 
+				return a - b;
 			}
 		}
 		接口中非 default 和 static 的方法不能有方法体;
@@ -1523,9 +1521,9 @@ class Dog {
 	效率其实比 Stringbuffer更快
 	public class Main{	    
 	    public static void main(String[] args){
-	        /*   1   */
+	        /*   1   * /
 	        String string = "a" + "b" + "c";
-	        /*   2   */
+	        /*   2   * /
 	        StringBuffer stringBuffer = new StringBuffer();
 	        stringBuffer.append("a").append("b").append("c");
 	        string = stringBuffer.toString();
@@ -1542,13 +1540,13 @@ class Dog {
 			}
 		}
 	原因是因为 String+其实是由 Stringbuilder 完成的,而一般情况下 Stringbuilder 要快于 Stringbuffer,
-	这是因为 Stringbuilder 线程不安全,少了很多线程锁的时间开销,因此这里依然是 string+的写法速度更快;	
-			/*   1   */
+	这是因为 Stringbuilder 线程不安全,少了很多线程锁的时间开销,因此这里依然是 string+的写法速度更快;
+			/*   1   * /
 	        String a = "a";
 	        String b = "b";
 	        String c = "c";
 	        String string = a + b + c;
-	        /*   2   */
+	        /*   2   * /
 	        StringBuffer stringBuffer = new StringBuffer();
 	        stringBuffer.append(a);
 	        stringBuffer.append(b);
@@ -1556,7 +1554,7 @@ class Dog {
 	        string = stringBuffer.toString();
 	2.2.字符串拼接方式:	+、concat() 以及 append() 方法,  append()速度最快,concat()次之,+最慢
 		(1).编译器对+进行了优化,它是使用 StringBuilder 的 append() 方法来进行处理的,
-		编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串,变慢的关键原因就在于 new StringBuilder() 和 
+		编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串,变慢的关键原因就在于 new StringBuilder() 和
 		toString(),这里可是创建了 10 W 个 StringBuilder 对象,而且每次还需要将其转换成 String
 		(2).concat:
 			concat() 的源码,它看上去就是一个数字拷贝形式,我们知道数组的处理速度是非常快的,但是由于该方法最后是这样的：
@@ -1570,8 +1568,8 @@ class Dog {
 	==> 通过上面的分析,他们三者的执行顺序应该为：
 		静态代码块 > 构造代码块 > 构造函数。
 	3.1.Java 类初始化过程:
-		(1).首先,初始化父类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化； 
-		(2).然后,初始化子类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化； 
+		(1).首先,初始化父类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化；
+		(2).然后,初始化子类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化；
 		(3).其次,初始化父类的普通成员变量和代码块,在执行父类的构造方法；
 		(4).最后,初始化子类的普通成员变量和代码块,在执行子类的构造方法；
 	3.2.不要在构造器里调用可能被重载的虚方法,
@@ -1595,18 +1593,18 @@ class Dog {
 		    }
 		}
 	3.1.Java 类初始化过程:
-		(1).首先,初始化父类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化； 
-		(2).然后,初始化子类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化； 
+		(1).首先,初始化父类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化；
+		(2).然后,初始化子类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化；
 		(3).其次,初始化父类的普通成员变量和代码块,在执行父类的构造方法；
 		(4).最后,初始化子类的普通成员变量和代码块,在执行子类的构造方法；
-		Java 中赋值顺序： 
-			(1).父类的静态变量赋值 
-			(2).自身的静态变量赋值 
-			(3).父类成员变量赋值 
-			(4).父类块赋值 
-			(5).父类构造函数赋值 
-			(6).自身成员变量赋值 
-			(7).自身块赋值 
+		Java 中赋值顺序：
+			(1).父类的静态变量赋值
+			(2).自身的静态变量赋值
+			(3).父类成员变量赋值
+			(4).父类块赋值
+			(5).父类构造函数赋值
+			(6).自身成员变量赋值
+			(7).自身块赋值
 			(8).自身构造函数赋值
 	3.2.Java 代码执行顺序:
 		public class TestExecuteCode {
@@ -1677,11 +1675,11 @@ class Dog {
 	优先级由高到低依次为：this.show(O)、super.show(O)、this.show((super)O)、super.show((super)O)
 		public class A {
 	        public String show(D obj) {return ("A and D");}
-	        public String show(A obj) {return ("A and A");} 
+	        public String show(A obj) {return ("A and A");}
 	    }
 	    public class B extends A{
 	        public String show(B obj) {return ("B and B");}
-	        public String show(A obj) {return ("B and A");} 
+	        public String show(A obj) {return ("B and A");}
 	    }
 	    public class C extends B{}
 	    public class D extends B{}
@@ -1783,7 +1781,7 @@ class Dog {
 			Method method = Demo.class.getMethod("main",String[].class);
 			method.invoke(null, (Object)new String[]{"111","222","333"});
 		★★注意:传入参数时不能直接传一个数组,jdk为了兼容1.5版本以下的,会将其拆包;
-		因此这里将其强转或者直接将String数组放入Object数组也可以	
+		因此这里将其强转或者直接将String数组放入Object数组也可以
 		(②).数组的反射:
 			◆一个问题:
 			int[] a1 = new int[]{1,2,3};
@@ -1806,6 +1804,7 @@ class Dog {
 	4.2.Javacompiler 动态编译:
 		JavaCompiler compile = ToolProvider.getSystemJavaCompiler();
 		int result = compile.run(null, null, null, "F:/class/HelloWorld.java");
+        ```
 		 /*
 		  * run(InputStream in, OutputStream out, OutputStream err, String... arguments);
 		  * 第一个参数: 为Java编译器提供参数;
@@ -1814,6 +1813,7 @@ class Dog {
 		  * 第四个参数: 可变参数,能传入一个或多个Java源文件
 		  * 返回值: 0 表示编译成功, 1 表示编译失败;
 		  */
+          ```
 	4.3.动态运行动态编译的Java类		
 ## 5.动态执行Javascript(JDK6.0以上)
 	5.1.脚本引擎:Java 应该程序可以通过一套固定的接口与脚本引擎交互,从而可以在Java平台上调用各种脚本语言;
@@ -1821,13 +1821,13 @@ class Dog {
 ## 6.Java 字节码操作
 	6.1.Java  动态操作:字节码操作,反射
 		字节码操作:动态生存新的类;
-		优势:比反射开销小,性能高;	
+		优势:比反射开销小,性能高;
 	6.2.常见的字节码操作类库:
 		(1).BCEL:apache
 		(2).ASM:轻量级的字节码操作框架,涉及到jvm底层的操作和指令
 		(3).CGLIB:基于asm实现
 		(4).javaasist:性能比较差,使用简单
-	6.3.Javasist:	
+	6.3.Javasist:
 ## 7.反射存在问题:
 	7.1.反射慢的原因:
 		(1).编译器不能对代码对优化.
@@ -2010,4 +2010,3 @@ class Dog {
 	(3).Enumeration 不支持 fail-fast 机制，而 Iterator 支持 fail-fast 机制
 		(一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生 fail-fast 机制,譬如 ConcurrentModificationException 异常)
 	尽量使用 Iterator 迭代器而不是 Enumeration 枚举器
-
