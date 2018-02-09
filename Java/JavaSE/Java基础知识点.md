@@ -1,12 +1,13 @@
+[TOC]
 # 一.Java 内部类:
 ## 1.为什么使用内部类?
 	使用内部类最吸引人的原因是:每个内部类都能独立地继承一个(接口的)实现,所以无论外围类是否已经继承了某个(接口的)实现,对于内部类都没有影响
-#### 1.1.使用内部类最大的优点就在于它能够非常好的解决多重继承的问题,使用内部类还能够为我们带来如下特性:
-	(1).内部类可以用多个实例,每个实例都有自己的状态信息,并且与其他外围对象的信息相互独。
-	(2).在单个外围类中,可以让多个内部类以不同的方式实现同一个接口,或者继承同一个类。
-	(3).创建内部类对象的时刻并不依赖于外围类对象的创建。
-	(4).内部类并没有令人迷惑的"is-a"关系,他就是一个独立的实体。
-	(5).内部类提供了更好的封装,除了该外围类,其他类都不能访问。
+	1.1.使用内部类最大的优点就在于它能够非常好的解决多重继承的问题,使用内部类还能够为我们带来如下特性:
+		(1).内部类可以用多个实例,每个实例都有自己的状态信息,并且与其他外围对象的信息相互独。
+		(2).在单个外围类中,可以让多个内部类以不同的方式实现同一个接口,或者继承同一个类。
+		(3).创建内部类对象的时刻并不依赖于外围类对象的创建。
+		(4).内部类并没有令人迷惑的"is-a"关系,他就是一个独立的实体。
+		(5).内部类提供了更好的封装,除了该外围类,其他类都不能访问。
 
 ## 2.内部类分类:
 ### (一).成员内部类:
@@ -230,87 +231,89 @@
 		其构造方法和普通类的构造方法没有区别,都是执行 <init> 方式;
 
 # 二.HashMap vs. TreeMap vs. Hashtable vs. LinkedHashMap
-##### (1).HashMap,TreeMap,HashTable父接口都是Map,LinkedHashMap是HashMap的子类;
-##### (2).HashMap:如果HashMap的key是自定义的对象,则需要重写equals()和hashcode()方法:
-◆★原因是:HashMap 不允许两个相同的元素;默认情况下,在Object类下实现的equals()和hashcode()方法被使用,
-默认的hashcode()方法给出不同的整数为不同的对象,并在equals()方法中,只有当两个引用指向的是同一个对象时才返回true
-```
-	public class HashMapDemo {
-			public static void main(String[] args) {
-				HashMap<Dog, Integer> hashMap = new HashMap<Dog, Integer>();
-				Dog d1 = new Dog("red");
-				Dog d2 = new Dog("black");
-				Dog d3 = new Dog("white");
-				Dog d4 = new Dog("white");
-				hashMap.put(d1, 10);
-				hashMap.put(d2, 15);
-				hashMap.put(d3, 5);
-				hashMap.put(d4, 20);
-				//print size
-				System.out.println(hashMap.size());
-				//loop HashMap
-				for (Entry<Dog, Integer> entry : hashMap.entrySet()) {
-					System.out.println(entry.getKey().toString() + " - " + entry.getValue());
+## 1.HashMap,TreeMap:
+	(1).HashMap,TreeMap,HashTable父接口都是Map,LinkedHashMap是HashMap的子类;
+	(2).HashMap:如果HashMap的key是自定义的对象,则需要重写equals()和hashcode()方法:
+		◆★原因是:HashMap 不允许两个相同的元素;默认情况下,在Object类下实现的equals()和hashcode()方法被使用,
+		默认的hashcode()方法给出不同的整数为不同的对象,并在equals()方法中,只有当两个引用指向的是同一个对象时才返回true
+```java
+		public class HashMapDemo {
+				public static void main(String[] args) {
+					HashMap<Dog, Integer> hashMap = new HashMap<Dog, Integer>();
+					Dog d1 = new Dog("red");
+					Dog d2 = new Dog("black");
+					Dog d3 = new Dog("white");
+					Dog d4 = new Dog("white");
+					hashMap.put(d1, 10);
+					hashMap.put(d2, 15);
+					hashMap.put(d3, 5);
+					hashMap.put(d4, 20);
+					//print size
+					System.out.println(hashMap.size());
+					//loop HashMap
+					for (Entry<Dog, Integer> entry : hashMap.entrySet()) {
+						System.out.println(entry.getKey().toString() + " - " + entry.getValue());
+					}
 				}
 			}
-		}
-		class Dog {
-			String color;
-			Dog(String c) {
-				color = c;
-			}
-			public String toString(){
-				return color + " dog";
-			}
-			public boolean equals(Object o) {
-				return ((Dog) o).color.equals(this.color);
-			}
-			public int hashCode() {
-				return color.length();
-			}
-		}
-
-```
-##### (3).TreeMap:是按照key来排序的,因此如果自定义对象作为key必须能够相互比较,因此其必须实现Comparable接口,
-如我们使用String作为key,是因为String已经实现了Comparable接口,如例子:
-
-```
-class Dog {
-			String color;
-			Dog(String c) {
-				color = c;
-			}
-			public boolean equals(Object o) {
-				return ((Dog) o).color.equals(this.color);
-			}
-			public int hashCode() {
-				return color.length();
-			}
-			public String toString(){
-				return color + " dog";
-			}
-		}
-		public class TestTreeMap {
-			public static void main(String[] args) {
-				Dog d1 = new Dog("red");
-				Dog d2 = new Dog("black");
-				Dog d3 = new Dog("white");
-				Dog d4 = new Dog("white");
-				TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
-				treeMap.put(d1, 10);
-				treeMap.put(d2, 15);
-				treeMap.put(d3, 5);
-				treeMap.put(d4, 20);
-				for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
-					System.out.println(entry.getKey() + " - " + entry.getValue());
+			class Dog {
+				String color;
+				Dog(String c) {
+					color = c;
+				}
+				public String toString(){
+					return color + " dog";
+				}
+				public boolean equals(Object o) {
+					return ((Dog) o).color.equals(this.color);
+				}
+				public int hashCode() {
+					return color.length();
 				}
 			}
-		}
+
+```
+	(3).TreeMap:是按照key来排序的,因此如果自定义对象作为key必须能够相互比较,因此其必须实现Comparable接口,
+	如我们使用String作为key,是因为String已经实现了Comparable接口,如例子:
+
+```java
+	class Dog {
+				String color;
+				Dog(String c) {
+					color = c;
+				}
+				public boolean equals(Object o) {
+					return ((Dog) o).color.equals(this.color);
+				}
+				public int hashCode() {
+					return color.length();
+				}
+				public String toString(){
+					return color + " dog";
+				}
+			}
+			public class TestTreeMap {
+				public static void main(String[] args) {
+					Dog d1 = new Dog("red");
+					Dog d2 = new Dog("black");
+					Dog d3 = new Dog("white");
+					Dog d4 = new Dog("white");
+					TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
+					treeMap.put(d1, 10);
+					treeMap.put(d2, 15);
+					treeMap.put(d3, 5);
+					treeMap.put(d4, 20);
+					for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
+						System.out.println(entry.getKey() + " - " + entry.getValue());
+					}
+				}
+			}
 	◆上述代码运行报异常:
 		Exception in thread "main" java.lang.ClassCastException: collection.Dog cannot be cast to java.lang.Comparable
 		at java.util.TreeMap.put(Unknown Source)
 		at collection.TestHashMap.main(TestHashMap.java:35)
 	修改上述代码:
+```java
 		class Dog implements Comparable<Dog>{
 			String color;
 			int size;		 
@@ -344,18 +347,13 @@ class Dog {
 			}
 		}
 ```
-
-
-##### (4).LinkedHashMap 与 HashMap 的不同区别是:LinkedHashMap 保留了插入顺序.
-
-##### (5).HashMap,HashTable,TreeMap:
-	A:迭代顺序:HashMap,HashTable不会保证元素的顺序,但是TreeMap是有序的;
-	B:key-value空值:HashMap的key-value都可以为空(只有一个key为 null,因为不能存在两个相同的key),
-		HashTable的key-value不允许为 null;
-		TreeMap因为key是有序,因此key不能为 null,value可以为 null;
-
-
-2.HashCode与HashSet关系:
+	(4).LinkedHashMap 与 HashMap 的不同区别是:LinkedHashMap 保留了插入顺序.
+	(5).HashMap,HashTable,TreeMap:
+		A:迭代顺序:HashMap,HashTable不会保证元素的顺序,但是TreeMap是有序的;
+		B:key-value空值:HashMap的key-value都可以为空(只有一个key为 null,因为不能存在两个相同的key),
+			HashTable的key-value不允许为 null;
+			TreeMap因为key是有序,因此key不能为 null,value可以为 null;
+### 2.HashCode与HashSet关系:
 
 # 三.按照目录结构打印当前目录及子目录
 	public class PrintDirectory {
@@ -827,10 +825,32 @@ class Dog {
 		// 编译错误
 		}
 
-		 // 假设这样的做法是允许的,那么在inspect方法就可以通过list.add(1)来向集合中添加一个数字。这样在test方法看来,
-		 // 其声明为List<String>的集合中却被添加了一个Integer类型的对象。这显然是违反类型安全的原则的,
-		 // 在某个时候肯定会抛出ClassCastException
-
+		// 假设这样的做法是允许的,那么在inspect方法就可以通过list.add(1)来向集合中添加一个数字。这样在test方法看来,
+		// 其声明为List<String>的集合中却被添加了一个Integer类型的对象。这显然是违反类型安全的原则的,
+		// 在某个时候肯定会抛出ClassCastException
+	2.4.类型擦除后,其类的getClass() 都是一样的:
+		public class TestGeneric {
+			public static void main(String[] args) {
+				Class<?> c1 = new ArrayList<String>().getClass();
+				Class<?> c2 = new ArrayList<String>().getClass();
+				System.out.println(c1 == c2);
+			}
+		}
+		反编译之后可以看到如下:
+		public class TestGeneric
+		{
+		public static void main(String[] paramArrayOfString)
+		{
+			Class localClass1 = new ArrayList().getClass();
+			Class localClass2 = new ArrayList().getClass();
+			System.out.println(localClass1 == localClass2);
+		}
+		}
+		==> 存在 ArrayList.class 文件但是不存在 ArrayList<String>.class 文件,即便是通过 class.getTypeParameters() 方法
+			获取类型信息也只能获取到 [T] 一样的泛型参数占位符,编译后任何具体的泛型类型都被擦除了,替换为非泛型上边界,如果没有指定边界则为 Object 类型,
+			泛型类型只有在静态类型检查期间才出现.
+	2.5.为什么 Java 泛型要通过擦除来实现?
+		Java 之所以要通过擦除来实现泛型机制其实是为了兼容性考虑,只有这样才能让非泛化代码到泛化代码的转变过程建立在不破坏现有类库的实现上
 ## 3.通配符与上下界:
 	3.1.在使用泛型类的时候,既可以指定一个具体的类型,也可以用通配符?来表示未知类型,如 List<?>
  	3.2.通配符所代表的其实是一组类型,但具体的类型是未知的,但是 List<?>并不等同于 List<Object>
