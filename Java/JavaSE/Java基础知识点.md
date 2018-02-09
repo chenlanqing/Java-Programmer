@@ -11,6 +11,7 @@
 
 ## 2.内部类分类:
 ### (一).成员内部类:
+```java
 	public class Outer{
 		private int age = 99;
 		String name = "Coco";
@@ -31,6 +32,7 @@
 			in.show();
 		}
 	}
+```
 	1.Inner 类定义在 Outer 类的内部,相当于 Outer 类的一个成员变量的位置,Inner 类可以使用任意访问控制符,如 public 、 protected 、 private 等
 	2.Inner 类中定义的 show() 方法可以直接访问 Outer 类中的数据,而不受访问控制符的影响,如直接访问 Outer 类中的私有属性age
 	3.定义了成员内部类后,必须使用外部类对象来创建内部类对象,而不能直接去 new 一个内部类对象,即:内部类 对象名 = 外部类对象.new 内部类();
