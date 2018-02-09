@@ -1,8 +1,9 @@
 [TOC]
 # 一.Java 内部类:
 ## 1.为什么使用内部类?
-	使用内部类最吸引人的原因是:每个内部类都能独立地继承一个(接口的)实现,所以无论外围类是否已经继承了某个(接口的)实现,对于内部类都没有影响
-	1.1.使用内部类最大的优点就在于它能够非常好的解决多重继承的问题,使用内部类还能够为我们带来如下特性:
+	使用内部类最吸引人的原因是:
+	每个内部类都能独立地继承一个(接口的)实现,所以无论外围类是否已经继承了某个(接口的)实现,对于内部类都没有影响
+	使用内部类最大的优点就在于它能够非常好的解决多重继承的问题,使用内部类还能够为我们带来如下特性:
 		(1).内部类可以用多个实例,每个实例都有自己的状态信息,并且与其他外围对象的信息相互独。
 		(2).在单个外围类中,可以让多个内部类以不同的方式实现同一个接口,或者继承同一个类。
 		(3).创建内部类对象的时刻并不依赖于外围类对象的创建。
@@ -33,16 +34,18 @@
 		}
 	}
 ```
-	1.Inner 类定义在 Outer 类的内部,相当于 Outer 类的一个成员变量的位置,Inner 类可以使用任意访问控制符,如 public 、 protected 、 private 等
-	2.Inner 类中定义的 show() 方法可以直接访问 Outer 类中的数据,而不受访问控制符的影响,如直接访问 Outer 类中的私有属性age
-	3.定义了成员内部类后,必须使用外部类对象来创建内部类对象,而不能直接去 new 一个内部类对象,即:内部类 对象名 = 外部类对象.new 内部类();
-	4.编译上面的程序后,会发现产生了两个 .class 文件: Outer.class,Outer$Inner.class{},在编译后成员内部类中有一个指向外部类对象的引用,
-	  且成员内部类编译后构造方法也多了一个指向外部类对象的引用参数.所以说编译器会默认为成员内部类添加了一个指向外部类对象的引用并且在成员内
-	  部类构造方法中对其进行赋值操作.我们可以在成员内部类中随意访问外部类的成员,同时也说明成员内部类是依赖于外部类的,如果没有创建外部类的对
-	  象则也无法创建成员内部类的对象.
+	1.Inner类定义 Outer 类的内部,相当于 Outer 类的一个成员变量的位置,Inner类可以使用任意访问控制符,如public,
+		protected,private等
+	2.Inner 类中定义的show()方法可以直接访问Outer类中的数据,而不受访问控制符的影响,如直接访问Outer类中的私有属性age
+	3.定义了成员内部类后,必须使用外部类对象来创建内部类对象,而不能直接去 new 一个内部类对象:
+		InnerClass inner = OuterClass.new InnnerClass();
+	4.编译上面的程序后,会发现产生了两个.class 文件: Outer.class,Outer$Inner.class{},在编译后成员内部类中有一个指向
+	外部类对象的引用,且成员内部类编译后构造方法也多了一个指向外部类对象的引用参数.所以说编译器会默认为成员内部类添加了
+	一个指向外部类对象的引用并且在成员内部类构造方法中对其进行赋值操作.我们可以在成员内部类中随意访问外部类的成员,同时
+	也说明成员内部类是依赖于外部类的,如果没有创建外部类的对象则也无法创建成员内部类的对象.
 	5.成员内部类中不能存在任何 static 的变量和方法,可以定义常量:
-		(1).因为非静态内部类是要依赖于外部类的实例,而静态变量和方法是不依赖于对象的,仅与类相关,
-			简而言之:在加载静态域时,根本没有外部类,所在在非静态内部类中不能定义静态域或方法,编译不通过;非静态内部类的作用域是实例级别
+		(1).因为非静态内部类是要依赖于外部类的实例,而静态变量和方法是不依赖于对象的,仅与类相关,简而言之:在加载静态域时,
+			根本没有外部类,所在在非静态内部类中不能定义静态域或方法,编译不通过;非静态内部类的作用域是实例级别
 		(2).常量是在编译器就确定的,放到所谓的常量池了
 	6.成员内部类的继承:
 		public class ChildInnerClass1 extends OutClass.InnerClass {
@@ -53,13 +56,16 @@
 		成员内部类的继承语法格式要求继承引用方式为 Outter.Inner 形式且继承类的构造器中必须有指向外部类对象的引用,
 		并通过这个引用调用 super(),其实这个要求就是因为成员内部类默认持有外部类的引用,外部类不先实例化则无法实例化自己.
 	★★友情提示:
-	1.外部类是不能直接使用内部类的成员和方法的,可先创建内部类的对象,然后通过内部类的对象来访问其成员变量和方法;
-	2.如果外部类和内部类具有相同的成员变量或方法,内部类默认访问自己的成员变量或方法,如果要访问外部类的成员变量,可以使用 this 关键字,如:Outer.this.name
+		1.外部类是不能直接使用内部类的成员和方法的,可先创建内部类的对象,然后通过内部类的对象来访问其成员变量和方法;
+		2.如果外部类和内部类具有相同的成员变量或方法,内部类默认访问自己的成员变量或方法,如果要访问外部类的成员变量,
+			可以使用 this 关键字,如:Outer.this.name
+
 ### (二).静态内部类: 是 static 修饰的内部类,
 	1.静态内部类不能直接访问外部类的非静态成员,但可以通过 new 外部类().成员 的方式访问
 	2.如果外部类的静态成员与内部类的成员名称相同,可通过"类名.静态成员"访问外部类的静态成员；
 	如果外部类的静态成员与内部类的成员名称不相同,则可通过"成员名"直接调用外部类的静态成员
 	3.创建静态内部类的对象时,不需要外部类的对象,可以直接创建 内部类 对象名 = new 内部类();
+```java
 		public class Outer{
 			private int age = 99;
 			static String name = "Coco";
@@ -75,12 +81,15 @@
 				i.show();
 			}
 		}
+```
 	4.非静态内部类中为什么不能有静态属性或者方法?
-	sttaic 类型的属性和方法在类加载的时候就会存在于内存中,要使用某个类的 static 属性或者方法的前提是这个类已经加载到JVM中,
-	非 static 内部类默认是持有外部类的引用且依赖外部类存在的,所以如果一个非 static 的内部类一旦具有 static 的属性或者方法
-	就会出现内部类未加载时却试图在内存中创建的 static 属性和方法,这自然是错误的,类都不存在却希望操作它的属性和方法.
-	从另一个角度讲非 static 的内部类在实例化的时候才会加载(不自动跟随主类加载),而static 的语义是类能直接通过类名访问类的 static
-	属性或者方法,所以如果没有实例化非 static  的内部类就等于非 static 的内部类没有被加载,所以无从谈起通过类名访问 static 属性或者方法.
+		sttaic 类型的属性和方法在类加载的时候就会存在于内存中,要使用某个类的 static 属性或者方法的前提是这个类已经加载到JVM中,
+		非 static 内部类默认是持有外部类的引用且依赖外部类存在的,所以如果一个非 static 的内部类一旦具有 static 的属性或者方法
+		就会出现内部类未加载时却试图在内存中创建的 static 属性和方法,这自然是错误的,类都不存在却希望操作它的属性和方法.从另一
+		个角度讲非 static 的内部类在实例化的时候才会加载(不自动跟随主类加载),而static 的语义是类能直接通过类名访问类的 static
+		属性或者方法,所以如果没有实例化非 static  的内部类就等于非 static 的内部类没有被加载,所以无从谈起通过类名访问 static 
+		属性或者方法.
+
 ### (三).方法内部类:访问仅限于方法内或者该作用域内
 	(1).局部内部类就像是方法里面的一个局部变量一样,是不能有 public、protected、private 以及 static 修饰符的
 	(2).只能访问方法中定义的 final 类型的局部变量,因为:当方法被调用运行完毕之后,局部变量就已消亡了.但内部类对象可能还存在,
@@ -88,7 +97,7 @@
 		==>使用final修饰符不仅会保持对象的引用不会改变,而且编译器还会持续维护这个对象在回调方法中的生命周期.
 		局部内部类并不是直接调用方法传进来的参数,而是内部类将传进来的参数通过自己的构造器备份到了自己的内部,
 		自己内部的方法调用的实际是自己的属性而不是外部类方法的参数;防止被篡改数据,而导致内部类得到的值不一致
-		```
+```java
 		/**
 		 * 使用的形参为何要为 final???
 		 * 在内部类中的属性和外部方法的参数两者从外表上看是同一个东西,但实际上却不是,所以他们两者是可以任意变化的,
@@ -115,12 +124,12 @@
 				o.show();
 			}
 		}
-		```
-	(3).注意:在JDK8版本之中,方法内部类中调用方法中的局部变量,可以不需要修饰为 final,匿名内部类也是一样的,主要是JDK8之后增加了 Effectively final 功能
-		反编译jdk8编译之后的class文件,发现内部类引用外部的局部变量都是 final 修饰的
+```
+	(3).注意:在JDK8版本之中,方法内部类中调用方法中的局部变量,可以不需要修饰为 final,匿名内部类也是一样的,主要是JDK8之后增加了
+		Effectively final 功能反编译jdk8编译之后的class文件,发现内部类引用外部的局部变量都是 final 修饰的
 		参考文章:http://docs.oracle.com/javase/tutorial/java/javaOO/localclasses.html
 		如下代码:
-		```
+```java
 		public class OutClass {
 			private int out = 1;
 			public void func(int param) {
@@ -134,6 +143,7 @@
 				}.start();
 			}
 		}
+```
 		在java8中使用命令查看字节码:javap -l -v OutClass$1.class,如下:
 		......
 		class OutClass$1 extends java.lang.Thread
@@ -172,7 +182,7 @@
 					......
 		}
 		......
-		```
+		
 ### (四).匿名内部类:
 	(1).匿名内部类是直接使用 new 来生成一个对象的引用;
 	(2).对于匿名内部类的使用它是存在一个缺陷的,就是它仅能被使用一次,创建匿名内部类时它会立即创建一个该类的实例,
@@ -182,6 +192,7 @@
 	(5).匿名内部类中不能存在任何的静态成员变量和静态方法,匿名内部类不能是抽象的,它必须要实现继承的类或者实现的接口的所有抽象方法
 	(6).匿名内部类初始化:使用构造代码块！利用构造代码块能够达到为匿名内部类创建一个构造器的效果.
 		匿名内部类不能通过构造方法初始化,只能通过构造代码块进行初始化
+```java
 		public class OuterClass {
 	        public InnerClass getInnerClass(final int   num,String str2){
 	            return new InnerClass(){
@@ -200,7 +211,9 @@
 	    interface InnerClass {
 	        int getNumber();
 	    }
+```
 	(7).如下代码:
+```java
 		List list1 = new ArrayList();
 		List list2 = new ArrayList(){};
 		List list3 = new ArrayList(){{}};
@@ -211,7 +224,7 @@
 		System.out.println(list2.getClass() == list3.getClass()); // false
 		System.out.println(list2.getClass() == list4.getClass()); // false
 		System.out.println(list3.getClass() == list4.getClass()); // false
-
+```
 		首先 list1 指向一个 ArrayList 对象实例;
 		list2 指向一个继承自 ArrayList 的匿名类内部类对象;
 		list3 也指向一个继承自 ArrayList 的匿名内部类(里面一对括弧为初始化代码块)对象;
@@ -223,12 +236,14 @@
 		System.out.println(list3.getClass().getName()); // com.demo.normal.OutClass$2
 		System.out.println(list4.getClass().getName()); // com.demo.normal.OutClass$3
 	(8).匿名内部类为什么不能直接使用构造方法?
-		因为类是匿名的,而且每次创建的匿名内部类同时被实例化后只能使用一次,所以就无从创建一个同名的构造方法了,但是可以直接调用父类的构造方法.
-		实质上类是有构造方法的,是通过编译器在编译时生成的,看如下代码:
+		因为类是匿名的,而且每次创建的匿名内部类同时被实例化后只能使用一次,所以就无从创建一个同名的构造方法了,
+		但是可以直接调用父类的构造方法.实质上类是有构造方法的,是通过编译器在编译时生成的,看如下代码:
+```java
 		public class InnerClass{}
 		public class OutClass{
 		    InnerClass inner = new InnerClass(){};
 		}
+```
 		编译之后使用命令 javap 可以很明显看到内部类的字节码中编译器为我们生成了参数为外部类引用的构造方法,
 		其构造方法和普通类的构造方法没有区别,都是执行 <init> 方式;
 
@@ -236,8 +251,8 @@
 ## 1.HashMap,TreeMap:
 	(1).HashMap,TreeMap,HashTable父接口都是Map,LinkedHashMap是HashMap的子类;
 	(2).HashMap:如果HashMap的key是自定义的对象,则需要重写equals()和hashcode()方法:
-		◆★原因是:HashMap 不允许两个相同的元素;默认情况下,在Object类下实现的equals()和hashcode()方法被使用,
-		默认的hashcode()方法给出不同的整数为不同的对象,并在equals()方法中,只有当两个引用指向的是同一个对象时才返回true
+	◆★原因是:HashMap 不允许两个相同的元素;默认情况下,在Object类下实现的equals()和hashcode()方法被使用,
+	默认的hashcode()方法给出不同的整数为不同的对象,并在equals()方法中,只有当两个引用指向的是同一个对象时才返回true
 ```java
 		public class HashMapDemo {
 				public static void main(String[] args) {
@@ -358,6 +373,7 @@
 ### 2.HashCode与HashSet关系:
 
 # 三.按照目录结构打印当前目录及子目录
+```java
 	public class PrintDirectory {
 		public static void main(String[] args) {
 			File file = new File("E:\\下载");
@@ -386,17 +402,17 @@
 			return sb.toString();
 		}
 	}
-
+```
 # 四.Java 关键字的意义:
-### 1.native:
+## 1.native:
 	native 关键字可以应用于方法,以指示该方法是用 Java 以外的语言实现的
-### 2.transient:
+## 2.transient:
 	transient 关键字可以应用于类的成员变量,以便指出该成员变量不应在包含它的类实例已序列化时被序列化
 	Java 的 serialization 提供了一种持久化对象实例的机制.当持久化对象时,可能有一个特殊的对象数据成员,
 	我们不想用serialization机制来保存它,为了在一个特定对象的一个域上关闭serialization,可以在这个域前加上关键字 transient.   
 	transient 是 Java 语言的关键字,用来表示一个域不是该对象串行化的一部分。当一个对象被串行化的时候,
 	transient 型变量的值不包括在串行化的表示中,然而非 transient 型的变量是被包括进去的.
-### 3.final:
+## 3.final:
 	 * http://www.importnew.com/18586.html
 	 * http://www.importnew.com/7553.html	 
 	3.1.含义:
@@ -417,6 +433,7 @@
 		(1).final 和 static:
 			static 作用于成员变量用来表示只保存一份副本,而 final 的作用是用来保证变量不可变
 			看代码:每次打印的两个j值都是一样的,而i的值却是不同的
+```java
 			public class Demo01 {
 				public static void main(String[] args) {
 					MyDemo1 d1 = new MyDemo1();
@@ -431,13 +448,14 @@
 				public final double i = Math.random();
 				public static double j = Math.random();
 			}
+```
 		(2).匿名内部类中使用的外部局部变量为什么只能是 final 变量(参考上面内部类)
 	3.4.为什么使用 final?
 		(1).final 关键字提高了性能。JVM 和 Java 应用都会缓存 final 变量。
 		(2).final 变量可以安全的在多线程环境下进行共享,而不需要额外的同步开销。
 		(3).使用 final 关键字,JVM 会对方法、变量及类进行优化;
 	3.5.不可变类:
-		创建不可变类要使用 final 关键字。不可变类是指它的对象一旦被创建了就不能被更改了。String 是不可变类的代表。
+		创建不可变类要使用 final 关键字。不可变类是指它的对象一旦被创建了就不能被更改了。String 是不可变类的代表.
 		不可变类有很多好处,譬如它们的对象是只读的,可以在多线程环境下安全的共享,不用额外的同步开销等等;
 		==> 不可变对象:
 			如果某个对象在被创建后其状态不能被修改,那么这个对象就称为不可变对象.不可变对象一定是线程安全的.
@@ -466,11 +484,12 @@
 			String[] str = new String[10];
 			str instanceof String[]; //  true
 	4.2.instanceof 与 clazz.isInstance(obj):
-		(1).instanceof 运算符用来在运行时指出对象是否是特定类的一个实例,通过返回一个布尔值来指出这个对象是否是这个特定类或者是它的子类的一个实例.
+		(1).instanceof 运算符用来在运行时指出对象是否是特定类的一个实例,通过返回一个布尔值来指出这个对象是否是这个特定类或
+			者是它的子类的一个实例.
 			result = object instanceof class
-			但是 instanceof 在 java 的编译状态和运行状态是有区别的,在编译状态中 class可以是 object 对象的父类、自身类、子类,在这三种情况下
-			java 编译时不会报错,在运行转态中 class 可以是 object 对象的父类、自身类但不能是子类;{}当为父类、自生类的情况下 result 结果为 true,
-			为子类的情况下为 false;
+			但是 instanceof 在 java 的编译状态和运行状态是有区别的,在编译状态中 class可以是 object 对象的父类、自身类、
+			子类,在这三种情况下java 编译时不会报错,在运行转态中 class 可以是 object 对象的父类、自身类但不能是子类;{}当为
+			父类、自生类的情况下 result 结果为 true,	为子类的情况下为 false;
 		(2).clazz.isInstance(obj):表明这个对象能不能被转化为这个类
 			一个对象能被转化为本身类所继承类(父类的父类等)和实现的接口(接口的父接口)强转;
 	4.3.instanceof 与 clazz.getClass():
@@ -487,18 +506,20 @@
 	(1).Object 中该方法的声明如下:
 		protected native Object clone() throws CloneNotSupportedException;
 	(2).在类中可以重写实现如下:
+```java
 		@Override
 		public Employee clone() throws CloneNotSupportedException {
 			Employee e = (Employee) super.clone();
 			e.address = address.clone();
 			return e;
 		}
-
+```
 ## 2.泛型重载:
 	(1).Java的方法重载一般指在同一个类中的两个同名方法,规则很简单：两个方法必须具有不同的方法签名;
 	换句话说:就是这两个方法的参数必须不相同,使得编译器能够区分开这两个重载的方法;
 	由于编译器不能仅仅通过方法的返回值类型来区分重载方法,所以如果两个方法只有返回类型不同,其它完全一样,编译是不能通过的。
 	// 在泛型方法的重载时,这个规则稍微有一点变化,看如下代码:
+```java
 		class Overloaded {
 			 public static int sum(List<Integer> ints) {			
 				return 0;
@@ -507,6 +528,7 @@
 				return null;
 			 }
 		}
+```
 	上面是两个泛型方法的重载例子,由于Java的泛型采用擦除法实现,List<Integer>和List<String>在运行时是完全一样的,
 	都是List类型.也就是,擦除后的方法签名如下：
 		int sum(List)
@@ -584,7 +606,8 @@
 		④.重载对于传入的参数类型只认了引用的类型,并没有去解析实际对象的类型.
 			如果重载是一种多态的话,它这里应该去解析实际对象的类型并调用ArrayList的方法
 ## 5.重写:
-    涉及到继承这个概念中的问题,子类继承了父类的方法,但是它可能需要有不同的操作行为,就需要在子类中重写这个父类方法.父类如果将方法声明为 final 的就可保证所有子类的调用此方法时调用的都是父类的方法;
+    涉及到继承这个概念中的问题,子类继承了父类的方法,但是它可能需要有不同的操作行为,就需要在子类中重写这个父类方法.父类如果
+	将方法声明为 final 的就可保证所有子类的调用此方法时调用的都是父类的方法;
 ## 6.两者的比较:
 	(1).重载是一个编译期概念、重写是一个运行期间概念;
 	(2).重载遵循所谓"编译期绑定",即在编译时根据参数变量的类型判断应该调用哪个方法。
@@ -608,6 +631,7 @@
 		(6).Java 序列化机制为了节省磁盘空间,具有特定的存储规则,当写入文件的为同一对象时,并不会再将对象的内容进行存储,
 			而只是再次存储一份引用,上面增加的 5 字节的存储空间就是新增引用和一些控制信息的空间.反序列化时,恢复引用关系
 			该存储规则极大的节省了存储空间;
+```java	
 				ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("result.obj"));
 				Test test = new Test();
 				test.i = 1;
@@ -624,18 +648,22 @@
 				System.out.println(t2.i);// 1
 				// 结果两个输出的都是 1, 原因就是第一次写入对象以后,第二次再试图写的时候,虚拟机根据引用关系
 				// 知道已经有一个相同对象已经写入文件,因此只保存第二次写的引用,所以读取时,都是第一次保存的对象
+```
 	1.2.子类与父类序列化:
 		(1).要想将父类对象也序列化,就需要让父类也实现 Serializable 接口;
 		(2).如果父类实现了 Serializable 接口,子类但没有实现 Serializable 接口,子类拥有一切可序列化相关的特性,子类可以序列化;
 		(3).如果子类实现 Serializable 接口,父类不实现,根据父类序列化规则,父类的字段数据将不被序列化,从而达到部分序列化的功能;
-		(4).在反序列化时仍会调用父类的构造器,只能调用父类的无参构造函数作为默认的父对象.如果父类没有默认构造方法则在反序列化时会出异常.
+		(4).在反序列化时仍会调用父类的构造器,只能调用父类的无参构造函数作为默认的父对象.
+			如果父类没有默认构造方法则在反序列化时会出异常.
 		(5).如果父类实现了 Serializable 接口,要让子类不可序列化,可以在子类中写如下代码:(其实违反了里氏替换原则)
+```java
 			private void writeObject(java.io.ObjectOutputStream out) throws IOException{
 		        throw new NotSerializableException("不可写");
 		    }
 		    private void readObject(java.io.ObjectInputStream in) throws IOException{
 		        throw new NotSerializableException("不可读");
 		    }
+```
 		(6).序列化与反序列化时子类和父类构造方法调用关系:
 			序列化时子类递归调用父类的构造函数,反序列化作用于子类对象时如果其父类没有实现序列化接口则其父类的默认无参构造函数会被调用.
 			如果父类实现了序列化接口则不会调用构造方法.
@@ -648,11 +676,11 @@
 	2.1.ArrayList 使用上述实现:为什么ArrayList要用这种方式来实现序列化呢?
 		(1).为什么 transient Object[] elementData;
 			ArrayList 实际上是动态数组,每次在放满以后自动增长设定的长度值,如果数组自动增长长度设为100,而实际只放了一个元素,
-			那就会序列化 99 个 null 元素。为了保证在序列化的时候不会将这么多 null 同时进行序列化,ArrayList 把元素数组设置为 transient
+			那就会序列化99个null元素.为了保证在序列化的时候不会将这么多null同时进行序列化,ArrayList 把元素数组设置为transient
 		(2).为什么要写方法:writeObject and readObject
-			前面提到为了防止一个包含大量空对象的数组被序列化,为了优化存储,所以,ArrayList 使用 transient 来声明elementData作为一个集合,
-			在序列化过程中还必须保证其中的元素可以被持久化下来,所以,通过重写writeObject 和 readObject方法的方式把其中的元素保留下来
-			writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中.
+			前面提到为了防止一个包含大量空对象的数组被序列化,为了优化存储,所以,ArrayList 使用 transient 来声明
+			elementData作为一个集合,在序列化过程中还必须保证其中的元素可以被持久化下来,所以,通过重写writeObject 和 readObject
+			方法的方式把其中的元素保留下来.writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中.
 			readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
 	2.2.如何自定义的序列化和反序列化策略
 		可以通过在被序列化的类中增加writeObject 和 readObject方法。那么问题又来了;
@@ -666,35 +694,40 @@
 		看 ObjectOutputStream 的writeObject 的调用栈：
 		writeObject ---> writeObject0 --->writeOrdinaryObject--->writeSerialData--->invokeWriteObject
 		writeObject0方法中有这么一段代码：
+```java
 		if (obj instanceof String) {
-                writeString((String) obj, unshared);
-            } else if (cl.isArray()) {
-                writeArray(obj, desc, unshared);
-            } else if (obj instanceof Enum) {
-                writeEnum((Enum<?>) obj, desc, unshared);
-            } else if (obj instanceof Serializable) {
-                writeOrdinaryObject(obj, desc, unshared);
-            } else {
-                if (extendedDebugInfo) {
-                    throw new NotSerializableException(
-                        cl.getName() + "\n" + debugInfoStack.toString());
-                } else {
-                    throw new NotSerializableException(cl.getName());
-                }
-            }
-		在进行序列化操作时,会判断要被序列化的类是否是 Enum、Array 和 Serializable 类型,如果不是则直接抛出 NotSerializableException
+			writeString((String) obj, unshared);
+		} else if (cl.isArray()) {
+			writeArray(obj, desc, unshared);
+		} else if (obj instanceof Enum) {
+			writeEnum((Enum<?>) obj, desc, unshared);
+		} else if (obj instanceof Serializable) {
+			writeOrdinaryObject(obj, desc, unshared);
+		} else {
+			if (extendedDebugInfo) {
+				throw new NotSerializableException(
+					cl.getName() + "\n" + debugInfoStack.toString());
+			} else {
+				throw new NotSerializableException(cl.getName());
+			}
+		}
+```
+		在进行序列化操作时,会判断要被序列化的类是否是 Enum、Array 和 Serializable 类型,
+		如果不是则直接抛出NotSerializableException
 	2.4.writeReplace() 和 readResolve():
-		Serializable 除过提供了 writeObject 和 readObject 标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve),
-		2.4.1.writeReplace:序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象,
-			该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法,直到该方法不再返回另一个对象为止,程序最后将调用该对象的
-			writeObject() 方法来保存该对象的状态.
+		Serializable除提供了writeObject和readObject标记方法外还提供了另外两个标记方法可以实现序列化对象的替换
+		(即 writeReplace 和 readResolve),
+		2.4.1.writeReplace:序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当
+			前对象替换成另一个对象,该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法,直到该
+			方法不再返回另一个对象为止,程序最后将调用该对象的writeObject() 方法来保存该对象的状态.
 			(1).实现了 writeReplace 的序列化类就不要再实现 writeObject 了,因为该类的 writeObject 方法就不会被调用了.
 			(2).实现 writeReplace 的返回对象必须是可序列化的对象;
 			(3).通过 writeReplace 序列化替换的对象在反序列化中无论实现哪个方法都是无法恢复原对象的.
-			(4).所以 writeObject 只和 readObject 配合使用,一旦实现了 writeReplace 在写入时进行替换就不再需要 writeObject 和 readObject 了.
-		2.4.2.readResolve:方法可以实现保护性复制整个对象,会紧挨着序列化类实现的 readObject() 之后被调用,该方法的返回值会代替原来反序列化的对象
-			而原来序列化类中 readObject() 反序列化的对象将会立即丢弃.
-			readObject() 方法在序列化单例类时尤其有用,单例序列化都应该提供 readResolve() 方法,这样才可以保证反序列化的对象依然正常.
+			(4).所以 writeObject 只和 readObject 配合使用,一旦实现了 writeReplace 在写入时进行替换就不再需要 
+				writeObject 和 readObject 了.
+		2.4.2.readResolve:方法可以实现保护性复制整个对象,会紧挨着序列化类实现的 readObject() 之后被调用,该方法的
+			返回值会代替原来反序列化的对象而原来序列化类中 readObject() 反序列化的对象将会立即丢弃.readObject() 
+			方法在序列化单例类时尤其有用,单例序列化都应该提供 readResolve() 方法,这样才可以保证反序列化的对象依然正常.
 
 ## 3.private static final long serialVersionUID:每个可序列化类相关联
 	(1).该序列号在反序列化过程中用于验证序列化对象的发送者和接收者是否为该对象加载了与序列化兼容的类;
@@ -712,16 +745,21 @@
 			无法反序化旧有实例,并在反序列化时抛出一个异常。如果你添加了serialVersionUID,在反序列旧有实例时,
 			新添加或更改的字段值将设为初始化值(对象为null,基本类型为相应的初始默认值),字段被删除将不设置
 ## 4.反序列化:
-	(1).实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法,完全基于字节,如果是子类继承父类的序列化,那么将调用父类的构造方法;
-	(2).实现 Externalizable  接口的对象在反序列化时会调用构造方法.该接口继承自 Serializable,使用该接口后基于 Serializable 接口的序列化机制就会失效,
-		因为 Externalizable 不会主动序列化,当使用该接口时序列化的细节需要由我们自己去实现.
-		使用 Externalizable 主动进行序列化时当读取对象时会调用被序列化类的无参构方法去创建一个新的对象,然后再将被保存对象的字段值分别填充到新对象中.
-		所以 所以实现 Externalizable 接口的类必须提供一个无参 public 的构造方法,
-		readExternal 方法必须按照与 writeExternal 方法写入值时相同的顺序和类型来读取属性值.
+	(1).实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法,完全基于字节,
+		如果是子类继承父类的序列化,那么将调用父类的构造方法;
+	(2).实现 Externalizable  接口的对象在反序列化时会调用构造方法.该接口继承自 Serializable,
+		使用该接口后基于 Serializable 接口的序列化机制就会失效:
+		因为:
+		* Externalizable 不会主动序列化,当使用该接口时序列化的细节需要由我们自己去实现.
+		* 使用 Externalizable 主动进行序列化时当读取对象时会调用被序列化类的无参构方法去创建一个新的对象,然后再将被保存对
+			象的字段值分别填充到新对象中.
+		* 所以 所以实现 Externalizable 接口的类必须提供一个无参 public 的构造方法,
+			readExternal 方法必须按照与 writeExternal 方法写入值时相同的顺序和类型来读取属性值.
 
 ## 5.序列化实现对象的拷贝:
 	内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中,再从字节流中将其读出来,这样就可以创建一个新的对象了,
 	并且该新对象与母对象之间并不存在引用共享的问题,真正实现对象的深拷贝
+```java
 	public class CloneUtils {
         @SuppressWarnings("unchecked")
         public static <T extends Serializable> T clone(T   obj){
@@ -745,6 +783,7 @@
             return cloneObj;
 	    }
 	}
+```
 ## 6.常见的序列化协议:
 	(1).COM:主要用于windows 平台,并没有实现跨平台,其序列化原理是利用编译器中的虚表
 	(2).CORBA:早期比较好的实现了跨平台,跨语言的序列化协议,COBRA 的主要问题是参与方过多带来的版本过多,
@@ -783,7 +822,8 @@
 		map1.put("c", "3");
         Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
         System.out.println(gson.toJson(map1)); // {"b":"2","a":"1","c":"3"}
-        (1).使用fastjson或者jdk自带的序列化,默认是无序输出的,如果需要使用fastJson输出有序的json:JSONObject,构造的时候使用 new JSONObject(true)
+        (1).使用fastjson或者jdk自带的序列化,默认是无序输出的,如果需要使用fastJson输出有序的json:JSONObject,
+			构造的时候使用 new JSONObject(true):
         	JSONObject object = new JSONObject(true);
 	        Map<String, String> map2 = new LinkedHashMap<String, String>();
 	        map2.put("b", "2");
@@ -793,8 +833,8 @@
 	        System.out.println(JSONObject.toJSON(object));// {"b":"2","a":"1","c":"3"}
 	    (2).Gson 保证了你插入的顺序,就是正常的Map迭代操作
 ## 8.序列化安全:
-	(1).序列化在传输中是不安全的:因为序列化二进制格式完全编写在文档中且完全可逆,所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容,
-		故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中.
+	(1).序列化在传输中是不安全的:因为序列化二进制格式完全编写在文档中且完全可逆,所以只需将二进制序列化流的内容转储到控制台就可以
+		看清类及其包含的内容,故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中.
 	(2).要解决序列化安全问题的核心原理就是避免在序列化中传递敏感数据,所以可以使用关键字 transient 修饰敏感数据的变量.
 		或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
 # 七.泛型:
@@ -802,8 +842,8 @@
     允许在定义类和接口的时候使用类型参数(type parameter),泛型最主要的应用是在JDK 5中的新集合类框架中;
 	其本质是参参数化类型
 	==> 为什么要有泛型?
-		* 在1.5之前没有泛型的情况下,只能通过对类型 Object 的引用来实现参数的任意化,其带来的缺点是需要显示强制转换,而强制转换在编译期不做检查,
-		  容易把代码流到运行时.使用泛型的好处是在编译时检查类型安全,提高了代码重用率, 避免产生 ClassCastException
+	在1.5之前没有泛型的情况下,只能通过对类型 Object 的引用来实现参数的任意化,其带来的缺点是需要显示强制转换,而强制转换在编译期
+	不做检查,容易把代码流到运行时.使用泛型的好处是在编译时检查类型安全,提高了代码重用率, 避免产生 ClassCastException
 ## 2.类型擦除(type erasure):
     使用泛型的时候加上的类型参数,会被编译器在编译的时候去掉,这个过程就称为类型擦除.
 	2.1.Java 中的泛型基本上都是在编译器这个层次来实现的,在生成的 Java 字节代码中是不包含泛型中的类型信息的;		
@@ -849,10 +889,10 @@
 		}
 		}
 		==> 存在 ArrayList.class 文件但是不存在 ArrayList<String>.class 文件,即便是通过 class.getTypeParameters() 方法
-			获取类型信息也只能获取到 [T] 一样的泛型参数占位符,编译后任何具体的泛型类型都被擦除了,替换为非泛型上边界,如果没有指定边界则为 Object 类型,
-			泛型类型只有在静态类型检查期间才出现.
+			获取类型信息也只能获取到 [T] 一样的泛型参数占位符,编译后任何具体的泛型类型都被擦除了,替换为非泛型上边界,如果没有
+			指定边界则为 Object 类型,泛型类型只有在静态类型检查期间才出现.
 	2.5.为什么 Java 泛型要通过擦除来实现?
-		Java 之所以要通过擦除来实现泛型机制其实是为了兼容性考虑,只有这样才能让非泛化代码到泛化代码的转变过程建立在不破坏现有类库的实现上
+		Java要通过擦除来实现泛型机制其实是为了兼容性考虑,只有这样才能让非泛化代码到泛化代码的转变过程建立在不破坏现有类库的实现上
 ## 3.通配符与上下界:
 	3.1.在使用泛型类的时候,既可以指定一个具体的类型,也可以用通配符?来表示未知类型,如 List<?>
  	3.2.通配符所代表的其实是一组类型,但具体的类型是未知的,但是 List<?>并不等同于 List<Object>
@@ -1110,6 +1150,7 @@
 ## 3.Java中数组的继承关系:
 	3.1.数组的顶层父类也必须是 Object,这就说明数组对象可以向上直接转型到 Object,也可以向下强制类型转换,
 		也可以使用 instanceof 关键字做类型判定
+```java
 		//1		在test1()中已经测试得到以下结论: 数组也是对象, 数组的顶层父类是Object, 所以可以向上转型
 		int[] a = new int[8];
 		Object obj = a ; //数组的父类也是Object,可以将a向上转型到Object		
@@ -1119,6 +1160,7 @@
 		if(obj instanceof int[]){  //可以用instanceof关键字进行类型判定
 			System.out.println("obj的真实类型是int[]");
 		}
+```
 	3.2.Java中数组的另一种"继承"关系:
 		String[] s = new String[5];
 		Object[] obja = s;   //成立,说明可以用Object[]的引用来接收String[]的对象
@@ -1131,6 +1173,7 @@
 			可以理解为:
 			其实这种关系可以这样表述：如果有两个类A和B,如果B继承(extends)了A,那么A[]类型的引用就可以指向B[]类型的对象
 		(2).数组的这种用法不能作用于基本类型数据:
+```java
 			int[] aa = new int[4];  
 			Object[] objaa = aa;  //错误的,不能通过编译  
 			因为 int 不是引用类型,Object 不是 int 的父类,在这里自动装箱不起作用
@@ -1145,7 +1188,7 @@
 				 * 数组具有这种特性：
 				 * 如果有两个类A和B,如果B继承(extends)了A,那么A[]类型的引用就可以指向B[]类型的对象
 				 * 测试数组的特殊特性对参数传递的便利性
-				 * /
+				 */
 				private static void test3() {
 					String[] a = new String[3];
 					doArray(a);
@@ -1168,7 +1211,7 @@
 				}
 				/**
 				 * 测试数组的集成关系, 并且他的继承关系是否和数组中元素的类型有关
-				 * /
+				 */
 				private static void test2() {
 
 					//1		在test1()中已经测试得到以下结论: 数组也是对象, 数组的顶层父类是Object, 所以可以向上转型
@@ -1202,7 +1245,7 @@
 					/**
 					 * 做一下总结, 如果A是B的父类, 那么A[] 类型的引用可以指向 B[]类型的变量
 					 * 但是B[]的直接父类是Object, 所有数组的父类都是Object
-					 * /
+					 */
 
 					//8		上面的结论可以扩展到二维数组
 					Son[][] sonss = new Son[2][4];
@@ -1219,7 +1262,7 @@
 					 * Object[] objs = new String[1];
 					 * Object[] objs = new Son[1];
 					 *
-					 * /
+					 */
 
 					//9		下面的代码成立吗?
 					int[] aa = new int[4];
@@ -1233,7 +1276,7 @@
 				/**
 				 * 测试在java语言中,数组是不是对象
 				 * 如果是对象, 那么他的类型是什么?
-				 * /
+				 */
 				private static void test1() {
 					int[] a = new int[4];
 					//a.length;  //对属性的引用不能当成语句
@@ -1248,7 +1291,7 @@
 					 * java是强类型的语言,一个对象总会有一个特定的类型,例如 Person p = new Person();
 					 * 对象p(确切的说是引用)的类型是Person类, 这个Person类是我们自己编写的
 					 * 那么数组的类型是什么呢? 下面使用反射的方式进行验证
-					 * /
+					 */
 					int[] a1 = {1, 2, 3, 4};
 					System.out.println(a1.getClass().getName());
 					//打印出的数组类的名字为[I
@@ -1272,16 +1315,18 @@
 					 * 但是在JVM中,他的类型为[java.lang.String
 					 *
 					 * 顺便说一句普通的类在JVM里的类型为 包名+类名, 也就是全限定名
-					 * /
+					 */
 				}				
 				public static class Father {
 				}				
 				public static class Son extends Father {
 				}
 			}
+```
 ## 4.Java 数组初始化:
 	(1).Java 数组是静态的,即当数组被初始化之后,该数组的长度是不可变的;
 ## 5.数组扩容:可以参照利用 List 集合中的add方法模拟实现:
+```java
 	// datas 原始数组    newLen 扩容大小
 	public static <T> T[] expandCapacity(T[] datas,int newLen){
        	newLen = newLen < 0 ? datas.length :datas.length + newLen;   
@@ -1300,6 +1345,7 @@
         int newLen = datas.length * mulitiple;
         return Arrays.copyOf(datas,newLen );
     }
+```
 ## 6.数组复制问题:
 	所以通过 Arrays.copyOf() 方法产生的数组是一个浅拷贝。同时数组的 clone() 方法也是,集合的 clone() 方法也是,
 	所以我们在使用拷贝方法的同时一定要注意浅拷贝这问题
@@ -1326,7 +1372,8 @@
     	size：元素数量、toArray：转换为数组,实现了数组的浅拷贝、get：获得指定元素、contains：是否包含某元素
 # 十三.switch:
 ## 1.支持类型：
-    JDK7 之后,switch 的参数可以是 String 类型了;到目前为止 switch 支持的数据类型:byte(Byte)、short(Short)、int(Integer)、char(Character)、String、枚举类型
+    JDK7 之后,switch 的参数可以是 String 类型了;到目前为止 switch 支持的数据类型:
+	byte(Byte)、short(Short)、int(Integer)、char(Character)、String、枚举类型
 ## 2.switch 对整型的支持:
     switch 对 int 的判断是直接比较整数的值
 	由于 byte 的存储范围小于 int,可以向 int 类型进行隐式转换,所以 switch 可以作用在 byte 类型变量上;
@@ -1337,6 +1384,7 @@
 	对于包装类型Character,其需要转换为基本类型char,转换方法:charValue
 ## 4.switch 对字符串支持的实现c
 	4.1.代码片段1:
+```java
 		public class switchDemoString {
 		    public static void main(String[] args) {
 		        String str = "world";
@@ -1352,7 +1400,9 @@
 		        }
 		    }
 		}
+```
 	4.2.反编译上述代码:
+```java
 		public class switchDemoString{
 		    public switchDemoString(){}
 		    public static void main(String args[]){
@@ -1372,19 +1422,18 @@
 		        }
 		    }
 		}
+```
 	4.3.分析:字符串的 switch 是通过equals()和hashCode()方法来实现的
 		(1).switch 中只能使用整型,hashCode()方法返回的是int,而不是long
 		(2).进行 switch 的实际是哈希值,然后通过使用equals方法比较进行安全检查,这个检查是必要的,因为哈希可能会发生碰撞
 		(3).其实 switch 只支持一种数据类型,那就是整型,其他数据类型都是转换成整型之后在使用 switch 的
 ## 5.枚举类:
-	枚举类型之所以能够使用,因为编译器层面实现了,编译器会将枚举 switch 转换为类似 switch(s.ordinal()) { case Status.START.ordinal() } 形式,
-	所以实质还是 int 参数类型.
-	可以通过查看反编译字节码来查看
+	枚举类型之所以能够使用,因为编译器层面实现了,编译器会将枚举 switch 转换为类似 
+	switch(s.ordinal()) { case Status.START.ordinal() } 形式,所以实质还是 int 参数类型.可以通过查看反编译字节码来查看
 ## 十四.抽象类与接口:
     抽象类与接口是 Java 语言中对抽象概念进行定义的两种机制
- * http://blog.csdn.net/chenssy/article/details/12858267
- * http://www.cnblogs.com/dolphin0520/p/3811437.html
-
+ 	* http://blog.csdn.net/chenssy/article/details/12858267
+ 	* http://www.cnblogs.com/dolphin0520/p/3811437.html
 ## 1.抽象类:
     如果一个类含有一个被 abstract 修饰的方法,那么该类就是抽象类,抽象类必须在类前用 abstract 关键字修饰
 	1.1.相关概念:
@@ -1422,13 +1471,17 @@
 		实现 Serializable 表示该类可以被序列化;
 	2.5.针对接口的默认修饰符看如下代码:
 		(1).接口定义如下:
+```java
 			public interface A{
-				String name; // 编译错误:The blank final field name may not have been initialized,即需要初始化
+				// 编译错误:The blank final field name may not have been initialized,即需要初始化
+				String name; 
 				// Illegal modifier for the interface method add; only public & abstract are permitted
 				// 非法字符,只有public 和 abstract 被允许使用
 				protected int add(int a, int b);
 			}
+```
 		(2).再看如下定义,编译如下代码,查看其字节码:
+```java
 			public interface A{
 				String name = "Hello";
 				int add(int a, int b);
@@ -1443,6 +1496,7 @@
 			    descriptor: (II)I
 			    flags: ACC_PUBLIC, ACC_ABSTRACT
 			}
+```
 ## 3.接口与抽象类的区别:
 	3.1.语法层面上:
 		(1).抽象类可以提供成员方法的实现细节,而接口中只能存在 public abstract 方法；
@@ -1463,10 +1517,11 @@
 			本质上应该是相同的.对于接口则不然,接口是"like-a ",并不要求接口的实现者和接口定义在概念本质上是一致的
 		(3).设计层次不同:抽象类是自下而上抽象出来的,需要先知道子类才能抽象出父类;
 			接口则是自顶向下的设计,接口根本不需要知道子类的存在,其只需要定义一个规则即可;
-//http://stackoverflow.com/questions/19722847/static-initialization-in-interface
+	* http://stackoverflow.com/questions/19722847/static-initialization-in-interface
 ## 4.Java8 下接口的不同之处(上述是针对 JDK7 之前的)
 	4.1.在 Java8 中,使用默认方法和静态方法来扩展接口,类似如下代码:
 		使用 default 关键字来实现默认方法
+```java
 		public interface Demo {
 			default int add(int a, int b){
 				return a + b;
@@ -1475,11 +1530,13 @@
 				return a - b;
 			}
 		}
+```
 		接口中非 default 和 static 的方法不能有方法体;
 	4.2.如果实现一个接口,默认方法可以不用覆盖重写实现,实现类默认可以直接调用该默认方法;实现类无法重写接口中的静态方法;
 		注意:在声明一个默认方法前,请仔细思考是不是真的有必要使用默认方法,因为默认方法会带给程序歧义,并且在复杂的继承体系中容易产生编译错误
 		http://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html
-		(1).如果一个类实现两个接口,两个接口中有同样签名的 default 方法,编译报错:
+```java
+		// 1.如果一个类实现两个接口,两个接口中有同样签名的 default 方法,编译报错:
 			public interface DefaultMethodDemo1 {
 			    default void add(){}
 			}
@@ -1487,9 +1544,9 @@
 			    default void add(){}
 			}
 			public class SubClassDemo implements DefaultMethodDemo1, DefaultMethodDemo2 {}
-			==> 编译错误:SubClassDemo inherited unrelated defaults for add() from type DefaultMethodDemo1 and DefaultMethodDemo2
-			因为相当于你在类里面定义了两个同样签名的方法
-		(2).如果一个类继承一个抽象类和实现一个接口,抽象类定义了一个和接口的默认方法相同的抽象方法,则在类中需要实现该方法.
+			// 编译错误:SubClassDemo inherited unrelated defaults for add() from type DefaultMethodDemo1 
+			// and DefaultMethodDemo2 因为相当于你在类里面定义了两个同样签名的方法
+		// 2.如果一个类继承一个抽象类和实现一个接口,抽象类定义了一个和接口的默认方法相同的抽象方法,则在类中需要实现该方法.
 			public interface DefaultMethodDemo2 {
 			    default void add(){}
 			}
@@ -1500,9 +1557,8 @@
 			    @Override
 			    public void add() {}
 			}
-		(3).抽象类、接口存在同样的签名方法,抽象类有实现体但是不是 public 修饰的,编译报错.
-			但如果子类实现对应的方法,则编译通过
-		(4).一个声明在类里面的方法优先于任何默认方法,优先选取最具体的实现;
+		// 3.抽象类、接口存在同样的签名方法,抽象类有实现体但是不是 public 修饰的,编译报错.但如果子类实现对应的方法,则编译通过
+		// 4.一个声明在类里面的方法优先于任何默认方法,优先选取最具体的实现;
 			public interface A {
 			    default void hello(){System.out.println("Interface A hello : A");}
 			}
@@ -1513,9 +1569,9 @@
 			    public static void main(String[] args) {new C().hello();}
 			}
 			输出结果:Interface B hello : B
+```
 	4.3.接口的 default 方法不能重写 Object 的方法,但是可以对 Object 类的方法进行重载.
 		因为若可以会很难确定什么时候该调用接口默认的方法
-
 # 十五.基本类型与引用类型
 ## 1.基本类型与引用类型的比较
 	1.1.如下四个变量,哪两个比较为 false
@@ -1524,23 +1580,26 @@
 		Integer i03 =Integer.valueOf(59);
 		Integer i04 = new Integer(59);
 		(1).Integer 为了节省空间和内存会在内存中缓存 -128~127 之间的数字;
-		(2).valueOf():调用该方法时,内部实现作了个判断,判断当前传入的值是否在 -128~127 之间且 IntergCache 是否已存在该对象
-			如果存在,则直接返回引用,如果不存在,则创建一个新对象
+		(2).valueOf():调用该方法时,内部实现作了个判断,判断当前传入的值是否在 -128~127 之间且 IntergCache 
+			是否已存在该对象如果存在,则直接返回引用,如果不存在,则创建一个新对象
 		(3).基本类型存在内存的栈中,与引用类型比较时, 引用类型会自动装箱,比较数值而不比较内存地址;
 	1.2.自动装箱拆箱机制是编译特性还是虚拟机运行时特性？分别是怎么实现的？
 		(1).自动装箱机制是编译时自动完成替换的.装箱阶段自动替换为了 valueOf 方法,拆箱阶段自动替换为了 xxxValue 方法;
-		(2).对于 Integer 类型的 valueOf 方法参数如果是 -128~127 之间的值会直接返回内部缓存池中已经存在对象的引用,参数是其他范围值则返回新建对象;
-		(3).而 Double 类型与 Integer 类型类似,一样会调用 Double 的 valueOf 方法,但是 Double 的区别在于不管传入的参数值是多少都会 new 一个对象来表
-			达该数值(因为在指定范围内浮点型数据个数是不确定的,整型等个数是确定的,所以可以 Cache)
-		==> 注意:Integer、Short、Byte、Character、Long 的 valueOf 方法实现类似,而 Double 和 Float 比较特殊,每次返回新包装对象,
-			对于两边都是包装类型的:== 比较的是引用,	equals 比较的是值;
+		(2).对于 Integer 类型的 valueOf 方法参数如果是 -128~127 之间的值会直接返回内部缓存池中已经存在对象的引用,
+			参数是其他范围值则返回新建对象;
+		(3).而 Double 类型与 Integer 类型类似,一样会调用 Double 的 valueOf 方法,但是 Double 的区别在于不管传入的
+		参数值是多少都会 new 一个对象来表达该数值(因为在指定范围内浮点型数据个数是不确定的,整型等个数是确定的,所以可以Cache)
+		==> 注意:Integer、Short、Byte、Character、Long 的 valueOf 方法实现类似,而 Double 和 Float 比较特殊,
+			每次返回新包装对象,对于两边都是包装类型的:== 比较的是引用,	equals 比较的是值;
 			对于两边有一边是表达式(包含算数运算): == 比较的是数值(自动触发拆箱过程),对于包装类型 equals 方法不会进行类型转换;
 	1.3.Integer i = 1; i += 1; 做了哪些操作:
 		(1).Integer i = 1; 做了自动装箱:使用 valueOf() 方法将 int 装箱为 Integer 类型
-		(2).i += 1; 先将 Integer 类型的 i 自动拆箱成 int(使用 intValue() 方法将 Integer 拆箱为 int),完成加法运行之后的 i 再装箱成 Integer 类型
+		(2).i += 1; 先将 Integer 类型的 i 自动拆箱成 int(使用 intValue() 方法将 Integer 拆箱为 int),
+			完成加法运行之后的 i 再装箱成 Integer 类型
 ## 2.关于 String+ 和 StringBuffer 的比较:
     在 String+写成一个表达式的时候(更准确的说,是写成一个赋值语句的时候)
 	效率其实比 Stringbuffer更快
+```java
 	public class Main{	    
 	    public static void main(String[] args){
 	        /*   1   * /
@@ -1551,6 +1610,7 @@
 	        string = stringBuffer.toString();
 	    }	    
 	}
+```
 	2.1.String+的写法要比 Stringbuffer 快,是因为在编译这段程序的时候,编译器会进行常量优化,
 	它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中{},看如下反编译的代码:
 		public class Main{}
@@ -1563,21 +1623,23 @@
 		}
 	原因是因为 String+其实是由 Stringbuilder 完成的,而一般情况下 Stringbuilder 要快于 Stringbuffer,
 	这是因为 Stringbuilder 线程不安全,少了很多线程锁的时间开销,因此这里依然是 string+的写法速度更快;
-			/*   1   * /
+```java
+			/*   1   */
 	        String a = "a";
 	        String b = "b";
 	        String c = "c";
 	        String string = a + b + c;
-	        /*   2   * /
+	        /*   2   */
 	        StringBuffer stringBuffer = new StringBuffer();
 	        stringBuffer.append(a);
 	        stringBuffer.append(b);
 	        stringBuffer.append(c);
 	        string = stringBuffer.toString();
+```
 	2.2.字符串拼接方式:	+、concat() 以及 append() 方法,  append()速度最快,concat()次之,+最慢
-		(1).编译器对+进行了优化,它是使用 StringBuilder 的 append() 方法来进行处理的,
-		编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串,变慢的关键原因就在于 new StringBuilder() 和
-		toString(),这里可是创建了 10 W 个 StringBuilder 对象,而且每次还需要将其转换成 String
+		(1).编译器对+进行了优化,它是使用 StringBuilder 的 append() 方法来进行处理的,编译器使用 append() 方法
+			追加后要同 toString() 转换成 String 字符串,变慢的关键原因就在于 new StringBuilder() 
+			和toString(),这里可是创建了 10 W 个 StringBuilder 对象,而且每次还需要将其转换成 String
 		(2).concat:
 			concat() 的源码,它看上去就是一个数字拷贝形式,我们知道数组的处理速度是非常快的,但是由于该方法最后是这样的：
 			return new String(0, count + otherLen, buf);这同样也创建了 10 W 个字符串对象,这是它变慢的根本原因
@@ -1596,6 +1658,7 @@
 		(4).最后,初始化子类的普通成员变量和代码块,在执行子类的构造方法；
 	3.2.不要在构造器里调用可能被重载的虚方法,
 		父类构造器执行的时候,调用了子类的重载方法,然而子类的类字段还在刚初始化的阶段,刚完成内存布局:
+```java
 		public class Base{
 		    private String baseName = "base";
 		    public Base(){
@@ -1614,6 +1677,7 @@
 		        Base b = new Sub();
 		    }
 		}
+```
 	3.1.Java 类初始化过程:
 		(1).首先,初始化父类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化；
 		(2).然后,初始化子类中的静态成员变量和静态代码块,按照在程序中出现的顺序初始化；
@@ -1629,6 +1693,7 @@
 			(7).自身块赋值
 			(8).自身构造函数赋值
 	3.2.Java 代码执行顺序:
+```java
 		public class TestExecuteCode {
 		    public static void main(String[] args) {
 		        System.out.println(new B().getValue());
@@ -1657,6 +1722,7 @@
 		        public void setValue(int value) {super.setValue(2 * value);}
 		    }
 		}
+```
 	==> 执行结果:22,34,17
 		(1).子类 B 中重写了父类 A 中的setValue方法:
 				super(5) // 调用了父类构造器,其中构造函数里面的setValue(value),调用的是子类的setValue方法
@@ -1695,6 +1761,7 @@
 	* http://blog.csdn.net/clqyhy/article/details/78978785
 	* http://blog.csdn.net/simon901/article/details/25078397
 	优先级由高到低依次为：this.show(O)、super.show(O)、this.show((super)O)、super.show((super)O)
+```java
 		public class A {
 	        public String show(D obj) {return ("A and D");}
 	        public String show(A obj) {return ("A and A");}
@@ -1723,13 +1790,14 @@
 	            System.out.println("9--" + b.show(d));  //  9--A and D    
 	        }
 	    }
+```
 	(1).多态是对象在不同时刻表现出来的多种状态,是一种编译时期状态和运行时期状态不一致的现象.
 	(2).在编写或者分析代码时记住如下口诀:
 		成员变量:编译看左,运行看左(因为无法重写);
 		成员方法:编译看左,运行看右(因为普通成员方法可以重写,变量不可以);
 		静态方法:编译看左,运行看左(因为属于类);
-	    ==> 当父类变量引用子类对象时 Base base = new Child();在这个引用变量 base 指向的对象中他的成员变量和静态方法与父类是一致的,
-	    	他的非静态方法在编译时是与父类一致的,运行时却与子类一致(发生了复写);
+	    ==> 当父类变量引用子类对象时 Base base = new Child();在这个引用变量 base 指向的对象中他的成员变量和
+		静态方法与父类是一致的,他的非静态方法在编译时是与父类一致的,运行时却与子类一致(发生了复写);
 
 # 十六.反射与注解
 ## 1.Java 注解:Annotation(JDK5.0+)
@@ -1779,8 +1847,8 @@
 	【一个类只有一个Class对象,这个对象包含了完整类的结构】
 	(1).Class 类[java.lang.Class]:反射的根源,各种类型----表示Java中的同一类事物
 		(1.1)Class 类获取: .class, getClass, Class.forName(String className);
-		Field : 属性相关类,获取所有属性(包括 private),getDeclaredFields();
-		Method : 方法相关类,getDeclaredMethods(); method.invoke()方法执行时,如果第一个参数为 null,则表示反射的方法为静态方法
+		Field:属性相关类,获取所有属性(包括 private),getDeclaredFields();
+		Method:方法相关类,getDeclaredMethods(); method.invoke()方法执行时,如果第一个参数为 null,则表示反射的方法为静态方法
 		Constructor : 构造器相关类,getDeclaredConstructors();
 		如果需要访问私有的,则需setAccessible(true;
 	(2).反射机制性能问题：反射会降低程序的效率
@@ -1867,8 +1935,10 @@
 		Comparator 是在集合外部实现的排序
 		所以,如想实现排序,就需要在集合外定义 Comparator 接口的方法或在集合内实现 Comparable 接口的方法
 	(2).Comparator 位于包 java.util下,而 Comparable 位于包 java.lang下
-	(3).Comparable 是一个对象本身就已经支持自比较所需要实现的接口(如 String、Integer 自己就可以完成比较大小操作,已经实现了Comparable接口);
-	(4).Comparator 是一个专用的比较器,当这个对象不支持自比较或者自比较函数不能满足你的要求时,你可以写一个比较器来完成两个对象之间大小的比较;
+	(3).Comparable 是一个对象本身就已经支持自比较所需要实现的接口
+		(如 String、Integer 自己就可以完成比较大小操作,已经实现了Comparable接口);
+	(4).Comparator 是一个专用的比较器,当这个对象不支持自比较或者自比较函数不能满足你的要求时,你可以写一个
+		比较器来完成两个对象之间大小的比较;
 	(5).可以说一个是自已完成比较,一个是外部程序实现比较的差别而已
 	(6).用 Comparator 是策略模式(strategy design pattern),就是不改变对象自身;
 		Comparable 而用一个策略对象(strategy object)来改变它的行为
@@ -1885,6 +1955,7 @@
 	(2).通过实现Comparator接口同样要重写一个方法：compare()。接下来的例子就通过这种方式来比较HDTV的大小。
 	其实Comparator通常用于排序。Java中的Collections和Arrays中都包含排序的sort方法,该方法可以接收一个Comparator
 	的实例(比较器)来进行排序:
+```java
 			class HDTV {
 			    private int size;
 			    private String brand;
@@ -1935,6 +2006,7 @@
 			        }
 			    }
 			}
+```
 	(3).经常会使用 Collections.reverseOrder()来获取一个倒序的 Comparator:
 		ArrayList<Integer> al = new ArrayList<Integer>();
 		al.add(3);
@@ -1980,8 +2052,8 @@
 		类似的还有 Enum 的 name 方法和 toString 方法一样都返回的是 Enum 的 name 值.
 
 ## 2.枚举类本质:
-	枚举类本质是通过普通类来实现的,只是编译器进行了相应的处理,每个枚举类编译之后的字节码实质都是继承自 java.lang.Enum 的枚举类类型同名普通类.
-	而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象,所有枚举常量都通过静态代码块进行初始化实例赋值.
+	枚举类本质是通过普通类来实现的,只是编译器进行了相应的处理,每个枚举类编译之后的字节码实质都是继承自 java.lang.Enum 
+	的枚举类类型同名普通类.而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象,所有枚举常量都通过静态代码块进行初始化实例赋值.
 	==> 如下代码:
 		public enum Status{
 			START(),
@@ -2005,30 +2077,32 @@
 	3.1.区别:
 		(1).枚举相对于常量类来说定义更简单,其不需要定义枚举值,而常量类中每个常量必须手动添加值.
 		(2).枚举作为参数使用时可以避免在编译时避免弱类型错误,而常量类中的常量作为参数使用时无法避免类型错误.
-		(3).枚举类自动具备内置方法,如 values() 方法可以获得所有值的集合遍历,ordinal 方法可以获得排序值,compareTo方法可以给予ordinal比较,
-			而常量类不具备这些方法.
-		(4).枚举的缺点是不能被继承(编译后生成的类是 final class{}),也不能通过 extends 继承其他类(枚举编译后实质是继承了 Enum 类,java是单继承的).
-			但是定义的枚举类也通过 implements 实现其他接口.
+		(3).枚举类自动具备内置方法,如 values() 方法可以获得所有值的集合遍历,ordinal 方法可以获得排序值,
+			compareTo方法可以给予ordinal比较,而常量类不具备这些方法.
+		(4).枚举的缺点是不能被继承(编译后生成的类是 final class{}),也不能通过 extends 继承其他类(枚举编译
+			后实质是继承了 Enum 类,java是单继承的).但是定义的枚举类也通过 implements 实现其他接口.
 		(5).枚举值定义完毕后除非重构,否则无法做扩展,而常量类可以随意继承.
 	3.2.Java 枚举会比静态常量更消耗内存吗?// TODO 查看资料
-		会更消耗,一般场景下不仅编译后的字节码会比静态常量多,而且运行时也会比静态常量需要更多的内存,不过这个多取决于场景和枚举的规模等等
+		会更消耗,一般场景下不仅编译后的字节码会比静态常量多,而且运行时也会比静态常量需要更多的内存,不
+		过这个多取决于场景和枚举的规模等等
 ## 4.枚举类是如何保证线程安全的:
-	 Java 类加载与初始化是 JVM 保证线程安全,而 Java enum{} 枚举在编译器编译后的字节码实质是一个 final 类,每个枚举类型是这个 final 类中的
-	 一个静态常量属性，其属性初始化是在该 final 类的 static 块中进行,而 static 的常量属性和代码块都是在类加载时初始化完成的,
-	 所以自然就是 JVM 保证了并发安全
+	 Java 类加载与初始化是 JVM 保证线程安全,而 Java enum{} 枚举在编译器编译后的字节码实质是一个 final 类,
+	 每个枚举类型是这个 final 类中的一个静态常量属性，其属性初始化是在该 final 类的 static 块中进行,而 static 
+	 的常量属性和代码块都是在类加载时初始化完成的, 所以自然就是 JVM 保证了并发安全
 ## 5.枚举与单例模式:
 	(1).除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了 Serializable 接口后就不再是单例了,
 		因为每次调用 readObject() 方法返回的都是一个新创建出来的对象(当然可以通过使用 readResolve() 方法来避免).
-	(2).Java 规范中保证了每一个枚举类型及其定义的枚举变量在 JVM 中都是唯一的,在枚举类型的序列化和反序列化上 Java 做了特殊处理.
-		序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中,反序列化时则是通过 java.lang.Enum 的 valueOf 方法来根据名字查找枚举对象
-		同时禁用了 writeObject、readObject、readObjectNoData、writeReplace 和 readResolve 等方法
+	(2).Java 规范中保证了每一个枚举类型及其定义的枚举变量在 JVM 中都是唯一的,在枚举类型的序列化和反序列化上 Java
+		做了特殊处理.序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中,反序列化时则是通过 java.lang.Enum 的 
+		valueOf 方法来根据名字查找枚举对象同时禁用了 writeObject、readObject、readObjectNoData、writeReplace 
+		和 readResolve 等方法
 	(3).Java 枚举序列化需要注意的点:
-		如果我们枚举被序列化本地持久化了,那我们就不能删除原来枚举类型中定义的任何枚举对象,否则程序在运行过程中反序列化时 JVM 就会找不到
-		与某个名字对应的枚举对象了,所以我们要尽量避免多枚举对象序列化的使用
+		如果我们枚举被序列化本地持久化了,那我们就不能删除原来枚举类型中定义的任何枚举对象,否则程序在运行过程中反序列化时 
+		JVM 就会找不到与某个名字对应的枚举对象了,所以我们要尽量避免多枚举对象序列化的使用
 ## 6.迭代器和枚举器区别:
 	(1).Enumeration<E> 枚举器接口是1.0开始提供,适用于传统类,而 Iterator<E>迭代器接口是1.2提供,适用于 Collections
 	(2).Enumeration 只有两个方法接口,我们只能读取集合的数据而不能对数据进行修改.
 		而 Iterator 有三个方法接口,除了能读取集合的数据外也能对数据进行删除操作
 	(3).Enumeration 不支持 fail-fast 机制，而 Iterator 支持 fail-fast 机制
-		(一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生 fail-fast 机制,譬如 ConcurrentModificationException 异常)
-	尽量使用 Iterator 迭代器而不是 Enumeration 枚举器
+		(一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生 fail-fast 机制,譬如 
+		ConcurrentModificationException 异常)尽量使用 Iterator 迭代器而不是 Enumeration 枚举器
