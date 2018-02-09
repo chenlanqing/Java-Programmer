@@ -7,6 +7,7 @@
   - [2.内部类分类:](#2%E5%86%85%E9%83%A8%E7%B1%BB%E5%88%86%E7%B1%BB)
 - [二.HashMap vs. TreeMap vs. Hashtable vs. LinkedHashMap](#%E4%BA%8Chashmap-vs-treemap-vs-hashtable-vs-linkedhashmap)
   - [1.HashMap,TreeMap:](#1hashmaptreemap)
+  - [2.HashCode与HashSet关系:](#2hashcode%E4%B8%8Ehashset%E5%85%B3%E7%B3%BB)
 - [三.按照目录结构打印当前目录及子目录](#%E4%B8%89%E6%8C%89%E7%85%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E6%89%93%E5%8D%B0%E5%BD%93%E5%89%8D%E7%9B%AE%E5%BD%95%E5%8F%8A%E5%AD%90%E7%9B%AE%E5%BD%95)
 - [四.Java 关键字的意义:](#%E5%9B%9Bjava-%E5%85%B3%E9%94%AE%E5%AD%97%E7%9A%84%E6%84%8F%E4%B9%89)
   - [1.native:](#1native)
@@ -467,7 +468,7 @@
 	B:key-value空值:HashMap的key-value都可以为空(只有一个key为 null,因为不能存在两个相同的key),
 		HashTable的key-value不允许为 null;
 		TreeMap因为key是有序,因此key不能为 null,value可以为 null;
-### 2.HashCode与HashSet关系:
+## 2.HashCode与HashSet关系:
 
 # 三.按照目录结构打印当前目录及子目录
 
