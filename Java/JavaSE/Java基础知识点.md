@@ -1,4 +1,3 @@
-[TOC]
 # 一.Java 内部类:
 ## 1.为什么使用内部类?
 	使用内部类最吸引人的原因是:
@@ -92,9 +91,9 @@
 
 ### (三).方法内部类:访问仅限于方法内或者该作用域内
 	(1).局部内部类就像是方法里面的一个局部变量一样,是不能有 public、protected、private 以及 static 修饰符的
-	(2).只能访问方法中定义的 final 类型的局部变量,因为:当方法被调用运行完毕之后,局部变量就已消亡了.但内部类对象可能还存在,
-        直到没有被引用时才会消亡.此时就会出现一种情况,就是内部类要访问一个不存在的局部变量;
-		==>使用final修饰符不仅会保持对象的引用不会改变,而且编译器还会持续维护这个对象在回调方法中的生命周期.
+	(2).只能访问方法中定义的 final 类型的局部变量,因为:当方法被调用运行完毕之后,局部变量就已消亡了.但内部类对象
+		可能还存在,直到没有被引用时才会消亡.此时就会出现一种情况,就是内部类要访问一个不存在的局部变量;
+		使用final修饰符不仅会保持对象的引用不会改变,而且编译器还会持续维护这个对象在回调方法中的生命周期.
 		局部内部类并不是直接调用方法传进来的参数,而是内部类将传进来的参数通过自己的构造器备份到了自己的内部,
 		自己内部的方法调用的实际是自己的属性而不是外部类方法的参数;防止被篡改数据,而导致内部类得到的值不一致
 ```java
@@ -373,6 +372,7 @@
 ### 2.HashCode与HashSet关系:
 
 # 三.按照目录结构打印当前目录及子目录
+
 ```java
 	public class PrintDirectory {
 		public static void main(String[] args) {
@@ -472,7 +472,7 @@
 		(3).final 和 abstract 这两个关键字是反相关的,final 类就不可能是 abstract 的;
 		(4).final 方法在编译阶段绑定,称为静态绑定(static binding)
 		(5).将类、方法、变量声明为 final 能够提高性能,这样 JVM 就有机会进行估计,然后优化;
-### 4.instanceof:
+## 4.instanceof:
 	4.1.一些使用注意事项
 		(1).只能用于对象的判断,不能用于基本类型的判断;
 		(2).若左操作数是 null 则结果直接返回 false,不再运算右操作数是什么类	    
@@ -859,17 +859,15 @@
 		        System.out.println(obj);    
 		    }    
 		    list.add(1);
-		//这个操作在当前方法的上下文是合法的。
 		}
 		public void test() {    
 		    List<String> strs = new ArrayList<String>();    
 		    inspect(strs);
-		// 编译错误
+			// 编译错误
 		}
-
-		// 假设这样的做法是允许的,那么在inspect方法就可以通过list.add(1)来向集合中添加一个数字。这样在test方法看来,
-		// 其声明为List<String>的集合中却被添加了一个Integer类型的对象。这显然是违反类型安全的原则的,
-		// 在某个时候肯定会抛出ClassCastException
+		假设这样的做法是允许的,那么在inspect方法就可以通过list.add(1)来向集合中添加一个数字。这样在test方法看来,
+		其声明为List<String>的集合中却被添加了一个Integer类型的对象。这显然是违反类型安全的原则的,
+		在某个时候肯定会抛出ClassCastException
 	2.4.类型擦除后,其类的getClass() 都是一样的:
 		public class TestGeneric {
 			public static void main(String[] args) {
@@ -881,18 +879,29 @@
 		反编译之后可以看到如下:
 		public class TestGeneric
 		{
-		public static void main(String[] paramArrayOfString)
-		{
-			Class localClass1 = new ArrayList().getClass();
-			Class localClass2 = new ArrayList().getClass();
-			System.out.println(localClass1 == localClass2);
-		}
+			public static void main(String[] paramArrayOfString)
+			{
+				Class localClass1 = new ArrayList().getClass();
+				Class localClass2 = new ArrayList().getClass();
+				System.out.println(localClass1 == localClass2);
+			}
 		}
 		==> 存在 ArrayList.class 文件但是不存在 ArrayList<String>.class 文件,即便是通过 class.getTypeParameters() 方法
 			获取类型信息也只能获取到 [T] 一样的泛型参数占位符,编译后任何具体的泛型类型都被擦除了,替换为非泛型上边界,如果没有
 			指定边界则为 Object 类型,泛型类型只有在静态类型检查期间才出现.
-	2.5.为什么 Java 泛型要通过擦除来实现?
-		Java要通过擦除来实现泛型机制其实是为了兼容性考虑,只有这样才能让非泛化代码到泛化代码的转变过程建立在不破坏现有类库的实现上
+	2.5.为什么Java泛型要通过擦除来实现?
+		Java要通过擦除来实现泛型机制其实是为了兼容性考虑,只有这样才能让非泛化代码到泛化代码的转变过程建立在不破坏现有类库的实现上.
+	2.6.如下代码能否编译通过:
+		ArrayList<Integer> a = new ArrayList<>();
+		a.add(1);
+		a.getClass().getMethod("add", Object.class).invoke(a, "abc");
+		==> 因为 Integer 泛型实例在编译之后被擦除了,只保留了原始类型 Object
+	2.7.先检查再擦除的类型检查是针对引用的,用引用调用泛型方法就会对这个引用调用的方法进行类型检测而无关它真正引用的对象:
+		ArrayList b = new ArrayList<String>();
+		b.add(1);
+		b.add("aaaa");
+		上述代码编译是没有问题的
+		* 泛型中参数化类型无法支持继承关系
 ## 3.通配符与上下界:
 	3.1.在使用泛型类的时候,既可以指定一个具体的类型,也可以用通配符?来表示未知类型,如 List<?>
  	3.2.通配符所代表的其实是一组类型,但具体的类型是未知的,但是 List<?>并不等同于 List<Object>
@@ -958,7 +967,7 @@
 	(1).在代码中避免泛型类和原始类型的混用;
 	(2).在使用带通配符的泛型类的时候,需要明确通配符所代表的一组类型的概念
 
-## 八.关于 try...catch...finally:
+# 八.关于 try...catch...finally:
     (http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)
 	首先看如下例子,最终结果是什么? // false
 	public boolean returnTest(){
