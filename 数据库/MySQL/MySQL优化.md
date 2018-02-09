@@ -1,6 +1,32 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.数据库优化](#%E4%B8%80%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BC%98%E5%8C%96)
+  - [1.数据库优化的目的:](#1%E6%95%B0%E6%8D%AE%E5%BA%93%E4%BC%98%E5%8C%96%E7%9A%84%E7%9B%AE%E7%9A%84)
+  - [2.影响 mysql 性能的因素::](#2%E5%BD%B1%E5%93%8D-mysql-%E6%80%A7%E8%83%BD%E7%9A%84%E5%9B%A0%E7%B4%A0)
+  - [3.MySQL 性能优化:](#3mysql-%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96)
+  - [4.慢查询日志包含的内容:](#4%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%8C%85%E5%90%AB%E7%9A%84%E5%86%85%E5%AE%B9)
+  - [5.慢查询日志分析查看:](#5%E6%85%A2%E6%9F%A5%E8%AF%A2%E6%97%A5%E5%BF%97%E5%88%86%E6%9E%90%E6%9F%A5%E7%9C%8B)
+  - [6.分析SQL查询:](#6%E5%88%86%E6%9E%90sql%E6%9F%A5%E8%AF%A2)
+  - [7.索引优化:](#7%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96)
+  - [8.查询分析:](#8%E6%9F%A5%E8%AF%A2%E5%88%86%E6%9E%90)
+  - [9.count和max优化:](#9count%E5%92%8Cmax%E4%BC%98%E5%8C%96)
+  - [10.limit 优化:](#10limit-%E4%BC%98%E5%8C%96)
+  - [11.索引优化:](#11%E7%B4%A2%E5%BC%95%E4%BC%98%E5%8C%96)
+  - [12.表的优化:](#12%E8%A1%A8%E7%9A%84%E4%BC%98%E5%8C%96)
+  - [13.系统的优化:](#13%E7%B3%BB%E7%BB%9F%E7%9A%84%E4%BC%98%E5%8C%96)
+  - [14.批量插入大量数据:](#14%E6%89%B9%E9%87%8F%E6%8F%92%E5%85%A5%E5%A4%A7%E9%87%8F%E6%95%B0%E6%8D%AE)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
+参考资料:
 * 使用的数据库是 sakila
 * [文件地址](http://dev.mysql.com/doc/sakila/en/sakila-installation.html)
 * http://www.cnblogs.com/Qian123/p/5666569.html
+
+# 一.数据库优化
 ## 1.数据库优化的目的:
 	(1).避免页面访问出错:
 		数据库连接超时
