@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.基于 JDK6 ConcurrentHashMap 的技术原理:](#%E4%B8%80%E5%9F%BA%E4%BA%8E-jdk6-concurrenthashmap-%E7%9A%84%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
  * http://www.importnew.com/16147.html
  * https://www.ibm.com/developerworks/cn/java/java-lo-concurrenthashmap/

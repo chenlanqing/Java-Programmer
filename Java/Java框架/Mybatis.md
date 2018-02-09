@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.使用Mybatis一般过程:](#%E4%B8%80%E4%BD%BF%E7%94%A8mybatis%E4%B8%80%E8%88%AC%E8%BF%87%E7%A8%8B)
+- [二.注意:](#%E4%BA%8C%E6%B3%A8%E6%84%8F)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.使用Mybatis一般过程:
     1.创建基本配置文件mybatis-config.xml,该配置文件存放数据库连接信息以及引入mapper映射文件和缓存设置等待;
             <?xml version="1.0" encoding="UTF-8" ?>

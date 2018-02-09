@@ -1,3 +1,46 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+  - [2、压缩与解压:](#2%E5%8E%8B%E7%BC%A9%E4%B8%8E%E8%A7%A3%E5%8E%8B)
+  - [3、ls [-alrtAFR] [name...]，](#3ls--alrtafr-name)
+  - [4、date，打印当前系统的时间](#4date%E6%89%93%E5%8D%B0%E5%BD%93%E5%89%8D%E7%B3%BB%E7%BB%9F%E7%9A%84%E6%97%B6%E9%97%B4)
+  - [5、ulimit 用于限制 shell 启动进程所占用的资源，支持以下各种类型的限制：](#5ulimit-%E7%94%A8%E4%BA%8E%E9%99%90%E5%88%B6-shell-%E5%90%AF%E5%8A%A8%E8%BF%9B%E7%A8%8B%E6%89%80%E5%8D%A0%E7%94%A8%E7%9A%84%E8%B5%84%E6%BA%90%E6%94%AF%E6%8C%81%E4%BB%A5%E4%B8%8B%E5%90%84%E7%A7%8D%E7%B1%BB%E5%9E%8B%E7%9A%84%E9%99%90%E5%88%B6)
+  - [6、cd - ：返回访问过的前一个目录](#6cd---%E8%BF%94%E5%9B%9E%E8%AE%BF%E9%97%AE%E8%BF%87%E7%9A%84%E5%89%8D%E4%B8%80%E4%B8%AA%E7%9B%AE%E5%BD%95)
+  - [7、常用键盘快捷键：](#7%E5%B8%B8%E7%94%A8%E9%94%AE%E7%9B%98%E5%BF%AB%E6%8D%B7%E9%94%AE)
+- [二、Linux](#%E4%BA%8Clinux)
+  - [1、文件基础](#1%E6%96%87%E4%BB%B6%E5%9F%BA%E7%A1%80)
+  - [2、文件处理命令](#2%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4)
+  - [3、Linux系统关机问题](#3linux%E7%B3%BB%E7%BB%9F%E5%85%B3%E6%9C%BA%E9%97%AE%E9%A2%98)
+  - [4、文件与目录：](#4%E6%96%87%E4%BB%B6%E4%B8%8E%E7%9B%AE%E5%BD%95)
+  - [5、显示文件的内容](#5%E6%98%BE%E7%A4%BA%E6%96%87%E4%BB%B6%E7%9A%84%E5%86%85%E5%AE%B9)
+  - [6、	更改文件的权限](#6%09%E6%9B%B4%E6%94%B9%E6%96%87%E4%BB%B6%E7%9A%84%E6%9D%83%E9%99%90)
+  - [7、umask语法： umask xxx (这里的xxx代表三个数字)](#7umask%E8%AF%AD%E6%B3%95-umask-xxx-%E8%BF%99%E9%87%8C%E7%9A%84xxx%E4%BB%A3%E8%A1%A8%E4%B8%89%E4%B8%AA%E6%95%B0%E5%AD%97)
+  - [8、文件的特殊属性](#8%E6%96%87%E4%BB%B6%E7%9A%84%E7%89%B9%E6%AE%8A%E5%B1%9E%E6%80%A7)
+  - [9、在Linux下搜索文件:](#9%E5%9C%A8linux%E4%B8%8B%E6%90%9C%E7%B4%A2%E6%96%87%E4%BB%B6)
+  - [10、ln 建立连接档](#10ln-%E5%BB%BA%E7%AB%8B%E8%BF%9E%E6%8E%A5%E6%A1%A3)
+  - [11、Linux用户以及用户组](#11linux%E7%94%A8%E6%88%B7%E4%BB%A5%E5%8F%8A%E7%94%A8%E6%88%B7%E7%BB%84)
+  - [12、Linux磁盘管理：](#12linux%E7%A3%81%E7%9B%98%E7%AE%A1%E7%90%86)
+  - [13、文本编辑工具vim](#13%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%B7%A5%E5%85%B7vim)
+  - [14、正则表达式：](#14%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+  - [15、Linux日常管理](#15linux%E6%97%A5%E5%B8%B8%E7%AE%A1%E7%90%86)
+  - [16.iptables 规则:](#16iptables-%E8%A7%84%E5%88%99)
+- [三、Shell脚本](#%E4%B8%89shell%E8%84%9A%E6%9C%AC)
+  - [1、Shell一些简单命令](#1shell%E4%B8%80%E4%BA%9B%E7%AE%80%E5%8D%95%E5%91%BD%E4%BB%A4)
+  - [2、变量:shell预设的变量都是大写](#2%E5%8F%98%E9%87%8Fshell%E9%A2%84%E8%AE%BE%E7%9A%84%E5%8F%98%E9%87%8F%E9%83%BD%E6%98%AF%E5%A4%A7%E5%86%99)
+  - [3、linux shell中的特殊符号](#3linux-shell%E4%B8%AD%E7%9A%84%E7%89%B9%E6%AE%8A%E7%AC%A6%E5%8F%B7)
+  - [4、一些命令:](#4%E4%B8%80%E4%BA%9B%E5%91%BD%E4%BB%A4)
+  - [5、shell与if相关参数](#5shell%E4%B8%8Eif%E7%9B%B8%E5%85%B3%E5%8F%82%E6%95%B0)
+  - [7、>/dev/null 2>&1 详解](#7devnull-21-%E8%AF%A6%E8%A7%A3)
+  - [8、Shell脚本解释器：bash，sh，ash，csh，ksh](#8shell%E8%84%9A%E6%9C%AC%E8%A7%A3%E9%87%8A%E5%99%A8bashshashcshksh)
+  - [9、编译型语言和解释型语言。](#9%E7%BC%96%E8%AF%91%E5%9E%8B%E8%AF%AD%E8%A8%80%E5%92%8C%E8%A7%A3%E9%87%8A%E5%9E%8B%E8%AF%AD%E8%A8%80)
+  - [10、shell脚本：](#10shell%E8%84%9A%E6%9C%AC)
+  - [11、字符串](#11%E5%AD%97%E7%AC%A6%E4%B8%B2)
+  - [12、Shell数组：](#12shell%E6%95%B0%E7%BB%84)
+  - [13、case语句为多选择语句。可以用case语句匹配一个值与一个模式，如果匹配成功，执行相匹配的命令。case语句格式如下：](#13case%E8%AF%AD%E5%8F%A5%E4%B8%BA%E5%A4%9A%E9%80%89%E6%8B%A9%E8%AF%AD%E5%8F%A5%E5%8F%AF%E4%BB%A5%E7%94%A8case%E8%AF%AD%E5%8F%A5%E5%8C%B9%E9%85%8D%E4%B8%80%E4%B8%AA%E5%80%BC%E4%B8%8E%E4%B8%80%E4%B8%AA%E6%A8%A1%E5%BC%8F%E5%A6%82%E6%9E%9C%E5%8C%B9%E9%85%8D%E6%88%90%E5%8A%9F%E6%89%A7%E8%A1%8C%E7%9B%B8%E5%8C%B9%E9%85%8D%E7%9A%84%E5%91%BD%E4%BB%A4case%E8%AF%AD%E5%8F%A5%E6%A0%BC%E5%BC%8F%E5%A6%82%E4%B8%8B)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 * http://www.92csz.com/study/linux/12.htm
 * http://see.xidian.edu.cn/cpp/view/6994.html

@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1、SVN创建版本库:](#1svn%E5%88%9B%E5%BB%BA%E7%89%88%E6%9C%AC%E5%BA%93)
+- [2、启动服务端程序:](#2%E5%90%AF%E5%8A%A8%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%A8%8B%E5%BA%8F)
+- [3.从Eclipse中上传项目:](#3%E4%BB%8Eeclipse%E4%B8%AD%E4%B8%8A%E4%BC%A0%E9%A1%B9%E7%9B%AE)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 1、SVN创建版本库:
 	在需创建的文件目录下，执行
 	svnadmin create D:\Dev\svnrep\oa

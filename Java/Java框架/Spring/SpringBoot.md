@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.Spring Boot 启动方式:](#1spring-boot-%E5%90%AF%E5%8A%A8%E6%96%B9%E5%BC%8F)
+- [2.Spring Boot 配置](#2spring-boot-%E9%85%8D%E7%BD%AE)
+- [3.Controller:](#3controller)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 [Spring Boot 启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
 #### 1.Spring Boot 启动方式:
 	(1).直接运行 main 方法

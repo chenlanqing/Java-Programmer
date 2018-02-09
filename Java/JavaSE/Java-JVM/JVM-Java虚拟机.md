@@ -1,3 +1,25 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [0.虚拟机历史:(阅读书籍:《深入理解Java虚拟机》)](#0%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%8E%86%E5%8F%B2%E9%98%85%E8%AF%BB%E4%B9%A6%E7%B1%8D%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3java%E8%99%9A%E6%8B%9F%E6%9C%BA)
+- [1.Java 代码编译和执行的整个过程:](#1java-%E4%BB%A3%E7%A0%81%E7%BC%96%E8%AF%91%E5%92%8C%E6%89%A7%E8%A1%8C%E7%9A%84%E6%95%B4%E4%B8%AA%E8%BF%87%E7%A8%8B)
+- [2.Java 内存区域](#2java-%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F)
+- [3.内存溢出与内存泄漏:](#3%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA%E4%B8%8E%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F)
+- [4.对象访问与内存分配:](#4%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E4%B8%8E%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D)
+- [5.Class 类文件结构:](#5class-%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84)
+- [6.虚拟机类加载机制:](#6%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6)
+- [7.字节码执行引擎:](#7%E5%AD%97%E8%8A%82%E7%A0%81%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E)
+- [8.方法调用:多态性实现机制——静态分派与动态分派://](#8%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E5%A4%9A%E6%80%81%E6%80%A7%E5%AE%9E%E7%8E%B0%E6%9C%BA%E5%88%B6%E9%9D%99%E6%80%81%E5%88%86%E6%B4%BE%E4%B8%8E%E5%8A%A8%E6%80%81%E5%88%86%E6%B4%BE)
+- [9.Java 语法糖:](#9java-%E8%AF%AD%E6%B3%95%E7%B3%96)
+- [10.Java 编译:](#10java-%E7%BC%96%E8%AF%91)
+- [11.Java 垃圾收集机制 :](#11java-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E6%9C%BA%E5%88%B6-)
+- [12.虚拟机监控及故障处理](#12%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9B%91%E6%8E%A7%E5%8F%8A%E6%95%85%E9%9A%9C%E5%A4%84%E7%90%86)
+- [13.JVM 虚拟机调优:](#13jvm-%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%B0%83%E4%BC%98)
+- [14.JVM 优化技术:](#14jvm-%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 参考文章：
 * [Java内存区域与内存溢出](http://www.importnew.com/19946.html)
 * [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)

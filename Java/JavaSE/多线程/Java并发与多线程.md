@@ -1,3 +1,51 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.并发与多线程简介:](#%E4%B8%80%E5%B9%B6%E5%8F%91%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%AE%80%E4%BB%8B)
+  - [1.多线程优点:](#1%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%BC%98%E7%82%B9)
+  - [2.多线程的代价:](#2%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BB%A3%E4%BB%B7)
+  - [3.并发编程模型:](#3%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B)
+- [二.Java 多线程:](#%E4%BA%8Cjava-%E5%A4%9A%E7%BA%BF%E7%A8%8B)
+  - [1.Java 线程类是继承自 java.lang.Thread 或其子类的,](#1java-%E7%BA%BF%E7%A8%8B%E7%B1%BB%E6%98%AF%E7%BB%A7%E6%89%BF%E8%87%AA-javalangthread-%E6%88%96%E5%85%B6%E5%AD%90%E7%B1%BB%E7%9A%84)
+  - [2.线程的创建及状态变化](#2%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%8F%8A%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96)
+  - [3.竞态条件与临界区:](#3%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E4%B8%8E%E4%B8%B4%E7%95%8C%E5%8C%BA)
+  - [4.线程安全与共享资源:](#4%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E5%85%B1%E4%BA%AB%E8%B5%84%E6%BA%90)
+  - [5.synchronized 关键字:](#5synchronized-%E5%85%B3%E9%94%AE%E5%AD%97)
+  - [6.synchronized 同步块:](#6synchronized-%E5%90%8C%E6%AD%A5%E5%9D%97)
+  - [7.synchronized 底层实现及 synchronized 锁优化.](#7synchronized-%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0%E5%8F%8A-synchronized-%E9%94%81%E4%BC%98%E5%8C%96)
+  - [8.volatile:](#8volatile)
+  - [9.线程安全及不可变性:](#9%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%8F%8A%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7)
+  - [10.线程通信:](#10%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1)
+  - [11.ThreadLocal 类:](#11threadlocal-%E7%B1%BB)
+  - [12.深入理解 ThreadLocal:](#12%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3-threadlocal)
+  - [13.死锁:](#13%E6%AD%BB%E9%94%81)
+  - [14.饥饿和公平:](#14%E9%A5%A5%E9%A5%BF%E5%92%8C%E5%85%AC%E5%B9%B3)
+- [三.JUC(java.util.concurrent)包](#%E4%B8%89jucjavautilconcurrent%E5%8C%85)
+  - [1.JUC 原子类:](#1juc-%E5%8E%9F%E5%AD%90%E7%B1%BB)
+  - [2.锁的相关概念:](#2%E9%94%81%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5)
+  - [3.独占锁:](#3%E7%8B%AC%E5%8D%A0%E9%94%81)
+  - [4.共享锁:读写锁:ReentrantReadWriteLock, 闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore](#4%E5%85%B1%E4%BA%AB%E9%94%81%E8%AF%BB%E5%86%99%E9%94%81reentrantreadwritelock-%E9%97%AD%E9%94%81countdownlatch-%E6%A0%85%E6%A0%8Fcyclicbarrier%E4%BF%A1%E5%8F%B7%E9%87%8Fsemaphore)
+  - [5.Condition](#5condition)
+  - [6.LockSupport:](#6locksupport)
+  - [5.Callable](#5callable)
+- [四.JUC 中集合类:](#%E5%9B%9Bjuc-%E4%B8%AD%E9%9B%86%E5%90%88%E7%B1%BB)
+  - [1.JUC 集合类:](#1juc-%E9%9B%86%E5%90%88%E7%B1%BB)
+  - [2.CopyOnWriteArrayList:](#2copyonwritearraylist)
+  - [3.CopyOnWriteArraySet:](#3copyonwritearrayset)
+  - [4.ConcurrentHashMap:](#4concurrenthashmap)
+  - [5.ConcurrentSkipListMap:](#5concurrentskiplistmap)
+  - [6.ConcurrentSkipListSet:](#6concurrentskiplistset)
+  - [7.ArrayBlockingQueue:](#7arrayblockingqueue)
+  - [8.LinkedBlockingQueue:](#8linkedblockingqueue)
+  - [9.LinkedBlockingDeque:](#9linkedblockingdeque)
+  - [10.ConcurrentLinkedQueue:](#10concurrentlinkedqueue)
+- [五.JUC 包核心与算法](#%E4%BA%94juc-%E5%8C%85%E6%A0%B8%E5%BF%83%E4%B8%8E%E7%AE%97%E6%B3%95)
+  - [1.AQS:AbstractQueuedSynchronizer,抽象队列同步器](#1aqsabstractqueuedsynchronizer%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
+  - [2.CAS:Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
  参考资料:
  * http://ifeve.com/java-concurrency-thread-directory/

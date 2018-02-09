@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.关于Javascript继承:](#1%E5%85%B3%E4%BA%8Ejavascript%E7%BB%A7%E6%89%BF)
+- [2.原型:](#2%E5%8E%9F%E5%9E%8B)
+- [3.原型继承:](#3%E5%8E%9F%E5%9E%8B%E7%BB%A7%E6%89%BF)
+- [4.关于原型的例子:](#4%E5%85%B3%E4%BA%8E%E5%8E%9F%E5%9E%8B%E7%9A%84%E4%BE%8B%E5%AD%90)
+- [5.JavaScript 中两个内置函数对象: Function, Object](#5javascript-%E4%B8%AD%E4%B8%A4%E4%B8%AA%E5%86%85%E7%BD%AE%E5%87%BD%E6%95%B0%E5%AF%B9%E8%B1%A1-function-object)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 * http://www.nowamagic.net/librarys/veda/detail/1648
 * http://web.jobbole.com/9648/

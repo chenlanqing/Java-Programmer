@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.关于 System.nanoTime() 与 System.currentTimeMillis(),三个问题:](#1%E5%85%B3%E4%BA%8E-systemnanotime-%E4%B8%8E-systemcurrenttimemillis%E4%B8%89%E4%B8%AA%E9%97%AE%E9%A2%98)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 1.关于 System.nanoTime() 与 System.currentTimeMillis(),三个问题:
 	* https://yq.aliyun.com/articles/67089?spm=5176.8091938.0.0.eWP39h
 	(1).在mac下发现System.nanoTime()在JDK7和JDK8下输出的值怎么完全不一样?

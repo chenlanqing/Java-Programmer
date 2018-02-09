@@ -1,3 +1,23 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.索引:](#1%E7%B4%A2%E5%BC%95)
+- [2.索引分类:](#2%E7%B4%A2%E5%BC%95%E5%88%86%E7%B1%BB)
+- [3.索引的语法:](#3%E7%B4%A2%E5%BC%95%E7%9A%84%E8%AF%AD%E6%B3%95)
+- [4.索引的结构:](#4%E7%B4%A2%E5%BC%95%E7%9A%84%E7%BB%93%E6%9E%84)
+- [5.哪些情况需要创建索引](#5%E5%93%AA%E4%BA%9B%E6%83%85%E5%86%B5%E9%9C%80%E8%A6%81%E5%88%9B%E5%BB%BA%E7%B4%A2%E5%BC%95)
+- [6.哪些情况不需要创建索引:](#6%E5%93%AA%E4%BA%9B%E6%83%85%E5%86%B5%E4%B8%8D%E9%9C%80%E8%A6%81%E5%88%9B%E5%BB%BA%E7%B4%A2%E5%BC%95)
+- [7.索引失效:](#7%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88)
+- [8.索引建立的原则:M](#8%E7%B4%A2%E5%BC%95%E5%BB%BA%E7%AB%8B%E7%9A%84%E5%8E%9F%E5%88%99m)
+- [9.索引的结构及底层实现](#9%E7%B4%A2%E5%BC%95%E7%9A%84%E7%BB%93%E6%9E%84%E5%8F%8A%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0)
+- [10.MySQL 创建索引时在 MySQL5.5 以下的版本中会锁表](#10mysql-%E5%88%9B%E5%BB%BA%E7%B4%A2%E5%BC%95%E6%97%B6%E5%9C%A8-mysql55-%E4%BB%A5%E4%B8%8B%E7%9A%84%E7%89%88%E6%9C%AC%E4%B8%AD%E4%BC%9A%E9%94%81%E8%A1%A8)
+- [1.索引的类型:](#1%E7%B4%A2%E5%BC%95%E7%9A%84%E7%B1%BB%E5%9E%8B)
+- [2.索引的使用:](#2%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BD%BF%E7%94%A8)
+- [4.索引使用的原则:](#4%E7%B4%A2%E5%BC%95%E4%BD%BF%E7%94%A8%E7%9A%84%E5%8E%9F%E5%88%99)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
  * [MySQL索引](http://blog.jobbole.com/98899/)
  * [理解MySQL索引](http://www.cnblogs.com/hustcat/archive/2009/10/28/1591648.html)

@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [四.HashMap 的存取实现:](#%E5%9B%9Bhashmap-%E7%9A%84%E5%AD%98%E5%8F%96%E5%AE%9E%E7%8E%B0)
+- [五.高并发下 HashMap 的使用的问题:](#%E4%BA%94%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B-hashmap-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
  * http://www.codeceo.com/article/java8-hashmap-learn.html
  * http://www.hollischuang.com/archives/82
  * http://www.importnew.com/16599.html

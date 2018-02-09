@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.Spring整合Hibernate:](#%E4%B8%80spring%E6%95%B4%E5%90%88hibernate)
+- [二.Spring 整合 Struts2:](#%E4%BA%8Cspring-%E6%95%B4%E5%90%88-struts2)
+- [三.Spring整合Hibernate和Struts2](#%E4%B8%89spring%E6%95%B4%E5%90%88hibernate%E5%92%8Cstruts2)
+- [四.Spring整合Mybatis](#%E5%9B%9Bspring%E6%95%B4%E5%90%88mybatis)
+- [五.Spring与SpringMVC](#%E4%BA%94spring%E4%B8%8Espringmvc)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.Spring整合Hibernate:
 #### 1.Spring整合Hibernate的优点:
 	(1).使用Spring的 IOC 容器来管理 Hibernate 的 SessionFactory;

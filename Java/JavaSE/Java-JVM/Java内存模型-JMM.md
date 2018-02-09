@@ -1,3 +1,36 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [二.Java 内存模型基础:](#%E4%BA%8Cjava-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9F%BA%E7%A1%80)
+  - [1.并发编程模型分类:](#1%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B%E5%88%86%E7%B1%BB)
+  - [2.Java 并发编程模型:](#2java-%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B)
+  - [3.Java 内存模型的抽象](#3java-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E7%9A%84%E6%8A%BD%E8%B1%A1)
+  - [4.指令重排序:](#4%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E5%BA%8F)
+  - [5.happens-before:先行发生](#5happens-before%E5%85%88%E8%A1%8C%E5%8F%91%E7%94%9F)
+- [三.JMM-重排序:](#%E4%B8%89jmm-%E9%87%8D%E6%8E%92%E5%BA%8F)
+  - [1.数据依赖性:](#1%E6%95%B0%E6%8D%AE%E4%BE%9D%E8%B5%96%E6%80%A7)
+  - [2.as-if-serial语义:](#2as-if-serial%E8%AF%AD%E4%B9%89)
+  - [3.程序顺序规则:](#3%E7%A8%8B%E5%BA%8F%E9%A1%BA%E5%BA%8F%E8%A7%84%E5%88%99)
+  - [4.重排序对多线程的影响:](#4%E9%87%8D%E6%8E%92%E5%BA%8F%E5%AF%B9%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%BD%B1%E5%93%8D)
+- [四.JMM-顺序一致性](#%E5%9B%9Bjmm-%E9%A1%BA%E5%BA%8F%E4%B8%80%E8%87%B4%E6%80%A7)
+  - [1.数据竞争与顺序一致性保证:](#1%E6%95%B0%E6%8D%AE%E7%AB%9E%E4%BA%89%E4%B8%8E%E9%A1%BA%E5%BA%8F%E4%B8%80%E8%87%B4%E6%80%A7%E4%BF%9D%E8%AF%81)
+  - [3.同步程序的顺序一致性效果:](#3%E5%90%8C%E6%AD%A5%E7%A8%8B%E5%BA%8F%E7%9A%84%E9%A1%BA%E5%BA%8F%E4%B8%80%E8%87%B4%E6%80%A7%E6%95%88%E6%9E%9C)
+  - [4.未同步程序的执行特性:](#4%E6%9C%AA%E5%90%8C%E6%AD%A5%E7%A8%8B%E5%BA%8F%E7%9A%84%E6%89%A7%E8%A1%8C%E7%89%B9%E6%80%A7)
+- [五.volatile 的特性:](#%E4%BA%94volatile-%E7%9A%84%E7%89%B9%E6%80%A7)
+  - [2.volatile写-读建立的happens before关系:从JSR-133开始，volatile变量的写-读可以实现线程之间的通信](#2volatile%E5%86%99-%E8%AF%BB%E5%BB%BA%E7%AB%8B%E7%9A%84happens-before%E5%85%B3%E7%B3%BB%E4%BB%8Ejsr-133%E5%BC%80%E5%A7%8Bvolatile%E5%8F%98%E9%87%8F%E7%9A%84%E5%86%99-%E8%AF%BB%E5%8F%AF%E4%BB%A5%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E4%B9%8B%E9%97%B4%E7%9A%84%E9%80%9A%E4%BF%A1)
+  - [4.volatile内存语义的实现:](#4volatile%E5%86%85%E5%AD%98%E8%AF%AD%E4%B9%89%E7%9A%84%E5%AE%9E%E7%8E%B0)
+  - [5.volatile 和 synchronized 的区别:](#5volatile-%E5%92%8C-synchronized-%E7%9A%84%E5%8C%BA%E5%88%AB)
+- [六.锁:](#%E5%85%AD%E9%94%81)
+  - [1.锁的释放-获取建立的happens before 关系](#1%E9%94%81%E7%9A%84%E9%87%8A%E6%94%BE-%E8%8E%B7%E5%8F%96%E5%BB%BA%E7%AB%8B%E7%9A%84happens-before-%E5%85%B3%E7%B3%BB)
+  - [2.锁释放和获取的内存语义:](#2%E9%94%81%E9%87%8A%E6%94%BE%E5%92%8C%E8%8E%B7%E5%8F%96%E7%9A%84%E5%86%85%E5%AD%98%E8%AF%AD%E4%B9%89)
+  - [3.锁内存语义的实现:](#3%E9%94%81%E5%86%85%E5%AD%98%E8%AF%AD%E4%B9%89%E7%9A%84%E5%AE%9E%E7%8E%B0)
+  - [4.java.util.concurrent包的实现](#4javautilconcurrent%E5%8C%85%E7%9A%84%E5%AE%9E%E7%8E%B0)
+- [七.final:](#%E4%B8%83final)
+- [八.处理器内存模型:](#%E5%85%AB%E5%A4%84%E7%90%86%E5%99%A8%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
  参考文章
  * http://www.cnblogs.com/dolphin0520/p/3920373.html

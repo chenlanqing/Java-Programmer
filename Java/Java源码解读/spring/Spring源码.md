@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.Spring 的整体架构:](#1spring-%E7%9A%84%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84)
+- [2.](#2)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 1.Spring 的整体架构:
 	1.1.Core Container:核心容器,包含 Core、Beans、Context、Expression Language 模块
 		Core 和 Beans 模块是框架的基础部分,提供 IOC 和依赖注入特性.这里的基础概念是 BeanFactory,它提供对 Factory 

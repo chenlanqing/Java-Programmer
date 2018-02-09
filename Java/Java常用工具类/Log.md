@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、Java中常用的日志方式有三种：](#%E4%B8%80java%E4%B8%AD%E5%B8%B8%E7%94%A8%E7%9A%84%E6%97%A5%E5%BF%97%E6%96%B9%E5%BC%8F%E6%9C%89%E4%B8%89%E7%A7%8D)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一、Java中常用的日志方式有三种：
 	jdk自带、common-logging、Log4j、Slf4j、Logback
 

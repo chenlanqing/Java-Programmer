@@ -1,3 +1,48 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.GC(GarbageCollection):垃圾回收,Java 的内存管理实际上就是对象的管理](#%E4%B8%80gcgarbagecollection%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6java-%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%AE%9E%E9%99%85%E4%B8%8A%E5%B0%B1%E6%98%AF%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%AE%A1%E7%90%86)
+  - [1.垃圾回收机制的意义:](#1%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%E6%84%8F%E4%B9%89)
+  - [2.如何确定对象为垃圾对象:](#2%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E5%AF%B9%E8%B1%A1%E4%B8%BA%E5%9E%83%E5%9C%BE%E5%AF%B9%E8%B1%A1)
+  - [3.GC 回收区域:](#3gc-%E5%9B%9E%E6%94%B6%E5%8C%BA%E5%9F%9F)
+- [二.垃圾回收机制的对象判断算法:](#%E4%BA%8C%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%E5%AF%B9%E8%B1%A1%E5%88%A4%E6%96%AD%E7%AE%97%E6%B3%95)
+  - [1.引用计数算法:Reference Counting Collector](#1%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E7%AE%97%E6%B3%95reference-counting-collector)
+  - [2.可达性分析算法:主流的实现,判定对象的存活](#2%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95%E4%B8%BB%E6%B5%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%A4%E5%AE%9A%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%AD%98%E6%B4%BB)
+  - [3.再谈引用:](#3%E5%86%8D%E8%B0%88%E5%BC%95%E7%94%A8)
+  - [4.对象的生存或死亡:](#4%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%94%9F%E5%AD%98%E6%88%96%E6%AD%BB%E4%BA%A1)
+  - [5.回收方法区:](#5%E5%9B%9E%E6%94%B6%E6%96%B9%E6%B3%95%E5%8C%BA)
+- [三.垃圾收集算法:](#%E4%B8%89%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95)
+  - [1.标记-清除算法(Marke-Sweep):最基础的收集算法](#1%E6%A0%87%E8%AE%B0-%E6%B8%85%E9%99%A4%E7%AE%97%E6%B3%95marke-sweep%E6%9C%80%E5%9F%BA%E7%A1%80%E7%9A%84%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95)
+  - [2.标记-整理算法(Mark-Compact):](#2%E6%A0%87%E8%AE%B0-%E6%95%B4%E7%90%86%E7%AE%97%E6%B3%95mark-compact)
+  - [3.复制算法(Copying):该算法的提出是为了克服句柄的开销和解决堆碎片的垃圾回收](#3%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95copying%E8%AF%A5%E7%AE%97%E6%B3%95%E7%9A%84%E6%8F%90%E5%87%BA%E6%98%AF%E4%B8%BA%E4%BA%86%E5%85%8B%E6%9C%8D%E5%8F%A5%E6%9F%84%E7%9A%84%E5%BC%80%E9%94%80%E5%92%8C%E8%A7%A3%E5%86%B3%E5%A0%86%E7%A2%8E%E7%89%87%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6)
+  - [4.分代收集算法(Generation Collection):基于不同的对象的生命周期是不一样的](#4%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95generation-collection%E5%9F%BA%E4%BA%8E%E4%B8%8D%E5%90%8C%E7%9A%84%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E6%98%AF%E4%B8%8D%E4%B8%80%E6%A0%B7%E7%9A%84)
+- [四.垃圾收集器:内存回收的具体实现](#%E5%9B%9B%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E7%9A%84%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0)
+  - [1.Serial 收集器:](#1serial-%E6%94%B6%E9%9B%86%E5%99%A8)
+  - [2.ParNew 收集器:](#2parnew-%E6%94%B6%E9%9B%86%E5%99%A8)
+  - [3.Parallel Scavenge 收集器](#3parallel-scavenge-%E6%94%B6%E9%9B%86%E5%99%A8)
+  - [4.Serial Old 收集器:Serial 收集器的老年代版本,采用标记-整理算法实现](#4serial-old-%E6%94%B6%E9%9B%86%E5%99%A8serial-%E6%94%B6%E9%9B%86%E5%99%A8%E7%9A%84%E8%80%81%E5%B9%B4%E4%BB%A3%E7%89%88%E6%9C%AC%E9%87%87%E7%94%A8%E6%A0%87%E8%AE%B0-%E6%95%B4%E7%90%86%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0)
+  - [5.Parallel Old 收集器:](#5parallel-old-%E6%94%B6%E9%9B%86%E5%99%A8)
+  - [6.CMS(Concurrent Mark Sweep) 收集器:](#6cmsconcurrent-mark-sweep-%E6%94%B6%E9%9B%86%E5%99%A8)
+  - [7.G1 收集器(Garbage First):面向服务端应用的垃圾收集器](#7g1-%E6%94%B6%E9%9B%86%E5%99%A8garbage-first%E9%9D%A2%E5%90%91%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%BA%94%E7%94%A8%E7%9A%84%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
+- [五.GC 执行机制:Minor GC 和 Full GC](#%E4%BA%94gc-%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6minor-gc-%E5%92%8C-full-gc)
+  - [1.Minor GC:](#1minor-gc)
+  - [2.Full GC:对整个堆进行整理,包括 新生代,老年代和持久代](#2full-gc%E5%AF%B9%E6%95%B4%E4%B8%AA%E5%A0%86%E8%BF%9B%E8%A1%8C%E6%95%B4%E7%90%86%E5%8C%85%E6%8B%AC-%E6%96%B0%E7%94%9F%E4%BB%A3%E8%80%81%E5%B9%B4%E4%BB%A3%E5%92%8C%E6%8C%81%E4%B9%85%E4%BB%A3)
+  - [3.内存回收与分配策略:](#3%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E4%B8%8E%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5)
+- [六.详解 finalize()方法:finalize是位于 Object 类的一个方法,该方法的访问修饰符为 protected](#%E5%85%AD%E8%AF%A6%E8%A7%A3-finalize%E6%96%B9%E6%B3%95finalize%E6%98%AF%E4%BD%8D%E4%BA%8E-object-%E7%B1%BB%E7%9A%84%E4%B8%80%E4%B8%AA%E6%96%B9%E6%B3%95%E8%AF%A5%E6%96%B9%E6%B3%95%E7%9A%84%E8%AE%BF%E9%97%AE%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%BA-protected)
+- [七.Java 有了GC同样会出现内存泄露问题](#%E4%B8%83java-%E6%9C%89%E4%BA%86gc%E5%90%8C%E6%A0%B7%E4%BC%9A%E5%87%BA%E7%8E%B0%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2%E9%97%AE%E9%A2%98)
+- [八.如何优化 GC](#%E5%85%AB%E5%A6%82%E4%BD%95%E4%BC%98%E5%8C%96-gc)
+  - [1.监控 GC:](#1%E7%9B%91%E6%8E%A7-gc)
+  - [2.GC 优化:如果你没有设定内存的大小,并且系统充斥着大量的超时日志时,你就需要在你的系统中进行GC优化了](#2gc-%E4%BC%98%E5%8C%96%E5%A6%82%E6%9E%9C%E4%BD%A0%E6%B2%A1%E6%9C%89%E8%AE%BE%E5%AE%9A%E5%86%85%E5%AD%98%E7%9A%84%E5%A4%A7%E5%B0%8F%E5%B9%B6%E4%B8%94%E7%B3%BB%E7%BB%9F%E5%85%85%E6%96%A5%E7%9D%80%E5%A4%A7%E9%87%8F%E7%9A%84%E8%B6%85%E6%97%B6%E6%97%A5%E5%BF%97%E6%97%B6%E4%BD%A0%E5%B0%B1%E9%9C%80%E8%A6%81%E5%9C%A8%E4%BD%A0%E7%9A%84%E7%B3%BB%E7%BB%9F%E4%B8%AD%E8%BF%9B%E8%A1%8Cgc%E4%BC%98%E5%8C%96%E4%BA%86)
+- [九.减少GC开销:](#%E4%B9%9D%E5%87%8F%E5%B0%91gc%E5%BC%80%E9%94%80)
+  - [1.避免隐式的 String 字符串:](#1%E9%81%BF%E5%85%8D%E9%9A%90%E5%BC%8F%E7%9A%84-string-%E5%AD%97%E7%AC%A6%E4%B8%B2)
+  - [2.计划好 List 的容量](#2%E8%AE%A1%E5%88%92%E5%A5%BD-list-%E7%9A%84%E5%AE%B9%E9%87%8F)
+  - [3.使用高效的含有原始类型的集合:](#3%E4%BD%BF%E7%94%A8%E9%AB%98%E6%95%88%E7%9A%84%E5%90%AB%E6%9C%89%E5%8E%9F%E5%A7%8B%E7%B1%BB%E5%9E%8B%E7%9A%84%E9%9B%86%E5%90%88)
+  - [4.使用数据流(Streams)代替内存缓冲区（in-memory buffers）](#4%E4%BD%BF%E7%94%A8%E6%95%B0%E6%8D%AE%E6%B5%81streams%E4%BB%A3%E6%9B%BF%E5%86%85%E5%AD%98%E7%BC%93%E5%86%B2%E5%8C%BAin-memory-buffers)
+  - [5.List 集合](#5list-%E9%9B%86%E5%90%88)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 参考文章:
  * [深入理解java垃圾回收机制](http://www.cnblogs.com/sunniest/p/4575144.html)

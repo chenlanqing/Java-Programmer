@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.ls命令](#%E4%B8%80ls%E5%91%BD%E4%BB%A4)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## 一.ls命令
     1.列出/home/chenlanqing文件夹下的所有文件和目录的详细资料:
     ls -l -R 

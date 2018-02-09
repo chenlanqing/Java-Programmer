@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [三.抽象工厂](#%E4%B8%89%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * http://www.jasongj.com/design_pattern/simple_factory/
 * http://www.cnblogs.com/zuoxiaolong/p/pattern4.html
 # 一.简单工厂-静态工厂方法:由一个工厂对象决定创建出哪一种产品类的实例

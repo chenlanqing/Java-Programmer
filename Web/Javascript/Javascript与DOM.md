@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+  - [节点层次:](#%E8%8A%82%E7%82%B9%E5%B1%82%E6%AC%A1)
+- [一.DOM 需要注意的点:](#%E4%B8%80dom-%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E7%82%B9)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## 节点层次:
 	(1).Document:
 		nodeType : 9

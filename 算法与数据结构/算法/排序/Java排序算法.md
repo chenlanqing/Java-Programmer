@@ -1,3 +1,19 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.冒泡排序:时间复杂度 O(n^2)](#1%E5%86%92%E6%B3%A1%E6%8E%92%E5%BA%8F%E6%97%B6%E9%97%B4%E5%A4%8D%E6%9D%82%E5%BA%A6-on%5E2)
+- [2.选择排序:O(n^2)](#2%E9%80%89%E6%8B%A9%E6%8E%92%E5%BA%8Fon%5E2)
+- [3.插入排序:O(n^2)](#3%E6%8F%92%E5%85%A5%E6%8E%92%E5%BA%8Fon%5E2)
+- [4.归并排序:O(n * log n)](#4%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8Fon--log-n)
+- [5.快速排序:类似于归并排序](#5%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F%E7%B1%BB%E4%BC%BC%E4%BA%8E%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F)
+- [6.归并排序和快速排序衍生的问题:](#6%E5%BD%92%E5%B9%B6%E6%8E%92%E5%BA%8F%E5%92%8C%E5%BF%AB%E9%80%9F%E6%8E%92%E5%BA%8F%E8%A1%8D%E7%94%9F%E7%9A%84%E9%97%AE%E9%A2%98)
+- [7.堆排序:堆就是完全二叉树，堆是优先队列](#7%E5%A0%86%E6%8E%92%E5%BA%8F%E5%A0%86%E5%B0%B1%E6%98%AF%E5%AE%8C%E5%85%A8%E4%BA%8C%E5%8F%89%E6%A0%91%E5%A0%86%E6%98%AF%E4%BC%98%E5%85%88%E9%98%9F%E5%88%97)
+- [8.跟堆相关的问题:](#8%E8%B7%9F%E5%A0%86%E7%9B%B8%E5%85%B3%E7%9A%84%E9%97%AE%E9%A2%98)
+- [9.希尔排序:](#9%E5%B8%8C%E5%B0%94%E6%8E%92%E5%BA%8F)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## 1.冒泡排序:时间复杂度 O(n^2)
 	(1).基本思想:在要排序的一组数中,对当前还未排好序的范围内的全部数,自上而下对相邻的两个数依次进行比较和调整,
 		让较大的数往下沉，较小的往上冒。即：每当两相邻的数比较后发现它们的排序与排序要求相反时,就将它们互换

@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.静态资源web服务:](#%E4%B8%80%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90web%E6%9C%8D%E5%8A%A1)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * yum -y install wget httpd-tools vim
 * yum -y install gcc gcc-c++ autoconf pcre pcre-devel make automake
 * cd /opt; mkdir app download log work backup

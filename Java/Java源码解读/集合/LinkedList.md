@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.类的定义(签名):](#%E4%B8%80%E7%B1%BB%E7%9A%84%E5%AE%9A%E4%B9%89%E7%AD%BE%E5%90%8D)
+- [二.属性:](#%E4%BA%8C%E5%B1%9E%E6%80%A7)
+- [三.构造方法:](#%E4%B8%89%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
+- [四.方法:](#%E5%9B%9B%E6%96%B9%E6%B3%95)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # 一.类的定义(签名):
 	public class LinkedList<E> extends AbstractSequentialList<E> 

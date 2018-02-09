@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.关于自执行函数:使用闭包保存状态](#1%E5%85%B3%E4%BA%8E%E8%87%AA%E6%89%A7%E8%A1%8C%E5%87%BD%E6%95%B0%E4%BD%BF%E7%94%A8%E9%97%AD%E5%8C%85%E4%BF%9D%E5%AD%98%E7%8A%B6%E6%80%81)
+- [2.关于<a>标签中执行函数的写法:](#2%E5%85%B3%E4%BA%8Ea%E6%A0%87%E7%AD%BE%E4%B8%AD%E6%89%A7%E8%A1%8C%E5%87%BD%E6%95%B0%E7%9A%84%E5%86%99%E6%B3%95)
+- [3.parseInt('string', radix):可解析一个字符串，并返回一个整数](#3parseintstring-radix%E5%8F%AF%E8%A7%A3%E6%9E%90%E4%B8%80%E4%B8%AA%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%B9%B6%E8%BF%94%E5%9B%9E%E4%B8%80%E4%B8%AA%E6%95%B4%E6%95%B0)
+- [4.关于Javascript中数字的部分知识总结：](#4%E5%85%B3%E4%BA%8Ejavascript%E4%B8%AD%E6%95%B0%E5%AD%97%E7%9A%84%E9%83%A8%E5%88%86%E7%9F%A5%E8%AF%86%E6%80%BB%E7%BB%93)
+- [5.不要在Javascript中使用连等操作:](#5%E4%B8%8D%E8%A6%81%E5%9C%A8javascript%E4%B8%AD%E4%BD%BF%E7%94%A8%E8%BF%9E%E7%AD%89%E6%93%8D%E4%BD%9C)
+- [6.JavaScript的分号插入机制](#6javascript%E7%9A%84%E5%88%86%E5%8F%B7%E6%8F%92%E5%85%A5%E6%9C%BA%E5%88%B6)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## 1.关于自执行函数:使用闭包保存状态
 	(1).页面有10个<a>标签,按如下代码点击<a>标签,结果是怎样的?
 		// 这个代码是错误的，因为变量i从来就没背locked住

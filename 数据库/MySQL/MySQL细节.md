@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.MySQL自增主键问题:](#1mysql%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E9%97%AE%E9%A2%98)
+- [2.](#2)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ### 1.MySQL自增主键问题:
     * 一张表里有自增主键,当自增到 17后,删除了低15,16,17三条记录,再把mysql重启,在插入一条记录,该记录的ID是18还是15?
 	1.1.AUTO_INCREMENT 列在 InnoDB 里如何工作:

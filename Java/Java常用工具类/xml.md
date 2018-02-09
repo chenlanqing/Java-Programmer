@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [三、XML](#%E4%B8%89xml)
+- [四、XML解析:](#%E5%9B%9Bxml%E8%A7%A3%E6%9E%90)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 三、XML			
 	1.什么是XML
 		(1).Extensible Markup Language,可扩展的标记语言,用于定义文档,使其具有结构化的特征;

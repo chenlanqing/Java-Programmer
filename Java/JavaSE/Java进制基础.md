@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.进制基础:](#1%E8%BF%9B%E5%88%B6%E5%9F%BA%E7%A1%80)
+- [2.二进制运算:](#2%E4%BA%8C%E8%BF%9B%E5%88%B6%E8%BF%90%E7%AE%97)
+- [3.负数:以其正值的补码形式表示](#3%E8%B4%9F%E6%95%B0%E4%BB%A5%E5%85%B6%E6%AD%A3%E5%80%BC%E7%9A%84%E8%A1%A5%E7%A0%81%E5%BD%A2%E5%BC%8F%E8%A1%A8%E7%A4%BA)
+- [4.Java 二进制:](#4java-%E4%BA%8C%E8%BF%9B%E5%88%B6)
+- [5.如何利用位运算:](#5%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%E4%BD%8D%E8%BF%90%E7%AE%97)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * http://www.importnew.com/18815.html
 * http://www.nowcoder.com/courses/1/8/1
 

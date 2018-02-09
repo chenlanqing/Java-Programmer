@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、Java 内存模型:](#%E4%B8%80java-%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)
+- [二、多线程:](#%E4%BA%8C%E5%A4%9A%E7%BA%BF%E7%A8%8B)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一、Java 内存模型:
 	1.Java反编译字节码命令：
 		javap -classpath . -c HelloWorld

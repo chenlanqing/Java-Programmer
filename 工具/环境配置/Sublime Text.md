@@ -1,3 +1,11 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [常用快捷键：](#%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * http://blog.jobbole.com/88648/
 
 ## 常用快捷键：

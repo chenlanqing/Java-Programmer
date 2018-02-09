@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.IO 通信:](#%E4%B8%80io-%E9%80%9A%E4%BF%A1)
+- [二.Netty 入门:](#%E4%BA%8Cnetty-%E5%85%A5%E9%97%A8)
+- [三.Netty 源码分析:](#%E4%B8%89netty-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.IO 通信:
 #### 1.Linux 网络IO 模型:
 	(1).阻塞IO模型:缺省情况下,所有文件操作都是阻塞的;

@@ -1,3 +1,21 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [4.类型转换:](#4%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2)
+- [5.编码规范:](#5%E7%BC%96%E7%A0%81%E8%A7%84%E8%8C%83)
+- [6.命名函数表达式:](#6%E5%91%BD%E5%90%8D%E5%87%BD%E6%95%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+- [7.解析Module模式:](#7%E8%A7%A3%E6%9E%90module%E6%A8%A1%E5%BC%8F)
+- [8.立即调用的函数表达式:](#8%E7%AB%8B%E5%8D%B3%E8%B0%83%E7%94%A8%E7%9A%84%E5%87%BD%E6%95%B0%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+- [9.S.O.L.I.D 五大原则:](#9solid-%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99)
+- [10.S.O.L.I.D五大原则之:单一职责SRP:](#10solid%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99%E4%B9%8B%E5%8D%95%E4%B8%80%E8%81%8C%E8%B4%A3srp)
+- [11.S.O.L.I.D五大原则之:开闭原则OCP](#11solid%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99%E4%B9%8B%E5%BC%80%E9%97%AD%E5%8E%9F%E5%88%99ocp)
+- [12.S.O.L.I.D五大原则之:里氏替换原则LSP](#12solid%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99%E4%B9%8B%E9%87%8C%E6%B0%8F%E6%9B%BF%E6%8D%A2%E5%8E%9F%E5%88%99lsp)
+- [13.S.O.L.I.D五大原则之:接口隔离原则ISP(The Interface Segregation Principle), 不应该强迫客户依赖于它们不用的方法](#13solid%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99%E4%B9%8B%E6%8E%A5%E5%8F%A3%E9%9A%94%E7%A6%BB%E5%8E%9F%E5%88%99ispthe-interface-segregation-principle-%E4%B8%8D%E5%BA%94%E8%AF%A5%E5%BC%BA%E8%BF%AB%E5%AE%A2%E6%88%B7%E4%BE%9D%E8%B5%96%E4%BA%8E%E5%AE%83%E4%BB%AC%E4%B8%8D%E7%94%A8%E7%9A%84%E6%96%B9%E6%B3%95)
+- [14.S.O.L.I.D五大原则之:依赖倒置原则DIP](#14solid%E4%BA%94%E5%A4%A7%E5%8E%9F%E5%88%99%E4%B9%8B%E4%BE%9D%E8%B5%96%E5%80%92%E7%BD%AE%E5%8E%9F%E5%88%99dip)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * 深入理解JavaScript系列:	http://www.cnblogs.com/TomXu/archive/2011/12/15/2288411.html
 ## 1.关于全局变量:
 	(1).在js开发中,减少使用全局变量,以免与第三方js插件存在命名冲突.如果一定要使用全局变量,可以使用命名空间或函数立即自动执行

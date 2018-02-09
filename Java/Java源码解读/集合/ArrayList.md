@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [6.ArrayList 与 Vector：](#6arraylist-%E4%B8%8E-vector)
+- [Vector:](#vector)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 1.Arraylist 类定义:
 	public class ArrayList<E> extends AbstractList<E> 
 		implements List<E>, RandomAccess, Cloneable, java.io.Serializable{}

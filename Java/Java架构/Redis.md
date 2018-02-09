@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.Redis 基本知识:](#%E4%B8%80redis-%E5%9F%BA%E6%9C%AC%E7%9F%A5%E8%AF%86)
+- [二.Redis 配置文件: "redis.conf" 常用配置介绍:](#%E4%BA%8Credis-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-redisconf-%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%8B%E7%BB%8D)
+- [三.Redis 持久化:](#%E4%B8%89redis-%E6%8C%81%E4%B9%85%E5%8C%96)
+- [四.Redis 事务:](#%E5%9B%9Bredis-%E4%BA%8B%E5%8A%A1)
+- [五.主从复制:](#%E4%BA%94%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.Redis 基本知识:
 #### 1.Redis:
     是一个开源,先进的key-value存储,并用于构建高性能,可扩展的Web应用程序的完美解决方案

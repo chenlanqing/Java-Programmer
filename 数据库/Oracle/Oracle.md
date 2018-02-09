@@ -1,3 +1,25 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.数据库](#%E4%B8%80%E6%95%B0%E6%8D%AE%E5%BA%93)
+  - [1.在开发Java大型项目时,如何存储数据?](#1%E5%9C%A8%E5%BC%80%E5%8F%91java%E5%A4%A7%E5%9E%8B%E9%A1%B9%E7%9B%AE%E6%97%B6%E5%A6%82%E4%BD%95%E5%AD%98%E5%82%A8%E6%95%B0%E6%8D%AE)
+  - [2.数据库的分类:](#2%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E5%88%86%E7%B1%BB)
+  - [3.Oracle认证](#3oracle%E8%AE%A4%E8%AF%81)
+  - [二.Oracle操作](#%E4%BA%8Coracle%E6%93%8D%E4%BD%9C)
+- [三.Oracle操作](#%E4%B8%89oracle%E6%93%8D%E4%BD%9C)
+- [四.创建数据库实例:](#%E5%9B%9B%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E5%BA%93%E5%AE%9E%E4%BE%8B)
+- [五.SQL函数](#%E4%BA%94sql%E5%87%BD%E6%95%B0)
+- [六.Oracle事务:](#%E5%85%ADoracle%E4%BA%8B%E5%8A%A1)
+- [七.Oracle数据的完整性:](#%E4%B8%83oracle%E6%95%B0%E6%8D%AE%E7%9A%84%E5%AE%8C%E6%95%B4%E6%80%A7)
+- [八.序列sequence:](#%E5%85%AB%E5%BA%8F%E5%88%97sequence)
+- [九.索引](#%E4%B9%9D%E7%B4%A2%E5%BC%95)
+- [十.管理权限和角色](#%E5%8D%81%E7%AE%A1%E7%90%86%E6%9D%83%E9%99%90%E5%92%8C%E8%A7%92%E8%89%B2)
+- [十一.pl/sql编程:](#%E5%8D%81%E4%B8%80plsql%E7%BC%96%E7%A8%8B)
+- [十二.数据库管理员(dba)和数据库中表的备份与恢复;](#%E5%8D%81%E4%BA%8C%E6%95%B0%E6%8D%AE%E5%BA%93%E7%AE%A1%E7%90%86%E5%91%98dba%E5%92%8C%E6%95%B0%E6%8D%AE%E5%BA%93%E4%B8%AD%E8%A1%A8%E7%9A%84%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.数据库
 ## 1.在开发Java大型项目时,如何存储数据?
 	(1)文件存储,但是存在如下问题:

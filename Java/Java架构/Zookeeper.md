@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.概述](#%E4%B8%80%E6%A6%82%E8%BF%B0)
+- [二.基本概念:](#%E4%BA%8C%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
+- [三.集群搭建:](#%E4%B8%89%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA)
+- [四.客户端使用:](#%E5%9B%9B%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%BD%BF%E7%94%A8)
+- [五.实战:](#%E4%BA%94%E5%AE%9E%E6%88%98)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.概述
 #### 1.Zookeeper 是什么:
     * 源代码开放的分布式协调服务,是一个高性能的分布式数据一致性解决方案.

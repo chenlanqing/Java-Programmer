@@ -1,3 +1,18 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.Object 类中 clone() 方法:](#1object-%E7%B1%BB%E4%B8%AD-clone-%E6%96%B9%E6%B3%95)
+- [2.Object 中 equals()方法:](#2object-%E4%B8%AD-equals%E6%96%B9%E6%B3%95)
+- [3.hashCode()方法:](#3hashcode%E6%96%B9%E6%B3%95)
+- [4.finalize()方法:finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说不是轻量级的程序;](#4finalize%E6%96%B9%E6%B3%95finalize%E6%96%B9%E6%B3%95%E4%B8%8D%E4%BC%9A%E8%A2%AB%E8%B0%83%E7%94%A8%E7%AC%AC%E4%BA%8C%E6%AC%A1finalize%E6%96%B9%E6%B3%95%E5%AF%B9%E4%BA%8E%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%9D%A5%E8%AF%B4%E4%B8%8D%E6%98%AF%E8%BD%BB%E9%87%8F%E7%BA%A7%E7%9A%84%E7%A8%8B%E5%BA%8F)
+- [5.toString()方法:](#5tostring%E6%96%B9%E6%B3%95)
+- [6.wait/notifAll](#6waitnotifall)
+- [7.registerNatives](#7registernatives)
+- [8.getClass:其定义:](#8getclass%E5%85%B6%E5%AE%9A%E4%B9%89)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * Object 类是 Java 中的终极父类,任何类都默认继承Object类,然而接口是不继承Object类;
 * ????为什么接口不继承Object类????
 

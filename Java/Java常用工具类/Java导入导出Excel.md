@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.读写Excel的三种技术：](#%E4%B8%80%E8%AF%BB%E5%86%99excel%E7%9A%84%E4%B8%89%E7%A7%8D%E6%8A%80%E6%9C%AF)
+- [二.	JXL读取,创建,修改Excel文件](#%E4%BA%8C%09jxl%E8%AF%BB%E5%8F%96%E5%88%9B%E5%BB%BA%E4%BF%AE%E6%94%B9excel%E6%96%87%E4%BB%B6)
+- [三.POI与Excel](#%E4%B8%89poi%E4%B8%8Eexcel)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.读写Excel的三种技术：
 #### 1.POI:提供对Office格式的档案读写:HSSF		(iText操作PDF或rtf)	
 	HSSF :　读取.xls表格

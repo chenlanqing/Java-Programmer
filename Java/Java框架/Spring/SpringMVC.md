@@ -1,3 +1,31 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.Spring MVC概述:](#1spring-mvc%E6%A6%82%E8%BF%B0)
+- [2.SpringMVC项目搭建:](#2springmvc%E9%A1%B9%E7%9B%AE%E6%90%AD%E5%BB%BA)
+- [3.@RequestMapping:此注解为URL映射请求](#3requestmapping%E6%AD%A4%E6%B3%A8%E8%A7%A3%E4%B8%BAurl%E6%98%A0%E5%B0%84%E8%AF%B7%E6%B1%82)
+- [4.处理模型数据:](#4%E5%A4%84%E7%90%86%E6%A8%A1%E5%9E%8B%E6%95%B0%E6%8D%AE)
+- [5.视图和视图解析器](#5%E8%A7%86%E5%9B%BE%E5%92%8C%E8%A7%86%E5%9B%BE%E8%A7%A3%E6%9E%90%E5%99%A8)
+- [6.RESTful SpringMVC CRUD](#6restful-springmvc-crud)
+- [7.SPringMVC 表单标签:可以实现将模型数据中的属性和 HTML 表单元素相绑定,以实现表单数据更便捷编辑和表单值的回显](#7springmvc-%E8%A1%A8%E5%8D%95%E6%A0%87%E7%AD%BE%E5%8F%AF%E4%BB%A5%E5%AE%9E%E7%8E%B0%E5%B0%86%E6%A8%A1%E5%9E%8B%E6%95%B0%E6%8D%AE%E4%B8%AD%E7%9A%84%E5%B1%9E%E6%80%A7%E5%92%8C-html-%E8%A1%A8%E5%8D%95%E5%85%83%E7%B4%A0%E7%9B%B8%E7%BB%91%E5%AE%9A%E4%BB%A5%E5%AE%9E%E7%8E%B0%E8%A1%A8%E5%8D%95%E6%95%B0%E6%8D%AE%E6%9B%B4%E4%BE%BF%E6%8D%B7%E7%BC%96%E8%BE%91%E5%92%8C%E8%A1%A8%E5%8D%95%E5%80%BC%E7%9A%84%E5%9B%9E%E6%98%BE)
+- [8.处理静态资源:](#8%E5%A4%84%E7%90%86%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90)
+- [9.数据绑定:](#9%E6%95%B0%E6%8D%AE%E7%BB%91%E5%AE%9A)
+- [10.关于配置: <mvc:annotation-driven />](#10%E5%85%B3%E4%BA%8E%E9%85%8D%E7%BD%AE-mvcannotation-driven-)
+- [11.@InitBinder](#11initbinder)
+- [12.数据格式化:](#12%E6%95%B0%E6%8D%AE%E6%A0%BC%E5%BC%8F%E5%8C%96)
+- [13.数据校验:JSR 303](#13%E6%95%B0%E6%8D%AE%E6%A0%A1%E9%AA%8Cjsr-303)
+- [14.JSON:](#14json)
+- [15.国际化:](#15%E5%9B%BD%E9%99%85%E5%8C%96)
+- [16.SpringMVC 实现文件上传:](#16springmvc-%E5%AE%9E%E7%8E%B0%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0)
+- [17.拦截器:](#17%E6%8B%A6%E6%88%AA%E5%99%A8)
+- [18.SpringMVC 异常处理:](#18springmvc-%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86)
+- [19.SpringMVC 运行流程:](#19springmvc-%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B)
+- [20.Spring 与 SpringMVC:](#20spring-%E4%B8%8E-springmvc)
+- [21.SpringMVC 对比 Struts2](#21springmvc-%E5%AF%B9%E6%AF%94-struts2)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 1.Spring MVC概述:
     (1).目前主流的MVC框架之一
     (2).Spring3.0后超越strut2,成为最优秀的MVC框架之一

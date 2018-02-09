@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.Servlet](#%E4%B8%80servlet)
+- [二、HTTP协议](#%E4%BA%8Chttp%E5%8D%8F%E8%AE%AE)
+- [三、Servlet高级应用:](#%E4%B8%89servlet%E9%AB%98%E7%BA%A7%E5%BA%94%E7%94%A8)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.Servlet
 	1.不使用开发工具开发一个servlet
 		(1)在tomcat服务器的webapps下新建一个目录test(应用名),在test文件夹内再新加一个WEB-INF文件夹,

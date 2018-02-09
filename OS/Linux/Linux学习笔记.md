@@ -1,3 +1,19 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.Linux装机](#%E4%B8%80linux%E8%A3%85%E6%9C%BA)
+  - [1.vmware虚拟机](#1vmware%E8%99%9A%E6%8B%9F%E6%9C%BA)
+  - [2.服务器注意事项:](#2%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
+- [二.Linux命令:](#%E4%BA%8Clinux%E5%91%BD%E4%BB%A4)
+  - [1.文件处理命令:](#1%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4)
+  - [2.网络命令:](#2%E7%BD%91%E7%BB%9C%E5%91%BD%E4%BB%A4)
+  - [3.关机重启:](#3%E5%85%B3%E6%9C%BA%E9%87%8D%E5%90%AF)
+  - [4.文本编辑器 vim:](#4%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%99%A8-vim)
+  - [5.Linux软件安装:](#5linux%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.Linux装机
 ## 1.vmware虚拟机
     (1).系统分区;

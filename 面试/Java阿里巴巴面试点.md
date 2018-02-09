@@ -1,3 +1,36 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.Java 的四个基本特性(抽象、封装、继承、多态),对多态的理解(多态的的实现方式)以及在项目中哪些地方使用多态?](#1java-%E7%9A%84%E5%9B%9B%E4%B8%AA%E5%9F%BA%E6%9C%AC%E7%89%B9%E6%80%A7%E6%8A%BD%E8%B1%A1%E5%B0%81%E8%A3%85%E7%BB%A7%E6%89%BF%E5%A4%9A%E6%80%81%E5%AF%B9%E5%A4%9A%E6%80%81%E7%9A%84%E7%90%86%E8%A7%A3%E5%A4%9A%E6%80%81%E7%9A%84%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E4%BB%A5%E5%8F%8A%E5%9C%A8%E9%A1%B9%E7%9B%AE%E4%B8%AD%E5%93%AA%E4%BA%9B%E5%9C%B0%E6%96%B9%E4%BD%BF%E7%94%A8%E5%A4%9A%E6%80%81)
+- [2.面向对象和面向过程的区别:](#2%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E5%92%8C%E9%9D%A2%E5%90%91%E8%BF%87%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB)
+- [3.面向对象开发的基本原则?如何使用这些原则?迪米特法则?](#3%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E5%BC%80%E5%8F%91%E7%9A%84%E5%9F%BA%E6%9C%AC%E5%8E%9F%E5%88%99%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E8%BF%99%E4%BA%9B%E5%8E%9F%E5%88%99%E8%BF%AA%E7%B1%B3%E7%89%B9%E6%B3%95%E5%88%99)
+- [4. static 和 final 的区别和用途:](#4-static-%E5%92%8C-final-%E7%9A%84%E5%8C%BA%E5%88%AB%E5%92%8C%E7%94%A8%E9%80%94)
+- [5.HashMap 和 HashTable 的区别? HashMap 中key可以是任何对象和数据类型吗?线程安全性呢?](#5hashmap-%E5%92%8C-hashtable-%E7%9A%84%E5%8C%BA%E5%88%AB-hashmap-%E4%B8%ADkey%E5%8F%AF%E4%BB%A5%E6%98%AF%E4%BB%BB%E4%BD%95%E5%AF%B9%E8%B1%A1%E5%92%8C%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%90%97%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E6%80%A7%E5%91%A2)
+- [6.HashMap 和 ConcurrentHashMap? ConcurrentHashMap 如何保证线程安全](#6hashmap-%E5%92%8C-concurrenthashmap-concurrenthashmap-%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8)
+- [7.如果别人知道源码是怎么实现的,故意构造相同的 hash 的字符串进行攻击,如何处理?在JDK7中如何处理?](#7%E5%A6%82%E6%9E%9C%E5%88%AB%E4%BA%BA%E7%9F%A5%E9%81%93%E6%BA%90%E7%A0%81%E6%98%AF%E6%80%8E%E4%B9%88%E5%AE%9E%E7%8E%B0%E7%9A%84%E6%95%85%E6%84%8F%E6%9E%84%E9%80%A0%E7%9B%B8%E5%90%8C%E7%9A%84-hash-%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%E8%BF%9B%E8%A1%8C%E6%94%BB%E5%87%BB%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86%E5%9C%A8jdk7%E4%B8%AD%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86)
+- [8.String,StringBuffer,StringBuilder 区别以及对 String 不变的理解:](#8stringstringbufferstringbuilder-%E5%8C%BA%E5%88%AB%E4%BB%A5%E5%8F%8A%E5%AF%B9-string-%E4%B8%8D%E5%8F%98%E7%9A%84%E7%90%86%E8%A7%A3)
+- [9.如果一个类重写了 equals 方法但没有重写 hashcode 会出现什么问题?](#9%E5%A6%82%E6%9E%9C%E4%B8%80%E4%B8%AA%E7%B1%BB%E9%87%8D%E5%86%99%E4%BA%86-equals-%E6%96%B9%E6%B3%95%E4%BD%86%E6%B2%A1%E6%9C%89%E9%87%8D%E5%86%99-hashcode-%E4%BC%9A%E5%87%BA%E7%8E%B0%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98)
+- [10.Java 序列化? 如何实现序列化与反序列化? 常见的序列化协议?](#10java-%E5%BA%8F%E5%88%97%E5%8C%96-%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8E%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-%E5%B8%B8%E8%A7%81%E7%9A%84%E5%BA%8F%E5%88%97%E5%8C%96%E5%8D%8F%E8%AE%AE)
+- [11.Java 创建线程的方式? 有什么不同之处?](#11java-%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F-%E6%9C%89%E4%BB%80%E4%B9%88%E4%B8%8D%E5%90%8C%E4%B9%8B%E5%A4%84)
+- [12.线程安全:](#12%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8)
+- [13.什么是线程池?如果让你设计一个线程池,如何设计,应该有哪些方法?](#13%E4%BB%80%E4%B9%88%E6%98%AF%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%A6%82%E6%9E%9C%E8%AE%A9%E4%BD%A0%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E5%BA%94%E8%AF%A5%E6%9C%89%E5%93%AA%E4%BA%9B%E6%96%B9%E6%B3%95)
+- [14.Java 的内存泄漏与内存溢出](#14java-%E7%9A%84%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F%E4%B8%8E%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA)
+- [15.concurrent 包下面有哪些:](#15concurrent-%E5%8C%85%E4%B8%8B%E9%9D%A2%E6%9C%89%E5%93%AA%E4%BA%9B)
+- [16.volatile 关键字如何保证内存可见性:](#16volatile-%E5%85%B3%E9%94%AE%E5%AD%97%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%86%85%E5%AD%98%E5%8F%AF%E8%A7%81%E6%80%A7)
+- [17.sleep 和 wait分别是哪个类的方法,有什么区别?](#17sleep-%E5%92%8C-wait%E5%88%86%E5%88%AB%E6%98%AF%E5%93%AA%E4%B8%AA%E7%B1%BB%E7%9A%84%E6%96%B9%E6%B3%95%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB)
+- [18.synchronized 与 Lock 的区别,使用场景.](#18synchronized-%E4%B8%8E-lock-%E7%9A%84%E5%8C%BA%E5%88%AB%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
+- [19.synchronized 底层是如何实现的?用在代码块和方法上有什么区别?](#19synchronized-%E5%BA%95%E5%B1%82%E6%98%AF%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%9A%84%E7%94%A8%E5%9C%A8%E4%BB%A3%E7%A0%81%E5%9D%97%E5%92%8C%E6%96%B9%E6%B3%95%E4%B8%8A%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB)
+- [20.Java 中的 BIO,NIO,AIO 分别是什么?](#20java-%E4%B8%AD%E7%9A%84-bionioaio-%E5%88%86%E5%88%AB%E6%98%AF%E4%BB%80%E4%B9%88)
+- [21.JDK 源码中使用到的设计模式:](#21jdk-%E6%BA%90%E7%A0%81%E4%B8%AD%E4%BD%BF%E7%94%A8%E5%88%B0%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
+- [22.数据库索引的优缺点以及什么时候数据库索引失效?](#22%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B4%A2%E5%BC%95%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9%E4%BB%A5%E5%8F%8A%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B4%A2%E5%BC%95%E5%A4%B1%E6%95%88)
+- [23.](#23)
+- [24.](#24)
+- [25.](#25)
+- [26.Mybatis 和 Hibernate](#26mybatis-%E5%92%8C-hibernate)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 1.Java 的四个基本特性(抽象、封装、继承、多态),对多态的理解(多态的的实现方式)以及在项目中哪些地方使用多态?
 	1.1.Java 的四个基本特性:
 		(1).抽象:抽象是将一类对象的共同特征总结出来构造类的过程,包括数据抽象和行为抽象两方面.抽象只关注对象的有哪些属性和行为,

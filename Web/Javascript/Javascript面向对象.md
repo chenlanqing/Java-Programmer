@@ -1,3 +1,27 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.var 和 function 的提前声明:](#1var-%E5%92%8C-function-%E7%9A%84%E6%8F%90%E5%89%8D%E5%A3%B0%E6%98%8E)
+- [2.关于全局变量与局部变量:](#2%E5%85%B3%E4%BA%8E%E5%85%A8%E5%B1%80%E5%8F%98%E9%87%8F%E4%B8%8E%E5%B1%80%E9%83%A8%E5%8F%98%E9%87%8F)
+- [3.给基本类型数据添加属性,不报错,但取值时是undefined](#3%E7%BB%99%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E6%95%B0%E6%8D%AE%E6%B7%BB%E5%8A%A0%E5%B1%9E%E6%80%A7%E4%B8%8D%E6%8A%A5%E9%94%99%E4%BD%86%E5%8F%96%E5%80%BC%E6%97%B6%E6%98%AFundefined)
+- [4.判断一个字符串中出现次数最多的字符,并统计次数](#4%E5%88%A4%E6%96%AD%E4%B8%80%E4%B8%AA%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B8%AD%E5%87%BA%E7%8E%B0%E6%AC%A1%E6%95%B0%E6%9C%80%E5%A4%9A%E7%9A%84%E5%AD%97%E7%AC%A6%E5%B9%B6%E7%BB%9F%E8%AE%A1%E6%AC%A1%E6%95%B0)
+- [6.Javascript面向对象编程:ECMAScript是基于原型实现的面向对象编程语言](#6javascript%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8Becmascript%E6%98%AF%E5%9F%BA%E4%BA%8E%E5%8E%9F%E5%9E%8B%E5%AE%9E%E7%8E%B0%E7%9A%84%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B%E8%AF%AD%E8%A8%80)
+- [7.Javascript数据类型:](#7javascript%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
+- [8.严格模式:"use strict":](#8%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8Fuse-strict)
+- [9.对象:Object 对象本身是一个函数对象](#9%E5%AF%B9%E8%B1%A1object-%E5%AF%B9%E8%B1%A1%E6%9C%AC%E8%BA%AB%E6%98%AF%E4%B8%80%E4%B8%AA%E5%87%BD%E6%95%B0%E5%AF%B9%E8%B1%A1)
+- [10.数组:](#10%E6%95%B0%E7%BB%84)
+- [11.函数(function):](#11%E5%87%BD%E6%95%B0function)
+- [12.OOP:面向对象编程是一种程序设计范型,同时也是一种程序开发的方法](#12oop%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E7%BC%96%E7%A8%8B%E6%98%AF%E4%B8%80%E7%A7%8D%E7%A8%8B%E5%BA%8F%E8%AE%BE%E8%AE%A1%E8%8C%83%E5%9E%8B%E5%90%8C%E6%97%B6%E4%B9%9F%E6%98%AF%E4%B8%80%E7%A7%8D%E7%A8%8B%E5%BA%8F%E5%BC%80%E5%8F%91%E7%9A%84%E6%96%B9%E6%B3%95)
+- [13.正则表达式:](#13%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+- [14.Javscript的事件:](#14javscript%E7%9A%84%E4%BA%8B%E4%BB%B6)
+- [15.Ajax 与 JSON](#15ajax-%E4%B8%8E-json)
+- [16.异常机制:](#16%E5%BC%82%E5%B8%B8%E6%9C%BA%E5%88%B6)
+- [17.Javascript 浏览器对象:](#17javascript-%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AF%B9%E8%B1%A1)
+- [18.Javascript 运算符优先级:](#18javascript-%E8%BF%90%E7%AE%97%E7%AC%A6%E4%BC%98%E5%85%88%E7%BA%A7)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * 深入理解JavaScript系列:
 	http://www.cnblogs.com/TomXu/archive/2011/12/15/2288411.html
 

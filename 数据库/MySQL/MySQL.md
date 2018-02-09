@@ -1,3 +1,47 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.概念](#%E4%B8%80%E6%A6%82%E5%BF%B5)
+- [二.MySQL操作](#%E4%BA%8Cmysql%E6%93%8D%E4%BD%9C)
+  - [1.连接,命令行:](#1%E8%BF%9E%E6%8E%A5%E5%91%BD%E4%BB%A4%E8%A1%8C)
+  - [2.SQL操作(structure query language)](#2sql%E6%93%8D%E4%BD%9Cstructure-query-language)
+  - [3.创建数据库:](#3%E5%88%9B%E5%BB%BA%E6%95%B0%E6%8D%AE%E5%BA%93)
+  - [4.数据库的查询:](#4%E6%95%B0%E6%8D%AE%E5%BA%93%E7%9A%84%E6%9F%A5%E8%AF%A2)
+  - [5.表的定义:](#5%E8%A1%A8%E7%9A%84%E5%AE%9A%E4%B9%89)
+  - [6.数据的操作(DML)](#6%E6%95%B0%E6%8D%AE%E7%9A%84%E6%93%8D%E4%BD%9Cdml)
+  - [7.校对规则:](#7%E6%A0%A1%E5%AF%B9%E8%A7%84%E5%88%99)
+- [三.MySQL数据类型](#%E4%B8%89mysql%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
+  - [1.数值型](#1%E6%95%B0%E5%80%BC%E5%9E%8B)
+  - [2.日期类型](#2%E6%97%A5%E6%9C%9F%E7%B1%BB%E5%9E%8B)
+  - [3.字符串类型:M表示允许的字符串长度](#3%E5%AD%97%E7%AC%A6%E4%B8%B2%E7%B1%BB%E5%9E%8Bm%E8%A1%A8%E7%A4%BA%E5%85%81%E8%AE%B8%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%95%BF%E5%BA%A6)
+  - [4.列类型的选择:](#4%E5%88%97%E7%B1%BB%E5%9E%8B%E7%9A%84%E9%80%89%E6%8B%A9)
+- [四.列属性](#%E5%9B%9B%E5%88%97%E5%B1%9E%E6%80%A7)
+- [五.查询 SQL 执行顺序:](#%E4%BA%94%E6%9F%A5%E8%AF%A2-sql-%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F)
+  - [1.一般SQL的写的顺序:](#1%E4%B8%80%E8%88%ACsql%E7%9A%84%E5%86%99%E7%9A%84%E9%A1%BA%E5%BA%8F)
+  - [2.数据执行的顺序:前面括号的数据表示执行顺序](#2%E6%95%B0%E6%8D%AE%E6%89%A7%E8%A1%8C%E7%9A%84%E9%A1%BA%E5%BA%8F%E5%89%8D%E9%9D%A2%E6%8B%AC%E5%8F%B7%E7%9A%84%E6%95%B0%E6%8D%AE%E8%A1%A8%E7%A4%BA%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F)
+  - [3.SQL性能下降的原因:](#3sql%E6%80%A7%E8%83%BD%E4%B8%8B%E9%99%8D%E7%9A%84%E5%8E%9F%E5%9B%A0)
+- [六.高级查询:](#%E5%85%AD%E9%AB%98%E7%BA%A7%E6%9F%A5%E8%AF%A2)
+  - [1.连接:](#1%E8%BF%9E%E6%8E%A5)
+  - [2.](#2)
+- [七.MySQL 存储引擎](#%E4%B8%83mysql-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E)
+  - [1.MySQL 的数据库引擎:MyISAM 和 InnoDB 引擎的区别:](#1mysql-%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%95%E6%93%8Emyisam-%E5%92%8C-innodb-%E5%BC%95%E6%93%8E%E7%9A%84%E5%8C%BA%E5%88%AB)
+  - [2.查看数据库引擎:](#2%E6%9F%A5%E7%9C%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%95%E6%93%8E)
+- [八.高级特性:](#%E5%85%AB%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7)
+  - [1.数据库隔离级别介绍、举例说明](#1%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E4%BB%8B%E7%BB%8D%E4%B8%BE%E4%BE%8B%E8%AF%B4%E6%98%8E)
+  - [2.数据库水平拆分(分表)和垂直拆分(分库)](#2%E6%95%B0%E6%8D%AE%E5%BA%93%E6%B0%B4%E5%B9%B3%E6%8B%86%E5%88%86%E5%88%86%E8%A1%A8%E5%92%8C%E5%9E%82%E7%9B%B4%E6%8B%86%E5%88%86%E5%88%86%E5%BA%93)
+- [九.数据库锁:](#%E4%B9%9D%E6%95%B0%E6%8D%AE%E5%BA%93%E9%94%81)
+  - [1.锁:](#1%E9%94%81)
+  - [2.锁的分类:](#2%E9%94%81%E7%9A%84%E5%88%86%E7%B1%BB)
+  - [3.表锁(偏读):偏向 MyISAM 存储引擎,开销小,加锁快,无死锁;锁粒度大,发生的锁冲突的概率最高,并发度最低;](#3%E8%A1%A8%E9%94%81%E5%81%8F%E8%AF%BB%E5%81%8F%E5%90%91-myisam-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E%E5%BC%80%E9%94%80%E5%B0%8F%E5%8A%A0%E9%94%81%E5%BF%AB%E6%97%A0%E6%AD%BB%E9%94%81%E9%94%81%E7%B2%92%E5%BA%A6%E5%A4%A7%E5%8F%91%E7%94%9F%E7%9A%84%E9%94%81%E5%86%B2%E7%AA%81%E7%9A%84%E6%A6%82%E7%8E%87%E6%9C%80%E9%AB%98%E5%B9%B6%E5%8F%91%E5%BA%A6%E6%9C%80%E4%BD%8E)
+  - [4.行锁:](#4%E8%A1%8C%E9%94%81)
+  - [5.死锁:](#5%E6%AD%BB%E9%94%81)
+  - [6.乐观锁与悲观锁:(数据库)](#6%E4%B9%90%E8%A7%82%E9%94%81%E4%B8%8E%E6%82%B2%E8%A7%82%E9%94%81%E6%95%B0%E6%8D%AE%E5%BA%93)
+- [十.13.表分区?](#%E5%8D%8113%E8%A1%A8%E5%88%86%E5%8C%BA)
+- [十一.分布式唯一ID:](#%E5%8D%81%E4%B8%80%E5%88%86%E5%B8%83%E5%BC%8F%E5%94%AF%E4%B8%80id)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * [数据库原理](http://blog.csdn.net/albertfly/article/details/51318995)
 * http://coding-geek.com/how-databases-work/
 * http://blog.codinglabs.org/articles/theory-of-mysql-index.html

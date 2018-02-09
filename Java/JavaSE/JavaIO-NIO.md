@@ -1,3 +1,22 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [IO 和 NIO 区别:](#io-%E5%92%8C-nio-%E5%8C%BA%E5%88%AB)
+- [一.JAVA I/O 工作机制介绍:](#%E4%B8%80java-io-%E5%B7%A5%E4%BD%9C%E6%9C%BA%E5%88%B6%E4%BB%8B%E7%BB%8D)
+  - [1.Java 的 I/O 操作类在包 java.io 下，大概有将近 80 个类，但是这些类大概可以分成四组,分别如下:](#1java-%E7%9A%84-io-%E6%93%8D%E4%BD%9C%E7%B1%BB%E5%9C%A8%E5%8C%85-javaio-%E4%B8%8B%E5%A4%A7%E6%A6%82%E6%9C%89%E5%B0%86%E8%BF%91-80-%E4%B8%AA%E7%B1%BB%E4%BD%86%E6%98%AF%E8%BF%99%E4%BA%9B%E7%B1%BB%E5%A4%A7%E6%A6%82%E5%8F%AF%E4%BB%A5%E5%88%86%E6%88%90%E5%9B%9B%E7%BB%84%E5%88%86%E5%88%AB%E5%A6%82%E4%B8%8B)
+  - [2.基于字节操作的 I/O 接口:InputStream 和 OutputStream](#2%E5%9F%BA%E4%BA%8E%E5%AD%97%E8%8A%82%E6%93%8D%E4%BD%9C%E7%9A%84-io-%E6%8E%A5%E5%8F%A3inputstream-%E5%92%8C-outputstream)
+  - [3.基于字符操作的 I/O 接口:Writer/Reader](#3%E5%9F%BA%E4%BA%8E%E5%AD%97%E7%AC%A6%E6%93%8D%E4%BD%9C%E7%9A%84-io-%E6%8E%A5%E5%8F%A3writerreader)
+  - [4.基于磁盘操作的 I/O 接口:File, 将数据持久化到物理磁盘](#4%E5%9F%BA%E4%BA%8E%E7%A3%81%E7%9B%98%E6%93%8D%E4%BD%9C%E7%9A%84-io-%E6%8E%A5%E5%8F%A3file-%E5%B0%86%E6%95%B0%E6%8D%AE%E6%8C%81%E4%B9%85%E5%8C%96%E5%88%B0%E7%89%A9%E7%90%86%E7%A3%81%E7%9B%98)
+  - [5.基于网络操作的 I/O 接口:Socket](#5%E5%9F%BA%E4%BA%8E%E7%BD%91%E7%BB%9C%E6%93%8D%E4%BD%9C%E7%9A%84-io-%E6%8E%A5%E5%8F%A3socket)
+- [三、Java NIO](#%E4%B8%89java-nio)
+  - [4.Buffer:用于和NIO通道进行交互,缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存](#4buffer%E7%94%A8%E4%BA%8E%E5%92%8Cnio%E9%80%9A%E9%81%93%E8%BF%9B%E8%A1%8C%E4%BA%A4%E4%BA%92%E7%BC%93%E5%86%B2%E5%8C%BA%E6%9C%AC%E8%B4%A8%E4%B8%8A%E6%98%AF%E4%B8%80%E5%9D%97%E5%8F%AF%E4%BB%A5%E5%86%99%E5%85%A5%E6%95%B0%E6%8D%AE%E7%84%B6%E5%90%8E%E5%8F%AF%E4%BB%A5%E4%BB%8E%E4%B8%AD%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE%E7%9A%84%E5%86%85%E5%AD%98)
+  - [5.Scatter/Gather:](#5scattergather)
+  - [6.通道之间的数据传输:](#6%E9%80%9A%E9%81%93%E4%B9%8B%E9%97%B4%E7%9A%84%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93)
+  - [7.Selector:是 Java NIO 中能够检测一到多个 NIO 通道,并能够知晓通道是否为诸如读写事件做好准备的组件,](#7selector%E6%98%AF-java-nio-%E4%B8%AD%E8%83%BD%E5%A4%9F%E6%A3%80%E6%B5%8B%E4%B8%80%E5%88%B0%E5%A4%9A%E4%B8%AA-nio-%E9%80%9A%E9%81%93%E5%B9%B6%E8%83%BD%E5%A4%9F%E7%9F%A5%E6%99%93%E9%80%9A%E9%81%93%E6%98%AF%E5%90%A6%E4%B8%BA%E8%AF%B8%E5%A6%82%E8%AF%BB%E5%86%99%E4%BA%8B%E4%BB%B6%E5%81%9A%E5%A5%BD%E5%87%86%E5%A4%87%E7%9A%84%E7%BB%84%E4%BB%B6)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # IO 和 NIO 区别:
 (1).IO 是面向流的,NIO 面向缓冲区;
 (2).IO 是阻塞的,NIO 是非阻塞的.

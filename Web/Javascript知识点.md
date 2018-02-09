@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、ECMAScript](#%E4%B8%80ecmascript)
+- [二、DOM](#%E4%BA%8Cdom)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一、ECMAScript
     1、JavaScript中的类型转换
     2、作用域、作用域链和闭包

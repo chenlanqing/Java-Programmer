@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.Windows 下配置环境变量:](#%E4%B8%80windows-%E4%B8%8B%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F)
+- [二.Linux 下安装 jdk](#%E4%BA%8Clinux-%E4%B8%8B%E5%AE%89%E8%A3%85-jdk)
+- [三、配置 Tomcat 服务器:](#%E4%B8%89%E9%85%8D%E7%BD%AE-tomcat-%E6%9C%8D%E5%8A%A1%E5%99%A8)
+- [四、添加 tomcat 启动到 service 中.](#%E5%9B%9B%E6%B7%BB%E5%8A%A0-tomcat-%E5%90%AF%E5%8A%A8%E5%88%B0-service-%E4%B8%AD)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.Windows 下配置环境变量:
     1.下载对应的jdk安装包(下载地址:http://www.oracle.com/technetwork/java/javase/downloads/index.html)
     2.安装JDK,注意安装目录不要有中文信息

@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+  - [一.Maven](#%E4%B8%80maven)
+- [二.gradle](#%E4%BA%8Cgradle)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## 一.Maven 
     1.下载对应文件,一般下载binary文件,如下载:apache-maven-3.3.9-bin.zip 文件(下载地址:http://maven.apache.org/download.cgi)
     2.解压该文件到对应的目录下;

@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.三个问题:](#%E4%B8%80%E4%B8%89%E4%B8%AA%E9%97%AE%E9%A2%98)
+- [二.Java 内存分配:](#%E4%BA%8Cjava-%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D)
+- [三.String 类型:](#%E4%B8%89string-%E7%B1%BB%E5%9E%8B)
+- [四.关于 String 的不可变:](#%E5%9B%9B%E5%85%B3%E4%BA%8E-string-%E7%9A%84%E4%B8%8D%E5%8F%AF%E5%8F%98)
+- [五.String intern()方法:](#%E4%BA%94string-intern%E6%96%B9%E6%B3%95)
+- [六.关于 String 需要注意的点:](#%E5%85%AD%E5%85%B3%E4%BA%8E-string-%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E7%82%B9)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
  参考文章:
  * http://www.importnew.com/15671.html
  * http://www.importnew.com/12845.html

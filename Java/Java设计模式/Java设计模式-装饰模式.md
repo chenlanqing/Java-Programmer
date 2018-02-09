@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [1.基本概念:](#1%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
+- [2.用途:](#2%E7%94%A8%E9%80%94)
+- [3.用途:](#3%E7%94%A8%E9%80%94)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 #### 1.基本概念:
 	装饰模式是在不必改变原类文件和使用继承的情况下,动态的扩展一个对象的功能.
 	它是通过创建一个包装对象,也就是装饰来包裹真实的对象

@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.设计模式分类:](#1%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%88%86%E7%B1%BB)
+- [2.单例模式:](#2%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F)
+- [3.构造器模式:](#3%E6%9E%84%E9%80%A0%E5%99%A8%E6%A8%A1%E5%BC%8F)
+- [4.观察者模式:](#4%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F)
+- [5.工厂模式:](#5%E5%B7%A5%E5%8E%82%E6%A8%A1%E5%BC%8F)
+- [6.建造模式:](#6%E5%BB%BA%E9%80%A0%E6%A8%A1%E5%BC%8F)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## 1.设计模式分类:
 	1.1.创建型设计模式:专注于处理对象创建机制,以适合给定情况的方式来创建对象;
 		Constructor(构造器模式),Factory(工厂模式),Abstract(抽象),Prototype(原型),

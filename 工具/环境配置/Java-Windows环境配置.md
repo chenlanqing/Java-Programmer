@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.Java环境配置:](#%E4%B8%80java%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)
+- [二.Maven环境配置:](#%E4%BA%8Cmaven%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)
+- [三.Tomcat环境配置:](#%E4%B8%89tomcat%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)
+- [四.Eclipse配置Maven:](#%E5%9B%9Beclipse%E9%85%8D%E7%BD%AEmaven)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 通用步骤: 1.【我的电脑】--> 【属性】-->【高级系统设置】 --> 【环境变量】;
 # 一.Java环境配置:
     2.在系统变量中添加:JAVA_HOME,变量值为JDK的安装目录

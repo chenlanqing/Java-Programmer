@@ -1,3 +1,12 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.开发环境的准备:](#%E4%B8%80%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83%E7%9A%84%E5%87%86%E5%A4%87)
+- [二.微信开发模式:](#%E4%BA%8C%E5%BE%AE%E4%BF%A1%E5%BC%80%E5%8F%91%E6%A8%A1%E5%BC%8F)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 一.开发环境的准备:
     1.微信公众号:
     2.外围映射工具(开发调试)

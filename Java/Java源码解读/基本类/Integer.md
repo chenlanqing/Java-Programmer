@@ -1,3 +1,14 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一.类定义:](#%E4%B8%80%E7%B1%BB%E5%AE%9A%E4%B9%89)
+- [二.属性:](#%E4%BA%8C%E5%B1%9E%E6%80%A7)
+- [三.方法:](#%E4%B8%89%E6%96%B9%E6%B3%95)
+- [四.Integer 缓存机制:](#%E5%9B%9Binteger-%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 * Integer 类在对象中包装了一个基本类型 int 的值。Integer 类型的对象包含一个 int 类型的字段
 
 # 一.类定义:

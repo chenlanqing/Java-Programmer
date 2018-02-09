@@ -1,3 +1,13 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.order  by  中  null  的处理方法:](#1order--by--%E4%B8%AD--null--%E7%9A%84%E5%A4%84%E7%90%86%E6%96%B9%E6%B3%95)
+- [2.case  when  的用法:](#2case--when--%E7%9A%84%E7%94%A8%E6%B3%95)
+- [3.Oracle中字符问题:](#3oracle%E4%B8%AD%E5%AD%97%E7%AC%A6%E9%97%AE%E9%A2%98)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 ## 1.order  by  中  null  的处理方法:
 	(1).默认处理:
 		oracle中  order  by  时默认认为  null  为最大值,所以如果  asc  升序后则排在最后,desc  降序则排在最前面
