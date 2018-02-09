@@ -4,11 +4,11 @@
 	使用内部类最吸引人的原因是:
 	每个内部类都能独立地继承一个(接口的)实现,所以无论外围类是否已经继承了某个(接口的)实现,对于内部类都没有影响
 	使用内部类最大的优点就在于它能够非常好的解决多重继承的问题,使用内部类还能够为我们带来如下特性:
-		(1).内部类可以用多个实例,每个实例都有自己的状态信息,并且与其他外围对象的信息相互独。
-		(2).在单个外围类中,可以让多个内部类以不同的方式实现同一个接口,或者继承同一个类。
-		(3).创建内部类对象的时刻并不依赖于外围类对象的创建。
-		(4).内部类并没有令人迷惑的"is-a"关系,他就是一个独立的实体。
-		(5).内部类提供了更好的封装,除了该外围类,其他类都不能访问。
+	(1).内部类可以用多个实例,每个实例都有自己的状态信息,并且与其他外围对象的信息相互独。
+	(2).在单个外围类中,可以让多个内部类以不同的方式实现同一个接口,或者继承同一个类。
+	(3).创建内部类对象的时刻并不依赖于外围类对象的创建。
+	(4).内部类并没有令人迷惑的"is-a"关系,他就是一个独立的实体。
+	(5).内部类提供了更好的封装,除了该外围类,其他类都不能访问。
 
 ## 2.内部类分类:
 ### (一).成员内部类:
@@ -83,12 +83,12 @@
 		}
 ```
 	4.非静态内部类中为什么不能有静态属性或者方法?
-		sttaic 类型的属性和方法在类加载的时候就会存在于内存中,要使用某个类的 static 属性或者方法的前提是这个类已经加载到JVM中,
-		非 static 内部类默认是持有外部类的引用且依赖外部类存在的,所以如果一个非 static 的内部类一旦具有 static 的属性或者方法
-		就会出现内部类未加载时却试图在内存中创建的 static 属性和方法,这自然是错误的,类都不存在却希望操作它的属性和方法.从另一
-		个角度讲非 static 的内部类在实例化的时候才会加载(不自动跟随主类加载),而static 的语义是类能直接通过类名访问类的 static
-		属性或者方法,所以如果没有实例化非 static  的内部类就等于非 static 的内部类没有被加载,所以无从谈起通过类名访问 static 
-		属性或者方法.
+	sttaic 类型的属性和方法在类加载的时候就会存在于内存中,要使用某个类的 static 属性或者方法的前提是这个类已经加载到JVM中,
+	非 static 内部类默认是持有外部类的引用且依赖外部类存在的,所以如果一个非 static 的内部类一旦具有 static 的属性或者方法
+	就会出现内部类未加载时却试图在内存中创建的 static 属性和方法,这自然是错误的,类都不存在却希望操作它的属性和方法.从另一
+	个角度讲非 static 的内部类在实例化的时候才会加载(不自动跟随主类加载),而static 的语义是类能直接通过类名访问类的 static
+	属性或者方法,所以如果没有实例化非 static  的内部类就等于非 static 的内部类没有被加载,所以无从谈起通过类名访问 static 
+	属性或者方法.
 
 ### (三).方法内部类:访问仅限于方法内或者该作用域内
 	(1).局部内部类就像是方法里面的一个局部变量一样,是不能有 public、protected、private 以及 static 修饰符的
@@ -229,8 +229,8 @@
 		list2 指向一个继承自 ArrayList 的匿名类内部类对象;
 		list3 也指向一个继承自 ArrayList 的匿名内部类(里面一对括弧为初始化代码块)对象;
 		list4 也指向一个继承自 ArrayList 的匿名内部类(里面多对括弧为多个初始化代码块)对象;
-		由于这些匿名内部类都出现在同一个类中,所以编译后其实得到的是 OutClass$1、OutClass$2、OutClass$3 的形式,所以自然都互补相等了,
-		可以通过 listX.getClass().getName() 进行验证:
+		由于这些匿名内部类都出现在同一个类中,所以编译后其实得到的是 OutClass$1、OutClass$2、OutClass$3 的形式,
+		所以自然都互不相等了,可以通过 listX.getClass().getName() 进行验证:
 		System.out.println(list1.getClass().getName()); // java.util.ArrayList
 		System.out.println(list2.getClass().getName()); // com.demo.normal.OutClass$1
 		System.out.println(list3.getClass().getName()); // com.demo.normal.OutClass$2
@@ -366,10 +366,10 @@
 ```
 	(4).LinkedHashMap 与 HashMap 的不同区别是:LinkedHashMap 保留了插入顺序.
 	(5).HashMap,HashTable,TreeMap:
-		A:迭代顺序:HashMap,HashTable不会保证元素的顺序,但是TreeMap是有序的;
-		B:key-value空值:HashMap的key-value都可以为空(只有一个key为 null,因为不能存在两个相同的key),
-			HashTable的key-value不允许为 null;
-			TreeMap因为key是有序,因此key不能为 null,value可以为 null;
+	A:迭代顺序:HashMap,HashTable不会保证元素的顺序,但是TreeMap是有序的;
+	B:key-value空值:HashMap的key-value都可以为空(只有一个key为 null,因为不能存在两个相同的key),
+		HashTable的key-value不允许为 null;
+		TreeMap因为key是有序,因此key不能为 null,value可以为 null;
 ### 2.HashCode与HashSet关系:
 
 # 三.按照目录结构打印当前目录及子目录
