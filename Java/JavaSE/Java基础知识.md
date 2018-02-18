@@ -393,74 +393,76 @@
 
 ```java
 	class Dog {
-				String color;
-				Dog(String c) {
-					color = c;
-				}
-				public boolean equals(Object o) {
-					return ((Dog) o).color.equals(this.color);
-				}
-				public int hashCode() {
-					return color.length();
-				}
-				public String toString(){
-					return color + " dog";
-				}
+		String color;
+		Dog(String c) {
+			color = c;
+		}
+		public boolean equals(Object o) {
+			return ((Dog) o).color.equals(this.color);
+		}
+		public int hashCode() {
+			return color.length();
+		}
+		public String toString(){
+			return color + " dog";
+		}
+	}
+	public class TestTreeMap {
+		public static void main(String[] args) {
+			Dog d1 = new Dog("red");
+			Dog d2 = new Dog("black");
+			Dog d3 = new Dog("white");
+			Dog d4 = new Dog("white");
+			TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
+			treeMap.put(d1, 10);
+			treeMap.put(d2, 15);
+			treeMap.put(d3, 5);
+			treeMap.put(d4, 20);
+			for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
+				System.out.println(entry.getKey() + " - " + entry.getValue());
 			}
-			public class TestTreeMap {
-				public static void main(String[] args) {
-					Dog d1 = new Dog("red");
-					Dog d2 = new Dog("black");
-					Dog d3 = new Dog("white");
-					Dog d4 = new Dog("white");
-					TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
-					treeMap.put(d1, 10);
-					treeMap.put(d2, 15);
-					treeMap.put(d3, 5);
-					treeMap.put(d4, 20);
-					for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
-						System.out.println(entry.getKey() + " - " + entry.getValue());
-					}
-				}
-			}
+		}
+	}
+```
 	◆上述代码运行报异常:
 		Exception in thread "main" java.lang.ClassCastException: collection.Dog cannot be cast to java.lang.Comparable
 		at java.util.TreeMap.put(Unknown Source)
 		at collection.TestHashMap.main(TestHashMap.java:35)
 	修改上述代码:
-```java
-		class Dog implements Comparable<Dog>{
-			String color;
-			int size;		 
-			Dog(String c, int s) {
-				color = c;
-				size = s;
-			}		 
-			public String toString(){
-				return color + " dog";
-			}		 
-			@Override
-			public int compareTo(Dog o) {
-				return  o.size - this.size;
-			}
-		}
 
-		public class TestTreeMap {
-			public static void main(String[] args) {
-				Dog d1 = new Dog("red", 30);
-				Dog d2 = new Dog("black", 20);
-				Dog d3 = new Dog("white", 10);
-				Dog d4 = new Dog("white", 10);
-				TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
-				treeMap.put(d1, 10);
-				treeMap.put(d2, 15);
-				treeMap.put(d3, 5);
-				treeMap.put(d4, 20);
-				for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
-					System.out.println(entry.getKey() + " - " + entry.getValue());
-				}
+```java
+	class Dog implements Comparable<Dog>{
+		String color;
+		int size;		 
+		Dog(String c, int s) {
+			color = c;
+			size = s;
+		}		 
+		public String toString(){
+			return color + " dog";
+		}		 
+		@Override
+		public int compareTo(Dog o) {
+			return  o.size - this.size;
+		}
+	}
+
+	public class TestTreeMap {
+		public static void main(String[] args) {
+			Dog d1 = new Dog("red", 30);
+			Dog d2 = new Dog("black", 20);
+			Dog d3 = new Dog("white", 10);
+			Dog d4 = new Dog("white", 10);
+			TreeMap<Dog, Integer> treeMap = new TreeMap<Dog, Integer>();
+			treeMap.put(d1, 10);
+			treeMap.put(d2, 15);
+			treeMap.put(d3, 5);
+			treeMap.put(d4, 20);
+			for (Entry<Dog, Integer> entry : treeMap.entrySet()) {
+				System.out.println(entry.getKey() + " - " + entry.getValue());
 			}
 		}
+	}
 ```
 	(4).LinkedHashMap 与 HashMap 的不同区别是:LinkedHashMap 保留了插入顺序.
 	(5).HashMap,HashTable,TreeMap:
@@ -950,8 +952,11 @@
 		而由泛型附加的类型信息对JVM来说是不可见的;
 	2.2.类型擦除的基本过程:
 		(1).首先是找到用来替换类型参数的具体类,这个具体类一般是 Object,如果指定了类型参数的上界的话,则使用这个上界.
-			把代码中的类型参数都替换成具体的类,同时去掉出现的类型声明,即去掉<>的内容
-		(2).可能需要生成一些桥接方法(bridge method)
+			把代码中的类型参数都替换成具体的类,同时去掉出现的类型声明,即去掉<>的内容.
+			即所有类型参数都用他们的限定类型替换，包括类、变量和方法，如果类型变量有限定则原始类型就用第一个边界的类型来替换，
+			譬如 class Prd<T extends Comparable & Serializable> {} 的原始类型就是 Comparable.
+		(2).如果类型擦除和多态性发生冲突时就在子类中生成桥方法解决;
+		(3).如果调用泛型方法的返回类型被擦除则在调用该方法时插入强制类型转换
 	2.3.编译器承担了全部的类型检查工作,编译器禁止某些泛型的使用方式,正是为了确保类型的安全性:
 		public void inspect(List<Object> list) {    
 		    for (Object obj : list) {        
@@ -990,17 +995,147 @@
 			指定边界则为 Object 类型,泛型类型只有在静态类型检查期间才出现.
 	2.5.为什么Java泛型要通过擦除来实现?
 		Java要通过擦除来实现泛型机制其实是为了兼容性考虑,只有这样才能让非泛化代码到泛化代码的转变过程建立在不破坏现有类库的实现上.
-	2.6.如下代码能否编译通过:
-		ArrayList<Integer> a = new ArrayList<>();
-		a.add(1);
-		a.getClass().getMethod("add", Object.class).invoke(a, "abc");
-		==> 因为 Integer 泛型实例在编译之后被擦除了,只保留了原始类型 Object
-	2.7.先检查再擦除的类型检查是针对引用的,用引用调用泛型方法就会对这个引用调用的方法进行类型检测而无关它真正引用的对象:
-		ArrayList b = new ArrayList<String>();
-		b.add(1);
-		b.add("aaaa");
-		上述代码编译是没有问题的
-		* 泛型中参数化类型无法支持继承关系
+	2.6.类型擦除带来的问题:
+		2.6.1:如下代码能否编译通过:为了解决兼容性带来的问题
+```java
+			ArrayList<Integer> a = new ArrayList<>();
+			a.add(1);
+			a.getClass().getMethod("add", Object.class).invoke(a, "abc");
+			// 因为 Integer 泛型实例在编译之后被擦除了,只保留了原始类型 Object
+			ArrayList<String> b = new ArrayList<String>();
+			b.add("123"); // 编译通过
+			b.add(123); // 编译失败
+
+			ArrayList<String> b = new ArrayList<>();
+			b.add("123"); // 编译通过
+			b.add(123); // 编译失败
+
+			ArrayList b = new ArrayList<String>();
+			b.add("123"); // 编译通过
+			b.add(123); // 编译通过
+			String s = (String) b.get(1); // 返回类型是 Object
+```
+		==> 先检查再擦除的类型检查是针对引用的,用引用调用泛型方法就会对这个引用调用的方法进行类型检测而无关它真正引用的对象:
+		2.6.2.泛型中参数化类型无法支持继承关系:因为泛型设计之初就是为了解决 Object 类型转换弊端而存在的,如果泛型参数
+			支持继承操作就违背了泛型设计转而继续回到原始的 Object 类型转换的弊端.
+```java
+			ArrayList<Object> a = new ArrayList<Object>();
+			a.add(new Object());
+			a.add(new Object());
+			ArrayList<String> b = a; // 编译报错
+
+			ArrayList<String> a = new ArrayList<String>();
+			a.add("abc");
+			a.add(new String());
+			ArrayList<Object> b = a; // 编译报错
+
+			ArrayList<Object> a = new ArrayList<String>(); // 编译报错
+			ArrayList<String> b = new ArrayList<Object>(); // 编译报错
+```
+		2.6.3.泛型与多态的冲突，其通过子类中生成桥方法解决了多态冲突问题
+			看如下代码:
+```java
+			class Creater<T>{
+				private T value;
+				public void setValue(T vslue){this.value = value;}
+				public T getValue(){return value;}
+			}
+			class StringCreater extends Creater<String>{
+				@Override
+				public void setValue(String vslue){super.setValue(value);}
+				@Override
+				public String getValue(){return super.getValue();}
+			}
+			StringCreater c = new StringCreater();
+			c.setValue("aaa");
+			c.setValue(new Object());// 编译错误
+```
+			从编译来看子类根本没有继承自父类参数为 Object 类型的 setValue 方法，所以说子类的 setValue 方
+			法是对父类的重写而不是重载,通过 javap 看下两个类的编译的字节码:
+			...
+			{
+				public void setValue(java.lang.String);
+				descriptor: (Ljava/lang/String;)V
+				flags: ACC_PUBLIC
+				Code:
+				stack=2, locals=2, args_size=2
+					0: aload_0
+					1: aload_1
+					2: invokespecial #2    // Method com/learning/Creater.setValue:(Ljava/lang/Object;)V
+					5: return
+				LineNumberTable:
+					line 25: 0
+				LocalVariableTable:
+					Start  Length  Slot  Name   Signature
+						0       6     0  this   Lcom/learning/StringCreater;
+						0       6     1 value   Ljava/lang/String;
+			public void setValue(java.lang.Object);
+				descriptor: (Ljava/lang/Object;)V
+				flags: ACC_PUBLIC, ACC_BRIDGE, ACC_SYNTHETIC
+				Code:
+				stack=2, locals=2, args_size=2
+					0: aload_0
+					1: aload_1
+					2: checkcast     #4                  // class java/lang/String
+					5: invokevirtual #6                  // Method setValue:(Ljava/lang/String;)V
+					8: return
+				LineNumberTable:
+					line 23: 0
+				LocalVariableTable:
+					Start  Length  Slot  Name   Signature
+						0       9     0  this   Lcom/learning/StringCreater;
+			}
+			(1).reater 泛型类在编译后类型被擦除为 Object,子类的本意是进行重写实现多态，可类型擦除后子类就和多态产生了冲突，
+			所以编译后的字节码里就出现了桥方法来实现多态;
+			(2).可以看到桥方法的参数类型都是 Object，也就是说子类中真正覆盖父类方法的是桥方法,
+			而子类 String 参数 setValue、getValue 方法上的 @Oveerride 注解只是个假象;
+		2.6.4.泛型读取时会进行自动类型转换问题，所以如果调用泛型方法的返回类型被擦除则在调用该方法时插入强制类型转换.
+			泛型类型参数不能是基本类型.
+			无法进行具体泛型参数类型的运行时类型检查.
+			不能抛出也不能捕获泛型类的对象,也不能在 catch 子句中使用泛型变量,如果可以在 catch 子句中使用则违背了异常的捕获优先级顺序;
+	2.7.泛型数组:
+		参考网址:https://docs.oracle.com/javase/tutorial/extra/generics/fineprint.html
+		(1).为什么泛型数组不能采用具体的泛型类型进行初始化?
+```java
+			// Not really allowed.
+			List<String>[] lsa = new List<String>[10];
+			Object o = lsa;
+			Object[] oa = (Object[]) o;
+			List<Integer> li = new ArrayList<Integer>();
+			li.add(new Integer(3));
+			// Unsound, but passes run time store check
+			oa[1] = li;
+
+			// Run-time error: ClassCastException.
+			String s = lsa[1].get(0);// 在取出数据的时候需要进行一次类型转换,所以会出现 ClassCastException
+			
+
+			// OK, array of unbounded wildcard type.
+			List<?>[] lsa = new List<?>[10];
+			Object o = lsa;
+			Object[] oa = (Object[]) o;
+			List<Integer> li = new ArrayList<Integer>();
+			li.add(new Integer(3));
+			// Correct.
+			oa[1] = li;
+			// Run time error, but cast is explicit.
+			String s = (String) lsa[1].get(0);
+```		
+			Java 的泛型数组初始化时数组类型不能是具体的泛型类型，只能是通配符的形式，因为具体类型会导致可存入任意类型对象，
+			在取出时会发生类型转换异常，会与泛型的设计思想冲突，而通配符形式本来就需要自己强转，符合预期;
+	2.8.Java不能实例化泛型对象,类似:T t = new T()
+		因为Java编译期没法确定泛型参数化类型,也就找不到对应的字节码文件.此外由于泛型被擦除为 Object,如果可以通过 new T则
+		成了 new Object.如果要实例化一个泛型对象,可以同反射实现:
+			static <T> T newClass(Class<T> clazz)throws InstantiationException,IllegalAccessException{
+				T t = clazz.newInstance();
+				return t;
+			}
+	2.9.泛型擦除擦除了哪些信息?
+		* 泛型擦除其实是分情况擦除的，不是完全擦除:
+		Java 在编译时会在字节码里指令集之外的地方保留部分泛型信息，泛型接口、类、方法定义上的所有泛型、成员变量声明处的
+		泛型都会被保留类型信息，其他地方的泛型信息都会被擦除.
+		泛型的擦除机制实际上擦除的是除结构化信息外的所有东西(结构化信息指与类结构相关的信息，而不是与程序执行流程有关的，
+		即与类及其字段和方法的类型参数相关的元数据都会被保留下来通过反射获取到)
 ## 3.通配符与上下界:
 	3.1.在使用泛型类的时候,既可以指定一个具体的类型,也可以用通配符?来表示未知类型,如 List<?>
  	3.2.通配符所代表的其实是一组类型,但具体的类型是未知的,但是 List<?>并不等同于 List<Object>
@@ -1009,9 +1144,13 @@
  	3.3.对于 List<?>中的元素只能用 Object 来引用,在有些情况下不是很方便.在这些情况下,可以使用上下界来限制未知类型的范围
  		如:List<? extends Number>说明 List 中可能包含的元素类型是 Number 及其子类
  		而:List<? super Number> 则说明 List 中包含的是 Number 及其父类
- 		当引入了上界之后,在使用类型的时候就可以使用上界类中定义的方法
+ 		当引入了上界之后,在使用类型的时候就可以使用上界类中定义的方法.
+		List<?> 是一个未知类型的 List，而 List<Object> 其实是任意类型的 List,可以把 List<String>、List<Integer> 
+		赋值给 List<?>，却不能把 List<String> 赋值给 List<Object>
  	3.4.关于 <? extends T> 和 <? super T>
- 		3.4.1.<? extends T>:表示参数化的类型可能是所指定的类型,或者是此类型的子类
+	 	List<? extends T> 可以接受任何继承自 T 的类型的 List
+		List<? super T> 可以接受任何 T 的父类构成的 List
+ 		3.4.1.<? extends T>:表示参数化的类型可能是所指定的类型,或者是此类型的子类,即泛型的上边界;
 	 		public class DemoGenerice {
 	 			public static void main(String[] args) {
 	 				List<? extends Season> list = new LinkedList<Season>();
@@ -1025,12 +1164,71 @@
 	 			List<? extends Season> 表示 "具有任何从 Season 继承类型的列表",编译器无法确定 List 所持有的类型,
 	 			所以无法安全的向其中添加对象。可以添加 null,因为 null 可以表示任何类型。
 	 			所以 List 的add 方法不能添加任何有意义的元素;
-	 	3.4.2.<? super T>:表示参数化的类型可能是所指定的类型,或者是此类型的父类型,直至Object
-
+			(2).? extends Season 表示的是 Season 的某个子类型,但不知道具体的子类型,如果允许写入,Java就无法确保类型
+				安全性,所以直接禁止.
+				<? super E> 形式与<? extends E> 正好相反，超类型通配符表示E的某个父类型，有了它就可以更灵活的写入了
+				==> 一定要注意泛型类型声明变量 ？时写数据的规则
+	 	3.4.2.<? super T>:表示参数化的类型可能是所指定的类型,或者是此类型的父类型,直至Object.即泛型的下边界
 	 	3.4.3.PECS原则:
 	 		(1).如果要从集合中读取类型T的数据,并且不能写入,可以使用 ? extends 通配符；(Producer Extends)
 	 		(2).如果要从集合中写入类型T的数据,并且不需要读取,可以使用 ? super 通配符；(Consumer Super)
 	 		(3).如果既要存又要取,那么就不要使用任何通配符
+	3.5. <T extends E> 和 <? extends E> 有什么区别:
+		<T extends E> 用于定义类型参数，声明了一个类型参数 T，可放在泛型类定义中类名后面、接口后面、泛型方法返回值前面
+		<? extends E> 用于实例化类型参数，用于实例化泛型变量中的类型参数，只是这个具体类型是未知的，只知道它是 E 或 E 的某个子类型
+		public void addAll(Bean<? extends E> c);
+		public <T extends E> addAll(Bean<T> c);
+	3.6.通配符的上下边界问题:
+		(1).扩展问题:
+```java
+		Vector<? extends Number> s1 = new Vector<Integer>();// 编译成功
+        Vector<? extends Number> s2 = new Vector<String>();// 编译报错,只能是 Number 的子类
+		Vector<? super Integer> s3 = new Vector<Number>();// 编译成功
+        Vector<? super Integer> s4 = new Vector<Byte>(); // 编译报错,只能是 Integer 的父类
+		class Bean<T super E>{} // 编译时报错，因为 Java 类型参数限定只有 extends 形式，没有 super 形式
+```
+		(2).类型转换赋值:
+```java
+		public class GenericTest {
+			public static <T> T add(T x, T y){
+				return y;
+			}
+			public static void main(String[] args) {
+				//t0编译报错:add 的两个参数一个是Integer,一个是Float,取同一父类的最小级Number,故T为Number类型,类型错误
+				int t0 = GenericTest.add(10,10.22);
+				//t1执行成功,add 的两个参数都是 Integer，所以 T 为 Integer 类型
+				int t1 = GenericTest.add(10,20);
+				//t2执行成功,add 的两个参数一个是Integer,一个是Float,取同一父类型Number,故T为Number类型
+				Number t2 = GenericTest.add(10,20.22);
+				//t3执行成功,的两个参数一个是Integer,一个是Float,取同一类型的最小级Object,故T为 Object类型
+				Object t3 = GenericTest.add(10,"abc");
+				//t4执行成功,add指定了泛型类型为 Integer,所以只能add为Integer的类型或者子类型的参数.
+				int t4 = GenericTest.<Integer>add(10,20);
+				//t5编译报错,同t4
+				int t5 = GenericTest.<Integer>add(10,22.22);
+				//t6执行成功,add指定了泛型类型Number,add只能为Number类型或者子类型的.
+				Number t6 = GenericTest.<Number>add(10,20.33);
+			}
+		}
+```
+			在调用泛型方法的时可以指定泛型,也可以不指定泛型；在不指定泛型时泛型变量的类型为该方法中的几种类型的同一个父类的最小级.
+			在指定泛型时该方法中的几种类型必须是该泛型实例类型或者其子类
+		(3).类型限定:
+```java
+		// 编译报错:因为编译器在编译前首先进行了泛型检查和泛型擦除才编译,所以等到真正编译时 T 由于没有类型限定自动擦除为Object类型
+		// 所以只能调用 Object 的方法，而 Object 没有 compareTo 方法
+		public static <T> T get(T t1, T t2){
+			if (t1.compareTo(t2) >= 0);
+			return t1;
+		}
+		// 编译成功.因为限定类型为 Comparable 接口，其存在 compareTo 方法，所以 t1、t2 擦除后被强转成功
+		// 所以类型限定在泛型类、泛型接口和泛型方法中都可以使用
+		public static <T extends Comparable> T get(T t1,T t2){
+			if (t1.compareTo(t2)>=0);
+			return t1;
+		}
+```
+						
 ## 4.Java 类型系统:
 	4.1.在 Java 中,通过继承机制而产生的类型体系结构是大家熟悉的.
 		根据Liskov替换原则,子类是可以替换父类的,但是反过来的话,即用父类的引用替换子类引用的时候,就需要进行强制类型转换
