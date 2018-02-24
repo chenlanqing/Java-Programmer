@@ -72,7 +72,7 @@
 				this.myArray = Arrays.copyOf(newMyArray, newMyArray.length);
 			}
 		}
-# 6.ArrayList 与 Vector：
+#### 6.ArrayList 与 Vector：
     (Vector 是同步的.Vector 是线程安全的动态数组.它的操作与 ArrayList 几乎一样):
 	如果集合中的元素的数目大于目前集合数组的长度时，Vector 增长率为目前数组长度的 100%,而 Arraylist 增长率为目
 	前数组长度的 50%.如过在集合中使用数据量比较大的数据，用 Vector 有一定的优势
