@@ -43,6 +43,10 @@
 - [五.JUC 包核心与算法](#%E4%BA%94juc-%E5%8C%85%E6%A0%B8%E5%BF%83%E4%B8%8E%E7%AE%97%E6%B3%95)
   - [1.AQS:AbstractQueuedSynchronizer,抽象队列同步器](#1aqsabstractqueuedsynchronizer%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
   - [2.CAS:Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
+- [六.线程池](#%E5%85%AD%E7%BA%BF%E7%A8%8B%E6%B1%A0)
+  - [1.原理](#1%E5%8E%9F%E7%90%86)
+  - [2.使用](#2%E4%BD%BF%E7%94%A8)
+  - [3.注意事项](#3%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1269,3 +1273,10 @@
 		(2).从锁的分类来看,CAS 属于乐观锁,乐观地认为程序中的并发情况不那么严重,所以让线程不断去尝试更新;
 			而 synchronized 属于悲观锁,悲观地认为程序中的并发情况严重,所以严防死守;
 		(3).两者没有绝对的好坏,关键看使用场景.在1.6版本后,synchronized 变为重量级锁之前也是采用 CAS 机制.
+
+# 六.线程池
+## 1.原理
+
+## 2.使用
+
+## 3.注意事项
