@@ -1299,11 +1299,12 @@
 	1.5.线程池原理:
 		预先启动一些线程,线程无限循环从任务队列中获取一个任务进行执行,直到线程池被关闭.如果某个线程因为执行某个任务发生异常而终止,
 		那么重新创建一个新的线程而已.如此反复.线程池的实现类是 ThreadPoolExecutor 类
-		![image](/image/线程池主要处理流程.png)
-## 1.ThreadPoolExecutor类:
+
+## 2.线程池数据结构:
 	java.uitl.concurrent.ThreadPoolExecutor类是线程池中最核心的一个类
-## 2.原理
+## 3.线程池任务 submit及执行流程:
+	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程池主要处理流程.png)
 
-## 3.使用
 
-## 4.注意事项
+
+
