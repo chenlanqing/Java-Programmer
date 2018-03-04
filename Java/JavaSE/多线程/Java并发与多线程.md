@@ -45,10 +45,8 @@
   - [2.CAS:Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
 - [六.线程池](#%E5%85%AD%E7%BA%BF%E7%A8%8B%E6%B1%A0)
   - [1.线程池技术:](#1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8A%80%E6%9C%AF)
-  - [1.ThreadPoolExecutor类:](#1threadpoolexecutor%E7%B1%BB)
-  - [2.原理](#2%E5%8E%9F%E7%90%86)
-  - [3.使用](#3%E4%BD%BF%E7%94%A8)
-  - [4.注意事项](#4%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
+  - [2.线程池数据结构:](#2%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
+  - [3.线程池任务 submit及执行流程:](#3%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BB%BB%E5%8A%A1-submit%E5%8F%8A%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1279,6 +1277,8 @@
 # 六.线程池
 	* http://www.cnblogs.com/dolphin0520/p/3932921.html
 	* http://www.cnblogs.com/cm4j/p/thread-pool.html
+	* [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
+	* [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
 ## 1.线程池技术:
 	1.1.为什么使用线程池:
 		(1).在多线程技术中,线程的创建和销毁很消耗时间,因为创建线程需要获取内存资源或者其他更多的资源.提高效率就是减少线程的创建和销毁次数.
@@ -1303,7 +1303,41 @@
 ## 2.线程池数据结构:
 	java.uitl.concurrent.ThreadPoolExecutor类是线程池中最核心的一个类
 ## 3.线程池任务 submit及执行流程:
-	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程池主要处理流程.png)
+	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程池主要处理流程.png)	
+	(1).一个任务提交,如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行;(执行这个步骤时需要获取全局锁)
+	(2).如果来不及执行，则把多余的线程放到workQueue，等待已启动的worker来循环执行;
+	(3).如果队列workQueue都放满了还没有执行，则在maximumPoolSize下面启动新的worker来循环执行workQueue;
+	(4).如果启动到maximumPoolSize还有任务进来，线程池已达到满负载，此时就执行任务拒绝RejectedExecutionHandler
+	线程池核心代码:
+```java
+		public void execute(Runnable command) {
+			if (command == null)
+				throw new NullPointerException();
+			int c = ctl.get();
+			// 判断当前线程数是否小于 corePoolSize,如果是,使用入参任务通过 addWork方法创建一个新的线程.
+			// 如果能完成新线程的创建execute方法结束,成果提交任务.
+			if (workerCountOf(c) < corePoolSize) {
+				if (addWorker(command, true))// true表示会再次检查workCount是否小于corePoolSize
+					return;
+				c = ctl.get();
+			}
+			// 如果上面没有完成任务提交;状态为运行并且能发成功加入任务到工作队列后,在进行一次check,如果状态在任务
+			// 加入了任务队列后变为非运行(可能线程池被关闭了),非运行状态下当然需要reject;
+			// 然后在判断当前线程数是否为0,如果是,新增一个线程;
+			if (isRunning(c) && workQueue.offer(command)) {
+				int recheck = ctl.get();
+				if (! isRunning(recheck) && remove(command))
+					reject(command);
+				else if (workerCountOf(recheck) == 0)
+					addWorker(null, false);
+			}
+			// 如果任务不能加入到工作队列,将尝试使用任务增加一个线程,如果失败,则是线程池已经shutdown或者线程池已经
+			// 达到饱和状态,所以reject这个任务.
+			else if (!addWorker(command, false))
+				reject(command);
+		}
+
+```
 
 
 
