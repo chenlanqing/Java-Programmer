@@ -7,6 +7,11 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+参考文章：
+* https://www.cnblogs.com/ITtangtang/p/3978349.html
+* https://github.com/code4craft/tiny-spring
+* [源代码](https://github.com/spring-projects/spring-framework)
+
 #### 1.Spring 的整体架构:
 	1.1.Core Container:核心容器,包含 Core、Beans、Context、Expression Language 模块
 		Core 和 Beans 模块是框架的基础部分,提供 IOC 和依赖注入特性.这里的基础概念是 BeanFactory,它提供对 Factory 

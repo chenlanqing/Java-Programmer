@@ -44,9 +44,11 @@
   - [1.AQS:AbstractQueuedSynchronizer,抽象队列同步器](#1aqsabstractqueuedsynchronizer%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
   - [2.CAS:Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
 - [六.线程池](#%E5%85%AD%E7%BA%BF%E7%A8%8B%E6%B1%A0)
-  - [1.原理](#1%E5%8E%9F%E7%90%86)
-  - [2.使用](#2%E4%BD%BF%E7%94%A8)
-  - [3.注意事项](#3%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
+  - [1.线程池技术:](#1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8A%80%E6%9C%AF)
+  - [1.ThreadPoolExecutor类:](#1threadpoolexecutor%E7%B1%BB)
+  - [2.原理](#2%E5%8E%9F%E7%90%86)
+  - [3.使用](#3%E4%BD%BF%E7%94%A8)
+  - [4.注意事项](#4%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
