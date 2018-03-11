@@ -51,7 +51,24 @@
 	(6).@GetMapping:组合注解
 
 
+***********************************************
+1.SpringBoot中如果需要注入某个配置，如：RestTemplate，可以使用如下方法：
+```java
+	@Configuration
+	public class RestConfig {
 
+		@Bean
+		public RestTemplate restTemplate() {
+			SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+			requestFactory.setConnectTimeout(1000);
+			requestFactory.setReadTimeout(1000);
+
+			RestTemplate restTemplate = new RestTemplate(requestFactory);
+			return restTemplate;
+
+		}
+	}
+```
 
 
 
