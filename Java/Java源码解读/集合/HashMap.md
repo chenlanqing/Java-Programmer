@@ -2,8 +2,25 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [四.HashMap 的存取实现:](#%E5%9B%9Bhashmap-%E7%9A%84%E5%AD%98%E5%8F%96%E5%AE%9E%E7%8E%B0)
-- [五.高并发下 HashMap 的使用的问题:](#%E4%BA%94%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B-hashmap-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98)
+- [一.HashMap 基本:](#%E4%B8%80hashmap-%E5%9F%BA%E6%9C%AC)
+  - [1.HashMap 的特点:](#1hashmap-%E7%9A%84%E7%89%B9%E7%82%B9)
+  - [2.HashMap 和 HashTable 的区别:](#2hashmap-%E5%92%8C-hashtable-%E7%9A%84%E5%8C%BA%E5%88%AB)
+  - [3.HashMap 与 HashSet的关系:](#3hashmap-%E4%B8%8E-hashset%E7%9A%84%E5%85%B3%E7%B3%BB)
+  - [4.HashTable 和 ConcurrentHashMap 的关系:](#4hashtable-%E5%92%8C-concurrenthashmap-%E7%9A%84%E5%85%B3%E7%B3%BB)
+  - [5.键的不变性:](#5%E9%94%AE%E7%9A%84%E4%B8%8D%E5%8F%98%E6%80%A7)
+  - [6.Java8 中 HashMap 的改进:](#6java8-%E4%B8%AD-hashmap-%E7%9A%84%E6%94%B9%E8%BF%9B)
+  - [7.从Java 7开始，HashMap 采用了延迟加载的机制:](#7%E4%BB%8Ejava-7%E5%BC%80%E5%A7%8Bhashmap-%E9%87%87%E7%94%A8%E4%BA%86%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E7%9A%84%E6%9C%BA%E5%88%B6)
+  - [8.如果你需要存储大量数据，你应该在创建HashMap时指定一个初始的容量.这个容量应该接近你期望的大小:](#8%E5%A6%82%E6%9E%9C%E4%BD%A0%E9%9C%80%E8%A6%81%E5%AD%98%E5%82%A8%E5%A4%A7%E9%87%8F%E6%95%B0%E6%8D%AE%E4%BD%A0%E5%BA%94%E8%AF%A5%E5%9C%A8%E5%88%9B%E5%BB%BAhashmap%E6%97%B6%E6%8C%87%E5%AE%9A%E4%B8%80%E4%B8%AA%E5%88%9D%E5%A7%8B%E7%9A%84%E5%AE%B9%E9%87%8F%E8%BF%99%E4%B8%AA%E5%AE%B9%E9%87%8F%E5%BA%94%E8%AF%A5%E6%8E%A5%E8%BF%91%E4%BD%A0%E6%9C%9F%E6%9C%9B%E7%9A%84%E5%A4%A7%E5%B0%8F)
+- [二.签名:](#%E4%BA%8C%E7%AD%BE%E5%90%8D)
+- [三.设计理念:](#%E4%B8%89%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
+  - [1.HashMap 的数据结构:](#1hashmap-%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
+  - [2.哈希表(hash table):](#2%E5%93%88%E5%B8%8C%E8%A1%A8hash-table)
+  - [3.HashMap 其实也是一个线性的数组实现的:](#3hashmap-%E5%85%B6%E5%AE%9E%E4%B9%9F%E6%98%AF%E4%B8%80%E4%B8%AA%E7%BA%BF%E6%80%A7%E7%9A%84%E6%95%B0%E7%BB%84%E5%AE%9E%E7%8E%B0%E7%9A%84)
+  - [4.HashMap 的工作原理:](#4hashmap-%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
+- [四.构造方法:](#%E5%9B%9B%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
+- [五.HashMap 的存取实现:](#%E4%BA%94hashmap-%E7%9A%84%E5%AD%98%E5%8F%96%E5%AE%9E%E7%8E%B0)
+- [六.高并发下 HashMap 的使用的问题:](#%E5%85%AD%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B-hashmap-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98)
+- [七.面试题](#%E4%B8%83%E9%9D%A2%E8%AF%95%E9%A2%98)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -11,9 +28,12 @@
  * http://www.hollischuang.com/archives/82
  * http://www.importnew.com/16599.html
  * [Java HashMap工作原理及实现:(JDK8)](http://yikun.github.io/2015/04/01/Java-HashMap%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E5%AE%9E%E7%8E%B0/)
+ * https://javadoop.com/post/hashmap
  * HashMap 是基于一个数组和多个链表来实现的
  * HashMap:继承 AbstractMap, 实现了 Map, Cloneable, Serializable
-#### 1.HashMap 的特点:
+
+# 一.HashMap 基本:
+## 1.HashMap 的特点:
 	1.1.HashMap 使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对
 		HashMap将 数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组)，
 		这个内部数组的默认长度是 16
@@ -33,7 +53,7 @@
 			如果Key对象是可变的，那么Key的哈希值就可能改变。在HashMap中可变对象作为Key会造成数据丢失
 		(2).在 HashMap 中使用不可变对象。在 HashMap 中，使用 String、Integer 等不可变类型用作Key是非常明智的
 			定义属于自己的不可变类时,在改变对象状态的时候，不要改变它的哈希值了
-#### 2.HashMap 和 HashTable 的区别:
+## 2.HashMap 和 HashTable 的区别:
 	(1).HashTable的方法是同步的，在方法的前面都有synchronized来同步，HashMap未经同步，所以在多线程场合要手动同步
 	(2).HashTable不允许null值(key和value都不可以) ,HashMap允许null值(key和value都可以)。
 	(3).HashTable有一个contains(Object value)功能和containsValue(Object value)功能一样。
@@ -52,7 +72,7 @@
 		static int indexFor(int h, int length) {
 		return h & (length-1);
 		}
-#### 3.HashMap 与 HashSet的关系:
+## 3.HashMap 与 HashSet的关系:
 	(1).HashSet底层是采用HashMap实现的:
 		public HashSet() {
 			map = new HashMap<E,Object>();
@@ -65,7 +85,7 @@
 		public boolean remove(Object o) { 
 		    return map.remove(o)==PRESENT; 
 		}
-#### 4.HashTable 和 ConcurrentHashMap 的关系:
+## 4.HashTable 和 ConcurrentHashMap 的关系:
 	4.1.ConcurrentHashMap 也是一种线程安全的集合类，他和 HashTable 也是有区别的,主要区别:就是加锁的粒度以及如何加锁;
 		ConcurrentHashMap 的加锁粒度要比 HashTable 更细一点。将数据分成一段一段的存储，然后给每一段数据配一把锁，
 		当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问
@@ -78,26 +98,25 @@
 			要在迭代的时候要将集合锁定一段时间，这些特性对可扩展性来说都是障碍;
 		(2).ConcurrentHashMap和CopyOnWriteArrayList保留了线程安全的同时，也提供了更高的并发性。ConcurrentHashMap
 			和 CopyOnWriteArrayList 并不是处处都需要用;大部分时候你只需要用到HashMap和ArrayList,它们用于应对一些普通的情况
-#### 5.键的不变性:
+## 5.键的不变性:
 	(1).为什么将字符串和整数作为HashMap的键是一种很好的实现？主要是因为它们是不可变的！如果你选择自己创建一个类作为键，
 		但不能保证这个类是不可变的，那么你可能会在HashMap内部丢失数据
-#### 6.Java8 中 HashMap 的改进:
+## 6.Java8 中 HashMap 的改进:
 	(1).在Java 8中，我们仍然使用数组，但它会被保存在Node中，Node 中包含了和之前 Entry 对象一样的信息，并且也会使用链表
 	(2).那么和Java 7相比，到底有什么大的区别呢？好吧，Node可以被扩展成TreeNode。TreeNode是一个红黑树的数据结构，
 		它可以存储更多的信息这样我们可以在O(log(n))的复杂度下添加、删除或者获取一个元素;
 	(3).红黑树是自平衡的二叉搜索树。它的内部机制可以保证它的长度总是log(n)，不管我们是添加还是删除节点。使用这种类型的树,
 		最主要的好处是针对内部表中许多数据都具有相同索引（桶）的情况，这时对树进行搜索的复杂度是O(log(n))，
 		而对于链表来说，执行相同的操作，复杂度是O(n);
-#### 7.从Java 7开始，HashMap 采用了延迟加载的机制:
+## 7.从Java 7开始，HashMap 采用了延迟加载的机制:
     这意味着即使你为HashMap指定了大小，在我们第一次使用put()方法之前，
 	记录使用的内部数组（耗费4*CAPACITY字节）也不会在内存中分配空间;
-#### 8.如果你需要存储大量数据，你应该在创建HashMap时指定一个初始的容量.这个容量应该接近你期望的大小:
+## 8.如果你需要存储大量数据，你应该在创建HashMap时指定一个初始的容量.这个容量应该接近你期望的大小:
 	通过初始化时指定Map期望的大小，你可以避免调整大小操作带来的消耗
 	如果你不这样做，Map会使用默认的大小，即16，factorLoad的值是0.75。前11次调用put()方法会非常快，但是第12次（16*0.75）
 	调用时会创建一个新的长度为32的内部数组（以及对应的链表/树），第13次到第22次调用put()方法会很快
---- 
-* 基于JDK1.6源码分析
-# 一.签名:
+
+# 二.签名:
     1.public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneable, Serializable{}
         (1).实现标记接口 Cloneable，用于表明 HashMap 对象会重写 java.lang.Object#clone()方法,HashMap 实现的是浅拷贝(shallow copy);
         (2).实现标记接口 Serializable，用于表明 HashMap 对象可以被序列化;
@@ -111,8 +130,9 @@
         (2).如果要实现个可变(modifiable)的map，首先继承 AbstractMap,然后重写 AbstractMap 的put方法,
             同时实现entrySet所返回set的迭代器的remove方法即可
     --> 为什么继承了 AbstractMap 还需要实现 Map 接口?
-# 二.设计理念:
-#### 1.HashMap 的数据结构:数据结构中有数组和链表来实现对数据的存储，但这两者基本上是两个极端
+# 三.设计理念:
+## 1.HashMap 的数据结构:
+	数据结构中有数组和链表来实现对数据的存储，但这两者基本上是两个极端
 	(1).数组:数组必须事先定义固定的长度（元素个数），不能适应数据动态地增减的情况。当数据增加时,可能超出原先定义的元素个数;
 		当数据减少时，造成内存浪费
 		数组是静态分配内存，并且在内存中连续。
@@ -124,25 +144,27 @@
 		链表定位元素时间复杂度O(n)
 		链表插入或删除元素的时间复杂度O(1)
 		链表的特点是：寻址困难，插入和删除容易.
-#### 2.哈希表(hash table):HashMap是一种基于哈希表（hash table）实现的map,既满足了数据的查找方便，同时不占用太多的内容空间，
+## 2.哈希表(hash table):
+	HashMap是一种基于哈希表（hash table）实现的map,既满足了数据的查找方便，同时不占用太多的内容空间，
 	(1).哈希表(也叫关联数组)一种通用的数据结构:
 		key经过hash函数作用后得到一个槽(buckets或slots)的索引(index),槽中保存着我们想要获取的值
 	(2).一些不同的key经过同一hash函数后可能产生相同的索引,利用哈希表这种数据结构实现具体类时:
 		设计个好的hash函数，使冲突尽可能的减少
 		其次是需要解决发生冲突后如何处理。
-#### 3.HashMap 其实也是一个线性的数组实现的,所以可以理解为其存储数据的容器就是一个线性数组
+## 3.HashMap 其实也是一个线性的数组实现的:
+	所以可以理解为其存储数据的容器就是一个线性数组
 	HashMap 里面实现一个静态内部类 Entry，其重要的属性有 key , value, next，从属性key,value我们就能很明显的
 	看出来 Entry 就是 HashMap 键值对实现的一个基础bean，我们上面说到HashMap的基础就是一个线性数组，
 	这个数组就是 Entry[]，Map 里面的内容都保存在 Entry[]里面
 	(PS.在 JDK8中,HashMap中内容保存在 Node[] 数组中的)
-#### 4.HashMap 的工作原理:
+## 4.HashMap 的工作原理:
 	(1).通过hash的方法，通过put和get存储和获取对象;
 	(2).存储对象时，我们将 K/V传给put方法时，它调用hashCode计算hash从而得到bucket位置，进一步存储，HashMap会根据
 		当前bucket的占用情况自动调整容量(超过Load Facotr则resize为原来的2倍);
 	(3).取对象时，我们将K传给get，它调用hashCode计算hash从而得到bucket位置，并进一步调用equals()方法确定键值对;
 	(4).如果发生碰撞的时候，Hashmap通过链表将产生碰撞冲突的元素组织起来，在Java 8中，如果一个bucket中碰撞冲突的元
 		素超过某个限制(默认是8)，则使用红黑树来替换链表，从而提高速度;
-# 三.构造方法:
+# 四.构造方法:
 #### 1.HashMap 提供了一个参数为空的构造函数与有一个参数且参数类型为 Map 的构造函数
 	除此之外，还提供了两个构造函数，用于设置 HashMap 的容量（capacity）与平衡因子（loadFactor）
 	public HashMap(int initialCapacity, float loadFactor) {
@@ -188,7 +210,7 @@
 		而16或者其他2的幂,Length - 1的值是所有二进制位全为1,这种情况下,index的结果等于 hashCode 后几位的值.只要输入hashcode本身是均匀分布的,hash算法等于均匀的
 
 
-# 四.HashMap 的存取实现:
+# 五.HashMap 的存取实现:
 #### 1.public V put(K key, V value)方法:
 	1.1.JDK6和JDK7:
 		(1).JDK7比JDK6增加了一个判断:
@@ -317,7 +339,7 @@
 		(2).扩充HashMap的时候，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0就好了，是0的话索引没变，
 		是1的话索引变成“原索引+oldCap”
 
-# 五.高并发下 HashMap 的使用的问题:
+# 六.高并发下 HashMap 的使用的问题:
     1.Hashmap 在插入元素过多的时候需要进行 resize,resize的条件是:size >=  capacity * loadFactor。
     2.Hashmap 的 resize 包含扩容和 reHash两个步骤,reHash在并发的情况下可能会形成链表环.
         当调用Get查找一个不存在的Key,而这个Key的Hash结果恰好等于某个值的时候,由于位置该值带有环形链表,所以程序将会进入死循环
@@ -329,8 +351,7 @@
         Hash 结果显然不同
     4.在涉及到多线程并发的情况,执行get方法有可能会引起循环遍历（前提是其它线程的put方法引起了resize动作）,导致CPU利用率接近100%
 
----
-* 面试题
+# 七.面试题
 #### 1.get和put的原理?JDK8
 	通过对key的hashCode()进行hashing，并计算下标( n-1 & hash)，从而获得buckets的位置。
 	如果产生碰撞，则利用key.equals()方法去链表或树中去查找对应的节点
