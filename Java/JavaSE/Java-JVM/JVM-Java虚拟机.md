@@ -1402,4 +1402,7 @@
 		        // 如果想要 StringBuffer sb 不逃逸出方法,可以使用 sb.toString();
 		    }
 	14.2.
-15.
+## 15.钩子函数(ShutdownHook)
+	https://segmentfault.com/a/1190000011496370
+	shutdownHook是一种特殊的结构,它允许开发人员插入JVM关闭时执行的一段代码.这种情况在我们需要做特殊清理操作的情况下很有用.
+	Runtime.addShutdownHook
