@@ -17,6 +17,7 @@
 - [12.虚拟机监控及故障处理](#12%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9B%91%E6%8E%A7%E5%8F%8A%E6%95%85%E9%9A%9C%E5%A4%84%E7%90%86)
 - [13.JVM 虚拟机调优:](#13jvm-%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%B0%83%E4%BC%98)
 - [14.JVM 优化技术:](#14jvm-%E4%BC%98%E5%8C%96%E6%8A%80%E6%9C%AF)
+- [15.钩子函数(ShutdownHook)](#15%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0shutdownhook)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -1402,4 +1403,7 @@
 		        // 如果想要 StringBuffer sb 不逃逸出方法,可以使用 sb.toString();
 		    }
 	14.2.
-15.
+## 15.钩子函数(ShutdownHook)
+	https://segmentfault.com/a/1190000011496370
+	shutdownHook是一种特殊的结构,它允许开发人员插入JVM关闭时执行的一段代码.这种情况在我们需要做特殊清理操作的情况下很有用.
+	Runtime.addShutdownHook

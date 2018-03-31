@@ -6,8 +6,11 @@
 - [二.Java 内存分配:](#%E4%BA%8Cjava-%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D)
 - [三.String 类型:](#%E4%B8%89string-%E7%B1%BB%E5%9E%8B)
 - [四.关于 String 的不可变:](#%E5%9B%9B%E5%85%B3%E4%BA%8E-string-%E7%9A%84%E4%B8%8D%E5%8F%AF%E5%8F%98)
-- [五.String intern()方法:](#%E4%BA%94string-intern%E6%96%B9%E6%B3%95)
+- [五.源码分析：](#%E4%BA%94%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
+  - [(五).String intern()方法:](#%E4%BA%94string-intern%E6%96%B9%E6%B3%95)
 - [六.关于 String 需要注意的点:](#%E5%85%AD%E5%85%B3%E4%BA%8E-string-%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E7%82%B9)
+- [七.String 相关的面试题](#%E4%B8%83string-%E7%9B%B8%E5%85%B3%E7%9A%84%E9%9D%A2%E8%AF%95%E9%A2%98)
+- [八.String的使用技巧](#%E5%85%ABstring%E7%9A%84%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -170,7 +173,7 @@
 
 
 ---
-源码分析：
+# 五.源码分析：
 * 参考文章: http://www.hollischuang.com/archives/99
 * 1.String 表示字符串,Java 中所有字符串的字面值都是 String 类的实例,例如"ABC".字符串是常量,
 	在定义之后不能被改变,字符串缓冲区支持可变的字符串.因为 String 对象是不可变的,所以可以共享它们
@@ -178,7 +181,7 @@
 * 2.Java 语言提供了对字符串连接运算符的特别支持(+),该符号也可用于将其他类型转换成字符串.
 	字符串的连接实际上是通过 StringBuffer 或者 StringBuilder 的append()方法来实现的,字符串的转换通过toString方法实现,
 	该方法由 Object 类定义,并可被 Java 中的所有类继承;
-# 一.定义:(与 JDK8 一致)
+## (一).定义:(与 JDK8 一致)
     public final class String implements java.io.Serializable, Comparable<String>, CharSequence{}
     从该类的声明中我们可以看出 String 是 final 类型的,表示该类不能被继承,同时该类实现了三个接口:表示可序列化,可比较,是字符序列
 #### 1.String 为什么要设计成不可变?
@@ -195,7 +198,7 @@
 		因为不可变对象不能被改变,所以他们可以自由地在多个线程之间共享.不需要任何同步处理?
 	(6).如果字符串是可变的则会引起很严重的安全问题,譬如数据库的用户名密码都是以字符串的形式传入来获得数据库的连接,或者在 socket 编程中主机名和端口
 		都是以字符串的形式传入,因为字符串是不可变的,所以它的值是不可改变的,否则黑客们可以钻到空子改变字符串指向的对象的值造成安全漏洞;
-# 二.属性:
+## (二).属性:
     1.private final char value[];
         这是一个字符数组,并且是 final 类型,他用于存储字符串内容,从 final 这个关键字中我们可以看出,
         String 的内容一旦被初始化了是不能被更改的. 虽然有这样的例子: String s = "a"; s = "b" 但是,
@@ -207,7 +210,7 @@
         Java 的序列化机制是通过在运行时判断类的serialVersionUID来验证版本一致性的.在进行反序列化时,
         JVM 会把传来的字节流中的serialVersionUID与本地相应实体(类)的serialVersionUID进行比较,如果相同就认为是一致的,
         可以进行反序列化,否则就会出现序列化版本不一致的异常(InvalidCastException).
-# 三.构造方法:
+## (三).构造方法:
 #### 1.使用字符数组、字符串构造一个 String
 	(1).使用一个字符数组来创建一个 String,那么这里值得注意的是,当我们使用字符数组创建 String 的时候,会用到 Arrays.copyOf
 		方法和 Arrays.copyOfRange方法.这两个方法是将原有的字符数组中的内容逐一的复制到 String 中的字符数组中;
@@ -259,7 +262,7 @@
 	4.3.在 Java 7 中,substring已经不再使用这种"优秀"的方法了,为什么呢?
 		有个致命的缺点:可能造成内存泄露
 		虽然 String 本身可以被回收,但它的内部数组却不能
-# 四.实例方法:
+## (四).实例方法:
 	length() 返回字符串长度
 	isEmpty() 返回字符串是否为空
 	charAt(int index) 返回字符串中第(index+1)个字符
@@ -371,7 +374,7 @@
 		然后再调用append方法,再调用toString方法.
 #### 9.intern():参考下面
 
-# 五.String intern()方法: 
+## (五).String intern()方法: 
 * http://www.importnew.com/12681.html
 * https://tech.meituan.com/in_depth_understanding_string_intern.html
 #### 1.Java 中8种基本类型和一种比较特殊的类型 String,常量池就类似一个 JAVA 系统级别提供的缓存,
@@ -514,8 +517,8 @@
 	如果 m 改为 final 修饰:
 	u == v ==> true;
 
----
-七.String 相关的面试题
+
+# 七.String 相关的面试题
 * http://www.importnew.com/18167.html
 #### 1.下面这段代码的输出结果是什么?
 	1.1."hello" + 2;在编译期间已经被优化为 "hello2", 因此在运行期间,变量a和变量b指向的是同一个对象
@@ -555,4 +558,9 @@
 #### 3.语句 String str = new String("abc"); 一共创建了多少个对象?
 	详细解释:http://rednaxelafx.iteye.com/blog/774673/
 
+# 八.String的使用技巧
 
+#### 1.数字前补0:
+```java
+	String.format("%05d", 1)
+```
