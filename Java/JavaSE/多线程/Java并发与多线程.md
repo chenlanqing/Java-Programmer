@@ -966,6 +966,7 @@
 				ReentrantLock中,包含了Sync对象.而且,Sync 是 AQS 的子类;更重要的是,Sync 有两个子类 FairSync(公平锁)和 
 				NonFairSync(非公平锁).ReentrantLock 是一个独占锁,至于它到底是公平锁还是非公平锁,
 				就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"
+			(4).提供了一个Condition类,可以分组唤醒需要唤醒的线程.
 		3.1.2.ReentrantLock 函数列表:
 			// 创建一个 ReentrantLock ，默认是“非公平锁”。
 			ReentrantLock()
@@ -1013,42 +1014,180 @@
 		3.1.4.非公平锁:则当线程要获取锁时,它会无视CLH等待队列而直接获取锁.
 		3.1.5.非公平锁获取:
 
-## 4.共享锁:读写锁:ReentrantReadWriteLock, 闭锁:CountDownLatch 、栅栏:CyclicBarrier、信号量:Semaphore 
-	4.1.ReentrantReadWriteLock 读写锁:
-		// TODO 
-		4.1.1.ReadWriteLock,读写锁,维护了一对锁:读取锁和写入锁.
-			读取锁-只用于读取数据操作,是"共享锁",能被多个线程同时获取;
-			写入锁-用于写入操作,是"独占锁",只能被一个线程获取.
-			==> 不能同时存在读取锁和写入锁
-			ReadWriteLock 是一个接口,ReentrantReadWriteLock 是它的实现类.ReentrantReadWriteLock 包括内部类 ReadLock 和 WriteLock
-		4.1.2.
-			// 返回用于读取操作的锁。
-			ReentrantReadWriteLock.ReadLock readLock()
-			// 返回用于写入操作的锁。
-			ReentrantReadWriteLock.WriteLock writeLock()
-	4.2.CountDownLatch:
-		(1).是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待
-		// http://www.cnblogs.com/skywang12345/p/3533887.html
-		CountDownLatch 包含了sync对象,sync是 Sync 类型.CountDownLatch 的 Sync 是实例类,它继承于 AQS
-		通过"共享锁"实现
-		CountDownLatch 中3个核心函数: CountDownLatch(int count), await(), countDown()
-	4.3.CyclicBarrier:
-		(1).是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
-			因为该 barrier 在释放等待线程后可以重用,所以称它为循环 的 barrier;
-			CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象trip",它是通过独占锁实现的
-	4.4.CountDownLatch 与 CyclicBarrier 两者的区别：
+## 4.共享锁-ReentrantReadWriteLock 读写锁:
+	4.1.ReadWriteLock,读写锁,维护了一对锁:读取锁和写入锁.
+		读取锁-只用于读取数据操作,是"共享锁",能被多个线程同时获取;
+		写入锁-用于写入操作,是"独占锁",只能被一个线程获取.
+		==> 不能同时存在读取锁和写入锁
+		ReadWriteLock 是一个接口,ReentrantReadWriteLock 是它的实现类.ReentrantReadWriteLock 包括内部类 ReadLock 和 WriteLock
+	4.2.
+		// 返回用于读取操作的锁。
+		ReentrantReadWriteLock.ReadLock readLock()
+		// 返回用于写入操作的锁。
+		ReentrantReadWriteLock.WriteLock writeLock()
+## 5.共享锁-闭锁:CountDownLatch:
+	参考文章: http://www.cnblogs.com/skywang12345/p/3533887.html
+	(1).是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待.允许1或N个线程等待其他线程完成执行
+	(2).数据结构:CountDownLatch 包含了sync对象,sync是 Sync 类型.CountDownLatch 的 Sync 是实例类,它继承于 AQS
+		通过"共享锁"实现.CountDownLatch 中3个核心函数: CountDownLatch(int count), await(), countDown()
+		--> CountDownLatch(int count):
+			public CountDownLatch(int count) {
+				if (count < 0) throw new IllegalArgumentException("count < 0");
+				this.sync = new Sync(count);
+			}
+			Sync(int count) {
+				setState(count);
+			}
+			protected final void setState(long newState) {
+				state = newState;
+			}
+			在AQS中，state是一个private volatile long类型的对象.对于CountDownLatch而言，state表示的”锁计数器“.
+			CountDownLatch中的getCount()最终是调用AQS中的getState()，返回的state对象，即”锁计数器“
+	(3).使用场景:并行计算
+	(4).实现原理:
+		A.CountDownLatch是通过“共享锁”实现的.
+		B.在创建CountDownLatch中时，会传递一个int类型参数count，该参数是“锁计数器”的初始状态，表示该“共享锁”最多能被count给线程同时获取.
+		C.当某线程调用该CountDownLatch对象的await()方法时，该线程会等待“共享锁”可用时，才能获取“共享锁”进而继续运行。
+		D.而“共享锁”可用的条件，就是“锁计数器”的值为0！而“锁计数器”的初始值为count，每当一个线程调用该CountDownLatch对象
+			的countDown()方法时，才将“锁计数器”-1；
+		E.通过这种方式，必须有count个线程调用countDown()之后，“锁计数器”才为0，而前面提到的等待线程才能继续运行！
+	(5).使用例子:
+```java
+	private final static int threadCount = 200;
+		public static void main(String[] args)throws Exception {
+			final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+			ExecutorService exec = Executors.newCachedThreadPool();
+			for (int i = 1; i <= threadCount; i++) {
+				final int count = i;
+				exec.execute(() -> {
+					try{
+						test(count);
+					} catch (Exception e){
+						log.error("exception", e);
+					} finally {
+						countDownLatch.countDown();
+					}
+				});
+			}
+			// 等待线程池中所有线程执行完毕后,main方法线程才继续执行
+			countDownLatch.await();
+			// 可以设置等待时长,即等待多少时间后执行main方法线程
+	//        countDownLatch.await(10, TimeUnit.MILLISECONDS);
+			log.info("~~~~~~~~main method finish {}", Thread.currentThread().getName());
+			exec.shutdown();
+		}
+		private static void test(int count) throws Exception {
+			Thread.sleep(100);
+			log.info("{}, {}", count, Thread.currentThread().getName());
+		}
+```	
+## 6.栅栏:CyclicBarrier:
+	参考资料:http://www.cnblogs.com/skywang12345/p/3533995.html
+	6.1.是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
+		因为该 barrier 在释放等待线程后可以重用,所以称它为循环 的 barrier;
+		CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象",它是通过独占锁实现的;
+	6.2.主要方法:
+		CyclicBarrier(int parties)
+			创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，
+			但它不会在启动 barrier 时执行预定义的操作。
+		CyclicBarrier(int parties, Runnable barrierAction)
+			创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，
+			并在启动 barrier 时执行给定的屏障操作，该操作由最后一个进入 barrier 的线程执行。
+		int await()
+			在所有参与者都已经在此 barrier 上调用 await 方法之前，将一直等待。
+		int await(long timeout, TimeUnit unit)
+			在所有参与者都已经在此屏障上调用 await 方法之前将一直等待,或者超出了指定的等待时间。
+		int getNumberWaiting()
+			返回当前在屏障处等待的参与者数目。
+		int getParties()
+			返回要求启动此 barrier 的参与者数目。
+		boolean isBroken()
+			查询此屏障是否处于损坏状态。
+		void reset()
+			将屏障重置为其初始状态。
+	6.3.使用场景:并行计算等
+	6.4.CountDownLatch 与 CyclicBarrier 两者的区别：
 		(1).CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行;
 			CyclicBarrier 则是允许N个线程相互等待;
 		(2).CountDownLatch 的计数器无法被重置
 			CyclicBarrier 的计数器可以被重置后使用,因此它被称为是循环的barrier;
-	4.5.Semaphore:是一个计数信号量,它的本质是一个"共享锁";
-		(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
-			当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
-			线程可以通过release()来释放它所持有的信号量许可
-		(2).Semaphore 包含了sync对象,sync是 Sync 类型;而且,Sync 也是一个继承于 AQS 的抽象类.
-			Sync 也包括"公平信号量" FairSync 和"非公平信号量" NonfairSync
-		(3)."公平信号量"和"非公平信号量"的释放信号量的机制是一样的!不同的是它们获取信号量的机制.
-## 5.Condition
+	6.5.例子:
+```java
+	static CyclicBarrier barrier = new CyclicBarrier(5);
+	// 到达屏障后执行某个回调
+	static CyclicBarrier barrier = new CyclicBarrier(5, ()->{
+        log.info("sdasdasdasdasdas");
+    });
+    public static void main(String[] args)throws Exception {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+
+        for (int i = 0; i < 10; i++) {
+            final int count = i;
+            Thread.sleep(1000);
+            executorService.execute(() -> {
+                try {
+                    race(count);
+                } catch (Exception e) {
+                    log.error("exception", e);
+                }
+            });
+        }
+        executorService.shutdown();
+    }
+    private static void race(int count) throws Exception{
+        Thread.sleep(1000);
+        log.info("{} is ready", count);
+        barrier.await();
+        log.info("{} continue",count);
+    }
+```
+## 7.共享锁-信号量:Semaphore:是一个计数信号量,它的本质是一个"共享锁";
+	参考文章:http://www.cnblogs.com/skywang12345/p/3534050.html
+	(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
+		当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
+		线程可以通过release()来释放它所持有的信号量许可
+	(2).Semaphore 包含了sync对象,sync是 Sync 类型;而且,Sync 也是一个继承于 AQS 的抽象类.
+		Sync包括两个子类："公平信号量"FairSync 和 "非公平信号量"NonfairSync.
+		默认情况下，sync是NonfairSync(即，默认是非公平信号量).
+	(3)."公平信号量"和"非公平信号量"的释放信号量的机制是一样的!不同的是它们获取信号量的机制:
+		线程在尝试获取信号量许可时，对于公平信号量而言，如果当前线程不在CLH队列的头部，则排队等候；
+		而对于非公平信号量而言，无论当前线程是不是在CLH队列的头部，它都会直接获取信号量。
+		该差异具体的体现在，它们的tryAcquireShared()函数的实现不同
+	(4).使用场景:在有限资源的场景下,比如数据库连接池的连接数
+	(5).例子:
+```java
+	private final static int threadCount = 20;
+    public static void main(String[] args) {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        final Semaphore semaphore = new Semaphore(3);
+        for (int i = 1; i <= threadCount; i++) {
+            final int count = i;
+            executorService.execute(() -> {
+                try{
+                    // 写法1: 获取许可,执行方法,释放许可
+                    semaphore.acquire();
+                    test(count);
+                    semaphore.release();
+
+                    // 写法2:尝试获取许可,获取成功则执行方法;如果没有获取成功,则不丢弃;
+                    // 尝试获取可以设置超时时间:tryAcquire(long timeout, TimeUnit unit)
+                    if (semaphore.tryAcquire()){
+                        test(count);
+                        semaphore.release();
+                    }
+                }catch (Exception e){
+                    log.error("exception", e);
+                }
+            });
+        }
+        executorService.shutdown();
+    }
+    private static void test(int count) throws Exception {
+        Thread.sleep(1000);
+        log.info("{}, {}", count, Thread.currentThread().getName());
+    }
+```
+## 8.Condition
 	(1).在使用 notify 和 notifyAll 方法进行通知时,被通知的线程是由JVM随机选择的.但是 ReentrantLock 集合
 		Condition 类就实现选择性通知.线程可以注册在指定的 Condition 中,从而可以有选择性的进行线程通知
 	(2).synchronized 就相当于整个 Lock 对象中只有一个单一的 Condition 对象,所有的线程都注册在它的一个
@@ -1070,7 +1209,7 @@
 		void signal()
 		// 唤醒所有等待线程。
 		void signalAll()
-## 6.LockSupport:
+## 9.LockSupport:
 	是用来创建锁和其他同步类的基本线程阻塞原语.
 	park() 和 unpark() 的作用分别是阻塞线程和解除阻塞线程,
 	而且park()和unpark()不会遇到"Thread.suspend 和 Thread.resume所可能引发的死锁"问题.
@@ -1094,8 +1233,8 @@
 	static void unpark(Thread thread)
 	==> LockSupport 是通过调用 Unsafe 函数中的接口实现阻塞和解除阻塞的
 	==> park和wait的区别:wait让线程阻塞前,必须通过synchronized获取同步锁; park 面向对象不同; 实现机制不一样,因此两者没有交集;
-## 5.Callable 
-	5.1.Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
+## 10.Callable 
+	10.1.Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
 		Callable 和 Runnable 有几点不同： 
 		(1).Callable规定的方法是call()，而Runnable规定的方法是run().
 		(2).Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。 
@@ -1103,6 +1242,15 @@
 		(4).运行 Callable 任务可拿到一个 Future 对象,Future 表示异步计算的结果。
 			它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
 			通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果.
+	10.2.
+
+## 11.FutureTask
+
+## 12.Fork/Join框架
+	设计思想与Mapreduce类似
+
+## 13.Exchanger
+
 # 四.JUC 中集合类:
 ## 1.JUC 集合类:
 	(1).List 和 Set:
@@ -1118,7 +1266,7 @@
 		(2).线程安全的
 		(3).因为通常要复制整个基础数组,所以可变操作(add()、set() 和 remove() 等等)的开销很大.
 		(4).迭代器支持hasNext(), next()等不可变操作，但不支持可变 remove()等操作;
-		(5).使用迭代器进行遍历的速度很快,并且不会与其他线程发生冲突.在构造迭代器时,迭代器依赖于不变的数组快照
+		(5).使用迭代器进行遍历的速度很快,并且不会与其他线程发生冲突.在构造迭代器时,迭代器依赖于不变的数组快照;
 	2.2.签名:
 		public class CopyOnWriteArrayList<E>  implements List<E>, RandomAccess, Cloneable, Serializable{}
 		(1).包含了成员lock.每一个CopyOnWriteArrayList都和一个互斥锁lock绑定,通过lock,实现了对CopyOnWriteArrayList的互斥访问
@@ -1134,7 +1282,7 @@
 			  通过volatile提供了"读取到的数据总是最新的"这个机制的保证.
 			B.通过互斥锁来保护数据.在"添加/修改/删除"数据时,会先"获取互斥锁",再修改完毕之后,
 			  先将数据更新到"volatile数组"中,然后再"释放互斥锁"
-## 3.CopyOnWriteArraySet:
+## 3.CopyOnWriteArraySet:(HashSet)
 	3.1.线程安全的无序的集合,可以将它理解成线程安全的HashSet.CopyOnWriteArraySet 和 HashSet 虽然都继承于共同的
 		父类 AbstractSet;但是 HashSet 是通过 HashMap 来实现的,而 CopyOnWriteArraySet 是通过 CopyOnWriteArrayList
 		来实现的.
@@ -1147,7 +1295,7 @@
 			通过这些API来添加元素时,只有当元素不存在时才执行添加操作
 ## 4.ConcurrentHashMap:
 	参考: /Java/Java源码解读/ConcurrentHashMap.java
-## 5.ConcurrentSkipListMap:
+## 5.ConcurrentSkipListMap:(TreeMap)
 	线程安全的有序的哈希表 
 	* http://www.cnblogs.com/skywang12345/p/3498556.html
 	(1).ConcurrentSkipListMap 和 TreeMap,它们虽然都是有序的哈希表;但是 ConcurrentSkipListMap 是线程安全的,
@@ -1156,7 +1304,7 @@
 		这样也就是说跳表的插入和删除的工作是比较简单的.
 	(2).
 
-## 6.ConcurrentSkipListSet: 
+## 6.ConcurrentSkipListSet: (TreeSet)
 	* http://www.cnblogs.com/skywang12345/p/3498556.html
 
 ## 7.ArrayBlockingQueue:
@@ -1165,10 +1313,7 @@
 ## 8.LinkedBlockingQueue: 
 	* http://www.cnblogs.com/skywang12345/p/3503458.html
 
-## 9.LinkedBlockingDeque:
-	* http://www.cnblogs.com/skywang12345/p/3503480.html
-
-## 10.ConcurrentLinkedQueue: 
+## 9.ConcurrentLinkedQueue: 
 	* http://www.cnblogs.com/skywang12345/p/3498995.html
 
 # 五.JUC 包核心与算法
@@ -1285,7 +1430,9 @@
 	1.1.为什么使用线程池:
 		(1).在多线程技术中,线程的创建和销毁很消耗时间,因为创建线程需要获取内存资源或者其他更多的资源.提高效率就是减少线程的创建和销毁次数.
 			可以利用已有线程来解决这个问题,这就是池化技术产生的原因.就如同数据库连接池一样
-		(2).线程池真正关注的点：如何缩短创建线程的时间和销毁线程的时间
+		(2).线程池真正关注的点：如何缩短创建线程的时间和销毁线程的时间;
+		(3).可有效的控制最大并发线程数,提高系统资源利用率,同时可以避免过多资源竞争,避免阻塞;
+		(4).提供定时执行\定期执行\单线程\并发控制数等功能;
 	1.2.什么是线程池：
 		线程池是一种多线程处理方法，处理过程中将任务添加到队列，然后在创建线程后自动启动这些任务。
 	1.3.应用范围：
