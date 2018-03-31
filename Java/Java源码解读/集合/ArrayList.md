@@ -75,7 +75,37 @@
     (Vector 是同步的.Vector 是线程安全的动态数组.它的操作与 ArrayList 几乎一样):
 	如果集合中的元素的数目大于目前集合数组的长度时，Vector 增长率为目前数组长度的 100%,而 Arraylist 增长率为目
 	前数组长度的 50%.如过在集合中使用数据量比较大的数据，用 Vector 有一定的优势
+	注意:
+	在某些特殊场合下,Vector并非线程安全的,看如下代码:
+```java
+	public static void main(String[] args) {
+		Vector<Integer> vector = new Vector<>();
+		while (true) {
+			for (int i = 0; i < 10; i++) {
+				vector.add(i);
+			}
 
+			Thread t1 = new Thread() {
+				public void run() {
+					for (int i = 0; i < vector.size(); i++) {
+						vector.remove(i);
+					}
+				}
+			};
+			Thread t2 = new Thread() {
+				public void run() {
+					for (int i = 0; i < vector.size(); i++) {
+						vector.get(i);
+					}
+				}
+			};
+			t1.start();
+			t2.start();
+		}
+	}	
+```
+	上述代码会抛出异常:
+	java.lang.ArrayIndexOutOfBoundsException: Array index out of range: 9
 
 
 --- 
