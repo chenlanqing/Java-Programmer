@@ -1359,7 +1359,7 @@
 
 # 五.JUC 包核心与算法
 ## 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
-	参考源码:[/Java/源码解读/thread/AbstractQueuedSynchronizer.java]
+[AbstractQueuedSynchronizer.java](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/AbstractQueuedSynchronizer.md)
 ## 2.CAS:Compare and Swap-比较与交换
 	/*
 	 * 非阻塞同步算法与CAS(Compare and Swap)无锁算法: http://www.cnblogs.com/Mainz/p/3546347.html
@@ -1414,6 +1414,7 @@
 			openjdk/openjdk/hotspot/src/share/vm/runtime/atomic.cpp
 			openjdk/openjdk/hotspot/src/os_cpu/windows_x86/vm/atomic_windows_x86.inline.hpp
 			对应部分源码片段:
+```c
 			inline jint     Atomic::cmpxchg    (jint     exchange_value, volatile jint*     dest, jint     compare_value) {
 			  // alternative for InterlockedCompareExchange
 			  int mp = os::is_MP();
@@ -1425,6 +1426,7 @@
 			    cmpxchg dword ptr [edx], ecx
 			  }
 			}
+```
 			==> 如上面源代码所示,程序会根据当前处理器的类型来决定是否为cmpxchg指令添加lock前缀.
 				如果程序是在多处理器上运行,就为cmpxchg指令加上lock前缀(lock cmpxchg)
 			==> lock前缀说明:
@@ -1460,6 +1462,7 @@
 		(2).从锁的分类来看,CAS 属于乐观锁,乐观地认为程序中的并发情况不那么严重,所以让线程不断去尝试更新;
 			而 synchronized 属于悲观锁,悲观地认为程序中的并发情况严重,所以严防死守;
 		(3).两者没有绝对的好坏,关键看使用场景.在1.6版本后,synchronized 变为重量级锁之前也是采用 CAS 机制.
+		(4).使用CAS在线程冲突严重时,会大幅降低程序性能;CAS只适合于线程冲突较少的情况使用
 
 # 六.线程池
 参考文章:
