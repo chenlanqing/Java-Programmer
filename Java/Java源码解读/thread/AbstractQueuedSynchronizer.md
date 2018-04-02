@@ -1,8 +1,9 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+'**目录**'
 
-- [2.不响应中断的独占锁:](#2%E4%B8%8D%E5%93%8D%E5%BA%94%E4%B8%AD%E6%96%AD%E7%9A%84%E7%8B%AC%E5%8D%A0%E9%94%81)
+- [一.概述:](#%E4%B8%80%E6%A6%82%E8%BF%B0)
+- [二.源码分析:](#%E4%BA%8C%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -11,8 +12,10 @@
  * http://www.cnblogs.com/zhanjindong/p/java-concurrent-package-aqs-overview.html
  * http://blog.csdn.net/pfnie/article/category/7161421
 
-* public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer implements java.io.Serializable{}
+
 # 一.概述:
+	签名:
+	public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer implements java.io.Serializable{}
 #### 1.设计思想:AQS 是构建锁或者其他同步组件的基础框架,是JUC并发包中的核心基础组件
 	(1).仅从 AQS 本身来说,它仅仅提供独占锁和共享锁两种方式, AQS 本身不存在所谓的公平和非公平锁.
 	(2).AQS 基于模板模式设计, 其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种,所以 AQS 没有抽象方法,所有方法都有默认实现
@@ -49,6 +52,7 @@
 		方法通常在线程中执行 acquire 调用,如果方法失败了, acquire 方法会将线程加入等待队列(如果线程还没有加入等待队列)直到它被其他线程发出的信号释放.
 	(4).tryReleaseShared:尝试在共享模式下设置状态来反映对节点的释放,方法通常在线程执行释放节点时调用;
 	(5).isHeldExclusively:当前同步器是否在独占模式下被线程占用,一般该方法表示是否被当前线程独占.
+
 # 二.源码分析:
 #### 1.基本数据结构:Node
 	1.1.关于 Node 需要注意点:

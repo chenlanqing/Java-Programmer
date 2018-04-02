@@ -52,6 +52,8 @@
   - [1.线程池技术:](#1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8A%80%E6%9C%AF)
   - [2.线程池数据结构:](#2%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
   - [3.线程池任务 submit及执行流程:](#3%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BB%BB%E5%8A%A1-submit%E5%8F%8A%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B)
+  - [4.线程池配置:](#4%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%85%8D%E7%BD%AE)
+- [七.多线程并发最佳实践](#%E4%B8%83%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%B9%B6%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -999,6 +1001,7 @@
 		是比较并交换函数,它是原子操作函数;即通过 CAS 操作的数据都是以原子方式进行的.
 ## 3.独占锁:
 	3.1.ReentrantLock 类(可重入锁),又称为独占锁.
+[ReentantLock]((https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/ReentrantLock.md))
 		3.1.1.ReentrantLock 基本:
 			(1).在同一个时间点只能被一个线程持有,而可重入即可以被单个线程多次获取.
 			(2).ReentrantLock 分为"公平锁"和"非公平锁",区别在于获取锁的机制上是否公平.
