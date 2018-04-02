@@ -506,10 +506,37 @@
 		7.5.2.偏向锁释放过程:
 			偏向锁只有遇到其他线程尝试竞争偏向锁时,持有偏向锁的线程才会释放锁,线程不会主动去释放偏向锁;
 	7.6.其他优化:
-		(1).适应性自旋(Adaptive Spinning):从轻量级锁的获取过程中知道,当前线程在获取轻量级锁的过程中执行 CAS 操作失败时,
+		7.6.1.适应性自旋(Adaptive Spinning):
+			(1).从轻量级锁的获取过程中知道,当前线程在获取轻量级锁的过程中执行 CAS 操作失败时,
 			是要通过自旋来获取重量级锁.问题是:自旋是需要消耗CPU的,如果一直获取不到锁,那么该线程就一直处在自旋状态.
 			解决该问题最简单的方法是指定自旋的次数.但是JDK采用了更合适的方法-适应性自旋.
 			简单来说就是如果自旋成功了,那么下次自旋的次数会更多,如果自旋失败了,则自旋的次数就会减少.
+			(2).自旋锁的实现:
+```java
+		public class MyWaitNotify3{
+			MonitorObject myMonitorObject = new MonitorObject();
+			boolean wasSignalled = false;
+
+			public void doWait(){
+					synchronized(myMonitorObject){
+							while(!wasSignalled){
+									try{
+											myMonitorObject.wait();
+										} catch(InterruptedException e){...}
+							}
+							//clear signal and continue running.
+							wasSignalled = false;
+					}
+			}
+
+			public void doNotify(){
+					synchronized(myMonitorObject){
+							wasSignalled = true;
+							myMonitorObject.notify();
+					}
+			}
+		}
+```
 		(2).锁粗化(Lock Coarsening):是将多次连接在一起的加锁和解锁操作合并在一起,将多个连续的锁扩展成一个范围更大的锁.
 			如:
 			public class StringBufferTest {
@@ -926,6 +953,8 @@
 		(2).公平锁。
 		(3).注意性能方面
 # 三.JUC(java.util.concurrent)包
+	从整体来看,concurrent包的实现示意图:
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/concurrent包的实现示意图.png)
 ## 1.JUC 原子类:
 	目的是对相应的数据进行原子操作.所谓原子操作,是指操作过程不会被中断,保证数据操作是以原子方式进行的
 	(1).基本类型: AtomicInteger, AtomicLong, AtomicBoolean ;
@@ -939,6 +968,7 @@
 			而使用 AtomicLong 能让 long 的操作保持原子型.
 			long foo = 65465498L;  ==> 非原子操作,Java 会分两步写入 long 变量,先写32位,再写后32位,就非线程安全的.
 			private volatile long foo;  ==> 原子性操作
+			
 ## 2.锁的相关概念:
 	* https://www.cnblogs.com/charlesblc/p/5994162.html
 	2.1.同步锁:通过synchronized关键字来进行同步
@@ -1336,6 +1366,7 @@
 	 * Java CAS 和ABA问题: http://www.cnblogs.com/549294286/p/3766717.html、http://www.importnew.com/20472.html
 	 * Unsafe与CAS: http://www.cnblogs.com/xrq730/p/4976007.html 
 	 * http://www.cnblogs.com/xrq730/category/1021774.html
+	 * https://blog.52itstyle.com/archives/948/
 	 */
 	2.1.CAS:cpu指令,在大多数处理器架构,包括 IA32,Space 中采用的都是 CAS 指令.CAS 语义:
 		CAS 有3个操作数,内存值 V,旧的预期值 A, 要修改的新值 B,当且仅当预期值 A 和内存值 V 相同时,将内存值修改为 B 并返回 true,否则什么都不做并返回 false

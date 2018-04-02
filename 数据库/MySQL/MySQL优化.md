@@ -853,6 +853,7 @@
 		同样,该配置在mysql服务重启后将失效,也可以将其配置在配置文件中
 	14.3.创建函数,确保每条数据不一样:
 		(1).随机产生字符串:
+```sql
 			-- 入参为随机字符串的长度
 			CREATE FUNCTION rand_string(n INT)
 			  RETURNS VARCHAR(255)
@@ -866,7 +867,9 @@
 			    END WHILE;
 			    RETURN return_str;
 			  END
+```
 		(2).随机产生部门编号:
+```sql
 			CREATE FUNCTION rand_num()
 			  RETURNS INT(5)
 			  BEGIN
@@ -874,10 +877,12 @@
 			    SET i = FLOOR(100 + rand() * 10);
 			    RETURN i;
 			  END;
+```
 		==> 要删除函数:
 			drop function function_name
 	14.4.创建存储过程:
 		(1).往emp表插入数据的存储过程
+```sql
 			CREATE PROCEDURE insert_emp(IN start INT(10), IN max_num INT(10))
 			  BEGIN
 			    DECLARE i INT DEFAULT 0;
@@ -891,7 +896,9 @@
 			    UNTIL i = max_num END REPEAT;
 			    COMMIT;
 			  END;
+```
 		(2).往dept表插入数据的存储过程
+```sql
 			CREATE PROCEDURE insert_dept(IN start INT(10), IN max_num INT(10))
 			  BEGIN
 			    DECLARE i INT DEFAULT 0;
@@ -902,6 +909,7 @@
 			    UNTIL i = max_num END REPEAT;
 			    COMMIT;
 			  END;
+```
 	14.5.执行存储过程:
 		call insert_dept(10,100)
 		call insert_emp(100000,500000);
