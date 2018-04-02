@@ -42,9 +42,11 @@
   - [4.ConcurrentHashMap:](#4concurrenthashmap)
   - [5.ConcurrentSkipListMap:(TreeMap)](#5concurrentskiplistmaptreemap)
   - [6.ConcurrentSkipListSet: (TreeSet)](#6concurrentskiplistset-treeset)
-  - [7.ArrayBlockingQueue:](#7arrayblockingqueue)
-  - [8.LinkedBlockingQueue:](#8linkedblockingqueue)
-  - [9.ConcurrentLinkedQueue:](#9concurrentlinkedqueue)
+  - [7.阻塞队列:](#7%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
+    - [7.1.什么是阻塞队列:](#71%E4%BB%80%E4%B9%88%E6%98%AF%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
+    - [7.2.应用场景:](#72%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
+    - [7.3.几个方法](#73%E5%87%A0%E4%B8%AA%E6%96%B9%E6%B3%95)
+    - [7.4.Java的阻塞队列](#74java%E7%9A%84%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
 - [五.JUC 包核心与算法](#%E4%BA%94juc-%E5%8C%85%E6%A0%B8%E5%BF%83%E4%B8%8E%E7%AE%97%E6%B3%95)
   - [1.AQS:AbstractQueuedSynchronizer,抽象队列同步器](#1aqsabstractqueuedsynchronizer%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
   - [2.CAS:Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
@@ -52,6 +54,7 @@
   - [1.线程池技术:](#1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8A%80%E6%9C%AF)
   - [2.线程池数据结构:](#2%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
   - [3.线程池任务 submit及执行流程:](#3%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BB%BB%E5%8A%A1-submit%E5%8F%8A%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B)
+  - [4.Executors](#4executors)
   - [4.线程池配置:](#4%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%85%8D%E7%BD%AE)
 - [七.多线程并发最佳实践](#%E4%B8%83%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%B9%B6%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
 
@@ -1351,13 +1354,45 @@
 ## 6.ConcurrentSkipListSet: (TreeSet)
 	* http://www.cnblogs.com/skywang12345/p/3498556.html
 
-## 7.ArrayBlockingQueue:
-	* http://www.cnblogs.com/skywang12345/p/3498652.html
+## 7.阻塞队列:
+### 7.1.什么是阻塞队列:
+	是一个在队列基础上又支持了两个附加操作的队列.
+	2个附加操作:
+	* 支持阻塞的插入方法:队列满时,队列会阻塞插入元素的线程,直到队列不满时;
+	* 支持阻塞的移除方法:队列空时,获取元素的线程会等待队列变为非空;
+### 7.2.应用场景:
+	(1).常用于生产者与消费者:生产者是向队列中添加元素的线程,消费者是从队列中取元素的线程.
+		简而言之:阻塞队列是生产者用来存放元素、消费者获取元素的容器;
+	(2).如何使用阻塞队列来实现生产者消费者模型:
+		通知模式:就是当生产者往满的队列里添加元素时会阻塞住生产者,当消费者消费了一个队
+		列中的元素后,会通知生产者当前队列可用;
+	(3).为什么BlockingQueue适合解决生产者消费者问题?
+		任何有效的生产者-消费者问题解决方案都是通过控制生产者put()方法（生产资源）和
+		消费者take()方法（消费资源）的调用来实现的,一旦你实现了对方法的阻塞控制,
+		那么你将解决该问题.Java通过BlockingQueue提供了开箱即用的支持来控制这些
+		方法的调用(一个线程创建资源，另一个消费资源).
+		BlockingQueue是一种数据结构，支持一个线程往里存资源，另一个线程从里取资源;
+	(4).实现:
+		生产者:
+		
 
-## 8.LinkedBlockingQueue: 
+### 7.3.几个方法
+| 方法处理方式 | 抛出异常    |  返回特殊值  | 一直阻塞| 超时退出 |
+| --------   | --------   | -------- |--------|--------|
+| 插入方法     | add(e)    |   offer(e) |put(e)| offer(e,time,unit)|
+| 移除方法     | remove    |   poll()  |take() | poll(time,unit)|
+| 检查方法     | element() |   peek()  |不可用| 不可用|
+
+### 7.4.Java的阻塞队列
+#### 7.4.1.ArrayBlockingQueue:一个由数组结构组成的有界阻塞队列
+	* http://www.cnblogs.com/skywang12345/p/3498652.html
+	此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列,
+	即如果队列满了，那么被阻塞在外面的线程对队列访问的顺序是不能保证线程公平（即先阻塞，先插入）的
+
+#### 7.4.2.LinkedBlockingQueue:一个由链表结构组成的有界阻塞队列
 	* http://www.cnblogs.com/skywang12345/p/3503458.html
 
-## 9.ConcurrentLinkedQueue: 
+#### 7.3.ConcurrentLinkedQueue: 
 	* http://www.cnblogs.com/skywang12345/p/3498995.html
 
 # 五.JUC 包核心与算法
@@ -1538,6 +1573,7 @@
 		}
 
 ```
+## 4.Executors
 ## 4.线程池配置:
 	CPU密集型任务:需要尽量压榨CPU,参考值可以设为NCPU + 1;
 	IO密集型任务:参考值可以设置为 2*NCPU
