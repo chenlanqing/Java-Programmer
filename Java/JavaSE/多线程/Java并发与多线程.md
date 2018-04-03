@@ -1374,26 +1374,32 @@
 		BlockingQueue是一种数据结构，支持一个线程往里存资源，另一个线程从里取资源;
 	(4).实现:
 		生产者:
-		
 
 ### 7.3.几个方法
 | 方法处理方式 | 抛出异常    |  返回特殊值  | 一直阻塞| 超时退出 |
-| --------   | --------   | -------- |--------|--------|
-| 插入方法     | add(e)    |   offer(e) |put(e)| offer(e,time,unit)|
-| 移除方法     | remove    |   poll()  |take() | poll(time,unit)|
-| 检查方法     | element() |   peek()  |不可用| 不可用|
+| --------    | --------   | ----------- |--------|--------|
+| 插入方法     | add(e)     | offer(e)    |put(e)  | offer(e,time,unit)|
+| 移除方法     | remove     | poll()      |take()  | poll(time,unit)|
+| 检查方法     | element()  | peek()      |不可用   | 不可用|
 
 ### 7.4.Java的阻塞队列
 #### 7.4.1.ArrayBlockingQueue:一个由数组结构组成的有界阻塞队列
 	* http://www.cnblogs.com/skywang12345/p/3498652.html
-	此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列,
+	(1).此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列,
 	即如果队列满了，那么被阻塞在外面的线程对队列访问的顺序是不能保证线程公平（即先阻塞，先插入）的
 
 #### 7.4.2.LinkedBlockingQueue:一个由链表结构组成的有界阻塞队列
 	* http://www.cnblogs.com/skywang12345/p/3503458.html
-
-#### 7.3.ConcurrentLinkedQueue: 
+	(1).此队列按照先出先进的原则对元素进行排序
+#### 7.4.3.PriorityBlockingQueue:支持优先级的无界阻塞队列
+#### 7.4.4.DelayQueue:支持延时获取元素的无界阻塞队列,即可以指定多久才能从队列中获取当前元素
+#### 7.4.5.SynchronousQueue不存储元素的阻塞队列
+	每一个put必须等待一个take操作,否则不能继续添加元素。并且他支持公平访问队列
+#### 7.4.6.LinkedTransferQueue:由链表结构组成的无界阻塞TransferQueue队列
+	相对于其他阻塞队列,多了tryTransfer和transfer方法
+#### 7.4.7.ConcurrentLinkedQueue: 
 	* http://www.cnblogs.com/skywang12345/p/3498995.html
+#### 7.4.8.LinkedBlockingDeque:链表结构的双向阻塞队列,优势在于多线程入队时,减少一半的竞争
 
 # 五.JUC 包核心与算法
 ## 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
