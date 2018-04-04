@@ -43,10 +43,6 @@
   - [5.ConcurrentSkipListMap:(TreeMap)](#5concurrentskiplistmaptreemap)
   - [6.ConcurrentSkipListSet: (TreeSet)](#6concurrentskiplistset-treeset)
   - [7.阻塞队列:](#7%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
-    - [7.1.什么是阻塞队列:](#71%E4%BB%80%E4%B9%88%E6%98%AF%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
-    - [7.2.应用场景:](#72%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
-    - [7.3.几个方法](#73%E5%87%A0%E4%B8%AA%E6%96%B9%E6%B3%95)
-    - [7.4.Java的阻塞队列](#74java%E7%9A%84%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
 - [五.JUC 包核心与算法](#%E4%BA%94juc-%E5%8C%85%E6%A0%B8%E5%BF%83%E4%B8%8E%E7%AE%97%E6%B3%95)
   - [1.AQS:AbstractQueuedSynchronizer,抽象队列同步器](#1aqsabstractqueuedsynchronizer%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
   - [2.CAS:Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
@@ -79,6 +75,7 @@
 		上下文切换并不廉价。如果没有必要，应该减少上下文切换的发生
 	(3).增加资源消耗:如线程管理中消耗的资源
 ## 3.并发编程模型:
+	Java 的并发采用的是共享内存模型
 	3.1.并行工作者:传入的作业会被分配到不同的工作者上
 		(1).并行工作者模型中，委派者(Delegator)将传入的作业分配给不同的工作者。
 			每个工作者完成整个任务。工作者们并行运作在不同的线程上，甚至可能在不同的CPU上
@@ -621,6 +618,10 @@
 				将 生产者和消费者中的 notify 改为 notifyAll,那么其不光通知同类线程,也包括异类线程
 		10.3.3.一生产与一消费:操作栈
 			生产者向堆栈 List 对象中放入数据,使消费者从 List 堆栈中取出数据
+		10.3.4.生产者消费者的不同模式实现:
+
+[生产者消费者](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/ProducerAndConsumer.md)
+
 	10.4.通过管道进行线程间通信:字节流
 		一个线程发送数据到输出管道,另一个线程从输入管道中读取数据,实现不同线程间通信
 		使用代码 inputStream.connect(outputStream) 或者 outputStream.connect(inputStream) 的作用
@@ -1004,7 +1005,9 @@
 		是比较并交换函数,它是原子操作函数;即通过 CAS 操作的数据都是以原子方式进行的.
 ## 3.独占锁:
 	3.1.ReentrantLock 类(可重入锁),又称为独占锁.
-[ReentantLock]((https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/ReentrantLock.md))
+	
+[ReentantLock](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/ReentrantLock.md)
+		
 		3.1.1.ReentrantLock 基本:
 			(1).在同一个时间点只能被一个线程持有,而可重入即可以被单个线程多次获取.
 			(2).ReentrantLock 分为"公平锁"和"非公平锁",区别在于获取锁的机制上是否公平.
@@ -1373,7 +1376,6 @@
 		方法的调用(一个线程创建资源，另一个消费资源).
 		BlockingQueue是一种数据结构，支持一个线程往里存资源，另一个线程从里取资源;
 	(4).实现:
-		生产者:
 
 ### 7.3.几个方法
 | 方法处理方式 | 抛出异常    |  返回特殊值  | 一直阻塞| 超时退出 |
