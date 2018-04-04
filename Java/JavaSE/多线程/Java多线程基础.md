@@ -64,78 +64,78 @@
 		
 ## 7.关于单例模式线程安全问题:
 ```java
-		/**
-			* 单例模式
-			* ①饿汉式
-			*/
-		private static final Single instance = new Single();
-		private Single(){
-			
+/**
+* 单例模式
+* ①饿汉式
+*/
+private static final Single instance = new Single();
+private Single(){
+	
+}
+public static Single getInstance(){
+	return instance;
+}
+
+/**
+* 单例模式
+* ②懒汉式:特点在于延迟加载,如果多线程访问时会出现安全问题,使用双层判断问题,
+* 加锁的对象是所属类所在的字节码文件对象
+*/
+private static Single instance = null;
+private Single(){				
+}
+public static Single getInstance(){
+	/*
+	* 通过外层判断,当有线程进来是先判断instance是否为空,而不是直接判断是否已经锁上,提高效率
+	*/
+	if(instance == null){
+		synchronized (Single.class) {
+			if(instance == null)
+				instance = new Single();
 		}
-		public static Single getInstance(){
-			return instance;
-		}
-		
-		/**
-			* 单例模式
-			* ②懒汉式:特点在于延迟加载,如果多线程访问时会出现安全问题,使用双层判断问题,
-			* 加锁的对象是所属类所在的字节码文件对象
-			*/
-		private static Single instance = null;
-		private Single(){				
-		}
-		public static Single getInstance(){
-			/*
-				* 通过外层判断,当有线程进来是先判断instance是否为空,而不是直接判断是否已经锁上,提高效率
-				*/
-			if(instance == null){
-				synchronized (Single.class) {
-					if(instance == null)
-						instance = new Single();
-				}
-			}
-			return instance;
-		}
+	}
+	return instance;
+}
 ```
 ## 8.死锁:同步中嵌套同步
 	死锁程序:
 ```java
-		public class DeadLock{
-			public static void main(String[] args) {
-				Thread t1 = new Thread(new Test(true));
-				Thread t2 = new Thread(new Test(false));
-				t1.start();
-				t2.start();
-			}
-		}
-		class Test implements Runnable{
-			private boolean flag;
-			public Test(boolean flag){
-				this.flag = flag;
-			}
-			@Override
-			public void run() {
-				if(flag){
-					synchronized(MyLock.obj1){
-						System.out.println("if obj1");
-						synchronized(MyLock.obj2){
-							System.out.println("if obj2");
-						}
-					}
-				}else{
-					synchronized(MyLock.obj2){
-						System.out.println("else obj2");
-						synchronized(MyLock.obj1){
-							System.out.println("else obj1");
-						}
-					}
+public class DeadLock{
+	public static void main(String[] args) {
+		Thread t1 = new Thread(new Test(true));
+		Thread t2 = new Thread(new Test(false));
+		t1.start();
+		t2.start();
+	}
+}
+class Test implements Runnable{
+	private boolean flag;
+	public Test(boolean flag){
+		this.flag = flag;
+	}
+	@Override
+	public void run() {
+		if(flag){
+			synchronized(MyLock.obj1){
+				System.out.println("if obj1");
+				synchronized(MyLock.obj2){
+					System.out.println("if obj2");
 				}
-			}	
+			}
+		}else{
+			synchronized(MyLock.obj2){
+				System.out.println("else obj2");
+				synchronized(MyLock.obj1){
+					System.out.println("else obj1");
+				}
+			}
 		}
-		class MyLock{
-			static Object obj1 = new Object();
-			static Object obj2 = new Object();	
-		}
+	}	
+}
+class MyLock{
+	static Object obj1 = new Object();
+	static Object obj2 = new Object();	
+}
 ```
 ## 9..线程间通讯:其实是多个线程操作同一资源,但是操作的动作不同;
 	(1).等待唤醒机制:
@@ -144,216 +144,212 @@
 		只有同一个锁上的被等待线程可以被同一个锁上notify唤醒;
 		等待和唤醒是同一个锁,锁可以是任意对象;
 ```java
-		class Res {
-			String name;
-			String sex;
-			boolean flag = false;
-			public synchronized void set(String name, String sex) {
-				if (flag)
-					try {
-						this.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				this.name = name;
-				this.sex = sex;
-				this.flag = true;
-				this.notify();
+class Res {
+	String name;
+	String sex;
+	boolean flag = false;
+	public synchronized void set(String name, String sex) {
+		if (flag)
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
-			public synchronized void out() {
-				if (!flag)
-					try {
-						this.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-				System.out.println(this.name + "," + this.sex);
-				this.flag = false;
-				this.notify();
+		this.name = name;
+		this.sex = sex;
+		this.flag = true;
+		this.notify();
+	}
+	public synchronized void out() {
+		if (!flag)
+			try {
+				this.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
 			}
+		System.out.println(this.name + "," + this.sex);
+		this.flag = false;
+		this.notify();
+	}
+}
+class Input implements Runnable {
+	Res r;
+	int x;
+
+	Input(Res r) {
+		this.r = r;
+	}
+
+	@Override
+	public void run() {
+		while (true) {
+			if (x == 0) {
+				r.set("Coco", "female");
+			} else {
+				r.set("顾夏阳", "男");
+			}
+			x = (x + 1) % 2;
 		}
-		class Input implements Runnable {
-			Res r;
-			int x;
+	}
+}
+class Output implements Runnable {
+	Res r;
 
-			Input(Res r) {
-				this.r = r;
-			}
+	Output(Res r) {
+		this.r = r;
+	}
 
-			@Override
-			public void run() {
-				while (true) {
-					if (x == 0) {
-						r.set("Coco", "female");
-					} else {
-						r.set("顾夏阳", "男");
-					}
-					x = (x + 1) % 2;
-				}
-			}
+	@Override
+	public void run() {
+		while (true) {
+			r.out();
 		}
-		class Output implements Runnable {
-			Res r;
-
-			Output(Res r) {
-				this.r = r;
-			}
-
-			@Override
-			public void run() {
-				while (true) {
-					r.out();
-				}
-			}
-		}
+	}
+}
 ```
 	(2).生产者消费者:多个生产者和消费者时,定义 while 循环使被唤醒的线程再次判断标记,
 		使用notifyAll()需要唤醒对方线程,只使用notify,容易出现只唤醒了本方线程,导致程序的所有线程都等待;
 ```java
-		class Resource{
-			private String name;
-			private int count=1;
-			private boolean flag = false;
-			
-			public synchronized void set(String name){
-				while(flag){
-					try{
-						this.wait();
-					}catch(Exception e){
-						e.printStackTrace();
-					}
-				}
-				this.name = name + "--" + count++;
-				System.out.println(Thread.currentThread().getName() + "...生产者..." + this.name);
-				flag = true;
-				this.notifyAll();
-			}
-			public synchronized void out(){
-				while(!flag){
-					try{
-						this.wait();
-					}catch(Exception e){
-						e.printStackTrace();
-					}
-				}
-				System.out.println(Thread.currentThread().getName() + "...消费者..........." + this.name);
-				flag = false;
-				this.notifyAll();
+class Resource{
+	private String name;
+	private int count=1;
+	private boolean flag = false;
+	public synchronized void set(String name){
+		while(flag){
+			try{
+				this.wait();
+			}catch(Exception e){
+				e.printStackTrace();
 			}
 		}
+		this.name = name + "--" + count++;
+		System.out.println(Thread.currentThread().getName() + "...生产者..." + this.name);
+		flag = true;
+		this.notifyAll();
+	}
+	public synchronized void out(){
+		while(!flag){
+			try{
+				this.wait();
+			}catch(Exception e){
+				e.printStackTrace();
+			}
+		}
+		System.out.println(Thread.currentThread().getName() + "...消费者..........." + this.name);
+		flag = false;
+		this.notifyAll();
+	}
+}
 ```
 		①.JDK5之后提供多线程升级解决方案,将同步 synchronized 替换成 Lock 操作,将 Object 中wait,notify,notifyAll
 		替换成 Condition 对象,该对象可以使用 Lock 锁获取,可以获取多个condition对象;
 		★ Lock 是显示锁机制;
 		★释放锁是必须执行,所以放在 finally 块中
 ```java
-		class Resource {
-			private String name;
-			private int count = 1;
-			private boolean flag = false;
-
-			private Lock lock = new ReentrantLock();
-			private Condition condition_pro = lock.newCondition();
-			private Condition condition_con = lock.newCondition();
-
-			public void set(String name) {
-				lock.lock();
-				try {
-					while (flag)
-						condition_pro.await();
-					this.name = name + "--" + count++;
-					System.out.println(Thread.currentThread().getName() + "...生产者..."
-							+ this.name);
-					flag = true;
-					condition_con.signalAll();
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					lock.unlock();
-				}
-			}
-			public void out() {
-				lock.lock();
-				try {
-					while (!flag)
-						condition_con.await();
-					System.out.println(Thread.currentThread().getName()
-							+ "...消费者..........." + this.name);
-					flag = false;
-					condition_pro.signalAll();
-				} catch (Exception e) {
-					e.printStackTrace();
-				} finally {
-					lock.unlock();
-				}
-
-			}
+class Resource {
+	private String name;
+	private int count = 1;
+	private boolean flag = false;
+	private Lock lock = new ReentrantLock();
+	private Condition condition_pro = lock.newCondition();
+	private Condition condition_con = lock.newCondition();
+	public void set(String name) {
+		lock.lock();
+		try {
+			while (flag)
+				condition_pro.await();
+			this.name = name + "--" + count++;
+			System.out.println(Thread.currentThread().getName() + "...生产者..."
+					+ this.name);
+			flag = true;
+			condition_con.signalAll();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			lock.unlock();
 		}
+	}
+	public void out() {
+		lock.lock();
+		try {
+			while (!flag)
+				condition_con.await();
+			System.out.println(Thread.currentThread().getName()
+					+ "...消费者..........." + this.name);
+			flag = false;
+			condition_pro.signalAll();
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			lock.unlock();
+		}
+
+	}
+}
 ```
 	(3).读写锁:读线程之间是同时的,读写互斥,写之间互斥;
 ```java
-		public class ReadWriteLockTest {
-			static ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
-			public static void main(String[] args) {
-				// 是否可以进入多个reader - 可以
-				// 是否可以进入多个writer - 不可以
-				// 当有reader进入后, writer是否可以进入 - 不可以
-				// 当有writer进入后, reader是否可以进入 - 不可以
-				MyThread t1 = new MyThread(0, "t1");
-				MyThread t2 = new MyThread(0, "t2");
-				MyThread t3 = new MyThread(1, "t3");
-				MyThread t4 = new MyThread(1, "t4");
-				t1.start();
-				t2.start();
-				t3.start();
-				t4.start();
-			}
-
-			private static class MyThread extends Thread {
-				private int type;
-				private String threadName;
-				public MyThread(int type, String threadName) {
-					this.threadName = threadName;
-					this.type = type;
-				}
-				@Override
-				public void run() {
-					while (true) {
-						if (type == 0) {
-							// read
-							ReentrantReadWriteLock.ReadLock readLock = null;
-							try {
-								readLock = lock.readLock();
-								readLock.lock();
-								System.err.println("to read...." + threadName);
-								try {
-									Thread.sleep(5 * 1000);
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
-							} finally {
-								readLock.unlock();
-							}
-						} else {
-							// write
-							ReentrantReadWriteLock.WriteLock writeLock = null;
-							try {
-								writeLock = lock.writeLock();
-								writeLock.lock();
-								System.err.println("to write...." + threadName);
-								try {
-									Thread.sleep(5 * 1000);
-								} catch (InterruptedException e) {
-									e.printStackTrace();
-								}
-							} finally {
-								writeLock.unlock();
-							}
+public class ReadWriteLockTest {
+	static ReentrantReadWriteLock lock = new ReentrantReadWriteLock(true);
+	public static void main(String[] args) {
+		// 是否可以进入多个reader - 可以
+		// 是否可以进入多个writer - 不可以
+		// 当有reader进入后, writer是否可以进入 - 不可以
+		// 当有writer进入后, reader是否可以进入 - 不可以
+		MyThread t1 = new MyThread(0, "t1");
+		MyThread t2 = new MyThread(0, "t2");
+		MyThread t3 = new MyThread(1, "t3");
+		MyThread t4 = new MyThread(1, "t4");
+		t1.start();
+		t2.start();
+		t3.start();
+		t4.start();
+	}
+	private static class MyThread extends Thread {
+		private int type;
+		private String threadName;
+		public MyThread(int type, String threadName) {
+			this.threadName = threadName;
+			this.type = type;
+		}
+		@Override
+		public void run() {
+			while (true) {
+				if (type == 0) {
+					// read
+					ReentrantReadWriteLock.ReadLock readLock = null;
+					try {
+						readLock = lock.readLock();
+						readLock.lock();
+						System.err.println("to read...." + threadName);
+						try {
+							Thread.sleep(5 * 1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
 						}
+					} finally {
+						readLock.unlock();
+					}
+				} else {
+					// write
+					ReentrantReadWriteLock.WriteLock writeLock = null;
+					try {
+						writeLock = lock.writeLock();
+						writeLock.lock();
+						System.err.println("to write...." + threadName);
+						try {
+							Thread.sleep(5 * 1000);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+					} finally {
+						writeLock.unlock();
 					}
 				}
 			}
 		}
+	}
+}
 ```
 ## 10..多线程控制:
 	(1).停止线程:stop方法已经过时.
@@ -363,48 +359,48 @@
 			★特殊情况:当线程处于等待状态,就不会读取到标记,那么线程就不会结束;
 				当没有指定的方式让等待状态的线程恢复到运行状态,这是需强制让线程恢复到运行状态(interrupt);
 ```java				
-		public class StopThread {
-			public static void main(String[] args) {
-				Stop s = new Stop();
-				
-				Thread t1 = new Thread(s);
-				Thread t2 = new Thread(s);
-				
-				t1.start();
-				t2.start();
-				
-				int num = 0;
-				while(true){
-					if(num++ == 60){
-						t1.interrupt();//强制中断线程的等待状态
-						t2.interrupt();
-						s.changeFlag();
-						break;
-					}
-					System.out.println(Thread.currentThread().getName() + "...." + num);
-				}
+public class StopThread {
+	public static void main(String[] args) {
+		Stop s = new Stop();
+		
+		Thread t1 = new Thread(s);
+		Thread t2 = new Thread(s);
+		
+		t1.start();
+		t2.start();
+		
+		int num = 0;
+		while(true){
+			if(num++ == 60){
+				t1.interrupt();//强制中断线程的等待状态
+				t2.interrupt();
+				s.changeFlag();
+				break;
 			}
+			System.out.println(Thread.currentThread().getName() + "...." + num);
 		}
-		//如果run方法变成同步方法,且其内调用了wait()方法,那么线程将无法stop,
-		//需强制中断其等待状态,恢复到运行状态
-		class Stop implements Runnable{
-			private boolean flag = true;
-			public synchronized void run() {
-				while(flag){
-					try {
-						wait();
-					} catch (InterruptedException e) {
-						System.out.println(Thread.currentThread().getName() + "....Exception");
-						flag = false;
-					}
-					System.out.println(Thread.currentThread().getName() + "....run");
-				}
-			}
-			
-			public void changeFlag(){
+	}
+}
+//如果run方法变成同步方法,且其内调用了wait()方法,那么线程将无法stop,
+//需强制中断其等待状态,恢复到运行状态
+class Stop implements Runnable{
+	private boolean flag = true;
+	public synchronized void run() {
+		while(flag){
+			try {
+				wait();
+			} catch (InterruptedException e) {
+				System.out.println(Thread.currentThread().getName() + "....Exception");
 				flag = false;
 			}
+			System.out.println(Thread.currentThread().getName() + "....run");
 		}
+	}
+	
+	public void changeFlag(){
+		flag = false;
+	}
+}
 ```
 	(2).守护线程:后台线程,默认产生的线程全部是Non-daemon线程
 		setDaemon(boolean on),该方法必须在启动线程前调用。
@@ -422,95 +418,89 @@
 			每个线程对共享数据的操作方法也分配到那个对象身上去完成，这样容易实现针对该数据进行的
 			各个操作的互斥和通信。
 ```java			
-			public class ThreadShareDataTest {					 
-				public static void main(String[] args) {						
-					ShareData shareData = new ShareData();
-					
-					Add add = new Add(shareData);
-					Sub sub = new Sub(shareData);
-					
-					new Thread(add).start();
-					new Thread(add).start();
-					new Thread(sub).start();
-					new Thread(sub).start();
-				}
-			}
-
-			class ShareData{
-				private Integer j=100;					
-				public synchronized void add(){
-					j++;
-					System.out.println(Thread.currentThread().getName()+" 对j进行加法运算   "+j);
-				}
-				
-				public synchronized  void sub(){
-					j--;
-					System.out.println(Thread.currentThread().getName()+"  对j进行减法运算  "+j);
-				}
-			}
-
-			class Add implements Runnable{
-
-				private ShareData data;
-				public Add(ShareData data)
-				{
-					this.data = data;
-				}
-				@Override
-				public void run() {
-					data.add();
-				}
-			}
-			class Sub implements Runnable{
-				private ShareData data;
-				public Sub(ShareData data){
-					this.data = data;
-				}
-				@Override
-				public void run() {
-					
-					data.sub();
-				}
-			}
+public class ThreadShareDataTest {					 
+	public static void main(String[] args) {						
+		ShareData shareData = new ShareData();
+		
+		Add add = new Add(shareData);
+		Sub sub = new Sub(shareData);
+		
+		new Thread(add).start();
+		new Thread(add).start();
+		new Thread(sub).start();
+		new Thread(sub).start();
+	}
+}
+class ShareData{
+	private Integer j=100;					
+	public synchronized void add(){
+		j++;
+		System.out.println(Thread.currentThread().getName()+" 对j进行加法运算   "+j);
+	}
+	public synchronized  void sub(){
+		j--;
+		System.out.println(Thread.currentThread().getName()+"  对j进行减法运算  "+j);
+	}
+}
+class Add implements Runnable{
+	private ShareData data;
+	public Add(ShareData data){
+		this.data = data;
+	}
+	@Override
+	public void run() {
+		data.add();
+	}
+}
+class Sub implements Runnable{
+	private ShareData data;
+	public Sub(ShareData data){
+		this.data = data;
+	}
+	@Override
+	public void run() {
+		
+		data.sub();
+	}
+}
 ```
 		②、将这些Runnable对象作为某一个类中的内部类，共享数据作为这个外部类中的成员变量，每个线程
 			对共享数据的操作方法也分配给外部类，以便实现对共享数据进行的各个操作的互斥和通信，作为内部
 			类的各个Runnable对象调用外部类的这些方法。 
 ```java
-			public class ThreadShareDataTest2 {
-				public static void main(String[] args) {
-					final ShareData2 shareData = new ShareData2();
-					for (int i = 0; i < 2; i++) {
-						new Thread() {
-							@Override
-							public void run() {
-								shareData.add();
-							}
-						}.start();
-					}
-					for (int i = 0; i < 2; i++) {
-						new Thread() {
-							@Override
-							public void run() {
-								shareData.sub();
-							}
-						}.start();
-					}
+public class ThreadShareDataTest2 {
+	public static void main(String[] args) {
+		final ShareData2 shareData = new ShareData2();
+		for (int i = 0; i < 2; i++) {
+			new Thread() {
+				@Override
+				public void run() {
+					shareData.add();
 				}
-			}
+			}.start();
+		}
+		for (int i = 0; i < 2; i++) {
+			new Thread() {
+				@Override
+				public void run() {
+					shareData.sub();
+				}
+			}.start();
+		}
+	}
+}
+class ShareData2 {
+	private Integer j = 100;
+	public synchronized void add() {
+		j++;
+		System.out.println(Thread.currentThread().getName() + "  对j进行加法运算    "	+ j);
+	}
 
-			class ShareData2 {
-				private Integer j = 100;
-				public synchronized void add() {
-					j++;
-					System.out.println(Thread.currentThread().getName() + "  对j进行加法运算    "	+ j);
-				}
-
-				public synchronized void sub() {
-					j--;
-					System.out.println(Thread.currentThread().getName() + "  对j进行减法运算   "	+ j);
-				}
-			}
+	public synchronized void sub() {
+		j--;
+		System.out.println(Thread.currentThread().getName() + "  对j进行减法运算   "	+ j);
+	}
+}
 ```
 		◆上面两种方式的组合：将共享数据封装在另外一个对象中，每个线程对共享数据的操作方法也分配到那
 		个对象身上去完成，对象作为这个外部类中的成员变量或方法中的局部变量，每个线程的Runnable对象
@@ -534,428 +524,408 @@
 	Callable接口类似于Runnable，从名字就可以看出来了，但是Runnable不会返回结果，并且无法抛出返回结果的异常，
 	而Callable功能更强大一些，被线程执行后，可以返回值，这个返回值可以被Future拿到，也就是说，Future可以拿到异步执行任务的返回值
 ```java
-	public class ThreadCallableFuture {
-		public static void main(String[] args) {
-			ExecutorService pool = Executors.newFixedThreadPool(3);
-			Future<String> future = 
-			pool.submit(new Callable<String>() {			
+public class ThreadCallableFuture {
+	public static void main(String[] args) {
+		ExecutorService pool = Executors.newFixedThreadPool(3);
+		Future<String> future = 
+		pool.submit(new Callable<String>() {			
+			@Override
+			public String call() throws Exception {
+				return "hello";
+			}
+		});;
+		try {
+			System.out.println(future.get());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		CompletionService<Integer> com = new ExecutorCompletionService<Integer>(pool);
+		for(int i=0;i<10;i++){
+			final int task = i;
+			com.submit(new Callable<Integer>() {
 				@Override
-				public String call() throws Exception {
-					return "hello";
+				public Integer call() throws Exception {
+					return task;
 				}
-			});;
+			});
+		}
+		for(int i=0;i<10;i++){
 			try {
-				System.out.println(future.get());
+				System.out.println(com.take().get());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
-			CompletionService<Integer> com = new ExecutorCompletionService<Integer>(pool);
-			for(int i=0;i<10;i++){
-				final int task = i;
-				com.submit(new Callable<Integer>() {
-					@Override
-					public Integer call() throws Exception {
-						return task;
-					}
-				});
-			}
-			for(int i=0;i<10;i++){
-				try {
-					System.out.println(com.take().get());
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
 		}
 	}
-	
-	import java.util.concurrent.*;
+}
+
+import java.util.concurrent.*;
+/**
+ * Callable 和 Future接口
+ * Callable是类似于Runnable的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
+ * Callable和Runnable有几点不同： 
+ * （1）Callable规定的方法是call()，而Runnable规定的方法是run().
+ * （2）Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。 
+ * （3）call()方法可抛出异常，而run()方法是不能抛出异常的。
+ * （4）运行Callable任务可拿到一个Future对象， Future表示异步计算的结果。
+ * 它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
+ * 通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果。
+ */
+public class CallableAndFuture {
 	/**
-		* Callable 和 Future接口
-		* Callable是类似于Runnable的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
-		* Callable和Runnable有几点不同： 
-		* （1）Callable规定的方法是call()，而Runnable规定的方法是run().
-		* （2）Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。 
-		* （3）call()方法可抛出异常，而run()方法是不能抛出异常的。
-		* （4）运行Callable任务可拿到一个Future对象， Future表示异步计算的结果。
-		* 它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
-		* 通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果。
-		*/
-	public class CallableAndFuture {
-
-		/**
-			* 自定义一个任务类，实现Callable接口
-			*/
-		public static class MyCallableClass implements Callable {
-			// 标志位
-			private int flag = 0;
-
-			public MyCallableClass(int flag) {
-				this.flag = flag;
-			}
-
-			public String call() throws Exception {
-				if (this.flag == 0) {
-					// 如果flag的值为0，则立即返回
-					return "flag = 0";
-				}
-				if (this.flag == 1) {
-					// 如果flag的值为1，做一个无限循环
-					try {
-						while (true) {
-							System.out.println("looping......");
-							Thread.sleep(2000);
-						}
-					} catch (InterruptedException e) {
-						System.out.println("Interrupted");
-					}
-					return "false";
-				} else {
-					// falg不为0或者1，则抛出异常
-					throw new Exception("Bad flag value!");
-				}
-			}
+	 * 自定义一个任务类，实现Callable接口
+	 */
+	public static class MyCallableClass implements Callable {
+		// 标志位
+		private int flag = 0;
+		public MyCallableClass(int flag) {
+			this.flag = flag;
 		}
-
-		public static void main(String[] args) {
-			// 定义3个Callable类型的任务
-			MyCallableClass task1 = new MyCallableClass(0);
-			MyCallableClass task2 = new MyCallableClass(1);
-			MyCallableClass task3 = new MyCallableClass(2);
-
-			// 创建一个执行任务的服务
-			ExecutorService es = Executors.newFixedThreadPool(3);
-			try {
-				// 提交并执行任务，任务启动时返回了一个Future对象，
-				// 如果想得到任务执行的结果或者是异常可对这个Future对象进行操作
-				Future future1 = es.submit(task1);
-				// 获得第一个任务的结果，如果调用get方法，当前线程会等待任务执行完毕后才往下执行
-				System.out.println("task1: " + future1.get());
-
-				Future future2 = es.submit(task2);
-				// 等待5秒后，再停止第二个任务。因为第二个任务进行的是无限循环
-				Thread.sleep(5000);
-				System.out.println("task2 cancel: " + future2.cancel(true));
-
-				// 获取第三个任务的输出，因为执行第三个任务会引起异常
-				// 所以下面的语句将引起异常的抛出
-				Future future3 = es.submit(task3);
-				System.out.println("task3: " + future3.get());
-			} catch (Exception e) {
-				System.out.println(e.toString());
+		public String call() throws Exception {
+			if (this.flag == 0) {
+				// 如果flag的值为0，则立即返回
+				return "flag = 0";
 			}
-			// 停止任务执行服务
-			es.shutdownNow();
+			if (this.flag == 1) {
+				// 如果flag的值为1，做一个无限循环
+				try {
+					while (true) {
+						System.out.println("looping......");
+						Thread.sleep(2000);
+					}
+				} catch (InterruptedException e) {
+					System.out.println("Interrupted");
+				}
+				return "false";
+			} else {
+				// falg不为0或者1，则抛出异常
+				throw new Exception("Bad flag value!");
+			}
 		}
 	}
+	public static void main(String[] args) {
+		// 定义3个Callable类型的任务
+		MyCallableClass task1 = new MyCallableClass(0);
+		MyCallableClass task2 = new MyCallableClass(1);
+		MyCallableClass task3 = new MyCallableClass(2);
+		// 创建一个执行任务的服务
+		ExecutorService es = Executors.newFixedThreadPool(3);
+		try {
+			// 提交并执行任务，任务启动时返回了一个Future对象，
+			// 如果想得到任务执行的结果或者是异常可对这个Future对象进行操作
+			Future future1 = es.submit(task1);
+			// 获得第一个任务的结果，如果调用get方法，当前线程会等待任务执行完毕后才往下执行
+			System.out.println("task1: " + future1.get());
+
+			Future future2 = es.submit(task2);
+			// 等待5秒后，再停止第二个任务。因为第二个任务进行的是无限循环
+			Thread.sleep(5000);
+			System.out.println("task2 cancel: " + future2.cancel(true));
+
+			// 获取第三个任务的输出，因为执行第三个任务会引起异常
+			// 所以下面的语句将引起异常的抛出
+			Future future3 = es.submit(task3);
+			System.out.println("task3: " + future3.get());
+		} catch (Exception e) {
+			System.out.println(e.toString());
+		}
+		// 停止任务执行服务
+		es.shutdownNow();
+	}
+}
 ```
 ## 14.线程同步工具类:
 	(1).Semaphore实现信号灯:Semaphore可以控制某个资源可被同时访问的个数
 		①.单个信号量的Semaphore对象可以实现互斥锁的功能,并且可以由一个线程获得了"锁",再由另一个线程释放锁,可以应用于死锁恢复的场合;
 ```java
-		/**
-			* Java 5.0里新加了4个协调线程间进程的同步装置，它们分别是：
-			* Semaphore, CountDownLatch, CyclicBarrier和Exchanger.
-			* 本例主要介绍Semaphore。
-			* Semaphore是用来管理一个资源池的工具，可以看成是个通行证，
-			* 线程要想从资源池拿到资源必须先拿到通行证，
-			* 如果线程暂时拿不到通行证，线程就会被阻断进入等待状态。
-			*/
-		public class SemaphoreTest {
-			/**
-				* 模拟资源池的类
-				* 只为池发放2个通行证，即同时只允许2个线程获得池中的资源。
-				*/
-			public static class Pool {
-				// 保存资源池中的资源
-				ArrayList<String> pool = null;
-				// 通行证
-				Semaphore pass = null;
-				Lock lock = new ReentrantLock();
-				public Pool(int size) {
-					// 初始化资源池
-					pool = new ArrayList<String>();
-					for (int i = 0; i < size; i++) {
-						pool.add("Resource " + i);
-					}
-					// 发放2个通行证
-					pass = new Semaphore(2);
-				}
-
-				public String get() throws InterruptedException {
-					// 获取通行证,只有得到通行证后才能得到资源
-					System.out.println("Try to get a pass...");
-					pass.acquire();
-					System.out.println("Got a pass");
-					return getResource();
-				}
-
-				public void put(String resource) {
-					// 归还通行证，并归还资源
-					System.out.println("Released a pass");
-					pass.release();
-					releaseResource(resource);
-				}
-
-				private String getResource() {
-					lock.lock();
-					String result = pool.remove(0);
-					System.out.println("资源 " + result + " 被取走");
-					lock.unlock();
-					return result;
-				}
-
-				private void releaseResource(String resource) {
-					lock.lock();
-					System.out.println("资源 " + resource + " 被归还");
-					pool.add(resource);
-					lock.unlock();
-				} 
+/**
+ *  Java 5.0里新加了4个协调线程间进程的同步装置，它们分别是：
+ * Semaphore, CountDownLatch, CyclicBarrier和Exchanger.
+ * 本例主要介绍Semaphore。
+ * Semaphore是用来管理一个资源池的工具，可以看成是个通行证，
+ * 线程要想从资源池拿到资源必须先拿到通行证，
+ * 如果线程暂时拿不到通行证，线程就会被阻断进入等待状态。
+ */
+public class SemaphoreTest {
+	/**
+	 * 模拟资源池的类
+	 * 只为池发放2个通行证，即同时只允许2个线程获得池中的资源。
+	 */
+	public static class Pool {
+		// 保存资源池中的资源
+		ArrayList<String> pool = null;
+		// 通行证
+		Semaphore pass = null;
+		Lock lock = new ReentrantLock();
+		public Pool(int size) {
+			// 初始化资源池
+			pool = new ArrayList<String>();
+			for (int i = 0; i < size; i++) {
+				pool.add("Resource " + i);
 			}
-			
-			public static void testPool() {
-				// 准备10个资源的资源池
-				final Pool aPool = new Pool(10);
-				Runnable worker = new Runnable() {
-					public void run() {
-						String resource = null;
-						try {
-							//取得resource
-							resource = aPool.get();
-							//用resource做工作
-							System.out.println("I am working on " + resource);
-							Thread.sleep(500);
-							System.out.println("I finished on " + resource);
-						} catch (InterruptedException ex) {
-						}
-						//归还resource
-						aPool.put(resource);
-					}
-				};
-				// 启动5个任务
-				ExecutorService service = Executors.newCachedThreadPool();
-				for (int i = 0; i < 5; i++) {
-					service.submit(worker);
-				}
-				service.shutdown();
-			} 
-			
-			public static void main(String[] args) {
-				SemaphoreTest.testPool();
-				
-				ExecutorService service = Executors.newCachedThreadPool();
-				final  Semaphore sp = new Semaphore(3);
-				for(int i=0;i<10;i++){
-					Runnable runnable = new Runnable(){
-							public void run(){
-							try {
-								sp.acquire();
-							} catch (InterruptedException e1) {
-								e1.printStackTrace();
-							}
-							System.out.println("线程" + Thread.currentThread().getName() + 
-									"进入，当前已有" + (3-sp.availablePermits()) + "个并发");
-							try {
-								Thread.sleep((long)(Math.random()*10000));
-							} catch (InterruptedException e) {
-								e.printStackTrace();
-							}
-							System.out.println("线程" + Thread.currentThread().getName() + 
-									"即将离开");					
-							sp.release();
-							//下面代码有时候执行不准确，因为其没有和上面的代码合成原子单元
-							System.out.println("线程" + Thread.currentThread().getName() + 
-									"已离开，当前已有" + (3-sp.availablePermits()) + "个并发");					
-						}
-					};
-					service.execute(runnable);			
-				}
-			}
+			// 发放2个通行证
+			pass = new Semaphore(2);
 		}
+		public String get() throws InterruptedException {
+			// 获取通行证,只有得到通行证后才能得到资源
+			System.out.println("Try to get a pass...");
+			pass.acquire();
+			System.out.println("Got a pass");
+			return getResource();
+		}
+		public void put(String resource) {
+			// 归还通行证，并归还资源
+			System.out.println("Released a pass");
+			pass.release();
+			releaseResource(resource);
+		}
+		private String getResource() {
+			lock.lock();
+			String result = pool.remove(0);
+			System.out.println("资源 " + result + " 被取走");
+			lock.unlock();
+			return result;
+		}
+		private void releaseResource(String resource) {
+			lock.lock();
+			System.out.println("资源 " + resource + " 被归还");
+			pool.add(resource);
+			lock.unlock();
+		} 
+	}
+	public static void testPool() {
+		// 准备10个资源的资源池
+		final Pool aPool = new Pool(10);
+		Runnable worker = new Runnable() {
+			public void run() {
+				String resource = null;
+				try {
+					//取得resource
+					resource = aPool.get();
+					//用resource做工作
+					System.out.println("I am working on " + resource);
+					Thread.sleep(500);
+					System.out.println("I finished on " + resource);
+				} catch (InterruptedException ex) {
+				}
+				//归还resource
+				aPool.put(resource);
+			}
+		};
+		// 启动5个任务
+		ExecutorService service = Executors.newCachedThreadPool();
+		for (int i = 0; i < 5; i++) {
+			service.submit(worker);
+		}
+		service.shutdown();
+	} 
+	public static void main(String[] args) {
+		SemaphoreTest.testPool();
+		
+		ExecutorService service = Executors.newCachedThreadPool();
+		final  Semaphore sp = new Semaphore(3);
+		for(int i=0;i<10;i++){
+			Runnable runnable = new Runnable(){
+					public void run(){
+					try {
+						sp.acquire();
+					} catch (InterruptedException e1) {
+						e1.printStackTrace();
+					}
+					System.out.println("线程" + Thread.currentThread().getName() + 
+							"进入，当前已有" + (3-sp.availablePermits()) + "个并发");
+					try {
+						Thread.sleep((long)(Math.random()*10000));
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+					System.out.println("线程" + Thread.currentThread().getName() + 
+							"即将离开");					
+					sp.release();
+					//下面代码有时候执行不准确，因为其没有和上面的代码合成原子单元
+					System.out.println("线程" + Thread.currentThread().getName() + 
+							"已离开，当前已有" + (3-sp.availablePermits()) + "个并发");					
+				}
+			};
+			service.execute(runnable);			
+		}
+	}
+}
 ```	
 	(2).CyclicBarrier:
 ```java
-		/**
-		* CyclicBarrier类似于CountDownLatch也是个计数器，
-		* 不同的是CyclicBarrier数的是调用了CyclicBarrier.await()进入等待的线程数，
-		* 当线程数达到了CyclicBarrier初始时规定的数目时，所有进入等待状态的线程被唤醒并继续。
-		* CyclicBarrier就象它名字的意思一样，可看成是个障碍，
-		* 所有的线程必须到齐后才能一起通过这个障碍。
-		* CyclicBarrier初始时还可带一个Runnable的参数，
-		* 此Runnable任务在CyclicBarrier的数目达到后，所有其它线程被唤醒前被执行。
-		*/
-		public class CyclicBarrierTest {
-			public static void main(String[] args) {
-				ExecutorService service = Executors.newCachedThreadPool();
-				final  CyclicBarrier cb = new CyclicBarrier(3);
-				for(int i=0;i<3;i++){
-					Runnable runnable = new Runnable(){
-							public void run(){
-							try {
-								Thread.sleep((long)(Math.random()*10000));	
-								System.out.println("线程" + Thread.currentThread().getName() + 
-										"即将到达集合地点1，当前已有" + (cb.getNumberWaiting()+1) + "个已经到达，" + (cb.getNumberWaiting()==2?"都到齐了，继续走啊":"正在等候"));						
-								cb.await();
-								
-								Thread.sleep((long)(Math.random()*10000));	
-								System.out.println("线程" + Thread.currentThread().getName() + 
-										"即将到达集合地点2，当前已有" + (cb.getNumberWaiting()+1) + "个已经到达，" + (cb.getNumberWaiting()==2?"都到齐了，继续走啊":"正在等候"));
-								cb.await();	
-								Thread.sleep((long)(Math.random()*10000));	
-								System.out.println("线程" + Thread.currentThread().getName() + 
-										"即将到达集合地点3，当前已有" + (cb.getNumberWaiting() + 1) + "个已经到达，" + (cb.getNumberWaiting()==2?"都到齐了，继续走啊":"正在等候"));						
-								cb.await();						
-							} catch (Exception e) {
-								e.printStackTrace();
-							}				
-						}
-					};
-					service.execute(runnable);
-				}
-				service.shutdown();
-			}							
-			public static class ComponentThread implements Runnable {
-				CyclicBarrier barrier;// 计数器
-				int ID;	// 组件标识
-				int[] array;	// 数据数组
-
-				// 构造方法
-				public ComponentThread(CyclicBarrier barrier, int[] array, int ID) {
-					this.barrier = barrier;
-					this.ID = ID;
-					this.array = array;
-				}
-
-				public void run() {
+/**
+ * CyclicBarrier类似于CountDownLatch也是个计数器，
+ * 不同的是CyclicBarrier数的是调用了CyclicBarrier.await()进入等待的线程数，
+ * 当线程数达到了CyclicBarrier初始时规定的数目时，所有进入等待状态的线程被唤醒并继续。
+ * CyclicBarrier就象它名字的意思一样，可看成是个障碍，
+ * 所有的线程必须到齐后才能一起通过这个障碍。
+ * CyclicBarrier初始时还可带一个Runnable的参数，
+ * 此Runnable任务在CyclicBarrier的数目达到后，所有其它线程被唤醒前被执行。
+ */
+public class CyclicBarrierTest {
+	public static void main(String[] args) {
+		ExecutorService service = Executors.newCachedThreadPool();
+		final  CyclicBarrier cb = new CyclicBarrier(3);
+		for(int i=0;i<3;i++){
+			Runnable runnable = new Runnable(){
+					public void run(){
 					try {
-						array[ID] = new Random().nextInt(100);
-						System.out.println("Component " + ID + " generates: " + array[ID]);
-						// 在这里等待Barrier处
-						System.out.println("Component " + ID + " sleep...");
-						barrier.await();
-						System.out.println("Component " + ID + " awaked...");
-						// 计算数据数组中的当前值和后续值
-						int result = array[ID] + array[ID + 1];
-						System.out.println("Component " + ID + " result: " + result);
-					} catch (Exception ex) {
-					}
+						Thread.sleep((long)(Math.random()*10000));	
+						System.out.println("线程" + Thread.currentThread().getName() + 
+								"即将到达集合地点1，当前已有" + (cb.getNumberWaiting()+1) + "个已经到达，" + (cb.getNumberWaiting()==2?"都到齐了，继续走啊":"正在等候"));						
+						cb.await();
+						
+						Thread.sleep((long)(Math.random()*10000));	
+						System.out.println("线程" + Thread.currentThread().getName() + 
+								"即将到达集合地点2，当前已有" + (cb.getNumberWaiting()+1) + "个已经到达，" + (cb.getNumberWaiting()==2?"都到齐了，继续走啊":"正在等候"));
+						cb.await();	
+						Thread.sleep((long)(Math.random()*10000));	
+						System.out.println("线程" + Thread.currentThread().getName() + 
+								"即将到达集合地点3，当前已有" + (cb.getNumberWaiting() + 1) + "个已经到达，" + (cb.getNumberWaiting()==2?"都到齐了，继续走啊":"正在等候"));						
+						cb.await();						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}				
 				}
-			}
-			/**
-				* 测试CyclicBarrier的用法
-				*/
-			public static void testCyclicBarrier() {
-				final int[] array = new int[3];
-				CyclicBarrier barrier = new CyclicBarrier(2, new Runnable() {
-					// 在所有线程都到达Barrier时执行
-					public void run() {
-						System.out.println("testCyclicBarrier run...");
-						array[2] = array[0] + array[1];
-					}
-				});
-
-				// 启动线程
-				new Thread(new ComponentThread(barrier, array, 0)).start();
-				new Thread(new ComponentThread(barrier, array, 1)).start();
-			}
-
-			public static void main(String[] args) {
-				CyclicBarrierTest.testCyclicBarrier();
+			};
+			service.execute(runnable);
+		}
+		service.shutdown();
+	}							
+	public static class ComponentThread implements Runnable {
+		CyclicBarrier barrier;// 计数器
+		int ID;	// 组件标识
+		int[] array;	// 数据数组
+		// 构造方法
+		public ComponentThread(CyclicBarrier barrier, int[] array, int ID) {
+			this.barrier = barrier;
+			this.ID = ID;
+			this.array = array;
+		}
+		public void run() {
+			try {
+				array[ID] = new Random().nextInt(100);
+				System.out.println("Component " + ID + " generates: " + array[ID]);
+				// 在这里等待Barrier处
+				System.out.println("Component " + ID + " sleep...");
+				barrier.await();
+				System.out.println("Component " + ID + " awaked...");
+				// 计算数据数组中的当前值和后续值
+				int result = array[ID] + array[ID + 1];
+				System.out.println("Component " + ID + " result: " + result);
+			} catch (Exception ex) {
 			}
 		}
+	}
+	/**
+	 * 测试CyclicBarrier的用法
+	 */
+	public static void testCyclicBarrier() {
+		final int[] array = new int[3];
+		CyclicBarrier barrier = new CyclicBarrier(2, new Runnable() {
+			// 在所有线程都到达Barrier时执行
+			public void run() {
+				System.out.println("testCyclicBarrier run...");
+				array[2] = array[0] + array[1];
+			}
+		});
+		// 启动线程
+		new Thread(new ComponentThread(barrier, array, 0)).start();
+		new Thread(new ComponentThread(barrier, array, 1)).start();
+	}
+	public static void main(String[] args) {
+		CyclicBarrierTest.testCyclicBarrier();
+	}
+}
 ```
 	(3).CountDownLatch
 ```java
-		/**
-			* CountDownLatch是个计数器，它有一个初始数，
-			* 等待这个计数器的线程必须等到计数器倒数到零时才可继续。
-			*/
-		public class CountDownLatchTest {
-			/**
-				* 初始化组件的线程
-				*/
-			public static class ComponentThread implements Runnable {
-				// 计数器
-				CountDownLatch latch;
-				// 组件ID
-				int ID;
-				// 构造方法
-				public ComponentThread(CountDownLatch latch, int ID) {
-					this.latch = latch;
-					this.ID = ID;
-				}
-
-				public void run() {
-					// 初始化组件
-					System.out.println("Initializing component " + ID);
-					try {
-						Thread.sleep(500 * ID);
-					} catch (InterruptedException e) {
-					}
-					System.out.println("Component " + ID + " initialized!");
-					//将计数器减一
-					latch.countDown();
-				}
-			}
-
-			/**
-				* 启动服务器
-				*/
-			public static void startServer() throws Exception {
-				System.out.println("Server is starting.");
-				//初始化一个初始值为3的CountDownLatch
-				CountDownLatch latch = new CountDownLatch(3);
-				//起3个线程分别去启动3个组件
-				ExecutorService service = Executors.newCachedThreadPool();
-				service.submit(new ComponentThread(latch, 1));
-				service.submit(new ComponentThread(latch, 2));
-				service.submit(new ComponentThread(latch, 3));
-				service.shutdown();
-
-				//等待3个组件的初始化工作都完成
-				latch.await();
-
-				//当所需的三个组件都完成时，Server就可继续了
-				System.out.println("Server is up!");
-			}
-
-			public static void main(String[] args) throws Exception {
-				CountDownLatchTest.startServer();
-				ExecutorService service = Executors.newCachedThreadPool();
-				final CountDownLatch cdOrder = new CountDownLatch(1);
-				final CountDownLatch cdAnswer = new CountDownLatch(3);		
-				for(int i=0;i<3;i++){
-					Runnable runnable = new Runnable(){
-							public void run(){
-							try {
-								System.out.println("线程" + Thread.currentThread().getName() + "正准备接受命令");						
-								cdOrder.await();
-								System.out.println("线程" + Thread.currentThread().getName() + "已接受命令");								
-								Thread.sleep((long)(Math.random()*10000));	
-								System.out.println("线程" + Thread.currentThread().getName() + "回应命令处理结果");						
-								cdAnswer.countDown();						
-							} catch (Exception e) {
-								e.printStackTrace();
-							}				
-						}
-					};
-					service.execute(runnable);
-				}		
-				try {
-					Thread.sleep((long)(Math.random()*10000));
-				
-					System.out.println("线程" + Thread.currentThread().getName() + "即将发布命令");						
-					cdOrder.countDown();
-					System.out.println("线程" + Thread.currentThread().getName() + "已发送命令，正在等待结果");	
-					cdAnswer.await();
-					System.out.println("线程" + Thread.currentThread().getName() + "已收到所有响应结果");	
-				} catch (Exception e) {
-					e.printStackTrace();
-				}				
-				service.shutdown();
-			}
+/**
+ * CountDownLatch是个计数器，它有一个初始数，
+ * 等待这个计数器的线程必须等到计数器倒数到零时才可继续。
+ */
+public class CountDownLatchTest {
+	/**
+	 * 初始化组件的线程
+	 */
+	public static class ComponentThread implements Runnable {
+		// 计数器
+		CountDownLatch latch;
+		// 组件ID
+		int ID;
+		// 构造方法
+		public ComponentThread(CountDownLatch latch, int ID) {
+			this.latch = latch;
+			this.ID = ID;
 		}
+		public void run() {
+			// 初始化组件
+			System.out.println("Initializing component " + ID);
+			try {
+				Thread.sleep(500 * ID);
+			} catch (InterruptedException e) {
+			}
+			System.out.println("Component " + ID + " initialized!");
+			//将计数器减一
+			latch.countDown();
+		}
+	}
+	/**
+	 * 启动服务器
+	 */
+	public static void startServer() throws Exception {
+		System.out.println("Server is starting.");
+		//初始化一个初始值为3的CountDownLatch
+		CountDownLatch latch = new CountDownLatch(3);
+		//起3个线程分别去启动3个组件
+		ExecutorService service = Executors.newCachedThreadPool();
+		service.submit(new ComponentThread(latch, 1));
+		service.submit(new ComponentThread(latch, 2));
+		service.submit(new ComponentThread(latch, 3));
+		service.shutdown();
+
+		//等待3个组件的初始化工作都完成
+		latch.await();
+		//当所需的三个组件都完成时，Server就可继续了
+		System.out.println("Server is up!");
+	}
+	public static void main(String[] args) throws Exception {
+		CountDownLatchTest.startServer();
+		ExecutorService service = Executors.newCachedThreadPool();
+		final CountDownLatch cdOrder = new CountDownLatch(1);
+		final CountDownLatch cdAnswer = new CountDownLatch(3);		
+		for(int i=0;i<3;i++){
+			Runnable runnable = new Runnable(){
+					public void run(){
+					try {
+						System.out.println("线程" + Thread.currentThread().getName() + "正准备接受命令");						
+						cdOrder.await();
+						System.out.println("线程" + Thread.currentThread().getName() + "已接受命令");								
+						Thread.sleep((long)(Math.random()*10000));	
+						System.out.println("线程" + Thread.currentThread().getName() + "回应命令处理结果");						
+						cdAnswer.countDown();						
+					} catch (Exception e) {
+						e.printStackTrace();
+					}				
+				}
+			};
+			service.execute(runnable);
+		}		
+		try {
+			Thread.sleep((long)(Math.random()*10000));
+			System.out.println("线程" + Thread.currentThread().getName() + "即将发布命令");						
+			cdOrder.countDown();
+			System.out.println("线程" + Thread.currentThread().getName() + "已发送命令，正在等待结果");	
+			cdAnswer.await();
+			System.out.println("线程" + Thread.currentThread().getName() + "已收到所有响应结果");	
+		} catch (Exception e) {
+			e.printStackTrace();
+		}				
+		service.shutdown();
+	}
+}
 ```	
 	(4).Exchanger
 ```java
