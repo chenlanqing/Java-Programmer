@@ -18,7 +18,7 @@
 ConcurrentHashMap 的锁分段技术;
 ConcurrentHashMap 的读是否要加锁,为什么;
 ConcurrentHashMap 的迭代器是强一致性的迭代器还是弱一致性的迭代器;
---- 
+
 # 一.基于 JDK6 ConcurrentHashMap 的技术原理:
     1.ConcurrentHashMap 的锁分段技术:
         首先将数据分成一段一段的存储,然后给每一段数据配一把锁,当一个线程占用锁访问其中一个段数据的时候,其他段的数据也能被其他线程访问.
@@ -48,9 +48,9 @@ ConcurrentHashMap 的迭代器是强一致性的迭代器还是弱一致性的�
             ConcurrentHashMap 是一个并发散列映射表的实现，它允许完全并发的读取,并且支持给定数量的并发更新
         (2).用分离锁实现多个线程间的更深层次的共享访问,用 HashEntery 对象的不变性来降低执行读操作的线程在遍历链表期间对加锁的需求
             通过对同一个 Volatile 变量的写 / 读访问，协调不同线程间读 / 写操作的内存可见性
+        (3).ConcurrentHashMap的并发度跟 segment 的大小有关.
 
----
-
+# 二.JDK8实现
  * [ConcurrentHashMap](https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483889&idx=1&sn=b2fcb50a7e8a556467ccb9a0cc9fe927&chksm=96cd41bda1bac8ab61e9e6d6b450ee69307c37713e3c73825dea2a3494a35c5f9ecd3a91eabd&scene=38#wechat_redirect)
  * [ConcurrentHashMap](https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483894&idx=1&sn=72e7fb63296ff382568a7861c75068c1&chksm=96cd41baa1bac8ace9a8c99a76851a59ebc57997bfaa680e5cdf8e42191dd8c0b3b281851edd&scene=38#wechat_redirect)
  * [ConcurrentHashMap](https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483902&idx=1&sn=4e52472a2ddfb6825fd9f1928c33e1ed&chksm=96cd41b2a1bac8a4f927f20905c1263b236a748fa05e06ba857459d1c46eafabd3b740c68fe7&scene=38#wechat_redirect)

@@ -72,7 +72,10 @@
 	(1).设计更复杂:多线程共享数据时尤其需要注意
 	(2).上下文切换的开销:	
 		CPU 会在一个上下文中执行一个线程,然后切换到另外一个上下文中执行另外一个线程
-		上下文切换并不廉价。如果没有必要，应该减少上下文切换的发生
+		上下文切换并不廉价。如果没有必要，应该减少上下文切换的发生.
+		--> 上下文切换:从任务保存到再加载的过程就是一次上下文切换
+			上下文切换过程中,CPU会停止处理当前运行的程序,并保存当前程序运行的具体位置以便之后继续运行;
+
 	(3).增加资源消耗:如线程管理中消耗的资源
 ## 3.并发编程模型:
 	Java 的并发采用的是共享内存模型
@@ -453,6 +456,7 @@
 	* http://www.cnblogs.com/javaminer/p/3889023.html
 	* http://cmsblogs.com/?p=2071
 	可以通过反编译字节码 -->javap -c SyncDemo.class
+	synchronized 的优化借鉴了锁的CAS操作
 	7.1.同步代码块的实现:
 		同步代码块是使用 monitorenter 和 monitorexit 指令来实现的.
 		7.1.1.monitorenter:每个对象都有一个监视器锁(monitor),当monitor被占用时就会处于锁定状态,线程执行monitorenter指令时尝试获取
@@ -1191,8 +1195,9 @@
         log.info("{} continue",count);
     }
 ```
-## 7.共享锁-信号量:Semaphore:是一个计数信号量,它的本质是一个"共享锁";
+## 7.共享锁-信号量:Semaphore
 	参考文章:http://www.cnblogs.com/skywang12345/p/3534050.html
+	是一个计数信号量,它的本质是一个"共享锁";它的作用是限制某段代码块的并发数
 	(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
 		当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
 		线程可以通过release()来释放它所持有的信号量许可
@@ -1283,7 +1288,7 @@
 	static void unpark(Thread thread)
 	==> LockSupport 是通过调用 Unsafe 函数中的接口实现阻塞和解除阻塞的
 	==> park和wait的区别:wait让线程阻塞前,必须通过synchronized获取同步锁; park 面向对象不同; 实现机制不一样,因此两者没有交集;
-## 10.Callable 
+## 10.Callable & Future
 	10.1.Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
 		Callable 和 Runnable 有几点不同： 
 		(1).Callable规定的方法是call()，而Runnable规定的方法是run().
@@ -1292,10 +1297,89 @@
 		(4).运行 Callable 任务可拿到一个 Future 对象,Future 表示异步计算的结果。
 			它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
 			通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果.
-	10.2.
+	10.2.如果需要获取线程的执行结果,需要使用到Future,Callable用于产生结果,Future用于获取结果
+		Callabl接口使用泛型来定义结果的返回值类型,在线程池提交Callable任务后返回了一个Future对象
 
-## 11.FutureTask
+## 11.FutureTask:
+	(1).可用于异步获取执行结果或取消执行任务的场景.通过传入Runnable或者Callable的任务给FutureTask,
+		直接调用其run方法或者放入线程池执行，之后可以在外部通过FutureTask的get方法异步获取执行结果.
+		FutureTask非常适合用于耗时的计算，主线程可以在完成自己的任务后，再去获取结果.
+		FutureTask还可以确保即使调用了多次run方法，它都只会执行一次Runnable或者Callable任务，
+		或者通过cancel取消FutureTask的执行等;
+	(2).FutureTask执行多任务计算:
+		利用FutureTask和ExecutorService,可以用多线程的方式提交计算任务,主线程继续执行其他任务,
+		当主线程需要子线程的计算结果时,在异步获取子线程的执行结果
+```java
+public class FutureTaskDemo {
+    public static void main(String[] args) {
+        FutureTaskDemo task = new FutureTaskDemo();
+        List<FutureTask<Integer>> taskList = new ArrayList<FutureTask<Integer>>();
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+        for (int i =0;i<10;i++){
+            FutureTask<Integer> f = new FutureTask<Integer>(task.new ComputeTask(i, "" + i));
+            taskList.add(f);
+            executorService.submit(f);
+        }
+        System.out.println("所有计算任务提交完毕,主线程做其他事情");
+        Integer total = 0;
+        for (FutureTask<Integer> t : taskList){
+            try {
+                total = total + t.get();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        executorService.shutdown();
+        System.out.println("计算任务执行完毕,执行结果:" + total);
 
+    }
+    private class ComputeTask implements Callable<Integer> {
+        private Integer result = 0;
+        private String taskName = "";
+        public ComputeTask(Integer result, String taskName) {
+            this.result = result;
+            this.taskName = taskName;
+        }
+        public String getTaskName() {
+            return taskName;
+        }
+        public Integer call() throws Exception {
+            for (int i = 0; i < 100; i++) {
+                result = +i;
+            }
+            Thread.sleep(5000);
+            System.out.println("子线程任务:" + taskName + " 计算完毕");
+            return result;
+        }
+    }
+}
+```
+	(3).高并发环境下,能够确保任务只执行一次:
+		下面代码保证了在高并发环境下不会多次创建连接或者多次锁的出现
+```java
+private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
+            = new ConcurrentHashMap<String, FutureTask<Connection>>();
+    public Connection getConnection(String key) throws Exception{
+        FutureTask<Connection> connectionTask = connectionPool.get(key);
+        if (connectionTask != null){
+            return connectionTask.get();
+        }
+        Callable<Connection> callable = new Callable<Connection>() {
+            public Connection call() throws Exception {
+                return createConnection();
+            }
+        };
+        FutureTask<Connection> newTask = new FutureTask<Connection>(callable);
+        connectionTask = connectionPool.putIfAbsent(key, newTask);
+        if (connectionTask == null){
+            connectionTask = newTask;
+            connectionTask.run();
+        }
+        return connectionTask.get();
+    }
+```
 ## 12.Fork/Join框架
 	设计思想与Mapreduce类似
 
@@ -1539,19 +1623,26 @@
 	1.5.线程池原理:
 		预先启动一些线程,线程无限循环从任务队列中获取一个任务进行执行,直到线程池被关闭.如果某个线程因为执行某个任务发生异常而终止,
 		那么重新创建一个新的线程而已.如此反复.线程池的实现类是 ThreadPoolExecutor 类
-
-## 2.线程池数据结构:
-	java.uitl.concurrent.ThreadPoolExecutor类是线程池中最核心的一个类
-	2.1.核心参数:
-		(1).
-## 3.线程池任务 submit及执行流程:
+## 2.重要类:
+### 2.1.ExecutorService:真正的线程池接口
+### 2.2.ScheduledExecutorService:和Timer/TimerTask类似，解决那些需要任务重复执行的问题
+### 2.3.ThreadPoolExecutor:ExecutorService的默认实现,线程池中最核心的一个类:
+#### 2.3.1.核心参数:
+	(1).corePoolSize核心线程数大小，当线程数<corePoolSize ，会创建线程执行runnable
+	(2).maximumPoolSize 最大线程数， 当线程数 >= corePoolSize的时候，会把runnable放入workQueue中
+	(3).keepAliveTime 保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。
+	(4).unit 时间单位
+	(5).workQueue 保存任务的阻塞队列
+	(6).threadFactory 创建线程的工厂
+	(7).handler 拒绝策略,默认有四种拒绝策略
+#### 2.3.2.任务执行顺序:
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程池主要处理流程.png)
 
 	(1).一个任务提交,如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行;(执行这个步骤时需要获取全局锁)
 	(2).如果来不及执行，则把多余的线程放到workQueue，等待已启动的worker来循环执行;
 	(3).如果队列workQueue都放满了还没有执行，则在maximumPoolSize下面启动新的worker来循环执行workQueue;
 	(4).如果启动到maximumPoolSize还有任务进来，线程池已达到满负载，此时就执行任务拒绝RejectedExecutionHandler
-	线程池核心代码:
+		线程池核心代码:
 ```java
 		public void execute(Runnable command) {
 			if (command == null)
@@ -1581,7 +1672,10 @@
 		}
 
 ```
-## 4.Executors
+### 2.4.ScheduledThreadPoolExecutor:
+	继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现
+
+
 ## 4.线程池配置:
 	CPU密集型任务:需要尽量压榨CPU,参考值可以设为NCPU + 1;
 	IO密集型任务:参考值可以设置为 2*NCPU
