@@ -7,6 +7,7 @@
 - [三.Redis 持久化:](#%E4%B8%89redis-%E6%8C%81%E4%B9%85%E5%8C%96)
 - [四.Redis 事务:](#%E5%9B%9Bredis-%E4%BA%8B%E5%8A%A1)
 - [五.主从复制:](#%E4%BA%94%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
+- [六.Redis面试题:](#%E5%85%ADredis%E9%9D%A2%E8%AF%95%E9%A2%98)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

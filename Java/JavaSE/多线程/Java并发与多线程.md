@@ -28,11 +28,11 @@
   - [4.共享锁-ReentrantReadWriteLock 读写锁:](#4%E5%85%B1%E4%BA%AB%E9%94%81-reentrantreadwritelock-%E8%AF%BB%E5%86%99%E9%94%81)
   - [5.共享锁-闭锁:CountDownLatch:](#5%E5%85%B1%E4%BA%AB%E9%94%81-%E9%97%AD%E9%94%81countdownlatch)
   - [6.栅栏:CyclicBarrier:](#6%E6%A0%85%E6%A0%8Fcyclicbarrier)
-  - [7.共享锁-信号量:Semaphore:是一个计数信号量,它的本质是一个"共享锁";](#7%E5%85%B1%E4%BA%AB%E9%94%81-%E4%BF%A1%E5%8F%B7%E9%87%8Fsemaphore%E6%98%AF%E4%B8%80%E4%B8%AA%E8%AE%A1%E6%95%B0%E4%BF%A1%E5%8F%B7%E9%87%8F%E5%AE%83%E7%9A%84%E6%9C%AC%E8%B4%A8%E6%98%AF%E4%B8%80%E4%B8%AA%E5%85%B1%E4%BA%AB%E9%94%81)
+  - [7.共享锁-信号量:Semaphore](#7%E5%85%B1%E4%BA%AB%E9%94%81-%E4%BF%A1%E5%8F%B7%E9%87%8Fsemaphore)
   - [8.Condition](#8condition)
   - [9.LockSupport:](#9locksupport)
-  - [10.Callable](#10callable)
-  - [11.FutureTask](#11futuretask)
+  - [10.Callable & Future](#10callable--future)
+  - [11.FutureTask:](#11futuretask)
   - [12.Fork/Join框架](#12forkjoin%E6%A1%86%E6%9E%B6)
   - [13.Exchanger](#13exchanger)
 - [四.JUC 中集合类:](#%E5%9B%9Bjuc-%E4%B8%AD%E9%9B%86%E5%90%88%E7%B1%BB)
@@ -48,9 +48,7 @@
   - [2.CAS:Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
 - [六.线程池](#%E5%85%AD%E7%BA%BF%E7%A8%8B%E6%B1%A0)
   - [1.线程池技术:](#1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8A%80%E6%9C%AF)
-  - [2.线程池数据结构:](#2%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
-  - [3.线程池任务 submit及执行流程:](#3%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%BB%BB%E5%8A%A1-submit%E5%8F%8A%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B)
-  - [4.Executors](#4executors)
+  - [2.重要类:](#2%E9%87%8D%E8%A6%81%E7%B1%BB)
   - [4.线程池配置:](#4%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%85%8D%E7%BD%AE)
 - [七.多线程并发最佳实践](#%E4%B8%83%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%B9%B6%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
 
@@ -125,6 +123,10 @@
 		(2).函数式并行里面最难的是确定需要并行的那个函数调用:
 			跨CPU协调函数调用需要一定的开销。某个函数完成的工作单元需要达到某个大小以弥补这个开销。
 			如果函数调用作用非常小，将它并行化可能比单线程、单CPU执行还慢
+	3.4.并行与并发:
+		(1).并行:表示两个线程同时做事情
+		(2).表示一会做这个事情,一会做另一个事情,存在着调度.单核 CPU 不可能存在并行(微观上)
+	
 # 二.Java 多线程:
 ## 1.Java 线程类是继承自 java.lang.Thread 或其子类的,
 	Thread thread = new Thread();
