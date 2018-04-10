@@ -1517,6 +1517,11 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 			(1).Java 无法直接访问底层操作系统,而是通过本地 native 方法来访问.不过 JVM 还是开了个后门,JDK 中有一个类 Unsafe,它提供了硬件级别的原子操作
 				对于 Unsafe 类的使用都是受限制的,只有授信的代码才能获得该类的实例	
 			(2).对 CAS 的实现:
+				compareAndSwap方法的参数含义:
+				第一个参数:要修改的参数
+				第二个参数:对象中要修改变量的偏移量
+				第三个参数:修改之前的值
+				第四个参数:预想修改后的值
 				public final native boolean compareAndSwapObject(Object paramObject1, long paramLong, Object paramObject2, Object paramObject3);
 				public final native boolean compareAndSwapInt(Object paramObject, long paramLong, int paramInt1, int paramInt2);
 				public final native boolean compareAndSwapLong(Object paramObject, long paramLong1, long paramLong2, long paramLong3);
@@ -1630,14 +1635,24 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 ### 2.2.ScheduledExecutorService:和Timer/TimerTask类似，解决那些需要任务重复执行的问题
 ### 2.3.ThreadPoolExecutor:ExecutorService的默认实现,线程池中最核心的一个类:
 #### 2.3.1.核心参数:
-	(1).corePoolSize核心线程数大小，当线程数<corePoolSize ，会创建线程执行runnable
-	(2).maximumPoolSize 最大线程数， 当线程数 >= corePoolSize的时候，会把runnable放入workQueue中
+	(1).corePoolSize 核心线程数大小，当线程数<corePoolSize,会创建线程执行runnable
+	(2).maximumPoolSize 最大线程数， 当线程数 >= corePoolSize的时候,会把runnable放入workQueue中
+		largestPoolSize:记录了曾经出现的最大线程个数
 	(3).keepAliveTime 保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。
 	(4).unit 时间单位
 	(5).workQueue 保存任务的阻塞队列
 	(6).threadFactory 创建线程的工厂
 	(7).handler 拒绝策略,默认有四种拒绝策略
-#### 2.3.2.任务执行顺序:
+#### 2.3.2.参数关系:
+	(1).corePoolSize 与 maximumPoolSize:
+		* 如果线程池中的实际线程数 < corePoolSize, 新增一个线程处理新的任务;
+		* 如果线程池中的实际线程数 >= corePoolSize, 新任务会放到workQueue中;
+		* 如果阻塞队列达到上限,且当前线程池的实际线程数 < maximumPoolSize,新增线程来处理任务;
+		* 如果阻塞队列满了,且这时线程池的实际线程数 >= maximumPoolSize,那么线程池已经达到极限,
+			会根据拒绝策略RejectedExecutionHandler拒绝新的任务.
+	(2).如果线程池阻塞队列达到极限时,在运行一段时间后,阻塞队列中的任务执行完成了,线程池会将超过核心
+		线程数的线程在一段时间内自动回收,在秒杀的业务场景中会有这样的情况发生.
+#### 2.3.3.任务执行顺序:
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程池主要处理流程.png)
 
 	(1).一个任务提交,如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行;(执行这个步骤时需要获取全局锁)
@@ -1679,6 +1694,7 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 
 
 ## 4.线程池配置:
+### 4.1.不同业务场景如何配置线程池参数
 	CPU密集型任务:需要尽量压榨CPU,参考值可以设为NCPU + 1;
 	IO密集型任务:参考值可以设置为 2*NCPU
 
@@ -1693,5 +1709,6 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 	8.使用Semaphore创建有界的访问;
 	9.宁可使用同步代码块也不要使用同步方法(synchronized)
 	10.避免使用静态变量,如果一定要用静态变量,可以声明为 final
+
 
 
