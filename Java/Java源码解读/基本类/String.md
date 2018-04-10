@@ -96,12 +96,15 @@
 			调试验证
 		3.1.2.StringBuilder 关键代码:
 			(1).以 append(String str)为例, 涉及关键代码:
-				StringBuilder			append(String)					在末尾追加字符串
-				AbstractStringBuilder	append(String)					在末尾追加字符串
-				AbstractStringBuilder	char value[]					存储字符数组
-				String					getChars(int, int, char[],int )	复制字符数组
-				AbstractStringBuilder	expandCapacity(int)				扩充容量
-				Arrays					copyOf(char[], int)				复制字符数组
+|						|								|				|
+|---------------------- |-----------------------		|-----------	|			
+|StringBuilder			|append(String)					|在末尾追加字符串|
+|AbstractStringBuilder	|append(String)					|在末尾追加字符串|
+|AbstractStringBuilder	|char value[]					|存储字符数组	|
+|String					|getChars(int, int, char[],int )|复制字符数组	|
+|AbstractStringBuilder	|expandCapacity(int)			|扩充容量		|
+|Arrays					|copyOf(char[], int)			|复制字符数组    |
+
 			(2).调用过程:
 			(3).附加以下"面向对象"的回答,会更加出彩:
 				StringBuilder 是抽象类 AbstractStringBuilder 的一个具体实现,(StringBuffer 也实现 AbstractStringBuilder)
