@@ -1,11 +1,19 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+**目录**
 
 - [1.Object 类中 clone() 方法:](#1object-%E7%B1%BB%E4%B8%AD-clone-%E6%96%B9%E6%B3%95)
+  - [1.1.作用:](#11%E4%BD%9C%E7%94%A8)
+  - [1.2.clone()工作原理:](#12clone%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
+  - [1.3.什么情况下需要覆盖clone()方法呢?](#13%E4%BB%80%E4%B9%88%E6%83%85%E5%86%B5%E4%B8%8B%E9%9C%80%E8%A6%81%E8%A6%86%E7%9B%96clone%E6%96%B9%E6%B3%95%E5%91%A2)
+  - [1.4.浅克隆:](#14%E6%B5%85%E5%85%8B%E9%9A%86)
+  - [1.5.深克隆:](#15%E6%B7%B1%E5%85%8B%E9%9A%86)
+  - [1.6.序列化实现对象的拷贝:](#16%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%9E%E7%8E%B0%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%8B%B7%E8%B4%9D)
+  - [1.7.String 的clone的特殊性? StringBuilder 和 StringBuffer 呢?](#17string-%E7%9A%84clone%E7%9A%84%E7%89%B9%E6%AE%8A%E6%80%A7-stringbuilder-%E5%92%8C-stringbuffer-%E5%91%A2)
+  - [1.8.Java 中集合的克隆:](#18java-%E4%B8%AD%E9%9B%86%E5%90%88%E7%9A%84%E5%85%8B%E9%9A%86)
 - [2.Object 中 equals()方法:](#2object-%E4%B8%AD-equals%E6%96%B9%E6%B3%95)
 - [3.hashCode()方法:](#3hashcode%E6%96%B9%E6%B3%95)
-- [4.finalize()方法:finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说不是轻量级的程序;](#4finalize%E6%96%B9%E6%B3%95finalize%E6%96%B9%E6%B3%95%E4%B8%8D%E4%BC%9A%E8%A2%AB%E8%B0%83%E7%94%A8%E7%AC%AC%E4%BA%8C%E6%AC%A1finalize%E6%96%B9%E6%B3%95%E5%AF%B9%E4%BA%8E%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%9D%A5%E8%AF%B4%E4%B8%8D%E6%98%AF%E8%BD%BB%E9%87%8F%E7%BA%A7%E7%9A%84%E7%A8%8B%E5%BA%8F)
+- [4.finalize()方法:](#4finalize%E6%96%B9%E6%B3%95)
 - [5.toString()方法:](#5tostring%E6%96%B9%E6%B3%95)
 - [6.wait/notifAll](#6waitnotifall)
 - [7.registerNatives](#7registernatives)
@@ -16,196 +24,201 @@
 * Object 类是 Java 中的终极父类,任何类都默认继承Object类,然而接口是不继承Object类;
 * ????为什么接口不继承Object类????
 
-#### 1.Object 类中 clone() 方法:
-	1.1.作用:
-		clone()可以产生一个相同的类并且返回给调用者.
+# 1.Object 类中 clone() 方法:
+## 1.1.作用:
+	clone()可以产生一个相同的类并且返回给调用者.
+## 1.2.clone()工作原理:
+	Object将clone()作为一个本地方法来实现，这意味着它的代码存放在本地的库中;
+	当代码执行的时候，将会检查调用对象的类(或者父类)是否实现了java.lang.Cloneable接口(Object类不实现Cloneable);
+	如果没有实现这个接口,clone()将会抛出一个检查异常()——java.lang.CloneNotSupportedException,
+	如果实现了这个接口,clone()会创建一个新的对象，并将原来对象的内容复制到新对象，最后返回这个新对象的引用	
+		public class CloneDemo implements Cloneable {
+			int x;
 
-	1.2.clone()工作原理:
-		Object将clone()作为一个本地方法来实现，这意味着它的代码存放在本地的库中;
-		当代码执行的时候，将会检查调用对象的类(或者父类)是否实现了java.lang.Cloneable接口(Object类不实现Cloneable);
-		如果没有实现这个接口,clone()将会抛出一个检查异常()——java.lang.CloneNotSupportedException,
-		如果实现了这个接口,clone()会创建一个新的对象，并将原来对象的内容复制到新对象，最后返回这个新对象的引用	
-			public class CloneDemo implements Cloneable {
-				int x;
-
-				public static void main(String[] args) throws CloneNotSupportedException {
-					CloneDemo cd = new CloneDemo();
-					cd.x = 5;
-					System.out.printf("cd.x = %d%n", cd.x);
-					CloneDemo cd2 = (CloneDemo) cd.clone();
-					System.out.printf("cd2.x = %d%n", cd2.x);
-				}
+			public static void main(String[] args) throws CloneNotSupportedException {
+				CloneDemo cd = new CloneDemo();
+				cd.x = 5;
+				System.out.printf("cd.x = %d%n", cd.x);
+				CloneDemo cd2 = (CloneDemo) cd.clone();
+				System.out.printf("cd2.x = %d%n", cd2.x);
 			}
-	1.3.什么情况下需要覆盖clone()方法呢?
-		调用clone()的代码是位于被克隆的类(即CloneDemo类)里面的,所以就不需要覆盖clone()了.
-		但是,如果调用别的类中的clone(),就需要覆盖clone()了.否则,将会看到“clone在Object中是被保护的”
-		// 提示:因为clone()在Object中的权限是protected	
-			class Data implements Cloneable {
-				int x;
+		}
+## 1.3.什么情况下需要覆盖clone()方法呢?
+	调用clone()的代码是位于被克隆的类(即CloneDemo类)里面的,所以就不需要覆盖clone()了.
+	但是,如果调用别的类中的clone(),就需要覆盖clone()了.否则,将会看到“clone在Object中是被保护的”
+```java
+// 提示:因为clone()在Object中的权限是protected	
+class Data implements Cloneable {
+	int x;
 
-				@Override
-				public Object clone() throws CloneNotSupportedException {
-					return super.clone();
-				}
-			}
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+		return super.clone();
+	}
+}
 
-			public class CloneDemo {
-				public static void main(String[] args) throws CloneNotSupportedException {
-					Data data = new Data();
-					data.x = 5;
-					System.out.printf("data.x = %d%n", data.x);
-					Data data2 = (Data) data.clone();
-					System.out.printf("data2.x = %d%n", data2.x);
-				}
-			}
+public class CloneDemo {
+	public static void main(String[] args) throws CloneNotSupportedException {
+		Data data = new Data();
+		data.x = 5;
+		System.out.printf("data.x = %d%n", data.x);
+		Data data2 = (Data) data.clone();
+		System.out.printf("data2.x = %d%n", data2.x);
+	}
+}
+```
+## 1.4.浅克隆:
+	(1).浅克隆(也叫做浅拷贝)仅复制了这个对象本身的成员变量,该对象如果引用了其他对象的话,也不对其复制.
+	上述代码演示了浅克隆.新的对象中的数据包含在了这个对象本身中,不涉及对别的对象的引用.
+	(2).如果一个对象中的所有成员变量都是原始类型,并且其引用了的对象都是不可改变的(大多情况下都是)时,使用浅克隆效果很好！
+	但是,如果其引用了可变的对象,那么这些变化将会影响到该对象和它克隆出的所有对象.		
+	// 浅克隆在复制引用了可变对象的对象时存在着问题
+	// 克隆后的对象修改,同样会影响到被克隆的对象
+	
+## 1.5.深克隆:
+	会复制这个对象和它所引用的对象的成员变量，如果该对象引用了其他对象，深克隆也会对其复制;
+```java
+public class Address {
+	private String city;
+	Address(String city) {
+		this.city = city;
+	}
+	@Override
+	public Address clone() {
+		return new Address(new String(city));
+	}
+	String getCity() {
+		return city;
+	}
+	void setCity(String city) {
+		this.city = city;
+	}
+}
+public class Employee implements Cloneable {
+	private String name;
+	private int age;
+	private Address address;
+	Employee(String name, int age, Address address) {
+		this.name = name;
+		this.age = age;
+		this.address = address;
+	}
+	@Override
+	public Employee clone() throws CloneNotSupportedException {
+		Employee e = (Employee) super.clone();
+		e.address = address.clone();
+		return e;
+	}
+	Address getAddress() {
+		return address;
+	}
+	String getName() {
+		return name;
+	}
+	int getAge() {
+		return age;
+	}
+}
+public class CloneDemo {
+	public static void main(String[] args) throws CloneNotSupportedException {
+		Employee e = new Employee("John Doe", 49, new Address("Denver"));
+		System.out.printf("%s: %d: %s%n", e.getName(), e.getAge(), e
+				.getAddress().getCity());
+		Employee e2 = (Employee) e.clone();
+		System.out.printf("%s: %d: %s%n", e2.getName(), e2.getAge(), e2
+				.getAddress().getCity());
+		e.getAddress().setCity("Chicago");
+		System.out.printf("%s: %d: %s%n", e.getName(), e.getAge(), e
+				.getAddress().getCity());
+		System.out.printf("%s: %d: %s%n", e2.getName(), e2.getAge(), e2
+				.getAddress().getCity());
+	}
+}	
+```
+	// 注意:从Address类中的clone()函数可以看出，这个clone()和我们之前写的clone()有些不同：
+	(1).Address类没有实现Cloneable接口。因为只有在Object类中的clone()被调用时才需要实现，
+		而Address是不会调用clone()的，所以没有实现Cloneable()的必要。
+	(2).这个clone()函数没有声明抛出CloneNotSupportedException。这个检查异常只可能在调用Object类clone()的时候抛出。
+		clone()是不会被调用的，因此这个异常也就没有被处理或者传回调用处的必要了。
+	(3).Object类的clone()没有被调用(这里没有调用super.clone())。因为这不是对Address的对象进行浅克隆——
+		只是一个成员变量复制而已。
+	(4).为了克隆Address的对象，需要创建一个新的Address对象并对其成员进行初始化操作。最后将新创建的Address对象返回。
+## 1.6.序列化实现对象的拷贝:
+	内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中,再从字节流中将其读出来,这样就可以创建一个新的对象了,
+	并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
+```java
+public class CloneUtils {
+	@SuppressWarnings("unchecked")
+	public static <T extends Serializable> T clone(T   obj){
+		T cloneObj = null;
+		try {
+			//写入字节流
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ObjectOutputStream obs = new   ObjectOutputStream(out);
+			obs.writeObject(obj);
+			obs.close();
 
-	1.4.浅克隆:
-		(1).浅克隆(也叫做浅拷贝)仅复制了这个对象本身的成员变量,该对象如果引用了其他对象的话,也不对其复制.
-		上述代码演示了浅克隆.新的对象中的数据包含在了这个对象本身中,不涉及对别的对象的引用.
-		(2).如果一个对象中的所有成员变量都是原始类型,并且其引用了的对象都是不可改变的(大多情况下都是)时,使用浅克隆效果很好！
-		但是,如果其引用了可变的对象,那么这些变化将会影响到该对象和它克隆出的所有对象.		
-		// 浅克隆在复制引用了可变对象的对象时存在着问题
-		// 克隆后的对象修改,同样会影响到被克隆的对象
-		
-	1.5.深克隆:会复制这个对象和它所引用的对象的成员变量，如果该对象引用了其他对象，深克隆也会对其复制;
-			public class Address {
-				private String city;
-				Address(String city) {
-					this.city = city;
-				}
-				@Override
-				public Address clone() {
-					return new Address(new String(city));
-				}
-				String getCity() {
-					return city;
-				}
-				void setCity(String city) {
-					this.city = city;
-				}
-			}
-			public class Employee implements Cloneable {
-				private String name;
-				private int age;
-				private Address address;
-				Employee(String name, int age, Address address) {
-					this.name = name;
-					this.age = age;
-					this.address = address;
-				}
-				@Override
-				public Employee clone() throws CloneNotSupportedException {
-					Employee e = (Employee) super.clone();
-					e.address = address.clone();
-					return e;
-				}
-				Address getAddress() {
-					return address;
-				}
-				String getName() {
-					return name;
-				}
-				int getAge() {
-					return age;
-				}
-			}
-			public class CloneDemo {
-				public static void main(String[] args) throws CloneNotSupportedException {
-					Employee e = new Employee("John Doe", 49, new Address("Denver"));
-					System.out.printf("%s: %d: %s%n", e.getName(), e.getAge(), e
-							.getAddress().getCity());
-					Employee e2 = (Employee) e.clone();
-					System.out.printf("%s: %d: %s%n", e2.getName(), e2.getAge(), e2
-							.getAddress().getCity());
-					e.getAddress().setCity("Chicago");
-					System.out.printf("%s: %d: %s%n", e.getName(), e.getAge(), e
-							.getAddress().getCity());
-					System.out.printf("%s: %d: %s%n", e2.getName(), e2.getAge(), e2
-							.getAddress().getCity());
-				}
-			}	
-		
-		// 注意:从Address类中的clone()函数可以看出，这个clone()和我们之前写的clone()有些不同：
-		(1).Address类没有实现Cloneable接口。因为只有在Object类中的clone()被调用时才需要实现，
-			而Address是不会调用clone()的，所以没有实现Cloneable()的必要。
-		(2).这个clone()函数没有声明抛出CloneNotSupportedException。这个检查异常只可能在调用Object类clone()的时候抛出。
-			clone()是不会被调用的，因此这个异常也就没有被处理或者传回调用处的必要了。
-		(3).Object类的clone()没有被调用(这里没有调用super.clone())。因为这不是对Address的对象进行浅克隆——
-			只是一个成员变量复制而已。
-		(4).为了克隆Address的对象，需要创建一个新的Address对象并对其成员进行初始化操作。最后将新创建的Address对象返回。
-	1.6.序列化实现对象的拷贝:
-		内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中,再从字节流中将其读出来,这样就可以创建一个新的对象了,
-		并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
-		public class CloneUtils {
-	        @SuppressWarnings("unchecked")
-	        public static <T extends Serializable> T clone(T   obj){
-	            T cloneObj = null;
-	            try {
-	                //写入字节流
-	                ByteArrayOutputStream out = new ByteArrayOutputStream();
-	                ObjectOutputStream obs = new   ObjectOutputStream(out);
-	                obs.writeObject(obj);
-	                obs.close();
+			//分配内存，写入原始对象，生成新对象
+			ByteArrayInputStream ios = new  ByteArrayInputStream(out.toByteArray());
+			ObjectInputStream ois = new ObjectInputStream(ios);
+			//返回生成的新对象
+			cloneObj = (T) ois.readObject();
+			ois.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return cloneObj;
+	}
+}
+```
+## 1.7.String 的clone的特殊性? StringBuilder 和 StringBuffer 呢?
+	(1).由于基本数据类型都能自动实现深度 clone,引用类型默认实现的是浅度 clone;而 String 是引用类型的一个特例,
+		我们可以和操作基本数据类型一样认为其实现了深度 clone（实质是浅克隆，切记只是一个假象）.
+		由于 String 是不可变类,对于 String 类中的很多修改操作都是通过新new对象复制处理的,所以当我们修改 clone 前后对象里面 
+		String 属性的值时其实都是属性引用的重新指向操作,自然对 clone 前后对象里 String 属性是没有相互影响的,类似于深度克隆;
+		所以虽然他是引用类型而且我们在深度克隆时无法调用其 clone 方法,但是其不影响我们深度克隆的使用;
+	(2).如果要实现深度克隆则 StringBuffer 和 StringBuilder 是需要主动特殊处理的,否则就是真正的对象浅克隆,
+		所以处理的办法就是在类的 clone 方法中对 StringBuffer 或者 StringBuilder 属性进行如下主动拷贝操作;
+## 1.8.Java 中集合的克隆:
+	(1).集合中默认克隆方式都是浅克隆,而且集合类提供的拷贝构造方式或addAll,add等方法都是浅克隆.
+		就是说存储在原集合和克隆集合中的对象会保持一致并指向堆中同一内存地址.
+		List<Person> destList = (List<Person>)srcList.clone();
+		List<Person> destList = new ArrayList<Person>(srcList.size());
+		for(Person person : srcList){
+			destList.add(person);
+		}
+		// 使用集合默认的 clone 方法复制（浅）
+		List<InfoBean> destList1 = (List<InfoBean>) srcList.clone();
+		// 使用 add 方法循环遍历复制（浅）
+		List<InfoBean> destList = new ArrayList<InfoBean>(srcList.size());
+		for (InfoBean bean : srcList) {
+			destList.add(bean);
+		}
+		// 使用 addAll 方法复制（浅）
+		List<InfoBean> destList2 = new ArrayList<InfoBean>();
+		destList.addAll(srcList);
+		// 使用构造方法复制（浅）
+		List<InfoBean> destList3 = new ArrayList<InfoBean>(srcList);
+		// 使用System.arraycopy()方法复制（浅）
+		InfoBean[] srcBeans = srcList.toArray(new InfoBean[0]);
+		InfoBean[] destBeans = new InfoBean[srcBeans.length];
+		System.arraycopy(srcBeans, 0, destBeans, 0, srcBeans.length);
+	(2).集合实现深克隆的方法:
+		==> 序列化:
+			public static <T extends Serializable> List<T> deepCopy(List<T> src) throws IOException, ClassNotFoundException {
+				ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+				ObjectOutputStream objOut = new ObjectOutputStream(byteOut);
 
-	                //分配内存，写入原始对象，生成新对象
-	                ByteArrayInputStream ios = new  ByteArrayInputStream(out.toByteArray());
-	                ObjectInputStream ois = new ObjectInputStream(ios);
-	                //返回生成的新对象
-	                cloneObj = (T) ois.readObject();
-	                ois.close();
-	            } catch (Exception e) {
-	                e.printStackTrace();
-	            }
-	            return cloneObj;
-		    }
-		}	
-	1.7.String 的clone的特殊性? StringBuilder 和 StringBuffer 呢?
-		(1).由于基本数据类型都能自动实现深度 clone,引用类型默认实现的是浅度 clone;而 String 是引用类型的一个特例,
-			我们可以和操作基本数据类型一样认为其实现了深度 clone（实质是浅克隆，切记只是一个假象）.
-			由于 String 是不可变类,对于 String 类中的很多修改操作都是通过新new对象复制处理的,所以当我们修改 clone 前后对象里面 
-			String 属性的值时其实都是属性引用的重新指向操作,自然对 clone 前后对象里 String 属性是没有相互影响的,类似于深度克隆;
-			所以虽然他是引用类型而且我们在深度克隆时无法调用其 clone 方法,但是其不影响我们深度克隆的使用;
-		(2).如果要实现深度克隆则 StringBuffer 和 StringBuilder 是需要主动特殊处理的,否则就是真正的对象浅克隆,
-			所以处理的办法就是在类的 clone 方法中对 StringBuffer 或者 StringBuilder 属性进行如下主动拷贝操作;
-	1.8.Java 中集合的克隆:
-		(1).集合中默认克隆方式都是浅克隆,而且集合类提供的拷贝构造方式或addAll,add等方法都是浅克隆.
-			就是说存储在原集合和克隆集合中的对象会保持一致并指向堆中同一内存地址.
-			List<Person> destList = (List<Person>)srcList.clone();
-			List<Person> destList = new ArrayList<Person>(srcList.size());
-			for(Person person : srcList){
-				destList.add(person);
-			}
-			// 使用集合默认的 clone 方法复制（浅）
-			List<InfoBean> destList1 = (List<InfoBean>) srcList.clone();
-			// 使用 add 方法循环遍历复制（浅）
-			List<InfoBean> destList = new ArrayList<InfoBean>(srcList.size());
-			for (InfoBean bean : srcList) {
-				destList.add(bean);
-			}
-			// 使用 addAll 方法复制（浅）
-			List<InfoBean> destList2 = new ArrayList<InfoBean>();
-			destList.addAll(srcList);
-			// 使用构造方法复制（浅）
-			List<InfoBean> destList3 = new ArrayList<InfoBean>(srcList);
-			// 使用System.arraycopy()方法复制（浅）
-			InfoBean[] srcBeans = srcList.toArray(new InfoBean[0]);
-			InfoBean[] destBeans = new InfoBean[srcBeans.length];
-			System.arraycopy(srcBeans, 0, destBeans, 0, srcBeans.length);
-		(2).集合实现深克隆的方法:
-			==> 序列化:
-				public static <T extends Serializable> List<T> deepCopy(List<T> src) throws IOException, ClassNotFoundException {
-				    ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-				    ObjectOutputStream objOut = new ObjectOutputStream(byteOut);
+				objOut.writeObject(src);
 
-				    objOut.writeObject(src);
+				ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
+				ObjectInputStream objIn = new ObjectInputStream(byteIn);
+				return (List<T>) objIn.readObject();
+			}
+		==> 集合中实体类实现 Cloneable 接口,拷贝时逐个拷贝克隆
+			destList.add((InfoBean)srcLisdt.get(index).clone());
 
-				    ByteArrayInputStream byteIn = new ByteArrayInputStream(byteOut.toByteArray());
-				    ObjectInputStream objIn = new ObjectInputStream(byteIn);
-				    return (List<T>) objIn.readObject();
-				}
-			==> 集合中实体类实现 Cloneable 接口,拷贝时逐个拷贝克隆
-				destList.add((InfoBean)srcLisdt.get(index).clone());
-#### 2.Object 中 equals()方法:
+# 2.Object 中 equals()方法:
 	public boolean equals(Object obj){
 		return (this == obj);
 	}
@@ -269,7 +282,7 @@
 		(7).double 类型: 使用 Double.doubleToLongBit 转换成 long 类型，然后使用==。
 			理由同上
 
-#### 3.hashCode()方法:
+# 3.hashCode()方法:
 	3.1.用途: hashCode()方法返回给调用者此对象的哈希码(其值由一个hash函数计算得来);
 		这个方法通常用在基于hash的集合类中，像java.util.HashMap,java.until.HashSet和java.util.Hashtable
 	3.2.在覆盖equals()时,同时覆盖hashCode():保证对象的功能兼容于hash集合
@@ -280,7 +293,8 @@
 		(3).当两个对象使用equals()方法比较的结果是不同的,hashCode()返回的整数值可以不同.然而,
 			hashCode()的返回值不同可以提高哈希表的性能。
 
-#### 4.finalize()方法:finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说不是轻量级的程序;
+# 4.finalize()方法:
+	finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说不是轻量级的程序;
 	4.1.用途: finalize()方法可以被子类对象所覆盖,然后作为一个终结者,当GC被调用的时候完成最后的清理工作(例如释放系统资源之类);
 		这就是终止。默认的finalize()方法什么也不做，当被调用时直接返回;
 
@@ -301,14 +315,17 @@
 				  super.finalize();
 			   }
 			}
+	4.4.finalize 方法实现原理:
+
+	4.5.finalize方法如何执行?
 	
-#### 5.toString()方法:
+# 5.toString()方法:
 	当编译器遇到 name + ": " + age 的表达时，会生成一个 java.lang.StringBuilder 对象，
 	并调用 append() 方法来对字符串添加变量值和分隔符。最后调用 toString() 方法返回一个包含各个元素的字符串对象
-#### 6.wait/notifAll	
+# 6.wait/notifAll	
 
-#### 7.registerNatives
+# 7.registerNatives
 
-#### 8.getClass:其定义:
+# 8.getClass:其定义:
 	public final native Class<?> getClass();
 	final 的方法,不可重写

@@ -470,6 +470,7 @@
 			指令执行时,monitor的进入数减1,如果减1后为0,那么线程退出monitor,不再持有monitor,
 		==> synchronized 代码块的语义底层是通过一个monitor的对象来完成,其实wait/notify等方法也依赖于monitor对象,
 			这就是为什么只有在同步的块或者方法中才能调用wait/notify等方法,否则会抛出java.lang.IllegalMonitorStateException 的异常的原因
+		7.1.3.源码分析:(https://www.jianshu.com/p/c5058b6fe8e5)
 	7.2.同步方法的实现:
 		方法的同步并没有通过指令monitorenter和monitorexit来完成,不过相对于普通方法,其常量池中多了 ACC_SYNCHRONIZED 标示符.
 		JVM 就是根据该标示符来实现方法的同步:

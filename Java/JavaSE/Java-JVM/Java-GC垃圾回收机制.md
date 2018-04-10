@@ -29,6 +29,7 @@
   - [1.Minor GC:](#1minor-gc)
   - [2.Full GC:对整个堆进行整理,包括 新生代,老年代和持久代](#2full-gc%E5%AF%B9%E6%95%B4%E4%B8%AA%E5%A0%86%E8%BF%9B%E8%A1%8C%E6%95%B4%E7%90%86%E5%8C%85%E6%8B%AC-%E6%96%B0%E7%94%9F%E4%BB%A3%E8%80%81%E5%B9%B4%E4%BB%A3%E5%92%8C%E6%8C%81%E4%B9%85%E4%BB%A3)
   - [3.内存回收与分配策略:](#3%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E4%B8%8E%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5)
+  - [4.YGC 过程:](#4ygc-%E8%BF%87%E7%A8%8B)
 - [六.详解 finalize()方法:finalize是位于 Object 类的一个方法,该方法的访问修饰符为 protected](#%E5%85%AD%E8%AF%A6%E8%A7%A3-finalize%E6%96%B9%E6%B3%95finalize%E6%98%AF%E4%BD%8D%E4%BA%8E-object-%E7%B1%BB%E7%9A%84%E4%B8%80%E4%B8%AA%E6%96%B9%E6%B3%95%E8%AF%A5%E6%96%B9%E6%B3%95%E7%9A%84%E8%AE%BF%E9%97%AE%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%BA-protected)
 - [七.Java 有了GC同样会出现内存泄露问题](#%E4%B8%83java-%E6%9C%89%E4%BA%86gc%E5%90%8C%E6%A0%B7%E4%BC%9A%E5%87%BA%E7%8E%B0%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2%E9%97%AE%E9%A2%98)
 - [八.如何优化 GC](#%E5%85%AB%E5%A6%82%E4%BD%95%E4%BC%98%E5%8C%96-gc)
@@ -314,6 +315,7 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 		可用确保是安全的.如果不成立,则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败,如果允许,那么会继续检查老年代
 		最大可用连续空间是否大于历次晋升到老年代对象的平均大小,如果大于,将尝试着进行一次MinorGC,有风险;
 		如果小于或者 HandlePromotionFailure 设置不允许毛线,那时会改为进行一次 FullGC.
+## 4.YGC 过程:
 # 六.详解 finalize()方法:finalize是位于 Object 类的一个方法,该方法的访问修饰符为 protected
 	1.finalize函数没有自动实现链式调用,必须手动的实现,因此finalize函数的最后一个语句通常是 super.finalize(),
 	通过这种方式,我们可以实现从下到上实现finalize的调用,即先释放自己的资源,然后再释放父类的资源;
