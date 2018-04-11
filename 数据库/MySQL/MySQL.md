@@ -268,7 +268,19 @@
 ## 2.
 
 # 七.MySQL 存储引擎	
-## 1.MySQL 的数据库引擎:MyISAM 和 InnoDB 引擎的区别:
+## 1.MySQL 的数据库引擎:
+### 1.1.MyISAM:5.5版本之前默认存储引擎
+	check table tableName  检查表
+	repair table tableName 修复表
+	(1).myisam 支持数据压缩:myisam pack,压缩后的表示只读的
+	(2).在5.0版本之前,单表默认大小为4G,如存储大表,需要修改:max_rows和avg_row_length
+		在5.0之后,默认支持的大小256TB
+	(3).适用场景:
+		* 非事务型应用
+		* 只读类应用
+		* 空间类应用(空间函数:GPS数据等)
+### 1.2.InnoDB
+### 1.3.MyISAM 和 InnoDB 引擎的区别:
 	1.1.主要区别:
 		(1).MyISAM 是非事务安全型的, InnoDB 是事务安全型的;
 		(2).MyISAM 锁的粒度是表级锁, InnoDB 是支持行级锁的;
@@ -277,12 +289,11 @@
 			MyISAM 更小的表空间
 		(5).MyISAM 表是保存成文件的形式,在跨平台的数据转移中使用MyISAM存储会省去不少的麻烦;
 		(6).InnoDB 表比 MyISAM 表更安全,可以在保证数据不丢失的情况下,切换非事务表到事务表；
-	1.2.适用场景:
+### 1.4.适用场景:
 		(1).MyISAM 管理非事务表,它提供高速存储和检索,以及全文搜索能力,如果应用中需要执行大量的select查询,那么MyISAM是更好的选择
 		(2).InnoDB 用于事务处理应用程序,具有众多特性,包括ACID事务支持.如果应用中需要执行大量的insert或update操作,
 			则应该使用 InnoDB,这样可以提高多用户并发操作的性能
 	==> 阿里巴巴大部分 mysql 数据库其实使用的 percona 的原型加以修改
-
 ## 2.查看数据库引擎:
 	(1).查看引擎:
 		mysql> show engines;
