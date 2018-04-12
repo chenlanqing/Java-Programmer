@@ -28,18 +28,70 @@
 
 
 参考文章
-* http://www.cnblogs.com/dolphin0520/p/3920373.html
+* [volatile关键字解析](http://www.cnblogs.com/dolphin0520/p/3920373.html)
 * [深入理解Java内存模型](http://www.infoq.com/cn/articles/java-memory-model-1)
-* http://ifeve.com/jmm-faq/
+* [Java内存模型](http://ifeve.com/jmm-faq/)
+* [CPU cache结构和缓存一致性](https://blog.csdn.net/reliveit/article/details/50450136)
 
-# 一.内存模型:
-## 1.相关概念
-
+# 一.内存模型
+## 1.CPU多级缓存
+	(1).为什么需要CPU cache:
+		CPU的频率太快,快到主存跟不上,这样在处理器时钟周期内,CPU通常需要等待主存,浪费资源.
+		所以cache的出现是为了缓解CPU和内存之间速度不匹配问题.
+	(2).CPU cache的意义:
+		* 时间局部性:如果某个数据被访问,那么在不久的将来它很可能再次被访问.
+		* 空间局部性:如果某个数据被访问,那么与它相邻的数据很快也可能被访问.
 ## 2.缓存一致性
+	缓存一致性:用于保证多个CPU cache之间的缓存共享数据一致.MESI-缓存一致协议
+### 2.1.cache写方式
+	(1).write through(写通):每次CPU修改了cache中的内容,立即更新到内存,意味着每次CPU
+		写共享数据,都会导致总线事务,因此这种方式常常会引起总线事务的竞争,高一致性,但效率低
+	(2).write back(写回):每次CPU修改了cache中的数据不会立即更新到内存中,而是等到
+		cache line在某个必须或者合适的时机才会更新到内存中.
+	无论是写通还是写回,在多线程环境下都需要处理缓存cache一致性问题.为了保证缓存一致性,
+	处理器提供了写失效和写更新两个操作来保证一致性.
+	* 写失效:当一个CPU修改数据,如果有其他CPU修改数据,则通知其为无效.
+	* 写更新:当一个CPU修改数据,如果有其他CPU有该数据,则通知其更新数据.
+### 2.2.cache line
+	cache line是cache与内存数据交换的最小单位,根据操作系统一般是32byte或者64byte.
+	在MESI协议中,状态可以是M,E,S,I;地址则是cache line中映射的内存地址,数据则是从内存读取的数据
+### 2.3.状态介绍
+	MESI协议将cache line的状态分成 modify、exclusive、shared、invalid,分别是修改、独占、共享、失效.
+	(1).modify:当前CPU cache拥有最新数据,其他CPU拥有失效数据(cache line状态是invalid).
+		虽然当前CPU中的数据和主存不一致,但是以当前CPU的数据为准.
+	(2).exclusive:只有当前CPU中有数据,其他CPU中没有改数据,当前CPU的数据和主存中的数据是一致的;
+	(3).shared:当前CPU和其他CPU有共同数据,并且和主存数据一致.
+	(4).invalid:当前CPU中的数据失效,数据应该从主存中获取,其他CPU可能有数据也可能没有数据,
+		当前CPU的数据和主存被认为是不一致的.
+	对于invalid而言,在MESI协议中采取的是写失效.
+### 2.4.cache操作
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/MESI.jpg)
+
+	在MESI中,每个cache的控制器不仅自己的操作(local read和local write),通过监听也能其他CPU
+	的cahce操作(remote read和remote write).对于自己本地缓存有的数据,CPU仅需要发起local
+	操作,否则发起remote操作,从主存中读取数据,cache通过总线监听,仅能够知道其他CPU发起的remote
+	操作,但是如果local操作会导致数据不一致,cache控制器会通知其他CPU的cache控制修改状态.
+	* local read(LR):读取本地cache中的数据
+	* local write(LW):将数据写到本地cache
+	* remote read(RR):读取内存中的数据
+	* remote write(RW):将数据写到主内存
+### 2.5.状态转换和cache操作
+	* MESI协议中cache line数据状态有4种,引起数据状态转换的CPU cache操作也有4种,
+	因此要理解MESI协议.就要将这16种状态转换的情况讨论清楚.
+	* 初始场景:在最初的时候,所有CPU中都没有数据,某一个CPU发生读操作,此时发生RR,
+		数据从主存中读取到当前CPU的cache,状态为E(独占,只有当前CPU有数据,且和主存
+		一致),此时如果有其他CPU也读取数据,则状态修改为S(共享,多个CPU之间拥有相同
+		数据,并且和主存保持一致),如果其中某一个CPU发生数据修改,那么该CPU中数据状
+		态修改为M(拥有最新数据,和主存不一致,但是以当前CPU中的为准),并通知其他拥有
+		该数据的CPU数据失效,其他CPU中的cache line状态修改为I(失效,和主存中的数据
+		被认为不一致,数据不可用应该重新获取)
+	2.5.1.modify:
+
+
 
 
 # 二.Java内存模型
-## 1.并发编程模型分类:
+## 1.并发编程模型分类
 	在并发编程中,需要处理两个关键问题:线程之间如何通信及线程之间如何同步
 	2.1.通信:是指线程之间以何种机制来交换信息.在命令式编程中,线程之间的通信机制有两种:共享内存和消息传递
 		(1).在共享内存的并发模型里，线程之间共享程序的公共状态，线程之间通过写-读内存中的公共状态来隐式进行通信。
@@ -81,7 +133,7 @@
 		(9).对一个变量执行unlock操作之前,必须先把此变量同步到主内存中(执行store和write操作);
     --> Java并发采用的是共享内存模型,Java 线程之间的通信总是隐式进行,整个通信过程对程序员完全透明
 
-## 2.定义:
+## 2.定义
     Java内存模型描述了在多线程代码中哪些行为是合法的,以及线程如何通过内存进行交互.
     它描述了"程序中的变量"和"从内存或者寄存器获取或存储它们的底层细节"之间的关系.
     Java内存模型通过使用各种各样的硬件和编译器的优化来正确实现以上事情
@@ -101,7 +153,7 @@
         从抽象的角度来看,JMM 定义了线程和主内存之间的抽象关系:线程之间的共享变量存储在主内存(main memory)中,
         每个线程都有一个私有的本地内存(local memory)，本地内存中存储了该线程以读/写共享变量的副本。
         本地内存是JMM的一个抽象概念，并不真实存在
-## 3.指令重排序:
+## 3.指令重排序
 	3.1.在执行程序时为了提高性能,编译器和处理器常常会对指令做重排序.重排序分三种类型:
 		(1).编译器优化的重排序:编译器在不改变单线程程序语义的前提下,可以重新安排语句的执行顺序
 		(2).指令级并行的重排序:现代处理器采用了指令级并行技术(Instruction-Level Parallelism,ILP)来将多条指令重叠执行。
@@ -188,9 +240,9 @@
 		(8).对象终结规则:一个对象的初始化完成先行发生于它的 finalize() 方法的开始
 	5.3.一个happens-before规则通常对应于多个编译器重排序规则和处理器重排序规则
 
-# 三.volatile 的特性:
+# 三.volatile 的特性
 	* http://www.cnblogs.com/dolphin0520/p/3920373.html
-## 1.volatile关键字的两层语义:
+## 1.volatile关键字的两层语义
     一旦一个共享变量(类的成员变量、类的静态成员变量)被volatile修饰之后,那么就具备了两层语义:
     (1).保证了不同线程对这个变量进行操作时的可见性,即一个线程修改了某个变量的值,
         这新值对其他线程来说是立即可见的;
@@ -237,7 +289,7 @@ class VolatileFeaturesExample {
 	--> 监视器锁的语义决定了临界区代码的执行具有原子性.这意味着即使是64位的 long 型和 double 型变量,
         只要它是volatile变量,对该变量的读写就将具有原子性.如果是多个volatile操作或类似于volatile++这种
         复合操作,这些操作整体上不具有原子性;
-## 2.volatile写-读建立的happens before关系:
+## 2.volatile写-读建立的happens before关系
 	从JSR-133开始，volatile变量的写-读可以实现线程之间的通信
 	2.1.volatile写-读的内存语义:
 		(1).volatile写的内存语义:当写一个volatile变量时,JMM 会把该线程对应的本地内存中的共享变量刷新到主内存;
@@ -295,7 +347,53 @@ class VolatileFeaturesExample {
 		在java 1.5的 java.util.concurrent.atomic 包下提供了一些原子操作类,即对基本数据类型的 自增(加1操作)，
 		自减(减1操作)、以及加法操作(加一个数)，减法操作(减一个数)进行了封装，保证这些操作是原子性操作。
 		atomic是利用 CAS 来实现原子性操作的(Compare And Swap)，CAS 实际上是利用处理器提供的 CMPXCHG 指令实现的，
-		而处理器执行 CMPXCHG 指令是一个原子性操作
+		而处理器执行 CMPXCHG 指令是一个原子性操作.
+		--> 不要将volatile用于getAndOperate操作(这种场合不原子,需要加锁).仅set或者get适合volatile
+		(3).为什么volatile无法保证原子性,而atomic原子操作类能保证原子性
+			假设让一个volatile的Intege自增,要分成三步:
+			* 读取volatile变量到local
+			* 增加变量的值
+			* 把local的值写回,让其他线程可见
+			上面三步的jvm指令为:
+				mov    0xc(%r10),%r8d ; Load
+				inc    %r8d           ; Increment
+				mov    %r8d,0xc(%r10) ; Store
+				lock addl $0x0,(%rsp) ; StoreLoad Barrier (内存屏障)
+			从Load到store到内存屏障,一共4步,其中最后一步jvm让这个最新的变量的值在所有线程可见,也就是最后一步让
+			所有的CPU内核都获得了最新的值,但中间的几步(从Load到Store)是不安全的,中间如果其他的CPU修改了值将会丢失.
+			代码如下:
+```java
+public static void main(String[] args) {
+	Thread t1 = new Thread(new LoopVolatile());
+	t1.start();
+	Thread t2 = new Thread(new LoopVolatile2());
+	t2.start();
+	while (t1.isAlive() || t2.isAlive()) {}
+	System.out.println("final val is: " + _longval);
+}
+private static volatile long _longval = 0;
+private static class LoopVolatile implements Runnable {
+	@Override
+	public void run() {
+		long val = 0;
+		while (val < 10000000L) {
+			_longval++;
+			val++;
+		}
+	}
+}
+private static class LoopVolatile2 implements Runnable {
+	@Override
+	public void run() {
+		long val = 0;
+		while (val < 10000000L) {
+			_longval++;
+			val++;
+		}
+	}
+}
+```
+			AtomicXXX 却能保证原子性:CAS指令,其实AtomicLong的源码里也用到了volatile,但只是用来读取或写入
 	2.5.volatile能保证有序性吗? volatile关键字能禁止指令重排序，所以volatile能在一定程度上保证有序性
 		2.5.1.有序性:在Java内存模型中，允许编译器和处理器对指令进行重排序，但是重排序过程不会影响到单线程程序的执行，
 			却会影响到多线程并发执行的正确性
@@ -321,7 +419,7 @@ class VolatileFeaturesExample {
 			确保它们自身状态的可见性,确保它们所引用对象的状态的可见性,以及标识一些重要的程序生命周期事件的发生;
 		==> 无状态对象:
 			就是没有实例变量的对象,不能保存数据,是不变类,线程安全的
-## 3.volatile内存语义的实现:
+## 3.volatile内存语义的实现
 	3.1.为了实现volatile内存语义，JMM 会分别限制编译器重排序和处理器重排序这两种类型的重排序类型
 	3.2.JMM 针对编译器制定的volatile重排序规则表:
 		(1).当第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。
@@ -349,7 +447,7 @@ class VolatileFeaturesExample {
 	3.5.由于volatile仅仅保证对单个volatile变量的读/写具有原子性，而监视器锁的互斥执行的特性可以确保
 		对整个临界区代码的执行具有原子性。
 		在功能上，监视器锁比volatile更强大；在可伸缩性和执行性能上,volatile更有优势
-## 4.volatile 和 synchronized 的区别:
+## 4.volatile 和 synchronized 的区别
 	(1).volatile 不会进行加锁操作
 		volatile变量是一种稍弱的同步机制在访问volatile变量时不会执行加锁机制,因此也就不会使执行线程阻塞,
 		因此volatile变量是一种比 synchronized 关键字更轻量级的同步机制;
@@ -360,10 +458,10 @@ class VolatileFeaturesExample {
 	(5).volatile 不会造成线程的阻塞;synchronized 可能会造成线程的阻塞;
 	(6).volatile 标记的变量不会被编译器优化;synchronized 标记的变量可以被编译器优化
 
-# 四.锁:
+# 四.锁
 ## 1.锁的释放-获取建立的happens before 关系
 	(1).锁是java并发编程中最重要的同步机制.锁除了让临界区互斥执行外，还可以让释放锁的线程向获取同一个锁的线程发送消息
-## 2.锁释放和获取的内存语义:
+## 2.锁释放和获取的内存语义
 	(1).当线程释放锁时,JMM 会把该线程对应的本地内存中的共享变量刷新到主内存中
 	(2).当线程获取锁时,JMM 会把该线程对应的本地内存置为无效.从而使得被监视器保护的临界区代码必须要从主内存中去读取共享变量
 	(3).锁释放与volatile写有相同的内存语义；锁获取与volatile读有相同的内存语义
