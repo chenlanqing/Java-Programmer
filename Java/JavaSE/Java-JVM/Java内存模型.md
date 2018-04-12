@@ -190,21 +190,28 @@
 
 # 三.volatile 的特性:
 	* http://www.cnblogs.com/dolphin0520/p/3920373.html
-## 1.把对volatile变量的单个读/写,看成是使用同一个监视器锁对这些单个读/写操作做了同步
+## 1.volatile关键字的两层语义:
+    一旦一个共享变量(类的成员变量、类的静态成员变量)被volatile修饰之后,那么就具备了两层语义:
+    (1).保证了不同线程对这个变量进行操作时的可见性,即一个线程修改了某个变量的值,
+        这新值对其他线程来说是立即可见的;
+    (2).禁止进行指令重排序
 	示例代码:
-		class VolatileFeaturesExample {
-		    volatile long vl = 0L;  //使用volatile声明64位的long型变量
-		    public void set(long l) {
-		        vl = l;   //单个volatile变量的写
-		    }
-		    public void getAndIncrement () {
-		        vl++;    //复合(多个)volatile变量的读/写
-		    }
-		    public long get() {
-		        return vl;   //单个volatile变量的读
-		    }
-		}
+```java
+class VolatileFeaturesExample {
+    volatile long vl = 0L;  //使用volatile声明64位的long型变量
+    public void set(long l) {
+        vl = l;   //单个volatile变量的写
+    }
+    public void getAndIncrement () {
+        vl++;    //复合(多个)volatile变量的读/写
+    }
+    public long get() {
+        return vl;   //单个volatile变量的读
+    }
+}
+```
 	假设有多个线程分别调用上面程序的三个方法,这个程序在语意上和下面程序等价:
+```java
 		class VolatileFeaturesExample {
 		    long vl = 0L;               // 64位的long型普通变量
 		    public synchronized void set(long l) {     //对单个的普通 变量的写用同一个监视器同步
@@ -220,13 +227,16 @@
 		        return vl;
 		    }
 		}
-	(1).如上面示例程序所示,对一个volatile变量的单个读/写操作,与对一个普通变量的读/写操作使用同一个监视器锁来同步,
-		它们之间的执行效果相同:
+```
+    把对volatile变量的单个读/写,看成是使用同一个监视器锁对这些单个读/写操作做了同步
+	--> 如上面示例程序所示,对一个volatile变量的单个读/写操作,与对一个普通变量的读/写操作使用同一个
+        监视器锁来同步,它们之间的执行效果相同:
 		volatile写和监视器的释放有相同的内存语义;volatile读与监视器的获取有相同的内存语义
-	(2).监视器锁的happens-before规则保证释放监视器和获取监视器的两个线程之间的内存可见性,这意味着对一个volatile变量的读,
-		总是能看到(任意线程)对这个volatile变量最后的写入;
-	(3).监视器锁的语义决定了临界区代码的执行具有原子性.这意味着即使是64位的 long 型和 double 型变量，只要它是volatile变量，
-		对该变量的读写就将具有原子性。如果是多个volatile操作或类似于volatile++这种复合操作，这些操作整体上不具有原子性
+	--> 监视器锁的happens-before规则保证释放监视器和获取监视器的两个线程之间的内存可见性,这意味着对一个
+        volatile变量的读,总是能看到(任意线程)对这个volatile变量最后的写入;
+	--> 监视器锁的语义决定了临界区代码的执行具有原子性.这意味着即使是64位的 long 型和 double 型变量,
+        只要它是volatile变量,对该变量的读写就将具有原子性.如果是多个volatile操作或类似于volatile++这种
+        复合操作,这些操作整体上不具有原子性;
 ## 2.volatile写-读建立的happens before关系:
 	从JSR-133开始，volatile变量的写-读可以实现线程之间的通信
 	2.1.volatile写-读的内存语义:
@@ -413,9 +423,7 @@
 		(2).AbstractQueuedSynchronizer 非阻塞数据结构 	原子变量类
 		(3).volatile变量的读写	compareAndSet()
 			(3)是底层实现,(2)是基于(3)来实现的,而(1)又是基于(2)来实现的
-
 # 五.final:
-    
 	1.对于 final 域,编译器和处理器要遵守两个重排序规则:
 		(1).在构造函数内对一个 final 域的写入,与随后把这个被构造对象的引用赋值给一个引用变量,这两个操作之间不能重排序
 		(2).初次读一个包含 final 域的对象的引用,与随后初次读这个 final 域,这两个操作之间不能重排序

@@ -578,7 +578,7 @@
 			==> 适用场景:追求吞吐量,同步块执行速度较长.
 ## 8.volatile:
 	
-[Java内存模型](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java内存模型.md#)
+[Java内存模型](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B.md#%E4%B8%89volatile-%E7%9A%84%E7%89%B9%E6%80%A7)
 
 ## 9.线程安全及不可变性:
 	线程安全包含原子性和可见性两个方面;
