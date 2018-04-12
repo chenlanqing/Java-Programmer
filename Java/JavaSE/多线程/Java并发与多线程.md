@@ -577,7 +577,9 @@
 			==> 缺点:线程阻塞,响应时间缓慢;
 			==> 适用场景:追求吞吐量,同步块执行速度较长.
 ## 8.volatile:
-	参考:http://note.youdao.com/noteshare?id=edebb78765a3925d235c41d9a71b52c6&sub=CDD93342E9564120A27007EF2020140E
+	
+[Java内存模型](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java内存模型.md#)
+
 ## 9.线程安全及不可变性:
 	线程安全包含原子性和可见性两个方面;
 	(1).当多个线程同时访问同一个资源，并且其中的一个或者多个线程对这个资源进行了写操作，才会产生竞态条件,

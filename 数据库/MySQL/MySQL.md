@@ -25,7 +25,7 @@
   - [1.连接:](#1%E8%BF%9E%E6%8E%A5)
   - [2.](#2)
 - [七.MySQL 存储引擎](#%E4%B8%83mysql-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E)
-  - [1.MySQL 的数据库引擎:MyISAM 和 InnoDB 引擎的区别:](#1mysql-%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%95%E6%93%8Emyisam-%E5%92%8C-innodb-%E5%BC%95%E6%93%8E%E7%9A%84%E5%8C%BA%E5%88%AB)
+  - [1.MySQL 的数据库引擎:](#1mysql-%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%95%E6%93%8E)
   - [2.查看数据库引擎:](#2%E6%9F%A5%E7%9C%8B%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%95%E6%93%8E)
 - [八.高级特性:](#%E5%85%AB%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7)
   - [1.数据库隔离级别介绍、举例说明](#1%E6%95%B0%E6%8D%AE%E5%BA%93%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E4%BB%8B%E7%BB%8D%E4%B8%BE%E4%BE%8B%E8%AF%B4%E6%98%8E)
