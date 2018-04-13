@@ -6,7 +6,10 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-
+参考文章
 * [类加载体系](http://blog.csdn.net/beliefer/article/details/50995516)
+* [Tomcat源码分析](https://blog.csdn.net/column/details/tomcat7-internal.html)
+
+# 一.Tomcat生命周期
 
 # 一.Tomcat 类加载机制

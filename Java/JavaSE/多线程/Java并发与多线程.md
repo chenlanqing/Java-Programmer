@@ -217,7 +217,7 @@
 			这两个方法的缺点:
 			(1).使用这两个方法时,如果使用不当极易造成公共的同步对象的独占,使得其他线程无法访问公共同步对象
 			(2).数据的不同步:容易出现因为线程的暂停而导致数据不同步的情况
-		2.7.3.线程中断原理:
+		2.7.3.线程中断原理
 	2.8.线程的睡眠:
 		Thread.sleep()
 		TimeUnit.SECONDS.sleep();
@@ -577,9 +577,7 @@
 			==> 缺点:线程阻塞,响应时间缓慢;
 			==> 适用场景:追求吞吐量,同步块执行速度较长.
 ## 8.volatile:
-	
-[Java内存模型](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B.md#%E4%B8%89volatile-%E7%9A%84%E7%89%B9%E6%80%A7)
-
+	参考:http://note.youdao.com/noteshare?id=edebb78765a3925d235c41d9a71b52c6&sub=CDD93342E9564120A27007EF2020140E
 ## 9.线程安全及不可变性:
 	线程安全包含原子性和可见性两个方面;
 	(1).当多个线程同时访问同一个资源，并且其中的一个或者多个线程对这个资源进行了写操作，才会产生竞态条件,

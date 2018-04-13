@@ -1,16 +1,23 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+**目录**
 
-- [1.Spring 的整体架构:](#1spring-%E7%9A%84%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84)
-- [2.](#2)
+- [一.Spring 的整体架构:](#%E4%B8%80spring-%E7%9A%84%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84)
+  - [1.1.Core Container:](#11core-container)
+  - [1.2.Data Access/Integration:包含 JDBC,ORM,OXM,JMS 和 Transaction 模块](#12data-accessintegration%E5%8C%85%E5%90%AB-jdbcormoxmjms-%E5%92%8C-transaction-%E6%A8%A1%E5%9D%97)
+  - [1.3.Web](#13web)
+  - [1.4.AOP](#14aop)
+  - [1.5.Test](#15test)
+- [二.IOC](#%E4%BA%8Cioc)
+  - [1.IOC的生命周期:](#1ioc%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 参考文章：
-* https://www.cnblogs.com/ITtangtang/p/3978349.html
-* https://github.com/code4craft/tiny-spring
+* [源码解读Spring IOC原理](https://www.cnblogs.com/ITtangtang/p/3978349.html)
+* [tiny-spring](https://github.com/code4craft/tiny-spring)
 * [源代码](https://github.com/spring-projects/spring-framework)
+* [IoC容器及Bean的生命周期](https://www.cnblogs.com/IvySue/p/6484599.html)
 
 # 一.Spring 的整体架构:
 ## 1.1.Core Container:
@@ -37,7 +44,6 @@
 	前者的基础进行了功能的拓展,例如增加了事件传播、资源访问和国际化的消息访问等功能.
 ### 1.1.ApplicationContext Bean 生命周期:
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/ApplicationContext-Bean的生命周期.png)
-
 
 	(1).Bean的实例化:
 		* 首先容器启动后,会对scope为singleton且非懒加载的bean进行实例化;
@@ -67,8 +73,14 @@
 		不再是Spring容器进行管理了;
 	(11).容器关闭后,如果Bean实现了DisposableBean接口,则会调用该接口的destroy()方法;
 	(12).如果Bean配置了destroy-method方法,则会执行destroy-method配置的方法.至此,整个Bean生命周期结束
+### 1.2.BeanFactory Bean生命周期
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/BeanFactory.png)
 
-
-
+	BeanFactoty容器中, Bean的生命周期如上图所示,与ApplicationContext相比,有如下几点不同：
+	(1).BeanFactory容器中,不会调用ApplicationContextAware接口的setApplicationContext()方法
+	(2).BeanPostProcessor接口的postProcessBeforeInitialization方法和postProcessAfterInitialization方
+		法不会自动调用，必须自己通过代码手动注册
+	(3).BeanFactory容器启动的时候,不会去实例化所有bean,包括所有scope为singleton且非延迟加载的bean也是一样,
+		而是在调用的时候去实例化
 
 
