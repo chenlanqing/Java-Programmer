@@ -2,7 +2,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一.Tomcat 类加载机制](#%E4%B8%80tomcat-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6)
+- [一.Tomcat生命周期](#%E4%B8%80tomcat%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
+- [二.Tomcat 类加载](#%E4%BA%8Ctomcat-%E7%B1%BB%E5%8A%A0%E8%BD%BD)
+  - [1.Web服务器需要解决的问题:](#1web%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%9C%80%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98)
+  - [2.Tomcat类库结构:](#2tomcat%E7%B1%BB%E5%BA%93%E7%BB%93%E6%9E%84)
+  - [3.Tomcat类加载器机制](#3tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E6%9C%BA%E5%88%B6)
+  - [4.线程上下文类加载器.](#4%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
+  - [5.问题扩展:](#5%E9%97%AE%E9%A2%98%E6%89%A9%E5%B1%95)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

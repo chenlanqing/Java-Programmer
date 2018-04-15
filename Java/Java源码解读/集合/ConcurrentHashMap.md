@@ -4,6 +4,7 @@
 
 - [一.基于 JDK6 ConcurrentHashMap 的技术原理:](#%E4%B8%80%E5%9F%BA%E4%BA%8E-jdk6-concurrenthashmap-%E7%9A%84%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86)
 - [二.JDK8实现](#%E4%BA%8Cjdk8%E5%AE%9E%E7%8E%B0)
+  - [1.基本概念:](#1%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -57,4 +58,7 @@ ConcurrentHashMap 的迭代器是强一致性的迭代器还是弱一致性的�
  * [ConcurrentHashMap](https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483902&idx=1&sn=4e52472a2ddfb6825fd9f1928c33e1ed&chksm=96cd41b2a1bac8a4f927f20905c1263b236a748fa05e06ba857459d1c46eafabd3b740c68fe7&scene=38#wechat_redirect)
  
 在1.8的实现中,已经抛弃了 Segment 分段锁机制,而是利用 CAS + synchronized 来保证并发更新安全的.底层依然采用"数组+链表+红黑树"的存储结构
-#### 1.基本概念:
+## 1.基本概念:
+
+    ConcurrentHashMap返回的迭代器具有弱一致性,并非fail-fast.弱一致性的迭代器可以容忍并发的修改,当创建迭代器时会遍历已有的元素,
+    并可以(但是不保证)在迭代器被构造后将修改反映给容器

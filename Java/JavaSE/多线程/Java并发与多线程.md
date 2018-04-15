@@ -35,8 +35,8 @@
   - [11.FutureTask:](#11futuretask)
   - [12.Fork/Join框架](#12forkjoin%E6%A1%86%E6%9E%B6)
   - [13.Exchanger](#13exchanger)
-- [四.JUC 中集合类:](#%E5%9B%9Bjuc-%E4%B8%AD%E9%9B%86%E5%90%88%E7%B1%BB)
-  - [1.JUC 集合类:](#1juc-%E9%9B%86%E5%90%88%E7%B1%BB)
+- [四.并发容器:](#%E5%9B%9B%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8)
+  - [1.并发容器类:](#1%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8%E7%B1%BB)
   - [2.CopyOnWriteArrayList:](#2copyonwritearraylist)
   - [3.CopyOnWriteArraySet:(HashSet)](#3copyonwritearraysethashset)
   - [4.ConcurrentHashMap:](#4concurrenthashmap)
@@ -1423,8 +1423,8 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 
 ## 13.Exchanger
 
-# 四.JUC 中集合类:
-## 1.JUC 集合类:
+# 四.并发容器:
+## 1.并发容器类:
 	(1).List 和 Set:
 		CopyOnWriteArrayList, CopyOnWriteArraySet 和 ConcurrentSkipListSet
 	(2).Map:
@@ -1432,6 +1432,8 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 	(3).Queue:
 		ArrayBlockingQueue, LinkedBlockingQueue, LinkedBlockingDeque,
 		ConcurrentLinkedQueue 和 ConcurrentLinkedDeque
+	(4).同步容器与并发容器:
+		同步容器将所有对容器状态的访问都串行化,以实现他们的安全性.这种方法严重降低了并发性.
 ## 2.CopyOnWriteArrayList:
 	2.1.基本:相当于线程安全的 ArrayList,和 ArrayList 一样,是个可变数组;不同的是,具有以下几个特性:
 		(1).最适合于应用程序:List 大小通常保持很小,只读操作远多于可变操作,需要在遍历期间防止线程间的冲突;
