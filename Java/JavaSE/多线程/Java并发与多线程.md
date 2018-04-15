@@ -60,6 +60,7 @@
  * [线程池](http://www.importnew.com/19011.html)
  * http://www.cnblogs.com/skywang12345/p/java_threads_category.html
  * http://blog.csdn.net/chenssy/article/category/6701493/2
+ * [线程中断机制](http://ifeve.com/java-interrupt-mechanism/)
 
 # 一.并发与多线程简介:
 ## 1.多线程优点:
@@ -132,175 +133,208 @@
 	Thread thread = new Thread();
 	thread.start();// 调用线程
 ## 2.线程的创建及状态变化
-	2.1.创建线程的方式:
-		2.1.1创建 Thread 子类的一个实例并重写run方法:run方法会在调用start()方法之后被执行
-		(1).方式1:继承类
-			class MyThread extends Thread{
-				public void run(){
-					System.out.println("my thread is running");
-				}
+### 2.1.创建线程的方式:
+	2.1.1创建 Thread 子类的一个实例并重写run方法:run方法会在调用start()方法之后被执行
+	(1).方式1:继承类
+		class MyThread extends Thread{
+			public void run(){
+				System.out.println("my thread is running");
 			}
-			可用如下方式创建并运行上述thread的子类:
-			MyThread myThread = new MyThread();
-			myTread.start();
-		(2).方式2:创建一个Thread的匿名子类
-			Thread thread = new Thread(){
-				public void run(){
-					System.out.println("my thread is running");
-				}
-			};
-			thread.start();
-		2.1.2.创建类的时候实现 Runnable 接口:
-			(1).新建一个实现了 java.lang.Runnable 接口的类的实例
-				class MyRunnable implements Runnable{
-					public void run(){
-						System.out.println("my thread is running");
-					}
-				}
-				为了使线程能够执行run()方法，需要在 Thread 类的构造函数中传入 MyRunnable 的实例对象
-				Thread thread = new Thread(new MyRunnable());
-				thread.start();
-			(2).创建一个实现了 Runnable 接口的匿名类:
-				Runnable myRunnable = new Runnable(){
-				   public void run(){
-				     System.out.println("Runnable running");
-				   }
-				}
-				Thread thread = new Thread(myRunnable);
-				thread.start();
-		2.1.3.实现 Callable 接口,实现call()方法,使用 FutureTask 类来包装 Callable 对象,FutureTask 
-			对象封装了该 Callable 对象的call()方法的返回值;使用 FutureTask 对象作为 Thread 对象的
-			target创建并启动新线程
-			执行 Callable 方式,需要 FutureTask 实现类的支持,用于接收运算结果
-			FutureTask<Integer> task = new FutureTask<>(new MyCallable());// FutureTask 也有闭锁的功能
-			new Thread(task).start();
-	2.3.创建 Thread 子类还是实现 Runnable 接口?
-		实现 Runnable 接口,线程池可以有效的管理实现了 Runnable 接口的线程
-		如果多个线程正在运行中,如果某个线程调用 System.exit()指示终结程序，那么全部的线程都会结束执行
-	2.4.常见错误问题:
-		调用run()方法而非start()方法
-	2.5.线程名称:
-		当创建一个线程的时候，可以给线程起一个名字
-		MyRunnable runnable = new MyRunnable();
-		Thread thread = new Thread(runnable, "New Thread");
+		}
+		可用如下方式创建并运行上述thread的子类:
+		MyThread myThread = new MyThread();
+		myTread.start();
+	(2).方式2:创建一个Thread的匿名子类
+		Thread thread = new Thread(){
+			public void run(){
+				System.out.println("my thread is running");
+			}
+		};
 		thread.start();
-		System.out.println(thread.getName());
-		也可以通过:
-		Thread.currentThread()获取当前线程的引用
-	2.6.Thread 的部分属性:
-		(1).ID: 每个线程的独特标识。
-		(2).Name: 线程的名称。
-		(3).Priority: 线程对象的优先级。优先级别在1-10之间，1是最低级，10是最高级。
-			不建议改变它们的优先级，但是你想的话也是可以的。
-		(4).Status: 线程的状态。在Java中，线程只能有这6种中的一种状态： 
-			new{}, runnable, blocked, waiting, time waiting, 或 terminated.
-	2.7.线程的中断与停止,暂停:
-		2.7.1.线程中断:Java 提供中断机制来通知线程表明我们想要结束它.中断机制的特性是线程需要检查是否被中断,
-			而且还可以决定是否响应结束的请求
-		2.7.2.线程停止:
-			2.7.2.1.线程停止的方法:
-				①.使用退出标志,使线程正常退出,也就是当run方法完成后线程终止;
-				②.使用stop方法强行终止线程,但不推荐使用,因为stop和suspend及resume一样,是过期的方法,使用会造成不可预料的结果
-				③.使用interrupt 方法中断线程;
-			2.7.2.2.interrup 终止线程:
-				(1).判断线程是否是停止状态
-					①.interruputed:测试当前线程是否有已经中断,执行后具有将状态标志清除为 false 的功能
-						如果连续调用两次该方法,第二次调用则返回 false
-					②.isInterrupteed:测试线程Thread对象是否已经中断,但不清除状态标志;
-			2.7.2.3.stop()方法:过期方法
-				(1).暴力停止线程的方法;
-				(2).调用 stop 方法时会抛出 java.lang.ThreadDeath 异常,通常情况下,该异常不需要显示捕获;
-				(3).强制停止线程,可能对锁定的对象进行了"解锁",导致数据得不到同步处理,出现数据不一致的情况
-			2.7.2.4.线程停止:在代码中增加异常处理
-			2.7.2.5.使用 return 停止线程:将方法 interrupt() 和 return 结合使用
-		2.7.3.暂停线程:可以使用 suspend()方法暂停线程,使用resume() 方法恢复线程的执行
-			这两个方法的缺点:
-			(1).使用这两个方法时,如果使用不当极易造成公共的同步对象的独占,使得其他线程无法访问公共同步对象
-			(2).数据的不同步:容易出现因为线程的暂停而导致数据不同步的情况
-		2.7.3.线程中断原理
-	2.8.线程的睡眠:
-		Thread.sleep()
-		TimeUnit.SECONDS.sleep();
-	2.9.等待线程的终结:
-		Thread.join():当前线程调用某个线程的这个方法时，它会暂停当前线程，直到被调用线程执行完成
-		Thread.join(long miseconds);	这方法让调用线程等待特定的毫秒数。
-		Thread.join(long milliseconds, long nanos)第二个版本的join方法和第一个很像,只不过它接收一个毫秒数和一个纳秒数
-	2.10.异常处理:
-		当一个非检查异常被抛出，默认的行为是在控制台写下stack trace并退出程序
-		(1).必须实现一个类来处理非检查异常。这个类必须实现 UncaughtExceptionHandler 接口并实现在接口
-			内已声明的 uncaughtException() 方法:
-			public class ExceptionHandler implements UncaughtExceptionHandler{
-				public void uncaughtException(Thread t, Throwable e){
-					System.out.printf("An exception has been captured\n");
-					System.out.printf("Thread: %s\n",t.getId());
-					System.out.printf("Exception: %s: %s\n",e.getClass().getName(),e.getMessage());
-					System.out.printf("Stack Trace: \n");
-					e.printStackTrace(System.out); 
-					System.out.printf("Thread status: %s\n",t.getState());
+	2.1.2.创建类的时候实现 Runnable 接口:
+		(1).新建一个实现了 java.lang.Runnable 接口的类的实例
+			class MyRunnable implements Runnable{
+				public void run(){
+					System.out.println("my thread is running");
 				}
 			}
-			Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
-		(2).当在一个线程里抛出一个异常，但是这个异常没有被捕获(这肯定是非检查异常):
-			JVM 检查线程的相关方法是否有设置一个未捕捉异常的处理者.
-			如果有,JVM 使用 Thread 对象和 Exception 作为参数调用此方法;
-			如果没有定义,那么 JVM 会寻找默认非捕捉异常 handle
-			如果线程没有捕捉未捕获异常的处理者,那么 JVM会 把异常的 stack trace 写入操控台并结束任务;
-	2.11.本地线程变量:ThreadLocal(详情查看第 9 点)
-		(1).本地线程变量为每个使用这些变量的线程储存属性值。可以用 get() 方法读取值和使用 set() 方法改变值
-	2.12.线程组:可以把线程分组
-		Java 提供 ThreadGroup 类来组织线程.
-		ThreadGroup 对象可以由 Thread 对象组成和由另外的 ThreadGroup 对象组成,生成线程树结构
-	2.13.用线程工厂创建线程:线程对象工厂 ThreadFactory
-	2.14.join()和yield()方法:
-		2.14.1.join()方法:
-			(1).等待该线程终止,指的是主线程等待子线程的终止,子线程调用了join()方法后面的代码,
-				只有等到子线程结束了才能执行;
-				让调用该方法的thread完成 run 方法的里面的东西后,在执行 join 方法后面的代码
-				当前运行着的线程将阻塞直到这个线程实例完成了执行
-			(2).join 具有使线程排队运行的作用.join 与 synchronized 区别:
-				join 内部是 wait 方法进行等待,而 synchronized 关键字使用的是"对象监视器"原理作为同步
-			(3).在执行 join 的过程中,如果当前线程对象被中断,则当前线程出现异常;
-			(3).join(long) 内部是使用 wait(long)方法来实现的,所以join(long)方法具有释放锁的特点,
-				而 sleep(long)不释放锁的
-		2.14.2.yield()方法:
-			(1).使当前线程从执行状态(运行状态)变为可执行状态(就绪状态),调用yield的时候锁并没有被释放
-				放弃当前的CPU资源,将它让给其他的任务去占用CPU执行时间,放弃的时间不确定
-				将CPU让给其他资源导致速度变慢,一般是把机会给到线程池拥有相同优先级的线程
-		2.14.3.两者的区别:
-			(1).join 是 final 的实例方法,yield是原生静态方法
-	2.15.线程的优先级:
-		(1).线程的优先级具有继承性,比如A线程启动B线程,则B线程的优先级与A是一样的;
-		(2).优先级具有规则性:
-			线程的优先级与代码执行顺序无关,CPU 尽量将执行资源让给优先级比较高的线程
-			高优先级的线程总是大部分先执行完的,但不带表高优先级的线程全部不执行完;
-		(3).优先级具有随机性:
-			也就是优先级较高的线程不一定每次都先执行完
-			不要把线程的优先级与运行结果的顺序作为衡量的标准,线程优先级与打印顺序无关
-	2.16.守护线程:守护线程优先级非常低,通常在程序里没有其他线程运行时才会执行;
-		当守护线程是唯一在运行的线程时,JVM 会结束守护线程并终止程序;
-		(1).守护线程通常用于在同一程序里给普通线程(也叫使用者线程)提供服务
-			它们通常无限循环的等待服务请求或执行线程任务
-			JAVA 中最典型的这种类型代表就是垃圾回收器
-			public class Daemon extends Thread{
-				public Daemon(){
-					setDaemon(true);//在这个构造函数,用setDaemon() 方法让此线程成为守护线程
+			为了使线程能够执行run()方法，需要在 Thread 类的构造函数中传入 MyRunnable 的实例对象
+			Thread thread = new Thread(new MyRunnable());
+			thread.start();
+		(2).创建一个实现了 Runnable 接口的匿名类:
+			Runnable myRunnable = new Runnable(){
+				public void run(){
+					System.out.println("Runnable running");
 				}
 			}
-		(2).只能在start() 方法之前可以调用 setDaemon() 方法。一旦线程运行了，就不能修改守护状态。
-			可以使用 isDaemon() 方法来检查线程是否是守护线程(方法返回 true) 或者是使用者线程 (方法返回 false)
-		(3).典型的守护线程是垃圾回收线程,当进程中没有非守护线程时,则垃圾回收线程也就没有存在的必要了
-			守护线程的作用是为其他线程的运行提供便利服务,最典型的应用:GC
-			当只有守护线程运行时，JVM会自动退出
-	2.17.线程的生命周期:
-		(1).新建态(New):通过线程的创建方式创建线程后,进入新建态态;
-		(2).就绪(Runnable):调用 Tread 的start 方法,就会为线程分配私有的方法栈,程序计数器资源,如果得到CPU资源,线程就转为运行状态.
-		(3).运行(Running):就绪态得到CPU资源后转为运行态,执行run方法.在调用 yield 方法后,线程由运行转为就绪
-		(4).阻塞(Bolcking):线程因为某种原因放弃CPU使用权,暂时停止运行.直到线程进入就绪状态,才有机会转到运行状态.阻塞的情况分三种:
-			A.等待阻塞 -- 通过调用线程的wait()方法，让线程等待某工作的完成。
-		    B.同步阻塞 -- 线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
-		    C.其他阻塞 -- 通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态.
-		    			当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
-		(5).死亡状态(Dead):线程执行完了或者因异常退出了run()方法,该线程结束生命周期
+			Thread thread = new Thread(myRunnable);
+			thread.start();
+	2.1.3.实现 Callable 接口,实现call()方法,使用 FutureTask 类来包装 Callable 对象,FutureTask 
+		对象封装了该 Callable 对象的call()方法的返回值;使用 FutureTask 对象作为 Thread 对象的
+		target创建并启动新线程
+		执行 Callable 方式,需要 FutureTask 实现类的支持,用于接收运算结果
+		FutureTask<Integer> task = new FutureTask<>(new MyCallable());// FutureTask 也有闭锁的功能
+		new Thread(task).start();
+### 2.3.创建 Thread 子类还是实现 Runnable 接口?
+	实现 Runnable 接口,线程池可以有效的管理实现了 Runnable 接口的线程
+	如果多个线程正在运行中,如果某个线程调用 System.exit()指示终结程序，那么全部的线程都会结束执行
+### 2.4.常见错误问题:
+	调用run()方法而非start()方法
+### 2.5.线程名称:
+	当创建一个线程的时候，可以给线程起一个名字
+	MyRunnable runnable = new MyRunnable();
+	Thread thread = new Thread(runnable, "New Thread");
+	thread.start();
+	System.out.println(thread.getName());
+	也可以通过:
+	Thread.currentThread()获取当前线程的引用
+### 2.6.Thread 的部分属性:
+	(1).ID: 每个线程的独特标识。
+	(2).Name: 线程的名称。
+	(3).Priority: 线程对象的优先级。优先级别在1-10之间，1是最低级，10是最高级。
+		不建议改变它们的优先级，但是你想的话也是可以的。
+	(4).Status: 线程的状态。在Java中，线程只能有这6种中的一种状态： 
+		new{}, runnable, blocked, waiting, time waiting, 或 terminated.
+### 2.7.线程的中断与停止,暂停:
+	2.7.1.线程中断:
+		Java 提供中断机制来通知线程表明我们想要结束它.中断机制的特性是线程需要检查是否被中断,
+		而且还可以决定是否响应结束的请求
+	2.7.2.线程停止:
+		2.7.2.1.线程停止的方法:
+			Java并没有提供安全停止线程的方法
+			①.使用退出标志,使线程正常退出,也就是当run方法完成后线程终止;
+			②.使用stop方法强行终止线程,但不推荐使用,因为stop和suspend及resume一样,是过期的方法,使用会造成不可预料的结果
+			③.使用interrupt 方法中断线程;
+		2.7.2.2.interrup 终止线程:
+			(1).判断线程是否是停止状态
+				①.interruputed:测试当前线程是否有已经中断,执行后具有将状态标志清除为 false 的功能
+					如果连续调用两次该方法,第二次调用则返回 false
+				②.isInterrupteed:测试线程Thread对象是否已经中断,但不清除状态标志;
+		2.7.2.3.stop()方法:过期方法
+			(1).暴力停止线程的方法;
+			(2).调用 stop 方法时会抛出 java.lang.ThreadDeath 异常,通常情况下,该异常不需要显示捕获;
+			(3).强制停止线程,可能对锁定的对象进行了"解锁",导致数据得不到同步处理,出现数据不一致的情况
+		2.7.2.4.线程停止:在代码中增加异常处理
+		2.7.2.5.使用 return 停止线程:将方法 interrupt() 和 return 结合使用
+	2.7.3.暂停线程:可以使用 suspend()方法暂停线程,使用resume() 方法恢复线程的执行
+		这两个方法的缺点:
+		(1).使用这两个方法时,如果使用不当极易造成公共的同步对象的独占,使得其他线程无法访问公共同步对象
+		(2).数据的不同步:容易出现因为线程的暂停而导致数据不同步的情况
+	2.7.4.线程中断原理:
+		(1).Java线程中断机制是一种协作机制,也就是说通过中断并不能直接停止另一个线程,需要被中断的线程自己处理中断.
+		(2).中断模型:
+			每个线程对象里都有一个boolean类型的标识,代表着是否有中断请求(该请求可以来自所有线程,包括被中断的线程本身),
+			Thread提供了几个方法来操作中断状态:
+			①.public static boolean interrupted():测试当前线程是否中断,线程的中断状态由该方法清除.
+				如果连续两次调用该方法,则第二次调用将返回 false
+			②.public boolean isInterrupted():测试线程是否已经中断.线程的中断状态不受该方法的影响;
+			③.public void interrupt():中断线程,唯一能将中断状态设置为true的方法
+		(3).中断处理:被中断线程只需在合适的时候处理即可，如果没有合适的时间点，甚至可以不处理
+			* https://www.ibm.com/developerworks/cn/java/j-jtp05236.html
+			①.中断状态管理:一般来说当可能阻塞的方法声明中有抛出InterruptedException则暗示该方法是可中断的;
+				如果程序捕获到这些可中断的阻塞方法抛出的InterruptedException或检测到中断后,可以按照如下原则处理:
+				* 如果遇到的是可中断的阻塞方法抛出InterruptedException,可以继续向方法调用栈的上层抛出该异常,
+				  如果是检测到中断,则可清除中断状态并抛出InterruptedException,使当前方法也成为一个可中断的方法
+				* 若有时候不太方便在方法上抛出InterruptedException,比如要实现的某个接口中的方法签名上没有
+				  throws InterruptedException，这时就可以捕获可中断方法的InterruptedException并通过
+				  Thread.currentThread.interrupt()来重新设置中断状态。如果是检测并清除了中断状态，亦是如此.
+			②.中断响应:根据实际情况而定
+				有些程序可能一检测到中断就立马将线程终止,有些可能是退出当前执行的任务,继续执行下一个任务;
+				如做一些事务回滚操作,一些清理工作,一些补偿操作
+		(4).中断的使用:
+			* 点击某个桌面应用中的取消按钮时；
+			* 某个操作超过了一定的执行时间限制需要中止时；
+			* 多个线程做相同的事情，只要一个线程成功其它线程都可以取消时；
+			* 一组线程中的一个或多个出现错误导致整组都无法继续时；
+			* 当一个应用或服务需要停止时
+
+### 2.8.线程的睡眠:
+	Thread.sleep()
+	TimeUnit.SECONDS.sleep();
+### 2.9.等待线程的终结:
+	Thread.join():当前线程调用某个线程的这个方法时，它会暂停当前线程，直到被调用线程执行完成
+	Thread.join(long miseconds);	这方法让调用线程等待特定的毫秒数。
+	Thread.join(long milliseconds, long nanos)第二个版本的join方法和第一个很像,只不过它接收一个毫秒数和一个纳秒数
+### 2.10.异常处理:
+	当一个非检查异常被抛出，默认的行为是在控制台写下stack trace并退出程序
+	(1).必须实现一个类来处理非检查异常。这个类必须实现 UncaughtExceptionHandler 接口并实现在接口
+		内已声明的 uncaughtException() 方法:
+		public class ExceptionHandler implements UncaughtExceptionHandler{
+			public void uncaughtException(Thread t, Throwable e){
+				System.out.printf("An exception has been captured\n");
+				System.out.printf("Thread: %s\n",t.getId());
+				System.out.printf("Exception: %s: %s\n",e.getClass().getName(),e.getMessage());
+				System.out.printf("Stack Trace: \n");
+				e.printStackTrace(System.out); 
+				System.out.printf("Thread status: %s\n",t.getState());
+			}
+		}
+		Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
+	(2).当在一个线程里抛出一个异常，但是这个异常没有被捕获(这肯定是非检查异常):
+		JVM 检查线程的相关方法是否有设置一个未捕捉异常的处理者.
+		如果有,JVM 使用 Thread 对象和 Exception 作为参数调用此方法;
+		如果没有定义,那么 JVM 会寻找默认非捕捉异常 handle
+		如果线程没有捕捉未捕获异常的处理者,那么 JVM会 把异常的 stack trace 写入操控台并结束任务;
+### 2.11.本地线程变量:
+	ThreadLocal(详情查看第 9 点)
+	(1).本地线程变量为每个使用这些变量的线程储存属性值。可以用 get() 方法读取值和使用 set() 方法改变值
+### 2.12.线程组:可以把线程分组
+	Java 提供 ThreadGroup 类来组织线程.
+	ThreadGroup 对象可以由 Thread 对象组成和由另外的 ThreadGroup 对象组成,生成线程树结构
+### 2.13.用线程工厂创建线程
+	线程对象工厂 ThreadFactory
+### 2.14.join()和yield()方法:
+	2.14.1.join()方法:
+		(1).等待该线程终止,指的是主线程等待子线程的终止,子线程调用了join()方法后面的代码,
+			只有等到子线程结束了才能执行;
+			让调用该方法的thread完成 run 方法的里面的东西后,在执行 join 方法后面的代码
+			当前运行着的线程将阻塞直到这个线程实例完成了执行
+		(2).join 具有使线程排队运行的作用.join 与 synchronized 区别:
+			join 内部是 wait 方法进行等待,而 synchronized 关键字使用的是"对象监视器"原理作为同步
+		(3).在执行 join 的过程中,如果当前线程对象被中断,则当前线程出现异常;
+		(3).join(long) 内部是使用 wait(long)方法来实现的,所以join(long)方法具有释放锁的特点,
+			而 sleep(long)不释放锁的
+	2.14.2.yield()方法:
+		(1).使当前线程从执行状态(运行状态)变为可执行状态(就绪状态),调用yield的时候锁并没有被释放
+			放弃当前的CPU资源,将它让给其他的任务去占用CPU执行时间,放弃的时间不确定
+			将CPU让给其他资源导致速度变慢,一般是把机会给到线程池拥有相同优先级的线程
+	2.14.3.两者的区别:
+		(1).join 是 final 的实例方法,yield是原生静态方法
+### 2.15.线程的优先级:
+	(1).线程的优先级具有继承性,比如A线程启动B线程,则B线程的优先级与A是一样的;
+	(2).优先级具有规则性:
+		线程的优先级与代码执行顺序无关,CPU 尽量将执行资源让给优先级比较高的线程
+		高优先级的线程总是大部分先执行完的,但不带表高优先级的线程全部不执行完;
+	(3).优先级具有随机性:
+		也就是优先级较高的线程不一定每次都先执行完
+		不要把线程的优先级与运行结果的顺序作为衡量的标准,线程优先级与打印顺序无关
+### 2.16.守护线程:守护线程优先级非常低,通常在程序里没有其他线程运行时才会执行;
+	当守护线程是唯一在运行的线程时,JVM 会结束守护线程并终止程序;
+	(1).守护线程通常用于在同一程序里给普通线程(也叫使用者线程)提供服务
+		它们通常无限循环的等待服务请求或执行线程任务
+		JAVA 中最典型的这种类型代表就是垃圾回收器
+		public class Daemon extends Thread{
+			public Daemon(){
+				setDaemon(true);//在这个构造函数,用setDaemon() 方法让此线程成为守护线程
+			}
+		}
+	(2).只能在start() 方法之前可以调用 setDaemon() 方法。一旦线程运行了，就不能修改守护状态。
+		可以使用 isDaemon() 方法来检查线程是否是守护线程(方法返回 true) 或者是使用者线程 (方法返回 false)
+	(3).典型的守护线程是垃圾回收线程,当进程中没有非守护线程时,则垃圾回收线程也就没有存在的必要了
+		守护线程的作用是为其他线程的运行提供便利服务,最典型的应用:GC
+		当只有守护线程运行时，JVM会自动退出
+### 2.17.线程的生命周期:
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程生命周期.png)
+
+	(1).新建态(New):通过线程的创建方式创建线程后,进入新建态态;
+	(2).就绪(Runnable):调用 Tread 的start 方法,就会为线程分配私有的方法栈,程序计数器资源,如果得到CPU资源,线程就转为运行状态.
+	(3).运行(Running):就绪态得到CPU资源后转为运行态,执行run方法.在调用 yield 方法后,线程由运行转为就绪
+	(4).阻塞(Bolcking):线程因为某种原因放弃CPU使用权,暂时停止运行.直到线程进入就绪状态,才有机会转到运行状态.阻塞的情况分三种:
+		A.等待阻塞 -- 通过调用线程的wait()方法，让线程等待某工作的完成。
+		B.同步阻塞 -- 线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
+		C.其他阻塞 -- 通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态.
+					当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
+	(5).死亡状态(Dead):线程执行完了或者因异常退出了run()方法,该线程结束生命周期
 ## 3.竞态条件与临界区:
 	3.1.在同一程序中运行多个线程本身不会导致问题,问题在于多个线程访问了相同的资源:
 		如果多个线程对这些相同资源进行了"写操作"才会引发线程安全问题;

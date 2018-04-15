@@ -2,10 +2,10 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一.GC(GarbageCollection):垃圾回收,Java 的内存管理实际上就是对象的管理](#%E4%B8%80gcgarbagecollection%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6java-%E7%9A%84%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86%E5%AE%9E%E9%99%85%E4%B8%8A%E5%B0%B1%E6%98%AF%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%AE%A1%E7%90%86)
-  - [1.垃圾回收机制的意义:](#1%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%E6%84%8F%E4%B9%89)
-  - [2.如何确定对象为垃圾对象:](#2%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E5%AF%B9%E8%B1%A1%E4%B8%BA%E5%9E%83%E5%9C%BE%E5%AF%B9%E8%B1%A1)
-  - [3.GC 回收区域:](#3gc-%E5%9B%9E%E6%94%B6%E5%8C%BA%E5%9F%9F)
+- [一.GC(GarbageCollection)](#%E4%B8%80gcgarbagecollection)
+  - [1.垃圾回收机制的意义](#1%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%E6%84%8F%E4%B9%89)
+  - [2.如何确定对象为垃圾对象](#2%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E5%AF%B9%E8%B1%A1%E4%B8%BA%E5%9E%83%E5%9C%BE%E5%AF%B9%E8%B1%A1)
+  - [3.GC 回收区域](#3gc-%E5%9B%9E%E6%94%B6%E5%8C%BA%E5%9F%9F)
 - [二.垃圾回收机制的对象判断算法:](#%E4%BA%8C%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%E5%AF%B9%E8%B1%A1%E5%88%A4%E6%96%AD%E7%AE%97%E6%B3%95)
   - [1.引用计数算法:Reference Counting Collector](#1%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E7%AE%97%E6%B3%95reference-counting-collector)
   - [2.可达性分析算法:主流的实现,判定对象的存活](#2%E5%8F%AF%E8%BE%BE%E6%80%A7%E5%88%86%E6%9E%90%E7%AE%97%E6%B3%95%E4%B8%BB%E6%B5%81%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%A4%E5%AE%9A%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%AD%98%E6%B4%BB)
@@ -15,9 +15,9 @@
 - [三.垃圾收集算法:](#%E4%B8%89%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95)
   - [1.标记-清除算法(Marke-Sweep):最基础的收集算法](#1%E6%A0%87%E8%AE%B0-%E6%B8%85%E9%99%A4%E7%AE%97%E6%B3%95marke-sweep%E6%9C%80%E5%9F%BA%E7%A1%80%E7%9A%84%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95)
   - [2.标记-整理算法(Mark-Compact):](#2%E6%A0%87%E8%AE%B0-%E6%95%B4%E7%90%86%E7%AE%97%E6%B3%95mark-compact)
-  - [3.复制算法(Copying):该算法的提出是为了克服句柄的开销和解决堆碎片的垃圾回收](#3%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95copying%E8%AF%A5%E7%AE%97%E6%B3%95%E7%9A%84%E6%8F%90%E5%87%BA%E6%98%AF%E4%B8%BA%E4%BA%86%E5%85%8B%E6%9C%8D%E5%8F%A5%E6%9F%84%E7%9A%84%E5%BC%80%E9%94%80%E5%92%8C%E8%A7%A3%E5%86%B3%E5%A0%86%E7%A2%8E%E7%89%87%E7%9A%84%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6)
-  - [4.分代收集算法(Generation Collection):基于不同的对象的生命周期是不一样的](#4%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95generation-collection%E5%9F%BA%E4%BA%8E%E4%B8%8D%E5%90%8C%E7%9A%84%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E6%98%AF%E4%B8%8D%E4%B8%80%E6%A0%B7%E7%9A%84)
-- [四.垃圾收集器:内存回收的具体实现](#%E5%9B%9B%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E7%9A%84%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0)
+  - [3.复制算法(Copying):](#3%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95copying)
+  - [4.分代收集算法(Generation Collection):](#4%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95generation-collection)
+- [四.垃圾收集器:](#%E5%9B%9B%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
   - [1.Serial 收集器:](#1serial-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [2.ParNew 收集器:](#2parnew-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [3.Parallel Scavenge 收集器](#3parallel-scavenge-%E6%94%B6%E9%9B%86%E5%99%A8)
@@ -26,15 +26,15 @@
   - [6.CMS(Concurrent Mark Sweep) 收集器:](#6cmsconcurrent-mark-sweep-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [7.G1 收集器(Garbage First):面向服务端应用的垃圾收集器](#7g1-%E6%94%B6%E9%9B%86%E5%99%A8garbage-first%E9%9D%A2%E5%90%91%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%BA%94%E7%94%A8%E7%9A%84%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
 - [五.GC 执行机制:Minor GC 和 Full GC](#%E4%BA%94gc-%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6minor-gc-%E5%92%8C-full-gc)
-  - [1.Minor GC:](#1minor-gc)
-  - [2.Full GC:对整个堆进行整理,包括 新生代,老年代和持久代](#2full-gc%E5%AF%B9%E6%95%B4%E4%B8%AA%E5%A0%86%E8%BF%9B%E8%A1%8C%E6%95%B4%E7%90%86%E5%8C%85%E6%8B%AC-%E6%96%B0%E7%94%9F%E4%BB%A3%E8%80%81%E5%B9%B4%E4%BB%A3%E5%92%8C%E6%8C%81%E4%B9%85%E4%BB%A3)
-  - [3.内存回收与分配策略:](#3%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E4%B8%8E%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5)
-  - [4.YGC 过程:](#4ygc-%E8%BF%87%E7%A8%8B)
-- [六.详解 finalize()方法:finalize是位于 Object 类的一个方法,该方法的访问修饰符为 protected](#%E5%85%AD%E8%AF%A6%E8%A7%A3-finalize%E6%96%B9%E6%B3%95finalize%E6%98%AF%E4%BD%8D%E4%BA%8E-object-%E7%B1%BB%E7%9A%84%E4%B8%80%E4%B8%AA%E6%96%B9%E6%B3%95%E8%AF%A5%E6%96%B9%E6%B3%95%E7%9A%84%E8%AE%BF%E9%97%AE%E4%BF%AE%E9%A5%B0%E7%AC%A6%E4%B8%BA-protected)
+  - [1.Minor GC(YGC):对新生代进行GC](#1minor-gcygc%E5%AF%B9%E6%96%B0%E7%94%9F%E4%BB%A3%E8%BF%9B%E8%A1%8Cgc)
+  - [2.Major GC:永久代](#2major-gc%E6%B0%B8%E4%B9%85%E4%BB%A3)
+  - [3.Full GC:对整个堆进行整理,包括 新生代,老年代和持久代](#3full-gc%E5%AF%B9%E6%95%B4%E4%B8%AA%E5%A0%86%E8%BF%9B%E8%A1%8C%E6%95%B4%E7%90%86%E5%8C%85%E6%8B%AC-%E6%96%B0%E7%94%9F%E4%BB%A3%E8%80%81%E5%B9%B4%E4%BB%A3%E5%92%8C%E6%8C%81%E4%B9%85%E4%BB%A3)
+  - [4.内存回收与分配策略:](#4%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E4%B8%8E%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5)
+- [六.详解 finalize()方法](#%E5%85%AD%E8%AF%A6%E8%A7%A3-finalize%E6%96%B9%E6%B3%95)
 - [七.Java 有了GC同样会出现内存泄露问题](#%E4%B8%83java-%E6%9C%89%E4%BA%86gc%E5%90%8C%E6%A0%B7%E4%BC%9A%E5%87%BA%E7%8E%B0%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2%E9%97%AE%E9%A2%98)
 - [八.如何优化 GC](#%E5%85%AB%E5%A6%82%E4%BD%95%E4%BC%98%E5%8C%96-gc)
   - [1.监控 GC:](#1%E7%9B%91%E6%8E%A7-gc)
-  - [2.GC 优化:如果你没有设定内存的大小,并且系统充斥着大量的超时日志时,你就需要在你的系统中进行GC优化了](#2gc-%E4%BC%98%E5%8C%96%E5%A6%82%E6%9E%9C%E4%BD%A0%E6%B2%A1%E6%9C%89%E8%AE%BE%E5%AE%9A%E5%86%85%E5%AD%98%E7%9A%84%E5%A4%A7%E5%B0%8F%E5%B9%B6%E4%B8%94%E7%B3%BB%E7%BB%9F%E5%85%85%E6%96%A5%E7%9D%80%E5%A4%A7%E9%87%8F%E7%9A%84%E8%B6%85%E6%97%B6%E6%97%A5%E5%BF%97%E6%97%B6%E4%BD%A0%E5%B0%B1%E9%9C%80%E8%A6%81%E5%9C%A8%E4%BD%A0%E7%9A%84%E7%B3%BB%E7%BB%9F%E4%B8%AD%E8%BF%9B%E8%A1%8Cgc%E4%BC%98%E5%8C%96%E4%BA%86)
+  - [2.GC 优化](#2gc-%E4%BC%98%E5%8C%96)
 - [九.减少GC开销:](#%E4%B9%9D%E5%87%8F%E5%B0%91gc%E5%BC%80%E9%94%80)
   - [1.避免隐式的 String 字符串:](#1%E9%81%BF%E5%85%8D%E9%9A%90%E5%BC%8F%E7%9A%84-string-%E5%AD%97%E7%AC%A6%E4%B8%B2)
   - [2.计划好 List 的容量](#2%E8%AE%A1%E5%88%92%E5%A5%BD-list-%E7%9A%84%E5%AE%B9%E9%87%8F)
@@ -49,20 +49,22 @@
  * [深入理解java垃圾回收机制](http://www.cnblogs.com/sunniest/p/4575144.html)
  * [Java GC 工作原理](http://www.hollischuang.com/archives/76)
  * [入浅出Java垃圾回收机制](http://www.importnew.com/1993.html)
- *  [Minor GC、Major GC和Full GC之间的区别](http://www.importnew.com/15820.html)
+ * [Minor GC、Major GC和Full GC之间的区别](http://www.importnew.com/15820.html)
+ * [YGC过程](https://www.jianshu.com/p/04eff13f3707)
  * 参考书:《深入理解Java虚拟机-JVM高级特性与最佳实践[周志明]》
  
 Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标记-清扫"式的垃圾回收器
-# 一.GC(GarbageCollection):垃圾回收,Java 的内存管理实际上就是对象的管理
-## 1.垃圾回收机制的意义:
+# 一.GC(GarbageCollection)
+	垃圾回收,Java 的内存管理实际上就是对象的管理
+## 1.垃圾回收机制的意义
 	Java 中的对象不再有"作用域"的概念,只有对象的引用才有"作用域".垃圾回收可以有效的防止内存泄露,有效的使用空闲的内存.
-## 2.如何确定对象为垃圾对象:
+## 2.如何确定对象为垃圾对象
 	(1).引用计数:如果一个对象没有任何引用与之关联,则说明该对象基本不太可能在其他地方被使用到,那么这个对象就成为可被回收的对象了
 		==> 无法解决循环引用的问题
 	(2).可达性分析法:解决循环引用问题:
 		基本思想是通过一系列的"GC Roots"对象作为起点进行搜索,如果在"GC Roots"和一个对象之间没有可达路径,则称该对象是不可达的;
 		要注意的是被判定为不可达的对象不一定就会成为可回收对象.被判定为不可达的对象要成为可回收对象必须至少经历两次标记过程
-## 3.GC 回收区域:
+## 3.GC 回收区域
 	(1).程序计数器、虚拟机栈、本地方法栈不需要进行垃圾回收的,因为他们的生命周期是和线程同步的,随着线程的销毁,
 	其占用的内存会自动释放,
 	(2).堆和方法区是线程共享的,需要进行垃圾回收
@@ -156,7 +158,8 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 	2.1.算法分为"标记"和"清除"两个阶段:
 		首先标记出所有需要回收的对象,让所有存活的对象都向一端移动,然后直接清理掉端边界意外的内存
 	2.2.标记-整理算法是在标记-清除算法的基础上,又进行了对象的移动,因此成本更高,但是却解决了内存碎片的问题
-## 3.复制算法(Copying):该算法的提出是为了克服句柄的开销和解决堆碎片的垃圾回收
+## 3.复制算法(Copying):
+	该算法的提出是为了克服句柄的开销和解决堆碎片的垃圾回收
 	3.1.算法思路:将可用内存按容量划分为大小相等的两块,每次只使用其中的一块;当一块的内存用完了,
 		就将存活的对象复制到另一块上面,然后再把已使用过的内存空间一次清理掉;
 		每次回收时都是对整个半区进行内存回收,内存分配是不用考虑内存碎片等;
@@ -168,7 +171,8 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 			只要 10% 内存会被浪费掉
 		(3).当 Survivor 空间不够用时,需要依赖其他内存(指老年代)进行分配担保:
 			没有足够的空间存放上一次新生代收集下来的存活对象时,这些对象将直接通过分配担保机制进入老年代;
-## 4.分代收集算法(Generation Collection):基于不同的对象的生命周期是不一样的
+## 4.分代收集算法(Generation Collection):
+	基于不同的对象的生命周期是不一样的
 	一般是把 Java 堆分为新生代与老年代
 	4.1.新生代(Young Generation):
 		(1).所有新生成的对象首先都是放在年轻代的,新生代的 GC 也叫做 MinorGC,MinorGC 发生频率比较高(不一定等 Eden 区满了才触发)
@@ -179,7 +183,8 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 		(3).一般使用标记-清除和标记-整理算法来进行回收;
 	4.3.持久代(Permanent Generation)
 		用于存放静态文件,如Java类、方法等.持久代对垃圾回收没有显著影响,但是有些应用可能动态生成或者调用一些class
-# 四.垃圾收集器:内存回收的具体实现
+# 四.垃圾收集器:
+	内存回收的具体实现
 	新生代收集器使用的收集器：Serial、PraNew、Parallel Scavenge
 	老年代收集器使用的收集器：Serial Old、Parallel Old、CMS
 ## 1.Serial 收集器:
@@ -244,12 +249,51 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 		(4).筛选回收(Live Data Counting and Evacuation)
 
 # 五.GC 执行机制:Minor GC 和 Full GC
-## 1.Minor GC:
-	一般情况下,当新对象生成,并且在 Eden 申请空间失败时,就会触发 Minor GC,主要是针对新生代对 Eden 区域进行GC,清除非存活对象,
-	并且把尚且存活的对象移动到 Survivor 区,然后整理 Survivor 的两个区.
-	这种方式的 GC 是对年轻代的 Eden 进行,不会影响到年老代.因为大部分对象都是从 Eden 区开始的,同时 Eden 区不会分配的很大,
-	所以 Eden 区的 GC 会频繁进行.因而,一般在这里需要使用速度快、效率高的算法,使Eden去能尽快空闲出来
-## 2.Full GC:对整个堆进行整理,包括 新生代,老年代和持久代
+## 1.Minor GC(YGC):对新生代进行GC
+	1.1.什么是YGC:
+		YGC是JVM GC当前最为频繁的一种GC,一个高并发的服务在运行期间,会进行大量的YGC，发生YGC时,
+		会进行STW(Stop The World),一般时间都很短,除非碰到YGC时,存在大量的存活对象需要进行拷贝,
+		主要是针对新生代对 Eden 区域进行GC,清除非存活对象.并且把尚且存活的对象移动到 Survivor 区,
+		然后整理 Survivor 的两个区.这种方式的 GC 是对年轻代的 Eden 进行,不会影响到年老代.因为大部分对
+		象都是从 Eden 区开始的,同时 Eden 区不会分配的很大.所以 Eden 区的 GC 会频繁进行.
+		因而,一般在这里需要使用速度快、效率高的算法,使Eden去能尽快空闲出来
+	1.1.触发条件:
+		一般情况下,当新对象生成,并且在 Eden 申请空间失败时,就会触发 Minor GC.
+	1.2.YGC过程:主要你分为两个步骤:
+		(1).查找GC Roots，拷贝所引用的对象到 to 区;
+		(2).递归遍历步骤1中对象,并拷贝其所引用的对象到 to 区,当然可能会存在自然晋升，或者因为
+			to 区空间不足引起的提前晋升的情况；
+	1.3.YGC细节:
+		(1).如果触发的YGC顺利执行完,.期间没有发生任何问题,垃圾回收完成后,正常的分配内存;
+		(2).如果YGC刚要开始执行,却不幸的发生了JNI的GC locker,本次的YGC会被放弃，如果是给对象分
+			配内存，会在老年代中直接分配内存，如果是TLAB的话，就要等JNI结束了;
+		(3).如果没有JNI的干扰，在YGC过程中，对象年纪达到阈值，正常晋升，或to空间不足，对象提前晋升，
+			但老年代又没这么多空间容纳晋升上来的对象，这时会发生“promotion failed”，而且eden和from区
+			的空间没办法清空， 把from区和to区进行swap，所以当前eden和from的使用率都是接近100%的，如果
+			当前是给对象（非TLAB）申请内存，会继续触发一次老年代的回收动作
+```java
+/**
+ * -Xmx20m -Xms20m -Xmn14m -XX:+UseParNewGC  -XX:+UseConcMarkSweepGC
+ *-XX:+UseCMSInitiatingOccupancyOnly  -XX:CMSInitiatingOccupancyFraction=75
+ *-XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintHeapAtGC
+ */
+public class JVM {
+    private static final int _1MB = 1024 * 1024;
+    private static final int _1K = 1024;
+    public static void main(String[] args) throws Exception {
+        byte[][] arr = new byte[10000][];
+        for (int i = 0; i< 1200; i++) {
+            arr[i] = new byte[10* _1K];
+        }
+        System.in.read();
+    }
+}
+```
+	1.4.
+	* http://lovestblog.cn/blog/2016/11/06/string-intern/
+## 2.Major GC:永久代
+## 3.Full GC:对整个堆进行整理,包括 新生代,老年代和持久代
+	堆空间使用到达80%(可调整)的时候会触发fgc
 	Full GC 因为需要对整个对进行回收，所以比 Scavenge GC 要慢,因此应该尽可能减少 Full GC 的次数。
 	在对JVM调优的过程中,很大一部分工作就是对于 FullGC 的调节。
 	有如下原因可能导致 Full GC：
@@ -260,70 +304,73 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 		(5).CMS GC 时出现promotion failed和concurrent mode failure
 			promotion failed:是在进行 Minor GC时,survivor空间放不下、对象只能放入老生代,而此时老生代也放不下造成的
 			concurrent mode failure:在执行 CMS GC 的过程中同时有对象要放入老生代,而此时老生代空间不足造成的
-## 3.内存回收与分配策略:
-	3.1.对象优先分配在 Eden 区域:大多数情况下,对象在新生代的Eden区中分配,如果Eden区没有足够的空间时,虚拟机将发起一次 MinorGC
-		(1).查看代码的具体GC日志VM参数
-			-verbose:gc -Xms20M -Xmx20M -Xmn10M -XX:+PrintGCDetails -XX:SurvivorRatio=8
-		(2).打印日志:
-			private static final int _1MB = 1024 * 1024;
-		    public static void testAllocation(){
-		        byte[] a1, a2, a3, a4;
-		        a1 = new byte[2 * _1MB];
-		        a2 = new byte[2 * _1MB];
-		        a3 = new byte[2 * _1MB];
-		        a4 = new byte[4 * _1MB];
-		    }
-		    [GC (Allocation Failure) [PSYoungGen: 14925K->1011K(18432K)] 14925K->13308K(38912K), 0.0042158 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
-		    [Full GC (Ergonomics) [PSYoungGen: 1011K->0K(18432K)] [ParOldGen: 12296K->13203K(20480K)] 13308K->13203K(38912K), [Metaspace: 3395K->3395K(1056768K)], 0.0056106 secs] [Times: user=0.00 sys=0.00, real=0.01 secs] 
-		    [GC (Allocation Failure) [PSYoungGen: 6307K->96K(18432K)] 19511K->19443K(38912K), 0.0027672 secs] [Times: user=0.06 sys=0.00, real=0.00 secs] 
-		    [Full GC (Ergonomics) [PSYoungGen: 96K->0K(18432K)] [ParOldGen: 19347K->19250K(20480K)] 19443K->19250K(38912K), [Metaspace: 3419K->3419K(1056768K)], 0.0068909 secs] [Times: user=0.00 sys=0.00, real=0.01 secs] 
-		    Heap
-		     PSYoungGen      total 18432K, used 12779K [0x00000000fec00000, 0x0000000100000000, 0x0000000100000000)
-		      eden space 16384K, 78% used [0x00000000fec00000,0x00000000ff87afb0,0x00000000ffc00000)
-		      from space 2048K, 0% used [0x00000000ffe00000,0x00000000ffe00000,0x0000000100000000)
-		      to   space 2048K, 0% used [0x00000000ffc00000,0x00000000ffc00000,0x00000000ffe00000)
-		     ParOldGen       total 20480K, used 19250K [0x00000000fd800000, 0x00000000fec00000, 0x00000000fec00000)
-		      object space 20480K, 93% used [0x00000000fd800000,0x00000000feaccb48,0x00000000fec00000)
-		     Metaspace       used 3425K, capacity 4494K, committed 4864K, reserved 1056768K
-		      class space    used 378K, capacity 386K, committed 512K, reserved 1048576K {}
-		    ①.GC 日志开头"[GC"和 "[FULL GC"说明了这次垃圾收集停顿的类型,不是用来区分新生代GC和老年代GC的
-		    如果有Full 说明这次GC发生了的"Stop-the-world"
-		    ②.[PSYoungGen: 14925K->1011K(18432K)] 14925K->13308K(38912K), 0.0042158 secs
-		    	[PSYoungGen, [ParOldGen, [Metaspace 表示GC发生的区域
-		    	PSYoungGen ==> 表示使用的是 Parallel Scavenge 收集器来回收新生代的
-		    	ParOldGen ==> Parallel Old 收集器
-		    	14925K->1011K(18432K)==>GC前盖该内存区域已使用容量->GC后该区域已使用容量(该区域总容量)
-		    	14925K->13308K(38912K) ==> GC前Java堆已使用容量->GC后Java堆已使用容量(Java堆总容量)
-		    	0.0042158 secs ==> 该区域GC所占用时间,单位是秒
-		    ③.[Times: user=0.00 sys=0.00, real=0.00 secs] 
-		    user,sys,real 与Linux的time命令输出的时间含义一致,分别代表用户态消耗的CPU时间,内核态消耗的CPU时间和操作从开始到结束锁经过的墙钟时间
-	3.2.大对象直接进入老年代:
-		(1).所谓大对象是指需要大量连续内存空间的Java对象,最典型的大对象就是那种很长的字符串以及数组.
-		(2).经常出现大对象容易导致内存还有不少空间时就提前触发垃圾收集来获取足够的连续空间分配给新生成的大对象.
-		(3).虚拟机提供了:-XX:PertenureSizeThreshold 参数,令大于这个设置值的对象直接在老年代分配,避免在Eden区和两个Survivor
-			区之间发生大量的内存复制
-	3.3.长期存活的对象将进入老年代:
-		(1).虚拟机给每个对象定义了一个对象年龄计数器,来识别哪些对象放在新生代,哪些对象放在老年代中.
-			如果对象在Eden出生并经过一次 MinorGC 后仍然存活,并且能够被 Survivor 容纳,将被移动到 Survivor 空间,并且对象年龄为1
-			当它的对象年龄增加到一定程度(默认15岁),将会进入到老年代.
-			对象晋升老年代的年龄阈值,可以通过参数 --XX:MaxTenuringThreshold 设置
-	3.4.动态对象年龄判定:
-		如果在 Survivor 空间中相同年龄所有对象大小的总和大于 Survivor 空间的一般,年龄大于或等于该年龄的对象可以直接进入老年代,
-		无须等到 MaxTenuringThreshold 中要求的年龄
-	3.5.空间分配担保:
-		在发生 MinorGC 之前,虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间,如果这个条件成立,那么MinorGC
-		可用确保是安全的.如果不成立,则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败,如果允许,那么会继续检查老年代
-		最大可用连续空间是否大于历次晋升到老年代对象的平均大小,如果大于,将尝试着进行一次MinorGC,有风险;
-		如果小于或者 HandlePromotionFailure 设置不允许毛线,那时会改为进行一次 FullGC.
-## 4.YGC 过程:
-# 六.详解 finalize()方法:finalize是位于 Object 类的一个方法,该方法的访问修饰符为 protected
+## 4.内存回收与分配策略:
+### 4.1.对象优先分配在 Eden 区域:大多数情况下,对象在新生代的Eden区中分配,如果Eden区没有足够的空间时,虚拟机将发起一次 MinorGC
+	(1).查看代码的具体GC日志VM参数
+		-verbose:gc -Xms20M -Xmx20M -Xmn10M -XX:+PrintGCDetails -XX:SurvivorRatio=8
+	(2).打印日志:
+		private static final int _1MB = 1024 * 1024;
+		public static void testAllocation(){
+			byte[] a1, a2, a3, a4;
+			a1 = new byte[2 * _1MB];
+			a2 = new byte[2 * _1MB];
+			a3 = new byte[2 * _1MB];
+			a4 = new byte[4 * _1MB];
+		}
+		[GC (Allocation Failure) [PSYoungGen: 14925K->1011K(18432K)] 14925K->13308K(38912K), 0.0042158 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+		[Full GC (Ergonomics) [PSYoungGen: 1011K->0K(18432K)] [ParOldGen: 12296K->13203K(20480K)] 13308K->13203K(38912K), [Metaspace: 3395K->3395K(1056768K)], 0.0056106 secs] [Times: user=0.00 sys=0.00, real=0.01 secs] 
+		[GC (Allocation Failure) [PSYoungGen: 6307K->96K(18432K)] 19511K->19443K(38912K), 0.0027672 secs] [Times: user=0.06 sys=0.00, real=0.00 secs] 
+		[Full GC (Ergonomics) [PSYoungGen: 96K->0K(18432K)] [ParOldGen: 19347K->19250K(20480K)] 19443K->19250K(38912K), [Metaspace: 3419K->3419K(1056768K)], 0.0068909 secs] [Times: user=0.00 sys=0.00, real=0.01 secs] 
+		Heap
+			PSYoungGen      total 18432K, used 12779K [0x00000000fec00000, 0x0000000100000000, 0x0000000100000000)
+			eden space 16384K, 78% used [0x00000000fec00000,0x00000000ff87afb0,0x00000000ffc00000)
+			from space 2048K, 0% used [0x00000000ffe00000,0x00000000ffe00000,0x0000000100000000)
+			to   space 2048K, 0% used [0x00000000ffc00000,0x00000000ffc00000,0x00000000ffe00000)
+			ParOldGen       total 20480K, used 19250K [0x00000000fd800000, 0x00000000fec00000, 0x00000000fec00000)
+			object space 20480K, 93% used [0x00000000fd800000,0x00000000feaccb48,0x00000000fec00000)
+			Metaspace       used 3425K, capacity 4494K, committed 4864K, reserved 1056768K
+			class space    used 378K, capacity 386K, committed 512K, reserved 1048576K {}
+		①.GC 日志开头"[GC"和 "[FULL GC"说明了这次垃圾收集停顿的类型,不是用来区分新生代GC和老年代GC的
+		如果有Full 说明这次GC发生了的"Stop-the-world"
+		②.[PSYoungGen: 14925K->1011K(18432K)] 14925K->13308K(38912K), 0.0042158 secs
+			[PSYoungGen, [ParOldGen, [Metaspace 表示GC发生的区域
+			PSYoungGen ==> 表示使用的是 Parallel Scavenge 收集器来回收新生代的
+			ParOldGen ==> Parallel Old 收集器
+			14925K->1011K(18432K)==>GC前盖该内存区域已使用容量->GC后该区域已使用容量(该区域总容量)
+			14925K->13308K(38912K) ==> GC前Java堆已使用容量->GC后Java堆已使用容量(Java堆总容量)
+			0.0042158 secs ==> 该区域GC所占用时间,单位是秒
+		③.[Times: user=0.00 sys=0.00, real=0.00 secs] 
+		user,sys,real 与Linux的time命令输出的时间含义一致,分别代表用户态消耗的CPU时间,内核态消耗的CPU时间和操作从开始到结束锁经过的墙钟时间
+### 4.2.大对象直接进入老年代:
+	(1).所谓大对象是指需要大量连续内存空间的Java对象,最典型的大对象就是那种很长的字符串以及数组.
+	(2).经常出现大对象容易导致内存还有不少空间时就提前触发垃圾收集来获取足够的连续空间分配给新生成的大对象.
+	(3).虚拟机提供了:-XX:PertenureSizeThreshold 参数,令大于这个设置值的对象直接在老年代分配,避免在Eden区和两个Survivor
+		区之间发生大量的内存复制
+### 4.3.长期存活的对象将进入老年代:
+	(1).虚拟机给每个对象定义了一个对象年龄计数器,来识别哪些对象放在新生代,哪些对象放在老年代中.
+		如果对象在Eden出生并经过一次 MinorGC 后仍然存活,并且能够被 Survivor 容纳,将被移动到 Survivor 空间,并且对象年龄为1
+		当它的对象年龄增加到一定程度(默认15岁),将会进入到老年代.
+		对象晋升老年代的年龄阈值,可以通过参数 --XX:MaxTenuringThreshold 设置
+### 4.4.动态对象年龄判定:
+	如果在 Survivor 空间中相同年龄所有对象大小的总和大于 Survivor 空间的一般,年龄大于或等于该年龄的对象可以直接进入老年代,
+	无须等到 MaxTenuringThreshold 中要求的年龄
+### 4.5.空间分配担保:
+	在发生 MinorGC 之前,虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间,如果这个条件成立,那么MinorGC
+	可用确保是安全的.如果不成立,则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败,如果允许,那么会继续检查老年代
+	最大可用连续空间是否大于历次晋升到老年代对象的平均大小,如果大于,将尝试着进行一次MinorGC,有风险;
+	如果小于或者 HandlePromotionFailure 设置不允许毛线,那时会改为进行一次 FullGC.
+# 六.详解 finalize()方法
+	finalize是位于 Object 类的一个方法,该方法的访问修饰符为 protected.
 	1.finalize函数没有自动实现链式调用,必须手动的实现,因此finalize函数的最后一个语句通常是 super.finalize(),
-	通过这种方式,我们可以实现从下到上实现finalize的调用,即先释放自己的资源,然后再释放父类的资源;
-	2.根据 Java 语言规范，JVM 保证调用finalize函数之前,这个对象是不可达的,但是 	JVM 不保证这个函数一定会被调用.另外,规范还保证finalize函数最多运行一次
+		通过这种方式,我们可以实现从下到上实现finalize的调用,即先释放自己的资源,然后再释放父类的资源;
+	2.根据 Java 语言规范，JVM 保证调用finalize函数之前,这个对象是不可达的,但是 	JVM 不保证这个函数一定会被调用.
+		另外,规范还保证finalize函数最多运行一次
 	3.GC 为了能够支持finalize函数，要对覆盖这个函数的对象作很多附加的工作。
-	在finalize运行完成之后,该对象可能变成可达的,GC 还要再检查一次该对象是否是可达的.因此，使用finalize会降低GC的运行性能.
-	由于GC调用finalize的时间是不确定的,因此通过这种方式释放资源也是不确定的
-	4.尽量少用finalize函数。finalize函数是Java提供给程序员一个释放对象或资源的机会.	但是，它会加大GC的工作量，因此尽量少采用finalize方式回收资源
+		在finalize运行完成之后,该对象可能变成可达的,GC 还要再检查一次该对象是否是可达的.
+		因此，使用finalize会降低GC的运行性能.
+		由于GC调用finalize的时间是不确定的,因此通过这种方式释放资源也是不确定的
+	4.尽量少用finalize函数。finalize函数是Java提供给程序员一个释放对象或资源的机会.	
+		但是，它会加大GC的工作量，因此尽量少采用finalize方式回收资源
 
 # 七.Java 有了GC同样会出现内存泄露问题
 	1.静态集合类像 HashMap、Vector 等的使用最容易出现内存泄露,这些静态变量的生命周期和应用程序一致，
@@ -347,7 +394,8 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 			jstat 不仅提供 GC 操作的信息,还提供类装载操作的信息以及运行时编译器操作的信息
 			$> jstat –gc  $<vmid$> 1000
 			==> vmid (虚拟机 ID)
-## 2.GC 优化:如果你没有设定内存的大小,并且系统充斥着大量的超时日志时,你就需要在你的系统中进行GC优化了
+## 2.GC 优化
+	如果你没有设定内存的大小,并且系统充斥着大量的超时日志时,你就需要在你的系统中进行GC优化了
 	2.1.GC 优化的目的:
 		(1).将转移到老年代的对象数量降到最少:减少被移到老年代空间对象的数量,可以调整新生代的空间.
 			减少 FullGC 的频率.
