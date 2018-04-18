@@ -662,7 +662,7 @@
 			生产者向堆栈 List 对象中放入数据,使消费者从 List 堆栈中取出数据
 		10.3.4.生产者消费者的不同模式实现:
 
-[生产者消费者](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/ProducerAndConsumer.md)
+[生产者消费者](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/生产者与消费者.md)
 
 	10.4.通过管道进行线程间通信:字节流
 		一个线程发送数据到输出管道,另一个线程从输入管道中读取数据,实现不同线程间通信
@@ -1503,10 +1503,17 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 
 ### 7.3.几个方法
 | 方法处理方式 | 抛出异常    |  返回特殊值  | 一直阻塞| 超时退出 |
-| --------    | --------   | ----------- |--------|--------|
+| --------    | --------   | ----------- |--------|----------|
 | 插入方法     | add(e)     | offer(e)    |put(e)  | offer(e,time,unit)|
 | 移除方法     | remove     | poll()      |take()  | poll(time,unit)|
 | 检查方法     | element()  | peek()      |不可用   | 不可用|
+
+	这四类方法分别对应的是：
+	(1).ThrowsException:如果操作不能马上进行,则抛出异常
+	(2).SpecialValue:如果操作不能马上进行,将会返回一个特殊的值,一般是true或者false
+	(3).Blocks:如果操作不能马上进行,操作会被阻塞
+	(4).TimesOut:如果操作不能马上进行,操作会被阻塞指定的时间,如果指定时间没执行,
+		则返回一个特殊值,一般是true或者false
 
 ### 7.4.Java的阻塞队列
 #### 7.4.1.ArrayBlockingQueue:一个由数组结构组成的有界阻塞队列

@@ -28,6 +28,7 @@
 * [Java内存分配](http://www.codeceo.com/article/java-object-memory.html)
 * [JVM 调优](http://www.codeceo.com/article/twitter-jvm-performance.html)
 * [ClassLoader机制](http://www.hollischuang.com/archives/199)
+* [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
 
 ## 0.虚拟机历史:(阅读书籍:《深入理解Java虚拟机》)
 	0.1.Sun Classic:世界上第一款商用Java虚拟机,在JDK1.2之前是 Sun JDK中唯一的虚拟机,在JDK1.2时,它与HotSpot虚拟机共存,
@@ -125,6 +126,15 @@
 				③.Java 虚拟机是基于栈的,Android 虚拟机是基于寄存器的:
 					基于栈的指令集最主要的优点是可移植性强,主要的缺点是执行速度相对会慢些;
 					基于寄存器指令集最主要的优点是执行速度快,主要的缺点是可移植性差,寄存器由硬件直接提供;
+					如:计算1+1的时候
+					--> 基于栈的指令集会是这样:
+						iconst_1
+						iconst_1 //两条iconst_1指令连续把两个常量1压入栈
+						iadd     //iadd指令把栈顶的两个值出栈、相加后把结果放回栈顶。
+						istore_0 //把栈顶值存入局部变量表第0个slot中
+					--> 基于寄存器的指令:
+						mov eax,1   //将eax寄存器址设为1
+						add eax,1   //将eax寄存器与1相加结果依旧存入eax寄存器
 				④.操作数栈中元素的数据类型必须与字节码指令的序列严格匹配,
 			(3).动态连接:
 				①.每个栈桢都包含一个指向运行时常量池中该栈桢所属方法的引用,持有该引用是支持方法调用过程的动态连接;
@@ -1402,3 +1412,5 @@
 	https://segmentfault.com/a/1190000011496370
 	shutdownHook是一种特殊的结构,它允许开发人员插入JVM关闭时执行的一段代码.这种情况在我们需要做特殊清理操作的情况下很有用.
 	Runtime.addShutdownHook
+
+## 16.JVM问题排查
