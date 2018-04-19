@@ -188,6 +188,8 @@
 	ORDER BY <order_by_condition>
 	LIMIT <limit_number>
 ## 2.数据执行的顺序:前面括号的数据表示执行顺序
+![image](https://github.com/chenlanqing/learningNote/blob/master/数据库/MySQL/image/SQL执行顺序.jpg)
+
 	(7)     SELECT 
 	(8)     DISTINCT <select_list>
 	(1)     FROM <left_table>
@@ -295,8 +297,21 @@
 		(5).支持全文索引,空间函数
 	1.2.3.状态检查
 		show engine innodb status
-### 1.3.MyISAM 和 InnoDB 引擎的区别:
-	1.1.主要区别:
+### 1.3.CSV存储引擎是基于 CSV 格式文件存储数据
+	1.3.1.特性:
+		(1).CSV 存储引擎因为自身文件格式的原因,所有列必须强制指定 NOT NULL;
+		(2).CSV 引擎也不支持索引,不支持分区;
+		(3).CSV 存储引擎也会包含一个存储表结构的 .frm 文件、一个 .csv 存储数据的文件、一个同名的元信息文件,
+			该文件的扩展名为 .CSM,用来保存表的状态及表中保存的数据量
+		(4).每个数据行占用一个文本行
+### 1.4.Archive
+
+### 1.5.Memory
+
+### 1.6.Federated
+
+## 2.MyISAM 和 InnoDB 引擎的区别:
+	1.2.主要区别:
 		(1).MyISAM 是非事务安全型的, InnoDB 是事务安全型的;
 		(2).MyISAM 锁的粒度是表级锁, InnoDB 是支持行级锁的;
 		(3).MyISAM 支持全文本索引,而InnoDB不支持全文索引
@@ -304,12 +319,39 @@
 			MyISAM 更小的表空间
 		(5).MyISAM 表是保存成文件的形式,在跨平台的数据转移中使用MyISAM存储会省去不少的麻烦;
 		(6).InnoDB 表比 MyISAM 表更安全,可以在保证数据不丢失的情况下,切换非事务表到事务表；
-### 1.4.适用场景:
+	2.2.适用场景:
 		(1).MyISAM 管理非事务表,它提供高速存储和检索,以及全文搜索能力,如果应用中需要执行大量的select查询,那么MyISAM是更好的选择
 		(2).InnoDB 用于事务处理应用程序,具有众多特性,包括ACID事务支持.如果应用中需要执行大量的insert或update操作,
 			则应该使用 InnoDB,这样可以提高多用户并发操作的性能
 	==> 阿里巴巴大部分 mysql 数据库其实使用的 percona 的原型加以修改
-## 2.查看数据库引擎:
+## 3.mysql存储引擎比较:
+| 特性 | InnoDB | MyISAM | MEMORY | ARCHIVE |
+| ---- | ----- | ------- | ------ | ------- |
+| 存储限制(Storage limits) | 64TB | No | YES | No |
+| 支持事物(Transactions) | Yes | No | No | No |
+| 锁机制(Locking granularity) | 行锁 | 表锁 | 表锁 | 行锁 |
+| B树索引(B-tree indexes) | Yes | Yes | Yes | No |
+| T树索引(T-tree indexes) | No | No | No | No |
+| 哈希索引(Hash indexes) | Yes | No | Yes | No |
+| 全文索引(Full-text indexes) | Yes | Yes | No | No |
+| 集群索引(Clustered indexes) | Yes | No | No | No |
+| 数据缓存(Data caches) | Yes | No | N/A | No |
+| 索引缓存(Index caches) | Yes | Yes | N/A | No |
+| 数据可压缩(Compressed data) | Yes | Yes | No | Yes |
+| 加密传输(Encrypted data<sup>[1]</sup>) | Yes | Yes | Yes | Yes |
+| 集群数据库支持(Cluster databases support) | No | No | No | No |
+| 复制支持(Replication support<sup>[2]</sup>) | Yes | No | No | Yes |
+| 外键支持(Foreign key support) | Yes | No | No | No |
+| 存储空间消耗(Storage Cost) | 高 | 低 | N/A | 非常低 |
+| 内存消耗(Memory Cost) | 高 | 低 | N/A | 低 |
+| 数据字典更新(Update statistics for data dictionary) | Yes | Yes | Yes | Yes |
+| 备份/时间点恢复(backup/point-in-time recovery<sup>[3]</sup>) | Yes | Yes | Yes | Yes |
+| 多版本并发控制(Multi-Version Concurrency Control/MVCC) | Yes | No | No | No |
+| 批量数据写入效率(Bulk insert speed) | 慢 | 快 | 快 | 非常快 |
+| 地理信息数据类型(Geospatial datatype support) | Yes | Yes | No | Yes |
+| 地理信息索引(Geospatial indexing support<sup>[4]</sup>) | Yes | Yes | No | Yes |
+
+## 4.查看数据库引擎:
 	(1).查看引擎:
 		mysql> show engines;
 		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
@@ -326,7 +368,7 @@
 		| PERFORMANCE_SCHEMA | YES     | Performance Schema                                             | NO           | NO   | NO         |
 		+--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
 
-	(2).查看存储引擎:
+	(2).查看默认存储引擎:
 		mysql> show variables like '%storage_engine%';
 		+------------------------+--------+
 		| Variable_name          | Value  |
@@ -334,6 +376,19 @@
 		| default_storage_engine | InnoDB |
 		| storage_engine         | InnoDB |
 		+------------------------+--------+
+	(3).设置存储引擎:
+		可以在my.cnf配置文件中设置需要的存储引擎,这个参数放在 [mysqld] 这个字段下面的 default_storage_engine 参数值
+		[mysqld]
+		default_storage_engine=CSV
+## 5.选择合适的存储引擎:
+	几个标准:
+	(1).是否需要支持事务;
+	(2).是否需要使用热备;
+	(3).崩溃恢复,能否接受崩溃;
+	(4).是否需要外键支持;
+	(5).存储的限制;
+	(6).对索引和缓存的支持
+
 # 八.高级特性:
 ## 1.数据库隔离级别介绍、举例说明
 	* http://www.cnblogs.com/fjdingsd/p/5273008.html
@@ -534,267 +589,319 @@
 				如果数据库表当前版本号与第一次取出来的版本标识值相等,则予以更新.否则认为是过期数据;
 		(3).实现数据版本有两种方式:第一种是使用版本号.第二种是使用时间戳
 
-# 十.13.表分区? 
-	13.1.表分区:
-		是指根据一定规则,将数据库中的一张表分解成多个更小的,容易管理的部分.
-		从逻辑上看,只有一张表,但是底层却是由多个物理分区组成.
-		子分区:分区表中对每个分区再次分割，又成为复合分区
-	13.2.与分表的区别:
-		(1).分表:指的是通过一定规则,将一张表分解成多张不同的表
-		(2).表与分区的区别在于:分区从逻辑上来讲只有一张表,而分表则是将一张表分解成多张表
-	13.3.表分区的优点:
-		(1).分区表的数据可以分布在不同的物理设备上,从而高效地利用多个硬件设备.
-		(2).和单个磁盘或者文件系统相比,可以存储更多数据.
-		(3).优化查询.在where语句中包含分区条件时,可以只扫描一个或多个分区表来提高查询效率.
-			涉及sum和count语句时,也可以在多个分区上并行处理,最后汇总结果. 
-		(4).分区表更容易维护.例如:想批量删除大量数据可以清除整个分区. 
-		(5).可以使用分区表来避免某些特殊的瓶颈.例如InnoDB的单个索引的互斥访问,ext3问价你系统的inode锁竞争等;
-	13.4.表分区的限制因素:
-		(1).一个表最多只能有1024个分区;
-		(2).MySQL5.1中,分区表达式必须是整数,或者返回整数的表达式.在MySQL5.5中提供了非整数表达式分区的支持.
-		(3).如果分区字段中有主键或者唯一索引的列,那么多有主键列和唯一索引列都必须包含进来.
-			即:分区字段要么不包含主键或者索引列,要么包含全部主键和索引列.
-		(4).分区表中无法使用外键约束.
-		(5).MySQL 的分区适用于一个表的所有数据和索引,不能只对表数据分区而不对索引分区,也不能只对索引分区而不对表分区,
-			也不能只对表的一部分数据分区;
-	13.5.查看分区:判断 MySQL 是否支持表分区:
-			mysql> show variables like '%partition%';
-			+-------------------+-------+
-			| Variable_name     | Value |
-			+-------------------+-------+
-			| have_partitioning | YES   |
-			+-------------------+-------+
-			1 row in set (0.00 sec)
-	13.6.MySQL 支持的分区类型:
-		(1).RANGE分区:按照数据的区间范围分区;
-		(2).LIST分区:按照List中的值分区,与 RANGE的区别是,range分区的区间范围值是连续的;
-		(3).HASH分区
-		(4).KEY分区
-		说明:在MySQL5.1版本中,RANGE,LIST,HASH 分区要求分区键必须是 int 类型,或者通过表达式返回INT类型.
-			但KEY分区的时候,可以使用其他类型的列(BLOB，TEXT类型除外)作为分区键;
-	13.7.RANGE分区:
-		(1).利用取值范围进行分区,区间要连续并且不能互相重叠.语法如下:
-			partition by range(exp)( --exp可以为列名或者表达式，比如to_date(created_date)
-			    partition p0 values less than(num)
-			)
-			例子:
-				create table emp (
-				  	id       int not null,
-				  	store_id int not null
-				)
-				partition by range (store_id) (
-					partition p0 values less than (10),
-					partition p1 values less than (20)
-				);
-				上面的语句创建了emp表,并根据store_id字段进行分区,小于10的值存在分区p0中,大于等于10,小于20的值存在分区p1中.
-			==> 注意:每个分区都是按顺序定义的,从最低到最高.
-				上面的语句,如果将less than(10) 和less than (20)的顺序颠倒过来,那么将报错,如下:
-				ERROR 1493 (HY000): VALUES LESS THAN value must be strictly increasing for each partition
-		(2).RANGE分区存在问题:	
-			A.range 范围覆盖问题:当插入的记录中对应的分区键的值不在分区定义的范围中的时候,插入语句会失败.
-				上面的例子,如果我插入一条store_id = 30的记录会怎么样呢?我们上面分区的时候,最大值是20,如果插入一条超过20的记录,会报错:
-				mysql> insert into emp value(30,30);
-				ERROR 1526 (HY000): Table has no partition for value 30.
-			==> 解决方案:
-				①.预估分区键的值,及时新增分区.
-				②.设置分区的时候,使用 values less than maxvalue 子句,MAXVALUE表示最大的可能的整数值.
-				③.尽量选择能够全部覆盖的字段作为分区键,比如一年的十二个月等
-			B.Range分区中,分区键的值如果是NULL,将被作为一个最小值来处理
-	13.8.LIST分区:
-		List分区是建立离散的值列表告诉数据库特定的值属于哪个分区,语法:
-		partition by list(exp)( --exp为列名或者表达式
-	        partition p0 values in (3,5)  --值为3和5的在p0分区
-	    )
+# 十.表分区
+## 1.表分区:
+	是指根据一定规则,将数据库中的一张表分解成多个更小的,容易管理的部分.
+	从逻辑上看,只有一张表,但是底层却是由多个物理分区组成.
+	子分区:分区表中对每个分区再次分割，又成为复合分区
+## 2.与分表的区别:
+	(1).分表:指的是通过一定规则,将一张表分解成多张不同的表
+	(2).表与分区的区别在于:分区从逻辑上来讲只有一张表,而分表则是将一张表分解成多张表
+## 3.表分区的优点:
+	(1).分区表的数据可以分布在不同的物理设备上,从而高效地利用多个硬件设备.
+	(2).和单个磁盘或者文件系统相比,可以存储更多数据.
+	(3).优化查询.在where语句中包含分区条件时,可以只扫描一个或多个分区表来提高查询效率.
+		涉及sum和count语句时,也可以在多个分区上并行处理,最后汇总结果. 
+	(4).分区表更容易维护.例如:想批量删除大量数据可以清除整个分区. 
+	(5).可以使用分区表来避免某些特殊的瓶颈.例如InnoDB的单个索引的互斥访问,ext3问价你系统的inode锁竞争等;
+## 4.表分区的限制因素:
+	(1).一个表最多只能有1024个分区;
+	(2).MySQL5.1中,分区表达式必须是整数,或者返回整数的表达式.在MySQL5.5中提供了非整数表达式分区的支持.
+	(3).如果分区字段中有主键或者唯一索引的列,那么多有主键列和唯一索引列都必须包含进来.
+		即:分区字段要么不包含主键或者索引列,要么包含全部主键和索引列.
+	(4).分区表中无法使用外键约束.
+	(5).MySQL 的分区适用于一个表的所有数据和索引,不能只对表数据分区而不对索引分区,也不能只对索引分区而不对表分区,
+		也不能只对表的一部分数据分区;
+## 5.查看分区:判断 MySQL 是否支持表分区:
+		mysql> show variables like '%partition%';
+		+-------------------+-------+
+		| Variable_name     | Value |
+		+-------------------+-------+
+		| have_partitioning | YES   |
+		+-------------------+-------+
+		1 row in set (0.00 sec)
+## 6.MySQL 支持的分区类型:
+	(1).RANGE分区:按照数据的区间范围分区;
+	(2).LIST分区:按照List中的值分区,与 RANGE的区别是,range分区的区间范围值是连续的;
+	(3).HASH分区
+	(4).KEY分区
+	说明:在MySQL5.1版本中,RANGE,LIST,HASH 分区要求分区键必须是 int 类型,或者通过表达式返回INT类型.
+		但KEY分区的时候,可以使用其他类型的列(BLOB，TEXT类型除外)作为分区键;
+## 7.RANGE分区:
+	(1).利用取值范围进行分区,区间要连续并且不能互相重叠.语法如下:
+		partition by range(exp)( --exp可以为列名或者表达式，比如to_date(created_date)
+			partition p0 values less than(num)
+		)
 		例子:
-			create table emp1 (
-			  id       int not null,
-			  store_id int not null
+			create table emp (
+				id       int not null,
+				store_id int not null
 			)
-			  partition by list (store_id) (
-			    partition p0 values in (3, 5),
-			    partition p1 values in (2, 6, 7, 9)
-			  )
-		==> 注意:如果插入的记录对应的分区键的值不在list分区指定的值中,将会插入失败.并且,list不能像range分区那样提供maxvalue.
-	13.9.Columns分区:MySQL5.5中引入的分区类型,解决了5.5版本之前range分区和list分区只支持整数分区的问题
-		Columns分区可以细分为 range columns分区和 list columns分区,他们都支持整数、日期时间、字符串三大数据类型.
-		-- http://www.cnblogs.com/chenmh/p/5630834.html
-		(1).与 RANGE分区 和 LIST分区区别:
-			针对日期字段的分区就不需要再使用函数进行转换了,例如针对date字段进行分区不需要再使用YEAR()表达式进行转换;
-			COLUMN分区支持多个字段作为分区键但是不支持表达式作为分区键;
-		(2).COLUMNS支持的类型:
-			整形支持:tinyint,smallint,mediumint,int,bigint;不支持decimal和float
-			时间类型支持:date,datetime
-			字符类型支持:char,varchar,binary,varbinary;不支持text,blob
-		13.9.1.RANGE COLUMNS分区:
-			(1).日期字段分区:
-				create table members(
-				  id int,
-				  joined date not NULL
-				)
-				  partition by range columns(joined)(
-				    partition a values less than('1980-01-01'),
-				    partition b values less than('1990-01-01'),
-				    partition c values less than('2000-01-01'),
-				    partition d values less than('2010-01-01'),
-				    partition e values less than MAXVALUE
-				  );
-			(2).多个字段组合分区:
-				CREATE TABLE rcx (
-				    a INT,
-				    b INT
-				    )
-				PARTITION BY RANGE COLUMNS(a,b) (
-				     PARTITION p0 VALUES LESS THAN (5,10),
-				     PARTITION p1 VALUES LESS THAN (10,20),
-				     PARTITION p2 VALUES LESS THAN (15,30),
-				     PARTITION p3 VALUES LESS THAN (MAXVALUE,MAXVALUE)
+			partition by range (store_id) (
+				partition p0 values less than (10),
+				partition p1 values less than (20)
+			);
+			上面的语句创建了emp表,并根据store_id字段进行分区,小于10的值存在分区p0中,大于等于10,小于20的值存在分区p1中.
+		==> 注意:每个分区都是按顺序定义的,从最低到最高.
+			上面的语句,如果将less than(10) 和less than (20)的顺序颠倒过来,那么将报错,如下:
+			ERROR 1493 (HY000): VALUES LESS THAN value must be strictly increasing for each partition
+	(2).RANGE分区存在问题:	
+		A.range 范围覆盖问题:当插入的记录中对应的分区键的值不在分区定义的范围中的时候,插入语句会失败.
+			上面的例子,如果我插入一条store_id = 30的记录会怎么样呢?我们上面分区的时候,最大值是20,如果插入一条超过20的记录,会报错:
+			mysql> insert into emp value(30,30);
+			ERROR 1526 (HY000): Table has no partition for value 30.
+		==> 解决方案:
+			①.预估分区键的值,及时新增分区.
+			②.设置分区的时候,使用 values less than maxvalue 子句,MAXVALUE表示最大的可能的整数值.
+			③.尽量选择能够全部覆盖的字段作为分区键,比如一年的十二个月等
+		B.Range分区中,分区键的值如果是NULL,将被作为一个最小值来处理
+## 8.LIST分区:
+	List分区是建立离散的值列表告诉数据库特定的值属于哪个分区,语法:
+	partition by list(exp)( --exp为列名或者表达式
+		partition p0 values in (3,5)  --值为3和5的在p0分区
+	)
+	例子:
+		create table emp1 (
+			id       int not null,
+			store_id int not null
+		)
+			partition by list (store_id) (
+			partition p0 values in (3, 5),
+			partition p1 values in (2, 6, 7, 9)
+			)
+	==> 注意:如果插入的记录对应的分区键的值不在list分区指定的值中,将会插入失败.并且,list不能像range分区那样提供maxvalue.
+## 9.Columns分区:MySQL5.5中引入的分区类型,解决了5.5版本之前range分区和list分区只支持整数分区的问题
+	Columns分区可以细分为 range columns分区和 list columns分区,他们都支持整数、日期时间、字符串三大数据类型.
+	-- http://www.cnblogs.com/chenmh/p/5630834.html
+	(1).与 RANGE分区 和 LIST分区区别:
+		针对日期字段的分区就不需要再使用函数进行转换了,例如针对date字段进行分区不需要再使用YEAR()表达式进行转换;
+		COLUMN分区支持多个字段作为分区键但是不支持表达式作为分区键;
+	(2).COLUMNS支持的类型:
+		整形支持:tinyint,smallint,mediumint,int,bigint;不支持decimal和float
+		时间类型支持:date,datetime
+		字符类型支持:char,varchar,binary,varbinary;不支持text,blob
+	9.1.RANGE COLUMNS分区:
+		(1).日期字段分区:
+			create table members(
+				id int,
+				joined date not NULL
+			)
+				partition by range columns(joined)(
+				partition a values less than('1980-01-01'),
+				partition b values less than('1990-01-01'),
+				partition c values less than('2000-01-01'),
+				partition d values less than('2010-01-01'),
+				partition e values less than MAXVALUE
 				);
-				注意:多字段的分区键比较是基于数组的比较.
-					①.它先用插入的数据的第一个字段值和分区的第一个值进行比较,如果插入的第一个值小于分区的第一个值
-						那么就不需要比较第二个值就属于该分区
-					②.如果第一个值等于分区的第一个值,开始比较第二个值同样如果第二个值小于分区的第二个值那么就属于该分区.
-			==> RANGE COLUMN的多列分区第一列的分区值一定是顺序增长的,不能出现交叉值,第二列的值随便,例如以下分区就会报错:
-				PARTITION BY RANGE COLUMNS(a,b) (
-				     PARTITION p0 VALUES LESS THAN (5,10),
-				     PARTITION p1 VALUES LESS THAN (10,20),
-				     PARTITION p2 VALUES LESS THAN (8,30), -- p2 中第一列比p1第一列的要小,所以报错
-				     PARTITION p3 VALUES LESS THAN (MAXVALUE,MAXVALUE)
+		(2).多个字段组合分区:
+			CREATE TABLE rcx (
+				a INT,
+				b INT
+				)
+			PARTITION BY RANGE COLUMNS(a,b) (
+					PARTITION p0 VALUES LESS THAN (5,10),
+					PARTITION p1 VALUES LESS THAN (10,20),
+					PARTITION p2 VALUES LESS THAN (15,30),
+					PARTITION p3 VALUES LESS THAN (MAXVALUE,MAXVALUE)
+			);
+			注意:多字段的分区键比较是基于数组的比较.
+				①.它先用插入的数据的第一个字段值和分区的第一个值进行比较,如果插入的第一个值小于分区的第一个值
+					那么就不需要比较第二个值就属于该分区
+				②.如果第一个值等于分区的第一个值,开始比较第二个值同样如果第二个值小于分区的第二个值那么就属于该分区.
+		==> RANGE COLUMN的多列分区第一列的分区值一定是顺序增长的,不能出现交叉值,第二列的值随便,例如以下分区就会报错:
+			PARTITION BY RANGE COLUMNS(a,b) (
+					PARTITION p0 VALUES LESS THAN (5,10),
+					PARTITION p1 VALUES LESS THAN (10,20),
+					PARTITION p2 VALUES LESS THAN (8,30), -- p2 中第一列比p1第一列的要小,所以报错
+					PARTITION p3 VALUES LESS THAN (MAXVALUE,MAXVALUE)
+			);
+	9.2.LIST COLUMNS分区:
+		(1).非整型字段分区:
+			create table listvar (
+				id    int      not null,
+				hired datetime not null
+			)
+				partition by list columns (hired)
+				(
+				partition a values in ('1990-01-01 10:00:00', '1991-01-01 10:00:00'),
+				partition b values in ('1992-01-01 10:00:00'),
+				partition c values in ('1993-01-01 10:00:00'),
+				partition d values in ('1994-01-01 10:00:00')
 				);
-		13.9.2.LIST COLUMNS分区:
-			(1).非整型字段分区:
-				create table listvar (
-				  id    int      not null,
-				  hired datetime not null
-				)
-				  partition by list columns (hired)
-				  (
-				  	partition a values in ('1990-01-01 10:00:00', '1991-01-01 10:00:00'),
-				  	partition b values in ('1992-01-01 10:00:00'),
-				  	partition c values in ('1993-01-01 10:00:00'),
-				  	partition d values in ('1994-01-01 10:00:00')
-				  );
-				LIST COLUMNS分区对分整形字段进行分区就无需使用函数对字段处理成整形,所以对非整形字段进行分区建议选择COLUMNS分区
-			(2).多字段分区:
-				create table listvardou (
-				  id    int      not null,
-				  hired datetime not null
-				)
-				  partition by list columns (id, hired)
-				  (
-					  partition a values in ( (1, '1990-01-01 10:00:00'), (1, '1991-01-01 10:00:00') ),
-					  partition b values in ( (2, '1992-01-01 10:00:00') ),
-					  partition c values in ( (3, '1993-01-01 10:00:00') ),
-					  partition d values in ( (4, '1994-01-01 10:00:00') )
-				  );
+			LIST COLUMNS分区对分整形字段进行分区就无需使用函数对字段处理成整形,所以对非整形字段进行分区建议选择COLUMNS分区
+		(2).多字段分区:
+			create table listvardou (
+				id    int      not null,
+				hired datetime not null
+			)
+				partition by list columns (id, hired)
+				(
+					partition a values in ( (1, '1990-01-01 10:00:00'), (1, '1991-01-01 10:00:00') ),
+					partition b values in ( (2, '1992-01-01 10:00:00') ),
+					partition c values in ( (3, '1993-01-01 10:00:00') ),
+					partition d values in ( (4, '1994-01-01 10:00:00') )
+				);
 
-	13.10.HASH分区:
-		(1).主要用来分散热点读,确保数据在预先确定个数的分区中尽可能平均分布.
-		(2).MySQL支持两种Hash分区:常规Hash分区和线性Hash分区
-		A.常规Hash分区-使用取模算法,语法如下:
-			partition by hash(store_id) partitions 4;
-			上面的语句,根据store_id对4取模,决定记录存储位置.比如store_id = 234的记录,
-			MOD(234,4)=2,所以会被存储在第二个分区.
-		==> 常规Hash分区的优点和不足-优点:能够使数据尽可能的均匀分布;缺点:不适合分区经常变动的需求.
-			如果需要增加两个分区变成6个分区,大部分数据都要重新计算分区.线性Hash分区可以解决.
-		B.线性Hash分区-分区函数是一个线性的2的幂的运算法则,语法如下:
-			partition by LINER hash(store_id) partitions 4;
-			算法介绍:假设要保存记录的分区编号为N,num为一个非负整数,表示分割成的分区的数量,那么N可以通过以下步骤得到：
-			Step 1. 找到一个大于等于num的2的幂，这个值为V，V可以通过下面公式得到：
-				V = Power(2,Ceiling(Log(2,num)))
-				例如:刚才设置了4个分区，num=4，Log(2,4)=2,Ceiling(2)=2,power(2,2)=4,即V=4
-			Step 2. 设置N=F(column_list)&(V-1)
-				例如:刚才V=4，store_id=234对应的N值，N = 234&(4-1) =2
-			Step 3. 当N>=num,设置V=Ceiling(V/2),N=N&(V-1)
-				例如:store_id=234,N=2<4,所以N就取值2,即可.
-				假设上面算出来的N=5,那么V=Ceiling(2.5)=3,N=234&(3-1)=1,即在第一个分区.
-		==> 线性Hash的优点和不足-优点:在分区维护(增加,删除,合并,拆分分区)时,MySQL能够处理得更加迅速;
-			缺点:与常规Hash分区相比,线性Hash各个分区之间的数据分布不太均衡
-	13.11.KEY分区:
-		(1).类似Hash分区,Hash分区允许使用用户自定义的表达式,但Key分区不允许使用用户自定义的表达式.
-			Hash仅支持整数分区,而Key分区支持除了Blob和text的其他类型的列作为分区键.
-			partition by key(exp) partitions 4; --exp是零个或多个字段名的列表
-		==> key分区的时候,exp可以为空,如果为空,则默认使用主键作为分区键,没有主键的时候,会选择非空惟一键作为分区键;
-	13.12.分区对于NULL值的处理:
-		MySQ允许分区键值为NULL,分区键可能是一个字段或者一个用户定义的表达式.
-		一般情况下,MySQL在分区的时候会把 NULL 值当作零值或者一个最小值进行处理.
-		注意:
-			Range分区中:NULL 值被当作最小值来处理
-			List分区中:NULL 值必须出现在列表中,否则不被接受
-			Hash/Key分区中:NULL 值会被当作零值来处理
-	13.13.分区管理:
-		1.13.1.增加分区:
-			(1).RANGE分区和LIST分区:
-				alter table table_name add partition (partition p0 values ...(exp))
-				values后面的内容根据分区的类型不同而不同
-			(2).Hash分区和Key分区:
-				alter table table_name add partition partitions 8; -- 指的是新增8个分区
-		1.13.2.删除分区:
-			(1).RANGE分区和LIST分区:
-				alter table table_name drop partition p0; --p0为要删除的分区名称
-			==> 删除了分区,同时也将删除该分区中的所有数据.
-				同时,如果删除了分区导致分区不能覆盖所有值,那么插入数据的时候会报错.
-			(2).Hash分区和Key分区:
-				alter table table_name coalesce partition 2; --将分区缩减到2个
-		1.13.3.移出分区:
-			alter table members remove partitioning;
-			使用remove移除分区是仅仅移除分区的定义.并不会删除数据和 drop PARTITION 不一样,后者会连同数据一起删除
-	13.14.分区查询:
-		(1).查询某张表一共有多少个分区:
-			SELECT
-			  partition_name                   part,
-			  partition_expression             expr,
-			  partition_description            descr,
-			  FROM_DAYS(partition_description) lessthan_sendtime,
-			  table_rows
-			FROM 
-				INFORMATION_SCHEMA.partitions
-			WHERE
-				TABLE_SCHEMA = SCHEMA ()
-				AND TABLE_NAME = 'emp';
-		(2).查看执行计划,判断查询数据是否进行了分区过滤
-			mysql> explain partitions select * from emp where store_id=5;
-			+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
-			| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | Extra       |
-			+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
-			|  1 | SIMPLE      | emp   | p1         | ALL  | NULL          | NULL | NULL    | NULL |    2 | Using where |
-			+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
-			1 row in set
-			上面的结果:partitions:p1 表示数据在p1分区进行检索	
+## 10.HASH分区:
+	(1).主要用来分散热点读,确保数据在预先确定个数的分区中尽可能平均分布.
+	(2).MySQL支持两种Hash分区:常规Hash分区和线性Hash分区
+	A.常规Hash分区-使用取模算法,语法如下:
+		partition by hash(store_id) partitions 4;
+		上面的语句,根据store_id对4取模,决定记录存储位置.比如store_id = 234的记录,
+		MOD(234,4)=2,所以会被存储在第二个分区.
+	==> 常规Hash分区的优点和不足-优点:能够使数据尽可能的均匀分布;缺点:不适合分区经常变动的需求.
+		如果需要增加两个分区变成6个分区,大部分数据都要重新计算分区.线性Hash分区可以解决.
+	B.线性Hash分区-分区函数是一个线性的2的幂的运算法则,语法如下:
+		partition by LINER hash(store_id) partitions 4;
+		算法介绍:假设要保存记录的分区编号为N,num为一个非负整数,表示分割成的分区的数量,那么N可以通过以下步骤得到：
+		Step 1. 找到一个大于等于num的2的幂，这个值为V，V可以通过下面公式得到：
+			V = Power(2,Ceiling(Log(2,num)))
+			例如:刚才设置了4个分区，num=4，Log(2,4)=2,Ceiling(2)=2,power(2,2)=4,即V=4
+		Step 2. 设置N=F(column_list)&(V-1)
+			例如:刚才V=4，store_id=234对应的N值，N = 234&(4-1) =2
+		Step 3. 当N>=num,设置V=Ceiling(V/2),N=N&(V-1)
+			例如:store_id=234,N=2<4,所以N就取值2,即可.
+			假设上面算出来的N=5,那么V=Ceiling(2.5)=3,N=234&(3-1)=1,即在第一个分区.
+	==> 线性Hash的优点和不足-优点:在分区维护(增加,删除,合并,拆分分区)时,MySQL能够处理得更加迅速;
+		缺点:与常规Hash分区相比,线性Hash各个分区之间的数据分布不太均衡
+## 11.KEY分区:
+	(1).类似Hash分区,Hash分区允许使用用户自定义的表达式,但Key分区不允许使用用户自定义的表达式.
+		Hash仅支持整数分区,而Key分区支持除了Blob和text的其他类型的列作为分区键.
+		partition by key(exp) partitions 4; --exp是零个或多个字段名的列表
+	==> key分区的时候,exp可以为空,如果为空,则默认使用主键作为分区键,没有主键的时候,会选择非空惟一键作为分区键;
+## 12.分区对于NULL值的处理:
+	MySQ允许分区键值为NULL,分区键可能是一个字段或者一个用户定义的表达式.
+	一般情况下,MySQL在分区的时候会把 NULL 值当作零值或者一个最小值进行处理.
+	注意:
+		Range分区中:NULL 值被当作最小值来处理
+		List分区中:NULL 值必须出现在列表中,否则不被接受
+		Hash/Key分区中:NULL 值会被当作零值来处理
+## 13.分区管理:
+	13.1.增加分区:
+		(1).RANGE分区和LIST分区:
+			alter table table_name add partition (partition p0 values ...(exp))
+			values后面的内容根据分区的类型不同而不同
+		(2).Hash分区和Key分区:
+			alter table table_name add partition partitions 8; -- 指的是新增8个分区
+	13.2.删除分区:
+		(1).RANGE分区和LIST分区:
+			alter table table_name drop partition p0; --p0为要删除的分区名称
+		==> 删除了分区,同时也将删除该分区中的所有数据.
+			同时,如果删除了分区导致分区不能覆盖所有值,那么插入数据的时候会报错.
+		(2).Hash分区和Key分区:
+			alter table table_name coalesce partition 2; --将分区缩减到2个
+	13.3.移出分区:
+		alter table members remove partitioning;
+		使用remove移除分区是仅仅移除分区的定义.并不会删除数据和 drop PARTITION 不一样,后者会连同数据一起删除
+## 14.分区查询:
+	(1).查询某张表一共有多少个分区:
+		SELECT
+			partition_name                   part,
+			partition_expression             expr,
+			partition_description            descr,
+			FROM_DAYS(partition_description) lessthan_sendtime,
+			table_rows
+		FROM 
+			INFORMATION_SCHEMA.partitions
+		WHERE
+			TABLE_SCHEMA = SCHEMA ()
+			AND TABLE_NAME = 'emp';
+	(2).查看执行计划,判断查询数据是否进行了分区过滤
+		mysql> explain partitions select * from emp where store_id=5;
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
+		| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | Extra       |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
+		|  1 | SIMPLE      | emp   | p1         | ALL  | NULL          | NULL | NULL    | NULL |    2 | Using where |
+		+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
+		1 row in set
+		上面的结果:partitions:p1 表示数据在p1分区进行检索	
 
-# 十一.分布式唯一ID:
-	* https://mp.weixin.qq.com/s/cqIK5Bv1U0mT97C7EOxmnA
-	14.1.ID生成的核心需求:
-		14.1.1.全局唯一:需要单独设置一个和业务无关的主键,专业术语叫做代理主键
-			这也是为什么数据库设计范式,唯一主键是第一范式!
-		14.1.2.趋势有序:InnoDB引擎表是基于B+树的索引组织表(IOT),每个表都需要有一个聚集索引,所有的行记录都存储在B+树的叶子节点(leaf pages of the tree)
-			基于聚集索引的增、删、改、查的效率相对是最高的
-			(1).如果我们定义了主键(PRIMARY KEY),那么InnoDB会选择其作为聚集索引;
-			(2).如果没有显式定义主键,则InnoDB会选择第一个不包含有 NULL .值的唯一索引作为主键索引
-			(3).如果也没有这样的唯一索引,则InnoDB会选择内置6字节长的ROWID作为隐含的聚集索引
-				(ROWID随着行记录的写入而主键递增,这个ROWID不像ORACLE的ROWID那样可引用,是隐含的)
-			==> 如果InnoDB表的数据写入顺序能和B+树索引的叶子节点顺序一致的话,这时候存取效率是最高的,也就是下面几种情况效率最高:
-				Ⅰ.使用自增列(INT/BIGINT类型)做主键，这时候写入顺序是自增的，和B+数叶子节点分裂顺序一致
-				Ⅱ.该表不指定自增列做主键,同时也没有可以被选为主键的唯一索引(上面的条件),这时候InnoDB会选择内置的ROWID作为主键,写入顺序和ROWID增长顺序一致
-				Ⅲ.除此以外,如果一个InnoDB表又没有显示主键,又有可以被选择为主键的唯一索引,但该唯一索引可能不是递增关系时
-					(例如字符串、UUID、多字段联合唯一索引的情况),该表的存取效率就会比较差
-	14.2.数据库自增长序列或字段:最常见的方式,利用数据库,全库唯一
-		14.2.1.优点:
-			(1).简单,代码方便,性能可以接受;
-			(2).数字ID天然排序,对分页或者需要排序的结果很有帮助
-		14.2.2.缺点:
-			(1).不同数据库语法和实现不同,数据库迁移的时候或多数据库版本支持的时候需要处理;
-			(2).在单个数据库或读写分离或一主多从的情况下,只有一个主库可以生成.有单点故障的风险
-			(3).在性能达不到要求的情况下,比较难于扩展;
-			(4).如果遇见多个系统需要合并或者涉及到数据迁移会相当痛苦; 分表分库的时候会有麻烦
-		14.2.3.优化方案:	
-			针对主库单点,如果有多个Master库,则每个Master库设置的起始数字不一样,步长一样,可以是Master的个数.
-	14.3.UUID:
-		14.3.1.优点:
-			(1).简单,代码方便.
-			(2).生成ID性能非常好,基本不会有性能问题.
-			(3).全球唯一,在遇见数据迁移,系统数据合并,或者数据库变更等情况下,可以从容应对
-		14.3.2.缺点:
-			(1).没有排序,无法保证趋势递增;
-			(2).UUID往往是使用字符串存储,查询的效率比较低;
-			(3).存储空间比较大,如果是海量数据库,就需要考虑存储量的问题;
-			(4).传输数据量大\不可读
+# 十一.分布式ID:
+[分布式唯一ID](https://mp.weixin.qq.com/s/cqIK5Bv1U0mT97C7EOxmnA)
+
+## 1.ID生成的核心需求:
+	1.1.全局唯一:需要单独设置一个和业务无关的主键,专业术语叫做代理主键
+		这也是为什么数据库设计范式,唯一主键是第一范式!
+	1.2.趋势有序:InnoDB引擎表是基于B+树的索引组织表(IOT),每个表都需要有一个聚集索引,所有的行记录都存储在B+树的叶子节点(leaf pages of the tree)
+		基于聚集索引的增、删、改、查的效率相对是最高的
+		(1).如果我们定义了主键(PRIMARY KEY),那么InnoDB会选择其作为聚集索引;
+		(2).如果没有显式定义主键,则InnoDB会选择第一个不包含有 NULL .值的唯一索引作为主键索引
+		(3).如果也没有这样的唯一索引,则InnoDB会选择内置6字节长的ROWID作为隐含的聚集索引
+			(ROWID随着行记录的写入而主键递增,这个ROWID不像ORACLE的ROWID那样可引用,是隐含的)
+		==> 如果InnoDB表的数据写入顺序能和B+树索引的叶子节点顺序一致的话,这时候存取效率是最高的,也就是下面几种情况效率最高:
+			Ⅰ.使用自增列(INT/BIGINT类型)做主键，这时候写入顺序是自增的，和B+数叶子节点分裂顺序一致
+			Ⅱ.该表不指定自增列做主键,同时也没有可以被选为主键的唯一索引(上面的条件),这时候InnoDB会选择内置的ROWID作为主键,写入顺序和ROWID增长顺序一致
+			Ⅲ.除此以外,如果一个InnoDB表又没有显示主键,又有可以被选择为主键的唯一索引,但该唯一索引可能不是递增关系时
+				(例如字符串、UUID、多字段联合唯一索引的情况),该表的存取效率就会比较差
+## 2.数据库自增长序列或字段:最常见的方式,利用数据库,全库唯一
+	2.1.优点:
+		(1).简单,代码方便,性能可以接受;
+		(2).数字ID天然排序,对分页或者需要排序的结果很有帮助
+	2.2.缺点:
+		(1).不同数据库语法和实现不同,数据库迁移的时候或多数据库版本支持的时候需要处理;
+		(2).在单个数据库或读写分离或一主多从的情况下,只有一个主库可以生成.有单点故障的风险
+		(3).在性能达不到要求的情况下,比较难于扩展;
+		(4).如果遇见多个系统需要合并或者涉及到数据迁移会相当痛苦; 分表分库的时候会有麻烦
+	2.3.优化方案:	
+		针对主库单点,如果有多个Master库,则每个Master库设置的起始数字不一样,步长一样,可以是Master的个数.
+## 3.UUID:
+	3.1.优点:
+		(1).简单,代码方便.
+		(2).生成ID性能非常好,基本不会有性能问题.
+		(3).全球唯一,在遇见数据迁移,系统数据合并,或者数据库变更等情况下,可以从容应对
+	3.2.缺点:
+		(1).没有排序,无法保证趋势递增;
+		(2).UUID往往是使用字符串存储,查询的效率比较低;
+		(3).存储空间比较大,如果是海量数据库,就需要考虑存储量的问题;
+		(4).传输数据量大\不可读
+		(5).不可读
+## 4.Redis生成ID
+	当使用数据库来生成ID性能不够要求的时候,可以尝试使用Redis来生成.主要依赖于Redis是单线程的,所以可以用于
+	生成全局唯一ID.(使用Redis的原子操作incr 和 incrby 来实现)
+	比较适合使用Redis来生成每天从0开始的流水号.
+	4.1.优点:
+		(1).不依赖于数据库,灵活方便,且性能优于数据库;
+		(2).数字ID天然排序,对分页或者需要排序的结果很有帮助;
+	4.2.缺点:
+		(1).如果系统中没有Redis,还需要引入新的组件,增加系统复杂度
+		(2).需要编码和配置的工作量比较大
+## 5.Twitter-Snowflake
+	5.1.Snowflake算法组成:
+		(1).41位的时间序列(精确到毫秒,41位的长度可以使用69年)
+		(2).10位的机器标识(10位的长度最多支持部署1024个节点)
+		(3).12位的计数顺序号(12位的计数顺序号支持每个节点每毫秒产生4096个ID序号).最高位是符号位,始终为0
+	算法示意图:
+![image](https://github.com/chenlanqing/learningNote/blob/master/数据库/MySQL/image/snowflake-64bit.jpg)
+
+	5.2.优点:
+		(1).不依赖数据库等第三方系统,以服务的方式部署,稳定性更高,生成ID的性能也是非常高的;
+		(2).按时间有序,毫秒数在高位,自增序列在低位,整个ID都是趋势递增的
+	5.3.缺点:
+		强依赖机器时钟,如果机器上时钟回拨,会导致发号重复或者服务会处于不可用状态
+		--> 解决时间问题:需要关闭ntp的时间同步功能,或者当检测到ntp时间调整后,拒绝分配id
+## 6.MongoDB的ObjectId
+	6.1.ObjectId使用12字节的存储空间,其生成方式如下:
+		|0|1|2|3|4|5|6 |7|8|9|10|11|
+		|时间戳 |机器ID|PID|计数器 |
+		前四个字节时间戳是从标准纪元开始的时间戳,单位为秒,有如下特性:
+		(1).时间戳与后边5个字节一块,保证秒级别的唯一性;
+		(2).保证插入顺序大致按时间排序
+		(3).隐含了文档创建时间;
+		(4).时间戳的实际值并不重要,不需要对服务器之间的时间进行同步
+	时间戳保证秒级唯一,机器ID保证设计时考虑分布式,避免时钟同步,PID保证同一台服务器运行
+	多个mongod实例时的唯一性,最后的计数器保证同一秒内的唯一性
+
+## 7.分布式唯一ID需要满足的条件
+	(1).高可用:不能有单点故障
+	(2).全局唯一性:不能出现重复的ID号,既然是唯一标识,这是最基本的要求;
+	(3).趋势递增:在MySQL InnoDB引擎中使用的是聚集索引,
+		在主键的选择上面我们应该尽量使用有序的主键保证写入性能
+	(4).时间有序:以时间为序,或者ID里包含时间
+		这样一是可以少一个索引,二是冷热数据容易分离;
+	(5).分片支持:可以控制ShardingId
+	(6).单调递增:保证下一个ID一定大于上一个ID,例如事务版本号、IM增量消息、排序等特殊需求;
+	(7).长度适中:不要太长，最好64bit
+	(8).信息安全:如果ID是连续的,恶意用户的扒取工作就非常容易做了,直接按照顺序下载指定URL即可;
+
+
+
