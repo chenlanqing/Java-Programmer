@@ -948,7 +948,8 @@ public class NetworkClassLoader extends ClassLoader {
 			参数观察到此操作会导致子类的加载
 		②.通过数组定义来引用类,不会触发此类的初始化
 		③.常量在编译阶段会存入调用类的常量池中,本质上并没有直接引用到定义常量的类,因此不会触发定义常量的类的初始化
-### 6.8.6.Java 类的链接:将 Java 类的二进制代码合并到 JVM 的运行状态之中的过程.在链接之前,这个类必须被成功加载
+### 6.8.6.Java 类的链接:
+	将 Java 类的二进制代码合并到 JVM 的运行状态之中的过程.在链接之前,这个类必须被成功加载
 	分为三部分：verification检测, preparation准备 和 resolution解析:
 	(1).verification 检测:
 		验证是用来确保 Java 类的二进制表示在结构上是完全正确的.如果验证过程出现错误的话,会抛出 java.lang.VerifyError
@@ -974,7 +975,8 @@ public class NetworkClassLoader extends ClassLoader {
 		③.创建对应类的 java.lang.Class 实例(注意,有了对应的 Class 实例,并不意味着这个类已经完成了加载链链接！)
 		==> 加载与链接阶段可能是交叉进行的,加载阶段尚未完成,连接阶段可能已经开始,但这些夹在加载阶段之中进行的动作,
 			仍然属于连接阶段的内容;
-## 6.9.Java 类的初始化: 类的初始化也是延迟的,直到类第一次被主动使用(active use),JVM 才会初始化类
+## 6.9.Java 类的初始化: 
+	类的初始化也是延迟的,直到类第一次被主动使用(active use),JVM 才会初始化类
 [类初始化](http://www.importnew.com/20040.html)
 ### 6.9.1.初始化过程
 	(1).初始化过程的主要操作是"执行静态代码块"和"初始化静态域".
@@ -1114,8 +1116,8 @@ public class NetworkClassLoader extends ClassLoader {
 	7.4.动态类型语言支持:
 		7.4.1.动态类型语言:关键特征是它的类型检查的主体过程是在运行期而不是编译期
 
-# 8.方法调用:多态性实现机制——静态分派与动态分派://
-    * http://www.importnew.com/20071.html
+# 8.方法调用:
+[多态性实现机制-静态分派与动态分派](http://www.importnew.com/20071.html)
 ## 8.1.方法解析:
 	(1).Class 文件的编译过程不包含传统编译中的连接步骤,一切方法调用在Class 文件里面存储的都只是符号引用,
 		而不是方法在实际运行时内存布局中入口地址.这个特性使得Java可以在类运行期间才能确定某些目标方法的直接引用,
@@ -1189,7 +1191,8 @@ public class NetworkClassLoader extends ClassLoader {
 		(4).如果始终没有找到合适的方法,则抛出 java.lang.AbstractMethodError 异常;
 		由于 invokevirtual 指令执行的第一步就是在运行期确定接收者的实际类型,所以两次调用中的 invokevirtual 指令
 		把常量池中的类方法符号引用解析到了不同的直接引用上,这个过程就是 Java 语言中方法重写的本质
-## 8.4.单分派和多分派:根据分派基于多少种宗量(方法的接收者与方法的参数统称为方法的宗量)
+## 8.4.单分派和多分派:
+	根据分派基于多少种宗量(方法的接收者与方法的参数统称为方法的宗量)
 	目前的Java语言(JDK1.6)是一门静态多分派、动态单分派的语言
 	8.4.1.单分派:根据一个宗量对目标方法进行选择
 	8.4.2.多分派:根据多于一个宗量对目标进行选择
@@ -1207,8 +1210,9 @@ public class NetworkClassLoader extends ClassLoader {
 	9.2.泛型在编译阶段会被擦除
 
 # 10.Java 编译:
-    * http://www.importnew.com/20109.html
-## 10.1.无论是物理机还是虚拟机,大部分程序代码从开始编译到最终转化成物理机的目标代码或虚拟机能执行的指令集之前,
+[Javac编译与JIT编译](http://www.importnew.com/20109.html)
+## 10.1.编译步骤
+	无论是物理机还是虚拟机,大部分程序代码从开始编译到最终转化成物理机的目标代码或虚拟机能执行的指令集之前,
 	都会按如下步骤进行:
 	程序源码 --> 词法分析 --> 单词流 --> 语法分析 --> 抽象语法树
 		--> 指令流 -->  解释器 --> 解释执行     			==>	解释执行的过程
@@ -1417,7 +1421,8 @@ public class NetworkClassLoader extends ClassLoader {
 		-permstat:以ClassLoader 为统计口径显示永久代内存状态,只能在 Linux/Solaris 下使用
 		-F: 当虚拟机进程对 -dump 选项没有响应时,可以使用该选项强制生成dump快照,只能在 Linux/Solaris 下使用
 
-## 12.5.jhat:虚拟机堆转储快照分析工具(JVM Heap Analysis Tool)与jmap搭配使用,用来分析堆转储快照
+## 12.5.jhat:
+	虚拟机堆转储快照分析工具(JVM Heap Analysis Tool)与jmap搭配使用,用来分析堆转储快照
 	jhat 内置了一个微型的HTTP/HTML 服务器,生成的dump文件的分析结果后可以在浏览器查看.
 	(1).在实际工作中,一般不会直接用jhat命令分析dump文件:
 		A.一般不会在部署应用的服务器上直接分析dump文件,即使可以这样做,也会尽量将dump文件复制到其他机器上进行分析.
@@ -1479,3 +1484,5 @@ public class NetworkClassLoader extends ClassLoader {
 	Runtime.addShutdownHook
 
 # 16.JVM问题排查
+https://blog.csdn.net/GitChat/article/details/79019454
+
