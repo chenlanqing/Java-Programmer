@@ -129,7 +129,8 @@
 	(6).利用容器中注册的Bean后处理器(实现BeanPostProcessor接口的Bean)对已经完成属性设置工作的Bean
 		进行后续加工,直接装配出一个准备就绪的Bean
 
-
+# 三.AOP
+* [Spring AOP原理](https://mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
 
 
 
