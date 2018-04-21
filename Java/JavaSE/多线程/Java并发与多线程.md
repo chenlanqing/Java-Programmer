@@ -69,7 +69,7 @@
 	(3).程序响应更快:端口监听操作
 ## 2.多线程的代价:
 	(1).设计更复杂:多线程共享数据时尤其需要注意
-	(2).上下文切换的开销:	
+	(2).上下文切换的开销:
 		CPU 会在一个上下文中执行一个线程,然后切换到另外一个上下文中执行另外一个线程
 		上下文切换并不廉价。如果没有必要，应该减少上下文切换的发生.
 		--> 上下文切换:从任务保存到再加载的过程就是一次上下文切换
@@ -127,7 +127,7 @@
 	3.4.并行与并发:
 		(1).并行:表示两个线程同时做事情
 		(2).表示一会做这个事情,一会做另一个事情,存在着调度.单核 CPU 不可能存在并行(微观上)
-	
+
 # 二.Java 多线程:
 ## 1.Java 线程类是继承自 java.lang.Thread 或其子类的,
 	Thread thread = new Thread();
@@ -169,7 +169,7 @@
 			}
 			Thread thread = new Thread(myRunnable);
 			thread.start();
-	2.1.3.实现 Callable 接口,实现call()方法,使用 FutureTask 类来包装 Callable 对象,FutureTask 
+	2.1.3.实现 Callable 接口,实现call()方法,使用 FutureTask 类来包装 Callable 对象,FutureTask
 		对象封装了该 Callable 对象的call()方法的返回值;使用 FutureTask 对象作为 Thread 对象的
 		target创建并启动新线程
 		执行 Callable 方式,需要 FutureTask 实现类的支持,用于接收运算结果
@@ -193,7 +193,7 @@
 	(2).Name: 线程的名称。
 	(3).Priority: 线程对象的优先级。优先级别在1-10之间，1是最低级，10是最高级。
 		不建议改变它们的优先级，但是你想的话也是可以的。
-	(4).Status: 线程的状态。在Java中，线程只能有这6种中的一种状态： 
+	(4).Status: 线程的状态。在Java中，线程只能有这6种中的一种状态：
 		new{}, runnable, blocked, waiting, time waiting, 或 terminated.
 ### 2.7.线程的中断与停止,暂停:
 	2.7.1.线程中断:
@@ -265,7 +265,7 @@
 				System.out.printf("Thread: %s\n",t.getId());
 				System.out.printf("Exception: %s: %s\n",e.getClass().getName(),e.getMessage());
 				System.out.printf("Stack Trace: \n");
-				e.printStackTrace(System.out); 
+				e.printStackTrace(System.out);
 				System.out.printf("Thread status: %s\n",t.getState());
 			}
 		}
@@ -366,7 +366,7 @@
 			    StringBuilder builder = new StringBuilder();			    
 			    public add(String text){
 			        this.builder.append(text);
-			    }	
+			    }
 			}
 			如果两个线程同时调用同一个NotThreadSafe实例上的add()方法，就会有竞态条件问题
 				NotThreadSafe sharedInstance = new NotThreadSafe();
@@ -401,7 +401,7 @@
 		准确的来说是获得了对象的锁,所以其他线程必须等待 A 线程执行完毕后才可以调用 X 方法,但 B 线程
 		可以随意调用其他非 synchronized 的方法;
 		(2).当 A 线程调用 anyObject 对象中对象加入 synchronized 关键字的 X 方法时, A 线程就获得了 X 方法
-		所在对象的锁,所以其他线程必须等待 A 线程执行完毕后才可以调用 X 方法,而 B 线程如果调用声明了 
+		所在对象的锁,所以其他线程必须等待 A 线程执行完毕后才可以调用 X 方法,而 B 线程如果调用声明了
 		synchronized 关键字的非 X 方法时,必须等待 A 线程将 X 方法执行完毕,也就释放对象锁后才可以调用
 	5.3.synchronized 锁重入:synchronized 关键字拥有锁重入功能,也就是在使用 synchronized 时,当一个线程
 		得到一个对象的锁之后,再次请求此对象锁时可以再次得到该对象的锁.在一个 synchronized 方法/块内
@@ -419,11 +419,11 @@
 		5.7.1.区别:
 			(1).synchronized 是Java的一个关键字,其是在JVM层面上实现的,如果线程执行时发生异常,JVM 会自动释放锁.
 				因此不会导致死锁现象发生;
-				Lock 是接口,通过代码实现的,在发生异常时,如果没有主动通过unLock()去释放锁,则很可能造成死锁现象,因此使用 Lock 
+				Lock 是接口,通过代码实现的,在发生异常时,如果没有主动通过unLock()去释放锁,则很可能造成死锁现象,因此使用 Lock
 				时需要在finally块中释放锁;
 			(2).Lock 可以让等待锁的线程响应中断,而 synchronized 使用时等待的线程会一直等待下去,不能响应中断.
 			(3).通过 Lock 可以知道有没有成功获取锁,而 synchronized 不行.
-			(4).在资源竞争不是很激烈的情况下, synchronized 的性能要优于 Lock,但是在资源竞争很激烈的情况下,synchronized 
+			(4).在资源竞争不是很激烈的情况下, synchronized 的性能要优于 Lock,但是在资源竞争很激烈的情况下,synchronized
 				性能会下降几十倍,但是 Lock 是保持常态的.
 			(5).在 JDK1.5 之后 synchronized 作了很多优化,在性能上已经有很大提升.
 				如:自旋锁、锁消除、锁粗化、轻量级锁、偏向锁
@@ -487,7 +487,7 @@
 	6.7.
 
 ## 7.synchronized 底层实现及 synchronized 锁优化.
-	
+
 	* http://blog.csdn.net/shandian000/article/details/54927876
 	* http://www.cnblogs.com/paddix/p/5367116.html
 	* http://www.cnblogs.com/javaminer/p/3889023.html
@@ -652,7 +652,7 @@
 		10.3.2.多生产与多消费:操作值,有可能"假死"
 			(1).假死:其实就是线程进入 WAITING 等待状态,如果全部线程都进入 WAITING 状态,
 				则程序就不再执行任何业务功能了,整个项目呈停止状态;
-			(2).多个生产者与消费者为什么会产生"假死"? 
+			(2).多个生产者与消费者为什么会产生"假死"?
 				虽然在代码中使用来 wait/notify,但不保证 notify 唤醒的是异类,也许是同类,比如:
 				"生产者"唤醒"生产者","消费者"唤醒"消费者",按照这样情况运行的比率积少成多,就会导致
 				所有的线程都不能继续运行下去,大家都在等待;
@@ -691,16 +691,16 @@
 	10.9.不要在字符串常量或全局对象中调用wait()
 		在wait()/notify()机制中，不要使用全局对象，字符串常量等。应该使用对应唯一的对象
 ## 11.ThreadLocal 类:
-	存放每个线程的共享变量,解决变量在不同线程间的隔离性	
+	存放每个线程的共享变量,解决变量在不同线程间的隔离性
 	参考资料
 	 * http://www.importnew.com/14398.html, http://www.importnew.com/16112.html
-	 * http://www.cnblogs.com/dolphin0520/p/3920407.html, 
+	 * http://www.cnblogs.com/dolphin0520/p/3920407.html,
 	 * https://vence.github.io/2016/05/28/threadlocal-info/
 	 * https://segmentfault.com/a/1190000000537475
 	 * http://www.jianshu.com/p/33c5579ef44f
 	 * https://toutiao.io/posts/nic1qr/preview
 	 * http://blog.brucefeng.info/post/threadlocal-resultin-fullgc?utm_source=tuicool&utm_medium=referral
-	 
+
 	11.1.创建 ThreadLocal 对象:private ThreadLocal myThreadLocal = new ThreadLocal();
 		每个线程仅需要实例化一次即可
 		虽然不同的线程执行同一段代码时,访问同一个ThreadLocal变量，但是每个线程只能看到私有的ThreadLocal实例
@@ -717,7 +717,7 @@
 			ThreadLocal 对象设置的值对所有线程都可见?
 			通过 ThreadLocal 子类的实现，并覆写initialValue()方法，就可以为 ThreadLocal 对象指定一个初始化值
 			private ThreadLocal myThreadLocal = new ThreadLocal<String>() {
-			   @Override 
+			   @Override
 			   protected String initialValue() {
 			       return "This is the initial value";
 			   }
@@ -793,8 +793,9 @@
 			}
 			在拦截器或者AOP 中设置需要传输的参数
 			==> 注意:在请求结束后一定要调用 remove 方法,移出不必要的键值对,以免造成内存泄漏.
-		11.8.3.父子线程数据传递:InheritableThreadLocal 
+		11.8.3.父子线程数据传递:InheritableThreadLocal
 			(1).该类继承自 ThreadLocal
+```java
 				public class InheritableThreadLocal<T> extends ThreadLocal<T> {
 				    protected T childValue(T parentValue) {
 				        return parentValue;
@@ -810,12 +811,13 @@
 				    /**
 				     * 同理，在创建ThreadLocalMap的时候不是给t.threadlocal赋值
 				     *而是给inheritableThreadLocals变量赋值
-				     * 
+				     *
 				     */
 				    void createMap(Thread t, T firstValue) {
 				        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
 				    }
 				}
+```
 			(2).InheritableThreadLocal 是如何实现在子线程中能拿到当前父线程中的值的呢?
 				创建线程时,init(....)方法里有如下代码:
 				if (parent.inheritableThreadLocals != null)
@@ -913,7 +915,7 @@
 					...		           
 		        }
 	            key.threadLocalHashCode & (len-1)
-	            ThreadLocalMap 中 Entry[] table 的大小必须是2的N次方呀(len = 2^N), 那 len-1 
+	            ThreadLocalMap 中 Entry[] table 的大小必须是2的N次方呀(len = 2^N), 那 len-1
 	            的二进制表示就是低位连续的N个1,那 key.threadLocalHashCode & (len-1) 的值就是
 	            threadLocalHashCode 的低N位.产生的哈希码分布真的是很均匀,而且没有任何冲突啊
 	            可以使用python验证:
@@ -1016,7 +1018,7 @@
 			而使用 AtomicLong 能让 long 的操作保持原子型.
 			long foo = 65465498L;  ==> 非原子操作,Java 会分两步写入 long 变量,先写32位,再写后32位,就非线程安全的.
 			private volatile long foo;  ==> 原子性操作
-			
+
 ## 2.锁的相关概念:
 	* https://www.cnblogs.com/charlesblc/p/5994162.html
 	2.1.同步锁:通过synchronized关键字来进行同步
@@ -1047,15 +1049,15 @@
 		是比较并交换函数,它是原子操作函数;即通过 CAS 操作的数据都是以原子方式进行的.
 ## 3.独占锁:
 	3.1.ReentrantLock 类(可重入锁),又称为独占锁.
-	
+
 [ReentantLock](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/ReentrantLock.md)
-		
+
 		3.1.1.ReentrantLock 基本:
 			(1).在同一个时间点只能被一个线程持有,而可重入即可以被单个线程多次获取.
 			(2).ReentrantLock 分为"公平锁"和"非公平锁",区别在于获取锁的机制上是否公平.
 			(3).ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程."公平锁"的机制下,线程依次排队获取,
 				而"非公平锁"在锁是可获取状态时,不管自己是不是在队列的开头都会获取锁.
-				ReentrantLock中,包含了Sync对象.而且,Sync 是 AQS 的子类;更重要的是,Sync 有两个子类 FairSync(公平锁)和 
+				ReentrantLock中,包含了Sync对象.而且,Sync 是 AQS 的子类;更重要的是,Sync 有两个子类 FairSync(公平锁)和
 				NonFairSync(非公平锁).ReentrantLock 是一个独占锁,至于它到底是公平锁还是非公平锁,
 				就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"
 			(4).提供了一个Condition类,可以分组唤醒需要唤醒的线程.
@@ -1172,7 +1174,7 @@
 			Thread.sleep(100);
 			log.info("{}, {}", count, Thread.currentThread().getName());
 		}
-```	
+```
 ## 6.栅栏:CyclicBarrier:
 	参考资料:http://www.cnblogs.com/skywang12345/p/3533995.html
 	6.1.是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
@@ -1328,9 +1330,9 @@
 	==> park和wait的区别:wait让线程阻塞前,必须通过synchronized获取同步锁; park 面向对象不同; 实现机制不一样,因此两者没有交集;
 ## 10.Callable & Future
 	10.1.Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。
-		Callable 和 Runnable 有几点不同： 
+		Callable 和 Runnable 有几点不同：
 		(1).Callable规定的方法是call()，而Runnable规定的方法是run().
-		(2).Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。 
+		(2).Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。
 		(3).call()方法可抛出异常，而run()方法是不能抛出异常的。
 		(4).运行 Callable 任务可拿到一个 Future 对象,Future 表示异步计算的结果。
 			它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。
@@ -1470,7 +1472,7 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 ## 4.ConcurrentHashMap:
 	参考: /Java/Java源码解读/ConcurrentHashMap.java
 ## 5.ConcurrentSkipListMap:(TreeMap)
-	线程安全的有序的哈希表 
+	线程安全的有序的哈希表
 	* http://www.cnblogs.com/skywang12345/p/3498556.html
 	(1).ConcurrentSkipListMap 和 TreeMap,它们虽然都是有序的哈希表;但是 ConcurrentSkipListMap 是线程安全的,
 		TreeMap 是线程不安全的;另外 ConcurrentSkipListMap 是通过跳表来实现的,而 TreeMap 是通过红黑树实现的.
@@ -1530,7 +1532,7 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 	每一个put必须等待一个take操作,否则不能继续添加元素。并且他支持公平访问队列
 #### 7.4.6.LinkedTransferQueue:由链表结构组成的无界阻塞TransferQueue队列
 	相对于其他阻塞队列,多了tryTransfer和transfer方法
-#### 7.4.7.ConcurrentLinkedQueue: 
+#### 7.4.7.ConcurrentLinkedQueue:
 	* http://www.cnblogs.com/skywang12345/p/3498995.html
 #### 7.4.8.LinkedBlockingDeque:链表结构的双向阻塞队列,优势在于多线程入队时,减少一半的竞争
 
@@ -1538,17 +1540,22 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 ## 1.AQS:AbstractQueuedSynchronizer,抽象队列同步器
 [AbstractQueuedSynchronizer.java](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/AbstractQueuedSynchronizer.md)
 ## 2.CAS:Compare and Swap-比较与交换
-	/*
-	 * 非阻塞同步算法与CAS(Compare and Swap)无锁算法: http://www.cnblogs.com/Mainz/p/3546347.html
-	 * Java CAS 和ABA问题: http://www.cnblogs.com/549294286/p/3766717.html、http://www.importnew.com/20472.html
-	 * Unsafe与CAS: http://www.cnblogs.com/xrq730/p/4976007.html 
-	 * http://www.cnblogs.com/xrq730/category/1021774.html
-	 * https://blog.52itstyle.com/archives/948/
-	 */
-	2.1.CAS:cpu指令,在大多数处理器架构,包括 IA32,Space 中采用的都是 CAS 指令.CAS 语义:
-		CAS 有3个操作数,内存值 V,旧的预期值 A, 要修改的新值 B,当且仅当预期值 A 和内存值 V 相同时,将内存值修改为 B 并返回 true,否则什么都不做并返回 false
-		CAS 是乐观锁技术:当多个线程尝试使用CAS同时更新同一个变量时,只有其中一个线程能更新变量的值,而其它线程都失败,失败的线程并不会被挂起,
-		而是被告知这次竞争中失败,并可以再次尝试.CAS 有3个操作数:内存值V,旧的预期值A,要修改的新值B.当且仅当预期值A和内存值V相同时,将内存值V修改为B,否则什么都不做.
+
+* [非阻塞同步算法与CAS(Compare and Swap)无锁算法](http://www.cnblogs.com/Mainz/p/3546347.html)
+* [Java CAS 和ABA问题](http://www.cnblogs.com/549294286/p/3766717.html、http://www.importnew.com/20472.html)
+* [Unsafe与CAS](http://www.cnblogs.com/xrq730/p/4976007.html)
+* [并发相关源码](http://www.cnblogs.com/xrq730/category/1021774.html)
+* [CAS原理](https://blog.52itstyle.com/archives/948/)
+
+	2.1.CAS:cpu指令,在大多数处理器架构,包括 IA32,Space 中采用的都是 CAS 指令.
+		(1).CAS 语义:
+			CAS 有3个操作数,内存值 V,旧的预期值 A, 要修改的新值 B,当且仅当预期值 A 和
+			内存值 V 相同时,将内存值修改为 B 并返回 true,否则什么都不做并返回 false;
+		(2).CAS 是乐观锁技术:
+			当多个线程尝试使用CAS同时更新同一个变量时,只有其中一个线程能更新变量的值,
+			而其它线程都失败,失败的线程并不会被挂起,而是被告知这次竞争中失败,并可以再次尝试.
+			CAS 有3个操作数:内存值V,旧的预期值A,要修改的新值B.当且仅当预期值A和内存值V相同时,
+			将内存值V修改为B,否则什么都不做.
 		CAS 操作是基于共享数据不会被修改的假设.
 	2.2.Java 中 CAS 的实现:
 		伪代码:
@@ -1556,20 +1563,26 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 		       备份旧数据；  
 		       基于旧数据构造新数据；  
 		}while(!CAS( 内存地址，备份的旧数据，新数据 ))  
-		JDK1.5 之前,需要编写明确的代码来执行CAS操作.在JDK1.5 之后,引入了底层的支持.并且JVM把它们编译为底层硬件提供的最有效的方法,
-		在运行CAS的平台上,运行时把它们编译为相应的机器指令,如果处理器/CPU 不支持CAS指令,那么JVM将使用自旋锁;
+		JDK1.5 之前,需要编写明确的代码来执行CAS操作.在JDK1.5 之后,引入了底层的支持.并且JVM把它们
+		编译为底层硬件提供的最有效的方法,在运行CAS的平台上,运行时把它们编译为相应的机器指令,
+		如果处理器/CPU 不支持CAS指令,那么JVM将使用自旋锁;
 		2.2.1.Unsafe 是 CAS 实现的核心类:
-			(1).Java 无法直接访问底层操作系统,而是通过本地 native 方法来访问.不过 JVM 还是开了个后门,JDK 中有一个类 Unsafe,它提供了硬件级别的原子操作
-				对于 Unsafe 类的使用都是受限制的,只有授信的代码才能获得该类的实例	
+			(1).Java 无法直接访问底层操作系统,而是通过本地 native 方法来访问.不过 JVM 还是开了个后门,
+				JDK 中有一个类 Unsafe,它提供了硬件级别的原子操作
+				对于 Unsafe 类的使用都是受限制的,只有授信的代码才能获得该类的实例
 			(2).对 CAS 的实现:
-				compareAndSwap方法的参数含义:
-				第一个参数:要修改的参数
-				第二个参数:对象中要修改变量的偏移量
-				第三个参数:修改之前的值
-				第四个参数:预想修改后的值
-				public final native boolean compareAndSwapObject(Object paramObject1, long paramLong, Object paramObject2, Object paramObject3);
-				public final native boolean compareAndSwapInt(Object paramObject, long paramLong, int paramInt1, int paramInt2);
-				public final native boolean compareAndSwapLong(Object paramObject, long paramLong1, long paramLong2, long paramLong3);
+```java	
+/*		
+compareAndSwap方法的参数含义:
+第一个参数:要修改的参数
+第二个参数:对象中要修改变量的偏移量
+第三个参数:修改之前的值
+第四个参数:预想修改后的值
+*/
+public final native boolean compareAndSwapObject(Object paramObject1, long paramLong, Object paramObject2, Object paramObject3);
+public final native boolean compareAndSwapInt(Object paramObject, long paramLong, int paramInt1, int paramInt2);
+public final native boolean compareAndSwapLong(Object paramObject, long paramLong1, long paramLong2, long paramLong3);
+```
 			(3).可以查看原子类的实现,比如:AtomicInteger#addAndGet 方法的实现:
 				==> JDK7:在addAndGet作一部分操作,然后调用compareAndSet,由该方法调用 Unsafe#getAndAddInt
 					public final int addAndGet(int delta) {
@@ -1597,17 +1610,17 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 			openjdk/openjdk/hotspot/src/os_cpu/windows_x86/vm/atomic_windows_x86.inline.hpp
 			对应部分源码片段:
 ```c
-			inline jint     Atomic::cmpxchg    (jint     exchange_value, volatile jint*     dest, jint     compare_value) {
-			  // alternative for InterlockedCompareExchange
-			  int mp = os::is_MP();
-			  __asm {
-			    mov edx, dest
-			    mov ecx, exchange_value
-			    mov eax, compare_value
-			    LOCK_IF_MP(mp)
-			    cmpxchg dword ptr [edx], ecx
-			  }
-			}
+inline jint Atomic::cmpxchg(jint exchange_value, volatile jint* dest, jint compare_value) {
+	// alternative for InterlockedCompareExchange
+	int mp = os::is_MP();
+	__asm {
+	mov edx, dest
+	mov ecx, exchange_value
+	mov eax, compare_value
+	LOCK_IF_MP(mp)
+	cmpxchg dword ptr [edx], ecx
+	}
+}
 ```
 			==> 如上面源代码所示,程序会根据当前处理器的类型来决定是否为cmpxchg指令添加lock前缀.
 				如果程序是在多处理器上运行,就为cmpxchg指令加上lock前缀(lock cmpxchg)
@@ -1628,7 +1641,7 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 				==> 可以参考:AtomicStampedReference#compareAndSet 方法:
 					public boolean compareAndSet(V expectedReference, V newReference, int expectedStamp, int newStamp) {
 					    Pair<V> current = pair;
-					    return expectedReference == current.reference && expectedStamp == current.stamp && 
+					    return expectedReference == current.reference && expectedStamp == current.stamp &&
 					            ((newReference == current.reference && newStamp == current.stamp) || casPair(current, Pair.of(newReference, newStamp)));
 					}
 				该类检查了当前引用与当前标志是否与预期相同,如果全部相等,才会以原子方式将该引用和该标志的值设为新的更新值
@@ -1648,8 +1661,8 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 
 # 六.线程池
 参考文章:
-* http://www.cnblogs.com/dolphin0520/p/3932921.html
-* http://www.cnblogs.com/cm4j/p/thread-pool.html
+* [线程池的使用](http://www.cnblogs.com/dolphin0520/p/3932921.html)
+* [线程池原理](http://www.cnblogs.com/cm4j/p/thread-pool.html)
 * [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
 * [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
 
@@ -1738,10 +1751,29 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 	继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现
 
 
-## 4.线程池配置:
-### 4.1.不同业务场景如何配置线程池参数
+## 3.线程池配置
+### 3.1.不同业务场景如何配置线程池参数
 	CPU密集型任务:需要尽量压榨CPU,参考值可以设为NCPU + 1;
 	IO密集型任务:参考值可以设置为 2*NCPU
+### 3.2.科学设置线程池:
+	(1).如果需要达到某个QPS,使用如下计算公式:
+		设置的线程数 = 目标QPS / (1 / 任务实际处理时间)
+		假设目标QPS=100, 任务的实际处理时间 0.2s, 100 * 0.2 = 20个线程,这里的20个线程必须对应物理的20个CPU核心,
+		否则不能达到预估的QPS目标.
+	(2).如果IO任务较多,使用阿姆达尔定律来计算:
+		设置的线程数 = CPU 核数 * (1 + io/computing)
+		假设4核 CPU,每个任务中的 IO 任务占总任务的80%, 4 * (1 + 4) = 20个线程,这里的20个线程对应的是4核心的 CPU.
+	(3).线程队列大小的设置:按照目标响应时间计算队列大小
+		队列大小 = 线程数 * (目标相应时间/任务实际处理时间)
+		假设目标相应时间为0.4s,计算阻塞队列的长度为20 * (0.4 / 0.2) = 40
+## 4.线程池最佳实践
+	(1).线程池的使用要考虑线程最大数量和最小数最小数量.
+	(2).对于单部的服务,线程的最大数量应该等于线程的最小数量,而混布的服务,
+		适当的拉开最大最小数量的差距，能够整体调整 CPU 内核的利用率.
+	(3).线程队列大小一定要设置有界队列,否则压力过大就会拖垮整个服务.
+	(4).必要时才使用线程池,须进行设计性能评估和压测.
+	(5).须考虑线程池的失败策略,失败后的补偿.
+	(6).后台批处理服务须与线上面向用户的服务进行分离.
 
 # 七.多线程并发最佳实践
 	1.使用本地变量;
@@ -1754,6 +1786,3 @@ private ConcurrentHashMap<String, FutureTask<Connection>> connectionPool
 	8.使用Semaphore创建有界的访问;
 	9.宁可使用同步代码块也不要使用同步方法(synchronized)
 	10.避免使用静态变量,如果一定要用静态变量,可以声明为 final
-
-
-

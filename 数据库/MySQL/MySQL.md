@@ -72,15 +72,15 @@
 
 # 一.概念
 	1.Mysql是基于C/S架构的;
-	
-	
+
+
 # 二.MySQL操作
 ## 1.连接,命令行:
 	mysql -hlocalhost -P3306 -uroot -p	--(-h:主机host, -P:端口,-u用户,-p:密码); --select user();查看当前用户
 ## 2.SQL操作(structure query language)
 ## 3.创建数据库:
 	create database 数据库名 [数据库选项]
-	(1)数据库名称规则:对于一些特点的组合,如纯数字、特殊符号等，包括MySQL的关键字，应该使用标识限定符来包裹，限定符使用反引号:"`";
+	(1)数据库名称规则:对于一些特点的组合,如纯数字、特殊符号等，包括MySQL的关键字，应该使用标识限定符来包裹，限定符使用反引号;
 	(2)数据库选项:存在数据库文件的.opt文件中
 		default-character-set=utf8
 		default-collation=utf8_general_ci
@@ -155,7 +155,7 @@
 	2.3.时间戳,timestamp	,存储时是整型,表示时是日期时间,格式YYYY-MM-DD HH:MM:SS,4个字节
 		存储范围:1970.1.1 00:00:00~2038.1.19 03:14:07
 		检索列时,+0可以检索到时间戳
-		支持0值:表示当前是没有规定的,如2013-04-0表示4月整个月;	
+		支持0值:表示当前是没有规定的,如2013-04-0表示4月整个月;
 	2.4.time,3个字节,范围:-838:59:59 ~838:59:59
 		表示一天中的时间或时间间隔,在表示时间间隔时可以使用天来表示,格式:D HH:MM:SS
 	2.5.year,1个字节,1901~2155
@@ -175,7 +175,7 @@
 	(1)应该使用最精确的类型,占用的空间少
 	(2)考虑应用程序语言的处理;
 	(3)考虑移植兼容性;
-	
+
 # 四.列属性
 	1.是否为空:规定一个字段的值是否可以为null,设置字段值不为空not null;
 		注意:字段属性最好不用 null:-- https://my.oschina.net/leejun2005/blog/1342985
@@ -202,7 +202,7 @@
 	- http://www.cnblogs.com/Qian123/p/5666569.html
 	- http://blog.csdn.net/bitcarmanlee/article/details/51004767
 ## 1.一般SQL的写的顺序:
-	SELECT 
+	SELECT
 	DISTINCT <select_list>
 	FROM <left_table> <join_type> JOIN <right_table>
 	ON <join_condition>
@@ -214,7 +214,7 @@
 ## 2.数据执行的顺序:前面括号的数据表示执行顺序
 ![image](https://github.com/chenlanqing/learningNote/blob/master/数据库/MySQL/image/SQL执行顺序.jpg)
 
-	(7)     SELECT 
+	(7)     SELECT
 	(8)     DISTINCT <select_list>
 	(1)     FROM <left_table>
 	(3)     <join_type> JOIN <right_table>
@@ -237,7 +237,7 @@
 	TOP:从VC10的开始处选择指定数量或比例的行, 生成表VT11,并返回调用者;
 	==> 除非你确定要有序行,否则不要指定ORDER BY 子句
 ## 3.SQL性能下降的原因:
-	
+
 # 六.高级查询:
 	* 参考图片: SQL-Joins-1.jpg,SQL-Joins-2.jpg
 ## 1.连接:
@@ -261,13 +261,13 @@
 		(1).select * from emp a right join dept b on a.deptId=b.id where a.id is null;
 			查询dept独有的数据
 	1.6.全连接:
-		(1).select * from emp a left join dept b on a.deptId=b.id 
-			union 
+		(1).select * from emp a left join dept b on a.deptId=b.id
+			union
 			select * from emp a right join dept b on a.deptId=b.id;
 			查询所有emp和dept独有和共有的数据
 	1.7.全连接(去除共有数据):
-		(1).select * from emp a left join dept b on a.deptId=b.id where b.id is null 
-			union 
+		(1).select * from emp a left join dept b on a.deptId=b.id where b.id is null
+			union
 			select * from emp a right join dept b on a.deptId=b.id where a.id is null;
 			去除两张表的共有数据,查询emp和dept分别独有的数据
 	1.8.union 和 union all:联合查询
@@ -287,13 +287,13 @@
 			如果子句中有 order by 或 limit, 需要用括号括起来,推荐放到所有子句之后,即对最终合并的结果来排序或筛选
 			在子句中,order by 需要配合limit使用才有意义.如果不配合limit使用,会被语法分析器优化分析时去除
 			(1).如下语句:
-				select * from emp a left join dept b on a.deptId=b.id order by id desc 
-				union 
+				select * from emp a left join dept b on a.deptId=b.id order by id desc
+				union
 				select * from emp a right join dept b on a.deptId=b.id order by id desc;
 				==> 报错:1221 - Incorrect usage of UNION and ORDER BY
 ## 2.
 
-# 七.MySQL 存储引擎	
+# 七.MySQL 存储引擎
 ## 1.MySQL 的数据库引擎:
 ### 1.1.MyISAM:5.5版本之前默认存储引擎
 	check table tableName  检查表
@@ -328,12 +328,35 @@
 		(3).CSV 存储引擎也会包含一个存储表结构的 .frm 文件、一个 .csv 存储数据的文件、一个同名的元信息文件,
 			该文件的扩展名为 .CSM,用来保存表的状态及表中保存的数据量
 		(4).每个数据行占用一个文本行
+	1.3.2.适合作为数据交换的中间表
 ### 1.4.Archive
-
-### 1.5.Memory
-
+	1.4.1.特性：
+		(1).以zlib对表数据进行压缩,磁盘I/O更少;
+		(2).数据存储在arz为后缀的文件;
+		(3).只支持insert和select操作;
+		(4).只允许在自增ID列上增加索引;
+	1.4.2.使用场景:
+		日志和数据采集类应用
+### 1.5.Memory:也称为heap存储引擎,所以数据保存在内存中
+	1.5.1.特性:
+		(1).支持hash 和btree索引
+		(2).所有字段都为固定长度 varchar(10) = char(10)
+		(3).不支持blob 和 text 等大字段
+		(4).使用表级锁
+		(5).最大大小由max_heap_table_size参数决定,不会对已经存在的表生效.
+			如果需要生效,需重启服务重建数据
+	1.5.2.使用场景:
+		(1).用于查找或者是映射表,例如邮编和地区的对应表
+		(2).用于保存数据分析中产生的中间表;
+		(3).用于缓存周期性聚合数据的结果表;
+			memory数据易丢失,所以要求数据可再生
 ### 1.6.Federated
-
+	1.6.1.特性:
+		(1).提供了访问远程mysql服务器上表的方法;
+		(2).本地不存储数据,数据全部放到远程数据库上;
+		(3).本地需要保存表结构和远程服务器的连接信息;
+	--> 默认禁止的,启用需要在配置文件中开启federated;
+	--> 连接方法:mysql://user_name[:password]@host_name[:port]/db_name/table_name
 ## 2.MyISAM 和 InnoDB 引擎的区别:
 	1.2.主要区别:
 		(1).MyISAM 是非事务安全型的, InnoDB 是事务安全型的;
@@ -584,9 +607,9 @@
 			而job处理的id列表为[8,9,10,4,2],这样就造成了死锁
 		(3).不同索引锁冲突:
 			事务A在执行时,除了在二级索引加锁外,还会在聚簇索引上加锁,在聚簇索引上加锁的顺序是[1,4,2,3,5],
-			而事务B执行时,只在聚簇索引上加锁,加锁顺序是[1,2,3,4,5],这样就造成了死锁的可能性.	
+			而事务B执行时,只在聚簇索引上加锁,加锁顺序是[1,2,3,4,5],这样就造成了死锁的可能性.
 		(4).gap锁冲突:
-			innodb在RR级别下,如下的情况也会产生死锁	
+			innodb在RR级别下,如下的情况也会产生死锁
 	5.5.避免死锁:
 		(1).以固定的顺序访问表和行.比如两个job批量更新的情形,简单方法是对id列表先排序,后执行,这样就避免了交叉等待锁的情形;
 			又比如将两个事务的sql顺序调整为一致,也能避免死锁.
@@ -625,8 +648,8 @@
 	(1).分区表的数据可以分布在不同的物理设备上,从而高效地利用多个硬件设备.
 	(2).和单个磁盘或者文件系统相比,可以存储更多数据.
 	(3).优化查询.在where语句中包含分区条件时,可以只扫描一个或多个分区表来提高查询效率.
-		涉及sum和count语句时,也可以在多个分区上并行处理,最后汇总结果. 
-	(4).分区表更容易维护.例如:想批量删除大量数据可以清除整个分区. 
+		涉及sum和count语句时,也可以在多个分区上并行处理,最后汇总结果.
+	(4).分区表更容易维护.例如:想批量删除大量数据可以清除整个分区.
 	(5).可以使用分区表来避免某些特殊的瓶颈.例如InnoDB的单个索引的互斥访问,ext3问价你系统的inode锁竞争等;
 ## 4.表分区的限制因素:
 	(1).一个表最多只能有1024个分区;
@@ -669,7 +692,7 @@
 		==> 注意:每个分区都是按顺序定义的,从最低到最高.
 			上面的语句,如果将less than(10) 和less than (20)的顺序颠倒过来,那么将报错,如下:
 			ERROR 1493 (HY000): VALUES LESS THAN value must be strictly increasing for each partition
-	(2).RANGE分区存在问题:	
+	(2).RANGE分区存在问题:
 		A.range 范围覆盖问题:当插入的记录中对应的分区键的值不在分区定义的范围中的时候,插入语句会失败.
 			上面的例子,如果我插入一条store_id = 30的记录会怎么样呢?我们上面分区的时候,最大值是20,如果插入一条超过20的记录,会报错:
 			mysql> insert into emp value(30,30);
@@ -825,7 +848,7 @@
 			partition_description            descr,
 			FROM_DAYS(partition_description) lessthan_sendtime,
 			table_rows
-		FROM 
+		FROM
 			INFORMATION_SCHEMA.partitions
 		WHERE
 			TABLE_SCHEMA = SCHEMA ()
@@ -838,7 +861,7 @@
 		|  1 | SIMPLE      | emp   | p1         | ALL  | NULL          | NULL | NULL    | NULL |    2 | Using where |
 		+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
 		1 row in set
-		上面的结果:partitions:p1 表示数据在p1分区进行检索	
+		上面的结果:partitions:p1 表示数据在p1分区进行检索
 
 # 十一.分布式ID:
 [分布式唯一ID](https://mp.weixin.qq.com/s/cqIK5Bv1U0mT97C7EOxmnA)
@@ -866,7 +889,7 @@
 		(2).在单个数据库或读写分离或一主多从的情况下,只有一个主库可以生成.有单点故障的风险
 		(3).在性能达不到要求的情况下,比较难于扩展;
 		(4).如果遇见多个系统需要合并或者涉及到数据迁移会相当痛苦; 分表分库的时候会有麻烦
-	2.3.优化方案:	
+	2.3.优化方案:
 		针对主库单点,如果有多个Master库,则每个Master库设置的起始数字不一样,步长一样,可以是Master的个数.
 ## 3.UUID:
 	3.1.优点:
@@ -926,6 +949,3 @@
 	(6).单调递增:保证下一个ID一定大于上一个ID,例如事务版本号、IM增量消息、排序等特殊需求;
 	(7).长度适中:不要太长，最好64bit
 	(8).信息安全:如果ID是连续的,恶意用户的扒取工作就非常容易做了,直接按照顺序下载指定URL即可;
-
-
-
