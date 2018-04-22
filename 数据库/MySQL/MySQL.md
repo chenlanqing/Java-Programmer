@@ -70,13 +70,48 @@
 * http://coding-geek.com/how-databases-work/
 * http://blog.codinglabs.org/articles/theory-of-mysql-index.html
 
-# 一.概念
-	1.Mysql是基于C/S架构的;
-
-
+# 一.Mysql基本:基于C/S架构
+## 1.MySQL服务器参数
+### 1.1.内存配置相关参数
+	(1).确定可以使用的内存上限;
+	(2).确定MySQL的每个连接使用的内存.
+		sort_buffer_size : 排查操作缓冲区
+		join_buffer_size : 连接缓冲区大小
+		read_buffer_size : 读缓冲区大小
+		read_rnd_buffer_size : 索引缓冲区大小
+		--> 上述参数是为每个线程分配的.
+	(3).确定需要为操作系统保留多少内存
+### 1.2.如何为缓存池分配内存:
+	innodb_ buffer_pool_size -> 修改该配置
+	总内存 - (每个线程所需要的内存 * 连接处数) - 系统保留内存
+### 1.3.I/O相关配置参数
+	* InnoDB I/O相关配置:
+		(1).innodb_log_file_size:单个事务日志文件的大小
+		(2).innodb_log_files_in_group:事务日志文件的数量
+		(3).innodb_log_buffer_size:事务日志缓冲区
+		(4).innodb_flush_log_at_trx_commit:log写入cache并刷新到缓存
+		(5).innodb_flush_method:刷新方式
+		(6).innodb_file_per_table:设置表空间
+		(7).innodb_doublewrite:是否支持双写缓存
+	* myisam I/O配置:
+		(1).delay_key_write:
+### 1.4.安全配置参数:
+	(1).expire_logs_days:指定自动清理binlog的天数
+	(2).max_allowed_packet:控制mysql可以接收的包的大小
+	(3).skip_name_resolve:禁用DNS查找
+	(4).sysdate_is_now:确保sysdate()返回确定性日期
+	(5).read_only:进行非uper权限的用户写权限
+	(6).skip_slave_start:禁用slave自动恢复
+	(7).sql_mode:设置mysql所使用的sql模式
+### 1.5.其他配置参数
+	(1).sync_binlog:控制mysql如何向磁盘刷新binlog
+	(2).tmp_table_size 和 max_heap_table_size:控制内存临时表大小
+	(3).max_connections:控制允许的最大连接数
+## 2.
 # 二.MySQL操作
 ## 1.连接,命令行:
-	mysql -hlocalhost -P3306 -uroot -p	--(-h:主机host, -P:端口,-u用户,-p:密码); --select user();查看当前用户
+	mysql -hlocalhost -P3306 -uroot -p	--(-h:主机host, -P:端口,-u用户,-p:密码); 
+	--select user();查看当前用户
 ## 2.SQL操作(structure query language)
 ## 3.创建数据库:
 	create database 数据库名 [数据库选项]
@@ -435,6 +470,7 @@
 	(4).是否需要外键支持;
 	(5).存储的限制;
 	(6).对索引和缓存的支持
+	--> 不要混合使用存储引擎
 
 # 八.高级特性:
 ## 1.数据库隔离级别介绍、举例说明

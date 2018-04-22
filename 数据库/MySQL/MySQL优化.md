@@ -87,144 +87,144 @@
 	+----+-------------+----------+------+---------------+------+---------+------+------+-------+
 	|  1 | SIMPLE      | customer | ALL  | NULL          | NULL | NULL    | NULL |  646 |       |
 	+----+-------------+----------+------+---------------+------+---------+------+------+-------+
-	6.1.id:select的查询序列号,包含一组数字,表示在查询中执行 select 子句或者操作表的顺序
-		(1).id相同,执行顺序由上而下
-		mysql> explain select film.* from film left join film_actor fa on film.film_id = fa.film_id
-			left join actor on fa.actor_id=actor.actor_id where first_name = 'sandra';
-		+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
-		| id | select_type | table | type   | possible_keys          | key     | key_len | ref                   | rows | Extra                    |
-		+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
-		|  1 | SIMPLE      | actor | ALL    | PRIMARY                | NULL    | NULL    | NULL                  |  200 | Using where              |
-		|  1 | SIMPLE      | fa    | ref    | PRIMARY,idx_fk_film_id | PRIMARY | 2       | sakila.actor.actor_id |   13 | Using where; Using index |
-		|  1 | SIMPLE      | film  | eq_ref | PRIMARY                | PRIMARY | 2       | sakila.fa.film_id     |    1 |                          |
-		+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
-		(2).id不同,如果是子查询,id的序号会递增,id值越大优先级越高,越先被执行
-		mysql> explain select title,release_year,length from film where film_id in(
-					select film_id from film_actor WHERE actor_id in (
-						select actor_id from actor where first_name='sandra'
-					)
-				);
-		+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
-		| id | select_type        | table      | type            | possible_keys  | key            | key_len | ref  | rows | Extra                    |
-		+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
-		|  1 | PRIMARY            | film       | ALL             | NULL           | NULL           | NULL    | NULL | 1128 | Using where              |
-		|  2 | DEPENDENT SUBQUERY | film_actor | index_subquery  | idx_fk_film_id | idx_fk_film_id | 2       | func |    2 | Using index; Using where |
-		|  3 | DEPENDENT SUBQUERY | actor      | unique_subquery | PRIMARY        | PRIMARY        | 2       | func |    1 | Using where              |
-		+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
-		(3).id相同不同,同时存在,DERIVED-衍生,
-		如下中 table 为 <derived2> 表示是根据id为2衍生的表格
-		mysql> explain select title,	release_year,	length from film left join (
-				select film_id from film_actor where actor_id in (
-						select actor_id from actor where first_name = 'sandra'
-					)
-				)s on film.film_id = s.film_id;
-		+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
-		| id | select_type        | table      | type            | possible_keys | key            | key_len | ref  | rows | Extra                    |
-		+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
-		|  1 | PRIMARY            | film       | ALL             | NULL          | NULL           | NULL    | NULL | 1128 |                          |
-		|  1 | PRIMARY            | <derived2> | ALL             | NULL          | NULL           | NULL    | NULL |   56 |                          |
-		|  2 | DERIVED            | film_actor | index           | NULL          | idx_fk_film_id | 2       | NULL | 5143 | Using where; Using index |
-		|  3 | DEPENDENT SUBQUERY | actor      | unique_subquery | PRIMARY       | PRIMARY        | 2       | func |    1 | Using where              |
-		+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
-	6.2.select_type:查询类型,主要用于区别普通查询,联合查询,子查询等复杂查询,主要有以下值:
-		(1).SIMPLE:简单的select查询,查询中不包含子查询或者union
-		(2).PRIMARY:查询中若包含任何复杂的子查询,最外层的查询则被标记为 primary
-		(3).SUBQUERY:在 select 或者 where 列表中包含了子查询
-		(4).DERIVED:在 from 列表中包含的子查询被标记为 DERIVED,MySQL 会递归执行这些子查询,把结果放在临时表中
-		(5).UNION:若第二个 select 出现在 union 之后,则被标记为union;
-			若 union 包含在 from 子句的子查询中, 外层 select 将被标记为 DERIVED
-		(6).UNION RESULT:从 union 中获取结果的 select
-	6.3.type:显示查询使用了何种类型,主要有:all, index, range, ref, eq_ref, const, system
-		从最好到最差依次为:system > const > eq_ref > ref > range > index > all
-		(1).system:表只有一行记录(等于系统表),这时const类型的特例,平时不会出现,基本上日常优化可以忽略
-		(2).const:表示通过索引一次就找到了,const 用于比较 primary key 和 unique 索引.因为只匹配一行数据,
-			所以很快.如将主键置于 where 列表中,MySQL能将该查询转换为一个常量.
-		(3).eq_ref:唯一性索引扫描,对于每个索引键,表中只有一条记录.常见于主键或唯一性扫描
-		(4).ref:非唯一性索引扫描,返回匹配某个单独值的所有行.本质上也是一种索引访问,返回的是某个单独值匹配的
-			所有行,但是其可能会找到多个符合条件的行.
-		(5).range:只检索给定范围的行,使用一个索引来选择行.key列显示使用了哪个索引.
-			一般是在 where 语句中使用了 between,<,>,in 等的查询.这种范围扫描索引比全表扫描要好,
-			因为其只需要开始于索引的某一点,而结束于另一点,不需要扫描全部索引.
-		(6).index:Full index scan, index 和 all 区别为 index 类型只遍历索引树,这通常比all快.因为索引文件通常比
-			数据文件小.(即两者虽然都是读全表,但是index 是从索引中读取,而all是从硬盘读取)
-		(7).all:遍历全表以匹配到相应的行
-		==> 一般来说,type在查询中能保证到range级别,最好能达到 ref
-	6.4.possible_keys、key、key_len:
-		(1).possible_keys:显示可能应用在这张表上的索引,一个或者多个.查询涉及到的字段上若存在索引,
-			则将该索引列出,但不一定被查询实际使用.
-		(2).key:实际使用的索引.如果为 NULL,则没有使用索引;查询中如果使用了覆盖索引,则该索引和查询的 select 字段重叠
-			==> message 表中字段 conversation_id 有加上索引
-			mysql> EXPLAIN select * FROM message;
-			+----+-------------+---------+------+---------------+------+---------+------+------+-------+
-			| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows | Extra |
-			+----+-------------+---------+------+---------------+------+---------+------+------+-------+
-			|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 |       |
-			+----+-------------+---------+------+---------------+------+---------+------+------+-------+
-			1 row in set
+### 6.1.id:select的查询序列号,包含一组数字,表示在查询中执行 select 子句或者操作表的顺序
+	(1).id相同,执行顺序由上而下
+	mysql> explain select film.* from film left join film_actor fa on film.film_id = fa.film_id
+		left join actor on fa.actor_id=actor.actor_id where first_name = 'sandra';
+	+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
+	| id | select_type | table | type   | possible_keys          | key     | key_len | ref                   | rows | Extra                    |
+	+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
+	|  1 | SIMPLE      | actor | ALL    | PRIMARY                | NULL    | NULL    | NULL                  |  200 | Using where              |
+	|  1 | SIMPLE      | fa    | ref    | PRIMARY,idx_fk_film_id | PRIMARY | 2       | sakila.actor.actor_id |   13 | Using where; Using index |
+	|  1 | SIMPLE      | film  | eq_ref | PRIMARY                | PRIMARY | 2       | sakila.fa.film_id     |    1 |                          |
+	+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
+	(2).id不同,如果是子查询,id的序号会递增,id值越大优先级越高,越先被执行
+	mysql> explain select title,release_year,length from film where film_id in(
+				select film_id from film_actor WHERE actor_id in (
+					select actor_id from actor where first_name='sandra'
+				)
+			);
+	+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
+	| id | select_type        | table      | type            | possible_keys  | key            | key_len | ref  | rows | Extra                    |
+	+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
+	|  1 | PRIMARY            | film       | ALL             | NULL           | NULL           | NULL    | NULL | 1128 | Using where              |
+	|  2 | DEPENDENT SUBQUERY | film_actor | index_subquery  | idx_fk_film_id | idx_fk_film_id | 2       | func |    2 | Using index; Using where |
+	|  3 | DEPENDENT SUBQUERY | actor      | unique_subquery | PRIMARY        | PRIMARY        | 2       | func |    1 | Using where              |
+	+----+--------------------+------------+-----------------+----------------+----------------+---------+------+------+--------------------------+
+	(3).id相同不同,同时存在,DERIVED-衍生,
+	如下中 table 为 <derived2> 表示是根据id为2衍生的表格
+	mysql> explain select title,	release_year,	length from film left join (
+			select film_id from film_actor where actor_id in (
+					select actor_id from actor where first_name = 'sandra'
+				)
+			)s on film.film_id = s.film_id;
+	+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
+	| id | select_type        | table      | type            | possible_keys | key            | key_len | ref  | rows | Extra                    |
+	+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
+	|  1 | PRIMARY            | film       | ALL             | NULL          | NULL           | NULL    | NULL | 1128 |                          |
+	|  1 | PRIMARY            | <derived2> | ALL             | NULL          | NULL           | NULL    | NULL |   56 |                          |
+	|  2 | DERIVED            | film_actor | index           | NULL          | idx_fk_film_id | 2       | NULL | 5143 | Using where; Using index |
+	|  3 | DEPENDENT SUBQUERY | actor      | unique_subquery | PRIMARY       | PRIMARY        | 2       | func |    1 | Using where              |
+	+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
+### 6.2.select_type:查询类型,主要用于区别普通查询,联合查询,子查询等复杂查询,主要有以下值:
+	(1).SIMPLE:简单的select查询,查询中不包含子查询或者union
+	(2).PRIMARY:查询中若包含任何复杂的子查询,最外层的查询则被标记为 primary
+	(3).SUBQUERY:在 select 或者 where 列表中包含了子查询
+	(4).DERIVED:在 from 列表中包含的子查询被标记为 DERIVED,MySQL 会递归执行这些子查询,把结果放在临时表中
+	(5).UNION:若第二个 select 出现在 union 之后,则被标记为union;
+		若 union 包含在 from 子句的子查询中, 外层 select 将被标记为 DERIVED
+	(6).UNION RESULT:从 union 中获取结果的 select
+### 6.3.type:显示查询使用了何种类型,主要有:all, index, range, ref, eq_ref, const, system
+	从最好到最差依次为:system > const > eq_ref > ref > range > index > all
+	(1).system:表只有一行记录(等于系统表),这时const类型的特例,平时不会出现,基本上日常优化可以忽略
+	(2).const:表示通过索引一次就找到了,const 用于比较 primary key 和 unique 索引.因为只匹配一行数据,
+		所以很快.如将主键置于 where 列表中,MySQL能将该查询转换为一个常量.
+	(3).eq_ref:唯一性索引扫描,对于每个索引键,表中只有一条记录.常见于主键或唯一性扫描
+	(4).ref:非唯一性索引扫描,返回匹配某个单独值的所有行.本质上也是一种索引访问,返回的是某个单独值匹配的
+		所有行,但是其可能会找到多个符合条件的行.
+	(5).range:只检索给定范围的行,使用一个索引来选择行.key列显示使用了哪个索引.
+		一般是在 where 语句中使用了 between,<,>,in 等的查询.这种范围扫描索引比全表扫描要好,
+		因为其只需要开始于索引的某一点,而结束于另一点,不需要扫描全部索引.
+	(6).index:Full index scan, index 和 all 区别为 index 类型只遍历索引树,这通常比all快.因为索引文件通常比
+		数据文件小.(即两者虽然都是读全表,但是index 是从索引中读取,而all是从硬盘读取)
+	(7).all:遍历全表以匹配到相应的行
+	==> 一般来说,type在查询中能保证到range级别,最好能达到 ref
+### 6.4.possible_keys、key、key_len:
+	(1).possible_keys:显示可能应用在这张表上的索引,一个或者多个.查询涉及到的字段上若存在索引,
+		则将该索引列出,但不一定被查询实际使用.
+	(2).key:实际使用的索引.如果为 NULL,则没有使用索引;查询中如果使用了覆盖索引,则该索引和查询的 select 字段重叠
+		==> message 表中字段 conversation_id 有加上索引
+		mysql> EXPLAIN select * FROM message;
+		+----+-------------+---------+------+---------------+------+---------+------+------+-------+
+		| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows | Extra |
+		+----+-------------+---------+------+---------------+------+---------+------+------+-------+
+		|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 |       |
+		+----+-------------+---------+------+---------------+------+---------+------+------+-------+
+		1 row in set
 
-			mysql> EXPLAIN select conversation_id FROM message;
-			+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
-			| id | select_type | table   | type  | possible_keys | key                | key_len | ref  | rows | Extra       |
-			+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
-			|  1 | SIMPLE      | message | index | NULL          | conversation_index | 137     | NULL |    1 | Using index |
-			+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
-			1 row in set
-		(3).key_len:表示索引中使用的字节数,可通过查询该列计算查询中使用的索引长度.在不损失精度的情况下,
-			长度越短越好,key_len显示的值为该索引最大的可能长度,并非实际使用的长度.
-			即 key_len 是根据表定义计算而得,不是通过表内检索出的.
-			key_len 的计算规则和三个因素有关:数据类型、字符编码、是否为 NULL,
-			如果是 null 的话需要判断是否为 null 的标识长度,所以索引字段最好不要为 null,因为 null 会使索引,索引统计和值更加复杂,并且需要额外一个字节的存储空间
-	6.5.ref:显示索引的哪一列被使用了,如果可能的话是一个常数.哪些列或常量被用于查找索引列上的值.
-		mysql> EXPLAIN SELECT n.*  FROM news n, `user` u WHERE n.user_id=u.id AND n.title='';
-		+----+-------------+-------+--------+---------------+---------+---------+-------------------+------+--------------------------+
-		| id | select_type | table | type   | possible_keys | key     | key_len | ref               | rows | Extra                    |
-		+----+-------------+-------+--------+---------------+---------+---------+-------------------+------+--------------------------+
-		|  1 | SIMPLE      | n     | ALL    | NULL          | NULL    | NULL    | NULL              |    2 | Using where              |
-		|  1 | SIMPLE      | u     | eq_ref | PRIMARY       | PRIMARY | 4       | toutiao.n.user_id |    1 | Using where; Using index |
-		+----+-------------+-------+--------+---------------+---------+---------+-------------------+------+--------------------------+
-		toutiao.n.user_id
-		==> toutiao:表示数据库名称, n:表示对应的表格, user_id:n表对应的字段
-	6.6.rows:根据表统计信息及索引选用的情况,大致估算出找到所需记录所需要读取的行数.
-		即有多少条记录被优化器所查询
-	6.7.Extra:包含不适合在其他列显示但非常重要的额外信息
-		(1).using filesort:说明 mysql中会对数据使用一个外部的索引排序,而不是按照表内的索引顺序进行读取.
-			MySQL中无法利用索引完成的排序称为"文件排序"
-			mysql> EXPLAIN SELECT * FROM message ORDER BY created_date;
-			+----+-------------+---------+------+---------------+------+---------+------+------+----------------+
-			| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows | Extra          |
-			+----+-------------+---------+------+---------------+------+---------+------+------+----------------+
-			|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 | Using filesort |
-			+----+-------------+---------+------+---------------+------+---------+------+------+----------------+
-		(2).using temporary:使用了临时表保存中间结果,MySQL在对查询结果排序时使用了临时表.常见于排序 order by
-			和分组查询 order by 中
-			mysql> EXPLAIN SELECT * FROM message GROUP BY created_date;
-			+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
-			| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows | Extra                           |
-			+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
-			|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 | Using temporary; Using filesort |
-			+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
-		(3).using index:表示相应的查询操作中使用了覆盖索引,避免访问表的数据行.
-			如果同时出现 using where,说明索引是用来执行索引键值的查找;
-			如果没有同时出现 using where,说明索引是用来读取数据而非执行查找动作;
-			==> 覆盖索引:
-				select 的数据列只用从索引中就能够取得,不必读取数据行,MySQL 可以利用索引返回 select 列表中的字段,
-				而不必根据索引再次读取数据文件,换句话说查询列要被所建的索引覆盖.
-				如果使用覆盖索引,要注意 select 列表只读取所需要的列,不要使用 select *
-				因为如果将所有字段一起做成索引会导致索引文件过大,查询性能下降.
-		(4).using where:使用 where 子句
-		(5).using join buffer:使用了连接缓存
-			mysql> explain select * from category inner join book on category.card=book.card inner join phone on category.card=phone.card;
-			+----+-------------+----------+------+---------------+------+---------+------+------+--------------------------------+
-			| id | select_type | table    | type | possible_keys | key  | key_len | ref  | rows | Extra                          |
-			+----+-------------+----------+------+---------------+------+---------+------+------+--------------------------------+
-			|  1 | SIMPLE      | category | ALL  | NULL          | NULL | NULL    | NULL |   20 |                                |
-			|  1 | SIMPLE      | book     | ALL  | NULL          | NULL | NULL    | NULL |   20 | Using where; Using join buffer |
-			|  1 | SIMPLE      | phone    | ALL  | NULL          | NULL | NULL    | NULL |   20 | Using where; Using join buffer |
-			+----+-------------+----------+------+---------------+------+---------+------+------+--------------------------------+
-		(6).impossible where:where子句的值总是false,不能用来获取任何元祖
-		(7).select table optimized away:在没有 group by 子句的情况下,基于索引优化 mix/max 操作或者对于 MyISAM
-			存储引擎优化 count(*)操作,不必等到执行阶段在进行计算,查询执行计划生成的阶段即可完成优化
-		(8).distinct:优化 distinct 操作,在找第一匹配的元祖后即停止找同样值的操作.
+		mysql> EXPLAIN select conversation_id FROM message;
+		+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
+		| id | select_type | table   | type  | possible_keys | key                | key_len | ref  | rows | Extra       |
+		+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
+		|  1 | SIMPLE      | message | index | NULL          | conversation_index | 137     | NULL |    1 | Using index |
+		+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
+		1 row in set
+	(3).key_len:表示索引中使用的字节数,可通过查询该列计算查询中使用的索引长度.在不损失精度的情况下,
+		长度越短越好,key_len显示的值为该索引最大的可能长度,并非实际使用的长度.
+		即 key_len 是根据表定义计算而得,不是通过表内检索出的.
+		key_len 的计算规则和三个因素有关:数据类型、字符编码、是否为 NULL,
+		如果是 null 的话需要判断是否为 null 的标识长度,所以索引字段最好不要为 null,因为 null 会使索引,索引统计和值更加复杂,并且需要额外一个字节的存储空间
+### 6.5.ref:显示索引的哪一列被使用了,如果可能的话是一个常数.哪些列或常量被用于查找索引列上的值.
+	mysql> EXPLAIN SELECT n.*  FROM news n, `user` u WHERE n.user_id=u.id AND n.title='';
+	+----+-------------+-------+--------+---------------+---------+---------+-------------------+------+--------------------------+
+	| id | select_type | table | type   | possible_keys | key     | key_len | ref               | rows | Extra                    |
+	+----+-------------+-------+--------+---------------+---------+---------+-------------------+------+--------------------------+
+	|  1 | SIMPLE      | n     | ALL    | NULL          | NULL    | NULL    | NULL              |    2 | Using where              |
+	|  1 | SIMPLE      | u     | eq_ref | PRIMARY       | PRIMARY | 4       | toutiao.n.user_id |    1 | Using where; Using index |
+	+----+-------------+-------+--------+---------------+---------+---------+-------------------+------+--------------------------+
+	toutiao.n.user_id
+	==> toutiao:表示数据库名称, n:表示对应的表格, user_id:n表对应的字段
+### 6.6.rows:根据表统计信息及索引选用的情况,大致估算出找到所需记录所需要读取的行数.
+	即有多少条记录被优化器所查询
+### 6.7.Extra:包含不适合在其他列显示但非常重要的额外信息
+	(1).using filesort:说明 mysql中会对数据使用一个外部的索引排序,而不是按照表内的索引顺序进行读取.
+		MySQL中无法利用索引完成的排序称为"文件排序"
+		mysql> EXPLAIN SELECT * FROM message ORDER BY created_date;
+		+----+-------------+---------+------+---------------+------+---------+------+------+----------------+
+		| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows | Extra          |
+		+----+-------------+---------+------+---------------+------+---------+------+------+----------------+
+		|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 | Using filesort |
+		+----+-------------+---------+------+---------------+------+---------+------+------+----------------+
+	(2).using temporary:使用了临时表保存中间结果,MySQL在对查询结果排序时使用了临时表.常见于排序 order by
+		和分组查询 order by 中
+		mysql> EXPLAIN SELECT * FROM message GROUP BY created_date;
+		+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
+		| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows | Extra                           |
+		+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
+		|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 | Using temporary; Using filesort |
+		+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
+	(3).using index:表示相应的查询操作中使用了覆盖索引,避免访问表的数据行.
+		如果同时出现 using where,说明索引是用来执行索引键值的查找;
+		如果没有同时出现 using where,说明索引是用来读取数据而非执行查找动作;
+		==> 覆盖索引:
+			select 的数据列只用从索引中就能够取得,不必读取数据行,MySQL 可以利用索引返回 select 列表中的字段,
+			而不必根据索引再次读取数据文件,换句话说查询列要被所建的索引覆盖.
+			如果使用覆盖索引,要注意 select 列表只读取所需要的列,不要使用 select *
+			因为如果将所有字段一起做成索引会导致索引文件过大,查询性能下降.
+	(4).using where:使用 where 子句
+	(5).using join buffer:使用了连接缓存
+		mysql> explain select * from category inner join book on category.card=book.card inner join phone on category.card=phone.card;
+		+----+-------------+----------+------+---------------+------+---------+------+------+--------------------------------+
+		| id | select_type | table    | type | possible_keys | key  | key_len | ref  | rows | Extra                          |
+		+----+-------------+----------+------+---------------+------+---------+------+------+--------------------------------+
+		|  1 | SIMPLE      | category | ALL  | NULL          | NULL | NULL    | NULL |   20 |                                |
+		|  1 | SIMPLE      | book     | ALL  | NULL          | NULL | NULL    | NULL |   20 | Using where; Using join buffer |
+		|  1 | SIMPLE      | phone    | ALL  | NULL          | NULL | NULL    | NULL |   20 | Using where; Using join buffer |
+		+----+-------------+----------+------+---------------+------+---------+------+------+--------------------------------+
+	(6).impossible where:where子句的值总是false,不能用来获取任何元祖
+	(7).select table optimized away:在没有 group by 子句的情况下,基于索引优化 mix/max 操作或者对于 MyISAM
+		存储引擎优化 count(*)操作,不必等到执行阶段在进行计算,查询执行计划生成的阶段即可完成优化
+	(8).distinct:优化 distinct 操作,在找第一匹配的元祖后即停止找同样值的操作.
 ## 7.索引优化:
 	-- 表相关操作SQL参加文件: 数据库脚本.sql
 	7.1.单表优化:查询 category_id 为1 且 comments > 1 的情况下,views 最多的 article_id
@@ -410,277 +410,277 @@
 				|  1 | SIMPLE      | t_user | ALL  | NULL          | NULL | NULL    | NULL |    5 | Using where |
 				+----+-------------+--------+------+---------------+------+---------+------+------+-------------+
 ## 8.查询分析:
-	8.1.如何进行优化:
-		(1).开启慢查询日志,设置慢查询的阙值,比如超过多少秒的日志打印出来,观察线上环境的慢sql情况
-		(2).通过explain 和 慢sql进行相应的分析;
-		(3).show profile 查询sql在 MySQL 服务器里面执行的细节和生命周期情况;
-		(4).SQL数据库服务器参数的优化(由运维或者DBA完成)
-	8.2.查询优化:
-		8.2.1.小表驱动大表:即小的数据集驱动大的数据集
-			(1).select * from A where id in(select id from B)
-				当B表的数据集小于A表的数据集时,in 优于 exists
-			(2).select * from A where exists(select 1 from B where B.id=A.id)
-				当A表的数据集小于A表的数据集时, exists 优于 in
-			(3).exists:
-				select ... from table where exists(subquery)
-				该语法可以理解为:将主查询的数据放到子查询中做条件验证,根据验证结果来决定主查询的数据结果是否保留
-				==> 注意:
-					Ⅰ.exists(subquery)只返回 true 和 false,因此子查询中 select * 可以是 select 1或者其他
-						官方说法是实际执行时会忽略 select 清单.
-					Ⅱ.exists 子查询的实际执行过程可能经过了优化;
-					Ⅲ.exists 子查询往往也可以用条件表达式,其他子查询或者join来替代.
-		8.2.2.order by:
-			8.2.2.1.order by 子句尽量使用 index 方式来排序,避免使用 fileSort 方式排序.
-				mysql 支持两种方式的排序:filesort(效率低),index(可以扫描索引本身完成排序,效率高).
-				order by 满足两种情况下,会使用 index 方式排序:
-				(1).order by 语句使用索引最左前列;
-				(2).使用 where 子句与 order by 子句条件组合满足索引最左前列.
-				==> 尽可能在索引上完成排序操作,遵照索引建的最左前列.
-			8.2.2.2.如果不在索引列上排序,fileSort有两种排序算法:双路排序和单路排序
-				(1).双路排序:MySQL4.1之前是使用双路排序.字面意思是两次扫描磁盘,最终取得数据.
-					读取行指针和order by 列,对他们进行排序,然后扫描已经排序好的列表,按照列表中的值重新从列表中读取对应的数据输出.
-					==> 取一批数据时,要对磁盘进行两次扫描.I\O本身是很耗时的.
-				(2).单路排序:从磁盘中读取查询需要的所有列,按照order by列在buffer 中进行排序,然后扫描排序后的列表进行输出.
-					它的效率更块一些.避免了二次读取数据.,并且把随机I/O变成了顺序IO,但它使用更多的空间.
-				(3).单路排序的问题:
-					在 sort_buffer 中,单路方法比双路方法要占用更多的空间,因为单路是把所有字段取出,所以有可能取出的数据
-					超出了 sort_buffer的容量,导致了每次只能去sort_buffer容量大小的数据,进行排序(创建临时文件,多路合并)
-					排序完再取 sort_buffer的容量大小,再排...,从而多次I\O
-				(3).针对单路排序:
-					增大 sort_buffer_size 参数的设置;
-					增大 max_length_for_sort_data 参数的设置
-			8.2.2.3.提高 order by 速度:
-				(1).order by 时 select * 是一个大忌,只查询需要的字段,主要产生的影响:
-					Ⅰ.当查询的字段大小总和小于 max_length_for_sort_data 而且排序字段不是 text|blob 类型时,
-						会用改进后的算法,单路排序
-					Ⅱ.两种算法的数据都可能超出 sort_buffer的容量,超出之后会创建临时文件进行多路合并,导致多次I/O
-						使用单路排序算法风险更大先.
-				(2).尝试提高 sort_buffer的容量大小.
-					根据系统能力来进行提高,因为这个参数是针对每个进程的.
-				(3).尝试提高 max_length_for_sort_data 的大小:
-					会增加改进算法的效率.但是如果设置的太高,数据总容量超出 sort_buffer_size的概率就增大.
-					明显症状是高磁盘IO和低的处理器使用率
-			8.2.2.4.总结:为排序使用索引.
-				MySQL能为排序与查询使用相同的索引
-				index a_b_c(a,b,c)
-				(1).order by 能使用索引最左前缀
-					order by a
-					order by a,b
-					order by a,b,c
-					order by a desc, b desc, c desc
-				(2).如果 where 子句使用索引的最左前缀为常量,order by 能使用索引:
-					where a= const order by b,c
-					where a= const and b = const order by c
-					where a= const and b> const order by b, c 
-				(3).不能使用索引进行排序:
-					order by a asc, b desc, c desc --排序不一致
-					where g = const order by b,c -- 丢失a 索引
-					where a = const order by c -- 丢失 b 索引
-					where a = const order by a,d -- d 不是索引的一部分
-					where a in (...) order by b,c --对于排序来说, 多个相等的条件也是范围查询
-		8.2.3.group by:实质是先排序后进行分组,遵照索引建的最佳左前缀.
-			当无法使用索引列时,增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置;
-			where 高于 having,能写在 where 中的限定条件不要去使用 having 限定了.
-			group by 的优化:
-			(1).explain select actor.first_name,actor.last_name, count(*) from film_actor inner join actor USING(actor_id)
-				group by film_actor.actor_id;
-				==>
-				+----+-------------+------------+------+---------------+---------+---------+-----------------------+------+---------------------------------+
-				| id | select_type | table      | type | possible_keys | key     | key_len | ref                   | rows | Extra                           |
-				+----+-------------+------------+------+---------------+---------+---------+-----------------------+------+---------------------------------+
-				|  1 | SIMPLE      | actor      | ALL  | PRIMARY       | NULL    | NULL    | NULL                  |  200 | Using temporary; Using filesort |
-				|  1 | SIMPLE      | film_actor | ref  | PRIMARY       | PRIMARY | 2       | sakila.actor.actor_id |   13 | Using index                     |
-				+----+-------------+------------+------+---------------+---------+---------+-----------------------+------+---------------------------------+
-			(2).优化后:
-				explain select actor.first_name, actor.last_name, c.cnt from actor inner join 
-				(select actor_id, count(*) cnt from film_actor group by actor_id) as c using(actor_id);
-				==>
-				+----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
-				| id | select_type | table      | type   | possible_keys | key     | key_len | ref        | rows | Extra       |
-				+----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
-				|  1 | PRIMARY     | <derived2> | ALL    | NULL          | NULL    | NULL    | NULL       |  200 |             |
-				|  1 | PRIMARY     | actor      | eq_ref | PRIMARY       | PRIMARY | 2       | c.actor_id |    1 |             |
-				|  2 | DERIVED     | film_actor | index  | NULL          | PRIMARY | 4       | NULL       | 4354 | Using index |
-				+----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
-	8.3.慢查询日志:
-		8.3.1.慢查询日志是 MySQL提供的一种日志记录,用来记录在mysql中响应时间超过阀值的语句,具体指运行的时间
-			超过 long_query_time 值的sql则会被记录到慢查询日志中.
-			long_query_time 默认值为 10,意思是指运行时间超过10秒的sql
-		8.3.2.如何设置:
-			(1).默认情况下,MySQL数据库没有开启慢查询日志,需要手动设置该参数.
-				当然,如果不是在调优的情况下,一般不建议开启该参数.因为其对性能会带来一定影响.
-			(2).查看是否开启:
-				show variables like '%slow_query_log%'
-				mysql> show variables like 'slow_query_log%';
-				+---------------------+-----------------------------------------------------------------+
-				| Variable_name       | Value                                                           |
-				+---------------------+-----------------------------------------------------------------+
-				| slow_query_log      | OFF                                                             |
-				| slow_query_log_file | C:\ProgramData\MySQL\MySQL Server 5.5\Data\BlueFish-PC-slow.log |
-				+---------------------+-----------------------------------------------------------------+
-				slow_query_log OFF 表示关闭
-				slow_query_log_file ==> 表示慢查询日志文件位置
-			(3).开启慢查询日志:
-				set global slow_query_log=1,只对当前数据库有效.如果 mysql 重启后会失效.
-				如果需要永久生效,需要修改配置文件,在相应的配置文件中增加或修改如下配置:
-				slow_query_log=1
-				slow_query_log_file=/var/lib/mysql/mysql-slow.log
-				然后重启mysql服务器.
-				==> 如果没有指定慢查询日志文件的存放路径,系统默认会给一个缺省路径 host_name-slow.log
-			(4).什么样的sql会被认为是慢查询sql的:主要有参数 long_query_time 来控制,默认情况下是 10s
-				查看参数 long_query_time 的设置:
-				mysql> show variables like '%long_query_time%';
-				+-----------------+-----------+
-				| Variable_name   | Value     |
-				+-----------------+-----------+
-				| long_query_time | 10.000000 |
-				+-----------------+-----------+
-				在mysql源码里是判断大于 long_query_time,而非大于等于的.
-			(5).设置慢sql查询:
-				set global long_query_time=3
-				一般在一个会话中设置之后查看不出来,需要重新连接或者重新打开一个会话或者使用 global 来查看:
-				mysql> set global long_query_time=3;
-				mysql> show variables like '%long_query_time%';
-				+-----------------+-----------+
-				| Variable_name   | Value     |
-				+-----------------+-----------+
-				| long_query_time | 10.000000 |
-				+-----------------+-----------+
-				mysql> show global variables like '%long_query_time%';
-				+-----------------+----------+
-				| Variable_name   | Value    |
-				+-----------------+----------+
-				| long_query_time | 3.000000 |
-				+-----------------+----------+
-			(6).在配置文件中配置上述慢查询日志开关:
-				slow_query_log=1
-				slow_query_log_file=/var/lib/mysql/mysql-slow.log
-				long_query_time=3
-				log_output=FILE
-		8.3.3.慢查询日志分析工具:mysqldumpslow-mysql提供的日志分析工具
-			(1).查看帮助信息:mysqldumpslow --help
-				-s:表示按照何种方式排序
-				c:访问次数
-				l:锁定时间
-				r:返回记录
-				t:查询时间
-				al:平均锁定时间
-				ar:平均返回记录
-				at:平均查询时间
-				-t num:为返回前面多少条数据
-				g:后边接正则表达式,大小写不敏感
-			(2).常用参考:
-				得到返回记录集最多的10个sql:
-					mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log
-				得到访问次数最多的10个SQL:
-					mysqldumpslow -s c -t 10 /var/lib/mysql/mysql-slow.log
-				得到按照时间排序的前10条里面含有左连接的查询语句:
-					mysqldumpslow -s t -t 10 -g "left join" /var/lib/mysql/mysql-slow.log
-				建议在使用这些命令时集合 | 或者 more 使用,否则可能出现爆屏现象:
-					mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log | more
-	8.4.Show Profile:
-		8.4.1.其是 mysql提供可以用来分析当前会话中语句执行的资源消耗情况.可以用于sql调优测量;
-		8.4.2.该值默认情况下是关闭的,并保存最近15次的运行结果;
-			(1).查看是否支持和关闭状态:
-				mysql> show variables like '%profil%';
-				+------------------------+-------+
-				| Variable_name          | Value |
-				+------------------------+-------+
-				| have_profiling         | YES   |
-				| profiling              | OFF   |
-				| profiling_history_size | 15    |
-				+------------------------+-------+
-			(2).开启profiling:
-				mysql> set profiling=on; ## 开启方式
-				mysql> show variables like '%profiling%';
-				+------------------------+-------+
-				| Variable_name          | Value |
-				+------------------------+-------+
-				| have_profiling         | YES   |
-				| profiling              | ON    |
-				| profiling_history_size | 15    |
-				+------------------------+-------+
-		8.4.3.运行相关的sql,可以通过show profiles 查出所有的历史查询子句:
-			mysql> show profiles;
-			+----------+------------+-----------------------------------------------+
-			| Query_ID | Duration   | Query                                         |
-			+----------+------------+-----------------------------------------------+
-			|        1 |   0.002309 | show variables like 'profiling'               |
-			|        2 |   0.000889 | select * from dept                            |
-			|        3 | 0.07644575 | select * from book                            |
-			|        4 |   1.520539 | select * from emp group by id%10 limit 150000 |
-			|        5 | 1.57117675 | select * from emp group by id%20 order by 5   |
-			|        6 |  0.0002625 | show profiling                                |
-			+----------+------------+-----------------------------------------------+
-		8.4.4.sql诊断:可以通过 show profile相关参数来查看
-			查看cpu和io情况
-			mysql> show profile cpu,block io for query 5;
-			+----------------------+----------+----------+------------+--------------+---------------+
-			| Status               | Duration | CPU_user | CPU_system | Block_ops_in | Block_ops_out |
-			+----------------------+----------+----------+------------+--------------+---------------+
-			| starting             | 0.000112 | 0        | 0          | NULL         | NULL          |
-			| checking permissions | 1.6E-5   | 0        | 0          | NULL         | NULL          |
-			| Opening tables       | 4.6E-5   | 0        | 0          | NULL         | NULL          |
-			| System lock          | 1.9E-5   | 0        | 0          | NULL         | NULL          |
-			| init                 | 4.9E-5   | 0        | 0          | NULL         | NULL          |
-			| optimizing           | 9E-6     | 0        | 0          | NULL         | NULL          |
-			| statistics           | 4.5E-5   | 0        | 0          | NULL         | NULL          |
-			| preparing            | 2E-5     | 0        | 0          | NULL         | NULL          |
-			| Creating tmp table   | 0.000508 | 0        | 0          | NULL         | NULL          |
-			| executing            | 8E-6     | 0        | 0          | NULL         | NULL          |
-			| Copying to tmp table | 1.569976 | 1.57561  | 0          | NULL         | NULL          |
-			| Sorting result       | 4.8E-5   | 0        | 0          | NULL         | NULL          |
-			| Sending data         | 6.1E-5   | 0        | 0          | NULL         | NULL          |
-			| end                  | 5E-6     | 0        | 0          | NULL         | NULL          |
-			| removing tmp table   | 1.3E-5   | 0        | 0          | NULL         | NULL          |
-			| end                  | 6E-6     | 0        | 0          | NULL         | NULL          |
-			| query end            | 6E-6     | 0        | 0          | NULL         | NULL          |
-			| closing tables       | 1.2E-5   | 0        | 0          | NULL         | NULL          |
-			| freeing items        | 0.000216 | 0        | 0          | NULL         | NULL          |
-			| logging slow query   | 3E-6     | 0        | 0          | NULL         | NULL          |
-			| cleaning up          | 3E-6     | 0        | 0          | NULL         | NULL          |
-			+----------------------+----------+----------+------------+--------------+---------------+
-			相关参数:
-				all:显示所有开销信息
-				block io:显示块IO相关开销
-				context switches:上下文切换相关开销
-				cpu:显示cpu相关开销信息
-				ipc:显示发送和接收相关开销信息
-				memory:显示内存相关开销信息
-				page faults:显示页面错误相关开销信息
-				source:显示和source_function,source_file,source_line 相关的开销信息
-				swaps:显示交换次数相关开销信息
-		8.4.5.开发中需要注意的点:
-			(1).converting HEAP to MyISAM:查询结果太大,内存都不够用了往磁盘上搬;
-			(2).creating tmp table:创建临时表(拷贝数据到临时表,用完再删除临时表);
-			(3).Copying to temp table on disk:把内存中临时表复制到磁盘-很危险
-			(4).locked
+### 8.1.如何进行优化:
+	(1).开启慢查询日志,设置慢查询的阙值,比如超过多少秒的日志打印出来,观察线上环境的慢sql情况
+	(2).通过explain 和 慢sql进行相应的分析;
+	(3).show profile 查询sql在 MySQL 服务器里面执行的细节和生命周期情况;
+	(4).SQL数据库服务器参数的优化(由运维或者DBA完成)
+### 8.2.查询优化:
+	8.2.1.小表驱动大表:即小的数据集驱动大的数据集
+		(1).select * from A where id in(select id from B)
+			当B表的数据集小于A表的数据集时,in 优于 exists
+		(2).select * from A where exists(select 1 from B where B.id=A.id)
+			当A表的数据集小于A表的数据集时, exists 优于 in
+		(3).exists:
+			select ... from table where exists(subquery)
+			该语法可以理解为:将主查询的数据放到子查询中做条件验证,根据验证结果来决定主查询的数据结果是否保留
+			==> 注意:
+				Ⅰ.exists(subquery)只返回 true 和 false,因此子查询中 select * 可以是 select 1或者其他
+					官方说法是实际执行时会忽略 select 清单.
+				Ⅱ.exists 子查询的实际执行过程可能经过了优化;
+				Ⅲ.exists 子查询往往也可以用条件表达式,其他子查询或者join来替代.
+	8.2.2.order by:
+		8.2.2.1.order by 子句尽量使用 index 方式来排序,避免使用 fileSort 方式排序.
+			mysql 支持两种方式的排序:filesort(效率低),index(可以扫描索引本身完成排序,效率高).
+			order by 满足两种情况下,会使用 index 方式排序:
+			(1).order by 语句使用索引最左前列;
+			(2).使用 where 子句与 order by 子句条件组合满足索引最左前列.
+			==> 尽可能在索引上完成排序操作,遵照索引建的最左前列.
+		8.2.2.2.如果不在索引列上排序,fileSort有两种排序算法:双路排序和单路排序
+			(1).双路排序:MySQL4.1之前是使用双路排序.字面意思是两次扫描磁盘,最终取得数据.
+				读取行指针和order by 列,对他们进行排序,然后扫描已经排序好的列表,按照列表中的值重新从列表中读取对应的数据输出.
+				==> 取一批数据时,要对磁盘进行两次扫描.I\O本身是很耗时的.
+			(2).单路排序:从磁盘中读取查询需要的所有列,按照order by列在buffer 中进行排序,然后扫描排序后的列表进行输出.
+				它的效率更块一些.避免了二次读取数据.,并且把随机I/O变成了顺序IO,但它使用更多的空间.
+			(3).单路排序的问题:
+				在 sort_buffer 中,单路方法比双路方法要占用更多的空间,因为单路是把所有字段取出,所以有可能取出的数据
+				超出了 sort_buffer的容量,导致了每次只能去sort_buffer容量大小的数据,进行排序(创建临时文件,多路合并)
+				排序完再取 sort_buffer的容量大小,再排...,从而多次I\O
+			(3).针对单路排序:
+				增大 sort_buffer_size 参数的设置;
+				增大 max_length_for_sort_data 参数的设置
+		8.2.2.3.提高 order by 速度:
+			(1).order by 时 select * 是一个大忌,只查询需要的字段,主要产生的影响:
+				Ⅰ.当查询的字段大小总和小于 max_length_for_sort_data 而且排序字段不是 text|blob 类型时,
+					会用改进后的算法,单路排序
+				Ⅱ.两种算法的数据都可能超出 sort_buffer的容量,超出之后会创建临时文件进行多路合并,导致多次I/O
+					使用单路排序算法风险更大先.
+			(2).尝试提高 sort_buffer的容量大小.
+				根据系统能力来进行提高,因为这个参数是针对每个进程的.
+			(3).尝试提高 max_length_for_sort_data 的大小:
+				会增加改进算法的效率.但是如果设置的太高,数据总容量超出 sort_buffer_size的概率就增大.
+				明显症状是高磁盘IO和低的处理器使用率
+		8.2.2.4.总结:为排序使用索引.
+			MySQL能为排序与查询使用相同的索引
+			index a_b_c(a,b,c)
+			(1).order by 能使用索引最左前缀
+				order by a
+				order by a,b
+				order by a,b,c
+				order by a desc, b desc, c desc
+			(2).如果 where 子句使用索引的最左前缀为常量,order by 能使用索引:
+				where a= const order by b,c
+				where a= const and b = const order by c
+				where a= const and b> const order by b, c 
+			(3).不能使用索引进行排序:
+				order by a asc, b desc, c desc --排序不一致
+				where g = const order by b,c -- 丢失a 索引
+				where a = const order by c -- 丢失 b 索引
+				where a = const order by a,d -- d 不是索引的一部分
+				where a in (...) order by b,c --对于排序来说, 多个相等的条件也是范围查询
+	8.2.3.group by:实质是先排序后进行分组,遵照索引建的最佳左前缀.
+		当无法使用索引列时,增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置;
+		where 高于 having,能写在 where 中的限定条件不要去使用 having 限定了.
+		group by 的优化:
+		(1).explain select actor.first_name,actor.last_name, count(*) from film_actor inner join actor USING(actor_id)
+			group by film_actor.actor_id;
+			==>
+			+----+-------------+------------+------+---------------+---------+---------+-----------------------+------+---------------------------------+
+			| id | select_type | table      | type | possible_keys | key     | key_len | ref                   | rows | Extra                           |
+			+----+-------------+------------+------+---------------+---------+---------+-----------------------+------+---------------------------------+
+			|  1 | SIMPLE      | actor      | ALL  | PRIMARY       | NULL    | NULL    | NULL                  |  200 | Using temporary; Using filesort |
+			|  1 | SIMPLE      | film_actor | ref  | PRIMARY       | PRIMARY | 2       | sakila.actor.actor_id |   13 | Using index                     |
+			+----+-------------+------------+------+---------------+---------+---------+-----------------------+------+---------------------------------+
+		(2).优化后:
+			explain select actor.first_name, actor.last_name, c.cnt from actor inner join 
+			(select actor_id, count(*) cnt from film_actor group by actor_id) as c using(actor_id);
+			==>
+			+----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
+			| id | select_type | table      | type   | possible_keys | key     | key_len | ref        | rows | Extra       |
+			+----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
+			|  1 | PRIMARY     | <derived2> | ALL    | NULL          | NULL    | NULL    | NULL       |  200 |             |
+			|  1 | PRIMARY     | actor      | eq_ref | PRIMARY       | PRIMARY | 2       | c.actor_id |    1 |             |
+			|  2 | DERIVED     | film_actor | index  | NULL          | PRIMARY | 4       | NULL       | 4354 | Using index |
+			+----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
+### 8.3.慢查询日志:
+	8.3.1.慢查询日志是 MySQL提供的一种日志记录,用来记录在mysql中响应时间超过阀值的语句,具体指运行的时间
+		超过 long_query_time 值的sql则会被记录到慢查询日志中.
+		long_query_time 默认值为 10,意思是指运行时间超过10秒的sql
+	8.3.2.如何设置:
+		(1).默认情况下,MySQL数据库没有开启慢查询日志,需要手动设置该参数.
+			当然,如果不是在调优的情况下,一般不建议开启该参数.因为其对性能会带来一定影响.
+		(2).查看是否开启:
+			show variables like '%slow_query_log%'
+			mysql> show variables like 'slow_query_log%';
+			+---------------------+-----------------------------------------------------------------+
+			| Variable_name       | Value                                                           |
+			+---------------------+-----------------------------------------------------------------+
+			| slow_query_log      | OFF                                                             |
+			| slow_query_log_file | C:\ProgramData\MySQL\MySQL Server 5.5\Data\BlueFish-PC-slow.log |
+			+---------------------+-----------------------------------------------------------------+
+			slow_query_log OFF 表示关闭
+			slow_query_log_file ==> 表示慢查询日志文件位置
+		(3).开启慢查询日志:
+			set global slow_query_log=1,只对当前数据库有效.如果 mysql 重启后会失效.
+			如果需要永久生效,需要修改配置文件,在相应的配置文件中增加或修改如下配置:
+			slow_query_log=1
+			slow_query_log_file=/var/lib/mysql/mysql-slow.log
+			然后重启mysql服务器.
+			==> 如果没有指定慢查询日志文件的存放路径,系统默认会给一个缺省路径 host_name-slow.log
+		(4).什么样的sql会被认为是慢查询sql的:主要有参数 long_query_time 来控制,默认情况下是 10s
+			查看参数 long_query_time 的设置:
+			mysql> show variables like '%long_query_time%';
+			+-----------------+-----------+
+			| Variable_name   | Value     |
+			+-----------------+-----------+
+			| long_query_time | 10.000000 |
+			+-----------------+-----------+
+			在mysql源码里是判断大于 long_query_time,而非大于等于的.
+		(5).设置慢sql查询:
+			set global long_query_time=3
+			一般在一个会话中设置之后查看不出来,需要重新连接或者重新打开一个会话或者使用 global 来查看:
+			mysql> set global long_query_time=3;
+			mysql> show variables like '%long_query_time%';
+			+-----------------+-----------+
+			| Variable_name   | Value     |
+			+-----------------+-----------+
+			| long_query_time | 10.000000 |
+			+-----------------+-----------+
+			mysql> show global variables like '%long_query_time%';
+			+-----------------+----------+
+			| Variable_name   | Value    |
+			+-----------------+----------+
+			| long_query_time | 3.000000 |
+			+-----------------+----------+
+		(6).在配置文件中配置上述慢查询日志开关:
+			slow_query_log=1
+			slow_query_log_file=/var/lib/mysql/mysql-slow.log
+			long_query_time=3
+			log_output=FILE
+	8.3.3.慢查询日志分析工具:mysqldumpslow-mysql提供的日志分析工具
+		(1).查看帮助信息:mysqldumpslow --help
+			-s:表示按照何种方式排序
+			c:访问次数
+			l:锁定时间
+			r:返回记录
+			t:查询时间
+			al:平均锁定时间
+			ar:平均返回记录
+			at:平均查询时间
+			-t num:为返回前面多少条数据
+			g:后边接正则表达式,大小写不敏感
+		(2).常用参考:
+			得到返回记录集最多的10个sql:
+				mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log
+			得到访问次数最多的10个SQL:
+				mysqldumpslow -s c -t 10 /var/lib/mysql/mysql-slow.log
+			得到按照时间排序的前10条里面含有左连接的查询语句:
+				mysqldumpslow -s t -t 10 -g "left join" /var/lib/mysql/mysql-slow.log
+			建议在使用这些命令时集合 | 或者 more 使用,否则可能出现爆屏现象:
+				mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log | more
+### 8.4.Show Profile:
+	8.4.1.其是 mysql提供可以用来分析当前会话中语句执行的资源消耗情况.可以用于sql调优测量;
+	8.4.2.该值默认情况下是关闭的,并保存最近15次的运行结果;
+		(1).查看是否支持和关闭状态:
+			mysql> show variables like '%profil%';
+			+------------------------+-------+
+			| Variable_name          | Value |
+			+------------------------+-------+
+			| have_profiling         | YES   |
+			| profiling              | OFF   |
+			| profiling_history_size | 15    |
+			+------------------------+-------+
+		(2).开启profiling:
+			mysql> set profiling=on; ## 开启方式
+			mysql> show variables like '%profiling%';
+			+------------------------+-------+
+			| Variable_name          | Value |
+			+------------------------+-------+
+			| have_profiling         | YES   |
+			| profiling              | ON    |
+			| profiling_history_size | 15    |
+			+------------------------+-------+
+	8.4.3.运行相关的sql,可以通过show profiles 查出所有的历史查询子句:
+		mysql> show profiles;
+		+----------+------------+-----------------------------------------------+
+		| Query_ID | Duration   | Query                                         |
+		+----------+------------+-----------------------------------------------+
+		|        1 |   0.002309 | show variables like 'profiling'               |
+		|        2 |   0.000889 | select * from dept                            |
+		|        3 | 0.07644575 | select * from book                            |
+		|        4 |   1.520539 | select * from emp group by id%10 limit 150000 |
+		|        5 | 1.57117675 | select * from emp group by id%20 order by 5   |
+		|        6 |  0.0002625 | show profiling                                |
+		+----------+------------+-----------------------------------------------+
+	8.4.4.sql诊断:可以通过 show profile相关参数来查看
+		查看cpu和io情况
+		mysql> show profile cpu,block io for query 5;
+		+----------------------+----------+----------+------------+--------------+---------------+
+		| Status               | Duration | CPU_user | CPU_system | Block_ops_in | Block_ops_out |
+		+----------------------+----------+----------+------------+--------------+---------------+
+		| starting             | 0.000112 | 0        | 0          | NULL         | NULL          |
+		| checking permissions | 1.6E-5   | 0        | 0          | NULL         | NULL          |
+		| Opening tables       | 4.6E-5   | 0        | 0          | NULL         | NULL          |
+		| System lock          | 1.9E-5   | 0        | 0          | NULL         | NULL          |
+		| init                 | 4.9E-5   | 0        | 0          | NULL         | NULL          |
+		| optimizing           | 9E-6     | 0        | 0          | NULL         | NULL          |
+		| statistics           | 4.5E-5   | 0        | 0          | NULL         | NULL          |
+		| preparing            | 2E-5     | 0        | 0          | NULL         | NULL          |
+		| Creating tmp table   | 0.000508 | 0        | 0          | NULL         | NULL          |
+		| executing            | 8E-6     | 0        | 0          | NULL         | NULL          |
+		| Copying to tmp table | 1.569976 | 1.57561  | 0          | NULL         | NULL          |
+		| Sorting result       | 4.8E-5   | 0        | 0          | NULL         | NULL          |
+		| Sending data         | 6.1E-5   | 0        | 0          | NULL         | NULL          |
+		| end                  | 5E-6     | 0        | 0          | NULL         | NULL          |
+		| removing tmp table   | 1.3E-5   | 0        | 0          | NULL         | NULL          |
+		| end                  | 6E-6     | 0        | 0          | NULL         | NULL          |
+		| query end            | 6E-6     | 0        | 0          | NULL         | NULL          |
+		| closing tables       | 1.2E-5   | 0        | 0          | NULL         | NULL          |
+		| freeing items        | 0.000216 | 0        | 0          | NULL         | NULL          |
+		| logging slow query   | 3E-6     | 0        | 0          | NULL         | NULL          |
+		| cleaning up          | 3E-6     | 0        | 0          | NULL         | NULL          |
+		+----------------------+----------+----------+------------+--------------+---------------+
+		相关参数:
+			all:显示所有开销信息
+			block io:显示块IO相关开销
+			context switches:上下文切换相关开销
+			cpu:显示cpu相关开销信息
+			ipc:显示发送和接收相关开销信息
+			memory:显示内存相关开销信息
+			page faults:显示页面错误相关开销信息
+			source:显示和source_function,source_file,source_line 相关的开销信息
+			swaps:显示交换次数相关开销信息
+	8.4.5.开发中需要注意的点:
+		(1).converting HEAP to MyISAM:查询结果太大,内存都不够用了往磁盘上搬;
+		(2).creating tmp table:创建临时表(拷贝数据到临时表,用完再删除临时表);
+		(3).Copying to temp table on disk:把内存中临时表复制到磁盘-很危险
+		(4).locked
 ## 9.count和max优化:
-	9.1.max 优化:
-		(1).explain select max(payment_date) from payment;
-			+----+-------------+---------+------+---------------+------+---------+------+-------+-------+
-			| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows  | Extra |
-			+----+-------------+---------+------+---------------+------+---------+------+-------+-------+
-			|  1 | SIMPLE      | payment | ALL  | NULL          | NULL | NULL    | NULL | 15123 |       |
-			+----+-------------+---------+------+---------------+------+---------+------+-------+-------+
-		(2).创建索引后:create index ix_paymentdate on payment(payment_date);
-			explain select max(payment_date) from payment;
-			+----+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-			| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                        |
-			+----+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-			|  1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Select tables optimized away |
-			+----+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
-		(3).总结:一般索引的字段都是按顺序排列的,索引对于max和min之类的可以使用索引来优化;
-	9.2.count的优化:
-		在一条SQL语句中,同时查出2006年和2007年发行的电影数量:
-		(1).错误一:无法分开计算2006和2007年的电影数量
-			select count(release_year='2006' or release_year='2007') from film;
-		(2).错误二:release_year不可能同时为2006,2007,逻辑存在错误
-			select count(*) from film where release_year='2006' and release_year='2007';
-		(3).优化SQL:
-			select count(release_year='2006' or null) as '2006年',count(release_year='2007' or null) as '2007年'
-			from film;
-		==> count 是不计算 null 的;
+### 9.1.max 优化:
+	(1).explain select max(payment_date) from payment;
+		+----+-------------+---------+------+---------------+------+---------+------+-------+-------+
+		| id | select_type | table   | type | possible_keys | key  | key_len | ref  | rows  | Extra |
+		+----+-------------+---------+------+---------------+------+---------+------+-------+-------+
+		|  1 | SIMPLE      | payment | ALL  | NULL          | NULL | NULL    | NULL | 15123 |       |
+		+----+-------------+---------+------+---------------+------+---------+------+-------+-------+
+	(2).创建索引后:create index ix_paymentdate on payment(payment_date);
+		explain select max(payment_date) from payment;
+		+----+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+		| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra                        |
+		+----+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+		|  1 | SIMPLE      | NULL  | NULL | NULL          | NULL | NULL    | NULL | NULL | Select tables optimized away |
+		+----+-------------+-------+------+---------------+------+---------+------+------+------------------------------+
+	(3).总结:一般索引的字段都是按顺序排列的,索引对于max和min之类的可以使用索引来优化;
+### 9.2.count的优化:
+	在一条SQL语句中,同时查出2006年和2007年发行的电影数量:
+	(1).错误一:无法分开计算2006和2007年的电影数量
+		select count(release_year='2006' or release_year='2007') from film;
+	(2).错误二:release_year不可能同时为2006,2007,逻辑存在错误
+		select count(*) from film where release_year='2006' and release_year='2007';
+	(3).优化SQL:
+		select count(release_year='2006' or null) as '2006年',count(release_year='2007' or null) as '2007年'
+		from film;
+	==> count 是不计算 null 的;
 ## 10.limit 优化:
 	(1).limit 常用于分页处理,时常会伴随 order by 从句使用,因此大多时候会使用 Filesorts 这样会造成大量的IO问题
 		explain select film_id,description from film order by title limit 50,5;
@@ -707,118 +707,118 @@
 			注意:这里的主键必须是有序的且中间没有缺失
 ## 11.索引优化:
 	索引过多会影响查询效率,因为在查询是需要去查找索引
-	11.1.如何选择合适的列建立索引:
-		(1).在 where 从句,group by,order by,on 从句出现的列;
-		(2).索引字段越小越好
-		(3).离散度大的列放到联合索引的前面;
-			select * from payment where staff_id = 2 and customer_id=584;
-			是 index(staff_id,customer_id)好?还是index(customer_id,staff_id)好?
-			==> 由于customer_id的离散度更大,所以应该使用index(customer_id,staff_id)
-			唯一值越多,说明其离散度就越大
-			select count(distinct customer_id), count(distinct staff_id) from payment;
-	11.2.重复及冗余索引:
-		11.2.1.重复索引是指相同的列以相同的顺序建立的同类型的索引,如下表所示 primary key 和 id 列上的索引就是重复索引
-			create table test{
-				id int not null primary key,
-				name varchar(10) not null,
-				unique(id)
-			}engine=innodb;
-		11.2.2.冗余索引:是指多个索引的前缀列相同,或是在联合索引中包含了主键的索引,下面的例子中的key(name,id)就是一个冗余索引
-			create table test{
-				id int not null primary key,
-				name varchar(10) not null,
-				key(name,id)
-			}engine=innodb;
-		11.2.3.查找重复或冗余索引:
-			(1).使用sql查询,切换到imformation_schema数据库:不包含主键等
-				SELECT
-					a.table_schema AS 'database',
-					a.table_name AS 'tableName',
-					a.index_name AS 'index_one',
-					b.index_name AS 'index_two',
-					a.column_name AS 'repeat_column'
-				FROM
-					STATISTICS a
-				JOIN STATISTICS b ON a.table_schema = b.table_schema
-				AND a.table_name = b.table_name
-				AND a.seq_in_index = b.seq_in_index
-				AND a.column_name = b.column_name
-				WHERE
-					a.seq_in_index = 1
-				AND a.index_name <> b.index_name;
-			(2).使用工具: pt-duplicate-key-checker 检查重复索引:
-				pt-duplicate-key-checker \
-				-uroot\
-				-p  ''\
-				-h 127.0.0.1
-	11.3.索引维护:业务变更或表变更需要对索引进行调整或将不使用的索引删除
-		MySQL 目前没有记录索引的使用情况,但是在 PerconMySQL 和 MariaDB 中可以通过 index_statistics 表来查看那些索引未使用;
-		在 MySQL中目前只能通过慢查询日志配置pt-index-usage 工具来进行索引使用情况的分析
-		pt-index-usage \
-			-uroot -p '' \
-			mysql-slow.log 
+### 11.1.如何选择合适的列建立索引:
+	(1).在 where 从句,group by,order by,on 从句出现的列;
+	(2).索引字段越小越好
+	(3).离散度大的列放到联合索引的前面;
+		select * from payment where staff_id = 2 and customer_id=584;
+		是 index(staff_id,customer_id)好?还是index(customer_id,staff_id)好?
+		==> 由于customer_id的离散度更大,所以应该使用index(customer_id,staff_id)
+		唯一值越多,说明其离散度就越大
+		select count(distinct customer_id), count(distinct staff_id) from payment;
+### 11.2.重复及冗余索引:
+	11.2.1.重复索引是指相同的列以相同的顺序建立的同类型的索引,如下表所示 primary key 和 id 列上的索引就是重复索引
+		create table test{
+			id int not null primary key,
+			name varchar(10) not null,
+			unique(id)
+		}engine=innodb;
+	11.2.2.冗余索引:是指多个索引的前缀列相同,或是在联合索引中包含了主键的索引,下面的例子中的key(name,id)就是一个冗余索引
+		create table test{
+			id int not null primary key,
+			name varchar(10) not null,
+			key(name,id)
+		}engine=innodb;
+	11.2.3.查找重复或冗余索引:
+		(1).使用sql查询,切换到imformation_schema数据库:不包含主键等
+			SELECT
+				a.table_schema AS 'database',
+				a.table_name AS 'tableName',
+				a.index_name AS 'index_one',
+				b.index_name AS 'index_two',
+				a.column_name AS 'repeat_column'
+			FROM
+				STATISTICS a
+			JOIN STATISTICS b ON a.table_schema = b.table_schema
+			AND a.table_name = b.table_name
+			AND a.seq_in_index = b.seq_in_index
+			AND a.column_name = b.column_name
+			WHERE
+				a.seq_in_index = 1
+			AND a.index_name <> b.index_name;
+		(2).使用工具: pt-duplicate-key-checker 检查重复索引:
+			pt-duplicate-key-checker \
+			-uroot\
+			-p  ''\
+			-h 127.0.0.1
+### 11.3.索引维护:业务变更或表变更需要对索引进行调整或将不使用的索引删除
+	MySQL 目前没有记录索引的使用情况,但是在 PerconMySQL 和 MariaDB 中可以通过 index_statistics 表来查看那些索引未使用;
+	在 MySQL中目前只能通过慢查询日志配置pt-index-usage 工具来进行索引使用情况的分析
+	pt-index-usage \
+		-uroot -p '' \
+		mysql-slow.log 
 ## 12.表的优化:
-	12.1.选择合适的数据类型:
-		12.1.1.如何选择合适的数据类型:
-			(1).使用可以存下数据的最小的数据类型;
-			(2).使用简单的数据类型,int 要比 varchar 类型 在mysql处理上更简单;
-			(3).尽可能的使用 not null 定义字段
-			(4).尽量少使用 text 类型,非用不可时最好考虑分表
-		12.1.2.使用 int 类存储日期和时间,利用 from_unixtime(),unix_timestamp()两个函数来进行转换
-			from_unixtime() 将 int 类型的时间戳转换为日期格式
-				select from_unixtime(timestr) from test
-			unix_timestamp() 将正常的日期时间转换为 int 类型
-				insert into test(timestr) values (unix_timestamp('2014-06-01 13:12:00'))
-		12.1.3.使用 bigint 来存储 ip地址,利用 inet_aton(),inet_ntoa()两个函数来进行转换;
-			inet_aton():将正常的ip地址转换为 bigint 类型:
-				INSERT INTO ip_add(name, ip) VALUE('ss', inet_aton('192.168.139.129'));
-			inet_ntoa():将 bigint 类型的数据转换为正常的ip地址
-				SELECT name, inet_ntoa(ip) ip FROM ip_add
-	12.2.表的范式化和反范式化:
-		(1).范式化:是指数据库的设计范式,目前一般指第三设计范式,也就是要求数据表中不存在非关键字段对任意候选
-			关键字段的传递函数依赖则符合第三范式
-			第一范式(1NF)：字段值具有原子性,不能再分(所有关系型数据库系统都满足第一范式);
-			 例如：姓名字段,其中姓和名是一个整体,如果区分姓和名那么必须设立两个独立字段;
-			第二范式(2NF)：一个表必须有主键,即每行数据都能被唯一的区分;
-			 备注：必须先满足第一范式;
-			第三范式(3NF)：一个表中不能包涵其他相关表中非关键字段的信息,即数据表不能有沉余字段;
-			 备注：必须先满足第二范式;
-		(2).反范式化:指为了查询效率的考虑把原来符合第三范式的表适当的增加冗余,以达到优化查询的目的,
-			反范式化是一种以空间换取时间的操作
-	12.3.垂直拆分:
-		所谓垂直拆分,就是把原来一个有很多列的表拆分成多个表,这个可以解决表的宽度问题,通常垂直拆分按照如下原则进行:
-		(1).把不常有的字段单独存放到一个表中;
-		(2).把大字段独立存放到一个表中;
-		(3).把经常一起使用的字段放到一起;
-	12.4.水平拆分:是为了解决单表的数据量过大的问题,水平拆分的表每一个表的结构都是完全一致的
-		面临的问题:
+### 12.1.选择合适的数据类型:
+	12.1.1.如何选择合适的数据类型:
+		(1).使用可以存下数据的最小的数据类型;
+		(2).使用简单的数据类型,int 要比 varchar 类型 在mysql处理上更简单;
+		(3).尽可能的使用 not null 定义字段
+		(4).尽量少使用 text 类型,非用不可时最好考虑分表
+	12.1.2.使用 int 类存储日期和时间,利用 from_unixtime(),unix_timestamp()两个函数来进行转换
+		from_unixtime() 将 int 类型的时间戳转换为日期格式
+			select from_unixtime(timestr) from test
+		unix_timestamp() 将正常的日期时间转换为 int 类型
+			insert into test(timestr) values (unix_timestamp('2014-06-01 13:12:00'))
+	12.1.3.使用 bigint 来存储 ip地址,利用 inet_aton(),inet_ntoa()两个函数来进行转换;
+		inet_aton():将正常的ip地址转换为 bigint 类型:
+			INSERT INTO ip_add(name, ip) VALUE('ss', inet_aton('192.168.139.129'));
+		inet_ntoa():将 bigint 类型的数据转换为正常的ip地址
+			SELECT name, inet_ntoa(ip) ip FROM ip_add
+### 12.2.表的范式化和反范式化:
+	(1).范式化:是指数据库的设计范式,目前一般指第三设计范式,也就是要求数据表中不存在非关键字段对任意候选
+		关键字段的传递函数依赖则符合第三范式
+		第一范式(1NF)：字段值具有原子性,不能再分(所有关系型数据库系统都满足第一范式);
+			例如：姓名字段,其中姓和名是一个整体,如果区分姓和名那么必须设立两个独立字段;
+		第二范式(2NF)：一个表必须有主键,即每行数据都能被唯一的区分;
+			备注：必须先满足第一范式;
+		第三范式(3NF)：一个表中不能包涵其他相关表中非关键字段的信息,即数据表不能有沉余字段;
+			备注：必须先满足第二范式;
+	(2).反范式化:指为了查询效率的考虑把原来符合第三范式的表适当的增加冗余,以达到优化查询的目的,
+		反范式化是一种以空间换取时间的操作
+### 12.3.垂直拆分:
+	所谓垂直拆分,就是把原来一个有很多列的表拆分成多个表,这个可以解决表的宽度问题,通常垂直拆分按照如下原则进行:
+	(1).把不常有的字段单独存放到一个表中;
+	(2).把大字段独立存放到一个表中;
+	(3).把经常一起使用的字段放到一起;
+### 12.4.水平拆分:是为了解决单表的数据量过大的问题,水平拆分的表每一个表的结构都是完全一致的
+	面临的问题:
 			跨分区表进行数据查询
 			统计及后台报表操作
 ## 13.系统的优化:
-	13.1.操作系统配置优化
-		数据库是基于操作系统,大多数MySQL都是安装在 Linux 服务器上,所以对于操作系统的一些参数配置也会影响到MySQL
-		的性能,下面是一些常用的配置项:
-		(1).网络方面的配置,要修改 /etc/sysctl.conf 文件
-			#增加tcp支持的队列数
-			net.ipv4.tcp_max_syn_backlog=65535
-			#减少断开连接时,资源回收:
-			net.ipv4.tcp_max_tw_buckets=8000
-			net.ipv4.tcp_twreuse=1
-			net.ipv4.tcp_tw_recycle=1
-			net.ipv4.tcp_fin_timeout=10
-		(2).打开文件数的限制:
-			可以使用 ulimit -a 查看目录的限制,可以修改/etc/security/limits.conf文件,增加以下内容修改打开文件数量的限制:
-			soft nofile 65535
-			hard nofile 65535
-			除此之外,最好在 mysql 服务器上关闭iptables,selinux等防火墙软件
-	13.2.MySQL配置优化:
-		(1).MySQL可以通过启动时指定配置参数和使用配置文件两种方法进行配置,在大多数情况下配置文件位于 /etc/my.cnf 或者是
-			/etc/mysql/my.cnf下,在windows系统配置文件可以是位于 C://windows/my.ini文件,
-			MySQL查找配置文件的顺序可以通过以下方法获得:
-			$/usr/sbin/mysqld --verbose --help | grep -A 1 'Default options'
-			注意:如果存在多个位置存在配置文件,后面的会覆盖前面的
+### 13.1.操作系统配置优化
+	数据库是基于操作系统,大多数MySQL都是安装在 Linux 服务器上,所以对于操作系统的一些参数配置也会影响到MySQL
+	的性能,下面是一些常用的配置项:
+	(1).网络方面的配置,要修改 /etc/sysctl.conf 文件
+		#增加tcp支持的队列数
+		net.ipv4.tcp_max_syn_backlog=65535
+		#减少断开连接时,资源回收:
+		net.ipv4.tcp_max_tw_buckets=8000
+		net.ipv4.tcp_twreuse=1
+		net.ipv4.tcp_tw_recycle=1
+		net.ipv4.tcp_fin_timeout=10
+	(2).打开文件数的限制:
+		可以使用 ulimit -a 查看目录的限制,可以修改/etc/security/limits.conf文件,增加以下内容修改打开文件数量的限制:
+		soft nofile 65535
+		hard nofile 65535
+		除此之外,最好在 mysql 服务器上关闭iptables,selinux等防火墙软件
+### 13.2.MySQL配置优化:
+	(1).MySQL可以通过启动时指定配置参数和使用配置文件两种方法进行配置,在大多数情况下配置文件位于 /etc/my.cnf 或者是
+		/etc/mysql/my.cnf下,在windows系统配置文件可以是位于 C://windows/my.ini文件,
+		MySQL查找配置文件的顺序可以通过以下方法获得:
+		$/usr/sbin/mysqld --verbose --help | grep -A 1 'Default options'
+		注意:如果存在多个位置存在配置文件,后面的会覆盖前面的
 
-	13.3.第三方配置优化:
+### 13.3.第三方配置优化:
 ## 14.批量插入大量数据:
 	14.1.创建表格:
 		# 新建数据库
