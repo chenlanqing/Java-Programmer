@@ -10,6 +10,14 @@
   - [1.5.Test](#15test)
 - [二.IOC](#%E4%BA%8Cioc)
   - [1.IOC的生命周期:](#1ioc%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
+  - [2.ApplicationContext Bean 生命周期:](#2applicationcontext-bean-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
+  - [3.BeanFactory Bean生命周期-面向Spring本身](#3beanfactory-bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%E9%9D%A2%E5%90%91spring%E6%9C%AC%E8%BA%AB)
+  - [4.IOC容器的启动过程](#4ioc%E5%AE%B9%E5%99%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
+  - [5.Bean加载过程](#5bean%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B)
+- [三.AOP](#%E4%B8%89aop)
+- [四.spring事务](#%E5%9B%9Bspring%E4%BA%8B%E5%8A%A1)
+- [五.相关面试题](#%E4%BA%94%E7%9B%B8%E5%85%B3%E9%9D%A2%E8%AF%95%E9%A2%98)
+  - [1.Spring与SpringMVC父子容器配置:](#1spring%E4%B8%8Espringmvc%E7%88%B6%E5%AD%90%E5%AE%B9%E5%99%A8%E9%85%8D%E7%BD%AE)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -132,5 +140,16 @@
 # 三.AOP
 * [Spring AOP原理](https://mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
 
+# 四.spring事务
 
+# 五.相关面试题
+## 1.Spring与SpringMVC父子容器配置:
+	(1).Spring和SpringMVC共存时,会有两个容器:一个SpringMVC的ServletWebApplicationContext为子容器,
+		一个Spring的RootWebApplicationContext为父容器.
+		当子容器中找不到对应的Bean会委托于父容器中的Bean.
+		* RootWebApplicationContext中的Bean对ServletWebApplicationContext可见,
+		  而ServletWebApplicationContext中的Bean对RootWebApplicationContext不可见.
+	(2).如果在父容器中开启了 @AspectJ 注解与事务配置,子容器和父容器均加载了所有Bean.
+		造成子容器中的services覆盖了父容器的Services,导致父容器中的动态代理的services不生效,事务也不生效.
+		--> 解决上述问题,可以由父容器加载所有Bean,子容器不加载任何Bean
 

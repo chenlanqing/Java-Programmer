@@ -2,7 +2,9 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一.概念](#%E4%B8%80%E6%A6%82%E5%BF%B5)
+- [一.Mysql基本:基于C/S架构](#%E4%B8%80mysql%E5%9F%BA%E6%9C%AC%E5%9F%BA%E4%BA%8Ecs%E6%9E%B6%E6%9E%84)
+  - [1.MySQL服务器参数](#1mysql%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%8F%82%E6%95%B0)
+  - [2.](#2)
 - [二.MySQL操作](#%E4%BA%8Cmysql%E6%93%8D%E4%BD%9C)
   - [1.连接,命令行:](#1%E8%BF%9E%E6%8E%A5%E5%91%BD%E4%BB%A4%E8%A1%8C)
   - [2.SQL操作(structure query language)](#2sql%E6%93%8D%E4%BD%9Cstructure-query-language)
@@ -23,7 +25,7 @@
   - [3.SQL性能下降的原因:](#3sql%E6%80%A7%E8%83%BD%E4%B8%8B%E9%99%8D%E7%9A%84%E5%8E%9F%E5%9B%A0)
 - [六.高级查询:](#%E5%85%AD%E9%AB%98%E7%BA%A7%E6%9F%A5%E8%AF%A2)
   - [1.连接:](#1%E8%BF%9E%E6%8E%A5)
-  - [2.](#2)
+  - [2.](#2-1)
 - [七.MySQL 存储引擎](#%E4%B8%83mysql-%E5%AD%98%E5%82%A8%E5%BC%95%E6%93%8E)
   - [1.MySQL 的数据库引擎:](#1mysql-%E7%9A%84%E6%95%B0%E6%8D%AE%E5%BA%93%E5%BC%95%E6%93%8E)
   - [2.MyISAM 和 InnoDB 引擎的区别:](#2myisam-%E5%92%8C-innodb-%E5%BC%95%E6%93%8E%E7%9A%84%E5%8C%BA%E5%88%AB)

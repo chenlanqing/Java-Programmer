@@ -28,7 +28,7 @@
   - [5.1.子网掩码:](#51%E5%AD%90%E7%BD%91%E6%8E%A9%E7%A0%81)
   - [5.2.求平均值:](#52%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC)
   - [5.3.判断奇偶数:](#53%E5%88%A4%E6%96%AD%E5%A5%87%E5%81%B6%E6%95%B0)
-  - [5.5.判断是否为 2 的幂](#55%E5%88%A4%E6%96%AD%E6%98%AF%E5%90%A6%E4%B8%BA-2-%E7%9A%84%E5%B9%82)
+  - [5.5.幂问题:](#55%E5%B9%82%E9%97%AE%E9%A2%98)
   - [5.6.计算绝对值:](#56%E8%AE%A1%E7%AE%97%E7%BB%9D%E5%AF%B9%E5%80%BC)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
