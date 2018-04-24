@@ -3,118 +3,149 @@
 **目录**
 
 - [一.Redis 基本知识:](#%E4%B8%80redis-%E5%9F%BA%E6%9C%AC%E7%9F%A5%E8%AF%86)
+  - [1.Redis:](#1redis)
+  - [2.Redis 的数据类型:其支持五种数据类型](#2redis-%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%85%B6%E6%94%AF%E6%8C%81%E4%BA%94%E7%A7%8D%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
+  - [3.Redis-keys:](#3redis-keys)
+  - [4.Redis Strings:在Redis的管理字符串值](#4redis-strings%E5%9C%A8redis%E7%9A%84%E7%AE%A1%E7%90%86%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC)
+  - [5.改变和查询键值空间:](#5%E6%94%B9%E5%8F%98%E5%92%8C%E6%9F%A5%E8%AF%A2%E9%94%AE%E5%80%BC%E7%A9%BA%E9%97%B4)
+  - [6.Redis 过期 (expires):有限生存时间的键](#6redis-%E8%BF%87%E6%9C%9F-expires%E6%9C%89%E9%99%90%E7%94%9F%E5%AD%98%E6%97%B6%E9%97%B4%E7%9A%84%E9%94%AE)
+  - [7.Redis 列表:](#7redis-%E5%88%97%E8%A1%A8)
+  - [8.Redis 哈希/散列 (Hashes):](#8redis-%E5%93%88%E5%B8%8C%E6%95%A3%E5%88%97-hashes)
+  - [9.Redis 集合 (Sets):是无序的字符串集合 (collections)](#9redis-%E9%9B%86%E5%90%88-sets%E6%98%AF%E6%97%A0%E5%BA%8F%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%9B%86%E5%90%88-collections)
+  - [10.Redis 有序集合 (Sorted sets):](#10redis-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88-sorted-sets)
 - [二.Redis 配置文件: "redis.conf" 常用配置介绍:](#%E4%BA%8Credis-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-redisconf-%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%8B%E7%BB%8D)
 - [三.Redis 持久化:](#%E4%B8%89redis-%E6%8C%81%E4%B9%85%E5%8C%96)
+  - [1.rdb:(Redis Datbase):保存为 dump.rdb](#1rdbredis-datbase%E4%BF%9D%E5%AD%98%E4%B8%BA-dumprdb)
+  - [2.aof:(append only file)](#2aofappend-only-file)
+  - [3.关于持久化方案选择:](#3%E5%85%B3%E4%BA%8E%E6%8C%81%E4%B9%85%E5%8C%96%E6%96%B9%E6%A1%88%E9%80%89%E6%8B%A9)
+  - [4.性能建议:](#4%E6%80%A7%E8%83%BD%E5%BB%BA%E8%AE%AE)
 - [四.Redis 事务:](#%E5%9B%9Bredis-%E4%BA%8B%E5%8A%A1)
+  - [1.事务:](#1%E4%BA%8B%E5%8A%A1)
+  - [2.如何使用:](#2%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8)
 - [五.主从复制:](#%E4%BA%94%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
-- [六.Redis面试题:](#%E5%85%ADredis%E9%9D%A2%E8%AF%95%E9%A2%98)
+  - [1.Redis 的复制:](#1redis-%E7%9A%84%E5%A4%8D%E5%88%B6)
+  - [2.主从复制:](#2%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
+  - [3.主从的配置:](#3%E4%B8%BB%E4%BB%8E%E7%9A%84%E9%85%8D%E7%BD%AE)
+  - [4.常用的主从模式:](#4%E5%B8%B8%E7%94%A8%E7%9A%84%E4%B8%BB%E4%BB%8E%E6%A8%A1%E5%BC%8F)
+  - [5.复制原理:](#5%E5%A4%8D%E5%88%B6%E5%8E%9F%E7%90%86)
+  - [6.哨兵模式(sentinel):](#6%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8Fsentinel)
+  - [7.复制的缺点:](#7%E5%A4%8D%E5%88%B6%E7%9A%84%E7%BC%BA%E7%82%B9)
+- [六.Redis应用](#%E5%85%ADredis%E5%BA%94%E7%94%A8)
+  - [1.使用场景](#1%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
+  - [2.Redis数据淘汰策略:](#2redis%E6%95%B0%E6%8D%AE%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5)
+- [Redis面试题:](#redis%E9%9D%A2%E8%AF%95%E9%A2%98)
+  - [1.redis如何用作缓存? 如何确保不脏数据](#1redis%E5%A6%82%E4%BD%95%E7%94%A8%E4%BD%9C%E7%BC%93%E5%AD%98-%E5%A6%82%E4%BD%95%E7%A1%AE%E4%BF%9D%E4%B8%8D%E8%84%8F%E6%95%B0%E6%8D%AE)
+  - [2.Redis 和 Memcache区别:](#2redis-%E5%92%8C-memcache%E5%8C%BA%E5%88%AB)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一.Redis 基本知识:
-#### 1.Redis:
-    是一个开源,先进的key-value存储,并用于构建高性能,可扩展的Web应用程序的完美解决方案
-	数据结构服务器,支持不同类型的值,高级键值 (key-value) 缓存 (cache) 和存储 (store) 系统
-	为了高性能采用内存 (in-memory) 数据集 (dataset)
-	1.1.特点:
-		(1).Redis 数据库完全在内存中,使;用磁盘仅用于持久性;
-		(2).相比许多键值数据存储,Redis 拥有一套较为丰富的数据类型;
-		(3).Redis 可以将数据复制到任意数量的从服务器;
-	1.2.优点:
-		(1).异常快速:Redis 的速度非常快,每秒能执行约11万集合,每秒约81000+条记录
-		(2).支持丰富的数据类型:Redis 支持最大多数开发人员已经知道像列表,集合,有序集合,散列数据类型
-		(3).操作都是原子性:所有 Redis 操作是原子的,这保证了如果两个客户端同时访问的 Redis 服务器将获得更新后的值;
-		(4).多功能实用工具:Redis 是一个多实用的工具,可以在多个用例如缓存,消息,队列使用(Redis 原生支持发布/订阅),
-			任何短暂的数据,应用程序,如Web应用程序会话,网页命中计数等
-	1.3.Redis 安装配置:
+## 1.Redis:
 
-	1.4.启动: redis-server
-		运行:redis-cli
-			127.0.0.1:6379> 127.0.0.1是本机的IP地址,6379为Redis服务器运行的端口
-		redis 127.0.0.1:6379> ping
-		PONG > 表示成功地安装Redis在您的机器上
-#### 2.Redis 的数据类型:其支持五种数据类型
-	2.1.字符串:是字节序列
-		(1).Redis 字符串是二进制安全的,这意味着他们有一个已知的长度没有任何特殊字符终止,所以你可以存储任何东西,512M为上限;
-			如一张图片等;
-		(2).使用场景:
-			①.使用 INCR 命令族 (INCR,DECR,INCRBY),将字符串作为原子计数器
-			②.使用 APPEND 命令追加字符串
-			③.使用 GETRANGE 和 SETRANGE 命令,使字符串作为随机访问向量 (vectors)
-			④.编码大量数据到很小的空间,或者使用 GETBIT 和 SETBIT 命令,创建一个基于 Redis 的布隆 (Bloom) 过滤器
-		(3).例子:
-			127.0.0.1:6379> set name "coco"
-			OK
-			127.0.0.1:6379> get name
-			"coco"
-	2.2.哈希/散列(hashes):
-		(1).Redis 的哈希是键值对的集合. Redis 的哈希值是字符串字段和字符串值之间的映射,因此它们被用来表示对象
-		(2).例子:
-			127.0.0.1:6379> hmset user:1000 username bluefish password 123 port 8080
-			OK
-			127.0.0.1:6379> hgetall user:1
-			1) "username"
-			2) "coco"
-			3) "password"
-			4) "coco"
-			5) "points"
-			6) "200"
-		(3).使用场景:
-			①.由于哈希主要用来表示对象,对象能存储很多元素
-		(4).每个哈希可以存储多达 2^23-1 个字段值对 (field-value pair)(多于 40 亿个);
-	2.3.列表(lists)
-		(1).Redis 的列表是简单的字符串列表,是按照插入顺序排序的字符串列表.您可以添加元素到 Redis 的列表的头部或尾部
-			表的最大长度为 2^32 - 1 元素（4294967295,每个列表中可容纳超过4十亿的元素）
-		(2).例子:
-			127.0.0.1:6379> lpush tutorial redis
-			(integer) 1
-			127.0.0.1:6379> lpush tutorial mongodb
-			(integer) 2
-			127.0.0.1:6379> lpush tutorial rabitmq
-			(integer) 3
-			127.0.0.1:6379> lrange tutorial 0 10
-			1) "rabitmq"
-			2) "mongodb"
-			3) "redis"
-		(3).LPUSH 命令插入一个新元素到列表头部,而 RPUSH 命令 插入一个新元素到列表的尾部
-			当这两个命令操作在一个不存在的键时,将会创建一个新的列表
-		(4).从时间复杂度的角度来看,Redis 列表主要特性就是支持时间常数的插入和靠近头尾部元素的删除,即使是需要插入上百万的条目
-			访问列表两端的元素是非常快的,但如果你试着访问一个非常大 的列表的中间元素仍然是十分慢的;
-		(5).使用场景:
-			①.为社交网络时间轴 (timeline) 建模,使用 LPUSH 命令往用户时间轴插入元素,使用 LRANGE 命令获得最近事项;
-			②.使用 LPUSH 和 LTRIM 命令创建一个不会超出给定数量元素的列表,只存储最近的 N 个元素;
-			③.列表可以用作消息传递原语,例如,众所周知的用于创建后台任务的 Ruby 库 Resque;
-			④.你可以用列表做更多的事情,这种数据类型支持很多的命令,包括阻塞命令,如 BLPOP
-	2.4.集合:Sets,不允许相同成员存在
-		(1).Redis 的集合是字符串的无序集合。在Redis您可以添加,删除和测试文件是否存在,在成员 O(1)的时间复杂度
-		(2).一个集合最多可以包含 2^32-1个元素（4294967295,每个集合超过40亿个元素）
-			127.0.0.1:6379> sadd tutoriallist redis
-			(integer) 1
-			127.0.0.1:6379> sadd tutoriallist mongodb
-			(integer) 1
-			127.0.0.1:6379> sadd tutoriallist rabitmq
-			(integer) 1
-			127.0.0.1:6379> sadd tutoriallist rabitmq
-			(integer) 0
-			127.0.0.1:6379> smembers tutoriallist
-			1) "rabitmq"
-			2) "mongodb"
-			3) "redis"
-		(3).使用场景:
-			①.你可以使用 Redis 集合追踪唯一性的事情,访问某篇博客文章的所有唯一 IP 吗?
-			②.Redis 集合可以表示关系;
-			③.你可以使用 SPOP 或 SRANDMEMBER 命令来从集合中随机抽取元素
-	2.5.有序集合:
-		(1).Redis 的有序集合类似于 Redis 的集合,字符串不重复的集合
-			不同的是,一个有序集合的每个成员用分数,以便采取有序set命令,从最小的到最大的成员分数有关
-		(2).使用有序集合,你可以非常快地(O(log(N)))完成添加,删除和更新元素的操作
-			由于元素是有序的而无需事后排序,你可以通过分数或者排名 (位置) 很快地来获取一个范围内的元素;
-		(3).使用场景:
-			①.获取排行:例如多人在线游戏排行榜,每次提交一个新的分数,你就使用 ZADD 命令更新
-			②.有序集合常用来索引存储在 Redis 内的数据
-			③.有序集合或许是最高级的 Redis 数据类型
-	2.6.位图(bitmaps)和超重对数(hyperloglogs):两种基于字符串基本类型
-#### 3.Redis-keys:用于在Redis的管理键,二进制安全的,可以用任何二进制序列作为key值
+是一个开源,先进的key-value存储,并用于构建高性能,可扩展的Web应用程序的完美解决方案
+数据结构服务器,支持不同类型的值,高级键值 (key-value) 缓存 (cache) 和存储 (store) 系统
+为了高性能采用内存 (in-memory) 数据集 (dataset)
+1.1.特点:
+	(1).Redis 数据库完全在内存中,使;用磁盘仅用于持久性;
+	(2).相比许多键值数据存储,Redis 拥有一套较为丰富的数据类型;
+	(3).Redis 可以将数据复制到任意数量的从服务器;
+1.2.优点:
+	(1).异常快速:Redis 的速度非常快,每秒能执行约11万集合,每秒约81000+条记录
+	(2).支持丰富的数据类型:Redis 支持最大多数开发人员已经知道像列表,集合,有序集合,散列数据类型
+	(3).操作都是原子性:所有 Redis 操作是原子的,这保证了如果两个客户端同时访问的 Redis 服务器将获得更新后的值;
+	(4).多功能实用工具:Redis 是一个多实用的工具,可以在多个用例如缓存,消息,队列使用(Redis 原生支持发布/订阅),
+		任何短暂的数据,应用程序,如Web应用程序会话,网页命中计数等
+1.3.Redis 安装配置:
+
+1.4.启动: redis-server
+	运行:redis-cli
+		127.0.0.1:6379> 127.0.0.1是本机的IP地址,6379为Redis服务器运行的端口
+	redis 127.0.0.1:6379> ping
+	PONG > 表示成功地安装Redis在您的机器上
+	
+## 2.Redis 的数据类型:其支持五种数据类型
+### 2.1.字符串:是字节序列
+	(1).Redis 字符串是二进制安全的,这意味着他们有一个已知的长度没有任何特殊字符终止,所以你可以存储任何东西,512M为上限;
+		如一张图片等;
+	(2).使用场景:
+		①.使用 INCR 命令族 (INCR,DECR,INCRBY),将字符串作为原子计数器
+		②.使用 APPEND 命令追加字符串
+		③.使用 GETRANGE 和 SETRANGE 命令,使字符串作为随机访问向量 (vectors)
+		④.编码大量数据到很小的空间,或者使用 GETBIT 和 SETBIT 命令,创建一个基于 Redis 的布隆 (Bloom) 过滤器
+	(3).例子:
+		127.0.0.1:6379> set name "coco"
+		OK
+		127.0.0.1:6379> get name
+		"coco"
+### 2.2.哈希/散列(hashes):
+	(1).Redis 的哈希是键值对的集合. Redis 的哈希值是字符串字段和字符串值之间的映射,因此它们被用来表示对象
+	(2).例子:
+		127.0.0.1:6379> hmset user:1000 username bluefish password 123 port 8080
+		OK
+		127.0.0.1:6379> hgetall user:1
+		1) "username"
+		2) "coco"
+		3) "password"
+		4) "coco"
+		5) "points"
+		6) "200"
+	(3).使用场景:
+		①.由于哈希主要用来表示对象,对象能存储很多元素
+	(4).每个哈希可以存储多达 2^23-1 个字段值对 (field-value pair)(多于 40 亿个);
+### 2.3.列表(lists)
+	(1).Redis 的列表是简单的字符串列表,是按照插入顺序排序的字符串列表.您可以添加元素到 Redis 的列表的头部或尾部
+		表的最大长度为 2^32 - 1 元素（4294967295,每个列表中可容纳超过4十亿的元素）
+	(2).例子:
+		127.0.0.1:6379> lpush tutorial redis
+		(integer) 1
+		127.0.0.1:6379> lpush tutorial mongodb
+		(integer) 2
+		127.0.0.1:6379> lpush tutorial rabitmq
+		(integer) 3
+		127.0.0.1:6379> lrange tutorial 0 10
+		1) "rabitmq"
+		2) "mongodb"
+		3) "redis"
+	(3).LPUSH 命令插入一个新元素到列表头部,而 RPUSH 命令 插入一个新元素到列表的尾部
+		当这两个命令操作在一个不存在的键时,将会创建一个新的列表
+	(4).从时间复杂度的角度来看,Redis 列表主要特性就是支持时间常数的插入和靠近头尾部元素的删除,即使是需要插入上百万的条目
+		访问列表两端的元素是非常快的,但如果你试着访问一个非常大 的列表的中间元素仍然是十分慢的;
+	(5).使用场景:
+		①.为社交网络时间轴 (timeline) 建模,使用 LPUSH 命令往用户时间轴插入元素,使用 LRANGE 命令获得最近事项;
+		②.使用 LPUSH 和 LTRIM 命令创建一个不会超出给定数量元素的列表,只存储最近的 N 个元素;
+		③.列表可以用作消息传递原语,例如,众所周知的用于创建后台任务的 Ruby 库 Resque;
+		④.你可以用列表做更多的事情,这种数据类型支持很多的命令,包括阻塞命令,如 BLPOP
+### 2.4.集合:Sets,不允许相同成员存在
+	(1).Redis 的集合是字符串的无序集合。在Redis您可以添加,删除和测试文件是否存在,在成员 O(1)的时间复杂度
+	(2).一个集合最多可以包含 2^32-1个元素（4294967295,每个集合超过40亿个元素）
+		127.0.0.1:6379> sadd tutoriallist redis
+		(integer) 1
+		127.0.0.1:6379> sadd tutoriallist mongodb
+		(integer) 1
+		127.0.0.1:6379> sadd tutoriallist rabitmq
+		(integer) 1
+		127.0.0.1:6379> sadd tutoriallist rabitmq
+		(integer) 0
+		127.0.0.1:6379> smembers tutoriallist
+		1) "rabitmq"
+		2) "mongodb"
+		3) "redis"
+	(3).使用场景:
+		①.你可以使用 Redis 集合追踪唯一性的事情,访问某篇博客文章的所有唯一 IP 吗?
+		②.Redis 集合可以表示关系;
+		③.你可以使用 SPOP 或 SRANDMEMBER 命令来从集合中随机抽取元素
+### 2.5.有序集合:
+	(1).Redis 的有序集合类似于 Redis 的集合,字符串不重复的集合
+		不同的是,一个有序集合的每个成员用分数,以便采取有序set命令,从最小的到最大的成员分数有关
+	(2).使用有序集合,你可以非常快地(O(log(N)))完成添加,删除和更新元素的操作
+		由于元素是有序的而无需事后排序,你可以通过分数或者排名 (位置) 很快地来获取一个范围内的元素;
+	(3).使用场景:
+		①.获取排行:例如多人在线游戏排行榜,每次提交一个新的分数,你就使用 ZADD 命令更新
+		②.有序集合常用来索引存储在 Redis 内的数据
+		③.有序集合或许是最高级的 Redis 数据类型
+### 2.6.位图(bitmaps)和超重对数(hyperloglogs):两种基于字符串基本类型
+## 3.Redis-keys:
+	用于在Redis的管理键,二进制安全的,可以用任何二进制序列作为key值
 	3.1.Redis keys命令使用语法如下所示：			
 		127.0.0.1:6379> COMMAND KEY_NAME
 	3.2.关于key的几条规则：
@@ -125,7 +156,7 @@
 		(3).最好坚持一种模式。例如："object-type:id:field"就是个不错的注意,像这样"user:1000:password"。
 			我喜欢对多单词的字段名中加上一个点,就像这样:"comment:1234:reply.to"
 		(4).键值最大值为 512MB
-#### 4.Redis Strings:在Redis的管理字符串值
+## 4.Redis Strings:在Redis的管理字符串值
 	(1).最简单Redis类型,如果你只用这种类型,Redis 就像一个可以持久化的memcached服务器
 		(memcache的数据仅保存在内存中,服务器重启后,数据将丢失)
 		127.0.0.1:6379> COMMAND KEY_NAME
@@ -152,7 +183,7 @@
 			127.0.0.1:6379> 
 	(3).如果键值已经存在,则执行失败:
 			SET mykey newval nx
-#### 5.改变和查询键值空间:
+## 5.改变和查询键值空间:
 	(1).有一些命令并不定义在特定的类型上,但是对键空间的交互很有用,因此他们能作用在任意键上
 	(2).EXISTS 命令返回 1(存在) 或 0(不存在),来表示键在数据库是否存在;
 		DEL 命令删除键极其关联的值,无论值是什么,删除成功返回 1,失败返回 0
@@ -177,7 +208,7 @@
 			(integer) 1
 			127.0.0.1:6379> type name
 			none
-#### 6.Redis 过期 (expires):有限生存时间的键
+## 6.Redis 过期 (expires):有限生存时间的键
 	(1).Redis 过期:给键设置超时,也就是一个有限的生存时间.当生存时间到了,键就会自动被销毁,就像用户调用 DEL 命令一样。
 	(2).特点：
 		①.过期时间可以设置为秒或者毫秒精度;
@@ -199,7 +230,7 @@
 		PTTL 命令检查键的生存剩余时间,单位是:毫秒
 		ttl key
 		pttl key
-#### 7.Redis 列表:
+## 7.Redis 列表:
 	7.1.使用链表实现,如果链表中有上百万个元素,增加一个元素到列表的头部或者尾部的操作都是在常量时间完成
 		(1).缺点:访问链表的速度很慢;
 	7.2.为什么使用链表实现列表?
@@ -262,7 +293,8 @@
 			②.当我们从聚合数据类型删除一个元素,如果值为空,则键也会被销毁。
 			③.调用一个像 LLEN 的只读命令(返回列表的长度),或者一个写命令从空键删除元素,
 				总是产生和操作一个持有空聚合类型值的键一样的结果
-#### 8.Redis 哈希/散列 (Hashes):哈希就是字段值对(fields-values pairs)的集合
+## 8.Redis 哈希/散列 (Hashes):
+	哈希就是字段值对(fields-values pairs)的集合
 	8.1.HMSET 命令为哈希设置多个字段,HGET 检索一个单独的字段.HMGET 类似于 HGET,但是返回值的数组:
 		127.0.0.1:6379>hmget user:1000 username birthyear no-such-field
 		1) "antirez"
@@ -274,7 +306,7 @@
 		127.0.0.1:6379> hincrby user:1 birthday 10
 		(integer) 1999
 	8.3.小的哈希 (少量元素,不太大的值) 在内存中以一种特殊的方式编码以高效利用内存
-#### 9.Redis 集合 (Sets):是无序的字符串集合 (collections)
+## 9.Redis 集合 (Sets):是无序的字符串集合 (collections)
 	9.1.SADD 命令添加元素到集合:
 		SADD myset 1 2 3 ==> 添加三个元素到myset中
 		SMEMBERS myset ==> 返回 sets 中所有元素,
@@ -295,7 +327,7 @@
 	9.8.集合的基数(集合的势):
 		对应的 Redis 命令:SCARD
 		当你只需要获得随机元素而不需要从集合中删除,SRANDMEMBER 命令则适合你完成任务。它具有返回重复的和非重复的元素的能力
-#### 10.Redis 有序集合 (Sorted sets):
+## 10.Redis 有序集合 (Sorted sets):
 	10.1.有序集合类似于集合和哈希的混合体的一种数据类型;有序集合由唯一的,不重复的字符串元素组成,
 		在某种意义上,有序集合也就是集合
 		(1).集合中的每个元素是无序的,但有序集合中的每个元素都关联了一个浮点值,称为分数(score,这就是为什么该
@@ -392,7 +424,7 @@
     include /path/to/local.conf
 
 # 三.Redis 持久化:
-#### 1.rdb:(Redis Datbase):保存为 dump.rdb
+## 1.rdb:(Redis Datbase):保存为 dump.rdb
 	1.1.RDB:在指定的时间间隔内将内存中的数据集快照写入磁盘,也就是行话讲的Snapshot快照,它恢复时是将快照文件直接读到内存里;
 		Redis 会单独创建(fork)一个子进程来进行持久化,会先将数据写入到 一个临时文件中,待持久化过程都结束了,再用这个临时文件替换
 		上次持久化好的文件.整个过程中,主进程是不进行任何IO操作的,这就确保了极高的性能 如果需要进行大规模数据的恢复,
@@ -433,7 +465,7 @@
 				fork 的时候,内存中的数据被克隆了一份,大致2倍的膨胀性需要考虑.
 	1.6.停止RBD保存:
 		动态停止RDB保存规则的方法:config set save ""
-#### 2.aof:(append only file)
+## 2.aof:(append only file)
 	2.1.AOF 是什么:以日志的形式记录每个操作,将 Redis 执行过的所有写指令记录下来(读操作不记录),只许追加但不可以改写文件,
 	 	redis启动之初会读取该文件重新构建数据,换言之,redis重启的话会根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作.
 	2.2.对应配置:
@@ -473,7 +505,7 @@
 		2.5.2.劣势:
 			相同数据集的数据而言aof文件要远大于rdb文件,恢复速度慢于rdb
 			Aof 运行效率要慢于rdb,每秒同步策略效率较好,不同步效率和rdb相同
-#### 3.关于持久化方案选择:
+## 3.关于持久化方案选择:
 	(1).RDB 持久化方式能够在指定的时间间隔能对你的数据进行快照存储;
 	(2).AOF 持久化方式记录每次对服务器写的操作,当服务器重启的时候会重新执行这些 命令来恢复原始的数据,AOF 命令以redis协议
 		追加保存每次写的操作到文件末尾. Redis 还能对AOF文件进行后台重写,使得AOF文件的体积不至于过大;
@@ -483,7 +515,7 @@
 		因为在通常情况下AOF文件保存的数据集要比RDB文件保存的数据集要完整.
 		==> RDB 的数据不实时,同时使用两者时服务器重启也只会找AOF文件.那要不要只使用AOF呢?
 		作者建议不要,因为RDB更适合用于备份数据库(AOF在不断变化不好备份),快速重启,而且不会有AOF可能潜在的bug,留着作为一个万一的手段。
-#### 4.性能建议:
+## 4.性能建议:
 	(1).因为RDB文件只用作后备用途,建议只在Slave上持久化RDB文件,而且只要15分钟备份一次就够了,只保留save 900 1这条规则。
 	(2).如果Enalbe AOF,好处是在最恶劣情况下也只会丢失不超过两秒数据,启动脚本较简单只load自己的AOF文件就可以了.
 		代价一是带来了持续的IO,二是AOF rewrite的最后将rewrite过程中产生的新数据写到新文件造成的阻塞几乎是不可避免的.
@@ -494,10 +526,10 @@
  		新浪微博就选用了这种架构
  		
 # 四.Redis 事务:
-#### 1.事务:
+## 1.事务:
     可以一次执行多个命令,本质是一组命令的集合,一个事务中的所有命令都会序列化,按顺序地串行执行而不会被其他命令插入,不允许加塞.
 	所以可以任务事务是部分支持事务的.
-#### 2.如何使用:
+## 2.如何使用:
 	2.1.case1-正常执行:
 		127.0.0.1:6379[1]> MULTI ==> 标记一个事务块的开始
 		OK
@@ -564,12 +596,12 @@
 		(3).不保证原子性:redis同一个事务中如果有一条命令执行失败,其后的命令仍然会被执行,没有回滚
 
 # 五.主从复制:
-#### 1.Redis 的复制:
+## 1.Redis 的复制:
 	就是我们所说的主从复制,主机数据更新后根据配置和策略,自动同步到备机的 master/slaver机制,Master 以写为主,Slave 以读为主;
-#### 2.主从复制:
+## 2.主从复制:
 	读写分离
 	容灾恢复
-#### 3.主从的配置:
+## 3.主从的配置:
 	3.1.一般是配从(库)不配主(库);
 	3.2.从库的配置:salveof 127.0.0.1(主库IP) 6379(主库端口)
 		从库每次与 master断开之后,都需要重新连接,除非修复 redis.conf 配置文件;
@@ -587,75 +619,75 @@
 			logfile ""
 		(6).dump.rdb 名字
 			dbfilename dump.rdb
-#### 4.常用的主从模式:
-	4.1.一主二仆:即配置一台主库,两台从库
-		4.1.1.主从显示的信息:
-			(1).未配置主从时,显示如下:
-				127.0.0.1:6379> info replication
-				# Replication
-				role:master
-				connected_slaves:0
-				master_repl_offset:0
-				repl_backlog_active:0
-				repl_backlog_size:1048576
-				repl_backlog_first_byte_offset:0
-				repl_backlog_histlen:0
-			(2).配置主库后,主库显示如:
-				127.0.0.1:6380> info replication
-				# Replication
-				role:master 														==> 当前库的角色
-				connected_slaves:1
-				slave0:ip=127.0.0.1,port=6379,state=online,offset=15,lag=0			==> 从库的信息
-				master_repl_offset:15
-				repl_backlog_active:1
-				repl_backlog_size:1048576
-				repl_backlog_first_byte_offset:2
-				repl_backlog_histlen:14
-			(3).配置从库后,从库显示如:
-				127.0.0.1:6379> info replication
-				# Replication
-				role:slave 															==> 当前库的角色
-				master_host:127.0.0.1
-				master_port:6380
-				master_link_status:up
-				master_last_io_seconds_ago:6
-				master_sync_in_progress:0
-				slave_repl_offset:1
-				slave_priority:100
-				slave_read_only:1
-				connected_slaves:0
-				master_repl_offset:0
-				repl_backlog_active:0
-				repl_backlog_size:1048576
-				repl_backlog_first_byte_offset:0
-				repl_backlog_histlen:0
-		4.1.2.一主二仆问题:
-			(1).切入点问题?slave1、slave2是从头开始复制还是从切入点开始复制? 比如从k4进来,那之前的123是否也可以复制
-				每次连接都都是全量复制数据
-			(2).从机是否可以写?set可否?
-				从库不能写,主库写,从库读
-			(3).主机shutdown后情况如何?从机是上位还是原地待命?
-				主机shutdown之后,从库原地待命,等到主机响应,"master_link_status:up"这个会变成:"master_link_status:down"
-			(4).主机又回来了后,主机新增记录,从机还能否顺利复制?
-				从库还是能顺利复制的.
-			(5).其中一台从机down后情况如何?依照原有它能跟上大部队吗?
-				从库宕机之后,与主库断开连接,如果从库在重启后,需要重新连接主库,除非有在redis.conf的配置
-	4.2.薪火相传:
-		上一个Slave可以是下一个slave的Master,Slave 同样可以接收其他 slaves的连接和同步请求,那么该slave作为了链条中下一个的master,
-		可以有效减轻master的写压力
-		中途变更转向:会清除之前的数据,重新建立拷贝最新的
-		slaveof 新主库IP 新主库端口
-	4.3.反客为主:
-		slaveof no one
-		使当前数据库停止与其他数据库的同步,转成主数据库
-#### 5.复制原理:
+## 4.常用的主从模式:
+### 4.1.一主二仆:即配置一台主库,两台从库
+	4.1.1.主从显示的信息:
+		(1).未配置主从时,显示如下:
+			127.0.0.1:6379> info replication
+			# Replication
+			role:master
+			connected_slaves:0
+			master_repl_offset:0
+			repl_backlog_active:0
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:0
+			repl_backlog_histlen:0
+		(2).配置主库后,主库显示如:
+			127.0.0.1:6380> info replication
+			# Replication
+			role:master 														==> 当前库的角色
+			connected_slaves:1
+			slave0:ip=127.0.0.1,port=6379,state=online,offset=15,lag=0			==> 从库的信息
+			master_repl_offset:15
+			repl_backlog_active:1
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:2
+			repl_backlog_histlen:14
+		(3).配置从库后,从库显示如:
+			127.0.0.1:6379> info replication
+			# Replication
+			role:slave 															==> 当前库的角色
+			master_host:127.0.0.1
+			master_port:6380
+			master_link_status:up
+			master_last_io_seconds_ago:6
+			master_sync_in_progress:0
+			slave_repl_offset:1
+			slave_priority:100
+			slave_read_only:1
+			connected_slaves:0
+			master_repl_offset:0
+			repl_backlog_active:0
+			repl_backlog_size:1048576
+			repl_backlog_first_byte_offset:0
+			repl_backlog_histlen:0
+	4.1.2.一主二仆问题:
+		(1).切入点问题?slave1、slave2是从头开始复制还是从切入点开始复制? 比如从k4进来,那之前的123是否也可以复制
+			每次连接都都是全量复制数据
+		(2).从机是否可以写?set可否?
+			从库不能写,主库写,从库读
+		(3).主机shutdown后情况如何?从机是上位还是原地待命?
+			主机shutdown之后,从库原地待命,等到主机响应,"master_link_status:up"这个会变成:"master_link_status:down"
+		(4).主机又回来了后,主机新增记录,从机还能否顺利复制?
+			从库还是能顺利复制的.
+		(5).其中一台从机down后情况如何?依照原有它能跟上大部队吗?
+			从库宕机之后,与主库断开连接,如果从库在重启后,需要重新连接主库,除非有在redis.conf的配置
+### 4.2.薪火相传:
+	上一个Slave可以是下一个slave的Master,Slave 同样可以接收其他 slaves的连接和同步请求,那么该slave作为了链条中下一个的master,
+	可以有效减轻master的写压力
+	中途变更转向:会清除之前的数据,重新建立拷贝最新的
+	slaveof 新主库IP 新主库端口
+### 4.3.反客为主:
+	slaveof no one
+	使当前数据库停止与其他数据库的同步,转成主数据库
+## 5.复制原理:
 	(1).slave启动成功连接到master后会发送一个sync命令
 	(2).master 接到命令启动后台的存盘进程,同时收集所有接收到的用于修改数据集命令,在后台进程执行完毕之后,
 		master将传送整个数据文件到slave,以完成一次完全同步
 	(3).全量复制：而slave服务在接收到数据库文件数据后,将其存盘并加载到内存中。
 	(4).增量复制：Master 继续将新的所有收集到的修改命令依次传给slave,完成同步
 		但是只要是重新连接master,一次完全同步（全量复制)将被自动执行
-#### 6.哨兵模式(sentinel):
+## 6.哨兵模式(sentinel):
 	6.1.什么是哨兵模式:
 		反客为主的自动版,能够后台监控主机是否故障,如果故障了根据投票数自动将从库转换为主库
 	6.2.使用步骤:
@@ -668,10 +700,50 @@
 	6.5.问题:如果之前的master重启回来,会不会双master冲突?
 		不会,之前的从库重启回来之后,会自动切换为从库,挂到之前从库转换为的主库上;
 		一组sentinel能同时监控多个Master
-#### 7.复制的缺点:
+## 7.复制的缺点:
 	由于所有的写操作都是先在Master上操作,然后同步更新到Slave上,所以从Master同步到Slave机器有一定的延迟,当系统很繁忙的时候,
 	延迟问题会更加严重,slave 机器数量的增加也会使这个问题更加严重
 
-# 六.Redis面试题:
-	1.redis如何用作缓存? 如何确保不脏数据
+# 六.Redis应用
+## 1.使用场景
+	(1).缓存:将热点数据放到内存中
+	(2).消息队列:List类型是双向链表,很适合用于消息队列;
+	(3).计数器:Redis支持计数器频繁的读写操作
+	(4).好友关系:使用 Set 类型的交集操作很容易就可以知道两个用户的共同好友
+## 2.Redis数据淘汰策略:
+	可以设置内存最大使用量，当内存使用量超过时施行淘汰策略，具体有 6 种淘汰策略。
 
+| 策略 | 描述 |
+| :--: | :--: |
+| volatile-lru | 从已设置过期时间的数据集中挑选最近最少使用的数据淘汰 |
+| volatile-ttl | 从已设置过期时间的数据集中挑选将要过期的数据淘汰 |
+|volatile-random | 从已设置过期时间的数据集中任意选择数据淘汰 |
+| allkeys-lru | 从所有数据集中挑选最近最少使用的数据淘汰 |
+| allkeys-random | 从所有数据集中任意选择数据进行淘汰 |
+| noeviction | 禁止驱逐数据 |
+
+	如果使用 Redis 来缓存数据时,要保证所有数据都是热点数据,可以将内存最大使用量设置为热点数据占用的内存量,
+	然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰.
+	作为内存数据库,出于对性能和内存消耗的考虑,Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key,
+	而是抽样一小部分 key 从中选出被淘汰 key.抽样数量可通过 maxmemory-samples 配置.
+
+
+# Redis面试题:
+## 1.redis如何用作缓存? 如何确保不脏数据
+
+## 2.Redis 和 Memcache区别:
+	两者都是非关系型数据库.主要区别如下:
+	(1).数据类型:
+		* Memcached 仅支持字符串类型;
+		* Redis 支持五种不同种类的数据类型,使得它可以更灵活地解决问题
+	(2).数据持久化:
+		* Memcached 不支持持久化;
+		* Redis 支持两种持久化策略：RDB 快照和 AOF 日志
+	(3).分布式:
+		* Memcached 不支持分布式.只能通过在客户端使用像一致性哈希这样的分布式算法来实现分布式存储,
+		  这种方式在存储和查询时都需要先在客户端计算一次数据所在的节点.
+		* Redis Cluster 实现了分布式的支持
+	(4).内存管理机制:
+		* Memcached 将内存分割成特定长度的块来存储数据,以完全解决内存碎片的问题,但是这种方式会使得内存的利用率不高.
+			例如块的大小为 128 bytes，只存储 100 bytes 的数据，那么剩下的 28 bytes 就浪费掉了
+		* 在 Redis 中,并不是所有数据都一直存储在内存中,可以将一些很久没用的 value 交换到磁盘.而 Memcached 的数据则会一直在内存中
