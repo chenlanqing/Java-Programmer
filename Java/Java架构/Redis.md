@@ -3,66 +3,36 @@
 **目录**
 
 - [一.Redis 基本知识:](#%E4%B8%80redis-%E5%9F%BA%E6%9C%AC%E7%9F%A5%E8%AF%86)
-  - [1.Redis:](#1redis)
-  - [2.Redis 的数据类型:其支持五种数据类型](#2redis-%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E5%85%B6%E6%94%AF%E6%8C%81%E4%BA%94%E7%A7%8D%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
-  - [3.Redis-keys:](#3redis-keys)
-  - [4.Redis Strings:在Redis的管理字符串值](#4redis-strings%E5%9C%A8redis%E7%9A%84%E7%AE%A1%E7%90%86%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC)
-  - [5.改变和查询键值空间:](#5%E6%94%B9%E5%8F%98%E5%92%8C%E6%9F%A5%E8%AF%A2%E9%94%AE%E5%80%BC%E7%A9%BA%E9%97%B4)
-  - [6.Redis 过期 (expires):有限生存时间的键](#6redis-%E8%BF%87%E6%9C%9F-expires%E6%9C%89%E9%99%90%E7%94%9F%E5%AD%98%E6%97%B6%E9%97%B4%E7%9A%84%E9%94%AE)
-  - [7.Redis 列表:](#7redis-%E5%88%97%E8%A1%A8)
-  - [8.Redis 哈希/散列 (Hashes):](#8redis-%E5%93%88%E5%B8%8C%E6%95%A3%E5%88%97-hashes)
-  - [9.Redis 集合 (Sets):是无序的字符串集合 (collections)](#9redis-%E9%9B%86%E5%90%88-sets%E6%98%AF%E6%97%A0%E5%BA%8F%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%9B%86%E5%90%88-collections)
-  - [10.Redis 有序集合 (Sorted sets):](#10redis-%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88-sorted-sets)
 - [二.Redis 配置文件: "redis.conf" 常用配置介绍:](#%E4%BA%8Credis-%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-redisconf-%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%8B%E7%BB%8D)
 - [三.Redis 持久化:](#%E4%B8%89redis-%E6%8C%81%E4%B9%85%E5%8C%96)
-  - [1.rdb:(Redis Datbase):保存为 dump.rdb](#1rdbredis-datbase%E4%BF%9D%E5%AD%98%E4%B8%BA-dumprdb)
-  - [2.aof:(append only file)](#2aofappend-only-file)
-  - [3.关于持久化方案选择:](#3%E5%85%B3%E4%BA%8E%E6%8C%81%E4%B9%85%E5%8C%96%E6%96%B9%E6%A1%88%E9%80%89%E6%8B%A9)
-  - [4.性能建议:](#4%E6%80%A7%E8%83%BD%E5%BB%BA%E8%AE%AE)
 - [四.Redis 事务:](#%E5%9B%9Bredis-%E4%BA%8B%E5%8A%A1)
-  - [1.事务:](#1%E4%BA%8B%E5%8A%A1)
-  - [2.如何使用:](#2%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8)
 - [五.主从复制:](#%E4%BA%94%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
-  - [1.Redis 的复制:](#1redis-%E7%9A%84%E5%A4%8D%E5%88%B6)
-  - [2.主从复制:](#2%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
-  - [3.主从的配置:](#3%E4%B8%BB%E4%BB%8E%E7%9A%84%E9%85%8D%E7%BD%AE)
-  - [4.常用的主从模式:](#4%E5%B8%B8%E7%94%A8%E7%9A%84%E4%B8%BB%E4%BB%8E%E6%A8%A1%E5%BC%8F)
-  - [5.复制原理:](#5%E5%A4%8D%E5%88%B6%E5%8E%9F%E7%90%86)
-  - [6.哨兵模式(sentinel):](#6%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8Fsentinel)
-  - [7.复制的缺点:](#7%E5%A4%8D%E5%88%B6%E7%9A%84%E7%BC%BA%E7%82%B9)
-- [六.Redis应用](#%E5%85%ADredis%E5%BA%94%E7%94%A8)
-  - [1.使用场景](#1%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
-  - [2.Redis数据淘汰策略:](#2redis%E6%95%B0%E6%8D%AE%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5)
-- [Redis面试题:](#redis%E9%9D%A2%E8%AF%95%E9%A2%98)
-  - [1.redis如何用作缓存? 如何确保不脏数据](#1redis%E5%A6%82%E4%BD%95%E7%94%A8%E4%BD%9C%E7%BC%93%E5%AD%98-%E5%A6%82%E4%BD%95%E7%A1%AE%E4%BF%9D%E4%B8%8D%E8%84%8F%E6%95%B0%E6%8D%AE)
-  - [2.Redis 和 Memcache区别:](#2redis-%E5%92%8C-memcache%E5%8C%BA%E5%88%AB)
+- [六.Redis面试题:](#%E5%85%ADredis%E9%9D%A2%E8%AF%95%E9%A2%98)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一.Redis 基本知识:
 ## 1.Redis:
+    是一个开源,先进的key-value存储,并用于构建高性能,可扩展的Web应用程序的完美解决方案
+	数据结构服务器,支持不同类型的值,高级键值 (key-value) 缓存 (cache) 和存储 (store) 系统
+	为了高性能采用内存 (in-memory) 数据集 (dataset)
+	1.1.特点:
+		(1).Redis 数据库完全在内存中,使;用磁盘仅用于持久性;
+		(2).相比许多键值数据存储,Redis 拥有一套较为丰富的数据类型;
+		(3).Redis 可以将数据复制到任意数量的从服务器;
+	1.2.优点:
+		(1).异常快速:Redis 的速度非常快,每秒能执行约11万集合,每秒约81000+条记录
+		(2).支持丰富的数据类型:Redis 支持最大多数开发人员已经知道像列表,集合,有序集合,散列数据类型
+		(3).操作都是原子性:所有 Redis 操作是原子的,这保证了如果两个客户端同时访问的 Redis 服务器将获得更新后的值;
+		(4).多功能实用工具:Redis 是一个多实用的工具,可以在多个用例如缓存,消息,队列使用(Redis 原生支持发布/订阅),
+			任何短暂的数据,应用程序,如Web应用程序会话,网页命中计数等
+	1.3.Redis 安装配置:
 
-是一个开源,先进的key-value存储,并用于构建高性能,可扩展的Web应用程序的完美解决方案
-数据结构服务器,支持不同类型的值,高级键值 (key-value) 缓存 (cache) 和存储 (store) 系统
-为了高性能采用内存 (in-memory) 数据集 (dataset)
-1.1.特点:
-	(1).Redis 数据库完全在内存中,使;用磁盘仅用于持久性;
-	(2).相比许多键值数据存储,Redis 拥有一套较为丰富的数据类型;
-	(3).Redis 可以将数据复制到任意数量的从服务器;
-1.2.优点:
-	(1).异常快速:Redis 的速度非常快,每秒能执行约11万集合,每秒约81000+条记录
-	(2).支持丰富的数据类型:Redis 支持最大多数开发人员已经知道像列表,集合,有序集合,散列数据类型
-	(3).操作都是原子性:所有 Redis 操作是原子的,这保证了如果两个客户端同时访问的 Redis 服务器将获得更新后的值;
-	(4).多功能实用工具:Redis 是一个多实用的工具,可以在多个用例如缓存,消息,队列使用(Redis 原生支持发布/订阅),
-		任何短暂的数据,应用程序,如Web应用程序会话,网页命中计数等
-1.3.Redis 安装配置:
-
-1.4.启动: redis-server
-	运行:redis-cli
-		127.0.0.1:6379> 127.0.0.1是本机的IP地址,6379为Redis服务器运行的端口
-	redis 127.0.0.1:6379> ping
-	PONG > 表示成功地安装Redis在您的机器上
-	
+	1.4.启动: redis-server
+		运行:redis-cli
+			127.0.0.1:6379> 127.0.0.1是本机的IP地址,6379为Redis服务器运行的端口
+		redis 127.0.0.1:6379> ping
+		PONG > 表示成功地安装Redis在您的机器上
 ## 2.Redis 的数据类型:其支持五种数据类型
 ### 2.1.字符串:是字节序列
 	(1).Redis 字符串是二进制安全的,这意味着他们有一个已知的长度没有任何特殊字符终止,所以你可以存储任何东西,512M为上限;
@@ -348,80 +318,88 @@
 
 # 二.Redis 配置文件: "redis.conf" 常用配置介绍:
     1. Redis 默认不是以守护进程的方式运行,可以通过该配置项修改,使用yes启用守护进程
-    daemonize no
+    	daemonize no
     2. 当Redis以守护进程方式运行时,Redis默认会把pid写入/var/run/redis.pid文件,可以通过pidfile指定
-    pidfile /var/run/redis.pid
+    	pidfile /var/run/redis.pid
     3. 指定Redis监听端口,默认端口为6379,作者在自己的一篇博文中解释了为什么选用6379作为默认端口,因为6379在手机按键上MERZ对应的号码,而MERZ取自意大利歌女Alessia Merz的名字
-    port 6379
+    	port 6379
     4. 绑定的主机地址
-    bind 127.0.0.1
+    	bind 127.0.0.1
     5.当 客户端闲置多长时间后关闭连接,如果指定为0,表示关闭该功能
-    timeout 300
+    	timeout 300
     6. 指定日志记录级别,Redis总共支持四个级别：debug、verbose、notice、warning,默认为verbose
-    loglevel verbose
+    	loglevel verbose
     7. 日志记录方式,默认为标准输出,如果配置Redis为守护进程方式运行,而这里又配置为日志记录方式为标准输出,则日志将会发送给/dev/null
-    logfile stdout
+    	logfile stdout
     8. 设置数据库的数量,默认数据库为0,可以使用SELECT <dbid>命令在连接上指定数据库id
-    databases 16
+    	databases 16
     9. 指定在多长时间内,有多少次更新操作,就将数据同步到数据文件,可以多个条件配合
-    save <seconds> <changes>
-    Redis默认配置文件中提供了三个条件：
-    save 900 1
-    save 300 10
-    save 60 10000
-    分别表示900秒（15分钟）内有1个更改,300秒（5分钟）内有10个更改以及60秒内有10000个更改。
+		save <seconds> <changes>
+		Redis默认配置文件中提供了三个条件：
+		save 900 1
+		save 300 10
+		save 60 10000
+		分别表示900秒（15分钟）内有1个更改,300秒（5分钟）内有10个更改以及60秒内有10000个更改。
     10. 指定存储至本地数据库时是否压缩数据,默认为yes,Redis采用LZF压缩,如果为了节省CPU时间,可以关闭该选项,但会导致数据库文件变的巨大
-    rdbcompression yes
+    	rdbcompression yes
     11. 指定本地数据库文件名,默认值为dump.rdb
-    dbfilename dump.rdb
+    	dbfilename dump.rdb
     12. 指定本地数据库存放目录
-    dir ./
+    	dir ./
     13. 设置当本机为slav服务时,设置master服务的IP地址及端口,在Redis启动时,它会自动从master进行数据同步
-    slaveof <masterip> <masterport>
+    	slaveof <masterip> <masterport>
     14. 当master服务设置了密码保护时,slav服务连接master的密码
-    masterauth <master-password>
+		masterauth <master-password>
     15. 设置Redis连接密码,如果配置了连接密码,客户端在连接Redis时需要通过AUTH <password>命令提供密码,默认关闭
-    requirepass foobared
-    16. 设置同一时间最大客户端连接数,默认无限制,Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数,如果设置 maxclients 0,表示不作限制。当客户端连接数到达限制时,Redis会关闭新的连接并向客户端返回max number of clients reached错误信息
-    maxclients 128
-    17. 指定Redis最大内存限制,Redis在启动时会把数据加载到内存中,达到最大内存后,Redis会先尝试清除已到期或即将到期的Key,当此方法处理 后,仍然到达最大内存设置,将无法再进行写入操作,但仍然可以进行读取操作。Redis新的vm机制,会把Key存放内存,Value会存放在swap区
-    maxmemory <bytes>
-        (1)volatile-lru:使用LRU算法移除key,只对设置了过期时间的键
-        (2)allkeys-lru:使用LRU算法移除key
-        (3)volatile-random:在过期集合中移除随机的key,只对设置了过期时间的键
-        (4)allkeys-random:移除随机的key
-        (5)volatile-ttl:移除那些TTL值最小的key,即那些最近要过期的key
-        (6)noeviction:不进行移除。针对写操作,只是返回错误信息
-    18. 指定是否在每次更新操作后进行日志记录,Redis在默认情况下是异步的把数据写入磁盘,如果不开启,可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的,所以有的数据会在一段时间内只存在于内存中。默认为no
-    appendonly no
+    	requirepass foobared
+    16. 设置同一时间最大客户端连接数,默认无限制,Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数,
+		如果设置 maxclients 0,表示不作限制。当客户端连接数到达限制时,Redis会关闭新的连接并向客户端返回max number of clients reached错误信息
+    	maxclients 128
+    17. 指定Redis最大内存限制,Redis在启动时会把数据加载到内存中,达到最大内存后,Redis会先尝试清除已到期或即将到期的Key,
+	当此方法处理 后,仍然到达最大内存设置,将无法再进行写入操作,但仍然可以进行读取操作。Redis新的vm机制,会把Key存放内存,Value会存放在swap区
+		maxmemory <bytes>
+			(1)volatile-lru:使用LRU算法移除key,只对设置了过期时间的键
+			(2)allkeys-lru:使用LRU算法移除key
+			(3)volatile-random:在过期集合中移除随机的key,只对设置了过期时间的键
+			(4)allkeys-random:移除随机的key
+			(5)volatile-ttl:移除那些TTL值最小的key,即那些最近要过期的key
+			(6)noeviction:不进行移除。针对写操作,只是返回错误信息
+    18. 指定是否在每次更新操作后进行日志记录,Redis在默认情况下是异步的把数据写入磁盘,如果不开启,
+	可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的,
+	所以有的数据会在一段时间内只存在于内存中。默认为no
+    	appendonly no
     19. 指定更新日志文件名,默认为appendonly.aof
-    appendfilename appendonly.aof
+    	appendfilename appendonly.aof
     20. 指定更新日志条件,共有3个可选值： 
         no：表示等操作系统进行数据缓存同步到磁盘（快） 
         always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢,安全） 
         everysec：表示每秒同步一次（折衷,默认值）
         appendfsync everysec
-    21. 指定是否启用虚拟内存机制,默认值为no,简单的介绍一下,VM机制将数据分页存放,由Redis将访问量较少的页即冷数据swap到磁盘上,访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）
-    vm-enabled no
+    21. 指定是否启用虚拟内存机制,默认值为no,简单的介绍一下,VM机制将数据分页存放,由Redis将访问量较少的页即冷数据swap到磁盘上,
+	访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）
+    	vm-enabled no
     22. 虚拟内存文件路径,默认值为/tmp/redis.swap,不可多个Redis实例共享
-    vm-swap-file /tmp/redis.swap
-    23. 将所有大于vm-max-memory的数据存入虚拟内存,无论vm-max-memory设置多小,所有索引数据都是内存存储的(Redis的索引数据 就是keys),也就是说,当vm-max-memory设置为0的时候,其实是所有value都存在于磁盘。默认值为0
-    vm-max-memory 0
-    24. Redis swap文件分成了很多的page,一个对象可以保存在多个page上面,但一个page上不能被多个对象共享,vm-page-size是要根据存储的 数据大小来设定的,作者建议如果存储很多小对象,page大小最好设置为32或者64bytes；如果存储很大大对象,则可以使用更大的page,如果不 确定,就使用默认值
-    vm-page-size 32
+   		vm-swap-file /tmp/redis.swap
+    23. 将所有大于vm-max-memory的数据存入虚拟内存,无论vm-max-memory设置多小,所有索引数据都是内存存储的
+	(Redis的索引数据 就是keys),也就是说,当vm-max-memory设置为0的时候,其实是所有value都存在于磁盘。默认值为0
+    	vm-max-memory 0
+    24. Redis swap文件分成了很多的page,一个对象可以保存在多个page上面,但一个page上不能被多个对象共享,
+	vm-page-size是要根据存储的 数据大小来设定的,作者建议如果存储很多小对象,page大小最好设置为32或者64bytes；
+	如果存储很大大对象,则可以使用更大的page,如果不 确定,就使用默认值
+    	vm-page-size 32
     25. 设置swap文件中的page数量,由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的,,在磁盘上每8个pages将消耗1byte的内存。
-    vm-pages 134217728
+    	vm-pages 134217728
     26. 设置访问swap文件的线程数,最好不要超过机器的核数,如果设置为0,那么所有对swap文件的操作都是串行的,可能会造成比较长时间的延迟。默认值为4
-    vm-max-threads 4
+    	vm-max-threads 4
     27. 设置在向客户端应答时,是否把较小的包合并为一个包发送,默认为开启
-    glueoutputbuf yes
+    	glueoutputbuf yes
     28. 指定在超过一定的数量或者最大的元素超过某一临界值时,采用一种特殊的哈希算法
-    hash-max-zipmap-entries 64
-    hash-max-zipmap-value 512
+		hash-max-zipmap-entries 64
+		hash-max-zipmap-value 512
     29. 指定是否激活重置哈希,默认为开启（后面在介绍Redis的哈希算法时具体介绍）
-    activerehashing yes
+    	activerehashing yes
     30. 指定包含其它的配置文件,可以在同一主机上多个Redis实例之间使用同一份配置文件,而同时各个实例又拥有自己的特定配置文件
-    include /path/to/local.conf
+    	include /path/to/local.conf
 
 # 三.Redis 持久化:
 ## 1.rdb:(Redis Datbase):保存为 dump.rdb
