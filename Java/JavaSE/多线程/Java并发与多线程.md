@@ -1121,7 +1121,8 @@
 		// 返回用于写入操作的锁。
 		ReentrantReadWriteLock.WriteLock writeLock()
 ## 5.共享锁-闭锁:CountDownLatch:
-	参考文章: http://www.cnblogs.com/skywang12345/p/3533887.html
+[CountDownLatch原理和示例](http://www.cnblogs.com/skywang12345/p/3533887.html)
+
 	(1).是一个同步辅助类,在完成一组正在其他线程中执行的操作之前,它允许一个或多个线程一直等待.允许1或N个线程等待其他线程完成执行
 	(2).数据结构:CountDownLatch 包含了sync对象,sync是 Sync 类型.CountDownLatch 的 Sync 是实例类,它继承于 AQS
 		通过"共享锁"实现.CountDownLatch 中3个核心函数: CountDownLatch(int count), await(), countDown()
@@ -1140,6 +1141,8 @@
 			CountDownLatch中的getCount()最终是调用AQS中的getState()，返回的state对象，即”锁计数器“
 	(3).使用场景:并行计算
 	(4).实现原理:
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/CountdownLatch.png)
+
 		A.CountDownLatch是通过“共享锁”实现的.
 		B.在创建CountDownLatch中时，会传递一个int类型参数count，该参数是“锁计数器”的初始状态，表示该“共享锁”最多能被count给线程同时获取.
 		C.当某线程调用该CountDownLatch对象的await()方法时，该线程会等待“共享锁”可用时，才能获取“共享锁”进而继续运行。
@@ -1181,6 +1184,9 @@
 	6.1.是一个同步辅助类,允许一组线程互相等待,直到到达某个公共屏障点 (common barrier point).
 		因为该 barrier 在释放等待线程后可以重用,所以称它为循环 的 barrier;
 		CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象",它是通过独占锁实现的;
+		下图应该从下往上看才正确
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/CyclicBarrier.png)
+
 	6.2.主要方法:
 		CyclicBarrier(int parties)
 			创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，
@@ -1238,7 +1244,10 @@
 ```
 ## 7.共享锁-信号量:Semaphore
 	参考文章:http://www.cnblogs.com/skywang12345/p/3534050.html
-	是一个计数信号量,它的本质是一个"共享锁";它的作用是限制某段代码块的并发数
+	是一个计数信号量,它的本质是一个"共享锁";它的作用是限制某段代码块的并发数:
+	
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/Semaphore.png)
+
 	(1).信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可;
 		当信号量中有可用的许可时,线程能获取该许可;否则线程必须等待,直到有可用的许可为止.
 		线程可以通过release()来释放它所持有的信号量许可
