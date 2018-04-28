@@ -9,13 +9,6 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
- * http://www.importnew.com/16147.html
- * https://www.ibm.com/developerworks/cn/java/java-lo-concurrenthashmap/
- * https://mp.weixin.qq.com/s/HUvHUBRqp4I4ShyUJr5xDw
- * https://mp.weixin.qq.com/s/V4KzR7A4Kq5ioCbF4oeiIw
- * https://mp.weixin.qq.com/s/8XLqCwWQimAIr__S_BfrHA
- * https://mp.weixin.qq.com/s/8MCq-i0AMqaJRQIecJl2WA
-
 三个方法研究:
 ConcurrentHashMap 的锁分段技术;
 ConcurrentHashMap 的读是否要加锁,为什么;
@@ -62,3 +55,12 @@ ConcurrentHashMap 的迭代器是强一致性的迭代器还是弱一致性的�
 
     ConcurrentHashMap返回的迭代器具有弱一致性,并非fail-fast.弱一致性的迭代器可以容忍并发的修改,当创建迭代器时会遍历已有的元素,
     并可以(但是不保证)在迭代器被构造后将修改反映给容器
+
+# 参考资料:
+
+* http://www.importnew.com/16147.html
+* https://www.ibm.com/developerworks/cn/java/java-lo-concurrenthashmap/
+* https://mp.weixin.qq.com/s/HUvHUBRqp4I4ShyUJr5xDw
+* https://mp.weixin.qq.com/s/V4KzR7A4Kq5ioCbF4oeiIw
+* https://mp.weixin.qq.com/s/8XLqCwWQimAIr__S_BfrHA
+* https://mp.weixin.qq.com/s/8MCq-i0AMqaJRQIecJl2WA

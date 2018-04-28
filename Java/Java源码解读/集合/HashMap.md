@@ -10,7 +10,7 @@
   - [5.键的不变性:](#5%E9%94%AE%E7%9A%84%E4%B8%8D%E5%8F%98%E6%80%A7)
   - [6.Java8 中 HashMap 的改进:](#6java8-%E4%B8%AD-hashmap-%E7%9A%84%E6%94%B9%E8%BF%9B)
   - [7.从Java 7开始,HashMap 采用了延迟加载的机制:](#7%E4%BB%8Ejava-7%E5%BC%80%E5%A7%8Bhashmap-%E9%87%87%E7%94%A8%E4%BA%86%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E7%9A%84%E6%9C%BA%E5%88%B6)
-  - [8.如果你需要存储大量数据,你应该在创建HashMap时指定一个初始的容量.这个容量应该接近你期望的大小:](#8%E5%A6%82%E6%9E%9C%E4%BD%A0%E9%9C%80%E8%A6%81%E5%AD%98%E5%82%A8%E5%A4%A7%E9%87%8F%E6%95%B0%E6%8D%AE%E4%BD%A0%E5%BA%94%E8%AF%A5%E5%9C%A8%E5%88%9B%E5%BB%BAhashmap%E6%97%B6%E6%8C%87%E5%AE%9A%E4%B8%80%E4%B8%AA%E5%88%9D%E5%A7%8B%E7%9A%84%E5%AE%B9%E9%87%8F%E8%BF%99%E4%B8%AA%E5%AE%B9%E9%87%8F%E5%BA%94%E8%AF%A5%E6%8E%A5%E8%BF%91%E4%BD%A0%E6%9C%9F%E6%9C%9B%E7%9A%84%E5%A4%A7%E5%B0%8F)
+  - [8.初始化HashMap,指定容量](#8%E5%88%9D%E5%A7%8B%E5%8C%96hashmap%E6%8C%87%E5%AE%9A%E5%AE%B9%E9%87%8F)
 - [二.签名:](#%E4%BA%8C%E7%AD%BE%E5%90%8D)
 - [三.设计理念:](#%E4%B8%89%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
   - [1.HashMap 的数据结构:](#1hashmap-%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
@@ -21,19 +21,19 @@
 - [五.HashMap 的存取实现:](#%E4%BA%94hashmap-%E7%9A%84%E5%AD%98%E5%8F%96%E5%AE%9E%E7%8E%B0)
 - [六.高并发下 HashMap 的使用的问题:](#%E5%85%AD%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B-hashmap-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98)
 - [七.面试题](#%E4%B8%83%E9%9D%A2%E8%AF%95%E9%A2%98)
+  - [1.get和put的原理?JDK8](#1get%E5%92%8Cput%E7%9A%84%E5%8E%9F%E7%90%86jdk8)
+  - [2.你知道hash的实现吗？为什么要这样实现？](#2%E4%BD%A0%E7%9F%A5%E9%81%93hash%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%90%97%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%99%E6%A0%B7%E5%AE%9E%E7%8E%B0)
+  - [3.容量处理:](#3%E5%AE%B9%E9%87%8F%E5%A4%84%E7%90%86)
+  - [4.为什么 JDK8 的 HashMap 使用的跟以往不同的实现?](#4%E4%B8%BA%E4%BB%80%E4%B9%88-jdk8-%E7%9A%84-hashmap-%E4%BD%BF%E7%94%A8%E7%9A%84%E8%B7%9F%E4%BB%A5%E5%BE%80%E4%B8%8D%E5%90%8C%E7%9A%84%E5%AE%9E%E7%8E%B0)
+  - [5.为什么HashMap默认的加载因子是0.75?](#5%E4%B8%BA%E4%BB%80%E4%B9%88hashmap%E9%BB%98%E8%AE%A4%E7%9A%84%E5%8A%A0%E8%BD%BD%E5%9B%A0%E5%AD%90%E6%98%AF075)
+  - [6.为什么HashMap的默认初始容量是16,且容量必须是 2的幂?](#6%E4%B8%BA%E4%BB%80%E4%B9%88hashmap%E7%9A%84%E9%BB%98%E8%AE%A4%E5%88%9D%E5%A7%8B%E5%AE%B9%E9%87%8F%E6%98%AF16%E4%B8%94%E5%AE%B9%E9%87%8F%E5%BF%85%E9%A1%BB%E6%98%AF-2%E7%9A%84%E5%B9%82)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
- * http://www.codeceo.com/article/java8-hashmap-learn.html
- * http://www.hollischuang.com/archives/82
- * http://www.importnew.com/16599.html
- * [Java HashMap工作原理及实现:(JDK8)](http://yikun.github.io/2015/04/01/Java-HashMap%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E5%AE%9E%E7%8E%B0/)
- * https://javadoop.com/post/hashmap
- * HashMap 是基于一个数组和多个链表来实现的
- * HashMap:继承 AbstractMap, 实现了 Map, Cloneable, Serializable
- * [hash()分析](http://www.hollischuang.com/archives/2091)
-
 # 一.HashMap 基本:
+	HashMap 是基于一个数组和多个链表来实现的
+	HashMap 继承 AbstractMap, 实现了 Map, Cloneable, Serializable
 ## 1.HashMap 的特点:
 	1.1.HashMap 使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对
 		HashMap将 数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组),
@@ -59,7 +59,8 @@
 	(2).HashTable不允许null值(key和value都不可以) ,HashMap允许null值(key和value都可以)。
 	(3).HashTable有一个contains(Object value)功能和containsValue(Object value)功能一样。
 	(4).HashTable使用Enumeration进行遍历,HashMap使用Iterator进行遍历。
-	(5).HashTable中hash数组默认大小是11,增加的方式是 old*2+1。HashMap中hash数组的默认大小是16,而且一定是2的指数。
+	(5).HashTable中hash数组默认大小是11,增加的方式是 old*2+1。HashMap中hash数组的默认大小是16,而且一定是2的指数.
+		在取模计算时,如果模数是2的幂,那么我们可以直接使用位运算来得到结果,效率要大大高于做除法
 	(6).哈希值的使用不同,HashTable 直接使用对象的 hashCode,代码是这样的:
 		int hash = key.hashCode();
 		int index = (hash & 0x7FFFFFFF) % tab.length;
@@ -71,7 +72,7 @@
 		     return h ^ (h >>> 7) ^ (h >>> 4);
 		}
 		static int indexFor(int h, int length) {
-		return h & (length-1);
+			return h & (length-1);
 		}
 ## 3.HashMap 与 HashSet的关系:
 	(1).HashSet底层是采用HashMap实现的:
@@ -103,16 +104,44 @@
 	(1).为什么将字符串和整数作为HashMap的键是一种很好的实现？主要是因为它们是不可变的！如果你选择自己创建一个类作为键,
 		但不能保证这个类是不可变的,那么你可能会在HashMap内部丢失数据
 ## 6.Java8 中 HashMap 的改进:
-	(1).在Java 8中,我们仍然使用数组,但它会被保存在Node中,Node 中包含了和之前 Entry 对象一样的信息,并且也会使用链表
-	(2).那么和Java 7相比,到底有什么大的区别呢？好吧,Node可以被扩展成TreeNode。TreeNode是一个红黑树的数据结构,
+	(1).在Java 8中,使用数组,但它会被保存在Node中,Node 中包含了和之前 Entry 对象一样的信息,并且也会使用链表
+	(2).和JDK7相比,最大区别在于 Node可以被扩展成TreeNode.TreeNode是一个红黑树的数据结构,
 		它可以存储更多的信息这样我们可以在O(log(n))的复杂度下添加、删除或者获取一个元素;
-	(3).红黑树是自平衡的二叉搜索树。它的内部机制可以保证它的长度总是log(n),不管我们是添加还是删除节点。使用这种类型的树,
+```java
+// 它继承自 LinkedHashMap.Entry,而 LinkedHashMap.Entry 继承自 HashMap.Node
+static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+	TreeNode<K,V> parent;  // red-black tree links
+	TreeNode<K,V> left;
+	TreeNode<K,V> right;
+	TreeNode<K,V> prev;    // needed to unlink next upon deletion
+	boolean red;
+}
+
+static class Entry<K,V> extends HashMap.Node<K,V> {
+	Entry<K,V> before, after;
+	Entry(int hash, K key, V value, Node<K,V> next) {
+					super(hash, key, value, next);
+	}
+}
+```
+	(3).红黑树是自平衡的二叉搜索树.不管是添加还是删除节点,它的内部机制可以保证它的长度总是log(n).使用这种类型的树,
 		最主要的好处是针对内部表中许多数据都具有相同索引（桶）的情况,这时对树进行搜索的复杂度是O(log(n)),
 		而对于链表来说,执行相同的操作,复杂度是O(n);
+	(4).jdk8中HashMap有三个关于红黑树的关键参数:
+		* TREEIFY_THRESHOLD = 8
+			一个桶的树化阈值,当桶中元素超过这个值时,使用红黑树节点替换链表节点,值为8,应该跟加载因子类似
+		* UNTREEIFY_THRESHOLD = 6
+			一个树的链表还原阈值,当扩容时,桶中元素个数小于这个值,会把树形的桶元素还原为链表结构.
+			这个值是6,应该比 TREEIFY_THRESHOLD 小
+		* MIN_TREEIFY_CAPACITY = 64
+			哈希表的最小树形化容量,当哈希表中的容量大于这个值时,表中的桶才能进行树形化,
+			否则桶内元素太多时会扩容,而不是树形化.
+			为了避免进行扩容、树形化选择的冲突,这个值不能小于 4 * TREEIFY_THRESHOLD
 ## 7.从Java 7开始,HashMap 采用了延迟加载的机制:
     这意味着即使你为HashMap指定了大小,在我们第一次使用put()方法之前,
 	记录使用的内部数组（耗费4*CAPACITY字节）也不会在内存中分配空间;
-## 8.如果你需要存储大量数据,你应该在创建HashMap时指定一个初始的容量.这个容量应该接近你期望的大小:
+## 8.初始化HashMap,指定容量
+	如果你需要存储大量数据,你应该在创建HashMap时指定一个初始的容量.这个容量应该接近你期望的大小:
 	通过初始化时指定Map期望的大小,你可以避免调整大小操作带来的消耗
 	如果你不这样做,Map会使用默认的大小,即16,factorLoad的值是0.75。前11次调用put()方法会非常快,但是第12次（16*0.75）
 	调用时会创建一个新的长度为32的内部数组（以及对应的链表/树）,第13次到第22次调用put()方法会很快
@@ -207,9 +236,9 @@
 		hash算法的最终得到的index结果,完全取决.
 		使用位运算的效果等同于取模,但是却大大提升了性能.
 	(4).为什么是 16? 可以试试,如果是10会产生什么结果?
-		当 HashMap 长度等于10 的时候,有些 index 结果出现的几率会更大,而有些index的结果永远不会出现.这显然不符合Hash算法均匀分布的原则.
-		而16或者其他2的幂,Length - 1的值是所有二进制位全为1,这种情况下,index的结果等于 hashCode 后几位的值.只要输入hashcode本身是均匀分布的,hash算法等于均匀的
-
+		当 HashMap 长度等于10 的时候,有些 index 结果出现的几率会更大,而有些index的结果永远不会出现.
+		这显然不符合Hash算法均匀分布的原则.而16或者其他2的幂,Length - 1的值是所有二进制位全为1,这种情况下,
+		index的结果等于 hashCode 后几位的值.只要输入hashcode本身是均匀分布的,hash算法等于均匀的
 
 # 五.HashMap 的存取实现:
 #### 1.public V put(K key, V value)方法:
@@ -345,39 +374,115 @@
 		是1的话索引变成“原索引+oldCap”
 
 # 六.高并发下 HashMap 的使用的问题:
-    1.Hashmap 在插入元素过多的时候需要进行 resize,resize的条件是:size >=  capacity * loadFactor。
-    2.Hashmap 的 resize 包含扩容和 reHash两个步骤,reHash在并发的情况下可能会形成链表环.
-        当调用Get查找一个不存在的Key,而这个Key的Hash结果恰好等于某个值的时候,由于位置该值带有环形链表,所以程序将会进入死循环
-    3.为什么扩容时需要 rehash:长度扩大以后,Hash 的规则也随之改变.
-        回顾一下Hash公式:
-        index =  HashCode（Key） &  （Length - 1） 
-        当原数组长度为8时,Hash 运算是 和 111B做与运算;
-        新数组长度为16,Hash 运算是和1111B做与运算.
-        Hash 结果显然不同
-    4.在涉及到多线程并发的情况,执行get方法有可能会引起循环遍历（前提是其它线程的put方法引起了resize动作）,导致CPU利用率接近100%
-
+	1.扩容-resize():影响resize发生的因素
+		(1).capacity:HashMap当前的长度(2的幂);
+		(2).loadfactor:加载因子,默认是0.75f
+		衡量HashMap是否进行resize条件: HashMap.size >= capacity * loadfactor.
+	2.扩容步骤
+		(1).扩容:创建一个新的entry数组,长度是原来数组的两倍;
+		(2).rehash:遍历原entry数组,把所有的entry重写hash到新的数组.
+			为什么需要重新hash? 因为长度扩大异以后,hash规则也随之改变;
+			index =  HashCode（Key） &  （Length - 1） 
+			当原数组长度为8时,Hash 运算是 和 111B做与运算;
+			新数组长度为16,Hash 运算是和1111B做与运算.
+	3.在单线程下上述步骤执行没有任何问题,在多线程环境下,reHash在并发的情况下可能会形成链表环.
+		此时问题并没有直接产生.当调用Get查找一个不存在的Key,而这个Key的Hash结果恰好等于某个值的时候,
+		由于位置该值带有环形链表,所以程序将会进入死循环
+	4.在高并发环境下,通常使用 ConcurrentHashMap,兼顾了线程安全和性能;
+	5.示例:
+		下面代码只在JDK7以前的版本有效,jdk8之后就不存在这种问题了.
+```java
+private static Map<Long, Set<Integer>> setMap = new ConcurrentHashMap<>();
+public static void main(String[] args) throws InterruptedException {
+    final long key = 1L;
+    setMap.put(key, new HashSet<Integer>());
+    for (int i = 0; i < 100; i++) {
+        setMap.get(key).add(i);
+    }
+    Thread a = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            for (int j = 100; j < 200000; j++) {
+                setMap.get(key).add(j);
+            }
+        }
+    });
+    Thread b = new Thread(new Runnable() {
+        @Override
+        public void run() {
+            for (int j = 200000; j < (200000 + 200000); j++) {
+                setMap.get(key).add(j);
+            }
+        }
+    });
+    a.start();
+    b.start();
+    Thread.sleep(1000 * 10);
+    System.out.println(setMap.toString()); // 报java.lang.OutOfMemoryError: Java heap space
+}
+```
 # 七.面试题
-#### 1.get和put的原理?JDK8
+## 1.get和put的原理?JDK8
 	通过对key的hashCode()进行hashing,并计算下标( n-1 & hash),从而获得buckets的位置。
-	如果产生碰撞,则利用key.equals()方法去链表或树中去查找对应的节点
-#### 2.你知道hash的实现吗？为什么要这样实现？
+	如果产生碰撞,则利用key.equals()方法去链表或树中去查找对应的节点.
+	
+## 2.你知道hash的实现吗？为什么要这样实现？
 	在Java 1.8的实现中,是通过hashCode()的高16位异或低16位实现的：(h = k.hashCode()) ^ (h >>> 16),主要是从速度、功效、
 	质量来考虑的,这么做可以在bucket的n比较小的时候,也能保证考虑到高低bit都参与到hash的计算中,同时不会有太大的开销
-#### 3.如果HashMap的大小超过了负载因子(load factor)定义的容量,如何处理?
-	如果超过了负载因子(默认0.75),则会重新resize一个原来长度两倍的HashMap,并且重新调用hash方法
-#### 4.为什么 JDK8 的 HashMap 使用的跟以往不同的实现?
-	一直到JDK7w为止,HashMap 的结构都是这么简单,基于一个数组以及多个链表的实现,hash 值冲突时就将对应节点以链表形式存储.
-	这样的 HashMap 在性能上存在问题:如果很多节点在hash时发生碰撞,存储在一个链表中,那么如果要查找其中一个节点时,不可
-	避免要花费O(N)的时间.
-	在JDK8中,使用红黑树来解决问题.在最坏的情况下,链表的查找时间复杂度是O(N),而红黑树一直是O(logN).
-	JDK7 中HashMap采用的是位桶+链表的方式,即我们常说的散列链表的方式,而 JDK8 中采用的是位桶+链表/红黑树,也是非线程安全的.
-	当某个位桶的链表的长度达到某个阀值的时候,这个链表就将转换成红黑树
-### 5.为什么HashMap默认的加载因子是0.75?
-	https://blog.csdn.net/hcmony/article/details/56494527
+
+## 3.容量处理:
+	(1).如果HashMap的大小超过了负载因子(load factor)定义的容量,如何处理?
+		如果超过了负载因子(默认0.75),则会重新resize一个原来长度两倍的HashMap,并且重新调用hash方法.
+	(2).如果指定了HashMap的容量,如: new HashMap(17),那么其容量会变为32.
+
+## 4.为什么 JDK8 的 HashMap 使用的跟以往不同的实现?
+	(1).一直到JDK7为止,HashMap 的结构都是这么简单,基于一个数组以及多个链表的实现,hash 值冲突时就将对应节点以
+		链表形式存储.这样的 HashMap 在性能上存在问题:如果很多节点在hash时发生碰撞,存储在一个链表中,那么如果要
+		查找其中一个节点时,不可避免要花费O(N)的时间;
+	(2).在JDK8中,使用红黑树来解决问题.在最坏的情况下,链表的查找时间复杂度是O(N),而红黑树一直是O(logN).
+		JDK7 中HashMap采用的是位桶+链表的方式,即我们常说的散列链表的方式,而 JDK8 中采用的是位桶+链表/红黑树,
+		也是非线程安全的.当某个位桶的链表的长度达到某个阀值的时候,这个链表就将转换成红黑树
+
+## 5.为什么HashMap默认的加载因子是0.75?
+	5.1.加载因子:
+		表示hash表中元素填满的程度.
+		* 加载因子越大,填满的元素越多,空间利用率越高,但冲突的机会加大;
+		* 反之,加载因子越小,填满的元素越少,冲突的机会减少,但空间利用率不高.
+		冲突的机会越大,则查找的成本越高;反之,查找的成本越小.
+		需要在"冲突的机会" 和 "空间利用率上" 寻找平衡.
+	5.2.为什么HashMap的默认加载因子是0.75?
+		在理想情况下,使用随机哈希码,节点出现的频率在hash桶中遵循泊松分布,同时给出了桶中元素个数和概率的对照表.
+		0: 0.60653066
+		1: 0.30326533
+		2: 0.07581633
+		3: 0.01263606
+		4: 0.00157952
+		5: 0.00015795
+		6: 0.00001316
+		7: 0.00000094
+		8: 0.00000006
+		从上面的表中可以看到当桶中元素到达8个的时候,概率已经变得非常小,也就是说用0.75作为加载因子,
+		每个碰撞位置的链表长度超过８个是几乎不可能的.
+
+## 6.为什么HashMap的默认初始容量是16,且容量必须是 2的幂?
+	之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法.从key映射到HashMap 数组对应的位置,会用到一个hash函数.
+	实现高效的hash算法,HashMap 中使用位运算.
+	index = hashcode(key) & (length - 1).  hash算法最终得到的index结果,完全取决于Key的Hashcode值的最后几位.
+	长度是2的幂不仅提高了性能,因为length - 1的二进制值位全是1,这种情况下,index的结果等同于Hashcode后几位的值,
+	只要输入hashcode均匀分布,hash算法的结果就是均匀的.
 
 
+# 参考资料
 
-
+* [Java8 HashMap实现原理](http://www.codeceo.com/article/java8-hashmap-learn.html)
+* [JDK8重新认识HashMap](https://tech.meituan.com/java-hashmap.html)
+* [HashMap完全解读](http://www.hollischuang.com/archives/82)
+* [Java HashMap工作原理](http://www.importnew.com/16599.html)
+* [Java HashMap工作原理及实现:(JDK8)](http://yikun.github.io/2015/04/01/Java-HashMap%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E5%AE%9E%E7%8E%B0/)
+* [hash()分析](http://www.hollischuang.com/archives/2091)
+* [HashMap 和 ConcurrentHashMap 全解析](https://javadoop.com/post/hashmap)
+* [加载因子是默认为0.75](https://blog.csdn.net/hcmony/article/details/56494527)
+* [高并发下的HashMap](https://www.jianshu.com/p/c15f7c180375)
 
 
 
