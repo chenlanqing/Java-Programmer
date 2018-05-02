@@ -806,11 +806,21 @@ public class NetworkClassLoader extends ClassLoader {
 	}
 }
 ```
-## 6.6.显示的加载类:
-	Class.forName(classname)
-	Class.forName(classname, initialized, classloader)
-	通过调用 java.lang.ClassLoader 的 loadClass()方法,而 loadClass()方法则调用了findClass()方法来定位相应类的字节码
-## 6.7.什么时候使用类加载器:
+## 6.6.显示的加载类
+### 6.6.1.显示加载类的方式:
+	(1).Class.forName(classname)
+		Class.forName(classname, initialized, classloader)
+	(2).通过调用 java.lang.ClassLoader 的 loadClass()方法,而 loadClass()方法
+		则调用了findClass()方法来定位相应类的字节码
+### 6.6.2.上述两种加载方式有什么区别?
+	(1).Class.forName(name) 实际调用的是 Class.forName(classname, initialized, classloader),
+		三个参数分别是:需要加载的class的名字、是否需要初始化、指定的类加载器
+	(2).ClassLoader.loadClass 实际调用的是ClassLoader.loadClass(name, resolve);
+		参数分别为:需要加载的class的名字、是否需要进行链接
+	(3).Class.forName 方法执行之后已经对被加载类的静态变量分配完了存储空间,而 ClassLoader.loadClass()方法
+		并没有一定执行完链接这一步；当想动态加载一个类且这个类又存在静态代码块或者静态变量而你在加载时就想同时
+		初始化这些静态代码块则应偏向于使用 Class.forName() 方法
+## 6.7.什么时候使用类加载器
 	类加载器是个很强大的概念,很多地方被运用.最经典的例子就是 AppletClassLoader,它被用来加载 Applet 使用的类,
 	而 Applets 大部分是在网上使用,而非本地的操作系统使用.使用不同的类加载器,你可以从不同的源地址加载同一个类,
 	它们被视为不同的类.J2EE 使用多个类加载器加载不同地方的类,例如WAR文件由 Web-app 类加载器加载,而 EJB-JAR
