@@ -65,15 +65,6 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-参考文章：
-* [Java内存区域与内存溢出](http://www.importnew.com/19946.html)
-* [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
-* [深入理解JVM内幕：从基本结构到Java 7新特性](http://www.importnew.com/1486.html)
-* [Java内存分配](http://www.codeceo.com/article/java-object-memory.html)
-* [JVM 调优](http://www.codeceo.com/article/twitter-jvm-performance.html)
-* [ClassLoader机制](http://www.hollischuang.com/archives/199)
-* [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
-
 # 0.虚拟机历史:(阅读书籍:《深入理解Java虚拟机》)
 	0.1.Sun Classic:世界上第一款商用Java虚拟机,在JDK1.2之前是 Sun JDK中唯一的虚拟机,在JDK1.2时,它与HotSpot虚拟机共存,
 		但默认的是Classic VM,在JDK1.3时成为默认虚拟机,直到1.4之后才完全退出历史舞台.
@@ -1474,7 +1465,6 @@ public class NetworkClassLoader extends ClassLoader {
 	13.7.由windows虚拟内存导致的长时间停顿
 # 14.JVM 优化技术:
 ## 14.1.逃逸分析:
-	* https://my.oschina.net/hosee/blog/638573
 	(1).逃逸分析的基本行为就是分析对象动态作用域:当一个对象在方法中被定义之后,它可能被外部所引用.
 		例如作为调用参数传递到其他地方中,称为方法逃逸
 		public static StringBuffer craeteStringBuffer(String s1, String s2) {
@@ -1496,3 +1486,14 @@ public class NetworkClassLoader extends ClassLoader {
 # 16.JVM问题排查
 	https://blog.csdn.net/GitChat/article/details/79019454
 	
+
+# 参考文章：
+* [Java内存区域与内存溢出](http://www.importnew.com/19946.html)
+* [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
+* [深入理解JVM内幕：从基本结构到Java 7新特性](http://www.importnew.com/1486.html)
+* [Java内存分配](http://www.codeceo.com/article/java-object-memory.html)
+* [JVM 调优](http://www.codeceo.com/article/twitter-jvm-performance.html)
+* [ClassLoader机制](http://www.hollischuang.com/archives/199)
+* [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
+* [JVM逃逸分析](https://my.oschina.net/hosee/blog/638573)
+* [内存管理工具Memory Analyzer的使用](https://www.zybuluo.com/frank-shaw/note/206287)

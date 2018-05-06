@@ -21,13 +21,6 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-参考文章：
-* [源码解读Spring IOC原理](https://www.cnblogs.com/ITtangtang/p/3978349.html)
-* [tiny-spring](https://github.com/code4craft/tiny-spring)
-* [源代码](https://github.com/spring-projects/spring-framework)
-* [IoC容器及Bean的生命周期](https://www.cnblogs.com/IvySue/p/6484599.html)
-* [IOC容器源码分析](https://javadoop.com/post/spring-ioc)
-
 # 一.Spring 的整体架构:
 ## 1.1.Core Container:
 	核心容器,包含 Core、Beans、Context、Expression Language 模块
@@ -138,9 +131,63 @@
 		进行后续加工,直接装配出一个准备就绪的Bean
 
 # 三.AOP
-* [Spring AOP原理](https://mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
+
 
 # 四.spring事务
+## 1.Spring事务管理方式
+	(1).编程式事务:使用TransactionTemplate,粒度控制在代码块,手动提交
+	(2).声明式事务:xml,注解,粒度只能控制在public方法中
+## 2.Spring的事务特性
+### 2.1.Spring的事务管理策略
+	都是基于 org.springframework.transaction.PlatformTransactionManager
+	一般使用的都是 DataSourceTransactionManager,也就是基于数据源的事务管理.
+	DataSourceTransactionManager 实现了两个接口:PlatformTransactionManager和InitializingBean,
+	* 实现了PlatformTransactionManager说明这个类主要功能是进行事务管理;
+	* 实现了InitializingBean接口,DataSourceTransactionManager进行事务管理的前提是DataSource已经成功注入.
+	TransactionDefinition接口里面定义了事务的隔离级别和事务的传播行为：
+### 2.2.Spring的事务隔离级别
+	在Spring的事务管理中一样,TransactionDefinition定义了5种隔离级别
+```java
+//底层数据库默认的隔离级别，这个与具体数据库有关系
+int ISOLATION_DEFAULT = -1;
+// 未提交读
+int ISOLATION_READ_UNCOMMITTED = Connection.TRANSACTION_READ_UNCOMMITTED;
+// 提交读：只能读取别人commit了的数据
+int ISOLATION_READ_COMMITTED = Connection.TRANSACTION_READ_COMMITTED;
+// 可重复读：存在幻读，不过MySQL通过MVCC解决这个问题
+int ISOLATION_REPEATABLE_READ = Connection.TRANSACTION_REPEATABLE_READ;
+// 串行化
+int ISOLATION_SERIALIZABLE = Connection.TRANSACTION_SERIALIZABLE;
+```
+### 2.3.Spring事务传播行为
+	事务传播行为是指如果在开始当前事务之前,一个事务上下文已经存在了,此时有若干选项可以指定一个事务性方法的执行行为.
+	在TransactionDefinition中同样定义了如下几种事务传播行为
+```java
+// 如果当前存在事务，则加入该事务；如果当前没有事务，则创建一个新的事务。这是默认值。
+int PROPAGATION_REQUIRED = 0;
+// 如果当前存在事务，则加入该事务；如果当前没有事务，则以非事务的方式继续运行。
+int PROPAGATION_SUPPORTS = 1;
+// 如果当前存在事务，则加入该事务；如果当前没有事务，则抛出异常。
+int PROPAGATION_MANDATORY = 2;
+// 创建一个新的事务，如果当前存在事务，则把当前事务挂起。
+int PROPAGATION_REQUIRES_NEW = 3;
+// 以非事务方式运行，如果当前存在事务，则把当前事务挂起。
+int PROPAGATION_NOT_SUPPORTED = 4;
+// 以非事务方式运行，如果当前存在事务，则抛出异常。
+int PROPAGATION_NEVER = 5;
+// 如果当前存在事务，则创建一个事务作为当前事务的嵌套事务来运行；
+// 如果当前没有事务，则该取值等价于TransactionDefinition.PROPAGATION_REQUIRED。
+int PROPAGATION_NESTED = 6;
+```	
+### 2.4.事务超时时间
+	一个事务允许执行的最长时间,如果超过这个限制但是事务还没有完成,则自动回滚事务.
+	在TransactionDefinition 以int值表示超时时间,其单位是秒.
+	默认设置为底层事务系统的超时值,如果底层数据库事务系统没有设置超时值,那么就是none,没有超时限制;
+### 2.5.事务回滚规则
+	Spring事务管理器会捕捉任何未处理的异常,然后依据规则决定是否回滚抛出异常的事务.
+	默认配置：spring只有在抛出的异常为运行时unchecked异常时才回滚该事务,也就是抛出的异常为RuntimeException的
+	子类(Errors也会导致事务回滚)，而抛出checked异常则不会导致事务回滚.
+## 3.
 
 # 五.相关面试题
 ## 1.Spring与SpringMVC父子容器配置:
@@ -153,3 +200,12 @@
 		造成子容器中的services覆盖了父容器的Services,导致父容器中的动态代理的services不生效,事务也不生效.
 		--> 解决上述问题,可以由父容器加载所有Bean,子容器不加载任何Bean
 
+
+# 参考资料
+
+* [Spring AOP原理](https://mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
+* [源码解读Spring IOC原理](https://www.cnblogs.com/ITtangtang/p/3978349.html)
+* [tiny-spring](https://github.com/code4craft/tiny-spring)
+* [源代码](https://github.com/spring-projects/spring-framework)
+* [IoC容器及Bean的生命周期](https://www.cnblogs.com/IvySue/p/6484599.html)
+* [IOC容器源码分析](https://javadoop.com/post/spring-ioc)
