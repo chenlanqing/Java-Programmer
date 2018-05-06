@@ -28,8 +28,8 @@
   - [6.3.ClassLoader 加载类原理:](#63classloader-%E5%8A%A0%E8%BD%BD%E7%B1%BB%E5%8E%9F%E7%90%86)
   - [6.4.ClassLoader 源码分析:](#64classloader-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
   - [6.5.自定义类加载器:](#65%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
-  - [6.6.显示的加载类:](#66%E6%98%BE%E7%A4%BA%E7%9A%84%E5%8A%A0%E8%BD%BD%E7%B1%BB)
-  - [6.7.什么时候使用类加载器:](#67%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%BD%BF%E7%94%A8%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
+  - [6.6.显示的加载类](#66%E6%98%BE%E7%A4%BA%E7%9A%84%E5%8A%A0%E8%BD%BD%E7%B1%BB)
+  - [6.7.什么时候使用类加载器](#67%E4%BB%80%E4%B9%88%E6%97%B6%E5%80%99%E4%BD%BF%E7%94%A8%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
   - [6.8.Java 类类生命周期](#68java-%E7%B1%BB%E7%B1%BB%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
   - [6.9.Java 类的初始化:](#69java-%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96)
   - [6.10.如下例子:](#610%E5%A6%82%E4%B8%8B%E4%BE%8B%E5%AD%90)
@@ -62,6 +62,7 @@
   - [14.2.](#142)
 - [15.钩子函数(ShutdownHook)](#15%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0shutdownhook)
 - [16.JVM问题排查](#16jvm%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5)
+- [参考文章：](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

@@ -16,8 +16,12 @@
   - [5.Bean加载过程](#5bean%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B)
 - [三.AOP](#%E4%B8%89aop)
 - [四.spring事务](#%E5%9B%9Bspring%E4%BA%8B%E5%8A%A1)
+  - [1.Spring事务管理方式](#1spring%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E6%96%B9%E5%BC%8F)
+  - [2.Spring的事务特性](#2spring%E7%9A%84%E4%BA%8B%E5%8A%A1%E7%89%B9%E6%80%A7)
+  - [3.Spring事务实现原理](#3spring%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
 - [五.相关面试题](#%E4%BA%94%E7%9B%B8%E5%85%B3%E9%9D%A2%E8%AF%95%E9%A2%98)
   - [1.Spring与SpringMVC父子容器配置:](#1spring%E4%B8%8Espringmvc%E7%88%B6%E5%AD%90%E5%AE%B9%E5%99%A8%E9%85%8D%E7%BD%AE)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -187,7 +191,7 @@ int PROPAGATION_NESTED = 6;
 	Spring事务管理器会捕捉任何未处理的异常,然后依据规则决定是否回滚抛出异常的事务.
 	默认配置：spring只有在抛出的异常为运行时unchecked异常时才回滚该事务,也就是抛出的异常为RuntimeException的
 	子类(Errors也会导致事务回滚)，而抛出checked异常则不会导致事务回滚.
-## 3.
+## 3.Spring事务实现原理
 
 # 五.相关面试题
 ## 1.Spring与SpringMVC父子容器配置:

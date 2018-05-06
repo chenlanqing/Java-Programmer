@@ -3,20 +3,46 @@
 **目录**
 
 - [一.Spring概念](#%E4%B8%80spring%E6%A6%82%E5%BF%B5)
+  - [1、Spring是什么？](#1spring%E6%98%AF%E4%BB%80%E4%B9%88)
+  - [2、具体描述 Spring:](#2%E5%85%B7%E4%BD%93%E6%8F%8F%E8%BF%B0-spring)
 - [二.IOC(DI)](#%E4%BA%8Ciocdi)
+  - [1.IOC(Inversion of Control)：](#1iocinversion-of-control)
+  - [2.Spring容器:](#2spring%E5%AE%B9%E5%99%A8)
+  - [3.DI(Dependency Injection)](#3didependency-injection)
+  - [4.各种类型信息的注入:](#4%E5%90%84%E7%A7%8D%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF%E7%9A%84%E6%B3%A8%E5%85%A5)
 - [三.Spring AOP: AOP(Aspect-Oriented Programming, 面向切面编程](#%E4%B8%89spring-aop-aopaspect-oriented-programming-%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2%E7%BC%96%E7%A8%8B)
+  - [1.关于面向切面编程:](#1%E5%85%B3%E4%BA%8E%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2%E7%BC%96%E7%A8%8B)
+  - [2.AOP 的优势:](#2aop-%E7%9A%84%E4%BC%98%E5%8A%BF)
+  - [3.AOP 的术语:](#3aop-%E7%9A%84%E6%9C%AF%E8%AF%AD)
+  - [4.基本使用:](#4%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8)
+  - [5.切面:](#5%E5%88%87%E9%9D%A2)
+  - [6.Aop:通知](#6aop%E9%80%9A%E7%9F%A5)
+  - [7.切入点表达式：](#7%E5%88%87%E5%85%A5%E7%82%B9%E8%A1%A8%E8%BE%BE%E5%BC%8F)
 - [四.AOP 原理分析:](#%E5%9B%9Baop-%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
 - [五.Spring的 事务:](#%E4%BA%94spring%E7%9A%84-%E4%BA%8B%E5%8A%A1)
+  - [1.事务:一组逻辑操作](#1%E4%BA%8B%E5%8A%A1%E4%B8%80%E7%BB%84%E9%80%BB%E8%BE%91%E6%93%8D%E4%BD%9C)
+  - [2.Spring 的事务管理:](#2spring-%E7%9A%84%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86)
+  - [3.声明式事务管理:](#3%E5%A3%B0%E6%98%8E%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86)
+  - [5.事务的传播性:当事务方法被另一个事务方法调用时, 必须指定事务应该如何传播](#5%E4%BA%8B%E5%8A%A1%E7%9A%84%E4%BC%A0%E6%92%AD%E6%80%A7%E5%BD%93%E4%BA%8B%E5%8A%A1%E6%96%B9%E6%B3%95%E8%A2%AB%E5%8F%A6%E4%B8%80%E4%B8%AA%E4%BA%8B%E5%8A%A1%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8%E6%97%B6-%E5%BF%85%E9%A1%BB%E6%8C%87%E5%AE%9A%E4%BA%8B%E5%8A%A1%E5%BA%94%E8%AF%A5%E5%A6%82%E4%BD%95%E4%BC%A0%E6%92%AD)
+  - [6.事务隔离级别:通过隔离事务属性指定 isolation](#6%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E9%80%9A%E8%BF%87%E9%9A%94%E7%A6%BB%E4%BA%8B%E5%8A%A1%E5%B1%9E%E6%80%A7%E6%8C%87%E5%AE%9A-isolation)
+  - [7.xml方式配置Spring事务:使用AOP来实现的,即使用动态代理](#7xml%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AEspring%E4%BA%8B%E5%8A%A1%E4%BD%BF%E7%94%A8aop%E6%9D%A5%E5%AE%9E%E7%8E%B0%E7%9A%84%E5%8D%B3%E4%BD%BF%E7%94%A8%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86)
+  - [8.编程式事务管理:(实际中很少用)](#8%E7%BC%96%E7%A8%8B%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E5%AE%9E%E9%99%85%E4%B8%AD%E5%BE%88%E5%B0%91%E7%94%A8)
+  - [9.Spring 中的部分注解配置](#9spring-%E4%B8%AD%E7%9A%84%E9%83%A8%E5%88%86%E6%B3%A8%E8%A7%A3%E9%85%8D%E7%BD%AE)
 - [六.Spring的三种配置方式:](#%E5%85%ADspring%E7%9A%84%E4%B8%89%E7%A7%8D%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F)
+  - [1.基于xml方式配置](#1%E5%9F%BA%E4%BA%8Exml%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
+  - [2.基于注解方式配置](#2%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
+  - [3.基于Java方式配置](#3%E5%9F%BA%E4%BA%8Ejava%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
+- [七.Spring中涉及的设计模式](#%E4%B8%83spring%E4%B8%AD%E6%B6%89%E5%8F%8A%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一.Spring概念
-#### 1、Spring是什么？
+## 1、Spring是什么？
 	(1).Spring 是一个开源框架.
 	(2).Spring 为简化企业级应用开发而生. 使用 Spring 可以使简单的 JavaBean 实现以前只有 EJB 才能实现的功能.
 	(3).Spring 是一个 IOC(DI) 和 AOP 容器框架;
-#### 2、具体描述 Spring:
+## 2、具体描述 Spring:
 	(1).轻量级：Spring 是非侵入性的 - 基于 Spring 开发的应用中的对象可以不依赖于 Spring 的 API
 	(2).依赖注入(DI --- dependency injection、IOC)
 	(3).面向切面编程(AOP --- aspect oriented programming)
@@ -26,8 +52,9 @@
 		(实际上 Spring 自身也提供了展现层的 SpringMVC 和 持久层的 Spring JDBC)
 	Spring容器初始化时:首先会初始化 bean,即构造相关类
 # 二.IOC(DI)
-#### 1.IOC(Inversion of Control)：其思想是反转资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源. 
-	作为回应, 容器适时的返回资源. 而应用了 IOC 之后, 则是容器主动地将资源推送给它所管理的组件, 组件所要做的仅是
+## 1.IOC(Inversion of Control)：
+	其思想是反转资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源. 
+	作为回应,容器适时的返回资源.而应用了 IOC 之后,则是容器主动地将资源推送给它所管理的组件,组件所要做的仅是
 	选择一种合适的方式来接受资源. 这种行为也被称为查找的被动形式;
 	// 控制反转:把创建对象(Bean)和维护对象(Bean)的关系的权利从程序中转移到Spring容器中,程序不再控制
 	1.1.IOC 机制实现Bean之间的调用;
@@ -57,7 +84,7 @@
 		(3).org.springframework.beans.factory.BeanFactory 是 Spring IOC 容器的具体实现，用来包装和管理前面提到的各种bean。
 		BeanFactory接口是Spring IoC 容器的核心接口
 
-#### 2.Spring容器:
+## 2.Spring容器:
 	在 Spring IOC 容器读取 Bean 配置创建 Bean 实例之前, 必须对它进行实例化. 只有在容器实例化后, 
 	才可以从 IOC 容器里获取 Bean 实例并使用.
 	2.1.Spring 提供了两种类型的 IOC 容器实现. 
@@ -96,7 +123,8 @@
 				Ⅰ.提供了支持国际化的文本消息
 				Ⅱ.统一的资源文件读取方式
 				Ⅲ.已在监听器中注册的bean的事件
-#### 3.DI(Dependency Injection) — IOC 的另一种表述方式：即组件以一些预先定义好的方式(例如: setter 方法)
+## 3.DI(Dependency Injection)
+	IOC 的另一种表述方式：即组件以一些预先定义好的方式(例如: setter 方法)
 	接受来自如容器的资源注入. 相对于 IOC 而言，这种表述更直接
 	****依赖注入(DI)和控制反转(IOC)是从不同的角度的描述的同一件事情:
 	****就是指通过引入IOC容器,利用依赖关系注入的方式,实现对象之间的解耦
@@ -114,7 +142,7 @@
 					<constructor-arg index="指定参数索引(从0开始)" ref="要注入的Bean对象的id属性值">
 					</constructor-arg>
 					
-#### 4.各种类型信息的注入:
+## 4.各种类型信息的注入:
 	(1).注入Bean对象:(使用最多)--------------------------------------------------★★★★★
 			<property name="属性名" ref="要注入的Bean对象的id属性值"></property>
 
@@ -168,15 +196,15 @@
 					</property>		
 		
 # 三.Spring AOP: AOP(Aspect-Oriented Programming, 面向切面编程	
-#### 1.关于面向切面编程:
+## 1.关于面向切面编程:
 	(1).AOP 的主要编程对象是切面(aspect), 而切面模块化横切关注点
 	(2).在应用 AOP 编程时, 仍然需要定义公共功能, 但可以明确的定义这个功能在哪里, 以什么方式应用, 
 		并且不必修改受影响的类. 这样一来横切关注点就被模块化到特殊的对象(切面)里
-#### 2.AOP 的优势:
+## 2.AOP 的优势:
 	(1).每个事物逻辑位于一个位置, 代码不分散, 便于维护和升级
 	(2).业务模块更简洁, 只包含核心业务代码;
 	
-#### 3.AOP 的术语:
+## 3.AOP 的术语:
 	(1).切面(Aspect):  横切关注点(跨越应用程序多个模块的功能)被模块化的特殊对象
 	(2).通知(Advice):  切面必须要完成的工作
 	(3).目标(Target): 被通知的对象
@@ -217,7 +245,7 @@
 			<aop:advisor advice-ref="bookShopTXDao" pointcut-ref="bookShop"/>
 		</aop:config>
 		
-#### 4.基本使用:
+## 4.基本使用:
 	4.1.使用注解来使用AOP：
 		(1).引入相关的jar包:aopalliance.jar、aspectj.weaver.jar 和 spring-aspects.jar
 		(2).配置文件引入相关的命名空间,并在配置文件中加入如下配置:
@@ -274,13 +302,13 @@
 						<aop:before method="beforeMethod" pointcut-ref="pointcut"/>
 					</aop:aspect>
 				</aop:config>
-#### 5.切面:
+## 5.切面:
 	5.1.切面的优先级:
 	(1).在同一个连接点上应用不止一个切面时, 除非明确指定, 否则它们的优先级是不确定的.
 	(2).切面的优先级可以通过实现 Ordered 接口或利用 @Order 注解指定.
 	(3).实现 Ordered 接口, getOrder() 方法的返回值越小, 优先级越高.
 	(4).若使用 @Order 注解, 序号出现在注解中	
-#### 6.Aop:通知
+## 6.Aop:通知
 	try{
 		// 前置通知:在连接点执行前执行的通知
 		// 方法执行体
@@ -339,7 +367,7 @@
                 return result;
             }
 
-#### 7.切入点表达式：
+## 7.切入点表达式：
     7.1.重用切入点表达式:
         (1).在AOP中,编写AspectJ切面时,同一个切点表达式可能会在多个通知中重复出现,可以通过 @Pointcut注解将一个切入点
         声明为简单的方法,其方法体通常都是空的;
@@ -421,7 +449,7 @@
         3.2.动态代理:在运行时借助于 JDK 动态代理、CGLIB 等在内存中“临时”生成 AOP 动态代理类，因此也被称为运行时增强
 
 # 五.Spring的 事务:
-#### 1.事务:一组逻辑操作
+## 1.事务:一组逻辑操作
 	用来确保数据的完整性和一致性,是一系列动作,这些动作要么全部完成要么全部不起作用;
 	1.1.四个关键属性:
 		(1).原子性(atomicity): 事务是个不可分割的工作单位
@@ -439,7 +467,7 @@
 			(2).
 		1.2.2.TransactionDefinition-事务定义信息(隔离,传播,超时,只读)
 		1.2.3.TransactionStatus-事务具体运行状态
-#### 2.Spring 的事务管理:	
+## 2.Spring 的事务管理:	
 	2.1.支持编程式事务管理与声明式事务管理
 		(1).编程式事务管理: 
 			将事务管理代码嵌入到业务方法中来控制事务的提交和回滚. 
@@ -450,7 +478,7 @@
 	2.2.Spring 事务管理核心: TransactionManager,其为事务管理封装了一组独立于技术的方法.
 		对于JDBC,JavaEE,Hibernate 等都实现了相应的事务管理器;
 
-#### 3.声明式事务管理:
+## 3.声明式事务管理:
 	3.1.事务管理是一种横切关注点
 	3.2.xml配置声明式事务管理:
 		<!-- 声明事务管理器-->
@@ -472,7 +500,7 @@
 		// 在需要事务管理的方法前加上注解,或者可以直接加在类上
 		@Transactional
 		
-#### 5.事务的传播性:当事务方法被另一个事务方法调用时, 必须指定事务应该如何传播
+## 5.事务的传播性:当事务方法被另一个事务方法调用时, 必须指定事务应该如何传播
 	5.1.Spring 支持的事务传播行为:
 		(1).REQUIRED:***
 			业务方法需要在一个容器里运行。如果方法运行时，已经处在一个事务中，那么加入到这个事务，否则自己新建一个新的事务。
@@ -517,7 +545,7 @@
 		(2).注解:
 			@Transactional(propagation=Propagation.REQUIRES_NEW)
 			
-#### 6.事务隔离级别:通过隔离事务属性指定 isolation	
+## 6.事务隔离级别:通过隔离事务属性指定 isolation	
 	6.1.事务隔离级别:
 		(1).DEFAULT:使用底层数据库的默认隔离级别,对于大多数数据库来说,默认的隔离级别都是: READ_COMMITTED
 		(2).READ_UNCOMMITTED:允许事务读取未被其他事务提交的变更,脏读、不可重复度、幻读的问题都会出现
@@ -557,7 +585,7 @@
 		    boolean isRollbackOnly(); // 是否为只回滚
 		    boolean isCompleted; // 是否已完成
 		} 
-#### 7.xml方式配置Spring事务:使用AOP来实现的,即使用动态代理
+## 7.xml方式配置Spring事务:使用AOP来实现的,即使用动态代理
 	7.1.步骤:
 		(1).配置事务管理器,包括配置hibernate、mybatis等:
 			<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
@@ -580,8 +608,8 @@
 				<aop:pointcut expression="execution(* *.*(..))" id="txPointCut"/>
 				<aop:advisor advice-ref="txAdvice" pointcut-ref="txPointCut"/>	
 			</aop:config>
-#### 8.编程式事务管理:(实际中很少用)
-#### 9.Spring 中的部分注解配置	
+## 8.编程式事务管理:(实际中很少用)
+## 9.Spring 中的部分注解配置	
 		◆从JDK5.0开始,提供了注解,泛型,新for循环,自动装箱,拆箱;
 		◆目前框架利用注解替代XML配置内容,
 		◆注解是一种标记(@标记),可以写在类定义前,方法定义前,属性变量定义前
@@ -625,13 +653,20 @@
 	
 	
 # 六.Spring的三种配置方式:
-#### 1.基于xml方式配置
+## 1.基于xml方式配置
 
 
-#### 2.基于注解方式配置
+## 2.基于注解方式配置
 
 
 
-#### 3.基于Java方式配置	
-	
-	
+## 3.基于Java方式配置	
+
+# 七.Spring中涉及的设计模式	
+
+
+# 参考资料
+
+* [Spring 框架的设计理念与设计模式分析](https://www.ibm.com/developerworks/cn/java/j-lo-spring-principle/)
+
+
