@@ -1,12 +1,24 @@
-* http://www.cnblogs.com/zuoxiaolong/p/pattern26.html
-* http://www.jasongj.com/design_pattern/summary/
-* http://www.cnblogs.com/wangjq/category/389973.html
-#### 1.OOP 基本特性:
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.OOP 基本特性:](#1oop-%E5%9F%BA%E6%9C%AC%E7%89%B9%E6%80%A7)
+- [2.面向对象设计原则:](#2%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E8%AE%BE%E8%AE%A1%E5%8E%9F%E5%88%99)
+- [3.为什么适用设计模式:](#3%E4%B8%BA%E4%BB%80%E4%B9%88%E9%80%82%E7%94%A8%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
+- [4.设计模式总共23种,可以分为三大类:](#4%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%80%BB%E5%85%B123%E7%A7%8D%E5%8F%AF%E4%BB%A5%E5%88%86%E4%B8%BA%E4%B8%89%E5%A4%A7%E7%B1%BB)
+  - [4.1.创建型模式:提供了一种在创建对象的同时隐藏创建逻辑的方式，而不是使用新的运算符直接实例化对象。](#41%E5%88%9B%E5%BB%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F%E6%8F%90%E4%BE%9B%E4%BA%86%E4%B8%80%E7%A7%8D%E5%9C%A8%E5%88%9B%E5%BB%BA%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%90%8C%E6%97%B6%E9%9A%90%E8%97%8F%E5%88%9B%E5%BB%BA%E9%80%BB%E8%BE%91%E7%9A%84%E6%96%B9%E5%BC%8F%E8%80%8C%E4%B8%8D%E6%98%AF%E4%BD%BF%E7%94%A8%E6%96%B0%E7%9A%84%E8%BF%90%E7%AE%97%E7%AC%A6%E7%9B%B4%E6%8E%A5%E5%AE%9E%E4%BE%8B%E5%8C%96%E5%AF%B9%E8%B1%A1)
+  - [4.2.结构型模式:这些设计模式关注类和对象的组合。继承的概念被用来组合接口和定义组合对象获得新功能的方式:](#42%E7%BB%93%E6%9E%84%E5%9E%8B%E6%A8%A1%E5%BC%8F%E8%BF%99%E4%BA%9B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E5%85%B3%E6%B3%A8%E7%B1%BB%E5%92%8C%E5%AF%B9%E8%B1%A1%E7%9A%84%E7%BB%84%E5%90%88%E7%BB%A7%E6%89%BF%E7%9A%84%E6%A6%82%E5%BF%B5%E8%A2%AB%E7%94%A8%E6%9D%A5%E7%BB%84%E5%90%88%E6%8E%A5%E5%8F%A3%E5%92%8C%E5%AE%9A%E4%B9%89%E7%BB%84%E5%90%88%E5%AF%B9%E8%B1%A1%E8%8E%B7%E5%BE%97%E6%96%B0%E5%8A%9F%E8%83%BD%E7%9A%84%E6%96%B9%E5%BC%8F)
+  - [4.3.行为型模式:这些设计模式特别关注对象之间的通信](#43%E8%A1%8C%E4%B8%BA%E5%9E%8B%E6%A8%A1%E5%BC%8F%E8%BF%99%E4%BA%9B%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E7%89%B9%E5%88%AB%E5%85%B3%E6%B3%A8%E5%AF%B9%E8%B1%A1%E4%B9%8B%E9%97%B4%E7%9A%84%E9%80%9A%E4%BF%A1)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+# 1.OOP 基本特性
 	(1).封装:也就是把客观事物封装成抽象的类,并且类可以把自己的属性和方法只让可信的类操作,对不可信的进行信息隐藏.
 	(2).继承:是指这样一种能力,它可以使用现有的类的所有功能,并在无需重新编写原来类的情况下对这些功能进行扩展.
 	(3).多态:指一个类实例的相同方法在不同情形有不同的表现形式.
 		具体来说就是不同实现类对公共接口有不同的实现方式.但这些操作可以通过相同的方式(公共接口)予以调用.
-#### 2.面向对象设计原则:
+# 2.面向对象设计原则
 	2.1.开闭原则:对修改关闭,对扩展开放
 	2.2.里氏替换原则:一个子类应该可以替换掉父类并且可以正常工作
 	2.3.依赖倒置原则:设计和实现要依赖于抽象而非具体.
@@ -17,38 +29,47 @@
 		低耦合高内聚
 	2.7.合成/聚合复用原则:如果新对象的某些功能在别的已经创建好的对象里面已经实现,那么应当尽量使用别的对象提供的功能,
 		使之成为新对象的一部分,而不要再重新创建.如桥接模式
-#### 3.为什么适用设计模式:
+# 3.为什么适用设计模式
 	3.1.什么是设计模式:
 		是一套被反复使用的、多数人知晓的、经过分类编目的、代码设计经验的总结.使用设计模式
 		是为了重用代码、让代码更容易被他人理解、保证代码可靠性;
 	3.2.每个设计模式都有其适合范围,并解决特定问题.所以项目实践中应该针对特定使用场景选用合适的设计模式
-#### 4.设计模式总共23种,可以分为三大类:
-	4.1.创建型模式:提供了一种在创建对象的同时隐藏创建逻辑的方式，而不是使用新的运算符直接实例化对象。
-		这使得程序在判断针对某个给定实例需要创建哪些对象时更加灵活:
-		(1).工厂模式（Factory Pattern）
-		(2).抽象工厂模式（Abstract Factory Pattern）
-		(3).单例模式（Singleton Pattern）
-		(4).建造者模式（Builder Pattern）
-		(5).原型模式（Prototype Pattern）
-	4.2.结构型模式:这些设计模式关注类和对象的组合。继承的概念被用来组合接口和定义组合对象获得新功能的方式:
-		(6).适配器模式（Adapter Pattern）
-		(7).桥接模式（Bridge Pattern）
-		(8).过滤器模式（Filter、Criteria Pattern）
-		(9).组合模式（Composite Pattern）
-		(10).装饰器模式（Decorator Pattern）
-		(11).外观模式（Facade Pattern）
-		(12).享元模式（Flyweight Pattern）
-		(13).代理模式（Proxy Pattern）
-	4.3.行为型模式:这些设计模式特别关注对象之间的通信
-		(14).责任链模式（Chain of Responsibility Pattern）
-		(15).命令模式（Command Pattern）
-		(16).解释器模式（Interpreter	Pattern）
-		(17).迭代器模式（Iterator Pattern）
-		(18).中介者模式（Mediator Pattern）
-		(19).备忘录模式（Memento Pattern）
-		(20).观察者模式（Observer Pattern）
-		(21).状态模式（State Pattern）
-		(22).空对象模式（Null Object	Pattern）
-		(23).策略模式（Strategy Pattern）
-		(24).模板模式（Template Pattern）
-		(25).访问者模式（Visitor Pattern）	
+# 4.设计模式总共23种,可以分为三大类
+## 4.1.创建型模式
+	提供了一种在创建对象的同时隐藏创建逻辑的方式，而不是使用新的运算符直接实例化对象。
+	这使得程序在判断针对某个给定实例需要创建哪些对象时更加灵活:
+	(1).工厂模式(Factory Pattern)
+	(2).抽象工厂模式(Abstract Factory Pattern)
+	(3).单例模式(Singleton Pattern)
+	(4).建造者模式(Builder Pattern)
+	(5).原型模式(Prototype Pattern)
+## 4.2.结构型模式
+	这些设计模式关注类和对象的组合。继承的概念被用来组合接口和定义组合对象获得新功能的方式:
+	(6).适配器模式(Adapter Pattern)
+	(7).桥接模式(Bridge Pattern)
+	(8).过滤器模式(Filter、Criteria Pattern)
+	(9).组合模式(Composite Pattern)
+	(10).装饰器模式(Decorator Pattern)
+	(11).外观模式(Facade Pattern)
+	(12).享元模式(Flyweight Pattern)
+	(13).代理模式(Proxy Pattern)
+## 4.3.行为型模式
+	这些设计模式特别关注对象之间的通信
+	(14).责任链模式(Chain of Responsibility Pattern)
+	(15).命令模式(Command Pattern)
+	(16).解释器模式(Interpreter	Pattern)
+	(17).迭代器模式(Iterator Pattern)
+	(18).中介者模式(Mediator Pattern)
+	(19).备忘录模式(Memento Pattern)
+	(20).观察者模式(Observer Pattern)
+	(21).状态模式(State Pattern)
+	(22).空对象模式(Null Object	Pattern)
+	(23).策略模式(Strategy Pattern)
+	(24).模板模式(Template Pattern)
+	(25).访问者模式(Visitor Pattern)	
+
+# 参考资料
+
+* [设计模式大杂烩](http://www.cnblogs.com/zuoxiaolong/p/pattern26.html)
+* [Java设计模式](http://www.jasongj.com/design_pattern/summary/)
+* [设计模式](http://www.cnblogs.com/wangjq/category/389973.html)

@@ -2,12 +2,13 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
+- [一.简单工厂-静态工厂方法:由一个工厂对象决定创建出哪一种产品类的实例](#%E4%B8%80%E7%AE%80%E5%8D%95%E5%B7%A5%E5%8E%82-%E9%9D%99%E6%80%81%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95%E7%94%B1%E4%B8%80%E4%B8%AA%E5%B7%A5%E5%8E%82%E5%AF%B9%E8%B1%A1%E5%86%B3%E5%AE%9A%E5%88%9B%E5%BB%BA%E5%87%BA%E5%93%AA%E4%B8%80%E7%A7%8D%E4%BA%A7%E5%93%81%E7%B1%BB%E7%9A%84%E5%AE%9E%E4%BE%8B)
+- [二.工厂方法:](#%E4%BA%8C%E5%B7%A5%E5%8E%82%E6%96%B9%E6%B3%95)
 - [三.抽象工厂](#%E4%B8%89%E6%8A%BD%E8%B1%A1%E5%B7%A5%E5%8E%82)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-* http://www.jasongj.com/design_pattern/simple_factory/
-* http://www.cnblogs.com/zuoxiaolong/p/pattern4.html
 # 一.简单工厂-静态工厂方法:由一个工厂对象决定创建出哪一种产品类的实例
     1.简单工厂模式解决的问题是如何去实例化一个合适的对象.
     2.简单工厂模式的核心思想就是:有一个专门的类来负责创建实例的过程
@@ -75,3 +76,7 @@
 # 三.抽象工厂
     1.为创建一组相关或相互依赖的对象提供一个接口,而且无需指定他们的具体类
 
+# 参考资料
+
+* [简单工厂模式](http://www.jasongj.com/design_pattern/simple_factory/)
+* [简单工厂模式详解](http://www.cnblogs.com/zuoxiaolong/p/pattern4.html)
