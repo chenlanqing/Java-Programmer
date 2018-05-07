@@ -43,6 +43,9 @@
   - [17.1.自定义拦截器(Interceptor):](#171%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8B%A6%E6%88%AA%E5%99%A8interceptor)
 - [18.SpringMVC 异常处理:](#18springmvc-%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86)
 - [19.SpringMVC 运行流程:](#19springmvc-%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B)
+  - [19.1.流程图](#191%E6%B5%81%E7%A8%8B%E5%9B%BE)
+  - [19.2.时序图](#192%E6%97%B6%E5%BA%8F%E5%9B%BE)
+  - [19.3.详细描述](#193%E8%AF%A6%E7%BB%86%E6%8F%8F%E8%BF%B0)
 - [20.Spring 与 SpringMVC:](#20spring-%E4%B8%8E-springmvc)
 - [21.SpringMVC 对比 Struts2](#21springmvc-%E5%AF%B9%E6%AF%94-struts2)
 
@@ -878,9 +881,26 @@ public void afterCompletion(HttpServletRequest request,
 			</bean>
 
 # 19.SpringMVC 运行流程:
+## 19.1.流程图
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java框架/Image/Spring请求流程.png)
 
-	
+## 19.2.时序图
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java框架/Image/SpringMVC请求时序图.png)
+
+## 19.3.详细描述
+	(1).发起请求到前端控制器(DispatcherServlet)
+	(2).前端控制器请求HandlerMapping查找 Handler(可以根据xml配置、注解进行查找)
+	(3).处理器映射器HandlerMapping向前端控制器返回Handler,HandlerMapping会把请求映射为HandlerExecutionChain对象(包含一个Handler
+		处理器（页面控制器）对象,多个HandlerInterceptor拦截器对象),通过这种策略模式,很容易添加新的映射策略
+	(4).前端控制器调用处理器适配器去执行Handler
+	(5).处理器适配器HandlerAdapter将会根据适配的结果去执行Handler
+	(6).Handler执行完成给适配器返回ModelAndView
+	(7).处理器适配器向前端控制器返回ModelAndView （ModelAndView是springmvc框架的一个底层对象，包括 Model和view）
+	(8).前端控制器请求视图解析器去进行视图解析(根据逻辑视图名解析成真正的视图(jsp)),
+		通过这种策略很容易更换其他视图技术,只需要更改视图解析器即可
+	(9).视图解析器向前端控制器返回View
+	(10).前端控制器进行视图渲染(视图渲染将模型数据(在ModelAndView对象中)填充到request域)
+	(11).前端控制器向用户响应结果
 # 20.Spring 与 SpringMVC:
 	20.1.需要进行 Spring 整合 SpringMVC 吗? 还是否需要再加入 Spring 的 IOC 容器? 
 		是否需要再web.xml文件中配置启动Spring IOC容器的ContextLoaderListener ?
