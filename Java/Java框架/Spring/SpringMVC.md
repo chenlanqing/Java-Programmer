@@ -878,17 +878,14 @@ public void afterCompletion(HttpServletRequest request,
 			</bean>
 
 # 19.SpringMVC 运行流程:
-	19.1.HandlerExecutionChain:处理器执行链,其中包含了拦截器、handler、目标方法
-		通过 HandlerMapping 获取:
-	19.2.HandlerMapping
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java框架/Image/Spring请求流程.png)
 
-	19.3.HandlerAdapter
-
+	
 # 20.Spring 与 SpringMVC:
 	20.1.需要进行 Spring 整合 SpringMVC 吗? 还是否需要再加入 Spring 的 IOC 容器? 
-		是否需要再 web.xml 文件中配置启动 Spring IOC 容器的 ContextLoaderListener ?
+		是否需要再web.xml文件中配置启动Spring IOC容器的ContextLoaderListener ?
 		(1).需要: 通常情况下, 类似于数据源、事务、整合其他框架都是放在 Spring 的配置文件中(而不是放在 SpringMVC 的配置文件中).
-			实际上放入 Spring 配置文件对应的 IOC 容器中的还有 Service 和 Dao. 
+			实际上放入 Spring 配置文件对应的IOC容器中的还有 Service 和 Dao. 
 		(2).不需要: 都放在 SpringMVC 的配置文件中. 也可以分多个 Spring 的配置文件, 然后使用 import 节点导入其他的配置文件
 	20.2.问题: 若 Spring 的 IOC 容器和 SpringMVC 的 IOC 容器扫描的包有重合的部分, 就会导致有的 bean 会被创建 2 次.
 		解决:
