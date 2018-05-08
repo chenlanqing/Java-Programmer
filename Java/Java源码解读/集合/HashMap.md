@@ -286,7 +286,7 @@ static class Entry<K,V> extends HashMap.Node<K,V> {
 				注意扩容的顺序,扩容之前old1->old2->old3,扩容之后old3->old2->old1,扩展之前和扩容之后的table的index不一定相同,
 				但是对于原bullet中的链表中的数据在扩容之后肯定还在一个链表中,因为hash值是一样的
 	1.2.JDK8 的实现:put的时候根据 h & (length – 1) 定位到那个桶然后看是红黑树还是链表再putVal
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/集合/集合图/HashMap#put方法.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/集合/集合图/HashMap-put方法.png)
 
 		public V put(K key, V value) {
 	        return putVal(hash(key), key, value, false, true);
