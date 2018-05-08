@@ -35,25 +35,26 @@
 	HashMap 是基于一个数组和多个链表来实现的
 	HashMap 继承 AbstractMap, 实现了 Map, Cloneable, Serializable
 ## 1.HashMap 的特点:
-	1.1.HashMap 使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对
-		HashMap将 数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组),
-		这个内部数组的默认长度是 16
-	1.2.HashMap 的特点:
-		(1).线程非安全,并且允许key与value都为 null 值,HashTable 与之相反,为线程安全,key与value都不允许 null 值;
-		(2).不保证其内部元素的顺序,而且随着时间的推移,同一元素的位置也可能改变（resize的情况）
-		(3).put、get操作的时间复杂度为O(1).
-		(4).遍历其集合视角的时间复杂度与其容量（capacity,槽的个数）和现有元素的大小（entry的个数）成正比,所以
-			如果遍历的性能要求很高,不要把capactiy设置的过高或把平衡因子（load factor,当entry数大于capacity*loadFactor时,
-			会进行resize,reside会导致key进行rehash）设置的过低
-		(5).由于HashMap是线程非安全的,这也就是意味着如果多个线程同时对一hashmap的集合试图做迭代时有结构的上改变（添加、
-			删除entry,只改变entry的value的值不算结构改变）,那么会报ConcurrentModificationException
-			专业术语叫fail-fast
-		(6).Map m = Collections.synchronizedMap(new HashMap()); 通过这种方式可以得到一个线程安全的map
-	1.3.不可变对象与 HashMap 的key:
-		(1).如果 HashMap Key 的哈希值在存储键值对后发生改变,Map 可能再也查找不到这个 Entry 了。
-			如果Key对象是可变的,那么Key的哈希值就可能改变。在HashMap中可变对象作为Key会造成数据丢失
-		(2).在 HashMap 中使用不可变对象。在 HashMap 中,使用 String、Integer 等不可变类型用作Key是非常明智的
-			定义属于自己的不可变类时,在改变对象状态的时候,不要改变它的哈希值了
+### 1.1.HashMap 基本结构:
+	使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对
+	HashMap将 数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组),
+	这个内部数组的默认长度是 16
+### 1.2.HashMap 的特点:
+	(1).线程非安全,并且允许key与value都为 null 值,HashTable 与之相反,为线程安全,key与value都不允许 null 值;
+	(2).不保证其内部元素的顺序,而且随着时间的推移,同一元素的位置也可能改变（resize的情况）
+	(3).put、get操作的时间复杂度为O(1).
+	(4).遍历其集合视角的时间复杂度与其容量（capacity,槽的个数）和现有元素的大小（entry的个数）成正比,所以
+		如果遍历的性能要求很高,不要把capactiy设置的过高或把平衡因子（load factor,当entry数大于capacity*loadFactor时,
+		会进行resize,reside会导致key进行rehash）设置的过低
+	(5).由于HashMap是线程非安全的,这也就是意味着如果多个线程同时对一hashmap的集合试图做迭代时有结构的上改变（添加、
+		删除entry,只改变entry的value的值不算结构改变）,那么会报ConcurrentModificationException
+		专业术语叫fail-fast
+	(6).Map m = Collections.synchronizedMap(new HashMap()); 通过这种方式可以得到一个线程安全的map
+### 1.3.不可变对象与 HashMap 的key:
+	(1).如果 HashMap Key 的哈希值在存储键值对后发生改变,Map 可能再也查找不到这个 Entry 了。
+		如果Key对象是可变的,那么Key的哈希值就可能改变。在HashMap中可变对象作为Key会造成数据丢失
+	(2).在 HashMap 中使用不可变对象。在 HashMap 中,使用 String、Integer 等不可变类型用作Key是非常明智的
+		定义属于自己的不可变类时,在改变对象状态的时候,不要改变它的哈希值了
 ## 2.HashMap 和 HashTable 的区别:
 	(1).HashTable的方法是同步的,在方法的前面都有synchronized来同步,HashMap未经同步,所以在多线程场合要手动同步
 	(2).HashTable不允许null值(key和value都不可以) ,HashMap允许null值(key和value都可以)。
@@ -241,139 +242,140 @@ static class Entry<K,V> extends HashMap.Node<K,V> {
 		index的结果等于 hashCode 后几位的值.只要输入hashcode本身是均匀分布的,hash算法等于均匀的
 
 # 五.HashMap 的存取实现:
-#### 1.public V put(K key, V value)方法:
-	1.1.JDK6和JDK7:
-		(1).JDK7比JDK6增加了一个判断:
-			先判断table(存放bullet的数组,初始类定义：transient Entry<K,V>[] table = (Entry<K,V>[]) EMPTY_TABLE;)是否为空,
-			如果为空则扩充table,其中包括确保table的大小为2的整数倍
-			if (table == EMPTY_TABLE) {
-				inflateTable(threshold);
+## 1.public V put(K key, V value)方法:
+### 1.1.JDK6和JDK7:
+	(1).JDK7比JDK6增加了一个判断:
+		先判断table(存放bullet的数组,初始类定义：transient Entry<K,V>[] table = (Entry<K,V>[]) EMPTY_TABLE;)是否为空,
+		如果为空则扩充table,其中包括确保table的大小为2的整数倍
+		if (table == EMPTY_TABLE) {
+			inflateTable(threshold);
+		}
+	(2).如果key值为 null,则特殊处理,调用putForNullKey(V value),hash值为0,存入table中,返回
+	(3).如果key值不为null,则计算key的hash值；
+	(4).然后计算key在table中的索引index;
+	(5).遍历table[index]的链表,如果发现链表中有bullet中的键的hash值与key相等,并且调用equals()方法也返回true,
+		则替换旧值（oldValue）,保证key的唯一性；
+	(6).addEntry()方法:
+		①.JDK6:
+			新节点一直插入在最前端,新节点始终是单向列表的头节点
+			void addEntry(int hash, K key, V value, int bucketIndex) {
+				// 下面两行行代码的逻辑是,创建一个新节点放到单向链表的头部,旧节点向后移
+				// 取出索引bucketIndex位置处的链表节点,如果节点不存在那就是null,也就是说当数组该位
+				// 置处还不曾存放过节点的时候,这个地方就是null;
+				Entry<K,V> e = table[bucketIndex];
+				// 创建一个节点,并放置在数组的bucketIndex索引位置处,并让新的节点的next指向原来的节点
+				table[bucketIndex] = new Entry<K,V>(hash, key, value, e);
+				// 如果当前HashMap中的元素已经到达了临界值,则将容量扩大2倍,并将size计数+1
+				if (size++ >= threshold)
+					resize(2 * table.length);
 			}
-		(2).如果key值为 null,则特殊处理,调用putForNullKey(V value),hash值为0,存入table中,返回
-		(3).如果key值不为null,则计算key的hash值；
-		(4).然后计算key在table中的索引index;
-		(5).遍历table[index]的链表,如果发现链表中有bullet中的键的hash值与key相等,并且调用equals()方法也返回true,
-			则替换旧值（oldValue）,保证key的唯一性；
-		(6).addEntry()方法:
-			①.JDK6:
-				新节点一直插入在最前端,新节点始终是单向列表的头节点
-				void addEntry(int hash, K key, V value, int bucketIndex) {
-					// 下面两行行代码的逻辑是,创建一个新节点放到单向链表的头部,旧节点向后移
-        			// 取出索引bucketIndex位置处的链表节点,如果节点不存在那就是null,也就是说当数组该位
-        			// 置处还不曾存放过节点的时候,这个地方就是null;
-			       	Entry<K,V> e = table[bucketIndex];
-			       	// 创建一个节点,并放置在数组的bucketIndex索引位置处,并让新的节点的next指向原来的节点
-	       	        table[bucketIndex] = new Entry<K,V>(hash, key, value, e);
-	       	      	// 如果当前HashMap中的元素已经到达了临界值,则将容量扩大2倍,并将size计数+1
-			       	if (size++ >= threshold)
-			           	resize(2 * table.length);
-			   	}
-			②.JDK7:
-				void addEntry(int hash, K key, V value, int bucketIndex) {
-			        if ((size >= threshold) && (null != table[bucketIndex])) {
-			            resize(2 * table.length);
-			            hash = (null != key) ? hash(key) : 0;
-			            bucketIndex = indexFor(hash, table.length);
-			        }
-			        createEntry(hash, key, value, bucketIndex);
-			    }
-			    void createEntry(int hash, K key, V value, int bucketIndex) {
-		            Entry<K,V> e = table[bucketIndex];
-		            table[bucketIndex] = new Entry<>(hash, key, value, e);
-		            size++;
-		        }
-				如果没有,在插入之前先判断table中阈值的大小,如果table中的bullet个数size超过阈值(threshold)则扩容(resize)两倍;
-				注意扩容的顺序,扩容之前old1->old2->old3,扩容之后old3->old2->old1,扩展之前和扩容之后的table的index不一定相同,
-				但是对于原bullet中的链表中的数据在扩容之后肯定还在一个链表中,因为hash值是一样的
-	1.2.JDK8 的实现:put的时候根据 h & (length – 1) 定位到那个桶然后看是红黑树还是链表再putVal
+		②.JDK7:
+			void addEntry(int hash, K key, V value, int bucketIndex) {
+				if ((size >= threshold) && (null != table[bucketIndex])) {
+					resize(2 * table.length);
+					hash = (null != key) ? hash(key) : 0;
+					bucketIndex = indexFor(hash, table.length);
+				}
+				createEntry(hash, key, value, bucketIndex);
+			}
+			void createEntry(int hash, K key, V value, int bucketIndex) {
+				Entry<K,V> e = table[bucketIndex];
+				table[bucketIndex] = new Entry<>(hash, key, value, e);
+				size++;
+			}
+			如果没有,在插入之前先判断table中阈值的大小,如果table中的bullet个数size超过阈值(threshold)则扩容(resize)两倍;
+			注意扩容的顺序,扩容之前old1->old2->old3,扩容之后old3->old2->old1,扩展之前和扩容之后的table的index不一定相同,
+			但是对于原bullet中的链表中的数据在扩容之后肯定还在一个链表中,因为hash值是一样的
+### 1.2.JDK8 的实现:put的时候根据 h & (length – 1) 定位到那个桶然后看是红黑树还是链表再putVal
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/集合/集合图/HashMap-put方法.png)
 
-		public V put(K key, V value) {
-	        return putVal(hash(key), key, value, false, true);
-	    }
-		(1).对key的hashCode()做hash,然后再计算index;
-		(2).如果没碰撞直接放到bucket里；
-		(3).如果碰撞了,以链表的形式存在buckets后；
-		(4).如果碰撞导致链表过长(大于等于TREEIFY_THRESHOLD),就把链表转换成红黑树；
-		(5).如果节点已经存在就替换old value(保证key的唯一性)
-		(6).如果bucket满了(超过load factor*current capacity),就要resize
-#### 2.public V get(Object key)方法:
-	2.1.JDK6的实现
-		(1).判断key值是否为null,如果是则特殊处理（在table[0]的链表中寻找）
-		(2).否则计算hash值,进而获得table中的index值
-		(3).在table[index]的链表中寻找,根据hash值和equals()方法获得相应的value。
-		public V get(Object key) {
-	        // 如果key等于null,则调通getForNullKey方法
-	        if (key == null)
-	            return getForNullKey();
-	        // 计算key对应的hash值
-	        int hash = hash(key.hashCode());
-	        // 通过hash值找到key对应数组的索引位置,遍历该数组位置的链表
-	        for (Entry<K,V> e = table [indexFor (hash, table .length)];
-	             e != null;
-	             e = e. next) {
-	            Object k;
-	            // 如果hash值和key都相等,则认为相等
-	            if (e.hash == hash && ((k = e.key) == key || key.equals(k)))
-	                // 返回value
-	                return e.value ;
-	        }
-	        return null;
-	    }
-	    private V getForNullKey() {
-	        // 遍历数组第一个位置处的链表
-	        for (Entry<K,V> e = table [0]; e != null; e = e. next) {
-	            if (e.key == null)
-	                return e.value ;
-	        }
-	        return null;
+	public V put(K key, V value) {
+		return putVal(hash(key), key, value, false, true);
+	}
+	(1).对key的hashCode()做hash,然后再计算index;
+	(2).如果没碰撞直接放到bucket里；
+	(3).如果碰撞了,以链表的形式存在buckets后；
+	(4).如果碰撞导致链表过长(大于等于TREEIFY_THRESHOLD),就把链表转换成红黑树；
+	(5).如果节点已经存在就替换old value(保证key的唯一性)
+	(6).如果bucket满了(超过load factor*current capacity),就要resize
+## 2.public V get(Object key)方法:
+### 2.1.JDK6的实现
+	(1).判断key值是否为null,如果是则特殊处理（在table[0]的链表中寻找）
+	(2).否则计算hash值,进而获得table中的index值
+	(3).在table[index]的链表中寻找,根据hash值和equals()方法获得相应的value。
+	public V get(Object key) {
+		// 如果key等于null,则调通getForNullKey方法
+		if (key == null)
+			return getForNullKey();
+		// 计算key对应的hash值
+		int hash = hash(key.hashCode());
+		// 通过hash值找到key对应数组的索引位置,遍历该数组位置的链表
+		for (Entry<K,V> e = table [indexFor (hash, table .length)];
+				e != null;
+				e = e. next) {
+			Object k;
+			// 如果hash值和key都相等,则认为相等
+			if (e.hash == hash && ((k = e.key) == key || key.equals(k)))
+				// 返回value
+				return e.value ;
 		}
-	2.2.JDK8的实现:
-		(1).bucket里的第一个节点,直接命中;
-		(2).如果有冲突,则通过key.equals(k)去查找对应的entry
-			若为树,则在树中通过key.equals(k)查找,O(logn)；
-			若为链表,则在链表中通过key.equals(k)查找,O(n)。
-#### 3.hash 函数的实现:在get和put的过程中,计算下标时,先对hashCode进行hash操作,然后再通过hash值进一步计算下标
-	3.1.JDK6的实现:
-		static int hash(int h) {
-		    h ^= (h >>> 20) ^ (h >>> 12);
-		    return h ^ (h >>> 7) ^ (h >>> 4);
+		return null;
+	}
+	private V getForNullKey() {
+		// 遍历数组第一个位置处的链表
+		for (Entry<K,V> e = table [0]; e != null; e = e. next) {
+			if (e.key == null)
+				return e.value ;
 		}
-		为了了更有效的工作,内部数组的大小必须是2的幂值
-	3.2.JDK8的实现:高16bit不变,低16bit和高16bit做了一个异或
-		static final int hash(Object key) {
-		    int h;
-		    return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
-		}
-		在Java 8之前的实现中是用链表解决冲突的,在产生碰撞的情况下,进行get时,两步的时间复杂度是O(1)+O(n)。
-			因此,当碰撞很厉害的时候n很大,O(n)的速度显然是影响速度的。
-		因此在Java 8中,利用红黑树替换链表,这样复杂度就变成了O(1)+O(logn)了,这样在n很大的时候,能够比较理想的解决这个问题;
-	3.3.HashMap的数据是存储在链表数组里面的,在对HashMap进行插入/删除等操作时,都需要根据K-V对的键值定位到他应该保存在数组的
-		哪个下标中.而这个通过键值求取下标的操作就叫做哈希.HashMap的数组是有长度的,Java中规定这个长度只能是2的倍数,初始值为
-		16.简单的做法是先求取出键值的hashcode,然后在将hashcode得到的int值对数组长度进行取模.
-		为了考虑性能,Java总采用按位与操作实现取模操作.
+		return null;
+	}
+### 2.2.JDK8的实现:
+	(1).bucket里的第一个节点,直接命中;
+	(2).如果有冲突,则通过key.equals(k)去查找对应的entry
+		若为树,则在树中通过key.equals(k)查找,O(logn)；
+		若为链表,则在链表中通过key.equals(k)查找,O(n)。
+## 3.hash 函数的实现
+	在get和put的过程中,计算下标时,先对hashCode进行hash操作,然后再通过hash值进一步计算下标
+### 3.1.JDK6的实现:
+	static int hash(int h) {
+		h ^= (h >>> 20) ^ (h >>> 12);
+		return h ^ (h >>> 7) ^ (h >>> 4);
+	}
+	为了了更有效的工作,内部数组的大小必须是2的幂值
+### 3.2.JDK8的实现:高16bit不变,低16bit和高16bit做了一个异或
+	static final int hash(Object key) {
+		int h;
+		return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
+	}
+	在Java 8之前的实现中是用链表解决冲突的,在产生碰撞的情况下,进行get时,两步的时间复杂度是O(1)+O(n)。
+		因此,当碰撞很厉害的时候n很大,O(n)的速度显然是影响速度的。
+	因此在Java 8中,利用红黑树替换链表,这样复杂度就变成了O(1)+O(logn)了,这样在n很大的时候,能够比较理想的解决这个问题;
+### 3.3.HashMap的数据是存储在链表数组里面的,在对HashMap进行插入/删除等操作时,都需要根据K-V对的键值定位到他应该保存在数组的
+	哪个下标中.而这个通过键值求取下标的操作就叫做哈希.HashMap的数组是有长度的,Java中规定这个长度只能是2的倍数,初始值为
+	16.简单的做法是先求取出键值的hashcode,然后在将hashcode得到的int值对数组长度进行取模.
+	为了考虑性能,Java总采用按位与操作实现取模操作.
 
-#### 4.resize 的实现
-	4.1.JDK6的实现:void resize( int newCapacity)resize
-		(1).获取当前数组的容量,如果容量已经是默认最大容量 MAXIMUM_CAPACITY,则将临界值改为 Integer.MAX_VALUE
-			if (oldCapacity == MAXIMUM_CAPACITY) {
-	            threshold = Integer.MAX_VALUE;
-	            return;
-	        }
-	    (2).如果不是默认最大容量
-		    // 使用新的容量创建一个新的链表数组
-	        Entry[] newTable = new Entry[newCapacity];
-	        // 将当前数组中的元素都移动到新数组中
-	        transfer(newTable);
-	        // 将当前数组指向新创建的数组
-	        table = newTable;
-	        // 重新计算临界值
-	        threshold = (int)(newCapacity * loadFactor);
-	4.2.JDK8 的实现:final Node<K,V>[] resize()
-		(1).当put时,如果发现目前的bucket占用程度已经超过了Load Factor所希望的比例,那么就会发生resize。
-		在resize的过程,简单的说就是把bucket扩充为2倍,之后重新计算index,把节点再放到新的bucket中
-		(2).扩充HashMap的时候,不需要重新计算hash,只需要看看原来的hash值新增的那个bit是1还是0就好了,是0的话索引没变,
-		是1的话索引变成“原索引+oldCap”
+## 4.resize 的实现
+### 4.1.JDK6的实现:void resize( int newCapacity)resize
+	(1).获取当前数组的容量,如果容量已经是默认最大容量 MAXIMUM_CAPACITY,则将临界值改为 Integer.MAX_VALUE
+		if (oldCapacity == MAXIMUM_CAPACITY) {
+			threshold = Integer.MAX_VALUE;
+			return;
+		}
+	(2).如果不是默认最大容量
+		// 使用新的容量创建一个新的链表数组
+		Entry[] newTable = new Entry[newCapacity];
+		// 将当前数组中的元素都移动到新数组中
+		transfer(newTable);
+		// 将当前数组指向新创建的数组
+		table = newTable;
+		// 重新计算临界值
+		threshold = (int)(newCapacity * loadFactor);
+### 4.2.JDK8 的实现:final Node<K,V>[] resize()
+	(1).当put时,如果发现目前的bucket占用程度已经超过了Load Factor所希望的比例,那么就会发生resize。
+	在resize的过程,简单的说就是把bucket扩充为2倍,之后重新计算index,把节点再放到新的bucket中
+	(2).扩充HashMap的时候,不需要重新计算hash,只需要看看原来的hash值新增的那个bit是1还是0就好了,是0的话索引没变,
+	是1的话索引变成“原索引+oldCap”
 
 # 六.高并发下 HashMap 的使用的问题:
 	1.扩容-resize():影响resize发生的因素
