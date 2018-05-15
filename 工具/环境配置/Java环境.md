@@ -143,7 +143,19 @@
     	同时tomcat在启动时候，执行start不会启动两个tomcat，保证始终只有一个tomcat服务在运行。
     	多个tomcat可以配置在多个目录下，互不影响	
     	
-	
+# 五.windows下tomcat和mave配置
+	通用步骤: 1.【我的电脑】--> 【属性】-->【高级系统设置】 --> 【环境变量】;
+## 1.Maven环境配置:
+	(1).在系统变量中添加:MAVEN_HOME,变量值为maven的安装目录
+	(2).在变量:PATH 后面添加:%MAVEN_HOME%\bin
+## 2.Tomcat环境配置:
+	(1).新建变量名：CATALINA_BASE,变量值为tomcat的安装目录
+	(2).新建变量名：CATALINA_HOME,变量值为tomcat的安装目录
+	(3).打开PATH,添加变量值：%CATALINA_HOME%\lib;%CATALINA_HOME%\bin
+## 3..Eclipse配置Maven:
+	preference--> Maven--->Installtion[添加当前Maven的配置路径]
+	User setting --> 选择Maven安装目录下conf下的settings.xml文件
+
 	
 	
 	
