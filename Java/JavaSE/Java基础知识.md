@@ -1,102 +1,110 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
+<!-- TOC -->
 
-- [一、Java 内部类](#%E4%B8%80java-%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [1、为什么使用内部类](#1%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [2、成员内部类](#2%E6%88%90%E5%91%98%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [3、静态内部类: 是 static 修饰的内部类](#3%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB-%E6%98%AF-static-%E4%BF%AE%E9%A5%B0%E7%9A%84%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [4、方法内部类](#4%E6%96%B9%E6%B3%95%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [5、匿名内部类](#5%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB)
-- [二、HashMap、TreeMap、Hashtable、LinkedHashMap](#%E4%BA%8Chashmaptreemaphashtablelinkedhashmap)
-  - [1、HashMap、TreeMap](#1hashmaptreemap)
-- [三、按照目录结构打印当前目录及子目录](#%E4%B8%89%E6%8C%89%E7%85%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E6%89%93%E5%8D%B0%E5%BD%93%E5%89%8D%E7%9B%AE%E5%BD%95%E5%8F%8A%E5%AD%90%E7%9B%AE%E5%BD%95)
-- [四、Java 关键字](#%E5%9B%9Bjava-%E5%85%B3%E9%94%AE%E5%AD%97)
-  - [1、native](#1native)
-  - [2、transient](#2transient)
-  - [3、final](#3final)
-  - [4、instanceof](#4instanceof)
-- [五、协变式重写和泛型重载](#%E4%BA%94%E5%8D%8F%E5%8F%98%E5%BC%8F%E9%87%8D%E5%86%99%E5%92%8C%E6%B3%9B%E5%9E%8B%E9%87%8D%E8%BD%BD)
-  - [1、协变式重写](#1%E5%8D%8F%E5%8F%98%E5%BC%8F%E9%87%8D%E5%86%99)
-  - [2、泛型重载:](#2%E6%B3%9B%E5%9E%8B%E9%87%8D%E8%BD%BD)
-  - [3、重写与重载：](#3%E9%87%8D%E5%86%99%E4%B8%8E%E9%87%8D%E8%BD%BD)
-  - [4、重载：能够用一个统一的接口名称来调用一系列方法](#4%E9%87%8D%E8%BD%BD%E8%83%BD%E5%A4%9F%E7%94%A8%E4%B8%80%E4%B8%AA%E7%BB%9F%E4%B8%80%E7%9A%84%E6%8E%A5%E5%8F%A3%E5%90%8D%E7%A7%B0%E6%9D%A5%E8%B0%83%E7%94%A8%E4%B8%80%E7%B3%BB%E5%88%97%E6%96%B9%E6%B3%95)
-  - [5、重写](#5%E9%87%8D%E5%86%99)
-  - [6、两者的比较](#6%E4%B8%A4%E8%80%85%E7%9A%84%E6%AF%94%E8%BE%83)
-- [六、Java 序列化-一种对象持久化的手段](#%E5%85%ADjava-%E5%BA%8F%E5%88%97%E5%8C%96-%E4%B8%80%E7%A7%8D%E5%AF%B9%E8%B1%A1%E6%8C%81%E4%B9%85%E5%8C%96%E7%9A%84%E6%89%8B%E6%AE%B5)
-  - [1、Java对象序列化](#1java%E5%AF%B9%E8%B1%A1%E5%BA%8F%E5%88%97%E5%8C%96)
-  - [2、如何序列化](#2%E5%A6%82%E4%BD%95%E5%BA%8F%E5%88%97%E5%8C%96)
-  - [3、private static final long serialVersionUID-每个可序列化类相关联](#3private-static-final-long-serialversionuid-%E6%AF%8F%E4%B8%AA%E5%8F%AF%E5%BA%8F%E5%88%97%E5%8C%96%E7%B1%BB%E7%9B%B8%E5%85%B3%E8%81%94)
-  - [5、序列化实现对象的拷贝](#5%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%9E%E7%8E%B0%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%8B%B7%E8%B4%9D)
-  - [6、常见的序列化协议](#6%E5%B8%B8%E8%A7%81%E7%9A%84%E5%BA%8F%E5%88%97%E5%8C%96%E5%8D%8F%E8%AE%AE)
-  - [3、通配符与上下界](#3%E9%80%9A%E9%85%8D%E7%AC%A6%E4%B8%8E%E4%B8%8A%E4%B8%8B%E7%95%8C)
-  - [4、Java 类型系统:](#4java-%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F)
-  - [6、在使用泛型的时候可以遵循一些基本的原则](#6%E5%9C%A8%E4%BD%BF%E7%94%A8%E6%B3%9B%E5%9E%8B%E7%9A%84%E6%97%B6%E5%80%99%E5%8F%AF%E4%BB%A5%E9%81%B5%E5%BE%AA%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E7%9A%84%E5%8E%9F%E5%88%99)
-- [八、关于 try...catch...finally](#%E5%85%AB%E5%85%B3%E4%BA%8E-trycatchfinally)
-  - [1、关于 try...catch...finally 使用](#1%E5%85%B3%E4%BA%8E-trycatchfinally-%E4%BD%BF%E7%94%A8)
-  - [2、使用 try...catch...finally 需要注意](#2%E4%BD%BF%E7%94%A8-trycatchfinally-%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F)
-  - [3、如何退出](#3%E5%A6%82%E4%BD%95%E9%80%80%E5%87%BA)
-- [九、Java 四舍五入](#%E4%B9%9Djava-%E5%9B%9B%E8%88%8D%E4%BA%94%E5%85%A5)
-  - [1、目前 Java 支持7中舍入法](#1%E7%9B%AE%E5%89%8D-java-%E6%94%AF%E6%8C%817%E4%B8%AD%E8%88%8D%E5%85%A5%E6%B3%95)
-  - [2、保留位](#2%E4%BF%9D%E7%95%99%E4%BD%8D)
-- [十、Java 中保留小数位数的处理](#%E5%8D%81java-%E4%B8%AD%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E4%BD%8D%E6%95%B0%E7%9A%84%E5%A4%84%E7%90%86)
-  - [1、使用 BigDecimal，保留小数点后两位](#1%E4%BD%BF%E7%94%A8-bigdecimal%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [2、使用 DecimalFormat，保留小数点后两位](#2%E4%BD%BF%E7%94%A8-decimalformat%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [3、使用 NumberFormat，保留小数点后两位](#3%E4%BD%BF%E7%94%A8-numberformat%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [4、使用 java.util.Formatter，保留小数点后两位](#4%E4%BD%BF%E7%94%A8-javautilformatter%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [5、使用 String.format来实现](#5%E4%BD%BF%E7%94%A8-stringformat%E6%9D%A5%E5%AE%9E%E7%8E%B0)
-- [十一、Java 中 length 和 length() 的区别:](#%E5%8D%81%E4%B8%80java-%E4%B8%AD-length-%E5%92%8C-length-%E7%9A%84%E5%8C%BA%E5%88%AB)
-- [十二、数组](#%E5%8D%81%E4%BA%8C%E6%95%B0%E7%BB%84)
-  - [1、Java 中数组是对象吗](#1java-%E4%B8%AD%E6%95%B0%E7%BB%84%E6%98%AF%E5%AF%B9%E8%B1%A1%E5%90%97)
-  - [2.Java中数组的类型:数组也是有类型的](#2java%E4%B8%AD%E6%95%B0%E7%BB%84%E7%9A%84%E7%B1%BB%E5%9E%8B%E6%95%B0%E7%BB%84%E4%B9%9F%E6%98%AF%E6%9C%89%E7%B1%BB%E5%9E%8B%E7%9A%84)
-  - [3.Java中数组的继承关系:](#3java%E4%B8%AD%E6%95%B0%E7%BB%84%E7%9A%84%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB)
-  - [4.Java 数组初始化:](#4java-%E6%95%B0%E7%BB%84%E5%88%9D%E5%A7%8B%E5%8C%96)
-  - [5.数组扩容:可以参照利用 List 集合中的add方法模拟实现:](#5%E6%95%B0%E7%BB%84%E6%89%A9%E5%AE%B9%E5%8F%AF%E4%BB%A5%E5%8F%82%E7%85%A7%E5%88%A9%E7%94%A8-list-%E9%9B%86%E5%90%88%E4%B8%AD%E7%9A%84add%E6%96%B9%E6%B3%95%E6%A8%A1%E6%8B%9F%E5%AE%9E%E7%8E%B0)
-  - [6.数组复制问题:](#6%E6%95%B0%E7%BB%84%E5%A4%8D%E5%88%B6%E9%97%AE%E9%A2%98)
-  - [7.数组转换为 List:](#7%E6%95%B0%E7%BB%84%E8%BD%AC%E6%8D%A2%E4%B8%BA-list)
-- [十三.switch:](#%E5%8D%81%E4%B8%89switch)
-  - [1.支持类型：](#1%E6%94%AF%E6%8C%81%E7%B1%BB%E5%9E%8B)
-  - [2.switch 对整型的支持:](#2switch-%E5%AF%B9%E6%95%B4%E5%9E%8B%E7%9A%84%E6%94%AF%E6%8C%81)
-  - [3.switch 对字符型支持的实现:](#3switch-%E5%AF%B9%E5%AD%97%E7%AC%A6%E5%9E%8B%E6%94%AF%E6%8C%81%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [4.switch 对字符串支持的实现c](#4switch-%E5%AF%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%94%AF%E6%8C%81%E7%9A%84%E5%AE%9E%E7%8E%B0c)
-  - [5.枚举类:](#5%E6%9E%9A%E4%B8%BE%E7%B1%BB)
-- [十四.抽象类与接口](#%E5%8D%81%E5%9B%9B%E6%8A%BD%E8%B1%A1%E7%B1%BB%E4%B8%8E%E6%8E%A5%E5%8F%A3)
-  - [1.抽象类:](#1%E6%8A%BD%E8%B1%A1%E7%B1%BB)
-  - [2.接口:](#2%E6%8E%A5%E5%8F%A3)
-  - [3.接口与抽象类的区别:](#3%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%8A%BD%E8%B1%A1%E7%B1%BB%E7%9A%84%E5%8C%BA%E5%88%AB)
-  - [4.Java8 下接口的不同之处(上述是针对 JDK7 之前的)](#4java8-%E4%B8%8B%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E5%A4%84%E4%B8%8A%E8%BF%B0%E6%98%AF%E9%92%88%E5%AF%B9-jdk7-%E4%B9%8B%E5%89%8D%E7%9A%84)
-- [十五.基本类型与引用类型](#%E5%8D%81%E4%BA%94%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B)
-  - [1.基本类型与引用类型的比较](#1%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83)
-  - [2.关于 String+ 和 StringBuffer 的比较:](#2%E5%85%B3%E4%BA%8E-string-%E5%92%8C-stringbuffer-%E7%9A%84%E6%AF%94%E8%BE%83)
-  - [3.静态代码块、静态，其作用级别为类; 构造代码块、构造函数、构造，其作用级别为对象](#3%E9%9D%99%E6%80%81%E4%BB%A3%E7%A0%81%E5%9D%97%E9%9D%99%E6%80%81%E5%85%B6%E4%BD%9C%E7%94%A8%E7%BA%A7%E5%88%AB%E4%B8%BA%E7%B1%BB-%E6%9E%84%E9%80%A0%E4%BB%A3%E7%A0%81%E5%9D%97%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E6%9E%84%E9%80%A0%E5%85%B6%E4%BD%9C%E7%94%A8%E7%BA%A7%E5%88%AB%E4%B8%BA%E5%AF%B9%E8%B1%A1)
-  - [4.给出一个表达式计算其可以按多少进制计算:](#4%E7%BB%99%E5%87%BA%E4%B8%80%E4%B8%AA%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%AE%A1%E7%AE%97%E5%85%B6%E5%8F%AF%E4%BB%A5%E6%8C%89%E5%A4%9A%E5%B0%91%E8%BF%9B%E5%88%B6%E8%AE%A1%E7%AE%97)
-  - [5.表达式的数据类型:](#5%E8%A1%A8%E8%BE%BE%E5%BC%8F%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
-  - [6.多态问题:](#6%E5%A4%9A%E6%80%81%E9%97%AE%E9%A2%98)
-- [十六.反射与注解](#十六.反射与注解)
-  - [1.Java 注解:Annotation(JDK5.0+)](#1java-%E6%B3%A8%E8%A7%A3annotationjdk50)
-  - [2.Java 动态加载与静态加载:](#2java-%E5%8A%A8%E6%80%81%E5%8A%A0%E8%BD%BD%E4%B8%8E%E9%9D%99%E6%80%81%E5%8A%A0%E8%BD%BD)
-  - [3.反射机制:(Reflection)运行时加载，探知使用编译期间完全未知的类;](#3%E5%8F%8D%E5%B0%84%E6%9C%BA%E5%88%B6reflection%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8A%A0%E8%BD%BD%E6%8E%A2%E7%9F%A5%E4%BD%BF%E7%94%A8%E7%BC%96%E8%AF%91%E6%9C%9F%E9%97%B4%E5%AE%8C%E5%85%A8%E6%9C%AA%E7%9F%A5%E7%9A%84%E7%B1%BB)
-  - [4.动态编译:Java6.0引入动态编译](#4%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91java60%E5%BC%95%E5%85%A5%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91)
-  - [5.动态执行Javascript(JDK6.0以上)](#5%E5%8A%A8%E6%80%81%E6%89%A7%E8%A1%8Cjavascriptjdk60%E4%BB%A5%E4%B8%8A)
-  - [6.Java 字节码操作](#6java-%E5%AD%97%E8%8A%82%E7%A0%81%E6%93%8D%E4%BD%9C)
-  - [7.反射存在问题:](#7%E5%8F%8D%E5%B0%84%E5%AD%98%E5%9C%A8%E9%97%AE%E9%A2%98)
-- [十七.比较器:Comparale and Comparator](#%E5%8D%81%E4%B8%83%E6%AF%94%E8%BE%83%E5%99%A8comparale-and-comparator)
-  - [1.区别:](#1%E5%8C%BA%E5%88%AB)
-  - [2.Comparable:](#2comparable)
-  - [3.Comparator:](#3comparator)
-  - [4.如何选择:](#4%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9)
-- [十八.枚举类:](#%E5%8D%81%E5%85%AB%E6%9E%9A%E4%B8%BE%E7%B1%BB)
-  - [1.枚举类概念:](#1%E6%9E%9A%E4%B8%BE%E7%B1%BB%E6%A6%82%E5%BF%B5)
-  - [2.枚举类本质:](#2%E6%9E%9A%E4%B8%BE%E7%B1%BB%E6%9C%AC%E8%B4%A8)
-  - [3.枚举类与常量:](#3%E6%9E%9A%E4%B8%BE%E7%B1%BB%E4%B8%8E%E5%B8%B8%E9%87%8F)
-  - [4.枚举类是如何保证线程安全的:](#4%E6%9E%9A%E4%B8%BE%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84)
-  - [5.枚举与单例模式:](#5%E6%9E%9A%E4%B8%BE%E4%B8%8E%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F)
-  - [6.迭代器和枚举器区别:](#6%E8%BF%AD%E4%BB%A3%E5%99%A8%E5%92%8C%E6%9E%9A%E4%B8%BE%E5%99%A8%E5%8C%BA%E5%88%AB)
+- [一、Java 内部类](#一java-内部类)
+    - [1、为什么使用内部类](#1为什么使用内部类)
+    - [2、成员内部类](#2成员内部类)
+    - [3、静态内部类: 是 static 修饰的内部类](#3静态内部类-是-static-修饰的内部类)
+    - [4、方法内部类](#4方法内部类)
+    - [5、匿名内部类](#5匿名内部类)
+- [二、HashMap、TreeMap、Hashtable、LinkedHashMap](#二hashmaptreemaphashtablelinkedhashmap)
+    - [1、HashMap、TreeMap](#1hashmaptreemap)
+    - [2、HashCode与HashSet关系](#2hashcode与hashset关系)
+- [三、按照目录结构打印当前目录及子目录](#三按照目录结构打印当前目录及子目录)
+- [四、Java 关键字](#四java-关键字)
+    - [1、native](#1native)
+    - [2、transient](#2transient)
+    - [3、final](#3final)
+    - [4、instanceof](#4instanceof)
+- [五、协变式重写和泛型重载](#五协变式重写和泛型重载)
+    - [1、协变式重写](#1协变式重写)
+    - [2、泛型重载:](#2泛型重载)
+    - [3、重写与重载：](#3重写与重载)
+    - [4、重载：能够用一个统一的接口名称来调用一系列方法](#4重载能够用一个统一的接口名称来调用一系列方法)
+    - [5、重写](#5重写)
+    - [6、两者的比较](#6两者的比较)
+- [六、Java 序列化-一种对象持久化的手段](#六java-序列化-一种对象持久化的手段)
+    - [1、Java对象序列化](#1java对象序列化)
+    - [2、如何序列化](#2如何序列化)
+    - [3、private static final long serialVersionUID-每个可序列化类相关联](#3private-static-final-long-serialversionuid-每个可序列化类相关联)
+    - [4、反序列化](#4反序列化)
+    - [5、序列化实现对象的拷贝](#5序列化实现对象的拷贝)
+    - [6、常见的序列化协议](#6常见的序列化协议)
+    - [7、JSON 序列化:](#7json-序列化)
+        - [7.1、关于Map转json输出顺序问题](#71关于map转json输出顺序问题)
+    - [8.序列化安全](#8序列化安全)
+- [七、泛型](#七泛型)
+    - [1、JDK1.5 引入的新特性](#1jdk15-引入的新特性)
+    - [2、类型擦除(type erasure)](#2类型擦除type-erasure)
+    - [3、通配符与上下界](#3通配符与上下界)
+    - [4、Java 类型系统:](#4java-类型系统)
+    - [5、开发自己的泛型类](#5开发自己的泛型类)
+    - [6、在使用泛型的时候可以遵循一些基本的原则](#6在使用泛型的时候可以遵循一些基本的原则)
+- [八、关于 try...catch...finally](#八关于-trycatchfinally)
+    - [1、关于 try...catch...finally 使用](#1关于-trycatchfinally-使用)
+    - [2、使用 try...catch...finally 需要注意](#2使用-trycatchfinally-需要注意)
+    - [3、如何退出](#3如何退出)
+- [九、Java 四舍五入](#九java-四舍五入)
+    - [1、目前 Java 支持7中舍入法](#1目前-java-支持7中舍入法)
+    - [2、保留位](#2保留位)
+    - [3、Math](#3math)
+- [十、Java 中保留小数位数的处理](#十java-中保留小数位数的处理)
+    - [1、使用 BigDecimal，保留小数点后两位](#1使用-bigdecimal保留小数点后两位)
+    - [2、使用 DecimalFormat，保留小数点后两位](#2使用-decimalformat保留小数点后两位)
+    - [3、使用 NumberFormat，保留小数点后两位](#3使用-numberformat保留小数点后两位)
+    - [4、使用 java.util.Formatter，保留小数点后两位](#4使用-javautilformatter保留小数点后两位)
+    - [5、使用 String.format来实现](#5使用-stringformat来实现)
+- [十一、Java 中 length 和 length() 的区别:](#十一java-中-length-和-length-的区别)
+- [十二、数组](#十二数组)
+    - [1、Java 中数组是对象吗](#1java-中数组是对象吗)
+    - [2.Java中数组的类型:数组也是有类型的](#2java中数组的类型数组也是有类型的)
+    - [3.Java中数组的继承关系:](#3java中数组的继承关系)
+    - [4.Java 数组初始化:](#4java-数组初始化)
+    - [5.数组扩容:可以参照利用 List 集合中的add方法模拟实现:](#5数组扩容可以参照利用-list-集合中的add方法模拟实现)
+    - [6.数组复制问题:](#6数组复制问题)
+    - [7.数组转换为 List:](#7数组转换为-list)
+- [十三.switch:](#十三switch)
+    - [1.支持类型：](#1支持类型)
+    - [2.switch 对整型的支持:](#2switch-对整型的支持)
+    - [3.switch 对字符型支持的实现:](#3switch-对字符型支持的实现)
+    - [4.switch 对字符串支持的实现c](#4switch-对字符串支持的实现c)
+    - [5.枚举类:](#5枚举类)
+- [十四.抽象类与接口](#十四抽象类与接口)
+    - [1.抽象类:](#1抽象类)
+    - [2.接口:](#2接口)
+    - [3.接口与抽象类的区别:](#3接口与抽象类的区别)
+    - [4.Java8 下接口的不同之处(上述是针对 JDK7 之前的)](#4java8-下接口的不同之处上述是针对-jdk7-之前的)
+- [十五.基本类型与引用类型](#十五基本类型与引用类型)
+    - [1.基本类型与引用类型的比较](#1基本类型与引用类型的比较)
+    - [2.关于 String+ 和 StringBuffer 的比较:](#2关于-string-和-stringbuffer-的比较)
+    - [3.静态代码块、静态，其作用级别为类; 构造代码块、构造函数、构造，其作用级别为对象](#3静态代码块静态其作用级别为类-构造代码块构造函数构造其作用级别为对象)
+    - [4.给出一个表达式计算其可以按多少进制计算:](#4给出一个表达式计算其可以按多少进制计算)
+    - [5.表达式的数据类型:](#5表达式的数据类型)
+    - [6.多态问题:](#6多态问题)
+- [十六.反射与注解](#十六反射与注解)
+    - [1.Java 注解:Annotation(JDK5.0+)](#1java-注解annotationjdk50)
+    - [2.Java 动态加载与静态加载:](#2java-动态加载与静态加载)
+    - [3.反射机制:(Reflection)运行时加载，探知使用编译期间完全未知的类;](#3反射机制reflection运行时加载探知使用编译期间完全未知的类)
+    - [4.动态编译:Java6.0引入动态编译](#4动态编译java60引入动态编译)
+    - [5.动态执行Javascript(JDK6.0以上)](#5动态执行javascriptjdk60以上)
+    - [6.Java 字节码操作](#6java-字节码操作)
+    - [7.反射存在问题:](#7反射存在问题)
+- [十七.比较器:Comparale and Comparator](#十七比较器comparale-and-comparator)
+    - [1.区别:](#1区别)
+    - [2.Comparable:](#2comparable)
+    - [3.Comparator:](#3comparator)
+    - [4.如何选择:](#4如何选择)
+- [十八.枚举类:](#十八枚举类)
+    - [1.枚举类概念:](#1枚举类概念)
+    - [2.枚举类本质:](#2枚举类本质)
+    - [3.枚举类与常量:](#3枚举类与常量)
+    - [4.枚举类是如何保证线程安全的:](#4枚举类是如何保证线程安全的)
+    - [5.枚举与单例模式:](#5枚举与单例模式)
+    - [6.迭代器和枚举器区别:](#6迭代器和枚举器区别)
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
+<!-- /TOC -->
 
 # 一、Java 内部类
+
 ## 1、为什么使用内部类
 
 使用内部类最吸引人的原因是:<br>
@@ -193,6 +201,7 @@ public class Outer{
 	属性或者方法.
 
 ## 4、方法内部类
+
 访问仅限于方法内或者该作用域内
 
 - 局部内部类就像是方法里面的一个局部变量一样，是不能有 public、protected、private 以及 static 修饰符的
@@ -289,6 +298,7 @@ class OutClass$1 extends java.lang.Thread
 ```
 
 ## 5、匿名内部类
+
 - 匿名内部类是直接使用 new 来生成一个对象的引用;
 - 对于匿名内部类的使用它是存在一个缺陷的，就是它仅能被使用一次，创建匿名内部类时它会立即创建一个该类的实例，<br>
 	该类的定义会立即消失，所以匿名内部类是不能够被重复使用;
@@ -297,6 +307,7 @@ class OutClass$1 extends java.lang.Thread
 - 匿名内部类中不能存在任何的静态成员变量和静态方法，匿名内部类不能是抽象的，它必须要实现继承的类或者实现的接口的所有抽象方法
 - 匿名内部类初始化:使用构造代码块！利用构造代码块能够达到为匿名内部类创建一个构造器的效果.<br>
 	匿名内部类不能通过构造方法初始化，只能通过构造代码块进行初始化
+
 ```java
 public class OuterClass {
 	public InnerClass getInnerClass(final int   num，String str2){
@@ -355,11 +366,14 @@ public class OutClass{
 	其构造方法和普通类的构造方法没有区别，都是执行 <init> 方式;
 
 # 二、HashMap、TreeMap、Hashtable、LinkedHashMap
+
 ## 1、HashMap、TreeMap
+
 - HashMap，TreeMap，HashTable父接口都是Map，LinkedHashMap是HashMap的子类;
 - HashMap:如果HashMap的key是自定义的对象，则需要重写equals()和hashcode()方法：<br>
 	原因是HashMap不允许两个相同的元素；默认情况下，在Object类下实现的equals()和hashcode()方法被使用，<br>
 	默认的hashcode()方法给出不同的整数为不同的对象，并在equals()方法中，只有当两个引用指向的是同一个对象时才返回true
+
 ```java
 public class HashMapDemo {
 	public static void main(String[] args) {
@@ -515,15 +529,21 @@ public class PrintDirectory {
 ```
 
 # 四、Java 关键字
+
 ## 1、native
+
 native 关键字可以应用于方法，以指示该方法是用 Java 以外的语言实现的
+
 ## 2、transient
+
 transient 关键字可以应用于类的成员变量，以便指出该成员变量不应在包含它的类实例已序列化时被序列化<br>
 Java 的 serialization 提供了一种持久化对象实例的机制.当持久化对象时，可能有一个特殊的对象数据成员，<br>
 我们不想用serialization机制来保存它，为了在一个特定对象的一个域上关闭serialization，可以在这个域前加上关键字 transient。<br>  
 transient 是 Java 语言的关键字，用来表示一个域不是该对象串行化的一部分。当一个对象被串行化的时候，<br>
 transient 型变量的值不包括在串行化的表示中，然而非 transient 型的变量是被包括进去的.
+
 ## 3、final
+
 * [final关键字](http://www.importnew.com/18586.html)
 * [深入理解Java中的final关键字](http://www.importnew.com/7553.html)
 
@@ -597,6 +617,7 @@ class MyDemo1{
 - 将类、方法、变量声明为 final 能够提高性能，这样 JVM 就有机会进行估计，然后优化；
 
 ## 4、instanceof
+
 **4.1、一些使用注意事项**
 
 - 只能用于对象的判断，不能用于基本类型的判断;
@@ -762,6 +783,7 @@ public class OverridePuzzle {
 将方法声明为 final 的就可保证所有子类的调用此方法时调用的都是父类的方法;
 
 ## 6、两者的比较
+
 - 重载是一个编译期概念、重写是一个运行期间概念;
 - 重载遵循所谓"编译期绑定"，即在编译时根据参数变量的类型判断应该调用哪个方法。
 - 重写遵循所谓"运行期绑定"，即在运行的时候，根据引用变量所指向的实际对象的类型来调用方法
@@ -770,7 +792,9 @@ public class OverridePuzzle {
 	但是，Java中提到的多态，在不特别说明的情况下都指动态多态)
 
 # 六、Java 序列化-一种对象持久化的手段
+
 ## 1、Java对象序列化
+
 JDK 1.1 中引入的一组开创性特性之一，用于作为一种将 Java 对象的状态转换为字节数组，以便存储或传输的机制，<br>
 以后，仍可以将字节数组转换回 Java 对象原有的状态
 
@@ -825,6 +849,7 @@ private void readObject(java.io.ObjectInputStream in) throws IOException{
 	无参构造函数会被调用。如果父类实现了序列化接口则不会调用构造方法.<br>
 
 ## 2、如何序列化
+
 在序列化过程中，如果被序列化的类中定义了writeObject 和 readObject 方法，<br>
 虚拟机会试图调用对象类里的 writeObject 和 readObject 方法，进行用户自定义的序列化和反序列化。<br>
 如果没有这样的方法，则默认调用是 ObjectOutputStream 的 defaultWriteObject 方法以及<br>
@@ -897,6 +922,7 @@ Serializable除提供了writeObject和readObject标记方法外还提供了另�
 	方法在序列化单例类时尤其有用，单例序列化都应该提供 readResolve() 方法，这样才可以保证反序列化的对象依然正常。<br>
 
 ## 3、private static final long serialVersionUID-每个可序列化类相关联
+
 - 该序列号在反序列化过程中用于验证序列化对象的发送者和接收者是否为该对象加载了与序列化兼容的类;
 - 如果接收者加载的该对象的类的 serialVersionUID 与对应的发送者的类的版本号不同，<br>
 	则反序列化将会导致 InvalidClassException;
@@ -911,7 +937,9 @@ Serializable除提供了writeObject和readObject标记方法外还提供了另�
 	- ②.当你序列化了一个类实例后，希望更改一个字段或添加一个字段，不设置serialVersionUID，所做的任何更改都将导致<br>
 		无法反序化旧有实例，并在反序列化时抛出一个异常。如果你添加了serialVersionUID，在反序列旧有实例时，<br>
 		新添加或更改的字段值将设为初始化值(对象为null，基本类型为相应的初始默认值)，字段被删除将不设置
+
 ## 4、反序列化
+
 - 实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法，完全基于字节，<br>
 	如果是子类继承父类的序列化，那么将调用父类的构造方法;
 - 实现 Externalizable  接口的对象在反序列化时会调用构造方法.该接口继承自 Serializable，<br>
@@ -923,8 +951,10 @@ Serializable除提供了writeObject和readObject标记方法外还提供了另�
 		readExternal 方法必须按照与 writeExternal 方法写入值时相同的顺序和类型来读取属性值。
 
 ## 5、序列化实现对象的拷贝
+
 内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中，再从字节流中将其读出来，这样就可以<br>
 创建一个新的对象了，并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
+
 ```java
 public class CloneUtils {
 	@SuppressWarnings("unchecked")
@@ -1011,6 +1041,7 @@ public class CloneUtils {
 	看清类及其包含的内容，故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中.
 - 要解决序列化安全问题的核心原理就是避免在序列化中传递敏感数据，所以可以使用关键字 transient 修饰敏感数据的变量.<br>
 	或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
+
 # 七、泛型
 ## 1、JDK1.5 引入的新特性
 允许在定义类和接口的时候使用类型参数(type parameter)，泛型最主要的应用是在JDK 5中的新集合类框架中；其本质是参参数化类型<br>
@@ -1381,6 +1412,7 @@ class ClassTest<X extends Number， Y， Z> {
 - 在使用带通配符的泛型类的时候，需要明确通配符所代表的一组类型的概念
 
 # 八、关于 try...catch...finally
+
 * [try、catch、finally中的细节分析](http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)
 
 首先看如下例子，最终结果是什么? // false
