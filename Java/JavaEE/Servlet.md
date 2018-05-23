@@ -384,7 +384,7 @@ servlet容器为servlet运行提供了网络相关的服务：<br>
 Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy方法来释放资源
 
 # 二、HTTP协议			
-[HTTP协议](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaEE/%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80.md#%E5%9B%9Bhttp%E4%B8%8Ehttps%E5%8D%8F%E8%AE%AE-%E5%BA%94%E7%94%A8%E5%B1%82)
+[HTTP协议](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaEE/%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80.md#1http协议)
 			
 # 三、Servlet高级应用
 
