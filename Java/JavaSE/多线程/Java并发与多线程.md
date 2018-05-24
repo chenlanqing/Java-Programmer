@@ -23,7 +23,7 @@
   - [14、饥饿和公平](#14%E9%A5%A5%E9%A5%BF%E5%92%8C%E5%85%AC%E5%B9%B3)
 - [三.JUC(java.util.concurrent)包](#%E4%B8%89jucjavautilconcurrent%E5%8C%85)
   - [1、JUC原子类](#1juc%E5%8E%9F%E5%AD%90%E7%B1%BB)
-  - [2.锁的相关概念:](#2%E9%94%81%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5)
+  - [2、锁的相关概念](#2%E9%94%81%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5)
   - [3、独占锁:](#3%E7%8B%AC%E5%8D%A0%E9%94%81)
   - [4、共享锁-ReentrantReadWriteLock-读写锁](#4%E5%85%B1%E4%BA%AB%E9%94%81-reentrantreadwritelock-%E8%AF%BB%E5%86%99%E9%94%81)
   - [5、共享锁-闭锁：CountDownLatch](#5%E5%85%B1%E4%BA%AB%E9%94%81-%E9%97%AD%E9%94%81countdownlatch)
@@ -1172,7 +1172,7 @@ public class DeadLock{
 	long foo = 65465498L;  ==> 非原子操作，Java 会分两步写入 long 变量，先写32位，再写后32位，就非线程安全的.<br>
 	private volatile long foo;  ==> 原子性操作
 
-## 2.锁的相关概念:
+## 2、锁的相关概念
 
 * [锁机制](https://www.cnblogs.com/charlesblc/p/5994162.html)
 

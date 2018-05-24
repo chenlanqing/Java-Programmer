@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1.Java多线程](#1java%E5%A4%9A%E7%BA%BF%E7%A8%8B)
+- [2.Java并发编程模型:并发模型与分布式系统之间有相似性](#2java%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B%E5%B9%B6%E5%8F%91%E6%A8%A1%E5%9E%8B%E4%B8%8E%E5%88%86%E5%B8%83%E5%BC%8F%E7%B3%BB%E7%BB%9F%E4%B9%8B%E9%97%B4%E6%9C%89%E7%9B%B8%E4%BC%BC%E6%80%A7)
+- [3.竞态条件与临界区:](#3%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E4%B8%8E%E4%B8%B4%E7%95%8C%E5%8C%BA)
+- [4.线程安全与共享资源:](#4%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E5%85%B1%E4%BA%AB%E8%B5%84%E6%BA%90)
+- [5.线程安全与不可变性:通过创建不可变的共享对象来保证对象在线程间共享时不会被修改，从而实现线程安全](#5%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7%E9%80%9A%E8%BF%87%E5%88%9B%E5%BB%BA%E4%B8%8D%E5%8F%AF%E5%8F%98%E7%9A%84%E5%85%B1%E4%BA%AB%E5%AF%B9%E8%B1%A1%E6%9D%A5%E4%BF%9D%E8%AF%81%E5%AF%B9%E8%B1%A1%E5%9C%A8%E7%BA%BF%E7%A8%8B%E9%97%B4%E5%85%B1%E4%BA%AB%E6%97%B6%E4%B8%8D%E4%BC%9A%E8%A2%AB%E4%BF%AE%E6%94%B9%E4%BB%8E%E8%80%8C%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # 1.Java多线程
 	(1).优点:
 		A:资源利用率更好;

@@ -4,7 +4,7 @@
 
 - [一、GC-GarbageCollection](#%E4%B8%80gc-garbagecollection)
   - [1、垃圾回收机制的意义](#1%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6%E7%9A%84%E6%84%8F%E4%B9%89)
-  - [2.如何确定对象为垃圾对象](#2%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E5%AF%B9%E8%B1%A1%E4%B8%BA%E5%9E%83%E5%9C%BE%E5%AF%B9%E8%B1%A1)
+  - [2、如何确定对象为垃圾对象](#2%E5%A6%82%E4%BD%95%E7%A1%AE%E5%AE%9A%E5%AF%B9%E8%B1%A1%E4%B8%BA%E5%9E%83%E5%9C%BE%E5%AF%B9%E8%B1%A1)
   - [3、GC 回收区域](#3gc-%E5%9B%9E%E6%94%B6%E5%8C%BA%E5%9F%9F)
 - [二、垃圾回收对象判断算法](#%E4%BA%8C%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%AF%B9%E8%B1%A1%E5%88%A4%E6%96%AD%E7%AE%97%E6%B3%95)
   - [1、引用计数算法：Reference Counting Collector](#1%E5%BC%95%E7%94%A8%E8%AE%A1%E6%95%B0%E7%AE%97%E6%B3%95reference-counting-collector)
@@ -17,7 +17,7 @@
   - [2、标记-整理算法(Mark-Compact)](#2%E6%A0%87%E8%AE%B0-%E6%95%B4%E7%90%86%E7%AE%97%E6%B3%95mark-compact)
   - [3、复制算法(Copying)](#3%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95copying)
   - [4、分代收集算法(Generation Collection)](#4%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95generation-collection)
-- [四.垃圾收集器](#%E5%9B%9B%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
+- [四、垃圾收集器](#%E5%9B%9B%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
   - [1、Serial 收集器](#1serial-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [2、ParNew 收集器](#2parnew-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [3、Parallel Scavenge 收集器](#3parallel-scavenge-%E6%94%B6%E9%9B%86%E5%99%A8)
@@ -26,7 +26,7 @@
   - [6、CMS(Concurrent Mark Sweep) 收集器](#6cmsconcurrent-mark-sweep-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [7、G1收集器(Garbage First)：面向服务端应用的垃圾收集器](#7g1%E6%94%B6%E9%9B%86%E5%99%A8garbage-first%E9%9D%A2%E5%90%91%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%BA%94%E7%94%A8%E7%9A%84%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
 - [五、GC 执行机制:Minor GC和Full GC](#%E4%BA%94gc-%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6minor-gc%E5%92%8Cfull-gc)
-  - [1.Minor GC(YGC)](#1minor-gcygc)
+  - [1、Minor GC(YGC)](#1minor-gcygc)
   - [2、Major GC:永久代](#2major-gc%E6%B0%B8%E4%B9%85%E4%BB%A3)
   - [3、Full GC](#3full-gc)
   - [4、内存回收与分配策略](#4%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E4%B8%8E%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5)
@@ -55,7 +55,7 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 
 Java 中的对象不再有"作用域"的概念，只有对象的引用才有"作用域"。垃圾回收可以有效的防止内存泄露，有效的使用空闲的内存。
 
-## 2.如何确定对象为垃圾对象
+## 2、如何确定对象为垃圾对象
 
 - 引用计数:如果一个对象没有任何引用与之关联，则说明该对象基本不太可能在其他地方被使用到，那么这个对象就成为可被回收的对象了<br>
 	无法解决循环引用的问题
@@ -224,7 +224,7 @@ public class Main {
 
 用于存放静态文件，如Java类、方法等.持久代对垃圾回收没有显著影响，但是有些应用可能动态生成或者调用一些class
 	
-# 四.垃圾收集器
+# 四、垃圾收集器
 
 内存回收的具体实现：
 新生代收集器使用的收集器：Serial、PraNew、Parallel Scavenge<br>
@@ -321,7 +321,7 @@ GC Roots Tracing 的过程，而重新阶段则是为了修正并发标记期间
 
 # 五、GC 执行机制:Minor GC和Full GC
 
-## 1.Minor GC(YGC)
+## 1、Minor GC(YGC)
 对新生代进行GC
 
 **1.1、什么是YGC**
