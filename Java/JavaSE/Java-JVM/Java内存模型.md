@@ -544,125 +544,163 @@ volatile 变量的正确使用：确保它们自身状态的可见性，确保�
 - volatile 不会造成线程的阻塞;synchronized 可能会造成线程的阻塞；
 - volatile 标记的变量不会被编译器优化;synchronized 标记的变量可以被编译器优化
 
-# 四.锁
-## 1.锁的释放-获取建立的happens before 关系
-	(1).锁是java并发编程中最重要的同步机制.锁除了让临界区互斥执行外，还可以让释放锁的线程向获取同一个锁的线程发送消息
-## 2.锁释放和获取的内存语义
-	(1).当线程释放锁时，JMM 会把该线程对应的本地内存中的共享变量刷新到主内存中
-	(2).当线程获取锁时，JMM 会把该线程对应的本地内存置为无效.从而使得被监视器保护的临界区代码必须要从主内存中去读取共享变量
-	(3).锁释放与volatile写有相同的内存语义；锁获取与volatile读有相同的内存语义
-	(4).下面对锁释放和锁获取的内存语义做个总结：
-		线程A释放一个锁，实质上是线程A向接下来将要获取这个锁的某个线程发出了(线程A对共享变量所做修改的)消息。
-		线程B获取一个锁，实质上是线程B接收了之前某个线程发出的(在释放这个锁之前对共享变量所做修改的)消息。
-		线程A释放锁，随后线程B获取这个锁，这个过程实质上是线程A通过主内存向线程B发送消息
-## 3.锁内存语义的实现：
-	借助 ReentrantLock 的源代码，来分析锁内存语义的具体实现机制
-	3.1.在 ReentrantLock 中，调用lock()方法获取锁；调用unlock()方法释放锁
-		(1).ReentrantLock 的实现依赖于java同步器框架 AbstractQueuedSynchronizer(简称 AQS)，
-			AQS 使用一个整型的volatile变量命名为state来维护同步状态，这个volatile变量是ReentrantLock内存语义实现的关键
-			AQS 的本质上是一个同步器/阻塞锁的基础框架，其作用主要是提供加锁、释放锁，
-			并在内部维护一个FIFO等待队列，用于存储由于锁竞争而阻塞的线程
-		(2).ReentrantLock 分为公平锁和非公平锁，我们首先分析公平锁
-			①.使用公平锁时，加锁方法lock()的方法调用轨迹如下：
-				ReentrantLock ： lock()
-				FairSync ： lock()
-				AbstractQueuedSynchronizer ： acquire(int arg)
-				FairSync ： tryAcquire(int acquires) 真正开始加锁
-					查看 tryAcquire 方法的实现，加锁方法首先读volatile变量state
-			②.在使用公平锁时，解锁方法unlock()的方法调用轨迹如下：
-				ReentrantLock ： unlock()
-				AbstractQueuedSynchronizer ： release(int arg)
-				Sync ： tryRelease(int releases) 真正开始释放锁
-					查看 tryRelease 方法的实现，在释放锁的最后写volatile变量state
-			公平锁在释放锁的最后写volatile变量state;在获取锁时首先读这个volatile变量.根据volatile的happens-before规则，
-			释放锁的线程在写volatile变量之前可见的共享变量，在获取锁的线程读取同一个volatile变量后将立即变的对获取锁的线程可见
-		(3).非公平锁的内存语义的实现：非公平锁的释放和公平锁完全一样，所以这里仅仅分析非公平锁的获取
-			使用非公平锁时，加锁方法lock()的方法调用轨迹如下：
-				ReentrantLock ： lock()
-				NonfairSync ： lock()
-				AbstractQueuedSynchronizer ： compareAndSetState(int expect， int update)
-			该方法以原子操作的方式更新state变量，java的compareAndSet()方法调用简称为CAS.
-			JDK 文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步状态设置为给定的更新值。
-			此操作具有 volatile 读和写的内存语义	
-		(4).对公平锁和非公平锁的内存语义做个总结：
-			①.公平锁和非公平锁释放时，最后都要写一个volatile变量state;
-			②.公平锁获取时，首先会去读这个volatile变量;
-			③.非公平锁获取时，首先会用compareAndSet()更新这个volatile变量，这个操作同时具有volatile读和volatile写的内存语义
-	3.2.锁释放-获取的内存语义的实现至少有下面两种方式：
-		(1).利用volatile变量的写-读所具有的内存语义
-		(2).利用compareAndSet()所附带的volatile读和volatile写的内存语义
-## 4.java.util.concurrent包的实现
-	4.1.Java 线程之间的通信现在有了下面四种方式：
-		(1).A线程 写volatile变量，随后 B线程 读这个volatile变量。
-		(2).A线程 写volatile变量，随后 B线程 用compareAndSet()更新这个volatile变量。
-		(3).A线程 用compareAndSet()更新一个volatile变量，随后 B线程 用 compareAndSet()更新这个volatile变量。
-		(4).A线程 用compareAndSet()更新一个volatile变量，随后 B线程 读这个volatile变量
-	4.2.concurrent包的源代码实现通用化的实现模式：
-		(1).首先，声明共享变量为volatile；
-		(2).然后，使用CAS的原子条件更新来实现线程之间的同步；
-		(3).同时，配合以volatile的读/写和CAS所具有的volatile读和写的内存语义来实现线程之间的通信
-	4.3.AbstractQueuedSynchronizer 非阻塞数据结构和原子变量类(java.util.concurrent.atomic包中的类)，
-		这些concurrent包中的基础类都是使用这种模式来实现的，而concurrent包中的高层类又是依赖于这些基础类来实现的
-		(1).Lock 	同步器	阻塞队列	执行器		并发容器
-		(2).AbstractQueuedSynchronizer 非阻塞数据结构 	原子变量类
-		(3).volatile变量的读写	compareAndSet()
-			(3)是底层实现，(2)是基于(3)来实现的，而(1)又是基于(2)来实现的
-# 五.final：
-	1.对于 final 域，编译器和处理器要遵守两个重排序规则：
-		(1).在构造函数内对一个 final 域的写入，与随后把这个被构造对象的引用赋值给一个引用变量，这两个操作之间不能重排序
-		(2).初次读一个包含 final 域的对象的引用，与随后初次读这个 final 域，这两个操作之间不能重排序
-	2.写 final 域的重排序规则：禁止把 final 域的写重排序到构造函数之外
-		2.1.这个规则的实现包含下面2个方面：
-			(1).JMM 禁止编译器把 final 域的写重排序到构造函数之外。
-			(2).编译器会在 final 域的写之后，构造函数 return 之前，插入一个 StoreStore 屏障。
-				这个屏障禁止处理器把 final 域的写重排序到构造函数之外
-		2.2.写 final 域的重排序规则可以确保：
-			在对象引用为任意线程可见之前，对象的 final 域已经被正确初始化过了，而普通域不具有这个保障
-	3.读 final 域的重排序规则：
-		3.1.规则：在一个线程中，初次读对象引用与初次读该对象包含的 final 域，JMM 禁止处理器重排序这两个操作
-			(注意：这个规则仅仅针对处理器)。编译器会在读 final 域操作的前面插入一个 LoadLoad 屏障
-			初次读对象引用与初次读该对象包含的 final 域，这两个操作之间存在间接依赖关系
-		3.2.读 final 域的重排序规则可以确保：
-			在读一个对象的 final 域之前，一定会先读包含这个 final 域的对象的引用。在这个示例程序中，如果该引用不为 null，
-			那么引用对象的 final 域一定已经被A线程初始化过了
-	4.如果 final 域是引用类型：上述 final 域是针对基本数据类型，对于 final 域的引用类型有不同的效果：
-		4.1.对于引用类型，写 final 域的重排序规则对编译器和处理器增加了如下约束：
-			在构造函数内对一个 final 引用的对象的成员域的写入，与随后在构造函数外把这个被构造
-			对象的引用赋值给一个引用变量，这两个操作之间不能重排序
-		4.2.为什么 final 引用不能从构造函数内“逸出”：
-			(1).写final域的重排序规则可以确保：在引用变量为任意线程可见之前，该引用变量指向的对象的final域已经在构造函数中被
-			正确初始化过了。其实要得到这个效果，还需要一个保证：在构造函数内部，不能让这个被构造对象的引用为其他线程可见，
-			也就是对象引用不能在构造函数中“逸出”
-			(2).在构造函数返回前，被构造对象的引用不能为其他线程可见，因为此时的final域可能还没有被初始化。在构造函数返回后，
-			任意线程都将保证能看到final域正确初始化之后的值
-	5.final 语义在处理器中的实现：以 x86 处理器为例：
-		由于x86处理器不会对写-写操作做重排序，所以在x86处理器中，写final域需要的StoreStore障屏会被省略掉。
-		同样，由于x86处理器不会对存在间接依赖关系的操作做重排序，所以在x86处理器中，读final域需要的LoadLoad屏障也会被省略掉。
-		也就是说在x86处理器中，final域的读/写不会插入任何内存屏障！
+# 四、锁
+## 1、锁的释放-获取建立的happens before 关系
 
-# 六.处理器内存模型：
-	1.处理器的内存模型：
-		(1).放松程序中写-读操作的顺序，由此产生了total store ordering内存模型(简称为TSO)。
-		(2).在前面1的基础上，继续放松程序中写-写操作的顺序，由此产生了partial store order 内存模型(简称为PSO)。
-		(3).在前面1和2的基础上，继续放松程序中读-写和读-读操作的顺序，由此产生了relaxed memory order内存模型(简称为RMO)
-			和PowerPC内存模型
-		注意：注意，这里处理器对读/写操作的放松，是以两个操作之间不存在数据依赖性为前提的(因为处理器要遵守as-if-serial语义，
-		处理器不会对存在数据依赖性的两个内存操作做重排序)
-		JMM屏蔽了不同处理器内存模型的差异，它在不同的处理器平台之上为java程序员呈现了一个一致的内存模型
-	2.JMM，处理器内存模型与顺序一致性内存模型之间的关系
-		JMM 是一个语言级的内存模型，处理器内存模型是硬件级的内存模型，顺序一致性内存模型是一个理论参考模型
-	3.JMM把 happens- before要求禁止的重排序分为了下面两类：
-			会改变程序执行结果的重排序。
-			不会改变程序执行结果的重排序。
-		JMM对这两种不同性质的重排序，采取了不同的策略：
-			对于会改变程序执行结果的重排序，JMM要求编译器和处理器必须禁止这种重排序。
-			对于不会改变程序执行结果的重排序，JMM对编译器和处理器不作要求(JMM允许这种重排序)
+锁是java并发编程中最重要的同步机制.锁除了让临界区互斥执行外，还可以让释放锁的线程向获取同一个锁的线程发送消息
 
-	4.旧的内存模型存在的问题：
-		(1).旧的存储模型在许多情况下，不允许JVM发生各种重排序行为
-		(2).在旧的内存模型中，final 字段并没有同其他字段进行区别对待——这意味着同
-			步是保证所有线程看到一个在构造方法中初始化的 final 字段的唯一方法
-		(3).旧的内存模型允许volatile变量的写操作和非volaitle变量的读写操作一起进行重排序
+## 2、锁释放和获取的内存语义
+
+- 当线程释放锁时，JMM 会把该线程对应的本地内存中的共享变量刷新到主内存中
+- 当线程获取锁时，JMM 会把该线程对应的本地内存置为无效.从而使得被监视器保护的临界区代码必须要从主内存中去读取共享变量
+- 锁释放与volatile写有相同的内存语义；锁获取与volatile读有相同的内存语义
+- 下面对锁释放和锁获取的内存语义做个总结：
+	- 线程A释放一个锁，实质上是线程A向接下来将要获取这个锁的某个线程发出了(线程A对共享变量所做修改的)消息。
+	- 线程B获取一个锁，实质上是线程B接收了之前某个线程发出的(在释放这个锁之前对共享变量所做修改的)消息。
+	- 线程A释放锁，随后线程B获取这个锁，这个过程实质上是线程A通过主内存向线程B发送消息
+
+## 3、锁内存语义的实现
+
+借助 ReentrantLock 的源代码，来分析锁内存语义的具体实现机制
+
+**3.1、在 ReentrantLock 中，调用lock()方法获取锁；调用unlock()方法释放锁**
+
+- ReentrantLock 的实现依赖于java同步器框架 AbstractQueuedSynchronizer(简称 AQS)，AQS 使用一个整型的volatile变量命名为state来<br>
+	维护同步状态，这个volatile变量是ReentrantLock内存语义实现的关键AQS 的本质上是一个同步器/阻塞锁的基础框架，其作用主要是提供加锁、释放锁，<br>
+	并在内部维护一个FIFO等待队列，用于存储由于锁竞争而阻塞的线程<br>
+- ReentrantLock 分为公平锁和非公平锁，我们首先分析公平锁
+	- ①、使用公平锁时，加锁方法lock()的方法调用轨迹如下：<br>
+		ReentrantLock ： lock()<br>
+		FairSync ： lock()<br>
+		AbstractQueuedSynchronizer ： acquire(int arg)<br>
+		FairSync ： tryAcquire(int acquires) 真正开始加锁<br>
+			查看 tryAcquire 方法的实现，加锁方法首先读volatile变量state
+	- ②、在使用公平锁时，解锁方法unlock()的方法调用轨迹如下：<br>
+		ReentrantLock ： unlock()<br>
+		AbstractQueuedSynchronizer ： release(int arg)<br>
+		Sync ： tryRelease(int releases) 真正开始释放锁<br>
+		查看 tryRelease 方法的实现，在释放锁的最后写volatile变量state
+
+	公平锁在释放锁的最后写volatile变量state;在获取锁时首先读这个volatile变量.根据volatile的happens-before规则，<br>
+	释放锁的线程在写volatile变量之前可见的共享变量，在获取锁的线程读取同一个volatile变量后将立即变的对获取锁的线程可见
+
+- 非公平锁的内存语义的实现：非公平锁的释放和公平锁完全一样，所以这里仅仅分析非公平锁的获取使用非公平锁时，加锁方法lock()的方法调用轨迹如下：<br>
+	ReentrantLock ： lock()<br>
+	NonfairSync ： lock()<br>
+	AbstractQueuedSynchronizer ： compareAndSetState(int expect， int update) <br>
+	该方法以原子操作的方式更新state变量，java的compareAndSet()方法调用简称为CAS。<br>
+	JDK 文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步状态设置为给定的更新值。此操作具有 volatile 读和写的内存语义
+
+- 对公平锁和非公平锁的内存语义做个总结：
+	- ①、公平锁和非公平锁释放时，最后都要写一个volatile变量state;
+	- ②、公平锁获取时，首先会去读这个volatile变量;
+	- ③、非公平锁获取时，首先会用compareAndSet()更新这个volatile变量，这个操作同时具有volatile读和volatile写的内存语义
+
+**3.2、锁释放-获取的内存语义的实现至少有下面两种方式：**
+
+- 利用volatile变量的写-读所具有的内存语义
+- 利用compareAndSet()所附带的volatile读和volatile写的内存语义
+
+## 4、java.util.concurrent包的实现
+
+**4.1、Java 线程之间的通信现在有了下面四种方式：**
+
+- A线程写volatile变量，随后B线程读这个volatile变量。
+- A线程写volatile变量，随后B线程用compareAndSet()更新这个volatile变量。
+- A线程用compareAndSet()更新一个volatile变量，随后 B线程用 compareAndSet()更新这个volatile变量。
+- A线程用compareAndSet()更新一个volatile变量，随后 B线程读这个volatile变量
+
+**4.2、concurrent包的源代码实现通用化的实现模式：**
+
+- 首先，声明共享变量为volatile；
+- 然后，使用CAS的原子条件更新来实现线程之间的同步；
+- 同时，配合以volatile的读/写和CAS所具有的volatile读和写的内存语义来实现线程之间的通信
+
+**4.3、AbstractQueuedSynchronizer非阻塞数据结构和原子变量类(java.util.concurrent.atomic包中的类)，**
+
+这些concurrent包中的基础类都是使用这种模式来实现的，而concurrent包中的高层类又是依赖于这些基础类来实现的
+
+- （1）Lock 同步器、阻塞队列、执行器、并发容器
+- （2）AbstractQueuedSynchronizer 非阻塞数据结构 	原子变量类
+- （3）volatile变量的读写	compareAndSet()
+
+（3）是底层实现，（2）是基于（3）来实现的，而（1）又是基于（2）来实现的
+
+# 五、final
+
+**1、对于final域，编译器和处理器要遵守两个重排序规则：**
+
+- 在构造函数内对一个 final 域的写入，与随后把这个被构造对象的引用赋值给一个引用变量，这两个操作之间不能重排序
+- 初次读一个包含 final 域的对象的引用，与随后初次读这个 final 域，这两个操作之间不能重排序
+
+**2、写final域的重排序规则：禁止把final域的写重排序到构造函数之外**
+
+- **2.1、这个规则的实现包含下面2个方面：**
+
+	- JMM 禁止编译器把 final 域的写重排序到构造函数之外。
+	- 编译器会在final域的写之后，构造函数return之前，插入一个StoreStore屏障。这个屏障禁止处理器把final域的写重排序到构造函数之外
+
+- **2.2、写final域的重排序规则可以确保：**
+
+在对象引用为任意线程可见之前，对象的 final 域已经被正确初始化过了，而普通域不具有这个保障
+
+**3、读final域的重排序规则：**
+
+- 规则：在一个线程中，初次读对象引用与初次读该对象包含的 final 域，JMM 禁止处理器重排序这两个操作（注意：这个规则仅仅针对处理器）。<br>
+	编译器会在读 final 域操作的前面插入一个 LoadLoad 屏障初次读对象引用与初次读该对象包含的 final 域，这两个操作之间存在间接依赖关系
+
+- 读 final 域的重排序规则可以确保：
+	在读一个对象的 final 域之前，一定会先读包含这个 final 域的对象的引用。在这个示例程序中，如果该引用不为 null，<br>
+	那么引用对象的 final 域一定已经被A线程初始化过了
+
+**4、如果final域是引用类型：上述final域是针对基本数据类型，对于final域的引用类型有不同的效果：**
+
+- 对于引用类型，写 final 域的重排序规则对编译器和处理器增加了如下约束：<br>
+
+	在构造函数内对一个 final 引用的对象的成员域的写入，与随后在构造函数外把这个被构造对象的引用赋值给一个引用变量，这两个操作之间不能重排序
+
+- 为什么 final 引用不能从构造函数内“逸出”：
+	- 写final域的重排序规则可以确保：在引用变量为任意线程可见之前，该引用变量指向的对象的final域已经在构造函数中被正确初始化过了。其实要得<br>
+	到这个效果，还需要一个保证：在构造函数内部，不能让这个被构造对象的引用为其他线程可见，也就是对象引用不能在构造函数中“逸出”
+
+	- 在构造函数返回前，被构造对象的引用不能为其他线程可见，因为此时的final域可能还没有被初始化。在构造函数返回后，<br>
+	任意线程都将保证能看到final域正确初始化之后的值
+
+**5、final语义在处理器中的实现：以 x86 处理器为例：**
+
+由于x86处理器不会对写-写操作做重排序，所以在x86处理器中，写final域需要的StoreStore障屏会被省略掉。同样，由于x86处理器不会对存在间接依赖关系<br>
+的操作做重排序，所以在x86处理器中，读final域需要的LoadLoad屏障也会被省略掉。也就是说在x86处理器中，final域的读/写不会插入任何内存屏障！
+
+# 六、处理器内存模型：
+
+**1、处理器的内存模型：**
+
+- 放松程序中写-读操作的顺序，由此产生了total store ordering内存模型(简称为TSO)。
+- 在前面1的基础上，继续放松程序中写-写操作的顺序，由此产生了partial store order 内存模型(简称为PSO)。
+- 在前面1和2的基础上，继续放松程序中读-写和读-读操作的顺序，由此产生了relaxed memory order内存模型(简称为RMO)和PowerPC内存模型
+
+注意：这里处理器对读/写操作的放松，是以两个操作之间不存在数据依赖性为前提的（因为处理器要遵守as-if-serial语义，处理器不会对存在数据<br>
+依赖性的两个内存操作做重排序）JMM屏蔽了不同处理器内存模型的差异，它在不同的处理器平台之上为java程序员呈现了一个一致的内存模型
+
+**2、JMM，处理器内存模型与顺序一致性内存模型之间的关系**
+
+JMM 是一个语言级的内存模型，处理器内存模型是硬件级的内存模型，顺序一致性内存模型是一个理论参考模型
+
+**3、JMM把 happens- before要求禁止的重排序分为了下面两类：**
+
+- 会改变程序执行结果的重排序。<br>
+- 不会改变程序执行结果的重排序。<br>
+
+JMM对这两种不同性质的重排序，采取了不同的策略：<br>
+
+- 对于会改变程序执行结果的重排序，JMM要求编译器和处理器必须禁止这种重排序。<br>
+- 对于不会改变程序执行结果的重排序，JMM对编译器和处理器不作要求（JMM允许这种重排序）
+
+**4、旧的内存模型存在的问题：**
+
+- 旧的存储模型在许多情况下，不允许JVM发生各种重排序行为
+- 在旧的内存模型中，final 字段并没有同其他字段进行区别对待——这意味着同步是保证所有线程看到一个在构造方法中初始化的 final 字段的唯一方法
+- 旧的内存模型允许volatile变量的写操作和非volaitle变量的读写操作一起进行重排序
 
 # 参考文章
 
