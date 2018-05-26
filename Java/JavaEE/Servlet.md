@@ -38,8 +38,7 @@
 # 一、Servlet
 ## 1、不使用开发工具开发一个servlet
 
-- （1）在tomcat服务器的webapps下新建一个目录test(应用名)，在test文件夹内再新加一个WEB-INF文件夹，<br>
-再在WEB-INF文件夹内新建一个classes文件夹;\apache-tomcat-6.0.14\webapps\test\WEB-INF\classes；
+- （1）在tomcat服务器的webapps下新建一个目录test(应用名)，在test文件夹内再新加一个WEB-INF文件夹，再在WEB-INF文件夹内新建一个classes文件夹;\apache-tomcat-6.0.14\webapps\test\WEB-INF\classes；
 - （2）在classes文件夹新建一个SecondServlet.java文件，如下代码:
 ```java
 	package cn.tarena;
@@ -79,8 +78,7 @@
 
 ## 2、load-on-startup
 
-服务器启动时初始化servlet，如果在<servlet>元素中配置了一个<load-on-startup>元素，那么WEB应用程序在启动时，<br>
-就会装载并创建Servlet的实例对象、以及调用Servlet实例对象的init()方法。<br>
+服务器启动时初始化servlet，如果在<servlet>元素中配置了一个<load-on-startup>元素，那么WEB应用程序在启动时，就会装载并创建Servlet的实例对象、以及调用Servlet实例对象的init()方法。<br>
 	举例：
 ```
 	<servlet>
@@ -96,19 +94,13 @@
 
 ## 3、servlet-mapping
 
-如果某个Servlet的映射路径仅仅为一个正斜杠("/")，那么这个Servlet就成为当前Web应用程序的缺省Servlet。<br>
-凡是在web.xml文件中找不到匹配的<servlet-mapping>元素的URL，它们的访问请求都将交给缺省Servlet处理，<br>
-也就是说，缺省Servlet用于处理所有其他Servlet都不处理的访问请求。<br>
-在<tomcat的安装目录>\conf\web.xml文件中，注册了一个名称为:<br>
-org.apache.catalina.servlets.DefaultServlet的Servlet，并将这个Servlet设置为了缺省Servlet。<br>
-当访问Tomcat服务器中的某个静态HTML文件和图片时，实际上是在访问这个缺省Servlet
+如果某个Servlet的映射路径仅仅为一个正斜杠("/")，那么这个Servlet就成为当前Web应用程序的缺省Servlet。凡是在web.xml文件中找不到匹配的<servlet-mapping>元素的URL，它们的访问请求都将交给缺省Servlet处理，也就是说，缺省Servlet用于处理所有其他Servlet都不处理的访问请求。在<tomcat的安装目录>\conf\web.xml文件中，注册了一个名称为：org.apache.catalina.servlets.DefaultServlet的Servlet，并将这个Servlet设置为了缺省Servlet。当访问Tomcat服务器中的某个静态HTML文件和图片时，实际上是在访问这个缺省Servlet
 
 ## 4、Servlet线程安全问题
 
 ## 5、Servlet初始化参数
 
-ServletConfig接口，没有固定值的数据都可以通过配置方式：如数据库，字符集编码;<br>
-在web.xml文件中配置参数:(可以配置多个<init-param>)，这里是为每个Servlet配置初始化参数
+ServletConfig接口，没有固定值的数据都可以通过配置方式：如数据库，字符集编码；在web.xml文件中配置参数：（可以配置多个<init-param>），这里是为每个Servlet配置初始化参数
 ```
 	<init-param>
 		<param-name>country</param-name>
@@ -190,10 +182,7 @@ response.setHeader("content-type", "text/html;charset=UTF-8");
 		Ⅰ.浏览器会向服务器发送两次请求;<br>
 		用户登录和显示购物车时通常会用到重定向技术;<br>
 	- 注意:<br>
-		response.getWriter()与response.getOutputStream()不能同时使用在一个Servlet(包括转发)，<br>
-		否则会出现异常:<br>
-		java.lang.IllegalStateException: getWriter() has already been called for this response<br>
-		重定向不会出现这种问题，因为其是两次响应;<br>
+		response.getWriter()与response.getOutputStream()不能同时使用在一个Servlet(包括转发)，否则会出现异常：java.lang.IllegalStateException: getWriter() has already been called for this response重定向不会出现这种问题，因为其是两次响应；
 - ④、获取的输出流，可以不去处理吗，Servlet会自动去管理关闭这些流；
 
 ## 8、HttpServletResquest
@@ -213,31 +202,23 @@ Session 与 Cookie 的作用都是为了保持访问用户与后端服务器的�
 
 ### 9.1、Cookie
 
-是服务器在本地机器上存储的小段文本并随每一个请求发送至同一个服务器，网络服务器用HTTP头向客户端<br>
-发送cookies，在客户终端，浏览器解析这些cookies并将它们保存为一个本地文件.
+是服务器在本地机器上存储的小段文本并随每一个请求发送至同一个服务器，网络服务器用HTTP头向客户端发送cookies，在客户终端，浏览器解析这些cookies并将它们保存为一个本地文件.
 
-- 当一个用户通过 HTTP 协议访问一个服务器的时候，这个服务器会将一些 Key/Value 键值对返回给客户端浏览器，<br>
-	并给这些数据加上一些限制条件，在条件符合时这个用户下次访问这个服务器的时候，数据又被完整地带回给服务器;
-- cookie的内容主要包括:名字、值、过期时间、路径和域.路径与域一起构成cookie的作用范围.若不设置过期时间，<br>
-	则表示这个cookie的生命期为浏览器会话期间，关闭浏览器窗口，cookie就消失，这种生命期为浏览器会话期的cookie<br>
-	被称为会话cookie.会话cookie一般是存储在内存中的;
-- 若设置了过期时间，浏览器就会把cookie保存到硬盘上，关闭后再次打开浏览器，这些cookie仍然有效直到超过设定的<br>
-	过期时间，存储在硬盘上的cookie可以在不同的浏览器进程间共享
+- 当一个用户通过 HTTP 协议访问一个服务器的时候，这个服务器会将一些 Key/Value 键值对返回给客户端浏览器，并给这些数据加上一些限制条件，在条件符合时这个用户下次访问这个服务器的时候，数据又被完整地带回给服务器；
+
+- cookie的内容主要包括:名字、值、过期时间、路径和域.路径与域一起构成cookie的作用范围.若不设置过期时间，则表示这个cookie的生命期为浏览器会话期间，关闭浏览器窗口，cookie就消失，这种生命期为浏览器会话期的cookie被称为会话cookie.会话cookie一般是存储在内存中的；
+
+- 若设置了过期时间，浏览器就会把cookie保存到硬盘上，关闭后再次打开浏览器，这些cookie仍然有效直到超过设定的过期时间，存储在硬盘上的cookie可以在不同的浏览器进程间共享
 
 ### 9.2、Session
 
-session机制采用的是一种在服务器端保持状态的解决方案.由于采用服务器端保持状态的方案在客户端也需要<br>
-保存一个标识，所以session机制可能需要借助于cookie机制来达到保存标识的目的.
+session机制采用的是一种在服务器端保持状态的解决方案.由于采用服务器端保持状态的方案在客户端也需要保存一个标识，所以session机制可能需要借助于cookie机制来达到保存标识的目的.
 
-- session是针对每一个用户的，变量的值保存在服务器上，用一个sessionID来区分是哪个用户session变量，这个值是<br>
-	通过用户的浏览器在访问的时候返回给服务器，当客户禁用cookie时，这个值也可能设置为由get来返回给服务器.
-- 就安全性来说，服务器端的session机制更安全些，因为它不会任意读取客户存储的信息.
-- 当程序需要为某个客户端的请求创建一个session时，服务器首先检查这个客户端的请求里是否已包含了一个<br>
-	session标识(称为sessionId)，如果已包含则说明以前已经为此客户端创建过session，服务器就按照sessionId<br>
-	把这个session检索出来使用(检索不到，会新建一个)，如果客户端请求不包含session id，则为此客户端创建一个<br>
-	session并且生成一个与此session相关联的session id，session id的值应该是一个既不会重复，又不容易被找<br>
-	到规律以仿造的字符串，这个session id将被在本次响应中返回给客户端保存保存这个session id的方式可以采用cookie，<br>
-	这样在交互过程中浏览器可以自动的按照规则把这个标识发挥给服务器
+- session是针对每一个用户的，变量的值保存在服务器上，用一个sessionID来区分是哪个用户session变量，这个值是通过用户的浏览器在访问的时候返回给服务器，当客户禁用cookie时，这个值也可能设置为由get来返回给服务器；
+
+- 就安全性来说，服务器端的session机制更安全些，因为它不会任意读取客户存储的信息；
+
+- 当程序需要为某个客户端的请求创建一个session时，服务器首先检查这个客户端的请求里是否已包含了一个session标识(称为sessionId)，如果已包含则说明以前已经为此客户端创建过session，服务器就按照sessionId把这个session检索出来使用(检索不到，会新建一个)，如果客户端请求不包含session id，则为此客户端创建一个session并且生成一个与此session相关联的session id，session id的值应该是一个既不会重复，又不容易被找到规律以仿造的字符串，这个session id将被在本次响应中返回给客户端保存保存这个session id的方式可以采用cookie，这样在交互过程中浏览器可以自动的按照规则把这个标识发挥给服务器；
 
 ### 9.3、Cookie 与 Session
 
@@ -272,27 +253,24 @@ session机制采用的是一种在服务器端保持状态的解决方案.由于
 ### 10.1、两者直接的关系
 
 - 两者关系有点像枪和子弹的关系，枪是为子弹而生，而子弹又让枪有了杀伤力。从技术角度来说是为了解耦，通过标准化接口来相互协作。
+
 - 以Tomcat如何管理Servlet容器来说：<br>
-	Tomcat 的容器等级中Context容器是直接管理Servlet在容器中的包装类Wrapper，所以Context容器如何运行将直接影响Servlet的工作方式.<br>
-	一个 Context 对应一个 Web 工程<br>
+	Tomcat 的容器等级中Context容器是直接管理Servlet在容器中的包装类Wrapper，所以Context容器如何运行将直接影响Servlet的工作方式。一个 Context 对应一个 Web 工程
 ```
 	<Context path="/projectOne " docBase="\user\projects\projectOne" reloadable="true" />
 ```
 ### 10.2、Servlet 容器的启动过程
 
-Tomcat7 也开始支持嵌入式功能，增加了一个启动 org.apache.catalina.startup.Tomcat.将Servlet包装成StandardWrapper并作为子容器<br>
-添加到 Context 中，其它的所有 web.xml 属性都被解析到 Context 中，所以说 Context 容器才是真正运行 Servlet 的 Servlet 容器
+Tomcat7 也开始支持嵌入式功能，增加了一个启动 org.apache.catalina.startup.Tomcat.将Servlet包装成StandardWrapper并作为子容器添加到 Context 中，其它的所有 web.xml 属性都被解析到 Context 中，所以说 Context 容器才是真正运行 Servlet 的 Servlet 容器
 
 ### 10.3、Servlet 对象创建
 
-如果 Servlet 的 load-on-startup 配置项大于 0，那么在 Context 容器启动的时候就会被实例化.<br>
-在 conf 下的 web.xml 文件中定义了一些默认的配置项，其定义了两个 Servlet，分别是:<br>
-org.apache.catalina.servlets.DefaultServlet 和 org.apache.jasper.servlet.JspServlet 它们的 load-on-startup <br>
-分别是 1 和 3，也就是当 Tomcat 启动时这两个 Servlet 就会被启动
+如果 Servlet 的 load-on-startup 配置项大于 0，那么在 Context 容器启动的时候就会被实例化。在 conf 下的 web.xml 文件中定义了一些默认的配置项，其定义了两个 Servlet，分别是：org.apache.catalina.servlets.DefaultServlet 和 org.apache.jasper.servlet.JspServlet 它们的 load-on-startup 分别是 1 和 3，也就是当 Tomcat 启动时这两个 Servlet 就会被启动
 
 ### 10.4、Servlet 是如何运行的
 
-servlet容器为servlet运行提供了网络相关的服务：<br>
+servlet容器为servlet运行提供了网络相关的服务：
+
 比如在浏览器地址栏输入地址:	http://ip:port/web01/hello
 
 - Step1：浏览器依据ip，port建立与servlet容器(servlet容器也是一个简单的服务器)之间的链接
@@ -311,8 +289,8 @@ servlet容器为servlet运行提供了网络相关的服务：<br>
 
 **1、实例化**
 
-- 什么是实例化:容器调用servlet构造器创建一个servlet对象;<br>
-	在默认情况下，不管有多少请求，容器只会创建一个servlet对象.
+- 什么是实例化:容器调用servlet构造器创建一个servlet对象；在默认情况下，不管有多少请求，容器只会创建一个servlet对象.
+
 - 什么时候实例化？
 	- 情况1：在默认情况下，容器收到请求之后才会创建servlet对象;
 	- 情况2：容器在启动时，就将某些servlet对象创建;这些servlet必须在web.xml中
@@ -323,6 +301,7 @@ servlet容器为servlet运行提供了网络相关的服务：<br>
 **2、初始化**
 
 - 什么是初始化：容器创建好servlet对象之后，会立即调用init方法;
+
 - 怎么样实现初始化处理逻辑？
 	- 一般情况下，不需要写init方法，因为GenericServlet类依据实现了innit方法:<br>
 		// 将容器创建的ServletConfig对象保存下来，<br>
@@ -337,9 +316,7 @@ servlet容器为servlet运行提供了网络相关的服务：<br>
 
 - 什么是就绪：servlet容器收到请求之后，会调用servlet对象的service方法来处理请求
 - 如何编写业务逻辑？
-	- 方式一.override HttpServlet的service方法:HttpServlet的service方法实现:<br>
-			依据请求类型调用doGet()或者doPost()方法，<br>
-			这两方法在默认情况下就只是简单的抛出异常，需要子类去override;
+	- 方式一.override HttpServlet的service方法:HttpServlet的service方法实现：依据请求类型调用doGet()或者doPost()方法，这两方法在默认情况下就只是简单的抛出异常，需要子类去override；
 	- 方式二.override HttpServlet的doGet()或者doPost()方法;
 
 **4、销毁:**
@@ -357,17 +334,14 @@ servlet容器为servlet运行提供了网络相关的服务：<br>
 #### 10.6.2、Servlet框架核心是 Servlet类
 
 所有Servlet都必须实现这个接口.在Servlet接口中定义了5个方法，其中3个方法代表了Servlet的生命周期.
-- init(ServletConfig)方法：<br>
-	负责初始化Servlet对象，在Servlet生命周期中，该方法执行一次;该方法执行在单线程环境中，因此不用考虑线程安全问题;
+- init(ServletConfig)方法：负责初始化Servlet对象，在Servlet生命周期中，该方法执行一次;该方法执行在单线程环境中，因此不用考虑线程安全问题;
 - service(ServletRequest req，ServletResponse res)方法：
-	负责响应客户的请求，为了提高效率，Servlet规范要求一个Servlet实例必须能够同时服务于多个客户端请求，<br>
-	即service是运行在多线程环境下，必须保证该方法的线程安全性;
+	负责响应客户的请求，为了提高效率，Servlet规范要求一个Servlet实例必须能够同时服务于多个客户端请求，即service是运行在多线程环境下，必须保证该方法的线程安全性;
 - destroy()方法：当Servlet对象退出生命周期时，负责释放占用的资源;
 
 #### 10.6.3、service方法注意事项
 
-- 如果service方法没有访问servlet的成员变量也没有访问全局资源，如果静态变量、文件、数据库连接，而是只使用了当前线程<br>
-	自己的资源，比如指向全局资源的临时变量、request、response等对象，该方法本身就是线程安全的，不需要进行同步控制;
+- 如果service方法没有访问servlet的成员变量也没有访问全局资源，如果静态变量、文件、数据库连接，而是只使用了当前线程自己的资源，比如指向全局资源的临时变量、request、response等对象，该方法本身就是线程安全的，不需要进行同步控制;
 - 如果service()方法访问了Servlet的成员变量，但是对该变量的操作是只读操作，该方法本身就是线程安全的，不必进行任何的同步控制;
 - 如果service()方法访问了Servlet的成员变量，并且对该变量的操作既有读又有写，通常需要加上同步控制语句;
 - 如果service()方法访问了全局的静态变量，如果同一时刻系统中也可能有其它线程访问该静态变量，如果既有读也有写的操作;通常需要加上同步控制语句
@@ -375,8 +349,7 @@ servlet容器为servlet运行提供了网络相关的服务：<br>
 
 ### 10.7、创建Servlet对象的时机
 
-- 默认情况下，在Servlet容器启动后:客户首次向Servlet发出请求，Servlet容器会判断内存中是否存在指定的Servlet对象，如果没有则创建它，<br>
-	然后根据客户的请求创建HttpRequest、HttpResponse对象，从而调用Servlet对象的service方法;
+- 默认情况下，在Servlet容器启动后:客户首次向Servlet发出请求，Servlet容器会判断内存中是否存在指定的Servlet对象，如果没有则创建它，然后根据客户的请求创建HttpRequest、HttpResponse对象，从而调用Servlet对象的service方法;
 - Servlet容器启动时:当web.xml文件中如果<servlet>元素中指定了<load-on-startup>子元素时，Servlet容器在启动web服务器时，将按照顺序创建并初始化Servlet对象;
 
 ### 10.8、销毁Servlet对象的时机
@@ -528,9 +501,7 @@ Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy
 	<!-- Javascript防重复提交不安全，易被攻破-->
 ```
 - ②、服务器端session防表单重复提交：<br>
-	表单页面由servlet程序生成，servlet为每次产生的表单页面分配一个唯一的随机标识号，并在FORM表单的一个隐藏字段中设置这个标识号，<br>
-	同时在当前用户的Session域中保存这个标识号。当用户提交FORM表单时，负责处理表单提交的serlvet得到表单提交的标识号，并与session<br>
-	中存储的标识号比较，如果相同则处理表单提交，处理完后清除当前用户的Session域中存储的标识号		
+	表单页面由servlet程序生成，servlet为每次产生的表单页面分配一个唯一的随机标识号，并在FORM表单的一个隐藏字段中设置这个标识号，同时在当前用户的Session域中保存这个标识号。当用户提交FORM表单时，负责处理表单提交的serlvet得到表单提交的标识号，并与session中存储的标识号比较，如果相同则处理表单提交，处理完后清除当前用户的Session域中存储的标识号		
 
 # 参考资料
 
