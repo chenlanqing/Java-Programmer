@@ -5,11 +5,27 @@
 - [一、并发与多线程简介](#%E4%B8%80%E5%B9%B6%E5%8F%91%E4%B8%8E%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%AE%80%E4%BB%8B)
   - [1、多线程优点](#1%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%BC%98%E7%82%B9)
   - [2、多线程的代价](#2%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BB%A3%E4%BB%B7)
-  - [3.并发编程模型](#3%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B)
+  - [3、并发编程模型](#3%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B)
 - [二、Java 多线程](#%E4%BA%8Cjava-%E5%A4%9A%E7%BA%BF%E7%A8%8B)
   - [1.Java线程继承自java.lang.Thread或其子类的](#1java%E7%BA%BF%E7%A8%8B%E7%BB%A7%E6%89%BF%E8%87%AAjavalangthread%E6%88%96%E5%85%B6%E5%AD%90%E7%B1%BB%E7%9A%84)
   - [2、线程的创建及状态变化](#2%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%8F%8A%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96)
-  - [3.竞态条件与临界区](#3%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E4%B8%8E%E4%B8%B4%E7%95%8C%E5%8C%BA)
+    - [2.1、创建线程的方式](#21%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F)
+    - [2.3、创建 Thread 子类还是实现 Runnable 接口](#23%E5%88%9B%E5%BB%BA-thread-%E5%AD%90%E7%B1%BB%E8%BF%98%E6%98%AF%E5%AE%9E%E7%8E%B0-runnable-%E6%8E%A5%E5%8F%A3)
+    - [2.4、常见错误问题](#24%E5%B8%B8%E8%A7%81%E9%94%99%E8%AF%AF%E9%97%AE%E9%A2%98)
+    - [2.5、线程名称](#25%E7%BA%BF%E7%A8%8B%E5%90%8D%E7%A7%B0)
+    - [2.6、Thread 的部分属性](#26thread-%E7%9A%84%E9%83%A8%E5%88%86%E5%B1%9E%E6%80%A7)
+    - [2.7、线程的中断、停止与暂停](#27%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%B8%AD%E6%96%AD%E5%81%9C%E6%AD%A2%E4%B8%8E%E6%9A%82%E5%81%9C)
+    - [2.8、线程的睡眠](#28%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%9D%A1%E7%9C%A0)
+    - [2.9、等待线程的终结](#29%E7%AD%89%E5%BE%85%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%BB%88%E7%BB%93)
+    - [2.10、异常处理](#210%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86)
+    - [2.11、本地线程变量](#211%E6%9C%AC%E5%9C%B0%E7%BA%BF%E7%A8%8B%E5%8F%98%E9%87%8F)
+    - [2.12、线程组可以把线程分组](#212%E7%BA%BF%E7%A8%8B%E7%BB%84%E5%8F%AF%E4%BB%A5%E6%8A%8A%E7%BA%BF%E7%A8%8B%E5%88%86%E7%BB%84)
+    - [2.13、用线程工厂创建线程](#213%E7%94%A8%E7%BA%BF%E7%A8%8B%E5%B7%A5%E5%8E%82%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B)
+    - [2.14、join()和yield()方法](#214join%E5%92%8Cyield%E6%96%B9%E6%B3%95)
+    - [2.15、线程的优先级](#215%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BC%98%E5%85%88%E7%BA%A7)
+    - [2.16、守护线程](#216%E5%AE%88%E6%8A%A4%E7%BA%BF%E7%A8%8B)
+    - [2.17、线程的生命周期](#217%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
+  - [3、竞态条件与临界区](#3%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E4%B8%8E%E4%B8%B4%E7%95%8C%E5%8C%BA)
   - [4、线程安全与共享资源](#4%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E5%85%B1%E4%BA%AB%E8%B5%84%E6%BA%90)
   - [5、synchronized 关键字](#5synchronized-%E5%85%B3%E9%94%AE%E5%AD%97)
   - [6、synchronized 同步块：](#6synchronized-%E5%90%8C%E6%AD%A5%E5%9D%97)
@@ -19,7 +35,7 @@
   - [10、线程通信](#10%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1)
   - [11、ThreadLocal类](#11threadlocal%E7%B1%BB)
   - [12、深入理解ThreadLocal](#12%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3threadlocal)
-  - [13.死锁](#13%E6%AD%BB%E9%94%81)
+  - [13、死锁](#13%E6%AD%BB%E9%94%81)
   - [14、饥饿和公平](#14%E9%A5%A5%E9%A5%BF%E5%92%8C%E5%85%AC%E5%B9%B3)
 - [三.JUC(java.util.concurrent)包](#%E4%B8%89jucjavautilconcurrent%E5%8C%85)
   - [1、JUC原子类](#1juc%E5%8E%9F%E5%AD%90%E7%B1%BB)
@@ -42,13 +58,28 @@
   - [5、ConcurrentSkipListMap：(TreeMap)](#5concurrentskiplistmaptreemap)
   - [6、ConcurrentSkipListSet: (TreeSet)](#6concurrentskiplistset-treeset)
   - [7、阻塞队列:](#7%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
+    - [7.1、什么是阻塞队列](#71%E4%BB%80%E4%B9%88%E6%98%AF%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
+    - [7.2、应用场景](#72%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
+    - [7.3、几个方法](#73%E5%87%A0%E4%B8%AA%E6%96%B9%E6%B3%95)
+    - [7.4、Java的阻塞队列](#74java%E7%9A%84%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
 - [五、JUC 包核心与算法](#%E4%BA%94juc-%E5%8C%85%E6%A0%B8%E5%BF%83%E4%B8%8E%E7%AE%97%E6%B3%95)
   - [1、AQS：AbstractQueuedSynchronizer-抽象队列同步器](#1aqsabstractqueuedsynchronizer-%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
   - [2、CAS：Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
+    - [2.1、什么是CAS](#21%E4%BB%80%E4%B9%88%E6%98%AFcas)
+    - [2.2、Java中CAS 的实现:](#22java%E4%B8%ADcas-%E7%9A%84%E5%AE%9E%E7%8E%B0)
+    - [2.3、CAS 使用场景](#23cas-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
+    - [2.4、CAS 缺点](#24cas-%E7%BC%BA%E7%82%B9)
+    - [2.5、CAS 与 synchronized 的区别：](#25cas-%E4%B8%8E-synchronized-%E7%9A%84%E5%8C%BA%E5%88%AB)
 - [六、线程池](#%E5%85%AD%E7%BA%BF%E7%A8%8B%E6%B1%A0)
   - [1、线程池技术](#1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8A%80%E6%9C%AF)
   - [2、重要类](#2%E9%87%8D%E8%A6%81%E7%B1%BB)
+    - [2.1、ExecutorService-真正的线程池接口](#21executorservice-%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8E%A5%E5%8F%A3)
+    - [2.2、ScheduledExecutorService](#22scheduledexecutorservice)
+    - [2.3、ThreadPoolExecutor：ExecutorService的默认实现，线程池中最核心的一个类](#23threadpoolexecutorexecutorservice%E7%9A%84%E9%BB%98%E8%AE%A4%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%B8%AD%E6%9C%80%E6%A0%B8%E5%BF%83%E7%9A%84%E4%B8%80%E4%B8%AA%E7%B1%BB)
+    - [2.4、ScheduledThreadPoolExecutor](#24scheduledthreadpoolexecutor)
   - [3、线程池配置](#3%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%85%8D%E7%BD%AE)
+    - [3.1、不同业务场景如何配置线程池参数](#31%E4%B8%8D%E5%90%8C%E4%B8%9A%E5%8A%A1%E5%9C%BA%E6%99%AF%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8F%82%E6%95%B0)
+    - [3.2、科学设置线程池](#32%E7%A7%91%E5%AD%A6%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0)
   - [4、线程池最佳实践](#4%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
 - [七、多线程并发最佳实践](#%E4%B8%83%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%B9%B6%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
@@ -70,7 +101,7 @@
 	--> 上下文切换：从任务保存到再加载的过程就是一次上下文切换；上下文切换过程中，CPU会停止处理当前运行的程序，并保存当前程序运行的具体位置以便之后继续运行
 - 增加资源消耗:如线程管理中消耗的资源
 
-## 3.并发编程模型
+## 3、并发编程模型
 
 Java 的并发采用的是共享内存模型
 
@@ -360,7 +391,7 @@ public class Daemon extends Thread{
 	- 其他阻塞：通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态。当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
 - 死亡状态（）Dead）：线程执行完了或者因异常退出了run()方法，该线程结束生命周期
 
-## 3.竞态条件与临界区
+## 3、竞态条件与临界区
 
 - 在同一程序中运行多个线程本身不会导致问题，问题在于多个线程访问了相同的资源：如果多个线程对这些相同资源进行了"写操作"才会引发线程安全问题;
 - 竞态条件：当两个线程竞争同一资源时，如果对资源的访问顺序敏感，就称存在竞态条件
@@ -1000,7 +1031,7 @@ ThreadLocalMap getMap(Thread t) {
 	- ThreadLocal 为每一个线程都提供了变量的副本，使得每个线程在某一时间访问到的并不是同一个对象，这样就隔离了多个线程对数据的数据共享
 - synchronized 用于线程间的数据共享，而 ThreadLocal 则用于线程间的数据隔离
 
-## 13.死锁
+## 13、死锁
 
 两个或更多线程阻塞着等待其它处于死锁状态的线程所持有的锁
 

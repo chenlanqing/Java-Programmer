@@ -8,6 +8,12 @@
   - [3、阻塞IO与非阻塞IO](#3%E9%98%BB%E5%A1%9Eio%E4%B8%8E%E9%9D%9E%E9%98%BB%E5%A1%9Eio)
   - [4、异步IO与同步IO](#4%E5%BC%82%E6%AD%A5io%E4%B8%8E%E5%90%8C%E6%AD%A5io)
   - [5、五种IO模型](#5%E4%BA%94%E7%A7%8Dio%E6%A8%A1%E5%9E%8B)
+    - [5.1、阻塞IO模型](#51%E9%98%BB%E5%A1%9Eio%E6%A8%A1%E5%9E%8B)
+    - [5.2、非阻塞IO模型](#52%E9%9D%9E%E9%98%BB%E5%A1%9Eio%E6%A8%A1%E5%9E%8B)
+    - [5.3、多路复用IO模型](#53%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8io%E6%A8%A1%E5%9E%8B)
+    - [5.4、信号驱动 IO 模型：](#54%E4%BF%A1%E5%8F%B7%E9%A9%B1%E5%8A%A8-io-%E6%A8%A1%E5%9E%8B)
+    - [5.5、异步 IO 模型](#55%E5%BC%82%E6%AD%A5-io-%E6%A8%A1%E5%9E%8B)
+    - [5.6、总结：](#56%E6%80%BB%E7%BB%93)
   - [6、高性能IO设计模式-多线程与线程池](#6%E9%AB%98%E6%80%A7%E8%83%BDio%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F-%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E6%B1%A0)
 - [二、Java IO](#%E4%BA%8Cjava-io)
   - [1、输入与输出：数据源和目标媒介](#1%E8%BE%93%E5%85%A5%E4%B8%8E%E8%BE%93%E5%87%BA%E6%95%B0%E6%8D%AE%E6%BA%90%E5%92%8C%E7%9B%AE%E6%A0%87%E5%AA%92%E4%BB%8B)
@@ -19,10 +25,12 @@
   - [7、流-仅仅只是一个连续的数据流](#7%E6%B5%81-%E4%BB%85%E4%BB%85%E5%8F%AA%E6%98%AF%E4%B8%80%E4%B8%AA%E8%BF%9E%E7%BB%AD%E7%9A%84%E6%95%B0%E6%8D%AE%E6%B5%81)
   - [8、Reader、Writer：](#8readerwriter)
 - [三、Java NIO](#%E4%B8%89java-nio)
-  - [1.Java NIO 概述](#1java-nio-%E6%A6%82%E8%BF%B0)
-  - [2.Channel](#2channel)
+  - [1、Java NIO 概述](#1java-nio-%E6%A6%82%E8%BF%B0)
+  - [2、Channel](#2channel)
   - [3、Buffer](#3buffer)
-  - [5.通道之间的数据传输](#5%E9%80%9A%E9%81%93%E4%B9%8B%E9%97%B4%E7%9A%84%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93)
+  - [4、Scatter/Gather](#4scattergather)
+  - [5、通道之间的数据传输](#5%E9%80%9A%E9%81%93%E4%B9%8B%E9%97%B4%E7%9A%84%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93)
+  - [6、Selector](#6selector)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -322,14 +330,14 @@ Writer writer = new OutputStreamWriter(outputStream);
 以通过将 Reader 包装到 BufferedReader、Writer 包装到 BufferedWriter 中实现缓冲
 
 # 三、Java NIO
-## 1.Java NIO 概述
-**1.1.核心概念：**
+## 1、Java NIO 概述
+**1.1、核心概念：**
 
 - Channels
 - Buffers
 - Selectors
 
-**1.2.Channel 和 Buffer：**
+**1.2、Channel 和 Buffer：**
 
 - 基本上，所有的IO在NIO中都从一个Channel开始，数据可以从Channel读到Buffer中，也可以从Buffer写到Channel中
 - Channel的几种实现：<br>
@@ -347,28 +355,28 @@ Writer writer = new OutputStreamWriter(outputStream);
 	ShortBuffer<br>
 	MappedByteBuffer<br>
 
-**1.3.Selector：Selector 允许单线程处理多个Channel**
+**1.3、Selector：Selector 允许单线程处理多个Channel**
 
 要使用Selector得向Selector注册Channel，然后调用它的select()方法个方法会一直阻塞到某个注册的通道有事件就绪。一旦这个方法返回，线程就可以处理这些事件，事件的例子有如新连接进来，数据接收；
 
-## 2.Channel
+## 2、Channel
 
 用于源节点与目标节点的连接.在 Java NIO 中负责缓冲区中数据的传输，本身不存储数据
 
-**2.1.与流类似，但有所不同：不能直接访问数据，可以与 Buffer 进行交互.**
+**2.1、与流类似，但有所不同：不能直接访问数据，可以与 Buffer 进行交互.**
 
 - 既可以从通道中读取数据，又可以写数据到通道.但流的读写通常是单向的
 - 通道可以异步地读写;
 - 通道中的数据总是要先读到一个 Buffer，或者总是要从一个 Buffer 中写入;
 
-**2.2.Java NIO 中最重要的通道的实现**
+**2.2、Java NIO 中最重要的通道的实现**
 
 - FileChannel：从文件中读写数据，一般从流中获取 Channel，不能切换成非阻塞模式
 - DatagramChannel：能通过UDP读写网络中的数据.
 - SocketChannel：能通过TCP读写网络中的数据.
 - ServerSocketChannel：可以监听新进来的TCP连接，像Web服务器那样.对每一个新进来的连接都会创建一个 SocketChannel
 
-**2.3.通道的获取：**
+**2.3、通道的获取：**
 
 - Java 针对支持通道的类都提供了 getChannel() 的方法;<br>
 	输入输出流<br>
@@ -501,7 +509,7 @@ Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数�
 - 直接缓冲区还可以通过 FileChannel 的map() 方法将文件区域直接映射到内存中来创建.该方法返回 MappedByteBuffer
 - 判断是直接缓冲区还是间接缓冲区，可以通过调用 isDirect() 方法来确定.
 
-## 4.Scatter/Gather
+## 4、Scatter/Gather
 
 **4.1、Scatter/Gather 用于描述从 Channel 中读取或者写入到 Channel 的操作：**
 
@@ -533,7 +541,7 @@ channel.write(bufferArray);
 // 注意只有position和limit之间的数据才会被写入
 ```
 
-## 5.通道之间的数据传输
+## 5、通道之间的数据传输
 
 在 Java NIO 中，如果两个通道中有一个是FileChannel，那你可以直接将数据从一个channel传输到另外一个channel
 
@@ -555,7 +563,7 @@ toChannel.transferFrom(position， count， fromChannel);
 ```
 - transferTo()：将数据从FileChannel传输到其他的channel中
 
-## 6.Selector
+## 6、Selector
 
 是 Java NIO 中能够检测一到多个 NIO 通道，并能够知晓通道是否为诸如读写事件做好准备的组件，这样一个单独的线程可以管理多个channel，从而管理多个网络连接
 
