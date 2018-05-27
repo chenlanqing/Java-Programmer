@@ -85,7 +85,21 @@
 - 加载本类的classloader未知时，为了隔离不同的调用者，即类的隔离，采用了上下文类加载的模式加载类.
 - 当前高层的接口在低层去实现，而高层的类有需要低层的类加载的时候，这个时候，需要使用上下文类加载器去实现
 		
-## 4、线程上下文类加载器
+## 4、线程上下文类加载器-ThreadContextClassLoader（TCCL）
+
+问题：在《深入理解java虚拟机》一书中，作者在类加载实践分析tomcat一节中，提出了一个思考题
+
+***如果有10个Web应用程序都是用Spring来进行组织和管理的话，Spring要对用户程序的类进行管理，自然要能访问到用户程序的类，而用户的程序”显然是放在/WebApp/WEB-INF目录中的，那么被CommonClassLoader或 SharedClassLoader加载的Spring如何访问并不在其加载范围内的用户程序呢？***
+
+### 4.1、线程上下文类加载器的产生
+
+Java提供了很多服务提供者接口（Service Provider Interface，SPI），允许第三方接口为这些接口提供实现。常见的SPI有：JDBC、JCE、JNDI、JBI等；
+
+这些SPI的接口由Java核心库来提供，而这些SPI的实现代码则作为Java应用所依赖的jar包被包含进类路径里。SPI接口的代码则经常需要加载具体的实现类。
+
+那么问题来了，SPI的接口是Java核心库的一部分，是由启动类加载器来加载的；SPI的实现类是由系统类加载器来加载的。引导类加载器是无法找到SPI的实现类的，因为按照双亲委托模型，Bootstrap ClassLoader 无法委派给AppClassLoader来加载类
+
+而线程上下文类加载器破坏了“双亲委托模型”，可以再执行中抛弃双亲委派模型，使程序逆向使用类加载器。有了线程上下文类加载器，JNDI服务使用这个线程上下文类加载器去加载所需要的SPI代码，也就是父类加载器请求子类加载器去完成类加载动作
 
 ## 5、问题扩展
 
@@ -102,3 +116,4 @@
 * [类加载体系](http：//blog.csdn.net/beliefer/article/details/50995516)
 * [Tomcat源码分析](https：//blog.csdn.net/column/details/tomcat7-internal.html)
 * [Tomcat基本结构](http：//zouzls.github.io/2017/03/29/SpringStart/)
+* [线程上下文类加载器](https://blog.csdn.net/yangcheng33/article/details/52631940)
