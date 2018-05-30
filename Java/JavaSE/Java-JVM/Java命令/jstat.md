@@ -1,3 +1,22 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1、类加载统计](#1%E7%B1%BB%E5%8A%A0%E8%BD%BD%E7%BB%9F%E8%AE%A1)
+- [2、编译统计](#2%E7%BC%96%E8%AF%91%E7%BB%9F%E8%AE%A1)
+- [3、垃圾回收统计：jstat -gc vmid](#3%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%BB%9F%E8%AE%A1jstat--gc-vmid)
+- [4、堆内存统计](#4%E5%A0%86%E5%86%85%E5%AD%98%E7%BB%9F%E8%AE%A1)
+- [5、新生代回收统计](#5%E6%96%B0%E7%94%9F%E4%BB%A3%E5%9B%9E%E6%94%B6%E7%BB%9F%E8%AE%A1)
+- [6、新生代内存统计](#6%E6%96%B0%E7%94%9F%E4%BB%A3%E5%86%85%E5%AD%98%E7%BB%9F%E8%AE%A1)
+- [7、老年代垃圾回收统计](#7%E8%80%81%E5%B9%B4%E4%BB%A3%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%BB%9F%E8%AE%A1)
+- [8、老年代内存统计](#8%E8%80%81%E5%B9%B4%E4%BB%A3%E5%86%85%E5%AD%98%E7%BB%9F%E8%AE%A1)
+- [9、元数据空间统计](#9%E5%85%83%E6%95%B0%E6%8D%AE%E7%A9%BA%E9%97%B4%E7%BB%9F%E8%AE%A1)
+- [10、总结垃圾回收统计](#10%E6%80%BB%E7%BB%93%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E7%BB%9F%E8%AE%A1)
+- [11、JVM编译方法统计](#11jvm%E7%BC%96%E8%AF%91%E6%96%B9%E6%B3%95%E7%BB%9F%E8%AE%A1)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 * 以下使用的 JDK 版本为 1.8
 

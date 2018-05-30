@@ -1481,9 +1481,9 @@ jps 可以通过RMI协议查询开启了RMI服务的远程虚拟机进程状态�
 
 ## 12.4、jmap：Java 内存映像工具(Memory Map for Java)
 
-- 功能：用于生成堆转储快照（一般称为 heapdump 或 dump 文件）不使 jmap命令也可以暴力获取堆转储快照，如使用 -XX：+HeapDumpOnOutOfMemoryError，可以让虚拟机在 OOM异常后自动生存 dump 文件jmap 的作用不仅仅是为了获取 dump 文件，它还可以查询 finalize 执行队列、Java 堆和永久代的详细信息，如空间使用率，当前用的哪种收集器等；
+- 功能：用于生成堆转储快照（一般称为 heapdump 或 dump 文件）不使jmap命令也可以暴力获取堆转储快照，如使用 -XX：+HeapDumpOnOutOfMemoryError，可以让虚拟机在 OOM异常后自动生存 dump 文件jmap的作用不仅仅是为了获取 dump 文件，它还可以查询finalize执行队列、Java堆和永久代的详细信息，如空间使用率，当前用的哪种收集器等；
 
-- jmap 命令在 windows 平台下是受限的，除了生存 dump文件的 -dump 选项和用于查看每个类的实例、空间占用统计的 -histo 选项在所有操作系统都提供之外，其余的选项只能在 Linux/Solaris 下使用：	jmap [option] vmid
+- jmap 命令在 windows平台下是受限的，除了生存dump文件的 -dump 选项和用于查看每个类的实例、空间占用统计的 -histo 选项在所有操作系统都提供之外，其余的选项只能在 Linux/Solaris 下使用：jmap [option] vmid
 
 - option选项含义：<br>
 	-dump ： 生成 Java 堆转储快照.格式为： -dump：[live，] format=b， file=<filename>，其中live子参数说明是否只dump出存活的对象<br>
