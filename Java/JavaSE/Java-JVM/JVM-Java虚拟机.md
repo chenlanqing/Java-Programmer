@@ -1500,18 +1500,18 @@ Javac 字节码编译器与虚拟机内的 JIT 编译器的执行过程合起来
 
 - 用法：jps [option] [hostid]，执行样例：<br>
 ```
-	C：\Users\BlueFish>jps -lm
-	2120 org.jetbrains.idea.maven.server.RemoteMavenServer
-	5736 sun.tools.jps.Jps -lm
-	1372
+C：\Users\BlueFish>jps -lm
+2120 org.jetbrains.idea.maven.server.RemoteMavenServer
+5736 sun.tools.jps.Jps -lm
+1372
 ```
 jps 可以通过RMI协议查询开启了RMI服务的远程虚拟机进程状态， hostid 为RMI注册表中注册的主机名
 
 - 主要参数：<br>
-	-q：只输出 LVMID，省略主类的名称 <br>
-	-m：输出虚拟机进程启动时传递给主类 main() 函数的参数 <br>
-	-l：输出主类的全名，如果进程执行的是 jar包，输出 jar 路径 <br>
-	-v：输出虚拟机进程启动时的 JVM 参数
+	- -q：只输出 LVMID，省略主类的名称 <br>
+	- -m：输出虚拟机进程启动时传递给主类 main() 函数的参数 <br>
+	- -l：输出主类的全名，如果进程执行的是 jar包，输出 jar 路径 <br>
+	- -v：输出虚拟机进程启动时的 JVM 参数
 
 ## 12.2、jstat：虚拟机统计信息监视工具(JVM Statistics Monitoring Tool)：
 
@@ -1549,6 +1549,11 @@ jps 可以通过RMI协议查询开启了RMI服务的远程虚拟机进程状态�
 	jinfo [option] pid
 	jinfo -flag pid
 
+- 参数
+	- -flag : 输出指定args参数的值
+	- -flags : 不需要args参数，输出所有JVM参数的值
+	- -sysprops : 输出系统属性，等同于System.getProperties()
+
 ## 12.4、jmap：Java 内存映像工具(Memory Map for Java)
 
 - 功能：用于生成堆转储快照（一般称为 heapdump 或 dump 文件）不使jmap命令也可以暴力获取堆转储快照，如使用 -XX：+HeapDumpOnOutOfMemoryError，可以让虚拟机在 OOM异常后自动生存 dump 文件jmap的作用不仅仅是为了获取 dump 文件，它还可以查询finalize执行队列、Java堆和永久代的详细信息，如空间使用率，当前用的哪种收集器等；
@@ -1573,6 +1578,16 @@ jps 可以通过RMI协议查询开启了RMI服务的远程虚拟机进程状态�
 	- jhat的分析功能相对来说很简陋，有专门的分析dump文件的工具：Eclipse Memory Analyzer 等；
 
 jhat idea.bin (这个文件为jamp生成的 dump 文件)
+
+- 参数
+	- -stack false|true 关闭对象分配调用栈跟踪(tracking object allocation call stack)。 如果分配位置信息在堆转储中不可用. 则必须将此标志设置为 false. 默认值为 true；
+	- -refs false|true 关闭对象引用跟踪(tracking of references to objects)。 默认值为 true. 默认情况下, 返回的指针是指向其他特定对象的对象,如反向链接或输入引用(referrers or incoming references), 会统计/计算堆中的所有对象；
+	- -port port-number 设置 jhat HTTP server 的端口号. 默认值 7000；
+	- -exclude exclude-file 指定对象查询时需要排除的数据成员列表文件(a file that lists data members that should be excluded from the reachable objects query)。 例如, 如果文件列列出了 java.lang.String.value , 那么当从某个特定对象 Object o 计算可达的对象列表时, 引用路径涉及 java.lang.String.value 的都会被排除；
+	- -baseline exclude-file 指定一个基准堆转储(baseline heap dump)。 在两个 heap dumps 中有相同 object ID 的对象会被标记为不是新的(marked as not being new). 其他对象被标记为新的(new). 在比较两个不同的堆转储时很有用；
+	- -debug int 设置 debug 级别. 0 表示不输出调试信息。 值越大则表示输出更详细的 debug 信息；
+	- -version 启动后只显示版本信息就退出；
+	- -J< flag > 因为 jhat 命令实际上会启动一个JVM来执行, 通过 -J 可以在启动JVM时传入一些启动参数. 例如, -J-Xmx512m 则指定运行 jhat 的Java虚拟机使用的最大堆内存为 512 MB. 如果需要使用多个JVM启动参数,则传入多个 -Jxxxxxx.
 
 ## 12.6、jstack
 
