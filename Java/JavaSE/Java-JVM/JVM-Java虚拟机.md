@@ -28,6 +28,12 @@
   - [3.5、提高内存利用率，降低内存风险](#35%E6%8F%90%E9%AB%98%E5%86%85%E5%AD%98%E5%88%A9%E7%94%A8%E7%8E%87%E9%99%8D%E4%BD%8E%E5%86%85%E5%AD%98%E9%A3%8E%E9%99%A9)
   - [3.6、java.lang.OutOfMemoryError：PermGen Space](#36javalangoutofmemoryerrorpermgen-space)
   - [3.7、Java8移除永久代](#37java8%E7%A7%BB%E9%99%A4%E6%B0%B8%E4%B9%85%E4%BB%A3)
+  - [3.8、元空间](#38%E5%85%83%E7%A9%BA%E9%97%B4)
+    - [3.8.1、基本概念](#381%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
+    - [3.8.2、元空间与永久代](#382%E5%85%83%E7%A9%BA%E9%97%B4%E4%B8%8E%E6%B0%B8%E4%B9%85%E4%BB%A3)
+    - [3.8.3、元空间参数](#383%E5%85%83%E7%A9%BA%E9%97%B4%E5%8F%82%E6%95%B0)
+    - [3.8.4、元空间垃圾回收](#384%E5%85%83%E7%A9%BA%E9%97%B4%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6)
+    - [3.8.5、比较JDK6、JDK7、JDK8区别](#385%E6%AF%94%E8%BE%83jdk6jdk7jdk8%E5%8C%BA%E5%88%AB)
 - [4、对象访问与内存分配](#4%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E4%B8%8E%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D)
 - [5、Class 类文件结构](#5class-%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84)
   - [5.1、平台无关性](#51%E5%B9%B3%E5%8F%B0%E6%97%A0%E5%85%B3%E6%80%A7)
@@ -498,6 +504,70 @@ Metaspace背后的一个思想是，类和它的元数据的生命周期是和�
 
 	- -XX：MinMetaspaceFreeRatio，在GC之后，最小的Metaspace剩余空间容量的百分比，减少为分配空间所导致的垃圾收集；
 	- -XX：MaxMetaspaceFreeRatio，在GC之后，最大的Metaspace剩余空间容量的百分比，减少为释放空间所导致的垃圾收集；
+
+### 3.8.4、元空间垃圾回收
+
+- 如果类元数据的空间占用达到参数“MaxMetaspaceSize”设置的值，将会触发对死亡对象和类加载器的垃圾回收
+
+- 为了限制垃圾回收的频率和延迟，适当的监控和调优元空间是非常有必要的。元空间过多的垃圾收集可能表示类、类加载器内存泄漏或对应用程序来说元空间太小了
+
+### 3.8.5、比较JDK6、JDK7、JDK8区别
+以字符串常量为例，这段程序以2的指数级不断的生成新的字符串，这样可以比较快速的消耗内存
+```java
+/**
+ * VM参数：-XX:PermSize=8m -XX:MaxPermSize=8m -Xmx16m
+ */
+public class StringOomMock {  
+    static String  base = "string";  
+    public static void main(String[] args) {  
+        List<String> list = new ArrayList<String>();  
+        for (int i=0;i< Integer.MAX_VALUE;i++){  
+            String str = base + base;  
+            base = str;  
+            list.add(str.intern());  
+        }  
+    }  
+}  
+```
+
+- JDK6（具体版本：1.6.0_45）
+
+```java
+E:\>D:\develop\Java\jdk1.6.0_45\bin\java -XX:PermSize=8m -XX:MaxPermSize=8m -Xmx16m StringOomMock
+Exception in thread "main" java.lang.OutOfMemoryError: PermGen space
+        at java.lang.String.intern(Native Method)
+        at StringOomMock.main(StringOomMock.java:11)
+```
+
+- JDK7（具体版本：1.7.0_67）
+```java
+E:\>D:\develop\Java\jdk1.7.0_67\bin\java -XX:PermSize=8m -XX:MaxPermSize=8m -Xmx16m StringOomMock
+Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
+        at java.util.Arrays.copyOf(Arrays.java:2367)
+        at java.lang.AbstractStringBuilder.expandCapacity(AbstractStringBuilder.java:130)
+        at java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:114)
+        at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:415)
+        at java.lang.StringBuilder.append(StringBuilder.java:132)
+        at StringOomMock.main(StringOomMock.java:9)
+```
+
+- JDK8（具体版本：jdk1.8.0_162）
+```java
+E:\>D:\develop\Java\jdk1.8.0_162\bin\java -XX:PermSize=8m -XX:MaxPermSize=8m -Xmx16m StringOomMock
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option PermSize=8m; support was removed in 8.0
+Java HotSpot(TM) 64-Bit Server VM warning: ignoring option MaxPermSize=8m; support was removed in 8.0
+Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
+        at java.util.Arrays.copyOf(Arrays.java:3332)
+        at java.lang.AbstractStringBuilder.ensureCapacityInternal(AbstractStringBuilder.java:124)
+        at java.lang.AbstractStringBuilder.append(AbstractStringBuilder.java:448)
+        at java.lang.StringBuilder.append(StringBuilder.java:136)
+        at StringOomMock.main(StringOomMock.java:9)
+```
+
+**从上述结果可以看出，JDK 1.6下，会出现“PermGen Space”的内存溢出，而在 JDK 1.7和 JDK 1.8 中，会出现堆内存溢出，并且 JDK 1.8中 PermSize 和 MaxPermGen 已经无效。因此，可以大致验证 JDK 1.7 和 1.8 将字符串常量由永久代转移到堆中，并且 JDK 1.8 中已经不存在永久代的结论**
+
+
+
 
 # 4、对象访问与内存分配
 
@@ -1586,3 +1656,4 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 * [内存管理工具Memory Analyzer的使用](https://www.zybuluo.com/frank-shaw/note/206287)
 * [Java代码与编译过程](http://www.codeceo.com/article/java-complie-run.html)
 * [对象的内存布局](https://segmentfault.com/a/1190000009740021)
+* [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
