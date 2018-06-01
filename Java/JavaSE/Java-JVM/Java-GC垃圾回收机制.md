@@ -218,6 +218,24 @@ public class Main {
 
 - ***JDK8之后完全移除了持久代，取而代之的是[元空间](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/JVM-Java%E8%99%9A%E6%8B%9F%E6%9C%BA.md#38%E5%85%83%E7%A9%BA%E9%97%B4)***
 	
+
+## 5、Hotspot虚拟机算法实现
+
+- **枚举根节点**
+
+	从可达性分析中从GC Roots节点找引用链这个操作为例，可作为GC Roots的节点主要在全局性的引用（例如常量或类静态属性）与执行上下文（例如栈帧中的局部变量表）中，现在很多应用仅仅方法区就有数百兆，如果要逐个检查这里面的引用，那么必然会消耗很多时间。
+
+- **GC停顿（STW）**
+
+	另外，可达性分析工作必须在一个能确保一致性的快照中进行——这里“一致性”的意思是指在整个分析期间整个执行系统看起来就像被冻结在某个时间点上，不可以出现分析过程中对象引用关系还在不断变化的情况，这是保证分析结果准确性的基础。这点是导致GC进行时必须停顿所有Java执行线程（Sun将这件事情称为“Stop The World”）的其中一个重要原因，即使是在号称（几乎）不会发生停顿的CMS收集器中，枚举根节点时也是必须要停顿的
+
+
+- **准确式GC与OopMap**
+
+	由于目前的主流Java虚拟机使用的都是准确式GC（即使用准确式内存管理，虚拟机可用知道内存中某个位置的数据具体是什么类型），所以当执行系统停顿下来后，并不需要一个不漏地检查完所有执行上下文和全局的引用位置，虚拟机应当是有办法直接得知哪些地方存放着对象引用。在HotSpot的实现中，是使用一组称为OopMap的数据结构来达到这个目的的，在类加载完成的时候，HotSpot就把对象内什么偏移量上是什么类型的数据计算出来，在JIT编译过程中，也会在特定的位置记录下栈和寄存器中哪些位置是引用。这样，GC在扫描时就可以直接得知这些信息了
+
+- **安全区域（Safe Region）**
+
 # 四、垃圾收集器
 
 内存回收的具体实现：
@@ -320,6 +338,11 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 - 并发标记（Concurrent Marking）：进行 GC Roots 追溯所有对象的过程，可与用户程序并发执行
 - 最终标记（Final Marking）：修正在并发标记期间因用户程序继续运作而导致标记产生变动的那一部分标记记录
 - 筛选回收（Live Data Counting and Evacuation）：对各个Region的回收价值和成本进行排序，根据用户所期望的 GC 停顿时间来指定回收计划
+
+通过下图可以比较清楚地看到G1收集器的运作步骤中并发和需要停顿的阶段（Safepoint处）：
+
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/G1收集器执行步骤.png)
+
 
 ## 8、垃圾收集器比较
 
@@ -455,6 +478,29 @@ Heap
 
 在发生 MinorGC 之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间，如果这个条件成立，那么MinorGC可用确保是安全的.如果不成立，则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败，如果允许，那么会继续检查老年代最大可用连续空间是否大于历次晋升到老年代对象的平均大小，如果大于，将尝试着进行一次MinorGC，有风险；如果小于或者 HandlePromotionFailure 设置不允许毛线，那时会改为进行一次 FullGC.
 
+## 5、GC参数
+
+- **5.1、JVM的GC日志的主要参数包括如下几个：**
+
+	- -XX:+PrintGC 输出GC日志
+	- -XX:+PrintGCDetails 输出GC的详细日志
+	- -XX:+PrintGCTimeStamps 输出GC的时间戳（以基准时间的形式）
+	- -XX:+PrintGCDateStamps 输出GC的时间戳（以日期的形式，如 2017-09-04T21:53:59.234+0800）
+	- -XX:+PrintHeapAtGC 在进行GC的前后打印出堆的信息
+	- -Xloggc:../logs/gc.log 日志文件的输出路径
+
+	在生产环境中，根据需要配置相应的参数来监控JVM运行情况
+
+- **5.2、Tomcat 设置示例：**
+```
+JAVA_OPTS="-server -Xms2000m -Xmx2000m -Xmn800m -XX:PermSize=64m -XX:MaxPermSize=256m -XX:SurvivorRatio=4
+-verbose:gc -Xloggc:$CATALINA_HOME/logs/gc.log 
+-Djava.awt.headless=true 
+-XX:+PrintGCTimeStamps -XX:+PrintGCDetails 
+-Dsun.rmi.dgc.server.gcInterval=600000 -Dsun.rmi.dgc.client.gcInterval=600000
+-XX:+UseConcMarkSweepGC -XX:MaxTenuringThreshold=15"
+```
+
 # 六、详解 finalize()方法
 
 finalize是位于 Object 类的一个方法，该方法的访问修饰符为 protected.
@@ -509,6 +555,8 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 	- -XX:NewRatio：Ratio of New area and Old area，新生代和老年代的占比
 	- -XX:NewSize：New area size，新生代空间
 	- -XX:SurvivorRati：Ratio ofEdenarea and Survivor area，Eden 和 Suvivor 空间的占比
+
+- -server参数
 
 **2.3.当OutOfMemoryError错误发生并且是由于Perm空间不足导致时，另一个可能影响GC性能的参数是GC类型**
 ```
@@ -585,3 +633,4 @@ G1	-XX:+UnlockExperimentalVMOptions
 * 《深入理解Java虚拟机-JVM高级特性与最佳实践[周志明]》
 * [如何优化垃圾回收](http://www.importnew.com/3146.html)
 * [String.intern()导致的YGC](http://lovestblog.cn/blog/2016/11/06/string-intern/)
+* [如何优化Java GC](https://crowhawk.github.io/2017/08/21/jvm_4/)
