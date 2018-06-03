@@ -24,7 +24,7 @@
 
     jmap -dump:live,format=b,file=heap.hprof [pid]
 
-- （4）4. 拿到heap dump文件，利用eclipse插件MAT来分析heap profile
+- （4）拿到heap dump文件，利用eclipse插件MAT来分析heap profile
 
 
 ## 3、总结

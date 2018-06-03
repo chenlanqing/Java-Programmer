@@ -543,7 +543,7 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 **2.1、GC优化的目的:**
 
 - 将转移到老年代的对象数量降到最少：减少被移到老年代空间对象的数量，可以调整新生代的空间。减少 FullGC 的频率.
-- 减少 Full GC 执行的时间:FullGC 的执行时间要比 MinorGC 要长很多。如果试图通过削减老年代空间来减少 FullGC 的执行时间，可能会导致OutOfMemoryError 或者增加 FullGC 执行此数与之相反，如果你试图通过增加老年代空间来减少 Full GC 执行次数，执行时间会增加
+- 减少 Full GC 执行的时间：FullGC 的执行时间要比 MinorGC 要长很多。如果试图通过削减老年代空间来减少 FullGC 的执行时间，可能会导致OutOfMemoryError 或者增加 FullGC 执行此数与之相反，如果你试图通过增加老年代空间来减少 Full GC 执行次数，执行时间会增加
 
 **2.2、GC优化需要考虑的Java参数**
 
@@ -558,21 +558,19 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 
 - -server参数
 
-**2.3.当OutOfMemoryError错误发生并且是由于Perm空间不足导致时，另一个可能影响GC性能的参数是GC类型**
-```
-Serial GC  	-XX:+UseSerialGC
-Parallel GC：	-XX:+UseParallelGC
-				-XX:ParallelGCThreads=value
-Parallel Compacting GC	-XX:+UseParallelOldGC
-CMS GC	-XX:+UseConcMarkSweepGC
-		-XX:+UseParNewGC
-		-XX:+CMSParallelRemarkEnabled
-		-XX:CMSInitiatingOccupancyFraction=value
-		-XX:+UseCMSInitiatingOccupancyOnly
-G1	-XX:+UnlockExperimentalVMOptions
-	-XX:+UseG1GC --> 在JDK6中这两个参数必须同时使用
+**2.3、当OutOfMemoryError错误发生并且是由于Perm空间不足导致时，另一个可能影响GC性能的参数是GC类型**
+
+收集器|参数|备注
+--------|------|------
+Serial GC |-XX:+UseSerialGC|
+Parallel GC|-XX:+UseParallelGC<br>-XX:ParallelGCThreads=value|
+Parallel Compacting GC|-XX:+UseParallelOldGC|
+CMS GC|-XX:+UseConcMarkSweepGC<br>-XX:+UseConcMarkSweepGC<br>-XX:+UseParNewGC<br>-XX:+CMSParallelRemarkEnabled<br>-XX:CMSInitiatingOccupancyFraction=value<br>-XX:+UseCMSInitiatingOccupancyOnly|
+G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必须同时使用
+
+
 ==> 最常用的GC类型是Serial GC
-```
+
 **2.4、GC优化过程：**
 
 - 监控GC状态；
