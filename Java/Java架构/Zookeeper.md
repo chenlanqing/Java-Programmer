@@ -12,7 +12,7 @@
   - [3、数据节点](#3%E6%95%B0%E6%8D%AE%E8%8A%82%E7%82%B9)
   - [4、版本](#4%E7%89%88%E6%9C%AC)
   - [5、watcher-事件监听器](#5watcher-%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC%E5%99%A8)
-  - [6.ACL：Access Control Lists](#6aclaccess-control-lists)
+  - [6、ACL：Access Control Lists](#6aclaccess-control-lists)
 - [三、集群搭建](#%E4%B8%89%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA)
   - [1、集群环境](#1%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83)
   - [2、集群搭建](#2%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA)
@@ -95,7 +95,7 @@ Zookeeper 对外的服务端口默认是 2181
 
 - 构成集群的机器，称为机器节点
 - 数据模型中的数据单元，为数据节点(ZNode).Zookeeper 的将所有数据存储在内存中，数据模型是一个树，由斜杠进行分割的路径。ZNode分为持久节点和临时节点.
-	- 持久节点：一旦被这个 ZNode 被创建了，除非主动进行 ZNode 的移出操作，否则这个 ZNode 将一直保存在 Zookeeper上
+	- 持久节点：一旦被这个 ZNode 被创建了，除非主动进行 ZNode 的移出操作，否则这个 ZNode 将一直保存在 Zookeeper上；
 	- 临时节点：与客户端的会话绑定，一旦客户端会话失效，那么该客户端创建的所有临时节点都会被移出；
 
 ## 4、版本
@@ -106,7 +106,7 @@ Zookeeper 对外的服务端口默认是 2181
 
 ZooKeeper 允许用户在指定节点上注册一些Watcher，当数据节点发生变化的时候，ZooKeeper 服务器会把这个变化的通知发送给感兴趣的客户端
 
-## 6.ACL：Access Control Lists
+## 6、ACL：Access Control Lists
 
 ZooKeeper 采用ACL策略来进行权限控制，有以下权限：<br>
 CREATE：创建子节点的权限<br>
@@ -400,6 +400,8 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 ## 3、负载均衡(负载均衡设备，负载均衡算法)
 
 ## 4、分布式锁
+
+[zookeeper分布式锁](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%9E%B6%E6%9E%84/%E5%88%86%E5%B8%83%E5%BC%8F.md#4zookeeper%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81)
 
 ## 5、分布式队列
 
