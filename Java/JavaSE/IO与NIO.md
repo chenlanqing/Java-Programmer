@@ -624,6 +624,30 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 
 **6.5、通过 Selector 选择通道**
 
+## 7、NIO序列图
+
+### 7.1、服务端通信序列图
+
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Image/NIO服务端通信序列图.jpg)
+
+- 1、打开ServerSocketChannel，用于监听客户端的连接，是所有客户端连接的父管道；
+- 2、绑定监听端口，设置连接为非阻塞模式；
+- 3、创建Reactor线程，创建多路复用器并启动线程；
+- 4、将ServerSocketChannel注册到Reactor线程的多路复用器Selector上，监听ACCEPT事件；
+- 5、多路复用器在线程run方法的无限循环体内轮询准备就绪的Key；
+- 6、多路复用器监听到有新的客户端接入，处理新的接入请求，完成TCP的三次握手，建立物理链路；
+- 7、设置客户端链路为非阻塞模式；
+- 8、将新接入的客户端连接注册到Reactor线程的多路复用器上，监听读操作，读取客户端发送的网络消息；
+- 9、异步读取客户端请求消息到缓冲区；
+- 10、对ByteBuffer进行编解码，如果有半包消息指针reset，继续读取后续的报文，将解码成功的消息封装成Task，投递到业务线程池中，进行业务逻辑编排；
+- 11、将POJO对象encode成ByteBuffer，调用SocketChannel的异步write接口，将消息异步发送给客户端；
+
+### 7.2、客户端通信序列图
+
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Image/NIO客户端通信序列图.jpg)
+
+
+
 # 参考文章
 * [Java-NIO系列](http：//ifeve.com/java-nio-all/)
 * [浅析I/O模型](http：//www.cnblogs.com/dolphin0520/p/3916526.html)

@@ -1,10 +1,29 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION， INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一.IO 通信：](#%E4%B8%80io-%E9%80%9A%E4%BF%A1)
-- [二.Netty 入门：](#%E4%BA%8Cnetty-%E5%85%A5%E9%97%A8)
-- [三.Netty 源码分析：](#%E4%B8%89netty-%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
+- [一、IO通信](#%E4%B8%80io%E9%80%9A%E4%BF%A1)
+  - [1、IO](#1io)
+    - [1.1、LinuxIO模型](#11linuxio%E6%A8%A1%E5%9E%8B)
+    - [1.2、IO多路复用技术](#12io%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%E6%8A%80%E6%9C%AF)
+  - [2、Java中IO](#2java%E4%B8%ADio)
+- [二、Netty](#%E4%BA%8Cnetty)
+  - [1、不建议使用原生NIO类库进行开发的原因](#1%E4%B8%8D%E5%BB%BA%E8%AE%AE%E4%BD%BF%E7%94%A8%E5%8E%9F%E7%94%9Fnio%E7%B1%BB%E5%BA%93%E8%BF%9B%E8%A1%8C%E5%BC%80%E5%8F%91%E7%9A%84%E5%8E%9F%E5%9B%A0)
+  - [2、Netty 的特点](#2netty-%E7%9A%84%E7%89%B9%E7%82%B9)
+  - [3、粘包和拆包](#3%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85)
+    - [3.1、TCP粘包/拆包问题](#31tcp%E7%B2%98%E5%8C%85%E6%8B%86%E5%8C%85%E9%97%AE%E9%A2%98)
+    - [3.2、TCP粘包拆包问题说明](#32tcp%E7%B2%98%E5%8C%85%E6%8B%86%E5%8C%85%E9%97%AE%E9%A2%98%E8%AF%B4%E6%98%8E)
+    - [3.3、TCP 粘包和拆包发生的原因](#33tcp-%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85%E5%8F%91%E7%94%9F%E7%9A%84%E5%8E%9F%E5%9B%A0)
+    - [3.4、粘包解决策略](#34%E7%B2%98%E5%8C%85%E8%A7%A3%E5%86%B3%E7%AD%96%E7%95%A5)
+    - [3.5、Netty 解决粘包和拆包](#35netty-%E8%A7%A3%E5%86%B3%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85)
+- [三、Netty服务端启动过程](#%E4%B8%89netty%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
+  - [1、创建服务端channel](#1%E5%88%9B%E5%BB%BA%E6%9C%8D%E5%8A%A1%E7%AB%AFchannel)
+  - [2、初始化服务端Channel](#2%E5%88%9D%E5%A7%8B%E5%8C%96%E6%9C%8D%E5%8A%A1%E7%AB%AFchannel)
+  - [3、注册Selector](#3%E6%B3%A8%E5%86%8Cselector)
+  - [4、端口绑定](#4%E7%AB%AF%E5%8F%A3%E7%BB%91%E5%AE%9A)
+- [四、NioEventLoop](#%E5%9B%9Bnioeventloop)
+  - [1、NioEventLoop 创建](#1nioeventloop-%E5%88%9B%E5%BB%BA)
+  - [2、NioEventLoop 启动](#2nioeventloop-%E5%90%AF%E5%8A%A8)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -45,9 +64,28 @@
 
 	- 但是由于其底层通信依然采用同步阻塞模型，无法从根本上解决问题
 
-- **2.3、NIO**
+- **2.3、NIO-非阻塞IO**
+	
+	- jdk1.4引入NIO,弥补了原来阻塞IO的不足，具体参考[Java-NIO](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/IO%E4%B8%8ENIO.md#%E4%B8%89java-nio)
 
-- **2.4、AIO**
+	- NIO相对其他IO来说，优点：
+		- 客户端发起的连接操作是异步的，可以通过在多路复用器注册OP_CONNECT等待后续结果，不需要像之前的客户端那样被同步阻塞；
+		- SocketChannel 的读写操作都是异步的，如果没有可读写的数据它不会同步等待，直接返回，这样I/O通信线程就可以处理其他链路；
+		- 线程模型的优化；
+
+- **2.4、AIO-异步IO**
+
+- **2.5、不同IO对比**
+
+	|  对比参数|同步IO（BIO）|伪异步IO|NIO|AIO|
+	|-------|----|----|--------|--------|
+	|客户端个数|1：1|M:N（其中M可以大于N）|M：1（1个IO线程处理多个客户端连接）|M：0（不需要启动额外的IO线程，被动回调）|
+	|IO类型（阻塞）|阻塞IO|阻塞IO|非阻塞IO|非阻塞IO|
+	|IO类型（同步）|同步IO|同步IO|同步IO（IO多路复用）|异步IO|
+	|API难度|简单|简单|非常复杂|复杂|
+	|调试难度|简单|简单|复杂|复杂|
+	|可靠性|非常差|差|高|高|
+	|吞吐量|低|中|高|高|
 
 # 二、Netty
 
@@ -70,29 +108,130 @@
 
 ## 3、粘包和拆包
 
-- **3.1、TCP粘包/拆包**
+### 3.1、TCP粘包/拆包问题
 
 TCP 是个流的协议，是连成一片的，其间没有分界线，TCP 底层并不了解业务数据的具体含义，它会根据 TCP 缓冲区的实际情况进行包的划分，所以在业务上认为，一个完整可能会被TCP拆分成多个包进行发送，也有可能把多个小的包封装成一个大的数据包发送.就是所谓的TCP粘包和拆包问题
 
-- **3.2、TCP 粘包和拆包发生的原因：**
+### 3.2、TCP粘包拆包问题说明
+
+假设客户端分别发送了两个独立的数据包D1和D2给服务器，由于服务端一次读取到的字节数是不确定的，故可能存在以下4中情况：
+- （1）服务端分两次收到了两个独立的数据包，分别是D1和D2，没有粘包和拆包；
+- （2）服务端一次收到了两个数据包，D1和D2粘合在一起，被称为TCP粘包；
+- （3）服务端分两个读取到了两个数据包，第一次读取到了完整的D1包和D2包的部分内容，第二次读取到了D2包的剩余内容，被称为TCP拆包；
+- （4）服务端分两次读取到了两个数据包，第一次读取到了D1包的部分内容D1_1，第二次读取到了D1包的剩余内容D1_2和D2包的整包
+
+### 3.3、TCP 粘包和拆包发生的原因
 
 - 应用程序 write 写入的字节大小大于套接口发送的缓冲区大小；
 - 进行 MSS 大小的TCP分段；
 - 以太网帧 payload 大于 MTU 进行 IP 分片；
 
-- **3.3、粘包解决策略：**
+### 3.4、粘包解决策略
 
 由于底层的TCP无法理解上层的业务数据，所以在底层是无法保证数据不被拆分和重组的.这个问题只能通过上层的应用协议栈设计来解决
 
 - 消息定长，例如每个报文的大小固定长度200字节，如果不够，空位补空格；
 - 在包尾增加回车换行符进行分割，如FTP协议
-- 将消息分为消息头和消息体，消息头中包含表示消息总长度的字段，
+- 将消息分为消息头和消息体，消息头中包含表示消息总长度的字段，通常设计思路为消息头的第一个字段使用int32来表示消息的总长度。
 
-- **3.4、Netty 解决粘包和拆包：**
+### 3.5、Netty 解决粘包和拆包
 
-	(1).LineBasedFrameDecoder：依次遍历 ByteBuf 中可读的字节，判断是否有"\n" 或者 "\r\n"，如果有就以此
-		位置为结束位置；
-	(2).StringDecoder：
-	两者组合是按行奇幻的文本解码器
+**1、LineBasedFrameDecoder**
 
-# 三、Netty 源码分析
+- LineBasedFrameDecoder：依次遍历 ByteBuf 中可读的字节，判断是否有"\n" 或者 "\r\n"，如果有就以此位置为结束位置，从可读索引到结束为止取件的字节就组成了一行。它是以换行符为结束标志的解码器，支持携带结束符或者不携带结束符两种解码方式，同时支持配置单行的最大长度。如果读取到最大长度后仍然没有发现换行符，就会抛出异常，同时忽略到之前督导的异常码流；
+
+- StringDecoder：将接收到的对象转换成字符串，然后继续调用后面的handler
+
+LineBasedFrameDecoder + StringDecoder组合就是按行切换的文本解码器，它被设计用来支持TCP的粘包和拆包；
+
+**2、DelimiterBasedFrameDecoder**
+
+可以自动完成以分隔符做结束标志的消息的解码
+
+**3、FixedLengthFrameDecoder**
+
+可以自动完成对定长消息的解码
+
+# 三、Netty服务端启动过程
+
+两个问题：
+- 服务端的Socket在哪里初始化？
+- 在哪里accept连接？
+
+Netty服务端启动过程：
+- （1）、创建服务端channel
+- （2）、初始化服务端channel
+- （3）、注册Selector；
+- （4）、端口绑定
+
+## 1、创建服务端channel
+
+- bind()-用户代码入口
+	- initAndRegister()-初始化并注册
+		- newChannel()-创建服务端channel
+
+反射创建服务端channel
+- newSocket()-通过jdk来创建底层jdk channel
+- NioServerSocketChannelConfig()-tcp参数配置类
+- AbstractChannel()
+	- configureBlocking(false) -配置阻塞模式
+	- AbstractChannel()-创建id，unsage，pipeline
+
+## 2、初始化服务端Channel
+
+- bind()-代码入口
+	- initAndRegister()-初始化并注册
+		- newChannel()-创建服务端channel
+		- init()-初始化服务端channel
+			- set ChannelOptions，ChannelAttrs 
+			- set ChildOptions，ChildAttrs
+			- config handler-配置服务端pipeline
+			- addSeverBootStrapAcceptor-添加连接器
+
+## 3、注册Selector
+
+- AbstractChannel.register(channel)-入口
+	- this.eventLoop=eventLoop -绑定线程
+	- register() 实际注册
+		- doRegister() 调用jdk底层注册
+		- invokeHandlerAddedIfNeeded()
+		- fireChannelRegistered() 传播事件
+
+
+## 4、端口绑定
+
+- AbstractUnsafe.bind() 入口
+	- doBind()
+		- javaChannel.bind() jdk底层绑定
+	- pipeline.fireChannleActive() 传播事件
+		- HeadContext.readIfIsAutoRead()
+
+# 四、NioEventLoop
+
+三个问题：
+- 默认情况下，Netty服务端起多少线程？何时启动？
+
+	默认情况下，是2倍CPU核数
+
+- Netty如何解决jdk空轮询bug的？-空轮询次数：512
+
+
+- Netty如何保证异步串行无锁化？
+
+## 1、NioEventLoop 创建
+- **基本流程：**
+	- new NioEventLoopGroup()线程组，默认是2*CPU核数
+		- new ThreadPerTaskExecutor() 线程创建器
+		- for(){newChild()}-构造NioEventLoop
+		- chooserFactory.newChooser()线程选择器
+
+
+- **ThreadPerTaskExecutor**
+
+	- 每次执行任务都会创建一个线程实体
+	- NioEventLoop 线程命名规则 nioEventLoop-1-XX
+
+- **newChild**
+
+## 2、NioEventLoop 启动
+
