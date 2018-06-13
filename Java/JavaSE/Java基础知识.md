@@ -1200,112 +1200,112 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 ## 3、通配符与上下界
 
-**3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符?来表示未知类型，如 List<?>**
+- **3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符?来表示未知类型，如 List<?>**
 
-**3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于 List<Object>**
+- **3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于 List<Object>**
 
-List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 List<?>则其中所包含的元素类型是不确定；
+	List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 List<?>则其中所包含的元素类型是不确定；
 
-**3.3、对于 List<?>中的元素只能用 Object 来引用，在有些情况下不是很方便.在这些情况下，可以使用上下界来限制未知类型的范围**
+- **3.3、对于 List<?>中的元素只能用 Object 来引用，在有些情况下不是很方便.在这些情况下，可以使用上下界来限制未知类型的范围**
 
-如：List<? extends Number>说明 List 中可能包含的元素类型是 Number 及其子类；而：List<? super Number> 则说明 List 中包含的是 Number 及其父类；当引入了上界之后，在使用类型的时候就可以使用上界类中定义的方法。List<?> 是一个未知类型的 List，而 List<Object> 其实是任意类型的 List，可以把 List<String>、List<Integer> 赋值给 List<?>，却不能把 List<String> 赋值给 List<Object>
+	如：List<? extends Number>说明 List 中可能包含的元素类型是 Number 及其子类；而：List<? super Number> 则说明 List 中包含的是 Number 及其父类；当引入了上界之后，在使用类型的时候就可以使用上界类中定义的方法。List<?> 是一个未知类型的 List，而 List<Object> 其实是任意类型的 List，可以把 List<String>、List<Integer> 赋值给 List<?>，却不能把 List<String> 赋值给 List<Object>
 
-**3.4、关于 <? extends T> 和 <? super T>**
+- **3.4、关于 <? extends T> 和 <? super T>**
 
-List<? extends T> 可以接受任何继承自 T 的类型的 List；List<? super T> 可以接受任何 T 的父类构成的 List
+	List<? extends T> 可以接受任何继承自 T 的类型的 List；List<? super T> 可以接受任何 T 的父类构成的 List
 
-- 3.4.1、<? extends T>：表示参数化的类型可能是所指定的类型，或者是此类型的子类，即泛型的上边界;
+	- 3.4.1、<? extends T>：表示参数化的类型可能是所指定的类型，或者是此类型的子类，即泛型的上边界;
 
-```java
-public class DemoGenerice {
-	public static void main(String[] args) {
-		List<? extends Season> list = new LinkedList<Season>();
-		list.add(new Spring()); //  编译错误
+	```java
+	public class DemoGenerice {
+		public static void main(String[] args) {
+			List<? extends Season> list = new LinkedList<Season>();
+			list.add(new Spring()); //  编译错误
+		}
+
 	}
+	class Season{}
+	class Spring extends Season{}
+	```
 
-}
-class Season{}
-class Spring extends Season{}
-```
+	编译错误原因：<br>
+		List<? extends Season> 表示 "具有任何从 Season 继承类型的列表"，编译器无法确定 List 所持有的类型，所以无法安全的向其中添加对象。可以添加 null，因为 null 可以表示任何类型。所以 List 的add 方法不能添加任何有意义的元素；
 
-编译错误原因：<br>
-	List<? extends Season> 表示 "具有任何从 Season 继承类型的列表"，编译器无法确定 List 所持有的类型，所以无法安全的向其中添加对象。可以添加 null，因为 null 可以表示任何类型。所以 List 的add 方法不能添加任何有意义的元素；
+	“? extends Season”表示的是Season的某个子类型，但不知道具体的子类型，如果允许写入，Java就无法确保类型安全性，所以直接禁止。 “<? super E> ”形式与“<? extends E> ”正好相反，超类型通配符表示E的某个父类型，有了它就可以更灵活的写入了
 
-“? extends Season”表示的是Season的某个子类型，但不知道具体的子类型，如果允许写入，Java就无法确保类型安全性，所以直接禁止。 “<? super E> ”形式与“<? extends E> ”正好相反，超类型通配符表示E的某个父类型，有了它就可以更灵活的写入了
+	*一定要注意泛型类型声明变量 ？时写数据的规则*
 
-*一定要注意泛型类型声明变量 ？时写数据的规则*
+	- 3.4.2、<? super T>：表示参数化的类型可能是所指定的类型，或者是此类型的父类型，直至Object.即泛型的下边界
 
-- 3.4.2、<? super T>：表示参数化的类型可能是所指定的类型，或者是此类型的父类型，直至Object.即泛型的下边界
+	- 3.4.3、PECS原则：
 
-- 3.4.3、PECS原则：
+		- 如果要从集合中读取类型T的数据，并且不能写入，可以使用 ? extends 通配符；(Producer Extends)
+		- 如果要从集合中写入类型T的数据，并且不需要读取，可以使用 ? super 通配符；(Consumer Super)
+		- 如果既要存又要取，那么就不要使用任何通配符
 
-	- 如果要从集合中读取类型T的数据，并且不能写入，可以使用 ? extends 通配符；(Producer Extends)
-	- 如果要从集合中写入类型T的数据，并且不需要读取，可以使用 ? super 通配符；(Consumer Super)
-	- 如果既要存又要取，那么就不要使用任何通配符
+- **3.5、<T extends E> 和 <? extends E> 有什么区别：**
 
-**3.5、<T extends E> 和 <? extends E> 有什么区别：**
+	> <T extends E> 用于定义类型参数，声明了一个类型参数 T，可放在泛型类定义中类名后面、接口后面、泛型方法返回值前面；
 
-> <T extends E> 用于定义类型参数，声明了一个类型参数 T，可放在泛型类定义中类名后面、接口后面、泛型方法返回值前面；
+	> <? extends E> 用于实例化类型参数，用于实例化泛型变量中的类型参数，只是这个具体类型是未知的，只知道它是 E 或 E 的某个子类型
 
-> <? extends E> 用于实例化类型参数，用于实例化泛型变量中的类型参数，只是这个具体类型是未知的，只知道它是 E 或 E 的某个子类型
+	```java
+	public void addAll(Bean<? extends E> c);
+	public <T extends E> addAll(Bean<T> c);
+	```
 
-```java
-public void addAll(Bean<? extends E> c);
-public <T extends E> addAll(Bean<T> c);
-```
+- **3.6、通配符的上下边界问题：**
 
-**3.6、通配符的上下边界问题：**
+	- 扩展问题：
 
-- 扩展问题：
-
-```java
-Vector<? extends Number> s1 = new Vector<Integer>();// 编译成功
-Vector<? extends Number> s2 = new Vector<String>();// 编译报错，只能是 Number 的子类
-Vector<? super Integer> s3 = new Vector<Number>();// 编译成功
-Vector<? super Integer> s4 = new Vector<Byte>(); // 编译报错，只能是 Integer 的父类
-class Bean<T super E>{} // 编译时报错，因为 Java 类型参数限定只有 extends 形式，没有 super 形式
-```
-- 类型转换赋值：
-```java
-public class GenericTest {
-	public static <T> T add(T x， T y){
-		return y;
+	```java
+	Vector<? extends Number> s1 = new Vector<Integer>();// 编译成功
+	Vector<? extends Number> s2 = new Vector<String>();// 编译报错，只能是 Number 的子类
+	Vector<? super Integer> s3 = new Vector<Number>();// 编译成功
+	Vector<? super Integer> s4 = new Vector<Byte>(); // 编译报错，只能是 Integer 的父类
+	class Bean<T super E>{} // 编译时报错，因为 Java 类型参数限定只有 extends 形式，没有 super 形式
+	```
+	- 类型转换赋值：
+	```java
+	public class GenericTest {
+		public static <T> T add(T x， T y){
+			return y;
+		}
+		public static void main(String[] args) {
+			//t0编译报错：add 的两个参数一个是Integer，一个是Float，取同一父类的最小级Number，故T为Number类型，类型错误
+			int t0 = GenericTest.add(10，10.22);
+			//t1执行成功，add 的两个参数都是 Integer，所以 T 为 Integer 类型
+			int t1 = GenericTest.add(10，20);
+			//t2执行成功，add 的两个参数一个是Integer，一个是Float，取同一父类型Number，故T为Number类型
+			Number t2 = GenericTest.add(10，20.22);
+			//t3执行成功，的两个参数一个是Integer，一个是Float，取同一类型的最小级Object，故T为 Object类型
+			Object t3 = GenericTest.add(10，"abc");
+			//t4执行成功，add指定了泛型类型为 Integer，所以只能add为Integer的类型或者子类型的参数.
+			int t4 = GenericTest.<Integer>add(10，20);
+			//t5编译报错，同t4
+			int t5 = GenericTest.<Integer>add(10，22.22);
+			//t6执行成功，add指定了泛型类型Number，add只能为Number类型或者子类型的.
+			Number t6 = GenericTest.<Number>add(10，20.33);
+		}
 	}
-	public static void main(String[] args) {
-		//t0编译报错：add 的两个参数一个是Integer，一个是Float，取同一父类的最小级Number，故T为Number类型，类型错误
-		int t0 = GenericTest.add(10，10.22);
-		//t1执行成功，add 的两个参数都是 Integer，所以 T 为 Integer 类型
-		int t1 = GenericTest.add(10，20);
-		//t2执行成功，add 的两个参数一个是Integer，一个是Float，取同一父类型Number，故T为Number类型
-		Number t2 = GenericTest.add(10，20.22);
-		//t3执行成功，的两个参数一个是Integer，一个是Float，取同一类型的最小级Object，故T为 Object类型
-		Object t3 = GenericTest.add(10，"abc");
-		//t4执行成功，add指定了泛型类型为 Integer，所以只能add为Integer的类型或者子类型的参数.
-		int t4 = GenericTest.<Integer>add(10，20);
-		//t5编译报错，同t4
-		int t5 = GenericTest.<Integer>add(10，22.22);
-		//t6执行成功，add指定了泛型类型Number，add只能为Number类型或者子类型的.
-		Number t6 = GenericTest.<Number>add(10，20.33);
-	}
-}
-```
-在调用泛型方法的时可以指定泛型，也可以不指定泛型；在不指定泛型时泛型变量的类型为该方法中的几种类型的同一个父类的最小级。在指定泛型时该方法中的几种类型必须是该泛型实例类型或者其子类
+	```
+	在调用泛型方法的时可以指定泛型，也可以不指定泛型；在不指定泛型时泛型变量的类型为该方法中的几种类型的同一个父类的最小级。在指定泛型时该方法中的几种类型必须是该泛型实例类型或者其子类
 
-- 类型限定：
-```java
-// 编译报错：因为编译器在编译前首先进行了泛型检查和泛型擦除才编译，所以等到真正编译时 T 由于没有类型限定自动擦除为Object类型
-// 所以只能调用 Object 的方法，而 Object 没有 compareTo 方法
-public static <T> T get(T t1， T t2){
-	if (t1.compareTo(t2) >= 0);
-	return t1;
-}
-// 编译成功.因为限定类型为 Comparable 接口，其存在 compareTo 方法，所以 t1、t2 擦除后被强转成功
-// 所以类型限定在泛型类、泛型接口和泛型方法中都可以使用
-public static <T extends Comparable> T get(T t1，T t2){
-	if (t1.compareTo(t2)>=0);
-	return t1;
-}
-```
+	- 类型限定：
+	```java
+	// 编译报错：因为编译器在编译前首先进行了泛型检查和泛型擦除才编译，所以等到真正编译时 T 由于没有类型限定自动擦除为Object类型
+	// 所以只能调用 Object 的方法，而 Object 没有 compareTo 方法
+	public static <T> T get(T t1， T t2){
+		if (t1.compareTo(t2) >= 0);
+		return t1;
+	}
+	// 编译成功.因为限定类型为 Comparable 接口，其存在 compareTo 方法，所以 t1、t2 擦除后被强转成功
+	// 所以类型限定在泛型类、泛型接口和泛型方法中都可以使用
+	public static <T extends Comparable> T get(T t1，T t2){
+		if (t1.compareTo(t2)>=0);
+		return t1;
+	}
+	```
 
 ## 4、Java 类型系统
 
