@@ -1,5 +1,5 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- DON'T EDIT THIS SECTION2.9、泛型擦除擦除了哪些信息？ INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
 - [一、Java 内部类](#%E4%B8%80java-%E5%86%85%E9%83%A8%E7%B1%BB)
@@ -1202,9 +1202,9 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 **3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符?来表示未知类型，如 List<?>**
 
-**3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是 List<?>并不等同于 List<Object>**
+**3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于 List<Object>**
 
-List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 List<?>则其中所包含的元素类型是不确定;
+List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 List<?>则其中所包含的元素类型是不确定；
 
 **3.3、对于 List<?>中的元素只能用 Object 来引用，在有些情况下不是很方便.在这些情况下，可以使用上下界来限制未知类型的范围**
 
@@ -1215,6 +1215,7 @@ List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在�
 List<? extends T> 可以接受任何继承自 T 的类型的 List；List<? super T> 可以接受任何 T 的父类构成的 List
 
 - 3.4.1、<? extends T>：表示参数化的类型可能是所指定的类型，或者是此类型的子类，即泛型的上边界;
+
 ```java
 public class DemoGenerice {
 	public static void main(String[] args) {
@@ -1244,16 +1245,19 @@ class Spring extends Season{}
 
 **3.5、<T extends E> 和 <? extends E> 有什么区别：**
 
-<T extends E> 用于定义类型参数，声明了一个类型参数 T，可放在泛型类定义中类名后面、接口后面、泛型方法返回值前面；<br>
+> <T extends E> 用于定义类型参数，声明了一个类型参数 T，可放在泛型类定义中类名后面、接口后面、泛型方法返回值前面；
 
-<? extends E> 用于实例化类型参数，用于实例化泛型变量中的类型参数，只是这个具体类型是未知的，只知道它是 E 或 E 的某个子类型
+> <? extends E> 用于实例化类型参数，用于实例化泛型变量中的类型参数，只是这个具体类型是未知的，只知道它是 E 或 E 的某个子类型
 
-public void addAll(Bean<? extends E> c);<br>
-public <T extends E> addAll(Bean<T> c);<br>
+```java
+public void addAll(Bean<? extends E> c);
+public <T extends E> addAll(Bean<T> c);
+```
 
 **3.6、通配符的上下边界问题：**
 
 - 扩展问题：
+
 ```java
 Vector<? extends Number> s1 = new Vector<Integer>();// 编译成功
 Vector<? extends Number> s2 = new Vector<String>();// 编译报错，只能是 Number 的子类
@@ -1303,7 +1307,7 @@ public static <T extends Comparable> T get(T t1，T t2){
 }
 ```
 
-## 4、Java 类型系统：
+## 4、Java 类型系统
 
 **4.1、在 Java 中，通过继承机制而产生的类型体系结构是大家熟悉的**
 
@@ -1987,6 +1991,15 @@ public interface A{
 	flags： ACC_PUBLIC， ACC_ABSTRACT
 }
 ```
+**2.6、常见空接口**
+
+空接口一般是作为一个标记接口，标记某些功能
+
+- Serializable 序列化
+- RandomAccess：List 实现所使用的标记接口,用来表明其支持快速(通常是固定时间)随机访问，此接口的主要目的是允许一般的算法更改其行为,从而在将其应用到随机或连续访问列表时能提供良好的性能
+- Cloneable 克隆
+- EventListener 事件监听
+
 ## 3、接口与抽象类的区别
 
 **3.1、语法层面上**
@@ -2026,7 +2039,7 @@ public interface Demo {
 ```
 接口中非 default 和 static 的方法不能有方法体
 
-**4.2.接口实现**
+**4.2、接口实现**
 
 如果实现一个接口，默认方法可以不用覆盖重写实现，实现类默认可以直接调用该默认方法;实现类无法重写接口中的静态方法；
 
@@ -2071,9 +2084,11 @@ public class C implements A， B {
 // 输出结果：Interface B hello ： B
 ```
 
-**4.3.接口的 default 方法不能重写 Object 的方法，但是可以对 Object 类的方法进行重载.**
+**4.3、接口的 default 方法不能重写 Object 的方法，但是可以对 Object 类的方法进行重载.**
 
 因为若可以会很难确定什么时候该调用接口默认的方法
+
+
 
 # 十五、类型、类初始化、二进制等
 
