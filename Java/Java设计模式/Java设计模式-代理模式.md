@@ -1,13 +1,13 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION， INSTEAD RE-RUN doctoc TO UPDATE -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一.代理模式基本：](#%E4%B8%80%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E5%9F%BA%E6%9C%AC)
-- [二.代理的实现方式：](#%E4%BA%8C%E4%BB%A3%E7%90%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F)
-  - [1.静态代理：](#1%E9%9D%99%E6%80%81%E4%BB%A3%E7%90%86)
-  - [2.动态代理：](#2%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86)
-  - [3.静态代理与动态代理：](#3%E9%9D%99%E6%80%81%E4%BB%A3%E7%90%86%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86)
-- [三.模拟 JDK 动态代理：](#%E4%B8%89%E6%A8%A1%E6%8B%9F-jdk-%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86)
+- [一、代理模式基本](#%E4%B8%80%E4%BB%A3%E7%90%86%E6%A8%A1%E5%BC%8F%E5%9F%BA%E6%9C%AC)
+- [二、代理的实现方式](#%E4%BA%8C%E4%BB%A3%E7%90%86%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F)
+  - [1、静态代理](#1%E9%9D%99%E6%80%81%E4%BB%A3%E7%90%86)
+  - [2、动态代理](#2%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86)
+  - [3、静态代理与动态代理](#3%E9%9D%99%E6%80%81%E4%BB%A3%E7%90%86%E4%B8%8E%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86)
+- [三、模拟 JDK 动态代理](#%E4%B8%89%E6%A8%A1%E6%8B%9F-jdk-%E5%8A%A8%E6%80%81%E4%BB%A3%E7%90%86)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

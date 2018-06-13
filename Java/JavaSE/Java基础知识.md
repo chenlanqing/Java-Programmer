@@ -1200,9 +1200,9 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 ## 3、通配符与上下界
 
-- **3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符?来表示未知类型，如 List<?>**
+- **3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符"?"来表示未知类型，如 List<?>**
 
-- **3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于 List<Object>**
+- **3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于List<Object>**
 
 	List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 List<?>则其中所包含的元素类型是不确定；
 
