@@ -9,7 +9,7 @@
 
 【箭头指向】：带三角箭头的实线，箭头指向父类
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/泛化关系图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E6%B3%9B%E5%8C%96%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
 
 ## 2、实现（Realization）
@@ -18,7 +18,7 @@
 
 【箭头指向】：带三角箭头的虚线，箭头指向接口
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/实现关系图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E5%AE%9E%E7%8E%B0%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
 
 ## 3、关联（Association)
@@ -29,13 +29,13 @@
 
 【箭头及指向】：带普通箭头的实心线，指向被拥有者
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/关联关系图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E5%85%B3%E8%81%94%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
 上图中，老师与学生是双向关联，老师有多名学生，学生也可能有多名老师。但学生与某课程间的关系为单向关联，一名学生可能要上多门课程，课程是个抽象的东西他不拥有学生
 
 下图为自身关联：
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/自关联.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E8%87%AA%E5%85%B3%E8%81%94.png)
 
 ## 4、聚合（Aggregation）
 
@@ -47,7 +47,7 @@
 
 【箭头及指向】：带空心菱形的实心线，菱形指向整体
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/聚合关系图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E8%81%9A%E5%90%88%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
 ## 5、组合（Composition）
 
@@ -59,7 +59,7 @@
 
 【箭头及指向】：带实心菱形的实线，菱形指向整体
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/组合关系图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E7%BB%84%E5%90%88%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
 ## 6、依赖（Dependency）
 
@@ -69,7 +69,7 @@
 
 【箭头及指向】：带箭头的虚线，指向被使用者
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/依赖关系图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E4%BE%9D%E8%B5%96%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
 ## 7、总结
 
@@ -77,7 +77,7 @@
 
 下面这张UML图，比较形象地展示了各种类图关系：
 
-![image](https://github.com/chenlanqing/learningNote/tree/master/UML/image/关系图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/UML/image/%E5%85%B3%E7%B3%BB%E5%9B%BE.png)
 
 
 
