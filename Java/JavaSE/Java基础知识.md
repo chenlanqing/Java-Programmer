@@ -2625,7 +2625,7 @@ System.out.println(al);
 
 **1.1、枚举类特点**
 
-- 枚举类是一种特殊的Java类;
+- 枚举类是一种特殊的Java类，枚举不可被基础
 - 枚举类中声明的每一个枚举值代表枚举类的一个实例对象;
 - 与java普通类一样，在声明枚举类时可以声明属性，方法，构造方法，但是枚举类必须是私有的
 - 枚举可以实现接口或继承抽象方法
@@ -2651,7 +2651,7 @@ public enum Status{
 
 **1.4.Java 枚举类比较使用 == 或者 equals()都一样，因为枚举类 Enum 的 equals()方法的默认实现是通过 == 来比较的.**
 
-在 Enum 中 equals 和 hashCode 方法都是 final， 所以在枚举类中不可实现这两个方法。类似的 Enum 的 compareTo 方法比较的是 Enum 的 ordinal 顺序大小；类似的还有 Enum 的 name 方法和 toString 方法一样都返回的是 Enum 的 name 值
+在Enum中equals和hashCode方法都是final，所以在枚举类中不可实现这两个方法。类似的Enum的compareTo方法比较的是Enum的ordinal顺序大小；类似的还有Enum的name方法和toString方法一样都返回的是Enum的name值
 
 ## 2、枚举类本质
 
@@ -2660,8 +2660,8 @@ public enum Status{
 ==> 如下代码：
 ```java
 		public enum Status{
-			START()，
-			STOP()，
+			START(),
+			STOP(),
 			RUNNING();
 		}
 		编译之后通过 javap -v 查看字节码文件：
@@ -2695,12 +2695,16 @@ public enum Status{
 
 ## 4、枚举类是如何保证线程安全的
 
-Java 类加载与初始化是 JVM 保证线程安全，而 Java enum 枚举在编译器编译后的字节码实质是一个 final 类，每个枚举类型是这个 final 类中的一个静态常量属性，其属性初始化是在该 final 类的 static 块中进行，而 static的常量属性和代码块都是在类加载时初始化完成的， 所以自然就是 JVM 保证了并发安全
+Java 类加载与初始化是 JVM 保证线程安全，而 Java enum 枚举在编译器编译后的字节码实质是一个 final 类，每个枚举类型是这个 final 类中的一个静态常量属性，其属性初始化是在该 final 类的 static 块中进行，而 static的常量属性和代码块都是在类加载时初始化完成的， 所以自然就是 JVM 保证了并发安全；
+
+也就是说，我们定义的一个枚举，在第一次被真正用到的时候，会被虚拟机加载并初始化，而这个初始化过程是线程安全的。解决单例的并发问题，主要解决的就是初始化过程中的线程安全问题
 
 ## 5、枚举与单例模式
 
-- 除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了 Serializable 接口后就不再是单例了，因为每次调用 readObject() 方法返回的都是一个新创建出来的对象(当然可以通过使用 readResolve() 方法来避免).
-- Java 规范中保证了每一个枚举类型及其定义的枚举变量在 JVM 中都是唯一的，在枚举类型的序列化和反序列化上 Java做了特殊处理.序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 java.lang.Enum 的valueOf 方法来根据名字查找枚举对象同时禁用了 writeObject、readObject、readObjectNoData、writeReplace和 readResolve 等方法
+- 除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了 Serializable 接口后就不再是单例了，因为每次调用readObject()方法返回的都是一个新创建出来的对象（当然可以通过使用 readResolve() 方法来避免)）
+
+- Java规范中保证了每一个枚举类型及其定义的枚举变量在JVM中都是唯一的，在枚举类型的序列化和反序列化上Java做了特殊处理。序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 java.lang.Enum 的valueOf 方法来根据名字查找枚举对象；同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了 writeObject、readObject、readObjectNoData、writeReplace和 readResolve 等方法
+
 - Java 枚举序列化需要注意的点：
 
 	如果我们枚举被序列化本地持久化了，那我们就不能删除原来枚举类型中定义的任何枚举对象，否则程序在运行过程中反序列化时JVM 就会找不到与某个名字对应的枚举对象了，所以我们要尽量避免多枚举对象序列化的使用
@@ -2710,3 +2714,8 @@ Java 类加载与初始化是 JVM 保证线程安全，而 Java enum 枚举在�
 - Enumeration<E> 枚举器接口是1.0开始提供，适用于传统类，而 Iterator<E>迭代器接口是1.2提供，适用于 Collections
 - Enumeration 只有两个方法接口，我们只能读取集合的数据而不能对数据进行修改，而 Iterator 有三个方法接口，除了能读取集合的数据外也能对数据进行删除操作
 - Enumeration 不支持 fail-fast 机制，而 Iterator 支持 fail-fast 机制（一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生 fail-fast 机制，譬如ConcurrentModificationException 异常）尽量使用 Iterator 迭代器而不是 Enumeration 枚举器；
+
+
+# 参考文章
+
+* [枚举的线程安全性及序列化问题](http://www.hollischuang.com/archives/197)
