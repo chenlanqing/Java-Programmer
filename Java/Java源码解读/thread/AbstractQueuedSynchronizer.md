@@ -26,9 +26,8 @@ AQS 是构建锁或者其他同步组件的基础框架，是JUC并发包中的�
 - AQS 基于模板模式设计， 其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种，所以 AQS 没有抽象方法，所有方法都有默认实现
 - AQS 是继承自 AbstractOwnableSynchronizer(AOS)，AOS 里面只有一个属性：exclusiveOwnerThread--用来标识当前占有锁的线程，加上该属性的get和set方法。<br>
 	
-	*为什么需要将持有锁的线程的标识向上抽取？*<br>
-	AOS 有段注释如下：<br>
-		同步器是需要被线程互斥访问的，AOS 提供了一个基本概念，那就是创建锁时赋予一个对于这个锁的所有权.AOS 本身不会去管理或者使用这些信息。然而子类或者工具类在适当的时候会去维护这些信息来控制和监听访问控制权。
+	***为什么需要将持有锁的线程的标识向上抽取***<br>
+	AOS 有段注释如下：同步器是需要被线程互斥访问的，AOS 提供了一个基本概念，那就是创建锁时赋予一个对于这个锁的所有权.AOS 本身不会去管理或者使用这些信息。然而子类或者工具类在适当的时候会去维护这些信息来控制和监听访问控制权。
 
 	AQS 是在1.5产生， 而 AOS 是在1.6之后才产生的.也就是说在AQS的整个声明过程中，都没有用到 AOS 中声明的属性或者方法，这些属性或者方法是在 AQS 的子类中才用的到.也就是在 1.6之后对子类进行增强.为什么不把 AOS 声明的属性直接放到 AQS中？可能是因为 AQS 不需要这些属性，不对 AQS 做过多侵入。
 
@@ -75,38 +74,44 @@ AQS 一共有五处方法供子类实现：
 - 每个节点持有一个 "status" 字段用于是否一条线程应当阻塞的追踪， 但是 state 字段并不保证加锁；
 - 一条线程所在节点如果它处于队列头的下一个节点，那么它会尝试 acquire， 但是 acquire 并不保证成功，只是有权利去竞争
 - 要进入队列，你只需要自动将它拼接在队列尾部即可；要从队列中移出，你只需要设置 header字段；
+- 同步队列是一个双向队列，AQS通过持有头尾指针管理同步队列
 
 - **1.2、Node 结构：**
-```
-	+------+  prev +-----+       +-----+
-head|      | <---- |     | <---- |     |  tail
-	+------+       +-----+       +-----+
-	head-头指针
-	tail-尾指针
-	prev-指向前驱节点指针
-	next-与prev相反，指向后置节点；
-```
-关键不同就是next指针，因为 AQS 中线程不是一直在自旋的，可能会返回睡眠和唤醒，这就需要前继释放锁的时候通过next指针找到其后继将其唤醒。也就是 AQS 的等待队列中后继是被前继唤醒的.AQS 结合了自旋和睡眠/唤醒两种方法的优点；
+
+	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/AQS节点图.png)
+
+	head-头指针 <br>
+	tail-尾指针<br>
+	prev-指向前驱节点指针<br>
+	next-与prev相反，指向后置节点；<br>
+
+	关键不同就是next指针，因为 AQS 中线程不是一直在自旋的，可能会返回睡眠和唤醒，这就需要前继释放锁的时候通过next指针找到其后继将其唤醒。也就是 AQS 的等待队列中后继是被前继唤醒的.AQS 结合了自旋和睡眠/唤醒两种方法的优点；
 
 - **1.3、Node 主要代码：**
 ```java
 //标记当前结点是共享模式
-static final Node SHARED = new Node()；
+static final Node SHARED = new Node();
 //标记当前结点是独占模式
-static final Node EXCLUSIVE = null；
+static final Node EXCLUSIVE = null;
 //代表线程已经被取消
-static final int CANCELLED = 1；
+static final int CANCELLED = 1;
 //代表后续节点需要唤醒
-static final int SIGNAL = -1；
+static final int SIGNAL = -1;
 //代表线程在condition queue中，等待某一条件
-static final int CONDITION = -2；
+static final int CONDITION = -2;
 //代表后续结点会传播唤醒的操作，共享模式下起作用
-static final int PROPAGATE = -3；
+static final int PROPAGATE = -3;
 //结点的等待状态，用来控制线程的阻塞/唤醒，以及避免不必要的调用LockSupport的park/unpark方法，主要值上述四个
-volatile int waitStatus； 
+volatile int waitStatus
 //拥有当前结点的线程。
 volatile Thread thread；
+// 当前节点的前驱节点
+volatile Node prev;
+// 当前节点的后继节点
+volatile Node next;
 ```
+
+
 ## 2、不响应中断的独占锁
 ```java
 public final void acquire(int arg) {
