@@ -115,6 +115,10 @@ java提供是jdbc Driver就是基于SPI的
 
     在 CATALINA_HOME/lib以及WEB-INF/lib中放置了不同版本的jar包，此时就会导致某些情况下报加载不到类的错误。还有如果多个应用使用同一jar包文件，当放置了多份，就可能导致多个应用间出现类加载不到的错误；
 
+# 四、Tomcat与数据源
+
+https://www.cnblogs.com/ShawnYang/p/7451459.html
+
 # 参考文章
 
 * [类加载体系](http：//blog.csdn.net/beliefer/article/details/50995516)

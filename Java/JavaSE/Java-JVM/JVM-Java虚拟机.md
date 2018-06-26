@@ -1238,6 +1238,12 @@ public class StaticTest{
 
 [Tomcat源码](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/tomcat/Tomcat源码.md)
 
+## 6.12、OSGI类加载
+http://www.javafxchina.net/blog/2016/12/osgi-08/
+https://blog.csdn.net/vking_wang/article/details/12875619
+http://osgi.com.cn/article/7289378
+
+
 # 7、字节码执行引擎
 
 **7.1、物理机的执行引擎是直接建立在处理器、硬件、指令集和操作系统层面上的**
