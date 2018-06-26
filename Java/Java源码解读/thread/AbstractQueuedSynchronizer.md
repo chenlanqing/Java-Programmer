@@ -112,16 +112,99 @@ volatile Node next;
 ```
 
 
-## 2、不响应中断的独占锁
+## 2、不可中断独占锁
+
+### 2.1、获取不中断独占锁
 ```java
+// 先看同步状态是否获取成功，如果成功则方法结束返回
+// 若失败则先调用addWaiter()方法再调用acquireQueued()方法
 public final void acquire(int arg) {
 	if (!tryAcquire(arg) && acquireQueued(addWaiter(Node.EXCLUSIVE)， arg))
 		selfInterrupt()；
+}
+
+private Node addWaiter(Node mode) {
+	// 1、将当前线程构建成Node类型
+	Node node = new Node(Thread.currentThread(), mode);
+	// Try the fast path of enq; backup to full enq on failure
+	// 2、当前尾节点是否为null？
+	Node pred = tail;
+	if (pred != null) {
+		// 2.2 将当前节点尾插入的方式插入同步队列中
+		node.prev = pred;
+		if (compareAndSetTail(pred, node)) {
+			pred.next = node;
+			return node;
+		}
+	}
+	// 2.1. 当前同步队列尾节点为null，说明当前线程是第一个加入同步队列进行等待的线程
+	enq(node);
+	return node;
 }
 ```
 - tryAcquire 由子类实现本身不会阻塞线程，如果返回 true， 则线程继续，如果返回 false 那么就加入阻塞队列阻塞线程，并等待前继结点释放锁
 - acquireQueued返回true，说明当前线程被中断唤醒后获取到锁，重置其interrupt status为true；acquireQueued方法中会保证忽视中断，只有tryAcquire成功了才返回
 - addWaiter 入队操作，并返回当前线程所在节点.	
+
+### 2.2、独占锁的释放（release()方法）
+```java
+public final boolean release(int arg) {
+	if (tryRelease(arg)) {
+		Node h = head;
+		if (h != null && h.waitStatus != 0)
+			unparkSuccessor(h);
+		return true;
+	}
+	return false;
+}
+```
+- 每一次锁释放后就会唤醒队列中该节点的后继节点所引用的线程，从而进一步可以佐证获得锁的过程是一个FIFO（先进先出）的过程
+
+### 2.3、独占锁获取和释放总结：
+- 线程获取锁失败，线程被封装成Node进行入队操作，核心方法在于addWaiter()和enq()，同时enq()完成对同步队列的头结点初始化工作以及CAS操作失败的重试；
+- 线程获取锁是一个自旋的过程，当且仅当“当前节点”的前驱节点是头结点并且成功获得同步状态时，节点出队即该节点引用的线程获得锁，否则，当不满足条件时就会调用LookSupport.park()方法使得线程阻塞；
+- 释放锁的时候会唤醒后继节点；
+
+总体来说：在获取同步状态时，AQS维护一个同步队列，获取同步状态失败的线程会加入到队列中进行自旋；移除队列（或停止自旋）的条件是前驱节点是头结点并且成功获得了同步状态。在释放同步状态时，同步器会调用unparkSuccessor()方法唤醒后继节点。
+
+## 3、可中断式独占锁
+
+### 3.1、获取可中断式独占锁（acquireInterruptibly方法）
+```java
+public final void acquireInterruptibly(int arg) throws InterruptedException {
+	if (Thread.interrupted())
+		throw new InterruptedException();
+	if (!tryAcquire(arg))
+		doAcquireInterruptibly(arg);
+}
+```
+可响应中断式锁可调用方法lock.lockInterruptibly()；而该方法其底层会调用AQS的acquireInterruptibly方法
+
+在获取同步状态失败后就会调用doAcquireInterruptibly方法：
+```java
+private void doAcquireInterruptibly(int arg) throws InterruptedException {
+	// 将节点插入到同步队列中
+	final Node node = addWaiter(Node.EXCLUSIVE);
+	boolean failed = true;
+	try {
+		for (;;) {
+			final Node p = node.predecessor();
+			if (p == head && tryAcquire(arg)) {
+				setHead(node);
+				p.next = null; // help GC
+				failed = false;
+				return;
+			}
+			if (shouldParkAfterFailedAcquire(p, node) &&
+				parkAndCheckInterrupt())
+				throw new InterruptedException();
+		}
+	} finally {
+		if (failed)
+			cancelAcquire(node);
+	}
+}
+```
 
 
 # 参考资料
