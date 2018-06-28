@@ -205,6 +205,12 @@ private void doAcquireInterruptibly(int arg) throws InterruptedException {
 	}
 }
 ```
+### 3.2、超时等待式获取锁（tryAcquireNanos()方法）
+通过调用lock.tryLock(timeout,TimeUnit)方式达到超时等待获取锁的效果，该方法会在三种情况下才会返回
+
+- 在超时时间内，当前线程成功获取了锁；
+- 当前线程在超时时间内被中断；
+- 超时时间结束，仍未获得锁返回false
 
 
 # 参考资料
