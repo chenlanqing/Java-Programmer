@@ -1596,6 +1596,8 @@ Fork/Join 框架采用了工作窃取（work-stealing）算法来实现，其算
 - 分割任务：首先需要创建一个ForkJoin任务，执行该类的fork方法可以对任务不断切割，直到分割的子任务足够小；
 - 合并任务执行结果：子任务执行的结果同一放在一个队列中，通过启动一个线程从队列中取执行结果。
 
+使用案例：[计算大List的数据之和](https://github.com/chenlanqing/learningNote/blob/master/%E7%AE%97%E6%B3%95%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98.md#63forkjoin%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0)
+
 ### 12.5、异常处理
 
 ForkJoinTask在执行的时候可能会抛出异常，但是我们没办法在主线程里直接捕获异常，所以ForkJoinTask提供了isCompletedAbnormally()方法来检查任务是否已经抛出异常或已经被取消了，并且可以通过ForkJoinTask的getException方法获取异常
@@ -1617,6 +1619,115 @@ Fork/Join框架适合能够进行拆分再合并的计算密集型（CPU密集�
 - 线程不得抛出checked exception
 
 ## 13、Exchanger
+
+是一个用于线程间协作的工具类，用于两个线程之间能够交换。它提供了一个交换的同步点，在这个同步点两个线程能够交换数据；
+
+具体交换数据是通过exchange方法来实现的，如果一个线程先执行exchange方法，那么它会同步等待另一个线程也执行exchange方法，这个时候两个线程就都达到了同步点，两个线程就可以交换数据；
+
+### 13.1、主要方法
+```java
+//当一个线程执行该方法的时候，会等待另一个线程也执行该方法，因此两个线程就都达到了同步点
+//将数据交换给另一个线程，同时返回获取的数据
+V exchange(V x) throws InterruptedException
+
+//同上一个方法功能基本一样，只不过这个方法同步等待的时候，增加了超时时间
+V exchange(V x, long timeout, TimeUnit unit)throws InterruptedException, TimeoutException 
+```
+### 13.2、使用例子
+```java
+public class ExchangerDemo {
+    public static void main(String[] args) {
+        List<String> buffer1 = new ArrayList<String>();
+        List<String> buffer2 = new ArrayList<String>();
+        Exchanger<List<String>> exchanger = new Exchanger<List<String>>();
+        Thread producerThread = new Thread(new Producer(buffer1,exchanger));
+        Thread consumerThread = new Thread(new Consumer(buffer2,exchanger));
+        producerThread.start();
+        consumerThread.start();
+    }
+    static class Producer implements Runnable {
+        // 生产者消费者交换的数据结构
+        private List<String> buffer;
+        // 生产者和消费者的交换对象
+        private Exchanger<List<String>> exchanger;
+        public Producer(List<String> buffer, Exchanger<List<String>> exchanger) {
+            this.buffer = buffer;
+            this.exchanger = exchanger;
+        }
+        @Override
+        public void run() {
+            for (int i = 1; i < 5; i++) {
+                System.out.println("生产者第" + i + "次提供");
+                for (int j = 1; j <= 3; j++) {
+                    System.out.println("生产者装入" + i + "--" + j);
+                    buffer.add("buffer：" + i + "--" + j);
+                }
+                System.out.println("生产者装满，等待与消费者交换...");
+                try {
+                    exchanger.exchange(buffer);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+    static class Consumer implements Runnable {
+        private List<String> buffer;
+        private final Exchanger<List<String>> exchanger;
+        public Consumer(List<String> buffer, Exchanger<List<String>> exchanger) {
+            this.buffer = buffer;
+            this.exchanger = exchanger;
+        }
+        @Override
+        public void run() {
+            for (int i = 1; i < 5; i++) {
+                //调用exchange()与消费者进行数据交换
+                try {
+                    buffer = exchanger.exchange(buffer);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                System.out.println("消费者第" + i + "次提取");
+                for (int j = 1; j <= 3; j++) {
+                    System.out.println("消费者 : " + buffer.get(0));
+                    buffer.remove(0);
+                }
+            }
+        }
+    }
+}
+```
+在Exchanger中，如果一个线程已经到达了exchanger节点时，对于它的伙伴节点的情况有三种：
+- 如果它的伙伴节点在该线程到达之前已经调用了exchanger方法，则它会唤醒它的伙伴然后进行数据交换，得到各自数据返回。
+- 如果它的伙伴节点还没有到达交换点，则该线程将会被挂起，等待它的伙伴节点到达被唤醒，完成数据交换。
+- 如果当前线程被中断了则抛出异常，或者等待超时了，则抛出超时异常。
+
+### 13.3、实现分析
+Exchanger算法的核心是通过一个可交换数据的slot，以及一个可以带有数据item的参与者，其文档注释中描述代码如下：
+```java
+ for (;;) {
+	if (slot is empty) {                       // offer
+		place item in a Node;
+		if (can CAS slot from empty to node) {
+		wait for release;
+		return matching item in node;
+		}
+	}
+	else if (can CAS slot from node to empty) { // release
+		get the item in node;
+		set matching item in node;
+		release waiting thread;
+	}
+	// else retry on CAS failure
+}
+```
+- 成员变量
+```java
+private final Participant participant;
+private volatile Node[] arena;
+private volatile Node slot;
+```
+通过数组arena来安排不同的线程使用不同的slot来降低竞争问题，并且可以保证最终一定会成对交换数据。但是Exchanger不是一来就会生成arena数组来降低竞争，只有当产生竞争是才会生成arena数组
 
 # 四、并发容器
 
@@ -2021,6 +2132,8 @@ public void execute(Runnable command) {
 
 # 参考文章
 
+* [死磕Java并发](http://blog.csdn.net/chenssy/article/category/6701493/2)
+* [Java并发专题](https://juejin.im/post/5aeed586f265da0b8262b019)
 * [非阻塞同步算法与CAS(Compare and Swap)无锁算法](http://www.cnblogs.com/Mainz/p/3546347.html)
 * [Java CAS 和ABA问题](http://www.cnblogs.com/549294286/p/3766717.html、http://www.importnew.com/20472.html)
 * [Unsafe与CAS](http://www.cnblogs.com/xrq730/p/4976007.html)
@@ -2029,7 +2142,6 @@ public void execute(Runnable command) {
 * [Java并发性和多线程介绍](http://ifeve.com/java-concurrency-thread-directory/)
 * [线程池](http://www.importnew.com/19011.html)
 * [Java多线程系列](http://www.cnblogs.com/skywang12345/p/java_threads_category.html)
-* [死磕Java并发](http://blog.csdn.net/chenssy/article/category/6701493/2)
 * [线程中断机制](http://ifeve.com/java-interrupt-mechanism/)
 * [深入分析synchronized的实现原理](http://cmsblogs.com/?p=2071)
 * [Synchronized及其实现原理](http://www.cnblogs.com/paddix/p/5367116.html)
@@ -2046,3 +2158,4 @@ public void execute(Runnable command) {
 * [线程池原理](http://www.cnblogs.com/cm4j/p/thread-pool.html)
 * [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
 * [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
+* [Exchanger](http://cmsblogs.com/?p=2269)
