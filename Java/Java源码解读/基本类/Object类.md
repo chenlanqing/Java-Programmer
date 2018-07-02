@@ -298,6 +298,8 @@ public boolean equals(Object obj){
 
 # 4、finalize()方法
 
+[详解finalize方法](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java-GC%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6.md#%E5%85%AD%E8%AF%A6%E8%A7%A3-finalize%E6%96%B9%E6%B3%95)
+
 finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说不是轻量级的程序;
 
 - 4.1、用途： 
@@ -323,9 +325,45 @@ finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说�
 		}
 	}
 	```
-- 4.4、finalize 方法实现原理：
+- 4.4、finalize方法存在问题
 
-- 4.5、finalize方法如何执行
+不建议使用finalize，在Java9甚至将该方法标记为deprecated，如果没有特殊原因，不要实现finalize方法，为什么？因为无法保证finalize什么时候执行，执行的是否符合预期。使用不当会影响性能，导致程序死锁、挂起
+
+*为什么导致这些问题呢？*
+
+finalize的执行是和垃圾收集关联在一起的，一旦实现了非空的finalize方法的对象是个“特殊公民”，JVM要对它进行额外处理。finalize本质上成为了快速回收的阻碍者，可能导致你的对象经过多个垃圾收集周期才回收；
+
+实践中因为finalize拖慢垃圾收集，导致大量对象堆积，也是一种典型的OOM的原因；
+
+从另一个角度，需要确保回收资源是因为资源有限，垃圾收集的时间不可预测，可能极大加剧资源占用，推荐资源用完即释放或者利用资源池来尽量重用；finalize还会掩盖资源回收时的出错信息，看如下代码：
+```java
+private void runFinalizer(JavaLangAccess jla) {
+	synchronized (this) {
+		if (hasBeenFinalized()) return;
+		remove();
+	}
+	try {
+		Object finalizee = this.get();
+		if (finalizee != null && !(finalizee instanceof java.lang.Enum)) {
+			jla.invokeFinalize(finalizee);
+
+			/* Clear stack slot containing this variable, to decrease
+				the chances of false retention with a conservative GC */
+			finalizee = null;
+		}
+	} catch (Throwable x) { } // 异常信息被吞掉，意味着一旦出错或异常，得不到任何有效的信息。
+	super.clear();
+}
+```
+
+
+
+
+- 4.5、finalize的替代机制
+
+Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner实现利用了幻象引用，这是一种常见所谓post-mortem清理机制。
+
+吸取finalize的教训，每个Cleaner的操作都是独立的，它有自己的运行线程，可以避免死锁；
 
 # 5、toString()方法：
 
