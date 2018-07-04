@@ -2729,6 +2729,28 @@ Java 类加载与初始化是 JVM 保证线程安全，而 Java enum 枚举在�
 - Enumeration 只有两个方法接口，我们只能读取集合的数据而不能对数据进行修改，而 Iterator 有三个方法接口，除了能读取集合的数据外也能对数据进行删除操作
 - Enumeration 不支持 fail-fast 机制，而 Iterator 支持 fail-fast 机制（一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生 fail-fast 机制，譬如ConcurrentModificationException 异常）尽量使用 Iterator 迭代器而不是 Enumeration 枚举器；
 
+# 十九、Java异常
+## 1、异常
+
+## 2、Error
+
+## 3、Exception
+
+## 4、Exception分类
+
+### 4.1、运行时异常
+
+### 4.2、非运行时异常
+
+## 5、常见异常
+
+### 5.1、NoClassDefFoundError和ClassNotFoundException
+当 JVM 或 ClassLoader 在加载类时找不到对应类就会引发 NoClassDefFoundError 和 ClassNotFoundException，他们的区别如下：
+
+- NoClassDefFoundError 和 ClassNotFoundException 都是由于在 CLASSPATH 下找不到对应的类而引起的。当应用运行时没有找到对应的引用类就会抛出 NoClassDefFoundError，当在代码中通过类名显式加载类（如使用 Class.forName()）时没有找到对应的类就会抛出 ClassNotFoundException；
+- NoClassDefFoundError 表示该类在编译阶段可以找到，但在运行时找不到了，另外有时静态块的初始化过程也会导致 NoClassDefFoundError。而 ClassNotFoundException 一般发生在通过反射或者 ClassLoader 依据类名加载类时类不存在；
+- 此外 NoClassDefFoundError 是 Error，是不受检查类型的异常；而 ClassNotFoundException 是受检查类型的异常，需要进行异常捕获，否则会导致编译错误；
+- NoClassDefFoundError 是链接错误，发生在 JVM 类加载流程的链接阶段，当解析引用的时候找不到对应的类就会抛出 NoClassDefFoundError；而 ClassNotFoundException 一般发生在类加载流程的加载阶段
 
 # 参考文章
 
