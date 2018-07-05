@@ -35,14 +35,18 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# 一.HashMap 基本:
-	HashMap 是基于一个数组和多个链表来实现的
-	HashMap 继承 AbstractMap, 实现了 Map, Cloneable, Serializable
-## 1.HashMap 的特点:
-### 1.1.HashMap 基本结构:
-	使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对
-	HashMap将 数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组),
-	这个内部数组的默认长度是 16
+# 一、HashMap 基本
+
+HashMap 是基于一个数组和多个链表来实现的，HashMap继承AbstractMap, 实现了 Map、Cloneable、Serializable
+```java
+public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable, Serializable
+```
+
+## 1、HashMap的特点
+### 1.1、HashMap 基本结构
+
+在JDK8之前使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对,HashMap将数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组),这个内部数组的默认长度是 16；
+
 ### 1.2.HashMap 的特点:
 	(1).线程非安全,并且允许key与value都为 null 值,HashTable 与之相反,为线程安全,key与value都不允许 null 值;
 	(2).不保证其内部元素的顺序,而且随着时间的推移,同一元素的位置也可能改变（resize的情况）
