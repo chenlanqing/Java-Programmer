@@ -666,7 +666,20 @@ synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现�
 	```
 	里每次调用stringBuffer.append方法都需要加锁和解锁，如果虚拟机检测到有一系列连串的对同一个对象加锁和解锁操作，就会将其合并成一次范围更大的加锁和解锁操作，即在第一次append方法时进行加锁，最后一次append方法结束后进行解锁
 
-	- 锁消除(Lock Elimination):锁消除即删除不必要的加锁操作。根据代码逃逸技术，如果判断到一段代码中，堆上的数据不会逃逸出当前线程，那么可以认为这段代码是线程安全的，不必要加锁.如:方法内的局部变量；
+	- 锁消除(Lock Elimination):锁消除即删除不必要的加锁操作。根据代码逃逸技术，如果判断到一段代码中，堆上的数据不会逃逸出当前线程，那么可以认为这段代码是线程安全的，不必要加锁。如:方法内的局部变量；
+	```java
+	public void hello() {
+		Object object = new Object();
+		synchronized(object) {
+			System.out.println(object);
+		}
+	}
+	// 上述代码在逃逸分析中会被优化成：
+	public void hello(){
+		Object object = new Object();
+		System.out.println(object);
+	}
+	```
 
 **7.7、总结：**
 
