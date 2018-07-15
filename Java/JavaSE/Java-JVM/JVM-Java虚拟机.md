@@ -1490,38 +1490,342 @@ public class FanxingTest{
 - 哪些程序代码会被编译为本地代码？如何编译为本地代码？
 - 如何从外部观察即时编译器的编译过程和编译结果
 
-### 10.4.1、
+###  10.4.1、概述
+当JVM在发现某个方法或者代码块运行特别频繁时，会把这些代码认定为“热点代码”，在运行时，虚拟机会将这些代码编译成与本地平台相关的机器码，并进行各种层次的优化，提高热点代码的执行效率，完成这个任务的成为即时编译器（Just In Time Compiler，JIT编译器）
 
-- Java 程序最初是仅仅通过解释器解释执行的，即对字节码逐条解释执行，这种方式的执行速度相对会比较慢，尤其当某个方法或代码块运行的特别频繁时，这种方式的执行效率就显得很低，当虚拟机发现某个方法或代码块运行特别频繁时，就会把这些代码认定为“Hot Spot Code”(热点代码)，为了提高热点代码的执行效率，在运行时，虚拟机将会把这些代码编译成与本地平台相关的机器码，并进行各层次的优化，完成这项任务的正是JIT编译器；
+### 10.4.2、解释器与编译器
 
-- 当前主流的商用虚拟机中几乎都同时包含解释器和编译器，二者各有优势：
-	- 当程序需要迅速启动和执行时，解释器可以首先发挥作用，省去编译的时间，立即执行;
-	- 当程序运行后，随着时间的推移，编译器逐渐发挥最用，把越来越多的代码编译成本地代码后，可以获取更高的执行效率。解释器可以节约内存，而编译执行可以提升效率;
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/解释器与编译器交互.png)
 
-- HotSpot 虚拟机中内置了两个JIT编译器：Client Complier 和 Server Complier，分别用在客户端和服务端；运行过程中会被即时编译器编译的“热点代码”有两类：
+- （1）两者并存的优势：
+	- 程序需要迅速启动和执行时，解释器优先发挥作用，省去编译时间，且随着时间推移，编译器将热点代码编译本地代码，提高执行效率；
+	- 当运行环境中内存资源限制较大（如部分嵌入式系统），使用解释器执行节约内存，反之可以使用编译执行来提升效率；
+	- 解释器还可以作为编译器激进优化的逃生门，如编译优化出现问题，能退化为解释器状态执行；
 
-	* 被多次调用的方法;
-	* 被多次调用的循环体
-	
-	两种编译器都是以整个方法作为编译对象，这种编译也是虚拟机中标准的编译方式
+- （2）HotSpot虚拟机内置两个JIT编译器：
+	- Client Compiler：C1编译器，更高的编译速度
+	- Server Compiler：C2编译器，更好的编译质量
 
-	- 热点代码的判定方式：
+- （3）JVM中JIT运行模式：
+	在HotSpot虚拟机（JDK7之前版本的）默认采用的是解释器与妻子一个编译器直接配合的方式。
+	- 混合模式（Mixed Mode）：默认模式，使用解释器+其中一个JIT编译器，可以使用 -client 或者 -server 指定使用哪个；
+	- 解释模式（Interpreted Mode）：只使用解释器，使用 -Xint 强制指定JVM使用解释模式；
+	- 编译模式（Compiled Mode）：只使用编译器，使用 -Xcomp 强制指定JVM优先使用编译模式，解释模式在编译模式无法进行的情况下介入；
+- （4）编译层次
+	为了在程序启动响应速度和运行效率之间达到最佳平衡，HotSpot虚拟机采用分层编译（Tiered Compilation）策略，该策略在JDK1.6时期出现，在JDK7之前需要使用参数：-XX:+TieredCompilation来手动开启，在JDK7的Server模式虚拟机中作为默认编译策略开启，其包含如下层次：
+	- 第0层：程序解释执行，解释器不开启性能监控功能，可触发第1层编译；
+	- 第1层：C1编译，将字节码编译为本地阿迪吗，进行简单、可靠的优化，必要时将加入性能监控逻辑；
+	- 第2层：C2编译，同1层优化，但启动了一些编译耗时较长的优化，甚至根据性能监控信息进行不可靠激进优化；
 
-		- ①、基于采样的热点探测：采用这种方法的虚拟机会周期性地检查各个线程的栈顶，如果发现某些方法经常出现在栈顶，那这段方法代码就是“热点代码”
-			- 优点：实现简单高效，还可以很容易地获取方法调用关系
-			- 缺点：很难精确地确认一个方法的热度，容易因为受到线程阻塞或别的外界因素的影响而扰乱热点探测；
+### 10.4.3、编译对象与触发条件
 
-		- ②、基于计数器的热点探测：采用这种方法的虚拟机会为每个方法，甚至是代码块建立计数器，统计方法的执行次数，如果执行次数超过一定的阀值，就认为它是"热点方法"
-			- 优点：统计结果相对更加精确严谨
-			- 缺点：实现复杂一些，需要为每个方法建立并维护计数器，而且不能直接获取到方法的调用关系
+- （1）编译对象（热点代码）：
+	- 被多次调用的方法：整个方法为编译对象；
+	- 被多次执行的循环体：依然以整个方法（不是单独的循环体）作为编译对象； 循环体编译优化是发生在方法执行过程中，因此称之为“栈上替换（on stack replacement），简称OSR编译，即方法栈帧还在栈上，方法就被替换了”
 
-	- HotSpot 虚拟机中使用的是第二种——基于计数器的热点探测方法，因此它为每个方法准备了两个计数器：方法调用计数器和回边计数器
-		- ①、方法调用计数器：用来统计方法调用的次数，在默认设置下，方法调用计数器统计的并不是方法被调用的绝对次数，而是一个相对的执行频率，即一段时间内方法被调用的次数
-		- ②、回边计数器：回边计数器用于统计一个方法中循环体代码执行的次数在字节码中遇到控制流向后跳转的指令就称为“回边”
+- （2）热点代码探测
+	- 基于采样的热点探测：其会周期性的检查各个线程的栈顶，如果发现某个或某些方法经常出现在栈顶，即热点方法
+		- 优点：实现简单、高效，可以很容易获取方法调用关系（将调用堆栈展开）
+		- 缺点：很难搞精准确定一个方法的热度，容易因为受到线程阻塞或别的外界因素的影响而扰乱热点探测；
+	- 基于计数器的热点探测：会为每个方法（代码块）建立计数器，统计方法的执行次数，如果执行次数超过一定阈值，就认定为热点方法；
+		- 优点：统计结果相对来说更加精确和严谨；
+		- 缺点：实现复杂，需要为每个方法都建立并维护计数器；且不能直接获取到方法的调用关系；
 
-		在确定虚拟机运行参数的前提下，这两个计数器都有一个确定的阀值，当计数器的值超过了阀值，就会触发JIT编译触发了JIT编译后，在默认设置下，执行引擎并不会同步等待编译请求完成，而是继续进入解释器按照解释方式执行字节码，直到提交的请求被编译器编译完成为止；当编译工作完成后，下一次调用该方法或代码时，就会使用已编译的版本
+- （3）基于计数器的热点探测：HotSpot虚拟机采用的探测方法；可以分为两类：
+	- 方法调用计数器：用于统计方法被调用的次数，默认阈值在Client模式下是1500次，在Server下是10000次
+		- 阈值修改：-XX:CompiledThreshold；
+		- 半衰周期：当超过一定时间限度，如果方法的调用次数仍然不足以让它提交JIT编译器编译，那么这个方法的调用计数器就被减少一半，该过程称为方法调用计数器热度的衰减，这段时间称为方法统计的半衰周期，使用 -XX:CounterHalfLifeTime 来设置半衰周期时间，单位是s
+		- 关闭热锻衰减：-XX:-UseCounterDecay
 
-Javac 字节码编译器与虚拟机内的 JIT 编译器的执行过程合起来其实就等同于一个传统的编译器所执行的编译过程	
+		![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/方法调用计数器触发即时编译.png)
+
+	- 回边计数器：统计一份方法中循环体代码执行的次数，在字节码中遇到控制流向后跳转的指令成为“回边”，建立回边的计数器统计的目的是为了触发OSR编译
+		- 阈值修改：-XX:BackEdgeThreshold，但当前虚拟机实际并未使用该参数；
+		- 间接修改阈值：-XX:OnStackReplacePercentage，其计算公式如下：
+			- Client模式下：阈值 = 方法调用计数器阈值（CompiledThreshold） * OSR 比率（OnStackReplacePercentage）/ 100； 其中OnStackReplacePercentage默认值为933，如果都取默认值的话，Client模式下虚拟机回边计数器的阈值我13955；
+			- Server模式：阈值 = 方法调用计数器阈值 * （OSR 比率 - 解释器监控比率（InterperterProfilePercentage）） / 100；其中OnStackReplacePercentage默认值为140，InterperterProfilePercentage 默认值为33，如果都取默认值，那么Server模式虚拟机回边计数器的阈值为10700；
+
+		![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/方法调用计数器触发即时编译.png)
+
+	*注意：* 上述图片中仅仅描述了Client VM的即时编译方式，对于Server VM 来说，情况比上述更复杂。可以通过源码文件 MethodOop.hpp中，定义了Java方法在虚拟机中的内存布局
+
+### 10.4.4、编译过程
+
+通过-XX:BackgroundCompilation禁止后台编译。Server Compiler和Client Compiler两个编译器的编译过程是不一样的
+
+- （1）对于Client Compiler来说，其实一个简单的三段式编译器：
+	- 第一阶段：一个平台独立的前端将字节码构成一种高级中间代码表示（High-Level Intermediate Representation，HIR）。HIR使用静态分配（Static Single Assignment，SSA）的形式来代表代码值，使得HIR的构造过程之中和之后都进行的优化动作更容易实现，在此之前会继续基础优化，如：方法内联、常量传播等；
+	- 第二阶段：一个平台相关的后端从HIR中产生低级中间代码（LIR）表示，而在此之前会在HIR上完成另外一部分的优化，如：控制检查、范围检查消除等；
+	- 第三阶段：是在凭条相关的后端使用线性扫描算法在LIR上分配寄存器，并在LIR上做窥孔优化，产生机器代码；Client Compiler 的大致执行过程：
+
+	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/Client-Compiler架构.png)
+
+- （2）Server Compiler，其会执行所有经典的优化动作，如无用代码消除、循环展开、循环表达式外提、消除公共子表达式、常量传播、基本块重排序等
+
+### 10.4.5、编译优化技术
+
+#### 10.4.5.1、优化技术概览
+优化前代码如下：
+```java
+static class B{
+    int value;
+    final int get(){
+        return value;
+    }
+}
+public void foo(){
+    y = b.get();
+    // ...do stuff
+	z = b.get();
+	sum = y + z; 
+}
+ 
+```
+- 内联优化：
+```java
+public void foo(){
+	y = b.value;
+	// ...do stuff
+	z = b.value;
+	sum = y + z;
+}
+```
+
+- 冗余访问消除或公共子表达式消除后
+```java
+public void foo(){
+	y = b.value;
+	// ...do stuff
+	z = y;
+	sum = y + z;
+}
+```
+
+- 复写传播后：
+```java
+public void foo(){
+	y = b.value;
+	// ...do stuff
+	y = y;
+	sum = y + y;
+}
+```
+
+- 无用代码消除后
+```java
+public void foo(){
+	y = b.value;
+	// ...do stuff
+	sum = y + y;
+}
+```
+#### 10.4.5.2、公共子表达式消除：一种与语言无关的经典优化技术
+- 含义：如果一个表达式E已经计算过，并且从先前的计算到现在E中所有变量的值都没有发生过变化，那么E的这次出现就成为了公共子表达式
+
+
+```java
+// 未优化前
+int d = (c * b) * 12 + a + (a + b * c);
+
+// 公共子表达式消除后
+int E = c * b;
+int d = E * 12 + a + (E + a);
+
+// 代数化简后
+int d  = 13 * E + 2 * a;
+```
+
+#### 10.4.5.3、数组边界检查消除：一种与语言无关的经典优化技术
+- 如果数组下标是一个常量，如foo[3]，只要在编译器根据数据流分析来确定foo.length的值，并判断下标3没有越界，则执行的时候就无需判断了。
+- 如果数组访问是发生在循环中，并且使用循环变量来进行数组访问，如果编译器只要通过数据流分析就可以判定循环变量的取值范围永远在[0,foo.length)之内，那在整个循环中就可以把数组的上下界检查消除；
+
+#### 10.4.5.4、方法内联：编译器最重要的优化手段之一
+- 优点：
+	- 取出调用方法的成本，比如建立栈帧；
+	- 为其他优化建立基础
+
+- 涉及技术：用于解决多态特征
+	- 类型继承关系分析（CHA，Class Hierarchy Analysis）技术：用于确定目前的加载类中，某个接口是否有多个实现，某个类是否有子类和子类是否抽象等；
+	- 内联缓存：在未发生方法调用钱，内联缓存为空，第一个调用后，缓存下方法接收者的版本信息，并且每次进行方法调取时都比较接收者版本，如果每次调用方法接收者版本一样，那么内联缓存可以继续用，但发现不一样时，即发生了虚函数的多态性，取消内联，，查找虚方法表进行方法分派；
+
+```java
+ // 优化前
+public static void foo(Object obj){
+    if(obj != null){
+        Sout("do something");
+} }
+public static void testInline(String[] args){
+    Object obj = null;
+    foo(obj);
+}
+// 优化后
+public static void testInline(String[] args){
+    Object obj = null;
+    if(obj != null){
+        Sout("do something");
+    }
+}
+```
+
+#### 10.4.5.5、逃逸分析
+
+- **1、基本概念**
+
+	逃逸分析的基本行为就是分析对象动态作用域：当一个对象在方法中被定义之后，它可能被外部所引用。例如作为调用参数传递到其他地方中，称为方法逃逸
+	```java
+	public static StringBuffer craeteStringBuffer(String s1， String s2) {
+		StringBuffer sb = new StringBuffer();
+		sb.append(s1);
+		sb.append(s2);
+		// StringBuffer sb是一个方法内部变量，上述代码中直接将sb返回，这样这个StringBuffer有可能被其他
+		// 方法所改变，这样它的作用域就不只是在方法内部，虽然它是一个局部变量，称其逃逸到了方法外部
+		return sb;
+		// 如果想要 StringBuffer sb 不逃逸出方法，可以使用 sb.toString();
+	}
+	```
+	使用逃逸分析，编译器对代码做了如下优化：
+	- 同步省略：如果一个对象被发现只能从一个线程被访问到，那么对于这个对象的操作可以不考虑同步
+	- 将堆分配转化为栈分配：如果一个对象在子程序中被分配，要使指向该对象的指针永远不会逃逸，对象可能是栈分配的候选，而不是堆分配
+	- 分离对象或标量替换：有的对象可能不需要作为一个连续的内存结构存在也可以被访问到，那么对象的部分（或全部）可以不存储在内存，而是存储在CPU寄存器中；
+
+	在Java代码运行时，通过JVM参数可指定是否开启逃逸分析，
+	- -XX:+DoEscapeAnalysis ： 表示开启逃逸分析
+	- -XX:-DoEscapeAnalysis ： 表示关闭逃逸分析 从jdk 1.7开始已经默认开始逃逸分析，如需关闭，需要指定-XX:-DoEscapeAnalysis
+
+- **2、同步省略**
+
+	在动态编译同步块的时候，JIT编译器可以借助逃逸分析来判断同步块所使用的锁对象是否只能够被一个线程访问而没有被发布到其他线程；
+
+	如果同步块所使用的锁对象通过这种分析被证实只能够被一个线程访问，那么JIT编译器在编译这个同步块的时候就会取消对这部分代码的同步。这个取消同步的过程就叫同步省略，也叫锁消除；在使用synchronized的时候，如果JIT经过逃逸分析之后发现并无线程安全问题的话，就会做锁消除
+
+	如下代码
+	```java
+	public void hello() {
+		Object object = new Object();
+		synchronized(object) {
+			System.out.println(object);
+		}
+	}
+	// 上述代码中对object进行加锁，但是object对象的生命周期只存在于hello方法中，并不会被其他方法访问到，因此在JIT编译阶段就被优化掉了，优化成如下代码：
+	public void hello(){
+		Object object = new Object();
+		System.out.println(object);
+	}
+	```
+- **3、标量替换**
+
+	标量（Scalar）是指一个无法再分解成更小的数据的数据。Java中的原始数据类型就是标量。相对的，那些还可以分解的数据叫做聚合量（Aggregate），Java中的对象就是聚合量，因为他可以分解成其他聚合量和标量
+
+	在JIT阶段，如果经过逃逸分析，发现一个对象不会被外界访问的话，那么经过JIT优化，就会把这个对象拆解成若干个其中包含的若干个成员变量来代替。这个过程就是标量替换；
+	```java
+	public static void main(String[] args) {
+	alloc();
+	}
+	private static void alloc() {
+	Point point = new Point（1,2）;
+	System.out.println("point.x="+point.x+"; point.y="+point.y);
+	}
+	class Point{
+		private int x;
+		private int y;
+	}
+	```
+
+	以上代码中，point对象并没有逃逸出alloc方法，并且point对象是可以拆解成标量的。那么，JIT就会不会直接创建Point对象，而是直接使用两个标量int x ，int y来替代Point对象
+	```java
+	private static void alloc() {
+	int x = 1;
+	int y = 2;
+	System.out.println("point.x="+x+"; point.y="+y);
+	}
+	```
+	可以看到，Point这个聚合量经过逃逸分析后，发现他并没有逃逸，就被替换成两个聚合量了。
+
+	那么标量替换有什么好处呢？就是可以大大减少堆内存的占用。因为一旦不需要创建对象了，那么就不再需要分配堆内存了，标量替换为栈上分配提供了很好的基础；
+
+- **4、栈上分配**
+
+	在Java虚拟机中，对象是在Java堆中分配内存的；但是，有一种特殊情况，那就是如果经过逃逸分析后发现，一个对象并没有逃逸出方法的话，那么就可能被优化成栈上分配。这样就无需在堆上分配内存，也无须进行垃圾回收了；
+
+	*其实在现有的虚拟机中，并没有真正的实现栈上分配，其实是标量替换实现的*
+
+	```java
+	public static void main(String[] args) {
+		long a1 = System.currentTimeMillis();
+		for (int i = 0; i < 1000000; i++) {
+			alloc();
+		}
+		// 查看执行时间
+		long a2 = System.currentTimeMillis();
+		// 为了方便查看堆内存中对象个数，线程sleep
+		try {
+			Thread.sleep(100000);
+		} catch (InterruptedException e1) {
+			e1.printStackTrace();
+		}
+	}
+	private static void alloc() {
+		User user = new User();
+	}
+	static class User {}
+
+	```
+	在alloc方法中定义了User对象，但是并没有在方法外部引用他。也就是说，这个对象并不会逃逸到alloc外部。经过JIT的逃逸分析之后，就可以对其内存分配进行优化；
+
+	- **未开启逃逸分析，指定JVM参数**
+		```
+		-Xmx4G -Xms4G -XX:-DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError 
+		```
+		通过jmap命令，可以看到在堆中一共创建了100万个EscapeAnalysis$User对象，虽然在alloc方法中创建的User对象并没有逃逸到方法外部，但是还是被分配在堆内存中；
+		```
+		root@localhost~|⇒  jps
+		5095 Launcher
+		5096 EscapeAnalysis
+		5097 Jps
+		4922 
+		4957 RemoteMavenServer
+		root@localhost~|⇒  jmap -histo 5096
+
+		num     #instances         #bytes  class name
+		----------------------------------------------
+		1:           557       67396184  [I
+		2:       1000000       16000000  com.learning.example.jvm.optimization.EscapeAnalysis$User
+		3:          2947        1353320  [B
+		4:          5138         756256  [C
+		```
+	- **开启逃逸分析，指定JVM参数**
+		```
+		-Xmx4G -Xms4G -XX:+DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError
+		```
+		开启了逃逸分析之后（-XX:+DoEscapeAnalysis），在堆内存中只有12万多个，而因为堆上分配的被优化成了栈上分配，所以GC次数明显减少
+		```
+		num     #instances         #bytes  class name
+		----------------------------------------------
+		1:           583       81745912  [I
+		2:        122982        1967712  com.learning.example.jvm.optimization.EscapeAnalysis$User
+		3:          2009        1200336  [B
+		4:          4250         623352  [C
+
+		```
+
+- **5、总结**
+
+逃逸分析技术并不成熟，其根本原因就是无法保证逃逸分析的性能消耗一定能高于他的消耗，虽然经过逃逸分析可以做标量替换、栈上分配、和锁消除。但是逃逸分析自身也是需要进行一系列复杂的分析的，这其实也是一个相对耗时的过程
+
+## 10.5、Java与C/C++编译器对比
+- **Java的劣势**
+	- JIT及时编译器运行占用用户运行时间；
+	- Java语言是动态类型安全语言，JVM频繁进行动态监测，如：实例方法访问时检查空指针、数组元素访问检查上下界、类型转换时检查继承关系；
+	- Java使用虚方法频率高于C/C++，即多台选择频率大于C/C++；
+	- Java是可以动态拓展的语言，运行时加载新的类可能改变程序类型的继承关系，即编译器需要时刻注意类型变化并在运行时撤销或重新进行一些优化；
+	- Java对象在堆上分配，垃圾回收比C/C++语言由用户管理开销大；
+
+- **Java的优势**
+	- 开发效率高；
+	- C/C++编译器属于静态优化，不能在运行期间进行优化，如
+		- 调用频率预测；
+		- 分支频率预测；
+		- 裁剪未被选择的；
 
 # 11、Java 垃圾收集机制
 
@@ -1670,158 +1974,13 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 
 **13.7、由windows虚拟内存导致的长时间停顿**
 
-# 14、JVM 优化技术
-## 14.1、逃逸分析
 
-### 14.1.1、基本概念
-逃逸分析的基本行为就是分析对象动态作用域：当一个对象在方法中被定义之后，它可能被外部所引用。例如作为调用参数传递到其他地方中，称为方法逃逸
-```java
-public static StringBuffer craeteStringBuffer(String s1， String s2) {
-	StringBuffer sb = new StringBuffer();
-	sb.append(s1);
-	sb.append(s2);
-	// StringBuffer sb是一个方法内部变量，上述代码中直接将sb返回，这样这个StringBuffer有可能被其他
-	// 方法所改变，这样它的作用域就不只是在方法内部，虽然它是一个局部变量，称其逃逸到了方法外部
-	return sb;
-	// 如果想要 StringBuffer sb 不逃逸出方法，可以使用 sb.toString();
-}
-```
-使用逃逸分析，编译器对代码做了如下优化：
-- 同步省略：如果一个对象被发现只能从一个线程被访问到，那么对于这个对象的操作可以不考虑同步
-- 将堆分配转化为栈分配：如果一个对象在子程序中被分配，要使指向该对象的指针永远不会逃逸，对象可能是栈分配的候选，而不是堆分配
-- 分离对象或标量替换：有的对象可能不需要作为一个连续的内存结构存在也可以被访问到，那么对象的部分（或全部）可以不存储在内存，而是存储在CPU寄存器中；
-
-在Java代码运行时，通过JVM参数可指定是否开启逃逸分析，
-- -XX:+DoEscapeAnalysis ： 表示开启逃逸分析
-- -XX:-DoEscapeAnalysis ： 表示关闭逃逸分析 从jdk 1.7开始已经默认开始逃逸分析，如需关闭，需要指定-XX:-DoEscapeAnalysis
-
-### 14.1.2、同步省略
-在动态编译同步块的时候，JIT编译器可以借助逃逸分析来判断同步块所使用的锁对象是否只能够被一个线程访问而没有被发布到其他线程；
-
-如果同步块所使用的锁对象通过这种分析被证实只能够被一个线程访问，那么JIT编译器在编译这个同步块的时候就会取消对这部分代码的同步。这个取消同步的过程就叫同步省略，也叫锁消除；在使用synchronized的时候，如果JIT经过逃逸分析之后发现并无线程安全问题的话，就会做锁消除
-
-如下代码
-```java
-public void hello() {
-	Object object = new Object();
-	synchronized(object) {
-		System.out.println(object);
-	}
-}
-// 上述代码中对object进行加锁，但是object对象的生命周期只存在于hello方法中，并不会被其他方法访问到，因此在JIT编译阶段就被优化掉了，优化成如下代码：
-public void hello(){
-	Object object = new Object();
-	System.out.println(object);
-}
-```
-### 14.1.3、标量替换
-标量（Scalar）是指一个无法再分解成更小的数据的数据。Java中的原始数据类型就是标量。相对的，那些还可以分解的数据叫做聚合量（Aggregate），Java中的对象就是聚合量，因为他可以分解成其他聚合量和标量
-
-在JIT阶段，如果经过逃逸分析，发现一个对象不会被外界访问的话，那么经过JIT优化，就会把这个对象拆解成若干个其中包含的若干个成员变量来代替。这个过程就是标量替换；
-```java
-public static void main(String[] args) {
-   alloc();
-}
-private static void alloc() {
-   Point point = new Point（1,2）;
-   System.out.println("point.x="+point.x+"; point.y="+point.y);
-}
-class Point{
-    private int x;
-    private int y;
-}
-```
-
-以上代码中，point对象并没有逃逸出alloc方法，并且point对象是可以拆解成标量的。那么，JIT就会不会直接创建Point对象，而是直接使用两个标量int x ，int y来替代Point对象
-```java
-private static void alloc() {
-   int x = 1;
-   int y = 2;
-   System.out.println("point.x="+x+"; point.y="+y);
-}
-```
-可以看到，Point这个聚合量经过逃逸分析后，发现他并没有逃逸，就被替换成两个聚合量了。
-
-那么标量替换有什么好处呢？就是可以大大减少堆内存的占用。因为一旦不需要创建对象了，那么就不再需要分配堆内存了，标量替换为栈上分配提供了很好的基础；
-
-### 14.1.4、栈上分配
-在Java虚拟机中，对象是在Java堆中分配内存的；但是，有一种特殊情况，那就是如果经过逃逸分析后发现，一个对象并没有逃逸出方法的话，那么就可能被优化成栈上分配。这样就无需在堆上分配内存，也无须进行垃圾回收了；
-
-*其实在现有的虚拟机中，并没有真正的实现栈上分配，其实是标量替换实现的*
-
-```java
-public static void main(String[] args) {
-	long a1 = System.currentTimeMillis();
-	for (int i = 0; i < 1000000; i++) {
-		alloc();
-	}
-	// 查看执行时间
-	long a2 = System.currentTimeMillis();
-	System.out.println("cost " + (a2 - a1) + " ms");
-	// 为了方便查看堆内存中对象个数，线程sleep
-	try {
-		Thread.sleep(100000);
-	} catch (InterruptedException e1) {
-		e1.printStackTrace();
-	}
-}
-private static void alloc() {
-	User user = new User();
-}
-static class User {}
-
-```
-在alloc方法中定义了User对象，但是并没有在方法外部引用他。也就是说，这个对象并不会逃逸到alloc外部。经过JIT的逃逸分析之后，就可以对其内存分配进行优化；
-
-- **未开启逃逸分析，指定JVM参数**
-	```
-	-Xmx4G -Xms4G -XX:-DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError 
-	```
-	通过jmap命令，可以看到在堆中一共创建了100万个EscapeAnalysis$User对象，虽然在alloc方法中创建的User对象并没有逃逸到方法外部，但是还是被分配在堆内存中；
-	```
-	root@localhost~|⇒  jps
-	5095 Launcher
-	5096 EscapeAnalysis
-	5097 Jps
-	4922 
-	4957 RemoteMavenServer
-	root@localhost~|⇒  jmap -histo 5096
-
-	num     #instances         #bytes  class name
-	----------------------------------------------
-	1:           557       67396184  [I
-	2:       1000000       16000000  com.learning.example.jvm.optimization.EscapeAnalysis$User
-	3:          2947        1353320  [B
-	4:          5138         756256  [C
-	```
-- **开启逃逸分析，指定JVM参数**
-	```
-	-Xmx4G -Xms4G -XX:+DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError
-	```
-	开启了逃逸分析之后（-XX:+DoEscapeAnalysis），在堆内存中只有12万多个，而因为堆上分配的被优化成了栈上分配，所以GC次数明显减少
-	```
-	num     #instances         #bytes  class name
-	----------------------------------------------
-	1:           583       81745912  [I
-	2:        122982        1967712  com.learning.example.jvm.optimization.EscapeAnalysis$User
-	3:          2009        1200336  [B
-	4:          4250         623352  [C
-
-	```
-
-
-### 14.1.5、总结
-
-逃逸分析技术并不成熟，其根本原因就是无法保证逃逸分析的性能消耗一定能高于他的消耗，虽然经过逃逸分析可以做标量替换、栈上分配、和锁消除。但是逃逸分析自身也是需要进行一系列复杂的分析的，这其实也是一个相对耗时的过程
-
-## 14.2
-
-# 15、钩子函数(ShutdownHook)
+# 14、钩子函数(ShutdownHook)
 	https://segmentfault.com/a/1190000011496370
 
 	shutdownHook是一种特殊的结构，它允许开发人员插入JVM关闭时执行的一段代码.这种情况在我们需要做特殊清理操作的情况下很有用.Runtime.addShutdownHook
 
-# 16、JVM问题排查
+# 15、JVM问题排查
 
 	https://blog.csdn.net/GitChat/article/details/79019454
 	
