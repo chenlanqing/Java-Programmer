@@ -1,3 +1,18 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、JVM参数](#%E4%B8%80jvm%E5%8F%82%E6%95%B0)
+  - [1、标准参数](#1%E6%A0%87%E5%87%86%E5%8F%82%E6%95%B0)
+  - [2、非标准参数](#2%E9%9D%9E%E6%A0%87%E5%87%86%E5%8F%82%E6%95%B0)
+  - [3、运行时参数](#3%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8F%82%E6%95%B0)
+  - [4、JIT编译器参数](#4jit%E7%BC%96%E8%AF%91%E5%99%A8%E5%8F%82%E6%95%B0)
+  - [5、高级服务能力参数](#5%E9%AB%98%E7%BA%A7%E6%9C%8D%E5%8A%A1%E8%83%BD%E5%8A%9B%E5%8F%82%E6%95%B0)
+  - [6、垃圾回收参数](#6%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%8F%82%E6%95%B0)
+- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # 一、JVM参数
 JVM参数可以分为如下：
@@ -176,164 +191,219 @@ java [options] -jar filename [args]
 - ```-XX:+UseCodeCacheFlushing``` <br>
     支持在关闭编译器之前清除code cache。默认是开启的，要关闭就把+换成-
 
-- ``` ``` <br>
+## 5、高级服务能力参数
+可以做系统信息收集和扩展性的debug
 
-- ``` ``` <br>
+- ```-XX:+ExtendedDTraceProbes``` <br>
+    支持dtrace探测，默认是关闭的
 
-- ``` ``` <br>
+- ```-XX:+HeapDumpOnOutOfMemory``` <br>
+    设置当java.lang.OutOfMemoryError发生时，将heap内存dump到当前目录的一个文件。默认是不开启的
 
-- ``` ``` <br>
+- ```-XX:HeapDumpPath=path``` <br>
+    设置在dump heap时将文件dump到哪里。默认是当前目录下 java_pidpid.hprof这样形式的文件。指定文件时例子如下：```-XX:HeapDumpPath=/var/log/java/java_heapdump.hprof```
 
-- ``` ``` <br>
+- ```-XX:LogFile=path``` <br>
+    指定日志数据被记录在哪里，默认是在当前目录的hotspot.log下。设置例子如下：```-XX:LogFile=/var/log/java/hotspot.log```
 
-- ``` ``` <br>
+- ```-XX:+PrintClassHistogram``` <br>
+    支持打印类实例的直方图，在按下ctrl+c时（SIGTERM）触发。默认是关闭的。等价于运行jmap -histo命令或者jcmd pid GC.class_histogram命令
 
-- ``` ``` <br>
+- ```-XX:+PrintConcurrentLocks``` <br>
+    支持打印java.util.concurrent的锁信息，在SIGTERM时触发。默认关闭，等价于运行jstack -l或者jcmd pid Thread.print -l命令
 
-- ``` ``` <br>
+- ```-XX:+UnlockDiagnosticVMOptions``` <br>
+    解锁对JVM进行诊断的选项参数。默认是关闭的，开启后支持一些特定参数对JVM进行诊断
 
-- ``` ``` <br>
+## 6、垃圾回收参数
+这部分参数控制JVM如何进行垃圾回收
 
-- ``` ``` <br>
+- ```-XX:+AggressiveHeap``` <br>
+    java堆内存优化。默认是关闭的，如果开启后，针对一些长时间运行的且有密集的内存分配操作，JVM根据系统cpu和内存的配置参数来进行优化
 
-- ``` ``` <br>
+- ```-XX:+AlwaysPreTouch``` <br>
+    支持在JVM启动时touch每一页，这样做会导致每页都会进入内存。可以用来模拟测试长时间运行的任务，将虚拟内存全部映射到物理内存。默认是关闭的
 
-- ``` ``` <br>
+- ```-XX:+CMSClassUnloadingEnabled``` <br>
+    支持CMS垃圾回收下的类卸载。默认是开启的。
 
-- ``` ``` <br>
+- ```-XX:CMSExpAvgFactor=percent``` <br>
+    设置一个时间百分比，用来加权并发回收统计的指数平均的样本。默认是25%
 
-- ``` ``` <br>
+- ```-XX:CMSInitiatingOccupancyFraction=percent``` <br>
+    设置一个年老代的占比，达到多少会触发CMS回收。默认是-1，任何一个负值的设定都表示了用-XX:CMSTriggerRatio来做真实的初始化值。设置方法如下：```-XX:CMSInitiatingOccupancyFraction=20```
 
-- ``` ``` <br>
+- ```-XX:+CMSScavengeBeforeRemark``` <br>
+    开启功能在CMSremark前进行Scavenge。默认是关闭的
 
-- ``` ``` <br>
+- ```-XX:CMSTriggerRatio=percent``` <br>
+    设置一个在CMS开始前的内存的触发百分比，针对的是由```-XX:MinHeapFreeRatio```分配的内存。默认是80
 
-- ``` ``` <br>
+- ```-XX:ConcGCThreads=threads``` <br>
+    设置支持并发GC的线程数。默认值依赖于给JVM的CPU数目
 
-- ``` ``` <br>
+- ```-XX:+DisableExplicitGC``` <br>
+    关闭显式GC调用，即关闭System.gc()。默认是可以调用的
 
-- ``` ``` <br>
+- ```-XX:+ExplicitGCInvokesConcurrent``` <br>
+    支持通过System.gc()来做并发的GC。默认是不支持的。该参数一定要和-XX:+UseConcMarkSweepGC一起使用
 
-- ``` ``` <br>
+- ```-XX:+ExplicitGCInvokesConcurrentAndUnloadsClasses``` <br>
+    支持通过System.gc()来做并发的GC并且卸载类。默认是不支持的。该参数一定要和-XX:+UseConcMarkSweepGC一起使用
 
-- ``` ``` <br>
+- ```-XX:G1HeapRegionSize=size``` <br>
+    设置在使用G1收集器时Java堆被划分为子区域的大小。在1MB到32MB之间，默认会根据Java堆的大小自动检测
 
-- ``` ``` <br>
+- ```-XX:+G1PrintHeapRegions``` <br>
+    打印出哪些region是被分配的，哪些是被G1取回的。默认是关闭打印的
 
-- ``` ``` <br>
+- ```-XX:G1ReservePercent=percent``` <br>
+    设置一个堆内存的百分比用来作为false ceiling，从而降低使用G1时晋升失败的可能性。默认是10%
 
-- ``` ``` <br>
+- ```-XX:InitialHeapSize=size``` <br>
+    设置初始堆内存大小，需要设置为0或者1024的倍数，设置为0说明初始堆大小等于年轻代加年老代的大小
 
-- ``` ``` <br>
+- ```-XX:InitialSurvivorRatio=ratio``` <br>
+    设置初始的survivor空间占比，当使用throughput型的GC时有效（即```-XX:+UseParallelGC``` 或```-XX:+UseParallelOldGC```）。运行过程中survivor空间占比会自动根据应用运行调整，如果关闭了自适应调整策略（```-XX:-UseAdaptiveSizePolicy```），则```XX:SurvivorRatio```参数会成为survivor空间占比。计算survivor空间大小，依赖young的空间大小，计算公式如下：S=Y/(R+2)，其中Y是young空间大小，R是survivor空间占比。一个例子就是如果young空间大小是2MB，而survivor默认占比是8，那么survivor的空间就是0.2MB
 
-- ``` ``` <br>
+- ```-XX:InitiatingHeapOccupancyPercent=percent``` <br>
+    设置一个触发并发GC的堆占用百分比。这个值对于基于整体内存的垃圾回收器有效，比如G1。默认是45%，如果设置为0表示无停顿GC
 
-- ``` ``` <br>
+- ```-XX:MaxGCPauseMillis=time``` <br>
+    设置一个最大的GC停顿时间（毫秒），这是个软目标，JVM会尽最大努力去实现它，默认没有最大值设置
 
-- ``` ``` <br>
+- ```-XX:MaxHeapSize=size``` <br>
+    设置最大堆大小，这个值需要大于2MB，且是1024的整数倍。等价于-Xmx
 
-- ``` ``` <br>
+- ```-XX:MaxHeapFreeRatio=percent``` <br>
+    设置在一次GC后最大的堆空闲空间占比。如果空闲堆空间超过这个值，堆空间会被收缩。默认是70%
 
-- ``` ``` <br>
+- ```-XX:MaxMetaspaceSize=size``` <br>
+    为类的元数据进行分配的metaspace最大native内存大小，默认情况这个值无限制。该值依赖于当前的JVM、其他在运行的JVM和系统可用内存
 
-- ``` ``` <br>
+- ```-XX:MaxNewSize=size``` <br>
+    设置最大的年轻代的堆大小。默认自动检测
 
-- ``` ``` <br>
+- ```-XX:MaxTenuringThreshold=threshold``` <br>
+    设置在自适应GC大小的使用占有最大阈值，默认对于parallel（throughput）的是15，对于CMS的是6
 
-- ``` ``` <br>
+- ```-XX:MetaspaceSize=size``` <br>
+    设置一个metaspace的大小，第一次超出该分配后会触发GC。默认值依赖于平台，该值会在运行时增加或减少
 
-- ``` ``` <br>
+- ```-XX:MinHeapFreeRatio=percent``` <br>
+    设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%
 
-- ``` ``` <br>
+- ```-XX:NewRatio=ratio``` <br>
+    设置年轻代和年老代的比例，默认是2。
 
-- ``` ``` <br>
+- ```-XX:NewSize=size``` <br>
+    设置初始的年轻代的大小。年轻代是分配新对象的地方，是 GC经常发生的地方。设置太低，会频繁minor GC，设置太高的话就只会发生Full GC了。Oracle推荐设置为整体内存的一半或者1/4。该参数等价于-Xmn
 
-- ``` ``` <br>
+- ```-XX:ParallelGCThreads=threads``` <br>
+    并行GC时的线程数。默认值是CPU数
 
-- ``` ``` <br>
+- ```-XX:+ParallelRefProcEnabled``` <br>
+    支持并发引用处理，默认是关闭的。
 
-- ``` ``` <br>
+- ```-XX:+PrintAdaptiveSizePolicy``` <br>
+    打印自适应调整策略。默认关闭
 
-- ``` ``` <br>
+- ```-XX:+PrintGC``` <br>
+    打印每次GC的消息，默认是关闭的
 
-- ``` ``` <br>
+- ```-XX:+PrintGCApplicationConcurrentTime``` <br>
+    打印上次GC暂停到目前的时间。默认不打印
 
-- ``` ``` <br>
+- ```-XX:+PrintGCApplicationStoppedTime``` <br>
+    打印GC暂停的时间长度。默认不打印
 
-- ``` ``` <br>
+- ```-XX:+PrintGCDateStamps``` <br>
+    打印每个GC的日期时间戳。默认不打印。
 
-- ``` ``` <br>
+- ```-XX:+PrintGCDetails``` <br>
+    打印每次GC的细节信息。默认不打印
 
-- ``` ``` <br>
+- ```-XX:+PrintGCTaskTimeStamps``` <br>
 
-- ``` ``` <br>
+- ```打印每个独立的GC线程任务的时间戳。默认不打印``` <br>
 
-- ``` ``` <br>
+- ```-XX:+PrintGCTimeStamps``` <br>
+    打印每次GC的时间戳。默认不打印。
 
-- ``` ``` <br>
+- ```-XX:+PrintStringDeduplicationStatistics``` <br>
+    打印细节的deduplication信息。默认不打印。
 
-- ``` ``` <br>
+- ```-XX:+PrintTenuringDistribution``` <br>
+    打印所在的年龄代的信息。具体例子如下：
+    ```
+    Desired survivor size 48286924 bytes, new threshold 10 (max 10) 
+    - age 1: 28992024 bytes, 28992024 total 
+    - age 2: 1366864 bytes, 30358888 total 
+    - age 3: 1425912 bytes, 31784800 total 
+    ...
+    ```
+    其中age1是最年轻的survivor，age2存活了2代，以此类推。默认该项关闭。
 
-- ``` ``` <br>
+- ```-XX:+ScavengeBeforeFullGC``` <br>
+    在每次Full GC前做一次年轻代的GC。该项默认是开启的。
 
-- ``` ``` <br>
+- ```-XX:SoftRefLRUPolicyMSPerMB=time``` <br>
+    设置一个软引用对象在上次被引用后在堆内存中保存的时间。默认是每1MB保存1秒钟。该参数对于client模式和server模式有不同的动作，因为client模式JVM在回收时会强制flush掉软引用，然而server模式会尝试先扩容堆空间
 
-- ``` ``` <br>
+- ```-XX:StringDeduplicationAgeThreshold=threshold``` <br>
+    string对象到达特定的age后会去除重复数据。默认是3，jvm中每次gc后存活的对象，age会加一。string对象在晋升为年老代之前都是去除重复数据的候选对象
 
-- ``` ``` <br>
+- ```-XX:SurvivorRatio=ratio``` <br>
+    eden区和survivor区的比例。默认是8。
 
-- ``` ``` <br>
+- ```-XX:TargetSurvivorRatio=percent``` <br>
+    设置在YGC后的期望的survivor空间占比。默认是50%。
 
-- ``` ``` <br>
+- ```-XX:TLABSize=size``` <br>
+    设置thread-local allocation buffer (TLAB)的初始化大小
 
-- ``` ``` <br>
+- ```-XX:+UseAdaptiveSizePolicy``` <br>
+    使用自适应分代大小。默认是开启的
 
-- ``` ``` <br>
+- ```-XX:+UseCMSInitiatingOccupancyOnly``` <br>
+    设置使用占用值作为初始化CMS收集器的唯一条件。默认是不开启
 
-- ``` ``` <br>
+- ```-XX:+UseConcMarkSweepGC``` <br>
+    设置让CMS也支持老年代的回收。默认是不开启的，如果开启，那么```-XX:+UseParNewGC```也会自动被设置。Java 8 不支持```-XX:+UseConcMarkSweepGC```，``` -XX:-UseParNewGC```这种组合
 
-- ``` ``` <br>
+- ```-XX:+UseG1GC ``` <br>
+    设置使用G1作为GC收集器。G1比较推荐在大堆应用场景下使用（大于6GB）
 
-- ``` ``` <br>
+- ```-XX:+UseGCOverheadLimit``` <br>
+    设置一种策略用来设置一个时间比率来限制在OOM之前的GC时间。默认是开启的，并行GC时如果有多于98%以上的时间用来gc就会抛出OOM。当堆空间较小时这个参数有助于保护应用程序不至于长时间的停顿没有进展
 
-- ``` ``` <br>
+- ```-XX:+UseNUMA``` <br>
+    使用NUMA[5]开启性能优化。默认不开启，该项只有在开启了```-XX:+UseParallelGC```后才有效
 
-- ``` ``` <br>
+- ```-XX:+UseParallelGC``` <br>
+    支持并行的垃圾收集器，即throughput垃圾收集。这可以在多核处理器下提升垃圾收集性能。默认不开启，收集器由系统根据JVM和机器配置自动选择。开启后```-XX:+UseParallelOldGC```选项也自动开启。
 
-- ``` ``` <br>
+- ```-XX:+UseParallelOldGC``` <br>
+    支持FULL GC的并行收集器。默认不开启
 
-- ``` ``` <br>
+- ```-XX:+UseParNewGC``` <br>
+    支持在年轻代用多线程进行垃圾收集。默认不开启，使用```-XX:+UseConcMarkSweepGC```时会自动被开启
 
-- ``` ``` <br>
+- ```-XX:+UseSerialGC``` <br>
+    支持使用串行收集器。默认不开启
 
-- ``` ``` <br>
+- ```-XX:+UseSHM``` <br>
+    在Linux环境下支持JVM使用共享内存来设置大页
 
-- ``` ``` <br>
+- ```-XX:+UseStringDeduplication``` <br>
+    支持string的去重存储。默认关闭，要使用该选项，必须使用G1垃圾回收器```-XX:+UseG1GC```。
 
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
-- ``` ``` <br>
-
+- ```-XX:+UseTLAB``` <br>
+    在年轻代支持thread-local分配block，默认开启
 
 
 # 参考文章
 
-* [JVM参数优化](https://www.zybuluo.com/changedi/note/975529)
-* [Java8 JVM参数解读](https://blog.csdn.net/liuxinghao/article/details/73963399)
+* [Java8 JVM参数解读](https://www.zybuluo.com/changedi/note/975529)
+* [JVM参数优化](https://blog.csdn.net/liuxinghao/article/details/73963399)
 * [JVM命令参数大全](https://blog.csdn.net/zero__007/article/details/52848040)

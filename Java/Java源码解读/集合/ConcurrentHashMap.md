@@ -10,12 +10,12 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-三个方法研究:
-ConcurrentHashMap 的锁分段技术;
-ConcurrentHashMap 的读是否要加锁,为什么;
-ConcurrentHashMap 的迭代器是强一致性的迭代器还是弱一致性的迭代器;
+基于如下来分析：
+- ConcurrentHashMap 的锁分段技术；
+- ConcurrentHashMap 的读是否要加锁，为什么？
+- ConcurrentHashMap 的迭代器是强一致性的迭代器还是弱一致性的迭代器；
 
-# 一.基于 JDK6 ConcurrentHashMap 的技术原理:
+# 一、基于 JDK6 ConcurrentHashMap 的技术原理
     1.ConcurrentHashMap 的锁分段技术:
         首先将数据分成一段一段的存储,然后给每一段数据配一把锁,当一个线程占用锁访问其中一个段数据的时候,其他段的数据也能被其他线程访问.
         采用分段锁的机制,实现并发的更新操作,底层采用"数组+链表+红黑树"的存储结构,其包含两个核心静态内部类 Segment 和 HashEntry.
