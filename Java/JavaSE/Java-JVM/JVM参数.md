@@ -197,7 +197,7 @@ java [options] -jar filename [args]
 - ```-XX:+ExtendedDTraceProbes``` <br>
     支持dtrace探测，默认是关闭的
 
-- ```-XX:+HeapDumpOnOutOfMemory``` <br>
+- ```-XX:+HeapDumpOnOutOfMemoryError``` <br>
     设置当java.lang.OutOfMemoryError发生时，将heap内存dump到当前目录的一个文件。默认是不开启的
 
 - ```-XX:HeapDumpPath=path``` <br>
