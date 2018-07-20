@@ -557,7 +557,8 @@ public class ShellSort {
 |快速排序|O(nlogn)|O(nlogn)|O(n<sup>2</sup>)|O(logn)~O(n)|不稳定|
 
 
-
+# 参考资料
+* [快速排序算法实现原理](http://www.cnblogs.com/nullzx/p/5880191.html)
 
 
 
