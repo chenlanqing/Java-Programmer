@@ -60,12 +60,12 @@ C:\Users\BlueFish>jstat -gc 2120
 - EU：Eden space容量使用的大小（KB）
 - OC：Old space当前容量的大小（KB）
 - OU：Old space使用容量的大小（KB）
-- MC：方法区大小
-- MU：方法区使用大小
+- MC：metaspace总量大小
+- MU：metaspace使用大小
 - CCSC：压缩类空间大小
 - CCSU：压缩类空间使用大小
-- PC：Permanent space当前容量的大小（KB）
-- PU：Permanent space使用容量的大小（KB）
+- PC：Permanent space当前容量的大小（KB），在JDK8已已经没有了
+- PU：Permanent space使用容量的大小（KB），在JDK8已已经没有了
 - YGC：从应用程序启动到采样时发生 Young GC 的次数
 - YGCT：从应用程序启动到采样时 Young GC 所用的时间(秒)
 - FGC：从应用程序启动到采样时发生 Full GC 的次数
