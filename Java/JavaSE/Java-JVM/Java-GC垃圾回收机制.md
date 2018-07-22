@@ -111,10 +111,11 @@ public class Main {
 	
 **2.2、Java中，可作为GC Roots的对象包括**
 
-- 虚拟机栈（栈桢中的本地变量表）中引用的对象；
+- 虚拟机栈（栈桢中的本地变量表）中引用的对象：类加载器、Thread等
 - 方法区中类静态属性引用的对象；
 - 方法区中常量引用的对象；
 - 本地方法栈中 JNI（即一般说的 native 方法）引用的对象；
+
 
 **2.3、对于用可达性分析法搜索不到的对象，GC 并不一定会回收该对象:要完全回收一个对象，至少需要经过两次标记的过程**
 
@@ -238,9 +239,26 @@ public class Main {
 
 # 四、垃圾收集器
 
-内存回收的具体实现：
-新生代收集器使用的收集器：Serial、PraNew、Parallel Scavenge<br>
-老年代收集器使用的收集器：Serial Old、Parallel Old、CMS<br>
+- 内存回收的具体实现：
+	- 新生代收集器使用的收集器：Serial、PraNew、Parallel Scavenge
+	- 老年代收集器使用的收集器：Serial Old、Parallel Old、CMS
+
+- 分类：
+	- 串行收集器Serial：Serial、Serial Old
+	- 并行收集器Parallel：Parallel Scavenge、Parallel Old，以吞吐量
+
+		指多条垃圾收集线程并行工作，但此时用户线程仍然处于等待状态，适合科学计算、后台处理等弱交互场景
+
+	- 并发收集器Concurrent：CMS、G1，有一定的停顿时间
+
+		指用户线程与垃圾收集线程同时执行（但不一定是并行的，可能会交替执行），垃圾收集线程在执行的时候不会停顿用户程序的运行，适合对响应时间有要求的场景，如web
+
+- 停顿时间与吞吐量
+	- 停顿时间：垃圾收集器做垃圾回收中断应用执行的时间。-XX:MaxGCPauseMillis
+	- 吞吐量：花在垃圾收集的时间和花在应用时间的占比。-XX:GCTimeRatio=<n>，垃圾收集时间占：1/（1+n）
+	
+	*最优结果：在最大吞吐量的时候，停顿时间最短*
+
 
 ## 1、Serial 收集器
 
@@ -297,7 +315,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 - Parallel Scavenge 收集器的老年代版本，使用标记-整理算法
 - JDK1.6 之后才开始提供的
 
-## 6、CMS（Concurrent Mark Sweep）收集器
+## 6、CMS（Concurrent Mark Sweep）收集器-老年代
 
 **6.1、追求最短 GC 回收停顿时间**
 
@@ -318,7 +336,19 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 	- CMS 收集无法处理浮动垃圾(Floating Garbage)，可能出现 Concurrent Mode Failure 失败而导致一次 Full GC 的产生
 	- CMS 基于标记-清除算法实现的，那么垃圾收集结束后会产生大量的空间碎片，空间碎片过多时，将会给大对象的分配带来很大麻烦，往往出现老年代还有很大空间剩余，但是无法找到足够大的连续空间来分配当前对象们，不得不提前触发一次 Full GC。
 
-## 7、G1收集器（Garbage First）：面向服务端应用的垃圾收集器
+**6.4、CMS相关参数**
+
+- -XX:ConcGCThreads：并发的GC线程数；
+- -XX:+UseCMSCompactAtFullCollection：Full GC之后做压缩
+- -XX:CMSFullGCsBeforeCompaction：多少次Full GC之后压缩一次
+- -XX:CMSInitiatingOccupancyFraction：触发Full GC
+- -XX:+UseCMSInitiatingOccupancyOnly：是否动态调整
+- -XX:+CMSScavengeBeforeRemark：full gc之前先做YGC
+- -XX:+CMSClassUnloadingEnabled：启用回收Perm区，针对JDK8之前的
+
+## 7、G1收集器（Garbage First）
+
+在JDK7正式开始提供G1垃圾收集器，面向服务端应用的垃圾收集器
 
 **7.1、特点：**
 
@@ -343,18 +373,48 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/G1收集器执行步骤.png)
 
+**7.4、最佳实践**
+
+- 年轻代大小：避免使用-Xmn、-XX:NewRatio 等显式设置Young区大小，会覆盖暂停时间目标；
+- 暂停时间目标：暂停时间不要太严苛，其吞吐量目标是90%的应用程序时间个和10%的垃圾回收时间，太严苛会直接影响到吞吐量
+- 关于MixGC调优：一些参数
+	```
+	-XX:InitiatingHeapOccupancyPercent=percent
+	-XX:G1MixedGCLiveThresholdPercent
+	-XX:G1HeapWastePercent
+	-XX:G1MixedGCCountTarget
+	-XX:G1OldCSetRegionThresholdPercent
+	```
+**7.5、是否需要切换到G1**
+如果存在下列问题，可以切换到G1垃圾收集器
+- 50%以上的堆被存活对象占用；
+- 对象分配和晋升的速度变化非常大；
+- 垃圾回收时间特别长，超过了1秒
 
 ## 8、垃圾收集器比较
+- 收集器比较
 
-收集器|运行机制|区域|算法|目标|适用场景
------|--------|----|----|----|------
-Serial|串行|新生代|复制算法|响应速度优先|单CPU环境下的Client模式
-Serial Old|串行|老年代|标记-整理|响应速度优先|单CPU环境下的client模式、CMS的后备预案
-ParNew|并行|新生代|复制算法|响应速度优先|多CPU环境时在Server模式下与CMS配合
-Parallel Scavenge|并行|新生代|复制算法|吞吐量优先|在后台运算而不需要太多的交互的任务
-Parallel Old|并行|老年代|标记-整理|吞吐量优先|在后台运算而不需要太多的交互的任务
-CMS|并发|老年代|标记-清除|响应速度优先|集中在互联网站或B/S系统服务端上的java应用
-G1|并发|both|标记-整理+复制|响应速度优先|面向服务端应用，将来替换CMS
+	收集器|运行机制|区域|算法|目标|适用场景
+	-----|--------|----|----|----|------
+	Serial|串行|新生代|复制算法|响应速度优先|单CPU环境下的Client模式
+	Serial Old|串行|老年代|标记-整理|响应速度优先|单CPU环境下的client模式、CMS的后备预案
+	ParNew|并行|新生代|复制算法|响应速度优先|多CPU环境时在Server模式下与CMS配合
+	Parallel Scavenge|并行|新生代|复制算法|吞吐量优先|在后台运算而不需要太多的交互的任务
+	Parallel Old|并行|老年代|标记-整理|吞吐量优先|在后台运算而不需要太多的交互的任务
+	CMS|并发|老年代|标记-清除|响应速度优先|集中在互联网站或B/S系统服务端上的java应用
+	G1|并发|both|标记-整理+复制|响应速度优先|面向服务端应用，将来替换CMS
+
+- 收集器如何搭配
+
+	![image]()
+
+## 9、如何选择垃圾收集器
+
+- 优先调整堆的大小让服务器自己来选择；
+- 如果内存小于100M，使用串行收集器；
+- 如果是单核，并且没有停顿时间的要求，串行或者JVM自己选择；
+- 如果允许停顿时间超过1秒，选择并行或者JVM自己选择；
+- 如果响应时间最重要，并且不能超过1秒，使用并发收集器
 
 # 五、GC 执行机制:Minor GC和Full GC
 
@@ -468,7 +528,7 @@ Heap
 
 ### 4.3、长期存活的对象将进入老年代
 
-虚拟机给每个对象定义了一个对象年龄计数器，来识别哪些对象放在新生代，哪些对象放在老年代中。如果对象在Eden出生并经过一次 MinorGC 后仍然存活，并且能够被 Survivor 容纳，将被移动到 Survivor 空间，并且对象年龄为1，当它的对象年龄增加到一定程度(默认15岁)，将会进入到老年代。对象晋升老年代的年龄阈值，可以通过参数 --XX:MaxTenuringThreshold 设置
+虚拟机给每个对象定义了一个对象年龄计数器，来识别哪些对象放在新生代，哪些对象放在老年代中。如果对象在Eden出生并经过一次 MinorGC 后仍然存活，并且能够被 Survivor 容纳，将被移动到 Survivor 空间，并且对象年龄为1，当它的对象年龄增加到一定程度(默认15岁)，将会进入到老年代。对象晋升老年代的年龄阈值，可以通过参数 -XX:MaxTenuringThreshold 设置
 
 ### 4.4、动态对象年龄判定
 

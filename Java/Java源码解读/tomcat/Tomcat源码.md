@@ -119,9 +119,91 @@ java提供是jdbc Driver就是基于SPI的
 
 https://www.cnblogs.com/ShawnYang/p/7451459.html
 
+# 五、Tomcat调试与监控
+
+## 1、远程调试Tomcat
+
+### 1.1、JDWP协议
+Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟机之间通信协议
+
+### 1.2、配置tomcat远程调试
+
+- 修改文件：startup.sh
+
+    在如下脚本中加入 jpda：
+    ```shell
+    exec "$PRGDIR"/"$EXECUTABLE" jpda start "$@"
+    ```
+
+- 修改catalina.sh：
+    ```shell
+    if [ "$1" = "jpda" ] ; then
+        if [ -z "$JPDA_TRANSPORT" ]; then
+            JPDA_TRANSPORT="dt_socket"
+        fi
+        if [ -z "$JPDA_ADDRESS" ]; then
+            JPDA_ADDRESS="localhost:8000"
+        fi
+        if [ -z "$JPDA_SUSPEND" ]; then
+            JPDA_SUSPEND="n"
+        fi
+        if [ -z "$JPDA_OPTS" ]; then
+            JPDA_OPTS="-agentlib:jdwp=transport=$JPDA_TRANSPORT,address=$JPDA_ADDRESS,server=y,suspend=$JPDA_SUSPEND"
+        fi
+        CATALINA_OPTS="$JPDA_OPTS $CATALINA_OPTS"
+        shift
+    fi
+    ```
+    修改上述脚本的 JPDA_ADDRESS="localhost:8000"，只需要配置端口即可
+    
+## 2.tomcat-manager监控
+在低版本是默认开启的，而高版本因为安全因素默认是关闭的；
+
+- 文档地址：{tomcat}/webapps/docs/manager-howto.html
+
+- 开启步骤：
+    - conf/tomcat-users.xml 添加用户
+    - conf/Catalina/localhost/manager.xml 配置允许的远程连接
+
+# 六、Tomcat优化
+
+## 1、内存优化
+
+## 2、线程优化
+
+参考文档：{tomcat}/webapps/docs/config/http.html
+
+- maxConnections：最大连接数
+
+- acceptCount
+
+- maxThreads：工作线程数
+
+- minSpareThreads：最小空闲的工作线程
+
+## 3、配置优化
+
+- autoDeploy
+
+    host.html
+
+- enableLookups：DNS查询
+
+    http.html
+
+- reloadable：false
+
+    contex.html
+
+- protocol
+
+    server.xml
+
+
 # 参考文章
 
 * [类加载体系](http：//blog.csdn.net/beliefer/article/details/50995516)
 * [Tomcat源码分析](https：//blog.csdn.net/column/details/tomcat7-internal.html)
 * [Tomcat基本结构](http：//zouzls.github.io/2017/03/29/SpringStart/)
 * [线程上下文类加载器](https://blog.csdn.net/yangcheng33/article/details/52631940)
+* [JDWP 协议及实现](https://www.ibm.com/developerworks/cn/java/j-lo-jpda3/)

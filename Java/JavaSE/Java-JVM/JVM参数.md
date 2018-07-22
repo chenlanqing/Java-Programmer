@@ -131,7 +131,7 @@ java [options] -jar filename [args]
 - ```-XX:OnOutOfMemoryError=string``` <br>
     同```-XX:OnError=string```，具体错误是OOM
 
-- ```-XX:-UseCompressedOops``` <br>
+- ```-XX:-UseCompressedClassPoniters``` <br>
     禁止使用压缩命令来压缩指针引用。压缩指针是默认开启的，如果使用压缩命令压缩指针，可以在JVM内存小于32G时做到内存压缩，即在64位机器上做到内存指针对齐只占用32位而不是64位。这样对于小于32G的JVM有非常高的性能提升。该参数只在64位JVM有效
 
 - ```-XX:+UseLargePages``` <br>
@@ -289,6 +289,9 @@ java [options] -jar filename [args]
 
 - ```-XX:MetaspaceSize=size``` <br>
     设置一个metaspace的大小，第一次超出该分配后会触发GC。默认值依赖于平台，该值会在运行时增加或减少
+
+- ```-XX:CompressedClassSpaceSize```<br>
+    启用CCS，设置压缩类空间大小
 
 - ```-XX:MinHeapFreeRatio=percent``` <br>
     设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%
