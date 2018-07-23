@@ -640,6 +640,36 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 - 如果结果令人满意，你可以将该参数应用于所有的服务器，并停止GC优化<br>
 	-XX:+PrintGCDetails  表示在控制台上打印出GC具体细节<br>
 	-XX:+PrintGC 表示在控制台上打印出GC信息
+- 初始参数：
+	```
+	-XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./ -XX:+PrintGCDetails -XX:+PringGCTimeStamps -XX:+PrintGCDateStamps -Xloggc:/logs/gc.log
+	```
+
+**2.5、调优参数:**
+
+- Parallel GC：
+	```
+	-XX:+UseParallelGC -XX:+UseParallelOldGC -XX:MaxGCPauseMillis=100 -XX:GCTimeRatio=99 -XX:YoungGenerationSizeIncrement=30
+	```
+
+- CMS GC
+
+	```
+	-XX:+UseConcMarkSweepGC -XX:CMSInitiatingOccupancyFraction=92 -XX:+UseCMSInitiatingOccupancyOnly -XX:+UseCMSCompactAtFullCollection -XX:CMSFullGCBeforeCompaction=5
+	```
+
+- G1 GC
+	```
+	-XX:+UseG1GC -Xms128M -Xmx128M -XX:MetaspaceSize=64M -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:StringDeduplicationAgeThreshold=3
+	```
+
+## 3、ParallelGC调优
+
+### 3.1、基本原则
+- 除非确定，否则不要设置最大堆内存；
+- 优先设置吞吐量目标；
+- 如果吞吐量目标达不到，调大最大内存，不能让OS使用Swap，如果仍然达不到，降低目标
+- 吞吐量能达到，GC时间太长，设置停顿时间的目标
 
 # 九、减少GC开销
 
