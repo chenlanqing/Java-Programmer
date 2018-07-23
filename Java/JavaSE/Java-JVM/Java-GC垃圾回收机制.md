@@ -406,7 +406,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 
 - 收集器如何搭配
 
-	![image]()
+	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/GC%E6%90%AD%E9%85%8D.png)
 
 ## 9、如何选择垃圾收集器
 
