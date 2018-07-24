@@ -663,6 +663,14 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 	-XX:+UseG1GC -Xms128M -Xmx128M -XX:MetaspaceSize=64M -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:StringDeduplicationAgeThreshold=3
 	```
 
+**2.6、GC可视化工具**
+
+- [gceasy](http://gceasy.io/)
+
+- [GCViewer](https://github.com/chewiebug/GCViewer)
+
+	*注意：* GCViewer是个maven工程，手动编译：maven clean install -Dmaven.test.skip=true，直接打开jar包导入gc.log文件即可有相应的统计信息
+
 ## 3、ParallelGC调优
 
 ### 3.1、基本原则
@@ -670,6 +678,14 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 - 优先设置吞吐量目标；
 - 如果吞吐量目标达不到，调大最大内存，不能让OS使用Swap，如果仍然达不到，降低目标
 - 吞吐量能达到，GC时间太长，设置停顿时间的目标
+
+## 4、G1 GC调优
+
+### 4.1、关于global concurrent marking
+
+- 堆占有率达到-XX:InitiatinHeapOccupancyPercent的数值触发 global concurrent marking，默认值为45%
+- 在global concurrent marking结束之后，可以知道young区有多少空间要被回收，在每次YGC之后和每次发生MixedGC之前，会检查垃圾占比是否达到-XX:G1HeapWastePercent，只有达到了下次才会发生MixedGC
+
 
 # 九、减少GC开销
 
