@@ -17,30 +17,30 @@
   - [2、标记-整理算法(Mark-Compact)](#2%E6%A0%87%E8%AE%B0-%E6%95%B4%E7%90%86%E7%AE%97%E6%B3%95mark-compact)
   - [3、复制算法（Copying）-新生代采用的收集算法](#3%E5%A4%8D%E5%88%B6%E7%AE%97%E6%B3%95copying-%E6%96%B0%E7%94%9F%E4%BB%A3%E9%87%87%E7%94%A8%E7%9A%84%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95)
   - [4、分代收集算法（Generation Collection）](#4%E5%88%86%E4%BB%A3%E6%94%B6%E9%9B%86%E7%AE%97%E6%B3%95generation-collection)
+  - [5、Hotspot虚拟机算法实现](#5hotspot%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%AE%97%E6%B3%95%E5%AE%9E%E7%8E%B0)
 - [四、垃圾收集器](#%E5%9B%9B%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
   - [1、Serial 收集器](#1serial-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [2、ParNew 收集器](#2parnew-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [3、Parallel Scavenge 收集器](#3parallel-scavenge-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [4、Serial Old 收集器](#4serial-old-%E6%94%B6%E9%9B%86%E5%99%A8)
   - [5、Parallel Old 收集器](#5parallel-old-%E6%94%B6%E9%9B%86%E5%99%A8)
-  - [6、CMS（Concurrent Mark Sweep）收集器](#6cmsconcurrent-mark-sweep%E6%94%B6%E9%9B%86%E5%99%A8)
-  - [7、G1收集器（Garbage First）：面向服务端应用的垃圾收集器](#7g1%E6%94%B6%E9%9B%86%E5%99%A8garbage-first%E9%9D%A2%E5%90%91%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%BA%94%E7%94%A8%E7%9A%84%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
+  - [6、CMS（Concurrent Mark Sweep）收集器-老年代](#6cmsconcurrent-mark-sweep%E6%94%B6%E9%9B%86%E5%99%A8-%E8%80%81%E5%B9%B4%E4%BB%A3)
+  - [7、G1收集器（Garbage First）](#7g1%E6%94%B6%E9%9B%86%E5%99%A8garbage-first)
   - [8、垃圾收集器比较](#8%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8%E6%AF%94%E8%BE%83)
+  - [9、如何选择垃圾收集器](#9%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E5%99%A8)
 - [五、GC 执行机制:Minor GC和Full GC](#%E4%BA%94gc-%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6minor-gc%E5%92%8Cfull-gc)
   - [1、Minor GC(YGC)](#1minor-gcygc)
   - [2、Major GC：永久代](#2major-gc%E6%B0%B8%E4%B9%85%E4%BB%A3)
   - [3、Full GC](#3full-gc)
   - [4、内存回收与分配策略](#4%E5%86%85%E5%AD%98%E5%9B%9E%E6%94%B6%E4%B8%8E%E5%88%86%E9%85%8D%E7%AD%96%E7%95%A5)
-    - [4.1、对象优先分配在 Eden 区域:](#41%E5%AF%B9%E8%B1%A1%E4%BC%98%E5%85%88%E5%88%86%E9%85%8D%E5%9C%A8-eden-%E5%8C%BA%E5%9F%9F)
-    - [4.2、大对象直接进入老年代](#42%E5%A4%A7%E5%AF%B9%E8%B1%A1%E7%9B%B4%E6%8E%A5%E8%BF%9B%E5%85%A5%E8%80%81%E5%B9%B4%E4%BB%A3)
-    - [4.3、长期存活的对象将进入老年代](#43%E9%95%BF%E6%9C%9F%E5%AD%98%E6%B4%BB%E7%9A%84%E5%AF%B9%E8%B1%A1%E5%B0%86%E8%BF%9B%E5%85%A5%E8%80%81%E5%B9%B4%E4%BB%A3)
-    - [4.4、动态对象年龄判定](#44%E5%8A%A8%E6%80%81%E5%AF%B9%E8%B1%A1%E5%B9%B4%E9%BE%84%E5%88%A4%E5%AE%9A)
-    - [4.5、空间分配担保](#45%E7%A9%BA%E9%97%B4%E5%88%86%E9%85%8D%E6%8B%85%E4%BF%9D)
+  - [5、GC参数](#5gc%E5%8F%82%E6%95%B0)
 - [六、详解 finalize()方法](#%E5%85%AD%E8%AF%A6%E8%A7%A3-finalize%E6%96%B9%E6%B3%95)
 - [七、Java 有了GC同样会出现内存泄露问题](#%E4%B8%83java-%E6%9C%89%E4%BA%86gc%E5%90%8C%E6%A0%B7%E4%BC%9A%E5%87%BA%E7%8E%B0%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2%E9%97%AE%E9%A2%98)
 - [八、如何优化GC](#%E5%85%AB%E5%A6%82%E4%BD%95%E4%BC%98%E5%8C%96gc)
   - [1、监控GC](#1%E7%9B%91%E6%8E%A7gc)
   - [2、GC 优化](#2gc-%E4%BC%98%E5%8C%96)
+  - [3、ParallelGC调优](#3parallelgc%E8%B0%83%E4%BC%98)
+  - [4、G1 GC调优](#4g1-gc%E8%B0%83%E4%BC%98)
 - [九、减少GC开销](#%E4%B9%9D%E5%87%8F%E5%B0%91gc%E5%BC%80%E9%94%80)
   - [1、避免隐式的 String 字符串](#1%E9%81%BF%E5%85%8D%E9%9A%90%E5%BC%8F%E7%9A%84-string-%E5%AD%97%E7%AC%A6%E4%B8%B2)
   - [2、计划好 List 的容量](#2%E8%AE%A1%E5%88%92%E5%A5%BD-list-%E7%9A%84%E5%AE%B9%E9%87%8F)
@@ -348,9 +348,11 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 
 ## 7、G1收集器（Garbage First）
 
-在JDK7正式开始提供G1垃圾收集器，面向服务端应用的垃圾收集器
+通过-XX:+UseG1GC参数来启用，作为体验版随着JDK 6u14版本面世，在JDK 7u4版本发行时被正式推出，在JDK 9中，G1被提议设置为默认垃圾收集器；
 
-**7.1、特点：**
+G1是一种服务器端的垃圾收集器，应用在多处理器和大容量内存环境中，在实现高吞吐量的同时，尽可能的满足垃圾收集暂停时间的要求
+
+### 7.1、特点
 
 - 并行与并发
 - 分代收集
@@ -358,22 +360,96 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 - 可预测停顿：降低停顿时间，G1收集器可以非常精确地控制停顿，既能让使用者明确指定在一个长度为M毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒，这几乎已经是实时Java的垃圾收集器的特征；
 - G1将整个Java堆（包括新生代、老年代）划分为多个大小相等的内存块（Region），每个Region 是逻辑连续的一段内存，在后台维护一个优先列表，每次根据允许的收集时间，优先回收垃圾最多的区域
 
-**7.2、与其他收集器区别：**
+G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方面表现的更出色：
+- G1是一个有整理内存过程的垃圾收集器，不会产生很多内存碎片；
+- G1的Stop The World(STW)更可控，G1在停顿时间上添加了预测机制，用户可以指定期望停顿时间；
 
-其将整个Java堆划分为多个大小相等的独立区域(Region).虽然还保留了新生代和老年代的概念，但是新生代和老年代不再是物理隔离的，它们都是一部分独立区域(不要求连续)的集合.
 
-**7.3、G1 收集器的运作大致可划分为：（不计算维护 Remembered Set 的操作）**
+与其他收集器的区别：其将整个Java堆划分为多个大小相等的独立区域(Region).虽然还保留了新生代和老年代的概念，但是新生代和老年代不再是物理隔离的，它们都是一部分独立区域(不要求连续)的集合
 
+### 7.2、G1中重要的概念
+在G1的实现过程中，引入了一些新的概念，对于实现高吞吐、没有内存碎片、收集时间可控等功能起到了关键作用
+
+#### 7.2.1、Region
+
+传统的GC收集器将连续的内存空间划分为新生代、老年代和永久代（JDK 8去除了永久代，引入了元空间Metaspace），这种划分的特点是各代的存储地址是连续的；而G1的各代存储地址是不连续的，每一代都使用了n个不连续的大小相同的Region，每个Region占有一块连续的虚拟内存地址：
+
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/G1-Region.jpg)
+
+在上图中，我们注意到还有一些Region标明了H，它代表Humongous，这表示这些Region存储的是巨大对象（humongous object，H-obj），即大小大于等于region一半的对象；H-obj有如下几个特征：
+- H-obj直接分配到了old gen，防止了反复拷贝移动；
+- H-obj在global concurrent marking阶段的cleanup 和 full GC阶段回收
+- 在分配H-obj之前先检查是否超过initiating heap occupancy percent和the marking threshold, 如果超过的话，就启动global concurrent marking，为的是提早回收，防止evacuation failures 和full GC
+
+为了减少连续H-objs分配对GC的影响，需要把大对象变为普通的对象，建议增大Region size
+
+一个Region的大小可以通过参数```-XX:G1HeapRegionSize```设定，取值范围从1M到32M，且是2的指数。如果不设定，那么G1会根据Heap大小自动决定。相关的设置可以参考hostspot源文件：heapRegion.cpp
+```c++
+void HeapRegion::setup_heap_region_size
+```
+
+#### 7.2.2、SATB（Snapshot-At-The-Beginning）
+
+GC开始时活着的对象的一个快照，其是通过Root Tracing得到的，作用是维持并发GC的正确性
+
+#### 7.2.3、RSet（Remembered Set）
+
+是辅助GC过程的一种结构，典型的空间换时间工具，和Card Table有些类似，还有一种数据结构也是辅助GC的：Collection Set（CSet），它记录了GC要收集的Region集合，集合里的Region可以是任意年代的；在GC的时候，对于old->young和old->old的跨代对象引用，只要扫描对应的CSet中的RSet即可
+
+- **RSet究竟是怎么辅助GC的呢？**
+
+	在做YGC的时候，只需要选定young generation region的RSet作为根集，这些RSet记录了old->young的跨代引用，避免了扫描整个old generation。 而mixed gc的时候，old generation中记录了old->old的RSet，young->old的引用由扫描全部young generation region得到，这样也不用扫描全部old generation region。所以RSet的引入大大减少了GC的工作量
+
+#### 7.2.4、Pause Prediction Model-停顿预测模型
+
+G1 GC是一个响应时间优先的GC算法，它与CMS最大的不同是，用户可以设定整个GC过程的期望停顿时间，参数-XX:MaxGCPauseMillis指定一个G1收集过程目标停顿时间，默认值200ms，不过它不是硬性条件，只是期望值。
+
+G1根据这个模型统计计算出来的历史数据来预测本次收集需要选择的Region数量，从而尽量满足用户设定的目标停顿时间，停顿预测模型是以衰减标准偏差为理论基础实现的
+
+### 7.3、G1 GC过程
+
+#### 7.3.1、GC模式
+
+G1提供了两种GC模式，Young GC和Mixed GC，两种都是完全Stop The World的
+
+- Young GC：选定所有年轻代里的Region。通过控制年轻代的region个数，即年轻代内存大小，来控制young GC的时间开销；
+- Mixed GC：选定所有年轻代里的Region，外加根据global concurrent marking统计得出收集收益高的若干老年代Region。在用户指定的开销目标范围内尽可能选择收益高的老年代Region
+
+Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC实在无法跟上程序分配内存的速度，导致老年代填满无法继续进行Mixed GC，就会使用serial old GC（full GC）来收集整个GC heap
+
+#### 7.3.2、global concurrent marking
+
+它的执行过程类似CMS，但是不同的是，在G1 GC中，它主要是为Mixed GC提供标记服务的，并不是一次GC过程的一个必须环节。
+
+global concurrent marking的执行过程分为四个步骤：
 - 初始标记（Initial Marking）：仅仅只是标记一下 GC Roots 能直接关联到的对象，速度很快，需要“Stop TheWorld”
-- 并发标记（Concurrent Marking）：进行 GC Roots 追溯所有对象的过程，可与用户程序并发执行
+- 并发标记（Concurrent Marking）：进行 GC Roots 追溯所有对象的过程，可与用户程序并发执行，并且收集各个Region的存活对象信息
 - 最终标记（Final Marking）：修正在并发标记期间因用户程序继续运作而导致标记产生变动的那一部分标记记录
-- 筛选回收（Live Data Counting and Evacuation）：对各个Region的回收价值和成本进行排序，根据用户所期望的 GC 停顿时间来指定回收计划
+- 清除垃圾（Cleanup）：清除空Region（没有存活对象的），加入到free list
 
-通过下图可以比较清楚地看到G1收集器的运作步骤中并发和需要停顿的阶段（Safepoint处）：
+第一阶段initial mark是共用了Young GC的暂停，这是因为他们可以复用root scan操作，所以可以说global concurrent marking是伴随Young GC而发生的。第四阶段Cleanup只是回收了没有存活对象的Region，所以它并不需要STW
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/G1收集器执行步骤.png)
+#### 7.3.3、G1 GC发生时机
 
-**7.4、最佳实践**
+- **1、YoungGC发生时机**
+
+- **2、Mixed GC发生时机**
+
+	其实是由一些参数控制着的,另外也控制着哪些老年代Region会被选入CSet
+
+	- G1HeapWastePercent：global concurrent marking结束之后，可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC；
+	- G1MixedGCLiveThresholdPercent：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet；
+	- G1MixedGCCountTarget：一次global concurrent marking之后，最多执行Mixed GC的次数；
+	- G1OldCSetRegionThresholdPercent：一次Mixed GC中能被选入CSet的最多old generation region数量
+	- -XX:G1HeapRegionSize=n设置Region大小，并非最终值
+	- -XX:MaxGCPauseMillis设置G1收集过程目标时间，默认值200ms，不是硬性条件
+	- -XX:G1NewSizePercent新生代最小值，默认值5%
+	- -XX:G1MaxNewSizePercent新生代最大值，默认值60%
+	- -XX:ParallelGCThreadsSTW期间，并行GC线程数
+	- -XX:ConcGCThreads=n并发标记阶段，并行执行的线程数
+	- -XX:InitiatingHeapOccupancyPercent设置触发标记周期的 Java 堆占用率阈值。默认值是45%
+
+### 7.4、最佳实践
 
 - 年轻代大小：避免使用-Xmn、-XX:NewRatio 等显式设置Young区大小，会覆盖暂停时间目标；
 - 暂停时间目标：暂停时间不要太严苛，其吞吐量目标是90%的应用程序时间个和10%的垃圾回收时间，太严苛会直接影响到吞吐量
@@ -385,7 +461,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 	-XX:G1MixedGCCountTarget
 	-XX:G1OldCSetRegionThresholdPercent
 	```
-**7.5、是否需要切换到G1**
+### 7.5、是否需要切换到G1
 如果存在下列问题，可以切换到G1垃圾收集器
 - 50%以上的堆被存活对象占用；
 - 对象分配和晋升的速度变化非常大；
@@ -394,15 +470,15 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 ## 8、垃圾收集器比较
 - 收集器比较
 
-	收集器|运行机制|区域|算法|目标|适用场景
-	-----|--------|----|----|----|------
-	Serial|串行|新生代|复制算法|响应速度优先|单CPU环境下的Client模式
-	Serial Old|串行|老年代|标记-整理|响应速度优先|单CPU环境下的client模式、CMS的后备预案
-	ParNew|并行|新生代|复制算法|响应速度优先|多CPU环境时在Server模式下与CMS配合
-	Parallel Scavenge|并行|新生代|复制算法|吞吐量优先|在后台运算而不需要太多的交互的任务
-	Parallel Old|并行|老年代|标记-整理|吞吐量优先|在后台运算而不需要太多的交互的任务
-	CMS|并发|老年代|标记-清除|响应速度优先|集中在互联网站或B/S系统服务端上的java应用
-	G1|并发|both|标记-整理+复制|响应速度优先|面向服务端应用，将来替换CMS
+	|收集器|运行机制|区域|算法|目标|适用场景
+	|-----|--------|----|----|----|------
+	|Serial|串行|新生代|复制算法|响应速度优先|单CPU环境下的Client模式
+	|Serial Old|串行|老年代|标记-整理|响应速度优先|单CPU环境下的client模式、CMS的后备预案
+	|ParNew|并行|新生代|复制算法|响应速度优先|多CPU环境时在Server模式下与CMS配合
+	|Parallel Scavenge|并行|新生代|复制算法|吞吐量优先|在后台运算而不需要太多的交互的任务
+	|Parallel Old|并行|老年代|标记-整理|吞吐量优先|在后台运算而不需要太多的交互的任务
+	|CMS|并发|老年代|标记-清除|响应速度优先|集中在互联网站或B/S系统服务端上的java应用
+	|G1|并发|both|标记-整理+复制|响应速度优先|面向服务端应用，将来替换CMS
 
 - 收集器如何搭配
 
@@ -416,7 +492,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 - 如果允许停顿时间超过1秒，选择并行或者JVM自己选择；
 - 如果响应时间最重要，并且不能超过1秒，使用并发收集器
 
-# 五、GC 执行机制:Minor GC和Full GC
+# 五、GC 执行机制：Minor GC和Full GC
 
 ## 1、Minor GC(YGC)
 对新生代进行GC
@@ -738,3 +814,5 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 * [如何优化垃圾回收](http://www.importnew.com/3146.html)
 * [String.intern()导致的YGC](http://lovestblog.cn/blog/2016/11/06/string-intern/)
 * [如何优化Java GC](https://crowhawk.github.io/2017/08/21/jvm_4/)
+* [Hotspot-G1-GC的一些关键技术](https://zhuanlan.zhihu.com/p/22591838)
+* [垃圾优先型垃圾回收器调优](http://www.oracle.com/technetwork/cn/articles/java/g1gc-1984535-zhs.html)
