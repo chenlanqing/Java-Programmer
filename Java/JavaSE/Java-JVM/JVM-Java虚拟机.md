@@ -615,6 +615,8 @@ Object obj = new Object();
 
 # 5、Class 类文件结构
 
+[class类文件结构](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/JVM-class%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84.md)
+
 # 6、虚拟机类加载机制
 	
 虚拟机把描述类的数据从Class文件加载到内存，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的Java 类型
@@ -1734,7 +1736,7 @@ public static void testInline(String[] args){
 
 # 11、Java 垃圾收集机制
 
-[GC垃圾回收](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java-GC垃圾回收机制.md)
+[GC垃圾回收](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/JVM-GC垃圾回收机制.md)
 
 # 12、虚拟机监控及故障处理
 
