@@ -205,4 +205,4 @@ public static void main(String[] args) {
 
 	add(element) --> AbstractList.add(e) --> SubList.add(index， e)	--> parent.add(index + parentOffset， e) --> ArrayList.add(newIndex， e)
 		
-
+## 3、为什么最好在newArrayList的时候最好指定容量？
