@@ -1907,3 +1907,4 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 * [Java代码与编译过程](http://www.codeceo.com/article/java-complie-run.html)
 * [对象的内存布局](https://segmentfault.com/a/1190000009740021)
 * [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
+* [Java虚拟机规范（JDK8）](https://docs.oracle.com/javase/specs/jvms/se8/html/index.html)
