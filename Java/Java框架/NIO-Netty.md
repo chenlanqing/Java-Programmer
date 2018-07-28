@@ -152,6 +152,24 @@ LineBasedFrameDecoder + StringDecoder组合就是按行切换的文本解码器�
 
 可以自动完成对定长消息的解码
 
+## 4、编解码技术
+
+### 4.1、Java序列化缺点
+- 无法跨语言，如RPC框架，RPC框架是需要跨语言调用的，几乎所有流行的RPC框架都没有使用Java序列化；
+- 序列化后码流太大；
+- 序列化性能太低
+
+### 4.2、主流与编解码框架
+- Google Protobuf
+	- 产品成熟度高；
+	- 跨语言、支持多种语言，包括C++、Java和python等；
+	- 编码后的消息更小，更加有利于存储和传输；
+	- 编解码的性能非常高；
+	- 支持不同协议版本的前向兼容；
+	- 支付定义可选和必选字段；
+- Facebook Thrift
+- JBoss Marshalling
+
 # 三、Netty服务端启动过程
 
 两个问题：
@@ -240,6 +258,31 @@ Netty服务端启动过程：
 ## 2、NioEventLoop 启动
 
 
+# 五、Pipeline
+## 1、概述
+
+## 2、初始化
+- pipeline在创建Channel的时候被创建
+- Pipeline节点的数据结构：ChannelHandlerContext；
+- Pipeline中两大节点：head和tail，这两个节点是不可被删除的
+
+## 3、添加ChannelHanndler
+- 3.1、主要步骤
+	- 判断是否重复添加；
+	- 创建节点并添加至链表；
+	- 回调添加完成事件
+
+## 4、删除ChannelHandler
+主要使用场景：权限校验
+- 找到节点，主要是遍历链表
+- 链表的删除（默认情况下pipeline都有head和tail节点，不必担心被删除的handler是否头结点或者尾节点）
+- 回调删除handler事件
+
+## 5、inBound事件的传播
+### 5.1、什么是inBound事件以及ChannelInboundHandler
+
+### 5.2、ChannelRead事件传播
+
 # Netty相关问题
 - **1、服务端的Socket在哪里初始化？**
 
@@ -260,3 +303,15 @@ Netty服务端启动过程：
 - **9、对于ChannelHandler的添加应该遵循什么样的顺序？**
 
 - **10、用户手动触发事件传播，不同的触发方式有什么样的区别？**
+
+- **11、**
+
+- **12、**
+
+- **13、**
+
+- **14、**
+
+- **15、**
+
+- **16、**
