@@ -18,9 +18,46 @@
 # 一、ConcurrentHashMap概述
 
 ## 1、为什么会出现ConcurrentHashMap
-
+- HashTable自身比较低效，因为其方法的实现基本是将put、get、size方法加上synchronized实现。简单来说，这就导致了所有并发操作都要竞争同一把锁，一个线程在进行同步操作时，其他线程只能等待，大大降低了并发操作的效率
+- HashMap不是线程安全的，在并发情况下会导致类似CPU占用100%等问题；
+- 同步包装器知识利用输入Map构造了一个同步版本，所有操作虽然不是声明为synchronized，但是还是利用了this作为互斥的mutex，并没有在真正意义上改进并发效率
 
 ## 2、ConcurrentHashMap 不同版本演进
+### 2.1、早期版本
+ConcurrentHashMap是基于：
+- 分离锁：将内部进行分段，里面则是HashEntry数组，和hashMap类似，哈希相同的条目也是以链表信息存储；
+- HashEntry内部使用volatile的value字段来保证可见性，利用不可变对象的机制以改进利用Unsafe提供的底层能力；
+
+其核心是利用分段设计，在进行并发操作的时候，只需要锁定相应的段即可，避免了hashTable整体同步的问题；
+
+*注意一点：JDK8以后的锁的粒度是加载链表头上的*
+
+### 2.2、新版本
+
+##  3、分段锁形式如何保证size的一致性
+LongAdder 是一种JVM利用空间换取更高的效率
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 一、JDK6版本ConcurrentHashMap 的技术原理

@@ -646,6 +646,20 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Image/NIO客户端通信序列图.jpg)
 
+# 四、IO与NIO面试相关
+## 1、文件拷贝实现方式
+主要关注以下几点：
+- 不同的copy方式，底层机制有什么区别？
+- 为什么零拷贝可能有性能优势？
+- Buffer的分类与使用；
+- Direct Buffer对垃圾收集有哪些方面的影响
+
+### 1.1、不同的拷贝方式底层机制的实现
+
+- 关于两个概念：用户态空间（User Space）和内核态空间（Kernel Space）
+
+    这是操作系统层面的概念，操作系统内核、硬件驱动等运行在内核状态空间，具有相对高的特权；而用户态空间，则给普通应用和服务使用
+
 
 
 # 参考文章
