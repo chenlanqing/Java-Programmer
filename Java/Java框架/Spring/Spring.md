@@ -664,6 +664,12 @@
 
 # 七.Spring中涉及的设计模式	
 
+- BeanFactory 和 ApplicationContext 使用了工厂模式
+- 在Bean的创建中，Spring为不同的scope定义的对象提供了单例、原型等模式的实现；
+- AOP领域则使用了代理模式、装饰器模式、适配器模式
+- 各种事件监听器，是观察者模式的典型应用；
+- 类似JdbcTemplate则应用了模板模式
+
 
 # 参考资料
 

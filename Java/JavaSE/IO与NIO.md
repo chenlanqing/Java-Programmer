@@ -1,4 +1,4 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+S<!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
@@ -660,6 +660,61 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 
     这是操作系统层面的概念，操作系统内核、硬件驱动等运行在内核状态空间，具有相对高的特权；而用户态空间，则给普通应用和服务使用
 
+- 基于流读写
+
+    当我们使用输入输出流进行读写时，实际上是进行了多次上下文切换，比如应用读取数据时先将内核态数据从磁盘读取到内核缓存，再切换到用户态将数据从内核缓存中读取到用户缓存，这种方式会带来一定的额外开销，可能会降低IO效率
+
+- 基于NIO：
+
+    基于NIO的transfer的实现方式，在Linux和Unix上，则会使用零拷贝技术，数据传输并不需要用户态参与，省去了上下文切换的开销和不必要的拷贝，进而可能提高应用拷贝性能
+
+## 2、Files.copy 方法
+
+最终实现是本地方法实现的[UnixCopyFile.c](http://hg.openjdk.java.net/jdk/jdk/file/f84ae8aa5d88/src/java.base/unix/native/libnio/fs/UnixCopyFile.c)，其内部明确说明了只是简单的用户态空间拷贝，所以该方法不是利用transfer来实现的，而是本地技术实现的用户态拷贝
+
+## 3、如何提高拷贝效率
+- 在程序中，使用缓存机制，合理减少IO次数；
+- 使用transfer等机制，减少上下文切换和额外IO操作；
+- 尽量减少不必要的转换过程，比如编解码；对象序列化与反序列化；
+
+## 4、DirectBuffer 与 MappedByteBuffer
+
+### 4.1、概述
+
+- DirectBuffer：其定义了isDirect方法，返回当前buffer是不是Direct类型。因为Java提供了堆内和堆外（Direct）Buffer，我们可以以他的allocat 或者 allocatDirect方法直接创建；
+- MappedByteBuffer：将文件按照指定大小直接映射为内存区域，当程序访问这个内存区域时直接将操作这块文件数据，省去了将数据从内核空间向用户空间传输的损耗；可以使用FileChannel.map创建，本质上也是DirectBuffer；
+
+在实际使用时，Java会对DirectBuffer仅做本地iO操作，对于很多大数据量的IO密集操作，可能会带来非常大的优势：
+- DirectBuffer生命周期内内存地址都不会再发生改变，进而内核可以安全的对其进行访问，很对IO操作很搞笑；
+- 减少了堆内对象存储的可能额外维护工作，所以访问效率可能有所提高；
+
+但是值得注意的是，DirectBuffer创建和销毁过程中，都会比一般的堆内存Buffer增加部分开销，通常建议用于长期使用、数据较大的场景
+
+因为DirectBuffer不在堆上，所以其参数设置大小可以用如下参数：```-XX:MaxDirectMemorySize=512M```；意味着在计算Java可以使用的内存大小的时候，不能只考虑堆的需要，还有DirectBuffer等一系列堆外因素，
+如果出现内存不足，堆外内存占用也是一种可能性；
+
+另外，大多数垃圾收集过程中，都不会主动收集DirectBuffer，它的垃圾收集过程，是基于Cleaner和幻象引用机制，其本身不是public类型，内部实现了一个Deallocator负责销毁的逻辑，对它的销毁往往需要到FullGC的时候，使用不当的话很容易引起OOM
+
+关于DirectBuffer的回收，注意以下几点：
+- 在应用程序中，显示调用System.gc()来强制触发；
+- 在大量使用DirectBuffer的部分框架中，框架自己在程序中调用释放方法，Netty的实现即如此；
+- 重复使用DirectBuffer
+
+### 4.2、跟踪与诊断DirectBuffer内存占用
+
+通常的垃圾收集日志等激励，并不包含Directbuffer等信息，在JDK8之后的版本，可以使用native memory tracking特性进行诊断：```-XX:NativeMemoryTracking={summary|detail}```
+
+注意激活NMT通常都会导致JVM出现5%~10%性能下降
+
+```
+// 打印 NMT信息
+jcmd <pid> VM.native_memory detail
+// 进行baseline，以对比分配内存变化
+jcmd <pid> VM.native_memory baseline
+// 进行baseline，以对比分配内存变化
+jcmd <pid> VM.native_memory detail.diff
+
+```
 
 
 # 参考文章
