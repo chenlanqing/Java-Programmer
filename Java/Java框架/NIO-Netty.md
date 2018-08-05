@@ -281,9 +281,46 @@ Netty服务端启动过程：
 - 回调删除handler事件
 
 ## 5、inBound事件的传播
+传播顺序与pipeline的添加顺序一致
+
 ### 5.1、什么是inBound事件以及ChannelInboundHandler
 
 ### 5.2、ChannelRead事件传播
+
+## 6、outBound事件的传播
+
+传播顺序与pipeline添加顺序逆序
+
+## 7、异常的传播
+传播顺序与pipeline添加顺序一致
+
+### 7.1、异常的触发链
+
+# 六、ByteBuf
+
+## 1、ByteBuf的结构
+
+## 2、ByteBuf分类
+从三个角度：
+- 池化：Pooled 和 Unpooled
+
+- Unsafe 和 非Unsafe
+
+- Heap 和 Direct
+
+## 3、内存分配管理器：ByteBufAllocator
+
+AbstractByteBufAllocator
+
+ByteBufAllocator 两大子类：PooledByteBufAllocator、UnpooledByteBufAllocator
+
+### 3.1、UnpooledByteBufAllocator
+- Heap内存分配
+
+- Direct内存分配
+
+### 3.2、PooledByteBufAllocator内存分配
+
 
 # Netty相关问题
 - **1、服务端的Socket在哪里初始化？**
@@ -306,11 +343,11 @@ Netty服务端启动过程：
 
 - **10、用户手动触发事件传播，不同的触发方式有什么样的区别？**
 
-- **11、**
+- **11、Netty内存类别**
 
-- **12、**
+- **12、如何减少多线程内存分配之间的竞争**
 
-- **13、**
+- **13、不同大小的内存是如何进行分配的**
 
 - **14、**
 
