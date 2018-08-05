@@ -14,9 +14,8 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-* yum -y install wget httpd-tools vim
-* yum -y install gcc gcc-c++ autoconf pcre pcre-devel make automake
-* cd /opt； mkdir app download log work backup
+
+
 * 启动Nginx：systemctl start nginx.service
 * 检查nginx配置文件： nginx -t -c /etc/nginx/nginx.conf
 
@@ -34,6 +33,13 @@
 - sendfile
 
 ## 2、Nginx安装
+
+- 安装一些依赖：
+	* yum -y install wget httpd-tools vim
+	* yum -y install gcc gcc-c++ autoconf pcre pcre-devel make automake
+
+- 初始化：
+	* cd /opt； mkdir app download log work backup
 
 Linux安装：（基于yum安装）
 
@@ -270,7 +276,8 @@ Context： http, server, location
 
 			
 
-
+# 参考文档
+* [Nginx官方文档](http://nginx.org/en/docs/)
 
 
 
