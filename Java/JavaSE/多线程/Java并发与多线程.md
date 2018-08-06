@@ -227,6 +227,22 @@ new Thread(task).start();
 ### 2.4、常见错误问题
 
 - 启动线程时调用run()方法而非start()方法
+- 一个线程两次调用start方法会出现什么情况：Java的线程是不允许启动两次的，第二次调用会出现 IllegalThreadStateException 异常，这是个运行时异常；
+	```java
+	public synchronized void start() {
+        /**
+         * This method is not invoked for the main method thread or "system"
+         * group threads created/set up by the VM. Any new functionality added
+         * to this method in the future may have to also be added to the VM.
+         *
+         * A zero status value corresponds to state "NEW".
+         */
+        if (threadStatus != 0)
+			throw new IllegalThreadStateException();
+		....
+	}
+
+	```
 
 ### 2.5、线程名称
 ```java
@@ -400,6 +416,25 @@ public class Daemon extends Thread{
 	- 同步阻塞：线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
 	- 其他阻塞：通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态。当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
 - 死亡状态（）Dead）：线程执行完了或者因异常退出了run()方法，该线程结束生命周期
+
+### 2.18、线程管理器MXBean
+- （1）获取当前线程数方式
+	- 使用线程管理器MXBean
+	- 直接通过线程组的activeCount，这种需要不断向上寻找父线程数组，否则只能获取当前线程组
+
+	如获取一个程序中开启了多少个线程：
+	```java
+	public static void main(String[] args) throws Exception {
+        System.out.println("Hello World");
+        ThreadMXBean threadMXBean = ManagementFactory.getThreadMXBean();
+        ThreadInfo[] threadInfo = threadMXBean.getThreadInfo(threadMXBean.getAllThreadIds());
+        for (ThreadInfo info : threadInfo) {
+            System.out.println(info.getThreadName());
+        }
+    }
+	```
+
+- （2）线程管理器MXBean
 
 ## 3、竞态条件与临界区
 
@@ -626,17 +661,25 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 	无论是 ACC_SYNCHRONIZED还是monitorenter、monitorexit都是基于Monitor实现的，都是基于Java虚拟机（HotSpot）中，Monitor是基于C++实现的，有[ObjectMonitor](http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/runtime/objectMonitor.hpp)实现，该类中有enter、exit、wait、notify、notifyAll等。sychronized加锁的时候，会调用objectMonitor的enter方法，解锁的时候会调用exit方法，这是在JDK6之前synchronized的实现会直接调用ObjectMonitor，这种锁被称之为重量级锁。
 
 
-**7.3.重量级锁：**
+**7.3、重量级锁：**
 
-synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现的。但是监视器锁本质又是依赖底层操作系统的Mutex Lock来实现的，而操作系统实现线程间的切换成本非常高，状态之间的转换需要相对较长的时间。依赖于底层操作系统的 Mutex Lock 所实现的锁我们称之为"重量级锁"
+synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现的。但是监视器锁本质又是依赖底层操作系统的Mutex Lock来实现的，而操作系统实现线程间的切换成本非常高，状态之间的转换需要相对较长的时间。依赖于底层操作系统的 Mutex Lock 所实现的锁我们称之为"重量级锁"，主要是涉及到用户态到内核态的切换
 
 Java的线程是映射到操作系统原生线程之上的，如果要阻塞或唤醒一个线程就需要操作系统的帮忙，这就要从用户态转换到核心态，因此状态转换需要花费很多的处理器时间，对于代码简单的同步块（如被synchronized修饰的get 或set方法）状态转换消耗的时间有可能比用户代码执行的时间还要长，所以说synchronized是java语言中一个重量级的操纵
 
-**7.4.轻量级锁:**
+**7.4、轻量级锁:**
 
-- **7.4.1.锁的状态总共有四种:无锁状态、偏向锁、轻量级锁和重量级锁**
+- **7.4.1、锁的状态总共有四种：无锁状态、偏向锁、轻量级锁和重量级锁**
 
 	随着锁的竞争，锁可以从偏向锁升级到轻量级锁，再升级到重量级锁（锁的升级是单向的，也就是说只能从低到高，不会出现锁的降级）。JDK6 中是默认开启偏向锁和轻量级锁的，也可以通过```-XX:UseBiasedLocking```来禁用偏向锁。锁的状态保存在对象的头文件中。轻量级锁是相对于使用操作系统互斥量来实现的传统锁而言的。另外轻量级锁并不是用来替代重量级锁的。轻量级锁适应的场景是线程交替执行同步块的情况，如果存在同一时间访问同一锁的情况，会导致轻量级锁膨胀为重量级锁.
+
+	- *注意：锁降级实际上是会发生的，当JVM进入安全点（SafePoint）的时候，会检查是否有闲置的 Monitor，然后试图进行降级。*
+
+		- 降级目的和过程：JVM会尝试在SWT的停顿中对处于“空闲(idle)”状态的重量级锁进行降级(deflate)，降级过程：在STW时，所有的Java线程都会暂停在“安全点(SafePoint)”，此时VMThread通过对所有Monitor的遍历，或者通过对所有依赖于MonitorInUseLists值的当前正在“使用”中的Monitor子序列进行遍历，从而得到哪些未被使用的“Monitor”作为降级对象；
+
+		- 可降级的Monitor对象：重量级锁的降级发生于STW阶段，降级对象就是那些仅仅能被VMThread访问而没有其他JavaThread访问的Monitor对象；
+
+		- *但是：但是锁升降级效率较低，如果频繁升降级的话对JVM性能会造成影响*
 
 - **7.4.2、轻量级锁的加锁过程：**
 
@@ -667,6 +710,8 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 - **7.5.2、偏向锁释放过程**
 
 	偏向锁只有遇到其他线程尝试竞争偏向锁时，持有偏向锁的线程才会释放锁，线程不会主动去释放偏向锁;
+
+	偏向锁是可以重偏向的，但是STW期间不能
 
 **7.6、其他优化：**
 
@@ -2209,6 +2254,7 @@ public void execute(Runnable command) {
 * [synchronized源码分析](https://www.jianshu.com/p/c5058b6fe8e5)
 * [Moniter的实现原理](http://www.hollischuang.com/archives/2030)
 * [JMV源码分析synchronized原理](https://www.cnblogs.com/kundeg/p/8422557.html)
+* [Java锁优化](http://luojinping.com/2015/07/09/java锁优化/)
 * [使用ThreadLocal变量的时机和方法](http://www.importnew.com/14398.html)
 * [清理ThreadLocal](http://www.importnew.com/16112.html)
 * [深入剖析ThreadLocal](http://www.cnblogs.com/dolphin0520/p/3920407.html，)
