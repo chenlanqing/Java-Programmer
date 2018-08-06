@@ -49,7 +49,17 @@
   - [10、Callable、Future](#10callablefuture)
   - [11、FutureTask](#11futuretask)
   - [12、Fork/Join框架](#12forkjoin%E6%A1%86%E6%9E%B6)
+    - [12.1、概述](#121%E6%A6%82%E8%BF%B0)
+    - [12.2、算法](#122%E7%AE%97%E6%B3%95)
+    - [12.3、相关类](#123%E7%9B%B8%E5%85%B3%E7%B1%BB)
+    - [12.4、使用](#124%E4%BD%BF%E7%94%A8)
+    - [12.5、异常处理](#125%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86)
+    - [12.6、应用场景](#126%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
+    - [12.7、注意](#127%E6%B3%A8%E6%84%8F)
   - [13、Exchanger](#13exchanger)
+    - [13.1、主要方法](#131%E4%B8%BB%E8%A6%81%E6%96%B9%E6%B3%95)
+    - [13.2、使用例子](#132%E4%BD%BF%E7%94%A8%E4%BE%8B%E5%AD%90)
+    - [13.3、实现分析](#133%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90)
 - [四、并发容器](#%E5%9B%9B%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8)
   - [1、并发容器类](#1%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8%E7%B1%BB)
   - [2、CopyOnWriteArrayList](#2copyonwritearraylist)
@@ -379,7 +389,7 @@ public class Daemon extends Thread{
 
 ### 2.17、线程的生命周期
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程生命周期.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/thread-status.png)
 
 
 - 新建态（New）：通过线程的创建方式创建线程后，进入新建态态;
@@ -461,7 +471,7 @@ synchronized 取得的锁是都是对象锁，而不是把一段代码或方法�
 - A线程先持有object对象的Lock锁，B线程如果在这时调用object对象中的synchronized类型的方法则需要等待，即同步
 
 **5.2、脏读：读取实例变量时，此值已经被其他线程修改过的，脏读可以通过 synchronized 关键字解决**
-- 当 A 线程调用 anyObject 对象加入 synchronized 关键字的 X 方法时， A 线程就获得了 X 方法锁，准确的来说是获得了对象的锁，所以其他线程必须等待 A 线程执行完毕后才可以调用 X 方法，但 B 线程可以随意调用其他非 synchronized 的方法;
+- 当 A 线程调用 anyObject 对synchronized象加入 synchronized 关键字的 X 方法时， A 线程就获得了 X 方法锁，准确的来说是获得了对象的锁，所以其他线程必须等待 A 线程执行完毕后才可以调用 X 方法，但 B 线程可以随意调用其他非 synchronized 的方法;
 
 - 当 A 线程调用 anyObject 对象中对象加入 synchronized 关键字的 X 方法时， A 线程就获得了 X 方法	所在对象的锁，所以其他线程必须等待 A 线程执行完毕后才可以调用 X 方法，而 B 线程如果调用声明了synchronized 关键字的非 X 方法时，必须等待 A 线程将 X 方法执行完毕，也就释放对象锁后才可以调用
 **5.3、synchronized 锁重入**
@@ -496,6 +506,28 @@ synchronized 关键字拥有锁重入功能，也就是在使用 synchronized �
 	- 某个线程在等待一个锁的控制权的这段时间需要中断;
 	- 需要分开处理一些wait-notify，ReentrantLock 里面的 Condition应用，能够控制notify哪个线程，锁可以绑定多个条件
 	- 具有公平锁功能，每个到来的线程都将排队等候
+
+**5.8、原子性、可见性、有序性**
+
+- **5.8.1、原子性**
+
+	在Java中，为了保证原子性，提供了两个高级的字节码指令monitorenter和monitorexit，这两个字节码指令，在Java中对应的关键字就是synchronized，通过monitorenter和monitorexit指令，可以保证被synchronized修饰的代码在同一时间只能被一个线程访问，在锁未释放之前，无法被其他线程访问到；
+
+- **5.8.2、可见性**
+
+	对一个变量解锁之前，必须先把此变量同步回主存中。这样解锁后，后续线程就可以访问到被修改后的值
+
+- **5.8.3、有序性**
+
+	synchronized是无法禁止指令重排和处理器优化的，那synchronized如何保证有序性？
+
+	Java中填入有序性：如果在本线程内观察，所有操作都是天然有序的。如果在一个线程中观察另一个线程，所有操作都是无序的。
+
+	as-if-serial语义：不管怎么重排序（编译器和处理器为了提高并行度），单线程程序的执行结果都不能被改变。编译器和处理器无论如何优化，都必须遵守as-if-serial语义。也就是说as-if-serial语义保证了单线程中，指令重排是有一定的限制的，而只要编译器和处理器都遵守了这个语义，那么就可以认为单线程程序是按照顺序执行。
+
+	由于synchronized修饰的代码，同一时间只能被同一线程访问。那么也就是单线程执行的。所以，可以保证其有序性
+
+
 	
 ## 6、synchronized 同步块：
 
@@ -561,7 +593,6 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 - 如果 static 加在 synchronized 同步方法上，那么对当前的*.java文件对应的 Class 类进行加锁。将 synchronized(string) 同步块与 String 联合使用时，需要注意字符串常量池带来的一些意外情况;
 - 如果是 synchronized(Class.class)代码块，则效果是是一样的，也是对整个类加锁;
 	
-
 ## 7、synchronized底层实现及锁优化
 - 可以通过反编译字节码 -->javap -c SyncDemo.class 查看底层实现
 - synchronized 的优化借鉴了锁的CAS操作
@@ -583,17 +614,28 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 
 **7.2、同步方法的实现：**
 
-方法的同步并没有通过指令monitorenter和monitorexit来完成，不过相对于普通方法，其常量池中多了 ACC_SYNCHRONIZED 标示符。JVM 就是根据该标示符来实现方法的同步：当方法调用时会检查方法的 ACC_SYNCHRONIZED 访问标示是否被设置，如果设置了，执行线程将先获取monitor，获取成功后，执行方法体。方法值完释放monitor，在方法执行期间，其他线程无法再获得同一个monitor对象.
+- （1）基本实现：
+
+	方法的同步并没有通过指令monitorenter和monitorexit来完成，不过相对于普通方法，其常量池中多了 ACC_SYNCHRONIZED 标示符。JVM 就是根据该标示符来实现方法的同步：当方法调用时会检查方法的 ACC_SYNCHRONIZED 访问标示是否被设置，如果设置了，执行线程将先获取monitor，获取成功后，执行方法体。方法值完释放monitor，在方法执行期间，其他线程无法再获得同一个monitor对象。
+
+	值得注意的是，如果在方法执行过程中，发生了异常，并且方法内部并没有处理该异常，那么在异常被抛到方法外面之前监视器锁会被自动释放。值得注意的是，如果在方法执行过程中，发生了异常，并且方法内部并没有处理该异常，那么在异常被抛到方法外面之前监视器锁会被自动释放。
+
+- （2）同步方法与同步代码块的实现：
+
+	无论是 ACC_SYNCHRONIZED还是monitorenter、monitorexit都是基于Monitor实现的，都是基于Java虚拟机（HotSpot）中，Monitor是基于C++实现的，有[ObjectMonitor](http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/runtime/objectMonitor.hpp)实现，该类中有enter、exit、wait、notify、notifyAll等。sychronized加锁的时候，会调用objectMonitor的enter方法，解锁的时候会调用exit方法，这是在JDK6之前synchronized的实现会直接调用ObjectMonitor，这种锁被称之为重量级锁。
+
 
 **7.3.重量级锁：**
 
 synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现的。但是监视器锁本质又是依赖底层操作系统的Mutex Lock来实现的，而操作系统实现线程间的切换成本非常高，状态之间的转换需要相对较长的时间。依赖于底层操作系统的 Mutex Lock 所实现的锁我们称之为"重量级锁"
 
+Java的线程是映射到操作系统原生线程之上的，如果要阻塞或唤醒一个线程就需要操作系统的帮忙，这就要从用户态转换到核心态，因此状态转换需要花费很多的处理器时间，对于代码简单的同步块（如被synchronized修饰的get 或set方法）状态转换消耗的时间有可能比用户代码执行的时间还要长，所以说synchronized是java语言中一个重量级的操纵
+
 **7.4.轻量级锁:**
 
 - **7.4.1.锁的状态总共有四种:无锁状态、偏向锁、轻量级锁和重量级锁**
 
-	随着锁的竞争，锁可以从偏向锁升级到轻量级锁，再升级到重量级锁（锁的升级是单向的，也就是说只能从低到高，不会出现锁的降级）。JDK6 中是默认开启偏向锁和轻量级锁的，也可以通过	-XX:UseBiasedLocking 来禁用偏向锁。锁的状态保存在对象的头文件中。轻量级锁是相对于使用操作系统互斥量来实现的传统锁而言的。另外轻量级锁并不是用来替代重量级锁的。轻量级锁适应的场景是线程交替执行同步块的情况，如果存在同一时间访问同一锁的情况，会导致轻量级锁膨胀为重量级锁.
+	随着锁的竞争，锁可以从偏向锁升级到轻量级锁，再升级到重量级锁（锁的升级是单向的，也就是说只能从低到高，不会出现锁的降级）。JDK6 中是默认开启偏向锁和轻量级锁的，也可以通过```-XX:UseBiasedLocking```来禁用偏向锁。锁的状态保存在对象的头文件中。轻量级锁是相对于使用操作系统互斥量来实现的传统锁而言的。另外轻量级锁并不是用来替代重量级锁的。轻量级锁适应的场景是线程交替执行同步块的情况，如果存在同一时间访问同一锁的情况，会导致轻量级锁膨胀为重量级锁.
 
 - **7.4.2、轻量级锁的加锁过程：**
 
@@ -626,8 +668,11 @@ synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现�
 	偏向锁只有遇到其他线程尝试竞争偏向锁时，持有偏向锁的线程才会释放锁，线程不会主动去释放偏向锁;
 
 **7.6、其他优化：**
+
+*注意：这些优化仅在Java虚拟机server模式下起作用*
+
 - **7.6.1、适应性自旋(Adaptive Spinning)**
-	- 从轻量级锁的获取过程中知道，当前线程在获取轻量级锁的过程中执行 CAS 操作失败时，是要通过自旋来获取重量级锁.问题是:自旋是需要消耗CPU的，如果一直获取不到锁，那么该线程就一直处在自旋状态。解决该问题最简单的方法是指定自旋的次数.但是JDK采用了更合适的方法-适应性自旋。简单来说就是如果自旋成功了，那么下次自旋的次数会更多，如果自旋失败了，则自旋的次数就会减少；
+	- 从轻量级锁的获取过程中知道，当前线程在获取轻量级锁的过程中执行 CAS 操作失败时，是要通过自旋来获取重量级锁。问题是：自旋是需要消耗CPU的，如果一直获取不到锁，那么该线程就一直处在自旋状态。解决该问题最简单的方法是指定自旋的次数.但是JDK采用了更合适的方法-适应性自旋。简单来说就是如果自旋成功了，那么下次自旋的次数会更多，如果自旋失败了，则自旋的次数就会减少；
 	- 自旋锁的实现：
 	```java
 	public class MyWaitNotify3{
@@ -654,7 +699,8 @@ synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现�
 		}
 	}
 	```
-	- 锁粗化(Lock Coarsening)：是将多次连接在一起的加锁和解锁操作合并在一起，将多个连续的锁扩展成一个范围更大的锁。如:
+
+	- 锁粗化(Lock Coarsening)：是将多次连接在一起的加锁和解锁操作合并在一起，将多个连续的锁扩展成一个范围更大的锁。如：
 	```java
 		public class StringBufferTest {
 			public void append(){
@@ -666,7 +712,7 @@ synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现�
 	```
 	里每次调用stringBuffer.append方法都需要加锁和解锁，如果虚拟机检测到有一系列连串的对同一个对象加锁和解锁操作，就会将其合并成一次范围更大的加锁和解锁操作，即在第一次append方法时进行加锁，最后一次append方法结束后进行解锁
 
-	- 锁消除(Lock Elimination):锁消除即删除不必要的加锁操作。根据代码逃逸技术，如果判断到一段代码中，堆上的数据不会逃逸出当前线程，那么可以认为这段代码是线程安全的，不必要加锁。如:方法内的局部变量；
+	- 锁消除(Lock Elimination)：锁消除即删除不必要的加锁操作。根据代码逃逸技术，如果判断到一段代码中，堆上的数据不会逃逸出当前线程，那么可以认为这段代码是线程安全的，不必要加锁。如:方法内的局部变量；
 	```java
 	public void hello() {
 		Object object = new Object();
@@ -683,7 +729,7 @@ synchronized 是通过对象内部的一个叫做监视器锁(monitor)来实现�
 
 **7.7、总结：**
 
-JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这两种锁也不是完全没缺点的，比如竞争比较激烈的时候，不但无法提升效率，反而会降低效率，因为多了一个锁升级的过程，这个时候就需要通过 -XX:-UseBiasedLocking 来禁用偏向锁.
+JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这两种锁也不是完全没缺点的，比如竞争比较激烈的时候，不但无法提升效率，反而会降低效率，因为多了一个锁升级的过程，这个时候就需要通过```-XX:-UseBiasedLocking```来禁用偏向锁。
 
 - 偏向锁：
 	- 优点：加锁和解锁不需要额外的消耗，和执行非同步方法比仅存在纳秒级的差距；
@@ -2160,6 +2206,8 @@ public void execute(Runnable command) {
 * [Synchronized及其实现原理](http://www.cnblogs.com/paddix/p/5367116.html)
 * [synchronized关键字及实现细节](http://www.cnblogs.com/javaminer/p/3889023.html)
 * [synchronized源码分析](https://www.jianshu.com/p/c5058b6fe8e5)
+* [Moniter的实现原理](http://www.hollischuang.com/archives/2030)
+* [JMV源码分析synchronized原理](https://www.cnblogs.com/kundeg/p/8422557.html)
 * [使用ThreadLocal变量的时机和方法](http://www.importnew.com/14398.html)
 * [清理ThreadLocal](http://www.importnew.com/16112.html)
 * [深入剖析ThreadLocal](http://www.cnblogs.com/dolphin0520/p/3920407.html，)
