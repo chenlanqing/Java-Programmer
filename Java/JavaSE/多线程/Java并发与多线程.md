@@ -1161,6 +1161,8 @@ public class DeadLock{
 	}
 }
 ```
+还有一种典型的死锁场景：类加载过程中的死锁，尤其是在框架大量使用自定义类加载时，因为往往不是应用本身的代码库，jstack不见得能显示全部锁信息。具体可参看[JDK官方文档](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
+
 **13.3、避免死锁**
 
 - 加锁顺序：如果能确保所有的线程都是按照相同的顺序获得锁，那么死锁就不会发生按照顺序加锁是一种有效的死锁预防机制。但是，这种方式需要你事先知道所有可能会用到的锁(并对这些锁做适当的排序)，但总有些时候是无法预知的
@@ -1176,9 +1178,29 @@ public class DeadLock{
 		- 一个可行的做法是释放所有锁，回退，并且等待一段随机的时间后重试然有回退和等待，但是如果有大量的线程竞争同一批锁，它们还是会重复地死锁
 		- 一个更好的方案是给这些线程设置优先级，让一个(或几个)线程回退，剩下的线程就像没发生死锁一样继续保持着它们需要的锁
 
-**13.4、监测是否有死锁现象**
+**13.4、死锁检测**
 
-执行 jps 命令，可以得到运行的线程 3244，再执行 jstack命令：jstack -l 3244
+- 使用jstack命令来进行检测，jstack <pid>
+	```
+	"Thread-1":
+		at com.learning.example.thread.base.Test.run(DeadLock.java:29)
+		- waiting to lock <0x000000076b022c38> (a java.lang.Object)
+		- locked <0x000000076b022c48> (a java.lang.Object)
+		at java.lang.Thread.run(Thread.java:748)
+	"Thread-0":
+		at com.learning.example.thread.base.Test.run(DeadLock.java:22)
+		- waiting to lock <0x000000076b022c48> (a java.lang.Object)
+		- locked <0x000000076b022c38> (a java.lang.Object)
+		at java.lang.Thread.run(Thread.java:748)
+
+	Found 1 deadlock.
+	```
+- 实际应用中，类死锁情况可能不会有上面如此清晰的输出，总体上可以理解为：区分线程状态 ->  查看等待目标 -> 对比Monitor等持有状态；
+- Java提供了标准的管理API，ThreadMXBean，其直接提供了 findDeadlockedThreads()方法用于定位
+
+**13.5、死循环导致线程等待如何诊断**
+
+如果是死循环导致线程等待，会导致CPU飙升，可以使用top命令配合grep java查找到CPU使用率高的java进程，再通过top -Hp <pid>查看该java进程下CPU使用率较高的线程，然后在使用jstack命令查看线程的具体情况
 
 ## 14、饥饿和公平
 
@@ -1384,22 +1406,22 @@ public static void main(String[] args)throws Exception {
 			try{
 				test(count);
 			} catch (Exception e){
-				log.error("exception"， e);
+				log.error("exception", e);
 			} finally {
 				countDownLatch.countDown();
 			}
 		});
 	}
-	// 等待线程池中所有线程执行完毕后，main方法线程才继续执行
+	// 等待线程池中所有线程执行完毕后,main方法线程才继续执行
 	countDownLatch.await();
-	// 可以设置等待时长，即等待多少时间后执行main方法线程
-//        countDownLatch.await(10， TimeUnit.MILLISECONDS);
-	log.info("~~~~~~~~main method finish {}"， Thread.currentThread().getName());
+	// 可以设置等待时长,即等待多少时间后执行main方法线程
+//        countDownLatch.await(10, TimeUnit.MILLISECONDS);
+	log.info("~~~~~~~~main method finish {}", Thread.currentThread().getName());
 	exec.shutdown();
 }
 private static void test(int count) throws Exception {
 	Thread.sleep(100);
-	log.info("{}， {}"， count， Thread.currentThread().getName());
+	log.info("{}, {}", count, Thread.currentThread().getName());
 }
 ```
 ## 6、栅栏：CyclicBarrier
@@ -1438,35 +1460,39 @@ private static void test(int count) throws Exception {
 
 - CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行；CyclicBarrier 则是允许N个线程相互等待；
 - CountDownLatch 的计数器无法被重置；CyclicBarrier 的计数器可以被重置后使用，因此它被称为是循环的barrier；
+- CoundDownLatch操作的是事件，而CyclicBarrier侧重点是线程，而不是调用事件
 
 - 6.5、例子：
 ```java
-static CyclicBarrier barrier = new CyclicBarrier(5);
-// 到达屏障后执行某个回调
-static CyclicBarrier barrier = new CyclicBarrier(5， ()->{
-	log.info("sdasdasdasdasdas");
-});
-public static void main(String[] args)throws Exception {
-	ExecutorService executorService = Executors.newCachedThreadPool();
+@Slf4j
+public class CyclicBarrierDemo {
+    static CyclicBarrier barrier = new CyclicBarrier(5);
+    // 到达屏障后执行某个回调
+    static CyclicBarrier barrier = new CyclicBarrier(5, ()->{
+        log.info("sdasdasdasdasdas");
+    });
+    public static void main(String[] args)throws Exception {
+        ExecutorService executorService = Executors.newCachedThreadPool();
 
-	for (int i = 0; i < 10; i++) {
-		final int count = i;
-		Thread.sleep(1000);
-		executorService.execute(() -> {
-			try {
-				race(count);
-			} catch (Exception e) {
-				log.error("exception"， e);
-			}
-		});
-	}
-	executorService.shutdown();
-}
-private static void race(int count) throws Exception{
-	Thread.sleep(1000);
-	log.info("{} is ready"， count);
-	barrier.await();
-	log.info("{} continue"，count);
+        for (int i = 0; i < 10; i++) {
+            final int count = i;
+            Thread.sleep(1000);
+            executorService.execute(() -> {
+                try {
+                    race(count);
+                } catch (Exception e) {
+                    log.error("exception", e);
+                }
+            });
+        }
+        executorService.shutdown();
+    }
+    private static void race(int count) throws Exception{
+        Thread.sleep(1000);
+        log.info("{} is ready", count);
+        barrier.await();
+        log.info("{} continue",count);
+    }
 }
 ```
 - 6.6、在并行任务计算中，如果单个线程完成了任务还需要等待其他线程完成，假如有10个线程正在跑任务，有9个线程已经完成了任务，那么这9个线程就得都等待该线程，这可能是很大的资源浪费，使用CountDownLatch也有这个问题。
@@ -1487,37 +1513,43 @@ private static void race(int count) throws Exception{
 
 - 使用场景：在有限资源的场景下，比如数据库连接池的连接数
 
+- 如果Semaphore的数值初始化为1，那么一个线程就可以通过acquire进入互斥状态，本质上和互斥锁类似，；但区别也必将明显，比如互斥锁是有持有者的；
+
 - 例子:
 ```java
-private final static int threadCount = 20;
-public static void main(String[] args) {
-	ExecutorService executorService = Executors.newCachedThreadPool();
-	final Semaphore semaphore = new Semaphore(3);
-	for (int i = 1; i <= threadCount; i++) {
-		final int count = i;
-		executorService.execute(() -> {
-			try{
-				// 写法1: 获取许可，执行方法，释放许可
-				semaphore.acquire();
-				test(count);
-				semaphore.release();
+@Slf4j
+public class SemaphoreDemo {
+    private final static int threadCount = 20;
+    public static void main(String[] args) {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        final Semaphore semaphore = new Semaphore(3);
+        for (int i = 1; i <= threadCount; i++) {
+            final int count = i;
+            executorService.execute(() -> {
+                try{
+                    // 写法1: 获取许可,执行方法,释放许可
+//                    semaphore.acquire();
+//                    test(count);
+//                    semaphore.release();
 
-				// 写法2:尝试获取许可，获取成功则执行方法;如果没有获取成功，则不丢弃;
-				// 尝试获取可以设置超时时间:tryAcquire(long timeout， TimeUnit unit)
-				if (semaphore.tryAcquire()){
-					test(count);
-					semaphore.release();
-				}
-			}catch (Exception e){
-				log.error("exception"， e);
-			}
-		});
-	}
-	executorService.shutdown();
-}
-private static void test(int count) throws Exception {
-	Thread.sleep(1000);
-	log.info("{}， {}"， count， Thread.currentThread().getName());
+                    // 写法2:尝试获取许可,获取成功则执行方法;如果没有获取成功,则不丢弃;
+                    // 尝试获取可以设置超时时间:tryAcquire(long timeout, TimeUnit unit)
+                    if (semaphore.tryAcquire()){
+                        test(count);
+                        semaphore.release();
+                    }
+                }catch (Exception e){
+                    log.error("exception", e);
+                }
+            });
+        }
+        executorService.shutdown();
+    }
+    private static void test(int count) throws Exception {
+        Thread.sleep(1000);
+        log.info("{}, {}", count, Thread.currentThread().getName());
+        log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
+    }
 }
 ```
 ## 8、Condition
@@ -1881,7 +1913,7 @@ public class CopyOnWriteArrayList<E>  implements List<E>， RandomAccess， Clon
 
 - ConcurrentSkipListMap 和 TreeMap，它们虽然都是有序的哈希表；但是 ConcurrentSkipListMap 是线程安全的，TreeMap 是线程不安全的；另外 ConcurrentSkipListMap 是通过跳表来实现的，而 TreeMap 是通过红黑树实现的。
 	- 跳表:平衡树的一种替代的数据结构，和红黑树不相同的是，跳表对于树的平衡的实现是基于一种随机化的算法的，这样也就是说跳表的插入和删除的工作是比较简单的.
-
+- TreeMap是基于红黑树实现的，要实现高效的并发是非常困难的，为了保证效率，当我们插入或者删除节点的时，会移动节点进行平衡操作，这导致在高并发场景中难以进行合理粒度的同步；
 
 ## 6、ConcurrentSkipListSet: (TreeSet)
 
@@ -2260,3 +2292,4 @@ public void execute(Runnable command) {
 * [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
 * [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
 * [Exchanger](http://cmsblogs.com/?p=2269)
+* [类加载过程中死锁](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
