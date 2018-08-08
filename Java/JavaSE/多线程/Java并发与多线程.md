@@ -2182,6 +2182,18 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 预先启动一些线程，线程无限循环从任务队列中获取一个任务进行执行，直到线程池被关闭.如果某个线程因为执行某个任务发生异常而终止，那么重新创建一个新的线程而已.如此反复.线程池的实现类是 ThreadPoolExecutor 类
 
 ## 2、重要类
+
+Executor框架结构：
+
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/%E5%A4%9A%E7%BA%BF%E7%A8%8B/image/Executor.png)
+- Executor是一个基础的接口，其初衷是将任务提交和任务执行细节解耦，其只有一个方法：
+	```java
+	void execute(Runnable command);
+	```
+- ExecutorService不仅提供Service管理功能，如shutdown等方法，也提供了更加全面的提交任务机制，如返回Future，其解决了Runnable无法返回结果的困扰；
+- Java提供了几种基础实现：ThreadPoolExecutor、ScheduleThreadPoolExecutor、ForkJoinPool；
+- Executors提供了各种方便的静态工厂方法；
+
 ### 2.1、ExecutorService-真正的线程池接口
 
 ### 2.2、ScheduledExecutorService
@@ -2198,6 +2210,7 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 - workQueue 保存任务的阻塞队列
 - threadFactory 创建线程的工厂
 - handler 拒绝策略，默认有四种拒绝策略
+- workers 保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的
 
 #### 2.3.2、参数关系
 
@@ -2247,9 +2260,31 @@ public void execute(Runnable command) {
 }
 
 ```
+
+#### 2.3.4、其他参数
+
+```java
+// ctl变量有双重角色，通过高低位的不同，既表示线程池状态，又表示工厂线程数目
+private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+```
+
 ### 2.4、ScheduledThreadPoolExecutor
 
 	继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现
+
+### 2.5、Excutors提供了5种不同的线程池创建配置
+- newCachedThreadPool()：用来处理大量短时间工作任务的线程池，其内部使用 SynchronousQueue作为工作队列具有以下几个特点：
+	- 它会试图缓存线程并重用，当无缓存线程可用时，就会创建新的工作线程；
+	- 如果线程限制的时间超过60秒，则会被终止并移出缓存；
+	- 长时间闲置时，这种线程池，不会消耗什么资源；
+
+- newFixedThreadPool(int nThreads)：重用指定数目的线程，其背后使用的是无界工作队列，任何时候最大只有nThreads个工作线程是活动的。这意味着，如果任务数量超过了活动队列数目，将在工作队列等待空闲线程出现；如果有工作线程退出，将会有新的工作线程被创建，以补足指定的数目nthreads；
+
+- newSingleThreadExecutor()：其她点在于工作线程数目被限制为1，操作一个无界的工作队列，所以它保证了所有任务都是被顺序执行的，最大会有一个任务处于活动状态，并且不允许使用者改动线程池实例，因此可以避免其改变线程数目；
+
+- newSingleThreadScheduledExecutor()和newScheduledThreadPool(int corePoolSize)创建的是个ScheduledExecutorService，可以进行定时或周期性的工作调度，区别在于单一工作线程还是多个工作线程；
+
+- newWorkStealingPool()，Java8加入的方法，其内部会构建ForkJoinPool，利用work-stealing算法，并行的处理任务，不保证处理顺序
 
 ## 3、线程池配置
 ### 3.1、不同业务场景如何配置线程池参数
@@ -2273,12 +2308,13 @@ public void execute(Runnable command) {
 
 ## 4、线程池最佳实践
 
-- 线程池的使用要考虑线程最大数量和最小数最小数量.
+- 线程池的使用要考虑线程最大数量和最小数最小数量，避免任务堆积
 - 对于单部的服务，线程的最大数量应该等于线程的最小数量，而混布的服务，适当的拉开最大最小数量的差距，能够整体调整CPU内核的利用率.
-- 线程队列大小一定要设置有界队列，否则压力过大就会拖垮整个服务.
+- 线程队列大小一定要设置有界队列，否则压力过大就会拖垮整个服务，避免过度扩展线程池
 - 必要时才使用线程池，须进行设计性能评估和压测.
 - 须考虑线程池的失败策略，失败后的补偿.
 - 后台批处理服务须与线上面向用户的服务进行分离.
+- 避免在线程池中使用ThreadLocal
 
 # 七、多线程并发最佳实践
 
