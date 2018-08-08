@@ -1726,7 +1726,7 @@ Fork/Join 框架采用了工作窃取（work-stealing）算法来实现，其算
 - 分割任务：首先需要创建一个ForkJoin任务，执行该类的fork方法可以对任务不断切割，直到分割的子任务足够小；
 - 合并任务执行结果：子任务执行的结果同一放在一个队列中，通过启动一个线程从队列中取执行结果。
 
-使用案例：[计算大List的数据之和](https://github.com/chenlanqing/learningNote/blob/master/%E7%AE%97%E6%B3%95%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98.md#63forkjoin%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0)
+使用案例：[计算大List的数据之和](https://github.com/chenlanqing/learningNote/blob/master/%E7%AE%97%E6%B3%95%E4%B8%8E%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84/%E7%AE%97%E6%B3%95/%E7%AE%97%E6%B3%95%E9%A2%98.md#52forkjoin%E6%A1%86%E6%9E%B6%E5%AE%9E%E7%8E%B0)
 
 ### 12.5、异常处理
 
@@ -1924,16 +1924,19 @@ public class CopyOnWriteArrayList<E>  implements List<E>， RandomAccess， Clon
 
 是一个在队列基础上又支持了两个附加操作的队列。2个附加操作：
 
-* 支持阻塞的插入方法:队列满时，队列会阻塞插入元素的线程，直到队列不满时;
-* 支持阻塞的移除方法:队列空时，获取元素的线程会等待队列变为非空;
+* 支持阻塞的插入方法：队列满时，队列会阻塞插入元素的线程，直到队列不满时；
+* 支持阻塞的移除方法：队列空时，获取元素的线程会等待队列变为非空；
 
 ### 7.2、应用场景
 
-- 常用于生产者与消费者:生产者是向队列中添加元素的线程，消费者是从队列中取元素的线程。简而言之:阻塞队列是生产者用来存放元素、消费者获取元素的容器;
-- 如何使用阻塞队列来实现生产者消费者模型：<br>
-	通知模式:就是当生产者往满的队列里添加元素时会阻塞住生产者，当消费者消费了一个队列中的元素后，会通知生产者当前队列可用;
+- 常用于生产者与消费者：生产者是向队列中添加元素的线程，消费者是从队列中取元素的线程。简而言之:阻塞队列是生产者用来存放元素、消费者获取元素的容器；
+
+- 如何使用阻塞队列来实现生产者消费者模型：通知模式-就是当生产者往满的队列里添加元素时会阻塞住生产者，当消费者消费了一个队列中的元素后，会通知生产者当前队列可用；
+
 - 为什么BlockingQueue适合解决生产者消费者问题？<br>
-	任何有效的生产者-消费者问题解决方案都是通过控制生产者put()方法（生产资源）和消费者take()方法（消费资源）的调用来实现的，一旦你实现了对方法的阻塞控制，那么你将解决该问题.Java通过BlockingQueue提供了开箱即用的支持来控制这些方法的调用(一个线程创建资源，另一个消费资源)。BlockingQueue是一种数据结构，支持一个线程往里存资源，另一个线程从里取资源;
+
+	任何有效的生产者-消费者问题解决方案都是通过控制生产者put()方法（生产资源）和消费者take()方法（消费资源）的调用来实现的，一旦你实现了对方法的阻塞控制，那么你将解决该问题.Java通过BlockingQueue提供了开箱即用的支持来控制这些方法的调用(一个线程创建资源，另一个消费资源)。BlockingQueue是一种数据结构，支持一个线程往里存资源，另一个线程从里取资源；
+
 - 实现
 
 ### 7.3、几个方法
@@ -1946,39 +1949,69 @@ public class CopyOnWriteArrayList<E>  implements List<E>， RandomAccess， Clon
 
 这四类方法分别对应的是：
 
-- ThrowsException:如果操作不能马上进行，则抛出异常
-- SpecialValue:如果操作不能马上进行，将会返回一个特殊的值，一般是true或者false
-- Blocks:如果操作不能马上进行，操作会被阻塞
-- TimesOut:如果操作不能马上进行，操作会被阻塞指定的时间，如果指定时间没执行，则返回一个特殊值，一般是true或者false
+- ThrowsException：如果操作不能马上进行，则抛出异常
+- SpecialValue：如果操作不能马上进行，将会返回一个特殊的值，一般是true或者false
+- Blocks：如果操作不能马上进行，操作会被阻塞
+- TimesOut：如果操作不能马上进行，操作会被阻塞指定的时间，如果指定时间没执行，则返回一个特殊值，一般是true或者false
 
 ### 7.4、Java的阻塞队列
-#### 7.4.1、ArrayBlockingQueue:一个由数组结构组成的有界阻塞队列
+#### 7.4.1、ArrayBlockingQueue
+典型的有界队列，一个由数组结构组成的有界阻塞队列，内部是final 数组保存数据，数组的大小就是队列的边界
 
 * http://www.cnblogs.com/skywang12345/p/3498652.html
 
 此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列，即如果队列满了，那么被阻塞在外面的线程对队列访问的顺序是不能保证线程公平（即先阻塞，先插入）的
 
-#### 7.4.2、LinkedBlockingQueue:一个由链表结构组成的有界阻塞队列
+#### 7.4.2、LinkedBlockingQueue
+
+其行为和内部实现是基于有界的逻辑实现的，如果在创建的时候没有指定容量，其容量自动设置为Integer.MAX_VALUE，成为了无界队列
 
 * http://www.cnblogs.com/skywang12345/p/3503458.html
 
-(1).此队列按照先出先进的原则对元素进行排序
+- 此队列按照先出先进的原则对元素进行排序
+- 其不同于ArrayBlockingQueue的是，其对于头尾操作时基于不同的锁的
 
-#### 7.4.3、PriorityBlockingQueue:支持优先级的无界阻塞队列
-#### 7.4.4、DelayQueue:支持延时获取元素的无界阻塞队列，即可以指定多久才能从队列中获取当前元素
-#### 7.4.5、SynchronousQueue不存储元素的阻塞队列
+#### 7.4.3、PriorityBlockingQueue
 
-每一个put必须等待一个take操作，否则不能继续添加元素。并且他支持公平访问队列
+支持优先级的无界阻塞队列
 
-#### 7.4.6、LinkedTransferQueue:由链表结构组成的无界阻塞TransferQueue队列
+#### 7.4.4、DelayQueue
 
-相对于其他阻塞队列，多了tryTransfer和transfer方法
+支持延时获取元素的无界阻塞队列，即可以指定多久才能从队列中获取当前元素
+
+#### 7.4.5、SynchronousQueue
+
+- 不存储元素的阻塞队列，该队列的容量为0，每一个put必须等待一个take操作，否则不能继续添加元素。并且他支持公平访问队列
+- 在JDK6之后，用CAS替换了原本基于锁的逻辑，同步开销比较小；
+- 是Executors.newCachedThreadPool()的默认队列
+
+#### 7.4.6、LinkedTransferQueue
+
+由链表结构组成的无界阻塞TransferQueue队列，相对于其他阻塞队列，多了tryTransfer和transfer方法
 
 #### 7.4.7、ConcurrentLinkedQueue
 
 * http://www.cnblogs.com/skywang12345/p/3498995.html
 
-#### 7.4.8、LinkedBlockingDeque-链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争
+是基于CAS的无锁技术，不需要在每个操作都使用锁
+
+#### 7.4.8、LinkedBlockingDeque
+链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争
+
+#### 7.4.9、ConcurrentLinkedDeque
+
+### 7.5、如何选择队列
+- 考虑应用场景对队列边界的需求：ArrayBlockingQueue是有明确容量限制的，而LinkedBlockingQueue则取决于我们是否在创建时指定，SynchronousQueue则不缓存任何元素；
+- 从空间利用角度：数组结构ArrayBlockingQueue要比LinkedBlockingQueue紧凑，因为其不需要创建所谓节点；但是ArrayBlockingQueue其初始分配阶段需要一段连续的空间，所以其初始内存需求更大；
+- 通用场景中，LinkedBlockingQueue的吞吐量一般优于ArrayBlockingQueue，因为其实现了更加细粒度的锁操作；
+- ArrayBlockingQueue实现简单，性能更好预测，稳定；
+- 如果需要实现两个线程之间的接力性，SynchronousQueue是完美符合该场景的，而且线程间协调和数据传输统一起来，代码更加规范；
+- 在元素队列较小的场景下，SynchronousQueue有优异的性能；
+
+## 8、三类并发容器比较
+- Concurrent类型是基于lock-free的，一般可以提供高吞吐量；Concurrent没有类似copyonwrite之类容器严重的修改开销；
+- 但是Concurrent往往有较低的遍历一致性，就是所谓的弱一致性，可能发生fail-fast
+- LinkedBlcokingQueue内部是基于锁的，并提供了BlockingQueue的等待方法；
 
 # 五、JUC 包核心与算法
 ## 1、AQS：AbstractQueuedSynchronizer-抽象队列同步器

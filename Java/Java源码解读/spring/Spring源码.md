@@ -198,6 +198,8 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 
 解决上述问题，可以由父容器加载所有Bean，子容器不加载任何Bean
 
+## 2、Spring中涉及的设计模式
+https://mp.weixin.qq.com/s/Hy-qxNT0nJzcAkanbH93eA
 
 # 参考资料
 
