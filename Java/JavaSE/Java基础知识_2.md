@@ -1,3 +1,15 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [十九、Jar包](#%E5%8D%81%E4%B9%9Djar%E5%8C%85)
+  - [1、Jar包本质](#1jar%E5%8C%85%E6%9C%AC%E8%B4%A8)
+  - [2、Jar包下META-INF作用](#2jar%E5%8C%85%E4%B8%8Bmeta-inf%E4%BD%9C%E7%94%A8)
+  - [3、MANIFEST.MF 文件解析](#3manifestmf-%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90)
+  - [4、Jar 包签名](#4jar-%E5%8C%85%E7%AD%BE%E5%90%8D)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # 十九、Jar包
 
