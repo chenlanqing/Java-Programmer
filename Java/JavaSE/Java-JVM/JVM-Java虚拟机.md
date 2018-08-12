@@ -271,6 +271,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 - 它用于存储已经被虚拟机加载的类信息、常量、静态变量、即时编译器编译后的代码等数据；
 - 它和 Java Heap 一样不需要连续的内存，虚拟机规范允许该区域可以选择不实现垃圾回收该区域的内存回收目标主要针是对废弃常量的和无用类的回收；
 - 根据Java虚拟机规范的规定，当方法区无法满足内存分配需求时，将抛出 OutOfMemoryError 异常；
+- 在HotSpot虚拟机中，习惯称方法区为永久代，在JDK8中将永久代移除，同时增加了元空间
 
 *其并不等同于“永久代”，因为Hospot虚拟机把GC分代收集扩展至方法区，或者说使用永久代来实现而已。其他虚拟机并不存在永久代的概念*
 
@@ -282,6 +283,8 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 ### 2.2.7、直接内存
 
 其并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域。它直接从操作系统中分配，因此不受Java堆大小的限制，但是会受到本机总内存的大小及处理器寻址空间的限制，因此它也可能导致 OutOfMemoryError 异常出现
+
+如Nio中涉及到的DirectBuffer
 
 ## 2.3、JDK8的JVM内存结构
 
@@ -351,9 +354,8 @@ Exception in thread "main" java.lang.OutOfMemoryError： Java heap space
 
 由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈，栈容量只由 -Xss 参数设置
 
-单线程：递归调用一个简单的方法，如不累积方法，会抛出 StackOverflowError
-
-多线程：无限循环的创建线程，并为每个线程无限循环的增加内存，会抛出 OutOfMemoryError
+- 单线程：递归调用一个简单的方法，如不累积方法，会抛出 StackOverflowError
+- 多线程：无限循环的创建线程，并为每个线程无限循环的增加内存，会抛出 OutOfMemoryError
 
 - 使用 -Xss 参数减少栈内存容量，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。定义了大量本地变量，增大此方法帧中本地变量表的长度，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。
 
@@ -638,9 +640,26 @@ for (URL url ： urLs) {
 }				
 System.out.println(System.getProperty("sun.boot.class.path"));
 ```
+
+可以替换核心类库：
+```
+# 指定新的bootclasspath，替换java.*包的内部实现
+java -Xbooclasspath:<your_boot_classpath> your_app
+
+# a 意味着append，将指定目录添加到bootclasspath后面
+java -Xbootclasspath/a:<your_dir> your_app
+
+# p 意味着prepend，将指定目录添加到bootclasspath前面
+java -Xbooclasspath/p:<your_dir> your_app
+```
 ### 6.2.2、Extension ClassLoader-扩展类加载器
 
-负责加载Java的扩展类库，默认加载JAVA_HOME/jre/lib/ext/目下的所有jar；将加载类的请求先委托给它的父加载器，也就是Bootstrap，如果没有成功加载的话，再从jre/lib/ext目录下或者java.ext.dirs系统属性定义的目录下加载类; Extension 加载器由 sun.misc.Launcher$ExtClassLoader 实现
+负责加载Java的扩展类库，默认加载JAVA_HOME/jre/lib/ext/目下的所有jar；将加载类的请求先委托给它的父加载器，也就是Bootstrap，如果没有成功加载的话，再从jre/lib/ext目录下或者java.ext.dirs系统属性定义的目录下加载类; Extension 加载器由 sun.misc.Launcher$ExtClassLoader 实现；
+
+覆盖extension目录
+```
+java -Djava.ext.dirs=your_ext_dir HelloWorld
+```
 
 ### 6.2.3、App ClassLoader-系统类加载器
 
@@ -648,8 +667,12 @@ System.out.println(System.getProperty("sun.boot.class.path"));
 
 *注意：*
 
-除了Java提供的默认的ClassLoader外，用户还可以自定义ClassLoader，自定义的ClassLoader都必须继承自java.lang.ClassLoader类，也包括：Extension ClassLoader 和 App ClassLoader；但是Bootstrap ClassLoader不继承自 ClassLoader，其不是一个普通Java类，其由 C++编写，已嵌入到 JVM 内核；当JVM启动后，Bootstrap ClassLoader也随着启动，负责加载完核心类库后，并构造Extension ClassLoader和App ClassLoader 类加载器;
+除了Java提供的默认的ClassLoader外，用户还可以自定义ClassLoader，自定义的ClassLoader都必须继承自java.lang.ClassLoader类，也包括：Extension ClassLoader 和 App ClassLoader；但是Bootstrap ClassLoader不继承自 ClassLoader，其不是一个普通Java类，其由 C++编写，已嵌入到 JVM 内核；当JVM启动后，Bootstrap ClassLoader也随着启动，负责加载完核心类库后，并构造Extension ClassLoader和App ClassLoader 类加载器；
 
+修改默认的应用类加载器
+```
+java -Djava.system.class.loader=your_class_loader HelloWorld
+```
 ## 6.3、ClassLoader 加载类原理
 
 ### 6.3.1、类加载器的工作原理基于三个机制：委托、可见性和单一性
@@ -1156,6 +1179,52 @@ http://www.javafxchina.net/blog/2016/12/osgi-08/
 https://blog.csdn.net/vking_wang/article/details/12875619
 http://osgi.com.cn/article/7289378
 
+## 6.13、JDK9类加载器概览
+在JDK9中，由于Jigsaw项目中引入了Java平台模块化系统（JPMS），JavaSE的源代码被划分为一些了模块，类加载，类文件容器都发生了变化
+- 前面的 -Xbootclasspath参数不可用了，API已经被划分到具体的模块，所以上面利用“-Xbootclasspath/p”替换某个Java核心类型代码，实际上变成了对相应模块进行修补，可以采用下面解决方案
+
+	首先，确认要修改的类文件已经编译好，并按照对应模块（假设是java.base）结构存放，然后，给模块打补丁：
+	```
+	java --patch-module java.bsae=your_patch yourApp
+	```
+- 扩展类加载器被重命名为平台类加载器（Platform Class-Loader），而且extension机制则被移除。也就意味着，如果只选java.ext.dirs环境变量或者lib/ext目录存在，JVM将直接返回错误，建议解决办法是将其放入classpath中；
+
+- 部分不需要AllPermission的Java基础模，被降级到平台类加载器中，相应的权限也被更精细度的限制起来；
+
+- rt.jar和tools.jar同样被移除了，JDK的核心类库以及相关资源，被存储在jimage文件中，并通过新的JRT文件系统访问，而不是原有的JAR文件系统，对于大部分软件的兼容性影响其实有限，更直接影响的是IDE软件；
+
+- 增加了Layer的抽烟小，JVM启动默认创建BootLayer，开发者也可以自己去定义和实例化layer，可以更加方便的实现类似容器一般的逻辑抽象；
+
+## 6.14、降低类加载开销的方法
+
+- AOT，其相当于直接编译成机器码，降低的其实主要是解释和编译开销；但是目前还是试验特性，支持的平台有限，比如JDK9只支持Linux x64
+- APPCDS（Application Class-Data Sharing），CDS在Java5中被引进，但仅限于Bootstrap Class-Loader，在8u40中实现了AppCDS，支持其他的类加载器，在JDK10中已经开源；
+
+	APPCDS的基本原理和工作过程：
+
+	首先，JVM将类信息加载，解析成为元数据，并根据是否需要修改，将其分类为Read-only部分和Read-Write部分；然后将元数据直接存储在文件系统中，作为所谓的shared archive。命令如下：
+	```
+	java -Xshare:dump -XX:+UseAppCDS -XX:SharedArchiveaFile=<jsa> -XX:SharedClassListFile=<classlist> --XX:SharedArchiveConfigFile=<config_file>
+	```
+	第二，在应用程序启动时，指定归档文件，并开启AppCDS
+	```
+	java -Xshare:oin -XX:+UseAppCDS -XX:SharedArchiveaFile=<jsa> yourApp
+	```
+	通过上面的命令，JVM会通过内存映射技术直接映射到相应的地址空间，免除了类加载、解析等各种开销
+
+## 6.15、Jar Hell问题
+
+## 6.16、字节码与类加载
+字节码与类加载时如何转换的？其发生在类加载哪一个阶段？
+
+- 首先，类从字节码到Class对象的转换，在类加载过程中，是通过如下方法提供的功能或者defineClass的其他本地实现
+	```java
+	protected final Class<?> defineClass(String name, byte[] b, int off, int len, ProtectionDomain protectionDomain){}
+	protected final Class<?> defineClass(String name, java.nio.ByteBuffer b, ProtectionDomain protectionDomain){}
+	```
+	可以看出，不管是是作为byte数组的形式还是放到ByteBuffer上，只要能够生成出规范的字节码，都可以平滑的完成字节码到Java对象的转换过程；
+
+	JDK提供的defineClass都是本地实现的
 
 # 7、字节码执行引擎
 
@@ -1654,7 +1723,7 @@ public static void testInline(String[] args){
 
 	在Java虚拟机中，对象是在Java堆中分配内存的；但是，有一种特殊情况，那就是如果经过逃逸分析后发现，一个对象并没有逃逸出方法的话，那么就可能被优化成栈上分配。这样就无需在堆上分配内存，也无须进行垃圾回收了；
 
-	*其实在现有的虚拟机中，并没有真正的实现栈上分配，其实是标量替换实现的*
+	*其实在现有的虚拟机中，并没有真正的实现栈上分配，其实是标量替换实现的，官方文档中，表示其不是实现非全局逃逸对象栈上分配替换堆上分配，具体[参考文档](https://docs.oracle.com/javase/8/docs/technotes/guides/vm/performance-enhancements-7.html#escapeAnalysis)*
 
 	```java
 	public static void main(String[] args) {
