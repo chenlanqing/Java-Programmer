@@ -264,7 +264,7 @@ public class Main {
 
 - **1.1、算法：**
 
-	Serial收集器对于新生代采用复制算法实现，对于老年代采用标记-整理算法实现
+	Serial收集器对于新生代采用复制算法实现，对于老年代采用标记-整理算法实现，使用JVM参数```-XX:UseSerialGC```开启
 
 - **1.2、单线程收集器：**
 
@@ -283,9 +283,9 @@ public class Main {
 
 - ParNew收集器，可以认为是Serial收集器的多线程版本，在多核CPU环境下有着比Serial更好的表现；其他与Serial收集器实现基本差不多；
 
-- 是运行在 Server 模式下的虚拟机中首选的新生代选择器，其中与性能无关的是：只有 Serial 收集器和 ParNew 收集器能与 CMS 收集配合工作；
+- 是运行在 Server 模式下的虚拟机中首选的新生代收集器，其中与性能无关的是：只有 Serial 收集器和 ParNew 收集器能与 CMS 收集配合工作；
 
-- 在JDK1.5中使用CMS来收集老年代的时候，新生代只能选用Serial ParNew收集器中的一个ParNew收集器也是使用-XX:UseConcMarkSweepGC 选项后的默认新生代收集器，也可以使用 -XX:+UseParNewGC 选项来强制指定它；
+- 在JDK1.5中使用CMS来收集老年代的时候，新生代只能选用Serial、ParNew收集器中的一个ParNew收集器也是使用```-XX:UseConcMarkSweepGC``` 选项后的默认新生代收集器，也可以使用 ```-XX:+UseParNewGC``` 选项来强制指定它；
 
 - ParNew 收集器在单 CPU 的环境中绝对不会有比 Serial 收集器有更好的效果，甚至由于存在线程交互的开销，该收集器在通过超线程技术实现的两个CP 的环境中都不能百分之百地保证可以超越
 
@@ -376,6 +376,8 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/G1-Region.jpg)
 
+region的大小是一致，数值在1M到32M字节之间的一个2的幂值，JVM会尽量划分2048个左右、同等大小的region，这点从源码[heapRegionBounds.hpp](http://hg.openjdk.java.net/jdk/jdk/file/fa2f93f99dbc/src/hotspot/share/gc/g1/heapRegionBounds.hpp)可以看到；
+
 在上图中，我们注意到还有一些Region标明了H，它代表Humongous，这表示这些Region存储的是巨大对象（humongous object，H-obj），即大小大于等于region一半的对象；H-obj有如下几个特征：
 - H-obj直接分配到了old gen，防止了反复拷贝移动；
 - H-obj在global concurrent marking阶段的cleanup 和 full GC阶段回收
@@ -387,6 +389,12 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 ```c++
 void HeapRegion::setup_heap_region_size
 ```
+
+*region的设计有什么副作用：*
+
+region的大小和大对象很难保证一致，这会导致空间浪费；并且region太小不合适，会令你在分配大对象时更难找到连续空间；
+
+
 
 #### 7.2.2、SATB（Snapshot-At-The-Beginning）
 
@@ -494,6 +502,13 @@ global concurrent marking的执行过程分为四个步骤：
 
 # 五、GC 执行机制：Minor GC和Full GC
 
+- 垃圾收集过程：
+	- （1）Java应用不断创建对象，通常都是分配在Eden区，当其空间占用达到一定阈值时，触发minor gc。仍然被引用的对象存活下来，被复制到JVM选择的Survivor区域，而没有被引用的对象被回收。存活对象的存活时间为1；
+	- （2）经过一次minor gc之后，Eden就空闲下来，直到再次达到minor gc触发条件，此时，另一个survivor区域则成为to区域，Eden区域存活的对象和from区域的对象都会被复制到to区域，并且存活的年龄计数被加1；
+	- （3）类似步骤2的过程发生很多次，直到对象年龄计数达到阈值，此时发生所谓的晋升，超过阈值的对象会被晋升到老年代。这个阈值可以通过参数```-XX:MaxTenuringThreshold```指定；
+	
+	通常把老年代的GC成为major gc，对整个堆进行的清理叫做Full GC
+
 ## 1、Minor GC(YGC)
 对新生代进行GC
 
@@ -537,7 +552,10 @@ public class JVM {
 }
 ```
 
-## 2、Major GC：永久代
+## 2、Major GC
+
+对老年代的GC成为major GC
+
 ## 3、Full GC
 
 对整个堆进行整理，包括 新生代，老年代和持久代；堆空间使用到达80%(可调整)的时候会触发fgc；Full GC 因为需要对整个对进行回收，所以比Scavenge GC要慢，因此应该尽可能减少 Full GC 的次数。在对JVM调优的过程中，很大一部分工作就是对于 FullGC 的调节。
@@ -676,12 +694,12 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 
 如果你没有设定内存的大小，并且系统充斥着大量的超时日志时，你就需要在你的系统中进行GC优化了
 
-**2.1、GC优化的目的:**
+### 2.1、GC优化的目的
 
 - 将转移到老年代的对象数量降到最少：减少被移到老年代空间对象的数量，可以调整新生代的空间。减少 FullGC 的频率.
 - 减少 Full GC 执行的时间：FullGC 的执行时间要比 MinorGC 要长很多。如果试图通过削减老年代空间来减少 FullGC 的执行时间，可能会导致OutOfMemoryError 或者增加 FullGC 执行此数与之相反，如果你试图通过增加老年代空间来减少 Full GC 执行次数，执行时间会增加
 
-**2.2、GC优化需要考虑的Java参数**
+### 2.2、GC优化需要考虑的Java参数
 
 - 堆内存空间：
 	- -Xms：Heap area size when starting JVM，启动JVM时的堆内存空间
@@ -694,7 +712,7 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 
 - -server参数
 
-**2.3、当OutOfMemoryError错误发生并且是由于Perm空间不足导致时，另一个可能影响GC性能的参数是GC类型**
+### 2.3、当OutOfMemoryError错误发生并且是由于Perm空间不足导致时，另一个可能影响GC性能的参数是GC类型
 
 收集器|参数|备注
 --------|------|------
@@ -707,7 +725,7 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 
 ==> 最常用的GC类型是Serial GC
 
-**2.4、GC优化过程：**
+### 2.4、GC优化过程
 
 - 监控GC状态；
 - 在分析监控结果后，决定是否进行GC优化；
@@ -721,7 +739,7 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 	-XX:+DisableExplicitGC -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./ -XX:+PrintGCDetails -XX:+PringGCTimeStamps -XX:+PrintGCDateStamps -Xloggc:/logs/gc.log
 	```
 
-**2.5、调优参数:**
+### 2.5、调优参数
 
 - Parallel GC：
 	```
@@ -739,13 +757,21 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 	-XX:+UseG1GC -Xms128M -Xmx128M -XX:MetaspaceSize=64M -XX:MaxGCPauseMillis=100 -XX:+UseStringDeduplication -XX:StringDeduplicationAgeThreshold=3
 	```
 
-**2.6、GC可视化工具**
+### 2.6、GC可视化工具
 
 - [gceasy](http://gceasy.io/)
 
 - [GCViewer](https://github.com/chewiebug/GCViewer)
 
 	*注意：* GCViewer是个maven工程，手动编译：maven clean install -Dmaven.test.skip=true，直接打开jar包导入gc.log文件即可有相应的统计信息
+
+
+### 2.7、常见调优思路
+- 理解应用需求和问题，确定调优目标。比如开发了一个应用服务，但发现偶尔会出现性能抖动，出现较长的服务停顿。评估用户可接受的响应时间和业务量，将目标简化为，希望GC暂停尽量控制在200ms以内，并保证一定的标准吞吐量；
+- 掌握JVM和GC的状态，定位具体的问题，确定是否有GC调优的必要。比如通过jstat等工具查看GC等相关状态，可以开启GC日志，或者利用操作系统提供的诊断工具；比如通过追踪GC日志，可以查找是不是GC在特定的实际发生了长时间的暂停；
+- 需要考虑选择的GC类型是否符合我们的应用特征，如果是，具体问题表现在那里，是MinorGC过长还是MixedGC等出现异常停顿情况；如果不是，考虑切换到什么类型，如果CMS个G1都是更侧重于低延迟的GC选型；
+- 通过分析确定具体调整的参数或者软硬件配置；
+- 验证是否达到调优目标，如果达到调优目标，可以考虑结束调优；否则重复完成分析、调整、验证整个过程；
 
 ## 3、ParallelGC调优
 

@@ -262,7 +262,8 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 - 如果在堆中没有内存可分配时，并且堆也无法扩展时，将会抛出 OutOfMemoryError 异常
 - Java 堆可以处在物理上不连续的内存空间中，只要逻辑上是连续的即可;
 - 其大小可以通过-Xmx和-Xms 来控制;
-- Java 堆分为新生代和老生代，新生代又被分为 Eden 和 Survivor 组成。对象主要分配在 Eden 区上新建的对象分配在新生代中。新生代大小可以由-Xmn 来控制，也可以用-XX：SurvivorRatio 来控制Eden和Survivor的比例；老生代存放新生代中经过多次垃圾回收(也即Minor GC)仍然存活的对象和较大内处对象
+- Java 堆分为新生代和老生代，新生代又被分为 Eden 和 Survivor 组成。对象主要分配在 Eden 区上新建的对象分配在新生代中。新生代大小可以由-Xmn 来控制，也可以用-XX：SurvivorRatio 来控制Eden和Survivor的比例；老生代存放新生代中经过多次垃圾回收(也即Minor GC)仍然存活的对象和较大内处对象，通常是从Survivor区域拷贝过来的对象，但并不绝对。
+- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做TLAB(Thread Local Allocation Buffer)。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度，
 
 ### 2.2.5、方法区
 
@@ -452,14 +453,11 @@ Exception in thread "main" java.lang.OutOfMemoryError
 	Minimum percentage of heap free after GC to avoid expansion.
 - XX:MaxHeapFreeRatio=70<br>
 	Maximum percentage of heap free after GC to avoid shrinking.
-- XX:NewRatio=2<br>
-	Ratio of new/old generation sizes. [Sparc -client：8; x86 -server：8; x86 -client：12.]-client：8 (1.3.1+)， x86：12]
-- XX:NewSize=2.125m<br>
-	Default size of new generation (in bytes) [5.0 and newer： 64 bit VMs are scaled 30% larger; x86：1m;x86， 5.0 and older： 640k]
+- XX:NewRatio ：老年代和新生代的比例，默认情况下，这个数值是2，意味着老年代是新生代的2倍，换而言之，新生代是堆大小的1/3
+- XX:NewSize=2.125M：不使用上述比例方式设置新生代大小，直接指定下面的参数，设定具体的内存大小数值
 - XX:MaxNewSize=<br>
 	Maximum size of new generation (in bytes). Since 1.4， MaxNewSize is computed as a function of NewRatio.
-- XX:SurvivorRatio=25<br>
-	Ratio of eden/survivor space size [Solaris amd64： 6; Sparc in 1.3.1： 25; other Solaris platforms in 5.0and earlier： 32]
+- XX:SurvivorRatio=25：Eden和Survivor的大小是按照比例设置的，如果Survivor是8，那么Survivor区域就是Eden的1/8大小，也就是新生代的1/10，因为YG = Eden + 2* Survivor
 - XX:PermSize=<br>
 	Initial size of permanent generation
 - XX:MaxPermSize=64m<br>
@@ -1921,14 +1919,85 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 
 ## 12.7、可视化工具
 
-- JConsole：Java 监视与管理控制台(Java Monitoring and Management Console)：
+- [JConsole](https://docs.oracle.com/javase/7/docs/technotes/guides/management/jconsole.html)：
+
+	Java 监视与管理控制台(Java Monitoring and Management Console)：
 	- 用法：一种基于 JMX 的可视化监视\管理工具，它管理部分的功能是针对 JMX MBean 进行管理的
 
 - VisualVM：多合一故障处理工具
 
-## 12.8、内存分析工具
+- [JMC](http://www.oracle.com/technetwork/java/javaseproducts/mission-control/java-mission-control-1998576.html)：
+	
+	Java Mission Control，不仅仅可以使用JMX进行普通的管理、监控任务，还可以配合[Java Flight Recorder](https://docs.oracle.com/javacomponents/jmc-5-4/jfr-runtime-guide/about.htm#JFRUH171)技术，以非常低的开销收集和分析JVM底层的Profiling和事件等信息；
+
+
+
+## 12.8、内存分析工具-MAT
 
 [内存管理工具](https://www.zybuluo.com/frank-shaw/note/206287)
+
+### 12.9、Native Memory Tracking
+JMC和JConsole的内存管理页面，对堆外内存的统计有限，可以使用NMT特性对JVM堆外内存进行分析
+- 准备工作
+	- 开启NMT并选择summary模式：```-XX:NativeMemoryTracking=summary```
+	- 为了方便获取和对比NMT输出，选择在应用退出时打印NMT统计信息：```-XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics```
+- 分析标准hello World程序：
+	```
+	java -XX:NativeMemoryTracking=summary -XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics HelloWorld
+	```
+	得到如下输出：
+	```
+	Hello World
+	Native Memory Tracking:
+	Total: reserved=5706451KB, committed=462527KB
+	-                 Java Heap (reserved=4194304KB, committed=262144KB)
+								(mmap: reserved=4194304KB, committed=262144KB) 
+	
+	-                     Class (reserved=1066111KB, committed=14207KB)
+								(classes #506)
+								(malloc=9343KB #177) 
+								(mmap: reserved=1056768KB, committed=4864KB) 
+	
+	-                    Thread (reserved=20597KB, committed=20597KB)
+								(thread #20)
+								(stack: reserved=20480KB, committed=20480KB)
+								(malloc=60KB #110) 
+								(arena=56KB #41)
+	
+	-                      Code (reserved=249637KB, committed=2573KB)
+								(malloc=37KB #316) 
+								(mmap: reserved=249600KB, committed=2536KB) 
+	
+	-                        GC (reserved=163627KB, committed=150831KB)
+								(malloc=10383KB #131) 
+								(mmap: reserved=153244KB, committed=140448KB) 
+	
+	-                  Compiler (reserved=133KB, committed=133KB)
+								(malloc=2KB #28) 
+								(arena=131KB #3)
+	
+	-                  Internal (reserved=9497KB, committed=9497KB)
+								(malloc=9465KB #1628) 
+								(mmap: reserved=32KB, committed=32KB) 
+	
+	-                    Symbol (reserved=1472KB, committed=1472KB)
+								(malloc=952KB #158) 
+								(arena=520KB #1)
+	
+	-    Native Memory Tracking (reserved=46KB, committed=46KB)
+								(malloc=4KB #45) 
+								(tracking overhead=42KB)
+	
+	-               Arena Chunk (reserved=1027KB, committed=1027KB)
+								(malloc=1027KB) 
+	```
+	- 第一部分是Java堆，可以使用-Xmx -Xms等参数调整；
+	- 第二部分是Class内存占用，它所统计的是java类元数据所占用的空间，JVM可以通过-XX:MaxMetaspaceSize=value来进行调整；
+	- 第三部分是Thread，这里既包括Java线程也包括GC等本地线程，一个简单的程序，其线程数量也有20个，如何降低线程数量呢？JKD9的默认GC是G1，在较大堆场景有良好表现，但其本身会比传统的ParallelGC或者SerialGC之类复杂太多，所以要么降低并行线程数，要么直接切换GC类型；JIT编译默认开启TieredCompilation，将其关闭，JIT也变的简单，在上面命令的基础上增加参数```-XX:-TieredCompilation -XX:+UseParallelGC```；
+	- 第四部分是Code统计信息，显然这是CodeCache相关内存，也就是JIT compiler存储编译热点方法等信息的地方，JVM提供了参数限制其初始值和最大值 ```-XX:InitialCodeCacheSize=value，-XX:ReservedCodeCacheSize=value```
+	- GC部分；
+	- Compiler部分：就是JIT的开销
+	- Internal部分，其统计Direct buffer的直接内存，这其实是堆外内存OOM常发生的地方；如果怀疑直接内存区域有问题，可以通过类似instrument构造函数等手段，排查可能问题
 
 # 13、JVM 虚拟机调优
 

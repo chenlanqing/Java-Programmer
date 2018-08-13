@@ -29,3 +29,8 @@
 ## 3、总结
 
 内存泄漏的原因分析，总结出来只有一条：存在无效的引用
+
+
+# 参考资料
+
+- [官方文档：思路和工具](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html#CIHIEEFH)
