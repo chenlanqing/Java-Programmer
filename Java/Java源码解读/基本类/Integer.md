@@ -1,6 +1,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
+目录
 
 - [一、类定义](#%E4%B8%80%E7%B1%BB%E5%AE%9A%E4%B9%89)
 - [二、属性](#%E4%BA%8C%E5%B1%9E%E6%80%A7)
@@ -10,12 +10,8 @@
   - [1、Integer构造方法](#1integer%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
   - [2、valueOf](#2valueof)
   - [3、String 转成 Integer（int）的方法](#3string-%E8%BD%AC%E6%88%90-integerint%E7%9A%84%E6%96%B9%E6%B3%95)
-    - [3.1、getInteger(String nm)：确定具有指定名称的系统属性的整数值](#31getintegerstring-nm%E7%A1%AE%E5%AE%9A%E5%85%B7%E6%9C%89%E6%8C%87%E5%AE%9A%E5%90%8D%E7%A7%B0%E7%9A%84%E7%B3%BB%E7%BB%9F%E5%B1%9E%E6%80%A7%E7%9A%84%E6%95%B4%E6%95%B0%E5%80%BC)
-    - [3.2、public static Integer decode(String nm) throws NumberFormatException](#32public-static-integer-decodestring-nm-throws-numberformatexception)
-    - [3.3、public static int parseInt(String s， int radix)throws NumberFormatException](#33public-static-int-parseintstring-s-int-radixthrows-numberformatexception)
-    - [3.4、将 String 转成 Integer 的方法之间有哪些区别](#34%E5%B0%86-string-%E8%BD%AC%E6%88%90-integer-%E7%9A%84%E6%96%B9%E6%B3%95%E4%B9%8B%E9%97%B4%E6%9C%89%E5%93%AA%E4%BA%9B%E5%8C%BA%E5%88%AB)
   - [4、int 转为 String 的方法：](#4int-%E8%BD%AC%E4%B8%BA-string-%E7%9A%84%E6%96%B9%E6%B3%95)
-    - [4.1、toString(int i)：](#41tostringint-i)
+  - [5、public int compareTo(Integer anotherInteger)](#5public-int-comparetointeger-anotherinteger)
   - [6、实现 Number 的方法](#6%E5%AE%9E%E7%8E%B0-number-%E7%9A%84%E6%96%B9%E6%B3%95)
 - [四、Integer 缓存机制](#%E5%9B%9Binteger-%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6)
   - [1、看代码](#1%E7%9C%8B%E4%BB%A3%E7%A0%81)
@@ -23,6 +19,8 @@
   - [3、valueOf的实现](#3valueof%E7%9A%84%E5%AE%9E%E7%8E%B0)
   - [4、IntegerCache：是 Integer 类中定义的一个 private static 的内部类](#4integercache%E6%98%AF-integer-%E7%B1%BB%E4%B8%AD%E5%AE%9A%E4%B9%89%E7%9A%84%E4%B8%80%E4%B8%AA-private-static-%E7%9A%84%E5%86%85%E9%83%A8%E7%B1%BB)
   - [5、其他缓存的对象](#5%E5%85%B6%E4%BB%96%E7%BC%93%E5%AD%98%E7%9A%84%E5%AF%B9%E8%B1%A1)
+- [六、int与Integer](#%E5%85%ADint%E4%B8%8Einteger)
+  - [1、int范围问题](#1int%E8%8C%83%E5%9B%B4%E9%97%AE%E9%A2%98)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -303,6 +301,7 @@ static String   toUnsignedString(int i， int radix)
 	Integer s = new Integer(199);
 	System.out.println((new StringBuilder()).append(s).append("").toString());
 	```
+	
 ## 5、public int compareTo(Integer anotherInteger)
 
 Integer 类实现了 Comparable<Integer>接口，所以 Integer 对象可以和另外一个 Integer 对象进行比较代码实现比较简单，就是拿出其中的 int 类型的value进行比较。
@@ -397,4 +396,30 @@ private static class IntegerCache {
 有 LongCache 用于缓存 Long 对象<br>
 有 CharacterCache 用于缓存 Character 对象<br>
 Byte， Short， Long 有固定范围： -128 到 127。对于 Character， 范围是 0 到 127。除了 Integer 以外，这个范围都不能改变
+
+# 六、int与Integer
+## 1、int范围问题
+- 看如下代码，会不会产生问题？
+	```java
+	// a、b、c 都是int类型数据
+	if(a + b < c){
+		...
+	}
+	```
+- 这里需要注意int类型溢出，不然会带来逻辑上的错误，上述代码可以改为如下
+	```java
+	if(a < c - b) {
+		...
+	}
+	```
+- 检测int类型相加是否溢出可以使用如下方法：
+	```java
+	int x = a + b;
+	boolean isOverFlow = (c ^ a) < 0 && (c ^ b) < 0
+	// 下列判断存在问题，f2判断时如果两个int数据a、b都为 Integer.MIN_VALUE， a + b = 0
+	boolean f1 = a > 0 && b > 0 && x < 0;
+	boolean f2 = a < 0 && b < 0 && x > 0;
+	```
+
+
 
