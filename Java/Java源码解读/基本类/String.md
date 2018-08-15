@@ -150,15 +150,16 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 
 #### 3.1.2、StringBuilder 关键代码
 
-- （1）以 append(String str)为例， 涉及关键代码：
-	|						|								|				|
-	|---------------------- |-----------------------		|-----------	|			
-	|StringBuilder			|append(String)					|在末尾追加字符串|
-	|AbstractStringBuilder	|append(String)					|在末尾追加字符串|
-	|AbstractStringBuilder	|char value[]					|存储字符数组	|
-	|String					|getChars(int， int， char[]，int )|复制字符数组	|
-	|AbstractStringBuilder	|expandCapacity(int)			|扩充容量		|
-	|Arrays					|copyOf(char[]， int)			|复制字符数组    |
+- （1）以 append(String str)为例，涉及关键代码：
+
+|对应类|方法|备注|
+|---|---|---|
+|StringBuilder			| append(String)					|在末尾追加字符串|
+|AbstractStringBuilder	|append(String)					|在末尾追加字符串|
+|AbstractStringBuilder	|char value[]					|存储字符数组	|
+|String					|getChars(int， int， char[]，int )|复制字符数组|
+|AbstractStringBuilder	|expandCapacity(int)			|扩充容量		|
+|Arrays					|copyOf(char[]， int)			|复制字符数组    |
 
 - 调用过程：
 - 附加以下"面向对象"的回答，会更加出彩：
@@ -166,19 +167,10 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 	StringBuilder 与 AbstractStringBuilder 重载了不同的append()方法
 	所有的append()方法都会返回 this，这样就实现了链式编程
 - 详细描述：
-	①.当数组容量不够的时候，会调用 AbstractStringBuilder 的expandCapacity()方法，将数组的容量扩大至原来的 2n+2；
-	其中，expandCapacity()又调用了 Arrays 的copyOf()方法，目的是把原来数组的元素拷贝至新的数组
-	②.假设执行了65535次append("H")，即：n=65535；那么，一共进行了多少次新数组内存的开辟，以及旧数组内存的释放？
-		为了方便，进行一些简化：
-		数组初始容量为1
-		每次扩容，容量扩大至原来的2倍
-		1248163264…65536
-		63356=216，故而，进行了 log2N 次开辟和释放
-	③.同样的道理，n=65535，复制了多少个字符？
-		首先，65535次复制无法避免.
-		其次，计算数组扩容所复制字符的个数.
-		1、2、4、8、16 … 32768
-		根据等比数列求和公式：
+	- ①.当数组容量不够的时候，会调用 AbstractStringBuilder 的expandCapacity()方法，将数组的容量扩大至原来的 2n+2；其中，expandCapacity()又调用了 Arrays 的copyOf()方法，目的是把原来数组的元素拷贝至新的数组
+	- ②.假设执行了65535次append("H")，即：n=65535；那么，一共进行了多少次新数组内存的开辟，以及旧数组内存的释放？为了方便，进行一些简化：
+		数组初始容量为1，每次扩容，容量扩大至原来的2倍：1 -> 2 -> 4 -> 8 -> 16 -> 32 -> 64 ... 65536; 63356=2^16，故而，进行了 log2N 次开辟和释放
+	- ③.同样的道理，n=65535，复制了多少个字符？首先，65535次复制无法避免。其次，计算数组扩容所复制字符的个数.1、2、4、8、16 … 32768根据等比数列求和公式：
 		a1=1，q=2，n=16代入可得sn=65535
 		所以，一共复制2n个字符
 
@@ -198,7 +190,7 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 	- ①.同StringBuilder的append()，假设执行了65535次"+"，即：n=65535；那么，一共进行了多少次新对象、新数组的开辟，以及旧对象、旧数组的释放？每次"+"，要 new StringBuilder()，一共n次；每次"+"，要 new char[str.length()+1]一共n次，故而，进行了2n次的开辟和释放
 	- ②.同样的道理，n=65535，复制了多少个字符？1、2、3、4、5、6 … 65535；根据等差数列求和公式()；Sn = 65535 * 65536 / 2；
 
-#### 3.1.4.数据对比
+#### 3.1.4、数据对比
 
 |方法|内存操作|复杂度|
 |-----|-----|-----|
