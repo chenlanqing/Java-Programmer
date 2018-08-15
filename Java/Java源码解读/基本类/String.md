@@ -177,13 +177,14 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 #### 3.1.3、String 源码剖析
 
 - String 的 "+"，涉及到的源码：
-	|对应类|对应方法|备注|
-	|-----|-------|----|
-	|StringBuilder|StringBuilder(String)		|StringBuilder 的构造函数|
-	|StringBuilder|append(String)				|在末尾追加字符串|
-	|StringBuilder|toString()					|StringBuilder 转换为String|
-	|String		|String(char[]， int，int)		|String 的构造函数|
-	|Arrays		|copyOfRange(char[]，int，int)	|复制字符数组|
+
+|对应类|对应方法|备注|
+|-----|-------|----|
+|StringBuilder|StringBuilder(String)		|StringBuilder 的构造函数|
+|StringBuilder|append(String)				|在末尾追加字符串|
+|StringBuilder|toString()					|StringBuilder 转换为String|
+|String		|String(char[]， int，int)		|String 的构造函数|
+|Arrays		|copyOfRange(char[]，int，int)	|复制字符数组|
 	
 - 调用过程：
 - 详细描述：
