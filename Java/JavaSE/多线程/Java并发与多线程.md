@@ -400,7 +400,7 @@ public class Daemon extends Thread{
 }
 ```
 
-- 只能在start() 方法之前可以调用 setDaemon() 方法。一旦线程运行了，就不能修改守护状态。	可以使用 isDaemon() 方法来检查线程是否是守护线程（方法返回 true）或者是使用者线程（方法返回 false）
+- 只能在start() 方法之前可以调用 setDaemon() 方法。一旦线程运行了，就不能修改守护状态，否则会抛出一个IllegalThreadStateException异常。可以使用isDaemon()方法来检查线程是否是守护线程（方法返回 true）或者是使用者线程（方法返回 false）；在Daemon中产生的新线程也是Daemon的；
 - 典型的守护线程是垃圾回收线程，当进程中没有非守护线程时，则垃圾回收线程也就没有存在的必要了守护线程的作用是为其他线程的运行提供便利服务，最典型的应用:GC，当只有守护线程运行时，JVM会自动退出
 
 ### 2.17、线程的生命周期
@@ -938,9 +938,9 @@ ThreadLocal的子类.为了解决ThreadLocal实例内部每个线程都只能看
 
 - **11.7.2、为什么会内存泄漏:**
 
-	- ThreadLocalMap使用ThreadLocal的弱引用作为key，如果一个ThreadLocal没有外部强引用来引用它，那么系统 GC 的时候，这个ThreadLocal势必会被回收，这样一来，ThreadLocalMap中就会出现key为null的Entry，就没有办法访问这些key为null的Entry的value.如果当前线程再迟迟不结束的话，这些key为null的Entry的value就会一直存在一条强引用链：Thread Ref -> Thread -> ThreaLocalMap -> Entry -> value永远无法回收，造成内存泄漏。只有thead退出以后，value的强引用链条才会断掉
+	- ThreadLocalMap使用ThreadLocal的弱引用作为key，如果一个ThreadLocal没有外部强引用来引用它，那么系统 GC 的时候，这个ThreadLocal势必会被回收，这样一来，ThreadLocalMap中就会出现key为null的Entry，就没有办法访问这些key为null的Entry的value；如果当前线程再迟迟不结束的话，这些key为null的Entry的value就会一直存在一条强引用链：Thread Ref -> Thread -> ThreaLocalMap -> Entry -> value，永远无法回收，造成内存泄漏。只有thead退出以后，value的强引用链条才会断掉
 
-	- ThreadLocalMap的设计中已经考虑到这种情况，加上了一些防护措施:在ThreadLocal的get()，set()，remove()的时候都会清除线程ThreadLocalMap里所有key为null的value
+	- ThreadLocalMap的设计中已经考虑到这种情况，加上了一些防护措施：在ThreadLocal的get()，set()，remove()的时候都会清除线程ThreadLocalMap里所有key为null的value
 
 	- 但是这些被动的预防措施并不能保证不会内存泄漏：
 		- 使用线程池的时候，这个线程执行任务结束，ThreadLocal 对象被回收了，线程放回线程池中不销毁，这个线程一直不被使用，导致内存泄漏;
@@ -949,7 +949,7 @@ ThreadLocal的子类.为了解决ThreadLocal实例内部每个线程都只能看
 - **11.7.3、为什么使用弱引用:**
 	- key使用强引用：引用的ThreadLocal的对象被回收了，但是ThreadLocalMap还持有ThreadLocal的强引用，如果没有手动删除，ThreadLocal不会被回收，导致 Entry 内存泄漏
 
-	- key 使用弱引用：引用的ThreadLocal的对象被回收了，由于ThreadLocalMap持有ThreadLocal的弱引用，即使没有手动删除，ThreadLocal 也会被回收.value在下一次ThreadLocalMap调用set，get的时候会被清除；
+	- key使用弱引用：引用的ThreadLocal的对象被回收了，由于ThreadLocalMap持有ThreadLocal的弱引用，即使没有手动删除，ThreadLocal 也会被回收，value在下一次ThreadLocalMap调用set，get的时候会被清除；
 
 	- 对比上述情况可以发现：<br>
 		由于ThreadLocalMap的生命周期跟Thread一样长，如果都没有手动删除对应key，都会导致内存泄漏，但是使用弱引用可以多一层保障：弱引用ThreadLocal不会内存泄漏，对应的value在下一次ThreadLocalMap调用set，get，remove的时候会被清除；
@@ -968,7 +968,7 @@ ThreadLocal的子类.为了解决ThreadLocal实例内部每个线程都只能看
 
 - **11.8.2、参数传递:**
 
-	场景:如果方法一层一层调用，调用了很多层，但是有个别参数只需要第一层方法和最后一层方式使用，如何传递？可以使用 ThreadLocal 来操作：
+	场景：如果方法一层一层调用，调用了很多层，但是有个别参数只需要第一层方法和最后一层方式使用，如何传递？可以使用 ThreadLocal 来操作：
 	```java
 	public class ThreadLocalCache {
 		public static ThreadLocal<User> userThreadLocal = new ThreadLocal<>();
@@ -1085,6 +1085,18 @@ ThreadLocalMap getMap(Thread t) {
 ```
 - 将 ThreadLocalMap 作为 Thread 类的成员变量的好处是：<br>
 	当线程死亡时，threadLocalMap被回收的同时，保存的"线程局部变量"如果不存在其它引用也可以同时被回收.同一个线程下，可以有多个treadLocal实例，保存多个"线程局部变量"。同一个threadLocal实例，可以有多个线程使用，保存多个线程的"线程局部变量"。
+- ThreadLocalMap类内部有个静态内部类：Entry，其继承自WeakReference
+	```java
+	static class Entry extends WeakReference<ThreadLocal<?>> {
+		/** The value associated with this ThreadLocal. */
+		Object value;
+
+		Entry(ThreadLocal<?> k, Object v) {
+			super(k);
+			value = v;
+		}
+	}
+	```
 
 **12.5、碰撞解决与神奇的 0x61c88647：既然ThreadLocal用map就避免不了冲突的产生**
 
@@ -2356,6 +2368,7 @@ private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 * [ThreadLocal 内部实现和应用场景](https://segmentfault.com/a/1190000000537475)
 * [优雅地使用 ThreadLocal 传递参数](https://toutiao.io/posts/nic1qr/preview)
 * [ThreadLocal 导致Full GC 分析](http://blog.brucefeng.info/post/threadlocal-resultin-fullgc?utm_source=tuicool&utm_medium=referral)
+* [ThreadLocal源码解读](https://www.cnblogs.com/micrari/p/6790229.html)
 * [线程池的使用](http://www.cnblogs.com/dolphin0520/p/3932921.html)
 * [线程池原理](http://www.cnblogs.com/cm4j/p/thread-pool.html)
 * [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
