@@ -15,6 +15,14 @@
 
 
 # 一、JVM参数
+查看虚拟机的参数：
+```
+roo@xxx-mac：~|=> java -XX:+PrintFlagsFinal -XX:+UnlockDiagnosticVMOptions -version | wc -l
+java version "1.8.0_151"
+Java(TM) SE Runtime Environment (build 1.8.0_151-b12)
+Java HotSpot(TM) 64-Bit Server VM (build 25.151-b12, mixed mode)
+     828
+```
 JVM参数可以分为如下：
 - 标准参数
 - 非标准参数
