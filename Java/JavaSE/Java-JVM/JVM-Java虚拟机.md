@@ -2021,9 +2021,79 @@ JMC和JConsole的内存管理页面，对堆外内存的统计有限，可以使
 
 
 # 14、钩子函数(ShutdownHook)
-	https://segmentfault.com/a/1190000011496370
 
-	shutdownHook是一种特殊的结构，它允许开发人员插入JVM关闭时执行的一段代码.这种情况在我们需要做特殊清理操作的情况下很有用.Runtime.addShutdownHook
+## 1、概述
+
+shutdownHook是一种特殊的结构，它允许开发人员插入JVM关闭时执行的一段代码。这种情况在我们需要做特殊清理操作的情况下很有用；
+
+## 2、用途
+在Jetty、Jboss等容器中可以看到shutdownHook的影子，在springboot中有关优雅关闭就会触发shutdownHook；
+- Application正常退出时，在退出时执行特定的业务逻辑，或者关闭资源等操作；
+- 虚拟机非正常退出时，比如用户按下ctrl+c、OOM宕机等、操作系统关闭（kill）等，在退出执行必要的挽救措施；
+
+## 3、示例
+```java
+public class ShutdownHookDemo {
+    public static void main(String[] args) {
+        Runtime.getRuntime().addShutdownHook(new Thread(()->{
+            try(FileWriter fw =  new FileWriter("hook.log")) {
+                fw.write("完成销毁工作，回收内存！" + (new Date()).toString());
+                System.out.println("退出程序...");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+        IntStream.range(0,10).forEach(i -> {
+            try {
+                System.out.println("正在工作...");
+                Thread.sleep(2_000L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        });
+    }
+}
+```
+
+## 4、shutdownHook相关源码
+```java
+public void addShutdownHook(Thread hook) {
+	SecurityManager sm = System.getSecurityManager();
+	if (sm != null) {
+		sm.checkPermission(new RuntimePermission("shutdownHooks"));
+	}
+	ApplicationShutdownHooks.add(hook);
+}
+
+```
+关键类：ApplicationShutdownHooks
+
+## 5、注意事项
+在编写shutdownHook时，需要注意一些陷阱
+
+- **应用程序无法保证shutdownHook总是运行的**
+
+	如JVM由于某些内部错误而崩溃，或（Unix / Linux中的kill -9）或TerminateProcess（Windows）），那么应用程序需要立即终止而不会甚至等待任何清理活动。除了上述之外，还可以通过调用Runime.halt（）方法来终止JVM，而阻止shutdownHook运行；
+
+- **shutdownHook可以在完成前强行停止**
+
+	建议谨慎地编写shutdownHook，确保它们快速完成，并且不会造成死锁等情况。另外特别注意的是，不应该执行长时间计算或等待用户I/O操作在钩子；
+
+- **可以有多个shutdownHook，但其执行顺序无法保证**
+
+	通过源码发现，可以注册多个shutdownHook。但是因为它是存储在IdentityHashMap中的，JVM并不能保证其执行顺序。但是可以同时执行所有的shutdownHook；
+
+- **关闭顺序开始后，无法注册/取消注册shutdownHook**
+
+	一旦关闭顺序是由JVM发起的，将不在允许添加或删除任何现有的shutdownHook，否则抛出IllegalStateException异常；
+
+- **关闭顺序开始后，只能由Runtime.halt（）停止**
+
+	关闭顺序开始后，只能通过Runtime.halt（）（强制终止JVM），可以停止关闭顺序的执行（外部影响除外，如SIGKILL）；
+
+- **使用shutdownHook需要安全权限**
+
+	如果我们使用Java Security Managers，则执行添加/删除shutdownHook的代码需要在运行时具有shutdownHooks权限。否则会导致SecurityException
 
 # 15、JVM问题排查
 
@@ -2046,3 +2116,4 @@ JMC和JConsole的内存管理页面，对堆外内存的统计有限，可以使
 * [对象的内存布局](https://segmentfault.com/a/1190000009740021)
 * [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
 * [Java虚拟机规范（JDK8）](https://docs.oracle.com/javase/specs/jvms/se8/html/index.html)
+* [钩子函数](https://segmentfault.com/a/1190000011496370)
