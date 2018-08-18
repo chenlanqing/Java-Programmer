@@ -1291,14 +1291,15 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 - 4.2、引入泛型后，类型系统增加了两个维度：
 
-    - 一个是类型参数自身的继承体系结构.List<String>和List<Object>这样的情况，类型参数String是继承自Object的
-    - 一个是泛型类或接口自身的继承体系结构.第二种指的是 List 接口继承自 Collection 接口
+    * 一个是类型参数自身的继承体系结构.List<String>和List<Object>这样的情况，类型参数String是继承自Object的
+    * 一个是泛型类或接口自身的继承体系结构.第二种指的是 List 接口继承自 Collection 接口
     	对于这个类型系统，有如下规则：
-    	- 相同类型参数的泛型类的关系取决于泛型类自身的继承体系结构，即 List<String>是 Collection<String> 的子类型，List<String>可以替换 Collection<String>
-    	- 当泛型类的类型声明中使用了通配符的时候，其子类型可以在两个维度上分别展开：对于 Collection<? extends Number>来说，<br>
+    	* 相同类型参数的泛型类的关系取决于泛型类自身的继承体系结构，即 List<String>是 Collection<String> 的子类型，List<String>可以替换 Collection<String>
+    	* 当泛型类的类型声明中使用了通配符的时候，其子类型可以在两个维度上分别展开：对于 Collection<? extends Number>来说，<br>
 
-    		- ①.其子类型可以在 Collection 这个维度上展开 List<? extends Number>和 Set<? extends Number>等<br>
-    		- ②.也可以在 Number 这个层次上展开，即 Collection<Double>和 Collection<Integer>等ArrayList<Long>和 HashSet<Double>等也都算是 Collection<? extends Number>的子类型
+    		* ①.其子类型可以在 Collection 这个维度上展开 List<? extends Number>和 Set<? extends Number>等<br>
+    		* ②.也可以在 Number 这个层次上展开，即 Collection<Double>和 Collection<Integer>等ArrayList<Long>和 HashSet<Double>等也都算是 Collection<? extends Number>的子类型
+			<br>
 
 ## 5、开发自己的泛型类
 
