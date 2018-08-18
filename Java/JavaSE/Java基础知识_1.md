@@ -1219,17 +1219,17 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 ## 3、通配符与上下界
 
-- **3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符"?"来表示未知类型，如 List<?>**
+- 3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符"?"来表示未知类型，如List<?>
 
-- **3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于List<Object>**
+- 3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于List<Object>
 
 	List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 List<?>则其中所包含的元素类型是不确定；
 
-- **3.3、对于 List<?>中的元素只能用 Object 来引用，在有些情况下不是很方便.在这些情况下，可以使用上下界来限制未知类型的范围**
+- 3.3、对于 List<?>中的元素只能用 Object 来引用，在有些情况下不是很方便.在这些情况下，可以使用上下界来限制未知类型的范围
 
 	如：List<? extends Number>说明 List 中可能包含的元素类型是 Number 及其子类；而：List<? super Number> 则说明 List 中包含的是 Number 及其父类；当引入了上界之后，在使用类型的时候就可以使用上界类中定义的方法。List<?> 是一个未知类型的 List，而 List<Object> 其实是任意类型的 List，可以把 List<String>、List<Integer> 赋值给 List<?>，却不能把 List<String> 赋值给 List<Object>
 
-- **3.4、关于 <? extends T> 和 <? super T>**
+- 3.4、关于 <? extends T> 和 <? super T>
 
 	List<? extends T> 可以接受任何继承自 T 的类型的 List；List<? super T> 可以接受任何 T 的父类构成的 List
 
@@ -1262,7 +1262,7 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 		- 如果要从集合中写入类型T的数据，并且不需要读取，可以使用 ? super 通配符；(Consumer Super)
 		- 如果既要存又要取，那么就不要使用任何通配符
 
-- **3.5、<T extends E> 和 <? extends E> 有什么区别：**
+- 3.5、<T extends E> 和 <? extends E> 有什么区别：
 
 	> <T extends E> 用于定义类型参数，声明了一个类型参数 T，可放在泛型类定义中类名后面、接口后面、泛型方法返回值前面；
 
@@ -1273,7 +1273,7 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 	public <T extends E> addAll(Bean<T> c);
 	```
 
-- **3.6、通配符的上下边界问题：**
+- 3.6、通配符的上下边界问题：
 
 	- 扩展问题：
 
@@ -1328,20 +1328,20 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 ## 4、Java 类型系统
 
-**4.1、在 Java 中，通过继承机制而产生的类型体系结构是大家熟悉的**
+- 4.1、在 Java 中，通过继承机制而产生的类型体系结构是大家熟悉的
 
 根据Liskov替换原则，子类是可以替换父类的，但是反过来的话，即用父类的引用替换子类引用的时候，就需要进行强制类型转换
 
-**4.2、引入泛型后，类型系统增加了两个维度：**
+- 4.2、引入泛型后，类型系统增加了两个维度：
 
-- 一个是类型参数自身的继承体系结构.List<String>和List<Object>这样的情况，类型参数String是继承自Object的
-- 一个是泛型类或接口自身的继承体系结构.第二种指的是 List 接口继承自 Collection 接口
-	对于这个类型系统，有如下规则：
-	- 相同类型参数的泛型类的关系取决于泛型类自身的继承体系结构，即 List<String>是 Collection<String> 的子类型，List<String>可以替换 Collection<String>
-	- 当泛型类的类型声明中使用了通配符的时候，其子类型可以在两个维度上分别展开：对于 Collection<? extends Number>来说，<br>
+    - 一个是类型参数自身的继承体系结构.List<String>和List<Object>这样的情况，类型参数String是继承自Object的
+    - 一个是泛型类或接口自身的继承体系结构.第二种指的是 List 接口继承自 Collection 接口
+    	对于这个类型系统，有如下规则：
+    	- 相同类型参数的泛型类的关系取决于泛型类自身的继承体系结构，即 List<String>是 Collection<String> 的子类型，List<String>可以替换 Collection<String>
+    	- 当泛型类的类型声明中使用了通配符的时候，其子类型可以在两个维度上分别展开：对于 Collection<? extends Number>来说，<br>
 
-		①.其子类型可以在 Collection 这个维度上展开 List<? extends Number>和 Set<? extends Number>等<br>
-		②.也可以在 Number 这个层次上展开，即 Collection<Double>和 Collection<Integer>等ArrayList<Long>和 HashSet<Double>等也都算是 Collection<? extends Number>的子类型
+    		①.其子类型可以在 Collection 这个维度上展开 List<? extends Number>和 Set<? extends Number>等<br>
+    		②.也可以在 Number 这个层次上展开，即 Collection<Double>和 Collection<Integer>等ArrayList<Long>和 HashSet<Double>等也都算是 Collection<? extends Number>的子类型
 
 ## 5、开发自己的泛型类
 
