@@ -715,6 +715,77 @@ jcmd <pid> VM.native_memory baseline
 jcmd <pid> VM.native_memory detail.diff
 
 ```
+# 四、IO面试题
+## 1、使用Java读取大文件
+- （1）文件流边读边用，使用文件流的read()方法每次读取指定长度的数据到内存中，具体代码如下
+    ```java
+    public static void readMethod1(String filePath) throws Exception{
+        BufferedInputStream reader = new BufferedInputStream(new FileInputStream(filePath));
+        int bytes = -1;
+        do {
+            byte[] byteArray = new byte[8192];
+            bytes = reader.read(byteArray);
+            if (bytes != -1) {
+                String s = new String(byteArray);
+                System.out.println(s);
+            }
+        } while (bytes > 0);
+
+        reader.close();
+    }
+    ```
+- （2）对大文件建立NIO的FileChannel，每次调用read()方法时会先将文件数据读取到已分配的固定长度的java.nio.ByteBuffer，接着从中获取读取的数据。这种方式比传统的流方式要快点
+    ```java
+    public static void fileChannelMethod(String filePath) throws Exception {
+        FileInputStream in = new FileInputStream(filePath);
+        ByteBuffer byteBuffer = ByteBuffer.allocate(65535);
+        FileChannel fileChannel = in.getChannel();
+        int b = -1;
+        do {
+            b = fileChannel.read(byteBuffer);
+            if (b != -1) {
+                byte[] array = new byte[b];
+                byteBuffer.flip();
+                byteBuffer.get(array);
+                byteBuffer.clear();
+                System.out.println(new String(array));
+            }
+        } while (b > 0);
+        in.close();
+        fileChannel.close();
+    }
+
+    ```
+- （3）内存文件映射，就是把文件内容映射到虚拟内存的一块区域中，从而可以直接操作内存当中的数据而无需每次都通过IO去物理硬盘读取文件，
+
+    ```java
+    public static void memoryMappingMethod(String filePath) throws Exception {
+        FileInputStream in = new FileInputStream(filePath);
+        FileChannel fileChannel = in.getChannel();
+        MappedByteBuffer mapperBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, 0, fileChannel.size());
+        boolean end = false;
+        do {
+            int limit = mapperBuffer.limit();
+            int position = mapperBuffer.position();
+            if (position >= limit) {
+                end = true;
+            }
+            int maxSize = 2048;
+            if (limit - position < maxSize) {
+                maxSize = limit - position;
+            }
+            byte[] array = new byte[maxSize];
+            mapperBuffer.get(array);
+            System.out.println(new String(array));
+
+        } while (!end);
+        in.close();
+        fileChannel.close();
+    }
+    ```
+    这种方式存在致命问题，就是无法读取超大文件（大于Integer.Max_value），因为 FileChannel的map方法中 size 参数会有大小限制，源码中发现该参数值大于 Integer.MAX_VALUE 时会直接抛出 IllegalArgumentException("Size exceeds Integer.MAX_VALUE") 异常，所以对于特别大的文件其依然不适合。
+
+    本质上是由于 java.nio.MappedByteBuffer 直接继承自 java.nio.ByteBuffer ，而 ByteBuffer 的索引是 int 类型的，所以 MappedByteBuffer 也只能最大索引到 Integer.MAX_VALUE 的位置，所以 FileChannel 的 map 方法会做参数合法性检查。
 
 
 # 参考文章
