@@ -121,6 +121,8 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+*任何一个JVM参数的默认值可以通过 ```java -XX:+PrintFlagsFinal -version |grep JVMParamName``` 获取，例如：```java -XX:+PrintFlagsFinal -version |grep MetaspaceSize```*
+
 # 0、虚拟机历史(阅读书籍：《深入理解Java虚拟机》)
 
 - Sun Classic：世界上第一款商用Java虚拟机，在JDK1.2之前是 Sun JDK中唯一的虚拟机，在JDK1.2时，它与HotSpot虚拟机共存，但默认的是Classic VM，在JDK1.3时成为默认虚拟机，直到1.4之后才完全退出历史舞台.
@@ -157,7 +159,7 @@ Java字节码的执行是由JVM执行引擎来完成，流程图如下所示：
 
 - 类执行机制：
 
-JVM 是基于栈的体系结构来执行 class 字节码的{}.线程创建后，都会产生程序计数器(PC)和栈(Stack)，程序计数器存放下一条要执行的指令在方法内的偏移量，栈中存放一个个栈帧，每个栈帧对应着每个方法的每次调用，而栈帧又是有局部变量区和操作数栈两部分组成，局部变量区用于存放方法中的局部变量和参数，操作数栈中用于存放方法执行过程中产生的中间结果；
+JVM 是基于栈的体系结构来执行 class 字节码的{}.线程创建后，都会产生程序计数器(PC)和栈(Stack)，程序计数器存放下一条要执行的指令在方法内的偏移量，栈中存放一个个栈帧，每个栈帧对应着每个方法的每次调用，而栈帧又是有局部变量区和操作数栈两部分组成，局部变量区用于存放方法中的局部变量和536，操作数栈中用于存放方法执行过程中产生的中间结果；
 
 ## 1.2、JVM 运行原理
 
@@ -530,6 +532,12 @@ Metaspace背后的一个思想是，类和它的元数据的生命周期是和�
 	- -XX：MinMetaspaceFreeRatio，在GC之后，最小的Metaspace剩余空间容量的百分比，减少为分配空间所导致的垃圾收集；
 	- -XX：MaxMetaspaceFreeRatio，在GC之后，最大的Metaspace剩余空间容量的百分比，减少为释放空间所导致的垃圾收集；
 
+- 元空间的扩容与分配
+	- （1）无论-XX:MetaspaceSize配置什么值，Metaspace的初始容量一定是21807104（约20.8m）；Meta区容量范围为[20.8m, MaxMetaspaceSize)；
+	- （2）Metaspace由于使用不断扩容到-XX:MetaspaceSize参数指定的量，就会发生FGC；且之后每次Metaspace扩容都会发生FGC；
+	- （3）如果Old区配置CMS垃圾回收，那么第2点的FGC也会使用CMS算法进行回收；
+	- （4）如果MaxMetaspaceSize设置太小，可能会导致频繁FGC，甚至OOM；
+
 ### 3.8.4、元空间垃圾回收
 
 - 如果类元数据的空间占用达到参数“MaxMetaspaceSize”设置的值，将会触发对死亡对象和类加载器的垃圾回收
@@ -590,6 +598,15 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 ```
 
 **从上述结果可以看出，JDK 1.6下，会出现“PermGen Space”的内存溢出，而在 JDK 1.7和 JDK 1.8 中，会出现堆内存溢出，并且 JDK 1.8中 PermSize 和 MaxPermGen 已经无效。因此，可以大致验证 JDK 1.7 和 1.8 将字符串常量由永久代转移到堆中，并且 JDK 1.8 中已经不存在永久代的结论**
+
+**JDK8+移除了Perm，引入了Metapsace，它们两者的区别是什么呢？** 
+
+- Metasace上面已经提到过，无论-XX:MetaspaceSize和-XX:MaxMetaspaceSize两个参数如何设置，都会从20.8M开始，随着类加载越来越多不断扩容调整，上限是-XX:MaxMetaspaceSize，默认是几乎无穷大。
+- 而Perm的话，我们通过配置-XX:PermSize以及-XX:MaxPermSize来控制这块内存的大小，jvm在启动的时候会根据-XX:PermSize初始化分配一块连续的内存块，这样的话，如果-XX:PermSize设置过大，就是一种赤果果的浪费。很明显，Metapsace比Perm好多了
+
+### 3.8.6、使用注意点
+- MetaspaceSize和MaxMetaspaceSize设置一样大；
+- 具体设置多大，建议稳定运行一段时间后通过```jstat -gc pid```确认且这个值大一些，对于大部分项目256m即可
 
 # 4、对象访问与内存分配
 
@@ -2115,5 +2132,6 @@ public void addShutdownHook(Thread hook) {
 * [Java代码与编译过程](http://www.codeceo.com/article/java-complie-run.html)
 * [对象的内存布局](https://segmentfault.com/a/1190000009740021)
 * [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
+* [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)
 * [Java虚拟机规范（JDK8）](https://docs.oracle.com/javase/specs/jvms/se8/html/index.html)
 * [钩子函数](https://segmentfault.com/a/1190000011496370)

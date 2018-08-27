@@ -341,7 +341,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 - -XX:ConcGCThreads：并发的GC线程数；
 - -XX:+UseCMSCompactAtFullCollection：Full GC之后做压缩
 - -XX:CMSFullGCsBeforeCompaction：多少次Full GC之后压缩一次
-- -XX:CMSInitiatingOccupancyFraction：触发Full GC
+- -XX:CMSInitiatingOccupancyFraction：触发Full GC，老年代内存使用占比达到 CMSInitiatingOccupancyFraction，默认为 92%
 - -XX:+UseCMSInitiatingOccupancyOnly：是否动态调整
 - -XX:+CMSScavengeBeforeRemark：full gc之前先做YGC
 - -XX:+CMSClassUnloadingEnabled：启用回收Perm区，针对JDK8之前的
@@ -655,6 +655,29 @@ JAVA_OPTS="-server -Xms2000m -Xmx2000m -Xmn800m -XX:PermSize=64m -XX:MaxPermSize
 -XX:+UseConcMarkSweepGC -XX:MaxTenuringThreshold=15"
 ```
 
+## 6、元空间垃圾回收
+
+- Metaspace 在空间不足时，会进行扩容，并逐渐达到设置的 MetaspaceSize。Metaspace 扩容到 -XX:MetaspaceSize 参数指定的量，就会发生 FGC。如果配置了 -XX:MetaspaceSize，那么触发 FGC 的阈值就是配置的值。如果 Old 区配置 CMS 垃圾回收，那么扩容引起的FGC也会使用CMS算法进行回
+
+	新建类导致 Metaspace 容量不够，触发 GC，GC 完成后重新计算 Metaspace 新容量，决定是否对 Metaspace 扩容或缩容
+
+- 老年代回收设置成非CMS时，Metaspace占用到达 -XX:MetaspaceSize会引发什么 GC？
+	- 当老年代回收设置成 CMS GC 时，会触发一次 CMS GC
+	- 不设置为 CMS GC时，使用如下配置进行测试，该配置并未设置 CMS GC，JDK 1.8 默认的老年代回收算法为 ParOldGen
+		```
+		-Xmx2048m -Xms2048m -Xmn1024m 
+		-XX:MetaspaceSize=40m -XX:MaxMetaspaceSize=128m
+		-XX:+PrintGCDetails -XX:+PrintGCDateStamps 
+		-XX:+PrintHeapAtGC -Xloggc:d:/heap_trace.txt
+		```
+		由于 Metasapce 到达 -XX:MetaspaceSize = 40m 时候，触发了一次 YGC 和一次 Full GC，所以一般都会直描述，当 Metasapce 到达 -XX:MetaspaceSize 时会触发一次 Full GC
+
+- 如何人工模拟 Metaspace 内存占用上升？
+
+	Metaspace 会保存类的描述信息,JVM 需要根据 Metaspace 中的信息，才能找到堆中类 java.lang.Class 所对应的对象,既然 Metaspace 中会保存类描述信息，可以通过新建类来增加 Metaspace 的占用
+
+	于是想到，使用 CGlib 动态代理，生成被代理类的子类
+
 # 六、详解 finalize()方法
 
 finalize是位于 Object 类的一个方法，该方法的访问修饰符为 protected.
@@ -846,3 +869,4 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 * [如何优化Java GC](https://crowhawk.github.io/2017/08/21/jvm_4/)
 * [Hotspot-G1-GC的一些关键技术](https://zhuanlan.zhihu.com/p/22591838)
 * [垃圾优先型垃圾回收器调优](http://www.oracle.com/technetwork/cn/articles/java/g1gc-1984535-zhs.html)
+* [由「Metaspace容量不足触发CMS GC」从而引发的思考](https://www.jianshu.com/p/468fb4c5b28d)
