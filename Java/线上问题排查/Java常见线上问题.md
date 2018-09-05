@@ -30,6 +30,7 @@
 内存泄漏的原因分析，总结出来只有一条：存在无效的引用
 
 # 二、后台服务出现明显“变慢”，如何诊断
+
 ## 1、首先明确问题定义
 - 服务是突然变慢还是长时间运行后观察到变慢？类似问题是否重复出现？
 - “慢”的定义是什么？是否能够理解为系统对其他方面的请求的反应延时变长？
@@ -43,6 +44,41 @@
 - 监控Java服务自身，例如GC日志是否观察到了Full GC等恶劣情况出现，或者是否出现MinorGC在变长等；利用jstat等工具，获取内存使用的统计信息也是常有手段，利用jstack检查是否出现死锁等；
 - 如果还不能确定具体问题，对应用进行Profiling也是办法，但是因为其对系统产生侵入性，如果非必要，不建议在生成系统进行；
 - 定位了程序错误或者JVM配置问题后，采取相应的补救措施，验证是否解决，否则重复上述步骤；
+
+# 三、线上持久代溢出
+
+## 1、问题背景
+    
+线上服务在某个时间点从注册中心断开，服务无法被调用，在运行定时任务时，抛出```Caused by: java.lang.OutOfMemoryError: PermGen space```
+
+## 2、问题定位
+
+- 查看持久代空间，通过jmap查看持久代，发现持久代到达99%
+    ```
+    jmap -haap <pid>
+    ```
+- 通过```jmap -histo <pid>```查看后发现 ```org.codehaus.groovy.runtime.metaclass.MetaMethodIndex$Entry```数量非常多；
+- 查看系统日志，发现很多sql操作的地方报如下异常:
+    ```
+    Caused by: java.lang.NullPointerException: null
+        at io.shardingsphere.core.jdbc.metadata.dialect.JDBCShardingRefreshHandler.execute(JDBCShardingRefreshHandler.java:49)
+        at io.shardingsphere.core.jdbc.core.statement.ShardingPreparedStatement.execute(ShardingPreparedStatement.java:159)
+        at org.apache.ibatis.executor.statement.PreparedStatementHandler.query(PreparedStatementHandler.java:63)
+        at org.apache.ibatis.executor.statement.RoutingStatementHandler.query(RoutingStatementHandler.java:79)
+        at org.apache.ibatis.executor.SimpleExecutor.doQuery(SimpleExecutor.java:63)
+        at org.apache.ibatis.executor.BaseExecutor.queryFromDatabase(BaseExecutor.java:324)
+        at org.apache.ibatis.executor.BaseExecutor.query(BaseExecutor.java:156)
+        at org.apache.ibatis.executor.CachingExecutor.query(CachingExecutor.java:109)
+        at org.apache.ibatis.executor.CachingExecutor.query(CachingExecutor.java:83)
+        at org.apache.ibatis.session.defaults.DefaultSqlSession.selectList(DefaultSqlSession.java:148)
+    ```
+    最后查到是sharding-jdbc的问题；
+- 查询sharding-jdbc的官方资料发现其3.0.0.M1版本在长时间运行之后，会发生空指针异常，[详情异常信息](https://github.com/sharding-sphere/sharding-sphere/issues/909)
+
+## 3、解决方案
+
+- 待官方把该问题修复后及时升级版本；
+- 把相应的定时任务、同步任务暂时去掉
 
 # 参考资料
 
