@@ -83,3 +83,4 @@
 # 参考资料
 
 - [官方文档：思路和工具](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html#CIHIEEFH)
+- [一次堆外内存泄露的排查过程](https://mp.weixin.qq.com/s/bkzVCjm0qeREpCnF_8xX2A)
