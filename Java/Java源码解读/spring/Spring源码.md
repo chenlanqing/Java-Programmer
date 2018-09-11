@@ -50,7 +50,7 @@
 Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等功能。BeanFactory和ApplicationContext是Spring两种很重要的容器，前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播、资源访问和国际化的消息访问等功能；
 
 ## 2、ApplicationContext Bean 生命周期
-![image](https：//github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/ApplicationContext-Bean的生命周期.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/ApplicationContext-Bean的生命周期.png)
 
 面向开发者的，几乎大部分应用场景都是直接使用ApplicationContext 而非底层的BeanFactory
 
@@ -83,7 +83,7 @@ Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 ## 3、BeanFactory Bean生命周期-面向Spring本身
 
-![image](https：//github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/BeanFactory.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/BeanFactory.png)
 
 BeanFactoty容器中， Bean的生命周期如上图所示，与ApplicationContext相比，有如下几点不同：
 
@@ -102,7 +102,7 @@ BeanFactoty容器中， Bean的生命周期如上图所示，与ApplicationConte
 - （3）ContextLoaderListener监听器初始化完毕后，始初始化web.xml中配置的Servlet，可以有多个。以最常见的DispatcherServlet为例（Spring MVC，这个servlet实际上是一个标准的前端控制器，用以转发、匹配、处理每个servlet请求。DispatcherServlet上下文在初始化的时候会建立自己的IoC上下文容器，用以持有spring mvc相关的bean，这个servlet自己持有的上下文默认实现类也是XmlWebApplicationContext.在建立DispatcherServlet自己的IoC上下文时，会利用WebApplicationContext.ROOTWEBAPPLICATIONCONTEXTATTRIBUTE先从ServletContext中获取之前的根上下文（即WebApplicationContext)作为自己上下文的parent上下文）即第2步中初始化的XmlWebApplicationContext作为自己的父容器）.有了这个parent上下文之后，再初始化自己持有的上下文（这个DispatcherServlet初始化自己上下文的工作在其initStrategies方法中可以看到，大概的工作就是初始化处理器映射、视图解析等）。初始化完毕后，spring以与servlet的名字相关（此处不是简单的以servlet名为Key，而是通过一些转换）的属性为属性Key，也将其存到ServletContext中，以便后续使用.这样每个servlet就持有自己的上下文，即拥有自己独立的bean空间，同时各个servlet共享相同的bean，即根上下文定义的那些bean
 
 ## 5、Bean加载过程
-![image](https：//github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/Spring-Bean加载过程.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/Spring-Bean加载过程.png)
 
 - ResourceLoader从存储介质中加载Spring配置信息，并使用Resource表示这个配置文件的资源。
 
@@ -203,11 +203,11 @@ https://mp.weixin.qq.com/s/Hy-qxNT0nJzcAkanbH93eA
 
 # 参考资料
 
-* [Spring AOP原理](https：//mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
-* [源码解读Spring IOC原理](https：//www.cnblogs.com/ITtangtang/p/3978349.html)
-* [tiny-spring](https：//github.com/code4craft/tiny-spring)
-* [源代码](https：//github.com/spring-projects/spring-framework)
-* [IoC容器及Bean的生命周期](https：//www.cnblogs.com/IvySue/p/6484599.html)
-* [IOC容器源码分析](https：//javadoop.com/post/spring-ioc)
-* [SpringIOC原理](https：//zhuanlan.zhihu.com/p/29344811)
+* [Spring AOP原理](https://mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
+* [源码解读Spring IOC原理](https://www.cnblogs.com/ITtangtang/p/3978349.html)
+* [tiny-spring](https://github.com/code4craft/tiny-spring)
+* [源代码](https://github.com/spring-projects/spring-framework)
+* [IoC容器及Bean的生命周期](https://www.cnblogs.com/IvySue/p/6484599.html)
+* [IOC容器源码分析](https://javadoop.com/post/spring-ioc)
+* [SpringIOC原理](https://zhuanlan.zhihu.com/p/29344811)
 * [Spring加载应用程序Bean类分析](https://blog.csdn.net/u013095337/article/details/53609398)
