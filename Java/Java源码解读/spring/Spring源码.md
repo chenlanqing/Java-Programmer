@@ -56,7 +56,7 @@ Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 - （1）Bean的实例化：
 	* 首先容器启动后，会对scope为singleton且非懒加载的bean进行实例化;
-	* 容器在内部实现的时候，采用“策略模式”来决定采用何种方式初始化bean实例.通常，可以通过反射或者CGLIB动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 CglibSubclassingInstantiationStartegy。容器只要根据相应bean定义的BeanDefinition取得实例化信息，结合CglibSubclassingInstantiationStartegy以及不同的bean定义类型，就可以返回实例化完成的对象实例.但不是直接返回构造完成的对象实例，而是以BeanWrapper对构	造完成的对象实例进行包裹，返回相应的BeanWrapper实例.这个BeanWrapper的实现类BeanWrapperImpl是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
+	* 容器在内部实现的时候，采用“策略模式”来决定采用何种方式初始化bean实例.通常，可以通过反射或者CGLIB动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 CglibSubclassingInstantiationStrategy。容器只要根据相应bean定义的BeanDefinition取得实例化信息，结合CglibSubclassingInstantiationStrategy以及不同的bean定义类型，就可以返回实例化完成的对象实例.但不是直接返回构造完成的对象实例，而是以BeanWrapper对构	造完成的对象实例进行包裹，返回相应的BeanWrapper实例.这个BeanWrapper的实现类BeanWrapperImpl是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
 
 - （2）设置对象属性：<br>
 	BeanWrapper继承了PropertyAccessor接口，可以以同一的方式对对象属性进行访问，同时又继承了PropertyEditorRegistry和TypeConverter接口，然后BeanWrapper就可以很方便地对bean注入属性了；
@@ -188,7 +188,10 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 
 ## 3、Spring事务实现原理
 
-# 五、相关面试题
+# 五、SpringFactoriesLoader
+
+
+# 相关面试题
 
 ## 1、Spring与SpringMVC父子容器配置
 

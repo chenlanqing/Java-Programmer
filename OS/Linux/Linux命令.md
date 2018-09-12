@@ -14,6 +14,24 @@
 
 # 一、查找命令
 
+```find / -name filename.txt``` 根据名称查找/目录下的filename.txt文件。
+
+```find . -name "*.xml"``` 递归查找所有的xml文件
+
+```find . -name "*" |xargs grep "hello"``` 递归查找所有文件内容中包含hello world的xml文件
+
+```grep -H 'spring' *.xml``` 查找所以有的包含spring的xml文件
+
+```find ./ -size 0 | xargs rm -f &``` 删除文件大小为零的文件
+
+```ls -l | grep '.jar'``` 查找当前目录中的所有jar文件
+
+```grep 'test' d*``` 显示所有以d开头的文件中包含test的行。
+
+```grep 'test' aa bb cc``` 显示在aa，bb，cc文件中匹配test的行。
+
+```grep '[a-z]\{5\}' aa``` 显示所有包含每个字符串至少有5个连续小写字符的字符串的行。
+
 # 二、系统监控
 
 ## 1、top
@@ -36,6 +54,7 @@ top [参数]
 - -n<次数> 循环显示的次数
 
 ### 1.3、实例
+
 ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/线上问题排查/image/top.jpg)
 
 - **说明**
@@ -96,8 +115,19 @@ top [参数]
         - TIME+ : 进程使用的 CPU 时间总计，单位 1/100 秒
         - COMMAND : 进程名称
 
+### 1.4、查看程序运行
 
+```ps –ef|grep tomcat``` 查看所有有关tomcat的进程
 
+```ps -ef|grep --color java``` 高亮要查询的关键字
+
+```ps aux|grep java``` 查看java进程
+
+```lsof -i :8080``` 查看端口属于哪个进程
+
+### 1.5、查看端口占用
+
+```netstat -tln | grep 8080``` 查看端口8080的使用情况
 
 # 三、其他
 ## 1、查看Linux发行版本

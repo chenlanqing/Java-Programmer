@@ -908,8 +908,10 @@ slaveof no one
 
 如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key.抽样数量可通过 maxmemory-samples 配置.
 
+# 七、Redis安全
 
-# 七、Redis面试题
+
+# 八、Redis面试题
 ## 1、redis如何用作缓存？ 如何确保不脏数据
 
 ## 2、Redis 和 Memcache区别
@@ -927,3 +929,7 @@ slaveof no one
 - 内存管理机制：
 	* Memcached 将内存分割成特定长度的块来存储数据，以完全解决内存碎片的问题，但是这种方式会使得内存的利用率不高；例如块的大小为 128 bytes，只存储 100 bytes 的数据，那么剩下的 28 bytes 就浪费掉了
 	* 在 Redis 中，并不是所有数据都一直存储在内存中，可以将一些很久没用的 value 交换到磁盘.而 Memcached 的数据则会一直在内存中
+
+
+# 参考资料
+- [Redis未授权访问详解](http://www.freebuf.com/column/158065.html)
