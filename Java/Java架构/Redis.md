@@ -38,12 +38,15 @@
   - [5、复制原理](#5%E5%A4%8D%E5%88%B6%E5%8E%9F%E7%90%86)
   - [6、哨兵模式-sentinel](#6%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8F-sentinel)
   - [7、复制的缺点](#7%E5%A4%8D%E5%88%B6%E7%9A%84%E7%BC%BA%E7%82%B9)
-- [六、Redis应用](#%E5%85%ADredis%E5%BA%94%E7%94%A8)
+- [六、Redis内存模型](#%E5%85%ADredis%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)
+- [七、Redis应用](#%E4%B8%83redis%E5%BA%94%E7%94%A8)
   - [1、使用场景](#1%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
   - [2、Redis数据淘汰策略](#2redis%E6%95%B0%E6%8D%AE%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5)
-- [七、Redis面试题](#%E4%B8%83redis%E9%9D%A2%E8%AF%95%E9%A2%98)
+- [八、Redis安全](#%E5%85%ABredis%E5%AE%89%E5%85%A8)
+- [九、Redis面试题](#%E4%B9%9Dredis%E9%9D%A2%E8%AF%95%E9%A2%98)
   - [1、redis如何用作缓存？ 如何确保不脏数据](#1redis%E5%A6%82%E4%BD%95%E7%94%A8%E4%BD%9C%E7%BC%93%E5%AD%98-%E5%A6%82%E4%BD%95%E7%A1%AE%E4%BF%9D%E4%B8%8D%E8%84%8F%E6%95%B0%E6%8D%AE)
   - [2、Redis 和 Memcache区别](#2redis-%E5%92%8C-memcache%E5%8C%BA%E5%88%AB)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -885,7 +888,12 @@ slaveof no one
 
 由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，slave 机器数量的增加也会使这个问题更加严重
 
-# 六、Redis应用
+# 六、Redis内存模型
+
+
+
+
+# 七、Redis应用
 ## 1、使用场景
 
 - 缓存：将热点数据放到内存中
@@ -908,10 +916,10 @@ slaveof no one
 
 如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key.抽样数量可通过 maxmemory-samples 配置.
 
-# 七、Redis安全
+# 八、Redis安全
 
 
-# 八、Redis面试题
+# 九、Redis面试题
 ## 1、redis如何用作缓存？ 如何确保不脏数据
 
 ## 2、Redis 和 Memcache区别
@@ -932,4 +940,5 @@ slaveof no one
 
 
 # 参考资料
+- [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 - [Redis未授权访问详解](http://www.freebuf.com/column/158065.html)
