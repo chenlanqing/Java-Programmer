@@ -516,21 +516,31 @@ Metaspace背后的一个思想是，类和它的元数据的生命周期是和�
 	- 元空间里的对象的位置是固定的；
 	- 如果发现某个加载器不再存活了，会把相关的空间整个回收
 
-### 3.8.2、元空间与永久代
+### 3.8.2、元空间组成
+- 元空间基本组成：
+	- Klass Metaspace：用来存klass，即class文件在jvm里的运行时数据结构，该内存是紧接着heap区的，这块内存大小可通过-XX:CompressedClassSpaceSize参数来控制，这个参数默认是1G，但是该内存也可以没有，假如没有开启压缩指针就不会有这块内存，这种情况下klass都会存在NoKlass Metaspace里；
+	- NoKlass Metaspace：存klass相关的其他的内容，比如method，constantPool等，这块内存是由多块内存组合起来的，所以可以认为是不连续的内存块组成的，块内存是必须的，虽然叫做NoKlass Metaspace，但是也其实可以存klass的内容；
 
-- 元空间本质和永久代类似，都是对JVM规范中方法区的实现；
-- 元空间与永久代之间最大的区别在于：元空间并不在虚拟机中，而是使用本地内存；
+	Klass Metaspace和NoKlass Mestaspace都是所有classloader共享的，所以类加载器们要分配内存，但是每个类加载器都有一个SpaceManager，来管理属于这个类加载的内存小块
+
+- 元空间与永久代
+	- 元空间本质和永久代类似，都是对JVM规范中方法区的实现；
+	- 元空间与永久代之间最大的区别在于：元空间并不在虚拟机中，而是使用本地内存；
+
 
 ### 3.8.3、元空间参数
 
 - 默认情况下，元空间的大小仅受本地内存限制，但可以通过以下参数来指定元空间的大小：
 	- -XX：MetaspaceSize，初始空间大小，达到该值就会触发垃圾收集进行类型卸载，同时GC会对该值进行调整；如果释放了大量的空间，就适当降低该值;如果释放了很少的空间，那么在不超过MaxMetaspaceSize时，适当提高该值；
-	- -XX：MaxMetaspaceSize， 最大空间，默认是没有限制的
+	- -XX：MaxMetaspaceSize， 最大空间，默认是没有限制的，MaxMetaspaceSize并不会在jvm启动的时候分配一块这么大的内存出来，而MaxPermSize是会分配一块这么大的内存的
 
-	除了上面两个指定大小的选项以外，还有两个与 GC 相关的属性：
+	除了上面两个指定大小的选项以外，还有与 GC 相关的属性：
 
 	- -XX：MinMetaspaceFreeRatio，在GC之后，最小的Metaspace剩余空间容量的百分比，减少为分配空间所导致的垃圾收集；
 	- -XX：MaxMetaspaceFreeRatio，在GC之后，最大的Metaspace剩余空间容量的百分比，减少为释放空间所导致的垃圾收集；
+	- UseLargePagesInMetaspace：默认false，这个参数是说是否在metaspace里使用LargePage，一般情况下我们使用4KB的page size，这个参数依赖于UseLargePages这个参数开启，不过这个参数我们一般不开；
+	- InitialBootClassLoaderMetaspaceSize：64位下默认4M，32位下默认2200K；
+	- CompressedClassSpaceSize
 
 - 元空间的扩容与分配
 	- （1）无论-XX:MetaspaceSize配置什么值，Metaspace的初始容量一定是21807104（约20.8m）；Meta区容量范围为[20.8m, MaxMetaspaceSize)；
@@ -2132,6 +2142,7 @@ public void addShutdownHook(Thread hook) {
 * [Java代码与编译过程](http://www.codeceo.com/article/java-complie-run.html)
 * [对象的内存布局](https://segmentfault.com/a/1190000009740021)
 * [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
+* [JVM源码分析之Metaspace解密](http://lovestblog.cn/blog/2016/10/29/metaspace/)
 * [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)
 * [Java虚拟机规范（JDK8）](https://docs.oracle.com/javase/specs/jvms/se8/html/index.html)
 * [钩子函数](https://segmentfault.com/a/1190000011496370)

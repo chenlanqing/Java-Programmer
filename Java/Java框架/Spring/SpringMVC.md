@@ -1,8 +1,8 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
+*目录**
 
-- [1.Spring MVC概述:](#1spring-mvc%E6%A6%82%E8%BF%B0)
+- [1、Spring MVC概述](#1spring-mvc%E6%A6%82%E8%BF%B0)
 - [2.SpringMVC项目搭建:](#2springmvc%E9%A1%B9%E7%9B%AE%E6%90%AD%E5%BB%BA)
 - [3.@RequestMapping:此注解为URL映射请求](#3requestmapping%E6%AD%A4%E6%B3%A8%E8%A7%A3%E4%B8%BAurl%E6%98%A0%E5%B0%84%E8%AF%B7%E6%B1%82)
   - [3.1.此注解可应用在类定义和方法定义上:](#31%E6%AD%A4%E6%B3%A8%E8%A7%A3%E5%8F%AF%E5%BA%94%E7%94%A8%E5%9C%A8%E7%B1%BB%E5%AE%9A%E4%B9%89%E5%92%8C%E6%96%B9%E6%B3%95%E5%AE%9A%E4%B9%89%E4%B8%8A)
@@ -16,6 +16,12 @@
   - [4.2.Model,ModelMap,Map](#42modelmodelmapmap)
   - [4.3.@SessionAttributes:](#43sessionattributes)
   - [4.4.@ModelAttribute:](#44modelattribute)
+    - [4.4.1.使用场景:当修改的数据前台表单传入时,而不需要修改的数据需要从数据库重新获取时可以使用该注解:](#441%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF%E5%BD%93%E4%BF%AE%E6%94%B9%E7%9A%84%E6%95%B0%E6%8D%AE%E5%89%8D%E5%8F%B0%E8%A1%A8%E5%8D%95%E4%BC%A0%E5%85%A5%E6%97%B6%E8%80%8C%E4%B8%8D%E9%9C%80%E8%A6%81%E4%BF%AE%E6%94%B9%E7%9A%84%E6%95%B0%E6%8D%AE%E9%9C%80%E8%A6%81%E4%BB%8E%E6%95%B0%E6%8D%AE%E5%BA%93%E9%87%8D%E6%96%B0%E8%8E%B7%E5%8F%96%E6%97%B6%E5%8F%AF%E4%BB%A5%E4%BD%BF%E7%94%A8%E8%AF%A5%E6%B3%A8%E8%A7%A3)
+    - [4.4.2.执行流程:](#442%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B)
+    - [4.4.3.源代码流程: HandlerMethodInvoker](#443%E6%BA%90%E4%BB%A3%E7%A0%81%E6%B5%81%E7%A8%8B-handlermethodinvoker)
+    - [4.4.4.SpringMVC确定目标方法 POJO 类型入参过程:](#444springmvc%E7%A1%AE%E5%AE%9A%E7%9B%AE%E6%A0%87%E6%96%B9%E6%B3%95-pojo-%E7%B1%BB%E5%9E%8B%E5%85%A5%E5%8F%82%E8%BF%87%E7%A8%8B)
+    - [4.4.5.@ModelAttribute 注解也可以来修饰目标方法 POJO 类型的入参, 其 value 属性值有如下的作用:](#445modelattribute-%E6%B3%A8%E8%A7%A3%E4%B9%9F%E5%8F%AF%E4%BB%A5%E6%9D%A5%E4%BF%AE%E9%A5%B0%E7%9B%AE%E6%A0%87%E6%96%B9%E6%B3%95-pojo-%E7%B1%BB%E5%9E%8B%E7%9A%84%E5%85%A5%E5%8F%82-%E5%85%B6-value-%E5%B1%9E%E6%80%A7%E5%80%BC%E6%9C%89%E5%A6%82%E4%B8%8B%E7%9A%84%E4%BD%9C%E7%94%A8)
+    - [4.4.6.处理 @SessionAttributes 注解引起的异常:](#446%E5%A4%84%E7%90%86-sessionattributes-%E6%B3%A8%E8%A7%A3%E5%BC%95%E8%B5%B7%E7%9A%84%E5%BC%82%E5%B8%B8)
 - [5.视图和视图解析器](#5%E8%A7%86%E5%9B%BE%E5%92%8C%E8%A7%86%E5%9B%BE%E8%A7%A3%E6%9E%90%E5%99%A8)
   - [5.1.视图解析流程分析:](#51%E8%A7%86%E5%9B%BE%E8%A7%A3%E6%9E%90%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90)
   - [5.2.视图:渲染模型数据,将模型里的数据以某种形式呈现给客户;](#52%E8%A7%86%E5%9B%BE%E6%B8%B2%E6%9F%93%E6%A8%A1%E5%9E%8B%E6%95%B0%E6%8D%AE%E5%B0%86%E6%A8%A1%E5%9E%8B%E9%87%8C%E7%9A%84%E6%95%B0%E6%8D%AE%E4%BB%A5%E6%9F%90%E7%A7%8D%E5%BD%A2%E5%BC%8F%E5%91%88%E7%8E%B0%E7%BB%99%E5%AE%A2%E6%88%B7)
@@ -51,12 +57,13 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# 1.Spring MVC概述:
-    (1).目前主流的MVC框架之一
-    (2).Spring3.0后超越strut2,成为最优秀的MVC框架之一
-    (3).Spring MVC通过一套注解,让POJO成为处理请求的控制器,而无需实现任何接口;
-    (4).支持REST风格的URL请求;
-    (5).采用了松耦合可插拔组件结构,比其他MVC框架更具扩展性和灵活性;
+# 1、Spring MVC概述
+
+- 目前主流的MVC框架之一
+- Spring3.0后超越strut2,成为最优秀的MVC框架之一
+- Spring MVC通过一套注解,让POJO成为处理请求的控制器,而无需实现任何接口;
+- 支持REST风格的URL请求;
+- 采用了松耦合可插拔组件结构,比其他MVC框架更具扩展性和灵活性;
 
 # 2.SpringMVC项目搭建:
     (1).引入相关jar包;
@@ -882,10 +889,10 @@ public void afterCompletion(HttpServletRequest request,
 
 # 19.SpringMVC 运行流程:
 ## 19.1.流程图
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java框架/Image/Spring请求流程.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java框架/Spring/image/Spring请求流程.png)
 
 ## 19.2.时序图
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java框架/Image/SpringMVC请求时序图.png)
+![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java框架/Spring/image/SpringMVC请求时序图.png)
 
 ## 19.3.详细描述
 	(1).发起请求到前端控制器(DispatcherServlet)
