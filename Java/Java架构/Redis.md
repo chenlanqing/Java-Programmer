@@ -920,6 +920,9 @@ slaveof no one
 
 
 # 九、Redis面试题
+
+[Redis常见面试题](https://mp.weixin.qq.com/s/ZeTgsYUtdmKQxSrZXuIt_A)
+
 ## 1、redis如何用作缓存？ 如何确保不脏数据
 
 ## 2、Redis 和 Memcache区别
