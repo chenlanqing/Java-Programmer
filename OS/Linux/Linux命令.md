@@ -115,7 +115,7 @@ top [参数]
         - TIME+ : 进程使用的 CPU 时间总计，单位 1/100 秒
         - COMMAND : 进程名称
 
-### 1.4、查看程序运行
+## 2、查看程序运行
 
 ```ps –ef|grep tomcat``` 查看所有有关tomcat的进程
 
@@ -125,9 +125,17 @@ top [参数]
 
 ```lsof -i :8080``` 查看端口属于哪个进程
 
-### 1.5、查看端口占用
+## 3、查看端口占用
 
 ```netstat -tln | grep 8080``` 查看端口8080的使用情况
+
+## 4、查看空间
+
+```df```
+
+```dh -sh *```
+## 5、[监控工具SAR](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
+
 
 # 三、其他
 ## 1、查看Linux发行版本
