@@ -214,3 +214,4 @@ https://mp.weixin.qq.com/s/Hy-qxNT0nJzcAkanbH93eA
 * [IOC容器源码分析](https://javadoop.com/post/spring-ioc)
 * [SpringIOC原理](https://zhuanlan.zhihu.com/p/29344811)
 * [Spring加载应用程序Bean类分析](https://blog.csdn.net/u013095337/article/details/53609398)
+* [Spring中Bean的this调用导致AOP失效的原因](https://my.oschina.net/guangshan/blog/1807721)

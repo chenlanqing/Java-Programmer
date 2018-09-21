@@ -1327,6 +1327,8 @@ class ClassTest<X extends Number， Y， Z> {
 - 在代码中避免泛型类和原始类型的混用;
 - 在使用带通配符的泛型类的时候，需要明确通配符所代表的一组类型的概念
 
+## 7、Java与C++泛型区别
+
 # 八、关于 try...catch...finally
 
 * [try、catch、finally中的细节分析](http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)

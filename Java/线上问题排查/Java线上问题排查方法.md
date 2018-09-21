@@ -508,3 +508,5 @@ vmstat：是Virtual Meomory Statistics（虚拟内存统计）的缩写，是实
 * [Btrace简介](https://www.jianshu.com/p/dbb3a8b5c92f)
 * [使用线程栈](https://www.jianshu.com/p/e92532f29349)
 * [Java 线上问题排查思路与工具使用](https://blog.csdn.net/gitchat/article/details/79019454)
+* [java问题排查工具单](https://yq.aliyun.com/articles/69520?utm_content=m_10360)
+* [Java问题排查工具箱](https://mp.weixin.qq.com/s/X4l9LhjZybqr5jc7RLfcOA)
