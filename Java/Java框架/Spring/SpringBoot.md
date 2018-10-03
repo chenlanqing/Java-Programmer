@@ -1,33 +1,26 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-*目录**
+**目录**
 
 - [一、SpringBoot](#%E4%B8%80springboot)
   - [1、简介](#1%E7%AE%80%E4%BB%8B)
   - [2、SpringBoot项目结构](#2springboot%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84)
-    - [2.1、pom文件](#21pom%E6%96%87%E4%BB%B6)
-    - [2.2、启动器](#22%E5%90%AF%E5%8A%A8%E5%99%A8)
-    - [2.3、主程序](#23%E4%B8%BB%E7%A8%8B%E5%BA%8F)
 - [二、SpringBoot配置](#%E4%BA%8Cspringboot%E9%85%8D%E7%BD%AE)
   - [1、配置文件](#1%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
   - [2、YAML语法](#2yaml%E8%AF%AD%E6%B3%95)
   - [3、配置文件值注入](#3%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%80%BC%E6%B3%A8%E5%85%A5)
-    - [3.1、注入方式](#31%E6%B3%A8%E5%85%A5%E6%96%B9%E5%BC%8F)
-    - [3.2、@Value获取值和@ConfigurationProperties获取值比较](#32value%E8%8E%B7%E5%8F%96%E5%80%BC%E5%92%8Cconfigurationproperties%E8%8E%B7%E5%8F%96%E5%80%BC%E6%AF%94%E8%BE%83)
-    - [3.3、@PropertySource&@ImportResource&@Bean](#33propertysourceimportresourcebean)
   - [4、配置文件占位符](#4%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%8D%A0%E4%BD%8D%E7%AC%A6)
-    - [4.1、随机数](#41%E9%9A%8F%E6%9C%BA%E6%95%B0)
-    - [4.2、占位符获取之前配置的值，如果没有可以是用“:”指定默认值](#42%E5%8D%A0%E4%BD%8D%E7%AC%A6%E8%8E%B7%E5%8F%96%E4%B9%8B%E5%89%8D%E9%85%8D%E7%BD%AE%E7%9A%84%E5%80%BC%E5%A6%82%E6%9E%9C%E6%B2%A1%E6%9C%89%E5%8F%AF%E4%BB%A5%E6%98%AF%E7%94%A8%E6%8C%87%E5%AE%9A%E9%BB%98%E8%AE%A4%E5%80%BC)
   - [5、Profile](#5profile)
-    - [5.1、多Profile文件](#51%E5%A4%9Aprofile%E6%96%87%E4%BB%B6)
-    - [5.2、yml支持多文档块方式](#52yml%E6%94%AF%E6%8C%81%E5%A4%9A%E6%96%87%E6%A1%A3%E5%9D%97%E6%96%B9%E5%BC%8F)
-    - [5.3、激活指定profile](#53%E6%BF%80%E6%B4%BB%E6%8C%87%E5%AE%9Aprofile)
   - [6、配置文件加载位置](#6%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%8A%A0%E8%BD%BD%E4%BD%8D%E7%BD%AE)
   - [7、外部配置加载顺序](#7%E5%A4%96%E9%83%A8%E9%85%8D%E7%BD%AE%E5%8A%A0%E8%BD%BD%E9%A1%BA%E5%BA%8F)
   - [8、自动配置原理](#8%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E5%8E%9F%E7%90%86)
-    - [8.1、自动配置原理](#81%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE%E5%8E%9F%E7%90%86)
-    - [8.2、@Conditional派生注解](#82conditional%E6%B4%BE%E7%94%9F%E6%B3%A8%E8%A7%A3)
-- [三、](#%E4%B8%89)
+- [三、SprinBoot-Web开发](#%E4%B8%89sprinboot-web%E5%BC%80%E5%8F%91)
+  - [1、静态资源映射](#1%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E6%98%A0%E5%B0%84)
+  - [2、模板引擎](#2%E6%A8%A1%E6%9D%BF%E5%BC%95%E6%93%8E)
+  - [3、SpringMVC自动配置](#3springmvc%E8%87%AA%E5%8A%A8%E9%85%8D%E7%BD%AE)
+  - [4、SpringBoot国际化](#4springboot%E5%9B%BD%E9%99%85%E5%8C%96)
+  - [5、拦截器](#5%E6%8B%A6%E6%88%AA%E5%99%A8)
+  - [6、错误页面](#6%E9%94%99%E8%AF%AF%E9%A1%B5%E9%9D%A2)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -474,8 +467,534 @@ Unconditional classes:
 
 ```
 
-# 三、SpringBoot日志
+# 三、SprinBoot-Web开发
 
+## 1、静态资源映射
+```java
+@ConfigurationProperties(prefix = "spring.resources", ignoreUnknownFields = false)
+public class ResourceProperties implements ResourceLoaderAware {
+  //可以设置和静态资源有关的参数，缓存时间等
+}
+```
+WebMvcAuotConfiguration
+```java
+@Override
+public void addResourceHandlers(ResourceHandlerRegistry registry) {
+	if (!this.resourceProperties.isAddMappings()) {
+		logger.debug("Default resource handling disabled");
+		return;
+	}
+	Integer cachePeriod = this.resourceProperties.getCachePeriod();
+	if (!registry.hasMappingForPattern("/webjars/**")) {
+		customizeResourceHandlerRegistration(
+				registry.addResourceHandler("/webjars/**")
+						.addResourceLocations(
+								"classpath:/META-INF/resources/webjars/")
+				.setCachePeriod(cachePeriod));
+	}
+	String staticPathPattern = this.mvcProperties.getStaticPathPattern();
+	//静态资源文件夹映射
+	if (!registry.hasMappingForPattern(staticPathPattern)) {
+		customizeResourceHandlerRegistration(
+				registry.addResourceHandler(staticPathPattern)
+						.addResourceLocations(
+								this.resourceProperties.getStaticLocations())
+				.setCachePeriod(cachePeriod));
+	}
+}
+
+//配置欢迎页映射
+@Bean
+public WelcomePageHandlerMapping welcomePageHandlerMapping(
+		ResourceProperties resourceProperties) {
+	return new WelcomePageHandlerMapping(resourceProperties.getWelcomePage(),
+			this.mvcProperties.getStaticPathPattern());
+}
+
+//配置喜欢的图标
+@Configuration
+@ConditionalOnProperty(value = "spring.mvc.favicon.enabled", matchIfMissing = true)
+public static class FaviconConfiguration {
+
+	private final ResourceProperties resourceProperties;
+
+	public FaviconConfiguration(ResourceProperties resourceProperties) {
+		this.resourceProperties = resourceProperties;
+	}
+
+	@Bean
+	public SimpleUrlHandlerMapping faviconHandlerMapping() {
+		SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
+		mapping.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
+		//所有  **/favicon.ico 
+		mapping.setUrlMap(Collections.singletonMap("**/favicon.ico",
+				faviconRequestHandler()));
+		return mapping;
+	}
+
+	@Bean
+	public ResourceHttpRequestHandler faviconRequestHandler() {
+		ResourceHttpRequestHandler requestHandler = new ResourceHttpRequestHandler();
+		requestHandler
+				.setLocations(this.resourceProperties.getFaviconLocations());
+		return requestHandler;
+	}
+
+}
+```
+- （1）所有 /webjars/** ，都去 classpath:/META-INF/resources/webjars/ 找资源；
+
+	[webjars](http://www.webjars.org/)：以jar包的方式引入静态资源；
+
+	localhost:8080/webjars/jquery/3.3.1/jquery.js
+	```xml
+		<!--引入jquery-webjar 在访问的时候只需要写webjars下面资源的名称即可  -->
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>jquery</artifactId>
+			<version>3.3.1</version>
+		</dependency>
+	```
+
+- （2）"/**" 访问当前项目的任何资源，都去（静态资源的文件夹）找映射
+	```
+	"classpath:/META-INF/resources/", 
+	"classpath:/resources/",
+	"classpath:/static/", 
+	"classpath:/public/" 
+	"/"：当前项目的根路径
+	```
+	localhost:8080/abc 去静态资源文件夹里面找abc
+
+- （3）欢迎页：静态资源文件夹下的所有index.html页面；被"/**"映射；
+
+- （4）所有的 **/favicon.ico  都是在静态资源文件下找
+
+## 2、模板引擎
+
+### 2.1、引入[thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html)
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-starter-thymeleaf</artifactId>
+	2.1.6
+</dependency>
+<!-- 切换thymeleaf版本 -->
+<properties>
+	<thymeleaf.version>3.0.9.RELEASE</thymeleaf.version>
+	<!-- 布局功能的支持程序  thymeleaf3主程序  layout2以上版本 -->
+	<!-- thymeleaf2   layout1-->
+	<thymeleaf-layout-dialect.version>2.2.2</thymeleaf-layout-dialect.version>
+</properties>
+```
+
+### 2.2、thymeleaf使用
+```java
+@ConfigurationProperties(prefix = "spring.thymeleaf")
+public class ThymeleafProperties {
+
+	private static final Charset DEFAULT_ENCODING = Charset.forName("UTF-8");
+
+	private static final MimeType DEFAULT_CONTENT_TYPE = MimeType.valueOf("text/html");
+
+	public static final String DEFAULT_PREFIX = "classpath:/templates/";
+
+	public static final String DEFAULT_SUFFIX = ".html";
+  	//
+```
+只要我们把HTML页面放在classpath:/templates/，thymeleaf就能自动渲染
+- （1）导入thymeleaf的名称空间
+	```html
+	<html lang="en" xmlns:th="http://www.thymeleaf.org">
+	```
+- （2）使用thymeleaf语法；
+
+### 2.3、thymeleaf公共页面元素抽取
+**2.3.1、基本步骤**
+
+- 抽取公共片段
+```html
+<div th:fragment="copy">
+&copy; 2011 The Good Thymes Virtual Grocery
+</div>
+```
+
+- 引入公共片段
+```html
+<div th:insert="~{footer :: copy}"></div>
+~{templatename::selector}：模板名::选择器
+~{templatename::fragmentname}:模板名::片段名
+```
+- 默认效果：insert的公共片段在div标签中，如果使用th:insert等属性进行引入，可以不用写~{}；行内写法可以加上：[[~{}]];[(~{})]；
+
+**2.3.2、三种引入公共片段的th属性**
+- **th:insert**：将公共片段整个插入到声明引入的元素中
+- **th:replace**：将声明引入的元素替换为公共片段
+- **th:include**：将被引入的片段的内容包含进这个标签中
+```html
+<footer th:fragment="copy">
+&copy; 2011 The Good Thymes Virtual Grocery
+</footer>
+
+<!-- 引入方式 -->
+<div th:insert="footer :: copy"></div>
+<div th:replace="footer :: copy"></div>
+<div th:include="footer :: copy"></div>
+
+<!-- 效果 -->
+<div>
+    <footer>
+    &copy; 2011 The Good Thymes Virtual Grocery
+    </footer>
+</div>
+
+<footer>
+&copy; 2011 The Good Thymes Virtual Grocery
+</footer>
+
+<div>
+&copy; 2011 The Good Thymes Virtual Grocery
+</div>
+```
+引入片段的时候传入参数，比如动态显示样式
+```html
+<nav class="col-md-2 d-none d-md-block bg-light sidebar" id="sidebar">
+    <div class="sidebar-sticky">
+        <ul class="nav flex-column">
+            <li class="nav-item">
+                <a class="nav-link active"
+                   th:class="${activeUri=='main.html'?'nav-link active':'nav-link'}"
+                   href="#" th:href="@{/main.html}">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-home">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Dashboard <span class="sr-only">(current)</span>
+                </a>
+            </li>
+
+<!--引入侧边栏;传入参数-->
+<div th:replace="commons/bar::#sidebar(activeUri='emps')"></div>
+```
+
+## 3、SpringMVC自动配置
+
+-[SpringMVC自动配置官方](https://docs.spring.io/spring-boot/docs/1.5.10.RELEASE/reference/htmlsingle/#boot-features-developing-web-applications)
+
+### 3.1、Spring MVC auto-configuration
+WebMvcAutoConfiguration
+- 自动配置了ViewResolver（视图解析器：根据方法的返回值得到视图对象（View），视图对象决定如何渲染（转发？重定向？））；
+- ContentNegotiatingViewResolver：组合所有的视图解析器的；
+- 如何定制：我们可以自己给容器中添加一个视图解析器；自动的将其组合进来；
+- 静态资源文件夹路径,webjars；
+- 自动注册了`Converter`, `GenericConverter`, `Formatter` beans
+	- Converter：转换器；  public String hello(User user)：类型转换使用Converter；
+	- `Formatter`  格式化器；  2017.12.17 -> Date；
+		```java
+		@Bean
+		@ConditionalOnProperty(prefix = "spring.mvc", name = "date-format")//在文件中配置日期格式化的规则
+		public Formatter<Date> dateFormatter() {
+			return new DateFormatter(this.mvcProperties.getDateFormat());//日期格式化组件
+		}	
+		```
+		自己添加的格式化器转换器，我们只需要放在容器中即可
+- HttpMessageConverter：SpringMVC用来转换Http请求和响应的；User---Json；
+- `HttpMessageConverters` 是从容器中确定；获取所有的HttpMessageConverter；自己给容器中添加HttpMessageConverter，只需要将自己的组件注册容器中
+
+### 3.2、扩展SpringMVC
+```xml
+<mvc:view-controller path="/hello" view-name="success"/>
+<mvc:interceptors>
+	<mvc:interceptor>
+		<mvc:mapping path="/hello"/>
+		<bean></bean>
+	</mvc:interceptor>
+</mvc:interceptors>
+```
+编写一个配置类（@Configuration），是`WebMvcConfigurerAdapter`类型；不能标注`@EnableWebMvc`；既保留了所有的自动配置，也能用我们扩展的配置；
+```java
+//使用WebMvcConfigurerAdapter可以来扩展SpringMVC的功能
+@Configuration
+public class MyMvcConfig extends WebMvcConfigurerAdapter {
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+       // super.addViewControllers(registry);
+        //浏览器发送 /bluefish 请求来到 success
+        registry.addViewController("/bluefish").setViewName("success");
+    }
+}
+```
+**原理：**
+- WebMvcAutoConfiguration是SpringMVC的自动配置类；
+- 在做其他自动配置时会导入；@Import(**EnableWebMvcConfiguration**.class)
+	```java
+	@Configuration
+	public static class EnableWebMvcConfiguration extends DelegatingWebMvcConfiguration {
+      private final WebMvcConfigurerComposite configurers = new WebMvcConfigurerComposite();
+	 //从容器中获取所有的WebMvcConfigurer
+      @Autowired(required = false)
+      public void setConfigurers(List<WebMvcConfigurer> configurers) {
+          if (!CollectionUtils.isEmpty(configurers)) {
+              this.configurers.addWebMvcConfigurers(configurers);
+            	//一个参考实现；将所有的WebMvcConfigurer相关配置都来一起调用；  
+            	@Override
+             // public void addViewControllers(ViewControllerRegistry registry) {
+              //    for (WebMvcConfigurer delegate : this.delegates) {
+               //       delegate.addViewControllers(registry);
+               //   }
+              }
+          }
+	}
+	```
+- 容器中所有的WebMvcConfigurer都会一起起作用；
+- 自定义配置的类也会被调用：SpringMVC的自动配置和扩展配置都会起作用；
+
+### 3.3、自动配置SpringMVC失效
+SpringBoot对SpringMVC的自动配置不需要了，所有都是我们自己配置；所有的SpringMVC的自动配置都失效了，**只需要在配置类中添加@EnableWebMvc即可**
+
+```java
+//使用WebMvcConfigurerAdapter可以来扩展SpringMVC的功能
+@EnableWebMvc
+@Configuration
+public class MyMvcConfig extends WebMvcConfigurerAdapter {
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+       // super.addViewControllers(registry);
+        //浏览器发送 /atguigu 请求来到 success
+        registry.addViewController("/atguigu").setViewName("success");
+    }
+}
+```
+**为什么@EnableWebMvc自动配置就失效了？**
+- @EnableWebMvc的核心：
+	```java
+	@Import(DelegatingWebMvcConfiguration.class)
+	public @interface EnableWebMvc {}
+	```
+	```java
+	@Configuration
+	public class DelegatingWebMvcConfiguration extends WebMvcConfigurationSupport {}
+	```
+- WebMVCAutoConfiguration
+	```java
+	@Configuration
+	@ConditionalOnWebApplication
+	@ConditionalOnClass({ Servlet.class, DispatcherServlet.class,
+			WebMvcConfigurerAdapter.class })
+	//容器中没有这个组件的时候，这个自动配置类才生效
+	@ConditionalOnMissingBean(WebMvcConfigurationSupport.class)
+	@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE + 10)
+	@AutoConfigureAfter({ DispatcherServletAutoConfiguration.class,
+			ValidationAutoConfiguration.class })
+	public class WebMvcAutoConfiguration {}
+	```
+- @EnableWebMvc将WebMvcConfigurationSupport组件导入进来；
+- 导入的WebMvcConfigurationSupport只是SpringMVC最基本的功能；
+
+### 3.4、修改SpringBoot的默认配置
+- SpringBoot在自动配置很多组件的时候，先看容器中有没有用户自己配置的（@Bean、@Component）如果有就用用户配置的，如果没有，才自动配置；如果有些组件可以有多个（ViewResolver）将用户配置的和自己默认的组合起来；
+- 在SpringBoot中会有非常多的xxxConfigurer帮助我们进行扩展配置；
+- 在SpringBoot中会有很多的xxxCustomizer帮助我们进行定制配置；
+
+## 4、SpringBoot国际化
+### 4.1、基本步骤
+- 编写国际化配置文件
+- 使用ResourceBundleMessageSource管理国际化资源文件
+- 在页面使用fmt:message取出国际化内容
+
+### 4.2、编写国际化配置文件
+![](image/SpringBoot-国际化.png)
+
+### 4.3、SpringBoot自动配置管理国际化资源文件的组件
+```java
+@ConfigurationProperties(prefix = "spring.messages")
+public class MessageSourceAutoConfiguration {
+    /**
+	 * Comma-separated list of basenames (essentially a fully-qualified classpath
+	 * location), each following the ResourceBundle convention with relaxed support for
+	 * slash based locations. If it doesn't contain a package qualifier (such as
+	 * "org.mypackage"), it will be resolved from the classpath root.
+	 */
+	private String basename = "messages";  
+    //我们的配置文件可以直接放在类路径下叫messages.properties；
+    
+    @Bean
+	public MessageSource messageSource() {
+		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+		if (StringUtils.hasText(this.basename)) {
+            //设置国际化资源文件的基础名（去掉语言国家代码的）
+			messageSource.setBasenames(StringUtils.commaDelimitedListToStringArray(
+					StringUtils.trimAllWhitespace(this.basename)));
+		}
+		if (this.encoding != null) {
+			messageSource.setDefaultEncoding(this.encoding.name());
+		}
+		messageSource.setFallbackToSystemLocale(this.fallbackToSystemLocale);
+		messageSource.setCacheSeconds(this.cacheSeconds);
+		messageSource.setAlwaysUseMessageFormat(this.alwaysUseMessageFormat);
+		return messageSource;
+	}
+```
+在application.properties中加入配置，即指定basename
+```
+spring.messages.basename=i18n.login
+```
+
+### 4.4、在页面中使用
+如果是thymeleaf模板的话，直接使用：```th:text="#{login.tip}"```
+
+页面根据浏览器设置的语言信息来实现国际化，其springboot实现是有个国际化（Locale-区域信息对象）和LocaleResolver（区域对象解析器）来实现的
+```java
+@Bean
+@ConditionalOnMissingBean
+@ConditionalOnProperty(prefix = "spring.mvc", name = "locale")
+public LocaleResolver localeResolver() {
+	if (this.mvcProperties
+			.getLocaleResolver() == WebMvcProperties.LocaleResolver.FIXED) {
+		return new FixedLocaleResolver(this.mvcProperties.getLocale());
+	}
+	AcceptHeaderLocaleResolver localeResolver = new AcceptHeaderLocaleResolver();
+	localeResolver.setDefaultLocale(this.mvcProperties.getLocale());
+	return localeResolver;
+}
+
+// 默认的就是根据请求头带来的区域信息获取Locale进行国际化
+// AcceptHeaderLocaleResolver 里面是解析request中的 Accept-Language 来实现的
+public class AcceptHeaderLocaleResolver implements LocaleResolver{
+	@Override
+	public Locale resolveLocale(HttpServletRequest request) {
+		Locale defaultLocale = getDefaultLocale();
+		if (defaultLocale != null && request.getHeader("Accept-Language") == null) {
+			return defaultLocale;
+		}
+		Locale requestLocale = request.getLocale();
+		List<Locale> supportedLocales = getSupportedLocales();
+		if (supportedLocales.isEmpty() || supportedLocales.contains(requestLocale)) {
+			return requestLocale;
+		}
+		Locale supportedLocale = findSupportedLocale(request, supportedLocales);
+		if (supportedLocale != null) {
+			return supportedLocale;
+		}
+		return (defaultLocale != null ? defaultLocale : requestLocale);
+	}
+}
+```
+### 4.5、根据连接来实现切换国际化
+```java
+/**
+ * 可以在连接上携带区域信息
+ */
+public class MyLocaleResolver implements LocaleResolver {
+    @Override
+    public Locale resolveLocale(HttpServletRequest request) {
+        String l = request.getParameter("l");
+        Locale locale = Locale.getDefault();
+        if(!StringUtils.isEmpty(l)){
+            String[] split = l.split("_");
+            locale = new Locale(split[0],split[1]);
+        }
+        return locale;
+    }
+
+    @Override
+    public void setLocale(HttpServletRequest request, HttpServletResponse response, Locale locale) {
+
+    }
+}
+
+// 在对应的配置类中将 MyLocaleResolver加入到容器中
+@Bean
+public LocaleResolver localeResolver(){
+	return new MyLocaleResolver();
+}
+```
+页面可以进行如下编写：
+```html
+<a class="btn btn-sm" th:href="@{/index.html(l='zh_CN')}">中文</a>
+<a class="btn btn-sm" th:href="@{/index.html(l='en_US')}">English</a>
+```
+
+## 5、拦截器
+在SpringBoot1.x版本中，静态资源不会被拦截，spring boot 2.x静态资源会被HandlerInterceptor拦截，是因为spring boot 2.x依赖的spring 5.x版本，相对于spring boot 1.5.x依赖的spring 4.3.x版本而言，针对资源的拦截器初始化时有区别，具体源码在WebMvcConfigurationSupport中
+
+spring 4.3.x源码如下
+```java
+/**
+ * Return a handler mapping ordered at Integer.MAX_VALUE-1 with mapped
+ * resource handlers. To configure resource handling, override
+ * {@link #addResourceHandlers}.
+ */
+@Bean
+public HandlerMapping resourceHandlerMapping() {
+    ResourceHandlerRegistry registry = new ResourceHandlerRegistry(this.applicationContext,
+				this.servletContext, mvcContentNegotiationManager());
+    addResourceHandlers(registry);
+
+    AbstractHandlerMapping handlerMapping = registry.getHandlerMapping();
+    if (handlerMapping != null) {
+        handlerMapping.setPathMatcher(mvcPathMatcher());
+        handlerMapping.setUrlPathHelper(mvcUrlPathHelper());
+        // 此处固定添加了一个Interceptor
+        handlerMapping.setInterceptors(new ResourceUrlProviderExposingInterceptor(mvcResourceUrlProvider()));
+        handlerMapping.setCorsConfigurations(getCorsConfigurations());
+		}
+    else {
+        handlerMapping = new EmptyHandlerMapping();
+    }
+    return handlerMapping;
+}
+```
+
+而spring 5.x的源码如下
+```java
+/**
+ * Return a handler mapping ordered at Integer.MAX_VALUE-1 with mapped
+ * resource handlers. To configure resource handling, override
+ * {@link #addResourceHandlers}.
+ */
+@Bean
+public HandlerMapping resourceHandlerMapping() {
+    Assert.state(this.applicationContext != null, "No ApplicationContext set");
+    Assert.state(this.servletContext != null, "No ServletContext set");
+
+    ResourceHandlerRegistry registry = new ResourceHandlerRegistry(this.applicationContext,
+				this.servletContext, mvcContentNegotiationManager(), mvcUrlPathHelper());
+    addResourceHandlers(registry);
+
+    AbstractHandlerMapping handlerMapping = registry.getHandlerMapping();
+    if (handlerMapping != null) {
+        handlerMapping.setPathMatcher(mvcPathMatcher());
+        handlerMapping.setUrlPathHelper(mvcUrlPathHelper());
+        // 此处是将所有的HandlerInterceptor都添加了（包含自定义的HandlerInterceptor）
+        handlerMapping.setInterceptors(getInterceptors());
+        handlerMapping.setCorsConfigurations(getCorsConfigurations());
+    }
+    else {
+        handlerMapping = new EmptyHandlerMapping();
+    }
+    return handlerMapping;
+}
+/**
+ * Provide access to the shared handler interceptors used to configure
+ * {@link HandlerMapping} instances with. This method cannot be overridden,
+ * use {@link #addInterceptors(InterceptorRegistry)} instead.
+ */
+protected final Object[] getInterceptors() {
+    if (this.interceptors == null) {
+        InterceptorRegistry registry = new InterceptorRegistry();
+        // 此处传入新new的registry对象，在配置类当中设置自定义的HandlerInterceptor后即可获取到
+        addInterceptors(registry);
+        registry.addInterceptor(new ConversionServiceExposingInterceptor(mvcConversionService()));
+        registry.addInterceptor(new ResourceUrlProviderExposingInterceptor(mvcResourceUrlProvider()));
+        this.interceptors = registry.getInterceptors();
+    }
+    return this.interceptors.toArray();
+}
+
+```
+
+## 6、错误页面
 
 # 参考资料
 - [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
