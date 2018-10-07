@@ -23,6 +23,13 @@
   - [6、错误处理机制](#6%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E6%9C%BA%E5%88%B6)
   - [7、嵌入式Servlet](#7%E5%B5%8C%E5%85%A5%E5%BC%8Fservlet)
   - [8、使用外置的Servlet容器](#8%E4%BD%BF%E7%94%A8%E5%A4%96%E7%BD%AE%E7%9A%84servlet%E5%AE%B9%E5%99%A8)
+- [四、SpringBoot启动配置原理](#%E5%9B%9Bspringboot%E5%90%AF%E5%8A%A8%E9%85%8D%E7%BD%AE%E5%8E%9F%E7%90%86)
+- [五、自定义Starter](#%E4%BA%94%E8%87%AA%E5%AE%9A%E4%B9%89starter)
+  - [1、自动装配Bean](#1%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8Dbean)
+  - [2、配置自动装配Bean](#2%E9%85%8D%E7%BD%AE%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8Dbean)
+  - [3、自动装配顺序](#3%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D%E9%A1%BA%E5%BA%8F)
+  - [4、启动器](#4%E5%90%AF%E5%8A%A8%E5%99%A8)
+  - [5、实例](#5%E5%AE%9E%E4%BE%8B)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -1877,11 +1884,401 @@ servlet3.0有几个规则：
 	```
 - （7）上述最后调用的run(application);其实就是调用 `org.springframework.boot.SpringApplication#run(java.lang.String...)` 的方法
 
+# 四、SpringBoot启动配置原理
+
+**1、重要的事件回调机制**
+- 配置在META-INF/spring.factories：**ApplicationContextInitializer**、**SpringApplicationRunListener**
+- 只需要放在ioc容器中：**ApplicationRunner**、**CommandLineRunner**
+
+**2、启动流程：**
+- （1）创建SpringApplication对象，
+
+	SpringBoot1.5版本调用initialize(sources)方法
+	```java
+	private void initialize(Object[] sources) {
+		//保存主配置类
+		if (sources != null && sources.length > 0) {
+			this.sources.addAll(Arrays.asList(sources));
+		}
+		//判断当前是否一个web应用
+		this.webEnvironment = deduceWebEnvironment();
+		//从类路径下找到META-INF/spring.factories配置的所有ApplicationContextInitializer；然后保存起来
+		setInitializers((Collection) getSpringFactoriesInstances(
+			ApplicationContextInitializer.class));
+		//从类路径下找到ETA-INF/spring.factories配置的所有ApplicationListener
+		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+		//从多个配置类中找到有main方法的主配置类
+		this.mainApplicationClass = deduceMainApplicationClass();
+	}
+	```
+	SpringBoot2.x版本是直接在SpringApplication构造方法中：
+	```java
+	public SpringApplication(Class<?>... primarySources) {
+		this(null, primarySources);
+	}
+
+	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+		this.resourceLoader = resourceLoader;
+		Assert.notNull(primarySources, "PrimarySources must not be null");
+		this.primarySources = new LinkedHashSet<>(Arrays.asList(primarySources));
+		this.webApplicationType = deduceWebApplicationType();
+		setInitializers((Collection) getSpringFactoriesInstances(
+				ApplicationContextInitializer.class));
+		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
+		this.mainApplicationClass = deduceMainApplicationClass();
+	}
+	```
+- （2）运行run方法
+	```java
+	public ConfigurableApplicationContext run(String... args) {
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+		ConfigurableApplicationContext context = null;
+		FailureAnalyzers analyzers = null;
+		configureHeadlessProperty();
+			
+		//获取SpringApplicationRunListeners；从类路径下META-INF/spring.factories
+		SpringApplicationRunListeners listeners = getRunListeners(args);
+			//回调所有的获取SpringApplicationRunListener.starting()方法
+		listeners.starting();
+		try {
+			//封装命令行参数
+			ApplicationArguments applicationArguments = new DefaultApplicationArguments(
+					args);
+			//准备环境
+			ConfigurableEnvironment environment = prepareEnvironment(listeners,
+					applicationArguments);
+					//创建环境完成后回调SpringApplicationRunListener.environmentPrepared()；表示环境准备完成
+			
+			Banner printedBanner = printBanner(environment);
+			
+			//创建ApplicationContext；决定创建web的ioc还是普通的ioc
+			context = createApplicationContext();
+			
+			analyzers = new FailureAnalyzers(context);
+			//准备上下文环境;将environment保存到ioc中；而且applyInitializers()；
+			//applyInitializers()：回调之前保存的所有的ApplicationContextInitializer的initialize方法
+			//回调所有的SpringApplicationRunListener的contextPrepared()；
+			//
+			prepareContext(context, environment, listeners, applicationArguments,
+					printedBanner);
+			//prepareContext运行完成以后回调所有的SpringApplicationRunListener的contextLoaded（）；
+			
+			//s刷新容器；ioc容器初始化（如果是web应用还会创建嵌入式的Tomcat）；Spring注解版
+			//扫描，创建，加载所有组件的地方；（配置类，组件，自动配置）
+			refreshContext(context);
+			//从ioc容器中获取所有的ApplicationRunner和CommandLineRunner进行回调
+			//ApplicationRunner先回调，CommandLineRunner再回调
+			afterRefresh(context, applicationArguments);
+			//所有的SpringApplicationRunListener回调finished方法
+			listeners.finished(context, null);
+			stopWatch.stop();
+			if (this.logStartupInfo) {
+				new StartupInfoLogger(this.mainApplicationClass)
+					.logStarted(getApplicationLog(), stopWatch);
+			}
+			//整个SpringBoot应用启动完成以后返回启动的ioc容器；
+			return context;
+		}
+		catch (Throwable ex) {
+			handleRunFailure(context, listeners, analyzers, ex);
+			throw new IllegalStateException(ex);
+		}
+	}
+	```
+总结：
+
+- SpringApplication.run(主程序类)
+	- new SpringApplication(主程序类)
+		- 判断是否web应用
+		- 加载并保存所有ApplicationContextInitializer(META-INF/spring.factories)， • 加载并保存所有ApplicationListener
+		- 获取到主程序类
+	- run()
+		- 回调所有的SpringApplicationRunListener(META-INF/spring.factories)的starting
+		- 获取ApplicationArguments
+		- 准备环境&回调所有监听器( SpringApplicationRunListener )的environmentPrepared • 打印banner信息
+		- 创建ioc容器对象(
+	- AnnotationConfigEmbeddedWebApplicationContext(web环境容器) – AnnotationConfigApplicationContext(普通环境容器)
+
+- 准备环境
+- 执行ApplicationContextInitializer. initialize()
+- 监听器SpringApplicationRunListener回调contextPrepared – 加载主配置类定义信息
+- 监听器SpringApplicationRunListener回调contextLoaded
+	- 刷新启动IOC容器;
+- 扫描加载所有容器中的组件
+- 包括从META-INF/spring.factories中获取的所有EnableAutoConfiguration组件
+	- 回调容器中所有的ApplicationRunner、CommandLineRunner的run方法 • 监听器SpringApplicationRunListener回调finished
+
+*Spring Boot 总是遵循一个标准;容器中有我们自己配置的组件就用我们配置的，没有就用自动配 置默认注册进来的组件;*
+
+**3、事件监听机制**
+
+配置在META-INF/spring.factories
+
+- **ApplicationContextInitializer**
+	```java
+	public class HelloApplicationContextInitializer implements ApplicationContextInitializer<ConfigurableApplicationContext> {
+		@Override
+		public void initialize(ConfigurableApplicationContext applicationContext) {
+			System.out.println("ApplicationContextInitializer...initialize..."+applicationContext);
+		}
+	}
+	```
+
+- **SpringApplicationRunListener**
+	SpringBoot1.5和SPringBoot2.x版本有不同
+	```java
+	public class HelloSpringApplicationRunListener implements SpringApplicationRunListener {
+		//必须有的构造器
+		public HelloSpringApplicationRunListener(SpringApplication application, String[] args){
+		}
+		@Override
+		public void starting() {
+			System.out.println("SpringApplicationRunListener...starting...");
+		}
+		@Override
+		public void environmentPrepared(ConfigurableEnvironment environment) {
+			Object o = environment.getSystemProperties().get("os.name");
+			System.out.println("SpringApplicationRunListener...environmentPrepared.."+o);
+		}
+		@Override
+		public void contextPrepared(ConfigurableApplicationContext context) {
+			System.out.println("SpringApplicationRunListener...contextPrepared...");
+		}
+		@Override
+		public void contextLoaded(ConfigurableApplicationContext context) {
+			System.out.println("SpringApplicationRunListener...contextLoaded...");
+		}
+		@Override
+		public void finished(ConfigurableApplicationContext context, Throwable exception) {
+			System.out.println("SpringApplicationRunListener...finished...");
+		}
+	}
+	```
+
+```
+org.springframework.context.ApplicationContextInitializer=\
+com.blue.fish.springboot.listener.HelloApplicationContextInitializer
+
+org.springframework.boot.SpringApplicationRunListener=\
+com.blue.fish.springboot.listener.HelloSpringApplicationRunListener
+```
+
+- **ApplicationRunner**
+	```java
+	@Component
+	public class HelloApplicationRunner implements ApplicationRunner {
+		@Override
+		public void run(ApplicationArguments args) throws Exception {
+			System.out.println("ApplicationRunner...run....");
+		}
+	}
+	```
+
+- **CommandLineRunner**
+	```java
+	@Component
+	public class HelloCommandLineRunner implements CommandLineRunner {
+		@Override
+		public void run(String... args) throws Exception {
+			System.out.println("CommandLineRunner...run..."+ Arrays.asList(args));
+		}
+	}
+	```
+
+# 五、自定义Starter
+
+## 1、自动装配Bean
+
+自动装配使用配置类(@Configuration)结合Spring4 提供的条件判断注解@Conditional及Spring Boot的派生注解如@ConditionOnClass完成;
+
+## 2、配置自动装配Bean
+
+将标注@Configuration的自动配置类，放在classpath下META-INF/spring.factories文件中
+```
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
+org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
+```
+
+## 3、自动装配顺序
+- 在特定自动装配Class之前
+
+	- @AutoConfigureBefore – 在特定自动装配Class之后
+	- @AutoConfigureAfter
+
+- 指定顺序：@AutoConfigureOrder
+
+```java
+@Configuration  //指定这个类是一个配置类
+@ConditionalOnXXX  //在指定条件成立的情况下自动配置类生效
+@AutoConfigureAfter  //指定自动配置类的顺序
+@Bean  //给容器中添加组件
+
+@ConfigurationPropertie结合相关xxxProperties类来绑定相关的配置
+@EnableConfigurationProperties //让xxxProperties生效加入到容器中
+```
+
+## 4、启动器
+
+启动器模块是一个空 JAR 文件，仅提供辅助性依赖管理，这些依赖可能用于自动装配或者其他类库
+
+命名规约：
+- 推荐使用以下命名规约：
+
+	xxxx-starter -> xxxx-starter-autoconfigurer
+
+- 官方命名空间
+	- 前缀:“spring-boot-starter-”
+	- 模式:spring-boot-starter-模块名
+	- 举例:spring-boot-starter-web、spring-boot-starter-actuator、spring-boot-starter-jdbc
+
+- 自定义命名空间
+	- 后缀:“-spring-boot-starter”
+	- 模式:模块-spring-boot-starter
+	- 举例:mybatis-spring-boot-starter
+
+启动器只用来做依赖导入；
+
+专门来写一个自动配置模块；
+
+启动器依赖自动配置；别人只需要引入启动器（starter）
+
+## 5、实例
+自定义starter步骤：
+
+- （1）启动器模块
+	```xml
+	<?xml version="1.0" encoding="UTF-8"?>
+	<project xmlns="http://maven.apache.org/POM/4.0.0"
+			xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+			xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		<modelVersion>4.0.0</modelVersion>
+
+		<groupId>com.demo.starter</groupId>
+		<artifactId>demo-spring-boot-starter</artifactId>
+		<version>1.0-SNAPSHOT</version>
+
+		<dependencies>
+			<dependency>
+				<groupId>com.demo.starter</groupId>
+				<artifactId>demo-spring-boot-starter-autoconfigurer</artifactId>
+				<version>0.0.1-SNAPSHOT</version>
+			</dependency>
+		</dependencies>
+	</project>
+	```
+
+- （2）自动配置模块
+	```xml
+	<?xml version="1.0" encoding="UTF-8"?>
+	<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+		<modelVersion>4.0.0</modelVersion>
+
+		<groupId>com.demo.starter</groupId>
+		<artifactId>demo-spring-boot-starter-autoconfigurer</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+		<packaging>jar</packaging>
+
+		<name>demo-spring-boot-starter-autoconfigurer</name>
+		<description>Demo project for Spring Boot</description>
+
+		<parent>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-parent</artifactId>
+			<version>2.0.5.RELEASE</version>
+			<relativePath/> <!-- lookup parent from repository -->
+		</parent>
+
+		<properties>
+			<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+			<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+			<java.version>1.8</java.version>
+		</properties>
+
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-starter-web</artifactId>
+			</dependency>
+
+		</dependencies>
+
+	</project>
+
+	```
+	```java
+	import org.springframework.boot.context.properties.ConfigurationProperties;
+	@ConfigurationProperties(prefix = "spring.hello")
+	public class HelloProperties {
+
+		private String prefix;
+		private String suffix;
+
+		public String getPrefix() {
+			return prefix;
+		}
+
+		public void setPrefix(String prefix) {
+			this.prefix = prefix;
+		}
+
+		public String getSuffix() {
+			return suffix;
+		}
+
+		public void setSuffix(String suffix) {
+			this.suffix = suffix;
+		}
+	}
+
+	public class HelloService {
+		HelloProperties helloProperties;
+
+		public HelloProperties getHelloProperties() {
+			return helloProperties;
+		}
+
+		public void setHelloProperties(HelloProperties helloProperties) {
+			this.helloProperties = helloProperties;
+		}
+
+		public String sayHello(String name){
+			return helloProperties.getPrefix()+ "-" +name + "-" + helloProperties.getSuffix();
+		}
+	}
+
+	@Configuration
+	@ConditionalOnWebApplication
+	@EnableConfigurationProperties(HelloProperties.class)
+	public class HelloServiceAutoConfiguration {
+
+		@Autowired
+		HelloProperties helloProperties;
+		@Bean
+		public HelloService helloService(){
+			HelloService service = new HelloService();
+			service.setHelloProperties(helloProperties);
+			return service;
+		}
+	}
+	```
+	spring.factories
+	```
+	org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+	com.demo.starter.demo.springboot.HelloServiceAutoConfiguration
+	```
+
+- （3）引入
+
+
 # 参考资料
 - [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
 - [Spring Boot知识清单](https://www.jianshu.com/p/83693d3d0a65)
 - [Spring Boot 官方文档](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
 - [SpringBoot1.x升级到2.x指南](http://www.leftso.com/blog/484.html)
+- [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
 
 
 
