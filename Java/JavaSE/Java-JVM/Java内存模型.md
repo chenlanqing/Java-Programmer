@@ -78,7 +78,7 @@ MESI协议将cache line的状态分成 modify、exclusive、shared、invalid，�
 
 ### 2.4、cache操作
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/MESI.jpg)
+![image](image/MESI.jpg)
 
 在MESI中，每个cache的控制器不仅自己的操作(local read和local write)，通过监听也能其他CPU的cahce操作(remote read和remote write)。对于自己本地缓存有的数据，CPU仅需要发起local操作，否则发起remote操作，从主存中读取数据，cache通过总线监听，仅能够知道其他CPU发起的remote操作，但是如果local操作会导致数据不一致，cache控制器会通知其他CPU的cache控制修改状态
 
@@ -136,6 +136,7 @@ MESI协议将cache line的状态分成 modify、exclusive、shared、invalid，�
 - RW：监听到总线发生RW操作，表示有其他CPU写主存，和本地cache无关，状态不变;
 
 # 二、Java内存模型
+
 ## 1、并发编程模型分类
 
 在并发编程中，需要处理两个关键问题：线程之间如何通信及线程之间如何同步
@@ -145,7 +146,7 @@ MESI协议将cache line的状态分成 modify、exclusive、shared、invalid，�
 - 在共享内存的并发模型里，线程之间共享程序的公共状态，线程之间通过写-读内存中的公共状态来隐式进行通信。
 - 在消息传递的并发模型里，线程之间没有公共状态，线程之间必须通过明确的发送消息来显式进行通信；首先，线程A把本地内存A中更新过的共享变量刷新到主内存中去。然后，线程B到主内存中去读取线程A之前已更新过的共享变量。<br>
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B%E5%9B%BE.jpg)
+![image](image/Java内存模型图.jpg)
 
 **1.2、同步：是指程序用于控制不同线程之间操作发生相对顺序的机制**
 
@@ -165,7 +166,7 @@ MESI协议将cache line的状态分成 modify、exclusive、shared、invalid，�
 
 **1.4、同步规则：**
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/JMM-%E5%90%8C%E6%AD%A5%E8%A7%84%E5%88%99%E5%9B%BE.png)
+![image](image/JMM-同步规则图.png)
 
 - 如果要把一个变量从住内存中复制到工作内存，就需要按顺序的执行read和load操作，如果把变量从工作内存同步回主内存中就要按顺序执行store和write操作.Java内存模型要求上述操作必须按顺序执行，而没有保证必须是连续执行;
 - 不允许read和load、store和write操作之一单独出现

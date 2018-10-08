@@ -13,7 +13,7 @@
 
 ## 2.2.Class 文件格式
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/class类文件格式.jpg)
+![image](image/class类文件格式.jpg)
 
 magic、minor_version、major_version、constant_pool_count、constant_pool、access_flag、this_class、super_clas、interfaces_count、interfaces、fields_count、fields、methods_count、methods、attributes_count、attributes；从图中可以看出当需要描述同一类型但数量不定的多个数据时，经常会在其前面使用一个前置的容量计数器来记录其数量，而便跟着若干个连续的数据项，称这一系列连续的某一类型的数据为某一类型的集合；Class 文件中各数据项是按照上表的顺序和数量被严格限定的，每个字节代表的含义、长度、先后顺序都不允许改变；
 

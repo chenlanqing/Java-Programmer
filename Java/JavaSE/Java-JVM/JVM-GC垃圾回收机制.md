@@ -374,7 +374,7 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 
 传统的GC收集器将连续的内存空间划分为新生代、老年代和永久代（JDK 8去除了永久代，引入了元空间Metaspace），这种划分的特点是各代的存储地址是连续的；而G1的各代存储地址是不连续的，每一代都使用了n个不连续的大小相同的Region，每个Region占有一块连续的虚拟内存地址：
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/G1-Region.jpg)
+![image](image/G1-Region.jpg)
 
 region的大小是一致，数值在1M到32M字节之间的一个2的幂值，JVM会尽量划分2048个左右、同等大小的region，这点从源码[heapRegionBounds.hpp](http://hg.openjdk.java.net/jdk/jdk/file/fa2f93f99dbc/src/hotspot/share/gc/g1/heapRegionBounds.hpp)可以看到；
 
@@ -490,7 +490,7 @@ global concurrent marking的执行过程分为四个步骤：
 
 - 收集器如何搭配
 
-	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/GC%E6%90%AD%E9%85%8D.png)
+	![image](image/GC搭配.png)
 
 ## 9、如何选择垃圾收集器
 

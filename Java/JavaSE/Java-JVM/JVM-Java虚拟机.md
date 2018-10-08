@@ -133,11 +133,11 @@
 
 Java代码编译是由Java源码编译器来完成，流程图如下所示：
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/Java源码编译流程.gif)
+![image](image/Java源码编译流程.gif)
 
 Java字节码的执行是由JVM执行引擎来完成，流程图如下所示：
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/JVM执行流程.gif)
+![image](image/JVM执行流程.gif)
 
 ## 1.1、包含三个重要机制
 
@@ -182,7 +182,7 @@ JVM 是基于栈的体系结构来执行 class 字节码的{}.线程创建后，
 
 Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据区：程序计数器、Java 虚拟机栈、本地方法栈、Java 堆、方法区；其中"程序计数器、Java 虚拟机栈、本地方法栈"三者是线程私有内存区；“Java 堆、方法区”为线程共享内存区
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/Java虚拟机内存区域.png)
+![image](image/Java虚拟机内存区域.png)
 
 ### 2.2.1、程序计数器：无内存溢出异常（PC 寄存器）
 
@@ -994,7 +994,7 @@ public class NetworkClassLoader extends ClassLoader {
 
 - 是正式为类变量分配内存并设置类变量初始值的阶段，变量所使用的内存都将在方法区中进行分配：这时候进行内存分配的仅包括类变量（static 修饰的变量），而不包括实例变量，实例变量会在对象实例化时随着对象一块分配在Java堆中；
 
-- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：public static int value=123；那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为123的putstatic指令是程序被编译后，存放于类构造器<clinit>()方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;<br>
+- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：public static int value=123；那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为123的putstatic指令是程序被编译后，存放于类构造器`<clinit>`()方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;<br>
 	int -> 0	long -> 0L	short -> (short)0	char -> '\u0000'	byte -> (byte)0<br>
 	boolean -> false	float -> 0.0f 	double -> 0.0d 	reference -> null<br>
 
@@ -1013,15 +1013,15 @@ public class NetworkClassLoader extends ClassLoader {
 
 类初始化阶段是类加载过程的最后一步，真正开始执行类中定义的java程序代码
 
-- 初始化阶段是执行类构造器<clinit>()方法的过程。<clinit>()方法是由编译器自动收集类中的所有类变量的赋值动作和静态语句块 static{}中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序所决定的，静态语句块中只能访问到定义在静态语句块之前的变量，定义在它之后的变量，在前面的静态语句块可以赋值，但是并不能访问；
+- 初始化阶段是执行类构造器`<clinit>`()方法的过程。`<clinit>`()方法是由编译器自动收集类中的所有类变量的赋值动作和静态语句块 static{}中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序所决定的，静态语句块中只能访问到定义在静态语句块之前的变量，定义在它之后的变量，在前面的静态语句块可以赋值，但是并不能访问；
 
-- <clinit>()方法与实例构造器<init>()方法不同，它不需要显示地调用父类构造器，虚拟机会保证在子类<clinit>()方法执行之前，父类的<clinit>()方法方法已经执行完毕;因此在虚拟机中第一个被执行的<clinit>()方法类肯定是 java.lang.Object由于父类的<clinit>()方法先执行，也就意味着父类中定义的静态语句块要优先于子类的变量赋值操作；
+- `<clinit>`()方法与实例构造器`<init>`()方法不同，它不需要显示地调用父类构造器，虚拟机会保证在子类`<clinit>`()方法执行之前，父类的`<clinit>`()方法方法已经执行完毕;因此在虚拟机中第一个被执行的`<clinit>`()方法类肯定是 java.lang.Object由于父类的`<clinit>`()方法先执行，也就意味着父类中定义的静态语句块要优先于子类的变量赋值操作；
 
-- <clinit>()方法对于类或者接口来说并不是必需的，如果一个类中没有静态语句块，也没有对类变量的赋值操作，那么编译器可以不为这个类生产<clinit>()方法；
+- `<clinit>`()方法对于类或者接口来说并不是必需的，如果一个类中没有静态语句块，也没有对类变量的赋值操作，那么编译器可以不为这个类生产`<clinit>`()方法；
 
-- 接口中不能使用静态语句块，但仍然有变量初始化的赋值操作，因此接口与类一样都会生成<clinit>()方法。但接口与类不同的是，执行接口的<clinit>()方法不需要先执行父接口的<clinit>()方法.只有当父接口中定义的变量使用时，父接口才会初始化.另外，接口的实现类在初始化时也一样不会执行接口的<clinit>()方法；
+- 接口中不能使用静态语句块，但仍然有变量初始化的赋值操作，因此接口与类一样都会生成`<clinit>`()方法。但接口与类不同的是，执行接口的`<clinit>`()方法不需要先执行父接口的`<clinit>`()方法.只有当父接口中定义的变量使用时，父接口才会初始化.另外，接口的实现类在初始化时也一样不会执行接口的`<clinit>`()方法；
 
-- 虚拟机会保证一个类的<clinit>()方法在多线程环境中被正确的加锁、同步，如果多个线程同时去初始化一个类，那么只会有一个线程去执行这个类的<clinit>()方法，其他线程都需要阻塞等待，直到活动线程执行<clinit>()方法完毕；其他线程虽然会被阻塞，但如果执行<clinit>()方法的那条线程退出<clinit>()方法后，其他线程唤醒之后不会再次进入<clinit>()方法.同一个类加载器下，一个类型只会初始化一次；
+- 虚拟机会保证一个类的`<clinit>`()方法在多线程环境中被正确的加锁、同步，如果多个线程同时去初始化一个类，那么只会有一个线程去执行这个类的`<clinit>`()方法，其他线程都需要阻塞等待，直到活动线程执行`<clinit>`()方法完毕；其他线程虽然会被阻塞，但如果执行`<clinit>`()方法的那条线程退出`<clinit>`()方法后，其他线程唤醒之后不会再次进入`<clinit>`()方法.同一个类加载器下，一个类型只会初始化一次；
 
 - 虚拟机规定有且只有 5 种情况(jdk1.7)必须对类进行"初始化"：即对一个类的主动引用
 	- ①、遇到new，getstatic，putstatic，invokestatic这几个调字节码指令时，如果类没有进行过初始化，则需要先触发其初始化;
@@ -1073,8 +1073,8 @@ public class NetworkClassLoader extends ClassLoader {
 - 初始化过程的主要操作是“执行静态代码块”和“初始化静态域”。在一个类被初始化之前，它的“直接父类”也需要被初始化。但是，一个接口的初始化，不会引起其父接口的初始化。在初始化的时候，会按照源代码中“从上到下”的顺序依次“执行静态代码块和初始化静态域”
 
 - 如果基类没有被初始化，初始化基类。有类构造函数，则执行类构造函数。类构造函数是由Java编译器完成的。它把类成员变量的初始化和static区间
-	的代码提取出，放到一个<clinit>方法中。这个方法不能被一般的方法访问（注意，static vfinal成员变量不会在此执行初始化，它一般被编
-	译器生成constant值）同时，<clinit>中是不会显示的调用基类的<clinit>的，因为1中已经执行了基类的初始化。该初始化过程是由Jvm保证线程安全的
+	的代码提取出，放到一个`<clinit>`方法中。这个方法不能被一般的方法访问（注意，static vfinal成员变量不会在此执行初始化，它一般被编
+	译器生成constant值）同时，`<clinit>`中是不会显示的调用基类的`<clinit>`的，因为1中已经执行了基类的初始化。该初始化过程是由Jvm保证线程安全的
 
 - Java 类和接口的初始化只有在特定的时机才会发生，这些时机包括：
 
@@ -1149,7 +1149,7 @@ public class Test{
 
 ### 6.9.3、接口的初始化过程与类初始化过程的不同
 
-- 接口也有初始化过程，上面的代码中我们都是用静态语句块来输出初始化信息的，而在接口中不能使用“static{}”语句块，但编译器仍然会为接口生成<clinit>类构造器，用于初始化接口中定义的成员变量（实际上是 static final 修饰的全局常量）
+- 接口也有初始化过程，上面的代码中我们都是用静态语句块来输出初始化信息的，而在接口中不能使用“static{}”语句块，但编译器仍然会为接口生成`<clinit>`类构造器，用于初始化接口中定义的成员变量（实际上是 static final 修饰的全局常量）
 
 - 主要区别：
 	当一个类在初始化时，要求其父类全部已经初始化过了;但是一个接口在初始化时，并不要求其父接口全部都完成了初始化，只有在真正使用
@@ -1283,7 +1283,7 @@ http://osgi.com.cn/article/7289378
 
 - 调用方法的字节指令：
 	- ①、invokestatic：调用静态方法
-	- ②、invokespecial：调用实例构造器<init>方法、私有方法和父类方法.
+	- ②、invokespecial：调用实例构造器`<init>`方法、私有方法和父类方法.
 	- ③、invokevirtual：调用所有的虚方法
 	- ④、invokeinterface：调用接口方法，会在运行时再确定一个实现此接口的对象
 	- ⑤、invokedynamic：只要能被invokestatic和invokespecial指令调用的方法，都可以在解析阶段确定唯一的调用版本，符合这个条件的有：静态方法、私有方法、实例构造器和父类方法四类，它们在类加载时就会把符号引用解析为该方法的直接引用.这类方法称为非虚方法(包括 final 方法)，与之相反，其他方法称为虚方法（final 方法除外）
@@ -1391,7 +1391,7 @@ public class StaticPai{
 
 ## 10.2、javac 编译
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/Javac%E7%BC%96%E8%AF%91%E8%BF%87%E7%A8%8B%E7%9A%84%E7%9A%84%E4%B8%BB%E4%BD%93%E4%BB%A3%E7%A0%81.jpg)
+![image](image/Javac编译过程的的主体代码.jpg)
 
 ### 10.2.1、Javac 编译过程
 
@@ -1434,7 +1434,7 @@ javac编译动作的入口是 com.sun.tools.javac.main.JavaCompiler类，上述�
 - 字节码生成：是Javac编译过程的最后一个阶段
 	
 	仅仅是把前面各个步骤所生成的信息转化成字节码写到磁盘中，编译器还进行了少量的代码添加和转换工作：
-	实例构造器<init>()方法和类构造器<clinit>()方法就是在这个阶段添加到语法树之中的
+	实例构造器`<init>`()方法和类构造器`<clinit>`()方法就是在这个阶段添加到语法树之中的
 	com.sun.tools.javac.jvm.Gen
 
 ## 10.3、语法糖
@@ -1496,7 +1496,7 @@ public class FanxingTest{
 
 ### 10.4.2、解释器与编译器
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/解释器与编译器交互.png)
+![image](image/解释器与编译器交互.png)
 
 - （1）两者并存的优势：
 	- 程序需要迅速启动和执行时，解释器优先发挥作用，省去编译时间，且随着时间推移，编译器将热点代码编译本地代码，提高执行效率；
@@ -1538,7 +1538,7 @@ public class FanxingTest{
 		- 半衰周期：当超过一定时间限度，如果方法的调用次数仍然不足以让它提交JIT编译器编译，那么这个方法的调用计数器就被减少一半，该过程称为方法调用计数器热度的衰减，这段时间称为方法统计的半衰周期，使用 -XX:CounterHalfLifeTime 来设置半衰周期时间，单位是s
 		- 关闭热锻衰减：-XX:-UseCounterDecay
 
-		![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/方法调用计数器触发即时编译.png)
+		![image](image/方法调用计数器触发即时编译.png)
 
 	- 回边计数器：统计一份方法中循环体代码执行的次数，在字节码中遇到控制流向后跳转的指令成为“回边”，建立回边的计数器统计的目的是为了触发OSR编译
 		- 阈值修改：-XX:BackEdgeThreshold，但当前虚拟机实际并未使用该参数；
@@ -1546,7 +1546,7 @@ public class FanxingTest{
 			- Client模式下：阈值 = 方法调用计数器阈值（CompiledThreshold） * OSR 比率（OnStackReplacePercentage）/ 100； 其中OnStackReplacePercentage默认值为933，如果都取默认值的话，Client模式下虚拟机回边计数器的阈值我13955；
 			- Server模式：阈值 = 方法调用计数器阈值 * （OSR 比率 - 解释器监控比率（InterperterProfilePercentage）） / 100；其中OnStackReplacePercentage默认值为140，InterperterProfilePercentage 默认值为33，如果都取默认值，那么Server模式虚拟机回边计数器的阈值为10700；
 
-		![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/方法调用计数器触发即时编译.png)
+		![image](image/方法调用计数器触发即时编译.png)
 
 	*注意：* 上述图片中仅仅描述了Client VM的即时编译方式，对于Server VM 来说，情况比上述更复杂。可以通过源码文件 MethodOop.hpp中，定义了Java方法在虚拟机中的内存布局
 
@@ -1559,7 +1559,7 @@ public class FanxingTest{
 	- 第二阶段：一个平台相关的后端从HIR中产生低级中间代码（LIR）表示，而在此之前会在HIR上完成另外一部分的优化，如：控制检查、范围检查消除等；
 	- 第三阶段：是在凭条相关的后端使用线性扫描算法在LIR上分配寄存器，并在LIR上做窥孔优化，产生机器代码；Client Compiler 的大致执行过程：
 
-	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/image/Client-Compiler架构.png)
+	![image](image/Client-Compiler架构.png)
 
 - （2）Server Compiler，其会执行所有经典的优化动作，如无用代码消除、循环展开、循环表达式外提、消除公共子表达式、常量传播、基本块重排序等
 
@@ -1830,7 +1830,7 @@ public static void testInline(String[] args){
 
 # 11、Java 垃圾收集机制
 
-[GC垃圾回收](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/JVM-GC垃圾回收机制.md)
+[GC垃圾回收](JVM-GC垃圾回收机制.md)
 
 # 12、虚拟机监控及故障处理
 

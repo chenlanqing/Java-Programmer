@@ -405,7 +405,7 @@ public class Daemon extends Thread{
 
 ### 2.17、线程的生命周期
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/thread-status.png)
+![image](image/thread-status.png)
 
 
 - 新建态（New）：通过线程的创建方式创建线程后，进入新建态态;
@@ -630,7 +630,8 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 - 如果是 synchronized(Class.class)代码块，则效果是是一样的，也是对整个类加锁;
 	
 ## 7、synchronized底层实现及锁优化
-- 可以通过反编译字节码 -->javap -c SyncDemo.class 查看底层实现
+
+- 可以通过反编译字节码 --> `javap -c SyncDemo.class` 查看底层实现
 - synchronized 的优化借鉴了锁的CAS操作
 
 **7.1、同步代码块的实现：**
@@ -1231,10 +1232,11 @@ public class DeadLock{
 - 公平锁。
 - 注意性能方面
 
-# 三.JUC(java.util.concurrent)包
+# 三、JUC(java.util.concurrent)包
 
 从整体来看，concurrent包的实现示意图：
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/concurrent包的实现示意图.png)
+
+![image](image/concurrent包的实现示意图.png)
 
 ## 1、JUC原子类
 
@@ -1398,7 +1400,7 @@ protected final void setState(long newState) {
 
 - 实现原理:
 
-	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/CountdownLatch.png)
+	![image](image/CountdownLatch.png)
 
 	- CountDownLatch是通过“共享锁”实现的.
 	- 在创建CountDownLatch中时，会传递一个int类型参数count，该参数是“锁计数器”的初始状态，表示该“共享锁”最多能被count给线程同时获取.
@@ -1444,7 +1446,7 @@ private static void test(int count) throws Exception {
 
 下图应该从下往上看才正确
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/CyclicBarrier.png)
+![image](image/CyclicBarrier.png)
 
 - 6.2、主要方法：
 	- CyclicBarrier(int parties)<br>
@@ -1515,7 +1517,7 @@ public class CyclicBarrierDemo {
 
 - 是一个计数信号量，它的本质是一个"共享锁";它的作用是限制某段代码块的并发数:<br>
 	
-	![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/Semaphore.png)
+	![image](image/Semaphore.png)
 
 - 信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可；当信号量中有可用的许可时，线程能获取该许可；否则线程必须等待，直到有可用的许可为止。线程可以通过release()来释放它所持有的信号量许可
 
@@ -2197,7 +2199,8 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 
 Executor框架结构：
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/%E5%A4%9A%E7%BA%BF%E7%A8%8B/image/Executor.png)
+![](image/Executor.png)
+
 - Executor是一个基础的接口，其初衷是将任务提交和任务执行细节解耦，其只有一个方法：
 	```java
 	void execute(Runnable command);
@@ -2236,7 +2239,12 @@ Executor框架结构：
 
 #### 2.3.3、任务执行顺序
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/多线程/image/线程池主要处理流程.png)
+![image](image/线程池主要处理流程.png)
+
+详细流程：
+
+![image](image/ThreadPool-execute.png)
+
 
 - 一个任务提交，如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行;(执行这个步骤时需要获取全局锁)
 - 如果来不及执行，则把多余的线程放到workQueue，等待已启动的worker来循环执行;

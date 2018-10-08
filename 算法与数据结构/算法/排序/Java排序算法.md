@@ -561,6 +561,13 @@ public class ShellSort {
 ## 2、关于稳定性与非稳定性
 - 排序前后两个相等的数相对位置不变，则算法稳定；从一个键上排序，然后再从另一个键上排序，第一个键排序的结果可以为第二个键排序所用
 
+# 11、计数排序
+
+https://mp.weixin.qq.com/s/WGqndkwLlzyVOHOdGK7X4Q
+
+# 12、桶排序
+
+# 13、基数排序
 
 # 参考资料
 * [快速排序算法实现原理](http://www.cnblogs.com/nullzx/p/5880191.html)
