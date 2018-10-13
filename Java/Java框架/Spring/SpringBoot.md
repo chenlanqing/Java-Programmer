@@ -120,7 +120,7 @@ public @interface SpringBootApplication {}
 
 		将主配置类（@SpringBootApplication标注的类）的所在包及下面所有子包里面的所有组件扫描到Spring容器；
 
-- @**Import**(EnableAutoConfigurationImportSelector.class)：给容器中导入组件
+ @**Import**(EnableAutoConfigurationImportSelector.class)：给容器中导入组件
 
 	EnableAutoConfigurationImportSelector 导入哪些组件的选择器；将所有需要导入的组件以全类名的方式返回；这些组件会被添加到容器中；会给容器中导入非常多的自动配置类```（xxxAutoConfiguration）```就是给容器中导入这个场景需要的所有组件，并配置好这些组件；有了自动配置类，免去了我们手动编写配置注入功能组件等的工作；
 

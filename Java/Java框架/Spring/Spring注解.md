@@ -7,9 +7,20 @@
   - [1.2、包扫描配置](#12%E5%8C%85%E6%89%AB%E6%8F%8F%E9%85%8D%E7%BD%AE)
   - [1.3、Conditional注解](#13conditional%E6%B3%A8%E8%A7%A3)
   - [1.4、@Import-快速给容器中导入一个组件](#14import-%E5%BF%AB%E9%80%9F%E7%BB%99%E5%AE%B9%E5%99%A8%E4%B8%AD%E5%AF%BC%E5%85%A5%E4%B8%80%E4%B8%AA%E7%BB%84%E4%BB%B6)
+  - [1.6、属性赋值](#16%E5%B1%9E%E6%80%A7%E8%B5%8B%E5%80%BC)
 - [2、Bean的生命周期](#2bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
   - [2.1、Bean的生命周期](#21bean%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
   - [2.2、初始化和销毁过程](#22%E5%88%9D%E5%A7%8B%E5%8C%96%E5%92%8C%E9%94%80%E6%AF%81%E8%BF%87%E7%A8%8B)
+- [3、自动装配](#3%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D)
+  - [3.1、@Autowired：自动注入](#31autowired%E8%87%AA%E5%8A%A8%E6%B3%A8%E5%85%A5)
+  - [3.2、`@Resource`和`@Inject`](#32resource%E5%92%8Cinject)
+  - [3.3、方法与构造器自动装配](#33%E6%96%B9%E6%B3%95%E4%B8%8E%E6%9E%84%E9%80%A0%E5%99%A8%E8%87%AA%E5%8A%A8%E8%A3%85%E9%85%8D)
+  - [3.4、自定义组件注入](#34%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BB%84%E4%BB%B6%E6%B3%A8%E5%85%A5)
+  - [3.5、Profile](#35profile)
+- [4、AOP](#4aop)
+  - [4.1、AOP基于注解写法](#41aop%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E5%86%99%E6%B3%95)
+  - [4.2、AOP原理](#42aop%E5%8E%9F%E7%90%86)
+  - [4.4、总结](#44%E6%80%BB%E7%BB%93)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -278,6 +289,20 @@ public ColorFactoryBean colorFactoryBean(){
 }
 ```
 
+## 1.6、属性赋值
+**1、使用@Value赋值**
+
+- 基本数值：`@Value("张三")`
+
+- 可以写Spring EL表达式； #{}，比如：`@Value("#{20-2}")`
+
+- 可以写${}；取出配置文件【properties】中的值（在运行环境变量里面的值）：`@Value("${person.nickName}")`
+
+**2、@PrpopertySource加载外部配置文件**
+
+- 之前导入配置文件`<context:property-placeholder location="classpath:person.properties"/>`
+- `@PropertySource(value={"classpath:/person.properties"})`使用`@PropertySource`读取外部配置文件中的k/v保存到运行的环境变量中;加载完外部的配置文件以后使用${}取出配置文件的值
+
 # 2、Bean的生命周期
 
 ## 2.1、Bean的生命周期
@@ -422,6 +447,410 @@ bean创建---初始化----销毁的过程
         }
         ```
     ---
+
+# 3、自动装配
+
+Spring利用依赖注入（DI），完成对IOC容器中中各个组件的依赖关系赋值
+
+AutowiredAnnotationBeanPostProcessor：解析完成自动装配功能
+
+## 3.1、@Autowired：自动注入
+以下面代码为例：
+```java
+BookService{
+    @Autowired
+    BookDao  bookDao;
+}
+```
+- 默认优先按照类型去容器中找对应的组件：`applicationContext.getBean(BookDao.class);`找到就赋值；
+
+- 如果找到多个相同类型的组件，再将属性的名称作为组件的id去容器中查找：`applicationContext.getBean("bookDao");`；
+    ```java
+    @Component
+    public class BookDao{
+
+    }
+
+    @ComponentScan("")
+    @Configuration
+    public class Config{
+        @Bean(name="bookDao2")
+        public BookDao bookDao(){
+
+        }
+    }
+    // 按照上述注入的话，会直接使用@Component上，而不是configuration配置的bean
+    ```
+
+
+- `@Qualifier("bookDao")`：使用@Qualifier指定需要装配的组件的id，而不是使用属性名；
+
+- 自动装配默认一定要将属性赋值好，没有就会报错，可以使用`@Autowired(required=false)`；
+
+- `@Primary`：让Spring进行自动装配的时候，默认使用首选的bean；也就是在注入的bean上加上注解，Spring进行装配的时候就自动装配`@Primary`修饰的Bean；当然也可以继续使用`@Qualifier`指定需要装配的bean的名字；
+
+
+## 3.2、`@Resource`和`@Inject`
+
+Spring还支持使用`@Resource(JSR250)`和`@Inject(JSR330)`【java规范的注解】
+
+- `@Resource`：可以和`@Autowired`一样实现自动装配功能；默认是按照组件名称进行装配的；没有能支持`@Primary`功能，也没有支持@Autowired（reqiured=false）;
+
+- `@Inject`：需要导入javax.inject的包，和Autowired的功能一样。没有required=false的功能；要使用该注解需要导入依赖：
+    ```xml
+    <dependency>
+        <groupId>javax.inject</groupId>
+        <artifactId>javax.inject</artifactId>
+        <version>1</version>
+    </dependency>
+    ```
+
+*`@Autowired`：Spring定义的； `@Resource、@Inject`都是java规范*
+
+## 3.3、方法与构造器自动装配
+@Autowired：构造器，参数，方法，属性；都是从容器中获取参数组件的值
+```java
+@Component
+public class Boss {
+	private Car car;
+	//构造器要用的组件，都是从容器中获取
+    // @Autowired 
+	public Boss(@Autowired Car car){
+		this.car = car;
+		System.out.println("Boss...有参构造器");
+	}
+	public Car getCar() {
+		return car;
+	}
+	
+	//标注在方法，Spring容器创建当前对象，就会调用方法，完成赋值；
+	//方法使用的参数，自定义类型的值从ioc容器中获取
+    @Autowired 
+	public void setCar(Car car) {
+		this.car = car;
+	}
+	@Override
+	public String toString() {
+		return "Boss [car=" + car + "]";
+	}
+}
+```
+
+- [标注在方法位置]：@Bean+方法参数；参数从容器中获取；默认不写`@Autowired`效果是一样的；都能自动装配；
+    ```java
+	// @Bean标注的方法创建对象的时候，方法参数的值从容器中获取
+	@Bean
+	public Color color(Car car){
+		Color color = new Color();
+		color.setCar(car);
+		return color;
+	}
+    ```
+
+- [标在构造器上]：如果组件只有一个有参构造器，这个有参构造器的`@Autowired`可以省略，参数位置的组件还是可以自动从容器中获取；
+
+- 放在参数位置
+    ```java
+    public Boss(@Autowired Car car){
+		this.car = car;
+		System.out.println("Boss...有参构造器");
+	}
+    ```
+
+## 3.4、自定义组件注入
+定义组件想要使用Spring容器底层的一些组件（ApplicationContext，BeanFactory，xxx），自定义组件实现xxxAware；在创建对象的时候，会调用接口规定的方法注入相关组件；
+
+`Aware`把Spring底层一些组件注入到自定义的Bean中；
+
+ApplicationContextAware --> ApplicationContextAwareProcessor；
+
+## 3.5、Profile
+
+Spring提供一种可以根据当前环境，动态的激活和切换一系列组件的功能
+
+`@Profile`：指定组件在哪个环境的情况下才能被注册到容器中，不指定，任何环境下都能注册这个组件；
+
+- 加了环境标识的bean，只有这个环境被激活的时候才能注册到容器中。默认是default环境；
+- 写在配置类上，只有是指定的环境的时候，整个配置类里面的所有配置才能开始生效；
+- 没有标注环境标识的bean在，任何环境下都是加载的；
+
+**激活profile**
+- 使用命令行动态参数: 在虚拟机参数位置加载 -Dspring.profiles.active=test
+
+- 代码的方式激活某种环境：
+    ```java
+    AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+    //1、创建一个applicationContext
+    //2、设置需要激活的环境
+    applicationContext.getEnvironment().setActiveProfiles("dev");
+    //3、注册主配置类
+    applicationContext.register(MainConfigOfProfile.class);
+    //4、启动刷新容器
+    applicationContext.refresh();
+    ```
+    使用无参构造器，`AnnotationConfigApplicationContext`其有参构造器的处理流程
+    ```java
+    public AnnotationConfigApplicationContext(Class<?>... annotatedClasses) {
+		this();
+		register(annotatedClasses);
+		refresh();
+	}
+    ```
+
+# 4、AOP
+
+指在程序运行期间动态的将某段代码切入到指定方法指定位置进行运行的编程方式，实际上是动态代理
+
+## 4.1、AOP基于注解写法
+- 导入aop模块；Spring AOP：(spring-aspects)；
+- 定义一个业务逻辑类；在业务逻辑运行的时候将日志进行打印（方法之前、方法运行结束、方法出现异常，xxx）
+- 定义一个日志切面类（LogAspects）：切面类里面的方法需要动态感知MathCalculator.div运行到哪里然后执行；通知方法：
+    - 前置通知(@Before)：logStart：在目标方法(div)运行之前运行
+    - 后置通知(@After)：logEnd：在目标方法(div)运行结束之后运行（无论方法正常结束还是异常结束）
+    - 返回通知(@AfterReturning)：logReturn：在目标方法(div)正常返回之后运行
+    - 异常通知(@AfterThrowing)：logException：在目标方法(div)出现异常以后运行
+    - 环绕通知(@Around)：动态代理，手动推进目标方法运行（joinPoint.procced()）
+- 给切面类的目标方法标注何时何地运行（通知注解）
+- 将切面类和业务逻辑类（目标方法所在类）都加入到容器中；
+- 必须告诉Spring哪个类是切面类(给切面类上加一个注解：@Aspect)
+- 给配置类中加 @EnableAspectJAutoProxy 【开启基于注解的aop模式】
+```java
+public class MathCalculator {
+	public int div(int i,int j){
+		System.out.println("MathCalculator...div...");
+		return i/j;	
+	}
+}
+
+@Aspect // 告诉Spring当前类是一个切面类
+public class LogAspects {
+	// 抽取公共的切入点表达式
+	// 1、本类引用
+	// 2、其他的切面引用
+	@Pointcut("execution(public int com.atguigu.aop.MathCalculator.*(..))")
+	public void pointCut(){};
+	// @Before在目标方法之前切入；切入点表达式（指定在哪个方法切入）
+	@Before("pointCut()")
+	public void logStart(JoinPoint joinPoint){
+		Object[] args = joinPoint.getArgs();
+		System.out.println(""+joinPoint.getSignature().getName()+"运行。。。@Before:参数列表是：{"+Arrays.asList(args)+"}");
+	}
+	@After("com.atguigu.aop.LogAspects.pointCut()")
+	public void logEnd(JoinPoint joinPoint){
+		System.out.println(""+joinPoint.getSignature().getName()+"结束。。。@After");
+	}
+	// JoinPoint一定要出现在参数表的第一位
+	@AfterReturning(value="pointCut()",returning="result")
+	public void logReturn(JoinPoint joinPoint,Object result){
+		System.out.println(""+joinPoint.getSignature().getName()+"正常返回。。。@AfterReturning:运行结果：{"+result+"}");
+	}
+	@AfterThrowing(value="pointCut()",throwing="exception")
+	public void logException(JoinPoint joinPoint,Exception exception){
+		System.out.println(""+joinPoint.getSignature().getName()+"异常。。。异常信息：{"+exception+"}");
+	}
+}
+ 
+
+@EnableAspectJAutoProxy // 开启基于注解的aop模式
+@Configuration
+public class MainConfigOfAOP { 
+	//业务逻辑类加入容器中
+	@Bean
+	public MathCalculator calculator(){
+		return new MathCalculator();
+	}
+	//切面类加入到容器中
+	@Bean
+	public LogAspects logAspects(){
+		return new LogAspects();
+	}
+}
+```
+
+## 4.2、AOP原理
+
+### 4.2.1、`@EnableAspectJAutoProxy`是什么
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Import(AspectJAutoProxyRegistrar.class)
+public @interface EnableAspectJAutoProxy {
+}
+```
+- （1）`@Import(AspectJAutoProxyRegistrar.class)`：给容器中导入`AspectJAutoProxyRegistrar` 利用`AspectJAutoProxyRegistrar`自定义给容器中注册bean；`BeanDefinetion：internalAutoProxyCreator=AnnotationAwareAspectJAutoProxyCreator`
+
+    给容器中注册一个AnnotationAwareAspectJAutoProxyCreator；
+
+- （2）AnnotationAwareAspectJAutoProxyCreator：
+    ```
+    AnnotationAwareAspectJAutoProxyCreator，其是一个 InstantiationAwareBeanPostProcessor
+        -> AspectJAwareAdvisorAutoProxyCreator
+            -> AbstractAdvisorAutoProxyCreator
+                -> AbstractAutoProxyCreator implements SmartInstantiationAwareBeanPostProcessor, BeanFactoryAware
+                关注后置处理器（在bean初始化完成前后做事情）、自动装配BeanFactory
+    ```
+    * AbstractAutoProxyCreator.setBeanFactory()
+    * AbstractAutoProxyCreator.有后置处理器的逻辑；
+    * AbstractAdvisorAutoProxyCreator.setBeanFactory() -> initBeanFactory()
+    * AnnotationAwareAspectJAutoProxyCreator.initBeanFactory()
+
+### 4.2.2、整体流程
+
+- （1）传入配置类，创建ioc容器；
+
+- （2）注册配置类，调用refresh（）刷新容器；
+
+- （3）`registerBeanPostProcessors(beanFactory);`注册bean的后置处理器来方便拦截bean的创建；
+
+    - （1）先获取ioc容器已经定义了的需要创建对象的所有BeanPostProcessor；
+    - （2）给容器中加别的BeanPostProcessor；
+    - （3）优先注册实现了`PriorityOrdered`接口的`BeanPostProcessor`；
+    - （4）再给容器中注册实现了Ordered接口的BeanPostProcessor；
+    - （4）注册没实现优先级接口的BeanPostProcessor；
+    - （5）注册BeanPostProcessor，实际上就是创建BeanPostProcessor对象，保存在容器中；
+    - （6）注册BeanPostProcessor，实际上就是创建BeanPostProcessor对象，保存在容器中；
+        以`创建internalAutoProxyCreator的BeanPostProcessor【AnnotationAwareAspectJAutoProxyCreator】`为例
+        - 创建Bean的实例；
+        - populateBean；给bean的各种属性赋值；
+        - initializeBean：初始化bean；
+            - invokeAwareMethods()：处理Aware接口的方法回调；
+            - applyBeanPostProcessorsBeforeInitialization()：应用后置处理器的postProcessBeforeInitialization();
+            - invokeInitMethods()；执行自定义的初始化方法；
+            - applyBeanPostProcessorsAfterInitialization()；执行后置处理器的postProcessAfterInitialization();
+        - `BeanPostProcessor(AnnotationAwareAspectJAutoProxyCreator)`创建成功；--> aspectJAdvisorsBuilder；
+    - （7）把BeanPostProcessor注册到BeanFactory中；`beanFactory.addBeanPostProcessor(postProcessor);`
+
+**以上是创建和注册AnnotationAwareAspectJAutoProxyCreator的过程**
+
+---
+- （4）`finishBeanFactoryInitialization(beanFactory);`完成BeanFactory初始化工作；创建剩下的单实例bean；
+    - （1）遍历获取容器中所有的Bean，依次创建对象`getBean(beanName);`，主要流程：getBean->doGetBean()->getSingleton()
+    - （2）创建bean<br/>
+        【AnnotationAwareAspectJAutoProxyCreator在所有bean创建之前会有一个拦截，InstantiationAwareBeanPostProcessor，会调用postProcessBeforeInstantiation()】
+        - （1）先从缓存中获取当前bean，如果能获取到，说明bean是之前被创建过的，直接使用，否则再创建；只要创建好的Bean都会被缓存起来；
+        - （2）`createBean();`创建bean；<br/>
+            AnnotationAwareAspectJAutoProxyCreator 会在任何bean创建之前先尝试返回bean的实例【BeanPostProcessor是在Bean对象创建完成初始化前后调用的】【InstantiationAwareBeanPostProcessor是在创建Bean实例之前先尝试用后置处理器返回对象的】
+            - resolveBeforeInstantiation(beanName, mbdToUse);解析BeforeInstantiation 希望后置处理器在此能返回一个代理对象；如果能返回代理对象就使用，如果不能就继续；
+                - 后置处理器先尝试返回对象；
+                    ```java
+                    bean = applyBeanPostProcessorsBeforeInstantiation（）：
+                    // 拿到所有后置处理器，如果是InstantiationAwareBeanPostProcessor;
+                    // 就执行postProcessBeforeInstantiation
+                    if (bean != null) {
+                        bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);
+                    }
+                    ```
+            - doCreateBean(beanName, mbdToUse, args);真正的去创建一个bean实例；
+## 4.3、AnnotationAwareAspectJAutoProxyCreator的作用
+AnnotationAwareAspectJAutoProxyCreator实现自InstantiationAwareBeanPostProcessor，其作用：
+
+- 1、每一个bean创建之前，调用postProcessBeforeInstantiation()；主要关心目标类以及需要切入的类；
+    - 判断当前bean是否在advisedBeans中（保存了所有需要增强bean）；
+    - 判断当前bean是否是基础类型的Advice、Pointcut、Advisor、AopInfrastructureBean，或者是否是切面（@Aspect）；
+    - 是否需要跳过：
+        - 获取候选的增强器（切面里面的通知方法）【List<Advisor> candidateAdvisors】每一个封装的通知方法的增强器是 InstantiationModelAwarePointcutAdvisor；判断每一个增强器是否是 AspectJPointcutAdvisor 类型的；返回true
+        - 永远返回false；
+
+- 2、创建对象：postProcessAfterInitialization；`return wrapIfNecessary(bean, beanName, cacheKey);`//包装如果需要的情况下
+    - （1）获取当前bean的所有增强器（通知方法）  Object[]  specificInterceptors；
+        - 找到候选的所有的增强器（找哪些通知方法是需要切入当前bean方法的）；
+        - 获取到能在bean使用的增强器；
+        - 给增强器排序
+    - （2）保存当前bean在advisedBeans中；
+    - （3）如果当前bean需要增强，创建当前bean的代理对象；
+        - 获取所有增强器（通知方法）
+        - 保存到proxyFactory；
+        - 创建代理对象：由Spring自动决定
+            ```java
+            JdkDynamicAopProxy(config); // jdk动态代理；
+            ObjenesisCglibAopProxy(config); // cglib的动态代理；
+            ```
+    - （4）给容器中返回当前组件使用cglib增强了的代理对象；
+    - （5）以后容器中获取到的就是这个组件的代理对象，执行目标方法的时候，代理对象就会执行通知方法的流程；
+
+- 3、目标方法执行：容器中保存了组件的代理对象（cglib增强后的对象），这个对象里面保存了详细信息（比如增强器，目标对象，xxx）；
+
+    - （1）CglibAopProxy.intercept();拦截目标方法的执行
+        ```java
+        // org.springframework.aop.framework.CglibAopProxy.DynamicAdvisedInterceptor#intercept
+        @Override
+		public Object intercept(Object proxy, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+
+        }
+        ```
+    - （2）根据ProxyFactory对象获取将要执行的目标方法拦截器链；`List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);`
+        - List<Object> interceptorList保存所有拦截器，其中包含一个默认的ExposeInvocationInterceptor和另外4个增强器；
+        - 遍历所有的增强器，将其转为Interceptor；`registry.getInterceptors(advisor);`;
+        - 将增强器转为List<MethodInterceptor>；
+            - 如果是MethodInterceptor，直接加入到集合中；
+            - 如果不是，使用AdvisorAdapter将增强器转为MethodInterceptor；
+            - 转换完成返回MethodInterceptor数组；
+    - （3）如果没有拦截器链，直接执行目标方法；`拦截器链（每一个通知方法又被包装为方法拦截器，利用MethodInterceptor机制）`；
+    - （4）如果有拦截器链，把需要执行的目标对象，目标方法，拦截器链等信息传入创建一个 CglibMethodInvocation 对象，并调用 Object retVal =  mi.proceed();
+        ```java
+        retVal = new CglibMethodInvocation(proxy, target, method, args, targetClass, chain, methodProxy).proceed();
+        ```
+    - （5）拦截器链的触发过程：
+        ```java
+        @Override
+        public Object proceed() throws Throwable {
+            //	We start with an index of -1 and increment early.
+            if (this.currentInterceptorIndex == this.interceptorsAndDynamicMethodMatchers.size() - 1) {
+                return invokeJoinpoint();
+            }
+            Object interceptorOrInterceptionAdvice =
+                    this.interceptorsAndDynamicMethodMatchers.get(++this.currentInterceptorIndex);
+            if (interceptorOrInterceptionAdvice instanceof InterceptorAndDynamicMethodMatcher) {
+                // Evaluate dynamic method matcher here: static part will already have
+                // been evaluated and found to match.
+                InterceptorAndDynamicMethodMatcher dm =
+                        (InterceptorAndDynamicMethodMatcher) interceptorOrInterceptionAdvice;
+                if (dm.methodMatcher.matches(this.method, this.targetClass, this.arguments)) {
+                    return dm.interceptor.invoke(this);
+                }
+                else {
+                    // Dynamic matching failed.
+                    // Skip this interceptor and invoke the next in the chain.
+                    return proceed();
+                }
+            }
+            else {
+                // It's an interceptor, so we just invoke it: The pointcut will have
+                // been evaluated statically before this object was constructed.
+                return ((MethodInterceptor) interceptorOrInterceptionAdvice).invoke(this);
+            }
+        }
+        ```
+        - 如果没有拦截器执行执行目标方法，或者拦截器的索引和拦截器数组-1大小一样（指定到了最后一个拦截器）执行目标方法；
+        - 链式获取每一个拦截器，拦截器执行`org.aopalliance.intercept.MethodInterceptor.invoke()`方法，每一个拦截器等待下一个拦截器执行完成返回以后再来执行；拦截器链的机制，保证通知方法与目标方法的执行顺序；
+            - ExposeInvocationInterceptor
+            - AspectJAfterThrowingAdvice：异常通知
+            - AfterReturningAdviceInterceptor：返回通知
+            - AspectJAfterAdvice：后置通知
+            - MethodBeforeAdviceInterceptor：前置通知，然后调用目标方法
+        
+
+## 4.4、总结
+- @EnableAspectJAutoProxy 开启AOP功能；
+- @EnableAspectJAutoProxy 会给容器中注册一个组件 AnnotationAwareAspectJAutoProxyCreator；
+- AnnotationAwareAspectJAutoProxyCreator是一个后置处理器；
+- 容器的创建流程
+    - registerBeanPostProcessors（）注册后置处理器；创建AnnotationAwareAspectJAutoProxyCreator对象
+    - finishBeanFactoryInitialization（）初始化剩下的单实例bean
+        - 创建业务逻辑组件和切面组件；
+        - AnnotationAwareAspectJAutoProxyCreator拦截组件的创建过程；
+        - 组件创建完之后，判断组件是否需要增强：`是`：切面的通知方法，包装成增强器（Advisor）;给业务逻辑组件创建一个代理对象（cglib）；
+- 执行目标方法：
+    - 代理对象执行目标方法；
+    - CglibAopProxy.intercept()；
+        - 得到目标方法的拦截器链（增强器包装成拦截器MethodInterceptor）
+        - 利用拦截器的链式机制，依次进入每一个拦截器进行执行；
+        - 效果：
+            - 正常执行：前置通知 -> 目标方法 -> 后置通知 -> 返回通知
+            - 出现异常：前置通知 -> 目标方法 -> 后置通知 -> 异常通知
+
+
 
 
 

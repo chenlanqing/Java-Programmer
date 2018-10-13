@@ -188,6 +188,9 @@ Netty服务端启动过程：
 - （1）创建ServerBootstrap实例：ServerBootstrap是Netty服务器的启动辅助类，它提供了一系列的方法用于服务端启动相关的参数；该类使用了Builder模式
 - （2）设置并绑定Reactor线程池：Netty的Reactor线程池是EventLoopGroup，它实际就是EventLoop数组。
 
+要启动一份Netty服务端，必须具备三个属性：线程模型、IO模型、连接读写处理逻辑
+
+
 ## 1、创建服务端channel
 
 - bind()-用户代码入口
