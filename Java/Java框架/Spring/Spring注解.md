@@ -850,7 +850,304 @@ AnnotationAwareAspectJAutoProxyCreator实现自InstantiationAwareBeanPostProcess
             - 正常执行：前置通知 -> 目标方法 -> 后置通知 -> 返回通知
             - 出现异常：前置通知 -> 目标方法 -> 后置通知 -> 异常通知
 
+# 5、声明式事务
+
+## 5.1、配置数据源
+```java
+@EnableTransactionManagement
+@ComponentScan("com.blue.fish.spring.tx")
+@Configuration
+public class TxConfig {
+	//数据源
+	@Bean
+	public DataSource dataSource() throws Exception{
+		ComboPooledDataSource dataSource = new ComboPooledDataSource();
+		dataSource.setUser("root");
+		dataSource.setPassword("123456");
+		dataSource.setDriverClass("com.mysql.jdbc.Driver");
+		dataSource.setJdbcUrl("jdbc:mysql://localhost:3306/test");
+		return dataSource;
+	}
+	@Bean
+	public JdbcTemplate jdbcTemplate() throws Exception{
+		//Spring对@Configuration类会特殊处理；给容器中加组件的方法，多次调用都只是从容器中找组件
+		JdbcTemplate jdbcTemplate = new JdbcTemplate(dataSource());
+		return jdbcTemplate;
+	}
+	//注册事务管理器在容器中
+	@Bean
+	public PlatformTransactionManager transactionManager() throws Exception{
+		return new DataSourceTransactionManager(dataSource());
+	}
+}
+```
+- 给方法上标注 @Transactional 表示当前方法是一个事务方法；
+- @EnableTransactionManagement 开启基于注解的事务管理功能；
+- 配置事务管理器来控制事务
+    ```java
+    @Bean
+    public PlatformTransactionManager transactionManager(){}
+    ```
+## 5.2、原理
+- （1）`@EnableTransactionManagement`：该注解利用TransactionManagementConfigurationSelector给容器中会导入组件，导入两个组件
+    ```java
+    @Target(ElementType.TYPE)
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Import(TransactionManagementConfigurationSelector.class)
+    public @interface EnableTransactionManagement {
+        boolean proxyTargetClass() default false;
+        // 在TransactionManagementConfigurationSelector里selectImports时需要用到
+        AdviceMode mode() default AdviceMode.PROXY;
+        int order() default Ordered.LOWEST_PRECEDENCE;
+    }
+
+    public class TransactionManagementConfigurationSelector extends AdviceModeImportSelector<EnableTransactionManagement> {
+        @Override
+        protected String[] selectImports(AdviceMode adviceMode) {
+            // 用到了@EnableTransactionManagement注解里的mode属性
+            switch (adviceMode) {
+                case PROXY:
+                    return new String[] {AutoProxyRegistrar.class.getName(), ProxyTransactionManagementConfiguration.class.getName()};
+                case ASPECTJ:
+                    return new String[] {TransactionManagementConfigUtils.TRANSACTION_ASPECT_CONFIGURATION_CLASS_NAME};
+                default:
+                    return null;
+            }
+        }
+    }
+    ```
+    - AutoProxyRegistrar
+
+        给容器中注册一个 InfrastructureAdvisorAutoProxyCreator 组件，其是一个后置处理器，利用后置处理器机制在对象创建以后，包装对象，返回一个代理对象（增强器），代理对象执行方法利用拦截器链进行调用；
+        
+    - ProxyTransactionManagementConfiguration：给容器中注册事务增强器
+        - 事务增强器要用事务注解的信息，AnnotationTransactionAttributeSource解析事务注解
+        - 事务拦截器：TransactionInterceptor；保存了事务属性信息，事务管理器；是一个MethodInterceptor，在目标方法执行的时候执行拦截器链；
+            ```java
+            @Configuration
+            public class ProxyTransactionManagementConfiguration extends AbstractTransactionManagementConfiguration {
+                // 
+                @Bean(name = TransactionManagementConfigUtils.TRANSACTION_ADVISOR_BEAN_NAME)
+                @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+                public BeanFactoryTransactionAttributeSourceAdvisor transactionAdvisor() {
+                    BeanFactoryTransactionAttributeSourceAdvisor advisor = new BeanFactoryTransactionAttributeSourceAdvisor();
+                    advisor.setTransactionAttributeSource(transactionAttributeSource());
+                    advisor.setAdvice(transactionInterceptor());
+                    advisor.setOrder(this.enableTx.<Integer>getNumber("order"));
+                    return advisor;
+                }
+                // 事务属性
+                @Bean
+                @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+                public TransactionAttributeSource transactionAttributeSource() {
+                    return new AnnotationTransactionAttributeSource();
+                }
+                // 执行目标方法拦截器
+                @Bean
+                @Role(BeanDefinition.ROLE_INFRASTRUCTURE)
+                public TransactionInterceptor transactionInterceptor() {
+                    TransactionInterceptor interceptor = new TransactionInterceptor();
+                    interceptor.setTransactionAttributeSource(transactionAttributeSource());
+                    if (this.txManager != null) {
+                        interceptor.setTransactionManager(this.txManager);
+                    }
+                    return interceptor;
+                }
+
+            }
+            ```
+            - 先获取事务相关的属性
+            - 再获取PlatformTransactionManager，如果事先没有添加指定任何transactionmanger，最终会从容器中按照类型获取一个PlatformTransactionManager；
+            - 执行目标方法：如果异常，获取到事务管理器，利用事务管理回滚操作；如果正常，利用事务管理器，提交事务
+
+# 6、Spring扩展
+
+## 6.1、BeanFactoryPostProcessor
+
+beanFactory的后置处理器，在BeanFactory标准初始化之后调用，来定制和修改BeanFactory的内容；所有的bean定义已经保存加载到beanFactory，但是bean的实例还未创建
+
+**原理**
+- （1）ioc容器创建对象；
+- （2）invokeBeanFactoryPostProcessors(beanFactory);如何找到所有的BeanFactoryPostProcessor并执行他们的方法；
+    - 直接在BeanFactory中找到所有类型是BeanFactoryPostProcessor的组件，并执行他们的方法；
+    - 在初始化创建其他组件前面执行；
+
+
+
+## 6.2、BeanDefinitionRegistryPostProcessor
+```java
+public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProcessor{
+    // BeanDefinitionRegistry的Bean定义信息的保存中心，以后BeanFactory就是按照BeanDefinitionRegistry里面保存的每一个bean定义信息创建bean实例；
+    void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException;
+}
+```
+在所有bean定义信息将要被加载，bean实例还未创建的；优先于`BeanFactoryPostProcessor`执行；利用`BeanDefinitionRegistryPostProcessor`给容器中再额外添加一些组件；
+
+自定义BeanDefinitionRegistryPostProcessor
+```java
+@Component
+public class MyBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor{
+	@Override
+	public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+		System.out.println("MyBeanDefinitionRegistryPostProcessor...bean的数量："+beanFactory.getBeanDefinitionCount());
+	}
+	@Override
+	public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+		System.out.println("postProcessBeanDefinitionRegistry...bean的数量："+registry.getBeanDefinitionCount());
+        // 自定义BeanDefinition
+		//RootBeanDefinition beanDefinition = new RootBeanDefinition(Blue.class);
+		AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(Blue.class).getBeanDefinition();
+		registry.registerBeanDefinition("hello", beanDefinition);
+	}
+}
+```
+**原理**
+- （1）ioc创建对象
+- （2）refresh() -> invokeBeanFactoryPostProcessors(beanFactory);
+- （3）从容器中获取到所有的BeanDefinitionRegistryPostProcessor组件
+    具体实现参考：`PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory, List<BeanFactoryPostProcessor>)`
+    - 依次触发所有的postProcessBeanDefinitionRegistry()方法；
+    - 再来触发postProcessBeanFactory()方法BeanFactoryPostProcessor；
+- （4）再来从容器中找到BeanFactoryPostProcessor组件；然后依次触发postProcessBeanFactory()方法
+
+## 6.3、ApplicationListener
+
+监听容器中发布的事件，其实基于事件驱动模型开发，主要监听 ApplicationEvent 及其下面的子事件
+```java
+// 监听 ApplicationEvent 及其下面的子事件；
+public interface ApplicationListener<E extends ApplicationEvent> extends EventListener {
+	void onApplicationEvent(E event);
+}
+```
+### 6.3.1、步骤
+- 写一个监听器（ApplicationListener实现类）来监听某个事件（ApplicationEvent及其子类）
+    ```java
+    @Component
+    public class MyApplicationListener implements ApplicationListener<ApplicationEvent> {
+        // 当容器中发布此事件以后，方法触发
+        @Override
+        public void onApplicationEvent(ApplicationEvent event) {
+            System.out.println("收到事件"+event);
+        }
+    }
+    ```
+- 把监听器加入到容器；
+- 只要容器中有相关事件的发布，就能监听到这个事件
+    - ContextRefreshedEvent：容器刷新完成（所有bean都完全创建）会发布这个事件；
+    - ContextClosedEvent：关闭容器会发布这个事件；
+- 发布事件：`applicationContext.publishEvent();`
+
+### 6.3.2、原理
+
+**ContextRefreshedEvent**
+- 容器创建对象：refresh()；
+- finishRefresh();容器刷新完成会发布ContextRefreshedEvent事件
+
+**【事件发布流程】**
+- 调用finishRefresh();方法发布事件
+- publishEvent(new ContextRefreshedEvent(this));
+    - 获取事件的多播器（派发器）：getApplicationEventMulticaster();
+    - multicastEvent派发事件；
+    - 获取到所有的ApplicationListener；
+        - for (final ApplicationListener<?> listener : getApplicationListeners(event, type)) {
+            - 如果有Executor，可以支持使用Executor进行异步派发：Executor executor = getTaskExecutor();
+            - 否则，同步的方式直接执行listener方法；invokeListener(listener, event);拿到listener回调onApplicationEvent方法；
+
+**【获取事件多播器（派发器）】**
+- 在创建容器refresh()方法里调用方法：`initApplicationEventMulticaster();`初始化ApplicationEventMulticaster；
+    - 先去容器中找有没有id=“applicationEventMulticaster”的组件；
+    - 如果没有`this.applicationEventMulticaster = new SimpleApplicationEventMulticaster(beanFactory);`，并且加入到容器中，我们就可以在其他组件要派发事件，自动注入这个applicationEventMulticaster；
+
+**【容器中的监听器】**
+- 在创建溶解refresh()方法是调用方法：`registerListeners();`从容器中拿到所有的监听器，把他们注册到applicationEventMulticaster中；
+    ```java
+    String[] listenerBeanNames = getBeanNamesForType(ApplicationListener.class, true, false);
+    //将listener注册到ApplicationEventMulticaster中
+    getApplicationEventMulticaster().addApplicationListenerBean(listenerBeanName);
+    ```
+
+**使用`@EventListener`**
+- 使用`EventListenerMethodProcessor`处理器来解析方法上的@EventListener；
+    ```java
+    @EventListener(classes={ApplicationEvent.class})
+	public void listen(ApplicationEvent event){
+		System.out.println("UserService。。监听到的事件："+event);
+	}
+    ```
+-  `EventListenerMethodProcessor`实现了`SmartInitializingSingleton` -> afterSingletonsInstantiated();
+    - 在创建溶解refresh()方法是调用方法：`finishBeanFactoryInitialization(beanFactory);初始化剩下的单实例bean；`
+        - 先创建所有的单实例bean；getBean();
+        - 获取所有创建好的单实例bean，判断是否是SmartInitializingSingleton类型的；如果是就调用afterSingletonsInstantiated();
 
 
 
 
+
+```java
+// org.springframework.context.support.AbstractApplicationContext.refresh() 方法实现如下：
+@Override
+public void refresh() throws BeansException, IllegalStateException {
+    synchronized (this.startupShutdownMonitor) {
+        // Prepare this context for refreshing.
+        prepareRefresh();
+
+        // Tell the subclass to refresh the internal bean factory.
+        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+        // Prepare the bean factory for use in this context.
+        prepareBeanFactory(beanFactory);
+
+        try {
+            // Allows post-processing of the bean factory in context subclasses.
+            postProcessBeanFactory(beanFactory);
+
+            // Invoke factory processors registered as beans in the context.
+            invokeBeanFactoryPostProcessors(beanFactory);
+
+            // Register bean processors that intercept bean creation.
+            registerBeanPostProcessors(beanFactory);
+
+            // Initialize message source for this context.
+            initMessageSource();
+
+            // Initialize event multicaster for this context.
+            initApplicationEventMulticaster();
+
+            // Initialize other special beans in specific context subclasses.
+            onRefresh();
+
+            // Check for listener beans and register them.
+            registerListeners();
+
+            // Instantiate all remaining (non-lazy-init) singletons.
+            finishBeanFactoryInitialization(beanFactory);
+
+            // Last step: publish corresponding event.
+            finishRefresh();
+        }
+
+        catch (BeansException ex) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("Exception encountered during context initialization - " +
+                        "cancelling refresh attempt: " + ex);
+            }
+
+            // Destroy already created singletons to avoid dangling resources.
+            destroyBeans();
+
+            // Reset 'active' flag.
+            cancelRefresh(ex);
+
+            // Propagate exception to caller.
+            throw ex;
+        }
+
+        finally {
+            // Reset common introspection caches in Spring's core, since we
+            // might not ever need metadata for singleton beans anymore...
+            resetCommonCaches();
+        }
+    }
+}
+```
