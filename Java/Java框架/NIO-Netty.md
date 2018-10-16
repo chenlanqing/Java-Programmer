@@ -175,7 +175,55 @@ LineBasedFrameDecoder + StringDecoder组合就是按行切换的文本解码器�
 两个问题：
 - 服务端的Socket在哪里初始化？
 - 在哪里accept连接？
+```java
+@Slf4j
+public class NettyServer {
+    public static void main(String[] args) {
+		// 定义两个线程模型，boss表示监听端口，accept新连接的线程组；work表示处理每一条连接的数据读写的线程组；
+        NioEventLoopGroup boss = new NioEventLoopGroup();
+        NioEventLoopGroup work = new NioEventLoopGroup();
 
+        ServerBootstrap bootstrap = new ServerBootstrap();
+
+        bootstrap.group(boss, work) // 指定线程模型
+				// 指定IO模型
+                .channel(NioServerSocketChannel.class)
+                // 指定处理新连接数据的读写处理逻辑
+                .childHandler(new ChannelInitializer<NioSocketChannel>() {
+                    @Override
+                    protected void initChannel(NioSocketChannel ch) throws Exception {
+
+                    }
+                })
+				// 给服务端NioServerSocketChannel指定一些属性，可以通过channle.attr取出该属性
+				.attr(AttributeKey.newInstance("serverName"), "nettyServer")
+				// 给每条连接指定自定义属性
+				.childAttr(AttributeKey.newInstance("clientName"), "nettyClient")
+				// 给每条连接设置一些TCP底层相关的属性
+				.childOption(ChannelOption.SO_KEEPALIVE,true)
+                // 用于指定在服务端启动过程中的一些逻辑
+                .handler(new ChannelInitializer<NioServerSocketChannel>() {
+                    @Override
+                    protected void initChannel(NioServerSocketChannel ch) throws Exception {
+                        log.info("Server is starting....");
+                    }
+                });
+
+        bind(bootstrap, 1021);
+    }
+
+    private static void bind(final ServerBootstrap bootstrap, final int port) {
+        bootstrap.bind(port).addListener((Future<? super Void> future) -> {
+            if (future.isSuccess()) {
+                log.info("port {} bind success...", port);
+            } else {
+                log.info("port {} bind failed...", port);
+                bind(bootstrap, port + 1);
+            }
+        });
+    }
+}
+```
 Netty服务端启动过程：
 - （1）、创建服务端channel
 - （2）、初始化服务端channel

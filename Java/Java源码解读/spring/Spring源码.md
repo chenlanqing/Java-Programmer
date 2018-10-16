@@ -50,7 +50,8 @@
 Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等功能。BeanFactory和ApplicationContext是Spring两种很重要的容器，前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播、资源访问和国际化的消息访问等功能；
 
 ## 2、ApplicationContext Bean 生命周期
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/ApplicationContext-Bean的生命周期.png)
+
+![image](image/ApplicationContext-Bean的生命周期.png)
 
 面向开发者的，几乎大部分应用场景都是直接使用ApplicationContext 而非底层的BeanFactory
 
@@ -83,7 +84,7 @@ Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 ## 3、BeanFactory Bean生命周期-面向Spring本身
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/BeanFactory.png)
+![image](image/BeanFactory.png)
 
 BeanFactoty容器中， Bean的生命周期如上图所示，与ApplicationContext相比，有如下几点不同：
 
@@ -102,7 +103,8 @@ BeanFactoty容器中， Bean的生命周期如上图所示，与ApplicationConte
 - （3）ContextLoaderListener监听器初始化完毕后，始初始化web.xml中配置的Servlet，可以有多个。以最常见的DispatcherServlet为例（Spring MVC，这个servlet实际上是一个标准的前端控制器，用以转发、匹配、处理每个servlet请求。DispatcherServlet上下文在初始化的时候会建立自己的IoC上下文容器，用以持有spring mvc相关的bean，这个servlet自己持有的上下文默认实现类也是XmlWebApplicationContext.在建立DispatcherServlet自己的IoC上下文时，会利用WebApplicationContext.ROOTWEBAPPLICATIONCONTEXTATTRIBUTE先从ServletContext中获取之前的根上下文（即WebApplicationContext)作为自己上下文的parent上下文）即第2步中初始化的XmlWebApplicationContext作为自己的父容器）.有了这个parent上下文之后，再初始化自己持有的上下文（这个DispatcherServlet初始化自己上下文的工作在其initStrategies方法中可以看到，大概的工作就是初始化处理器映射、视图解析等）。初始化完毕后，spring以与servlet的名字相关（此处不是简单的以servlet名为Key，而是通过一些转换）的属性为属性Key，也将其存到ServletContext中，以便后续使用.这样每个servlet就持有自己的上下文，即拥有自己独立的bean空间，同时各个servlet共享相同的bean，即根上下文定义的那些bean
 
 ## 5、Bean加载过程
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/spring/image/Spring-Bean加载过程.png)
+
+![image](image/Spring-Bean加载过程.png)
 
 - ResourceLoader从存储介质中加载Spring配置信息，并使用Resource表示这个配置文件的资源。
 
@@ -118,6 +120,76 @@ BeanFactoty容器中， Bean的生命周期如上图所示，与ApplicationConte
 - 在实例化Bean时，Spring容器使用BeanWrapper对Bean进行封装，BeanWrapper提供了很多以Java反射机制操作Bean的方法，它将结合该Bean的BeanDefinition以及容器中属性编辑器，完成Bean属性的设置工作；
 
 - 利用容器中注册的Bean后处理器(实现BeanPostProcessor接口的Bean)对已经完成属性设置工作的Bean进行后续加工，直接装配出一个准备就绪的Bean
+
+## 6、IOC容器源码
+AbstractApplicationContext.refresh()
+```java
+// org.springframework.context.support.AbstractApplicationContext.refresh() 方法实现如下：
+@Override
+public void refresh() throws BeansException, IllegalStateException {
+    synchronized (this.startupShutdownMonitor) {
+        // Prepare this context for refreshing.
+        prepareRefresh();
+
+        // Tell the subclass to refresh the internal bean factory.
+        ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
+
+        // Prepare the bean factory for use in this context.
+        prepareBeanFactory(beanFactory);
+
+        try {
+            // Allows post-processing of the bean factory in context subclasses.
+            postProcessBeanFactory(beanFactory);
+
+            // Invoke factory processors registered as beans in the context.
+            invokeBeanFactoryPostProcessors(beanFactory);
+
+            // Register bean processors that intercept bean creation.
+            registerBeanPostProcessors(beanFactory);
+
+            // Initialize message source for this context.
+            initMessageSource();
+
+            // Initialize event multicaster for this context.
+            initApplicationEventMulticaster();
+
+            // Initialize other special beans in specific context subclasses.
+            onRefresh();
+
+            // Check for listener beans and register them.
+            registerListeners();
+
+            // Instantiate all remaining (non-lazy-init) singletons.
+            finishBeanFactoryInitialization(beanFactory);
+
+            // Last step: publish corresponding event.
+            finishRefresh();
+        }
+
+        catch (BeansException ex) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("Exception encountered during context initialization - " +
+                        "cancelling refresh attempt: " + ex);
+            }
+
+            // Destroy already created singletons to avoid dangling resources.
+            destroyBeans();
+
+            // Reset 'active' flag.
+            cancelRefresh(ex);
+
+            // Propagate exception to caller.
+            throw ex;
+        }
+
+        finally {
+            // Reset common introspection caches in Spring's core, since we
+            // might not ever need metadata for singleton beans anymore...
+            resetCommonCaches();
+        }
+    }
+}
+```
 
 # 三、AOP
 
