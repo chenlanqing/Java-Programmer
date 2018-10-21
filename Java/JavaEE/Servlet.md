@@ -361,7 +361,7 @@ Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy
 			
 # 三、Servlet高级应用
 
-## 1.监听器
+## 1、监听器
 
 - 1.1、servlet规范当中规定的一种特殊的组件，用于监听servlet容器产生的事件并进行相应的处理<br>
 	容器产生的事件主要有两大类：
@@ -471,7 +471,90 @@ Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy
 - 对响应内容进行压缩;
 - 通过FilterConfig来获取初始化参数
 
-# 四、其他
+# 四、Servlet3.0
+
+- [官方文档-中文](https://github.com/chenlanqing/learningNote/blob/master/Java/官方文档/Servlet3.1规范中文版.pdf)
+- [官方文档-英文](https://github.com/chenlanqing/learningNote/blob/master/Java/官方文档/servlet-3.0-spec.pdf)
+
+## 1、runtimes pluggability（运行时插件能力）
+- Servlet容器启动会扫描，当前应用里面每一个jar包的ServletContainerInitializer的实现；
+- 提供ServletContainerInitializer的实现类；必须绑定在，META-INF/services/javax.servlet.ServletContainerInitializer，文件的内容就是ServletContainerInitializer实现类的全类名；
+
+	![](images/Servlet2.0-pluggablility.png)
+
+示例：
+```java
+/**
+ * 容器启动的时候会将@HandlesTypes指定的这个类型下面的子类（实现类，子接口等）传递过来； 传入感兴趣的类型；
+ */
+@HandlesTypes(value = { HelloService.class })
+public class MyServletContainerInitializer implements ServletContainerInitializer {
+	/**
+	 * 应用启动的时候，会运行onStartup方法；
+	 * Set<Class<?>> arg0：感兴趣的类型的所有子类型； ServletContext
+	 * arg1:代表当前Web应用的ServletContext；一个Web应用一个ServletContext；
+	 * 1）、使用ServletContext注册Web组件（Servlet、Filter、Listener）
+	 * 2）、使用编码的方式，在项目启动的时候给ServletContext里面添加组件； 必须在项目启动的时候来添加；
+	 * 1）、ServletContainerInitializer得到的ServletContext；
+	 * 2）、ServletContextListener得到的ServletContext；
+	 */
+	@Override
+	public void onStartup(Set<Class<?>> arg0, ServletContext sc) throws ServletException {
+		// 感兴趣的类型的所有子类型，即上面配置的HandlesTypes的value的子类
+		for (Class<?> claz : arg0) {
+			System.out.println(claz);
+		}
+		// 注册组件 ServletRegistration
+		ServletRegistration.Dynamic servlet = sc.addServlet("userServlet", new UserServlet());
+		// 配置servlet的映射信息
+		servlet.addMapping("/user");
+
+		// 注册Listener
+		sc.addListener(UserListener.class);
+
+		// 注册Filter FilterRegistration
+		FilterRegistration.Dynamic filter = sc.addFilter("userFilter", UserFilter.class);
+		// 配置Filter的映射信息
+		filter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+	}
+}
+```
+
+## 2、开启异步支持
+```java
+@WebServlet(value="/async",asyncSupported=true)
+public class HelloAsyncServlet extends HttpServlet {
+	@Override
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		//1、支持异步处理asyncSupported=true
+		//2、开启异步模式
+		System.out.println("主线程开始。。。"+Thread.currentThread()+"==>"+System.currentTimeMillis());
+		AsyncContext startAsync = req.startAsync();
+		//3、业务逻辑进行异步处理;开始异步处理
+		startAsync.start(new Runnable() {
+			@Override
+			public void run() {
+				try {
+					System.out.println("副线程开始。。。"+Thread.currentThread()+"==>"+System.currentTimeMillis());
+					sayHello();
+					// 异步任务完成
+					startAsync.complete();
+					//获取到异步上下文
+					AsyncContext asyncContext = req.getAsyncContext();
+					//4、获取响应
+					ServletResponse response = asyncContext.getResponse();
+					response.getWriter().write("hello async...");
+					System.out.println("副线程结束。。。"+Thread.currentThread()+"==>"+System.currentTimeMillis());
+				} catch (Exception e) {
+				}
+			}
+		});		
+		System.out.println("主线程结束。。。"+Thread.currentThread()+"==>"+System.currentTimeMillis());
+	}
+}
+```
+
+# 五、其他
 
 ## 1、防止表单重复提交
 

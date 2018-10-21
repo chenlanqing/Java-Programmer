@@ -967,7 +967,140 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 - 前端控制器进行视图渲染(视图渲染将模型数据(在ModelAndView对象中)填充到request域)
 - 前端控制器向用户响应结果
 
-# 20、Spring 与 SpringMVC
+
+# 20、SpringMVC注解配置
+
+利用Servlet3.0的特性，可以无配置文件实现SpringMVC的web开发
+
+```java
+/**
+ * web容器启动的时候创建对象；调用方法来初始化容器以前前端控制器
+ */
+public class MyWebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
+    /**
+     * 获取根容器的配置类；（Spring的配置文件）   父容器；
+     */
+    @Override
+    protected Class<?>[] getRootConfigClasses() {
+        return new Class[]{RootConfig.class};
+    }
+    /**
+     * 获取web容器的配置类（SpringMVC配置文件）  子容器；
+     */
+    @Override
+    protected Class<?>[] getServletConfigClasses() {
+        return new Class[]{AppConfig.class};
+    }
+    /**
+     * 获取DispatcherServlet的映射信息<br/>
+     * /：拦截所有请求（包括静态资源（xx.js,xx.png）），但是不包括*.jsp；<br/>
+     * /*：拦截所有请求；连*.jsp页面都拦截；jsp页面是tomcat的jsp引擎解析的；
+     */
+    @Override
+    protected String[] getServletMappings() {
+        return new String[]{"/"};
+    }
+	/**
+	 * 编码过滤器
+	 */
+    @Override
+    protected Filter[] getServletFilters() {
+        return new Filter[]{new CharacterEncodingFilter("UTF-8", true)};
+    }
+}
+```
+- web容器在启动的时候，会扫描每个jar包下的 `META-INF/services/javax.servlet.ServletContainerInitializer`
+
+	![](image/Spring-initializer.png)
+
+- 加载这个文件指定的类`SpringServletContainerInitializer`
+	```java
+	@HandlesTypes(WebApplicationInitializer.class)
+	public class SpringServletContainerInitializer implements ServletContainerInitializer {
+		@Override
+		public void onStartup(Set<Class<?>> webAppInitializerClasses, ServletContext servletContext) throws ServletException {
+			List<WebApplicationInitializer> initializers = new LinkedList<WebApplicationInitializer>();
+			if (webAppInitializerClasses != null) {
+				for (Class<?> waiClass : webAppInitializerClasses) {
+					// Be defensive: Some servlet containers provide us with invalid classes,
+					// no matter what @HandlesTypes says...
+					if (!waiClass.isInterface() && !Modifier.isAbstract(waiClass.getModifiers()) &&
+							WebApplicationInitializer.class.isAssignableFrom(waiClass)) {
+						try {
+							initializers.add((WebApplicationInitializer) waiClass.newInstance());
+						}
+						catch (Throwable ex) {
+							throw new ServletException("Failed to instantiate WebApplicationInitializer class", ex);
+						}
+					}
+				}
+			}
+			if (initializers.isEmpty()) {
+				servletContext.log("No Spring WebApplicationInitializer types detected on classpath");
+				return;
+			}
+			servletContext.log(initializers.size() + " Spring WebApplicationInitializers detected on classpath");
+			AnnotationAwareOrderComparator.sort(initializers);
+			for (WebApplicationInitializer initializer : initializers) {
+				initializer.onStartup(servletContext);
+			}
+		}
+	}
+	```
+
+- spring的应用一启动会加载感兴趣的`WebApplicationInitializer`接口的下的所有组件；并且为WebApplicationInitializer组件创建对象（组件不是接口，不是抽象类）
+	- AbstractContextLoaderInitializer：创建根容器；createRootApplicationContext()；
+	- AbstractDispatcherServletInitializer：
+		- 创建一个web的ioc容器；createServletApplicationContext();
+		- 创建了DispatcherServlet；createDispatcherServlet()；
+		- 将创建的DispatcherServlet添加到ServletContext中；getServletMappings();
+	- AbstractAnnotationConfigDispatcherServletInitializer：注解方式配置的DispatcherServlet初始化器
+		- 创建根容器：createRootApplicationContext() => getRootConfigClasses();传入一个配置类
+		- 创建web的ioc容器： createServletApplicationContext();获取配置类；getServletConfigClasses();
+
+```java
+/**
+ * SpringMVC 容器，只扫描controller，子容器，useDefaultFilters=false 禁用默认的过滤规则；
+ */
+@ComponentScan(value = "com.blue.fish",
+        includeFilters = {@ComponentScan.Filter(type = FilterType.ANNOTATION, classes = {Controller.class})},
+        useDefaultFilters = false)
+// @EnableWebMvc:开启SpringMVC定制配置功能；
+@EnableWebMvc
+// 配置组件（视图解析器、视图映射、静态资源映射、拦截器）extends WebMvcConfigurerAdapter
+public class AppConfig  extends WebMvcConfigurerAdapter{
+    @Override
+    public void configureDefaultServletHandling(DefaultServletHandlerConfigurer configurer) {
+        configurer.enable();
+    }
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(new FirstInterceptor()).addPathPatterns("/**");
+    }
+    @Override
+    public void configureViewResolvers(ViewResolverRegistry registry) {
+        registry.jsp("/WEB-INF/", ".jsp");
+    }
+    @Override
+    public void configureMessageConverters(List<HttpMessageConverter<?>> converters) {
+        converters.add(new MappingJackson2HttpMessageConverter());
+        converters.add(new StringHttpMessageConverter(Charset.forName("UTF-8")));
+        super.configureMessageConverters(converters);
+    }
+}
+
+/**
+ * Spring的容器不扫描controller，其为父容器
+ ersion 1.0.0
+ */
+@ComponentScan(value = "com.blue.fish", excludeFilters = {@ComponentScan.Filter(type = FilterType.ANNOTATION, classes = {Controller.class})})
+public class RootConfig {
+}
+```
+
+# 21、其他
+
+## 21.1、Spring 与 SpringMVC
 
 - 需要进行 Spring 整合 SpringMVC 吗? 还是否需要再加入 Spring 的 IOC 容器? 是否需要再web.xml文件中配置启动Spring IOC容器的ContextLoaderListener ?
 	- 需要：通常情况下，类似于数据源、事务、整合其他框架都是放在 Spring 的配置文件中(而不是放在 SpringMVC 的配置文件中)。实际上放入 Spring 配置文件对应的IOC容器中的还有 Service 和 Dao. 
@@ -997,7 +1130,7 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 	- 多个 Spring IOC 容器之间可以设置为父子关系，以实现良好的解耦。
 	- Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：即 WEB 层容器可以引用业务层容器的 Bean，而业务层容器却访问不到 WEB 层容器的 Bean
 
-# 21、SpringMVC 对比 Struts2
+# 21.2、SpringMVC 对比 Struts2
 
 - Spring MVC 的入口是 Servlet， 而 Struts2 是 Filter
 - Spring MVC 会稍微比 Struts2 快些. Spring MVC 是基于方法设计， 而 Sturts2 是基于类， 每次发一次请求都会实	例一个 Action.

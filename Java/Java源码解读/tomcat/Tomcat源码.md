@@ -199,6 +199,13 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
 
     server.xml
 
+# 七、其他
+## 1、Tomcat控制输出乱码：
+在catalina.sh文件中找到`JAVA_OPTS`
+```
+JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails  -XX:+PrintGCTimeStamps  -XX:+PrintGCDateStamps  -Xloggc:$CATALINA_HOME/logs/gc.log -Dorg.apache.catalina.security.SecurityListener.UMASK=`umask`"
+```
+加上：`-Dfile.encoding=UTF8 -Dsun.jnu.encoding=UTF8`
 
 # 参考文章
 
