@@ -645,8 +645,7 @@ final Node<K,V>[] resize()
 * [HashMap 和 ConcurrentHashMap 全解析](https://javadoop.com/post/hashmap)
 * [加载因子是默认为0.75](https://blog.csdn.net/hcmony/article/details/56494527)
 * [高并发下的HashMap](https://www.jianshu.com/p/c15f7c180375)
-
-
+* [彻底理解HashMap](https://mp.weixin.qq.com/s/DfAoqmjh2tt5nZaUc8Dxwg)
 
 
 

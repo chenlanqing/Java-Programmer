@@ -2218,14 +2218,14 @@ Executor框架结构：
 ### 2.3、ThreadPoolExecutor：ExecutorService的默认实现，线程池中最核心的一个类
 #### 2.3.1、核心参数
 
-- corePoolSize 核心线程数大小，当线程数<corePoolSize，会创建线程执行runnable
-- maximumPoolSize 最大线程数， 当线程数 >= corePoolSize的时候，会把runnable放入workQueue中largestPoolSize:记录了曾经出现的最大线程个数
-- keepAliveTime 保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。
-- unit 时间单位
-- workQueue 保存任务的阻塞队列
-- threadFactory 创建线程的工厂
-- handler 拒绝策略，默认有四种拒绝策略
-- workers 保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的
+- corePoolSize：核心线程数大小，当线程数 < corePoolSize，会创建线程执行runnable
+- maximumPoolSize：最大线程数， 当线程数 >= corePoolSize的时候，会把runnable放入workQueue中largestPoolSize:记录了曾经出现的最大线程个数
+- keepAliveTime：保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。
+- unit：时间单位
+- workQueue：保存任务的阻塞队列
+- threadFactory：创建线程的工厂
+- handler：拒绝策略，默认有四种拒绝策略
+- workers：保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的，线程池底层的存储结构其实就是一个HashSet
 
 #### 2.3.2、参数关系
 
@@ -2280,17 +2280,19 @@ public void execute(Runnable command) {
 }
 
 ```
-
-#### 2.3.4、其他参数
-
 ```java
 // ctl变量有双重角色，通过高低位的不同，既表示线程池状态，又表示工厂线程数目
 private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 ```
 
+#### 2.3.4、总结
+- 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
+- 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
+- 线程池原理关键技术：锁（lock,cas）、阻塞队列、hashSet（资源池）
+
 ### 2.4、ScheduledThreadPoolExecutor
 
-	继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现
+继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现
 
 ### 2.5、Excutors提供了5种不同的线程池创建配置
 - newCachedThreadPool()：用来处理大量短时间工作任务的线程池，其内部使用 SynchronousQueue作为工作队列具有以下几个特点：
@@ -2305,6 +2307,28 @@ private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 - newSingleThreadScheduledExecutor()和newScheduledThreadPool(int corePoolSize)创建的是个ScheduledExecutorService，可以进行定时或周期性的工作调度，区别在于单一工作线程还是多个工作线程；
 
 - newWorkStealingPool()，Java8加入的方法，其内部会构建ForkJoinPool，利用work-stealing算法，并行的处理任务，不保证处理顺序
+
+***为什么不建议使用JDK自身提供的构建线程池的方式？***
+
+使用Executors创建线程池可能会导致OOM（OutOfMemory ,内存溢出）。因为这些工程方法中都没有指定阻塞队列的容量，没有指定的话默认容量是`Integer.MAX_VALUE`，那么阻塞队列就是个无界队列，而创建这么多线程，必然会导致OOM；
+- newFixedThreadPool
+	```java
+	public static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
+		return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), threadFactory);
+	}
+	```
+	```
+	Exception in thread "main" java.lang.OutOfMemoryError: GC overhead limit exceeded
+		at java.util.concurrent.LinkedBlockingQueue.offer(LinkedBlockingQueue.java:416)
+		at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1371)
+		at com.learning.example.thread.pool.ExecutorsDemo.main(ExecutorsDemo.java:17)
+	```
+真正的导致OOM的其实是LinkedBlockingQueue.offer
+- ArrayBlockingQueue是一个用数组实现的有界阻塞队列，必须设置容量。
+- LinkedBlockingQueue是一个用链表实现的有界阻塞队列，容量可以选择进行设置，不设置的话，将是一个无边界的阻塞队列，最大长度为Integer.MAX_VALUE
+
+除了调用`ThreadPoolExecutor`构造器之外，还可以使用Apache和Guava来使用线程池，可以使用guava的`ThreadFactoryBuilder`
+
 
 ## 3、线程池配置
 ### 3.1、不同业务场景如何配置线程池参数
@@ -2348,6 +2372,10 @@ private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 - 8、使用Semaphore创建有界的访问；
 - 9、宁可使用同步代码块也不要使用同步方法(synchronized)；
 - 10、避免使用静态变量，如果一定要用静态变量，可以声明为 final；
+
+# 八、线程与并发相关面试题
+
+## 1、为什么线程池的底层数据接口采用HashSet来实现
 
 # 参考文章
 
