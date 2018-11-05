@@ -2,14 +2,20 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一.Windows 下配置环境变量:](#%E4%B8%80windows-%E4%B8%8B%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F)
-- [二.Linux 下安装 jdk](#%E4%BA%8Clinux-%E4%B8%8B%E5%AE%89%E8%A3%85-jdk)
+- [一、Windows 下配置环境变量:](#%E4%B8%80windows-%E4%B8%8B%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F)
+- [二、Linux 下安装 jdk](#%E4%BA%8Clinux-%E4%B8%8B%E5%AE%89%E8%A3%85-jdk)
+  - [1、rpm安装](#1rpm%E5%AE%89%E8%A3%85)
+  - [2、压缩包安装](#2%E5%8E%8B%E7%BC%A9%E5%8C%85%E5%AE%89%E8%A3%85)
 - [三、配置 Tomcat 服务器:](#%E4%B8%89%E9%85%8D%E7%BD%AE-tomcat-%E6%9C%8D%E5%8A%A1%E5%99%A8)
 - [四、添加 tomcat 启动到 service 中.](#%E5%9B%9B%E6%B7%BB%E5%8A%A0-tomcat-%E5%90%AF%E5%8A%A8%E5%88%B0-service-%E4%B8%AD)
+- [五、windows下tomcat和mave配置](#%E4%BA%94windows%E4%B8%8Btomcat%E5%92%8Cmave%E9%85%8D%E7%BD%AE)
+  - [1、Maven环境配置:](#1maven%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)
+  - [2、Tomcat环境配置:](#2tomcat%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)
+  - [3、Eclipse配置Maven:](#3eclipse%E9%85%8D%E7%BD%AEmaven)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# 一.Windows 下配置环境变量:
+# 一、Windows 下配置环境变量:
     1.下载对应的jdk安装包(下载地址:http://www.oracle.com/technetwork/java/javase/downloads/index.html)
     2.安装JDK,注意安装目录不要有中文信息
     3.win+r 键运行cmd,输入 java -version,回车出现如下信息,表示安装成功:
@@ -24,43 +30,79 @@
     	4.4.在"系统变量"选项区域中查看 CLASSPATH 变量,如果不存在,则新建变量CLASSPATH;否则选中该变量,单击"编辑"按钮,在"变量值"文本框的起始位置添加
     		".;%JAVA_HOME%\lib\dt.jar;%JAVA_HOME%\lib\tools.jar;"
     		==> 注意 classpath 变量中,前面的 ".;" 不能去掉
-# 二.Linux 下安装 jdk
-    1.安装环境:CentOS7
-    2.JDK 下载地址: http://www.oracle.com/technetwork/java/javase/downloads/index.html
-    3.检验系统原版本:
-    	[root@zck ~]# java -version
-    	java version "1.7.0_"
-    	OpenJDK Runtime Environment (IcedTea6 1.11.1) (rhel-1.45.1.11.1.el6-x86_64)
-    	OpenJDK 64-Bit Server VM (build 20.0-b12, mixed mode)
-    4.进一步查看JDK信息:
-    	[root@localhost ~]#  rpm -qa | grep java
-    	javapackages-tools-3.4.1-6.el7_0.noarch
-    	tzdata-java-2014i-1.el7.noarch
-    	java-1.7.0-openjdk-headless-1.7.0.71-2.5.3.1.el7_0.x86_64
-    	java-1.7.0-openjdk-1.7.0.71-2.5.3.1.el7_0.x86_64
-    	python-javapackages-3.4.1-6.el7_0.noarch
-    5.卸载OpenJDK:
-    	[root@localhost ~]# rpm -e --nodeps tzdata-java-2014i-1.el7.noarch
-    	[root@localhost ~]# rpm -e --nodeps java-1.7.0-openjdk-headless-1.7.0.71-2.5.3.1.el7_0.x86_64
-    	[root@localhost ~]# rpm -e --nodeps java-1.7.0-openjdk-1.7.0.71-2.5.3.1.el7_0.x86_64
-    6.执行rpm安装命令，默认安装在 /usr 下
-    	[root@zck local]# rpm -ivh jdk-8u144-linux-x64.rpm
-    7.验证安装:
-    	[root@localhost usr]# java -version
-    	java version "1.8.0_144"
-    	Java(TM) SE Runtime Environment (build 1.8.0_144-b01)
-    	Java HotSpot(TM) 64-Bit Server VM (build 25.144-b01, mixed mode)
-    8.配置环境变量:
-    	[root@localhost usr]# vi /etc/profile
-    	编辑该文件，在该文件后追加如下配置:
-    		JAVA_HOME=/usr/java/jdk1.8.0_144
-    		JRE_HOME=/usr/java/jdk1.8.0_144/jre
-    		PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin
-    		CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib
-    		export JAVA_HOME JRE_HOME PATH CLASSPATH
-    	[root@localhost ~]# source /etc/profile   //使修改立即生效
-    	[root@localhost ~]# echo $PATH   //查看PATH值
-    	
+# 二、Linux 下安装 jdk
+- 安装环境:CentOS7
+- JDK 下载地址: http://www.oracle.com/technetwork/java/javase/downloads/index.html
+
+## 1、rpm安装
+- 检验系统原版本:
+	```
+	[root@zck ~]# java -version
+	java version "1.7.0_"
+	OpenJDK Runtime Environment (IcedTea6 1.11.1) (rhel-1.45.1.11.1.el6-x86_64)
+	OpenJDK 64-Bit Server VM (build 20.0-b12, mixed mode)
+	```
+- 进一步查看JDK信息:
+	```
+	[root@localhost ~]#  rpm -qa | grep java
+	javapackages-tools-3.4.1-6.el7_0.noarch
+	tzdata-java-2014i-1.el7.noarch
+	java-1.7.0-openjdk-headless-1.7.0.71-2.5.3.1.el7_0.x86_64
+	java-1.7.0-openjdk-1.7.0.71-2.5.3.1.el7_0.x86_64
+	python-javapackages-3.4.1-6.el7_0.noarch
+	```
+- 卸载OpenJDK:
+	```
+	[root@localhost ~]# rpm -e --nodeps tzdata-java-2014i-1.el7.noarch
+	[root@localhost ~]# rpm -e --nodeps java-1.7.0-openjdk-headless-1.7.0.71-2.5.3.1.el7_0.x86_64
+	[root@localhost ~]# rpm -e --nodeps java-1.7.0-openjdk-1.7.0.71-2.5.3.1.el7_0.x86_64
+	```
+- 执行rpm安装命令，默认安装在 /usr 下
+	```
+	[root@zck local]# rpm -ivh jdk-8u144-linux-x64.rpm
+	```
+- 验证安装:
+	```
+	[root@localhost usr]# java -version
+	java version "1.8.0_144"
+	Java(TM) SE Runtime Environment (build 1.8.0_144-b01)
+	Java HotSpot(TM) 64-Bit Server VM (build 25.144-b01, mixed mode)
+	```
+- 配置环境变量:
+	```
+	[root@localhost usr]# vi /etc/profile
+	编辑该文件，在该文件后追加如下配置:
+		JAVA_HOME=/usr/java/jdk1.8.0_144
+		JRE_HOME=/usr/java/jdk1.8.0_144/jre
+		PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin
+		CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib
+		export JAVA_HOME JRE_HOME PATH CLASSPATH
+	[root@localhost ~]# source /etc/profile   //使修改立即生效
+	[root@localhost ~]# echo $PATH   //查看PATH值
+    ```	
+
+## 2、压缩包安装
+
+- 下载相应的压缩包：[jdk-8u191-linux-x64.tar.gz](http://download.oracle.com/otn-pub/java/jdk/8u191-b12/2787e4a523244c269598db4e85c51e0c/jdk-8u191-linux-x64.tar.gz)
+- 解压缩到相应的目录：/root/software/jdk1.8.0_191
+- 在当前登录用户下找到 .bash_profile文件，添加如下配置:
+	```bash
+	# 配置环境变量
+	PATH=$PATH:$HOME/bin
+	export PATH
+	export JAVA_HOME=/home/root/software/jdk1.7.0_79
+	export PATH=$JAVA_HOME/bin:$PATH
+	export MAVEN_HOME=/home/root/software/apache-maven-3.5.0
+	export PATH=${PATH}:${MAVEN_HOME}/bin
+	export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+	
+	# 配置别名
+	alias base="cd /home/root/software"
+	alias webapps="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/webapps"
+	alias log="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs/catalina.out"
+	alias log2="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance2/logs/catalina.out"
+	alias cdlog="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs"
+	```
     	
 # 三、配置 Tomcat 服务器:	
     1、安装说明 
@@ -143,16 +185,16 @@
     	同时tomcat在启动时候，执行start不会启动两个tomcat，保证始终只有一个tomcat服务在运行。
     	多个tomcat可以配置在多个目录下，互不影响	
     	
-# 五.windows下tomcat和mave配置
+# 五、windows下tomcat和mave配置
 	通用步骤: 1.【我的电脑】--> 【属性】-->【高级系统设置】 --> 【环境变量】;
-## 1.Maven环境配置:
+## 1、Maven环境配置:
 	(1).在系统变量中添加:MAVEN_HOME,变量值为maven的安装目录
 	(2).在变量:PATH 后面添加:%MAVEN_HOME%\bin
-## 2.Tomcat环境配置:
+## 2、Tomcat环境配置:
 	(1).新建变量名：CATALINA_BASE,变量值为tomcat的安装目录
 	(2).新建变量名：CATALINA_HOME,变量值为tomcat的安装目录
 	(3).打开PATH,添加变量值：%CATALINA_HOME%\lib;%CATALINA_HOME%\bin
-## 3..Eclipse配置Maven:
+## 3、Eclipse配置Maven:
 	preference--> Maven--->Installtion[添加当前Maven的配置路径]
 	User setting --> 选择Maven安装目录下conf下的settings.xml文件
 
