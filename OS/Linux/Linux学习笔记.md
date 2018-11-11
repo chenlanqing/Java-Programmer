@@ -38,6 +38,13 @@
     - [2.4、环境变量](#24%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F)
     - [2.5、位置参数变量](#25%E4%BD%8D%E7%BD%AE%E5%8F%82%E6%95%B0%E5%8F%98%E9%87%8F)
     - [2.7、接受用户输入](#27%E6%8E%A5%E5%8F%97%E7%94%A8%E6%88%B7%E8%BE%93%E5%85%A5)
+  - [3、bash运算](#3bash%E8%BF%90%E7%AE%97)
+    - [3.1、declare声明变量类型](#31declare%E5%A3%B0%E6%98%8E%E5%8F%98%E9%87%8F%E7%B1%BB%E5%9E%8B)
+    - [3.2、数值运算](#32%E6%95%B0%E5%80%BC%E8%BF%90%E7%AE%97)
+    - [3.3、变量替换](#33%E5%8F%98%E9%87%8F%E6%9B%BF%E6%8D%A2)
+  - [4、环境变量配置文件](#4%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+    - [4.1、source命令](#41source%E5%91%BD%E4%BB%A4)
+    - [4.2、环境配置文件](#42%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -761,8 +768,112 @@ echo -e "\n"
 echo "Sex is $gender"
 ```
 
+## 3、bash运算
 
+### 3.1、declare声明变量类型
 
+declare [+/-][选项] 变量名，选项：
+- -：给变量设定类型属性
+- +：取消变量的类型属性
+- -i：将变量声明为整数型(integer) -x: 将变量声明为环境变量
+- -p：显示指定变量的被声明的类型
 
+### 3.2、数值运算
+
+- 方式1：
+	```sh
+	[root@localhost ~]# aa=11 
+	[root@localhost ~]# bb=22 
+	#给变量aa和bb赋值
+	[root@localhost ~]# declare -i cc=$aa+$bb
+	```
+
+- 方式2：expr或let数值运算工具
+	```sh
+	[root@localhost ~]# aa=11
+	[root@localhost ~]# bb=22 
+	#给变量aa和变量bb赋值 
+	[root@localhost ~]# dd=$(expr $aa + $bb)
+	#dd的值是aa和bb的和。注意“+”号左右两 侧必须有空格
+	```
+- 方式3：`$((运算式))` 或 `$[运算式]`
+	```sh
+	[root@localhost ~]# aa=11 
+	[root@localhost ~]# bb=22 
+	[root@localhost ~]# ff=$(( $aa+$bb )) 
+	[root@localhost ~]# gg=$[ $aa+$bb ]
+	```
+运算符的优先级同正常的运算符优先级
+
+### 3.3、变量替换
+
+变量置换方式 | 变量y没有设置 | 变量y为空值 | 变量y设置值
+-----------|-------------|-----------|-----------
+x=${y-新值} | x=新值	| x为空	     |x=$y
+x=${y:-新值} | x=新值	| x=新值	|x=$y
+x=${y+新值} |x为空 	|	x=新值		| x=新值
+x=${y:+新值}|x为空	| 	x为空		|x=新值
+x=${y=新值}	|x=新值 y=新值 |x为空 y值不变|x=$y y值不变
+x=${y:=新值} | x=新值 y=新值 | x=新值 y=新值 | x=$y y值不变
+x=${y?新值} |新值输出到标准，错误输出(就是屏幕) | x为空| x=$y
+x=${y:?新值}|新值输出到标准 错误输出 |新值输出到标准 错误输出 | x=$y
+
+```sh
+[root@localhost ~]# unset y
+#删除变量y
+[root@localhost ~]# x=${y-new} #进行测试
+[root@localhost ~]# echo $x
+new 
+#因为变量y不存在，所以x=new
+```
+
+## 4、环境变量配置文件
+
+### 4.1、source命令
+```sh
+[root@localhost ~]# source 配置文件 或
+[root@localhost ~]# . 配置文件
+```
+
+### 4.2、环境配置文件
+
+环境变量配置文件中主要是定义对系统的操作环境生效的系统默认环境变量，比如 PATH、HISTSIZE、PS1、HOSTNAME等默认环境变量
+- /etc/profile
+- /etc/profile.d/*.sh
+- ~/.bash_profile
+- ~/.bashrc
+- /etc/bashrc
+
+#### 4.2.1、/etc/profile
+
+- USER变量
+- LOGNAME变量
+- MAIL变量
+- PATH变量
+- HOSTNAME变量
+- HISTSIZE变量
+- umask
+- 调用/etc/profile.d/*.sh文件
+
+#### 4.2.2、`~/.bash_profile`
+
+- 调用了~/.bashrc文件。
+- 在PATH变量后面加入了“:$HOME/bin” 这个目录
+
+#### 4.2.3、`~/.bashrc的作用`
+- 定义默认别名
+- 调用/etc/bashrc
+
+#### 4.2.4、/etc/bashrc的作用
+- PS1变量
+- umask
+- PATH变量
+- 调用/etc/profile.d/*.sh文件
+
+***注意：***该配置文件在未登录的情况下使用的
+
+#### 4.2.5、上述配置文件的执行顺序
+
+![](image/环境变量配置文件关系.png)
 
 
