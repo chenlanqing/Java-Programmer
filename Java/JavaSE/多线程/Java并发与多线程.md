@@ -271,12 +271,12 @@ Thread.currentThread()获取当前线程的引用
 - Priority：线程对象的优先级。优先级别在1-10之间，1是最低级，10是最高级。不建议改变它们的优先级。
 - Status:：线程的状态。在Java中，线程只能有这6种中的一种状态：new、runnable、block、waiting、time waiting 和 terminated。
 
-### 2.7、线程的中断、停止与暂停
-**2.7.1、线程中断**
+
+#### 2.7.1、线程中断
 
 Java 提供中断机制来通知线程表明我们想要结束它.中断机制的特性是线程需要检查是否被中断，而且还可以决定是否响应结束的请求
 
-**2.7.2、线程停止**
+#### 2.7.2、线程停止
 
 - 线程停止的方法：Java并没有提供安全停止线程的方法
 	- ①、使用退出标志，使线程正常退出，也就是当run方法完成后线程终止;
@@ -296,14 +296,14 @@ Java 提供中断机制来通知线程表明我们想要结束它.中断机制�
 
 - 使用 return 停止线程：将方法 interrupt() 和 return 结合使用
 
-**2.7.3、暂停线程：可以使用 suspend()方法暂停线程，使用resume() 方法恢复线程的执行**
+#### 2.7.3、暂停线程：可以使用 suspend()方法暂停线程，使用resume() 方法恢复线程的执行
 
 这两个方法的缺点：
 
 - 使用这两个方法时，如果使用不当极易造成公共的同步对象的独占，使得其他线程无法访问公共同步对象
 - 数据的不同步:容易出现因为线程的暂停而导致数据不同步的情况
 
-**2.7.4、线程中断原理:**
+#### 2.7.4、线程中断原理
 
 - Java线程中断机制是一种协作机制，也就是说通过中断并不能直接停止另一个线程，需要被中断的线程自己处理中断.
 
@@ -327,10 +327,31 @@ Java 提供中断机制来通知线程表明我们想要结束它.中断机制�
 	* 一组线程中的一个或多个出现错误导致整组都无法继续时；
 	* 当一个应用或服务需要停止时
 
+#### 2.7.5、线程使用interrupt优雅退出例子
+```java
+public void run(){
+	try {
+		// do something
+		// 线程退出条件
+		while(!Thread.currentThread().isInterrupted() && more work to do ){
+			// do more work
+		}
+	} catch(InterrupterException e) {
+		// thread was interrupted during sleep or wait
+	} finally {
+		// clean up if needed
+	}
+}
+```
+
 ### 2.8、线程的睡眠
 
-	Thread.sleep()
-	TimeUnit.SECONDS.sleep();
+- Thread.sleep()
+- TimeUnit.SECONDS.sleep();
+
+当一个执行中的线程调用了Thread的sleep方法会，调用线程会暂时让出指定时间的执行权利，但是该线程所有持有的锁不释放；在指定的时间会正常返回，线程处于就绪装填；
+
+如果在睡眠期间其他线程调用了该线程的interrupt方法中断了该线程，则该线程会在调用sleep方法的地方抛出InterruptedException异常
 
 ### 2.9、等待线程的终结
 
