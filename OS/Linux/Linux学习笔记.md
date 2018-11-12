@@ -730,14 +730,18 @@ $#	| 这个变量代表命令行中所有参数的个数
 - `$*`与`$@`的区别
 	```bash
 	#!/bin/bash
-	for i in "$*"
+	for i in "$*";
+	do
 		#$*中的所有参数看成是一个整体，所以这个for循环只会循环一次 do
-		echo "The parameters is: $i" done
+		echo "The parameters is: $i"
+	done
 	x=1
-	for y in "$@"
+	for y in "$@";
+	do
 		#$@中的每个参数都看成是独立的，所以“$@”中有几个参数，就会循环几次 do
 		echo "The parameter$x is: $y"
-		x=$(( $x +1 )) done
+		x=$(( $x +1 ))
+	done
 	```
 ### 2.6、预定义变量
 - `$?`：最后一次执行的命令的返回状态。如果这个变 量的值为0，证明上一个命令正确执行;如果 这个变量的值为非0(具体是哪个数，由命令 自己来决定)，则证明上一个命令执行不正确 了。

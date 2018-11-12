@@ -1944,6 +1944,8 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 	-l：除堆栈外，显示关于锁的附加信息<br>
 	-m：如果调用本地方法的话，来可以显示 C/C++ 堆栈<br>
 
+[线程堆栈分析](http://fastthread.io/)
+
 ## 12.7、可视化工具
 
 - [JConsole](https://docs.oracle.com/javase/7/docs/technotes/guides/management/jconsole.html)：

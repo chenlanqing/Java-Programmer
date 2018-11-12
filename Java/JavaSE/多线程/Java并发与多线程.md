@@ -7,7 +7,7 @@
   - [2、多线程的代价](#2%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BB%A3%E4%BB%B7)
   - [3、并发编程模型](#3%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B)
 - [二、Java 多线程](#%E4%BA%8Cjava-%E5%A4%9A%E7%BA%BF%E7%A8%8B)
-  - [1.Java线程继承自java.lang.Thread或其子类的](#1java%E7%BA%BF%E7%A8%8B%E7%BB%A7%E6%89%BF%E8%87%AAjavalangthread%E6%88%96%E5%85%B6%E5%AD%90%E7%B1%BB%E7%9A%84)
+  - [1.Java线程](#1java%E7%BA%BF%E7%A8%8B)
   - [2、线程的创建及状态变化](#2%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%8F%8A%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96)
     - [2.1、创建线程的方式](#21%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F)
     - [2.3、创建 Thread 子类还是实现 Runnable 接口](#23%E5%88%9B%E5%BB%BA-thread-%E5%AD%90%E7%B1%BB%E8%BF%98%E6%98%AF%E5%AE%9E%E7%8E%B0-runnable-%E6%8E%A5%E5%8F%A3)
@@ -25,6 +25,7 @@
     - [2.15、线程的优先级](#215%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BC%98%E5%85%88%E7%BA%A7)
     - [2.16、守护线程](#216%E5%AE%88%E6%8A%A4%E7%BA%BF%E7%A8%8B)
     - [2.17、线程的生命周期](#217%E7%BA%BF%E7%A8%8B%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
+    - [2.18、线程管理器MXBean](#218%E7%BA%BF%E7%A8%8B%E7%AE%A1%E7%90%86%E5%99%A8mxbean)
   - [3、竞态条件与临界区](#3%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E4%B8%8E%E4%B8%B4%E7%95%8C%E5%8C%BA)
   - [4、线程安全与共享资源](#4%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E5%85%B1%E4%BA%AB%E8%B5%84%E6%BA%90)
   - [5、synchronized 关键字](#5synchronized-%E5%85%B3%E9%94%AE%E5%AD%97)
@@ -37,7 +38,7 @@
   - [12、深入理解ThreadLocal](#12%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3threadlocal)
   - [13、死锁](#13%E6%AD%BB%E9%94%81)
   - [14、饥饿和公平](#14%E9%A5%A5%E9%A5%BF%E5%92%8C%E5%85%AC%E5%B9%B3)
-- [三.JUC(java.util.concurrent)包](#%E4%B8%89jucjavautilconcurrent%E5%8C%85)
+- [三、JUC(java.util.concurrent)包](#%E4%B8%89jucjavautilconcurrent%E5%8C%85)
   - [1、JUC原子类](#1juc%E5%8E%9F%E5%AD%90%E7%B1%BB)
   - [2、锁的相关概念](#2%E9%94%81%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5)
   - [3、独占锁:](#3%E7%8B%AC%E5%8D%A0%E9%94%81)
@@ -72,6 +73,8 @@
     - [7.2、应用场景](#72%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
     - [7.3、几个方法](#73%E5%87%A0%E4%B8%AA%E6%96%B9%E6%B3%95)
     - [7.4、Java的阻塞队列](#74java%E7%9A%84%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
+    - [7.5、如何选择队列](#75%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9%E9%98%9F%E5%88%97)
+  - [8、三类并发容器比较](#8%E4%B8%89%E7%B1%BB%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8%E6%AF%94%E8%BE%83)
 - [五、JUC 包核心与算法](#%E4%BA%94juc-%E5%8C%85%E6%A0%B8%E5%BF%83%E4%B8%8E%E7%AE%97%E6%B3%95)
   - [1、AQS：AbstractQueuedSynchronizer-抽象队列同步器](#1aqsabstractqueuedsynchronizer-%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
   - [2、CAS：Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
@@ -85,13 +88,17 @@
   - [2、重要类](#2%E9%87%8D%E8%A6%81%E7%B1%BB)
     - [2.1、ExecutorService-真正的线程池接口](#21executorservice-%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8E%A5%E5%8F%A3)
     - [2.2、ScheduledExecutorService](#22scheduledexecutorservice)
-    - [2.3、ThreadPoolExecutor：ExecutorService的默认实现，线程池中最核心的一个类](#23threadpoolexecutorexecutorservice%E7%9A%84%E9%BB%98%E8%AE%A4%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E6%B1%A0%E4%B8%AD%E6%9C%80%E6%A0%B8%E5%BF%83%E7%9A%84%E4%B8%80%E4%B8%AA%E7%B1%BB)
+    - [2.3、ThreadPoolExecutor](#23threadpoolexecutor)
     - [2.4、ScheduledThreadPoolExecutor](#24scheduledthreadpoolexecutor)
+    - [2.5、Excutors创建线程池](#25excutors%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E6%B1%A0)
+    - [2.6、设置线程池线程的名称](#26%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%90%8D%E7%A7%B0)
   - [3、线程池配置](#3%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%85%8D%E7%BD%AE)
     - [3.1、不同业务场景如何配置线程池参数](#31%E4%B8%8D%E5%90%8C%E4%B8%9A%E5%8A%A1%E5%9C%BA%E6%99%AF%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8F%82%E6%95%B0)
     - [3.2、科学设置线程池](#32%E7%A7%91%E5%AD%A6%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0)
   - [4、线程池最佳实践](#4%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
 - [七、多线程并发最佳实践](#%E4%B8%83%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%B9%B6%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
+- [八、线程与并发相关面试题](#%E5%85%AB%E7%BA%BF%E7%A8%8B%E4%B8%8E%E5%B9%B6%E5%8F%91%E7%9B%B8%E5%85%B3%E9%9D%A2%E8%AF%95%E9%A2%98)
+  - [1、为什么线程池的底层数据接口采用HashSet来实现](#1%E4%B8%BA%E4%BB%80%E4%B9%88%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E6%8E%A5%E5%8F%A3%E9%87%87%E7%94%A8hashset%E6%9D%A5%E5%AE%9E%E7%8E%B0)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -160,10 +167,13 @@ Java 的并发采用的是共享内存模型
 
 # 二、Java 多线程
 
-## 1.Java线程继承自java.lang.Thread或其子类的
+## 1.Java线程
 
-	Thread thread = new Thread();
-	thread.start();// 调用线程
+继承自java.lang.Thread或其子类的
+
+Thread thread = new Thread();
+
+thread.start();// 调用线程
 
 ## 2、线程的创建及状态变化
 
@@ -2215,7 +2225,10 @@ Executor框架结构：
 
 和Timer/TimerTask类似，解决那些需要任务重复执行的问题
 
-### 2.3、ThreadPoolExecutor：ExecutorService的默认实现，线程池中最核心的一个类
+### 2.3、ThreadPoolExecutor
+
+ExecutorService的默认实现，线程池中最核心的一个类
+
 #### 2.3.1、核心参数
 
 - corePoolSize：核心线程数大小，当线程数 < corePoolSize，会创建线程执行runnable
@@ -2294,7 +2307,9 @@ private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 
 继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现
 
-### 2.5、Excutors提供了5种不同的线程池创建配置
+### 2.5、Excutors创建线程池
+
+Excutors 提供了5种不同的线程池创建方式
 - newCachedThreadPool()：用来处理大量短时间工作任务的线程池，其内部使用 SynchronousQueue作为工作队列具有以下几个特点：
 	- 它会试图缓存线程并重用，当无缓存线程可用时，就会创建新的工作线程；
 	- 如果线程限制的时间超过60秒，则会被终止并移出缓存；
@@ -2329,8 +2344,70 @@ private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 
 除了调用`ThreadPoolExecutor`构造器之外，还可以使用Apache和Guava来使用线程池，可以使用guava的`ThreadFactoryBuilder`
 
+### 2.6、设置线程池线程的名称
+
+线程池中的线程是通过线程工程来创建的即`ThreadFactory`，那么设置线程名称也是通过其实现的，`ThreadPoolExecutor`默认使用的线程工厂是`Executors.DefaultThreadFactory`
+```java
+static class DefaultThreadFactory implements ThreadFactory {
+	// poolNumber是static的原子变量用来记录当前线程池的编号是应用级别的，所有线程池公用一个，比如创建第一个线程池时候线程池编号为1，创建第二个线程池时候线程池的编号为2，这里pool-1-thread-1里面的pool-1中的1就是这个值
+	private static final AtomicInteger poolNumber = new AtomicInteger(1);
+	private final ThreadGroup group;
+	// threadNumber是线程池级别的，每个线程池有一个该变量用来记录该线程池中线程的编号，这里pool-1-thread-1里面的thread-1中的1就是这个值
+	private final AtomicInteger threadNumber = new AtomicInteger(1);
+	// namePrefix是线程池中线程的前缀，默认固定为pool
+	private final String namePrefix;
+
+	DefaultThreadFactory() {
+		SecurityManager s = System.getSecurityManager();
+		group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+		namePrefix = "pool-" + poolNumber.getAndIncrement() + "-thread-";
+	}
+
+	public Thread newThread(Runnable r) {
+		// 具体创建线程，可知线程的名称使用namePrefix + threadNumber.getAndIncrement()拼接的
+		Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(),0);
+		if (t.isDaemon())
+			t.setDaemon(false);
+		if (t.getPriority() != Thread.NORM_PRIORITY)
+			t.setPriority(Thread.NORM_PRIORITY);
+		return t;
+	}
+}
+```
+那么，如果需要自定义名称的话，可以手动实现一个`ThreadFactory`
+```java
+// 命名线程工厂
+static class NamedThreadFactory implements ThreadFactory {
+	private static final AtomicInteger poolNumber = new AtomicInteger(1);
+	private final ThreadGroup group;
+	private final AtomicInteger threadNumber = new AtomicInteger(1);
+	private final String namePrefix;
+
+	NamedThreadFactory(String name) {
+		SecurityManager s = System.getSecurityManager();
+		group = (s != null) ? s.getThreadGroup() : Thread.currentThread().getThreadGroup();
+		if (null == name || name.isEmpty()) {
+			name = "pool";
+		}
+		namePrefix = name + "-" + poolNumber.getAndIncrement() + "-thread-";
+	}
+
+	public Thread newThread(Runnable r) {
+		Thread t = new Thread(group, r, namePrefix + threadNumber.getAndIncrement(), 0);
+		if (t.isDaemon())
+			t.setDaemon(false);
+		if (t.getPriority() != Thread.NORM_PRIORITY)
+			t.setPriority(Thread.NORM_PRIORITY);
+		return t;
+	}
+}
+// 创建线程池的时候可以使用如下
+static ThreadPoolExecutor executorOne = new ThreadPoolExecutor(5, 5, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(), new NamedThreadFactory("ASYN-ACCEPT-POOL"));
+static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(), new NamedThreadFactory("ASYN-PROCESS-POOL"));
+```
 
 ## 3、线程池配置
+
 ### 3.1、不同业务场景如何配置线程池参数
 
 - CPU密集型任务:需要尽量压榨CPU，参考值可以设为NCPU + 1;	
