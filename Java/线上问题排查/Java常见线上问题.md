@@ -84,3 +84,5 @@
 
 - [官方文档：思路和工具](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html#CIHIEEFH)
 - [一次堆外内存泄露的排查过程](https://mp.weixin.qq.com/s/bkzVCjm0qeREpCnF_8xX2A)
+- [spring boot引起的“堆外内存泄漏”](https://mp.weixin.qq.com/s/warAkXqkpDXOA10wN0vv-Q)
+- [一次HashSet所引起的并发问题](https://mp.weixin.qq.com/s/-_6fDP6OSse-tL-ptjcbJw)

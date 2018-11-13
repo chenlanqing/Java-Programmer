@@ -285,7 +285,7 @@ servlet容器为servlet运行提供了网络相关的服务：
 
 ### 10.5.servlet的生命周期的四个阶段
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaEE/images/Servlet生命周期.png)
+![image](images/Servlet生命周期.png)
 
 **1、实例化**
 
@@ -356,9 +356,10 @@ servlet容器为servlet运行提供了网络相关的服务：
 
 Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy方法来释放资源
 
-# 二、HTTP协议			
-[HTTP协议](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaEE/%E7%BD%91%E7%BB%9C%E5%9F%BA%E7%A1%80.md#1http协议)
-			
+# 二、HTTP协议	
+
+[HTTP协议](网络基础.md#四HTTP与HTTPS协议-应用层)	
+
 # 三、Servlet高级应用
 
 ## 1、监听器

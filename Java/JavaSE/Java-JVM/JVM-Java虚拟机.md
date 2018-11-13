@@ -9,13 +9,16 @@
 - [2、Java 内存区域](#2java-%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F)
   - [2.1.Java 虚拟机](#21java-%E8%99%9A%E6%8B%9F%E6%9C%BA)
   - [2.2、内存区域](#22%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F)
-    - [2.2.1、程序计数器：无内存溢出异常（PC 寄存器）](#221%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8%E6%97%A0%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA%E5%BC%82%E5%B8%B8pc-%E5%AF%84%E5%AD%98%E5%99%A8)
-    - [2.2.2、Java 虚拟机栈：该区域也是线程私有的，它的生命周期也与线程相同](#222java-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88%E8%AF%A5%E5%8C%BA%E5%9F%9F%E4%B9%9F%E6%98%AF%E7%BA%BF%E7%A8%8B%E7%A7%81%E6%9C%89%E7%9A%84%E5%AE%83%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E4%B9%9F%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9B%B8%E5%90%8C)
-    - [2.2.3、本地方法栈：使用到的本地操作系统(Native)方法服务](#223%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88%E4%BD%BF%E7%94%A8%E5%88%B0%E7%9A%84%E6%9C%AC%E5%9C%B0%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9Fnative%E6%96%B9%E6%B3%95%E6%9C%8D%E5%8A%A1)
+    - [2.2.1、程序计数器](#221%E7%A8%8B%E5%BA%8F%E8%AE%A1%E6%95%B0%E5%99%A8)
+    - [2.2.2、Java 虚拟机栈](#222java-%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88)
+    - [2.2.3、本地方法栈](#223%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88)
     - [2.2.4、Java 堆](#224java-%E5%A0%86)
     - [2.2.5、方法区](#225%E6%96%B9%E6%B3%95%E5%8C%BA)
     - [2.2.6、运行时常量池：方法区的一部分](#226%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0%E6%96%B9%E6%B3%95%E5%8C%BA%E7%9A%84%E4%B8%80%E9%83%A8%E5%88%86)
     - [2.2.7、直接内存](#227%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98)
+  - [2.3、JDK8的JVM内存结构](#23jdk8%E7%9A%84jvm%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84)
+    - [2.3.1、堆区](#231%E5%A0%86%E5%8C%BA)
+    - [2.3.2、非堆（metaspace）](#232%E9%9D%9E%E5%A0%86metaspace)
 - [3、内存溢出与内存泄漏](#3%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA%E4%B8%8E%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F)
   - [3.1、内存溢出](#31%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA)
   - [3.2、内存泄漏](#32%E5%86%85%E5%AD%98%E6%B3%84%E6%BC%8F)
@@ -24,22 +27,19 @@
     - [3.3.2、方法区和运行时常量池](#332%E6%96%B9%E6%B3%95%E5%8C%BA%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E5%B8%B8%E9%87%8F%E6%B1%A0)
     - [3.3.3、虚拟机栈和本地方法栈：](#333%E8%99%9A%E6%8B%9F%E6%9C%BA%E6%A0%88%E5%92%8C%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E6%A0%88)
     - [3.3.4、本机直接内存溢出](#334%E6%9C%AC%E6%9C%BA%E7%9B%B4%E6%8E%A5%E5%86%85%E5%AD%98%E6%BA%A2%E5%87%BA)
-  - [3.4、通过参数优化虚拟机内存的参数如下所示](#34%E9%80%9A%E8%BF%87%E5%8F%82%E6%95%B0%E4%BC%98%E5%8C%96%E8%99%9A%E6%8B%9F%E6%9C%BA%E5%86%85%E5%AD%98%E7%9A%84%E5%8F%82%E6%95%B0%E5%A6%82%E4%B8%8B%E6%89%80%E7%A4%BA)
+  - [3.4、JVM参数](#34jvm%E5%8F%82%E6%95%B0)
   - [3.5、提高内存利用率，降低内存风险](#35%E6%8F%90%E9%AB%98%E5%86%85%E5%AD%98%E5%88%A9%E7%94%A8%E7%8E%87%E9%99%8D%E4%BD%8E%E5%86%85%E5%AD%98%E9%A3%8E%E9%99%A9)
-  - [3.6、java.lang.OutOfMemoryError：PermGen Space](#36javalangoutofmemoryerrorpermgen-space)
+  - [3.6、持久代溢出](#36%E6%8C%81%E4%B9%85%E4%BB%A3%E6%BA%A2%E5%87%BA)
   - [3.7、Java8移除永久代](#37java8%E7%A7%BB%E9%99%A4%E6%B0%B8%E4%B9%85%E4%BB%A3)
   - [3.8、元空间](#38%E5%85%83%E7%A9%BA%E9%97%B4)
     - [3.8.1、基本概念](#381%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
-    - [3.8.2、元空间与永久代](#382%E5%85%83%E7%A9%BA%E9%97%B4%E4%B8%8E%E6%B0%B8%E4%B9%85%E4%BB%A3)
+    - [3.8.2、元空间组成](#382%E5%85%83%E7%A9%BA%E9%97%B4%E7%BB%84%E6%88%90)
     - [3.8.3、元空间参数](#383%E5%85%83%E7%A9%BA%E9%97%B4%E5%8F%82%E6%95%B0)
     - [3.8.4、元空间垃圾回收](#384%E5%85%83%E7%A9%BA%E9%97%B4%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6)
     - [3.8.5、比较JDK6、JDK7、JDK8区别](#385%E6%AF%94%E8%BE%83jdk6jdk7jdk8%E5%8C%BA%E5%88%AB)
+    - [3.8.6、使用注意点](#386%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F%E7%82%B9)
 - [4、对象访问与内存分配](#4%E5%AF%B9%E8%B1%A1%E8%AE%BF%E9%97%AE%E4%B8%8E%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D)
 - [5、Class 类文件结构](#5class-%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84)
-  - [5.1、平台无关性](#51%E5%B9%B3%E5%8F%B0%E6%97%A0%E5%85%B3%E6%80%A7)
-  - [5.2、类文件结构](#52%E7%B1%BB%E6%96%87%E4%BB%B6%E7%BB%93%E6%9E%84)
-    - [5.2.1、Class文件是一组以8位字节为基础单位的二进制流](#521class%E6%96%87%E4%BB%B6%E6%98%AF%E4%B8%80%E7%BB%84%E4%BB%A58%E4%BD%8D%E5%AD%97%E8%8A%82%E4%B8%BA%E5%9F%BA%E7%A1%80%E5%8D%95%E4%BD%8D%E7%9A%84%E4%BA%8C%E8%BF%9B%E5%88%B6%E6%B5%81)
-    - [5.2.2.Class 文件格式](#522class-%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F)
 - [6、虚拟机类加载机制](#6%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6)
   - [6.1、ClassLoader](#61classloader)
   - [6.2、Java默认的三个ClassLoader](#62java%E9%BB%98%E8%AE%A4%E7%9A%84%E4%B8%89%E4%B8%AAclassloader)
@@ -47,15 +47,15 @@
     - [6.2.2、Extension ClassLoader-扩展类加载器](#622extension-classloader-%E6%89%A9%E5%B1%95%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
     - [6.2.3、App ClassLoader-系统类加载器](#623app-classloader-%E7%B3%BB%E7%BB%9F%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
   - [6.3、ClassLoader 加载类原理](#63classloader-%E5%8A%A0%E8%BD%BD%E7%B1%BB%E5%8E%9F%E7%90%86)
-    - [6.3.1、类加载器的工作原理基于三个机制：委托、可见性和单一性](#631%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%9F%BA%E4%BA%8E%E4%B8%89%E4%B8%AA%E6%9C%BA%E5%88%B6%E5%A7%94%E6%89%98%E5%8F%AF%E8%A7%81%E6%80%A7%E5%92%8C%E5%8D%95%E4%B8%80%E6%80%A7)
-    - [6.3.2、ClassLoader 使用的是双亲委托模型来搜索类的](#632classloader-%E4%BD%BF%E7%94%A8%E7%9A%84%E6%98%AF%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%89%98%E6%A8%A1%E5%9E%8B%E6%9D%A5%E6%90%9C%E7%B4%A2%E7%B1%BB%E7%9A%84)
+    - [6.3.1、类加载器的工作原理](#631%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
+    - [6.3.2、ClassLoader加载机制](#632classloader%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6)
     - [6.3.3、为什么要使用双亲委托这种模型呢](#633%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E4%BD%BF%E7%94%A8%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%89%98%E8%BF%99%E7%A7%8D%E6%A8%A1%E5%9E%8B%E5%91%A2)
-    - [6.3.4、在JVM搜索类时，判断两个class是否相同](#634%E5%9C%A8jvm%E6%90%9C%E7%B4%A2%E7%B1%BB%E6%97%B6%E5%88%A4%E6%96%AD%E4%B8%A4%E4%B8%AAclass%E6%98%AF%E5%90%A6%E7%9B%B8%E5%90%8C)
+    - [6.3.4、如何判断两个class是否相同](#634%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%AD%E4%B8%A4%E4%B8%AAclass%E6%98%AF%E5%90%A6%E7%9B%B8%E5%90%8C)
     - [6.3.5、ClassLoader 的体系架构](#635classloader-%E7%9A%84%E4%BD%93%E7%B3%BB%E6%9E%B6%E6%9E%84)
   - [6.4、ClassLoader源码分析](#64classloader%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
     - [6.4.1、类定义](#641%E7%B1%BB%E5%AE%9A%E4%B9%89)
     - [6.4.2、loadClass()方法的实现](#642loadclass%E6%96%B9%E6%B3%95%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [6.4.3、描述一下 JVM 加载 .class文件的原理机制](#643%E6%8F%8F%E8%BF%B0%E4%B8%80%E4%B8%8B-jvm-%E5%8A%A0%E8%BD%BD-class%E6%96%87%E4%BB%B6%E7%9A%84%E5%8E%9F%E7%90%86%E6%9C%BA%E5%88%B6)
+    - [6.4.3、JVM加载class文件的原理](#643jvm%E5%8A%A0%E8%BD%BDclass%E6%96%87%E4%BB%B6%E7%9A%84%E5%8E%9F%E7%90%86)
     - [6.4.4、破坏双亲委派模型：](#644%E7%A0%B4%E5%9D%8F%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%B4%BE%E6%A8%A1%E5%9E%8B)
   - [6.5、自定义类加载器](#65%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
     - [6.5.1、自定义类加载器的作用](#651%E8%87%AA%E5%AE%9A%E4%B9%89%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E7%9A%84%E4%BD%9C%E7%94%A8)
@@ -73,11 +73,15 @@
     - [6.8.6、Java 类的链接](#686java-%E7%B1%BB%E7%9A%84%E9%93%BE%E6%8E%A5)
   - [6.9、Java 类的初始化](#69java-%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96)
     - [6.9.1、初始化过程](#691%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B)
-    - [6.9.2、虚拟机规定只有这四种情况才会触发类的初始化，称为对一个类进行主动引用](#692%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%A7%84%E5%AE%9A%E5%8F%AA%E6%9C%89%E8%BF%99%E5%9B%9B%E7%A7%8D%E6%83%85%E5%86%B5%E6%89%8D%E4%BC%9A%E8%A7%A6%E5%8F%91%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E7%A7%B0%E4%B8%BA%E5%AF%B9%E4%B8%80%E4%B8%AA%E7%B1%BB%E8%BF%9B%E8%A1%8C%E4%B8%BB%E5%8A%A8%E5%BC%95%E7%94%A8)
-    - [6.9.3、接口的初始化过程与类初始化过程的不同](#693%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B%E4%B8%8E%E7%B1%BB%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B%E7%9A%84%E4%B8%8D%E5%90%8C)
+    - [6.9.2、虚拟机触发类的初始化情况](#692%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%A7%A6%E5%8F%91%E7%B1%BB%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E6%83%85%E5%86%B5)
+    - [6.9.3、接口的初始化过程与类初始化过程](#693%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B%E4%B8%8E%E7%B1%BB%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B)
   - [6.10、如下例子](#610%E5%A6%82%E4%B8%8B%E4%BE%8B%E5%AD%90)
   - [6.11、Tomcat 类加载体系](#611tomcat-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E4%BD%93%E7%B3%BB)
   - [6.12、OSGI类加载](#612osgi%E7%B1%BB%E5%8A%A0%E8%BD%BD)
+  - [6.13、JDK9类加载器概览](#613jdk9%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E6%A6%82%E8%A7%88)
+  - [6.14、降低类加载开销的方法](#614%E9%99%8D%E4%BD%8E%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%BC%80%E9%94%80%E7%9A%84%E6%96%B9%E6%B3%95)
+  - [6.15、Jar Hell问题](#615jar-hell%E9%97%AE%E9%A2%98)
+  - [6.16、字节码与类加载](#616%E5%AD%97%E8%8A%82%E7%A0%81%E4%B8%8E%E7%B1%BB%E5%8A%A0%E8%BD%BD)
 - [7、字节码执行引擎](#7%E5%AD%97%E8%8A%82%E7%A0%81%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E)
 - [8、方法调用](#8%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8)
   - [8.1、方法解析](#81%E6%96%B9%E6%B3%95%E8%A7%A3%E6%9E%90)
@@ -95,7 +99,7 @@
   - [10.3、语法糖](#103%E8%AF%AD%E6%B3%95%E7%B3%96)
     - [10.3.1、泛型与类型擦除](#1031%E6%B3%9B%E5%9E%8B%E4%B8%8E%E7%B1%BB%E5%9E%8B%E6%93%A6%E9%99%A4)
     - [10.3.2、自动装箱、拆箱与遍历循环](#1032%E8%87%AA%E5%8A%A8%E8%A3%85%E7%AE%B1%E6%8B%86%E7%AE%B1%E4%B8%8E%E9%81%8D%E5%8E%86%E5%BE%AA%E7%8E%AF)
-    - [10.3.3、条件编译：根据布尔常量值的真假，编译器将会把分支中不成立的代码块消除掉.](#1033%E6%9D%A1%E4%BB%B6%E7%BC%96%E8%AF%91%E6%A0%B9%E6%8D%AE%E5%B8%83%E5%B0%94%E5%B8%B8%E9%87%8F%E5%80%BC%E7%9A%84%E7%9C%9F%E5%81%87%E7%BC%96%E8%AF%91%E5%99%A8%E5%B0%86%E4%BC%9A%E6%8A%8A%E5%88%86%E6%94%AF%E4%B8%AD%E4%B8%8D%E6%88%90%E7%AB%8B%E7%9A%84%E4%BB%A3%E7%A0%81%E5%9D%97%E6%B6%88%E9%99%A4%E6%8E%89)
+    - [10.3.3、条件编译](#1033%E6%9D%A1%E4%BB%B6%E7%BC%96%E8%AF%91)
     - [10.3.4、其他语法糖](#1034%E5%85%B6%E4%BB%96%E8%AF%AD%E6%B3%95%E7%B3%96)
   - [10.4、JIT 编译-后端编译](#104jit-%E7%BC%96%E8%AF%91-%E5%90%8E%E7%AB%AF%E7%BC%96%E8%AF%91)
     - [10.4.1、概述](#1041%E6%A6%82%E8%BF%B0)
@@ -106,16 +110,22 @@
   - [10.5、Java与C/C++编译器对比](#105java%E4%B8%8Ecc%E7%BC%96%E8%AF%91%E5%99%A8%E5%AF%B9%E6%AF%94)
 - [11、Java 垃圾收集机制](#11java-%E5%9E%83%E5%9C%BE%E6%94%B6%E9%9B%86%E6%9C%BA%E5%88%B6)
 - [12、虚拟机监控及故障处理](#12%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%9B%91%E6%8E%A7%E5%8F%8A%E6%95%85%E9%9A%9C%E5%A4%84%E7%90%86)
-  - [12.1、jps：虚拟机进程状况工具（JVM Process Status Tool）](#121jps%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%BF%9B%E7%A8%8B%E7%8A%B6%E5%86%B5%E5%B7%A5%E5%85%B7jvm-process-status-tool)
-  - [12.2、jstat：虚拟机统计信息监视工具(JVM Statistics Monitoring Tool)：](#122jstat%E8%99%9A%E6%8B%9F%E6%9C%BA%E7%BB%9F%E8%AE%A1%E4%BF%A1%E6%81%AF%E7%9B%91%E8%A7%86%E5%B7%A5%E5%85%B7jvm-statistics-monitoring-tool)
-  - [12.3、jinfo：Java 配置信息工具(Configuration Info for Java)](#123jinfojava-%E9%85%8D%E7%BD%AE%E4%BF%A1%E6%81%AF%E5%B7%A5%E5%85%B7configuration-info-for-java)
-  - [12.4、jmap：Java 内存映像工具(Memory Map for Java)](#124jmapjava-%E5%86%85%E5%AD%98%E6%98%A0%E5%83%8F%E5%B7%A5%E5%85%B7memory-map-for-java)
+  - [12.1、jps](#121jps)
+  - [12.2、jstat](#122jstat)
+  - [12.3、jinfo](#123jinfo)
+  - [12.4、jmap](#124jmap)
   - [12.5、jhat](#125jhat)
   - [12.6、jstack](#126jstack)
   - [12.7、可视化工具](#127%E5%8F%AF%E8%A7%86%E5%8C%96%E5%B7%A5%E5%85%B7)
-  - [12.8、内存分析工具](#128%E5%86%85%E5%AD%98%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7)
+  - [12.8、内存分析工具-MAT](#128%E5%86%85%E5%AD%98%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7-mat)
+  - [12.9、Native Memory Tracking](#129native-memory-tracking)
 - [13、JVM 虚拟机调优](#13jvm-%E8%99%9A%E6%8B%9F%E6%9C%BA%E8%B0%83%E4%BC%98)
 - [14、钩子函数(ShutdownHook)](#14%E9%92%A9%E5%AD%90%E5%87%BD%E6%95%B0shutdownhook)
+  - [1、概述](#1%E6%A6%82%E8%BF%B0)
+  - [2、用途](#2%E7%94%A8%E9%80%94)
+  - [3、示例](#3%E7%A4%BA%E4%BE%8B)
+  - [4、shutdownHook相关源码](#4shutdownhook%E7%9B%B8%E5%85%B3%E6%BA%90%E7%A0%81)
+  - [5、注意事项](#5%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
 - [15、JVM问题排查](#15jvm%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
@@ -184,14 +194,18 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 ![image](image/Java虚拟机内存区域.png)
 
-### 2.2.1、程序计数器：无内存溢出异常（PC 寄存器）
+### 2.2.1、程序计数器
+
+`无内存溢出异常（PC 寄存器）`
 
 - 一块较小的内存空间，它是当前线程所执行的字节码的行号指示器，字节码解释器工作时通过改变该计数器的值来选择下一条需要执行的字节码指令，分支、跳转、循环等基础功能都要依赖它来实现。
 - 每条线程都有一个独立的的程序计数器，各线程间的计数器互不影响，因此该区域是线程私有的;
 - 当线程在执行一个 Java 方法时，该计数器记录的是正在执行的虚拟机字节码指令的地址，当线程在执行的是Native方法（调用本地操作系统方法）时，该计数器的值为空;
 - 该内存区域是唯一一个在 Java 虚拟机规范中没有规定任何 OOM（内存溢出：OutOfMemoryError）情况的区域；
 
-### 2.2.2、Java 虚拟机栈：该区域也是线程私有的，它的生命周期也与线程相同
+### 2.2.2、Java 虚拟机栈
+
+`该区域也是线程私有的，它的生命周期也与线程相同`
 
 **2.2.2.1、虚拟机栈特征：**
 
@@ -253,9 +267,9 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 	- ②、方法退出的过程实际上等同于把当前栈帧出，因此退出时可能执行的操作有：恢复上层方法的局部变量表和操作数栈，如果有返回值，则把它压入调用者栈帧的操作数栈中，调整PC计数器的值以指向方法调用指令后面的一条指令
 
-### 2.2.3、本地方法栈：使用到的本地操作系统(Native)方法服务
+### 2.2.3、本地方法栈
 
-线程私有，与虚拟机栈发挥的作用类似;
+使用到的本地操作系统(Native)方法服务，线程私有，与虚拟机栈发挥的作用类似;
 
 ### 2.2.4、Java 堆
 
@@ -445,7 +459,9 @@ Exception in thread "main" java.lang.OutOfMemoryError
 ```
 由直接内存导致的内存溢出，一个明显的特征是在 Heap Dump 文件中不会看见明显的异常，如果发现OOM后dump文件很小，而程序又间接或直接使用了NIO，可以考虑检查是不是直接内存的问题.
 
-## 3.4、通过参数优化虚拟机内存的参数如下所示
+## 3.4、JVM参数
+
+通过参数优化虚拟机内存的参数如下所示
 
 - Xms：初始Heap大小
 - Xmx：java heap最大值
@@ -475,7 +491,9 @@ Exception in thread "main" java.lang.OutOfMemoryError
 - 尽量做远程方法调用类应用开发时使用瞬间值变量，除非远程调用端需要获取该瞬间值变量的值.
 - 尽量在合适的场景下使用对象池技术以提高系统性能
 
-## 3.6、java.lang.OutOfMemoryError：PermGen Space
+## 3.6、持久代溢出
+
+java.lang.OutOfMemoryError：PermGen Space
 
 由于方法区主要存储类的相关信息.所以对于动态生成类的情况比较容易出现永久代的内存溢出
 
@@ -700,8 +718,9 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 ```
 ## 6.3、ClassLoader 加载类原理
 
-### 6.3.1、类加载器的工作原理基于三个机制：委托、可见性和单一性
+### 6.3.1、类加载器的工作原理
 
+其工作原理是基于三个机制：委托、可见性和单一性
 - 委托机制是指将加载一个类的请求交给父类加载器，如果这个父类加载器不能够找到或者加载这个类，那么再加载它；
 
 - 可见性的原理是子类的加载器可以看见所有的父类加载器加载的类，而父类加载器看不到子类加载器加载的类；当一个类已经被Application类加载器加载过了，然后如果想要使用 Extension 类加载器加载这个类，将会抛出 java.lang.ClassNotFoundException 异常：
@@ -713,8 +732,9 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 
 正确理解类加载器能够帮你解决 NoClassDefFoundError 和 java.lang.ClassNotFoundException
 
-### 6.3.2、ClassLoader 使用的是双亲委托模型来搜索类的
+### 6.3.2、ClassLoader加载机制
 
+使用的是双亲委托模型来搜索类的
 - 双亲委派模型要求除了顶层的启动类加载器（Bootstrap ClassLoader）外，其余的类加载器都应该有自己的父类加载器，这里的类加载器之间的父子关系不是以继承的关系来实现的，而是都使用组合关系来复用父加载器的代码；启动类加载器(Bootstrap ClassLoader)本身没有父类加载器，但可以用作其它 ClassLoader 实例的的父类加载器；
 
 - 当一个 ClassLoader 实例需要加载某个类时，它会试图亲自搜索某个类之前，先把这个任务委托给它的父类加载器；
@@ -735,7 +755,7 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 
 String 来动态替代java核心api中定义的类型，这样会存在非常大的安全隐患；而双亲委托的方式，就可以避免这种情况，因 String已经在启动时就被引导类加载器（Bootstrcp ClassLoader）加载；所以用户自定义的 ClassLoader 永远也无法加载一个自己写的 String，除非你改变JDK中ClassLoader搜索类的默认算法；
 
-### 6.3.4、在JVM搜索类时，判断两个class是否相同
+### 6.3.4、如何判断两个class是否相同
 
 JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相同，而且要判断是否由同一个类加载器实例加载的；只有两者同时满足的情况下，JVM才认为这两个 class是相同的；如果两个类来源于同一个 Class 文件，被同一个虚拟机加载，只要加载它们的类加载器不同，那这两个类必定不相等；这里的"相等"包括代表类的Clas 对象的equals()方法、isAssignaleFrom()方法、isInstance()方法的返回结果，也包括使用 instanceof关键字做对象所属关系判定等情况；
 
@@ -848,7 +868,7 @@ try {
 - 如果以上两个步骤都没有成功的加载到类，那么：c = findClass(name);调用自己的findClass(name)方法来加载类
 - 已经得到了加载之后的类，那么就根据resolve的值决定是否调用resolveClass方法.resolveClass方法的作用是链接指定的类：这个方法给 Classloader用来链接一个类，如果这个类已经被链接过了，那么这个方法只做一个简单的返回.否则，这个类将被按照 Java™ 规范中的 Execution 描述进行链接.
 
-### 6.4.3、描述一下 JVM 加载 .class文件的原理机制
+### 6.4.3、JVM加载class文件的原理
 
 类装载器就是寻找类或接口字节码文件进行解析并构造JVM内部对象表示的组件，在java中类装载器把一个类装入JVM，经过以下步骤：
 
@@ -1086,7 +1106,9 @@ public class NetworkClassLoader extends ClassLoader {
 
 	通过 Java 反射 API 也可能造成类和接口的初始化.需要注意的是，当访问一个 Java 类或接口中的静态域的时候，只有真正声明这个域的类或接口才会被初始化
 
-### 6.9.2、虚拟机规定只有这四种情况才会触发类的初始化，称为对一个类进行主动引用
+### 6.9.2、虚拟机触发类的初始化情况
+
+虚拟机规定只有这四种情况才会触发类的初始化，称为对一个类进行主动引用
 
 除此之外所有引用类的方式都不会触发其初始化，称为被动引用；下面是写被动引用的例子：
 
@@ -1147,7 +1169,7 @@ public class Test{
 
 这是一个对数组引用类型的初初始化，而该数组中的元素仅仅包含一个对Const类的引用，并没有对其进行初始化
 
-### 6.9.3、接口的初始化过程与类初始化过程的不同
+### 6.9.3、接口的初始化过程与类初始化过程
 
 - 接口也有初始化过程，上面的代码中我们都是用静态语句块来输出初始化信息的，而在接口中不能使用“static{}”语句块，但编译器仍然会为接口生成`<clinit>`类构造器，用于初始化接口中定义的成员变量（实际上是 static final 修饰的全局常量）
 
@@ -1477,7 +1499,9 @@ public class FanxingTest{
 
 - 包装类在遇到 == 运算在不遇到运算符的情况下不会自动拆箱，以及他们equals()方法不处理数据转型关系
 
-### 10.3.3、条件编译：根据布尔常量值的真假，编译器将会把分支中不成立的代码块消除掉.
+### 10.3.3、条件编译
+
+根据布尔常量值的真假，编译器将会把分支中不成立的代码块消除掉.
 
 ### 10.3.4、其他语法糖
 
@@ -1834,8 +1858,9 @@ public static void testInline(String[] args){
 
 # 12、虚拟机监控及故障处理
 
-## 12.1、jps：虚拟机进程状况工具（JVM Process Status Tool）
+## 12.1、jps
 
+虚拟机进程状况工具（JVM Process Status Tool）
 - 功能：列出正在运行的虚拟机进程，并显示虚拟机执行主类名称以及这些进程的本地虚拟机唯一ID(LVMID)对于本地虚拟机进程来说，LVMID 与操作系统的进程ID是一致的，使用 windows 任务管理和UNINX的ps命令也可以查询虚拟机进程的 LVMID，如果同时启动了多个虚拟机进程，无法根据进程名称定位时，只能依赖jps命令显示主类的功能才能区分；
 
 - 用法：jps [option] [hostid]，执行样例：<br>
@@ -1857,8 +1882,9 @@ jps 可以通过RMI协议查询开启了RMI服务的远程虚拟机进程状态�
 
 ps -ef | grep tomcat
 
-## 12.2、jstat：虚拟机统计信息监视工具(JVM Statistics Monitoring Tool)：
+## 12.2、jstat
 
+虚拟机统计信息监视工具(JVM Statistics Monitoring Tool)：
 - 功能：用于监视虚拟机各种运行状态信息的命令行工具。它可以显示本地或者远程虚拟机进程中类装载、内存垃圾收集、JIT 编译等运行数据，在没有GUI图形界面，只提供了纯文本控制台环境的服务器上，是运行期定位虚拟机性能问题的首选工具；
 
 - 用法：
@@ -1887,8 +1913,9 @@ ps -ef | grep tomcat
 
 [jstat](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java命令/jstat.md)
 
-## 12.3、jinfo：Java 配置信息工具(Configuration Info for Java)
+## 12.3、jinfo
 
+Java 配置信息工具(Configuration Info for Java)
 - 功能：实时的查看和调整虚拟机各项参数，使用 jps 命令的 -v 参数可以查看虚拟机启动时显式指定的参数列表<br>
 	jinfo [option] pid
 	jinfo -flag pid
@@ -1898,8 +1925,9 @@ ps -ef | grep tomcat
 	- -flags : 不需要args参数，输出所有JVM参数的值
 	- -sysprops : 输出系统属性，等同于System.getProperties()
 
-## 12.4、jmap：Java 内存映像工具(Memory Map for Java)
+## 12.4、jmap
 
+Java 内存映像工具(Memory Map for Java)
 - 功能：用于生成堆转储快照（一般称为 heapdump 或 dump 文件）不使jmap命令也可以暴力获取堆转储快照，如使用 -XX：+HeapDumpOnOutOfMemoryError，可以让虚拟机在 OOM异常后自动生存 dump 文件jmap的作用不仅仅是为了获取 dump 文件，它还可以查询finalize执行队列、Java堆和永久代的详细信息，如空间使用率，当前用的哪种收集器等；
 
 - jmap 命令在 windows平台下是受限的，除了生存dump文件的 -dump 选项和用于查看每个类的实例、空间占用统计的 -histo 选项在所有操作系统都提供之外，其余的选项只能在 Linux/Solaris 下使用：jmap [option] vmid
@@ -1965,11 +1993,14 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 
 [内存管理工具](https://www.zybuluo.com/frank-shaw/note/206287)
 
-### 12.9、Native Memory Tracking
+## 12.9、Native Memory Tracking
+
 JMC和JConsole的内存管理页面，对堆外内存的统计有限，可以使用NMT特性对JVM堆外内存进行分析
+
 - 准备工作
 	- 开启NMT并选择summary模式：```-XX:NativeMemoryTracking=summary```
 	- 为了方便获取和对比NMT输出，选择在应用退出时打印NMT统计信息：```-XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics```
+
 - 分析标准hello World程序：
 	```
 	java -XX:NativeMemoryTracking=summary -XX:+UnlockDiagnosticVMOptions -XX:+PrintNMTStatistics HelloWorld
@@ -2027,6 +2058,19 @@ JMC和JConsole的内存管理页面，对堆外内存的统计有限，可以使
 	- GC部分；
 	- Compiler部分：就是JIT的开销
 	- Internal部分，其统计Direct buffer的直接内存，这其实是堆外内存OOM常发生的地方；如果怀疑直接内存区域有问题，可以通过类似instrument构造函数等手段，排查可能问题
+
+## 12.10、其他工具
+
+### 12.10.1、arthas
+
+### 12.10.2、pmap
+
+### 12.10.3、gperftools
+
+### 12.10.4、strace
+
+### 12.10.5、gdb
+
 
 # 13、JVM 虚拟机调优
 
