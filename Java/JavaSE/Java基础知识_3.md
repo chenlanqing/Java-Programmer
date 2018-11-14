@@ -15,7 +15,9 @@ JDK1.5之后引进的，也可以叫做Java代理，JavaAgent 是运行在 main�
 Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同，Java agent并不能单独启动，必须依附在一个应用程序中运行；
 
 ## 2、手动编写java agent
+
 - 在META-INF目录下创建MANIFEST文件
+- 并在MANIFEST文件中指定Agent的启动类
 
 
 

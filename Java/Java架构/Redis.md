@@ -890,7 +890,49 @@ slaveof no one
 
 # 六、Redis内存模型
 
+## 1、Redis内存统计
 
+在redis-cli客户端中通过命令`info memory`可以查看内存使用情况
+```
+127.0.0.1:6379> info memory
+# Memory
+used_memory:902686
+used_memory_human:881.53K
+used_memory_rss:2437120
+used_memory_rss_human:2.32M
+used_memory_peak:902686
+used_memory_peak_human:881.53K
+used_memory_peak_perc:100.01%
+used_memory_overhead:902148
+used_memory_startup:852518
+used_memory_dataset:538
+used_memory_dataset_perc:1.07%
+total_system_memory:1027514368
+total_system_memory_human:979.91M
+used_memory_lua:37888
+used_memory_lua_human:37.00K
+maxmemory:0
+maxmemory_human:0B
+maxmemory_policy:noeviction
+mem_fragmentation_ratio:2.70
+mem_allocator:libc
+active_defrag_running:0
+lazyfree_pending_objects:0
+```
+- `used_memory`：Redis分配器分配的内存总量（单位是字节），包括使用的虚拟内存（即swap）；used_memory_human只是显示更友好；
+- `used_memory_rss`：Redis进程占据操作系统的内存（单位是字节），与top及ps命令看到的值是一致的；除了分配器分配的内存之外，`used_memory_rss`还包括进程运行本身需要的内存、内存碎片等，但是不包括虚拟内存；
+
+	`used_memory`和`used_memory_rss`，前者是从Redis角度得到的量，后者是从操作系统角度得到的量。二者之所以有所不同，一方面是因为内存碎片和Redis进程运行需要占用内存，使得前者可能比后者小，另一方面虚拟内存的存在，使得前者可能比后者大；
+
+	由于在实际应用中，Redis的数据量会比较大，此时进程运行占用的内存与Redis数据量和内存碎片相比，都会小得多；因此`used_memory_rss`和`used_memory`的比例，便成了衡量Redis内存碎片率的参数；这个参数就是`mem_fragmentation_ratio`；
+
+- `mem_fragmentation_ratio`：内存碎片比率，该值是`used_memory_rss` / `used_memory`的比值；
+
+	`mem_fragmentation_ratio`一般大于1，且该值越大，内存碎片比例越大。`mem_fragmentation_ratio`<1，说明Redis使用了虚拟内存，由于虚拟内存的媒介是磁盘，比内存速度要慢很多，当这种情况出现时，应该及时排查，如果内存不足应该及时处理，如增加Redis节点、增加Redis服务器的内存、优化应用等。
+
+	一般来说，`mem_fragmentation_ratio`在1.03左右是比较健康的状态（对于jemalloc来说）；上面截图中的`mem_fragmentation_ratio`值很大，是因为还没有向Redis中存入数据，Redis进程本身运行的内存使得`used_memory_rss` 比`used_memory`大得多
+
+- `mem_allocator：Redis`使用的内存分配器，在编译时指定；可以是 `libc 、jemalloc或者tcmalloc`，默认是`jemalloc`；
 
 
 # 七、Redis应用
@@ -919,14 +961,25 @@ slaveof no one
 # 八、Redis安全
 
 
-# 九、Redis面试题
+# 九、Redis与Java
+
+## 1、Jedis
+
+Redis的Java实现的客户端，其API提供了比较全面的Redis命令的支持，Jedis简单使用阻塞的I/O和redis交互
+
+## 2、Redission
+
+Redission通过Netty支持非阻塞I/O
+
+# 十、Redis面试题
 
 [Redis常见面试题](https://mp.weixin.qq.com/s/ZeTgsYUtdmKQxSrZXuIt_A)
 
 ## 1、redis如何用作缓存？ 如何确保不脏数据
 
 ## 2、Redis 和 Memcache区别
-两者都是非关系型数据库.主要区别如下
+
+两者都是非关系型数据库，主要区别如下
 
 - 数据类型：
 	* Memcached 仅支持字符串类型；

@@ -194,11 +194,13 @@ SpringMVC提供了以下几种输出模型数据
 - @SessionAttributes： 将模型中的某个属性暂存到 HttpSession 中，以便多个请求之间可以共享这个属性
 - @ModelAttribute： 方法入参标注该注解后， 入参的对象就会放到数据模型中
 
-## 4.1、ModelAndView：new ModelAndView(viewName);
+## 4.1、ModelAndView：new ModelAndView(viewName)
+
 - 控制器处理方法的返回值如果为ModelAndView，则其既包含视图信息也包含模型数据信息
 - MoelAndView addObject(String attributeName， Object attributeValue)、ModelAndView addAllObject(Map<String， ?> modelMap)
 - void setView(View view)、void setViewName(String viewName)
 - SpringMVC 会把 ModelAndView 的 model 中数据放入到 request 域对象中. 
+
 ```java
 @RequestMapping("/testModelAndView")
 public ModelAndView testModelAndView(){
@@ -213,6 +215,7 @@ public ModelAndView testModelAndView(){
 ```
 
 ## 4.2、Model、ModelMap、Map
+
 目标方法添加上述类型参数，实际上是：ExtendedModelMap，可以像其中添加返回到前台的数据，其实际上还是存入ModelAndView中的
 ```java
 @RequestMapping("/testMap")
@@ -224,6 +227,7 @@ public String testMap(Map<String， Object> map){
 ```
 
 ## 4.3、@SessionAttributes
+
 多个请求之间共用某个模型属性数据，该注解只能使用在类上；在控制器类上标准该注解，SpringMVC将在模型中对应的数据暂存到HttpSession中
 
 除了可以通过属性名指定需要放到会话中的属性外(实际上使用的是 value 属性值)，还可以通过模型属性的对象类型指定哪些模型属性需要放到会话中(实际上使用的是 types 属性值)
@@ -249,24 +253,28 @@ public String testSessionAttributes(Map<String， Object> map){
 有 @ModelAttribute 标记的方法， 会在每个目标方法执行之前被 SpringMVC 调用
 
 ### 4.4.1、使用场景
+
 当修改的数据前台表单传入时，而不需要修改的数据需要从数据库重新获取时可以使用该注解
+
 ```java
-@ModelAttribute
-public void getUser(@RequestParam(value="id"， required=false) Integer id，
-		Map<String， Object> map){
-	if(id != null){
-		User user = new User(1， "Coco"， "123456"， 13， "coco@163.com");
-		map.put("user"， user);
-		System.out.println("从数据库获取的数据：" + user);
+	@ModelAttribute
+	public void getUser(@RequestParam(value="id", required=false) Integer id,
+			Map<String, Object> map){
+		if(id != null){
+			User user = new User(1, "Coco", "123456", 13, "coco@163.com");
+			map.put("user", user);
+			System.out.println("从数据库获取的数据：" + user);
+		}
 	}
-}
-@RequestMapping("modelattributes")
-public String testModelAttribute(User user){
-	System.out.println("修改User：" + user);
-	return SUCCESS;
-}
-```		
+	@RequestMapping("modelattributes")
+	public String testModelAttribute(User user){
+		System.out.println("修改User：" + user);
+		return SUCCESS;
+	}
+```
+
 ### 4.4.2、执行流程
+
 - 执行 @ModelAttribute 修饰的方法：从数据库取出对象，把对象存入Map中，键值为：user；
 - SpringMVC 从Map中取出 User对象，并把表单的请求参数赋值给 User对象对应的属性；
 - SpringMVC 把上述对象传入目标方法的参数；
@@ -308,6 +316,7 @@ public String testModelAttribute(User user){
 - SpringMVC 会一 value 为 key， POJO 类型的对象为 value， 存入到 request 中. 
 	
 ### 4.4.6、处理 @SessionAttributes 注解引起的异常
+
 如果在处理类定义处标注了@SessionAttributes(“xxx”)，则尝试从会话中获取该属性，并将其赋给该入参，然后再用请求消息填充该入参对象。如果在会话中找不到对应的属性，则抛出 HttpSessionRequiredException 异常;
 
 解决方法：
@@ -574,7 +583,8 @@ java.util.UUID -> java.lang.String ： ObjectToStringConverter@112b07f ……
 	</bean>
 	```
 # 10、关于配置
- ```<mvc：annotation-driven />```
+
+ `<mvc：annotation-driven />`
 
 - 如果加入该配置，Spring 会自动注册 RequestMappingHandlerMapping、RequestMappingHandlerAdapter 与 ExceptionHandlerExceptionResolver 三个bean;
 - 该配置还提供以下支持：
@@ -583,9 +593,10 @@ java.util.UUID -> java.lang.String ： ObjectToStringConverter@112b07f ……
 	- 支持使用 @Valid 注解对 JavaBean 实例进行 JSR 303 验证;
 	- 支持使用 @RequestBody 和 @ResponseBody 注解;
 - 源代码分析：
-	- 在既没有配置```<mvc：default-servlet-handler/>```也没有配置 ```<mvc：annotation-driven/>```DispatcherServlet 中 handlerAdapters中存在 AnnotationMethodHandlerAdapter
-	- 配置了```<mvc：default-servlet-handler/>```但没有配置```<mvc：annotation-driven/>```DispatcherServlet 中 handlerAdapters中不存在 AnnotationMethodHandlerAdapter所以对应的映射无法访问；
-	- 既配置了```<mvc：default-servlet-handler/>```又配置```<mvc：annotation-driven/>```DispatcherServlet 中 handlerAdapters中存在 RequestMappingHandlerAdapterRequestMappingHandlerAdapter 替换 AnnotationMethodHandlerAdapter 了，因为后者在 Spring3.2之后过时了
+	- 在既没有配置`<mvc：default-servlet-handler/>`也没有配置 `<mvc：annotation-driven/>`DispatcherServlet 中 handlerAdapters中存在 AnnotationMethodHandlerAdapter
+	- 配置了`<mvc：default-servlet-handler/>`但没有配置`<mvc：annotation-driven/>`DispatcherServlet 中 handlerAdapters中不存在 AnnotationMethodHandlerAdapter所以对应的映射无法访问；
+	- 既配置了`<mvc：default-servlet-handler/>`又配置`<mvc：annotation-driven/>`DispatcherServlet 中 handlerAdapters中存在 RequestMappingHandlerAdapterRequestMappingHandlerAdapter 替换 AnnotationMethodHandlerAdapter 了，因为后者在 Spring3.2之后过时了；
+
 
 # 11、@InitBinder
 
@@ -594,6 +605,7 @@ java.util.UUID -> java.lang.String ： ObjectToStringConverter@112b07f ……
 - @InitBinder 方法不能有返回值，它必须声明为void，
 - @InitBinder 方法的参数通常是是 WebDataBinder
 - 如果需要不绑定相关数据，可以设置dataBinder.setDisallowedFields("");
+
 
 # 12、数据格式化
 
@@ -877,33 +889,36 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 
 - Spring MVC 通过 HandlerExceptionResolver 处理程序的异常，包括 Handler 映射、数据绑定以及目标方法执行时发生的异常
 - SpringMVC 提供的 HandlerExceptionResolver 的实现类 DispatcherServlet 默认装配的 HandlerExceptionResolver：
-	- 没有使用 ```<mvc：annotation-driven/> ```配置：
+
+	- 没有使用`<mvc：annotation-driven/>`配置：
 		```
 		AnnotationMethodHandlerExceptionResolver
 		ResponseStatusExceptionResolver
 		DefaultHandlerExceptionResolver
 		```
-	- 使用了``` <mvc：annotation-driven/> ```配置：
+	- 使用了`<mvc：annotation-driven/>`配置：
 		```
 		ExceptionHandlerExceptionResolver
 		ResponseStatusExceptionResolver
 		DefaultHandlerExceptionResolver
 		```
+
 ## 18.1、ExceptionHandlerExceptionResolver
 
 - 主要处理 Handler 中用 @ExceptionHandler 注解定义的方法
 - @ExceptionHandler 注解定义的方法优先级问题：例如发生的是NullPointerException，但是声明的异常有 RuntimeException 和 Exception，此候会根据异常的最近继承关系找到继承深度最浅的那个 @ExceptionHandler注解方法，即标记了 RuntimeException 的方法
 - ExceptionHandlerMethodResolver 内部若找不到@ExceptionHandler 注解的话，会找@ControllerAdvice 中的@ExceptionHandler 注解方法
+
 	```java
 	@ControllerAdvice
 	public class HandlerEcetpion{
 		/**
-			* 1. 在 @ExceptionHandler 方法的入参中可以加入 Exception 类型的参数， 该参数即对应发生的异常对象
-			* 2. @ExceptionHandler 方法的入参中不能传入 Map. 若希望把异常信息传导页面上， 需要使用 ModelAndView 作为返回值
-			* 3. @ExceptionHandler 方法标记的异常有优先级的问题. 
-			* 4. @ControllerAdvice： 如果在当前 Handler 中找不到 @ExceptionHandler 方法来出来当前方法出现的异常， 
-			* 则将去 @ControllerAdvice 标记的类中查找 @ExceptionHandler 标记的方法来处理异常. 
-			*/
+		* 1. 在 @ExceptionHandler 方法的入参中可以加入 Exception 类型的参数， 该参数即对应发生的异常对象
+		* 2. @ExceptionHandler 方法的入参中不能传入 Map. 若希望把异常信息传导页面上， 需要使用 ModelAndView 作为返回值
+		* 3. @ExceptionHandler 方法标记的异常有优先级的问题. 
+		* 4. @ControllerAdvice： 如果在当前 Handler 中找不到 @ExceptionHandler 方法来出来当前方法出现的异常， 
+		* 则将去 @ControllerAdvice 标记的类中查找 @ExceptionHandler 标记的方法来处理异常. 
+		*/
 		@ExceptionHandler({RuntimeException.class})
 		public ModelAndView handlerException(Exception ex){ // 处理异常的方法可以放入 Exception类型的参数
 			ModelAndView view = new ModelAndView("error");// 如果需要将异常传入到前台，可以设置返回值为 ModelAndView
@@ -948,9 +963,15 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 # 19、SpringMVC 运行流程
 
 ## 19.1、流程图
+
 ![](image/Spring请求流程.png)
 
+详细
+
+![](image/SpringMVC-source.png)
+
 ## 19.2、时序图
+
 ![](image/SpringMVC请求时序图.png)
 
 ## 19.3、详细描述
