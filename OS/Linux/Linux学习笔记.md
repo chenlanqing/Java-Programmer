@@ -45,6 +45,15 @@
   - [4、环境变量配置文件](#4%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
     - [4.1、source命令](#41source%E5%91%BD%E4%BB%A4)
     - [4.2、环境配置文件](#42%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
+  - [5、正则表达式](#5%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+    - [5.1、正则表达式与通配符](#51%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E4%B8%8E%E9%80%9A%E9%85%8D%E7%AC%A6)
+    - [5.2、基础正则表达式](#52%E5%9F%BA%E7%A1%80%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
+  - [6、字符截取命令](#6%E5%AD%97%E7%AC%A6%E6%88%AA%E5%8F%96%E5%91%BD%E4%BB%A4)
+    - [6.1、cut命令](#61cut%E5%91%BD%E4%BB%A4)
+    - [6.2、 printf命令](#62-printf%E5%91%BD%E4%BB%A4)
+    - [6.3、awk命令](#63awk%E5%91%BD%E4%BB%A4)
+    - [6.4、sed命令](#64sed%E5%91%BD%E4%BB%A4)
+    - [6.5、sort命令](#65sort%E5%91%BD%E4%BB%A4)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -879,5 +888,207 @@ new
 #### 4.2.5、上述配置文件的执行顺序
 
 ![](image/环境变量配置文件关系.png)
+
+## 5、正则表达式
+
+### 5.1、正则表达式与通配符
+
+- 正则表达式用来在文件中匹配符合条件的字符串，正则是包含匹配。grep、awk、sed等命令可以支持正则表达式；
+- 通配符用来匹配符合条件的文件名，通配符是完全匹配。ls、find、cp这些命令不支持正则表达式，所以只能使用shell自己的通配符来进行匹配了；
+
+### 5.2、基础正则表达式
+
+元字符 | 作用
+------| ------
+`*`	| 前一个字符匹配0次或任意多次
+`.`	|匹配除了换行符外任意一个字符
+`^` | 匹配行首。例如:^hello会匹配以hello开头的行
+`$`	|匹配行尾。例如:hello&会匹配以hello结尾的行
+`[]`|匹配中括号中指定的任意一个字符，只匹配一个字符。 例如:[aoeiu] 匹配任意一个元音字母，[0-9] 匹配任意一位 数字， [a-z][0-9]匹配小写字和一位数字构成的两位字符
+`[^]`|匹配除中括号的字符以外的任意一个字符。例如:[^0-9] 匹配 任意一位非数字字符，[^a-z] 表示任意一位非小写字母
+`\` |转义符。用于取消讲特殊符号的含义取消
+`\{n\}`|表示其前面的字符恰好出现n次。例如:[0-9]\{4\} 匹配4位数 字，[1][3-8][0-9]\{9\} 匹配手机号码
+`\{n,\}`|表示其前面的字符出现不小于n次。例如: [0-9]\{2,\} 表示两 位及以上的数字
+`\{n,m\}`|表示其前面的字符至少出现n次，最多出现m次。例如: [a- z]\{6,8\} 匹配6到8位的小写字母
+
+## 6、字符截取命令
+
+操作文件：student.txt
+```
+ID      Name    PHP     Linux   MySQL   Avg
+1       Coco    80      78      88      88
+2       Holiday 90      96      93      93
+3       Jayden  95      95      100     97.5
+```
+
+### 6.1、cut命令
+
+格式：`cut [选项] 文件名`，选项：
+- `-f` 列号：提取第几列
+- `-d` 分隔符：按照指定分隔符分割列
+
+```bash
+[root@bluefish shell]# cut -f 2 student.txt 
+# 提取文件student.txt第2列
+[root@bluefish shell]# cut -f 2,3 student.txt 
+# 提取文件student.txt第2，3列
+[root@bluefish shell]# cut -d ":" -f 1,3 /etc/passwd
+# passwd文件按“:” 分割，提取第1，3列
+```
+
+cut命令的局限：只能按照制表位或者其他分割符处理，无法按照空格进行分割，如：
+```bash
+[root@localhost ~]# df -h | cut -d " " -f 1,3
+# 无法对df的结果进行分割处理
+```
+
+### 6.2、 printf命令
+
+printf '输出类型输出格式' 输出内容；
+
+- （1）输出类型：
+	- `%ns`：输出字符串。n是数字指代输出几个字符；
+	- `%ni`：输出整数。n是数字指代输出几个数字；
+	- `%m.nf`：输出浮点数。m和n是数字，指代输出的整数 位数和小数位数。如%8.2f代表共输出8位数，其中2位是小数，6位是整数；
+
+- （2）输出格式：
+	- `\a`：输出警告声音
+	- `\b`：输出退格键，也就是Backspace键
+	- `\f`：清除屏幕
+	- `\n`：换行
+	- `\r`：回车，也就是Enter键
+	- `\t`：水平输出退格键，也就是Tab键 \v: 垂直输出退格键，也就是Tab键
+
+	```bash
+	[root@localhost ~]# printf %s 1 2 3 4 5 6 
+	[root@localhost ~]# printf %s %s %s 1 2 3 4 5 6
+	[root@localhost ~]# printf '%s %s %s' 1 2 3 4 5 6 
+	[root@localhost ~]# printf '%s %s %s\n' 1 2 3 4 5 6
+	```
+
+	```bash
+	[root@bluefish shell]# printf '%s' $(cat student.txt)
+	IDNamePHPLinuxMySQLAvg1Coco807888882Holiday909693933Jayden959510097.5
+
+	[root@bluefish shell]# printf '%s\t %s\t %s\t %s\t %s\t %s\t \n' $(cat student.txt)
+	ID       Name    PHP     Linux   MySQL   Avg     
+	1        Coco    80      78      88      88      
+	2        Hol     90      96      93      93      
+	3        Jayden  95      95      100     97.5 
+	```
+ 
+ 在`awk`命令的输出中支持`print`和`printf`命令：
+ - `print`：print会在每个输出之后自动加入一换行符（Linux默认没有print命令）；
+ - `printf`：printf是标准格式输出命令，并不会自动加入换行符，如果需要换行，需要手工加入换行符
+
+### 6.3、awk命令
+
+`awk ‘条件1{动作1} 条件2{动作2}...’ 文件名`
+
+- 条件：一般使用关系表达式作为条件
+- 动作：格式化输出，流程控制语句
+
+	```bash
+	[root@bluefish shell]# awk '{printf $2 "\t" $6 "\n"}' student.txt
+	Name    Avg
+	Coco    88
+	Hol     93
+	Jayden  97.5
+	[root@bluefish shell]# df -h | awk '{print $1 "\t" $3}'
+	Filesystem      Used
+	/dev/mapper/VolGroup00-LogVol00 2.9G
+	devtmpfs        0
+	tmpfs   0
+	tmpfs   17M
+	tmpfs   0
+	/dev/sda2       89M
+	tmpfs   0
+	```
+
+- BEGIN：在输出结果一行输出数据，BEGIN后面的动作只执行一次，必须大写；相应的有END，在输出结果最后输出END后跟的动作
+
+	```bash
+	[root@bluefish shell]# awk 'BEGIN{printf "This is a transcript \n" } {printf $2 "\t" $6 "\n"}' student.txt
+	This is a transcript 
+	Name    Avg
+	Coco    88
+	Hol     93
+	Jayden  97.5
+	```
+
+- FS内置变量
+
+	```bash
+	[root@bluefish shell]# cat /etc/passwd | grep "/bin/bash" | \
+	> awk 'BEGIN {FS=":"} {printf $1 "\t" $3 "\n"}'
+	root    0
+	vagrant 1000
+	tomcat  1001
+	rabbitmq        996
+	```
+
+- 关系运算符
+
+	```bash
+	[root@bluefish shell]# cat student.txt | grep -v Name | awk '$6 >= 93 {printf $2 "\n" }'
+	Hol
+	Jayden
+	```
+
+### 6.4、sed命令
+
+sed 是一种几乎包括在所有 UNIX 平台（包括 Linux的轻量级流编辑器。sed主要是用来将数据进行选取、替换、删除、新增的命令
+
+`sed [选项] ‘[动作]’ 文件名`
+
+- 选项：
+	- `-n`：一般sed命令会把所有数据都输出到屏幕，如果加入此选择，则只会把经过sed命令处理的行输出到屏幕。
+	- `-e`：允许对输入数据应用多条sed命令编辑
+	- `-i`：用sed的修改结果直接修改读取数据的文件， 而不是由屏幕输出
+
+- 动作：
+	- `a \`：追加，在当前行后添加一行或多行。添加多行时，除最后一行外，每行末尾需要用“\”代表数据未完结。
+	- `c \`：行替换，用c后面的字符串替换原数据行，替换多行时，除最后一行外，每行末尾需用“\”代表数据未完结。
+	- `i \`：插入，在当期行前插入一行或多行。插入多行时，除最后一行外，每行末尾需要用“\”代表数据未完结。
+	- `d`：删除，删除指定的行
+	- `p`：打印，输出指定的行
+	- `s`：字串替换，用一个字符串替换另外一个字符串。格式为“行范围s/旧字串/新字串/g”(和vim中的替换格式类似)
+
+**行数据操作**
+
+- `sed '2p' student.txt`： 查看文件的第二行
+- `sed -n '2p' student.txt`
+- `sed '2,4d' student.txt`：删除第二行到第四行的数据，但不修改文 件本身
+- `sed '2a hello' student.txt`：在第二行后追加hello
+- `sed '2i hello \ world' student.txt`：在第二行前插入两行数据
+- `sed '2c No such person‘ student.txt`：数据替换
+
+**字符串替换：`sed ‘s/旧字串/新字串/g’ 文件名`**
+
+- `sed '3s/74/99/g' student.txt`：在第三行中，把74换成99
+- `sed -i '3s/74/99/g' student.txt`：sed操作的数据直接写入文件
+- `sed -e 's/Coco//g ; s/Jayden//g' student.txt`：同时把“Coco”和“Jayden”替换为空
+
+### 6.5、sort命令
+
+排序命令，`sort [选项] 文件名`，选项如下：
+- -f：忽略大小写
+- -n：以数值型进行排序，默认使用字符串型排序
+- -r：反向排序
+- -t：指定分隔符，默认是分隔符是制表符
+- -k n[,m]：按照指定的字段范围排序。从第n字段开始， m字段结束（默认到行尾）
+
+	```bash
+	[root@localhost ~]# sort /etc/passwd
+	#排序用户信息文件
+	[root@localhost ~]# sort -r /etc/passwd
+	#反向排序
+	[root@localhost ~]# sort -t ":" -k 3,3 /etc/passwd
+	#指定分隔符是“:”，用第三字段开头，第三字段结尾排序，就是只用第三字段排序，这里是按照字符顺序排序的
+	[root@localhost ~]# sort -n -t ":" -k 3,3 /etc/passwd
+	# 以数字进行排序
+	```
+
+
 
 
