@@ -2,17 +2,17 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [十一、Java 中 length 和 length() 的区别：](#%E5%8D%81%E4%B8%80java-%E4%B8%AD-length-%E5%92%8C-length-%E7%9A%84%E5%8C%BA%E5%88%AB)
+- [十一、Java中length和length()的区别](#%E5%8D%81%E4%B8%80java%E4%B8%ADlength%E5%92%8Clength%E7%9A%84%E5%8C%BA%E5%88%AB)
 - [十二、数组](#%E5%8D%81%E4%BA%8C%E6%95%B0%E7%BB%84)
   - [1、Java 中数组是对象吗](#1java-%E4%B8%AD%E6%95%B0%E7%BB%84%E6%98%AF%E5%AF%B9%E8%B1%A1%E5%90%97)
   - [2、Java中数组的类型](#2java%E4%B8%AD%E6%95%B0%E7%BB%84%E7%9A%84%E7%B1%BB%E5%9E%8B)
   - [3、Java中数组的继承关系](#3java%E4%B8%AD%E6%95%B0%E7%BB%84%E7%9A%84%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB)
-  - [4、Java 数组初始化：](#4java-%E6%95%B0%E7%BB%84%E5%88%9D%E5%A7%8B%E5%8C%96)
+  - [4、Java 数组初始化](#4java-%E6%95%B0%E7%BB%84%E5%88%9D%E5%A7%8B%E5%8C%96)
   - [5、数组扩容](#5%E6%95%B0%E7%BB%84%E6%89%A9%E5%AE%B9)
   - [6、数组复制问题](#6%E6%95%B0%E7%BB%84%E5%A4%8D%E5%88%B6%E9%97%AE%E9%A2%98)
   - [7、数组转换为 List](#7%E6%95%B0%E7%BB%84%E8%BD%AC%E6%8D%A2%E4%B8%BA-list)
 - [十三、switch](#%E5%8D%81%E4%B8%89switch)
-  - [1.支持类型](#1%E6%94%AF%E6%8C%81%E7%B1%BB%E5%9E%8B)
+  - [1、支持类型](#1%E6%94%AF%E6%8C%81%E7%B1%BB%E5%9E%8B)
   - [2、switch 对整型的支持](#2switch-%E5%AF%B9%E6%95%B4%E5%9E%8B%E7%9A%84%E6%94%AF%E6%8C%81)
   - [3、switch 对字符型支持的实现](#3switch-%E5%AF%B9%E5%AD%97%E7%AC%A6%E5%9E%8B%E6%94%AF%E6%8C%81%E7%9A%84%E5%AE%9E%E7%8E%B0)
   - [4、switch 对字符串支持的实现](#4switch-%E5%AF%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%94%AF%E6%8C%81%E7%9A%84%E5%AE%9E%E7%8E%B0)
@@ -21,16 +21,16 @@
   - [1、抽象类](#1%E6%8A%BD%E8%B1%A1%E7%B1%BB)
   - [2、接口](#2%E6%8E%A5%E5%8F%A3)
   - [3、接口与抽象类的区别](#3%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%8A%BD%E8%B1%A1%E7%B1%BB%E7%9A%84%E5%8C%BA%E5%88%AB)
-  - [4、Java8 下接口的不同之处(上述是针对 JDK7 之前的)](#4java8-%E4%B8%8B%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E5%A4%84%E4%B8%8A%E8%BF%B0%E6%98%AF%E9%92%88%E5%AF%B9-jdk7-%E4%B9%8B%E5%89%8D%E7%9A%84)
-- [十五、类型、类初始化、二进制等](#%E5%8D%81%E4%BA%94%E7%B1%BB%E5%9E%8B%E7%B1%BB%E5%88%9D%E5%A7%8B%E5%8C%96%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%AD%89)
+  - [4、Java8下接口的不同之处](#4java8%E4%B8%8B%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E5%A4%84)
+- [十五、类型、类初始化、二进制](#%E5%8D%81%E4%BA%94%E7%B1%BB%E5%9E%8B%E7%B1%BB%E5%88%9D%E5%A7%8B%E5%8C%96%E4%BA%8C%E8%BF%9B%E5%88%B6)
   - [1、基本类型与引用类型的比较](#1%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83)
-  - [2、关于 String + 和 StringBuffer 的比较](#2%E5%85%B3%E4%BA%8E-string--%E5%92%8C-stringbuffer-%E7%9A%84%E6%AF%94%E8%BE%83)
+  - [2、关于String +和StringBuffer的比较](#2%E5%85%B3%E4%BA%8Estring-%E5%92%8Cstringbuffer%E7%9A%84%E6%AF%94%E8%BE%83)
   - [3、静态代码块、静态变量](#3%E9%9D%99%E6%80%81%E4%BB%A3%E7%A0%81%E5%9D%97%E9%9D%99%E6%80%81%E5%8F%98%E9%87%8F)
   - [4、给出一个表达式计算其可以按多少进制计算](#4%E7%BB%99%E5%87%BA%E4%B8%80%E4%B8%AA%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%AE%A1%E7%AE%97%E5%85%B6%E5%8F%AF%E4%BB%A5%E6%8C%89%E5%A4%9A%E5%B0%91%E8%BF%9B%E5%88%B6%E8%AE%A1%E7%AE%97)
   - [5、表达式的数据类型](#5%E8%A1%A8%E8%BE%BE%E5%BC%8F%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
   - [6、多态问题](#6%E5%A4%9A%E6%80%81%E9%97%AE%E9%A2%98)
 - [十六、反射与注解](#%E5%8D%81%E5%85%AD%E5%8F%8D%E5%B0%84%E4%B8%8E%E6%B3%A8%E8%A7%A3)
-  - [1、Java 注解：Annotation(JDK5.0+)](#1java-%E6%B3%A8%E8%A7%A3annotationjdk50)
+  - [1、Java注解：Annotation](#1java%E6%B3%A8%E8%A7%A3annotation)
   - [2、Java 动态加载与静态加载](#2java-%E5%8A%A8%E6%80%81%E5%8A%A0%E8%BD%BD%E4%B8%8E%E9%9D%99%E6%80%81%E5%8A%A0%E8%BD%BD)
   - [3、反射机制：(Reflection)](#3%E5%8F%8D%E5%B0%84%E6%9C%BA%E5%88%B6reflection)
   - [4、动态编译：Java6.0引入动态编译](#4%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91java60%E5%BC%95%E5%85%A5%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91)
@@ -60,17 +60,17 @@
   - [2、Jar包下META-INF作用](#2jar%E5%8C%85%E4%B8%8Bmeta-inf%E4%BD%9C%E7%94%A8)
   - [3、MANIFEST.MF 文件解析](#3manifestmf-%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90)
   - [4、Jar 包签名](#4jar-%E5%8C%85%E7%AD%BE%E5%90%8D)
+  - [5、IDEA打jar包](#5idea%E6%89%93jar%E5%8C%85)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# 十一、Java 中 length 和 length() 的区别：
+# 十一、Java中length和length()的区别
 
 - 1、获取数组的长度是使用属性 length，获取字符串长度是使用方法 length()
 - 2、为什么数组有length属性?
 	- 数组是一个容器对象，其中包含固定数量的同一类型的值.一旦数组被创建，那么数组的长度就是固定的了。数组的长度可以作为final实例变量的长度。因此，长度可以被视为一个数组的属性
  	- 有两种创建数组的方法：1、通过数组表达式创建数组。2、通过初始化值创建数组。无论使用哪种方式，一旦数组被创建，其大小就固定了
-- 3、Java 中为什么没有定义一个类似 String 一样 Array 类：<br>
-	数组包含所有从 Object 继承下来方法，为什么没有一个array类呢?一个简单的解释是它被隐藏起来了
+- 3、Java 中为什么没有定义一个类似 String 一样 Array 类：数组包含所有从 Object 继承下来方法，为什么没有一个array类呢?一个简单的解释是它被隐藏起来了
 - 4、为什么 String 有length()方法？
 	背后的数据结构是一个 char 数组，所以没有必要来定义一个不必要的属性(因为该属性在 char 数值中已经提供了)
 
@@ -78,26 +78,27 @@
 
 ## 1、Java 中数组是对象吗
 
-- 什么是对象：<br>
+- 什么是对象：
 
-语言层面：对象是根据某个类创建出来的一个实例，表示某类事物中一个具体的个体.对象具有各种属性，并且具有一些特定的行为计算机层面：对象就是内存中的一个内存块，在这个内存块封装了一些数据，也就是类中定义的各个属性
+	语言层面：对象是根据某个类创建出来的一个实例，表示某类事物中一个具体的个体.对象具有各种属性，并且具有一些特定的行为计算机层面：对象就是内存中的一个内存块，在这个内存块封装了一些数据，也就是类中定义的各个属性
 
 - 数组：
 
-语言层面上，数组不是某类事物中的一个具体的个体，而是多个个体的集合，那么数组应该不是对象而在计算机的角度，数组也是一个内存块，也封装了一些数据，这样的话也可以称之为对象
+	语言层面上，数组不是某类事物中的一个具体的个体，而是多个个体的集合，那么数组应该不是对象而在计算机的角度，数组也是一个内存块，也封装了一些数据，这样的话也可以称之为对象
 
-```java
-int[] a = new int[4];
-//a.length;  //对属性的引用不能当成语句
-int len = a.length;  //数组中保存一个字段， 表示数组的长度		
-//以下方法说明数组可以调用方法，java中的数组是对象.
-//这些方法是Object中的方法，所以可以肯定，数组的最顶层父类也是Object
-a.clone();
-a.toString();
-```
+	```java
+	int[] a = new int[4];
+	//a.length;  //对属性的引用不能当成语句
+	int len = a.length;  //数组中保存一个字段， 表示数组的长度		
+	//以下方法说明数组可以调用方法，java中的数组是对象.
+	//这些方法是Object中的方法，所以可以肯定，数组的最顶层父类也是Object
+	a.clone();
+	a.toString();
+	```
+
 这基本上可以认定，java中的数组也是对象，它具有java中其他对象的一些基本特点：封装了一些数据，可以访问属性，也可以调用方法.所以：Java数组是对象
 
-而在 C++中，数组虽然封装了数据，但数组名只是一个指针，指向数组中的首个元素，既没有属性，也没有方法可以调用；所以 C++中的数组不是对象，只是一个数据的集合，而不能当做对象来使用
+而在C++中，数组虽然封装了数据，但数组名只是一个指针，指向数组中的首个元素，既没有属性，也没有方法可以调用；所以 C++中的数组不是对象，只是一个数据的集合，而不能当做对象来使用
 
 ## 2、Java中数组的类型
 
@@ -254,8 +255,6 @@ public class ArrayTest {
 		//以下方法说明数组可以调用方法，java中的数组是对象.这些方法是Object中的方法，所以可以肯定，数组的最顶层父类也是Object
 		a.clone();
 		a.toString();
-
-
 		/**
 			* java是强类型的语言，一个对象总会有一个特定的类型，例如 Person p = new Person();
 			* 对象p(确切的说是引用)的类型是Person类， 这个Person类是我们自己编写的
@@ -292,7 +291,8 @@ public class ArrayTest {
 	}
 }
 ```
-## 4、Java 数组初始化：
+
+## 4、Java 数组初始化
 
 Java 数组是静态的，即当数组被初始化之后，该数组的长度是不可变的;
 
@@ -337,7 +337,7 @@ public static void main(String[] args) {
 }
 ```
 
-*为什么上述结果输出为 1？*
+***为什么上述结果输出为 1？***
 
 首先看 asList的源码：
 ```java
@@ -345,6 +345,7 @@ public static <T> List<T> asList(T... a) {
 	return new ArrayList<T>(a);
 }
 ```
+
 - 注意这个参数：T…a，这个参数是一个泛型的变长参数，我们知道基本数据类型是不可能泛型化的，也是就说 8 个基本数据类型是不可作为泛型参数的，但是为什么编译器没有报错呢？这是因为在 Java 中，数组会当做一个对象来处理，它是可以泛型的，所以我们的程序是把一个 int 型的数组作为了 T 的类型，所以在转换之后 List 中就只会存在一个类型为 int 数组的元素了；
 
 - 这里是直接返回一个 ArrayList 对象返回，但是注意这个 ArrayList 并不是 java.util.ArrayList，而是 Arrays 工具类的一个内之类，这个内部类并没有提供 add() 方法，那么查看父类 AbstractList仅仅只是提供了方法，方法的具体实现却没有，所以具体的实现需要子类自己来提供，但是非常遗憾这个内部类 ArrayList 并没有提供 add 的实现方法
@@ -353,7 +354,7 @@ size：元素数量、toArray：转换为数组，实现了数组的浅拷贝、
 
 # 十三、switch
 
-## 1.支持类型
+## 1、支持类型
 
 JDK7 之后，switch 的参数可以是 String 类型了;到目前为止 switch 支持的数据类型：byte(Byte)、short(Short)、int(Integer)、char(Character)、String、枚举类型
 
@@ -373,7 +374,7 @@ switch 对 int 的判断是直接比较整数的值：
 
 ## 4、switch 对字符串支持的实现
 
-**4.1、代码片段1：**
+### 4.1、代码**
 
 ```java
 	public class switchDemoString {
@@ -393,7 +394,7 @@ switch 对 int 的判断是直接比较整数的值：
 	}
 ```
 
-**4.2、反编译上述代码**
+### 4.2、反编译上述代码
 
 ```java
 public class switchDemoString{
@@ -416,15 +417,17 @@ public class switchDemoString{
 	}
 }
 ```
-**4.3、分析：字符串的 switch 是通过equals()和hashCode()方法来实现的**
 
+### 4.3、分析
+
+字符串的 switch 是通过equals()和hashCode()方法来实现的
 - switch 中只能使用整型，hashCode()方法返回的是int，而不是long
 - 进行 switch 的实际是哈希值，然后通过使用equals方法比较进行安全检查，这个检查是必要的，因为哈希可能会发生碰撞
 - 其实 switch 只支持一种数据类型，那就是整型，其他数据类型都是转换成整型之后在使用 switch 的
 
 ## 5、枚举类
 
-枚举类型之所以能够使用，因为编译器层面实现了，编译器会将枚举 switch 转换为类似 switch(s.ordinal()) { case Status.START.ordinal() } 形式，所以实质还是 int 参数类型.可以通过查看反编译字节码来查看
+枚举类型之所以能够使用，因为编译器层面实现了，编译器会将枚举 switch 转换为类似 `switch(s.ordinal()) { case Status.START.ordinal() }` 形式，所以实质还是 int 参数类型。可以通过查看反编译字节码来查看
 
 # 十四、抽象类与接口
 
@@ -435,37 +438,35 @@ public class switchDemoString{
 
 如果一个类含有一个被 abstract 修饰的方法，那么该类就是抽象类，抽象类必须在类前用 abstract 关键字修饰
 
-**1.1、相关概念**
+### 1.1、相关概念
 
-- 抽象类体现了数据抽象的思想，是实现多态的一种机制;
-- 抽象类的存在就是为了继承的，所以说抽象类就是用来继承的;
+- 抽象类体现了数据抽象的思想，是实现多态的一种机制；
+- 抽象类的存在就是为了继承的，所以说抽象类就是用来继承的；
 
-**1.2、注意点**
+### 1.2、注意点
 
-- （1）抽象类不能被实例化，实例化的工作应该交由它的子类来完成，它只需要有一个引用即可;
-- （2）抽象方法必须为 public 或者 protected- （因为如果为 private 子类便无法实现该方法），缺省情况下默认为 public;
-- （3）抽象类中可以包含具体的方法，当然也可以不包含抽象方法;
-- （4）子类继承父类必须实现所有抽象方法，如果不实现需要将子类也定义为抽象类;
-- （5）抽象类可以实现接口- （ implements ），可以不实现接口方法;
-- （6）abstract 不能与 final 并列修饰同一个类- （因为被 final 修饰的类不能被继承）;
-- （7）abstract 不能与 private、static、final 或 native 并列修饰同一个方法;<br>
-	private 修饰的方法不能被子类所见，所以也就不能被子类所重写;<br>
-	final 与类类似，final 修饰的方法不能被重写;<br>
-	static 修饰的方法是类的方法，而抽象方法还没被实现;<br>
-	native 是本地方法，不是由 Java 来实现的，
-- （8）abstract 类中定义的抽象方法必须在具体的子类中实现，所以不能有抽象构造方法或抽象静态方法;
+- （1）抽象类不能被实例化，实例化的工作应该交由它的子类来完成，它只需要有一个引用即可；
+- （2）抽象方法必须为 public 或者 protected- （因为如果为 private 子类便无法实现该方法），缺省情况下默认为 public；
+- （3）抽象类中可以包含具体的方法，当然也可以不包含抽象方法；
+- （4）子类继承父类必须实现所有抽象方法，如果不实现需要将子类也定义为抽象类；
+- （5）抽象类可以实现接口- （ implements ），可以不实现接口方法；
+- （6）abstract 不能与 final 并列修饰同一个类- （因为被 final 修饰的类不能被继承）；
+- （7）abstract 不能与 private、static、final 或 native 并列修饰同一个方法；
+	- private 修饰的方法不能被子类所见，所以也就不能被子类所重写；
+	- final 与类类似，final 修饰的方法不能被重写；
+	- static 修饰的方法是类的方法，而抽象方法还没被实现；
+	- native 是本地方法，不是由 Java 来实现的，
+- （8）abstract 类中定义的抽象方法必须在具体的子类中实现，所以不能有抽象构造方法或抽象静态方法；
 
 ## 2、接口
 
 接口本身就不是类，在软件工程中，接口泛指供别人调用的方法或者函数，类使用 interface Demo{} 修饰
 
-**2.1、接口是用来建立类与类之间的协议，它所提供的只是一种形式，而没有具体的实现;**
+接口是用来建立类与类之间的协议，它所提供的只是一种形式，而没有具体的实现；实现该接口的实现类必须要实现该接口的所有方法，通过使用 implements 关键字
 
-实现该接口的实现类必须要实现该接口的所有方法，通过使用 implements 关键字
+接口是抽象类的延伸，Java 中是不能多继承的，子类只能有一个父类；但是接口不同，一个类可以实现多个接口，接口之间可以没有任何联系；
 
-**2.2、接口是抽象类的延伸，Java 中是不能多继承的，子类只能有一个父类；但是接口不同，一个类可以实现多个接口，接口之间可以没有任何联系;**
-
-**2.3、接口使用注意事项**
+### 2.1、接口使用注意事项
 
 - （1）接口之间也可以继承，但只能是接口继承接口，接口也不能实现接口；抽象类不能继承接口，只能是使用实现；接口之间可以是继承关系，类- （抽象类）与接口是实现关系;
 - （2）接口中的所有方法默认都是 public abstract 修饰的;接口中不能有静态代码块和静态方法；		
@@ -474,11 +475,7 @@ public class switchDemoString{
 - （5）接口不能直接实例化，但可以声明接口变量引用指向接口的实现类对象使用 instanceof 检查一个对象实现了某个特点接口；
 - （6）如果一个类中实现了两个接口，且两个接口有同名方法，那么默认情况下实现的是第一个接口的方法；
 
-**2.4、为什么有些接口是个空接口，没有定义任何方法和变量**
-
-Cloneable、Serializable这一类接口表示某个标志，实现 Cloneable 表示该类可以被克隆，实现 Serializable 表示该类可以被序列化;
-
-**2.5、针对接口的默认修饰符看如下代码**
+### 2.2、接口的默认修饰符
 
 - 接口定义如下
 
@@ -510,9 +507,10 @@ public interface A{
 	flags： ACC_PUBLIC， ACC_ABSTRACT
 }
 ```
-**2.6、常见空接口**
 
-空接口一般是作为一个标记接口，标记某些功能
+### 2.3、常见空接口
+
+空接口一般是作为一个标记接口，标记某些功能；Cloneable、Serializable这一类接口表示某个标志，实现 Cloneable 表示该类可以被克隆，实现 Serializable 表示该类可以被序列化;
 
 - Serializable 序列化
 - RandomAccess：List 实现所使用的标记接口,用来表明其支持快速(通常是固定时间)随机访问，此接口的主要目的是允许一般的算法更改其行为,从而在将其应用到随机或连续访问列表时能提供良好的性能
@@ -521,7 +519,7 @@ public interface A{
 
 ## 3、接口与抽象类的区别
 
-**3.1、语法层面上**
+### 3.1、语法层面上
 
 - （1）抽象类可以提供成员方法的实现细节，而接口中只能存在 public abstract 方法；
 - （2）抽象类中的成员变量可以是各种类型的，而接口中的成员变量只能是 public static final 类型的；
@@ -530,7 +528,7 @@ public interface A{
 - （5）一个类只能继承一个抽象类，而一个类却可以实现多个接口；
 - （6）接口和抽象类都可以包含内部类- （抽象类)或者内部接口；
 
-**3.2、设计层面上**
+### 3.2、设计层面上
 
 - （1）抽象层次不同：抽象类是对类抽象，而接口是对行为的抽象，抽象类是对整个类整体进行抽象，包括属性、行为，但是接口却是对类局部- （行为)进行抽象;抽象是：is-a 的关系，接口是：like-a 的关系；
 
@@ -540,11 +538,11 @@ public interface A{
 
 [接口静态初始化](http://stackoverflow.com/questions/19722847/static-initialization-in-interface)
 
-## 4、Java8 下接口的不同之处(上述是针对 JDK7 之前的)
+## 4、Java8下接口的不同之处
 
-**4.1、在 Java8 中，使用默认方法和静态方法来扩展接口，类似如下代码**
+### 4.1、默认方法（default）
 
-使用 default 关键字来实现默认方法
+在 Java8 中，使用默认方法和静态方法来扩展接口，类似如下代码，使用 default 关键字来实现默认方法
 
 ```java
 public interface Demo {
@@ -556,13 +554,14 @@ public interface Demo {
 	}
 }
 ```
+
 接口中非 default 和 static 的方法不能有方法体
 
-**4.2、接口实现**
+### 4.2、接口实现
 
-如果实现一个接口，默认方法可以不用覆盖重写实现，实现类默认可以直接调用该默认方法;实现类无法重写接口中的静态方法；
+如果实现一个接口，默认方法可以不用覆盖重写实现，实现类默认可以直接调用该默认方法；实现类无法重写接口中的静态方法；
 
-注意：在声明一个默认方法前，请仔细思考是不是真的有必要使用默认方法，因为默认方法会带给程序歧义，并且在复杂的继承体系中容易产生编译错误
+***注意：在声明一个默认方法前，请仔细思考是不是真的有必要使用默认方法，因为默认方法会带给程序歧义，并且在复杂的继承体系中容易产生编译错误***
 
 [官方资料](http://docs.oracle.com/javase/tutorial/java/IandI/defaultmethods.html)
 
@@ -603,13 +602,9 @@ public class C implements A， B {
 // 输出结果：Interface B hello ： B
 ```
 
-**4.3、接口的 default 方法不能重写 Object 的方法，但是可以对 Object 类的方法进行重载.**
+接口的default方法不能重写Object的方法，但是可以对Object类的方法进行重载。因为若可以会很难确定什么时候该调用接口默认的方法
 
-因为若可以会很难确定什么时候该调用接口默认的方法
-
-
-
-# 十五、类型、类初始化、二进制等
+# 十五、类型、类初始化、二进制
 
 ## 1、基本类型与引用类型的比较
 
@@ -640,7 +635,7 @@ Integer i04 = new Integer(59);
 - Integer i = 1; 做了自动装箱：使用 valueOf() 方法将 int 装箱为 Integer 类型
 - i += 1; 先将 Integer 类型的 i 自动拆箱成 int(使用 intValue() 方法将 Integer 拆箱为 int)，完成加法运行之后的 i 再装箱成 Integer 类型
 
-## 2、关于 String + 和 StringBuffer 的比较
+## 2、关于String +和StringBuffer的比较
 
 在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)效率其实比 Stringbuffer更快
 
@@ -705,13 +700,14 @@ string = stringBuffer.toString();
 
 ==> 通过上面的分析，他们三者的执行顺序应该为：静态代码块 > 构造代码块 > 构造函数。
 
-**3.1、Java 类初始化过程：**
+### 3.1、Java 类初始化过程
+
 - 首先，初始化父类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
 - 然后，初始化子类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
 - 其次，初始化父类的普通成员变量和代码块，在执行父类的构造方法；
 - 最后，初始化子类的普通成员变量和代码块，在执行子类的构造方法；
 
-**3.2、不要在构造器里调用可能被重载的虚方法**
+### 3.2、不要在构造器里调用可能被重载的虚方法
 
 父类构造器执行的时候，调用了子类的重载方法，然而子类的类字段还在刚初始化的阶段，刚完成内存布局：
 
@@ -735,7 +731,8 @@ public class Base{
 	}
 }
 ```
-**3.3、Java 中赋值顺序**
+
+### 3.3、Java 中赋值顺序
 
 - （1）父类的静态变量赋值
 - （2）自身的静态变量赋值
@@ -746,7 +743,8 @@ public class Base{
 - （7）自身块赋值
 - （8）自身构造函数赋值
 
-**3.4、Java 代码执行顺序**
+### 3.4、Java 代码执行顺序
+
 ```java
 public class TestExecuteCode {
 	public static void main(String[] args) {
@@ -778,29 +776,34 @@ public class TestExecuteCode {
 }
 ```
 
-	==> 执行结果：22，34，17
-		(1).子类 B 中重写了父类 A 中的setValue方法：
-				super(5) // 调用了父类构造器，其中构造函数里面的setValue(value)，调用的是子类的setValue方法
-			finally块中的
-				this.setValue(value) //调用的也是子类的setValue方法
-			而子类setValue方法中的
-				super.setValue(2*value); //调用的是父类A的setValue方法
-		(2).try...catch...finally块中有return返回值的情况
-			finally 块中虽然改变了value的值，但 try 块中返回的应该是 return 之前存储的值.
-	==> 父类执行时如果有子类的方法重写了父类的方法，调用的子类的重写方法
+- 执行结果：22，34，17
+	（1）子类 B 中重写了父类 A 中的setValue方法：
+	
+	`super(5)` // 调用了父类构造器，其中构造函数里面的`setValue(value)`，调用的是子类的setValue方法
+
+	`finally`块中的：`this.setValue(value)` //调用的也是子类的setValue方法
+
+	而子类`setValue`方法中的：`super.setValue(2*value);` //调用的是父类A的setValue方法
+
+	（2）`try...catch...finally`块中有`return`返回值的情况：`finally` 块中虽然改变了value的值，但`try`块中返回的应该是 return 之前存储的值
+
+- 父类执行时如果有子类的方法重写了父类的方法，调用的子类的重写方法
 
 ## 4、给出一个表达式计算其可以按多少进制计算
 
-- 式子7*15=133成立，则用的是几进制?<br>
-	可以通过解方程来解决，上述式子可以转换为方程：<br>
-	7 * (1 * x + 5) = 1 * x^2 + 3 * x + 3<br>
-	==> x^2 -4x - 32 = 0<br>
-	==> x = -4 或 x = 8<br>
-- 如果下列的公式成立：78+78=123，则采用的是_______进制表示的<br>
-	7 * x + 8 + 7 * x + 8 = 1 * x^2 + 2 * x + 3<br>
-	==><br>
-	x^2 - 12 * x - 13 = 0<br>
-	==> x = -1， x = 13<br>
+- 式子7*15=133成立，则用的是几进制？可以通过解方程来解决，上述式子可以转换为方程：
+	```
+	7 * (1 * x + 5) = 1 * x^2 + 3 * x + 3
+	x^2 -4x - 32 = 0
+	x = -4 或 x = 8
+	```
+
+- 如果下列的公式成立：78+78=123，则采用的是_______进制表示的：
+	```
+	7 * x + 8 + 7 * x + 8 = 1 * x^2 + 2 * x + 3
+	x^2 - 12 * x - 13 = 0
+	x = -1， x = 13
+	```
 
 ## 5、表达式的数据类型
 
@@ -808,7 +811,7 @@ public class TestExecuteCode {
 - 如果有一个操作数是 long 型，计算结果是 long 型；
 - 如果有一个操作数是 float 型，计算结果是 float 型；
 - 如果有一个操作数是 double 型，计算结果是 double 型；
-- final 修饰的变量是常量，如果运算时直接是已常量值进行计算，没有final修饰的变量相加后会被自动提升为int型<br>
+- final 修饰的变量是常量，如果运算时直接是已常量值进行计算，没有final修饰的变量相加后会被自动提升为int型
 	byte b1=1，b2=2，b3，b6;<br>
 	final byte b4=4，b5=6;<br>
 	b6=b4+b5;// b4， b5是常量，则在计算时直接按原值计算，不提升为int型<br>
@@ -819,7 +822,7 @@ public class TestExecuteCode {
 
 * [多态一道面试题](http://blog.csdn.net/clqyhy/article/details/78978785)
 
-当超类对象引用变量引用子类对象时，被引用对象的类型而不是引用变量的类型决定了调用谁的成员方法，但是这个被调用的方法必须是在超类中定义过的，也就是说被子类覆盖的方法：优先级由高到低依次为：this.show(O)、super.show(O)、this.show((super)O)、super.show((super)O)
+当超类对象引用变量引用子类对象时，被引用对象的类型而不是引用变量的类型决定了调用谁的成员方法，但是这个被调用的方法必须是在超类中定义过的，也就是说被子类覆盖的方法：优先级由高到低依次为：`this.show(O)、super.show(O)、this.show((super)O)、super.show((super)O)`
 
 ```java
 public class A {
@@ -851,67 +854,73 @@ public class Test {
 	}
 }
 ```
-- 多态是对象在不同时刻表现出来的多种状态，是一种编译时期状态和运行时期状态不一致的现象.
+- 多态是对象在不同时刻表现出来的多种状态，是一种编译时期状态和运行时期状态不一致的现象。
 
-- 在编写或者分析代码时记住如下口诀：<br>
-	成员变量：编译看左，运行看左(因为无法重写);<br>
-	成员方法：编译看左，运行看右(因为普通成员方法可以重写，变量不可以);<br>
-	静态方法：编译看左，运行看左(因为属于类)；
+- 在编写或者分析代码时记住如下口诀：
+	- 成员变量：编译看左，运行看左(因为无法重写)；
+	- 成员方法：编译看左，运行看右(因为普通成员方法可以重写，变量不可以)；
+	- 静态方法：编译看左，运行看左(因为属于类)；
 
 - 当父类变量引用子类对象时 Base base = new Child();在这个引用变量 base 指向的对象中他的成员变量和静态方法与父类是一致的，他的非静态方法在编译时是与父类一致的，运行时却与子类一致(发生了复写);
 
 # 十六、反射与注解
 
-## 1、Java 注解：Annotation(JDK5.0+)
+## 1、Java注解：Annotation
 
-**1.1、内置注解，如：**
+JDK5之后新增的功能
 
-@Override：重写<br>
-@Deprecated：过时<br>
-@SuppressWarnings：取消警告<br>
+### 1.1、内置注解
 
-- 注解分为：<br>
-	按运行机制：源码注解，编译时注解，运行时注解<br>
-	按照来源注解：JDK，第三方，自定义注解;<br>
+- @Override：重写
+- @Deprecated：过时
+- @SuppressWarnings：取消警告
 
-**1.2、自定义注解：使用 @interface 自定义注解时，自动集成了 Annotation 接口，要点如下：**
-- （1）@interface 用来声明一个注解： public @interface 注解名{};
+- 注解分为：
+	按运行机制：源码注解，编译时注解，运行时注解
+	按照来源注解：JDK，第三方，自定义注解；
+
+### 1.2、自定义注解
+
+使用`@interface`自定义注解时，自动集成了`Annotation`接口，要点如下：
+
+- （1）`@interface`用来声明一个注解：`public @interface`注解名{}；
 - （2）其中的每一个方法实际上是声明了一个配置参数：
 	- ①、方法的名称就是参数的名称，无参无异常;
-	- ②、返回值类型就是参数的类型(返回值只能是基本类型，Class， String， Enum);
+	- ②、返回值类型就是参数的类型(返回值只能是基本类型，`Class`，` String`， `Enum`);
 	- ③、可以通过 default 来声明参数的默认值
 	- ④、如果只有一个参数成员，一般参数名为：value;
 	- ⑤、没有成员的注解是标识注解;
 
 *注意：注解元素必须要有值，在定义注解元素时经常使用空字符串，0作为默认值*
 
-**1.3、元注解**
+### 1.3、元注解
 
 负责注解其他注解，Java定义了四个标准的meta-annotation类型，用来提供对其他 annotation 类型作说明
 
-- @Target<br>
-	用于描述注解的使用范围：@Target(value= ElementType.TYPE)<br>
-	包 -----> PACKAGE<br>
-	类.接口.枚举.Annotation类型 -----> TYPE<br>
-	方法参数 -----> PARAMETER<br>
-	局部变量 -----> LOCAL VARIABLE<br>
-- @Retention<br>
-	表示需要在什么级别保存该注释信息，用于描述注解的生命周期：(RetentionPolicy)<br>
-	SOURCE --- 在源文件有效(即源文件保留)<br>
-	CLASS --- 在class文件中有效<br>
-	RUNTIME --- 在运行时有效(可被反射读取)<br>
-- @Documented：生成文档的时候会生成注解的注释
-- @Inherited：允许子类继承
+- `@Target`：用于描述注解的使用范围：`@Target(value= ElementType.TYPE)`
+	- 包：PACKAGE<br>
+	- 类、接口、枚举、Annotation类型：TYPE
+	- 方法参数：PARAMETER
+	- 局部变量：LOCAL VARIABLE
 
-**1.4、解析注解**
+- `@Retention`：表示需要在什么级别保存该注释信息，用于描述注解的生命周期：`(RetentionPolicy)`
+	SOURCE：在源文件有效(即源文件保留)
+	CLASS：在class文件中有效
+	RUNTIME：在运行时有效(可被反射读取)
+
+- `@Documented`：生成文档的时候会生成注解的注释
+
+- `@Inherited`：允许子类继承
+
+### 1.4、解析注解
 
 通过反射获取类、函数或成员上的运行时注解信息，从而实现动态控制程序运行的逻辑;
 
-**1.5、注解处理器**
+### 1.5、注解处理器
 
-注解处理器是一个在javac中的，用来编译时扫描和处理的注解的工具；一个注解的注解处理器，以Java代码(或者编译过的字节码)作为输入，生成文件(通常是.java文件)作为输出。这具体的含义什么呢？你可以生成Java代码！这些生成的Java代码是在生成的.java文件中，所以你不能修改已经存在的Java类，例如向已有的类中添加方法。这些生成的Java文件，会同其他普通的手动编写的Java源代码一样被javac编译；
+注解处理器是一个在javac中的，用来编译时扫描和处理的注解的工具；一个注解的注解处理器，以Java代码(或者编译过的字节码)作为输入，生成文件(通常是`.java`文件)作为输出。这具体的含义什么呢？你可以生成Java代码！这些生成的Java代码是在生成的`.java`文件中，所以你不能修改已经存在的Java类，例如向已有的类中添加方法。这些生成的Java文件，会同其他普通的手动编写的Java源代码一样被`javac`编译；
 
-虚处理器 AbstractProcessor：
+虚处理器 AbstractProcessor
 
 ## 2、Java 动态加载与静态加载
 
@@ -920,65 +929,75 @@ public class Test {
 
 ## 3、反射机制：(Reflection)
 
-运行时加载，探知使用编译期间完全未知的类;
-
-反射：将一个Java类中的所有信息映射成相应的Java类;
+运行时加载，探知使用编译期间完全未知的类；反射：将一个Java类中的所有信息映射成相应的Java类;
 
 【一个类只有一个Class对象，这个对象包含了完整类的结构】
 
-- Class 类[java.lang.Class]：反射的根源，各种类型----表示Java中的同一类事物<br>
-	(1.1)Class 类获取： .class， getClass， Class.forName(String className);<br>
-	Field：属性相关类，获取所有属性(包括 private)，getDeclaredFields();<br>
-	Method：方法相关类，getDeclaredMethods(); method.invoke()方法执行时，如果第一个参数为 null，则表示反射的方法为静态方法<br>
-	Constructor ： 构造器相关类，getDeclaredConstructors();<br>
-	如果需要访问私有的，则需setAccessible(true;<br>
+- `Class` 类[java.lang.Class]：反射的根源，各种类型----表示Java中的同一类事物
+	- `Class`类获取：`.class、getClass、Class.forName(String className);`
+	- `Field`：属性相关类，获取所有属性(包括 private)，`getDeclaredFields()`;
+	- `Method`：方法相关类，`getDeclaredMethods();`，`method.invoke()`方法执行时，如果第一个参数为 null，则表示反射的方法为静态方法
+	- `Constructor`： 构造器相关类，`getDeclaredConstructors()`;
+
+	如果需要访问私有的，则需setAccessible(true;
 
 - 反射机制性能问题：反射会降低程序的效率，如果在开发中确实需要使用到反射，可以将setAccessible设为 true ：即取消Java语言访问检查;
 
-- 反射操作泛型：<br>
+- 反射操作泛型：
 	- ①、Java 采用泛型擦除的机制来引入泛型.Java中的泛型仅仅是给编译器使用的，确保数据的安全性和免去强制类型转换的麻烦；	但是一旦编译完成，所有和泛型有关的类型全部擦除;
-	- ②、为了通过反射操作泛型，Java有 ParameterizedType，GenericArrayType，TypeVariable，WildcardType 几种类型来代表不能被归一到Class类中的类型但是又和原始类型齐名的类型；
+	- ②、为了通过反射操作泛型，Java有 `ParameterizedType、GenericArrayType、TypeVariable、WildcardType`几种类型来代表不能被归一到Class类中的类型但是又和原始类型齐名的类型；
 
-		Type 是 Java 编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型<br>
-		ParameterizedType ： 参数化类型<br>
-		GenericArrayType ： 元素类型是参数化类型或者类型变量的数组类型<br>
-		TypeVariable ： 各种类型变量的公共父接口<br>
-		WildcardType ： 表示一种通配符类型表达式;<br>
+		- `Type`是Java编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型
+		- `ParameterizedType ：参数化类型
+		- `GenericArrayType`：元素类型是参数化类型或者类型变量的数组类型
+		- `TypeVariable`：各种类型变量的公共父接口
+		- `WildcardType`：表示一种通配符类型表达式;
 
-- 反射操作注解<br>
-	getAnnotation(Class<A> annotationClass);<br>
-	getAnnotations();<br>
+- 反射操作注解
 
-- 反射操作<br>
-	- ①、使用反射调用类的main方法：<br>
-		Method method = Demo.class.getMethod("main"，String[].class);<br>
-		method.invoke(null， (Object)new String[]{"111"，"222"，"333"});<br>
+	```
+	getAnnotation(Class<A> annotationClass);
+	getAnnotations();
+	```
+
+- 反射操作
+
+	- ①、使用反射调用类的main方法：
+		
+		```
+		Method method = Demo.class.getMethod("main"，String[].class);
+		method.invoke(null， (Object)new String[]{"111"，"222"，"333"});
+		```
 
 	*注意：传入参数时不能直接传一个数组，jdk为了兼容1.5版本以下的，会将其拆包；因此这里将其强转或者直接将String数组放入Object数组也可以*
 
-	- ②、数组的反射<br>
-		◆一个问题：<br>
+	- ②、数组的反射
+		- 一个问题：
+		```java
 		int[] a1 = new int[]{1，2，3};<br>
 		String[] a2 = new String[]{"a"，"b"，"c"};<br>
-		System.out.println(Arrays.asList(a1)); // 输出： [[I@24c98b07]<br>
-		System.out.println(Arrays.asList(a2)); // 输出：[a， b， c]<br>
-		原因：<br>
-		在jdk1.4：asList(Object[] a);<br>
-		在jdk1.5：asList(T... a);<br>
-		int数组在编译运行时不会被认为为一个Object数组，因此其将按照一个数组对象来处理；<br>
-		◆基本类型的一维数组可以被当作Object类型处理，不能被当作Object[]类型使用;<br>
-			非基本类型的一维数组既可以当作Object类型使用，也可以当作Object[]类型使用;<br>
-		◆Array 工具类可完成数组的反射操作;<br>
+		System.out.println(Arrays.asList(a1)); // 输出： [[I@24c98b07]
+		System.out.println(Arrays.asList(a2)); // 输出：[a， b， c]
+		// 原因：
+		// 在jdk1.4：asList(Object[] a);<br>
+		// 在jdk1.5：asList(T... a);<br>
+		```
+		int数组在编译运行时不会被认为为一个Object数组，因此其将按照一个数组对象来处理；
+
+		- 基本类型的一维数组可以被当作Object类型处理，不能被当作`Object[]`类型使用非基本类型的一维数组既可以当作Object类型使用，也可以当作Object[]类型使用；
+		Array 工具类可完成数组的反射操作;
+
 - 反射的应用：实现框架功能，使用类加载器加载文件
 
 ## 4、动态编译：Java6.0引入动态编译
 
-**4.1.动态编译的两种方法：**
+### 4.1.动态编译的两种方法
 
 - 通过Runtime调用javac，启动新的进程去操作;
 - 通过Javacompiler动态编译;
 
-**4.2.Javacompiler 动态编译：**
+### 4.2.Javacompiler 动态编译
+
 ```java
 JavaCompiler compile = ToolProvider.getSystemJavaCompiler();
 int result = compile.run(null， null， null， "F：/class/HelloWorld.java");
@@ -991,7 +1010,8 @@ int result = compile.run(null， null， null， "F：/class/HelloWorld.java");
 * 返回值： 0 表示编译成功， 1 表示编译失败;
 */
 ```
-**4.3、动态运行动态编译的Java类**
+
+### 4.3、动态运行动态编译的Java类
 
 ## 5、动态执行Javascript(JDK6.0以上)
 
@@ -1000,31 +1020,31 @@ int result = compile.run(null， null， null， "F：/class/HelloWorld.java");
 
 ## 6、Java 字节码操作
 
-**6.1、Java 动态操作：字节码操作，反射**
+### 6.1、Java 动态操作：字节码操作，反射
 
-字节码操作：动态生存新的类;<br>
-优势：比反射开销小，性能高;
+字节码操作：动态生存新的类；
 
-**6.2、常见的字节码操作类库：**
+优势：比反射开销小，性能高；
+
+### 6.2、常见的字节码操作类库
 
 - BCEL：apache
 - ASM：轻量级的字节码操作框架，涉及到jvm底层的操作和指令
 - CGLIB：基于asm实现
 - javaasist：性能比较差，使用简单
 
-**6.3、Javasist：**
+### 6.3、Javasist
 
 ## 7、反射存在问题
 
-**7.1、反射慢的原因：**
+### 7.1、反射慢的原因
 
 - 编译器不能对代码对优化.
 - 所有的反射操作都需要类似查表的操作，参数需要封装，解封装，异常也重新封装，rethrow等等
 
-**7.2、优化方式：**
+### 7.2、优化方式
 
-- 灵活运用API，如果只是寻找某个方法，不要使用 getMethods() 后在遍历筛选，而是直接用<br>
-	getMethod(methodName)来根据方法名获取方法;
+- 灵活运用API，如果只是寻找某个方法，不要使用`getMethods()`后在遍历筛选，而是直接用`getMethod(methodName)`来根据方法名获取方法;
 - 使用缓存：需要多次动态创建一个类的实例的时候.
 - 使用代码动态生成技术，通过调用代理类的方式来模拟反射
 
@@ -1032,29 +1052,22 @@ int result = compile.run(null， null， null， "F：/class/HelloWorld.java");
 
 ## 1、区别
 
-- Comparable & Comparator 都是用来实现集合中元素的比较、排序的：
-
-	Comparable 是在集合内部定义的方法实现的排序;<br>
-	Comparator 是在集合外部实现的排序<br>
+- `Comparable` & `Comparator`都是用来实现集合中元素的比较、排序的：
+	- `Comparable` 是在集合内部定义的方法实现的排序;
+	- `Comparator` 是在集合外部实现的排序;
 
 	所以，如想实现排序，就需要在集合外定义 Comparator 接口的方法或在集合内实现 Comparable 接口的方法
 
-- Comparator 位于包 java.util下，而 Comparable 位于包 java.lang下
-
-- Comparable 是一个对象本身就已经支持自比较所需要实现的接口，（如 String、Integer 自己就可以完成比较大小操作，已经实现了Comparable接口）；
-
-- Comparator 是一个专用的比较器，当这个对象不支持自比较或者自比较函数不能满足你的要求时，你可以写一个比较器来完成两个对象之间大小的比较；
-
+- `Comparator` 位于包 java.util下，而 Comparable 位于包 java.lang下
+- `Comparable` 是一个对象本身就已经支持自比较所需要实现的接口，（如 String、Integer 自己就可以完成比较大小操作，已经实现了Comparable接口）；
+- `Comparator` 是一个专用的比较器，当这个对象不支持自比较或者自比较函数不能满足你的要求时，你可以写一个比较器来完成两个对象之间大小的比较；
 - 可以说一个是自已完成比较，一个是外部程序实现比较的差别而已
-
-- 用 Comparator 是策略模式(strategy design pattern)，就是不改变对象自身；Comparable 而用一个策略对象(strategy object)来改变它的行为
-
-- 有时在实现 Comparator 接口时，并没有实现equals方法，可程序并没有报错.原因是实现该接口的类也是Object类的子类，而Object类已经实现了equals方法
+- 用 `Comparator` 是策略模式(strategy design pattern)，就是不改变对象自身；Comparable 而用一个策略对象(strategy object)来改变它的行为
+- 有时在实现 `Comparator` 接口时，并没有实现equals方法，可程序并没有报错.原因是实现该接口的类也是Object类的子类，而Object类已经实现了equals方法
 
 ## 2、Comparable
 
-一个实现了 Comparable 接口的类，可以让其自身的对象和其他对象进行比较。<br>
-也就是说：同一个类的两个对象之间要想比较，对应的类就要实现 Comparable 接口，并实现compareTo()方法
+一个实现了 Comparable 接口的类，可以让其自身的对象和其他对象进行比较。也就是说：同一个类的两个对象之间要想比较，对应的类就要实现`Comparable`接口，并实现compareTo()方法
 
 ## 3、Comparator
 
@@ -1117,7 +1130,7 @@ public class Main {
 }
 ```
 
-- 经常会使用 Collections.reverseOrder()来获取一个倒序的 Comparator：
+- 经常会使用`Collections.reverseOrder()`来获取一个倒序的 Comparator：
 
 ```java
 ArrayList<Integer> al = new ArrayList<Integer>();
@@ -1131,6 +1144,7 @@ Comparator<Integer> comparator = Collections.reverseOrder();
 Collections.sort(al，comparator);
 System.out.println(al);
 ```
+
 ## 4、如何选择
 
 - 一个类如果实现 Comparable 接口，那么他就具有了可比较性，意思就是说它的实例之间相互直接可以进行比较
@@ -1142,7 +1156,7 @@ System.out.println(al);
 
 枚举类是JDK1.5之后出现的，允许用常量来表示特定的数据片断，而且全部都以类型安全的形式来表示
 
-**1.1、枚举类特点**
+### 1.1、枚举类特点
 
 - 枚举类是一种特殊的Java类，枚举不可被基础
 - 枚举类中声明的每一个枚举值代表枚举类的一个实例对象;
@@ -1151,12 +1165,13 @@ System.out.println(al);
 - 在JDK5之后，switch语句，可以接受int，byte，char，short外，还可以接受枚举类型
 - 若枚举类只有一个枚举值，则可以当作单例设计模式
 
-**1.2、枚举类的一些方法**
+### 1.2、枚举类的一些方法
 
 - values()：获得所有的枚举类
 - valueOf(String str)：将一个字符串转为枚举类;
 
-**1.3、枚举类基类**
+### 1.3、枚举类基类
+
 ```java
 public abstract class Enum<E extends Enum<E>> implements Comparable<E>， Serializable{}
 // 定义枚举类：
@@ -1166,41 +1181,42 @@ public enum Status{
 	RUNNING();
 }
 ```
-==> 除了 toString 方法，其余方法都不可重写。要么是 final 方法要么是私有方法。
+除了`toString`方法，其余方法都不可重写。要么是`final`方法要么是私有方法。
 
-**1.4.Java 枚举类比较使用 == 或者 equals()都一样，因为枚举类 Enum 的 equals()方法的默认实现是通过 == 来比较的.**
+### 1.4、枚举比较
 
-在Enum中equals和hashCode方法都是final，所以在枚举类中不可实现这两个方法。类似的Enum的compareTo方法比较的是Enum的ordinal顺序大小；类似的还有Enum的name方法和toString方法一样都返回的是Enum的name值
+Java 枚举类比较使用 == 或者 equals()都一样，因为枚举类 Enum 的 equals()方法的默认实现是通过 == 来比较的。
+
+在`Enum`中`equals`和`hashCode`方法都是`final`，所以在枚举类中不可实现这两个方法。类似的`Enum`的`compareTo`方法比较的是`Enum`的`ordinal`顺序大小；类似的还有`Enum`的name方法和toString方法一样都返回的是Enum的name值
 
 ## 2、枚举类本质
 
-枚举类本质是通过普通类来实现的，只是编译器进行了相应的处理，每个枚举类编译之后的字节码实质都是继承自 java.lang.Enum的枚举类类型同名普通类.而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象，所有枚举常量都通过静态代码块进行初始化实例赋值.
+枚举类本质是通过普通类来实现的，只是编译器进行了相应的处理，每个枚举类编译之后的字节码实质都是继承自`java.lang.Enum`的枚举类类型同名普通类.而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象，所有枚举常量都通过静态代码块进行初始化实例赋值.
 
-==> 如下代码：
 ```java
-		public enum Status{
-			START(),
-			STOP(),
-			RUNNING();
-		}
-		编译之后通过 javap -v 查看字节码文件：
-		.......
-		public final class Status extends java.lang.Enum<Status>
-		.......
-		{
-			// 枚举类型值都成了status类型类的静态常量成员属性
-			public static final Status start;
-		  	public static final Status stop;		    
-		  	public static final Status running;
-		    // 静态代码块
-		    static{};
-		}
+public enum Status{
+	START(),
+	STOP(),
+	RUNNING();
+}
+编译之后通过 javap -v 查看字节码文件：
+.......
+public final class Status extends java.lang.Enum<Status>
+.......
+{
+	// 枚举类型值都成了status类型类的静态常量成员属性
+	public static final Status start;
+	public static final Status stop;		    
+	public static final Status running;
+	// 静态代码块
+	static{};
+}
 ```
 - 所以从某种意义上可以说 JDK 1.5 后引入的枚举类型是上面枚举常量类的代码封装而已
 
 ## 3、枚举类与常量
 
-**3.1.区别：**
+### 3.1、区别
 
 - 枚举相对于常量类来说定义更简单，其不需要定义枚举值，而常量类中每个常量必须手动添加值.
 - 枚举作为参数使用时可以避免在编译时避免弱类型错误，而常量类中的常量作为参数使用时无法避免类型错误.
@@ -1208,21 +1224,21 @@ public enum Status{
 - 枚举的缺点是不能被继承（编译后生成的类是 final class），也不能通过 extends 继承其他类（枚举编译后实质是继承了 Enum 类，java是单继承的）。但是定义的枚举类也通过 implements 实现其他接口；
 - 枚举值定义完毕后除非重构，否则无法做扩展，而常量类可以随意继承.
 
-**3.2.Java 枚举会比静态常量更消耗内存吗**
+### 3.2、枚举与静态常量内存消耗比
 
-会更消耗，一般场景下不仅编译后的字节码会比静态常量多，而且运行时也会比静态常量需要更多的内存，不过这个多取决于场景和枚举的规模等等
+Java枚举会比静态常量更消耗内存，一般场景下不仅编译后的字节码会比静态常量多，而且运行时也会比静态常量需要更多的内存，不过这个多取决于场景和枚举的规模等等
 
 ## 4、枚举类是如何保证线程安全的
 
-Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编译器编译后的字节码实质是一个 final 类，每个枚举类型是这个 final 类中的一个静态常量属性，其属性初始化是在该 final 类的 static 块中进行，而 static的常量属性和代码块都是在类加载时初始化完成的， 所以自然就是 JVM 保证了并发安全；
+Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编译器编译后的字节码实质是一个 final 类，每个枚举类型是这个 final 类中的一个静态常量属性，其属性初始化是在该`final`类的`static`块中进行，而 static的常量属性和代码块都是在类加载时初始化完成的， 所以自然就是 JVM 保证了并发安全；
 
 也就是说，我们定义的一个枚举，在第一次被真正用到的时候，会被虚拟机加载并初始化，而这个初始化过程是线程安全的。解决单例的并发问题，主要解决的就是初始化过程中的线程安全问题
 
 ## 5、枚举与单例模式
 
-- 除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了 Serializable 接口后就不再是单例了，因为每次调用readObject()方法返回的都是一个新创建出来的对象（当然可以通过使用 readResolve() 方法来避免)）
+- 除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了`Serializable`接口后就不再是单例了，因为每次调用`readObject()`方法返回的都是一个新创建出来的对象（当然可以通过使用 readResolve() 方法来避免)）
 
-- Java规范中保证了每一个枚举类型及其定义的枚举变量在JVM中都是唯一的，在枚举类型的序列化和反序列化上Java做了特殊处理。序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 java.lang.Enum 的valueOf 方法来根据名字查找枚举对象；同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了 writeObject、readObject、readObjectNoData、writeReplace和 readResolve 等方法
+- Java规范中保证了每一个枚举类型及其定义的枚举变量在JVM中都是唯一的，在枚举类型的序列化和反序列化上Java做了特殊处理。序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 `java.lang.Enum`的`valueOf`方法来根据名字查找枚举对象；同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了`writeObject、readObject、readObjectNoData、writeReplace和 readResolve`等方法
 
 - Java 枚举序列化需要注意的点：
 
@@ -1230,11 +1246,12 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 
 ## 6、迭代器和枚举器区别
 
-- Enumeration<E> 枚举器接口是1.0开始提供，适用于传统类，而 Iterator<E>迭代器接口是1.2提供，适用于 Collections
-- Enumeration 只有两个方法接口，我们只能读取集合的数据而不能对数据进行修改，而 Iterator 有三个方法接口，除了能读取集合的数据外也能对数据进行删除操作
-- Enumeration 不支持 fail-fast 机制，而 Iterator 支持 fail-fast 机制（一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生 fail-fast 机制，譬如ConcurrentModificationException 异常）尽量使用 Iterator 迭代器而不是 Enumeration 枚举器；
+- `Enumeration<E>` 枚举器接口是1.0开始提供，适用于传统类，而`Iterator<E>`迭代器接口是1.2提供，适用于`Collections`
+- `Enumeration` 只有两个方法接口，我们只能读取集合的数据而不能对数据进行修改，而`Iterator`有三个方法接口，除了能读取集合的数据外也能对数据进行删除操作
+- `Enumeration` 不支持`fail-fast`机制，而`Iterator`支持`fail-fast`机制（一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生`fail-fast`机制，譬如`ConcurrentModificationException`异常）尽量使用`Iterator`迭代器而不是`Enumeration`枚举器；
 
 # 十九、Java异常
+
 ## 1、异常
 
 ## 2、Error
@@ -1250,6 +1267,7 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 ## 5、常见异常
 
 ### 5.1、NoClassDefFoundError和ClassNotFoundException
+
 当 JVM 或 ClassLoader 在加载类时找不到对应类就会引发 NoClassDefFoundError 和 ClassNotFoundException，他们的区别如下：
 
 - NoClassDefFoundError 和 ClassNotFoundException 都是由于在 CLASSPATH 下找不到对应的类而引起的。当应用运行时没有找到对应的引用类就会抛出 NoClassDefFoundError，当在代码中通过类名显式加载类（如使用 Class.forName()）时没有找到对应的类就会抛出 ClassNotFoundException；
@@ -1351,11 +1369,11 @@ Main-Class：定义jar文件的入口类，该类必须是一个可执行的类�
 #### 3.2.4、小程序(Applet)相关属性
 
 - Extendsion-List：该属性指定了小程序需要的扩展信息列表，列表中的每个名字对应以下的属性
-- <extension>-Extension-Name：定义了Jar文件的唯一标识
-- <extension>-Specification-Version：定义扩展规范的版本
-- <extension>-Implementation-Version：定义了扩展实现的版本
-- <extension>-Implementation-Vendor-Id：定义了扩展实现的供应商版本编号
-- <extension>-Implementation-URL：该jar文件最新版本的下载地址
+- `<extension>`-Extension-Name：定义了Jar文件的唯一标识
+- `<extension>`-Specification-Version：定义扩展规范的版本
+- `<extension>`-Implementation-Version：定义了扩展实现的版本
+- `<extension>`-Implementation-Vendor-Id：定义了扩展实现的供应商版本编号
+- `<extension>`-Implementation-URL：该jar文件最新版本的下载地址
 
 #### 3.2.5、扩展标识属性
 
@@ -1364,6 +1382,7 @@ Extension-Name该属性定义了jar文件的唯一标识符
 #### 3.2.6、签名相关属性
 
 ### 3.3、MANIFEST.MF信息的获取
+
 可以通过java.util.jar这个类库来获取
 ```java
 import java.io.File;  
@@ -1394,14 +1413,88 @@ publicclass ManifestUtil {
 - Jar 包可以用 jarsigner 工具或者直接通过 java.security API 进行签名来保证安全性。一个签名的 Jar 包与原来的 Jar 包代码部分完全相同，只是更新了它的  manifest 且在 META-INF 目录中增加了一个签名文件和一个签名块文件；
 - Jar 包签名采用公钥/密钥机制，通过公钥对被秘钥加密的文件进行解密来验证文件的安全性。Jar 包签名可以防止恶意者冒充某个组织发布 Jar 包，从而避免了被篡改的恶意安全风险。当 Jar 包被签名时，一个签名文件（XXX.SF）会自动在 META-INF 文件夹中生成，该文件夹中同时还含有 manifest 文件、公钥文件，manifest 文件中包含 Jar 包中每个文件的摘要信息，然而签名文件中则包含的是 manifest 文件中每个摘要项的摘要，当 Jar 签名被验证时首先对 Jar 中每个文件进行摘要计算，然后与 manifest 中已记录的摘要进行比较来判断文件是否更改过，同时还要计算 manifest 文件的摘要，并与签名文件比较，以验证 manifest 文件是否被修改过
 
+## 5、IDEA打jar包
 
+使用Idea打包生成指定的`MANIFEST.MF`文件
 
+### 5.1、打包Java工程
 
+- 新建Java工程
+- 新建文件：`META-INF/MANIFEST.MF`
 
+	![](image/MANIFEST.MF文件.png)
 
+- 编写Java类:
+	```java
+	package agent;
+	import java.lang.instrument.Instrumentation;
+	public class AgentBoot {
+		/**
+		* 该方法在main方法之前运行，与main方法运行在同一个JVM中 并被同一个System ClassLoader装载
+		* 被统一的安全策略(security policy)和上下文(context)管理
+		*/
+		public static void premain(String agentOps, Instrumentation inst) {
+			System.out.println("=========premain方法执行========");
+			System.out.println(agentOps);
+			// 添加Transformer
+			inst.addTransformer(new MyTransformer());
+		}
+		/**
+		* 如果不存在 premain(String agentOps, Instrumentation inst) 则会执行 premain(String
+		* agentOps)
+		*/
+		public static void premain(String agentOps) {
+			System.out.println("====premain方法执行2====");
+			System.out.println(agentOps);
+		}
+	}
+	```
+- 在`MANIFEST.MF` 添加需要添加的数据：
+	```
+	Manifest-Version: 1.0
+	Premain-Class: agent.AgentBoot
+	Can-Redefine-Classes: true
+	Can-Retransform-Classes: true
+	Boot-Class-Path: javassist-3.18.1-GA.jar
+	```
+- 打开：`File -> Project Structure`，找到`Artifacts`
 
+	![](image/新建artifacts.png)
 
+- 编辑该artifacts：
 
+	![](image/update-artifacts.png)
+
+- 指定`MainClass`
+
+	![](image/mainClass.png)
+
+- 选择 `Buile -> Build Artifacts`，弹出选择action，执行`build`
+
+### 5.2、maven工程打包
+
+直接在pom文件加入插件
+
+```xml
+<plugin>
+	<groupId>org.apache.maven.plugins</groupId>
+	<artifactId>maven-jar-plugin</artifactId>
+	<version>2.3.1</version>
+	<configuration>
+		<archive>
+			<manifest>
+				<addClasspath>true</addClasspath>
+			</manifest>
+			<manifestEntries>
+				<Premain-Class>com.blue.fish.AgentBoot</Premain-Class>
+				<Agent-Class>com.blue.fish.AgentBoot</Agent-Class>
+				<Can-Redefine-Classes>true</Can-Redefine-Classes>
+				<Can-Retransform-Classes>true</Can-Retransform-Classes>
+			</manifestEntries>
+		</archive>
+	</configuration>
+</plugin>
+```
 
 
 
