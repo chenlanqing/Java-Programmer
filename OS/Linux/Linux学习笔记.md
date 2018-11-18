@@ -7,53 +7,33 @@
   - [2、服务器注意事项](#2%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
 - [二、Linux命令](#%E4%BA%8Clinux%E5%91%BD%E4%BB%A4)
   - [1、文件处理命令](#1%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4)
-    - [1.1、目录处理命令](#11%E7%9B%AE%E5%BD%95%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4)
-    - [1.2、文件处理命令](#12%E6%96%87%E4%BB%B6%E5%A4%84%E7%90%86%E5%91%BD%E4%BB%A4)
-    - [1.3、链接命令](#13%E9%93%BE%E6%8E%A5%E5%91%BD%E4%BB%A4)
-    - [1.4、文件权限管理](#14%E6%96%87%E4%BB%B6%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86)
-    - [1.5、文件搜索命令](#15%E6%96%87%E4%BB%B6%E6%90%9C%E7%B4%A2%E5%91%BD%E4%BB%A4)
-    - [1.6、帮助命令](#16%E5%B8%AE%E5%8A%A9%E5%91%BD%E4%BB%A4)
-    - [1.7、用户管理命令](#17%E7%94%A8%E6%88%B7%E7%AE%A1%E7%90%86%E5%91%BD%E4%BB%A4)
-    - [1.8、压缩命令](#18%E5%8E%8B%E7%BC%A9%E5%91%BD%E4%BB%A4)
   - [2、网络命令](#2%E7%BD%91%E7%BB%9C%E5%91%BD%E4%BB%A4)
   - [3、关机重启](#3%E5%85%B3%E6%9C%BA%E9%87%8D%E5%90%AF)
   - [4、文本编辑器 vim](#4%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%99%A8-vim)
-    - [4.1、vim 常用操作](#41vim-%E5%B8%B8%E7%94%A8%E6%93%8D%E4%BD%9C)
-    - [4.2、文本编辑器技巧](#42%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%99%A8%E6%8A%80%E5%B7%A7)
-  - [5、Linux软件安装](#5linux%E8%BD%AF%E4%BB%B6%E5%AE%89%E8%A3%85)
-- [三、Shell](#%E4%B8%89shell)
+- [三、软件管理](#%E4%B8%89%E8%BD%AF%E4%BB%B6%E7%AE%A1%E7%90%86)
+  - [1、软件包管理简介](#1%E8%BD%AF%E4%BB%B6%E5%8C%85%E7%AE%A1%E7%90%86%E7%AE%80%E4%BB%8B)
+  - [2、RPM包管理-rpm命令管理](#2rpm%E5%8C%85%E7%AE%A1%E7%90%86-rpm%E5%91%BD%E4%BB%A4%E7%AE%A1%E7%90%86)
+  - [3、RPM包管理-yum在线管理](#3rpm%E5%8C%85%E7%AE%A1%E7%90%86-yum%E5%9C%A8%E7%BA%BF%E7%AE%A1%E7%90%86)
+  - [4、源码包管理](#4%E6%BA%90%E7%A0%81%E5%8C%85%E7%AE%A1%E7%90%86)
+  - [5、脚本安装包与软件包选择](#5%E8%84%9A%E6%9C%AC%E5%AE%89%E8%A3%85%E5%8C%85%E4%B8%8E%E8%BD%AF%E4%BB%B6%E5%8C%85%E9%80%89%E6%8B%A9)
+- [四、系统管理](#%E5%9B%9B%E7%B3%BB%E7%BB%9F%E7%AE%A1%E7%90%86)
+  - [1、用户与用户组管理](#1%E7%94%A8%E6%88%B7%E4%B8%8E%E7%94%A8%E6%88%B7%E7%BB%84%E7%AE%A1%E7%90%86)
+  - [2、权限管理](#2%E6%9D%83%E9%99%90%E7%AE%A1%E7%90%86)
+  - [3、文件系统](#3%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F)
+  - [4、服务管理](#4%E6%9C%8D%E5%8A%A1%E7%AE%A1%E7%90%86)
+  - [5、进程管理](#5%E8%BF%9B%E7%A8%8B%E7%AE%A1%E7%90%86)
+  - [6、日志管理](#6%E6%97%A5%E5%BF%97%E7%AE%A1%E7%90%86)
+  - [7、启动管理](#7%E5%90%AF%E5%8A%A8%E7%AE%A1%E7%90%86)
+  - [8、备份与恢复](#8%E5%A4%87%E4%BB%BD%E4%B8%8E%E6%81%A2%E5%A4%8D)
+- [五、Shell](#%E4%BA%94shell)
   - [1、Bash基本功能](#1bash%E5%9F%BA%E6%9C%AC%E5%8A%9F%E8%83%BD)
-    - [1.1、历史命令](#11%E5%8E%86%E5%8F%B2%E5%91%BD%E4%BB%A4)
-    - [1.2、命令别名](#12%E5%91%BD%E4%BB%A4%E5%88%AB%E5%90%8D)
-    - [1.3、bash常用快捷键](#13bash%E5%B8%B8%E7%94%A8%E5%BF%AB%E6%8D%B7%E9%94%AE)
-    - [1.4、输入输出重定向](#14%E8%BE%93%E5%85%A5%E8%BE%93%E5%87%BA%E9%87%8D%E5%AE%9A%E5%90%91)
-    - [1.5、多命令顺序执行](#15%E5%A4%9A%E5%91%BD%E4%BB%A4%E9%A1%BA%E5%BA%8F%E6%89%A7%E8%A1%8C)
-    - [1.6、管道符](#16%E7%AE%A1%E9%81%93%E7%AC%A6)
-    - [1.7、通配符](#17%E9%80%9A%E9%85%8D%E7%AC%A6)
-    - [1.8、其他特殊符号](#18%E5%85%B6%E4%BB%96%E7%89%B9%E6%AE%8A%E7%AC%A6%E5%8F%B7)
   - [2、bash变量](#2bash%E5%8F%98%E9%87%8F)
-    - [2.1、规范](#21%E8%A7%84%E8%8C%83)
-    - [2.2、变量分类](#22%E5%8F%98%E9%87%8F%E5%88%86%E7%B1%BB)
-    - [2.3、本地变量](#23%E6%9C%AC%E5%9C%B0%E5%8F%98%E9%87%8F)
-    - [2.4、环境变量](#24%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F)
-    - [2.5、位置参数变量](#25%E4%BD%8D%E7%BD%AE%E5%8F%82%E6%95%B0%E5%8F%98%E9%87%8F)
-    - [2.7、接受用户输入](#27%E6%8E%A5%E5%8F%97%E7%94%A8%E6%88%B7%E8%BE%93%E5%85%A5)
   - [3、bash运算](#3bash%E8%BF%90%E7%AE%97)
-    - [3.1、declare声明变量类型](#31declare%E5%A3%B0%E6%98%8E%E5%8F%98%E9%87%8F%E7%B1%BB%E5%9E%8B)
-    - [3.2、数值运算](#32%E6%95%B0%E5%80%BC%E8%BF%90%E7%AE%97)
-    - [3.3、变量替换](#33%E5%8F%98%E9%87%8F%E6%9B%BF%E6%8D%A2)
   - [4、环境变量配置文件](#4%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
-    - [4.1、source命令](#41source%E5%91%BD%E4%BB%A4)
-    - [4.2、环境配置文件](#42%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
   - [5、正则表达式](#5%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
-    - [5.1、正则表达式与通配符](#51%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F%E4%B8%8E%E9%80%9A%E9%85%8D%E7%AC%A6)
-    - [5.2、基础正则表达式](#52%E5%9F%BA%E7%A1%80%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
   - [6、字符截取命令](#6%E5%AD%97%E7%AC%A6%E6%88%AA%E5%8F%96%E5%91%BD%E4%BB%A4)
-    - [6.1、cut命令](#61cut%E5%91%BD%E4%BB%A4)
-    - [6.2、 printf命令](#62-printf%E5%91%BD%E4%BB%A4)
-    - [6.3、awk命令](#63awk%E5%91%BD%E4%BB%A4)
-    - [6.4、sed命令](#64sed%E5%91%BD%E4%BB%A4)
-    - [6.5、sort命令](#65sort%E5%91%BD%E4%BB%A4)
+  - [7、条件判断](#7%E6%9D%A1%E4%BB%B6%E5%88%A4%E6%96%AD)
+  - [8、流程控制](#8%E6%B5%81%E7%A8%8B%E6%8E%A7%E5%88%B6)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -449,52 +429,354 @@ ln [源文件] [目标文件] ：同步更新；生成硬链接，不能跨分�
 - 替换：ab myemail chenlanq@qq.com：在文本编辑时输入 myemail， 回车或空格会自动替换为邮箱
 - 如果要使上述定义的=命令永久有效，则需要在用户的根目录下创建文件：.vimrc 里面可以存放编辑模式下的命令
 
-## 5、Linux软件安装
+# 三、软件管理
 
-- 5.1.软件包管理简介
-	- 5.1.1.软件包分类：
-		- 源码包：大部分都是 c和c++语言来实现的脚本安装包
-		- 二进制包：rpm包，系统默认包，源代码经过编译之后
-	- 5.1.2、rpm命令管理
-		- RPM包命令规则
-			```
-			httpd-2.2.15-15.el6.centos.1.i686.rpm  软件包全名
-			httpd 		软件包名
-			2.2.15		软件版本
-			15			软件发布的次数
-			el6.centos 	适合的Linux平台
-			i686		适合的硬件平台
-			rpm 		rpm包扩展名
-			```
-		- rpm 包依赖性
-			```
-			树形依赖： a --> b --> c
-			环形依赖： a --> b --> c --> a
-			模块依赖： 模块依赖查询网站 www.rpmfind.net
-			```
-		- 包全名与报名
-			- 包全名：操作的包是没有安装的软件包时，使用包全名，而且要注意路径，在安装和升级使用
-			- 包名：操作已经安装的软件包时，使用包名
-		- rpm安装
-			```
-			rpm -ivh 包全名
-				-i 	安装 
-				-v 	显示详细信息
-				-h 	显示进度
-				--nodeps	不检测依赖性
-				-U 	升级
-			rpm -e 包名：卸载
-			```
-- 5.2、RPM包管理-rpm命令管理
+## 1、软件包管理简介
 
-- 5.3、RPM包管理-yum在线管理
+- 1.1、软件包分类：
 
-- 5.4、源码包管理
+	- 源码包：大部分都是 c和c++语言来实现的脚本安装包
+		- 开源，如果有足够的能力，可以修改源代码；
+		- 可以自由选择所需的功能；
+		- 软件是编译安装，所以更加适合自己的系统，更加稳定也效率更高；
+		- 卸载方便；
+		- 安装过程步骤较多，尤其安装较大的软件集合时(如LAMP环境搭建)，容易出现 拼写错误；
+		- 编译过程时间较长，安装比二进制安装时间长；
+		- 因为是编译安装，安装过程中一旦报错新手很难解决
+	- 二进制包：rpm包，系统默认包，源代码经过编译之后
+		- 包管理系统简单，只通过几个命令就可以 实现包的安装、升级、查询和卸载；
+		- 安装速度比源码包安装快的多；
+		- 经过编译，不再可以看到源代码；
+		- 功能选择不如源码包灵活；
+		- 依赖性
 
-- 5.5、脚本安装包与软件包选择：
+## 2、RPM包管理-rpm命令管理
+
+### 2.1、RPM包命令规则
+
+```
+httpd-2.2.15-15.el6.centos.1.i686.rpm  软件包全名
+httpd 		软件包名
+2.2.15		软件版本
+15			软件发布的次数
+el6.centos 	适合的Linux平台
+i686		适合的硬件平台
+rpm 		rpm包扩展名
+```
+
+### 2.2、rpm 包依赖性
+
+```
+树形依赖： a --> b --> c
+环形依赖： a --> b --> c --> a
+模块依赖： 模块依赖查询网站：www.rpmfind.net
+```
+- 包全名与报名
+	- 包全名：操作的包是没有安装的软件包时，使用包全名，而且要注意路径，在安装和升级使用
+	- 包名：操作已经安装的软件包时，使用包名，是搜索`/var/lib/rpm/`中的数据库
+
+### 2.3、rpm安装
+
+```
+rpm -ivh 包全名
+	-i 	安装 
+	-v 	显示详细信息
+	-h 	显示进度
+	--nodeps	不检测依赖性
+	-U 	升级
+rpm -e 包名：卸载
+```
 
 
-# 三、Shell
+- `[root@localhost ~]# rpm -q 包名`：查询包是否安装
+- `[root@localhost ~]# rpm –qa`：查询所有已经安装的RPM包
+- `rpm–qi 包名`：查询软件包的详细信息
+- `rpm–ql 包名`：查询包文件安装位置
+- `rpm–qf 系统文件名`：查询系统文件属于哪个软件包
+- `rpm –qR 包名`：查询软件包的依赖性
+- `rpm –V 已安装的包名`：RPM包校验
+
+## 3、RPM包管理-yum在线管理
+
+### 3.1、网络yum源
+
+`[root@localhost yum.repos.d]# vi /etc/yum.repos.d/CentOS-Base.repo`
+- `[base]`：容器名称，一定要放在[]中
+- name：容器说明，可以自己随便写
+- mirrorlist：镜像站点，这个可以注释掉
+- baseurl：我们的yum源服务器的地址。默认是CentOS官方的yum源服务 器，是可以使用的，如果你觉得慢可以改成你喜欢的yum源地 址
+- enabled：此容器是否生效，如果不写或写成enable=1都是生效，写成 enable=0就是不生效
+- gpgcheck：如果是1是指RPM的数字证书生效，如果是0则不生效
+- gpgkey：数字证书的公钥文件保存位置。不用修改
+
+### 3.2、yum命令
+
+- `yum list`：查询所有可以用的软件包列表
+- `yum search 关键字`：搜索服务器上所有和关键字相关的包
+- `yum –y install 包名`：`-y`表示自动回答yes，安装软件
+- `yum -y update 包名`：软件升级
+- `yum -y remove 包名`：软件卸载
+- `yum grouplist`：列出所有可用的软件组列表
+- `yum groupinstall 软件组名`：安装指定软件组，组名可以由grouplist查询出来
+- `yum groupremove 软件组名`：卸载指定软件组
+
+### 3.3、搭建光盘源
+
+光盘yum源搭建步骤
+- 挂载光盘：`mount /dev/cdrom /mnt/cdrom/`
+- 让网络yum源文件失效：
+	```bash
+	[root@localhost ~]# cd /etc/yum.repos.d/
+	[root@localhost yum.repos.d]# mv CentOS-Base.repo CentOS-Base.repo.bak
+	[root@localhost yum.repos.d]# mv CentOS-Debuginfo.repo CentOS-Debuginfo.repo.bak
+	[root@localhost yum.repos.d]# mv CentOS-Vault.repo CentOS-V ault.repo.bak
+	```
+- 修改光盘yum源文件
+	```bash
+	[root@localhost yum.repos.d]# vim CentOS-Media.repo [c6-media]
+	name=CentOS-$releasever - Media baseurl=file:///mnt/cdrom #地址为你自己的光盘挂载地址
+	# file:///media/cdrom/
+	# file:///media/cdrecorder/
+	#注释这两个不存在的地址
+	gpgcheck=1
+	enabled=1 #把enabled=0改为enabled=1，让这个yum源配置文件生效 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
+	```
+
+## 4、源码包管理
+
+### 4.1、源码包和RPM包的区别
+
+- RPM包安装位置，其是安装在默认位置的
+	- `/etc/`：配置文件安装目录
+	- `/usr/bin/`：可执行的命令安装目录
+	- `/usr/lib/`：程序所使用的函数库保存位置
+	- `/usr/share/doc/`：基本的软件使用手册保存位置
+	- `/usr/share/man/`：帮助文件保存位置
+- 源码包安装位置：安装在指定位置当中，一般是`/usr/local/软件名/`
+
+
+## 5、脚本安装包与软件包选择
+
+# 四、系统管理
+
+## 1、用户与用户组管理
+
+### 1.1、用户信息文件
+
+用户信息存放在文件：`/etc/passwd`，内容如下：
+
+```
+root:x:0:0:root:/root:/bin/bash
+...
+```
+其是使用`:` 进行分割的，各个字段含义：
+
+- 第1个字段：用户名称
+- 第2个字段：密码标志，密码是存储在：`/etc/shadow`
+- 第3个字段：UID（用户ID）
+	- 0：超级用户
+	- 1-499：系统用户（伪用户）
+	- 500-65535：普通用户
+- 第4个字段：GID（用户初始组ID） `初始组`就是用户一登录就就立刻拥有这个用户组的相关权限，每个用户的初始组只能有一个，一般就是和这个用户的用户名相同的组名作为这个用户的初始组；`附加组`指用户可以加入多个其他的用户组，并拥有这些组的权限，附加组可以有多个；
+- 第5个字段：用户说明
+- 第6个字段：家目录
+	- 普通用户：/home/用户名/
+	- 超级用户：/root/
+- 第7个字段：登录之后的shell，即Linux的命令解释器，除了标准的`/bin/bash`之外，还可以写成：`/sbin/nologin, /usr/bin/passwd`等
+
+### 1.2、影子文件
+
+该文件位置：`/etc/shadow`
+```
+root:$1$RQF6Hgs/$8zbWgDRZfty9DGNWuhWSY.:17277:0:99999:7:::
+```
+其是使用`:` 进行分割的，各个字段含义：
+- 第1字段：用户名
+- 第2字段：加密密码
+	- 加密算法升级为SHA512散列加密算法
+	- 如果密码位是`!!`或`*`代表没有密码，不能登录；
+- 第3字段：密码最后一次修改日期，使用1970年1月1日作为标准时间，每过一天时间戳加1
+- 第4字段：两次密码的修改间隔时间（和第3字段相比）
+- 第5字段：密码有效期（和第3字段相比）
+- 第6字段：密码修改到期前的警告天数（和第5字段相比）
+- 第7字段：密码过期后的宽限天数（和第5字段相比）
+	- 0：代表密码过期后立即失效
+	- -1：则代表密码永远不会失效
+- 第8字段：账号失效时间，要用时间戳表示
+- 第9字段：保留字段
+
+**时间戳换算**
+- 把时间戳换算为日期：`date -d "1970-01-01 17277 days"`
+- 把日期换算为时间戳：`echo $(($(date --date="2018/11/16" +%s)/86400+1))`
+
+### 1.3、组信息文件
+
+**组信息文件`/etc/group`，`root:x:0:`**
+
+- 第一字段：组名
+- 第二字段：组密码标志
+- 第三字段：GID
+- 第四字段：组中附加用户
+
+**组密码文件`/etc/gshadow`，`root:::`**
+
+- 第一字段：组名
+- 第二字段：组密码
+- 第三字段：组管理员用户名
+- 第四字段：组中附加用户
+
+### 1.4、用户管理相关文件
+
+- 用户的家目录：
+	- 普通用户：`/home/用户名/`，所有者和所属组都是此用户，权限是700；
+	- 超级用户：`/root/`，所有者和所属组都是 root用户，权限是550；
+- 用户的邮箱：`/var/spool/mail/用户名/`；
+- 用户模板目录：`/etc/skel/`，创建一个用户后，默认家目录下有如下文件：` .bash_logout  .bash_profile  .bashr`；
+
+### 1.5、用户管理命令
+
+#### 1.5.1、添加用户：useradd命令
+
+`[root@localhost ~]#useradd [选项] 用户名`
+
+- `-u` UID：手工指定用户的UID号
+- `-d` 家目录：手工指定用户的家目录
+- `-c` 用户说明： 手工指定用户的说明
+- `-g` 组名：手工指定用户的初始组
+- `-G` 组名：指定用户的附加组
+- `-s` shell：手工指定用户的登录shell。默认是/bin/bash
+
+添加的默认用户，实际上是在往下列文件中写内容
+```
+[root@localhost ~]# useradd user1
+[root@localhost ~]# grep "user1" /etc/passwd
+[root@localhost ~]# grep "user1" /etc/shadow
+[root@localhost ~]# grep "user1" /etc/group
+[root@localhost ~]# grep "user1" /etc/gshadow
+[root@localhost ~]# ll -d /home/user1/
+[root@localhost ~]# ll /var/spool/mail/user1
+```
+
+指定选项添加用户：
+```
+groupadd user2
+useradd -u 550 -g user1 -G root -d /home/user2 -c "test user" -s /bin/bash user1
+```
+
+用户默认值文件
+- `/etc/default/useradd`
+	```
+	GROUP=100	#用户默认组    
+	HOME=/home	#用户家目录
+	INACTIVE=-1	#密码过期宽限天数，为/etc/shadowd第7字段
+	EXPIRE=		#密码失效时间，为/etc/shadowd第8字段
+	SHELL=/bin/bash	#默认shell
+	SKEL=/etc/skel	#模板目录
+	CREATE_MAIL_SPOOL=yes	#是否建立邮箱
+	```
+- `/etc/login.defs`
+	```
+	PASS_MAX_DAYS 99999	#密码有效期，为/etc/shadowd第5字段
+	PASS_MIN_DAYS 0	#密码修改间隔，为/etc/shadowd第4字段
+	PASS_MIN_LEN 5	#密码最小5位(PAM)
+	PASS_WARN_AGE 7	#密码到期警告，为`/etc/shadowd` 第6字段
+	UID_MIN 500 	#最小和最大UID范围
+	GID_MAX 60000	
+	ENCRYPT_METHOD	SHA512 #加密模式
+	```
+
+#### 1.5.2、修改密码：passwd命令
+
+`[root@localhost ~]#passwd [选项] 用户名`，如果不写用户名，则是为当前登录用户给密码
+- `-S`：查询用户密码的密码状态。仅root用户 可用。
+- `-l`：暂时锁定用户，仅root用户可用
+- `-u`： 解锁用户，仅root用户可用
+- `--stdin`：可以通过管道符输出的数据作为用户的密码。
+
+查看密码状态：
+```bash
+[root@localhost ~]# passwd -S user1
+user1 PS 2018-11-18 0 99999 7 -1 (Password set, MD5 crypt.)
+#用户名密码设定时间(2018-11-18) 密码修改间隔时间(0) #密码有效期(99999) 警告时间(7) 密码不失效(-1)
+```
+
+锁定用户和解锁用户：`passwd -l user1`，`passwd -u user1`
+
+使用字符串作为用户的密码：`echo "123" | passwd --stdin user2`
+
+#### 1.5.3、修改用户信息：usermod
+
+`[root@localhost ~]#usermod [选项] 用户名 选项`
+- `-u UID`：修改用户的UID
+- `-c` 用户说明：修改用户的说明信息
+- `-G` 组名：修改用户的附加组
+- `-L`：临时锁定用户
+- `-U`
+
+```bash
+[root@localhost ~]# usermod -c "test user" lamp #修改用户的说明
+[root@localhost ~]# usermod -G root lamp #把lamp用户加入root组
+[root@localhost ~]# usermod -L lamp #锁定用户
+[root@localhost ~]# usermod -U lamp #解锁用户
+```
+
+#### 1.5.4、修改用户密码状态：chage
+
+`[root@localhost ~]#chage [选项] 用户名`
+- `-l`: 列出用户的详细密码状态
+- `-d` 日期：修改密码最后一次更改日期(shadow3字段)
+- `-m` 天数：两次密码修改间隔(4字段) 
+- `-M` 天数：密码有效期(5字段)
+- `-W` 天数：密码过期前警告天数(6字段) 
+- `-I` 天数：密码过后宽限天数(7字段) 
+- `-E` 日期：账号失效时间(8字段)
+
+```bash
+[root@localhost ~]# chage -d 0 user1
+#这个命令其实是把密码修改日期归0了(shadow第3字段) #这样用户一登陆就要修改密码
+```
+
+#### 1.5.5、删除用户：userdel
+
+`[root@localhost ~]# userdel [-r] 用户名`，`-r`:删除用户的同时删除用户家目录
+
+手工删除用户：
+```bash
+[root@localhost ~]# vi /etc/passwd
+[root@localhost ~]# vi /etc/shadow
+[root@localhost ~]# vi /etc/group
+[root@localhost ~]# vi /etc/gshadow
+[root@localhost ~]# rm -rf /var/spool/mail/user1
+[root@localhost ~]# rm -rf /home/user1/
+```
+
+查看用户ID：`id 用户名`
+
+#### 1.5.6、切换用户身份：su
+
+`[root@localhost ~]# su [选项] 用户名`
+- `-`：选项只使用`-`代表连带用户的环境 变量一起切换
+- `-c` 命令：仅执行一次命令，而不切换用户身份
+
+`su - root -c "useradd user3"`：不切换成root，但是执行useradd命令添加user1用户
+
+
+## 2、权限管理
+
+## 3、文件系统
+
+## 4、服务管理
+
+## 5、进程管理
+
+## 6、日志管理
+
+## 7、启动管理
+
+## 8、备份与恢复
+
+
+# 五、Shell
 
 ## 1、Bash基本功能
 
@@ -753,7 +1035,7 @@ $#	| 这个变量代表命令行中所有参数的个数
 	done
 	```
 ### 2.6、预定义变量
-- `$?`：最后一次执行的命令的返回状态。如果这个变 量的值为0，证明上一个命令正确执行;如果 这个变量的值为非0(具体是哪个数，由命令 自己来决定)，则证明上一个命令执行不正确 了。
+- `$?`：最后一次执行的命令的返回状态。如果这个变量的值为0，证明上一个命令正确执行；如果 这个变量的值为非0（具体是哪个数，由命令自己来决定），则证明上一个命令执行不正确了。
 - `$$`：当前进程的进程号(PID)
 - `$!`：后台运行的最后一个进程的进程号(PID)
 
@@ -1088,7 +1370,378 @@ sed 是一种几乎包括在所有 UNIX 平台（包括 Linux的轻量级流编�
 	[root@localhost ~]# sort -n -t ":" -k 3,3 /etc/passwd
 	# 以数字进行排序
 	```
+	
+## 7、条件判断
+
+两种判断格式：
+
+- test -e /root/install.log
+- [ -e /root/install.log ]，括号两端必须有空格
+
+### 7.1、按照文件类型判断
+
+测试选项 | 作用
+--------| -------
+-b 文件 | 判断该文件是否存在，并且是否为块设备文件（是否块设备文件为真）
+-c 文件 | 判断该文件是否存在，并且是否为字符设备文件(是字符设备 文件为真)
+`-d 文件` | 判断该文件是否存在，并且是否为目录文件(是目录为真)
+`-e 文件` | 判断该文件是否存在(存在为真)
+`-f 文件` | 判断该文件是否存在，并且是否为普通文件(是普通文件为真）
+-L 文件 | 判断该文件是否存在，并且是否为符号链接文件(是符号链接 文件为真)
+-p 文件 | 判断该文件是否存在，并且是否为管道文件(是管道文件为真)
+-s 文件 | 判断该文件是否存在，并且是否为非空(非空为真)
+-S 文件 | 判断该文件是否存在，并且是否为套接字文件(是套接字文件为真)
+
+```bash
+[ -d /root ] && echo "yes" || echo "no"
+# 第一个判断命令如果正确执行，则打印“yes”，否则打 印“no”
+```
+
+### 7.2、按照文件权限进行判断
+
+测试选项 | 作用
+--------| -------
+`-r 文件` | 判断该文件是否存在，并且是否该文件拥有读权限(有读 权限为真)
+`-w 文件` | 判断该文件是否存在，并且是否该文件拥有写权限(有写 权限为真)
+`-x 文件` | 判断该文件是否存在，并且是否该文件拥有执行权限(有 执行权限为真)
+-u 文件  | 判断该文件是否存在，并且是否该文件拥有SUID权限(有 SUID权限为真)
+-g 文件 | 判断该文件是否存在，并且是否该文件拥有SGID权限(有 SGID权限为真)
+-k 文件 | 判断该文件是否存在，并且是否该文件拥有SBit权限(有 SBit权限为真)
+
+```bash
+[root@bluefish shell]# [ -w /root/dev/shell/student.txt ] && echo yes || echo no
+# 判断文件是否有写权限
+```
+
+### 7.3、两个文件直接进行比较
+
+测试选项 | 作用
+--------| -------
+`文件1 -nt 文件2` | 判断文件1的修改时间是否比文件2的新(如果新则为真)
+`文件1 -ot 文件2` | 判断文件1的修改时间是否比文件2的旧(如果旧则为真)
+`文件1 -ef 文件2` | 判断文件1是否和文件2的Inode号一致，可以理解为两个文件是否为同一个文件。这个判断用于判断硬链接是很 好的方法
+
+```bash
+ln /root/student.txt /tmp/stu.txt
+# 创建个硬链接吧
+[ /root/student.txt -ef /tmp/stu.txt ] && echo "yes" || echo "no" yes
+# 用test测试下
+```
+
+### 7.4、两个整数之间的比较
+
+测试选项 | 作用
+--------| -------
+整数1 -eq 整数 2 | 判断整数1是否和整数2相等(相等为真)
+整数1 -ne 整数 2 | 判断整数1是否和整数2不相等(不相等位置)
+整数1 -gt 整数 2 | 判断整数1是否大于整数2(大于为真)
+整数1 -lt 整数 2 | 判断整数1是否小于整数2(小于位置)
+整数1 -ge 整数 2 | 判断整数1是否大于等于整数2(大于等于为真)
+整数1 -le 整数 2 | 判断整数1是否小于等于整数2(小于等于为真)
+
+```bash
+[ 23 -ge 22 ] && echo "yes" || echo "no" yes
+#判断23是否大于等于22，当然是了
+[ 23 -le 22 ] && echo "yes" || echo "no" no #判断23是否小于等于22，当然不是了
+```
+
+### 7.5、字符串的判断
+
+测试选项 | 作用
+--------| -------
+-z 字符串 | 判断字符串是否为空(为空返回真)
+-n 字符串 | 判断字符串是否为非空(非空返回真)
+字串1 ==字串2 | 判断字符串1是否和字符串2相等(相等返回真)
+字串1 != 字串2 | 判断字符串1是否和字符串2不相等(不相等返回真)
+
+```bash
+name=bluefish
+#给name变量赋值
+[ -z "$name" ] && echo "yes" || echo "no" no
+#判断name变量是否为空，因为不为空，所 以返回no
+```
+
+### 7.6、多重条件判断
+
+测试选项 | 作用
+--------| -------
+`判断1 -a 判断2` | 逻辑与，判断1和判断2都成立，最终的结果才为真
+`判断1 -o 判断2` | 逻辑或，判断1和判断2有一个成立，最终的结果就为 真
+`! 判断` | 逻辑非，使原始的判断式取反
+
+```bash
+aa=11
+[ -n "$aa" -a "$aa" -gt 23 ] && echo "yes" || echo "no"
+no 
+# 判断变量aa是否有值，同时判断变量aa的是否大于23
+# 因为变量aa的值不大于23，所以虽然第一个判断值为真， 返回的结果也是假
+
+aa=24
+[ -n "$aa" -a "$aa" -gt 23 ] && echo "yes" || echo "no" yes
+```
 
 
+## 8、流程控制
 
+### 8.1、if语句
+
+#### 8.1.1、单分支if条件语句
+
+- `if`语句使用fi结尾，和一般语言使用大括号结尾不同；
+- `[ 条件判断式 ]`就是使用test命令判断，所 以中括号和条件判断式之间必须有空格；
+- `then`后面跟符合条件之后执行的程序，可以放在`[]`之后，用 `;` 分割。也可以换行写入，就不需要 `;` 了
+
+```bash
+if [ 条件判断 ]; then
+	程序
+fi
+
+# 或者
+if [ 条件判断 ]
+	then 
+		程序
+fi
+```
+
+例子:判断分区使用率
+
+```bash
+#!/bin/bash
+# 统计根分区使用率
+
+rate=$(df -h  | grep "/dev/sda2" | awk '{print $5}' | cut -d "%" -f1)
+if [ $rate -ge 80 ]
+	then
+		echo "Warning /dev/sda2 is full"
+fi
+```
+
+#### 8.1.2、双分支if条件语句
+
+```bash
+if [ 条件判断 ]
+	then
+		条件成立时，执行的程序
+	else
+		条件不成立时，执行的另衣蛾程序
+fi
+```
+
+**例子1：备份mysql数据库**
+
+```bash
+#!/bin/bash
+ntpdate asia.pool.ntp.org &>/dev/null
+#同步系统时间
+date=$(date +%y%m%d) #把当前系统时间按照“年月日”格式赋予变量date
+size=$(du -sh /var/lib/mysql/mysql/help_topic.ibd) #统计mysql数据库的大小，并把大小赋予size变量
+
+if [ -d /tmp/dbbak ]
+	then
+		echo "Date: $date" > /tmp/dbbak/dbinfo.txt
+		echo "Data size: $size" >> /tmp/dbbak/dbinfo.txt
+		cd /tmp/dbbak
+		tar -zcf mysq-lib-$date.tar.gz /var/lib/mysql/mysql/help_topic.ibd &> /dev/null
+		rm -rf /tmp/dbbak/dbinfo.txt
+	else
+		mkdir /tmp/dbbak
+		echo "Date: $date" > /tmp/dbbak/dbinfo.txt
+		echo "Data size: $size" >> /tmp/dbbak/dbinfo.txt
+		cd /tmp/dbbak
+		tar -zcf mysq-lib-$date.tar.gz /var/lib/mysql/mysql/help_topic.ibd &> /dev/null
+		rm -rf /tmp/dbbak/dbinfo.txt
+fi
+```
+
+ **例子2:判断apache是否启动**
+
+```bash
+port=$(nmap -sT 192.168.1.156 | grep tcp | grep http | awk '{print $2}')
+#使用nmap命令扫描服务器，并截取apache服务的状态，赋予变量port 
+
+if [ "$port" == "open" ]
+	then
+		echo “$(date) httpd is ok!” >> /tmp/autostart-acc.log
+	else
+		/etc/rc.d/init.d/httpd start &>/dev/null
+		echo "$(date) restart httpd !!" >> /tmp/autostart-err.log 
+fi
+```
+
+#### 8.1.3、多分支if条件语句
+```
+if [ 条件判断式1 ] 
+	then
+		当条件判断式1成立时，执行程序1 
+elif [ 条件判断式2 ]
+	then 当条件判断式2成立时，执行程序2
+	# 省略更多条件...
+else
+	当所有条件都不成立时，最后执行此程序 
+fi
+```
+
+例子
+```bash
+#!/bin/bash
+
+read -p "please input a filename: " file
+
+if [ -z "$file" ]
+#判断file变量是否为空
+	then
+		echo "ERROR, please input a fileName!!"
+		exit 1
+elif [ ! -e "$file" ]
+#判断file的值是否存在
+	then
+		echo "your input is not a file"
+		exit 2
+elif [ -f "$file" ]
+#判断file的值是否为普通文件
+	then
+		echo "$file is a regulare file!"
+elif [ -d "$file" ]
+#判断file的值是否为目录文件
+	then
+		echo "$file is a directory"
+else
+        echo "$file is illeaga file"    
+
+fi
+```
+
+### 8.2、case语句
+
+`case`语句和`if...elif...else`语句一样都是多分支条件语句，不过和`if`多分支条件语句不同的是，`case`语句只能判断一种条件关 系，而`if`语句可以判断多种条件关系;
+```bash
+case $变量名 in 
+	"值1")
+		如果变量的值等于值1，则执行程序1
+		;; 
+	"值2")
+		如果变量的值等于值2，则执行程序2
+		;;
+	...省略其他分支... 
+	*)
+   		如果变量的值都不是以上的值，则执行此程序
+		;; 
+esac
+```
+
+例子：
+
+```bash
+#!/bin/bash
+echo 'Airline to Shanghai, please input "1"'
+echo 'Airline to Guangzhou, please input "2"'
+echo 'Airline to Beijing, please input "3"'
+read -p "please input your choice: " -t 30 de
+
+echo "Your input $de \n"
+
+case $de in
+	1)
+		echo "Welcome to Shanghai!"
+		;;
+	2)
+		echo "Welcome to Guangzhou"
+		;;
+	3)
+		echo "Welcome to Beijing"
+		;;
+	*)
+		echo "illegal input"
+		;;
+esac
+```
+
+### 8.3、for循环
+
+- 语法1：
+
+	```bash
+	for 变量 in 值1值2值3... 
+		do
+			程序 
+		done
+	```
+
+	例子：批量解压缩脚本
+
+	```bash
+	#!/bin/bash
+
+	cd /lamp
+	ls *.tar.gz > ls.log
+	for i in $(cat ls.log)
+		do
+			tar -zxf $i &> /dev/null
+		done
+	```
+
+- 语法2：
+	```bash
+	for (( 初始值; 循环控制条件; 变量变化))
+		do
+			程序
+		done
+	```
+	例子
+	```bash
+	#!/bin/bash
+	s=0
+	for (( i=0; i<=100; i=i+1))
+		do
+			s=$(($s+$i))
+		done
+	echo "The sum of  1+2+3+...+100 is: $s"
+	```
+
+### 8.4、while循环
+
+`while`循环是不定循环，也称作条件循环 。只要条件判断式成立，循环就会一直继 续，直到条件判断式不成立，循环才会停止。这就和`for`的固定循环不太一样了。
+
+```bash
+while [ 条件判断式 ]
+	do
+		程序
+	done
+```
+
+```bash
+#!/bin/bash
+i=1
+s=0
+
+while [ i -le 100 ]
+	do
+		s=$(($s + $i))
+		i=$(($i + 1))
+	done
+```
+
+### 8.5、util循环
+
+`until`循环，和`while`循环相反，`until`循环时 只要条件判断式不成立则进行循环，并执`行循环程序。一旦循环条件成立，则终止循环
+
+```bash
+until [ 条件判断式 ]
+	do
+		程序
+	done
+```
+
+```bash
+#!/bin/bash
+i=1
+s=0
+
+until [ i -gt 100 ]
+# 循环直到变量i的值大于100，就停止循环
+	do
+		s=$(($s + $i))
+		i=$(($i + 1))
+	done
+```
 
