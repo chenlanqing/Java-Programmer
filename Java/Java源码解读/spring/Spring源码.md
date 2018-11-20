@@ -50,82 +50,83 @@
 
 ## 1、IOC的生命周期
 
-Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等功能。BeanFactory和ApplicationContext是Spring两种很重要的容器，前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播、资源访问和国际化的消息访问等功能；
+Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等功能。`BeanFactory`和`ApplicationContext`是Spring两种很重要的容器，前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播、资源访问和国际化的消息访问等功能；
 
 ## 2、ApplicationContext Bean 生命周期
 
 ![image](image/ApplicationContext-Bean的生命周期.png)
 
-面向开发者的，几乎大部分应用场景都是直接使用ApplicationContext 而非底层的BeanFactory
+面向开发者的，几乎大部分应用场景都是直接使用`ApplicationContex`t 而非底层的`BeanFactory`
 
 - （1）Bean的实例化：
-	* 首先容器启动后，会对scope为singleton且非懒加载的bean进行实例化;
-	* 容器在内部实现的时候，采用“策略模式”来决定采用何种方式初始化bean实例.通常，可以通过反射或者CGLIB动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 CglibSubclassingInstantiationStrategy。容器只要根据相应bean定义的BeanDefinition取得实例化信息，结合CglibSubclassingInstantiationStrategy以及不同的bean定义类型，就可以返回实例化完成的对象实例.但不是直接返回构造完成的对象实例，而是以BeanWrapper对构	造完成的对象实例进行包裹，返回相应的BeanWrapper实例.这个BeanWrapper的实现类BeanWrapperImpl是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
+	* 首先容器启动后，会对`scope`为`singleton`且非懒加载的bean进行实例化;
+	* 容器在内部实现的时候，采用`策略模式`来决定采用何种方式初始化bean实例.通常，可以通过反射或者CGLIB动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 `CglibSubclassingInstantiationStrategy`。容器只要根据相应bean定义的`BeanDefinitio`n取得实例化信息，结合`CglibSubclassingInstantiationStrategy`以及不同的bean定义类型，就可以返回实例化完成的对象实例。但不是直接返回构造完成的对象实例，而是以BeanWrapper对构	造完成的对象实例进行包裹，返回相应的`BeanWrapper`实例，这个`BeanWrapper`的实现类`BeanWrapperImpl`是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
 
-- （2）设置对象属性：<br>
-	BeanWrapper继承了PropertyAccessor接口，可以以同一的方式对对象属性进行访问，同时又继承了PropertyEditorRegistry和TypeConverter接口，然后BeanWrapper就可以很方便地对bean注入属性了；
+- （2）设置对象属性：
 
-- （3）如果Bean实现了BeanNameAware接口，会回调该接口的setBeanName()方法，传入该bean的id，此时该Bean就获得了自己在配置文件中的id；
+	`BeanWrapper`继承了`PropertyAccessor`接口，可以以同一的方式对对象属性进行访问，同时又继承了`PropertyEditorRegistry`和`TypeConverter`接口，然后`BeanWrapper`就可以很方便地对bean注入属性了；
 
-- （4）如果Bean实现了BeanFactoryAware接口，会回调该接口的setBeanFactory()方法，传入该Bean的BeanFactory，这样该Bean就获得了自己所在的BeanFactory
+- （3）如果`Bean`实现了`BeanNameAware`接口，会回调该接口的`setBeanName()`方法，传入该bean的id，此时该Bean就获得了自己在配置文件中的id；
 
-- （5）如果Bean实现了ApplicationContextAware接口，会回调该接口的setApplicationContext()方法，传入该Bean的ApplicationContext，这样该Bean就获得了自己所在的ApplicationContext
+- （4）如果`Bean`实现了`BeanFactoryAware`接口，会回调该接口的`setBeanFactory()`方法，传入该Bean的BeanFactory，这样该Bean就获得了自己所在的BeanFactory
 
-- （6）如果有一个Bean实现了BeanPostProcessor接口，并将该接口配置到配置文件中，则会调用该接口的postProcessBeforeInitialization()方法
+- （5）如果`Bean`实现了`ApplicationContextAware`接口，会回调该接口的`setApplicationContext()`方法，传入该Bean的`ApplicationContext`，这样该Bean就获得了自己所在的`ApplicationContext`
 
-- （7）如果Bean实现了InitializingBean接口，则会回调该接口的afterPropertiesSet()方法
+- （6）如果有一个`Bean`实现了`BeanPostProcessor`接口，并将该接口配置到配置文件中，则会调用该接口的`postProcessBeforeInitialization()`方法
 
-- （8）如果Bean配置了init-method方法，则会执行init-method配置的方法；
+- （7）如果`Bean`实现了`InitializingBean`接口，则会回调该接口的`afterPropertiesSet()`方法
 
-- （9）如果有一个Bean实现了BeanPostProcessor接口，并将该接口配置到配置文件中，则会调用该接口的postProcessAfterInitialization方法；
+- （8）如果`Bean`配置了`init-method`方法，则会执行`init-method`配置的方法；
+
+- （9）如果有一个`Bean`实现了`BeanPostProcessor`接口，并将该接口配置到配置文件中，则会调用该接口的`postProcessAfterInitialization`方法；
 
 - （10）经过步骤9之后，就可以正式使用该Bean了，对于scope为singleton的Bean，Spring IoC容器会缓存一份该Bean的实例，而对于scope为prototype的Bean，每次被调用都回new一个对象，而且生命周期也交给调用方管理了，不再是Spring容器进行管理了；
 
-- （11）容器关闭后，如果Bean实现了DisposableBean接口，则会调用该接口的destroy()方法；
+- （11）容器关闭后，如果`Bean`实现了`DisposableBean`接口，则会调用该接口的`destroy()`方法；
 
-- （12）如果Bean配置了destroy-method方法，则会执行destroy-method配置的方法.至此，整个Bean生命周期结束；
+- （12）如果Bean配置了`destroy-method`方法，则会执行`destroy-method`配置的方法.至此，整个Bean生命周期结束；
 
 ## 3、BeanFactory Bean生命周期-面向Spring本身
 
 ![image](image/BeanFactory.png)
 
-BeanFactoty容器中， Bean的生命周期如上图所示，与ApplicationContext相比，有如下几点不同：
+`BeanFactoty`容器中， Bean的生命周期如上图所示，与`ApplicationContext`相比，有如下几点不同：
 
-- BeanFactory容器中，不会调用ApplicationContextAware接口的setApplicationContext()方法
-- BeanPostProcessor接口的postProcessBeforeInitialization方法和postProcessAfterInitialization方法不会自动调用，必须自己通过代码手动注册
-- BeanFactory容器启动的时候，不会去实例化所有bean，包括所有scope为singleton且非延迟加载的bean也是一样，而是在调用的时候去实例化
+- `BeanFactory`容器中，不会调用`ApplicationContextAware`接口的`setApplicationContext()`方法
+- `BeanPostProcessor`接口的`postProcessBeforeInitialization`方法和`postProcessAfterInitialization`方法不会自动调用，必须自己通过代码手动注册
+- `BeanFactory`容器启动的时候，不会去实例化所有bean，包括所有scope为singleton且非延迟加载的bean也是一样，而是在调用的时候去实例化
 
 ## 4、IOC容器的启动过程
 
-### 4.1、web环境下Spring\SpringMVC容器启动过程
+web环境下`Spring\SpringMVC`容器启动过程
 
-- （1）对于一个web应用，其部署在web容器中，web容器提供一个全局的上下文环境，即ServletContext，其为后面的SpringIOC容器提宿主环境；
+- （1）对于一个web应用，其部署在web容器中，web容器提供一个全局的上下文环境，即`ServletContext`，其为后面的`SpringIOC`容器提宿主环境；
 
-- （2）web.xml中配置ContextLoaderListener.在web容器启动时，会触发容器初始化事件，ContextLoaderListener会监听到这个事件，其contextInitialized()方法被调用，在这个方法中，spring会初始化一个启动上下文，这个上下文被称为根上下文，即WebApplicationContext.其实际实现类是XmlWebApplicationContext。这个就是Spring的IOC容器.其对应的Bean定义的配置由web.xml中的context-param标签指定.在这个IoC容器初始化完毕后，spring容器以WebApplicationContext.ROOTWEBAPPLICATIONCONTEXTATTRIBUTE为属性Key，将其存储到ServletContext中，便于获取；
+- （2）`web.xml`中配置`ContextLoaderListener`在web容器启动时，会触发容器初始化事件，`ContextLoaderListener`会监听到这个事件，其`contextInitialized()`方法被调用，在这个方法中，spring会初始化一个启动上下文，这个上下文被称为`根上下文`，即`WebApplicationContext`。其实际实现类是`XmlWebApplicationContext`。这个就是Spring的IOC容器。其对应的Bean定义的配置由web.xml中的context-param标签指定.在这个IoC容器初始化完毕后，spring容器以`WebApplicationContext.ROOTWEBAPPLICATIONCONTEXTATTRIBUTE`为属性Key，将其存储到`ServletContext`中，便于获取；
 
-- （3）ContextLoaderListener监听器初始化完毕后，始初始化web.xml中配置的Servlet，可以有多个。以最常见的DispatcherServlet为例（Spring MVC，这个servlet实际上是一个标准的前端控制器，用以转发、匹配、处理每个servlet请求。DispatcherServlet上下文在初始化的时候会建立自己的IoC上下文容器，用以持有spring mvc相关的bean，这个servlet自己持有的上下文默认实现类也是XmlWebApplicationContext.在建立DispatcherServlet自己的IoC上下文时，会利用WebApplicationContext.ROOTWEBAPPLICATIONCONTEXTATTRIBUTE先从ServletContext中获取之前的根上下文（即WebApplicationContext)作为自己上下文的parent上下文）即第2步中初始化的XmlWebApplicationContext作为自己的父容器）.有了这个parent上下文之后，再初始化自己持有的上下文（这个DispatcherServlet初始化自己上下文的工作在其initStrategies方法中可以看到，大概的工作就是初始化处理器映射、视图解析等）。初始化完毕后，spring以与servlet的名字相关（此处不是简单的以servlet名为Key，而是通过一些转换）的属性为属性Key，也将其存到ServletContext中，以便后续使用.这样每个servlet就持有自己的上下文，即拥有自己独立的bean空间，同时各个servlet共享相同的bean，即根上下文定义的那些bean
+- （3）`ContextLoaderListener`监听器初始化完毕后，始初始化`web.xml`中配置的`Servlet`，可以有多个。以最常见的`DispatcherServlet`为例（Spring MVC，这个servlet实际上是一个标准的前端控制器，用以转发、匹配、处理每个servlet请求。`DispatcherServlet上下文`在初始化的时候会建立自己的IoC上下文容器，用以持有spring mvc相关的bean，这个servlet自己持有的上下文默认实现类也是`XmlWebApplicationContext`。在建立`DispatcherServlet`自己的IoC上下文时，会利用`WebApplicationContext.ROOTWEBAPPLICATIONCONTEXTATTRIBUTE`先从`ServletContext`中获取之前的根上下文（即`WebApplicationContext`）作为自己上下文的parent上下文）即第2步中初始化的`XmlWebApplicationContext`作为自己的父容器）.有了这个parent上下文之后，再初始化自己持有的上下文（这个`DispatcherServlet`初始化自己上下文的工作在其`initStrategies`方法中可以看到，大概的工作就是初始化处理器映射、视图解析等）。初始化完毕后，spring以与servlet的名字相关（此处不是简单的以servlet名为Key，而是通过一些转换）的属性为属性Key，也将其存到`ServletContext`中，以便后续使用.这样每个servlet就持有自己的上下文，即拥有自己独立的bean空间，同时各个servlet共享相同的bean，即根上下文定义的那些bean
 
 ## 5、Bean加载过程
 
 ![image](image/Spring-Bean加载过程.png)
 
-- ResourceLoader从存储介质中加载Spring配置信息，并使用Resource表示这个配置文件的资源。
+- `ResourceLoader`从存储介质中加载Spring配置信息，并使用Resource表示这个配置文件的资源。
 
-- BeanDefinitionReader读取Resource所指向的配置文件资源，然后解析配置文件。配置文件中每一个<bean>解析成一个BeanDefinition对象，并保存到BeanDefinitionRegistry中；
+- `BeanDefinitionReader`读取`Resource`所指向的配置文件资源，然后解析配置文件。配置文件中每一个`<bean>`解析成一个`BeanDefinition`对象，并保存到`BeanDefinitionRegistry`中；
 
-- 容器扫描BeanDefinitionRegistry中的BeanDefinition，使用Java的反射机制自动识别出Bean工厂后处理后器（实现BeanFactoryPostProcessor接口）的Bean，然后调用这些Bean工厂后处理器对BeanDefinitionRegistry中的BeanDefinition进行加工处理.主要完成以下两项工作：
-	* 对使用到占位符的<bean>元素标签进行解析，得到最终的配置值，这意味对一些半成品式的
-		BeanDefinition对象进行加工处理并得到成品的BeanDefinition对象;
-	* 对BeanDefinitionRegistry中的BeanDefinition进行扫描，通过Java反射机制找出所有属性编辑器的Bean（实现java.beans.PropertyEditor接口的Bean），并自动将它们注册到Spring容器的属性编辑器注册表中（PropertyEditorRegistry）
+- 容器扫描`BeanDefinitionRegistry`中的`BeanDefinition`，使用Java的反射机制自动识别出Bean工厂后处理后器（实现`BeanFactoryPostProcessor`接口）的Bean，然后调用这些Bean工厂后处理器对`BeanDefinitionRegistry`中的`BeanDefinition`进行加工处理.主要完成以下两项工作：
+	* 对使用到占位符的`<bean>`元素标签进行解析，得到最终的配置值，这意味对一些半成品式的`BeanDefinition`对象进行加工处理并得到成品的`BeanDefinition`对象;
+	* 对`BeanDefinitionRegistry`中的`BeanDefinition`进行扫描，通过Java反射机制找出所有属性编辑器的Bean（实现`java.beans.PropertyEditor`接口的Bean），并自动将它们注册到Spring容器的属性编辑器注册表中（`PropertyEditorRegistry`）
 
-- Spring容器从BeanDefinitionRegistry中取出加工后的BeanDefinition，并调用InstantiationStrategy着手进行Bean实例化的工作；
+- Spring容器从`BeanDefinitionRegistry`中取出加工后的`BeanDefinition`，并调用`InstantiationStrategy`着手进行Bean实例化的工作；
 
-- 在实例化Bean时，Spring容器使用BeanWrapper对Bean进行封装，BeanWrapper提供了很多以Java反射机制操作Bean的方法，它将结合该Bean的BeanDefinition以及容器中属性编辑器，完成Bean属性的设置工作；
+- 在实例化Bean时，Spring容器使用`BeanWrapper`对Bean进行封装，`BeanWrapper`提供了很多以Java反射机制操作Bean的方法，它将结合该Bean的`BeanDefinition`以及容器中属性编辑器，完成Bean属性的设置工作；
 
 - 利用容器中注册的Bean后处理器(实现BeanPostProcessor接口的Bean)对已经完成属性设置工作的Bean进行后续加工，直接装配出一个准备就绪的Bean
 
 ## 6、IOC容器源码
-AbstractApplicationContext.refresh()
+
+`AbstractApplicationContext.refresh()`
 ```java
 // org.springframework.context.support.AbstractApplicationContext.refresh() 方法实现如下：
 @Override
@@ -193,7 +194,9 @@ public void refresh() throws BeansException, IllegalStateException {
     }
 }
 ```
+
 ### 6.1、prepareRefresh()：刷新前预处理
+
 ```java
 protected void prepareRefresh() {
     this.startupDate = System.currentTimeMillis();
@@ -216,9 +219,9 @@ protected void prepareRefresh() {
     this.earlyApplicationEvents = new LinkedHashSet<ApplicationEvent>();
 }
 ```
-- initPropertySources()：初始化一些属性设置;子类自定义个性化的属性设置方法；这个方法是由子类来实现的
-- getEnvironment().validateRequiredProperties();检验属性的合法等;
-- earlyApplicationEvents= new LinkedHashSet<ApplicationEvent>();保存容器中的一些早期的事件；
+- `initPropertySources()`：初始化一些属性设置;子类自定义个性化的属性设置方法；这个方法是由子类来实现的
+- `getEnvironment().validateRequiredProperties();`检验属性的合法等;
+- `earlyApplicationEvents= new LinkedHashSet<ApplicationEvent>();`保存容器中的一些早期的事件；
 
 ### 6.2、obtainFreshBeanFactory()：获取BeanFactory
 ```java
@@ -231,17 +234,18 @@ protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
     return beanFactory;
 }
 ```
-- refreshBeanFactory();刷新【创建】BeanFactory；创建了一个 `this.beanFactory = new DefaultListableBeanFactory();`设置id；
-- getBeanFactory();返回刚才GenericApplicationContext创建的BeanFactory对象；
+- `refreshBeanFactory();`刷新【创建】BeanFactory；创建了一个 `this.beanFactory = new DefaultListableBeanFactory();`设置id；
+- `getBeanFactory();`返回刚才GenericApplicationContext创建的BeanFactory对象；
 - 将创建的BeanFactory即`DefaultListableBeanFactory`返回；
 
 ### 6.3、prepareBeanFactory(beanFactory)
-BeanFactory的预准备工作（BeanFactory进行一些设置）；
+
+`BeanFactory`的预准备工作（BeanFactory进行一些设置）；
 - 设置BeanFactory的类加载器、支持表达式解析器...
-- 添加部分BeanPostProcessor【ApplicationContextAwareProcessor】
-- 设置忽略的自动装配的接口EnvironmentAware、EmbeddedValueResolverAware、xxx；
-- 注册可以解析的自动装配；我们能直接在任何组件中自动注入：BeanFactory、ResourceLoader、ApplicationEventPublisher、ApplicationContext
-- 添加BeanPostProcessor【ApplicationListenerDetector】
+- 添加部分`BeanPostProcessor【ApplicationContextAwareProcessor】`
+- 设置忽略的自动装配的接口`EnvironmentAware、EmbeddedValueResolverAware、xxx；`
+- 注册可以解析的自动装配；我们能直接在任何组件中自动注入：`BeanFactory、ResourceLoader、ApplicationEventPublisher、ApplicationContext`
+- 添加`BeanPostProcessor【ApplicationListenerDetector】`
 - 添加编译时的AspectJ；
 - 给BeanFactory中注册一些能用的组件；
     - environment【ConfigurableEnvironment】、
@@ -249,29 +253,33 @@ BeanFactory的预准备工作（BeanFactory进行一些设置）；
     - systemEnvironment【Map<String, Object>】
 
 ### 6.4、postProcessBeanFactory(beanFactory);
+
 BeanFactory准备工作完成后进行的后置处理工作；子类通过重写这个方法来在BeanFactory创建并预准备完成以后做进一步的设置
 
 ---
 ***=================以上是BeanFactory的创建及预准备工作=================***
 
 ### 6.5、invokeBeanFactoryPostProcessors(beanFactory);
-执行BeanFactoryPostProcessor的方法；BeanFactoryPostProcessor：BeanFactory的后置处理器。在BeanFactory标准初始化之后执行的；
 
-两个接口：BeanFactoryPostProcessor、BeanDefinitionRegistryPostProcessor；执行BeanFactoryPostProcessor的方法，其具体调用的方法是：`PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(oConfigurableListableBeanFactory, List<BeanFactoryPostProcessor>)`
+执行`BeanFactoryPostProcessor`的方法；`BeanFactoryPostProcessor：BeanFactory`的后置处理器。在BeanFactory标准初始化之后执行的；
+
+两个接口：`BeanFactoryPostProcessor、BeanDefinitionRegistryPostProcessor`；执行BeanFactoryPostProcessor的方法，其具体调用的方法是：`PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(oConfigurableListableBeanFactory, List<BeanFactoryPostProcessor>)`
 
 **先执行BeanDefinitionRegistryPostProcessor**
+
 - 获取所有的BeanDefinitionRegistryPostProcessor；
-- 先执行实现了`PriorityOrdered`优先级接口的`BeanDefinitionRegistryPostProcessor`，postProcessor.postProcessBeanDefinitionRegistry(registry)`;
-- 在执行实现了`Ordered`顺序接口的`BeanDefinitionRegistryPostProcessor`；postProcessor.postProcessBeanDefinitionRegistry(registry)；
-- 最后执行没有实现任何优先级或者是顺序接口的BeanDefinitionRegistryPostProcessors；postProcessor.postProcessBeanDefinitionRegistry(registry);
+- 先执行实现了`PriorityOrdered`优先级接口的`BeanDefinitionRegistryPostProcessor`，`postProcessor.postProcessBeanDefinitionRegistry(registry)`;
+- 在执行实现了`Ordered`顺序接口的`BeanDefinitionRegistryPostProcessor`；`postProcessor.postProcessBeanDefinitionRegistry(registry)`；
+- 最后执行没有实现任何优先级或者是顺序接口的`BeanDefinitionRegistryPostProcessors；postProcessor.postProcessBeanDefinitionRegistry(registry);`
 
 **再执行BeanFactoryPostProcessor的方法**
 - 获取所有的BeanFactoryPostProcessor；
-- 先执行实现了PriorityOrdered优先级接口的BeanFactoryPostProcessor、postProcessor.postProcessBeanFactory()
-- 在执行实现了Ordered顺序接口的BeanFactoryPostProcessor；postProcessor.postProcessBeanFactory()
-- 最后执行没有实现任何优先级或者是顺序接口的BeanFactoryPostProcessor；postProcessor.postProcessBeanFactory()；
+- 先执行实现了PriorityOrdered优先级接口的`BeanFactoryPostProcessor、postProcessor.postProcessBeanFactory()`
+- 在执行实现了Ordered顺序接口的`BeanFactoryPostProcessor；postProcessor.postProcessBeanFactory()`
+- 最后执行没有实现任何优先级或者是顺序接口的`BeanFactoryPostProcessor；postProcessor.postProcessBeanFactory()；`
 
 ### 6.6、registerBeanPostProcessors(beanFactory);
+
 ```java
 // Separate between BeanPostProcessors that implement PriorityOrdered,
 // Ordered, and the rest.
@@ -282,19 +290,20 @@ List<String> nonOrderedPostProcessorNames = new ArrayList<String>();
 ```
 注册BeanPostProcessor（Bean的后置处理器）【 intercept bean creation】，不同接口类型的BeanPostProcessor；在Bean创建前后的执行时机是不一样的，实际调用方法：`PostProcessorRegistrationDelegate.registerBeanPostProcessors(ConfigurableListableBeanFactory, AbstractApplicationContext)`
 
-BeanPostProcessor、DestructionAwareBeanPostProcessor、InstantiationAwareBeanPostProcessor、SmartInstantiationAwareBeanPostProcessor、MergedBeanDefinitionPostProcessor【internalPostProcessors】、
+`BeanPostProcessor、DestructionAwareBeanPostProcessor、InstantiationAwareBeanPostProcessor、SmartInstantiationAwareBeanPostProcessor、MergedBeanDefinitionPostProcessor【internalPostProcessors】、`
 
 - 获取所有的 BeanPostProcessor;后置处理器都默认可以通过PriorityOrdered、Ordered接口来执行优先级;
-- 先注册PriorityOrdered优先级接口的BeanPostProcessor；把每一个BeanPostProcessor；添加到BeanFactory中,beanFactory.addBeanPostProcessor(postProcessor);
+- 先注册PriorityOrdered优先级接口的BeanPostProcessor；把每一个BeanPostProcessor；添加到BeanFactory中,`beanFactory.addBeanPostProcessor(postProcessor);`
 - 再注册Ordered接口的;
 - 最后注册没有实现任何优先级接口的;
 - 最终注册MergedBeanDefinitionPostProcessor；
-- 注册一个ApplicationListenerDetector；来在Bean创建完成后检查是否是ApplicationListener，如果是applicationContext.addApplicationListener((ApplicationListener<?>) bean);
+- 注册一个ApplicationListenerDetector；来在Bean创建完成后检查是否是ApplicationListener，如果是`applicationContext.addApplicationListener((ApplicationListener<?>) bean);`
 
 ### 6.7、initMessageSource();
+
 初始化MessageSource组件（做国际化功能；消息绑定，消息解析）；
 - 获取BeanFactory；
-- 看容器中是否有id为messageSource的，类型是MessageSource的组件，如果有赋值给messageSource；如果没有自己创建一个DelegatingMessageSource；MessageSource：取出国际化配置文件中的某个key的值；能按照区域信息获取；
+- 看容器中是否有id为messageSource的，类型是MessageSource的组件，如果有赋值给messageSource；如果没有自己创建一个`DelegatingMessageSource；MessageSource`：取出国际化配置文件中的某个key的值；能按照区域信息获取；
 - 把创建好的MessageSource注册在容器中，以后获取国际化配置文件的值的时候，可以自动注入MessageSource；
 ```java
 beanFactory.registerSingleton(MESSAGE_SOURCE_BEAN_NAME, this.messageSource);	
@@ -302,6 +311,7 @@ MessageSource.getMessage(String code, Object[] args, String defaultMessage, Loca
 ```
 
 ### 6.8、initApplicationEventMulticaster();
+
 初始化事件派发器；主要是针对事件的处理
 ```java
 protected void initApplicationEventMulticaster() {
@@ -321,6 +331,7 @@ protected void initApplicationEventMulticaster() {
 ```
 
 ### 6.9、onRefresh()
+
 子类重写这个方法，在容器刷新的时候可以自定义逻辑；
 ```java
 protected void onRefresh() throws BeansException {
@@ -329,6 +340,7 @@ protected void onRefresh() throws BeansException {
 ```
 
 ### 6.10、registerListeners();
+
 给容器中将所有项目里面的ApplicationListener注册进来；
 ```java
 protected void registerListeners() {
@@ -354,6 +366,7 @@ protected void registerListeners() {
 ```
 
 ### 6.11、finishBeanFactoryInitialization(beanFactory)
+
 初始化所有剩下的单实例bean；这一步骤是比较繁琐的
 ```java
 protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
@@ -393,8 +406,8 @@ protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory b
 - Bean不是抽象的，是单实例的，是懒加载；
     - 判断是否是FactoryBean；是否是实现FactoryBean接口的Bean；
     - 不是工厂Bean。利用getBean(beanName);创建对象
-        - getBean(beanName)； ioc.getBean();
-        - doGetBean(name, null, null, false);
+        - `getBean(beanName)； ioc.getBean();`
+        - `doGetBean(name, null, null, false);`
         - 先获取缓存中保存的单实例Bean。如果能获取到说明这个Bean之前被创建过（所有创建过的单实例Bean都会被缓存起来）
             从`private final Map<String, Object> singletonObjects = new ConcurrentHashMap<String, Object>(256);`获取的；
         - 缓存中获取不到，开始Bean的创建对象流程；
@@ -430,6 +443,7 @@ protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory b
     所有Bean都利用getBean创建完成以后；检查所有的Bean是否是SmartInitializingSingleton接口的；如果是；就执行afterSingletonsInstantiated()；
 
 ### 6.12、finishRefresh();
+
 完成BeanFactory的初始化创建工作；IOC容器就创建完成；
 ```java
 protected void finishRefresh() {
@@ -446,11 +460,11 @@ protected void finishRefresh() {
     LiveBeansView.registerApplicationContext(this);
 }
 ```
-- initLifecycleProcessor();初始化和生命周期有关的后置处理器；LifecycleProcessor；默认从容器中找是否有lifecycleProcessor的组件【LifecycleProcessor】；如果没有new DefaultLifecycleProcessor();加入到容器；
+- `initLifecycleProcessor();`初始化和生命周期有关的后置处理器；LifecycleProcessor；默认从容器中找是否有lifecycleProcessor的组件【LifecycleProcessor】；如果没有new DefaultLifecycleProcessor();加入到容器；
 
-- getLifecycleProcessor().onRefresh();拿到前面定义的生命周期处理器（BeanFactory）；回调onRefresh()；
-- publishEvent(new ContextRefreshedEvent(this));发布容器刷新完成事件；
-- liveBeansView.registerApplicationContext(this);
+- `getLifecycleProcessor().onRefresh();`拿到前面定义的生命周期处理器（BeanFactory）；回调onRefresh()；
+- `publishEvent(new ContextRefreshedEvent(this));`发布容器刷新完成事件；
+- `liveBeansView.registerApplicationContext(this);`
 
 # 三、AOP
 

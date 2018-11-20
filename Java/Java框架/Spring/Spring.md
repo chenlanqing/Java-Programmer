@@ -1,6 +1,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-*目录**
+**目录**
 
 - [一、Spring概念](#%E4%B8%80spring%E6%A6%82%E5%BF%B5)
   - [1、Spring是什么](#1spring%E6%98%AF%E4%BB%80%E4%B9%88)
@@ -10,23 +10,25 @@
   - [2、Spring容器](#2spring%E5%AE%B9%E5%99%A8)
   - [3、DI(Dependency Injection)](#3didependency-injection)
   - [4、各种类型信息的注入](#4%E5%90%84%E7%A7%8D%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF%E7%9A%84%E6%B3%A8%E5%85%A5)
-- [三.Spring AOP](#%E4%B8%89spring-aop)
+- [三、Spring AOP](#%E4%B8%89spring-aop)
   - [1、关于面向切面编程](#1%E5%85%B3%E4%BA%8E%E9%9D%A2%E5%90%91%E5%88%87%E9%9D%A2%E7%BC%96%E7%A8%8B)
   - [2、AOP 的优势](#2aop-%E7%9A%84%E4%BC%98%E5%8A%BF)
   - [3、AOP 的术语](#3aop-%E7%9A%84%E6%9C%AF%E8%AF%AD)
   - [6、Aop：通知](#6aop%E9%80%9A%E7%9F%A5)
-- [四、AOP 原理分析](#%E5%9B%9Baop-%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+- [四、IOC与AOP原理分析](#%E5%9B%9Bioc%E4%B8%8Eaop%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+  - [1、IOC原理](#1ioc%E5%8E%9F%E7%90%86)
+  - [2、AOP原理](#2aop%E5%8E%9F%E7%90%86)
 - [五、Spring的 事务](#%E4%BA%94spring%E7%9A%84-%E4%BA%8B%E5%8A%A1)
   - [1、事务：一组逻辑操作](#1%E4%BA%8B%E5%8A%A1%E4%B8%80%E7%BB%84%E9%80%BB%E8%BE%91%E6%93%8D%E4%BD%9C)
   - [2、Spring 的事务管理](#2spring-%E7%9A%84%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86)
   - [3、声明式事务管理](#3%E5%A3%B0%E6%98%8E%E5%BC%8F%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86)
   - [6、事务隔离级别：通过隔离事务属性指定 isolation](#6%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB%E9%80%9A%E8%BF%87%E9%9A%94%E7%A6%BB%E4%BA%8B%E5%8A%A1%E5%B1%9E%E6%80%A7%E6%8C%87%E5%AE%9A-isolation)
   - [9、Spring 中的部分注解配置](#9spring-%E4%B8%AD%E7%9A%84%E9%83%A8%E5%88%86%E6%B3%A8%E8%A7%A3%E9%85%8D%E7%BD%AE)
-- [六.Spring的三种配置方式：](#%E5%85%ADspring%E7%9A%84%E4%B8%89%E7%A7%8D%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F)
-  - [1.基于xml方式配置](#1%E5%9F%BA%E4%BA%8Exml%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
-  - [2.基于注解方式配置](#2%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
-  - [3.基于Java方式配置](#3%E5%9F%BA%E4%BA%8Ejava%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
-- [七.Spring中涉及的设计模式](#%E4%B8%83spring%E4%B8%AD%E6%B6%89%E5%8F%8A%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
+- [六、Spring的三种配置方式](#%E5%85%ADspring%E7%9A%84%E4%B8%89%E7%A7%8D%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F)
+  - [1、基于xml方式配置](#1%E5%9F%BA%E4%BA%8Exml%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
+  - [2、基于注解方式配置](#2%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
+  - [3、基于Java方式配置](#3%E5%9F%BA%E4%BA%8Ejava%E6%96%B9%E5%BC%8F%E9%85%8D%E7%BD%AE)
+- [七、Spring中涉及的设计模式](#%E4%B8%83spring%E4%B8%AD%E6%B6%89%E5%8F%8A%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -50,6 +52,7 @@
 Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 # 二、IOC(DI)
+
 ## 1、IOC(Inversion of Control)
 
 其思想是反转资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源.而应用了 IOC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式
@@ -198,7 +201,8 @@ IOC 的另一种表述方式：即组件以一些预先定义好的方式(例如
 		</property>	
 		```	
 		
-# 三.Spring AOP
+# 三、Spring AOP
+
 AOP(Aspect-Oriented Programming，面向切面编程	
 
 ## 1、关于面向切面编程
@@ -456,7 +460,13 @@ try{
 		如：within(org.action..*) && !execution(...);
 	```
         
-# 四、AOP 原理分析
+# 四、IOC与AOP原理分析
+
+## 1、IOC原理
+
+
+
+## 2、AOP原理
 
 - OOP 允许你定义从上到下的关系，但并不适合定义从左到右的关系，AOP 技术则恰恰相反，它利用一种称为“横切”的技术，剖解开封装的对象内部，并将那些影响了多个类的公共行为封装到一个可重用模块，并将其名为“Aspect”，就是将那些与业务无关，却为业务模块所共同调用的逻辑或责任封装起来，便于减少系统的重复代码，降低模块间的耦合度，并有利于未来的可操作性和可维护性；
 
@@ -467,6 +477,7 @@ try{
 	- 动态代理：在运行时借助于 JDK 动态代理、CGLIB 等在内存中“临时”生成 AOP 动态代理类，因此也被称为运行时增强
 
 # 五、Spring的 事务
+
 ## 1、事务：一组逻辑操作
 
 用来确保数据的完整性和一致性，是一系列动作，这些动作要么全部完成要么全部不起作用；
@@ -672,17 +683,18 @@ try{
 	可以加注解标记：@Scope()-----表示是否为单例	
 	```
 	
-# 六.Spring的三种配置方式：
-## 1.基于xml方式配置
+# 六、Spring的三种配置方式
+
+## 1、基于xml方式配置
 
 
-## 2.基于注解方式配置
+## 2、基于注解方式配置
 
 
 
-## 3.基于Java方式配置	
+## 3、基于Java方式配置	
 
-# 七.Spring中涉及的设计模式	
+# 七、Spring中涉及的设计模式	
 
 - BeanFactory 和 ApplicationContext 使用了工厂模式
 - 在Bean的创建中，Spring为不同的scope定义的对象提供了单例、原型等模式的实现；

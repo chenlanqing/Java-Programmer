@@ -989,6 +989,39 @@ JDK5之后新增的功能
 
 - 反射的应用：实现框架功能，使用类加载器加载文件
 
+- 反射时基本类型与包装类型注意问题
+
+	反射中基本类型的class和其对应包装类的class是不同的，所以在获得Method指定参数时需要精确指定参数的类型，即基本类型参数 int 是无法使用包装类型 Integer 来获得的
+
+	反射调用基本类型参数方法除了可以通过 基本类型名`.class`外还可以通过对应包装类的静态字段`TYPE`获得，`int.class 等价于 Integer.TYPE`；
+	
+	```java
+	Class clzss = byte.class;
+	Class clzss = short.class;
+	Class clzss = int.class;
+	Class clzss = long.class;
+	Class clzss = char.class;
+	Class clzss = float.class;
+	Class clzss = double.class;
+	Class clzss = boolean.class;
+	Class clzss = void.class;
+
+	Byte.TYPE = byte.class;
+	Short.TYPE = short.class;
+	Integer.TYPE = int.class;
+	Long.TYPE = long.class;
+	Char.TYPE = char.class;
+	Float.TYPE = float.class;
+	Double.TYPE = double.class;
+	Boolean.TYPE = boolean.class;
+	Void.TYPE = void.class;
+
+	Class clzss = int[].class; //int[] 数组
+	Class clzss = String[].class; //String[] 数组
+	Class clzss = String[][].class; //String[][] 数组的数组
+	```
+
+
 ## 4、动态编译：Java6.0引入动态编译
 
 ### 4.1.动态编译的两种方法

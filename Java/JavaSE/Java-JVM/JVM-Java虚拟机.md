@@ -367,14 +367,14 @@ Exception in thread "main" java.lang.OutOfMemoryError： Java heap space
 - JDK1.6以及之前的版本，由于常量池分配在永久代中，我们可以通过 -XX：PermSize 和 -XX：MaxPermSize 限制方法区的的大小，从而简介限制其中常量池的容量;
 - 方法区存放 Class 相关信息，如类名、访问修饰符、常量池、字段描述、方法描述等.对于这些区域的测试，基本思路是：运行时产生大量的类去填满方法区，直到溢出。当前很多主类框架，如图Spring等，在对类进行增强时，都会用到CGLib这类字节码技术，增强的类越多，就需要越大的方法区来保证动态生存的Class可以载入内存.常见大量生存类的场景：大量JSP或者动态产生JSP文件的应用，基于OSGI的应用;
 
-### 3.3.3、虚拟机栈和本地方法栈：
+### 3.3.3、虚拟机栈和本地方法栈
 
 由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈，栈容量只由 -Xss 参数设置
 
 - 单线程：递归调用一个简单的方法，如不累积方法，会抛出 StackOverflowError
 - 多线程：无限循环的创建线程，并为每个线程无限循环的增加内存，会抛出 OutOfMemoryError
 
-- 使用 -Xss 参数减少栈内存容量，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。定义了大量本地变量，增大此方法帧中本地变量表的长度，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。
+- 使用 -Xss 参数减少栈内存容量，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。定义了大量本地变量，增大此方法帧中本地变量表的长度，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。栈的默认大小是`1M`，可通过命令：`java -XX:+PrintFlagsFinal -version | grep ThreadStackSize`
 
 ```java
 // VM Args：-Xss128k
