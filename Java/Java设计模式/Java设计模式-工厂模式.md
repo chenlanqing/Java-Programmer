@@ -48,12 +48,17 @@ public class Creator {
 }
 ```
 
+JDK中有使用的了简单工厂模式：
+- Calendar类
+- DriverManager
+
 # 二、工厂方法
 
-- 工厂方法：定义一个创建产品对象的工厂接口，将实际创建工作推迟到子类当中。核心工厂类不再负责产品的创建，  这样核心类成为一个抽象工厂角色，仅负责具体工厂子类必须实现的接口
-- 工厂方法模式弥补了简单工厂模式不满足开闭原则的诟病，当我们需要增加产品时，只需要增加相应的产品和工厂类，而不需要修改现有的代码
+- 工厂方法：定义一个创建产品对象的工厂接口，将实际创建工作推迟到子类当中。核心工厂类不再负责产品的创建，这样核心类成为一个抽象工厂角色，仅负责具体工厂子类必须实现的接口
+- 工厂方法模式弥补了简单工厂模式不满足开闭原则的诟病，当我们需要增加产品时，只需要增加相应的产品和工厂类，而不需要修改现有的代码，其是符合开闭原则的；但是其类的个数容易过多，增加复杂度
 - 实例代码：
-```java
+
+    ```java
     // 抽象产品接口
     public interface Light {
         public void turnOn();
@@ -79,12 +84,24 @@ public class Creator {
     public class TubeCreator implements Creator{
         public Light createLight() {return new TubeLight();}
     }
-```
+    ```
 - 工厂方法运用：JDBC的Driver和Connection适用的场景就是我们需要一个产品帮我们完成一项任务，但是这个产品有可能有很多品牌（像这里的mysql，oracle），为了保持我们对产品操作的一致性，我们就可能要用到工厂方法模式
+
+- JDK中运用的工厂方法：Iterator；URLStreamHandlerFactory与URLStreamHandler
+- logback中的实现类
 
 # 三、抽象工厂
 
-1、为创建一组相关或相互依赖的对象提供一个接口，而且无需指定他们的具体类
+- 抽象工厂模式提供了一个创建一系列相关或相互依赖对象的接口，无需指定他们具体的类；
+- 适用场景：客户端不依赖产品实例如何被创建、实现等细节；强调一系列相关的产品对象一起使用创建对象需要大量重复代码；提供了产品类的类库
+- 优点：具体产品在应用层隔离
+- JDK中使用场景：Connection、Statement、PreparedStatment和mybatis中的SqlSessionFactory、SqlSession
+- 实现：
+
+    ```java
+    
+    ```
+
 
 # 参考资料
 
