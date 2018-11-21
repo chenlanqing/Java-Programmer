@@ -164,6 +164,19 @@ public class HungrySingleton {
 }
 ```
 
+## 3.3、Runtime类
+
+JDK中的`Runtime`类使用的就是恶汉模式来实现的
+```java
+public class Runtime {
+    private static Runtime currentRuntime = new Runtime();
+    public static Runtime getRuntime() {
+        return currentRuntime;
+    }
+    private Runtime() {}
+}
+```
+
 # 4、双重校验锁
 
 ## 4.1、基本实现
@@ -290,6 +303,8 @@ public enum SingletonEnum {
 }
 ```
 
+[枚举本质](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86_2.md#%E5%8D%81%E5%85%AB%E6%9E%9A%E4%B8%BE%E7%B1%BB)
+
 # 7、反序列化问题
 
 在反序列化的过程中到底发生了什么，使得反序列化后的单例不是唯一的？分析一下 ObjectInputputStream 的readObject 方法执行情况到底是怎样的
@@ -357,17 +372,60 @@ public class Singleton implements Serializable{
 }
 ```
 
-# 8、单例与JVM垃圾回收
+# 8、容器单例
+
+```java
+public class ContainerSingleton {
+    private static Map<String, Object> singleMap = new HashMap<>();
+    private ContainerSingleton(){}
+
+    public static void putInstance(String key, Object instance) {
+        if (StringUtils.isNotBlank(key) && instance != null) {
+            if (!singleMap.containsKey(key)){
+                singleMap.put(key,instance);
+            }
+        }
+    }
+    public static Object getInstance(String key) {
+        return singleMap.get(key);
+    }
+}
+```
+
+可以参考`java.awt.Desktop`，其中有使用该类单例
+
+如果应用中有比较多的单例，可以通过容器来进行管理，类比SPring的IOC容器
+
+# 9、ThreadLocal与单例
+
+ThreadLocal 可以确保在一个线程中对象是唯一的，但是无法保证在整个应用中对象时唯一的，如Mybatis的`ErrorContext`类
+
+```java
+public class ThreadLocalSingleton {
+    private static ThreadLocal<ThreadLocalSingleton> instance = new ThreadLocal<>(){
+        @Override
+        protected Object initialValue() {
+            return new ThreadLocalSingleton();
+        }
+    };
+    private ThreadLocalSingleton(){}
+    public static ThreadLocalSingleton getInstance(){
+        return instance.get();
+    }
+}
+```
+
+# 10、单例与JVM垃圾回收
 
 当一个单例的对象长久不用时，会不会被jvm的垃圾收集机制回收?(Hotspot 虚拟机)
 
-## 8.1、分析思路
+## 10.1、分析思路
 
 - Hotspot 垃圾收集算法:GC Root
 - 方法区的垃圾收集方法，JVM卸载类的判断方法
 
 
-# 9、总结
+# 11、总结
 
 有两个问题需要注意
 

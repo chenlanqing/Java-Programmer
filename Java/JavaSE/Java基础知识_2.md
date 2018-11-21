@@ -1247,6 +1247,56 @@ public final class Status extends java.lang.Enum<Status>
 ```
 - 所以从某种意义上可以说 JDK 1.5 后引入的枚举类型是上面枚举常量类的代码封装而已
 
+```java
+public enum  EnumSingleton {
+    INSTANCE {
+        @Override
+        public void print() {
+            System.out.println("Singleton Enum");
+        }
+    };
+
+    public abstract void print();
+
+    public static EnumSingleton getInstance(){
+        return INSTANCE;
+    }
+}
+```
+
+通过Jad反编译后，看如下代码
+```java
+public abstract class EnumSingleton extends Enum{
+    public static EnumSingleton[] values(){
+        return (EnumSingleton[])$VALUES.clone();
+    }
+    public static EnumSingleton valueOf(String name){
+        return (EnumSingleton)Enum.valueOf(com/blue/fish/design/pattern/creational/singleton/EnumSingleton, name);
+    }
+    private EnumSingleton(String s, int i){
+        super(s, i);
+    }
+    public abstract void print();
+    public static EnumSingleton getInstance(){
+        return INSTANCE;
+    }
+    public static final EnumSingleton INSTANCE;
+    private static final EnumSingleton $VALUES[];
+    static {
+		// 如果枚举类有抽象方法，对应的枚举中会使用匿名内部类来构建枚举
+        INSTANCE = new EnumSingleton("INSTANCE", 0) {
+            public void print(){
+                System.out.println("Singleton Enum");
+            }
+
+        };
+        $VALUES = (new EnumSingleton[] {
+            INSTANCE
+        });
+    }
+}
+```
+
 ## 3、枚举类与常量
 
 ### 3.1、区别
