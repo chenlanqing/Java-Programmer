@@ -1,6 +1,6 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
+*目录**
 
 - [1、什么是单例](#1%E4%BB%80%E4%B9%88%E6%98%AF%E5%8D%95%E4%BE%8B)
 - [2、懒汉模式](#2%E6%87%92%E6%B1%89%E6%A8%A1%E5%BC%8F)
@@ -12,6 +12,7 @@
 - [3、恶汉模式](#3%E6%81%B6%E6%B1%89%E6%A8%A1%E5%BC%8F)
   - [3.1、基本写法](#31%E5%9F%BA%E6%9C%AC%E5%86%99%E6%B3%95)
   - [3.2、完整饿汉式](#32%E5%AE%8C%E6%95%B4%E9%A5%BF%E6%B1%89%E5%BC%8F)
+  - [3.3、Runtime类](#33runtime%E7%B1%BB)
 - [4、双重校验锁](#4%E5%8F%8C%E9%87%8D%E6%A0%A1%E9%AA%8C%E9%94%81)
   - [4.1、基本实现](#41%E5%9F%BA%E6%9C%AC%E5%AE%9E%E7%8E%B0)
   - [4.2、改进](#42%E6%94%B9%E8%BF%9B)
@@ -20,9 +21,11 @@
   - [5.2、防止反射](#52%E9%98%B2%E6%AD%A2%E5%8F%8D%E5%B0%84)
 - [6、枚举实现](#6%E6%9E%9A%E4%B8%BE%E5%AE%9E%E7%8E%B0)
 - [7、反序列化问题](#7%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E9%97%AE%E9%A2%98)
-- [8、单例与JVM垃圾回收](#8%E5%8D%95%E4%BE%8B%E4%B8%8Ejvm%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6)
-  - [8.1、分析思路](#81%E5%88%86%E6%9E%90%E6%80%9D%E8%B7%AF)
-- [9、总结](#9%E6%80%BB%E7%BB%93)
+- [8、容器单例](#8%E5%AE%B9%E5%99%A8%E5%8D%95%E4%BE%8B)
+- [9、ThreadLocal与单例](#9threadlocal%E4%B8%8E%E5%8D%95%E4%BE%8B)
+- [10、单例与JVM垃圾回收](#10%E5%8D%95%E4%BE%8B%E4%B8%8Ejvm%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6)
+  - [10.1、分析思路](#101%E5%88%86%E6%9E%90%E6%80%9D%E8%B7%AF)
+- [11、总结](#11%E6%80%BB%E7%BB%93)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -450,6 +453,20 @@ public class Singleton implements java.io.Serializable {
 			return INSTANCE;     
 	}    
 } 
+```
+
+- 如果单例接口实现了cloneable接口，那么有可能会破坏单例模式，所以在重写clone方法时需要特殊处理
+```java
+public class Singleton implements Cloneable{
+    private Singleton(){}
+    private static Singleton instance = new Singleton();
+    public static Singleton getInstance(){
+        return instance;
+    } 
+    protected Object clone() throws UnsupportedException{
+        return getInstance();
+    }
+}
 ```
 
 # 参考资料
