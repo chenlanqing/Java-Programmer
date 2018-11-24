@@ -83,3 +83,10 @@ public class TestBuilderV2 {
     }
 }
 ```
+
+# 6、UML类图
+
+![](image/建造者模式类图.png)
+
+首先建造者接口（Builder）和具体的建造者（ActualBuilder）应该是要新建的，而指挥者（Director）、产品（Product）
+
