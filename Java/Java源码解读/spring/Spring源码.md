@@ -544,13 +544,27 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 
 ## 1、Spring与SpringMVC父子容器配置
 
-- Spring和SpringMVC共存时，会有两个容器：一个SpringMVC的ServletWebApplicationContext为子容器，一个Spring的RootWebApplicationContext为父容器。当子容器中找不到对应的Bean会委托于父容器中的Bean。
-	* RootWebApplicationContext中的Bean对ServletWebApplicationContext可见，而ServletWebApplicationContext中的Bean对RootWebApplicationContext不可见。
-- 如果在父容器中开启了 @AspectJ 注解与事务配置，子容器和父容器均加载了所有Bean。造成子容器中的services覆盖了父容器的Services，导致父容器中的动态代理的services不生效，事务也不生效。
+### 1.1、Spring父子容器的关系
 
-解决上述问题，可以由父容器加载所有Bean，子容器不加载任何Bean
+- `Spring`和`SpringMVC`共存时，会有两个容器：一个`SpringMVC`的`ServletWebApplicationContext`为子容器，一个Spring的`RootWebApplicationContext`为父容器。当子容器中找不到对应的Bean会委托于父容器中的Bean。
+	* `RootWebApplicationContext`中的`Bean`对`ServletWebApplicationContext`可见，而`ServletWebApplicationContext`中的`Bean`对`RootWebApplicationContext`不可见。
+
+- 如果在父容器中开启了 `@AspectJ` 注解与事务配置，子容器和父容器均加载了所有Bean。造成子容器中的services覆盖了父容器的Services，导致父容器中的动态代理的services不生效，事务也不生效。
+
+    ![](image/Spring父子容器.png)
+
+### 1.2、如何解决Spring父子容器关系
+
+可以参考[Spring官方文档](https://docs.spring.io/spring/docs/4.3.16.RELEASE/spring-framework-reference/htmlsingle/#mvc-servlet) 中的`Figure 22.2. Typical context hierarchy in Spring Web MVC`
+
+- 子容器包含`Controllers、HandlerMapping、viewResolver`，其他bean都在父容器中；
+
+- 子容器不加载任何bean，均有父容器加载
+
+
 
 ## 2、Spring中涉及的设计模式
+
 https://mp.weixin.qq.com/s/Hy-qxNT0nJzcAkanbH93eA
 
 # 参考资料

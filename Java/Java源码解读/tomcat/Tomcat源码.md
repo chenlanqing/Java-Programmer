@@ -115,11 +115,19 @@ java提供是jdbc Driver就是基于SPI的
 
     在 CATALINA_HOME/lib以及WEB-INF/lib中放置了不同版本的jar包，此时就会导致某些情况下报加载不到类的错误。还有如果多个应用使用同一jar包文件，当放置了多份，就可能导致多个应用间出现类加载不到的错误；
 
-# 四、Tomcat与数据源
+# 四、Tomcat启动流程
+
+http://cxis.me/2017/05/10/tomcat7%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/
+
+# 五、Tomcat与HTTP请求
+
+# 六、Web应用加载
+
+# 七、Tomcat与数据源
 
 https://www.cnblogs.com/ShawnYang/p/7451459.html
 
-# 五、Tomcat调试与监控
+# 八、Tomcat调试与监控
 
 ## 1、远程调试Tomcat
 
@@ -156,7 +164,7 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
     ```
     修改上述脚本的 JPDA_ADDRESS="localhost:8000"，只需要配置端口即可
     
-## 2.tomcat-manager监控
+## 2、tomcat-manager监控
 在低版本是默认开启的，而高版本因为安全因素默认是关闭的；
 
 - 文档地址：{tomcat}/webapps/docs/manager-howto.html
@@ -165,7 +173,7 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
     - conf/tomcat-users.xml 添加用户
     - conf/Catalina/localhost/manager.xml 配置允许的远程连接
 
-# 六、Tomcat优化
+# 九、Tomcat优化
 
 ## 1、内存优化
 
@@ -199,8 +207,11 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
 
     server.xml
 
-# 七、其他
-## 1、Tomcat控制输出乱码：
+
+# 十、其他
+
+## 1、Tomcat控制输出乱码
+
 在catalina.sh文件中找到`JAVA_OPTS`
 ```
 JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails  -XX:+PrintGCTimeStamps  -XX:+PrintGCDateStamps  -Xloggc:$CATALINA_HOME/logs/gc.log -Dorg.apache.catalina.security.SecurityListener.UMASK=`umask`"
@@ -214,3 +225,5 @@ JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails  -XX:+PrintGCTimeStamps  -XX:+PrintGCD
 * [Tomcat基本结构](http：//zouzls.github.io/2017/03/29/SpringStart/)
 * [线程上下文类加载器](https://blog.csdn.net/yangcheng33/article/details/52631940)
 * [JDWP 协议及实现](https://www.ibm.com/developerworks/cn/java/j-lo-jpda3/)
+* [Tomca实现原理](http://www.iocoder.cn/Tomcat/Tomcat-collection/)
+* [Tomcat一次完整的请求](https://www.jianshu.com/p/7b6ce4b90bae)
