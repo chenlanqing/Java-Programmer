@@ -702,6 +702,12 @@ try{
 - 各种事件监听器，是观察者模式的典型应用；
 - 类似JdbcTemplate则应用了模板模式
 
+# 八、Spring常见问题
+
+## 1、循环依赖问题
+
+- [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
+- [Spring中循环引用的处理](https://www.iflym.com/index.php/code/201208280001.html)
 
 # 参考资料
 

@@ -22,5 +22,7 @@
 - JpaVendorAdapter
 - HandlerAdapter
 
+# 4、UML类图
 
+![](uml/适配器模式类图.png)
 
