@@ -23,7 +23,7 @@
 
 # 2、观察者模式类图
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/uml/观察者模式类图.png)
+![image](uml/观察者模式类图.png)
 
 - Subject：被观察者，定义被观察者必须实现的职责，能够动态取消或者添加观察者；一般是抽象类或者具体实现类，仅仅完成作为被观察者必须实现的职责：管理观察者并通知观察者；
 - Observer：观察者，即进行update操作，对接收到的信息进行处理；
