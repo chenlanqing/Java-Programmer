@@ -2503,7 +2503,7 @@
 											"containerExtending": false,
 											"left": 581,
 											"top": 191,
-											"width": 162,
+											"width": 162.96337890625,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -2575,7 +2575,7 @@
 									"containerExtending": false,
 									"left": 576,
 									"top": 184,
-									"width": 172,
+									"width": 172.96337890625,
 									"height": 25,
 									"autoResize": false,
 									"stereotypeLabel": {
@@ -2621,7 +2621,7 @@
 											"containerExtending": false,
 											"left": 581,
 											"top": 214,
-											"width": 162,
+											"width": 162.96337890625,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -2642,7 +2642,7 @@
 									"containerExtending": false,
 									"left": 576,
 									"top": 209,
-									"width": 172,
+									"width": 172.96337890625,
 									"height": 23,
 									"autoResize": false
 								},
@@ -2666,7 +2666,7 @@
 									"containerExtending": false,
 									"left": 576,
 									"top": 232,
-									"width": 172,
+									"width": 172.96337890625,
 									"height": 10,
 									"autoResize": false
 								},
@@ -2730,7 +2730,7 @@
 							"containerExtending": false,
 							"left": 576,
 							"top": 184,
-							"width": 172,
+							"width": 172.96337890625,
 							"height": 58,
 							"autoResize": false,
 							"stereotypeDisplay": "label",
@@ -4106,7 +4106,7 @@
 											"containerExtending": false,
 											"left": 469,
 											"top": 327,
-											"width": 171,
+											"width": 171.63427734375,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -4178,7 +4178,7 @@
 									"containerExtending": false,
 									"left": 464,
 									"top": 320,
-									"width": 181,
+									"width": 181.63427734375,
 									"height": 25,
 									"autoResize": false,
 									"stereotypeLabel": {
@@ -4224,7 +4224,7 @@
 											"containerExtending": false,
 											"left": 469,
 											"top": 350,
-											"width": 171,
+											"width": 171.63427734375,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -4245,7 +4245,7 @@
 									"containerExtending": false,
 									"left": 464,
 									"top": 345,
-									"width": 181,
+									"width": 181.63427734375,
 									"height": 23,
 									"autoResize": false
 								},
@@ -4269,7 +4269,7 @@
 									"containerExtending": false,
 									"left": 464,
 									"top": 368,
-									"width": 181,
+									"width": 181.63427734375,
 									"height": 10,
 									"autoResize": false
 								},
@@ -4333,7 +4333,7 @@
 							"containerExtending": false,
 							"left": 464,
 							"top": 320,
-							"width": 181,
+							"width": 181.63427734375,
 							"height": 58,
 							"autoResize": false,
 							"stereotypeDisplay": "label",
@@ -4425,7 +4425,7 @@
 											"containerExtending": false,
 											"left": 685,
 											"top": 327,
-											"width": 171,
+											"width": 171.63427734375,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -4497,7 +4497,7 @@
 									"containerExtending": false,
 									"left": 680,
 									"top": 320,
-									"width": 181,
+									"width": 181.63427734375,
 									"height": 25,
 									"autoResize": false,
 									"stereotypeLabel": {
@@ -4543,7 +4543,7 @@
 											"containerExtending": false,
 											"left": 685,
 											"top": 350,
-											"width": 171,
+											"width": 171.63427734375,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -4564,7 +4564,7 @@
 									"containerExtending": false,
 									"left": 680,
 									"top": 345,
-									"width": 181,
+									"width": 181.63427734375,
 									"height": 23,
 									"autoResize": false
 								},
@@ -4588,7 +4588,7 @@
 									"containerExtending": false,
 									"left": 680,
 									"top": 368,
-									"width": 181,
+									"width": 181.63427734375,
 									"height": 10,
 									"autoResize": false
 								},
@@ -4652,7 +4652,7 @@
 							"containerExtending": false,
 							"left": 680,
 							"top": 320,
-							"width": 181,
+							"width": 181.63427734375,
 							"height": 58,
 							"autoResize": false,
 							"stereotypeDisplay": "label",
@@ -24521,7 +24521,7 @@
 											"containerExtending": false,
 											"left": 96,
 											"top": -16,
-											"width": 90,
+											"width": 90.27001953125,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -24809,7 +24809,7 @@
 											"containerExtending": false,
 											"left": -368,
 											"top": 0,
-											"width": 90,
+											"width": 90.27001953125,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -25186,7 +25186,7 @@
 											"containerExtending": false,
 											"left": -32,
 											"top": 0,
-											"width": 90,
+											"width": 90.27001953125,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -25706,7 +25706,7 @@
 											"containerExtending": false,
 											"left": -224,
 											"top": -16,
-											"width": 90,
+											"width": 90.27001953125,
 											"height": 13,
 											"autoResize": false,
 											"underline": false,
@@ -27174,6 +27174,27 @@
 					"isFinalSpecialization": false,
 					"isLeaf": false,
 					"isActive": false
+				}
+			],
+			"visibility": "public"
+		},
+		{
+			"_type": "UMLModel",
+			"_id": "AAAAAAFnWNrYsmoe2EI=",
+			"_parent": {
+				"$ref": "AAAAAAFF+h6SjaM2Hec="
+			},
+			"name": "桥接模式",
+			"ownedElements": [
+				{
+					"_type": "UMLClassDiagram",
+					"_id": "AAAAAAFnWNr96Go0FSQ=",
+					"_parent": {
+						"$ref": "AAAAAAFnWNrYsmoe2EI="
+					},
+					"name": "桥接模式类图",
+					"visible": true,
+					"defaultDiagram": false
 				}
 			],
 			"visibility": "public"
