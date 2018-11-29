@@ -2,28 +2,27 @@ package com.tarena.util;
 
 import org.hibernate.cfg.Configuration;
 import org.hibernate.tool.hbm2ddl.SchemaExport;
+
 /**
- *	Ê¹ÓÃHibernate´´½¨±í¸ñ 
+ * ä½¿ç”¨Hibernateåˆ›å»ºè¡¨æ ¼
+ * 
  * @author chenlanqing
  *
  */
 public class ExportDB {
 	public static void main(String[] args) {
 		/*
-		 * Configuration config = new Configuration();Èç¹ûÊÇÕâÃ´Ğ´µÄ»°,
-		 * ÄÇÃ´¼ÓÔØµÄÅäÖÃÎÄ¼ş¾ÍÊÇÔçÆÚµÄhibernate.properties,¶ø²»ÊÇhibernate.cfg.xml;
-		 * Configuration config = new Configuration().configure();
-		 * ¼ÓÔØhibernate.cfg.xmlÅäÖÃÎÄ¼ş
+		 * Configuration config = new Configuration();å¦‚æœæ˜¯è¿™ä¹ˆå†™çš„è¯,
+		 * é‚£ä¹ˆåŠ è½½çš„é…ç½®æ–‡ä»¶å°±æ˜¯æ—©æœŸçš„hibernate.properties,è€Œä¸æ˜¯hibernate.cfg.xml; Configuration config
+		 * = new Configuration().configure(); åŠ è½½hibernate.cfg.xmlé…ç½®æ–‡ä»¶
 		 */
 		Configuration config = new Configuration().configure();
 		/*
-		 * ´´½¨½¨±í¹¤¾ßÀàµÄ¶ÔÏó:SchemaExport
+		 * åˆ›å»ºå»ºè¡¨å·¥å…·ç±»çš„å¯¹è±¡:SchemaExport
 		 */
 		SchemaExport export = new SchemaExport(config);
 		/*
-		 * µ÷ÓÃcreate·½·¨,Éú³É¶ÔÓ¦µÄ±í¸ñ;
-		 * ¸Ã·½·¨µÚÒ»¸ö²ÎÊı:ÊÇ·ñ½²DDL²Ù×÷Óï¾ä´òÓ¡µ½¿ØÖÆÌ¨;
-		 * µÚ¶ş¸ö²ÎÊı:ÊÇ·ñ½«½á¹ûÓ¦ÓÃµÄµ½Êı¾İ¿âÖĞ
+		 * è°ƒç”¨createæ–¹æ³•,ç”Ÿæˆå¯¹åº”çš„è¡¨æ ¼; è¯¥æ–¹æ³•ç¬¬ä¸€ä¸ªå‚æ•°:æ˜¯å¦è®²DDLæ“ä½œè¯­å¥æ‰“å°åˆ°æ§åˆ¶å°; ç¬¬äºŒä¸ªå‚æ•°:æ˜¯å¦å°†ç»“æœåº”ç”¨çš„åˆ°æ•°æ®åº“ä¸­
 		 */
 		export.create(true, true);
 	}

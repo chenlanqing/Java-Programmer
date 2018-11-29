@@ -72,6 +72,10 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 	IOC 容器的工作模式可以看成是工厂模式的升华；IOC 容器看作是一个工厂，这个工厂里要生产的对象都在配置文件中给出定义，然后利用编程语言的的反射编程，根据配置文件中给出的类名生成相应的对象。从实现来看，IOC 是把以前在工厂方法里写死的对象生成代码，改变为由配置文件来定义，也就是把工厂和对象生成这两者独立分隔开来，目的就是提高灵活性和可维护性；
 
+	***为什么不使用工厂模式，而使用IOC？*** 
+
+	IOC是通过反射机制来实现的。当我们的需求出现变动时，工厂模式会需要进行相应的变化。但是IOC的反射机制允许我们不重新编译代码，因为它的对象都是动态生成的
+
 - Spring 中的 IOC
 	- Spring 中的 org.springframework.beans 包和 org.springframework.context包构成了Spring框架IoC容器的基础
 	- BeanFactory 接口提供了一个先进的配置机制，使得任何类型的对象的配置成为可能：ApplicationContex 接口对 BeanFactory（是一个子接口）进行了扩展，在BeanFactory的基础上添加了其他功能，比如与Spring的AOP更容易集成，也提供了处理message resource的机制(用于国际化)、事件传播以及应用层的特别配置，比如针对Web应用的WebApplicationContext
