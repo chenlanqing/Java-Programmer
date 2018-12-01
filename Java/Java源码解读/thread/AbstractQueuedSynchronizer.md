@@ -78,7 +78,7 @@ AQS 一共有五处方法供子类实现：
 
 ### 1.2、Node 结构
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/AQS节点图.png)
+![image](image/AQS节点图.png)
 
 head-头指针 <br>
 tail-尾指针<br>

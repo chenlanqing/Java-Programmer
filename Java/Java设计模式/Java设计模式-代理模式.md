@@ -38,7 +38,7 @@
 - 缺点：
     - 造成系统设计中类的数据增加；
     - 在客户端和目标对象增加一个代理对象，会造成请求处理速度变慢；
-    - 增加西系统的复杂度
+    - 增加系统的复杂度
 
 # 二、代理的实现方式
 
@@ -72,6 +72,8 @@
     
         proxy ==> 被代理的类， method ==> 被代理的方法， args ==> 被代理的方法的参数数组
 
+    - 生成代理类：byte[] classFile = ProxyGenerator.generateProxyClass("被代理的类", ConcreteSubject.class.getInterfaces());
+
 - JDK 动态代理的实现步骤：
     - ①.创建一个实现接口 InvocationHandler 的类，必须实现 invoke 方法;
     - ②.创建被代理的类和接口;
@@ -88,11 +90,24 @@
 
 ### 2.2、CGLIB 动态代理
 
+#### 2.2.1、介绍
+
+它的底层是通过使用一个小而快的字节码处理框架ASM（Java字节码操控框架）来转换字节码并生成新的类
+
+#### 2.2.2、CGLib代理实现
+
+使用cglib实现动态代理，需要在`MethodInterceptor`实现类中定义代理行为
+
+
+
+代理行为在intercept方法中定义，同时通过getInstance方法（该方法名可以自定义）获取动态代理的实例，并且可以通过向该方法传入类对象指定被代理对象的类型
 
 ### 2.3、JDK 与 CGLIB 代理的比较
 
 - JDK：只能代理实现了接口的类；没有实现接口的类不能实现 JDK 的动态代理
-- CGLIB：针对类来实现代理的，对指定目标产生一个子类，通过方法拦截技术拦截所有父类方法的调用
+- CGLIB：针对类来实现代理的，对指定目标产生一个子类，通过方法拦截技术拦截所有父类方法的调用；CGLib是通过继承来实现的，因此不能代理被final修饰的类；
+- JDK动态代理通过JVM实现代理类字节码的创建，cglib通过ASM创建字节码
+
 
 ### 2.4、Spring中代理的选择
 
@@ -124,4 +139,4 @@ Spring中动态代理的核心类：
 
 # 参考资料
 
-* [代理模式详解](http：//www.cnblogs.com/zuoxiaolong/p/pattern3.html)
+* [代理模式详解](http://www.cnblogs.com/zuoxiaolong/p/pattern3.html)
