@@ -65,7 +65,7 @@
 
 ### 2.2、cache line
 
-cache line是cache与内存数据交换的最小单位，根据操作系统一般是32byte或者64byte。在MESI协议中，状态可以是M、E、S、I;地址则是cache line中映射的内存地址，数据则是从内存读取的数据
+`cache line`是cache与内存数据交换的最小单位，根据操作系统一般是32byte或者64byte。在MESI协议中，状态可以是`M、E、S、I`；地址则是`cache line`中映射的内存地址，数据则是从内存读取的数据
 
 ### 2.3、状态介绍
 

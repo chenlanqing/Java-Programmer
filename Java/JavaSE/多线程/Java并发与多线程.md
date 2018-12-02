@@ -113,10 +113,18 @@
 ## 2、多线程的代价
 
 - 设计更复杂：多线程共享数据时尤其需要注意
-- 上下文切换的开销：<br>
-	CPU 会在一个上下文中执行一个线程，然后切换到另外一个上下文中执行另外一个线程；上下文切换并不廉价。如果没有必要，应该减少上下文切换的发生。<br>
-	--> 上下文切换：从任务保存到再加载的过程就是一次上下文切换；上下文切换过程中，CPU会停止处理当前运行的程序，并保存当前程序运行的具体位置以便之后继续运行
-- 增加资源消耗:如线程管理中消耗的资源
+- 上下文切换的开销：
+
+	CPU 会在一个上下文中执行一个线程，然后切换到另外一个上下文中执行另外一个线程；上下文切换并不廉价。如果没有必要，应该减少上下文切换的发生。
+
+	上下文切换：从任务保存到再加载的过程就是一次上下文切换；上下文切换过程中，CPU会停止处理当前运行的程序，并保存当前程序运行的具体位置以便之后继续运行。如何减少上下文切换：
+	- 无锁并发编程：多线程竞争时，会引起上下文切换，所以多线程处理数据时，可以用一些办法来避免使用锁，如将数据的ID按照Hash取模分段，不同的线程处理不同段的数据
+	- CAS算法：Java的Atomic包使用CAS算法来更新数据，而不需要加锁；
+	- 使用最少线程：避免创建不需要的线程，比如任务很少，但是创建了很多线程来处理，这样会造成大量线程都处于等待状态；
+	- 协程：在单线程里实现多任务的调度，并在单线程里维持多个任务间的切换
+
+
+- 增加资源消耗：如线程管理中消耗的资源
 
 ## 3、并发编程模型
 
@@ -450,7 +458,6 @@ public class Daemon extends Thread{
 
 ![image](image/thread-status.png)
 
-
 - 新建态（New）：通过线程的创建方式创建线程后，进入新建态态;
 - 就绪（Runnable）：调用Tread的start方法，就会为线程分配私有的方法栈，程序计数器资源，如果得到CPU资源，线程就转为运行状态。
 - 运行（Running）：就绪态得到CPU资源后转为运行态，执行run方法.在调用 yield 方法后，线程由运行转为就绪。
@@ -487,6 +494,7 @@ public class Daemon extends Thread{
 - 临界区：致竞态条件发生的代码区称作临界区
 
 ## 4、线程安全与共享资源
+
 **4.1、允许被多个线程同时执行的代码称作线程安全的代码，线程安全的代码不包含竞态条件**
 
 **4.2、局部变量:存储在线程自己的栈中.也就是说，局部变量永远也不会被多个线程共享，基础类型的局部变量是线程安全的**
@@ -496,43 +504,45 @@ public class Daemon extends Thread{
 - 尽管引用本身没有被共享，但引用所指的对象并没有存储在线程的栈内.所有的对象都存在共享堆中
 - 如果在某个方法中创建的对象不会逃逸出(即该对象不会被其它方法获得，也不会被非局部变量引用到)该方法，那么它就是线程安全的
 - 实际上，哪怕将这个对象作为参数传给其它方法，只要别的线程获取不到这个对象，那它仍是线程安全的：
-```java
-public void someMethod(){			  
-	LocalObject localObject = new LocalObject();
-	localObject.callMethod();
-	method2(localObject);
-}
-public void method2(LocalObject localObject){
-	localObject.setValue("value");
-}
-```
+
+	```java
+	public void someMethod(){			  
+		LocalObject localObject = new LocalObject();
+		localObject.callMethod();
+		method2(localObject);
+	}
+	public void method2(LocalObject localObject){
+		localObject.setValue("value");
+	}
+	```
+
 **4.4、对象成员：（实例变量）**
 
 - 对象成员存储在堆上.如果两个线程同时更新同一个对象的同一个成员，那这个代码就不是线程安全的；
 - 案例：
-```java
-public class NotThreadSafe{
-	StringBuilder builder = new StringBuilder();			    
-	public add(String text){
-		this.builder.append(text);
+	```java
+	public class NotThreadSafe{
+		StringBuilder builder = new StringBuilder();			    
+		public add(String text){
+			this.builder.append(text);
+		}
 	}
-}
-// 如果两个线程同时调用同一个NotThreadSafe实例上的add()方法，就会有竞态条件问题
-NotThreadSafe sharedInstance = new NotThreadSafe();
-new Thread(new MyRunnable(sharedInstance)).start(); // 两个MyRunnable共享了同一个NotThreadSafe对象
-new Thread(new MyRunnable(sharedInstance)).start();
-public class MyRunnable implements Runnable{
-	NotThreadSafe instance = null;			  
-	public MyRunnable(NotThreadSafe instance){
-	this.instance = instance;
+	// 如果两个线程同时调用同一个NotThreadSafe实例上的add()方法，就会有竞态条件问题
+	NotThreadSafe sharedInstance = new NotThreadSafe();
+	new Thread(new MyRunnable(sharedInstance)).start(); // 两个MyRunnable共享了同一个NotThreadSafe对象
+	new Thread(new MyRunnable(sharedInstance)).start();
+	public class MyRunnable implements Runnable{
+		NotThreadSafe instance = null;			  
+		public MyRunnable(NotThreadSafe instance){
+		this.instance = instance;
+		}
+		public void run(){
+		this.instance.add("some text");
+		}
 	}
-	public void run(){
-	this.instance.add("some text");
-	}
-}
-new Thread(new MyRunnable(new NotThreadSafe())).start();
-new Thread(new MyRunnable(new NotThreadSafe())).start();
-```
+	new Thread(new MyRunnable(new NotThreadSafe())).start();
+	new Thread(new MyRunnable(new NotThreadSafe())).start();
+	```
 现在两个线程都有自己单独的NotThreadSafe对象，调用add()方法时就会互不干扰，再也不会有竞态条件问题了
 
 **4.5、线程控制逃逸规则:可以帮助你判断代码中对某些资源的访问是否是线程安全的**
@@ -541,7 +551,10 @@ new Thread(new MyRunnable(new NotThreadSafe())).start();
 - 即使对象本身线程安全，但如果该对象中包含其他资源(文件，数据库连接)整个应用也许就不再是线程安全的了;
 
 ## 5、synchronized 关键字
+
 synchronized 取得的锁是都是对象锁，而不是把一段代码或方法当作锁，哪个线程先执行代synchronized关键字的方法，哪个线程就持有该方法所属对象的锁，其他线程只能呈等待状态
+
+进入synchronized 块内使用到的变量从线程的工作内存中清除，主要在synchronized块内使用到该变量时就不会从线程的工作内存中获取，而是直接从主内存中获取；退出synchronized块是在synchronized块内对共享变量的修改刷新到主内存；
 
 ### 5.1、synchronized 方法与锁对象
 
@@ -1001,7 +1014,43 @@ public class ThreadLocalExample {
 
 ### 11.6、InheritableThreadLocal
 
-ThreadLocal的子类.为了解决ThreadLocal实例内部每个线程都只能看到自己的私有值，所以 InheritableThreadLocal 允许一个线程创建的所有子线程访问其父线程的值
+正常情况下，父线程中在`ThreadLocal`设置的变量在子线程中是获取不到的，那么子线程如何获取父线程中的值呢？使用`InheritableThreadLocal`
+
+`InheritableThreadLocal`是`ThreadLocal`的子类。为了解决ThreadLocal实例内部每个线程都只能看到自己的私有值，所以`InheritableThreadLocal`允许一个线程创建的所有子线程访问其父线程的值
+
+`InheritableThreadLocal`继承自ThreadLocal，代码如下：
+```java
+public class InheritableThreadLocal<T> extends ThreadLocal<T> {
+	// 
+    protected T childValue(T parentValue) {
+        return parentValue;
+    }
+    ThreadLocalMap getMap(Thread t) {
+       return t.inheritableThreadLocals;
+    }
+    void createMap(Thread t, T firstValue) {
+        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
+    }
+}
+```
+`InheritableThreadLocal`通过重写`getMap`和`createMap`方法，让本地变量保存到了具体的`inheritableThreadLocals`（Thread类的变量）变量里面，那么线程在通过`InheritableThreadLocal`类实例的set或者get方法设置变量时，就会创建当前线程的`inheritableThreadLocals`变量。当父线程创建子线程时，构造函数会把父线程中`inheritableThreadLocals`变量里面的本地变量复制一份保存到子线程的`inheritableThreadLocals`变量里面；
+
+示例：
+```java
+public class ParentThreadSharedDataWithSon {
+    // 使用InheritableThreadLocal来构建ThreadLocal，子线程能看到父线程设置的变量
+  	public static ThreadLocal<String> threadLocal = new InheritableThreadLocal<>();
+    // public static ThreadLocal<String> threadLocal = new ThreadLocal<>();
+    public static void main(String[] args) {
+        threadLocal.set("Hello 子线程");
+        Thread thread = new Thread(()->{
+            System.out.println(threadLocal.get());
+        });
+        thread.start();
+        System.out.println("Main Thread:" + threadLocal.get());
+    }
+}	
+```
 
 ### 11.7、ThreadLocal内存泄露
 
@@ -1309,6 +1358,98 @@ public class DeadLock{
 - 使用锁，而不是同步块:为了提高等待线程的公平性，我们使用锁方式来替代同步块
 - 公平锁。
 - 注意性能方面
+
+## 15、伪共享问题
+
+伪共享问题涉及到CPU缓存问题
+
+### 15.1、CPU缓存
+
+CPU 缓存（Cache Memory）是位于 CPU 与内存之间的临时存储器，它的容量比内存小的多但是交换速度却比内存要快得多；
+
+高速缓存的出现主要是为了解决 CPU 运算速度与内存读写速度不匹配的矛盾，因为 CPU 运算速度要比内存读写速度快很多，这样会使 CPU 花费很长时间等待数据到来或把数据写入内存。
+
+在缓存中的数据是内存中的一小部分，但这一小部分是短时间内 CPU 即将访问的，当 CPU 调用大量数据时，就可避开内存直接从缓存中调用，从而加快读取速度
+
+CPU 缓存可以分为一级缓存，二级缓存，部分高端 CPU 还具有三级缓存；每一级缓存中所储存的全部数据都是下一级缓存的一部分，越靠近 CPU 的缓存越快也越小。当 CPU 执行运算的时候，它先去 L1 查找所需的数据，再去 L2，然后是 L3，最后如果这些缓存中都没有，所需的数据就要去主内存拿。走得越远，运算耗费的时间就越长；为了支撑更多的热点数据，同时追求最高的性价比，多级缓存架构应运而生
+
+![](image/CPU-Cache层次结构图.png)
+
+### 15.2、缓存行
+
+[缓存行](../Java-JVM/Java内存模型.md#22cache-line)
+
+### 15.3、什么是伪共享
+
+多个线程同时读写同一个缓存行的不同变量时导致的 CPU 缓存失效；尽管这些变量之间没有任何关系，但由于在主内存中邻近，存在于同一个缓存行之中，它们的相互覆盖会导致频繁的缓存未命中，引发性能下降
+
+### 15.4、为什么会发生伪共享
+
+如果多个线程的变量共享了同一个 CacheLine，任意一方的修改操作都会使得整个 CacheLine 失效（因为 CacheLine 是 CPU 缓存的最小单位），也就意味着，频繁的多线程操作，CPU 缓存将会彻底失效，降级为 CPU core 和主内存的直接交互；
+
+比如在 JDK 的 LinkedBlockingQueue 中，存在指向队列头的引用 head 和指向队列尾的引用 tail 。而这种队列经常在异步编程中使有，这两个引用的值经常的被不同的线程修改，但它们却很可能在同一个缓存行，于是就产生了伪共享
+
+### 15.5、伪共享解决方法
+
+- 字节填充（缓存行填充）
+
+	一条缓存行有 64 字节，而 Java 程序的对象头固定占 8 字节(32位系统)或 12 字节( 64 位系统默认开启压缩, 不开压缩为 16 字节)，所以我们只需要填 6 个无用的长整型补上6*8=48字节，让不同的 VolatileLong 对象处于不同的缓存行，就避免了伪共享
+	```java
+	public class PaddingObject{
+		public volatile long value = 0L;    // 实际数据
+		public long p1, p2, p3, p4, p5, p6; // 填充
+	}
+	```
+	在 Java7 之后，一个 JVM 的优化给字节填充造成了一些影响，上面的代码片段 public long p1, p2, p3, p4, p5, p6; 会被认为是无效代码被优化掉，有回归到了伪共享的窘境之中，可以使用继承的方式来填充；
+
+- Contended注解方式：
+
+	在JDK1.8中，新增了一种注解`@sun.misc.Contended`，来使各个变量在Cache line中分隔开。注意，jvm需要添加参数`-XX:-RestrictContended`才能开启此功能，填充的默认宽度是128，要自定义宽度可以设置 `-XX:ContendedPaddingWidth`参数
+	```java
+	@Retention(RetentionPolicy.RUNTIME)
+	@Target({ElementType.FIELD, ElementType.TYPE})
+	public @interface Contended {
+		String value() default "";
+	}
+	```
+	
+### 15.6、伪共享最佳实践
+
+- 在Thread类中生成随机数是和线程有着关联，多线程下产生随机数的操作是很常见的，JDK为了确保产生随机数的操作不会产生false sharing ,把产生随机数的三个相关值设为独占cache line：
+	```java
+	// The following three initially uninitialized fields are exclusively
+    // managed by class java.util.concurrent.ThreadLocalRandom. These
+    // fields are used to build the high-performance PRNGs in the
+    // concurrent code, and we can not risk accidental false sharing.
+    // Hence, the fields are isolated with @Contended.
+    /** The current seed for a ThreadLocalRandom */
+    @sun.misc.Contended("tlr")
+    long threadLocalRandomSeed;
+
+    /** Probe hash value; nonzero if threadLocalRandomSeed initialized */
+    @sun.misc.Contended("tlr")
+    int threadLocalRandomProbe;
+
+    /** Secondary seed isolated from public ThreadLocalRandom sequence */
+    @sun.misc.Contended("tlr")
+    int threadLocalRandomSecondarySeed;
+	```
+	
+- ConcurrentHashMap中的内部类CounterCell，另外还包括并发容器 Exchanger 也有相同的操作
+	```java
+	@sun.misc.Contended static final class CounterCell {
+        volatile long value;
+        CounterCell(long x) { value = x; }
+    }
+	```
+
+- RingBuffer，优秀的开源框架 Disruptor 中的一个数据结构
+	```java
+	abstract class RingBufferPad{
+		protected long p1, p2, p3, p4, p5, p6, p7;
+	}
+	```
+
 
 # 三、JUC(java.util.concurrent)包
 
@@ -2593,3 +2734,5 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 * [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
 * [Exchanger](http://cmsblogs.com/?p=2269)
 * [类加载过程中死锁](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
+* [CPU Cache 与缓存行](https://mp.weixin.qq.com/s/4oU6YqxHso2ir0NXtBuaog)
+* [Java伪共享问题](https://www.cnblogs.com/cyfonly/p/5800758.html)
