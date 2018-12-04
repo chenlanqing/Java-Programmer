@@ -140,6 +140,7 @@ public class ConcreteObserver implements Observer{
 
 * [观察者模式](http://www.cnblogs.com/zuoxiaolong/p/pattern7.html)
 * [观察者模式](http://www.jasongj.com/design_pattern/observer/)
+* [观察者模式](https://www.cnblogs.com/wangjq/archive/2012/07/12/2587966.html)
 
 
 
