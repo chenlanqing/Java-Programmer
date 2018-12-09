@@ -317,10 +317,13 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 
 ## 6、CMS（Concurrent Mark Sweep）收集器-老年代
 
-**6.1、追求最短 GC 回收停顿时间**
+它管理新生代的方式与Parallel收集器和Serial收集器相同，而在老年代则是尽可能得并发执行，每个垃圾收集器周期只有2次短停顿
 
-**6.2、基于标记-清除算法实现的，运作过程可以分为4个步骤：**
+追求最短 GC 回收停顿时间，为了消除Throught收集器和Serial收集器在Full GC周期中的长时间停顿
 
+### 6.1、实现
+
+基于标记-清除算法实现的，运作过程可以分为4个步骤：
 - 初始标记（CMS initial mark）：仅仅只是标记一下 GC Roots 能直接关联到的对象，速度很快，需要“Stop TheWorld”；
 - 并发标记（CMS concurrent mark）：进行GC Roots追溯所有对象的过程，在整个过程中耗时最长
 - 重新标记（CMS remark）：为了修正并发标记期间因用户程序继续运作而导致标记产生变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记阶段稍长一些，但远比并发标记的时间短。此阶段也需要“Stop The World”；
@@ -328,7 +331,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 
 其中初始标记、重新标记这两个步骤仍然需要"Stop the world"。初始标记仅仅是标记以下 GC Roots 能直接关联到的对象，速度很快，并发标记阶段就是进行GC Roots Tracing 的过程，而重新阶段则是为了修正并发标记期间因用户程序继续运作而导致标记常数变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记的阶段稍微长点，但远比并发标记阶段时间短；
 
-**6.3、优缺点：**
+### 6.2、优缺点
 
 - 优点：并发收集，低停顿
 - 缺点：
@@ -336,15 +339,15 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 	- CMS 收集无法处理浮动垃圾(Floating Garbage)，可能出现 Concurrent Mode Failure 失败而导致一次 Full GC 的产生
 	- CMS 基于标记-清除算法实现的，那么垃圾收集结束后会产生大量的空间碎片，空间碎片过多时，将会给大对象的分配带来很大麻烦，往往出现老年代还有很大空间剩余，但是无法找到足够大的连续空间来分配当前对象们，不得不提前触发一次 Full GC。
 
-**6.4、CMS相关参数**
+### 6.3、CMS相关参数
 
-- -XX:ConcGCThreads：并发的GC线程数；
-- -XX:+UseCMSCompactAtFullCollection：Full GC之后做压缩
-- -XX:CMSFullGCsBeforeCompaction：多少次Full GC之后压缩一次
-- -XX:CMSInitiatingOccupancyFraction：触发Full GC，老年代内存使用占比达到 CMSInitiatingOccupancyFraction，默认为 92%
-- -XX:+UseCMSInitiatingOccupancyOnly：是否动态调整
-- -XX:+CMSScavengeBeforeRemark：full gc之前先做YGC
-- -XX:+CMSClassUnloadingEnabled：启用回收Perm区，针对JDK8之前的
+- `-XX:ConcGCThreads`：并发的GC线程数；
+- `-XX:+UseCMSCompactAtFullCollection`：Full GC之后做压缩
+- `-XX:CMSFullGCsBeforeCompaction`：多少次Full GC之后压缩一次
+- `-XX:CMSInitiatingOccupancyFraction`：触发Full GC，老年代内存使用占比达到 CMSInitiatingOccupancyFraction，默认为 92%
+- `-XX:+UseCMSInitiatingOccupancyOnly`：是否动态调整
+- `-XX:+CMSScavengeBeforeRemark`：full gc之前先做YGC
+- `-XX:+CMSClassUnloadingEnabled`：启用回收Perm区，针对JDK8之前的
 
 ## 7、G1收集器（Garbage First）
 
@@ -871,3 +874,4 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 * [垃圾优先型垃圾回收器调优](http://www.oracle.com/technetwork/cn/articles/java/g1gc-1984535-zhs.html)
 * [由「Metaspace容量不足触发CMS GC」从而引发的思考](https://www.jianshu.com/p/468fb4c5b28d)
 * [频繁FullGC的案例](https://mp.weixin.qq.com/s/X-oOlXomjOyBe_8E4bWQLQ)
+* [CMS垃圾收集器](https://mp.weixin.qq.com/s/-yqJa4dOyzLaK_tJ1x9E7w)
