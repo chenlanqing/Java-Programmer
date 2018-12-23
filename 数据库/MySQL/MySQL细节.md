@@ -8,6 +8,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ### 1.MySQL自增主键问题:
+
     * 一张表里有自增主键,当自增到 17后,删除了低15,16,17三条记录,再把mysql重启,在插入一条记录,该记录的ID是18还是15?
 	1.1.AUTO_INCREMENT 列在 InnoDB 里如何工作:
 		(1).如果为一个表指定 AUTO_INCREMENT 列,在数据词典里的InnoDB表句柄包含一个名为自动增长计数器的计数器,被用在为该列赋新值.
@@ -20,8 +21,10 @@
 			(1).先不重启mysql,继续插入表一行记录,这行记录的id为 18,
 			(2).重启mysql,插入表一行记录,这行记录的id为 19,
 
+[MySQL 自增 id 超大问题查询](https://mp.weixin.qq.com/s/xvxQz_oAzFBtpWfHl7kn3A)
+
 ### 2.Mysql唯一键问题:
-	mysql唯一键可以为null
+mysql唯一键可以为null
 
 
 

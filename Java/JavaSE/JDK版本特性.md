@@ -32,22 +32,34 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一、各个版本特性
+
 ## 1、JDK5
 
-- 引入泛型；
-- 增强循环，可以使用迭代方式；
-- 自动装箱与自动拆箱；
-- 类型安全的枚举，
-- 可变参数；
-- 静态引入，
-- 元数据(注解)，
-- 引入Instrumentation
+- 泛型
+- 枚举
+- 自动装箱拆箱
+- 可变参数
+- 元注解
+- foreach循环（增强for、for/in）
+- 静态导入
+
+  ```java
+  import static java.lang.System.err;
+  import static java.lang.System.out;
+  err.println(msg); 
+  ```
+- 格式化（System.out.println 支持%s %d等格式化输出）
+
+  System.out.println("Line %d: %s%n", i++, line);
+
+- 线程框架/数据结构 JUC
+- Arrays工具类/StringBuilder/instrument
 
 ## 2、JDK6
 
 - 支持脚本语言
 - 引入JDBC 4.0 API
-- 引入Java Compiler API；
+- 引入Java Compiler API,可以实现进程内编译，动态产生Java代码；
 - 可插拔注解；
 - 增加对Native PKI、Java GSS、Kerberos 和 LDAP 的支持
 - 继承Web Services
@@ -61,9 +73,17 @@
 - 支持 try-with-resources；
 - 引入Java NIO.2开发包；
 - 数值类型可以用2进制字符串表示，并且可以在字符串表示中添加下划线；
+
+  Java7前支持十进制（123）、八进制（0123）、十六进制（0X12AB），Java7添加二进制表示（0B11110001、0b11110001）；
+
+  Java7中支持在数字量中间添加’_'作为分隔符。更直观，如（12_123_456）。下划线仅仅能在数字中间。编译时编译器自己主动删除数字中的下划线
+
 - null 值的自动处理；
+- JSR292与InvokeDynamic指令
+- fork/join framework
 
 ## 4、JDK8
+
 [http://www.open-open.com/lib/view/open1403232177575.html]
 
 - 函数式接口 FunctionalInterface 
@@ -74,7 +94,7 @@
 - JVM 的PermGen空间被移除，取代它的是Metaspace(JEP 122)元空间
 - 数组并行(parallel)操作
 
-## 5、JDK9.
+## 5、JDK9
 
 - Jigsaw 项目；模块化源码
 - 简化进程API
@@ -136,5 +156,6 @@
 
 ## 参考资料
 
+* [Java各个版本特性最全总结](https://mp.weixin.qq.com/s/wQW3tZmCs50RjzMtbxOgpQ)
 * [Java8新特性](https://www.jianshu.com/p/5b800057f2d8)
 * [JDK8新特性指南](http://www.open-open.com/lib/view/open1403232177575.html)
