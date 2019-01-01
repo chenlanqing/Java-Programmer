@@ -1268,6 +1268,10 @@ ThreadLocalMap getMap(Thread t) {
 	- ThreadLocal 为每一个线程都提供了变量的副本，使得每个线程在某一时间访问到的并不是同一个对象，这样就隔离了多个线程对数据的数据共享
 - synchronized 用于线程间的数据共享，而 ThreadLocal 则用于线程间的数据隔离
 
+### 12.7、ThreadLocal与线程池
+
+在线程池中，由于大部分线程都是重用而不是重新创建，那么对应线程中的ThreadLocal没有清理，造成数据篡写；所以在线程执行完成时，要对 ThreadLocal 进行清理（清除掉与本线程相关联的 value 对象）。不然，被复用的线程去执行新的任务时会使用被上一个线程操作过的 value 对象，从而产生不符合预期的结果。
+
 ## 13、死锁
 
 两个或更多线程阻塞着等待其它处于死锁状态的线程所持有的锁
@@ -2684,7 +2688,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 - 必要时才使用线程池，须进行设计性能评估和压测.
 - 须考虑线程池的失败策略，失败后的补偿.
 - 后台批处理服务须与线上面向用户的服务进行分离.
-- 避免在线程池中使用ThreadLocal
+- 避免在线程池中使用`ThreadLocal`，因为可能存在造成数据混乱的情况
 
 # 七、多线程并发最佳实践
 

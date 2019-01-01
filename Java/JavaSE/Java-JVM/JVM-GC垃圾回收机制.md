@@ -351,7 +351,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现
 
 ## 7、G1收集器（Garbage First）
 
-通过-XX:+UseG1GC参数来启用，作为体验版随着JDK 6u14版本面世，在JDK 7u4版本发行时被正式推出，在JDK 9中，G1被提议设置为默认垃圾收集器；
+通过`-XX:+UseG1GC`参数来启用，作为体验版随着JDK 6u14版本面世，在JDK 7u4版本发行时被正式推出，在JDK 9中，G1被提议设置为默认垃圾收集器；
 
 G1是一种服务器端的垃圾收集器，应用在多处理器和大容量内存环境中，在实现高吞吐量的同时，尽可能的满足垃圾收集暂停时间的要求
 
@@ -367,10 +367,10 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 - G1是一个有整理内存过程的垃圾收集器，不会产生很多内存碎片；
 - G1的Stop The World(STW)更可控，G1在停顿时间上添加了预测机制，用户可以指定期望停顿时间；
 
-
 与其他收集器的区别：其将整个Java堆划分为多个大小相等的独立区域(Region).虽然还保留了新生代和老年代的概念，但是新生代和老年代不再是物理隔离的，它们都是一部分独立区域(不要求连续)的集合
 
 ### 7.2、G1中重要的概念
+
 在G1的实现过程中，引入了一些新的概念，对于实现高吞吐、没有内存碎片、收集时间可控等功能起到了关键作用
 
 #### 7.2.1、Region
@@ -397,11 +397,11 @@ void HeapRegion::setup_heap_region_size
 
 region的大小和大对象很难保证一致，这会导致空间浪费；并且region太小不合适，会令你在分配大对象时更难找到连续空间；
 
-
-
 #### 7.2.2、SATB（Snapshot-At-The-Beginning）
 
 GC开始时活着的对象的一个快照，其是通过Root Tracing得到的，作用是维持并发GC的正确性
+
+标记数据结构包括了两个位图：previous位图和next位图。previous位图保存了最近一次完成的标记信息，并发标记周期会创建并更新next位图，随着时间的推移，previous位图会越来越过时，最终在并发标记周期结束的时候，next位图会将previous位图覆盖掉
 
 #### 7.2.3、RSet（Remembered Set）
 
@@ -473,12 +473,14 @@ global concurrent marking的执行过程分为四个步骤：
 	-XX:G1OldCSetRegionThresholdPercent
 	```
 ### 7.5、是否需要切换到G1
+
 如果存在下列问题，可以切换到G1垃圾收集器
 - 50%以上的堆被存活对象占用；
 - 对象分配和晋升的速度变化非常大；
 - 垃圾回收时间特别长，超过了1秒
 
 ## 8、垃圾收集器比较
+
 - 收集器比较
 
 	|收集器|运行机制|区域|算法|目标|适用场景
@@ -513,6 +515,7 @@ global concurrent marking的执行过程分为四个步骤：
 	通常把老年代的GC成为major gc，对整个堆进行的清理叫做Full GC
 
 ## 1、Minor GC(YGC)
+
 对新生代进行GC
 
 **1.1、什么是YGC**
@@ -573,6 +576,7 @@ public class JVM {
 	promotion failed：是在进行 Minor GC时，survivor空间放不下、对象只能放入老生代，而此时老生代也放不下造成的concurrent mode failure：在执行 CMS GC 的过程中同时有对象要放入老生代，而此时老生代空间不足造成的
 
 ## 4、内存回收与分配策略
+
 ### 4.1、对象优先分配在 Eden 区域:
 
 大多数情况下，对象在新生代的Eden区中分配，如果Eden区没有足够的空间时，虚拟机将发起一次 MinorGC
@@ -875,3 +879,4 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 * [由「Metaspace容量不足触发CMS GC」从而引发的思考](https://www.jianshu.com/p/468fb4c5b28d)
 * [频繁FullGC的案例](https://mp.weixin.qq.com/s/X-oOlXomjOyBe_8E4bWQLQ)
 * [CMS垃圾收集器](https://mp.weixin.qq.com/s/-yqJa4dOyzLaK_tJ1x9E7w)
+* [G1垃圾收集器](https://mp.weixin.qq.com/s/9-NFMt4I9Hw2nP0fjR8JCg)

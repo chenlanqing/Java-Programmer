@@ -89,6 +89,8 @@
 
 # 二、Netty
 
+![](image/Netty通信流程.png)
+
 ## 1、不建议使用原生NIO类库进行开发的原因
 
 - NIO 类库和API繁杂，使用麻烦，你需要熟练掌握 Selector、ServerSocketChannel、SocketChannel、ByteBuffer等；

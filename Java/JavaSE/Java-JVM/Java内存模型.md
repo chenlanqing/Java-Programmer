@@ -690,3 +690,4 @@ JMM对这两种不同性质的重排序，采取了不同的策略：
 * [Java内存模型](http://ifeve.com/jmm-faq/)
 * [CPU cache结构和缓存一致性](https://blog.csdn.net/reliveit/article/details/50450136)
 * [Java内存模型](http://www.hollischuang.com/archives/2550)
+* [Linux与JVM的内存关系](http://www.open-open.com/lib/view/open1420814127390.html)

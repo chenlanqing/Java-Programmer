@@ -184,3 +184,49 @@ JDK 提供给了我们两个方法用于载入库文件，一个是`System.load(
     - 使用 `System.loadLibrary("A")`，然后把 libA.so 和 libB.so 都放在 `java.library.path` 下即可
 
 
+# 二十四、Java中的null
+
+* [Java中的null](https://www.cnblogs.com/greatfish/p/5906617.html)
+
+首先看一段代码：
+```java
+public class Null {
+	public static void nihao() {
+		System.out.println("你好陌生人");
+	}
+	public static void main(String[] args) {
+		((Null) null).nihao();
+	}
+}
+```
+输出结果：你好陌生人
+
+- `null`是Java中的关键字,它不属于任何类型,只是一种特殊的值,也可以说说代表一个不确定的对象
+    ```java
+    public static void main(String[] args) {
+		System.out.println(null instanceof Object); // false
+	}
+    ```
+- `null`是所有引用类型的默认值
+- `null`可以被转化为任何类型,输出`null`不会抛出任何异常,这和println()的源代码有关
+    ```java
+    public static void main(String[] args) {
+		Object o = (Object)null;
+		Integer i = (Integer)null;
+		String s = (String )null;
+		Null n = (Null)null;
+		System.out.println(o);
+		System.out.println(i);
+		System.out.println(s);
+		System.out.println(n);
+	}
+    ```
+- `null`可以被转化为任何类型,所以可以调用静态方法；
+- `null`可以被转化为任何类型,但是不能调用非静态方法,运行时会出错；
+- `null`被强转化任何类型后,它还仅仅是一个特殊值,并不属于任何类型.
+- `null==null`返回true,被转换为同种类型的null,都返回true,不同类型直接编译报错；
+- 用String转换后的null可以进行字符串运算,这是因为字符串进行连接的时候,编译器对`null`进行了特别的优化,其实就是例化`StringBuilder`,在调用`append()`方法时对`null`的一个特别处理,当为null时,转化为“null”,最后调用`toString()`返回一个String对象;
+- 用八大基本类型转换后的`null`,不可以进行基本类型的运算,否则会出现编译或者运行错误；
+- `null`和`""`并不相等,因为下面的s并没有指向某一块内存,而s1指向了一块空字符串的内存；
+
+
