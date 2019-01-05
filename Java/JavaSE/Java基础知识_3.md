@@ -12,6 +12,10 @@
   - [4、示例](#4%E7%A4%BA%E4%BE%8B)
   - [5、原理](#5%E5%8E%9F%E7%90%86)
   - [6、总结](#6%E6%80%BB%E7%BB%93)
+- [二十三、本地方法(native)](#%E4%BA%8C%E5%8D%81%E4%B8%89%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95native)
+  - [1、本地方法加载](#1%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E5%8A%A0%E8%BD%BD)
+- [二十四、Java中的null](#%E4%BA%8C%E5%8D%81%E5%9B%9Bjava%E4%B8%AD%E7%9A%84null)
+- [二十五、字符集与字符编码](#%E4%BA%8C%E5%8D%81%E4%BA%94%E5%AD%97%E7%AC%A6%E9%9B%86%E4%B8%8E%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -229,4 +233,6 @@ public class Null {
 - 用八大基本类型转换后的`null`,不可以进行基本类型的运算,否则会出现编译或者运行错误；
 - `null`和`""`并不相等,因为下面的s并没有指向某一块内存,而s1指向了一块空字符串的内存；
 
+# 二十五、字符集与字符编码
 
+http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
