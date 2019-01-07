@@ -3,16 +3,34 @@
 **目录**
 
 - [一、消息中间件](#%E4%B8%80%E6%B6%88%E6%81%AF%E4%B8%AD%E9%97%B4%E4%BB%B6)
-- [二、ActiveMQ](#%E4%BA%8Cactivemq)
-  - [1、ActiveMQ 基本概念](#1activemq-%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
-  - [2、使用 ActiveMQ](#2%E4%BD%BF%E7%94%A8-activemq)
-  - [3、ActiveMQ 集群](#3activemq-%E9%9B%86%E7%BE%A4)
+  - [1、主流中间件介绍](#1%E4%B8%BB%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%BB%8B%E7%BB%8D)
+  - [2、AMQP协议-高级消息队列协议](#2amqp%E5%8D%8F%E8%AE%AE-%E9%AB%98%E7%BA%A7%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%8D%8F%E8%AE%AE)
+- [二、RabbitMQ](#%E4%BA%8Crabbitmq)
+  - [1、概述](#1%E6%A6%82%E8%BF%B0)
+  - [2、RabbitMQ命令与控制台](#2rabbitmq%E5%91%BD%E4%BB%A4%E4%B8%8E%E6%8E%A7%E5%88%B6%E5%8F%B0)
+  - [3、Exchange交换机](#3exchange%E4%BA%A4%E6%8D%A2%E6%9C%BA)
+  - [4、其他概念](#4%E5%85%B6%E4%BB%96%E6%A6%82%E5%BF%B5)
+  - [5、消息如何保障100%投递成功](#5%E6%B6%88%E6%81%AF%E5%A6%82%E4%BD%95%E4%BF%9D%E9%9A%9C100%25%E6%8A%95%E9%80%92%E6%88%90%E5%8A%9F)
+  - [6、Confirm确认消息](#6confirm%E7%A1%AE%E8%AE%A4%E6%B6%88%E6%81%AF)
+  - [7、Return消息机制](#7return%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6)
+  - [8、消费端自定义监听](#8%E6%B6%88%E8%B4%B9%E7%AB%AF%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9B%91%E5%90%AC)
+  - [9、消费端限流](#9%E6%B6%88%E8%B4%B9%E7%AB%AF%E9%99%90%E6%B5%81)
+  - [10、消费端ACK与重回队列](#10%E6%B6%88%E8%B4%B9%E7%AB%AFack%E4%B8%8E%E9%87%8D%E5%9B%9E%E9%98%9F%E5%88%97)
+  - [11、TTL-Time To Live，生存时间](#11ttl-time-to-live%E7%94%9F%E5%AD%98%E6%97%B6%E9%97%B4)
+  - [12、死信队列-Dead Letter Exchane](#12%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97-dead-letter-exchane)
+  - [12.2、死信队列](#122%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97)
+- [三、RabbitMQ与Spring整合](#%E4%B8%89rabbitmq%E4%B8%8Espring%E6%95%B4%E5%90%88)
+  - [1、RabbitMQ整合Spring AMQP](#1rabbitmq%E6%95%B4%E5%90%88spring-amqp)
+- [四、RabbitMQ集群](#%E5%9B%9Brabbitmq%E9%9B%86%E7%BE%A4)
+  - [1、集群架构模式](#1%E9%9B%86%E7%BE%A4%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一、消息中间件
 
 MQ的衡量指标：服务性能、数据存储、集群架构
+
 ## 1、主流中间件介绍
 
 ### 1.1、ActiveMQ
@@ -24,25 +42,19 @@ MQ的衡量指标：服务性能、数据存储、集群架构
 
 ### 1.4、RabbitMQ
 
-## 2、AMQP协议-高级消息队列协议
+## 2、消息队列
 
-### 2.1、概述
-是具有现代特征的二进制协议，是一个提供统一消息服务的应用层标准高级消息队列协议，是应用层协议的一个开放标准，为面向消息的中间件设计
+### 2.1、优点
 
+- 解耦
+- 异步处理
+- 削峰
 
-### 2.2、AMQP协议模型
+### 2.2、缺点
 
-### 2.3、AMQP核心概念
-
-- Server：又称Broker，接受客户端连接，实现AMQP实体服务；
-- Connction：连接，应用程序与Broker的网络连接；
-- Channel：网络信道，几乎所有的操作都是在Channel进行，Channel是进行消息读写的通道；客户端可以建立多个Channel，每个Channle代表一个会话任务；
-- Message：消息，服务器和应用程序之间传输的数据，由Properties和body组成，Properties对消息进行修饰，比如消息的优先级、延迟等；Body则是消息体内容；
-- Virtual Host：虚拟地址，用户进行逻辑隔离，最上层的消息路由；一个Virtual Host里面可以有若干个Exchange和Q，同一个Virtual Host里面不能有相同名称的Exchange或Queue；
-- Exchange：交换机，接受消息，根据路由键转发消息到绑定的队列；
-- Binding：Exchange和Queue之间的虚拟连接，binding中可以包含routing key；
-- Routing Key：一个路由规则，虚拟机可用它来确定如何路由一个特点消息；
-- Queue：也称为Message Queue，消息队列，保存消息并将它们转发给消费者；
+- 系统可用性降低：系统引入的外部依赖越多，越容易挂掉
+- 系统复杂性提高：保证消息没有重复消费？怎么处理消息丢失的情况？怎么保证消息传递的顺序性？
+- 一致性问题
 
 # 二、RabbitMQ
 
@@ -136,7 +148,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
   - 消息落库，对消息进行状态打标；在高并发场景下，可能存在大量的数据库操作
   - 消息的延迟投递，做二次确认，回调检查，回调检查是补偿机制
 
-    ![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%9E%B6%E6%9E%84/image/中间件/生产端可靠性消息投递-二次确认.png)
+    ![image](image/生产端可靠性消息投递-二次确认.png)
 
 ### 5.2、消费端幂等性保障
 
@@ -327,6 +339,7 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 - 自定义二进制转换器：比如图片类型、PDF、PPT、流媒体等
 
 # 四、RabbitMQ集群
+
 ## 1、集群架构模式
 
 - 主备模式：实现RabbitMQ的高可用集群，一般在并发和数据量不高的情况下，这种模型非常好用且简单。主备模式也称之为Warren模式。主节点如果挂了，从节点提供服务而已，和activemq利用zookeeper做主备一样。主要利用好HaProxy来进行配置
