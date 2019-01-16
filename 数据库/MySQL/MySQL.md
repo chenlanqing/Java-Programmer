@@ -1146,6 +1146,8 @@ mysql> explain partitions select * from emp where store_id=5；
 ```
 上面的结果：partitions：p1 表示数据在p1分区进行检索
 
+https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
+
 # 十一、数据库结构设计
 
 ## 1、数据库结构设计的步骤

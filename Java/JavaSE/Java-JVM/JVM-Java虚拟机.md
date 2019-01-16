@@ -1313,6 +1313,7 @@ http://osgi.com.cn/article/7289378
 ## 6.15、Jar Hell问题
 
 ## 6.16、字节码与类加载
+
 字节码与类加载时如何转换的？其发生在类加载哪一个阶段？
 
 - 首先，类从字节码到Class对象的转换，在类加载过程中，是通过如下方法提供的功能或者defineClass的其他本地实现
@@ -1323,6 +1324,13 @@ http://osgi.com.cn/article/7289378
 	可以看出，不管是是作为byte数组的形式还是放到ByteBuffer上，只要能够生成出规范的字节码，都可以平滑的完成字节码到Java对象的转换过程；
 
 	JDK提供的defineClass都是本地实现的
+
+	```
+	获取字节码方式
+	List.class
+	list.getClass()
+	Class.forName('全路径')
+	```
 
 # 7、字节码执行引擎
 

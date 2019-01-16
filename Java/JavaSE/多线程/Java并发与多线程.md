@@ -407,7 +407,9 @@ Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 
 ### 2.12、线程组可以把线程分组
 
-Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 对象组成和由另外的 ThreadGroup 对象组成，生成线程树结构
+Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 对象组成和由另外的 ThreadGroup 对象组成，生成线程树结构，方便线程管理
+
+***不推荐使用线程组***
 
 ### 2.13、用线程工厂创建线程
 
@@ -928,7 +930,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 一个线程发送数据到输出管道，另一个线程从输入管道中读取数据，实现不同线程间通信使用代码 inputStream.connect(outputStream)或者 outputStream.connect(inputStream) 的作用使两个Stream之间产生通信链接，这样才可以将数据进行输出与输入
 
-### 10.5.wait()、notify()和notifyAll()
+### 10.5、wait()、notify()和notifyAll()
 
 上述方法是定义在java.lang.Object类
 
@@ -942,13 +944,19 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 ### 10.6、丢失的信号(Missed Signals)
 
-notify()和notifyAll()方法不会保存调用它们的方法，因为当这两个方法被调用时，有可能没有线程处于等待状态，通知信号过后便丢弃了，如果一个线程先于被通知线程调用wait()前调用了notify()，等待的线程将错过这个信号
+- notify()和notifyAll()方法不会保存调用它们的方法，因为当这两个方法被调用时，有可能没有线程处于等待状态，通知信号过后便丢弃了，如果一个线程先于被通知线程调用wait()前调用了notify()，等待的线程将错过这个信号
+
+- 解决方案：设置变量表示是否被通知过
+
+- [LostNotify.java](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-basis/src/main/java/com/blue/fish/se/basis/object/LostNotify.java)
 
 ### 10.7、假唤醒
 
-- 由于莫名其妙的原因，线程有可能在没有调用过notify()和notifyAll()的情况下醒来.这就是所谓的假唤醒(spurious wakeups)
+- 由于莫名其妙的原因，线程有可能在没有调用过notify()和notifyAll()的情况下醒来。这就是所谓的假唤醒(spurious wakeups)
 
-- 为了防止假唤醒，保存信号的成员变量将在一个while循环里接受检查，而不是在if表达式里.这样的一个while循环叫做自旋锁；注意:这种做法要慎重，目前的JVM实现自旋会消耗CPU，如果长时间不调用doNotify方法，doWait方法会一直自旋，CPU会消耗太大
+- 为了防止假唤醒，保存信号的成员变量将在一个while循环里接受检查，而不是在if表达式里。这样的一个while循环叫做自旋锁；注意：这种做法要慎重，目前的JVM实现自旋会消耗CPU，如果长时间不调用doNotify方法，doWait方法会一直自旋，CPU会消耗太大
+
+- [EarlyNotify.java](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-basis/src/main/java/com/blue/fish/se/basis/object/EarlyNotify.java)
 
 ### 10.8、多个线程等待相同信号
 
@@ -956,9 +964,42 @@ notify()和notifyAll()方法不会保存调用它们的方法，因为当这两�
 
 在wait()/notify()机制中，不要使用全局对象，字符串常量等。应该使用对应唯一的对象
 
+### 10.10、等待/通知的典型范式
+
+可归纳出等待/通知的典型范式，该范式分为两部分，分别针对等待方（消费者）和通知方（生产者）：
+- 等待方遵循原则如下
+	- 获取对象的锁
+	- 如果条件不满足，那么调用对象的wait()方法，被通知后仍要检查条件；
+	- 条件满足则执行对应的逻辑
+
+	对应伪代码：
+	```java
+	synchronized(对象){
+		while(条件不满足){
+			对象.wait();
+		}
+		// doSomething();
+	}
+	```
+
+- 通知方遵循原则如下：
+	- 获得对象的锁
+	- 改变条件
+	- 通知所以等待在对象上的线程
+
+	对应伪代码：
+	```java
+	synchronized(对象){
+		改变条件
+		对象.notifyAll();
+	}
+	```
+
 ## 11、ThreadLocal类
 
-存放每个线程的共享变量，解决变量在不同线程间的隔离性
+存放每个线程的共享变量，解决变量在不同线程间的隔离性，能让线程拥有了自己内部独享的变量；覆盖initialValue方法指定线程独享的值
+
+每一个线程都有一个私有变量，是`ThreadLocalMap`类型。当为线程添加`ThreadLocal`对象时，就是保存到这个map中，所以线程与线程间不会互相干扰
 
 ### 11.1、创建ThreadLocal对象
 
@@ -1482,6 +1523,8 @@ CPU 缓存可以分为一级缓存，二级缓存，部分高端 CPU 还具有�
 
 `start`方法调用了`start0`方法，这是一个JNI接口，在Java中通过JNI接口可以实现Java调用本地方法，`start0`方法的实现在 `jdk/src/share/native/java/lang/Thread.c`中定义
 
+## 19、线程调度算法
+
 
 
 # 三、JUC(java.util.concurrent)包
@@ -1632,7 +1675,7 @@ ReentrantReadWriteLock.WriteLock writeLock()
 
 [CountDownLatch原理和示例](http://www.cnblogs.com/skywang12345/p/3533887.html)
 
-- 是一个同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待.允许1或N个线程等待其他线程完成执行；
+- 是一个同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待.允许1或xN个线程等待其他线程完成执行；
 - 数据结构：CountDownLatch 包含了sync对象，sync是 Sync 类型；CountDownLatch的Sync是实例类，它继承于AQS通过"共享锁"实现；
 - CountDownLatch 中3个核心函数: CountDownLatch(int count)， await()， countDown()
 

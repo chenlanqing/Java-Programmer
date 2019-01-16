@@ -2279,6 +2279,7 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 - [Spring Boot 官方文档](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
 - [SpringBoot1.x升级到2.x指南](http://www.leftso.com/blog/484.html)
 - [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
+- [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)
 
 
 

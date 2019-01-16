@@ -506,6 +506,8 @@ try{
 
 - 2.2、Spring 事务管理核心：TransactionManager，其为事务管理封装了一组独立于技术的方法。对于JDBC，JavaEE，Hibernate 等都实现了相应的事务管理器;
 
+***Spring事务默认地只在抛出RuntimeException和Error时才标识事务回滚，从事务方法中抛出的Checked exceptions将不被标识进行事务回滚***
+
 ## 3、声明式事务管理
 
 - 事务管理是一种横切关注点
