@@ -293,6 +293,11 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 
 # 四、Mybatis与Spring整合
 
+# 五、MyBatis原理
+
+* [Mybatis初始化机制详解](https://blog.csdn.net/luanlouis/article/details/37744073)
+* []()
+
 # 参考资料
 
 - [Hibernate与Mybatis对比](http://www.cnblogs.com/inspurhaitian/p/4647485.html)

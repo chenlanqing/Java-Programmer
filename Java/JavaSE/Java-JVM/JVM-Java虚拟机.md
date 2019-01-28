@@ -983,6 +983,8 @@ public class NetworkClassLoader extends ClassLoader {
 
 - Class.forName 方法执行之后已经对被加载类的静态变量分配完了存储空间，而 ClassLoader.loadClass()方法并没有一定执行完链接这一步；当想动态加载一个类且这个类又存在静态代码块或者静态变量而你在加载时就想同时初始化这些静态代码块则应偏向于使用 Class.forName() 方法
 
+-  Class.forName() 方法可以获取原生类型的 Class，而 ClassLoader.loadClass() 则会报错
+
 ## 6.7、什么时候使用类加载器
 
 类加载器是个很强大的概念，很多地方被运用.最经典的例子就是AppletClassLoader，它被用来加载Applet使用的类，而Applets大部分是在网上使用，而非本地的操作系统使用.使用不同的类加载器，你可以从不同的源地址加载同一个类，它们被视为不同的类.J2EE 使用多个类加载器加载不同地方的类，例如WAR文件由 Web-app 类加载器加载，而 EJB-JAR中的类由另外的类加载器加载.有些服务器也支持热部署，这也由类加载器实现.你也可以使用类加载器来加载数据库或者其他持久层的数据；
@@ -1278,6 +1280,7 @@ https://blog.csdn.net/vking_wang/article/details/12875619
 http://osgi.com.cn/article/7289378
 
 ## 6.13、JDK9类加载器概览
+
 在JDK9中，由于Jigsaw项目中引入了Java平台模块化系统（JPMS），JavaSE的源代码被划分为一些了模块，类加载，类文件容器都发生了变化
 - 前面的 -Xbootclasspath参数不可用了，API已经被划分到具体的模块，所以上面利用“-Xbootclasspath/p”替换某个Java核心类型代码，实际上变成了对相应模块进行修补，可以采用下面解决方案
 

@@ -114,18 +114,24 @@ def main():
 	foo('0')
 ```
 
-(1).assert的意思是:表达式n != 0应该是True，否则，根据程序运行的逻辑，后面的代码肯定会出错。
-(2).如果断言失败，assert语句本身就会抛出AssertionError：
-(3).启动Python解释器时可以用-O参数来关闭assert
+- assert的意思是:表达式n != 0应该是True，否则，根据程序运行的逻辑，后面的代码肯定会出错。
+- 如果断言失败，assert语句本身就会抛出AssertionError：
+- 启动Python解释器时可以用-O参数来关闭assert
 
-3.3.logging:和assert比，logging不会抛出错误，而且可以输出到文件
+### 3.3、logging
+
+和assert比，logging不会抛出错误，而且可以输出到文件
+
 	import logging
 	logging.basicConfig(level=logging.INFO)		
 	logging.info('n = %d' % n)
 	# 它允许你指定记录信息的级别，有debug，info，warning，error等几个级别
-	(1).logging的另一个好处是通过简单的配置，一条语句可以同时输出到不同的地方
 
-3.4.pdb:启动python的调试器pdb，让程序以单步运行，可以随时查看运行状态:
+logging的另一个好处是通过简单的配置，一条语句可以同时输出到不同的地方
+
+### 3.4、pdb
+启动python的调试器pdb，让程序以单步运行，可以随时查看运行状态：
+
 	如:
 		#err.py
 		s = '0'

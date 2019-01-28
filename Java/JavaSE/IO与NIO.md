@@ -331,7 +331,9 @@ Writer writer = new OutputStreamWriter(outputStream);
 以通过将 Reader 包装到 BufferedReader、Writer 包装到 BufferedWriter 中实现缓冲
 
 # 三、Java NIO
+
 ## 1、Java NIO 概述
+
 **1.1、核心概念：**
 
 - Channels
@@ -362,7 +364,7 @@ Writer writer = new OutputStreamWriter(outputStream);
 
 ## 2、Channel
 
-用于源节点与目标节点的连接.在 Java NIO 中负责缓冲区中数据的传输，本身不存储数据
+用于源节点与目标节点的连接。在 Java NIO 中负责缓冲区中数据的传输，本身不存储数据
 
 **2.1、与流类似，但有所不同：不能直接访问数据，可以与 Buffer 进行交互.**
 
@@ -372,7 +374,7 @@ Writer writer = new OutputStreamWriter(outputStream);
 
 **2.2、Java NIO 中最重要的通道的实现**
 
-- FileChannel：从文件中读写数据，一般从流中获取 Channel，不能切换成非阻塞模式
+- FileChannel：从文件中读写数据，一般从流中获取 Channel，不能切换成非阻塞模式，不能用于Selector
 - DatagramChannel：能通过UDP读写网络中的数据.
 - SocketChannel：能通过TCP读写网络中的数据.
 - ServerSocketChannel：可以监听新进来的TCP连接，像Web服务器那样.对每一个新进来的连接都会创建一个 SocketChannel
@@ -458,7 +460,7 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 **3.3、Buffer 的分配：**
 
 每一个 Buffer 类都有一个allocate方法。下面是一个分配48字节capacity的 ByteBuffer 的例子<br>
-ByteBuffer buf = ByteBuffer.allocate(48);
+`ByteBuffer buf = ByteBuffer.allocate(48);`
 
 **3.4、向 Buffer 中写数据：**
 
@@ -568,17 +570,17 @@ toChannel.transferFrom(position， count， fromChannel);
 
 是 Java NIO 中能够检测一到多个 NIO 通道，并能够知晓通道是否为诸如读写事件做好准备的组件，这样一个单独的线程可以管理多个channel，从而管理多个网络连接
 
-**6.1、为什么使用 Selector?**
+### 6.1、为什么使用 Selector
 
 可以只用一个线程处理所有的通道，使用Selector能够处理多个通道;
 
-**6.2、.Selector 的创建**
+### 6.2、Selector 的创建
 
-	Selector selector = Selector.open();
+Selector selector = Selector.open();
 
-**6.3、向 Selector 注册通道：为了将Channel和Selector配合使用，必须将channel注册到selector上**
+### 6.3、向 Selector 注册通道
 
-通过 SelectableChannel.register()方法来实现
+为了将Channel和Selector配合使用，必须将channel注册到selector上；通过 SelectableChannel.register()方法来实现
 ```java
 /**
  * 与Selector一起使用时，Channel必须处于非阻塞模式下
@@ -587,15 +589,16 @@ toChannel.transferFrom(position， count， fromChannel);
 channel.configureBlocking(false);
 SelectionKey key = channel.register(selector， Selectionkey.OP_READ);
 ```
-- register()方法的第二个参数：是在通过Selector监听Channel时对什么事件感兴趣，可以监听四种不同类型的事件：<br>
-	Connect == SelectionKey.OP_CONNECT<br>
-	Accept  == SelectionKey.OP_ACCEPT<br>
-	Read    == SelectionKey.OP_READ<br>
-	Writer  == SelectionKey.OP_WRITE<br>
-	如果你对不止一种事件感兴趣，那么可以用“位或”操作符将常量连接起来<br>
-	int interestSet = SelectionKey.OP_READ | SelectionKey.OP_WRITE;
+- register()方法的第二个参数：是在通过Selector监听Channel时对什么事件感兴趣，可以监听四种不同类型的事件：
+	- Connect == SelectionKey.OP_CONNECT：连接就绪
+	- Accept  == SelectionKey.OP_ACCEPT：接受就绪
+	- Read    == SelectionKey.OP_READ：读就绪
+	- Writer  == SelectionKey.OP_WRITE：写就绪
 
-**6.4、SelectionKey**
+	如果你对不止一种事件感兴趣，那么可以用“位或”操作符将常量连接起来：`int interestSet = SelectionKey.OP_READ | SelectionKey.OP_WRITE;`
+
+### 6.4、SelectionKey
+
 - interest集合：你所选择的感兴趣的事件集合
 ```java
 int interestSet = selectionKey.interestOps();
@@ -617,18 +620,18 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 	Channel  channel  = selectionKey.channel();<br>
 	Selector selector = selectionKey.selector();<br>
 - 附加的对象：可以将一个对象或者更多信息附着到SelectionKey上，这样就能方便的识别某个给定的通道<br>
-		selectionKey.attach(theObject);<br>
-		Object attachedObj = selectionKey.attachment();<br>
+    selectionKey.attach(theObject);<br>
+    Object attachedObj = selectionKey.attachment();<br>
 	还可以在用register()方法向Selector注册Channel的时候附加对象<br>
 		SelectionKey key = channel.register(selector， SelectionKey.OP_READ， theObject);
 
-**6.5、通过 Selector 选择通道**
+### 6.5、通过 Selector 选择通道
 
 ## 7、NIO序列图
 
 ### 7.1、服务端通信序列图
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Image/NIO服务端通信序列图.jpg)
+![](Image/NIO服务端通信序列图.jpg)
 
 - 1、打开ServerSocketChannel，用于监听客户端的连接，是所有客户端连接的父管道；
 - 2、绑定监听端口，设置连接为非阻塞模式；
@@ -644,7 +647,7 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 
 ### 7.2、客户端通信序列图
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Image/NIO客户端通信序列图.jpg)
+![](Image/NIO客户端通信序列图.jpg)
 
 # 四、IO与NIO面试相关
 ## 1、文件拷贝实现方式

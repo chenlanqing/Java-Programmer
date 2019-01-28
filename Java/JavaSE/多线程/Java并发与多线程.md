@@ -2553,13 +2553,13 @@ ExecutorService的默认实现，线程池中最核心的一个类
 
 #### 2.3.1、核心参数
 
-- corePoolSize：核心线程数大小，当线程数 < corePoolSize，会创建线程执行runnable
-- maximumPoolSize：最大线程数， 当线程数 >= corePoolSize的时候，会把runnable放入workQueue中largestPoolSize:记录了曾经出现的最大线程个数
-- keepAliveTime：保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。
+- corePoolSize：核心线程数大小，当线程数 < corePoolSize，会创建线程执行runnable；如果等于0,则任务执行完之后,没有任何请求进入时销毁线程池的线程；如果大于0,即使本地任务执行完毕,核心线程也不会被销毁；
+- maximumPoolSize：最大线程数， 当线程数 >= corePoolSize的时候，会把runnable放入workQueue中largestPoolSize:记录了曾经出现的最大线程个数；如果待执行的线程数大于此值,需要借助第5个参数的帮助,缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
+- keepAliveTime：保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。在默认情况下,当线程池的线程数大于 corePoolSize时, keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收.
 - unit：时间单位
-- workQueue：保存任务的阻塞队列
-- threadFactory：创建线程的工厂
-- handler：拒绝策略，默认有四种拒绝策略
+- workQueue：保存任务的阻塞队列；当请求的线程数大于 maximumPoolSize时,线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表,使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取,是一个生产消费模型队列；
+- threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时,就可以知道线程任务是由哪个线程工厂产生的
+- handler：拒绝策略，默认有四种拒绝策略；当超过参数 workQueue的任务缓存区上限的时候,就可以通过该策略处理请求,这是一种简单的限流保护.
 - workers：保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的，线程池底层的存储结构其实就是一个HashSet
 
 #### 2.3.2、参数关系
@@ -2806,6 +2806,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 * [ThreadLocal源码解读](https://www.cnblogs.com/micrari/p/6790229.html)
 * [线程池的使用](http://www.cnblogs.com/dolphin0520/p/3932921.html)
 * [线程池原理](http://www.cnblogs.com/cm4j/p/thread-pool.html)
+* [线程池](https://mp.weixin.qq.com/s/pnjWFG7iujO3LzpM79pt7w)
 * [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
 * [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
 * [Exchanger](http://cmsblogs.com/?p=2269)
