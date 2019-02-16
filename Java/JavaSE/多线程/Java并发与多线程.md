@@ -597,7 +597,8 @@ synchronized 关键字拥有锁重入功能，也就是在使用 synchronized �
 	- 在资源竞争不是很激烈的情况下， synchronized 的性能要优于 Lock，但是在资源竞争很激烈的情况下，synchronized性能会下降几十倍，但是 Lock 是保持常态的.
 	- 在 JDK1.5 之后 synchronized 作了很多优化，在性能上已经有很大提升.	如:自旋锁、锁消除、锁粗化、轻量级锁、偏向锁
 	- synchronized 和 ReentrantLock 都是可重入锁;
-	- 公平锁:即尽量以请求锁的顺序来获取锁synchronized 是非公平锁，无法保证等待的线程获取锁的顺序；ReentrantLock和ReentrantReadWriteLock，默认情况下是非公平锁，但是可以设置为 公平锁
+	- 公平锁：即尽量以请求锁的顺序来获取锁synchronized 是非公平锁，无法保证等待的线程获取锁的顺序；ReentrantLock和ReentrantReadWriteLock，默认情况下是非公平锁，但是可以设置为 公平锁；
+	- synchronized的锁状态是无法在代码中直接判断的，但是ReentrantLock可以通过ReentrantLock#isLocked判断
 
 - Lock 适用场景：
 	- 某个线程在等待一个锁的控制权的这段时间需要中断;
@@ -1553,22 +1554,25 @@ private volatile long foo;  ==> 原子性操作
 
 * [锁机制](https://www.cnblogs.com/charlesblc/p/5994162.html)
 * [Java锁机制](https://mp.weixin.qq.com/s/7ONKM3Xer2-HKvA9_ekhlQ)
+* [Java锁总结](https://www.jianshu.com/p/eec14bd3d640)
 
-![](image/Java锁机制.png)
+![](image/Java锁小结.png)
 
-**2.1、同步锁：通过synchronized关键字来进行同步**
+### 2.1、同步锁：通过synchronized关键字来进行同步
 
-同步锁的原理是，对于每一个对象，有且仅有一个同步锁：不同的线程能共同访问该同步锁。但是，在同一个时间点，该同步锁能且只能被一个线程获取到
+同步锁的原理是，对于每一个对象，有且仅有一个同步锁：不同的线程能共同访问该同步锁。但是，在同一个时间点，该同步锁能且只能被一个线程获取到；
 
-**2.2、JUC 包中的锁：**
+### 2.2、JUC包中的锁
 
 包括：Lock接口、ReadWriteLock接口、LockSupport阻塞、Condition条件 和 AbstractOwnableSynchronizer、AbstractQueuedSynchronizer、AbstractQueuedLongSynchronizer 三个抽象类，ReentrantLock独占锁、ReentrantReadWriteLock读写锁。由于CountDownLatch、CyclicBarrier 和 Semaphore 也是通过AQS来实现的
 
-**2.3、可重入锁:synchronized和ReentrantLock都是可重入锁，锁基于线程的分配，而不是基于方法调用的分配.**
+### 2.3、可重入锁
+
+synchronized和ReentrantLock都是可重入锁，锁基于线程的分配，而不是基于方法调用的分配。
 
 线程可以进入任何一个它已经拥有的锁所同步着的代码块。可重入锁是用来最大的作用是用来解决死锁的；
 
-**2.4、AQS-AbstractQueuedSynchronizer类：**
+### 2.4、AQS-AbstractQueuedSynchronizer类
 
 是java中管理"锁"的抽象类，锁的许多公共方法都是在这个类中实现。AQS 是独占锁（例如:ReentrantLock）和共享锁（例如:Semaphore）的公共父类。
 
@@ -1582,13 +1586,30 @@ AQS锁的分类:
 
 - 共享锁：能被多个线程同时拥有，能被共享的锁。JUC 包中的 ReentrantReadWriteLock.ReadLock，CyclicBarrier，CountDownLatch 和 Semaphore 都是共享锁。
 
-**2.5、CLH队列-Craig Landin and Hagersten lock queue**
+### 2.5、CLH队列-Craig Landin and Hagersten lock queue
 
 CLH 队列是 AQS 中"等待锁"的线程队列.在多线程中，为了保护竞争资源不被多个线程同时操作而起来错误，常常需要通过锁来保护这些资源在独占锁中，竞争资源在一个时间点只能被一个线程锁访问;而其它线程则需要等待.CLH 就是管理这些"等待锁"的线程的队列。CLH 是一个非阻塞的 FIFO 队列。也就是说往里面插入或移除一个节点的时候，在并发条件下不会阻塞，而是通过自旋锁和 CAS 保证节点插入和移除的原子性。
 
-**2.6、CAS:Compare And Swap**
+### 2.6、CAS:Compare And Swap
 
 是比较并交换函数，它是原子操作函数;即通过CAS操作的数据都是以原子方式进行的。
+
+synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁的实现
+
+### 2.7、对象锁、类锁、私有锁
+
+- 对象锁：使用 synchronized 修饰非静态的方法以及 synchronized(this) 同步代码块使用的锁是对象锁；
+- 类锁：使用 synchronized 修饰静态的方法以及 synchronized(class) 同步代码块使用的锁是类锁；
+- 私有锁：在类内部声明一个私有属性如private Object lock，在需要加锁的同步块使用 synchronized(lock）
+
+**其特性：**
+- 对象锁具有可重入性。
+- 当一个线程获得了某个对象的对象锁，则该线程仍然可以调用其他任何需要该对象锁的 synchronized 方法或 synchronized(this) 同步代码块。
+- 当一个线程访问某个对象的一个 synchronized(this) 同步代码块时，其他线程对该对象中所有其它 synchronized(this) 同步代码块的访问将被阻塞，因为访问的是同一个对象锁。
+- 每个类只有一个类锁，但是类可以实例化成对象，因此每一个对象对应一个对象锁。
+- 类锁和对象锁不会产生竞争。
+- 私有锁和对象锁也不会产生竞争。
+- 使用私有锁可以减小锁的细粒度，减少由锁产生的开销。
 
 ## 3、独占锁
 
@@ -1602,6 +1623,7 @@ CLH 队列是 AQS 中"等待锁"的线程队列.在多线程中，为了保护�
 	- ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程。"公平锁"的机制下，线程依次排队获取；而"非公平锁"在锁是可获取状态时，不管自己是不是在队列的开头都会获取锁。<br>
 		ReentrantLock中，包含了Sync对象.而且，Sync 是 AQS 的子类;更重要的是，Sync 有两个子类 FairSync（公平锁）和	NonFairSync（非公平锁）；ReentrantLock 是一个独占锁，至于它到底是公平锁还是非公平锁，就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"；
 	- 提供了一个Condition类，可以分组唤醒需要唤醒的线程.
+	- 公平性、可重入、可中断、超时机制
 
 - **3.1.2、ReentrantLock 函数列表**
 	```java
@@ -2389,6 +2411,7 @@ do{
 JDK1.5 之前，需要编写明确的代码来执行CAS操作.在JDK1.5 之后，引入了底层的支持。并且JVM把它们编译为底层硬件提供的最有效的方法，在运行CAS的平台上，运行时把它们编译为相应的机器指令，如果处理器/CPU 不支持CAS指令，那么JVM将使用自旋锁;
 
 #### 2.2.1、Unsafe是CAS实现的核心类
+
 - Java 无法直接访问底层操作系统，而是通过本地 native 方法来访问.不过 JVM 还是开了个后门，JDK 中有一个类 Unsafe，它提供了硬件级别的原子操作对于 Unsafe 类的使用都是受限制的，只有授信的代码才能获得该类的实例
 - 对 CAS 的实现:
 ```java	
@@ -2422,6 +2445,7 @@ public final native boolean compareAndSwapLong(Object paramObject， long paramL
 		return unsafe.getAndAddInt(this， valueOffset， delta) + delta;
 	}
 	```
+
 #### 2.2.2、Unsafe 方法实现:使用 C++ 来实现的
 
 注意：对应于windows操作系统，X86 处理器<br>
@@ -2793,6 +2817,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 * [Synchronized及其实现原理](http://www.cnblogs.com/paddix/p/5367116.html)
 * [synchronized关键字及实现细节](http://www.cnblogs.com/javaminer/p/3889023.html)
 * [synchronized源码分析](https://www.jianshu.com/p/c5058b6fe8e5)
+* [synchronized底层实现分析](https://github.com/farmerjohngit/myblog/issues/12)
 * [Moniter的实现原理](http://www.hollischuang.com/archives/2030)
 * [JMV源码分析synchronized原理](https://www.cnblogs.com/kundeg/p/8422557.html)
 * [Java锁优化](http://luojinping.com/2015/07/09/java锁优化/)

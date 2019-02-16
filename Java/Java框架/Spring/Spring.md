@@ -34,6 +34,7 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一、Spring概念
+
 ## 1、Spring是什么
 
 - Spring 是一个开源框架.
@@ -50,6 +51,50 @@
 - 一站式：在 IOC 和 AOP 的基础上可以整合各种企业应用的开源框架和优秀的第三方类库 (实际上 Spring 自身也提供了展现层的 SpringMVC 和 持久层的 Spring JDBC)
 
 Spring容器初始化时：首先会初始化 bean，即构造相关类
+
+## 3、Spring的模块结构
+
+![](image/SpringFramework.png)
+
+### 3.1、Spring 核心容器
+
+对应图上的Core Container，该层基本上是 Spring Framework 的核心。它包含以下模块：
+- Spring Core
+- Spring Bean：核心容器提供 Spring 框架的基本功能。核心容器的主要组件是 BeanFactory，它是工厂模式的实现。BeanFactory 使用控制反转 （IOC）模式将应用程序的配置和依赖性规范与实际的应用程序代码分开
+- Spring Context：Spring 上下文是一个配置文件，向 Spring 框架提供上下文信息。Spring 上下文包括企业服务，例如 JNDI、EJB、电子邮件、国际化、事件机制、校验和调度功能
+- SpEL (Spring Expression Language)：Spring 表达式语言全称为 “Spring Expression Language”，缩写为 “SpEL” ，类似于 Struts2 中使用的 OGNL 表达式语言，能在运行时构建复杂表达式、存取对象图属性、对象方法调用等等，并且能与 Spring 功能完美整合，如能用来配置 Bean 定义
+
+或者说这块就是IOC
+
+### 3.2、数据访问
+
+对应图中，Data Access；该层提供与数据库交互的支持。它包含以下模块：
+- JDBC (Java DataBase Connectivity)：Spring 对 JDBC 的封装模块，提供了对关系数据库的访问。
+- ORM (Object Relational Mapping)：Spring ORM 模块，提供了对 hibernate5 和 JPA 的集成
+- OXM (Object XML Mappers)：Spring 提供了一套类似 ORM 的映射机制，用来将 Java 对象和 XML 文件进行映射。这就是 Spring 的对象 XML 映射功能，有时候也成为 XML 的序列化和反序列化；
+- Transaction：Spring 简单而强大的事务管理功能，包括声明式事务和编程式事务。
+
+### 3.3、Web
+
+该层提供了创建 Web 应用程序的支持。它包含以下模块：
+
+- WebMVC：MVC 框架是一个全功能的构建 Web 应用程序的 MVC 实现。通过策略接口，MVC 框架变成为高度可配置的，MVC 容纳了大量视图技术，其中包括 JSP、Velocity、Tiles、iText 和 POI
+- WebFlux：基于 Reactive 库的响应式的 Web 开发框架；
+- WebSocket：Spring 4.0 的一个最大更新是增加了对 Websocket 的支持。Websocket 提供了一个在 Web 应用中实现高效、双向通讯，需考虑客户端(浏览器)和服务端之间高频和低延时消息交换的机制。一般的应用场景有：在线交易、网页聊天、游戏、协作、数据可视化等
+
+### 3.4、AOP
+
+该层支持面向切面编程。它包含以下模块：
+
+- AOP：通过配置管理特性，Spring AOP 模块直接将面向方面的编程功能集成到了 Spring 框架中。所以，可以很容易地使 Spring 框架管理的任何对象支持 AOP。Spring AOP 模块为基于 Spring 的应用程序中的对象提供了事务管理服务。通过使用 Spring AOP，不用依赖 EJB 组件，就可以将声明性事务管理集成到应用程序中；
+- Aspects：该模块为与 AspectJ 的集成提供支持；
+- Instrumentation：该层为类检测和类加载器实现提供支持
+
+### 3.5、其它
+
+- JMS (Java Messaging Service)：提供了一个 JMS 集成框架，简化了 JMS API 的使用。
+- Test：该模块为使用 JUnit 和 TestNG 进行测试提供支持；
+- Messaging：该模块为 STOMP 提供支持。它还支持注解编程模型，该模型用于从 WebSocket 客户端路由和处理 STOMP 消息
 
 # 二、IOC(DI)
 
