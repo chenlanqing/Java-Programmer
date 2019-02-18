@@ -168,7 +168,7 @@ OK
 	- ②、Redis 集合可以表示关系；
 	- ③、你可以使用 SPOP 或 SRANDMEMBER 命令来从集合中随机抽取元素
 
-### 2.5.有序集合
+### 2.5、有序集合
 
 - Redis 的有序集合类似于 Redis 的集合，字符串不重复的集合；不同的是，一个有序集合的每个成员用分数，以便采取有序set命令，从最小的到最大的成员分数有关
 
@@ -180,6 +180,15 @@ OK
 	- ③、有序集合或许是最高级的 Redis 数据类型
 
 ### 2.6、位图(bitmaps)和超重对数(hyperloglogs)两种基于字符串基本类型
+
+### 2.7、总结
+
+Redis在互联网公司一般有以下应用：
+- String：缓存、限流、计数器、分布式锁、分布式Session
+- Hash：存储用户信息、用户主页访问量、组合查询
+- List：微博关注人时间轴列表、简单队列
+- Set：赞、踩、标签、好友关系
+- Zset：排行榜
 
 ## 3、Redis-keys
 
@@ -363,6 +372,7 @@ LTRIM 和 LPUSH 组合使用实现一个添加操作和一个修剪操作一起�
 		- ①、当我们向聚合(aggregate)数据类型添加一个元素，如果目标键不存在，添加元素前将创建一个空的聚合数据类型。
 		- ②、当我们从聚合数据类型删除一个元素，如果值为空，则键也会被销毁。
 		- ③、调用一个像 LLEN 的只读命令(返回列表的长度)，或者一个写命令从空键删除元素，总是产生和操作一个持有空聚合类型值的键一样的结果
+
 ## 8、Redis 哈希/散列 (Hashes)
 
 哈希就是字段值对(fields-values pairs)的集合
@@ -1022,3 +1032,4 @@ Redission通过Netty支持非阻塞I/O
 - [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 - [Redis未授权访问详解](http://www.freebuf.com/column/158065.html)
 - [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
+- [Redis数据结构](https://mp.weixin.qq.com/s/69xl2yU4B97aQIn1k_Lwqw)

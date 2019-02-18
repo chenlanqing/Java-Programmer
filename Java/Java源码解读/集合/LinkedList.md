@@ -10,25 +10,50 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
-# 一.类的定义(签名):
-	public class LinkedList<E> extends AbstractSequentialList<E> 
-		implements List<E>, Deque<E>, Cloneable, java.io.Serializable{}
-	1.AbstractSequenceList 提供了 List 接口骨干性的实现以减少实现 List 接口的复杂度
-	2.Deque 接口定义了双端队列的操作
+# 一、类的定义(签名)
+```java
+public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>, Deque<E>, Cloneable, java.io.Serializable {
 
-# 二.属性:
-    1.JDK6:
-        private transient Entry<E> header = new Entry<E>(null, null, null);// 链表的头节点
-        private transient int size = 0; // 链表的长度
-        (1).Entry<E> header:链表的头结点,private static class Entry<E>{},Entry 即是节点对象,
-            该对象里定义了存储的元素,后驱节点,前驱节点,每个节点只指定字节的前驱节点和后驱节点
-    2.JDK7:
-        transient int size = 0; // 链表的长度
-        transient Node<E> first;
-        transient Node<E> last;
-        (1).Node<E> first 表示第一个节点, Node<E> last 表示最后一个节点
-            private static class Node<E>{},Node 即是节点对象,
-            该对象里定义了存储的元素,后驱节点,前驱节点,每个节点只指定字节的前驱节点和后驱节点
+}
+```
+- `AbstractSequenceList`提供了 List 接口骨干性的实现以减少实现 List 接口的复杂度
+- `Deque`接口定义了双端队列的操作
+
+# 二、属性
+
+## 1、JDK6
+
+```java
+private transient Entry<E> header = new Entry<E>(null, null, null);// 链表的头节点
+private transient int size = 0; // 链表的长度
+```
+- `Entry<E> header`：链表的头结点：
+- `private static class Entry<E>`：Entry 即是节点对象，该对象里定义了存储的元素，后驱节点，前驱节点，每个节点只指定字节的前驱节点和后驱节点
+
+## 2、JDK7
+
+```java
+transient int size = 0; // 链表的长度
+transient Node<E> first;
+transient Node<E> last;
+```
+- Node<E> first 表示第一个节点,
+- Node<E> last 表示最后一个节点
+- private static class Node<E>，Node 即是节点对象，该对象里定义了存储的元素，后驱节点，前驱节点，每个节点只指定字节的前驱节点和后驱节点
+        
+
+
+# 参考资料
+
+* [LinkedList源码分析](https://mp.weixin.qq.com/s/FcTVC7rcq1GXxXa5yySu9w)
+
+
+
+
+
+
+————————
+
 # 三.构造方法:
     1.不带参数的构造器
         (1).JDK6:该构造器就是将头结点的前驱和后驱节点都指向header
@@ -205,4 +230,3 @@
                     x = x.prev;
                 return x;
             }
-

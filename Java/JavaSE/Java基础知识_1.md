@@ -45,13 +45,14 @@
   - [5、开发自己的泛型类](#5%E5%BC%80%E5%8F%91%E8%87%AA%E5%B7%B1%E7%9A%84%E6%B3%9B%E5%9E%8B%E7%B1%BB)
   - [6、在使用泛型的时候可以遵循一些基本的原则](#6%E5%9C%A8%E4%BD%BF%E7%94%A8%E6%B3%9B%E5%9E%8B%E7%9A%84%E6%97%B6%E5%80%99%E5%8F%AF%E4%BB%A5%E9%81%B5%E5%BE%AA%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E7%9A%84%E5%8E%9F%E5%88%99)
   - [7、Java与C++泛型区别](#7java%E4%B8%8Ec%E6%B3%9B%E5%9E%8B%E5%8C%BA%E5%88%AB)
-- [八、关于`try...catch...finally`](#%E5%85%AB%E5%85%B3%E4%BA%8Etrycatchfinally)
-  - [1、关于`try...catch...finally`使用](#1%E5%85%B3%E4%BA%8Etrycatchfinally%E4%BD%BF%E7%94%A8)
-  - [2、使用`try...catch...finally`需要注意](#2%E4%BD%BF%E7%94%A8trycatchfinally%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F)
+- [八、关于try...catch...finally](#%E5%85%AB%E5%85%B3%E4%BA%8Etrycatchfinally)
+  - [1、关于try...catch...finally使用](#1%E5%85%B3%E4%BA%8Etrycatchfinally%E4%BD%BF%E7%94%A8)
+  - [2、使用try...catch...finally需要注意](#2%E4%BD%BF%E7%94%A8trycatchfinally%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F)
   - [3、如何退出](#3%E5%A6%82%E4%BD%95%E9%80%80%E5%87%BA)
 - [九、Java 四舍五入](#%E4%B9%9Djava-%E5%9B%9B%E8%88%8D%E4%BA%94%E5%85%A5)
   - [1、目前 Java 支持7中舍入法](#1%E7%9B%AE%E5%89%8D-java-%E6%94%AF%E6%8C%817%E4%B8%AD%E8%88%8D%E5%85%A5%E6%B3%95)
   - [2、保留位](#2%E4%BF%9D%E7%95%99%E4%BD%8D)
+  - [3、Math](#3math)
 - [十、Java 中保留小数位数的处理](#%E5%8D%81java-%E4%B8%AD%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E4%BD%8D%E6%95%B0%E7%9A%84%E5%A4%84%E7%90%86)
   - [1、使用 BigDecimal，保留小数点后两位](#1%E4%BD%BF%E7%94%A8-bigdecimal%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
   - [2、使用 DecimalFormat，保留小数点后两位](#2%E4%BD%BF%E7%94%A8-decimalformat%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
@@ -1045,7 +1046,7 @@ public class TestGeneric
 	}
 }
 ```
-存在 ArrayList.class 文件但是不存在 ArrayList<String>.class 文件，即便是通过 class.getTypeParameters() 方法获取类型信息也只能获取到 [T] 一样的泛型参数占位符，编译后任何具体的泛型类型都被擦除了，替换为非泛型上边界，如果没有指定边界则为 Object 类型，泛型类型只有在静态类型检查期间才出现.
+存在 ArrayList.class 文件但是不存在 `ArrayList<String>.class` 文件，即便是通过 class.getTypeParameters() 方法获取类型信息也只能获取到 [T] 一样的泛型参数占位符，编译后任何具体的泛型类型都被擦除了，替换为非泛型上边界，如果没有指定边界则为 Object 类型，泛型类型只有在静态类型检查期间才出现.
 
 ### 2.2、为什么Java泛型要通过擦除来实现
 
@@ -1207,15 +1208,15 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 ## 3、通配符与上下界
 
-- 3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符"?"来表示未知类型，如List<?>
+- 3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符"?"来表示未知类型，如`List<?>`
 
-- 3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是List<?>并不等同于`List<Object>
+- 3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是`List<?>`并不等同于`List<Object>`
 
-	`List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 List<?>则其中所包含的元素类型是不确定；
+	`List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 `List<?>`则其中所包含的元素类型是不确定；
 
 - 3.3、对于 List<?>中的元素只能用 Object 来引用，在有些情况下不是很方便.在这些情况下，可以使用上下界来限制未知类型的范围
 
-	如：List<? extends Number>说明 List 中可能包含的元素类型是 Number 及其子类；而：List<? super Number> 则说明 List 中包含的是 Number 及其父类；当引入了上界之后，在使用类型的时候就可以使用上界类中定义的方法。List<?> 是一个未知类型的 List，而 List<Object> 其实是任意类型的 List，可以把 List<String>、List<Integer> 赋值给 List<?>，却不能把 List<String> 赋值给 List<Object>
+	如：`List<? extends Number>`说明 List 中可能包含的元素类型是 Number 及其子类；而：`List<? super Number>` 则说明 List 中包含的是 Number 及其父类；当引入了上界之后，在使用类型的时候就可以使用上界类中定义的方法。`List<?>` 是一个未知类型的 List，而 `List<Object>` 其实是任意类型的 List，可以把 `List<String>、List<Integer>` 赋值给 `List<?>`，却不能把 `List<String>` 赋值给 `List<Object>`
 
 - 3.4、关于`<? extends T>`和`<? super T>`
 
@@ -1321,18 +1322,18 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 - 4.2、引入泛型后，类型系统增加了两个维度：
 
-    * 一个是类型参数自身的继承体系结构.List<String>和List<Object>这样的情况，类型参数String是继承自Object的
+    * 一个是类型参数自身的继承体系结构：`List<String>`和`List<Object>`这样的情况，类型参数String是继承自Object的
     * 一个是泛型类或接口自身的继承体系结构.第二种指的是 List 接口继承自 Collection 接口
     	对于这个类型系统，有如下规则：
-    	* 相同类型参数的泛型类的关系取决于泛型类自身的继承体系结构，即 List<String>是 Collection<String> 的子类型，List<String>可以替换 Collection<String>
-    	* 当泛型类的类型声明中使用了通配符的时候，其子类型可以在两个维度上分别展开：对于 Collection<? extends Number>来说，<
+    	* 相同类型参数的泛型类的关系取决于泛型类自身的继承体系结构，即 `List<String>`是 `Collection<String>` 的子类型，`List<String>`可以替换 `Collection<String>`
+    	* 当泛型类的类型声明中使用了通配符的时候，其子类型可以在两个维度上分别展开：对于 `Collection<? extends Number>`来说：
+    		* ①.其子类型可以在 Collection 这个维度上展开`List<? extends Number>和 Set<? extends Number>`等
+    		* ②.也可以在 Number 这个层次上展开，即 `Collection<Double>`和 `Collection<Integer>`等`ArrayList<Long>`和 `HashSet<Double>`等也都算是 `Collection<? extends Number>`的子类型
 
-    		* ①.其子类型可以在 Collection 这个维度上展开 List<? extends Number>和 Set<? extends Number>等<
-    		* ②.也可以在 Number 这个层次上展开，即 Collection<Double>和 Collection<Integer>等ArrayList<Long>和 HashSet<Double>等也都算是 Collection<? extends Number>的子类型
 
 ## 5、开发自己的泛型类
 
-- 泛型类与一般的Java类基本相同，只是在类和接口定义上多出来了用<>声明的类型参数
+- 泛型类与一般的Java类基本相同，只是在类和接口定义上多出来了用`<>`声明的类型参数
 - 所声明的类型参数在Java类中可以像一般的类型一样作为方法的参数和返回值，或是作为域和局部变量的类型
 - 由于类型擦除机制，类型参数并不能用来创建对象或是作为静态变量的类型
 
@@ -1359,7 +1360,7 @@ class ClassTest<X extends Number， Y， Z> {
 
 ## 7、Java与C++泛型区别
 
-# 八、关于`try...catch...finally`
+# 八、关于try...catch...finally
 
 * [try、catch、finally中的细节分析](http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)
 
@@ -1375,13 +1376,13 @@ public boolean returnTest(){
 	}
 }
 ```
-## 1、关于`try...catch...finally`使用
+## 1、关于try...catch...finally使用
 - `try、catch、finally`语句中，在如果`try`语句有`retur`语句，则返回的之后当前 try 中变量此时对应的值，此后对变量做任何的修改，都不影响 try 中 return 的返回值;
 - 如果 finally 块中有 return 语句，则 try 或 catch 中的返回语句忽略;
 - 如果 finally 块中抛出异常，则整个 try、catch、finally 块中抛出异常;
 - 如果 catch 异常中写了多个需要 catch 的异常，可以如果匹配到了捕获的异常，则后面其他的异常都将被忽略
 
-## 2、使用`try...catch...finally`需要注意
+## 2、使用try...catch...finally需要注意
 
 - 尽量在 try 或者 catch 中使用 return 语句.通过 finally 块中达到对 try 或者 catch 返回值修改是不可行的;
 - finally 块中避免使用 return 语句，因为 finally 块中如果使用 return 语句，会显示的消化掉 try、catch 块中的异常信息，屏蔽了错误的发生;
@@ -1448,6 +1449,7 @@ Exception in thread "main" java.lang.ArithmeticException： / by zero
 	或者
 	`<fmt：formatNumber type="number" value="${10000.22/100}" maxFractionDigits="0"/>`
 	maxFractionDigits表示保留的位数
+
 ## 3、Math
 
 ```java

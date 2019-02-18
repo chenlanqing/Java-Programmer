@@ -2,25 +2,19 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一、Spring的整体架构](#%E4%B8%80spring%E7%9A%84%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84)
-  - [1.1、Core Container](#11core-container)
-  - [1.2、Data Access/Integration](#12data-accessintegration)
-  - [1.3、Web](#13web)
-  - [1.4、AOP](#14aop)
-  - [1.5、Test](#15test)
-- [二、IOC](#%E4%BA%8Cioc)
+- [一、IOC](#%E4%B8%80ioc)
   - [1、IOC的生命周期](#1ioc%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
   - [2、ApplicationContext Bean 生命周期](#2applicationcontext-bean-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
   - [3、BeanFactory Bean生命周期-面向Spring本身](#3beanfactory-bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%E9%9D%A2%E5%90%91spring%E6%9C%AC%E8%BA%AB)
   - [4、IOC容器的启动过程](#4ioc%E5%AE%B9%E5%99%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
   - [5、Bean加载过程](#5bean%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B)
   - [6、IOC容器源码](#6ioc%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81)
-- [三、AOP](#%E4%B8%89aop)
-- [四、spring事务](#%E5%9B%9Bspring%E4%BA%8B%E5%8A%A1)
+- [二、AOP](#%E4%BA%8Caop)
+- [三、spring事务](#%E4%B8%89spring%E4%BA%8B%E5%8A%A1)
   - [1、Spring事务管理方式](#1spring%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E6%96%B9%E5%BC%8F)
   - [2、Spring的事务特性](#2spring%E7%9A%84%E4%BA%8B%E5%8A%A1%E7%89%B9%E6%80%A7)
   - [3、Spring事务实现原理](#3spring%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
-- [五、SpringFactoriesLoader](#%E4%BA%94springfactoriesloader)
+- [四、SpringFactoriesLoader](#%E5%9B%9Bspringfactoriesloader)
 - [相关面试题](#%E7%9B%B8%E5%85%B3%E9%9D%A2%E8%AF%95%E9%A2%98)
   - [1、Spring与SpringMVC父子容器配置](#1spring%E4%B8%8Espringmvc%E7%88%B6%E5%AD%90%E5%AE%B9%E5%99%A8%E9%85%8D%E7%BD%AE)
   - [2、Spring中涉及的设计模式](#2spring%E4%B8%AD%E6%B6%89%E5%8F%8A%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
@@ -28,25 +22,7 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# 一、Spring的整体架构
-## 1.1、Core Container
-
-核心容器，包含 Core、Beans、Context、Expression Language模块；Core和Beans模块是框架的基础部分，提供IOC和依赖注入特性.这里的基础概念是BeanFactory，它提供对Factory 模式的经典实现来消除对程序性单例模式的需要
-
-- Core模块主要包含Spring框架基本的核心工具类，Spring的其他组件都要使用到这个包里的类，该模块是其他组件的基本核心；
-- Beans模块是所有应用都要用到的，包含访问配置文件、创建和管理bean以及进行IOC和DI 操作相关的所有类；
-- Context 模块构建于Core和Beans模块基础之上，提供了一种类似于 JNDI 注册器的框架式的对象访问方法。该模块继承了Beans的特性，为Spring核心提供了大量的扩展，添加对国际化、事件传播、资源加载和对Context的透明创建的支持. ApplicationContext 接口是 Context 模块的关键；
-- Expression Language 模块提供了一个强大的表达式语言用于在运行时查询和操作对象
-
-## 1.2、Data Access/Integration
-
-包含JDBC、ORM、OXM、JMS和Transaction模块，其中JDBC模块提供了一个JDBC抽象层
-
-## 1.3、Web
-## 1.4、AOP
-## 1.5、Test
-
-# 二、IOC
+# 一、IOC
 
 ## 1、IOC的生命周期
 
@@ -466,12 +442,12 @@ protected void finishRefresh() {
 - `publishEvent(new ContextRefreshedEvent(this));`发布容器刷新完成事件；
 - `liveBeansView.registerApplicationContext(this);`
 
-# 三、AOP
+# 二、AOP
 
 
 
 
-# 四、spring事务
+# 三、spring事务
 
 ## 1、Spring事务管理方式
 
@@ -537,7 +513,8 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 
 ## 3、Spring事务实现原理
 
-# 五、SpringFactoriesLoader
+
+# 四、SpringFactoriesLoader
 
 
 # 相关面试题

@@ -5,8 +5,8 @@
 - [一、Spring概念](#%E4%B8%80spring%E6%A6%82%E5%BF%B5)
   - [1、Spring是什么](#1spring%E6%98%AF%E4%BB%80%E4%B9%88)
   - [2、具体描述 Spring](#2%E5%85%B7%E4%BD%93%E6%8F%8F%E8%BF%B0-spring)
-- [二、IOC(DI)](#%E4%BA%8Ciocdi)
-  - [1、IOC(Inversion of Control)](#1iocinversion-of-control)
+- [二、IoC(DI)](#%E4%BA%8Ciocdi)
+  - [1、IoC(Inversion of Control)](#1iocinversion-of-control)
   - [2、Spring容器](#2spring%E5%AE%B9%E5%99%A8)
   - [3、DI(Dependency Injection)](#3didependency-injection)
   - [4、各种类型信息的注入](#4%E5%90%84%E7%A7%8D%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF%E7%9A%84%E6%B3%A8%E5%85%A5)
@@ -15,8 +15,8 @@
   - [2、AOP 的优势](#2aop-%E7%9A%84%E4%BC%98%E5%8A%BF)
   - [3、AOP 的术语](#3aop-%E7%9A%84%E6%9C%AF%E8%AF%AD)
   - [6、Aop：通知](#6aop%E9%80%9A%E7%9F%A5)
-- [四、IOC与AOP原理分析](#%E5%9B%9Bioc%E4%B8%8Eaop%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
-  - [1、IOC原理](#1ioc%E5%8E%9F%E7%90%86)
+- [四、IoC与AOP原理分析](#%E5%9B%9Bioc%E4%B8%8Eaop%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+  - [1、IoC原理](#1ioc%E5%8E%9F%E7%90%86)
   - [2、AOP原理](#2aop%E5%8E%9F%E7%90%86)
 - [五、Spring的 事务](#%E4%BA%94spring%E7%9A%84-%E4%BA%8B%E5%8A%A1)
   - [1、事务：一组逻辑操作](#1%E4%BA%8B%E5%8A%A1%E4%B8%80%E7%BB%84%E9%80%BB%E8%BE%91%E6%93%8D%E4%BD%9C)
@@ -39,16 +39,16 @@
 
 - Spring 是一个开源框架.
 - Spring 为简化企业级应用开发而生. 使用 Spring 可以使简单的 JavaBean 实现以前只有 EJB 才能实现的功能.
-- Spring 是一个 IOC(DI) 和 AOP 容器框架;
+- Spring 是一个 IoC(DI) 和 AOP 容器框架;
 
 ## 2、具体描述 Spring
 
 - 轻量级：Spring 是非侵入性的 - 基于 Spring 开发的应用中的对象可以不依赖于 Spring 的 API
-- 依赖注入(DI --- dependency injection、IOC)
+- 依赖注入(DI --- dependency injection、IoC)
 - 面向切面编程(AOP --- aspect oriented programming)
 - 容器：Spring 是一个容器，因为它包含并且管理应用对象的生命周期
 - 框架：Spring 实现了使用简单的组件配置组合成一个复杂的应用. 在 Spring 中可以使用 XML 和 Java 注解组合这些对象
-- 一站式：在 IOC 和 AOP 的基础上可以整合各种企业应用的开源框架和优秀的第三方类库 (实际上 Spring 自身也提供了展现层的 SpringMVC 和 持久层的 Spring JDBC)
+- 一站式：在 IoC 和 AOP 的基础上可以整合各种企业应用的开源框架和优秀的第三方类库 (实际上 Spring 自身也提供了展现层的 SpringMVC 和 持久层的 Spring JDBC)
 
 Spring容器初始化时：首先会初始化 bean，即构造相关类
 
@@ -60,11 +60,11 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 对应图上的Core Container，该层基本上是 Spring Framework 的核心。它包含以下模块：
 - Spring Core
-- Spring Bean：核心容器提供 Spring 框架的基本功能。核心容器的主要组件是 BeanFactory，它是工厂模式的实现。BeanFactory 使用控制反转 （IOC）模式将应用程序的配置和依赖性规范与实际的应用程序代码分开
+- Spring Bean：核心容器提供 Spring 框架的基本功能。核心容器的主要组件是 BeanFactory，它是工厂模式的实现。BeanFactory 使用控制反转 （IoC）模式将应用程序的配置和依赖性规范与实际的应用程序代码分开
 - Spring Context：Spring 上下文是一个配置文件，向 Spring 框架提供上下文信息。Spring 上下文包括企业服务，例如 JNDI、EJB、电子邮件、国际化、事件机制、校验和调度功能
 - SpEL (Spring Expression Language)：Spring 表达式语言全称为 “Spring Expression Language”，缩写为 “SpEL” ，类似于 Struts2 中使用的 OGNL 表达式语言，能在运行时构建复杂表达式、存取对象图属性、对象方法调用等等，并且能与 Spring 功能完美整合，如能用来配置 Bean 定义
 
-或者说这块就是IOC
+或者说这块就是IoC
 
 ### 3.2、数据访问
 
@@ -96,54 +96,52 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 - Test：该模块为使用 JUnit 和 TestNG 进行测试提供支持；
 - Messaging：该模块为 STOMP 提供支持。它还支持注解编程模型，该模型用于从 WebSocket 客户端路由和处理 STOMP 消息
 
-# 二、IOC(DI)
+# 二、IoC(DI)
 
-## 1、IOC(Inversion of Control)
+## 1、IoC(Inversion of Control)
 
-其思想是反转资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源.而应用了 IOC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式
+其思想是反转资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源.而应用了 IoC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式
 
 控制反转：把创建对象(Bean)和维护对象(Bean)的关系的权利从程序中转移到Spring容器中，程序不再控制
 
-- IOC 机制实现Bean之间的调用;
-- IOC 解决的问题：可以降低两个组件对象之间的关联，降低耦合度;
-- Spring IOC 控制反转，哪些方面的控制被反转了呢？获得依赖对象的过程被反转了，由主动获取变为被动获取
-- 使用 IOC 的优势：
+- IoC 机制实现Bean之间的调用;
+- IoC 解决的问题：可以降低两个组件对象之间的关联，降低耦合度;
+- Spring IoC 控制反转，哪些方面的控制被反转了呢？获得依赖对象的过程被反转了，由主动获取变为被动获取
+- 使用 IoC 的优势：
 	- 维护性比较好，非常便于进行单元测试，便于调试程序和诊断故障。代码中的每一个Class都可以单独测试，彼此之间互不影响，只要保证自身的功能无误即可，这就是组件之间低耦合或者无耦合带来的好处;
 	- 开发团队的成员都只需要关心实现自身的业务逻辑，完全不用去关心其它的人工作进展，因为你的任务跟别人没有任何关系，你的任务可以单独测试，你的任务也不用依赖于别人的组件
-	- 可复用性好，我们可以把具有普遍性的常用组件独立出来，反复利用到项目中的其它部分，或者是其它项目，当然这也是面向对象的基本特征，IOC 不仅更好地贯彻了这个原则，提高了模块的可复用性。符合接口标准的实现，都可以插接到支持此标准的模块中;
-	- 完全具有热插拨的特性，IOC 生成对象的方式转为外置方式，也就是把对象生成放在配置文件里进行定义；
+	- 可复用性好，我们可以把具有普遍性的常用组件独立出来，反复利用到项目中的其它部分，或者是其它项目，当然这也是面向对象的基本特征，IoC 不仅更好地贯彻了这个原则，提高了模块的可复用性。符合接口标准的实现，都可以插接到支持此标准的模块中;
+	- 完全具有热插拨的特性，IoC 生成对象的方式转为外置方式，也就是把对象生成放在配置文件里进行定义；
 
-- IOC 使用的技术：最基本的技术就是反射
+- IoC 使用的技术：最基本的技术就是反射，设计模式是工厂模式
 
-	IOC 容器的工作模式可以看成是工厂模式的升华；IOC 容器看作是一个工厂，这个工厂里要生产的对象都在配置文件中给出定义，然后利用编程语言的的反射编程，根据配置文件中给出的类名生成相应的对象。从实现来看，IOC 是把以前在工厂方法里写死的对象生成代码，改变为由配置文件来定义，也就是把工厂和对象生成这两者独立分隔开来，目的就是提高灵活性和可维护性；
+	IoC 容器的工作模式可以看成是工厂模式的升华；IoC 容器看作是一个工厂，这个工厂里要生产的对象都在配置文件中给出定义，然后利用编程语言的的反射编程，根据配置文件中给出的类名生成相应的对象。从实现来看，IoC 是把以前在工厂方法里写死的对象生成代码，改变为由配置文件来定义，也就是把工厂和对象生成这两者独立分隔开来，目的就是提高灵活性和可维护性；
 
-	***为什么不使用工厂模式，而使用IOC？*** 
+	***为什么不使用工厂模式，而使用IoC？*** 
 
-	IOC是通过反射机制来实现的。当我们的需求出现变动时，工厂模式会需要进行相应的变化。但是IOC的反射机制允许我们不重新编译代码，因为它的对象都是动态生成的
+	IoC是通过反射机制来实现的。当我们的需求出现变动时，工厂模式会需要进行相应的变化。但是IoC的反射机制允许我们不重新编译代码，因为它的对象都是动态生成的
 
-- Spring 中的 IOC
-	- Spring 中的 org.springframework.beans 包和 org.springframework.context包构成了Spring框架IoC容器的基础
-	- BeanFactory 接口提供了一个先进的配置机制，使得任何类型的对象的配置成为可能：ApplicationContex 接口对 BeanFactory（是一个子接口）进行了扩展，在BeanFactory的基础上添加了其他功能，比如与Spring的AOP更容易集成，也提供了处理message resource的机制(用于国际化)、事件传播以及应用层的特别配置，比如针对Web应用的WebApplicationContext
-	- org.springframework.beans.factory.BeanFactory 是 Spring IOC 容器的具体实现，用来包装和管理前面提到的各种bean。BeanFactory接口是Spring IoC 容器的核心接口
+- Spring 中的 IoC
+	- Spring 中的 `org.springframework.beans` 包和 `org.springframework.context`包构成了Spring框架IoC容器的基础
+	- BeanFactory 接口提供了一个先进的配置机制，使得任何类型的对象的配置成为可能：`ApplicationContex` 接口对 `BeanFactory`（是一个子接口）进行了扩展，在`BeanFactory`的基础上添加了其他功能，比如与Spring的AOP更容易集成，也提供了处理message resource的机制(用于国际化)、事件传播以及应用层的特别配置，比如针对Web应用的`WebApplicationContext`
+	- `org.springframework.beans.factory.BeanFactory` 是 Spring IoC 容器的具体实现，用来包装和管理前面提到的各种bean。BeanFactory接口是Spring IoC 容器的核心接口
 
 ## 2、Spring容器
 
-在 Spring IOC 容器读取 Bean 配置创建 Bean 实例之前，必须对它进行实例化. 只有在容器实例化后，才可以从 IOC 容器里获取 Bean 实例并使用
+在 Spring IoC 容器读取 Bean 配置创建 Bean 实例之前，必须对它进行实例化. 只有在容器实例化后，才可以从 IoC 容器里获取 Bean 实例并使用
 
-Spring 提供了两种类型的 IOC 容器实现：
+Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容器的基本实现；（2）ApplicationContext：提供了更多的高级特性。是BeanFactory的子接口.
 
-- BeanFactory：IOC 容器的基本实现.
-- ApplicationContext：提供了更多的高级特性. 是 BeanFactory 的子接口.
+![](image/SpringIOC容器层级关系.png)
 
+- BeanFactory是Spring框架的基础设施，面向Spring本身；ApplicationContext，面向使用Spring框架的开发者，几乎所有的应用场合都直接使用 ApplicationContext;而非底层的 BeanFactory；但是无论使用何种方式，配置文件时相同的。常用的BeanFactory容器是`XmlBeanFactory`，它可以根据 XML 文件中定义的内容，创建相应的 Bean
 
-- （1）BeanFactory 是 Spring 框架的基础设施，面向 Spring 本身；ApplicationContext 面向使用 Spring 框架的开发者，几乎所有的应用场合都直接使用 ApplicationContext;而非底层的 BeanFactory；但是无论使用何种方式，配置文件时相同的。
-
-	ApplicationContext 的主要实现类：【 ApplicationContext 在初始化上下文时就实例化所有单例的 Bean】
+- ApplicationContext 的主要实现类：【 ApplicationContext 在初始化上下文时就实例化所有单例的 Bean】
 	- ①、ClassPathXmlApplicationContext：从类路径下加载配置文件;
 	- ②、FileSystemXmlApplicationContext：从文件系统中加载配置文件;
 	- ③、WebApplicationContext：是专门为 WEB 应用而准备的，它允许从相对于 WEB 根目录的路径中完成初始化工作;
 
-- （2）Spring 容器对 Bean 的管理：
+- Spring容器对Bean的管理：
 	- 控制Bean对象创建模式：在bean元素中，利用scope属性可以指定Bean组件创建对象的方式：
 		- prototype：非单例模式
 		- singleton：单例模式(默认是单例模式)
@@ -154,7 +152,7 @@ Spring 提供了两种类型的 IOC 容器实现：
 		- singleton模式的Bean组件，默认是在 ApplicationContext 容器实例化时就创建了组件;可以在bean元素中追加属性lazy-init="true"，将singleton模式创建对象推迟到getBean()方法
 		- prototype模式是在调用getBean()方法时创建了组件;
 		
-	- 可以指定Bean对象初始化和销毁方法：```<bean init-method="初始化方法" destroy-method="销毁方法">```
+	- 可以指定Bean对象初始化和销毁方法：`<bean init-method="初始化方法" destroy-method="销毁方法">`
 		- Spring 将 Bean 对象创建完毕后，会自动调用init-method里指定的方法
 		- destroy-method指定的方法需满足下面条件才能执行：
 			- scope="singleton";才能使用;
@@ -162,13 +160,21 @@ Spring 提供了两种类型的 IOC 容器实现：
 - BeanFactory 和 ApplicationContext 区别：
 	- ①、BeanFactory 可以理解为含有bean集合的工厂类，包含了各种bean的定义，以便在接收请求时对应的Bean实例化BeanFactory 包含了bean生命周期的控制
 	- ②、application context如同bean factory一样具有bean定义、bean关联关系的设置，根据请求分发bean的功能。但application context在此基础上还提供了其他的功能。
-		- Ⅰ.提供了支持国际化的文本消息
-		- Ⅱ.统一的资源文件读取方式
-		- Ⅲ.已在监听器中注册的bean的事件
+		- 提供了支持国际化的文本消息
+		- 统一的资源文件读取方式
+		- 已在监听器中注册的bean的事件
+	- 详细比较：
+
+	|BeanFactory	| ApplicationContext|
+	------------|-------------------
+	|它使用懒加载  |	它使用即时加载|
+	|它使用语法显式提供资源对象 | 它自己创建和管理资源对象|
+	|不支持国际化  |	支持国际化|
+	|不支持基于依赖的注解 | 支持基于依赖的注解|
 
 ## 3、DI(Dependency Injection)
 
-IOC 的另一种表述方式：即组件以一些预先定义好的方式(例如：setter 方法)接受来自如容器的资源注入.。相对于 IOC 而言，这种表述更直接。依赖注入(DI)和控制反转(IOC)是从不同的角度的描述的同一件事情：就是指通过引入IOC容器，利用依赖关系注入的方式，实现对象之间的解耦
+IoC 的另一种表述方式：即组件以一些预先定义好的方式(例如：setter 方法)接受来自如容器的资源注入。相对于 IoC 而言，这种表述更直接。依赖注入(DI)和控制反转(IoC)是从不同的角度的描述的同一件事情：就是指通过引入IoC容器，利用依赖关系注入的方式，实现对象之间的解耦
 
 以来注入是Spring实现IoC的技术途径，依赖注入的方式：
 - setter方式注入：(推荐使用)，使用步骤：
@@ -311,7 +317,7 @@ AOP(Aspect-Oriented Programming，面向切面编程
 	- 引入相关的jar包：aopalliance.jar、aspectj.weaver.jar 和 spring-aspects.jar
 	- 配置文件引入相关的命名空间，并在配置文件中加入如下配置：
 		```<aop：aspectj-autoproxy></aop：aspectj-autoproxy>```
-	- 在配置文件中加入IOC容器扫描Bean的配置：
+	- 在配置文件中加入IoC容器扫描Bean的配置：
 		```<context：component-scan base-package="com.bluefish.aop.impl"></context：component-scan>```
 	- 编写切面类，即共通属性：
 		- ①.首先切面是一个Bean，需要加入注解：@Component
@@ -509,9 +515,9 @@ try{
 		如：within(org.action..*) && !execution(...);
 	```
         
-# 四、IOC与AOP原理分析
+# 四、IoC与AOP原理分析
 
-## 1、IOC原理
+## 1、IoC原理
 
 
 
@@ -747,11 +753,16 @@ try{
 
 # 七、Spring中涉及的设计模式	
 
-- BeanFactory 和 ApplicationContext 使用了工厂模式
-- 在Bean的创建中，Spring为不同的scope定义的对象提供了单例、原型等模式的实现；
-- AOP领域则使用了代理模式、装饰器模式、适配器模式
-- 各种事件监听器，是观察者模式的典型应用；
-- 类似JdbcTemplate则应用了模板模式
+- 代理模式：在 AOP 和 remoting 中被用的比较多。`org.springframework.aop.framework.ProxyFactoryBean`该工厂根据Spring bean构建AOP代理
+- 单例模式：在 Spring 配置文件中定义的 Bean 默认为单例模式。
+- 模板方法：用来解决代码重复的问题。比如 RestTemplate、JmsTemplate、JdbcTemplate.Spring在`org.springframework.context.support.AbstractApplicationContext`类中使用模板方法
+- 前端控制器：Spring提供了 DispatcherServlet 来对请求进行分发。
+- 视图帮助(View Helper) ：Spring 提供了一系列的 JSP 标签，高效宏来辅助将分散的代码整合在视图里。
+- 依赖注入：贯穿于 BeanFactory / ApplicationContext 接口的核心理念。
+- 工厂模式：BeanFactory 用来创建对象的实例。通过它的实现，我们可以从Spring的容器访问bean
+- 解释器模式：SpEL是一种由Spring的`org.springframework.expression.ExpressionParser`实现分析和执行的语言；这些实现使用作为字符串给出的Spel表达式，并将它们转换为`org.springframework.expression.Expression`的实例。上下文组件由`org.springframework.expression.EvaluationContext`实现表示；
+- 建造者模式：BeanDefinitionBuilder，允许我们以编程方式定义bean的类；
+- 复合模式：在Spring世界中，我们检索复合对象的概念是`org.springframework.beans.BeanMetadataElement`接口，用于配置bean对象。它是所有继承对象的基本界面
 
 # 八、Spring常见问题
 
@@ -764,5 +775,8 @@ try{
 
 * [Spring框架的设计理念与设计模式分析](https：//www.ibm.com/developerworks/cn/java/j-lo-spring-principle/)
 * [Spring中涉及的设计模式](https://mp.weixin.qq.com/s/Hy-qxNT0nJzcAkanbH93eA)
+* [Spring中的设计模式](http://www.iocoder.cn/Spring/DesignPattern-1/)
+* [SpringIOC面试点](https://www.jianshu.com/p/17b66e6390fd)
+* [SpringAOP面试点](https://www.jianshu.com/p/e18fd44964eb)
 
 
