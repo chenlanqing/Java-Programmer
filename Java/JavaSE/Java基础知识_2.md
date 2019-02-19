@@ -1191,8 +1191,8 @@ System.out.println(al);
 
 ### 1.1、枚举类特点
 
-- 枚举类是一种特殊的Java类，枚举不可被基础
-- 枚举类中声明的每一个枚举值代表枚举类的一个实例对象;
+- 枚举类是一种特殊的Java类，枚举不可被继承
+- 枚举类中声明的每一个枚举值代表枚举类的一个实例对象；
 - 与java普通类一样，在声明枚举类时可以声明属性，方法，构造方法，但是枚举类必须是私有的
 - 枚举可以实现接口或继承抽象方法
 - 在JDK5之后，switch语句，可以接受int，byte，char，short外，还可以接受枚举类型
@@ -1232,7 +1232,7 @@ public enum Status{
 	STOP(),
 	RUNNING();
 }
-编译之后通过 javap -v 查看字节码文件：
+编译之后通过 javap -verbose 查看字节码文件：
 .......
 public final class Status extends java.lang.Enum<Status>
 .......

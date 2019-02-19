@@ -20,6 +20,7 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 ```
 
 ## 1、设计思想
+
 AQS 是构建锁或者其他同步组件的基础框架，是JUC并发包中的核心基础组件
 
 - 仅从 AQS 本身来说，它仅仅提供独占锁和共享锁两种方式， AQS 本身不存在所谓的公平和非公平锁。
@@ -207,6 +208,7 @@ private void doAcquireInterruptibly(int arg) throws InterruptedException {
 }
 ```
 ### 3.2、超时等待式获取锁（tryAcquireNanos()方法）
+
 通过调用lock.tryLock(timeout,TimeUnit)方式达到超时等待获取锁的效果，该方法会在三种情况下才会返回
 
 - 在超时时间内，当前线程成功获取了锁；

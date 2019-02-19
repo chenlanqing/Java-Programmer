@@ -144,7 +144,7 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 - Spring容器对Bean的管理：
 	- 控制Bean对象创建模式：在bean元素中，利用scope属性可以指定Bean组件创建对象的方式：
 		- prototype：非单例模式
-		- singleton：单例模式(默认是单例模式)
+		- singleton：单例模式(默认是单例模式)，Spring不关心bean是否线程安全，当然，但实际上，大部分的 Spring Bean 并没有可变的状态(比如Serview 类和 DAO 类)，所以在某种程度上说 Spring 的单例 Bean 是线程安全的
 
 		在web程序中，通过一些配置，可以扩展出request，session等属性值;
 
@@ -255,7 +255,7 @@ IoC 的另一种表述方式：即组件以一些预先定义好的方式(例如
 			</props>
 		</property>	
 		```	
-		
+
 # 三、Spring AOP
 
 AOP(Aspect-Oriented Programming，面向切面编程	
@@ -310,6 +310,7 @@ AOP(Aspect-Oriented Programming，面向切面编程
 		<aop：advisor advice-ref="bookShopTXDao" pointcut-ref="bookShop"/>
 	</aop：config>
 	```	
+
 ## 4、基本使用
 
 - 4.1、使用注解来使用AOP
@@ -342,36 +343,36 @@ AOP(Aspect-Oriented Programming，面向切面编程
 		}
 		```
 - 4.2、使用xml使用AOP
-	```
+	```xml
 	将共通处理组件定义成一个<bean>
 	定义<aop：pointcut>，指定哪些组件为目标，即切入点;
 	定义<aop：aspect>，切面;
 	定义<aop：before>，指定通知：
-			<bean id="loggingAspectJ" class="com.bluefish.aop.xml.LoggingAspectJ"></bean>	
-			<bean id="validationAspectJ" class="com.bluefish.aop.xml.ValidationAspectJ"></bean>
-			<!-- 利用Spring的AOP机制将CheckRoleBean作用到各个Action的execute方法 -->
-			<aop：config>
-				<!-- 配置切入点表达式 -->
-				<aop：pointcut expression="execution(* *.*(..))" id="pointcut"/>
-				<!-- 指定切面，ref：引用配置好的bean，order：切面优先级 -->
-				<aop：aspect ref="loggingAspectJ" order="2">
-					<!-- 前置通知：method：切面中的方法，pointcut-ref：切入点 --> 
-					<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
-					<!-- 
-						返回通知：returning：连接点执行的结果，对应方法中的返回值参数
-						public void afterReturnningMethod(JoinPoint joinPoint，Object result){}
-					-->
-					<aop：after-returning method="afterReturnningMethod" pointcut-ref="pointcut" returning="result"/>
-					<!-- 
-						异常通知：throwing：表示该方法中的异常参数
-						public void afterThrowingMethod(JoinPoint joinPoint，Exception e){}
-					-->
-					<aop：after-throwing method="afterThrowingMethod" pointcut-ref="pointcut" throwing="e"/>
-				</aop：aspect>
-				<aop：aspect ref="validationAspectJ" order="1">
-					<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
-				</aop：aspect>
-			</aop：config>
+		<bean id="loggingAspectJ" class="com.bluefish.aop.xml.LoggingAspectJ"></bean>	
+		<bean id="validationAspectJ" class="com.bluefish.aop.xml.ValidationAspectJ"></bean>
+		<!-- 利用Spring的AOP机制将CheckRoleBean作用到各个Action的execute方法 -->
+		<aop：config>
+			<!-- 配置切入点表达式 -->
+			<aop：pointcut expression="execution(* *.*(..))" id="pointcut"/>
+			<!-- 指定切面，ref：引用配置好的bean，order：切面优先级 -->
+			<aop：aspect ref="loggingAspectJ" order="2">
+				<!-- 前置通知：method：切面中的方法，pointcut-ref：切入点 --> 
+				<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
+				<!-- 
+					返回通知：returning：连接点执行的结果，对应方法中的返回值参数
+					public void afterReturnningMethod(JoinPoint joinPoint，Object result){}
+				-->
+				<aop：after-returning method="afterReturnningMethod" pointcut-ref="pointcut" returning="result"/>
+				<!-- 
+					异常通知：throwing：表示该方法中的异常参数
+					public void afterThrowingMethod(JoinPoint joinPoint，Exception e){}
+				-->
+				<aop：after-throwing method="afterThrowingMethod" pointcut-ref="pointcut" throwing="e"/>
+			</aop：aspect>
+			<aop：aspect ref="validationAspectJ" order="1">
+				<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
+			</aop：aspect>
+		</aop：config>
 	```
 ## 5、切面
 
@@ -514,6 +515,12 @@ try{
 		提示：上述表达式可以使用 ||，&&进行拼接
 		如：within(org.action..*) && !execution(...);
 	```
+
+## 8、AOP的实现方式
+
+- 静态代理：指使用 AOP 框架提供的命令进行编译，从而在编译阶段就可生成 AOP 代理类，因此也称为编译时增强；
+- 动态代理：在运行时在内存中“临时”生成 AOP 动态代理类，因此也被称为运行时增强。目前 Spring 中使用了两种动态代理库；
+
         
 # 四、IoC与AOP原理分析
 
@@ -666,9 +673,10 @@ try{
 		boolean isCompleted; // 是否已完成
 	}
 	```
-## 7、xml方式配置Spring事务：使用AOP来实现的，即使用动态代理
-详细步骤
 
+## 7、xml方式配置Spring事务：使用AOP来实现的，即使用动态代理
+
+详细步骤
 - 配置事务管理器，包括配置hibernate、mybatis等：
 	```xml
 	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
@@ -694,6 +702,7 @@ try{
 		<aop：advisor advice-ref="txAdvice" pointcut-ref="txPointCut"/>	
 	</aop：config>
 	```
+	
 ## 8、编程式事务管理
 
 ## 9、Spring 中的部分注解配置	
@@ -744,10 +753,7 @@ try{
 
 ## 1、基于xml方式配置
 
-
 ## 2、基于注解方式配置
-
-
 
 ## 3、基于Java方式配置	
 
@@ -767,9 +773,48 @@ try{
 # 八、Spring常见问题
 
 ## 1、循环依赖问题
-
 - [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
-- [Spring中循环引用的处理](https://www.iflym.com/index.php/code/201208280001.html)
+- [Spring循环依赖处理](http://cmsblogs.com/?p=2887)
+
+### 1.1、什么是循环依赖
+
+循环依赖，其实就是循环引用，就是两个或者两个以上的 bean 互相引用对方，最终形成一个闭环，如 A 依赖 B，B 依赖 C，C 依赖 A；
+
+循环依赖，其实就是一个死循环的过程，在初始化 A 的时候发现引用了 B，这时就会去初始化 B，然后又发现 B 引用 C，跑去初始化 C，初始化 C 的时候发现引用了 A，则又会去初始化 A，依次循环永不退出，除非有终结条件
+
+### 1.2、循环依赖的场景
+
+- 构造器的循环依赖：Spring是无法解决的，只能抛出`BeanCurrentlyInCreationException`异常表示循环依赖；
+- field 属性的循环依赖
+
+Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean ，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；
+
+### 1.3、解决循环依赖
+
+- 首先 A 完成初始化第一步并将自己提前曝光出来（通过 ObjectFactory 将自己提前曝光），在初始化的时候，发现自己依赖对象 B，此时就会去尝试 get(B)，这个时候发现 B 还没有被创建出来
+- 然后 B 就走创建流程，在 B 初始化的时候，同样发现自己依赖 C，C 也没有被创建出来
+- 这个时候 C 又开始初始化进程，但是在初始化的过程中发现自己依赖 A，于是尝试 get(A)，这个时候由于 A 已经添加至缓存中（一般都是添加至三级缓存 singletonFactories ），通过 ObjectFactory 提前曝光，所以可以通过 ObjectFactory#getObject() 方法来拿到 A 对象，C 拿到 A 对象后顺利完成初始化，然后将自己添加到一级缓存中
+- 回到 B ，B 也可以拿到 C 对象，完成初始化，A 可以顺利拿到 B 完成初始化。到这里整个链路就已经完成了初始化过程了
+
+## 2、Spring与SpringMVC父子容器配置
+
+### 2.1、Spring父子容器的关系
+
+- `Spring`和`SpringMVC`共存时，会有两个容器：一个`SpringMVC`的`ServletWebApplicationContext`为子容器，一个Spring的`RootWebApplicationContext`为父容器。当子容器中找不到对应的Bean会委托于父容器中的Bean。
+	* `RootWebApplicationContext`中的`Bean`对`ServletWebApplicationContext`可见，而`ServletWebApplicationContext`中的`Bean`对`RootWebApplicationContext`不可见。
+
+- 如果在父容器中开启了 `@AspectJ` 注解与事务配置，子容器和父容器均加载了所有Bean。造成子容器中的services覆盖了父容器的Services，导致父容器中的动态代理的services不生效，事务也不生效。
+
+    ![](image/Spring父子容器.png)
+
+### 2.2、如何解决Spring父子容器关系
+
+可以参考[Spring官方文档](https://docs.spring.io/spring/docs/4.3.16.RELEASE/spring-framework-reference/htmlsingle/#mvc-servlet) 中的`Figure 22.2. Typical context hierarchy in Spring Web MVC`
+
+- 子容器包含`Controllers、HandlerMapping、viewResolver`，其他bean都在父容器中；
+
+- 子容器不加载任何bean，均有父容器加载
+
 
 # 参考资料
 
@@ -778,5 +823,5 @@ try{
 * [Spring中的设计模式](http://www.iocoder.cn/Spring/DesignPattern-1/)
 * [SpringIOC面试点](https://www.jianshu.com/p/17b66e6390fd)
 * [SpringAOP面试点](https://www.jianshu.com/p/e18fd44964eb)
-
+* [AOP理论知识](https://segmentfault.com/a/1190000007469968)
 

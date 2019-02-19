@@ -1614,12 +1614,12 @@ synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁�
 
 ## 3、独占锁
 
-**3.1、ReentrantLock 类(可重入锁)，又称为独占锁.**
+**3.1、ReentrantLock 类(可重入锁)，又称为独占锁**
 
-[ReentantLock](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/ReentrantLock.md)
+[ReentantLock](../../Java源码解读/thread/ReentrantLock.md)
 
 - **3.1.1、ReentrantLock 基本**
-	- 在同一个时间点只能被一个线程持有，而可重入即可以被单个线程多次获取.
+	- 在同一个时间点只能被一个线程持有，而可重入即可以被单个线程多次获取。主要是修改state值，重入多少次，就得释放多少次锁，保证释放之后state变为0；
 	- ReentrantLock 分为"公平锁"和"非公平锁"，区别在于获取锁的机制上是否公平.
 	- ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程。"公平锁"的机制下，线程依次排队获取；而"非公平锁"在锁是可获取状态时，不管自己是不是在队列的开头都会获取锁。<br>
 		ReentrantLock中，包含了Sync对象.而且，Sync 是 AQS 的子类;更重要的是，Sync 有两个子类 FairSync（公平锁）和	NonFairSync（非公平锁）；ReentrantLock 是一个独占锁，至于它到底是公平锁还是非公平锁，就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"；
@@ -1669,11 +1669,11 @@ synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁�
 	// 试图释放此锁。
 	void unlock()
 	```
-- **3.1.3、公平锁:是按照通过CLH等待线程按照先来先得的规则，公平的获取锁**
+- **3.1.3、公平锁：是按照通过CLH等待线程按照先来先得的规则，公平的获取锁**
 
 	获取公平锁:获取锁是通过lock()函数，是在ReentrantLock.java的FairSync类中实现
 
-- **3.1.4、非公平锁:则当线程要获取锁时，它会无视CLH等待队列而直接获取锁.**
+- **3.1.4、非公平锁：则当线程要获取锁时，它会无视CLH等待队列而直接获取锁.**
 
 - **3.1.5、非公平锁获取**
 
@@ -1765,9 +1765,9 @@ private static void test(int count) throws Exception {
 
 - 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。因为该 barrier 在释放等待线程后可以重用，所以称它为循环 的 barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过独占锁实现的；
 
-下图应该从下往上看才正确
+	下图应该从下往上看才正确
 
-![image](image/CyclicBarrier.png)
+	![image](image/CyclicBarrier.png)
 
 - 6.2、主要方法：
 	- CyclicBarrier(int parties)<br>
@@ -1912,7 +1912,7 @@ public class SemaphoreDemo {
 	```
 ## 9、LockSupport
 
-是用来创建锁和其他同步类的基本线程阻塞原语。park() 和 unpark() 的作用分别是阻塞线程和解除阻塞线程，	而且park()和unpark()不会遇到"Thread.suspend 和 Thread.resume所可能引发的死锁"问题。因为park() 和 unpark()有许可的存在;调用 park() 的线程和另一个试图将其 unpark() 的线程之间的竞争将保持活性。
+是用来创建锁和其他同步类的基本线程阻塞原语。`park()`和`unpark()`的作用分别是阻塞线程和解除阻塞线程，而且`park()和unpark()`不会遇到`Thread.suspend 和 Thread.resume所可能引发的死锁`问题。因为`park()` 和 `unpark()`有许可的存在；调用 `park()` 的线程和另一个试图将其 `unpark()` 的线程之间的竞争将保持活性。
 
 函数列表：
 ```java
@@ -2284,7 +2284,8 @@ CopyOnWriteArrayList 则不存在这个问题
 
 * http://www.cnblogs.com/skywang12345/p/3498556.html
 
-## 7、阻塞队列:
+## 7、阻塞队列
+
 ### 7.1、什么是阻塞队列
 
 是一个在队列基础上又支持了两个附加操作的队列。2个附加操作：
@@ -2320,6 +2321,7 @@ CopyOnWriteArrayList 则不存在这个问题
 - TimesOut：如果操作不能马上进行，操作会被阻塞指定的时间，如果指定时间没执行，则返回一个特殊值，一般是true或者false
 
 ### 7.4、Java的阻塞队列
+
 #### 7.4.1、ArrayBlockingQueue
 典型的有界队列，一个由数组结构组成的有界阻塞队列，内部是final 数组保存数据，数组的大小就是队列的边界
 
@@ -2361,6 +2363,7 @@ CopyOnWriteArrayList 则不存在这个问题
 是基于CAS的无锁技术，不需要在每个操作都使用锁
 
 #### 7.4.8、LinkedBlockingDeque
+
 链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争
 
 #### 7.4.9、ConcurrentLinkedDeque
@@ -2384,7 +2387,7 @@ CopyOnWriteArrayList 则不存在这个问题
 
 ## 1、AQS：AbstractQueuedSynchronizer-抽象队列同步器
 
-[AbstractQueuedSynchronizer.java](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/AbstractQueuedSynchronizer.md)
+[AbstractQueuedSynchronizer.java](../../Java源码解读/thread/AbstractQueuedSynchronizer.md)
 
 ## 2、CAS：Compare and Swap-比较与交换
 
@@ -2593,7 +2596,7 @@ ExecutorService的默认实现，线程池中最核心的一个类
 	* 如果线程池中的实际线程数 < corePoolSize， 新增一个线程处理新的任务;
 	* 如果线程池中的实际线程数 >= corePoolSize， 新任务会放到workQueue中;
 	* 如果阻塞队列达到上限，且当前线程池的实际线程数 < maximumPoolSize，新增线程来处理任务;
-	* 如果阻塞队列满了，且这时线程池的实际线程数 >= maximumPoolSize，那么线程池已经达到极限，会根据拒绝策略RejectedExecutionHandler拒绝新的任务.
+	* 如果阻塞队列满了，且这时线程池的实际线程数 >= maximumPoolSize，那么线程池已经达到极限，会根据拒绝策略`RejectedExecutionHandler`拒绝新的任务.
 
 - 如果线程池阻塞队列达到极限时，在运行一段时间后，阻塞队列中的任务执行完成了，线程池会将超过核心线程数的线程在一段时间内自动回收，在秒杀的业务场景中会有这样的情况发生。
 
@@ -2646,6 +2649,7 @@ private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 ```
 
 #### 2.3.4、总结
+
 - 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
 - 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
 - 线程池原理关键技术：锁（lock,cas）、阻塞队列、hashSet（资源池）
@@ -2757,8 +2761,8 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 
 ### 3.1、不同业务场景如何配置线程池参数
 
-- CPU密集型任务:需要尽量压榨CPU，参考值可以设为NCPU + 1;	
-- IO密集型任务:参考值可以设置为 2*NCPU
+- CPU密集型任务：需要尽量压榨CPU，参考值可以设为NCPU + 1;	
+- IO密集型任务：参考值可以设置为 2*NCPU
 
 ### 3.2、科学设置线程池
 - 如果需要达到某个QPS，使用如下计算公式：<br>
@@ -2770,7 +2774,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 	设置的线程数 = CPU 核数 * (1 + io/computing)<br>
 	假设4核 CPU，每个任务中的 IO 任务占总任务的80%， 4 * (1 + 4) = 20个线程，这里的20个线程对应的是4核心的 CPU。<br>
 
-- 线程队列大小的设置:按照目标响应时间计算队列大小<br>
+- 线程队列大小的设置：按照目标响应时间计算队列大小<br>
 	队列大小 = 线程数 * (目标相应时间/任务实际处理时间)<br>
 	假设目标相应时间为0.4s，计算阻塞队列的长度为20 * (0.4 / 0.2) = 40。<br>
 
