@@ -554,6 +554,8 @@ public class Daemon extends Thread{
 
 ## 5、synchronized 关键字
 
+![](image/synchronized.png)
+
 synchronized可以保证方法或者代码块在运行时，同一时刻只有一个方法可以进入到临界区，同时它还可以保证共享变量的内存可见性
 
 进入synchronized 块内使用到的变量从线程的工作内存中清除，主要在synchronized块内使用到该变量时就不会从线程的工作内存中获取，而是直接从主内存中获取；退出synchronized块是在synchronized块内对共享变量的修改刷新到主内存；
@@ -576,7 +578,9 @@ synchronized可以保证方法或者代码块在运行时，同一时刻只有�
 
 ### 5.3、synchronized 锁重入
 
-synchronized 关键字拥有锁重入功能，也就是在使用 synchronized 时，当一个线程得到一个对象的锁之后，再次请求此对象锁时可以再次得到该对象的锁.在一个 synchronized 方法/块内部调用本类的其他 synchronized 方法/块时，是永远可以得到锁的;可重入锁:自己可以再次获得自己的内部锁，也支持父子类继承的环境子类可以通过可重入锁调用父类的同步方法
+synchronized 关键字拥有锁重入功能，也就是在使用 synchronized 时，当一个线程得到一个对象的锁之后，再次请求此对象锁时可以再次得到该对象的锁。在一个 synchronized 方法/块内部调用本类的其他 synchronized 方法/块时，是永远可以得到锁的；
+
+可重入锁：自己可以再次获得自己的内部锁，也支持父子类继承的环境子类可以通过可重入锁调用父类的同步方法
 
 ### 5.4、出现异常时，锁自动释放
 
@@ -709,11 +713,14 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 
 每个对象都有一个监视器锁(monitor)，当monitor被占用时就会处于锁定状态，线程执行monitorenter指令时尝试获取monitor的所有权
 - 如果 monitor 的进入数为 0，则该线程进入monitor，然后将进入数设置为 1，该线程为 monitor的所有者.
-- 如果线程已经占用该monitor，只是重新进入，则monitor的进入数加 1;
-- 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到 monitor 的进入数为 0，再尝试重新获取 monitord的所有权.
+- 如果线程已经占用该monitor，只是重新进入，则monitor的进入数加 1；
+- 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到 monitor 的进入数为 0，再尝试重新获取 monitor的所有权.
 
 #### 7.1.2、monitorexit
+
 执行该指令的线程必须是objectref所对应的monitor的持有者，指令执行时，monitor的进入数减1，如果减1后为0，那么线程退出monitor，不再持有monitor。
+
+可重入锁每次退出都是 monitor 减1，当 monitor为0的时间，锁被完全释放；
 	
 synchronized 代码块的语义底层是通过一个monitor的对象来完成，其实wait/notify等方法也依赖于monitor对象，这就是为什么只有在同步的块或者方法中才能调用wait/notify等方法，否则会抛出`java.lang.IllegalMonitorStateException`的异常的原因
 
@@ -876,6 +883,21 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 轻量级锁|竞争的线程不会阻塞，提高了程序的响应速度；|如果始终得不到锁竞争的线程使用自旋会消耗CPU；|追求响应时间，同步执行速度非常块；
 重量级锁|线程竞争不使用自旋，不会消耗CPU；|线程阻塞，响应时间缓慢；|追求吞吐量，同步块执行速度较长。
 
+### 7.8、synchronized相关面试题
+
+- synchronized使用时需要注意：
+	- 锁对象不能为空：因为锁的信息时保存在对象头中的，如果对象都没有，锁信息无法保存
+	- 作用域不宜过大：synchronized包裹的范围，会导致性能下降；
+	- 避免死锁：相互等待锁导致死锁
+
+- 如何选择Lock和synchronized
+	- 尽可能避免使用者两者，可以使用java.util.concurrent包下的；
+	- 如果可以使用synchronized，就使用，因为使用lock会增加代码复杂度；
+
+- 多个线程等待同一个synchronized锁的时候，JVM如何选择下一个获取锁的是哪一个线程？
+	- 随机不可控
+
+- 一句话介绍synchronized：JVM会自动通过monitor来加锁和解锁，保证了同时只有一个线程可以执行指定代码，从而保证了线程安全，同时具有可冲入和不可中断的性质；
 
 ## 8、volatile
 
