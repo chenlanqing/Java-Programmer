@@ -234,6 +234,7 @@ JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails  -XX:+PrintGCTimeStamps  -XX:+PrintGCD
 
 # 参考文章
 
+* [Tomcat8官方文档](https://tomcat.apache.org/tomcat-8.0-doc/index.html)
 * [类加载体系](http：//blog.csdn.net/beliefer/article/details/50995516)
 * [Tomcat源码分析](https：//blog.csdn.net/column/details/tomcat7-internal.html)
 * [Tomcat基本结构](http：//zouzls.github.io/2017/03/29/SpringStart/)

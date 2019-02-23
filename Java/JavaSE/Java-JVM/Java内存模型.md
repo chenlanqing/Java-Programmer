@@ -144,7 +144,7 @@ MESI协议将cache line的状态分成 modify、exclusive、shared、invalid，�
 **1.1、通信：是指线程之间以何种机制来交换信息.在命令式编程中，线程之间的通信机制有两种：共享内存和消息传递**
 
 - 在共享内存的并发模型里，线程之间共享程序的公共状态，线程之间通过写-读内存中的公共状态来隐式进行通信。
-- 在消息传递的并发模型里，线程之间没有公共状态，线程之间必须通过明确的发送消息来显式进行通信；首先，线程A把本地内存A中更新过的共享变量刷新到主内存中去。然后，线程B到主内存中去读取线程A之前已更新过的共享变量。<br>
+- 在消息传递的并发模型里，线程之间没有公共状态，线程之间必须通过明确的发送消息来显式进行通信；首先，线程A把本地内存A中更新过的共享变量刷新到主内存中去。然后，线程B到主内存中去读取线程A之前已更新过的共享变量。
 
 ![image](image/Java内存模型图.jpg)
 
@@ -183,6 +183,7 @@ Java并发采用的是共享内存模型，Java 线程之间的通信总是隐�
 ## 2、定义
 
 ### 2.1、概述
+
 Java内存模型描述了在多线程代码中哪些行为是合法的，以及线程如何通过内存进行交互。   它描述了"程序中的变量"和"从内存或者寄存器获取或存储它们的底层细节"之间的关系。Java内存模型通过使用各种各样的硬件和编译器的优化来正确实现以上事情：
 
 - 在Java虚拟机规范中试图定义一种Java内存模型(Java Memory Model)来屏蔽各个硬件平台和操作系统的内存访问差异，	以实现让Java程序在各种平台下都能达到一致的访问效果.
@@ -201,11 +202,18 @@ Java内存模型描述了在多线程代码中哪些行为是合法的，以及�
 - Java对象模型：关于Java对象自身的存储模型称之为Java对象模型，和Java对象在虚拟机中的表现形式有关
 
 ## 3、指令重排序
+
 **3.1、在执行程序时为了提高性能，编译器和处理器常常会对指令做重排序.重排序分三种类型：**
 
 - 编译器优化的重排序：编译器在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序
 - 指令级并行的重排序：现代处理器采用了指令级并行技术(Instruction-Level Parallelism，ILP)来将多条指令重叠执行。如果不存在数据依赖性，处理器可以改变语句对应机器指令的执行顺序
 - 内存系统的重排序：由于处理器使用缓存和读/写缓冲区，这使得加载和存储操作看上去可能是在乱序执行
+
+*指令重排序需要满足两个条件：*
+- 在单线程环境下不能改变程序运行的结果；
+- 存在数据依赖关系的不允许重排序
+
+*无法通过happens-before原则推导出来的，JMM允许任意的排序。*
 
 **3.2、从Java源代码到最终实际执行的指令序列，会分别经历下面三种重排序**
 
@@ -222,22 +230,22 @@ Java内存模型描述了在多线程代码中哪些行为是合法的，以及�
 	
 - .常见的处理器都允许 Store-Load重排序；常见的处理器都不允许对存在数据依赖的操作做重排序。sparc-TSO 和x86拥有相对较强的处理器内存模型，它们仅允许对写-读操作做重排序(因为它们都使用了写缓冲区)
 
-**3.4.、MM 内存屏障：**
+**3.4、MM 内存屏障：**
 
 是一种屏障指令，它使CPU或编译器对屏障指令之前和之后发出的内存操作执行一个排序约束
 
-- LoadLoad Barriers<br>
-	抽象示例：Load1; LoadLoad; Load2 <br>
-	描述：在Load2要读取的数据被访问前，保证Load1要读取的数据被读取完毕<br>
-- StoreStore Barriers<br>
-	抽象示例：Store1; StoreStore; Store2 <br>
-	描述： 在Store2写入执行前，确保Store1数据对其他处理器可见(刷新到内存)<br>
-- LoadStore Barriers <br>
-	抽象示例：Load1; LoadStore; Store2 	<br>
-	描述：在Store2被写入前，保证Load1要读取的数据被读取完毕<br>
-- StoreLoad Barriers<br>
-	抽象示例：Store1; StoreLoad; Load2  <br>
-	描述：在Load2读取操作执行前，保证Store1的写入对所有处理器可见。StoreLoad Barriers 会使该屏障之前的所有内存访问指令(存储和装载指令)完成之后。才执行该屏障之后的内存访问指令.StoreLoad Barriers 是一个“全能型”的屏障，它同时具有其他三个屏障的效果，它同时具有其他三个屏障的效果，同时也是开销最大的屏障
+- `LoadLoad Barriers`
+	- 抽象示例：`Load1; LoadLoad; Load2` 
+	- 描述：在Load2要读取的数据被访问前，保证Load1要读取的数据被读取完毕
+- `StoreStore Barriers`
+	- 抽象示例：`Store1; StoreStore; Store2 `
+	- 描述： 在Store2写入执行前，确保Store1数据对其他处理器可见(刷新到内存)
+- `LoadStore Barriers `
+	- 抽象示例：`Load1; LoadStore; Store2`
+	- 描述：在Store2被写入前，保证Load1要读取的数据被读取完毕
+- `StoreLoad Barriers`
+	- 抽象示例：`Store1; StoreLoad; Load2  `
+	- 描述：在Load2读取操作执行前，保证Store1的写入对所有处理器可见。StoreLoad Barriers 会使该屏障之前的所有内存访问指令(存储和装载指令)完成之后。才执行该屏障之后的内存访问指令。StoreLoad Barriers 是一个“全能型”的屏障，它同时具有其他三个屏障的效果，它同时具有其他三个屏障的效果，同时也是开销最大的屏障
 
 ## 4、JMM-顺序一致性
 
@@ -273,30 +281,60 @@ Java内存模型描述了在多线程代码中哪些行为是合法的，以及�
 
 -- JMM 不保证对64位的 long 型和 double 型变量的读/写操作具有原子性，而顺序一致性模型保证对所有的内存读/写操作都具有原子性
 
-## 5、happens-before 与 as-if-serial
+## 5、happens before 与 as-if-serial
 
 ### 5.1、happens-before
 
-从JDK5开始，java使用新的 JSR -133内存模型，JSR-133提出了"happens-before"的概念，通过这个概念来阐述操作之间的内存可见性如果一个操作执行的结果需要对另一个操作可见，那么这两个操作之间必须存在happens-before关系，这里提到的两个操作既可以是在一个线程之内，也可以是在不同线程之间。
+从JDK5开始，java使用新的`JSR-133`内存模型，`JSR-133`提出了`happens-before`的概念，通过这个概念来阐述操作之间的内存可见性如果一个操作执行的结果需要对另一个操作可见，那么这两个操作之间必须存在`happens-before`关系，这里提到的两个操作既可以是在一个线程之内，也可以是在不同线程之间。
 
-注意：两个操作之间具有happens-before关系，并不意味着前一个操作必须要在后一个操作之前执行！happens-before仅仅要求前一个操作(执行的结果)对后一个操作可见，且前一个操作按顺序排在第二个操作之前（the first is visible to and ordered before the second）
+注意：两个操作之间具有`happens-before`关系，并不意味着前一个操作必须要在后一个操作之前执行！`happens-before`仅仅要求前一个操作(执行的结果)对后一个操作可见，且前一个操作按顺序排在第二个操作之前（the first is visible to and ordered before the second）；如果重排序之后的执行结果与按照happens-before关系来执行的结果一致，那么这种重排序并不非法
 
 ### 5.2、happens-before规则
 
-- 程序顺序规则：一个线程中的每个操作，happens-before 于该线程中的任意后续操作
-- 监视器锁规则：对一个监视器锁的解锁，happens-before 于随后对这个监视器锁的加锁
-- volatile变量规则：对一个volatile域的写，happens-before 于任意后续对这个volatile域的读
-- 传递性：如果A happens-before B，且 B happens-before C，那么 A happens-before C
-- 线程启动规则：Thread 对象的 start 方法 happens-before 于此线程的每一个动作;
-- 线程终止规则：线程中的所有操作都先行发生于此线程的终止检测，可以通过 Thread.join() 方法结束，Thread.isAlive()的返回值等手段检测到已终止执行;
+- 程序顺序规则：一个线程内，按照代码顺序，书写在前面的操作先行发生于书写在后面的操作；
+- 监视器锁规则：对一个监视器锁的解锁，`happens-before` 于随后对这个监视器锁的加锁
+- volatile变量规则：对一个`volatile`域的写，`happens-before` 于任意后续对这个`volatile`域的读
+- 传递性：如果`A happens-before B`，且 `B happens-before C`，那么 `A happens-before C`
+- 线程启动规则：Thread 对象的 start 方法 `happens-before` 于此线程的每一个动作;
+- 线程终止规则：线程中的所有操作都先行发生于此线程的终止检测，可以通过 `Thread.join()`方法结束，`Thread.isAlive()`的返回值等手段检测到已终止执行;
 - 线程中断规则：对线程的 interrupt 方法的调用先行发生于被中断线程的代码检测到中断事件的发生
-- 对象终结规则：一个对象的初始化完成先行发生于它的 finalize() 方法的开始
+- 对象终结规则：一个对象的初始化完成先行发生于它的` finalize()` 方法的开始
 
 *一个happens-before规则通常对应于多个编译器重排序规则和处理器重排序规则，happens-before关系是存在这传递性的*
 
+可以对他们进行推导出其他满足happens-before的规则：
+- 将一个元素放入一个线程安全的队列的操作Happens-Before从队列中取出这个元素的操作；
+- 将一个元素放入一个线程安全容器的操作Happens-Before从容器中取出这个元素的操作；
+- 在CountDownLatch上的倒数操作`Happens-Before` `CountDownLatch#await()`操作；
+- 释放Semaphore许可的操作Happens-Before获得许可操作；
+- Future表示的任务的所有操作Happens-Before Future#get()操作；
+- 向Executor提交一个Runnable或Callable的操作Happens-Before任务开始执行操作
+
+	![](image/Happens-Before与JMM.png)
+
 ### 5.3、as-if-serial语义
 
-- 概述：所有的操作均可以为了优化而被重排序，但是你必须要保证重排序后执行的结果不能被改变，编译器、runtime、处理器都必须遵守as-if-serial语义。注意as-if-serial只保证单线程环境，多线程环境下无效
+- 所有的操作均可以为了优化而被重排序，但是你必须要保证重排序后执行的结果不能被改变，编译器、runtime、处理器都必须遵守as-if-serial语义。注意as-if-serial只保证单线程环境，多线程环境下无效；
+- 为了保证`as-if-serial`语义，Java异常处理机制对重排序做了一种特殊的处理：JIT在重排序时会在catch语句中插入错误代偿代码,这样做虽然会导致cathc里面的逻辑变得复杂，但是JIT优化原则是：尽可能地优化程序正常运行下的逻辑，哪怕以catch块逻辑变得复杂为代价
+
+	例子：
+	```java
+	public class RecordExample1 {
+		public static void main(String[] args){
+			int a = 1;
+			int b = 2;
+
+			try {
+				a = 3;           //A
+				b = 1 / 0;       //B
+			} catch (Exception e) {
+
+			} finally {
+				System.out.println("a = " + a);
+			}
+		}
+	}
+	```
 
 # 三、volatile 的特性
 
@@ -389,18 +427,20 @@ stop = true;
 
 当一个共享变量被volatile修饰时，它会保证修改的值会立即被更新到主存，当有其他线程需要读取时，它会去内存中读取新值；另外：通过 synchronized 和 Lock 也能够保证可见性，synchronized 和Lock 能保证同一时刻只有一个线程获取锁然后执行同步代码，并且在释放锁之前会将对变量的修改刷新到主存当中。因此可以保证可见性
 
-- 解决异步死循环：<br>
+- 解决异步死循环：
+
 	JVM 在设置 -server 时出现死循环：一个变量存在与公共堆栈中和线程的私有堆栈中.JVM 被设置了-server是为了线程运行的效率，线程一直在私有堆栈中获取变量的值，而调用 set 方法时虽然被执行了，但是更新的却是公共堆栈中的变量值；造成这样的原因就是私有堆栈中的值和公共堆栈的值不同步造成的；
+
 - 为什么 volatile 有这样的特性？因为 Java 的 happens-before(先行发生)对于一个volatile变量的写操作先行发生于后面对这个变量的读操作可见性：基于CPU的内存屏障指令，被JSR-133抽象为happens-before原则
 
 **2.4、volatile保证原子性吗：volatile也无法保证对变量的任何操作都是原子性的**
 
 - 原子性：在Java中，对基本数据类型的变量的读取和赋值操作是原子性操作，即这些操作是不可被中断的，要么执行，要么不执行
 	```java
-		x = 10;         //语句1
-		y = x;         //语句2
-		x++;           //语句3
-		x = x + 1;     //语句4
+	x = 10;         //语句1
+	y = x;         //语句2
+	x++;           //语句3
+	x = x + 1;     //语句4
 	```
 	上述四句那些是原子操作?
 	- ①、其实只有语句1是原子性操作，其他三个语句都不是原子性操作。
@@ -408,7 +448,7 @@ stop = true;
 	- ③、语句2实际上包含2个操作，它先要去读取x的值，再将x的值写入工作内存，虽然读取x的值以及 将x的值写入工作内存这2个操作都是原子性操作，但是合起来就不是原子性操作了。
 	- ④、同样的，x++和 x = x+1包括3个操作：读取x的值，进行加1操作，写入新的值。
 
-	所以上面4个语句只有语句1的操作具备原子性
+	所以上面4个语句只有语句1的操作具备原子性；volatile是无法保证复合操作的原子性
 
 - 自增操作不是原子性操作，而且volatile也无法保证对变量的任何操作都是原子性的。在java 1.5的 java.util.concurrent.atomic 包下提供了一些原子操作类，即对基本数据类型的自增(加1操作)，自减(减1操作)、以及加法操作(加一个数)，减法操作(减一个数)进行了封装，保证这些操作是原子性操作。atomic是利用 CAS 来实现原子性操作的(Compare And Swap)，CAS 实际上是利用处理器提供的 CMPXCHG 指令实现的，	而处理器执行 CMPXCHG 指令是一个原子性操作.
 	
@@ -420,45 +460,46 @@ stop = true;
 	* 增加变量的值
 	* 把local的值写回，让其他线程可见
 
-	上面三步的jvm指令为：<br>
-	mov    0xc(%r10)，%r8d ; Load<br>
-	inc    %r8d           ; Increment<br>
+	上面三步的jvm指令为：
+	```
+	mov    0xc(%r10)，%r8d ; Load
+	inc    %r8d           ; Increment
 	mov    %r8d，0xc(%r10) ; Store
-	lock addl $0x0，(%rsp) ; StoreLoad Barrier (内存屏障)<br>
-
+	lock addl $0x0，(%rsp) ; StoreLoad Barrier (内存屏障)
+	```
 	从Load到store到内存屏障，一共4步，其中最后一步jvm让这个最新的变量的值在所有线程可见，也就是最后一步让所有的CPU内核都获得了最新的值，但中间的几步(从Load到Store)是不安全的，中间如果其他的CPU修改了值将会丢失.
 	代码如下：
-```java
-public static void main(String[] args) {
-	Thread t1 = new Thread(new LoopVolatile());
-	t1.start();
-	Thread t2 = new Thread(new LoopVolatile2());
-	t2.start();
-	while (t1.isAlive() || t2.isAlive()) {}
-	System.out.println("final val is： " + _longval);
-}
-private static volatile long _longval = 0;
-private static class LoopVolatile implements Runnable {
-	@Override
-	public void run() {
-		long val = 0;
-		while (val < 10000000L) {
-			_longval++;
-			val++;
+	```java
+	public static void main(String[] args) {
+		Thread t1 = new Thread(new LoopVolatile());
+		t1.start();
+		Thread t2 = new Thread(new LoopVolatile2());
+		t2.start();
+		while (t1.isAlive() || t2.isAlive()) {}
+		System.out.println("final val is： " + _longval);
+	}
+	private static volatile long _longval = 0;
+	private static class LoopVolatile implements Runnable {
+		@Override
+		public void run() {
+			long val = 0;
+			while (val < 10000000L) {
+				_longval++;
+				val++;
+			}
 		}
 	}
-}
-private static class LoopVolatile2 implements Runnable {
-	@Override
-	public void run() {
-		long val = 0;
-		while (val < 10000000L) {
-			_longval++;
-			val++;
+	private static class LoopVolatile2 implements Runnable {
+		@Override
+		public void run() {
+			long val = 0;
+			while (val < 10000000L) {
+				_longval++;
+				val++;
+			}
 		}
 	}
-}
-```
+	```
 	AtomicXXX 却能保证原子性：CAS指令，其实AtomicLong的源码里也用到了volatile，但只是用来读取或写入
 
 **2.5、volatile能保证有序性吗-volatile关键字能禁止指令重排序，所以volatile能在一定程度上保证有序性**
@@ -505,16 +546,12 @@ volatile 变量的正确使用：确保它们自身状态的可见性，确保�
 
 
 **3.3、为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止特定类型的处理器重排序：**
+
 下面是基于保守策略的 JMM 内存屏障插入策略
-
 - 在每个volatile写操作的前面插入一个StoreStore屏障：保证在volatile写之前，其前面的所有普通写操作已经对任意处理器可见了，因为StoreStore屏障将保障上面所有的普通写在volatile写之前刷新到主内存；
-
 - 在每个volatile写操作的后面插入一个StoreLoad屏障：避免volatile写与后面可能有的volatile读/写操作重排序，因为编译器常常无法准确判断在一个volatile写的后面，是否需要插入一个 StoreLoad 屏障，为了保证能正确实现volatile的内存语义，JMM 在这里采取了保守策略：在每个volatile写的后面或在每个volatile读的前面插入一个 StoreLoad 屏障；
-
 - 在每个volatile读操作的后面插入一个 LoadLoad 屏障：用来禁止处理器把上面的volatile读与下面的普通读重排序；
-
 - 在每个volatile读操作的后面插入一个 LoadStore 屏障：用来禁止处理器把上面的volatile读与下面的普通写重排序；
-
 在实际执行时，只要不改变volatile写-读的内存语义，编译器可以根据具体情况省略不必要的屏障
 
 **3.4、JSR-133为什么要增强volatile的内存语义**
@@ -535,6 +572,7 @@ volatile 变量的正确使用：确保它们自身状态的可见性，确保�
 - volatile 标记的变量不会被编译器优化;synchronized 标记的变量可以被编译器优化
 
 # 四、锁
+
 ## 1、锁的释放-获取建立的happens before 关系
 
 锁是java并发编程中最重要的同步机制.锁除了让临界区互斥执行外，还可以让释放锁的线程向获取同一个锁的线程发送消息
@@ -558,25 +596,31 @@ volatile 变量的正确使用：确保它们自身状态的可见性，确保�
 - ReentrantLock 的实现依赖于java同步器框架 AbstractQueuedSynchronizer(简称 AQS)，AQS 使用一个整型的volatile变量命名为state来维护同步状态，这个volatile变量是ReentrantLock内存语义实现的关键AQS 的本质上是一个同步器/阻塞锁的基础框架，其作用主要是提供加锁、释放锁，并在内部维护一个FIFO等待队列，用于存储由于锁竞争而阻塞的线程；
 
 - ReentrantLock 分为公平锁和非公平锁，我们首先分析公平锁
-	- ①、使用公平锁时，加锁方法lock()的方法调用轨迹如下：<br>
-		ReentrantLock ： lock()<br>
-		FairSync ： lock()<br>
-		AbstractQueuedSynchronizer ： acquire(int arg)<br>
-		FairSync ： tryAcquire(int acquires) 真正开始加锁<br>
+	- ①、使用公平锁时，加锁方法lock()的方法调用轨迹如下：
+		```
+		ReentrantLock ： lock()
+		FairSync ： lock()
+		AbstractQueuedSynchronizer ： acquire(int arg)
+		FairSync ： tryAcquire(int acquires) 真正开始加锁
 			查看 tryAcquire 方法的实现，加锁方法首先读volatile变量state
-	- ②、在使用公平锁时，解锁方法unlock()的方法调用轨迹如下：<br>
-		ReentrantLock ： unlock()<br>
-		AbstractQueuedSynchronizer ： release(int arg)<br>
-		Sync ： tryRelease(int releases) 真正开始释放锁<br>
+		```
+	- ②、在使用公平锁时，解锁方法unlock()的方法调用轨迹如下：
+		```
+		ReentrantLock ： unlock()
+		AbstractQueuedSynchronizer ： release(int arg)
+		Sync ： tryRelease(int releases) 真正开始释放锁
 		查看 tryRelease 方法的实现，在释放锁的最后写volatile变量state
+		```
 
 	公平锁在释放锁的最后写volatile变量state;在获取锁时首先读这个volatile变量.根据volatile的happens-before规则，释放锁的线程在写volatile变量之前可见的共享变量，在获取锁的线程读取同一个volatile变量后将立即变的对获取锁的线程可见
 
-- 非公平锁的内存语义的实现：非公平锁的释放和公平锁完全一样，所以这里仅仅分析非公平锁的获取使用非公平锁时，加锁方法lock()的方法调用轨迹如下：<br>
-	ReentrantLock ： lock()<br>
-	NonfairSync ： lock()<br>
-	AbstractQueuedSynchronizer ： compareAndSetState(int expect， int update) <br>
-	该方法以原子操作的方式更新state变量，java的compareAndSet()方法调用简称为CAS。<br>
+- 非公平锁的内存语义的实现：非公平锁的释放和公平锁完全一样，所以这里仅仅分析非公平锁的获取使用非公平锁时，加锁方法lock()的方法调用轨迹如下：
+	```
+	ReentrantLock ： lock()
+	NonfairSync ： lock()
+	AbstractQueuedSynchronizer ： compareAndSetState(int expect， int update) 
+	```
+	该方法以原子操作的方式更新state变量，java的compareAndSet()方法调用简称为CAS。
 	JDK 文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步状态设置为给定的更新值。此操作具有 volatile 读和写的内存语义
 
 - 对公平锁和非公平锁的内存语义做个总结：
@@ -691,3 +735,4 @@ JMM对这两种不同性质的重排序，采取了不同的策略：
 * [CPU cache结构和缓存一致性](https://blog.csdn.net/reliveit/article/details/50450136)
 * [Java内存模型](http://www.hollischuang.com/archives/2550)
 * [Linux与JVM的内存关系](http://www.open-open.com/lib/view/open1420814127390.html)
+* [Java内存模型之happens-before](http://cmsblogs.com/?p=2102)

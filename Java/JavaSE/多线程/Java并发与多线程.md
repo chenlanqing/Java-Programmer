@@ -554,7 +554,7 @@ public class Daemon extends Thread{
 
 ## 5、synchronized 关键字
 
-synchronized 取得的锁是都是对象锁，而不是把一段代码或方法当作锁，哪个线程先执行代synchronized关键字的方法，哪个线程就持有该方法所属对象的锁，其他线程只能呈等待状态
+synchronized可以保证方法或者代码块在运行时，同一时刻只有一个方法可以进入到临界区，同时它还可以保证共享变量的内存可见性
 
 进入synchronized 块内使用到的变量从线程的工作内存中清除，主要在synchronized块内使用到该变量时就不会从线程的工作内存中获取，而是直接从主内存中获取；退出synchronized块是在synchronized块内对共享变量的修改刷新到主内存；
 
@@ -562,7 +562,10 @@ synchronized 取得的锁是都是对象锁，而不是把一段代码或方法�
 
 - 只有共享资源的读写访问才需要同步化实现;
 - A线程先持有object对象的Lock锁，B线程可以以异步化的方式调用object对象中的非synchronized类型的方法;
-- A线程先持有object对象的Lock锁，B线程如果在这时调用object对象中的synchronized类型的方法则需要等待，即同步
+- A线程先持有object对象的Lock锁，B线程如果在这时调用object对象中的synchronized类型的方法则需要等待，即同步；
+- 普通同步方法，锁是当前实例对象；
+- 静态同步方法，锁是当前类的class对象；
+- 同步方法块，锁是括号里面的对象
 
 ### 5.2、脏读
 
@@ -609,21 +612,21 @@ synchronized 关键字拥有锁重入功能，也就是在使用 synchronized �
 
 - 原子性
 
-	在Java中，为了保证原子性，提供了两个高级的字节码指令monitorenter和monitorexit，这两个字节码指令，在Java中对应的关键字就是synchronized，通过monitorenter和monitorexit指令，可以保证被synchronized修饰的代码在同一时间只能被一个线程访问，在锁未释放之前，无法被其他线程访问到；
+	在Java中，为了保证原子性，提供了两个高级的字节码指令`monitorenter`和`monitorexit`，这两个字节码指令，在Java中对应的关键字就是`synchronized`，通过`monitorenter`和`monitorexit`指令，可以保证被`synchronized`修饰的代码在同一时间只能被一个线程访问，在锁未释放之前，无法被其他线程访问到；
 
 - 可见性
 
 	对一个变量解锁之前，必须先把此变量同步回主存中。这样解锁后，后续线程就可以访问到被修改后的值
 
-- 5.8.3、有序性
+- 有序性
 
-	synchronized是无法禁止指令重排和处理器优化的，那synchronized如何保证有序性？
+	`synchronized`是无法禁止指令重排和处理器优化的，那`synchronized`如何保证有序性？
 
 	Java中填入有序性：如果在本线程内观察，所有操作都是天然有序的。如果在一个线程中观察另一个线程，所有操作都是无序的。
 
-	as-if-serial语义：不管怎么重排序（编译器和处理器为了提高并行度），单线程程序的执行结果都不能被改变。编译器和处理器无论如何优化，都必须遵守as-if-serial语义。也就是说as-if-serial语义保证了单线程中，指令重排是有一定的限制的，而只要编译器和处理器都遵守了这个语义，那么就可以认为单线程程序是按照顺序执行。
+	`as-if-serial`语义：不管怎么重排序（编译器和处理器为了提高并行度），单线程程序的执行结果都不能被改变。编译器和处理器无论如何优化，都必须遵守as-if-serial语义。也就是说`as-if-serial`语义保证了单线程中，指令重排是有一定的限制的，而只要编译器和处理器都遵守了这个语义，那么就可以认为单线程程序是按照顺序执行。
 
-	由于synchronized修饰的代码，同一时间只能被同一线程访问。那么也就是单线程执行的。所以，可以保证其有序性
+	由于`synchronized`修饰的代码，同一时间只能被同一线程访问。那么也就是单线程执行的。所以，可以保证其有序性
 
 
 	
@@ -751,6 +754,8 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 
 	- *但是：但是锁升降级效率较低，如果频繁升降级的话对JVM性能会造成影响*
 
+![](image/轻量级锁获取与释放过程.png)
+
 #### 7.4.2、轻量级锁的加锁过程
 
 - （1）在代码块进入同步块的时候，如果同步对象锁状态为无锁状态（锁标志位为"01"状态，是否偏向锁为"0"）虚拟机首先将在当前线程的栈桢建立一个名为锁记录(Lock Record)的空间，用于存储锁对象目前的 Mark Word 的拷贝；
@@ -773,6 +778,9 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 偏向锁在JDK 6及以后的JVM里是默认启用的，可以通过JVM参数关闭偏向锁：`-XX:-UseBiasedLocking=false`，关闭之后程序默认会进入轻量级锁状态；
 
 偏向锁默认不是立即就启动的，在程序启动后，通常有几秒的延迟，可以通过命令`-XX:BiasedLockingStartupDelay=0`来关闭延迟
+
+![](image/偏向锁获取与释放过程.png)
+
 
 #### 7.5.1、偏向锁的获取过程
 
@@ -871,7 +879,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 ## 8、volatile
 
-[volatile特性](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B.md#%E4%B8%89volatile-%E7%9A%84%E7%89%B9%E6%80%A7)
+[volatile特性](../Java-JVM/Java内存模型.md#三volatile的特性)
 
 ## 9、线程安全及不可变性
 
@@ -2804,6 +2812,9 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 # 八、线程与并发相关面试题
 
 ## 1、为什么线程池的底层数据接口采用HashSet来实现
+
+## 2、使用模拟真正的并发请求
+
 
 # 参考文章
 

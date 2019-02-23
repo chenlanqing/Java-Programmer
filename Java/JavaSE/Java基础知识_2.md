@@ -1021,6 +1021,7 @@ JDK5之后新增的功能
 	Class clzss = String[][].class; //String[][] 数组的数组
 	```
 
+- 反射与工厂模式
 
 ## 4、动态编译：Java6.0引入动态编译
 
