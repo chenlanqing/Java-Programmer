@@ -469,6 +469,33 @@ public class Singleton implements Cloneable{
 }
 ```
 
+# 12、不使用synchronized和lock实现线程安全的单例
+
+上面的代码要么显示或者隐式的使用了synchronized或者lock，饿汉模式和内部类模式是因为类的初始化是由ClassLoader完成的，这其实就是利用了ClassLoader的线程安全机制啊；ClassLoader的loadClass方法在加载类的时候使用了synchronized关键字；
+
+可以使用CAS来实现线程安全的单例；借助CAS（AtomicReference）实现单例模式
+
+```java
+public class CASSingleton {
+    private static AtomicReference<CASSingleton> INSTANCE = new AtomicReference<>();
+    private CASSingleton(){}
+    public static CASSingleton getInstance() {
+        for (;;){
+            CASSingleton instance = INSTANCE.get();
+            if (instance != null) {
+                return instance;
+            }
+            instance = new CASSingleton();
+            if (INSTANCE.compareAndSet(null, instance)) {
+                return instance;
+            }
+        }
+    }
+}
+```
+
+
+
 # 参考资料
 
 * [单例模式的七种写法](http://www.hollischuang.com/archives/205)

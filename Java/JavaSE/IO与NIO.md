@@ -650,7 +650,9 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 ![](Image/NIO客户端通信序列图.jpg)
 
 # 四、IO与NIO面试相关
+
 ## 1、文件拷贝实现方式
+
 主要关注以下几点：
 - 不同的copy方式，底层机制有什么区别？
 - 为什么零拷贝可能有性能优势？
@@ -718,8 +720,9 @@ jcmd <pid> VM.native_memory baseline
 jcmd <pid> VM.native_memory detail.diff
 
 ```
-# 四、IO面试题
-## 1、使用Java读取大文件
+
+## 5、使用Java读取大文件
+
 - （1）文件流边读边用，使用文件流的read()方法每次读取指定长度的数据到内存中，具体代码如下
     ```java
     public static void readMethod1(String filePath) throws Exception{
@@ -790,6 +793,19 @@ jcmd <pid> VM.native_memory detail.diff
 
     本质上是由于 java.nio.MappedByteBuffer 直接继承自 java.nio.ByteBuffer ，而 ByteBuffer 的索引是 int 类型的，所以 MappedByteBuffer 也只能最大索引到 Integer.MAX_VALUE 的位置，所以 FileChannel 的 map 方法会做参数合法性检查。
 
+## 6、NIO消息传输错误
+
+### 6.1、存在问题的情况
+
+- 多消息粘包：
+- 单消息不完整：接收端buffer容量不够
+- 消息到达提醒重复触发（读消息时未设置取消监听）
+
+### 6.2、如何解决
+
+- 数据传输加上开始结束标记
+- 数据传输使用固定头部的方案；
+- 混合方案：固定头、数据加密、数据描述
 
 # 参考文章
 * [Java-NIO系列](http：//ifeve.com/java-nio-all/)

@@ -278,6 +278,7 @@ Context： http, server, location
 
 # 参考文档
 * [Nginx官方文档](http://nginx.org/en/docs/)
+* [Nginx极简教程](https://mp.weixin.qq.com/s/vHkxYfpuiAteMNSrpNWdsw)
 
 
 

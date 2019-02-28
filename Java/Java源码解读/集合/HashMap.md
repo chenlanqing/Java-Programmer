@@ -181,7 +181,9 @@ public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable
 	- 如果要实现个不可变(unmodifiable)的map，那么只需继承 AbstractMap，然后实现其entrySet方法，这个方法返回的set不支持add与remove，同时这个set的迭代器(iterator)不支持remove操作即可。
 	- 如果要实现个可变(modifiable)的map，首先继承 AbstractMa，然后重写 AbstractMap 的put方法，同时实现entrySet所返回set的迭代器的remove方法即可
 
-***为什么继承了 AbstractMap 还需要实现 Map 接口？***
+***为什么继承了 AbstractMap 还需要实现 Map 接口？*** HashMap的作者说这是一个写法错误；并没有其他意思；也有可能是为了语义和代码上更清晰吧；
+
+
 
 # 三、设计理念
 ## 1.HashMap 的数据结构
@@ -551,13 +553,13 @@ final Node<K,V>[] resize()
 # 六、高并发下 HashMap 的使用的问题
 
 - 扩容-resize()：影响resize发生的因素
-	- capacity:HashMap当前的长度(2的幂);
-	- loadfactor:加载因子,默认是0.75f衡量HashMap是否进行resize条件: HashMap.size >= capacity * loadfactor.
+	- capacity：HashMap当前的长度(2的幂);
+	- loadfactor：加载因子,默认是0.75f衡量HashMap是否进行resize条件: HashMap.size >= capacity * loadfactor.
 - 扩容步骤
-	- （1）扩容:创建一个新的entry数组，长度是原来数组的两倍；
-	- （2）rehash:遍历原entry数组，把所有的entry重写hash到新的数组.为什么需要重新hash? 因为长度扩大异以后，hash规则也随之改变；index =  HashCode（Key） &  （Length - 1） 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算.
-- 在单线程下上述步骤执行没有任何问题，在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环
-- 在高并发环境下，通常使用 ConcurrentHashMap，兼顾了线程安全和性能；
+	- （1）扩容：创建一个新的entry数组，长度是原来数组的两倍；
+	- （2）rehash：遍历原entry数组，把所有的entry重写hash到新的数组。为什么需要重新hash？因为长度扩大异以后，hash规则也随之改变；`index =  HashCode(Key)&(Length - 1)` 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算.
+- 在单线程下上述步骤执行没有任何问题；在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环
+- 在高并发环境下，通常使用 `ConcurrentHashMap`，兼顾了线程安全和性能；
 - 下面代码只在JDK7以前的版本有效，jdk8之后就不存在这种问题了
 	```java
 	private static Map<Long, Set<Integer>> setMap = new ConcurrentHashMap<>();
@@ -591,6 +593,7 @@ final Node<K,V>[] resize()
 	```
 
 # 七、面试题
+
 ## 1、get和put的原理？JDK8
 
 通过对key的hashCode()进行hashing,并计算下标( n-1 & hash),从而获得buckets的位置。如果产生碰撞,则利用key.equals()方法去链表或树中去查找对应的节点.
@@ -606,8 +609,8 @@ final Node<K,V>[] resize()
 
 ## 4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现
 
-- 一直到JDK7为止，HashMap 的结构都是这么简单，基于一个数组以及多个链表的实现，hash 值冲突时就将对应节点以链表形式存储.这样的 HashMap 在性能上存在问题:如果很多节点在hash时发生碰撞，存储在一个链表中，那么如果要查找其中一个节点时，不可避免要花费O(N)的时间;
-- 在JDK8中，使用红黑树来解决问题.在最坏的情况下，链表的查找时间复杂度是O(N)，而红黑树一直是O(logN)。JDK7 中HashMap采用的是位桶+链表的方式，即我们常说的散列链表的方式，而 JDK8 中采用的是位桶+链表/红黑树也是非线程安全的.当某个位桶的链表的长度达到某个阀值的时候，这个链表就将转换成红黑树
+- 一直到JDK7为止，HashMap 的结构都是这么简单，基于一个数组以及多个链表的实现，hash 值冲突时就将对应节点以链表形式存储。这样的 HashMap 在性能上存在问题：如果很多节点在hash时发生碰撞，存储在一个链表中，那么如果要查找其中一个节点时，不可避免要花费O(N)的时间;
+- 在JDK8中，使用红黑树来解决问题。在最坏的情况下，链表的查找时间复杂度是O(N)，而红黑树一直是O(logN)。JDK7 中HashMap采用的是位桶+链表的方式，即我们常说的散列链表的方式；而 JDK8 中采用的是`位桶+链表/红黑树`也是非线程安全的。当某个位桶的链表的长度达到某个阀值的时候，这个链表就将转换成红黑树
 
 ## 5、为什么HashMap默认的加载因子是0.75
 
