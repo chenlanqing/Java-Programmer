@@ -298,7 +298,7 @@ public boolean equals(Object obj){
 
 # 4、finalize()方法
 
-[详解finalize方法](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/Java-GC%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E6%9C%BA%E5%88%B6.md#%E5%85%AD%E8%AF%A6%E8%A7%A3-finalize%E6%96%B9%E6%B3%95)
+[详解finalize方法](../../JavaSE/Java-JVM/JVM-GC垃圾回收机制.md#六详解-finalize方法)
 
 finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说不是轻量级的程序;
 
@@ -333,6 +333,8 @@ finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说�
 
 finalize的执行是和垃圾收集关联在一起的，一旦实现了非空的finalize方法的对象是个“特殊公民”，JVM要对它进行额外处理。finalize本质上成为了快速回收的阻碍者，可能导致你的对象经过多个垃圾收集周期才回收；
 
+对于重载了 Object 类的 finalize 方法的类实例化的对象（这里称为 f 对象），JVM 为了能在 GC 对象时触发 f 对象的 finalize 方法的调用，将每个 f 对象包装生成一个对应的 FinalReference 对象，方便 GC 时进行处理
+
 实践中因为finalize拖慢垃圾收集，导致大量对象堆积，也是一种典型的OOM的原因；
 
 从另一个角度，需要确保回收资源是因为资源有限，垃圾收集的时间不可预测，可能极大加剧资源占用，推荐资源用完即释放或者利用资源池来尽量重用；finalize还会掩盖资源回收时的出错信息，看如下代码：
@@ -356,9 +358,6 @@ private void runFinalizer(JavaLangAccess jla) {
 }
 ```
 
-
-
-
 - 4.5、finalize的替代机制
 
 Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner实现利用了幻象引用，这是一种常见所谓post-mortem清理机制。
@@ -370,6 +369,7 @@ Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner
 当编译器遇到 name + "： " + age 的表达时，会生成一个 java.lang.StringBuilder 对象，并调用 append() 方法来对字符串添加变量值和分隔符。最后调用 toString() 方法返回一个包含各个元素的字符串对象
 
 # 6、wait/notifAll
+
 ## 6.1、wait
 
 该方法用来将当前线程置入休眠状态，直到接到通知或被中断为止；

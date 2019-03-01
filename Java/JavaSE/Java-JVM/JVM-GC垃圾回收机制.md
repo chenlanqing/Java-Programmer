@@ -717,7 +717,7 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 **1.2、如何监控**
 
 - jstat:是 HotSpot JVM 提供的一个监控工具；jstat 不仅提供 GC 操作的信息，还提供类装载操作的信息以及运行时编译器操作的信息<br>
-	$> jstat –gc  $<vmid$> 1000<br>
+	$> `jstat –gc  $<vmid$> 1000<br>`
 	==> vmid (虚拟机 ID)
 
 ## 2、GC 优化

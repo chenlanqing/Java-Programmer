@@ -86,3 +86,4 @@
 - [一次堆外内存泄露的排查过程](https://mp.weixin.qq.com/s/bkzVCjm0qeREpCnF_8xX2A)
 - [spring boot引起的“堆外内存泄漏”](https://mp.weixin.qq.com/s/warAkXqkpDXOA10wN0vv-Q)
 - [一次HashSet所引起的并发问题](https://mp.weixin.qq.com/s/-_6fDP6OSse-tL-ptjcbJw)
+- [YGC实战](https://mp.weixin.qq.com/s/6hNg955-DcnkUQ9f6mNEQg)
