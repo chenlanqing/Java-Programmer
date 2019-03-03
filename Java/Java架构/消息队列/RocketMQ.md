@@ -195,3 +195,134 @@ RocketMQ是一款分布式、队列模型的消息中间件；最新版4.3.x版�
 - 设置namesrvAddr及其消费位置ConsumeFromWhere；
 - 进行订阅主题subscribe；
 - 注册监听并消费registerMessageListener；
+
+# 三、RocketMQ核心
+
+## 1、生产者
+
+### 1.1、核心参数
+
+- producerGroup：组名，在一个应用中是唯一的
+- createTopicKey：可以直接创建Topic；
+- defaultTopicQueueNums：默认是4；
+- sendMsgTimeout：单位是ms，发送消息超时时间
+- compressMsgBodyOverHowmuch：字节传输中是否压缩，默认是4096字节；
+- retryTimesWhenSendFaild：是否重发
+
+### 1.2、主从同步机制
+
+- Master-Slave主从同步
+- 同步信息：数据内容 + 元数据信息
+- 元数据同步：Broker角色识别，为slave则启动同步任务；包括配置信息，使用定时任务，使用Netty
+- 消息同步：HAService、HAConnetion、WaitNotifyObject；使用实时同步，使用原生Socket；commit log
+- 主要同步是Master和Slave的偏移量比较；
+
+### 1.3、同步消息发送
+
+- 同步、异步发送消息核心实现：DefaultMQProducerImpl
+- 同步发送消息：producer.send(Message msg);
+- 异步发送消息：producer.send(Message msg, SendCallBack sendCallBack)
+
+### 1.4、Netty底层框架解析
+
+- 主要关键类：RemotingService、RemotingServer、RemotingClient、NettyRemotingAbstract、NettyRemotingClient、NettyRemotingServer；
+- 自定义消息传输协议：`消息长度|序列化类型&&头部长度|消息头数据|消息主体数据`
+
+### 1.5、消息投递状态
+
+```java
+public enum SendStatus {
+    SEND_OK,
+    FLUSH_DISK_TIMEOUT,
+    FLUSH_SLAVE_TIMEOUT,
+    SLAVE_NOT_AVAILABLE,
+}
+```
+
+### 1.6、延迟消息
+
+- 延迟消息：消息发送到Broker之后，要特定的时间才会被Consumer消费；
+- 目前只支持固定精度的定时消息；
+- MessageStoreConfig配置类、ScheduleMessageService 任务类；
+- setDelayTimeLevel
+
+### 1.7、自定义消息发送规则
+
+- 通过MessageQueueSelector可以发送到指定的队列中；
+- producer.send(msg, selector, msg)
+    ```java
+    SendResult sendResult = producer.send(message, new MessageQueueSelector() {
+        @Override
+        public MessageQueue select(List<MessageQueue> mqs, Message msg, Object arg) {
+            Integer queueNumber = (Integer)arg;
+            return mqs.get(queueNumber);
+        }
+    }, 2);
+    // 其中send的第三个参数，也即是2会通过回调赋值到MessageQueueSelector重写的方法中arg参数；
+    ```
+
+## 2、消费者
+
+### 2.1、PushConsumer核心参数
+
+- consumeFromWhere：消费者从哪个位置开始消费；
+- allocateMessageQueueStrategy
+- subscription：订阅
+- offsetStore：存储实际的偏移量，分为localOffSet和RemoteOffSet；
+- consumeThreadMin/consumeThreadMax
+- consumeConcurrentMaxSpan/pullThresholdQueu
+- pullinterval/pullBatchSize
+- consumeMessageBatchSize：拉取数据条数
+
+### 2.2、PushCosnumer消费模式
+
+#### 2.2.1、集群模式
+
+- 默认的模式
+- GroupName用于把多个Consumer组织到一起；
+- 相同的GroupName的consumer只消费所订阅消息的一部分；
+- 目的：达到天然的负载均衡机制；
+
+#### 2.2.2、广播模式
+
+- 同一个ConsumerGroup里的Consumer都消费订阅Topic全部信息，也就是每一条消息都被一个Consumer消费；
+- 设置广播模式：setMessageModel
+
+### 2.3、偏移量offset
+
+- offset是消息消费进度的核心；
+- offset指某个topic下的一条消息在MessageQueue里的位置；可以通过offset进行定位到这条消息
+- offset的存储实现分别为远程文件类型和本地文件类型；
+- RemoteBrokerOffsetStore：
+    - 默认集群模式采用远程文件存储offset：本质是因为多消费模式，每个consumer消费所订阅主题的一部分；需要broker控制offset；
+- LocalFileOffsetStore
+    - 广播模式下，由于每个consumer都会受到消息且消费，各个consumer之间没有任何干扰，独立线程消费；
+
+### 2.4、PushConsumer长轮询分析
+
+- DefaultPushConsumer是使用长轮询模式进行实现的；长轮询是主动拉取
+- Push消息推送：broker推送消息到消费者端；受消费端消费能力影响
+- Pull消息拉取：消费端从broker拉取消息；需要本地记录offset
+- 长轮询机制：
+
+### 2.5、PullConsumer使用
+
+- 消息拉取方式：DefaultPullConsumer
+- pull方式主要做三件事：
+    - 获取Message Queue并遍历；
+    - 维护OffsetStore
+    - 根据不同的消息状态做不同的处理
+
+## 3、核心原理
+
+
+
+
+
+
+
+
+
+
+
+

@@ -27,37 +27,6 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# 一、消息中间件
-
-MQ的衡量指标：服务性能、数据存储、集群架构
-
-## 1、主流中间件介绍
-
-### 1.1、ActiveMQ
-- 概述：
-	
-### 1.2、Kafka
-
-### 1.3、RocketMQ
-
-### 1.4、RabbitMQ
-
-## 2、消息队列
-
-### 2.1、优点
-
-- 解耦
-- 异步处理
-- 削峰
-
-主要解决应用耦合，异步消息，流量削锋等问题。可实现高性能，高可用，可伸缩和最终一致性架构，是大型分布式系统不可缺少的中间件。
-
-### 2.2、缺点
-
-- 系统可用性降低：系统引入的外部依赖越多，越容易挂掉
-- 系统复杂性提高：保证消息没有重复消费？怎么处理消息丢失的情况？怎么保证消息传递的顺序性？
-- 一致性问题
-
 # 二、RabbitMQ
 
 ## 1、概述
@@ -171,6 +140,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
   - 如果不进行落库，那么都存到缓存中，如何设置定时同步策略；
 
 ## 6、Confirm确认消息
+
 ### 6.1、概述
 - 消息的确认，是指生产者投递消息后，如果broker收到消息，则会给生产者一个应答；
 - 生产者进行接收应答，用来确定这条消息是否正常的发送到Broker，这种方式也是消息的可靠性投递的核心保障；
@@ -212,22 +182,27 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 - RabbitMQ 支付队列的怄气时间，从消息入队列开始计算，只要超过了队列的超时时间配置，那么消息会自动的清除；
 
 ## 12、死信队列-Dead Letter Exchane
+
 - 利用DLX，当消息在一个队列中变成死信时，它能被重新publish到另一个Exchange，这个Exchange就是DLX；
 
 ### 12.1、消息变成死信的情况
+
 - 消息被拒绝（basic.rejec/basic.nack），并且requeue=fals；
 - 消息TTL过去
 - 队列达到最大长度
 
-## 12.2、死信队列
+### 12.2、死信队列
+
 - DLX也是正常的Exchange，和一般的Exchange没有区别，它能在任何的队列上被指定，实际上就是设置某个队列的属性；
 - 当这个队列中有死信时，RabbitMQ就会自动的将这个消息重新发布到设置的Exchange上，进而被路由到另一个队列；
 - 可以监听这个队列中消息做相应的处理，这个特性可以弥补RabbitMQ3.0以前致辞的immediate参数的功能；
 
 # 三、RabbitMQ与Spring整合
+
 ## 1、RabbitMQ整合Spring AMQP
 
 ### 1.1、RabbitAdmin
+
 其可以很好的操作RabbitMQ，在Spring直接注入即可；
 
 autoStartup必须设置为true，否则Spring不会加载RabbitAdmin类；
@@ -370,6 +345,10 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 
 
 
+# 五、RabbitMQ-SET化架构实现
+
+使用RabbitMQ的通信插件：Federation
+
 
 
 
@@ -377,3 +356,4 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 # 参考资料
 * [RabbitMQ官方文档](http://www.rabbitmq.com/documentation.html)
 * [RabbitMQ命令操作](https://blog.csdn.net/noonebirdyou/article/details/54645755)
+* [RabbitMQ可靠消息投递方案](https://www.imooc.com/article/49814)
