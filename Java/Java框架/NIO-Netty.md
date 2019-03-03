@@ -377,35 +377,109 @@ ByteBufAllocator 两大子类：PooledByteBufAllocator、UnpooledByteBufAllocato
 ### 3.2、PooledByteBufAllocator内存分配
 
 
-# Netty相关问题
-- **1、服务端的Socket在哪里初始化？**
+# Netty面试题
 
-- **2、在哪里accept连接？**
+## 1、服务端的Socket在哪里初始化？
 
-- **3、默认情况下，Netty服务端起多少线程？何时启动？**
+## 2、在哪里accept连接？
 
-- **4、Netty如何解决jdk空轮询bug的？-空轮询次数：512**
+## 3、默认情况下，Netty服务端起多少线程？何时启动？
 
-- **5、Netty如何保证异步串行无锁化？**
+## 4、Netty如何解决jdk空轮询bug的？-空轮询次数：512
 
-- **6、Netty是在哪里检测有新连接接入的？**
+## 5、Netty如何保证异步串行无锁化？
 
-- **7、新连接是怎样注册到NioEventLoop线程的**
+## 6、Netty是在哪里检测有新连接接入的？
 
-- **8、Netty是如何判断ChannelHandler类型的？**
+## 7、新连接是怎样注册到NioEventLoop线程的
 
-- **9、对于ChannelHandler的添加应该遵循什么样的顺序？**
+## 8、Netty是如何判断ChannelHandler类型的？
 
-- **10、用户手动触发事件传播，不同的触发方式有什么样的区别？**
+## 9、对于ChannelHandler的添加应该遵循什么样的顺序？
 
-- **11、Netty内存类别**
+## 10、用户手动触发事件传播，不同的触发方式有什么样的区别？
 
-- **12、如何减少多线程内存分配之间的竞争**
+## 11、Netty内存类别
 
-- **13、不同大小的内存是如何进行分配的**
+## 12、如何减少多线程内存分配之间的竞争
 
-- **14、**
+## 13、不同大小的内存是如何进行分配的
 
-- **15、**
+## 14、Netty实现零拷贝
 
-- **16、**
+### 14.1、零拷贝（Zero-Copy）技术
+
+零拷贝主要的任务就是避免CPU将数据从一块存储拷贝到另外一块存储，主要就是利用各种零拷贝技术，避免让CPU做大量的数据拷贝任务，减少不必要的拷贝，或者让别的组件来做这一类简单的数据传输任务，让CPU解脱出来专注于别的任务；
+
+通常是指计算机在网络上发送文件时，不需要将文件内容拷贝到用户空间（User Space）而直接在内核空间（Kernel Space）中传输到网络的方式；
+
+### 14.2、零拷贝实现
+
+Linux中的`sendfile()`以及Java NIO中的`FileChannel.transferTo()`方法都实现了零拷贝的功能，而在Netty中也通过在FileRegion中包装了NIO的`FileChannel.transferTo()`方法实现了零拷贝；
+
+在Netty中还有另一种形式的零拷贝，即Netty允许我们将多段数据合并为一整段虚拟数据供用户使用，而过程中不需要对数据进行拷贝操作；
+
+### 14.3、Netty实现零拷贝
+
+Netty 的 Zero-copy 体现在如下几个个方面：
+- Netty 提供了 CompositeByteBuf 类, 它可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf, 避免了各个 ByteBuf 之间的拷贝.
+- 通过 wrap 操作, 我们可以将 byte[] 数组、ByteBuf、ByteBuffer等包装成一个 Netty ByteBuf 对象, 进而避免了拷贝操作.
+- ByteBuf 支持 slice 操作, 因此可以将 ByteBuf 分解为多个共享同一个存储区域的 ByteBuf, 避免了内存的拷贝.
+- 通过 FileRegion 包装的FileChannel.tranferTo 实现文件传输, 可以直接将文件缓冲区的数据发送到目标 Channel, 避免了传统通过循环 write 方式导致的内存拷贝问题
+
+#### 14.3.1、通过 CompositeByteBuf 实现零拷贝
+
+如果希望将两个ByteBuf合并为一个ByteBuf，通常做法是：
+```java
+ByteBuf header = ...
+ByteBuf body = ...
+ByteBuf allBuf = Unpooled.buffer(header.readableBytes() + body.readableBytes());
+allBuf.writeBytes(header);
+allBuf.writeBytes(body);
+```
+将 header 和 body 都拷贝到了新的 allBuf 中了, 这无形中增加了两次额外的数据拷贝操作了；
+
+CompositeByteBuf实现合并：
+```java
+ByteBuf header = ...
+ByteBuf body = ...
+
+CompositeByteBuf compositeByteBuf = Unpooled.compositeBuffer();
+compositeByteBuf.addComponents(true, header, body);
+// 或者使用如下方式
+ByteBuf allByteBuf = Unpooled.wrappedBuffer(header, body);
+```
+
+不过需要注意的是, 虽然看起来 CompositeByteBuf 是由两个 ByteBuf 组合而成的, 不过在 CompositeByteBuf 内部, 这两个 ByteBuf 都是单独存在的, CompositeByteBuf 只是逻辑上是一个整体；
+
+Unpooled.wrappedBuffer 方法, 它底层封装了 CompositeByteBuf 操作
+
+#### 14.3.2、通过 wrap 操作实现零拷贝
+
+有一个 byte 数组, 希望将它转换为一个 ByteBuf 对象，通常做法是：
+```java
+byte[] bytes = ...
+ByteBuf byteBuf = Unpooled.buffer();
+byteBuf.writeBytes(bytes);
+```
+显然这样的方式也是有一个额外的拷贝操作的, 我们可以使用 Unpooled 的相关方法, 包装这个 byte 数组, 生成一个新的 ByteBuf 实例, 而不需要进行拷贝操作. 上面的代码可以改为：
+```java
+byte[] bytes = ...
+ByteBuf byteBuf = Unpooled.wrappedBuffer(bytes);
+```
+通过 `Unpooled.wrappedBuffer`方法来将 bytes 包装成为一个 `UnpooledHeapByteBuf` 对象, 而在包装的过程中，是不会有拷贝操作的。即最后我们生成的生成的 ByteBuf 对象是和 bytes 数组共用了同一个存储空间，对 bytes 的修改也会反映到 ByteBuf 对象中；
+
+#### 14.3.3、通过 slice 操作实现零拷贝
+
+slice 操作和 wrap 操作刚好相反, Unpooled.wrappedBuffer 可以将多个 ByteBuf 合并为一个, 而 slice 操作可以将一个 ByteBuf 切片 为多个共享一个存储区域的 ByteBuf 对象
+
+#### 14.3.4、通过 FileRegion 实现零拷贝
+
+Netty 中使用 FileRegion 实现文件传输的零拷贝, 不过在底层 FileRegion 是依赖于 `Java NIO FileChannel.transfer` 的零拷贝功能；
+
+通过 RandomAccessFile 打开一个文件, 然后 Netty 使用了 DefaultFileRegion 来封装一个 FileChannel：`new DefaultFileRegion(raf.getChannel(), 0, length)`；
+有了 FileRegion 后, 我们就可以直接通过它将文件的内容直接写入 Channel 中, 而不需要像传统的做法: 拷贝文件内容到临时 buffer, 然后再将 buffer 写入 Channel
+
+## 15、
+
+## 16、
