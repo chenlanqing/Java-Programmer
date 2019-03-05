@@ -133,6 +133,9 @@ static final int PROPAGATE = -3;
 ## 2、不可中断独占锁
 
 ### 2.1、获取不中断独占锁
+
+![](image/tryAcquire流程.png)
+
 ```java
 // 先看同步状态是否获取成功，如果成功则方法结束返回
 // 若失败则先调用addWaiter()方法再调用acquireQueued()方法
@@ -160,9 +163,12 @@ private Node addWaiter(Node mode) {
 	return node;
 }
 ```
-- tryAcquire 由子类实现本身不会阻塞线程，如果返回 true， 则线程继续，如果返回 false 那么就加入阻塞队列阻塞线程，并等待前继结点释放锁
-- acquireQueued返回true，说明当前线程被中断唤醒后获取到锁，重置其interrupt status为true；acquireQueued方法中会保证忽视中断，只有tryAcquire成功了才返回
-- addWaiter 入队操作，并返回当前线程所在节点.	
+- tryAcquire：由子类实现本身不会阻塞线程，如果返回 true， 则线程继续，如果返回 false 那么就加入阻塞队列阻塞线程，并等待前继结点释放锁
+- acquireQueued：返回true，说明当前线程被中断唤醒后获取到锁，重置其interrupt status为true；acquireQueued方法中会保证忽视中断，只有tryAcquire成功了才返回；只有其前驱节点为头结点才能够尝试获取同步状态：
+	- 保持FIFO同步队列原则
+	- 头节点释放同步状态后，将会唤醒其后继节点，后继节点被唤醒后需要检查自己是否为头节点；
+- addWaiter：入队操作，并返回当前线程所在节点。将当前线程加入到CLH同步队列尾部。
+- selfInterrupt：产生一个中断。
 
 ### 2.2、独占锁的释放（release()方法）
 ```java
@@ -178,16 +184,19 @@ public final boolean release(int arg) {
 ```
 - 每一次锁释放后就会唤醒队列中该节点的后继节点所引用的线程，从而进一步可以佐证获得锁的过程是一个FIFO（先进先出）的过程
 
-### 2.3、独占锁获取和释放总结：
-- 线程获取锁失败，线程被封装成Node进行入队操作，核心方法在于addWaiter()和enq()，同时enq()完成对同步队列的头结点初始化工作以及CAS操作失败的重试；
-- 线程获取锁是一个自旋的过程，当且仅当“当前节点”的前驱节点是头结点并且成功获得同步状态时，节点出队即该节点引用的线程获得锁，否则，当不满足条件时就会调用LookSupport.park()方法使得线程阻塞；
+### 2.3、独占锁获取和释放总结
+
+- 线程获取锁失败，线程被封装成Node进行入队操作，核心方法在于`addWaiter()`和`enq()`，同时`enq()`完成对同步队列的头结点初始化工作以及CAS操作失败的重试；
+- 线程获取锁是一个自旋的过程，当且仅当`“当前节点”`的前驱节点是头结点并且成功获得同步状态时，节点出队即该节点引用的线程获得锁，否则，当不满足条件时就会调用`LookSupport.park()`方法使得线程阻塞；
 - 释放锁的时候会唤醒后继节点；
 
 总体来说：在获取同步状态时，AQS维护一个同步队列，获取同步状态失败的线程会加入到队列中进行自旋；移除队列（或停止自旋）的条件是前驱节点是头结点并且成功获得了同步状态。在释放同步状态时，同步器会调用unparkSuccessor()方法唤醒后继节点。
 
 ## 3、可中断式独占锁
 
-### 3.1、获取可中断式独占锁（acquireInterruptibly方法）
+获取可中断式独占锁（acquireInterruptibly方法）
+
+该方法在等待获取同步状态时，如果当前线程被中断了，会立刻响应中断抛出异常InterruptedException
 ```java
 public final void acquireInterruptibly(int arg) throws InterruptedException {
 	if (Thread.interrupted())
@@ -196,9 +205,9 @@ public final void acquireInterruptibly(int arg) throws InterruptedException {
 		doAcquireInterruptibly(arg);
 }
 ```
-可响应中断式锁可调用方法lock.lockInterruptibly()；而该方法其底层会调用AQS的acquireInterruptibly方法
+可响应中断式锁可调用方法`lock.lockInterruptibly()`；而该方法其底层会调用AQS的`acquireInterruptibly`方法
 
-在获取同步状态失败后就会调用doAcquireInterruptibly方法：
+在获取同步状态失败后就会调用`doAcquireInterruptibly`方法：
 ```java
 private void doAcquireInterruptibly(int arg) throws InterruptedException {
 	// 将节点插入到同步队列中
@@ -223,13 +232,164 @@ private void doAcquireInterruptibly(int arg) throws InterruptedException {
 	}
 }
 ```
-### 3.2、超时等待式获取锁（tryAcquireNanos()方法）
+`doAcquireInterruptibly(int arg)`方法与`acquire(int arg)`方法仅有两个差别：
+- 方法声明抛出InterruptedException异常
+- 在中断方法处不再是使用interrupted标志，而是直接抛出InterruptedException异常
 
-通过调用lock.tryLock(timeout,TimeUnit)方式达到超时等待获取锁的效果，该方法会在三种情况下才会返回
+## 4、超时获取独占锁
 
+通过调用`tryAcquireNanos(int arg,long nanos)`方式达到超时等待获取锁的效果，该方法会在三种情况下才会返回
 - 在超时时间内，当前线程成功获取了锁；
 - 当前线程在超时时间内被中断；
 - 超时时间结束，仍未获得锁返回false
+```java
+public final boolean tryAcquireNanos(int arg, long nanosTimeout) throws InterruptedException {
+	if (Thread.interrupted())
+		throw new InterruptedException();
+	return tryAcquire(arg) ||
+		doAcquireNanos(arg, nanosTimeout);
+}
+```
+`tryAcquireNanos(int arg, long nanosTimeout)`方法超时获取最终是在`doAcquireNanos(int arg, long nanosTimeout)`中实现的，如下
+```java
+private boolean doAcquireNanos(int arg, long nanosTimeout) throws InterruptedException {
+	if (nanosTimeout <= 0L)
+		return false;
+	final long deadline = System.nanoTime() + nanosTimeout;
+	final Node node = addWaiter(Node.EXCLUSIVE); // 新增node节点
+	boolean failed = true;
+	try {
+		for (;;) {
+			final Node p = node.predecessor();
+			if (p == head && tryAcquire(arg)) {//获取同步状态成功
+				setHead(node);
+				p.next = null; // help GC
+				failed = false;
+				return true;
+			}
+			/**
+			 * 获取失败，做超时、中断判断
+			 */
+			 // 重新计算需要休眠的时间
+			nanosTimeout = deadline - System.nanoTime();
+			// 已经超时，返回false
+			if (nanosTimeout <= 0L)
+				return false;
+			// 如果没有超时，则等待nanosTimeout纳秒；该线程会直接从LockSupport.parkNanos中返回，LockSupport为JUC提供的一个阻塞和唤醒的工具类
+			if (shouldParkAfterFailedAcquire(p, node) &&
+				nanosTimeout > spinForTimeoutThreshold)
+				LockSupport.parkNanos(this, nanosTimeout);
+			// 线程是否已经中断了
+			if (Thread.interrupted())
+				throw new InterruptedException();
+		}
+	} finally {
+		if (failed)
+			cancelAcquire(node);
+	}
+}
+```
+![](image/超时获取独占锁.png)
+
+## 5、阻塞与唤醒
+
+在线程获取同步状态时如果获取失败，则加入CLH同步队列，通过通过自旋的方式不断获取同步状态，但是在自旋的过程中则需要判断当前线程是否需要阻塞，其主要方法在`acquireQueued()`：
+```java
+final boolean acquireQueued(final Node node, int arg) {
+	boolean failed = true;
+	try {
+		boolean interrupted = false;
+		for (;;) {
+			final Node p = node.predecessor();
+			if (p == head && tryAcquire(arg)) {
+				setHead(node);
+				p.next = null; // help GC
+				failed = false;
+				return interrupted;
+			}
+			if (shouldParkAfterFailedAcquire(p, node) &&
+				parkAndCheckInterrupt())
+				interrupted = true;
+		}
+	} finally {
+		if (failed)
+			cancelAcquire(node);
+	}
+}
+```
+通过这段代码我们可以看到，在获取同步状态失败后，线程并不是立马进行阻塞，需要检查该线程的状态，检查状态的方法为 `shouldParkAfterFailedAcquire(Node pred, Node node)` 方法，该方法主要靠前驱节点判断当前线程是否应该被阻塞，代码如下：
+```java
+private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
+	// 前驱节点
+	int ws = pred.waitStatus;
+	// 状态为signal，表示当前线程处于等待状态，直接放回true
+	if (ws == Node.SIGNAL)
+		return true;
+	// 前驱节点状态 > 0 ，则为Cancelled,表明该节点已经超时或者被中断了，需要从同步队列中取消
+	if (ws > 0) {
+		do {
+			node.prev = pred = pred.prev;
+		} while (pred.waitStatus > 0);
+		pred.next = node;
+	// 前驱节点状态为Condition、propagate
+	} else {
+		compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
+	}
+	return false;
+}
+```
+这段代码主要检查当前线程是否需要被阻塞，具体规则如下：
+- 如果当前线程的前驱节点状态为`SINNAL`，则表明当前线程需要被阻塞，调用`unpark()`方法唤醒，直接返回true，当前线程阻塞；
+- 如果当前线程的前驱节点状态为`CANCELLED（ws > 0）`，则表明该线程的前驱节点已经等待超时或者被中断了，则需要从`CLH`队列中将该前驱节点删除掉，直到回溯到前驱节点状态 <= 0 ，返回false；
+- 如果前驱节点非`SINNAL`，非`CANCELLED`，则通过CAS的方式将其前驱节点设置为`SINNAL`，返回false；
+
+如果`shouldParkAfterFailedAcquire(Node pred, Node node)` 方法返回true，则调用`parkAndCheckInterrupt()`方法阻塞当前线程：
+```java
+private final boolean parkAndCheckInterrupt() {
+	LockSupport.park(this);
+	return Thread.interrupted();
+}
+```
+parkAndCheckInterrupt() 方法主要是把当前线程挂起，从而阻塞住线程的调用栈，同时返回当前线程的中断状态。其内部则是调用LockSupport工具类的park()方法来阻塞该方法
+
+当线程释放同步状态后，则需要唤醒该线程的后继节点：
+```java
+public final boolean release(int arg) {
+	if (tryRelease(arg)) {
+		Node h = head;
+		if (h != null && h.waitStatus != 0)
+			//唤醒后继节点
+			unparkSuccessor(h);
+		return true;
+	}
+	return false;
+}
+```
+调用unparkSuccessor(Node node)唤醒后继节点：
+```java
+private void unparkSuccessor(Node node) {
+	//当前节点状态
+	int ws = node.waitStatus;
+	//当前状态 < 0 则设置为 0
+	if (ws < 0)
+		compareAndSetWaitStatus(node, ws, 0);
+
+	//当前节点的后继节点
+	Node s = node.next;
+	//后继节点为null或者其状态 > 0 (超时或者被中断了)
+	if (s == null || s.waitStatus > 0) {
+		s = null;
+		//从tail节点来找可用节点
+		for (Node t = tail; t != null && t != node; t = t.prev)
+			if (t.waitStatus <= 0)
+				s = t;
+	}
+	//唤醒后继节点
+	if (s != null)
+		LockSupport.unpark(s.thread);
+}
+```
+
 
 
 # 参考资料

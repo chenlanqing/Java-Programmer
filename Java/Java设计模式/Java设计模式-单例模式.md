@@ -482,10 +482,14 @@ public class CASSingleton {
     public static CASSingleton getInstance() {
         for (;;){
             CASSingleton instance = INSTANCE.get();
+            // 如果singleton不为空，就返回singleton
             if (instance != null) {
                 return instance;
             }
             instance = new CASSingleton();
+            // CAS操作，预期值是NULL，新值是singleton
+            // 如果成功，返回singleton
+            // 如果失败，进入第二次循环，singletonAtomicReference.get()就不会为空了
             if (INSTANCE.compareAndSet(null, instance)) {
                 return instance;
             }

@@ -1946,6 +1946,8 @@ public class SemaphoreDemo {
 
 是用来创建锁和其他同步类的基本线程阻塞原语。`park()`和`unpark()`的作用分别是阻塞线程和解除阻塞线程，而且`park()和unpark()`不会遇到`Thread.suspend 和 Thread.resume所可能引发的死锁`问题。因为`park()` 和 `unpark()`有许可的存在；调用 `park()` 的线程和另一个试图将其 `unpark()` 的线程之间的竞争将保持活性。
 
+每个使用LockSupport的线程都会与一个许可关联，如果该许可可用，并且可在进程中使用，则调用park()将会立即返回，否则可能阻塞。如果许可尚不可用，则可以调用 unpark 使其可用。但是注意许可不可重入，也就是说只能调用一次park()方法，否则会一直阻塞
+
 函数列表：
 ```java
 // 返回提供给最近一次尚未解除阻塞的 park 方法调用的 blocker 对象，如果该调用不受阻塞，则返回 null。
@@ -2427,28 +2429,32 @@ CopyOnWriteArrayList 则不存在这个问题
 
 cpu指令，在大多数处理器架构，包括 IA32，Space 中采用的都是 CAS 指令.
 
-- CAS 语义：<br>
+- CAS 语义：
+
 	CAS 有3个操作数，内存值V，旧的预期值A，要修改的新值B，当且仅当预期值A和内存值V相同时，将内存值修改为B并返回true，否则什么都不做并返回false;
 
-- CAS 是乐观锁技术：<br>
-	当多个线程尝试使用CAS同时更新同一个变量时，只有其中一个线程能更新变量的值，而其它线程都失败，失败的线程并不会被挂起，而是被告知这次竞争中失败，并可以再次尝试。CAS 有3个操作数:内存值V，旧的预期值A，要修改的新值B.当且仅当预期值A和内存值V相同时，将内存值V修改为B，否则什么都不做.
+- CAS 是乐观锁技术：
 
-CAS 操作是基于共享数据不会被修改的假设.
+	当多个线程尝试使用CAS同时更新同一个变量时，只有其中一个线程能更新变量的值，而其它线程都失败，失败的线程并不会被挂起，而是被告知这次竞争中失败，并可以再次尝试。
+	
+	CAS 有3个操作数：`内存值V、旧的预期值A、要修改的新值B`。当且仅当预期值A和内存值V相同时，将内存值V修改为B，否则什么都不做.
 
-### 2.2、Java中CAS 的实现:
+CAS 操作是基于共享数据不会被修改的假设。
+
+### 2.2、Java中CAS 的实现
 
 伪代码：
-```
+```java
 do{   
 	备份旧数据；  
 	基于旧数据构造新数据；  
-}while(!CAS( 内存地址，备份的旧数据，新数据 ))  
+}while(!CAS(内存地址,备份的旧数据,新数据 ))  
 ```
-JDK1.5 之前，需要编写明确的代码来执行CAS操作.在JDK1.5 之后，引入了底层的支持。并且JVM把它们编译为底层硬件提供的最有效的方法，在运行CAS的平台上，运行时把它们编译为相应的机器指令，如果处理器/CPU 不支持CAS指令，那么JVM将使用自旋锁;
+JDK1.5 之前，需要编写明确的代码来执行CAS操作。在JDK1.5 之后，引入了底层的支持。并且JVM把它们编译为底层硬件提供的最有效的方法，在运行CAS的平台上，运行时把它们编译为相应的机器指令，如果处理器/CPU 不支持CAS指令，那么JVM将使用自旋锁；
 
-#### 2.2.1、Unsafe是CAS实现的核心类
+#### 2.2.1、CAS实现的核心类：Unsafe
 
-- Java 无法直接访问底层操作系统，而是通过本地 native 方法来访问.不过 JVM 还是开了个后门，JDK 中有一个类 Unsafe，它提供了硬件级别的原子操作对于 Unsafe 类的使用都是受限制的，只有授信的代码才能获得该类的实例
+- Java 无法直接访问底层操作系统，而是通过本地 native 方法来访问。不过 JVM 还是开了个后门，JDK 中有一个类 Unsafe，它提供了硬件级别的原子操作对于 Unsafe 类的使用都是受限制的，只有授信的代码才能获得该类的实例
 - 对 CAS 的实现:
 ```java	
 /*		
@@ -2462,7 +2468,7 @@ public final native boolean compareAndSwapObject(Object paramObject1， long par
 public final native boolean compareAndSwapInt(Object paramObject， long paramLong， int paramInt1， int paramInt2);
 public final native boolean compareAndSwapLong(Object paramObject， long paramLong1， long paramLong2， long paramLong3);
 ```
-- 可以查看原子类的实现，比如:AtomicInteger#addAndGet 方法的实现:
+- 可以查看原子类的实现，比如：`AtomicInteger#addAndGet` 方法的实现：
 	```java
 	// JDK7:在addAndGet作一部分操作，然后调用compareAndSet，由该方法调用 Unsafe#getAndAddInt
 	public final int addAndGet(int delta) {
@@ -2482,13 +2488,11 @@ public final native boolean compareAndSwapLong(Object paramObject， long paramL
 	}
 	```
 
-#### 2.2.2、Unsafe 方法实现:使用 C++ 来实现的
+#### 2.2.2、Unsafe 方法实现：使用 C++ 来实现的
 
-注意：对应于windows操作系统，X86 处理器<br>
-sun.misc.Unsafe 类的compareAndSwapInt()方法的源代码<br>
-public final native boolean compareAndSwapInt(Object o， long offset， int expected， int x);<br>
-该方法是本地方法，这个本地方法在openjdk中依次调用的c++代码主要有三个文件：<br>
-openjdk/openjdk/hotspot/src/share/vm/prims/unsafe.cpp、openjdk/openjdk/hotspot/src/share/vm/runtime/atomic.cpp、openjdk/openjdk/hotspot/src/os_cpu/windows_x86/vm/atomic_windows_x86.inline.hpp<br>
+注意：对应于windows操作系统，X86 处理器，`sun.misc.Unsafe` 类的`compareAndSwapInt()`方法的源代码：
+`public final native boolean compareAndSwapInt(Object o， long offset， int expected， int x);`；该方法是本地方法，这个本地方法在openjdk中依次调用的c++代码主要有三个文件：`openjdk/openjdk/hotspot/src/share/vm/prims/unsafe.cpp`、`openjdk/openjdk/hotspot/src/share/vm/runtime/atomic.cpp`、`openjdk/openjdk/hotspot/src/os_cpu/windows_x86/vm/atomic_windows_x86.inline.hpp`
+
 对应部分源码片段：
 
 ```c++
@@ -2505,15 +2509,15 @@ inline jint Atomic::cmpxchg(jint exchange_value， volatile jint* dest， jint c
 }
 
 ```
-- 如上面源代码所示，程序会根据当前处理器的类型来决定是否为cmpxchg指令添加lock前缀。如果程序是在多处理器上运行，就为cmpxchg指令加上lock前缀(lock cmpxchg)
-- lock前缀说明:
-	- Ⅰ.确保对内存的读-改-写操作原子执行
-	- Ⅱ.禁止该指令与之前和之后的读和写指令重排序
-	- Ⅲ.把写缓冲区中的所有数据刷新到内存中
+- 如上面源代码所示，程序会根据当前处理器的类型来决定是否为`cmpxchg`指令添加`lock`前缀。如果程序是在多处理器上运行，就为`cmpxchg`指令加上`lock`前缀(`lock cmpxchg`)
+- lock前缀说明：
+	- Ⅰ、确保对内存的`读-改-写`操作原子执行
+	- Ⅱ、禁止该指令与之前和之后的读和写指令重排序
+	- Ⅲ、把写缓冲区中的所有数据刷新到内存中
 
 ### 2.3、CAS 使用场景
 
-- 原子类的实现;
+- 原子类的实现
 - AbstractQueuedSynchronizer(AQS)
 
 ### 2.4、CAS 缺点
@@ -2536,8 +2540,8 @@ inline jint Atomic::cmpxchg(jint exchange_value， volatile jint* dest， jint c
 	该类检查了当前引用与当前标志是否与预期相同，如果全部相等，才会以原子方式将该引用和该标志的值设为新的更新值
 
 #### 2.4.2、CPU 开销较大
-	
-在并发量比较高的情况下，如果许多线程反复尝试更新某一个变量，却又一直更新不成功，循环往复，会给CPU带来很大的压力；主要是自旋CAS操作如果长时间不成功，会给CPU带来非常大的执行开销.
+
+在并发量比较高的情况下，如果许多线程反复尝试更新某一个变量，却又一直更新不成功，循环往复，会给CPU带来很大的压力；主要是自旋CAS操作如果长时间不成功，会给CPU带来非常大的执行开销。
 
 #### 2.4.3、不能保证代码块的原子性
 

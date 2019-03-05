@@ -315,14 +315,71 @@ public enum SendStatus {
 
 ## 3、核心原理
 
+### 3.1、Broker消息存储结构
+
+
+### 3.2、消息的同步刷盘与异步刷盘
+
+
+### 3.3、消息的同步复制与异步复制
+
+
+### 3.4、高可用机制
+
+
+### 3.5、NameServer协调服务
+
+# 四、RocketMQ应用实践
+
+## 1、双主双从部署
+
+### 1.1、配置
 
 
 
 
 
+# 五、RocketMQ源码分析
 
+## 1、调试环境搭建
 
+- 下载RocketMQ源码：https://github.com/apache/rocketmq
+- 将源码导入到IDEA中（使用4.3.0分支）；
+- 执行命令：`mvn -Prelease-all -DskipTests clean install -U`，编译查看是否导入成功，并可在目录：`distribution/target/apache-rocketmq`获取到可部署的tar包；
+- 启动`NamesrvStartup`
+    - 配置`ROCKETMQ_HOME`，在当前机器上新建rokcetmq运行目录
 
+        ![](image/NamesrvStartup-config.png)
 
+    - 在上述rocket运行目录中新建如下目录：
+        ```
+        config
+        logs
+        store
+        ```
+    - 将rocketmq源码下的distribution部署目录下broker.conf、logback_broker.xml文件复制到上述新建的conf目录下，修改logback_broker.xml文件中日志文件的目录；
+    - 将如下配置添加到broker.conf中
+        ```
+        brokerClusterName=rocketmq-cluster
+        brokerName=broker-a
+        brokerId=0
+        namesrvAddr=127.0.0.1:9876
+        deleteWhen=04
+        fileReservedTime=48
+        brokerRole=ASYNC_MASTER
+        flushDiskType=ASYNC_FLUSH
 
+        #存储路径，需要在上述新建的目录中创建如下目录
+        storePathRootDir=/Users/bluefish/Documents/sourcecode/conf/rocketmq/store
+        storePathCommitLog=/Users/bluefish/Documents/sourcecode/conf/rocketmq/store/commitlog
+        storePathConsumeQueue=/Users/bluefish/Documents/sourcecode/conf/rocketmq/store/consumequeue
+        storePathIndex=/Users/bluefish/Documents/sourcecode/conf/rocketmq/store/index
+        storeCheckpoint=/Users/bluefish/Documents/sourcecode/conf/rocketmq/store/checkpoint
+        abortFile=/Users/bluefish/Documents/sourcecode/conf/rocketmq/store/abort
+        ```
+- 启动`BrokerStartup`，同样需要配置`ROCKETMQ_HOME`，同时配置下nameaddr的地址
 
+    ![](image/BrokerStartup-config.png)
+
+- 将上述两个文件启动之后，找到文件：`org.apache.rocketmq.example.quickstart.Producer`，修改代码为：`producer.setNamesrvAddr("127.0.0.1:9876");`，发送消息，测试消息发送是否成功；
+- 消费消息：`org.apache.rocketmq.example.quickstart.Consumer`，修改代码：`consumer.setNamesrvAddr("127.0.0.1:9876");` 执行，看是否消费成功；
