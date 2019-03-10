@@ -14,7 +14,9 @@ RocketMQ是一款分布式、队列模型的消息中间件；最新版4.3.x版�
 - 强调集群无单点；
 - 消息失败重试机制、消息可查询
 
-## 2、概念模型
+## 2、概念模型与设计理念和目标
+
+### 2.1、概念模型
 
 - Producer：消息生产者，负责生产消息，一般由业务系统负责生产消息
 - Consumer：消息消费者，负责消费消息，一般是后台系统负责异步消费；
@@ -23,6 +25,13 @@ RocketMQ是一款分布式、队列模型的消息中间件；最新版4.3.x版�
 - Producer Group：生产者集合，一般用于发送一类消息；主要是在事务消息回查；
 - Consumer Group：消费者集合，一般用于接受一类消息进行消费；
 - Broker：MQ消息服务，用于消息存储和生产消费转发；
+
+### 2.2、设计理念
+
+RocketMQ设计是基于主题的发布与订阅模式，核心功能包括：消息发送、消息存储、消息消费，整体设计体现：
+- NameServer设计及其简单，不同于zookeeper；Topic路由信息无需在集群之间保持强一致，追求最终一致性。RocketMQ的NameServer集群之间不通信，极大的降低了NameServer的实现复杂程度，对网络的要求也降低了，但性能有较大提升；
+- 高效的IO存储机制；
+- 容忍存在设计缺陷
 
 ## 3、搭建RocketMQ环境
 
@@ -383,3 +392,8 @@ public enum SendStatus {
 
 - 将上述两个文件启动之后，找到文件：`org.apache.rocketmq.example.quickstart.Producer`，修改代码为：`producer.setNamesrvAddr("127.0.0.1:9876");`，发送消息，测试消息发送是否成功；
 - 消费消息：`org.apache.rocketmq.example.quickstart.Consumer`，修改代码：`consumer.setNamesrvAddr("127.0.0.1:9876");` 执行，看是否消费成功；
+
+
+
+
+

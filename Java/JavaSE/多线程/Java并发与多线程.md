@@ -2327,6 +2327,8 @@ CopyOnWriteArrayList 则不存在这个问题
 * 支持阻塞的插入方法：队列满时，队列会阻塞插入元素的线程，直到队列不满时；
 * 支持阻塞的移除方法：队列空时，获取元素的线程会等待队列变为非空；
 
+BlockingQueue 是一个接口，继承自 Queue
+
 ### 7.2、应用场景
 
 - 常用于生产者与消费者：生产者是向队列中添加元素的线程，消费者是从队列中取元素的线程。简而言之:阻塞队列是生产者用来存放元素、消费者获取元素的容器；
@@ -2337,7 +2339,9 @@ CopyOnWriteArrayList 则不存在这个问题
 
 	任何有效的生产者-消费者问题解决方案都是通过控制生产者put()方法（生产资源）和消费者take()方法（消费资源）的调用来实现的，一旦你实现了对方法的阻塞控制，那么你将解决该问题.Java通过BlockingQueue提供了开箱即用的支持来控制这些方法的调用(一个线程创建资源，另一个消费资源)。BlockingQueue是一种数据结构，支持一个线程往里存资源，另一个线程从里取资源；
 
-- 实现
+- BlockingQueue 不接受 null 值的插入，相应的方法在碰到 null 的插入时会抛出 NullPointerException 异常;
+- BlockingQueue 的实现都是线程安全的，但是批量的集合操作如 addAll, containsAll, retainAll 和 removeAll 不一定是原子操作；
+- BlockingQueue 不支持 close 或 shutdown 等关闭操作
 
 ### 7.3、几个方法
 
@@ -2357,24 +2361,58 @@ CopyOnWriteArrayList 则不存在这个问题
 ### 7.4、Java的阻塞队列
 
 #### 7.4.1、ArrayBlockingQueue
-典型的有界队列，一个由数组结构组成的有界阻塞队列，内部是final 数组保存数据，数组的大小就是队列的边界
 
-* http://www.cnblogs.com/skywang12345/p/3498652.html
+- [ArrayBlockingQueue](http://www.cnblogs.com/skywang12345/p/3498652.html)是典型的有界队列，一个由数组结构组成的有界阻塞队列，内部是`final`数组保存数据，数组的大小就是队列的边界
 
-此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列，即如果队列满了，那么被阻塞在外面的线程对队列访问的顺序是不能保证线程公平（即先阻塞，先插入）的
+- 此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列，即如果队列满了，那么被阻塞在外面的线程对队列访问的顺序是不能保证线程公平（即先阻塞，先插入）的，其并发控制采用可重入锁来控制，不管是插入操作还是读取操作，都需要获取到锁才能进行操作；
+
+- 其内部是采用一个 ReentrantLock 和相应的两个 Condition 来实现：
+	```java
+	// 用于存放元素的数组
+	final Object[] items;
+	// 下一次读取操作的位置
+	int takeIndex;
+	// 下一次写入操作的位置
+	int putIndex;
+	// 队列中的元素数量
+	int count;
+	// 以下几个就是控制并发用的同步器
+	final ReentrantLock lock;
+	private final Condition notEmpty;
+	private final Condition notFull;
+	```
+- ArrayBlockingQueue 实现并发同步的原理就是，读操作和写操作都需要获取到 AQS 独占锁才能进行操作。如果队列为空，这个时候读操作的线程进入到读线程队列排队，等待写线程写入新的元素，然后唤醒读线程队列的第一个等待线程。如果队列已满，这个时候写操作的线程进入到写线程队列排队，等待读线程将队列元素移除腾出空间，然后唤醒写线程队列的第一个等待线程
 
 #### 7.4.2、LinkedBlockingQueue
 
-其行为和内部实现是基于有界的逻辑实现的，如果在创建的时候没有指定容量，其容量自动设置为Integer.MAX_VALUE，成为了无界队列
-
-* http://www.cnblogs.com/skywang12345/p/3503458.html
+- [LinkedBlockingQueue](http://www.cnblogs.com/skywang12345/p/3503458.html)其行为和内部实现是基于有界的逻辑实现的，如果在创建的时候没有指定容量，其容量自动设置为`Integer.MAX_VALUE`，成为了无界队列
+	```java
+	public LinkedBlockingQueue() {
+		this(Integer.MAX_VALUE);
+	}
+	public LinkedBlockingQueue(int capacity) {
+		if (capacity <= 0) throw new IllegalArgumentException();
+		this.capacity = capacity;
+		last = head = new Node<E>(null);
+	}
+	```
 
 - 此队列按照先出先进的原则对元素进行排序
-- 其不同于ArrayBlockingQueue的是，其对于头尾操作时基于不同的锁的
+- 其不同于ArrayBlockingQueue的是，其对于头尾操作时基于不同的锁的；
+- LinkedBlockingQueue在实现“多线程对竞争资源的互斥访问”时，对于“插入”和“取出(删除)”操作分别使用了不同的锁。对于插入操作，通过“插入锁putLock”进行同步；对于取出操作，通过“取出锁takeLock”进行同步。此外，插入锁putLock和“非满条件notFull”相关联，取出锁takeLock和“非空条件notEmpty”相关联。通过notFull和notEmpty更细腻的控制锁
+	```java
+    private final ReentrantLock takeLock = new ReentrantLock(); // 取出锁
+    private final Condition notEmpty = takeLock.newCondition(); // 非空条件
+    private final ReentrantLock putLock = new ReentrantLock(); // 插入锁
+    private final Condition notFull = putLock.newCondition(); // 未满条件
+	```
 
 #### 7.4.3、PriorityBlockingQueue
 
-支持优先级的无界阻塞队列
+- 带排序的 BlockingQueue 实现，其并发控制采用的是 ReentrantLock，队列为无界队列；PriorityBlockingQueue 只能指定初始的队列大小，后面插入元素的时候，如果空间不够的话会自动扩容；
+- 简单地说，它就是 PriorityQueue 的线程安全版本。不可以插入 null 值，同时，插入队列的对象必须是可比较大小的（comparable），否则报 ClassCastException 异常。它的插入操作 put 方法不会 block，因为它是无界队列（take 方法在队列为空的时候会阻塞）；
+- 此类实现了 Collection 和 Iterator 接口中的所有接口方法，对其对象进行迭代并遍历时，不能保证有序性。如果你想要实现有序遍历，建议采用 Arrays.sort(queue.toArray()) 进行处理
+- PriorityBlockingQueue 使用了基于数组的二叉堆来存放元素，所有的 public 方法采用同一个 lock 进行并发控制
 
 #### 7.4.4、DelayQueue
 
@@ -2384,7 +2422,10 @@ CopyOnWriteArrayList 则不存在这个问题
 
 - 不存储元素的阻塞队列，该队列的容量为0，每一个put必须等待一个take操作，否则不能继续添加元素。并且他支持公平访问队列
 - 在JDK6之后，用CAS替换了原本基于锁的逻辑，同步开销比较小；
-- 是Executors.newCachedThreadPool()的默认队列
+- 是Executors.newCachedThreadPool()的默认队列；
+- 不能在 SynchronousQueue 中使用 peek 方法（在这里这个方法直接返回 null），peek 方法的语义是只读取不移除；
+- SynchronousQueue 也不能被迭代，因为根本就没有元素可以拿来迭代的；
+- Transferer 有两个内部实现类，是因为构造 SynchronousQueue 的时候，可以指定公平策略。公平模式意味着，所有的读写线程都遵守先来后到，FIFO 嘛，对应 TransferQueue。而非公平模式则对应 TransferStack；
 
 #### 7.4.6、LinkedTransferQueue
 
@@ -2882,3 +2923,4 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 * [类加载过程中死锁](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
 * [CPU Cache 与缓存行](https://mp.weixin.qq.com/s/4oU6YqxHso2ir0NXtBuaog)
 * [Java伪共享问题](https://www.cnblogs.com/cyfonly/p/5800758.html)
+* [Java-BlockingQueue](https://javadoop.com/post/java-concurrent-queue)

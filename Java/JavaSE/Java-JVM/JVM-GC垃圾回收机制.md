@@ -217,7 +217,7 @@ public class Main {
 
 用于存放静态文件，如Java类、方法等.持久代对垃圾回收没有显著影响，但是有些应用可能动态生成或者调用一些class
 
-- ***JDK8之后完全移除了持久代，取而代之的是[元空间](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java-JVM/JVM-Java%E8%99%9A%E6%8B%9F%E6%9C%BA.md#38%E5%85%83%E7%A9%BA%E9%97%B4)***
+- ***JDK8之后完全移除了持久代，取而代之的是[元空间](JVM-Java虚拟机.md#38元空间)***
 	
 
 ## 5、Hotspot虚拟机算法实现

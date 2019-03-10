@@ -2,92 +2,52 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一、IO通信](#%E4%B8%80io%E9%80%9A%E4%BF%A1)
-  - [1、IO](#1io)
-    - [1.1、LinuxIO模型](#11linuxio%E6%A8%A1%E5%9E%8B)
-    - [1.2、IO多路复用技术](#12io%E5%A4%9A%E8%B7%AF%E5%A4%8D%E7%94%A8%E6%8A%80%E6%9C%AF)
-  - [2、Java中IO](#2java%E4%B8%ADio)
-- [二、Netty](#%E4%BA%8Cnetty)
+- [一、Netty](#%E4%B8%80netty)
   - [1、不建议使用原生NIO类库进行开发的原因](#1%E4%B8%8D%E5%BB%BA%E8%AE%AE%E4%BD%BF%E7%94%A8%E5%8E%9F%E7%94%9Fnio%E7%B1%BB%E5%BA%93%E8%BF%9B%E8%A1%8C%E5%BC%80%E5%8F%91%E7%9A%84%E5%8E%9F%E5%9B%A0)
   - [2、Netty 的特点](#2netty-%E7%9A%84%E7%89%B9%E7%82%B9)
   - [3、粘包和拆包](#3%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85)
-    - [3.1、TCP粘包/拆包问题](#31tcp%E7%B2%98%E5%8C%85%E6%8B%86%E5%8C%85%E9%97%AE%E9%A2%98)
-    - [3.2、TCP粘包拆包问题说明](#32tcp%E7%B2%98%E5%8C%85%E6%8B%86%E5%8C%85%E9%97%AE%E9%A2%98%E8%AF%B4%E6%98%8E)
-    - [3.3、TCP 粘包和拆包发生的原因](#33tcp-%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85%E5%8F%91%E7%94%9F%E7%9A%84%E5%8E%9F%E5%9B%A0)
-    - [3.4、粘包解决策略](#34%E7%B2%98%E5%8C%85%E8%A7%A3%E5%86%B3%E7%AD%96%E7%95%A5)
-    - [3.5、Netty 解决粘包和拆包](#35netty-%E8%A7%A3%E5%86%B3%E7%B2%98%E5%8C%85%E5%92%8C%E6%8B%86%E5%8C%85)
-- [三、Netty服务端启动过程](#%E4%B8%89netty%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
+  - [4、编解码技术](#4%E7%BC%96%E8%A7%A3%E7%A0%81%E6%8A%80%E6%9C%AF)
+- [二、Netty服务端启动过程](#%E4%BA%8Cnetty%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
   - [1、创建服务端channel](#1%E5%88%9B%E5%BB%BA%E6%9C%8D%E5%8A%A1%E7%AB%AFchannel)
   - [2、初始化服务端Channel](#2%E5%88%9D%E5%A7%8B%E5%8C%96%E6%9C%8D%E5%8A%A1%E7%AB%AFchannel)
   - [3、注册Selector](#3%E6%B3%A8%E5%86%8Cselector)
   - [4、端口绑定](#4%E7%AB%AF%E5%8F%A3%E7%BB%91%E5%AE%9A)
-- [四、NioEventLoop](#%E5%9B%9Bnioeventloop)
+- [三、NioEventLoop](#%E4%B8%89nioeventloop)
   - [1、NioEventLoop 创建](#1nioeventloop-%E5%88%9B%E5%BB%BA)
   - [2、NioEventLoop 启动](#2nioeventloop-%E5%90%AF%E5%8A%A8)
+- [四、Pipeline](#%E5%9B%9Bpipeline)
+  - [1、概述](#1%E6%A6%82%E8%BF%B0)
+  - [2、初始化](#2%E5%88%9D%E5%A7%8B%E5%8C%96)
+  - [3、添加ChannelHanndler](#3%E6%B7%BB%E5%8A%A0channelhanndler)
+  - [4、删除ChannelHandler](#4%E5%88%A0%E9%99%A4channelhandler)
+  - [5、inBound事件的传播](#5inbound%E4%BA%8B%E4%BB%B6%E7%9A%84%E4%BC%A0%E6%92%AD)
+  - [6、outBound事件的传播](#6outbound%E4%BA%8B%E4%BB%B6%E7%9A%84%E4%BC%A0%E6%92%AD)
+  - [7、异常的传播](#7%E5%BC%82%E5%B8%B8%E7%9A%84%E4%BC%A0%E6%92%AD)
+- [五、ByteBuf](#%E4%BA%94bytebuf)
+  - [1、ByteBuf的结构](#1bytebuf%E7%9A%84%E7%BB%93%E6%9E%84)
+  - [2、ByteBuf分类](#2bytebuf%E5%88%86%E7%B1%BB)
+  - [3、内存分配管理器：ByteBufAllocator](#3%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E7%AE%A1%E7%90%86%E5%99%A8bytebufallocator)
+- [Netty面试题](#netty%E9%9D%A2%E8%AF%95%E9%A2%98)
+  - [1、服务端的Socket在哪里初始化？](#1%E6%9C%8D%E5%8A%A1%E7%AB%AF%E7%9A%84socket%E5%9C%A8%E5%93%AA%E9%87%8C%E5%88%9D%E5%A7%8B%E5%8C%96)
+  - [2、在哪里accept连接？](#2%E5%9C%A8%E5%93%AA%E9%87%8Caccept%E8%BF%9E%E6%8E%A5)
+  - [3、默认情况下，Netty服务端起多少线程？何时启动？](#3%E9%BB%98%E8%AE%A4%E6%83%85%E5%86%B5%E4%B8%8Bnetty%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%B5%B7%E5%A4%9A%E5%B0%91%E7%BA%BF%E7%A8%8B%E4%BD%95%E6%97%B6%E5%90%AF%E5%8A%A8)
+  - [4、Netty如何解决jdk空轮询bug的？-空轮询次数：512](#4netty%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3jdk%E7%A9%BA%E8%BD%AE%E8%AF%A2bug%E7%9A%84-%E7%A9%BA%E8%BD%AE%E8%AF%A2%E6%AC%A1%E6%95%B0512)
+  - [5、Netty如何保证异步串行无锁化？](#5netty%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E5%BC%82%E6%AD%A5%E4%B8%B2%E8%A1%8C%E6%97%A0%E9%94%81%E5%8C%96)
+  - [6、Netty是在哪里检测有新连接接入的？](#6netty%E6%98%AF%E5%9C%A8%E5%93%AA%E9%87%8C%E6%A3%80%E6%B5%8B%E6%9C%89%E6%96%B0%E8%BF%9E%E6%8E%A5%E6%8E%A5%E5%85%A5%E7%9A%84)
+  - [7、新连接是怎样注册到NioEventLoop线程的](#7%E6%96%B0%E8%BF%9E%E6%8E%A5%E6%98%AF%E6%80%8E%E6%A0%B7%E6%B3%A8%E5%86%8C%E5%88%B0nioeventloop%E7%BA%BF%E7%A8%8B%E7%9A%84)
+  - [8、Netty是如何判断ChannelHandler类型的？](#8netty%E6%98%AF%E5%A6%82%E4%BD%95%E5%88%A4%E6%96%ADchannelhandler%E7%B1%BB%E5%9E%8B%E7%9A%84)
+  - [9、对于ChannelHandler的添加应该遵循什么样的顺序？](#9%E5%AF%B9%E4%BA%8Echannelhandler%E7%9A%84%E6%B7%BB%E5%8A%A0%E5%BA%94%E8%AF%A5%E9%81%B5%E5%BE%AA%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84%E9%A1%BA%E5%BA%8F)
+  - [10、用户手动触发事件传播，不同的触发方式有什么样的区别？](#10%E7%94%A8%E6%88%B7%E6%89%8B%E5%8A%A8%E8%A7%A6%E5%8F%91%E4%BA%8B%E4%BB%B6%E4%BC%A0%E6%92%AD%E4%B8%8D%E5%90%8C%E7%9A%84%E8%A7%A6%E5%8F%91%E6%96%B9%E5%BC%8F%E6%9C%89%E4%BB%80%E4%B9%88%E6%A0%B7%E7%9A%84%E5%8C%BA%E5%88%AB)
+  - [11、Netty内存类别](#11netty%E5%86%85%E5%AD%98%E7%B1%BB%E5%88%AB)
+  - [12、如何减少多线程内存分配之间的竞争](#12%E5%A6%82%E4%BD%95%E5%87%8F%E5%B0%91%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D%E4%B9%8B%E9%97%B4%E7%9A%84%E7%AB%9E%E4%BA%89)
+  - [13、不同大小的内存是如何进行分配的](#13%E4%B8%8D%E5%90%8C%E5%A4%A7%E5%B0%8F%E7%9A%84%E5%86%85%E5%AD%98%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E5%88%86%E9%85%8D%E7%9A%84)
+  - [14、Netty实现零拷贝](#14netty%E5%AE%9E%E7%8E%B0%E9%9B%B6%E6%8B%B7%E8%B4%9D)
+  - [15、Netty的高性能体现](#15netty%E7%9A%84%E9%AB%98%E6%80%A7%E8%83%BD%E4%BD%93%E7%8E%B0)
+  - [16、](#16)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
-# 一、IO通信
-## 1、IO
-### 1.1、LinuxIO模型
-
-- 阻塞IO模型：最常用的IO模型缺省情况下，所有文件操作都是阻塞的；
-- 非阻塞IO模型；
-- IO复用模型：Linux提供select/poll
-- 信号驱动IO模型
-- 异步IO
-
-### 1.2、IO多路复用技术
-
-- IO多路复用技术通过把多个IO阻塞复用到同一个select的阻塞上，从而使得系统在单线程的清下可以同时处理多个客户端请求；
-- 与传统的多线程/多进程模型比，IO多路复用的最大优势是系统开销小，系统不需要创建新的额外进程或者线程，也不需要维护这些进程和线程的运行，降低了系统维护的工作量。
-- IO多路复用技术应用场景：
-	- 服务器需要同时处理多个处于监听状态或者多个连接状态的套接字；
-	- 服务器需要同时处理多种网络协议的套接字；
-
-
-**对于操作系统而言，底层是支持异步IO通信。**
-
-## 2、Java中IO
-
-- **2.1、BIO：**
-
-	- 采用BIO通信模型的服务端，由一个独立的 Acceptor现场负责监听客户端连接，它接收到客户端连接请求之后为每个客户端创建一个新的线程进行链路处理，处理完成后，通过输出流返回给应答给客户端，线程销毁.这是典型的一请求一应答通信模型。
-
-	- 该模型最大的问题是缺乏弹性伸缩能力，当客户端并发访问量增加后，服务端的线程个数和客户端并发访问数呈1：1的正比关系.由于线程是Java虚拟机的非常宝贵的系统资源，当线程数膨胀后，系统的性能急剧下降，系统可能会发生线程堆栈溢出，创建线程失败等。
-
-- **2.2、伪异步IO：采用线程池和任务队列可以实现伪异步IO**
-
-	- 当有新的客户端接入时，将客户端的Socket封装成一个Task（其实现Runnable接口）传递给后端的线程池中处理，JDK的线程池维护一个消息队列和N个活跃线程，对消息队列中的任务进行处理。
-
-	- 由于线程池和消息队列都是有界的，因此，无论客户端并发连接数多大，它都不会导致线程个数过于膨胀或者内存溢出；
-
-	- 但是由于其底层通信依然采用同步阻塞模型，无法从根本上解决问题
-
-- **2.3、NIO-非阻塞IO**
-	
-	- jdk1.4引入NIO,弥补了原来阻塞IO的不足，具体参考[Java-NIO](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/IO%E4%B8%8ENIO.md#%E4%B8%89java-nio)
-
-	- NIO相对其他IO来说，优点：
-		- 客户端发起的连接操作是异步的，可以通过在多路复用器注册OP_CONNECT等待后续结果，不需要像之前的客户端那样被同步阻塞；
-		- SocketChannel 的读写操作都是异步的，如果没有可读写的数据它不会同步等待，直接返回，这样I/O通信线程就可以处理其他链路；
-		- 线程模型的优化；
-
-- **2.4、AIO-异步IO**
-
-- **2.5、不同IO对比**
-
-	|  对比参数|同步IO（BIO）|伪异步IO|NIO|AIO|
-	|-------|----|----|--------|--------|
-	|客户端个数|1：1|M:N（其中M可以大于N）|M：1（1个IO线程处理多个客户端连接）|M：0（不需要启动额外的IO线程，被动回调）|
-	|IO类型（阻塞）|阻塞IO|阻塞IO|非阻塞IO|非阻塞IO|
-	|IO类型（同步）|同步IO|同步IO|同步IO（IO多路复用）|异步IO|
-	|API难度|简单|简单|非常复杂|复杂|
-	|调试难度|简单|简单|复杂|复杂|
-	|可靠性|非常差|差|高|高|
-	|吞吐量|低|中|高|高|
-
-# 二、Netty
+# 一、Netty
 
 ![](image/Netty通信流程.png)
 
@@ -174,7 +134,7 @@ LineBasedFrameDecoder + StringDecoder组合就是按行切换的文本解码器�
 - Facebook Thrift
 - JBoss Marshalling
 
-# 三、Netty服务端启动过程
+# 二、Netty服务端启动过程
 
 两个问题：
 - 服务端的Socket在哪里初始化？
@@ -285,7 +245,7 @@ Netty服务端启动过程：
 	- pipeline.fireChannleActive() 传播事件
 		- HeadContext.readIfIsAutoRead()
 
-# 四、NioEventLoop
+# 三、NioEventLoop
 
 三个问题：
 - 默认情况下，Netty服务端起多少线程？何时启动？
@@ -315,7 +275,8 @@ Netty服务端启动过程：
 ## 2、NioEventLoop 启动
 
 
-# 五、Pipeline
+# 四、Pipeline
+
 ## 1、概述
 
 ## 2、初始化
@@ -351,7 +312,7 @@ Netty服务端启动过程：
 
 ### 7.1、异常的触发链
 
-# 六、ByteBuf
+# 五、ByteBuf
 
 ## 1、ByteBuf的结构
 
@@ -480,6 +441,6 @@ Netty 中使用 FileRegion 实现文件传输的零拷贝, 不过在底层 FileR
 通过 RandomAccessFile 打开一个文件, 然后 Netty 使用了 DefaultFileRegion 来封装一个 FileChannel：`new DefaultFileRegion(raf.getChannel(), 0, length)`；
 有了 FileRegion 后, 我们就可以直接通过它将文件的内容直接写入 Channel 中, 而不需要像传统的做法: 拷贝文件内容到临时 buffer, 然后再将 buffer 写入 Channel
 
-## 15、
+## 15、Netty的高性能体现
 
 ## 16、

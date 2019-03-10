@@ -51,7 +51,9 @@
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一、Redis 基本知识
+
 ## 1、Redis
+
 是一个开源，先进的key-value存储，并用于构建高性能，可扩展的Web应用程序的完美解决方案数据结构服务器，支持不同类型的值，高级键值（key-value）缓存 （cache）和存储 （store）系统为了高性能采用内存（in-memory）数据集（dataset）
 
 **1.1、特点：**
@@ -1026,6 +1028,16 @@ Redission通过Netty支持非阻塞I/O
 - 内存管理机制：
 	* Memcached 将内存分割成特定长度的块来存储数据，以完全解决内存碎片的问题，但是这种方式会使得内存的利用率不高；例如块的大小为 128 bytes，只存储 100 bytes 的数据，那么剩下的 28 bytes 就浪费掉了
 	* 在 Redis 中，并不是所有数据都一直存储在内存中，可以将一些很久没用的 value 交换到磁盘.而 Memcached 的数据则会一直在内存中
+
+## 3、动态字符串sds的优缺点
+
+
+
+## 4、redis的单线程特性有什么优缺点
+
+
+## 5、Redis的并发竞争问题如何解决
+
 
 
 # 参考资料

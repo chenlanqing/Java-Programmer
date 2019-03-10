@@ -372,7 +372,7 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 
 **1.3、zookeeper 实现master选举：**
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%9E%B6%E6%9E%84/zookeeper/Zookeeper-Master%E9%80%89%E4%B8%BE.jpg)
+![](zookeeper/Zookeeper-Master选举.jpg)
 
 - 其架构图中显示左侧树状结果为zookeeper集群，右侧为程序服务器，所有服务器在启动的时候，都会订阅	zookeeper 中master节点的删除事件，以便在主服务器宕机时进行抢主操作.所有服务器同时会在server节点下注册一个临时节点，以便于应用程序读取当前可用服务器列表;
 
