@@ -186,7 +186,8 @@ public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable
 
 
 # 三、设计理念
-## 1.HashMap 的数据结构
+
+## 1、HashMap 的数据结构
 
 数据结构中有数组和链表来实现对数据的存储，但这两者基本上是两个极端；
 - 数组：数组必须事先定义固定的长度（元素个数），不能适应数据动态地增减的情况。当数据增加时，可能超出原先定义的元素个数；
@@ -195,7 +196,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable
 	- 数组利用下标定位，时间复杂度为O(1)
 	- 数组插入或删除元素的时间复杂度O(n)
 	- 数组的特点是：寻址容易，插入和删除困难；
-- 链表:链表存储区间离散，占用内存比较宽松
+- 链表：链表存储区间离散，占用内存比较宽松
 	- 链表是动态分配内存，并不连续。
 	- 链表定位元素时间复杂度O(n)
 	- 链表插入或删除元素的时间复杂度O(1)
@@ -221,6 +222,7 @@ HashMap是一种基于哈希表（hash table）实现的map，既满足了数据
 - 如果发生碰撞的时候，Hashmap通过链表将产生碰撞冲突的元素组织起来，在Java 8中，如果一个bucket中碰撞冲突的元素超过某个限制(默认是8)，则使用红黑树来替换链表，从而提高速度；
 
 ## 5、HashMap的哈希函数的设计原理
+
 - HashMap 的初始长度是 16，并且每次自动扩展或是手动初始化时长度必须是2的幂。
 - 之所以 HashMap 的初始长度是 16，是为了服务于 key映射到 index 的hash算法。
 - 如何实现一个尽量均匀分布的 hash 函数呢?可以通过 key 的hashcode值来做某种运算。
@@ -233,6 +235,7 @@ HashMap是一种基于哈希表（hash table）实现的map，既满足了数据
 # 四、构造方法与成员变量
 
 ## 1、无参构造方法与其他构造方法
+
 HashMap 提供了一个参数为空的构造函数与有一个参数且参数类型为 Map 的构造函数，除此之外,还提供了两个构造函数，用于设置 HashMap 的容量（capacity）与平衡因子（loadFactor）
 ```java
 public HashMap(int initialCapacity, float loadFactor) {
@@ -253,6 +256,7 @@ public HashMap() {
 	this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);
 }
 ```
+
 ## 2、容量(Capacity)与平衡因子(LoadFactor)
 
 都有个默认值，并且容量有个最大值
@@ -267,6 +271,7 @@ public HashMap() {
 - Capacity就是bucket的大小，Load factor就是bucket填满程度的最大比例。如果对迭代性能要求很高的话不要把capacity设置过大，也不要把load factor设置过小。当bucket中的entries的数目大于capacity*load factor时就需要调整bucket的大小为当前的2倍
 
 ## 3、modcount
+
 ```java
 // 这个用来实现“fast-fail”机制
 transient int modCount
@@ -358,9 +363,10 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)
 		如果没有，在插入之前先判断table中阈值的大小，如果table中的bullet个数size超过阈值(threshold)则扩容(resize)两倍；注意扩容的顺序，扩容之前old1->old2->old3，扩容之后old3->old2->old1，扩展之前和扩容之后的table的index不一定相同，但是对于原bullet中的链表中的数据在扩容之后肯定还在一个链表中，因为hash值是一样的
 
 ### 1.2、JDK8 的实现
+
 put的时候根据 h & (length – 1) 定位到那个桶然后看是红黑树还是链表再putVal
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/集合/集合图/HashMap-put方法.png)
+![](集合图/HashMap-put方法.png)
 
 ```java
 public V put(K key, V value) {
@@ -375,6 +381,7 @@ public V put(K key, V value) {
 - （6）如果bucket满了（超过load factor*current capacity)，就要resize
 
 ## 2、get方法
+
 public V get(Object key)
 - JDK6
 ```java
@@ -442,12 +449,17 @@ private V getForNullKey() {
 ```
 ### 2.2、JDK8的实现
 
+![](集合图/HashMap-getNode.png)
+
+主要是getNode()方法
 - bucket里的第一个节点，直接命中；
-- 如果有冲突,则通过key.equals(k)去查找对应的entry；若为树，则在树中通过key.equals(k)查找,O(logn)；若为链表,则在链表中通过key.equals(k)查找,O(n)。
+- 如果有冲突，则通过`key.equals(k)`去查找对应的entry；若为树，则在树中通过`key.equals(k)`查找,O(logn)；若为链表，则在链表中通过`key.equals(k)`查找，O(n)。
 
 ## 3、hash 函数的实现
 
-在get和put的过程中,计算下标时,先对hashCode进行hash操作,然后再通过hash值进一步计算下标
+哈希函数每次在相同或相等的对象上应用哈希函数时, 应每次返回相同的哈希码。换句话说, 两个相等的对象必须一致地生成相同的哈希码
+
+在get和put的过程中，计算下标时，先对hashCode进行hash操作，然后再通过hash值进一步计算下标
 
 ### 3.1、JDK6的实现
 ```java
@@ -475,7 +487,9 @@ final int hash(Object k) {
 	return h ^ (h >>> 7) ^ (h >>> 4);
 }
 ```
+
 ### 3.3、JDK8的实现
+
 高16bit不变,低16bit和高16bit做了一个异或
 ```java
 static final int hash(Object key) {
@@ -596,11 +610,13 @@ final Node<K,V>[] resize()
 
 ## 1、get和put的原理？JDK8
 
-通过对key的hashCode()进行hashing,并计算下标( n-1 & hash),从而获得buckets的位置。如果产生碰撞,则利用key.equals()方法去链表或树中去查找对应的节点.
+通过对key的hashCode()进行hashing,并计算下标`( n-1 & hash)`,从而获得buckets的位置。如果产生碰撞,则利用key.equals()方法去链表或树中去查找对应的节点.
 	
 ## 2、你知道hash的实现吗？为什么要这样实现？
 
-在Java 1.8的实现中,是通过hashCode()的高16位异或低16位实现的：(h = k.hashCode()) ^ (h >>> 16),主要是从速度、功效、质量来考虑的,这么做可以在bucket的n比较小的时候,也能保证考虑到高低bit都参与到hash的计算中,同时不会有太大的开销
+在Java 1.8的实现中,是通过hashCode()的高16位异或低16位实现的：`(h = k.hashCode()) ^ (h >>> 16)`；
+
+主要是从速度、功效、质量来考虑的,这么做可以在bucket的n比较小的时候,也能保证考虑到高低bit都参与到hash的计算中,同时不会有太大的开销
 
 ## 3、容量处理
 

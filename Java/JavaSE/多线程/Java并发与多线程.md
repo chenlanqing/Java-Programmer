@@ -2643,14 +2643,39 @@ Executor框架结构：
 	void execute(Runnable command);
 	```
 - ExecutorService不仅提供Service管理功能，如shutdown等方法，也提供了更加全面的提交任务机制，如返回Future，其解决了Runnable无法返回结果的困扰；
+- AbstractExecutorService，其实现了非常有用的一些方法供子类直接使用
 - Java提供了几种基础实现：ThreadPoolExecutor、ScheduleThreadPoolExecutor、ForkJoinPool；
 - Executors提供了各种方便的静态工厂方法；
+- 由于线程池支持获取线程执行的结果，所以，引入了Future接口，RunnableFuture继承自此接口，其主要实现类是FutureTask；在线程池的使用过程中，我们是往线程池提交任务（task），使用过线程池的都知道，我们提交的每个任务是实现了 Runnable 接口的，其实就是先将 Runnable 的任务包装成 FutureTask，然后再提交到线程池
 
-### 2.1、ExecutorService-真正的线程池接口
+### 2.1、Executor
 
-### 2.2、ScheduledExecutorService
+```java
+public interface Executor {
+    void execute(Runnable command);
+}
+```
 
-和Timer/TimerTask类似，解决那些需要任务重复执行的问题
+如果我们希望线程池同步执行每一个任务，我们可以这么实现这个接口：
+```java
+class DirectExecutor implements Executor {
+    public void execute(Runnable r) {
+        r.run();// 这里不是用的new Thread(r).start()，也就是说没有启动任何一个新的线程。
+    }
+}
+```
+我们希望每个任务提交进来后，直接启动一个新的线程来执行这个任务，我们可以这么实现：
+```java
+class ThreadPerTaskExecutor implements Executor {
+    public void execute(Runnable r) {
+        new Thread(r).start();  // 每个任务都用一个新的线程来执行
+    }
+}
+```
+
+### 2.2、ExecutorService-真正的线程池接口
+
+ScheduledExecutorService：和Timer/TimerTask类似，解决那些需要任务重复执行的问题
 
 ### 2.3、ThreadPoolExecutor
 
@@ -2658,11 +2683,11 @@ ExecutorService的默认实现，线程池中最核心的一个类
 
 #### 2.3.1、核心参数
 
-- corePoolSize：核心线程数大小，当线程数 < corePoolSize，会创建线程执行runnable；如果等于0,则任务执行完之后,没有任何请求进入时销毁线程池的线程；如果大于0,即使本地任务执行完毕,核心线程也不会被销毁；
-- maximumPoolSize：最大线程数， 当线程数 >= corePoolSize的时候，会把runnable放入workQueue中largestPoolSize:记录了曾经出现的最大线程个数；如果待执行的线程数大于此值,需要借助第5个参数的帮助,缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
+- corePoolSize：核心线程数大小，`当线程数 < corePoolSize`，会创建线程执行runnable；如果等于0，则任务执行完之后,没有任何请求进入时销毁线程池的线程；如果大于0,即使本地任务执行完毕,核心线程也不会被销毁；
+- maximumPoolSize：最大线程数， `当线程数 >= corePoolSize`的时候，会把runnable放入workQueue中；largestPoolSize:记录了曾经出现的最大线程个数；如果待执行的线程数大于此值，需要借助第5个参数的帮助,缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
 - keepAliveTime：保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。在默认情况下,当线程池的线程数大于 corePoolSize时, keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收.
 - unit：时间单位
-- workQueue：保存任务的阻塞队列；当请求的线程数大于 maximumPoolSize时,线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表,使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取,是一个生产消费模型队列；
+- workQueue：保存任务的阻塞队列；当请求的线程数大于 maximumPoolSize时，线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表,使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取,是一个生产消费模型队列；
 - threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时,就可以知道线程任务是由哪个线程工厂产生的
 - handler：拒绝策略，默认有四种拒绝策略；当超过参数 workQueue的任务缓存区上限的时候,就可以通过该策略处理请求,这是一种简单的限流保护.
 - workers：保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的，线程池底层的存储结构其实就是一个HashSet
@@ -2677,7 +2702,61 @@ ExecutorService的默认实现，线程池中最核心的一个类
 
 - 如果线程池阻塞队列达到极限时，在运行一段时间后，阻塞队列中的任务执行完成了，线程池会将超过核心线程数的线程在一段时间内自动回收，在秒杀的业务场景中会有这样的情况发生。
 
-#### 2.3.3、任务执行顺序
+#### 2.3.3、线程池状态
+
+采用一个 32 位的整数来存放线程池的状态和当前池中的线程数，其中高 3 位用于存放线程池状态，低 29 位表示线程数
+```java
+private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+// 这里 COUNT_BITS 设置为 29(32-3)，意味着前三位用于存放线程状态，后29位用于存放线程数
+// 很多初学者很喜欢在自己的代码中写很多 29 这种数字，或者某个特殊的字符串，然后分布在各个地方，这是非常糟糕的
+private static final int COUNT_BITS = Integer.SIZE - 3;
+
+// 000 11111111111111111111111111111
+// 这里得到的是 29 个 1，也就是说线程池的最大线程数是 2^29-1=536870911
+// 以我们现在计算机的实际情况，这个数量还是够用的
+private static final int CAPACITY   = (1 << COUNT_BITS) - 1;
+
+// 我们说了，线程池的状态存放在高 3 位中
+// 运算结果为 111跟29个0：111 00000000000000000000000000000
+private static final int RUNNING    = -1 << COUNT_BITS;
+// 000 00000000000000000000000000000
+private static final int SHUTDOWN   =  0 << COUNT_BITS;
+// 001 00000000000000000000000000000
+private static final int STOP       =  1 << COUNT_BITS;
+// 010 00000000000000000000000000000
+private static final int TIDYING    =  2 << COUNT_BITS;
+// 011 00000000000000000000000000000
+private static final int TERMINATED =  3 << COUNT_BITS;
+
+// 将整数 c 的低 29 位修改为 0，就得到了线程池的状态
+private static int runStateOf(int c)     { return c & ~CAPACITY; }
+// 将整数 c 的高 3 为修改为 0，就得到了线程池中的线程数
+private static int workerCountOf(int c)  { return c & CAPACITY; }
+
+private static int ctlOf(int rs, int wc) { return rs | wc; }
+/*
+ * Bit field accessors that don't require unpacking ctl.
+ * These depend on the bit layout and on workerCount being never negative.
+ */
+private static boolean runStateLessThan(int c, int s) {
+    return c < s;
+}
+private static boolean runStateAtLeast(int c, int s) {
+    return c >= s;
+}
+private static boolean isRunning(int c) {
+    return c < SHUTDOWN;
+}
+```
+- RUNNING：这个没什么好说的，这是最正常的状态：接受新的任务，处理等待队列中的任务
+- SHUTDOWN：不接受新的任务提交，但是会继续处理等待队列中的任务
+- STOP：不接受新的任务提交，不再处理等待队列中的任务，中断正在执行任务的线程
+- TIDYING：所有的任务都销毁了，workCount 为 0。线程池的状态在转换为 TIDYING 状态时，会执行钩子方法 terminated()
+- TERMINATED：terminated() 方法结束后，线程池的状态就会变成这个
+
+`RUNNING 定义为 -1，SHUTDOWN 定义为 0，其他的都比 0 大，所以等于 0 的时候不能提交任务，大于 0 的话，连正在执行的任务也需要中断`
+
+#### 2.3.4、任务执行顺序
 
 ![image](image/线程池主要处理流程.png)
 
@@ -2725,7 +2804,7 @@ public void execute(Runnable command) {
 private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 ```
 
-#### 2.3.4、总结
+#### 2.3.5、总结
 
 - 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
 - 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
@@ -2917,6 +2996,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 * [线程池的使用](http://www.cnblogs.com/dolphin0520/p/3932921.html)
 * [线程池原理](http://www.cnblogs.com/cm4j/p/thread-pool.html)
 * [线程池](https://mp.weixin.qq.com/s/pnjWFG7iujO3LzpM79pt7w)
+* [Java线程池](https://javadoop.com/post/java-thread-pool)
 * [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
 * [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
 * [Exchanger](http://cmsblogs.com/?p=2269)
