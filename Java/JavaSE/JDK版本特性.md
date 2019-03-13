@@ -159,3 +159,4 @@
 * [Java各个版本特性最全总结](https://mp.weixin.qq.com/s/wQW3tZmCs50RjzMtbxOgpQ)
 * [Java8新特性](https://www.jianshu.com/p/5b800057f2d8)
 * [JDK8新特性指南](http://www.open-open.com/lib/view/open1403232177575.html)
+* [Java8教程](https://mp.weixin.qq.com/s/qYsjT0QUD2BgeEDIkhymmg)

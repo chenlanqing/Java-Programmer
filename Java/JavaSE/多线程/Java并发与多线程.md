@@ -1646,78 +1646,22 @@ synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁�
 
 ## 3、独占锁
 
-**3.1、ReentrantLock 类(可重入锁)，又称为独占锁**
+### 3.1、ReentrantLock
 
-[ReentantLock](../../Java源码解读/thread/ReentrantLock.md)
-
-- **3.1.1、ReentrantLock 基本**
-	- 在同一个时间点只能被一个线程持有，而可重入即可以被单个线程多次获取。主要是修改state值，重入多少次，就得释放多少次锁，保证释放之后state变为0；
-	- ReentrantLock 分为"公平锁"和"非公平锁"，区别在于获取锁的机制上是否公平.
-	- ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程。"公平锁"的机制下，线程依次排队获取；而"非公平锁"在锁是可获取状态时，不管自己是不是在队列的开头都会获取锁。<br>
-		ReentrantLock中，包含了Sync对象.而且，Sync 是 AQS 的子类;更重要的是，Sync 有两个子类 FairSync（公平锁）和	NonFairSync（非公平锁）；ReentrantLock 是一个独占锁，至于它到底是公平锁还是非公平锁，就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"；
-	- 提供了一个Condition类，可以分组唤醒需要唤醒的线程.
-	- 公平性、可重入、可中断、超时机制
-
-- **3.1.2、ReentrantLock 函数列表**
-	```java
-	// 创建一个 ReentrantLock ，默认是“非公平锁”。
-	ReentrantLock()
-	// 创建策略是fair的 ReentrantLock。fair为true表示是公平锁，fair为false表示是非公平锁。
-	ReentrantLock(boolean fair)
-	// 查询当前线程保持此锁的次数。
-	int getHoldCount()
-	// 返回目前拥有此锁的线程，如果此锁不被任何线程拥有，则返回 null。
-	protected Thread getOwner()
-	// 返回一个 collection，它包含可能正等待获取此锁的线程。
-	protected Collection<Thread> getQueuedThreads()
-	// 返回正等待获取此锁的线程估计数。
-	int getQueueLength()
-	// 返回一个 collection，它包含可能正在等待与此锁相关给定条件的那些线程。
-	protected Collection<Thread> getWaitingThreads(Condition condition)
-	// 返回等待与此锁相关的给定条件的线程估计数。
-	int getWaitQueueLength(Condition condition)
-	// 查询给定线程是否正在等待获取此锁。
-	boolean hasQueuedThread(Thread thread)
-	// 查询是否有些线程正在等待获取此锁。
-	boolean hasQueuedThreads()
-	// 查询是否有些线程正在等待与此锁有关的给定条件。
-	boolean hasWaiters(Condition condition)
-	// 如果是“公平锁”返回true，否则返回false。
-	boolean isFair()
-	// 查询当前线程是否保持此锁。
-	boolean isHeldByCurrentThread()
-	// 查询此锁是否由任意线程保持。
-	boolean isLocked()
-	// 获取锁。
-	void lock()
-	// 如果当前线程未被中断，则获取锁。
-	void lockInterruptibly()
-	// 返回用来与此 Lock 实例一起使用的 Condition 实例。
-	Condition newCondition()
-	// 仅在调用时锁未被另一个线程保持的情况下，才获取该锁。
-	boolean tryLock()
-	// 如果锁在给定等待时间内没有被另一个线程保持，且当前线程未被中断，则获取该锁。
-	boolean tryLock(long timeout， TimeUnit unit)
-	// 试图释放此锁。
-	void unlock()
-	```
-- **3.1.3、公平锁：是按照通过CLH等待线程按照先来先得的规则，公平的获取锁**
-
-	获取公平锁:获取锁是通过lock()函数，是在ReentrantLock.java的FairSync类中实现
-
-- **3.1.4、非公平锁：则当线程要获取锁时，它会无视CLH等待队列而直接获取锁.**
-
-- **3.1.5、非公平锁获取**
+[ReentantLock](../../Java源码解读/thread/ReentrantLock.md)可重入锁，又是独占锁
 
 ## 4、共享锁-ReentrantReadWriteLock-读写锁
 
-- 4.1、ReadWriteLock，读写锁，维护了一对锁：读取锁和写入锁；<br>
-	读取锁-只用于读取数据操作，是"共享锁"，能被多个线程同时获取;<br>
-	写入锁-用于写入操作，是"独占锁"，只能被一个线程获取。<br>
-	==> 不能同时存在读取锁和写入锁<br>
-	ReadWriteLock 是一个接口，ReentrantReadWriteLock 是它的实现类。ReentrantReadWriteLock 包括内部类 ReadLock 和 WriteLock
+### 4.1、ReadWriteLock
 
-- 4.2、如何获取读写锁
+读写锁，维护了一对锁：读取锁和写入锁；
+- 读取锁：只用于读取数据操作，是"共享锁"，能被多个线程同时获取;
+- 写入锁：用于写入操作，是"独占锁"，只能被一个线程获取。
+- 不能同时存在读取锁和写入锁
+
+ReadWriteLock 是一个接口，ReentrantReadWriteLock 是它的实现类。ReentrantReadWriteLock 包括内部类 ReadLock 和 WriteLock
+
+### 4.2、如何获取读写锁
 
 ```java
 // 返回用于读取操作的锁。
@@ -1725,6 +1669,54 @@ ReentrantReadWriteLock.ReadLock readLock()
 // 返回用于写入操作的锁。
 ReentrantReadWriteLock.WriteLock writeLock()
 ```
+ReentrantReadWriteLock与ReentrantLock一样，其锁主体依然是Sync，它的读锁、写锁都是依靠Sync来实现的
+
+读写锁ReentrantReadWriteLock内部维护着两个一对锁，需要用一个变量维护多种状态。所以读写锁采用“按位切割使用”的方式来维护这个变量，将其切分为两部分，将 state 这个 32 位的 int 值分为高 16 位和低 16位，分别用于共享模式和独占模式；分割之后，读写锁是如何迅速确定读锁和写锁的状态呢？通过为运算。假如当前同步状态为S，那么写状态等于 S & 0x0000FFFF（将高16位全部抹去），读状态等于S >>> 16(无符号补0右移16位)。代码如下：
+```java
+static final int SHARED_SHIFT   = 16;
+static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+static final int MAX_COUNT      = (1 << SHARED_SHIFT) - 1;
+static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+
+static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
+static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
+```
+- state 的高 16 位代表读锁的获取次数，包括重入次数，获取到读锁一次加 1，释放掉读锁一次减 1
+- state 的低 16 位代表写锁的获取次数，因为写锁是独占锁，同时只能被一个线程获得，所以它代表重入次数；
+- 每个线程都需要维护自己的 HoldCounter，记录该线程获取的读锁次数，这样才能知道到底是不是读锁重入，用 ThreadLocal 属性 readHolds 维护
+
+### 4.3、写锁：支持可重入的排他锁
+
+写锁的获取最终会调用tryAcquire(int arg)，该方法在内部类Sync中实现；
+
+写锁的释放最终还是会调用AQS的模板方法release(int arg)方法，该方法首先调用tryRelease(int arg)方法尝试释放锁，tryRelease(int arg)方法为读写锁内部类Sync中定义了
+
+非公平模式下，为了提高吞吐量，lock 的时候会先 CAS 竞争一下，能成功就代表读锁获取成功了，但是如果发现 head.next 是获取写锁的线程，就不会去做 CAS 操作；
+
+Doug Lea 将持有写锁的线程，去获取读锁的过程称为锁降级（Lock downgrading）。这样，此线程就既持有写锁又持有读锁。但是，锁升级是不可以的。线程持有读锁的话，在没释放的情况下不能去获取写锁，因为会发生死锁；
+
+### 4.4、读锁：可重入的共享锁
+
+它能够被多个线程同时持有，在没有其他写线程访问时，读锁总是或获取成功；
+
+读锁的获取过程：
+- 因为存在锁降级情况，如果存在写锁且锁的持有者不是当前线程则直接返回失败，否则继续；但是需要遵循先获取写锁、获取读锁在释放写锁的次序；
+
+	在获取读锁的方法tryAcquireShared(int unused)中，有一段代码就是来判读锁降级的：
+	```java
+	int c = getState();
+	// exclusiveCount(c)计算写锁，如果存在写锁，且锁的持有者不是当前线程，直接返回-1
+	if (exclusiveCount(c) != 0 && getExclusiveOwnerThread() != current)
+		return -1;
+	```
+	为什么锁降级中读锁的获取释放？
+
+	假如当前线程A不获取读锁而是直接释放了写锁，这个时候另外一个线程B获取了写锁，那么这个线程B对数据的修改是不会对当前线程A可见的。如果获取了读锁，则线程B在获取写锁过程中判断如果有读锁还没有释放则会被阻塞，只有当前线程A释放读锁后，线程B才会获取写锁成功
+
+- 依据公平性原则，判断读锁是否需要阻塞，读锁持有线程数小于最大值（65535），且设置锁状态成功，执行以下代码（对于HoldCounter下面再阐述），并返回1。如果不满足改条件，执行fullTryAcquireShared()；fullTryAcquireShared(Thread current)会根据“是否需要阻塞等待”，“读取锁的共享计数是否超过限制”等等进行处理。如果不需要阻塞等待，并且锁的共享计数没有超过限制，则通过CAS尝试获取锁，并返回1
+- 读锁释放的过程还是比较简单的，主要就是将 hold count 减 1，如果减到 0 的话，还要将 ThreadLocal 中的 remove 掉。然后是在 for 循环中将 state 的高 16 位减 1，如果发现读锁和写锁都释放光了，那么唤醒后继的获取写锁的线程
+- 为何要引入firstRead、firstReaderHoldCount。这是为了一个效率问题，firstReader是不会放入到readHolds中的，如果读锁仅有一个的情况下就会避免查找readHolds
+
 
 ## 5、共享锁-闭锁：CountDownLatch
 
@@ -1795,39 +1787,44 @@ private static void test(int count) throws Exception {
 
 * [CyclicBarrier原理和示例](http://www.cnblogs.com/skywang12345/p/3533995.html)
 
-- 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。因为该 barrier 在释放等待线程后可以重用，所以称它为循环 的 barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过独占锁实现的；
+- 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。因为该 barrier 在释放等待线程后可以重用，所以称它为循环的barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过独占锁实现的；
+
+	CyclicBarrier 的原理不是 AQS 的共享模式，是 AQS Condition 和 ReentrantLock 的结合使用
 
 	下图应该从下往上看才正确
 
 	![image](image/CyclicBarrier.png)
 
 - 6.2、主要方法：
-	- CyclicBarrier(int parties)<br>
-		创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，但它不会在启动 barrier 时执行预定义的操作。
-	- CyclicBarrier(int parties， Runnable barrierAction)<br>
-		创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，并在启动 barrier 时执行给定的屏障操作，该操作由最后一个进入 barrier 的线程执行。
-	- int await()<br>
-		在所有参与者都已经在此 barrier 上调用 await 方法之前，将一直等待。<br>
-	- int await(long timeout， TimeUnit unit)<br>
-		在所有参与者都已经在此屏障上调用 await 方法之前将一直等待，或者超出了指定的等待时间。<br>
-	- int getNumberWaiting()<br>
-		返回当前在屏障处等待的参与者数目。<br>
-	- int getParties()<br>
-		返回要求启动此 barrier 的参与者数目。<br>
-	- boolean isBroken()<br>
-		查询此屏障是否处于损坏状态。<br>
-	- void reset()<br>
-		将屏障重置为其初始状态。
+	- CyclicBarrier(int parties)：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，但它不会在启动 barrier 时执行预定义的操作。
+	- CyclicBarrier(int parties， Runnable barrierAction)：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，并在启动 barrier 时执行给定的屏障操作，该操作由最后一个进入 barrier 的线程执行。
+	- int await()：在所有参与者都已经在此 barrier 上调用 await 方法之前，将一直等待。如果该线程不是到达的最后一个线程，则他会一直处于等待状态，除非发生以下情况：
+		- 最后一个线程到达，即index == 0；
+		- 超出了指定时间（超时等待）；
+		- 其他的某个线程中断当前线程；
+		- 其他的某个线程中断另一个等待的线程；
+		- 其他的某个线程在等待barrier超时；
+		- 其他的某个线程在此barrier调用reset()方法。reset()方法用于将屏障重置为初始状态
 
-- 6.3、使用场景：
+		如果一个线程处于等待状态时，如果其他线程调用reset()，或者调用的barrier原本就是被损坏的，则抛出BrokenBarrierException异常。同时，任何线程在等待时被中断了，则其他所有线程都将抛出BrokenBarrierException异常，并将barrier置于损坏状态
 
-	并行计算等。当一组线程（任务）并发的执行一件工作的时候，必须等待所有的线程（任务）都完成时才能进行下一个步骤
+		在CyclicBarrier中，同一批线程属于同一代。当有parties个线程到达barrier，generation就会被更新换代。其中broken标识该当前CyclicBarrier是否已经处于中断状态；
+
+		当barrier损坏了或者有一个线程中断了，则通过breakBarrier()来终止所有的线程；在breakBarrier()中除了将broken设置为true，还会调用signalAll将在CyclicBarrier处于等待状态的线程全部唤醒。
+
+	- int await(long timeout， TimeUnit unit)：在所有参与者都已经在此屏障上调用 await 方法之前将一直等待，或者超出了指定的等待时间。
+	- int getNumberWaiting()：返回当前在屏障处等待的参与者数目。
+	- int getParties()：返回要求启动此 barrier 的参与者数目。
+	- boolean isBroken()：查询此屏障是否处于损坏状态。
+	- void reset()：将屏障重置为其初始状态。
+
+- 6.3、使用场景：并行计算等。当一组线程（任务）并发的执行一件工作的时候，必须等待所有的线程（任务）都完成时才能进行下一个步骤
 
 - 6.4、CountDownLatch 与 CyclicBarrier 两者的区别：
 
-- CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行；CyclicBarrier 则是允许N个线程相互等待；
-- CountDownLatch 的计数器无法被重置；CyclicBarrier 的计数器可以被重置后使用，因此它被称为是循环的barrier；
-- CoundDownLatch操作的是事件，而CyclicBarrier侧重点是线程，而不是调用事件
+	- CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行；CyclicBarrier 则是允许N个线程相互等待；
+	- CountDownLatch 的计数器无法被重置；CyclicBarrier 的计数器可以被重置后使用，因此它被称为是循环的barrier；
+	- CoundDownLatch操作的是事件，而CyclicBarrier侧重点是线程，而不是调用事件
 
 - 6.5、例子：
 ```java
@@ -1868,7 +1865,7 @@ public class CyclicBarrierDemo {
 
 * [Semaphore信号量的原理和示例](http://www.cnblogs.com/skywang12345/p/3534050.html)
 
-- 是一个计数信号量，它的本质是一个"共享锁";它的作用是限制某段代码块的并发数:<br>
+- 是一个计数信号量，它的本质是一个"共享锁"，它的作用是限制某段代码块的并发数
 	
 	![image](image/Semaphore.png)
 
@@ -1878,9 +1875,11 @@ public class CyclicBarrierDemo {
 
 - “公平信号量”和“非公平信号量”的释放信号量的机制是一样的!不同的是它们获取信号量的机制：线程在尝试获取信号量许可时，对于公平信号量而言，如果当前线程不在CLH队列的头部，则排队等候；而对于非公平信号量而言，无论当前线程是不是在CLH队列的头部，它都会直接获取信号量。该差异具体的体现在，它们的tryAcquireShared()函数的实现不同
 
-- 使用场景：在有限资源的场景下，比如数据库连接池的连接数
+- 使用场景：Semaphore 通常用于限制可以访问某些资源（物理或逻辑的）的线程数目，比如数据库连接池的连接数
 
 - 如果Semaphore的数值初始化为1，那么一个线程就可以通过acquire进入互斥状态，本质上和互斥锁类似，；但区别也必将明显，比如互斥锁是有持有者的；
+
+- Semaphore内部包含公平锁（FairSync）和非公平锁（NonfairSync），继承内部类Sync，其中Sync继承AQS；Semaphore默认选择非公平锁
 
 - 例子:
 ```java
@@ -1919,6 +1918,7 @@ public class SemaphoreDemo {
     }
 }
 ```
+
 ## 8、Condition
 
 - 在使用 notify 和 notifyAll 方法进行通知时，被通知的线程是由JVM随机选择的.但是 ReentrantLock 集合Condition 类就实现选择性通知。线程可以注册在指定的 Condition 中，从而可以有选择性的进行线程通知
@@ -2228,6 +2228,8 @@ private volatile Node slot;
 ```
 通过数组arena来安排不同的线程使用不同的slot来降低竞争问题，并且可以保证最终一定会成对交换数据。但是Exchanger不是一来就会生成arena数组来降低竞争，只有当产生竞争是才会生成arena数组
 
+## 14、Phaser
+
 # 四、并发容器
 
 ## 1、并发容器类
@@ -2462,25 +2464,21 @@ BlockingQueue 是一个接口，继承自 Queue
 
 ## 1、AQS：AbstractQueuedSynchronizer-抽象队列同步器
 
-[AbstractQueuedSynchronizer.java](../../Java源码解读/thread/AbstractQueuedSynchronizer.md)
+[AbstractQueuedSynchronizer](../../Java源码解读/thread/AbstractQueuedSynchronizer.md)
 
 ## 2、CAS：Compare and Swap-比较与交换
+
+![](image/CAS.png)
 
 ### 2.1、什么是CAS
 
 cpu指令，在大多数处理器架构，包括 IA32，Space 中采用的都是 CAS 指令.
 
-- CAS 语义：
+- CAS 语义：CAS 有3个操作数，内存值V，旧的预期值A，要修改的新值B，当且仅当预期值A和内存值V相同时，将内存值修改为B并返回true，否则什么都不做并返回false;
 
-	CAS 有3个操作数，内存值V，旧的预期值A，要修改的新值B，当且仅当预期值A和内存值V相同时，将内存值修改为B并返回true，否则什么都不做并返回false;
+- CAS 是乐观锁技术：当多个线程尝试使用CAS同时更新同一个变量时，只有其中一个线程能更新变量的值，而其它线程都失败，失败的线程并不会被挂起，而是被告知这次竞争中失败，并可以再次尝试。CAS 有3个操作数：`内存值V、旧的预期值A、要修改的新值B`。当且仅当预期值A和内存值V相同时，将内存值V修改为B，否则什么都不做.
 
-- CAS 是乐观锁技术：
-
-	当多个线程尝试使用CAS同时更新同一个变量时，只有其中一个线程能更新变量的值，而其它线程都失败，失败的线程并不会被挂起，而是被告知这次竞争中失败，并可以再次尝试。
-	
-	CAS 有3个操作数：`内存值V、旧的预期值A、要修改的新值B`。当且仅当预期值A和内存值V相同时，将内存值V修改为B，否则什么都不做.
-
-CAS 操作是基于共享数据不会被修改的假设。
+- CAS 操作是基于共享数据不会被修改的假设。
 
 ### 2.2、Java中CAS 的实现
 
@@ -2496,7 +2494,7 @@ JDK1.5 之前，需要编写明确的代码来执行CAS操作。在JDK1.5 之后
 #### 2.2.1、CAS实现的核心类：Unsafe
 
 - Java 无法直接访问底层操作系统，而是通过本地 native 方法来访问。不过 JVM 还是开了个后门，JDK 中有一个类 Unsafe，它提供了硬件级别的原子操作对于 Unsafe 类的使用都是受限制的，只有授信的代码才能获得该类的实例
-- 对 CAS 的实现:
+- 对 CAS 的实现：valueOffset为变量值在内存中的偏移地址，unsafe就是通过偏移地址来得到数据的原值的
 ```java	
 /*		
 compareAndSwap方法的参数含义:
@@ -2506,6 +2504,7 @@ compareAndSwap方法的参数含义:
 第四个参数:预想修改后的值
 */
 public final native boolean compareAndSwapObject(Object paramObject1， long paramLong， Object paramObject2， Object paramObject3);
+// 对象、对象的地址、预期值、修改值
 public final native boolean compareAndSwapInt(Object paramObject， long paramLong， int paramInt1， int paramInt2);
 public final native boolean compareAndSwapLong(Object paramObject， long paramLong1， long paramLong2， long paramLong3);
 ```
@@ -2550,6 +2549,7 @@ inline jint Atomic::cmpxchg(jint exchange_value， volatile jint* dest， jint c
 }
 
 ```
+CPU提供了两种方法来实现多处理器的原子操作：总线加锁或者缓存加锁
 - 如上面源代码所示，程序会根据当前处理器的类型来决定是否为`cmpxchg`指令添加`lock`前缀。如果程序是在多处理器上运行，就为`cmpxchg`指令加上`lock`前缀(`lock cmpxchg`)
 - lock前缀说明：
 	- Ⅰ、确保对内存的`读-改-写`操作原子执行
@@ -2571,7 +2571,7 @@ inline jint Atomic::cmpxchg(jint exchange_value， volatile jint* dest， jint c
 
 - 解决思路是:每次变量更新的时候把变量的版本号加 1，那么 A-B-A 就会变成 A1-B2-A3，只要变量被某一线程修改过，改变量对应的版本号就会发生递增变化.
 	```java
-	//	可以参考:AtomicStampedReference#compareAndSet 方法:
+	//	可以参考:AtomicStampedReference#compareAndSet 方法：AtomicStampedReference通过包装[E,Integer]的元组来对对象标记版本戳stamp
 	public boolean compareAndSet(V expectedReference， V newReference， int expectedStamp， int newStamp) {
 		Pair<V> current = pair;
 		return expectedReference == current.reference && expectedStamp == current.stamp &&

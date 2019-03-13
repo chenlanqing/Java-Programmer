@@ -86,6 +86,11 @@ AQS 一共有五处方法供子类实现：
 - CLH同步队列是一个FIFO双向队列，AQS依赖它来完成同步状态的管理，当前线程如果获取同步状态失败时，AQS则会将当前线程已经等待状态等信息构造成一个节点（Node）并将其加入到CLH同步队列，同时会阻塞当前线程，当同步状态释放时，会把首节点唤醒（公平锁），使其再次尝试获取同步状态
 - 在CLH同步队列中，一个节点表示一个线程，它保存着线程的引用（thread）、状态（waitStatus）、前驱节点（prev）、后继节点（next）
 
+## 5、state
+
+- 对于独占模式来说，通常就是 0 代表可获取锁，1 代表锁被别人获取了，可重入锁例外；
+- 共享模式下，每个线程都可以对 state 进行加减操作；独占模式和共享模式对于 state 的操作完全不一样
+
 # 二、源码分析
 
 ## 1、基本数据结构-Node
@@ -405,7 +410,9 @@ private void unparkSuccessor(Node node) {
 }
 ```
 
+# 三、AbstractQueuedLongSynchronizer
 
+AbstractQueuedSynchronizer的一个版本，其中同步状态由long类型维护。该类与AbstractQueuedSynchronizer具有完全相同的结构、属性和方法，唯一的例外是所有与状态相关的参数和结果都定义为long而不是int。
 
 # 参考资料
 

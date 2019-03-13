@@ -1,14 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一.基于 JDK6 ConcurrentHashMap 的技术原理:](#%E4%B8%80%E5%9F%BA%E4%BA%8E-jdk6-concurrenthashmap-%E7%9A%84%E6%8A%80%E6%9C%AF%E5%8E%9F%E7%90%86)
-- [二.JDK8实现](#%E4%BA%8Cjdk8%E5%AE%9E%E7%8E%B0)
-  - [1.基本概念:](#1%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
-- [参考资料:](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 基于如下来分析
 - ConcurrentHashMap 的锁分段技术；
@@ -18,6 +7,7 @@
 # 一、ConcurrentHashMap概述
 
 ## 1、为什么会出现ConcurrentHashMap
+
 - HashTable自身比较低效，因为其方法的实现基本是将put、get、size方法加上synchronized实现。简单来说，这就导致了所有并发操作都要竞争同一把锁，一个线程在进行同步操作时，其他线程只能等待，大大降低了并发操作的效率
 - HashMap不是线程安全的，在并发情况下会导致类似CPU占用100%等问题；
 - 同步包装器知识利用输入Map构造了一个同步版本，所有操作虽然不是声明为synchronized，但是还是利用了this作为互斥的mutex，并没有在真正意义上改进并发效率
