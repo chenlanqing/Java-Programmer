@@ -394,9 +394,9 @@ HAVING <having_condition>
 ORDER BY <order_by_condition>
 LIMIT <limit_number>
 ```
-## 2\数据执行的顺序：前面括号的数据表示执行顺序
+## 2、数据执行的顺序：前面括号的数据表示执行顺序
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/数据库/MySQL/image/SQL执行顺序.jpg)
+![image](image/SQL执行顺序.jpg)
 ```
 (7)     SELECT
 (8)     DISTINCT <select_list>
@@ -410,12 +410,12 @@ LIMIT <limit_number>
 (10)    LIMIT <limit_number>
 ```
 - FROM：对FROM子句中的前两个表执行笛卡尔积(Cartesian product)(交叉联接)， 生成虚拟表VT1
-- ON：对VT1应用ON筛选器.只有那些使<join_condition>为真的行才被插入VT2.
+- ON：对VT1应用ON筛选器.只有那些使`<join_condition>`为真的行才被插入VT2.
 - OUTER(JOIN)：如果指定了OUTER JOIN(相对于CROSS JOIN 或(INNER JOIN)，保留表(preserved table：左外部联接把左表标记为保留表， 右外部联接把右表标记为保留表， 完全外部联接把两个表都标记为保留表)中未找到匹配的行将作为外部行添加到 VT2，生成VT3.如果FROM子句包含两个以上的表， 则对上一个联接生成的结果表和下一个表重复执行步骤1到步骤3， 直到处理完所有的表为止
-- WHERE：对VT3应用WHERE筛选器.只有使<where_condition>为true的行才被插入VT4.
+- WHERE：对VT3应用WHERE筛选器.只有使`<where_condition>`为true的行才被插入VT4.
 - GROUP BY：按GROUP BY子句中的列列表对VT4中的行分组， 生成VT5.
 - CUBE|ROLLUP：把超组(Suppergroups)插入VT5，生成VT6.
-- HAVING：对VT6应用HAVING筛选器.只有使<having_condition>为true的组才会被插入VT7.
+- HAVING：对VT6应用HAVING筛选器.只有使`<having_condition>`为true的组才会被插入VT7.
 - SELECT：处理SELECT列表， 产生VT8.
 - DISTINCT：将重复的行从VT8中移除， 产生VT9.
 - ORDER BY：将VT9中的行按ORDER BY 子句中的列列表排序， 生成游标(VC10).
@@ -427,14 +427,14 @@ LIMIT <limit_number>
 
 # 六、高级查询
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/数据库/MySQL/image/SQL-Joins-1.jpg)
-![image](https://github.com/chenlanqing/learningNote/blob/master/数据库/MySQL/image/SQL-Joins-2.jpg)
+![image](image/SQL-Joins-1.jpg)
+![image](image/SQL-Joins-2.jpg)
 
 ## 1、连接
 
 场景：假设两张表：emp， dept. emp表中的deptId为dept表中的主键。MySQL 不支持 full join
 
-**1.1、内连接：**
+### 1.1、内连接
 ```sql
 select * from emp inner join dept on emp.deptId=dept.id；
 ```
@@ -443,31 +443,31 @@ select * from emp inner join dept on emp.deptId=dept.id；
 select * from emp， dept where emp.deptId=dept.id
 ```
 
-**1.2、左外连接：**
+### 1.2、左外连接
 ```sql
 select * from emp a left join dept b on a.deptId=b.id
 ```
 查询emp独有的数据和查询emp与dept共有的数据
 
-**1.3、左连接：**
+### 1.3、左连接
 ```sql
 select * from emp a left join dept b on a.deptId=b.id where b.id is null；
 ```
 查询emp独有的数据
 
-**1.4、右外连接：**
+### 1.4、右外连接
 ```sql
 select * from emp a right join dept b on a.deptId=b.id；
 ```
 查询dept独有的数据和查询emp与dept共有的数据
 
-**1.5、右外连接：**
+### 1.5、右外连接
 ```sql
 select * from emp a right join dept b on a.deptId=b.id where a.id is null；
 ```
 查询dept独有的数据
 
-**1.6、全连接：**
+### 1.6、全连接
 ```sql
 select * from emp a left join dept b on a.deptId=b.id
 union
@@ -475,7 +475,7 @@ select * from emp a right join dept b on a.deptId=b.id；
 ```
 查询所有emp和dept独有和共有的数据
 
-**1.7、全连接（去除共有数据）：**
+### 1.7、全连接（去除共有数据）
 ```sql
 select * from emp a left join dept b on a.deptId=b.id where b.id is null
 union
@@ -483,7 +483,7 @@ select * from emp a right join dept b on a.deptId=b.id where a.id is null；
 ```
 去除两张表的共有数据，查询emp和dept分别独有的数据
 
-**1.8、union 和 union all：联合查询**
+### 1.8、union 和 union all：联合查询
 
 - **1.8.1、union：**
 
@@ -514,6 +514,16 @@ union
 select * from emp a right join dept b on a.deptId=b.id order by id desc；
 ```
 ==> 报错：1221 - Incorrect usage of UNION and ORDER BY
+
+## 2、连接使用注意事项
+
+- 关于 `A LEFT JOIN B ON 条件表达式` 的一点提醒：ON 条件（“A LEFT JOIN B ON 条件表达式”中的ON）用来决定如何从 B 表中检索数据行。如果 B 表中没有任何一行数据匹配 ON 的条件,将会额外生成一行所有列为 NULL 的数据
+
+- 对于 `A LEFT JOIN B ON 条件表达式`中，如果on后面的条件有关于A表的过滤条件，其是不生效的；类似如下的SQL
+	```sql
+	select user.*, score.score from user left join score on user.id = score.userId and user.status = 1
+	```
+	使用user.status对user表进行过滤是不生效的，只能加在where语句中
 
 # 七、MySQL 存储引擎
 
@@ -601,7 +611,7 @@ show engine innodb status
 
 默认禁止的，启用需要在配置文件中开启federated；
 
-连接方法：mysql：//user_name[：password]@host_name[：port]/db_name/table_name
+连接方法：`mysql：//user_name[:password]@host_name[:port]/db_name/table_name`
 
 ## 2、MyISAM 和 InnoDB 引擎的区别
 

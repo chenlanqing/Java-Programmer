@@ -1,5 +1,3 @@
-
-```
 -- 索引优化
 create table if not exists `article`(
   `id` int(10) NOT NULL AUTO_INCREMENT,
@@ -75,7 +73,7 @@ INSERT INTO book(card) VALUES(FLOOR(1+ (RAND()*20)));
 INSERT INTO book(card) VALUES(FLOOR(1+ (RAND()*20)));
 INSERT INTO book(card) VALUES(FLOOR(1+ (RAND()*20)));
 
-CREATE TABLE `staffs` (
+CREATE TABLE staffs (
   `id` int(10) NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL DEFAULT '' COMMENT '姓名',
   `age` int(11) NOT NULL DEFAULT '0' COMMENT '年龄',
@@ -84,4 +82,3 @@ CREATE TABLE `staffs` (
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8;
 
-```

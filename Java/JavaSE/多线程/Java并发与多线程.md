@@ -2420,6 +2420,8 @@ BlockingQueue 是一个接口，继承自 Queue
 
 支持延时获取元素的无界阻塞队列，即可以指定多久才能从队列中获取当前元素
 
+在内部用一个PriorityQueue保存所有的Delayed对象，Delayed接口中只有一个方法long getDelay(TimeUnit unit);，返回该任务的deadline距离当前时间还有多久，堆顶保存了最快到期的任务
+
 #### 7.4.5、SynchronousQueue
 
 - 不存储元素的阻塞队列，该队列的容量为0，每一个put必须等待一个take操作，否则不能继续添加元素。并且他支持公平访问队列
