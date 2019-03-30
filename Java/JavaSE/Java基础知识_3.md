@@ -243,10 +243,90 @@ http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
 
 # 二十七、JMX
 
+- [JMX详解](https://www.cnblogs.com/dongguacai/p/5900507.html)
+- [官方资料](https://www.oracle.com/technetwork/java/javase/tech/javamanagement-140525.html)
+
 Java Management Extensions是管理Java的一种扩展。这种机制可以方便的管理、监控正在运行中的Java程序。常用于管理线程，内存，日志Level，服务重启，系统环境等
 
 ## 1、基本属术语
 
+- MBean：`Managed Bean`，在JMX中MBean代表一个被管理的资源实例，通过MBean中暴露的方法和属性，外界可以获取被管理的资源的状态和操纵MBean的行为；MBean就是一个Java Object，同JavaBean模型一样，外界使用自醒和反射来获取Object的值和调用Object的方法，只是MBean更为复杂和高级一些。MBean通过公共方法以及遵从特定的设计模式封装了属性和操作，以便暴露给管理应用程序；
+- MBeanServer：MBean生存在一个MBeanServer中。MBeanServer管理这些MBean，并且代理外界对它们的访问。并且MBeanServer提供了一种注册机制，使得外界可以通过名字来得到相应的MBean实例
+- JMX Agent：Agent只是一个Java进程，它包括这个MBeanServer和一系列附加的MbeanService。当然这些Service也是通过MBean的形式来发布
+- Protocol Adapters and Connectors：MBeanServer依赖于Protocol Adapters和Connectors来和运行该代理的Java虚拟机之外的管理应用程序进行通信。Protocol Adapters通过特定的协议提供了一张注册在MBeanServer的MBean的视图
 
+    Adapters和Connectors使MBean服务器与管理应用程序能进行通信；
 
+    Adapter 和Connector的区别在于：Adapter是使用某种Internet协议来与JMX Agent获得联系，Agent端会有一个对象 (Adapter)来处理有关协议的细节。比如SNMP Adapter和HTTP Adapter。而Connector则是使用类似RPC的方式来访问Agent，在Agent端和客户端都必须有这样一个对象来处理相应的请求与应答。比如RMI Connector
+
+应用场景：中间件软件WebLogic的管理页面就是基于JMX开发的，而JBoss则整个系统都基于JMX构架
+
+## 2、JMX架构
+
+![](image/MBean架构.png)
+
+- Instrumentation层：Instrumentation层主要包括了一系列的接口定义和描述如何开发MBean的规范。通常JMX所管理的资源有一个或多个MBean组成，因此这个资源可以是任何由Java语言开发的组件，或是一个JavaWrapper包装的其他语言开发的资源；
+- Agent层：Agent 用来管理相应的资源，并且为远端用户提供访问的接口。Agent层构建在Intrumentation层之上，并且使用并管理 Instrumentation层内部描述的组件；Agent层主要定义了各种服务以及通信模型。该层的核心是一MBeanServer,所有的MBean都要向它注册，才能被管理；
+- Distributed层：Distributed层关心Agent如何被远端用户访问的细节。它定义了一系列用来访问Agent的接口和组件，包括Adapter和Connector的描述
+
+### 2.1、MBean分类
+
+- standard MBean：这种类型的MBean最简单，它能管理的资源（包括属性，方法，时间）必须定义在接口中，然后MBean必须实现这个接口。它的命名也必须遵循一定的规范，例如我们的MBean为Hello，则接口必须为HelloMBean；
+- dynamic MBean：必须实现javax.management.DynamicMBean接口，所有的属性，方法都在运行时定义；
+- open MBean
+- model MBean：与标准和动态MBean相比，你可以不用写MBean类，只需使用javax.management.modelmbean.RequiredModelMBean即可
+
+## 3、JMX的访问方式
+
+### 3.1、通过jconsole
+
+jconsole是JDK自带的工具
+
+参考代码：[JConsoleAgent.java](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-basis/src/main/java/com/blue/fish/se/basis/jmx/demo/JConsoleAgent.java)
+
+### 3.2、通过JMX提供的工具页访问
+
+改动适配层，这里需要到导入外部jar包jdmk
+
+参考代码：[HtmlAdapterAgent.java](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-basis/src/main/java/com/blue/fish/se/basis/jmx/demo/HtmlAdapterAgent.java)
+
+### 3.3、通过客户端程序进行远程访问
+
+参考代码：[RMIAgent.java](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-basis/src/main/java/com/blue/fish/se/basis/jmx/demo/RMIAgent.java)
+
+## 4、Notification
+
+MBean之间的通信是必不可少的，Notification就起到了在MBean之间沟通桥梁的作用。JMX 的通知由四部分组成：
+- Notification这个相当于一个信息包，封装了需要传递的信息；
+- Notification broadcaster这个相当于一个广播器，把消息广播出；
+- Notification listener 这是一个监听器，用于监听广播出来的通知信息；
+- Notification filiter 这个一个过滤器，过滤掉不需要的通知。这个一般很少使用；
+
+## 5、JMX监控tomcat
+
+* [JMX管理监控Tomcat8](https://tomcat.apache.org/tomcat-8.0-doc/monitoring.html)
+
+利用JMX监控Tomcat，就是相当于部署在tomcat上的应用作为服务端，也就是被管理资源的对象。然后通过程序或者jconsole远程连接到该应用上来。远程连接需要服务器端提供ip和port。如果需要加密访问的话，还需要配置用户名、密码等参数
+
+主要是在tomcat下的文件catalina.sh中进行一些环境变量的配置配置：
+```
+set CATALINA_OPTS=-Dcom.sun.management.jmxremote
+  -Dcom.sun.management.jmxremote.port=%my.jmx.port%
+  -Dcom.sun.management.jmxremote.ssl=false
+  -Dcom.sun.management.jmxremote.authenticate=false
+如果需要授权：
+-Dcom.sun.management.jmxremote.authenticate=true
+-Dcom.sun.management.jmxremote.password.file=../conf/jmxremote.password
+-Dcom.sun.management.jmxremote.access.file=../conf/jmxremote.access
+
+```
+- `-Dcom.sun.management.jmxremote=true`：相关 JMX 代理侦听开关
+- `-Djava.rmi.server.hostname=xxxx`：服务器端的IP
+- `-Dcom.sun.management.jmxremote.port=29094`：相关 JMX 代理侦听请求的端口
+- `-Dcom.sun.management.jmxremote.ssl=false`：指定是否使用 SSL 通讯
+- `-Dcom.sun.management.jmxremote.authenticate=false`：指定是否需要密码验证
+
+## 6、JMX产生问题原因
+
+JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢出等问题引起的
 
