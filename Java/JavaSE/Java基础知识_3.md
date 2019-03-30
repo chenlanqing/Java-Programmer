@@ -330,3 +330,6 @@ set CATALINA_OPTS=-Dcom.sun.management.jmxremote
 
 JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢出等问题引起的
 
+# 二十八、Java基准测试-JMH
+
+- [JMH教程](http://tutorials.jenkov.com/java-performance/jmh.html)
