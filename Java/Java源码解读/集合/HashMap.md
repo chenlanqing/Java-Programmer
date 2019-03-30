@@ -325,7 +325,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)
 		inflateTable(threshold);
 	}
 	```
-- （2）如果key值为 null,则特殊处理，调用putForNullKey(V value)，hash值为0，存入table中，返回
+- （2）如果key值为 null,则特殊处理，调用putForNullKey(V value)，hash值为0，存入table中，最终会将这个 entry 放到 table[0] 中
 - （3）如果key值不为null,则计算key的hash值；
 - （4）然后计算key在table中的索引index；
 - （5）遍历table[index]的链表，如果发现链表中有bullet中的键的hash值与key相等，并且调用equals()方法也返回true，则替换旧值（oldValue），保证key的唯一性；

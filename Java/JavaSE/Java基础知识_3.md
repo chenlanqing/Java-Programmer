@@ -242,3 +242,11 @@ http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
 
 
 # 二十七、JMX
+
+Java Management Extensions是管理Java的一种扩展。这种机制可以方便的管理、监控正在运行中的Java程序。常用于管理线程，内存，日志Level，服务重启，系统环境等
+
+## 1、基本属术语
+
+
+
+

@@ -13,18 +13,13 @@
 - 同步包装器知识利用输入Map构造了一个同步版本，所有操作虽然不是声明为synchronized，但是还是利用了this作为互斥的mutex，并没有在真正意义上改进并发效率
 
 ## 2、ConcurrentHashMap 不同版本演进
-### 2.1、早期版本
-ConcurrentHashMap是基于：
-- 分离锁：将内部进行分段，里面则是HashEntry数组，和hashMap类似，哈希相同的条目也是以链表信息存储；
-- HashEntry内部使用volatile的value字段来保证可见性，利用不可变对象的机制以改进利用Unsafe提供的底层能力；
 
-其核心是利用分段设计，在进行并发操作的时候，只需要锁定相应的段即可，避免了hashTable整体同步的问题；
+### 2.1、JDK1.7版本
 
-*注意一点：JDK8以后的锁的粒度是加载链表头上的*
-
-### 2.2、新版本
+ConcurrentHashMap 由一个个 Segment 组成，ConcurrentHashMap 是一个 Segment 数组，Segment 通过继承 ReentrantLock 来进行加锁，所以每次需要加锁的操作锁住的是一个 segment，这样只要保证每个 Segment 是线程安全的，也就实现了全局的线程安全
 
 ##  3、分段锁形式如何保证size的一致性
+
 LongAdder 是一种JVM利用空间换取更高的效率
 
 

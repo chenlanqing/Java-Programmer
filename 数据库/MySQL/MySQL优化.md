@@ -1094,6 +1094,7 @@ MySQL可以通过启动时指定配置参数和使用配置文件两种方法进
 - [sakila文件地址](http://dev.mysql.com/doc/sakila/en/sakila-installation.html)
 - [SQL调优](http://www.cnblogs.com/Qian123/p/5666569.html)
 - [SQL优化](https://mp.weixin.qq.com/s/hU2EkRW_PC3pRZ4vF4VvOw)
+- [MySQL常见面试题](https://mp.weixin.qq.com/s/ZtuUg79OFLh20-HWs2Qs4A)
 
 
 
