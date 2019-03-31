@@ -230,6 +230,7 @@ public class Main {
 
 	另外，可达性分析工作必须在一个能确保一致性的快照中进行——这里“一致性”的意思是指在整个分析期间整个执行系统看起来就像被冻结在某个时间点上，不可以出现分析过程中对象引用关系还在不断变化的情况，这是保证分析结果准确性的基础。这点是导致GC进行时必须停顿所有Java执行线程（Sun将这件事情称为“Stop The World”）的其中一个重要原因，即使是在号称（几乎）不会发生停顿的CMS收集器中，枚举根节点时也是必须要停顿的
 
+	***GC是怎么实现STW的？***
 
 - **准确式GC与OopMap**
 
@@ -684,6 +685,10 @@ JAVA_OPTS="-server -Xms2000m -Xmx2000m -Xmn800m -XX:PermSize=64m -XX:MaxPermSize
 	Metaspace 会保存类的描述信息,JVM 需要根据 Metaspace 中的信息，才能找到堆中类 java.lang.Class 所对应的对象,既然 Metaspace 中会保存类描述信息，可以通过新建类来增加 Metaspace 的占用
 
 	于是想到，使用 CGlib 动态代理，生成被代理类的子类
+
+## 7、GC相关题目
+
+请写一段程序，让其运行时的表现为触发5次YGC，然后3次FGC，然后3次YGC，然后1次FGC，请给出代码以及启动参数
 
 # 六、详解 finalize()方法
 
