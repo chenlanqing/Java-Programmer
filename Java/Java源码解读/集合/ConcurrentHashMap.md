@@ -14,38 +14,7 @@
 
 ## 2、ConcurrentHashMap 不同版本演进
 
-### 2.1、JDK1.7版本
-
-ConcurrentHashMap 由一个个 Segment 组成，ConcurrentHashMap 是一个 Segment 数组，Segment 通过继承 ReentrantLock 来进行加锁，所以每次需要加锁的操作锁住的是一个 segment，这样只要保证每个 Segment 是线程安全的，也就实现了全局的线程安全
-
-##  3、分段锁形式如何保证size的一致性
-
-LongAdder 是一种JVM利用空间换取更高的效率
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 一、JDK6版本ConcurrentHashMap 的技术原理
+### 2.1、JDK6
 
 - 1、ConcurrentHashMap 的锁分段技术:
 
@@ -88,23 +57,31 @@ LongAdder 是一种JVM利用空间换取更高的效率
 
     (3).ConcurrentHashMap的并发度跟 segment 的大小有关.
 
+### 2.2、JDK1.7版本
 
-# 二.JDK8实现
- * [ConcurrentHashMap](https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483889&idx=1&sn=b2fcb50a7e8a556467ccb9a0cc9fe927&chksm=96cd41bda1bac8ab61e9e6d6b450ee69307c37713e3c73825dea2a3494a35c5f9ecd3a91eabd&scene=38#wechat_redirect)
- * [ConcurrentHashMap](https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483894&idx=1&sn=72e7fb63296ff382568a7861c75068c1&chksm=96cd41baa1bac8ace9a8c99a76851a59ebc57997bfaa680e5cdf8e42191dd8c0b3b281851edd&scene=38#wechat_redirect)
- * [ConcurrentHashMap](https://mp.weixin.qq.com/s?__biz=MzIwMzY1OTU1NQ==&mid=2247483902&idx=1&sn=4e52472a2ddfb6825fd9f1928c33e1ed&chksm=96cd41b2a1bac8a4f927f20905c1263b236a748fa05e06ba857459d1c46eafabd3b740c68fe7&scene=38#wechat_redirect)
- 
-在1.8的实现中,已经抛弃了 Segment 分段锁机制,而是利用 CAS + synchronized 来保证并发更新安全的.底层依然采用"数组+链表+红黑树"的存储结构
-## 1.基本概念:
+ConcurrentHashMap 由一个个 Segment 组成，ConcurrentHashMap 是一个 Segment 数组，Segment 通过继承 ReentrantLock 来进行加锁，所以每次需要加锁的操作锁住的是一个 segment，这样只要保证每个 Segment 是线程安全的，也就实现了全局的线程安全；
 
-    ConcurrentHashMap返回的迭代器具有弱一致性,并非fail-fast.弱一致性的迭代器可以容忍并发的修改,当创建迭代器时会遍历已有的元素,
-    并可以(但是不保证)在迭代器被构造后将修改反映给容器
+ConcurrentHashMap初始化时，计算出Segment数组的大小ssize和每个Segment中HashEntry数组的大小cap，并初始化Segment数组的第一个元素；其中ssize大小为2的幂次方，默认为16，cap大小也是2的幂次方，最小值为2，最终结果根据根据初始化容量initialCapacity进行计算，计算过程如下
+
+
+### 2.3、JDK8版本
+
+1.8中放弃了Segment臃肿的设计，取而代之的是采用Node + CAS + Synchronized来保证并发安全进行实现；只有在执行第一次put方法时才会调用initTable()初始化Node数组；
+
+底层依然采用"数组+链表+红黑树"的存储结构
+
+##  3、分段锁形式如何保证size的一致性
+
+LongAdder 是一种JVM利用空间换取更高的效率
+
+# 二、JDK8的实现
+
+
 
 # 参考资料:
 
-* http://www.importnew.com/16147.html
-* https://www.ibm.com/developerworks/cn/java/java-lo-concurrenthashmap/
-* https://mp.weixin.qq.com/s/HUvHUBRqp4I4ShyUJr5xDw
-* https://mp.weixin.qq.com/s/V4KzR7A4Kq5ioCbF4oeiIw
-* https://mp.weixin.qq.com/s/8XLqCwWQimAIr__S_BfrHA
-* https://mp.weixin.qq.com/s/8MCq-i0AMqaJRQIecJl2WA
+* [ConcurrentHashMap高并发性的实现机制](http://www.importnew.com/16147.html)
+* [ConcurrentHashMap面试必问](https://mp.weixin.qq.com/s/HUvHUBRqp4I4ShyUJr5xDw)
+* [ConcurrentHashMap进阶之红黑树实现](https://mp.weixin.qq.com/s/8XLqCwWQimAIr__S_BfrHA)
+* [ConcurrentHashMap进阶之扩容实现](https://mp.weixin.qq.com/s/8MCq-i0AMqaJRQIecJl2WA)
+* [Jdk7与JDK8的区别](https://www.jianshu.com/p/e694f1e868ec)
