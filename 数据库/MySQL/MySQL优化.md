@@ -57,11 +57,13 @@
 
 使用MySQL慢查询日志对有效率问题的SQL进行监控
 ```sql
-	show variables	like 'slow_query_log';
-	set global slow_query_log_file='/home/mysql/sql_log/mysql_slow_log'; -- 慢查询日志存储的硬盘位置
-	set global log_queries_not_using_indexes=on; -- 是否将未使用索引的sql记录到慢查询日志中
-	set global long_query_time=1; --将超过多少秒的sql记录到慢查询日志中
+show variables like '%slow_queries%%'; -- 查看慢sql的条数
+show variables	like 'slow_query_log';
+set global slow_query_log_file='/home/mysql/sql_log/mysql_slow_log'; -- 慢查询日志存储的硬盘位置
+set global log_queries_not_using_indexes=on; -- 是否将未使用索引的sql记录到慢查询日志中
+set global long_query_time=1; --将超过多少秒的sql记录到慢查询日志中
 ```
+慢日志的信息：
 - 执行SQL的主机信息：
 	```
 	# User@Host： root[root] @ localhost [127.0.0.1]
@@ -223,7 +225,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 	|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 | Using filesort |
 	+----+-------------+---------+------+---------------+------+---------+------+------+----------------+
 	```
-- using temporary：使用了临时表保存中间结果，MySQL在对查询结果排序时使用了临时表.常见于排序 order by 和分组查询 order by 中
+- using temporary：使用了临时表保存中间结果，MySQL在对查询结果排序时使用了临时表.常见于排序 order by 和分组查询 group by 中
 	```sql
 	mysql> EXPLAIN SELECT * FROM message GROUP BY created_date；
 	+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
@@ -233,9 +235,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 	+----+-------------+---------+------+---------------+------+---------+------+------+---------------------------------+
 	```
 - using index：表示相应的查询操作中使用了覆盖索引，避免访问表的数据行。如果同时出现 using where，说明索引是用来执行索引键值的查找；如果没有同时出现 using where，说明索引是用来读取数据而非执行查找动作；
-	- 覆盖索引：
-		
-		select 的数据列只用从索引中就能够取得，不必读取数据行，MySQL 可以利用索引返回 select 列表中的字段，而不必根据索引再次读取数据文件，换句话说查询列要被所建的索引覆盖。如果使用覆盖索引，要注意 select 列表只读取所需要的列，不要使用 select *，因为如果将所有字段一起做成索引会导致索引文件过大，查询性能下降.
+	- 覆盖索引：select 的数据列只用从索引中就能够取得，不必读取数据行，MySQL 可以利用索引返回 select 列表中的字段，而不必根据索引再次读取数据文件，换句话说查询列要被所建的索引覆盖。如果使用覆盖索引，要注意 select 列表只读取所需要的列，不要使用 select *，因为如果将所有字段一起做成索引会导致索引文件过大，查询性能下降.
 
 - using where：使用 where 子句
 
@@ -258,7 +258,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 
 表相关操作SQL参加文件：[数据库脚本.sql](数据库脚本-用于索引优化.sql)
 
-**7.1、单表优化：查询 category_id 为1 且 comments > 1 的情况下，views 最多的 article_id**
+### 7.1、单表优化：查询 category_id 为1 且 comments > 1 的情况下，views 最多的 article_id**
 
 基本sql：```sqlselect id from article where category_id=1 and comments > 1 order by views desc limit 1；```
 
@@ -322,7 +322,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 
 	因为按照 Btree索引的工作原理，先排序 category_id， 如果遇到相同的 category_id 则再排序 comments，如果遇到相同的 comments 则再排序 views，当 comments 字段在联合索引里处于中间位置时，因为 comments >1条件是一个范围，MySQL无法利用索引再对后面的 views 部分进行检索，即 range类型查询字段后面的索引无效；
 
-**7.2、两表优化：**
+### 7.2、两表优化
 
 左连接查询优化：
 - 没有任何索引除主键外：
@@ -366,7 +366,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 
 	一般左右连接查询一般都是索引创建在相反的方向上：如果是左连接，则相关字段索引建立在右边表上；如果是右连接，则相关字段索引建立在左边表上；
 
-**7.3、三表查询：**
+### 7.3、三表查询
 
 - 没有创建索引：
 	```sql
@@ -401,7 +401,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 	- 保证 join 语句中被驱动表上的 join 条件字段已经被索引；
 	- 当无法保证被驱动表的join条件字段被索引且内存资源充足的情况下，不要太吝惜 joinBuffer 的设置
 
-**7.4、索引失效**
+### 7.4、索引失效
 
 - （1）全值匹配，最佳左前缀法则：如果索引了多列，要遵守最左前缀法则.指的是查询从索引的最左前列开始并且不跳过索引中的列.
 
