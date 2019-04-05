@@ -1,29 +1,46 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
 
-- [1.MySQL自增主键问题:](#1mysql%E8%87%AA%E5%A2%9E%E4%B8%BB%E9%94%AE%E9%97%AE%E9%A2%98)
-- [2.](#2)
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+# 1、MySQL自增主键问题
 
-### 1.MySQL自增主键问题:
+## 1.1、数据库重启对自增主键的影响
 
-    * 一张表里有自增主键,当自增到 17后,删除了低15,16,17三条记录,再把mysql重启,在插入一条记录,该记录的ID是18还是15?
-	1.1.AUTO_INCREMENT 列在 InnoDB 里如何工作:
-		(1).如果为一个表指定 AUTO_INCREMENT 列,在数据词典里的InnoDB表句柄包含一个名为自动增长计数器的计数器,被用在为该列赋新值.
-			自动增长计数器仅被存储在主内存中,而不是存在磁盘上.
-		(2).InnoDB使用下列算法来为包含一个名为ai_col的AUTO_INCREMENT列的表T初始化自动增长计数器:
-			服务器启动之后,当一个用户对表T做插入之时,InnoDB执行等价如下语句的动作:
-			SELECT MAX(ai_col) FROM T FOR UPDATE;
-	1.2.如果 mysql 服务重启, 因为 自动增长计数器仅被存储在主内存中,所以每次重启mysql都会重置.
-		解决方法:
-			(1).先不重启mysql,继续插入表一行记录,这行记录的id为 18,
-			(2).重启mysql,插入表一行记录,这行记录的id为 19,
+问题：一张表里有自增主键，当自增到 17后，删除了低15，16，17三条记录，再把mysql重启，在插入一条记录，该记录的ID是18还是15？
+- `AUTO_INCREMENT` 列在 InnoDB 里如何工作:
+	- 如果为一个表指定 AUTO_INCREMENT 列，在数据词典里的InnoDB表句柄包含一个名为自动增长计数器的计数器，被用在为该列赋新值。自动增长计数器仅被存储在主内存中，而不是存在磁盘上.
+	- InnoDB使用下列算法来为包含一个名为`ai_col`的`AUTO_INCREMENT`列的表T初始化自动增长计数器：服务器启动之后，当一个用户对表T做插入之时，InnoDB执行等价如下语句的动作:`SELECT MAX(ai_col) FROM T FOR UPDATE;`
+- 如果 mysql 服务重启， 因为 自动增长计数器仅被存储在主内存中，所以每次重启mysql都会重置。解决方法:
+	- 先不重启mysql，继续插入表一行记录，这行记录的id为 18，
+	- 重启mysql，插入表一行记录，这行记录的id为 19
 
-[MySQL 自增 id 超大问题查询](https://mp.weixin.qq.com/s/xvxQz_oAzFBtpWfHl7kn3A)
+## 1.2、插入语句对自增主键的影响
 
-### 2.Mysql唯一键问题:
+- `REPLACE INTO...`对主键的影响：`REPLACE INTO...`每次插入的时候如果唯一索引对应的数据已经存在，会删除原数据，然后重新插入新的数据，这也就导致id会增大，但实际预期可能是更新那条数据；
+
+- `INSERT ... ON DUPLICATE KEY UPDATE ...`对自增主键的影响：
+
+	每次执行时主键ID都会自动加1，但是实际记录并没有增加；
+
+	“INSERT ... ON DUPLICATE KEY UPDATE ...”影响的行数是1为什么返回2？插入影响1行，更新影响2行，0的话就是存在且更新前后值一样
+
+	***原因：***
+
+	mysql主键自增有个参数 innodb_autoinc_lock_mode，他有三种可能只 0, 1, 2，mysql5.1之后加入的，默认值是 1，之前的版本可以看做都是 0
+
+	- 数据库默认值也是1，当做简单插入（可以确定插入行数）的时候，直接将auto_increment加1，而不会去锁表，这也就提高了性能
+	- 模式 0的话就是不管什么情况都是加上表锁，等语句执行完成的时候在释放，如果真的添加了记录，将 auto_increment加1
+	- 模式 2，什么情况都不加 AUTO_INC锁，存在安全问题，当 binlog格式设置为 Statement模式的时候，从库同步的时候，执行结果可能跟主库不一致，问题很大；
+
+	由于 `innodb_autoinc_lock_mode`值是1， `INSERT...ON DUPLICATE KEY UPDATE...`是简单的语句，预先就可以计算出影响的行数，所以不管是否更新，这里都将 auto_increment加1（多行的话大于1）
+
+## 1.3、为什么用自增列作为主键
+
+- 如果我们定义了主键(PRIMARY KEY)，那么InnoDB会选择主键作为聚集索引、如果没有显式定义主键，则InnoDB会选择第一个不包含有NULL值的唯一索引作为主键索引、如果也没有这样的唯一索引，则InnoDB会选择内置6字节长的ROWID作为隐含的聚集索引(ROWID随着行记录的写入而主键递增，这个ROWID不像ORACLE的ROWID那样可引用，是隐含的)；
+- 数据记录本身被存于主索引（一颗B+Tree）的叶子节点上。这就要求同一个叶子节点内（大小为一个内存页或磁盘页）的各条数据记录按主键顺序存放，因此每当有一条新的记录插入时，MySQL会根据其主键将其插入适当的节点和位置，如果页面达到装载因子（InnoDB默认为15/16），则开辟一个新的页（节点）；
+- 如果表使用自增主键，那么每次插入新的记录，记录就会顺序添加到当前索引节点的后续位置，当一页写满，就会自动开辟一个新的页
+- 如果使用非自增主键（如果身份证号或学号等），由于每次插入主键的值近似于随机，因此每次新纪录都要被插到现有索引页得中间某个位置，此时MySQL不得不为了将新记录插到合适位置而移动数据，甚至目标页面可能已经被回写到磁盘上而从缓存中清掉，此时又要从磁盘上读回来，这增加了很多开销，同时频繁的移动、分页操作造成了大量的碎片，得到了不够紧凑的索引结构，后续不得不通过OPTIMIZE TABLE来重建表并优化填充页面
+
+# 2、Mysql唯一键问题
+
 mysql唯一键可以为null
 
 
