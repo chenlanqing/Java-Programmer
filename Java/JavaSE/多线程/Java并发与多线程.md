@@ -423,7 +423,7 @@ Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 
 #### 2.14.1、join()方法
 
 - 等待该线程终止，指的是主线程等待子线程的终止，子线程调用了join()方法后面的代码，只有等到子线程结束了才能执行;	让调用该方法的thread完成run方法的里面的东西后，在执行 join 方法后面的代码当前运行着的线程将阻塞直到这个线程实例完成了执行；
-- join 具有使线程排队运行的作用。join与synchronize 区别:join 内部是wait方法进行等待，而synchronized关键字使用的是"对象监视器"原理作为同步；
+- join 具有使线程排队运行的作用。join与synchronize 区别：join 内部是wait方法进行等待，而synchronized关键字使用的是"对象监视器"原理作为同步；
 - 在执行 join 的过程中，如果当前线程对象被中断，则当前线程出现异常；
 - join(long) 内部是使用 wait(long)方法来实现的，所以join(long)方法具有释放锁的特点，而 sleep(long)不释放锁的；
 
@@ -433,7 +433,7 @@ Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 
 
 #### 2.14.3、两者的区别
 
-- join 是 final 的实例方法，yield是原生静态方法
+- join 是 final 的实例方法，yield是原生静态方法x
 - yield 只是使当前线程重新回到可执行状态，所以执行yield()的线程有可能在进入到可执行状态后马上又被执行，只能使同优先级或更高优先级的线程有执行的机会。
 - join 等待该线程终止，等待调用join方法的线程结束，再继续执行
 

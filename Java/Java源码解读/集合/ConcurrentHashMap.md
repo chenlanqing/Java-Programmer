@@ -8,9 +8,9 @@
 
 ## 1、为什么会出现ConcurrentHashMap
 
-- HashTable自身比较低效，因为其方法的实现基本是将put、get、size方法加上synchronized实现。简单来说，这就导致了所有并发操作都要竞争同一把锁，一个线程在进行同步操作时，其他线程只能等待，大大降低了并发操作的效率
-- HashMap不是线程安全的，在并发情况下会导致类似CPU占用100%等问题；
-- 同步包装器知识利用输入Map构造了一个同步版本，所有操作虽然不是声明为synchronized，但是还是利用了this作为互斥的mutex，并没有在真正意义上改进并发效率
+HashMap是用得非常频繁的一个集合，但是由于它是非线程安全的，在多线程环境下，put操作是有可能产生死循环的，导致CPU利用率接近100%。
+
+为了解决该问题，提供了`Hashtable`和`Collections.synchronizedMap(hashMap)`两种解决方案，但是这两种方案都是对读写加锁，独占式，一个线程在读时其他线程必须等待，吞吐量较低，性能较为低下
 
 ## 2、ConcurrentHashMap 不同版本演进
 
@@ -66,7 +66,7 @@ ConcurrentHashMap初始化时，计算出Segment数组的大小ssize和每个Seg
 
 ### 2.3、JDK8版本
 
-1.8中放弃了Segment臃肿的设计，取而代之的是采用Node + CAS + Synchronized来保证并发安全进行实现；只有在执行第一次put方法时才会调用initTable()初始化Node数组；
+1.8中放弃了Segment臃肿的设计，取而代之的是采用`Node + CAS + Synchronized`来保证并发安全进行实现；只有在执行第一次put方法时才会调用initTable()初始化Node数组；
 
 底层依然采用"数组+链表+红黑树"的存储结构
 
@@ -76,7 +76,47 @@ LongAdder 是一种JVM利用空间换取更高的效率
 
 # 二、JDK8的实现
 
+```java
+public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements ConcurrentMap<K,V>, Serializable {}
+```
 
+## 1、基本变量
+
+- **常量**
+    ```java
+    // 链表转红黑树阀值,> 8 链表转换为红黑树
+    static final int TREEIFY_THRESHOLD = 8;
+    //树转链表阀值，小于等于6（tranfer时，lc、hc=0两个计数器分别++记录原bin、新binTreeNode数量，<=UNTREEIFY_THRESHOLD 则untreeify(lo)）
+    static final int UNTREEIFY_THRESHOLD = 6;
+    // 2^15-1，help resize的最大线程数
+    private static final int MAX_RESIZERS = (1 << (32 - RESIZE_STAMP_BITS)) - 1;
+    // 32-16=16，sizeCtl中记录size大小的偏移量
+    private static final int RESIZE_STAMP_SHIFT = 32 - RESIZE_STAMP_BITS;
+    // 树根节点的hash值
+    static final int TREEBIN   = -2;
+    // ReservationNode的hash值
+    static final int RESERVED  = -3;
+    // 可用处理器数量
+    static final int NCPU = Runtime.getRuntime().availableProcessors();
+    ```
+- **几个重要的变量**
+    - table：用来存放Node节点的数据，默认为null，默认大小为16的数组，每次扩容时大小总是2的幂次方；
+    - nextTable：扩容时新生成的数据，数组为table的两倍；
+    - Node：节点，保存key-value的数据结构；
+    - ForwardingNode：一个特殊的Node节点，hash值为-1，其中存储nextTable的引用。只有当table发生扩容时，ForwardingNode才会发挥作用，作为一个占位符放在table中表示节点为null或者已经被移动；
+    - sizeCtl：控制标识符，用来控制table初始化和扩容操作：
+        - 负数代表正在初始化或者扩容操作；
+        - `-1`代表正在初始化；
+        - `-N` 标识有`N-1`个线程正在进行扩容操作；
+        - 正数或0标识hash表还没有被初始化，这个值表示初始化或者下一次进行扩容的大小
+
+## 2、内部类
+
+### 2.1、Node
+
+### 2.2、TreeNode
+
+### 2.3、TreeBin
 
 # 参考资料:
 
