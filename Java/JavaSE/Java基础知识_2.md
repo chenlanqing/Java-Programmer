@@ -929,7 +929,9 @@ JDK5之后新增的功能
 
 ## 3、反射机制：(Reflection)
 
-运行时加载，探知使用编译期间完全未知的类；反射：将一个Java类中的所有信息映射成相应的Java类;
+运行时加载，探知使用编译期间完全未知的类；反射：将一个Java类中的所有信息映射成相应的Java类；
+
+反射机制是在运行状态，对于任意一个类，都能够知道这个的类的所有属性和方法；对于任意一个对象，都能够调用它的任意方法和属性；
 
 【一个类只有一个Class对象，这个对象包含了完整类的结构】
 
@@ -939,7 +941,7 @@ JDK5之后新增的功能
 	- `Method`：方法相关类，`getDeclaredMethods();`，`method.invoke()`方法执行时，如果第一个参数为 null，则表示反射的方法为静态方法
 	- `Constructor`： 构造器相关类，`getDeclaredConstructors()`;
 
-	如果需要访问私有的，则需setAccessible(true;
+	如果需要访问私有的，则需setAccessible(true);
 
 - 反射机制性能问题：反射会降低程序的效率，如果在开发中确实需要使用到反射，可以将setAccessible设为 true ：即取消Java语言访问检查;
 
@@ -948,7 +950,7 @@ JDK5之后新增的功能
 	- ②、为了通过反射操作泛型，Java有 `ParameterizedType、GenericArrayType、TypeVariable、WildcardType`几种类型来代表不能被归一到Class类中的类型但是又和原始类型齐名的类型；
 
 		- `Type`是Java编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型
-		- `ParameterizedType ：参数化类型
+		- `ParameterizedType` ：参数化类型
 		- `GenericArrayType`：元素类型是参数化类型或者类型变量的数组类型
 		- `TypeVariable`：各种类型变量的公共父接口
 		- `WildcardType`：表示一种通配符类型表达式;
