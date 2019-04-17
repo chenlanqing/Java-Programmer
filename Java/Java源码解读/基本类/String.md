@@ -448,11 +448,11 @@ String replace(CharSequence target， CharSequence replacement)
 
 	相同点是都是全部替换，即把源字符串中的某一字符或字符串全部换成指定的字符或字符串， 如果只想替换第一次出现的，可以使用 replaceFirst()，这个方法也是基于规则表达式的替换，但与replaceAll()不同的是，只替换第一次出现的字符串; 另外，如果replaceAll()和replaceFirst()所用的参数据不是基于规则表达式的，则与replace()替换字符串的效果是一样的，即这两者也支持字符串的操作；
 
-## 6.copyValueOf 和 valueOf
+## 6、copyValueOf 和 valueOf
 
 valueOf六个重载方法可以看到这些方法可以将六种基本数据类型的变量转换成String类型
 
-## 7.String 对 + 的重载
+## 7、String 对 + 的重载
 
 Java 是不支持重载运算符，String 的 + 是java中唯一的一个重载运算符，如何实现的？
 ```java
@@ -470,7 +470,7 @@ public static void main(String args[]){
 ```
 其实 String 对 + 的支持其实就是使用了 StringBuilder 以及他的append、toString两个方法
 
-## 8.String.valueOf 和 Integer.toString的区别
+## 8、String.valueOf 和 Integer.toString的区别
 
 有三种方式将一个int类型的变量变成呢过String类型，那么他们有什么区别？
 ```java
@@ -488,7 +488,7 @@ public native String intern();
 
 ### 5.1、Java常量池
 
-Java 中8种基本类型和一种比较特殊的类型 String，常量池就类似一个 JAVA 系统级别提供的缓存，8种基本类型的常量池都是系统协调的，String 类型的常量池比较特殊.它的主要使用方法有两种：
+Java 中8种基本类型和一种比较特殊的类型 String，常量池就类似一个 JAVA 系统级别提供的缓存，8种基本类型的常量池都是系统协调的，String 类型的常量池比较特殊。它的主要使用方法有两种：
 
 - 直接使用双引号声明出来的String对象会直接存储在常量池中;
 - 如果不是用双引号声明的 String 对象，可以使用 String 提供的intern方法.intern 方法会从字符串常量池中查询当前字符串是否存在，若不存在就会将当前字符串放入常量池中；

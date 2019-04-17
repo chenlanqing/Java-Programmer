@@ -372,16 +372,27 @@ Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner
 
 ## 6.1、wait
 
-该方法用来将当前线程置入休眠状态，直到接到通知或被中断为止；
+该方法用来将当前线程置入休眠状态，直到接到通知或被中断为止；在调用 wait()之前，线程必须要获得该对象的对象监视器锁，即只能在同步方法或同步块中调用 wait()方法；调用wait()方法之后，当前线程会释放锁。如果调用wait()方法时，线程并未获取到锁的话，则会抛出`IllegalMonitorStateException`异常，这是以个RuntimeException。如果再次获取到锁的话，当前线程才能从wait()方法处成功返回
 
-在调用 wait()之前，线程必须要获得该对象的对象监视器锁，即只能在同步方法或同步块中调用 wait()方法；
+**为什么wait()方法要放在同步块中？**
 
-调用wait()方法之后，当前线程会释放锁。
+- 如果wait()方法不在同步块中，代码的确会抛出异常：IllegalMonitorStateException；
+- Java设计者为了避免使用者出现lost wake up问题而搞出来的；
+- 首先看`Lost Wake-Up Problem`，该问题是会在所有的多线程环境下出现；为了避免不经意间出现这种lost wake up问题，包括java.util.concurrent.locks.Condition的await()/signal()也必须要在同步块中；一定要处于锁对象的同步块中；下面的代码一样出现`IllegalMonitorStateException`
+	```java
+	private Object obj = new Object();
+	private Object another = new Object();
+	public void produce(){
+		// 因为锁住的是obj对象，而调用notify是another对象
+		synchronized(obj){
+			try{
+				another.notify();
+			} catch(Exception e){
 
-如果调用wait()方法时，线程并未获取到锁的话，则会抛出IllegalMonitorStateException异常，这是以个RuntimeException。
-
-如果再次获取到锁的话，当前线程才能从wait()方法处成功返回
-
+			}
+		}
+	}
+	```
 
 ## 6.2、notify
 
@@ -401,7 +412,7 @@ notifyAll 使所有原来在该对象上 wait 的线程统统退出WAITTING状�
 
 ### 6.4.1、notify早期通知
 
-notify通知的遗漏很容易理解，即threadA还没开始wait的时候，threadB已经notify了，这样，threadB通知是没有任何响应的，当 threadB 退出 synchronized 代码块后，threadA 再开始 wait，便会一直阻塞等待，直到被别的线程打断
+notify通知的遗漏很容易理解，即threadA还没开始wait的时候，发生上下文切换，threadB已经notify了，这样，threadB通知是没有任何响应的，当 threadB 退出 synchronized 代码块后，threadA 再开始 wait，便会一直阻塞等待，直到被别的线程打断：Lost Wake-Up Problem问题
 ```java
 public class EarlyNotify {
     private static String lockObject = "";
@@ -520,16 +531,19 @@ public class ResolveEarlyNotify {
 在使用线程的等待/通知机制时，一般都要配合一个 boolean 变量值（或者其他能够判断真假的条件），在 notify 之前改变该 boolean 变量的值，让 wait 返回后能够退出 while 循环（一般都要在 wait 方法外围加一层 while 循环，以防止早期通知），或在通知被遗漏后，不会被阻塞在 wait 方法处。这样便保证了程序的正确性
 
 ### 6.4.2、wait等待条件发生变化
+
 如果线程在等待时接受到了通知，但是之后等待的条件发生了变化，并没有再次对等待条件进行判断，也会导致程序出现错误
 
 在使用线程的等待/通知机制时，一般都要在while循环中调用wait()方法，因此需要配合使用一个boolean变量（或其他能判断真假的条件），满足while循环的条件时，进入while循环，执行wait()方法，不满足while循环的条件时，跳出循环，执行后面的代码；
 
 ### 6.4.3、“假死”状态
+
 - 现象：如果是多消费者和多生产者情况，如果使用notify方法可能会出现“假死”的情况，即唤醒的是同类线程。
 - 原因分析：假设当前多个生产者线程会调用wait方法阻塞等待，当其中的生产者线程获取到对象锁之后使用notify通知处于WAITTING状态的线程，如果唤醒的仍然是生产者线程，就会造成所有的生产者线程都处于等待状态。
 - 解决办法：将notify方法替换成notifyAll方法，如果使用的是lock的话，就将signal方法替换成signalAll方法
 
 ## 6.5、wait/notify通知机制使用条件
+
 - 永远在while循环中对条件进行判断而不是if语句中进行wait条件的判断；
 - 使用notifyAll而不是notify
 

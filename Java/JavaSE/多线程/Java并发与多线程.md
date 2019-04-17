@@ -2605,6 +2605,12 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 
 - 使用CAS在线程冲突严重时，会大幅降低程序性能;CAS只适合于线程冲突较少的情况使用
 
+### 2.6、JDK8对CAS的优化
+
+在jdk1.8中，直接使用了Unsafe的getAndAddInt方法，而在jdk1.7的Unsafe中，没有此方法
+- 1.8在调用getAndAddInt的时候，如果系统底层支持fetch-and-add，那么它执行的就是native方法，使用的是fetch-and-add；
+- 如果不支持，就按照上面的所看到的getAndAddInt方法体那样，以java代码的方式去执行，使用的是compare-and-swap；
+
 # 六、线程池
 
 ## 1、线程池技术

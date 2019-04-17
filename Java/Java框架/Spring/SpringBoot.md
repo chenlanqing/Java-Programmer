@@ -2272,6 +2272,9 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 
 - （3）引入
 
+# 面试题
+
+**SpringApplication.run都做了些什么？**
 
 # 参考资料
 - [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
