@@ -118,6 +118,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
 
 ### 2.3、TreeBin
 
+# 面试
+
+- size方法和mappingCount方法的异同，两者计算是否准确；
+- 多线程环境下如何进行扩容
+- HashMap、HashTable、ConcurrenHashMap区别
+
 # 参考资料:
 
 * [ConcurrentHashMap高并发性的实现机制](http://www.importnew.com/16147.html)

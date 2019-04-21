@@ -393,6 +393,13 @@ Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner
 		}
 	}
 	```
+- wait和sleep的区别：
+	- sleep: 是 Thread 类的静态方法，调用此方法会让当前线程暂停执行指定的时间，将执行机会(CPU)让给其他线程，但是对象的锁依然保持，因此休眠结束后会自动恢复；
+	- wait: 是 Object 类的方法；调用对象的 wait 方法导致当前线程放弃对象的锁(线程暂停执行)，进入对象的等待池，只有调用的对象的 notify(notifyAll)时才能唤醒等待池中的线程进入等锁池,如果线程重新获得对象的锁就可以进入就绪状态:
+	
+	***为什么 wait 方法要定义在 Object 类中?***
+	
+	因为这些方法在操作同步线程时，都必须要标识它们操作线程的锁，只有同一个锁上的被等待线程，可以被同一个锁上的notify唤醒，不可以对不同锁中的线程进行唤醒，等待和唤醒必须是同一个锁。而锁可以是任意对象，所以可以被任意对象调用的方法是定义在 Object 类中。而jdk1.5以后提供了 Lock 接口和 Condition 对象，`Condition 中的await(), signal().signalAll()`代替 `Object 中的wait(),notify(),notifyAll()`
 
 ## 6.2、notify
 
