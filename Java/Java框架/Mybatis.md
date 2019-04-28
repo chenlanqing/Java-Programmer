@@ -298,6 +298,10 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 * [Mybatis初始化机制详解](https://blog.csdn.net/luanlouis/article/details/37744073)
 * []()
 
+# 六、MyBatis中的设计模式
+
+http://www.crazyant.net/2022.html
+
 # 参考资料
 
 - [Hibernate与Mybatis对比](http://www.cnblogs.com/inspurhaitian/p/4647485.html)

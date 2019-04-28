@@ -1459,25 +1459,23 @@ System.out.println("floor d1="+Math.floor(d1)); // -1.0
 System.out.println("floor d1="+Math.round(d1)); // 0
 ```
 - ceil()：该方法返回的是一个 double 类型数据;返回一个大于该参数的最小 double 值，等于某个整数，特殊情况：
+	- ①.如果参数小于0且大于-1.0，则结果为-0.0；
+	- ②.如果参数数学上等于某个整数，则结果与该参数相同;如：5.0；
+	- ③.如果参数为 NaN，无穷大，正0或负0，那么结果与参数相同；
 
-	①.如果参数小于0且大于-1.0，则结果为-0.0;<br>
-	②.如果参数数学上等于某个整数，则结果与该参数相同;如：5.0;<br>
-	③.如果参数为 NaN，无穷大，正0或负0，那么结果与参数相同;<br>
-	==> 特别注意：Math.ceil(d1) == -Math.floor(-d1);<br>
+	==> 特别注意：Math.ceil(d1) == -Math.floor(-d1)；
 
 - floor()：返回 double 类型数据，返回一个小于该参数的最大 double 值，等于某个整数
+	- ①.如果参数数学上等于某个整数，则结果与该参数相同;如：5.0；
+	- ②.如果参数为 NaN，无穷大，正0或负0，那么结果与参数相同；
 
-	①.如果参数数学上等于某个整数，则结果与该参数相同;如：5.0;<br>
-	②.如果参数为 NaN，无穷大，正0或负0，那么结果与参数相同;<br>
+- round()：返回一个整数，如果参数为 float，返回 int 类型；如果参数为 double，返回 long 类型
+	`(int)Math.floor(a + 0.5f);`、`(long)Math.floor(a + 0.5d);`
 
-- round()：返回一个整数，如果参数为 float，返回 int 类型;如果参数为 double，返回 long 类型<br>
-	(int)Math.floor(a + 0.5f);<br>
-	(long)Math.floor(a + 0.5d);<br>
-
-	返回最接近参数的 int 或 long 类型数据，将参数加上 1/2， 对结果调用 floor 将所得结果强转为 int 或 long<br>
-	①.如果参数为 NaN， 结果为 0<br>
-	②.如果结果为负无穷大或任何小于等于 Integer.MIN_VALUE 或 Long.MIN_VALUE 的值，那么结果等于 Integer.MIN_VALUE 或 Long.MIN_VALUE 的值。
-	③.如果参数为正无穷大或任何大于等于 Integer.MAX_VALUE 或 Long.MAX_VALUE 的值，那么结果等于 Integer.MAX_VALUE 或 Long.MAX_VALUE 的值
+	返回最接近参数的 int 或 long 类型数据，将参数加上 1/2， 对结果调用 floor 将所得结果强转为 int 或 long
+	- ①.如果参数为 NaN， 结果为 0
+	- ②.如果结果为负无穷大或任何小于等于 `Integer.MIN_VALUE` 或 `Long.MIN_VALUE` 的值，那么结果等于 `Integer.MIN_VALUE` 或 `Long.MIN_VALUE` 的值。
+	- ③.如果参数为正无穷大或任何大于等于 `Integer.MAX_VALUE` 或 `Long.MAX_VALUE` 的值，那么结果等于 `Integer.MAX_VALUE` 或 `Long.MAX_VALUE` 的值
 
 # 十、Java 中保留小数位数的处理
 
@@ -1533,7 +1531,7 @@ public static String format5(double value) {
 }
 ```
 
-**5.1、对浮点数进行格式化：占位符格式为： %[index$][标识] * [最小宽度][.精度]转换符**
+**5.1、对浮点数进行格式化：占位符格式为： `%[index$][标识] * [最小宽度][.精度]`转换符**
 
 ```java
 double num = 123.4567899;
@@ -1544,7 +1542,7 @@ System.out.print(String.format("%g %n"， num)); // 123.457
 - 可用标识符
 	- -，在最小宽度内左对齐，不可以与0标识一起使用。
 	- 0，若内容长度不足最小宽度，则在左边用0来填充。
-	- #，对8进制和16进制，8进制前添加一个0，16进制前添加0x。
+	- `#`，对8进制和16进制，8进制前添加一个0，16进制前添加0x。
 	- +，结果总包含一个+或-号。
 	- 空格，正数前加空格，负数前加-号。
 	- ，，只用与十进制，每3位数字间用，分隔。

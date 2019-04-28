@@ -56,6 +56,8 @@
 
 是一个开源，先进的key-value存储，并用于构建高性能，可扩展的Web应用程序的完美解决方案数据结构服务器，支持不同类型的值，高级键值（key-value）缓存 （cache）和存储 （store）系统为了高性能采用内存（in-memory）数据集（dataset）
 
+redis为了达到最快的读写速度，将数据都读到内存中，并通过异步的方式将数据写入磁盘。如果不将数据放在内存中，磁盘IO速度会严重影响redis的性能
+
 **1.1、特点：**
 
 - Redis 数据库完全在内存中，使；用磁盘仅用于持久性；
@@ -972,15 +974,13 @@ lazyfree_pending_objects:0
 |volatile-random | 从已设置过期时间的数据集中任意选择数据淘汰 |
 | allkeys-lru | 从所有数据集中挑选最近最少使用的数据淘汰 |
 | allkeys-random | 从所有数据集中任意选择数据进行淘汰 |
-| noeviction | 禁止驱逐数据 |
+| noeviction | 禁止淘汰数据 |
 
 如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key.抽样数量可通过 maxmemory-samples 配置.
 
 ## 3、Redis过期策略
 
-- 定期删除：redis 会将每个设置了过期时间的 key 放入到一个独立的字典中，以后会定期遍历这个字典来删除到期的 key；
-
-	Redis 默认会每秒进行十次过期扫描（100ms一次），过期扫描不会遍历过期字典中所有的 key，而是采用了一种简单的贪心策略
+- 定期删除：redis 会将每个设置了过期时间的 key 放入到一个独立的字典中，以后会定期遍历这个字典来删除到期的 key；Redis 默认会每秒进行十次过期扫描（100ms一次），过期扫描不会遍历过期字典中所有的 key，而是采用了一种简单的贪心策略
 	- 从过期字典中随机 20 个 key；
 	- 删除这 20 个 key 中已经过期的 key；
 	- 如果过期的 key 比率超过 1/4，那就重复步骤 1；
@@ -996,7 +996,10 @@ lazyfree_pending_objects:0
 # 八、Redis安全
 
 
-# 九、Redis与Java
+# 九、Redis管道
+
+
+# 十、Redis与Java
 
 ## 1、Jedis
 
@@ -1006,9 +1009,14 @@ Redis的Java实现的客户端，其API提供了比较全面的Redis命令的支
 
 Redission通过Netty支持非阻塞I/O
 
-# 十、Redis面试题
 
-[Redis常见面试题](https://mp.weixin.qq.com/s/ZeTgsYUtdmKQxSrZXuIt_A)
+# 十一、redis基准测试
+
+redis-benchmark
+
+# Redis面试题
+
+[Redis常见面试题](https://mp.weixin.qq.com/s/LAWkUOn2iQaDC_bxm_NwbQ)
 
 ## 1、redis如何用作缓存？ 如何确保不脏数据
 
@@ -1032,11 +1040,24 @@ Redission通过Netty支持非阻塞I/O
 ## 3、动态字符串sds的优缺点
 
 
-
 ## 4、redis的单线程特性有什么优缺点
 
 
 ## 5、Redis的并发竞争问题如何解决
+
+首先redis为单进程单线程模式，采用队列模式将并发访问变为串行访问。redis本身时没有锁的概念的，redis对多个客户端连接并不存在竞争，但是在Jedis客户端对redis进行并发访问时会产生一系列问题，这些问题时由于客户端连接混乱造成的。有两种方案解决。
+- 在客户端，对连接进行池化，同时对客户端读写redis操作采用内部锁synchronized。
+- 在服务器角度，利用setnx实现锁
+
+## 6、redis通讯协议
+
+
+## 7、Redis有哪些架构模式
+
+
+## 8、Redis是基于CAP的
+
+
 
 
 

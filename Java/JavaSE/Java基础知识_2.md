@@ -130,19 +130,17 @@ if(obj instanceof int[]){  //可以用instanceof关键字进行类型判定
 }
 ```
 **3.2、Java中数组的另一种"继承"关系**
+```java
+String[] s = new String[5];
+Object[] obja = s;   //成立，说明可以用Object[]的引用来接收String[]的对象
+// s的直接父类是?
+//5那么String[] 的直接父类是Object[] 还是 Object? 
+System.out.println(s.getClass().getSuperclass().getName()); 
+//打印结果为java.lang.Object，说明String[] 的直接父类是 Object而不是Object[] 
+```
+- 数组类直接继承了 Object，关于 `Object[]`类型的引用能够指向 `String[]`类型的对象，这并不是严格意义上的继承，`String[]` 不继承自` Object[]`，但是可以允许 `String[]`向上转型到 `Object[]`；可以理解为：其实这种关系可以这样表述：如果有两个类A和B，如果B继承(extends)了A，那么`A[]`类型的引用就可以指向`B[]`类型的对象
 
-String[] s = new String[5];<br>
-Object[] obja = s;   //成立，说明可以用Object[]的引用来接收String[]的对象<br>
-s的直接父类是?<br>
-//5那么String[] 的直接父类是Object[] 还是 Object?  <br>
-System.out.println(s.getClass().getSuperclass().getName());  <br>
-//打印结果为java.lang.Object，说明String[] 的直接父类是 Object而不是Object[]  <br>
-
-- 数组类直接继承了 Object，关于 Object[]类型的引用能够指向 String[]类型的对象，这并不是严格意义上的继承，String[] 不继承自 Object[]，但是可以允许 String[]向上转型到 Object[]；可以理解为：<br>
-	其实这种关系可以这样表述：如果有两个类A和B，如果B继承(extends)了A，那么A[]类型的引用就可以指向B[]类型的对象
-
-- 数组的这种用法不能作用于基本类型数据：
-
+- 数组的这种用法不能作用于基本类型数据
 ```java
 int[] aa = new int[4];  
 Object[] objaa = aa;  //错误的，不能通过编译  
@@ -226,13 +224,13 @@ public class ArrayTest {
 		//所以，根据上面的结论，Father[][]的引用可以指向Son[][]类型的对象
 
 		/**
-			* 扩展结论：
-			* 因为Object是所有引用类型的父类
-			* 所以Object[]的引用可以指向任何引用数据类型的数组的对象. 如：
-			* Object[] objs = new String[1];
-			* Object[] objs = new Son[1];
-			*
-			*/
+		* 扩展结论：
+		* 因为Object是所有引用类型的父类
+		* 所以Object[]的引用可以指向任何引用数据类型的数组的对象. 如：
+		* Object[] objs = new String[1];
+		* Object[] objs = new Son[1];
+		*
+		*/	
 
 		//9		下面的代码成立吗?
 		int[] aa = new int[4];
@@ -356,17 +354,14 @@ size：元素数量、toArray：转换为数组，实现了数组的浅拷贝、
 
 ## 1、支持类型
 
-JDK7 之后，switch 的参数可以是 String 类型了;到目前为止 switch 支持的数据类型：byte(Byte)、short(Short)、int(Integer)、char(Character)、String、枚举类型
+JDK7 之后，switch 的参数可以是 String 类型了；到目前为止 switch 支持的数据类型：`byte(Byte)、short(Short)、int(Integer)、char(Character)、String、枚举类型`
 
 ## 2、switch 对整型的支持
 
 switch 对 int 的判断是直接比较整数的值：
-
-由于 byte 的存储范围小于 int，可以向 int 类型进行隐式转换，所以 switch 可以作用在 byte 类型变量上；
-
-由于 long 的存储范围大于 int，不能向 int 进行隐式转换，只能强制转换，所以 switch 不可以作用在 long 类型变量上。
-
-对于包装类型，其使用的时候都是通过 byteValue，shortValue等来转换为基本类型
+- 由于 byte 的存储范围小于 int，可以向 int 类型进行隐式转换，所以 switch 可以作用在 byte 类型变量上；
+- 由于 long 的存储范围大于 int，不能向 int 进行隐式转换，只能强制转换，所以 switch 不可以作用在 long 类型变量上。
+- 对于包装类型，其使用的时候都是通过 byteValue，shortValue等来转换为基本类型
 
 ## 3、switch 对字符型支持的实现
 
@@ -374,24 +369,23 @@ switch 对 int 的判断是直接比较整数的值：
 
 ## 4、switch 对字符串支持的实现
 
-### 4.1、代码**
-
+### 4.1、代码
 ```java
-	public class switchDemoString {
-		public static void main(String[] args) {
-			String str = "world";
-			switch (str) {
-			case "hello"：
-				System.out.println("hello");
-				break;
-			case "world"：
-				System.out.println("world");
-				break;
-			default：
-				break;
-			}
+public class switchDemoString {
+	public static void main(String[] args) {
+		String str = "world";
+		switch (str) {
+		case "hello"：
+			System.out.println("hello");
+			break;
+		case "world"：
+			System.out.println("world");
+			break;
+		default：
+			break;
 		}
 	}
+}
 ```
 
 ### 4.2、反编译上述代码
@@ -531,9 +525,7 @@ public interface A{
 ### 3.2、设计层面上
 
 - （1）抽象层次不同：抽象类是对类抽象，而接口是对行为的抽象，抽象类是对整个类整体进行抽象，包括属性、行为，但是接口却是对类局部- （行为)进行抽象;抽象是：is-a 的关系，接口是：like-a 的关系；
-
 - （2）跨域不同：抽象类所跨域的是具有相似特点的类，而接口却可以跨域不同的类，抽象类所体现的是一种继承关系，要想使得继承关系合理，父类和派生类之间必须存在"is-a" 关系，即父类和派生类在概念本质上应该是相同的。对于接口则不然，接口是"like-a "，并不要求接口的实现者和接口定义在概念本质上是一致的；
-
 - （3）设计层次不同：抽象类是自下而上抽象出来的，需要先知道子类才能抽象出父类；	接口则是自顶向下的设计，接口根本不需要知道子类的存在，其只需要定义一个规则即可;
 
 [接口静态初始化](http://stackoverflow.com/questions/19722847/static-initialization-in-interface)
@@ -617,11 +609,9 @@ Integer i03 =Integer.valueOf(59);
 Integer i04 = new Integer(59);
 ```
 
-（1）Integer 为了节省空间和内存会在内存中缓存 -128~127 之间的数字;
-
-（2）valueOf()：调用该方法时，内部实现作了个判断，判断当前传入的值是否在 -128~127 之间且 IntergCache	是否已存在该对象如果存在，则直接返回引用，如果不存在，则创建一个新对象
-
-（3）基本类型存在内存的栈中，与引用类型比较时， 引用类型会自动装箱，比较数值而不比较内存地址;
+- （1）Integer 为了节省空间和内存会在内存中缓存 -128~127 之间的数字;
+- （2）valueOf()：调用该方法时，内部实现作了个判断，判断当前传入的值是否在-128~127之间且 IntergCache是否已存在该对象如果存在，则直接返回引用，如果不存在，则创建一个新对象
+- （3）基本类型存在内存的栈中，与引用类型比较时， 引用类型会自动装箱，比较数值而不比较内存地址;
 
 **1.2、自动装箱拆箱机制是编译特性还是虚拟机运行时特性？分别是怎么实现的？**
 
@@ -684,9 +674,9 @@ string = stringBuffer.toString();
 
 - 编译器对+进行了优化，它是使用 StringBuilder 的 append() 方法来进行处理的，编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串，变慢的关键原因就在于 new StringBuilder()和toString()，这里可是创建了 10 W 个 StringBuilder 对象，而且每次还需要将其转换成 String
 
-- concat：<br>
-	concat() 的源码，它看上去就是一个数字拷贝形式，我们知道数组的处理速度是非常快的，但是由于该方法最后是这样的：<br>
-	return new String(0， count + otherLen， buf);这同样也创建了 10 W 个字符串对象，这是它变慢的根本原因
+- concat：
+	concat() 的源码，它看上去就是一个数字拷贝形式，我们知道数组的处理速度是非常快的，但是由于该方法最后是这样的：
+	`return new String(0， count + otherLen， buf);`这同样也创建了 10 W 个字符串对象，这是它变慢的根本原因
 
 - append() 方法拼接字符串：并没有产生新的字符串对象；
 
@@ -694,9 +684,9 @@ string = stringBuffer.toString();
 
 其作用级别为类；构造代码块、构造函数、构造，其作用级别为对象
 
-- （1）、静态代码块，它是随着类的加载而被执行，只要类被加载了就会执行，而且只会加载一次，主要用于给类进行初始化。
-- （2）、构造代码块，每创建一个对象时就会执行一次，且优先于构造函数，主要用于初始化不同对象共性的初始化内容和初始化实例环境。
-- （3）、构造函数，每创建一个对象时就会执行一次.同时构造函数是给特定对象进行初始化，而构造代码是给所有对象进行初始化，作用区域不同.
+- （1）静态代码块，它是随着类的加载而被执行，只要类被加载了就会执行，而且只会加载一次，主要用于给类进行初始化。
+- （2）构造代码块，每创建一个对象时就会执行一次，且优先于构造函数，主要用于初始化不同对象共性的初始化内容和初始化实例环境。
+- （3）构造函数，每创建一个对象时就会执行一次.同时构造函数是给特定对象进行初始化，而构造代码是给所有对象进行初始化，作用区域不同.
 
 ==> 通过上面的分析，他们三者的执行顺序应该为：静态代码块 > 构造代码块 > 构造函数。
 
@@ -898,7 +888,7 @@ JDK5之后新增的功能
 负责注解其他注解，Java定义了四个标准的meta-annotation类型，用来提供对其他 annotation 类型作说明
 
 - `@Target`：用于描述注解的使用范围：`@Target(value= ElementType.TYPE)`
-	- 包：PACKAGE<br>
+	- 包：PACKAGE
 	- 类、接口、枚举、Annotation类型：TYPE
 	- 方法参数：PARAMETER
 	- 局部变量：LOCAL VARIABLE
@@ -935,7 +925,7 @@ JDK5之后新增的功能
 
 【一个类只有一个Class对象，这个对象包含了完整类的结构】
 
-- `Class` 类[java.lang.Class]：反射的根源，各种类型----表示Java中的同一类事物
+- `Class` 类`[java.lang.Class]`：反射的根源，各种类型----表示Java中的同一类事物
 	- `Class`类获取：`.class、getClass、Class.forName(String className);`
 	- `Field`：属性相关类，获取所有属性(包括 private)，`getDeclaredFields()`;
 	- `Method`：方法相关类，`getDeclaredMethods();`，`method.invoke()`方法执行时，如果第一个参数为 null，则表示反射的方法为静态方法
@@ -1522,7 +1512,7 @@ publicclass ManifestUtil {
 - 新建Java工程
 - 新建文件：`META-INF/MANIFEST.MF`
 
-	![](image/MANIFEST.MF文件.png)
+![](image/MANIFEST.MF文件.png)
 
 - 编写Java类:
 	```java
