@@ -2828,49 +2828,116 @@ private static boolean isRunning(int c) {
 
 ![image](image/ThreadPool-execute.png)
 
-
+**execute方法执行机制：**
 - 一个任务提交，如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行;(执行这个步骤时需要获取全局锁)
 - 如果来不及执行，则把多余的线程放到workQueue，等待已启动的worker来循环执行;
 - 如果队列workQueue都放满了还没有执行，则在maximumPoolSize下面启动新的worker来循环执行workQueue;
 - 如果启动到maximumPoolSize还有任务进来，线程池已达到满负载，此时就执行任务拒绝RejectedExecutionHandler
 - 线程池核心代码：
-```java
-public void execute(Runnable command) {
-	if (command == null)
-		throw new NullPointerException();
-	int c = ctl.get();
-	// 判断当前线程数是否小于 corePoolSize，如果是，使用入参任务通过 addWork方法创建一个新的线程.
-	// 如果能完成新线程的创建execute方法结束，成果提交任务.
-	if (workerCountOf(c) < corePoolSize) {
-		if (addWorker(command， true))// true表示会再次检查workCount是否小于corePoolSize
-			return;
-		c = ctl.get();
-	}
-	// 如果上面没有完成任务提交;状态为运行并且能发成功加入任务到工作队列后，在进行一次check，如果状态在任务
-	// 加入了任务队列后变为非运行(可能线程池被关闭了)，非运行状态下当然需要reject;
-	// 然后在判断当前线程数是否为0，如果是，新增一个线程;
-	if (isRunning(c) && workQueue.offer(command)) {
-		int recheck = ctl.get();
-		if (! isRunning(recheck) && remove(command))
+	```java
+	public void execute(Runnable command) {
+		if (command == null)
+			throw new NullPointerException();
+		int c = ctl.get();
+		// 判断当前线程数是否小于 corePoolSize，如果是，使用入参任务通过 addWork方法创建一个新的线程.
+		// 如果能完成新线程的创建execute方法结束，成果提交任务.
+		if (workerCountOf(c) < corePoolSize) {
+			if (addWorker(command， true))// true表示会再次检查workCount是否小于corePoolSize
+				return;
+			c = ctl.get();
+		}
+		// 如果上面没有完成任务提交;状态为运行并且能发成功加入任务到工作队列后，在进行一次check，如果状态在任务
+		// 加入了任务队列后变为非运行(可能线程池被关闭了)，非运行状态下当然需要reject;
+		// 然后在判断当前线程数是否为0，如果是，新增一个线程;
+		if (isRunning(c) && workQueue.offer(command)) {
+			int recheck = ctl.get();
+			if (! isRunning(recheck) && remove(command))
+				reject(command);
+			else if (workerCountOf(recheck) == 0)
+				addWorker(null， false);
+		}
+		// 如果任务不能加入到工作队列，将尝试使用任务增加一个线程，如果失败，则是线程池已经shutdown或者线程池已经
+		// 达到饱和状态，所以reject这个任务.
+		else if (!addWorker(command， false))
 			reject(command);
-		else if (workerCountOf(recheck) == 0)
-			addWorker(null， false);
 	}
-	// 如果任务不能加入到工作队列，将尝试使用任务增加一个线程，如果失败，则是线程池已经shutdown或者线程池已经
-	// 达到饱和状态，所以reject这个任务.
-	else if (!addWorker(command， false))
-		reject(command);
-}
 
-```
+	```
+	```java
+	// ctl变量有双重角色，通过高低位的不同，既表示线程池状态，又表示工厂线程数目
+	private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+	```
+
+**submit()方法执行机制：**
 ```java
-// ctl变量有双重角色，通过高低位的不同，既表示线程池状态，又表示工厂线程数目
-private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
+public Future<?> submit(Runnable task) {
+	if (task == null) throw new NullPointerException();
+	RunnableFuture<Void> ftask = newTaskFor(task, null);
+	execute(ftask);
+	return ftask;
+}
 ```
+- submit 返回一个 Future 对象，我们可以调用其 get 方法获取任务执行的结果；就是将 Runnable 包装成 FutureTask 而已。可以看到，最终还是调用 Execute 方法
 
-#### 2.3.5、拒绝策略
+#### 2.3.5、新任务添加到队列
 
-#### 2.3.6、总结
+线程池使用 addWorker 方法新建线程，第一个参数代表要执行的任务，线程会将这个任务执行完毕后再从队列取任务执行。第二参数是核心线程的标志，它并不是 Worker 本身的属性，在这里只用来判断工作线程数量是否超标；
+
+第一部分进行一些前置判断，并使用循环 CAS 结构将线程数量加1。代码如下
+```java
+private boolean addWorker(Runnable firstTask, boolean core) {
+    retry: //这个语法不常用，用于给外层 for 循环命名。方便嵌套 for 循环中，break 和 continue 指定是外层还是内层循环
+    for (;;) {
+        int c = ctl.get();
+        int rs = runStateOf(c);
+        
+        // firstTask 不为空代表这个方法用于添加任务，为空代表新建线程。SHUTDOWN 状态下不接受新任务，但处理队列中的任务。这就是第二个判断的逻辑。
+        if (rs >= SHUTDOWN &&
+        ! (rs == SHUTDOWN &&
+           firstTask == null &&
+           ! workQueue.isEmpty()))
+        return false;
+        
+        // 使用循环 CAS 自旋，增加线程数量直到成功为止
+        for (;;) {
+        int wc = workerCountOf(c);
+        //判断是否超过线程容量
+        if (wc >= CAPACITY ||
+            wc >= (core ? corePoolSize : maximumPoolSize))
+            return false;
+        //使用 CAS 将线程数量加1
+        if (compareAndIncrementWorkerCount(c))
+            break retry;
+        //修改不成功说明线程数量有变化
+        //重新判断线程池状态，有变化时跳到外层循环重新获取线程池状态
+        c = ctl.get();  // Re-read ctl
+        if (runStateOf(c) != rs)
+            continue retry;
+        //到这里说明状态没有变化，重新尝试增加线程数量
+        }
+    }
+    ... ...
+}
+```
+第二部分负责新建并启动线程，并将 Worker 添加至 Hashset 中。代码很简单，没什么好注释的，用了 ReentrantLock 确保线程安全
+
+#### 2.3.6、worker
+
+Worker 本身并不区分核心线程和非核心线程，核心线程只是概念模型上的叫法，特性是依靠对线程数量的判断来实现的
+- 继承自 AQS，本身实现了一个最简单的不公平的不可重入锁
+- 构造方法传入 Runnable，代表第一个执行的任务，可以为空。构造方法中新建一个线程；
+- 实现了 Runnable 接口，在新建线程时传入 this。因此线程启动时，会执行 Worker 本身的 run 方法；
+- run 方法调用了 ThreadPoolExecutor 的 runWorker 方法，负责实际执行任务
+
+#### 2.3.7、拒绝策略
+
+RejectedExecutionHandler，四种策略都是静态内部类，在默认情况下，ThreadPoolExecutor使用抛弃策略：`private static final RejectedExecutionHandler defaultHandler = new AbortPolicy();`
+- CallerRunsPolicy：在线程池没有关闭（调用shut Down）的情况下，直接由调用线程来执行该任务。否则直接就丢弃该任务，什么也不做。
+- AbortPolicy：丢弃任务并抛出`RejectedExecutionException`异常。
+- DiscardPolicy：直接丢弃该任务，什么也不做。
+- DiscardOldestPolicy：在线程池没有关闭（调用shutDown）的情况下，丢弃线程池任务队列中等待最久-即队列首部的任务，并尝试直接执行该触发饱和策略的任务
+
+#### 2.3.8、总结
 
 - 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
 - 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
@@ -3027,8 +3094,12 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 
 ## 1、为什么线程池的底层数据接口采用HashSet来实现
 
+
 ## 2、使用模拟真正的并发请求
 
+使用CountDownLatch
+
+[模拟超过5W的并发用户](https://mp.weixin.qq.com/s/2BondePBWkfUNSwNyTMcTA)
 
 # 参考文章
 

@@ -924,7 +924,7 @@ public class CloneUtils {
 
 - 6.2、CORBA：早期比较好的实现了跨平台，跨语言的序列化协议，COBRA 的主要问题是参与方过多带来的版本过多，版本之间兼容性较差，以及使用复杂晦涩;
 - 6.3、XML&SOAP
-	- XML 是一种常用的序列化和反序列化协议，具有跨机器，跨语言等优点；
+	- XML 是一种常用的序列化和反序列化协议，具有跨机器，跨语言等优点；注意xml中一些特殊字符的处理；
 	- SOAP(Simple Object Access protocol)是一种被广泛应用的，基于XML为序列化和反序列化协议的结构化消息传递协议；SOAP具有安全、可扩展、跨语言、跨平台并支持多种传输层协议
 - 6.4、JSON(Javascript Object Notation)
 	- ①、这种Associative array格式非常符合工程师对对象的理解;
