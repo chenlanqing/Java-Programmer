@@ -471,7 +471,11 @@ Thread.setDefaultUncaughtExceptionHandler(new ExceptionHandler());
 
 Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 对象组成和由另外的 ThreadGroup 对象组成，生成线程树结构，方便线程管理
 
+当线程运行过程中出现异常情况时，在某些情况下JVM会把线程的控制权交到线程关联的线程组对象上来进行处理
+
 ***不推荐使用线程组***
+- 线程组ThreadGroup对象中比较有用的方法是stop、resume、suspend等方法，由于这几个方法会导致线程的安全问题（主要是死锁问题），已经被官方废弃掉了；
+- 线程组ThreadGroup不是线程安全的，这在使用过程中获取的信息并不全是及时有效的，这就降低了它的统计使用价值
 
 ### 2.13、用线程工厂创建线程
 
@@ -784,6 +788,8 @@ synchronized 代码块的语义底层是通过一个monitor的对象来完成，
 	方法的同步并没有通过指令monitorenter和monitorexit来完成，不过相对于普通方法，其常量池中多了 ACC_SYNCHRONIZED 标示符。JVM 就是根据该标示符来实现方法的同步：当方法调用时会检查方法的 ACC_SYNCHRONIZED 访问标示是否被设置，如果设置了，执行线程将先获取monitor，获取成功后，执行方法体。方法值完释放monitor，在方法执行期间，其他线程无法再获得同一个monitor对象。锁是放在对象头中的；
 
 	值得注意的是，如果在方法执行过程中，发生了异常，并且方法内部并没有处理该异常，那么在异常被抛到方法外面之前监视器锁会被自动释放。值得注意的是，如果在方法执行过程中，发生了异常，并且方法内部并没有处理该异常，那么在异常被抛到方法外面之前监视器锁会被自动释放。
+
+	加锁的本质就是在锁对象的对象头中写入当前线程ID
 
 - （2）同步方法与同步代码块的实现：
 
@@ -1481,6 +1487,10 @@ public class DeadLock{
 
 如果是死循环导致线程等待，会导致CPU飙升，可以使用top命令配合grep java查找到CPU使用率高的java进程，再通过`top -Hp <pid>`查看该java进程下CPU使用率较高的线程，然后在使用jstack命令查看线程的具体情况
 
+### 13.6、分布式环境下死锁
+
+[分布式事务下死锁问题](../../Java架构/分布式.md#6分布式事务下死锁问题)
+
 ## 14、饥饿和公平
 
 ### 14.1、饥饿
@@ -1614,8 +1624,22 @@ CPU 缓存可以分为一级缓存，二级缓存，部分高端 CPU 还具有�
 
 ## 19、线程调度算法
 
+线程调度是指按照特定机制为多个线程分配CPU的使用权；
+
+Java 虚拟机如何进行线程调度：有两种调度模型：分时调度模型和抢占式调度模型
+- 分时调度模型是指让所有的线程轮流获得 cpu 的使用权，并且平均分配每个线程占用的 CPU 的时间片这个也比较好理解；
+- Java 虚拟机采用抢占式调度模型，是指优先让可运行池中优先级高的线程占用 CPU，如果可运行池中的线程优先级相同，那么就随机选择一个线程，使其占用 CPU。处于运行状态的线程会一直运行，直至它不得不放弃 CPU；
+
+放弃CPU原因：一个线程会因为以下原因而放弃 CPU
+- Java 虚拟机让当前线程暂时放弃 CPU，转到就绪状态，使其它线程获得运行机会；
+- 当前线程因为某些原因而进入阻塞状态；
+- 线程结束运行
+
+Java 的线程调度是不分时的，同时启动多个线程后，不能保证各个线程轮流获得均等的 CPU 时间片。不是所有的线程切换都需要进入内核模式
 
 ## 20、CPU超线程技术
+
+- 超线程是英特尔公司的私有技术，其能够帮助提升物理处理器的资源使用效率，保证处理器一直处于繁忙状态，以便完成更多工作
 
 # 三、JUC(java.util.concurrent)包
 
@@ -2360,17 +2384,35 @@ CopyOnWriteArrayList 则不存在这个问题
 
 ## 4、ConcurrentHashMap：
 
-[ConcurrentHashMap](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/%E9%9B%86%E5%90%88/ConcurrentHashMap.md)
+[ConcurrentHashMap](../../Java源码解读/集合/ConcurrentHashMap.md)
 
 ## 5、ConcurrentSkipListMap：(TreeMap)
 
+### 5.1、基本描述
+
 线程安全的有序的哈希表
-
-* http://www.cnblogs.com/skywang12345/p/3498556.html
-
 - ConcurrentSkipListMap 和 TreeMap，它们虽然都是有序的哈希表；但是 ConcurrentSkipListMap 是线程安全的，TreeMap 是线程不安全的；另外 ConcurrentSkipListMap 是通过跳表来实现的，而 TreeMap 是通过红黑树实现的。
 	- 跳表:平衡树的一种替代的数据结构，和红黑树不相同的是，跳表对于树的平衡的实现是基于一种随机化的算法的，这样也就是说跳表的插入和删除的工作是比较简单的.
 - TreeMap是基于红黑树实现的，要实现高效的并发是非常困难的，为了保证效率，当我们插入或者删除节点的时，会移动节点进行平衡操作，这导致在高并发场景中难以进行合理粒度的同步；
+
+### 5.2、SkipList
+
+Skip List，称之为跳表，它是一种可以替代平衡树的数据结构，其数据元素默认按照key值升序，天然有序。Skip list让已排序的数据分布在多层链表中，以0-1随机数决定一个数据的向上攀升与否，通过“空间来换取时间”的一个算法，在每个节点中增加了向前的指针，在插入、删除、查找时可以忽略一些不可能涉及到的结点，从而提高了效率；
+
+SkipList的特性：
+- 由很多层结构组成，level是通过一定的概率随机产生的；
+- 每一层都是一个有序的链表，默认是升序，也可以根据创建映射时所提供的Comparator进行排序，具体取决于使用的构造方法；
+- 最底层(Level 1)的链表包含所有元素；
+- 如果一个元素出现在Level i 的链表中，则它在Level i 之下的链表也都会出现
+- 每个节点包含两个指针，一个指向同一链表中的下一个元素，一个指向下面一层的元素；
+
+其插入和查找的效率O(logn)，其效率不低于红黑树，但是其原理和实现的复杂度要比红黑树简单多了；
+
+### 5.3、ConcurrentSkipListMap
+
+ConcurrentSkipListMap其内部采用SkipLis数据结构实现。为了实现SkipList，ConcurrentSkipListMap提供了三个内部类来构建这样的链表结构：`Node、Index、HeadIndex`。其中Node表示最底层的单链表有序节点、Index表示为基于Node的索引层，HeadIndex用来维护索引层次；
+
+ConcurrentSkipListMap是通过`HeadIndex`维护索引层次，通过`Index`从最上层开始往下层查找，一步一步缩小查询范围，最后到达最底层`Node`时，就只需要比较很小一部分数据了
 
 ## 6、ConcurrentSkipListSet: (TreeSet)
 
@@ -2423,7 +2465,7 @@ BlockingQueue 是一个接口，继承自 Queue
 - [ArrayBlockingQueue](http://www.cnblogs.com/skywang12345/p/3498652.html)是典型的有界队列，一个由数组结构组成的有界阻塞队列，内部是`final`数组保存数据，数组的大小就是队列的边界
 
 - 此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列，即如果队列满了，那么被阻塞在外面的线程对队列访问的顺序是不能保证线程公平（即先阻塞，先插入）的，其并发控制采用可重入锁来控制，不管是插入操作还是读取操作，都需要获取到锁才能进行操作；
-
+- 看到`ArrayBlockingQueue`继承`AbstractQueue`，实现`BlockingQueue`接口；`AbstractQueue`在Queue接口中扮演着非常重要的作用，该类提供了对queue操作的骨干实现；`BlockingQueue`继承`java.util.Queue`为阻塞队列的核心接口，提供了在多线程环境下的出列、入列操作，作为使用者，则不需要关心队列在什么时候阻塞线程，什么时候唤醒线程，所有一切均由`BlockingQueue`来完成
 - 其内部是采用一个 ReentrantLock 和相应的两个 Condition 来实现：
 	```java
 	// 用于存放元素的数组
@@ -2467,39 +2509,76 @@ BlockingQueue 是一个接口，继承自 Queue
 
 #### 7.4.3、PriorityBlockingQueue
 
-- 带排序的 BlockingQueue 实现，其并发控制采用的是 ReentrantLock，队列为无界队列；PriorityBlockingQueue 只能指定初始的队列大小，后面插入元素的时候，如果空间不够的话会自动扩容；
+- 带排序的 BlockingQueue 实现，其并发控制采用的是 ReentrantLock，支持优先级的无界阻塞队列；PriorityBlockingQueue 只能指定初始的队列大小，后面插入元素的时候，如果空间不够的话会自动扩容；
 - 简单地说，它就是 PriorityQueue 的线程安全版本。不可以插入 null 值，同时，插入队列的对象必须是可比较大小的（comparable），否则报 ClassCastException 异常。它的插入操作 put 方法不会 block，因为它是无界队列（take 方法在队列为空的时候会阻塞）；
-- 此类实现了 Collection 和 Iterator 接口中的所有接口方法，对其对象进行迭代并遍历时，不能保证有序性。如果你想要实现有序遍历，建议采用 Arrays.sort(queue.toArray()) 进行处理
+- 默认情况下元素采用自然顺序升序排序，此类实现了 Collection 和 Iterator 接口中的所有接口方法，对其对象进行迭代并遍历时，不能保证有序性。如果你想要实现有序遍历，建议采用 Arrays.sort(queue.toArray()) 进行处理
 - PriorityBlockingQueue 使用了基于数组的二叉堆来存放元素，所有的 public 方法采用同一个 lock 进行并发控制
 
 #### 7.4.4、DelayQueue
 
-支持延时获取元素的无界阻塞队列，即可以指定多久才能从队列中获取当前元素
+- 支持延时获取元素的无界阻塞队列，即可以指定多久才能从队列中获取当前元素。如果队列里面没有元素到期，是不能从列头获取元素的，哪怕有元素也不行。也就是说只有在延迟期到时才能够从队列中取元素；
 
-在内部用一个PriorityQueue保存所有的Delayed对象，Delayed接口中只有一个方法long getDelay(TimeUnit unit);，返回该任务的deadline距离当前时间还有多久，堆顶保存了最快到期的任务
+- DelayQueue主要用于两个方面：（1）缓存：清掉缓存中超时的缓存数据；（2）任务超时处理
+
+- 在内部用一个PriorityQueue保存所有的`Delayed`对象，Delayed接口中只有一个方法long getDelay(TimeUnit unit);，返回该任务的deadline距离当前时间还有多久，堆顶保存了最快到期的任务；以支持优先级无界队列的PriorityQueue作为一个容器，容器里面的元素都应该实现Delayed接口，在每次往优先级队列中添加元素时以元素的过期时间作为排序条件，最先过期的元素放在优先级最高
 
 #### 7.4.5、SynchronousQueue
 
+[SynchronousQueue](http://cmsblogs.com/?p=2418)
+
 - 不存储元素的阻塞队列，该队列的容量为0，每一个put必须等待一个take操作，否则不能继续添加元素。并且他支持公平访问队列
+- SynchronousQueue分为公平和非公平，默认情况下采用非公平性访问策略，当然也可以通过构造函数来设置为公平性访问策略
 - 在JDK6之后，用CAS替换了原本基于锁的逻辑，同步开销比较小；
 - 是Executors.newCachedThreadPool()的默认队列；
 - 不能在 SynchronousQueue 中使用 peek 方法（在这里这个方法直接返回 null），peek 方法的语义是只读取不移除；
 - SynchronousQueue 也不能被迭代，因为根本就没有元素可以拿来迭代的；
 - Transferer 有两个内部实现类，是因为构造 SynchronousQueue 的时候，可以指定公平策略。公平模式意味着，所有的读写线程都遵守先来后到，FIFO 嘛，对应 TransferQueue。而非公平模式则对应 TransferStack；
+- SynchronousQueue非常适合做交换工作，生产者的线程和消费者的线程同步以传递某些信息、事件或者任务
 
 #### 7.4.6、LinkedTransferQueue
 
-由链表结构组成的无界阻塞TransferQueue队列，相对于其他阻塞队列，多了tryTransfer和transfer方法
+- 由链表结构组成的FIFO无界阻塞队列TransferQueue队列，相对于其他阻塞队列，多了tryTransfer和transfer方法；
+- LinkedTransferQueue采用一种预占模式：有就直接拿走，没有就占着这个位置直到拿到或者超时或者中断。即消费者线程到队列中取元素时，如果发现队列为空，则会生成一个null节点，然后park住等待生产者。后面如果生产者线程入队时发现有一个null元素节点，这时生产者就不会入列了，直接将元素填充到该节点上，唤醒该节点的线程，被唤醒的消费者线程拿东西走人
 
 #### 7.4.7、ConcurrentLinkedQueue
 
-* http://www.cnblogs.com/skywang12345/p/3498995.html
+```java
+public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<E>, java.io.Serializa{
 
-是基于CAS的无锁技术，不需要在每个操作都使用锁
+}
+```
+
+* [ConcurrentLinkedQueue](http://www.cnblogs.com/skywang12345/p/3498995.html)
+
+- 是一个基于链接节点的无边界的线程安全队列，它采用FIFO原则对元素进行排序。采用“wait-free”算法（即CAS算法）来实现的
+- 特性：
+	- 在入队的最后一个元素的next为null；
+	- 队列中所有未删除的节点的item都不能为null且都能从head节点遍历到；
+	- 对于要删除的节点，不是直接将其设置为null，而是先将其item域设置为null（迭代器会跳过item为null的节点）；
+	- 允许head和tail更新滞后。即head、tail不总是指向第一个元素和最后一个元素；
+- head的不变性和可变性：
+	- 不变性：
+		- 所有未删除的节点都可以通过head节点遍历到；
+		- head不能为null；
+		- head节点的next不能指向自身；
+	- 可变性：
+		- head的item可能为null，也可能不为null；
+		- 允许tail滞后head，也就是说调用succc()方法，从head不可达tail；
+- tail的不变性和可变性：
+	- 不变性：tail不能为null
+	- 可变性：
+		- tail的item可能为null，也可能不为null；
+		- tail节点的next域可以指向自身；
+		- 允许tail滞后head，也就是说调用succc()方法，从head不可达tail
+- 内部类Node：Node是个单向链表节点，next用于指向下一个Node，item用于存储数据。Node中操作节点数据的API，都是通过Unsafe机制的CAS函数实现的；
+- ConcurrentLinkedQueue就是通过volatile来实现多线程对竞争资源的互斥访问的
 
 #### 7.4.8、LinkedBlockingDeque
 
-链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争
+- 链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争；支持FIFO、FILO两种操作方式
+- LinkedBlockingDeque是可选容量的，在初始化时可以设置容量防止其过度膨胀，如果不设置，默认容量大小为`Integer.MAX_VALUE`；
+- LinkedBlockingDeque 继承AbstractQueue，实现接口BlockingDeque，而BlockingDeque又继承接口BlockingQueue，BlockingDeque是支持两个附加操作的 Queue，这两个操作是：获取元素时等待双端队列变为非空；存储元素时等待双端队列中的空间变得可用；
+- 通过互斥锁ReentrantLock 来实现，notEmpty 、notFull 两个Condition做协调生产者、消费者问题
 
 #### 7.4.9、ConcurrentLinkedDeque
 
@@ -2694,7 +2773,13 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 
 ### 1.5、线程池原理
 
-预先启动一些线程，线程无限循环从任务队列中获取一个任务进行执行，直到线程池被关闭.如果某个线程因为执行某个任务发生异常而终止，那么重新创建一个新的线程而已.如此反复.线程池的实现类是 ThreadPoolExecutor 类
+预先启动一些线程，线程无限循环从任务队列中获取一个任务进行执行，直到线程池被关闭.如果某个线程因为执行某个任务发生异常而终止，那么重新创建一个新的线程而已.如此反复.线程池的实现类是 ThreadPoolExecutor 类；
+
+核心工作线程值在初始的时候被创建，当新任务来到的时候被启动，但是我们可以通过重写 prestartCoreThread 或 prestartCoreThreads 方法来改变这种行为。通常场景我们可以在应用启动的时候来 WarmUp 核心线程，从而达到任务过来能够立马执行的结果，使得初始任务处理的时间得到一定优化
+
+### 1.6、Hook
+
+ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，允许用户在任务执行之前会执行之后做一些事情。我们可以通过它来实现比如初始化 ThreadLocal、收集统计信息、如记录日志等操作。这类 Hook 如 beforeExecute 和 afterExecute。另外还有一个 Hook 可以用来在任务被执行完的时候让用户插入逻辑，如 rerminated。如果 hook 方法执行失败，则内部的工作线程的执行将会失败或被中断
 
 ## 2、重要类
 
@@ -2925,7 +3010,10 @@ private boolean addWorker(Runnable firstTask, boolean core) {
 
 Worker 本身并不区分核心线程和非核心线程，核心线程只是概念模型上的叫法，特性是依靠对线程数量的判断来实现的
 - 继承自 AQS，本身实现了一个最简单的不公平的不可重入锁
-- 构造方法传入 Runnable，代表第一个执行的任务，可以为空。构造方法中新建一个线程；
+- 构造方法传入 Runnable，代表第一个执行的任务，可以为空。构造方法中新建一个线程；构造函数主要是做三件事：
+	- 设置同步状态state为-1，同步状态大于0表示就已经获取了锁；
+	- 设置将当前任务task设置为firstTask；
+	- 利用Worker本身对象this和ThreadFactory创建线程对象。
 - 实现了 Runnable 接口，在新建线程时传入 this。因此线程启动时，会执行 Worker 本身的 run 方法；
 - run 方法调用了 ThreadPoolExecutor 的 runWorker 方法，负责实际执行任务
 
@@ -2942,10 +3030,15 @@ RejectedExecutionHandler，四种策略都是静态内部类，在默认情况�
 - 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
 - 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
 - 线程池原理关键技术：锁（lock,cas）、阻塞队列、hashSet（资源池）
+- 使用该线程池是，一定要注意控制并发的任务数，否则创建大量的线程可能导致严重的性能问题
 
 ### 2.4、ScheduledThreadPoolExecutor
 
-继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现
+- 继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现；提供了“延迟”和“周期执行”功能的ThreadPoolExecutor；
+- 一旦启用已延迟的任务就执行它，但是有关何时启用，启用后何时执行则没有任何实时保证。按照提交的先进先出 (FIFO) 顺序来启用那些被安排在同一执行时间的任务；
+- 一般通过Executors.newScheduledThreadPool(int);来构造一个ScheduledThreadPoolExecutor对象；
+- 它所使用的阻塞队列变成了DelayedWorkQueue，而不是`ThreadLocalhExecutor`的LinkedBlockingQueue；
+- DelayedWorkQueue为ScheduledThreadPoolExecutor中的内部类，它其实和阻塞队列DelayQueue有点儿类似。DelayQueue是可以提供延迟的阻塞队列，它只有在延迟期满时才能从中提取元素，其列头是延迟期满后保存时间最长的Delayed元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null
 
 ### 2.5、Excutors创建线程池
 
@@ -3045,6 +3138,19 @@ static class NamedThreadFactory implements ThreadFactory {
 static ThreadPoolExecutor executorOne = new ThreadPoolExecutor(5, 5, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(), new NamedThreadFactory("ASYN-ACCEPT-POOL"));
 static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(), new NamedThreadFactory("ASYN-PROCESS-POOL"));
 ```
+
+### 2.7、选择合适的队列
+
+下面主要是不同队列策略表现：
+- 直接递交：一种比较好的默认选择是使用 SynchronousQueue，这种策略会将提交的任务直接传送给工作线程，而不持有。如果当前没有工作线程来处理，即任务放入队列失败，则根据线程池的实现，会引发新的工作线程创建，因此新提交的任务会被处理。这种策略在当提交的一批任务之间有依赖关系的时候避免了锁竞争消耗。值得一提的是，这种策略最好是配合 unbounded 线程数来使用，从而避免任务被拒绝。同时我们必须要考虑到一种场景，当任务到来的速度大于任务处理的速度，将会引起无限制的线程数不断的增加。
+
+- 无界队列：使用无界队列如 LinkedBlockingQueue 没有指定最大容量的时候，将会引起当核心线程都在忙的时候，新的任务被放在队列上，因此，永远不会有大于 corePoolSize 的线程被创建，因此 maximumPoolSize 参数将失效。这种策略比较适合所有的任务都不相互依赖，独立执行。举个例子，如网页服务器中，每个线程独立处理请求。但是当任务处理速度小于任务进入速度的时候会引起队列的无限膨胀。
+
+- 有界队列：有界队列如 ArrayBlockingQueue 帮助限制资源的消耗，但是不容易控制。队列长度和 maximumPoolSize 这两个值会相互影响，使用大的队列和小 maximumPoolSize 会减少 CPU 的使用、操作系统资源、上下文切换的消耗，但是会降低吞吐量，如果任务被频繁的阻塞如IO线程，系统其实可以调度更多的线程。使用小的队列通常需要大 maximumPoolSize，从而使得 CPU更忙一些，但是又会增加降低吞吐量的线程调度的消耗。总结一下是 IO 密集型可以考虑多些线程来平衡 CPU 的使用，CPU 密集型可以考虑少些线程减少线程调度的消耗
+
+### 2.8、空闲线程回收
+
+如果当前池子中的工作线程数大于 corePoolSize，如果超过这个数字的线程处于空闲的时间大于 keepAliveTime，则这些线程将会被终止，这是一种减少不必要资源消耗的策略。这个参数可以在运行时被改变，我们同样可以将这种策略应用给核心线程，我们可以通过调用 allowCoreThreadTimeout 来实现
 
 ## 3、线程池配置
 

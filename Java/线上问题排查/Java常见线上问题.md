@@ -107,14 +107,47 @@
 
 ## 1、问题背景
 
-有一个系统A同时对接了两个系统B、C，B、C系统都会同时请求系统A去更新某个表的某个字段值，因为都是批量更新导致死锁问题；
+- 问题1：有一个系统A同时对接了两个系统B、C，B、C系统都会同时请求系统A去更新某个表的某个字段值，因为都是批量更新导致死锁问题；
+- 问题2：有一个系统A同时对接了两个系统B、C，B、C系统都会通知系统A更新某个表的某个字段，更新的where条件中有两个字段，两个字段都是单值索引，导致更新时存在死锁；根据两个条件查询时的执行计划type是`index_merge`
+
+    ```sql
+    create table test(
+        `id`  bigint(20) NOT NULL AUTO_INCREMENT,
+        `code` varchar(255) not null comment '编号',
+        `parentCode` varchar(255) not null comment '父类编号',
+        `price` decimal(19,9) default null,
+        PRIMARY KEY (`id`),
+        KEY `key_code` (`code`),
+        KEY `key_parentCode` (`parentCode`)
+    )ENGINE=InnoDB;
+
+    explain update test set price = 2.66 where code='001' and parentCode = 'XS0001';
+
+    第一个事务：根据code索引，已经锁住primary id，然后再根据parentCode索引锁定primary id；
+    第二个事务：根据parentCode索引锁定primary id，然后再根据code索引，已经锁住primary id；
+    所以这样并发更新就可能出现死索引
+    ```
 
 ## 2、问题定位
 
+问题2定位
+- 环境：MySQL的事务隔离级别Read Committed
 
 ## 3、解决方案
 
-每次更新前都会特定的唯一键的进行排序处理，按照顺序去更新
+- 问题1：每次更新前都会特定的唯一键的进行排序处理，按照顺序去更新；
+- 问题2：
+    - 查询出对应数据的主键，通过主键更新数据；
+    - 将code和parentCode作为组合索引，可以避免掉index_merge；
+    - 将优化器的index merge优化关闭；
+
+## 4、反思
+
+对于第二个问题，创建合理的索引，更新时尽量使用主键来更新；
+
+# 五、长事务、大事务
+
+
 
 # 参考资料
 

@@ -813,6 +813,9 @@ java -Djava.ext.dirs=your_ext_dir HelloWorld
 ```
 java -Djava.system.class.loader=your_class_loader HelloWorld
 ```
+
+如果碰到类似NoSuchMethodError、NoClassDefFoundError、NoClassDefFoundError找不到类的错误信息，可以使用jvm参数`-verbose:class`方便地定位该问题，使用该参数可以快速地定位某个类是从哪个jar包加载的
+
 ## 6.3、ClassLoader 加载类原理
 
 ### 6.3.1、类加载器的工作原理
