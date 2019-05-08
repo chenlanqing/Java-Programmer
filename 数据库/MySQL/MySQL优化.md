@@ -68,9 +68,10 @@
 ```sql
 show variables like '%slow_queries%%'; -- 查看慢sql的条数
 show variables	like 'slow_query_log';
+
 set global slow_query_log_file='/home/mysql/sql_log/mysql_slow_log'; -- 慢查询日志存储的硬盘位置
 set global log_queries_not_using_indexes=on; -- 是否将未使用索引的sql记录到慢查询日志中
-set global long_query_time=1; --将超过多少秒的sql记录到慢查询日志中
+set global long_query_time=1; --将超过多少秒的sql记录到慢查询日志中，需要重新连接数据库服务器
 ```
 慢日志的信息：
 - 执行SQL的主机信息：
@@ -988,7 +989,7 @@ MySQL可以通过启动时指定配置参数和使用配置文件两种方法进
 
 ### 13.3、第三方配置优化
 
-## 14、批量插入大量数据：
+## 14、批量插入大量数据
 
 - 创建表格：
 	```sql

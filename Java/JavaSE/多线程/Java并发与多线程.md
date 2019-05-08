@@ -793,7 +793,7 @@ synchronized 代码块的语义底层是通过一个monitor的对象来完成，
 
 - （2）同步方法与同步代码块的实现：
 
-	无论是 ACC_SYNCHRONIZED还是monitorenter、monitorexit都是基于Monitor实现的，都是基于Java虚拟机（HotSpot）中，Monitor是基于C++实现的，有[ObjectMonitor](http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/runtime/objectMonitor.hpp)实现，该类中有enter、exit、wait、notify、notifyAll等。sychronized加锁的时候，会调用objectMonitor的enter方法，解锁的时候会调用exit方法，这是在JDK6之前synchronized的实现会直接调用ObjectMonitor，这种锁被称之为重量级锁。
+	无论是 `ACC_SYNCHRONIZED`还是`monitorenter、monitorexit`都是基于Monitor实现的，都是基于Java虚拟机（HotSpot）中，Monitor是基于C++实现的，有[ObjectMonitor](http://hg.openjdk.java.net/jdk8/jdk8/hotspot/file/87ee5ee27509/src/share/vm/runtime/objectMonitor.hpp)实现，该类中有enter、exit、wait、notify、notifyAll等。sychronized加锁的时候，会调用objectMonitor的enter方法，解锁的时候会调用exit方法，这是在JDK6之前synchronized的实现会直接调用ObjectMonitor，这种锁被称之为重量级锁。
 
 ### 7.3、重量级锁
 

@@ -224,7 +224,7 @@ MyISAM，InnoDB，Memonry 三个常用MySQL引擎类型比较：
 
 * [MySQL索引原理](https://www.cnblogs.com/bypp/p/7755307.html)
 * [MySQL索引分析](https://mp.weixin.qq.com/s/CgMUV_rEQYtIRfwW12OBmA)
-
+* [MySQL索引数据库结构](http://blog.codinglabs.org/articles/theory-of-mysql-index.html)
 
 
 

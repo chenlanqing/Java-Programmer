@@ -202,6 +202,10 @@ innodb_ buffer_pool_size -> 修改该配置 <br>
 	- 索引管理-优化效率
 	- 锁管理
 
+### 3.2、MySQL架构
+
+![](image/mysql架构.png)
+
 # 二、MySQL操作
 
 ## 1、连接命令行
@@ -891,7 +895,6 @@ Innodb_row_lock_time：从系统启动到现在锁定的总时间长度；(*****
 Innodb_row_lock_time_avg：每次等待所花平均时间；(******)<br>
 Innodb_row_lock_time_max：从系统启动到现在等待最长的一次所花的时间<br>
 Innodb_row_lock_waits：等待总次数(******)<br>
-
 
 ## 5、死锁
 

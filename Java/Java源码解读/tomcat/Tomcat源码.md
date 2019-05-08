@@ -16,6 +16,12 @@
 
 # 一、Tomcat
 
+## 1、Tomcat架构
+
+![](Tomcat架构.png)
+
+tomcat由Server、Service、Engine、Connerctor、Host、Context组件组成，其中带有s的代表在一个tomcat实例上可以存在多个组件，比如Context(s)，tomcat允许我们部署多个应用，每个应用对应一个Context。这些组件在tomcat的conf/server.xml文件中可以找到，对tomcat的调优需要改动该文件
+
 # 二、Tomcat生命周期
 
 # 三、Tomcat 类加载
@@ -29,62 +35,105 @@
 
 ## 2、Tomcat类库结构
 
-在Tomcat目录结构中，有3组目录("/common/*"、"/server/*"、"/shared/*")可以存放Java类库，另外还可以加上Web应用程序自身的目录“/WEB-INF/*”.放在这四个目录下的含义分别为：
+在Tomcat目录结构中，有3组目录`("/common/*"、"/server/*"、"/shared/*")`可以存放Java类库，另外还可以加上Web应用程序自身的目录`“/WEB-INF/*”`.放在这四个目录下的含义分别为：
 
-- （1）/common 目录下的：类库可以被Tomcat和所有Web程序共同使用；
-- （2）/server目录：类库可以被Tomcat使用，对所有web应用程序不可见；
-- （3）/shared目录：类库可被所有的web应用程序共同使用，但对Tomcat自己不可见；
-- （4）/WebApp/WEB-INF目录：类库仅仅可以被此Web应用程序使用，对Tomcat和其他Web应用程序都不可见。
+- （1）`/common` 目录下的：类库可以被Tomcat和所有Web程序共同使用；
+- （2）`/server`目录：类库可以被Tomcat使用，对所有web应用程序不可见；
+- （3）`/shared`目录：类库可被所有的web应用程序共同使用，但对Tomcat自己不可见；
+- （4）`/WebApp/WEB-INF`目录：类库仅仅可以被此Web应用程序使用，对Tomcat和其他Web应用程序都不可见。
 
 为了支持上述目录结构，并对目录里面的类库进行加载和隔离。Tomcat自定义了多个类加载器。
 
-对于Tomcat6.x以后的版本，只有指定了tomcat/conf/catalina.properties配置文件的server.loader和share.loader项后才会真正建立Catalina ClassLoader和Shared ClassLoader的实例，否则在用到这两个类加载器的地方都会用Common ClassLoader的实例代替。而默认的配置文件中没有设置这两个loader项，所以Tomcat 6.x顺理成章地把/common、/server和/shared三个目录默认合并到一起变成一个/lib目录，这个目录里的类库相当于以前/common目录中类库的作用；
+对于Tomcat6.x以后的版本，只有指定了`tomcat/conf/catalina.properties`配置文件的`server.loader`和`share.loader`项后才会真正建立`Catalina ClassLoader`和`Shared ClassLoader`的实例，否则在用到这两个类加载器的地方都会用`Common ClassLoader`的实例代替。而默认的配置文件中没有设置这两个loader项，所以Tomcat 6.x顺理成章地把`/common、/server和/shared`三个目录默认合并到一起变成一个`/lib`目录，这个目录里的类库相当于以前`/common`目录中类库的作用；
 
 ## 3、Tomcat类加载器机制
 
-![image](https：//github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/tomcat/Tomcat类加载机制.jpg)
+![image](Tomcat类加载机制.jpg)
 
 ### 3.1、Tomcat中的类加载器
 
-- Bootstrap 引导类加载器：加载JVM启动所需的类，以及标准扩展类（位于jre/lib/ext下）
-
-- System 系统类加载器：加载tomcat启动的类，比如bootstrap.jar，通常在catalina.bat或者catalina.sh中指定。位于CATALINA_HOME/bin下
-
-- Common 通用类加载器：加载tomcat使用以及应用通用的一些类，位于CATALINA_HOME/lib下，比如servlet-api.jar
-
-- webapp 应用类加载器：每个应用在部署后，都会创建一个唯一的类加载器.该类加载器会加载位于 WEB-INF/lib下的jar文件中的class和 WEB-INF/classes下的class文件
+- `Bootstrap 引导类加载器`：加载JVM启动所需的类，以及标准扩展类（位于jre/lib/ext下）
+- `System 系统类加载器`：加载tomcat启动的类，比如`bootstrap.jar`，通常在`catalina.bat`或者`catalina.sh`中指定。位于`CATALINA_HOME/bin`下
+- `Common 通用类加载器`：加载tomcat使用以及应用通用的一些类，位于`CATALINA_HOME/lib`下，比如servlet-api.jar
+- `webapp 应用类加载器`：每个应用在部署后，都会创建一个唯一的类加载器.该类加载器会加载位于` WEB-INF/lib`下的jar文件中的class和` WEB-INF/classes`下的class文件
 
 ### 3.2、tomcat 类加载顺序
 
 当应用需要到某个类时，则会按照下面的顺序进行类加载：
-
 - （1）使用bootstrap引导类加载器加载
 - （2）使用system系统类加载器加载
 - （3）使用应用类加载器在WEB-INF/classes中加载
 - （4）使用应用类加载器在WEB-INF/lib中加载
 - （5）使用common类加载器在CATALINA_HOME/lib中加载
 
-### 3.3、tomcat 如何隔离多个应用
+### 3.3、Tomcat类加载过程
 
-对于每个webapp应用，都会对应唯一的StandContext，在StandContext会引用WebAppLoader，该类又会引用WebAppClassLoader，WebAppClassLoader 就是真正加载webappd的classLoader。WebappClassLoader加载class的步骤：
+主要处理逻辑在：`org.apache.catalina.startup.Bootstrap#init()`
+```java
+public void init() throws Exception {
+    // 初始化commonLoader、catalinaLoader、sharedLoader，关于ClassLoader的后面再看
+    initClassLoaders();
 
-- （1）先检查webappclassloader的缓冲容器是否有该类；
-- （2）为防止webapp覆盖j2se类，尝试用systemclassloader加载；
-- （3）进行安全性检查
-- （4）通过检查后，判断delegate的值来决定是否委托给父类加载器（默认是否）；
-- （5）通过WebappClassLoader自己加载class
-- （6）最后无条件地委托给父加载器；
-- （7）如果都没有加载成功，则抛出ClassNotFoundException异
+    // 设置上下文类加载器为 catalinaLoader
+    Thread.currentThread().setContextClassLoader(catalinaLoader);
+    SecurityClassLoad.securityClassLoad(catalinaLoader);
 
-*不同的StandardContext有不同的WebappClassLoader，那么不同的webapp的类装载器就是不一致的。装载器的不一致带来了名称空间不一致，所以webapp之间是相互隔离的*
+    // 反射方法实例化Catalina，后面初始化Catalina用了很多反射，不知道意图是什么
+    Class<?> startupClass = catalinaLoader.loadClass("org.apache.catalina.startup.Catalina");
+    Object startupInstance = startupClass.getConstructor().newInstance();
 
-### 3.4、如何破坏双亲委托
+    //TODO 为Catalina对象设置其父加载器为shared类加载器，默认情况下就是catalina类加载器
+
+    // 引用Catalina实例
+    catalinaDaemon = startupInstance;
+}
+```
+
+catalina.properties：
+```
+common.loader=${catalina.base}/lib,${catalina.base}/lib/*.jar,${catalina.home}/lib,${catalina.home}/lib/*.jar
+server.loader=
+shared.loader=
+```
+
+由ClassLoaderFactory 创建类加载器。在创建 URLClassLoader 的时候还需要考虑 jdk 对权限控制的影响，因此 tomcat 利用 AccessController 创建 URLClassLoader
+
+
+### 3.4、tomcat 如何隔离多个应用
+
+- **WebappClassLoader**
+
+    对于每个webapp应用，都会对应唯一的StandContext，在StandContext会引用WebAppLoader，该类又会引用WebAppClassLoader，WebAppClassLoader 就是真正加载webappd的classLoader。WebappClassLoader加载class的步骤：
+
+    - （1）先检查webappclassloader的缓冲容器是否有该类；
+    - （2）为防止webapp覆盖j2se类，尝试用systemclassloader加载；
+    - （3）进行安全性检查
+    - （4）通过检查后，判断delegate的值来决定是否委托给父类加载器（默认是否）；
+    - （5）通过WebappClassLoader自己加载class
+    - （6）最后无条件地委托给父加载器；
+    - （7）如果都没有加载成功，则抛出ClassNotFoundException异
+
+    *不同的StandardContext有不同的WebappClassLoader，那么不同的webapp的类装载器就是不一致的。装载器的不一致带来了名称空间不一致，所以webapp之间是相互隔离的*
+
+- **WebappLoader**
+
+    在tomcat中，每个webapp对应一个`StandardContext`，在start过程便会实例化WebappLoader，并且调用其start方法完成初始化，包括创建`ParallelWebappClassLoader`实例，然后，还会启动Context的子容器。注意，这两个过程，都会将线程上下文类加载器指定为`ParallelWebappClassLoader`类加载器，在完成 webapp 相关的类加载之后，又将线程上下文类加载器设置为 catalina 类加载器；
+
+- **Hotswap**
+
+    可以为 Context 组件指定 reloadable 属性，如果设为 true，tomcat便会启用 Hotswap，定期扫描类文件的变动，如果有变动，则重启 webapp 从而达到 Hotswap 的目的；
+
+    这个参数由 Context 指定的，但是会通过 WebappLoader#setContext(Context context) 方法调用，从而传递给 WebappLoader；
+
+    WebappLoader 提供了后台定时任务的方法，Context 容器会间隔性地进行调用，它用于监听 class、jar 等文件的变更，一旦有变动，便会对 Context 容器进行 reload 操作
+
+### 3.5、如何破坏双亲委托
 
 - webappClassLoader上面有一个common的类加载器，它是所有webappClassLoader的父加载器，多个应用汇存在公有的类库，而公有的类库都会使用commonclassloader来实现；
 - 如果不是公有的类呢，这些类就会使用webappClassLoader加载，而webappClassLoader的实现并没有走双亲委派的模式
 - 加载本类的classloader未知时，为了隔离不同的调用者，即类的隔离，采用了上下文类加载的模式加载类.
 - 当前高层的接口在低层去实现，而高层的类有需要低层的类加载的时候，这个时候，需要使用上下文类加载器去实现
-		
+
 ## 4、线程上下文类加载器-ThreadContextClassLoader（TCCL）
 
 问题：在《深入理解java虚拟机》一书中，作者在类加载实践分析tomcat一节中，提出了一个思考题
@@ -102,8 +151,18 @@ Java提供了很多服务提供者接口（Service Provider Interface，SPI）�
 使用线程上下文类加载器，可以在执行线程中抛弃双亲委派加载链模式，使用线程上下文里的类加载器加载类。线程上下文从根本解决了一般应用不能违背双亲委派模式的问题。使java类加载体系显得更灵活
 
 ### 4.2、线程上下文类加载器应用
+
 java提供是jdbc Driver就是基于SPI的
 
+### 4.3、Tomcat为什么要设置线程上下文类加载器
+
+```java
+// 设置上下文类加载器为 catalinaLoader
+Thread.currentThread().setContextClassLoader(catalinaLoader);
+SecurityClassLoad.securityClassLoad(catalinaLoader);
+```
+- 一方面，很多诸如 ClassUtils 之类的编码，他们在获取 ClassLoader 的时候，都是先尝试从 Thread 上下文中获取 ClassLoader，例如：`ClassLoader cl = Thread.currentThread().getContextClassLoader();`
+- 另一方面，在没有显式指定类加载器的情况下，默认使用线程的上下文类加载器加载类，由于 tomcat 的大部分 jar 包都在 ${catalina.hom}/lib 目录，因此需要将线程类加载器指定为 catalina 类加载器，否则加载不了相关的类
 
 ## 5、问题扩展
 
@@ -113,7 +172,7 @@ java提供是jdbc Driver就是基于SPI的
 
 - 版本问题：
 
-    在 CATALINA_HOME/lib以及WEB-INF/lib中放置了不同版本的jar包，此时就会导致某些情况下报加载不到类的错误。还有如果多个应用使用同一jar包文件，当放置了多份，就可能导致多个应用间出现类加载不到的错误；
+    在 `CATALINA_HOME/lib`以及`WEB-INF/lib`中放置了不同版本的jar包，此时就会导致某些情况下报加载不到类的错误。还有如果多个应用使用同一jar包文件，当放置了多份，就可能导致多个应用间出现类加载不到的错误；
 
 # 四、Tomcat启动流程
 
