@@ -100,7 +100,7 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 ## 1、IoC(Inversion of Control)
 
-其思想是反转资源获取的方向. 传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源.而应用了 IoC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式
+其思想是反转资源获取的方向。传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源。而应用了 IoC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式
 
 控制反转：把创建对象(Bean)和维护对象(Bean)的关系的权利从程序中转移到Spring容器中，程序不再控制
 
@@ -134,7 +134,7 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 
 ![](image/SpringIOC容器层级关系.png)
 
-- BeanFactory是Spring框架的基础设施，面向Spring本身；ApplicationContext，面向使用Spring框架的开发者，几乎所有的应用场合都直接使用 ApplicationContext;而非底层的 BeanFactory；但是无论使用何种方式，配置文件时相同的。常用的BeanFactory容器是`XmlBeanFactory`，它可以根据 XML 文件中定义的内容，创建相应的 Bean
+- BeanFactory是Spring框架的基础设施，面向Spring本身；ApplicationContext，面向使用Spring框架的开发者，几乎所有的应用场合都直接使用 ApplicationContext;而非底层的 BeanFactory；但是无论使用何种方式，配置文件时相同的。常用的BeanFactory容器是`XmlBeanFactory`，它可以根据 XML 文件中定义的内容，创建相应的 Bean；BeanFactory是IOC容器的核心接口，它的职责包括：实例化、定位、配置应用程序中的对象及建立这些对象间的依赖
 
 - ApplicationContext 的主要实现类：【 ApplicationContext 在初始化上下文时就实例化所有单例的 Bean】
 	- ①、ClassPathXmlApplicationContext：从类路径下加载配置文件;
@@ -166,11 +166,17 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 	- 详细比较：
 
 	|BeanFactory	| ApplicationContext|
-	------------|-------------------
+	|------------|-------------------|
 	|它使用懒加载  |	它使用即时加载|
 	|它使用语法显式提供资源对象 | 它自己创建和管理资源对象|
 	|不支持国际化  |	支持国际化|
 	|不支持基于依赖的注解 | 支持基于依赖的注解|
+
+- BeanFactory和FactoryBean的区别：
+	- BeanFactory是接口，提供了OC容器最基本的形式，给具体的IOC容器的实现提供了规范；
+	- FactoryBean也是接口，为IOC容器中Bean的实现提供了更加灵活的方式，FactoryBean在IOC容器的基础上给Bean的实现加上了一个简单工厂模式和装饰模式；
+	- BeanFactory是个Factory，也就是IOC容器或对象工厂，FactoryBean是个Bean。在Spring中，所有的Bean都是由BeanFactory(也就是IOC容器)来进行管理的。但对FactoryBean而言，这个Bean不是简单的Bean，而是一个能生产或者修饰对象生成的工厂Bean,它的实现与设计模式中的工厂模式和修饰器模式类似；
+	- org.springframework.bean.factory.FactoryBean工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑
 
 ## 3、DI(Dependency Injection)
 
@@ -190,7 +196,12 @@ IoC 的另一种表述方式：即组件以一些预先定义好的方式(例如
 		<constructor-arg index="指定参数索引(从0开始)" ref="要注入的Bean对象的id属性值">
 		</constructor-arg>
 		```
-				
+
+依赖倒置原则、IOC、DI、IOC容器的关系：
+
+![](image/IOC与DI关系.png)
+
+
 ## 4、各种类型信息的注入
 
 - 注入Bean对象：(使用最多)
@@ -526,7 +537,7 @@ try{
 
 ## 1、IoC原理
 
-
+[IOC原理](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/%E6%A1%86%E6%9E%B6/spring/Spring%E6%BA%90%E7%A0%81.md#%E4%B8%80ioc)
 
 ## 2、AOP原理
 

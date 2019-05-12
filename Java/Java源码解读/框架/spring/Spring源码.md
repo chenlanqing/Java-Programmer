@@ -441,7 +441,11 @@ protected void finishRefresh() {
 
 # 二、AOP
 
-
+AOP的实现：jdkProxy和Cglib
+- 有AopProxyFactory根据AdvisedSupport对象的配置来决定；
+- 默认策略如果目标类是接口，则用JDKProxy来实现，否则用后者；
+- JDKProxy的核心：invocationHandler接口和Proxy类；使用Java的反射机制来实现的
+- CGlib：以继承的方式动态生成目标类的代理；借助ASM实现
 
 # 三、spring事务
 

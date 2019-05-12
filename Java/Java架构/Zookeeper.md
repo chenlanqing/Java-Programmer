@@ -116,6 +116,7 @@ DELETE：删除子节点的权限<br>
 ADMIN：设置节点ACL的权限<br>
 
 # 三、集群搭建
+
 ## 1、集群环境
 
 - JDK 环境
@@ -130,6 +131,8 @@ ADMIN：设置节点ACL的权限<br>
 			dataDir=/temp/zookeeper
 		改为：
 			dataDir=/var/zookeeper
+
+			/usr/local/zookeeper/data
 	(4).输入三台集群的IP，端口等信息
 		server.id=host：port：port
 		server.1=192.168.139.129：2888：3888
@@ -356,6 +359,7 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 ```
 
 # 五、实战
+
 ## 1、master 选举
 
 **1.1、master 选举**
