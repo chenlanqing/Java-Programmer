@@ -489,10 +489,78 @@ Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 
 - join 具有使线程排队运行的作用。join与synchronize 区别：join 内部是wait方法进行等待，而synchronized关键字使用的是"对象监视器"原理作为同步；
 - 在执行 join 的过程中，如果当前线程对象被中断，则当前线程出现异常；
 - join(long) 内部是使用 wait(long)方法来实现的，所以join(long)方法具有释放锁的特点，而 sleep(long)不释放锁的；
+- 使用join方法之后，线程顺序执行；
+
+示例：
+```java
+public class ThreadJoin {
+    public static void main(String[] args) throws Exception{
+        JoinThread yield = new JoinThread();
+        Thread t1 = new Thread(yield, "t1");
+        Thread t2 = new Thread(yield, "t2");
+        Thread t3 = new Thread(yield, "t3");
+        t1.start();
+		t1.join();
+        t2.start();
+		t2.join();
+        t3.start();
+    }
+    static class JoinThread implements Runnable {
+        @Override
+        public void run() {
+            System.out.println("current thread name:" + Thread.currentThread().getName());
+        }
+    }
+}
+// 输出结果
+current thread name:t1
+current thread name:t2
+current thread name:t3
+```
 
 #### 2.14.2、yield()方法
 
 使当前线程从执行状态(运行状态)变为可执行状态(就绪状态)，调用yield的时候锁并没有被释放，放弃当前的CPU资源，将它让给其他的任务去占用CPU执行时间，放弃的时间不确定，将CPU让给其他资源导致速度变慢，一般是把机会给到线程池拥有相同优先级的线程
+
+使用yield之后，线程交替执行
+
+示例：
+```java
+public class ThreadYield {
+    public static void main(String[] args) throws Exception{
+        YieldThread yieldThread = new YieldThread();
+        Thread t1 = new Thread(yieldThread, "FirstThread");
+        Thread t2 = new Thread(yieldThread, "SecondThread");
+        t1.start();
+        t2.start();
+    }
+    static class YieldThread implements Runnable {
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            for (int i = 0; i < 5; i++) {
+                System.out.println(Thread.currentThread().getName() + ": " + i);
+                Thread.yield();
+            }
+        }
+    }
+}
+// 输出结果
+FirstThread: 0
+SecondThread: 0
+FirstThread: 1
+SecondThread: 1
+FirstThread: 2
+SecondThread: 2
+FirstThread: 3
+SecondThread: 3
+FirstThread: 4
+SecondThread: 4
+```
 
 #### 2.14.3、两者的区别
 
