@@ -293,8 +293,13 @@ public boolean equals(Object obj){
 - 在覆盖equals()时，同时覆盖hashCode()：保证对象的功能兼容于hash集合
 - hashCode()方法的规则：
 	- 在同一个Java程序中，对一个相同的对象，无论调用多少次hashCode()，hashCode()返回的整数必须相同，因此必须保证equals()方法比较的内容不会更改.但不必在另一个相同的Java程序中也保证返回值相同;
-	- 如果两个对象用equals()方法比较的结果是相同的，那么这两个对象调用hashCode()应该返回相同的整数值;
+	- 如果两个对象用equals()方法比较的结果是相同的，那么这两个对象调用hashCode()应该返回相同的整数值
+
+		假如两个Java对象A和B，A和B相等（eqauls结果为true），但A和B的哈希码不同，则A和B存入HashMap时的哈希码计算得到的HashMap内部数组位置索引可能不同，那么A和B很有可能允许同时存入HashMap，显然相等/相同的元素是不允许同时存入HashMap，HashMap不允许存放重复元素
+
 	- 当两个对象使用equals()方法比较的结果是不同的，hashCode()返回的整数值可以不同。然而，hashCode()的返回值不同可以提高哈希表的性能。
+
+**重写equals方法必须重写hashCode方法：**如果不这样做，那么在使用基于散列的的集合时，无法正常运行，如：HashMap、HashSet、HashTable；
 
 # 4、finalize()方法
 
