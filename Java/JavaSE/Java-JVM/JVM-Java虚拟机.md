@@ -613,8 +613,8 @@ Metaspace背后的一个思想是，类和它的元数据的生命周期是和�
 ### 3.8.3、元空间参数
 
 - 默认情况下，元空间的大小仅受本地内存限制，但可以通过以下参数来指定元空间的大小：
-	- -XX：MetaspaceSize，初始空间大小，达到该值就会触发垃圾收集进行类型卸载，同时GC会对该值进行调整；如果释放了大量的空间，就适当降低该值;如果释放了很少的空间，那么在不超过MaxMetaspaceSize时，适当提高该值；
-	- -XX：MaxMetaspaceSize， 最大空间，默认是没有限制的，MaxMetaspaceSize并不会在jvm启动的时候分配一块这么大的内存出来，而MaxPermSize是会分配一块这么大的内存的
+	- `-XX:MetaspaceSize`，初始空间大小，达到该值就会触发垃圾收集进行类型卸载，同时GC会对该值进行调整；如果释放了大量的空间，就适当降低该值;如果释放了很少的空间，那么在不超过MaxMetaspaceSize时，适当提高该值；
+	- `-XX:MaxMetaspaceSize`， 最大空间，默认是没有限制的，MaxMetaspaceSize并不会在jvm启动的时候分配一块这么大的内存出来，而MaxPermSize是会分配一块这么大的内存的
 
 	除了上面两个指定大小的选项以外，还有与 GC 相关的属性：
 
@@ -803,7 +803,7 @@ java -Djava.ext.dirs=your_ext_dir HelloWorld
 
 ### 6.2.3、App ClassLoader-系统类加载器
 
-负责加载应用程序classpath目录下的所有jar和类文件；Application类加载器是Extensio 类加载器的子加载器.通过sun.misc.Launcher$AppClassLoader实现；这个类加载器是 ClassLoader 中 getSystemClassLoader() 方法的返回值，所以也称为系统类加载器
+负责加载应用程序classpath目录下的所有jar和类文件；Application类加载器是Extension 类加载器的子加载器.通过sun.misc.Launcher$AppClassLoader实现；这个类加载器是 ClassLoader 中 getSystemClassLoader() 方法的返回值，所以也称为系统类加载器
 
 *注意：*
 

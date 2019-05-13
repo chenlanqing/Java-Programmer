@@ -595,9 +595,9 @@ public class Daemon extends Thread{
 ![image](image/thread-status.png)
 
 - 新建态（New）：通过线程的创建方式创建线程后，进入新建态态;
-- 就绪（Runnable）：调用Tread的start方法，就会为线程分配私有的方法栈，程序计数器资源，如果得到CPU资源，线程就转为运行状态。
-- 运行（Running）：就绪态得到CPU资源后转为运行态，执行run方法.在调用 yield 方法后，线程由运行转为就绪。
-- 阻塞（Bolcking）：线程因为某种原因放弃CPU使用权，暂时停止运行.直到线程进入就绪状态，才有机会转到运行状态.阻塞的情况分三种:
+- 就绪（Runnable）：调用Tread的start方法，就会为线程分配私有的方法栈，程序计数器资源，如果得到CPU资源，线程就转为就绪状态。
+- 运行（Running）：就绪态得到CPU资源后转为运行态，执行run方法。在调用 yield 方法后，线程由运行转为就绪。
+- 阻塞（Bolcking）：线程因为某种原因放弃CPU使用权，暂时停止运行。直到线程进入就绪状态，才有机会转到运行状态.阻塞的情况分三种:
 	- 等待阻塞：通过调用线程的wait()方法，让线程等待某工作的完成。
 	- 同步阻塞：线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
 	- 其他阻塞：通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态。当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
@@ -737,7 +737,7 @@ synchronized 关键字拥有锁重入功能，也就是在使用 synchronized �
 	- 在资源竞争不是很激烈的情况下， synchronized 的性能要优于 Lock，但是在资源竞争很激烈的情况下，synchronized性能会下降几十倍，但是 Lock 是保持常态的.
 	- 在 JDK1.5 之后 synchronized 作了很多优化，在性能上已经有很大提升.	如:自旋锁、锁消除、锁粗化、轻量级锁、偏向锁
 	- synchronized 和 ReentrantLock 都是可重入锁;
-	- 公平锁：即尽量以请求锁的顺序来获取锁synchronized 是非公平锁，无法保证等待的线程获取锁的顺序；ReentrantLock和ReentrantReadWriteLock，默认情况下是非公平锁，但是可以设置为 公平锁；
+	- 公平锁：即尽量以请求锁的顺序来获取锁，synchronized 是非公平锁，无法保证等待的线程获取锁的顺序；ReentrantLock和ReentrantReadWriteLock，默认情况下是非公平锁，但是可以设置为 公平锁；
 	- synchronized的锁状态是无法在代码中直接判断的，但是ReentrantLock可以通过ReentrantLock#isLocked判断；
 	- 机制：synchronized是操作Mark Word，Lock是调用Unsafe类的park方法
 
@@ -3108,9 +3108,9 @@ RejectedExecutionHandler，四种策略都是静态内部类，在默认情况�
 - 它所使用的阻塞队列变成了DelayedWorkQueue，而不是`ThreadLocalhExecutor`的LinkedBlockingQueue；
 - DelayedWorkQueue为ScheduledThreadPoolExecutor中的内部类，它其实和阻塞队列DelayQueue有点儿类似。DelayQueue是可以提供延迟的阻塞队列，它只有在延迟期满时才能从中提取元素，其列头是延迟期满后保存时间最长的Delayed元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null
 
-### 2.5、Excutors创建线程池
+### 2.5、Executors创建线程池
 
-Excutors 提供了5种不同的线程池创建方式
+Executors 提供了5种不同的线程池创建方式
 - newCachedThreadPool()：用来处理大量短时间工作任务的线程池，其内部使用 SynchronousQueue作为工作队列具有以下几个特点：
 	- 它会试图缓存线程并重用，当无缓存线程可用时，就会创建新的工作线程；
 	- 如果线程限制的时间超过60秒，则会被终止并移出缓存；
@@ -3274,6 +3274,30 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 使用CountDownLatch
 
 [模拟超过5W的并发用户](https://mp.weixin.qq.com/s/2BondePBWkfUNSwNyTMcTA)
+
+## 3、可重入锁为什么可以防止死锁
+
+```java
+public class Widget {
+    public synchronized void doSomething(){
+        // do something
+    }
+}
+public class LoggingWidget extends Widget {
+    public synchronized void doSomething() {
+        super.doSomething();
+    }
+}
+```
+如果synchronized 不是可重入锁，那么LoggingWidget 的super.dosomething();无法获得Widget对象的锁，因为会死锁
+
+这里涉及到Java的重写；子类LoggingWidget 的doSomething方法，重写了父类Widget 的doSomething方法，但是子类对象如果要调用父类的doSomething方法，那么就需要用到super关键字了。因为实例方法的调用是Java虚拟机在运行时动态绑定的，子类LoggingWidget 的对象调用doSomething方法，一定是绑定到子类自身的doSomething方法，必须用super关键字告诉虚拟机，这里要调用的是父类的doSomething方法；
+
+super关键字并没有新建一个父类的对象，比如说widget，然后再去调用widget.doSomething方法，实际上调用父类doSomething方法的还是我们的子类对象；
+
+如果一个线程有子类对象的引用loggingWidget，然后调用loggingWidget.doSomething方法的时候，会请求子类对象loggingWidget 的对象锁；又因为loggingWidget 的doSomething方法中调用的父类的doSomething方法，实际上还是要请求子类对象loggingWidget 的对象锁，那么如果synchronized 关键字不是个可重入锁的话，就会在子类对象持有的父类doSomething方法上产生死锁了。正因为synchronized 关键字的可重入锁，当前线程因为已经持有了子类对象loggingWidget 的对象锁，后面再遇到请求loggingWidget 的对象锁就可以畅通无阻地执行同步方法了
+
+
 
 # 参考文章
 

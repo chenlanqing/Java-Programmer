@@ -173,7 +173,7 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 	|不支持基于依赖的注解 | 支持基于依赖的注解|
 
 - BeanFactory和FactoryBean的区别：
-	- BeanFactory是接口，提供了OC容器最基本的形式，给具体的IOC容器的实现提供了规范；
+	- BeanFactory是接口，提供了IOC容器最基本的形式，给具体的IOC容器的实现提供了规范；
 	- FactoryBean也是接口，为IOC容器中Bean的实现提供了更加灵活的方式，FactoryBean在IOC容器的基础上给Bean的实现加上了一个简单工厂模式和装饰模式；
 	- BeanFactory是个Factory，也就是IOC容器或对象工厂，FactoryBean是个Bean。在Spring中，所有的Bean都是由BeanFactory(也就是IOC容器)来进行管理的。但对FactoryBean而言，这个Bean不是简单的Bean，而是一个能生产或者修饰对象生成的工厂Bean,它的实现与设计模式中的工厂模式和修饰器模式类似；
 	- org.springframework.bean.factory.FactoryBean工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑
