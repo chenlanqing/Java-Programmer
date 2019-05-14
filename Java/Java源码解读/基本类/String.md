@@ -667,6 +667,7 @@ String v = "Hello，World.";
 	}
 	```
 ## 2、怎样将 GB2312 编码的字符串转换为 ISO-8859-1 编码的字符串？
+
 ```java
 String s1 = "你好";
 String s2 = new	String(s1.getBytes("GB2312")， "ISO-8859-1");
@@ -675,7 +676,45 @@ String s2 = new	String(s1.getBytes("GB2312")， "ISO-8859-1");
 
 ## 3、语句 String str = new String("abc"); 一共创建了多少个对象
 
-http://rednaxelafx.iteye.com/blog/774673/
+在常量池中查找是否有“abc”对象，有则返回对应的引用；
+
+没有则创建对应的实例对象；在堆中创建一个String("abc")对象，将对象地址赋值给str，创建一个引用
+
+
+## 4、String的长度限制
+
+### 4.1、编译期
+
+看String的源码`public String(char value[], int offset, int count)`，count是int类型的，所以char[] value最多可以保存 Integer.MAX_VALUE个；
+
+但是在实际证明，String中最多可以有65534个字符，如果超过了这个个数，就会在编译期报错
+```java
+String s = "a...a"; // 65534个a
+System.out.println(s.length());
+
+String s1 = "a...a"; // 65535个a
+System.out.println(s1.length()); // 或报错，提示常量字符串过长；
+```
+
+当我们使用字符串字面量直接定义String的时候，是会把字符串在常量池中存储一份的。上面的65534其实是常量池的限制；常量池中每一种数据项也有自己的类型。Java中的UTF-8编码的unicode字符串在常量池中以CONSTANT_Utf8类型表示；
+
+CONSTANT_Utf8_INFO是一个CONSTANT_Utf8类型的常量池数据项，它存储的是一个常量字符串。常量池中的所有字面量几乎都是通过CONSTANT_Utf8_INFO描述的。CONSTANT_Utf8_INFO的定义：
+```
+CONSTANT_Utf8_INFO{
+	u1 tag;
+	u2 length;
+	u1 bytes[length];
+}
+```
+使用字面量定义的字符串在class文件中是使用CONSTANT_Utf8_INFO存储的，而CONSTANT_Utf8_INFO中有u2 length；表明了该类型存储数据的长度；
+
+u2是无符号的16位整数，因此理论上允许的最大长度是2^16=65536。而Java class文件是使用一种变体的UTF-8格式来存放字符串的，null值用两个字节来表述，因此值剩下65534个字节
+
+### 4.2、运行期
+
+上面的限制是使用 `String s = ""`这种字面值方式的定义的才会有限制；
+
+String在运行期也是有限制的，也就是 Integer.MAX_VALUE，约为4G。在运行期，如果String的长度超过这个范围，就有可能抛出异常（JDK9之前）
 
 # 八、String的使用技巧
 
@@ -693,3 +732,4 @@ http://rednaxelafx.iteye.com/blog/774673/
 * [Java 7、8中的String.intern](http://www.importnew.com/12681.html)
 * [深入解析String#intern](https://tech.meituan.com/in_depth_understanding_string_intern.html)
 * [String、StringBuilder、StringBuffer](http://www.cnblogs.com/dolphin0520/p/3778589.html)
+* [String对象创建问题](http://rednaxelafx.iteye.com/blog/774673/)

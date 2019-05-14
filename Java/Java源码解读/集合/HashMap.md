@@ -379,7 +379,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)
 
 put的时候根据 h & (length – 1) 定位到那个桶然后看是红黑树还是链表再putVal
 
-![](集合图/HashMap-put方法.png)
+![](image/HashMap-put方法.png)
 
 ```java
 public V put(K key, V value) {
@@ -462,7 +462,7 @@ private V getForNullKey() {
 ```
 ### 2.2、JDK8的实现
 
-![](集合图/HashMap-getNode.png)
+![](image/HashMap-getNode.png)
 
 主要是getNode()方法
 - bucket里的第一个节点，直接命中；
