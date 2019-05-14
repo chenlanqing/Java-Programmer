@@ -80,6 +80,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 - HashTable的方法是同步的，在方法的前面都有synchronized来同步，HashMap未经同步，所以在多线程场合要手动同步
 - HashTable不允许null值(key和value都不可以) ，HashMap允许null值(key和value都可以)。
 - HashTable有一个contains(Object value)功能和containsValue(Object value)功能一样。
+- HashTable是基于Dictionary类继承的；HashMap继承抽象类AbstractMap实现了Map接口；
 - HashTable使用Enumeration进行遍历，HashMap使用Iterator进行遍历。
 - HashTable中hash数组默认大小是11，增加的方式是 old*2+1。HashMap中hash数组的默认大小是16，而且一定是2的指数。在取模计算时，如果模数是2的幂，那么我们可以直接使用位运算来得到结果，效率要大大高于做除法
 - 哈希值的使用不同，HashTable 直接使用对象的 hashCode，代码是这样的：
@@ -664,6 +665,8 @@ final Node<K,V>[] resize()
 ## 6、为什么HashMap的默认初始容量是16,且容量必须是 2的幂
 
 之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法。从key映射到HashMap 数组对应的位置，会用到一个hash函数。实现高效的hash算法，HashMap 中使用位运算。index = hashcode(key) & (length - 1)。  hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位。长度是2的幂不仅提高了性能，因为length - 1的二进制值位全是1，这种情况下，index的结果等同于Hashcode后几位的值，只要输入hashcode均匀分布，hash算法的结果就是均匀的。
+
+## 7、
 
 
 # 参考资料

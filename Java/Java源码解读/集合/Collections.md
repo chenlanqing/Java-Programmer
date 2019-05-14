@@ -176,3 +176,23 @@ private static void swap(Object[] x, int a, int b) {
 ```
 
 ## 3、JDK1.8
+
+# 二、常见内部类
+
+![](image/Collections-InnerClass.png)
+
+## 1、SynchronizedList
+
+## 2、SynchronizedMap
+
+## 3、SynchronizedSet
+
+
+## 4、SynchronizedSortedMap
+
+## 5、SynchronizedSortedSet
+
+
+## 6、一系列的不可变集合
+
+- UnmodifiableCollection：为只读集合

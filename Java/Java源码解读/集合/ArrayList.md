@@ -206,3 +206,22 @@ public static void main(String[] args) {
 	add(element) --> AbstractList.add(e) --> SubList.add(index， e)	--> parent.add(index + parentOffset， e) --> ArrayList.add(newIndex， e)
 		
 ## 3、为什么最好在newArrayList的时候最好指定容量？
+
+## 4、SynchronizedList、Vector有什么区别
+
+- SynchronizedList 是java.util.Collections的静态内部类；Vector是java.util包中的一个类；
+- 使用add方法时，扩容机制不一样；
+- SynchronizedList有很好的扩展和兼容功能，可以将所有的List的子类转成线程安全的类；
+- 使用SynchronizedList的时候，进行遍历时需要手动进行同步处理；
+- SynchronizedList可以指定锁的对象
+
+## 5、Arrays.asList(T...args)获得的List特点
+
+- 其返回的List是Arrays的一个内部类，是原来数组的视图，不支持增删操作；
+- 如果需要对其进行操作的话，可以通过ArrayList的构造器将其转为ArrayList；
+
+## 6、Iterator和ListIterator区别
+
+- 都是用于遍历集合的，Iterator可以用于遍历Set、List；ListIterator只可用于List；
+- ListIterator实现的Iterator接口；
+- ListIterator可向前和向后遍历；Iterator只可向后遍历；
