@@ -364,112 +364,120 @@ Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy
 
 ## 1、监听器
 
-- 1.1、servlet规范当中规定的一种特殊的组件，用于监听servlet容器产生的事件并进行相应的处理<br>
-	容器产生的事件主要有两大类：
-	- 声明周期相关的事件：容器创建或者销毁request，session，servlet上下文是产生的事件
-	- 绑定的相关事件，容器调用了request，session，servlet上下文的setAttribute，removeAttribute时产生的事件
+### 1.1、什么是监听器
 
-- 1.2.、监听器应用
-	统计在线人数和在线用户;<br>
-	系统启动时加载初始化信息;<br>
-	统计网站访问量;<br>
-	结合Spring使用;<br>
-- 1.3、servlet组件启动顺序：监听器 ----> 过滤器 ----> Servlet
+servlet规范当中规定的一种特殊的组件，用于监听servlet容器产生的事件并进行相应的处理容器产生的事件主要有两大类：
+- 声明周期相关的事件：容器创建或者销毁request，session，servlet上下文是产生的事件
+- 绑定的相关事件，容器调用了request，session，servlet上下文的setAttribute，removeAttribute时产生的事件
 
-- 1.4、监听器分类
-	- 按监听的对象分类：
-		- 用于监听应用程序环境对象(ServletContext)的事件监听器;
-		- 用于监听用户会话对象(HttpSession)的事件监听器;
-		- 用于监听请求消息对象(ServletRequest)的事件监听器
-	- 按监听的事件划分：
-		- 监听域对象自身的创建与销毁;ServletContext，HttpSession，ServletRequest
-		- 监听域对象的属性增加与删除;
-		- 监听绑定到HttpSession域中的某个对象的状态;
+### 1.2、监听器应用
 
-- 1.5、监听域对象自身的创建与销毁
-	- ServletContext: 需实现:ServletContextListener，有两个事件处理方法：创建或销毁ServletContext对象;
-	```java
-		// 主要用途：定时器，全局属性对象
-		@Override
-		public void contextDestroyed(ServletContextEvent sce) {	
-			// ServletContext 销毁时调用
-			System.out.println("**************销毁监听器*********");
-		}
+- 统计在线人数和在线用户；
+- 系统启动时加载初始化信息；
+- 统计网站访问量；
+- 结合Spring使用；
+
+### 1.3、servlet组件启动顺序
+
+监听器 ----> 过滤器 ----> Servlet
+
+### 1.4、监听器分类
+
+- 按监听的对象分类：
+	- 用于监听应用程序环境对象(ServletContext)的事件监听器;
+	- 用于监听用户会话对象(HttpSession)的事件监听器;
+	- 用于监听请求消息对象(ServletRequest)的事件监听器
+- 按监听的事件划分：
+	- 监听域对象自身的创建与销毁;ServletContext，HttpSession，ServletRequest
+	- 监听域对象的属性增加与删除;
+	- 监听绑定到HttpSession域中的某个对象的状态;
+
+### 1.5、监听域对象自身的创建与销毁
+
+- ServletContext：需实现:ServletContextListener，有两个事件处理方法：创建或销毁ServletContext对象;
+```java
+	// 主要用途：定时器，全局属性对象
+	@Override
+	public void contextDestroyed(ServletContextEvent sce) {	
+		// ServletContext 销毁时调用
+		System.out.println("**************销毁监听器*********");
+	}
+	
+	@Override
+	public void contextInitialized(ServletContextEvent sce) {
+		// ServletContext 创建是调用
+		// ServletContextEvent 可以获取 ServletContext
+		String username = sce.getServletContext().getInitParameter("");
+		System.out.println("**************监听器*********" + username);
+	}
+```
+- HttpSession对象：实现了HttpSessionListener
+```java
+	@Override
+	public void sessionCreated(HttpSessionEvent se) {
+		// session创建时调用
+	}
+	@Override
+	public void sessionDestroyed(HttpSessionEvent se) {
+		// session销毁时调用
+	}
+```
+- ServletRequest对象：实现了ServletRequestListener
+```java
+	@Override
+	public void requestDestroyed(ServletRequestEvent sre) {
 		
-		@Override
-		public void contextInitialized(ServletContextEvent sce) {
-			// ServletContext 创建是调用
-			// ServletContextEvent 可以获取 ServletContext
-			String username = sce.getServletContext().getInitParameter("");
-			System.out.println("**************监听器*********" + username);
-		}
-	```
-	- HttpSession对象:实现了HttpSessionListener
-	```java
-		@Override
-		public void sessionCreated(HttpSessionEvent se) {
-			// session创建时调用
-		}
-		@Override
-		public void sessionDestroyed(HttpSessionEvent se) {
-			// session销毁时调用
-		}
-	```
-	- ServletRequest对象:实现了ServletRequestListener
-	```java
-		@Override
-		public void requestDestroyed(ServletRequestEvent sre) {
-			
-		}
+	}
 
-		@Override
-		public void requestInitialized(ServletRequestEvent sre) {
+	@Override
+	public void requestInitialized(ServletRequestEvent sre) {
 
-		}
-	```	
-- 1.6、监听域对象的属性增加与删除：<br>
-	实现接口
-	- ServletContextAttributeListener : 属性的增加与删除
-	- HttpSessionAttributeListener : Session属性的增加与删除;
-	- ServletRequestAttributeListener : 请求参数的增加与删除
+	}
+```	
+### 1.6、监听域对象的属性增加与删除，实现接口
+
+- ServletContextAttributeListener：属性的增加与删除
+- HttpSessionAttributeListener：Session属性的增加与删除;
+- ServletRequestAttributeListener：请求参数的增加与删除
 		
-- 1.7、绑定到HttpSession域中的对象状态的事件监听器
+绑定到HttpSession域中的对象状态的事件监听器
 
 ## 2、过滤器：Filter
 
-不能直接处理请求；服务器端的组件，其可以截取用户端的请求与响应信息，并对这些信息过滤;
+不能直接处理请求；服务器端的组件，其可以截取用户端的请求与响应信息，并对这些信息过滤
 
-**2.1、工作原理:**
+### 2.1、工作原理
 
-过滤器将用户请求发送到web资源，web资源发送响应到过滤器，过滤器将web资源发送给用户;
+过滤器将用户请求发送到web资源，web资源发送响应到过滤器，过滤器将web资源发送给用户
 
-**2.2、生命周期:**
+使用：implements Filter
 
-实例化 ---> web.xml(实例化一次)<br>
-初始化 ---> init()(执行一次)<br>
-过滤   ---> doFilter()(多次执行)<br>
-销毁   ---> destroy()(web容器关闭)
+### 2.2、生命周期
 
-**2.3、实现: implements Filter**
+- 实例化：一般是web.xml，实例化一次；这个方法可以读取过滤器web.mxl文件中过滤器的参数
+- 初始化：init()，执行一次
+- 过滤：doFilter()，多次执行；完成实际的过滤操作，这个地方是过滤器的核心方法，当用户请求访问与过滤器关联的URL时，web容器将先调用过滤的doFilter方法。FilterChain参数可以调用chain.doFilter方法，将请求传给下一个过滤器，或利用转发、重定向将请求转到其他资源
+- 销毁：destroy()，web容器关闭，释放过滤器占用的资源；
 
-**2.4、过滤器链:服务器按照web.xml定义的先后顺序将过滤器组装成一条链**
+### 2.3、过滤器分类
 
-**2.5、过滤器分类**
+- request：用户直接访问页面时，web容器会调用过滤器
+- forward：目标资源是RequestDispatcher	的forward访问时，该过滤器被调用;
+- include：目标资源是RequestDispatcher	的include访问时，该过滤器被调用;
+- error：目标资源是通过声明式异常处理机制调用时，过滤器将被调用 
+- async：异步调用资源------Servlet3.0，@WebFilter
 
-- request:用户直接访问页面时，web容器会调用过滤器
-- forward:目标资源是RequestDispatcher	的forward访问时，该过滤器被调用;
-- include:目标资源是RequestDispatcher	的include访问时，该过滤器被调用;
-- error :目标资源是通过声明式异常处理机制调用时，过滤器将被调用 
-- async: 异步调用资源------Servlet3.0
-	@WebFilter
+### 2.4、多个过滤器
 
-**2.6、过滤器应用:**
+过滤器链：服务器按照web.xml定义的先后顺序将过滤器组装成一条链；返回时是按照进入的顺序反向走一遍
 
-- 对用于请求进行统一认证;
+### 2.5、过滤器应用
+
+- 对用于请求进行统一认证
 - 编码转换
-- 对用户发送的数据进行过滤转换;
-- 转换图像格式;
-- 对响应内容进行压缩;
+- 对用户发送的数据进行过滤转换
+- 转换图像格式
+- 对响应内容进行压缩
 - 通过FilterConfig来获取初始化参数
 
 # 四、Servlet3.0
@@ -478,6 +486,7 @@ Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy
 - [官方文档-英文](https://github.com/chenlanqing/learningNote/blob/master/Java/官方文档/servlet-3.0-spec.pdf)
 
 ## 1、runtimes pluggability（运行时插件能力）
+
 - Servlet容器启动会扫描，当前应用里面每一个jar包的ServletContainerInitializer的实现；
 - 提供ServletContainerInitializer的实现类；必须绑定在，META-INF/services/javax.servlet.ServletContainerInitializer，文件的内容就是ServletContainerInitializer实现类的全类名；
 

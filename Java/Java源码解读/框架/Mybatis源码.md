@@ -1,4 +1,91 @@
 
-# 1、
+# 1、Mybatis原理分析
 
-# 2、
+## 1.1、MyBatis的主要成员
+
+- Configuration：MyBatis所有的配置信息都保存在Configuration对象之中，配置文件中的大部分配置都会存储到该类中
+- SqlSession：作为MyBatis工作的主要顶层API，表示和数据库交互时的会话，完成必要数据库增删改查功能
+- Executor：MyBatis执行器，是MyBatis 调度的核心，负责SQL语句的生成和查询缓存的维护
+- StatementHandler：封装了JDBC Statement操作，负责对JDBC statement 的操作，如设置参数等
+- ParameterHandler：负责对用户传递的参数转换成JDBC Statement 所对应的数据类型
+- ResultSetHandler：负责将JDBC返回的ResultSet结果集对象转换成List类型的集合
+- TypeHandler：负责java数据类型和jdbc数据类型(也可以说是数据表列类型)之间的映射和转换
+- MappedStatement：MappedStatement维护一条`<select|update|delete|insert>`节点的封装
+- SqlSource：负责根据用户传递的parameterObject，动态地生成SQL语句，将信息封装到BoundSql对象中，并返回
+- BoundSql：表示动态生成的SQL语句以及相应的参数信息
+
+以上主要成员在一次数据库操作中基本都会涉及，在SQL操作中重点需要关注的是SQL参数什么时候被设置和结果集怎么转换为JavaBean对象的，这两个过程正好对应`StatementHandler`和`ResultSetHandler`类中的处理逻辑
+
+![](image/Mybatis层次结构.png)
+
+## 1.2、MyBatis的初始化
+
+MyBatis的初始化的过程其实就是解析配置文件和初始化Configuration的过程，MyBatis的初始化过程可用以下几行代码来表述：
+```java
+String resource = "mybatis.xml";
+// 加载mybatis的配置文件（它也加载关联的映射文件）
+InputStream inputStream = null;
+try {
+    inputStream = Resources.getResourceAsStream(resource);
+} catch (IOException e) {
+    e.printStackTrace();
+}
+// 构建sqlSession的工厂
+sessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+```
+
+# 2、Mapper接口是怎么定位到Mapper.xml
+
+- 文件：mybatis-spring-1.2.xsd
+```xml
+<xsd:element name="scan">
+    <xsd:annotation>
+      <xsd:documentation>
+        <![CDATA[
+          Searches recursively starting from a base package for interfaces and registers them as MapperFactoryBeans.
+          Note that only interfaces with at least one method will be registered; concrete classes will be ignored.
+        ]]>
+      </xsd:documentation>
+    </xsd:annotation>
+    <xsd:complexType>
+      <xsd:attribute name="base-package" type="xsd:string" use="required">
+        <xsd:annotation>
+          <xsd:documentation>
+            <![CDATA[
+              The comma-separated list of packages to scan for annotated components.
+            ]]>
+          </xsd:documentation>
+        </xsd:annotation>
+      </xsd:attribute>
+```
+Spring 会扫描 basePackage 下的所有Mapper接口并注册为MapperFactoryBean，如下配置：`@MapperScan(basePackages = "com.best.rms.erp.*.dao")`
+
+- MapperFactoryBean
+
+    ```public class MapperFactoryBean<T> extends SqlSessionDaoSupport implements FactoryBean<T>```
+
+    - MapperFactoryBean 实现了 Spring 的 FactoryBean 接口，可见MapperFactoryBean 是通过 FactoryBean 接口中定义的 getObject 方法来获取对应的Mapper对象的
+
+    - MapperFactoryBean 还继承了SqlSessionDaoSupport，需要注入生产SqlSession 的 sqlSessionFactory对象
+
+        MapperScannerConfigurer 配置中的sqlSessionFactoryBeanName属性 ，在做多数据源的时候，需要指定不同的SqlSessionFactoryBean，这样Spring 在注册 MapperFactoryBean 的时候会使用不同的 SqlSessionFactory 来生成 SqlSession；
+
+- `@Autowired Mapper`
+
+    ```java
+    // MapperFactoryBean中getObject方法
+    public T getObject() throws Exception {
+    return this.getSqlSession().getMapper(this.mapperInterface);
+    }
+    ```
+
+    MapperFactoryBean会从它的getObject方法中获取对应的Mapper接口，而getObject内部还是通过我们注入的属性调用SqlSession接口的getMapper(Mapper接口)方法来返回对应的Mapper接口的。这样就通过把SqlSessionFactory和相应的Mapper接口交给Spring管理实现了Mybatis跟Spring的整合
+
+
+
+
+
+# 参考资料
+
+- [MyBatis实现原理](https://www.cnblogs.com/luoxn28/p/6417892.html)
+

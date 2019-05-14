@@ -878,12 +878,26 @@ public void afterCompletion(HttpServletRequest request，
 	</mvc：interceptors>
 	```
 - 拦截器的执行顺序：(只有一个拦截器) FirstInterceptor.preHandle() ==> HandlerAdapters.handler() ==> FirstInterceptor.postHandle() ==> DispatcherServlet.redner() ==> FirstInterceptor.afterCompletion()
-- 多个拦截器的执行顺序： [SpringMVC多个拦截器执行顺序.png]
+- 多个拦截器的执行顺序： 拦截器它们之间的执行顺序跟在SpringMVC的配置文件中定义的先后顺序有关
+
+	![](image/SpringMVC多个拦截器执行顺序.png)
+	
 	- preHanlde： 按照配置文件中配置的顺序正序执行， 如果某个拦截器preHanlde返回值为 true，则其对于的afterCompletion一定要执行
 	- postHandle： 按照配置文件配置的顺序倒序执行
 	- afterCompletion： 按照配置文件配置的顺序倒序执行
 
 FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#handle ==> SecondInterceptor#postHandle ==> FirstInterceptor#postHandle ==> DispatcherServlet#render ==> SecondInterceptor#afterCompletion ==> FirstInterceptor#afterCompletion
+
+## 17.2、拦截器与Servlet的过滤器的区别
+
+- 拦截器是基于Java的反射机制的，而过滤器是基于函数回调；
+- 拦截器不依赖Servlet容器，过滤器依赖Servlet容器；
+- 拦截器只能对Action请求起作用，而过滤器则可以对几乎所有的请求起作用；
+- 拦截器可以访问action上下文、值栈里的对象，而过滤器不能访问；
+- 在action的生命周期中，拦截器可以多次被调用，而过滤器只能在容器初始化时被调用一次；
+- 拦截器可以获取IOC容器中的各个bean，而过滤器就不行，在拦截器里注入一个service，可以调用业务逻辑
+- 过滤器和拦截器触发时机不一样：过滤器是在请求进入容器后，但请求进入servlet之前进行预处理的。请求结束返回也是，是在servlet处理完后，返回给前端之前
+- Filter是Servlet规范规定的，只能用于web程序中；
 
 # 18、SpringMVC 异常处理
 
@@ -1151,7 +1165,7 @@ public class RootConfig {
 	- 多个 Spring IOC 容器之间可以设置为父子关系，以实现良好的解耦。
 	- Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：即 WEB 层容器可以引用业务层容器的 Bean，而业务层容器却访问不到 WEB 层容器的 Bean
 
-# 21.2、SpringMVC 对比 Struts2
+## 21.2、SpringMVC 对比 Struts2
 
 - Spring MVC 的入口是 Servlet， 而 Struts2 是 Filter
 - Spring MVC 会稍微比 Struts2 快些. Spring MVC 是基于方法设计， 而 Sturts2 是基于类， 每次发一次请求都会实	例一个 Action.

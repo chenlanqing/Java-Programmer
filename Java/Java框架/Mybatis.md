@@ -296,7 +296,20 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 # 五、MyBatis原理
 
 * [Mybatis初始化机制详解](https://blog.csdn.net/luanlouis/article/details/37744073)
-* []()
+
+## 1、mybatis的初始化
+
+- 首先会创建SqlSessionFactoryBuilder建造者对象，然后由它进行创建SqlSessionFactory
+- 然后会解析xml配置文件，实际为configuration节点的解析操作，还要解析transactionManager及datasource，最后将解析后的结果存到configuration对象中。
+- 解析完MyBatis配置文件后，configuration就初始化完成了，然后根据configuration对象来创建SqlSession，到这里时，MyBatis的初始化的征程已经走完了。
+
+## 2、mybatis的sql查询流程
+
+- 调用selectOne方法进行SQL查询，selectOne方法最后调用的是selectList，在selectList中，会查询configuration中存储的MappedStatement对象，mapper文件中一个sql语句的配置对应一个MappedStatement对象，然后调用执行器进行查询操作。
+- 执行器在query操作中，优先会查询缓存是否命中，命中则直接返回，否则从数据库中查询。
+- 真正的doQuery操作是由SimplyExecutor代理来完成的，该方法中有2个子流程，一个是SQL参数的设置，另一个是SQL查询操作和结果集的封装。
+    - 首先获取数据库connection连接，然后准备statement，然后就设置SQL查询中的参数值。打开一个connection连接，在使用完后不会close，而是存储下来，当下次需要打开连接时就直接返回。
+
 
 # 六、MyBatis中的设计模式
 
