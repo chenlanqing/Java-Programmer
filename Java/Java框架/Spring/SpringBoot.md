@@ -192,6 +192,7 @@ public class Person {
 ```
 
 ### 3.2、@Value获取值和@ConfigurationProperties获取值比较
+
 |            | @ConfigurationProperties | @Value |
 | ---------- | ------------------------ | ------ |
 | 功能         | 批量注入配置文件中的属性             | 一个个指定  |
@@ -1886,11 +1887,12 @@ servlet3.0有几个规则：
 
 # 四、SpringBoot启动配置原理
 
-**1、重要的事件回调机制**
+## 1、重要的事件回调机制
+
 - 配置在META-INF/spring.factories：**ApplicationContextInitializer**、**SpringApplicationRunListener**
 - 只需要放在ioc容器中：**ApplicationRunner**、**CommandLineRunner**
 
-**2、启动流程：**
+## 2、启动流程
 - （1）创建SpringApplication对象，
 
 	SpringBoot1.5版本调用initialize(sources)方法
@@ -2011,7 +2013,7 @@ servlet3.0有几个规则：
 
 *Spring Boot 总是遵循一个标准;容器中有我们自己配置的组件就用我们配置的，没有就用自动配 置默认注册进来的组件;*
 
-**3、事件监听机制**
+## 3、事件监听机制
 
 配置在META-INF/spring.factories
 
@@ -2274,7 +2276,16 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 
 # 六、SpringBoot面试题
 
-**SpringApplication.run都做了些什么？**
+## 1、SpringApplication.run都做了些什么？
+
+## 2、SpringBoot常用注解
+
+- @SpringBootApplication：包含@Configuration、@EnableAutoConfiguration、@ComponentScan通常用在主类上
+	- @Configuration 等同于spring的XML配置文件；使用Java代码可以检查类型安全。
+	- @EnableAutoConfiguration 自动配置。
+	- @ComponentScan 组件扫描，可自动发现和装配一些Bean
+
+- @MapperScan：开启MyBatis的DAO扫描  
 
 # 七、SOFABoot
 

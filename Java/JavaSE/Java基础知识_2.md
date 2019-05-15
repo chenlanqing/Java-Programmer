@@ -857,7 +857,7 @@ public class Test {
 
 ## 1、Java注解：Annotation
 
-JDK5之后新增的功能
+JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据，注解不直接影响代码执行。
 
 ### 1.1、内置注解
 
@@ -1314,10 +1314,39 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 
 - 除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了`Serializable`接口后就不再是单例了，因为每次调用`readObject()`方法返回的都是一个新创建出来的对象（当然可以通过使用 readResolve() 方法来避免)）
 
-- Java规范中保证了每一个枚举类型及其定义的枚举变量在JVM中都是唯一的，在枚举类型的序列化和反序列化上Java做了特殊处理。序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 `java.lang.Enum`的`valueOf`方法来根据名字查找枚举对象；同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了`writeObject、readObject、readObjectNoData、writeReplace和 readResolve`等方法
+- Java规范中保证了每一个枚举类型及其定义的枚举变量在JVM中都是唯一的，在枚举类型的序列化和反序列化上Java做了特殊处理。序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 `java.lang.Enum`的`valueOf`方法来根据名字查找枚举对象；同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了`writeObject、readObject、readObjectNoData、writeReplace和 readResolve`等方法；
+
+	```java
+	// remaining cases
+	if (obj instanceof String) {
+		writeString((String) obj, unshared);
+	} else if (cl.isArray()) {
+		writeArray(obj, desc, unshared);
+	} else if (obj instanceof Enum) {
+		writeEnum((Enum<?>) obj, desc, unshared);
+	} else if (obj instanceof Serializable) {
+		writeOrdinaryObject(obj, desc, unshared);
+	} else {
+		if (extendedDebugInfo) {
+			throw new NotSerializableException(
+				cl.getName() + "\n" + debugInfoStack.toString());
+		} else {
+			throw new NotSerializableException(cl.getName());
+		}
+	}
+
+	private void writeEnum(Enum<?> en,ObjectStreamClass desc, boolean unshared) throws IOException {
+        bout.writeByte(TC_ENUM);
+        ObjectStreamClass sdesc = desc.getSuperDesc();
+        writeClassDesc((sdesc.forClass() == Enum.class) ? desc : sdesc, false);
+        handles.assign(unshared ? null : en);
+		// 这里是将name属性输出到结果中
+        writeString(en.name(), false);
+    }
+	```
+- 普通的Java类的反序列化过程中，会通过反射调用类的默认构造函数来初始化对象。所以即使单例中构造函数是私有的，也会被反射给破坏掉。由于反序列化后的对象是重新new出来的，所以破坏了单例；但是枚举的反序列化并不是通过反射实现的，它是通过name去找实例的，所以，也就不会发生由于反序列化导致的单例破坏问题；
 
 - Java 枚举序列化需要注意的点：
-
 	如果我们枚举被序列化本地持久化了，那我们就不能删除原来枚举类型中定义的任何枚举对象，否则程序在运行过程中反序列化时JVM 就会找不到与某个名字对应的枚举对象了，所以我们要尽量避免多枚举对象序列化的使用
 
 ## 6、迭代器和枚举器区别
@@ -1329,6 +1358,8 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 # 十九、Java异常
 
 ## 1、异常
+
+Throwable是Java中的最顶级的异常类，继承Object，实现了序列化接口，有两个重要的子类：Exception、Error
 
 ## 2、Error
 
@@ -1349,6 +1380,7 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 - IllegalArgumentException
 - IndexOutOfBoundException
 - NumberFormatException
+- UnsupportedOperationException
 
 ### 5.2、非RuntimeException
 
@@ -1364,6 +1396,11 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 	- NoClassDefFoundError 表示该类在编译阶段可以找到，但在运行时找不到了，另外有时静态块的初始化过程也会导致 NoClassDefFoundError。而 ClassNotFoundException 一般发生在通过反射或者 ClassLoader 依据类名加载类时类不存在；
 	- 此外 NoClassDefFoundError 是 Error，是不受检查类型的异常；而 ClassNotFoundException 是受检查类型的异常，需要进行异常捕获，否则会导致编译错误；
 	- NoClassDefFoundError 是链接错误，发生在 JVM 类加载流程的链接阶段，当解析引用的时候找不到对应的类就会抛出 NoClassDefFoundError；而 ClassNotFoundException 一般发生在类加载流程的加载阶段
+
+## 6、Error与Exception
+
+- Error：表示系统级的错误，是Java运行环境内部错误或者硬件问题，不能指望程序来处理；除了退出运行外别无选择，它是Java虚拟机抛出的；
+- Exception：表示程序需要捕捉、需要处理的异常，是由于程序设计不完善而出现的问题，程序必须处理的问题；
 
 # 二十、Jar包
 

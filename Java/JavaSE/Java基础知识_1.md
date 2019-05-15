@@ -986,9 +986,15 @@ System.out.println(JSONObject.toJSON(object));// {"b"："2"，"a"："1"，"c"：
 
 ## 8、序列化安全
 
-- 序列化在传输中是不安全的：因为序列化二进制格式完全编写在文档中且完全可逆，所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容，故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中。
+- 序列化在传输中是不安全的：因为序列化二进制格式完全编写在文档中且完全可逆，所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容，故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中。可能面临信息泄露、数据篡改、拒绝服务等
 
 - 要解决序列化安全问题的核心原理就是避免在序列化中传递敏感数据，所以可以使用关键字 transient 修饰敏感数据的变量。或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
+	- 对序列化的流数据进行加密；
+	- 在传输的过程中使用TLS加密传输；
+	- 对序列化数据进行完整性校验；
+	- 针对信息泄露：使用transient标记敏感字段；
+	- 针对数据篡改：实现ObjectInputValidation接口并重写其方法；
+	- 针对整个对象伪造：通过重写ObjectInputStream的resolveClass来实现
 
 ## 9、Java默认序列化与二进制编码
 
@@ -1016,7 +1022,7 @@ Java 中的泛型基本上都是在编译器这个层次来实现的，在生成
 ### 2.1、类型擦除的基本过程
 
 - 首先是找到用来替换类型参数的具体类，这个具体类一般是 Object，如果指定了类型参数的上界的话，则使用这个上界。把代码中的类型参数都替换成具体的类，同时去掉出现的类型声明，即去掉<>的内容。即所有类型参数都用他们的限定类型替换，包括类、变量和方法，如果类型变量有限定则原始类型就用第一个边界的类型来替换，譬如
-`class Prd<T extends Comparable & Serializable>{}`的原始类型就是 Comparable.
+`class Prd<T extends Comparable & Serializable>`的原始类型就是 Comparable.
 - 如果类型擦除和多态性发生冲突时就在子类中生成桥方法解决;
 - 如果调用泛型方法的返回类型被擦除则在调用该方法时插入强制类型转换
 
@@ -1223,7 +1229,7 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 
 - 3.2、通配符所代表的其实是一组类型，但具体的类型是未知的，但是`List<?>`并不等同于`List<Object>`
 
-	`List<Object> 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 `List<?>`则其中所包含的元素类型是不确定；
+	`List<Object>` 实际上确定了 List 中包含的是 Object 及其子类，在使用的时候都可以通过 Object 来进行引用。而 `List<?>`则其中所包含的元素类型是不确定；
 
 - 3.3、对于 List<?>中的元素只能用 Object 来引用，在有些情况下不是很方便.在这些情况下，可以使用上下界来限制未知类型的范围
 
@@ -1415,6 +1421,7 @@ Exception in thread "main" java.lang.ArithmeticException： / by zero
 	at com.exe1.TestSort.test1(TestSort.java：14)
 	at com.exe1.TestSort.main(TestSort.java：6)
 ```
+
 ## 3、如何退出
 
 在 try 里面通过 System.exit(0) 来退出 JVM 的情况下 finally 块中的代码才不会执行。其他 return 等情况都会调用，所以在不终止 JVM 的情况下 finally 中的代码一定会执行
