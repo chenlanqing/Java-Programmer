@@ -330,6 +330,7 @@ JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢�
 # 二十八、Java基准测试-JMH
 
 - [JMH教程](http://tutorials.jenkov.com/java-performance/jmh.html)
+- [JMH使用](https://www.xncoding.com/2018/01/07/java/jmh.html)
 
 # 二十九、面向对象
 
@@ -351,6 +352,96 @@ JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢�
 - 里氏替换原则
 - 依赖倒置原则
 - 接口隔离原则
+
+
+# 三十、Lambda表达式与函数式接口
+
+## 1、函数式接口
+
+函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
+
+java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解@FunctionalInterface进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
+
+Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现
+
+## 2、Lambda表达式
+
+### 2.1、语法格式
+
+```java
+// 之前的语法
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        System.out.println("内部类线程");
+    }
+}).start();
+// lambda语法
+new Thread(() -> System.out.println("我是Lambda线程")).start();
+```
+
+### 2.2、Lambda原理
+
+如下代码：启动一个线程，包含lambda表达式和匿名内部类的方式
+```java
+public class LambdaDemo {
+    public static void runThreadUseLambda() {
+        new Thread(() -> System.out.println("我是Lambda线程")).start();
+    }
+    public static void runWithInnerClass() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("内部类线程");
+            }
+        }).start();
+    }
+    public static void main(String[] args) {
+        runThreadUseLambda();
+        runWithInnerClass();
+    }
+}
+```
+通过`javap -c LambdaDemo`查看字节码
+```java
+...
+public static void runThreadUseLambda();
+Code:
+    0: new           #2                  // class java/lang/Thread
+    3: dup
+    4: invokedynamic #3,  0              // InvokeDynamic #0:run:()Ljava/lang/Runnable;
+    9: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
+    12: invokevirtual #5                  // Method java/lang/Thread.start:()V
+    15: return
+
+public static void runWithInnerClass();
+Code:
+    0: new           #2                  // class java/lang/Thread
+    3: dup
+    4: new           #6                  // class com/blue/fish/se/basis/lambda/LambdaDemo$1
+    7: dup
+    8: invokespecial #7                  // Method com/blue/fish/se/basis/lambda/LambdaDemo$1."<init>":()V
+    11: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
+    14: invokevirtual #5                  // Method java/lang/Thread.start:()V
+    17: return
+...
+```
+对比上述两个方法，发现lambda的是`invokeDynamic`，而内部类的是`invokespecial`；
+
+JVM指令：
+- invokeinterface：调用接口方法；
+- invokespecial：专门用来调用父类方法、私有方法和初始化方法；
+- invokestatic：调用静态方法；
+- invokevirtual：调用对象的一般方法
+
+上述这四个指令所对应的类、调用的方法在编译时几乎是固定的：invokestatic所对应的类为静态方法所在的类，方法为静态方法本身；invokespecial所对应的类为当前对象，方法是固定的；invokeinterface和invokevirtual所对应的类也为当前对象，方法可以因为继承和实现进行选择，但也仅限于整个继承体系中选择；
+
+在java7 JVM中增加了一个新的指令invokedynamic，用于支持动态语言，即允许方法调用可以在运行时指定类和方法，不必在编译的时候确定；字节码中每条invokedynamic指令出现的位置称为一个动态调用点，invokedynamic指令后面会跟一个指向常量池的调用点限定符，这个限定符会被解析为一个动态调用点；
+
+Lambda采用的是invokedynamic指令；
+
+### 2.3、Lambda性能
+
 
 
 

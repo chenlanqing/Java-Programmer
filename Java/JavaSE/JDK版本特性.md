@@ -121,6 +121,8 @@
 
 ### 1.1、Lambda表达式和函数式接口
 
+函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口。java 8提供 @FunctionalInterface作为注解,这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口）；
+
 ### 1.2、接口的默认方法和静态方法
 
 ### 1.3、方法引用
@@ -159,4 +161,3 @@
 * [Java各个版本特性最全总结](https://mp.weixin.qq.com/s/wQW3tZmCs50RjzMtbxOgpQ)
 * [Java8新特性](https://www.jianshu.com/p/5b800057f2d8)
 * [JDK8新特性指南](http://www.open-open.com/lib/view/open1403232177575.html)
-* [Java8教程](https://mp.weixin.qq.com/s/qYsjT0QUD2BgeEDIkhymmg)

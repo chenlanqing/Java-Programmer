@@ -482,18 +482,18 @@ String i3 = Integer.toString(i);
 - 第三行和第四行没有任何区别，因为 String.valueOf(i)也是调用 Integer.toString(i)来实现的. 
 - 第二行代码其实是 String i1 = (new StringBuilder()).append(i).toString();，首先创建一个 StringBuilder 对象，然后再调用append方法，再调用toString方法
 
-## 5、String intern()方法
+## 9、String intern()方法
 
 public native String intern();
 
-### 5.1、Java常量池
+### 9.1、Java常量池
 
 Java 中8种基本类型和一种比较特殊的类型 String，常量池就类似一个 JAVA 系统级别提供的缓存，8种基本类型的常量池都是系统协调的，String 类型的常量池比较特殊。它的主要使用方法有两种：
 
 - 直接使用双引号声明出来的String对象会直接存储在常量池中;
 - 如果不是用双引号声明的 String 对象，可以使用 String 提供的intern方法.intern 方法会从字符串常量池中查询当前字符串是否存在，若不存在就会将当前字符串放入常量池中；
 
-### 5.2、intern 的实现原理
+### 9.2、intern 的实现原理
 
 如果常量池中存在当前字符串，就会直接返回当前字符串。如果常量池中没有此字符串，会将此字符串放入常量池中后，再返回
 
@@ -501,15 +501,15 @@ Java 中8种基本类型和一种比较特殊的类型 String，常量池就类�
 - String 的 String Pool 是一个固定大小的 Hashtable，默认值大小长度是1009，如果放进 String Pool的 String 非常多，就会造成 Hash 冲突严重，从而导致链表会很长，而链表长了后直接会造成的影响就是当调用 String.intern时性能会大幅下降
 - JDK6 中 StringTable 是固定的，就是 1009 的长度，所以如果常量池中的字符串过多就会导致效率下降很快；在jdk7中，StringTable 的长度可以通过一个参数指定： -XX：StringTableSize=99991；从 Java7u40 开始，该默认值增大到 60013
 
-### 5.3、JDK6 和 JDK7 下intern的区别
+### 9.3、JDK6 和 JDK7 下intern的区别
 
-#### 5.3.1、关于创建对象问题
+#### 9.3.1、关于创建对象问题
 
 String s = new String("abc")这个语句创建了几个对象
 
 第一个对象是"abc"字符串存储在常量池中，第二个对象在 JAVA Heap 中的 String 对象
 
-#### 5.3.2、看一段代码
+#### 9.3.2、看一段代码
 
 - 代码片段1：
 	```java
@@ -567,13 +567,13 @@ String s = new String("abc")这个语句创建了几个对象
 		- 第一段代码和第二段代码的改变就是 s3.intern(); 的顺序是放在String s4 = "11";后了。这样，首先执行String s4 = "11";声明 s4 的时候常量池中是不存在"11"对象的，执行完毕后，"11"对象是 s4 声明产生的新对象.然后再执行s3.intern();时，常量池中"11"对象已经存在了，因此 s3 和 s4 的引用是不同的.
 		- 第二段代码中的 s 和 s2 代码中，s.intern();，这一句往后放也不会有什么影响了，因为对象池中在执行第一句代码 String s = new String("1");的时候已经生成"1"对象了.下边的s2声明都是直接从常量池中取地址引用的。s 和 s2 的引用地址是不会相等的；
 
-#### 5.3.3、总结
+#### 9.3.3、总结
 
 从上述的例子代码可以看出 jdk7 版本对 intern 操作和常量池都做了一定的修改.主要包括2点
 - 将 String常量池 从 Perm 区移动到了 Java Heap区
 - String#intern 方法时，如果存在堆中的对象，会直接保存对象的引用，而不会重新创建对象；
 
-### 5.4、intern 的使用
+### 9.4、intern 的使用
 
 - 正确使用：
 	```java
@@ -605,6 +605,8 @@ String s = new String("abc")这个语句创建了几个对象
 - 不正确使用：
 
 	fastjson 中对所有的 json 的 key 使用了 intern 方法，缓存到了字符串常量池中，这样每次读取的时候就会非常快，大大减少时间和空间.而且 json 的 key 通常都是不变的.这个地方没有考虑到大量的 json key 如果是变化的，那就会给字符串常量池带来很大的负担
+
+## 10、indexOf方法
 
 # 六、关于 String 需要注意的点
 

@@ -21,6 +21,7 @@
 ## 1.2、MyBatis的初始化
 
 MyBatis的初始化的过程其实就是解析配置文件和初始化Configuration的过程，MyBatis的初始化过程可用以下几行代码来表述：
+
 ```java
 String resource = "mybatis.xml";
 // 加载mybatis的配置文件（它也加载关联的映射文件）
@@ -75,7 +76,7 @@ Spring 会扫描 basePackage 下的所有Mapper接口并注册为MapperFactoryBe
     ```java
     // MapperFactoryBean中getObject方法
     public T getObject() throws Exception {
-    return this.getSqlSession().getMapper(this.mapperInterface);
+      return this.getSqlSession().getMapper(this.mapperInterface);
     }
     ```
 

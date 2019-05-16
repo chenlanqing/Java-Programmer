@@ -315,6 +315,49 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 
 http://www.crazyant.net/2022.html
 
+# 七、面试题
+
+## 1、为什么mybatis的mapper没有实现类？
+
+mybatis的mapper为什么没有实现类呢？
+
+```java
+public class MapperProxyFactory<T> {
+
+  private final Class<T> mapperInterface;
+  private final Map<Method, MapperMethod> methodCache = new ConcurrentHashMap<>();
+
+  public MapperProxyFactory(Class<T> mapperInterface) {
+    this.mapperInterface = mapperInterface;
+  }
+
+  public Class<T> getMapperInterface() {
+    return mapperInterface;
+  }
+
+  public Map<Method, MapperMethod> getMethodCache() {
+    return methodCache;
+  }
+ // 获取mapper，它返回给了我们一个Proxy。用过JDK动态代理的看到Proxy.newProxyInstance这句一定感到非常的熟悉吧。原来mapper是通过动态代码来实现的，newProxyInstance的第三个参数即为代理执行器的handler了，它传入的是一个mapperProxy对象
+  @SuppressWarnings("unchecked")
+  protected T newInstance(MapperProxy<T> mapperProxy) {
+    return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[] { mapperInterface }, mapperProxy);
+  }
+
+  public T newInstance(SqlSession sqlSession) {
+    final MapperProxy<T> mapperProxy = new MapperProxy<>(sqlSession, mapperInterface, methodCache);
+    return newInstance(mapperProxy);
+  }
+
+}
+```
+执行`sqlSession.getMapper(UserMapper.class)`这句代码最终返回的应该就是一个由jdk动态代理生成的代理类；当执行`Object subject = mapper.getSubject(1);`方法时，最终执行的也就是`mapperMethod.execute(this.sqlSession,args)`的代码
+
+所以回到原问题，为什么mybatis的mapper没有实现类呢？原因是因为 它采用了：Java动态代理实现接口
+
+
+org.apache.ibatis.binding.MapperProxy@423e4cbb
+
 # 参考资料
 
 - [Hibernate与Mybatis对比](http://www.cnblogs.com/inspurhaitian/p/4647485.html)
