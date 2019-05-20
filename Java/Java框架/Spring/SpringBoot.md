@@ -1905,8 +1905,7 @@ servlet3.0有几个规则：
 		//判断当前是否一个web应用
 		this.webEnvironment = deduceWebEnvironment();
 		//从类路径下找到META-INF/spring.factories配置的所有ApplicationContextInitializer；然后保存起来
-		setInitializers((Collection) getSpringFactoriesInstances(
-			ApplicationContextInitializer.class));
+		setInitializers((Collection) getSpringFactoriesInstances(ApplicationContextInitializer.class));
 		//从类路径下找到ETA-INF/spring.factories配置的所有ApplicationListener
 		setListeners((Collection) getSpringFactoriesInstances(ApplicationListener.class));
 		//从多个配置类中找到有main方法的主配置类
@@ -1945,12 +1944,10 @@ servlet3.0有几个规则：
 		listeners.starting();
 		try {
 			//封装命令行参数
-			ApplicationArguments applicationArguments = new DefaultApplicationArguments(
-					args);
+			ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
 			//准备环境
-			ConfigurableEnvironment environment = prepareEnvironment(listeners,
-					applicationArguments);
-					//创建环境完成后回调SpringApplicationRunListener.environmentPrepared()；表示环境准备完成
+			ConfigurableEnvironment environment = prepareEnvironment(listeners,applicationArguments);
+			//创建环境完成后回调SpringApplicationRunListener.environmentPrepared()；表示环境准备完成
 			
 			Banner printedBanner = printBanner(environment);
 			
@@ -1962,11 +1959,10 @@ servlet3.0有几个规则：
 			//applyInitializers()：回调之前保存的所有的ApplicationContextInitializer的initialize方法
 			//回调所有的SpringApplicationRunListener的contextPrepared()；
 			//
-			prepareContext(context, environment, listeners, applicationArguments,
-					printedBanner);
+			prepareContext(context, environment, listeners, applicationArguments,printedBanner);
 			//prepareContext运行完成以后回调所有的SpringApplicationRunListener的contextLoaded（）；
 			
-			//s刷新容器；ioc容器初始化（如果是web应用还会创建嵌入式的Tomcat）；Spring注解版
+			//刷新容器；ioc容器初始化（如果是web应用还会创建嵌入式的Tomcat）；Spring注解版
 			//扫描，创建，加载所有组件的地方；（配置类，组件，自动配置）
 			refreshContext(context);
 			//从ioc容器中获取所有的ApplicationRunner和CommandLineRunner进行回调
@@ -1999,7 +1995,7 @@ servlet3.0有几个规则：
 		- 回调所有的SpringApplicationRunListener(META-INF/spring.factories)的starting
 		- 获取ApplicationArguments
 		- 准备环境&回调所有监听器( SpringApplicationRunListener )的environmentPrepared • 打印banner信息
-		- 创建ioc容器对象(
+		- 创建ioc容器对象
 	- AnnotationConfigEmbeddedWebApplicationContext(web环境容器) – AnnotationConfigApplicationContext(普通环境容器)
 
 - 准备环境

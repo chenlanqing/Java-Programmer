@@ -796,6 +796,9 @@ try{
 ### 1.2、循环依赖的场景
 
 - 构造器的循环依赖：Spring是无法解决的，只能抛出`BeanCurrentlyInCreationException`异常表示循环依赖；
+
+	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。 形成环状依赖， 从而被Spring抛出
+
 - field 属性的循环依赖
 
 Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean ，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；

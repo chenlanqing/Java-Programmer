@@ -349,7 +349,7 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 
 ### 7.3、NIO-非阻塞IO
 	
-- jdk1.4引入NIO,弥补了原来阻塞IO的不足，具体参考[Java-NIO](#三Java-NIO)
+- jdk1.4引入NIO，弥补了原来阻塞IO的不足，具体参考[Java-NIO](#三Java-NIO)
 
 - NIO相对其他IO来说，优点：
 	- 客户端发起的连接操作是异步的，可以通过在多路复用器注册OP_CONNECT等待后续结果，不需要像之前的客户端那样被同步阻塞；
