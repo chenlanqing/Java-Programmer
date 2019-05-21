@@ -68,6 +68,7 @@ Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同�
 # 二十二、Java SPI机制
 
 - [Java中的SPI机制](https://mp.weixin.qq.com/s/LZhsCBuQignJj9Qb8NlYeg)
+- [Dubbo中SPI的使用](https://mp.weixin.qq.com/s/DdTw_4xBXU1NTv2Sm3xEZg)
 
 ## 1、SPI是什么
 
@@ -162,7 +163,28 @@ public final class ServiceLoader<S> implements Iterable<S> {
     - 通过反射方法`Class.forName()`加载类对象，并用`instance()`方法将类实例化
     - 把实例化后的类缓存到providers对象中(LinkedHashMap类型）然后返回实例对象。
 
-## 6、总结
+## 6、Dubbo中SPI的使用
+
+Dubbo中关于SPI的加载，都是用过`ExtensionLoader`类来加载的，使用双重检验锁来解决线程安全问题；Dubbo的SPI的包含负载均衡算法、Filter等，比如LoadBalance（负载均衡）
+
+```java
+@SPI(RandomLoadBalance.NAME)
+public interface LoadBalance {
+    @Adaptive("loadbalance")
+    <T> Invoker<T> select(List<Invoker<T>> invokers, URL url, Invocation invocation) throws RpcException;
+}
+```
+
+![](Image/Dubbo-SPI.png)
+
+```
+random=com.alibaba.dubbo.rpc.cluster.loadbalance.RandomLoadBalance
+roundrobin=com.alibaba.dubbo.rpc.cluster.loadbalance.RoundRobinLoadBalance
+leastactive=com.alibaba.dubbo.rpc.cluster.loadbalance.LeastActiveLoadBalance
+consistenthash=com.alibaba.dubbo.rpc.cluster.loadbalance.ConsistentHashLoadBalance
+```
+
+## 7、总结
 
 - 优点：使用Java SPI机制的优势是实现解耦，使得第三方服务模块的装配控制的逻辑与调用者的业务代码分离，而不是耦合在一起。应用程序可以根据实际业务情况启用框架扩展或替换框架组件
 - 缺点：

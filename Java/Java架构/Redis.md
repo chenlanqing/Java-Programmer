@@ -600,6 +600,8 @@ ZREVRANGE 命令按相反的顺序获取有序集合的元素；也可以同时�
 
 # 三、Redis 持久化
 
+redis为什么需要持久化？故障恢复
+
 ## 1、rdb（Redis Datbase）-保存为 dump.rdb
 
 **1.1、RDB：在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的Snapshot快照，它恢复时是将快照文件直接读到内存里；**
@@ -631,7 +633,7 @@ save 900 1
 save 300 10
 save 60 10000
 ```
-**1.4、触发RD中B快照：**
+**1.4、触发RDB快照：**
 
 - 配置文件中默认的快照配置.
 - 命令 save 或者 bgsave <br>
@@ -645,8 +647,11 @@ config get dir 获取当前rdb文件存放的目录；
 
 **1.6.优势与劣势：**
 
-- 优势：适合大规模的数据恢复，对数据完整性和一致性要求不高的；
-- 劣势：在一定时间间隔做一次，如果redis意外宕机，就会丢失最后一次快照后的所有修改。fork 的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑.
+- 优势：
+	- 适合大规模的数据恢复，对数据完整性和一致性要求不高的；
+	- 相对于AOF持久化机制来说，直接基于RDB数据文件来重启和恢复redis进程，更加快速
+- 劣势：
+	- 在一定时间间隔做一次，如果redis意外宕机，就会丢失最后一次快照后的所有修改。fork 的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑.
 
 **1.7、停止RBD保存：**
 
@@ -654,11 +659,11 @@ config get dir 获取当前rdb文件存放的目录；
 
 ## 2、aof-append only file
 
-**2.1、AOF 是什么：**
+### 2.1、AOF 是什么
 
 以日志的形式记录每个操作，将 Redis 执行过的所有写指令记录下来(读操作不记录)，只许追加但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话会根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作；
 
-**2.2、对应配置：**
+### 2.2、对应配置
 ```
 appendonly					是否开启aof持久化，默认为 no
 appendfilename				aof持久化名称，默认是："appendonly.aof"			
@@ -670,7 +675,8 @@ no-appendfsync-on-rewrite	重写时是否可以运用Appendfsync，用默认no�
 auto-aof-rewrite-min-size	设置重写的基准值，aof重写的最小值
 auto-aof-rewrite-percentage	设置重写的基准值，上次重写的比例
 ```
-**2.3、AOF 启动/恢复/修复：**
+
+### 2.3、AOF 启动/恢复/修复
 
 - **2.3.1、正常操作：**
 
@@ -681,22 +687,18 @@ auto-aof-rewrite-percentage	设置重写的基准值，上次重写的比例
 
 	备份被写坏的文件，运行 redis-check-aof --fix 进行修复；重启redis将重新加载；
 
-**2.4、Rewrite：重写机制：**
+### 2.4、Rewrite：重写机制
 
-- 什么是重写：<br>
-	AOF 采用文件追加方式，文件会越来越大为避免出现此种情况，新增了重写机制，当AOF文件的大小超过所设定的阈值时，Redis 就会启动AOF文件的内容压缩，只保留可以恢复数据的最小指令集.可以使用命令 bgrewriteaof；
+- 什么是重写：AOF 采用文件追加方式，文件会越来越大为避免出现此种情况，新增了重写机制，当AOF文件的大小超过所设定的阈值时，Redis 就会启动AOF文件的内容压缩，只保留可以恢复数据的最小指令集.可以使用命令 bgrewriteaof；
 
-- 重写原理：<br>
-	AOF 文件持续增长而过大时，会fork出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句.重写aof文件的操作，并没有读取旧的aof文件， 而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似；
+- 重写原理：AOF 文件持续增长而过大时，会fork出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句.重写aof文件的操作，并没有读取旧的aof文件， 而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似；
 
-- 触发：<br>
-	Redis 会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次 rewrite 后大小的一倍且文件大于64M时触发；<br>
+- 触发：Redis 会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次 rewrite 后大小的一倍且文件大于64M时触发；<br>
 	配置：auto-aof-rewrite-min-size 64M
 			
-**2.5、优势与劣势：**
+### 2.5、优势与劣势
 
 - **2.5.1、优势：**
-
 	- 每修改同步：appendfsync always   同步持久化每次发生数据变更会被立即记录到磁盘，性能较差但数据完整性比较好
 	- 每秒同步：appendfsync everysec    异步操作，每秒记录，如果一秒内宕机，有数据丢失
 	- 不同步：appendfsync no   从不同步<br>
@@ -816,15 +818,23 @@ QUEUED
 - 没有隔离级别的概念：队列中的命令没有提交之前都不会实际的被执行，因为事务提交前任何指令都不会被实际执行，也就不存在"事务内的查询要看到事务里的更新，在事务外查询不能看到"这个让人万分头痛的问题
 - 不保证原子性：redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚
 
-# 五、主从复制
+# 五、Redis高可用架构
 
 ## 1、Redis 的复制
 
 就是我们所说的主从复制，主机数据更新后根据配置和策略，自动同步到备机的 master/slaver机制，Master 以写为主，Slave 以读为主；
 
+如果采用了主从架构，那么建议必须开启master的持久化，保证在master宕机的情况下，恢复时数据不被清空。
+
+不建议用slave node作为master node的数据热备，因为那样的话，如果你关掉master的持久化，可能在master宕机重启的时候数据是空的，然后可能一经过复制，salve node数据也丢了
+
 ## 2、主从复制
 
 读写分离、容灾恢复
+
+redis replication -> 主从架构 -> 读写分离 -> 水平扩容支撑读高并发
+
+***缺点***：由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，slave 机器数量的增加也会使这个问题更加严重
 
 ## 3、主从的配置
 
@@ -847,6 +857,7 @@ QUEUED
 	(6).dump.rdb 名字
 		dbfilename dump.rdb
 ```
+
 ## 4、常用的主从模式
 
 ### 4.1、一主二仆：即配置一台主库，两台从库
@@ -918,20 +929,90 @@ slaveof no one
 
 使当前数据库停止与其他数据库的同步，转成主数据库
 
-## 5、复制原理
+## 5、复制的流程
 
-- slave启动成功连接到master后会发送一个sync命令
-- master 接到命令启动后台的存盘进程，同时收集所有接收到的用于修改数据集命令，在后台进程执行完毕之后，master将传送整个数据文件到slave，以完成一次完全同步
-- 全量复制：而slave服务在接收到数据库文件数据后，将其存盘并加载到内存中。
-- 增量复制：Master 继续将新的所有收集到的修改命令依次传给slave，完成同步但是只要是重新连接master，一次完全同步（全量复制)将被自动执行
+### 5.1、复制的原理
+
+- slave启动成功连接到master后会发送一个sync命令，redis 2.8开始，slave node会周期性地确认自己每次复制的数据量；
+
+	如果这是slave node重新连接master node，那么master node仅仅会复制给slave部分缺少的数据; 否则如果是slave node第一次连接master node，那么会触发一次full resynchronization；
+	
+	开始full resynchronization的时候，master会启动一个后台线程，开始生成一份RDB快照文件，同时还会将从客户端收到的所有写命令缓存在内存中。RDB文件生成完毕之后，master会将这个RDB发送给slave，slave会先写入本地磁盘，然后再从本地磁盘加载到内存中。然后master会将内存中缓存的写命令发送给slave，slave也会同步这些数据；
+	
+	slave node如果跟master node有网络故障，断开了连接，会自动重连。master如果发现有多个slave node都来重新连接，仅仅会启动一个rdb save操作，用一份数据服务所有slave node；
+
+- 主从复制的断点续传：从redis 2.8开始，就支持主从复制的断点续传，如果主从复制过程中，网络连接断掉了，那么可以接着上次复制的地方，继续复制下去，而不是从头开始复制一份。master node会在内存中常见一个backlog，master和slave都会保存一个replica offset还有一个master id，offset就是保存在backlog中的。如果master和slave网络连接断掉了，slave会让master从上次的replica offset开始继续复制；但是如果没有找到对应的offset，那么就会执行一次resynchronization；
+
+- 过期key：slave不会过期key，只会等待master过期key。如果master过期了一个key，或者通过LRU淘汰了一个key，那么会模拟一条del命令发送给slave。
+
+### 5.2、复制的完整流程
+
+- （1）slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程没开始；master host和ip是从redis.conf里面的slaveof获取；
+- （2）slave node内部有个定时任务，每秒检查是否有新的master node要连接和复制，如果发现，就跟master node建立socket网络连接
+- （3）slave node发送ping命令给master node
+- （4）口令认证，如果master设置了requirepass，那么salve node必须发送masterauth的口令过去进行认证
+- （5）master node第一次执行全量复制，将所有数据发给slave node
+- （6）master node后续持续将写命令，异步复制给slave node
+
+### 5.3、数据同步相关的核心机制
+
+指的就是第一次slave连接msater的时候，执行的全量复制
+
+- （1）master和slave都会维护一个offset
+
+	master会在自身不断累加offset，slave也会在自身不断累加offset；slave每秒都会上报自己的offset给master，同时master也会保存每个slave的offset；是master和slave都要知道各自的数据的offset，才能知道互相之间的数据不一致的情况；
+
+- （2）backlog
+
+	master node有一个backlog，默认是1MB大小；master node给slave node复制数据时，也会将数据在backlog中同步写一份；backlog主要是用来做全量复制中断候的增量复制的
+
+- （3）master run id
+
+	nfo server，可以看到master run id；如果根据host+ip定位master node，是不靠谱的，如果master node重启或者数据出现了变化，那么slave node应该根据不同的run id区分，run id不同就做全量复制；如果需要不更改run id重启redis，可以使用redis-cli debug reload命令
+
+- （4）psync
+
+	从节点使用psync从master node进行复制，psync runid offset；master node会根据自身的情况返回响应信息，可能是`FULLRESYNC runid offset`触发全量复制，可能是`CONTINUE`触发增量复制；
+
+### 5.4、全量复制
+
+- （1）master执行bgsave，在本地生成一份rdb快照文件
+- （2）master node将rdb快照文件发送给salve node，如果rdb复制时间超过60秒（repl-timeout），那么slave node就会认为复制失败，可以适当调节大这个参数
+- （3）对于千兆网卡的机器，一般每秒传输100MB，6G文件，很可能超过60s
+- （4）master node在生成rdb时，会将所有新的写命令缓存在内存中，在salve node保存了rdb之后，再将新的写命令复制给salve node
+- （5）`client-output-buffer-limit slave 256MB 64MB 60`，如果在复制期间，内存缓冲区持续消耗超过64MB，或者一次性超过256MB，那么停止复制，复制失败
+- （6）slave node接收到rdb之后，清空自己的旧数据，然后重新加载rdb到自己的内存中，同时基于旧的数据版本对外提供服务
+- （7）如果slave node开启了AOF，那么会立即执行BGREWRITEAOF，重写AOF
+
+rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite，很耗费时间
+
+### 5.5、增量复制
+
+- （1）如果全量复制过程中，master-slave网络连接断掉，那么salve重新连接master时，会触发增量复制
+- （2）master直接从自己的backlog中获取部分丢失的数据，发送给slave node，默认backlog就是1MB
+- （3）msater就是根据slave发送的psync中的offset来从backlog中获取数据的
+
+### 5.6、heartbeat
+
+主从节点互相都会发送heartbeat信息；master默认每隔10秒发送一次heartbeat，salve node每隔1秒发送一个heartbeat
+
+### 5.7、异步复制	
+
+aster每次接收到写命令之后，现在内部写入数据，然后异步发送给slave node
 
 ## 6、哨兵模式-sentinel
 
-**6.1、什么是哨兵模式：**
+### 6.1、什么是哨兵模式
 
-反客为主的自动版，能够后台监控主机是否故障，如果故障了根据投票数自动将从库转换为主库
+由一个或多个Sentinel 实例 组成的Sentinel 系统可以监视任意多个主服务器，以及这些主服务器属下的所有从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器属下的某个从服务器升级为新的主服务器；
 
-**6.2、使用步骤：**
+主要功能：
+- （1）集群监控，负责监控redis master和slave进程是否正常工作
+- （2）消息通知，如果某个redis实例有故障，那么哨兵负责发送消息作为报警通知给管理员
+- （3）故障转移，如果master node挂掉了，会自动转移到slave node上
+- （4）配置中心，如果故障转移发生了，通知client客户端新的master地址
+
+### 6.2、使用步骤
 
 - 在响应的目录下新建：sentinel.conf文件，名字绝不能错；
 - 在 sentinel.conf 增加如下配置：<br>
@@ -940,13 +1021,148 @@ slaveof no one
 - 启动哨兵：redis-sentinel sentinel.conf
 - 原有的master挂了，投票新选，重新主从继续开工，info replication查查看
 
-**6.3.问题：如果之前的master重启回来，会不会双master冲突？**
+### 6.3、哨兵核心点
 
-不会，之前的从库重启回来之后，会自动切换为从库，挂到之前从库转换为的主库上；一组sentinel能同时监控多个Master
+- 哨兵至少需要3个实例，来保证自己的健壮性
+- 哨兵 + redis主从的部署架构，是不会保证数据零丢失的，只能保证redis集群的高可用性
 
-## 7、复制的缺点
+#### 6.3.1、为什么redis哨兵至少需要3个实例
 
-由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，slave 机器数量的增加也会使这个问题更加严重
+**为什么redis哨兵集群只有2个节点无法正常工作？**
+```
++----+         +----+
+| M1 |---------| R1 |
+| S1 |         | S2 |
++----+         +----+
+```
+如果哨兵集群仅仅部署了个2个哨兵实例，quorum=1
+
+aster宕机，s1和s2中只要有1个哨兵认为master宕机就可以还行切换，同时s1和s2中会选举出一个哨兵来执行故障转移
+
+同时这个时候，需要majority，也就是大多数哨兵都是运行的，2个哨兵的majority就是2（2的majority=2，3的majority=2，5的majority=3，4的majority=2），2个哨兵都运行着，就可以允许执行故障转移
+
+但是如果整个M1和S1运行的机器宕机了，那么哨兵只有1个了，此时就没有majority来允许执行故障转移，虽然另外一台机器还有一个R1，但是故障转移不会执行
+
+**经典的3节点哨兵集群**
+```
+       +----+
+       | M1 |
+       | S1 |
+       +----+
+          |
++----+    |    +----+
+| R2 |----+----| R3 |
+| S2 |         | S3 |
++----+         +----+
+```
+Configuration: quorum = 2，majority
+
+如果M1所在机器宕机了，那么三个哨兵还剩下2个，S2和S3可以一致认为master宕机，然后选举出一个来执行故障转移
+
+同时3个哨兵的majority是2，所以还剩下的2个哨兵运行着，就可以允许执行故障转移
+
+### 6.4、数据丢失及解决方案
+
+#### 6.4.1、两种数据丢失情况
+
+主备切换的过程，可能会导致数据丢失
+- 异步复制导致的数据丢失：因为master -> slave的复制是异步的，所以可能有部分数据还没复制到slave，master就宕机了，此时这些部分数据就丢失了
+- 脑裂导致的数据丢失：
+
+	某个master所在机器突然脱离了正常的网络，跟其他slave机器不能连接，但是实际上master还运行着。此时哨兵可能就会认为master宕机了，然后开启选举，将其他slave切换成了master这个时候，集群里就会有两个master，也就是所谓的脑裂；
+
+	此时虽然某个slave被切换成了master，但是可能client还没来得及切换到新的master，还继续写向旧master的数据可能也丢失了。因此旧master再次恢复的时候，会被作为一个slave挂到新的master上去，自己的数据会清空，重新从新的master复制数据
+
+#### 6.4.2、解决方案
+
+redis.confg存在两个配置：
+```
+min-slaves-to-write 1  要求至少有1个slave，数据复制和同步的延迟不能超过10秒
+min-slaves-max-lag 10  如果说一旦所有的slave，数据复制和同步的延迟都超过了10秒钟，那么这个时候，master就不会再接收任何请求了
+```
+
+上面两个配置可以减少异步复制和脑裂导致的数据丢失
+- 减少异步复制的数据丢失：有了min-slaves-max-lag这个配置，就可以确保说，一旦slave复制数据和ack延时太长，就认为可能master宕机后损失的数据太多了，那么就拒绝写请求，这样可以把master宕机时由于部分数据未同步到slave导致的数据丢失降低的可控范围内；
+
+- 减少脑裂的数据丢失：
+
+	如果一个master出现了脑裂，跟其他slave丢了连接，那么上面两个配置可以确保说，如果不能继续给指定数量的slave发送数据，而且slave超过10秒没有给自己ack消息，那么就直接拒绝客户端的写请求
+
+	这样脑裂后的旧master就不会接受client的新数据，也就避免了数据丢失
+
+	上面的配置就确保了，如果跟任何一个slave丢了连接，在10秒后发现没有slave给自己ack，那么就拒绝新的写请求
+
+	因此在脑裂场景下，最多就丢失10秒的数据
+
+### 6.5、哨兵失败状态转换机制
+
+sdown和odown转换机制：sdown和odown两种失败状态
+- sdown是主观宕机，就一个哨兵如果自己觉得一个master宕机了，那么就是主观宕机；
+- odown是客观宕机，如果quorum数量的哨兵都觉得一个master宕机了，那么就是客观宕机；
+
+sdown达成的条件很简单，如果一个哨兵ping一个master，超过了`is-master-down-after-milliseconds`指定的毫秒数之后，就主观认为master宕机
+
+sdown到odown转换的条件很简单，如果一个哨兵在指定时间内，收到了quorum指定数量的其他哨兵也认为那个master是sdown了，那么就认为是odown了，客观认为master宕机
+
+### 6.6、哨兵集群的自动发现机制
+
+哨兵互相之间的发现，是通过redis的`pub/sub`系统实现的，每个哨兵都会往`__sentinel__:hello`这个channel里发送一个消息，这时候所有其他哨兵都可以消费到这个消息，并感知到其他的哨兵的存在
+
+每隔两秒钟，每个哨兵都会往自己监控的某个master+slaves对应的`__sentinel__:hello channel`里发送一个消息，内容是自己的host、ip和runid还有对这个master的监控配置
+
+每个哨兵也会去监听自己监控的每个master+slaves对应的`__sentinel__:hello channel`，然后去感知到同样在监听这个master+slaves的其他哨兵的存在
+
+每个哨兵还会跟其他哨兵交换对master的监控配置，互相进行监控配置的同步
+
+### 6.7、slave配置的自动纠正
+
+哨兵会负责自动纠正slave的一些配置，比如slave如果要成为潜在的master候选人，哨兵会确保slave在复制现有master的数据; 如果slave连接到了一个错误的master上，比如故障转移之后，那么哨兵会确保它们连接到正确的master上
+
+### 6.8、slave->master选举算法
+
+如果一个master被认为odown了，而且majority哨兵都允许了主备切换，那么某个哨兵就会执行主备切换操作，此时首先要选举一个slave来，会考虑slave的一些信息
+- （1）跟master断开连接的时长
+- （2）slave优先级
+- （3）复制offset
+- （4）run id
+
+如果一个slave跟master断开连接已经超过了`down-after-milliseconds`的10倍，外加master宕机的时长，那么slave就被认为不适合选举为master：`(down-after-milliseconds * 10) + milliseconds_since_master_is_in_SDOWN_state`
+
+接下来会对slave进行排序：
+- （1）按照slave优先级进行排序，`slave-priority`越低，优先级就越高
+- （2）如果`slave-priority`相同，那么看replica offset，哪个slave复制了越多的数据，offset越靠后，优先级就越高
+- （3）如果上面两个条件都相同，那么选择一个run id比较小的那个slave
+
+### 6.9、quorum和majority
+
+每次一个哨兵要做主备切换，首先需要quorum数量的哨兵认为odown，然后选举出一个哨兵来做切换，这个哨兵还得得到majority哨兵的授权，才能正式执行切换
+
+如果quorum < majority，比如5个哨兵，majority就是3，quorum设置为2，那么就3个哨兵授权就可以执行切换
+
+但是如果quorum >= majority，那么必须quorum数量的哨兵都授权，比如5个哨兵，quorum是5，那么必须5个哨兵都同意授权，才能执行切换
+
+### 6.10、configuration epoch
+
+哨兵会对一套redis master+slave进行监控，有相应的监控的配置
+
+执行切换的那个哨兵，会从要切换到的新master（salve->master）那里得到一个configuration epoch，这就是一个version号，每次切换的version号都必须是唯一的
+
+如果第一个选举出的哨兵切换失败了，那么其他哨兵，会等待failover-timeout时间，然后接替继续执行切换，此时会重新获取一个新的configuration epoch，作为新的version号
+
+### 6.11、configuraiton传播
+
+哨兵完成切换之后，会在自己本地更新生成最新的master配置，然后同步给其他的哨兵，就是通过之前说的pub/sub消息机制
+
+这里之前的version号就很重要了，因为各种消息都是通过一个channel去发布和监听的，所以一个哨兵完成一次新的切换之后，新的master配置是跟着新的version号的
+
+其他的哨兵都是根据版本号的大小来更新自己的master配置的
+
+### 6.12、哨兵配置实战
+
+// TODO 
+
+## 7、Redis集群
+
 
 # 六、Redis内存模型
 
@@ -1106,6 +1322,8 @@ redis-benchmark
 
 ## 1、redis如何用作缓存？ 如何确保不脏数据
 
+- 设置过期时间
+
 ## 2、Redis 和 Memcache区别
 
 两者都是非关系型数据库，主要区别如下
@@ -1190,6 +1408,10 @@ BLPOP key [key ...] timeout：阻塞知道队列有消息或者超时；
 
 pub/sub：主题订阅模式
 - 消息的发布是无状态，无法保证状态可达；
+
+## 11、Redis如何保证高并发和高可用
+
+主从 -> 读写分离
 
 # 参考资料
 - [Redis中文文档](http://redisdoc.com/)

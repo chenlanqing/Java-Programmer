@@ -135,91 +135,21 @@
 
 # 七、依赖：冲突、聚合、继承
 
-# 八、其他
+## 1、查了依赖树
 
+查看依赖jar包Tree结构并输出到文件
+```
+mvn dependency:tree -Doutput=output.txt  
+mvn dependency:tree -Dverbose -Dincludes=asm:asm 就会出来asm依赖包的分析信息
+```
 
+## 2、依赖冲突
 
+mvn dependency:tree -Dverbose -Doutput=output.txt  根据导出的文件肥西
 
+# 八、编写Maven插件
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// TODO 
 
 
 
