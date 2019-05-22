@@ -88,7 +88,7 @@ public static Integer valueOf(int i)；
 ```
 - 通常情况下： IntegerCache.low=-128，IntegerCache.high=127（）除非显示声明 java.lang.Integer.IntegerCache.high 的值），Integer 中有一段动态代码块，该部分内容会在 Integer 类被加载的时候就执行：
 ```java
-// 虚拟机初始化时，该段代码就加载，通过 VM 参数： -XX：AutoBoxCacheMax=<size> 控制其初始化
+// 虚拟机初始化时，该段代码就加载，通过 VM 参数： -XX:AutoBoxCacheMax=<size> 控制其初始化
 // java.lang.Integer.IntegerCache.high property may be set and saved in the 
 // private system properties in the sun.misc.VM class
 private static class IntegerCache{
