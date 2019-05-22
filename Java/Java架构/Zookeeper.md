@@ -123,6 +123,7 @@ ADMIN：设置节点ACL的权限<br>
 - 下载 zookeeper(一般放在 opt 目录下)
 
 ## 2、集群搭建
+
 	(1).进入 zookeeper/conf 目录下，复制一份文件
 		cp zoo_sample.cfg  zoo.cfg
 	(2).编辑：zoo.cfg
@@ -416,3 +417,4 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 
 - [Zookeeper的数据发布与订阅模式](http://blog.csdn.net/zuoanyinxiang/article/details/50937892)
 - [Zookeeper概述](https://mp.weixin.qq.com/s/WNdovBpvJJanJArS2R1emg)
+- [zk启动流程](https://juejin.im/post/5c7be87ce51d45721073e413)

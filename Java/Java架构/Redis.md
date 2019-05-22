@@ -1161,7 +1161,37 @@ sdown到odown转换的条件很简单，如果一个哨兵在指定时间内，�
 
 // TODO 
 
-## 7、Redis集群
+## 7、Redis Cluster
+
+### 7.1、Redis集群
+
+是一个提供在多个Redis间节点间共享数据的程序集
+
+Redis集群并不支持处理多个keys的命令,因为这需要在不同的节点间移动数据,从而达不到像Redis那样的性能,在高负载的情况下可能会导致不可预料的错误.
+
+Redis 集群通过分区来提供一定程度的可用性,在实际环境中当某个节点宕机或者不可达的情况下继续处理命令. Redis 集群的优势：
+- 自动分割数据到不同的节点上。
+- 整个集群的部分节点失败或者不可达的情况下能够继续处理命令。
+
+redis cluster（多master + 读写分离 + 高可用）
+
+### 7.2、分片算法
+
+Redis集群没有使用hash算法和一致性hash的算法，使用的是hash槽（hash slot）算法
+
+redis cluster有固定的16384个hash slot，对每个key计算CRC16值，然后对16384取模，可以获取key对应的hash slot；redis cluster中每个master都会持有部分slot。hash slot让node的增加和移除很简单，增加一个master，就将其他master的hash slot移动部分过去，减少一个master，就将它的hash slot移动到其他master上去；移动hash slot的成本是非常低的
+
+### 7.3、Redis集群通信原理
+
+
+
+## 8、Redis Cluster 与 主从复制
+
+如果你的数据量很少，主要是承载高并发高性能的场景，比如你的缓存一般就几个G，单机足够了
+
+replication，一个mater，多个slave，要几个slave跟你的要求的读吞吐量有关系，然后自己搭建一个sentinal集群，去保证redis主从架构的高可用性，就可以了
+
+redis cluster，主要是针对海量数据+高并发+高可用的场景，海量数据，如果你的数据量很大，那么建议就用redis cluster
 
 
 # 六、Redis内存模型
@@ -1420,3 +1450,4 @@ pub/sub：主题订阅模式
 - [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
 - [Redis数据结构](https://mp.weixin.qq.com/s/69xl2yU4B97aQIn1k_Lwqw)
 - [Redis数据结构-SkipList](https://juejin.im/post/57fa935b0e3dd90057c50fbc)
+- [Redis Cluster](http://www.redis.cn/topics/cluster-tutorial.html)

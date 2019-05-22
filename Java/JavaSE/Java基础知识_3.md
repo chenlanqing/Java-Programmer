@@ -72,7 +72,7 @@ Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同�
 
 ## 1、SPI是什么
 
-`SPI`全称`Service Provider Interface`，是Java提供的一套用来被第三方实现或者扩展的API，它可以用来启用框架扩展和替换组件
+`SPI`全称`Service Provider Interface`，是一种服务发现机制，是Java提供的一套用来被第三方实现或者扩展的API，它可以用来启用框架扩展和替换组件
 
 整体机制如下：
 
