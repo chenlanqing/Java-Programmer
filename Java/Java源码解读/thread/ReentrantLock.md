@@ -68,6 +68,31 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 则当线程要获取锁时，它会无视CLH等待队列而直接获取锁
 
+## 5、保证可见性
+
+```java
+class LockDemo{
+	private final Lock rtl = new ReentrantLock();
+	int value;
+	public void addOne(){
+		rtl.lock();
+		try{
+			value += 1;
+		} finally{
+			rtl.unlock();
+		}
+	}
+}
+```
+
+利用volatile的相关的happens-before规则。ReentrantLock中有一个实现锁的Sync中其持有一个volatile的成员变量state，获取锁的时候，会读写state的值；解锁的时候，也会读写state的值。
+
+在执行`value+1`之前，程序会先读写一次volatile变量state，在执行`value+1`之后，又读写了一次volatile变量state，根据happens-before规则：
+- 顺序性规则：对于线程T1，`value+1` happens-before 释放锁的操作 unlock();
+- volatile变量规则：由于state=1会先读取state，所以线程T1的 unlock() 操作 happens-before 线程T2的 lock 操作；
+- 传递性规则：线程T1的`value+1` happens-before 线程T2的 lock 操作
+
+
 # 二、Condition
 
 ## 1、签名

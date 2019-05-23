@@ -6,12 +6,17 @@
   - [1、多线程优点](#1%E5%A4%9A%E7%BA%BF%E7%A8%8B%E4%BC%98%E7%82%B9)
   - [2、多线程的代价](#2%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%BB%A3%E4%BB%B7)
   - [3、并发编程模型](#3%E5%B9%B6%E5%8F%91%E7%BC%96%E7%A8%8B%E6%A8%A1%E5%9E%8B)
+  - [4、进程与线程](#4%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B)
+    - [4.1、进程](#41%E8%BF%9B%E7%A8%8B)
+    - [4.2、线程](#42%E7%BA%BF%E7%A8%8B)
+    - [4.3、区别](#43%E5%8C%BA%E5%88%AB)
+    - [4.4、Java进程和线程的关系](#44java%E8%BF%9B%E7%A8%8B%E5%92%8C%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%85%B3%E7%B3%BB)
 - [二、Java 多线程](#%E4%BA%8Cjava-%E5%A4%9A%E7%BA%BF%E7%A8%8B)
   - [1.Java线程](#1java%E7%BA%BF%E7%A8%8B)
   - [2、线程的创建及状态变化](#2%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%88%9B%E5%BB%BA%E5%8F%8A%E7%8A%B6%E6%80%81%E5%8F%98%E5%8C%96)
     - [2.1、创建线程的方式](#21%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E7%9A%84%E6%96%B9%E5%BC%8F)
     - [2.3、创建 Thread 子类还是实现 Runnable 接口](#23%E5%88%9B%E5%BB%BA-thread-%E5%AD%90%E7%B1%BB%E8%BF%98%E6%98%AF%E5%AE%9E%E7%8E%B0-runnable-%E6%8E%A5%E5%8F%A3)
-    - [2.4、常见错误问题](#24%E5%B8%B8%E8%A7%81%E9%94%99%E8%AF%AF%E9%97%AE%E9%A2%98)
+    - [2.4、start与run方法](#24start%E4%B8%8Erun%E6%96%B9%E6%B3%95)
     - [2.5、线程名称](#25%E7%BA%BF%E7%A8%8B%E5%90%8D%E7%A7%B0)
     - [2.6、Thread 的部分属性](#26thread-%E7%9A%84%E9%83%A8%E5%88%86%E5%B1%9E%E6%80%A7)
     - [2.7、线程的中断、停止与暂停](#27%E7%BA%BF%E7%A8%8B%E7%9A%84%E4%B8%AD%E6%96%AD%E5%81%9C%E6%AD%A2%E4%B8%8E%E6%9A%82%E5%81%9C)
@@ -29,20 +34,99 @@
   - [3、竞态条件与临界区](#3%E7%AB%9E%E6%80%81%E6%9D%A1%E4%BB%B6%E4%B8%8E%E4%B8%B4%E7%95%8C%E5%8C%BA)
   - [4、线程安全与共享资源](#4%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E4%B8%8E%E5%85%B1%E4%BA%AB%E8%B5%84%E6%BA%90)
   - [5、synchronized 关键字](#5synchronized-%E5%85%B3%E9%94%AE%E5%AD%97)
-  - [6、synchronized 同步块：](#6synchronized-%E5%90%8C%E6%AD%A5%E5%9D%97)
+    - [5.1、synchronized 方法与锁对象](#51synchronized-%E6%96%B9%E6%B3%95%E4%B8%8E%E9%94%81%E5%AF%B9%E8%B1%A1)
+    - [5.2、脏读](#52%E8%84%8F%E8%AF%BB)
+    - [5.3、synchronized 锁重入](#53synchronized-%E9%94%81%E9%87%8D%E5%85%A5)
+    - [5.4、出现异常时，锁自动释放](#54%E5%87%BA%E7%8E%B0%E5%BC%82%E5%B8%B8%E6%97%B6%E9%94%81%E8%87%AA%E5%8A%A8%E9%87%8A%E6%94%BE)
+    - [5.5、同步不具有继承性](#55%E5%90%8C%E6%AD%A5%E4%B8%8D%E5%85%B7%E6%9C%89%E7%BB%A7%E6%89%BF%E6%80%A7)
+    - [5.6、静态方法同步](#56%E9%9D%99%E6%80%81%E6%96%B9%E6%B3%95%E5%90%8C%E6%AD%A5)
+    - [5.7、synchronized 与 Lock 的区别](#57synchronized-%E4%B8%8E-lock-%E7%9A%84%E5%8C%BA%E5%88%AB)
+    - [5.8、原子性、可见性、有序性](#58%E5%8E%9F%E5%AD%90%E6%80%A7%E5%8F%AF%E8%A7%81%E6%80%A7%E6%9C%89%E5%BA%8F%E6%80%A7)
+  - [6、synchronized 同步块](#6synchronized-%E5%90%8C%E6%AD%A5%E5%9D%97)
+    - [6.1、实例方法中的同步块](#61%E5%AE%9E%E4%BE%8B%E6%96%B9%E6%B3%95%E4%B8%AD%E7%9A%84%E5%90%8C%E6%AD%A5%E5%9D%97)
+    - [6.2、synchronized同步方法或同步代码块两种作用](#62synchronized%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95%E6%88%96%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81%E5%9D%97%E4%B8%A4%E7%A7%8D%E4%BD%9C%E7%94%A8)
+    - [6.3、结论](#63%E7%BB%93%E8%AE%BA)
+    - [6.4、静态同步synchronized方法与synchronized(Class.class)代码块](#64%E9%9D%99%E6%80%81%E5%90%8C%E6%AD%A5synchronized%E6%96%B9%E6%B3%95%E4%B8%8Esynchronizedclassclass%E4%BB%A3%E7%A0%81%E5%9D%97)
   - [7、synchronized底层实现及锁优化](#7synchronized%E5%BA%95%E5%B1%82%E5%AE%9E%E7%8E%B0%E5%8F%8A%E9%94%81%E4%BC%98%E5%8C%96)
+    - [7.1、同步代码块的实现](#71%E5%90%8C%E6%AD%A5%E4%BB%A3%E7%A0%81%E5%9D%97%E7%9A%84%E5%AE%9E%E7%8E%B0)
+    - [7.2、同步方法的实现](#72%E5%90%8C%E6%AD%A5%E6%96%B9%E6%B3%95%E7%9A%84%E5%AE%9E%E7%8E%B0)
+    - [7.3、重量级锁](#73%E9%87%8D%E9%87%8F%E7%BA%A7%E9%94%81)
+    - [7.4、轻量级锁](#74%E8%BD%BB%E9%87%8F%E7%BA%A7%E9%94%81)
+    - [7.5、偏向锁](#75%E5%81%8F%E5%90%91%E9%94%81)
+    - [7.6、其他优化](#76%E5%85%B6%E4%BB%96%E4%BC%98%E5%8C%96)
+    - [7.7、总结](#77%E6%80%BB%E7%BB%93)
+    - [7.8、synchronized相关面试题](#78synchronized%E7%9B%B8%E5%85%B3%E9%9D%A2%E8%AF%95%E9%A2%98)
   - [8、volatile](#8volatile)
   - [9、线程安全及不可变性](#9%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E5%8F%8A%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7)
   - [10、线程通信](#10%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1)
+    - [10.1、使用 sleep 和 while(true)来实现线程通信](#101%E4%BD%BF%E7%94%A8-sleep-%E5%92%8C-whiletrue%E6%9D%A5%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B%E9%80%9A%E4%BF%A1)
+    - [10.2、等待/唤醒机制](#102%E7%AD%89%E5%BE%85%E5%94%A4%E9%86%92%E6%9C%BA%E5%88%B6)
+    - [10.3、生产者/消费者模式](#103%E7%94%9F%E4%BA%A7%E8%80%85%E6%B6%88%E8%B4%B9%E8%80%85%E6%A8%A1%E5%BC%8F)
+    - [10.4、通过管道进行线程间通信：字节流](#104%E9%80%9A%E8%BF%87%E7%AE%A1%E9%81%93%E8%BF%9B%E8%A1%8C%E7%BA%BF%E7%A8%8B%E9%97%B4%E9%80%9A%E4%BF%A1%E5%AD%97%E8%8A%82%E6%B5%81)
+    - [10.5、wait()、notify()和notifyAll()](#105waitnotify%E5%92%8Cnotifyall)
+    - [10.6、丢失的信号(Missed Signals)](#106%E4%B8%A2%E5%A4%B1%E7%9A%84%E4%BF%A1%E5%8F%B7missed-signals)
+    - [10.7、假唤醒](#107%E5%81%87%E5%94%A4%E9%86%92)
+    - [10.8、多个线程等待相同信号](#108%E5%A4%9A%E4%B8%AA%E7%BA%BF%E7%A8%8B%E7%AD%89%E5%BE%85%E7%9B%B8%E5%90%8C%E4%BF%A1%E5%8F%B7)
+    - [10.9、不要在字符串常量或全局对象中调用wait()](#109%E4%B8%8D%E8%A6%81%E5%9C%A8%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%B8%B8%E9%87%8F%E6%88%96%E5%85%A8%E5%B1%80%E5%AF%B9%E8%B1%A1%E4%B8%AD%E8%B0%83%E7%94%A8wait)
+    - [10.10、等待/通知的典型范式](#1010%E7%AD%89%E5%BE%85%E9%80%9A%E7%9F%A5%E7%9A%84%E5%85%B8%E5%9E%8B%E8%8C%83%E5%BC%8F)
   - [11、ThreadLocal类](#11threadlocal%E7%B1%BB)
+    - [11.1、创建ThreadLocal对象](#111%E5%88%9B%E5%BB%BAthreadlocal%E5%AF%B9%E8%B1%A1)
+    - [11.2、访问ThreadLocal对象](#112%E8%AE%BF%E9%97%AEthreadlocal%E5%AF%B9%E8%B1%A1)
+    - [11.3、ThreadLocal泛型](#113threadlocal%E6%B3%9B%E5%9E%8B)
+    - [11.4、初始化 ThreadLocal](#114%E5%88%9D%E5%A7%8B%E5%8C%96-threadlocal)
+    - [11.5、完整的ThreadLocal 实例](#115%E5%AE%8C%E6%95%B4%E7%9A%84threadlocal-%E5%AE%9E%E4%BE%8B)
+    - [11.6、InheritableThreadLocal](#116inheritablethreadlocal)
+    - [11.7、ThreadLocal内存泄露](#117threadlocal%E5%86%85%E5%AD%98%E6%B3%84%E9%9C%B2)
+    - [11.8、ThreadLocal的应用场景](#118threadlocal%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
   - [12、深入理解ThreadLocal](#12%E6%B7%B1%E5%85%A5%E7%90%86%E8%A7%A3threadlocal)
+    - [12.1、理解ThreadLocal](#121%E7%90%86%E8%A7%A3threadlocal)
+    - [12.2、深入解析ThreadLocal 类](#122%E6%B7%B1%E5%85%A5%E8%A7%A3%E6%9E%90threadlocal-%E7%B1%BB)
+    - [12.3、变量](#123%E5%8F%98%E9%87%8F)
+    - [12.4、ThreadLocalMap](#124threadlocalmap)
+    - [12.5、碰撞解决与神奇的 0x61c88647](#125%E7%A2%B0%E6%92%9E%E8%A7%A3%E5%86%B3%E4%B8%8E%E7%A5%9E%E5%A5%87%E7%9A%84-0x61c88647)
+    - [12.6、ThreadLocal和synchronized](#126threadlocal%E5%92%8Csynchronized)
+    - [12.7、ThreadLocal与线程池](#127threadlocal%E4%B8%8E%E7%BA%BF%E7%A8%8B%E6%B1%A0)
   - [13、死锁](#13%E6%AD%BB%E9%94%81)
-  - [14、饥饿和公平](#14%E9%A5%A5%E9%A5%BF%E5%92%8C%E5%85%AC%E5%B9%B3)
+    - [13.1、死锁产生的必要条件](#131%E6%AD%BB%E9%94%81%E4%BA%A7%E7%94%9F%E7%9A%84%E5%BF%85%E8%A6%81%E6%9D%A1%E4%BB%B6)
+    - [13.2、死锁程序](#132%E6%AD%BB%E9%94%81%E7%A8%8B%E5%BA%8F)
+    - [13.3、避免死锁](#133%E9%81%BF%E5%85%8D%E6%AD%BB%E9%94%81)
+    - [13.4、死锁检测](#134%E6%AD%BB%E9%94%81%E6%A3%80%E6%B5%8B)
+    - [13.5、死循环导致线程等待如何诊断](#135%E6%AD%BB%E5%BE%AA%E7%8E%AF%E5%AF%BC%E8%87%B4%E7%BA%BF%E7%A8%8B%E7%AD%89%E5%BE%85%E5%A6%82%E4%BD%95%E8%AF%8A%E6%96%AD)
+    - [13.6、分布式环境下死锁](#136%E5%88%86%E5%B8%83%E5%BC%8F%E7%8E%AF%E5%A2%83%E4%B8%8B%E6%AD%BB%E9%94%81)
+  - [14、活锁、饥饿和公平](#14%E6%B4%BB%E9%94%81%E9%A5%A5%E9%A5%BF%E5%92%8C%E5%85%AC%E5%B9%B3)
+    - [14.1、活锁](#141%E6%B4%BB%E9%94%81)
+    - [14.2、饥饿](#142%E9%A5%A5%E9%A5%BF)
+    - [14.3、Java中导致饥饿的原因](#143java%E4%B8%AD%E5%AF%BC%E8%87%B4%E9%A5%A5%E9%A5%BF%E7%9A%84%E5%8E%9F%E5%9B%A0)
+    - [14.4、在Java中实现公平性方案](#144%E5%9C%A8java%E4%B8%AD%E5%AE%9E%E7%8E%B0%E5%85%AC%E5%B9%B3%E6%80%A7%E6%96%B9%E6%A1%88)
+  - [15、伪共享问题](#15%E4%BC%AA%E5%85%B1%E4%BA%AB%E9%97%AE%E9%A2%98)
+    - [15.1、CPU缓存](#151cpu%E7%BC%93%E5%AD%98)
+    - [15.2、缓存行](#152%E7%BC%93%E5%AD%98%E8%A1%8C)
+    - [15.3、什么是伪共享](#153%E4%BB%80%E4%B9%88%E6%98%AF%E4%BC%AA%E5%85%B1%E4%BA%AB)
+    - [15.4、为什么会发生伪共享](#154%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E5%8F%91%E7%94%9F%E4%BC%AA%E5%85%B1%E4%BA%AB)
+    - [15.5、伪共享解决方法](#155%E4%BC%AA%E5%85%B1%E4%BA%AB%E8%A7%A3%E5%86%B3%E6%96%B9%E6%B3%95)
+    - [15.6、伪共享最佳实践](#156%E4%BC%AA%E5%85%B1%E4%BA%AB%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
+  - [16、ThreadLocalRandom](#16threadlocalrandom)
+  - [17、线程分类](#17%E7%BA%BF%E7%A8%8B%E5%88%86%E7%B1%BB)
+  - [18、JVM如何实现线程](#18jvm%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E7%BA%BF%E7%A8%8B)
+  - [19、线程调度算法](#19%E7%BA%BF%E7%A8%8B%E8%B0%83%E5%BA%A6%E7%AE%97%E6%B3%95)
+  - [20、CPU超线程技术](#20cpu%E8%B6%85%E7%BA%BF%E7%A8%8B%E6%8A%80%E6%9C%AF)
 - [三、JUC(java.util.concurrent)包](#%E4%B8%89jucjavautilconcurrent%E5%8C%85)
   - [1、JUC原子类](#1juc%E5%8E%9F%E5%AD%90%E7%B1%BB)
   - [2、锁的相关概念](#2%E9%94%81%E7%9A%84%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5)
-  - [3、独占锁:](#3%E7%8B%AC%E5%8D%A0%E9%94%81)
+    - [2.1、同步锁：通过synchronized关键字来进行同步](#21%E5%90%8C%E6%AD%A5%E9%94%81%E9%80%9A%E8%BF%87synchronized%E5%85%B3%E9%94%AE%E5%AD%97%E6%9D%A5%E8%BF%9B%E8%A1%8C%E5%90%8C%E6%AD%A5)
+    - [2.2、JUC包中的锁](#22juc%E5%8C%85%E4%B8%AD%E7%9A%84%E9%94%81)
+    - [2.3、可重入锁](#23%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81)
+    - [2.4、AQS-AbstractQueuedSynchronizer类](#24aqs-abstractqueuedsynchronizer%E7%B1%BB)
+    - [2.5、CLH队列-Craig Landin and Hagersten lock queue](#25clh%E9%98%9F%E5%88%97-craig-landin-and-hagersten-lock-queue)
+    - [2.6、CAS:Compare And Swap](#26cascompare-and-swap)
+    - [2.7、对象锁、类锁、私有锁](#27%E5%AF%B9%E8%B1%A1%E9%94%81%E7%B1%BB%E9%94%81%E7%A7%81%E6%9C%89%E9%94%81)
+  - [3、独占锁](#3%E7%8B%AC%E5%8D%A0%E9%94%81)
+    - [3.1、ReentrantLock](#31reentrantlock)
   - [4、共享锁-ReentrantReadWriteLock-读写锁](#4%E5%85%B1%E4%BA%AB%E9%94%81-reentrantreadwritelock-%E8%AF%BB%E5%86%99%E9%94%81)
+    - [4.1、ReadWriteLock](#41readwritelock)
+    - [4.2、如何获取读写锁](#42%E5%A6%82%E4%BD%95%E8%8E%B7%E5%8F%96%E8%AF%BB%E5%86%99%E9%94%81)
+    - [4.3、写锁：支持可重入的排他锁](#43%E5%86%99%E9%94%81%E6%94%AF%E6%8C%81%E5%8F%AF%E9%87%8D%E5%85%A5%E7%9A%84%E6%8E%92%E4%BB%96%E9%94%81)
+    - [4.4、读锁：可重入的共享锁](#44%E8%AF%BB%E9%94%81%E5%8F%AF%E9%87%8D%E5%85%A5%E7%9A%84%E5%85%B1%E4%BA%AB%E9%94%81)
   - [5、共享锁-闭锁：CountDownLatch](#5%E5%85%B1%E4%BA%AB%E9%94%81-%E9%97%AD%E9%94%81countdownlatch)
   - [6、栅栏：CyclicBarrier](#6%E6%A0%85%E6%A0%8Fcyclicbarrier)
   - [7、共享锁-信号量：Semaphore](#7%E5%85%B1%E4%BA%AB%E9%94%81-%E4%BF%A1%E5%8F%B7%E9%87%8Fsemaphore)
@@ -61,14 +145,23 @@
     - [13.1、主要方法](#131%E4%B8%BB%E8%A6%81%E6%96%B9%E6%B3%95)
     - [13.2、使用例子](#132%E4%BD%BF%E7%94%A8%E4%BE%8B%E5%AD%90)
     - [13.3、实现分析](#133%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90)
+  - [14、Phaser](#14phaser)
 - [四、并发容器](#%E5%9B%9B%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8)
   - [1、并发容器类](#1%E5%B9%B6%E5%8F%91%E5%AE%B9%E5%99%A8%E7%B1%BB)
   - [2、CopyOnWriteArrayList](#2copyonwritearraylist)
+    - [2.1、特性](#21%E7%89%B9%E6%80%A7)
+    - [2.2、签名](#22%E7%AD%BE%E5%90%8D)
+    - [2.3、实现原理](#23%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [2.4、ArrayList的线程安全集合](#24arraylist%E7%9A%84%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E9%9B%86%E5%90%88)
+    - [2.5、CopyOnWriteList缺点](#25copyonwritelist%E7%BC%BA%E7%82%B9)
   - [3、CopyOnWriteArraySet：(HashSet)](#3copyonwritearraysethashset)
   - [4、ConcurrentHashMap：](#4concurrenthashmap)
   - [5、ConcurrentSkipListMap：(TreeMap)](#5concurrentskiplistmaptreemap)
+    - [5.1、基本描述](#51%E5%9F%BA%E6%9C%AC%E6%8F%8F%E8%BF%B0)
+    - [5.2、SkipList](#52skiplist)
+    - [5.3、ConcurrentSkipListMap](#53concurrentskiplistmap)
   - [6、ConcurrentSkipListSet: (TreeSet)](#6concurrentskiplistset-treeset)
-  - [7、阻塞队列:](#7%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
+  - [7、阻塞队列](#7%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
     - [7.1、什么是阻塞队列](#71%E4%BB%80%E4%B9%88%E6%98%AF%E9%98%BB%E5%A1%9E%E9%98%9F%E5%88%97)
     - [7.2、应用场景](#72%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
     - [7.3、几个方法](#73%E5%87%A0%E4%B8%AA%E6%96%B9%E6%B3%95)
@@ -79,19 +172,28 @@
   - [1、AQS：AbstractQueuedSynchronizer-抽象队列同步器](#1aqsabstractqueuedsynchronizer-%E6%8A%BD%E8%B1%A1%E9%98%9F%E5%88%97%E5%90%8C%E6%AD%A5%E5%99%A8)
   - [2、CAS：Compare and Swap-比较与交换](#2cascompare-and-swap-%E6%AF%94%E8%BE%83%E4%B8%8E%E4%BA%A4%E6%8D%A2)
     - [2.1、什么是CAS](#21%E4%BB%80%E4%B9%88%E6%98%AFcas)
-    - [2.2、Java中CAS 的实现:](#22java%E4%B8%ADcas-%E7%9A%84%E5%AE%9E%E7%8E%B0)
+    - [2.2、Java中CAS 的实现](#22java%E4%B8%ADcas-%E7%9A%84%E5%AE%9E%E7%8E%B0)
     - [2.3、CAS 使用场景](#23cas-%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
     - [2.4、CAS 缺点](#24cas-%E7%BC%BA%E7%82%B9)
-    - [2.5、CAS 与 synchronized 的区别：](#25cas-%E4%B8%8E-synchronized-%E7%9A%84%E5%8C%BA%E5%88%AB)
+    - [2.5、CAS 与 synchronized 的区别](#25cas-%E4%B8%8E-synchronized-%E7%9A%84%E5%8C%BA%E5%88%AB)
+    - [2.6、JDK8对CAS的优化](#26jdk8%E5%AF%B9cas%E7%9A%84%E4%BC%98%E5%8C%96)
 - [六、线程池](#%E5%85%AD%E7%BA%BF%E7%A8%8B%E6%B1%A0)
   - [1、线程池技术](#1%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8A%80%E6%9C%AF)
+    - [1.1、为什么使用线程池](#11%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8%E7%BA%BF%E7%A8%8B%E6%B1%A0)
+    - [1.2、什么是线程池](#12%E4%BB%80%E4%B9%88%E6%98%AF%E7%BA%BF%E7%A8%8B%E6%B1%A0)
+    - [1.3、应用范围](#13%E5%BA%94%E7%94%A8%E8%8C%83%E5%9B%B4)
+    - [1.4、如何设计一个线程池](#14%E5%A6%82%E4%BD%95%E8%AE%BE%E8%AE%A1%E4%B8%80%E4%B8%AA%E7%BA%BF%E7%A8%8B%E6%B1%A0)
+    - [1.5、线程池原理](#15%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8E%9F%E7%90%86)
+    - [1.6、Hook](#16hook)
   - [2、重要类](#2%E9%87%8D%E8%A6%81%E7%B1%BB)
-    - [2.1、ExecutorService-真正的线程池接口](#21executorservice-%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8E%A5%E5%8F%A3)
-    - [2.2、ScheduledExecutorService](#22scheduledexecutorservice)
+    - [2.1、Executor](#21executor)
+    - [2.2、ExecutorService-真正的线程池接口](#22executorservice-%E7%9C%9F%E6%AD%A3%E7%9A%84%E7%BA%BF%E7%A8%8B%E6%B1%A0%E6%8E%A5%E5%8F%A3)
     - [2.3、ThreadPoolExecutor](#23threadpoolexecutor)
     - [2.4、ScheduledThreadPoolExecutor](#24scheduledthreadpoolexecutor)
-    - [2.5、Excutors创建线程池](#25excutors%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E6%B1%A0)
+    - [2.5、Executors创建线程池](#25executors%E5%88%9B%E5%BB%BA%E7%BA%BF%E7%A8%8B%E6%B1%A0)
     - [2.6、设置线程池线程的名称](#26%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%90%8D%E7%A7%B0)
+    - [2.7、选择合适的队列](#27%E9%80%89%E6%8B%A9%E5%90%88%E9%80%82%E7%9A%84%E9%98%9F%E5%88%97)
+    - [2.8、空闲线程回收](#28%E7%A9%BA%E9%97%B2%E7%BA%BF%E7%A8%8B%E5%9B%9E%E6%94%B6)
   - [3、线程池配置](#3%E7%BA%BF%E7%A8%8B%E6%B1%A0%E9%85%8D%E7%BD%AE)
     - [3.1、不同业务场景如何配置线程池参数](#31%E4%B8%8D%E5%90%8C%E4%B8%9A%E5%8A%A1%E5%9C%BA%E6%99%AF%E5%A6%82%E4%BD%95%E9%85%8D%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0%E5%8F%82%E6%95%B0)
     - [3.2、科学设置线程池](#32%E7%A7%91%E5%AD%A6%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E6%B1%A0)
@@ -99,11 +201,15 @@
 - [七、多线程并发最佳实践](#%E4%B8%83%E5%A4%9A%E7%BA%BF%E7%A8%8B%E5%B9%B6%E5%8F%91%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5)
 - [八、线程与并发相关面试题](#%E5%85%AB%E7%BA%BF%E7%A8%8B%E4%B8%8E%E5%B9%B6%E5%8F%91%E7%9B%B8%E5%85%B3%E9%9D%A2%E8%AF%95%E9%A2%98)
   - [1、为什么线程池的底层数据接口采用HashSet来实现](#1%E4%B8%BA%E4%BB%80%E4%B9%88%E7%BA%BF%E7%A8%8B%E6%B1%A0%E7%9A%84%E5%BA%95%E5%B1%82%E6%95%B0%E6%8D%AE%E6%8E%A5%E5%8F%A3%E9%87%87%E7%94%A8hashset%E6%9D%A5%E5%AE%9E%E7%8E%B0)
+  - [2、使用模拟真正的并发请求](#2%E4%BD%BF%E7%94%A8%E6%A8%A1%E6%8B%9F%E7%9C%9F%E6%AD%A3%E7%9A%84%E5%B9%B6%E5%8F%91%E8%AF%B7%E6%B1%82)
+  - [3、可重入锁为什么可以防止死锁](#3%E5%8F%AF%E9%87%8D%E5%85%A5%E9%94%81%E4%B8%BA%E4%BB%80%E4%B9%88%E5%8F%AF%E4%BB%A5%E9%98%B2%E6%AD%A2%E6%AD%BB%E9%94%81)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+
 # 一、并发与多线程简介
+
 ## 1、多线程优点
 
 - 资源利用率更好:文件读写操作
@@ -224,9 +330,18 @@ Java 的并发采用的是共享内存模型
 - Java采用单线程编程模型，程序会自动创建主线程；
 - 主线程可以创建子线程，原则上要后于子线程完成执行；
 
+## 5、产生并发的原因
+
+CPU、 内存、磁盘速度的差异，CPU缓存 -> 可见性，线程切换 -> 原子性，编译优化 -> 重排序；
+
+并发的解决方式：
+- 可见性：volatile、synchronized；
+- 原子性：互斥锁
+- 重排序：volatile、禁止重排序
+
 # 二、Java 多线程
 
-## 1.Java线程
+## 1、Java线程
 
 继承自java.lang.Thread或其子类的
 
@@ -592,6 +707,38 @@ public class Daemon extends Thread{
 
 ### 2.17、线程的生命周期
 
+**1、通用的线程生命周期**
+
+通用的线程生命周期可以用五态模型来描述：初始状态、可运行状态、运行状态、休眠状态、终止状态
+- 初始状态：指的是线程已经被创建，但是不允许分配CPU执行；这是编程语言层面的，在操作系统层面，真正的线程还没有创建；
+- 可运行状态：指的是线程可以分配CPU执行。在这种状态下，真正的操作系统线程已经被成功创建，可以分配CPU执行；
+- 当有空闲CPU时，操作系统会将其分配给一个处于可运行状态的线程，被分配到CPU的线程的状态转换成了运行状态；
+- 运行状态的线程如果调用了一个阻塞API或者等待某个事件，那么线程就会转换到休眠状态，同时释放CPU使用权 
+
+**2、Java线程的生命周期**
+
+Java语言中线程共有6种状态，其中BLOCKED、WAITING、TIME_WAITING 是一种状态即休眠状态，分别是：
+- NEW（初始化状态）
+- RUNNABLE（可运行/运行状态）
+- BLOCKED（阻塞状态）
+- WAITING（无时限等待）
+- TIME_WAITING（有时限等待）
+- TERMINATED（终止状态）
+
+**3、状态转换过程**
+
+- **（1）RUNNABLE 与 BLOCKED 状态转换**
+
+	只有一种常见会触发这种转换，就是现场等待synchronized的隐式锁。synchronized修饰的代码同一时刻只允许一个线程执行，其他线程只能等待，在这种情况下，等待的线程就会从 RUNNABLE 转换到 BLOCKED状态，而当等待的线程获得 synchronized 隐式锁时，又会从BLOCKED转换为RUNNABLE状态；
+
+- **（2）RUNNABLE 与 WAITING 状态转换**
+
+	有三种场景会触发这种隐式转换：
+	- 获得 synchronized 隐式锁的线程，调用无参的 Object.wait方法；
+	- 调用无参数的Thread.join方法。等待的线程状态会从 RUNNABLE 转换到 WAITING。当线程执行完，原来等待它的线程又会从 WAITING 状态转换到 RUNNABLE；
+	- 调用 LockSupport.park() 方法。调用该方法，线程状态会从 RUNNABLR 转换到 WAITING。调用LockSupport.unpark(Thread thread)可以唤醒目标线程，目标线程的状态又会从 WAITING 转换到 RUNNABLE
+
+
 ![image](image/thread-status.png)
 
 - 新建态（New）：通过线程的创建方式创建线程后，进入新建态态;
@@ -601,6 +748,7 @@ public class Daemon extends Thread{
 	- 等待阻塞：通过调用线程的wait()方法，让线程等待某工作的完成。
 	- 同步阻塞：线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
 	- 其他阻塞：通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态。当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
+	- 
 - 死亡状态（Dead）：线程执行完了或者因异常退出了run()方法，该线程结束生命周期
 
 ### 2.18、线程管理器MXBean
@@ -745,6 +893,11 @@ synchronized 关键字拥有锁重入功能，也就是在使用 synchronized �
 	- 某个线程在等待一个锁的控制权的这段时间需要中断;
 	- 需要分开处理一些wait-notify，ReentrantLock 里面的 Condition应用，能够控制notify哪个线程，锁可以绑定多个条件
 	- 具有公平锁功能，每个到来的线程都将排队等候
+
+**为什么有synchronized还会有Lock？**
+- synchronized无法响应中断；支持中断的API：`void lockInterruptibly() throws InterruptedException;`
+- synchronized不支持超时；支持超时的API：`boolean tryLock(long time, TimeUnit unit) throws InterruptedException;`
+- synchronized 不支持非阻塞获取锁；非阻塞获取的API：`boolean tryLock();`
 
 ### 5.8、原子性、可见性、有序性
 
@@ -1559,19 +1712,27 @@ public class DeadLock{
 
 [分布式事务下死锁问题](../../Java架构/分布式.md#6分布式事务下死锁问题)
 
-## 14、饥饿和公平
+## 14、活锁、饥饿和公平
 
-### 14.1、饥饿
+### 14.1、活锁
+
+线程未发生阻塞，但仍然存在无法执行的情况，称为活锁。
+
+指的是线程不断重复执行相同的操作，但每次操作的结果都是失败的。尽管这个问题不会阻塞线程，但是程序也无法继续执
+
+解决活锁：尝试等待一个随机的时间
+
+### 14.2、饥饿
 
 如果一个线程因为CPU时间全部被其他线程抢走而得不到CPU运行时间，这种状态被称之为“饥饿”解决饥饿的方案被称之为“公平性”即所有线程均能公平地获得运行机会
 
-### 14.2、Java中导致饥饿的原因
+### 14.3、Java中导致饥饿的原因
 
 - 高优先级线程吞噬所有的低优先级线程的CPU时间：优先级越高的线程获得的CPU时间越多，线程优先级值设置在1到10之间，而这些优先级值所表示行为的准确解释则依赖于你的应用运行平台，对大多数应用来说，你最好是不要改变其优先级值；
 - 线程被永久堵塞在一个等待进入同步块的状态，因为其他线程总是能在它之前持续地对该同步块进行访问；
 - 线程在等待一个本身也处于永久等待完成的对象(比如调用这个对象的wait方法)如果多个线程处在wait()方法执行上，而对其调用notify()不会保证哪一个线程会获得唤醒，任何线程都有可能处于继续等待的状态;
 
-### 14.3、在Java中实现公平性方案
+### 14.4、在Java中实现公平性方案
 
 - 使用锁，而不是同步块:为了提高等待线程的公平性，我们使用锁方式来替代同步块
 - 公平锁。
@@ -3228,6 +3389,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 - IO密集型任务：参考值可以设置为 2*NCPU
 
 ### 3.2、科学设置线程池
+
 - 如果需要达到某个QPS，使用如下计算公式：<br>
 	设置的线程数 = 目标QPS / (1 / 任务实际处理时间)<br>
 	假设目标QPS=100， 任务的实际处理时间 0.2s， 100 * 0.2 = 20个线程，这里的20个线程必须对应物理的20个CPU核心，<br>

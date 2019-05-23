@@ -394,5 +394,11 @@ public enum SendStatus {
 
 
 
+# 面试题
 
+## 1、RocketMQ如何保证消息不被重复消费
+
+## 2、幂等性保证
+
+## 3、可靠性投递
 
