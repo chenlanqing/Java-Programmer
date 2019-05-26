@@ -497,7 +497,7 @@ Java 提供中断机制来通知线程表明我们想要结束它.中断机制�
 这两个方法的缺点：
 
 - 使用这两个方法时，如果使用不当极易造成公共的同步对象的独占，使得其他线程无法访问公共同步对象
-- 数据的不同步:容易出现因为线程的暂停而导致数据不同步的情况
+- 数据的不同步：容易出现因为线程的暂停而导致数据不同步的情况
 
 #### 2.7.4、线程中断原理
 
@@ -738,18 +738,26 @@ Java语言中线程共有6种状态，其中BLOCKED、WAITING、TIME_WAITING 是
 	- 调用无参数的Thread.join方法。等待的线程状态会从 RUNNABLE 转换到 WAITING。当线程执行完，原来等待它的线程又会从 WAITING 状态转换到 RUNNABLE；
 	- 调用 LockSupport.park() 方法。调用该方法，线程状态会从 RUNNABLR 转换到 WAITING。调用LockSupport.unpark(Thread thread)可以唤醒目标线程，目标线程的状态又会从 WAITING 转换到 RUNNABLE
 
+- **（3）RUNNABLE 与 TIME_WAITING 状态转换**
+
+	有五种场景会触发这种转法：
+	- 调用带超时参数的 `Thread.sleep(long millis)`方法；
+	- 获得 synchronized 隐式锁的线程，调用到超时的 `Object.waiting(long timeout)`方法；
+	- 调用带超时参数的 Thread.join(long miliis)方法；
+	- 调用带超时参数的 `LockSupport.parkNanos(Object blocker, long deadline)`方法；
+	- 调用带超时参数的 `LockSupport.parkUntil(long deadline)`方法；
+
+	TIME_WAITING 和 WAITING状态的区别仅仅是触发条件多了超时参数；
+
+- **（4）从 NEW 到 RUNNABLE 状态**
+
+	Java刚创建出来的Thread对象就是NEW状态。NEW状态的线程不会被操作系统调度，因此不会被执行。从NEW状态转换到RUNNABLE状态，只需要调用线程对象的start()方法即可；
+
+- **（5）从 RUNNABLE 与 TERMINATED 状态**
+
+	线程执行完了或者因异常退出了run()方法，该线程结束生命周期
 
 ![image](image/thread-status.png)
-
-- 新建态（New）：通过线程的创建方式创建线程后，进入新建态态;
-- 就绪（Runnable）：调用Tread的start方法，就会为线程分配私有的方法栈，程序计数器资源，如果得到CPU资源，线程就转为就绪状态。
-- 运行（Running）：就绪态得到CPU资源后转为运行态，执行run方法。在调用 yield 方法后，线程由运行转为就绪。
-- 阻塞（Bolcking）：线程因为某种原因放弃CPU使用权，暂时停止运行。直到线程进入就绪状态，才有机会转到运行状态.阻塞的情况分三种:
-	- 等待阻塞：通过调用线程的wait()方法，让线程等待某工作的完成。
-	- 同步阻塞：线程在获取synchronized同步锁失败(因为锁被其它线程所占用)，它会进入同步阻塞状态。
-	- 其他阻塞：通过调用线程的sleep()或join()或发出了I/O请求时，线程会进入到阻塞状态。当sleep()状态超时、join()等待线程终止或者超时、或者I/O处理完毕时，线程重新转入就绪状态
-	- 
-- 死亡状态（Dead）：线程执行完了或者因异常退出了run()方法，该线程结束生命周期
 
 ### 2.18、线程管理器MXBean
 
@@ -1880,10 +1888,10 @@ Java 的线程调度是不分时的，同时启动多个线程后，不能保证
 
 目的是对相应的数据进行原子操作.所谓原子操作，是指操作过程不会被中断，保证数据操作是以原子方式进行的
 
-- 基本类型：AtomicInteger、AtomicLong、AtomicBoolean；JDK8 新增: DoubleAdder、LongAdder；
+- 基本类型：AtomicInteger、AtomicLong、AtomicBoolean；JDK8 新增原子化累加器：DoubleAdder、DoubleAccumulator、LongAdder、LongAccumulator，这四个类仅仅用来支持累加操作；
 - 数组类型：AtomicIntegerArray、AtomicLongArray、AtomicReferenceArray；
 - 引用类型：AtomicReference、AtomicStampedRerence、AtomicMarkableReference；
-- 对象的属性修改类型：AtomicIntegerFieldUpdater、AtomicLongFieldUpdater、AtomicReferenceFieldUpdater
+- 对象的属性修改类型：AtomicIntegerFieldUpdater、AtomicLongFieldUpdater、AtomicReferenceFieldUpdater，对象必须是volatile类型的，只有这样才能保证可见性。否则会抛出IllegalArgumentException异常；
 
 
 - AtomicLong 是作用是对长整形进行原子操作。
@@ -2026,6 +2034,10 @@ Doug Lea 将持有写锁的线程，去获取读锁的过程称为锁降级（Lo
 - 读锁释放的过程还是比较简单的，主要就是将 hold count 减 1，如果减到 0 的话，还要将 ThreadLocal 中的 remove 掉。然后是在 for 循环中将 state 的高 16 位减 1，如果发现读锁和写锁都释放光了，那么唤醒后继的获取写锁的线程
 - 为何要引入firstRead、firstReaderHoldCount。这是为了一个效率问题，firstReader是不会放入到readHolds中的，如果读锁仅有一个的情况下就会避免查找readHolds
 
+### 4.5、StampedLock：比读写锁性能更高的锁
+
+其有写锁、悲观读锁、乐观读
+
 
 ## 5、共享锁-闭锁：CountDownLatch
 
@@ -2050,7 +2062,7 @@ protected final void setState(long newState) {
 ```
 在AQS中，state是一个private volatile long类型的对象。对于CountDownLatch而言，state表示的“锁计数器”；CountDownLatch中的getCount()最终是调用AQS中的getState()，返回的state对象，即”锁计数器“
 
-- 使用场景:并行计算
+- 使用场景：并行计算
 
 - 实现原理:
 
@@ -2092,6 +2104,7 @@ private static void test(int count) throws Exception {
 	log.info("{}, {}", count, Thread.currentThread().getName());
 }
 ```
+
 ## 6、栅栏：CyclicBarrier
 
 * [CyclicBarrier原理和示例](http://www.cnblogs.com/skywang12345/p/3533995.html)
@@ -2184,7 +2197,7 @@ public class CyclicBarrierDemo {
 
 - “公平信号量”和“非公平信号量”的释放信号量的机制是一样的!不同的是它们获取信号量的机制：线程在尝试获取信号量许可时，对于公平信号量而言，如果当前线程不在CLH队列的头部，则排队等候；而对于非公平信号量而言，无论当前线程是不是在CLH队列的头部，它都会直接获取信号量。该差异具体的体现在，它们的tryAcquireShared()函数的实现不同
 
-- 使用场景：Semaphore 通常用于限制可以访问某些资源（物理或逻辑的）的线程数目，比如数据库连接池的连接数
+- 使用场景：Semaphore 通常用于限制可以访问某些资源（物理或逻辑的）的线程数目，比如数据库连接池的连接数；可以用来实现限流器
 
 - 如果Semaphore的数值初始化为1，那么一个线程就可以通过acquire进入互斥状态，本质上和互斥锁类似，；但区别也必将明显，比如互斥锁是有持有者的；
 
@@ -2282,24 +2295,19 @@ park和wait的区别：wait让线程阻塞前，必须通过synchronized获取�
 
 ## 10、Callable、Future
 
-**10.1、Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务。**
-
-Callable 和 Runnable 有几点不同：
-
+Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务；Callable 和 Runnable 有几点不同：
 - Callable规定的方法是call()，而Runnable规定的方法是run()；
 - Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。
 - call()方法可抛出异常，而run()方法是不能抛出异常的。
 - 运行 Callable 任务可拿到一个 Future 对象，Future 表示异步计算的结果。它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果.
 
-**10.2、如果需要获取线程的执行结果，需要使用到Future，Callable用于产生结果，Future用于获取结果<br>Callabl接口使用泛型来定义结果的返回值类型，在线程池提交Callable任务后返回了一个Future对象**
+如果需要获取线程的执行结果，需要使用到Future，Callable用于产生结果，Future用于获取结果，Callabl接口使用泛型来定义结果的返回值类型，在线程池提交Callable任务后返回了一个Future对象
 
 ## 11、FutureTask
 
 - 可用于异步获取执行结果或取消执行任务的场景：通过传入Runnable或者Callable的任务给FutureTask，直接调用其run方法或者放入线程池执行，之后可以在外部通过FutureTask的get方法异步获取执行结果。FutureTask非常适合用于耗时的计算，主线程可以在完成自己的任务后，再去获取结果。FutureTask还可以确保即使调用了多次run方法，它都只会执行一次Runnable或者Callable任务，或者通过cancel取消FutureTask的执行等;
 
-- FutureTask执行多任务计算：<br>
-
-	利用FutureTask和ExecutorService，可以用多线程的方式提交计算任务，主线程继续执行其他任务，当主线程需要子线程的计算结果时，在异步获取子线程的执行结果
+- FutureTask执行多任务计算：利用FutureTask和ExecutorService，可以用多线程的方式提交计算任务，主线程继续执行其他任务，当主线程需要子线程的计算结果时，在异步获取子线程的执行结果
 
 ```java
 public class FutureTaskDemo {
@@ -2557,8 +2565,8 @@ private volatile Node slot;
 - 最适合于应用程序:List 大小通常保持很小，只读操作远多于可变操作，需要在遍历期间防止线程间的冲突;
 - 线程安全的
 - 因为通常要复制整个基础数组，所以可变操作(add()、set() 和 remove() 等等)的开销很大.
-- 迭代器支持hasNext()， next()等不可变操作，但不支持可变 remove()等操作;
-- 使用迭代器进行遍历的速度很快，并且不会与其他线程发生冲突.在构造迭代器时，迭代器依赖于不变的数组快照；
+- 迭代器支持hasNext()， next()等不可变操作，但不支持可变 remove()等操作；即迭代器是只读的；
+- 使用迭代器进行遍历的速度很快，并且不会与其他线程发生冲突。在构造迭代器时，迭代器依赖于不变的数组快照；
 - 元素可以为null
 
 ### 2.2、签名
@@ -2621,7 +2629,7 @@ CopyOnWriteArrayList 则不存在这个问题
 
 线程安全的有序的哈希表
 - ConcurrentSkipListMap 和 TreeMap，它们虽然都是有序的哈希表；但是 ConcurrentSkipListMap 是线程安全的，TreeMap 是线程不安全的；另外 ConcurrentSkipListMap 是通过跳表来实现的，而 TreeMap 是通过红黑树实现的。
-	- 跳表:平衡树的一种替代的数据结构，和红黑树不相同的是，跳表对于树的平衡的实现是基于一种随机化的算法的，这样也就是说跳表的插入和删除的工作是比较简单的.
+	- 跳表：平衡树的一种替代的数据结构，和红黑树不相同的是，跳表对于树的平衡的实现是基于一种随机化的算法的，这样也就是说跳表的插入和删除的工作是比较简单的.
 - TreeMap是基于红黑树实现的，要实现高效的并发是非常困难的，为了保证效率，当我们插入或者删除节点的时，会移动节点进行平衡操作，这导致在高并发场景中难以进行合理粒度的同步；
 
 ### 5.2、SkipList
@@ -2972,7 +2980,7 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 
 # 六、线程池
 
-## 1、线程池技术
+## 1、概要
 
 ### 1.1、为什么使用线程池
 
@@ -3010,7 +3018,7 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 
 ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，允许用户在任务执行之前会执行之后做一些事情。我们可以通过它来实现比如初始化 ThreadLocal、收集统计信息、如记录日志等操作。这类 Hook 如 beforeExecute 和 afterExecute。另外还有一个 Hook 可以用来在任务被执行完的时候让用户插入逻辑，如 rerminated。如果 hook 方法执行失败，则内部的工作线程的执行将会失败或被中断
 
-## 2、重要类
+## 2、JDK线程池
 
 Executor框架结构：
 
@@ -3051,9 +3059,24 @@ class ThreadPerTaskExecutor implements Executor {
 }
 ```
 
+Executor是基于生产者-消费者模式，提交任务的操作相当于生产者，执行任务的线程相当于消费者；
+
 ### 2.2、ExecutorService-真正的线程池接口
 
-ScheduledExecutorService：和Timer/TimerTask类似，解决那些需要任务重复执行的问题
+这个接口继承自Executor，主要是添加了一些线程池生命周期的管理方法；
+```java
+void shutdown();
+List<Runnable> shutdownNow();
+boolean isShutdown();
+boolean isTerminated();
+boolean awaitTermination(long timeout, TimeUnit unit)throws InterruptedException;
+```
+ExecutorService的生命周期有三种状态：运行、关闭、终止。
+- ExecutorService在创建时处于运行状态；
+- shutdown方法将执行平滑的关闭过程：不再接受新的任务，同时等待已久提交的任务执行完成，包括那些还未开始执行的任务。
+- shutdownNow方法将执行粗暴的关闭过程：它将尝试取消所有运行中的任务，并且不再启动队列中尚未开始执行的任务；
+
+在ExecutorService关闭后提交的任务将由拒绝策略来进行处理；
 
 ### 2.3、ThreadPoolExecutor
 
@@ -3263,9 +3286,16 @@ RejectedExecutionHandler，四种策略都是静态内部类，在默认情况�
 
 ### 2.4、ScheduledThreadPoolExecutor
 
-- 继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现；提供了“延迟”和“周期执行”功能的ThreadPoolExecutor；
+Timer/TimerTask存在问题：
+- Timer支持基于绝对时间而不是相对时间的调度机制，因此任务的执行对系统时钟变化很敏感，而ScheduledThreadPoolExecutor只支持基于相对时间的调度；
+- Timer在执行所有定时任务时只会创建一个线程。如果某个任务执行时间过长，那么将破坏其他TimerTask的定时精确性；
+- Timer创建的线程没有处理异常，因此一旦抛出非受检异常，该线程会立即终止，也不会恢复线程的运行；
+
+ScheduledExecutorService：和Timer/TimerTask类似，解决那些需要任务重复执行的问题
+
+- 继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现；提供了`“延迟”`和`“周期执行”`功能的ThreadPoolExecutor；
 - 一旦启用已延迟的任务就执行它，但是有关何时启用，启用后何时执行则没有任何实时保证。按照提交的先进先出 (FIFO) 顺序来启用那些被安排在同一执行时间的任务；
-- 一般通过Executors.newScheduledThreadPool(int);来构造一个ScheduledThreadPoolExecutor对象；
+- 一般通过`Executors.newScheduledThreadPool(int);`来构造一个ScheduledThreadPoolExecutor对象；
 - 它所使用的阻塞队列变成了DelayedWorkQueue，而不是`ThreadLocalhExecutor`的LinkedBlockingQueue；
 - DelayedWorkQueue为ScheduledThreadPoolExecutor中的内部类，它其实和阻塞队列DelayQueue有点儿类似。DelayQueue是可以提供延迟的阻塞队列，它只有在延迟期满时才能从中提取元素，其列头是延迟期满后保存时间最长的Delayed元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null
 
@@ -3380,6 +3410,117 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 ### 2.8、空闲线程回收
 
 如果当前池子中的工作线程数大于 corePoolSize，如果超过这个数字的线程处于空闲的时间大于 keepAliveTime，则这些线程将会被终止，这是一种减少不必要资源消耗的策略。这个参数可以在运行时被改变，我们同样可以将这种策略应用给核心线程，我们可以通过调用 allowCoreThreadTimeout 来实现
+
+### 2.9、线程池异常处理
+
+**1、使用ExecutorService.submit执行任务，利用返回的Future对象的get方法接收抛出的异常，然后进行处理**
+
+利用Future.get得到任务抛出的异常的缺点在于，我们需要显式的遍历Future，调用get方法获取每个任务执行抛出的异常，然后处理
+
+**2、重写ThreadPoolExecutor.afterExecute方法，处理传递到afterExecute方法中的异常：**
+
+`protected void afterExecute(Runnable r, Throwable t) { }`
+
+**3、为工作者线程设置UncaughtExceptionHandler，在uncaughtException方法中处理异常**
+
+当一个线程因为未捕获的异常而退出时，JVM会把这个事件报告给应用提供的UncaughtExceptionHandler异常处理器，如果没有提供任何的异常处理器，那么默认的行为就是将堆栈信息输送到System.err；
+
+*注意，这个方案不适用与使用submit方式提交任务的情况，原因是：FutureTask的run方法捕获异常后保存，不再重新抛出，意味着runWorker方法并不会捕获到抛出的异常，线程也就不会退出，也不会执行我们设置的UncaughtExceptionHandler，只能在execute.execute()使用*
+
+如何为工作者线程设置UncaughtExceptionHandler呢？ThreadPoolExecutor的构造函数提供一个ThreadFactory，可以在其中设置我们自定义的UncaughtExceptionHandler，这里不再赘述。
+
+**4、在我们提供的Runnable的run方法中捕获任务代码可能抛出的所有异常，包括未检测异常**
+
+这种方法比较简单，也有他的局限性，不够灵活，我们的处理被局限在了线程代码边界之内
+
+### 2.10、任务取消与线程池关闭
+
+- 通过Future取消线程池中的任务
+	```java
+	// 该方法是非阻塞的
+	// 如果任务运行之前调用了该方法，那么任务就不会被运行；
+	// 如果任务已经完成或者已经被取消，那么该方法方法不起作用；
+	// 如果任务正在运行，并且 cancel 传入参数为 true，那么便会去终止与 Future 关联的任务
+	// cancel(false) 与 cancel(true）的区别在于，cancel(false) 只 取消已经提交但还没有被运行的任务（即任务就不会被安排运行）；而 cancel(true) 会取消所有已经提交的任务，包括 正在等待的 和 正在运行的 任务
+	boolean cancel(boolean mayInterruptIfRunning);
+	// 该方法是非阻塞的。在任务结束之前，如果任务被取消了，该方法返回 true，否则返回 false；如果任务已经完成，该方法则一直返回 false
+    boolean isCancelled();
+	// 该方法同样是非阻塞的。如果任务已经结束（正常结束，或者被取消，或者执行出错），返回 true，否则返回 false
+	boolean isDone();
+	```
+	当任务被取消时，Future 的 get 方法抛出了 CancellationException 异常，并且成功的取消了任务；
+
+	虽然取消了任务，Future 的 get 方法也对我们的取消做出了响应（即抛出 CancellationException 异常），但是任务并没有停止，而是直到任务运行完毕了，程序才结束；
+	FutureTask中cancel的实现中：cancel(true) 方法的原理是向正在运行任务的线程发送中断指令 —— 即调用运行任务的 Thread 的 interrupt() 方法。 如果一个任务是可取消的，那么它应该可以对 Thread 的 interrupt() 方法做出被取消时的响应。
+	```java
+	public boolean cancel(boolean mayInterruptIfRunning) {
+        if (!(state == NEW &&
+              UNSAFE.compareAndSwapInt(this, stateOffset, NEW,
+                  mayInterruptIfRunning ? INTERRUPTING : CANCELLED)))
+            return false;
+        try {    // in case call to interrupt throws exception
+            if (mayInterruptIfRunning) {
+                try {
+                    Thread t = runner;
+                    if (t != null)
+                        t.interrupt();
+                } finally { // final state
+                    UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
+                }
+            }
+        } finally {
+            finishCompletion();
+        }
+        return true;
+    }
+	```
+
+	如果要通过 Future 的 cancel 方法取消正在运行的任务，那么该任务必定是可以对线程中断做出响应 的任务。通过 Thread.currentThread().isInterrupted() 方法，我们可以判断任务是否被取消，从而做出相应的取消任务的响应
+
+- 线程池关闭
+	- shutdown：
+		```java
+		public void shutdown() {
+			final ReentrantLock mainLock = this.mainLock;
+			mainLock.lock();
+			try {
+				checkShutdownAccess();
+				advanceRunState(SHUTDOWN); // 原子性的修改线程池的状态为SHUTDOWN状态
+				interruptIdleWorkers();// 中断空闲的线程
+				onShutdown(); // hook for ScheduledThreadPoolExecutor
+			} finally {
+				mainLock.unlock();
+			}
+			tryTerminate();
+		}
+		```
+		如果线程正在执行线程池里的任务，即便任务处于阻塞状态，线程也不会被中断，而是继续执行。
+		如果线程池阻塞等待从队列里读取任务，则会被唤醒，但是会继续判断队列是否为空，如果不为空会继续从队列里读取任务，为空则线程退出
+
+	- shutdownNow执行逻辑：将线程池状态修改为STOP，然后调用线程池里的所有线程的interrupt方法
+		```java
+		public List<Runnable> shutdownNow() {
+			List<Runnable> tasks;
+			final ReentrantLock mainLock = this.mainLock;
+			mainLock.lock();
+			try {
+				checkShutdownAccess();
+				advanceRunState(STOP);// 原子性的修改线程池的状态为STOP状态
+				interruptWorkers();// 遍历线程池里的所有工作线程，然后调用线程的interrupt方法
+				tasks = drainQueue();// 将队列里还没有执行的任务放到列表里，返回给调用方
+			} finally {
+				mainLock.unlock();
+			}
+			tryTerminate();
+			return tasks;
+		}
+		```
+
+		当我们调用线程池的shutdownNow时：
+		- 如果线程正在getTask方法中执行，则会通过for循环进入到if语句，于是getTask返回null。从而线程退出。不管线程池里是否有未完成的任务。
+		- 如果线程因为执行提交到线程池里的任务而处于阻塞状态，则会导致报错(如果任务里没有捕获InterruptedException异常)，否则线程会执行完当前任务，然后通过getTask方法返回为null来退出
+
+	
 
 ## 3、线程池配置
 

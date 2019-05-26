@@ -36,7 +36,9 @@
       <url>http：//maven.net.cn/content/groups/public</url>
     </mirror>
 	```
+
 # 五、maven的生命周期和插件
+
 - 完整的项目构建过程：清理、编译、测试、打包、集成测试、验证、部署	
 
 - maven的生命周期：分为三个周期，周期之间相互不影响
@@ -55,7 +57,15 @@
 		(3).post-site：在生成项目站点后要完成的工作
 		(4).site-deploy：发布生成的站点到服务器上
 	```
+
+- DenpendencyManagement和dependencies区别
+	- dependencies即使在子项目中不写该依赖项，那么子项目仍然会从父项目中继承该依赖项（全部继承）
+	- dependencyManagement里只是声明依赖，并不实现引入，因此子项目需要显示的声明需要用的依赖。如果不在子项目中声明依赖，是不会从父项目中继承下来的；只有在子项目中写了该依赖项，并且没有指定具体版本，才会从父项目中继承该项，并且version和scope都读取自父pom；另外如果子项目中指定了版本号，那么会使用子项目中指定的jar版本；
+	- dependencyManagement 中的 dependencies 元素只表明依赖项版本的优先选择，并不影响项目的依赖项；而 dependencies 元素则影响项目的依赖项；
+	- 只有当外层的dependencies 元素中没有指明版本信息时， dependencyManagement中的 dependencies 元素才起作用
+
 # 六、pom.xml介绍
+
 ```xml
 <project xmlns="http：//maven.apache.org/POM/4.0.0" xmlns：xsi="http：//www.w3.org/2001/XMLSchema-instance"
   xsi：schemaLocation="http：//maven.apache.org/POM/4.0.0 http：//maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -150,6 +160,7 @@ mvn dependency:tree -Dverbose -Doutput=output.txt  根据导出的文件肥西
 # 八、编写Maven插件
 
 // TODO 
+
 
 
 
