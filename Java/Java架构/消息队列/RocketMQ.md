@@ -250,9 +250,9 @@ public enum SendStatus {
 ### 1.6、延迟消息
 
 - 延迟消息：消息发送到Broker之后，要特定的时间才会被Consumer消费；
-- 目前只支持固定精度的定时消息；
+- 目前只支持固定精度的定时消息：RocketMQ 支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息。预设值的延迟时间间隔为：1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h
 - MessageStoreConfig配置类、ScheduleMessageService 任务类；
-- setDelayTimeLevel
+- 在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。broker在接收到延迟消息的时候会把对应延迟级别的消息先存储到对应的延迟队列中，等延迟消息时间到达时，会把消息重新存储到对应的topic的queue里面
 
 ### 1.7、自定义消息发送规则
 
@@ -402,3 +402,6 @@ public enum SendStatus {
 
 ## 3、可靠性投递
 
+# 参考资料
+
+* [RocketMQ的原理与实践](https://www.jianshu.com/p/453c6e7ff81c)
