@@ -3166,10 +3166,10 @@ private static boolean isRunning(int c) {
 ![image](image/ThreadPool-execute.png)
 
 **execute方法执行机制：**
-- 一个任务提交，如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行;(执行这个步骤时需要获取全局锁)
-- 如果来不及执行，则把多余的线程放到workQueue，等待已启动的worker来循环执行;
-- 如果队列workQueue都放满了还没有执行，则在maximumPoolSize下面启动新的worker来循环执行workQueue;
-- 如果启动到maximumPoolSize还有任务进来，线程池已达到满负载，此时就执行任务拒绝RejectedExecutionHandler
+- 一个任务提交，如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行；(执行这个步骤时需要获取全局锁)
+- 如果来不及执行，则把多余的线程放到workQueue，等待已启动的worker来循环执行；
+- 如果队列workQueue都放满了还没有执行，则在maximumPoolSize下面启动新的worker来循环执行workQueue；
+- 如果启动到maximumPoolSize还有任务进来，线程池已达到满负载，此时就执行任务拒绝RejectedExecutionHandler；
 - 线程池核心代码：
 	```java
 	public void execute(Runnable command) {
