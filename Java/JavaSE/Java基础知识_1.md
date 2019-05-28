@@ -350,6 +350,11 @@ public class OutClass{
 
 编译之后使用命令 javap 可以很明显看到内部类的字节码中编译器为我们生成了参数为外部类引用的构造方法，其构造方法和普通类的构造方法没有区别，都是执行`<init>`方式;
 
+## 6、内部类GC问题
+
+- 匿名内部类并不会妨碍外部类的正常GC，而是不能将它定义成静态属性引用。
+- 静态匿名内部类，导致外部类不能正常回收的原因就是：它作为GC Root对象却保持着外部类的引用。方法区中类静态属性引用的对象可以作为GC root对象
+
 # 二、HashMap、TreeMap、Hashtable、LinkedHashMap
 
 ## 1、HashMap、TreeMap
