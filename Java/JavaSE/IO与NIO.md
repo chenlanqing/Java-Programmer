@@ -78,6 +78,7 @@
 如果有多个任务或者事件发生，这些事件可以并发地执行，一个事件或者任务的执行不会导致整个流程的暂时等待;
 
 ## 2、阻塞与非阻塞
+
 **2.1、阻塞**
 
 当某个事件或者任务在执行过程中，它发出一个请求操作，但是由于该请求操作需要的条件不满足，那么就会一直在那等待，直至条件满足；
@@ -1064,6 +1065,21 @@ jcmd <pid> VM.native_memory detail.diff
 BIO由于不是NIO那样的事件机制，在连接的IO读取上，无论是否真的有读/写发生，都需要阻塞住当前的线程，对于基于BIO实现的Server端，通常的实现方法都是用一个线程去accept连接，当连接建立后，将这个连接的IO读写放到一个专门的处理线程，所以当建立100个连接时，通常会产生1个Accept线程 + 100个处理线程。
 
 NIO通过事件来触发，这样就可以实现在有需要读/写的时候才处理，不用阻塞当前线程，NIO在处理IO的读写时，当从网卡缓冲区读或写入缓冲区时，这个过程是串行的，所以用太多线程处理IO事件其实也没什么意义，连接事件由于通常处理比较快，用1个线程去处理就可以，IO事件呢，通常会采用cpu core数+1或cpu core数 * 2，这个的原因是IO线程通常除了从缓冲区读写外，还会做些比较轻量的例如解析协议头等，这些是可以并发的，为什么不只用1个线程处理，是因为当并发的IO事件非常多时，1个线程的效率不足以发挥出多core的CPU的能力，从而导致这个地方成为瓶颈，这种在分布式cache类型的场景里会比较明显，按照这个，也就更容易理解为什么在基于Netty等写程序时，不要在IO线程里直接做过多动作，而应该把这些动作转移到另外的线程池里去处理，就是为了能保持好IO事件能被高效处理
+
+## 8、Channel和Scoket区别
+
+Socket、SocketChannel二者的实质都是一样的，都是为了实现客户端与服务器端的连接而存在的。
+
+- 所属包不同：Socket在java.net包中，而SocketChannel在java.nio包中；
+- 异步方式不同：Socket是阻塞连接（当然我们可以自己实现非阻塞），SocketChannel可以设置非阻塞连接；
+- 性能不同：一般来说使用SocketChannel会有更好的性能。其实，Socket实际应该比SocketChannel更高效，不过由于使用者设计等原因，效率反而比直接使用SocketChannel低；
+- 使用方式不同：
+    - Socket、ServerSocket类可以传入不同参数直接实例化对象并绑定ip和端口：
+        ```java
+        Socket socket = new Socket("127.0.0.1", "8000");
+        ServerSocket serverSocket = new ServerSocket("8000")
+        ```
+    - 而SocketChannel、ServerSocketChannel类需要借助Selector类控制
 
 # 参考文章
 * [Java-NIO系列](http://ifeve.com/java-nio-all/)
