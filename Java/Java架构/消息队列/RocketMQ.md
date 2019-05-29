@@ -190,19 +190,68 @@ RocketMQ设计是基于主题的发布与订阅模式，核心功能包括：消
 
 # 二、RocketMQ入门
 
-## 1、生产者使用
+## 1、RocketMQ组成
+
+- 生产者（Producer）：负责产生消息，生产者向消息服务器发送由业务应用程序系统生成的消息。
+- 消费者（Consumer）：负责消费消息，消费者从消息服务器拉取信息并将其输入用户应用程序。
+- 消息服务器（Broker）：是消息存储中心，主要作用是接收来自 Producer 的消息并存储， Consumer 从这里取得消息。
+- 名称服务器（NameServer）：用来保存 Broker 相关 Topic 等元信息并给 Producer ，提供 Consumer 查找 Broker 信息
+
+## 2、Rocket整体流程
+
+- 启动 Namesrv，Namesrv起 来后监听端口，等待 Broker、Producer、Consumer 连上来，相当于一个路由控制中心。
+- Broker 启动，跟所有的 Namesrv 保持长连接，定时发送心跳包。
+
+    心跳包中，包含当前 Broker 信息(IP+端口等)以及存储所有 Topic 信息。
+    注册成功后，Namesrv 集群中就有 Topic 跟 Broker 的映射关系。
+
+- 收发消息前，先创建 Topic 。创建 Topic 时，需要指定该 Topic 要存储在 哪些 Broker上。也可以在发送消息时自动创建Topic。
+- Producer 发送消息。
+
+    启动时，先跟 Namesrv 集群中的其中一台建立长连接，并从Namesrv 中获取当前发送的 Topic 存在哪些 Broker 上，然后跟对应的 Broker 建立长连接，直接向 Broker 发消息。
+
+- Consumer 消费消息。
+
+    Consumer 跟 Producer 类似。跟其中一台 Namesrv 建立长连接，获取当前订阅 Topic 存在哪些 Broker 上，然后直接跟 Broker 建立连接通道，开始消费消息。
+
+## 3、NameServer
+
+- Namesrv 用于存储 Topic、Broker 关系信息，功能简单，稳定性高
+    - 多个 Namesrv 之间的信息共享，通过 Broker 主动向多个 Namesrv 都发起心跳。正如上文所说，Broker 需要跟所有 Namesrv 连接
+    - 即使整个 Namesrv 集群宕机，已经正常工作的 Producer、Consumer、Broker 仍然能正常工作，但新起的 Producer、Consumer、Broker 就无法工作；
+
+-  Namesrv 压力不会太大，平时主要开销是在维持心跳和提供 Topic-Broker 的关系数据。但有一点需要注意，Broker 向 Namesr 发心跳时，会带上当前自己所负责的所有 Topic 信息，如果 Topic 个数太多（万级别），会导致一次心跳中，就 Topic 的数据就几十 M，网络情况差的话，网络传输失败，心跳失败，导致 Namesrv 误认为 Broker 心跳失败
+
+## 4、Broker
+
+- 高并发读写服务：
+    - 消息顺序写：所有 Topic 数据同时只会写一个文件，一个文件满1G ，再写新文件，真正的顺序写盘，使得发消息 TPS 大幅提高。
+    - 消息随机读：RocketMQ 尽可能让读命中系统 Pagecache ，因为操作系统访问 Pagecache 时，即使只访问 1K 的消息，系统也会提前预读出更多的数据，在下次读时就可能命中 Pagecache ，减少 IO 操作；
+- 负载均衡与动态伸缩：
+    - 负载均衡：Broker 上存 Topic 信息，Topic 由多个队列组成，队列会平均分散在多个 Broker 上，而 Producer 的发送机制保证消息尽量平均分布到所有队列中，最终效果就是所有消息都平均落在每个 Broker 上。
+    - 动态伸缩能力（非顺序消息）：Broker 的伸缩性体现在两个维度：Topic、Broke；
+- 高可用 & 高可靠。
+- Broker 与 Namesrv 的心跳机制：
+
+    - 单个 Broker 跟所有 Namesrv 保持心跳请求，心跳间隔为30秒，心跳请求中包括当前 Broker 所有的 Topic 信息。
+    - Namesrv 会反查 Broker 的心跳信息，如果某个 Broker 在 2 分钟之内都没有心跳，则认为该 Broker 下线，调整 Topic 跟 Broker 的对应关系。但此时 Namesrv 不会主动通知Producer、Consumer 有 Broker 宕机。也就说，只能等 Producer、Consumer 下次定时拉取 Topic 信息的时候，才会发现有 Broker 宕机；
+
+## 5、生产者使用
 
 - 创建生产者对象：DefaultMQProducer
 - 设置NamesrvAddr
 - 启动生产者服务；
 - 创建消息并发送
 
-## 2、消费者使用
+## 6、消费者使用
 
 - 创建消费者对象：DefaultMQPushConsumer
 - 设置namesrvAddr及其消费位置ConsumeFromWhere；
 - 进行订阅主题subscribe；
 - 注册监听并消费registerMessageListener；
+- 发送消息方式：同步方式、异步方式、Oneway 方式
+- 消费者消费模式有两种：集群消费和广播消费
+- 消费者获取消息有两种模式：推送模式和拉取模式。绝大部分场景下只会使用 PushConsumer 推送模式；
 
 # 三、RocketMQ核心
 
@@ -253,6 +302,9 @@ public enum SendStatus {
 - 目前只支持固定精度的定时消息：RocketMQ 支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息。预设值的延迟时间间隔为：1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h
 - MessageStoreConfig配置类、ScheduleMessageService 任务类；
 - 在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。broker在接收到延迟消息的时候会把对应延迟级别的消息先存储到对应的延迟队列中，等延迟消息时间到达时，会把消息重新存储到对应的topic的queue里面
+- 主要原理：
+    - 定时消息发送到 Broker 后，会被存储 Topic 为 SCHEDULE_TOPIC_XXXX 中，并且所在 Queue 编号为延迟级别 - 1；需要 -1 的原因是，延迟级别是从 1 开始的。如果延迟级别为 0 ，意味着无需延迟。
+    - Broker 针对每个 SCHEDULE_TOPIC_XXXX 的队列，都创建一个定时任务，顺序扫描到达时间的延迟消息，重新存储到延迟消息原始的 Topic 的原始 Queue 中，这样它就可以被 Consumer 消费到
 
 ### 1.7、自定义消息发送规则
 
@@ -321,6 +373,10 @@ public enum SendStatus {
     - 维护OffsetStore
     - 根据不同的消息状态做不同的处理
 
+### 2.6、死信队列
+
+当一条消息被消费失败 16 次后，会被存储到 Topic 为 "%DLQ%" + ConsumerGroup 到死信队列
+
 ## 3、核心原理
 
 ### 3.1、Broker消息存储结构
@@ -342,9 +398,6 @@ public enum SendStatus {
 ## 1、双主双从部署
 
 ### 1.1、配置
-
-
-
 
 
 # 五、RocketMQ源码分析
