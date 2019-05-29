@@ -415,6 +415,10 @@ protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory b
     
     所有Bean都利用getBean创建完成以后；检查所有的Bean是否是SmartInitializingSingleton接口的；如果是；就执行afterSingletonsInstantiated()；
 
+getBean的全流程：
+
+![](image/getBean过程.jpg)
+
 ### 6.12、finishRefresh();
 
 完成BeanFactory的初始化创建工作；IOC容器就创建完成；

@@ -282,6 +282,7 @@ AOP(Aspect-Oriented Programming，面向切面编程
 - 业务模块更简洁，只包含核心业务代码;
 	
 ## 3、AOP 的术语
+
 - 切面(Aspect)：横切关注点(跨越应用程序多个模块的功能)被模块化的特殊对象
 - 通知(Advice)：切面必须要完成的工作
 - 目标(Target)：被通知的对象
@@ -531,7 +532,6 @@ try{
 
 - 静态代理：指使用 AOP 框架提供的命令进行编译，从而在编译阶段就可生成 AOP 代理类，因此也称为编译时增强；
 - 动态代理：在运行时在内存中“临时”生成 AOP 动态代理类，因此也被称为运行时增强。目前 Spring 中使用了两种动态代理库；
-
       
 # 四、IoC与AOP原理分析
 
@@ -804,6 +804,9 @@ try{
 Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean ，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；
 
 ### 1.3、解决循环依赖
+
+Spring 在创建 bean 的时候并不是等它完全完成，而是在创建过程中将创建中的 bean 的 ObjectFactory 提前曝光（即加入到 singletonFactories 缓存中）。
+这样，一旦下一个 bean 创建的时候需要依赖 bean，则直接使用 ObjectFactory 的 `#getObject()` 方法来获取了；
 
 - 首先 A 完成初始化第一步并将自己提前曝光出来（通过 ObjectFactory 将自己提前曝光），在初始化的时候，发现自己依赖对象 B，此时就会去尝试 get(B)，这个时候发现 B 还没有被创建出来
 - 然后 B 就走创建流程，在 B 初始化的时候，同样发现自己依赖 C，C 也没有被创建出来
