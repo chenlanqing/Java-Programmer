@@ -59,6 +59,8 @@ HashMap是用得非常频繁的一个集合，但是由于它是非线程安全�
 
 ### 2.2、JDK1.7版本
 
+在Jdk1.7中是采用Segment + HashEntry + ReentrantLock
+
 ConcurrentHashMap 由一个个 Segment 组成，ConcurrentHashMap 是一个 Segment 数组，Segment 通过继承 ReentrantLock 来进行加锁，所以每次需要加锁的操作锁住的是一个 segment，这样只要保证每个 Segment 是线程安全的，也就实现了全局的线程安全；
 
 ConcurrentHashMap初始化时，计算出Segment数组的大小ssize和每个Segment中HashEntry数组的大小cap，并初始化Segment数组的第一个元素；其中ssize大小为2的幂次方，默认为16，cap大小也是2的幂次方，最小值为2，最终结果根据根据初始化容量initialCapacity进行计算，计算过程如下
@@ -69,6 +71,10 @@ ConcurrentHashMap初始化时，计算出Segment数组的大小ssize和每个Seg
 1.8中放弃了Segment臃肿的设计，取而代之的是采用`Node + CAS + Synchronized`来保证并发安全进行实现；只有在执行第一次put方法时才会调用initTable()初始化Node数组；
 
 底层依然采用"数组+链表+红黑树"的存储结构
+
+- JDK1.8的实现降低锁的粒度，JDK1.7版本锁的粒度是基于Segment的，包含多个HashEntry，而JDK1.8锁的粒度就是HashEntry（首节点）；
+- JDK1.8版本的数据结构变得更加简单，使得操作也更加清晰流畅，因为已经使用synchronized来进行同步，所以不需要分段锁的概念，也就不需要Segment这种数据结构了，由于粒度的降低，实现的复杂度也增加了
+- JDK1.8使用红黑树来优化链表，基于长度很长的链表的遍历是一个很漫长的过程，而红黑树的遍历效率是很快的，代替一定阈值的链表，这样形成一个最佳拍档
 
 ##  3、分段锁形式如何保证size的一致性
 
@@ -100,7 +106,13 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
     static final int NCPU = Runtime.getRuntime().availableProcessors();
     ```
 - **几个重要的变量**
-    - table：用来存放Node节点的数据，默认为null，默认大小为16的数组，每次扩容时大小总是2的幂次方；
+    ```java
+    transient volatile Node<K,V>[] table;
+    private transient volatile Node<K,V>[] nextTable;
+    private transient volatile long baseCount;
+    private transient volatile int sizeCtl;
+    ```
+    - table：用来存放Node节点的数据，默认为null，默认大小为16的数组，每次扩容时大小总是2的幂次方；是volatile修饰的，为了使得Node数组在扩容的时候对其他线程具有可见性而加的volatile
     - nextTable：扩容时新生成的数据，数组为table的两倍；
     - Node：节点，保存key-value的数据结构；
     - ForwardingNode：一个特殊的Node节点，hash值为-1，其中存储nextTable的引用。只有当table发生扩容时，ForwardingNode才会发挥作用，作为一个占位符放在table中表示节点为null或者已经被移动；
@@ -118,12 +130,52 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
 
 ### 2.3、TreeBin
 
+## 3、put方法
+
+## 4、get方法
+
+- 首先计算hash值，定位到该table索引位置，如果是首节点符合就返回
+- 如果遇到扩容的时候，会调用标志正在扩容节点ForwardingNode的find方法，查找该节点，匹配就返回
+- 以上都不符合的话，就往下遍历节点，匹配就返回，否则最后就返回null
+```java
+//会发现源码中没有一处加了锁
+public V get(Object key) {
+    Node<K,V>[] tab; Node<K,V> e, p; int n, eh; K ek;
+    int h = spread(key.hashCode()); //计算hash
+    if ((tab = table) != null && (n = tab.length) > 0 &&
+        (e = tabAt(tab, (n - 1) & h)) != null) {//读取首节点的Node元素
+        if ((eh = e.hash) == h) { //如果该节点就是首节点就返回
+            if ((ek = e.key) == key || (ek != null && key.equals(ek)))
+                return e.val;
+        }
+        //hash值为负值表示正在扩容，这个时候查的是ForwardingNode的find方法来定位到nextTable来
+        //eh=-1，说明该节点是一个ForwardingNode，正在迁移，此时调用ForwardingNode的find方法去nextTable里找。
+        //eh=-2，说明该节点是一个TreeBin，此时调用TreeBin的find方法遍历红黑树，由于红黑树有可能正在旋转变色，所以find里会有读写锁。
+        //eh>=0，说明该节点下挂的是一个链表，直接遍历该链表即可。
+        else if (eh < 0)
+            return (p = e.find(h, key)) != null ? p.val : null;
+        while ((e = e.next) != null) {//既不是首节点也不是ForwardingNode，那就往下遍历
+            if (e.hash == h &&
+                ((ek = e.key) == key || (ek != null && key.equals(ek))))
+                return e.val;
+        }
+    }
+    return null;
+}
+```
+**get没有加锁的话，ConcurrentHashMap是如何保证读到的数据不是脏数据的呢？**
+
+get操作可以无锁是由于Node的元素val和指针next是用volatile修饰的，在多线程环境下线程A修改结点的val或者新增节点的时候是对线程B可见的。
+
+既然volatile修饰数组对get操作没有效果那加在数组上的volatile的目的是：为了使得Node数组在扩容的时候对其他线程具有可见性而加的volatile
 
 # 面试
 
-- size方法和mappingCount方法的异同，两者计算是否准确；
-- 多线程环境下如何进行扩容
-- HashMap、HashTable、ConcurrenHashMap区别
+## 1、size方法和mappingCount方法的异同，两者计算是否准确
+
+## 2、多线程环境下如何进行扩容
+
+## 3、HashMap、HashTable、ConcurrenHashMap区别
 
 # 参考资料:
 
