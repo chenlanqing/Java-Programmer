@@ -151,6 +151,8 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 	- 可以控制单例模式的创建时机：
 		- singleton模式的Bean组件，默认是在 ApplicationContext 容器实例化时就创建了组件;可以在bean元素中追加属性lazy-init="true"，将singleton模式创建对象推迟到getBean()方法
 		- prototype模式是在调用getBean()方法时创建了组件;
+
+		单例 bean 存在线程问题，主要是因为当多个线程操作同一个对象的时候，对这个对象的非静态成员变量的写操作会存在线程安全问题。
 		
 	- 可以指定Bean对象初始化和销毁方法：`<bean init-method="初始化方法" destroy-method="销毁方法">`
 		- Spring 将 Bean 对象创建完毕后，会自动调用init-method里指定的方法
@@ -532,6 +534,10 @@ try{
 
 - 静态代理：指使用 AOP 框架提供的命令进行编译，从而在编译阶段就可生成 AOP 代理类，因此也称为编译时增强；
 - 动态代理：在运行时在内存中“临时”生成 AOP 动态代理类，因此也被称为运行时增强。目前 Spring 中使用了两种动态代理库；
+
+## 9、AspectJ与Spring AOP
+
+Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 基于代理(Proxying)，而 AspectJ 基于字节码操作(Bytecode Manipulation)
       
 # 四、IoC与AOP原理分析
 

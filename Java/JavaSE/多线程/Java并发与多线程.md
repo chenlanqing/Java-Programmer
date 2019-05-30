@@ -3206,6 +3206,7 @@ private static boolean isRunning(int c) {
 	```
 
 **submit()方法执行机制：**
+
 ```java
 public Future<?> submit(Runnable task) {
 	if (task == null) throw new NullPointerException();

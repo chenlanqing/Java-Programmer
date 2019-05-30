@@ -990,17 +990,18 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 
 ## 19.3、详细描述
 
-- 发起请求到前端控制器(DispatcherServlet)
-- 前端控制器请求HandlerMapping查找 Handler(可以根据xml配置、注解进行查找)
-- 处理器映射器HandlerMapping向前端控制器返回Handler，HandlerMapping会把请求映射为HandlerExecutionChain对象(包含一个Handler处理器（页面控制器）对象，多个HandlerInterceptor拦截器对象)，通过这种策略模式，很容易添加新的映射策略
-- 前端控制器调用处理器适配器去执行Handler
+- 发起请求到`DispatcherServlet.doService()`，实际调用的是`DispatcherServlet.doDispatch()`
+- 判断前端请求是否为文件上传，如果是文件上传，将httpServletRequest转换为MultipartHttpServletRequest；
+- `DispatcherServlet`请求HandlerMapping查找 Handler(可以根据xml配置、注解进行查找)
+- HandlerMapping向`DispatcherServlet`返回Handler，HandlerMapping会把请求映射为HandlerExecutionChain对象(包含一个Handler处理器（页面控制器）对象，多个HandlerInterceptor拦截器对象)，通过这种策略模式，很容易添加新的映射策略
+- `DispatcherServlet`调用处理器适配器去执行Handler
 - 处理器适配器HandlerAdapter将会根据适配的结果去执行Handler
 - Handler执行完成给适配器返回ModelAndView
-- 处理器适配器向前端控制器返回ModelAndView （ModelAndView是springmvc框架的一个底层对象，包括 Model和view）
-- 前端控制器请求视图解析器去进行视图解析(根据逻辑视图名解析成真正的视图(jsp))，通过这种策略很容易更换其他视图技术，只需要更改视图解析器即可
-- 视图解析器向前端控制器返回View
-- 前端控制器进行视图渲染(视图渲染将模型数据(在ModelAndView对象中)填充到request域)
-- 前端控制器向用户响应结果
+- 处理器适配器向`DispatcherServlet`返回ModelAndView （ModelAndView是springmvc框架的一个底层对象，包括 Model和view）
+- `DispatcherServlet`请求视图解析器去进行视图解析(根据逻辑视图名解析成真正的视图(jsp))，通过这种策略很容易更换其他视图技术，只需要更改视图解析器即可
+- 视图解析器向`DispatcherServlet`返回View
+- `DispatcherServlet`进行视图渲染(视图渲染将模型数据(在ModelAndView对象中)填充到request域)
+- `DispatcherServlet`向用户响应结果
 
 
 # 20、SpringMVC注解配置
@@ -1171,3 +1172,8 @@ public class RootConfig {
 - Spring MVC 会稍微比 Struts2 快些. Spring MVC 是基于方法设计， 而 Sturts2 是基于类， 每次发一次请求都会实	例一个 Action.
 - Spring MVC 使用更加简洁， 开发效率 Spring MVC 确实比 struts2 高： 支持 JSR303， 处理 ajax 的请求更方便
 - Struts2 的 OGNL 表达式使页面的开发效率相比	Spring MVC 更高些.
+
+
+# 参考资料
+
+* [SpringMVC-DispatchServlet源码分析](https://juejin.im/post/5c754d7d6fb9a049bd42f62c)
