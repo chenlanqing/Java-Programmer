@@ -801,7 +801,7 @@ java -Djava.ext.dirs=your_ext_dir HelloWorld
 
 ### 6.2.3、App ClassLoader-系统类加载器
 
-负责加载应用程序classpath目录下的所有jar和类文件；Application类加载器是Extension 类加载器的子加载器.通过sun.misc.Launcher$AppClassLoader实现；这个类加载器是 ClassLoader 中 getSystemClassLoader() 方法的返回值，所以也称为系统类加载器
+负责加载应用程序classpath目录下的所有jar和类文件；Application类加载器是Extension 类加载器的子加载器。通过`sun.misc.Launcher$AppClassLoader`实现；这个类加载器是 ClassLoader 中 `getSystemClassLoader()` 方法的返回值，所以也称为系统类加载器
 
 *注意：*
 
@@ -812,7 +812,7 @@ java -Djava.ext.dirs=your_ext_dir HelloWorld
 java -Djava.system.class.loader=your_class_loader HelloWorld
 ```
 
-如果碰到类似NoSuchMethodError、NoClassDefFoundError、NoClassDefFoundError找不到类的错误信息，可以使用jvm参数`-verbose:class`方便地定位该问题，使用该参数可以快速地定位某个类是从哪个jar包加载的
+如果碰到类似`NoSuchMethodError、NoClassDefFoundError、NoClassDefFoundError`找不到类的错误信息，可以使用jvm参数`-verbose:class`方便地定位该问题，使用该参数可以快速地定位某个类是从哪个jar包加载的
 
 ## 6.3、ClassLoader 加载类原理
 
@@ -840,7 +840,6 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 - 这个过程是由上至下依次检查的：
 	如果一个类加载器收到了类加载的请求，首先并不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，
 	因此所有的加载请求最终都应该传送到顶层的启动类加载器中，只有当父类加载器反馈自己无法完成这个加载请求时，子类才会尝试自己去加载：
-
 	- ①、首先由最顶层的类加载器 Bootstrap ClassLoader 试图加载，如果没加载到，则把任务转交给 Extension ClassLoader 试图加载;
 	- ②、如果也没加载到，则转交给 App ClassLoader 进行加载，如果它也没有加载得到的话，则返回给委托的发起者;
 	- ③、由它到指定的文件系统或网络等URL中加载该类.如果它们都没有加载到这个类时，则抛出 ClassNotFoundException 异常.否则将这个找到的类生成一个类的定义，并将它加载到内存当中，最后返回这个类在内存中的 Class 实例对象
@@ -851,7 +850,37 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 
 *E.G.*
 
-String 来动态替代java核心api中定义的类型，这样会存在非常大的安全隐患；而双亲委托的方式，就可以避免这种情况，因 String已经在启动时就被引导类加载器（Bootstrcp ClassLoader）加载；所以用户自定义的 ClassLoader 永远也无法加载一个自己写的 String，除非你改变JDK中ClassLoader搜索类的默认算法；
+String 来动态替代java核心api中定义的类型，这样会存在非常大的安全隐患；而双亲委托的方式，就可以避免这种情况，因 String已经在启动时就被引导类加载器（Bootstrcp ClassLoader）加载；所以用户自定义的 ClassLoader 永远也无法加载一个自己写的 String，除非你改变JDK中ClassLoader搜索类的默认算法；虽然可以正常编译，但是永远无法被加载运行。即使自定义了自己的类加载器，强行用defineClass方法去加载一个以`java.lang`开头的类也不会成功，如果尝试这样做的话，会收到虚拟机抛出的`java.lang.SercurityException:Prohibited package name:java.lang`异常
+```java
+// final的方法
+rotected final Class<?> defineClass(String name, byte[] b, int off, int len, ProtectionDomain protectionDomain)throws ClassFormatError{
+	protectionDomain = preDefineClass(name, protectionDomain);
+	String source = defineClassSourceLocation(protectionDomain);
+	Class<?> c = defineClass1(name, b, off, len, protectionDomain, source);
+	postDefineClass(c, protectionDomain);
+	return c;
+}
+/* Determine protection domain, and check that:
+	- not define java.* class,
+	- signer of this class matches signers for the rest of the classes in package.
+*/
+private ProtectionDomain preDefineClass(String name, ProtectionDomain pd){
+		if (!checkName(name))
+				throw new NoClassDefFoundError("IllegalName: " + name);
+		// Note:  Checking logic in java.lang.invoke.MemberName.checkForTypeAlias
+		// relies on the fact that spoofing is impossible if a class has a name
+		// of the form "java.*"
+		if ((name != null) && name.startsWith("java.")) {
+				throw new SecurityException("Prohibited package name: " + name.substring(0, name.lastIndexOf('.')));
+		}
+		if (pd == null) {
+				pd = defaultDomain;
+		}
+		if (name != null) checkCerts(name, pd.getCodeSource());
+		return pd;
+}
+```
+
 
 ### 6.3.4、如何判断两个class是否相同
 
@@ -859,9 +888,7 @@ JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相�
 
 ### 6.3.5、ClassLoader 的体系架构
 
-- 检查类是否已经加载顺序：自底向上<br>
-
-Custom ClassLoader(自定义加载) --> App ClassLoader --> Extension ClassLoader --> Bootstrap ClassLoader
+- 检查类是否已经加载顺序：自底向上，`Custom ClassLoader(自定义加载) --> App ClassLoader --> Extension ClassLoader --> Bootstrap ClassLoader`
 
 - 加载类顺序
 	Load JRE\lib\rt.jar或者 -Xbootclasspath 选项指定的jar包；<br>
@@ -889,10 +916,11 @@ Custom ClassLoader(自定义加载) --> App ClassLoader --> Extension ClassLoade
 		null --> ExtClassLoader的父类加载器是Bootstrap ClassLoader.
 
 	- 测试3：用 Bootstrcp ClassLoader 来加载 ClassLoaderDemo.class	
-		- 在jvm追加如下参数：-Xbootclasspath/a：c：\ClassLoaderDemo.jar -verbose
-		- 将 ClassLoaderDemo.jar解压后，放到 JAVA_HOME/jre/classes目录下;
+		- 在jvm追加如下参数：`-Xbootclasspath/a：c：\ClassLoaderDemo.jar -verbose`
+		- 将 ClassLoaderDemo.jar解压后，放到 `JAVA_HOME/jre/classes`目录下;
 
 ## 6.4、ClassLoader源码分析
+
 ### 6.4.1、类定义
 
 public abstract class ClassLoader{} 是一个抽象类；
@@ -1114,13 +1142,16 @@ public class NetworkClassLoader extends ClassLoader {
 
 - 是正式为类变量分配内存并设置类变量初始值的阶段，变量所使用的内存都将在方法区中进行分配：这时候进行内存分配的仅包括类变量（static 修饰的变量），而不包括实例变量，实例变量会在对象实例化时随着对象一块分配在Java堆中；
 
-- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：public static int value=123；那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为123的putstatic指令是程序被编译后，存放于类构造器`<clinit>`()方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;<br>
-	int -> 0	long -> 0L	short -> (short)0	char -> '\u0000'	byte -> (byte)0<br>
-	boolean -> false	float -> 0.0f 	double -> 0.0d 	reference -> null<br>
+- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：public static int value=123；那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为123的putstatic指令是程序被编译后，存放于类构造器`<clinit>()`方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;
+	```
+	int -> 0	long -> 0L	short -> (short)0	char -> '\u0000'	byte -> (byte)0
+	boolean -> false	float -> 0.0f 	double -> 0.0d 	reference -> null
+	```
 
-- 特殊情况是指：public static final int value=123，即当类字段的字段属性是 ConstantValue时，会在准备阶段初始化为指定的值，所以标注为 final 之后，value的值在准备阶段初始化为123而非 0。
+- 特殊情况是指：public static final int value=123，即当类字段的字段属性是 ConstantValue时，会在准备阶段初始化为指定的值，所以标注为 final 之后，value的值在准备阶段初始化为123而非 0
 	
 ### 6.8.4、解析
+
 解析阶段是虚拟机将常量池内的符号引用替换为直接引用的过程
 
 - 虚拟机要求在执行anewarray、checkcast、getfield、getstatic、instanceof、invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual、ldc、ldc_w、multianewarray、new、putstatic、putfield这16个用于操作符合引用的字节码指令之前，先对它们所使用的符号进行解析。虚拟机可以根据需要来判断是在类加载器加载时就对常量池中的符号引用进行解析，还是等到一个符号引用将要被使用前才去解析他；
@@ -1133,15 +1164,15 @@ public class NetworkClassLoader extends ClassLoader {
 
 类初始化阶段是类加载过程的最后一步，真正开始执行类中定义的java程序代码
 
-- 初始化阶段是执行类构造器`<clinit>`()方法的过程。`<clinit>`()方法是由编译器自动收集类中的所有类变量的赋值动作和静态语句块 static{}中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序所决定的，静态语句块中只能访问到定义在静态语句块之前的变量，定义在它之后的变量，在前面的静态语句块可以赋值，但是并不能访问；
+- 初始化阶段是执行类构造器`<clinit>()`方法的过程。`<clinit>()`方法是由编译器自动收集类中的所有类变量的赋值动作和静态语句块 `static` 中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序所决定的，静态语句块中只能访问到定义在静态语句块之前的变量，定义在它之后的变量，在前面的静态语句块可以赋值，但是并不能访问；
 
-- `<clinit>`()方法与实例构造器`<init>`()方法不同，它不需要显示地调用父类构造器，虚拟机会保证在子类`<clinit>`()方法执行之前，父类的`<clinit>`()方法方法已经执行完毕;因此在虚拟机中第一个被执行的`<clinit>`()方法类肯定是 java.lang.Object由于父类的`<clinit>`()方法先执行，也就意味着父类中定义的静态语句块要优先于子类的变量赋值操作；
+- `<clinit>()`方法与实例构造器`<init>`()方法不同，它不需要显示地调用父类构造器，虚拟机会保证在子类`<clinit>()`方法执行之前，父类的`<clinit>()`方法方法已经执行完毕;因此在虚拟机中第一个被执行的`<clinit>()`方法类肯定是 java.lang.Object由于父类的`<clinit>()`方法先执行，也就意味着父类中定义的静态语句块要优先于子类的变量赋值操作；
 
-- `<clinit>`()方法对于类或者接口来说并不是必需的，如果一个类中没有静态语句块，也没有对类变量的赋值操作，那么编译器可以不为这个类生产`<clinit>`()方法；
+- `<clinit>()`方法对于类或者接口来说并不是必需的，如果一个类中没有静态语句块，也没有对类变量的赋值操作，那么编译器可以不为这个类生产`<clinit>()`方法；
 
-- 接口中不能使用静态语句块，但仍然有变量初始化的赋值操作，因此接口与类一样都会生成`<clinit>`()方法。但接口与类不同的是，执行接口的`<clinit>`()方法不需要先执行父接口的`<clinit>`()方法.只有当父接口中定义的变量使用时，父接口才会初始化.另外，接口的实现类在初始化时也一样不会执行接口的`<clinit>`()方法；
+- 接口中不能使用静态语句块，但仍然有变量初始化的赋值操作，因此接口与类一样都会生成`<clinit>()`方法。但接口与类不同的是，执行接口的`<clinit>()`方法不需要先执行父接口的`<clinit>()`方法.只有当父接口中定义的变量使用时，父接口才会初始化.另外，接口的实现类在初始化时也一样不会执行接口的`<clinit>()`方法；
 
-- 虚拟机会保证一个类的`<clinit>`()方法在多线程环境中被正确的加锁、同步，如果多个线程同时去初始化一个类，那么只会有一个线程去执行这个类的`<clinit>`()方法，其他线程都需要阻塞等待，直到活动线程执行`<clinit>`()方法完毕；其他线程虽然会被阻塞，但如果执行`<clinit>`()方法的那条线程退出`<clinit>`()方法后，其他线程唤醒之后不会再次进入`<clinit>`()方法.同一个类加载器下，一个类型只会初始化一次；
+- 虚拟机会保证一个类的`<clinit>()`方法在多线程环境中被正确的加锁、同步，如果多个线程同时去初始化一个类，那么只会有一个线程去执行这个类的`<clinit>()`方法，其他线程都需要阻塞等待，直到活动线程执行`<clinit>()`方法完毕；其他线程虽然会被阻塞，但如果执行`<clinit>()`方法的那条线程退出`<clinit>()`方法后，其他线程唤醒之后不会再次进入`<clinit>()`方法。同一个类加载器下，一个类型只会初始化一次；
 
 - 虚拟机规定有且只有 5 种情况(jdk1.7)必须对类进行"初始化"：即对一个类的主动引用
 	- ①、遇到new，getstatic，putstatic，invokestatic这几个调字节码指令时，如果类没有进行过初始化，则需要先触发其初始化;
@@ -1190,27 +1221,23 @@ public class NetworkClassLoader extends ClassLoader {
 
 ### 6.9.1、初始化过程
 
-- 初始化过程的主要操作是“执行静态代码块”和“初始化静态域”。在一个类被初始化之前，它的“直接父类”也需要被初始化。但是，一个接口的初始化，不会引起其父接口的初始化。在初始化的时候，会按照源代码中“从上到下”的顺序依次“执行静态代码块和初始化静态域”
+- 初始化过程的主要操作是`“执行静态代码块”`和`“初始化静态域”`。在一个类被初始化之前，它的“直接父类”也需要被初始化。但是，一个接口的初始化，不会引起其父接口的初始化。在初始化的时候，会按照源代码中`“从上到下”`的顺序依次`“执行静态代码块和初始化静态域”`
 
-- 如果基类没有被初始化，初始化基类。有类构造函数，则执行类构造函数。类构造函数是由Java编译器完成的。它把类成员变量的初始化和static区间
-	的代码提取出，放到一个`<clinit>`方法中。这个方法不能被一般的方法访问（注意，static vfinal成员变量不会在此执行初始化，它一般被编
-	译器生成constant值）同时，`<clinit>`中是不会显示的调用基类的`<clinit>`的，因为1中已经执行了基类的初始化。该初始化过程是由Jvm保证线程安全的
+- 如果基类没有被初始化，初始化基类。有类构造函数，则执行类构造函数。类构造函数是由Java编译器完成的。它把类成员变量的初始化和static区间的代码提取出，放到一个`<clinit>`方法中。这个方法不能被一般的方法访问（注意，static vfinal成员变量不会在此执行初始化，它一般被编译器生成constant值）同时，`<clinit>`中是不会显示的调用基类的`<clinit>`的，因为1中已经执行了基类的初始化。该初始化过程是由Jvm保证线程安全的
 
 - Java 类和接口的初始化只有在特定的时机才会发生，这些时机包括：
 
-	创建一个Java类的实例，如：MyClass obj = new MyClass()<br>
-	调用一个Java类中的静态方法，如：MyClass.sayHello()<br>
-	给Java类或接口中声明的静态域赋值，如：MyClass.value = 10<br>
-	访问Java类或接口中声明的静态域，并且该域不是常值变量，如：int value = MyClass.value<br>
-	在顶层Java类中执行assert语句。<br>
+	- 创建一个Java类的实例，如：`MyClass obj = new MyClass()；`
+	- 调用一个Java类中的静态方法，如：`MyClass.sayHello()；`
+	- 给Java类或接口中声明的静态域赋值，如：`MyClass.value = 10；`
+	- 访问Java类或接口中声明的静态域，并且该域不是常值变量，如：`int value = MyClass.value；`
+	- 在顶层Java类中执行assert语句；
 
 	通过 Java 反射 API 也可能造成类和接口的初始化.需要注意的是，当访问一个 Java 类或接口中的静态域的时候，只有真正声明这个域的类或接口才会被初始化
 
 ### 6.9.2、虚拟机触发类的初始化情况
 
-虚拟机规定只有这四种情况才会触发类的初始化，称为对一个类进行主动引用
-
-除此之外所有引用类的方式都不会触发其初始化，称为被动引用；下面是写被动引用的例子：
+虚拟机规定只有这四种情况才会触发类的初始化，称为对一个类进行主动引用。除此之外所有引用类的方式都不会触发其初始化，称为被动引用；下面是写被动引用的例子：
 
 - 通过子类引用父类的静态字段，这时对子类的引用为被动引用，因此不会初始化子类，只会初始化父类；对于静态字段，只有直接定义这个字段的类才会被初始化。因此，通过其子类来引用父类中定义的静态字段，只会触发父类的初始化而不会触发子类的初始化
 ```java
@@ -1271,7 +1298,7 @@ public class Test{
 
 ### 6.9.3、接口的初始化过程与类初始化过程
 
-- 接口也有初始化过程，上面的代码中我们都是用静态语句块来输出初始化信息的，而在接口中不能使用“static{}”语句块，但编译器仍然会为接口生成`<clinit>`类构造器，用于初始化接口中定义的成员变量（实际上是 static final 修饰的全局常量）
+- 接口也有初始化过程，上面的代码中我们都是用静态语句块来输出初始化信息的，而在接口中不能使用“static”语句块，但编译器仍然会为接口生成`<clinit>`类构造器，用于初始化接口中定义的成员变量（实际上是 static final 修饰的全局常量）
 
 - 主要区别：
 	当一个类在初始化时，要求其父类全部已经初始化过了;但是一个接口在初始化时，并不要求其父接口全部都完成了初始化，只有在真正使用
@@ -1565,7 +1592,7 @@ javac编译动作的入口是 com.sun.tools.javac.main.JavaCompiler类，上述�
 - 字节码生成：是Javac编译过程的最后一个阶段
 	
 	仅仅是把前面各个步骤所生成的信息转化成字节码写到磁盘中，编译器还进行了少量的代码添加和转换工作：
-	实例构造器`<init>`()方法和类构造器`<clinit>`()方法就是在这个阶段添加到语法树之中的
+	实例构造器`<init>`()方法和类构造器`<clinit>()`方法就是在这个阶段添加到语法树之中的
 	com.sun.tools.javac.jvm.Gen
 
 ## 10.3、语法糖
