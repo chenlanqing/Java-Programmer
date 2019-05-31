@@ -1,49 +1,22 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、概述](#%E4%B8%80%E6%A6%82%E8%BF%B0)
-  - [1、Zookeeper 是什么](#1zookeeper-%E6%98%AF%E4%BB%80%E4%B9%88)
-  - [2、典型应用场景](#2%E5%85%B8%E5%9E%8B%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
-  - [3、优势](#3%E4%BC%98%E5%8A%BF)
-- [二、基本概念](#%E4%BA%8C%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
-  - [1、集群角色](#1%E9%9B%86%E7%BE%A4%E8%A7%92%E8%89%B2)
-  - [2、会话](#2%E4%BC%9A%E8%AF%9D)
-  - [3、数据节点](#3%E6%95%B0%E6%8D%AE%E8%8A%82%E7%82%B9)
-  - [4、版本](#4%E7%89%88%E6%9C%AC)
-  - [5、watcher-事件监听器](#5watcher-%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC%E5%99%A8)
-  - [6、ACL：Access Control Lists](#6aclaccess-control-lists)
-- [三、集群搭建](#%E4%B8%89%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA)
-  - [1、集群环境](#1%E9%9B%86%E7%BE%A4%E7%8E%AF%E5%A2%83)
-  - [2、集群搭建](#2%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA)
-  - [3、单机集群](#3%E5%8D%95%E6%9C%BA%E9%9B%86%E7%BE%A4)
-  - [4、伪集群搭建](#4%E4%BC%AA%E9%9B%86%E7%BE%A4%E6%90%AD%E5%BB%BA)
-- [四、客户端使用](#%E5%9B%9B%E5%AE%A2%E6%88%B7%E7%AB%AF%E4%BD%BF%E7%94%A8)
-  - [1、zkCli.sh 使用](#1zkclish-%E4%BD%BF%E7%94%A8)
-  - [2、Java 中 zookeeper 的使用](#2java-%E4%B8%AD-zookeeper-%E7%9A%84%E4%BD%BF%E7%94%A8)
-- [五、实战](#%E4%BA%94%E5%AE%9E%E6%88%98)
-  - [1、master 选举](#1master-%E9%80%89%E4%B8%BE)
-  - [2、订阅发布](#2%E8%AE%A2%E9%98%85%E5%8F%91%E5%B8%83)
-  - [3、负载均衡(负载均衡设备，负载均衡算法)](#3%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E8%AE%BE%E5%A4%87%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%AE%97%E6%B3%95)
-  - [4、分布式锁](#4%E5%88%86%E5%B8%83%E5%BC%8F%E9%94%81)
-  - [5、分布式队列](#5%E5%88%86%E5%B8%83%E5%BC%8F%E9%98%9F%E5%88%97)
-  - [6、命名服务](#6%E5%91%BD%E5%90%8D%E6%9C%8D%E5%8A%A1)
-- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # 一、概述
 
 ## 1、Zookeeper 是什么
 
 源代码开放的分布式协调服务，是一个高性能的分布式数据一致性解决方案。那些复杂的、容易出错的分布式一致性服务封装起来，构成一个高效可靠的原语集，
 并提供一系列简单易用的接口给用户使用。Zookeeper 可以保证分布式一致性特征：
+- 顺序一致性：从同一个客户端发起的事务请求，最终将会严格按照其发起顺序被应用到 Zookeeper 中去
 
-- 顺序一致性：从同一个客户端发起的事务请求，最终将会严格按照其发起顺序被应用到 Zookeeper 中去.
+	zookeeper采用了全局递增的事务Id来标识，所有的proposal（提议）都在被提出的时候加上了`ZXID`，`ZXID`实际上是一个64位的数字，高32位是epoch（时期; 纪元; 世; 新时代）用来标识leader是否发生改变，如果有新的leader产生出来，epoch会自增，低32位用来递增计数。当新产生proposal的时候，会依据数据库的两阶段过程，首先会向其他的server发出事务执行请求，如果超过半数的机器都能执行并且能够成功，那么就会开始执行
+
 - 原子性：所有事务请求的处理结果在整个集群中所有的机器上的应用情况是一致的.也就是说要么整个集群所有机器都成功应用了某个事务，要么都没有应用.不会存在集群中部分机器应用了该事务，而其他没有应用的情况
 - 单一视图：无论客户端连接的是哪个 Zookeeper 服务器，其看到的服务端数据模型都是一致的.
 - 可靠性：一旦服务端成功应用了一个事务，并完成了对客户端的响应，那么该事务所引起的服务端状态变更便会一直保留下来.
 - 实时性：一旦一个事务被成功应用，那么客户端能够立即从服务端上读取到这个事务变更后的最新数据状态
+
+zookeeper提供了
+- 文件系统：Zookeeper提供一个多层级的节点命名空间（节点称为znode）。与文件系统不同的是，这些节点都可以设置关联的数据，而文件系统中只有文件节点可以存放数据而目录节点不行。
+Zookeeper为了保证高吞吐和低延迟，在内存中维护了这个树状的目录结构，这种特性使得Zookeeper不能用于存放大量的数据，每个节点的存放数据zab上限为1M
+- 通知机制
 
 ## 2、典型应用场景
 
@@ -80,14 +53,40 @@
 - 高性能，易用稳定的工业级产品
 - 有着广泛的应用
 
+## 4、ZAB协议
+
+ZAB协议是为分布式协调服务Zookeeper专门设计的一种支持崩溃恢复的原子广播协议。其包括两种基本的模式：崩溃恢复和消息广播。
+
+当整个zookeeper集群刚刚启动或者Leader服务器宕机、重启或者网络故障导致不存在过半的服务器与Leader服务器保持正常通信时，所有进程（服务器）进入崩溃恢复模式，首先选举产生新的Leader服务器，然后集群中Follower服务器开始与新的Leader服务器进行数据同步，当集群中超过半数机器与该Leader服务器完成数据同步之后，退出恢复模式进入消息广播模式，Leader服务器开始接收客户端的事务请求生成事物提案来进行事务请求处理
+
+**ZAB和Paxos算法的联系与区别**
+
+- 相同点：
+	- 两者都存在一个类似于Leader进程的角色，由其负责协调多个Follower进程的运行
+	- Leader进程都会等待超过半数的Follower做出正确的反馈后，才会将一个提案进行提交
+	- ZAB协议中，每个Proposal中都包含一个 epoch 值来代表当前的Leader周期，Paxos中名字为Ballot
+- 不同点：ZAB用来构建高可用的分布式数据主备系统（Zookeeper），Paxos是用来构建分布式一致性状态机系统。
+
+## 5、Zookeeper 下 Server工作状态
+
+服务器具有四种状态，分别是`LOOKING、FOLLOWING、LEADING、OBSERVING`。
+- `LOOKING`：寻找Leader状态。当服务器处于该状态时，它会认为当前集群中没有Leader，因此需要进入Leader选举状态。
+- `FOLLOWING`：跟随者状态。表明当前服务器角色是Follower。
+- `LEADING`：领导者状态。表明当前服务器角色是Leader。
+- `OBSERVING`：观察者状态。表明当前服务器角色是Observer
+
 # 二、基本概念
+
+Zookeeper架构
+
 ## 1、集群角色
 
-- Leader：服务器是整个Zookeeper集群工作机制中的核心，为客户端提供读和写服务
-- Follower：服务器是Zookeeper集群状态的跟随者
-- Observer：服务器充当一个观察者的角色，不参与 Leader 的选举过程，也不参与写操作的"过半写成功"策略，因此 Observer 可以在不影响写性能的情况下提升集群的读性能.只提供非事务的操作
+- Leader：服务器是整个Zookeeper集群工作机制中的核心，为客户端提供读和写服务。负责进行投票的发起和决议，更新系统状态，Leader 是由选举产生;
+- Follower：用于接受客户端请求并向客户端返回结果，在选主过程中参与投票;
+- Observer：服务器充当一个观察者的角色，不参与 Leader 的选举过程，也不参与写操作的"过半写成功"策略，因此 Observer 可以在不影响写性能的情况下提升集群的读性能.只提供非事务的操作；可以接受客户端连接，接受读写请求，写请求转发给 Leader，但 Observer 不参加投票过程，只同步 Leader 的状态，Observer 的目的是为了扩展系统，提高读取速度
 
 ## 2、会话
+
 Zookeeper 对外的服务端口默认是 2181
 
 指客户端和ZooKeeper服务器的连接，ZooKeeper 中的会话叫Session，客户端靠与服务器建立一个TCP的长连接来维持一个Session，客户端在启动的时候首先会与服务器建立一个TCP连接，通过这个连接，客户端能够通过心跳检测与服务器保持有效的会话，也能向ZK服务器发送请求并获得响应
@@ -101,24 +100,64 @@ Zookeeper 对外的服务端口默认是 2181
 	- 持久节点：一旦被这个 ZNode 被创建了，除非主动进行 ZNode 的移出操作，否则这个 ZNode 将一直保存在 Zookeeper上；
 	- 临时节点：与客户端的会话绑定，一旦客户端会话失效，那么该客户端创建的所有临时节点都会被移出；
 
+一般分类：
+- `PERSISTENT-持久化目录节点`：客户端与zookeeper断开连接后，该节点依旧存在 
+- `PERSISTENT_SEQUENTIAL-持久化顺序编号目录节点`：客户端与zookeeper断开连接后，该节点依旧存在，只是Zookeeper给该节点名称进行顺序编号 
+- `EPHEMERAL-临时目录节点`：客户端与zookeeper断开连接后，该节点被删除 
+- `EPHEMERAL_SEQUENTIAL-临时顺序编号目录节点`：客户端与zookeeper断开连接后，该节点被删除，只是Zookeeper给该节点名称进行顺序编号
+
 ## 4、版本
 
 版本类型说明version当前数据节点数据内容的版本号cversion当前数据节点子节点的版本号aversion当前数据节点ACL变更版本号
 
 ## 5、watcher-事件监听器
 
-ZooKeeper 允许用户在指定节点上注册一些Watcher，当数据节点发生变化的时候，ZooKeeper 服务器会把这个变化的通知发送给感兴趣的客户端
+ZooKeeper 允许用户在指定节点上注册一些Watcher，当数据节点发生变化的时候，ZooKeeper 服务器会把这个变化的通知发送给感兴趣的客户端，然后客户端根据Watcher通知状态和事件类型做出业务上的改变。
+
+### 5.1、工作机制
+
+- 客户端注册watcher
+- 服务端处理watcher
+- 客户端回调watcher
+
+### 5.2、Watcher特性总结
+
+- 一次性：无论是服务端还是客户端，一旦一个Watcher被触发，Zookeeper都会将其从相应的存储中移除。这样的设计有效的减轻了服务端的压力，不然对于更新非常频繁的节点，服务端会不断的向客户端发送事件通知，无论对于网络还是服务端的压力都非常大。
+- 客户端串行执行：客户端Watcher回调的过程是一个串行同步的过程。
+- 轻量：
+	- Watcher通知非常简单，只会告诉客户端发生了事件，而不会说明事件的具体内容。
+	- 客户端向服务端注册Watcher的时候，并不会把客户端真实的Watcher对象实体传递到服务端，仅仅是在客户端请求中使用boolean类型属性进行了标记。
+- watcher event异步发送watcher的通知事件从server发送到client是异步的，这就存在一个问题，不同的客户端和服务器之间通过socket进行通信，由于网络延迟或其他因素导致客户端在不通的时刻监听到事件，由于Zookeeper本身提供了ordering guarantee，即客户端监听事件后，才会感知它所监视znode发生了变化。所以我们使用Zookeeper不能期望能够监控到节点每次的变化。Zookeeper只能保证最终的一致性，而无法保证强一致性。
+- 注册watcher getData、exists、getChildren
+- 触发watcher create、delete、setData
+- 当一个客户端连接到一个新的服务器上时，watch将会被以任意会话事件触发。当与一个服务器失去连接的时候，是无法接收到watch的。而当client重新连接时，如果需要的话，所有先前注册过的watch，都会被重新注册。通常这是完全透明的。只有在一个特殊情况下，watch可能会丢失：对于一个未创建的znode的exist watch，如果在客户端断开连接期间被创建了，并且随后在客户端连接上之前又删除了，这种情况下，这个watch事件可能会被丢失
+
 
 ## 6、ACL：Access Control Lists
 
-ZooKeeper 采用ACL策略来进行权限控制，有以下权限：<br>
-CREATE：创建子节点的权限<br>
-READ：获取节点数据和子节点列表的权限<br>
-WRITE：更新节点数据的权限<br>
-DELETE：删除子节点的权限<br>
-ADMIN：设置节点ACL的权限<br>
+ZooKeeper 采用ACL策略来进行权限控制，
+### 6.1、权限模式（Scheme）
+
+- IP：从IP地址粒度进行权限控制
+- Digest：最常用，用类似于 username:password 的权限标识来进行权限配置，便于区分不同应用来进行权限控制
+- World：最开放的权限控制方式，是一种特殊的digest模式，只有一个权限标识“world:anyone”
+- Super：超级用户
+
+### 6.2、授权对象
+
+授权对象指的是权限赋予的用户或一个指定实体，例如IP地址或是机器灯。
+
+### 6.3、权限 Permission
+
+- CREATE：数据节点创建权限，允许授权对象在该Znode下创建子节点
+- DELETE：子节点删除权限，允许授权对象删除该数据节点的子节点
+- READ：数据节点的读取权限，允许授权对象访问该数据节点并读取其数据内容或子节点列表等
+- WRITE：数据节点更新权限，允许授权对象对该数据节点进行更新操作
+- ADMIN：数据节点管理权限，允许授权对象对该数据节点进行ACL相关设置操作
 
 # 三、集群搭建
+
+部署模式：单机模式、伪集群模式、集群模式。
 
 ## 1、集群环境
 
@@ -162,7 +201,7 @@ ADMIN：设置节点ACL的权限<br>
 		Sent： 0
 		Connections： 1
 		Outstanding： 0
-		Zxid： 0x0
+		`ZXID`： 0x0
 		Mode： follower
 		Node count： 4
 		Connection closed by foreign host.
@@ -180,6 +219,7 @@ ADMIN：设置节点ACL的权限<br>
 ## 4、伪集群搭建
 
 # 四、客户端使用
+
 ## 1、zkCli.sh 使用
 
 **1.1、使用方法**
@@ -192,11 +232,11 @@ ADMIN：设置节点ACL的权限<br>
 **1.2、常用命令：h 可以查看**
 ```
 (1).stat path [watch]：path节点的状态信息
-	cZxid = 0x100000016						--> 创建时的事务ID
+	cZXID = 0x100000016						--> 创建时的事务ID
 	ctime = Sun Aug 06 09：47：58 CST 2017 	--> 创建时间
-	mZxid = 0x10000002a						--> 最后一次更新是的事务ID
+	mZXID = 0x10000002a						--> 最后一次更新是的事务ID
 	mtime = Sat Sep 02 19：33：15 CST 2017	--> 修改时间
-	pZxid = 0x10000001d						--> 子节点列表最后一次修改事务的ID：为当前节点添加子节点，或者删除子节点
+	pZXID = 0x10000001d						--> 子节点列表最后一次修改事务的ID：为当前节点添加子节点，或者删除子节点
 	cversion = 4							--> 子节点版本号
 	dataVersion = 2							-->	数据版本号
 	aclVersion = 0							--> ACL权限版本好
@@ -336,6 +376,7 @@ ZooKeeper zookeeper = new ZooKeeper("192.168.139.129：2181"， 5000， new MyWa
 		zookeeper.addAuthInfo("digest"， "jike：123456".getBytes());			
 		String path = zookeeper.create("/node_4"， "123".getBytes()， Ids.CREATOR_ALL_ACL， CreateMode.PERSISTENT);
 	```
+
 ## 3、ZkClient 客户端的使用
 
 ZkClient 是Github上一个开源的ZooKeeper客户端.ZkClient 在ZooKeeper原生API接口之上进行了包装，是一个更加易用的ZooKeeper客户端.同时，ZkClient 在内部实现了诸如Session超时重连、Watcher反复注册等功能
@@ -362,7 +403,237 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 });
 ```
 
-# 五、实战
+# 五、zookeeper核心原理
+
+## 1、工作原理
+
+Zookeeper 的核心是原子广播，这个机制保证了各个Server之间的同步。实现这个机制的协议叫做Zab协议。Zab协议有两种模式，它们分别是恢复模式（选主）和广播模式（同步）。当服务启动或者在领导者崩溃后，Zab就进入了恢复模式，当领导者被选举出来，且大多数Server完成了和 leader的状态同步以后，恢复模式就结束了。状态同步保证了leader和Server具有相同的系统状态
+
+## 2、系统模型
+
+
+## 3、序列化与协议
+
+
+## 4、会话
+
+
+## 5、服务器启动
+
+
+## 6、Leader选举
+
+Leader选举是保证分布式数据一致性的关键所在。当Zookeeper集群中的一台服务器出现以下两种情况之一时，需要进入Leader选举
+- 服务器初始化启动。
+- 服务器运行期间无法和Leader保持连接。
+
+### 6.1、服务器启动时期的Leader选举
+
+若进行Leader选举，则至少需要两台机器，这里选取3台机器组成的服务器集群为例。在集群初始化阶段，当有一台服务器Server1启动时，其单独无法进行和完成Leader选举，当第二台服务器Server2启动时，此时两台机器可以相互通信，每台机器都试图找到Leader，于是进入Leader选举过程。选举过程如下：
+
+- （1）每个Server发出一个投票：由于是初始情况，Server1和Server2都会将自己作为Leader服务器来进行投票，每次投票会包含所推举的服务器的`myid`和`ZXID`，使用(`myid`, `ZXID`)来表示，此时Server1的投票为(1, 0)，Server2的投票为(2, 0)，然后各自将这个投票发给集群中其他机器。
+
+- （2）接受来自各个服务器的投票：集群的每个服务器收到投票后，首先判断该投票的有效性，如检查是否是本轮投票、是否来自LOOKING状态的服务器。
+
+- （3）处理投票：针对每一个投票，服务器都需要将别人的投票和自己的投票进行PK，PK规则如下
+	- 优先检查`ZXID`。`ZXID`比较大的服务器优先作为Leader。
+	- 如果`ZXID`相同，那么就比较`myid`。`myid`较大的服务器作为Leader服务器。
+
+	对于Server1而言，它的投票是(1, 0)，接收Server2的投票为(2, 0)，首先会比较两者的`ZXID`，均为0，再比较`myid`，此时Server2的m`yid`最大，于是更新自己的投票为(2, 0)，然后重新投票，对于Server2而言，其无须更新自己的投票，只是再次向集群中所有机器发出上一次投票信息即可。
+
+- （4）统计投票：每次投票后，服务器都会统计投票信息，判断是否已经有过半机器接受到相同的投票信息，对于Server1、Server2而言，都统计出集群中已经有两台机器接受了(2, 0)的投票信息，此时便认为已经选出了Leader。
+
+- （5）改变服务器状态：一旦确定了Leader，每个服务器就会更新自己的状态，如果是Follower，那么就变更为FOLLOWING，如果是Leader，就变更为LEADING
+
+### 6.2、服务器运行时期的Leader选举
+
+在Zookeeper运行期间，Leader与非Leader服务器各司其职，即便当有非Leader服务器宕机或新加入，此时也不会影响Leader，但是一旦Leader服务器挂了，那么整个集群将暂停对外服务，进入新一轮Leader选举，其过程和启动时期的Leader选举过程基本一致。假设正在运行的有Server1、Server2、Server3三台服务器，当前Leader是Server2，若某一时刻Leader挂了，此时便开始Leader选举。选举过程如下：
+
+- （1）变更状态：Leader挂后，余下的非Observer服务器都会讲自己的服务器状态变更为LOOKING，然后开始进入Leader选举过程。
+
+- （2）每个Server会发出一个投票：在运行期间，每个服务器上的`ZXID`可能不同，此时假定Server1的`ZXID`为123，Server3的`ZXID`为122；在第一轮投票中，Server1和Server3都会投自己，产生投票(1, 123)，(3, 122)，然后各自将投票发送给集群中所有机器。
+
+- （3）接收来自各个服务器的投票：与启动时过程相同。
+
+- （4）处理投票：与启动时过程相同，此时，Server1将会成为Leader。
+
+- （5）统计投票：与启动时过程相同。
+
+- （6）改变服务器的状态：与启动时过程相同；
+
+### 6.3、Leader选举算法分析
+
+在zookeeper中，提供了三种Leader选举的算法，分别是`LeaderElection（纯UDP实现的）`、`UPD版本的FastLeaderElection`和`TCP版本的FastLeaderElection`，可以通过在配置文件zoo.cfg中使用`elcetionAlg`属性来指定，分别用数字0~3来表示。0-LeaderElection；1-UPD版本的FastLeaderElection，非授权模式；2-UPD版本的FastLeaderElection，授权模式的；3-TCP版本的FastLeaderElection；
+
+从3.4.0版本开始，zookeeper只保留了`TCP版本的FastLeaderElection`算法。
+
+#### 6.3.1、术语：**
+- SID：服务器ID，用来唯一标识一台zookeeper集群中的机器，每台机器不能重复，和myid的值一致
+- ZXID：事务ID，用来唯一标识一次服务器状态的变更，每台机器不能重复，和myid的值一致；
+- Vote：投票
+- Quorum：过半机器数，指的是zookeeper集群中过半的机器数，如果集群中总的机器数是n的话，可以通过`quorum=(n/2 + )`来计算 
+
+#### 6.3.2、算法分析
+
+**进入leader选举：**
+
+当一台机器进入Leader选举时，当前集群可能会处于以下两种状态
+- 集群中已经存在Leader
+- 集群中不存在Leader
+
+对于集群中已经存在Leader而言，此种情况一般都是某台机器启动得较晚，在其启动之前，集群已经在正常工作，对这种情况，该机器试图去选举Leader时，会被告知当前服务器的Leader信息，对于该机器而言，仅仅需要和Leader机器建立起连接，并进行状态同步即可。而在集群中不存在Leader情况下则会相对复杂，其步骤如下：
+
+- **第一次投票**
+
+	无论哪种导致进行Leader选举，集群的所有机器都处于试图选举出一个Leader的状态，即LOOKING状态，LOOKING机器会向所有其他机器发送消息，该消息称为投票。
+	
+	投票中包含了SID（服务器的唯一标识）和ZXID（事务ID），(SID, ZXID)形式来标识一次投票信息。假定Zookeeper由5台机器组成，SID分别为1、2、3、4、5，ZXID分别为9、9、9、8、8，并且此时SID为2的机器是Leader机器，某一时刻，1、2所在机器出现故障，因此集群开始进行Leader选举。在第一次投票时，每台机器都会将自己作为投票对象，于是SID为3、4、5的机器投票情况分别为(3, 9)，(4, 8)， (5, 8)。
+
+- **变更投票**
+
+	每台机器发出投票后，也会收到其他机器的投票，每台机器会根据一定规则来处理收到的其他机器的投票，并以此来决定是否需要变更自己的投票，这个规则也是整个Leader选举算法的核心所在，其中术语描述如下：
+	- `vote_sid`：接收到的投票中所推举Leader服务器的SID。
+	- `vote_zxid`：接收到的投票中所推举Leader服务器的ZXID。
+	- `self_sid`：当前服务器自己的SID。
+	- `self_zxid`：当前服务器自己的ZXID。
+
+	每次对收到的投票的处理，都是对(vote_sid, vote_zxid)和(self_sid, self_zxid)对比的过程：
+	- 规则一：如果vote_zxid大于self_zxid，就认可当前收到的投票，并再次将该投票发送出去。
+	- 规则二：如果vote_zxid小于self_zxid，那么坚持自己的投票，不做任何变更。
+	- 规则三：如果vote_zxid等于self_zxid，那么就对比两者的SID，如果vote_sid大于self_sid，那么就认可当前收到的投票，并再次将该投票发送出去。
+	- 规则四：如果vote_zxid等于self_zxid，并且vote_sid小于self_sid，那么坚持自己的投票，不做任何变更。
+
+	5台机器组成的zookeeper投票过程：
+
+
+- **确定Leader**
+
+	经过第二轮投票后，集群中的每台机器都会再次接收到其他机器的投票，然后开始统计投票，如果一台机器收到了超过半数的相同投票，那么这个投票对应的SID机器即为Leader。此时Server3将成为Leader。
+
+由上面规则可知：**通常那台服务器上的数据越新（ZXID会越大），其成为Leader的可能性越大，也就越能够保证数据的恢复。如果ZXID相同，则SID越大机会越大**
+
+#### 6.3.3、Leader选举实现细节
+
+**服务器状态：**
+
+服务器具有四种状态，分别是LOOKING、FOLLOWING、LEADING、OBSERVING。
+- LOOKING：寻找Leader状态。当服务器处于该状态时，它会认为当前集群中没有Leader，因此需要进入Leader选举状态；
+- FOLLOWING：跟随者状态。表明当前服务器角色是Follower；
+- LEADING：领导者状态。表明当前服务器角色是Leader；
+- OBSERVING：观察者状态。表明当前服务器角色是Observer；
+
+**投票数据结构：**
+
+每个投票中包含了两个最基本的信息，所推举服务器的SID和ZXID，投票（Vote）在Zookeeper中包含字段如下：
+- id：被推举的Leader的SID。
+- zxid：被推举的Leader事务ID。
+- electionEpoch：逻辑时钟，用来判断多个投票是否在同一轮选举周期中，该值在服务端是一个自增序列，每次进入新一轮的投票后，都会对该值进行加1操作。
+- peerEpoch：被推举的Leader的epoch。
+- state：当前服务器的状态。
+
+**QuorumCnxManager：网络I/O**
+
+每台服务器在启动的过程中，会启动一个QuorumPeerManager，负责各台服务器之间的底层Leader选举过程中的网络通信
+
+- **消息队列**。
+
+	QuorumCnxManager内部维护了一系列的队列，用来保存接收到的、待发送的消息以及消息的发送器，除接收队列以外，其他队列都按照SID分组形成队列集合，如一个集群中除了自身还有3台机器，那么就会为这3台机器分别创建一个发送队列，互不干扰。
+	- recvQueue：消息接收队列，用于存放那些从其他服务器接收到的消息。
+	- queueSendMap：消息发送队列，用于保存那些待发送的消息，按照SID进行分组。
+	- senderWorkerMap：发送器集合，每个SenderWorker消息发送器，都对应一台远程Zookeeper服务器，负责消息的发送，也按照SID进行分组。
+	- lastMessageSent：最近发送过的消息，为每个SID保留最近发送过的一个消息；
+
+- **建立连接**
+	
+	为了能够相互投票，Zookeeper集群中的所有机器都需要两两建立起网络连接。QuorumCnxManager在启动时会创建一个ServerSocket来监听Leader选举的通信端口(默认为3888)。开启监听后，Zookeeper能够不断地接收到来自其他服务器的创建连接请求，在接收到其他服务器的TCP连接请求时，会进行处理。为了避免两台机器之间重复地创建TCP连接，Zookeeper只允许SID大的服务器主动和其他机器建立连接，否则断开连接。在接收到创建连接请求后，服务器通过对比自己和远程服务器的SID值来判断是否接收连接请求，如果当前服务器发现自己的SID更大，那么会断开当前连接，然后自己主动和远程服务器建立连接。一旦连接建立，就会根据远程服务器的SID来创建相应的消息发送器SendWorker和消息接收器RecvWorker，并启动；
+
+- **消息接收与发送**
+
+	- 消息接收：由消息接收器RecvWorker负责，由于Zookeeper为每个远程服务器都分配一个单独的RecvWorker，因此，每个RecvWorker只需要不断地从这个TCP连接中读取消息，并将其保存到recvQueue队列中。
+	- 消息发送：由于Zookeeper为每个远程服务器都分配一个单独的SendWorker，因此，每个SendWorker只需要不断地从对应的消息发送队列中获取出一个消息发送即可，同时将这个消息放入lastMessageSent中。在SendWorker中，一旦Zookeeper发现针对当前服务器的消息发送队列为空，那么此时需要从lastMessageSent中取出一个最近发送过的消息来进行再次发送，这是为了解决接收方在消息接收前或者接收到消息后服务器挂了，导致消息尚未被正确处理。同时，Zookeeper能够保证接收方在处理消息时，会对重复消息进行正确的处理
+
+#### 6.3.4、FastLeaderElection算法核心
+
+几个概念：
+- 外部投票：特指其他服务器发来的投票。
+- 内部投票：服务器自身当前的投票。
+- 选举轮次：Zookeeper服务器Leader选举的轮次，即logicalclock
+- PK：对内部投票和外部投票进行对比来确定是否需要变更内部投票。
+
+**选票管理**
+
+下图是选票管理过程中相关组件之间的协作关系：
+
+![](image/zookeeper选票管理.png)
+
+- sendqueue：选票发送队列，用于保存待发送的选票。
+- recvqueue：选票接收队列，用于保存接收到的外部投票。
+-  WorkerReceiver：选票接收器。其会不断地从QuorumCnxManager中获取其他服务器发来的选举消息，并将其转换成一个选票，然后保存到recvqueue中，在选票接收过程中，如果发现该外部选票的选举轮次小于当前服务器的，那么忽略该外部投票，同时立即发送自己的内部投票。
+- WorkerSender：选票发送器，不断地从sendqueue中获取待发送的选票，并将其传递到底层QuorumCnxManager中；
+
+**算法核心**
+
+上图展示了FastLeaderElection模块是如何与底层网络I/O进行交互的。Leader选举的基本流程如下：
+
+![](image/zookeeper选举算法实现流程.png)
+
+- （1）自增选举轮次。Zookeeper规定所有有效的投票都必须在同一轮次中，在开始新一轮投票时，会首先对logicalclock进行自增操作。
+
+- （2）初始化选票。在开始进行新一轮投票之前，每个服务器都会初始化自身的选票，并且在初始化阶段，每台服务器都会将自己推举为Leader。
+
+- （3）发送初始化选票。完成选票的初始化后，服务器就会发起第一次投票。Zookeeper会将刚刚初始化好的选票放入sendqueue中，由发送器WorkerSender负责发送出去。
+
+- （4）接收外部投票。每台服务器会不断地从recvqueue队列中获取外部选票。如果服务器发现无法获取到任何外部投票，那么就会立即确认自己是否和集群中其他服务器保持着有效的连接，如果没有连接，则马上建立连接，如果已经建立了连接，则再次发送自己当前的内部投票。
+
+- （5）判断选举轮次。在发送完初始化选票之后，接着开始处理外部投票。在处理外部投票时，会根据选举轮次来进行不同的处理。
+	- 外部投票的选举轮次大于内部投票。若服务器自身的选举轮次落后于该外部投票对应服务器的选举轮次，那么就会立即更新自己的选举轮次(logicalclock)，并且清空所有已经收到的投票，然后使用初始化的投票来进行PK以确定是否变更内部投票。最终再将内部投票发送出去。
+	- 外部投票的选举轮次小于内部投票。若服务器接收的外选票的选举轮次落后于自身的选举轮次，那么Zookeeper就会直接忽略该外部投票，不做任何处理，并返回步骤4。
+	- 外部投票的选举轮次等于内部投票。此时可以开始进行选票PK。
+
+- （6）选票PK。在进行选票PK时，符合任意一个条件就需要变更投票。
+	- 若外部投票中推举的Leader服务器的选举轮次大于内部投票，那么需要变更投票。
+	- 若选举轮次一致，那么就对比两者的ZXID，若外部投票的ZXID大，那么需要变更投票。
+	- 若两者的ZXID一致，那么就对比两者的SID，若外部投票的SID大，那么就需要变更投票。
+
+- （7）变更投票。经过PK后，若确定了外部投票优于内部投票，那么就变更投票，即使用外部投票的选票信息来覆盖内部投票，变更完成后，再次将这个变更后的内部投票发送出去。
+
+- （8）选票归档。无论是否变更了投票，都会将刚刚收到的那份外部投票放入选票集合recvset中进行归档。recvset用于记录当前服务器在本轮次的Leader选举中收到的所有外部投票（按照服务队的SID区别，如{(1, vote1), (2, vote2)...}）。
+
+- （9）统计投票。完成选票归档后，就可以开始统计投票，统计投票是为了统计集群中是否已经有过半的服务器认可了当前的内部投票，如果确定已经有过半服务器认可了该投票，则终止投票。否则返回步骤4。
+
+- （10）更新服务器状态。若已经确定可以终止投票，那么就开始更新服务器状态，服务器首选判断当前被过半服务器认可的投票所对应的Leader服务器是否是自己，若是自己，则将自己的服务器状态更新为LEADING，若不是，则根据具体情况来确定自己是FOLLOWING或是OBSERVING。
+
+以上10个步骤就是FastLeaderElection的核心，其中步骤4-9会经过几轮循环，直到有Leader选举产生。
+
+## 7、数据同步
+
+整个集群完成Leader选举之后，Learner（Follower和Observer的统称）回向Leader服务器进行注册。当Learner服务器想Leader服务器完成注册后，进入数据同步环节。
+
+数据同步流程：（均以消息传递的方式进行）
+- i. Learner向Learder注册
+- ii. 数据同步
+- iii. 同步确认
+
+Zookeeper的数据同步通常分为四类：
+- 直接差异化同步（DIFF同步）
+- 先回滚再差异化同步（TRUNC+DIFF同步）
+- 仅回滚同步（TRUNC同步）
+- 全量同步（SNAP同步）
+
+在进行数据同步前，Leader服务器会完成数据同步初始化：
+- peerLastZxid：从learner服务器注册时发送的ACKEPOCH消息中提取lastZxid（该Learner服务器最后处理的ZXID）
+- minCommittedLog：Leader服务器Proposal缓存队列committedLog中最小ZXID
+- maxCommittedLog：Leader服务器Proposal缓存队列committedLog中最大ZXID
+
+直接差异化同步（DIFF同步）：peerLastZxid介于minCommittedLog和maxCommittedLog之间；
+
+先回滚再差异化同步（TRUNC+DIFF同步）：当新的Leader服务器发现某个Learner服务器包含了一条自己没有的事务记录，那么就需要让该Learner服务器进行事务回滚--回滚到Leader服务器上存在的，同时也是最接近于peerLastZxid的ZXID；
+
+仅回滚同步（TRUNC同步）：peerLastZxid 大于 maxCommittedLog
+
+全量同步（SNAP同步）：peerLastZxid 小于 minCommittedLog、Leader服务器上没有Proposal缓存队列且peerLastZxid不等于lastProcessZxid
+
+# 六、应用场景
 
 ## 1、master 选举
 
@@ -384,7 +655,7 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 
 - 其架构图中显示左侧树状结果为zookeeper集群，右侧为程序服务器，所有服务器在启动的时候，都会订阅	zookeeper 中master节点的删除事件，以便在主服务器宕机时进行抢主操作.所有服务器同时会在server节点下注册一个临时节点，以便于应用程序读取当前可用服务器列表;
 
-- 选举原理：zookeeper的节点有两种类型，持久节点跟临时节点.<br>
+- 选举原理：zookeeper的节点有两种类型，持久节点跟临时节点。
 
 	*临时节点有个特性：就是如果注册这个节点的机器失去连接(通常是宕机)，那么这个节点会被zookeeper删除*
 
@@ -394,15 +665,23 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 
 ### 2.1、基本概念
 
-- 订阅发布可以看成一对多的关系：多个订阅者对象同时监听一个主题对象，这个主题对象在自身状态发生变化时，会通知所有的订阅者对象，使他们能够自动的更新自己的状态;
-- 可以让发布方和订阅方，独立封装，独立改变，当一个对象的改变，需要同时改变其他的对象，而且它不知道有多少个对象需要改变时，可以使用发布订阅模式;
+- 订阅发布可以看成一对多的关系：多个订阅者对象同时监听一个主题对象，这个主题对象在自身状态发生变化时，会通知所有的订阅者对象，使他们能够自动的更新自己的状态；
+
+- 可以让发布方和订阅方，独立封装，独立改变，当一个对象的改变，需要同时改变其他的对象，而且它不知道有多少个对象需要改变时，可以使用发布订阅模式；
+
+- 发布订阅一般由两种设计模式：push模式和pull模式。在push模式中，服务端主动将数据更新发送给所有订阅的客户端；而pull模式是由客户端主动发动请求来获取最新数据，一般是由客户端定时进行轮询拉取的方式。
+
+	zookeeper是采用推拉结合的方式：客户端向服务端注册自己需要关注的节点，一旦节点数据发送变更，那么服务端就会向相应的客户端发送Watcher时间通知，客户端接收到这个消息通知后，需要主动到服务端获取最新的数据。
+
 - 订阅发布在分布式系统中典型应用：配置管理和服务发现
 	- 配置管理：是指如果集群中机器拥有某些相同的配置，并且这些配置信息需要动态的改变，我们可以使用发布订阅模式，对配置文件做统一的管理，让这些机器各自订阅配置文件的改变，当配置文件发生改变的时候这些机器就会得到通知，把自己的配置文件更新为最新的配置;
 	- 服务发现：是指对集群中的服务上下线做统一的管理，每个工作服务器都可以作为数据的发布方，向集群注册自己的基本信息，而让模型机器作为订阅方，订阅工作服务器的基本信息，当工作服务器的基本信息发生改变时如上下线，服务器的角色和服务范围变更，监控服务器就会得到通知，并响应这些变化
 
-### 2.2、基本架构图
+## 3、负载均衡
 
-## 3、负载均衡(负载均衡设备，负载均衡算法)
+**zookeeper负载均衡和nginx负载均衡区别**
+
+zk的负载均衡是可以调控，nginx只是能调权重，其他需要可控的都需要自己写插件；但是nginx的吞吐量比zk大很多，应该说按业务选择用哪种方式。
 
 ## 4、分布式锁
 
@@ -418,3 +697,4 @@ zkClient.subscribeDataChanges("/node_2"， new IZkDataListener() {
 - [Zookeeper的数据发布与订阅模式](http://blog.csdn.net/zuoanyinxiang/article/details/50937892)
 - [Zookeeper概述](https://mp.weixin.qq.com/s/WNdovBpvJJanJArS2R1emg)
 - [zk启动流程](https://juejin.im/post/5c7be87ce51d45721073e413)
+- [zookeeper面试题](https://www.cnblogs.com/lanqiu5ge/p/9405601.html)
