@@ -208,6 +208,7 @@ Maven的最近依赖策略：如果一个项目依赖相同的groupId、artifact
 # 参考资料
 
 * [Maven工程](https://www.jianshu.com/p/34740cd1fb58)
+* [Maven插件开发指南](https://maven.apache.org/plugin-developers/index.html)
 
 
 
