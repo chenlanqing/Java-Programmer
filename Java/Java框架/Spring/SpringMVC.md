@@ -138,13 +138,12 @@ value、method、params 及 heads分别表示请求 URL、请求方法、请求�
 	
 ## 3.4、@PathVariable
 
-@RequestMapping使用@PathVariable 映射 URL 绑定的占位符(Spring 3.0新增的功能)
+`@RequestMapping`使用`@PathVariable` 映射 URL 绑定的占位符(Spring 3.0新增的功能)
 
-@PathVariable 可以来映射 URL 中的占位符到目标方法的参数中：@RequestMapping("/testPathVariable/{id}")
-
-URL地址：/testPathVariable/1111
+`@PathVariable` 可以来映射 URL 中的占位符到目标方法的参数中：`@RequestMapping("/testPathVariable/{id}")`，实际URL地址：/testPathVariable/1111
 
 ## 3.5、REST风格URL
+
 - REST：Representational State Transfer，资源表现层状态转化，目前最流行的一种互联网软件架构
 - HTTP 协议里面，四个表示操作方式的动词：GET、POST、PUT、DELETE。它们分别对应四种基本操作：GET 用来获取资源，POST 用来新建资源，PUT 用来更新资源，DELETE 用来删除资源
 - 以CURD为例：
@@ -187,6 +186,7 @@ URL地址：/testPathVariable/1111
 	```
 
 # 4、处理模型数据
+
 SpringMVC提供了以下几种输出模型数据
 
 - ModelAndView： 处理方法返回值类型为 ModelAndView时， 方法体即可通过该对象添加模型数据
@@ -336,18 +336,19 @@ public String testSessionAttributes(Map<String， Object> map){
 		bindObject = BeanUtils.instantiateClass(paramType);
 	}
 	```
+
 # 5、视图和视图解析器
 
 ## 5.1.视图解析流程分析
 
-- 请求处理方法执行完成后，最终返回一个 ModelAndView对象.对于那些返回 String、View、ModeMap等类型的处理方法，Spring MVC 也会在内部将它们装配成一个ModelAndView 对象，它包含了逻辑名和模型对象的视图
+- 请求处理方法执行完成后，最终返回一个 ModelAndView对象。对于那些返回 String、View、ModeMap等类型的处理方法，Spring MVC 也会在内部将它们装配成一个ModelAndView 对象，它包含了逻辑名和模型对象的视图
 - SpringMVC通过视图解析器(ViewResolver)找到真正的物理视图(一个View对象)；
 - 调用View对象的render()方法得到显示结果；
 
 ## 5.2、视图
-渲染模型数据，将模型里的数据以某种形式呈现给用户
 
-- Spring在org.springframework.web.servlet中定义了高度抽象的接口;
+渲染模型数据，将模型里的数据以某种形式呈现给用户
+- Spring在`org.springframework.web.servlet`中定义了高度抽象的接口;
 - 视图对象由视图解析器负责实例化。由于视图是无状态的，所以他们不会有线程安全的问题;
 - 常用的视图实现类：
 	- URL资源视图
@@ -367,6 +368,7 @@ public String testSessionAttributes(Map<String， Object> map){
 		MappingJacksonJsonView：将模型数据通过JackSon开源框架ObjectMapper以JSON方式输出；
 
 ## 5.3、视图解析器
+
 将逻辑视图解析为一个具体的视图对象，所有的视图解析器必须实现ViewResolver
 
 ### 5.3.1、ViewResolver
@@ -397,17 +399,17 @@ JSP中最常用视图技术
 		<property name="basename" value="i18n"/>
 	</bean>
 	```
-- 若希望直接响应通过 SpringMVC 渲染的页面，可以使用 mvc：view-controller 标签实现
+- 若希望直接响应通过 SpringMVC 渲染的页面，可以使用 `mvc:view-controller` 标签实现
 	```xml
 	<!-- 配置直接转发的页面 -->
 	<!-- 可以直接相应转发的页面， 而无需再经过 Handler 的方法.  -->
-	<mvc：view-controller path="/success" view-name="success"/>
+	<mvc:view-controller path="/success" view-name="success"/>
 	<!-- 
 		如果配置了mvc：view-controller， 则其他返回到该视图的URL都将无法显示，
 		报404错误，需要再配置如下配置解决该问题
 	-->
 	<!-- 在实际开发中通常都需配置 mvc：annotation-driven 标签 -->
-	<mvc：annotation-driven></mvc：annotation-driven>
+	<mvc:annotation-driven></mvc:annotation-driven>
 	```
 
 ### 5.3.3、自定义视图-必须实现 View 接口
@@ -419,12 +421,13 @@ JSP中最常用视图技术
 </bean>
 ```
 ==> 返回时，直接返回bean的类名[首字母小写]
+
 ### 5.3.4、关于重定向
 
 - 控制器方法返回字符串类型的值会被当成逻辑视图名处理
 - 如果返回的字符串中带 forward： 或 redirect：前缀时，SpringMVC 会对他们进行特殊处理：将 forward： 和redirect： 当成指示符，其后的字符串作为 URL 来处理
-	- redirect：success.jsp：会完成一个到 success.jsp 的重定向的操作
-	- forward：success.jsp：会完成一个到 success.jsp 的转发操作
+	- redirect:success.jsp：会完成一个到 success.jsp 的重定向的操作
+	- forward:success.jsp：会完成一个到 success.jsp 的转发操作
 ```java
 // 注：源代码， org.springframework.web.servlet.view.UrlBasedViewResolver
 @Override
@@ -449,7 +452,9 @@ protected View createView(String viewName， Locale locale) throws Exception {
 	return super.createView(viewName， locale);
 }
 ```
+
 # 6.RESTful SpringMVC CRUD
+
 - SpringMVC中配置HiddenHttpMethodFilter;（SpringBoot自动配置好的）
 - 页面创建一个post表单
 - 创建一个input项，name="_method";值就是我们指定的请求方式	
@@ -827,43 +832,38 @@ java.util.UUID -> java.lang.String ： ObjectToStringConverter@112b07f ……
 
 ## 17.1、自定义拦截器(Interceptor)
 
-- Spring MVC 也可以使用拦截器对请求进行拦截处理，用户可以自定义拦截器来实现特定的功能，自定义的拦截器必须实现 HandlerInterceptor 接口
+- Spring MVC 也可以使用拦截器对请求进行拦截处理，用户可以自定义拦截器来实现特定的功能，自定义的拦截器必须实现 `HandlerInterceptor` 接口
 - 自定义拦截器的实现：
 ```java
 public class FirstInterceptor implements HandlerInterceptor {
-/**
+	/**
 	* 该方法在目标方法之前被调用，在方法中对用户请求 request 进行处理。
 	* (1).若返回值为 true， 则继续调用后续的拦截器或目标方法;
 	* (2).若返回值为 false，则后续拦截器或目标方法将不会被调用;
 	* 用途：
 	* 	权限控制，日志，事务等
 	*/
-@Override
-public boolean preHandle(HttpServletRequest request，
-		HttpServletResponse response， Object handler) throws Exception {
-	System.out.println("[FirstInterceptor] preHandle");
-	return true;
-}
-/**
+	@Override
+	public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+		System.out.println("[FirstInterceptor] preHandle");
+		return true;
+	}
+	/**
 	* 调用目标方法之后， 但渲染视图之前. 是DispatcherServlet 向客户端返回响应前被调用
 	* 可以对请求域中的属性或视图做出修改.
 	*/
-@Override
-public void postHandle(HttpServletRequest request，
-		HttpServletResponse response， Object handler，
-		ModelAndView modelAndView) throws Exception {
-	System.out.println("[FirstInterceptor] postHandle");
-}
-/**
+	@Override
+	public void postHandle(HttpServletRequest request, HttpServletResponse response, Object handler, ModelAndView modelAndView) throws Exception {
+		System.out.println("[FirstInterceptor] postHandle");
+	}
+	/**
 	* 在 DispatcherServlet 完全处理完请求后被调用，
 	* 渲染视图之后被调用. 主要是释放资源
 	*/
-@Override
-public void afterCompletion(HttpServletRequest request，
-		HttpServletResponse response， Object handler， Exception ex)
-		throws Exception {
-	System.out.println("[FirstInterceptor] afterCompletion");
-}
+	@Override
+	public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+		System.out.println("[FirstInterceptor] afterCompletion");
+	}
 }
 ```
 - 配置自定义拦截器：
@@ -904,13 +904,13 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 - Spring MVC 通过 HandlerExceptionResolver 处理程序的异常，包括 Handler 映射、数据绑定以及目标方法执行时发生的异常
 - SpringMVC 提供的 HandlerExceptionResolver 的实现类 DispatcherServlet 默认装配的 HandlerExceptionResolver：
 
-	- 没有使用`<mvc：annotation-driven/>`配置：
+	- 没有使用`<mvc:annotation-driven/>`配置：
 		```
 		AnnotationMethodHandlerExceptionResolver
 		ResponseStatusExceptionResolver
 		DefaultHandlerExceptionResolver
 		```
-	- 使用了`<mvc：annotation-driven/>`配置：
+	- 使用了`<mvc:annotation-driven/>`配置：
 		```
 		ExceptionHandlerExceptionResolver
 		ResponseStatusExceptionResolver

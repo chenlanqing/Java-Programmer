@@ -149,7 +149,7 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 		在web程序中，通过一些配置，可以扩展出request，session等属性值;
 
 	- 可以控制单例模式的创建时机：
-		- singleton模式的Bean组件，默认是在 ApplicationContext 容器实例化时就创建了组件;可以在bean元素中追加属性lazy-init="true"，将singleton模式创建对象推迟到getBean()方法
+		- singleton模式的Bean组件，默认是在 ApplicationContext 容器实例化时就创建了组件；可以在bean元素中追加属性lazy-init="true"，将singleton模式创建对象推迟到getBean()方法
 		- prototype模式是在调用getBean()方法时创建了组件;
 
 		单例 bean 存在线程问题，主要是因为当多个线程操作同一个对象的时候，对这个对象的非静态成员变量的写操作会存在线程安全问题。
@@ -630,7 +630,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 	
 - 5.3、传播行为：REQUIRES_NEW
 	
-	如果 buy()方法中配置了：@Transactional(propagation=Propagation.REQUIRES_NEW)，则buyMany()调用buy()时，buyMany()方法的事务会挂起，buy()方法开启新事务，buy()的事务提交完毕后，buyMany()方法的事务继续.
+	如果 buy()方法中配置了：`@Transactional(propagation=Propagation.REQUIRES_NEW)`，则buyMany()调用buy()时，buyMany()方法的事务会挂起，buy()方法开启新事务，buy()的事务提交完毕后，buyMany()方法的事务继续.
 
 - 5.4、配置事务的传播行为：使用propagation属性指定事务的传播行为
 
@@ -807,7 +807,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 - field 属性的循环依赖
 
-Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean ，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；
+Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean
 
 ### 1.3、解决循环依赖
 
@@ -817,7 +817,14 @@ Spring 在创建 bean 的时候并不是等它完全完成，而是在创建过�
 - 首先 A 完成初始化第一步并将自己提前曝光出来（通过 ObjectFactory 将自己提前曝光），在初始化的时候，发现自己依赖对象 B，此时就会去尝试 get(B)，这个时候发现 B 还没有被创建出来
 - 然后 B 就走创建流程，在 B 初始化的时候，同样发现自己依赖 C，C 也没有被创建出来
 - 这个时候 C 又开始初始化进程，但是在初始化的过程中发现自己依赖 A，于是尝试 get(A)，这个时候由于 A 已经添加至缓存中（一般都是添加至三级缓存 singletonFactories ），通过 ObjectFactory 提前曝光，所以可以通过 ObjectFactory#getObject() 方法来拿到 A 对象，C 拿到 A 对象后顺利完成初始化，然后将自己添加到一级缓存中
-- 回到 B ，B 也可以拿到 C 对象，完成初始化，A 可以顺利拿到 B 完成初始化。到这里整个链路就已经完成了初始化过程了
+- 回到 B ，B 也可以拿到 C 对象，完成初始化，A 可以顺利拿到 B 完成初始化。到这里整个链路就已经完成了初始化过程了；
+
+SpringBoot解决循环依赖：加`@Lazy`注解
+```java
+@Autowired
+@Lazy
+private CService cService;
+```
 
 ## 2、Spring与SpringMVC父子容器配置
 
@@ -835,8 +842,7 @@ Spring 在创建 bean 的时候并不是等它完全完成，而是在创建过�
 可以参考[Spring官方文档](https://docs.spring.io/spring/docs/4.3.16.RELEASE/spring-framework-reference/htmlsingle/#mvc-servlet) 中的`Figure 22.2. Typical context hierarchy in Spring Web MVC`
 
 - 子容器包含`Controllers、HandlerMapping、viewResolver`，其他bean都在父容器中；
-
-- 子容器不加载任何bean，均有父容器加载
+- 子容器不加载任何bean，均由父容器加载
 
 ## 3、Spring注解@Resource和@Autowired区别对比
 

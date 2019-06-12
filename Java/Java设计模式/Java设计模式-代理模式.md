@@ -110,7 +110,7 @@
 
 - 当Bean有实现接口时，Spring就会使用JDK的动态代理；
 - 当Bean没有实现接口时，Spring使用CGLib
-- 当然也可以强制使用CGLib，只需要在Spring配置中增加：`<aop:aspectj-autoproxy proxy-target-class="true" />`
+- 当然也可以强制使用CGLib，只需要在Spring配置中增加：`<aop:aspectj-autoproxy proxy-target-class="true" />`，使用Springboot时使用配置：`spring.aop.proxy-target-class=true`
 
 Spring中动态代理的核心类：
 - ProxyFactoryBean

@@ -745,7 +745,7 @@ public @interface EnableAspectJAutoProxy {
 
 ## 4.3、AnnotationAwareAspectJAutoProxyCreator的作用
 
-AnnotationAwareAspectJAutoProxyCreator实现自InstantiationAwareBeanPostProcessor，其作用：
+AnnotationAwareAspectJAutoProxyCreator实现自`InstantiationAwareBeanPostProcessor`，其作用：
 
 - 1、每一个bean创建之前，调用postProcessBeforeInstantiation()；主要关心目标类以及需要切入的类；
     - 判断当前bean是否在advisedBeans中（保存了所有需要增强bean）；
