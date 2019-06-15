@@ -2303,7 +2303,31 @@ Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Ru
 
 如果需要获取线程的执行结果，需要使用到Future，Callable用于产生结果，Future用于获取结果，Callabl接口使用泛型来定义结果的返回值类型，在线程池提交Callable任务后返回了一个Future对象
 
+Future的方法
+```java
+// 该方法是非阻塞的
+// 如果任务运行之前调用了该方法，那么任务就不会被运行；
+// 如果任务已经完成或者已经被取消，那么该方法方法不起作用；
+// 如果任务正在运行，并且 cancel 传入参数为 true，那么便会去终止与 Future 关联的任务
+// cancel(false) 与 cancel(true）的区别在于，cancel(false) 只 取消已经提交但还没有被运行的任务（即任务就不会被安排运行）；而 cancel(true) 会取消所有已经提交的任务，包括 正在等待的 和 正在运行的 任务
+boolean cancel(boolean mayInterruptIfRunning);
+// 该方法是非阻塞的。在任务结束之前，如果任务被取消了，该方法返回 true，否则返回 false；如果任务已经完成，该方法则一直返回 false
+boolean isCancelled();
+// 该方法同样是非阻塞的。如果任务已经结束（正常结束，或者被取消，或者执行出错），返回 true，否则返回 false
+boolean isDone();
+// 获取任务结果，get方法是阻塞式的，如果被调用的时候，任务还没有执行完，那么调用get方法的线程会阻塞，直到任务执行完才会唤醒
+V get() throws InterruptedException, ExecutionException;
+// 获取任务结果，支持超时
+V get(long timeout, TimeUnit unit)throws InterruptedException, ExecutionException, TimeoutException;
+```
+
 ## 11、FutureTask
+
+```java
+public class FutureTask<V> implements RunnableFuture<V>{};
+
+public interface RunnableFuture<V> extends Runnable, Future<V>{};
+```
 
 - 可用于异步获取执行结果或取消执行任务的场景：通过传入Runnable或者Callable的任务给FutureTask，直接调用其run方法或者放入线程池执行，之后可以在外部通过FutureTask的get方法异步获取执行结果。FutureTask非常适合用于耗时的计算，主线程可以在完成自己的任务后，再去获取结果。FutureTask还可以确保即使调用了多次run方法，它都只会执行一次Runnable或者Callable任务，或者通过cancel取消FutureTask的执行等;
 
@@ -2546,6 +2570,16 @@ private volatile Node slot;
 通过数组arena来安排不同的线程使用不同的slot来降低竞争问题，并且可以保证最终一定会成对交换数据。但是Exchanger不是一来就会生成arena数组来降低竞争，只有当产生竞争是才会生成arena数组
 
 ## 14、Phaser
+
+
+## 15、CompletableFuture
+
+JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFuture来解决。
+
+## 16、CompletionService
+
+批量的并行任务
+
 
 # 四、并发容器
 
@@ -3434,7 +3468,33 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 
 这种方法比较简单，也有他的局限性，不够灵活，我们的处理被局限在了线程代码边界之内
 
-### 2.10、任务取消与线程池关闭
+### 2.10、获取线程执行结果
+
+```java
+// 其参数Runnable，该接口的run方法是没有返回值的，所以这个方法的返回的Future仅可以用来断言任务已经结束；
+public Future<?> submit(Runnable task) {
+	if (task == null) throw new NullPointerException();
+	RunnableFuture<Void> ftask = newTaskFor(task, null);
+	execute(ftask);
+	return ftask;
+}
+// 假设这个方法返回的Future对象是f，f.get的返回值就是传给submit方法的参数result
+public <T> Future<T> submit(Runnable task, T result) {
+	if (task == null) throw new NullPointerException();
+	RunnableFuture<T> ftask = newTaskFor(task, result);
+	execute(ftask);
+	return ftask;
+}
+// Callable接口的call方法有返回值，可以通过Future的get获取任务的执行结果
+public <T> Future<T> submit(Callable<T> task) {
+	if (task == null) throw new NullPointerException();
+	RunnableFuture<T> ftask = newTaskFor(task);
+	execute(ftask);
+	return ftask;
+}
+```
+
+### 2.11、任务取消与线程池关闭
 
 - 通过Future取消线程池中的任务
 	```java

@@ -377,21 +377,22 @@ public enum SendStatus {
 
 当一条消息被消费失败 16 次后，会被存储到 Topic 为 "%DLQ%" + ConsumerGroup 到死信队列
 
-## 3、核心原理
+## 3、NameServer
 
-### 3.1、Broker消息存储结构
+### 3.1、架构设计
 
+- Broker消息服务器器在启动的时候向所有的NameServer注册，消息生产者在发送消息之前先从NameServer中获取Broker服务器地址列表，然后根据负载均衡算法从列表中选择一台消息服务器器进行消息发送；
+- NameServer与每台Broker服务器保持长连接，并间隔30s检测Broker是否存活，如果检测到Broker宕机，则从路由注册表中将其移除。但是路由变化不会马上通知消息生产者，这样设计是为了降低NameServer实现的复杂性，在消息发送端提供容错机制来保证消息发送的高可用性。
+- NameServer本身的高可用性可以通过部署多台NameServer服务器来实现，但是彼此不通信，也就是在某一时刻的数据并不完全相同；
 
-### 3.2、消息的同步刷盘与异步刷盘
+## 4、RocketMQ分布式事务消息
 
+### 4.1、架构设计
 
-### 3.3、消息的同步复制与异步复制
+### 4.2、使用
 
-
-### 3.4、高可用机制
-
-
-### 3.5、NameServer协调服务
+- `TransactionMQProducer`：事务消息的消费者
+- TransactionListener：监听器，执行本地事务和检查本地事务两个方法
 
 # 四、RocketMQ应用实践
 
