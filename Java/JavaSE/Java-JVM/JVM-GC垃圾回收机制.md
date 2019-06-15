@@ -335,6 +335,8 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 其中初始标记、重新标记这两个步骤仍然需要"Stop the world"。初始标记仅仅是标记以下 GC Roots 能直接关联到的对象，速度很快，并发标记阶段就是进行GC Roots Tracing 的过程，而重新阶段则是为了修正并发标记期间因用户程序继续运作而导致标记常数变动的那一部分对象的标记记录，这个阶段的停顿时间一般会比初始标记的阶段稍微长点，但远比并发标记阶段时间短；
 
+当GC线程标记好了一个对象的时候，此时我们程序的线程又将该对象重新加入了“关系网”中，当执行二次标记的时候，该对象也没有重写finalize()方法，因此回收的时候就会回收这个不该回收的对象。虚拟机的解决方法就是在一些特定指令位置设置一些“安全点”，当程序运行到这些“安全点”的时候就会暂停所有当前运行的线程（Stop The World 所以叫STW），暂停后再找到“GC Roots”进行关系的组建，进而执行标记和清除
+
 ### 6.2、优缺点
 
 - 优点：并发收集，低停顿
@@ -351,10 +353,25 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 - `-XX:ConcGCThreads`：并发的GC线程数；
 - `-XX:+UseCMSCompactAtFullCollection`：Full GC之后做压缩
 - `-XX:CMSFullGCsBeforeCompaction`：多少次Full GC之后压缩一次
-- `-XX:CMSInitiatingOccupancyFraction`：触发Full GC，老年代内存使用占比达到 CMSInitiatingOccupancyFraction，默认为 92%
+- `-XX:CMSInitiatingOccupancyFraction`：触发Full GC，老年代内存使用占比达到 `CMSInitiatingOccupancyFraction`，默认为 92%
 - `-XX:+UseCMSInitiatingOccupancyOnly`：是否动态调整
 - `-XX:+CMSScavengeBeforeRemark`：full gc之前先做YGC
 - `-XX:+CMSClassUnloadingEnabled`：启用回收Perm区，针对JDK8之前的
+
+### 6.4、CMS中Young Gc的实现过程
+
+- 先找出根对象，如Java栈中引用的对象、静态变量引用的对象和系统词典中引用的对象等待，把这些对象标记成活跃对象，并复制到to区；
+- 接着遍历这些活跃对象中引用的对象并标记，找出老年代对象在eden区有引用关系的对象并标记；
+- 最后把这些标记的对象复制到to，在复制过程还要判断活跃对象的gc年龄是否已经达到阈值，如果已经达到阈值，就直接晋升到老年代，YGC结束之后把from和to的引用互换
+
+CMS GC 时出现`promotion failed`和`concurrent mode failure`
+- promotion failed：是在进行 Minor GC时，survivor空间放不下、对象只能放入老生代，而此时老生代也放不下造成的；
+
+	解决办法：`-XX:UseCMSCompactAtFullCollection -XX:CMSFullGCBeforeCompaction=5` 或者调大新生代或者Survivor空间
+
+- concurrent mode failure：在执行 CMS GC 的过程中同时有对象要放入老生代，而此时老生代空间不足造成的；
+
+	解决办法：`+XX:CMSInitiatingOccupancyFraction`，调大老年代的空间，`+XX:CMSMaxAbortablePrecleanTime`
 
 ## 7、G1收集器（Garbage First）
 
@@ -843,6 +860,7 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 
 
 ### 2.7、常见调优思路
+
 - 理解应用需求和问题，确定调优目标。比如开发了一个应用服务，但发现偶尔会出现性能抖动，出现较长的服务停顿。评估用户可接受的响应时间和业务量，将目标简化为，希望GC暂停尽量控制在200ms以内，并保证一定的标准吞吐量；
 - 掌握JVM和GC的状态，定位具体的问题，确定是否有GC调优的必要。比如通过jstat等工具查看GC等相关状态，可以开启GC日志，或者利用操作系统提供的诊断工具；比如通过追踪GC日志，可以查找是不是GC在特定的实际发生了长时间的暂停；
 - 需要考虑选择的GC类型是否符合我们的应用特征，如果是，具体问题表现在那里，是MinorGC过长还是MixedGC等出现异常停顿情况；如果不是，考虑切换到什么类型，如果CMS个G1都是更侧重于低延迟的GC选型；
@@ -865,11 +883,16 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 - 在global concurrent marking结束之后，可以知道young区有多少空间要被回收，在每次YGC之后和每次发生MixedGC之前，会检查垃圾占比是否达到-XX:G1HeapWastePercent，只有达到了下次才会发生MixedGC
 
 ### 4.2、主要调优步骤
+
 - （1）首先开启G1 GC：-XX:+UseG1GC
 - （2）如果发现是metaspace分配引起GC次数多，可以适当调大metaspace大小：-XX:MetaspaceSize=xx
 - （3）增大堆内存 -Xmxsize -Xmssize
 
-## 5、常见调优策略
+## 5、CMS GC调优
+
+* [JVM发生CMS GC的5中情况](https://mp.weixin.qq.com/s/ezmD1XXgPoVoCo0nkKavdg)
+
+## 6、常见调优策略
 
 - 将新对象预留在新生代，由于 Full GC 的成本远高于 Minor GC，因此尽可能将对象分配在新生代是明智的做法，实际项目中根据 GC 日志分析新生代空间大小分配是否合理，适当通过“-Xmn”命令调节新生代大小，最大限度降低新对象直接进入老年代的情况；
 - 大对象进入老年代，虽然大部分情况下，将对象分配在新生代是合理的。但是对于大对象这种做法却值得商榷，大对象如果首次在新生代分配可能会出现空间不足导致很多年龄不够的小对象被分配的老年代，破坏新生代的对象结构，可能会出现频繁的 full gc。因此，对于大对象，可以设置直接进入老年代（当然短命的大对象对于垃圾回收老说简直就是噩梦）。-XX:PretenureSizeThreshold 可以设置直接进入老年代的对象大小；

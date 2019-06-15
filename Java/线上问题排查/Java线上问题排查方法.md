@@ -607,3 +607,4 @@ JDK 1.4.2和5.0的默认值是60000毫秒，即1分钟；JDK6以及以后的版�
 * [java问题排查工具单](https://yq.aliyun.com/articles/69520?utm_content=m_10360)
 * [Java问题排查工具箱](https://mp.weixin.qq.com/s/X4l9LhjZybqr5jc7RLfcOA)
 * [线程堆栈分析](http://fastthread.io/)
+* [系统问题、CPU、FullGC问题排查思路](https://mp.weixin.qq.com/s/wTEMbOGiXA8xfyFascoMpA)

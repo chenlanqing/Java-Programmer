@@ -1092,8 +1092,8 @@ MySQL可以通过启动时指定配置参数和使用配置文件两种方法进
 		```
 - 执行存储过程：
 	```
-	call insert_dept(10，100)
-	call insert_emp(100000，500000);
+	call insert_dept(10,100);
+	call insert_emp(100000,500000);
 	```
 
 

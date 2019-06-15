@@ -156,3 +156,6 @@
 - [spring boot引起的“堆外内存泄漏”](https://mp.weixin.qq.com/s/warAkXqkpDXOA10wN0vv-Q)
 - [一次HashSet所引起的并发问题](https://mp.weixin.qq.com/s/-_6fDP6OSse-tL-ptjcbJw)
 - [YGC实战](https://mp.weixin.qq.com/s/6hNg955-DcnkUQ9f6mNEQg)
+- [CPU与老年代占用过高问题排查](https://mp.weixin.qq.com/s/-LjR4zSEF0loIexqHJ9hUw)
+- [JVM发生OOM的8种原因](https://mp.weixin.qq.com/s/dzZjCx1WzjLZCXLr8V-ukA)
+- [数据库的死锁问题排查过程-由索引问题引起的死锁](https://mp.weixin.qq.com/s/3vTElAcvQk-CfgAb4bAiXw)

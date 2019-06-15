@@ -221,8 +221,19 @@ public class Person {
 	```
 
 SpringBoot推荐给容器中添加组件的方式
-- 1、配置类@**Configuration** ------> Spring配置文件
-- 2、使用@**Bean**给容器中添加组件
+- 1、配置类`@Configuration`：Spring配置文件，通过启动一个`AnnotationConfigApplicationContext` 来引导这个`@Configuration` 注解的类
+
+	@Configuration 使用@Component 进行原注解，因此@Configuration 类也可以被组件扫描
+	```java
+	@Target(ElementType.TYPE)
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Component
+	public @interface Configuration {
+		String value() default "";
+	}
+	```
+- 2、使用`@Bean`给容器中添加组件
 	```java
 	/**
 	* @Configuration：指明当前类是一个配置类；就是来替代之前的Spring配置文件
