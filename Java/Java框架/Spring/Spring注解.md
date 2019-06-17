@@ -782,9 +782,9 @@ AnnotationAwareAspectJAutoProxyCreator实现自`InstantiationAwareBeanPostProces
         }
         ```
     - （2）根据ProxyFactory对象获取将要执行的目标方法拦截器链；`List<Object> chain = this.advised.getInterceptorsAndDynamicInterceptionAdvice(method, targetClass);`
-        - List<Object> interceptorList保存所有拦截器，其中包含一个默认的ExposeInvocationInterceptor和另外4个增强器；
+        - `List<Object> interceptorList`保存所有拦截器，其中包含一个默认的ExposeInvocationInterceptor和另外4个增强器；
         - 遍历所有的增强器，将其转为Interceptor；`registry.getInterceptors(advisor);`;
-        - 将增强器转为List<MethodInterceptor>；
+        - 将增强器转为`List<MethodInterceptor>`；
             - 如果是MethodInterceptor，直接加入到集合中；
             - 如果不是，使用AdvisorAdapter将增强器转为MethodInterceptor；
             - 转换完成返回MethodInterceptor数组；
@@ -834,6 +834,7 @@ AnnotationAwareAspectJAutoProxyCreator实现自`InstantiationAwareBeanPostProces
         
 
 ## 4.4、总结
+
 - @EnableAspectJAutoProxy 开启AOP功能；
 - @EnableAspectJAutoProxy 会给容器中注册一个组件 AnnotationAwareAspectJAutoProxyCreator；
 - AnnotationAwareAspectJAutoProxyCreator是一个后置处理器；
@@ -849,8 +850,8 @@ AnnotationAwareAspectJAutoProxyCreator实现自`InstantiationAwareBeanPostProces
         - 得到目标方法的拦截器链（增强器包装成拦截器MethodInterceptor）
         - 利用拦截器的链式机制，依次进入每一个拦截器进行执行；
         - 效果：
-            - 正常执行：前置通知 -> 目标方法 -> 后置通知 -> 返回通知
-            - 出现异常：前置通知 -> 目标方法 -> 后置通知 -> 异常通知
+            - 正常执行：`前置通知 -> 目标方法 -> 后置通知 -> 返回通知`
+            - 出现异常：`前置通知 -> 目标方法 -> 后置通知 -> 异常通知`
 
 # 5、声明式事务
 
