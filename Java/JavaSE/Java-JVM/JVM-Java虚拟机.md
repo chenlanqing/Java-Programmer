@@ -409,7 +409,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 		}
 	}
 ```
--XX：+HeapDumpOnOutOfMemoryError：可以让虚拟机在出现内存溢出时Dump当前的内存堆转储快照，事后可以进行分析。运行代码：
+-XX:+HeapDumpOnOutOfMemoryError：可以让虚拟机在出现内存溢出时Dump当前的内存堆转储快照，事后可以进行分析。运行代码：
 ```
 java.lang.OutOfMemoryError： Java heap space
 Dumping heap to java_pid5148.hprof ...

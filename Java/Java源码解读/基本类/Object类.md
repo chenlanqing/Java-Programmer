@@ -305,7 +305,7 @@ public boolean equals(Object obj){
 
 [详解finalize方法](../../JavaSE/Java-JVM/JVM-GC垃圾回收机制.md#六详解-finalize方法)
 
-finalize()方法不会被调用第二次;finalize()方法对于虚拟机来说不是轻量级的程序;
+finalize()方法不会被调用第二次；finalize()方法对于虚拟机来说不是轻量级的程序;
 
 - 4.1、用途： 
 
