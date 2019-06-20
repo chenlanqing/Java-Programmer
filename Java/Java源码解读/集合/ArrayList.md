@@ -24,11 +24,11 @@
 ```java
 public class ArrayList<E> extends AbstractList<E> implements List<E>， RandomAccess， Cloneable， java.io.Serializable{}
 ```
-- ArrayList 继承 AbstractList(这是一个抽象类，对一些基础的 List 操作进行封装)，
-- 实现 List，RandomAccess，Cloneable，Serializable 几个接口.
-- RandomAccess 是一个标记接口，用来表明其支持快速随机访问，为List提供快速访问功能的;
+- ArrayList 继承 AbstractList（这是一个抽象类，对一些基础的 List 操作进行封装）；
+- 实现 List，RandomAccess，Cloneable，Serializable 几个接口；
+- RandomAccess 是一个标记接口，用来表明其支持快速随机访问，为Lis提供快速访问功能的；实现了该接口的list可以通过for循环来遍历数据，比使用迭代器的效率要高；
 - Cloneable 是克隆标记接口，覆盖了 clone 函数，能被克隆
-- java.io.Serializable 接口，ArrayList 支持序列化，能通过序列化传输数据.
+- java.io.Serializable 接口，ArrayList 支持序列化，能通过序列化传输数据。
 
 ## 2、构造方法
 ```java

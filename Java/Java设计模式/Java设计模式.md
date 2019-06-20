@@ -95,3 +95,4 @@
 * [设计模式大杂烩](http://www.cnblogs.com/zuoxiaolong/p/pattern26.html)
 * [Java设计模式](http://www.jasongj.com/design_pattern/summary/)
 * [设计模式](http://www.cnblogs.com/wangjq/category/389973.html)
+* [设计模式的应用](https://www.itcodemonkey.com/article/14407.html)

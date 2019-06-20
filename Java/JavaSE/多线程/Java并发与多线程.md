@@ -3038,9 +3038,9 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 - 基本组成部分
 
 	- 线程池管理器：用于创建并管理线程池，包含c黄金线程池，销毁线程池，添加新任务等功能
-	- 工作线程：线程池中的线程;
-	- 任务接口：每个任务必须实现的接口，以供工作线程调度任务执行;
-	- 任务队列：用于存放没有处理的任务，提供一种缓存机制;
+	- 工作线程：线程池中的线程；
+	- 任务接口：每个任务必须实现的接口，以供工作线程调度任务执行；
+	- 任务队列：用于存放没有处理的任务，提供一种缓存机制；
 
 ### 1.5、线程池原理
 
@@ -3118,22 +3118,22 @@ ExecutorService的默认实现，线程池中最核心的一个类
 
 #### 2.3.1、核心参数
 
-- corePoolSize：核心线程数大小，`当线程数 < corePoolSize`，会创建线程执行runnable；如果等于0，则任务执行完之后,没有任何请求进入时销毁线程池的线程；如果大于0,即使本地任务执行完毕,核心线程也不会被销毁；
-- maximumPoolSize：最大线程数， `当线程数 >= corePoolSize`的时候，会把runnable放入workQueue中；largestPoolSize:记录了曾经出现的最大线程个数；如果待执行的线程数大于此值，需要借助第5个参数的帮助,缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
-- keepAliveTime：保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。在默认情况下,当线程池的线程数大于 corePoolSize时, keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收.
+- corePoolSize：核心线程数大小，`当线程数 < corePoolSize`，会创建线程执行runnable；如果等于0，则任务执行完之后，没有任何请求进入时销毁线程池的线程；如果大于0，即使本地任务执行完毕，核心线程也不会被销毁；
+- maximumPoolSize：最大线程数， `当线程数 >= corePoolSize`的时候，会把runnable放入workQueue中；largestPoolSize：记录了曾经出现的最大线程个数；如果待执行的线程数大于此值，需要借助第5个参数的帮助，缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
+- keepAliveTime：保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。在默认情况下，当线程池的线程数大于 corePoolSize时，keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收.
 - unit：时间单位
-- workQueue：保存任务的阻塞队列；当请求的线程数大于 maximumPoolSize时，线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表,使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取,是一个生产消费模型队列；
-- threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时,就可以知道线程任务是由哪个线程工厂产生的
-- handler：拒绝策略，默认有四种拒绝策略；当超过参数 workQueue的任务缓存区上限的时候,就可以通过该策略处理请求,这是一种简单的限流保护.
+- workQueue：保存任务的阻塞队列；当请求的线程数大于 maximumPoolSize时，线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表，使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取，是一个生产消费模型队列；
+- threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时，就可以知道线程任务是由哪个线程工厂产生的
+- handler：拒绝策略，默认有四种拒绝策略；当超过参数 workQueue的任务缓存区上限的时候，就可以通过该策略处理请求，这是一种简单的限流保护
 - workers：保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的，线程池底层的存储结构其实就是一个HashSet
 
 #### 2.3.2、参数关系
 
 - corePoolSize 与 maximumPoolSize:
-	* 如果线程池中的实际线程数 < corePoolSize， 新增一个线程处理新的任务;
-	* 如果线程池中的实际线程数 >= corePoolSize， 新任务会放到workQueue中;
-	* 如果阻塞队列达到上限，且当前线程池的实际线程数 < maximumPoolSize，新增线程来处理任务;
-	* 如果阻塞队列满了，且这时线程池的实际线程数 >= maximumPoolSize，那么线程池已经达到极限，会根据拒绝策略`RejectedExecutionHandler`拒绝新的任务.
+	* 如果线程池中的实际线程数 < corePoolSize， 新增一个线程处理新的任务；
+	* 如果线程池中的实际线程数 >= corePoolSize， 新任务会放到workQueue中；
+	* 如果阻塞队列达到上限，且当前线程池的实际线程数 < maximumPoolSize，新增线程来处理任务；
+	* 如果阻塞队列满了，且这时线程池的实际线程数 >= maximumPoolSize，那么线程池已经达到极限，会根据拒绝策略`RejectedExecutionHandler`拒绝新的任务。
 
 - 如果线程池阻塞队列达到极限时，在运行一段时间后，阻塞队列中的任务执行完成了，线程池会将超过核心线程数的线程在一段时间内自动回收，在秒杀的业务场景中会有这样的情况发生。
 

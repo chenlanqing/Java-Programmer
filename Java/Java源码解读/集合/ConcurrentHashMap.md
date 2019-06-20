@@ -169,6 +169,10 @@ get操作可以无锁是由于Node的元素val和指针next是用volatile修饰�
 
 既然volatile修饰数组对get操作没有效果那加在数组上的volatile的目的是：为了使得Node数组在扩容的时候对其他线程具有可见性而加的volatile
 
+## 5、扩容
+
+## 6、hash冲突解决
+
 # 面试
 
 ## 1、size方法和mappingCount方法的异同，两者计算是否准确
@@ -176,6 +180,8 @@ get操作可以无锁是由于Node的元素val和指针next是用volatile修饰�
 ## 2、多线程环境下如何进行扩容
 
 ## 3、HashMap、HashTable、ConcurrenHashMap区别
+
+## 4、
 
 # 参考资料:
 
