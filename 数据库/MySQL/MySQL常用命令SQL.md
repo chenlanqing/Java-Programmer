@@ -5,6 +5,15 @@
 update b join a on b.id = a.id set b.score = a.score
 ```
 
+# 2、mysql加密解密
+
+```sql
+select aes_encrypt("需要加密的字符串","密钥");
+-- 此时的加密后的字符串是二进制，可以转成十六进制的使用函数：hex()
+select aes_decrypt("加密后的字符串","密钥");
+-- 将十六进制转换为二进制：unhex()
+```
+
 
 ```sql
 /* Windows服务 */

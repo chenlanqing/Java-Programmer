@@ -243,8 +243,9 @@ create database 数据库名 [数据库选项]
 
 - 数据库名称规则：对于一些特点的组合，如纯数字、特殊符号等，包括MySQL的关键字，应该使用标识限定符来包裹，限定符使用反引号；
 - 数据库选项：存在数据库文件的.opt文件中 <br>
-	default-character-set=utf8<br>
-	default-collation=utf8_general_ci<br>
+	`default-character-set=utf8`<br>
+	`default-collation=utf8_general_ci`<br>
+
 ## 4、数据库的查询
 
 	show databases
@@ -268,10 +269,43 @@ create database 数据库名 [数据库选项]
 
 ## 6、数据的操作（DML）
 
-- 插入数据：
-- 查询(DQL)：
-- 删除数据
-- 修改数据
+### 6.1、insert
+
+### 6.2、update
+
+### 6.3、delete
+
+#### 6.3.1、删除操作
+
+`delete from table_name [where]`
+
+`truncate table_name`
+
+#### 6.3.2、delete、truncate、drop的区别
+
+- delete和truncate操作只删除表中数据，而不删除表结构；
+- delete删除时对于auto_increment类型的字段，值不会从1开始，truncate可以实现删除数据后，auto_increment类型的字段值从1开始；
+- delete属于DML，这个操作会放到rollback segement中，事务提交之后才生效；
+- truncate和drop属于DDL，操作立即生效，原数据不放到rollback segment中，不能回滚，操作不触发trigger；
+- delete语句不影响表所占用的extent，高水线(high watermark)保持原位置不动；drop语句将表所占用的空间全部释放。truncate 语句缺省情况下见空间释放到 minextents个 extent,除非使用reuse storage; truncate会将高水线复位(回到最开始)；
+- 执行速度：`drop> truncate > delete`；
+- 使用建议：
+	- drop：完全删除表；
+	- truncate：想保留表而将所有数据删除。如果和事务无关；
+	- delete：如果和事务有关，或者想触发；删除部分数据；可以返回被删除的记录数；
+
+#### 6.3.3、Mysql高水位问题
+
+- 产生原因：数据库中有些表使用delete删除了一些行后，发现空间并未释放；
+	- delete 不会释放文件高水位 
+	- truncate会释放 ，实际是把.ibd文件删掉了，再建一个。
+	- delete + alter engine=innodb会释放， 相当于重建表。
+
+- 解决方案：
+	- 执行 OPTIMIZE TABLE 表名：只对MyISAM, BDB和InnoDB表起作用，而且会锁表！
+	- 写一SQL，创建新表，删除旧表，新表重命名：生产环境中不停机情况下，数据比较难处理；
+	- 考虑用表分区，过期的表分区直接删除，不存在高水位问题；
+
 
 ## 7、校对规则
 
