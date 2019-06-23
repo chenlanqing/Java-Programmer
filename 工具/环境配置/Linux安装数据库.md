@@ -103,6 +103,11 @@
         增加下面一行：
 
         -A RH-Firewall-1-INPUT -m state --state NEW -m tcp -p tcp --dport 3306-j ACCEPT
+        ```
+        开放端口：
+        firewall-cmd --zone=public --add-port=3306/tcp --permanent
+        firewall-cmd --reload
+        ```
     - （2）重启防火墙
 
         systemctl restart iptables 

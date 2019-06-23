@@ -5,6 +5,10 @@
 update b join a on b.id = a.id set b.score = a.score
 ```
 
+删除也可以用表关联来删除数据
+
+`delete e,d from e join d on e.id = d.eid and e.name=''`
+
 # 2、mysql加密解密
 
 ```sql
@@ -13,6 +17,16 @@ select aes_encrypt("需要加密的字符串","密钥");
 select aes_decrypt("加密后的字符串","密钥");
 -- 将十六进制转换为二进制：unhex()
 ```
+
+# 3、批量插入记录时忽略错误的记录
+
+`insert ignore into table()values(),(),();`
+
+# 4、插入时存在就更新
+
+`insert into table() value() on duplicate key update col=''`
+
+# 5、使用from语句替代子查询
 
 
 ```sql

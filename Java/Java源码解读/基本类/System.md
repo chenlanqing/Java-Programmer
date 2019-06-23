@@ -36,6 +36,26 @@ currentTimeMillis其实是通过gettimeofday来实现的。System.currentTimeMil
 - 至于时间回归的现象相信随着64 为操作系统 的产生逐渐得到解决，因为用64位操作系统可以表示到“292，277，026，596年12月4日15时30分08秒”；
 - System.out.println(new Date(0))，打印出来的时间是8点而非0点存在系统时间和本地时间的问题，其实系统时间依然是0点，不过跟你所在时区有关。
 
+# 2、System.gc方法
+
+## 2.1、方法实现
+
+```java
+public static void gc() {
+	Runtime.getRuntime().gc();
+}
+/*
+运行垃圾收集器。
+调用此方法表明，java虚拟机扩展。努力回收未使用的对象，以便内存可以快速复用，当控制从方法调用返回的时候，虚拟机尽力回收被丢弃的对象
+*/
+public native void gc();
+```
+## 2.2、作用
+
+- 做一次full gc
+- 执行后会暂停整个进程。
+- System.gc我们可以禁掉，使用-XX:+DisableExplicitGC，其实一般在cms gc下我们通过-XX:+ExplicitGCInvokesConcurrent也可以做稍微高效一点的gc，也就是并行gc。
+- 最常见的场景是RMI/NIO下的堆外内存分配等；
 
 # 参考文章
 

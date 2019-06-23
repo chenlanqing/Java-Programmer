@@ -302,11 +302,63 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 - Class文件中除了有类的版本、字段、方法、接口等描述信息外，还有一项信息是常量池(Class文件常量池)，用于存放编译器生成的各种字面量和符号引用，这部分内容将在类加载后存放到方法区的运行时常量池中；
 - 运行时常量池相对于Class文件常量池的另一个重要特征是具备动态性；运行期间也可能将新的常量放入池中，这种特性被开发人员利用比较多的是String类的intern()方法;
 
-### 2.2.7、直接内存
+### 2.2.7、直接内存（堆外内存）
 
-其并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域。它直接从操作系统中分配，因此不受Java堆大小的限制，但是会受到本机总内存的大小及处理器寻址空间的限制，因此它也可能导致 OutOfMemoryError 异常出现
+其并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域。它直接从操作系统中分配，因此不受Java堆大小的限制，但是会受到本机总内存的大小及处理器寻址空间的限制，因此它也可能导致 OutOfMemoryError 异常出现。
 
-如Nio中涉及到的DirectBuffer
+在JAVA中，可以通过Unsafe和NIO包下的ByteBuffer（DirectBuffer）来操作堆外内存。
+
+最底层是通过malloc方法申请的，但是这块内存需要进行手动释放，JVM并不会进行回收，幸好Unsafe提供了另一个接口freeMemory可以对申请的堆外内存进行释放
+
+**1、使用unsafe分配堆外内存**
+```java
+private static void unsafeAllocate() throws Exception{
+	// 回报安全异常：SecurityException
+//  Unsafe unsafe = Unsafe.getUnsafe();
+	Field theUnsafe = Unsafe.class.getDeclaredField("theUnsafe");
+	theUnsafe.setAccessible(true);
+	Unsafe unsafe = (Unsafe) theUnsafe.get(null);
+
+	unsafe.allocateMemory(1024);
+	unsafe.reallocateMemory(1024, 1024);
+	unsafe.freeMemory(1024);
+}
+```
+
+**2、使用Nio包写的DirectBuffer**
+```java
+ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
+```
+
+**3、堆外内存垃圾回收**
+- 堆外内存会溢出么
+
+	通过修改JVM参数：-XX:MaxDirectMemorySize=40M，将最大堆外内存设置为40M。既然堆外内存有限，则必然会发生内存溢出。
+	
+	为模拟内存溢出，可以设置JVM参数：-XX:+DisableExplicitGC，禁止代码中显式调用System.gc()。可以看到出现OOM。得到的结论是，堆外内存会溢出，并且其垃圾回收依赖于代码显式调用System.gc();
+	```java
+	Exception in thread "main" java.lang.OutOfMemoryError: Direct buffer memory
+	at java.nio.Bits.reserveMemory(Bits.java:694)
+	at java.nio.DirectByteBuffer.<init>(DirectByteBuffer.java:123)
+	at java.nio.ByteBuffer.allocateDirect(ByteBuffer.java:311)
+	at com.blue.fish.jvm.direct.DirectMemoryAllocate.nioAllocate(DirectMemoryAllocate.java:33)
+	at com.blue.fish.jvm.direct.DirectMemoryAllocate.main(DirectMemoryAllocate.java:17)
+	```
+- 什么时候会触发堆外内存回收
+
+	关于堆外内存垃圾回收的时机，首先考虑堆外内存的分配过程。JVM在堆内只保存堆外内存的引用，用DirectByteBuffer对象来表示。每个DirectByteBuffer对象在初始化时，都会创建一个对应的Cleaner对象。这个Cleaner对象会在合适的时候执行`unsafe.freeMemory(address)`，从而回收这块堆外内存。
+
+	当DirectByteBuffer对象在某次YGC中被回收，只有Cleaner对象知道堆外内存的地址。当下一次FGC执行时，Cleaner对象会将自身Cleaner链表上删除，并触发clean方法清理堆外内存。此时，堆外内存将被回收，Cleaner对象也将在下次YGC时被回收。如果JVM一直没有执行FGC的话，无法触发Cleaner对象执行clean方法，从而堆外内存也一直得不到释放。
+
+	其实，在ByteBuffer.allocateDirect方式中，会主动调用System.gc()强制执行FGC。JVM觉得有需要时，就会真正执行GC操作。不过很多线上环境的JVM参数有-XX:+DisableExplicitGC，导致了System.gc()等于一个空函数，根本不会触发FGC
+
+**4、使用堆外内存优点以及注意事项**
+
+- 优点：
+	- 减少了垃圾回收
+	- 加快了复制的速度
+
+- 注意事项：`java.nio.DirectByteBuffer`对象在创建过程中会先通过Unsafe接口直接通过`os::malloc`来分配内存，然后将内存的起始地址和大小存到DirectByteBuffer对象里，这样就可以直接操作这些内存。这些内存只有在DirectByteBuffer回收掉之后才有机会被回收，因此如果这些对象大部分都移到了old，但是一直没有触发CMS GC或者Full GC，那么悲剧将会发生，因为你的物理内存被他们耗尽了，因此为了避免这种悲剧的发生，通过-XX:MaxDirectMemorySize来指定最大的堆外内存大小，当使用达到了阈值的时候将调用System.gc来做一次full gc，以此来回收掉没有被使用的堆外内存；
 
 ## 2.3、JDK8的JVM内存结构
 
@@ -2426,3 +2478,4 @@ public void addShutdownHook(Thread hook) {
 * [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)
 * [Java虚拟机规范（JDK8）](https://docs.oracle.com/javase/specs/jvms/se8/html/index.html)
 * [钩子函数](https://segmentfault.com/a/1190000011496370)
+* [堆外内存](https://www.jianshu.com/p/35cf0f348275)
