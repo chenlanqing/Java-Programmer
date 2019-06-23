@@ -326,11 +326,13 @@ private static void unsafeAllocate() throws Exception{
 ```
 
 **2、使用Nio包写的DirectBuffer**
+
 ```java
 ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 ```
 
 **3、堆外内存垃圾回收**
+
 - 堆外内存会溢出么
 
 	通过修改JVM参数：-XX:MaxDirectMemorySize=40M，将最大堆外内存设置为40M。既然堆外内存有限，则必然会发生内存溢出。

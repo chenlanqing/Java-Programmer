@@ -573,30 +573,101 @@ ZREVRANGE 命令按相反的顺序获取有序集合的元素；也可以同时�
 	
 # 二、Redis内部数据结构
 
-## 1、quickList
+## 1、字符串处理-SDS
 
-## 2、ziplist
+Redis自己构建了一种名叫Simple dynamic string(SDS)的数据结构
+```c
+struct sdshdr{
+	//记录buf数组中已使用字节的数量
+	//等于 SDS 保存字符串的长度
+	int len;
+	//记录 buf 数组中未使用字节的数量
+	int free;
+	//字节数组，用于保存字符串
+	char buf[];
+}
+```
 
-## 3、robj
+其优点：
+- 开发者不用担心字符串变更造成的内存溢出问题。
+- 常数时间复杂度获取字符串长度len字段。
+- 空间预分配free字段，会默认留够一定的空间防止多次重分配内存
 
-## 4、sds
+## 2、链表
 
-## 5、dict
+Redis的链表在双向链表上扩展了头、尾节点、元素数等属性
+```c
+typedef  struct listNode{
+	//前置节点
+	struct listNode *prev;
+	//后置节点
+	struct listNode *next;
+	//节点的值
+	void *value;  
+}
+typedef struct list{
+	//表头节点
+	listNode *head;
+	//表尾节点
+	listNode *tail;
+	//链表所包含的节点数量
+	unsigned long len;
+	//节点值复制函数
+	void (*free) (void *ptr);
+	//节点值释放函数
+	void (*free) (void *ptr);
+	//节点值对比函数
+	int (*match) (void *ptr,void *key);
+}list;
+```
 
-## 6、skiplist
+Redis的链表有这几个特点：
+- 可以直接获得头、尾节点。
+- 常数时间复杂度得到链表长度。
+- 是双向链表
 
-### 6.1、特性
+## 3、字典(Hash)
 
-为了实现sorted set这种对外的数据结构，Redis里面使用skiplist
+Redis的Hash，就是在数组+链表的基础上，进行了一些rehash优化等
 
-### 6.2、实现
+- Reids的Hash采用链地址法来处理冲突，然后它没有使用红黑树优化。
+- 哈希表节点采用单链表结构。
+- rehash优化；
 
-### 6.3、Redis为什么用skiplist而不用平衡树？
+### 3.1、rehash优化
+
+## 4、skiplist
+
+### 4.1、特性
+
+为了实现sorted set这种对外的数据结构，Redis里面使用skiplist。跳跃表在redis中用在有序集合键、集群节点内部数据结构
+
+### 4.2、实现
+
+分为几个概念：
+- 层（level）：层，也就是level[]字段，层的数量越多，访问节点速度越快。(因为它相当于是索引，层数越多，它索引就越细，就能很快找到索引值)
+- 前进指针(forward)：层中有一个forward字段，用于从表头向表尾方向访问；
+- 跨度(span)：用于记录两个节点之间的距离
+- 后退指针(backward)：用于从表尾向表头方向访问。
+
+### 4.3、Redis为什么用skiplist而不用平衡树？
 
 - 从内存占用上来说，skiplist比平衡树更灵活一些。一般来说，平衡树每个节点包含2个指针（分别指向左右子树），而skiplist每个节点包含的指针数目平均为1/(1-p)，具体取决于参数p的大小。如果像Redis里的实现一样，取p=1/4，那么平均每个节点包含1.33个指针，比平衡树更有优势；
 - 对范围查找的支持：在做范围查找的时候，平衡树比skiplist操作要复杂；只需要在找到小值之后，对第1层链表进行若干步的遍历就可以实现
 - 更容易实现：平衡树的插入和删除操作可能引发子树的调整，逻辑复杂，而skiplist的插入和删除只需要修改相邻节点的指针，操作简单又快速；
 - 从算法实现难度上来比较，skiplist比平衡树要简单得多
+
+## 5、整数集合(intset)
+
+Reids对整数存储专门作了优化，intset就是redis用于保存整数值的集合数据结构。当一个结合中只包含整数元素，redis就会用这个来存储
+
+## 6、压缩列表(ziplist)
+
+ziplist是redis为了节约内存而开发的顺序型数据结构。它被用在列表键和哈希键中。一般用于小数据存储
+
+## 7、快速列表(quicklist)
+
+一个由ziplist组成的双向链表。但是一个quicklist可以有多个quicklist节点，它很像B树的存储方式。是在redis3.2版本中新加的数据结构，用在列表的底层实现
 
 # 三、Redis 持久化
 
@@ -1455,3 +1526,4 @@ pub/sub：主题订阅模式
 - [Redis数据结构](https://mp.weixin.qq.com/s/69xl2yU4B97aQIn1k_Lwqw)
 - [Redis数据结构-SkipList](https://juejin.im/post/57fa935b0e3dd90057c50fbc)
 - [Redis Cluster](http://www.redis.cn/topics/cluster-tutorial.html)
+- [Redis内存数据结构](https://mp.weixin.qq.com/s/DpNzFRUMwtz0-YY0gdQGgA)
