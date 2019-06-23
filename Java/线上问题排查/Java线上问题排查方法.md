@@ -543,7 +543,13 @@ vmstat：是Virtual Meomory Statistics（虚拟内存统计）的缩写，是实
 
 ### 4.5、死锁
 
+#### 4.5.1、java死锁
+
 jstack可以帮助我们检查死锁，并且在日志中打印具体的死锁线程信息
+
+#### 4.5.2、数据库死锁
+
+通过命令查找死锁信息：`SHOW ENGINE INNODB STATUS`，一般日志里会记录产生死锁的SQL
 
 ### 4.6、长时间GC停顿
 
