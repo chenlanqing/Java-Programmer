@@ -978,7 +978,7 @@ JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相�
 
 ### 6.4.1、类定义
 
-public abstract class ClassLoader{} 是一个抽象类；
+`public abstract class ClassLoader`是一个抽象类；
 
 ### 6.4.2、loadClass()方法的实现
 ```java
@@ -1624,7 +1624,39 @@ public class StaticPai{
 
 # 9、JVM异常处理
 
+## 9.1、JVM如何捕获异常
 
+在编译生成的字节码中，每个方法都附带一个异常表。异常表中的每一个条目代表一个异常处理器，并且由from指针、to指针、target指针以及所捕获的异常类型构成。这些指针的值时字节码索引，用以定位字节码。
+
+其中from指针、to指针标示了该异常处理器锁监控的范围，例如try代码块所覆盖的范围。target指针则指向异常处理器的其实位置，例如catch代码块的起始位置；
+```java
+
+public static void main(String[] args) {
+  try {
+    mayThrowException();
+  } catch (Exception e) {
+    e.printStackTrace();
+  }
+}
+// 对应的 Java 字节码
+public static void main(java.lang.String[]);
+  Code:
+    0: invokestatic mayThrowException:()V
+    3: goto 11
+    6: astore_1
+    7: aload_1
+    8: invokevirtual java.lang.Exception.printStackTrace
+   11: return
+  Exception table:
+    from  to target type
+      0   3   6  Class java/lang/Exception  // 异常表条目
+```
+
+当程序触发异常时，Java虚拟机会自上至下遍历异常表中的所有条目。当触发异常的字节码索引值在某个异常表条目的监控范围内，Java虚拟机会判断所抛出的异常和该条目想要捕获的异常是否匹配。如果匹配，Java虚拟机会将控制流转移至该条目target指针指向的字节码；
+
+如果遍历完所有异常表条目后，Java虚拟机仍未匹配到异常处理器，那么它会弹出当前方法对应的Java栈帧，并且在调用者中重复上述操作。在最坏的情况下，Java虚拟机需要遍历当前线程Java栈上的所有方法的异常表；
+
+finally代码块的编译：复制finally代码块的内容，分别放在try-catch代码块所有正常执行路径以及异常执行路径的出口中。针对异常执行路径，Java编译器会生成一个或多个异常条目，监控整个try-catch代码块，并且捕获所有种类的异常。这些异常表条目的target指针将指向另一份复制的finally代码块。并且，在这个finally代码块的最后，Java编译器会重新抛出所捕获的异常。
 
 # 10、Java编译
 

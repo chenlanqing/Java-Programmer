@@ -1,3 +1,18 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、sort(int[] a)](#%E4%B8%80sortint-a)
+  - [1、JDK1.6](#1jdk16)
+    - [1.1、源码](#11%E6%BA%90%E7%A0%81)
+    - [1.2、分析](#12%E5%88%86%E6%9E%90)
+  - [2、JDK1.7](#2jdk17)
+    - [2.1、源码：](#21%E6%BA%90%E7%A0%81)
+  - [3、JDK1.8](#3jdk18)
+    - [3.1、源码：](#31%E6%BA%90%E7%A0%81)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # 一、sort(int[] a)
 

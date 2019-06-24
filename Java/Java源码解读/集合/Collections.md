@@ -2,7 +2,19 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一.sort()方法实现:](#%E4%B8%80sort%E6%96%B9%E6%B3%95%E5%AE%9E%E7%8E%B0)
+- [一、sort()方法实现](#%E4%B8%80sort%E6%96%B9%E6%B3%95%E5%AE%9E%E7%8E%B0)
+  - [1、JDK1.6](#1jdk16)
+    - [1.1、源码](#11%E6%BA%90%E7%A0%81)
+  - [2、JDK1.7](#2jdk17)
+    - [2.1、源码](#21%E6%BA%90%E7%A0%81)
+  - [3、JDK1.8](#3jdk18)
+- [二、常见内部类](#%E4%BA%8C%E5%B8%B8%E8%A7%81%E5%86%85%E9%83%A8%E7%B1%BB)
+  - [1、SynchronizedList](#1synchronizedlist)
+  - [2、SynchronizedMap](#2synchronizedmap)
+  - [3、SynchronizedSet](#3synchronizedset)
+  - [4、SynchronizedSortedMap](#4synchronizedsortedmap)
+  - [5、SynchronizedSortedSet](#5synchronizedsortedset)
+  - [6、一系列的不可变集合](#6%E4%B8%80%E7%B3%BB%E5%88%97%E7%9A%84%E4%B8%8D%E5%8F%AF%E5%8F%98%E9%9B%86%E5%90%88)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

@@ -15,6 +15,10 @@
     - [1.1、区别](#11%E5%8C%BA%E5%88%AB)
     - [1.2、关于Vector线程安全](#12%E5%85%B3%E4%BA%8Evector%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8)
   - [2、ArrayList的sublist修改是否影响list本身](#2arraylist%E7%9A%84sublist%E4%BF%AE%E6%94%B9%E6%98%AF%E5%90%A6%E5%BD%B1%E5%93%8Dlist%E6%9C%AC%E8%BA%AB)
+  - [3、为什么最好在newArrayList的时候最好指定容量？](#3%E4%B8%BA%E4%BB%80%E4%B9%88%E6%9C%80%E5%A5%BD%E5%9C%A8newarraylist%E7%9A%84%E6%97%B6%E5%80%99%E6%9C%80%E5%A5%BD%E6%8C%87%E5%AE%9A%E5%AE%B9%E9%87%8F)
+  - [4、SynchronizedList、Vector有什么区别](#4synchronizedlistvector%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB)
+  - [5、Arrays.asList(T...args)获得的List特点](#5arraysaslisttargs%E8%8E%B7%E5%BE%97%E7%9A%84list%E7%89%B9%E7%82%B9)
+  - [6、Iterator和ListIterator区别](#6iterator%E5%92%8Clistiterator%E5%8C%BA%E5%88%AB)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

@@ -14,7 +14,7 @@
   - [8、初始化HashMap指定容量](#8%E5%88%9D%E5%A7%8B%E5%8C%96hashmap%E6%8C%87%E5%AE%9A%E5%AE%B9%E9%87%8F)
 - [二、签名](#%E4%BA%8C%E7%AD%BE%E5%90%8D)
 - [三、设计理念](#%E4%B8%89%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
-  - [1.HashMap 的数据结构](#1hashmap-%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
+  - [1、HashMap 的数据结构](#1hashmap-%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
   - [2、哈希表(hash table)](#2%E5%93%88%E5%B8%8C%E8%A1%A8hash-table)
   - [3、HashMap是一个线性的数组实现](#3hashmap%E6%98%AF%E4%B8%80%E4%B8%AA%E7%BA%BF%E6%80%A7%E7%9A%84%E6%95%B0%E7%BB%84%E5%AE%9E%E7%8E%B0)
   - [4、HashMap 的工作原理](#4hashmap-%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
@@ -37,15 +37,17 @@
     - [3.4、关于性能](#34%E5%85%B3%E4%BA%8E%E6%80%A7%E8%83%BD)
   - [4、resize 的实现](#4resize-%E7%9A%84%E5%AE%9E%E7%8E%B0)
     - [4.1、JDK6的实现](#41jdk6%E7%9A%84%E5%AE%9E%E7%8E%B0)
+    - [4.2、JDK7实现](#42jdk7%E5%AE%9E%E7%8E%B0)
     - [4.3、JDK8 的实现](#43jdk8-%E7%9A%84%E5%AE%9E%E7%8E%B0)
-- [六、高并发下 HashMap 的使用的问题](#%E5%85%AD%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B-hashmap-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98)
-- [七、面试题](#%E4%B8%83%E9%9D%A2%E8%AF%95%E9%A2%98)
+  - [5、高并发下 HashMap 的使用的问题](#5%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B-hashmap-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98)
+- [六、面试题](#%E5%85%AD%E9%9D%A2%E8%AF%95%E9%A2%98)
   - [1、get和put的原理？JDK8](#1get%E5%92%8Cput%E7%9A%84%E5%8E%9F%E7%90%86jdk8)
   - [2、你知道hash的实现吗？为什么要这样实现？](#2%E4%BD%A0%E7%9F%A5%E9%81%93hash%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%90%97%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%99%E6%A0%B7%E5%AE%9E%E7%8E%B0)
   - [3、容量处理](#3%E5%AE%B9%E9%87%8F%E5%A4%84%E7%90%86)
   - [4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现](#4%E4%B8%BA%E4%BB%80%E4%B9%88-jdk8-%E7%9A%84-hashmap-%E4%BD%BF%E7%94%A8%E7%9A%84%E8%B7%9F%E4%BB%A5%E5%BE%80%E4%B8%8D%E5%90%8C%E7%9A%84%E5%AE%9E%E7%8E%B0)
   - [5、为什么HashMap默认的加载因子是0.75](#5%E4%B8%BA%E4%BB%80%E4%B9%88hashmap%E9%BB%98%E8%AE%A4%E7%9A%84%E5%8A%A0%E8%BD%BD%E5%9B%A0%E5%AD%90%E6%98%AF075)
   - [6、为什么HashMap的默认初始容量是16,且容量必须是 2的幂](#6%E4%B8%BA%E4%BB%80%E4%B9%88hashmap%E7%9A%84%E9%BB%98%E8%AE%A4%E5%88%9D%E5%A7%8B%E5%AE%B9%E9%87%8F%E6%98%AF16%E4%B8%94%E5%AE%B9%E9%87%8F%E5%BF%85%E9%A1%BB%E6%98%AF-2%E7%9A%84%E5%B9%82)
+  - [7、](#7)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -55,6 +57,7 @@
 HashMap 是基于一个数组和多个链表来实现的，HashMap继承AbstractMap, 实现了 Map、Cloneable、Serializable
 
 ## 1、HashMap的特点
+
 ### 1.1、HashMap 基本结构
 
 在JDK8之前使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对,HashMap将数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组),这个内部数组的默认长度是 16；
@@ -77,7 +80,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 ## 2、HashMap和HashTable的区别
 
-- HashTable的方法是同步的，在方法的前面都有synchronized来同步，HashMap未经同步，所以在多线程场合要手动同步
+- HashTable的方法是同步的，在方法的前面都有synchronized来同步，HashMap未经同步，所以在多线程场合要手动同步；
 - HashTable不允许null值(key和value都不可以) ，HashMap允许null值(key和value都可以)。
 - HashTable有一个contains(Object value)功能和containsValue(Object value)功能一样。
 - HashTable是基于Dictionary类继承的；HashMap继承抽象类AbstractMap实现了Map接口；
@@ -153,10 +156,11 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 	}
 	```
 - 红黑树是自平衡的二叉搜索树，不管是添加还是删除节点，它的内部机制可以保证它的长度总是log(n)。使用这种类型的树，最主要的好处是针对内部表中许多数据都具有相同索引（桶）的情况，这时对树进行搜索的复杂度是O(log(n))，而对于链表来说，执行相同的操作，复杂度是O(n)；
+
 - jdk8中HashMap有三个关于红黑树的关键参数：
 	* TREEIFY_THRESHOLD = 8：
 
-		一个桶的树化阈值,当桶中元素超过这个值时,使用红黑树节点替换链表节点值为8，应该跟加载因子类似;
+		一个桶的树化阈值，当桶中元素超过这个值时，使用红黑树节点替换链表节点值为8，应该跟加载因子类似；
 
 		理想情况下使用随机的哈希码，容器中节点分布在hash桶中的频率遵循泊松分布，按照泊松分布的计算公式计算出了桶中元素个数和概率的对照表，可以看到链表中元素个数为8时的概率已经非常小，再多的就更少了，所以原作者在选择链表元素个数时选择了8，是根据概率统计而选择的
 
@@ -164,7 +168,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 	* UNTREEIFY_THRESHOLD = 6：
 
-		一个树的链表还原阈值,当扩容时,桶中元素个数小于这个值,会把树形的桶元素还原为链表结构，这个值是6，应该比 TREEIFY_THRESHOLD 小
+		一个树的链表还原阈值，当扩容时，桶中元素个数小于这个值，会把树形的桶元素还原为链表结构，这个值是6，应该比 TREEIFY_THRESHOLD 小
 
 		为什么是6和8？中间有个差值7可以防止链表和树之间频繁的转换。假设一下，如果设计成链表个数超过8则链表转换成树结构，链表个数小于8则树结构转换成链表，如果一个HashMap不停的插入、删除元素，链表个数在8左右徘徊，就会频繁的发生树转链表、链表转树，效率会很低。
 
@@ -172,7 +176,13 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 	
 		哈希表的最小树形化容量，当哈希表中的容量大于这个值时，表中的桶才能进行树形化，否则桶内元素太多时会扩容,而不是树形化。为了避免进行扩容、树形化选择的冲突,这个值不能小于 4 * TREEIFY_THRESHOLD
 
-　　
+- 为什么使用红黑树而不使用二叉树？
+
+	之所以选择红黑树是为了解决二叉查找树的缺陷：二叉查找树在特殊情况下会变成一条线性结构（这就跟原来使用链表结构一样了，造成层次很深的问题），遍历查找会非常慢。而红黑树在插入新数据后可能需要通过左旋、右旋、变色这些操作来保持平衡。引入红黑树就是为了查找数据快，解决链表查询深度的问题；
+
+	**但是为什么会有链表与红黑树的相互转化？**
+
+	红黑树属于平衡二叉树，为了保持“平衡”是需要付出代价的，但是该代价所损耗的资源要比遍历线性链表要少。所以当长度大于8的时候，会使用红黑树；如果链表长度很短的话，根本不需要引入红黑树，引入反而会慢
 
 ## 7、延迟加载机制
 
@@ -180,9 +190,10 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 ## 8、初始化HashMap指定容量
 
-如果你需要存储大量数据，你应该在创建HashMap时指定一个初始的容量，这个容量应该接近你期望的大小。通过初始化时指定Map期望的大小，你可以避免调整大小操作带来的消耗。如果你不这样做，Map会使用默认的大小即16，factorLoad的值是0.75。前11次调用put()方法会非常快，但是第12次（16*0.75）调用时会创建一个新的长度为32的内部数组（以及对应的链表/树），第13次到第22次调用put()方法会很快
+如果你需要存储大量数据，你应该在创建HashMap时指定一个初始的容量，这个容量应该接近你期望的大小。通过初始化时指定Map期望的大小，你可以避免调整大小操作带来的消耗。如果你不这样做，Map会使用默认的大小即16，factorLoad的值是0.75。前11次调用put()方法会非常快，但是第12次（16*0.75）调用时会创建一个新的长度为32的内部数组（以及对应的链表/树），第13次到第22次调用put()方法会很快；
 
 # 二、签名
+
 ```java
 public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable, Serializable
 ```
@@ -196,8 +207,6 @@ public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable
 	- 如果要实现个可变(modifiable)的map，首先继承 AbstractMa，然后重写 AbstractMap 的put方法，同时实现entrySet所返回set的迭代器的remove方法即可
 
 ***为什么继承了 AbstractMap 还需要实现 Map 接口？*** HashMap的作者说这是一个写法错误；并没有其他意思；也有可能是为了语义和代码上更清晰吧；
-
-
 
 # 三、设计理念
 
@@ -282,6 +291,9 @@ public HashMap() {
 	```java
 	static final int DEFAULT_INITIAL_CAPACITY = 1 << 4;
 	```
+	为什么容量必须是2的倍数：
+	索引计算公式为i = (n - 1) & hash，如果n为2次幂，那么n-1的低位就全是1，哈希值进行与操作时可以保证低位的值不变，从而保证分布均匀，效果等同于hash%n，但是位运算比取余运算要高效的多
+
 - Capacity就是bucket的大小，Load factor就是bucket填满程度的最大比例。如果对迭代性能要求很高的话不要把capacity设置过大，也不要把load factor设置过小。当bucket中的entries的数目大于capacity*load factor时就需要调整bucket的大小为当前的2倍
 
 ## 3、modcount
@@ -546,7 +558,7 @@ final int hash(Object k) {
 
 ### 3.3、JDK8的实现
 
-高16bit不变,低16bit和高16bit做了一个异或
+采用"扰乱函数"的解决方案，将key的哈希值，进行高16位和低16位异或操作，增加低16位的随机性，降低哈希冲突的可能性
 ```java
 static final int hash(Object key) {
 	int h;
@@ -562,6 +574,7 @@ HashMap的数据是存储在链表数组里面的，在对HashMap进行插入/�
 ## 4、resize 的实现
 
 ### 4.1、JDK6的实现
+
 ```java
 void resize(int newCapacity) {
 	Entry[] oldTable = table;
@@ -577,7 +590,7 @@ void resize(int newCapacity) {
 	threshold = (int)(newCapacity * loadFactor);
 }
 ```
-- 获取当前数组的容量,如果容量已经是默认最大容量 MAXIMUM_CAPACITY,则将临界值改为 Integer.MAX_VALUE
+- 获取当前数组的容量，如果容量已经是默认最大容量`MAXIMUM_CAPACITY`，则将临界值改为 `Integer.MAX_VALUE`
 	```java
 	if (oldCapacity == MAXIMUM_CAPACITY) {
 		threshold = Integer.MAX_VALUE;
@@ -595,7 +608,9 @@ void resize(int newCapacity) {
 	// 重新计算临界值
 	threshold = (int)(newCapacity * loadFactor);
 	```
+
 ### 4.2、JDK7实现
+
 ```java
 void resize(int newCapacity) {
 	Entry[] oldTable = table;
@@ -615,12 +630,14 @@ void resize(int newCapacity) {
 
 ### 4.3、JDK8 的实现
 
+```java
 final Node<K,V>[] resize()
+```
 
 - 当put时，如果发现目前的bucket占用程度已经超过了Load Factor所希望的比例，那么就会发生resize。在resize的过程，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点再放到新的bucket中
 - 扩充HashMap的时候，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0就好了，是0的话索引没变，是1的话索引变成“原索引+oldCap”
 
-# 六、高并发下 HashMap 的使用的问题
+## 5、高并发下 HashMap 的使用的问题
 
 - 扩容-resize()：影响resize发生的因素
 	- capacity：HashMap当前的长度(2的幂);
@@ -628,9 +645,9 @@ final Node<K,V>[] resize()
 - 扩容步骤
 	- （1）扩容：创建一个新的entry数组，长度是原来数组的两倍；
 	- （2）rehash：遍历原entry数组，把所有的entry重写hash到新的数组。为什么需要重新hash？因为长度扩大异以后，hash规则也随之改变；`index =  HashCode(Key)&(Length - 1)` 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算.
-- 在单线程下上述步骤执行没有任何问题；在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环
+- 在单线程下上述步骤执行没有任何问题；在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环，从而报内存溢出。
 - 在高并发环境下，通常使用 `ConcurrentHashMap`，兼顾了线程安全和性能；
-- 下面代码只在JDK7以前的版本有效，jdk8之后就不存在这种问题了
+- 下面代码只在JDK7以前的版本有效，jdk8之后就不存在这种问题了。因为JDK8中扩容的时候不存在rehash操作。
 	```java
 	private static Map<Long, Set<Integer>> setMap = new ConcurrentHashMap<>();
 	public static void main(String[] args) throws InterruptedException {
@@ -662,17 +679,17 @@ final Node<K,V>[] resize()
 	}
 	```
 
-# 七、面试题
+# 六、面试题
 
 ## 1、get和put的原理？JDK8
 
-通过对key的hashCode()进行hashing,并计算下标`( n-1 & hash)`,从而获得buckets的位置。如果产生碰撞,则利用key.equals()方法去链表或树中去查找对应的节点.
+通过对key的hashCode()进行hashing，并计算下标`( n-1 & hash)`，从而获得buckets的位置。如果产生碰撞，则利用key.equals()方法去链表或树中去查找对应的节点.
 	
 ## 2、你知道hash的实现吗？为什么要这样实现？
 
-在Java 1.8的实现中,是通过hashCode()的高16位异或低16位实现的：`(h = k.hashCode()) ^ (h >>> 16)`；
+在Java 1.8的实现中，是通过hashCode()的高16位异或低16位实现的：`(h = k.hashCode()) ^ (h >>> 16)`；
 
-主要是从速度、功效、质量来考虑的,这么做可以在bucket的n比较小的时候,也能保证考虑到高低bit都参与到hash的计算中,同时不会有太大的开销
+主要是从速度、功效、质量来考虑的，这么做可以在bucket的n比较小的时候，也能保证考虑到高低bit都参与到hash的计算中，同时不会有太大的开销
 
 ## 3、容量处理
 
@@ -681,7 +698,7 @@ final Node<K,V>[] resize()
 
 ## 4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现
 
-- 一直到JDK7为止，HashMap 的结构都是这么简单，基于一个数组以及多个链表的实现，hash 值冲突时就将对应节点以链表形式存储。这样的 HashMap 在性能上存在问题：如果很多节点在hash时发生碰撞，存储在一个链表中，那么如果要查找其中一个节点时，不可避免要花费O(N)的时间;
+- 一直到JDK7为止，HashMap 的结构都是这么简单，基于一个数组以及多个链表的实现，hash 值冲突时就将对应节点以链表形式存储。这样的 HashMap 在性能上存在问题：如果很多节点在hash时发生碰撞，存储在一个链表中，那么如果要查找其中一个节点时，不可避免要花费O(N)的时间；
 - 在JDK8中，使用红黑树来解决问题。在最坏的情况下，链表的查找时间复杂度是O(N)，而红黑树一直是O(logN)。JDK7 中HashMap采用的是位桶+链表的方式，即我们常说的散列链表的方式；而 JDK8 中采用的是`位桶+链表/红黑树`也是非线程安全的。当某个位桶的链表的长度达到某个阀值的时候，这个链表就将转换成红黑树
 
 ## 5、为什么HashMap默认的加载因子是0.75
@@ -704,7 +721,7 @@ final Node<K,V>[] resize()
 	```
 	从上面的表中可以看到当桶中元素到达8个的时候，概率已经变得非常小，也就是说用0.75作为加载因子，每个碰撞位置的链表长度超过８个是几乎不可能的
 
-## 6、为什么HashMap的默认初始容量是16,且容量必须是 2的幂
+## 6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂
 
 之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法。从key映射到HashMap 数组对应的位置，会用到一个hash函数。实现高效的hash算法，HashMap 中使用位运算。index = hashcode(key) & (length - 1)。  hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位。长度是2的幂不仅提高了性能，因为length - 1的二进制值位全是1，这种情况下，index的结果等同于Hashcode后几位的值，只要输入hashcode均匀分布，hash算法的结果就是均匀的。
 

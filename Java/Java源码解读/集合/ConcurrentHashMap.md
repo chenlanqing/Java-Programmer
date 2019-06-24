@@ -1,3 +1,33 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、ConcurrentHashMap概述](#%E4%B8%80concurrenthashmap%E6%A6%82%E8%BF%B0)
+  - [1、为什么会出现ConcurrentHashMap](#1%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E5%87%BA%E7%8E%B0concurrenthashmap)
+  - [2、ConcurrentHashMap 不同版本演进](#2concurrenthashmap-%E4%B8%8D%E5%90%8C%E7%89%88%E6%9C%AC%E6%BC%94%E8%BF%9B)
+    - [2.1、JDK6](#21jdk6)
+    - [2.2、JDK1.7版本](#22jdk17%E7%89%88%E6%9C%AC)
+    - [2.3、JDK8版本](#23jdk8%E7%89%88%E6%9C%AC)
+  - [3、分段锁形式如何保证size的一致性](#3%E5%88%86%E6%AE%B5%E9%94%81%E5%BD%A2%E5%BC%8F%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81size%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7)
+- [二、JDK8的实现](#%E4%BA%8Cjdk8%E7%9A%84%E5%AE%9E%E7%8E%B0)
+  - [1、基本变量](#1%E5%9F%BA%E6%9C%AC%E5%8F%98%E9%87%8F)
+  - [2、内部类](#2%E5%86%85%E9%83%A8%E7%B1%BB)
+    - [2.1、Node](#21node)
+    - [2.2、TreeNode](#22treenode)
+    - [2.3、TreeBin](#23treebin)
+  - [3、put方法](#3put%E6%96%B9%E6%B3%95)
+  - [4、get方法](#4get%E6%96%B9%E6%B3%95)
+  - [5、扩容](#5%E6%89%A9%E5%AE%B9)
+  - [6、hash冲突解决](#6hash%E5%86%B2%E7%AA%81%E8%A7%A3%E5%86%B3)
+- [面试](#%E9%9D%A2%E8%AF%95)
+  - [1、size方法和mappingCount方法的异同，两者计算是否准确](#1size%E6%96%B9%E6%B3%95%E5%92%8Cmappingcount%E6%96%B9%E6%B3%95%E7%9A%84%E5%BC%82%E5%90%8C%E4%B8%A4%E8%80%85%E8%AE%A1%E7%AE%97%E6%98%AF%E5%90%A6%E5%87%86%E7%A1%AE)
+  - [2、多线程环境下如何进行扩容](#2%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E6%89%A9%E5%AE%B9)
+  - [3、HashMap、HashTable、ConcurrenHashMap区别](#3hashmaphashtableconcurrenhashmap%E5%8C%BA%E5%88%AB)
+  - [4、](#4)
+- [参考资料:](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 基于如下来分析
 - ConcurrentHashMap 的锁分段技术；
