@@ -290,6 +290,20 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
     <parameter property="user_count" mode="OUT" jdbcType="INTEGER"/>
 </parameterMap>
 ```
+## 6、批量插入
+
+### 6.1、mybatis-foreach处理
+
+
+### 6.2、mybatis代码处理
+
+
+### 6.3、JDBC批处理 + 事务
+
+
+### 6.4、数据分批 + JDBC批处理 + 事务
+
+
 
 # 四、Mybatis与Spring整合
 

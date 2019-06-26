@@ -1439,10 +1439,9 @@ public class ParentThreadSharedDataWithSon {
 
 - key使用弱引用：引用的ThreadLocal的对象被回收了，由于ThreadLocalMap持有ThreadLocal的弱引用，即使没有手动删除，ThreadLocal 也会被回收，value在下一次ThreadLocalMap调用set，get的时候会被清除；
 
-- 对比上述情况可以发现：<br>
-	由于ThreadLocalMap的生命周期跟Thread一样长，如果都没有手动删除对应key，都会导致内存泄漏，但是使用弱引用可以多一层保障：弱引用ThreadLocal不会内存泄漏，对应的value在下一次ThreadLocalMap调用set，get，remove的时候会被清除；
-- ThreadLocal内存泄漏的根源是：<br>
-	由于ThreadLocalMap的生命周期跟Thread一样长，如果没有手动删除对应key就会导致内存泄漏，而不是因为弱引用；
+- 对比上述情况可以发现：由于ThreadLocalMap的生命周期跟Thread一样长，如果都没有手动删除对应key，都会导致内存泄漏，但是使用弱引用可以多一层保障：弱引用ThreadLocal不会内存泄漏，对应的value在下一次ThreadLocalMap调用set，get，remove的时候会被清除；
+
+- ThreadLocal内存泄漏的根源是：由于ThreadLocalMap的生命周期跟Thread一样长，如果没有手动删除对应key就会导致内存泄漏，而不是因为弱引用；
 
 #### 11.7.4、ThreadLocal最佳实践：如何避免内存泄漏
 
@@ -3037,7 +3036,7 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 
 - 基本组成部分
 
-	- 线程池管理器：用于创建并管理线程池，包含c黄金线程池，销毁线程池，添加新任务等功能
+	- 线程池管理器：用于创建并管理线程池，包括创建线程池、销毁线程池、添加新任务等功能；
 	- 工作线程：线程池中的线程；
 	- 任务接口：每个任务必须实现的接口，以供工作线程调度任务执行；
 	- 任务队列：用于存放没有处理的任务，提供一种缓存机制；
@@ -3120,9 +3119,9 @@ ExecutorService的默认实现，线程池中最核心的一个类
 
 - corePoolSize：核心线程数大小，`当线程数 < corePoolSize`，会创建线程执行runnable；如果等于0，则任务执行完之后，没有任何请求进入时销毁线程池的线程；如果大于0，即使本地任务执行完毕，核心线程也不会被销毁；
 - maximumPoolSize：最大线程数， `当线程数 >= corePoolSize`的时候，会把runnable放入workQueue中；largestPoolSize：记录了曾经出现的最大线程个数；如果待执行的线程数大于此值，需要借助第5个参数的帮助，缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
-- keepAliveTime：保持存活时间，当线程数大于corePoolSize的空闲线程能保持的最大时间。在默认情况下，当线程池的线程数大于 corePoolSize时，keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收.
+- keepAliveTime：保持存活时间，当线程数大于`corePoolSize`的空闲线程能保持的最大时间。在默认情况下，当线程池的线程数大于 `corePoolSize` 时，keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收.
 - unit：时间单位
-- workQueue：保存任务的阻塞队列；当请求的线程数大于 maximumPoolSize时，线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表，使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取，是一个生产消费模型队列；
+- workQueue：保存任务的阻塞队列；当请求的线程数大于 `corePoolSize` 时，线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表，使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取，是一个生产消费模型队列；
 - threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时，就可以知道线程任务是由哪个线程工厂产生的
 - handler：拒绝策略，默认有四种拒绝策略；当超过参数 workQueue的任务缓存区上限的时候，就可以通过该策略处理请求，这是一种简单的限流保护
 - workers：保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的，线程池底层的存储结构其实就是一个HashSet
@@ -3460,7 +3459,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 
 当一个线程因为未捕获的异常而退出时，JVM会把这个事件报告给应用提供的UncaughtExceptionHandler异常处理器，如果没有提供任何的异常处理器，那么默认的行为就是将堆栈信息输送到System.err；
 
-*注意，这个方案不适用与使用submit方式提交任务的情况，原因是：FutureTask的run方法捕获异常后保存，不再重新抛出，意味着runWorker方法并不会捕获到抛出的异常，线程也就不会退出，也不会执行我们设置的UncaughtExceptionHandler，只能在execute.execute()使用*
+*注意，这个方案不适用于使用submit方式提交任务的情况，原因是：FutureTask的run方法捕获异常后保存，不再重新抛出，意味着runWorker方法并不会捕获到抛出的异常，线程也就不会退出，也不会执行我们设置的UncaughtExceptionHandler，只能在execute.execute()使用*
 
 如何为工作者线程设置UncaughtExceptionHandler呢？ThreadPoolExecutor的构造函数提供一个ThreadFactory，可以在其中设置我们自定义的UncaughtExceptionHandler，这里不再赘述。
 
@@ -3695,9 +3694,8 @@ super关键字并没有新建一个父类的对象，比如说widget，然后再
 * [线程池的使用](http://www.cnblogs.com/dolphin0520/p/3932921.html)
 * [线程池原理](http://www.cnblogs.com/cm4j/p/thread-pool.html)
 * [线程池](https://mp.weixin.qq.com/s/pnjWFG7iujO3LzpM79pt7w)
-* [Java线程池](https://javadoop.com/post/java-thread-pool)
 * [ThreadPoolExecutor源码分析](https://mp.weixin.qq.com/s/vVFbVZUqSsTdoAb9Djvk5A)
-* [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/?hmsr=toutiao.io&utm_medium=toutiao.io&utm_source=toutiao.io)
+* [Java线程池设计思想及源码解读](https://javadoop.com/2017/09/05/java-thread-pool/)
 * [Exchanger](http://cmsblogs.com/?p=2269)
 * [类加载过程中死锁](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
 * [CPU Cache 与缓存行](https://mp.weixin.qq.com/s/4oU6YqxHso2ir0NXtBuaog)

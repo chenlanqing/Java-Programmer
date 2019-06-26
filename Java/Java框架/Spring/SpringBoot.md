@@ -2203,8 +2203,8 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 启动器依赖自动配置；别人只需要引入启动器（starter）
 
 ## 5、实例
-自定义starter步骤：
 
+自定义starter步骤：
 - （1）启动器模块
 	```xml
 	<?xml version="1.0" encoding="UTF-8"?>
