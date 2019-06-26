@@ -253,7 +253,7 @@ RocketMQ设计是基于主题的发布与订阅模式，核心功能包括：消
 - 消费者消费模式有两种：集群消费和广播消费
 - 消费者获取消息有两种模式：推送模式和拉取模式。绝大部分场景下只会使用 PushConsumer 推送模式；
 
-# 三、RocketMQ核心
+# 三、RocketMQ消息消费
 
 ## 1、生产者
 
@@ -296,17 +296,7 @@ public enum SendStatus {
 }
 ```
 
-### 1.6、延迟消息
-
-- 延迟消息：消息发送到Broker之后，要特定的时间才会被Consumer消费；
-- 目前只支持固定精度的定时消息：RocketMQ 支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息。预设值的延迟时间间隔为：1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h
-- MessageStoreConfig配置类、ScheduleMessageService 任务类；
-- 在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。broker在接收到延迟消息的时候会把对应延迟级别的消息先存储到对应的延迟队列中，等延迟消息时间到达时，会把消息重新存储到对应的topic的queue里面
-- 主要原理：
-    - 定时消息发送到 Broker 后，会被存储 Topic 为 SCHEDULE_TOPIC_XXXX 中，并且所在 Queue 编号为延迟级别 - 1；需要 -1 的原因是，延迟级别是从 1 开始的。如果延迟级别为 0 ，意味着无需延迟。
-    - Broker 针对每个 SCHEDULE_TOPIC_XXXX 的队列，都创建一个定时任务，顺序扫描到达时间的延迟消息，重新存储到延迟消息原始的 Topic 的原始 Queue 中，这样它就可以被 Consumer 消费到
-
-### 1.7、自定义消息发送规则
+### 1.6、自定义消息发送规则
 
 - 通过MessageQueueSelector可以发送到指定的队列中；
 - producer.send(msg, selector, msg)
@@ -385,14 +375,60 @@ public enum SendStatus {
 - NameServer与每台Broker服务器保持长连接，并间隔30s检测Broker是否存活，如果检测到Broker宕机，则从路由注册表中将其移除。但是路由变化不会马上通知消息生产者，这样设计是为了降低NameServer实现的复杂性，在消息发送端提供容错机制来保证消息发送的高可用性。
 - NameServer本身的高可用性可以通过部署多台NameServer服务器来实现，但是彼此不通信，也就是在某一时刻的数据并不完全相同；
 
-## 4、RocketMQ分布式事务消息
+## 4、事务消息
 
 ### 4.1、架构设计
 
+RcoketMQ事务消息的实现原理是基于两阶段提交和定时事务状态回查来决定消息最终是提交还是回滚；交互如下：
+
+![](image/RocketMQ事务消息机制.png)
+- 应用程序在事务内完成相关业务数据落库后，需要同步调用RocketMQ消息发送接口，发送状态为prepare的消息。消息发送成功后，RocketMQ服务器会回调RocketMQ消息发送者的时间监听程序，记录消息的本地事务状态，该相关标记与本地业务操作同属于一个事务，确保消息的发送与本地事务是原子性的。
+- RocketMQ在收到类型为prepare的消息时，会首先备份消息的原主题与原消息消费队列，然后将消息存储在主题为：`RMQ_SYS_TRANS_HALF_TOPIC`的消息消费队列中；
+- RocketMQ消息服务器开启一个定时任务，消费`RMQ_SYS_TRANS_HALF_TOPIC`的消息，向消息发送端发起消息事务状态回查，应用程序根据保存的事务状态回馈消息服务器的事务状态。如果是提交或回滚，则消息服务器提交或回滚，如果是未知（ LocalTransactionState.UNKNOW），则待下一次回查，RocketMQ允许设置一条消息的回查间隔与回查次数，如果在超过回查次数后依然无法获取消息的事务状态，则默认回滚消息；
+
 ### 4.2、使用
 
-- `TransactionMQProducer`：事务消息的消费者
-- TransactionListener：监听器，执行本地事务和检查本地事务两个方法
+RocketMQ的事务消息发送者为：org.apache.rocketmq.client.producer.TransactionMQProducer，该类继承自`org.apache.rocketmq.client.producer.DefaultMQProducer`。
+
+主要关键信息：
+- TransactionMQProducer：包含
+    - TransactionListener transactionListener：事务监听器，主要定义实现本地事务状态执行、本地事务状态回查两个接口；
+    - ExecutorService executorService：事务状态回查异步执行线程池；
+
+### 4.3、事务消息发送流程
+
+![](image/RocketMQ事务消息发送流程.png)
+
+## 5、顺序消息
+
+### 5.1、概念
+
+顺序消息：指的是消费顺序和生产顺序相同；
+- 全局顺序消费：在某个topic下，所有的消息都要保证顺序；
+- 局部顺序消费：可以确保同一个消息消费队列中的消息被顺序消费。
+
+### 5.2、应用场景
+
+高并发下的用户下单订单场景
+
+## 6、消息重复消费问题
+
+RocketMQ不保证消息不重复，如果你的业务需要保证严格的不重复消息，需要你自己在业务端去重
+
+## 7、延迟消息
+
+- 延迟消息：消息发送到Broker之后，要特定的时间才会被Consumer消费；
+- 目前只支持固定精度的定时消息：RocketMQ 支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息。预设值的延迟时间间隔为：`1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h`。如果需要支持任意时间精度的定时调度，不可表面的需要在Broker层错消息排序（可以参考ScheduleExecutorService实现），在加上持久化方面的考虑，不可避免带来比较大的性能消耗；
+- MessageStoreConfig配置类、ScheduleMessageService 任务类；
+- 在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。broker在接收到延迟消息的时候会把对应延迟级别的消息先存储到对应的延迟队列中，等延迟消息时间到达时，会把消息重新存储到对应的topic的queue里面
+- 主要原理：
+    - 定时消息发送到 Broker 后，会被存储 Topic 为 SCHEDULE_TOPIC_XXXX 中，并且所在 Queue 编号为延迟级别 - 1；需要 -1 的原因是，延迟级别是从 1 开始的。如果延迟级别为 0 ，意味着无需延迟。
+    - Broker 针对每个 SCHEDULE_TOPIC_XXXX 的队列，都创建一个定时任务，顺序扫描到达时间的延迟消息，重新存储到延迟消息原始的 Topic 的原始 Queue 中，这样它就可以被 Consumer 消费到
+
+## 8、消息过滤机制
+
+RocketMWQ支持表达式过滤和类过滤两种模式，其中表达式又分为TAG和SQL92。
+- 类过滤模式允许提交一个过滤类到FilterServer，
 
 # 四、RocketMQ应用实践
 
