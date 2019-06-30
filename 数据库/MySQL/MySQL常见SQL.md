@@ -28,6 +28,35 @@ select aes_decrypt("加密后的字符串","密钥");
 
 # 5、使用from语句替代子查询
 
+# 6、对字段值进行替换
+
+```sql
+SELECT
+	GROUP_CONCAT( `name` SEPARATOR ',' ) 
+FROM
+	t_a t 
+WHERE
+	FIND_IN_SET ( t.id, ( SELECT REPLACE ( TRIM( BOTH '#' FROM a_id ), '#', ',' ) FROM t_b t ))
+```
+将t_b表中的字段a_id与t_a表关联，并拼接起来
+
+t_a表中的数据：
+```
+1	喜剧
+2	动作
+3	爱情
+4	战争
+```
+t_b表中的数据：
+```
+1	醉拳	#1#2#3#
+```
+需要将`#1#2#3#`其展示为对应的类型的中文
+
+
+
+
+
 
 ```sql
 /* Windows服务 */

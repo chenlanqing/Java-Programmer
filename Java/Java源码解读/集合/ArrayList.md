@@ -72,7 +72,7 @@ ArrayList(Collection<? extends E> collection)
 
 ## 4、数组扩容
 
-如果数组容量不够，对数组进行扩容.JDK7 以后及 JDK7 前的实现不一样
+如果数组容量不够，对数组进行扩容，JDK7 以后及 JDK7 前的实现不一样
 
 - JDK6：直接扩容，且扩容一般是源数组的 1.5 倍：
 	```java
@@ -98,6 +98,7 @@ ArrayList(Collection<? extends E> collection)
 		elementData = Arrays.copyOf(elementData, newCapacity);
 	}
 	```
+	
 ## 5、ArrayList 安全隐患
 
 - **当传递 ArrayList 到某个方法中，或者某个方法返回 ArrayList，什么时候要考虑安全隐患？如何修复安全违规这个问题呢？**

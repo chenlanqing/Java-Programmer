@@ -23,13 +23,13 @@
 
 ## 1、什么是 Nginx
 
-一个开源且高性能,可靠的HTTP中间件、代理服务；
+一个开源且高性能，可靠的HTTP中间件、代理服务；
 
 为什么选择Nginx
 
 - Io[多路复用](http://www.cnblogs.com/fanzhidongyzby/p/4098546.html)epoll多路复用
-- 轻量级：功能模块少,代码模块化；
-- CPU亲和（affinity）：是一种把CPU核心和Nginx工作进程绑定方式,把每个worker进程固定在一个cpu上执行,减少切换CPU的cache miss,活动更好的性能；
+- 轻量级：功能模块少，代码模块化；
+- CPU亲和（affinity）：是一种把CPU核心和Nginx工作进程绑定方式，把每个worker进程固定在一个cpu上执行，减少切换CPU的cache miss，活动更好的性能；
 - sendfile
 
 ## 2、Nginx安装
@@ -43,7 +43,7 @@
 
 Linux安装：（基于yum安装）
 
-- 在 /etc/yum.repos.d/ 目录下新建文件 nginx.repo,在文件中输入：
+- 在 /etc/yum.repos.d/ 目录下新建文件 nginx.repo，在文件中输入：
 ```
 [nginx]
 name=nginx repo
@@ -51,7 +51,7 @@ baseurl=http://nginx.org/packages/OS/OSRELEASE/$basearch/
 gpgcheck=0
 enabled=1
 ==> OS - "rhel" or "centos"
-==> OSRELEASE - 对应的版本,如6,7
+==> OSRELEASE - 对应的版本，如6，7
 ```
 - 查看nginx相关安装包：
 
