@@ -569,9 +569,53 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 - 1.2、Spring 事务接口：主要有三个接口
 
-	- PlatformTransactionManager-平台事务管理器：Spring 为不同的持久框架提供了不同的接口实现；DataSourceTransactionManager：使用 Spring JDBC 或 mybatis 进行持久化数据时使用
+	- PlatformTransactionManager：平台事务管理器：Spring 为不同的持久框架提供了不同的接口实现；DataSourceTransactionManager：使用 Spring JDBC 或 mybatis 进行持久化数据时使用
+		```java
+		public interface PlatformTransactionManager {
+			// 获得事务
+			// 返回一个已经激活的事务或创建一个新的事务（根据给定的 TransactionDefinition 类型参数定义的事务属性），返回的是 TransactionStatus 对象代表了当前事务的状态，其中该方法抛出 TransactionException（未检查异常）表示事务由于某种原因失败
+			TransactionStatus getTransaction(@Nullable TransactionDefinition definition) throws TransactionException;
+			// 提交事务
+			// 用于提交 TransactionStatus 参数代表的事务
+			void commit(TransactionStatus status) throws TransactionException;
+			// 回滚事务
+			// 用于回滚 TransactionStatus 参数代表的事务
+			void rollback(TransactionStatus status) throws TransactionException;
+		}
+		```
 	- TransactionDefinition-事务定义信息(隔离，传播，超时，只读)
+		```java
+		public interface TransactionDefinition {
+			// 返回定义的事务传播行为
+			int getPropagationBehavior();  
+			// 返回定义的事务隔离级别
+			int getIsolationLevel();  
+			// 返回定义的事务超时时间
+			int getTimeout();  
+			// 返回定义的事务是否是只读的
+			boolean isReadOnly();  
+			// 返回定义的事务名字
+			String getName();  
+		}
+		```
 	- TransactionStatus-事务具体运行状态
+		```java
+		public interface TransactionStatus extends SavepointManager, Flushable {
+			// 返回当前事务状态是否是新事务
+			boolean isNewTransaction();
+			// 返回当前事务是否有保存点
+			boolean hasSavepoint();
+			// 设置当前事务应该回滚
+			void setRollbackOnly();
+			// 返回当前事务是否应该回滚
+			boolean isRollbackOnly();
+			// 用于刷新底层会话中的修改到数据库，一般用于刷新如 Hibernate/JPA 的会话，可能对如 JDBC 类型的事务无任何影响
+			@Override
+			void flush();
+			// 当前事务否已经完成
+			boolean isCompleted();
+		}
+		```
 
 ## 2、Spring 的事务管理
 
@@ -646,20 +690,20 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 			
 ## 6、事务隔离级别：通过隔离事务属性指定 isolation	
 
-- 6.1、务隔离级别：
+- 6.1、事务隔离级别：
 
 	- DEFAULT：使用底层数据库的默认隔离级别，对于大多数数据库来说，默认的隔离级别都是：READ_COMMITTED
 	- READ_UNCOMMITTED：允许事务读取未被其他事务提交的变更，脏读、不可重复度、幻读的问题都会出现
 	- READ_COMMITTED：只允许事务读取已被其他事务提交的变更，可以避免脏读，但不可重复读、幻读的问题仍可能出现;
+	- REPEATABLE_READ：对相同字段的多次读取是一致的，除非数据被事务本身改变。可防止脏读，不可重复读，但幻读仍可能发生；
 	- SERIALIZABLE：确保事务可以从一个表中读取相同的行，在这个事务持续期间，禁止其他事务对该表执行插入，更新，和删除等操作，所有并发问题都可以避免，但性能十分低下;串行
-	- REPEATABLE_READ：对相同字段的多次读取是一致的，除非数据被事务本身改变.可防止脏读，不可重复读，但幻读仍可能发生；
-
+	
 - 6.2、事务的隔离级别要得到底层数据库引擎的支持，而不是应用程序或者框架的支持
 
 	- Oracle 支持两种事务隔离级别：READ_COMMITED(默认级别) ，SERIALIZABLE
 	- Mysql 支持四种隔离级别：默认是 REPEATABLE_READ 级别
 
-- 6.3、设置事务隔离属性：@Transactional(isolation=Isolation.READ_COMMITTED)	
+- 6.3、设置事务隔离属性：`@Transactional(isolation=Isolation.READ_COMMITTED)	`
 
 - 6.4、设置事务回滚属性：默认情况下只有未检查异常(RuntimeException和Error类型的异常)会导致事务回滚
 
@@ -680,7 +724,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 - 6.7、事务的状态：
 
-	调用 PlatformTransactionManager 接口的getTransaction()的方法得到的是 TransactionStatus 接口的一个实现；这个接口描述的是一些处理事务提供简单的控制事务执行和查询事务状态的方法
+	调用 PlatformTransactionManager 接口的getTransaction()的方法得到的是 TransactionStatus 接口的一个实现；这个接口描述的是一些处理事务提供简单的控制事务执行和查询事务状态的方法，其参数是：TransactionDefinition类型，其包含了一些传播性、隔离级别、超时时间等
 	```java
 	public interface TransactionStatus{
 		boolean isNewTransaction(); // 是否是新的事物
@@ -786,6 +830,10 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 - 解释器模式：SpEL是一种由Spring的`org.springframework.expression.ExpressionParser`实现分析和执行的语言；这些实现使用作为字符串给出的Spel表达式，并将它们转换为`org.springframework.expression.Expression`的实例。上下文组件由`org.springframework.expression.EvaluationContext`实现表示；
 - 建造者模式：BeanDefinitionBuilder，允许我们以编程方式定义bean的类；
 - 复合模式：在Spring世界中，我们检索复合对象的概念是`org.springframework.beans.BeanMetadataElement`接口，用于配置bean对象。它是所有继承对象的基本界面
+- 观察者模式：定义对象间的一种一对多的依赖关系，当一个对象的状态发生改变时，所有依赖于它的对象都得到通知并被自动更新。spring中Observer模式常用的地方是listener的实现。如ApplicationListener；
+- 策略模式：spring中在实例化对象的时候用到Strategy模式。在SimpleInstantiationStrategy中有如下代码说明了策略模式的使用情况；
+- 装饰器模式：Spring中用到的包装器模式在类名上有两种表现：一种是类名中含有Wrapper，另一种是类名中含有Decorator。基本上都是动态地给一个对象添加一些额外的职责；
+- 适配器模式：由于 Advisor 链需要的是 MethodInterceptor（拦截器）对象，所以每一个Advisor中的Advice都要适配成对应的MethodInterceptor对象。AdvisorAdapter
 
 # 八、Spring常见问题
 
