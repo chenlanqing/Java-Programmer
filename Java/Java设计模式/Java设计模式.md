@@ -354,7 +354,7 @@ public enum SingletonEnum {
 }
 ```
 
-[枚举本质](https://github.com/chenlanqing/learningNote/blob/master/Java/JavaSE/Java%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86_2.md#%E5%8D%81%E5%85%AB%E6%9E%9A%E4%B8%BE%E7%B1%BB)
+[枚举本质](../Java基础/Java基础知识.md#十八枚举类)
 
 ## 7、反序列化问题
 
