@@ -1,7 +1,9 @@
 
 # 一、Netty
 
-![](image/Netty通信流程.png)
+Netty结构图
+
+![](image/Netty架构.png)
 
 ## 1、不建议使用原生NIO类库进行开发的原因
 
@@ -73,6 +75,7 @@ LineBasedFrameDecoder + StringDecoder组合就是按行切换的文本解码器�
 ## 4、编解码技术
 
 ### 4.1、Java序列化缺点
+
 - 无法跨语言，如RPC框架，RPC框架是需要跨语言调用的，几乎所有流行的RPC框架都没有使用Java序列化；
 - 序列化后码流太大；
 - 序列化性能太低
@@ -105,6 +108,8 @@ Netty可以同时支持Reactor单线程模型、多线程模型和主从Reactor�
 对于boos线程来说，第一步轮询出来的基本都是 accept 事件，表示有新的连接，而worker线程轮询出来的基本都是read/write事件，表示网络的读写事件
 
 # 二、Netty服务端启动过程
+
+![](image/Netty通信流程.png)
 
 两个问题：
 - 服务端的Socket在哪里初始化？
@@ -503,12 +508,13 @@ Netty 中使用 FileRegion 实现文件传输的零拷贝, 不过在底层 FileR
 
 ## 16、Netty组件之间的关系
 
-Channel ----> Socket </br>
-EventLoop ----> 控制流，多线程处理，并发；</br>
-ChannelHandler和ChannelPipeline</br>
-Bootstrap 和 ServerBootstrap</br>
+```
+Channel ----> Socket
+EventLoop ----> 控制流，多线程处理，并发；
+ChannelHandler和ChannelPipeline
+Bootstrap 和 ServerBootstrap
 Channel 接口
-
+```
 **一个 channel 对应一个channelPipeline ,一个 channelPipeline 对应多个channelHandler**
 
 ChannelPipeline 为 ChannelHandler 链提供了容器，当 channel 创建时，就会被自动分配到它专属的 ChannelPipeline ，这个关联是永久性的

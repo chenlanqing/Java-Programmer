@@ -1103,7 +1103,6 @@ public class ConcreteObserver implements Observer{
 
 # 十二、代理模式
 
-
 ## 1、基本概念
 
 给目标对象提供一个代理对象，并由代理对象控制对目标对象的引用，通过引入代理对象的方式来间接访问目标对象，防止直接访问目标对象给系统带来的不必要复杂性
@@ -1187,7 +1186,9 @@ public class ConcreteObserver implements Observer{
 
 使用cglib实现动态代理，需要在`MethodInterceptor`实现类中定义代理行为
 
-代理行为在intercept方法中定义，同时通过getInstance方法（该方法名可以自定义）获取动态代理的实例，并且可以通过向该方法传入类对象指定被代理对象的类型
+代理行为在intercept方法中定义，同时通过getInstance方法（该方法名可以自定义）获取动态代理的实例，并且可以通过向该方法传入类对象指定被代理对象的类型。
+
+由CGLIB创建的代理类，不会包含父类中的私有方法
 
 #### 5.2.3、JDK 与 CGLIB 代理的比较
 
@@ -1200,6 +1201,15 @@ public class ConcreteObserver implements Observer{
 - 当Bean有实现接口时，Spring就会使用JDK的动态代理；
 - 当Bean没有实现接口时，Spring使用CGLib
 - 当然也可以强制使用CGLib，只需要在Spring配置中增加：`<aop:aspectj-autoproxy proxy-target-class="true" />`，使用Springboot时使用配置：`spring.aop.proxy-target-class=true`
+- 在SpringBoot中，默认使用的就是CGLIB方式来创建代理：在它的配置文件中，spring.aop.proxy-target-class默认是true
+    ```json
+    {
+      "name": "spring.aop.proxy-target-class",
+      "type": "java.lang.Boolean",
+      "description": "Whether subclass-based (CGLIB) proxies are to be created (true), as opposed to standard Java interface-based proxies (false).",
+      "defaultValue": true
+    }
+    ```
 
 Spring中动态代理的核心类：
 - ProxyFactoryBean

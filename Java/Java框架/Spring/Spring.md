@@ -973,21 +973,38 @@ value、method、params 及 heads分别表示请求 URL、请求方法、请求�
 	- 需要发送 POST 请求
 	- 需要在发送 POST 请求时携带一个 name="_method" 的隐藏域， 值为 DELETE 或 PUT	
 
-### 3.6、映射请求参数
+### 3.6、请求参数映射及参数解析器
 
-- @RequestParam 来映射请求参数：value 值即请求参数的参数名，required 该参数是否必须，默认为 true，表示请求参数中必须包含对应的参数，若不存在，将抛出异常；defaultValue 请求参数的默认值
+针对不同类型的参数，有不同的解析器。Spring注册了这些解析器，它们有一个共同的接口`HandlerMethodArgumentResolver`。supportsParameter用来判断方法参数是否可以被当前解析器解析，如果可以就调用resolveArgument去解析
+
+- `@RequestParam `来映射请求参数：value 值即请求参数的参数名，required 该参数是否必须，默认为 true，表示请求参数中必须包含对应的参数，若不存在，将抛出异常；defaultValue 请求参数的默认值
 	```java
+	// 请求路径是这样的：http://localhost:8080/test?username=Jack
 	@RequestParam(value = "username") String un，
 	@RequestParam(value = "age"， required = false， defaultValue = "0") int age
 	```
+	在Spring中，这里对应的参数解析器是`RequestParamMethodArgumentResolver`，拿到参数名称后，直接从Request中获取值；
 	
-- @RequestHeader 映射请求头，用法同上：同 @RequestParam
+- `@RequestHeader` 映射请求头，用法同上：同 @RequestParam
 	```java
 	@RequestHeader(value = "Accept-Language") String al
 	```
-- @CookieValue 绑定请求中的 Cookie 值，可处理方法入参绑定某个 Cookie 值，属性同 @RequestParam：@CookieValue("JSESSIONID") String sessionId
+- `@CookieValue` 绑定请求中的 Cookie 值，可处理方法入参绑定某个 Cookie 值，属性同 @RequestParam：@CookieValue("JSESSIONID") String sessionId
 
-- 使用POJO对象绑定请求参数值：按请求参数名与POJO对象属性名自动匹配，自动为属性填充值，支持级联属性
+- `@RequestBody`：按请求参数名与POJO对象属性名自动匹配，自动为属性填充值，支持级联属性。
+
+	在Spring中，RequestBody注解的参数会由`RequestResponseBodyMethodProcessor`类来负责解析。它的解析由父类`AbstractMessageConverterMethodArgumentResolver`负责。整个过程我们分为三个步骤来看：
+	- 获取请求辅助信息：在开始之前需要先获取请求的一些辅助信息，比如HTTP请求的数据格式，上下文Class信息、参数类型Class、HTTP请求方法类型等；
+	- 确定消息转换器：根据获取到的辅助信息确定一个消息转换器。消息转换器有很多，它们的共同接口是`HttpMessageConverter`。在这里，Spring帮我们注册了很多转换器，所以需要循环它们，来确定使用哪一个来做消息转换。如果是JSON数据格式的，会选择`MappingJackson2HttpMessageConverter`来处理。它的构造函数正是指明了这一点；
+	- 解析：确定了消息转换器，就可以通过Request获取Body，然后调用转换器解析就好了。
+
+- GET请求参数转换Bean：比如常见的：`http://localhost:8080/test3?id=1001&name=Jack&password=1234&address=北京市海淀区`
+
+	Java有一种内省机制可以完成这件事。我们可以获取目标类的属性描述符对象，然后拿到它的Method对象， 通过invoke来设置
+
+	Spring就是通过内省机制来处理的，它是通过BeanWrapperImpl来处理的。wrapper.setPropertyValue最后就会调用到`BeanWrapperImpl#BeanPropertyHandler.setValue()`方法。
+
+	Spring中处理这种参数的解析器是`ServletModelAttributeMethodProcessor`。它的解析过程在其父类`ModelAttributeMethodProcessor.resolveArgument()`方法
 
 - 使用Servlet原生API作为参数传入，具体支持以下类型：
 	```
@@ -1000,6 +1017,43 @@ value、method、params 及 heads分别表示请求 URL、请求方法、请求�
 	OutputStream -----> response.getOutputStream()
 	Reader       -----> request.getReader()
 	Writer       -----> response.getWriter()
+	```
+
+**自定义参数解析器：**
+
+所有的消息解析器都实现了HandlerMethodArgumentResolver接口，可以定义一个参数解析器，让它实现这个接口就好了；
+- 可以定义一个`RequestXuner`注解；
+- 实现了HandlerMethodArgumentResolver接口的解析器类
+	```java
+	public class XunerArgumentResolver implements HandlerMethodArgumentResolver {
+		@Override
+		public boolean supportsParameter(MethodParameter parameter) {
+			return parameter.hasParameterAnnotation(RequestXuner.class);
+		}
+
+		@Override
+		public Object resolveArgument(MethodParameter methodParameter,
+									ModelAndViewContainer modelAndViewContainer,
+									NativeWebRequest nativeWebRequest,
+									WebDataBinderFactory webDataBinderFactory){
+			//获取参数上的注解
+			RequestXuner annotation = methodParameter.getParameterAnnotation(RequestXuner.class);
+			String name = annotation.name();
+			//从Request中获取参数值
+			String parameter = nativeWebRequest.getParameter(name);
+			return "HaHa，"+parameter;
+		}
+	}
+	```
+- 注册到Spring中
+	```java
+	@Configuration
+	public class WebMvcConfiguration extends WebMvcConfigurationSupport {
+		@Override
+		protected void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+			resolvers.add(new XunerArgumentResolver());
+		}
+	}
 	```
 
 ## 4、处理模型数据
@@ -5422,13 +5476,15 @@ Spring 提供了以下五种标准的事件：
 * [SpringIOC面试点](https://www.jianshu.com/p/17b66e6390fd)
 * [SpringAOP面试点](https://www.jianshu.com/p/e18fd44964eb)
 * [AOP理论知识](https://segmentfault.com/a/1190000007469968)
+* [Spring AOP使用需要注意的点](https://juejin.im/post/5d01e088f265da1b7f2978c3)
 * [SpringMVC-DispatchServlet源码分析](https://juejin.im/post/5c754d7d6fb9a049bd42f62c)
-- [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
-- [Spring Boot知识清单](https://www.jianshu.com/p/83693d3d0a65)
-- [Spring Boot 官方文档](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
-- [SpringBoot1.x升级到2.x指南](http://www.leftso.com/blog/484.html)
-- [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
-- [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)
-- [](https://www.sofastack.tech/sofa-boot/docs/Home)
+* [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
+* [Spring Boot知识清单](https://www.jianshu.com/p/83693d3d0a65)
+* [Spring Boot 官方文档](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
+* [SpringBoot1.x升级到2.x指南](http://www.leftso.com/blog/484.html)
+* [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
+* [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)
+* [SofaBoot](https://www.sofastack.tech/sofa-boot/docs/Home)
+
 
 
