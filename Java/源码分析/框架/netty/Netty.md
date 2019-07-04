@@ -1,3 +1,20 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、架构](#%E4%B8%80%E6%9E%B6%E6%9E%84)
+  - [1、Netty逻辑架构](#1netty%E9%80%BB%E8%BE%91%E6%9E%B6%E6%9E%84)
+    - [1.1、Reactor 通信调度层](#11reactor-%E9%80%9A%E4%BF%A1%E8%B0%83%E5%BA%A6%E5%B1%82)
+    - [1.2、职责链 PipeLine](#12%E8%81%8C%E8%B4%A3%E9%93%BE-pipeline)
+    - [1.3、业务逻辑处理层，可以分为两类：](#13%E4%B8%9A%E5%8A%A1%E9%80%BB%E8%BE%91%E5%A4%84%E7%90%86%E5%B1%82%E5%8F%AF%E4%BB%A5%E5%88%86%E4%B8%BA%E4%B8%A4%E7%B1%BB)
+  - [2、高性能](#2%E9%AB%98%E6%80%A7%E8%83%BD)
+  - [3、可靠性](#3%E5%8F%AF%E9%9D%A0%E6%80%A7)
+    - [3.1、链路有效性检测](#31%E9%93%BE%E8%B7%AF%E6%9C%89%E6%95%88%E6%80%A7%E6%A3%80%E6%B5%8B)
+    - [3.2、内存保护机制](#32%E5%86%85%E5%AD%98%E4%BF%9D%E6%8A%A4%E6%9C%BA%E5%88%B6)
+    - [3.3、优雅停机](#33%E4%BC%98%E9%9B%85%E5%81%9C%E6%9C%BA)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 
 # 一、架构

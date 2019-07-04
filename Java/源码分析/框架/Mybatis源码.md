@@ -1,3 +1,16 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [1、Mybatis原理分析](#1mybatis%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+  - [1.1、MyBatis的主要成员](#11mybatis%E7%9A%84%E4%B8%BB%E8%A6%81%E6%88%90%E5%91%98)
+  - [1.2、MyBatis的初始化](#12mybatis%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96)
+  - [1.3、SqlSession](#13sqlsession)
+- [2、Mapper接口是怎么定位到Mapper.xml](#2mapper%E6%8E%A5%E5%8F%A3%E6%98%AF%E6%80%8E%E4%B9%88%E5%AE%9A%E4%BD%8D%E5%88%B0mapperxml)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # 1、Mybatis原理分析
 

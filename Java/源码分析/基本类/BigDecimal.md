@@ -1,3 +1,18 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**目录**
+
+- [一、源码分析](#%E4%B8%80%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
+  - [1、签名](#1%E7%AD%BE%E5%90%8D)
+  - [2、构造函数](#2%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0)
+  - [3、属性](#3%E5%B1%9E%E6%80%A7)
+  - [4、方法](#4%E6%96%B9%E6%B3%95)
+- [二、注意问题](#%E4%BA%8C%E6%B3%A8%E6%84%8F%E9%97%AE%E9%A2%98)
+  - [1、double和float转BigDecimal](#1double%E5%92%8Cfloat%E8%BD%ACbigdecimal)
+  - [2、关于除以0的问题](#2%E5%85%B3%E4%BA%8E%E9%99%A4%E4%BB%A50%E7%9A%84%E9%97%AE%E9%A2%98)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 # 一、源码分析
 

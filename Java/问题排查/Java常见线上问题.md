@@ -17,6 +17,9 @@
   - [1、问题背景](#1%E9%97%AE%E9%A2%98%E8%83%8C%E6%99%AF-1)
   - [2、问题定位](#2%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D-1)
   - [3、解决方案](#3%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88-1)
+  - [4、反思](#4%E5%8F%8D%E6%80%9D)
+- [五、长事务、大事务](#%E4%BA%94%E9%95%BF%E4%BA%8B%E5%8A%A1%E5%A4%A7%E4%BA%8B%E5%8A%A1)
+  - [1、如何避免长事务对业务的影响](#1%E5%A6%82%E4%BD%95%E9%81%BF%E5%85%8D%E9%95%BF%E4%BA%8B%E5%8A%A1%E5%AF%B9%E4%B8%9A%E5%8A%A1%E7%9A%84%E5%BD%B1%E5%93%8D)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

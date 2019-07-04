@@ -16,8 +16,9 @@
     - [2.1、概述](#21%E6%A6%82%E8%BF%B0)
     - [2.2、易混淆概念：Java内存结构、Java内存模型、Java对象模型](#22%E6%98%93%E6%B7%B7%E6%B7%86%E6%A6%82%E5%BF%B5java%E5%86%85%E5%AD%98%E7%BB%93%E6%9E%84java%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8Bjava%E5%AF%B9%E8%B1%A1%E6%A8%A1%E5%9E%8B)
   - [3、指令重排序](#3%E6%8C%87%E4%BB%A4%E9%87%8D%E6%8E%92%E5%BA%8F)
+    - [3.1、重排序分三种类型](#31%E9%87%8D%E6%8E%92%E5%BA%8F%E5%88%86%E4%B8%89%E7%A7%8D%E7%B1%BB%E5%9E%8B)
   - [4、JMM-顺序一致性](#4jmm-%E9%A1%BA%E5%BA%8F%E4%B8%80%E8%87%B4%E6%80%A7)
-  - [5、happens-before 与 as-if-serial](#5happens-before-%E4%B8%8E-as-if-serial)
+  - [5、happens before 与 as-if-serial](#5happens-before-%E4%B8%8E-as-if-serial)
     - [5.1、happens-before](#51happens-before)
     - [5.2、happens-before规则](#52happens-before%E8%A7%84%E5%88%99)
     - [5.3、as-if-serial语义](#53as-if-serial%E8%AF%AD%E4%B9%89)
@@ -32,7 +33,7 @@
   - [3、锁内存语义的实现](#3%E9%94%81%E5%86%85%E5%AD%98%E8%AF%AD%E4%B9%89%E7%9A%84%E5%AE%9E%E7%8E%B0)
   - [4、java.util.concurrent包的实现](#4javautilconcurrent%E5%8C%85%E7%9A%84%E5%AE%9E%E7%8E%B0)
 - [五、final](#%E4%BA%94final)
-- [六、处理器内存模型：](#%E5%85%AD%E5%A4%84%E7%90%86%E5%99%A8%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)
+- [六、处理器内存模型](#%E5%85%AD%E5%A4%84%E7%90%86%E5%99%A8%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->

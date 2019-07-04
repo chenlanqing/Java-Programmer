@@ -20,8 +20,13 @@
   - [6.2、notify](#62notify)
   - [6.3、notifyAll](#63notifyall)
   - [6.4、wait/notify存在的一些问题](#64waitnotify%E5%AD%98%E5%9C%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E9%97%AE%E9%A2%98)
+    - [6.4.1、notify早期通知](#641notify%E6%97%A9%E6%9C%9F%E9%80%9A%E7%9F%A5)
+    - [6.4.2、wait等待条件发生变化](#642wait%E7%AD%89%E5%BE%85%E6%9D%A1%E4%BB%B6%E5%8F%91%E7%94%9F%E5%8F%98%E5%8C%96)
+    - [6.4.3、“假死”状态](#643%E5%81%87%E6%AD%BB%E7%8A%B6%E6%80%81)
+  - [6.5、wait/notify通知机制使用条件](#65waitnotify%E9%80%9A%E7%9F%A5%E6%9C%BA%E5%88%B6%E4%BD%BF%E7%94%A8%E6%9D%A1%E4%BB%B6)
 - [7、registerNatives](#7registernatives)
 - [8、getClass：其定义：](#8getclass%E5%85%B6%E5%AE%9A%E4%B9%89)
+- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 

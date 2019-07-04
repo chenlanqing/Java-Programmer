@@ -3,6 +3,13 @@
 **目录**
 
 - [1、关于System.nanoTime() 与 System.currentTimeMillis()](#1%E5%85%B3%E4%BA%8Esystemnanotime-%E4%B8%8E-systemcurrenttimemillis)
+  - [1.1、MAC 不同JDK版本下nanoTime实现异同](#11mac-%E4%B8%8D%E5%90%8Cjdk%E7%89%88%E6%9C%AC%E4%B8%8Bnanotime%E5%AE%9E%E7%8E%B0%E5%BC%82%E5%90%8C)
+  - [1.2、System.nanoTime()的值很奇怪，究竟是怎么算出来的？](#12systemnanotime%E7%9A%84%E5%80%BC%E5%BE%88%E5%A5%87%E6%80%AA%E7%A9%B6%E7%AB%9F%E6%98%AF%E6%80%8E%E4%B9%88%E7%AE%97%E5%87%BA%E6%9D%A5%E7%9A%84)
+  - [1.3、System.currentTimeMillis()为何不是 System.nanoTime()的 1000000 倍：](#13systemcurrenttimemillis%E4%B8%BA%E4%BD%95%E4%B8%8D%E6%98%AF-systemnanotime%E7%9A%84-1000000-%E5%80%8D)
+  - [1.4、为什么计算时间从 “1970年1月1日” 开始？](#14%E4%B8%BA%E4%BB%80%E4%B9%88%E8%AE%A1%E7%AE%97%E6%97%B6%E9%97%B4%E4%BB%8E-1970%E5%B9%B41%E6%9C%881%E6%97%A5-%E5%BC%80%E5%A7%8B)
+- [2、System.gc方法](#2systemgc%E6%96%B9%E6%B3%95)
+  - [2.1、方法实现](#21%E6%96%B9%E6%B3%95%E5%AE%9E%E7%8E%B0)
+  - [2.2、作用](#22%E4%BD%9C%E7%94%A8)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
