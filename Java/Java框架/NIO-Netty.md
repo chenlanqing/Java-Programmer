@@ -290,6 +290,7 @@ Netty服务端启动过程：
 ## 1、ByteBuf的结构
 
 ## 2、ByteBuf分类
+
 从三个角度：
 - 池化：Pooled 和 Unpooled
     - Pooled池化内存分配每次从预先分配好的一块内存取一段连续内存封装成ByteBuf提供给应用程序,
@@ -310,11 +311,15 @@ AbstractByteBufAllocator
 ByteBufAllocator 两大子类：PooledByteBufAllocator、UnpooledByteBufAllocator
 
 ### 3.1、UnpooledByteBufAllocator
+
 - Heap内存分配
 
 - Direct内存分配
 
 ### 3.2、PooledByteBufAllocator内存分配
+
+# Netty应用场景
+
 
 
 # Netty面试题

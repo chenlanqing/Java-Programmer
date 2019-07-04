@@ -1142,7 +1142,7 @@ li.add(new Integer(3));
 oa[1] = li;
 // Run time error， but cast is explicit.
 String s = (String) lsa[1].get(0);
-```	
+```
 
 Java 的泛型数组初始化时数组类型不能是具体的泛型类型，只能是通配符的形式，因为具体类型会导致可存入任意类型对象，在取出时会发生类型转换异常，会与泛型的设计思想冲突，而通配符形式本来就需要自己强转，符合预期;
 
@@ -4305,7 +4305,7 @@ else x= a;
 典型的例子：`data = socket.read();`
 
 ### 5.2、非阻塞IO模型
-	
+
 用户线程发起一个read操作后，并不需要等待，而是马上就得到了一个结果
 
 - 一旦内核中的数据准备好了，并且又再次收到了用户线程的请求，那么它马上就将数据拷贝到了用户线程，然后返回；
@@ -4511,7 +4511,7 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 - 但是由于其底层通信依然采用同步阻塞模型，无法从根本上解决问题
 
 ### 7.3、NIO-非阻塞IO
-	
+
 - jdk1.4引入NIO，弥补了原来阻塞IO的不足，具体参考[Java-NIO](#三Java-NIO)
 
 - NIO相对其他IO来说，优点：
@@ -4684,7 +4684,7 @@ Reader：类似 Writer
 ```
 
 **5.5、InputStreamReader-字节流与字符流转换接口**
-   
+
 是字节到字符的转化桥梁，InputStream到Reader的过程要指定编码字符集，否则将采用操作系统默认字符集，很可能会出现乱码问题.StreamDecoder正是完成字节到字符的解码的实现类
 
 ## 6、标准输出
@@ -4704,7 +4704,7 @@ System.out 是一个 PrintStream 流.System.out一般会把你写到其中的数
 **6.4、System.err：**
 
 System.err 是一个 PrintStream 流.System.err 与 System.out 的运行方式类似，但它更多的是用于打印错误文本
-   
+
 **6.5、替换系统流：**
 
 System.in、System.out、System.err这3个流是java.lang.System类中的静态成员，并且已经预先在JVM启动的时候初始化完成，你依然可以更改它们；要把一个新的InputStream设置给System.in或者一个新的OutputStream设置给System.out或者System.err；可以使用 System.setIn()， System.setOut()， System.setErr()方法设置新的系统流
@@ -4713,7 +4713,9 @@ System.in、System.out、System.err这3个流是java.lang.System类中的静态�
 
 ## 7、流-仅仅只是一个连续的数据流
 
-**7.1、流和数组不一样，不能通过索引读写数据.在流中，你也不能像数组那样前后移动读取数据，<br> 除非使用 RandomAccessFile 处理文件.**
+![](image/IO流链接.png)
+
+**7.1、流和数组不一样，不能通过索引读写数据.在流中，你也不能像数组那样前后移动读取数据，除非使用 RandomAccessFile 处理文件.**
 
 **7.2、InputStream：java.io.InputStream 类是所有 Java IO 输入流的基类**
 
@@ -4725,7 +4727,9 @@ System.in、System.out、System.err这3个流是java.lang.System类中的静态�
 
 **7.4、组合流：将流整合起来以便实现更高级的输入和输出操作**
 
-InputStream input = new BufferedInputStream(new FileInputStream("c：\\data\\input-file.txt"));
+`InputStream input = new BufferedInputStream(new FileInputStream("c：\\data\\input-file.txt"));`
+
+一个流要么是输入流，要么是输出流，不可能同时是输入流、输出流。因为`InputStream`和`OutputStream`是抽象类，而Java中对于类只能单继承，不能继承多个类。
 
 ## 8、Reader、Writer
 
@@ -4735,7 +4739,8 @@ InputStream input = new BufferedInputStream(new FileInputStream("c：\\data\\inp
 - Reader的read()方法返回一个字符，意味着这个返回值的范围在0到65535之间
 - 整合 Reader 与 InputStream：<br>
 如果你有一个InputStream输入流，并且想从其中读取字符，可以把这个InputStream包装到InputStreamReader中Reader reader = new InputStreamReader(inputStream);在构造函数中可以指定解码方式
-    
+  
+
 **8.2、Writer类：是Java IO中所有Writer的基类，子类包括BufferedWriter和PrintWriter等等**
 
 - 整合 Writer 和 OutputStream：
@@ -4746,12 +4751,23 @@ Writer writer = new OutputStreamWriter(outputStream);
 
 以通过将 Reader 包装到 BufferedReader、Writer 包装到 BufferedWriter 中实现缓冲
 
+## 9、流的使用
+
+- 将字节流转换成字符缓冲流
+	```java
+	// 读取文件，读取文件注意编码问题
+	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("D:/1.txt")));
+	// 获取控制台输入
+	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+	```
+
 # 三十八、Java NIO
 
 ## 1、Java NIO 概述
 
 **1.1、核心概念：**
 
+NIO：非阻塞IO
 - Channels
 - Buffers
 - Selectors
@@ -4824,7 +4840,7 @@ C.获取解码器：
 ```
 ## 3、Buffer
 
-用于和NIO通道进行交互，缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存
+用于和NIO通道进行交互，缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存，底层实现是数组
 
 方法名称 |方法描述
 --------|-------
@@ -4841,63 +4857,57 @@ int remaining()	|返回position 和limit 之间的元素个数
 Buffer reset()|将位置position 转到以前设置的mark 所在的位置
 Buffer rewind()	|将位置设为为0，取消设置的mark
 
-**3.1、Buffer 的基本用法：**
+### 3.1、Buffer 的基本用法
 
 获取缓冲区的方法：(例子)ByteBuffer.allocate()
 
-- 使用Buffer读写数据一般遵循以下四个步骤<br>
-	①、写入数据到 Buffer<br>
-	②、调用flip()方法<br>
-	③、从 Buffer 中读取数据<br>
-	④、调用clear()方法或者compact()方法
+- 使用Buffer读写数据一般遵循以下四个步骤
+	- ①、写入数据到 Buffer
+	- ②、调用flip()方法
+	- ③、从 Buffer 中读取数据
+	- ④、调用clear()方法或者compact()方法
 
 - 当向buffer写入数据时，buffer会记录下写了多少数据。一旦要读取数据，需要通过flip()方法将Buffer从写模式切换到读模式;在读模式下，可以读取之前写入到buffer的所有数据；
 
 - 一旦读完了所有的数据，就需要清空缓冲区，让它可以再次被写入。有两种方式能清空缓冲区：调用clear()或compact()方法。clear()方法会清空整个缓冲区。compact()方法只会清除已经读过的数据。任何未读的数据都被移到缓冲区的起始处，新写入的数据将放到缓冲区未读数据的后面；
 
 - Buffer 的capacity，position和limit： 关键属性
-	- （1）缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存.<br>
-		这块内存被包装成 NIO Buffer 对象，并提供了一组方法，用来方便的访问该块内存
-	- （2）Buffer 对象的四个属性：<br>
-		capacity<br>
-		position<br>
-		limit<br>
-		mark<br>
-		position和limit的含义取决于 Buffer 处在读模式还是写模式。不管Buffer处在什么模式，capacity的含义总是一样的<br>
-	- （3）capacity：最大存储数据的容量，一旦声明不能改变；作为一个内存块，Buffer 有一个固定的大小值，也叫"capacity".你只能往里写capacity个 byte、long，char 等类型；一旦Buffer满了，需要将其清空(通过读数据或者清除数据)才能继续写数据往里写数据<br>
-	- （4）position：<br>
-		①、当你写数据到 Buffer 中时，position表示当前的位置，初始的position值为0，当一个 byte、long 等数据写到 Buffer 后，position会向前移动到下一个可插入数据的 Buffer 单元.position最大可为capacity – 1<br>
-		②、当读取数据时，也是从某个特定位置读.当将Buffer从写模式切换到读模式，position会被重置为0. 当从 Buffer的position处读取数据时，position向前移动到下一个可读的位置
-	- （5）limit：<br>
-		①.在写模式下，Buffer 的limit表示你最多能往Buffer里写多少数据.写模式下，limit等于Buffer的capacity<br>
-		②.当切换Buffer到读模式时， limit表示你最多能读到多少数据，当切换Buffer到读模式时，limit会被设置成写模式下的position值<br>
+	- （1）缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存。这块内存被包装成 NIO Buffer 对象，并提供了一组方法，用来方便的访问该块内存
+	- （2）Buffer 对象的四个属性：
+		capacity、position、limit、mark；其中position和limit的含义取决于 Buffer 处在读模式还是写模式。不管Buffer处在什么模式，capacity的含义总是一样的
+	- （3）capacity：最大存储数据的容量，一旦声明不能改变；作为一个内存块，Buffer 有一个固定的大小值，也叫"capacity".你只能往里写capacity个 byte、long，char 等类型；一旦Buffer满了，需要将其清空(通过读数据或者清除数据)才能继续写数据往里写数据
+	- （4）position：
+		- ①、当你写数据到 Buffer 中时，position表示当前的位置，初始的position值为0，当一个 byte、long 等数据写到 Buffer 后，position会向前移动到下一个可插入数据的 Buffer 单元.position最大可为capacity – 1
+		- ②、当读取数据时，也是从某个特定位置读.当将Buffer从写模式切换到读模式，position会被重置为0. 当从 Buffer的position处读取数据时，position向前移动到下一个可读的位置
+	- （5）limit：
+		- ①.在写模式下，Buffer 的limit表示你最多能往Buffer里写多少数据.写模式下，limit等于Buffer的capacity
+		- ②.当切换Buffer到读模式时， limit表示你最多能读到多少数据，当切换Buffer到读模式时，limit会被设置成写模式下的position值
 	- （6）mark：标记，表示记录当前position的位置，可以通过reset() 恢复到 mark 的位置;
 
-**3.3、Buffer 的分配：**
+### 3.3、Buffer 的分配
 
-每一个 Buffer 类都有一个allocate方法。下面是一个分配48字节capacity的 ByteBuffer 的例子<br>
+每一个 Buffer 类都有一个allocate方法。下面是一个分配48字节capacity的 ByteBuffer 的例子：
 `ByteBuffer buf = ByteBuffer.allocate(48);`
 
-**3.4、向 Buffer 中写数据：**
+### 3.4、向 Buffer 中写数据
 
-- 从 Channel 写到 Buffer <br>
-	int bytesRead = inChannel.read(buf); //read into buffer
+- 从 Channel 写到 Buffer：`int bytesRead = inChannel.read(buf); //read into buffer`
 - 通过 Buffer 的put()方法写到 Buffer 里：buf.put(127);
 
-**3.5、flip()方法：**
+### 3.5、flip()方法
 
-flip方法将 Buffer 从写模式切换到读模式.调用flip()方法会将position设回0，并将limit设置成之前position的值，即position现在用于标记读的位置，limit表示之前写进了多少个 byte、char 等 —— 现在能读取多少个 byte、char 等
+flip方法将 Buffer 从写模式切换到读模式。调用flip()方法会将position设回0，并将limit设置成之前position的值，即position现在用于标记读的位置，limit表示之前写进了多少个 byte、char 等 —— 现在能读取多少个 byte、char 等
 
-**3.6、从 Buffer 中读取数据：**
+### 3.6、从 Buffer 中读取数据
 
 - 从 Buffer 读取数据到 Channel：int bytesWritten = inChannel.write(buf);
 - 使用get()方法从 Buffer 中读取数据 byte aByte = buf.get();
 
-**3.7、rewind()方法**
+### 3.7、rewind()方法
 
 Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数据。limit保持不变，仍然表示能从Buffer中读取多少个元素(byte、char等)
 	
-**3.8、clear()与compact()方法：**
+### 3.8、clear()与compact()方法
 
 - 一旦读完Buffer中的数据，需要让Buffer准备好再次被写入.可以通过clear()或compact()方法来完成
 - 如果调用的是clear()方法，position将被设回0，limit被设置成 capacity的值.换句话说，Buffer 被清空了。Buffer 中的数据并未清除，只是这些标记告诉我们可以从哪里开始往 Buffer 里写数据
@@ -4905,26 +4915,23 @@ Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数�
 - 如果 Buffer 中仍有未读的数据，且后续还需要这些数据，但是此时想要先先写些数据，那么使用compact()方法
 - compact()方法将所有未读的数据拷贝到Buffer起始处.然后将position设到最后一个未读元素正后面.limit属性依然像clear()方法一样，设置成capacity.现在Buffer准备好写数据了，但是不会覆盖未读的数据
 
-**3.9、mark()与reset()方法**
+### 3.9、mark()与reset()方法
 
 通过调用 Buffer.mark()方法，可以标记 Buffer 中的一个特定position。之后可以通过调用 Buffer.reset()方法恢复到这个position
 
-**3.10、equals()与compareTo()方法：**
+### 3.10、equals()与compareTo()方法
 
 - equals()，当满足下列条件时，表示两个Buffer相等：<br>
-	有相同的类型（byte、char、int等）.<br>
-	Buffer 中剩余的 byte、char 等的个数相等.<br>
-	Buffer 中所有剩余的 byte、char 等都相同<br>
-	==> 实际上，它只比较Buffer中的剩余元素(剩余元素是从 position到limit之间的元素)<br>
+	有相同的类型（byte、char、int等）。
+	Buffer 中剩余的 byte、char 等的个数相等。
+	Buffer 中所有剩余的 byte、char 等都相同。
+	==> 实际上，它只比较Buffer中的剩余元素(剩余元素是从 position到limit之间的元素)
 - compareTo()方法：<br>
-	compareTo()方法比较两个Buffer的剩余元素(byte、char等)， 如果满足下列条件，则认为一个Buffer"小于"另一个Buffer：<br>
-	第一个不相等的元素小于另一个Buffer中对应的元素；所有元素都相等，但第一个Buffer比另一个先耗尽(第一个Buffer的元素个数比另一个少)
+	compareTo()方法比较两个Buffer的剩余元素(byte、char等)， 如果满足下列条件，则认为一个Buffer"小于"另一个Buffer：第一个不相等的元素小于另一个Buffer中对应的元素；所有元素都相等，但第一个Buffer比另一个先耗尽(第一个Buffer的元素个数比另一个少)
 
-**3.11、直接缓冲区与非直接缓冲区：**
+### 3.11、直接缓冲区与非直接缓冲区
 
-- 直接缓冲区是通过调用此类的 allocateDirect()工厂方法来创建的，此方法返回的缓冲区进行分配取消分配所需成本通常要高于非直接缓冲区。<br>
-	建议将直接缓冲区主要分配给那些易受基础系统的本机I/O 操作影响的大型、持久的缓冲区。<br>
-	一般情况下仅在直接缓冲区能带来明显好处时分配它们<br>
+- 直接缓冲区是通过调用此类的 allocateDirect()工厂方法来创建的，此方法返回的缓冲区进行分配取消分配所需成本通常要高于非直接缓冲区。建议将直接缓冲区主要分配给那些易受基础系统的本机I/O 操作影响的大型、持久的缓冲区。一般情况下仅在直接缓冲区能带来明显好处时分配它们
 - 直接缓冲区还可以通过 FileChannel 的map() 方法将文件区域直接映射到内存中来创建.该方法返回 MappedByteBuffer
 - 判断是直接缓冲区还是间接缓冲区，可以通过调用 isDirect() 方法来确定.
 
