@@ -2317,14 +2317,14 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 - @SuppressWarnings：取消警告
 
 - 注解分为：
-	按运行机制：源码注解，编译时注解，运行时注解
-	按照来源注解：JDK，第三方，自定义注解；
+	- 按运行机制：源码注解，编译时注解，运行时注解
+	- 按照来源注解：JDK，第三方，自定义注解；
 
 ### 1.2、自定义注解
 
 使用`@interface`自定义注解时，自动集成了`Annotation`接口，要点如下：
 
-- （1）`@interface`用来声明一个注解：`public @interface`注解名{}；
+- （1）`@interface`用来声明一个注解：`public @interface`注解名；
 - （2）其中的每一个方法实际上是声明了一个配置参数：
 	- ①、方法的名称就是参数的名称，无参无异常;
 	- ②、返回值类型就是参数的类型(返回值只能是基本类型，`Class`，` String`， `Enum`);
@@ -2362,6 +2362,27 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 注解处理器是一个在javac中的，用来编译时扫描和处理的注解的工具；一个注解的注解处理器，以Java代码(或者编译过的字节码)作为输入，生成文件(通常是`.java`文件)作为输出。这具体的含义什么呢？你可以生成Java代码！这些生成的Java代码是在生成的`.java`文件中，所以你不能修改已经存在的Java类，例如向已有的类中添加方法。这些生成的Java文件，会同其他普通的手动编写的Java源代码一样被`javac`编译；
 
 虚处理器 AbstractProcessor
+
+### 1.6、注解实现原理
+
+注解本质是一个继承了`java.lang.annotation.Annotation`的特殊接口，其具体实现类是Java运行时生成的动态代理类。而我们通过反射获取注解时，返回的是Java 运行时生成的动态代理对象$Proxy1。通过代理对象调用自定义注解（接口）的方法，会最终调用`AnnotationInvocationHandler`的invoke方法。该方法会从memberValues这个Map中索引出对应的值
+
+**定义一个注解：**
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface TestAnnotation {
+}
+```
+**反编译查看字节码：javap -verbose TestAnnotation**
+```java
+Classfile /Users/bluefish/Documents/workspace/base/java-code/java-se/java-se-basis/target/classes/com/blue/fish/se/basis/annotation/TestAnnotation.class
+  Last modified 2019-7-5; size 413 bytes
+  MD5 checksum 11f8b11847f9f3a3813b91a80c97607d
+  Compiled from "TestAnnotation.java"
+public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.lang.annotation.Annotation
+
+```
 
 ## 2、Java 动态加载与静态加载
 
@@ -3237,34 +3258,40 @@ publicclass ManifestUtil {
     - [3.6、从 Buffer 中读取数据](#36%E4%BB%8E-buffer-%E4%B8%AD%E8%AF%BB%E5%8F%96%E6%95%B0%E6%8D%AE)
     - [3.7、rewind()方法](#37rewind%E6%96%B9%E6%B3%95)
     - [3.8、clear()与compact()方法](#38clear%E4%B8%8Ecompact%E6%96%B9%E6%B3%95)
-    - [3.9、mark()与reset()方法](#39mark%E4%B8%8Ereset%E6%96%B9%E6%B3%95)
+    - [3.9、更多方法](#39%E6%9B%B4%E5%A4%9A%E6%96%B9%E6%B3%95)
     - [3.10、equals()与compareTo()方法](#310equals%E4%B8%8Ecompareto%E6%96%B9%E6%B3%95)
-    - [3.11、直接缓冲区与非直接缓冲区](#311%E7%9B%B4%E6%8E%A5%E7%BC%93%E5%86%B2%E5%8C%BA%E4%B8%8E%E9%9D%9E%E7%9B%B4%E6%8E%A5%E7%BC%93%E5%86%B2%E5%8C%BA)
+    - [3.11、只读Buffer](#311%E5%8F%AA%E8%AF%BBbuffer)
+    - [3.11、直接缓冲区（DirectBuffer）](#311%E7%9B%B4%E6%8E%A5%E7%BC%93%E5%86%B2%E5%8C%BAdirectbuffer)
   - [4、Scatter/Gather](#4scattergather)
+    - [4.1、概述](#41%E6%A6%82%E8%BF%B0)
+    - [4.2、Scattering Reads](#42scattering-reads)
+    - [4.3、Gathering Writes](#43gathering-writes)
   - [5、通道之间的数据传输](#5%E9%80%9A%E9%81%93%E4%B9%8B%E9%97%B4%E7%9A%84%E6%95%B0%E6%8D%AE%E4%BC%A0%E8%BE%93)
   - [6、Selector](#6selector)
     - [6.1、为什么使用 Selector](#61%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8-selector)
     - [6.2、Selector 的创建](#62selector-%E7%9A%84%E5%88%9B%E5%BB%BA)
     - [6.3、向 Selector 注册通道](#63%E5%90%91-selector-%E6%B3%A8%E5%86%8C%E9%80%9A%E9%81%93)
     - [6.4、SelectionKey](#64selectionkey)
-    - [6.5、通过 Selector 选择通道](#65%E9%80%9A%E8%BF%87-selector-%E9%80%89%E6%8B%A9%E9%80%9A%E9%81%93)
+    - [6.5、基本使用](#65%E5%9F%BA%E6%9C%AC%E4%BD%BF%E7%94%A8)
   - [7、NIO序列图](#7nio%E5%BA%8F%E5%88%97%E5%9B%BE)
     - [7.1、服务端通信序列图](#71%E6%9C%8D%E5%8A%A1%E7%AB%AF%E9%80%9A%E4%BF%A1%E5%BA%8F%E5%88%97%E5%9B%BE)
     - [7.2、客户端通信序列图](#72%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%80%9A%E4%BF%A1%E5%BA%8F%E5%88%97%E5%9B%BE)
 - [三十九、IO与NIO面试相关](#%E4%B8%89%E5%8D%81%E4%B9%9Dio%E4%B8%8Enio%E9%9D%A2%E8%AF%95%E7%9B%B8%E5%85%B3)
   - [1、文件拷贝实现方式](#1%E6%96%87%E4%BB%B6%E6%8B%B7%E8%B4%9D%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F)
     - [1.1、不同的拷贝方式底层机制的实现](#11%E4%B8%8D%E5%90%8C%E7%9A%84%E6%8B%B7%E8%B4%9D%E6%96%B9%E5%BC%8F%E5%BA%95%E5%B1%82%E6%9C%BA%E5%88%B6%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [2、Files.copy 方法](#2filescopy-%E6%96%B9%E6%B3%95)
-  - [3、如何提高拷贝效率](#3%E5%A6%82%E4%BD%95%E6%8F%90%E9%AB%98%E6%8B%B7%E8%B4%9D%E6%95%88%E7%8E%87)
-  - [4、DirectBuffer 与 MappedByteBuffer](#4directbuffer-%E4%B8%8E-mappedbytebuffer)
-    - [4.1、概述](#41%E6%A6%82%E8%BF%B0)
-    - [4.2、跟踪与诊断DirectBuffer内存占用](#42%E8%B7%9F%E8%B8%AA%E4%B8%8E%E8%AF%8A%E6%96%ADdirectbuffer%E5%86%85%E5%AD%98%E5%8D%A0%E7%94%A8)
-  - [5、使用Java读取大文件](#5%E4%BD%BF%E7%94%A8java%E8%AF%BB%E5%8F%96%E5%A4%A7%E6%96%87%E4%BB%B6)
-  - [6、NIO消息传输错误](#6nio%E6%B6%88%E6%81%AF%E4%BC%A0%E8%BE%93%E9%94%99%E8%AF%AF)
-    - [6.1、存在问题的情况](#61%E5%AD%98%E5%9C%A8%E9%97%AE%E9%A2%98%E7%9A%84%E6%83%85%E5%86%B5)
-    - [6.2、如何解决](#62%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3)
-  - [7、关于BIO、NIO等现场问题](#7%E5%85%B3%E4%BA%8Ebionio%E7%AD%89%E7%8E%B0%E5%9C%BA%E9%97%AE%E9%A2%98)
-  - [8、Channel和Scoket区别](#8channel%E5%92%8Cscoket%E5%8C%BA%E5%88%AB)
+    - [1.2、Files.copy 方法](#12filescopy-%E6%96%B9%E6%B3%95)
+    - [1.3、基于流的读写](#13%E5%9F%BA%E4%BA%8E%E6%B5%81%E7%9A%84%E8%AF%BB%E5%86%99)
+    - [1.4、基于NIO实现](#14%E5%9F%BA%E4%BA%8Enio%E5%AE%9E%E7%8E%B0)
+    - [1.4、如何提高拷贝效率](#14%E5%A6%82%E4%BD%95%E6%8F%90%E9%AB%98%E6%8B%B7%E8%B4%9D%E6%95%88%E7%8E%87)
+  - [2、DirectBuffer 与 MappedByteBuffer](#2directbuffer-%E4%B8%8E-mappedbytebuffer)
+    - [2.1、概述](#21%E6%A6%82%E8%BF%B0)
+    - [2.2、跟踪与诊断DirectBuffer内存占用](#22%E8%B7%9F%E8%B8%AA%E4%B8%8E%E8%AF%8A%E6%96%ADdirectbuffer%E5%86%85%E5%AD%98%E5%8D%A0%E7%94%A8)
+  - [3、使用Java读取大文件](#3%E4%BD%BF%E7%94%A8java%E8%AF%BB%E5%8F%96%E5%A4%A7%E6%96%87%E4%BB%B6)
+  - [4、NIO消息传输错误](#4nio%E6%B6%88%E6%81%AF%E4%BC%A0%E8%BE%93%E9%94%99%E8%AF%AF)
+    - [4.1、存在问题的情况](#41%E5%AD%98%E5%9C%A8%E9%97%AE%E9%A2%98%E7%9A%84%E6%83%85%E5%86%B5)
+    - [4.2、如何解决](#42%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3)
+  - [5、关于BIO、NIO等现场问题](#5%E5%85%B3%E4%BA%8Ebionio%E7%AD%89%E7%8E%B0%E5%9C%BA%E9%97%AE%E9%A2%98)
+  - [6、Channel和Scoket区别](#6channel%E5%92%8Cscoket%E5%8C%BA%E5%88%AB)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -3483,6 +3510,8 @@ public class Null {
 # 二十五、字符集与字符编码
 
 http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
+
+
 
 # 二十六、JMS
 
@@ -5041,14 +5070,16 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 	- （1）缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存。这块内存被包装成 NIO Buffer 对象，并提供了一组方法，用来方便的访问该块内存
 	- （2）Buffer 对象的四个属性：
 		capacity、position、limit、mark；其中position和limit的含义取决于 Buffer 处在读模式还是写模式。不管Buffer处在什么模式，capacity的含义总是一样的
-	- （3）capacity：最大存储数据的容量，一旦声明不能改变；作为一个内存块，Buffer 有一个固定的大小值，也叫"capacity".你只能往里写capacity个 byte、long，char 等类型；一旦Buffer满了，需要将其清空(通过读数据或者清除数据)才能继续写数据往里写数据
+	- （3）capacity：最大存储数据的容量，一旦声明不能改变，且不会为负数；作为一个内存块，Buffer 有一个固定的大小值，也叫"capacity".你只能往里写capacity个 byte、long，char 等类型；一旦Buffer满了，需要将其清空(通过读数据或者清除数据)才能继续写数据往里写数据
 	- （4）position：
-		- ①、当你写数据到 Buffer 中时，position表示当前的位置，初始的position值为0，当一个 byte、long 等数据写到 Buffer 后，position会向前移动到下一个可插入数据的 Buffer 单元.position最大可为capacity – 1
+		- ①、当你写数据到 Buffer 中时，position表示当前的位置，初始的position值为0，当一个 byte、long 等数据写到 Buffer 后，position会向前移动到下一个可插入数据的 Buffer 单元。position最大可为capacity – 1。永远不会大于limit
 		- ②、当读取数据时，也是从某个特定位置读.当将Buffer从写模式切换到读模式，position会被重置为0. 当从 Buffer的position处读取数据时，position向前移动到下一个可读的位置
 	- （5）limit：
-		- ①.在写模式下，Buffer 的limit表示你最多能往Buffer里写多少数据.写模式下，limit等于Buffer的capacity
-		- ②.当切换Buffer到读模式时， limit表示你最多能读到多少数据，当切换Buffer到读模式时，limit会被设置成写模式下的position值
+		- ①、在写模式下，Buffer 的limit表示你最多能往Buffer里写多少数据，永远不会超过capacity。写模式下，limit等于Buffer的capacity
+		- ②、当切换Buffer到读模式时，limit表示你最多能读到多少数据，当切换Buffer到读模式时，limit会被设置成写模式下的position值
 	- （6）mark：标记，表示记录当前position的位置，可以通过reset() 恢复到 mark 的位置;
+
+	它们之间的关系：`0 <= mark <= position <= limit <= capacity`
 
 ### 3.3、Buffer 的分配
 
@@ -5062,7 +5093,7 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 
 ### 3.5、flip()方法
 
-flip方法将 Buffer 从写模式切换到读模式。调用flip()方法会将position设回0，并将limit设置成之前position的值，即position现在用于标记读的位置，limit表示之前写进了多少个 byte、char 等 —— 现在能读取多少个 byte、char 等
+flip方法将 Buffer 从写模式切换到读模式。调用flip()方法会将position设回0，并将limit设置成之前position的值，即position现在用于标记读的位置，limit表示之前写进了多少个 byte、char，现在能读取多少个 byte、char 等
 
 ### 3.6、从 Buffer 中读取数据
 
@@ -5081,9 +5112,11 @@ Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数�
 - 如果 Buffer 中仍有未读的数据，且后续还需要这些数据，但是此时想要先先写些数据，那么使用compact()方法
 - compact()方法将所有未读的数据拷贝到Buffer起始处.然后将position设到最后一个未读元素正后面.limit属性依然像clear()方法一样，设置成capacity.现在Buffer准备好写数据了，但是不会覆盖未读的数据
 
-### 3.9、mark()与reset()方法
+### 3.9、更多方法
 
-通过调用 Buffer.mark()方法，可以标记 Buffer 中的一个特定position。之后可以通过调用 Buffer.reset()方法恢复到这个position
+- Buffer.mark()：通过调用 Buffer.mark()方法，可以标记 Buffer 中的一个特定position。之后可以通过调用 Buffer.reset()方法恢复到这个position
+
+- Buffer.slice()：与原有Buffer共享底层数组
 
 ### 3.10、equals()与compareTo()方法
 
@@ -5095,21 +5128,32 @@ Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数�
 - compareTo()方法：<br>
 	compareTo()方法比较两个Buffer的剩余元素(byte、char等)， 如果满足下列条件，则认为一个Buffer"小于"另一个Buffer：第一个不相等的元素小于另一个Buffer中对应的元素；所有元素都相等，但第一个Buffer比另一个先耗尽(第一个Buffer的元素个数比另一个少)
 
-### 3.11、直接缓冲区与非直接缓冲区
+### 3.11、只读Buffer
 
-- 直接缓冲区是通过调用此类的 allocateDirect()工厂方法来创建的，此方法返回的缓冲区进行分配取消分配所需成本通常要高于非直接缓冲区。建议将直接缓冲区主要分配给那些易受基础系统的本机I/O 操作影响的大型、持久的缓冲区。一般情况下仅在直接缓冲区能带来明显好处时分配它们
-- 直接缓冲区还可以通过 FileChannel 的map() 方法将文件区域直接映射到内存中来创建.该方法返回 MappedByteBuffer
-- 判断是直接缓冲区还是间接缓冲区，可以通过调用 isDirect() 方法来确定.
+一般是具体的实现buffer后面带上一个R。
+
+可以随时将一个普通Buffer调用asReadOnlyBuffer返回一个只读Buffer，但不能将一个只读Buffer转换为读写Buffer
+
+### 3.11、直接缓冲区（DirectBuffer）
+
+- 直接缓冲区是通过调用此类的 `allocateDirect()`工厂方法来创建的，此方法返回的缓冲区进行分配取消分配所需成本通常要高于非直接缓冲区。
+- 直接缓冲对象是在java中的，但是其并不是在堆中分配的，主要是通过Buffer类中的成员变量：address，指向的是堆外内存的地址；
+- 建议将直接缓冲区主要分配给那些易受基础系统的本机I/O 操作影响的大型、持久的缓冲区。一般情况下仅在直接缓冲区能带来明显好处时分配它们；
+- 直接缓冲区还可以通过 FileChannel 的map() 方法将文件区域直接映射到内存中来创建。该方法返回 MappedByteBuffer
+- 判断是直接缓冲区还是间接缓冲区，可以通过调用 isDirect() 方法来确定；
 
 ## 4、Scatter/Gather
 
-**4.1、Scatter/Gather 用于描述从 Channel 中读取或者写入到 Channel 的操作：**
+### 4.1、概述
 
+Scatter/Gather 用于描述从 Channel 中读取或者写入到 Channel 的操作
 - Scatter(分散)从 Channel 中读取是指在读操作时将读取的数据写入多个 Buffer 中，Channel 将从 Channel 中读取的数据"分散(scatter)"到多个 Buffer 中
 - Gather(聚集)写入 Channel 是指在写操作时将多个 Buffer 的数据写入同一个 Channel，Channel 将多个 Buffer 中的数据"聚集(gather)"后发送到 Channel
 - Scatter/Gather 经常用于需要将传输的数据分开处理的场合
 
-**4.2、Scattering Reads：是指数据从一个channel读取到多个buffer中**
+### 4.2、Scattering Reads
+
+Scattering Reads：是指数据从一个channel读取到多个buffer中
 
 (1).代码示例：
 ```java
@@ -5123,7 +5167,9 @@ channel.read(bufferArray);
 ```
 注意：Scattering Reads 在移动下一个 Buffer 前，必须填满当前的buffer，这也意味着它不适用于动态消息
 
-**4.3、Gathering Writes：是指数据从多个buffer写入到同一个channel**
+### 4.3、Gathering Writes
+
+是指数据从多个buffer写入到同一个channel
 ```java
 ByteBuffer header = ByteBuffer.allocate(128);
 ByteBuffer body   = ByteBuffer.allocate(1024);
@@ -5165,7 +5211,10 @@ toChannel.transferFrom(position， count， fromChannel);
 
 ### 6.2、Selector 的创建
 
+```java
 Selector selector = Selector.open();
+```
+上面返回的Selector真正的实现类是：`sun.nio.ch.KQueueSelectorImpl`
 
 ### 6.3、向 Selector 注册通道
 
@@ -5214,7 +5263,11 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 	还可以在用register()方法向Selector注册Channel的时候附加对象<br>
 		SelectionKey key = channel.register(selector， SelectionKey.OP_READ， theObject);
 
-### 6.5、通过 Selector 选择通道
+### 6.5、基本使用
+
+[NioServer](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioServer.java)
+
+[NioClient](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioClient.java)
 
 ## 7、NIO序列图
 
@@ -5250,30 +5303,93 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 
 ### 1.1、不同的拷贝方式底层机制的实现
 
-- 关于两个概念：用户态空间（User Space）和内核态空间（Kernel Space）
+- 关于两个概念：用户态空间（User Space）和内核态空间（Kernel Space）这是操作系统层面的概念，操作系统内核、硬件驱动等运行在内核状态空间，具有相对高的特权；而用户态空间，则给普通应用和服务使用
 
-    这是操作系统层面的概念，操作系统内核、硬件驱动等运行在内核状态空间，具有相对高的特权；而用户态空间，则给普通应用和服务使用
+- 基于流读写：当我们使用输入输出流进行读写时，实际上是进行了多次上下文切换，比如应用读取数据时先将内核态数据从磁盘读取到内核缓存，再切换到用户态将数据从内核缓存中读取到用户缓存，这种方式会带来一定的额外开销，可能会降低IO效率
 
-- 基于流读写
+- 基于NIO：基于NIO的transfer的实现方式，在Linux和Unix上，则会使用零拷贝技术，数据传输并不需要用户态参与，省去了上下文切换的开销和不必要的拷贝，进而可能提高应用拷贝性能
 
-    当我们使用输入输出流进行读写时，实际上是进行了多次上下文切换，比如应用读取数据时先将内核态数据从磁盘读取到内核缓存，再切换到用户态将数据从内核缓存中读取到用户缓存，这种方式会带来一定的额外开销，可能会降低IO效率
-
-- 基于NIO：
-
-    基于NIO的transfer的实现方式，在Linux和Unix上，则会使用零拷贝技术，数据传输并不需要用户态参与，省去了上下文切换的开销和不必要的拷贝，进而可能提高应用拷贝性能
-
-## 2、Files.copy 方法
+### 1.2、Files.copy 方法
 
 最终实现是本地方法实现的[UnixCopyFile.c](http://hg.openjdk.java.net/jdk/jdk/file/f84ae8aa5d88/src/java.base/unix/native/libnio/fs/UnixCopyFile.c)，其内部明确说明了只是简单的用户态空间拷贝，所以该方法不是利用transfer来实现的，而是本地技术实现的用户态拷贝
 
-## 3、如何提高拷贝效率
+### 1.3、基于流的读写
+
+```java
+public static void copyFileByStream(File source, File dest) throws Exception {
+	try (InputStream is = new FileInputStream(source);
+			OutputStream os = new FileOutputStream(dest)) {
+		byte[] buffer = new byte[1024];
+		int len;
+		while ((len = is.read(buffer)) > 0) {
+			os.write(buffer, 0, len);
+		}
+	}
+}
+```
+
+### 1.4、基于NIO实现
+
+- 基于基本NIO操作实现
+```java
+public static void main(String[] args) throws Exception {
+	FileInputStream in = new FileInputStream("temp/test1.txt");
+	FileOutputStream out = new FileOutputStream("temp/test1-copy.txt");
+	FileChannel inChannel = in.getChannel();
+	FileChannel outChannel = out.getChannel();
+	ByteBuffer buffer = ByteBuffer.allocate(1024);
+	int read = inChannel.read(buffer);
+	if (read == -1) {
+		return;
+	}
+	buffer.flip();
+	outChannel.write(buffer);
+}
+```
+
+- 基于Nio的transferTo或者transferFrom
+```java
+// 使用java nio 的transferTo 或 transferFrom来实现，其copy速度相对来说更快点，因为其更能利用现代操作系统底层机制，避免不必要的拷贝和上下文切换
+public static void copyFileByChannel(File source, File dest) throws Exception {
+	try (FileChannel sourceChannel = new FileInputStream(source).getChannel();
+			FileChannel targetChannel = new FileOutputStream(dest).getChannel()) {
+		for (long count = sourceChannel.size(); count
+				> 0; ) {
+			long transferred = sourceChannel.transferTo(sourceChannel.position(), count, targetChannel);
+			sourceChannel.position(sourceChannel.position() + transferred);
+			count -= transferred;
+		}
+	}
+}
+```
+
+- 基于MappdByteBuffer实现，中间使用了编码
+```java
+public static void copyFileByMappedByteBuffer(String source, String dest) throws Exception {
+	RandomAccessFile input = new RandomAccessFile(source, "r");
+	RandomAccessFile output = new RandomAccessFile(dest, "rw");
+	long length = new File(source).length();
+	FileChannel inputChannel = input.getChannel();
+	FileChannel outputChannel = output.getChannel();
+	MappedByteBuffer inputData = inputChannel.map(FileChannel.MapMode.READ_ONLY, 0, length);
+	Charset charset = Charset.forName("UTF-8");
+	CharsetDecoder decoder = charset.newDecoder();
+	CharsetEncoder encoder = charset.newEncoder();
+	CharBuffer charBuffer = decoder.decode(inputData);
+	ByteBuffer outputData = encoder.encode(charBuffer);
+	outputChannel.write(outputData);
+}
+```
+
+### 1.4、如何提高拷贝效率
+
 - 在程序中，使用缓存机制，合理减少IO次数；
 - 使用transfer等机制，减少上下文切换和额外IO操作；
 - 尽量减少不必要的转换过程，比如编解码；对象序列化与反序列化；
 
-## 4、DirectBuffer 与 MappedByteBuffer
+## 2、DirectBuffer 与 MappedByteBuffer
 
-### 4.1、概述
+### 2.1、概述
 
 - DirectBuffer：其定义了isDirect方法，返回当前buffer是不是Direct类型。因为Java提供了堆内和堆外（Direct）Buffer，我们可以以他的allocat 或者 allocatDirect方法直接创建；
 - MappedByteBuffer：将文件按照指定大小直接映射为内存区域，当程序访问这个内存区域时直接将操作这块文件数据，省去了将数据从内核空间向用户空间传输的损耗；可以使用FileChannel.map创建，本质上也是DirectBuffer；
@@ -5294,7 +5410,7 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 - 在大量使用DirectBuffer的部分框架中，框架自己在程序中调用释放方法，Netty的实现即如此；
 - 重复使用DirectBuffer
 
-### 4.2、跟踪与诊断DirectBuffer内存占用
+### 2.2、跟踪与诊断DirectBuffer内存占用
 
 通常的垃圾收集日志等激励，并不包含Directbuffer等信息，在JDK8之后的版本，可以使用native memory tracking特性进行诊断：```-XX:NativeMemoryTracking={summary|detail}```
 
@@ -5309,7 +5425,7 @@ jcmd <pid> VM.native_memory baseline
 jcmd <pid> VM.native_memory detail.diff
 ```
 
-## 5、使用Java读取大文件
+## 3、使用Java读取大文件
 
 - （1）文件流边读边用，使用文件流的read()方法每次读取指定长度的数据到内存中，具体代码如下
     ```java
@@ -5381,21 +5497,21 @@ jcmd <pid> VM.native_memory detail.diff
 
     本质上是由于 java.nio.MappedByteBuffer 直接继承自 java.nio.ByteBuffer ，而 ByteBuffer 的索引是 int 类型的，所以 MappedByteBuffer 也只能最大索引到 Integer.MAX_VALUE 的位置，所以 FileChannel 的 map 方法会做参数合法性检查。
 
-## 6、NIO消息传输错误
+## 4、NIO消息传输错误
 
-### 6.1、存在问题的情况
+### 4.1、存在问题的情况
 
 - 多消息粘包：
 - 单消息不完整：接收端buffer容量不够
 - 消息到达提醒重复触发（读消息时未设置取消监听）
 
-### 6.2、如何解决
+### 4.2、如何解决
 
 - 数据传输加上开始结束标记
 - 数据传输使用固定头部的方案；
 - 混合方案：固定头、数据加密、数据描述
 
-## 7、关于BIO、NIO等现场问题
+## 5、关于BIO、NIO等现场问题
 
 **基于BIO实现的Server端，当建立了100个连接时，会有多少个线程？如果基于NIO，又会是多少个线程？ 为什么？**
 
@@ -5403,7 +5519,7 @@ BIO由于不是NIO那样的事件机制，在连接的IO读取上，无论是否
 
 NIO通过事件来触发，这样就可以实现在有需要读/写的时候才处理，不用阻塞当前线程，NIO在处理IO的读写时，当从网卡缓冲区读或写入缓冲区时，这个过程是串行的，所以用太多线程处理IO事件其实也没什么意义，连接事件由于通常处理比较快，用1个线程去处理就可以，IO事件呢，通常会采用cpu core数+1或cpu core数 * 2，这个的原因是IO线程通常除了从缓冲区读写外，还会做些比较轻量的例如解析协议头等，这些是可以并发的，为什么不只用1个线程处理，是因为当并发的IO事件非常多时，1个线程的效率不足以发挥出多core的CPU的能力，从而导致这个地方成为瓶颈，这种在分布式cache类型的场景里会比较明显，按照这个，也就更容易理解为什么在基于Netty等写程序时，不要在IO线程里直接做过多动作，而应该把这些动作转移到另外的线程池里去处理，就是为了能保持好IO事件能被高效处理
 
-## 8、Channel和Scoket区别
+## 6、Channel和Scoket区别
 
 Socket、SocketChannel二者的实质都是一样的，都是为了实现客户端与服务器端的连接而存在的。
 
