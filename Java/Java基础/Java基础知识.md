@@ -4955,6 +4955,18 @@ Writer writer = new OutputStreamWriter(outputStream);
 	// 获取控制台输入
 	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 	```
+- 获取控制台输入
+
+	- 用Scanner包装System.in，Scanner取得的输入以space, tab, enter 键为结束符
+		```java
+		Scanner scan = new Scanner(System.in);
+		String read = scan.nextLine();
+		```
+	- 使用BufferedReader取得含空格的输入：取得包含space在内的输入
+		```java
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in ));
+		br.readLine();
+		```
 
 # 三十八、Java NIO
 
@@ -5033,9 +5045,10 @@ C.获取解码器：
 	CharsetDecoder cd = cs.newDecoder();
 	CharBuffer cf = cd.decode(ByteBuffer);
 ```
+
 ## 3、Buffer
 
-用于和NIO通道进行交互，缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存，底层实现是数组
+用于和NIO通道进行交互，缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存，底层实现是数组；一般读写都要通过channel和buffer，需要从channel中读取数据到buffer中，或者将数据从buffer中写到channel中
 
 方法名称 |方法描述
 --------|-------
@@ -5080,6 +5093,8 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 	- （6）mark：标记，表示记录当前position的位置，可以通过reset() 恢复到 mark 的位置;
 
 	它们之间的关系：`0 <= mark <= position <= limit <= capacity`
+
+	![](image/NIO-Buffer属性变化.png)
 
 ### 3.3、Buffer 的分配
 

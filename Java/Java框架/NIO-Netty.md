@@ -318,11 +318,8 @@ ByteBufAllocator 两大子类：PooledByteBufAllocator、UnpooledByteBufAllocato
 
 ### 3.2、PooledByteBufAllocator内存分配
 
-# Netty应用场景
 
-
-
-# Netty面试题
+# 六、Netty面试题
 
 ## 1、服务端的Socket在哪里初始化？
 

@@ -394,6 +394,13 @@ CPU、 内存、磁盘速度的差异，CPU缓存 -> 可见性，线程切换 ->
 - 原子性：互斥锁
 - 重排序：volatile、禁止重排序
 
+## 6、并发编程的三要素：
+
+- 原子性：指的是一个或者多个操作，要么全部执行并且在执行的过程中不被其他操作打断，要么就全部都不执行。
+- 可见性：指多个线程操作一个共享变量时，其中一个线程对变量进行修改后，其他线程可以立即看到修改的结果。
+    实现可见性的方法：synchronized或者Lock：保证同一个时刻只有一个线程获取锁执行代码，锁释放之前把最新的值刷新到主内存，实现可见性。
+- 有序性：即程序的执行顺序按照代码的先后顺序来执行
+
 # 二、Java 多线程
 
 ## 1、Java线程
@@ -1053,9 +1060,11 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 #### 7.1.1、monitorenter
 
 每个对象都有一个监视器锁(monitor)，当monitor被占用时就会处于锁定状态，线程执行monitorenter指令时尝试获取monitor的所有权
-- 如果 monitor 的进入数为 0，则该线程进入monitor，然后将进入数设置为 1，该线程为 monitor的所有者.
+- 如果 monitor 的进入数为 0，则该线程进入monitor，然后将进入数设置为 1，该线程为 monitor的所有者。
 - 如果线程已经占用该monitor，只是重新进入，则monitor的进入数加 1；
-- 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到 monitor 的进入数为 0，再尝试重新获取 monitor的所有权.
+- 如果其他线程已经占用了monitor，则该线程进入阻塞状态，直到 monitor 的进入数为 0，再尝试重新获取 monitor的所有权。
+
+Synchronized是对对象进行加锁，在Jvm中，对象在内存中分为三块区域：对象头、实例数据和对齐填充。在对象头中保存了锁标志位和指向Monitor对象的起始地址。当Monitor被某个线程持有后，就会处于锁定状态，Owner部分会指向持有Monitor对象的线程。另外Monitor中还有两个队列，用来存放进入及等待获取锁的线程
 
 #### 7.1.2、monitorexit
 
@@ -1063,7 +1072,7 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 
 可重入锁每次退出都是 monitor 减1，当 monitor为0的时间，锁被完全释放；
 	
-synchronized 代码块的语义底层是通过一个monitor的对象来完成，其实wait/notify等方法也依赖于monitor对象，这就是为什么只有在同步的块或者方法中才能调用wait/notify等方法，否则会抛出`java.lang.IllegalMonitorStateException`的异常的原因
+synchronized 代码块的语义底层是通过一个monitor的对象来完成，其实wait/notify等方法也依赖于monitor对象，这就是为什么只有在同步的块或者方法中才能调用wait/notify等方法，否则会抛出`java.lang.IllegalMonitorStateException`的异常的原因。
 
 ### 7.2、同步方法的实现
 
