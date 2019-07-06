@@ -92,21 +92,6 @@ LineBasedFrameDecoder + StringDecoder组合就是按行切换的文本解码器�
 - Facebook Thrift
 - JBoss Marshalling
 
-## 5、Netty线程模型
-
-Netty可以同时支持Reactor单线程模型、多线程模型和主从Reactor多线程模型。
-
-服务端启动的时候，创建了两个NioEventLoopGroup，他们实际是两个独立的Reactor线程池。一个用于接收客户端的TCO连接，另一个用于处理IO相关的读写操作或者执行系统的Task、定时任务Task；
-
-通过调整线程池的线程个数、是否共享线程池等方式，netty的Reactor线程模型可以在单线程、多线程和主从多线程间切换。
-
-不管是boos线程还是worker线程，所做的事情均分为以下三个步骤：
-- 轮询注册在selector上的IO事件
-- 处理IO事件
-- 执行异步task
-
-对于boos线程来说，第一步轮询出来的基本都是 accept 事件，表示有新的连接，而worker线程轮询出来的基本都是read/write事件，表示网络的读写事件
-
 # 二、Netty服务端启动过程
 
 ![](image/Netty通信流程.png)
@@ -441,7 +426,9 @@ Page级别以下的内存分配首先查找到Page然后把此Page按照SubPage�
 
 ### 14.2、零拷贝实现
 
-Linux中的`sendfile()`以及Java NIO中的`FileChannel.transferTo()`方法都实现了零拷贝的功能，而在Netty中也通过在FileRegion中包装了NIO的`FileChannel.transferTo()`方法实现了零拷贝；
+Linux中的`sendfile()`以及Java NIO中的`FileChannel.transferTo()`方法都实现了零拷贝的功能，而在Netty中也通过在`FileRegion`中包装了NIO的`FileChannel.transferTo()`方法实现了零拷贝；
+
+- Linux中的`sendfile()`流程：
 
 在Netty中还有另一种形式的零拷贝，即Netty允许我们将多段数据合并为一整段虚拟数据供用户使用，而过程中不需要对数据进行拷贝操作；
 

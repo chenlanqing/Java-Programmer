@@ -83,5 +83,88 @@ Java的优雅停机通常通过注册JDK的ShutdownHook来实现，当系统接�
 
 通常优雅退出需要有超时控制机制，例如30S，如果到达超时时间仍然没有完成退出前的资源回收等操作，则由停机脚本直接调用kill -9 pid，强制退出
 
+# 二、线程模型
 
+## 1、Reactor线程模型
 
+[Java基础知识-Reactor](../../../Java基础/Java基础知识.md#6.1Reactor)
+
+## 2、Netty线程模型
+
+Netty可以同时支持Reactor单线程模型、多线程模型和主从Reactor多线程模型。
+
+服务端启动的时候，创建了两个NioEventLoopGroup，他们实际是两个独立的Reactor线程池。一个用于接收客户端的TCO连接，另一个用于处理IO相关的读写操作或者执行系统的Task、定时任务Task；
+
+通过调整线程池的线程个数、是否共享线程池等方式，netty的Reactor线程模型可以在单线程、多线程和主从多线程间切换。
+
+不管是boos线程还是worker线程，所做的事情均分为以下三个步骤：
+- 轮询注册在selector上的IO事件
+- 处理IO事件
+- 执行异步task
+
+对于boos线程来说，第一步轮询出来的基本都是 accept 事件，表示有新的连接，而worker线程轮询出来的基本都是read/write事件，表示网络的读写事件
+
+## 3、最佳实践
+
+Netty的多线程编程最佳实践：
+- 创建两个NioEventLoopGroup，用于逻辑隔离NIO Acceptor 和NIO I/O线程；
+- 尽量不要在ChannelHandler中启动用户线程；
+- 解码要放在NIO线程调用的解码Handler中进行，不要切换到用户线程中完成消息的解码；
+- 如果业务逻辑操作非常简单，没有复杂的业务逻辑计算，没有可能会导致线程被阻塞的磁盘操作、数据库操作、网络操作等，可以直接在NIO线程上完成业务逻辑编排，不需要切换到用户线程；
+- 如果业务逻辑处理复杂，不要在NIO线程上完成，建议将解码后的POJO消息封装成TASK。
+
+推荐的线程数量计算公式：
+- 公式一：线程数量 = (线程总时间 / 瓶颈资源时间) * 瓶颈资源的线程并行数；
+- 公式二：QPS = 1000 / 线程总时间 * 线程数
+
+## 4、NioEventLoop
+
+### 4.1、设计原理
+
+其并不是一个纯粹的IO线程，其除了负责IO的读写外，还需要兼顾处理以下任务：
+- 系统Task：通过调用NioEventLoop的execute方法实现，Netty有很多系统Task，创建他们的主要原因是：当IO线程和用户线程同时操作网络资源时，为了防止并发操作导致的锁竞争，将用户线程的操作封装成Task放入消息队列中，由IO线程负责执行，实现了局部无锁化；
+
+- 定时任务：通过调用NioEventLoop的schedule方法实现。
+
+它实现了EventLoop接口、EventExecutorLooop接口和ScheduleExecutorService接口；
+
+### 4.2、继承关系图
+
+![](image/NioEventLoop继承关系图.png)
+
+### 4.3、源码分析
+
+## 5、NioEventLoopGroup
+
+![](image/NioEventLoopGroup类关系图.png)
+
+### 5.1、开启的线程数
+
+默认情况下开启的线程数：`EventLoopGroup bossGroup = new NioEventLoopGroup();`，一般情况，通常会传入1，表示一个线程
+```java
+// 默认情况下不传，会调用另外一个构造函数，传入的是0
+ public NioEventLoopGroup() {
+    this(0);
+}
+// 最终会调用如何构造方法，此时nThreads这个参数的值为0
+public NioEventLoopGroup(int nThreads, Executor executor, final SelectorProvider selectorProvider, final SelectStrategyFactory selectStrategyFactory) {
+    super(nThreads, executor, selectorProvider, selectStrategyFactory, RejectedExecutionHandlers.reject());
+}
+// 会调用父类MultithreadEventLoopGroup的构造方法，其中会判断时nThreads是否为0，如果为0，则使用 DEFAULT_EVENT_LOOP_THREADS的值，该值时在静态代码块中初始化的
+protected MultithreadEventLoopGroup(int nThreads, Executor executor, Object... args) {
+    super(nThreads == 0 ? DEFAULT_EVENT_LOOP_THREADS : nThreads, executor, args);
+}
+// 如果没有配置变量：io.netty.eventLoopThreads，则默认电脑上默认的CPU核数*2，即取的是逻辑CPU的数量
+private static final int DEFAULT_EVENT_LOOP_THREADS;
+static {
+    DEFAULT_EVENT_LOOP_THREADS = Math.max(1, SystemPropertyUtil.getInt("io.netty.eventLoopThreads", Runtime.getRuntime().availableProcessors() * 2));
+    if (logger.isDebugEnabled()) {
+        logger.debug("-Dio.netty.eventLoopThreads: {}", DEFAULT_EVENT_LOOP_THREADS);
+    }
+}
+```
+NioEventLoopGroup 其构造方法都是初始化一些参数
+
+## 6、ServerBootstrap
+
+Bootstrap sub-class which allows easy bootstrap of ServerChannel
