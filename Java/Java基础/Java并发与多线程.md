@@ -1572,6 +1572,36 @@ public class ParentThreadSharedDataWithSon {
 		- ③、解决方案：
 			在使用完这个线程的时候清除所有的localMap，在submit新任务的时候在重新重父线程中copy所有的Entry。然后重新给当前线程的t.inhertableThreadLocal赋值；阿里巴巴有一套解决方案：[transmittable-thread-local](https://github.com/chenlanqing/transmittable-thread-local)
 
+ThreadLocal 无法解决共享对象的更新问题，ThreadLocal 对象建议使用 static 修饰。这个变量是针对一个线程内所有操作共享的，所以设置为静态变量，所有此类实例共享 此静态变量 ，也就是说在类第一次被使用时装载，只分配一块存储空间，所有此类的对象(只 要是这个线程内定义的)都可以操控这个变量
+
+### 11.9、FastThreadLocal
+
+**1、用法：**
+
+FastThreadLocal用法上兼容ThreadLocal。使用FastThreadLocal不用像ThreadLocal那样先`try 之后finally`进行threadLocal对象.remove();
+
+由于构造FastThreadLocalThread的时候，通过FastThreadLocalRunnable对Runnable对象进行了包装：
+```java
+FastThreadLocalRunnable.wrap(target); // 从而构造了FastThreadLocalRunnable对象
+```
+FastThreadLocalRunnable在执行完之后都会调用`FastThreadLocal.removeAll();`
+
+**2、最佳实践：**
+
+FastThreadLocal并不是什么情况都快。 使用`FastThreadLocalThread`线程才会快，如果是普通线程还更慢！ 注意：使用`FastThreadLocalThread`线程才会快，如果是普通线程还更慢！
+
+Netty中有两个基准测试类：FastThreadLocalFastPathBenchmark、FastThreadLocalSlowPathBenchmark
+
+- FastThreadLocal操作元素的时候，使用常量下标在数组中进行定位元素来替代ThreadLocal通过哈希和哈希表，这个改动特别在频繁使用的时候，效果更加显著！
+- 想要利用上面的特征，线程必须是FastThreadLocalThread或者其子类，默认DefaultThreadFactory都是使用FastThreadLocalThread的
+- 只用在FastThreadLocalThread或者子类的线程使用FastThreadLocal才会更快，因为FastThreadLocalThread 定义了属性threadLocalMap类型是InternalThreadLocalMap。如果普通线程会借助ThreadLocal
+
+**3、伪共享问题：**
+
+FastThreadLocal利用字节填充来解决伪共享问题
+
+所以FastThreadLocal比ThreadLocal快，并不是空间换时间，FastThreadLocal并没有浪费空间！！！
+
 ## 12、深入理解ThreadLocal
 
 ### 12.1、理解ThreadLocal

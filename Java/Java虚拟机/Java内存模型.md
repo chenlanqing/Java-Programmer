@@ -745,3 +745,4 @@ JMM对这两种不同性质的重排序，采取了不同的策略：
 * [Java内存模型](http://www.hollischuang.com/archives/2550)
 * [Linux与JVM的内存关系](http://www.open-open.com/lib/view/open1420814127390.html)
 * [Java内存模型之happens-before](http://cmsblogs.com/?p=2102)
+* [深入理解Java内存模型](http://www.jiangxinlingdu.com/concurrent/2019/02/16/java-memory-model.html)
