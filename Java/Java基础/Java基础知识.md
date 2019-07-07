@@ -4582,6 +4582,8 @@ epoll使用一个文件描述符管理多个描述符，将用户关系的文件
 
 ### 6.1、Reactor
 
+具体可以参考文档：《Scalable IO in Java》，作者是：Doug Lea
+
 #### 6.1.1、概念
 
 Reactor 是一种和 IO 相关的设计模式
@@ -4590,7 +4592,7 @@ Reactor 是一种和 IO 相关的设计模式
 - 采用多路复用将事件分发给相应的Handler处理
 
 Reactor实际上采用了分而治之和事件驱动的思想：
-- 分而治之：一个连接里完整的网络处理过程一般分为 accept，read，decode，process，encode，send这几步。而Reactor模式将每个步骤映射为一个Task，服务端线程执行的最小逻辑单元不再是一个完整的网络请求，而是 Task，且采用非阻塞方式执行；
+- 分而治之：一个连接里完整的网络处理过程一般分为 accept、read、decode、process、encode、send这几步。而Reactor模式将每个步骤映射为一个Task，服务端线程执行的最小逻辑单元不再是一个完整的网络请求，而是 Task，且采用非阻塞方式执行；
 - 事件驱动：每个Task 对应特定的网络事件，当Task 准备就绪时，Reactor 收到对应的网络事件通知，并将Task 分发给绑定了对应网络事件的 Handler 执行
 
 总结概念如下：

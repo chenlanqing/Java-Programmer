@@ -1252,7 +1252,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 ## 8、volatile
 
-[volatile特性](../Java-JVM/Java内存模型.md#三volatile的特性)
+[volatile特性](../Java虚拟机/Java内存模型.md#三volatile的特性)
 
 ## 9、线程安全及不可变性
 

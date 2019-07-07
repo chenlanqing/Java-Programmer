@@ -303,8 +303,38 @@ ByteBufAllocator 两大子类：PooledByteBufAllocator、UnpooledByteBufAllocato
 
 ### 3.2、PooledByteBufAllocator内存分配
 
+# 六、Netty涉及设计模式
 
-# 六、Netty面试题
+## 1、单例模式
+
+比如
+- ReadTimeOutException
+- MqttEncoder
+
+## 2、策略模式
+
+DefaultEventExecutorChooserFactory
+
+## 3、装饰者模式
+
+WrappedByteBuf、UnreleasableByteBuf、SimpleLeakAwareByteBuf
+
+## 4、观察者模式
+
+Channel.writeAndFlush
+
+## 5、迭代器模式
+
+
+## 6、责任链模式
+
+ChannelHandler、ChannelInboundHandler、ChannelOutboundHandler
+
+ChannelPipeline
+
+ChannelHandlerContext
+
+# 七、Netty面试题
 
 ## 1、服务端的Socket在哪里初始化？
 
@@ -435,9 +465,10 @@ Linux中的`sendfile()`以及Java NIO中的`FileChannel.transferTo()`方法都�
 ### 14.3、Netty实现零拷贝
 
 Netty 的 Zero-copy 体现在如下几个个方面：
-- Netty 提供了 CompositeByteBuf 类, 它可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf, 避免了各个 ByteBuf 之间的拷贝.
-- 通过 wrap 操作, 我们可以将 byte[] 数组、ByteBuf、ByteBuffer等包装成一个 Netty ByteBuf 对象, 进而避免了拷贝操作.
-- ByteBuf 支持 slice 操作, 因此可以将 ByteBuf 分解为多个共享同一个存储区域的 ByteBuf, 避免了内存的拷贝.
+- Netty的接收和发送ByteBuffer采用Direct Buffer，使用堆外直接内存进行Socket读写，不需要进行字节缓冲区的二次拷贝；
+- Netty 提供了 CompositeByteBuf 类, 它可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf, 避免了各个 ByteBuf 之间的拷贝。
+- 通过 wrap 操作, 我们可以将 byte[] 数组、ByteBuf、ByteBuffer等包装成一个 Netty ByteBuf 对象, 进而避免了拷贝操作。
+- ByteBuf 支持 slice 操作, 因此可以将 ByteBuf 分解为多个共享同一个存储区域的 ByteBuf, 避免了内存的拷贝。
 - 通过 FileRegion 包装的FileChannel.tranferTo 实现文件传输, 可以直接将文件缓冲区的数据发送到目标 Channel, 避免了传统通过循环 write 方式导致的内存拷贝问题
 
 #### 14.3.1、通过 CompositeByteBuf 实现零拷贝
