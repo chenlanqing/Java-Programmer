@@ -15,6 +15,7 @@
 
 
 # 一、JVM参数
+
 查看虚拟机的参数：
 ```
 roo@xxx-mac：~|=> java -XX:+PrintFlagsFinal -XX:+UnlockDiagnosticVMOptions -version | wc -l
@@ -40,6 +41,8 @@ java [options] -jar filename [args]
 - -XX:-option 不启用选项 
 - -XX:option=number 给选项设置一个数字类型值，可跟单位，例如 128k, 256m, 1g 
 - -XX:option=string 给选项设置一个字符串值，例如-XX:HeapDumpPath=./dump.core
+
+所有参数文件都可以再OpenJDK中 [globals.hpp](https://github.com/chenlanqing/openjdk/blob/jdk/jdk/src/hotspot/share/runtime/globals.hpp)文件中找到
 
 ## 1、标准参数
 
@@ -338,9 +341,7 @@ java [options] -jar filename [args]
 - `-XX:+PrintGCDetails` <br>
     打印每次GC的细节信息。默认不打印
 
-- `-XX:+PrintGCTaskTimeStamps` <br>
-
-- `打印每个独立的GC线程任务的时间戳。默认不打印` <br>
+- `-XX:+PrintGCTaskTimeStamps`：打印每个独立的GC线程任务的时间戳。默认不打印
 
 - `-XX:+PrintGCTimeStamps` <br>
     打印每次GC的时间戳。默认不打印。
@@ -422,3 +423,4 @@ java [options] -jar filename [args]
 * [Java8 JVM参数解读](https://www.zybuluo.com/changedi/note/975529)
 * [JVM参数优化](https://blog.csdn.net/liuxinghao/article/details/73963399)
 * [JVM命令参数大全](https://blog.csdn.net/zero__007/article/details/52848040)
+* [Java HotSpot VM Command-Line Options](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/clopts001.html)

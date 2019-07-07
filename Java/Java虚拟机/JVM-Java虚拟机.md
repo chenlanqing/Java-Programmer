@@ -163,6 +163,8 @@
 
 *任何一个JVM参数的默认值可以通过 ```java -XX:+PrintFlagsFinal -version |grep JVMParamName``` 获取，例如：```java -XX:+PrintFlagsFinal -version |grep MetaspaceSize```*
 
+`java -XX:+PrintCommandLineFlags -version`：查看初始默认参数
+
 # 0、虚拟机历史
 
 - Sun Classic：世界上第一款商用Java虚拟机，在JDK1.2之前是 Sun JDK中唯一的虚拟机，在JDK1.2时，它与HotSpot虚拟机共存，但默认的是Classic VM，在JDK1.3时成为默认虚拟机，直到1.4之后才完全退出历史舞台.
@@ -368,7 +370,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 - 堆外内存会溢出么
 
-	通过修改JVM参数：-XX:MaxDirectMemorySize=40M，将最大堆外内存设置为40M。既然堆外内存有限，则必然会发生内存溢出。
+	通过修改JVM参数：`-XX:MaxDirectMemorySize=40M`，将最大堆外内存设置为40M。既然堆外内存有限，则必然会发生内存溢出。
 	
 	为模拟内存溢出，可以设置JVM参数：-XX:+DisableExplicitGC，禁止代码中显式调用System.gc()。可以看到出现OOM。得到的结论是，堆外内存会溢出，并且其垃圾回收依赖于代码显式调用System.gc();
 	```java
@@ -385,7 +387,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 	当DirectByteBuffer对象在某次YGC中被回收，只有Cleaner对象知道堆外内存的地址。当下一次FGC执行时，Cleaner对象会将自身Cleaner链表上删除，并触发clean方法清理堆外内存。此时，堆外内存将被回收，Cleaner对象也将在下次YGC时被回收。如果JVM一直没有执行FGC的话，无法触发Cleaner对象执行clean方法，从而堆外内存也一直得不到释放。
 
-	其实，在ByteBuffer.allocateDirect方式中，会主动调用System.gc()强制执行FGC。JVM觉得有需要时，就会真正执行GC操作。不过很多线上环境的JVM参数有-XX:+DisableExplicitGC，导致了System.gc()等于一个空函数，根本不会触发FGC
+	其实，在`ByteBuffer.allocateDirect`方式中，会主动调用System.gc()强制执行FGC。JVM觉得有需要时，就会真正执行GC操作。不过很多线上环境的JVM参数有-XX:+DisableExplicitGC，导致了System.gc()等于一个空函数，根本不会触发FGC
 
 **4、使用堆外内存优点以及注意事项**
 
@@ -393,7 +395,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 	- 减少了垃圾回收
 	- 加快了复制的速度
 
-- 注意事项：`java.nio.DirectByteBuffer`对象在创建过程中会先通过Unsafe接口直接通过`os::malloc`来分配内存，然后将内存的起始地址和大小存到DirectByteBuffer对象里，这样就可以直接操作这些内存。这些内存只有在DirectByteBuffer回收掉之后才有机会被回收，因此如果这些对象大部分都移到了old，但是一直没有触发CMS GC或者Full GC，那么悲剧将会发生，因为你的物理内存被他们耗尽了，因此为了避免这种悲剧的发生，通过-XX:MaxDirectMemorySize来指定最大的堆外内存大小，当使用达到了阈值的时候将调用System.gc来做一次full gc，以此来回收掉没有被使用的堆外内存；
+- 注意事项：`java.nio.DirectByteBuffer`对象在创建过程中会先通过Unsafe接口直接通过`os::malloc`来分配内存，然后将内存的起始地址和大小存到DirectByteBuffer对象里，这样就可以直接操作这些内存。这些内存只有在DirectByteBuffer回收掉之后才有机会被回收，因此如果这些对象大部分都移到了old，但是一直没有触发CMS GC或者Full GC，那么悲剧将会发生，因为你的物理内存被他们耗尽了，因此为了避免这种悲剧的发生，通过-XX:MaxDirectMemorySize来指定最大的堆外内存大小，当使用达到了阈值的时候将调用`System.gc`来做一次full gc，以此来回收掉没有被使用的堆外内存；
 
 ## 2.3、JDK8的JVM内存结构
 
@@ -2233,9 +2235,6 @@ ps -ef | grep tomcat
 	-gcpermcapacity：输出永久代使用到的最大、最小空间<br>
 	-printcompilation：输出已经被JIT编译的方法<br>
 
-- 按上述参数执行结果各个代表的意思，参考如下文件：
-
-[jstat](Jvm监控工具/jstat.md)
 
 ## 12.3、jinfo
 
@@ -2394,6 +2393,8 @@ JMC和JConsole的内存管理页面，对堆外内存的统计有限，可以使
 ### 12.10.4、strace
 
 ### 12.10.5、gdb
+
+### 12.10.5、jprofiler
 
 
 # 13、JVM 虚拟机调优

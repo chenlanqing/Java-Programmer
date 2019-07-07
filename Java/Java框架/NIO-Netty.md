@@ -5,11 +5,13 @@ Netty结构图
 
 ![](image/Netty架构.png)
 
+Netty是一个异步事件驱动的网络应用框架，用于快速开发可维护的高性能服务器和客户端。Netty封装了JDK的NIO
+
 ## 1、不建议使用原生NIO类库进行开发的原因
 
 - NIO 类库和API繁杂，使用麻烦，你需要熟练掌握 Selector、ServerSocketChannel、SocketChannel、ByteBuffer等；
 - 需要具备其他的额外技能做铺垫，例如熟悉Java多线程编程.这时因为NIO编程设计到Reactor模式，你必须对多线程和网络编程非常熟悉，才能编写出高质量的NIO程序；
-- 可靠性能力补齐，工作量和难度非常大.例如客户端面临断连重连、网络闪断、半包读写、失败缓存、网络拥塞和异常码流的处理问题.NIO 编程的特点是功能开发相对容易、但是可靠性能力补齐的工作量和难度都非常大；
+- 可靠性能力补齐，工作量和难度非常大。例如客户端面临断连重连、网络闪断、半包读写、失败缓存、网络拥塞和异常码流的处理问题.NIO 编程的特点是功能开发相对容易、但是可靠性能力补齐的工作量和难度都非常大；
 - JDK NIO的bug，如臭名昭著的 epoll bug会导致Selector空轮询，最终导致CPU 100%；
 
 ## 2、Netty 的特点
@@ -48,7 +50,7 @@ TCP本质上是不会发生数据层面的粘包。粘包是数据处理的逻�
 
 ### 3.4、粘包解决策略
 
-由于底层的TCP无法理解上层的业务数据，所以在底层是无法保证数据不被拆分和重组的.这个问题只能通过上层的应用协议栈设计来解决
+由于底层的TCP无法理解上层的业务数据，所以在底层是无法保证数据不被拆分和重组的。这个问题只能通过上层的应用协议栈设计来解决
 
 - 消息定长，例如每个报文的大小固定长度200字节，如果不够，空位补空格；
 - 在包尾增加回车换行符进行分割，如FTP协议
@@ -91,6 +93,30 @@ LineBasedFrameDecoder + StringDecoder组合就是按行切换的文本解码器�
 	- 支付定义可选和必选字段；
 - Facebook Thrift
 - JBoss Marshalling
+
+## 5、Netty核心组件
+
+- Bootstrap & ServerBootstrap：都是启动器，能够帮助 Netty 使用者更加方便地组装和配置 Netty ，也可以更方便地启动 Netty 应用程序
+
+- Channel：Netty 网络操作抽象类，它除了包括基本的 I/O 操作，如 bind、connect、read、write 之外，还包括了 Netty 框架相关的一些功能，如获取该 Channe l的 EventLoop。Netty 的 Channel 则提供的一系列的 API ，它大大降低了直接与 Socket 进行操作的复杂性
+
+- ChannelFuture：Netty 提供了 ChannelFuture 接口，通过该接口的 addListener() 方法注册一个 ChannelFutureListener，当操作执行成功或者失败时，监听就会自动触发返回结果。
+
+- EventLoop & EventLoopGroup：定义了在整个连接的生命周期里当有事件发生的时候处理的核心抽象，Channel 为Netty 网络操作抽象类，EventLoop 主要是为Channel 处理 I/O 操作，两者配合参与 I/O 操作
+
+- ChannelHandler：ChannelHandler 为 Netty 中最核心的组件，它充当了所有处理入站和出站数据的应用程序逻辑的容器。ChannelHandler 主要用来处理各种事件，这里的事件很广泛，比如可以是连接、数据接收、异常、数据转换等。ChannelHandler 有两个核心子类 ChannelInboundHandler 和 ChannelOutboundHandler，其中 ChannelInboundHandler 用于接收、处理入站数据和事件，而 ChannelOutboundHandler 则相反
+
+- ChannelPipeline：ChannelPipeline 为 ChannelHandler 链提供了一个容器并定义了用于沿着链传播入站和出站事件流的 API。一个数据或者事件可能会被多个 Handler 处理，在这个过程中，数据或者事件经流 ChannelPipeline，由 ChannelHandler 处理
+
+## 6、使用场景
+
+- 构建高性能、低时延的各种 Java 中间件，Netty 主要作为基础通信框架提供高性能、低时延的通信服务。例如：
+    - RocketMQ ，分布式消息队列。
+    - Dubbo ，服务调用框架。
+    - Spring WebFlux ，基于响应式的 Web 框架。
+    - HDFS ，分布式文件系统。
+- 公有或者私有协议栈的基础通信框架，例如可以基于 Netty 构建异步、高性能的 WebSocket、Protobuf 等协议的支持。
+- 各领域应用，例如大数据、游戏等，Netty 作为高性能的通信框架用于内部各模块的数据分发、传输和汇总等，实现模块之间高性能通信
 
 # 二、Netty服务端启动过程
 
@@ -274,6 +300,16 @@ Netty服务端启动过程：
 
 ## 1、ByteBuf的结构
 
+其实现优势：
+- 它可以被用户自定义的缓冲区类型扩展
+- 通过内置的符合缓冲区类型实现了透明的零拷贝
+- 容量可以按需增长
+- 在读和写这两种模式之间切换不需要调用 #flip() 方法
+- 读和写使用了不同的索引
+- 支持方法的链式调用
+- 持引用计数
+- 支持池化
+
 ## 2、ByteBuf分类
 
 从三个角度：
@@ -302,6 +338,37 @@ ByteBufAllocator 两大子类：PooledByteBufAllocator、UnpooledByteBufAllocato
 - Direct内存分配
 
 ### 3.2、PooledByteBufAllocator内存分配
+
+## 4、Netty内存泄露检测的实现机制
+
+Netty 4开始，对象的生命周期由它们的引用计数（reference counts）管理，而不是由垃圾收集器（garbage collector）管理了。ByteBuf是最值得注意的，它使用了引用计数来改进分配内存和释放内存的性能；
+
+在Netty中，通过`io.netty.util.ReferenceCounted`接口，定义了引用计数相关的一系列操作
+
+### 4.1、为什么要有引用计数器
+
+Netty里四种主力的ByteBuf，其中UnpooledHeapByteBuf 底下的byte[]能够依赖JVM GC自然回收；而UnpooledDirectByteBuf底下是DirectByteBuffer，除了等JVM GC，最好也能主动进行回收；而PooledHeapByteBuf 和 PooledDirectByteBuf，则必须要主动将用完的byte[]/ByteBuffer放回池里，否则内存就要爆掉。所以，Netty ByteBuf需要在JVM的GC机制之外，有自己的引用计数器和回收过程
+
+### 4.2、引用计数器基本
+
+- 计数器基于 AtomicIntegerFieldUpdater，为什么不直接用AtomicInteger？因为ByteBuf对象很多，如果都把int包一层AtomicInteger花销较大，而AtomicIntegerFieldUpdater只需要一个全局的静态变量。
+- 所有ByteBuf的引用计数器初始值为1。
+- 调用release()，将计数器减1，等于零时， deallocate()被调用，各种回收。
+- 调用retain()，将计数器加1，即使ByteBuf在别的地方被人release()了，在本Class没喊cut之前，不要把它释放掉。
+- 由duplicate(), slice()和order()所衍生的ByteBuf，与原对象共享底下的buffer，也共享引用计数器，所以它们经常需要调用retain()来显示自己的存在。
+- 当引用计数器为0，底下的buffer已被回收，即使ByteBuf对象还在，对它的各种访问操作都会抛出异常
+
+### 4.3、内存泄露检测
+
+所谓内存泄漏，主要是针对池化的ByteBuf。ByteBuf对象被JVM GC掉之前，没有调用release()把底下的DirectByteBuffer或byte[]归还到池里，会导致池越来越大。而非池化的ByteBuf，即使像DirectByteBuf那样可能会用到System.gc()，但终归会被release掉的，不会出大事；
+
+功能测试时，最好开着"`-Dio.netty.leakDetectionLevel=paranoid`"。盯紧log里有没有出现 "LEAK: "字样。
+
+Netty默认会从分配的ByteBuf里抽样出大约1%的来进行跟踪。如果泄漏，会有如下语句打印：
+```
+LEAK: ByteBuf.release() was not called before it's garbage-collected. Enable advanced leak reporting to find out where the leak occurred. To enable advanced leak reporting, specify the JVM option '-Dio.netty.leakDetectionLevel=advanced' or call ResourceLeakDetector.setLevel()
+```
+这句话报告有泄漏的发生，提示你用-D参数，把防漏等级从默认的simple升到advanced，就能具体看到被泄漏的ByteBuf被创建和访问的地方
 
 # 六、Netty涉及设计模式
 
@@ -419,6 +486,11 @@ ChannelInboundHandler按照注册的先后顺序执行；ChannelOutboundHandler�
 - 对于channelOutboundHandler，总是会从write事件执行的开始，向链表头部方向遍历执行可用的outboundHandler
 
 ## 10、用户手动触发事件传播，不同的触发方式有什么样的区别？
+
+事件传播：
+- Outbound 事件的传播
+- Inbound 事件的传播
+- 异常事件的传播
 
 ## 11、Netty内存类别
 
@@ -545,3 +617,18 @@ EventLoop 是用来处理连接的生命周期中所发生的事情，EventLoop,
 - 所有的 EventLoop 处理的 I/O 事件都将在专有的 Thread 上处理
 - 一个 Channel 在他的生命周期中只会注册一个 EventLoop
 - 一个 EventLoop 会被分配给多个 Channel;
+
+## 17、Netty如何实现重连
+
+心跳检测一般继承ChannelInboundHandlerAdapter类，实现userEventTriggered的方法
+
+- 客户端，通过 IdleStateHandler 实现定时检测是否空闲，例如说 15 秒。
+    - 如果空闲，则向服务端发起心跳。
+    - 如果多次心跳失败，则关闭和服务端的连接，然后重新发起连接。
+- 服务端，通过 IdleStateHandler 实现定时检测客户端是否空闲，例如说 90 秒。
+    - 如果检测到空闲，则关闭客户端。
+    - 注意，如果接收到客户端的心跳请求，要反馈一个心跳响应给客户端。通过这样的方式，使客户端知道自己心跳成功
+
+# 参考资料
+
+* [Netty之有效规避内存泄漏](http://calvin1978.blogcn.com/articles/netty-leak.html)
