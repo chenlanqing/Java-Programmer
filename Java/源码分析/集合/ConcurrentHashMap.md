@@ -1,33 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、ConcurrentHashMap概述](#%E4%B8%80concurrenthashmap%E6%A6%82%E8%BF%B0)
-  - [1、为什么会出现ConcurrentHashMap](#1%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E5%87%BA%E7%8E%B0concurrenthashmap)
-  - [2、ConcurrentHashMap 不同版本演进](#2concurrenthashmap-%E4%B8%8D%E5%90%8C%E7%89%88%E6%9C%AC%E6%BC%94%E8%BF%9B)
-    - [2.1、JDK6](#21jdk6)
-    - [2.2、JDK1.7版本](#22jdk17%E7%89%88%E6%9C%AC)
-    - [2.3、JDK8版本](#23jdk8%E7%89%88%E6%9C%AC)
-  - [3、分段锁形式如何保证size的一致性](#3%E5%88%86%E6%AE%B5%E9%94%81%E5%BD%A2%E5%BC%8F%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81size%E7%9A%84%E4%B8%80%E8%87%B4%E6%80%A7)
-- [二、JDK8的实现](#%E4%BA%8Cjdk8%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [1、基本变量](#1%E5%9F%BA%E6%9C%AC%E5%8F%98%E9%87%8F)
-  - [2、内部类](#2%E5%86%85%E9%83%A8%E7%B1%BB)
-    - [2.1、Node](#21node)
-    - [2.2、TreeNode](#22treenode)
-    - [2.3、TreeBin](#23treebin)
-  - [3、put方法](#3put%E6%96%B9%E6%B3%95)
-  - [4、get方法](#4get%E6%96%B9%E6%B3%95)
-  - [5、扩容](#5%E6%89%A9%E5%AE%B9)
-  - [6、hash冲突解决](#6hash%E5%86%B2%E7%AA%81%E8%A7%A3%E5%86%B3)
-- [面试](#%E9%9D%A2%E8%AF%95)
-  - [1、size方法和mappingCount方法的异同，两者计算是否准确](#1size%E6%96%B9%E6%B3%95%E5%92%8Cmappingcount%E6%96%B9%E6%B3%95%E7%9A%84%E5%BC%82%E5%90%8C%E4%B8%A4%E8%80%85%E8%AE%A1%E7%AE%97%E6%98%AF%E5%90%A6%E5%87%86%E7%A1%AE)
-  - [2、多线程环境下如何进行扩容](#2%E5%A4%9A%E7%BA%BF%E7%A8%8B%E7%8E%AF%E5%A2%83%E4%B8%8B%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8C%E6%89%A9%E5%AE%B9)
-  - [3、HashMap、HashTable、ConcurrenHashMap区别](#3hashmaphashtableconcurrenhashmap%E5%8C%BA%E5%88%AB)
-  - [4、](#4)
-- [参考资料:](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 基于如下来分析
 - ConcurrentHashMap 的锁分段技术；
@@ -156,11 +126,118 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V> implements Concurre
 
 ### 2.1、Node
 
+```java
+static class Node<K,V> implements Map.Entry<K,V> {
+    final int hash;
+    final K key;
+    volatile V val;
+    volatile Node<K,V> next;
+}
+```
+
 ### 2.2、TreeNode
+
+```java
+static final class TreeNode<K,V> extends Node<K,V> {
+    TreeNode<K,V> parent;  // red-black tree links
+    TreeNode<K,V> left;
+    TreeNode<K,V> right;
+    TreeNode<K,V> prev;    // needed to unlink next upon deletion
+}
+```
 
 ### 2.3、TreeBin
 
+```java
+static final class TreeBin<K,V> extends Node<K,V> {
+    TreeNode<K,V> root;
+    volatile TreeNode<K,V> first;
+    volatile Thread waiter;
+    volatile int lockState;
+    // values for lockState
+    static final int WRITER = 1; // set while holding write lock
+    static final int WAITER = 2; // set when waiting for write lock
+    static final int READER = 4; // increment value for setting read lock
+}
+```
+
 ## 3、put方法
+
+当执行put方法插入数据时，根据key的hash值，在Node数组中找到相应的位置，实现如下：
+- 判断是否有过初始化Node数组，如果没有，则初始化数组：
+    ```java
+    private final Node<K,V>[] initTable() {
+        Node<K,V>[] tab; int sc;
+        while ((tab = table) == null || tab.length == 0) {
+            if ((sc = sizeCtl) < 0)
+                Thread.yield(); // lost initialization race; just spin
+            else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
+                // 通过对 sizeCtl 进行一个 CAS 操作来控制的，将 sizeCtl 设置为 -1，代表抢到了锁
+                try {
+                    if ((tab = table) == null || tab.length == 0) {
+                        int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
+                        @SuppressWarnings("unchecked")
+                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
+                        table = tab = nt;
+                        sc = n - (n >>> 2);
+                    }
+                } finally {
+                    sizeCtl = sc;
+                }
+                break;
+            }
+        }
+        return tab;
+    }
+    ```
+- 如果相应位置的Node还未初始化，则通过CAS插入相应的数据
+    ```java
+    else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+            if (casTabAt(tab, i, null,
+                            new Node<K,V>(hash, key, value, null)))
+                break;                   // no lock when adding to empty bin
+    }
+    ```
+- 如果相应位置的Node不为空，且当前该节点不处于移动状态，则对该节点加synchronized锁，如果该节点的hash不小于0，则遍历链表更新节点或插入新节点；
+    ```java
+    synchronized (f) {
+        if (tabAt(tab, i) == f) {
+            if (fh >= 0) {
+                binCount = 1;
+                for (Node<K,V> e = f;; ++binCount) {
+                    K ek;
+                    if (e.hash == hash &&
+                        ((ek = e.key) == key ||
+                            (ek != null && key.equals(ek)))) {
+                        oldVal = e.val;
+                        if (!onlyIfAbsent)
+                            e.val = value;
+                        break;
+                    }
+                    Node<K,V> pred = e;
+                    if ((e = e.next) == null) {
+                        pred.next = new Node<K,V>(hash, key,
+                                                    value, null);
+                        break;
+                    }
+                }
+            }
+            else if (f instanceof TreeBin) {
+                Node<K,V> p;
+                binCount = 2;
+                if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,
+                                                value)) != null) {
+                    oldVal = p.val;
+                    if (!onlyIfAbsent)
+                        p.val = value;
+                }
+            }
+        }
+    }
+    ```
+- 如果该节点是TreeBin类型的节点，说明是红黑树结构，则通过putTreeVal方法往红黑树中插入节点；
+- 如果binCount不为0，说明put操作对数据产生了影响，如果当前链表的个数达到8个，则通过treeifyBin方法转化为红黑树，如果oldVal不为空，说明是一次更新操作，没有对元素个数产生影响，则直接返回旧值；
+- 如果插入的是一个新节点，则执行addCount()方法尝试更新元素个数baseCount；
 
 ## 4、get方法
 
@@ -201,17 +278,94 @@ get操作可以无锁是由于Node的元素val和指针next是用volatile修饰�
 
 ## 5、扩容
 
-## 6、hash冲突解决
+### 5.1、触发扩容
+
+- 如果新增节点之后，所在链表的元素个数达到了阈值 8，则会调用 `treeifyBin()`方法把链表转换成红黑树，不过在结构转换之前，会对数组长度进行判断。如果数组长度n小于阈值 MIN_TREEIFY_CAPACITY，默认是64，则会调用 tryPresize方法把数组长度扩大到原来的两倍，并触发 transfer方法，重新调整节点的位置；
+
+- 新增节点之后，会调用 addCount方法记录元素个数，并检查是否需要进行扩容，当数组元素个数达到阈值时，会触发 transfer方法，重新调整节点的位置；
+
+### 5.2、扩容实现
+
+tryPresize();
+```java
+// 方法参数 size 传进来的时候就已经翻了倍了，扩容后数组容量为原来的 2 倍。
+private final void tryPresize(int size) {
+    
+}
+```
+
+这个方法的核心在于 sizeCtl 值的操作，首先将其设置为一个负数，然后执行 transfer(tab, null)，再下一个循环将 sizeCtl 加 1，并执行 transfer(tab, nt)，之后可能是继续 sizeCtl 加 1，并执行 transfer(tab, nt)
+
+## 6、size与mappingCount方法
+
+1.8中使用一个volatile类型的变量baseCount记录元素的个数，当插入新数据或则删除数据时，会通过addCount()方法更新baseCount，实现如下。
+```java
+public int size() {
+    long n = sumCount();
+    return ((n < 0L) ? 0 :
+            (n > (long)Integer.MAX_VALUE) ? Integer.MAX_VALUE :
+            (int)n);
+}
+public long mappingCount() {
+    long n = sumCount();
+    return (n < 0L) ? 0L : n; // ignore transient negative values
+}
+/**
+ * 当没有争用时，使用这个变量计数。会有一个addCount方法对该变量通过CAS进行操作
+ */
+private transient volatile long baseCount;
+final long sumCount() {
+    CounterCell[] as = counterCells; CounterCell a;
+    long sum = baseCount;
+    if (as != null) {
+        for (int i = 0; i < as.length; ++i) {
+            if ((a = as[i]) != null)
+                sum += a.value;
+        }
+    }
+    return sum;
+}
+// 一种用于分配计数的填充单元。改编自LongAdder和Striped64。请查看他们的内部文档进行解释。使用了 @sun.misc.Contended 标记的类，这个注解标识着这个类防止需要防止 "伪共享"
+@sun.misc.Contended 
+static final class CounterCell {
+    volatile long value;
+    CounterCell(long x) { value = x; }
+}
+```
+两者之间比较：上述两个方法都是调用sumCount方法来计算的，只不过size方法返回的是int类型，所以需要限制最大值必须是 Integer.MAX_VALUE；而mappingCount方法返回的是long类型的；
+
+先看baseCount，它一个 volatile 的变量，在 addCount 方法中会使用它，而 addCount 方法在 put 结束后会调用。在 addCount 方法中，会对这个变量做 CAS 加法。
+```java
+if ((as = counterCells) != null ||
+    !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
+    CounterCell a; long v; int m;
+    boolean uncontended = true;
+    if (as == null || (m = as.length - 1) < 0 ||
+        (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
+        !(uncontended =
+            U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) {
+        fullAddCount(x, uncontended);
+        return;
+    }
+    if (check <= 1)
+        return;
+    s = sumCount();
+}
+```
+但是如果并发导致 CAS 失败了，怎么办呢？使用 counterCells
+
+## 7、hash冲突解决
+
+在Java 8 之前，HashMap和其他基于map的类都是通过链地址法解决冲突，它们使用单向链表来存储相同索引值的元素。在最坏的情况下，这种方式会将HashMap的get方法的性能从O(1)降低到O(n)。为了解决在频繁冲突时hashmap性能降低的问题，Java 8中使用平衡树来替代链表存储冲突的元素。这意味着我们可以将最坏情况下的性能从O(n)提高到O(logn)
 
 # 面试
 
-## 1、size方法和mappingCount方法的异同，两者计算是否准确
+## 1、多线程环境下如何进行扩容
 
-## 2、多线程环境下如何进行扩容
+
 
 ## 3、HashMap、HashTable、ConcurrenHashMap区别
 
-## 4、
 
 # 参考资料:
 
