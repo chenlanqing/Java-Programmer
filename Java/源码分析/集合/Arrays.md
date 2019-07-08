@@ -1,22 +1,7 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、sort(int[] a)](#%E4%B8%80sortint-a)
-  - [1、JDK1.6](#1jdk16)
-    - [1.1、源码](#11%E6%BA%90%E7%A0%81)
-    - [1.2、分析](#12%E5%88%86%E6%9E%90)
-  - [2、JDK1.7](#2jdk17)
-    - [2.1、源码：](#21%E6%BA%90%E7%A0%81)
-  - [3、JDK1.8](#3jdk18)
-    - [3.1、源码：](#31%E6%BA%90%E7%A0%81)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 # 一、sort(int[] a)
 
 ## 1、JDK1.6
+
 ### 1.1、源码
 ```java
 // int类型数组排序
@@ -237,12 +222,182 @@ if (right - left < QUICKSORT_THRESHOLD) {
 ```
 ## 3、JDK1.8
 
-### 3.1、源码：
+### 3.1、源码
+
 ```java
+public static void sort(int[] a) {
+    DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
+}
+```
+DualPivotQuicksort.sort方法
+```java
+private static final int QUICKSORT_THRESHOLD = 286;
+static void sort(int[] a, int left, int right,
+                 int[] work, int workBase, int workLen) {
+    // Use Quicksort on small arrays，QUICKSORT_THRESHOLD为286，当要排序区间小于286时，发现调用了本类的重载sort方法
+    if (right - left < QUICKSORT_THRESHOLD) {
+        sort(a, left, right, true);
+        return;
+    }
+
+    /**
+         * run[i] 意味着第i个有序数列开始的位置，（升序或者降序）
+         **/
+    int[] run =new int[MAX_RUN_COUNT + 1];
+    int count=0; run[0] = left;
+
+    // 检查数组是不是已经接近有序状态
+    for(int k = left; k < right; run[count] = k) {
+        if(a[k] < a[k + 1]){ // 升序
+            while(++k <= right && a[k - 1] <= a[k]) ;
+        } else if(a[k] > a[k + 1]) { // 降序
+            while(++k <=right && a[k - 1] >= a[k]);
+            //如果是降序的，找出k之后，把数列倒置
+            for (int lo = run[count],hi = k;++lo < --hi) {
+                int t = a[lo]; a[lo] = a[hi]; a[hi] = t;
+            }
+        } else { // 相等
+            for(int m = MAX_RUN_LENGTH; ++k <=right && a[k - 1] == a[k];) {
+                // 数列中有至少MAX_RUN_LENGTH的数据相等的时候，直接使用快排。
+                // 这里为什么这么处理呢？
+                if(--m == 0){
+                    sort(a, left, right, true);
+                    return;
+                }
+            }
+        }
+
+        /**
+             * 数组并非高度有序，使用快速排序,因为数组中有序数列的个数超过了MAX_RUN_COUNT
+             */
+        if(++count == MAX_RUN_COUNT) {
+            sort(a, left, right, true);
+            return;
+        }
+    }
+    //检查特殊情况
+    if(run[count] == right++){ // 最后一个有序数列只有最后一个元素
+        run[++count] =right; // 那给最后一个元素的后面加一个哨兵
+    } else if(count == 1) { // 整个数组中只有一个有序数列，说明数组已经有序啦，不需要排序了
+        return;
+    }
+
+    /**
+         * 创建合并用的临时数组。
+         * 注意： 这里变量right被加了1，它在数列最后一个元素位置+1的位置
+         * 这里没看懂，没发现后面的奇数处理和偶数处理有什么不同
+         */
+    int[] b; byte odd=0;
+    for(int n=1; (n <<= 1) < count; odd ^=1);
+
+    if(odd == 0) {
+        b=a;a= new int[b.length];
+        for(int i=left -1; ++i < right; a[i] = b[i]);
+    } else {
+        b=new int[a.length];
+    }
+
+    // 合并
+    // 最外层循环，直到count为1，也就是栈中待合并的序列只有一个的时候，标志合并成功
+    // a 做原始数组，b 做目标数组
+    for(int last; count > 1; count = last) { 
+        // 遍历数组，合并相邻的两个升序序列
+        for(int k = (last = 0) + 2; k <= count; k += 2) {
+            // 合并run[k-2] 与 run[k-1]两个序列
+            int hi = run[k], mi = run[k - 1];
+            for(int i = run[k - 2], p = i,q = mi; i < hi; ++i){
+                // 这里我给源码加了一个括号，这样好理解一点。 之前总觉得它会出现数组越界问题，
+                // 后来加了这个括号之后发现是没有问题的
+                if(q >= hi  ||  (p < mi && a[p] <= a[q])) {
+                    b[i] = a[p++];
+                } else {
+                    b[i] = a[q++];
+                }
+            }
+            // 这里把合并之后的数列往前移动
+            run[++last] = hi;
+        }
+        // 如果栈的长度为奇数，那么把最后落单的有序数列copy过对面
+        if((count & 1) != 0) {
+            for(int i = right, lo =run[count -1]; --i >= lo; b[i] = a[i]);
+            run[++last] = right;
+        }
+        //临时数组，与原始数组对调，保持a做原始数组，b 做目标数组
+        int[] t = a; a = b; b = t;
+    }
+}
+
+
+
+int length = right - left + 1;
+// INSERTION_SORT_THRESHOLD为47，发现当要排序的个数小于47个时，采用插入排序，采用了哨兵方法，对于新元素从他前一个一个一个比较
+// Use insertion sort on tiny arrays
+if (length < INSERTION_SORT_THRESHOLD) {
+    if (leftmost) {
+        /*
+                 * Traditional (without sentinel) insertion sort,
+                 * optimized for server VM, is used in case of
+                 * the leftmost part.
+                 */
+        for (int i = left, j = i; i < right; j = ++i) {
+            int ai = a[i + 1];
+            while (ai < a[j]) {
+                a[j + 1] = a[j];
+                if (j-- == left) {
+                    break;
+                }
+            }
+            a[j + 1] = ai;
+        }
+    } else {
+        /**
+                * 首先跨过开头的升序的部分
+                */
+        do {
+            if(left > right) {
+                return;
+            }
+        }while(a[++left] >= a[left - 1]);
+
+        /**
+                 * 这里用到了成对插入排序方法，它比简单的插入排序算法效率要高一些
+                 * 因为这个分支执行的条件是左边是有元素的
+                 * 所以可以直接从left开始往前查找。
+                 */
+        for(int k = left; ++left <= right; k = ++left) {
+            int a1 = a[k], a2 = a[left];
+
+            //保证a1>=a2
+            if(a1 < a2) {
+                a2 = a1; a1 = a[left];
+            }
+            //先把两个数字中较大的那个移动到合适的位置
+            while(a1 < a[--k]) {
+                a[k + 2] = a[k]; //这里每次需要向左移动两个元素
+            }
+            a[++k + 1] = a1;
+            //再把两个数字中较小的那个移动到合适的位置
+            while(a2 < a[--k]) {
+                a[k + 1] = a[k]; //这里每次需要向左移动一个元素
+            }
+            a[k + 1] = a2;
+        }
+        int last = a[right];
+
+        while(last < a[--right]) {
+            a[right + 1] = last;
+        }
+        a[right + 1] = last;
+    }
+    return;
+}
 
 ```
+至于大过INSERTION_SORT_THRESHOLD（47）的，用一种快速排序(双轴快排)的方法：
+- 从数列中挑出五个元素，称为 “基准”（pivot）；
+- 重新排序数列，所有元素比基准值小的摆放在基准前面，所有元素比基准值大的摆在基准的后面（相同的数可以到任一边）。在这个分区退出之后，该基准就处于数列的中间位置。这个称为分区（partition）操作；
+- 递归地（recursive）把小于基准值元素的子数列和大于基准值元素的子数列排序。
 
 
-
-
+**总结，插入排序，快速排序，归并排序三种排序的组合**
 
