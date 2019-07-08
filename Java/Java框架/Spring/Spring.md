@@ -5678,11 +5678,6 @@ Spring 提供了以下五种标准的事件：
     applicationContext.publishEvent(customEvent);
     ```
 
-
-
-
-
-
 # 参考资料
 
 * [Spring框架的设计理念与设计模式分析](https：//www.ibm.com/developerworks/cn/java/j-lo-spring-principle/)
@@ -5700,6 +5695,3 @@ Spring 提供了以下五种标准的事件：
 * [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
 * [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)
 * [SofaBoot](https://www.sofastack.tech/sofa-boot/docs/Home)
-
-
-

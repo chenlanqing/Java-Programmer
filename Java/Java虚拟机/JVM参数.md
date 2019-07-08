@@ -104,7 +104,7 @@ java [options] -jar filename [args]
     设置初始的堆大小，如果没有设置这个值，那么它的初始化大小就是年轻代和老年代的和，等价于`-XX:InitialHeapSize`；这个值的大小必须是1024的倍数，并且大于1M
 
 - `-Xmxsize` <br>
-    设置最大的内存分配大小，一般的服务端部署，-Xms和-Xmx设置为同样大小。与`-XX:MaxHeapSize`具有同样的作用
+    设置最大的内存分配大小，一般的服务端部署，-Xms和-Xmx设置为同样大小。与`-XX:MaxHeapSize`具有同样的作用，避免在GC后调整堆大小带来的压力
 
 - `-Xmnsize` <br>
     设置年轻代大小，还可以通过其他两个选项来代替这个选项来指定年轻代最小和最大内存：`-XX:NewSize`指定初始化大小,`-XX:MaxNewSize`指定最大内存大小

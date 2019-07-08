@@ -697,6 +697,10 @@ public class CASSingleton {
 }
 ```
 
+## 13、JDK中使用场景
+
+- java.lang.Runtime#getRuntime
+
 # 三、工厂模式
 
 ## 1、简单工厂
@@ -791,6 +795,9 @@ JDK中有使用的了简单工厂模式：
     ```java
     
     ```
+- JDK使用场景：
+    
+    - java.util.Calendar#getInstance()
 
 # 四、观察者模式
 
@@ -1581,24 +1588,14 @@ public class TestBuilderV2 {
     - 外部状态由客户端保存，共享对象读取外部状态的开销可能比较大
     - 享元模式要求将内部状态与外部状态分离，这使得程序的逻辑复杂化，同时也增加了状态维护成本
 
-
 ## 6、JDK使用场景
 
 - Integer中的IntegerCache
 
 
-
-
-
-
-
-
-
-
-
-
 # 参考资料
 
+* [JDK中设计模式](https://juejin.im/post/5cd842d56fb9a0323070efc0)
 * [设计模式大杂烩](http://www.cnblogs.com/zuoxiaolong/p/pattern26.html)
 * [Java设计模式](http://www.jasongj.com/design_pattern/summary/)
 * [设计模式](http://www.cnblogs.com/wangjq/category/389973.html)
