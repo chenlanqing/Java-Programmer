@@ -2835,7 +2835,11 @@ Throwable是Java中的最顶级的异常类，继承Object，实现了序列化�
 
 ## 2、Error
 
+是程序中无法处理的错误，表示运行应用程序中出现了严重的错误。此类错误一般表示代码运行时JVM出现问题。通常有Virtual MachineError（虚拟机运行错误）、NoClassDefFoundError（类定义错误）等。比如说当jvm耗完可用内存时，将出现OutOfMemoryError。此类错误发生时，JVM将终止线程
+
 ## 3、Exception
+
+程序本身可以捕获并且可以处理的异常。
 
 ## 4、Exception分类
 
@@ -2873,6 +2877,34 @@ Throwable是Java中的最顶级的异常类，继承Object，实现了序列化�
 
 - Error：表示系统级的错误，是Java运行环境内部错误或者硬件问题，不能指望程序来处理；除了退出运行外别无选择，它是Java虚拟机抛出的；
 - Exception：表示程序需要捕捉、需要处理的异常，是由于程序设计不完善而出现的问题，程序必须处理的问题；
+
+## 7、异常链
+
+- 常常会再捕获一个异常后抛出另外一个异常，并且希望把异常原始信息保存下来，这被称为异常链；
+- 现在所有Throwable的子类子构造器中都可以接受一个cause对象作为参数，这个cause就异常原由，代表着原始异常，即使在当前位置创建并抛出行的异常，也可以通过这个cause追踪到异常最初发生的位置；
+- Throwable类及其所有的子类都提供了带cause参数的构造器，其他的异常类就只有通过initCause()来设置cause了；
+
+一般构造异常链有两种方法：
+```java
+// 1、将原始异常信息作为参数传入到新异常的构造函数中；
+public static void constructorArgsChain() {
+	try {
+		originException();
+	} catch (BusinessException e) {
+		throw new RuntimeException(e);
+	}
+}
+// 2、调用方法initCause()，其实这种情况等于：new RuntimeException("系统异常，请联系管理员", e);
+public static void initCause() {
+	try {
+		originException();
+	} catch (BusinessException e) {
+		RuntimeException ex = new RuntimeException("系统异常，请联系管理员");
+		ex.initCause(e);
+		throw ex;
+	}
+}
+```
 
 # 二十、Jar包
 
@@ -4322,19 +4354,13 @@ else x= a;
 
 ## 3、Java官方库的新特性
 
-### 3.1、Optional
-
-### 3.2、Streams
-
-### 3.3、Date/Time API(JSR 310)
-
-### 3.4、Nashorn JavaScript引擎
-
-### 3.5、Base64
-
-### 3.6、并行数组
-
-### 3.7、并发性
+- Optional
+- Stream
+- Date/Time API(JSR 310)
+- Nashorn JavaScript引擎
+- Base64
+- 并行数组
+- 并发性
 
 ## 4、各个版本特性
 
@@ -4419,6 +4445,177 @@ else x= a;
 - G1的并行Full GC
 - 应用程序类数据共享
 - ThreadLocal握手机制
+
+## 5、Stream
+
+`public interface Stream<T> extends BaseStream<T, Stream<T>>`
+
+### 5.1、特性
+
+JAVA8中提出一个集合流的抽象工具（java.util.stream，简称Stream），用于集合内元素的计算，更确切的说是过滤和统计操作。
+
+Stream不是一种真实的数据源（不存在数据结构），所以没有办法直接来创建它，Stream只能依赖其他数据源来转换成我们的抽象操作。Stream本身是不存在，只是抽象出来的一个抽象操作，经过各种操作之后，Stream还需要转换成真实的数据源；
+
+它专注于对集合对象进行各种非常便利、高效的聚合操作（aggregate operation），或者大批量数据操作 (bulk data operation)。Stream API 借助于同样新出现的 Lambda 表达式，极大的提高编程效率和程序可读性。同时它提供串行和并行两种模式进行汇聚操作，并发模式能够充分利用多核处理器的优势，使用 fork/join 并行方式来拆分任务和加速处理过程；
+
+Stream 就如同一个迭代器（Iterator），单向，不可往复，数据只能遍历一次，遍历过一次后即用尽了。Stream跟迭代器比较，区别：
+- 无存储：Stream是基于数据源的对象，它本身不存储数据元素，而是通过管道将数据源的元素传递给操作。
+- 函数式编程：对Stream的任何修改都不会修改背后的数据源，比如对Stream执行filter操作并不会删除被过滤的元素，而是会产生一个不包含被过滤元素的新的Stream。
+- 延迟执行：Stream的操作由零个或多个中间操作（intermediate operation）和一个结束操作（terminal operation）两部分组成。只有执行了结束操作，Stream定义的中间操作才会依次执行，这就是Stream的延迟特性。
+- 可消费性：Stream只能被“消费”一次，一旦遍历过就会失效。就像容器的迭代器那样，想要再次遍历必须重新生成一个新的Stream
+
+### 5.2、创建Stream
+
+最常用的创建Stream有两种途径：
+- 通过Stream接口的静态工厂方法；
+- 通过Collection接口的默认方法–stream()，把一个Collection对象转换成Stream；或者使用parallelStream()创建并行
+- 通过Arrays.stream(Object[])方法。
+- BufferedReader.lines()从文件中获得行的流。
+- Files类的操作路径的方法，如list、find、walk等。
+- 随机数流Random.ints()。
+- 其它一些类提供了创建流的方法，如BitSet.stream(), Pattern.splitAsStream(java.lang.CharSequence), 和 JarFile.stream()
+
+其实最终都是依赖StreamSupport类来完成Stream创建的；
+
+### 5.3、常见用法
+
+- **foreach：迭代流中的每个数据**
+	```java
+	// 使用 forEach 输出了10个随机数
+	Random random = new Random(100);
+	random.ints().limit(10).forEach(System.out::println);
+	```
+- **map：法用于映射每个元素到对应的结果**
+	```java
+	// 以下代码片段使用 map 输出了元素对应的平方数
+	List<Integer> list = Arrays.asList(3, 2, 2, 3, 7, 3, 5);
+	List<Integer> result = list.stream().map(i -> i * i).distinct().collect(Collectors.toList());
+	System.out.println(list);
+	System.out.println(result);
+	```
+- **filter：方法用于通过设置的条件过滤出元素**
+	```java
+	// 。以下代码片段使用 filter 方法过滤出空字符串
+	List<String> list = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+	long count = list.stream().filter(String::isEmpty).count();
+	System.out.println(count);
+	```
+- **sorted：用于对流进行排序**
+	```java
+	Random random = new Random();
+	random.ints().limit(10).sorted().forEach(System.out::println);
+	```
+- **Collectors：实现了很多归约操作，例如将流转换成集合和聚合元素。Collectors 可用于返回列表或字符串：**
+	```java
+	List<String>strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+	List<String> filtered = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.toList());
+	String mergedString = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.joining(", "));
+	```
+
+## 6、Optional
+
+[Optional使用](https://www.cnblogs.com/rjzheng/p/9163246.html)
+
+是为了解决NPE问题，以往我们需要对对象进行判空：
+```java
+public String getCity(User user)  throws Exception{
+	if(user!=null){
+		if(user.getAddress()!=null){
+			Address address = user.getAddress();
+			if(address.getCity()!=null){
+				return address.getCity();
+			}
+		}
+	}
+	throw new Excpetion("取值错误"); 
+}
+```
+而使用Optional之后，代码变成：
+```java
+public String getCity(User user) throws Exception{
+    return Optional.ofNullable(user)
+                   .map(u-> u.getAddress())
+                   .map(a->a.getCity())
+                   .orElseThrow(()->new Exception("取指错误"));
+}
+```
+
+**Optional(T value)、empty()、of(T value)、ofNullable(T value)**
+
+- Optional(T value)，即构造函数，它是private权限的，不能由外部调用的；
+- 其余三个函数是public权限；
+- Optional的本质，就是内部储存了一个真实的值，在构造的时候，就直接判断其值是否为空
+
+## 7、JDK8时间
+
+### 7.1、旧版API存在问题
+
+- 非线程安全 − ``java.util.Date`` 是非线程安全的，所有的日期类都是可变的，这是Java日期类最大的问题之一。
+- 设计很差 − Java的日期/时间类的定义并不一致，在java.util和java.sql的包中都有日期类，此外用于格式化和解析的类在java.text包中定义。java.util.Date同时包含日期和时间，而java.sql.Date仅包含日期，将其纳入java.sql包并不合理。另外这两个类都有相同的名字，这本身就是一个非常糟糕的设计。
+- 时区处理麻烦 − 日期类并不提供国际化，没有时区支持，因此Java引入了java.util.Calendar和java.util.TimeZone类，但他们同样存在上述所有的问题；
+
+### 7.2、JDK8新API
+
+JDK8.0之后, 新增加了以下几个类用来表示日期时间：
+- LocalDate：用来表示日期(年、月、日)，LocalDate是不可变对象, 如果想改变对象的状态, 最终得到都是一个新的LocalDate对象, 并不会对旧的LocalDate对象产生影
+- LocalTime：用来表示时间(时、分、秒)
+- LocalDateTime：用来表示日期时间(年、月、日、时、分、秒)
+- DataTimeFomatter：用来格式化日期
+- ZonedDateTime：无论是LocalDate、LocalTime、LocalDateTime，它们基本是时区无关的，内部并没有存储时区属性，而基本用的系统默认时区；ZonedDateTime 可以被理解为 LocalDateTime 的外层封装，它的内部存储了一个 LocalDateTime 的实例，专门用于普通的日期时间处理。此外，它还定义了 ZoneId 和 ZoneOffset 来描述时区的概念；
+- Instant：用于表示一个时间戳，可以精确到纳秒
+
+### 7.3、新API基本操作
+
+- 格式化时间：
+	```java
+	public static void main(String[] a){
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
+		LocalDateTime localDateTime = LocalDateTime.now();
+		System.out.println(formatter.format(localDateTime));
+
+		String str = "2008年08月23日 23:59:59";
+		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
+		LocalDateTime localDateTime2 = LocalDateTime.parse(str,formatter2);
+		System.out.println(localDateTime2);
+
+	}
+	```
+- java8时间与老版本时间转换：
+	```java
+	public static void main(String[] args) {
+        // Date与Instant的相互转化
+        Instant instant = Instant.now();
+        Date date = Date.from(instant);
+        Instant instant2 = date.toInstant();
+
+        //Date转为LocalDateTime
+        Date date2 = new Date();
+        LocalDateTime localDateTime2 = LocalDateTime.ofInstant(date2.toInstant(), ZoneId.systemDefault());
+
+        //LocalDateTime转Date
+        LocalDateTime localDateTime3 = LocalDateTime.now();
+        Instant instant3 = localDateTime3.atZone(ZoneId.systemDefault()).toInstant();
+        Date date3 = Date.from(instant);
+
+        //LocalDate转Date
+        //因为LocalDate不包含时间，所以转Date时，会默认转为当天的起始时间，00:00:00
+        LocalDate localDate4 = LocalDate.now();
+        Instant instant4 = localDate4.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+        Date date4 = Date.from(instant);
+
+        // Calendar to Instant
+        Instant time = Calendar.getInstance().toInstant();
+        System.out.println(time);
+
+        // TimeZone to ZoneId
+        ZoneId defaultZone = TimeZone.getDefault().toZoneId();
+        System.out.println(defaultZone);
+
+        // ZonedDateTime from specific Calendar
+        ZonedDateTime gregorianCalendarDateTime = new GregorianCalendar().toZonedDateTime();
+        GregorianCalendar gc = GregorianCalendar.from(gregorianCalendarDateTime);
+    }
+	```
 
 # 三十五、正则表达式
 
