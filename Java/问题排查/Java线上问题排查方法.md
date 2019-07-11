@@ -408,7 +408,7 @@ at MyTest.main(MyTest.java:26)
 
 - 系统异常排查流程
 
-    ![image](/image/系统异常排查流程.gif)
+    ![image](image/系统异常排查流程.gif)
 
 - 业务异常排查流程
 

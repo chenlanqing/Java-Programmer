@@ -37,11 +37,11 @@
 
 ## 1.1、作用
 
-clone()可以产生一个相同的类并且返回给调用者.
+clone()可以产生一个相同的类并且返回给调用者
 
 ## 1.2、clone()工作原理
 
-Object将clone()作为一个本地方法来实现，这意味着它的代码存放在本地的库中；当代码执行的时候，将会检查调用对象的类(或者父类)是否实现了java.lang.Cloneable接口(Object类不实现Cloneable)；如果没有实现这个接口，clone()将会抛出一个检查异常()——java.lang.Clon eNotSupportedException，如果实现了这个接口，clone()会创建一个新的对象，并将原来对象的内容复制到新对象，最后返回这个新对象的引用	
+Object将clone()作为一个本地方法来实现，这意味着它的代码存放在本地的库中；当代码执行的时候，将会检查调用对象的类(或者父类)是否实现了`java.lang.Cloneable`接口(Object类不实现Cloneable)；如果没有实现这个接口，clone()将会抛出一个检查异常：`java.lang.Clon eNotSupportedException`，如果实现了这个接口，clone()会创建一个新的对象，并将原来对象的内容复制到新对象，最后返回这个新对象的引用	
 ```java
 public class CloneDemo implements Cloneable {
 	int x;
@@ -55,7 +55,9 @@ public class CloneDemo implements Cloneable {
 	}
 }
 ```
+
 ## 1.3、什么情况下需要覆盖clone()方法呢
+
 调用clone()的代码是位于被克隆的类(即CloneDemo类)里面的，所以就不需要覆盖clone()了。但是，如果调用别的类中的clone()，就需要覆盖clone()了。否则，将会看到“clone在Object中是被保护的”
 
 ```java
@@ -88,6 +90,7 @@ public class CloneDemo {
 ***浅克隆在复制引用了可变对象的对象时存在着问题，克隆后的对象修改，同样会影响到被克隆的对象***
 	
 ## 1.5、深克隆
+
 会复制这个对象和它所引用的对象的成员变量，如果该对象引用了其他对象，深克隆也会对其复制;
 ```java
 public class Address {
@@ -155,6 +158,7 @@ public class CloneDemo {
 - 为了克隆Address的对象，需要创建一个新的Address对象并对其成员进行初始化操作。最后将新创建的Address对象返回。
 
 ## 1.6、序列化实现对象的拷贝
+
 内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中，再从字节流中将其读出来，这样就可以创建一个新的对象了，并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
 ```java
 public class CloneUtils {
@@ -183,10 +187,11 @@ public class CloneUtils {
 ```
 ## 1.7、String的clone的特殊性以及StringBuilder和StringBuffer
 
-- 由于基本数据类型都能自动实现深度clone，引用类型默认实现的是浅度clone；而String是引用类型的一个特例，我们可以和操作基本数据类型一样认为其实现了深度 clone（实质是浅克隆，切记只是一个假象）.由于 String 是不可变类，对于 String 类中的很多修改操作都是通过新new对象复制处理的，所以当我们修改 clone 前后对象里面 String 属性的值时其实都是属性引用的重新指向操作，自然对 clone 前后对象里 String 属性是没有相互影响的，类似于深度克隆；所以虽然他是引用类型而且我们在深度克隆时无法调用其 clone 方法，但是其不影响我们深度克隆的使用；
+- 由于基本数据类型都能自动实现深度clone，引用类型默认实现的是浅度clone；而String是引用类型的一个特例，我们可以和操作基本数据类型一样认为其实现了深度 clone（实质是浅克隆，切记只是一个假象）。由于 String 是不可变类，对于 String 类中的很多修改操作都是通过新new对象复制处理的，所以当我们修改 clone 前后对象里面 String 属性的值时其实都是属性引用的重新指向操作，自然对 clone 前后对象里 String 属性是没有相互影响的，类似于深度克隆；所以虽然他是引用类型而且我们在深度克隆时无法调用其 clone 方法，但是其不影响我们深度克隆的使用；
 - 如果要实现深度克隆则 StringBuffer 和 StringBuilder 是需要主动特殊处理的，否则就是真正的对象浅克隆，所以处理的办法就是在类的 clone 方法中对 StringBuffer 或者 StringBuilder 属性进行如下主动拷贝操作；
 
 ## 1.8、Java中集合的克隆
+
 - 集合中默认克隆方式都是浅克隆，而且集合类提供的拷贝构造方式或addAll，add等方法都是浅克隆；就是说存储在原集合和克隆集合中的对象会保持一致并指向堆中同一内存地址。
 ```java
 List<Person> destList = (List<Person>)srcList.clone();

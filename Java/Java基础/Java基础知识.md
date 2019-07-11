@@ -3750,14 +3750,14 @@ public class Null {
 ```
 输出结果：你好陌生人
 
-- `null`是Java中的关键字,它不属于任何类型,只是一种特殊的值,也可以说说代表一个不确定的对象
+- `null`是Java中的关键字，它不属于任何类型，只是一种特殊的值，也可以说说代表一个不确定的对象
     ```java
     public static void main(String[] args) {
 		System.out.println(null instanceof Object); // false
 	}
     ```
 - `null`是所有引用类型的默认值
-- `null`可以被转化为任何类型,输出`null`不会抛出任何异常,这和println()的源代码有关
+- `null`可以被转化为任何类型，输出`null`不会抛出任何异常，这和println()的源代码有关
     ```java
     public static void main(String[] args) {
 		Object o = (Object)null;
@@ -3770,13 +3770,13 @@ public class Null {
 		System.out.println(n);
 	}
     ```
-- `null`可以被转化为任何类型,所以可以调用静态方法；
-- `null`可以被转化为任何类型,但是不能调用非静态方法,运行时会出错；
-- `null`被强转化任何类型后,它还仅仅是一个特殊值,并不属于任何类型.
-- `null==null`返回true,被转换为同种类型的null,都返回true,不同类型直接编译报错；
-- 用String转换后的null可以进行字符串运算,这是因为字符串进行连接的时候,编译器对`null`进行了特别的优化,其实就是例化`StringBuilder`,在调用`append()`方法时对`null`的一个特别处理,当为null时,转化为“null”,最后调用`toString()`返回一个String对象;
-- 用八大基本类型转换后的`null`,不可以进行基本类型的运算,否则会出现编译或者运行错误；
-- `null`和`""`并不相等,因为下面的s并没有指向某一块内存,而s1指向了一块空字符串的内存；
+- `null`可以被转化为任何类型，所以可以调用静态方法；
+- `null`可以被转化为任何类型，但是不能调用非静态方法，运行时会出错；
+- `null`被强转化任何类型后，它还仅仅是一个特殊值，并不属于任何类型。
+- `null==null`返回true，被转换为同种类型的null，都返回true，不同类型直接编译报错；
+- 用String转换后的null可以进行字符串运算，这是因为字符串进行连接的时候，编译器对`null`进行了特别的优，其实就是例化`StringBuilder`，在调用`append()`方法时对`null`的一个特别处理，当为null时，转化为“null”，最后调用`toString()`返回一个String对象；
+- 用八大基本类型转换后的`null`，不可以进行基本类型的运算，否则会出现编译或者运行错误；
+- `null`和`""`并不相等，因为下面的s并没有指向某一块内存，而s1指向了一块空字符串的内存；
 
 # 二十五、字符集与字符编码
 
@@ -4443,7 +4443,7 @@ f ==> 1111
 ### 4.4、数据类型转换为 字节
 
 `8143 (00000000 00000000 00011111 11001111)` ==> `byte[] b = [-49,31,0,0]`;
-- 第一个（低端）字节：`8143 >> 0 * 8 & 0xff = 11001111(207)`,有符号为 -49 
+- 第一个（低端）字节：`8143 >> 0 * 8 & 0xff = 11001111(207)`，有符号为 -49 
 - 第二个（低端）字节：`8143 >> 1 * 8 & 0xff = 00011111(31)`
 - 第三个（低端）字节：`8143 >> 2 * 8 & 0xff = 00000000(0)`
 - 第四个（低端）字节：`8143 >> 3 * 8 & 0xff = 00000000(0)`
@@ -4573,7 +4573,7 @@ else x= a;
 
 ### 1.1、Lambda表达式和函数式接口
 
-函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口。java 8提供 @FunctionalInterface作为注解,这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口）；
+函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口。java 8提供 @FunctionalInterface作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口）；
 
 ### 1.2、接口的默认方法和静态方法
 
@@ -5271,7 +5271,7 @@ public class PipedExample {
 ```
 **3.4、管道与线程：**
 
-当使用两个相关联的管道流时，务必将它们分配给不同的线程.read()方法和write()方法调用时会导致流阻塞，这意味着如果你尝试在一个线程中同时进行读和写，可能会导致线程死锁;
+当使用两个相关联的管道流时，务必将它们分配给不同的线程。read()方法和write()方法调用时会导致流阻塞，这意味着如果你尝试在一个线程中同时进行读和写，可能会导致线程死锁;
 
 ## 4、网络
 
@@ -5536,7 +5536,7 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 
 ### 3.3、Buffer 的分配
 
-每一个 Buffer 类都有一个allocate方法。下面是一个分配48字节capacity的 ByteBuffer 的例子：
+因为JDK中所有跟基本数据类型相关的Buffer都是抽象类，不能直接通过new来创建，每一个 Buffer 类都有一个allocate方法。下面是一个分配48字节capacity的 ByteBuffer 的例子：
 `ByteBuffer buf = ByteBuffer.allocate(48);`
 
 ### 3.4、向 Buffer 中写数据
@@ -5865,7 +5865,7 @@ public static void copyFileByMappedByteBuffer(String source, String dest) throws
 
 ### 2.2、跟踪与诊断DirectBuffer内存占用
 
-通常的垃圾收集日志等激励，并不包含Directbuffer等信息，在JDK8之后的版本，可以使用native memory tracking特性进行诊断：```-XX:NativeMemoryTracking={summary|detail}```
+通常的垃圾收集日志等记录，并不包含Directbuffer等信息，在JDK8之后的版本，可以使用native memory tracking特性进行诊断：```-XX:NativeMemoryTracking={summary|detail}```
 
 注意激活NMT通常都会导致JVM出现5%~10%性能下降
 
@@ -5947,7 +5947,25 @@ jcmd <pid> VM.native_memory detail.diff
     }
     ```
     这种方式存在致命问题，就是无法读取超大文件（大于Integer.Max_value），因为 FileChannel的map方法中 size 参数会有大小限制，源码中发现该参数值大于 Integer.MAX_VALUE 时会直接抛出 IllegalArgumentException("Size exceeds Integer.MAX_VALUE") 异常，所以对于特别大的文件其依然不适合。
-
+	```java
+	// sun.nio.ch.FileChannelImpl#map
+	public MappedByteBuffer map(MapMode var1, long var2, long var4) throws IOException {
+        this.ensureOpen();
+        if (var1 == null) {
+            throw new NullPointerException("Mode is null");
+        } else if (var2 < 0L) {
+            throw new IllegalArgumentException("Negative position");
+        } else if (var4 < 0L) {
+            throw new IllegalArgumentException("Negative size");
+        } else if (var2 + var4 < 0L) {
+            throw new IllegalArgumentException("Position + size overflow");
+        } else if (var4 > 2147483647L) {
+			throw new IllegalArgumentException("Size exceeds Integer.MAX_VALUE");
+		} else {
+			....
+		}
+	}
+	```
     本质上是由于 java.nio.MappedByteBuffer 直接继承自 java.nio.ByteBuffer ，而 ByteBuffer 的索引是 int 类型的，所以 MappedByteBuffer 也只能最大索引到 Integer.MAX_VALUE 的位置，所以 FileChannel 的 map 方法会做参数合法性检查。
 
 ## 4、NIO消息传输错误

@@ -164,9 +164,9 @@ public class Main {
 
 - JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refefence）、软引用（Soft Refefence）、弱引用（Weak Refefence）、虚引用（Phantom Refefence），4种引用强度依次逐渐减弱
 
-	- 强引用(Strong Refefence)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象;当内存空间不足.Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
+	- 强引用(Strong Refefence)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足.Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
 
-	- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象;对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存
+	- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存
 
 	- 弱引用(Weak Refefence)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakRefefence 类来实现弱引用；
 
@@ -995,3 +995,4 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 * [CMS垃圾收集器](https://mp.weixin.qq.com/s/-yqJa4dOyzLaK_tJ1x9E7w)
 * [G1垃圾收集器](https://mp.weixin.qq.com/s/9-NFMt4I9Hw2nP0fjR8JCg)
 * [ZGC垃圾收集器](https://www.jianshu.com/p/6f89fd5842bf)
+* [JVM垃圾回收](https://mp.weixin.qq.com/s/aA1eDYIUHuIfigTw2ffouw)
