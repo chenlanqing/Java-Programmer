@@ -51,6 +51,8 @@
 
 tomcat由Server、Service、Engine、Connerctor、Host、Context组件组成，其中带有s的代表在一个tomcat实例上可以存在多个组件，比如Context(s)，tomcat允许我们部署多个应用，每个应用对应一个Context。这些组件在tomcat的conf/server.xml文件中可以找到，对tomcat的调优需要改动该文件
 
+## 2、Tomcat-NIO模型
+
 # 二、Tomcat生命周期
 
 # 三、Tomcat 类加载
@@ -263,6 +265,9 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
     - conf/Catalina/localhost/manager.xml 配置允许的远程连接
 
 # 九、Tomcat优化
+
+- 参数maxThreads、maxConnections、acceptAccount区别；
+- tomcat默认支持并发数，怎么修改
 
 ## 1、内存优化
 

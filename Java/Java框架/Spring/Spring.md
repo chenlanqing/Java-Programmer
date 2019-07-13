@@ -11,8 +11,8 @@
     - [3.3、Web](#33web)
     - [3.4、AOP](#34aop)
     - [3.5、其它](#35%E5%85%B6%E5%AE%83)
-- [二、IoC(DI)](#%E4%BA%8Ciocdi)
-  - [1、IoC(Inversion of Control)](#1iocinversion-of-control)
+- [二、IOC(DI)](#%E4%BA%8Ciocdi)
+  - [1、IOC(Inversion of Control)](#1iocinversion-of-control)
   - [2、Spring容器](#2spring%E5%AE%B9%E5%99%A8)
   - [3、DI(Dependency Injection)](#3didependency-injection)
   - [4、各种类型信息的注入](#4%E5%90%84%E7%A7%8D%E7%B1%BB%E5%9E%8B%E4%BF%A1%E6%81%AF%E7%9A%84%E6%B3%A8%E5%85%A5)
@@ -24,8 +24,8 @@
   - [6、Aop：通知](#6aop%E9%80%9A%E7%9F%A5)
   - [8、AOP的实现方式](#8aop%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F)
   - [9、AspectJ与Spring AOP](#9aspectj%E4%B8%8Espring-aop)
-- [四、IoC与AOP原理分析](#%E5%9B%9Bioc%E4%B8%8Eaop%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
-  - [1、IoC原理](#1ioc%E5%8E%9F%E7%90%86)
+- [四、IOC与AOP原理分析](#%E5%9B%9Bioc%E4%B8%8Eaop%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+  - [1、IOC原理](#1ioc%E5%8E%9F%E7%90%86)
   - [2、AOP原理](#2aop%E5%8E%9F%E7%90%86)
 - [五、Spring的 事务](#%E4%BA%94spring%E7%9A%84-%E4%BA%8B%E5%8A%A1)
   - [1、事务：一组逻辑操作](#1%E4%BA%8B%E5%8A%A1%E4%B8%80%E7%BB%84%E9%80%BB%E8%BE%91%E6%93%8D%E4%BD%9C)
@@ -218,18 +218,18 @@
 
 ## 1、Spring是什么
 
-- Spring 是一个开源框架.
-- Spring 为简化企业级应用开发而生. 使用 Spring 可以使简单的 JavaBean 实现以前只有 EJB 才能实现的功能.
-- Spring 是一个 IoC(DI) 和 AOP 容器框架;
+- Spring 是一个开源框架
+- Spring 为简化企业级应用开发而生。使用 Spring 可以使简单的 JavaBean 实现以前只有 EJB 才能实现的功能。
+- Spring 是一个 IOC(DI) 和 AOP 容器框架；
 
 ## 2、具体描述 Spring
 
-- 轻量级：Spring 是非侵入性的 - 基于 Spring 开发的应用中的对象可以不依赖于 Spring 的 API
-- 依赖注入(DI --- dependency injection、IoC)
+- 轻量级：Spring 是非侵入性的-基于 Spring 开发的应用中的对象可以不依赖于 Spring 的 API
+- 依赖注入(DI --- dependency injection、IOC)
 - 面向切面编程(AOP --- aspect oriented programming)
 - 容器：Spring 是一个容器，因为它包含并且管理应用对象的生命周期
-- 框架：Spring 实现了使用简单的组件配置组合成一个复杂的应用. 在 Spring 中可以使用 XML 和 Java 注解组合这些对象
-- 一站式：在 IoC 和 AOP 的基础上可以整合各种企业应用的开源框架和优秀的第三方类库 (实际上 Spring 自身也提供了展现层的 SpringMVC 和 持久层的 Spring JDBC)
+- 框架：Spring 实现了使用简单的组件配置组合成一个复杂的应用。在 Spring 中可以使用 XML 和 Java 注解组合这些对象
+- 一站式：在 IOC 和 AOP 的基础上可以整合各种企业应用的开源框架和优秀的第三方类库 (实际上 Spring 自身也提供了展现层的 SpringMVC 和 持久层的 Spring JDBC)
 
 Spring容器初始化时：首先会初始化 bean，即构造相关类
 
@@ -241,11 +241,11 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 对应图上的Core Container，该层基本上是 Spring Framework 的核心。它包含以下模块：
 - Spring Core
-- Spring Bean：核心容器提供 Spring 框架的基本功能。核心容器的主要组件是 BeanFactory，它是工厂模式的实现。BeanFactory 使用控制反转 （IoC）模式将应用程序的配置和依赖性规范与实际的应用程序代码分开
+- Spring Bean：核心容器提供 Spring 框架的基本功能。核心容器的主要组件是 BeanFactory，它是工厂模式的实现。BeanFactory 使用控制反转 （IOC）模式将应用程序的配置和依赖性规范与实际的应用程序代码分开
 - Spring Context：Spring 上下文是一个配置文件，向 Spring 框架提供上下文信息。Spring 上下文包括企业服务，例如 JNDI、EJB、电子邮件、国际化、事件机制、校验和调度功能
 - SpEL (Spring Expression Language)：Spring 表达式语言全称为 “Spring Expression Language”，缩写为 “SpEL” ，类似于 Struts2 中使用的 OGNL 表达式语言，能在运行时构建复杂表达式、存取对象图属性、对象方法调用等等，并且能与 Spring 功能完美整合，如能用来配置 Bean 定义
 
-或者说这块就是IoC
+或者说这块就是IOC
 
 ### 3.2、数据访问
 
@@ -277,60 +277,57 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 - Test：该模块为使用 JUnit 和 TestNG 进行测试提供支持；
 - Messaging：该模块为 STOMP 提供支持。它还支持注解编程模型，该模型用于从 WebSocket 客户端路由和处理 STOMP 消息
 
-# 二、IoC(DI)
+# 二、IOC(DI)
 
-## 1、IoC(Inversion of Control)
+## 1、IOC(Inversion of Control)
 
-其思想是反转资源获取的方向。传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源。而应用了 IoC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式
+其思想是反转资源获取的方向。传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源。而应用了 IOC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式；
 
 控制反转：把创建对象(Bean)和维护对象(Bean)的关系的权利从程序中转移到Spring容器中，程序不再控制
-
-- IoC 机制实现Bean之间的调用;
-- IoC 解决的问题：可以降低两个组件对象之间的关联，降低耦合度;
-- Spring IoC 控制反转，哪些方面的控制被反转了呢？获得依赖对象的过程被反转了，由主动获取变为被动获取
-- 使用 IoC 的优势：
-	- 维护性比较好，非常便于进行单元测试，便于调试程序和诊断故障。代码中的每一个Class都可以单独测试，彼此之间互不影响，只要保证自身的功能无误即可，这就是组件之间低耦合或者无耦合带来的好处;
+- IOC 机制实现Bean之间的调用；
+- IOC 解决的问题：可以降低两个组件对象之间的关联，降低耦合度；
+- Spring IOC 控制反转：获得依赖对象的过程由主动获取变为被动获取
+- 使用 IOC 的优势：
+	- 维护性比较好，非常便于进行单元测试，便于调试程序和诊断故障。代码中的每一个Class都可以单独测试，彼此之间互不影响，只要保证自身的功能无误即可，这就是组件之间低耦合或者无耦合带来的好处；
 	- 开发团队的成员都只需要关心实现自身的业务逻辑，完全不用去关心其它的人工作进展，因为你的任务跟别人没有任何关系，你的任务可以单独测试，你的任务也不用依赖于别人的组件
-	- 可复用性好，我们可以把具有普遍性的常用组件独立出来，反复利用到项目中的其它部分，或者是其它项目，当然这也是面向对象的基本特征，IoC 不仅更好地贯彻了这个原则，提高了模块的可复用性。符合接口标准的实现，都可以插接到支持此标准的模块中;
-	- 完全具有热插拨的特性，IoC 生成对象的方式转为外置方式，也就是把对象生成放在配置文件里进行定义；
+	- 可复用性好，我们可以把具有普遍性的常用组件独立出来，反复利用到项目中的其它部分，或者是其它项目，当然这也是面向对象的基本特征，IOC 不仅更好地贯彻了这个原则，提高了模块的可复用性。符合接口标准的实现，都可以插接到支持此标准的模块中；
+	- 完全具有热插拨的特性，IOC 生成对象的方式转为外置方式，也就是把对象生成放在配置文件里进行定义；
 
-- IoC 使用的技术：最基本的技术就是反射，设计模式是工厂模式
+- IOC 使用的技术：最基本的技术就是反射，设计模式是工厂模式
 
-	IoC 容器的工作模式可以看成是工厂模式的升华；IoC 容器看作是一个工厂，这个工厂里要生产的对象都在配置文件中给出定义，然后利用编程语言的的反射编程，根据配置文件中给出的类名生成相应的对象。从实现来看，IoC 是把以前在工厂方法里写死的对象生成代码，改变为由配置文件来定义，也就是把工厂和对象生成这两者独立分隔开来，目的就是提高灵活性和可维护性；
+	IOC 容器的工作模式可以看成是工厂模式的升华；IOC 容器看作是一个工厂，这个工厂里要生产的对象都在配置文件中给出定义，然后利用编程语言的的反射编程，根据配置文件中给出的类名生成相应的对象。从实现来看，IOC 是把以前在工厂方法里写死的对象生成代码，改变为由配置文件来定义，也就是把工厂和对象生成这两者独立分隔开来，目的就是提高灵活性和可维护性；
 
-	***为什么不使用工厂模式，而使用IoC？*** 
+	***为什么不使用工厂模式，而使用IOC？*** 
 
-	IoC是通过反射机制来实现的。当我们的需求出现变动时，工厂模式会需要进行相应的变化。但是IoC的反射机制允许我们不重新编译代码，因为它的对象都是动态生成的
+	IOC是通过反射机制来实现的。当我们的需求出现变动时，工厂模式会需要进行相应的变化。但是IOC的反射机制允许我们不重新编译代码，因为它的对象都是动态生成的
 
-- Spring 中的 IoC
-	- Spring 中的 `org.springframework.beans` 包和 `org.springframework.context`包构成了Spring框架IoC容器的基础
+- Spring 中的 IOC
+	- Spring 中的 `org.springframework.beans` 包和 `org.springframework.context`包构成了Spring框架IOC容器的基础
 	- BeanFactory 接口提供了一个先进的配置机制，使得任何类型的对象的配置成为可能：`ApplicationContex` 接口对 `BeanFactory`（是一个子接口）进行了扩展，在`BeanFactory`的基础上添加了其他功能，比如与Spring的AOP更容易集成，也提供了处理message resource的机制(用于国际化)、事件传播以及应用层的特别配置，比如针对Web应用的`WebApplicationContext`
-	- `org.springframework.beans.factory.BeanFactory` 是 Spring IoC 容器的具体实现，用来包装和管理前面提到的各种bean。BeanFactory接口是Spring IoC 容器的核心接口
+	- `org.springframework.beans.factory.BeanFactory` 是 Spring IOC 容器的具体实现，用来包装和管理前面提到的各种bean。BeanFactory接口是Spring IOC 容器的核心接口
 
 ## 2、Spring容器
 
-在 Spring IoC 容器读取 Bean 配置创建 Bean 实例之前，必须对它进行实例化. 只有在容器实例化后，才可以从 IoC 容器里获取 Bean 实例并使用
+在 Spring IOC 容器读取 Bean 配置创建 Bean 实例之前，必须对它进行实例化. 只有在容器实例化后，才可以从 IOC 容器里获取 Bean 实例并使用
 
-Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容器的基本实现；（2）ApplicationContext：提供了更多的高级特性。是BeanFactory的子接口.
+Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容器的基本实现；（2）ApplicationContext：提供了更多的高级特性。是BeanFactory的子接口.
 
 ![](image/SpringIOC容器层级关系.png)
 
-- BeanFactory是Spring框架的基础设施，面向Spring本身；ApplicationContext，面向使用Spring框架的开发者，几乎所有的应用场合都直接使用 ApplicationContext;而非底层的 BeanFactory；但是无论使用何种方式，配置文件时相同的。常用的BeanFactory容器是`XmlBeanFactory`，它可以根据 XML 文件中定义的内容，创建相应的 Bean；BeanFactory是IOC容器的核心接口，它的职责包括：实例化、定位、配置应用程序中的对象及建立这些对象间的依赖
+- BeanFactory是Spring框架的基础设施，面向Spring本身；ApplicationContext，面向使用Spring框架的开发者，几乎所有的应用场合都直接使用 ApplicationContext，而非底层的 BeanFactory；但是无论使用何种方式，配置文件是相同的。常用的BeanFactory容器是`XmlBeanFactory`，它可以根据 XML 文件中定义的内容，创建相应的 Bean；BeanFactory是IOC容器的核心接口，它的职责包括：实例化、定位、配置应用程序中的对象及建立这些对象间的依赖
 
 - ApplicationContext 的主要实现类：【 ApplicationContext 在初始化上下文时就实例化所有单例的 Bean】
-	- ①、ClassPathXmlApplicationContext：从类路径下加载配置文件;
-	- ②、FileSystemXmlApplicationContext：从文件系统中加载配置文件;
-	- ③、WebApplicationContext：是专门为 WEB 应用而准备的，它允许从相对于 WEB 根目录的路径中完成初始化工作;
+	- ①、ClassPathXmlApplicationContext：从类路径下加载配置文件；
+	- ②、FileSystemXmlApplicationContext：从文件系统中加载配置文件；
+	- ③、WebApplicationContext：是专门为 WEB 应用而准备的，它允许从相对于 WEB 根目录的路径中完成初始化工作；
 
 - Spring容器对Bean的管理：
 	- 控制Bean对象创建模式：在bean元素中，利用scope属性可以指定Bean组件创建对象的方式：
 		- prototype：非单例模式
-		- singleton：单例模式(默认是单例模式)，Spring不关心bean是否线程安全，当然，但实际上，大部分的 Spring Bean 并没有可变的状态(比如Serview 类和 DAO 类)，所以在某种程度上说 Spring 的单例 Bean 是线程安全的
-
-		在web程序中，通过一些配置，可以扩展出request，session等属性值;
+		- singleton：单例模式(默认是单例模式)，Spring不关心bean是否线程安全，当然，但实际上，大部分的 Spring Bean 并没有可变的状态(比如Serview 类和 DAO 类)，所以在某种程度上说 Spring 的单例 Bean 是线程安全的；在web程序中，通过一些配置，可以扩展出request，session等属性值;
 
 	- 可以控制单例模式的创建时机：
-		- singleton模式的Bean组件，默认是在 ApplicationContext 容器实例化时就创建了组件；可以在bean元素中追加属性lazy-init="true"，将singleton模式创建对象推迟到getBean()方法
+		- singleton模式的Bean组件，默认是在 ApplicationContext 容器实例化时就创建了组件；可以在bean元素中追加属性`lazy-init="true"`，将singleton模式创建对象推迟到getBean()方法
 		- prototype模式是在调用getBean()方法时创建了组件;
 
 		单例 bean 存在线程问题，主要是因为当多个线程操作同一个对象的时候，对这个对象的非静态成员变量的写操作会存在线程安全问题。
@@ -338,14 +335,16 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 	- 可以指定Bean对象初始化和销毁方法：`<bean init-method="初始化方法" destroy-method="销毁方法">`
 		- Spring 将 Bean 对象创建完毕后，会自动调用init-method里指定的方法
 		- destroy-method指定的方法需满足下面条件才能执行：
-			- scope="singleton";才能使用;
-			- 执行AbstractApplicationContext容器的close()方法触发;
+			- `scope="singleton"`才能使用
+			- 执行AbstractApplicationContext容器的close()方法触发
+
 - BeanFactory 和 ApplicationContext 区别：
 	- ①、BeanFactory 可以理解为含有bean集合的工厂类，包含了各种bean的定义，以便在接收请求时对应的Bean实例化BeanFactory 包含了bean生命周期的控制
-	- ②、application context如同bean factory一样具有bean定义、bean关联关系的设置，根据请求分发bean的功能。但application context在此基础上还提供了其他的功能。
+	- ②、ApplicationContext 如同bean factory一样具有bean定义、bean关联关系的设置，根据请求分发bean的功能。但 ApplicationContext 在此基础上还提供了其他的功能。
 		- 提供了支持国际化的文本消息
 		- 统一的资源文件读取方式
 		- 已在监听器中注册的bean的事件
+
 	- 详细比较：
 
 	|BeanFactory	| ApplicationContext|
@@ -363,19 +362,19 @@ Spring 提供了两种类型的 IoC 容器实现：（1）BeanFactory：IoC 容�
 
 ## 3、DI(Dependency Injection)
 
-IoC 的另一种表述方式：即组件以一些预先定义好的方式(例如：setter 方法)接受来自如容器的资源注入。相对于 IoC 而言，这种表述更直接。依赖注入(DI)和控制反转(IoC)是从不同的角度的描述的同一件事情：就是指通过引入IoC容器，利用依赖关系注入的方式，实现对象之间的解耦
+IOC 的另一种表述方式：即组件以一些预先定义好的方式(例如：setter 方法)接受来自如容器的资源注入。相对于 IOC 而言，这种表述更直接。依赖注入(DI)和控制反转(IOC)是从不同的角度的描述的同一件事情：就是指通过引入IOC容器，利用依赖关系注入的方式，实现对象之间的解耦
 
-以来注入是Spring实现IoC的技术途径，依赖注入的方式：
+依赖注入是Spring实现IOC的技术途径，依赖注入的方式：
 - setter方式注入：(推荐使用)，使用步骤：
 	- 在Action中定义dao接口变量及其set方法;
 	- 在Spring配置Action组件的bean元素，使用下面格式：
-		```
+		```xml
 		<property name="属性名" ref="要注入的Bean对象的id属性值"></property>
 		```
-- 构造方式注入：使用步骤：
+- 构造方式注入：
 	- 在Action中定义dao接口变量以及带参数的构造方法(参数为dao接口类型的变量);
 	- 在Spring配置Action组件的bean元素，使用下面格式：
-		```
+		```xml
 		<constructor-arg index="指定参数索引(从0开始)" ref="要注入的Bean对象的id属性值">
 		</constructor-arg>
 		```
@@ -383,7 +382,6 @@ IoC 的另一种表述方式：即组件以一些预先定义好的方式(例如
 依赖倒置原则、IOC、DI、IOC容器的关系：
 
 ![](image/IOC与DI关系.png)
-
 
 ## 4、各种类型信息的注入
 
@@ -452,7 +450,7 @@ IoC 的另一种表述方式：即组件以一些预先定义好的方式(例如
 
 # 三、Spring AOP
 
-AOP(Aspect-Oriented Programming，面向切面编程	
+AOP（Aspect-Oriented Programming），面向切面编程	
 
 ## 1、关于面向切面编程
 
@@ -513,17 +511,17 @@ AOP(Aspect-Oriented Programming，面向切面编程
 	- 引入相关的jar包：aopalliance.jar、aspectj.weaver.jar 和 spring-aspects.jar
 	- 配置文件引入相关的命名空间，并在配置文件中加入如下配置：
 		```<aop：aspectj-autoproxy></aop：aspectj-autoproxy>```
-	- 在配置文件中加入IoC容器扫描Bean的配置：
+	- 在配置文件中加入IOC容器扫描Bean的配置：
 		```<context：component-scan base-package="com.bluefish.aop.impl"></context：component-scan>```
 	- 编写切面类，即共通属性：
-		- ①.首先切面是一个Bean，需要加入注解：@Component
-		- ②.其次，类是一个切面，需加入注解：@Aspect;
+		- ①、首先切面是一个Bean，需要加入注解：@Component
+		- ②、其次，类是一个切面，需加入注解：@Aspect；
 	- 在切面类中声明通知：(这里以前置通知为准)
-		- ①.声明一个方法;
-		- ②.在方法上加入注解：@Before("execution(*)")
-		- ③.如果需要获取访问链接的细节问题，如方法名和参数等，可以在声明的方法中加入JoinPoint参数<br>
-			获取方法签名：joinPoint.getSignature()<br>
-			获取方法参数：joinPoint.getSignature()<br>
+		- ①、声明一个方法;
+		- ②、在方法上加入注解：@Before("execution(*)")
+		- ③、如果需要获取访问链接的细节问题，如方法名和参数等，可以在声明的方法中加入JoinPoint参数：
+			- 获取方法签名：joinPoint.getSignature()
+			- 获取方法参数：joinPoint.getArgs()
 		如：
 		```java
 		@Aspect
@@ -539,35 +537,35 @@ AOP(Aspect-Oriented Programming，面向切面编程
 		```
 - 4.2、使用xml使用AOP
 	```xml
-	将共通处理组件定义成一个<bean>
-	定义<aop：pointcut>，指定哪些组件为目标，即切入点;
-	定义<aop：aspect>，切面;
-	定义<aop：before>，指定通知：
-		<bean id="loggingAspectJ" class="com.bluefish.aop.xml.LoggingAspectJ"></bean>	
-		<bean id="validationAspectJ" class="com.bluefish.aop.xml.ValidationAspectJ"></bean>
-		<!-- 利用Spring的AOP机制将CheckRoleBean作用到各个Action的execute方法 -->
-		<aop：config>
-			<!-- 配置切入点表达式 -->
-			<aop：pointcut expression="execution(* *.*(..))" id="pointcut"/>
-			<!-- 指定切面，ref：引用配置好的bean，order：切面优先级 -->
-			<aop：aspect ref="loggingAspectJ" order="2">
-				<!-- 前置通知：method：切面中的方法，pointcut-ref：切入点 --> 
-				<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
-				<!-- 
-					返回通知：returning：连接点执行的结果，对应方法中的返回值参数
-					public void afterReturnningMethod(JoinPoint joinPoint，Object result){}
-				-->
-				<aop：after-returning method="afterReturnningMethod" pointcut-ref="pointcut" returning="result"/>
-				<!-- 
-					异常通知：throwing：表示该方法中的异常参数
-					public void afterThrowingMethod(JoinPoint joinPoint，Exception e){}
-				-->
-				<aop：after-throwing method="afterThrowingMethod" pointcut-ref="pointcut" throwing="e"/>
-			</aop：aspect>
-			<aop：aspect ref="validationAspectJ" order="1">
-				<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
-			</aop：aspect>
-		</aop：config>
+	<!-- 将共通处理组件定义成一个<bean> -->
+	<!-- 定义<aop：pointcut>，指定哪些组件为目标，即切入点; -->
+	<!-- 定义<aop：aspect>，切面; -->
+	<!-- 定义<aop：before>，指定通知： -->
+	<bean id="loggingAspectJ" class="com.bluefish.aop.xml.LoggingAspectJ"></bean>	
+	<bean id="validationAspectJ" class="com.bluefish.aop.xml.ValidationAspectJ"></bean>
+	<!-- 利用Spring的AOP机制将CheckRoleBean作用到各个Action的execute方法 -->
+	<aop：config>
+		<!-- 配置切入点表达式 -->
+		<aop：pointcut expression="execution(* *.*(..))" id="pointcut"/>
+		<!-- 指定切面，ref：引用配置好的bean，order：切面优先级 -->
+		<aop：aspect ref="loggingAspectJ" order="2">
+			<!-- 前置通知：method：切面中的方法，pointcut-ref：切入点 --> 
+			<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
+			<!-- 
+				返回通知：returning：连接点执行的结果，对应方法中的返回值参数
+				public void afterReturnningMethod(JoinPoint joinPoint，Object result){}
+			-->
+			<aop：after-returning method="afterReturnningMethod" pointcut-ref="pointcut" returning="result"/>
+			<!-- 
+				异常通知：throwing：表示该方法中的异常参数
+				public void afterThrowingMethod(JoinPoint joinPoint，Exception e){}
+			-->
+			<aop：after-throwing method="afterThrowingMethod" pointcut-ref="pointcut" throwing="e"/>
+		</aop：aspect>
+		<aop：aspect ref="validationAspectJ" order="1">
+			<aop：before method="beforeMethod" pointcut-ref="pointcut"/>
+		</aop：aspect>
+	</aop：config>
 	```
 ## 5、切面
 
@@ -589,15 +587,15 @@ try{
 	// 后置通知：当某连接点退出的时候执行的通知(不论正常返回还是抛出异常)，其访问不到连接点执行的结果
 }
 ```
-- 6.1、前置通知(Before)：在方法执行之前执行的通知，前置通知使用 @Before 注解，并将切入点表达式的值作为注解值.
+- 6.1、前置通知(Before)：在方法执行之前执行的通知，前置通知使用 @Before 注解，并将切入点表达式的值作为注解值
 	
 - 6.2、后置通知(After)：后置通知是在连接点完成之后执行的，即连接点返回结果或者抛出异常的时候；
 	
-- 6.3、返回通知(AfterReturning)：连接点是正常返回时执行的通知. 
+- 6.3、返回通知(AfterReturning)：连接点是正常返回时执行的通知
 
-	只要将 returning 属性添加到 @AfterReturning 注解中，就可以访问连接点的返回值。该属性的值即为用来传入返回值的参数名称.必须在通知方法的签名中添加一个同名参数。在运行时，Spring AOP 会通过这个参数传递返回值.原始的切点表达式需要出现在 pointcut 属性中
+	只要将 returning 属性添加到 @AfterReturning 注解中，就可以访问连接点的返回值。该属性的值即为用来传入返回值的参数名称。必须在通知方法的签名中添加一个同名参数。在运行时，Spring AOP 会通过这个参数传递返回值。原始的切点表达式需要出现在 pointcut 属性中
 	
-	 @AfterReturning(pointcut="execution(int com.bluefish.aop.impl.ICaculator.*(int，int))"，returning="result")
+	 @AfterReturning(pointcut="execution(int com.bluefish.aop.impl.ICaculator.*(int，int))", returning="result")
 	
 - 6.4.异常通知(AfterThrowing)：连接点执行异常时执行的通知	
 	- 可以访问到异常对象; 且可以指定在出现特定异常时在执行通知代码
@@ -612,8 +610,8 @@ try{
 		```
 		
 - 6.5、环绕通知(Around)：环绕通知是所有通知类型中功能最为强大的，能够全面地控制连接点. 甚至可以控制是否执行连接点
-	- 环绕通知需要携带 ProceedingJoinPoint 类型的参数. 它是 JoinPoint 的子接口
-	- 环绕通知类似于动态代理的全过程：ProceedingJoinPoint 类型的参数可以决定是否执行目标方法。proceed() 方法来执行被代理的方法，如果忘记这样做就会导致通知被执行了，但目标方法没有被执行;
+	- 环绕通知需要携带 ProceedingJoinPoint 类型的参数，它是 JoinPoint 的子接口
+	- 环绕通知类似于动态代理的全过程：ProceedingJoinPoint 类型的参数可以决定是否执行目标方法。proceed() 方法来执行被代理的方法，如果忘记这样做就会导致通知被执行了，但目标方法没有被执行；
 	- 环绕通知必须有返回值，返回值即为目标方法的返回值，即调用 joinPoint.proceed(); 的返回值，否则会出现空指针异常;
 		```java
 		@Around("execution(public int com.atguigu.spring.aop.ArithmeticCalculator.*(..))")
@@ -640,6 +638,7 @@ try{
 			return result;
 		}
 		```
+
 ## 7、切入点表达式
 
 - 7.1、重用切入点表达式：
@@ -720,9 +719,9 @@ try{
 
 Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 基于代理(Proxying)，而 AspectJ 基于字节码操作(Bytecode Manipulation)
       
-# 四、IoC与AOP原理分析
+# 四、IOC与AOP原理分析
 
-## 1、IoC原理
+## 1、IOC原理
 
 [IOC原理](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/%E6%A1%86%E6%9E%B6/spring/Spring%E6%BA%90%E7%A0%81.md#%E4%B8%80ioc)
 
@@ -750,7 +749,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 - 1.2、Spring 事务接口：主要有三个接口
 
-	- PlatformTransactionManager：平台事务管理器：Spring 为不同的持久框架提供了不同的接口实现；DataSourceTransactionManager：使用 Spring JDBC 或 mybatis 进行持久化数据时使用
+	- PlatformTransactionManager：平台事务管理器，Spring 为不同的持久框架提供了不同的接口实现；DataSourceTransactionManager：使用 Spring JDBC 或 mybatis 进行持久化数据时使用
 		```java
 		public interface PlatformTransactionManager {
 			// 获得事务
@@ -802,7 +801,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 - 2.1、支持编程式事务管理与声明式事务管理
 	- 编程式事务管理：将事务管理代码嵌入到业务方法中来控制事务的提交和回滚。在编程式管理事务时，必须在每个事务操作中包含额外的事务管理代码. 
-	- 声明式事务管理：大多数情况下比编程式事务管理更好用. 它将事务管理代码从业务方法中分离出来，以声明的方式来实现事务管理。事务管理作为一种横切关注点，可以通过 AOP 方法模块化. Spring 通过 Spring AOP 框架支持声明式事务管理
+	- 声明式事务管理：大多数情况下比编程式事务管理更好用。它将事务管理代码从业务方法中分离出来，以声明的方式来实现事务管理。事务管理作为一种横切关注点，可以通过 AOP 方法模块化. Spring 通过 Spring AOP 框架支持声明式事务管理
 
 - 2.2、Spring 事务管理核心：TransactionManager，其为事务管理封装了一组独立于技术的方法。对于JDBC，JavaEE，Hibernate 等都实现了相应的事务管理器;
 
@@ -831,9 +830,9 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 		<property name="dataSource" ref="dataSource" />
 	</bean>		
 	<tx：annotation-driven transaction-manager="transactionManager"/>
-	// 在需要事务管理的方法前加上注解，或者可以直接加在类上
-	@Transactional
 	```
+	在需要事务管理的方法前加上注解，或者可以直接加在类上：`@Transactional`
+
 ## 5、事务的传播性：当事务方法被另一个事务方法调用时，必须指定事务应该如何传播
 
 - 5.1、Spring 支持的事务传播行为：
@@ -4141,14 +4140,14 @@ public @interface SpringBootApplication {
 ```
 - `@SpringBootApplication` = `(默认属性)@Configuration + @EnableAutoConfiguration + @ComponentScan`。如果在启动类不配置`@SpringBootApplication`，也可以配置这三个注解，通用能够启动；
 - `@Configuration`：JavaConfig形式的Spring Ioc容器的配置类；
-- `@ComponentScan`：@ComponentScan的功能其实就是自动扫描并加载符合条件的组件（比如@Component和@Repository等）或者bean定义，最终将这些bean定义加载到IoC容器中
-- `@EnableAutoConfiguration`：@EnableAutoConfiguration也是借助@Import的帮助，将所有符合自动配置条件的bean定义加载到IoC容器，仅此而已！
+- `@ComponentScan`：@ComponentScan的功能其实就是自动扫描并加载符合条件的组件（比如@Component和@Repository等）或者bean定义，最终将这些bean定义加载到IOC容器中
+- `@EnableAutoConfiguration`：@EnableAutoConfiguration也是借助@Import的帮助，将所有符合自动配置条件的bean定义加载到IOC容器，仅此而已！
 
     @EnableAutoConfiguration会根据类路径中的jar依赖为项目进行自动配置，如：添加了spring-boot-starter-web依赖，会自动添加Tomcat和Spring MVC的依赖，Spring Boot会对Tomcat和Spring MVC进行自动配置
 
 	借助于Spring框架原有的一个工具类：SpringFactoriesLoader的支持，SpringFactoriesLoader属于Spring框架私有的一种扩展方案，其主要功能就是从指定的配置文件META-INF/spring.factories加载配置
 
-	从classpath中搜寻所有的`META-INF/spring.factories`配置文件，并将其中`org.springframework.boot.autoconfigure.EnableutoConfiguration`对应的配置项通过反射（Java Refletion）实例化为对应的标注了@Configuration的JavaConfig形式的IoC容器配置类，然后汇总为一个并加载到IoC容器。
+	从classpath中搜寻所有的`META-INF/spring.factories`配置文件，并将其中`org.springframework.boot.autoconfigure.EnableutoConfiguration`对应的配置项通过反射（Java Refletion）实例化为对应的标注了@Configuration的JavaConfig形式的IOC容器配置类，然后汇总为一个并加载到IOC容器。
 
 	配置在`META-INF/spring.factories`：**ApplicationContextInitializer**、**SpringApplicationRunListener**
 	
@@ -4261,9 +4260,9 @@ public @interface SpringBootApplication {
 - 6） 根据用户是否明确设置了applicationContextClass类型以及初始化阶段的推断结果，决定该为当前SpringBoot应用创建什么类型的ApplicationContext并创建完成，然后根据条件决定是否添加ShutdownHook，决定是否使用自定义的BeanNameGenerator，决定是否使用自定义的ResourceLoader，当然，最重要的，将之前准备好的Environment设置给创建好的ApplicationContext使用。
 - 7） ApplicationContext创建好之后，SpringApplication会再次借助Spring-FactoriesLoader，查找并加载classpath中所有可用的ApplicationContext-Initializer，然后遍历调用这些ApplicationContextInitializer的initialize（applicationContext）方法来对已经创建好的ApplicationContext进行进一步的处理。
 - 8） 遍历调用所有SpringApplicationRunListener的contextPrepared()方法。
-- 9） 最核心的一步，将之前通过@EnableAutoConfiguration获取的所有配置以及其他形式的IoC容器配置加载到已经准备完毕的ApplicationContext。
+- 9） 最核心的一步，将之前通过@EnableAutoConfiguration获取的所有配置以及其他形式的IOC容器配置加载到已经准备完毕的ApplicationContext。
 - 10） 遍历调用所有SpringApplicationRunListener的contextLoaded()方法。
-- 11） 调用ApplicationContext的refresh()方法，完成IoC容器可用的最后一道工序。
+- 11） 调用ApplicationContext的refresh()方法，完成IOC容器可用的最后一道工序。
 - 12） 查找当前ApplicationContext中是否注册有CommandLineRunner，如果有，则遍历执行它们。
 - 13） 正常情况下，遍历执行SpringApplicationRunListener的finished()方法、（如果整个过程出现异常，则依然调用所有SpringApplicationRunListener的finished()方法，只不过这种情况下会将异常信息一并传入处理）
 
