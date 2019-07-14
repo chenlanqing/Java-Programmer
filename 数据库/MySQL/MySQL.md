@@ -574,6 +574,14 @@ type(M，D)--M表示的所有位数(不包括小数点和符号)，D表示允许
 	- 字符串列的最大长度比平均长度大很多
 	- 字符串列很少被更新
 	- 使用了多字节字符集存储字符串
+- TINYBLOB：0-255字节，不超过 255 个字符的二进制字符串
+- TINYTEXT：0-255字节，短文本字符串
+- BLOB：0-65535字节，二进制形式的长文本数据
+- TEXT：0-65535字节，长文本数据
+- MEDIUMBLOB：0-16777215字节，二进制形式的中等长度文本数据
+- MEDIUMTEXT：0-16777215字节，中等长度文本数据
+- LONGBLOB：0-4294967295字节，二进制形式的极大文本数据
+- LONGTEXT：0-4294967295字节，极大文本数据
 
 ## 4、列类型的选择
 
@@ -660,6 +668,7 @@ LIMIT <limit_number>
 # 六、高级查询
 
 ![image](image/SQL-Joins-1.jpg)
+
 ![image](image/SQL-Joins-2.jpg)
 
 ## 1、连接
@@ -761,6 +770,125 @@ select * from emp a right join dept b on a.deptId=b.id order by id desc
 
 ## 4、行转列与列转行
 
+[行转列与列转行](https://www.cnblogs.com/xiaoxi/p/7151433.html)
+
+### 4.1、行转列
+
+![](image/数据行.png)
+
+将上述数据按照下列各式数据：
+
+![](image/数据行转列.png)
+
+- **1、使用case...when....then 进行行转列**
+	```sql
+	SELECT user_name ,
+		MAX(CASE course WHEN '数学' THEN score ELSE 0 END ) 数学,
+		MAX(CASE course WHEN '语文' THEN score ELSE 0 END ) 语文,
+		MAX(CASE course WHEN '英语' THEN score ELSE 0 END ) 英语
+	FROM test_tb_grade
+	GROUP BY user_name;
+	```
+
+- **2、使用IF() 进行行转列：**
+	```sql
+	SELECT userid,
+	SUM(IF(`subject`='语文',score,0)) as '语文',
+	SUM(IF(`subject`='数学',score,0)) as '数学',
+	SUM(IF(`subject`='英语',score,0)) as '英语',
+	SUM(IF(`subject`='政治',score,0)) as '政治' 
+	FROM tb_score 
+	GROUP BY userid
+	```
+	**注意点：**
+	- SUM() 是为了能够使用GROUP BY根据userid进行分组，因为每一个userid对应的subject="语文"的记录只有一条，所以SUM() 的值就等于对应那一条记录的score的值。
+	假如userid ='001' and subject='语文' 的记录有两条，则此时SUM() 的值将会是这两条记录的和，同理，使用Max()的值将会是这两条记录里面值最大的一个。但是正常情况下，一个user对应一个subject只有一个分数，因此可以使用SUM()、MAX()、MIN()、AVG()等聚合函数都可以达到行转列的效果。
+
+	- `IF(subject='语文',score,0)` 作为条件，即对所有subject='语文'的记录的score字段进行SUM()、MAX()、MIN()、AVG()操作，如果score没有值则默认为0；
+
+- **3、利用SUM(IF()) 生成列 + WITH ROLLUP 生成汇总行，并利用 IFNULL将汇总行标题显示为Total**
+	```sql
+	SELECT IFNULL(userid,'total') AS userid,
+		SUM(IF(`subject`='语文',score,0)) AS 语文,
+		SUM(IF(`subject`='数学',score,0)) AS 数学,
+		SUM(IF(`subject`='英语',score,0)) AS 英语,
+		SUM(IF(`subject`='政治',score,0)) AS 政治,
+		SUM(IF(`subject`='total',score,0)) AS total
+	FROM(
+		SELECT userid,IFNULL(`subject`,'total') AS `subject`,SUM(score) AS score
+		FROM tb_score
+		GROUP BY userid,`subject`
+		WITH ROLLUP
+		HAVING userid IS NOT NULL
+	)AS A 
+	GROUP BY userid
+	WITH ROLLUP;
+	```
+
+- **4、利用SUM(IF()) 生成列 + UNION 生成汇总行,并利用 IFNULL将汇总行标题显示为 Total**
+	```sql
+	SELECT userid,
+	SUM(IF(`subject`='语文',score,0)) AS 语文,
+	SUM(IF(`subject`='数学',score,0)) AS 数学,
+	SUM(IF(`subject`='英语',score,0)) AS 英语,
+	SUM(IF(`subject`='政治',score,0)) AS 政治,
+	SUM(score) AS TOTAL 
+	FROM tb_score
+	GROUP BY userid
+	UNION
+	SELECT 'TOTAL',SUM(IF(`subject`='语文',score,0)) AS 语文,
+	SUM(IF(`subject`='数学',score,0)) AS 数学,
+	SUM(IF(`subject`='英语',score,0)) AS 英语,
+	SUM(IF(`subject`='政治',score,0)) AS 政治,
+	SUM(score) FROM tb_score
+	```
+
+- **5、利用SUM(IF()) 生成列，直接生成结果不再利用子查询**
+	```sql
+	SELECT IFNULL(userid,'TOTAL') AS userid,
+	SUM(IF(`subject`='语文',score,0)) AS 语文,
+	SUM(IF(`subject`='数学',score,0)) AS 数学,
+	SUM(IF(`subject`='英语',score,0)) AS 英语,
+	SUM(IF(`subject`='政治',score,0)) AS 政治,
+	SUM(score) AS TOTAL 
+	FROM tb_score
+	GROUP BY userid WITH ROLLUP;
+	```
+- **6、动态，适用于列不确定情况**
+	```sql
+	SET @EE='';
+	select @EE :=CONCAT(@EE,'sum(if(subject= \'',subject,'\',score,0)) as ',subject, ',') AS aa FROM (SELECT DISTINCT subject FROM tb_score) A ;
+
+	SET @QQ = CONCAT('select ifnull(userid,\'TOTAL\')as userid,',@EE,' sum(score) as TOTAL from tb_score group by userid WITH ROLLUP');
+	-- SELECT @QQ;
+
+	PREPARE stmt FROM @QQ;
+	EXECUTE stmt;
+	DEALLOCATE PREPARE stmt;
+	```
+- **7、合并字段显示：利用group_concat()**
+	```sql
+	SELECT userid,GROUP_CONCAT(`subject`,":",score)AS 成绩 FROM tb_score
+	GROUP BY userid
+	```
+	group_concat()函数可以很好的建属于同一分组的多个行转化为一个列
+
+### 4.2、列转行
+
+![](image/数据行2.png)
+
+将上面的数据按照下列各式转换：
+
+![](image/数据行2列转行.png)
+
+列转行SQL：
+```sql
+select user_name, '语文' COURSE, CN_SCORE as SCORE from test_tb_grade2
+union select user_name, '数学' COURSE, MATH_SCORE as SCORE from test_tb_grade2
+union select user_name, '英语' COURSE, EN_SCORE as SCORE from test_tb_grade2
+order by user_name,COURSE;
+```
+
 # 七、MySQL 存储引擎
 
 ## 1、MySQL 的数据库引擎
@@ -787,7 +915,7 @@ InnoDB使用表空间进行数据存储：innodb_file_per_table，对InnoDB使�
 	- 重启mysql服务，重建innodb系统表空间
 	- 重新导入数据.
 
-- **1.2.2.存储特性：**
+- **1.2.2、存储特性：**
 
 	- 事务性存储引擎
 	- 完全支持事务的ACID特性
@@ -798,41 +926,41 @@ InnoDB使用表空间进行数据存储：innodb_file_per_table，对InnoDB使�
 
 - **1.2.3、状态检查**
 
-show engine innodb status
+	show engine innodb status
 
 ### 1.3、CSV存储引擎是基于 CSV 格式文件存储数据
 
-- **1.3.1.特性：**
+- **1.3.1、特性：**
 	- CSV 存储引擎因为自身文件格式的原因，所有列必须强制指定 NOT NULL；
 	- CSV 引擎也不支持索引，不支持分区；
 	- CSV 存储引擎也会包含一个存储表结构的 .frm 文件、一个 .csv 存储数据的文件、一个同名的元信息文件，该文件的扩展名为.CSM，用来保存表的状态及表中保存的数据量
 	- 每个数据行占用一个文本行
 
-- **1.3.2.适合作为数据交换的中间表**
+- **1.3.2、适合作为数据交换的中间表**
 
 ### 1.4、Archive
 
-- **1.4.1.特性：**
+- **1.4.1、特性：**
 
 	- 以zlib对表数据进行压缩，磁盘I/O更少；
 	- 数据存储在arz为后缀的文件；
 	- 只支持insert和select操作；
 	- 只允许在自增ID列上增加索引；
 
-- **1.4.2.使用场景：**
+- **1.4.2、使用场景：**
 
-日志和数据采集类应用
+	日志和数据采集类应用
 
 ### 1.5、Memory：也称为heap存储引擎，所以数据保存在内存中
 
-- **1.5.1.特性：**
+- **1.5.1、特性：**
 	- 支持hash 和btree索引
 	- 所有字段都为固定长度 varchar(10) = char(10)
 	- 不支持blob 和 text 等大字段
 	- 使用表级锁
 	- 最大大小由max_heap_table_size参数决定，不会对已经存在的表生效。如果需要生效，需重启服务重建数据
 
-- **1.5.2.使用场景：**
+- **1.5.2、使用场景：**
 
 	- 用于查找或者是映射表，例如邮编和地区的对应表
 	- 用于保存数据分析中产生的中间表；
@@ -840,7 +968,7 @@ show engine innodb status
 
 ### 1.6、Federated
 
-- **1.6.1.特性：**
+- **1.6.1、特性：**
 
 	- 提供了访问远程mysql服务器上表的方法；
 	- 本地不存储数据，数据全部放到远程数据库上；
@@ -848,7 +976,7 @@ show engine innodb status
 
 默认禁止的，启用需要在配置文件中开启federated；
 
-连接方法：`mysql：//user_name[:password]@host_name[:port]/db_name/table_name`
+连接方法：`mysql://user_name[:password]@host_name[:port]/db_name/table_name`
 
 ## 2、MyISAM 和 InnoDB 引擎的区别
 
@@ -1190,7 +1318,7 @@ MyISAM 的读写锁调度是写优先，这也是 MyISAM 不适合做写为主�
 
 	- 是对数据被外界（包括本系统当前的其他事务，以及来自外部系统的事务处理）修改持保守态度（悲观）；因此，在整个数据处理过程中，将数据处于锁定状态。悲观锁的实现，往往依靠数据库提供的锁机制；
 
-	(2).悲观并发控制实际上是"先取锁再访问"的保守策略，为数据处理的安全提供了保证.但是在效率方面，处理加锁的机制会让数据库产生额外的开销，还有增加产生死锁的机会
+	- 悲观并发控制实际上是"先取锁再访问"的保守策略，为数据处理的安全提供了保证.但是在效率方面，处理加锁的机制会让数据库产生额外的开销，还有增加产生死锁的机会
 
 - **6.2、乐观锁：**
 	- 乐观锁假设认为数据一般情况下不会造成冲突，所以在数据进行提交更新的时候，才会正式对数据的冲突与否进行检测，如果发现冲突了，则让返回用户错误的信息，让用户决定如何去做；
@@ -2672,6 +2800,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 		where a = const order by a，d -- d 不是索引的一部分
 		where a in (...) order by b，c --对于排序来说， 多个相等的条件也是范围查询
 		```
+		
 **8.2.3、group by：实质是先排序后进行分组，遵照索引建的最佳左前缀**
 
 当无法使用索引列时，增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置；where 高于 having，能写在 where 中的限定条件不要去使用 having 限定了
