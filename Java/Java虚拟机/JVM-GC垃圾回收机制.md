@@ -113,9 +113,9 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 
 给对象中添加一个引用计数器，每当有一个地方引用他时，计数器就加1;当引用失效时，引用计时器就减1；任何时刻计数器为0的对象就是不可能再被使用；
 
-**1.2.优缺点：**
+**1.2、优缺点：**
 
-- 优点：算法实现简单，盘点效率也很高，如:Python语言
+- 优点：算法实现简单，盘点效率也很高，如：Python语言
 - 缺点：很难解决对象之间的循环引用问题；如父对象有一个对子对象的引用，子对象反过来引用父对象。这样，他们的引用计数永远不可能为0;
 
 **1.3、循环引用例子**
@@ -150,9 +150,9 @@ public class Main {
 - 本地方法栈中 JNI（即一般说的 native 方法）引用的对象；
 - 活跃线程的引用对象
 
-**2.3、对于用可达性分析法搜索不到的对象，GC 并不一定会回收该对象:要完全回收一个对象，至少需要经过两次标记的过程**
+**2.3、对于用可达性分析法搜索不到的对象，GC 并不一定会回收该对象：要完全回收一个对象，至少需要经过两次标记的过程**
 
-- 第一次标记：对于一个没有其他引用的对象，筛选该对象是否有必要执行 finalize 方法，如果没有必要执行，则意味着可以直接回收。筛选依据:是否复写或执行过finalize()方法；因为finalize方法只能被执行一次；
+- 第一次标记：对于一个没有其他引用的对象，筛选该对象是否有必要执行 finalize 方法，如果没有必要执行，则意味着可以直接回收。筛选依据：是否复写或执行过finalize()方法；因为finalize方法只能被执行一次；
 
 - 第二次标记：如果被筛选判定位有必要执行，则会放入FQueue队列，并自动创建一个低优先级的finalize线程来执行释放操作。如果在一个对象释放前被其他对象引用，则该对象会被移除FQueue队列;
 
@@ -462,15 +462,15 @@ GC开始时活着的对象的一个快照，其是通过Root Tracing得到的，
 
 #### 7.2.3、RSet（Remembered Set）
 
-是辅助GC过程的一种结构，典型的空间换时间工具，和Card Table有些类似，还有一种数据结构也是辅助GC的：Collection Set（CSet），它记录了GC要收集的Region集合，集合里的Region可以是任意年代的；在GC的时候，对于old->young和old->old的跨代对象引用，只要扫描对应的CSet中的RSet即可
+是辅助GC过程的一种结构，典型的空间换时间工具，和Card Table有些类似，还有一种数据结构也是辅助GC的：Collection Set（CSet），它记录了GC要收集的Region集合，集合里的Region可以是任意年代的；在GC的时候，对于`old->young`和`old->old`的跨代对象引用，只要扫描对应的CSet中的RSet即可
 
 - **RSet究竟是怎么辅助GC的呢？**
 
-	在做YGC的时候，只需要选定young generation region的RSet作为根集，这些RSet记录了old->young的跨代引用，避免了扫描整个old generation。 而mixed gc的时候，old generation中记录了old->old的RSet，young->old的引用由扫描全部young generation region得到，这样也不用扫描全部old generation region。所以RSet的引入大大减少了GC的工作量
+	在做YGC的时候，只需要选定`young generation region`的RSet作为根集，这些RSet记录了`old->young`的跨代引用，避免了扫描整个old generation。 而mixed gc的时候，old generation中记录了`old->old`的RSet，`young->old`的引用由扫描全部young generation region得到，这样也不用扫描全部old generation region。所以RSet的引入大大减少了GC的工作量
 
 #### 7.2.4、Pause Prediction Model-停顿预测模型
 
-G1 GC是一个响应时间优先的GC算法，它与CMS最大的不同是，用户可以设定整个GC过程的期望停顿时间，参数-XX:MaxGCPauseMillis指定一个G1收集过程目标停顿时间，默认值200ms，不过它不是硬性条件，只是期望值。
+G1 GC是一个响应时间优先的GC算法，它与CMS最大的不同是，用户可以设定整个GC过程的期望停顿时间，参数`-XX:MaxGCPauseMillis`指定一个G1收集过程目标停顿时间，默认值200ms，不过它不是硬性条件，只是期望值。
 
 G1根据这个模型统计计算出来的历史数据来预测本次收集需要选择的Region数量，从而尽量满足用户设定的目标停顿时间，停顿预测模型是以衰减标准偏差为理论基础实现的
 
@@ -672,7 +672,7 @@ FullGC次数过多的原因：
 
 大多数情况下，对象在新生代的Eden区中分配，如果Eden区没有足够的空间时，虚拟机将发起一次 MinorGC
 
-- 查看代码的具体GC日志VM参数：<br>
+- 查看代码的具体GC日志VM参数：
 ```
 -verbose:gc -Xms20M -Xmx20M -Xmn10M -XX:+PrintGCDetails -XX:SurvivorRatio=8
 ```
@@ -716,19 +716,19 @@ Heap
 
 - 所谓大对象是指需要大量连续内存空间的Java对象，最典型的大对象就是那种很长的字符串以及数组.
 - 经常出现大对象容易导致内存还有不少空间时就提前触发垃圾收集来获取足够的连续空间分配给新生成的大对象.
-- 虚拟机提供了:-XX:PertenureSizeThreshold 参数，令大于这个设置值的对象直接在老年代分配，避免在Eden区和两个Survivor区之间发生大量的内存复制
+- 虚拟机提供了 `-XX:PertenureSizeThreshold` 参数，令大于这个设置值的对象直接在老年代分配，避免在Eden区和两个Survivor区之间发生大量的内存复制
 
 ### 4.3、长期存活的对象将进入老年代
 
-虚拟机给每个对象定义了一个对象年龄计数器，来识别哪些对象放在新生代，哪些对象放在老年代中。如果对象在Eden出生并经过一次 MinorGC 后仍然存活，并且能够被 Survivor 容纳，将被移动到 Survivor 空间，并且对象年龄为1，当它的对象年龄增加到一定程度(默认15岁)，将会进入到老年代。对象晋升老年代的年龄阈值，可以通过参数 -XX:MaxTenuringThreshold 设置
+虚拟机给每个对象定义了一个对象年龄计数器，来识别哪些对象放在新生代，哪些对象放在老年代中。如果对象在Eden出生并经过一次 MinorGC 后仍然存活，并且能够被 Survivor 容纳，将被移动到 Survivor 空间，并且对象年龄为1，当它的对象年龄增加到一定程度(默认15岁)，将会进入到老年代。对象晋升老年代的年龄阈值，可以通过参数 `-XX:MaxTenuringThreshold` 设置
 
 ### 4.4、动态对象年龄判定
 
-如果在 Survivor 空间中相同年龄所有对象大小的总和大于 Survivor 空间的一般，年龄大于或等于该年龄的对象可以直接进入老年代，无须等到 MaxTenuringThreshold 中要求的年龄
+如果在 Survivor 空间中相同年龄所有对象大小的总和大于 Survivor 空间的一半，年龄大于或等于该年龄的对象可以直接进入老年代，无须等到 MaxTenuringThreshold 中要求的年龄
 
 ### 4.5、空间分配担保
 
-在发生 MinorGC 之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间，如果这个条件成立，那么MinorGC可用确保是安全的.如果不成立，则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败，如果允许，那么会继续检查老年代最大可用连续空间是否大于历次晋升到老年代对象的平均大小，如果大于，将尝试着进行一次MinorGC，有风险；如果小于或者 HandlePromotionFailure 设置不允许毛线，那时会改为进行一次 FullGC.
+在发生 MinorGC 之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间，如果这个条件成立，那么MinorGC可用确保是安全的。如果不成立，则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败，如果允许，那么会继续检查老年代最大可用连续空间是否大于历次晋升到老年代对象的平均大小，如果大于，将尝试着进行一次MinorGC，有风险；如果小于或者 HandlePromotionFailure 设置不允许毛线，那时会改为进行一次 FullGC.
 
 ## 5、GC参数
 
@@ -772,13 +772,73 @@ JAVA_OPTS="-server -Xms2000m -Xmx2000m -Xmn800m -XX:PermSize=64m -XX:MaxPermSize
 
 - 如何人工模拟 Metaspace 内存占用上升？
 
-	Metaspace 会保存类的描述信息,JVM 需要根据 Metaspace 中的信息，才能找到堆中类 java.lang.Class 所对应的对象,既然 Metaspace 中会保存类描述信息，可以通过新建类来增加 Metaspace 的占用
-
-	于是想到，使用 CGlib 动态代理，生成被代理类的子类
+	Metaspace 会保存类的描述信息，JVM 需要根据 Metaspace 中的信息，才能找到堆中类 java.lang.Class 所对应的对象，既然 Metaspace 中会保存类描述信息，可以通过新建类来增加 Metaspace 的占用，于是想到，使用 CGlib 动态代理，生成被代理类的子类
 
 ## 7、GC相关题目
 
 请写一段程序，让其运行时的表现为触发5次YGC，然后3次FGC，然后3次YGC，然后1次FGC，请给出代码以及启动参数
+```java
+/**
+ * VM设置：-Xms41m -Xmx41m -Xmn10m -XX:+UseParallelGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps
+ * -Xms41m 				堆最小值
+ * -Xmx41m 				堆最大值
+ * -Xmn10m 				新生代大小大小(推荐 3/8)
+ * -XX:+UseParallelGC   使用并行收集器
+ *
+ * <p>
+ * 初始化时：835k(堆内存)
+ * 第一次add：3907k
+ * 第二次add：6979k
+ * 第三次add: eden + survivor1 = 9216k < 6979k + 3072k,区空间不够，开始 YGC
+ * YGC  6979k -> 416k(9216k) 表示年轻代 GC前为6979，GC后426k.年轻代总大小9216k
+ */
+public class ControlYgcAndFgc {
+    private static final int _1_MB = 1024 * 1024;
+    public static void main(String[] args) {
+        List caches = new ArrayList();
+        System.out.println("--初始化时已用堆值:" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() / 1024 + "k");
+        for (int i = 1; i <= 12; i++) {
+            caches.add(new byte[3 * _1_MB]);
+        }
+        // 释放空间，重新添加 ,如果不释放空间，会报错：java.lang.OutOfMemoryError: Java heap space 【这里这样做，主要为了防止数组对象实际大小超过堆大小】
+        caches.remove(0);
+        caches.add(new byte[3 * _1_MB]);
+        // 这里是为了下次FGC后，直接减少老年代的内存大小，从而正常YGC
+        for (int i = 0; i < 8; i++) {
+            caches.remove(0);
+        }
+        caches.add(new byte[3 * _1_MB]);
+        for (int i = 0; i < 6; i++) {
+            caches.add(new byte[3 * _1_MB]);
+        }
+    }
+}
+```
+运行，控制台打印请如下：
+```java
+--初始化时已用堆值:1319k
+0.175: [GC (Allocation Failure) [PSYoungGen: 7463K->586K(9216K)] 7463K->6738K(41984K), 0.0046075 secs] [Times: user=0.02 sys=0.00, real=0.01 secs] 
+0.180: [GC (Allocation Failure) [PSYoungGen: 6890K->634K(9216K)] 13042K->12938K(41984K), 0.0030904 secs] [Times: user=0.02 sys=0.01, real=0.00 secs] 
+0.184: [GC (Allocation Failure) [PSYoungGen: 7075K->570K(9216K)] 19379K->19018K(41984K), 0.0027370 secs] [Times: user=0.01 sys=0.00, real=0.01 secs] 
+0.187: [GC (Allocation Failure) [PSYoungGen: 6855K->618K(9216K)] 25303K->25210K(41984K), 0.0035804 secs] [Times: user=0.02 sys=0.00, real=0.00 secs] 
+0.191: [GC (Allocation Failure) [PSYoungGen: 6910K->554K(9216K)] 31502K->31290K(41984K), 0.0029389 secs] [Times: user=0.01 sys=0.01, real=0.00 secs] 
+0.194: [Full GC (Ergonomics) [PSYoungGen: 554K->0K(9216K)] [ParOldGen: 30736K->31173K(32768K)] 31290K->31173K(41984K), [Metaspace: 2772K->2772K(1056768K)], 0.0079522 secs] [Times: user=0.05 sys=0.00, real=0.01 secs] 
+0.203: [Full GC (Ergonomics) [PSYoungGen: 6296K->3072K(9216K)] [ParOldGen: 31173K->31173K(32768K)] 37469K->34245K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0064756 secs] [Times: user=0.03 sys=0.00, real=0.01 secs] 
+0.210: [Full GC (Ergonomics) [PSYoungGen: 6144K->0K(9216K)] [ParOldGen: 31173K->12741K(32768K)] 37317K->12741K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0043703 secs] [Times: user=0.02 sys=0.00, real=0.00 secs] 
+0.215: [GC (Allocation Failure) [PSYoungGen: 6298K->0K(9216K)] 19039K->18885K(41984K), 0.0011114 secs] [Times: user=0.01 sys=0.00, real=0.01 secs] 
+0.217: [GC (Allocation Failure) [PSYoungGen: 6272K->0K(9216K)] 25157K->25029K(41984K), 0.0010150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+0.219: [GC (Allocation Failure) [PSYoungGen: 6283K->0K(9216K)] 31313K->31173K(41984K), 0.0008821 secs] [Times: user=0.01 sys=0.00, real=0.00 secs] 
+0.219: [Full GC (Ergonomics) [PSYoungGen: 0K->0K(9216K)] [ParOldGen: 31173K->31173K(32768K)] 31173K->31173K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0024537 secs] [Times: user=0.01 sys=0.00, real=0.00 secs] 
+Heap
+ PSYoungGen      total 9216K, used 3236K [0x00000007bf600000, 0x00000007c0000000, 0x00000007c0000000)
+  eden space 8192K, 39% used [0x00000007bf600000,0x00000007bf9290e0,0x00000007bfe00000)
+  from space 1024K, 0% used [0x00000007bff00000,0x00000007bff00000,0x00000007c0000000)
+  to   space 1024K, 0% used [0x00000007bfe00000,0x00000007bfe00000,0x00000007bff00000)
+ ParOldGen       total 32768K, used 31173K [0x00000007bd600000, 0x00000007bf600000, 0x00000007bf600000)
+  object space 32768K, 95% used [0x00000007bd600000,0x00000007bf471520,0x00000007bf600000)
+ Metaspace       used 2781K, capacity 4486K, committed 4864K, reserved 1056768K
+  class space    used 297K, capacity 386K, committed 512K, reserved 1048576K
+```
 
 # 六、详解 finalize()方法
 
@@ -813,7 +873,7 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 **1.2、如何监控**
 
 - jstat：是 HotSpot JVM 提供的一个监控工具；jstat 不仅提供 GC 操作的信息，还提供类装载操作的信息以及运行时编译器操作的信息<br>
-	$> `jstat –gc  $<vmid$> 1000<br>`
+	`$> jstat –gc  $<vmid$> 1000`<br>
 	==> vmid (虚拟机 ID)
 
 ## 2、GC 优化
