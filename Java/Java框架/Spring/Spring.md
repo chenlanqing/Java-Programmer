@@ -1424,7 +1424,7 @@ public String testSessionAttributes(Map<String， Object> map){
 
 ## 5、视图和视图解析器
 
-### 5.1.视图解析流程分析
+### 5.1、视图解析流程分析
 
 - 请求处理方法执行完成后，最终返回一个 ModelAndView对象。对于那些返回 String、View、ModeMap等类型的处理方法，Spring MVC 也会在内部将它们装配成一个ModelAndView 对象，它包含了逻辑名和模型对象的视图
 - SpringMVC通过视图解析器(ViewResolver)找到真正的物理视图(一个View对象)；
@@ -1589,7 +1589,7 @@ protected View createView(String viewName， Locale locale) throws Exception {
 
 ## 8、处理静态资源
 
-### 8.1.静态资源问题发生的原因
+### 8.1、静态资源问题发生的原因
 
 - 优雅的 REST 风格的资源URL 不希望带 .html 或 .do 等后缀
 - 若将 DispatcherServlet 请求映射配置为 /，则 Spring MVC 将捕获WEB 容器的所有请求，包括静态资源的请求，SpringMVC 会将他们当成一个普通请求处理，因找不到对应处理器将导致错
@@ -4155,6 +4155,8 @@ public @interface SpringBootApplication {
 
 ## 2、启动流程
 
+![](image/SpringBoot启动过程.png)
+
 - （1）创建SpringApplication对象，
 
 	SpringBoot1.5版本调用initialize(sources)方法
@@ -4409,14 +4411,14 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 	xxxx-starter -> xxxx-starter-autoconfigurer
 
 - 官方命名空间
-	- 前缀:“spring-boot-starter-”
-	- 模式:spring-boot-starter-模块名
-	- 举例:spring-boot-starter-web、spring-boot-starter-actuator、spring-boot-starter-jdbc
+	- 前缀：“spring-boot-starter-”
+	- 模式：spring-boot-starter-模块名
+	- 举例：spring-boot-starter-web、spring-boot-starter-actuator、spring-boot-starter-jdbc
 
 - 自定义命名空间
-	- 后缀:“-spring-boot-starter”
-	- 模式:模块-spring-boot-starter
-	- 举例:mybatis-spring-boot-starter
+	- 后缀：“-spring-boot-starter”
+	- 模式：模块-spring-boot-starter
+	- 举例：mybatis-spring-boot-starter
 
 启动器只用来做依赖导入；
 
@@ -4551,6 +4553,11 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 	```
 
 - （3）引入
+
+## 6、starter原理
+
+利用starter实现自动化配置只需要两个条件——maven依赖、配置文件。starter实现自动化配置的流程：
+引入maven实质上就是导入jar包，spring-boot启动的时候会找到starter jar包中的`resources/META-INF/spring.factories`文件，根据`spring.factories`文件中的配置，找到需要自动配置的类
 
 # 十五、SpringBoot面试题
 
