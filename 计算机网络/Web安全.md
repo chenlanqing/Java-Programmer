@@ -61,7 +61,7 @@ CSRF：Cross Site Request Forgery，跨站点请求伪造，是一种常见的we
 
 ## 2、攻击原理
 
-![](images/CSRF攻击流程.png)
+![](image/CSRF攻击流程.png)
 
 - （1）首先用户C浏览并登录了受信任站点A；
 - （2）登录信息验证通过以后，站点A会在返回给浏览器的信息中带上已登录的cookie，cookie信息会在浏览器端保存一定时间（根据服务端设置而定）；
