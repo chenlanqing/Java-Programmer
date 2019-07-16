@@ -199,10 +199,10 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 
 |方法|内存操作|复杂度|
 |-----|-----|-----|
-|StringBuilder 的append	|开辟、释放内存	|O(log2N)
-|String 的 +			|开辟、释放内存	|O(N)
-|StringBuilder 的append	|字符复制	|O(N)
-|String 的 +			|字符复制	|O(N^2/2)
+|StringBuilder 的append	|开辟、释放内存	|O(log2N)|
+|String 的 +			|开辟、释放内存	|O(N)|
+|StringBuilder 的append	|字符复制	|O(N)|
+|String 的 +			|字符复制	|O(N^2/2)|
 
 ### 3.2、关于equals比较，看如下代码
 ```java
