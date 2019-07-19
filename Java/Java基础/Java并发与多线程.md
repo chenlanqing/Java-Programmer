@@ -2966,7 +2966,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 
 ## 1、AQS：AbstractQueuedSynchronizer-抽象队列同步器
 
-[AbstractQueuedSynchronizer](../../Java源码解读/thread/AbstractQueuedSynchronizer.md)
+[AbstractQueuedSynchronizer](../../源码分析/thread/AbstractQueuedSynchronizer.md)
 
 ## 2、CAS：Compare and Swap-比较与交换
 
