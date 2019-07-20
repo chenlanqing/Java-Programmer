@@ -42,7 +42,19 @@
 
 Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等功能。`BeanFactory`和`ApplicationContext`是Spring两种很重要的容器，前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播、资源访问和国际化的消息访问等功能；
 
-## 2、ApplicationContext Bean 生命周期
+## 2、IOC生命周期
+
+### 2.1、BeanFactory Bean生命周期-面向Spring本身
+
+![image](image/BeanFactory.png)
+
+`BeanFactoty`容器中， Bean的生命周期如上图所示，与`ApplicationContext`相比，有如下几点不同：
+
+- `BeanFactory`容器中，不会调用`ApplicationContextAware`接口的`setApplicationContext()`方法
+- `BeanPostProcessor`接口的`postProcessBeforeInitialization`方法和`postProcessAfterInitialization`方法不会自动调用，必须自己通过代码手动注册
+- `BeanFactory`容器启动的时候，不会去实例化所有bean，包括所有scope为singleton且非延迟加载的bean也是一样，而是在调用的时候去实例化
+
+### 2.2、BeanFactory Bean生命周期-面向Spring本身
 
 ![image](image/ApplicationContext-Bean的生命周期.png)
 
@@ -76,15 +88,25 @@ Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 - （12）如果Bean配置了`destroy-method`方法，则会执行`destroy-method`配置的方法.至此，整个Bean生命周期结束；
 
-## 3、BeanFactory Bean生命周期-面向Spring本身
+## 3、IOC源码体系
 
-![image](image/BeanFactory.png)
+- Resource 体系：`org.springframework.core.io.Resource`，对资源的抽象。它的每一个实现类都代表了一种资源的访问策略，如 ClassPathResource、RLResource、FileSystemResource 等；
 
-`BeanFactoty`容器中， Bean的生命周期如上图所示，与`ApplicationContext`相比，有如下几点不同：
+- ResourceLoader 体系：有了资源，就应该有资源加载，Spring 利用 `org.springframework.core.io.ResourceLoader` 来进行统一资源加载
 
-- `BeanFactory`容器中，不会调用`ApplicationContextAware`接口的`setApplicationContext()`方法
-- `BeanPostProcessor`接口的`postProcessBeforeInitialization`方法和`postProcessAfterInitialization`方法不会自动调用，必须自己通过代码手动注册
-- `BeanFactory`容器启动的时候，不会去实例化所有bean，包括所有scope为singleton且非延迟加载的bean也是一样，而是在调用的时候去实例化
+- BeanFactory 体系：`org.springframework.beans.factory.BeanFactory`，是一个非常纯粹的 bean 容器，它是 IoC 必备的数据结构，其中 BeanDefinition 是它的基本结构。BeanFactory 内部维护着一个BeanDefinition map ，并可根据 BeanDefinition 的描述进行 bean 的创建和管理；
+    - BeanFactory 有三个直接子类 ListableBeanFactory、HierarchicalBeanFactory 和 AutowireCapableBeanFactory 。
+    - DefaultListableBeanFactory 为最终默认实现，它实现了所有接口
+
+- BeanDefinition 体系：`org.springframework.beans.factory.config.BeanDefinition`，用来描述 Spring 中的 Bean 对象；
+
+- BeanDefinitionReader 体系：`org.springframework.beans.factory.support.BeanDefinitionReader` 的作用是读取 Spring 的配置文件的内容，并将其转换成 Ioc 容器内部的数据结构 ：BeanDefinition；
+
+- ApplicationContext 体系：org.springframework.context.ApplicationContext ，Spring 容器，它叫做应用上下文。它继承 BeanFactory ，所以它是 BeanFactory 的扩展升级版，由于 ApplicationContext 的结构就决定了它与 BeanFactory 的不同，其主要区别有：
+    - 继承 `org.springframework.context.MessageSource` 接口，提供国际化的标准访问策略。
+    - 继承 `org.springframework.context.ApplicationEventPublisher` 接口，提供强大的事件机制。
+    - 扩展 ResourceLoader ，可以用来加载多种 Resource ，可以灵活访问不同的资源。
+    - 对 Web 应用的支持
 
 ## 4、IOC容器的启动过程
 
@@ -114,7 +136,7 @@ web环境下`Spring\SpringMVC`容器启动过程
 
 - 利用容器中注册的Bean后处理器(实现BeanPostProcessor接口的Bean)对已经完成属性设置工作的Bean进行后续加工，直接装配出一个准备就绪的Bean
 
-## 6、IOC容器源码
+## 6、refresh方法源码
 
 `AbstractApplicationContext.refresh()`
 ```java

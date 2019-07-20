@@ -283,6 +283,8 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 其思想是反转资源获取的方向。传统的资源查找方式要求组件向容器发起请求查找资源。作为回应，容器适时的返回资源。而应用了 IOC 之后，则是容器主动地将资源推送给它所管理的组件，组件所要做的仅是选择一种合适的方式来接受资源。这种行为也被称为查找的被动形式；
 
+由 Spring IoC 容器来负责对象的生命周期和对象之间的关系
+
 控制反转：把创建对象(Bean)和维护对象(Bean)的关系的权利从程序中转移到Spring容器中，程序不再控制
 - IOC 机制实现Bean之间的调用；
 - IOC 解决的问题：可以降低两个组件对象之间的关联，降低耦合度；
@@ -912,6 +914,22 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 		void setRollbackOnly();  // 设置为只回滚
 		boolean isRollbackOnly(); // 是否为只回滚
 		boolean isCompleted; // 是否已完成
+	}
+	```
+- `@Transactional`注解只能使用在public方法中：
+
+	在获取注解属性的时候，`AbstractFallbackTransactionAttributeSource#computeTransactionAttribute`这个方法有判断
+	```java
+	@Nullable
+	protected TransactionAttribute computeTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
+		// Don't allow no-public methods as required.
+		if (allowPublicMethodsOnly() && !Modifier.isPublic(method.getModifiers())) {
+			return null;
+		}
+	...
+	}
+	protected boolean allowPublicMethodsOnly() {
+		return false;
 	}
 	```
 
