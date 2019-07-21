@@ -60,7 +60,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 ### 1.1、HashMap 基本结构
 
-在JDK8之前使用了一个内部类 Entry<K, V>来存储数据, 这个内部类是一个简单的键值对,HashMap将数据存储到多个单向Entry链表中, 所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组),这个内部数组的默认长度是 16；
+在JDK8之前使用了一个内部类 Entry<K, V>来存储数据，这个内部类是一个简单的键值对，HashMap将数据存储到多个单向Entry链表中，所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组)，这个内部数组的默认长度是 16；
 
 在JDK8之后，内部采用的是Node<K,V>节点来存储数据的
 
@@ -68,7 +68,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 - 线程非安全，并且允许key与value都为 null 值，HashTable 与之相反，为线程安全，key与value都不允许 null 值；
 - 不保证其内部元素的顺序，而且随着时间的推移，同一元素的位置也可能改变（resize的情况）
-- put、get操作的时间复杂度为O(1).
+- put、get操作的时间复杂度为O(1)。
 - 遍历其集合视角的时间复杂度与其容量（capacity，槽的个数）和现有元素的大小（entry的个数）成正比，所以如果遍历的性能要求很高，不要把capactiy设置的过高或把平衡因子（load factor，当entry数大于capacity*loadFactor时，会进行resize，reside会导致key进行rehash）设置的过低
 - 由于HashMap是线程非安全的，这也就是意味着如果多个线程同时对一hashmap的集合试图做迭代时有结构的上改变（添加、删除entry，只改变entry的value的值不算结构改变），那么会报ConcurrentModificationException专业术语叫fail-fast
 - Map m = Collections.synchronizedMap(new HashMap())； 通过这种方式可以得到一个线程安全的map
@@ -120,10 +120,11 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 		return map.remove(o)==PRESENT; 
 	}
 	```
+
 ## 4、HashTable和ConcurrentHashMap 的关系
 
-- ConcurrentHashMap 也是一种线程安全的集合类，他和 HashTable 也是有区别的，主要区别:就是加锁的粒度以及如何加锁；ConcurrentHashMap 的加锁粒度要比 HashTable 更细一点。将数据分成一段一段的存储，然后给每一段数据配一把锁，当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问
-- ConcurrentHashMap 如何实现写分段锁，如何实现弱一致性和读不加锁，不加锁情况能否保证每次获取的元素都是最新的?ConcurrentHashMap Segment
+- ConcurrentHashMap 也是一种线程安全的集合类，他和 HashTable 也是有区别的，主要区别：就是加锁的粒度以及如何加锁；ConcurrentHashMap 的加锁粒度要比 HashTable 更细一点。将数据分成一段一段的存储，然后给每一段数据配一把锁，当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问
+- ConcurrentHashMap 如何实现写分段锁，如何实现弱一致性和读不加锁，不加锁情况能否保证每次获取的元素都是最新的？ConcurrentHashMap Segment
 - 为什么需要ConcurrentHashMap和CopyOnWriteArrayList
 	- 同步的集合类(Hashtable和Vector)同步的封装类(使用Collections.synchronizedMap()方法和 Collections.synchronizedList()方法返回的对象)可以创建出线程安全的Map和List。但是有些因素使得它们不适合高并发的系统。它们仅有单个锁，对整个集合加锁，以及为了防止ConcurrentModificationException异常经常要在迭代的时候要将集合锁定一段时间，这些特性对可扩展性来说都是障碍；
 	- ConcurrentHashMap和CopyOnWriteArrayList保留了线程安全的同时，也提供了更高的并发性。ConcurrentHashMap和 CopyOnWriteArrayList 并不是处处都需要用；大部分时候你只需要用到HashMap和ArrayList，它们用于应对一些普通的情况
@@ -157,7 +158,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 	```
 - 红黑树是自平衡的二叉搜索树，不管是添加还是删除节点，它的内部机制可以保证它的长度总是log(n)。使用这种类型的树，最主要的好处是针对内部表中许多数据都具有相同索引（桶）的情况，这时对树进行搜索的复杂度是O(log(n))，而对于链表来说，执行相同的操作，复杂度是O(n)；
 
-- jdk8中HashMap有三个关于红黑树的关键参数：
+- JDK8中HashMap有三个关于红黑树的关键参数：
 	* TREEIFY_THRESHOLD = 8：
 
 		一个桶的树化阈值，当桶中元素超过这个值时，使用红黑树节点替换链表节点值为8，应该跟加载因子类似；
@@ -174,7 +175,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 	* MIN_TREEIFY_CAPACITY = 64：
 	
-		哈希表的最小树形化容量，当哈希表中的容量大于这个值时，表中的桶才能进行树形化，否则桶内元素太多时会扩容,而不是树形化。为了避免进行扩容、树形化选择的冲突,这个值不能小于 4 * TREEIFY_THRESHOLD
+		哈希表的最小树形化容量，当哈希表中的容量大于这个值时，表中的桶才能进行树形化，否则桶内元素太多时会扩容，而不是树形化。为了避免进行扩容、树形化选择的冲突，这个值不能小于 4 * TREEIFY_THRESHOLD
 
 - 为什么使用红黑树而不使用二叉树？
 
@@ -202,7 +203,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable
 - 实现标记接口 Serializable，用于表明 HashMap 对象可以被序列化；
 - HashMap 继承 AbstractMap 抽象类的同时又实现了 Map 接口：在语法层面继承接口Map是多余的，这么做仅仅是为了让阅读代码的人明确知道 HashMap 是属于 Map 体系的，起到了文档的作用AbstractMap 相当于个辅助类，Map 的一些操作这里面已经提供了默认实现，后面具体的子类如果没有特殊行为，可直接使用AbstractMap提供的实现；
 
-- AbstractMap 抽象类：对 Map 中的方法提供了一个基本实现,减少了实现Map接口的工作量
+- AbstractMap 抽象类：对 Map 中的方法提供了一个基本实现，减少了实现Map接口的工作量
 	- 如果要实现个不可变(unmodifiable)的map，那么只需继承 AbstractMap，然后实现其entrySet方法，这个方法返回的set不支持add与remove，同时这个set的迭代器(iterator)不支持remove操作即可。
 	- 如果要实现个可变(modifiable)的map，首先继承 AbstractMa，然后重写 AbstractMap 的put方法，同时实现entrySet所返回set的迭代器的remove方法即可
 
@@ -224,6 +225,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable
 	- 链表定位元素时间复杂度O(n)
 	- 链表插入或删除元素的时间复杂度O(1)
 	- 链表的特点是：寻址困难，插入和删除容易
+- 红黑树：当链表达到一定长度后，其查询效率比较低，而后会转成红黑树结构，红黑树的查询都是在O(logN)
 
 ## 2、哈希表(hash table)
 
@@ -307,7 +309,9 @@ transient int modCount
 # 五、HashMap 的存取实现
 
 ## 1、put方法
+
 - JDK6
+
 ```java
 public V put(K key, V value) {
 	if (key == null)
@@ -329,13 +333,17 @@ public V put(K key, V value) {
 	return null;
 }
 ```
+
 - JDK7 在上述JDK6的基础上增加了一个判断
+
 ```java
 if (table == EMPTY_TABLE) {
 	inflateTable(threshold);
 }
 ```
+
 - JDK8
+
 ```java
 public V put(K key, V value) {
 	return putVal(hash(key), key, value, false, true);
@@ -344,8 +352,8 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)
 ```
 ### 1.1、JDK6和JDK7
 
-- （1）JDK7比JDK6增加了一个判断:
-	先判断table（存放bullet的数组,初始类定义：transient Entry<K,V>[] table = (Entry<K,V>[]) EMPTY_TABLE;）是否为空，如果为空则扩充table，其中包括确保table的大小为2的整数倍
+- （1）JDK7比JDK6增加了一个判断：
+	先判断table（存放bullet的数组，初始类定义：`transient Entry<K,V>[] table = (Entry<K,V>[]) EMPTY_TABLE;`）是否为空，如果为空则扩充table，其中包括确保table的大小为2的整数倍
 	```java
 	if (table == EMPTY_TABLE) {
 		inflateTable(threshold);
@@ -441,7 +449,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,boolean evict) {
 		return null;
 }
 ```
-- （1）对key的hashCode()做hash，然后再计算index;
+- （1）对key的hashCode()做hash，然后再计算index；
 - （2）如果没碰撞直接放到bucket里；
 - （3）如果碰撞了，以链表的形式存在buckets后；
 - （4）如果碰撞导致链表过长（大于等于TREEIFY_THRESHOLD），就把链表转换成红黑树；
@@ -525,9 +533,7 @@ private V getForNullKey() {
 
 ## 3、hash 函数的实现
 
-哈希函数每次在相同或相等的对象上应用哈希函数时, 应每次返回相同的哈希码。换句话说, 两个相等的对象必须一致地生成相同的哈希码
-
-在get和put的过程中，计算下标时，先对hashCode进行hash操作，然后再通过hash值进一步计算下标
+哈希函数每次在相同或相等的对象上应用哈希函数时，应每次返回相同的哈希码。换句话说，两个相等的对象必须一致地生成相同的哈希码；在get和put的过程中，计算下标时，先对hashCode进行hash操作，然后再通过hash值进一步计算下标
 
 ### 3.1、JDK6的实现
 ```java
@@ -644,7 +650,7 @@ final Node<K,V>[] resize()
 	- loadfactor：加载因子,默认是0.75f衡量HashMap是否进行resize条件: HashMap.size >= capacity * loadfactor.
 - 扩容步骤
 	- （1）扩容：创建一个新的entry数组，长度是原来数组的两倍；
-	- （2）rehash：遍历原entry数组，把所有的entry重写hash到新的数组。为什么需要重新hash？因为长度扩大异以后，hash规则也随之改变；`index =  HashCode(Key)&(Length - 1)` 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算.
+	- （2）rehash：遍历原entry数组，把所有的entry重写hash到新的数组。为什么需要重新hash？因为长度扩大异以后，hash规则也随之改变；`index =  HashCode(Key)&(Length - 1)` 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算。
 - 在单线程下上述步骤执行没有任何问题；在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环，从而报内存溢出。
 - 在高并发环境下，通常使用 `ConcurrentHashMap`，兼顾了线程安全和性能；
 - 下面代码只在JDK7以前的版本有效，jdk8之后就不存在这种问题了。因为JDK8中扩容的时候不存在rehash操作。
