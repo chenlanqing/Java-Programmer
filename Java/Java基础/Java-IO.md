@@ -2,40 +2,27 @@
 
 ## 1、异步与同步
 
-**1.1、同步**
+- **同步**：如果有多个任务或者事件要发生，这些任务或者事件必须逐个地进行，一个事件或者任务的执行会导致整个流程的暂时等待，这些事件没有办法并发地执行；
 
-如果有多个任务或者事件要发生，这些任务或者事件必须逐个地进行，一个事件或者任务的执行会导致整个流程的暂时等待，这些事件没有办法并发地执行；
-
-**1.2、异步**
-
-如果有多个任务或者事件发生，这些事件可以并发地执行，一个事件或者任务的执行不会导致整个流程的暂时等待;
+- **异步**：如果有多个任务或者事件发生，这些事件可以并发地执行，一个事件或者任务的执行不会导致整个流程的暂时等待;
 
 ## 2、阻塞与非阻塞
 
-**2.1、阻塞**
+- **阻塞**：当某个事件或者任务在执行过程中，它发出一个请求操作，但是由于该请求操作需要的条件不满足，那么就会一直在那等待，直至条件满足；
 
-当某个事件或者任务在执行过程中，它发出一个请求操作，但是由于该请求操作需要的条件不满足，那么就会一直在那等待，直至条件满足；
+- **非阻塞**：当某个事件或者任务在执行过程中，它发出一个请求操作，如果该请求操作需要的条件不满足，会立即返回一个标志信息告知条件不满足，不会一直在那等待；
 
-**2.2、非阻塞**
-
-当某个事件或者任务在执行过程中，它发出一个请求操作，如果该请求操作需要的条件不满足，会立即返回一个标志信息告知条件不满足，不会一直在那等待;
-
-**2.3、阻塞和非阻塞的区别**
-
-关键在于当发出请求一个操作时，如果条件不满足，是会一直等待还是返回一个标志信息	
+**阻塞和非阻塞的区别**：关键在于当发出请求一个操作时，如果条件不满足，是会一直等待还是返回一个标志信息	
 
 ## 3、阻塞IO与非阻塞IO
 
-**3.1、IO操作包括-对硬盘的读写、对socket的读写以及外设的读写;**
+- **IO操作包括**：对硬盘的读写、对socket的读写以及外设的读写；
 
-**3.2、完整的IO请求操作包括两个阶段**
+- **完整的IO请求操作包括两个阶段**：
+    - 查看数据是否就绪；
+    - 进行数据拷贝(内核将数据拷贝到用户线程)；
 
-- 查看数据是否就绪;
-- 进行数据拷贝(内核将数据拷贝到用户线程);
-
-**3.3、阻塞(blocking IO)和非阻塞(non-blocking IO)的区别：**
-
-其区别就在于第一个阶段，如果数据没有就绪，在查看数据是否就绪的过程中是一直等待，还是直接返回一个标志信息.
+- **阻塞(blocking IO)和非阻塞(non-blocking IO)的区别**：其区别就在于第一个阶段，如果数据没有就绪，在查看数据是否就绪的过程中是一直等待，还是直接返回一个标志信息。
 
 ## 4、异步IO与同步IO
 
@@ -47,11 +34,11 @@
 **4.2、同步IO和异步IO模型是针对用户线程和内核的交互来说的：**
 
 - 同步IO：当用户发出IO请求操作之后，如果数据没有就绪，需要通过用户线程或者内核不断地去轮询数据是否就绪，当数据就绪时，再将数据从内核拷贝到用户线程；
-- 异步IO：只有IO请求操作的发出是由用户线程来进行的，IO 操作的两个阶段都是由内核自动完成，然后发送通知告知用户线程IO操作已经完成.也就是说在异步IO中，不会对用户线程产生任何阻塞
+- 异步IO：只有IO请求操作的发出是由用户线程来进行的，IO 操作的两个阶段都是由内核自动完成，然后发送通知告知用户线程IO操作已经完成。也就是说在异步IO中，不会对用户线程产生任何阻塞
 
 **4.3、同步IO和异步IO关键区别**
 
-同步IO和异步IO的关键区别反映在数据拷贝阶段是由用户线程完成还是内核完成，所以说"异步IO"必须要有操作系统的底层支持;
+同步IO和异步IO的关键区别反映在数据拷贝阶段是由用户线程完成还是内核完成，所以说"异步IO"必须要有操作系统的底层支持；
 
 **4.4、“同步IO和异步IO”与“阻塞IO和非阻塞IO”是不同的两组概念**
 
@@ -61,7 +48,7 @@
 
 同步、异步是描述被调用方的；
 
-阻塞、非阻塞是描述调用方的
+阻塞、非阻塞是描述调用方的；
 
 同步不一定阻塞、异步也不一定非阻塞
 
@@ -71,7 +58,7 @@
 
 最传统的一种 IO模型，即在读写数据过程中会发生阻塞现象
 
-当用户线程发出IO请求之后，内核会去查看数据是否就绪，如果没有就绪就会等待数据就绪，而用户线程就会处于阻塞状态，用户线程交出CPU.当数据就绪之后，内核会将数据拷贝到用户线程，并返回结果给用户线程，用户线程才解除block状态
+当用户线程发出IO请求之后，内核会去查看数据是否就绪，如果没有就绪就会等待数据就绪，而用户线程就会处于阻塞状态，用户线程交出CPU。当数据就绪之后，内核会将数据拷贝到用户线程，并返回结果给用户线程，用户线程才解除block状态
 
 典型的例子：`data = socket.read();`
 
@@ -321,10 +308,6 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 
 # 二、Java-IO流
 
-结构：
-
-![](image/Java-IO流.png)
-
 ## 1、输入与输出-数据源和目标媒介
 
 **1.1、Java IO关注的是从原始数据源的读取以及输出原始数据到目标媒介： 数据源--> 程序 --> 目标媒介**
@@ -509,6 +492,8 @@ System.in、System.out、System.err这3个流是java.lang.System类中的静态�
 `InputStream input = new BufferedInputStream(new FileInputStream("c：\\data\\input-file.txt"));`
 
 一个流要么是输入流，要么是输出流，不可能同时是输入流、输出流。因为`InputStream`和`OutputStream`是抽象类，而Java中对于类只能单继承，不能继承多个类。
+
+![](image/Java-IO流.png)
 
 ## 8、Reader、Writer
 
@@ -864,10 +849,155 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 
 ### 6.5、基本使用
 
-[NioServer](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioServer.java)
+**服务端**：[NioServer](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioServer.java)
+```java
+public class NioServer {
+    private static Map<String, SocketChannel> clientMap = new ConcurrentHashMap<>();
+    public static void main(String[] args) throws Exception {
+        ServerSocketChannel serverSocketChannel = ServerSocketChannel.open();
+        serverSocketChannel.configureBlocking(false);
 
-[NioClient](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioClient.java)
+        ServerSocket serverSocket = serverSocketChannel.socket();
+        InetSocketAddress address = new InetSocketAddress(8899);
+        serverSocket.bind(address);
 
+        Selector selector = Selector.open();
+        serverSocketChannel.register(selector, SelectionKey.OP_ACCEPT);
+
+        while (true) {
+            try {
+                selector.select();
+
+                Set<SelectionKey> keySet = selector.selectedKeys();
+
+                keySet.forEach(selectionKey -> {
+                    final SocketChannel client;
+
+                    try {
+                        if (selectionKey.isAcceptable()) {
+                            ServerSocketChannel server = 
+                                (ServerSocketChannel) selectionKey.channel();
+                            client = server.accept();
+                            client.configureBlocking(false);
+                            client.register(selector, SelectionKey.OP_READ);
+                            String key = "【" + UUID.randomUUID().toString() + "】";
+                            clientMap.put(key, client);
+                        } else if (selectionKey.isReadable()) {
+                            client = (SocketChannel) selectionKey.channel();
+                            ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+
+                            int count = client.read(readBuffer);
+
+                            if (count > 0) {
+                                readBuffer.flip();
+
+                                Charset charset = Charset.forName("UTF-8");
+                                String receiveMessage = 
+                                    String.valueOf(charset.decode(readBuffer).array());
+                                System.out.println(client + ": " + receiveMessage);
+
+                                String senderKey = null;
+
+                                for (Map.Entry<String, SocketChannel> entry 
+                                        : clientMap.entrySet()) {
+                                    if (client == entry.getValue()) {
+                                        senderKey = entry.getKey();
+                                        break;
+                                    }
+                                }
+
+                                for (Map.Entry<String, SocketChannel> entry 
+                                        : clientMap.entrySet()) {
+                                    SocketChannel value = entry.getValue();
+                                    ByteBuffer writeBuffer = ByteBuffer.allocate(1024);
+                                    writeBuffer.put((senderKey + ": " + receiveMessage).getBytes());
+                                    writeBuffer.flip();
+
+                                    value.write(writeBuffer);
+                                }
+                            }
+                        }
+                    } catch (IOException e) {
+                    }
+                });
+                keySet.clear();
+            } catch (Exception e) {
+            }
+        }
+    }
+}
+```
+
+**客户端**：[NioClient](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioClient.java)
+```java
+public class NioClient {
+
+    public static void main(String[] args) {
+        try {
+            SocketChannel socketChannel = SocketChannel.open();
+            socketChannel.configureBlocking(false);
+
+            Selector selector = Selector.open();
+
+            socketChannel.register(selector, SelectionKey.OP_CONNECT);
+            socketChannel.connect(new InetSocketAddress("127.0.0.1", 8899));
+
+            while (true) {
+                selector.select();
+
+                Set<SelectionKey> keySet = selector.selectedKeys();
+
+                for (SelectionKey selectionKey : keySet) {
+                    if (selectionKey.isConnectable()) {
+                        SocketChannel client = (SocketChannel) selectionKey.channel();
+
+                        if (client.isConnectionPending()) {
+                            client.finishConnect();
+
+                            ByteBuffer writeBuffer = ByteBuffer.allocate(1024);
+                            writeBuffer.put((LocalDateTime.now() + " 连接成功").getBytes());
+                            writeBuffer.flip();
+                            client.write(writeBuffer);
+                            ExecutorService executorService = 
+                                Executors.newSingleThreadExecutor(Executors.defaultThreadFactory());
+
+                            executorService.submit(() -> {
+                                while (true) {
+                                    writeBuffer.clear();
+                                    InputStreamReader input = new InputStreamReader(System.in);
+                                    BufferedReader br = new BufferedReader(input);
+
+                                    String message = br.readLine();
+
+                                    writeBuffer.put(message.getBytes());
+                                    writeBuffer.flip();
+
+                                    client.write(writeBuffer);
+                                }
+                            });
+                        }
+                        client.register(selector, SelectionKey.OP_READ);
+                    } else if (selectionKey.isReadable()) {
+                        SocketChannel client = (SocketChannel) selectionKey.channel();
+
+                        ByteBuffer readBuffer = ByteBuffer.allocate(1024);
+
+                        int count = client.read(readBuffer);
+
+                        if (count > 0) {
+                            String receivedMessage = new String(readBuffer.array(), 0, count);
+                            System.out.println(receivedMessage);
+                        }
+                    }
+                }
+                keySet.clear();
+            }
+
+        } catch (Exception e) {
+        }
+    }
+}
+```
 ## 7、NIO序列图
 
 ### 7.1、服务端通信序列图
