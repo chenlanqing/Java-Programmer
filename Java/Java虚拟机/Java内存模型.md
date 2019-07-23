@@ -298,7 +298,7 @@ Happens-Before 约束了编译器的优化行为，虽允许编译器优化，�
 ### 5.2、happens-before规则
 
 - 程序顺序规则：一个线程内，按照代码顺序，书写在前面的操作先行发生于书写在后面的操作；
-- 监视器锁规则：对一个监视器锁的解锁，`happens-before` 于随后对这个监视器锁的加锁
+- 监视器锁规则：对一个监视器锁的解锁，`happens-before` 于随后对同一个监视器锁的加锁
 - volatile变量规则：对一个`volatile`域的写，`happens-before` 于任意后续对这个`volatile`域的读
 - 传递性：如果`A happens-before B`，且 `B happens-before C`，那么 `A happens-before C`
 - 线程启动规则：Thread 对象的 start 方法 `happens-before` 于此线程的每一个动作;
