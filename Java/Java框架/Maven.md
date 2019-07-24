@@ -204,6 +204,27 @@ Maven的最近依赖策略：如果一个项目依赖相同的groupId、artifact
 
 // TODO 
 
+# 九、Maven常见技巧
+
+## 1、Maven自动更新jar
+
+设置Maven自动升级jar包，jar包引入常规写法：
+```xml
+<dependency>
+	<groupId>org.seleniumhq.selenium</groupId>
+	<artifactId>selenium-java</artifactId>
+	<version>2.4.0</version>
+</dependency>
+```
+把写法改成以下形式就可以让Maven自动升级jar包了：
+```xml
+<dependency>
+	<groupId>org.seleniumhq.selenium</groupId>
+	<artifactId>selenium-java</artifactId>
+	<version>[2.4.0,)</version>
+</dependency>
+```
+注意version中使用的中括号和小括号：这样写version之后，selenium框架就会自动升级了，最低版本为2.4.0，最高版本不限，当然你也可以限制最高版本，语法就是开闭区间的语法
 
 # 参考资料
 

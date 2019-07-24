@@ -2274,7 +2274,7 @@ public class RootConfig {
 - Spring MVC 的入口是 Servlet， 而 Struts2 是 Filter
 - Spring MVC 会稍微比 Struts2 快些. Spring MVC 是基于方法设计， 而 Sturts2 是基于类， 每次发一次请求都会实	例一个 Action.
 - Spring MVC 使用更加简洁， 开发效率 Spring MVC 确实比 struts2 高： 支持 JSR303， 处理 ajax 的请求更方便
-- Struts2 的 OGNL 表达式使页面的开发效率相比	Spring MVC 更高些.
+- Struts2 的 OGNL 表达式使页面的开发效率相比Spring MVC 更高些.
 
 # 十、SpringBoot
 
