@@ -1,40 +1,14 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、消息中间件](#%E4%B8%80%E6%B6%88%E6%81%AF%E4%B8%AD%E9%97%B4%E4%BB%B6)
-  - [1、主流中间件介绍](#1%E4%B8%BB%E6%B5%81%E4%B8%AD%E9%97%B4%E4%BB%B6%E4%BB%8B%E7%BB%8D)
-  - [2、AMQP协议-高级消息队列协议](#2amqp%E5%8D%8F%E8%AE%AE-%E9%AB%98%E7%BA%A7%E6%B6%88%E6%81%AF%E9%98%9F%E5%88%97%E5%8D%8F%E8%AE%AE)
-- [二、RabbitMQ](#%E4%BA%8Crabbitmq)
-  - [1、概述](#1%E6%A6%82%E8%BF%B0)
-  - [2、RabbitMQ命令与控制台](#2rabbitmq%E5%91%BD%E4%BB%A4%E4%B8%8E%E6%8E%A7%E5%88%B6%E5%8F%B0)
-  - [3、Exchange交换机](#3exchange%E4%BA%A4%E6%8D%A2%E6%9C%BA)
-  - [4、其他概念](#4%E5%85%B6%E4%BB%96%E6%A6%82%E5%BF%B5)
-  - [5、消息如何保障100%投递成功](#5%E6%B6%88%E6%81%AF%E5%A6%82%E4%BD%95%E4%BF%9D%E9%9A%9C100%25%E6%8A%95%E9%80%92%E6%88%90%E5%8A%9F)
-  - [6、Confirm确认消息](#6confirm%E7%A1%AE%E8%AE%A4%E6%B6%88%E6%81%AF)
-  - [7、Return消息机制](#7return%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6)
-  - [8、消费端自定义监听](#8%E6%B6%88%E8%B4%B9%E7%AB%AF%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9B%91%E5%90%AC)
-  - [9、消费端限流](#9%E6%B6%88%E8%B4%B9%E7%AB%AF%E9%99%90%E6%B5%81)
-  - [10、消费端ACK与重回队列](#10%E6%B6%88%E8%B4%B9%E7%AB%AFack%E4%B8%8E%E9%87%8D%E5%9B%9E%E9%98%9F%E5%88%97)
-  - [11、TTL-Time To Live，生存时间](#11ttl-time-to-live%E7%94%9F%E5%AD%98%E6%97%B6%E9%97%B4)
-  - [12、死信队列-Dead Letter Exchane](#12%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97-dead-letter-exchane)
-  - [12.2、死信队列](#122%E6%AD%BB%E4%BF%A1%E9%98%9F%E5%88%97)
-- [三、RabbitMQ与Spring整合](#%E4%B8%89rabbitmq%E4%B8%8Espring%E6%95%B4%E5%90%88)
-  - [1、RabbitMQ整合Spring AMQP](#1rabbitmq%E6%95%B4%E5%90%88spring-amqp)
-- [四、RabbitMQ集群](#%E5%9B%9Brabbitmq%E9%9B%86%E7%BE%A4)
-  - [1、集群架构模式](#1%E9%9B%86%E7%BE%A4%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 二、RabbitMQ
 
 ## 1、概述
 
-### 1.1、定义：
+### 1.1、定义
+
 RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用Erlang语言来编写的，并且RabbitMQ是AMQP协议；
 
-### 1.2、具有以下特点：
+### 1.2、具有以下特点
+
 - 开源、性能优秀，稳定性保障；
 - 提供可靠性消息投递模式、返回模式；
 - 与SpringAMQP完美整合，API丰富；
@@ -42,6 +16,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 - 保障数据不丢失的前提做到高可靠性、可用性
 
 ### 1.3、高性能原因
+
 - Erlang语言最初在于交换机领域的架构模式，使得RabbitMQ在broker之间进行数据交互性能是非常优秀的；
 - Erlang特点：有着和原生socket一样的延迟；
 
@@ -50,12 +25,33 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 
 ### 1.5、RabbitMQ消息流转
 
+### 1.6、AMQP：高级消息队列协议
+
+是二进制协议，为面向消息的中间件设计。是一个进程间传递异步消息的网络协议
+
+**AMQP架构图：**
+
+![](image/AMQP协议模型.png)
+
+**AMQP核心概念：**
+- Server：又称Broker，接收客户端的连接，实现AMQP实体服务；
+- Connection：连接，应用程序与Broker进行连接；
+- Channel：几乎所有的操作都是在Channel中进行的，Channel是进行消息读写的通道。客户端可建立多个Channel，每个Channel表示一个会话任务；
+- Message：消息，服务器和应用程序之间传送的数据，由Properties和Body组成。Properties可以对消息进行修饰，比如消息的优先级、延迟等高级特性；Body则就是消息体的内容；
+- Vitual Host：虚拟地址，用于进行逻辑隔离，最上层的消息路由。一个Vitual Host里面可以有若干个Exchange和Queue，同一个Vitual Host不能有相同名称的Exchange和Queue；
+- Exchange：交换机，接收消息，根据路由键转发消息到绑定的队列；
+- Binding：Exchange和Queue之间的虚拟连接；binding中可以包含routing key；
+- Routing key：一个路由规格，虚拟机库用它来确定如何路由一个特点的消息；
+- Queue：消息队列，保存消息并将它们转发给消费者；
+
 ## 2、RabbitMQ命令与控制台
 
 ## 3、Exchange交换机
+
 接收消息，并根据路由键转发消息所绑定的队列
 
 ### 3.1、属性
+
 - Name：交换名称
 - Type：交换机类型direct、topic、fanout、headers；
 - Durability：是否需要持久化，true为持久化；
@@ -64,6 +60,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 - Arguments：扩展参数，用于扩展AMQP协议自制定化使用
 
 ### 3.2、交换机类型
+
 - Direct Exchange
 
   所有发生到Direct Exchange的消息被转到到RoutingKey中指定的Queue；
@@ -84,6 +81,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
   不处理路由键，只需要简单的将队列绑定到交换机上；发送到交换机的消息都会被转发到与该交换机绑定的所有队列上，Fanout交换机转发消息是最快的
 
 ## 4、其他概念
+
 - Binding-绑定
   - Exchange和Exchange、Queue之间的连接关系
   - Binding中可以包含RoutingKey或者参数；
@@ -142,6 +140,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 ## 6、Confirm确认消息
 
 ### 6.1、概述
+
 - 消息的确认，是指生产者投递消息后，如果broker收到消息，则会给生产者一个应答；
 - 生产者进行接收应答，用来确定这条消息是否正常的发送到Broker，这种方式也是消息的可靠性投递的核心保障；
 
@@ -157,6 +156,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 - 关键参数：Mandatory，如果为true，则监听器会接收到路由不可达的消息，然后进行后续处理，如果为false，那么broker端会自动删除该消息
 
 ## 8、消费端自定义监听
+
 继承DefaultConsumer
 
 ## 9、消费端限流
@@ -284,6 +284,7 @@ public Queue queue_pdf() {
 rabbitAdmin类在初始化时会从Spring容器中抓取上面@Bean声明的交换机、队列和绑定关系，在初始化时会直接注册到rabbitMQ上
 
 ### 1.3、RabbitTemplate-消息模板
+
 - 与SpringAMQP整合时进行发送消息的关键类；
 - 提供了丰富的消息发送方法，包括可靠性投递、回调监听消息接口ConfirmCallback、返回值确认接口ReturnCallback等，同样可以注入的Spring的容器中，然后直接使用；
 ```java
@@ -293,7 +294,9 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
     return rabbitTemplate;
 }
 ```
+
 ### 1.4、SimpleMessageListenerContainer-简单消息监听器
+
 - 监听队列，自动启用、自动声明；
 - 设置事务特性、事务管理器、事务属性、事务容量、是否开启事务、回滚消息等；
 - 设置消费数量、最小最大数量、批量消费；
@@ -305,11 +308,13 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 ？*SimpleMessageListenerContainer为什么可以动态感知配置变更*
 
 ### 1.5、MessageListenerAdapter-消息监听适配器
+
 - 默认监听方法名称-defaultListenerMethod，用于设置监听方法名称；
 - Delegate委托对象：实际真实的委托对象，用于处理消息
 - queueOrTagMethodName，队列标识与方法名称组成的集合，可以与一一进行队列与方法名称的匹配，队列与方法名称绑定，即指定队列里的消息会被绑定的方法所接受处理；
 
 ### 1.6、MessageConverter-消息转换器
+
 - 在进行发送消息的时候，正常清理下消息体为二进制的数据方式进行传输，如果希望内部帮我们进行转换，或者指定自定义的转换器，就需要用到MessageConverter；
 - 自定义常用转换器，一般来说需要实现接口：MessageConverter，主要实现两个方法：toMessage和fromMessage；
 - 主要有json转换器（Jackson2JsonMessageConverter）、DefaultJackson2JavaTypeMapper映射器，可以进行java对象的映射关系；
@@ -354,6 +359,8 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 
 
 # 参考资料
+
 * [RabbitMQ官方文档](http://www.rabbitmq.com/documentation.html)
 * [RabbitMQ命令操作](https://blog.csdn.net/noonebirdyou/article/details/54645755)
 * [RabbitMQ可靠消息投递方案](https://www.imooc.com/article/49814)
+* [AMQP协议](http://rabbitmq.mr-ping.com/AMQP/amqp-0-9-1-quickref.html)
