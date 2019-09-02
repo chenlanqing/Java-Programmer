@@ -411,7 +411,7 @@ Thread thread = new Thread();
 
 thread.start();// 调用线程
 
-## 2、线程的创建及状态变化
+## 2、线程Thread
 
 ### 2.1、创建线程的方式
 
@@ -476,10 +476,37 @@ new Thread(task).start();
 ```
 其中FutureTask该类实现了接口：RunnableFuture，该接口又继承了两个接口Runnable, Future<V>
 
+#### 2.1.4、实现多线程的方式
+
+实现多线程的实质方式只有两种
+
+只能通过新建Thread类这一种方式来创建线程，但是类里面的run方法有两种方式来实现，第一种是重写run方法，第二种实现Runnable接口的run方法，然后再把该runnable实例传给Thread类。除此之外，从表面上看线程池、定时器等工具类也可以创建线程，但是它们的本质都逃不出刚才所说的范围，也就是实现Runnable接口和继承Thread类。
+
 ### 2.3、创建 Thread 子类还是实现 Runnable 接口
 
 - 实现 Runnable 接口，线程池可以有效的管理实现了 Runnable 接口的线程如果多个线程正在运行中，如果某个线程调用 System.exit()指示终结程序，那么全部的线程都会结束执行；
-- Thread类实现了Runnable接口 
+- Thread类实现了Runnable接口；
+- 如果同时实现Thread和Runnable，那么只会执行Thread里的run方法，因为虽然传入了Runnable对象，但是由于Thread的run方法被覆盖了，所以Runnable里传入的对象不会被执行；
+    ```java
+    public static void main(String[] args) {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("Runnable ......");
+            }
+        }){
+            public void run(){
+                System.out.println("Thread ......");
+            }
+        }.start();
+    }
+    @Override
+    public void run() {
+        if (target != null) {
+            target.run();
+        }
+    }
+    ```
 
 ### 2.4、start与run方法
 
@@ -618,7 +645,7 @@ public void run(){
 	Thread.join(long miseconds)	这方法让调用线程等待特定的毫秒数。
 	Thread.join(long milliseconds, long nanos)	第二个版本的join方法和第一个很像，只不过它接收一个毫秒数和一个纳秒数
 
-### 2.10、异常处理
+### 2.10、未捕获异常的处理
 
 当一个非检查异常被抛出，默认的行为是在控制台写下stack trace并退出程序
 
@@ -3138,15 +3165,11 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 
 ### 1.5、线程池原理
 
-预先启动一些线程，线程无限循环从任务队列中获取一个任务进行执行，直到线程池被关闭.如果某个线程因为执行某个任务发生异常而终止，那么重新创建一个新的线程而已.如此反复.线程池的实现类是 ThreadPoolExecutor 类；
+预先启动一些线程，线程无限循环从任务队列中获取一个任务进行执行，直到线程池被关闭.如果某个线程因为执行某个任务发生异常而终止，那么重新创建一个新的线程而已。如此反复。线程池的实现类是 ThreadPoolExecutor 类；
 
 核心工作线程值在初始的时候被创建，当新任务来到的时候被启动，但是我们可以通过重写 prestartCoreThread 或 prestartCoreThreads 方法来改变这种行为。通常场景我们可以在应用启动的时候来 WarmUp 核心线程，从而达到任务过来能够立马执行的结果，使得初始任务处理的时间得到一定优化
 
-### 1.6、Hook
-
-ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，允许用户在任务执行之前会执行之后做一些事情。我们可以通过它来实现比如初始化 ThreadLocal、收集统计信息、如记录日志等操作。这类 Hook 如 beforeExecute 和 afterExecute。另外还有一个 Hook 可以用来在任务被执行完的时候让用户插入逻辑，如 rerminated。如果 hook 方法执行失败，则内部的工作线程的执行将会失败或被中断
-
-## 2、JDK线程池
+## 2、JDK线程池结构
 
 Executor框架结构：
 
@@ -3210,7 +3233,61 @@ ExecutorService的生命周期有三种状态：运行、关闭、终止。
 
 ExecutorService的默认实现，线程池中最核心的一个类
 
-#### 2.3.1、核心参数
+### 2.4、ScheduledThreadPoolExecutor
+
+Timer/TimerTask存在问题：
+- Timer支持基于绝对时间而不是相对时间的调度机制，因此任务的执行对系统时钟变化很敏感，而ScheduledThreadPoolExecutor只支持基于相对时间的调度；
+- Timer在执行所有定时任务时只会创建一个线程。如果某个任务执行时间过长，那么将破坏其他TimerTask的定时精确性；
+- Timer创建的线程没有处理异常，因此一旦抛出非受检异常，该线程会立即终止，也不会恢复线程的运行；
+
+ScheduledExecutorService：和Timer/TimerTask类似，解决那些需要任务重复执行的问题
+
+- 继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现；提供了`“延迟”`和`“周期执行”`功能的ThreadPoolExecutor；
+- 一旦启用已延迟的任务就执行它，但是有关何时启用，启用后何时执行则没有任何实时保证。按照提交的先进先出 (FIFO) 顺序来启用那些被安排在同一执行时间的任务；
+- 一般通过`Executors.newScheduledThreadPool(int);`来构造一个ScheduledThreadPoolExecutor对象；
+- 它所使用的阻塞队列变成了DelayedWorkQueue，而不是`ThreadLocalhExecutor`的LinkedBlockingQueue；
+- DelayedWorkQueue为ScheduledThreadPoolExecutor中的内部类，它其实和阻塞队列DelayQueue有点儿类似。DelayQueue是可以提供延迟的阻塞队列，它只有在延迟期满时才能从中提取元素，其列头是延迟期满后保存时间最长的Delayed元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null
+
+### 2.5、Executors创建线程池
+
+Executors 提供了5种不同的线程池创建方式
+- newCachedThreadPool()：用来处理大量短时间工作任务的线程池，其内部使用 SynchronousQueue作为工作队列具有以下几个特点：
+	- 它会试图缓存线程并重用，当无缓存线程可用时，就会创建新的工作线程；
+	- 如果线程限制的时间超过60秒，则会被终止并移出缓存；
+	- 长时间闲置时，这种线程池，不会消耗什么资源；
+
+- newFixedThreadPool(int nThreads)：重用指定数目的线程，其背后使用的是无界工作队列，任何时候最大只有nThreads个工作线程是活动的。这意味着，如果任务数量超过了活动队列数目，将在工作队列等待空闲线程出现；如果有工作线程退出，将会有新的工作线程被创建，以补足指定的数目nthreads；
+
+- newSingleThreadExecutor()：其她点在于工作线程数目被限制为1，操作一个无界的工作队列，所以它保证了所有任务都是被顺序执行的，最大会有一个任务处于活动状态，并且不允许使用者改动线程池实例，因此可以避免其改变线程数目；
+
+- newSingleThreadScheduledExecutor()和newScheduledThreadPool(int corePoolSize)创建的是个ScheduledExecutorService，可以进行定时或周期性的工作调度，区别在于单一工作线程还是多个工作线程；
+
+- newWorkStealingPool()，Java8加入的方法，其内部会构建ForkJoinPool，利用work-stealing算法，并行的处理任务，不保证处理顺序
+
+***为什么不建议使用JDK自身提供的构建线程池的方式？***
+
+使用Executors创建线程池可能会导致OOM（OutOfMemory ,内存溢出）。因为这些工程方法中都没有指定阻塞队列的容量，没有指定的话默认容量是`Integer.MAX_VALUE`，那么阻塞队列就是个无界队列，而创建这么多线程，必然会导致OOM；
+- newFixedThreadPool
+	```java
+	public static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
+		return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), threadFactory);
+	}
+	```
+	```
+	Exception in thread "main" java.lang.OutOfMemoryError: GC overhead limit exceeded
+		at java.util.concurrent.LinkedBlockingQueue.offer(LinkedBlockingQueue.java:416)
+		at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1371)
+		at com.learning.example.thread.pool.ExecutorsDemo.main(ExecutorsDemo.java:17)
+	```
+真正的导致OOM的其实是LinkedBlockingQueue.offer
+- ArrayBlockingQueue是一个用数组实现的有界阻塞队列，必须设置容量。
+- LinkedBlockingQueue是一个用链表实现的有界阻塞队列，容量可以选择进行设置，不设置的话，将是一个无边界的阻塞队列，最大长度为Integer.MAX_VALUE
+
+除了调用`ThreadPoolExecutor`构造器之外，还可以使用Apache和Guava来使用线程池，可以使用guava的`ThreadFactoryBuilder`
+
+## 3、ThreadPoolExecutor实现
+
+### 3.1、核心参数
 
 - corePoolSize：核心线程数大小，`当线程数 < corePoolSize`，会创建线程执行runnable；如果等于0，则任务执行完之后，没有任何请求进入时销毁线程池的线程；如果大于0，即使本地任务执行完毕，核心线程也不会被销毁；
 - maximumPoolSize：最大线程数， `当线程数 >= corePoolSize`的时候，会把runnable放入workQueue中；largestPoolSize：记录了曾经出现的最大线程个数；如果待执行的线程数大于此值，需要借助第5个参数的帮助，缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
@@ -3221,7 +3298,7 @@ ExecutorService的默认实现，线程池中最核心的一个类
 - handler：拒绝策略，默认有四种拒绝策略；当超过参数 workQueue的任务缓存区上限的时候，就可以通过该策略处理请求，这是一种简单的限流保护
 - workers：保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的，线程池底层的存储结构其实就是一个HashSet
 
-#### 2.3.2、参数关系
+### 3.2、参数关系
 
 - corePoolSize 与 maximumPoolSize:
 	* 如果线程池中的实际线程数 < corePoolSize， 新增一个线程处理新的任务；
@@ -3231,7 +3308,7 @@ ExecutorService的默认实现，线程池中最核心的一个类
 
 - 如果线程池阻塞队列达到极限时，在运行一段时间后，阻塞队列中的任务执行完成了，线程池会将超过核心线程数的线程在一段时间内自动回收，在秒杀的业务场景中会有这样的情况发生。
 
-#### 2.3.3、线程池状态
+### 3.3、线程池状态
 
 采用一个 32 位的整数来存放线程池的状态和当前池中的线程数，其中高 3 位用于存放线程池状态，低 29 位表示线程数
 ```java
@@ -3285,7 +3362,7 @@ private static boolean isRunning(int c) {
 
 `RUNNING 定义为 -1，SHUTDOWN 定义为 0，其他的都比 0 大，所以等于 0 的时候不能提交任务，大于 0 的话，连正在执行的任务也需要中断`
 
-#### 2.3.4、任务执行顺序
+### 3.4、任务执行顺序
 
 ![image](image/线程池主要处理流程.png)
 
@@ -3345,7 +3422,7 @@ public Future<?> submit(Runnable task) {
 ```
 - submit 返回一个 Future 对象，我们可以调用其 get 方法获取任务执行的结果；就是将 Runnable 包装成 FutureTask 而已。可以看到，最终还是调用 Execute 方法
 
-#### 2.3.5、新任务添加到队列
+### 3.5、新任务添加到队列
 
 线程池使用 addWorker 方法新建线程，第一个参数代表要执行的任务，线程会将这个任务执行完毕后再从队列取任务执行。第二参数是核心线程的标志，它并不是 Worker 本身的属性，在这里只用来判断工作线程数量是否超标；
 
@@ -3387,7 +3464,14 @@ private boolean addWorker(Runnable firstTask, boolean core) {
 ```
 第二部分负责新建并启动线程，并将 Worker 添加至 Hashset 中。代码很简单，没什么好注释的，用了 ReentrantLock 确保线程安全
 
-#### 2.3.6、worker
+下面主要是不同队列策略表现：
+- 直接递交：一种比较好的默认选择是使用 SynchronousQueue，这种策略会将提交的任务直接传送给工作线程，而不持有。如果当前没有工作线程来处理，即任务放入队列失败，则根据线程池的实现，会引发新的工作线程创建，因此新提交的任务会被处理。这种策略在当提交的一批任务之间有依赖关系的时候避免了锁竞争消耗。值得一提的是，这种策略最好是配合 unbounded 线程数来使用，从而避免任务被拒绝。同时我们必须要考虑到一种场景，当任务到来的速度大于任务处理的速度，将会引起无限制的线程数不断的增加。
+
+- 无界队列：使用无界队列如 LinkedBlockingQueue 没有指定最大容量的时候，将会引起当核心线程都在忙的时候，新的任务被放在队列上，因此，永远不会有大于 corePoolSize 的线程被创建，因此 maximumPoolSize 参数将失效。这种策略比较适合所有的任务都不相互依赖，独立执行。举个例子，如网页服务器中，每个线程独立处理请求。但是当任务处理速度小于任务进入速度的时候会引起队列的无限膨胀。
+
+- 有界队列：有界队列如 ArrayBlockingQueue 帮助限制资源的消耗，但是不容易控制。队列长度和 maximumPoolSize 这两个值会相互影响，使用大的队列和小 maximumPoolSize 会减少 CPU 的使用、操作系统资源、上下文切换的消耗，但是会降低吞吐量，如果任务被频繁的阻塞如IO线程，系统其实可以调度更多的线程。使用小的队列通常需要大 maximumPoolSize，从而使得 CPU更忙一些，但是又会增加降低吞吐量的线程调度的消耗。总结一下是 IO 密集型可以考虑多些线程来平衡 CPU 的使用，CPU 密集型可以考虑少些线程减少线程调度的消耗
+
+### 3.6、worker
 
 Worker 本身并不区分核心线程和非核心线程，核心线程只是概念模型上的叫法，特性是依靠对线程数量的判断来实现的
 - 继承自 AQS，本身实现了一个最简单的不公平的不可重入锁
@@ -3398,7 +3482,7 @@ Worker 本身并不区分核心线程和非核心线程，核心线程只是概�
 - 实现了 Runnable 接口，在新建线程时传入 this。因此线程启动时，会执行 Worker 本身的 run 方法；
 - run 方法调用了 ThreadPoolExecutor 的 runWorker 方法，负责实际执行任务
 
-#### 2.3.7、拒绝策略
+### 3.7、拒绝策略
 
 RejectedExecutionHandler，四种策略都是静态内部类，在默认情况下，ThreadPoolExecutor使用抛弃策略：`private static final RejectedExecutionHandler defaultHandler = new AbortPolicy();`
 - CallerRunsPolicy：在线程池没有关闭（调用shut Down）的情况下，直接由调用线程来执行该任务。否则直接就丢弃该任务，什么也不做。
@@ -3406,66 +3490,7 @@ RejectedExecutionHandler，四种策略都是静态内部类，在默认情况�
 - DiscardPolicy：直接丢弃该任务，什么也不做。
 - DiscardOldestPolicy：在线程池没有关闭（调用shutDown）的情况下，丢弃线程池任务队列中等待最久-即队列首部的任务，并尝试直接执行该触发饱和策略的任务
 
-#### 2.3.8、总结
-
-- 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
-- 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
-- 线程池原理关键技术：锁（lock,cas）、阻塞队列、hashSet（资源池）
-- 使用该线程池是，一定要注意控制并发的任务数，否则创建大量的线程可能导致严重的性能问题
-
-### 2.4、ScheduledThreadPoolExecutor
-
-Timer/TimerTask存在问题：
-- Timer支持基于绝对时间而不是相对时间的调度机制，因此任务的执行对系统时钟变化很敏感，而ScheduledThreadPoolExecutor只支持基于相对时间的调度；
-- Timer在执行所有定时任务时只会创建一个线程。如果某个任务执行时间过长，那么将破坏其他TimerTask的定时精确性；
-- Timer创建的线程没有处理异常，因此一旦抛出非受检异常，该线程会立即终止，也不会恢复线程的运行；
-
-ScheduledExecutorService：和Timer/TimerTask类似，解决那些需要任务重复执行的问题
-
-- 继承ThreadPoolExecutor的ScheduledExecutorService接口实现，周期性任务调度的类实现；提供了`“延迟”`和`“周期执行”`功能的ThreadPoolExecutor；
-- 一旦启用已延迟的任务就执行它，但是有关何时启用，启用后何时执行则没有任何实时保证。按照提交的先进先出 (FIFO) 顺序来启用那些被安排在同一执行时间的任务；
-- 一般通过`Executors.newScheduledThreadPool(int);`来构造一个ScheduledThreadPoolExecutor对象；
-- 它所使用的阻塞队列变成了DelayedWorkQueue，而不是`ThreadLocalhExecutor`的LinkedBlockingQueue；
-- DelayedWorkQueue为ScheduledThreadPoolExecutor中的内部类，它其实和阻塞队列DelayQueue有点儿类似。DelayQueue是可以提供延迟的阻塞队列，它只有在延迟期满时才能从中提取元素，其列头是延迟期满后保存时间最长的Delayed元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null
-
-### 2.5、Executors创建线程池
-
-Executors 提供了5种不同的线程池创建方式
-- newCachedThreadPool()：用来处理大量短时间工作任务的线程池，其内部使用 SynchronousQueue作为工作队列具有以下几个特点：
-	- 它会试图缓存线程并重用，当无缓存线程可用时，就会创建新的工作线程；
-	- 如果线程限制的时间超过60秒，则会被终止并移出缓存；
-	- 长时间闲置时，这种线程池，不会消耗什么资源；
-
-- newFixedThreadPool(int nThreads)：重用指定数目的线程，其背后使用的是无界工作队列，任何时候最大只有nThreads个工作线程是活动的。这意味着，如果任务数量超过了活动队列数目，将在工作队列等待空闲线程出现；如果有工作线程退出，将会有新的工作线程被创建，以补足指定的数目nthreads；
-
-- newSingleThreadExecutor()：其她点在于工作线程数目被限制为1，操作一个无界的工作队列，所以它保证了所有任务都是被顺序执行的，最大会有一个任务处于活动状态，并且不允许使用者改动线程池实例，因此可以避免其改变线程数目；
-
-- newSingleThreadScheduledExecutor()和newScheduledThreadPool(int corePoolSize)创建的是个ScheduledExecutorService，可以进行定时或周期性的工作调度，区别在于单一工作线程还是多个工作线程；
-
-- newWorkStealingPool()，Java8加入的方法，其内部会构建ForkJoinPool，利用work-stealing算法，并行的处理任务，不保证处理顺序
-
-***为什么不建议使用JDK自身提供的构建线程池的方式？***
-
-使用Executors创建线程池可能会导致OOM（OutOfMemory ,内存溢出）。因为这些工程方法中都没有指定阻塞队列的容量，没有指定的话默认容量是`Integer.MAX_VALUE`，那么阻塞队列就是个无界队列，而创建这么多线程，必然会导致OOM；
-- newFixedThreadPool
-	```java
-	public static ExecutorService newFixedThreadPool(int nThreads, ThreadFactory threadFactory) {
-		return new ThreadPoolExecutor(nThreads, nThreads, 0L, TimeUnit.MILLISECONDS, new LinkedBlockingQueue<Runnable>(), threadFactory);
-	}
-	```
-	```
-	Exception in thread "main" java.lang.OutOfMemoryError: GC overhead limit exceeded
-		at java.util.concurrent.LinkedBlockingQueue.offer(LinkedBlockingQueue.java:416)
-		at java.util.concurrent.ThreadPoolExecutor.execute(ThreadPoolExecutor.java:1371)
-		at com.learning.example.thread.pool.ExecutorsDemo.main(ExecutorsDemo.java:17)
-	```
-真正的导致OOM的其实是LinkedBlockingQueue.offer
-- ArrayBlockingQueue是一个用数组实现的有界阻塞队列，必须设置容量。
-- LinkedBlockingQueue是一个用链表实现的有界阻塞队列，容量可以选择进行设置，不设置的话，将是一个无边界的阻塞队列，最大长度为Integer.MAX_VALUE
-
-除了调用`ThreadPoolExecutor`构造器之外，还可以使用Apache和Guava来使用线程池，可以使用guava的`ThreadFactoryBuilder`
-
-### 2.6、设置线程池线程的名称
+### 3.8、设置线程池线程的名称
 
 线程池中的线程是通过线程工厂来创建的即`ThreadFactory`，那么设置线程名称也是通过其实现的，`ThreadPoolExecutor`默认使用的线程工厂是`Executors.DefaultThreadFactory`
 ```java
@@ -3527,20 +3552,11 @@ static ThreadPoolExecutor executorOne = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit.MINUTES, new LinkedBlockingQueue<>(), new NamedThreadFactory("ASYN-PROCESS-POOL"));
 ```
 
-### 2.7、选择合适的队列
-
-下面主要是不同队列策略表现：
-- 直接递交：一种比较好的默认选择是使用 SynchronousQueue，这种策略会将提交的任务直接传送给工作线程，而不持有。如果当前没有工作线程来处理，即任务放入队列失败，则根据线程池的实现，会引发新的工作线程创建，因此新提交的任务会被处理。这种策略在当提交的一批任务之间有依赖关系的时候避免了锁竞争消耗。值得一提的是，这种策略最好是配合 unbounded 线程数来使用，从而避免任务被拒绝。同时我们必须要考虑到一种场景，当任务到来的速度大于任务处理的速度，将会引起无限制的线程数不断的增加。
-
-- 无界队列：使用无界队列如 LinkedBlockingQueue 没有指定最大容量的时候，将会引起当核心线程都在忙的时候，新的任务被放在队列上，因此，永远不会有大于 corePoolSize 的线程被创建，因此 maximumPoolSize 参数将失效。这种策略比较适合所有的任务都不相互依赖，独立执行。举个例子，如网页服务器中，每个线程独立处理请求。但是当任务处理速度小于任务进入速度的时候会引起队列的无限膨胀。
-
-- 有界队列：有界队列如 ArrayBlockingQueue 帮助限制资源的消耗，但是不容易控制。队列长度和 maximumPoolSize 这两个值会相互影响，使用大的队列和小 maximumPoolSize 会减少 CPU 的使用、操作系统资源、上下文切换的消耗，但是会降低吞吐量，如果任务被频繁的阻塞如IO线程，系统其实可以调度更多的线程。使用小的队列通常需要大 maximumPoolSize，从而使得 CPU更忙一些，但是又会增加降低吞吐量的线程调度的消耗。总结一下是 IO 密集型可以考虑多些线程来平衡 CPU 的使用，CPU 密集型可以考虑少些线程减少线程调度的消耗
-
-### 2.8、空闲线程回收
+### 3.9、空闲线程回收
 
 如果当前池子中的工作线程数大于 corePoolSize，如果超过这个数字的线程处于空闲的时间大于 keepAliveTime，则这些线程将会被终止，这是一种减少不必要资源消耗的策略。这个参数可以在运行时被改变，我们同样可以将这种策略应用给核心线程，我们可以通过调用 allowCoreThreadTimeout 来实现
 
-### 2.9、线程池异常处理
+### 3.10、线程池异常处理
 
 **1、使用ExecutorService.submit执行任务，利用返回的Future对象的get方法接收抛出的异常，然后进行处理**
 
@@ -3562,7 +3578,7 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 
 这种方法比较简单，也有他的局限性，不够灵活，我们的处理被局限在了线程代码边界之内
 
-### 2.10、获取线程执行结果
+### 3.11、获取线程执行结果
 
 ```java
 // 其参数Runnable，该接口的run方法是没有返回值的，所以这个方法的返回的Future仅可以用来断言任务已经结束；
@@ -3588,7 +3604,7 @@ public <T> Future<T> submit(Callable<T> task) {
 }
 ```
 
-### 2.11、任务取消与线程池关闭
+### 3.12、任务取消与线程池关闭
 
 - 通过Future取消线程池中的任务
 	```java
@@ -3675,14 +3691,26 @@ public <T> Future<T> submit(Callable<T> task) {
 		- 如果线程正在getTask方法中执行，则会通过for循环进入到if语句，于是getTask返回null。从而线程退出。不管线程池里是否有未完成的任务。
 		- 如果线程因为执行提交到线程池里的任务而处于阻塞状态，则会导致报错(如果任务里没有捕获InterruptedException异常)，否则线程会执行完当前任务，然后通过getTask方法返回为null来退出
 
-## 3、线程池配置
 
-### 3.1、不同业务场景如何配置线程池参数
+### 3.13、Hook
+
+ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，允许用户在任务执行之前会执行之后做一些事情。我们可以通过它来实现比如初始化 ThreadLocal、收集统计信息、如记录日志等操作。这类 Hook 如 beforeExecute 和 afterExecute。另外还有一个 Hook 可以用来在任务被执行完的时候让用户插入逻辑，如 rerminated。如果 hook 方法执行失败，则内部的工作线程的执行将会失败或被中断
+
+### 3.14、总结
+
+- 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
+- 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
+- 线程池原理关键技术：锁（lock,cas）、阻塞队列、hashSet（资源池）
+- 使用该线程池是，一定要注意控制并发的任务数，否则创建大量的线程可能导致严重的性能问题
+
+## 4、线程池配置
+
+### 4.1、不同业务场景如何配置线程池参数
 
 - CPU密集型任务：需要尽量压榨CPU，参考值可以设为NCPU + 1;	
 - IO密集型任务：参考值可以设置为 2*NCPU
 
-### 3.2、科学设置线程池
+### 4.2、科学设置线程池
 
 - 如果需要达到某个QPS，使用如下计算公式：<br>
 	设置的线程数 = 目标QPS / (1 / 任务实际处理时间)<br>
@@ -3697,7 +3725,7 @@ public <T> Future<T> submit(Callable<T> task) {
 	队列大小 = 线程数 * (目标相应时间/任务实际处理时间)<br>
 	假设目标相应时间为0.4s，计算阻塞队列的长度为20 * (0.4 / 0.2) = 40。<br>
 
-## 4、线程池最佳实践
+## 5、线程池最佳实践
 
 - 线程池的使用要考虑线程最大数量和最小数最小数量，避免任务堆积
 - 对于单部的服务，线程的最大数量应该等于线程的最小数量，而混布的服务，适当的拉开最大最小数量的差距，能够整体调整CPU内核的利用率.
