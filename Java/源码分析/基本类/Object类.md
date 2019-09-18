@@ -387,11 +387,11 @@ Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner
 
 ## 6.1、wait
 
-该方法用来将当前线程置入休眠状态，直到接到通知或被中断为止；在调用 wait()之前，线程必须要获得该对象的对象监视器锁，即只能在同步方法或同步块中调用 wait()方法；调用wait()方法之后，当前线程会释放锁。如果调用wait()方法时，线程并未获取到锁的话，则会抛出`IllegalMonitorStateException`异常，这是以个RuntimeException。如果再次获取到锁的话，当前线程才能从wait()方法处成功返回
+该方法用来将当前线程置入休眠状态，直到接到通知或被中断为止；在调用 wait()之前，线程必须要获得该对象的对象监视器锁，即只能在同步方法或同步块中调用 wait()方法；调用wait()方法之后，当前线程会释放锁。如果调用wait()方法时，线程并未获取到锁的话，则会抛出`IllegalMonitorStateException`异常，这是一个RuntimeException。如果再次获取到锁的话，当前线程才能从wait()方法处成功返回；wait在线程中断的时候也会被唤醒；
 
 **为什么wait()方法要放在同步块中？**
 
-- 如果wait()方法不在同步块中，代码的确会抛出异常：IllegalMonitorStateException；
+- 如果wait()方法不在同步块中，代码会抛出异常：IllegalMonitorStateException；
 - Java设计者为了避免使用者出现lost wake up问题而搞出来的；
 - 首先看`Lost Wake-Up Problem`，该问题是会在所有的多线程环境下出现；为了避免不经意间出现这种lost wake up问题，包括java.util.concurrent.locks.Condition的await()/signal()也必须要在同步块中；一定要处于锁对象的同步块中；下面的代码一样出现`IllegalMonitorStateException`
 	```java
@@ -410,7 +410,7 @@ Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner
 	```
 - wait和sleep的区别：
 	- sleep: 是 Thread 类的静态方法，调用此方法会让当前线程暂停执行指定的时间，将执行机会(CPU)让给其他线程，但是对象的锁依然保持，因此休眠结束后会自动恢复；
-	- wait: 是 Object 类的方法；调用对象的 wait 方法导致当前线程放弃对象的锁(线程暂停执行)，进入对象的等待池，只有调用的对象的 notify(notifyAll)时才能唤醒等待池中的线程进入等锁池,如果线程重新获得对象的锁就可以进入就绪状态:
+	- wait: 是 Object 类的方法；调用对象的 wait 方法导致当前线程放弃对象的锁(线程暂停执行)，进入对象的等待池，只有调用的对象的 notify(notifyAll)时才能唤醒等待池中的线程进入等锁池，如果线程重新获得对象的锁就可以进入就绪状态；需要在同步代码块中
 	
 	***为什么 wait 方法要定义在 Object 类中?***
 	
