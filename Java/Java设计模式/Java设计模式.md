@@ -318,7 +318,7 @@ public class LazySingletonComplete implements Serializable{
 }
 ```
 
-## 3、恶汉模式
+## 3、饿汉模式
 
 - 是否 Lazy 初始化：否
 - 是否多线程安全：是
