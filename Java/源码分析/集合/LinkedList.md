@@ -20,7 +20,7 @@ public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>,
 }
 ```
 - `AbstractSequenceList`提供了 List 接口骨干性的实现以减少实现 List 接口的复杂度
-- `Deque`接口定义了双端队列的操作
+- `Deque`接口定义了双端队列的操作，是一个双向链表
 
 # 二、属性
 

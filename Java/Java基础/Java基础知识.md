@@ -312,6 +312,9 @@
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
+
+**Java世界里的一切东西都只是在拼Java命令行参数而已**
+
 # Java平台理解
 
 ## 1、从宏观角度看
@@ -339,7 +342,7 @@ Write once， run anywhere
 - C++允许过程式程序设计和面向对象程序设计；Java必须适应面向对象的程序设计方式；
 - C++支持指针，引用，传值调用。Java只有值传递；
 - C++需要显示的内存管理，支持析构函数；Java是自动管理内存的；
-- C++支持多重继承，包括虚拟继承；Java只允许单继承，但是接口之间可以多继承；
+- C++支持多重继承，包括虚拟继承；Java只允许，但是接口之间可以多继承；
 
 # 一、Java 内部类
 
@@ -4793,6 +4796,24 @@ JDK8.0之后, 新增加了以下几个类用来表示日期时间：
 	```
 
 # 三十五、正则表达式
+
+
+# 三十六、其他知识
+
+- 关于调试调试参数：
+
+	`export JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=1044`，执行这行后，当前机器下所有java程序都会进入debug模式
+
+- 如何调试Java程序：
+	- 判断需要调试的代码运行在哪个JVM里；
+	- 找到需要调试的源代码
+
+- 如何将开源项目本地打包：每个开源项目都有一个文件：CONTRIBUTING.md，阅读该文件可以找到对应的方法
+	
+	JDK打包可以搜索文件：jdk building.jdk
+
+- 
+
 
 
 

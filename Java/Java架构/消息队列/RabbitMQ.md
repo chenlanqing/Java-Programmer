@@ -38,7 +38,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 - Connection：连接，应用程序与Broker进行连接；
 - Channel：几乎所有的操作都是在Channel中进行的，Channel是进行消息读写的通道。客户端可建立多个Channel，每个Channel表示一个会话任务；
 - Message：消息，服务器和应用程序之间传送的数据，由Properties和Body组成。Properties可以对消息进行修饰，比如消息的优先级、延迟等高级特性；Body则就是消息体的内容；
-- Vitual Host：虚拟地址，用于进行逻辑隔离，最上层的消息路由。一个Vitual Host里面可以有若干个Exchange和Queue，同一个Vitual Host不能有相同名称的Exchange和Queue；
+- Virtual Host：虚拟地址，用于进行逻辑隔离，最上层的消息路由。一个Vitual Host里面可以有若干个Exchange和Queue，同一个Vitual Host不能有相同名称的Exchange和Queue；
 - Exchange：交换机，接收消息，根据路由键转发消息到绑定的队列；
 - Binding：Exchange和Queue之间的虚拟连接；binding中可以包含routing key；
 - Routing key：一个路由规格，虚拟机库用它来确定如何路由一个特点的消息；
@@ -48,7 +48,30 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 
 发布者（Publisher）发布消息（Message），经由交换机（Exchange）；交换机根据路由规则将收到的消息分发给与该交换机绑定的队列（Queue）；最后 AMQP 代理会将消息投递给订阅了此队列的消费者，或者消费者按照需求自行获取；
 
+### 1.7、RabbitMQ安装
 
+准备：
+`yum install build-essential openssl openssl-devel unixODBC unixODBC-devel make gcc gcc-c++ kernel-devel m4 ncurses-devel tk tc xz`
+
+下载：
+```
+wget www.rabbitmq.com/releases/erlang/erlang-18.3-1.el7.centos.x86_64.rpm
+wget http://repo.iotti.biz/CentOS/7/x86_64/socat-1.7.3.2-5.el7.lux.x86_64.rpm
+wget www.rabbitmq.com/releases/rabbitmq-server/v3.6.5/rabbitmq-server-3.6.5-1.noarch.rpm
+```
+
+配置文件：
+```
+vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
+```
+比如修改密码、配置等等，例如：loopback_users 中的 <<"guest">>,只保留guest
+服务启动和停止：
+- 启动 rabbitmq-server start &
+- 停止 rabbitmqctl app_stop
+
+管理插件：rabbitmq-plugins enable rabbitmq_management
+
+访问地址：http://192.168.11.76:15672/
 
 ## 2、RabbitMQ整体架构
 
