@@ -54,8 +54,8 @@
 
 ## 1、不使用开发工具开发一个servlet
 
-- （1）在tomcat服务器的webapps下新建一个目录test(应用名)，在test文件夹内再新加一个WEB-INF文件夹，再在WEB-INF文件夹内新建一个classes文件夹;\apache-tomcat-6.0.14\webapps\test\WEB-INF\classes；
-- （2）在classes文件夹新建一个SecondServlet.java文件，如下代码:
+- （1）在tomcat服务器的webapps下新建一个目录test(应用名)，在test文件夹内再新加一个WEB-INF文件夹，再在WEB-INF文件夹内新建一个classes文件夹;`\apache-tomcat-6.0.14\webapps\test\WEB-INF\classes`；
+- （2）在classes文件夹新建一个`SecondServlet.java`文件，如下代码:
 ```java
 	package cn.tarena;
 	import java.io.*;
@@ -70,8 +70,8 @@
 		}
 	}
 ```
-- （3）找到servlet-api.jar文件，复制到当前classes文件夹中，编译java文件:<br>
-	javac -cp servlet-api.jar -d . SecondServlet.java--- .表示当前目录;
+- （3）找到`servlet-api.jar`文件，复制到当前classes文件夹中，编译java文件:<br>
+	`javac -cp servlet-api.jar -d . SecondServlet.java`   `.`表示当前目录;
 - （4）配置web.xml文件:在WEB-INF文件夹下新建文件web.xml，添加如下配置:
 ```xml
 	<?xml version="1.0" encoding="UTF-8"?>
@@ -90,7 +90,9 @@
 		</servlet-mapping>
 	</web-app>
 ```
-- 访问该servlet：启动tomcat服务器，地址栏输入:localhost:8080/test/secondServlet
+- 访问该servlet：启动tomcat服务器，地址栏输入:`localhost:8080/test/secondServlet`
+
+在Servlet3.0之后，支持注解的形式：`@WebServlet("/myAnnotationServlet")`，就可以不用`web.xml`文件了；
 
 ## 2、load-on-startup
 
