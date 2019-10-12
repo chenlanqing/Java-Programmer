@@ -2,50 +2,54 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一、Servlet](#%E4%B8%80servlet)
-  - [1、不使用开发工具开发一个servlet](#1%E4%B8%8D%E4%BD%BF%E7%94%A8%E5%BC%80%E5%8F%91%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AAservlet)
-  - [2、load-on-startup](#2load-on-startup)
-  - [3、servlet-mapping](#3servlet-mapping)
-  - [4、Servlet线程安全问题](#4servlet%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E9%97%AE%E9%A2%98)
-  - [5、Servlet初始化参数](#5servlet%E5%88%9D%E5%A7%8B%E5%8C%96%E5%8F%82%E6%95%B0)
-  - [6、ServletContext](#6servletcontext)
-  - [7、HttpServletResponse](#7httpservletresponse)
-  - [8、HttpServletResquest](#8httpservletresquest)
-  - [9、状态管理](#9%E7%8A%B6%E6%80%81%E7%AE%A1%E7%90%86)
-    - [9.1、Cookie](#91cookie)
-    - [9.2、Session](#92session)
-    - [9.3、Cookie 与 Session](#93cookie-%E4%B8%8E-session)
-    - [9.4、分布式Session](#94%E5%88%86%E5%B8%83%E5%BC%8Fsession)
-  - [10、Servlet 与 Servlet 容器](#10servlet-%E4%B8%8E-servlet-%E5%AE%B9%E5%99%A8)
-    - [10.1、两者直接的关系](#101%E4%B8%A4%E8%80%85%E7%9B%B4%E6%8E%A5%E7%9A%84%E5%85%B3%E7%B3%BB)
-    - [10.2、Servlet 容器的启动过程](#102servlet-%E5%AE%B9%E5%99%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
-    - [10.3、Servlet 对象创建](#103servlet-%E5%AF%B9%E8%B1%A1%E5%88%9B%E5%BB%BA)
-    - [10.4、Servlet 是如何运行的](#104servlet-%E6%98%AF%E5%A6%82%E4%BD%95%E8%BF%90%E8%A1%8C%E7%9A%84)
-    - [10.5.servlet的生命周期的四个阶段](#105servlet%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%9A%84%E5%9B%9B%E4%B8%AA%E9%98%B6%E6%AE%B5)
-    - [10.6、Servlet架构](#106servlet%E6%9E%B6%E6%9E%84)
-    - [10.7、创建Servlet对象的时机](#107%E5%88%9B%E5%BB%BAservlet%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%97%B6%E6%9C%BA)
-    - [10.8、销毁Servlet对象的时机](#108%E9%94%80%E6%AF%81servlet%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%97%B6%E6%9C%BA)
-- [二、HTTP协议](#%E4%BA%8Chttp%E5%8D%8F%E8%AE%AE)
-- [三、Servlet高级应用](#%E4%B8%89servlet%E9%AB%98%E7%BA%A7%E5%BA%94%E7%94%A8)
-  - [1、监听器](#1%E7%9B%91%E5%90%AC%E5%99%A8)
-    - [1.1、什么是监听器](#11%E4%BB%80%E4%B9%88%E6%98%AF%E7%9B%91%E5%90%AC%E5%99%A8)
-    - [1.2、监听器应用](#12%E7%9B%91%E5%90%AC%E5%99%A8%E5%BA%94%E7%94%A8)
-    - [1.3、servlet组件启动顺序](#13servlet%E7%BB%84%E4%BB%B6%E5%90%AF%E5%8A%A8%E9%A1%BA%E5%BA%8F)
-    - [1.4、监听器分类](#14%E7%9B%91%E5%90%AC%E5%99%A8%E5%88%86%E7%B1%BB)
-    - [1.5、监听域对象自身的创建与销毁](#15%E7%9B%91%E5%90%AC%E5%9F%9F%E5%AF%B9%E8%B1%A1%E8%87%AA%E8%BA%AB%E7%9A%84%E5%88%9B%E5%BB%BA%E4%B8%8E%E9%94%80%E6%AF%81)
-    - [1.6、监听域对象的属性增加与删除，实现接口](#16%E7%9B%91%E5%90%AC%E5%9F%9F%E5%AF%B9%E8%B1%A1%E7%9A%84%E5%B1%9E%E6%80%A7%E5%A2%9E%E5%8A%A0%E4%B8%8E%E5%88%A0%E9%99%A4%E5%AE%9E%E7%8E%B0%E6%8E%A5%E5%8F%A3)
-  - [2、过滤器：Filter](#2%E8%BF%87%E6%BB%A4%E5%99%A8filter)
-    - [2.1、工作原理](#21%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
-    - [2.2、生命周期](#22%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
-    - [2.3、过滤器分类](#23%E8%BF%87%E6%BB%A4%E5%99%A8%E5%88%86%E7%B1%BB)
-    - [2.4、多个过滤器](#24%E5%A4%9A%E4%B8%AA%E8%BF%87%E6%BB%A4%E5%99%A8)
-    - [2.5、过滤器应用](#25%E8%BF%87%E6%BB%A4%E5%99%A8%E5%BA%94%E7%94%A8)
-- [四、Servlet3.0](#%E5%9B%9Bservlet30)
-  - [1、runtimes pluggability（运行时插件能力）](#1runtimes-pluggability%E8%BF%90%E8%A1%8C%E6%97%B6%E6%8F%92%E4%BB%B6%E8%83%BD%E5%8A%9B)
-  - [2、开启异步支持](#2%E5%BC%80%E5%90%AF%E5%BC%82%E6%AD%A5%E6%94%AF%E6%8C%81)
-- [五、其他](#%E4%BA%94%E5%85%B6%E4%BB%96)
-  - [1、防止表单重复提交](#1%E9%98%B2%E6%AD%A2%E8%A1%A8%E5%8D%95%E9%87%8D%E5%A4%8D%E6%8F%90%E4%BA%A4)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+- [一、Servlet](#%e4%b8%80servlet)
+	- [1、不使用开发工具开发一个servlet](#1%e4%b8%8d%e4%bd%bf%e7%94%a8%e5%bc%80%e5%8f%91%e5%b7%a5%e5%85%b7%e5%bc%80%e5%8f%91%e4%b8%80%e4%b8%aaservlet)
+	- [2、load-on-startup](#2load-on-startup)
+	- [3、servlet-mapping](#3servlet-mapping)
+	- [4、Servlet线程安全问题](#4servlet%e7%ba%bf%e7%a8%8b%e5%ae%89%e5%85%a8%e9%97%ae%e9%a2%98)
+	- [5、Servlet初始化参数](#5servlet%e5%88%9d%e5%a7%8b%e5%8c%96%e5%8f%82%e6%95%b0)
+	- [6、ServletContext](#6servletcontext)
+	- [7、HttpServletResponse](#7httpservletresponse)
+	- [8、HttpServletResquest](#8httpservletresquest)
+	- [9、状态管理](#9%e7%8a%b6%e6%80%81%e7%ae%a1%e7%90%86)
+		- [9.1、Cookie](#91cookie)
+		- [9.2、Session](#92session)
+		- [9.3、Cookie 与 Session](#93cookie-%e4%b8%8e-session)
+		- [9.4、分布式Session](#94%e5%88%86%e5%b8%83%e5%bc%8fsession)
+	- [10、Servlet 与 Servlet 容器](#10servlet-%e4%b8%8e-servlet-%e5%ae%b9%e5%99%a8)
+		- [10.1、两者直接的关系](#101%e4%b8%a4%e8%80%85%e7%9b%b4%e6%8e%a5%e7%9a%84%e5%85%b3%e7%b3%bb)
+		- [10.2、Servlet 容器的启动过程](#102servlet-%e5%ae%b9%e5%99%a8%e7%9a%84%e5%90%af%e5%8a%a8%e8%bf%87%e7%a8%8b)
+		- [10.3、Servlet 对象创建](#103servlet-%e5%af%b9%e8%b1%a1%e5%88%9b%e5%bb%ba)
+		- [10.4、Servlet 是如何运行的](#104servlet-%e6%98%af%e5%a6%82%e4%bd%95%e8%bf%90%e8%a1%8c%e7%9a%84)
+		- [10.5、servlet的生命周期](#105servlet%e7%9a%84%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f)
+		- [10.6、Servlet结构](#106servlet%e7%bb%93%e6%9e%84)
+			- [10.6.1、Servlet框架组成](#1061servlet%e6%a1%86%e6%9e%b6%e7%bb%84%e6%88%90)
+			- [10.6.2、Servlet框架核心是 Servlet类](#1062servlet%e6%a1%86%e6%9e%b6%e6%a0%b8%e5%bf%83%e6%98%af-servlet%e7%b1%bb)
+			- [10.6.3、service方法注意事项](#1063service%e6%96%b9%e6%b3%95%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9)
+		- [10.7、创建Servlet对象的时机](#107%e5%88%9b%e5%bb%baservlet%e5%af%b9%e8%b1%a1%e7%9a%84%e6%97%b6%e6%9c%ba)
+		- [10.8、销毁Servlet对象的时机](#108%e9%94%80%e6%af%81servlet%e5%af%b9%e8%b1%a1%e7%9a%84%e6%97%b6%e6%9c%ba)
+	- [11、Context、ServletContext、ApplicationContext](#11contextservletcontextapplicationcontext)
+- [二、HTTP协议](#%e4%ba%8chttp%e5%8d%8f%e8%ae%ae)
+- [三、Servlet高级应用](#%e4%b8%89servlet%e9%ab%98%e7%ba%a7%e5%ba%94%e7%94%a8)
+	- [1、监听器](#1%e7%9b%91%e5%90%ac%e5%99%a8)
+		- [1.1、什么是监听器](#11%e4%bb%80%e4%b9%88%e6%98%af%e7%9b%91%e5%90%ac%e5%99%a8)
+		- [1.2、监听器应用](#12%e7%9b%91%e5%90%ac%e5%99%a8%e5%ba%94%e7%94%a8)
+		- [1.3、servlet组件启动顺序](#13servlet%e7%bb%84%e4%bb%b6%e5%90%af%e5%8a%a8%e9%a1%ba%e5%ba%8f)
+		- [1.4、监听器分类](#14%e7%9b%91%e5%90%ac%e5%99%a8%e5%88%86%e7%b1%bb)
+		- [1.5、监听域对象自身的创建与销毁](#15%e7%9b%91%e5%90%ac%e5%9f%9f%e5%af%b9%e8%b1%a1%e8%87%aa%e8%ba%ab%e7%9a%84%e5%88%9b%e5%bb%ba%e4%b8%8e%e9%94%80%e6%af%81)
+		- [1.6、监听域对象的属性增加与删除，实现接口](#16%e7%9b%91%e5%90%ac%e5%9f%9f%e5%af%b9%e8%b1%a1%e7%9a%84%e5%b1%9e%e6%80%a7%e5%a2%9e%e5%8a%a0%e4%b8%8e%e5%88%a0%e9%99%a4%e5%ae%9e%e7%8e%b0%e6%8e%a5%e5%8f%a3)
+	- [2、过滤器：Filter](#2%e8%bf%87%e6%bb%a4%e5%99%a8filter)
+		- [2.1、工作原理](#21%e5%b7%a5%e4%bd%9c%e5%8e%9f%e7%90%86)
+		- [2.2、生命周期](#22%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f)
+		- [2.3、过滤器分类](#23%e8%bf%87%e6%bb%a4%e5%99%a8%e5%88%86%e7%b1%bb)
+		- [2.4、多个过滤器](#24%e5%a4%9a%e4%b8%aa%e8%bf%87%e6%bb%a4%e5%99%a8)
+		- [2.5、过滤器应用](#25%e8%bf%87%e6%bb%a4%e5%99%a8%e5%ba%94%e7%94%a8)
+- [四、Servlet3.0](#%e5%9b%9bservlet30)
+	- [1、runtimes pluggability（运行时插件能力）](#1runtimes-pluggability%e8%bf%90%e8%a1%8c%e6%97%b6%e6%8f%92%e4%bb%b6%e8%83%bd%e5%8a%9b)
+	- [2、开启异步支持](#2%e5%bc%80%e5%90%af%e5%bc%82%e6%ad%a5%e6%94%af%e6%8c%81)
+- [五、其他](#%e4%ba%94%e5%85%b6%e4%bb%96)
+	- [1、防止表单重复提交](#1%e9%98%b2%e6%ad%a2%e8%a1%a8%e5%8d%95%e9%87%8d%e5%a4%8d%e6%8f%90%e4%ba%a4)
+- [参考资料](#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -54,9 +58,9 @@
 
 ## 1、不使用开发工具开发一个servlet
 
-- （1）在tomcat服务器的webapps下新建一个目录test(应用名)，在test文件夹内再新加一个WEB-INF文件夹，再在WEB-INF文件夹内新建一个classes文件夹;`\apache-tomcat-6.0.14\webapps\test\WEB-INF\classes`；
+- （1）在tomcat服务器的webapps下新建一个目录test(应用名)，在test文件夹内再新加一个WEB-INF文件夹，再在WEB-INF文件夹内新建一个classes文件夹；`\apache-tomcat-6.0.14\webapps\test\WEB-INF\classes`；
 - （2）在classes文件夹新建一个`SecondServlet.java`文件，如下代码:
-```java
+	```java
 	package cn.tarena;
 	import java.io.*;
 	import javax.servlet.*;
@@ -69,11 +73,10 @@
 			out.println("实现HttpServlet......................");
 		}
 	}
-```
-- （3）找到`servlet-api.jar`文件，复制到当前classes文件夹中，编译java文件:<br>
-	`javac -cp servlet-api.jar -d . SecondServlet.java`   `.`表示当前目录;
-- （4）配置web.xml文件:在WEB-INF文件夹下新建文件web.xml，添加如下配置:
-```xml
+	```
+- （3）找到`servlet-api.jar`文件，复制到当前classes文件夹中，编译java文件：`javac -cp servlet-api.jar -d . SecondServlet.java`，其中`.`表示当前目录;
+- （4）配置`web.xml`文件：在WEB-INF文件夹下新建文件`web.xml`，添加如下配置:
+	```xml
 	<?xml version="1.0" encoding="UTF-8"?>
 	<web-app xmlns="http://java.sun.com/xml/ns/javaee"
 		xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -89,93 +92,94 @@
 			<url-pattern>/secondServlet</url-pattern>
 		</servlet-mapping>
 	</web-app>
-```
-- 访问该servlet：启动tomcat服务器，地址栏输入:`localhost:8080/test/secondServlet`
+	```
+- 访问该servlet：启动tomcat服务器，地址栏输入：`localhost:8080/test/secondServlet`
 
-在Servlet3.0之后，支持注解的形式：`@WebServlet("/myAnnotationServlet")`，就可以不用`web.xml`文件了；
+**注意**：在Servlet3.0之后，支持注解的形式：`@WebServlet("/myAnnotationServlet")`，就可以不用`web.xml`文件了；
 
 ## 2、load-on-startup
 
-服务器启动时初始化servlet，如果在<servlet>元素中配置了一个<load-on-startup>元素，那么WEB应用程序在启动时，就会装载并创建Servlet的实例对象、以及调用Servlet实例对象的init()方法。<br>
-	举例：
+服务器启动时初始化servlet，如果在`<servlet>`元素中配置了一个`<load-on-startup>`元素，那么WEB应用程序在启动时，就会装载并创建Servlet的实例对象、以及调用Servlet实例对象的init()方法。例如：
+```xml
+<servlet>
+	<servlet-name>invoker</servlet-name>
+	<servlet-class>
+		org.apache.catalina.servlets.InvokerServlet
+	</servlet-class>
+	<load-on-startup>2</load-on-startup>
+</servlet>
 ```
-	<servlet>
-		<servlet-name>invoker</servlet-name>
-		<servlet-class>
-			org.apache.catalina.servlets.InvokerServlet
-		</servlet-class>
-		<load-on-startup>2</load-on-startup>
-	</servlet>
-```
-是一个正整数，数字越小，先启动。<br>
+是一个正整数，数字越小，先启动。
+
 用途：为web应用写一个InitServlet，这个servlet配置为启动时装载，为整个web应用创建必要的数据库表和数据
 
 ## 3、servlet-mapping
 
-如果某个Servlet的映射路径仅仅为一个正斜杠("/")，那么这个Servlet就成为当前Web应用程序的缺省Servlet。凡是在web.xml文件中找不到匹配的<servlet-mapping>元素的URL，它们的访问请求都将交给缺省Servlet处理，也就是说，缺省Servlet用于处理所有其他Servlet都不处理的访问请求。在<tomcat的安装目录>\conf\web.xml文件中，注册了一个名称为：org.apache.catalina.servlets.DefaultServlet的Servlet，并将这个Servlet设置为了缺省Servlet。当访问Tomcat服务器中的某个静态HTML文件和图片时，实际上是在访问这个缺省Servlet
+如果某个Servlet的映射路径仅仅为一个正斜杠`("/")`，那么这个Servlet就成为当前Web应用程序的缺省Servlet。凡是在web.xml文件中找不到匹配的`<servlet-mapping>`元素的URL，它们的访问请求都将交给缺省Servlet处理，也就是说，缺省Servlet用于处理所有其他Servlet都不处理的访问请求。在`CATALINA_HOME\conf\web.xml`文件中，注册了一个名称为：`org.apache.catalina.servlets.DefaultServlet`的Servlet，并将这个Servlet设置为了缺省Servlet。当访问Tomcat服务器中的某个静态HTML文件和图片时，实际上是在访问这个缺省Servlet
 
 ## 4、Servlet线程安全问题
 
 ## 5、Servlet初始化参数
 
-ServletConfig接口，没有固定值的数据都可以通过配置方式：如数据库，字符集编码；在web.xml文件中配置参数：（可以配置多个<init-param>），这里是为每个Servlet配置初始化参数
+ServletConfig接口，没有固定值的数据都可以通过配置方式：如数据库，字符集编码；在web.xml文件中配置参数：（可以配置多个`<init-param>`），这里是为每个Servlet配置初始化参数
+```xml
+<init-param>
+	<param-name>country</param-name>
+	<param-value>China</param-value>
+</init-param>
 ```
-	<init-param>
-		<param-name>country</param-name>
-		<param-value>China</param-value>
-	</init-param>
+在Servlet中获取值
+```java
+// 根据配置参数名获取参数值
+String value = this.getServletConfig().getInitParameter("country");
+// 获取配置中所有初始化参数
+Enumeration e = this.getServletConfig().getInitParameterNames();
 ```
-在Servlet中获取值:<br>
 
-	// 根据配置参数名获取参数值
-	String value = this.getServletConfig().getInitParameter("country");
-	// 获取配置中所有初始化参数
-	Enumeration e = this.getServletConfig().getInitParameterNames();
-
-★ ServletConfig对象用于封装servlet的配置信息
+**ServletConfig对象用于封装servlet的配置信息**
 	
 ## 6、ServletContext
 
-可以通过ServletContext来实现多个servlet的资源共享
+可以通过ServletContext来实现多个servlet的资源共享：`ServletContext context = this.getServletContext();`
 
-	ServletContext context = this.getServletContext();
-
-- ①、ServletContext域:这是一个容器，说明了该容器的作用范围，也就是应用程序范围;
+- ①、ServletContext域:这是一个容器，说明了该容器的作用范围，也就是应用程序范围
 - ②可以通过给Web应用配置全局初始化参数
-
+	```xml
 	<context-param>
 		<param-name>country</param-name>
 		<param-value>China</param-value>
 	</context-param>
-	获取:this.getServletContext().getInitParameter("country");
+	```
+	获取：`this.getServletContext().getInitParameter("country");`
 
-- ③、管理web资源文件(.xml	.properties)
-	- Ⅰ.读取.properties文件:
-```
+- ③、管理web资源文件(`.xml`、`.properties`)，如下是读取`.properties`文件:
+	```java
 	InputStream in = this.getServletContext().getResourceAsStream("/WEB-INF/classes/db.properties");
 	Properties props = new Properties();
 	props.load(in);
-```
-	注意:
-	FileInputStream input = new FileInputStream("classes/db.properties");
-	这里流的读取文件的路径是相对路径，在Java中，其是相对与JVM的路径;
-	在Web开发中尤其要注意，"classes/db.properties"这样写是相对于服务器里的目录;
-	以tomcat为例:
-		这里就是相当于tomcat/bin目录的，完整应该是:/bin/classes/db.properties，
-		因此在Web开发中读取配置文件最好使用ServletContext来读取;
-	◆还有一种方法获取配置文件在服务器上的绝对路径:
+	```
+	注意：`FileInputStream input = new FileInputStream("classes/db.properties");`，这里流的读取文件的路径是相对路径，在Java中，其是相对与JVM的路径；在Web开发中尤其要注意，"classes/db.properties"这样写是相对于服务器里的目录；
+	
+	以tomcat为例：这里就是相当于`tomcat/bin`目录的，完整应该是：`/bin/classes/db.properties`，因此在Web开发中读取配置文件最好使用ServletContext来读取；
+	- 还有一种方法获取配置文件在服务器上的绝对路径：
+		```java
 		String path = this.getServletContext().getRealPath("/WEB-INF/classes/db.properties");
-		那么就可以使用流来读取了:
+		// 那么就可以使用流来读取了:
 		FileInputStream input = new FileInputStream(path);
-	◆可以使用类装载器来实现配置文件的读取(不在Servlet中读取)
+		```
+	- 可以使用类装载器来实现配置文件的读取(不在Servlet中读取)
+		```java
 		InputStream input = Demo2.class.getClassLoader().getResourceAsStream("db.properties");
-		这里使用类装载器来加载配置文件，那么这里将不能读取db.properties更新后的数据;
-		如果需要读取更新后的数据:
+		```
+		这里使用类装载器来加载配置文件，那么这里将不能读取db.properties更新后的数据；如果需要读取更新后的数据：
 		使用类加载器来获取配置文件的路径
-			String path = Demo2.class.getClassLoader().getResource("db.properties");
-			FileInputStream input = new FileInputStream(path);
+		```java
+		String path = Demo2.class.getClassLoader().getResource("db.properties");
+		FileInputStream input = new FileInputStream(path);
+		```
 
 ## 7、HttpServletResponse
+
 ```java
 //设置response使用的编码格式，以控制其输出到浏览器的编码
 response.setCharacterEncoding("UTF-8"); 
@@ -183,36 +187,30 @@ response.setCharacterEncoding("UTF-8");
 response.setHeader("content-type", "text/html;charset=UTF-8");
 ```
 
-- ①、控制浏览器定时刷新<br>
-	response.setHeader("refresh", "3;url=指向地址");//每隔3s刷新页面<br>
-	◆用户注册成功，自动跳转页面，可以用此来实现<br>
-- ②、控制缓存:<br>
-	控制缓存时间<br>
-	response.setDateHeader("expires",System.currentTimeMillis() + 1000*3600 );<br>
-	禁止浏览器缓存<br>
-	response.setDateHeader("expires",-1);<br>
-- ③、重定向:服务器发送一个302状态和一个location消息头(值是一个地址，称为重定向地址)<br>
-	response.setStatus(302);<br>
-	response.setHeader("location"，"url...");<br>
-	或者:<br>
-	response.sendRedirect(url);<br>
-	- 特点:<br>
-		Ⅰ.浏览器会向服务器发送两次请求;<br>
-		用户登录和显示购物车时通常会用到重定向技术;<br>
-	- 注意:<br>
-		response.getWriter()与response.getOutputStream()不能同时使用在一个Servlet(包括转发)，否则会出现异常：java.lang.IllegalStateException: getWriter() has already been called for this response重定向不会出现这种问题，因为其是两次响应；
-- ④、获取的输出流，可以不去处理吗，Servlet会自动去管理关闭这些流；
+- ①、控制浏览器定时刷新：`response.setHeader("refresh", "3;url=指向地址");`,每隔3s刷新页面，用户注册成功，自动跳转页面，可以用此来实现
+- ②、控制缓存时间：
+	`response.setDateHeader("expires",System.currentTimeMillis() + 1000*3600 );`
+
+	禁止浏览器缓存：`response.setDateHeader("expires",-1);`
+- ③、重定向:服务器发送一个302状态和一个location消息头(值是一个地址，称为重定向地址)
+	```java
+	response.setStatus(302);
+	response.setHeader("location"，"url...");
+	// 或者:
+	response.sendRedirect(url);
+	```
+	- 特点：浏览器会向服务器发送两次请求；用户登录和显示购物车时通常会用到重定向技术；
+	- 注意：response.getWriter()与response.getOutputStream()不能同时使用在一个Servlet(包括转发)，否则会出现异常：java.lang.IllegalStateException: getWriter() has already been called for this response重定向不会出现这种问题，因为其是两次响应；
+- ④、获取的输出流，可以不去处理，Servlet会自动去管理关闭这些流；
 
 ## 8、HttpServletResquest
 
 - 乱码问题
-```
-	可以修改服务器的配置，如tomcat，可以加上属性:URIEncoding="utf-8"
-	<Connector port="8088" protocol="HTTP/1.1" 
-		connectionTimeout="20000" 
-		redirectPort="8443" URIEncoding="utf-8" />
+```xml
+<!-- 可以修改服务器的配置，如tomcat，可以加上属性:URIEncoding="utf-8" -->
+<Connector port="8088" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443" URIEncoding="utf-8" />
 ```		
-- 请求转发:
+- 请求转发
 		
 ## 9、状态管理
 
@@ -240,12 +238,12 @@ session机制采用的是一种在服务器端保持状态的解决方案.由于
 都能够进行会话跟踪，但是完成的原理不太一样
 
 - 存取方式不同
-	- Cookie 中只能保管ASCII字符串，假如需求存取Unicode字符或者二进制数据，需求先进行编码;也不能直接存储Java对象;
-	- Session 中能够存取任何类型的数据，包括而不限于 String、Integer、List、Map 等;
+	- Cookie 中只能保管ASCII字符串，假如需求存取Unicode字符或者二进制数据，需求先进行编码；也不能直接存储Java对象；
+	- Session 中能够存取任何类型的数据，包括而不限于 String、Integer、List、Map 等；
 	- 单个cookie保存的数据不能超过4K，很多浏览器都限制一个站点最多保存20个cookie
 - 隐私策略的不同
-	- Cookie 存储在客户端阅读器中，对客户端是可见的，客户端的一些程序可能会窥探、复制以至修正Cookie中的内容;
-	- Session 存储在服务器上，对客户端是透明的，不存在敏感信息泄露的风险;
+	- Cookie 存储在客户端阅读器中，对客户端是可见的，客户端的一些程序可能会窥探、复制以至修正Cookie中的内容；
+	- Session 存储在服务器上，对客户端是透明的，不存在敏感信息泄露的风险；
 - 有效期上的不同
 	- Cookie 设置过期时间可以很大，保证长期有效.
 	- Session 依赖于名为JSESSIONID的Cookie，而Cookie JSESSIONID 的过期时间默许为–1，只需关闭了阅读器该Session就会失效
@@ -253,7 +251,7 @@ session机制采用的是一种在服务器端保持状态的解决方案.由于
 	- Cookie 保管在客户端，不占用服务器资源，假如并发阅读的用户十分多，Cookie 是很好的选择
 	- Session 是保管在服务器端的，每个用户都会产生一个Session.假如并发访问的用户十分多，会产生十分多的Session，耗费大量的内存
 - 浏览器支持的不同
-	- Cookie 是需要客户端浏览器支持的.假如客户端禁用了Cookie，或者不支持Cookie，则会话跟踪会失效;
+	- Cookie 是需要客户端浏览器支持的.假如客户端禁用了Cookie，或者不支持Cookie，则会话跟踪会失效；
 	- 假如客户端浏览器不支持Cookie，需要运用Session以及URL地址重写
 - 跨域支持上的不同
 	- Cookie 支持跨域名访问
@@ -274,11 +272,10 @@ session机制采用的是一种在服务器端保持状态的解决方案.由于
 
 - 两者关系有点像枪和子弹的关系，枪是为子弹而生，而子弹又让枪有了杀伤力。从技术角度来说是为了解耦，通过标准化接口来相互协作。
 
-- 以Tomcat如何管理Servlet容器来说：<br>
-	Tomcat 的容器等级中Context容器是直接管理Servlet在容器中的包装类Wrapper，所以Context容器如何运行将直接影响Servlet的工作方式。一个 Context 对应一个 Web 工程
-```
+- 以Tomcat如何管理Servlet容器来说：Tomcat 的容器等级中Context容器是直接管理Servlet在容器中的包装类Wrapper，所以Context容器如何运行将直接影响Servlet的工作方式。一个 Context 对应一个 Web 工程
+	```
 	<Context path="/projectOne " docBase="\user\projects\projectOne" reloadable="true" />
-```
+	```
 ### 10.2、Servlet 容器的启动过程
 
 Tomcat7 也开始支持嵌入式功能，增加了一个启动 org.apache.catalina.startup.Tomcat.将Servlet包装成StandardWrapper并作为子容器添加到 Context 中，其它的所有 web.xml 属性都被解析到 Context 中，所以说 Context 容器才是真正运行 Servlet 的 Servlet 容器
@@ -291,7 +288,7 @@ Tomcat7 也开始支持嵌入式功能，增加了一个启动 org.apache.catali
 
 servlet容器为servlet运行提供了网络相关的服务：
 
-比如在浏览器地址栏输入地址:	http://ip:port/web01/hello
+比如在浏览器地址栏输入地址:	`http://ip:port/web01/hello`
 
 - Step1：浏览器依据ip，port建立与servlet容器(servlet容器也是一个简单的服务器)之间的链接
 - Step2：浏览器将请求参数，请求资源路径等等打包(需按照http协议的要求)
@@ -301,33 +298,36 @@ servlet容器为servlet运行提供了网络相关的服务：
 - Step6：容器调用servlet对象的service方法(会将事先创建好的request，response作为参数传递进来)
 - Step7：ervlet可以通过请求request对象获得请求参数，进行相应的处理，然后将处理结果缓存到response对象上
 - Step8：容器从response对象上获取之前处理的结果，然后打包发送给浏览器.
-- Step9：浏览器拆包(解析容器返回的响应数据包)，依据获取的数据生成相应的页面;
+- Step9：浏览器拆包(解析容器返回的响应数据包)，依据获取的数据生成相应的页面；
 
-### 10.5.servlet的生命周期的四个阶段
+### 10.5、servlet的生命周期
 
 ![image](image/Servlet生命周期.png)
 
-**1、实例化**
+**1、加载与实例化**
 
-- 什么是实例化:容器调用servlet构造器创建一个servlet对象；在默认情况下，不管有多少请求，容器只会创建一个servlet对象.
+- 什么是实例化：容器调用servlet构造器创建一个servlet对象；在默认情况下，不管有多少请求，容器只会创建一个servlet对象。
 
 - 什么时候实例化？
-	- 情况1：在默认情况下，容器收到请求之后才会创建servlet对象;
-	- 情况2：容器在启动时，就将某些servlet对象创建;这些servlet必须在web.xml中
+	- 情况1：在默认情况下，容器收到请求之后才会创建servlet对象；
+	- 情况2：容器在启动时，就将某些servlet对象创建；这些servlet必须在1中
 
-	配置一个参数:<load-on-startup>配置，其参数值越小，优先级越高，0为最高优先级
-	例如:<load-on-startup>1</load-on-startup>
+	加载和实例化可以发生在容器启动时，或者延迟初始化直到容器决定有请求需要处理时
+
+	配置一个参数：`<load-on-startup>`配置，其参数值越小，优先级越高，0为最高优先级，例如：`<load-on-startup>1</load-on-startup>`
 
 **2、初始化**
 
-- 什么是初始化：容器创建好servlet对象之后，会立即调用init方法;
+- 什么是初始化：容器创建好servlet对象之后，会立即调用init方法；
 
 - 怎么样实现初始化处理逻辑？
-	- 一般情况下，不需要写init方法，因为GenericServlet类依据实现了innit方法:<br>
-		// 将容器创建的ServletConfig对象保存下来，<br>
-		// 并且提供了getServletConfig方法来获得该对象<br>
-		// 调用了一个空的init方法，(该init方法用于子类去override)<br>
-		// 建议override无参的init方法<br>
+	- 一般情况下，不需要写init方法，因为GenericServlet类依据实现了innit方法：
+		```
+		// 将容器创建的ServletConfig对象保存下来，
+		// 并且提供了getServletConfig方法来获得该对象
+		// 调用了一个空的init方法，(该init方法用于子类去override)
+		// 建议override无参的init方法
+		```
 	- 如果要实现自己的初始化处理逻辑，只要override init()方法
 	- 初始化方法只会执行一次
 	- ServletConfig对象可以用来访问servlet的初始化参数
@@ -336,45 +336,58 @@ servlet容器为servlet运行提供了网络相关的服务：
 
 - 什么是就绪：servlet容器收到请求之后，会调用servlet对象的service方法来处理请求
 - 如何编写业务逻辑？
-	- 方式一.override HttpServlet的service方法:HttpServlet的service方法实现：依据请求类型调用doGet()或者doPost()方法，这两方法在默认情况下就只是简单的抛出异常，需要子类去override；
-	- 方式二.override HttpServlet的doGet()或者doPost()方法;
+	- 方式一：override HttpServlet的service方法:HttpServlet的service方法实现：依据请求类型调用doGet()或者doPost()方法，这两方法在默认情况下就只是简单的抛出异常，需要子类去override；
+	- 方式二：override HttpServlet的doGet()或者doPost()方法；
 
 **4、销毁:**
 
-- 什么是销毁:容器依据自身的算法，是否销毁servlet对象；容器在销毁之前，会调用servlet对象的destroy()方法;
-- destroy方法只会执行一次;
+- 什么是销毁：容器依据自身的算法，是否销毁servlet对象；容器在销毁之前，会调用servlet对象的destroy()方法；
+- destroy方法只会执行一次；
 
-### 10.6、Servlet架构
+### 10.6、Servlet结构
+
 #### 10.6.1、Servlet框架组成
 
 由两个 java 包组成：javax.servlet与javax.servlet.http
-- javax.servlet 定义了所有Servlet类必须实现或者扩展的通用接口和类;
+- javax.servlet 定义了所有Servlet类必须实现或者扩展的通用接口和类；
 - javax.servlet.http 定义了采用http协议通信的HttpServlet类.
 
 #### 10.6.2、Servlet框架核心是 Servlet类
 
 所有Servlet都必须实现这个接口.在Servlet接口中定义了5个方法，其中3个方法代表了Servlet的生命周期.
-- init(ServletConfig)方法：负责初始化Servlet对象，在Servlet生命周期中，该方法执行一次;该方法执行在单线程环境中，因此不用考虑线程安全问题;
+- init(ServletConfig)方法：负责初始化Servlet对象，在Servlet生命周期中，该方法执行一次；该方法执行在单线程环境中，因此不用考虑线程安全问题；
 - service(ServletRequest req，ServletResponse res)方法：
-	负责响应客户的请求，为了提高效率，Servlet规范要求一个Servlet实例必须能够同时服务于多个客户端请求，即service是运行在多线程环境下，必须保证该方法的线程安全性;
-- destroy()方法：当Servlet对象退出生命周期时，负责释放占用的资源;
+	负责响应客户的请求，为了提高效率，Servlet规范要求一个Servlet实例必须能够同时服务于多个客户端请求，即service是运行在多线程环境下，必须保证该方法的线程安全性；
+- destroy()方法：当Servlet对象退出生命周期时，负责释放占用的资源；
 
 #### 10.6.3、service方法注意事项
 
-- 如果service方法没有访问servlet的成员变量也没有访问全局资源，如果静态变量、文件、数据库连接，而是只使用了当前线程自己的资源，比如指向全局资源的临时变量、request、response等对象，该方法本身就是线程安全的，不需要进行同步控制;
-- 如果service()方法访问了Servlet的成员变量，但是对该变量的操作是只读操作，该方法本身就是线程安全的，不必进行任何的同步控制;
-- 如果service()方法访问了Servlet的成员变量，并且对该变量的操作既有读又有写，通常需要加上同步控制语句;
-- 如果service()方法访问了全局的静态变量，如果同一时刻系统中也可能有其它线程访问该静态变量，如果既有读也有写的操作;通常需要加上同步控制语句
-- 如果service()方法访问了全局的资源，比如文件、数据库连接等，通常需要加上同步控制语句;
+- 如果service方法没有访问servlet的成员变量也没有访问全局资源，如果静态变量、文件、数据库连接，而是只使用了当前线程自己的资源，比如指向全局资源的临时变量、request、response等对象，该方法本身就是线程安全的，不需要进行同步控制；
+- 如果service()方法访问了Servlet的成员变量，但是对该变量的操作是只读操作，该方法本身就是线程安全的，不必进行任何的同步控制；
+- 如果service()方法访问了Servlet的成员变量，并且对该变量的操作既有读又有写，通常需要加上同步控制语句；
+- 如果service()方法访问了全局的静态变量，如果同一时刻系统中也可能有其它线程访问该静态变量，如果既有读也有写的操作；通常需要加上同步控制语句
+- 如果service()方法访问了全局的资源，比如文件、数据库连接等，通常需要加上同步控制语句；
 
 ### 10.7、创建Servlet对象的时机
 
-- 默认情况下，在Servlet容器启动后:客户首次向Servlet发出请求，Servlet容器会判断内存中是否存在指定的Servlet对象，如果没有则创建它，然后根据客户的请求创建HttpRequest、HttpResponse对象，从而调用Servlet对象的service方法;
-- Servlet容器启动时:当web.xml文件中如果`<servlet>`元素中指定了<load-on-startup>子元素时，Servlet容器在启动web服务器时，将按照顺序创建并初始化Servlet对象;
+- 默认情况下，在Servlet容器启动后:客户首次向Servlet发出请求，Servlet容器会判断内存中是否存在指定的Servlet对象，如果没有则创建它，然后根据客户的请求创建HttpRequest、HttpResponse对象，从而调用Servlet对象的service方法；
+- Servlet容器启动时:当web.xml文件中如果`<servlet>`元素中指定了<load-on-startup>子元素时，Servlet容器在启动web服务器时，将按照顺序创建并初始化Servlet对象；
 
 ### 10.8、销毁Servlet对象的时机
 
 Servlet容器停止或者重新启动:Servlet容器调用Servlet对象的destroy方法来释放资源
+
+## 11、Context、ServletContext、ApplicationContext
+
+Tomcat的Context组件、Servlet规范中的ServletContext以及Spring中的ApplicationContext比较：
+
+- Servlet规范中ServletContext表示web应用的上下文环境，而web应用对应tomcat的概念是Context，所以从设计上，ServletContext自然会成为tomcat的Context具体实现的一个成员变量。
+
+- tomcat内部实现也是这样完成的，ServletContext对应tomcat实现是org.apache.catalina.core.ApplicationContext，Context容器对应tomcat实现是org.apache.catalina.core.StandardContext。ApplicationContext是StandardContext的一个成员变量。
+
+- Spring的ApplicationContext之前已经介绍过，tomcat启动过程中ContextLoaderListener会监听到容器初始化事件，它的contextInitialized方法中，Spring会初始化全局的Spring根容器ApplicationContext，初始化完毕后，Spring将其存储到ServletContext中。
+
+总而言之，Servlet规范中ServletContext是tomcat的Context实现的一个成员变量，而Spring的ApplicationContext是Servlet规范中ServletContext的一个属性
 
 # 二、HTTP协议	
 
@@ -404,25 +417,25 @@ servlet规范当中规定的一种特殊的组件，用于监听servlet容器产
 ### 1.4、监听器分类
 
 - 按监听的对象分类：
-	- 用于监听应用程序环境对象(ServletContext)的事件监听器;
-	- 用于监听用户会话对象(HttpSession)的事件监听器;
+	- 用于监听应用程序环境对象(ServletContext)的事件监听器；
+	- 用于监听用户会话对象(HttpSession)的事件监听器；
 	- 用于监听请求消息对象(ServletRequest)的事件监听器
 - 按监听的事件划分：
-	- 监听域对象自身的创建与销毁;ServletContext，HttpSession，ServletRequest
-	- 监听域对象的属性增加与删除;
-	- 监听绑定到HttpSession域中的某个对象的状态;
+	- 监听域对象自身的创建与销毁；ServletContext，HttpSession，ServletRequest
+	- 监听域对象的属性增加与删除；
+	- 监听绑定到HttpSession域中的某个对象的状态；
 
 ### 1.5、监听域对象自身的创建与销毁
 
-- ServletContext：需实现:ServletContextListener，有两个事件处理方法：创建或销毁ServletContext对象;
-```java
+- ServletContext：需实现:ServletContextListener，有两个事件处理方法：创建或销毁ServletContext对象；
+	```java
 	// 主要用途：定时器，全局属性对象
 	@Override
 	public void contextDestroyed(ServletContextEvent sce) {	
 		// ServletContext 销毁时调用
 		System.out.println("**************销毁监听器*********");
 	}
-	
+
 	@Override
 	public void contextInitialized(ServletContextEvent sce) {
 		// ServletContext 创建是调用
@@ -430,9 +443,9 @@ servlet规范当中规定的一种特殊的组件，用于监听servlet容器产
 		String username = sce.getServletContext().getInitParameter("");
 		System.out.println("**************监听器*********" + username);
 	}
-```
+	```
 - HttpSession对象：实现了HttpSessionListener
-```java
+	```java
 	@Override
 	public void sessionCreated(HttpSessionEvent se) {
 		// session创建时调用
@@ -441,9 +454,9 @@ servlet规范当中规定的一种特殊的组件，用于监听servlet容器产
 	public void sessionDestroyed(HttpSessionEvent se) {
 		// session销毁时调用
 	}
-```
+	```
 - ServletRequest对象：实现了ServletRequestListener
-```java
+	```java
 	@Override
 	public void requestDestroyed(ServletRequestEvent sre) {
 		
@@ -453,11 +466,11 @@ servlet规范当中规定的一种特殊的组件，用于监听servlet容器产
 	public void requestInitialized(ServletRequestEvent sre) {
 
 	}
-```	
+	```	
 ### 1.6、监听域对象的属性增加与删除，实现接口
 
 - ServletContextAttributeListener：属性的增加与删除
-- HttpSessionAttributeListener：Session属性的增加与删除;
+- HttpSessionAttributeListener：Session属性的增加与删除；
 - ServletRequestAttributeListener：请求参数的增加与删除
 		
 绑定到HttpSession域中的对象状态的事件监听器
@@ -482,8 +495,8 @@ servlet规范当中规定的一种特殊的组件，用于监听servlet容器产
 ### 2.3、过滤器分类
 
 - request：用户直接访问页面时，web容器会调用过滤器
-- forward：目标资源是RequestDispatcher	的forward访问时，该过滤器被调用;
-- include：目标资源是RequestDispatcher	的include访问时，该过滤器被调用;
+- forward：目标资源是RequestDispatcher	的forward访问时，该过滤器被调用；
+- include：目标资源是RequestDispatcher	的include访问时，该过滤器被调用；
 - error：目标资源是通过声明式异常处理机制调用时，过滤器将被调用 
 - async：异步调用资源------Servlet3.0，@WebFilter
 
@@ -502,8 +515,8 @@ servlet规范当中规定的一种特殊的组件，用于监听servlet容器产
 
 # 四、Servlet3.0
 
-- [官方文档-中文](https://github.com/chenlanqing/learningNote/blob/master/Java/官方文档/Servlet3.1规范中文版.pdf)
-- [官方文档-英文](https://github.com/chenlanqing/learningNote/blob/master/Java/官方文档/servlet-3.0-spec.pdf)
+- [官方文档-中文](../官方文档/Servlet3.1规范中文版.pdf)
+- [官方文档-英文](../官方文档/servlet-3.0-spec.pdf)
 
 ## 1、runtimes pluggability（运行时插件能力）
 
@@ -551,6 +564,7 @@ public class MyServletContainerInitializer implements ServletContainerInitialize
 ```
 
 ## 2、开启异步支持
+
 ```java
 @WebServlet(value="/async",asyncSupported=true)
 public class HelloAsyncServlet extends HttpServlet {
