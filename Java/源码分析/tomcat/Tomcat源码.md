@@ -72,20 +72,44 @@ Tomcat设计了两个核心的核心组件：连接器（Connector）和容器�
 
 连接器主要有三个接口来实现该类：EndPoint、Processor、Adapter
 
-
-
-
-
-
-1）Servlet规范中ServletContext表示web应用的上下文环境，而web应用对应tomcat的概念是Context，所以从设计上，ServletContext自然会成为tomcat的Context具体实现的一个成员变量。
-
-2）tomcat内部实现也是这样完成的，ServletContext对应tomcat实现是org.apache.catalina.core.ApplicationContext，Context容器对应tomcat实现是org.apache.catalina.core.StandardContext。ApplicationContext是StandardContext的一个成员变量。
-
-3）Spring的ApplicationContext之前已经介绍过，tomcat启动过程中ContextLoaderListener会监听到容器初始化事件，它的contextInitialized方法中，Spring会初始化全局的Spring根容器ApplicationContext，初始化完毕后，Spring将其存储到ServletContext中。
-
-总而言之，Servlet规范中ServletContext是tomcat的Context实现的一个成员变量，而Spring的ApplicationContext是Servlet规范中ServletContext的一个属性
+### 1.2、
 
 ## 2、Tomcat-NIO模型
+
+## 3、Tomcat与Jetty
+
+### 3.1、Jetty
+
+- Jetty 也是 Http 服务器 + Servlet 容器， 更小巧， 更易于定制
+- Jetty 架构： 多个 Connector + 多个 Handler + 一个全局线程池(Connector 和 Handler 共享)
+- 多个 Connector 在不同端口监听请求， 可以根据应用场景选择 Handler ： ServletHandler 和 SessionHandler
+- Jetty 用 Server 启动和协调上述组件
+- Jetty 与 Tomcat 的区别
+    - Jetty 没有 Service 的概念， Jetty 的 Connector 被 Handler 共享
+    - Tomcat 连接器有自己的线程池， Jetty Connector 使用全局线程池
+- Connector 组件， 完成 I/O 模型 + 协议封装
+    - 只支持 NIO 模型， 通过 Connection 组件封装协议
+    - Java NIO 核心组件为： Channel， Buffer， Selector
+        - Channel 即一个 socket 连接
+        - Channel 通过 Buffer 间接读写数据
+        - Selector 检测 Channel 的 I/O 事件， 可以处理多个 Channel， 减少线程切换开销
+    - NIO 完成三个功能： 监听连接， I/O 事件查询， 数据读写， 对应的 Jetty 封装为 Acceptor， SelectorManager， Connection
+    - Acceptor 接受请求
+        - Jetty 有独立 Acceptor 线程组处理连接请求
+        - Connector 的实现类 ServerConnector 中有 _acceptors 数组， 保存固定数目的 Acceptor.
+        - Acceptor 是 Connector 内部类， 是 Runnable 的. 通过 getExecutor 得到线程以执行
+        - Acceptor 通过阻塞接受连接， 接受连接后， 调用 accepted， 其将 SocketChannel 设为非阻塞， 交给 Selector 处理
+    - SelectorManager 管理 Selector
+        - 被管理的 Selector 叫 ManagedSelector， 保存于 SelectorManager 的一个数组中
+        - SelectorManager 选择一个 Selector， 并创建一个任务 Accept 给 ManagedSelector， ManagerSelector 实现：
+            - 调用 register 将 Channel 注册到 Selector， 拿到 SelectionKey
+            - 创建 EndPoint 和 Connection， 并与 SelectionKey(Channel) 绑定
+        - 当有 I/O 事件时， ManagedSelector 调用 EndPoint 返回一个 Runnable 对象， 并扔给线程池执行
+    - Connection
+        - 上述 Runnable 对象会调用 Connection 处理请求， 得到 Request 并调用 Handler 容器处理
+        - 具体实现类 HttpConnection
+            - 请求处理： 在 EndPoint 中注册一系列回调函数， 数据到达时调用. ( 用回调函数模拟异步 I/O ). 在回调方法中读数据， 解析请求并存到 Request
+            - 相应处理： Handler 返回 Response， HttpConnection 通过 EndPoint 写到 Channel
 
 # 二、Tomcat生命周期
 
@@ -290,6 +314,7 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
     修改上述脚本的 JPDA_ADDRESS="localhost:8000"，只需要配置端口即可
     
 ## 2、tomcat-manager监控
+
 在低版本是默认开启的，而高版本因为安全因素默认是关闭的；
 
 - 文档地址：{tomcat}/webapps/docs/manager-howto.html

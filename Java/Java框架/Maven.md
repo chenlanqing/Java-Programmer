@@ -226,6 +226,47 @@ Maven的最近依赖策略：如果一个项目依赖相同的groupId、artifact
 ```
 注意version中使用的中括号和小括号：这样写version之后，selenium框架就会自动升级了，最低版本为2.4.0，最高版本不限，当然你也可以限制最高版本，语法就是开闭区间的语法
 
+## 2、IDEA自动重置LanguageLevel和JavaCompiler版本的问题
+
+使用IDEA时，导入的Maven项目默认的LanguageLevel和JavaCompiler都是1.5，1.5的情况下连最简单的@Override注解都不支持，所以项目可能出现一堆错；
+
+解决办法就是在pom.xml中指定maven-compiler-plugin的版本，该版本会同时影响LanguageLevel和JavaCompiler，修改后默认就成了这里设置的版本
+```xml
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>2.3.2</version>
+			<configuration>
+				<source>1.8</source>
+				<target>1.8</target>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+```
+
+## 3、一行命令同时修改maven项目中多个mudule的版本号
+
+Maven工厂在版本升级的时候就会比较麻烦，因为要遍历的修改所有pom中的版本号。比如要把1.0.0升级到1.0.1，那么就需要把所有的pom中的version都改掉
+```xml
+</plugins>
+    <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+        <version>2.7</version>
+        <configuration>
+            <generateBackupPoms>false</generateBackupPoms>
+        </configuration>
+    </plugin>
+</plugins>
+```
+generateBackupPoms用于配置是否生成备份Pom，用于版本回滚。配置好插件后，执行命令：
+```
+mvn versions:set -DnewVersion=1.0.1
+```
+
 # 参考资料
 
 * [Maven工程](https://www.jianshu.com/p/34740cd1fb58)
