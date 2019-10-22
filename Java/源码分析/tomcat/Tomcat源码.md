@@ -51,8 +51,6 @@
 
 ![](Tomcat架构.png)
 
-最顶层是Server，即一个Tomcat实例，一个Server中有一个或多个Service，一个Service有一个或多个连接器和一个容器组成；连接器与容器之间通过ServletRequest和ServletResponse连通
-
 tomcat由Server、Service、Engine、Connerctor、Host、Context组件组成，其中带有s的代表在一个tomcat实例上可以存在多个组件，比如Context(s)，tomcat允许我们部署多个应用，每个应用对应一个Context。这些组件在tomcat的conf/server.xml文件中可以找到，对tomcat的调优需要改动该文件；
 
 Tomcat要实现主要两个核心功能：
@@ -61,7 +59,11 @@ Tomcat要实现主要两个核心功能：
 
 Tomcat设计了两个核心的核心组件：连接器（Connector）和容器（Container）来分别做上述两件事情，连接器负责对外服务，容器负责内部处理；
 
-### 1.1、连接器
+![](Tomcat架构-1.png)
+
+最顶层是Server，即一个Tomcat实例，一个Server中有一个或多个Service，一个Service有一个或多个连接器和一个容器组成；连接器与容器之间通过ServletRequest和ServletResponse连通；
+
+### 1.2、连接器Connector
 
 连接器对Servlet容器屏蔽了协议以及IO模型等的区别，无论是ajp和http，在容器中获取到的都是一个标准的ervletRequest对象。
 
@@ -70,9 +72,111 @@ Tomcat设计了两个核心的核心组件：连接器（Connector）和容器�
 - 应用层协议解析
 - Tomcat Request/Response 与 ServletRequest和ServletResponse的转化
 
-连接器主要有三个接口来实现该类：EndPoint、Processor、Adapter
+连接器主要有三个接口来实现该类：EndPoint、Processor、Adapter。EndPoint负责提供字节流给Processor，Processor负责提供Tomcat Request对象给Adapter，Adapter负责提供Servlet对象给容器；
 
-### 1.2、
+由于IO模型和应用层协议可以自由组合，比如NIO+HTTP或者NIO2.0+AJP，Tomcat将网络通信和应用层协议解析放在一起考虑，设计了一个ProtocolHandler的接口来封装两种变化点。各种协议和通信模型的组合具有相应的具体实现类，比如Http11NioProtocol。
+
+可以看下ProtocolHandler接口的继承关系：
+
+![](Tomcat-Protocol继承关系.png)
+
+连接器的三个核心组件：EndPoint、Processor、Adapter分别用来做三件事情，其中EndPoint 和Processor放在一起抽象成了Protocol组件，关系如下：
+
+![](Tomcat-Connector关系.png)
+
+#### 1.2.1、ProtocolHandler组件
+
+用来处理网络连接和应用层协议，包含了EndPoint和Processor
+
+**EndPoint**
+
+EndPoint是通信端点，即通信监听的端口，是具体的Socket接收和发送处理器，用来实现TCP/IP协议的；其实是利用Socket借口将底层传来的数据转换为HTTP格式的数据，是间接的实现；
+
+EndPoint是一个接口，具体抽象实现类：AbstractEndPoint，其具体的子类Nio2Endpoint、NioEndpoint有两个重要的子组件：Acceptor和SocketProcessor（内部类实现方式）
+- Acceptor：用于监听Socket连接请求；
+- SocketProcessor：用于处理接收到的Socket请求，其实现与Runnable接口，其一般提交给线程池进行处理；
+
+**Processor**
+
+Processor是用来实现HTTP协议的，Processor接收Socket，读取字节解析成Tomcat Request和Response对象，并通过Adapter提交到容器处理。Processor是对应用层协议的抽象；
+
+
+总结：EndPoint接收到Sokcet连接后，生成一个SocketProcessor任务提交到线程池处理，SocketProcessor的run方法调用Processor组件去解析应用层协议，Processor同解析生成Request对象后，会调用Adapter的Service方法；
+
+#### 1.2.2、Adapter组件
+
+
+### 1.3、容器Container
+
+在Tomcat里，容器是用来装在Servlet的。
+
+#### 1.3.1、容器的层次结构
+
+容器设计了4种容器，分别是Engine、Host、Context和Wrapper，这四种容器父子关系，其关系如下图：
+
+![](Tomcat-Container容器关系.png)
+
+Tomcat通过一种分层架构，使得Servlet容器具有很好的灵活性：Context表示一个web应用程序；Wrapper表示一个Servlet，一个Web应用可能有多个Servlet；Host代表的是一个虚拟主机或者说一个站点；Tomcat可以配置多个虚拟主机地址，而一个虚拟主机可以部署多个web应用程序；Engine表示引擎，用来虚拟管理多个虚拟站点，一个Service最多有一个Engine；
+
+可以查看Tomcat中[server.xml](server.xml)，能够发现其架构关系；Tomcat采用组件化的设计，其构成组件都是可配置的，其中最外层是server
+```xml
+<Server>                            <!-- 顶层组件，可以包含多个Service -->
+    <Service>                       <!-- 顶层组件，可以包含一个Engine，多个连接器  -->
+        <Connector></Connector>     <!-- 连接器组件，代表通信接口  -->
+        <Engine>                    <!-- 容器组件，一个Engin组件处理Service中所有的请求，包含多个Host -->
+            <Host>                  <!-- 容器组件，处理特定的Host下客户请求，可以包含多个Context -->
+                <Context></Context> <!-- 容器组件，为特点的web应用处理所有的客户请求 -->
+            </Host>
+        </Engine>
+    </Service>
+</Server>
+```
+Tomcat使用组合模式来管理这些容器；其具体实现是所有容器组件都实现了Container接口，因此组合模式可以使得用户对单容器对象（Wrapper）和组合容器对象（Context、Host、Engine）的使用具有一致性。Container接口定义：
+```java
+public interface Container extends Lifecycle {
+    public void setName(String name);
+    public Container getParent();
+    public void setParent(Container container);
+    public void addChild(Container child);
+    public void removeChild(Container child);
+    public Container findChild(String name);
+}
+```
+
+#### 1.3.2、请求定位Servlet过程
+
+Tomcat主要是通过Mapper组件来完成的。Mapper组件的功能就是将用户请求的URL定位到一个Servlet中。其主要原理是：Mapper组件中保存了web应用的配置信息，即容器组件与访问路径的映射关系。当一个请求到来时，Mapper组件通过解析请求URL的域名和路径，再到自己保存的Map里查找，定位到一个Servlet。一个请求URL最后只会定位到一个Wrapper容器即一个Servlet；
+- 首先，根据协议和端口号选定Service和Engin，Service确定了意味着Engine也就确定了；
+- 然后，根据域名选定Host：Service和Engin确定后，mapper组件通过URL中域名查找指定的Host容器；
+- 之后，根据URL路径找到Context组件，匹配相应的web应用的路径；
+- 最后，根据URL路径找到Wrapper（Servlet）：Context确定后，Mapper根据web.xml中配置的Servlet的映射路径找到具体的Wrapper和Servlet；
+
+整个过程中，连接器的adapter会调用容器的Service方法来执行Servlet，最先拿到请求的是Engine容器，Engine容器对请求做相应的处理后，会把请求传给自己的子容器Host继续处理，最终整个请求会传给Wrapper容器，整个调用过程是怎么实现的？使用的是**Pipeline-Valve**管道。
+
+Pipeline-Valve是责任链模式，责任链模式指在一个请求处理的过程中有很多处理者一次对请求进行处理，每个处理者负责做自己相应的处理，处理完后将再调用下一个处理者继续处理；
+```java
+public interface Valve {
+  public Valve getNext();
+  public void setNext(Valve valve);
+  // invoke是用来处理请求的，getNext和setNext是将Valve串起来的；
+  public void invoke(Request request, Response response)
+}
+public interface Pipeline extends Contained {
+  public void addValve(Valve valve);
+  public Valve getBasic();
+  public void setBasic(Valve valve);
+  public Valve getFirst();
+}
+```
+Pipeline维护Valve链表。每一个容器都有一个Pipeline对象，只要触发Pipeline的第一个Valve，容器里Pipeline的Valve就会被调用；不同容器之间的Pipeline通过getBasic方法，其负责调用下层容器的Pipeline里的第一个Valve；整个调用过程由连接器中的Adapter触发，调用Engine的第一个Valve
+```java
+connector.getService().getContainer().getPipeline().getFirst().invoke(request, response);
+```
+Wrapper容器在最后一个Valve中会创建一个Filter链，调用doFilter方法。
+
+Valve和Filter区别：
+- Valve是Tomcat的私有机制；Filter是Servelt API公有的标准，所有Web容器都支持Filter机制；
+- Valve工作在web容器基本，拦截所有应用的请求；而Servlet Filter工作在应用级别；
 
 ## 2、Tomcat-NIO模型
 
@@ -112,6 +216,79 @@ Tomcat设计了两个核心的核心组件：连接器（Connector）和容器�
             - 相应处理： Handler 返回 Response， HttpConnection 通过 EndPoint 写到 Channel
 
 # 二、Tomcat生命周期
+
+第一部分中各个组件的层次关系，图中红色虚线表示一个请求在Tomcat的流转过程
+
+![](Tomcat-组件关系图.png)
+
+上面描述了组件之间的静态关系，如果让一个系统能够对外提供服务，需要创建、组织并启动这些组件；在服务停止时需要释放资源。Tomcat需要动态的管理这些组件的生命周期；
+
+分析这些组件有两层关系：
+- 第一层关系组件有大有小，大组件管理小组件；
+- 第二层关系是组件有内有外，外层组件控制内层组件，请求是由外层组件来驱动的；
+
+## 1、一键启停：LifeCycle接口
+
+上面每个组件都要经历创建、初始化、启动等过程，这些不变点抽象出来为一个接口，即LifeCycle，其内有如下方法：init、start、stop、destroy，每个具体的组件去实现这些方法。在父组件的init方法需要创建子组件并调用子组件的init方法，这就是组合模式，并且只需要调用最顶层组件，也就是Server组件的init和start方法，整个Tomcat就启动起来了；
+
+## 2、可扩展性：LifeCycle事件
+
+组件的init和start调用是由它的父组件状态变化触发的，上层组件的初始化触发子组件的初始化，可以把组件的生命周期定义为一个个状态，把状态的转变看作是一个事件，事件是由监听器的，在监听器可以实现一些逻辑，可以方便添加和删除监听器，这就是观察者模式；
+
+具体来说是在LifeCycle接口加入两个方法：添加监听器和删除监听器，除此之外还定义了一个Enum表示组件有哪些状态，以及在什么状态下触发什么事件；因此LifeCycle接口和LifeCycleState就定义成了下面这样的：
+
+![](Tomcat-LifeCycle类图.png)
+
+一旦组件达到相应的状态就会触发相应的事件；
+
+## 3、重用性：LifeCycleBase抽象基类
+
+不同的类实现接口时往往会有相同的逻辑，为了避免每个类都去实现一遍，定义了一个基类来实现共同的逻辑，让各个子类去继承基类，而不是直接实现接口，达到代码重用目的；
+
+基类中会定义一些抽象方法，基类不会去实现这些方法，而是调用这些方法来实现基本的骨架逻辑。抽象方法需要各个子类去实现的，子类必须实现。
+
+Tomcat中定义了一个基类LifecycleBase来实现LifeCycle接口，把公共的逻辑放在该类中，如生命周期中状态的转变与维护、生命事件的触发以及监听器添加和删除等，而子类负责自己的初始化、启动和停止方法。避免与基类中方法同名，把具体子类的实现方法改名字，在后面加上internal等；
+
+![](Tomcat-LifeCycleBase类图.png)
+
+LifecycleBase实现了LifeCycle接口中所有方法，还定义了相应的抽象方法交给具体的子类去实现，典型的模板设计模式
+
+LifecycleBase中init方法的实现：
+```java
+@Override
+public final synchronized void init() throws LifecycleException {
+    // 1、状态检查：检查状态的合法性，当前是NEW状态才往下进行
+    if (!state.equals(LifecycleState.NEW)) {
+        invalidTransition(Lifecycle.BEFORE_INIT_EVENT);
+    }
+    // 2、触发INITIALIZING事件的监听器，setStateInternal会去调用监听器的业务方法
+    setStateInternal(LifecycleState.INITIALIZING, null, false);
+
+    try {
+        // 3、调用具体子类的初始化方法
+        initInternal();
+    } catch (Throwable t) {
+        ExceptionUtils.handleThrowable(t);
+        setStateInternal(LifecycleState.FAILED, null, false);
+        throw new LifecycleException(
+                sm.getString("lifecycleBase.initFail",toString()), t);
+    }
+    // 4、触发 INITIALIZED事件的监听器
+    setStateInternal(LifecycleState.INITIALIZED, null, false);
+}
+```
+
+什么时候、谁把监听器注册进来的：
+- Tomcat自定义了一些监听器，这些监听器是父组件在创建子组件的过程中注册到子组件的。
+- 可以再Server.xml中定义自己的监听器，Tomcat会在启动时解析server.xml，创建并注册到容器组件
+
+## 4、生命周期管理总体类图
+
+![](Tomcat-生命周期整体概览.png)
+
+StandardServer、StandardService 等都是Server和Service的具体实现类，都继承了LifecycleBase；
+
+StandardEngine、StandardHost、StandardContext和StandardWrapper都是相应容器组件的具体实现类，都是容器，所以继承了ContainnerBae接口，也继承了LifecycleBase类，生命周期管理接口和功能接口是分开的，符合接口分离原则；
 
 # 三、Tomcat 类加载
 
@@ -375,6 +552,9 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
 
 
 ### 1.4、责任链模式
+
+
+### 1.5、模板设计模式
 
 
 ## 2、Tomcat控制输出乱码

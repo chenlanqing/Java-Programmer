@@ -1458,10 +1458,40 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
         - 在构造函数中未初始化完毕就将this赋值；
         - 隐式逸出：注册监听事件；
         - 在构造函数中运行线程；
+            ```java
+            public class ThisEscape {
+                public ThisEscape(EventSource source) {
+                    source.register(
+                        new EventListener(){
+                            public void onEvent(Event e){
+                                // doSomething
+                            }
+                        }
+                    );
+                }
+            }
+            ```
 
     解决逸出时安全问题：
     - 返回副本
     - 工厂模式
+        ```java
+        public class SafeListener {
+            private finale EventListener listener;
+            private SafeListener(){
+                listener = new EventListener(){
+                    public void onEvent(Event e){
+                        // doSomething
+                    }
+                }
+            }
+            public static SafeListener newInstance(EventSource source) {
+                SafeListener safe = new SafeListener();
+                source.registerListener(sale.listener);
+                return safe;
+            }
+        }
+        ```
 
 **需要考虑线程安全的问题：**
 - 访问共享的变量或资源，比如对象的属性、静态变量、共享缓存、数据库等，都有并发危险；
