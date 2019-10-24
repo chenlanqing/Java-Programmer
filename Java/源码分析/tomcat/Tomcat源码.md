@@ -1,11 +1,27 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
+目录
 
 - [一、Tomcat](#%E4%B8%80tomcat)
   - [1、Tomcat架构](#1tomcat%E6%9E%B6%E6%9E%84)
+    - [1.1、Tomcat整体架构](#11tomcat%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84)
+    - [1.2、连接器Connector](#12%E8%BF%9E%E6%8E%A5%E5%99%A8connector)
+    - [1.3、容器Container](#13%E5%AE%B9%E5%99%A8container)
+  - [2、Tomcat-NIO模型](#2tomcat-nio%E6%A8%A1%E5%9E%8B)
+  - [3、Tomcat与Jetty](#3tomcat%E4%B8%8Ejetty)
+    - [3.1、Jetty](#31jetty)
 - [二、Tomcat生命周期](#%E4%BA%8Ctomcat%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
-- [三、Tomcat 类加载](#%E4%B8%89tomcat-%E7%B1%BB%E5%8A%A0%E8%BD%BD)
+  - [1、一键启停：LifeCycle接口](#1%E4%B8%80%E9%94%AE%E5%90%AF%E5%81%9Clifecycle%E6%8E%A5%E5%8F%A3)
+  - [2、可扩展性：LifeCycle事件](#2%E5%8F%AF%E6%89%A9%E5%B1%95%E6%80%A7lifecycle%E4%BA%8B%E4%BB%B6)
+  - [3、重用性：LifeCycleBase抽象基类](#3%E9%87%8D%E7%94%A8%E6%80%A7lifecyclebase%E6%8A%BD%E8%B1%A1%E5%9F%BA%E7%B1%BB)
+  - [4、生命周期管理总体类图](#4%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86%E6%80%BB%E4%BD%93%E7%B1%BB%E5%9B%BE)
+- [三、Tomcat启动组件](#%E4%B8%89tomcat%E5%90%AF%E5%8A%A8%E7%BB%84%E4%BB%B6)
+  - [1、Catalina](#1catalina)
+  - [2、Server组件](#2server%E7%BB%84%E4%BB%B6)
+  - [3、Service组件](#3service%E7%BB%84%E4%BB%B6)
+  - [4、Engine组件](#4engine%E7%BB%84%E4%BB%B6)
+  - [5、从Tomcat看设计规范](#5%E4%BB%8Etomcat%E7%9C%8B%E8%AE%BE%E8%AE%A1%E8%A7%84%E8%8C%83)
+- [四、Tomcat 类加载](#%E5%9B%9Btomcat-%E7%B1%BB%E5%8A%A0%E8%BD%BD)
   - [1、Web服务器需要解决的问题](#1web%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%9C%80%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98)
   - [2、Tomcat类库结构](#2tomcat%E7%B1%BB%E5%BA%93%E7%BB%93%E6%9E%84)
   - [3、Tomcat类加载器机制](#3tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E6%9C%BA%E5%88%B6)
@@ -19,7 +35,6 @@
     - [4.2、线程上下文类加载器应用](#42%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%BA%94%E7%94%A8)
     - [4.3、Tomcat为什么要设置线程上下文类加载器](#43tomcat%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
   - [5、问题扩展](#5%E9%97%AE%E9%A2%98%E6%89%A9%E5%B1%95)
-- [四、Tomcat启动流程](#%E5%9B%9Btomcat%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B)
 - [五、Tomcat与HTTP请求](#%E4%BA%94tomcat%E4%B8%8Ehttp%E8%AF%B7%E6%B1%82)
 - [六、Web应用加载](#%E5%85%ADweb%E5%BA%94%E7%94%A8%E5%8A%A0%E8%BD%BD)
 - [七、Tomcat与数据源](#%E4%B8%83tomcat%E4%B8%8E%E6%95%B0%E6%8D%AE%E6%BA%90)
@@ -29,15 +44,17 @@
     - [1.2、配置tomcat远程调试](#12%E9%85%8D%E7%BD%AEtomcat%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95)
   - [2、tomcat-manager监控](#2tomcat-manager%E7%9B%91%E6%8E%A7)
 - [九、Tomcat优化](#%E4%B9%9Dtomcat%E4%BC%98%E5%8C%96)
-  - [1、内存优化](#1%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96)
-  - [2、线程优化](#2%E7%BA%BF%E7%A8%8B%E4%BC%98%E5%8C%96)
-  - [3、配置优化](#3%E9%85%8D%E7%BD%AE%E4%BC%98%E5%8C%96)
+  - [1、提高Tomcat启动速度](#1%E6%8F%90%E9%AB%98tomcat%E5%90%AF%E5%8A%A8%E9%80%9F%E5%BA%A6)
+  - [2、内存优化](#2%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96)
+  - [3、线程优化](#3%E7%BA%BF%E7%A8%8B%E4%BC%98%E5%8C%96)
+  - [4、配置优化](#4%E9%85%8D%E7%BD%AE%E4%BC%98%E5%8C%96)
 - [十、其他](#%E5%8D%81%E5%85%B6%E4%BB%96)
   - [1、Tomcat中设计模式](#1tomcat%E4%B8%AD%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
     - [1.1、门面模式（外观模式）](#11%E9%97%A8%E9%9D%A2%E6%A8%A1%E5%BC%8F%E5%A4%96%E8%A7%82%E6%A8%A1%E5%BC%8F)
     - [1.2、观察者模式](#12%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F)
     - [1.3、命令模式](#13%E5%91%BD%E4%BB%A4%E6%A8%A1%E5%BC%8F)
     - [1.4、责任链模式](#14%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F)
+    - [1.5、模板设计模式](#15%E6%A8%A1%E6%9D%BF%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
   - [2、Tomcat控制输出乱码](#2tomcat%E6%8E%A7%E5%88%B6%E8%BE%93%E5%87%BA%E4%B9%B1%E7%A0%81)
 - [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
 
@@ -184,6 +201,8 @@ Valve和Filter区别：
 
 ### 3.1、Jetty
 
+![](Jetty整体架构.png)
+
 - Jetty 也是 Http 服务器 + Servlet 容器， 更小巧， 更易于定制
 - Jetty 架构： 多个 Connector + 多个 Handler + 一个全局线程池(Connector 和 Handler 共享)
 - 多个 Connector 在不同端口监听请求， 可以根据应用场景选择 Handler ： ServletHandler 和 SessionHandler
@@ -290,7 +309,219 @@ StandardServer、StandardService 等都是Server和Service的具体实现类，�
 
 StandardEngine、StandardHost、StandardContext和StandardWrapper都是相应容器组件的具体实现类，都是容器，所以继承了ContainnerBae接口，也继承了LifecycleBase类，生命周期管理接口和功能接口是分开的，符合接口分离原则；
 
-# 三、Tomcat 类加载
+# 三、Tomcat启动组件
+
+http://cxis.me/2017/05/10/tomcat7%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/
+https://github.com/c-rainstorm/blog/blob/master/tomcat/%E8%B0%88%E8%B0%88%20Tomcat%20%E6%9E%B6%E6%9E%84%E5%8F%8A%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%5B%E5%90%AB%E9%83%A8%E7%BD%B2%5D.md
+
+启动Tomcat可以通过${CATALINA_HOME}/bin目录下的脚本startup.sh来启动Tomcat，执行该脚本之后，会发生如下流程：
+
+![](Tomcat-启动流程图.png)
+
+## 1、Catalina
+
+Catalina的主要任务时创建Server，它通过解析server.xml，把配置在server.xml的各种组件都创建出来，接着调用Server的init方法和start方法，Tomcat就启动起来了。
+
+Catalina在JVM中注册了一个关闭钩子，优雅的停止Tomcat并清理资源；
+```java
+public void start() {
+    //1. 如果持有的 Server 实例为空，就解析 server.xml 创建出来
+    if (getServer() == null) {
+        load();
+    }
+    //2. 如果创建失败，报错退出
+    if (getServer() == null) {
+        log.fatal(sm.getString("catalina.noServer"));
+        return;
+    }
+
+    //3. 启动 Server
+    try {
+        getServer().start();
+    } catch (LifecycleException e) {
+        return;
+    }
+
+    // 创建并注册关闭钩子
+    if (useShutdownHook) {
+        if (shutdownHook == null) {
+            shutdownHook = new CatalinaShutdownHook();
+        }
+        Runtime.getRuntime().addShutdownHook(shutdownHook);
+    }
+
+    // 用 await 方法监听停止请求
+    if (await) {
+        await();
+        stop();
+    }
+}
+/**
+ * Await and shutdown.
+ */
+public void await() {
+    getServer().await();
+}
+```
+Tomcat的关闭钩子实际上就是执行了Server的stop方法，Server的stop方法会释放和清理所有的资源
+```java
+protected class CatalinaShutdownHook extends Thread {
+    @Override
+    public void run() {
+        try {
+            if (getServer() != null) {
+                Catalina.this.stop();
+            }
+        } catch (Throwable ex) {
+            ExceptionUtils.handleThrowable(ex);
+            log.error(sm.getString("catalina.shutdownHookFail"), ex);
+        } finally {
+            // If JULI is used, shut JULI down *after* the server shuts down
+            // so log messages aren't lost
+            LogManager logManager = LogManager.getLogManager();
+            if (logManager instanceof ClassLoaderLogManager) {
+                ((ClassLoaderLogManager) logManager).shutdown();
+            }
+        }
+    }
+}
+```
+
+## 2、Server组件
+
+Server组件的具体实现类是StandardServer；首先StandardServer是继承了LifecycleBase，生命周期被统一管理，并且其子组件为Service，因此还需要管理Service的生命周期；
+
+Server在内部维护了若干Service组件，其是以数组来保存的，Server将一个Service添加到数组中；
+```java
+@Override
+public void addService(Service service) {
+    service.setServer(this);
+    synchronized (servicesLock) {
+        // 创建一个长度 +1 的新数组，在添加过程中动态的扩展数组长度，当添加一个新的Service实例时，进行数组复制，为了节省内存空间；
+        Service results[] = new Service[services.length + 1];
+        // 将老的数据复制过去
+        System.arraycopy(services, 0, results, 0, services.length);
+        results[services.length] = service;
+        services = results;
+
+        // 启动 Service 组件
+        if (getState().isAvailable()) {
+            try {
+                service.start();
+            } catch (LifecycleException e) {
+                // Ignore
+            }
+        }
+        // 触发监听事件
+        support.firePropertyChange("service", null, service);
+    }
+}
+```
+
+除此之外，Server组件还有一个重要的任务是启动一个Socket来监听停止端口，也就是能我们为什么能够通过shutdown命令来关闭Tomcat。
+
+Catalina启动时最后有一个await方法，其调用的就是Server的await方法；在await方法里会创建一个Socket监听8005端口，并且是在一个死循环里接收Socket上的连接请求，如果有新的连接到来就建立连接，然后从Socket读取数据；如果读取到的数据是停止命令“SHUTDOWN”，就退出循环，进入stop流程；
+
+## 3、Service组件
+
+其具体实现类是StandardService，其基本定义及关键的成员变量：
+```java
+public class StandardService extends LifecycleBase implements Service {
+    // 名字
+    private String name = null;
+    //Server 实例
+    private Server server = null;
+    // 连接器数组
+    protected Connector connectors[] = new Connector[0];
+    private final Object connectorsLock = new Object();
+    // 对应的 Engine 容器
+    private Engine engine = null;
+    // 映射器及其监听器
+    protected final Mapper mapper = new Mapper();
+    protected final MapperListener mapperListener = new MapperListener(this);
+    ...
+}
+```
+
+MapperListener是因为Tomcat支持热部署，当web应用的部署发生变化时，Mapper中的映射信息需要发生变化，MapperListener是一个监听器，其会监听容器的变化，并把信息更新到Mapper中，是一个典型的观察者模式；
+
+看下Service的启动方法startInternal：
+```java
+protected void startInternal() throws LifecycleException {
+    //1. 触发启动监听器
+    setState(LifecycleState.STARTING);
+    //2. 先启动 Engine，Engine 会启动它子容器
+    if (engine != null) {
+        synchronized (engine) {
+            engine.start();
+        }
+    }
+    //3. 再启动 Mapper 监听器
+    mapperListener.start();
+    //4. 最后启动连接器，连接器会启动它子组件，比如 Endpoint
+    synchronized (connectorsLock) {
+        for (Connector connector: connectors) {
+            if (connector.getState() != LifecycleState.FAILED) {
+                connector.start();
+            }
+        }
+    }
+}
+```
+
+Service先启动了Engine组件，再启动Mapper监听器，最后才是启动连接器。因为内层组件启动好了才能堆外提供服务，才能启动外层的连接器组件。而Mapper也依赖容器组件，容器组件启动好了才能监听其变化，因此Mapper和MapperListener在容器组件之后才启动。组件停止的顺序跟启动顺序正好相反。
+
+## 4、Engine组件
+
+Engine本质上是一个容器，因此StandardEngine其继承了ContainerBase基类，并且实现了Engine接口
+```java
+public class StandardEngine extends ContainerBase implements Engine {
+}
+```
+Engine的子容器是Host，所以其持有了一个Host容器的数组，这些功能被抽象到了ContainerBase里：`protected final HashMap<String, Container> children = new HashMap<>();`，使用HashMap主要是HashMap能够快速的查找子容器。
+
+ContainerBase用HashMap保存子容器，还实现了子容器的增删查改，子组件的启动和停止都提供了默认实现。ContainerBase会用专门的线程池来启动子容器：
+```java
+for (int i = 0; i < children.length; i++) {
+   results.add(startStopExecutor.submit(new StartChild(children[i])));
+}
+```
+Engine在启动Host子容器时直接重用了该方法
+
+StandardEngine对请求的处理，把请求转发给某一个Host子容器来处理，具体是通过Valve来实现的:
+```java
+final class StandardEngineValve extends ValveBase {
+    public final void invoke(Request request, Response response)
+      throws IOException, ServletException {
+      // 拿到请求中的 Host 容器
+      Host host = request.getHost();
+      if (host == null) {
+          return;
+      }
+      // 调用 Host 容器中的 Pipeline 中的第一个 Valve
+      host.getPipeline().getFirst().invoke(request, response);
+  }
+}
+```
+处理请求的Host容器对象是从请求中拿到的，因为在请求到达Engine容器之前，Mapper组件已经对请求进行了路由处理，Mapper组件通过请求的URL定位了相应的容器，并且把容器对象保存到请求对象中；
+
+## 5、从Tomcat看设计规范
+
+- 组件化及可配置：
+
+    Tomcat和jetty都是基于组件的，可以通过xml文件或者代码的或者配置组件；主要考虑两点：
+    - 面向接口编程；
+    - web容器提供一个载体把组件组装在一起工作；
+
+- 组件的创建
+
+    web容器启动之间不知道需要创建哪些组件，也就是说需要通过反射机制动态的创建；
+
+- 组件的生命周期管理
+
+- 组件的骨架抽象类和模板模式
+
+# 四、Tomcat 类加载
 
 ## 1、Web服务器需要解决的问题
 
@@ -440,11 +671,6 @@ SecurityClassLoad.securityClassLoad(catalinaLoader);
 
     在 `CATALINA_HOME/lib`以及`WEB-INF/lib`中放置了不同版本的jar包，此时就会导致某些情况下报加载不到类的错误。还有如果多个应用使用同一jar包文件，当放置了多份，就可能导致多个应用间出现类加载不到的错误；
 
-# 四、Tomcat启动流程
-
-http://cxis.me/2017/05/10/tomcat7%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/
-https://github.com/c-rainstorm/blog/blob/master/tomcat/%E8%B0%88%E8%B0%88%20Tomcat%20%E6%9E%B6%E6%9E%84%E5%8F%8A%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B%5B%E5%90%AB%E9%83%A8%E7%BD%B2%5D.md
-
 # 五、Tomcat与HTTP请求
 
 # 六、Web应用加载
@@ -502,12 +728,90 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
 
 # 九、Tomcat优化
 
+## 1、提高Tomcat启动速度
+
+**清理Tomcat：**
+
+- 清理不必要的web应用：主要是删除webapps文件下不需要的工程，一般是host-manager、example、doc等默认工程，还有之前部署过的但是用不着的工程；
+- 清理xml配置文件：保持配置文件的简洁；
+- 清理JAR文件：可以删除不必要的jar文件，JVM的类加载器在加载类时需要查找没一个jar文件。web应用下的lib目录不应该出现Servlet API或者Tomcat本身的jar；
+- 清理其他文件：及时清理日志，删除logs文件下不需要的日志文件。同样还有work文件夹下的catalina目录；
+
+**禁止Tomcat TLD扫描：**
+
+- Tomcat为了支持JSP，在应用启动时会扫描jar包里的TLD文件，加载里面定义的标签库。可以配置不扫描这些jar包。
+
+    如果没有使用JSP作为页面模板，可以把TLD扫描禁止掉，在context.xml文件中的Context标签下加上JarScanner和JarScanFilter
+    ```xml
+    <Context>
+        <JarScanner>
+            <JarScanfilter defaultTldScan="false"/>
+        </JarScanner>
+    </Context>
+    ```
+    如果项目使用了JSP作为web页面模块，意味着TLD扫描无法避免，但是可以通过配置告诉Tomcat，只扫描那些包含TLD文件的JAR包。在Tomcat的conf目录下的catalina.properties文件，在这个文件里的jarsToSkip配置上，加上jar包；
+    ```
+    tomcat.util.scan.StandardJarScanFilter.jarsToSkip=xxx.jar
+    ```
+
+**关闭WebSocket支持：**
+
+- Tomcat会扫描WebSocket注解的API实现，比如`@ServerEndPoint`注解的类。注解扫描一般是比较慢的，如果不需要使用WebSocket可以关闭它。在context.xml中，给Context标签增加一个containerSciFilter的属性：
+    ```xml
+    <Context containerSciFilter="org.apache.tomcat.websocket.server.WsSci">
+       ...
+    </Context>
+    ```
+    如果不需要WebSockets这个功能，可以把Tomcat lib目录下的websocket-api.jar和tomcat-websocket.jar两个jar包删掉；
+
+**关闭JSP支持：**
+
+- 跟关闭WebSocket一样，不需要使用JSP，可以通过类似方法关闭JSP功能
+    ```xml
+    <Context containerSciFilter="org.apache.tomcat.websocket.server.WsSci | org.apache.jasper.servlet.JasperInitializer">
+       ...
+    </Context>
+    ```
+
+**禁止Servlet注解扫描：**
+
+- Servlet3.0引入了注解Servlet，Tomcat为了支持会在web应用启动时扫描类文件，如果没有使用Servlet注解功能，可以不用去扫描。在web应用下的web.xml文件，设置`<web-app>`元素的metadata-complete="true"，其表示web.xml里的配置的Servlet是完整的
+    ```xml
+    <web-app metada-complete="true">
+    ...
+    </web-app>
+    ```
+
+**配置Web-Fragment扫描：**
+
+- Servlet3.0引入了“web模块部署莫奥数片段”的web-fragment.xml，其是一个部署描述文件，可以完成web.xml的配置功能。而该文件只能放在JAR文件的META-INF目录下，而jar包通常放在WEB-INF/lib目录下，因此Tomcat需要对Jar文件进行扫描才能支持这个功能；
+
+    可以通过web.xml里面的`<absolute-ordering>`元素直接指定哪些jar包需要扫描web fragment，如果`<absolute-ordering>`是空的，表示不需要扫描
+    ```xml
+    <web-app>
+        <absolute-orderind />
+    </web-app>
+    ```
+
+**随机数熵源优化：**
+
+**并且启动多个web应用：**
+
+- Tomcat默认情况下，web应用时一个一个启动的，所有web应用启动完成，Tomcat才算启动完毕；如果一个web应用下有多个web应用，为了优化启动速度，可以配置多个应用并行启动。通过修改server.xml中Host元素的startStopThreads属性来完成。该属性表述想用多少个线程来启动web应用，如果设置成0，表示需要并行启动web应用
+    ```xml
+    <Engine startStopThreads="0">
+        <Host startStopThreads="0">
+            ...
+        </Host>
+    </Engine>
+    ```
+
+## 2、内存优化
+
+## 3、线程优化
+
 - 参数maxThreads、maxConnections、acceptAccount区别；
 - tomcat默认支持并发数，怎么修改
-
-## 1、内存优化
-
-## 2、线程优化
 
 参考文档：{tomcat}/webapps/docs/config/http.html
 
@@ -519,7 +823,7 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
 
 - minSpareThreads：最小空闲的工作线程
 
-## 3、配置优化
+## 4、配置优化
 
 - autoDeploy
 
