@@ -3722,11 +3722,127 @@ Worker 本身并不区分核心线程和非核心线程，核心线程只是概�
 
 ### 3.7、拒绝策略
 
-RejectedExecutionHandler，四种策略都是静态内部类，在默认情况下，ThreadPoolExecutor使用抛弃策略：`private static final RejectedExecutionHandler defaultHandler = new AbortPolicy();`
-- CallerRunsPolicy：在线程池没有关闭（调用shut Down）的情况下，直接由调用线程来执行该任务。否则直接就丢弃该任务，什么也不做。
-- AbortPolicy：丢弃任务并抛出`RejectedExecutionException`异常。
+```java
+public interface RejectedExecutionHandler {
+    void rejectedExecution(Runnable r, ThreadPoolExecutor executor);
+}
+```
+
+#### 3.7.1、JDK实现的拒绝策略
+
+四种策略都是静态内部类，在默认情况下，ThreadPoolExecutor使用抛弃策略：`private static final RejectedExecutionHandler defaultHandler = new AbortPolicy();`
+
+- CallerRunsPolicy：调用者运行策略
+
+    在线程池没有关闭（调用shut Down）的情况下，直接由调用线程来执行该任务。当触发拒绝策略时，只要线程池没有关闭，就由提交任务的当前线程处理
+
+    使用场景：一般在不允许失败的、对性能要求不高、并发量较小的场景下使用，因为线程池一般情况下不会关闭，也就是提交的任务一定会被运行，但是由于是调用者线程自己执行的，当多次提交任务时，就会阻塞后续任务执行，性能和效率自然就慢了
+
+- AbortPolicy：当触发拒绝策略时，直接抛出拒绝执行的异常RejectedExecutionException，中止策略的意思也就是打断当前执行流程。Tomcat中的拒绝策略也是类似的
+
 - DiscardPolicy：直接丢弃该任务，什么也不做。
-- DiscardOldestPolicy：在线程池没有关闭（调用shutDown）的情况下，丢弃线程池任务队列中等待最久-即队列首部的任务，并尝试直接执行该触发饱和策略的任务
+
+- DiscardOldestPolicy：在线程池没有关闭（调用shutDown）的情况下，丢弃线程池任务队列中等待最久-即队列首部的任务，并尝试直接执行该触发饱和策略的任务；
+
+#### 3.7.2、第三方拒绝策略
+
+**1、Dubbo中实现的拒绝策略：**
+```java
+// 继承自线程池默认的拒绝策略
+public class AbortPolicyWithReport extends ThreadPoolExecutor.AbortPolicy {
+    protected static final Logger logger = LoggerFactory.getLogger(AbortPolicyWithReport.class);
+    private final String threadName;
+    private final URL url;
+    private static volatile long lastPrintTime = 0;
+    private static Semaphore guard = new Semaphore(1);
+    public AbortPolicyWithReport(String threadName, URL url) {
+        this.threadName = threadName;
+        this.url = url;
+    }
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+        String msg = String.format("Thread pool is EXHAUSTED!" +
+                        " Thread Name: %s, Pool Size: %d (active: %d, core: %d, max: %d, largest: %d), Task: %d (completed: %d)," +
+                        " Executor status:(isShutdown:%s, isTerminated:%s, isTerminating:%s), in %s://%s:%d!",
+                threadName, e.getPoolSize(), e.getActiveCount(), e.getCorePoolSize(), e.getMaximumPoolSize(), e.getLargestPoolSize(),
+                e.getTaskCount(), e.getCompletedTaskCount(), e.isShutdown(), e.isTerminated(), e.isTerminating(),
+                url.getProtocol(), url.getIp(), url.getPort());
+        logger.warn(msg);
+        dumpJStack();
+        throw new RejectedExecutionException(msg);
+    }
+    private void dumpJStack() {
+       //省略实现
+    }
+}
+```
+当dubbo的工作线程触发了线程拒绝后，主要做了三个事情，原则就是尽量让使用者清楚触发线程拒绝策略的真实原因
+- 输出了一条警告级别的日志，日志内容为线程池的详细设置参数，以及线程池当前的状态，还有当前拒绝任务的一些详细信息。可以说，这条日志，使用dubbo的有过生产运维经验的或多或少是见过的，这个日志简直就是日志打印的典范，其他的日志打印的典范还有spring。得益于这么详细的日志，可以很容易定位到问题所在
+- 输出当前线程堆栈详情，这个太有用了，当你通过上面的日志信息还不能定位问题时，案发现场的dump线程上下文信息就是你发现问题的救命稻草。
+- 继续抛出拒绝执行异常，使本次任务失败，这个继承了JDK默认拒绝策略的特性；
+
+**2、Netty中的线程池拒绝策略：**
+
+```java
+private static final class NewThreadRunsPolicy implements RejectedExecutionHandler {
+    NewThreadRunsPolicy() {
+        super();
+    }
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        try {
+            final Thread t = new Thread(r, "Temporary task executor");
+            t.start();
+        } catch (Throwable e) {
+            throw new RejectedExecutionException(
+                    "Failed to start a new thread", e);
+        }
+    }
+}
+```
+
+Netty中的实现很像JDK中的CallerRunsPolicy，舍不得丢弃任务。不同的是，CallerRunsPolicy是直接在调用者线程执行的任务。而 Netty是新建了一个线程来处理的。所以，Netty的实现相较于调用者执行策略的使用面就可以扩展到支持高效率高性能的场景了。但是也要注意一点，Netty的实现里，在创建线程时未做任何的判断约束，也就是说只要系统还有资源就会创建新的线程来处理，直到new不出新的线程了，才会抛创建线程失败的异常；
+
+**3、ActiveMq中的线程池拒绝策略：**
+
+```java
+new RejectedExecutionHandler() {
+    @Override
+    public void rejectedExecution(final Runnable r, final ThreadPoolExecutor executor) {
+        try {
+            executor.getQueue().offer(r, 60, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            throw new RejectedExecutionException("Interrupted waiting for BrokerService.worker");
+        }
+
+        throw new RejectedExecutionException("Timed Out while attempting to enqueue Task.");
+    }
+});
+```
+
+ActiveMq中的策略属于最大努力执行任务型，当触发拒绝策略时，在尝试一分钟的时间重新将任务塞进任务队列，当一分钟超时还没成功时，就抛出异常
+
+**4、pinpoint中的线程池拒绝策略：**
+
+```java
+public class RejectedExecutionHandlerChain implements RejectedExecutionHandler {
+    private final RejectedExecutionHandler[] handlerChain;
+    public static RejectedExecutionHandler build(List<RejectedExecutionHandler> chain) {
+        Objects.requireNonNull(chain, "handlerChain must not be null");
+        RejectedExecutionHandler[] handlerChain = chain.toArray(new RejectedExecutionHandler[0]);
+        return new RejectedExecutionHandlerChain(handlerChain);
+    }
+    private RejectedExecutionHandlerChain(RejectedExecutionHandler[] handlerChain) {
+        this.handlerChain = Objects.requireNonNull(handlerChain, "handlerChain must not be null");
+    }
+    @Override
+    public void rejectedExecution(Runnable r, ThreadPoolExecutor executor) {
+        for (RejectedExecutionHandler rejectedExecutionHandler : handlerChain) {
+            rejectedExecutionHandler.rejectedExecution(r, executor);
+        }
+    }
+}
+```
+pinpoint的拒绝策略实现很有特点，其定义了一个拒绝策略链，包装了一个拒绝策略列表，当触发拒绝策略时，会将策略链中的rejectedExecution依次执行一遍
 
 ### 3.8、设置线程池线程的名称
 

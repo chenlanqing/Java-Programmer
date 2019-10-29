@@ -795,6 +795,14 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
 
 **随机数熵源优化：**
 
+- Tomcat7以上版本依赖Java的SecureRandom类来生成随机数，比如SessionId，而JVM默认使用阻塞式熵源(/dev/random)，在某些情况下就会导致Tomcat启动变慢。当阻塞时间较长时，可能会看到这样的警告日志：
+    ```
+    <DATE> org.apache.catalina.util.SessionIdGenerator createSecureRandomINFO: Creation of SecureRandom instance for session ID generation using [SHA1PRNG] took [8152] milliseconds.
+    ```
+    通过设置，可以让JVM使用非阻塞式的熵源，参数是：`-Djava.security.egd=file:/dev/./urandom`，或者设置java.security文件位于目录（$JAVA_HOME/jre/lib/security）之下的`securerandom.source=file:/dev/./urandom`；
+
+    注意，这里的`/dev/./urandom`有个./的原因是Oracle JRE的bug。阻塞式熵源安全性(/dev/random)比较高，非阻塞式熵源安全性会低一些；
+
 **并且启动多个web应用：**
 
 - Tomcat默认情况下，web应用时一个一个启动的，所有web应用启动完成，Tomcat才算启动完毕；如果一个web应用下有多个web应用，为了优化启动速度，可以配置多个应用并行启动。通过修改server.xml中Host元素的startStopThreads属性来完成。该属性表述想用多少个线程来启动web应用，如果设置成0，表示需要并行启动web应用
