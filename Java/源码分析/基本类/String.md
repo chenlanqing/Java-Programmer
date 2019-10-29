@@ -129,7 +129,7 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 
 ## 3、String、StringBuffer、StringBuilder 的联系与区别
 
-- StringBuffer 和 StringBuilder 都继承了抽象类 AbstractStringBuilder，这个抽象类和String一样也定义了char[] value和 int count，但是与String类不同的是，它们没有final修饰符.
+- StringBuffer 和 StringBuilder 都继承了抽象类 AbstractStringBuilder，这个抽象类和String一样也定义了`char[] value`和 `int count`，但是与String类不同的是，它们没有final修饰符。
 	- String、StringBuffer和StringBuilder在本质上都是字符数组，不同的是，在进行连接操作时，String每次返回一个新的String实例，而StringBuffer和StringBuilder的append方法直接返回 this，所以这就是为什么在进行大量字符串连接运算时，不推荐使用 String，而推荐 StringBuffer 和 StringBuilder；
 	- StringBuffer和StringBuilder默认 16 个字节数组的大小，超过默认的数组长度时扩容为原来字节数组的长度 * 2 + 2。所以使用StringBuffer和StringBuilder时可以适当考虑下初始化大小，以便通过减少扩容次数来提高代码的高效性；
 
@@ -147,7 +147,10 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 	```
 	因此，如果在多线程环境可以使用 StringBuffer 进行字符串连接操作，单线程环境使用 StringBuilder，它的效率更高
 
+- StringBuffer是JDK1.0就有的，而StringBuilder是JDK1.5之后才有的，JDK1.5是将StringBuffer中的部分功能移到 AbstractStringBuilder中，再抽象出非线程安全但性能更高的StringBuilder；
+
 ### 3.1、StringBuilder 与 String 性能对比
+
 #### 3.1.1、要点
 
 写代码展示效率的差异、借助ctrl建剖析源代码的调用过程、分析时间复杂度，空间复杂度、调试验证
