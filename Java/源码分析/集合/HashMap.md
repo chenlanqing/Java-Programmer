@@ -2,53 +2,57 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一、HashMap 基本](#%E4%B8%80hashmap-%E5%9F%BA%E6%9C%AC)
-  - [1、HashMap的特点](#1hashmap%E7%9A%84%E7%89%B9%E7%82%B9)
-    - [1.1、HashMap 基本结构](#11hashmap-%E5%9F%BA%E6%9C%AC%E7%BB%93%E6%9E%84)
-    - [1.2、HashMap的特点](#12hashmap%E7%9A%84%E7%89%B9%E7%82%B9)
-    - [1.3、不可变对象与 HashMap 的key](#13%E4%B8%8D%E5%8F%AF%E5%8F%98%E5%AF%B9%E8%B1%A1%E4%B8%8E-hashmap-%E7%9A%84key)
-  - [2、HashMap和HashTable的区别](#2hashmap%E5%92%8Chashtable%E7%9A%84%E5%8C%BA%E5%88%AB)
-  - [5、键的不变性](#5%E9%94%AE%E7%9A%84%E4%B8%8D%E5%8F%98%E6%80%A7)
-  - [6、Java8 中 HashMap 的改进](#6java8-%E4%B8%AD-hashmap-%E7%9A%84%E6%94%B9%E8%BF%9B)
-  - [7、延迟加载机制](#7%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6)
-  - [8、初始化HashMap指定容量](#8%E5%88%9D%E5%A7%8B%E5%8C%96hashmap%E6%8C%87%E5%AE%9A%E5%AE%B9%E9%87%8F)
-- [二、签名](#%E4%BA%8C%E7%AD%BE%E5%90%8D)
-- [三、设计理念](#%E4%B8%89%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
-  - [1、HashMap 的数据结构](#1hashmap-%E7%9A%84%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
-  - [2、哈希表(hash table)](#2%E5%93%88%E5%B8%8C%E8%A1%A8hash-table)
-  - [3、HashMap是一个线性的数组实现](#3hashmap%E6%98%AF%E4%B8%80%E4%B8%AA%E7%BA%BF%E6%80%A7%E7%9A%84%E6%95%B0%E7%BB%84%E5%AE%9E%E7%8E%B0)
-  - [4、HashMap 的工作原理](#4hashmap-%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
-  - [5、HashMap的哈希函数的设计原理](#5hashmap%E7%9A%84%E5%93%88%E5%B8%8C%E5%87%BD%E6%95%B0%E7%9A%84%E8%AE%BE%E8%AE%A1%E5%8E%9F%E7%90%86)
-- [四、构造方法与成员变量](#%E5%9B%9B%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95%E4%B8%8E%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F)
-  - [1、无参构造方法与其他构造方法](#1%E6%97%A0%E5%8F%82%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95%E4%B8%8E%E5%85%B6%E4%BB%96%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
-  - [2、容量(Capacity)与平衡因子(LoadFactor)](#2%E5%AE%B9%E9%87%8Fcapacity%E4%B8%8E%E5%B9%B3%E8%A1%A1%E5%9B%A0%E5%AD%90loadfactor)
-  - [3、modcount](#3modcount)
-- [五、HashMap 的存取实现](#%E4%BA%94hashmap-%E7%9A%84%E5%AD%98%E5%8F%96%E5%AE%9E%E7%8E%B0)
-  - [1、put方法](#1put%E6%96%B9%E6%B3%95)
-    - [1.1、JDK6和JDK7](#11jdk6%E5%92%8Cjdk7)
-    - [1.2、JDK8 的实现](#12jdk8-%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [2、get方法](#2get%E6%96%B9%E6%B3%95)
-    - [2.1、JDK6的实现](#21jdk6%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [2.2、JDK8的实现](#22jdk8%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [3、hash 函数的实现](#3hash-%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [3.1、JDK6的实现](#31jdk6%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [3.2、JDK7的实现](#32jdk7%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [3.3、JDK8的实现](#33jdk8%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [3.4、关于性能](#34%E5%85%B3%E4%BA%8E%E6%80%A7%E8%83%BD)
-  - [4、resize 的实现](#4resize-%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [4.1、JDK6的实现](#41jdk6%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [4.2、JDK7实现](#42jdk7%E5%AE%9E%E7%8E%B0)
-    - [4.3、JDK8 的实现](#43jdk8-%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [5、高并发下 HashMap 的使用的问题](#5%E9%AB%98%E5%B9%B6%E5%8F%91%E4%B8%8B-hashmap-%E7%9A%84%E4%BD%BF%E7%94%A8%E7%9A%84%E9%97%AE%E9%A2%98)
-- [六、面试题](#%E5%85%AD%E9%9D%A2%E8%AF%95%E9%A2%98)
-  - [1、get和put的原理？JDK8](#1get%E5%92%8Cput%E7%9A%84%E5%8E%9F%E7%90%86jdk8)
-  - [2、你知道hash的实现吗？为什么要这样实现？](#2%E4%BD%A0%E7%9F%A5%E9%81%93hash%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%90%97%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%BF%99%E6%A0%B7%E5%AE%9E%E7%8E%B0)
-  - [3、容量处理](#3%E5%AE%B9%E9%87%8F%E5%A4%84%E7%90%86)
-  - [4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现](#4%E4%B8%BA%E4%BB%80%E4%B9%88-jdk8-%E7%9A%84-hashmap-%E4%BD%BF%E7%94%A8%E7%9A%84%E8%B7%9F%E4%BB%A5%E5%BE%80%E4%B8%8D%E5%90%8C%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [5、为什么HashMap默认的加载因子是0.75](#5%E4%B8%BA%E4%BB%80%E4%B9%88hashmap%E9%BB%98%E8%AE%A4%E7%9A%84%E5%8A%A0%E8%BD%BD%E5%9B%A0%E5%AD%90%E6%98%AF075)
-  - [6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂](#6%E4%B8%BA%E4%BB%80%E4%B9%88hashmap%E7%9A%84%E9%BB%98%E8%AE%A4%E5%88%9D%E5%A7%8B%E5%AE%B9%E9%87%8F%E6%98%AF16%E4%B8%94%E5%AE%B9%E9%87%8F%E5%BF%85%E9%A1%BB%E6%98%AF-2%E7%9A%84%E5%B9%82)
-  - [7、](#7)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+- [一、HashMap 基本](#%e4%b8%80hashmap-%e5%9f%ba%e6%9c%ac)
+	- [1、HashMap的特点](#1hashmap%e7%9a%84%e7%89%b9%e7%82%b9)
+		- [1.1、HashMap 基本结构](#11hashmap-%e5%9f%ba%e6%9c%ac%e7%bb%93%e6%9e%84)
+		- [1.2、HashMap的特点](#12hashmap%e7%9a%84%e7%89%b9%e7%82%b9)
+		- [1.3、不可变对象与 HashMap 的key](#13%e4%b8%8d%e5%8f%af%e5%8f%98%e5%af%b9%e8%b1%a1%e4%b8%8e-hashmap-%e7%9a%84key)
+	- [2、HashMap和HashTable的区别](#2hashmap%e5%92%8chashtable%e7%9a%84%e5%8c%ba%e5%88%ab)
+	- [3、HashMap与HashSet的关系](#3hashmap%e4%b8%8ehashset%e7%9a%84%e5%85%b3%e7%b3%bb)
+	- [4、HashTable和ConcurrentHashMap 的关系](#4hashtable%e5%92%8cconcurrenthashmap-%e7%9a%84%e5%85%b3%e7%b3%bb)
+	- [5、键的不变性](#5%e9%94%ae%e7%9a%84%e4%b8%8d%e5%8f%98%e6%80%a7)
+	- [6、Java8 中 HashMap 的改进](#6java8-%e4%b8%ad-hashmap-%e7%9a%84%e6%94%b9%e8%bf%9b)
+	- [7、延迟加载机制](#7%e5%bb%b6%e8%bf%9f%e5%8a%a0%e8%bd%bd%e6%9c%ba%e5%88%b6)
+	- [8、初始化HashMap指定容量](#8%e5%88%9d%e5%a7%8b%e5%8c%96hashmap%e6%8c%87%e5%ae%9a%e5%ae%b9%e9%87%8f)
+		- [8.1、为什么需要指定容量](#81%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e6%8c%87%e5%ae%9a%e5%ae%b9%e9%87%8f)
+		- [8.2、指定容量的数值多大合适](#82%e6%8c%87%e5%ae%9a%e5%ae%b9%e9%87%8f%e7%9a%84%e6%95%b0%e5%80%bc%e5%a4%9a%e5%a4%a7%e5%90%88%e9%80%82)
+- [二、签名](#%e4%ba%8c%e7%ad%be%e5%90%8d)
+- [三、设计理念](#%e4%b8%89%e8%ae%be%e8%ae%a1%e7%90%86%e5%bf%b5)
+	- [1、HashMap 的数据结构](#1hashmap-%e7%9a%84%e6%95%b0%e6%8d%ae%e7%bb%93%e6%9e%84)
+	- [2、哈希表(hash table)](#2%e5%93%88%e5%b8%8c%e8%a1%a8hash-table)
+	- [3、HashMap是一个线性的数组实现](#3hashmap%e6%98%af%e4%b8%80%e4%b8%aa%e7%ba%bf%e6%80%a7%e7%9a%84%e6%95%b0%e7%bb%84%e5%ae%9e%e7%8e%b0)
+	- [4、HashMap 的工作原理](#4hashmap-%e7%9a%84%e5%b7%a5%e4%bd%9c%e5%8e%9f%e7%90%86)
+	- [5、HashMap的哈希函数的设计原理](#5hashmap%e7%9a%84%e5%93%88%e5%b8%8c%e5%87%bd%e6%95%b0%e7%9a%84%e8%ae%be%e8%ae%a1%e5%8e%9f%e7%90%86)
+- [四、构造方法与成员变量](#%e5%9b%9b%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95%e4%b8%8e%e6%88%90%e5%91%98%e5%8f%98%e9%87%8f)
+	- [1、无参构造方法与其他构造方法](#1%e6%97%a0%e5%8f%82%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95%e4%b8%8e%e5%85%b6%e4%bb%96%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95)
+	- [2、容量(Capacity)与平衡因子(LoadFactor)](#2%e5%ae%b9%e9%87%8fcapacity%e4%b8%8e%e5%b9%b3%e8%a1%a1%e5%9b%a0%e5%ad%90loadfactor)
+	- [3、modcount](#3modcount)
+- [五、HashMap 的存取实现](#%e4%ba%94hashmap-%e7%9a%84%e5%ad%98%e5%8f%96%e5%ae%9e%e7%8e%b0)
+	- [1、put方法](#1put%e6%96%b9%e6%b3%95)
+		- [1.1、JDK6和JDK7](#11jdk6%e5%92%8cjdk7)
+		- [1.2、JDK8 的实现](#12jdk8-%e7%9a%84%e5%ae%9e%e7%8e%b0)
+	- [2、get方法](#2get%e6%96%b9%e6%b3%95)
+		- [2.1、JDK6的实现](#21jdk6%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [2.2、JDK8的实现](#22jdk8%e7%9a%84%e5%ae%9e%e7%8e%b0)
+	- [3、hash 函数的实现](#3hash-%e5%87%bd%e6%95%b0%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [3.1、JDK6的实现](#31jdk6%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [3.2、JDK7的实现](#32jdk7%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [3.3、JDK8的实现](#33jdk8%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [3.4、关于性能](#34%e5%85%b3%e4%ba%8e%e6%80%a7%e8%83%bd)
+	- [4、resize 的实现](#4resize-%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [4.1、JDK6的实现](#41jdk6%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [4.2、JDK7实现](#42jdk7%e5%ae%9e%e7%8e%b0)
+		- [4.3、JDK8 的实现](#43jdk8-%e7%9a%84%e5%ae%9e%e7%8e%b0)
+	- [5、高并发下 HashMap 的使用的问题](#5%e9%ab%98%e5%b9%b6%e5%8f%91%e4%b8%8b-hashmap-%e7%9a%84%e4%bd%bf%e7%94%a8%e7%9a%84%e9%97%ae%e9%a2%98)
+- [六、面试题](#%e5%85%ad%e9%9d%a2%e8%af%95%e9%a2%98)
+	- [1、get和put的原理？JDK8](#1get%e5%92%8cput%e7%9a%84%e5%8e%9f%e7%90%86jdk8)
+	- [2、你知道hash的实现吗？为什么要这样实现？](#2%e4%bd%a0%e7%9f%a5%e9%81%93hash%e7%9a%84%e5%ae%9e%e7%8e%b0%e5%90%97%e4%b8%ba%e4%bb%80%e4%b9%88%e8%a6%81%e8%bf%99%e6%a0%b7%e5%ae%9e%e7%8e%b0)
+	- [3、容量处理](#3%e5%ae%b9%e9%87%8f%e5%a4%84%e7%90%86)
+	- [4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现](#4%e4%b8%ba%e4%bb%80%e4%b9%88-jdk8-%e7%9a%84-hashmap-%e4%bd%bf%e7%94%a8%e7%9a%84%e8%b7%9f%e4%bb%a5%e5%be%80%e4%b8%8d%e5%90%8c%e7%9a%84%e5%ae%9e%e7%8e%b0)
+	- [5、为什么HashMap默认的加载因子是0.75](#5%e4%b8%ba%e4%bb%80%e4%b9%88hashmap%e9%bb%98%e8%ae%a4%e7%9a%84%e5%8a%a0%e8%bd%bd%e5%9b%a0%e5%ad%90%e6%98%af075)
+	- [6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂](#6%e4%b8%ba%e4%bb%80%e4%b9%88hashmap%e7%9a%84%e9%bb%98%e8%ae%a4%e5%88%9d%e5%a7%8b%e5%ae%b9%e9%87%8f%e6%98%af16%e4%b8%94%e5%ae%b9%e9%87%8f%e5%bf%85%e9%a1%bb%e6%98%af-2%e7%9a%84%e5%b9%82)
+	- [7、](#7)
+- [参考资料](#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -191,7 +195,29 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 ## 8、初始化HashMap指定容量
 
+### 8.1、为什么需要指定容量
+
 如果你需要存储大量数据，你应该在创建HashMap时指定一个初始的容量，这个容量应该接近你期望的大小。通过初始化时指定Map期望的大小，你可以避免调整大小操作带来的消耗。如果你不这样做，Map会使用默认的大小即16，factorLoad的值是0.75。前11次调用put()方法会非常快，但是第12次（16*0.75）调用时会创建一个新的长度为32的内部数组（以及对应的链表/树），第13次到第22次调用put()方法会很快；
+
+### 8.2、指定容量的数值多大合适
+
+构造方法传递的 initialCapacity，最终会被 `tableSizeFor()` 方法动态调整为 2 的 N 次幂，以方便在扩容的时候，计算数据在 newTable 中的位置。
+```java
+static final int MAXIMUM_CAPACITY = 1 << 30;
+static final int tableSizeFor(int cap) {
+	int n = cap - 1;
+	n |= n >>> 1;
+	n |= n >>> 2;
+	n |= n >>> 4;
+	n |= n >>> 8;
+	n |= n >>> 16;
+	return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+}
+```
+
+如果设置了 table 的初始容量，会在初始化 table 时，将扩容阈值 threshold 重新调整为 `table.size * loadFactor`。而 HashMap 是否扩容，由 threshold 决定，而 threshold 又由初始容量和 loadFactor 决定。如果我们预先知道 HashMap 数据量范围，可以预设 HashMap 的容量值来提升效率，但是需要注意要考虑装载因子的影响，才能保证不会触发预期之外的动态扩容；通常在初始化 HashMap 时，初始容量都是根据业务来的，而不会是一个固定值，为此我们需要有一个特殊处理的方式，就是将预期的初始容量，再除以 HashMap 的装载因子，默认时就是除以 0.75；
+
+例如：想要用 HashMap 存放 1k 条数据，应该设置 `1000 / 0.75`，实际传递进去的值是 1333，然后会被 tableSizeFor() 方法调整到 2048，足够存储数据而不会触发扩容；
 
 # 二、签名
 
