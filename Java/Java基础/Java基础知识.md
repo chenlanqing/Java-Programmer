@@ -2,320 +2,332 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [Java平台理解](#java%E5%B9%B3%E5%8F%B0%E7%90%86%E8%A7%A3)
-  - [1、从宏观角度看](#1%E4%BB%8E%E5%AE%8F%E8%A7%82%E8%A7%92%E5%BA%A6%E7%9C%8B)
-  - [2、从微观角度](#2%E4%BB%8E%E5%BE%AE%E8%A7%82%E8%A7%92%E5%BA%A6)
-  - [3、Java与C++的区别](#3java%E4%B8%8Ec%E7%9A%84%E5%8C%BA%E5%88%AB)
-- [一、Java 内部类](#%E4%B8%80java-%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [1、为什么使用内部类](#1%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [2、成员内部类](#2%E6%88%90%E5%91%98%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [3、静态内部类](#3%E9%9D%99%E6%80%81%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [4、方法内部类](#4%E6%96%B9%E6%B3%95%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [5、匿名内部类](#5%E5%8C%BF%E5%90%8D%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [6、内部类GC问题](#6%E5%86%85%E9%83%A8%E7%B1%BBgc%E9%97%AE%E9%A2%98)
-- [二、HashMap、TreeMap、Hashtable、LinkedHashMap](#%E4%BA%8Chashmaptreemaphashtablelinkedhashmap)
-  - [1、HashMap、TreeMap](#1hashmaptreemap)
-  - [2、HashCode与HashSet关系](#2hashcode%E4%B8%8Ehashset%E5%85%B3%E7%B3%BB)
-- [三、按照目录结构打印当前目录及子目录](#%E4%B8%89%E6%8C%89%E7%85%A7%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E6%89%93%E5%8D%B0%E5%BD%93%E5%89%8D%E7%9B%AE%E5%BD%95%E5%8F%8A%E5%AD%90%E7%9B%AE%E5%BD%95)
-- [四、Java 关键字](#%E5%9B%9Bjava-%E5%85%B3%E9%94%AE%E5%AD%97)
-  - [1、native](#1native)
-  - [2、transient](#2transient)
-  - [3、final](#3final)
-    - [3.1、含义](#31%E5%90%AB%E4%B9%89)
-    - [3.2、final 修饰符](#32final-%E4%BF%AE%E9%A5%B0%E7%AC%A6)
-    - [3.3、注意点](#33%E6%B3%A8%E6%84%8F%E7%82%B9)
-    - [3.4、为什么使用 `final`](#34%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BD%BF%E7%94%A8-final)
-    - [3.5、不可变类](#35%E4%B8%8D%E5%8F%AF%E5%8F%98%E7%B1%BB)
-    - [3.6、知识点](#36%E7%9F%A5%E8%AF%86%E7%82%B9)
-  - [4、instanceof](#4instanceof)
-    - [4.1、一些使用注意事项](#41%E4%B8%80%E4%BA%9B%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
-    - [4.2、`instanceof`与`clazz.isInstance(obj)`](#42instanceof%E4%B8%8Eclazzisinstanceobj)
-    - [4.3、instanceof 与 clazz.getClass()：](#43instanceof-%E4%B8%8E-clazzgetclass)
-    - [4.4、instanceof实现原理](#44instanceof%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
-- [五、协变式重写和泛型重载](#%E4%BA%94%E5%8D%8F%E5%8F%98%E5%BC%8F%E9%87%8D%E5%86%99%E5%92%8C%E6%B3%9B%E5%9E%8B%E9%87%8D%E8%BD%BD)
-  - [1、协变式重写](#1%E5%8D%8F%E5%8F%98%E5%BC%8F%E9%87%8D%E5%86%99)
-    - [1.1、不同版本之间变化](#11%E4%B8%8D%E5%90%8C%E7%89%88%E6%9C%AC%E4%B9%8B%E9%97%B4%E5%8F%98%E5%8C%96)
-  - [2、泛型重载](#2%E6%B3%9B%E5%9E%8B%E9%87%8D%E8%BD%BD)
-  - [3、重写与重载](#3%E9%87%8D%E5%86%99%E4%B8%8E%E9%87%8D%E8%BD%BD)
-    - [3.1、两者的比较](#31%E4%B8%A4%E8%80%85%E7%9A%84%E6%AF%94%E8%BE%83)
-    - [3.2、重写的条件](#32%E9%87%8D%E5%86%99%E7%9A%84%E6%9D%A1%E4%BB%B6)
-    - [3.3、重载的条件](#33%E9%87%8D%E8%BD%BD%E7%9A%84%E6%9D%A1%E4%BB%B6)
-  - [4、重载](#4%E9%87%8D%E8%BD%BD)
-  - [5、重写](#5%E9%87%8D%E5%86%99)
-  - [6、两者的比较](#6%E4%B8%A4%E8%80%85%E7%9A%84%E6%AF%94%E8%BE%83)
-- [六、Java 序列化-一种对象持久化的手段](#%E5%85%ADjava-%E5%BA%8F%E5%88%97%E5%8C%96-%E4%B8%80%E7%A7%8D%E5%AF%B9%E8%B1%A1%E6%8C%81%E4%B9%85%E5%8C%96%E7%9A%84%E6%89%8B%E6%AE%B5)
-  - [1、Java对象序列化](#1java%E5%AF%B9%E8%B1%A1%E5%BA%8F%E5%88%97%E5%8C%96)
-    - [1.1、基本点](#11%E5%9F%BA%E6%9C%AC%E7%82%B9)
-    - [1.2、子类与父类序列化](#12%E5%AD%90%E7%B1%BB%E4%B8%8E%E7%88%B6%E7%B1%BB%E5%BA%8F%E5%88%97%E5%8C%96)
-  - [2、如何序列化](#2%E5%A6%82%E4%BD%95%E5%BA%8F%E5%88%97%E5%8C%96)
-    - [2.1、ArrayList序列化实现](#21arraylist%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%9E%E7%8E%B0)
-    - [2.2、自定义序列化和反序列化策略](#22%E8%87%AA%E5%AE%9A%E4%B9%89%E5%BA%8F%E5%88%97%E5%8C%96%E5%92%8C%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%AD%96%E7%95%A5)
-    - [2.3、Serializable如何实现序列化与反序列化](#23serializable%E5%A6%82%E4%BD%95%E5%AE%9E%E7%8E%B0%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8E%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96)
-    - [2.4、writeReplace()和readResolve()](#24writereplace%E5%92%8Creadresolve)
-  - [3、serialVersionUID](#3serialversionuid)
-  - [4、反序列化](#4%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96)
-  - [5、序列化实现对象的拷贝](#5%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%9E%E7%8E%B0%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%8B%B7%E8%B4%9D)
-  - [6、常见的序列化协议](#6%E5%B8%B8%E8%A7%81%E7%9A%84%E5%BA%8F%E5%88%97%E5%8C%96%E5%8D%8F%E8%AE%AE)
-  - [7、JSON 序列化](#7json-%E5%BA%8F%E5%88%97%E5%8C%96)
-    - [7.1、关于Map转json输出顺序问题](#71%E5%85%B3%E4%BA%8Emap%E8%BD%ACjson%E8%BE%93%E5%87%BA%E9%A1%BA%E5%BA%8F%E9%97%AE%E9%A2%98)
-  - [8、序列化安全](#8%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%89%E5%85%A8)
-  - [9、Java默认序列化与二进制编码](#9java%E9%BB%98%E8%AE%A4%E5%BA%8F%E5%88%97%E5%8C%96%E4%B8%8E%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%BC%96%E7%A0%81)
-- [七、泛型](#%E4%B8%83%E6%B3%9B%E5%9E%8B)
-  - [1、JDK5 引入的新特性](#1jdk5-%E5%BC%95%E5%85%A5%E7%9A%84%E6%96%B0%E7%89%B9%E6%80%A7)
-  - [2、类型擦除(type erasure)](#2%E7%B1%BB%E5%9E%8B%E6%93%A6%E9%99%A4type-erasure)
-    - [2.1、类型擦除的基本过程](#21%E7%B1%BB%E5%9E%8B%E6%93%A6%E9%99%A4%E7%9A%84%E5%9F%BA%E6%9C%AC%E8%BF%87%E7%A8%8B)
-    - [2.2、为什么Java泛型要通过擦除来实现](#22%E4%B8%BA%E4%BB%80%E4%B9%88java%E6%B3%9B%E5%9E%8B%E8%A6%81%E9%80%9A%E8%BF%87%E6%93%A6%E9%99%A4%E6%9D%A5%E5%AE%9E%E7%8E%B0)
-    - [2.3、类型擦除带来的问题](#23%E7%B1%BB%E5%9E%8B%E6%93%A6%E9%99%A4%E5%B8%A6%E6%9D%A5%E7%9A%84%E9%97%AE%E9%A2%98)
-    - [2.4、泛型数组](#24%E6%B3%9B%E5%9E%8B%E6%95%B0%E7%BB%84)
-    - [2.5、Java不能实例化泛型对象](#25java%E4%B8%8D%E8%83%BD%E5%AE%9E%E4%BE%8B%E5%8C%96%E6%B3%9B%E5%9E%8B%E5%AF%B9%E8%B1%A1)
-    - [2.6、泛型擦除擦除了哪些信息](#26%E6%B3%9B%E5%9E%8B%E6%93%A6%E9%99%A4%E6%93%A6%E9%99%A4%E4%BA%86%E5%93%AA%E4%BA%9B%E4%BF%A1%E6%81%AF)
-  - [3、通配符与上下界](#3%E9%80%9A%E9%85%8D%E7%AC%A6%E4%B8%8E%E4%B8%8A%E4%B8%8B%E7%95%8C)
-  - [4、Java 类型系统](#4java-%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F)
-  - [5、开发自己的泛型类](#5%E5%BC%80%E5%8F%91%E8%87%AA%E5%B7%B1%E7%9A%84%E6%B3%9B%E5%9E%8B%E7%B1%BB)
-  - [6、在使用泛型的时候可以遵循一些基本的原则](#6%E5%9C%A8%E4%BD%BF%E7%94%A8%E6%B3%9B%E5%9E%8B%E7%9A%84%E6%97%B6%E5%80%99%E5%8F%AF%E4%BB%A5%E9%81%B5%E5%BE%AA%E4%B8%80%E4%BA%9B%E5%9F%BA%E6%9C%AC%E7%9A%84%E5%8E%9F%E5%88%99)
-  - [7、Java与C++泛型区别](#7java%E4%B8%8Ec%E6%B3%9B%E5%9E%8B%E5%8C%BA%E5%88%AB)
-- [八、关于try...catch...finally](#%E5%85%AB%E5%85%B3%E4%BA%8Etrycatchfinally)
-  - [1、关于try...catch...finally使用](#1%E5%85%B3%E4%BA%8Etrycatchfinally%E4%BD%BF%E7%94%A8)
-  - [2、使用try...catch...finally需要注意](#2%E4%BD%BF%E7%94%A8trycatchfinally%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F)
-  - [3、如何退出](#3%E5%A6%82%E4%BD%95%E9%80%80%E5%87%BA)
-  - [4、JVM中实现](#4jvm%E4%B8%AD%E5%AE%9E%E7%8E%B0)
-- [九、Java 四舍五入](#%E4%B9%9Djava-%E5%9B%9B%E8%88%8D%E4%BA%94%E5%85%A5)
-  - [1、目前 Java 支持7中舍入法](#1%E7%9B%AE%E5%89%8D-java-%E6%94%AF%E6%8C%817%E4%B8%AD%E8%88%8D%E5%85%A5%E6%B3%95)
-  - [2、保留位](#2%E4%BF%9D%E7%95%99%E4%BD%8D)
-  - [3、Math](#3math)
-- [十、Java 中保留小数位数的处理](#%E5%8D%81java-%E4%B8%AD%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E4%BD%8D%E6%95%B0%E7%9A%84%E5%A4%84%E7%90%86)
-  - [1、使用 BigDecimal，保留小数点后两位](#1%E4%BD%BF%E7%94%A8-bigdecimal%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [2、使用 DecimalFormat，保留小数点后两位](#2%E4%BD%BF%E7%94%A8-decimalformat%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [3、使用 NumberFormat，保留小数点后两位](#3%E4%BD%BF%E7%94%A8-numberformat%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [4、使用 java.util.Formatter，保留小数点后两位](#4%E4%BD%BF%E7%94%A8-javautilformatter%E4%BF%9D%E7%95%99%E5%B0%8F%E6%95%B0%E7%82%B9%E5%90%8E%E4%B8%A4%E4%BD%8D)
-  - [5、使用 String.format来实现](#5%E4%BD%BF%E7%94%A8-stringformat%E6%9D%A5%E5%AE%9E%E7%8E%B0)
-- [十一、Java中length和length()的区别](#%E5%8D%81%E4%B8%80java%E4%B8%ADlength%E5%92%8Clength%E7%9A%84%E5%8C%BA%E5%88%AB)
-- [十二、数组](#%E5%8D%81%E4%BA%8C%E6%95%B0%E7%BB%84)
-  - [1、Java 中数组是对象吗](#1java-%E4%B8%AD%E6%95%B0%E7%BB%84%E6%98%AF%E5%AF%B9%E8%B1%A1%E5%90%97)
-  - [2、Java中数组的类型](#2java%E4%B8%AD%E6%95%B0%E7%BB%84%E7%9A%84%E7%B1%BB%E5%9E%8B)
-  - [3、Java中数组的继承关系](#3java%E4%B8%AD%E6%95%B0%E7%BB%84%E7%9A%84%E7%BB%A7%E6%89%BF%E5%85%B3%E7%B3%BB)
-  - [4、Java 数组初始化](#4java-%E6%95%B0%E7%BB%84%E5%88%9D%E5%A7%8B%E5%8C%96)
-  - [5、数组扩容](#5%E6%95%B0%E7%BB%84%E6%89%A9%E5%AE%B9)
-  - [6、数组复制问题](#6%E6%95%B0%E7%BB%84%E5%A4%8D%E5%88%B6%E9%97%AE%E9%A2%98)
-  - [7、数组转换为 List](#7%E6%95%B0%E7%BB%84%E8%BD%AC%E6%8D%A2%E4%B8%BA-list)
-- [十三、switch](#%E5%8D%81%E4%B8%89switch)
-  - [1、支持类型](#1%E6%94%AF%E6%8C%81%E7%B1%BB%E5%9E%8B)
-  - [2、switch 对整型的支持](#2switch-%E5%AF%B9%E6%95%B4%E5%9E%8B%E7%9A%84%E6%94%AF%E6%8C%81)
-  - [3、switch 对字符型支持的实现](#3switch-%E5%AF%B9%E5%AD%97%E7%AC%A6%E5%9E%8B%E6%94%AF%E6%8C%81%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [4、switch 对字符串支持的实现](#4switch-%E5%AF%B9%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%94%AF%E6%8C%81%E7%9A%84%E5%AE%9E%E7%8E%B0)
-    - [4.1、代码](#41%E4%BB%A3%E7%A0%81)
-    - [4.2、反编译上述代码](#42%E5%8F%8D%E7%BC%96%E8%AF%91%E4%B8%8A%E8%BF%B0%E4%BB%A3%E7%A0%81)
-    - [4.3、分析](#43%E5%88%86%E6%9E%90)
-  - [5、枚举类](#5%E6%9E%9A%E4%B8%BE%E7%B1%BB)
-- [十四、抽象类与接口](#%E5%8D%81%E5%9B%9B%E6%8A%BD%E8%B1%A1%E7%B1%BB%E4%B8%8E%E6%8E%A5%E5%8F%A3)
-  - [1、抽象类](#1%E6%8A%BD%E8%B1%A1%E7%B1%BB)
-    - [1.1、相关概念](#11%E7%9B%B8%E5%85%B3%E6%A6%82%E5%BF%B5)
-    - [1.2、注意点](#12%E6%B3%A8%E6%84%8F%E7%82%B9)
-  - [2、接口](#2%E6%8E%A5%E5%8F%A3)
-    - [2.1、接口使用注意事项](#21%E6%8E%A5%E5%8F%A3%E4%BD%BF%E7%94%A8%E6%B3%A8%E6%84%8F%E4%BA%8B%E9%A1%B9)
-    - [2.2、接口的默认修饰符](#22%E6%8E%A5%E5%8F%A3%E7%9A%84%E9%BB%98%E8%AE%A4%E4%BF%AE%E9%A5%B0%E7%AC%A6)
-    - [2.3、常见空接口](#23%E5%B8%B8%E8%A7%81%E7%A9%BA%E6%8E%A5%E5%8F%A3)
-  - [3、接口与抽象类的区别](#3%E6%8E%A5%E5%8F%A3%E4%B8%8E%E6%8A%BD%E8%B1%A1%E7%B1%BB%E7%9A%84%E5%8C%BA%E5%88%AB)
-    - [3.1、语法层面上](#31%E8%AF%AD%E6%B3%95%E5%B1%82%E9%9D%A2%E4%B8%8A)
-    - [3.2、设计层面上](#32%E8%AE%BE%E8%AE%A1%E5%B1%82%E9%9D%A2%E4%B8%8A)
-  - [4、Java8下接口的不同之处](#4java8%E4%B8%8B%E6%8E%A5%E5%8F%A3%E7%9A%84%E4%B8%8D%E5%90%8C%E4%B9%8B%E5%A4%84)
-    - [4.1、默认方法（default）](#41%E9%BB%98%E8%AE%A4%E6%96%B9%E6%B3%95default)
-    - [4.2、接口实现](#42%E6%8E%A5%E5%8F%A3%E5%AE%9E%E7%8E%B0)
-- [十五、类型、类初始化、二进制](#%E5%8D%81%E4%BA%94%E7%B1%BB%E5%9E%8B%E7%B1%BB%E5%88%9D%E5%A7%8B%E5%8C%96%E4%BA%8C%E8%BF%9B%E5%88%B6)
-  - [1、基本类型与引用类型的比较](#1%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E4%B8%8E%E5%BC%95%E7%94%A8%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%AF%94%E8%BE%83)
-  - [2、关于String +和StringBuffer的比较](#2%E5%85%B3%E4%BA%8Estring-%E5%92%8Cstringbuffer%E7%9A%84%E6%AF%94%E8%BE%83)
-  - [3、静态代码块、静态变量](#3%E9%9D%99%E6%80%81%E4%BB%A3%E7%A0%81%E5%9D%97%E9%9D%99%E6%80%81%E5%8F%98%E9%87%8F)
-    - [3.1、Java 类初始化过程](#31java-%E7%B1%BB%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B)
-    - [3.2、不要在构造器里调用可能被重载的虚方法](#32%E4%B8%8D%E8%A6%81%E5%9C%A8%E6%9E%84%E9%80%A0%E5%99%A8%E9%87%8C%E8%B0%83%E7%94%A8%E5%8F%AF%E8%83%BD%E8%A2%AB%E9%87%8D%E8%BD%BD%E7%9A%84%E8%99%9A%E6%96%B9%E6%B3%95)
-    - [3.3、Java 中赋值顺序](#33java-%E4%B8%AD%E8%B5%8B%E5%80%BC%E9%A1%BA%E5%BA%8F)
-    - [3.4、Java 代码执行顺序](#34java-%E4%BB%A3%E7%A0%81%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F)
-  - [4、给出一个表达式计算其可以按多少进制计算](#4%E7%BB%99%E5%87%BA%E4%B8%80%E4%B8%AA%E8%A1%A8%E8%BE%BE%E5%BC%8F%E8%AE%A1%E7%AE%97%E5%85%B6%E5%8F%AF%E4%BB%A5%E6%8C%89%E5%A4%9A%E5%B0%91%E8%BF%9B%E5%88%B6%E8%AE%A1%E7%AE%97)
-  - [5、表达式的数据类型](#5%E8%A1%A8%E8%BE%BE%E5%BC%8F%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
-  - [6、多态问题](#6%E5%A4%9A%E6%80%81%E9%97%AE%E9%A2%98)
-- [十六、反射与注解](#%E5%8D%81%E5%85%AD%E5%8F%8D%E5%B0%84%E4%B8%8E%E6%B3%A8%E8%A7%A3)
-  - [1、Java注解：Annotation](#1java%E6%B3%A8%E8%A7%A3annotation)
-    - [1.1、内置注解](#11%E5%86%85%E7%BD%AE%E6%B3%A8%E8%A7%A3)
-    - [1.2、自定义注解](#12%E8%87%AA%E5%AE%9A%E4%B9%89%E6%B3%A8%E8%A7%A3)
-    - [1.3、元注解](#13%E5%85%83%E6%B3%A8%E8%A7%A3)
-    - [1.4、解析注解](#14%E8%A7%A3%E6%9E%90%E6%B3%A8%E8%A7%A3)
-    - [1.5、注解处理器](#15%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E5%99%A8)
-    - [1.6、注解实现原理](#16%E6%B3%A8%E8%A7%A3%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
-  - [2、Java 动态加载与静态加载](#2java-%E5%8A%A8%E6%80%81%E5%8A%A0%E8%BD%BD%E4%B8%8E%E9%9D%99%E6%80%81%E5%8A%A0%E8%BD%BD)
-  - [3、反射机制：(Reflection)](#3%E5%8F%8D%E5%B0%84%E6%9C%BA%E5%88%B6reflection)
-  - [4、动态编译：Java6.0引入动态编译](#4%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91java60%E5%BC%95%E5%85%A5%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91)
-    - [4.1.动态编译的两种方法](#41%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91%E7%9A%84%E4%B8%A4%E7%A7%8D%E6%96%B9%E6%B3%95)
-    - [4.2.Javacompiler 动态编译](#42javacompiler-%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91)
-    - [4.3、动态运行动态编译的Java类](#43%E5%8A%A8%E6%80%81%E8%BF%90%E8%A1%8C%E5%8A%A8%E6%80%81%E7%BC%96%E8%AF%91%E7%9A%84java%E7%B1%BB)
-  - [5、动态执行Javascript(JDK6.0以上)](#5%E5%8A%A8%E6%80%81%E6%89%A7%E8%A1%8Cjavascriptjdk60%E4%BB%A5%E4%B8%8A)
-  - [6、Java 字节码操作](#6java-%E5%AD%97%E8%8A%82%E7%A0%81%E6%93%8D%E4%BD%9C)
-    - [6.1、Java 动态操作：字节码操作，反射](#61java-%E5%8A%A8%E6%80%81%E6%93%8D%E4%BD%9C%E5%AD%97%E8%8A%82%E7%A0%81%E6%93%8D%E4%BD%9C%E5%8F%8D%E5%B0%84)
-    - [6.2、常见的字节码操作类库](#62%E5%B8%B8%E8%A7%81%E7%9A%84%E5%AD%97%E8%8A%82%E7%A0%81%E6%93%8D%E4%BD%9C%E7%B1%BB%E5%BA%93)
-    - [6.3、Javasist](#63javasist)
-  - [7、反射存在问题](#7%E5%8F%8D%E5%B0%84%E5%AD%98%E5%9C%A8%E9%97%AE%E9%A2%98)
-    - [7.1、反射慢的原因](#71%E5%8F%8D%E5%B0%84%E6%85%A2%E7%9A%84%E5%8E%9F%E5%9B%A0)
-    - [7.2、优化方式](#72%E4%BC%98%E5%8C%96%E6%96%B9%E5%BC%8F)
-- [十七、比较器：Comparale、Comparator](#%E5%8D%81%E4%B8%83%E6%AF%94%E8%BE%83%E5%99%A8comparalecomparator)
-  - [1、区别](#1%E5%8C%BA%E5%88%AB)
-  - [2、Comparable](#2comparable)
-  - [3、Comparator](#3comparator)
-  - [4、如何选择](#4%E5%A6%82%E4%BD%95%E9%80%89%E6%8B%A9)
-- [十八、枚举类](#%E5%8D%81%E5%85%AB%E6%9E%9A%E4%B8%BE%E7%B1%BB)
-  - [1、枚举类概念](#1%E6%9E%9A%E4%B8%BE%E7%B1%BB%E6%A6%82%E5%BF%B5)
-    - [1.1、枚举类特点](#11%E6%9E%9A%E4%B8%BE%E7%B1%BB%E7%89%B9%E7%82%B9)
-    - [1.2、枚举类的一些方法](#12%E6%9E%9A%E4%B8%BE%E7%B1%BB%E7%9A%84%E4%B8%80%E4%BA%9B%E6%96%B9%E6%B3%95)
-    - [1.3、枚举类基类](#13%E6%9E%9A%E4%B8%BE%E7%B1%BB%E5%9F%BA%E7%B1%BB)
-    - [1.4、枚举比较](#14%E6%9E%9A%E4%B8%BE%E6%AF%94%E8%BE%83)
-  - [2、枚举类本质](#2%E6%9E%9A%E4%B8%BE%E7%B1%BB%E6%9C%AC%E8%B4%A8)
-  - [3、枚举类与常量](#3%E6%9E%9A%E4%B8%BE%E7%B1%BB%E4%B8%8E%E5%B8%B8%E9%87%8F)
-    - [3.1、区别](#31%E5%8C%BA%E5%88%AB)
-    - [3.2、枚举与静态常量内存消耗比](#32%E6%9E%9A%E4%B8%BE%E4%B8%8E%E9%9D%99%E6%80%81%E5%B8%B8%E9%87%8F%E5%86%85%E5%AD%98%E6%B6%88%E8%80%97%E6%AF%94)
-  - [4、枚举类是如何保证线程安全的](#4%E6%9E%9A%E4%B8%BE%E7%B1%BB%E6%98%AF%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8%E7%9A%84)
-  - [5、枚举与单例模式](#5%E6%9E%9A%E4%B8%BE%E4%B8%8E%E5%8D%95%E4%BE%8B%E6%A8%A1%E5%BC%8F)
-  - [6、迭代器和枚举器区别](#6%E8%BF%AD%E4%BB%A3%E5%99%A8%E5%92%8C%E6%9E%9A%E4%B8%BE%E5%99%A8%E5%8C%BA%E5%88%AB)
-- [十九、Java异常](#%E5%8D%81%E4%B9%9Djava%E5%BC%82%E5%B8%B8)
-  - [1、异常](#1%E5%BC%82%E5%B8%B8)
-  - [2、Error](#2error)
-  - [3、Exception](#3exception)
-  - [4、Exception分类](#4exception%E5%88%86%E7%B1%BB)
-    - [4.1、运行时异常](#41%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BC%82%E5%B8%B8)
-    - [4.2、非运行时异常](#42%E9%9D%9E%E8%BF%90%E8%A1%8C%E6%97%B6%E5%BC%82%E5%B8%B8)
-  - [5、常见异常](#5%E5%B8%B8%E8%A7%81%E5%BC%82%E5%B8%B8)
-    - [5.1、RuntimeException](#51runtimeexception)
-    - [5.2、非RuntimeException](#52%E9%9D%9Eruntimeexception)
-    - [5.3、Error](#53error)
-  - [6、Error与Exception](#6error%E4%B8%8Eexception)
-  - [7、异常链](#7%E5%BC%82%E5%B8%B8%E9%93%BE)
-- [二十、Jar包](#%E4%BA%8C%E5%8D%81jar%E5%8C%85)
-  - [1、Jar包本质](#1jar%E5%8C%85%E6%9C%AC%E8%B4%A8)
-  - [2、Jar包下META-INF作用](#2jar%E5%8C%85%E4%B8%8Bmeta-inf%E4%BD%9C%E7%94%A8)
-  - [3、MANIFEST.MF 文件解析](#3manifestmf-%E6%96%87%E4%BB%B6%E8%A7%A3%E6%9E%90)
-    - [3.1、格式规则](#31%E6%A0%BC%E5%BC%8F%E8%A7%84%E5%88%99)
-    - [3.2、内容分类](#32%E5%86%85%E5%AE%B9%E5%88%86%E7%B1%BB)
-    - [3.3、MANIFEST.MF信息的获取](#33manifestmf%E4%BF%A1%E6%81%AF%E7%9A%84%E8%8E%B7%E5%8F%96)
-  - [4、Jar 包签名](#4jar-%E5%8C%85%E7%AD%BE%E5%90%8D)
-  - [5、IDEA打jar包](#5idea%E6%89%93jar%E5%8C%85)
-    - [5.1、打包Java工程](#51%E6%89%93%E5%8C%85java%E5%B7%A5%E7%A8%8B)
-    - [5.2、maven工程打包](#52maven%E5%B7%A5%E7%A8%8B%E6%89%93%E5%8C%85)
-  - [6、war包和jar包的区别](#6war%E5%8C%85%E5%92%8Cjar%E5%8C%85%E7%9A%84%E5%8C%BA%E5%88%AB)
-- [二十一、Java Agent](#%E4%BA%8C%E5%8D%81%E4%B8%80java-agent)
-  - [1、Java agent](#1java-agent)
-  - [2、手动编写java agent](#2%E6%89%8B%E5%8A%A8%E7%BC%96%E5%86%99java-agent)
-- [二十二、Java SPI机制](#%E4%BA%8C%E5%8D%81%E4%BA%8Cjava-spi%E6%9C%BA%E5%88%B6)
-  - [1、SPI是什么](#1spi%E6%98%AF%E4%BB%80%E4%B9%88)
-  - [2、使用场景](#2%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
-  - [3、使用规则](#3%E4%BD%BF%E7%94%A8%E8%A7%84%E5%88%99)
-  - [4、示例](#4%E7%A4%BA%E4%BE%8B)
-  - [5、原理](#5%E5%8E%9F%E7%90%86)
-  - [6、总结](#6%E6%80%BB%E7%BB%93)
-- [二十三、本地方法(native)](#%E4%BA%8C%E5%8D%81%E4%B8%89%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95native)
-  - [1、本地方法加载](#1%E6%9C%AC%E5%9C%B0%E6%96%B9%E6%B3%95%E5%8A%A0%E8%BD%BD)
-- [二十四、Java中的null](#%E4%BA%8C%E5%8D%81%E5%9B%9Bjava%E4%B8%AD%E7%9A%84null)
-- [二十五、字符集与字符编码](#%E4%BA%8C%E5%8D%81%E4%BA%94%E5%AD%97%E7%AC%A6%E9%9B%86%E4%B8%8E%E5%AD%97%E7%AC%A6%E7%BC%96%E7%A0%81)
-- [二十六、JMS](#%E4%BA%8C%E5%8D%81%E5%85%ADjms)
-- [二十七、JMX](#%E4%BA%8C%E5%8D%81%E4%B8%83jmx)
-  - [1、基本属术语](#1%E5%9F%BA%E6%9C%AC%E5%B1%9E%E6%9C%AF%E8%AF%AD)
-  - [2、JMX架构](#2jmx%E6%9E%B6%E6%9E%84)
-    - [2.1、MBean分类](#21mbean%E5%88%86%E7%B1%BB)
-  - [3、JMX的访问方式](#3jmx%E7%9A%84%E8%AE%BF%E9%97%AE%E6%96%B9%E5%BC%8F)
-    - [3.1、通过jconsole](#31%E9%80%9A%E8%BF%87jconsole)
-    - [3.2、通过JMX提供的工具页访问](#32%E9%80%9A%E8%BF%87jmx%E6%8F%90%E4%BE%9B%E7%9A%84%E5%B7%A5%E5%85%B7%E9%A1%B5%E8%AE%BF%E9%97%AE)
-    - [3.3、通过客户端程序进行远程访问](#33%E9%80%9A%E8%BF%87%E5%AE%A2%E6%88%B7%E7%AB%AF%E7%A8%8B%E5%BA%8F%E8%BF%9B%E8%A1%8C%E8%BF%9C%E7%A8%8B%E8%AE%BF%E9%97%AE)
-  - [4、Notification](#4notification)
-  - [5、JMX监控tomcat](#5jmx%E7%9B%91%E6%8E%A7tomcat)
-  - [6、JMX产生问题原因](#6jmx%E4%BA%A7%E7%94%9F%E9%97%AE%E9%A2%98%E5%8E%9F%E5%9B%A0)
-- [二十八、Java基准测试-JMH](#%E4%BA%8C%E5%8D%81%E5%85%ABjava%E5%9F%BA%E5%87%86%E6%B5%8B%E8%AF%95-jmh)
-- [二十九、面向对象](#%E4%BA%8C%E5%8D%81%E4%B9%9D%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1)
-  - [1、面向对象与面向过程](#1%E9%9D%A2%E5%90%91%E5%AF%B9%E8%B1%A1%E4%B8%8E%E9%9D%A2%E5%90%91%E8%BF%87%E7%A8%8B)
-  - [2、三大基本特征](#2%E4%B8%89%E5%A4%A7%E5%9F%BA%E6%9C%AC%E7%89%B9%E5%BE%81)
-  - [3、五大基本原则](#3%E4%BA%94%E5%A4%A7%E5%9F%BA%E6%9C%AC%E5%8E%9F%E5%88%99)
-- [三十、Lambda表达式与函数式接口](#%E4%B8%89%E5%8D%81lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E4%B8%8E%E5%87%BD%E6%95%B0%E5%BC%8F%E6%8E%A5%E5%8F%A3)
-  - [1、函数式接口](#1%E5%87%BD%E6%95%B0%E5%BC%8F%E6%8E%A5%E5%8F%A3)
-  - [2、Lambda表达式](#2lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F)
-    - [2.1、语法格式](#21%E8%AF%AD%E6%B3%95%E6%A0%BC%E5%BC%8F)
-    - [2.2、Lambda原理](#22lambda%E5%8E%9F%E7%90%86)
-    - [2.3、Lambda性能](#23lambda%E6%80%A7%E8%83%BD)
-- [三十一、Java编码](#%E4%B8%89%E5%8D%81%E4%B8%80java%E7%BC%96%E7%A0%81)
-  - [1、为什么需要编码](#1%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E7%BC%96%E7%A0%81)
-  - [2、编码方式](#2%E7%BC%96%E7%A0%81%E6%96%B9%E5%BC%8F)
-  - [3、Java中需要编码的场景](#3java%E4%B8%AD%E9%9C%80%E8%A6%81%E7%BC%96%E7%A0%81%E7%9A%84%E5%9C%BA%E6%99%AF)
-    - [3.1、I/O 操作中存在的编码](#31io-%E6%93%8D%E4%BD%9C%E4%B8%AD%E5%AD%98%E5%9C%A8%E7%9A%84%E7%BC%96%E7%A0%81)
-    - [3.2、内存中操作中的编码](#32%E5%86%85%E5%AD%98%E4%B8%AD%E6%93%8D%E4%BD%9C%E4%B8%AD%E7%9A%84%E7%BC%96%E7%A0%81)
-  - [4、Java中如何编解码](#4java%E4%B8%AD%E5%A6%82%E4%BD%95%E7%BC%96%E8%A7%A3%E7%A0%81)
-- [三十二、加密与解密](#%E4%B8%89%E5%8D%81%E4%BA%8C%E5%8A%A0%E5%AF%86%E4%B8%8E%E8%A7%A3%E5%AF%86)
-  - [1、Java安全](#1java%E5%AE%89%E5%85%A8)
-    - [1.1、网络安全体系](#11%E7%BD%91%E7%BB%9C%E5%AE%89%E5%85%A8%E4%BD%93%E7%B3%BB)
-    - [1.2、Java安全](#12java%E5%AE%89%E5%85%A8)
-  - [2、Base64加密算法](#2base64%E5%8A%A0%E5%AF%86%E7%AE%97%E6%B3%95)
-  - [3、消息摘要算法](#3%E6%B6%88%E6%81%AF%E6%91%98%E8%A6%81%E7%AE%97%E6%B3%95)
-    - [3.1、MD](#31md)
-    - [3.2、SHA](#32sha)
-    - [3.3、MAC](#33mac)
-- [三十三、进制基础](#%E4%B8%89%E5%8D%81%E4%B8%89%E8%BF%9B%E5%88%B6%E5%9F%BA%E7%A1%80)
-  - [1、进制基础](#1%E8%BF%9B%E5%88%B6%E5%9F%BA%E7%A1%80)
-  - [2、二进制运算](#2%E4%BA%8C%E8%BF%9B%E5%88%B6%E8%BF%90%E7%AE%97)
-    - [2.1、与运算：&](#21%E4%B8%8E%E8%BF%90%E7%AE%97)
-    - [2.2、或运算：|](#22%E6%88%96%E8%BF%90%E7%AE%97)
-    - [2.3、异或运算：^](#23%E5%BC%82%E6%88%96%E8%BF%90%E7%AE%97%5E)
-    - [2.4、取反运算：~](#24%E5%8F%96%E5%8F%8D%E8%BF%90%E7%AE%97)
-    - [2.5、左移：<<](#25%E5%B7%A6%E7%A7%BB)
-    - [2.6、右移：>>](#26%E5%8F%B3%E7%A7%BB)
-    - [2.7、无符号右移：>>>](#27%E6%97%A0%E7%AC%A6%E5%8F%B7%E5%8F%B3%E7%A7%BB)
-    - [2.8、二进制四则运算](#28%E4%BA%8C%E8%BF%9B%E5%88%B6%E5%9B%9B%E5%88%99%E8%BF%90%E7%AE%97)
-  - [3、负数：以其正值的补码形式表示](#3%E8%B4%9F%E6%95%B0%E4%BB%A5%E5%85%B6%E6%AD%A3%E5%80%BC%E7%9A%84%E8%A1%A5%E7%A0%81%E5%BD%A2%E5%BC%8F%E8%A1%A8%E7%A4%BA)
-    - [3.1、原码](#31%E5%8E%9F%E7%A0%81)
-    - [3.2、反码](#32%E5%8F%8D%E7%A0%81)
-    - [3.3、补码：反码加1称为补码](#33%E8%A1%A5%E7%A0%81%E5%8F%8D%E7%A0%81%E5%8A%A01%E7%A7%B0%E4%B8%BA%E8%A1%A5%E7%A0%81)
-    - [3.4、案例](#34%E6%A1%88%E4%BE%8B)
-    - [3.5、根据 `1+~n = -n` 可以快速，计算负数补码](#35%E6%A0%B9%E6%8D%AE-1n---n-%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E8%AE%A1%E7%AE%97%E8%B4%9F%E6%95%B0%E8%A1%A5%E7%A0%81)
-  - [4、Java 二进制](#4java-%E4%BA%8C%E8%BF%9B%E5%88%B6)
-    - [4.1、Java 基本数据类型](#41java-%E5%9F%BA%E6%9C%AC%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
-    - [4.2、常用的数](#42%E5%B8%B8%E7%94%A8%E7%9A%84%E6%95%B0)
-    - [4.3、大小端](#43%E5%A4%A7%E5%B0%8F%E7%AB%AF)
-    - [4.4、数据类型转换为 字节](#44%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B%E8%BD%AC%E6%8D%A2%E4%B8%BA-%E5%AD%97%E8%8A%82)
-    - [4.5、字符串与字节的相互转换](#45%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B8%8E%E5%AD%97%E8%8A%82%E7%9A%84%E7%9B%B8%E4%BA%92%E8%BD%AC%E6%8D%A2)
-    - [4.6、转换实例](#46%E8%BD%AC%E6%8D%A2%E5%AE%9E%E4%BE%8B)
-  - [5、如何利用位运算](#5%E5%A6%82%E4%BD%95%E5%88%A9%E7%94%A8%E4%BD%8D%E8%BF%90%E7%AE%97)
-    - [5.1、子网掩码](#51%E5%AD%90%E7%BD%91%E6%8E%A9%E7%A0%81)
-    - [5.2、求平均值](#52%E6%B1%82%E5%B9%B3%E5%9D%87%E5%80%BC)
-    - [5.3、判断奇偶数](#53%E5%88%A4%E6%96%AD%E5%A5%87%E5%81%B6%E6%95%B0)
-    - [5.5、幂问题](#55%E5%B9%82%E9%97%AE%E9%A2%98)
-    - [5.6、计算绝对值:](#56%E8%AE%A1%E7%AE%97%E7%BB%9D%E5%AF%B9%E5%80%BC)
-- [三十四、JDK8新特性](#%E4%B8%89%E5%8D%81%E5%9B%9Bjdk8%E6%96%B0%E7%89%B9%E6%80%A7)
-  - [1、Java语言新特性](#1java%E8%AF%AD%E8%A8%80%E6%96%B0%E7%89%B9%E6%80%A7)
-    - [1.1、Lambda表达式和函数式接口](#11lambda%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%92%8C%E5%87%BD%E6%95%B0%E5%BC%8F%E6%8E%A5%E5%8F%A3)
-    - [1.2、接口的默认方法和静态方法](#12%E6%8E%A5%E5%8F%A3%E7%9A%84%E9%BB%98%E8%AE%A4%E6%96%B9%E6%B3%95%E5%92%8C%E9%9D%99%E6%80%81%E6%96%B9%E6%B3%95)
-    - [1.3、方法引用](#13%E6%96%B9%E6%B3%95%E5%BC%95%E7%94%A8)
-    - [1.4、重复注解](#14%E9%87%8D%E5%A4%8D%E6%B3%A8%E8%A7%A3)
-    - [1.5、更好的类型推断](#15%E6%9B%B4%E5%A5%BD%E7%9A%84%E7%B1%BB%E5%9E%8B%E6%8E%A8%E6%96%AD)
-    - [1.6、拓宽注解的应用场景](#16%E6%8B%93%E5%AE%BD%E6%B3%A8%E8%A7%A3%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF)
-  - [2、编译器新特性](#2%E7%BC%96%E8%AF%91%E5%99%A8%E6%96%B0%E7%89%B9%E6%80%A7)
-    - [2.1、参数名称](#21%E5%8F%82%E6%95%B0%E5%90%8D%E7%A7%B0)
-  - [3、Java官方库的新特性](#3java%E5%AE%98%E6%96%B9%E5%BA%93%E7%9A%84%E6%96%B0%E7%89%B9%E6%80%A7)
-  - [4、各个版本特性](#4%E5%90%84%E4%B8%AA%E7%89%88%E6%9C%AC%E7%89%B9%E6%80%A7)
-    - [4.1、JDK5](#41jdk5)
-    - [4.2、JDK6](#42jdk6)
-    - [4.3、JDK7](#43jdk7)
-    - [4.4、JDK8](#44jdk8)
-    - [4.5、JDK9](#45jdk9)
-    - [4.6、JDK10](#46jdk10)
-  - [5、Stream](#5stream)
-    - [5.1、特性](#51%E7%89%B9%E6%80%A7)
-    - [5.2、创建Stream](#52%E5%88%9B%E5%BB%BAstream)
-    - [5.3、常见用法](#53%E5%B8%B8%E8%A7%81%E7%94%A8%E6%B3%95)
-  - [6、Optional](#6optional)
-  - [7、JDK8时间](#7jdk8%E6%97%B6%E9%97%B4)
-    - [7.1、旧版API存在问题](#71%E6%97%A7%E7%89%88api%E5%AD%98%E5%9C%A8%E9%97%AE%E9%A2%98)
-    - [7.2、JDK8新API](#72jdk8%E6%96%B0api)
-    - [7.3、新API基本操作](#73%E6%96%B0api%E5%9F%BA%E6%9C%AC%E6%93%8D%E4%BD%9C)
-- [三十五、正则表达式](#%E4%B8%89%E5%8D%81%E4%BA%94%E6%AD%A3%E5%88%99%E8%A1%A8%E8%BE%BE%E5%BC%8F)
-- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
+- [一、Java平台理解](#%e4%b8%80java%e5%b9%b3%e5%8f%b0%e7%90%86%e8%a7%a3)
+	- [1、从宏观角度看](#1%e4%bb%8e%e5%ae%8f%e8%a7%82%e8%a7%92%e5%ba%a6%e7%9c%8b)
+	- [2、从微观角度](#2%e4%bb%8e%e5%be%ae%e8%a7%82%e8%a7%92%e5%ba%a6)
+	- [3、Java与C++的区别](#3java%e4%b8%8ec%e7%9a%84%e5%8c%ba%e5%88%ab)
+	- [4、面向对象与面向过程](#4%e9%9d%a2%e5%90%91%e5%af%b9%e8%b1%a1%e4%b8%8e%e9%9d%a2%e5%90%91%e8%bf%87%e7%a8%8b)
+	- [5、三大基本特征](#5%e4%b8%89%e5%a4%a7%e5%9f%ba%e6%9c%ac%e7%89%b9%e5%be%81)
+	- [6、五大基本原则](#6%e4%ba%94%e5%a4%a7%e5%9f%ba%e6%9c%ac%e5%8e%9f%e5%88%99)
+- [二、Java常见问题](#%e4%ba%8cjava%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98)
+	- [1、基本类型与引用类型的比较](#1%e5%9f%ba%e6%9c%ac%e7%b1%bb%e5%9e%8b%e4%b8%8e%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e7%9a%84%e6%af%94%e8%be%83)
+	- [2、关于String +和StringBuffer的比较](#2%e5%85%b3%e4%ba%8estring-%e5%92%8cstringbuffer%e7%9a%84%e6%af%94%e8%be%83)
+	- [3、静态代码块、静态变量](#3%e9%9d%99%e6%80%81%e4%bb%a3%e7%a0%81%e5%9d%97%e9%9d%99%e6%80%81%e5%8f%98%e9%87%8f)
+		- [3.1、Java 类初始化过程](#31java-%e7%b1%bb%e5%88%9d%e5%a7%8b%e5%8c%96%e8%bf%87%e7%a8%8b)
+		- [3.2、不要在构造器里调用可能被重载的虚方法](#32%e4%b8%8d%e8%a6%81%e5%9c%a8%e6%9e%84%e9%80%a0%e5%99%a8%e9%87%8c%e8%b0%83%e7%94%a8%e5%8f%af%e8%83%bd%e8%a2%ab%e9%87%8d%e8%bd%bd%e7%9a%84%e8%99%9a%e6%96%b9%e6%b3%95)
+		- [3.3、Java 中赋值顺序](#33java-%e4%b8%ad%e8%b5%8b%e5%80%bc%e9%a1%ba%e5%ba%8f)
+		- [3.4、Java 代码执行顺序](#34java-%e4%bb%a3%e7%a0%81%e6%89%a7%e8%a1%8c%e9%a1%ba%e5%ba%8f)
+	- [4、给出一个表达式计算其可以按多少进制计算](#4%e7%bb%99%e5%87%ba%e4%b8%80%e4%b8%aa%e8%a1%a8%e8%be%be%e5%bc%8f%e8%ae%a1%e7%ae%97%e5%85%b6%e5%8f%af%e4%bb%a5%e6%8c%89%e5%a4%9a%e5%b0%91%e8%bf%9b%e5%88%b6%e8%ae%a1%e7%ae%97)
+	- [5、表达式的数据类型](#5%e8%a1%a8%e8%be%be%e5%bc%8f%e7%9a%84%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b)
+	- [6、按照目录结构打印当前目录及子目录](#6%e6%8c%89%e7%85%a7%e7%9b%ae%e5%bd%95%e7%bb%93%e6%9e%84%e6%89%93%e5%8d%b0%e5%bd%93%e5%89%8d%e7%9b%ae%e5%bd%95%e5%8f%8a%e5%ad%90%e7%9b%ae%e5%bd%95)
+- [三、进制基础](#%e4%b8%89%e8%bf%9b%e5%88%b6%e5%9f%ba%e7%a1%80)
+	- [1、进制基础](#1%e8%bf%9b%e5%88%b6%e5%9f%ba%e7%a1%80)
+	- [2、二进制运算](#2%e4%ba%8c%e8%bf%9b%e5%88%b6%e8%bf%90%e7%ae%97)
+		- [2.1、与运算：&](#21%e4%b8%8e%e8%bf%90%e7%ae%97)
+		- [2.2、或运算：|](#22%e6%88%96%e8%bf%90%e7%ae%97)
+		- [2.3、异或运算：^](#23%e5%bc%82%e6%88%96%e8%bf%90%e7%ae%97)
+		- [2.4、取反运算：~](#24%e5%8f%96%e5%8f%8d%e8%bf%90%e7%ae%97)
+		- [2.5、左移：<<](#25%e5%b7%a6%e7%a7%bb)
+		- [2.6、右移：>>](#26%e5%8f%b3%e7%a7%bb)
+		- [2.7、无符号右移：>>>](#27%e6%97%a0%e7%ac%a6%e5%8f%b7%e5%8f%b3%e7%a7%bb)
+		- [2.8、二进制四则运算](#28%e4%ba%8c%e8%bf%9b%e5%88%b6%e5%9b%9b%e5%88%99%e8%bf%90%e7%ae%97)
+			- [2.8.1、加法](#281%e5%8a%a0%e6%b3%95)
+			- [2.8.2、减法](#282%e5%87%8f%e6%b3%95)
+			- [2.8.3、乘法](#283%e4%b9%98%e6%b3%95)
+			- [2.8.4、除法](#284%e9%99%a4%e6%b3%95)
+	- [3、负数：以其正值的补码形式表示](#3%e8%b4%9f%e6%95%b0%e4%bb%a5%e5%85%b6%e6%ad%a3%e5%80%bc%e7%9a%84%e8%a1%a5%e7%a0%81%e5%bd%a2%e5%bc%8f%e8%a1%a8%e7%a4%ba)
+		- [3.1、原码](#31%e5%8e%9f%e7%a0%81)
+		- [3.2、反码](#32%e5%8f%8d%e7%a0%81)
+		- [3.3、补码：反码加1称为补码](#33%e8%a1%a5%e7%a0%81%e5%8f%8d%e7%a0%81%e5%8a%a01%e7%a7%b0%e4%b8%ba%e8%a1%a5%e7%a0%81)
+		- [3.4、案例](#34%e6%a1%88%e4%be%8b)
+		- [3.5、根据 `1+~n = -n` 可以快速，计算负数补码](#35%e6%a0%b9%e6%8d%ae-1n---n-%e5%8f%af%e4%bb%a5%e5%bf%ab%e9%80%9f%e8%ae%a1%e7%ae%97%e8%b4%9f%e6%95%b0%e8%a1%a5%e7%a0%81)
+	- [4、Java 二进制](#4java-%e4%ba%8c%e8%bf%9b%e5%88%b6)
+		- [4.1、Java 基本数据类型](#41java-%e5%9f%ba%e6%9c%ac%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b)
+		- [4.2、常用的数](#42%e5%b8%b8%e7%94%a8%e7%9a%84%e6%95%b0)
+		- [4.3、大小端](#43%e5%a4%a7%e5%b0%8f%e7%ab%af)
+		- [4.4、数据类型转换为 字节](#44%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2%e4%b8%ba-%e5%ad%97%e8%8a%82)
+		- [4.5、字符串与字节的相互转换](#45%e5%ad%97%e7%ac%a6%e4%b8%b2%e4%b8%8e%e5%ad%97%e8%8a%82%e7%9a%84%e7%9b%b8%e4%ba%92%e8%bd%ac%e6%8d%a2)
+		- [4.6、转换实例](#46%e8%bd%ac%e6%8d%a2%e5%ae%9e%e4%be%8b)
+	- [5、如何利用位运算](#5%e5%a6%82%e4%bd%95%e5%88%a9%e7%94%a8%e4%bd%8d%e8%bf%90%e7%ae%97)
+		- [5.1、子网掩码](#51%e5%ad%90%e7%bd%91%e6%8e%a9%e7%a0%81)
+		- [5.2、求平均值](#52%e6%b1%82%e5%b9%b3%e5%9d%87%e5%80%bc)
+		- [5.3、判断奇偶数](#53%e5%88%a4%e6%96%ad%e5%a5%87%e5%81%b6%e6%95%b0)
+		- [5.5、幂问题](#55%e5%b9%82%e9%97%ae%e9%a2%98)
+		- [5.6、计算绝对值:](#56%e8%ae%a1%e7%ae%97%e7%bb%9d%e5%af%b9%e5%80%bc)
+- [四、JDK8新特性](#%e5%9b%9bjdk8%e6%96%b0%e7%89%b9%e6%80%a7)
+	- [1、Java语言新特性](#1java%e8%af%ad%e8%a8%80%e6%96%b0%e7%89%b9%e6%80%a7)
+		- [1.1、Lambda表达式和函数式接口](#11lambda%e8%a1%a8%e8%be%be%e5%bc%8f%e5%92%8c%e5%87%bd%e6%95%b0%e5%bc%8f%e6%8e%a5%e5%8f%a3)
+		- [1.2、接口的默认方法和静态方法](#12%e6%8e%a5%e5%8f%a3%e7%9a%84%e9%bb%98%e8%ae%a4%e6%96%b9%e6%b3%95%e5%92%8c%e9%9d%99%e6%80%81%e6%96%b9%e6%b3%95)
+		- [1.3、方法引用](#13%e6%96%b9%e6%b3%95%e5%bc%95%e7%94%a8)
+		- [1.4、重复注解](#14%e9%87%8d%e5%a4%8d%e6%b3%a8%e8%a7%a3)
+		- [1.5、更好的类型推断](#15%e6%9b%b4%e5%a5%bd%e7%9a%84%e7%b1%bb%e5%9e%8b%e6%8e%a8%e6%96%ad)
+		- [1.6、拓宽注解的应用场景](#16%e6%8b%93%e5%ae%bd%e6%b3%a8%e8%a7%a3%e7%9a%84%e5%ba%94%e7%94%a8%e5%9c%ba%e6%99%af)
+	- [2、编译器新特性](#2%e7%bc%96%e8%af%91%e5%99%a8%e6%96%b0%e7%89%b9%e6%80%a7)
+		- [2.1、参数名称](#21%e5%8f%82%e6%95%b0%e5%90%8d%e7%a7%b0)
+	- [3、Java官方库的新特性](#3java%e5%ae%98%e6%96%b9%e5%ba%93%e7%9a%84%e6%96%b0%e7%89%b9%e6%80%a7)
+	- [4、各个版本特性](#4%e5%90%84%e4%b8%aa%e7%89%88%e6%9c%ac%e7%89%b9%e6%80%a7)
+		- [4.1、JDK5](#41jdk5)
+		- [4.2、JDK6](#42jdk6)
+		- [4.3、JDK7](#43jdk7)
+		- [4.4、JDK8](#44jdk8)
+		- [4.5、JDK9](#45jdk9)
+		- [4.6、JDK10](#46jdk10)
+	- [5、Stream](#5stream)
+		- [5.1、特性](#51%e7%89%b9%e6%80%a7)
+		- [5.2、创建Stream](#52%e5%88%9b%e5%bb%bastream)
+		- [5.3、常见用法](#53%e5%b8%b8%e8%a7%81%e7%94%a8%e6%b3%95)
+	- [6、Optional](#6optional)
+	- [7、JDK8时间](#7jdk8%e6%97%b6%e9%97%b4)
+		- [7.1、旧版API存在问题](#71%e6%97%a7%e7%89%88api%e5%ad%98%e5%9c%a8%e9%97%ae%e9%a2%98)
+		- [7.2、JDK8新API](#72jdk8%e6%96%b0api)
+		- [7.3、新API基本操作](#73%e6%96%b0api%e5%9f%ba%e6%9c%ac%e6%93%8d%e4%bd%9c)
+	- [8、Lambda表达式与函数式接口](#8lambda%e8%a1%a8%e8%be%be%e5%bc%8f%e4%b8%8e%e5%87%bd%e6%95%b0%e5%bc%8f%e6%8e%a5%e5%8f%a3)
+		- [8.1、函数式接口](#81%e5%87%bd%e6%95%b0%e5%bc%8f%e6%8e%a5%e5%8f%a3)
+		- [8.2、Lambda表达式](#82lambda%e8%a1%a8%e8%be%be%e5%bc%8f)
+			- [8.2.1、语法格式](#821%e8%af%ad%e6%b3%95%e6%a0%bc%e5%bc%8f)
+			- [8.2.2、Lambda原理](#822lambda%e5%8e%9f%e7%90%86)
+			- [8.2.3、Lambda性能](#823lambda%e6%80%a7%e8%83%bd)
+- [五、正则表达式](#%e4%ba%94%e6%ad%a3%e5%88%99%e8%a1%a8%e8%be%be%e5%bc%8f)
+- [六、Java 内部类](#%e5%85%adjava-%e5%86%85%e9%83%a8%e7%b1%bb)
+	- [1、为什么使用内部类](#1%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8%e5%86%85%e9%83%a8%e7%b1%bb)
+	- [2、成员内部类](#2%e6%88%90%e5%91%98%e5%86%85%e9%83%a8%e7%b1%bb)
+	- [3、静态内部类](#3%e9%9d%99%e6%80%81%e5%86%85%e9%83%a8%e7%b1%bb)
+	- [4、方法内部类](#4%e6%96%b9%e6%b3%95%e5%86%85%e9%83%a8%e7%b1%bb)
+	- [5、匿名内部类](#5%e5%8c%bf%e5%90%8d%e5%86%85%e9%83%a8%e7%b1%bb)
+	- [6、内部类GC问题](#6%e5%86%85%e9%83%a8%e7%b1%bbgc%e9%97%ae%e9%a2%98)
+- [七、Java 关键字](#%e4%b8%83java-%e5%85%b3%e9%94%ae%e5%ad%97)
+	- [1、native](#1native)
+	- [2、transient](#2transient)
+	- [3、final](#3final)
+		- [3.1、含义](#31%e5%90%ab%e4%b9%89)
+		- [3.2、final 修饰符](#32final-%e4%bf%ae%e9%a5%b0%e7%ac%a6)
+		- [3.3、注意点](#33%e6%b3%a8%e6%84%8f%e7%82%b9)
+		- [3.4、为什么使用 `final`](#34%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8-final)
+		- [3.5、不可变类](#35%e4%b8%8d%e5%8f%af%e5%8f%98%e7%b1%bb)
+		- [3.6、知识点](#36%e7%9f%a5%e8%af%86%e7%82%b9)
+	- [4、instanceof](#4instanceof)
+		- [4.1、一些使用注意事项](#41%e4%b8%80%e4%ba%9b%e4%bd%bf%e7%94%a8%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9)
+		- [4.2、`instanceof`与`clazz.isInstance(obj)`](#42instanceof%e4%b8%8eclazzisinstanceobj)
+		- [4.3、instanceof 与 clazz.getClass()：](#43instanceof-%e4%b8%8e-clazzgetclass)
+		- [4.4、instanceof实现原理](#44instanceof%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86)
+- [八、泛型](#%e5%85%ab%e6%b3%9b%e5%9e%8b)
+	- [1、JDK5 引入的新特性](#1jdk5-%e5%bc%95%e5%85%a5%e7%9a%84%e6%96%b0%e7%89%b9%e6%80%a7)
+	- [2、类型擦除(type erasure)](#2%e7%b1%bb%e5%9e%8b%e6%93%a6%e9%99%a4type-erasure)
+		- [2.1、类型擦除的基本过程](#21%e7%b1%bb%e5%9e%8b%e6%93%a6%e9%99%a4%e7%9a%84%e5%9f%ba%e6%9c%ac%e8%bf%87%e7%a8%8b)
+		- [2.2、为什么Java泛型要通过擦除来实现](#22%e4%b8%ba%e4%bb%80%e4%b9%88java%e6%b3%9b%e5%9e%8b%e8%a6%81%e9%80%9a%e8%bf%87%e6%93%a6%e9%99%a4%e6%9d%a5%e5%ae%9e%e7%8e%b0)
+		- [2.3、类型擦除带来的问题](#23%e7%b1%bb%e5%9e%8b%e6%93%a6%e9%99%a4%e5%b8%a6%e6%9d%a5%e7%9a%84%e9%97%ae%e9%a2%98)
+		- [2.4、泛型数组](#24%e6%b3%9b%e5%9e%8b%e6%95%b0%e7%bb%84)
+		- [2.5、Java不能实例化泛型对象](#25java%e4%b8%8d%e8%83%bd%e5%ae%9e%e4%be%8b%e5%8c%96%e6%b3%9b%e5%9e%8b%e5%af%b9%e8%b1%a1)
+		- [2.6、泛型擦除擦除了哪些信息](#26%e6%b3%9b%e5%9e%8b%e6%93%a6%e9%99%a4%e6%93%a6%e9%99%a4%e4%ba%86%e5%93%aa%e4%ba%9b%e4%bf%a1%e6%81%af)
+	- [3、通配符与上下界](#3%e9%80%9a%e9%85%8d%e7%ac%a6%e4%b8%8e%e4%b8%8a%e4%b8%8b%e7%95%8c)
+	- [4、Java 类型系统](#4java-%e7%b1%bb%e5%9e%8b%e7%b3%bb%e7%bb%9f)
+	- [5、开发自己的泛型类](#5%e5%bc%80%e5%8f%91%e8%87%aa%e5%b7%b1%e7%9a%84%e6%b3%9b%e5%9e%8b%e7%b1%bb)
+	- [6、在使用泛型的时候可以遵循一些基本的原则](#6%e5%9c%a8%e4%bd%bf%e7%94%a8%e6%b3%9b%e5%9e%8b%e7%9a%84%e6%97%b6%e5%80%99%e5%8f%af%e4%bb%a5%e9%81%b5%e5%be%aa%e4%b8%80%e4%ba%9b%e5%9f%ba%e6%9c%ac%e7%9a%84%e5%8e%9f%e5%88%99)
+	- [7、Java与C++泛型区别](#7java%e4%b8%8ec%e6%b3%9b%e5%9e%8b%e5%8c%ba%e5%88%ab)
+- [九、协变式重写和泛型重载](#%e4%b9%9d%e5%8d%8f%e5%8f%98%e5%bc%8f%e9%87%8d%e5%86%99%e5%92%8c%e6%b3%9b%e5%9e%8b%e9%87%8d%e8%bd%bd)
+	- [1、协变式重写](#1%e5%8d%8f%e5%8f%98%e5%bc%8f%e9%87%8d%e5%86%99)
+		- [1.1、不同版本之间变化](#11%e4%b8%8d%e5%90%8c%e7%89%88%e6%9c%ac%e4%b9%8b%e9%97%b4%e5%8f%98%e5%8c%96)
+	- [2、泛型重载](#2%e6%b3%9b%e5%9e%8b%e9%87%8d%e8%bd%bd)
+	- [3、重写与重载](#3%e9%87%8d%e5%86%99%e4%b8%8e%e9%87%8d%e8%bd%bd)
+		- [3.1、两者的比较](#31%e4%b8%a4%e8%80%85%e7%9a%84%e6%af%94%e8%be%83)
+		- [3.2、重写的条件](#32%e9%87%8d%e5%86%99%e7%9a%84%e6%9d%a1%e4%bb%b6)
+		- [3.3、重载的条件](#33%e9%87%8d%e8%bd%bd%e7%9a%84%e6%9d%a1%e4%bb%b6)
+	- [4、重载](#4%e9%87%8d%e8%bd%bd)
+	- [5、重写](#5%e9%87%8d%e5%86%99)
+	- [6、两者的比较](#6%e4%b8%a4%e8%80%85%e7%9a%84%e6%af%94%e8%be%83)
+- [十、Java 序列化](#%e5%8d%81java-%e5%ba%8f%e5%88%97%e5%8c%96)
+	- [1、Java对象序列化](#1java%e5%af%b9%e8%b1%a1%e5%ba%8f%e5%88%97%e5%8c%96)
+		- [1.1、基本点](#11%e5%9f%ba%e6%9c%ac%e7%82%b9)
+		- [1.2、子类与父类序列化](#12%e5%ad%90%e7%b1%bb%e4%b8%8e%e7%88%b6%e7%b1%bb%e5%ba%8f%e5%88%97%e5%8c%96)
+	- [2、如何序列化](#2%e5%a6%82%e4%bd%95%e5%ba%8f%e5%88%97%e5%8c%96)
+		- [2.1、ArrayList序列化实现](#21arraylist%e5%ba%8f%e5%88%97%e5%8c%96%e5%ae%9e%e7%8e%b0)
+		- [2.2、自定义序列化和反序列化策略](#22%e8%87%aa%e5%ae%9a%e4%b9%89%e5%ba%8f%e5%88%97%e5%8c%96%e5%92%8c%e5%8f%8d%e5%ba%8f%e5%88%97%e5%8c%96%e7%ad%96%e7%95%a5)
+		- [2.3、Serializable如何实现序列化与反序列化](#23serializable%e5%a6%82%e4%bd%95%e5%ae%9e%e7%8e%b0%e5%ba%8f%e5%88%97%e5%8c%96%e4%b8%8e%e5%8f%8d%e5%ba%8f%e5%88%97%e5%8c%96)
+		- [2.4、writeReplace()和readResolve()](#24writereplace%e5%92%8creadresolve)
+	- [3、serialVersionUID](#3serialversionuid)
+	- [4、反序列化](#4%e5%8f%8d%e5%ba%8f%e5%88%97%e5%8c%96)
+	- [5、序列化实现对象的拷贝](#5%e5%ba%8f%e5%88%97%e5%8c%96%e5%ae%9e%e7%8e%b0%e5%af%b9%e8%b1%a1%e7%9a%84%e6%8b%b7%e8%b4%9d)
+	- [6、常见的序列化协议](#6%e5%b8%b8%e8%a7%81%e7%9a%84%e5%ba%8f%e5%88%97%e5%8c%96%e5%8d%8f%e8%ae%ae)
+	- [7、JSON 序列化](#7json-%e5%ba%8f%e5%88%97%e5%8c%96)
+		- [7.1、关于Map转json输出顺序问题](#71%e5%85%b3%e4%ba%8emap%e8%bd%acjson%e8%be%93%e5%87%ba%e9%a1%ba%e5%ba%8f%e9%97%ae%e9%a2%98)
+	- [8、序列化安全](#8%e5%ba%8f%e5%88%97%e5%8c%96%e5%ae%89%e5%85%a8)
+	- [9、Java默认序列化与二进制编码](#9java%e9%bb%98%e8%ae%a4%e5%ba%8f%e5%88%97%e5%8c%96%e4%b8%8e%e4%ba%8c%e8%bf%9b%e5%88%b6%e7%bc%96%e7%a0%81)
+- [十一、Java异常](#%e5%8d%81%e4%b8%80java%e5%bc%82%e5%b8%b8)
+	- [1、异常](#1%e5%bc%82%e5%b8%b8)
+	- [2、Error](#2error)
+	- [3、Exception](#3exception)
+	- [4、Exception分类](#4exception%e5%88%86%e7%b1%bb)
+		- [4.1、运行时异常](#41%e8%bf%90%e8%a1%8c%e6%97%b6%e5%bc%82%e5%b8%b8)
+		- [4.2、非运行时异常](#42%e9%9d%9e%e8%bf%90%e8%a1%8c%e6%97%b6%e5%bc%82%e5%b8%b8)
+	- [5、常见异常](#5%e5%b8%b8%e8%a7%81%e5%bc%82%e5%b8%b8)
+		- [5.1、RuntimeException](#51runtimeexception)
+		- [5.2、非RuntimeException](#52%e9%9d%9eruntimeexception)
+		- [5.3、Error](#53error)
+	- [6、Error与Exception](#6error%e4%b8%8eexception)
+	- [7、异常链](#7%e5%bc%82%e5%b8%b8%e9%93%be)
+- [十二、关于try...catch...finally](#%e5%8d%81%e4%ba%8c%e5%85%b3%e4%ba%8etrycatchfinally)
+	- [1、关于try...catch...finally使用](#1%e5%85%b3%e4%ba%8etrycatchfinally%e4%bd%bf%e7%94%a8)
+	- [2、使用try...catch...finally需要注意](#2%e4%bd%bf%e7%94%a8trycatchfinally%e9%9c%80%e8%a6%81%e6%b3%a8%e6%84%8f)
+	- [3、如何退出](#3%e5%a6%82%e4%bd%95%e9%80%80%e5%87%ba)
+	- [4、JVM中实现](#4jvm%e4%b8%ad%e5%ae%9e%e7%8e%b0)
+- [十三、Java 四舍五入](#%e5%8d%81%e4%b8%89java-%e5%9b%9b%e8%88%8d%e4%ba%94%e5%85%a5)
+	- [1、目前 Java 支持7中舍入法](#1%e7%9b%ae%e5%89%8d-java-%e6%94%af%e6%8c%817%e4%b8%ad%e8%88%8d%e5%85%a5%e6%b3%95)
+	- [2、保留位](#2%e4%bf%9d%e7%95%99%e4%bd%8d)
+	- [3、Math](#3math)
+- [十四、Java 中保留小数位数的处理](#%e5%8d%81%e5%9b%9bjava-%e4%b8%ad%e4%bf%9d%e7%95%99%e5%b0%8f%e6%95%b0%e4%bd%8d%e6%95%b0%e7%9a%84%e5%a4%84%e7%90%86)
+	- [1、使用 BigDecimal，保留小数点后两位](#1%e4%bd%bf%e7%94%a8-bigdecimal%e4%bf%9d%e7%95%99%e5%b0%8f%e6%95%b0%e7%82%b9%e5%90%8e%e4%b8%a4%e4%bd%8d)
+	- [2、使用 DecimalFormat，保留小数点后两位](#2%e4%bd%bf%e7%94%a8-decimalformat%e4%bf%9d%e7%95%99%e5%b0%8f%e6%95%b0%e7%82%b9%e5%90%8e%e4%b8%a4%e4%bd%8d)
+	- [3、使用 NumberFormat，保留小数点后两位](#3%e4%bd%bf%e7%94%a8-numberformat%e4%bf%9d%e7%95%99%e5%b0%8f%e6%95%b0%e7%82%b9%e5%90%8e%e4%b8%a4%e4%bd%8d)
+	- [4、使用 java.util.Formatter，保留小数点后两位](#4%e4%bd%bf%e7%94%a8-javautilformatter%e4%bf%9d%e7%95%99%e5%b0%8f%e6%95%b0%e7%82%b9%e5%90%8e%e4%b8%a4%e4%bd%8d)
+	- [5、使用 String.format来实现](#5%e4%bd%bf%e7%94%a8-stringformat%e6%9d%a5%e5%ae%9e%e7%8e%b0)
+- [十五、数组](#%e5%8d%81%e4%ba%94%e6%95%b0%e7%bb%84)
+	- [1、Java 中数组是对象吗](#1java-%e4%b8%ad%e6%95%b0%e7%bb%84%e6%98%af%e5%af%b9%e8%b1%a1%e5%90%97)
+	- [2、Java中数组的类型](#2java%e4%b8%ad%e6%95%b0%e7%bb%84%e7%9a%84%e7%b1%bb%e5%9e%8b)
+	- [3、Java中数组的继承关系](#3java%e4%b8%ad%e6%95%b0%e7%bb%84%e7%9a%84%e7%bb%a7%e6%89%bf%e5%85%b3%e7%b3%bb)
+	- [4、Java 数组初始化](#4java-%e6%95%b0%e7%bb%84%e5%88%9d%e5%a7%8b%e5%8c%96)
+	- [5、数组扩容](#5%e6%95%b0%e7%bb%84%e6%89%a9%e5%ae%b9)
+	- [6、数组复制问题](#6%e6%95%b0%e7%bb%84%e5%a4%8d%e5%88%b6%e9%97%ae%e9%a2%98)
+	- [7、数组转换为 List](#7%e6%95%b0%e7%bb%84%e8%bd%ac%e6%8d%a2%e4%b8%ba-list)
+	- [8、Java中length和length()的区别](#8java%e4%b8%adlength%e5%92%8clength%e7%9a%84%e5%8c%ba%e5%88%ab)
+- [十六、枚举类](#%e5%8d%81%e5%85%ad%e6%9e%9a%e4%b8%be%e7%b1%bb)
+	- [1、枚举类概念](#1%e6%9e%9a%e4%b8%be%e7%b1%bb%e6%a6%82%e5%bf%b5)
+		- [1.1、枚举类特点](#11%e6%9e%9a%e4%b8%be%e7%b1%bb%e7%89%b9%e7%82%b9)
+		- [1.2、枚举类的一些方法](#12%e6%9e%9a%e4%b8%be%e7%b1%bb%e7%9a%84%e4%b8%80%e4%ba%9b%e6%96%b9%e6%b3%95)
+		- [1.3、枚举类基类](#13%e6%9e%9a%e4%b8%be%e7%b1%bb%e5%9f%ba%e7%b1%bb)
+		- [1.4、枚举比较](#14%e6%9e%9a%e4%b8%be%e6%af%94%e8%be%83)
+	- [2、枚举类本质](#2%e6%9e%9a%e4%b8%be%e7%b1%bb%e6%9c%ac%e8%b4%a8)
+	- [3、枚举类与常量](#3%e6%9e%9a%e4%b8%be%e7%b1%bb%e4%b8%8e%e5%b8%b8%e9%87%8f)
+		- [3.1、区别](#31%e5%8c%ba%e5%88%ab)
+		- [3.2、枚举与静态常量内存消耗比](#32%e6%9e%9a%e4%b8%be%e4%b8%8e%e9%9d%99%e6%80%81%e5%b8%b8%e9%87%8f%e5%86%85%e5%ad%98%e6%b6%88%e8%80%97%e6%af%94)
+	- [4、枚举类是如何保证线程安全的](#4%e6%9e%9a%e4%b8%be%e7%b1%bb%e6%98%af%e5%a6%82%e4%bd%95%e4%bf%9d%e8%af%81%e7%ba%bf%e7%a8%8b%e5%ae%89%e5%85%a8%e7%9a%84)
+	- [5、枚举与单例模式](#5%e6%9e%9a%e4%b8%be%e4%b8%8e%e5%8d%95%e4%be%8b%e6%a8%a1%e5%bc%8f)
+	- [6、迭代器和枚举器区别](#6%e8%bf%ad%e4%bb%a3%e5%99%a8%e5%92%8c%e6%9e%9a%e4%b8%be%e5%99%a8%e5%8c%ba%e5%88%ab)
+- [十七、switch](#%e5%8d%81%e4%b8%83switch)
+	- [1、支持类型](#1%e6%94%af%e6%8c%81%e7%b1%bb%e5%9e%8b)
+	- [2、switch 对整型的支持](#2switch-%e5%af%b9%e6%95%b4%e5%9e%8b%e7%9a%84%e6%94%af%e6%8c%81)
+	- [3、switch 对字符型支持的实现](#3switch-%e5%af%b9%e5%ad%97%e7%ac%a6%e5%9e%8b%e6%94%af%e6%8c%81%e7%9a%84%e5%ae%9e%e7%8e%b0)
+	- [4、switch 对字符串支持的实现](#4switch-%e5%af%b9%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%94%af%e6%8c%81%e7%9a%84%e5%ae%9e%e7%8e%b0)
+		- [4.1、代码](#41%e4%bb%a3%e7%a0%81)
+		- [4.2、反编译上述代码](#42%e5%8f%8d%e7%bc%96%e8%af%91%e4%b8%8a%e8%bf%b0%e4%bb%a3%e7%a0%81)
+		- [4.3、分析](#43%e5%88%86%e6%9e%90)
+	- [5、枚举类](#5%e6%9e%9a%e4%b8%be%e7%b1%bb)
+- [十八、抽象类与接口](#%e5%8d%81%e5%85%ab%e6%8a%bd%e8%b1%a1%e7%b1%bb%e4%b8%8e%e6%8e%a5%e5%8f%a3)
+	- [1、抽象类](#1%e6%8a%bd%e8%b1%a1%e7%b1%bb)
+		- [1.1、相关概念](#11%e7%9b%b8%e5%85%b3%e6%a6%82%e5%bf%b5)
+		- [1.2、注意点](#12%e6%b3%a8%e6%84%8f%e7%82%b9)
+	- [2、接口](#2%e6%8e%a5%e5%8f%a3)
+		- [2.1、接口使用注意事项](#21%e6%8e%a5%e5%8f%a3%e4%bd%bf%e7%94%a8%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9)
+		- [2.2、接口的默认修饰符](#22%e6%8e%a5%e5%8f%a3%e7%9a%84%e9%bb%98%e8%ae%a4%e4%bf%ae%e9%a5%b0%e7%ac%a6)
+		- [2.3、常见空接口](#23%e5%b8%b8%e8%a7%81%e7%a9%ba%e6%8e%a5%e5%8f%a3)
+	- [3、接口与抽象类的区别](#3%e6%8e%a5%e5%8f%a3%e4%b8%8e%e6%8a%bd%e8%b1%a1%e7%b1%bb%e7%9a%84%e5%8c%ba%e5%88%ab)
+		- [3.1、语法层面上](#31%e8%af%ad%e6%b3%95%e5%b1%82%e9%9d%a2%e4%b8%8a)
+		- [3.2、设计层面上](#32%e8%ae%be%e8%ae%a1%e5%b1%82%e9%9d%a2%e4%b8%8a)
+	- [4、Java8下接口的不同之处](#4java8%e4%b8%8b%e6%8e%a5%e5%8f%a3%e7%9a%84%e4%b8%8d%e5%90%8c%e4%b9%8b%e5%a4%84)
+		- [4.1、默认方法（default）](#41%e9%bb%98%e8%ae%a4%e6%96%b9%e6%b3%95default)
+		- [4.2、接口实现](#42%e6%8e%a5%e5%8f%a3%e5%ae%9e%e7%8e%b0)
+	- [5、多态问题](#5%e5%a4%9a%e6%80%81%e9%97%ae%e9%a2%98)
+- [十九、反射与注解](#%e5%8d%81%e4%b9%9d%e5%8f%8d%e5%b0%84%e4%b8%8e%e6%b3%a8%e8%a7%a3)
+	- [1、Java注解：Annotation](#1java%e6%b3%a8%e8%a7%a3annotation)
+		- [1.1、内置注解](#11%e5%86%85%e7%bd%ae%e6%b3%a8%e8%a7%a3)
+		- [1.2、自定义注解](#12%e8%87%aa%e5%ae%9a%e4%b9%89%e6%b3%a8%e8%a7%a3)
+		- [1.3、元注解](#13%e5%85%83%e6%b3%a8%e8%a7%a3)
+		- [1.4、解析注解](#14%e8%a7%a3%e6%9e%90%e6%b3%a8%e8%a7%a3)
+		- [1.5、注解处理器](#15%e6%b3%a8%e8%a7%a3%e5%a4%84%e7%90%86%e5%99%a8)
+		- [1.6、注解实现原理](#16%e6%b3%a8%e8%a7%a3%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86)
+	- [2、Java 动态加载与静态加载](#2java-%e5%8a%a8%e6%80%81%e5%8a%a0%e8%bd%bd%e4%b8%8e%e9%9d%99%e6%80%81%e5%8a%a0%e8%bd%bd)
+	- [3、反射机制：(Reflection)](#3%e5%8f%8d%e5%b0%84%e6%9c%ba%e5%88%b6reflection)
+	- [4、动态编译：Java6.0引入动态编译](#4%e5%8a%a8%e6%80%81%e7%bc%96%e8%af%91java60%e5%bc%95%e5%85%a5%e5%8a%a8%e6%80%81%e7%bc%96%e8%af%91)
+		- [4.1.动态编译的两种方法](#41%e5%8a%a8%e6%80%81%e7%bc%96%e8%af%91%e7%9a%84%e4%b8%a4%e7%a7%8d%e6%96%b9%e6%b3%95)
+		- [4.2.Javacompiler 动态编译](#42javacompiler-%e5%8a%a8%e6%80%81%e7%bc%96%e8%af%91)
+		- [4.3、动态运行动态编译的Java类](#43%e5%8a%a8%e6%80%81%e8%bf%90%e8%a1%8c%e5%8a%a8%e6%80%81%e7%bc%96%e8%af%91%e7%9a%84java%e7%b1%bb)
+	- [5、动态执行Javascript(JDK6.0以上)](#5%e5%8a%a8%e6%80%81%e6%89%a7%e8%a1%8cjavascriptjdk60%e4%bb%a5%e4%b8%8a)
+	- [6、Java 字节码操作](#6java-%e5%ad%97%e8%8a%82%e7%a0%81%e6%93%8d%e4%bd%9c)
+		- [6.1、Java 动态操作：字节码操作，反射](#61java-%e5%8a%a8%e6%80%81%e6%93%8d%e4%bd%9c%e5%ad%97%e8%8a%82%e7%a0%81%e6%93%8d%e4%bd%9c%e5%8f%8d%e5%b0%84)
+		- [6.2、常见的字节码操作类库](#62%e5%b8%b8%e8%a7%81%e7%9a%84%e5%ad%97%e8%8a%82%e7%a0%81%e6%93%8d%e4%bd%9c%e7%b1%bb%e5%ba%93)
+		- [6.3、Javasist](#63javasist)
+	- [7、反射存在问题](#7%e5%8f%8d%e5%b0%84%e5%ad%98%e5%9c%a8%e9%97%ae%e9%a2%98)
+		- [7.1、反射慢的原因](#71%e5%8f%8d%e5%b0%84%e6%85%a2%e7%9a%84%e5%8e%9f%e5%9b%a0)
+		- [7.2、优化方式](#72%e4%bc%98%e5%8c%96%e6%96%b9%e5%bc%8f)
+- [二十、比较器：Comparale、Comparator](#%e4%ba%8c%e5%8d%81%e6%af%94%e8%be%83%e5%99%a8comparalecomparator)
+	- [1、区别](#1%e5%8c%ba%e5%88%ab)
+	- [2、Comparable](#2comparable)
+	- [3、Comparator](#3comparator)
+	- [4、如何选择](#4%e5%a6%82%e4%bd%95%e9%80%89%e6%8b%a9)
+- [二十一、Jar包](#%e4%ba%8c%e5%8d%81%e4%b8%80jar%e5%8c%85)
+	- [1、Jar包本质](#1jar%e5%8c%85%e6%9c%ac%e8%b4%a8)
+	- [2、Jar包下META-INF作用](#2jar%e5%8c%85%e4%b8%8bmeta-inf%e4%bd%9c%e7%94%a8)
+	- [3、MANIFEST.MF 文件解析](#3manifestmf-%e6%96%87%e4%bb%b6%e8%a7%a3%e6%9e%90)
+		- [3.1、格式规则](#31%e6%a0%bc%e5%bc%8f%e8%a7%84%e5%88%99)
+		- [3.2、内容分类](#32%e5%86%85%e5%ae%b9%e5%88%86%e7%b1%bb)
+			- [3.2.1、一般属性](#321%e4%b8%80%e8%88%ac%e5%b1%9e%e6%80%a7)
+			- [3.2.2、应用程序相关属性](#322%e5%ba%94%e7%94%a8%e7%a8%8b%e5%ba%8f%e7%9b%b8%e5%85%b3%e5%b1%9e%e6%80%a7)
+			- [3.2.3、包扩展属性](#323%e5%8c%85%e6%89%a9%e5%b1%95%e5%b1%9e%e6%80%a7)
+			- [3.2.4、小程序(Applet)相关属性](#324%e5%b0%8f%e7%a8%8b%e5%ba%8fapplet%e7%9b%b8%e5%85%b3%e5%b1%9e%e6%80%a7)
+			- [3.2.5、扩展标识属性](#325%e6%89%a9%e5%b1%95%e6%a0%87%e8%af%86%e5%b1%9e%e6%80%a7)
+			- [3.2.6、签名相关属性](#326%e7%ad%be%e5%90%8d%e7%9b%b8%e5%85%b3%e5%b1%9e%e6%80%a7)
+		- [3.3、MANIFEST.MF信息的获取](#33manifestmf%e4%bf%a1%e6%81%af%e7%9a%84%e8%8e%b7%e5%8f%96)
+	- [4、Jar 包签名](#4jar-%e5%8c%85%e7%ad%be%e5%90%8d)
+	- [5、IDEA打jar包](#5idea%e6%89%93jar%e5%8c%85)
+		- [5.1、打包Java工程](#51%e6%89%93%e5%8c%85java%e5%b7%a5%e7%a8%8b)
+		- [5.2、maven工程打包](#52maven%e5%b7%a5%e7%a8%8b%e6%89%93%e5%8c%85)
+	- [6、war包和jar包的区别](#6war%e5%8c%85%e5%92%8cjar%e5%8c%85%e7%9a%84%e5%8c%ba%e5%88%ab)
+	- [7、如何将开源项目本地打包](#7%e5%a6%82%e4%bd%95%e5%b0%86%e5%bc%80%e6%ba%90%e9%a1%b9%e7%9b%ae%e6%9c%ac%e5%9c%b0%e6%89%93%e5%8c%85)
+- [二十二、Java Agent](#%e4%ba%8c%e5%8d%81%e4%ba%8cjava-agent)
+	- [1、Java agent](#1java-agent)
+	- [2、手动编写java agent](#2%e6%89%8b%e5%8a%a8%e7%bc%96%e5%86%99java-agent)
+- [二十二、Java SPI机制](#%e4%ba%8c%e5%8d%81%e4%ba%8cjava-spi%e6%9c%ba%e5%88%b6)
+	- [1、SPI是什么](#1spi%e6%98%af%e4%bb%80%e4%b9%88)
+	- [2、使用场景](#2%e4%bd%bf%e7%94%a8%e5%9c%ba%e6%99%af)
+	- [3、使用规则](#3%e4%bd%bf%e7%94%a8%e8%a7%84%e5%88%99)
+	- [4、示例](#4%e7%a4%ba%e4%be%8b)
+	- [5、原理](#5%e5%8e%9f%e7%90%86)
+	- [6、总结](#6%e6%80%bb%e7%bb%93)
+- [二十四、Java中的null](#%e4%ba%8c%e5%8d%81%e5%9b%9bjava%e4%b8%ad%e7%9a%84null)
+- [二十五、字符集与字符编码](#%e4%ba%8c%e5%8d%81%e4%ba%94%e5%ad%97%e7%ac%a6%e9%9b%86%e4%b8%8e%e5%ad%97%e7%ac%a6%e7%bc%96%e7%a0%81)
+	- [1、为什么需要编码](#1%e4%b8%ba%e4%bb%80%e4%b9%88%e9%9c%80%e8%a6%81%e7%bc%96%e7%a0%81)
+	- [2、编码方式](#2%e7%bc%96%e7%a0%81%e6%96%b9%e5%bc%8f)
+	- [3、Java中需要编码的场景](#3java%e4%b8%ad%e9%9c%80%e8%a6%81%e7%bc%96%e7%a0%81%e7%9a%84%e5%9c%ba%e6%99%af)
+		- [3.1、I/O 操作中存在的编码](#31io-%e6%93%8d%e4%bd%9c%e4%b8%ad%e5%ad%98%e5%9c%a8%e7%9a%84%e7%bc%96%e7%a0%81)
+		- [3.2、内存中操作中的编码](#32%e5%86%85%e5%ad%98%e4%b8%ad%e6%93%8d%e4%bd%9c%e4%b8%ad%e7%9a%84%e7%bc%96%e7%a0%81)
+	- [4、Java中如何编解码](#4java%e4%b8%ad%e5%a6%82%e4%bd%95%e7%bc%96%e8%a7%a3%e7%a0%81)
+- [二十六、JMS](#%e4%ba%8c%e5%8d%81%e5%85%adjms)
+- [二十七、JMX](#%e4%ba%8c%e5%8d%81%e4%b8%83jmx)
+	- [1、基本属术语](#1%e5%9f%ba%e6%9c%ac%e5%b1%9e%e6%9c%af%e8%af%ad)
+	- [2、JMX架构](#2jmx%e6%9e%b6%e6%9e%84)
+		- [2.1、MBean分类](#21mbean%e5%88%86%e7%b1%bb)
+	- [3、JMX的访问方式](#3jmx%e7%9a%84%e8%ae%bf%e9%97%ae%e6%96%b9%e5%bc%8f)
+		- [3.1、通过jconsole](#31%e9%80%9a%e8%bf%87jconsole)
+		- [3.2、通过JMX提供的工具页访问](#32%e9%80%9a%e8%bf%87jmx%e6%8f%90%e4%be%9b%e7%9a%84%e5%b7%a5%e5%85%b7%e9%a1%b5%e8%ae%bf%e9%97%ae)
+		- [3.3、通过客户端程序进行远程访问](#33%e9%80%9a%e8%bf%87%e5%ae%a2%e6%88%b7%e7%ab%af%e7%a8%8b%e5%ba%8f%e8%bf%9b%e8%a1%8c%e8%bf%9c%e7%a8%8b%e8%ae%bf%e9%97%ae)
+	- [4、Notification](#4notification)
+	- [5、JMX监控tomcat](#5jmx%e7%9b%91%e6%8e%a7tomcat)
+	- [6、JMX产生问题原因](#6jmx%e4%ba%a7%e7%94%9f%e9%97%ae%e9%a2%98%e5%8e%9f%e5%9b%a0)
+- [二十八、Java基准测试-JMH](#%e4%ba%8c%e5%8d%81%e5%85%abjava%e5%9f%ba%e5%87%86%e6%b5%8b%e8%af%95-jmh)
+- [二十九、本地方法(native)](#%e4%ba%8c%e5%8d%81%e4%b9%9d%e6%9c%ac%e5%9c%b0%e6%96%b9%e6%b3%95native)
+	- [1、本地方法加载](#1%e6%9c%ac%e5%9c%b0%e6%96%b9%e6%b3%95%e5%8a%a0%e8%bd%bd)
+	- [2、如何编写本地方法](#2%e5%a6%82%e4%bd%95%e7%bc%96%e5%86%99%e6%9c%ac%e5%9c%b0%e6%96%b9%e6%b3%95)
+- [三十、加密与解密](#%e4%b8%89%e5%8d%81%e5%8a%a0%e5%af%86%e4%b8%8e%e8%a7%a3%e5%af%86)
+	- [1、Java安全](#1java%e5%ae%89%e5%85%a8)
+		- [1.1、网络安全体系](#11%e7%bd%91%e7%bb%9c%e5%ae%89%e5%85%a8%e4%bd%93%e7%b3%bb)
+		- [1.2、Java安全](#12java%e5%ae%89%e5%85%a8)
+	- [2、Base64加密算法](#2base64%e5%8a%a0%e5%af%86%e7%ae%97%e6%b3%95)
+	- [3、消息摘要算法](#3%e6%b6%88%e6%81%af%e6%91%98%e8%a6%81%e7%ae%97%e6%b3%95)
+		- [3.1、MD](#31md)
+		- [3.2、SHA](#32sha)
+		- [3.3、MAC](#33mac)
+- [三十一、调试](#%e4%b8%89%e5%8d%81%e4%b8%80%e8%b0%83%e8%af%95)
+	- [1、调试](#1%e8%b0%83%e8%af%95)
+- [三十二、Java魔数](#%e4%b8%89%e5%8d%81%e4%ba%8cjava%e9%ad%94%e6%95%b0)
+	- [1、魔数](#1%e9%ad%94%e6%95%b0)
+	- [2、常见文件类型的魔数](#2%e5%b8%b8%e8%a7%81%e6%96%87%e4%bb%b6%e7%b1%bb%e5%9e%8b%e7%9a%84%e9%ad%94%e6%95%b0)
+- [参考文章](#%e5%8f%82%e8%80%83%e6%96%87%e7%ab%a0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 
 **Java世界里的一切东西都只是在拼Java命令行参数而已**
 
-# Java平台理解
+# 一、Java平台理解
 
 ## 1、从宏观角度看
 
@@ -344,7 +356,979 @@ Write once， run anywhere
 - C++需要显示的内存管理，支持析构函数；Java是自动管理内存的；
 - C++支持多重继承，包括虚拟继承；Java只允许，但是接口之间可以多继承；
 
-# 一、Java 内部类
+## 4、面向对象与面向过程
+
+- 面向过程：把问题分解成一个一个步骤，每个步骤用函数实现；进行面向过程编程时，上来先定义一个函数，然后使用诸如if-else等方式进行代码执行；
+- 面向对象：将问题分解成一个一个步骤，对每个步骤进行相应的抽象、形成对象，通过不同对象之间的调用，组合解决问题；是一种变成死信，提倡使用类来抽象现实模型
+
+## 5、三大基本特征
+
+- 封装：通常认为封装是把数据和操作数据的方法绑定起来，对数据的访问只能通过已定义的接口；面向对象的本质就是：将现实世界描绘成一系列完全自然、封闭的对象。在类中的编写的方法就是对实现细节的一种封装；编写一个类就是对数据和数据操作的封装；
+- 继承：继承是从已有类中得到继承信息并创建新类的过程。提供继承信息的类被称为父类；得到继承信息的类被称为子类。继承让变化中的软件系统有了一定的延续性，同时继承也是封装程序中可变因素的重要手段；
+- 多态：指允许不同子类型的对象对同一消息作出不同的响应；
+
+## 6、五大基本原则
+
+- 单一职责原则
+- 开放封闭原则
+- 里氏替换原则
+- 依赖倒置原则
+- 接口隔离原则
+
+# 二、Java常见问题
+
+## 1、基本类型与引用类型的比较
+
+**1.1、如下四个变量，哪两个比较为 false**
+
+```java
+Integer i01 = 59;
+int i02 = 59;
+Integer i03 =Integer.valueOf(59);
+Integer i04 = new Integer(59);
+```
+
+- （1）Integer 为了节省空间和内存会在内存中缓存 -128~127 之间的数字;
+- （2）valueOf()：调用该方法时，内部实现作了个判断，判断当前传入的值是否在-128~127之间且 IntergCache是否已存在该对象如果存在，则直接返回引用，如果不存在，则创建一个新对象
+- （3）基本类型存在内存的栈中，与引用类型比较时， 引用类型会自动装箱，比较数值而不比较内存地址;
+
+**1.2、自动装箱拆箱机制是编译特性还是虚拟机运行时特性？分别是怎么实现的？**
+
+- 自动装箱机制是编译时自动完成替换的.装箱阶段自动替换为了 valueOf 方法，拆箱阶段自动替换为了 xxxValue 方法;
+- 对于 Integer 类型的 valueOf 方法参数如果是 -128~127 之间的值会直接返回内部缓存池中已经存在对象的引用，参数是其他范围值则返回新建对象;
+- 而 Double 类型与 Integer 类型类似，一样会调用 Double 的 valueOf 方法，但是 Double 的区别在于不管传入的参数值是多少都会 new 一个对象来表达该数值(因为在指定范围内浮点型数据个数是不确定的，整型等个数是确定的，所以可以Cache)
+- 注意：Integer、Short、Byte、Character、Long 的 valueOf 方法实现类似，而 Double 和 Float 比较特殊，每次返回新包装对象，对于两边都是包装类型的：== 比较的是引用，	equals 比较的是值；对于两边有一边是表达式(包含算数运算)： == 比较的是数值(自动触发拆箱过程)，对于包装类型 equals 方法不会进行类型转换;
+
+**1.3.Integer i = 1; i += 1; 做了哪些操作**
+
+- Integer i = 1; 做了自动装箱：使用 valueOf() 方法将 int 装箱为 Integer 类型
+- i += 1; 先将 Integer 类型的 i 自动拆箱成 int(使用 intValue() 方法将 Integer 拆箱为 int)，完成加法运行之后的 i 再装箱成 Integer 类型
+
+## 2、关于String +和StringBuffer的比较
+
+在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)效率其实比 Stringbuffer更快
+
+```java
+public class Main{	    
+	public static void main(String[] args){		
+		String string = "a" + "b" + "c";
+
+		StringBuffer stringBuffer = new StringBuffer();
+		stringBuffer.append("a").append("b").append("c");
+		string = stringBuffer.toString();
+	}	    
+}
+```
+**2.1、String+的写法要比 Stringbuffer 快，是因为在编译这段程序的时候，编译器会进行常量优化。**
+
+它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中{}，看如下反编译的代码：
+
+```java
+public class Main{}
+	public static void main(String[] args){
+		String string = "abc";
+		StringBuffer stringBuffer = new StringBuffer();
+		stringBuffer.append("a").append("b").append("c");
+		string = stringBuffer.toString();
+	}
+}
+```
+
+原因是因为 String+其实是由 Stringbuilder 完成的，而一般情况下 Stringbuilder 要快于 Stringbuffer，这是因为 Stringbuilder 线程不安全，少了很多线程锁的时间开销，因此这里依然是 string+的写法速度更快;
+
+```java
+/*   1   */
+String a = "a";
+String b = "b";
+String c = "c";
+String string = a + b + c;
+/*   2   */
+StringBuffer stringBuffer = new StringBuffer();
+stringBuffer.append(a);
+stringBuffer.append(b);
+stringBuffer.append(c);
+string = stringBuffer.toString();
+```
+**2.2、字符串拼接方式：+、concat() 以及 append() 方法，append()速度最快，concat()次之，+最慢**
+
+- 编译器对+进行了优化，它是使用 StringBuilder 的 append() 方法来进行处理的，编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串，变慢的关键原因就在于 new StringBuilder()和toString()，这里可是创建了 10 W 个 StringBuilder 对象，而且每次还需要将其转换成 String
+
+- concat：
+	concat() 的源码，它看上去就是一个数字拷贝形式，我们知道数组的处理速度是非常快的，但是由于该方法最后是这样的：
+	`return new String(0， count + otherLen， buf);`这同样也创建了 10 W 个字符串对象，这是它变慢的根本原因
+
+- append() 方法拼接字符串：并没有产生新的字符串对象；
+
+## 3、静态代码块、静态变量
+
+其作用级别为类；构造代码块、构造函数、构造，其作用级别为对象
+
+- （1）静态代码块，它是随着类的加载而被执行，只要类被加载了就会执行，而且只会加载一次，主要用于给类进行初始化。
+- （2）构造代码块，每创建一个对象时就会执行一次，且优先于构造函数，主要用于初始化不同对象共性的初始化内容和初始化实例环境。
+- （3）构造函数，每创建一个对象时就会执行一次.同时构造函数是给特定对象进行初始化，而构造代码是给所有对象进行初始化，作用区域不同.
+
+==> 通过上面的分析，他们三者的执行顺序应该为：静态代码块 > 构造代码块 > 构造函数。
+
+### 3.1、Java 类初始化过程
+
+- 首先，初始化父类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
+- 然后，初始化子类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
+- 其次，初始化父类的普通成员变量和代码块，在执行父类的构造方法；
+- 最后，初始化子类的普通成员变量和代码块，在执行子类的构造方法；
+
+### 3.2、不要在构造器里调用可能被重载的虚方法
+
+父类构造器执行的时候，调用了子类的重载方法，然而子类的类字段还在刚初始化的阶段，刚完成内存布局：
+
+```java
+public class Base{
+	private String baseName = "base";
+	public Base(){
+		callName();
+	}
+	public void callName(){
+		System. out. println(baseName);
+	}
+	static class Sub extends Base{
+		private String baseName = "sub";
+		public void callName(){
+			System. out. println (baseName) ;
+		}
+	}
+	public static void main(String[] args){
+		Base b = new Sub();
+	}
+}
+```
+
+### 3.3、Java 中赋值顺序
+
+- （1）父类的静态变量赋值
+- （2）自身的静态变量赋值
+- （3）父类成员变量赋值
+- （4）父类块赋值
+- （5）父类构造函数赋值
+- （6）自身成员变量赋值
+- （7）自身块赋值
+- （8）自身构造函数赋值
+
+### 3.4、Java 代码执行顺序
+
+```java
+public class TestExecuteCode {
+	public static void main(String[] args) {
+		System.out.println(new B().getValue());
+	}
+	static class A {
+		protected int value;
+		public A(int v){
+			setValue(v);
+		}
+		public void setValue(int value) { this.value = value;}
+		public int getValue() {
+			try {
+				value++;
+				return value;
+			} finally {
+				this.setValue(value);
+				System.out.println(value);
+			}
+		}
+	}
+	static class B extends A {
+		public B(){
+			super(5);
+			setValue(getValue() - 3);
+		}
+		public void setValue(int value) {super.setValue(2 * value);}
+	}
+}
+```
+
+- 执行结果：22，34，17
+	（1）子类 B 中重写了父类 A 中的setValue方法：
+	
+	`super(5)` // 调用了父类构造器，其中构造函数里面的`setValue(value)`，调用的是子类的setValue方法
+
+	`finally`块中的：`this.setValue(value)` //调用的也是子类的setValue方法
+
+	而子类`setValue`方法中的：`super.setValue(2*value);` //调用的是父类A的setValue方法
+
+	（2）`try...catch...finally`块中有`return`返回值的情况：`finally` 块中虽然改变了value的值，但`try`块中返回的应该是 return 之前存储的值
+
+- 父类执行时如果有子类的方法重写了父类的方法，调用的子类的重写方法
+
+## 4、给出一个表达式计算其可以按多少进制计算
+
+- 式子7*15=133成立，则用的是几进制？可以通过解方程来解决，上述式子可以转换为方程：
+	```
+	7 * (1 * x + 5) = 1 * x^2 + 3 * x + 3
+	x^2 -4x - 32 = 0
+	x = -4 或 x = 8
+	```
+
+- 如果下列的公式成立：78+78=123，则采用的是_______进制表示的：
+	```
+	7 * x + 8 + 7 * x + 8 = 1 * x^2 + 2 * x + 3
+	x^2 - 12 * x - 13 = 0
+	x = -1， x = 13
+	```
+
+## 5、表达式的数据类型
+
+- 所有的 byte，short，char 型的值将被提升为 int 型；
+- 如果有一个操作数是 long 型，计算结果是 long 型；
+- 如果有一个操作数是 float 型，计算结果是 float 型；
+- 如果有一个操作数是 double 型，计算结果是 double 型；
+- final 修饰的变量是常量，如果运算时直接是已常量值进行计算，没有final修饰的变量相加后会被自动提升为int型
+	```java
+	byte b1=1，b2=2，b3，b6;
+	final byte b4=4，b5=6;
+	b6=b4+b5;// b4， b5是常量，则在计算时直接按原值计算，不提升为int型
+	b3=(b1+b2);// 编译错误
+	System.out.println(b3+b6);
+	```
+
+**记住一点：JDK中关于任何整型类型的运算，都是按照int来的**
+```java
+private static final long mil_seconds = 24 * 60 * 60 * 1000;
+private static final long micro_seconds = 24 * 60 * 60 * 1000 * 1000;
+public static void main(String[] args) {
+	System.out.println(micro_seconds / mil_seconds);
+}
+```
+上面代码中 micro_seconds 在运算时，其已超过 int 类型的最大值，溢出了。
+
+## 6、按照目录结构打印当前目录及子目录
+
+```java
+public class PrintDirectory {
+	public static void main(String[] args) {
+		File file = new File("E：\\下载");
+		PrintDirectory pd = new PrintDirectory();
+		pd.listDirectory(file，0);
+	}
+	//列出该目录的子目录
+	private void listDirectory(File dir，int level){
+		System.out.println(getSpace(level) + dir.getName());
+		level++;
+		File[] files = dir.listFiles();		
+		for(int i=0;i<files.length;i++){
+			if(files[i].isDirectory()){
+				listDirectory(files[i]，level);
+			}else{
+				System.out.println(getSpace(level)+files[i].getName());
+			}
+		}
+	}
+	//按照目录结构打印目录
+	private String getSpace(int level){
+		StringBuilder sb = new StringBuilder();
+		for(int i=0;i<level;i++){
+			sb.append("|--");
+		}
+		return sb.toString();
+	}
+}
+```
+
+# 三、进制基础
+
+## 1、进制基础
+
+## 2、二进制运算
+
+### 2.1、与运算：&
+
+**2.1.1、两位全为1，结果才为 1**
+
+```
+0&0=0	0&1=0	1&0=0	1&1=1
+51&5 = 1 即: 
+	51 => 00000000 00000000 00000000 00110011
+	5  => 00000000 00000000 00000000 00000101
+	& ==> 00000000 00000000 00000000 00000001 (1)
+```
+
+**2.1.2、用法**
+
+- 清零：如果想将一个单元清零，即使其全部二进制为 0， 只要与一个各位都为 0 的数值相`与`，结果为 0；
+- 取一个数中指定位置，如：x = 10101110， 取 x 的低四位，用 `x & 00001111 = 00001110`，即可得到	
+
+### 2.2、或运算：|
+
+**2.2.1、只要有一个为 1，结果就为 1**
+
+	0|0 = 0		1|0 = 1		0|1	= 1		1|1 = 1
+	51|5 = 55 即:
+		51 => 00000000 00000000 00000000 00110011
+		5  => 00000000 00000000 00000000 00000101
+		|  => 00000000 00000000 00000000 00110111
+
+**2.2.3、用法**
+
+	常用来对一个数据的某些位置 1
+	如: x = 1010 0000 的低四位置 1， 用 x | 0000 1111 = 1010 1111
+
+### 2.3、异或运算：^
+
+**2.3.1、两个相应位为"异"(值不同)，则该位结果为 1， 否则为 0**
+
+	0^0 = 0		1^0 = 1		0^1 = 1		1^1 = 0；
+	51^5 = 54即:
+		51 => 00000000 00000000 00000000 00110011
+		5  => 00000000 00000000 00000000 00000101
+		^  => 00000000 00000000 00000000 00110110
+
+**2.3.2、用法**
+
+- 使特定位翻转，找一个数，对应 x 要翻转的各位，该数的对应位为 1，其余位为 0，此数与 x 对应的位"异或"即可<br>
+	如:x = 10101110， 使 x 低四位翻转， 用 x ^ 0000 1111 = 1010 0001
+- 与 0 相异或，保留原值<br>
+	如: x ^ 00000000 = 10101110
+- 两个变量交换值:<br>
+	- ①、借助第三个变量来实现:<br>
+		c = a， a = b， b = c；<br>
+	- ②、利用加减法来实现:<br>
+		a = a + b， b = a - b， a = a-b；<br>
+	- ③、用异或运算来实现，也是效率最高的:<br>
+		原理:利用一个数异或本身等于 0 和 异或运算符合交换率<br>
+		a = a ^ b； b = a ^ b； a = a ^ b
+
+### 2.4、取反运算：~ 
+
+	取反:对一个二进制数按位取反，即将 0 变为 1，1 变为 0
+		~1 = 0		~0 = 1	
+
+### 2.5、左移：<< 
+
+	将一个运算对象的各二进制位全部左移若干位(左边的二进制位丢弃，右边补 0)
+		2 << 2 = 8；
+			2   => 00000000 00000000 00000000 00000010
+			>>2 => 00000000 00000000 00000000 00001000
+	若左移时舍弃的高位不包含 1，则每左移一位，相当于该数乘以 2；
+		2 << 2 ==> 2 * 2 * 2(最快计算 2 的三次方)
+
+### 2.6、右移：>>
+
+	将一个数的各二进制位全部右移若干位，正数左补 0，负数左补 1；对于正数来说操作数每右移一位，相当于该数除以 2
+	左补 1 或 0 看被移动的数是正数还是负数； 
+		4 >> 2 ==> 1 ( 4 / 2 / 2)；
+		-14(11110010) >> 2 ==> -4(11111100)
+
+### 2.7、无符号右移：>>> 
+
+各个位向右移指定的位数，右移后左边空出的位使用 0 填充，移出右边的位被丢弃掉
+
+	-14 >> 2:
+		-14 => 11111111 11111111 11111111 11110010
+		>>2 => 00111111	11111111 11111111 11111100(1073741820) ；
+
+### 2.8、二进制四则运算
+
+#### 2.8.1、加法
+
+`0+0=0，0+1=1，1+0=1，1+1=10`
+- 当两个相加的二进制仅一位时，相加的结果为1；
+- 如果两个二进制位全是0，相加的结果仍为0；
+- 如果两个相加的进制位均为1，则结果为10，要向高位进1，也就是`逢2进1`规则
+
+在运算的过程中，两数要从最低位开始对齐
+
+#### 2.8.2、减法
+
+`1-1=0，1-0=1，0-0=0，0-1=-1`
+- 当两个相减的二进制位中同为0或1时，相减结果为0；
+- 如果被减数的二进制位为1，而减数的二进制位为0，则相减的结果仍为1；
+- 如果被减数的二进制位为0，而减数的二进制位为1，则需要向高位借1，但此时借1当2；
+
+#### 2.8.3、乘法
+
+`0*0=0，1*0=0，0*1=0，1*1=1`
+- 只有当两个相乘的二进制位都为1，相乘的结果才为1；
+- 当两个相乘的二进制位只要有一位为0，则相乘的结果都为0；
+- 1与任何数相乘的结果都是对应的被乘数；而0与任何数相乘结果都为0；
+
+在乘法运算中，乘数的每一位都要与被乘数的每一位分别相乘，而不仅是对应位相乘
+
+#### 2.8.4、除法
+
+当被除数大于除数时，商是“1”；当被除数小于除数时，不够除，商只能是“0”；
+
+## 3、负数：以其正值的补码形式表示
+
+### 3.1、原码
+
+一个整数按照绝对值大小转换成二进制成为原码 <br>
+14 => 00000000 00000000 00000000 00001110  (14的原码)
+
+### 3.2、反码
+
+将二进制按位取反，所得的二进制数称为原二进制数的反码<br>
+将 14 的每一位按位取反<br>
+
+	00000000 00000000 00000000 00001110 => 14 原码
+	11111111 11111111 11111111 11110001 => 14 反码
+	两者互为反码
+
+### 3.3、补码：反码加1称为补码
+
+正数的补码和原码相同；负数的补码是通过先把除符号位外其他各位取反，再在末位（最低位）加1得到；
+
+11111111 11111111 11111111 11110001 + 1 => <br>
+11111111 11111111 11111111 11110010
+
+### 3.4、案例
+```
+-14 << 2
+-14 => 11111111 11111111 11111111 11110010
+<<2 => 11111111 11111111 11111111 11001000
+```
+- 分析:只需要该补码的原码对应的正值，然后取相反数<br>
+	- 补码减 1，得到反码 11000111<br>
+	- 补码取反得到 原码，即该负数的正值 00111000<br>
+	- 计算正值，为 56<br>
+	- 取相反数<br>
+
+### 3.5、根据 `1+~n = -n` 可以快速，计算负数补码	
+
+`-n = ~n+1`  =>  `-n-1 = ~n`
+
+## 4、Java 二进制
+
+### 4.1、Java 基本数据类型
+
+- 整型：`byte(8 bit)、short(16 bit)、int(32 bit)、long(64 bit)`
+- 浮点型： `float(32 bit)、double(64 bit)`；
+- 布尔：`true false (1 bit)`
+- 字符：`char(unicode字符 16 bit)`
+
+### 4.2、常用的数
+
+0xff ==> 11111111
+
+f ==> 1111
+
+### 4.3、大小端
+
+- 小端（little-endian）：低位字节排放在内存的低地址端即该值的起始地址，高位字节排放在内存的高地址端
+- 大端（big-endian）：高位字节排放在内存的低地址端即该值的起始地址，低位字节排放在内存的高地址端
+- 例子: 32bit宽的数 `0x12345678`
+	- 在 little-endian 模式下在 CPU 内存的存放方式:(假设内存起始地址 0x4000开始存放)
+		- 内存地址:	`0x4000 	0x4001	0x4002	0x4003`
+		- 存放内容:	`0x78 	0x56	0x34	0x12`
+	- 在 big-endian 模式下存放如下:
+		- 内存地址:	`0x4000 	0x4001	0x4002	0x4003`
+		- 存放内容:	`0x12 	0x34	0x56	0x78`
+- 大端的优势就是易于阅读，小端便于cpu内部数据计算
+
+### 4.4、数据类型转换为 字节
+
+`8143 (00000000 00000000 00011111 11001111)` ==> `byte[] b = [-49,31,0,0]`;
+- 第一个（低端）字节：`8143 >> 0 * 8 & 0xff = 11001111(207)`，有符号为 -49 
+- 第二个（低端）字节：`8143 >> 1 * 8 & 0xff = 00011111(31)`
+- 第三个（低端）字节：`8143 >> 2 * 8 & 0xff = 00000000(0)`
+- 第四个（低端）字节：`8143 >> 3 * 8 & 0xff = 00000000(0)`
+
+### 4.5、字符串与字节的相互转换
+
+字符串 --> 字节：`byte[] b = s.getBytes();`<br>
+字节 --> 字符串：`byte[] b = new byte[int]; new String(b)` 或者 `new String(b, encode)`// encode 编码格式:
+
+### 4.6、转换实例
+```java
+public class CovertToRadix {
+	public static byte[] intToByte(int i){
+		byte[] arr = new byte[4];
+		/*
+		arr[0] = (byte)((int)((i >> 0 * 8) & 0xff));
+		arr[1] = (byte)((int)((i >> 1 * 8) & 0xff));
+		arr[2] = (byte)((int)((i >> 2 * 8) & 0xff));
+		arr[3] = (byte)((int)((i >> 3 * 8) & 0xff));
+		*/
+		for(int j=0;j<arr.length;j++){
+			arr[j] = (byte)((int)((i >> j * 8) & 0xff));
+		}
+		return arr;
+	}
+	public static int byteToInt(byte[] arr){
+		/*
+		int r0 = (int)((arr[0]& 0xff) << 0 * 8);
+		int r1 = (int)((arr[1]& 0xff) << 1 * 8);
+		int r2 = (int)((arr[2]& 0xff) << 2 * 8);
+		int r3 = (int)((arr[3]& 0xff) << 3 * 8);
+		*/
+		int result = 0;
+		for(int j=0;j<arr.length;j++){
+			result += (int)((arr[j]& 0xff) << j * 8);
+		}
+		return result;
+	}
+}
+```
+## 5、如何利用位运算
+
+### 5.1、子网掩码
+
+### 5.2、求平均值
+```
+int x = 32760; int y = 32762; 求 x，y 的平均值，要求空间复杂度 O(0)
+public static int ave(int x， int y){
+	return (x&y) + ((x^y)>>1)；
+}
+```
+- 知识点: `>>n` 相当于除于2^n ，`<<n` 相当于乘于 2^n
+- 把 x，y分别分成两个部分来看，两者相同的位分别拿出来:<br>
+```
+x(111111111111000) = 111111111111000 + 000000000000000
+y(111111111111010) = 111111111111000 + 000000000000010
+相同部分我们叫做x1，y1，不同部分我们叫做x2，y2.那么现在(x+y)/2 =(x1+y1)/2 +(x2 + y2)/2 ，<br>
+因为x1 == y1 ，所以(x1+y1)/2 == x1 ==y1，<br>
+相同部分我们用与运算求出来 x1 = x & y ，不同部分的和我们用^ 求出来，然后除于 2(>>1)是不是我们想要的结果了呢<br>
+```
+
+### 5.3、判断奇偶数
+
+- `a&1 = 0` 偶数
+- `a&1 = 1` 奇数
+
+##5.4、取 int 型变量 a 的第 k 位 (k=0，1，2....)
+
+即 `a>>k&1` (先右移k再与1)
+
+### 5.5、幂问题
+
+- 判断是否为 2 的幂：`((x&(x-1))==0) && (x!=0);`
+- 如何判断一个无符号数是2的n次方-1:
+```java
+private static boolean isPowerOfTwoLoseOne(int val) {
+	return (val & (val+1)) == 0；
+}
+```
+- 非2的幂次方转换为2的幂次方
+- 求一个数离它最近的大于等于2的幂次方的数:
+```java
+MAXIMUM_CAPACITY = Integer.MAX_VALUE；
+private static final int tableSizeFor(int c) {
+	int n = c - 1;
+	n |= n >>> 1;
+	n |= n >>> 2;
+	n |= n >>> 4;
+	n |= n >>> 8;
+	n |= n >>> 16;
+	return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
+}
+```
+- 如果求小于等于2的幂次方的数:
+```java
+private static final int tableSizeFor(int n) {
+	n |= n >>> 1;
+	n |= n >>> 2;
+	n |= n >>> 4;
+	n |= n >>> 8;
+	n |= n >>> 16;
+	return  n-(n>>1);
+}
+```
+### 5.6、计算绝对值:
+
+```java
+public static int abs(int x){
+	int y = x >> 31;
+	return (x^y) - y;
+}
+```
+
+- 取模运算转化成位运算 (在不产生溢出的情况下)：`a % (2^n)` 等价于 `a & (2^n - 1)`
+- 乘法运算转化成位运算 (在不产生溢出的情况下)：`a * (2^n)` 等价于 `a<< n`
+- 除法运算转化成位运算 (在不产生溢出的情况下)：`a / (2^n)` 等价于 `a>> n`，例: 12/8 == 12>>3
+- a % 2 等价于 a & 1       
+```
+if (x == a) x= b;
+else x= a;
+等价于 x= a ^ b ^ x;
+```
+
+# 四、JDK8新特性
+
+## 1、Java语言新特性
+
+### 1.1、Lambda表达式和函数式接口
+
+函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口。java 8提供 @FunctionalInterface作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口）；
+
+### 1.2、接口的默认方法和静态方法
+
+### 1.3、方法引用
+
+### 1.4、重复注解
+
+### 1.5、更好的类型推断
+
+### 1.6、拓宽注解的应用场景
+
+
+## 2、编译器新特性
+
+### 2.1、参数名称
+
+
+## 3、Java官方库的新特性
+
+- Optional
+- Stream
+- Date/Time API(JSR 310)
+- Nashorn JavaScript引擎
+- Base64
+- 并行数组
+- 并发性
+
+## 4、各个版本特性
+
+### 4.1、JDK5
+
+- 泛型
+- 枚举
+- 自动装箱拆箱
+- 可变参数
+- 元注解
+- foreach循环（增强for、for/in）
+- 静态导入
+
+  ```java
+  import static java.lang.System.err;
+  import static java.lang.System.out;
+  err.println(msg); 
+  ```
+- 格式化（System.out.println 支持%s %d等格式化输出）
+
+  System.out.println("Line %d: %s%n", i++, line);
+
+- 线程框架/数据结构 JUC
+- Arrays工具类/StringBuilder/instrument
+
+### 4.2、JDK6
+
+- 支持脚本语言
+- 引入JDBC 4.0 API
+- 引入Java Compiler API,可以实现进程内编译，动态产生Java代码；
+- 可插拔注解；
+- 增加对Native PKI、Java GSS、Kerberos 和 LDAP 的支持
+- 继承Web Services
+
+### 4.3、JDK7
+
+- switch语句块中允许以字符串作为分支条件；
+- 在创建泛型对象时应用类型推断；钻石语法:Map<String， List<String>> data = new HashMap()；
+- 在一个语句块中捕获多种异常；
+- 支持动态语言；
+- 支持 try-with-resources；
+- 引入Java NIO.2开发包；
+- 数值类型可以用2进制字符串表示，并且可以在字符串表示中添加下划线；
+
+  Java7前支持十进制（123）、八进制（0123）、十六进制（0X12AB），Java7添加二进制表示（0B11110001、0b11110001）；
+
+  Java7中支持在数字量中间添加’_'作为分隔符。更直观，如（12_123_456）。下划线仅仅能在数字中间。编译时编译器自己主动删除数字中的下划线
+
+- null 值的自动处理；
+- JSR292与InvokeDynamic指令
+- fork/join framework
+
+### 4.4、JDK8
+
+[http://www.open-open.com/lib/view/open1403232177575.html]
+
+- 函数式接口 FunctionalInterface 
+- Lambda表达式
+- 接口的增强.接口中的默认方法.默认方法的继承.单接口实现情况下，默认方法可以直接用， 多接口实现情况下一旦出现同方法签名的默认方法，那么必须显式覆盖，否则编译不通过.
+- Stream 迭代
+- 新增时间 API
+- JVM 的PermGen空间被移除，取代它的是Metaspace(JEP 122)元空间
+- 数组并行(parallel)操作
+
+### 4.5、JDK9
+
+- Jigsaw 项目；模块化源码
+- 简化进程API
+- 轻量级 JSON API
+- 钱和货币的API
+- 改善锁争用机制
+- 代码分段缓存
+- 智能Java编译， 第二阶段
+- HTTP 2.0客户端
+- Kulla计划: Java的REPL实现
+
+### 4.6、JDK10
+
+- 本地变量类型推断
+- 统一JDK仓库
+- 垃圾回收器接口
+- G1的并行Full GC
+- 应用程序类数据共享
+- ThreadLocal握手机制
+
+## 5、Stream
+
+`public interface Stream<T> extends BaseStream<T, Stream<T>>`
+
+### 5.1、特性
+
+JAVA8中提出一个集合流的抽象工具（java.util.stream，简称Stream），用于集合内元素的计算，更确切的说是过滤和统计操作。
+
+Stream不是一种真实的数据源（不存在数据结构），所以没有办法直接来创建它，Stream只能依赖其他数据源来转换成我们的抽象操作。Stream本身是不存在，只是抽象出来的一个抽象操作，经过各种操作之后，Stream还需要转换成真实的数据源；
+
+它专注于对集合对象进行各种非常便利、高效的聚合操作（aggregate operation），或者大批量数据操作 (bulk data operation)。Stream API 借助于同样新出现的 Lambda 表达式，极大的提高编程效率和程序可读性。同时它提供串行和并行两种模式进行汇聚操作，并发模式能够充分利用多核处理器的优势，使用 fork/join 并行方式来拆分任务和加速处理过程；
+
+Stream 就如同一个迭代器（Iterator），单向，不可往复，数据只能遍历一次，遍历过一次后即用尽了。Stream跟迭代器比较，区别：
+- 无存储：Stream是基于数据源的对象，它本身不存储数据元素，而是通过管道将数据源的元素传递给操作。
+- 函数式编程：对Stream的任何修改都不会修改背后的数据源，比如对Stream执行filter操作并不会删除被过滤的元素，而是会产生一个不包含被过滤元素的新的Stream。
+- 延迟执行：Stream的操作由零个或多个中间操作（intermediate operation）和一个结束操作（terminal operation）两部分组成。只有执行了结束操作，Stream定义的中间操作才会依次执行，这就是Stream的延迟特性。
+- 可消费性：Stream只能被“消费”一次，一旦遍历过就会失效。就像容器的迭代器那样，想要再次遍历必须重新生成一个新的Stream
+
+### 5.2、创建Stream
+
+最常用的创建Stream有两种途径：
+- 通过Stream接口的静态工厂方法；
+- 通过Collection接口的默认方法–stream()，把一个Collection对象转换成Stream；或者使用parallelStream()创建并行
+- 通过Arrays.stream(Object[])方法。
+- BufferedReader.lines()从文件中获得行的流。
+- Files类的操作路径的方法，如list、find、walk等。
+- 随机数流Random.ints()。
+- 其它一些类提供了创建流的方法，如BitSet.stream(), Pattern.splitAsStream(java.lang.CharSequence), 和 JarFile.stream()
+
+其实最终都是依赖StreamSupport类来完成Stream创建的；
+
+### 5.3、常见用法
+
+- **foreach：迭代流中的每个数据**
+	```java
+	// 使用 forEach 输出了10个随机数
+	Random random = new Random(100);
+	random.ints().limit(10).forEach(System.out::println);
+	```
+- **map：法用于映射每个元素到对应的结果**
+	```java
+	// 以下代码片段使用 map 输出了元素对应的平方数
+	List<Integer> list = Arrays.asList(3, 2, 2, 3, 7, 3, 5);
+	List<Integer> result = list.stream().map(i -> i * i).distinct().collect(Collectors.toList());
+	System.out.println(list);
+	System.out.println(result);
+	```
+- **filter：方法用于通过设置的条件过滤出元素**
+	```java
+	// 。以下代码片段使用 filter 方法过滤出空字符串
+	List<String> list = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+	long count = list.stream().filter(String::isEmpty).count();
+	System.out.println(count);
+	```
+- **sorted：用于对流进行排序**
+	```java
+	Random random = new Random();
+	random.ints().limit(10).sorted().forEach(System.out::println);
+	```
+- **Collectors：实现了很多归约操作，例如将流转换成集合和聚合元素。Collectors 可用于返回列表或字符串：**
+	```java
+	List<String>strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+	List<String> filtered = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.toList());
+	String mergedString = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.joining(", "));
+	```
+
+## 6、Optional
+
+[Optional使用](https://www.cnblogs.com/rjzheng/p/9163246.html)
+
+是为了解决NPE问题，以往我们需要对对象进行判空：
+```java
+public String getCity(User user)  throws Exception{
+	if(user!=null){
+		if(user.getAddress()!=null){
+			Address address = user.getAddress();
+			if(address.getCity()!=null){
+				return address.getCity();
+			}
+		}
+	}
+	throw new Excpetion("取值错误"); 
+}
+```
+而使用Optional之后，代码变成：
+```java
+public String getCity(User user) throws Exception{
+    return Optional.ofNullable(user)
+                   .map(u-> u.getAddress())
+                   .map(a->a.getCity())
+                   .orElseThrow(()->new Exception("取指错误"));
+}
+```
+
+**Optional(T value)、empty()、of(T value)、ofNullable(T value)**
+
+- Optional(T value)，即构造函数，它是private权限的，不能由外部调用的；
+- 其余三个函数是public权限；
+- Optional的本质，就是内部储存了一个真实的值，在构造的时候，就直接判断其值是否为空
+
+## 7、JDK8时间
+
+### 7.1、旧版API存在问题
+
+- 非线程安全 − ``java.util.Date`` 是非线程安全的，所有的日期类都是可变的，这是Java日期类最大的问题之一。
+- 设计很差 − Java的日期/时间类的定义并不一致，在java.util和java.sql的包中都有日期类，此外用于格式化和解析的类在java.text包中定义。java.util.Date同时包含日期和时间，而java.sql.Date仅包含日期，将其纳入java.sql包并不合理。另外这两个类都有相同的名字，这本身就是一个非常糟糕的设计。
+- 时区处理麻烦 − 日期类并不提供国际化，没有时区支持，因此Java引入了java.util.Calendar和java.util.TimeZone类，但他们同样存在上述所有的问题；
+
+### 7.2、JDK8新API
+
+JDK8.0之后, 新增加了以下几个类用来表示日期时间：
+- LocalDate：用来表示日期(年、月、日)，LocalDate是不可变对象, 如果想改变对象的状态, 最终得到都是一个新的LocalDate对象, 并不会对旧的LocalDate对象产生影
+- LocalTime：用来表示时间(时、分、秒)
+- LocalDateTime：用来表示日期时间(年、月、日、时、分、秒)
+- DataTimeFomatter：用来格式化日期
+- ZonedDateTime：无论是LocalDate、LocalTime、LocalDateTime，它们基本是时区无关的，内部并没有存储时区属性，而基本用的系统默认时区；ZonedDateTime 可以被理解为 LocalDateTime 的外层封装，它的内部存储了一个 LocalDateTime 的实例，专门用于普通的日期时间处理。此外，它还定义了 ZoneId 和 ZoneOffset 来描述时区的概念；
+- Instant：用于表示一个时间戳，可以精确到纳秒
+
+### 7.3、新API基本操作
+
+- 格式化时间：
+	```java
+	public static void main(String[] a){
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
+		LocalDateTime localDateTime = LocalDateTime.now();
+		System.out.println(formatter.format(localDateTime));
+
+		String str = "2008年08月23日 23:59:59";
+		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
+		LocalDateTime localDateTime2 = LocalDateTime.parse(str,formatter2);
+		System.out.println(localDateTime2);
+
+	}
+	```
+- java8时间与老版本时间转换：
+	```java
+	public static void main(String[] args) {
+        // Date与Instant的相互转化
+        Instant instant = Instant.now();
+        Date date = Date.from(instant);
+        Instant instant2 = date.toInstant();
+
+        //Date转为LocalDateTime
+        Date date2 = new Date();
+        LocalDateTime localDateTime2 = LocalDateTime.ofInstant(date2.toInstant(), ZoneId.systemDefault());
+
+        //LocalDateTime转Date
+        LocalDateTime localDateTime3 = LocalDateTime.now();
+        Instant instant3 = localDateTime3.atZone(ZoneId.systemDefault()).toInstant();
+        Date date3 = Date.from(instant);
+
+        //LocalDate转Date
+        //因为LocalDate不包含时间，所以转Date时，会默认转为当天的起始时间，00:00:00
+        LocalDate localDate4 = LocalDate.now();
+        Instant instant4 = localDate4.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+        Date date4 = Date.from(instant);
+
+        // Calendar to Instant
+        Instant time = Calendar.getInstance().toInstant();
+        System.out.println(time);
+
+        // TimeZone to ZoneId
+        ZoneId defaultZone = TimeZone.getDefault().toZoneId();
+        System.out.println(defaultZone);
+
+        // ZonedDateTime from specific Calendar
+        ZonedDateTime gregorianCalendarDateTime = new GregorianCalendar().toZonedDateTime();
+        GregorianCalendar gc = GregorianCalendar.from(gregorianCalendarDateTime);
+    }
+	```
+
+## 8、Lambda表达式与函数式接口
+
+### 8.1、函数式接口
+
+函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
+
+java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解@FunctionalInterface进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
+
+Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现
+
+### 8.2、Lambda表达式
+
+#### 8.2.1、语法格式
+
+```java
+// 之前的语法
+new Thread(new Runnable() {
+    @Override
+    public void run() {
+        System.out.println("内部类线程");
+    }
+}).start();
+// lambda语法
+new Thread(() -> System.out.println("我是Lambda线程")).start();
+```
+
+#### 8.2.2、Lambda原理
+
+如下代码：启动一个线程，包含lambda表达式和匿名内部类的方式
+```java
+public class LambdaDemo {
+    public static void runThreadUseLambda() {
+        new Thread(() -> System.out.println("我是Lambda线程")).start();
+    }
+    public static void runWithInnerClass() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                System.out.println("内部类线程");
+            }
+        }).start();
+    }
+    public static void main(String[] args) {
+        runThreadUseLambda();
+        runWithInnerClass();
+    }
+}
+```
+通过`javap -c LambdaDemo`查看字节码
+```java
+...
+public static void runThreadUseLambda();
+Code:
+    0: new           #2                  // class java/lang/Thread
+    3: dup
+    4: invokedynamic #3,  0              // InvokeDynamic #0:run:()Ljava/lang/Runnable;
+    9: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
+    12: invokevirtual #5                  // Method java/lang/Thread.start:()V
+    15: return
+
+public static void runWithInnerClass();
+Code:
+    0: new           #2                  // class java/lang/Thread
+    3: dup
+    4: new           #6                  // class com/blue/fish/se/basis/lambda/LambdaDemo$1
+    7: dup
+    8: invokespecial #7                  // Method com/blue/fish/se/basis/lambda/LambdaDemo$1."<init>":()V
+    11: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
+    14: invokevirtual #5                  // Method java/lang/Thread.start:()V
+    17: return
+...
+```
+对比上述两个方法，发现lambda的是`invokeDynamic`，而内部类的是`invokespecial`；
+
+JVM指令：
+- invokeinterface：调用接口方法；
+- invokespecial：专门用来调用父类方法、私有方法和初始化方法；
+- invokestatic：调用静态方法；
+- invokevirtual：调用对象的一般方法
+
+上述这四个指令所对应的类、调用的方法在编译时几乎是固定的：invokestatic所对应的类为静态方法所在的类，方法为静态方法本身；invokespecial所对应的类为当前对象，方法是固定的；invokeinterface和invokevirtual所对应的类也为当前对象，方法可以因为继承和实现进行选择，但也仅限于整个继承体系中选择；
+
+在java7 JVM中增加了一个新的指令invokedynamic，用于支持动态语言，即允许方法调用可以在运行时指定类和方法，不必在编译的时候确定；字节码中每条invokedynamic指令出现的位置称为一个动态调用点，invokedynamic指令后面会跟一个指向常量池的调用点限定符，这个限定符会被解析为一个动态调用点；
+
+Lambda采用的是invokedynamic指令；
+
+#### 8.2.3、Lambda性能
+
+# 五、正则表达式
+
+# 六、Java 内部类
 
 ## 1、为什么使用内部类
 
@@ -607,169 +1591,8 @@ public class OutClass{
 - 匿名内部类并不会妨碍外部类的正常GC，而是不能将它定义成静态属性引用。
 - 静态匿名内部类，导致外部类不能正常回收的原因就是：它作为GC Root对象却保持着外部类的引用。方法区中类静态属性引用的对象可以作为GC root对象
 
-# 二、HashMap、TreeMap、Hashtable、LinkedHashMap
 
-## 1、HashMap、TreeMap
-
-- `HashMap、TreeMap、HashTable`父接口都是`Map`，`LinkedHashMap`是`HashMap`的子类;
-- `HashMap`：如果`HashMa`p的key是自定义的对象，则需要重写equals()和hashcode()方法：原因是`HashMap`不允许两个相同的元素；默认情况下，在`Object`类下实现的`equals()和hashcode()`方法被使用，默认的`hashcode()`方法给出不同的整数为不同的对象，并在`equals()`方法中，只有当两个引用指向的是同一个对象时才返回`true`
-
-```java
-public class HashMapDemo {
-	public static void main(String[] args) {
-		HashMap<Dog， Integer> hashMap = new HashMap<Dog， Integer>();
-		Dog d1 = new Dog("red");
-		Dog d2 = new Dog("black");
-		Dog d3 = new Dog("white");
-		Dog d4 = new Dog("white");
-		hashMap.put(d1， 10);
-		hashMap.put(d2， 15);
-		hashMap.put(d3， 5);
-		hashMap.put(d4， 20);
-		//print size
-		System.out.println(hashMap.size());
-		//loop HashMap
-		for (Entry<Dog， Integer> entry ： hashMap.entrySet()) {
-			System.out.println(entry.getKey().toString() + " - " + entry.getValue());
-		}
-	}
-}
-class Dog {
-	String color;
-	Dog(String c) {
-		color = c;
-	}
-	public String toString(){
-		return color + " dog";
-	}
-	public boolean equals(Object o) {
-		return ((Dog) o).color.equals(this.color);
-	}
-	public int hashCode() {
-		return color.length();
-	}
-}
-
-```
-- `TreeMap`：是按照key来排序的，因此如果自定义对象作为key必须能够相互比较，因此其必须实现`Comparable`接口，如我们使用`String`作为key，是因为`String`已经实现了`Comparable`接口，如例子：
-
-```java
-class Dog {
-	String color;
-	Dog(String c) {
-		color = c;
-	}
-	public boolean equals(Object o) {
-		return ((Dog) o).color.equals(this.color);
-	}
-	public int hashCode() {
-		return color.length();
-	}
-	public String toString(){
-		return color + " dog";
-	}
-}
-public class TestTreeMap {
-	public static void main(String[] args) {
-		Dog d1 = new Dog("red");
-		Dog d2 = new Dog("black");
-		Dog d3 = new Dog("white");
-		Dog d4 = new Dog("white");
-		TreeMap<Dog， Integer> treeMap = new TreeMap<Dog， Integer>();
-		treeMap.put(d1， 10);
-		treeMap.put(d2， 15);
-		treeMap.put(d3， 5);
-		treeMap.put(d4， 20);
-		for (Entry<Dog， Integer> entry ： treeMap.entrySet()) {
-			System.out.println(entry.getKey() + " - " + entry.getValue());
-		}
-	}
-}
-```
-
-上述代码运行报异常：
-```
-Exception in thread "main" java.lang.ClassCastException： collection.Dog cannot be cast to java.lang.Comparable
-at java.util.TreeMap.put(Unknown Source)
-at collection.TestHashMap.main(TestHashMap.java：35)
-```
-
-修改上述代码：
-```java
-class Dog implements Comparable<Dog>{
-	String color;
-	int size;		 
-	Dog(String c， int s) {
-		color = c;
-		size = s;
-	}		 
-	public String toString(){
-		return color + " dog";
-	}		 
-	@Override
-	public int compareTo(Dog o) {
-		return  o.size - this.size;
-	}
-}
-
-public class TestTreeMap {
-	public static void main(String[] args) {
-		Dog d1 = new Dog("red"， 30);
-		Dog d2 = new Dog("black"， 20);
-		Dog d3 = new Dog("white"， 10);
-		Dog d4 = new Dog("white"， 10);
-		TreeMap<Dog， Integer> treeMap = new TreeMap<Dog， Integer>();
-		treeMap.put(d1， 10);
-		treeMap.put(d2， 15);
-		treeMap.put(d3， 5);
-		treeMap.put(d4， 20);
-		for (Entry<Dog， Integer> entry ： treeMap.entrySet()) {
-			System.out.println(entry.getKey() + " - " + entry.getValue());
-		}
-	}
-}
-```
-- `LinkedHashMap`与`HashMap`的不同区别是：`LinkedHashMap`保留了插入顺序.
-- `HashMap、HashTable、TreeMap`：
-	- A、迭代顺序：`HashMap，HashTable`不会保证元素的顺序，但是`TreeMap`是有序的;
-	- B、`key-value`空值：`HashMap`的`key-value`都可以为空(只有一个key为 null，因为不能存在两个相同的key)，`HashTable`的`key-value`不允许为 null；`TreeMap`因为key是有序，因此key不能为 null，value可以为 null
-
-## 2、HashCode与HashSet关系
-
-# 三、按照目录结构打印当前目录及子目录
-
-```java
-public class PrintDirectory {
-	public static void main(String[] args) {
-		File file = new File("E：\\下载");
-		PrintDirectory pd = new PrintDirectory();
-		pd.listDirectory(file，0);
-	}
-	//列出该目录的子目录
-	private void listDirectory(File dir，int level){
-		System.out.println(getSpace(level) + dir.getName());
-		level++;
-		File[] files = dir.listFiles();		
-		for(int i=0;i<files.length;i++){
-			if(files[i].isDirectory()){
-				listDirectory(files[i]，level);
-			}else{
-				System.out.println(getSpace(level)+files[i].getName());
-			}
-		}
-	}
-	//按照目录结构打印目录
-	private String getSpace(int level){
-		StringBuilder sb = new StringBuilder();
-		for(int i=0;i<level;i++){
-			sb.append("|--");
-		}
-		return sb.toString();
-	}
-}
-```
-
-# 四、Java 关键字
+# 七、Java 关键字
 
 ## 1、native
 
@@ -889,388 +1712,7 @@ JVM有一条名为 instanceof 的指令，而Java源码编译到Class文件时�
 - indexbyte1和indexbyte2用于构造对当前类的常量池的索引，objectref为reference类型，可以是某个类，数组的实例或者是接口
 - 基本过程：对indexbyte1和indexbyte2构造的常量池索引进行解析，然后根据java规范判断解析的类是不是objectref的一个实例，最后在栈顶写入结果
 
-# 五、协变式重写和泛型重载
-
-## 1、协变式重写
-
-### 1.1、不同版本之间变化
-
-在Java1.4及以前，子类方法如果要覆盖超类的某个方法，必须具有完全相同的方法签名，包括返回值也必须完全一样；Java5.0放宽了这一限制，只要子类方法与超类方法具有相同的方法签名，或者子类方法的返回值是超类方法的子类型，就可以覆盖；可以不需要强制转换类型
-
-例如：重写 Object 类的 clone()方法：
-
-- Object 中该方法的声明如下：
-
-	`protected native Object clone() throws CloneNotSupportedException;`
-
-- 在类中可以重写实现如下：
-
-```java
-@Override
-public Employee clone() throws CloneNotSupportedException {
-	Employee e = (Employee) super.clone();
-	e.address = address.clone();
-	return e;
-}
-```
-
-## 2、泛型重载
-
-- Java的方法重载一般指在同一个类中的两个同名方法，规则很简单：两个方法必须具有不同的方法签名；换句话说：就是这两个方法的参数必须不相同，使得编译器能够区分开这两个重载的方法；由于编译器不能仅仅通过方法的返回值类型来区分重载方法，所以如果两个方法只有返回类型不同，其它完全一样，编译是不能通过的。在泛型方法的重载时，这个规则稍微有一点变化，看如下代码：
-
-```java
-class Overloaded {
-	public static int sum(List<Integer> ints) {			
-		return 0;
-	}
-	public static String sum(List<String> strings) {
-		return null;
-	}
-}
-```
-
-上面是两个泛型方法的重载例子，由于Java的泛型采用擦除法实现，List<Integer>和List<String>在运行时是完全一样的，都是List类型。也就是，擦除后的方法签名如下：
-	```
-	int sum(List)
-	String sum(List)
-	```
-
-- Java允许这两个方法进行重载，虽然它们的方法签名相同，只有返回值类型不同，这在两个普通方法的重载中是不允许的；当然了，如果两个泛型方法的参数在擦除后相同，而且返回值类型也完全一样，那编译肯定是不能通过的；类似地，一个类不能同时继承两个具有相同擦除类型的父类，也不能同时实现两个具有相同擦除的接口。如 `Class A implements Comparable<Integer>,Comparable<Long>。`
-- 总结一下：两个泛型方法在擦除泛型信息后，如果具有相同的参数类型，而返回值不一样，是可以进行重载的；Java有足够的信息来区分这两个重载的方法
-
-## 3、重写与重载
-
-### 3.1、两者的比较
-
-- 重载是一个编译期概念、重写是一个运行期间概念;
-- 重载遵循所谓"编译期绑定"，即在编译时根据参数变量的类型判断应该调用哪个方法。
-- 重写遵循所谓"运行期绑定"，即在运行的时候，根据引用变量所指向的实际对象的类型来调用方法
-- 因为在编译期已经确定调用哪个方法，所以重载并不是多态。而重写是多态。重载只是一种语言特性，是一种语法规则，与多态无关，与面向对象也无关。(注：严格来说，重载是编译时多态，即静态多态。但是，Java中提到的多态，在不特别说明的情况下都指动态多态)
-
-### 3.2、重写的条件
-
-- 参数列表必须完全与被重写方法的相同；
-- 返回类型必须完全与被重写方法的返回类型相同；
-- 访问级别的限制性一定不能比被重写方法的强；
-- 访问级别的限制性可以比被重写方法的弱；
-- 重写方法一定不能抛出新的检查异常或比被重写的方法声明的检查异常更广泛的检查异常
-- 重写的方法能够抛出更少或更有限的异常(也就是说，被重写的方法声明了异常，但重写的方法可以什么也不声明)
-- 不能重写被标示为final的方法；
-- 如果不能继承一个方法，则不能重写这个方法
-- 参数列表必须完全与被重写方法的相同；
-
-### 3.3、重载的条件
-
-- 被重载的方法必须改变参数列表；
-- 被重载的方法可以改变返回类型；
-- 被重载的方法可以改变访问修饰符；
-- 被重载的方法可以声明新的或更广的检查异常；
-- 方法能够在同一个类中或者在一个子类中被重载;
-
-## 4、重载
-
-能够用一个统一的接口名称来调用一系列方法
-- 重载本身并不是多态，同时运行时绑定重载方法也不是多态的表现；
-- 如下例子：重载方法"3"注释与不注释，结果有和不一样
-
-```java			 
-public class NullArguementOverloading {
-	public static void main(String[] args) {
-		NullArguementOverloading obj = new NullArguementOverloading();
-		obj.overLoad(null); // Double array argument method.
-	}
-	private void overLoad(Object o){ // 1
-		System.out.println("Object o arguement method.");
-	}
-	private void overLoad(double[] dArray){ //2
-		System.out.println("Double array argument method.");
-	}
-	private void overLoad(String str) { //3
-		System.out.println("String argument method.");
-	}
-}
-```
-①、注释掉"3"，运行结果：`Double array argument method`
-
-②、不注释掉：`obj.overLoad(null);`编译错误
-
-- Java对重载的处理有最精确匹配原则：
-	- ①、Java 的重载解析过程是以两阶段运行的：
-		- 第一阶段 选取所有可获得并且可应用的方法或构造器；
-		- 第二阶段在第一阶段选取的方法或构造器中选取最精确的一个；
-	- ②、上面代码：String 也是继承自 Object， 数组也是可认为继承自 Object， 两个为平行等级，null 不确定到底是哪个；
-	- ③、另外，重载是在编译期就已经确定了的，并不需要等到运行时才能确定，因此重载不是多态的一个原因。
-	- ④、重载对于传入的参数类型只认了引用的类型，并没有去解析实际对象的类型。如果重载是一种多态的话，它这里应该去解析实际对象的类型并调用ArrayList的方法
-
-```java
-public class OverridePuzzle {			 
-	private void overloadList(List list){
-		System.out.println("List arguement method.");
-	}			 
-	private void overloadList(ArrayList arrayList){
-		System.out.println("ArrayList arguement method");
-	}
-	public static void main(String[] args) {
-		OverridePuzzle op = new OverridePuzzle();
-		List list = new ArrayList<String>();
-		op.overloadList(list); // List arguement method
-	}			 
-}
-```
-
-## 5、重写
-
-涉及到继承这个概念中的问题，子类继承了父类的方法，但是它可能需要有不同的操作行为，就需要在子类中重写这个父类方法.父类如果将方法声明为 `final` 的就可保证所有子类的调用此方法时调用的都是父类的方法;
-
-## 6、两者的比较
-
-- 重载是一个编译期概念、重写是一个运行期间概念;
-- 重载遵循所谓"编译期绑定"，即在编译时根据参数变量的类型判断应该调用哪个方法。
-- 重写遵循所谓"运行期绑定"，即在运行的时候，根据引用变量所指向的实际对象的类型来调用方法
-- 因为在编译期已经确定调用哪个方法，所以重载并不是多态。而重写是多态。重载只是一种语言特性，是一种语法规则，与多态无关，与面向对象也无关。(注：严格来说，重载是编译时多态，即静态多态。但是，Java中提到的多态，在不特别说明的情况下都指动态多态)
-
-# 六、Java 序列化-一种对象持久化的手段
-
-## 1、Java对象序列化
-
-JDK 1.1 中引入的一组开创性特性之一，用于作为一种将 Java 对象的状态转换为字节数组，以便存储或传输的机制，以后，仍可以将字节数组转换回 Java 对象原有的状态
-
-### 1.1、基本点
-
-- 对象序列化保存的是对象的"状态"，即它的成员变量。由此可知，对象序列化不会关注类中的“静态变量”；
-- 在 Java 中，只要一个类实现了 `java.io.Serializable` 接口，那么它就可以被序列化；实现 `Externalizable`，自己要对序列化内容进行控制，控制哪些属性可以被序列化，哪些不能被序列化
-- 通过 `ObjectOutputStream` 和 `ObjectInputStream` 对对象进行序列化及反序列化;
-- 虚拟机是否允许反序列化，不仅取决于类路径和功能代码是否一致，一个非常重要的一点是两个类的序列化 ID 是否一致，就是 `private static final long serialVersionUID;`
-- transient 关键字的作用是控制变量的序列化，在变量声明前加上该关键字，可以阻止该变量被序列化到文件中，在被反序列化后，transient 变量的值被设为初始值，如 int 型的是 0，对象型的是 null；
-- Java 序列化机制为了节省磁盘空间，具有特定的存储规则，当写入文件的为同一对象时，并不会再将对象的内容进行存储，而只是再次存储一份引用，上面增加的 5 字节的存储空间就是新增引用和一些控制信息的空间.反序列化时，恢复引用关系；该存储规则极大的节省了存储空间;
-
-```java
-ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("result.obj"));
-Test test = new Test();
-test.i = 1;
-out.writeObject(test);
-out.flush();
-test.i = 2;
-out.writeObject(test);
-out.close();
-ObjectInputStream oin = new ObjectInputStream(new FileInputStream(
-					"result.obj"));
-Test t1 = (Test) oin.readObject();
-Test t2 = (Test) oin.readObject();
-System.out.println(t1.i);// 1
-System.out.println(t2.i);// 1
-// 结果两个输出的都是 1， 原因就是第一次写入对象以后，第二次再试图写的时候，虚拟机根据引用关系
-// 知道已经有一个相同对象已经写入文件，因此只保存第二次写的引用，所以读取时，都是第一次保存的对象
-```
-
-### 1.2、子类与父类序列化
-
-- 要想将父类对象也序列化，就需要让父类也实现`Serializable`接口;
-- 如果父类实现了`Serializable`接口，子类但没有实现`Serializable`接口，子类拥有一切可序列化相关的特性，子类可以序列化;
-- 如果子类实现`Serializable`接口，父类不实现，根据父类序列化规则，父类的字段数据将不被序列化，从而达到部分序列化的功能;
-- 在反序列化时仍会调用父类的构造器，只能调用父类的无参构造函数作为默认的父对象。如果父类没有默认构造方法则在反序列化时会出异常.
-- 如果父类实现了 Serializable 接口，要让子类不可序列化，可以在子类中写如下代码：(其实违反了里氏替换原则)
-
-```java
-private void writeObject(java.io.ObjectOutputStream out) throws IOException{
-	throw new NotSerializableException("不可写");
-}
-private void readObject(java.io.ObjectInputStream in) throws IOException{
-	throw new NotSerializableException("不可读");
-}
-```
-- 序列化与反序列化时子类和父类构造方法调用关系：序列化时子类递归调用父类的构造函数，反序列化作用于子类对象时如果其父类没有实现序列化接口则其父类的默认无参构造函数会被调用。如果父类实现了序列化接口则不会调用构造方法
-
-## 2、如何序列化
-
-在序列化过程中，如果被序列化的类中定义了`writeObject` 和 `readObject`方法，虚拟机会试图调用对象类里的`writeObject`和`readObject`方法，进行用户自定义的序列化和反序列化。如果没有这样的方法，则默认调用是`ObjectOutputStream`的`defaultWriteObject`方法以及`ObjectInputStream`的`defaultReadObject`方法。用户自定义的`writeObject`和`readObject`方法可以允许用户控制序列化的过程，比如可以在序列化的过程中动态改变序列化的数值;
-
-### 2.1、ArrayList序列化实现
-
-`ArrayList`使用上述实现：为什么`ArrayList`要用这种方式来实现序列化呢？
-
-- 为什么 `transient Object[] elementData`？：
-
-	`ArrayList`实际上是动态数组，每次在放满以后自动增长设定的长度值，如果数组自动增长长度设为100，而实际只放了一个元素，那就会序列化99个null元素.为了保证在序列化的时候不会将这么多null同时进行序列化，ArrayList 把元素数组设置为transient
-
-- 为什么要写方法：`writeObject and readObject`
-
-	前面提到为了防止一个包含大量空对象的数组被序列化，为了优化存储，所以，ArrayList 使用 transient 来声明elementData作为一个集合，在序列化过程中还必须保证其中的元素可以被持久化下来，所以，通过重写writeObject 和 readObject方法的方式把其中的元素保留下来.writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中。readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
-
-### 2.2、自定义序列化和反序列化策略
-
-可以通过在被序列化的类中增加`writeObject`和`readObject`方法。那么问题又来了;
-
-- 那么如果一个类中包含`writeObject`和`readObject`方法，那么这两个方法是怎么被调用的呢？
-
-	在使用 `ObjectOutputStream `的`writeObject`方法和` ObjectInputStream `的readObject方法时，会通过反射的方式调用
-	- ①、`ObjectOutputStream` 的`writeObject`的调用栈：`writeObject ---> writeObject0 --->writeOrdinaryObject--->writeSerialData--->invokeWriteObject`
-	- ②、这里看一下invokeWriteObject：其中`writeObjectMethod.invoke(obj， new Object[]{ out });`是关键，通过反射的方式调用`writeObjectMethod`方法
-
-### 2.3、Serializable如何实现序列化与反序列化
-
-Serializable 明明就是一个空的接口，它是怎么保证只有实现了该接口的方法才能进行序列化与反序列化的呢？看`ObjectOutputStream` 的`writeObject`的调用栈：
-
-`writeObject ---> writeObject0 --->writeOrdinaryObject--->writeSerialData--->invokeWriteObject`
-
-`writeObject0`方法中有这么一段代码：
-
-```java
-if (obj instanceof String) {
-	writeString((String) obj， unshared);
-} else if (cl.isArray()) {
-	writeArray(obj， desc， unshared);
-} else if (obj instanceof Enum) {
-	writeEnum((Enum<?>) obj， desc， unshared);
-} else if (obj instanceof Serializable) {
-	writeOrdinaryObject(obj， desc， unshared);
-} else {
-	if (extendedDebugInfo) {
-		throw new NotSerializableException(
-			cl.getName() + "\n" + debugInfoStack.toString());
-	} else {
-		throw new NotSerializableException(cl.getName());
-	}
-}
-```
-在进行序列化操作时，会判断要被序列化的类是否是`Enum、Array`和`Serializable`类型，如果不是则直接抛出`NotSerializableException`
-
-### 2.4、writeReplace()和readResolve()
-
-`Serializable`除提供了writeObject和readObject标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve)
-
-- 2.4.1、writeReplace：序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象，该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法，直到该方法不再返回另一个对象为止，程序最后将调用该对象的writeObject() 方法来保存该对象的状态
-
-	- 实现了 writeReplace 的序列化类就不要再实现 writeObject 了，因为该类的 writeObject 方法就不会被调用；
-	- 实现 writeReplace 的返回对象必须是可序列化的对象；
-	- 通过 writeReplace 序列化替换的对象在反序列化中无论实现哪个方法都是无法恢复原对象的。
-	- 所以 writeObject 只和 readObject 配合使用，一旦实现了 writeReplace 在写入时进行替换就不再需要writeObject 和 readObject 了。
-
-- 2.4.2、readResolve：方法可以实现保护性复制整个对象，会紧挨着序列化类实现的 readObject() 之后被调用，该方法的返回值会代替原来反序列化的对象而原来序列化类中 readObject() 反序列化的对象将会立即丢弃.readObject()方法在序列化单例类时尤其有用，单例序列化都应该提供 readResolve() 方法，这样才可以保证反序列化的对象依然正常。
-
-## 3、serialVersionUID
-
-`private static final long serialVersionUID`：每个可序列化类相关联
-
-- 该序列号在反序列化过程中用于验证序列化对象的发送者和接收者是否为该对象加载了与序列化兼容的类;
-- 如果接收者加载的该对象的类的 serialVersionUID 与对应的发送者的类的版本号不同，则反序列化将会导致 InvalidClassException;
-- 为保证 serialVersionUID 值跨不同 java 编译器实现的一致性，序列化类必须声明一个明确的 serialVersionUID ;
-- 使用 private 修饰符显示声明 serialVersionUID(如果可能)，原因是这种声明仅应用于直接声明类 – serialVersionUID 字段作为继承成员没有用处;
-- 类的serialVersionUID的默认值完全依赖于Java编译器的实现，对于同一个类，用不同的Java编译器编译，有可能会导致不同的serialVersionUID，也有可能相同
-- 显式地定义serialVersionUID有两种用途：
-	- ①.在某些场合，希望类的不同版本对序列化兼容，因此需要确保类的不同版本具有相同的serialVersionUID；在某些场合，不希望类的不同版本对序列化兼容，因此需要确保类的不同版本具有不同的serialVersionUID
-	- ②.当你序列化了一个类实例后，希望更改一个字段或添加一个字段，不设置serialVersionUID，所做的任何更改都将导致无法反序化旧有实例，并在反序列化时抛出一个异常。如果你添加了serialVersionUID，在反序列旧有实例时，新添加或更改的字段值将设为初始化值(对象为null，基本类型为相应的初始默认值)，字段被删除将不设置
-
-## 4、反序列化
-
-- 实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法，完全基于字节，如果是子类继承父类的序列化，那么将调用父类的构造方法;
-- 实现 Externalizable  接口的对象在反序列化时会调用构造方法.该接口继承自 Serializable，使用该接口后基于 Serializable 接口的序列化机制就会失效，因为：
-	* Externalizable 不会主动序列化，当使用该接口时序列化的细节需要由我们自己去实现.
-	* 使用 Externalizable 主动进行序列化时当读取对象时会调用被序列化类的无参构方法去创建一个新的对象，然后再将被保存对象的字段值分别填充到新对象中。
-	* 所以 所以实现 Externalizable 接口的类必须提供一个无参 public 的构造方法，readExternal 方法必须按照与 writeExternal 方法写入值时相同的顺序和类型来读取属性值。
-
-## 5、序列化实现对象的拷贝
-
-内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中，再从字节流中将其读出来，这样就可以创建一个新的对象了，并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
-
-```java
-public class CloneUtils {
-	@SuppressWarnings("unchecked")
-	public static <T extends Serializable> T clone(T   obj){
-		T cloneObj = null;
-		try {
-			//写入字节流
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			ObjectOutputStream obs = new ObjectOutputStream(out);
-			obs.writeObject(obj);
-			obs.close();
-			//分配内存，写入原始对象，生成新对象
-			ByteArrayInputStream ios = new  ByteArrayInputStream(out.toByteArray());
-			ObjectInputStream ois = new ObjectInputStream(ios);
-			//返回生成的新对象
-			cloneObj = (T) ois.readObject();
-			ois.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return cloneObj;
-	}
-}
-```
-
-## 6、常见的序列化协议
-
-- 6.1、COM：主要用于windows 平台，并没有实现跨平台，其序列化原理是利用编译器中的虚表
-
-- 6.2、CORBA：早期比较好的实现了跨平台，跨语言的序列化协议，COBRA 的主要问题是参与方过多带来的版本过多，版本之间兼容性较差，以及使用复杂晦涩;
-- 6.3、XML&SOAP
-	- XML 是一种常用的序列化和反序列化协议，具有跨机器，跨语言等优点；注意xml中一些特殊字符的处理；
-	- SOAP(Simple Object Access protocol)是一种被广泛应用的，基于XML为序列化和反序列化协议的结构化消息传递协议；SOAP具有安全、可扩展、跨语言、跨平台并支持多种传输层协议
-- 6.4、JSON(Javascript Object Notation)
-	- ①、这种Associative array格式非常符合工程师对对象的理解；
-	- ②、它保持了XML的人眼可读(Human-readable)的优点；
-	- ③、相对xml而言，序列化都的数据更简洁；
-	- ④、它具备Javascript的先天性支持，所以被广泛应用于Web browser的应用常景中，是Ajax的事实标准协议；
-	- ⑤、与XML相比，其协议比较简单，解析速度比较快；
-	- ⑥、松散的Associative array使得其具有良好的可扩展性和兼容性
-- 6.5、Thrift：是 Facebook 开源提供的一个高性能，轻量级 RPC 服务框架，其产生正是为了满足当前大数据量、分布式、跨语言、跨平台数据通讯的需；其并不仅仅是序列化协议，而是一个 RPC 框架；由于Thrift的序列化被嵌入到Thrift框架里面，Thrift框架本身并没有透出序列化和反序列化接口，这导致其很难和其他传输层协议共同使用；
-- 6.6、Protobuf：
-	- ①.标准的IDL和IDL编译器，这使得其对工程师非常友好；
-	- ②.序列化数据非常简洁，紧凑，与XML相比，其序列化之后的数据量约为1/3到1/10；
-	- ③.解析速度非常快，比对应的XML快约20-100倍；
-	- ④.提供了非常友好的动态库，使用非常简介，反序列化只需要一行代码；
-
-## 7、JSON 序列化
-
-### 7.1、关于Map转json输出顺序问题
-
-```java
-Map<String， String> map = new LinkedHashMap<String， String>();
-map.put("b"， "2");
-map.put("a"， "1");
-map.put("c"， "3");
-System.out.println(JSON.toJSON(map));// {"a"："1"，"b"："2"，"c"："3"}
-
-Map<String， String> map1 = new LinkedHashMap<String， String>();
-map1.put("b"， "2");
-map1.put("a"， "1");
-map1.put("c"， "3");
-Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
-System.out.println(gson.toJson(map1)); // {"b"："2"，"a"："1"，"c"："3"}
-```
-
-- 使用fastjson或者jdk自带的序列化，默认是无序输出的，如果需要使用fastJson输出有序的json：JSONObject
-```java
-// 构造的时候使用 new JSONObject(true)：
-JSONObject object = new JSONObject(true);
-Map<String， String> map2 = new LinkedHashMap<String， String>();
-map2.put("b"， "2");
-map2.put("a"， "1");
-map2.put("c"， "3");
-object.putAll(map2);
-System.out.println(JSONObject.toJSON(object));// {"b"："2"，"a"："1"，"c"："3"}
-```
-
-- Gson 保证了你插入的顺序，就是正常的Map迭代操作
-
-## 8、序列化安全
-
-- 序列化在传输中是不安全的：因为序列化二进制格式完全编写在文档中且完全可逆，所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容，故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中。可能面临信息泄露、数据篡改、拒绝服务等
-
-- 要解决序列化安全问题的核心原理就是避免在序列化中传递敏感数据，所以可以使用关键字 transient 修饰敏感数据的变量。或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
-	- 对序列化的流数据进行加密；
-	- 在传输的过程中使用TLS加密传输；
-	- 对序列化数据进行完整性校验；
-	- 针对信息泄露：使用transient标记敏感字段；
-	- 针对数据篡改：实现ObjectInputValidation接口并重写其方法；
-	- 针对整个对象伪造：通过重写ObjectInputStream的resolveClass来实现
-
-## 9、Java默认序列化与二进制编码
-
-- 字节码流大小
-- 序列化耗时
-
-# 七、泛型
+# 八、泛型
 
 ## 1、JDK5 引入的新特性
 
@@ -1646,7 +2088,467 @@ class ClassTest<X extends Number， Y， Z> {
 
 ## 7、Java与C++泛型区别
 
-# 八、关于try...catch...finally
+# 九、协变式重写和泛型重载
+
+## 1、协变式重写
+
+### 1.1、不同版本之间变化
+
+在Java1.4及以前，子类方法如果要覆盖超类的某个方法，必须具有完全相同的方法签名，包括返回值也必须完全一样；Java5.0放宽了这一限制，只要子类方法与超类方法具有相同的方法签名，或者子类方法的返回值是超类方法的子类型，就可以覆盖；可以不需要强制转换类型
+
+例如：重写 Object 类的 clone()方法：
+
+- Object 中该方法的声明如下：
+
+	`protected native Object clone() throws CloneNotSupportedException;`
+
+- 在类中可以重写实现如下：
+
+```java
+@Override
+public Employee clone() throws CloneNotSupportedException {
+	Employee e = (Employee) super.clone();
+	e.address = address.clone();
+	return e;
+}
+```
+
+## 2、泛型重载
+
+- Java的方法重载一般指在同一个类中的两个同名方法，规则很简单：两个方法必须具有不同的方法签名；换句话说：就是这两个方法的参数必须不相同，使得编译器能够区分开这两个重载的方法；由于编译器不能仅仅通过方法的返回值类型来区分重载方法，所以如果两个方法只有返回类型不同，其它完全一样，编译是不能通过的。在泛型方法的重载时，这个规则稍微有一点变化，看如下代码：
+
+```java
+class Overloaded {
+	public static int sum(List<Integer> ints) {			
+		return 0;
+	}
+	public static String sum(List<String> strings) {
+		return null;
+	}
+}
+```
+
+上面是两个泛型方法的重载例子，由于Java的泛型采用擦除法实现，List<Integer>和List<String>在运行时是完全一样的，都是List类型。也就是，擦除后的方法签名如下：
+	```
+	int sum(List)
+	String sum(List)
+	```
+
+- Java允许这两个方法进行重载，虽然它们的方法签名相同，只有返回值类型不同，这在两个普通方法的重载中是不允许的；当然了，如果两个泛型方法的参数在擦除后相同，而且返回值类型也完全一样，那编译肯定是不能通过的；类似地，一个类不能同时继承两个具有相同擦除类型的父类，也不能同时实现两个具有相同擦除的接口。如 `Class A implements Comparable<Integer>,Comparable<Long>。`
+- 总结一下：两个泛型方法在擦除泛型信息后，如果具有相同的参数类型，而返回值不一样，是可以进行重载的；Java有足够的信息来区分这两个重载的方法
+
+## 3、重写与重载
+
+### 3.1、两者的比较
+
+- 重载是一个编译期概念、重写是一个运行期间概念;
+- 重载遵循所谓"编译期绑定"，即在编译时根据参数变量的类型判断应该调用哪个方法。
+- 重写遵循所谓"运行期绑定"，即在运行的时候，根据引用变量所指向的实际对象的类型来调用方法
+- 因为在编译期已经确定调用哪个方法，所以重载并不是多态。而重写是多态。重载只是一种语言特性，是一种语法规则，与多态无关，与面向对象也无关。(注：严格来说，重载是编译时多态，即静态多态。但是，Java中提到的多态，在不特别说明的情况下都指动态多态)
+
+### 3.2、重写的条件
+
+- 参数列表必须完全与被重写方法的相同；
+- 返回类型必须完全与被重写方法的返回类型相同；
+- 访问级别的限制性一定不能比被重写方法的强；
+- 访问级别的限制性可以比被重写方法的弱；
+- 重写方法一定不能抛出新的检查异常或比被重写的方法声明的检查异常更广泛的检查异常
+- 重写的方法能够抛出更少或更有限的异常(也就是说，被重写的方法声明了异常，但重写的方法可以什么也不声明)
+- 不能重写被标示为final的方法；
+- 如果不能继承一个方法，则不能重写这个方法
+- 参数列表必须完全与被重写方法的相同；
+
+### 3.3、重载的条件
+
+- 被重载的方法必须改变参数列表；
+- 被重载的方法可以改变返回类型；
+- 被重载的方法可以改变访问修饰符；
+- 被重载的方法可以声明新的或更广的检查异常；
+- 方法能够在同一个类中或者在一个子类中被重载;
+
+## 4、重载
+
+能够用一个统一的接口名称来调用一系列方法
+- 重载本身并不是多态，同时运行时绑定重载方法也不是多态的表现；
+- 如下例子：重载方法"3"注释与不注释，结果有和不一样
+
+```java			 
+public class NullArguementOverloading {
+	public static void main(String[] args) {
+		NullArguementOverloading obj = new NullArguementOverloading();
+		obj.overLoad(null); // Double array argument method.
+	}
+	private void overLoad(Object o){ // 1
+		System.out.println("Object o arguement method.");
+	}
+	private void overLoad(double[] dArray){ //2
+		System.out.println("Double array argument method.");
+	}
+	private void overLoad(String str) { //3
+		System.out.println("String argument method.");
+	}
+}
+```
+①、注释掉"3"，运行结果：`Double array argument method`
+
+②、不注释掉：`obj.overLoad(null);`编译错误
+
+- Java对重载的处理有最精确匹配原则：
+	- ①、Java 的重载解析过程是以两阶段运行的：
+		- 第一阶段 选取所有可获得并且可应用的方法或构造器；
+		- 第二阶段在第一阶段选取的方法或构造器中选取最精确的一个；
+	- ②、上面代码：String 也是继承自 Object， 数组也是可认为继承自 Object， 两个为平行等级，null 不确定到底是哪个；
+	- ③、另外，重载是在编译期就已经确定了的，并不需要等到运行时才能确定，因此重载不是多态的一个原因。
+	- ④、重载对于传入的参数类型只认了引用的类型，并没有去解析实际对象的类型。如果重载是一种多态的话，它这里应该去解析实际对象的类型并调用ArrayList的方法
+
+```java
+public class OverridePuzzle {			 
+	private void overloadList(List list){
+		System.out.println("List arguement method.");
+	}			 
+	private void overloadList(ArrayList arrayList){
+		System.out.println("ArrayList arguement method");
+	}
+	public static void main(String[] args) {
+		OverridePuzzle op = new OverridePuzzle();
+		List list = new ArrayList<String>();
+		op.overloadList(list); // List arguement method
+	}			 
+}
+```
+
+## 5、重写
+
+涉及到继承这个概念中的问题，子类继承了父类的方法，但是它可能需要有不同的操作行为，就需要在子类中重写这个父类方法.父类如果将方法声明为 `final` 的就可保证所有子类的调用此方法时调用的都是父类的方法;
+
+## 6、两者的比较
+
+- 重载是一个编译期概念、重写是一个运行期间概念;
+- 重载遵循所谓"编译期绑定"，即在编译时根据参数变量的类型判断应该调用哪个方法。
+- 重写遵循所谓"运行期绑定"，即在运行的时候，根据引用变量所指向的实际对象的类型来调用方法
+- 因为在编译期已经确定调用哪个方法，所以重载并不是多态。而重写是多态。重载只是一种语言特性，是一种语法规则，与多态无关，与面向对象也无关。(注：严格来说，重载是编译时多态，即静态多态。但是，Java中提到的多态，在不特别说明的情况下都指动态多态)
+
+# 十、Java 序列化
+
+## 1、Java对象序列化
+
+JDK 1.1 中引入的一组开创性特性之一，用于作为一种将 Java 对象的状态转换为字节数组，以便存储或传输的机制，以后，仍可以将字节数组转换回 Java 对象原有的状态
+
+### 1.1、基本点
+
+- 对象序列化保存的是对象的"状态"，即它的成员变量。由此可知，对象序列化不会关注类中的“静态变量”；
+- 在 Java 中，只要一个类实现了 `java.io.Serializable` 接口，那么它就可以被序列化；实现 `Externalizable`，自己要对序列化内容进行控制，控制哪些属性可以被序列化，哪些不能被序列化
+- 通过 `ObjectOutputStream` 和 `ObjectInputStream` 对对象进行序列化及反序列化;
+- 虚拟机是否允许反序列化，不仅取决于类路径和功能代码是否一致，一个非常重要的一点是两个类的序列化 ID 是否一致，就是 `private static final long serialVersionUID;`
+- transient 关键字的作用是控制变量的序列化，在变量声明前加上该关键字，可以阻止该变量被序列化到文件中，在被反序列化后，transient 变量的值被设为初始值，如 int 型的是 0，对象型的是 null；
+- Java 序列化机制为了节省磁盘空间，具有特定的存储规则，当写入文件的为同一对象时，并不会再将对象的内容进行存储，而只是再次存储一份引用，上面增加的 5 字节的存储空间就是新增引用和一些控制信息的空间.反序列化时，恢复引用关系；该存储规则极大的节省了存储空间;
+
+```java
+ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("result.obj"));
+Test test = new Test();
+test.i = 1;
+out.writeObject(test);
+out.flush();
+test.i = 2;
+out.writeObject(test);
+out.close();
+ObjectInputStream oin = new ObjectInputStream(new FileInputStream(
+					"result.obj"));
+Test t1 = (Test) oin.readObject();
+Test t2 = (Test) oin.readObject();
+System.out.println(t1.i);// 1
+System.out.println(t2.i);// 1
+// 结果两个输出的都是 1， 原因就是第一次写入对象以后，第二次再试图写的时候，虚拟机根据引用关系
+// 知道已经有一个相同对象已经写入文件，因此只保存第二次写的引用，所以读取时，都是第一次保存的对象
+```
+
+### 1.2、子类与父类序列化
+
+- 要想将父类对象也序列化，就需要让父类也实现`Serializable`接口;
+- 如果父类实现了`Serializable`接口，子类但没有实现`Serializable`接口，子类拥有一切可序列化相关的特性，子类可以序列化;
+- 如果子类实现`Serializable`接口，父类不实现，根据父类序列化规则，父类的字段数据将不被序列化，从而达到部分序列化的功能;
+- 在反序列化时仍会调用父类的构造器，只能调用父类的无参构造函数作为默认的父对象。如果父类没有默认构造方法则在反序列化时会出异常.
+- 如果父类实现了 Serializable 接口，要让子类不可序列化，可以在子类中写如下代码：(其实违反了里氏替换原则)
+
+```java
+private void writeObject(java.io.ObjectOutputStream out) throws IOException{
+	throw new NotSerializableException("不可写");
+}
+private void readObject(java.io.ObjectInputStream in) throws IOException{
+	throw new NotSerializableException("不可读");
+}
+```
+- 序列化与反序列化时子类和父类构造方法调用关系：序列化时子类递归调用父类的构造函数，反序列化作用于子类对象时如果其父类没有实现序列化接口则其父类的默认无参构造函数会被调用。如果父类实现了序列化接口则不会调用构造方法
+
+## 2、如何序列化
+
+在序列化过程中，如果被序列化的类中定义了`writeObject` 和 `readObject`方法，虚拟机会试图调用对象类里的`writeObject`和`readObject`方法，进行用户自定义的序列化和反序列化。如果没有这样的方法，则默认调用是`ObjectOutputStream`的`defaultWriteObject`方法以及`ObjectInputStream`的`defaultReadObject`方法。用户自定义的`writeObject`和`readObject`方法可以允许用户控制序列化的过程，比如可以在序列化的过程中动态改变序列化的数值;
+
+### 2.1、ArrayList序列化实现
+
+`ArrayList`使用上述实现：为什么`ArrayList`要用这种方式来实现序列化呢？
+
+- 为什么 `transient Object[] elementData`？：
+
+	`ArrayList`实际上是动态数组，每次在放满以后自动增长设定的长度值，如果数组自动增长长度设为100，而实际只放了一个元素，那就会序列化99个null元素.为了保证在序列化的时候不会将这么多null同时进行序列化，ArrayList 把元素数组设置为transient
+
+- 为什么要写方法：`writeObject and readObject`
+
+	前面提到为了防止一个包含大量空对象的数组被序列化，为了优化存储，所以，ArrayList 使用 transient 来声明elementData作为一个集合，在序列化过程中还必须保证其中的元素可以被持久化下来，所以，通过重写writeObject 和 readObject方法的方式把其中的元素保留下来.writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中。readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
+
+### 2.2、自定义序列化和反序列化策略
+
+可以通过在被序列化的类中增加`writeObject`和`readObject`方法。那么问题又来了;
+
+- 那么如果一个类中包含`writeObject`和`readObject`方法，那么这两个方法是怎么被调用的呢？
+
+	在使用 `ObjectOutputStream `的`writeObject`方法和` ObjectInputStream `的readObject方法时，会通过反射的方式调用
+	- ①、`ObjectOutputStream` 的`writeObject`的调用栈：`writeObject ---> writeObject0 --->writeOrdinaryObject--->writeSerialData--->invokeWriteObject`
+	- ②、这里看一下invokeWriteObject：其中`writeObjectMethod.invoke(obj， new Object[]{ out });`是关键，通过反射的方式调用`writeObjectMethod`方法
+
+### 2.3、Serializable如何实现序列化与反序列化
+
+Serializable 明明就是一个空的接口，它是怎么保证只有实现了该接口的方法才能进行序列化与反序列化的呢？看`ObjectOutputStream` 的`writeObject`的调用栈：
+
+`writeObject ---> writeObject0 --->writeOrdinaryObject--->writeSerialData--->invokeWriteObject`
+
+`writeObject0`方法中有这么一段代码：
+
+```java
+if (obj instanceof String) {
+	writeString((String) obj， unshared);
+} else if (cl.isArray()) {
+	writeArray(obj， desc， unshared);
+} else if (obj instanceof Enum) {
+	writeEnum((Enum<?>) obj， desc， unshared);
+} else if (obj instanceof Serializable) {
+	writeOrdinaryObject(obj， desc， unshared);
+} else {
+	if (extendedDebugInfo) {
+		throw new NotSerializableException(
+			cl.getName() + "\n" + debugInfoStack.toString());
+	} else {
+		throw new NotSerializableException(cl.getName());
+	}
+}
+```
+在进行序列化操作时，会判断要被序列化的类是否是`Enum、Array`和`Serializable`类型，如果不是则直接抛出`NotSerializableException`
+
+### 2.4、writeReplace()和readResolve()
+
+`Serializable`除提供了writeObject和readObject标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve)
+
+- 2.4.1、writeReplace：序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象，该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法，直到该方法不再返回另一个对象为止，程序最后将调用该对象的writeObject() 方法来保存该对象的状态
+
+	- 实现了 writeReplace 的序列化类就不要再实现 writeObject 了，因为该类的 writeObject 方法就不会被调用；
+	- 实现 writeReplace 的返回对象必须是可序列化的对象；
+	- 通过 writeReplace 序列化替换的对象在反序列化中无论实现哪个方法都是无法恢复原对象的。
+	- 所以 writeObject 只和 readObject 配合使用，一旦实现了 writeReplace 在写入时进行替换就不再需要writeObject 和 readObject 了。
+
+- 2.4.2、readResolve：方法可以实现保护性复制整个对象，会紧挨着序列化类实现的 readObject() 之后被调用，该方法的返回值会代替原来反序列化的对象而原来序列化类中 readObject() 反序列化的对象将会立即丢弃.readObject()方法在序列化单例类时尤其有用，单例序列化都应该提供 readResolve() 方法，这样才可以保证反序列化的对象依然正常。
+
+## 3、serialVersionUID
+
+`private static final long serialVersionUID`：每个可序列化类相关联
+
+- 该序列号在反序列化过程中用于验证序列化对象的发送者和接收者是否为该对象加载了与序列化兼容的类;
+- 如果接收者加载的该对象的类的 serialVersionUID 与对应的发送者的类的版本号不同，则反序列化将会导致 InvalidClassException;
+- 为保证 serialVersionUID 值跨不同 java 编译器实现的一致性，序列化类必须声明一个明确的 serialVersionUID ;
+- 使用 private 修饰符显示声明 serialVersionUID(如果可能)，原因是这种声明仅应用于直接声明类 – serialVersionUID 字段作为继承成员没有用处;
+- 类的serialVersionUID的默认值完全依赖于Java编译器的实现，对于同一个类，用不同的Java编译器编译，有可能会导致不同的serialVersionUID，也有可能相同
+- 显式地定义serialVersionUID有两种用途：
+	- ①.在某些场合，希望类的不同版本对序列化兼容，因此需要确保类的不同版本具有相同的serialVersionUID；在某些场合，不希望类的不同版本对序列化兼容，因此需要确保类的不同版本具有不同的serialVersionUID
+	- ②.当你序列化了一个类实例后，希望更改一个字段或添加一个字段，不设置serialVersionUID，所做的任何更改都将导致无法反序化旧有实例，并在反序列化时抛出一个异常。如果你添加了serialVersionUID，在反序列旧有实例时，新添加或更改的字段值将设为初始化值(对象为null，基本类型为相应的初始默认值)，字段被删除将不设置
+
+## 4、反序列化
+
+- 实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法，完全基于字节，如果是子类继承父类的序列化，那么将调用父类的构造方法;
+- 实现 Externalizable  接口的对象在反序列化时会调用构造方法.该接口继承自 Serializable，使用该接口后基于 Serializable 接口的序列化机制就会失效，因为：
+	* Externalizable 不会主动序列化，当使用该接口时序列化的细节需要由我们自己去实现.
+	* 使用 Externalizable 主动进行序列化时当读取对象时会调用被序列化类的无参构方法去创建一个新的对象，然后再将被保存对象的字段值分别填充到新对象中。
+	* 所以 所以实现 Externalizable 接口的类必须提供一个无参 public 的构造方法，readExternal 方法必须按照与 writeExternal 方法写入值时相同的顺序和类型来读取属性值。
+
+## 5、序列化实现对象的拷贝
+
+内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中，再从字节流中将其读出来，这样就可以创建一个新的对象了，并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
+
+```java
+public class CloneUtils {
+	@SuppressWarnings("unchecked")
+	public static <T extends Serializable> T clone(T   obj){
+		T cloneObj = null;
+		try {
+			//写入字节流
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			ObjectOutputStream obs = new ObjectOutputStream(out);
+			obs.writeObject(obj);
+			obs.close();
+			//分配内存，写入原始对象，生成新对象
+			ByteArrayInputStream ios = new  ByteArrayInputStream(out.toByteArray());
+			ObjectInputStream ois = new ObjectInputStream(ios);
+			//返回生成的新对象
+			cloneObj = (T) ois.readObject();
+			ois.close();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return cloneObj;
+	}
+}
+```
+
+## 6、常见的序列化协议
+
+- 6.1、COM：主要用于windows 平台，并没有实现跨平台，其序列化原理是利用编译器中的虚表
+
+- 6.2、CORBA：早期比较好的实现了跨平台，跨语言的序列化协议，COBRA 的主要问题是参与方过多带来的版本过多，版本之间兼容性较差，以及使用复杂晦涩;
+- 6.3、XML&SOAP
+	- XML 是一种常用的序列化和反序列化协议，具有跨机器，跨语言等优点；注意xml中一些特殊字符的处理；
+	- SOAP(Simple Object Access protocol)是一种被广泛应用的，基于XML为序列化和反序列化协议的结构化消息传递协议；SOAP具有安全、可扩展、跨语言、跨平台并支持多种传输层协议
+- 6.4、JSON(Javascript Object Notation)
+	- ①、这种Associative array格式非常符合工程师对对象的理解；
+	- ②、它保持了XML的人眼可读(Human-readable)的优点；
+	- ③、相对xml而言，序列化都的数据更简洁；
+	- ④、它具备Javascript的先天性支持，所以被广泛应用于Web browser的应用常景中，是Ajax的事实标准协议；
+	- ⑤、与XML相比，其协议比较简单，解析速度比较快；
+	- ⑥、松散的Associative array使得其具有良好的可扩展性和兼容性
+- 6.5、Thrift：是 Facebook 开源提供的一个高性能，轻量级 RPC 服务框架，其产生正是为了满足当前大数据量、分布式、跨语言、跨平台数据通讯的需；其并不仅仅是序列化协议，而是一个 RPC 框架；由于Thrift的序列化被嵌入到Thrift框架里面，Thrift框架本身并没有透出序列化和反序列化接口，这导致其很难和其他传输层协议共同使用；
+- 6.6、Protobuf：
+	- ①.标准的IDL和IDL编译器，这使得其对工程师非常友好；
+	- ②.序列化数据非常简洁，紧凑，与XML相比，其序列化之后的数据量约为1/3到1/10；
+	- ③.解析速度非常快，比对应的XML快约20-100倍；
+	- ④.提供了非常友好的动态库，使用非常简介，反序列化只需要一行代码；
+
+## 7、JSON 序列化
+
+### 7.1、关于Map转json输出顺序问题
+
+```java
+Map<String， String> map = new LinkedHashMap<String， String>();
+map.put("b"， "2");
+map.put("a"， "1");
+map.put("c"， "3");
+System.out.println(JSON.toJSON(map));// {"a"："1"，"b"："2"，"c"："3"}
+
+Map<String， String> map1 = new LinkedHashMap<String， String>();
+map1.put("b"， "2");
+map1.put("a"， "1");
+map1.put("c"， "3");
+Gson gson = new GsonBuilder().enableComplexMapKeySerialization().create();
+System.out.println(gson.toJson(map1)); // {"b"："2"，"a"："1"，"c"："3"}
+```
+
+- 使用fastjson或者jdk自带的序列化，默认是无序输出的，如果需要使用fastJson输出有序的json：JSONObject
+```java
+// 构造的时候使用 new JSONObject(true)：
+JSONObject object = new JSONObject(true);
+Map<String， String> map2 = new LinkedHashMap<String， String>();
+map2.put("b"， "2");
+map2.put("a"， "1");
+map2.put("c"， "3");
+object.putAll(map2);
+System.out.println(JSONObject.toJSON(object));// {"b"："2"，"a"："1"，"c"："3"}
+```
+
+- Gson 保证了你插入的顺序，就是正常的Map迭代操作
+
+## 8、序列化安全
+
+- 序列化在传输中是不安全的：因为序列化二进制格式完全编写在文档中且完全可逆，所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容，故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中。可能面临信息泄露、数据篡改、拒绝服务等
+
+- 要解决序列化安全问题的核心原理就是避免在序列化中传递敏感数据，所以可以使用关键字 transient 修饰敏感数据的变量。或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
+	- 对序列化的流数据进行加密；
+	- 在传输的过程中使用TLS加密传输；
+	- 对序列化数据进行完整性校验；
+	- 针对信息泄露：使用transient标记敏感字段；
+	- 针对数据篡改：实现ObjectInputValidation接口并重写其方法；
+	- 针对整个对象伪造：通过重写ObjectInputStream的resolveClass来实现
+
+## 9、Java默认序列化与二进制编码
+
+- 字节码流大小
+- 序列化耗时
+
+# 十一、Java异常
+
+## 1、异常
+
+Throwable是Java中的最顶级的异常类，继承Object，实现了序列化接口，有两个重要的子类：Exception、Error
+
+## 2、Error
+
+是程序中无法处理的错误，表示运行应用程序中出现了严重的错误。此类错误一般表示代码运行时JVM出现问题。通常有Virtual MachineError（虚拟机运行错误）、NoClassDefFoundError（类定义错误）等。比如说当jvm耗完可用内存时，将出现OutOfMemoryError。此类错误发生时，JVM将终止线程
+
+## 3、Exception
+
+程序本身可以捕获并且可以处理的异常。
+
+## 4、Exception分类
+
+### 4.1、运行时异常
+
+### 4.2、非运行时异常
+
+## 5、常见异常
+
+### 5.1、RuntimeException
+
+- NullpointException
+- ClassCastException
+- IllegalArgumentException
+- IndexOutOfBoundException
+- NumberFormatException
+- UnsupportedOperationException
+
+### 5.2、非RuntimeException
+
+- ClassNotFoundException
+- IOException
+
+### 5.3、Error
+
+- StackOverflowError：
+- OutOfMemoryError
+- NoClassDefFoundError和ClassNotFoundException：当 JVM 或 ClassLoader 在加载类时找不到对应类就会引发 NoClassDefFoundError 和 ClassNotFoundException，他们的区别如下：
+	- NoClassDefFoundError 和 ClassNotFoundException 都是由于在 CLASSPATH 下找不到对应的类而引起的。当应用运行时没有找到对应的引用类就会抛出 NoClassDefFoundError，当在代码中通过类名显式加载类（如使用 Class.forName()）时没有找到对应的类就会抛出 ClassNotFoundException；
+	- NoClassDefFoundError 表示该类在编译阶段可以找到，但在运行时找不到了，另外有时静态块的初始化过程也会导致 NoClassDefFoundError。而 ClassNotFoundException 一般发生在通过反射或者 ClassLoader 依据类名加载类时类不存在；
+	- 此外 NoClassDefFoundError 是 Error，是不受检查类型的异常；而 ClassNotFoundException 是受检查类型的异常，需要进行异常捕获，否则会导致编译错误；
+	- NoClassDefFoundError 是链接错误，发生在 JVM 类加载流程的链接阶段，当解析引用的时候找不到对应的类就会抛出 NoClassDefFoundError；而 ClassNotFoundException 一般发生在类加载流程的加载阶段
+
+## 6、Error与Exception
+
+- Error：表示系统级的错误，是Java运行环境内部错误或者硬件问题，不能指望程序来处理；除了退出运行外别无选择，它是Java虚拟机抛出的；
+- Exception：表示程序需要捕捉、需要处理的异常，是由于程序设计不完善而出现的问题，程序必须处理的问题；
+
+## 7、异常链
+
+- 常常会再捕获一个异常后抛出另外一个异常，并且希望把异常原始信息保存下来，这被称为异常链；
+- 现在所有Throwable的子类子构造器中都可以接受一个cause对象作为参数，这个cause就异常原由，代表着原始异常，即使在当前位置创建并抛出行的异常，也可以通过这个cause追踪到异常最初发生的位置；
+- Throwable类及其所有的子类都提供了带cause参数的构造器，其他的异常类就只有通过initCause()来设置cause了；
+
+一般构造异常链有两种方法：
+```java
+// 1、将原始异常信息作为参数传入到新异常的构造函数中；
+public static void constructorArgsChain() {
+	try {
+		originException();
+	} catch (BusinessException e) {
+		throw new RuntimeException(e);
+	}
+}
+// 2、调用方法initCause()，其实这种情况等于：new RuntimeException("系统异常，请联系管理员", e);
+public static void initCause() {
+	try {
+		originException();
+	} catch (BusinessException e) {
+		RuntimeException ex = new RuntimeException("系统异常，请联系管理员");
+		ex.initCause(e);
+		throw ex;
+	}
+}
+```
+
+# 十二、关于try...catch...finally
 
 * [try、catch、finally中的细节分析](http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)
 
@@ -1729,7 +2631,7 @@ public static void main(java.lang.String[]);
 
 finally代码块的编译：复制finally代码块的内容，分别放在try-catch代码块所有正常执行路径以及异常执行路径的出口中。针对异常执行路径，Java编译器会生成一个或多个异常条目，监控整个try-catch代码块，并且捕获所有种类的异常。这些异常表条目的target指针将指向另一份复制的finally代码块。并且，在这个finally代码块的最后，Java编译器会重新抛出所捕获的异常。
 
-# 九、Java 四舍五入
+# 十三、Java 四舍五入
 
 ## 1、目前 Java 支持7中舍入法
 
@@ -1746,24 +2648,24 @@ finally代码块的编译：复制finally代码块的内容，分别放在try-ca
 - 四舍五入：
 
 ```
-	double   f   =   111231.5585;
-	BigDecimal   b   =   new   BigDecimal(f);
-	double   f1   =   b.setScale(2，   RoundingMode.HALF_UP).doubleValue();
+double   f   =   111231.5585;
+BigDecimal   b   =   new   BigDecimal(f);
+double   f1   =   b.setScale(2，   RoundingMode.HALF_UP).doubleValue();
 ```
 
 - 格式化：
 
 ```
-	java.text.DecimalFormat   df   =new   java.text.DecimalFormat("#.00″);
-	df.format(你要格式化的数字);
+java.text.DecimalFormat   df   =new   java.text.DecimalFormat("#.00″);
+df.format(你要格式化的数字);
 ```
 
 - 类C语言：
 
 ```
-	double d = 3.1415926;
-	String result = String .format("%.2f");
-	%.2f %. 表示 小数点前任意位数   2 表示两位小数 格式后的结果为f 表示浮点型
+double d = 3.1415926;
+String result = String .format("%.2f");
+%.2f %. 表示 小数点前任意位数   2 表示两位小数 格式后的结果为f 表示浮点型
 ```
 - 此外如果使用 struts 标签做输出的话， 有个 format 属性，设置为 format="0.00″就是保留两位小数
 	`<bean：write name="entity" property="dkhAFSumPl"  format="0.00" />`
@@ -1798,7 +2700,7 @@ System.out.println("floor d1="+Math.round(d1)); // 0
 	- ②.如果结果为负无穷大或任何小于等于 `Integer.MIN_VALUE` 或 `Long.MIN_VALUE` 的值，那么结果等于 `Integer.MIN_VALUE` 或 `Long.MIN_VALUE` 的值。
 	- ③.如果参数为正无穷大或任何大于等于 `Integer.MAX_VALUE` 或 `Long.MAX_VALUE` 的值，那么结果等于 `Integer.MAX_VALUE` 或 `Long.MAX_VALUE` 的值
 
-# 十、Java 中保留小数位数的处理
+# 十四、Java 中保留小数位数的处理
 
 ## 1、使用 BigDecimal，保留小数点后两位
 
@@ -1876,17 +2778,7 @@ System.out.print(String.format("%g %n"， num)); // 123.457
 	- e，指数类型。如9.38e+5。
 	- g，浮点数型(比%f，%a长度短些，显示6位有效数字，且会进行四舍五入)
 
-# 十一、Java中length和length()的区别
-
-- 1、获取数组的长度是使用属性 length，获取字符串长度是使用方法 length()
-- 2、为什么数组有length属性?
-	- 数组是一个容器对象，其中包含固定数量的同一类型的值.一旦数组被创建，那么数组的长度就是固定的了。数组的长度可以作为final实例变量的长度。因此，长度可以被视为一个数组的属性
- 	- 有两种创建数组的方法：1、通过数组表达式创建数组。2、通过初始化值创建数组。无论使用哪种方式，一旦数组被创建，其大小就固定了
-- 3、Java 中为什么没有定义一个类似 String 一样 Array 类：数组包含所有从 Object 继承下来方法，为什么没有一个array类呢?一个简单的解释是它被隐藏起来了
-- 4、为什么 String 有length()方法？
-	背后的数据结构是一个 char 数组，所以没有必要来定义一个不必要的属性(因为该属性在 char 数值中已经提供了)
-
-# 十二、数组
+# 十五、数组
 
 ## 1、Java 中数组是对象吗
 
@@ -2162,7 +3054,196 @@ public static <T> List<T> asList(T... a) {
 
 size：元素数量、toArray：转换为数组，实现了数组的浅拷贝、get：获得指定元素、contains：是否包含某元素
 
-# 十三、switch
+## 8、Java中length和length()的区别
+
+- 1、获取数组的长度是使用属性 length，获取字符串长度是使用方法 length()
+- 2、为什么数组有length属性?
+	- 数组是一个容器对象，其中包含固定数量的同一类型的值.一旦数组被创建，那么数组的长度就是固定的了。数组的长度可以作为final实例变量的长度。因此，长度可以被视为一个数组的属性
+ 	- 有两种创建数组的方法：1、通过数组表达式创建数组。2、通过初始化值创建数组。无论使用哪种方式，一旦数组被创建，其大小就固定了
+- 3、Java 中为什么没有定义一个类似 String 一样 Array 类：数组包含所有从 Object 继承下来方法，为什么没有一个array类呢?一个简单的解释是它被隐藏起来了
+- 4、为什么 String 有length()方法？
+	背后的数据结构是一个 char 数组，所以没有必要来定义一个不必要的属性(因为该属性在 char 数值中已经提供了)
+
+# 十六、枚举类
+
+## 1、枚举类概念
+
+枚举类是JDK1.5之后出现的，允许用常量来表示特定的数据片断，而且全部都以类型安全的形式来表示
+
+### 1.1、枚举类特点
+
+- 枚举类是一种特殊的Java类，枚举不可被继承
+- 枚举类中声明的每一个枚举值代表枚举类的一个实例对象；
+- 与java普通类一样，在声明枚举类时可以声明属性，方法，构造方法，但是枚举类必须是私有的
+- 枚举可以实现接口或继承抽象方法
+- 在JDK5之后，switch语句，可以接受int，byte，char，short外，还可以接受枚举类型
+- 若枚举类只有一个枚举值，则可以当作单例设计模式
+
+### 1.2、枚举类的一些方法
+
+- values()：获得所有的枚举类
+- valueOf(String str)：将一个字符串转为枚举类;
+
+### 1.3、枚举类基类
+
+```java
+public abstract class Enum<E extends Enum<E>> implements Comparable<E>， Serializable{}
+// 定义枚举类：
+public enum Status{
+	START()，
+	STOP()，
+	RUNNING();
+}
+```
+除了`toString`方法，其余方法都不可重写。要么是`final`方法要么是私有方法。
+
+### 1.4、枚举比较
+
+Java 枚举类比较使用 == 或者 equals()都一样，因为枚举类 Enum 的 equals()方法的默认实现是通过 == 来比较的。
+
+在`Enum`中`equals`和`hashCode`方法都是`final`，所以在枚举类中不可实现这两个方法。类似的`Enum`的`compareTo`方法比较的是`Enum`的`ordinal`顺序大小；类似的还有`Enum`的name方法和toString方法一样都返回的是Enum的name值
+
+## 2、枚举类本质
+
+枚举类本质是通过普通类来实现的，只是编译器进行了相应的处理，每个枚举类编译之后的字节码实质都是继承自`java.lang.Enum`的枚举类类型同名普通类.而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象，所有枚举常量都通过静态代码块进行初始化实例赋值.
+
+```java
+public enum Status{
+	START(),
+	STOP(),
+	RUNNING();
+}
+编译之后通过 javap -verbose 查看字节码文件：
+.......
+public final class Status extends java.lang.Enum<Status>
+.......
+{
+	// 枚举类型值都成了status类型类的静态常量成员属性
+	public static final Status start;
+	public static final Status stop;		    
+	public static final Status running;
+	// 静态代码块
+	static{};
+}
+```
+- 所以从某种意义上可以说 JDK 1.5 后引入的枚举类型是上面枚举常量类的代码封装而已
+
+```java
+public enum  EnumSingleton {
+    INSTANCE {
+        @Override
+        public void print() {
+            System.out.println("Singleton Enum");
+        }
+    };
+
+    public abstract void print();
+
+    public static EnumSingleton getInstance(){
+        return INSTANCE;
+    }
+}
+```
+
+通过Jad反编译后，看如下代码
+```java
+public abstract class EnumSingleton extends Enum{
+    public static EnumSingleton[] values(){
+        return (EnumSingleton[])$VALUES.clone();
+    }
+    public static EnumSingleton valueOf(String name){
+        return (EnumSingleton)Enum.valueOf(com/blue/fish/design/pattern/creational/singleton/EnumSingleton, name);
+    }
+    private EnumSingleton(String s, int i){
+        super(s, i);
+    }
+    public abstract void print();
+    public static EnumSingleton getInstance(){
+        return INSTANCE;
+    }
+    public static final EnumSingleton INSTANCE;
+    private static final EnumSingleton $VALUES[];
+    static {
+		// 如果枚举类有抽象方法，对应的枚举中会使用匿名内部类来构建枚举
+        INSTANCE = new EnumSingleton("INSTANCE", 0) {
+            public void print(){
+                System.out.println("Singleton Enum");
+            }
+
+        };
+        $VALUES = (new EnumSingleton[] {
+            INSTANCE
+        });
+    }
+}
+```
+
+## 3、枚举类与常量
+
+### 3.1、区别
+
+- 枚举相对于常量类来说定义更简单，其不需要定义枚举值，而常量类中每个常量必须手动添加值.
+- 枚举作为参数使用时可以避免在编译时避免弱类型错误，而常量类中的常量作为参数使用时无法避免类型错误.
+- 枚举类自动具备内置方法，如 values() 方法可以获得所有值的集合遍历，ordinal 方法可以获得排序值，compareTo方法可以给予ordinal比较，而常量类不具备这些方法。
+- 枚举的缺点是不能被继承（编译后生成的类是 final class），也不能通过 extends 继承其他类（枚举编译后实质是继承了 Enum 类，java是单继承的）。但是定义的枚举类也通过 implements 实现其他接口；
+- 枚举值定义完毕后除非重构，否则无法做扩展，而常量类可以随意继承.
+
+### 3.2、枚举与静态常量内存消耗比
+
+Java枚举会比静态常量更消耗内存，一般场景下不仅编译后的字节码会比静态常量多，而且运行时也会比静态常量需要更多的内存，不过这个多取决于场景和枚举的规模等等
+
+## 4、枚举类是如何保证线程安全的
+
+Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编译器编译后的字节码实质是一个 final 类，每个枚举类型是这个 final 类中的一个静态常量属性，其属性初始化是在该`final`类的`static`块中进行，而 static的常量属性和代码块都是在类加载时初始化完成的， 所以自然就是 JVM 保证了并发安全；
+
+也就是说，我们定义的一个枚举，在第一次被真正用到的时候，会被虚拟机加载并初始化，而这个初始化过程是线程安全的。解决单例的并发问题，主要解决的就是初始化过程中的线程安全问题
+
+## 5、枚举与单例模式
+
+- 除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了`Serializable`接口后就不再是单例了，因为每次调用`readObject()`方法返回的都是一个新创建出来的对象（当然可以通过使用 readResolve() 方法来避免)）
+
+- Java规范中保证了每一个枚举类型及其定义的枚举变量在JVM中都是唯一的，在枚举类型的序列化和反序列化上Java做了特殊处理。序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 `java.lang.Enum`的`valueOf`方法来根据名字查找枚举对象；同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了`writeObject、readObject、readObjectNoData、writeReplace和 readResolve`等方法；
+
+	```java
+	// remaining cases
+	if (obj instanceof String) {
+		writeString((String) obj, unshared);
+	} else if (cl.isArray()) {
+		writeArray(obj, desc, unshared);
+	} else if (obj instanceof Enum) {
+		writeEnum((Enum<?>) obj, desc, unshared);
+	} else if (obj instanceof Serializable) {
+		writeOrdinaryObject(obj, desc, unshared);
+	} else {
+		if (extendedDebugInfo) {
+			throw new NotSerializableException(
+				cl.getName() + "\n" + debugInfoStack.toString());
+		} else {
+			throw new NotSerializableException(cl.getName());
+		}
+	}
+
+	private void writeEnum(Enum<?> en,ObjectStreamClass desc, boolean unshared) throws IOException {
+        bout.writeByte(TC_ENUM);
+        ObjectStreamClass sdesc = desc.getSuperDesc();
+        writeClassDesc((sdesc.forClass() == Enum.class) ? desc : sdesc, false);
+        handles.assign(unshared ? null : en);
+		// 这里是将name属性输出到结果中
+        writeString(en.name(), false);
+    }
+	```
+- 普通的Java类的反序列化过程中，会通过反射调用类的默认构造函数来初始化对象。所以即使单例中构造函数是私有的，也会被反射给破坏掉。由于反序列化后的对象是重新new出来的，所以破坏了单例；但是枚举的反序列化并不是通过反射实现的，它是通过name去找实例的，所以，也就不会发生由于反序列化导致的单例破坏问题；
+
+- Java 枚举序列化需要注意的点：
+	如果我们枚举被序列化本地持久化了，那我们就不能删除原来枚举类型中定义的任何枚举对象，否则程序在运行过程中反序列化时JVM 就会找不到与某个名字对应的枚举对象了，所以我们要尽量避免多枚举对象序列化的使用
+
+## 6、迭代器和枚举器区别
+
+- `Enumeration<E>` 枚举器接口是1.0开始提供，适用于传统类，而`Iterator<E>`迭代器接口是1.2提供，适用于`Collections`
+- `Enumeration` 只有两个方法接口，我们只能读取集合的数据而不能对数据进行修改，而`Iterator`有三个方法接口，除了能读取集合的数据外也能对数据进行删除操作
+- `Enumeration` 不支持`fail-fast`机制，而`Iterator`支持`fail-fast`机制（一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生`fail-fast`机制，譬如`ConcurrentModificationException`异常）尽量使用`Iterator`迭代器而不是`Enumeration`枚举器；
+
+# 十七、switch
 
 ## 1、支持类型
 
@@ -2235,7 +3316,7 @@ public class switchDemoString{
 
 枚举类型之所以能够使用，因为编译器层面实现了，编译器会将枚举 switch 转换为类似 `switch(s.ordinal()) { case Status.START.ordinal() }` 形式，所以实质还是 int 参数类型。可以通过查看反编译字节码来查看
 
-# 十四、抽象类与接口
+# 十八、抽象类与接口
 
 * [抽象类与接口](http://blog.csdn.net/chenssy/article/details/12858267)
 * [深入理解Java的接口和抽象类](http://www.cnblogs.com/dolphin0520/p/3811437.html)
@@ -2408,231 +3489,7 @@ public class C implements A， B {
 
 接口的default方法不能重写Object的方法，但是可以对Object类的方法进行重载。因为若可以会很难确定什么时候该调用接口默认的方法
 
-# 十五、类型、类初始化、二进制
-
-## 1、基本类型与引用类型的比较
-
-**1.1、如下四个变量，哪两个比较为 false**
-
-```java
-Integer i01 = 59;
-int i02 = 59;
-Integer i03 =Integer.valueOf(59);
-Integer i04 = new Integer(59);
-```
-
-- （1）Integer 为了节省空间和内存会在内存中缓存 -128~127 之间的数字;
-- （2）valueOf()：调用该方法时，内部实现作了个判断，判断当前传入的值是否在-128~127之间且 IntergCache是否已存在该对象如果存在，则直接返回引用，如果不存在，则创建一个新对象
-- （3）基本类型存在内存的栈中，与引用类型比较时， 引用类型会自动装箱，比较数值而不比较内存地址;
-
-**1.2、自动装箱拆箱机制是编译特性还是虚拟机运行时特性？分别是怎么实现的？**
-
-- 自动装箱机制是编译时自动完成替换的.装箱阶段自动替换为了 valueOf 方法，拆箱阶段自动替换为了 xxxValue 方法;
-- 对于 Integer 类型的 valueOf 方法参数如果是 -128~127 之间的值会直接返回内部缓存池中已经存在对象的引用，参数是其他范围值则返回新建对象;
-- 而 Double 类型与 Integer 类型类似，一样会调用 Double 的 valueOf 方法，但是 Double 的区别在于不管传入的参数值是多少都会 new 一个对象来表达该数值(因为在指定范围内浮点型数据个数是不确定的，整型等个数是确定的，所以可以Cache)
-- 注意：Integer、Short、Byte、Character、Long 的 valueOf 方法实现类似，而 Double 和 Float 比较特殊，每次返回新包装对象，对于两边都是包装类型的：== 比较的是引用，	equals 比较的是值；对于两边有一边是表达式(包含算数运算)： == 比较的是数值(自动触发拆箱过程)，对于包装类型 equals 方法不会进行类型转换;
-
-**1.3.Integer i = 1; i += 1; 做了哪些操作**
-
-- Integer i = 1; 做了自动装箱：使用 valueOf() 方法将 int 装箱为 Integer 类型
-- i += 1; 先将 Integer 类型的 i 自动拆箱成 int(使用 intValue() 方法将 Integer 拆箱为 int)，完成加法运行之后的 i 再装箱成 Integer 类型
-
-## 2、关于String +和StringBuffer的比较
-
-在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)效率其实比 Stringbuffer更快
-
-```java
-public class Main{	    
-	public static void main(String[] args){		
-		String string = "a" + "b" + "c";
-
-		StringBuffer stringBuffer = new StringBuffer();
-		stringBuffer.append("a").append("b").append("c");
-		string = stringBuffer.toString();
-	}	    
-}
-```
-**2.1、String+的写法要比 Stringbuffer 快，是因为在编译这段程序的时候，编译器会进行常量优化。**
-
-它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中{}，看如下反编译的代码：
-
-```java
-public class Main{}
-	public static void main(String[] args){
-		String string = "abc";
-		StringBuffer stringBuffer = new StringBuffer();
-		stringBuffer.append("a").append("b").append("c");
-		string = stringBuffer.toString();
-	}
-}
-```
-
-原因是因为 String+其实是由 Stringbuilder 完成的，而一般情况下 Stringbuilder 要快于 Stringbuffer，这是因为 Stringbuilder 线程不安全，少了很多线程锁的时间开销，因此这里依然是 string+的写法速度更快;
-
-```java
-/*   1   */
-String a = "a";
-String b = "b";
-String c = "c";
-String string = a + b + c;
-/*   2   */
-StringBuffer stringBuffer = new StringBuffer();
-stringBuffer.append(a);
-stringBuffer.append(b);
-stringBuffer.append(c);
-string = stringBuffer.toString();
-```
-**2.2、字符串拼接方式：+、concat() 以及 append() 方法，append()速度最快，concat()次之，+最慢**
-
-- 编译器对+进行了优化，它是使用 StringBuilder 的 append() 方法来进行处理的，编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串，变慢的关键原因就在于 new StringBuilder()和toString()，这里可是创建了 10 W 个 StringBuilder 对象，而且每次还需要将其转换成 String
-
-- concat：
-	concat() 的源码，它看上去就是一个数字拷贝形式，我们知道数组的处理速度是非常快的，但是由于该方法最后是这样的：
-	`return new String(0， count + otherLen， buf);`这同样也创建了 10 W 个字符串对象，这是它变慢的根本原因
-
-- append() 方法拼接字符串：并没有产生新的字符串对象；
-
-## 3、静态代码块、静态变量
-
-其作用级别为类；构造代码块、构造函数、构造，其作用级别为对象
-
-- （1）静态代码块，它是随着类的加载而被执行，只要类被加载了就会执行，而且只会加载一次，主要用于给类进行初始化。
-- （2）构造代码块，每创建一个对象时就会执行一次，且优先于构造函数，主要用于初始化不同对象共性的初始化内容和初始化实例环境。
-- （3）构造函数，每创建一个对象时就会执行一次.同时构造函数是给特定对象进行初始化，而构造代码是给所有对象进行初始化，作用区域不同.
-
-==> 通过上面的分析，他们三者的执行顺序应该为：静态代码块 > 构造代码块 > 构造函数。
-
-### 3.1、Java 类初始化过程
-
-- 首先，初始化父类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
-- 然后，初始化子类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
-- 其次，初始化父类的普通成员变量和代码块，在执行父类的构造方法；
-- 最后，初始化子类的普通成员变量和代码块，在执行子类的构造方法；
-
-### 3.2、不要在构造器里调用可能被重载的虚方法
-
-父类构造器执行的时候，调用了子类的重载方法，然而子类的类字段还在刚初始化的阶段，刚完成内存布局：
-
-```java
-public class Base{
-	private String baseName = "base";
-	public Base(){
-		callName();
-	}
-	public void callName(){
-		System. out. println(baseName);
-	}
-	static class Sub extends Base{
-		private String baseName = "sub";
-		public void callName(){
-			System. out. println (baseName) ;
-		}
-	}
-	public static void main(String[] args){
-		Base b = new Sub();
-	}
-}
-```
-
-### 3.3、Java 中赋值顺序
-
-- （1）父类的静态变量赋值
-- （2）自身的静态变量赋值
-- （3）父类成员变量赋值
-- （4）父类块赋值
-- （5）父类构造函数赋值
-- （6）自身成员变量赋值
-- （7）自身块赋值
-- （8）自身构造函数赋值
-
-### 3.4、Java 代码执行顺序
-
-```java
-public class TestExecuteCode {
-	public static void main(String[] args) {
-		System.out.println(new B().getValue());
-	}
-	static class A {
-		protected int value;
-		public A(int v){
-			setValue(v);
-		}
-		public void setValue(int value) { this.value = value;}
-		public int getValue() {
-			try {
-				value++;
-				return value;
-			} finally {
-				this.setValue(value);
-				System.out.println(value);
-			}
-		}
-	}
-	static class B extends A {
-		public B(){
-			super(5);
-			setValue(getValue() - 3);
-		}
-		public void setValue(int value) {super.setValue(2 * value);}
-	}
-}
-```
-
-- 执行结果：22，34，17
-	（1）子类 B 中重写了父类 A 中的setValue方法：
-	
-	`super(5)` // 调用了父类构造器，其中构造函数里面的`setValue(value)`，调用的是子类的setValue方法
-
-	`finally`块中的：`this.setValue(value)` //调用的也是子类的setValue方法
-
-	而子类`setValue`方法中的：`super.setValue(2*value);` //调用的是父类A的setValue方法
-
-	（2）`try...catch...finally`块中有`return`返回值的情况：`finally` 块中虽然改变了value的值，但`try`块中返回的应该是 return 之前存储的值
-
-- 父类执行时如果有子类的方法重写了父类的方法，调用的子类的重写方法
-
-## 4、给出一个表达式计算其可以按多少进制计算
-
-- 式子7*15=133成立，则用的是几进制？可以通过解方程来解决，上述式子可以转换为方程：
-	```
-	7 * (1 * x + 5) = 1 * x^2 + 3 * x + 3
-	x^2 -4x - 32 = 0
-	x = -4 或 x = 8
-	```
-
-- 如果下列的公式成立：78+78=123，则采用的是_______进制表示的：
-	```
-	7 * x + 8 + 7 * x + 8 = 1 * x^2 + 2 * x + 3
-	x^2 - 12 * x - 13 = 0
-	x = -1， x = 13
-	```
-
-## 5、表达式的数据类型
-
-- 所有的 byte，short，char 型的值将被提升为 int 型；
-- 如果有一个操作数是 long 型，计算结果是 long 型；
-- 如果有一个操作数是 float 型，计算结果是 float 型；
-- 如果有一个操作数是 double 型，计算结果是 double 型；
-- final 修饰的变量是常量，如果运算时直接是已常量值进行计算，没有final修饰的变量相加后会被自动提升为int型
-	```java
-	byte b1=1，b2=2，b3，b6;
-	final byte b4=4，b5=6;
-	b6=b4+b5;// b4， b5是常量，则在计算时直接按原值计算，不提升为int型
-	b3=(b1+b2);// 编译错误
-	System.out.println(b3+b6);
-	```
-
-**记住一点：JDK中关于任何整型类型的运算，都是按照int来的**
-```java
-private static final long mil_seconds = 24 * 60 * 60 * 1000;
-private static final long micro_seconds = 24 * 60 * 60 * 1000 * 1000;
-public static void main(String[] args) {
-	System.out.println(micro_seconds / mil_seconds);
-}
-```
-上面代码中 micro_seconds 在运算时，其已超过 int 类型的最大值，溢出了。
-
-## 6、多态问题
+## 5、多态问题
 
 * [多态一道面试题](http://blog.csdn.net/clqyhy/article/details/78978785)
 
@@ -2677,7 +3534,8 @@ public class Test {
 
 - 当父类变量引用子类对象时 Base base = new Child();在这个引用变量 base 指向的对象中他的成员变量和静态方法与父类是一致的，他的非静态方法在编译时是与父类一致的，运行时却与子类一致(发生了复写);
 
-# 十六、反射与注解
+
+# 十九、反射与注解
 
 ## 1、Java注解：Annotation
 
@@ -2919,7 +3777,7 @@ int result = compile.run(null， null， null， "F：/class/HelloWorld.java");
 - 使用缓存：需要多次动态创建一个类的实例的时候.
 - 使用代码动态生成技术，通过调用代理类的方式来模拟反射
 
-# 十七、比较器：Comparale、Comparator
+# 二十、比较器：Comparale、Comparator
 
 ## 1、区别
 
@@ -3021,265 +3879,8 @@ System.out.println(al);
 - 一个类如果实现 Comparable 接口，那么他就具有了可比较性，意思就是说它的实例之间相互直接可以进行比较
 - 通常在两种情况下会定义一个实现 Comparator 类可以把一个Comparator的子类传递给Collections.sort()、Arrays.sort()等方法，用于自定义排序规则。用于初始化特定的数据结构。常见的有可排序的Set(TreeSet)和可排序的Map(TreeMap);
 
-# 十八、枚举类
 
-## 1、枚举类概念
-
-枚举类是JDK1.5之后出现的，允许用常量来表示特定的数据片断，而且全部都以类型安全的形式来表示
-
-### 1.1、枚举类特点
-
-- 枚举类是一种特殊的Java类，枚举不可被继承
-- 枚举类中声明的每一个枚举值代表枚举类的一个实例对象；
-- 与java普通类一样，在声明枚举类时可以声明属性，方法，构造方法，但是枚举类必须是私有的
-- 枚举可以实现接口或继承抽象方法
-- 在JDK5之后，switch语句，可以接受int，byte，char，short外，还可以接受枚举类型
-- 若枚举类只有一个枚举值，则可以当作单例设计模式
-
-### 1.2、枚举类的一些方法
-
-- values()：获得所有的枚举类
-- valueOf(String str)：将一个字符串转为枚举类;
-
-### 1.3、枚举类基类
-
-```java
-public abstract class Enum<E extends Enum<E>> implements Comparable<E>， Serializable{}
-// 定义枚举类：
-public enum Status{
-	START()，
-	STOP()，
-	RUNNING();
-}
-```
-除了`toString`方法，其余方法都不可重写。要么是`final`方法要么是私有方法。
-
-### 1.4、枚举比较
-
-Java 枚举类比较使用 == 或者 equals()都一样，因为枚举类 Enum 的 equals()方法的默认实现是通过 == 来比较的。
-
-在`Enum`中`equals`和`hashCode`方法都是`final`，所以在枚举类中不可实现这两个方法。类似的`Enum`的`compareTo`方法比较的是`Enum`的`ordinal`顺序大小；类似的还有`Enum`的name方法和toString方法一样都返回的是Enum的name值
-
-## 2、枚举类本质
-
-枚举类本质是通过普通类来实现的，只是编译器进行了相应的处理，每个枚举类编译之后的字节码实质都是继承自`java.lang.Enum`的枚举类类型同名普通类.而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象，所有枚举常量都通过静态代码块进行初始化实例赋值.
-
-```java
-public enum Status{
-	START(),
-	STOP(),
-	RUNNING();
-}
-编译之后通过 javap -verbose 查看字节码文件：
-.......
-public final class Status extends java.lang.Enum<Status>
-.......
-{
-	// 枚举类型值都成了status类型类的静态常量成员属性
-	public static final Status start;
-	public static final Status stop;		    
-	public static final Status running;
-	// 静态代码块
-	static{};
-}
-```
-- 所以从某种意义上可以说 JDK 1.5 后引入的枚举类型是上面枚举常量类的代码封装而已
-
-```java
-public enum  EnumSingleton {
-    INSTANCE {
-        @Override
-        public void print() {
-            System.out.println("Singleton Enum");
-        }
-    };
-
-    public abstract void print();
-
-    public static EnumSingleton getInstance(){
-        return INSTANCE;
-    }
-}
-```
-
-通过Jad反编译后，看如下代码
-```java
-public abstract class EnumSingleton extends Enum{
-    public static EnumSingleton[] values(){
-        return (EnumSingleton[])$VALUES.clone();
-    }
-    public static EnumSingleton valueOf(String name){
-        return (EnumSingleton)Enum.valueOf(com/blue/fish/design/pattern/creational/singleton/EnumSingleton, name);
-    }
-    private EnumSingleton(String s, int i){
-        super(s, i);
-    }
-    public abstract void print();
-    public static EnumSingleton getInstance(){
-        return INSTANCE;
-    }
-    public static final EnumSingleton INSTANCE;
-    private static final EnumSingleton $VALUES[];
-    static {
-		// 如果枚举类有抽象方法，对应的枚举中会使用匿名内部类来构建枚举
-        INSTANCE = new EnumSingleton("INSTANCE", 0) {
-            public void print(){
-                System.out.println("Singleton Enum");
-            }
-
-        };
-        $VALUES = (new EnumSingleton[] {
-            INSTANCE
-        });
-    }
-}
-```
-
-## 3、枚举类与常量
-
-### 3.1、区别
-
-- 枚举相对于常量类来说定义更简单，其不需要定义枚举值，而常量类中每个常量必须手动添加值.
-- 枚举作为参数使用时可以避免在编译时避免弱类型错误，而常量类中的常量作为参数使用时无法避免类型错误.
-- 枚举类自动具备内置方法，如 values() 方法可以获得所有值的集合遍历，ordinal 方法可以获得排序值，compareTo方法可以给予ordinal比较，而常量类不具备这些方法。
-- 枚举的缺点是不能被继承（编译后生成的类是 final class），也不能通过 extends 继承其他类（枚举编译后实质是继承了 Enum 类，java是单继承的）。但是定义的枚举类也通过 implements 实现其他接口；
-- 枚举值定义完毕后除非重构，否则无法做扩展，而常量类可以随意继承.
-
-### 3.2、枚举与静态常量内存消耗比
-
-Java枚举会比静态常量更消耗内存，一般场景下不仅编译后的字节码会比静态常量多，而且运行时也会比静态常量需要更多的内存，不过这个多取决于场景和枚举的规模等等
-
-## 4、枚举类是如何保证线程安全的
-
-Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编译器编译后的字节码实质是一个 final 类，每个枚举类型是这个 final 类中的一个静态常量属性，其属性初始化是在该`final`类的`static`块中进行，而 static的常量属性和代码块都是在类加载时初始化完成的， 所以自然就是 JVM 保证了并发安全；
-
-也就是说，我们定义的一个枚举，在第一次被真正用到的时候，会被虚拟机加载并初始化，而这个初始化过程是线程安全的。解决单例的并发问题，主要解决的就是初始化过程中的线程安全问题
-
-## 5、枚举与单例模式
-
-- 除枚举实现的单例模式以外的其他实现方式都有一个比较大的问题是一旦实现了`Serializable`接口后就不再是单例了，因为每次调用`readObject()`方法返回的都是一个新创建出来的对象（当然可以通过使用 readResolve() 方法来避免)）
-
-- Java规范中保证了每一个枚举类型及其定义的枚举变量在JVM中都是唯一的，在枚举类型的序列化和反序列化上Java做了特殊处理。序列化时 Java 仅仅是将枚举对象的 name 属性输出到结果中，反序列化时则是通过 `java.lang.Enum`的`valueOf`方法来根据名字查找枚举对象；同时，编译器是不允许任何对这种序列化机制的定制的，因此禁用了`writeObject、readObject、readObjectNoData、writeReplace和 readResolve`等方法；
-
-	```java
-	// remaining cases
-	if (obj instanceof String) {
-		writeString((String) obj, unshared);
-	} else if (cl.isArray()) {
-		writeArray(obj, desc, unshared);
-	} else if (obj instanceof Enum) {
-		writeEnum((Enum<?>) obj, desc, unshared);
-	} else if (obj instanceof Serializable) {
-		writeOrdinaryObject(obj, desc, unshared);
-	} else {
-		if (extendedDebugInfo) {
-			throw new NotSerializableException(
-				cl.getName() + "\n" + debugInfoStack.toString());
-		} else {
-			throw new NotSerializableException(cl.getName());
-		}
-	}
-
-	private void writeEnum(Enum<?> en,ObjectStreamClass desc, boolean unshared) throws IOException {
-        bout.writeByte(TC_ENUM);
-        ObjectStreamClass sdesc = desc.getSuperDesc();
-        writeClassDesc((sdesc.forClass() == Enum.class) ? desc : sdesc, false);
-        handles.assign(unshared ? null : en);
-		// 这里是将name属性输出到结果中
-        writeString(en.name(), false);
-    }
-	```
-- 普通的Java类的反序列化过程中，会通过反射调用类的默认构造函数来初始化对象。所以即使单例中构造函数是私有的，也会被反射给破坏掉。由于反序列化后的对象是重新new出来的，所以破坏了单例；但是枚举的反序列化并不是通过反射实现的，它是通过name去找实例的，所以，也就不会发生由于反序列化导致的单例破坏问题；
-
-- Java 枚举序列化需要注意的点：
-	如果我们枚举被序列化本地持久化了，那我们就不能删除原来枚举类型中定义的任何枚举对象，否则程序在运行过程中反序列化时JVM 就会找不到与某个名字对应的枚举对象了，所以我们要尽量避免多枚举对象序列化的使用
-
-## 6、迭代器和枚举器区别
-
-- `Enumeration<E>` 枚举器接口是1.0开始提供，适用于传统类，而`Iterator<E>`迭代器接口是1.2提供，适用于`Collections`
-- `Enumeration` 只有两个方法接口，我们只能读取集合的数据而不能对数据进行修改，而`Iterator`有三个方法接口，除了能读取集合的数据外也能对数据进行删除操作
-- `Enumeration` 不支持`fail-fast`机制，而`Iterator`支持`fail-fast`机制（一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生`fail-fast`机制，譬如`ConcurrentModificationException`异常）尽量使用`Iterator`迭代器而不是`Enumeration`枚举器；
-
-# 十九、Java异常
-
-## 1、异常
-
-Throwable是Java中的最顶级的异常类，继承Object，实现了序列化接口，有两个重要的子类：Exception、Error
-
-## 2、Error
-
-是程序中无法处理的错误，表示运行应用程序中出现了严重的错误。此类错误一般表示代码运行时JVM出现问题。通常有Virtual MachineError（虚拟机运行错误）、NoClassDefFoundError（类定义错误）等。比如说当jvm耗完可用内存时，将出现OutOfMemoryError。此类错误发生时，JVM将终止线程
-
-## 3、Exception
-
-程序本身可以捕获并且可以处理的异常。
-
-## 4、Exception分类
-
-### 4.1、运行时异常
-
-### 4.2、非运行时异常
-
-## 5、常见异常
-
-### 5.1、RuntimeException
-
-- NullpointException
-- ClassCastException
-- IllegalArgumentException
-- IndexOutOfBoundException
-- NumberFormatException
-- UnsupportedOperationException
-
-### 5.2、非RuntimeException
-
-- ClassNotFoundException
-- IOException
-
-### 5.3、Error
-
-- StackOverflowError：
-- OutOfMemoryError
-- NoClassDefFoundError和ClassNotFoundException：当 JVM 或 ClassLoader 在加载类时找不到对应类就会引发 NoClassDefFoundError 和 ClassNotFoundException，他们的区别如下：
-	- NoClassDefFoundError 和 ClassNotFoundException 都是由于在 CLASSPATH 下找不到对应的类而引起的。当应用运行时没有找到对应的引用类就会抛出 NoClassDefFoundError，当在代码中通过类名显式加载类（如使用 Class.forName()）时没有找到对应的类就会抛出 ClassNotFoundException；
-	- NoClassDefFoundError 表示该类在编译阶段可以找到，但在运行时找不到了，另外有时静态块的初始化过程也会导致 NoClassDefFoundError。而 ClassNotFoundException 一般发生在通过反射或者 ClassLoader 依据类名加载类时类不存在；
-	- 此外 NoClassDefFoundError 是 Error，是不受检查类型的异常；而 ClassNotFoundException 是受检查类型的异常，需要进行异常捕获，否则会导致编译错误；
-	- NoClassDefFoundError 是链接错误，发生在 JVM 类加载流程的链接阶段，当解析引用的时候找不到对应的类就会抛出 NoClassDefFoundError；而 ClassNotFoundException 一般发生在类加载流程的加载阶段
-
-## 6、Error与Exception
-
-- Error：表示系统级的错误，是Java运行环境内部错误或者硬件问题，不能指望程序来处理；除了退出运行外别无选择，它是Java虚拟机抛出的；
-- Exception：表示程序需要捕捉、需要处理的异常，是由于程序设计不完善而出现的问题，程序必须处理的问题；
-
-## 7、异常链
-
-- 常常会再捕获一个异常后抛出另外一个异常，并且希望把异常原始信息保存下来，这被称为异常链；
-- 现在所有Throwable的子类子构造器中都可以接受一个cause对象作为参数，这个cause就异常原由，代表着原始异常，即使在当前位置创建并抛出行的异常，也可以通过这个cause追踪到异常最初发生的位置；
-- Throwable类及其所有的子类都提供了带cause参数的构造器，其他的异常类就只有通过initCause()来设置cause了；
-
-一般构造异常链有两种方法：
-```java
-// 1、将原始异常信息作为参数传入到新异常的构造函数中；
-public static void constructorArgsChain() {
-	try {
-		originException();
-	} catch (BusinessException e) {
-		throw new RuntimeException(e);
-	}
-}
-// 2、调用方法initCause()，其实这种情况等于：new RuntimeException("系统异常，请联系管理员", e);
-public static void initCause() {
-	try {
-		originException();
-	} catch (BusinessException e) {
-		RuntimeException ex = new RuntimeException("系统异常，请联系管理员");
-		ex.initCause(e);
-		throw ex;
-	}
-}
-```
-
-# 二十、Jar包
+# 二十一、Jar包
 
 ## 1、Jar包本质
 
@@ -3508,7 +4109,11 @@ publicclass ManifestUtil {
 
 - war包中的文件按一定目录结构来组织：通常其根目录下包含有Html和Jsp文件或者包含这两种文件的目录，另外还会有一个WEB-INF目录，通常在WEB-INF目录下有一个web.xml文件和一个classes目录，web.xml是这个应用的配置文件，而classes目录下则包含编译好的Servlet类和Jsp或Servlet所依赖的其它类（如JavaBean）。通常这些所依赖的类也可以打包成JAR放到WEB-INF下的lib目录下，当然也可以放到系统的CLASSPATH中，但那样移植和管理起来不方便。
 
-# 二十一、Java Agent
+## 7、如何将开源项目本地打包
+
+每个开源项目都有一个文件：CONTRIBUTING.md，阅读该文件可以找到对应的方法。JDK打包可以搜索文件：jdk building.jdk
+
+# 二十二、Java Agent
 
 - [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
 - [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
@@ -3656,22 +4261,6 @@ public final class ServiceLoader<S> implements Iterable<S> {
     - 虽然ServiceLoader也算是使用的延迟加载，但是基本只能通过遍历全部获取，也就是接口的实现类全部加载并实例化一遍。如果你并不想用某些实现类，它也被加载并实例化了，这就造成了浪费。获取某个实现类的方式不够灵活，只能通过Iterator形式获取，不能根据某个参数来获取对应的实现类。
     - 多个并发多线程使用ServiceLoader类的实例是不安全的
 
-# 二十三、本地方法(native)
-
-## 1、本地方法加载
-
-JDK 提供给了我们两个方法用于载入库文件，一个是`System.load(String filename)`方法，另一个是`System.loadLibrary(String libname)`方法，他们的区别主要如下：
-
-- 加载的路径不同：
-    - `System.load(String filename)` 是从作为动态库的本地文件系统中以指定的文件名加载代码文件，文件名参数必须是完整的路径名且带文件后缀
-    - `System.loadLibrary(String libname)` 是加载由`libname`参数指定的系统库（系统库指的是`java.library.path`，可以通过` System.getProperty(String key)` 方法查看 java.library.path 指向的目录内容），将库名映射到实际系统库的方法取决于系统实现，譬如在 Android 平台系统会自动去系统目录、应用 lib 目录下去找 libname 参数拼接了 lib 前缀的库文件;
-- 是否自动加载库的依赖库:
-
-    譬如libA.so 和 libB.so 有依赖关系
-    - 如果选择 `System.load("/sdcard/path/libA.so")`，即使 libB.so 也放在 `/sdcard/path/` 路径下，load 方法还是会因为找不到依赖的 libB.so 文件而失败，因为虚拟机在载入 libA.so 的时候发现它依赖于 libB.so，那么会先去 java.library.path 下载入 libB.so，而 libB.so 并不位于 `java.library.path` 下，所以会报错；
-    - 使用 `System.loadLibrary("A")`，然后把 libA.so 和 libB.so 都放在 `java.library.path` 下即可
-
-
 # 二十四、Java中的null
 
 * [Java中的null](https://www.cnblogs.com/greatfish/p/5906617.html)
@@ -3721,7 +4310,98 @@ public class Null {
 
 http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
 
+* [Java中文编码](https://www.ibm.com/developerworks/cn/java/j-lo-chinesecoding/index.html)
 
+## 1、为什么需要编码
+
+- 计算机中存储信息的最小单元是一个字节即 8 个 bit，所以能表示的字符范围是 0~255 个
+- 人类要表示的符号太多，无法用一个字节来完全表示
+- 要解决这个矛盾必须需要一个新的数据结构 char，从 char 到 byte 必须编码
+
+## 2、编码方式
+
+计算中提拱了多种翻译方式，常见的有 ASCII、ISO-8859-1、GB2312、GBK、UTF-8、UTF-16 等。它们都可以被看作为字典，它们规定了转化的规则，按照这个规则就可以让计算机正确的表示我们的字符；
+
+- ASCII码：总共有 128 个，用一个字节的低 7 位表示，0~31 是控制字符如换行回车删除等；32~126 是打印字符，可以通过键盘输入并且能够显示出来；
+
+- ISO-8859-1： ISO 组织在 ASCII 码基础上又制定了一些列标准用来扩展 ASCII 编码，它们是 `ISO-8859-1~ISO-8859-15`，其中` ISO-8859-1` 涵盖了大多数西欧语言字符，所有应用的最广泛。ISO-8859-1 仍然是单字节编码，它总共能表示 256 个字符；
+
+- GB2312：它的全称是《信息交换用汉字编码字符集 基本集》，它是双字节编码，总的编码范围是 A1-F7，其中从 A1-A9 是符号区，总共包含 682 个符号，从 B0-F7 是汉字区，包含 6763 个汉字；
+
+- GBK：全称叫《汉字内码扩展规范》，是国家技术监督局为 windows95 所制定的新的汉字内码规范，它的出现是为了扩展 GB2312，加入更多的汉字，它的编码范围是 8140~FEFE（去掉 XX7F）总共有 23940 个码位，它能表示 21003 个汉字，它的编码是和 GB2312 兼容的，也就是说用 GB2312 编码的汉字可以用 GBK 来解码，并且不会有乱码；
+
+- GB18030：全称是《信息交换用汉字编码字符集》，是我国的强制标准，它可能是单字节、双字节或者四字节编码，它的编码与 GB2312 编码兼容，这个虽然是国家标准，但是实际应用系统中使用的并不广泛；
+
+- UTF-16：UTF-16 具体定义了 Unicode 字符在计算机中存取方法。UTF-16 用两个字节来表示 Unicode 转化格式，这个是定长的表示方法，不论什么字符都可以用两个字节表示，两个字节是 16 个 bit，所以叫 UTF-16。UTF-16 表示字符非常方便，每两个字节表示一个字符，这个在字符串操作时就大大简化了操作，这也是 Java 以 UTF-16 作为内存的字符存储格式的一个很重要的原因；
+
+- UTF-8：采用了一种变长技术，每个编码区域有不同的字码长度。不同类型的字符可以是由 1~6 个字节组成；UTF-8 有以下编码规则：
+    - 如果一个字节，最高位（第 8 位）为 0，表示这是一个 ASCII 字符（00 - 7F）。可见，所有 ASCII 编码已经是 UTF-8 了。
+    - 如果一个字节，以 11 开头，连续的 1 的个数暗示这个字符的字节数，例如：110xxxxx 代表它是双字节 UTF-8 字符的首字节。
+    - 如果一个字节，以 10 开始，表示它不是首字节，需要向前查找才能得到当前字符的首字节
+
+## 3、Java中需要编码的场景
+
+### 3.1、I/O 操作中存在的编码
+
+涉及到编码的地方一般都在字符到字节或者字节到字符的转换上，而需要这种转换的场景主要是在 I/O 的时候，这个 I/O 包括磁盘 I/O 和网络 I/O
+
+IO中读写是StreamEncoder 类负责将字符编码成字节，编码格式和默认编码规则与解码是一致的，关系如下：
+
+![](image/InputStreamReaderEcode.png)  <br/>  ![](image/OutputStreamWriterEncide.png) 
+
+IO编码示例：涉及到 I/O 操作时只要注意指定统一的编解码 Charset 字符集，一般不会出现乱码问题
+```java
+String file = "c:/stream.txt";
+String charset = "UTF-8";
+// 写字符换转成字节流
+FileOutputStream outputStream = new FileOutputStream(file);
+OutputStreamWriter writer = new OutputStreamWriter(
+        outputStream, charset);
+try {
+    writer.write("这是要保存的中文字符");
+} finally {
+    writer.close();
+}
+// 读取字节转换成字符
+FileInputStream inputStream = new FileInputStream(file);
+InputStreamReader reader = new InputStreamReader(
+        inputStream, charset);
+StringBuffer buffer = new StringBuffer();
+char[] buf = new char[64];
+int count = 0;
+try {
+    while ((count = reader.read(buf)) != -1) {
+        buffer.append(buffer, 0, count);
+    }
+} finally {
+    reader.close();
+}
+```
+
+### 3.2、内存中操作中的编码
+
+Java 中用 String 表示字符串，所以 String 类就提供转换到字节的方法，也支持将字节转换为字符串的构造函数
+```java
+String s = "这是一段中文字符串"; 
+byte[] b = s.getBytes("UTF-8"); 
+String n = new String(b,"UTF-8");
+```
+
+Charset 提供 encode 与 decode 分别对应 char[] 到 byte[] 的编码和 byte[] 到 char[] 的解码
+```java
+Charset charset = Charset.forName("UTF-8"); 
+ByteBuffer byteBuffer = charset.encode(string); 
+CharBuffer charBuffer = charset.decode(byteBuffer);
+```
+Java 中还有一个 ByteBuffer 类，它提供一种 char 和 byte 之间的软转换，它们之间转换不需要编码与解码，只是把一个 16bit 的 char 格式，拆分成为 2 个 8bit 的 byte 表示，它们的实际值并没有被修改，仅仅是数据的类型做了转换
+
+## 4、Java中如何编解码
+
+Java编码中需要用到的类图
+
+![](image/Java编码类图.png)
+
+首先根据指定的 charsetName 通过 Charset.forName(charsetName) 设置 Charset 类，然后根据 Charset 创建 CharsetEncoder 对象，再调用 CharsetEncoder.encode 对字符串进行编码，不同的编码类型都会对应到一个类中，实际的编码过程是在这些类中完成的；
 
 # 二十六、JMS
 
@@ -3821,212 +4501,24 @@ JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢�
 - [JMH教程](http://tutorials.jenkov.com/java-performance/jmh.html)
 - [JMH使用](https://www.xncoding.com/2018/01/07/java/jmh.html)
 
-# 二十九、面向对象
+# 二十九、本地方法(native)
 
-## 1、面向对象与面向过程
+## 1、本地方法加载
 
-- 面向过程：把问题分解成一个一个步骤，每个步骤用函数实现；进行面向过程编程时，上来先定义一个函数，然后使用诸如if-else等方式进行代码执行；
-- 面向对象：将问题分解成一个一个步骤，对每个步骤进行相应的抽象、形成对象，通过不同对象之间的调用，组合解决问题；是一种变成死信，提倡使用类来抽象现实模型
+JDK 提供给了我们两个方法用于载入库文件，一个是`System.load(String filename)`方法，另一个是`System.loadLibrary(String libname)`方法，他们的区别主要如下：
 
-## 2、三大基本特征
+- 加载的路径不同：
+    - `System.load(String filename)` 是从作为动态库的本地文件系统中以指定的文件名加载代码文件，文件名参数必须是完整的路径名且带文件后缀
+    - `System.loadLibrary(String libname)` 是加载由`libname`参数指定的系统库（系统库指的是`java.library.path`，可以通过` System.getProperty(String key)` 方法查看 java.library.path 指向的目录内容），将库名映射到实际系统库的方法取决于系统实现，譬如在 Android 平台系统会自动去系统目录、应用 lib 目录下去找 libname 参数拼接了 lib 前缀的库文件;
+- 是否自动加载库的依赖库:
 
-- 封装：通常认为封装是把数据和操作数据的方法绑定起来，对数据的访问只能通过已定义的接口；面向对象的本质就是：将现实世界描绘成一系列完全自然、封闭的对象。在类中的编写的方法就是对实现细节的一种封装；编写一个类就是对数据和数据操作的封装；
-- 继承：继承是从已有类中得到继承信息并创建新类的过程。提供继承信息的类被称为父类；得到继承信息的类被称为子类。继承让变化中的软件系统有了一定的延续性，同时继承也是封装程序中可变因素的重要手段；
-- 多态：指允许不同子类型的对象对同一消息作出不同的响应；
+    譬如libA.so 和 libB.so 有依赖关系
+    - 如果选择 `System.load("/sdcard/path/libA.so")`，即使 libB.so 也放在 `/sdcard/path/` 路径下，load 方法还是会因为找不到依赖的 libB.so 文件而失败，因为虚拟机在载入 libA.so 的时候发现它依赖于 libB.so，那么会先去 java.library.path 下载入 libB.so，而 libB.so 并不位于 `java.library.path` 下，所以会报错；
+    - 使用 `System.loadLibrary("A")`，然后把 libA.so 和 libB.so 都放在 `java.library.path` 下即可
 
-## 3、五大基本原则
+## 2、如何编写本地方法
 
-- 单一职责原则
-- 开放封闭原则
-- 里氏替换原则
-- 依赖倒置原则
-- 接口隔离原则
-
-
-# 三十、Lambda表达式与函数式接口
-
-## 1、函数式接口
-
-函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
-
-java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解@FunctionalInterface进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
-
-Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现
-
-## 2、Lambda表达式
-
-### 2.1、语法格式
-
-```java
-// 之前的语法
-new Thread(new Runnable() {
-    @Override
-    public void run() {
-        System.out.println("内部类线程");
-    }
-}).start();
-// lambda语法
-new Thread(() -> System.out.println("我是Lambda线程")).start();
-```
-
-### 2.2、Lambda原理
-
-如下代码：启动一个线程，包含lambda表达式和匿名内部类的方式
-```java
-public class LambdaDemo {
-    public static void runThreadUseLambda() {
-        new Thread(() -> System.out.println("我是Lambda线程")).start();
-    }
-    public static void runWithInnerClass() {
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                System.out.println("内部类线程");
-            }
-        }).start();
-    }
-    public static void main(String[] args) {
-        runThreadUseLambda();
-        runWithInnerClass();
-    }
-}
-```
-通过`javap -c LambdaDemo`查看字节码
-```java
-...
-public static void runThreadUseLambda();
-Code:
-    0: new           #2                  // class java/lang/Thread
-    3: dup
-    4: invokedynamic #3,  0              // InvokeDynamic #0:run:()Ljava/lang/Runnable;
-    9: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
-    12: invokevirtual #5                  // Method java/lang/Thread.start:()V
-    15: return
-
-public static void runWithInnerClass();
-Code:
-    0: new           #2                  // class java/lang/Thread
-    3: dup
-    4: new           #6                  // class com/blue/fish/se/basis/lambda/LambdaDemo$1
-    7: dup
-    8: invokespecial #7                  // Method com/blue/fish/se/basis/lambda/LambdaDemo$1."<init>":()V
-    11: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
-    14: invokevirtual #5                  // Method java/lang/Thread.start:()V
-    17: return
-...
-```
-对比上述两个方法，发现lambda的是`invokeDynamic`，而内部类的是`invokespecial`；
-
-JVM指令：
-- invokeinterface：调用接口方法；
-- invokespecial：专门用来调用父类方法、私有方法和初始化方法；
-- invokestatic：调用静态方法；
-- invokevirtual：调用对象的一般方法
-
-上述这四个指令所对应的类、调用的方法在编译时几乎是固定的：invokestatic所对应的类为静态方法所在的类，方法为静态方法本身；invokespecial所对应的类为当前对象，方法是固定的；invokeinterface和invokevirtual所对应的类也为当前对象，方法可以因为继承和实现进行选择，但也仅限于整个继承体系中选择；
-
-在java7 JVM中增加了一个新的指令invokedynamic，用于支持动态语言，即允许方法调用可以在运行时指定类和方法，不必在编译的时候确定；字节码中每条invokedynamic指令出现的位置称为一个动态调用点，invokedynamic指令后面会跟一个指向常量池的调用点限定符，这个限定符会被解析为一个动态调用点；
-
-Lambda采用的是invokedynamic指令；
-
-### 2.3、Lambda性能
-
-# 三十一、Java编码
-
-* [Java中文编码](https://www.ibm.com/developerworks/cn/java/j-lo-chinesecoding/index.html)
-
-## 1、为什么需要编码
-
-- 计算机中存储信息的最小单元是一个字节即 8 个 bit，所以能表示的字符范围是 0~255 个
-- 人类要表示的符号太多，无法用一个字节来完全表示
-- 要解决这个矛盾必须需要一个新的数据结构 char，从 char 到 byte 必须编码
-
-## 2、编码方式
-
-计算中提拱了多种翻译方式，常见的有 ASCII、ISO-8859-1、GB2312、GBK、UTF-8、UTF-16 等。它们都可以被看作为字典，它们规定了转化的规则，按照这个规则就可以让计算机正确的表示我们的字符；
-
-- ASCII码：总共有 128 个，用一个字节的低 7 位表示，0~31 是控制字符如换行回车删除等；32~126 是打印字符，可以通过键盘输入并且能够显示出来；
-
-- ISO-8859-1： ISO 组织在 ASCII 码基础上又制定了一些列标准用来扩展 ASCII 编码，它们是 `ISO-8859-1~ISO-8859-15`，其中` ISO-8859-1` 涵盖了大多数西欧语言字符，所有应用的最广泛。ISO-8859-1 仍然是单字节编码，它总共能表示 256 个字符；
-
-- GB2312：它的全称是《信息交换用汉字编码字符集 基本集》，它是双字节编码，总的编码范围是 A1-F7，其中从 A1-A9 是符号区，总共包含 682 个符号，从 B0-F7 是汉字区，包含 6763 个汉字；
-
-- GBK：全称叫《汉字内码扩展规范》，是国家技术监督局为 windows95 所制定的新的汉字内码规范，它的出现是为了扩展 GB2312，加入更多的汉字，它的编码范围是 8140~FEFE（去掉 XX7F）总共有 23940 个码位，它能表示 21003 个汉字，它的编码是和 GB2312 兼容的，也就是说用 GB2312 编码的汉字可以用 GBK 来解码，并且不会有乱码；
-
-- GB18030：全称是《信息交换用汉字编码字符集》，是我国的强制标准，它可能是单字节、双字节或者四字节编码，它的编码与 GB2312 编码兼容，这个虽然是国家标准，但是实际应用系统中使用的并不广泛；
-
-- UTF-16：UTF-16 具体定义了 Unicode 字符在计算机中存取方法。UTF-16 用两个字节来表示 Unicode 转化格式，这个是定长的表示方法，不论什么字符都可以用两个字节表示，两个字节是 16 个 bit，所以叫 UTF-16。UTF-16 表示字符非常方便，每两个字节表示一个字符，这个在字符串操作时就大大简化了操作，这也是 Java 以 UTF-16 作为内存的字符存储格式的一个很重要的原因；
-
-- UTF-8：采用了一种变长技术，每个编码区域有不同的字码长度。不同类型的字符可以是由 1~6 个字节组成；UTF-8 有以下编码规则：
-    - 如果一个字节，最高位（第 8 位）为 0，表示这是一个 ASCII 字符（00 - 7F）。可见，所有 ASCII 编码已经是 UTF-8 了。
-    - 如果一个字节，以 11 开头，连续的 1 的个数暗示这个字符的字节数，例如：110xxxxx 代表它是双字节 UTF-8 字符的首字节。
-    - 如果一个字节，以 10 开始，表示它不是首字节，需要向前查找才能得到当前字符的首字节
-
-## 3、Java中需要编码的场景
-
-### 3.1、I/O 操作中存在的编码
-
-涉及到编码的地方一般都在字符到字节或者字节到字符的转换上，而需要这种转换的场景主要是在 I/O 的时候，这个 I/O 包括磁盘 I/O 和网络 I/O
-
-IO中读写是StreamEncoder 类负责将字符编码成字节，编码格式和默认编码规则与解码是一致的，关系如下：
-
-![](image/InputStreamReaderEcode.png)  <br/>  ![](image/OutputStreamWriterEncide.png) 
-
-IO编码示例：涉及到 I/O 操作时只要注意指定统一的编解码 Charset 字符集，一般不会出现乱码问题
-```java
-String file = "c:/stream.txt";
-String charset = "UTF-8";
-// 写字符换转成字节流
-FileOutputStream outputStream = new FileOutputStream(file);
-OutputStreamWriter writer = new OutputStreamWriter(
-        outputStream, charset);
-try {
-    writer.write("这是要保存的中文字符");
-} finally {
-    writer.close();
-}
-// 读取字节转换成字符
-FileInputStream inputStream = new FileInputStream(file);
-InputStreamReader reader = new InputStreamReader(
-        inputStream, charset);
-StringBuffer buffer = new StringBuffer();
-char[] buf = new char[64];
-int count = 0;
-try {
-    while ((count = reader.read(buf)) != -1) {
-        buffer.append(buffer, 0, count);
-    }
-} finally {
-    reader.close();
-}
-```
-
-### 3.2、内存中操作中的编码
-
-Java 中用 String 表示字符串，所以 String 类就提供转换到字节的方法，也支持将字节转换为字符串的构造函数
-```java
-String s = "这是一段中文字符串"; 
-byte[] b = s.getBytes("UTF-8"); 
-String n = new String(b,"UTF-8");
-```
-
-Charset 提供 encode 与 decode 分别对应 char[] 到 byte[] 的编码和 byte[] 到 char[] 的解码
-```java
-Charset charset = Charset.forName("UTF-8"); 
-ByteBuffer byteBuffer = charset.encode(string); 
-CharBuffer charBuffer = charset.decode(byteBuffer);
-```
-Java 中还有一个 ByteBuffer 类，它提供一种 char 和 byte 之间的软转换，它们之间转换不需要编码与解码，只是把一个 16bit 的 char 格式，拆分成为 2 个 8bit 的 byte 表示，它们的实际值并没有被修改，仅仅是数据的类型做了转换
-
-## 4、Java中如何编解码
-
-Java编码中需要用到的类图
-
-![](image/Java编码类图.png)
-
-首先根据指定的 charsetName 通过 Charset.forName(charsetName) 设置 Charset 类，然后根据 Charset 创建 CharsetEncoder 对象，再调用 CharsetEncoder.encode 对字符串进行编码，不同的编码类型都会对应到一个类中，实际的编码过程是在这些类中完成的；
-
-# 三十二、加密与解密
+# 三十、加密与解密
 
 数据的安全是基于密钥，而不是算法的保密。算法的是公开
 
@@ -4189,633 +4681,74 @@ private static void bcSha1(String src) throws NoSuchAlgorithmException {
 
 MAC、HMAC-带密钥的MAC
 
-# 三十三、进制基础
 
-## 1、进制基础
+# 三十一、调试
 
-## 2、二进制运算
+## 1、调试
 
-### 2.1、与运算：&
+- 调试参数
 
-**2.1.1、两位全为1，结果才为 1**
-
-```
-0&0=0	0&1=0	1&0=0	1&1=1
-51&5 = 1 即: 
-	51 => 00000000 00000000 00000000 00110011
-	5  => 00000000 00000000 00000000 00000101
-	& ==> 00000000 00000000 00000000 00000001 (1)
-```
-
-**2.1.2、用法**
-
-- 清零：如果想将一个单元清零，即使其全部二进制为 0， 只要与一个各位都为 0 的数值相`与`，结果为 0；
-- 取一个数中指定位置，如：x = 10101110， 取 x 的低四位，用 `x & 00001111 = 00001110`，即可得到	
-
-### 2.2、或运算：|
-
-**2.2.1、只要有一个为 1，结果就为 1**
-
-	0|0 = 0		1|0 = 1		0|1	= 1		1|1 = 1
-	51|5 = 55 即:
-		51 => 00000000 00000000 00000000 00110011
-		5  => 00000000 00000000 00000000 00000101
-		|  => 00000000 00000000 00000000 00110111
-
-**2.2.3、用法**
-
-	常用来对一个数据的某些位置 1
-	如: x = 1010 0000 的低四位置 1， 用 x | 0000 1111 = 1010 1111
-
-### 2.3、异或运算：^
-
-**2.3.1、两个相应位为"异"(值不同)，则该位结果为 1， 否则为 0**
-
-	0^0 = 0		1^0 = 1		0^1 = 1		1^1 = 0；
-	51^5 = 54即:
-		51 => 00000000 00000000 00000000 00110011
-		5  => 00000000 00000000 00000000 00000101
-		^  => 00000000 00000000 00000000 00110110
-
-**2.3.2、用法**
-
-- 使特定位翻转，找一个数，对应 x 要翻转的各位，该数的对应位为 1，其余位为 0，此数与 x 对应的位"异或"即可<br>
-	如:x = 10101110， 使 x 低四位翻转， 用 x ^ 0000 1111 = 1010 0001
-- 与 0 相异或，保留原值<br>
-	如: x ^ 00000000 = 10101110
-- 两个变量交换值:<br>
-	- ①、借助第三个变量来实现:<br>
-		c = a， a = b， b = c；<br>
-	- ②、利用加减法来实现:<br>
-		a = a + b， b = a - b， a = a-b；<br>
-	- ③、用异或运算来实现，也是效率最高的:<br>
-		原理:利用一个数异或本身等于 0 和 异或运算符合交换率<br>
-		a = a ^ b； b = a ^ b； a = a ^ b
-
-### 2.4、取反运算：~ 
-
-	取反:对一个二进制数按位取反，即将 0 变为 1，1 变为 0
-		~1 = 0		~0 = 1	
-
-### 2.5、左移：<< 
-
-	将一个运算对象的各二进制位全部左移若干位(左边的二进制位丢弃，右边补 0)
-		2 << 2 = 8；
-			2   => 00000000 00000000 00000000 00000010
-			>>2 => 00000000 00000000 00000000 00001000
-	若左移时舍弃的高位不包含 1，则每左移一位，相当于该数乘以 2；
-		2 << 2 ==> 2 * 2 * 2(最快计算 2 的三次方)
-
-### 2.6、右移：>>
-
-	将一个数的各二进制位全部右移若干位，正数左补 0，负数左补 1；对于正数来说操作数每右移一位，相当于该数除以 2
-	左补 1 或 0 看被移动的数是正数还是负数； 
-		4 >> 2 ==> 1 ( 4 / 2 / 2)；
-		-14(11110010) >> 2 ==> -4(11111100)
-
-### 2.7、无符号右移：>>> 
-
-各个位向右移指定的位数，右移后左边空出的位使用 0 填充，移出右边的位被丢弃掉
-
-	-14 >> 2:
-		-14 => 11111111 11111111 11111111 11110010
-		>>2 => 00111111	11111111 11111111 11111100(1073741820) ；
-
-### 2.8、二进制四则运算
-
-#### 2.8.1、加法
-
-`0+0=0，0+1=1，1+0=1，1+1=10`
-- 当两个相加的二进制仅一位时，相加的结果为1；
-- 如果两个二进制位全是0，相加的结果仍为0；
-- 如果两个相加的进制位均为1，则结果为10，要向高位进1，也就是`逢2进1`规则
-
-在运算的过程中，两数要从最低位开始对齐
-
-#### 2.8.2、减法
-
-`1-1=0，1-0=1，0-0=0，0-1=-1`
-- 当两个相减的二进制位中同为0或1时，相减结果为0；
-- 如果被减数的二进制位为1，而减数的二进制位为0，则相减的结果仍为1；
-- 如果被减数的二进制位为0，而减数的二进制位为1，则需要向高位借1，但此时借1当2；
-
-#### 2.8.3、乘法
-
-`0*0=0，1*0=0，0*1=0，1*1=1`
-- 只有当两个相乘的二进制位都为1，相乘的结果才为1；
-- 当两个相乘的二进制位只要有一位为0，则相乘的结果都为0；
-- 1与任何数相乘的结果都是对应的被乘数；而0与任何数相乘结果都为0；
-
-在乘法运算中，乘数的每一位都要与被乘数的每一位分别相乘，而不仅是对应位相乘
-
-#### 2.8.4、除法
-
-当被除数大于除数时，商是“1”；当被除数小于除数时，不够除，商只能是“0”；
-
-## 3、负数：以其正值的补码形式表示
-
-### 3.1、原码
-
-一个整数按照绝对值大小转换成二进制成为原码 <br>
-14 => 00000000 00000000 00000000 00001110  (14的原码)
-
-### 3.2、反码
-
-将二进制按位取反，所得的二进制数称为原二进制数的反码<br>
-将 14 的每一位按位取反<br>
-
-	00000000 00000000 00000000 00001110 => 14 原码
-	11111111 11111111 11111111 11110001 => 14 反码
-	两者互为反码
-
-### 3.3、补码：反码加1称为补码
-
-正数的补码和原码相同；负数的补码是通过先把除符号位外其他各位取反，再在末位（最低位）加1得到；
-
-11111111 11111111 11111111 11110001 + 1 => <br>
-11111111 11111111 11111111 11110010
-
-### 3.4、案例
-```
--14 << 2
--14 => 11111111 11111111 11111111 11110010
-<<2 => 11111111 11111111 11111111 11001000
-```
-- 分析:只需要该补码的原码对应的正值，然后取相反数<br>
-	- 补码减 1，得到反码 11000111<br>
-	- 补码取反得到 原码，即该负数的正值 00111000<br>
-	- 计算正值，为 56<br>
-	- 取相反数<br>
-
-### 3.5、根据 `1+~n = -n` 可以快速，计算负数补码	
-
-`-n = ~n+1`  =>  `-n-1 = ~n`
-
-## 4、Java 二进制
-
-### 4.1、Java 基本数据类型
-
-- 整型：`byte(8 bit)、short(16 bit)、int(32 bit)、long(64 bit)`
-- 浮点型： `float(32 bit)、double(64 bit)`；
-- 布尔：`true false (1 bit)`
-- 字符：`char(unicode字符 16 bit)`
-
-### 4.2、常用的数
-
-0xff ==> 11111111
-
-f ==> 1111
-
-### 4.3、大小端
-
-- 小端（little-endian）：低位字节排放在内存的低地址端即该值的起始地址，高位字节排放在内存的高地址端
-- 大端（big-endian）：高位字节排放在内存的低地址端即该值的起始地址，低位字节排放在内存的高地址端
-- 例子: 32bit宽的数 `0x12345678`
-	- 在 little-endian 模式下在 CPU 内存的存放方式:(假设内存起始地址 0x4000开始存放)
-		- 内存地址:	`0x4000 	0x4001	0x4002	0x4003`
-		- 存放内容:	`0x78 	0x56	0x34	0x12`
-	- 在 big-endian 模式下存放如下:
-		- 内存地址:	`0x4000 	0x4001	0x4002	0x4003`
-		- 存放内容:	`0x12 	0x34	0x56	0x78`
-- 大端的优势就是易于阅读，小端便于cpu内部数据计算
-
-### 4.4、数据类型转换为 字节
-
-`8143 (00000000 00000000 00011111 11001111)` ==> `byte[] b = [-49,31,0,0]`;
-- 第一个（低端）字节：`8143 >> 0 * 8 & 0xff = 11001111(207)`，有符号为 -49 
-- 第二个（低端）字节：`8143 >> 1 * 8 & 0xff = 00011111(31)`
-- 第三个（低端）字节：`8143 >> 2 * 8 & 0xff = 00000000(0)`
-- 第四个（低端）字节：`8143 >> 3 * 8 & 0xff = 00000000(0)`
-
-### 4.5、字符串与字节的相互转换
-
-字符串 --> 字节：`byte[] b = s.getBytes();`<br>
-字节 --> 字符串：`byte[] b = new byte[int]; new String(b)` 或者 `new String(b, encode)`// encode 编码格式:
-
-### 4.6、转换实例
-```java
-public class CovertToRadix {
-	public static byte[] intToByte(int i){
-		byte[] arr = new byte[4];
-		/*
-		arr[0] = (byte)((int)((i >> 0 * 8) & 0xff));
-		arr[1] = (byte)((int)((i >> 1 * 8) & 0xff));
-		arr[2] = (byte)((int)((i >> 2 * 8) & 0xff));
-		arr[3] = (byte)((int)((i >> 3 * 8) & 0xff));
-		*/
-		for(int j=0;j<arr.length;j++){
-			arr[j] = (byte)((int)((i >> j * 8) & 0xff));
-		}
-		return arr;
-	}
-	public static int byteToInt(byte[] arr){
-		/*
-		int r0 = (int)((arr[0]& 0xff) << 0 * 8);
-		int r1 = (int)((arr[1]& 0xff) << 1 * 8);
-		int r2 = (int)((arr[2]& 0xff) << 2 * 8);
-		int r3 = (int)((arr[3]& 0xff) << 3 * 8);
-		*/
-		int result = 0;
-		for(int j=0;j<arr.length;j++){
-			result += (int)((arr[j]& 0xff) << j * 8);
-		}
-		return result;
-	}
-}
-```
-## 5、如何利用位运算
-
-### 5.1、子网掩码
-
-### 5.2、求平均值
-```
-int x = 32760; int y = 32762; 求 x，y 的平均值，要求空间复杂度 O(0)
-public static int ave(int x， int y){
-	return (x&y) + ((x^y)>>1)；
-}
-```
-- 知识点: `>>n` 相当于除于2^n ，`<<n` 相当于乘于 2^n
-- 把 x，y分别分成两个部分来看，两者相同的位分别拿出来:<br>
-```
-x(111111111111000) = 111111111111000 + 000000000000000
-y(111111111111010) = 111111111111000 + 000000000000010
-相同部分我们叫做x1，y1，不同部分我们叫做x2，y2.那么现在(x+y)/2 =(x1+y1)/2 +(x2 + y2)/2 ，<br>
-因为x1 == y1 ，所以(x1+y1)/2 == x1 ==y1，<br>
-相同部分我们用与运算求出来 x1 = x & y ，不同部分的和我们用^ 求出来，然后除于 2(>>1)是不是我们想要的结果了呢<br>
-```
-
-### 5.3、判断奇偶数
-
-- `a&1 = 0` 偶数
-- `a&1 = 1` 奇数
-
-##5.4、取 int 型变量 a 的第 k 位 (k=0，1，2....)
-
-即 `a>>k&1` (先右移k再与1)
-
-### 5.5、幂问题
-
-- 判断是否为 2 的幂：`((x&(x-1))==0) && (x!=0);`
-- 如何判断一个无符号数是2的n次方-1:
-```java
-private static boolean isPowerOfTwoLoseOne(int val) {
-	return (val & (val+1)) == 0；
-}
-```
-- 非2的幂次方转换为2的幂次方
-- 求一个数离它最近的大于等于2的幂次方的数:
-```java
-MAXIMUM_CAPACITY = Integer.MAX_VALUE；
-private static final int tableSizeFor(int c) {
-	int n = c - 1;
-	n |= n >>> 1;
-	n |= n >>> 2;
-	n |= n >>> 4;
-	n |= n >>> 8;
-	n |= n >>> 16;
-	return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
-}
-```
-- 如果求小于等于2的幂次方的数:
-```java
-private static final int tableSizeFor(int n) {
-	n |= n >>> 1;
-	n |= n >>> 2;
-	n |= n >>> 4;
-	n |= n >>> 8;
-	n |= n >>> 16;
-	return  n-(n>>1);
-}
-```
-### 5.6、计算绝对值:
-
-```java
-public static int abs(int x){
-	int y = x >> 31;
-	return (x^y) - y;
-}
-```
-
-- 取模运算转化成位运算 (在不产生溢出的情况下)：`a % (2^n)` 等价于 `a & (2^n - 1)`
-- 乘法运算转化成位运算 (在不产生溢出的情况下)：`a * (2^n)` 等价于 `a<< n`
-- 除法运算转化成位运算 (在不产生溢出的情况下)：`a / (2^n)` 等价于 `a>> n`，例: 12/8 == 12>>3
-- a % 2 等价于 a & 1       
-```
-if (x == a) x= b;
-else x= a;
-等价于 x= a ^ b ^ x;
-```
-
-# 三十四、JDK8新特性
-
-## 1、Java语言新特性
-
-### 1.1、Lambda表达式和函数式接口
-
-函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口。java 8提供 @FunctionalInterface作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口）；
-
-### 1.2、接口的默认方法和静态方法
-
-### 1.3、方法引用
-
-### 1.4、重复注解
-
-### 1.5、更好的类型推断
-
-### 1.6、拓宽注解的应用场景
-
-
-## 2、编译器新特性
-
-### 2.1、参数名称
-
-
-## 3、Java官方库的新特性
-
-- Optional
-- Stream
-- Date/Time API(JSR 310)
-- Nashorn JavaScript引擎
-- Base64
-- 并行数组
-- 并发性
-
-## 4、各个版本特性
-
-### 4.1、JDK5
-
-- 泛型
-- 枚举
-- 自动装箱拆箱
-- 可变参数
-- 元注解
-- foreach循环（增强for、for/in）
-- 静态导入
-
-  ```java
-  import static java.lang.System.err;
-  import static java.lang.System.out;
-  err.println(msg); 
-  ```
-- 格式化（System.out.println 支持%s %d等格式化输出）
-
-  System.out.println("Line %d: %s%n", i++, line);
-
-- 线程框架/数据结构 JUC
-- Arrays工具类/StringBuilder/instrument
-
-### 4.2、JDK6
-
-- 支持脚本语言
-- 引入JDBC 4.0 API
-- 引入Java Compiler API,可以实现进程内编译，动态产生Java代码；
-- 可插拔注解；
-- 增加对Native PKI、Java GSS、Kerberos 和 LDAP 的支持
-- 继承Web Services
-
-### 4.3、JDK7
-
-- switch语句块中允许以字符串作为分支条件；
-- 在创建泛型对象时应用类型推断；钻石语法:Map<String， List<String>> data = new HashMap()；
-- 在一个语句块中捕获多种异常；
-- 支持动态语言；
-- 支持 try-with-resources；
-- 引入Java NIO.2开发包；
-- 数值类型可以用2进制字符串表示，并且可以在字符串表示中添加下划线；
-
-  Java7前支持十进制（123）、八进制（0123）、十六进制（0X12AB），Java7添加二进制表示（0B11110001、0b11110001）；
-
-  Java7中支持在数字量中间添加’_'作为分隔符。更直观，如（12_123_456）。下划线仅仅能在数字中间。编译时编译器自己主动删除数字中的下划线
-
-- null 值的自动处理；
-- JSR292与InvokeDynamic指令
-- fork/join framework
-
-### 4.4、JDK8
-
-[http://www.open-open.com/lib/view/open1403232177575.html]
-
-- 函数式接口 FunctionalInterface 
-- Lambda表达式
-- 接口的增强.接口中的默认方法.默认方法的继承.单接口实现情况下，默认方法可以直接用， 多接口实现情况下一旦出现同方法签名的默认方法，那么必须显式覆盖，否则编译不通过.
-- Stream 迭代
-- 新增时间 API
-- JVM 的PermGen空间被移除，取代它的是Metaspace(JEP 122)元空间
-- 数组并行(parallel)操作
-
-### 4.5、JDK9
-
-- Jigsaw 项目；模块化源码
-- 简化进程API
-- 轻量级 JSON API
-- 钱和货币的API
-- 改善锁争用机制
-- 代码分段缓存
-- 智能Java编译， 第二阶段
-- HTTP 2.0客户端
-- Kulla计划: Java的REPL实现
-
-### 4.6、JDK10
-
-- 本地变量类型推断
-- 统一JDK仓库
-- 垃圾回收器接口
-- G1的并行Full GC
-- 应用程序类数据共享
-- ThreadLocal握手机制
-
-## 5、Stream
-
-`public interface Stream<T> extends BaseStream<T, Stream<T>>`
-
-### 5.1、特性
-
-JAVA8中提出一个集合流的抽象工具（java.util.stream，简称Stream），用于集合内元素的计算，更确切的说是过滤和统计操作。
-
-Stream不是一种真实的数据源（不存在数据结构），所以没有办法直接来创建它，Stream只能依赖其他数据源来转换成我们的抽象操作。Stream本身是不存在，只是抽象出来的一个抽象操作，经过各种操作之后，Stream还需要转换成真实的数据源；
-
-它专注于对集合对象进行各种非常便利、高效的聚合操作（aggregate operation），或者大批量数据操作 (bulk data operation)。Stream API 借助于同样新出现的 Lambda 表达式，极大的提高编程效率和程序可读性。同时它提供串行和并行两种模式进行汇聚操作，并发模式能够充分利用多核处理器的优势，使用 fork/join 并行方式来拆分任务和加速处理过程；
-
-Stream 就如同一个迭代器（Iterator），单向，不可往复，数据只能遍历一次，遍历过一次后即用尽了。Stream跟迭代器比较，区别：
-- 无存储：Stream是基于数据源的对象，它本身不存储数据元素，而是通过管道将数据源的元素传递给操作。
-- 函数式编程：对Stream的任何修改都不会修改背后的数据源，比如对Stream执行filter操作并不会删除被过滤的元素，而是会产生一个不包含被过滤元素的新的Stream。
-- 延迟执行：Stream的操作由零个或多个中间操作（intermediate operation）和一个结束操作（terminal operation）两部分组成。只有执行了结束操作，Stream定义的中间操作才会依次执行，这就是Stream的延迟特性。
-- 可消费性：Stream只能被“消费”一次，一旦遍历过就会失效。就像容器的迭代器那样，想要再次遍历必须重新生成一个新的Stream
-
-### 5.2、创建Stream
-
-最常用的创建Stream有两种途径：
-- 通过Stream接口的静态工厂方法；
-- 通过Collection接口的默认方法–stream()，把一个Collection对象转换成Stream；或者使用parallelStream()创建并行
-- 通过Arrays.stream(Object[])方法。
-- BufferedReader.lines()从文件中获得行的流。
-- Files类的操作路径的方法，如list、find、walk等。
-- 随机数流Random.ints()。
-- 其它一些类提供了创建流的方法，如BitSet.stream(), Pattern.splitAsStream(java.lang.CharSequence), 和 JarFile.stream()
-
-其实最终都是依赖StreamSupport类来完成Stream创建的；
-
-### 5.3、常见用法
-
-- **foreach：迭代流中的每个数据**
-	```java
-	// 使用 forEach 输出了10个随机数
-	Random random = new Random(100);
-	random.ints().limit(10).forEach(System.out::println);
-	```
-- **map：法用于映射每个元素到对应的结果**
-	```java
-	// 以下代码片段使用 map 输出了元素对应的平方数
-	List<Integer> list = Arrays.asList(3, 2, 2, 3, 7, 3, 5);
-	List<Integer> result = list.stream().map(i -> i * i).distinct().collect(Collectors.toList());
-	System.out.println(list);
-	System.out.println(result);
-	```
-- **filter：方法用于通过设置的条件过滤出元素**
-	```java
-	// 。以下代码片段使用 filter 方法过滤出空字符串
-	List<String> list = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
-	long count = list.stream().filter(String::isEmpty).count();
-	System.out.println(count);
-	```
-- **sorted：用于对流进行排序**
-	```java
-	Random random = new Random();
-	random.ints().limit(10).sorted().forEach(System.out::println);
-	```
-- **Collectors：实现了很多归约操作，例如将流转换成集合和聚合元素。Collectors 可用于返回列表或字符串：**
-	```java
-	List<String>strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
-	List<String> filtered = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.toList());
-	String mergedString = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.joining(", "));
-	```
-
-## 6、Optional
-
-[Optional使用](https://www.cnblogs.com/rjzheng/p/9163246.html)
-
-是为了解决NPE问题，以往我们需要对对象进行判空：
-```java
-public String getCity(User user)  throws Exception{
-	if(user!=null){
-		if(user.getAddress()!=null){
-			Address address = user.getAddress();
-			if(address.getCity()!=null){
-				return address.getCity();
-			}
-		}
-	}
-	throw new Excpetion("取值错误"); 
-}
-```
-而使用Optional之后，代码变成：
-```java
-public String getCity(User user) throws Exception{
-    return Optional.ofNullable(user)
-                   .map(u-> u.getAddress())
-                   .map(a->a.getCity())
-                   .orElseThrow(()->new Exception("取指错误"));
-}
-```
-
-**Optional(T value)、empty()、of(T value)、ofNullable(T value)**
-
-- Optional(T value)，即构造函数，它是private权限的，不能由外部调用的；
-- 其余三个函数是public权限；
-- Optional的本质，就是内部储存了一个真实的值，在构造的时候，就直接判断其值是否为空
-
-## 7、JDK8时间
-
-### 7.1、旧版API存在问题
-
-- 非线程安全 − ``java.util.Date`` 是非线程安全的，所有的日期类都是可变的，这是Java日期类最大的问题之一。
-- 设计很差 − Java的日期/时间类的定义并不一致，在java.util和java.sql的包中都有日期类，此外用于格式化和解析的类在java.text包中定义。java.util.Date同时包含日期和时间，而java.sql.Date仅包含日期，将其纳入java.sql包并不合理。另外这两个类都有相同的名字，这本身就是一个非常糟糕的设计。
-- 时区处理麻烦 − 日期类并不提供国际化，没有时区支持，因此Java引入了java.util.Calendar和java.util.TimeZone类，但他们同样存在上述所有的问题；
-
-### 7.2、JDK8新API
-
-JDK8.0之后, 新增加了以下几个类用来表示日期时间：
-- LocalDate：用来表示日期(年、月、日)，LocalDate是不可变对象, 如果想改变对象的状态, 最终得到都是一个新的LocalDate对象, 并不会对旧的LocalDate对象产生影
-- LocalTime：用来表示时间(时、分、秒)
-- LocalDateTime：用来表示日期时间(年、月、日、时、分、秒)
-- DataTimeFomatter：用来格式化日期
-- ZonedDateTime：无论是LocalDate、LocalTime、LocalDateTime，它们基本是时区无关的，内部并没有存储时区属性，而基本用的系统默认时区；ZonedDateTime 可以被理解为 LocalDateTime 的外层封装，它的内部存储了一个 LocalDateTime 的实例，专门用于普通的日期时间处理。此外，它还定义了 ZoneId 和 ZoneOffset 来描述时区的概念；
-- Instant：用于表示一个时间戳，可以精确到纳秒
-
-### 7.3、新API基本操作
-
-- 格式化时间：
-	```java
-	public static void main(String[] a){
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
-		LocalDateTime localDateTime = LocalDateTime.now();
-		System.out.println(formatter.format(localDateTime));
-
-		String str = "2008年08月23日 23:59:59";
-		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
-		LocalDateTime localDateTime2 = LocalDateTime.parse(str,formatter2);
-		System.out.println(localDateTime2);
-
-	}
-	```
-- java8时间与老版本时间转换：
-	```java
-	public static void main(String[] args) {
-        // Date与Instant的相互转化
-        Instant instant = Instant.now();
-        Date date = Date.from(instant);
-        Instant instant2 = date.toInstant();
-
-        //Date转为LocalDateTime
-        Date date2 = new Date();
-        LocalDateTime localDateTime2 = LocalDateTime.ofInstant(date2.toInstant(), ZoneId.systemDefault());
-
-        //LocalDateTime转Date
-        LocalDateTime localDateTime3 = LocalDateTime.now();
-        Instant instant3 = localDateTime3.atZone(ZoneId.systemDefault()).toInstant();
-        Date date3 = Date.from(instant);
-
-        //LocalDate转Date
-        //因为LocalDate不包含时间，所以转Date时，会默认转为当天的起始时间，00:00:00
-        LocalDate localDate4 = LocalDate.now();
-        Instant instant4 = localDate4.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
-        Date date4 = Date.from(instant);
-
-        // Calendar to Instant
-        Instant time = Calendar.getInstance().toInstant();
-        System.out.println(time);
-
-        // TimeZone to ZoneId
-        ZoneId defaultZone = TimeZone.getDefault().toZoneId();
-        System.out.println(defaultZone);
-
-        // ZonedDateTime from specific Calendar
-        ZonedDateTime gregorianCalendarDateTime = new GregorianCalendar().toZonedDateTime();
-        GregorianCalendar gc = GregorianCalendar.from(gregorianCalendarDateTime);
-    }
-	```
-
-# 三十五、正则表达式
-
-
-# 三十六、其他知识
-
-- 关于调试调试参数：
-
-	`export JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=1044`，执行这行后，当前机器下所有java程序都会进入debug模式
+`export JAVA_TOOL_OPTIONS=-agentlib:jdwp=transport=dt_socket,server=y,suspend=y,address=1044`，执行这行后，当前机器下所有java程序都会进入debug模式
 
 - 如何调试Java程序：
 	- 判断需要调试的代码运行在哪个JVM里；
 	- 找到需要调试的源代码
 
-- 如何将开源项目本地打包：每个开源项目都有一个文件：CONTRIBUTING.md，阅读该文件可以找到对应的方法
-	
-	JDK打包可以搜索文件：jdk building.jdk
 
-- 
+# 三十二、Java魔数
 
+## 1、魔数
 
+文件的起始几个字节的内容是固定的（或是有意填充，或是本就如此），这几个字节的内容也被称为魔数 （magic number），因此可以根据这几个字节的内容确定文件类型
 
+## 2、常见文件类型的魔数
+
+```java
+public enum FileType {
+    JPEG("JPEG", "FFD8FF"),
+    PNG("PNG", "89504E47"),
+    GIF("GIF", "47494638"),
+    TIFF("TIFF", "49492A00"),
+    BMP("BMP", "424D"),
+    DWG("DWG", "41433130"),
+    PSD("PSD", "38425053"),
+    RTF("RTF", "7B5C727466"),
+    XML("XML", "3C3F786D6C"),
+    HTML("HTML", "68746D6C3E"),
+    DBX("DBX", "CFAD12FEC5FD746F "),
+    PST("PST", "2142444E"),
+    OLE2("OLE2", "0xD0CF11E0A1B11AE1"),
+    XLS_DOC("XLS_DOC", "D0CF11E0"),
+    MDB("MDB", "5374616E64617264204A"),
+    WPB("WPB", "FF575043"),
+    EPS_PS("EPS_PS", "252150532D41646F6265"),
+    PDF("PDF", "255044462D312E"),
+    PWL("PWL", "E3828596"),
+    ZIP("ZIP", "504B0304"),
+    RAR("RAR", "52617221"),
+    WAV("WAV", "57415645"),
+    AVI("AVI", "41564920"),
+    RAM("RAM", "2E7261FD"),
+    RM("RM", "2E524D46"),
+    MOV("MOV", "6D6F6F76"),
+    ASF("ASF", "3026B2758E66CF11"),
+    MID("MID", "4D546864");
+    private String key;
+    private String value;
+    FileType(String key, String value) {
+        this.key = key;
+        this.value = value;
+    }
+    public String getValue() {
+        return value;
+    }
+    public String getKey() {
+         return key;
+    }
+}
+```
+
+如何通过魔数判断文件类型？
 
 # 参考文章
 
