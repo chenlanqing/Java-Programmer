@@ -139,10 +139,11 @@ Spring 会扫描 basePackage 下的所有Mapper接口并注册为MapperFactoryBe
 
     MapperFactoryBean会从它的getObject方法中获取对应的Mapper接口，而getObject内部还是通过我们注入的属性调用SqlSession接口的getMapper(Mapper接口)方法来返回对应的Mapper接口的。这样就通过把SqlSessionFactory和相应的Mapper接口交给Spring管理实现了Mybatis跟Spring的整合
 
-
+大数量批量插入数据库：https://github.com/ksfzhaohui/blog/blob/master/mybatis/Mybatis%E4%B9%8BMapper%E6%8E%A5%E5%8F%A3%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8CSQL.md
 
 # 参考资料
 
 - [MyBatis实现原理](https://www.cnblogs.com/luoxn28/p/6417892.html)
 - [Mybatis-SqlSession原理分析](https://mp.weixin.qq.com/s/tTTLDOoqPfqHJLW12Zdo6A)
+
 
