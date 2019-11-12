@@ -2,61 +2,73 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一、三个问题](#%E4%B8%80%E4%B8%89%E4%B8%AA%E9%97%AE%E9%A2%98)
-- [二、Java 内存分配](#%E4%BA%8Cjava-%E5%86%85%E5%AD%98%E5%88%86%E9%85%8D)
-  - [1.JVM 的体系结构包含几个主要的子系统和内存区](#1jvm-%E7%9A%84%E4%BD%93%E7%B3%BB%E7%BB%93%E6%9E%84%E5%8C%85%E5%90%AB%E5%87%A0%E4%B8%AA%E4%B8%BB%E8%A6%81%E7%9A%84%E5%AD%90%E7%B3%BB%E7%BB%9F%E5%92%8C%E5%86%85%E5%AD%98%E5%8C%BA)
-  - [2、Java 堆区域唯一目的是存放对象实例](#2java-%E5%A0%86%E5%8C%BA%E5%9F%9F%E5%94%AF%E4%B8%80%E7%9B%AE%E7%9A%84%E6%98%AF%E5%AD%98%E6%94%BE%E5%AF%B9%E8%B1%A1%E5%AE%9E%E4%BE%8B)
-- [三、String 类型](#%E4%B8%89string-%E7%B1%BB%E5%9E%8B)
-  - [1、String 的本质-字符数组](#1string-%E7%9A%84%E6%9C%AC%E8%B4%A8-%E5%AD%97%E7%AC%A6%E6%95%B0%E7%BB%84)
-  - [2、String 定义方式](#2string-%E5%AE%9A%E4%B9%89%E6%96%B9%E5%BC%8F)
-    - [2.1、三种方式](#21%E4%B8%89%E7%A7%8D%E6%96%B9%E5%BC%8F)
-    - [2.2、常量池](#22%E5%B8%B8%E9%87%8F%E6%B1%A0)
-    - [2.3.使用关键字new](#23%E4%BD%BF%E7%94%A8%E5%85%B3%E9%94%AE%E5%AD%97new)
-    - [2.4.直接定义](#24%E7%9B%B4%E6%8E%A5%E5%AE%9A%E4%B9%89)
-    - [2.5、串联生成](#25%E4%B8%B2%E8%81%94%E7%94%9F%E6%88%90)
-    - [2.6、关于三个问题](#26%E5%85%B3%E4%BA%8E%E4%B8%89%E4%B8%AA%E9%97%AE%E9%A2%98)
-  - [3、String、StringBuffer、StringBuilder 的联系与区别](#3stringstringbufferstringbuilder-%E7%9A%84%E8%81%94%E7%B3%BB%E4%B8%8E%E5%8C%BA%E5%88%AB)
-    - [3.1、StringBuilder 与 String 性能对比](#31stringbuilder-%E4%B8%8E-string-%E6%80%A7%E8%83%BD%E5%AF%B9%E6%AF%94)
-    - [3.2、关于equals比较，看如下代码](#32%E5%85%B3%E4%BA%8Eequals%E6%AF%94%E8%BE%83%E7%9C%8B%E5%A6%82%E4%B8%8B%E4%BB%A3%E7%A0%81)
-- [四、关于 String 的不可变](#%E5%9B%9B%E5%85%B3%E4%BA%8E-string-%E7%9A%84%E4%B8%8D%E5%8F%AF%E5%8F%98)
-- [五、源码分析](#%E4%BA%94%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90)
-  - [1、定义：(与 JDK8 一致)](#1%E5%AE%9A%E4%B9%89%E4%B8%8E-jdk8-%E4%B8%80%E8%87%B4)
-    - [1.1、String 为什么要设计成不可变](#11string-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AE%BE%E8%AE%A1%E6%88%90%E4%B8%8D%E5%8F%AF%E5%8F%98)
-  - [2、属性](#2%E5%B1%9E%E6%80%A7)
-  - [3、构造方法](#3%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
-    - [3.1、使用字符数组、字符串构造一个 String](#31%E4%BD%BF%E7%94%A8%E5%AD%97%E7%AC%A6%E6%95%B0%E7%BB%84%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%9E%84%E9%80%A0%E4%B8%80%E4%B8%AA-string)
-    - [3.2、使用字节数组构造一个 String](#32%E4%BD%BF%E7%94%A8%E5%AD%97%E8%8A%82%E6%95%B0%E7%BB%84%E6%9E%84%E9%80%A0%E4%B8%80%E4%B8%AA-string)
-    - [3.3、使用 StringBuffer 和 StringBuider 构造一个 String](#33%E4%BD%BF%E7%94%A8-stringbuffer-%E5%92%8C-stringbuider-%E6%9E%84%E9%80%A0%E4%B8%80%E4%B8%AA-string)
-    - [3.4、一个特殊的保护类型的构造方法：(JDK7 以上版本)](#34%E4%B8%80%E4%B8%AA%E7%89%B9%E6%AE%8A%E7%9A%84%E4%BF%9D%E6%8A%A4%E7%B1%BB%E5%9E%8B%E7%9A%84%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95jdk7-%E4%BB%A5%E4%B8%8A%E7%89%88%E6%9C%AC)
-  - [4、实例方法](#4%E5%AE%9E%E4%BE%8B%E6%96%B9%E6%B3%95)
-    - [4.1、getBytes()](#41getbytes)
-    - [4.2、比较方法](#42%E6%AF%94%E8%BE%83%E6%96%B9%E6%B3%95)
-    - [4.3、hashCode()](#43hashcode)
-    - [4.4、substring](#44substring)
-    - [4.2、JDK 7 中的substring](#42jdk-7-%E4%B8%AD%E7%9A%84substring)
-    - [4.3、substring的细节](#43substring%E7%9A%84%E7%BB%86%E8%8A%82)
-  - [5、replaceFirst、replaceAll、replace](#5replacefirstreplaceallreplace)
-  - [6、copyValueOf 和 valueOf](#6copyvalueof-%E5%92%8C-valueof)
-  - [7、String 对 + 的重载](#7string-%E5%AF%B9--%E7%9A%84%E9%87%8D%E8%BD%BD)
-  - [8、String.valueOf 和 Integer.toString的区别](#8stringvalueof-%E5%92%8C-integertostring%E7%9A%84%E5%8C%BA%E5%88%AB)
-  - [9、String intern()方法](#9string-intern%E6%96%B9%E6%B3%95)
-    - [9.1、Java常量池](#91java%E5%B8%B8%E9%87%8F%E6%B1%A0)
-    - [9.2、intern 的实现原理](#92intern-%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
-    - [9.3、JDK6 和 JDK7 下intern的区别](#93jdk6-%E5%92%8C-jdk7-%E4%B8%8Bintern%E7%9A%84%E5%8C%BA%E5%88%AB)
-    - [9.4、intern 的使用](#94intern-%E7%9A%84%E4%BD%BF%E7%94%A8)
-  - [10、indexOf方法](#10indexof%E6%96%B9%E6%B3%95)
-- [六、关于 String 需要注意的点](#%E5%85%AD%E5%85%B3%E4%BA%8E-string-%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E7%9A%84%E7%82%B9)
-  - [1、注意点](#1%E6%B3%A8%E6%84%8F%E7%82%B9)
-  - [2、用final修饰String变量注意点](#2%E7%94%A8final%E4%BF%AE%E9%A5%B0string%E5%8F%98%E9%87%8F%E6%B3%A8%E6%84%8F%E7%82%B9)
-- [七、String 相关的面试题](#%E4%B8%83string-%E7%9B%B8%E5%85%B3%E7%9A%84%E9%9D%A2%E8%AF%95%E9%A2%98)
-  - [1、下面这段代码的输出结果是什么](#1%E4%B8%8B%E9%9D%A2%E8%BF%99%E6%AE%B5%E4%BB%A3%E7%A0%81%E7%9A%84%E8%BE%93%E5%87%BA%E7%BB%93%E6%9E%9C%E6%98%AF%E4%BB%80%E4%B9%88)
-  - [3、语句 String str = new String("abc"); 一共创建了多少个对象](#3%E8%AF%AD%E5%8F%A5-string-str--new-stringabc-%E4%B8%80%E5%85%B1%E5%88%9B%E5%BB%BA%E4%BA%86%E5%A4%9A%E5%B0%91%E4%B8%AA%E5%AF%B9%E8%B1%A1)
-  - [4、String的长度限制](#4string%E7%9A%84%E9%95%BF%E5%BA%A6%E9%99%90%E5%88%B6)
-    - [4.1、编译期](#41%E7%BC%96%E8%AF%91%E6%9C%9F)
-    - [4.2、运行期](#42%E8%BF%90%E8%A1%8C%E6%9C%9F)
-- [八、String的使用技巧](#%E5%85%ABstring%E7%9A%84%E4%BD%BF%E7%94%A8%E6%8A%80%E5%B7%A7)
-  - [1、数字前补0](#1%E6%95%B0%E5%AD%97%E5%89%8D%E8%A1%A50)
-- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
+- [一、三个问题](#%e4%b8%80%e4%b8%89%e4%b8%aa%e9%97%ae%e9%a2%98)
+- [二、Java 内存分配](#%e4%ba%8cjava-%e5%86%85%e5%ad%98%e5%88%86%e9%85%8d)
+	- [1.JVM 的体系结构包含几个主要的子系统和内存区](#1jvm-%e7%9a%84%e4%bd%93%e7%b3%bb%e7%bb%93%e6%9e%84%e5%8c%85%e5%90%ab%e5%87%a0%e4%b8%aa%e4%b8%bb%e8%a6%81%e7%9a%84%e5%ad%90%e7%b3%bb%e7%bb%9f%e5%92%8c%e5%86%85%e5%ad%98%e5%8c%ba)
+	- [2、Java 堆区域唯一目的是存放对象实例](#2java-%e5%a0%86%e5%8c%ba%e5%9f%9f%e5%94%af%e4%b8%80%e7%9b%ae%e7%9a%84%e6%98%af%e5%ad%98%e6%94%be%e5%af%b9%e8%b1%a1%e5%ae%9e%e4%be%8b)
+- [三、String 类型](#%e4%b8%89string-%e7%b1%bb%e5%9e%8b)
+	- [1、String 的本质-字符数组](#1string-%e7%9a%84%e6%9c%ac%e8%b4%a8-%e5%ad%97%e7%ac%a6%e6%95%b0%e7%bb%84)
+	- [2、String 定义方式](#2string-%e5%ae%9a%e4%b9%89%e6%96%b9%e5%bc%8f)
+		- [2.1、三种方式](#21%e4%b8%89%e7%a7%8d%e6%96%b9%e5%bc%8f)
+		- [2.2、常量池](#22%e5%b8%b8%e9%87%8f%e6%b1%a0)
+		- [2.3.使用关键字new](#23%e4%bd%bf%e7%94%a8%e5%85%b3%e9%94%ae%e5%ad%97new)
+		- [2.4.直接定义](#24%e7%9b%b4%e6%8e%a5%e5%ae%9a%e4%b9%89)
+		- [2.5、串联生成](#25%e4%b8%b2%e8%81%94%e7%94%9f%e6%88%90)
+		- [2.6、关于三个问题](#26%e5%85%b3%e4%ba%8e%e4%b8%89%e4%b8%aa%e9%97%ae%e9%a2%98)
+	- [3、String、StringBuffer、StringBuilder 的联系与区别](#3stringstringbufferstringbuilder-%e7%9a%84%e8%81%94%e7%b3%bb%e4%b8%8e%e5%8c%ba%e5%88%ab)
+		- [3.1、StringBuilder 与 String 性能对比](#31stringbuilder-%e4%b8%8e-string-%e6%80%a7%e8%83%bd%e5%af%b9%e6%af%94)
+			- [3.1.1、要点](#311%e8%a6%81%e7%82%b9)
+			- [3.1.2、StringBuilder 关键代码](#312stringbuilder-%e5%85%b3%e9%94%ae%e4%bb%a3%e7%a0%81)
+			- [3.1.3、String 源码剖析](#313string-%e6%ba%90%e7%a0%81%e5%89%96%e6%9e%90)
+			- [3.1.4、数据对比](#314%e6%95%b0%e6%8d%ae%e5%af%b9%e6%af%94)
+		- [3.2、关于equals比较，看如下代码](#32%e5%85%b3%e4%ba%8eequals%e6%af%94%e8%be%83%e7%9c%8b%e5%a6%82%e4%b8%8b%e4%bb%a3%e7%a0%81)
+- [四、关于 String 的不可变](#%e5%9b%9b%e5%85%b3%e4%ba%8e-string-%e7%9a%84%e4%b8%8d%e5%8f%af%e5%8f%98)
+- [五、源码分析](#%e4%ba%94%e6%ba%90%e7%a0%81%e5%88%86%e6%9e%90)
+	- [1、定义：(与 JDK8 一致)](#1%e5%ae%9a%e4%b9%89%e4%b8%8e-jdk8-%e4%b8%80%e8%87%b4)
+		- [1.1、String 为什么要设计成不可变](#11string-%e4%b8%ba%e4%bb%80%e4%b9%88%e8%a6%81%e8%ae%be%e8%ae%a1%e6%88%90%e4%b8%8d%e5%8f%af%e5%8f%98)
+	- [2、属性](#2%e5%b1%9e%e6%80%a7)
+	- [3、构造方法](#3%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95)
+		- [3.1、使用字符数组、字符串构造一个 String](#31%e4%bd%bf%e7%94%a8%e5%ad%97%e7%ac%a6%e6%95%b0%e7%bb%84%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%9e%84%e9%80%a0%e4%b8%80%e4%b8%aa-string)
+		- [3.2、使用字节数组构造一个 String](#32%e4%bd%bf%e7%94%a8%e5%ad%97%e8%8a%82%e6%95%b0%e7%bb%84%e6%9e%84%e9%80%a0%e4%b8%80%e4%b8%aa-string)
+		- [3.3、使用 StringBuffer 和 StringBuider 构造一个 String](#33%e4%bd%bf%e7%94%a8-stringbuffer-%e5%92%8c-stringbuider-%e6%9e%84%e9%80%a0%e4%b8%80%e4%b8%aa-string)
+		- [3.4、一个特殊的保护类型的构造方法：(JDK7 以上版本)](#34%e4%b8%80%e4%b8%aa%e7%89%b9%e6%ae%8a%e7%9a%84%e4%bf%9d%e6%8a%a4%e7%b1%bb%e5%9e%8b%e7%9a%84%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95jdk7-%e4%bb%a5%e4%b8%8a%e7%89%88%e6%9c%ac)
+			- [3.4.1、为什么Java会提供这样一个方法呢](#341%e4%b8%ba%e4%bb%80%e4%b9%88java%e4%bc%9a%e6%8f%90%e4%be%9b%e8%bf%99%e6%a0%b7%e4%b8%80%e4%b8%aa%e6%96%b9%e6%b3%95%e5%91%a2)
+			- [3.4.2、在Java7之前很多String里面的方法都使用这种"性能好的、节约内存的、安全"的构造函数](#342%e5%9c%a8java7%e4%b9%8b%e5%89%8d%e5%be%88%e5%a4%9astring%e9%87%8c%e9%9d%a2%e7%9a%84%e6%96%b9%e6%b3%95%e9%83%bd%e4%bd%bf%e7%94%a8%e8%bf%99%e7%a7%8d%22%e6%80%a7%e8%83%bd%e5%a5%bd%e7%9a%84%e8%8a%82%e7%ba%a6%e5%86%85%e5%ad%98%e7%9a%84%e5%ae%89%e5%85%a8%22%e7%9a%84%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0)
+			- [3.4.3、在 Java 7 中，substring已经不再使用这种"优秀"的方法了，为什么呢](#343%e5%9c%a8-java-7-%e4%b8%adsubstring%e5%b7%b2%e7%bb%8f%e4%b8%8d%e5%86%8d%e4%bd%bf%e7%94%a8%e8%bf%99%e7%a7%8d%22%e4%bc%98%e7%a7%80%22%e7%9a%84%e6%96%b9%e6%b3%95%e4%ba%86%e4%b8%ba%e4%bb%80%e4%b9%88%e5%91%a2)
+	- [4、实例方法](#4%e5%ae%9e%e4%be%8b%e6%96%b9%e6%b3%95)
+		- [4.1、getBytes()](#41getbytes)
+		- [4.2、比较方法](#42%e6%af%94%e8%be%83%e6%96%b9%e6%b3%95)
+		- [4.3、hashCode()](#43hashcode)
+		- [4.4、substring](#44substring)
+			- [4.1、JDK6中的substring](#41jdk6%e4%b8%ad%e7%9a%84substring)
+		- [4.2、JDK 7 中的substring](#42jdk-7-%e4%b8%ad%e7%9a%84substring)
+		- [4.3、substring的细节](#43substring%e7%9a%84%e7%bb%86%e8%8a%82)
+	- [5、replaceFirst、replaceAll、replace](#5replacefirstreplaceallreplace)
+	- [6、copyValueOf 和 valueOf](#6copyvalueof-%e5%92%8c-valueof)
+	- [7、String 对 + 的重载](#7string-%e5%af%b9--%e7%9a%84%e9%87%8d%e8%bd%bd)
+	- [8、String.valueOf 和 Integer.toString的区别](#8stringvalueof-%e5%92%8c-integertostring%e7%9a%84%e5%8c%ba%e5%88%ab)
+	- [9、String intern()方法](#9string-intern%e6%96%b9%e6%b3%95)
+		- [9.1、Java常量池](#91java%e5%b8%b8%e9%87%8f%e6%b1%a0)
+		- [9.2、intern 的实现原理](#92intern-%e7%9a%84%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86)
+		- [9.3、JDK6 和 JDK7 下intern的区别](#93jdk6-%e5%92%8c-jdk7-%e4%b8%8bintern%e7%9a%84%e5%8c%ba%e5%88%ab)
+			- [9.3.1、关于创建对象问题](#931%e5%85%b3%e4%ba%8e%e5%88%9b%e5%bb%ba%e5%af%b9%e8%b1%a1%e9%97%ae%e9%a2%98)
+			- [9.3.2、看一段代码](#932%e7%9c%8b%e4%b8%80%e6%ae%b5%e4%bb%a3%e7%a0%81)
+			- [9.3.3、总结](#933%e6%80%bb%e7%bb%93)
+		- [9.4、intern 的使用](#94intern-%e7%9a%84%e4%bd%bf%e7%94%a8)
+	- [10、indexOf方法](#10indexof%e6%96%b9%e6%b3%95)
+- [六、关于 String 需要注意的点](#%e5%85%ad%e5%85%b3%e4%ba%8e-string-%e9%9c%80%e8%a6%81%e6%b3%a8%e6%84%8f%e7%9a%84%e7%82%b9)
+	- [1、注意点](#1%e6%b3%a8%e6%84%8f%e7%82%b9)
+	- [2、用final修饰String变量注意点](#2%e7%94%a8final%e4%bf%ae%e9%a5%b0string%e5%8f%98%e9%87%8f%e6%b3%a8%e6%84%8f%e7%82%b9)
+- [七、String 相关的面试题](#%e4%b8%83string-%e7%9b%b8%e5%85%b3%e7%9a%84%e9%9d%a2%e8%af%95%e9%a2%98)
+	- [1、下面这段代码的输出结果是什么](#1%e4%b8%8b%e9%9d%a2%e8%bf%99%e6%ae%b5%e4%bb%a3%e7%a0%81%e7%9a%84%e8%be%93%e5%87%ba%e7%bb%93%e6%9e%9c%e6%98%af%e4%bb%80%e4%b9%88)
+	- [2、怎样将 GB2312 编码的字符串转换为 ISO-8859-1 编码的字符串？](#2%e6%80%8e%e6%a0%b7%e5%b0%86-gb2312-%e7%bc%96%e7%a0%81%e7%9a%84%e5%ad%97%e7%ac%a6%e4%b8%b2%e8%bd%ac%e6%8d%a2%e4%b8%ba-iso-8859-1-%e7%bc%96%e7%a0%81%e7%9a%84%e5%ad%97%e7%ac%a6%e4%b8%b2)
+	- [3、语句 String str = new String("abc"); 一共创建了多少个对象](#3%e8%af%ad%e5%8f%a5-string-str--new-string%22abc%22-%e4%b8%80%e5%85%b1%e5%88%9b%e5%bb%ba%e4%ba%86%e5%a4%9a%e5%b0%91%e4%b8%aa%e5%af%b9%e8%b1%a1)
+	- [4、String的长度限制](#4string%e7%9a%84%e9%95%bf%e5%ba%a6%e9%99%90%e5%88%b6)
+		- [4.1、编译期](#41%e7%bc%96%e8%af%91%e6%9c%9f)
+		- [4.2、运行期](#42%e8%bf%90%e8%a1%8c%e6%9c%9f)
+- [八、String的使用技巧](#%e5%85%abstring%e7%9a%84%e4%bd%bf%e7%94%a8%e6%8a%80%e5%b7%a7)
+	- [1、数字前补0](#1%e6%95%b0%e5%ad%97%e5%89%8d%e8%a1%a50)
+- [参考文章](#%e5%8f%82%e8%80%83%e6%96%87%e7%ab%a0)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -146,6 +158,37 @@ public final class String implements java.io.Serializable, Comparable<String>, C
 	}
 	```
 	因此，如果在多线程环境可以使用 StringBuffer 进行字符串连接操作，单线程环境使用 StringBuilder，它的效率更高
+
+- 为什么StringBuilder是非线程安全的？具体可能发生错误的代码地方在哪里？
+	```java
+	// StringBuilder的append方法
+	public StringBuilder append(String str) {
+		super.append(str);
+		return this;
+	}
+	// super.append方法调用的是父类 AbstractStringBuilder 的append方法
+	public AbstractStringBuilder append(String str) {
+        if (str == null)
+            return appendNull();
+        int len = str.length();
+        ensureCapacityInternal(count + len);
+        str.getChars(0, len, value, count);
+        count += len;
+        return this;
+    }
+	```
+	从代码中分析：
+	- `count += len;`：这段代码其不是原子性操作，在多线程操作的时候可能出现问题；
+	- `ensureCapacityInternal(count + len);`：
+		```java
+		private void ensureCapacityInternal(int minimumCapacity) {
+			// 在这里操作的时候两个线程操作的时候正常应该扩容两个，但是在多线程环境下，可能存在只扩容了一个数量，那么在后面调用 System.arraycopy(value, srcBegin, dst, dstBegin, srcEnd - srcBegin); 的时候就会报越界操作
+			if (minimumCapacity - value.length > 0) {
+				value = Arrays.copyOf(value,
+						newCapacity(minimumCapacity));
+			}
+		}
+		```
 
 - StringBuffer是JDK1.0就有的，而StringBuilder是JDK1.5之后才有的，JDK1.5是将StringBuffer中的部分功能移到 AbstractStringBuilder中，再抽象出非线程安全但性能更高的StringBuilder；
 
@@ -353,6 +396,7 @@ boolean contains(CharSequence s) //判断字符串是否包含字符序列s
 String[] split(String regex， int limit) //按照字符regex将字符串分成limit份.
 String[] split(String regex)//按照字符regex分割字符串
 ```
+
 ### 4.1、getBytes()
 
 将一个字符串转换成字节数组，那么String提供了很多重载的getBytes方法；值得注意的是，在使用这些方法的时候一定要注意编码问题，一般为了保持跟机器环境无关需要指定编码方式
