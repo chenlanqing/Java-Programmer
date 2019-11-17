@@ -2,50 +2,80 @@
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 **目录**
 
-- [一、ArrayList](#%E4%B8%80arraylist)
-  - [1、Arraylist 类定义](#1arraylist-%E7%B1%BB%E5%AE%9A%E4%B9%89)
-  - [2、构造方法](#2%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
-  - [3、成员变量](#3%E6%88%90%E5%91%98%E5%8F%98%E9%87%8F)
-  - [4、数组扩容](#4%E6%95%B0%E7%BB%84%E6%89%A9%E5%AE%B9)
-  - [5、ArrayList 安全隐患](#5arraylist-%E5%AE%89%E5%85%A8%E9%9A%90%E6%82%A3)
-  - [1、签名：](#1%E7%AD%BE%E5%90%8D)
-  - [2、方法与变量：](#2%E6%96%B9%E6%B3%95%E4%B8%8E%E5%8F%98%E9%87%8F)
-  - [3、Vector 多一种迭代方式](#3vector-%E5%A4%9A%E4%B8%80%E7%A7%8D%E8%BF%AD%E4%BB%A3%E6%96%B9%E5%BC%8F)
-- [三、面试题](#%E4%B8%89%E9%9D%A2%E8%AF%95%E9%A2%98)
-  - [1、ArrayList 与 Vector](#1arraylist-%E4%B8%8E-vector)
-    - [1.1、区别](#11%E5%8C%BA%E5%88%AB)
-    - [1.2、关于Vector线程安全](#12%E5%85%B3%E4%BA%8Evector%E7%BA%BF%E7%A8%8B%E5%AE%89%E5%85%A8)
-  - [2、ArrayList的sublist修改是否影响list本身](#2arraylist%E7%9A%84sublist%E4%BF%AE%E6%94%B9%E6%98%AF%E5%90%A6%E5%BD%B1%E5%93%8Dlist%E6%9C%AC%E8%BA%AB)
-  - [3、为什么最好在newArrayList的时候最好指定容量？](#3%E4%B8%BA%E4%BB%80%E4%B9%88%E6%9C%80%E5%A5%BD%E5%9C%A8newarraylist%E7%9A%84%E6%97%B6%E5%80%99%E6%9C%80%E5%A5%BD%E6%8C%87%E5%AE%9A%E5%AE%B9%E9%87%8F)
-  - [4、SynchronizedList、Vector有什么区别](#4synchronizedlistvector%E6%9C%89%E4%BB%80%E4%B9%88%E5%8C%BA%E5%88%AB)
-  - [5、Arrays.asList(T...args)获得的List特点](#5arraysaslisttargs%E8%8E%B7%E5%BE%97%E7%9A%84list%E7%89%B9%E7%82%B9)
-  - [6、Iterator和ListIterator区别](#6iterator%E5%92%8Clistiterator%E5%8C%BA%E5%88%AB)
+- [一、ArrayList](#%e4%b8%80arraylist)
+	- [1、Arraylist 类定义](#1arraylist-%e7%b1%bb%e5%ae%9a%e4%b9%89)
+	- [2、构造方法](#2%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95)
+	- [3、成员变量](#3%e6%88%90%e5%91%98%e5%8f%98%e9%87%8f)
+	- [4、新增和扩容](#4%e6%96%b0%e5%a2%9e%e5%92%8c%e6%89%a9%e5%ae%b9)
+	- [5、ArrayList 安全隐患](#5arraylist-%e5%ae%89%e5%85%a8%e9%9a%90%e6%82%a3)
+- [二、Vector](#%e4%ba%8cvector)
+	- [1、签名：](#1%e7%ad%be%e5%90%8d)
+	- [2、方法与变量：](#2%e6%96%b9%e6%b3%95%e4%b8%8e%e5%8f%98%e9%87%8f)
+	- [3、Vector 多一种迭代方式](#3vector-%e5%a4%9a%e4%b8%80%e7%a7%8d%e8%bf%ad%e4%bb%a3%e6%96%b9%e5%bc%8f)
+- [三、面试题](#%e4%b8%89%e9%9d%a2%e8%af%95%e9%a2%98)
+	- [1、ArrayList 与 Vector](#1arraylist-%e4%b8%8e-vector)
+		- [1.1、区别](#11%e5%8c%ba%e5%88%ab)
+		- [1.2、关于Vector线程安全](#12%e5%85%b3%e4%ba%8evector%e7%ba%bf%e7%a8%8b%e5%ae%89%e5%85%a8)
+	- [2、ArrayList的sublist修改是否影响list本身](#2arraylist%e7%9a%84sublist%e4%bf%ae%e6%94%b9%e6%98%af%e5%90%a6%e5%bd%b1%e5%93%8dlist%e6%9c%ac%e8%ba%ab)
+	- [3、为什么最好在newArrayList的时候最好指定容量？](#3%e4%b8%ba%e4%bb%80%e4%b9%88%e6%9c%80%e5%a5%bd%e5%9c%a8newarraylist%e7%9a%84%e6%97%b6%e5%80%99%e6%9c%80%e5%a5%bd%e6%8c%87%e5%ae%9a%e5%ae%b9%e9%87%8f)
+	- [4、SynchronizedList、Vector有什么区别](#4synchronizedlistvector%e6%9c%89%e4%bb%80%e4%b9%88%e5%8c%ba%e5%88%ab)
+	- [5、Arrays.asList(T...args)获得的List特点](#5arraysaslisttargs%e8%8e%b7%e5%be%97%e7%9a%84list%e7%89%b9%e7%82%b9)
+	- [6、Iterator和ListIterator区别](#6iterator%e5%92%8clistiterator%e5%8c%ba%e5%88%ab)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一、ArrayList
 
 ## 1、Arraylist 类定义
+
 ```java
 public class ArrayList<E> extends AbstractList<E> implements List<E>， RandomAccess， Cloneable， java.io.Serializable{}
 ```
 - ArrayList 继承 AbstractList（这是一个抽象类，对一些基础的 List 操作进行封装）；
 - 实现 List，RandomAccess，Cloneable，Serializable 几个接口；
 - RandomAccess 是一个标记接口，用来表明其支持快速随机访问，为Lis提供快速访问功能的；实现了该接口的list可以通过for循环来遍历数据，比使用迭代器的效率要高；
-- Cloneable 是克隆标记接口，覆盖了 clone 函数，能被克隆
+- Cloneable 是克隆标记接口，覆盖了 clone 函数，能被克隆；
 - java.io.Serializable 接口，ArrayList 支持序列化，能通过序列化传输数据。
 
 ## 2、构造方法
+
 ```java
 // 默认构造函数
 ArrayList()
-// capacity是ArrayList的默认容量大小.当由于增加数据导致容量不足时，容量会添加上一次容量大小的一半.
+// capacity是ArrayList的默认容量大小，当由于增加数据导致容量不足时，容量会增加到当前容器的1.5倍
 ArrayList(int capacity)
 // 创建一个包含collection的ArrayList
-ArrayList(Collection<? extends E> collection)
+ArrayList(Collection<? extends E> collection){
+	elementData = c.toArray();
+	if ((size = elementData.length) != 0) {
+		// c.toArray might (incorrectly) not return Object[] (see 6260652)
+		if (elementData.getClass() != Object[].class)
+			elementData = Arrays.copyOf(elementData, size, Object[].class);
+	} else {
+		// replace with empty array.
+		this.elementData = EMPTY_ELEMENTDATA;
+	}
+}
 ```
+
+上面包含Collection参数的构造方法里面有个数字：6260652，这是一个Java的bug，意思当给定的集合内的元素不是Object类型时，会转换成Object类型。一般情况下不会触发此  [bug 6260652](https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6260652)，只有在下面的场景下才会触发：ArrayList初始化之后（ArrayList元素非Object类型），再次调用toArray方法时，得到Object数组，并且往Object数组赋值时才会触发该bug：
+```java
+List<String> list = Arrays.asList("hello world", "Java");
+Object[] objects = list.toArray();
+System.out.println(objects.getClass().getSimpleName());
+objects[0] = new Object();
+```
+输出结果：
+```java
+Exception in thread "main" java.lang.ArrayStoreException: java.lang.Object
+	at com.jolly.demo.TestArrayList.main(TestArrayList.java:23)
+String[]
+```
+上面bug在jdk9后解决了：Arrays.asList(x).toArray().getClass() should be Object[].class
+
 ## 3、成员变量
-- transient Object[] elementData
+
+- `transient Object[] elementData`
 
 	Object 数组，Arraylist 实际存储的数据。	如果通过不含参数的构造函数ArrayList()来创建ArrayList，默认为空数组
 	```java
@@ -54,26 +84,39 @@ ArrayList(Collection<? extends E> collection)
 	}
 	private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
 	```
-	添加数据时默认初始化容量为10
-
-	- 为什么数组类型是 Object 而不是泛型E：如果是E的话再初始化的时候需要通过反射来实现
+	ArrayList无参构造器初始化时，默认是空数组的，数组容量也是0，真正是在添加数据时默认初始化容量为10；
+	- 为什么数组类型是 Object 而不是泛型E：如果是E的话在初始化的时候需要通过反射来实现，另外一个泛型是在JDK1.5之后才出现的，而ArrayList在jdk1.2就有了；
 	- ①、为什么 transient Object[] elementData；
 
 		ArrayList 实际上是动态数组，每次在放满以后自动增长设定的长度值，如果数组自动增长长度设为100，而实际只放了一个元素，那就会序列化 99 个 null 元素.为了保证在序列化的时候不
 		会将这么多 null 同时进行序列化，	ArrayList 把元素数组设置为 transient；
 
-	- ②、为什么要写方法：writeObject and readObject：
+	- ②、为什么要写方法：`writeObject and readObject`：
 	
 		前面提到为了防止一个包含大量空对象的数组被序列化，为了优化存储.所以，ArrayList 使用 transient 来声明elementData作为一个集合，在序列化过程中还必须保证其中的元素可以被持久化下来，所以，通过重写writeObject 和 readObject方法的方式把其中的元素保留下来writeObject方法把elementData数组中的元素遍历的保存到输出流ObjectOutputStream)中。readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
 
-- private int size：Arraylist 的容量
-- protected transient int modCount = 0
+- `private int size`：Arraylist 的容量
+- `protected transient int modCount = 0`
 
 	这个为父类 AbstractList 的成员变量，记录了ArrayList结构性变化的次数在ArrayList的所有涉及结构变化的方法中都增加modCount的值，AbstractList 中的iterator()方法（ArrayList直接继承了这个方法）使用了一个私有内部成员类Itr，该内部类中定义了一个变量 expectedModCount，这个属性在Itr类初始化时被赋予ArrayList对象的modCount属性的值，在next()方法中调用了checkForComodification()方法，进行对修改的同步检查；
 
-## 4、数组扩容
+## 4、新增和扩容
 
-如果数组容量不够，对数组进行扩容，JDK7 以后及 JDK7 前的实现不一样
+新增元素主要有两步：
+- 判断是否需要扩容，如果需要执行扩容操作；
+- 直接赋值
+
+```java
+public boolean add(E e) {
+  //确保数组大小是否足够，不够执行扩容，size 为当前数组的大小
+  ensureCapacityInternal(size + 1);  // Increments modCount!!
+  //直接赋值，线程不安全的
+  elementData[size++] = e;
+  return true;
+}
+```
+
+如果数组容量不够，对数组进行扩容，JDK7 以后及 JDK7 前的实现不一样。扩容本质上是对数组之间的数据拷贝；
 
 - JDK6：直接扩容，且扩容一般是源数组的 1.5 倍：
 	```java
@@ -87,6 +130,22 @@ ArrayList(Collection<? extends E> collection)
 	```
 - JDK8：扩容，一般是之前的1.5倍
 	```java
+    private void ensureCapacityInternal(int minCapacity) {
+        ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+    }
+	private static int calculateCapacity(Object[] elementData, int minCapacity) {
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            return Math.max(DEFAULT_CAPACITY, minCapacity);
+        }
+        return minCapacity;
+    }
+    private void ensureExplicitCapacity(int minCapacity) {
+        modCount++;
+        // 如果我们期望的最小容量大于目前数组的长度，那么就扩容
+        if (minCapacity - elementData.length > 0)
+            grow(minCapacity);
+    }
+	// 扩容，并把现有数据拷贝到新的数组里面去
 	private void grow(int minCapacity) {
 		// overflow-conscious code
 		int oldCapacity = elementData.length;
@@ -121,6 +180,11 @@ ArrayList(Collection<? extends E> collection)
 			}
 		}
 		```
+
+- 线程安全问题的本质
+
+	因为ArrayList自身的elementData、size、modCount在进行各种操作时，都没有加锁，而且这些数据并不是可见的（volatile），如果多个线程对变量进行操作时，可能存在数据被覆盖问题；
+
 # 二、Vector
 
 ## 1、签名：
