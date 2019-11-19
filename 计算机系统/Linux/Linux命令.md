@@ -59,7 +59,7 @@ top [参数]
 
 ### 1.3、实例
 
-![image](https://github.com/chenlanqing/learningNote/blob/master/Java/线上问题排查/image/top.jpg)
+![image](../../Java/问题排查/image/top.jpg)
 
 - **说明**
 
