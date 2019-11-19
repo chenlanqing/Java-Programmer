@@ -1,12 +1,16 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
+目录
 
-- [一、查找命令](#%e4%b8%80%e6%9f%a5%e6%89%be%e5%91%bd%e4%bb%a4)
-  - [4、查看空间](#4%e6%9f%a5%e7%9c%8b%e7%a9%ba%e9%97%b4)
-  - [5、监控工具SAR](#5%e7%9b%91%e6%8e%a7%e5%b7%a5%e5%85%b7sar)
-- [三、其他](#%e4%b8%89%e5%85%b6%e4%bb%96)
-  - [1、查看Linux发行版本](#1%e6%9f%a5%e7%9c%8blinux%e5%8f%91%e8%a1%8c%e7%89%88%e6%9c%ac)
+- [一、查找命令](#%E4%B8%80%E6%9F%A5%E6%89%BE%E5%91%BD%E4%BB%A4)
+- [二、系统监控](#%E4%BA%8C%E7%B3%BB%E7%BB%9F%E7%9B%91%E6%8E%A7)
+  - [1、top](#1top)
+  - [2、查看程序运行](#2%E6%9F%A5%E7%9C%8B%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C)
+  - [3、查看端口占用](#3%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E5%8D%A0%E7%94%A8)
+  - [4、查看空间](#4%E6%9F%A5%E7%9C%8B%E7%A9%BA%E9%97%B4)
+  - [5、监控工具SAR](#5%E7%9B%91%E6%8E%A7%E5%B7%A5%E5%85%B7sar)
+- [三、其他](#%E4%B8%89%E5%85%B6%E4%BB%96)
+  - [1、查看Linux发行版本](#1%E6%9F%A5%E7%9C%8Blinux%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
