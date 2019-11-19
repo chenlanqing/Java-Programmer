@@ -16,6 +16,10 @@
 
 ```find / -name filename.txt``` 根据名称查找/目录下的filename.txt文件。
 
+```find / type f -size +100M``` 查询大于100M的文件
+
+```find / -name 'tomcat' -type d``` 查询名字为tomcat的目录，后面的type表示文件类型：d-文件夹，f-文件
+
 ```find . -name "*.xml"``` 递归查找所有的xml文件
 
 ```find . -name "*" |xargs grep "hello"``` 递归查找所有文件内容中包含hello world的xml文件
