@@ -51,7 +51,9 @@
 	- [4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现](#4%e4%b8%ba%e4%bb%80%e4%b9%88-jdk8-%e7%9a%84-hashmap-%e4%bd%bf%e7%94%a8%e7%9a%84%e8%b7%9f%e4%bb%a5%e5%be%80%e4%b8%8d%e5%90%8c%e7%9a%84%e5%ae%9e%e7%8e%b0)
 	- [5、为什么HashMap默认的加载因子是0.75](#5%e4%b8%ba%e4%bb%80%e4%b9%88hashmap%e9%bb%98%e8%ae%a4%e7%9a%84%e5%8a%a0%e8%bd%bd%e5%9b%a0%e5%ad%90%e6%98%af075)
 	- [6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂](#6%e4%b8%ba%e4%bb%80%e4%b9%88hashmap%e7%9a%84%e9%bb%98%e8%ae%a4%e5%88%9d%e5%a7%8b%e5%ae%b9%e9%87%8f%e6%98%af16%e4%b8%94%e5%ae%b9%e9%87%8f%e5%bf%85%e9%a1%bb%e6%98%af-2%e7%9a%84%e5%b9%82)
-	- [7、](#7)
+	- [7、泊松分布与指数分布](#7%e6%b3%8a%e6%9d%be%e5%88%86%e5%b8%83%e4%b8%8e%e6%8c%87%e6%95%b0%e5%88%86%e5%b8%83)
+		- [7.1、泊松分布](#71%e6%b3%8a%e6%9d%be%e5%88%86%e5%b8%83)
+		- [7.2、指数分布](#72%e6%8c%87%e6%95%b0%e5%88%86%e5%b8%83)
 - [参考资料](#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -167,7 +169,18 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 		一个桶的树化阈值，当桶中元素超过这个值时，使用红黑树节点替换链表节点值为8，应该跟加载因子类似；
 
-		理想情况下使用随机的哈希码，容器中节点分布在hash桶中的频率遵循泊松分布，按照泊松分布的计算公式计算出了桶中元素个数和概率的对照表，可以看到链表中元素个数为8时的概率已经非常小，再多的就更少了，所以原作者在选择链表元素个数时选择了8，是根据概率统计而选择的
+		理想情况下使用随机的哈希码，容器中节点分布在hash桶中的频率遵循泊松分布，按照泊松分布的计算公式计算出了桶中元素个数和概率的对照表，可以看到链表中元素个数为8时的概率已经非常小，再多的就更少了，所以原作者在选择链表元素个数时选择了8，是根据概率统计而选择的：
+		```
+		0: 0.60653066
+		1: 0.30326533
+		2: 0.07581633
+		3: 0.01263606
+		4: 0.00157952
+		5: 0.00015795
+		6: 0.00001316
+		7: 0.00000094
+		8: 0.00000006
+		```
 
 		红黑树的平均查找长度是log(n)，长度为8，查找长度为log(8)=3，链表的平均查找长度为n/2，当长度为8时，平均查找长度为8/2=4，这才有转换成树的必要；链表长度如果是小于等于6，6/2=3，虽然速度也很快的，但是转化为树结构和生成树的时间并不会太短；
 
@@ -324,6 +337,10 @@ public HashMap() {
 
 - Capacity就是bucket的大小，Load factor就是bucket填满程度的最大比例。如果对迭代性能要求很高的话不要把capacity设置过大，也不要把load factor设置过小。当bucket中的entries的数目大于capacity*load factor时就需要调整bucket的大小为当前的2倍
 
+- 最大容量： `static final int MAXIMUM_CAPACITY = 1 << 30;`
+	
+- 扩容阈值： `int threshold;`
+  
 ## 3、modcount
 
 ```java
@@ -424,7 +441,7 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)
 
 ### 1.2、JDK8 的实现
 
-put的时候根据 h & (length – 1) 定位到那个桶然后看是红黑树还是链表再putVal
+put的时候根据 `h & (length – 1)` 定位到那个桶（数组的位置）然后看是红黑树还是链表再putVal
 
 ![](image/HashMap-put方法.png)
 
@@ -432,47 +449,68 @@ put的时候根据 h & (length – 1) 定位到那个桶然后看是红黑树还
 public V put(K key, V value) {
 	return putVal(hash(key), key, value, false, true);
 }
-final V putVal(int hash, K key, V value, boolean onlyIfAbsent,boolean evict) {
-		Node<K,V>[] tab; Node<K,V> p; int n, i;
-		// 如果数组还没初始化或者数组长度为0，则通过resize方法进行初始化或者扩容
-		if ((tab = table) == null || (n = tab.length) == 0)
-				n = (tab = resize()).length;
-		if ((p = tab[i = (n - 1) & hash]) == null)
-				tab[i] = newNode(hash, key, value, null);
-		else {
-				Node<K,V> e; K k;
-				if (p.hash == hash &&
-						((k = p.key) == key || (key != null && key.equals(k))))
-						e = p;
-				else if (p instanceof TreeNode)
-						e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
-				else {
-						for (int binCount = 0; ; ++binCount) {
-								if ((e = p.next) == null) {
-										p.next = newNode(hash, key, value, null);
-										if (binCount >= TREEIFY_THRESHOLD - 1) // -1 for 1st
-												treeifyBin(tab, hash);
-										break;
-								}
-								if (e.hash == hash &&
-										((k = e.key) == key || (key != null && key.equals(k))))
-										break;
-								p = e;
-						}
-				}
-				if (e != null) { // existing mapping for key
-						V oldValue = e.value;
-						if (!onlyIfAbsent || oldValue == null)
-								e.value = value;
-						afterNodeAccess(e);
-						return oldValue;
-				}
-		}
-		++modCount;
-		if (++size > threshold)
-				resize();
-		afterNodeInsertion(evict);
-		return null;
+// 入参 hash：通过 hash 算法计算出来的值。
+// 入参 onlyIfAbsent：false 表示即使 key 已经存在了，仍然会用新值覆盖原来的值，默认为 false
+final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
+    // n 表示数组的长度，i 为数组索引下标，p 为 i 下标位置的 Node 值
+    Node<K,V>[] tab; Node<K,V> p; int n, i;
+    //如果数组为空，使用 resize 方法初始化
+    if ((tab = table) == null || (n = tab.length) == 0)
+        n = (tab = resize()).length;
+    // 如果当前索引位置是空的，直接生成新的节点在当前索引位置上
+    if ((p = tab[i = (n - 1) & hash]) == null)
+        tab[i] = newNode(hash, key, value, null);
+    // 如果当前索引位置有值的处理方法，即我们常说的如何解决 hash 冲突
+    else {
+        // e 当前节点的临时变量
+        Node<K,V> e; K k;
+        // 如果 key 的 hash 和值都相等，直接把当前下标位置的 Node 值赋值给临时变量
+        if (p.hash == hash &&
+            ((k = p.key) == key || (key != null && key.equals(k))))
+            e = p;
+        // 如果是红黑树，使用红黑树的方式新增
+        else if (p instanceof TreeNode)
+            e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
+        // 是个链表，把新节点放到链表的尾端
+        else {
+            // 自旋
+            for (int binCount = 0; ; ++binCount) {
+                // e = p.next 表示从头开始，遍历链表
+                // p.next == null 表明 p 是链表的尾节点
+                if ((e = p.next) == null) {
+                    // 把新节点放到链表的尾部 
+                    p.next = newNode(hash, key, value, null);
+                    // 当链表的长度大于等于 8 时，链表转红黑树
+                    if (binCount >= TREEIFY_THRESHOLD - 1)
+                        treeifyBin(tab, hash);
+                    break;
+                }
+                // 链表遍历过程中，发现有元素和新增的元素相等，结束循环
+                if (e.hash == hash &&
+                    ((k = e.key) == key || (key != null && key.equals(k))))
+                    break;
+                //更改循环的当前元素，使 p 在遍历过程中，一直往后移动。
+                p = e;
+            }
+        }
+        // 说明新节点的新增位置已经找到了
+        if (e != null) {
+            V oldValue = e.value;
+            // 当 onlyIfAbsent 为 false 时，才会覆盖值 
+            if (!onlyIfAbsent || oldValue == null)
+                e.value = value;
+            afterNodeAccess(e);
+            // 返回老值
+            return oldValue;
+        }
+    }
+    // 记录 HashMap 的数据结构发生了变化
+    ++modCount;
+    //如果 HashMap 的实际大小大于扩容的门槛，开始扩容
+    if (++size > threshold)
+        resize();
+    afterNodeInsertion(evict);
+    return null;
 }
 ```
 - （1）对key的hashCode()做hash，然后再计算index；
@@ -481,6 +519,74 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent,boolean evict) {
 - （4）如果碰撞导致链表过长（大于等于TREEIFY_THRESHOLD），就把链表转换成红黑树；
 - （5）如果节点已经存在就替换old value- （保证key的唯一性)
 - （6）如果bucket满了（超过load factor*current capacity)，就要resize
+
+往红黑树中添加节点
+```java
+//入参 h：key 的hash值
+final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab, int h, K k, V v) {
+    Class<?> kc = null;
+    boolean searched = false;
+    //找到根节点
+    TreeNode<K,V> root = (parent != null) ? root() : this;
+    //自旋
+    for (TreeNode<K,V> p = root;;) {
+        int dir, ph; K pk;
+        // p hash 值大于 h，说明 p 在 h 的右边
+        if ((ph = p.hash) > h)
+            dir = -1;
+        // p hash 值小于 h，说明 p 在 h 的左边
+        else if (ph < h)
+            dir = 1;
+        //要放进去key在当前树中已经存在了(equals来判断)
+        else if ((pk = p.key) == k || (k != null && k.equals(pk)))
+            return p;
+        //自己实现的Comparable的话，不能用hashcode比较了，需要用compareTo
+        else if ((kc == null &&
+                  //得到key的Class类型，如果key没有实现Comparable就是null
+                  (kc = comparableClassFor(k)) == null) ||
+                  //当前节点pk和入参k不等
+                 (dir = compareComparables(kc, k, pk)) == 0) {
+            if (!searched) {
+                TreeNode<K,V> q, ch;
+                searched = true;
+                if (((ch = p.left) != null &&
+                     (q = ch.find(h, k, kc)) != null) ||
+                    ((ch = p.right) != null &&
+                     (q = ch.find(h, k, kc)) != null))
+                    return q;
+            }
+            dir = tieBreakOrder(k, pk);
+        }
+
+        TreeNode<K,V> xp = p;
+        //找到和当前hashcode值相近的节点(当前节点的左右子节点其中一个为空即可)
+        if ((p = (dir <= 0) ? p.left : p.right) == null) {
+            Node<K,V> xpn = xp.next;
+            //生成新的节点
+            TreeNode<K,V> x = map.newTreeNode(h, k, v, xpn);
+            //把新节点放在当前子节点为空的位置上
+            if (dir <= 0)
+                xp.left = x;
+            else
+                xp.right = x;
+            //当前节点和新节点建立父子，前后关系
+            xp.next = x;
+            x.parent = x.prev = xp;
+            if (xpn != null)
+                ((TreeNode<K,V>)xpn).prev = x;
+            //balanceInsertion 对红黑树进行着色或旋转，以达到更多的查找效率，着色或旋转的几种场景如下
+            //着色：新节点总是为红色；如果新节点的父亲是黑色，则不需要重新着色；如果父亲是红色，那么必须通过重新着色或者旋转的方法，再次达到红黑树的5个约束条件
+            //旋转： 父亲是红色，叔叔是黑色时，进行旋转
+            //如果当前节点是父亲的右节点，则进行左旋
+            //如果当前节点是父亲的左节点，则进行右旋
+          
+            //moveRootToFront 方法是把算出来的root放到根节点上
+            moveRootToFront(tab, balanceInsertion(root, x));
+            return null;
+        }
+    }
+}
+```
 
 ## 2、get方法
 
@@ -757,8 +863,19 @@ final Node<K,V>[] resize()
 
 之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法。从key映射到HashMap 数组对应的位置，会用到一个hash函数。实现高效的hash算法，HashMap 中使用位运算。index = hashcode(key) & (length - 1)。  hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位。长度是2的幂不仅提高了性能，因为length - 1的二进制值位全是1，这种情况下，index的结果等同于Hashcode后几位的值，只要输入hashcode均匀分布，hash算法的结果就是均匀的。
 
-## 7、
+## 7、泊松分布与指数分布
 
+### 7.1、泊松分布
+
+Poisson分布，是一种统计与概率论中常见的离散概率分布，其适合于描述单位时间内随机事件发生的次数的概率分布。
+
+如某一服务设施在一定时间内受到的服务请求的次数，电话交换机接到呼叫的次数、汽车站台的候客人数、机器出现的故障数、自然灾害发生的次数、DNA序列的变异数、放射性原子核的衰变数、激光的光子数分布等等；
+
+### 7.2、指数分布
+
+指数分布（Exponential distribution）是一种连续概率分布。指数分配可以用来表示独立随机事件发生的时间间隔，比如旅客进入机场的时间间隔、打进客服中心电话的时间间隔、中文维基百科新条目出现的时间间隔等等；
+
+与泊松分布相比，其最大的差异就是指数分布是针对连续随机变量定义，即时间这个变量。时间必须是连续的。而泊松分布是针对随机事件发生次数定义的，发生次数是离散的。粗略地可以认为这两个分布之间有一种“倒数”的关系
 
 # 参考资料
 
