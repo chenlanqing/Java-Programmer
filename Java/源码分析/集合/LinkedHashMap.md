@@ -29,6 +29,24 @@ LinkedHashMap实现与HashMap的不同之处在于，后者维护着一个运行
 
 对于LinkedHashMap而言，它继承与HashMap、底层使用哈希表与双向链表来保存所有元素。其基本操作与父类HashMap相似，它通过重写父类相关的方法，来实现自己的链接列表特性
 
+# 二、属性
+
+其在HashMap的基础上增加了如下属性：
+```java
+// 链表头
+transient LinkedHashMap.Entry<K,V> head;
+// 链表尾
+transient LinkedHashMap.Entry<K,V> tail;
+// 继承 Node，为数组的每个元素增加了 before 和 after 属性
+static class Entry<K,V> extends HashMap.Node<K,V> {
+    Entry<K,V> before, after;
+    Entry(int hash, K key, V value, Node<K,V> next) {
+        super(hash, key, value, next);
+    }
+}
+// 控制两种访问模式的字段，默认false：true按照访问顺序，会把经常访问的 key 放到队尾；false按照插入顺序提供访问
+final boolean accessOrder;
+```
 
  * http://www.cnblogs.com/children/archive/2012/10/02/2710624.html
  * http://www.tuicool.com/articles/IRBNB3v
