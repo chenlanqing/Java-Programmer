@@ -19,6 +19,8 @@
 		- [3.4、Java 代码执行顺序](#34java-%e4%bb%a3%e7%a0%81%e6%89%a7%e8%a1%8c%e9%a1%ba%e5%ba%8f)
 	- [4、给出一个表达式计算其可以按多少进制计算](#4%e7%bb%99%e5%87%ba%e4%b8%80%e4%b8%aa%e8%a1%a8%e8%be%be%e5%bc%8f%e8%ae%a1%e7%ae%97%e5%85%b6%e5%8f%af%e4%bb%a5%e6%8c%89%e5%a4%9a%e5%b0%91%e8%bf%9b%e5%88%b6%e8%ae%a1%e7%ae%97)
 	- [5、表达式的数据类型](#5%e8%a1%a8%e8%be%be%e5%bc%8f%e7%9a%84%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b)
+		- [5.1、基本类型中类型转换](#51%e5%9f%ba%e6%9c%ac%e7%b1%bb%e5%9e%8b%e4%b8%ad%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2)
+		- [5.2、三目运算中类型转换问题](#52%e4%b8%89%e7%9b%ae%e8%bf%90%e7%ae%97%e4%b8%ad%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2%e9%97%ae%e9%a2%98)
 	- [6、按照目录结构打印当前目录及子目录](#6%e6%8c%89%e7%85%a7%e7%9b%ae%e5%bd%95%e7%bb%93%e6%9e%84%e6%89%93%e5%8d%b0%e5%bd%93%e5%89%8d%e7%9b%ae%e5%bd%95%e5%8f%8a%e5%ad%90%e7%9b%ae%e5%bd%95)
 - [三、进制基础](#%e4%b8%89%e8%bf%9b%e5%88%b6%e5%9f%ba%e7%a1%80)
 	- [1、进制基础](#1%e8%bf%9b%e5%88%b6%e5%9f%ba%e7%a1%80)
@@ -576,6 +578,8 @@ public class TestExecuteCode {
 
 ## 5、表达式的数据类型
 
+### 5.1、基本类型中类型转换
+
 - 所有的 byte，short，char 型的值将被提升为 int 型；
 - 如果有一个操作数是 long 型，计算结果是 long 型；
 - 如果有一个操作数是 float 型，计算结果是 float 型；
@@ -598,6 +602,51 @@ public static void main(String[] args) {
 }
 ```
 上面代码中 micro_seconds 在运算时，其已超过 int 类型的最大值，溢出了。
+
+另外，如果在基本类型与对应的包装类型进行比较或者运算的时候，都会将包装类型自动拆箱，例如下面的代码：
+```java
+int a = 10;
+Integer b = Integer.valueOf(10);
+System.out.println(a == b); // 这里比较的时候会调用 Integer 类的 intValue()方法，所以需要注意是否有空指针问题
+```
+
+### 5.2、三目运算中类型转换问题
+
+在使用三目运算符时，尽量保证两个返回值的类型一致，不然会触发类型转换，转换规则如下：
+- （1）如果返回值`X`和返回值`Y`是同种类型，那么返回类型毫无疑问就是这种类型；
+- （2）如果两个返回值`X`和`Y`的类型不同，那么返回值类型为他们两最接近的父类。举例：
+	```java
+	// String 和 Boolean 都实现了 Serializable 接口
+	Serializable serializable = a == b ? "true" : Boolean.FALSE;
+	// 所有类都继承了 Object 类
+	Object o = a == b ? new ArrayList<>() : new TernaryOperatorDemo();
+	```
+- （3）对于基本数据类型，如果其中一个返回值`X`类型为`byte`、`short`或者`char`，另一个返回值`Y`类型为`int`：
+  - 若在`编译期`就能判断出`Y`的取值范围在`X`的取值范围之内，则返回类型为`X`的类型，反之则为`Y`的类型。
+  - 如果返回值`X`类型不为以上几种，则会触发隐藏类型转换；
+- （4）当基本数据类型和对象数据类型相遇时，三目运算默认返回结果为基本数据类型；
+
+例子：
+```java
+private static void test1(int a, int b) {
+  // 触发隐藏类型转换,int 类型 9 转为 9.0D
+  System.out.println(a == b ? 9.9 : 9);
+  // 编译期判断,98 在 char 之内,转为 b
+  System.out.println(a == b ? 'a' : 98);
+  // 编译期判断,超出char范围，统一转 int
+  System.out.println(a == b ? 'a' : Integer.MAX_VALUE);
+  // 编译期时无法判断 b 的取值,触发隐藏类型转换,统一转 int
+  System.out.println(a == b ? 'a' : b);
+  System.out.println(a != b ? 'a' : b);
+
+  Map<String, Long> map = new HashMap<>();
+  map.put("b", 1L);
+  // 基本数据类型和对象数据类型相遇时,默认转为基本数据类，
+  // map.get("a") 返回 null,转为基本数据类型时，报空指针异常
+  System.out.println(map == null ? -1L : map.get("a"));
+
+}
+```
 
 ## 6、按照目录结构打印当前目录及子目录
 
