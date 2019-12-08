@@ -139,8 +139,24 @@ top [参数]
 ## 5、[监控工具SAR](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
 
 
-# 三、其他
+# 三、常用命令
+
 ## 1、查看Linux发行版本
 
 cat /etc/redhat-release
+
+## 2、级联创建目录
+
+mkdir -p project/{a,b,c}/src，该命令最终创建的目录结构：
+```
+.
+└── project
+    ├── a
+    │   └── src
+    ├── b
+    │   └── src
+    └── c
+        └── src
+```
+
 
