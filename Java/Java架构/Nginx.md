@@ -1,20 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、Nginx](#%E4%B8%80nginx)
-  - [1、什么是 Nginx](#1%E4%BB%80%E4%B9%88%E6%98%AF-nginx)
-  - [2、Nginx安装](#2nginx%E5%AE%89%E8%A3%85)
-  - [3、Nginx 参数使用](#3nginx-%E5%8F%82%E6%95%B0%E4%BD%BF%E7%94%A8)
-  - [4、Nginx 模块](#4nginx-%E6%A8%A1%E5%9D%97)
-- [二、静态资源web服务](#%E4%BA%8C%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90web%E6%9C%8D%E5%8A%A1)
-  - [1、文件读取](#1%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96)
-  - [2、tcp_nopush](#2tcp_nopush)
-  - [3、tcp_nodelay](#3tcp_nodelay)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 
 * 启动Nginx：systemctl start nginx.service
 * 检查nginx配置文件： nginx -t -c /etc/nginx/nginx.conf
@@ -246,7 +229,6 @@ enabled=1
 	}
 	```
 
-
 # 二、静态资源web服务
 
 ## 1、文件读取
@@ -273,10 +255,92 @@ Context： http, server, location
 在keeplive连接下,提高网络包的传输实时性
 ```
 
+# 三、Nginx深入
 
+## 1、Nginx的进程模型
+
+- master进程
+- process进程
+
+
+## 2、Nginx的请求抢占机制
+
+
+## 3、Nginx的事件处理
+
+
+```
+Nginx.conf 核心配置文件
+设置worker进程的用户，指的linux中的用户，会涉及到nginx操作目录或文件的一些权限，默认为nobody
+
+user root;
+worker进程工作数设置，一般来说CPU有几个，就设置几个，或者设置为N-1也行
+
+worker_processes 1;
+nginx 日志级别debug | info | notice | warn | error | crit | alert | emerg，错误级别从左到右越来越大
+
+设置nginx进程 pid
+
+pid        logs/nginx.pid;
+设置工作模式
+
+events {
+    # 默认使用epoll
+    use epoll;
+    # 每个worker允许连接的客户端最大连接数
+    worker_connections  10240;
+}
+http 是指令块，针对http网络传输的一些指令配置
+
+http {
+}
+include 引入外部配置，提高可读性，避免单个配置文件过大
+
+include       mime.types;
+设定日志格式，main为定义的格式名称，如此 access_log 就可以直接使用这个变量了
+
+参数名	参数意义
+$remote_addr	客户端ip
+$remote_user	远程客户端用户名，一般为：’-’
+$time_local	时间和时区
+$request	请求的url以及method
+$status	响应状态码
+$body_bytes_send	响应客户端内容字节数
+$http_referer	记录用户从哪个链接跳转过来的
+$http_user_agent	用户所使用的代理，一般来时都是浏览器
+$http_x_forwarded_for	通过代理服务器来记录客户端的ip
+sendfile使用高效文件传输，提升传输性能。启用后才能使用tcp_nopush，是指当数据表累积一定大小后才发送，提高了效率。
+
+sendfile        on;
+tcp_nopush      on;
+keepalive_timeout设置客户端与服务端请求的超时时间，保证客户端多次请求的时候不会重复建立新的连接，节约资源损耗。
+
+#keepalive_timeout  0;
+keepalive_timeout  65;
+gzip启用压缩，html/js/css压缩后传输会更快
+
+gzip on;
+server可以在http指令块中设置多个虚拟主机
+
+listen 监听端口
+server_name localhost、ip、域名
+location 请求路由映射，匹配拦截
+root 请求位置
+index 首页设置
+    server {
+            listen       88;
+            server_name  localhost;
+    
+            location / {
+                root   html;
+                index  index.html index.htm;
+            }
+    }
+```
 			
 
 # 参考文档
+
 * [Nginx官方文档](http://nginx.org/en/docs/)
 * [Nginx极简教程](https://mp.weixin.qq.com/s/vHkxYfpuiAteMNSrpNWdsw)
 
