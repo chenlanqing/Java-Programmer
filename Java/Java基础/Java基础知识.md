@@ -377,7 +377,7 @@ Write once， run anywhere
 - 依赖倒置原则
 - 接口隔离原则
 
-# 二、Java常见问题
+# 二、Java隐蔽问题
 
 ## 1、基本类型与引用类型的比较
 
@@ -680,6 +680,78 @@ public class PrintDirectory {
 	}
 }
 ```
+
+## 7、boolean占用字节数
+
+- 在Java虚拟机中没有任何供 `boolean`值专用的字节码指令,Java语言表达式所操作的 `boolean`值,在编译之后都使用Java虚拟机中的`int`数据类型来代替。
+- Java虚拟机直接支持 boolean类型的数组，虚拟机的 navarra指令参见第6章的newarray小节可以创建这种数组。boolean类型数组的访问与修改共用byte类型数组的baload和 bastore指令；
+- 因为在虚拟机规范中说了，boolean值在编译之后都使用Java虚拟机中的int数据类型来代替，而int是4个字节，那么boolean值就是4个字节。
+- boolean类型数组的访问与修改共用byte类型数组的baload和 bastore指令，因为两者共用，只有两者字节一样才能通用呀，所以byte数组中一个byte是1个字节，那么boolean数组中boolean是1个字节。
+
+**总结：boolean在数组情况下为1个字节，单个boolean为4个字节**
+
+Java规范中，没有明确指出boolean的大小。在《Java虚拟机规范》给出了单个boolean占4个字节，和boolean数组1个字节的定义，具体 还要看虚拟机实现是否按照规范来，所以1个字节、4个字节都是有可能的。
+
+```java
+class LotsOfBooleans{
+    boolean a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, aa, ab, ac, ad, ae, af;
+    boolean b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, ba, bb, bc, bd, be, bf;
+    boolean c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, ca, cb, cc, cd, ce, cf;
+    boolean d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, da, db, dc, dd, de, df;
+    boolean e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, ea, eb, ec, ed, ee, ef;
+}
+class LotsOfInts{
+    int a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, aa, ab, ac, ad, ae, af;
+    int b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, ba, bb, bc, bd, be, bf;
+    int c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, ca, cb, cc, cd, ce, cf;
+    int d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, da, db, dc, dd, de, df;
+    int e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, ea, eb, ec, ed, ee, ef;
+}
+public class Test{
+    private static final int SIZE = 100000;
+    public static void main(String[] args) throws Exception{
+        LotsOfBooleans[] first = new LotsOfBooleans[SIZE];
+        LotsOfInts[] second = new LotsOfInts[SIZE];
+
+        System.gc();
+        long startMem = getMemory();
+
+        for (int i=0; i < SIZE; i++) {
+            first[i] = new LotsOfBooleans();
+        }
+
+        System.gc();
+        long endMem = getMemory();
+
+        System.out.println ("Size for LotsOfBooleans: " + (endMem-startMem));
+        System.out.println ("Average size: " + ((endMem-startMem) / ((double)SIZE)));
+
+        System.gc();
+        startMem = getMemory();
+        for (int i=0; i < SIZE; i++) {
+            second[i] = new LotsOfInts();
+        }
+        System.gc();
+        endMem = getMemory();
+
+        System.out.println ("Size for LotsOfInts: " + (endMem-startMem));
+        System.out.println ("Average size: " + ((endMem-startMem) / ((double)SIZE)));
+
+        // Make sure nothing gets collected
+        long total = 0;
+        for (int i=0; i < SIZE; i++) {
+            total += (first[i].a0 ? 1 : 0) + second[i].a0;
+        }
+        System.out.println(total);
+    }
+    private static long getMemory(){
+        Runtime runtime = Runtime.getRuntime();
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
+}
+```
+
+另外，大部分指令都没有支持整数类型byte、char、short。编译器在编译期或运行期将byte和short类型的数据带符号扩展为相应的int类型数据，将boolean和char类型数据零位扩展为相应的int类型数据；
 
 # 三、进制基础
 
