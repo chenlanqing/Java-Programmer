@@ -267,6 +267,9 @@ generateBackupPoms用于配置是否生成备份Pom，用于版本回滚。配�
 mvn versions:set -DnewVersion=1.0.1
 ```
 
+# 十、Maven私服仓库搭建
+
+
 # 参考资料
 
 * [Maven工程](https://www.jianshu.com/p/34740cd1fb58)
