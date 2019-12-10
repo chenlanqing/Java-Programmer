@@ -159,4 +159,8 @@ mkdir -p project/{a,b,c}/src，该命令最终创建的目录结构：
         └── src
 ```
 
+## 3、按照rz、sz命令
+
+yum install -y lrzsz
+
 

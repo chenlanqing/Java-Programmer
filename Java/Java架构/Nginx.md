@@ -17,6 +17,8 @@
 
 ## 2、Nginx安装
 
+### 2.1、yum安装
+
 - 安装一些依赖：
 	* yum -y install wget httpd-tools vim
 	* yum -y install gcc gcc-c++ autoconf pcre pcre-devel make automake
@@ -48,9 +50,45 @@ enabled=1
 
 	nginx -V：查看对应的编译参数
 
-## 3、Nginx 参数使用
+### 2.2、tar包安装
 
-**3.1、Nginx 安装目录：查看其安装目录 rpm -ql nginx**
+- 安装依赖环境：
+	- 安装gcc环境：`yum install gcc-c++`
+	- 安装PCRE库，用于解析正则表达式：`yum install -y pcre pcre-devel`
+	- zlib压缩和解压缩依赖：`yum install -y zlib zlib-devel`
+	- SSL 安全的加密的套接字协议层，用于HTTP安全传输，也就是https：`yum install -y openssl openssl-devel`
+
+- 下载tar包
+- 解压，需要注意，解压后得到的是源码，源码需要编译后才能安装：`tar -zxvf nginx-1.16.1.tar.gz` 
+- 编译之前，先创建nginx临时目录，如果不创建，在启动nginx的过程中会报错：`mkdir /var/temp/nginx -p`
+- 在nginx目录，输入如下命令进行配置，目的是为了创建makefile文件：
+	```
+	./configure --prefix=/usr/local/nginx --pid-path=/var/run/nginx/nginx.pid --lock-path=/var/lock/nginx.lock --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-http_gzip_static_module --http-client-body-temp-path=/var/temp/nginx/client --http-proxy-temp-path=/var/temp/nginx/proxy --http-fastcgi-temp-path=/var/temp/nginx/fastcgi --http-uwsgi-temp-path=/var/temp/nginx/uwsgi --http-scgi-temp-path=/var/temp/nginx/scgi
+	```
+	|命令	 |解释 |
+	| ------|------|
+	|–prefix	|指定nginx安装目录|
+	|–pid-path	|指向nginx的pid|
+	|–lock-path	|锁定安装文件，防止被恶意篡改或误操作|
+	|–error-log	|错误日志|
+	|–http-log-path	|http日志|
+	|–with-http_gzip_static_module	|启用gzip模块，在线实时压缩输出数据流|
+	|–http-client-body-temp-path	|设定客户端请求的临时目录|
+	|–http-proxy-temp-path	|设定http代理临时目录|
+	|–http-fastcgi-temp-path	|设定fastcgi临时目录|
+	|–http-uwsgi-temp-path	|设定uwsgi临时目录|
+	|–http-scgi-temp-path	|设定scgi临时目录|
+- make编译：`make`
+- 安装：`make install`
+- 进入`/usr/local/nginx/sbin`目录启动nginx：`./nginx`
+- 停止：`./nginx -s stop`
+- 重新加载：`./nginx -s reload`
+
+## 3、Nginx使用
+
+### 3.1、Nginx安装目录
+
+查看其安装目录 rpm -ql nginx
 ```
 (1)./etc/logrotate.d/nginx - nginx 日志轮转,用于 logrotate 服务的日志切割；
 (2)./etc/nginx
@@ -75,19 +113,141 @@ enabled=1
 	/etc/nginx/modules
 	模块目录
 	......
-```	
-**3.2、Nginx 编译参数：nginx -V**
 
-**3.3、nginx.conf 配置文件：**
-```
-(1).user -- 设置nginx服务的系统使用用户
-	worker_processes -- 工作进程数(跟CPU个数)；
-	error_log  -- Nginx的错误日志
-	pid   -- Nginx 启动时候pid
-	events -- 	work_connections -- 每个进程允许最大连接数(可以优化的参数)
-				use --  工作进程数
-(2).http:
-```
+Nginx 编译参数：nginx -V
+```	
+
+### 3.2、nginx.conf配置文件
+
+- 设置worker进程的用户，指的linux中的用户，会涉及到nginx操作目录或文件的一些权限，默认为nobody：
+	```
+	user root;
+	```
+- worker进程工作数设置，一般来说CPU有几个，就设置几个，或者设置为N-1也行
+	```
+	worker_processes 1;
+	```
+- nginx 日志级别`debug | info | notice | warn | error | crit | alert | emerg`，错误级别从左到右越来越大
+
+- 设置nginx进程 pid
+	```
+	pid        logs/nginx.pid;
+	```
+- 设置工作模式
+	```
+	events {
+		# 默认使用epoll
+		use epoll;
+		# 每个worker允许连接的客户端最大连接数
+		worker_connections  10240;
+	}
+	```
+- http 是指令块，针对http网络传输的一些指令配置
+	```
+	http {
+	}
+	```
+- include 引入外部配置，提高可读性，避免单个配置文件过大
+	```
+	include       mime.types;
+	```
+- 设定日志格式，main为定义的格式名称，如此 access_log 就可以直接使用这个变量了
+	|参数名	|参数意义|
+	|------|------|
+	|$remote_addr	|客户端ip|
+	|$remote_user	|远程客户端用户名，一般为：’-’|
+	|$time_local	|时间和时区|
+	|$request	|请求的url以及method|
+	|$status	|响应状态码|
+	|$body_bytes_send	|响应客户端内容字节数|
+	|$http_referer|	记录用户从哪个链接跳转过来的|
+	|$http_user_agent	|用户所使用的代理，一般来时都是浏览器|
+	|$http_x_forwarded_for	|通过代理服务器来记录客户端的ip|
+	
+- `sendfile`使用高效文件传输，提升传输性能。启用后才能使用tcp_nopush，是指当数据表累积一定大小后才发送，提高了效率。
+	```
+	sendfile        on;
+	tcp_nopush      on;
+	```
+- keepalive_timeout设置客户端与服务端请求的超时时间，保证客户端多次请求的时候不会重复建立新的连接，节约资源损耗。
+	```
+	#keepalive_timeout  0;
+	keepalive_timeout  65;
+	```
+- gzip启用压缩，`html/js/css`压缩后传输会更快
+	```
+	gzip on;
+	```
+- `server`可以在`http`指令块中设置多个虚拟主机
+	- listen 监听端口
+	- server_name localhost、ip、域名
+	- location 请求路由映射，匹配拦截
+	- root 请求位置
+	- index 首页设置
+	- alias 别名
+	```
+	server {
+			listen       88;
+			server_name  localhost;
+			location / {
+				root   html;
+				index  index.html index.htm;
+			}
+	}
+	```
+
+	**root 与 alias：**
+
+	- root 路径完全匹配访问，配置的时候为：
+		```
+		location /demo {
+			root /home
+		}
+		```
+		用户访问的时候请求为：`url:port/demo/files/img/face.png`
+
+	- alias 可以为你的路径做一个别名，对用户透明配置的时候为：
+		```
+		location /hello {
+			root /home/demo
+		}
+		```
+		用户访问的时候请求为：`url:port/hello/files/img/face.png`，如此相当于为目录demo做一个自定义的别名。
+
+	**location 的匹配规则：**
+	- 空格：默认匹配，普通匹配
+		```
+		location / {
+			root /home;
+		}
+		```
+	- `=`：精确匹配
+		```
+		location = /imooc/img/face1.png {
+			root /home;
+		}
+		```
+	- `~*`：匹配正则表达式，不区分大小写
+		```
+		#符合图片的显示
+		location ~ \.(GIF|jpg|png|jpeg) {
+			root /home;
+		}
+		```
+	- `~`：匹配正则表达式，区分大小写
+		```
+		#GIF必须大写才能匹配到
+		location ~ \.(GIF|jpg|png|jpeg) {
+			root /home;
+		}
+		```
+	- `^~`：以某个字符路径开头
+		```
+		location ^~ /imooc/img {
+			root /home;
+		}
+		```
+
 ## 4、Nginx 模块
 
 **4.1、[sub_status](http://nginx.org/en/docs/http/ngx_http_stub_status_module.html)**
@@ -268,76 +428,6 @@ Context： http, server, location
 
 ## 3、Nginx的事件处理
 
-
-```
-Nginx.conf 核心配置文件
-设置worker进程的用户，指的linux中的用户，会涉及到nginx操作目录或文件的一些权限，默认为nobody
-
-user root;
-worker进程工作数设置，一般来说CPU有几个，就设置几个，或者设置为N-1也行
-
-worker_processes 1;
-nginx 日志级别debug | info | notice | warn | error | crit | alert | emerg，错误级别从左到右越来越大
-
-设置nginx进程 pid
-
-pid        logs/nginx.pid;
-设置工作模式
-
-events {
-    # 默认使用epoll
-    use epoll;
-    # 每个worker允许连接的客户端最大连接数
-    worker_connections  10240;
-}
-http 是指令块，针对http网络传输的一些指令配置
-
-http {
-}
-include 引入外部配置，提高可读性，避免单个配置文件过大
-
-include       mime.types;
-设定日志格式，main为定义的格式名称，如此 access_log 就可以直接使用这个变量了
-
-参数名	参数意义
-$remote_addr	客户端ip
-$remote_user	远程客户端用户名，一般为：’-’
-$time_local	时间和时区
-$request	请求的url以及method
-$status	响应状态码
-$body_bytes_send	响应客户端内容字节数
-$http_referer	记录用户从哪个链接跳转过来的
-$http_user_agent	用户所使用的代理，一般来时都是浏览器
-$http_x_forwarded_for	通过代理服务器来记录客户端的ip
-sendfile使用高效文件传输，提升传输性能。启用后才能使用tcp_nopush，是指当数据表累积一定大小后才发送，提高了效率。
-
-sendfile        on;
-tcp_nopush      on;
-keepalive_timeout设置客户端与服务端请求的超时时间，保证客户端多次请求的时候不会重复建立新的连接，节约资源损耗。
-
-#keepalive_timeout  0;
-keepalive_timeout  65;
-gzip启用压缩，html/js/css压缩后传输会更快
-
-gzip on;
-server可以在http指令块中设置多个虚拟主机
-
-listen 监听端口
-server_name localhost、ip、域名
-location 请求路由映射，匹配拦截
-root 请求位置
-index 首页设置
-    server {
-            listen       88;
-            server_name  localhost;
-    
-            location / {
-                root   html;
-                index  index.html index.htm;
-            }
-    }
-```
-			
 
 # 参考文档
 
