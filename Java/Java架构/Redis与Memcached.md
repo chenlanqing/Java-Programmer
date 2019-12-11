@@ -1480,6 +1480,18 @@ Redission通过Netty支持非阻塞I/O
 
 redis-benchmark
 
+# 十二、Memcached
+
+## 1、原理
+
+Memcached 是一个开源的、高性能的分布式 key/value 内存缓存系统。它以 key/value 键值对的方式存储数据，是一个键值类型的 NoSQL 组件
+
+其是一个典型的内存型缓存组件，这就意味着，Mc 一旦重启就会丢失所有的数据；
+
+Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布和协同。Mc 采用多线程处理请求，由一个主线程和任意多个工作线程协作，从而充分利用多核，提升 IO 效率
+
+## 2、
+
 # Redis面试题
 
 [Redis常见面试题](https://mp.weixin.qq.com/s/LAWkUOn2iQaDC_bxm_NwbQ)
@@ -1573,9 +1585,13 @@ BLPOP key [key ...] timeout：阻塞知道队列有消息或者超时；
 pub/sub：主题订阅模式
 - 消息的发布是无状态，无法保证状态可达；
 
-## 11、Redis如何保证高并发和高可用
+## 12、Redis如何保证高并发和高可用
 
 主从 -> 读写分离
+
+## 13、Redis的key和value的大小多少合适？
+
+Set、List大小多少合适？
 
 # 参考资料
 - [Redis中文文档](http://redisdoc.com/)
