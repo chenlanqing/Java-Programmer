@@ -837,7 +837,100 @@ server {
 }
 ```
 
-# 三、Nginx深入
+# 二、Nginx模块
+
+# 三、Keepalived+LVS+Nginx高可用
+
+## 1、Keepalived
+
+### 1.1、概述
+
+### 1.2、安装
+
+- 下载安装包
+- 解压：`tar -zxvf keepalived-2.0.18.tar.gz`；
+- 执行configure：使用configure命令配置安装目录与核心配置文件所在位置
+	```
+	./configure --prefix=/usr/local/keepalived --sysconf=/etc
+	```
+	- prefix：keepalived安装的位置
+	- sysconf：keepalived核心配置文件所在位置，固定位置，改成其他位置则keepalived启动不了，`/var/log/messages`中会报错
+
+	配置过程中可能会出现警告信息，如下所示：
+	```
+	*** WARNING - this build will not support IPVS with IPv6. Please install libnl/libnl-3 dev libraries to support IPv6 with IPVS.
+	```
+	安装libnl/libnl-3依赖：`yum -y install libnl libnl-devel`
+
+	重新configure一下，此时OK。
+
+- 安装keepalived：`make && make install`
+- 进入到/etc/keepalived，该目录下为keepalived核心配置文件
+
+将keepalived注册为系统服务：将解压缩包里面的`keepalived/etc/init.d/keepalived` 和`keepalived/etc/sysconfig.d/keepalived`两个文件分别拷贝到`/etc/init.d`和`/etc/sysconfig`目录下
+
+### 1.3、主节点keepalived配置
+
+配置文件：keepalived.conf
+```conf
+global_defs {
+   # 路由id：当前安装keepalived的节点主机标识符，保证全局唯一
+   router_id keep_171
+}
+vrrp_instance VI_1 {
+    # 表示状态是MASTER主机还是备用机BACKUP
+    state MASTER
+    # 该实例绑定的网卡，可以通过 ip addr 查看网卡
+    interface ens33
+    # 保证主备节点一致即可
+    virtual_router_id 51
+    # 权重，master权重一般高于backup，如果有多个，那就是选举，谁的权重高，谁就当选
+    priority 100
+    # 主备之间同步检查时间间隔，单位秒
+    advert_int 2
+    # 认证权限密码，防止非法节点进入
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    # 虚拟出来的ip，可以有多个（vip）
+    virtual_ipaddress {
+        192.168.1.161
+    }
+}
+```
+
+启动：./keepalived，启动后，查看网卡ens33下多了个IP地址；
+
+### 1.4、备用节点keepalived配置
+
+```conf
+global_defs {
+   router_id keep_172
+}
+vrrp_instance VI_1 {
+    # 备用机设置为BACKUP
+    state BACKUP
+    interface ens33
+    virtual_router_id 51
+    # 权重低于MASTER
+    priority 80
+    advert_int 2
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        # 注意：主备两台的vip都是一样的，绑定到同一个vip
+        192.168.1.161
+    }
+}
+```
+
+## 2、LVS
+
+
+# 四、Nginx深入
 
 ## 1、Nginx的进程模型
 
@@ -991,32 +1084,6 @@ server {
 		...
 	}
 	```
-
-# 二、静态资源web服务
-
-## 1、文件读取
-```
-(1).配置语法：
-	Syntax：	sendfile on | off；
-	Default： sendfile off；
-	Context： http, server, location, if in location
-	引用： --with-file-aio 异步文件读取
-```
-## 2、tcp_nopush
-```
-Syntax：	tcp_nopush on | off；
-Default： tcp_nopush off；
-Context： http, server, location
-注意： sendfile 开启的情况下,提高网络包的传输效率
-```
-
-## 3、tcp_nodelay
-```
-Syntax：	tcp_nodelay on | off；
-Default： tcp_nodelay on；
-Context： http, server, location
-在keeplive连接下,提高网络包的传输实时性
-```
 
 # 参考文档
 
