@@ -163,4 +163,14 @@ mkdir -p project/{a,b,c}/src，该命令最终创建的目录结构：
 
 yum install -y lrzsz
 
+## 4、远程拷贝文件与文件夹
+
+- 拷贝文件：`scp shutdown-tomcat.sh root@192.168.56.104:/root/`
+- 拷贝文件夹：`scp -r /root/software/ root@192.168.56.104:/root/`
+- 远程下载文件：`cp -r root@192.168.56.104:/root/ /root/software/`
+
+
+
+
+
 

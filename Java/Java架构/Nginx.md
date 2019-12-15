@@ -475,9 +475,11 @@ http {
 }
 ```
 
-## 6、负载均衡配置
+## 6、负载均衡配置：upstream
 
-假设这样一个应用场景：将应用部署在 `192.168.1.11:80`、`192.168.1.12:80`、`192.168.1.13:80` 三台 linux 环境的服务器上。网站域名叫 `www.helloworld.com`，公网 IP 为 `192.168.1.11`。在公网 IP 所在的服务器上部署 nginx，对所有请求做负载均衡处理
+### 6.2、单个webapp
+
+假设这样一个应用场景：将应用部署在 `192.168.56.101:80`、`192.168.56.102:80`、`192.168.56.103:80` 三台 linux 环境的服务器上。网站域名叫 `www.helloworld.com`，公网 IP 为 `192.168.56.104`。在公网 IP 所在的服务器上部署 nginx，对所有请求做负载均衡处理
 
 ```conf
 http {
@@ -489,17 +491,16 @@ http {
 
     #设定负载均衡的服务器列表
     upstream load_balance_server {
-        #weigth参数表示权值，权值越高被分配到的几率越大
-        server 192.168.1.11:80   weight=5;
-        server 192.168.1.12:80   weight=1;
-        server 192.168.1.13:80   weight=6;
+        #weigth参数表示权值，权值越高被分配到的几率越大，默认是轮询的策略
+        server 192.168.56.101:80   weight=5;
+        server 192.168.56.102:80   weight=1;
+        server 192.168.56.103:80   weight=6;
     }
 
    #HTTP服务器
    server {
         #侦听80端口
         listen       80;
-
         #定义使用www.xx.com访问
         server_name  www.helloworld.com;
 
@@ -530,7 +531,197 @@ http {
 }
 ```
 
-### 3.3、Nginx解决跨域
+### 6.2、有多个 webapp 的配置
+
+当一个网站功能越来越丰富时，往往需要将一些功能相对独立的模块剥离出来，独立维护。这样的话，通常，会有多个 webapp。举个例子：假如 www.helloworld.com 站点有好几个 webapp，finance（金融）、product（产品）、admin（用户中心）。访问这些应用的方式通过上下文(context)来进行区分:
+- www.helloworld.com/finance/
+- www.helloworld.com/product/
+- www.helloworld.com/admin/
+
+我们知道，http 的默认端口号是 80，如果在一台服务器上同时启动这 3 个 webapp 应用，都用 80 端口，肯定是不成的。所以，这三个应用需要分别绑定不同的端口号。那么，问题来了，用户在实际访问 www.helloworld.com 站点时，访问不同 webapp，总不会还带着对应的端口号去访问吧。所以，你再次需要用到反向代理来做处理
+```conf
+http {
+    #此处省略一些基本配置
+    upstream product_server{
+        server www.helloworld.com:8081;
+    }
+    upstream admin_server{
+        server www.helloworld.com:8082;
+    }
+    upstream finance_server{
+        server www.helloworld.com:8083;
+    }
+    server {
+        #此处省略一些基本配置
+        #默认指向product的server
+        location / {
+            proxy_pass http://product_server;
+        }
+        location /product/{
+            proxy_pass http://product_server;
+        }
+        location /admin/ {
+            proxy_pass http://admin_server;
+        }
+        location /finance/ {
+            proxy_pass http://finance_server;
+        }
+    }
+}
+```
+
+### 6.3、upstream 指令参数
+
+- max_conns：限制每台server的连接数，用于保护避免过载，可起到限流作用
+	```conf
+	# worker进程设置1个，便于测试观察成功的连接数
+	worker_processes  1;
+	upstream tomcats {
+			server 192.168.1.173:8080 max_conns=2;
+			server 192.168.1.174:8080 max_conns=2;
+			server 192.168.1.175:8080 max_conns=2;
+	}
+	```
+- slow_start：商业版，需要付费；该参数不能使用在hash和random load balancing中。如果在 upstream 中只有一台 server，则该参数失效
+	```conf
+	upstream tomcats {
+			server 192.168.1.173:8080 weight=6 slow_start=60s;
+	#       server 192.168.1.190:8080;
+			server 192.168.1.174:8080 weight=2;
+			server 192.168.1.175:8080 weight=2;
+	}
+	```
+- down：用于标记服务节点不可用：
+	```conf
+	upstream tomcats {
+			server 192.168.1.173:8080 down;
+	#       server 192.168.1.190:8080;
+			server 192.168.1.174:8080 weight=1;
+			server 192.168.1.175:8080 weight=1;
+	}
+	```
+- backup：表示当前服务器节点是备用机，只有在其他的服务器都宕机以后，自己才会加入到集群中，被用户访问到：
+	```conf
+	upstream tomcats {
+			server 192.168.1.173:8080 backup;
+	#       server 192.168.1.190:8080;
+			server 192.168.1.174:8080 weight=1;
+			server 192.168.1.175:8080 weight=1;
+	}
+	```
+	**注意：backup参数不能使用在hash和random load balancing中**
+- max_fails、fail_timeout：
+	- max_fails：表示失败几次，则标记server已宕机，剔出上游服务。
+	- fail_timeout：表示失败的重试时间。
+
+	假设目前设置如下：
+	```conf
+	upstream tomcats {
+			server 192.168.1.173:8080 max_fails=2 fail_timeout=15s ;
+	}
+	```
+	则代表在15秒内请求某一server失败达到2次后，则认为该server已经挂了或者宕机了，随后再过15秒，这15秒内不会有新的请求到达刚刚挂掉的节点上，而是会请求到正常运作的server，15秒后会再有新请求尝试连接挂掉的server，如果还是失败，重复上一过程，直到恢复；
+
+### 6.4、keepalive提高吞吐量
+
+- keepalived：设置长连接处理的数量
+- proxy_http_version：设置长连接http版本信息
+- proxy_set_header：清除connection header信息
+```conf
+upstream tomcats {
+	server 192.168.1.190:8080;
+	keepalive 32;
+}
+
+server {
+	listen       80;
+	server_name  www.tomcats.com;
+	location / {
+		proxy_pass  http://tomcats;
+		proxy_http_version 1.1;
+		proxy_set_header Connection "";
+	}
+}
+```
+
+### 6.5、ip_hash
+
+ip_hash 可以保证用户访问可以请求到上游服务中的固定的服务器，前提是用户ip没有发生更改。使用ip_hash的注意点：**不能把后台服务器直接移除，只能标记down**
+```
+upstream tomcats {
+	ip_hash;	
+	server 192.168.1.173:8080;
+	server 192.168.1.174:8080 down;
+	server 192.168.1.175:8080;
+}
+```
+
+如果机器数量变化，hash算法需要重新计算，会带来一系列，比如：缓存等的问题
+
+### 6.6、url_hash、least_conn
+
+根据每次请求的url地址，hash后访问到固定的服务器节点。
+```conf
+upstream tomcats {
+    # url hash
+    hash $request_uri;
+    # 最少连接数
+    # least_conn
+    server 192.168.1.173:8080;
+    server 192.168.1.174:8080;
+    server 192.168.1.175:8080;
+}
+server {
+    listen 80;
+    server_name www.tomcats.com;
+
+    location / {
+        proxy_pass  http://tomcats;
+    }
+}
+```
+
+## 7、缓存
+
+- 缓存在nginx端，提升所有访问到nginx这一端的用户
+- 提升访问上游（upstream）服务器的速度
+- 用户访问仍然会产生请求流量
+
+### 7.1、Nginx控制浏览器缓存
+
+```conf
+location /files {
+    alias /home/imooc;
+    expires 10s; # 10s中过期
+    expires @22h30m; # 绝对时间：22:30分过期
+    expires -1h; # 当前时间的前一个小时过期
+    expires epoch; # 关闭浏览器缓存，页面header显示的 Cache-Control: no-cache；Expires: Thu, 01 Jan 1970 00:00:01 GMT
+    expires off; # nginx缓存关闭，页面header不显示cache-controll
+    expires max;
+}
+```
+
+### 7.2、反向代理缓存
+
+```conf
+# proxy_cache_path 设置缓存目录
+#       keys_zone 设置共享内存以及占用空间大小
+#       max_size 设置缓存大小
+#       inactive 超过此时间则被清理
+#       use_temp_path 临时目录，使用后会影响nginx性能
+proxy_cache_path /usr/local/nginx/upstream_cache keys_zone=mycache:5m max_size=1g inactive=1m use_temp_path=off;
+
+location / {
+    proxy_pass  http://tomcats;
+
+    # 启用缓存，和keys_zone一致
+    proxy_cache mycache;
+    # 针对200和304状态码缓存时间为8小时
+    proxy_cache_valid   200 304 8h;
+}
+```
+
+## 8、Nginx解决跨域
 
 ```conf
 server {
@@ -554,7 +745,7 @@ server {
 }
 ```
 
-### 3.4、静态资源防盗链
+## 9、静态资源防盗链
 
 ```conf
 server {
@@ -570,6 +761,81 @@ server {
 }
 ```
 
+## 10、配置HTTPS
+
+### 10.1、安装SSL模块
+
+要在nginx中配置https，就必须安装ssl模块，也就是: http_ssl_module：
+- 进行nginx的解压目录
+- 新增ssl模块(原来的那些模块需要保留)
+	```
+	./configure \
+	--prefix=/usr/local/nginx \
+	--pid-path=/var/run/nginx/nginx.pid \
+	--lock-path=/var/lock/nginx.lock \
+	--error-log-path=/var/log/nginx/error.log \
+	--http-log-path=/var/log/nginx/access.log \
+	--with-http_gzip_static_module \
+	--http-client-body-temp-path=/var/temp/nginx/client \
+	--http-proxy-temp-path=/var/temp/nginx/proxy \
+	--http-fastcgi-temp-path=/var/temp/nginx/fastcgi \
+	--http-uwsgi-temp-path=/var/temp/nginx/uwsgi \
+	--http-scgi-temp-path=/var/temp/nginx/scgi  \
+	--with-http_ssl_module
+	```
+- make、make install
+
+### 10.2、配置HTTPS
+
+- 把ssl证书 `*.crt` 和 私钥 `*.key` 拷贝到/usr/local/nginx/conf目录中
+- 新增 server 监听 443 端口：
+	```conf
+	server {
+		listen       443;
+		server_name  www.imoocdsp.com;
+		# 开启ssl
+		ssl     on;
+		# 配置ssl证书
+		ssl_certificate      1_www.imoocdsp.com_bundle.crt;
+		# 配置证书秘钥
+		ssl_certificate_key  2_www.imoocdsp.com.key;
+		# ssl会话cache
+		ssl_session_cache    shared:SSL:1m;
+		# ssl会话超时时间
+		ssl_session_timeout  5m;
+		# 配置加密套件，写法遵循 openssl 标准
+		ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+		ssl_ciphers ECDHE-RSA-AES128-GCM-SHA256:HIGH:!aNULL:!MD5:!RC4:!DHE;
+		ssl_prefer_server_ciphers on;
+		
+		location / {
+			proxy_pass http://tomcats/;
+			index  index.html index.htm;
+		}
+	}
+	```
+
+## 11、搭建文件服务器
+
+Nginx 中的配置要点：
+- 将 autoindex 开启可以显示目录，默认不开启。
+- 将 autoindex_exact_size 开启可以显示文件的大小。
+- 将 autoindex_localtime 开启可以显示文件的修改时间。
+- root 用来设置开放为文件服务的根路径。
+- charset 设置为 charset utf-8,gbk;，可以避免中文乱码问题
+
+```conf
+autoindex on;# 显示目录
+autoindex_exact_size on;# 显示文件大小
+autoindex_localtime on;# 显示文件时间
+server {
+    charset      utf-8,gbk; # windows 服务器下设置后，依然乱码，暂时无解
+    listen       9050 default_server;
+    listen       [::]:9050 default_server;
+    server_name  _;
+    root         /share/fs;
+}
+```
 
 # 三、Nginx深入
 
