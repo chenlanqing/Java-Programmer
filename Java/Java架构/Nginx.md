@@ -845,6 +845,11 @@ server {
 
 ### 1.1、概述
 
+- 是为Linux系统和基于Linux的基础设施提供简单而健壮的负载平衡和高可用性工具；
+- 负载均衡框架依赖于众所周知且广泛使用的Linux虚拟服务器(IPVS)内核模块，该模块提供了第4层的负载均衡。Keepalived实现一组检查器，根据负载平衡服务器池的健康状况动态地、自适应地维护和管理它们；
+- 高可用性是通过VRRP协议实现的。VRRP是路由器故障转移的基础；
+- Keepalived实现了一组到VRRP有限状态机的挂钩，提供了低级和高速的协议交互。为了提供最快的网络故障检测，Keepalived实现了BFD协议
+
 ### 1.2、安装
 
 - 下载安装包
@@ -869,60 +874,181 @@ server {
 
 将keepalived注册为系统服务：将解压缩包里面的`keepalived/etc/init.d/keepalived` 和`keepalived/etc/sysconfig.d/keepalived`两个文件分别拷贝到`/etc/init.d`和`/etc/sysconfig`目录下
 
-### 1.3、主节点keepalived配置
+### 1.3、keepalived双击主备
 
-配置文件：keepalived.conf
-```conf
+![](image/keepalived-双机主备.png)
+
+- **主节点配置：**
+
+	配置文件：keepalived.conf
+	```conf
+	global_defs {
+	# 路由id：当前安装keepalived的节点主机标识符，保证全局唯一
+	router_id keep_171
+	}
+	vrrp_instance VI_1 {
+		# 表示状态是MASTER主机还是备用机BACKUP
+		state MASTER
+		# 该实例绑定的网卡，可以通过 ip addr 查看网卡
+		interface ens33
+		# 保证主备节点一致即可
+		virtual_router_id 51
+		# 权重，master权重一般高于backup，如果有多个，那就是选举，谁的权重高，谁就当选
+		priority 100
+		# 主备之间同步检查时间间隔，单位秒
+		advert_int 2
+		# 认证权限密码，防止非法节点进入
+		authentication {
+			auth_type PASS
+			auth_pass 1111
+		}
+		# 虚拟出来的ip，可以有多个（vip）
+		virtual_ipaddress {
+			192.168.1.161
+		}
+	}
+	```
+
+	启动：./keepalived，启动后，查看网卡ens33下多了个IP地址；
+
+- **备用节点配置**
+
+	```conf
+	global_defs {
+	router_id keep_172
+	}
+	vrrp_instance VI_1 {
+		# 备用机设置为BACKUP
+		state BACKUP
+		interface ens33
+		virtual_router_id 51
+		# 权重低于MASTER
+		priority 80
+		advert_int 2
+		authentication {
+			auth_type PASS
+			auth_pass 1111
+		}
+		virtual_ipaddress {
+			# 注意：主备两台的vip都是一样的，绑定到同一个vip
+			192.168.1.161
+		}
+	}
+	```
+
+### 1.4、自动重启nginx
+
+- 增加Nginx重启检测脚本：
+	```bash
+	vim /etc/keepalived/check_nginx_alive_or_not.sh
+	#!/bin/bash
+
+	A=`ps -C nginx --no-header |wc -l`
+	# 判断nginx是否宕机，如果宕机了，尝试重启
+	if [ $A -eq 0 ];then
+		/usr/local/nginx/sbin/nginx
+		# 等待一小会再次检查nginx，如果没有启动成功，则停止keepalived，使其启动备用机
+		sleep 3
+		if [ `ps -C nginx --no-header |wc -l` -eq 0 ];then
+			killall keepalived
+		fi
+	fi
+	```
+- 增加运行权限：`chmod +x /etc/keepalived/check_nginx_alive_or_not.sh`；
+- 配置keepalived监听nginx脚本
+	```
+	vrrp_script check_nginx_alive {
+		script "/etc/keepalived/check_nginx_alive_or_not.sh"
+		interval 2 # 每隔两秒运行上一行脚本
+		weight 10 # 如果脚本运行失败，则升级权重+10
+	}
+	```
+- 在vrrp_instance中新增监控的脚本
+	```
+	track_script {
+		check_nginx_alive   # 追踪 nginx 脚本
+	}
+	```
+- 重启Keepalived使得配置文件生效
+
+### 1.5、keepalived双主热备
+
+对于双机主备架构，备用机在主节点运行正常的情况下是不会运行的，那么对于备用机资源来说是一种浪费。
+
+用户请  -> DNS轮询 -> 虚拟IP（两个）
+
+![](image/keepalived-双主热备.png)
+
+规则：以一个虚拟ip分组归为同一个路由
+
+**主节点**
+```
 global_defs {
-   # 路由id：当前安装keepalived的节点主机标识符，保证全局唯一
    router_id keep_171
 }
+
 vrrp_instance VI_1 {
-    # 表示状态是MASTER主机还是备用机BACKUP
     state MASTER
-    # 该实例绑定的网卡，可以通过 ip addr 查看网卡
     interface ens33
-    # 保证主备节点一致即可
     virtual_router_id 51
-    # 权重，master权重一般高于backup，如果有多个，那就是选举，谁的权重高，谁就当选
     priority 100
-    # 主备之间同步检查时间间隔，单位秒
-    advert_int 2
-    # 认证权限密码，防止非法节点进入
+    advert_int 1
     authentication {
         auth_type PASS
         auth_pass 1111
     }
-    # 虚拟出来的ip，可以有多个（vip）
     virtual_ipaddress {
         192.168.1.161
+    }
+}
+
+vrrp_instance VI_2 {
+    state BACKUP
+    interface ens33
+    virtual_router_id 52
+    priority 80
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        192.168.1.162
     }
 }
 ```
 
-启动：./keepalived，启动后，查看网卡ens33下多了个IP地址；
-
-### 1.4、备用节点keepalived配置
-
-```conf
+**备用节点配置：**
+```
 global_defs {
    router_id keep_172
 }
 vrrp_instance VI_1 {
-    # 备用机设置为BACKUP
     state BACKUP
     interface ens33
     virtual_router_id 51
-    # 权重低于MASTER
     priority 80
-    advert_int 2
+    advert_int 1
     authentication {
         auth_type PASS
         auth_pass 1111
     }
     virtual_ipaddress {
-        # 注意：主备两台的vip都是一样的，绑定到同一个vip
         192.168.1.161
+    }
+}
+vrrp_instance VI_2 {
+    state MASTER
+    interface ens33
+    virtual_router_id 52
+    priority 100
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        192.168.1.162
     }
 }
 ```
