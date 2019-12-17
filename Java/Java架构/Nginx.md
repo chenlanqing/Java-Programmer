@@ -989,6 +989,39 @@ vrrp_instance VI_2 {
 
 ## 2、LVS
 
+### 2.1、概述
+
+### 2.2、安装配置
+
+**安装ipvsadm**
+
+LVS是现在一般都是集成在linux中的，所以`ipvs`是自带的，只需要安装`ipvsadm`即可（`ipvsadm`是管理集群的工具，通过`ipvs`可以管理集群，查看集群等操作：
+```
+安装
+yum install ipvsadm
+检查
+ipvsadm -Ln
+```
+
+**搭建LVS-DR模式- 配置LVS节点：**
+
+- 准备：
+	```
+	服务器与ip规划：
+		LVS - 1台
+			VIP（虚拟IP）：192.168.1.150
+			DIP（转发者IP/内网IP）：192.168.1.151
+		Nginx - 2台（RealServer）
+			RIP（真实IP/内网IP）：192.168.1.171
+			RIP（真实IP/内网IP）：192.168.1.172
+
+	所有计算机节点关闭网络配置管理器，因为有可能会和网络接口冲突：
+		systemctl stop NetworkManager 
+		systemctl disable NetworkManager
+	```
+- 创建子接口，进入网卡目录：`cd /etc/sysconfig/network-scripts/`
+- 找到当前网卡：ens33，拷贝其并且创建子接口：`cp ifcfg-ens33 ifcfg-ens33:1`；
+- 
 
 # 四、Nginx深入
 
