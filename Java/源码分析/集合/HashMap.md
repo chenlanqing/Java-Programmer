@@ -825,9 +825,18 @@ final Node<K,V>[] resize()
 	
 ## 2、你知道hash的实现吗？为什么要这样实现？
 
-在Java 1.8的实现中，是通过hashCode()的高16位异或低16位实现的：`(h = k.hashCode()) ^ (h >>> 16)`；
+在Java 1.8的实现中，是通过hashCode()的高16位异或低16位实现的：`(h = k.hashCode()) ^ (h >>> 16)`；计算下标`( n-1 & hash)`
 
-主要是从速度、功效、质量来考虑的，这么做可以在bucket的n比较小的时候，也能保证考虑到高低bit都参与到hash的计算中，同时不会有太大的开销
+- 主要是从速度、功效、质量来考虑的，这么做可以在bucket的n比较小的时候，也能保证考虑到高低bit都参与到hash的计算中，同时不会有太大的开销;
+- hash的算法是``(h = k.hashCode()) ^ (h >>> 16)`，为了使得计算出的hash值更分散，所以选择将h无符号右移16位，然后再与h异或时，就能达到h的高16位和低16位都能参与计算，减少碰撞的可能性；
+- 使用&操作，是为了提高处理器处理的数据；
+- 数组的大小是2的幂次方，是因为只有大小是2的幂次方时，才能够使得`( n-1 & hash)`公式成立
+
+**有哪些解决hash冲突的方法：**
+- hash的算法尽可能避免的hash冲突；
+- 自动扩容，当数组大小快满的时候，采取自动扩容，可以减少hash冲突；
+- hash冲突发生时，采用链表来解决；
+- hash冲突严重时，链表会自动转换成红黑树，提高查询速度；
 
 ## 3、容量处理
 
@@ -876,6 +885,26 @@ Poisson分布，是一种统计与概率论中常见的离散概率分布，其�
 指数分布（Exponential distribution）是一种连续概率分布。指数分配可以用来表示独立随机事件发生的时间间隔，比如旅客进入机场的时间间隔、打进客服中心电话的时间间隔、中文维基百科新条目出现的时间间隔等等；
 
 与泊松分布相比，其最大的差异就是指数分布是针对连续随机变量定义，即时间这个变量。时间必须是连续的。而泊松分布是针对随机事件发生次数定义的，发生次数是离散的。粗略地可以认为这两个分布之间有一种“倒数”的关系
+
+## 8、如果HashMap在put的时候，如果数组已有某个key，不想覆盖怎么办？取值时，如果得到的value是空时，如何返回默认值；
+
+- 如果数组有了key，但是不想覆盖value，可以选择putIfAbsent方法，这个方法有个内置变量onlyIfAbsent，内置是true，就不会覆盖；在平时使用put的时候，内置onlyIfAbsent是false，允许覆盖；
+	```java
+	@Override
+    public V putIfAbsent(K key, V value) {
+        return putVal(hash(key), key, value, true, true);
+    }	
+	```
+- 取值时，如果为空，想返回默认值，可以使用getOrDefault方法，第一个参数为key，第二个参数为想返回的默认值；
+	```java
+	@Override
+    public V getOrDefault(Object key, V defaultValue) {
+        Node<K,V> e;
+        return (e = getNode(hash(key), key)) == null ? defaultValue : e.value;
+    }
+	```
+***上述方法都是在JDK1.8之后才有的***
+
 
 # 参考资料
 
