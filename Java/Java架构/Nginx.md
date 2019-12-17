@@ -989,9 +989,18 @@ vrrp_instance VI_2 {
 
 ## 2、LVS
 
+https://blog.csdn.net/Ki8Qzvka6Gz4n450m/article/details/79119665
+https://blog.51cto.com/junwang/1439428
+
 ### 2.1、概述
 
-### 2.2、安装配置
+LVS是`Linux Virtual Server`的简称，即Linux虚拟服务器，章文嵩博士发起的一个开源项目，现在 LVS 已经是 Linux 内核标准的一部分；
+
+使用 LVS 可以达到的技术目标是：通过 LVS 达到的负载均衡技术和 Linux 操作系统实现一个高性能高可用的 Linux 服务器集群，它具有良好的可靠性、可扩展性和可操作性。从而以低廉的成本实现最优的性能。LVS 是一个实现负载均衡集群的开源软件项目，LVS架构从逻辑上可分为调度层、Server集群层和共享存储；
+
+LVS的IP负载均衡技术是通过ipvs内核模块来实现的，ipvs是LVS集群系统的核心软件，它的主要作用是：安装在Director Server上，同时在Director Server上虚拟出一个IP地址，用户必须通过这个虚拟的IP地址访问集群服务。这个虚拟IP一般称为LVS的VIP，即Virtual IP。访问的请求首先经过VIP到达负载调度器，然后由负载调度器从Real Server列表中选取一个服务节点响应用户的请求。当用户的请求到达负载调度器后，调度器如何将请求发送到提供服务的Real Server节点，而Real Server节点如何返回数据给用户，是ipvs实现的重点技术，ipvs实现负载均衡机制有四种，分别是NAT、TUN和DR以及后来经淘宝开发的FullNat
+
+### 2.2、安装
 
 **安装ipvsadm**
 
@@ -1002,6 +1011,66 @@ yum install ipvsadm
 检查
 ipvsadm -Ln
 ```
+
+ipvsadm语法：
+```
+ipvsadm -A|E -t|u|f service-address [-s scheduler] [-p [timeout]] [-M netmask]
+ipvsadm -D -t|u|f service-address
+ipvsadm -C
+ipvsadm -R
+ipvsadm -S [-n]
+ipvsadm -a|e -t|u|f service-address -r RS-address [-g|i|m] [-w weight] [-x upper] [-y lower]
+ipvsadm -d -t|u|f service-address -r RS-address
+ipvsadm -L|l [options]
+ipvsadm -Z [-t|u|f service-address]
+注释：
+    -A    添加一个新的集群服务；
+    -E    修改一个己有的集群服务；
+    -D    删除指定的集群服务；
+    -a    向指定的集群服务中添加RS及属性；
+    -e    修改RS属性；
+    -t    指定为tcp协议；
+    -u    指定为udp协议；
+    -f    指定防火墙标记码，通常用于将两个或以上的服务绑定为一个服务进行处理时使用；
+    -s    调度方法，默认为wlc；
+    -w    指定权重，默认为1；
+    -p 	  timeout   persistent connection, 持久连接超时时长；
+    -g    Gateway, DR模型；
+    -i    ipip, TUN模型；
+    -m    masquerade, NAT模型；
+    -S    保存ipvsadm设定的规则策略，默认保存在/etc/sysconfig/ipvsadm中；
+    -R    载入己保存的规则策略，默认加载/etc/sysconfig/ipvsadm；
+    -C    清除所有集群服务；
+    -Z    清除所有记数器；
+    -L    显示当前己有集群服务，能通过相应的options查看不同状态信息；
+	-n: 数字格式显示IP地址；
+	-c: 显示连接数相关信息；
+	--stats: 显示统计数据；
+	--rate: 速率；
+	--exact：显示统计数据的精确值；
+```
+
+### 2.3、工作原理
+
+LVS分为两个部件：ipvs和ipvsadm
+- `ipvs`：工作于内核空间，主要用于使用户定义的策略生效；
+- `ipvsadm`:工作于用户空间，主要用于用户定义和管理集群服务的工具；
+
+ipvs工作于内核空间的INPUT链上，当收到用户请求某集群服务时，经过PREROUTING链，经检查本机路由表，送往INPUT链；在进入netfilter的INPUT链时，ipvs强行将请求报文通过ipvsadm定义的集群服务策略的路径改为FORWORD链，将报文转发至后端真实提供服务的主机；
+
+### 2.4、术语
+
+- client IP     = CIP
+- virtual IP    = VIP - 向外部直接面向用户请求，作为用户请求的目标的IP地址
+- director IP   = DIP - Director Server IP，主要用于和内部主机通讯的IP地址。
+- realserver IP = RIP (and RIP1, RIP2...) Real Server IP，后端服务器的IP地址。
+- director GW   = DGW - the director's gw (only needed for LVS-NAT)  (this can be the realserver gateway for LVS-DR and LVS-Tun)
+- DS：Director Server。指的是前端负载均衡器节点。
+- RS：Real Server。后端真实的工作服务器。
+
+### 2.5、LV/NAT工作模式
+
+### 2.6、LVS/DR工作模式
 
 **搭建LVS-DR模式- 配置LVS节点：**
 
@@ -1022,6 +1091,12 @@ ipvsadm -Ln
 - 创建子接口，进入网卡目录：`cd /etc/sysconfig/network-scripts/`
 - 找到当前网卡：ens33，拷贝其并且创建子接口：`cp ifcfg-ens33 ifcfg-ens33:1`；
 - 
+
+### 2.7、LVS/Tun
+
+
+## 3、Keepalived+LVS+Nginx
+
 
 # 四、Nginx深入
 
@@ -1182,6 +1257,7 @@ https://juejin.im/post/5cdea826e51d4510b934dcb5
 
 * [Nginx官方文档](http://nginx.org/en/docs/)
 * [Nginx极简教程](https://mp.weixin.qq.com/s/vHkxYfpuiAteMNSrpNWdsw)
+* [LVS官方文档](http://www.austintek.com/LVS/LVS-HOWTO/HOWTO/)
 
 
 
