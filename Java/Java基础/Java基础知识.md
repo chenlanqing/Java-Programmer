@@ -9,7 +9,7 @@
 	- [4、面向对象与面向过程](#4%e9%9d%a2%e5%90%91%e5%af%b9%e8%b1%a1%e4%b8%8e%e9%9d%a2%e5%90%91%e8%bf%87%e7%a8%8b)
 	- [5、三大基本特征](#5%e4%b8%89%e5%a4%a7%e5%9f%ba%e6%9c%ac%e7%89%b9%e5%be%81)
 	- [6、五大基本原则](#6%e4%ba%94%e5%a4%a7%e5%9f%ba%e6%9c%ac%e5%8e%9f%e5%88%99)
-- [二、Java常见问题](#%e4%ba%8cjava%e5%b8%b8%e8%a7%81%e9%97%ae%e9%a2%98)
+- [二、Java隐蔽问题](#%e4%ba%8cjava%e9%9a%90%e8%94%bd%e9%97%ae%e9%a2%98)
 	- [1、基本类型与引用类型的比较](#1%e5%9f%ba%e6%9c%ac%e7%b1%bb%e5%9e%8b%e4%b8%8e%e5%bc%95%e7%94%a8%e7%b1%bb%e5%9e%8b%e7%9a%84%e6%af%94%e8%be%83)
 	- [2、关于String +和StringBuffer的比较](#2%e5%85%b3%e4%ba%8estring-%e5%92%8cstringbuffer%e7%9a%84%e6%af%94%e8%be%83)
 	- [3、静态代码块、静态变量](#3%e9%9d%99%e6%80%81%e4%bb%a3%e7%a0%81%e5%9d%97%e9%9d%99%e6%80%81%e5%8f%98%e9%87%8f)
@@ -22,16 +22,17 @@
 		- [5.1、基本类型中类型转换](#51%e5%9f%ba%e6%9c%ac%e7%b1%bb%e5%9e%8b%e4%b8%ad%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2)
 		- [5.2、三目运算中类型转换问题](#52%e4%b8%89%e7%9b%ae%e8%bf%90%e7%ae%97%e4%b8%ad%e7%b1%bb%e5%9e%8b%e8%bd%ac%e6%8d%a2%e9%97%ae%e9%a2%98)
 	- [6、按照目录结构打印当前目录及子目录](#6%e6%8c%89%e7%85%a7%e7%9b%ae%e5%bd%95%e7%bb%93%e6%9e%84%e6%89%93%e5%8d%b0%e5%bd%93%e5%89%8d%e7%9b%ae%e5%bd%95%e5%8f%8a%e5%ad%90%e7%9b%ae%e5%bd%95)
+	- [7、boolean占用字节数](#7boolean%e5%8d%a0%e7%94%a8%e5%ad%97%e8%8a%82%e6%95%b0)
 - [三、进制基础](#%e4%b8%89%e8%bf%9b%e5%88%b6%e5%9f%ba%e7%a1%80)
 	- [1、进制基础](#1%e8%bf%9b%e5%88%b6%e5%9f%ba%e7%a1%80)
 	- [2、二进制运算](#2%e4%ba%8c%e8%bf%9b%e5%88%b6%e8%bf%90%e7%ae%97)
-		- [2.1、与运算：&](#21%e4%b8%8e%e8%bf%90%e7%ae%97)
+		- [2.1、与运算：&amp;](#21%e4%b8%8e%e8%bf%90%e7%ae%97amp)
 		- [2.2、或运算：|](#22%e6%88%96%e8%bf%90%e7%ae%97)
 		- [2.3、异或运算：^](#23%e5%bc%82%e6%88%96%e8%bf%90%e7%ae%97)
 		- [2.4、取反运算：~](#24%e5%8f%96%e5%8f%8d%e8%bf%90%e7%ae%97)
-		- [2.5、左移：<<](#25%e5%b7%a6%e7%a7%bb)
-		- [2.6、右移：>>](#26%e5%8f%b3%e7%a7%bb)
-		- [2.7、无符号右移：>>>](#27%e6%97%a0%e7%ac%a6%e5%8f%b7%e5%8f%b3%e7%a7%bb)
+		- [2.5、左移：&lt;&lt;](#25%e5%b7%a6%e7%a7%bbltlt)
+		- [2.6、右移：&gt;&gt;](#26%e5%8f%b3%e7%a7%bbgtgt)
+		- [2.7、无符号右移：&gt;&gt;&gt;](#27%e6%97%a0%e7%ac%a6%e5%8f%b7%e5%8f%b3%e7%a7%bbgtgtgt)
 		- [2.8、二进制四则运算](#28%e4%ba%8c%e8%bf%9b%e5%88%b6%e5%9b%9b%e5%88%99%e8%bf%90%e7%ae%97)
 			- [2.8.1、加法](#281%e5%8a%a0%e6%b3%95)
 			- [2.8.2、减法](#282%e5%87%8f%e6%b3%95)
@@ -42,7 +43,7 @@
 		- [3.2、反码](#32%e5%8f%8d%e7%a0%81)
 		- [3.3、补码：反码加1称为补码](#33%e8%a1%a5%e7%a0%81%e5%8f%8d%e7%a0%81%e5%8a%a01%e7%a7%b0%e4%b8%ba%e8%a1%a5%e7%a0%81)
 		- [3.4、案例](#34%e6%a1%88%e4%be%8b)
-		- [3.5、根据 `1+~n = -n` 可以快速，计算负数补码](#35%e6%a0%b9%e6%8d%ae-1n---n-%e5%8f%af%e4%bb%a5%e5%bf%ab%e9%80%9f%e8%ae%a1%e7%ae%97%e8%b4%9f%e6%95%b0%e8%a1%a5%e7%a0%81)
+		- [3.5、根据 1+~n = -n 可以快速，计算负数补码](#35%e6%a0%b9%e6%8d%ae-1n---n-%e5%8f%af%e4%bb%a5%e5%bf%ab%e9%80%9f%e8%ae%a1%e7%ae%97%e8%b4%9f%e6%95%b0%e8%a1%a5%e7%a0%81)
 	- [4、Java 二进制](#4java-%e4%ba%8c%e8%bf%9b%e5%88%b6)
 		- [4.1、Java 基本数据类型](#41java-%e5%9f%ba%e6%9c%ac%e6%95%b0%e6%8d%ae%e7%b1%bb%e5%9e%8b)
 		- [4.2、常用的数](#42%e5%b8%b8%e7%94%a8%e7%9a%84%e6%95%b0)
@@ -54,8 +55,9 @@
 		- [5.1、子网掩码](#51%e5%ad%90%e7%bd%91%e6%8e%a9%e7%a0%81)
 		- [5.2、求平均值](#52%e6%b1%82%e5%b9%b3%e5%9d%87%e5%80%bc)
 		- [5.3、判断奇偶数](#53%e5%88%a4%e6%96%ad%e5%a5%87%e5%81%b6%e6%95%b0)
+		- [5.4、取 int 型变量 a 的第 k 位 (k=0，1，2....)](#54%e5%8f%96-int-%e5%9e%8b%e5%8f%98%e9%87%8f-a-%e7%9a%84%e7%ac%ac-k-%e4%bd%8d-k012)
 		- [5.5、幂问题](#55%e5%b9%82%e9%97%ae%e9%a2%98)
-		- [5.6、计算绝对值:](#56%e8%ae%a1%e7%ae%97%e7%bb%9d%e5%af%b9%e5%80%bc)
+		- [5.6、计算绝对值](#56%e8%ae%a1%e7%ae%97%e7%bb%9d%e5%af%b9%e5%80%bc)
 - [四、JDK8新特性](#%e5%9b%9bjdk8%e6%96%b0%e7%89%b9%e6%80%a7)
 	- [1、Java语言新特性](#1java%e8%af%ad%e8%a8%80%e6%96%b0%e7%89%b9%e6%80%a7)
 		- [1.1、Lambda表达式和函数式接口](#11lambda%e8%a1%a8%e8%be%be%e5%bc%8f%e5%92%8c%e5%87%bd%e6%95%b0%e5%bc%8f%e6%8e%a5%e5%8f%a3)
@@ -104,12 +106,12 @@
 		- [3.1、含义](#31%e5%90%ab%e4%b9%89)
 		- [3.2、final 修饰符](#32final-%e4%bf%ae%e9%a5%b0%e7%ac%a6)
 		- [3.3、注意点](#33%e6%b3%a8%e6%84%8f%e7%82%b9)
-		- [3.4、为什么使用 `final`](#34%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8-final)
+		- [3.4、为什么使用 final](#34%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8-final)
 		- [3.5、不可变类](#35%e4%b8%8d%e5%8f%af%e5%8f%98%e7%b1%bb)
 		- [3.6、知识点](#36%e7%9f%a5%e8%af%86%e7%82%b9)
 	- [4、instanceof](#4instanceof)
 		- [4.1、一些使用注意事项](#41%e4%b8%80%e4%ba%9b%e4%bd%bf%e7%94%a8%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9)
-		- [4.2、`instanceof`与`clazz.isInstance(obj)`](#42instanceof%e4%b8%8eclazzisinstanceobj)
+		- [4.2、instanceof与clazz.isInstance(obj)](#42instanceof%e4%b8%8eclazzisinstanceobj)
 		- [4.3、instanceof 与 clazz.getClass()：](#43instanceof-%e4%b8%8e-clazzgetclass)
 		- [4.4、instanceof实现原理](#44instanceof%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86)
 - [八、泛型](#%e5%85%ab%e6%b3%9b%e5%9e%8b)
@@ -957,6 +959,7 @@ f ==> 1111
 字节 --> 字符串：`byte[] b = new byte[int]; new String(b)` 或者 `new String(b, encode)`// encode 编码格式:
 
 ### 4.6、转换实例
+
 ```java
 public class CovertToRadix {
 	public static byte[] intToByte(int i){
@@ -1013,13 +1016,14 @@ y(111111111111010) = 111111111111000 + 000000000000010
 - `a&1 = 0` 偶数
 - `a&1 = 1` 奇数
 
-##5.4、取 int 型变量 a 的第 k 位 (k=0，1，2....)
+### 5.4、取 int 型变量 a 的第 k 位 (k=0，1，2....)
 
 即 `a>>k&1` (先右移k再与1)
 
 ### 5.5、幂问题
 
 - 判断是否为 2 的幂：`((x&(x-1))==0) && (x!=0);`
+  
 - 如何判断一个无符号数是2的n次方-1:
 ```java
 private static boolean isPowerOfTwoLoseOne(int val) {
@@ -1027,6 +1031,7 @@ private static boolean isPowerOfTwoLoseOne(int val) {
 }
 ```
 - 非2的幂次方转换为2的幂次方
+  
 - 求一个数离它最近的大于等于2的幂次方的数:
 ```java
 MAXIMUM_CAPACITY = Integer.MAX_VALUE；
@@ -1040,6 +1045,7 @@ private static final int tableSizeFor(int c) {
 	return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
 }
 ```
+
 - 如果求小于等于2的幂次方的数:
 ```java
 private static final int tableSizeFor(int n) {
@@ -1051,7 +1057,16 @@ private static final int tableSizeFor(int n) {
 	return  n-(n>>1);
 }
 ```
-### 5.6、计算绝对值:
+- 使用位运算(&)来实现取模运算(%)：
+	```
+	X % 2^n = X & (2^n - 1)
+	2^n表示2的n次方，也就是说，一个数对2^n取模 == 一个数和(2^n - 1)做按位与运算 。
+	假设n为3，则2^3 = 8，表示成2进制就是1000。2^3 -1 = 7 ，即0111。
+	此时X & (2^3 - 1) 就相当于取X的2进制的最后三位数。
+	从2进制角度来看，X / 8相当于 X >> 3，即把X右移3位，此时得到了X / 8的商，而被移掉的部分(后三位)，则是X % 8，也就是余数
+	```
+
+### 5.6、计算绝对值
 
 ```java
 public static int abs(int x){
