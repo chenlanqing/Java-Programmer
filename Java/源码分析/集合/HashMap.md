@@ -27,7 +27,7 @@
 	- [1、无参构造方法与其他构造方法](#1%e6%97%a0%e5%8f%82%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95%e4%b8%8e%e5%85%b6%e4%bb%96%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95)
 	- [2、容量(Capacity)与平衡因子(LoadFactor)](#2%e5%ae%b9%e9%87%8fcapacity%e4%b8%8e%e5%b9%b3%e8%a1%a1%e5%9b%a0%e5%ad%90loadfactor)
 	- [3、modcount](#3modcount)
-- [五、HashMap 的存取实现](#%e4%ba%94hashmap-%e7%9a%84%e5%ad%98%e5%8f%96%e5%ae%9e%e7%8e%b0)
+- [五、方法实现](#%e4%ba%94%e6%96%b9%e6%b3%95%e5%ae%9e%e7%8e%b0)
 	- [1、put方法](#1put%e6%96%b9%e6%b3%95)
 		- [1.1、JDK6和JDK7](#11jdk6%e5%92%8cjdk7)
 		- [1.2、JDK8 的实现](#12jdk8-%e7%9a%84%e5%ae%9e%e7%8e%b0)
@@ -39,21 +39,23 @@
 		- [3.2、JDK7的实现](#32jdk7%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [3.3、JDK8的实现](#33jdk8%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [3.4、关于性能](#34%e5%85%b3%e4%ba%8e%e6%80%a7%e8%83%bd)
+		- [3.5、对比HashTable的hash方法](#35%e5%af%b9%e6%af%94hashtable%e7%9a%84hash%e6%96%b9%e6%b3%95)
 	- [4、resize 的实现](#4resize-%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [4.1、JDK6的实现](#41jdk6%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [4.2、JDK7实现](#42jdk7%e5%ae%9e%e7%8e%b0)
 		- [4.3、JDK8 的实现](#43jdk8-%e7%9a%84%e5%ae%9e%e7%8e%b0)
-	- [5、高并发下 HashMap 的使用的问题](#5%e9%ab%98%e5%b9%b6%e5%8f%91%e4%b8%8b-hashmap-%e7%9a%84%e4%bd%bf%e7%94%a8%e7%9a%84%e9%97%ae%e9%a2%98)
 - [六、面试题](#%e5%85%ad%e9%9d%a2%e8%af%95%e9%a2%98)
 	- [1、get和put的原理？JDK8](#1get%e5%92%8cput%e7%9a%84%e5%8e%9f%e7%90%86jdk8)
 	- [2、你知道hash的实现吗？为什么要这样实现？](#2%e4%bd%a0%e7%9f%a5%e9%81%93hash%e7%9a%84%e5%ae%9e%e7%8e%b0%e5%90%97%e4%b8%ba%e4%bb%80%e4%b9%88%e8%a6%81%e8%bf%99%e6%a0%b7%e5%ae%9e%e7%8e%b0)
-	- [3、容量处理](#3%e5%ae%b9%e9%87%8f%e5%a4%84%e7%90%86)
+	- [3、容量是如何处理的](#3%e5%ae%b9%e9%87%8f%e6%98%af%e5%a6%82%e4%bd%95%e5%a4%84%e7%90%86%e7%9a%84)
 	- [4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现](#4%e4%b8%ba%e4%bb%80%e4%b9%88-jdk8-%e7%9a%84-hashmap-%e4%bd%bf%e7%94%a8%e7%9a%84%e8%b7%9f%e4%bb%a5%e5%be%80%e4%b8%8d%e5%90%8c%e7%9a%84%e5%ae%9e%e7%8e%b0)
 	- [5、为什么HashMap默认的加载因子是0.75](#5%e4%b8%ba%e4%bb%80%e4%b9%88hashmap%e9%bb%98%e8%ae%a4%e7%9a%84%e5%8a%a0%e8%bd%bd%e5%9b%a0%e5%ad%90%e6%98%af075)
 	- [6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂](#6%e4%b8%ba%e4%bb%80%e4%b9%88hashmap%e7%9a%84%e9%bb%98%e8%ae%a4%e5%88%9d%e5%a7%8b%e5%ae%b9%e9%87%8f%e6%98%af16%e4%b8%94%e5%ae%b9%e9%87%8f%e5%bf%85%e9%a1%bb%e6%98%af-2%e7%9a%84%e5%b9%82)
 	- [7、泊松分布与指数分布](#7%e6%b3%8a%e6%9d%be%e5%88%86%e5%b8%83%e4%b8%8e%e6%8c%87%e6%95%b0%e5%88%86%e5%b8%83)
 		- [7.1、泊松分布](#71%e6%b3%8a%e6%9d%be%e5%88%86%e5%b8%83)
 		- [7.2、指数分布](#72%e6%8c%87%e6%95%b0%e5%88%86%e5%b8%83)
+	- [8、如果HashMap在put的时候，如果数组已有某个key，不想覆盖怎么办？取值时，如果得到的value是空时，如何返回默认值；](#8%e5%a6%82%e6%9e%9chashmap%e5%9c%a8put%e7%9a%84%e6%97%b6%e5%80%99%e5%a6%82%e6%9e%9c%e6%95%b0%e7%bb%84%e5%b7%b2%e6%9c%89%e6%9f%90%e4%b8%aakey%e4%b8%8d%e6%83%b3%e8%a6%86%e7%9b%96%e6%80%8e%e4%b9%88%e5%8a%9e%e5%8f%96%e5%80%bc%e6%97%b6%e5%a6%82%e6%9e%9c%e5%be%97%e5%88%b0%e7%9a%84value%e6%98%af%e7%a9%ba%e6%97%b6%e5%a6%82%e4%bd%95%e8%bf%94%e5%9b%9e%e9%bb%98%e8%ae%a4%e5%80%bc)
+	- [9、高并发下 HashMap 的使用的问题](#9%e9%ab%98%e5%b9%b6%e5%8f%91%e4%b8%8b-hashmap-%e7%9a%84%e4%bd%bf%e7%94%a8%e7%9a%84%e9%97%ae%e9%a2%98)
 - [参考资料](#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -91,13 +93,13 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 - HashTable有一个contains(Object value)功能和containsValue(Object value)功能一样。
 - HashTable是基于Dictionary类继承的；HashMap继承抽象类AbstractMap实现了Map接口；
 - HashTable使用Enumeration进行遍历，HashMap使用Iterator进行遍历。
-- HashTable中hash数组默认大小是11，增加的方式是 old*2+1。HashMap中hash数组的默认大小是16，而且一定是2的指数。在取模计算时，如果模数是2的幂，那么我们可以直接使用位运算来得到结果，效率要大大高于做除法
+- HashTable中hash数组默认大小是11，增加的方式是 2n+1。HashMap中hash数组的默认大小是16，之后每次扩充是都是2的倍数。在取模计算时，如果模数是2的幂，那么我们可以直接使用位运算来得到结果，效率要大大高于做除法
 - 哈希值的使用不同，HashTable 直接使用对象的 hashCode，代码是这样的：
 	```java
 	int hash = key.hashCode();
 	int index = (hash & 0x7FFFFFFF) % tab.length;
 	```
-	而 HashMap重新计算hash值，而且用与代替求模
+	而 HashMap重新计算hash值，而且用 & 代替 % 求模
 	```java
 	int hash = hash(k);
 	int i = indexFor(hash, table.length);
@@ -109,6 +111,8 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 		return h & (length-1);
 	}
 	```
+- HashMap为了提高效率使用位运算代替哈希，这又引入了哈希分布不均匀的问题，所以HashMap为解决这问题，又对hash算法做了一些改进，进行了扰动计算
+
 ## 3、HashMap与HashSet的关系
 
 - HashSet底层是采用HashMap实现的
@@ -214,11 +218,12 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 ### 8.2、指定容量的数值多大合适
 
-构造方法传递的 initialCapacity，最终会被 `tableSizeFor()` 方法动态调整为 2 的 N 次幂，以方便在扩容的时候，计算数据在 newTable 中的位置。
+构造方法传递的 initialCapacity，最终会被 `tableSizeFor()` 方法动态通过利用无符号右移和按位或运算等方式计算出第一个大于该数的2的幂，以方便在扩容的时候，计算数据在 newTable 中的位置。
 ```java
 static final int MAXIMUM_CAPACITY = 1 << 30;
 static final int tableSizeFor(int cap) {
 	int n = cap - 1;
+	// 是对一个二进制数依次向右移位，然后与原值取或。其目的对于一个数字的二进制，从第一个不为0的位开始，把后面的所有位都设置成1
 	n |= n >>> 1;
 	n |= n >>> 2;
 	n |= n >>> 4;
@@ -231,6 +236,8 @@ static final int tableSizeFor(int cap) {
 如果设置了 table 的初始容量，会在初始化 table 时，将扩容阈值 threshold 重新调整为 `table.size * loadFactor`。而 HashMap 是否扩容，由 threshold 决定，而 threshold 又由初始容量和 loadFactor 决定。如果我们预先知道 HashMap 数据量范围，可以预设 HashMap 的容量值来提升效率，但是需要注意要考虑装载因子的影响，才能保证不会触发预期之外的动态扩容；通常在初始化 HashMap 时，初始容量都是根据业务来的，而不会是一个固定值，为此我们需要有一个特殊处理的方式，就是将预期的初始容量，再除以 HashMap 的装载因子，默认时就是除以 0.75；
 
 例如：想要用 HashMap 存放 1k 条数据，应该设置 `1000 / 0.75`，实际传递进去的值是 1333，然后会被 tableSizeFor() 方法调整到 2048，足够存储数据而不会触发扩容；
+
+在JDK 1.7和JDK 1.8中，HashMap初始化这个容量的时机不同。JDK 1.8中，在调用HashMap的构造函数定义HashMap的时候，就会进行容量的设定。而在JDK 1.7中，要等到第一次put操作时才进行这一操作
 
 # 二、签名
 
@@ -349,7 +356,7 @@ transient int modCount
 ```
 所谓快速失败就是在并发集合中，其进行迭代操作时，若有其他线程对其结构性的修改，这是迭代器会立马感知到，并且立刻抛出ConcurrentModificationException异常，而不是等待迭代完成之后才告诉你已经出错
 
-# 五、HashMap 的存取实现
+# 五、方法实现
 
 ## 1、put方法
 
@@ -683,16 +690,20 @@ final int hash(Object k) {
 	if (0 != h && k instanceof String) {
 					return sun.misc.Hashing.stringHash32((String) k);
 	}
-
 	h ^= k.hashCode();
-
-	// This function ensures that hashCodes that differ only by
-	// constant multiples at each bit position have a bounded
-	// number of collisions (approximately 8 at default load factor).
+	// 是为了对key的hashCode进行扰动计算，防止不同hashCode的高位不同但低位相同导致的hash冲突
+	// 把高位的特征和低位的特征组合起来，降低哈希冲突的概率
 	h ^= (h >>> 20) ^ (h >>> 12);
 	return h ^ (h >>> 7) ^ (h >>> 4);
 }
+// 将hash生成的整型转换成链表数组中的下标
+static int indexFor(int h, int length) {
+	// assert Integer.bitCount(length) == 1 : "length must be a non-zero power of 2";
+	return h & (length-1);
+}
 ```
+
+- 位运算(&)效率要比代替取模运算(%)高很多，主要原因是位运算直接对内存数据进行操作，不需要转成十进制，因此处理速度非常快，还可以很好的解决负数的问题
 
 ### 3.3、JDK8的实现
 
@@ -703,11 +714,31 @@ static final int hash(Object key) {
 	return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
 }
 ```
+在JDK1.8的实现中，优化了高位运算的算法，通过hashCode()的高16位异或低16位实现的：(h = k.hashCode()) ^ (h >>> 16)，主要是从速度、功效、质量来考虑的。以上方法得到的int的hash值，然后再通过h & (table.length -1)来得到该对象在数据中保存的位置
+
 在Java 8之前的实现中是用链表解决冲突的，在产生碰撞的情况下，进行get时，两步的时间复杂度是O(1)+O(n)。因此，当碰撞很厉害的时候n很大，O(n)的速度显然是影响速度的。因此在Java 8中，利用红黑树替换链表，这样复杂度就变成了O(1)+O(logn)了，这样在n很大的时候，能够比较理想的解决这个问题；
 
 ### 3.4、关于性能
 
 HashMap的数据是存储在链表数组里面的，在对HashMap进行插入/删除等操作时，都需要根据K-V对的键值定位到他应该保存在数组的哪个下标中.而这个通过键值求取下标的操作就叫做哈希。HashMap的数组是有长度的，Java中规定这个长度只能是2的倍数，初始值为16.简单的做法是先求取出键值的hashcode，然后在将hashcode得到的int值对数组长度进行取模.为了考虑性能，Java总采用按位与操作实现取模操作。
+
+### 3.5、对比HashTable的hash方法
+
+- JDK7：
+	```java
+	private int hash(Object k) {
+        // hashSeed will be zero if alternative hashing is disabled.
+        return hashSeed ^ k.hashCode();
+    }
+	// 计算索引：
+	index = (hash & 0x7FFFFFFF) % tab.length;
+	```
+
+	为啥要把hash值和`0x7FFFFFFF`做一次按位与操作呢，主要是为了保证得到的index的的二进制的第一位为0（一个32位的有符号数和0x7FFFFFFF做按位与操作，其实就是在取绝对值。），也就是为了得到一个正数。因为有符号数第一位0代表正数，1代表负数；
+
+	**为什么HashTable不使用 & 代替 % 进行取模运算？**
+	- HashTable的构造函数和扩容函数
+	- HashTable默认的初始大小为11，之后每次扩充为原来的2n+1。也就是说，HashTable的链表数组的默认大小是一个素数、奇数。之后的每次扩充结果也都是奇数。由于HashTable会尽量使用素数、奇数作为容量的大小。当哈希表的大小为素数时，简单的取模哈希的结果会更加均匀
 
 ## 4、resize 的实现
 
@@ -775,48 +806,6 @@ final Node<K,V>[] resize()
 - 当put时，如果发现目前的bucket占用程度已经超过了Load Factor所希望的比例，那么就会发生resize。在resize的过程，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点再放到新的bucket中
 - 扩充HashMap的时候，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0就好了，是0的话索引没变，是1的话索引变成“原索引+oldCap”
 
-## 5、高并发下 HashMap 的使用的问题
-
-- 扩容-resize()：影响resize发生的因素
-	- capacity：HashMap当前的长度(2的幂);
-	- loadfactor：加载因子,默认是0.75f衡量HashMap是否进行resize条件: HashMap.size >= capacity * loadfactor.
-- 扩容步骤
-	- （1）扩容：创建一个新的entry数组，长度是原来数组的两倍；
-	- （2）rehash：遍历原entry数组，把所有的entry重写hash到新的数组。为什么需要重新hash？因为长度扩大异以后，hash规则也随之改变；`index =  HashCode(Key)&(Length - 1)` 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算。
-- 在单线程下上述步骤执行没有任何问题；在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环，从而报内存溢出。
-- 在高并发环境下，通常使用 `ConcurrentHashMap`，兼顾了线程安全和性能；
-- 下面代码只在JDK7以前的版本有效，jdk8之后就不存在这种问题了。因为JDK8中扩容的时候不存在rehash操作。
-	```java
-	private static Map<Long, Set<Integer>> setMap = new ConcurrentHashMap<>();
-	public static void main(String[] args) throws InterruptedException {
-		final long key = 1L;
-		setMap.put(key, new HashSet<Integer>());
-		for (int i = 0; i < 100; i++) {
-			setMap.get(key).add(i);
-		}
-		Thread a = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				for (int j = 100; j < 200000; j++) {
-					setMap.get(key).add(j);
-				}
-			}
-		});
-		Thread b = new Thread(new Runnable() {
-			@Override
-			public void run() {
-				for (int j = 200000; j < (200000 + 200000); j++) {
-					setMap.get(key).add(j);
-				}
-			}
-		});
-		a.start();
-		b.start();
-		Thread.sleep(1000 * 10);
-		System.out.println(setMap.toString()); // 报java.lang.OutOfMemoryError: Java heap space
-	}
-	```
-
 # 六、面试题
 
 ## 1、get和put的原理？JDK8
@@ -833,12 +822,13 @@ final Node<K,V>[] resize()
 - 数组的大小是2的幂次方，是因为只有大小是2的幂次方时，才能够使得`( n-1 & hash)`公式成立
 
 **有哪些解决hash冲突的方法：**
+
 - hash的算法尽可能避免的hash冲突；
 - 自动扩容，当数组大小快满的时候，采取自动扩容，可以减少hash冲突；
 - hash冲突发生时，采用链表来解决；
 - hash冲突严重时，链表会自动转换成红黑树，提高查询速度；
 
-## 3、容量处理
+## 3、容量是如何处理的
 
 - 如果HashMap的大小超过了负载因子(load factor)定义的容量。如何处理？如果超过了负载因子(默认0.75)。则会重新resize一个原来长度两倍的HashMap。并且重新调用hash方法。
 - 如果指定了HashMap的容量，如：new HashMap(17)，那么其容量会变为32。
@@ -854,7 +844,7 @@ final Node<K,V>[] resize()
 	* 加载因子越大，填满的元素越多，空间利用率越高,但冲突的机会加大；
 	* 反之,加载因子越小，填满的元素越少，冲突的机会减少，但空间利用率不高。冲突的机会越大，则查找的成本越高；反之。查找的成本越小。需要在"冲突的机会" 和 "空间利用率上" 寻找平衡
 
-- 5.2、为什么HashMap的默认加载因子是0.75：在理想情况下,使用随机哈希码,节点出现的频率在hash桶中遵循泊松分布,同时给出了桶中元素个数和概率的对照表.
+- 5.2、为什么HashMap的默认加载因子是0.75：在理想情况下，使用随机哈希码，节点出现的频率在hash桶中遵循泊松分布,同时给出了桶中元素个数和概率的对照表.
 	```
 	0: 0.60653066
 	1: 0.30326533
@@ -905,6 +895,47 @@ Poisson分布，是一种统计与概率论中常见的离散概率分布，其�
 	```
 ***上述方法都是在JDK1.8之后才有的***
 
+## 9、高并发下 HashMap 的使用的问题
+
+- 扩容-resize()：影响resize发生的因素
+	- capacity：HashMap当前的长度(2的幂);
+	- loadfactor：加载因子,默认是0.75f衡量HashMap是否进行resize条件: HashMap.size >= capacity * loadfactor.
+- 扩容步骤
+	- （1）扩容：创建一个新的entry数组，长度是原来数组的两倍；
+	- （2）rehash：遍历原entry数组，把所有的entry重写hash到新的数组。为什么需要重新hash？因为长度扩大异以后，hash规则也随之改变；`index =  HashCode(Key)&(Length - 1)` 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算。
+- 在单线程下上述步骤执行没有任何问题；在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环，从而报内存溢出。
+- 在高并发环境下，通常使用 `ConcurrentHashMap`，兼顾了线程安全和性能；
+- 下面代码只在JDK7以前的版本有效，jdk8之后就不存在这种问题了。因为JDK8中扩容的时候不存在rehash操作。
+	```java
+	private static Map<Long, Set<Integer>> setMap = new ConcurrentHashMap<>();
+	public static void main(String[] args) throws InterruptedException {
+		final long key = 1L;
+		setMap.put(key, new HashSet<Integer>());
+		for (int i = 0; i < 100; i++) {
+			setMap.get(key).add(i);
+		}
+		Thread a = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				for (int j = 100; j < 200000; j++) {
+					setMap.get(key).add(j);
+				}
+			}
+		});
+		Thread b = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				for (int j = 200000; j < (200000 + 200000); j++) {
+					setMap.get(key).add(j);
+				}
+			}
+		});
+		a.start();
+		b.start();
+		Thread.sleep(1000 * 10);
+		System.out.println(setMap.toString()); // 报java.lang.OutOfMemoryError: Java heap space
+	}
+	```
 
 # 参考资料
 
