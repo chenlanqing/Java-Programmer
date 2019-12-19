@@ -1,20 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、Windows 下配置环境变量:](#%E4%B8%80windows-%E4%B8%8B%E9%85%8D%E7%BD%AE%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F)
-- [二、Linux 下安装 jdk](#%E4%BA%8Clinux-%E4%B8%8B%E5%AE%89%E8%A3%85-jdk)
-  - [1、rpm安装](#1rpm%E5%AE%89%E8%A3%85)
-  - [2、压缩包安装](#2%E5%8E%8B%E7%BC%A9%E5%8C%85%E5%AE%89%E8%A3%85)
-- [三、配置 Tomcat 服务器:](#%E4%B8%89%E9%85%8D%E7%BD%AE-tomcat-%E6%9C%8D%E5%8A%A1%E5%99%A8)
-- [四、添加 tomcat 启动到 service 中.](#%E5%9B%9B%E6%B7%BB%E5%8A%A0-tomcat-%E5%90%AF%E5%8A%A8%E5%88%B0-service-%E4%B8%AD)
-- [五、windows下tomcat和mave配置](#%E4%BA%94windows%E4%B8%8Btomcat%E5%92%8Cmave%E9%85%8D%E7%BD%AE)
-  - [1、Maven环境配置:](#1maven%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)
-  - [2、Tomcat环境配置:](#2tomcat%E7%8E%AF%E5%A2%83%E9%85%8D%E7%BD%AE)
-  - [3、Eclipse配置Maven:](#3eclipse%E9%85%8D%E7%BD%AEmaven)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # 一、Windows 下配置环境变量
 
 - 下载对应的jdk安装包(下载地址:http://www.oracle.com/technetwork/java/javase/downloads/index.html)
@@ -116,120 +99,128 @@
 	alias cdlog="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs"
 	```
     	
-# 三、配置 Tomcat 服务器:	
-    1、安装说明 
-    	安装环境：CentOS-7
-    	安装方式：源码安装 
-    	软件：apache-tomcat-8.0.14.tar.gz
-    	下载地址：http://tomcat.apache.org/download-80.cgi	
-    	安装前提：系统必须已安装配置JDK6+
-    
-    2、拷贝文件到 /usr/local 目录
-    	[root@localhost ~]# cd /usr/local  
-    	[root@localhost ~]# tar -zxv -f apache-tomcat-8.0.14.tar.gz // 解压压缩包  
-    	[root@localhost ~]# rm -rf apache-tomcat-8.0.14.tar.gz // 删除压缩包  
-    	[root@localhost ~]# mv apache-tomcat-8.0.14 tomcat //重命名 tomcat目录
-    	
-    3、启动 tomcat
-    	
-    4、防火墙开放8080端口增加8080端口到防火墙配置中，执行以下操作：	
-    	[root@localhost ~]# vi + /etc/sysconfig/iptables
-    	增加如下代码：
-    	-A RH-Firewall-1-INPUT -m state --state NEW -m tcp -p tcp --dport 8080 -j ACCEPT
-    	重启防火墙
-    	[root@localhost ~]# service iptables restart
+# 三、配置 Tomcat 服务器
 
-		对于centos7的话，使用firewall
-		添加端口：
-		firewall-cmd --zone=public --add-port=8080/tcp --permanent
+## 1、安装说明 
 
-		firewall-cmd --reload
+- 安装环境：CentOS-7
+- 安装方式：源码安装 
+- 软件：apache-tomcat-8.0.14.tar.gz
+- 下载地址：http://tomcat.apache.org/download-80.cgi	
+- 安装前提：系统必须已安装配置JDK6+
+
+## 2、拷贝文件到 /usr/local 目录
+
+```
+[root@localhost ~]# cd /usr/local  
+[root@localhost ~]# tar -zxv -f apache-tomcat-8.0.14.tar.gz // 解压压缩包  
+[root@localhost ~]# rm -rf apache-tomcat-8.0.14.tar.gz // 删除压缩包  
+[root@localhost ~]# mv apache-tomcat-8.0.14 tomcat //重命名 tomcat目录
+```
+	
+## 3、启动 tomcat
+
+执行tomcat目录下的bin里的startup.sh文件
+	
+## 4、防火墙开放8080端口增加8080端口到防火墙配置中，执行以下操作
+
+```
+[root@localhost ~]# vi + /etc/sysconfig/iptables
+增加如下代码：
+-A RH-Firewall-1-INPUT -m state --state NEW -m tcp -p tcp --dport 8080 -j ACCEPT
+重启防火墙
+[root@localhost ~]# service iptables restart
+```
+
+对于centos7的话，使用firewall，添加端口：
+```
+firewall-cmd --zone=public --add-port=8080/tcp --permanent
+刷新防火墙
+firewall-cmd --reload
+```
 
 # 四、添加 tomcat 启动到 service 中.
-    在 CentOS-7 使用 systemctl 进行配置
-    1、centos7 使用 systemctl 替换了 service命令
-    	参考：redhat文档 https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/System_Administrators_Guide/sect-Managing_Services_with_systemd-Services.html#sect-Managing_Services_with_systemd-Services-List 
-    	查看全部服务命令：
-    	[root@localhost /]# systemctl list-unit-files --type service
-    	查看服务
-    	[root@localhost /]# systemctl status name.service
-    	启动服务
-    	[root@localhost /]# systemctl start name.service
-    	停止服务
-    	[root@localhost /]# systemctl stop name.service
-    	重启服务
-    	[root@localhost /]# systemctl restart name.service增加开机启动
-    	[root@localhost /]# systemctl enable name.service
-    	删除开机启动
-    	[root@localhost /]# systemctl disable name.service
-    	// 其中.service 可以省略。
-    
-    2、tomcat增加启动参数:tomcat 需要增加一个pid文件
-    	在tomca/bin 目录下面，增加 setenv.sh 配置，catalina.sh启动的时候会调用，同时配置java内存参数
-    	#add tomcat pid
-    	CATALINA_PID="$CATALINA_BASE/tomcat.pid"
-    	#add java opts
-    	JAVA_OPTS="-server -XX:PermSize=256M -XX:MaxPermSize=1024m -Xms512M -Xmx1024M -XX:MaxNewSize=256m"
-    
-    3、增加tomcat.service
-    	在/usr/lib/systemd/system目录下增加tomcat.service，目录必须是绝对目录。
-    	[Unit]
-    	Description=Tomcat
-    	After=syslog.target network.target remote-fs.target nss-lookup.target
-    	 
-    	[Service]
-    	Type=forking
-    	PIDFile=/data/tomcat/tomcat.pid
-    	ExecStart=/data/tomcat/bin/startup.sh 
-    	ExecReload=/bin/kill -s HUP $MAINPID
-    	ExecStop=/bin/kill -s QUIT $MAINPID
-    	PrivateTmp=true
-    	 
-    	[Install]
-    	WantedBy=multi-user.target
-    
-    	[unit]配置了服务的描述，规定了在network启动之后执行。[service]配置服务的pid，服务的启动，停止，重启。[install]配置了使用用户。
-    
-    4，使用tomcat.service配置开机启动
-    	[root@localhost /]# systemctl enable tomcat
-    	启动tomcat
-    	[root@localhost /]# systemctl start tomcat
-    	停止tomcat
-    	[root@localhost /]# systemctl stop tomcat
-    	重启tomcat
-    	[root@localhost /]# systemctl restart tomcat
-    
-    	因为配置pid，在启动的时候会再tomcat根目录生成tomcat.pid文件，停止之后删除。
-    	同时tomcat在启动时候，执行start不会启动两个tomcat，保证始终只有一个tomcat服务在运行。
-    	多个tomcat可以配置在多个目录下，互不影响	
+在 CentOS-7 使用 systemctl 进行配置
+
+## 1、centos7 使用 systemctl 替换了 service命令
+
+```
+参考：redhat文档 https://access.redhat.com/documentation/en-US/Red_Hat_Enterprise_Linux/7/html/System_Administrators_Guide/sect-Managing_Services_with_systemd-Services.html#sect-Managing_Services_with_systemd-Services-List 
+查看全部服务命令：
+[root@localhost /]# systemctl list-unit-files --type service
+查看服务
+[root@localhost /]# systemctl status name.service
+启动服务
+[root@localhost /]# systemctl start name.service
+停止服务
+[root@localhost /]# systemctl stop name.service
+重启服务
+[root@localhost /]# systemctl restart name.service增加开机启动
+[root@localhost /]# systemctl enable name.service
+删除开机启动
+[root@localhost /]# systemctl disable name.service
+// 其中.service 可以省略。
+```
+
+## 2、tomcat增加启动参数
+
+tomcat 需要增加一个pid文件，在`tomca/bin` 目录下面，增加 `setenv.sh` 配置，`catalina.sh`启动的时候会调用，同时配置java内存参数
+```
+#add tomcat pid
+CATALINA_PID="$CATALINA_BASE/tomcat.pid"
+#add java opts
+JAVA_OPTS="-server -XX:PermSize=256M -XX:MaxPermSize=1024m -Xms512M -Xmx1024M -XX:MaxNewSize=256m"
+```
+
+## 3、增加tomcat.service
+
+在`/usr/lib/systemd/system`目录下增加`tomcat.service`，目录必须是绝对目录。
+```
+[Unit]
+Description=Tomcat
+After=syslog.target network.target remote-fs.target nss-lookup.target
+	
+[Service]
+Type=forking
+PIDFile=/data/tomcat/tomcat.pid
+ExecStart=/data/tomcat/bin/startup.sh 
+ExecReload=/bin/kill -s HUP $MAINPID
+ExecStop=/bin/kill -s QUIT $MAINPID
+PrivateTmp=true
+	
+[Install]
+WantedBy=multi-user.target
+```
+`[unit]`配置了服务的描述，规定了在network启动之后执行。`[service]`配置服务的pid，服务的启动，停止，重启。`[install]`配置了使用用户。
+
+## 4、使用tomcat.service配置开机启动
+
+```
+[root@localhost /]# systemctl enable tomcat
+启动tomcat
+[root@localhost /]# systemctl start tomcat
+停止tomcat
+[root@localhost /]# systemctl stop tomcat
+重启tomcat
+[root@localhost /]# systemctl restart tomcat
+```
+因为配置pid，在启动的时候会再tomcat根目录生成`tomcat.pid`文件，停止之后删除。同时tomcat在启动时候，执行start不会启动两个tomcat，保证始终只有一个tomcat服务在运行。多个tomcat可以配置在多个目录下，互不影响	
     	
 # 五、windows下tomcat和mave配置
-	通用步骤: 1.【我的电脑】--> 【属性】-->【高级系统设置】 --> 【环境变量】;
-## 1、Maven环境配置:
-	(1).在系统变量中添加:MAVEN_HOME,变量值为maven的安装目录
-	(2).在变量:PATH 后面添加:%MAVEN_HOME%\bin
-## 2、Tomcat环境配置:
-	(1).新建变量名：CATALINA_BASE,变量值为tomcat的安装目录
-	(2).新建变量名：CATALINA_HOME,变量值为tomcat的安装目录
-	(3).打开PATH,添加变量值：%CATALINA_HOME%\lib;%CATALINA_HOME%\bin
-## 3、Eclipse配置Maven:
-	preference--> Maven--->Installtion[添加当前Maven的配置路径]
-	User setting --> 选择Maven安装目录下conf下的settings.xml文件
+
+通用步骤: `【我的电脑】--> 【属性】-->【高级系统设置】 --> 【环境变量】`;
+
+## 1、Maven环境配置
+
+- 在系统变量中添加：`MAVEN_HOME`，变量值为maven的安装目录
+- 在变量：`PATH` 后面添加：`%MAVEN_HOME%\bin`
+
+## 2、Tomcat环境配置
+
+- 新建变量名：`CATALINA_BASE`，变量值为tomcat的安装目录
+- 新建变量名：`CATALINA_HOME`，变量值为tomcat的安装目录
+- 打开PATH,添加变量值：`%CATALINA_HOME%\lib;%CATALINA_HOME%\bin`
 
 # 参考文档
 
-- [CentOS-7](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/migration_planning_guide/sect-red_hat_enterprise_linux-migration_planning_guide-security_and_access_control)
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+- [CentOS-7](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/migration_planning_guide/index)
