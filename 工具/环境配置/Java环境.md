@@ -139,6 +139,12 @@
     	重启防火墙
     	[root@localhost ~]# service iptables restart
 
+		对于centos7的话，使用firewall
+		添加端口：
+		firewall-cmd --zone=public --add-port=8080/tcp --permanent
+
+		firewall-cmd --reload
+
 # 四、添加 tomcat 启动到 service 中.
     在 CentOS-7 使用 systemctl 进行配置
     1、centos7 使用 systemctl 替换了 service命令
@@ -210,7 +216,9 @@
 	preference--> Maven--->Installtion[添加当前Maven的配置路径]
 	User setting --> 选择Maven安装目录下conf下的settings.xml文件
 
-	
+# 参考文档
+
+- [CentOS-7](https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/7/html/migration_planning_guide/sect-red_hat_enterprise_linux-migration_planning_guide-security_and_access_control)
 	
 	
 	
