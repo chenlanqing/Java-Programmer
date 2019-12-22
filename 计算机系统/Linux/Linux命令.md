@@ -169,7 +169,13 @@ yum install -y lrzsz
 - 拷贝文件夹：`scp -r /root/software/ root@192.168.56.104:/root/`
 - 远程下载文件：`cp -r root@192.168.56.104:/root/ /root/software/`
 
+## 5、永久关闭防火墙
 
+centOS7
+
+- 查看状态：`systemctl status firewalld.service`；
+- 停止防火墙：`systemctl stop firewalld.service`
+- 禁止防火墙：`systemctl disable firewalld.service`
 
 
 

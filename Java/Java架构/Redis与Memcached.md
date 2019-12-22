@@ -1055,25 +1055,7 @@ QUEUED
 
 ## 3、主从的配置
 
-- 3.1、一般是配从(库)不配主(库)；
-
-- 3.2、从库的配置：salveof 127.0.0.1(主库IP) 6379(主库端口)，从库每次与 master断开之后，都需要重新连接，除非修复 redis.conf 配置文件；
-	可以通过命令：info replication 查看当前库是主库还是从库；与主库断开：salveof no one
-
-- 3.3、操作细节(如果在同一台机器上)
-```
-	(1).拷贝多个 redis.conf 文件；
-	(2).开启 daemonize 为 yes；
-		daemonize yes
-	(3).指定pid进程
-		pidfile /var/run/redis_6379.pid
-	(4).指定端口
-		port 6379
-	(5).log 文件名字
-		logfile ""
-	(6).dump.rdb 名字
-		dbfilename dump.rdb
-```
+[Redis主从配置](../../工具/环境配置/Linux环境配置.md#3Redis主从配置)
 
 ## 4、常用的主从模式
 
