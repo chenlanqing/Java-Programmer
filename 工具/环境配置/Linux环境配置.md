@@ -1,4 +1,8 @@
-# 一、Redis安装
+# 一、Vmware Fusion虚拟机配置静态IP
+
+https://www.cnblogs.com/itbsl/p/10998696.html#commentform
+
+# 二、Redis安装
 
 环境：centos7
 
