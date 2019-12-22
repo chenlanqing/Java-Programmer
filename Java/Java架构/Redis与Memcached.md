@@ -165,6 +165,28 @@ PONG > 表示成功地安装Redis在您的机器上
 	- ③、使用 GETRANGE 和 SETRANGE 命令，使字符串作为随机访问向量（vectors）
 	- ④、编码大量数据到很小的空间，或者使用 GETBIT 和 SETBIT 命令，创建一个基于 Redis 的布隆 (Bloom) 过滤器
 
+**常用命令：**
+- get/set/del：查询/设置/删除
+- set rekey data：设置已经存在的key，会覆盖
+- setnx rekey data：设置已经存在的key，不会覆盖
+- set key value ex time：设置带过期时间的数据
+- expire key：设置过期时间
+- ttl：查看剩余时间，-1永不过期，-2过期
+- append key：合并字符串
+- strlen key：字符串长度
+- incr key：累加1
+- decr key：类减1
+- incrby key num：累加给定数值
+- decrby key num：累减给定数值
+- getrange key start end：截取数据，end=-1 代表到最后
+- setrange key start newdata：从start位置开始替换数据
+- mset：连续设值
+- mget：连续取值
+- msetnx：连续设置，如果存在则不设置
+- select index：切换数据库，总共默认16个
+- flushdb：删除当前下边db中的数据（不建议使用）
+- flushall：删除所有db中的数据（不建议使用）
+
 - 例子：
 ```
 127.0.0.1：6379> set name "coco"
@@ -175,7 +197,6 @@ OK
 ### 2.2、哈希/散列-hashes
 
 - Redis 的哈希是键值对的集合。Redis 的哈希值是字符串字段和字符串值之间的映射，因此它们被用来表示对象
-
 - 例子
 ```
 127.0.0.1：6379> hmset user：1000 username bluefish password 123 port 8080
@@ -189,8 +210,33 @@ OK
 6) "200"
 ```
 - 使用场景：由于哈希主要用来表示对象，对象能存储很多元素
-
 - 每个哈希可以存储多达 2^23-1 个字段值对 (field-value pair)(多于 40 亿个)；
+
+**常用命令：**
+```
+hset key property value：
+-> hset user name imooc
+-> 创建一个user对象，这个对象中包含name属性，name值为imooc
+
+hget user name：获得用户对象中name的值
+
+hmset：设置对象中的多个键值对
+-> hset user age 18 phone 139123123
+hmsetnx：设置对象中的多个键值对，存在则不添加
+-> hset user age 18 phone 139123123
+
+hmget：获得对象中的多个属性
+-> hmget user age phone
+
+hgetall user：获得整个对象的内容
+hincrby user age 2：累加属性
+hincrbyfloat user age 2.2：累加属性
+hlen user：有多少个属性
+hexists user age：判断属性是否存在
+hkeys user：获得所有属性
+hvals user：获得所有值
+hdel user：删除对象
+```
 
 ### 2.3、列表-lists
 
@@ -209,16 +255,26 @@ OK
 2) "mongodb"
 3) "redis"
 ```
-
 - LPUSH 命令插入一个新元素到列表头部，而 RPUSH 命令 插入一个新元素到列表的尾部当这两个命令操作在一个不存在的键时，将会创建一个新的列表
-
 - 从时间复杂度的角度来看，Redis 列表主要特性就是支持时间常数的插入和靠近头尾部元素的删除，即使是需要插入上百万的条目访问列表两端的元素是非常快的，但如果你试着访问一个非常大 的列表的中间元素仍然是十分慢的；
-
 - 使用场景：
 	- ①、为社交网络时间轴 (timeline) 建模，使用 LPUSH 命令往用户时间轴插入元素，使用 LRANGE 命令获得最近事项；
 	- ②、使用 LPUSH 和 LTRIM 命令创建一个不会超出给定数量元素的列表，只存储最近的 N 个元素；
 	- ③、列表可以用作消息传递原语，例如，众所周知的用于创建后台任务的 Ruby 库 Resque；
 	- ④、你可以用列表做更多的事情，这种数据类型支持很多的命令，包括阻塞命令，如 BLPOP
+
+**常用命令：**
+- lpush userList 1 2 3 4 5：构建一个list，从左边开始存入数据
+- rpush userList 1 2 3 4 5：构建一个list，从右边开始存入数据
+- lrange list start end：获得数据
+- lpop：从左侧开始拿出一个数据
+- rpop：从右侧开始拿出一个数据
+- llen list：list长度
+- lindex list index：获取list下标的值
+- lset list index value：把某个下标的值替换
+- linsert list before/after value：插入一个新的值
+- lrem list num value：删除几个相同数据
+- ltrim list start end：截取值，替换原来的list
 
 ### 2.4、集合：Sets-不允许相同成员存在
 
@@ -243,17 +299,32 @@ OK
 	- ①、你可以使用 Redis 集合追踪唯一性的事情，访问某篇博客文章的所有唯一 IP 吗？
 	- ②、Redis 集合可以表示关系；
 	- ③、你可以使用 SPOP 或 SRANDMEMBER 命令来从集合中随机抽取元素
+- sdiff set1 set2：存在于set1中但是不存在set2中的数据，差集；
+- sinter set1 set2：两个set的交集；
+- sunion set1 set2：两个集合的并集；
 
 ### 2.5、有序集合
 
 - Redis 的有序集合类似于 Redis 的集合，字符串不重复的集合；不同的是，一个有序集合的每个成员用分数，以便采取有序set命令，从最小的到最大的成员分数有关
-
 - 使用有序集合，你可以非常快地(O(log(N)))完成添加，删除和更新元素的操作由于元素是有序的而无需事后排序，你可以通过分数或者排名 (位置) 很快地来获取一个范围内的元素；
-
 - 使用场景：
 	- ①、获取排行：例如多人在线游戏排行榜，每次提交一个新的分数，你就使用 ZADD 命令更新
 	- ②、有序集合常用来索引存储在 Redis 内的数据
 	- ③、有序集合或许是最高级的 Redis 数据类型
+
+**常用命令：**
+- zadd zset 10 value1 20 value2 30 value3：设置member和对应的分数
+- zrange zset 0 -1：查看所有zset中的内容
+- zrange zset 0 -1 withscores：带有分数
+- zrank zset value：获得对应的下标
+- zscore zset value：获得对应的分数
+- zcard zset：统计个数
+- zcount zset 分数1 分数2：统计个数
+- zrangebyscore zset 分数1 分数2：查询分数之间的member(包含分数1 分数2)
+- zrangebyscore zset (分数1 (分数2：查询分数之间的member（不包含分数1 和 分数2）
+- zrangebyscore zset 分数1 分数2 limit start end：查询分数之间的member(包含分数1 分数2)，获得的结果集再次根据下标区间做查询
+- zrem zset value：删除member
+
 
 ### 2.6、位图(bitmaps)和超重对数(hyperloglogs)两种基于字符串基本类型
 
@@ -732,17 +803,19 @@ ziplist是redis为了节约内存而开发的顺序型数据结构。它被用�
 
 redis为什么需要持久化？故障恢复
 
-## 1、rdb（Redis Datbase）-保存为 dump.rdb
+## 1、rdb（Redis Datbase）
 
-**1.1、RDB：在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的Snapshot快照，它恢复时是将快照文件直接读到内存里；**
+### 1.1、什么是RDB
+
+RDB：在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的Snapshot快照，它恢复时是将快照文件直接读到内存里；是保存为 `dump.rdb`
 
 Redis会单独创建(fork)一个子进程来进行持久化，会先将数据写入到 一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不进行任何IO操作的，这就确保了极高的性能 如果需要进行大规模数据的恢复，且对于数据恢复的完整性不是非常敏感，那RDB方式要比AOF方式更加的高效。RDB的缺点是最后一次持久化后的数据可能丢失；
 
-**1.2、关于 fork：**
+### 1.2、关于 fork
 
 Fork 的作用是复制一个与当前进程一样的进程。新进程的所有数据(变量、环境变量、程序计数器等)数值都和原进程一致，但是是一个全新的进程，并作为原进程的子进程。
 
-**1.3、配置位置：**
+### 1.3、配置位置
 ```
 ################################################################ SNAPSHOTTING  ################################################################
 # Save the DB on disk：
@@ -764,7 +837,7 @@ save 300 10
 save 60 10000
 ```
 
-**1.4、触发RDB快照：**
+### 1.4、触发RDB快照
 
 - 配置文件中默认的快照配置.
 - 命令 save 或者 bgsave <br>
@@ -772,11 +845,11 @@ save 60 10000
 	==> bgsave：redis会在后台异步进行快照操作，同时还可以响应客户端请求；
 - 执行 flushall 命令，也会产生 dump.rdb 文件将，但里面是空的.
 
-**1.5、将备份文件移动到 redis 安装目录并启动服务即可**
+### 1.5、将备份文件移动到 redis 安装目录并启动服务即可
 
 config get dir 获取当前rdb文件存放的目录；
 
-**1.6.优势与劣势：**
+### 1.6、优势与劣势
 
 - 优势：
 	- 适合大规模的数据恢复，对数据完整性和一致性要求不高的；
@@ -784,7 +857,7 @@ config get dir 获取当前rdb文件存放的目录；
 - 劣势：
 	- 在一定时间间隔做一次，如果redis意外宕机，就会丢失最后一次快照后的所有修改。fork 的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑.
 
-**1.7、停止RBD保存：**
+### 1.7、停止RBD保存
 
 动态停止RDB保存规则的方法：config set save ""
 
@@ -825,17 +898,25 @@ auto-aof-rewrite-percentage	设置重写的基准值，上次重写的比例
 - 重写原理：AOF文件持续增长而过大时，会fork出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句。重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似；
 
 - 触发：Redis 会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次 rewrite 后大小的一倍且文件大于64M时触发；配置：`auto-aof-rewrite-min-size 64M`
-			
+	```
+	no-appendfsync-on-rewrite no
+	auto-aof-rewrite-percentage 100
+	auto-aof-rewrite-min-size 64mb
+	```
 ### 2.5、优势与劣势
 
 **2.5.1、优势：**
-- 每修改同步：appendfsync always   同步持久化每次发生数据变更会被立即记录到磁盘，性能较差但数据完整性比较好
-- 每秒同步：appendfsync everysec    异步操作，每秒记录，如果一秒内宕机，有数据丢失
-- 不同步：appendfsync no   从不同步<br>
+
+- 使用AOF Redis更持久:你可以使用不同的fsync策略:完全不使用fsync，每秒使用fsync，每次查询时使用fsync。使用fsync的默认策略，每秒写操作的性能仍然很好(fsync是使用后台线程执行的，当没有fsync执行时，主线程会努力执行写操作)，但是只会损失一秒的写操作。
+- AOF日志只是一个附加日志，所以如果出现断电，也不会有查找或损坏问题。即使日志以半写的命令结束，出于某种原因(磁盘已满或其他原因)，redis-check-aof工具也可以轻松修复它。
+- 当AOF变得太大时，Redis能够在后台自动重写它。重写是完全安全,复述,继续追加到旧文件,产生一个全新的最小集合操作需要创建当前数据集,而一旦准备复述,开关的两个和第二个文件附加到新的一个开始。
+- AOF以一种易于理解和解析的格式，包含所有操作的一个接一个的日志。您甚至可以轻松导出AOF文件。例如，即使您使用FLUSHALL命令清除了所有的错误，如果在此期间没有重写日志，您仍然可以保存您的数据集，只需停止服务器，删除最新的命令，并重新启动Redis。
 
 **2.5.2、劣势：**
 
-相同数据集的数据而言aof文件要远大于rdb文件，恢复速度慢于rdb。Aof 运行效率要慢于rdb，每秒同步策略效率较好，不同步效率和rdb相同
+- 相同数据集的数据而言aof文件要远大于rdb文件，恢复速度慢于rdb。Aof 运行效率要慢于rdb，每秒同步策略效率较好，不同步效率和rdb相同
+- 根据精确的fsync策略，AOF可能比RDB慢。一般来说，将fsync设置为每秒一次，性能仍然非常高，禁用fsync后，即使在高负载情况下，其速度也应该与RDB一样快。即使在写负载很大的情况下，RDB仍然能够提供关于最大延迟的更多保证。
+- 在特定的命令中(例如，有一个涉及到阻塞命令，如BRPOPLPUSH)，导致生成的AOF在重新加载时不能完全复制相同的数据集。；
 
 ## 3、关于持久化方案选择
 
@@ -956,19 +1037,21 @@ QUEUED
 
 ## 1、Redis 的复制
 
-就是我们所说的主从复制，主机数据更新后根据配置和策略，自动同步到备机的 master/slaver机制，Master 以写为主，Slave 以读为主；
-
-如果采用了主从架构，那么建议必须开启master的持久化，保证在master宕机的情况下，恢复时数据不被清空。
-
-不建议用slave node作为master node的数据热备，因为那样的话，如果你关掉master的持久化，可能在master宕机重启的时候数据是空的，然后可能一经过复制，salve node数据也丢了
+- 就是我们所说的主从复制，主机数据更新后根据配置和策略，自动同步到备机的 master/slaver机制，Master 以写为主，Slave 以读为主；
+- 如果采用了主从架构，那么建议必须开启master的持久化，保证在master宕机的情况下，恢复时数据不被清空。
+- 不建议用slave node作为master node的数据热备，因为那样的话，如果你关掉master的持久化，可能在master宕机重启的时候数据是空的，然后可能一经过复制，salve - node数据也丢了
 
 ## 2、主从复制
 
 读写分离、容灾恢复
 
-redis replication -> 主从架构 -> 读写分离 -> 水平扩容支撑读高并发
+`redis replication -> 主从架构 -> 读写分离 -> 水平扩容支撑读高并发`
 
 ***缺点***：由于所有的写操作都是先在Master上操作，然后同步更新到Slave上，所以从Master同步到Slave机器有一定的延迟，当系统很繁忙的时候，延迟问题会更加严重，slave 机器数量的增加也会使这个问题更加严重
+
+**主从原理：**
+
+
 
 ## 3、主从的配置
 
@@ -1045,7 +1128,9 @@ repl_backlog_size：1048576
 repl_backlog_first_byte_offset：0
 repl_backlog_histlen：0
 ```
+
 **4.1.2、一主二仆问题：**
+
 - 切入点问题？slave1、slave2是从头开始复制还是从切入点开始复制？ 比如从k4进来，那之前的123是否也可以复制每次连接都都是全量复制数据
 - 从机是否可以写？set可否？从库不能写，主库写，从库读
 - 主机shutdown后情况如何？从机是上位还是原地待命？主机shutdown之后，从库原地待命，等到主机响应，"master_link_status：up"这个会变成："master_link_status：down"
@@ -1069,11 +1154,11 @@ slaveof no one
 
 - slave启动成功连接到master后会发送一个sync命令，redis 2.8开始，slave node会周期性地确认自己每次复制的数据量；
 
-	如果这是slave node重新连接master node，那么master node仅仅会复制给slave部分缺少的数据; 否则如果是slave node第一次连接master node，那么会触发一次full resynchronization；
+	- 如果这是slave node重新连接master node，那么master node仅仅会复制给slave部分缺少的数据; 否则如果是slave node第一次连接master node，那么会触发一次full resynchronization；
 	
-	开始full resynchronization的时候，master会启动一个后台线程，开始生成一份RDB快照文件，同时还会将从客户端收到的所有写命令缓存在内存中。RDB文件生成完毕之后，master会将这个RDB发送给slave，slave会先写入本地磁盘，然后再从本地磁盘加载到内存中。然后master会将内存中缓存的写命令发送给slave，slave也会同步这些数据；
+	- 开始full resynchronization的时候，master会启动一个后台线程，开始生成一份RDB快照文件，同时还会将从客户端收到的所有写命令缓存在内存中。RDB文件生成完毕之后，master会将这个RDB发送给slave，slave会先写入本地磁盘，然后再从本地磁盘加载到内存中。然后master会将内存中缓存的写命令发送给slave，slave也会同步这些数据；
 	
-	slave node如果跟master node有网络故障，断开了连接，会自动重连。master如果发现有多个slave node都来重新连接，仅仅会启动一个rdb save操作，用一份数据服务所有slave node；
+	- slave node如果跟master node有网络故障，断开了连接，会自动重连。master如果发现有多个slave node都来重新连接，仅仅会启动一个rdb save操作，用一份数据服务所有slave node；
 
 - 主从复制的断点续传：从redis 2.8开始，就支持主从复制的断点续传，如果主从复制过程中，网络连接断掉了，那么可以接着上次复制的地方，继续复制下去，而不是从头开始复制一份。master node会在内存中常见一个backlog，master和slave都会保存一个replica offset还有一个master id，offset就是保存在backlog中的。如果master和slave网络连接断掉了，slave会让master从上次的replica offset开始继续复制；但是如果没有找到对应的offset，那么就会执行一次resynchronization；
 
@@ -1134,6 +1219,8 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 
 aster每次接收到写命令之后，现在内部写入数据，然后异步发送给slave node
 
+### 5.8、无磁盘化复制
+
 ## 6、哨兵模式-sentinel
 
 ### 6.1、什么是哨兵模式
@@ -1148,11 +1235,31 @@ aster每次接收到写命令之后，现在内部写入数据，然后异步发
 
 ### 6.2、使用步骤
 
-- 在响应的目录下新建：sentinel.conf文件，名字绝不能错；
-- 在 sentinel.conf 增加如下配置：<br>
-	sentinel monitor 被监控数据库名字(自己起名字) 127.0.0.1 6379 1<br>
-	上面最后一个数字1，表示主机挂掉后salve投票看让谁接替成为主机，得票数多少后成为主机；
-- 启动哨兵：redis-sentinel sentinel.conf
+- 在相应的目录下新建：sentinel.conf文件，名字绝不能错；
+- redis.conf文件配置：
+	```
+	port 26379
+	pidfile "/usr/local/redis/sentinel/redis-sentinel.pid"
+	dir "/usr/local/redis/sentinel"
+	daemonize yes
+	protected-mode no
+	logfile "/usr/local/redis/sentinel/redis-sentinel.log"
+	```
+- 在 sentinel.conf 增加如下配置：
+	```
+	# 配置哨兵
+	sentinel monitor mymaster 127.0.0.1 6379 2
+	# 密码
+	sentinel auth-pass <master-name> <password>
+	# master被sentinel认定为失效的间隔时间
+	sentinel down-after-milliseconds mymaster 30000
+	# 剩余的slaves重新和新的master做同步的并行个数
+	sentinel parallel-syncs mymaster 1
+	# 主备切换的超时时间，哨兵要去做故障转移，这个时候哨兵也是一个进程，如果他没有去执行，超过这个时间后，会由其他的哨兵来处理
+	sentinel failover-timeout mymaster 180000
+	```
+	`sentinel monitor 被监控数据库名字(自己起名字) 127.0.0.1 6379 1`，最后一个数字1，表示主机挂掉后salve投票看让谁接替成为主机，得票数多少后成为主机；
+- 启动哨兵：`redis-sentinel sentinel.conf`
 - 原有的master挂了，投票新选，重新主从继续开工，info replication查查看
 
 ### 6.3、哨兵核心点
@@ -1200,7 +1307,7 @@ Configuration: quorum = 2，majority
 #### 6.4.1、两种数据丢失情况
 
 主备切换的过程，可能会导致数据丢失
-- 异步复制导致的数据丢失：因为master -> slave的复制是异步的，所以可能有部分数据还没复制到slave，master就宕机了，此时这些部分数据就丢失了
+- 异步复制导致的数据丢失：因为`master -> slave`的复制是异步的，所以可能有部分数据还没复制到slave，master就宕机了，此时这些部分数据就丢失了
 - 脑裂导致的数据丢失：
 
 	某个master所在机器突然脱离了正常的网络，跟其他slave机器不能连接，但是实际上master还运行着。此时哨兵可能就会认为master宕机了，然后开启选举，将其他slave切换成了master这个时候，集群里就会有两个master，也就是所谓的脑裂；
@@ -1237,6 +1344,15 @@ sdown和odown转换机制：sdown和odown两种失败状态
 sdown达成的条件很简单，如果一个哨兵ping一个master，超过了`is-master-down-after-milliseconds`指定的毫秒数之后，就主观认为master宕机
 
 sdown到odown转换的条件很简单，如果一个哨兵在指定时间内，收到了quorum指定数量的其他哨兵也认为那个master是sdown了，那么就认为是odown了，客观认为master宕机
+
+**master在宕机之后，如果恢复之后存在不同步问题：**
+
+有可能是从节点配置了masterauth，这是用于同步master的数据，但是主节点一开始是master是不受影响的，当master转变为slave后，由于他没有设置masterauth，所以他不能从新的master同步数据，随之导致info replication的时候，同步状态为down，所以只需要修改redis.conf中的masterauth统一即可；
+
+一般master数据无法同步给slave的方案检查为如下：
+- 网络通信问题，要保证互相ping通，内网互通。
+- 关闭防火墙，对应的端口开发（虚拟机中建议永久关闭防火墙，云服务器的话需要保证内网互通）。
+- 统一所有的密码，不要漏了某个节点没有设置。
 
 ### 6.6、哨兵集群的自动发现机制
 
@@ -1299,9 +1415,7 @@ sdown到odown转换的条件很简单，如果一个哨兵在指定时间内，�
 
 ### 7.1、Redis集群
 
-是一个提供在多个Redis间节点间共享数据的程序集
-
-Redis集群并不支持处理多个keys的命令,因为这需要在不同的节点间移动数据,从而达不到像Redis那样的性能,在高负载的情况下可能会导致不可预料的错误.
+是一个提供在多个Redis间节点间共享数据的程序集；Redis集群并不支持处理多个keys的命令，因为这需要在不同的节点间移动数据，从而达不到像Redis那样的性能，在高负载的情况下可能会导致不可预料的错误
 
 Redis 集群通过分区来提供一定程度的可用性,在实际环境中当某个节点宕机或者不可达的情况下继续处理命令. Redis 集群的优势：
 - 自动分割数据到不同的节点上。
@@ -1390,7 +1504,20 @@ Redis单线程的优劣势：
 	- 单线程天然支持原子操作
 - 劣势：无法发挥多核CPU性能，不过可以通过在单机开多个Redis实例来完善
 
-### 2.2、高性能
+### 2.4、Redis线程模型
+
+- redis 内部使用文件事件处理器 file event handler，这个文件事件处理器是单线程的，所以 redis 才叫做单线程的模型。
+- 它采用 IO 多路复用机制同时监听多个 socket，根据 socket 上的事件来选择对应的事件处理器进行处理
+
+![](image/Redis-线程模型.png)
+
+- 客户端 socket01 向 redis 的 server socket 请求建立连接，此时 server socket 会产生一个 AE_READABLE 事件，IO 多路复用程序监听到 server socket 产生的事件后，将该事件压入队列中。文件事件分派器从队列中获取该事件，交给连接应答处理器。连接应答处理器会创建一个能与客户端通信的 socket01，并将该 socket01 的 AE_READABLE 事件与命令请求处理器关联。
+
+- 假设此时客户端发送了一个 set key value 请求，此时 redis 中的 socket01 会产生 AE_READABLE 事件，IO 多路复用程序将事件压入队列，此时事件分派器从队列中获取到该事件，由于前面 socket01 的 AE_READABLE 事件已经与命令请求处理器关联，因此事件分派器将事件交给命令请求处理器来处理。命令请求处理器读取 socket01 的 key value 并在自己内存中完成 key value 的设置。操作完成后，它会将 socket01 的 AE_WRITABLE 事件与命令回复处理器关联。
+
+- 如果此时客户端准备好接收返回结果了，那么 redis 中的 socket01 会产生一个 AE_WRITABLE 事件，同样压入队列中，事件分派器找到相关联的命令回复处理器，由命令回复处理器对 socket01 输入本次操作的一个结果，比如 ok，之后解除 socket01 的 AE_WRITABLE 事件与命令回复处理器的关联
+
+### 2.3、高性能
 
 - redis是基于内存的，内存的读写速度非常快；
 - 数据结构简单；
@@ -1417,12 +1544,14 @@ Redis单线程的优劣势：
 | -- | -- |
 | volatile-lru | 从已设置过期时间的数据集中挑选最近最少使用的数据淘汰 |
 | volatile-ttl | 从已设置过期时间的数据集中挑选将要过期的数据淘汰 |
-|volatile-random | 从已设置过期时间的数据集中任意选择数据淘汰 |
+| volatile-random | 从已设置过期时间的数据集中任意选择数据淘汰 |
 | allkeys-lru | 从所有数据集中挑选最近最少使用的数据淘汰 |
 | allkeys-random | 从所有数据集中任意选择数据进行淘汰 |
 | noeviction | 禁止淘汰数据 |
 
-如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key.抽样数量可通过 maxmemory-samples 配置.
+如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key。抽样数量可通过 maxmemory-samples 配置。
+
+默认是noeviction
 
 ## 3、Redis过期策略
 
@@ -1430,6 +1559,11 @@ Redis单线程的优劣势：
 	- 从过期字典中随机 20 个 key；
 	- 删除这 20 个 key 中已经过期的 key；
 	- 如果过期的 key 比率超过 1/4，那就重复步骤 1；
+
+	定期删除对应的配置：
+	```
+	hz 10
+	```
 
 - 惰性删除：是在客户端访问这个 key 的时候，redis 对 key 的过期时间进行检查，如果过期了就立即删除，不会给你返回任何东西。
 
@@ -1442,7 +1576,7 @@ Redis单线程的优劣势：
 # 八、Redis安全
 
 
-# 九、Redis管道
+# 九、Redis管道pipeline
 
 ## 1、单条命令的执行步骤
 
@@ -1567,6 +1701,10 @@ redis> SET mykey "Hello"
 	- 不保证每次执行都返回某个给定数量的元素，支持模糊查询；
 	- 一次返回的数量不可控，只能是大概率符合count参数；
 
+**注意：**
+
+对于会影响Redis性能的一些命令，可以给其设置别名，或者直接禁止执行，比如：`keys *`
+
 ## 10、大量的key同时过期需要注意什么
 
 集中过期，由于清楚大量的key很耗时，会出现短暂的卡顿现象；
@@ -1594,6 +1732,8 @@ pub/sub：主题订阅模式
 Set、List大小多少合适？
 
 # 参考资料
+- [Redis官方资料-命令](https://redis.io/commands)
+- [Redis持久化](https://redis.io/topics/persistence)
 - [Redis中文文档](http://redisdoc.com/)
 - [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 - [Redis未授权访问详解](http://www.freebuf.com/column/158065.html)

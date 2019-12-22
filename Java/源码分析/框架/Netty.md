@@ -145,7 +145,7 @@ private volatile int ioRatio = 50;
 
 ## 1、Reactor线程模型
 
-[Java基础知识-Reactor](../../Java基础/Java基础知识.md#6.1Reactor)
+[Java基础知识-Reactor](../../Java基础/Java-IO.md#6.1Reactor)
 
 ## 2、Netty线程模型
 

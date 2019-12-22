@@ -490,7 +490,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 无限循环的创建对象，在List中保存引用，以不被垃圾收集器回收;
 ```java
-	// VM Args： -Xms20m -Xmx20m -XX：+HeapDumpOnOutOfMemoryError
+	// VM Args： -Xms20m -Xmx20m -XX：+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<指定dump目录>
 	public class HeapOOM {
 		static class OOMObject{}
 		public static void main(String[] args) {
@@ -501,7 +501,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 		}
 	}
 ```
--XX:+HeapDumpOnOutOfMemoryError：可以让虚拟机在出现内存溢出时Dump当前的内存堆转储快照，事后可以进行分析。运行代码：
+`-XX:+HeapDumpOnOutOfMemoryError`：可以让虚拟机在出现内存溢出时Dump当前的内存堆转储快照，事后可以进行分析。运行代码：
 ```
 java.lang.OutOfMemoryError： Java heap space
 Dumping heap to java_pid5148.hprof ...
@@ -511,6 +511,8 @@ Exception in thread "main" java.lang.OutOfMemoryError： Java heap space
 - 解决异常，一般是通过内存映像分析工具对dump出来的堆转储快照进行分析，重点是确认内存中的对象是否是必要的，也就是先分清楚是内存泄漏还是内存溢出。
 - 如果是内存溢出，可以进一步通过工具查看泄漏对象到GC Roots 的引用链。
 - 如果不存在泄漏，换而言之，就是内存中的对象确实都还必须存活着，那就应当检查虚拟机的堆参数（Xmx 和 Xms），与机器物理内存对比是否还可以调大，代码上检查是否存在某些对象生命周期过长，持有状态时间过长的情况，尝试减少程序运行期的内存消耗；
+
+`-XX:HeapDumpPath=<指定dump目录>` 指定dump文件的目录
 
 ### 3.3.2、方法区和运行时常量池
 

@@ -380,7 +380,28 @@ at MyTest.main(MyTest.java:26)
 - 资源不足或者资源泄漏，造成当前线程阻塞在锁对象上（即wait在锁对象上），长期得不到唤醒(notify)。
 - 如果当前程序和外部通信，当外部程序挂起无返回时，也会导致当前线程挂起
 
-# 二、Java线上问题排查思路
+# 二、Heap Dump分析
+
+## 1、发生OOM之后
+
+如果OOM发生之后，想办法得到Heap dump
+- 项目启动之初，给定虚拟机餐厨：`-XX:+HeapDumpOnOutOfMemoryError`
+- 通过jmap命令获取：`jmap -dump:live,format=b,file=<filepath> <pid>`
+
+## 2、OOM可能原因
+
+- 代码问题；
+- 配置问题；
+- 内存不够
+
+90%的问题都是代码问题
+
+## 3、Heap Dump分析
+
+- 如果是Metaspace/PermGen OOM，一般是Class对象问题；
+- 如果是Heap Space OOME，瞄准占空间最大的对象；
+
+# 三、Java线上问题排查思路
 
 [Java 线上问题排查思路与工具使用](https://blog.csdn.net/gitchat/article/details/79019454)
 
