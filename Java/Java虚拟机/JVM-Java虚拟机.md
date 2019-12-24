@@ -304,7 +304,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 ### 2.2.4、Java 堆
 
-- Java 虚拟机所管理的内存中最大的一块，它是所有线程共享的一块内存区域。几乎所有的对象实例和数组都在这类分配内存.
+- Java 虚拟机所管理的内存中最大的一块，它是所有线程共享的一块内存区域。几乎所有的对象实例和数组都在这里分配内存.
 - Java Heap 是垃圾收集器管理的主要区域，因此很多时候也被称为"GC堆"
 - 如果在堆中没有内存可分配时，并且堆也无法扩展时，将会抛出 OutOfMemoryError 异常
 - Java 堆可以处在物理上不连续的内存空间中，只要逻辑上是连续的即可;
@@ -328,7 +328,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 - 它和 Java Heap 一样不需要连续的内存，虚拟机规范允许该区域可以选择不实现垃圾回收该区域的内存回收目标主要针是对废弃常量的和无用类的回收；
 - 根据Java虚拟机规范的规定，当方法区无法满足内存分配需求时，将抛出 OutOfMemoryError 异常；
 - 在HotSpot虚拟机中，习惯称方法区为永久代，在JDK8中将永久代移除，同时增加了元空间；
-- 在JDK版本之后，将字符串常量池从持久代中移除，放到了堆中；
+- 在JDK7版本之后，将字符串常量池从持久代中移除，放到了堆中；
 
 *其并不等同于“永久代”，因为Hospot虚拟机把GC分代收集扩展至方法区，或者说使用永久代来实现而已。其他虚拟机并不存在永久代的概念*
 
@@ -387,7 +387,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 	当DirectByteBuffer对象在某次YGC中被回收，只有Cleaner对象知道堆外内存的地址。当下一次FGC执行时，Cleaner对象会将自身Cleaner链表上删除，并触发clean方法清理堆外内存。此时，堆外内存将被回收，Cleaner对象也将在下次YGC时被回收。如果JVM一直没有执行FGC的话，无法触发Cleaner对象执行clean方法，从而堆外内存也一直得不到释放。
 
-	其实，在`ByteBuffer.allocateDirect`方式中，会主动调用System.gc()强制执行FGC。JVM觉得有需要时，就会真正执行GC操作。不过很多线上环境的JVM参数有-XX:+DisableExplicitGC，导致了System.gc()等于一个空函数，根本不会触发FGC
+	其实，在`ByteBuffer.allocateDirect`方式中，会主动调用`System.gc()`强制执行FGC。JVM觉得有需要时，就会真正执行GC操作。不过很多线上环境的JVM参数有`-XX:+DisableExplicitGC`，导致了`System.gc()`等于一个空函数，根本不会触发FGC
 
 **4、使用堆外内存优点以及注意事项**
 
@@ -523,12 +523,12 @@ Exception in thread "main" java.lang.OutOfMemoryError： Java heap space
 
 ### 3.3.3、虚拟机栈和本地方法栈
 
-由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈，栈容量只由 -Xss 参数设置
+由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈，栈容量只由 `-Xss` 参数设置
 
 - 单线程：递归调用一个简单的方法，如不累积方法，会抛出 StackOverflowError
 - 多线程：无限循环的创建线程，并为每个线程无限循环的增加内存，会抛出 OutOfMemoryError
 
-- 使用 -Xss 参数减少栈内存容量，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。定义了大量本地变量，增大此方法帧中本地变量表的长度，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。栈的默认大小是`1M`，可通过命令：`java -XX:+PrintFlagsFinal -version | grep ThreadStackSize`
+- 使用 `-Xss` 参数减少栈内存容量，结果抛出 `StackOverflowError`，异常时输出的堆栈深度相应缩小。定义了大量本地变量，增大此方法帧中本地变量表的长度，结果抛出 StackOverflowError，异常时输出的堆栈深度相应缩小。栈的默认大小是`1M`，可通过命令：`java -XX:+PrintFlagsFinal -version | grep ThreadStackSize`
 
 ```java
 // VM Args：-Xss128k
@@ -590,7 +590,7 @@ public class StackOOM {
 
 ### 3.3.4、本机直接内存溢出
 
-DirectMemory 容量可通过 -XX：MaxDirectMemorySize 指定，如果不指定，则默认与Java堆最大值(-Xmx指定)一样。使用 Unsafe 来操作。
+DirectMemory 容量可通过 `-XX：MaxDirectMemorySize` 指定，如果不指定，则默认与Java堆最大值(-Xmx指定)一样。使用 Unsafe 来操作。
 ```java
 // VM Args：-Xmx20M -XX：MaxDirectMemorySize=10M
 public class DirectMemoryOOM {
@@ -611,29 +611,31 @@ Exception in thread "main" java.lang.OutOfMemoryError
 	at sun.misc.Unsafe.allocateMemory(Native Method)
 	at demo1.DirectMemoryOOM.main(DirectMemoryOOM.java：21)
 ```
-由直接内存导致的内存溢出，一个明显的特征是在 Heap Dump 文件中不会看见明显的异常，如果发现OOM后dump文件很小，而程序又间接或直接使用了NIO，可以考虑检查是不是直接内存的问题.
+由直接内存导致的内存溢出，一个明显的特征是在 Heap Dump 文件中不会看见明显的异常，如果发现OOM后dump文件很小，而程序又间接或直接使用了NIO，可以考虑检查是不是直接内存的问题。
 
 ## 3.4、JVM参数
 
 通过参数优化虚拟机内存的参数如下所示
 
-- Xms：初始Heap大小
-- Xmx：java heap最大值
-- Xmn：young generation的heap大小
-- Xss：每个线程的Stack大小
-- XX:MinHeapFreeRatio=40<br>
+- `Xms`：初始Heap大小
+- `Xmx`：java heap最大值
+- `Xmn`：young generation的heap大小
+- `Xss`：每个线程的Stack大小
+- `-XX:MinHeapFreeRatio=40`<br>
 	Minimum percentage of heap free after GC to avoid expansion.
-- XX:MaxHeapFreeRatio=70<br>
+- `-XX:MaxHeapFreeRatio=70`<br>
 	Maximum percentage of heap free after GC to avoid shrinking.
-- XX:NewRatio ：老年代和新生代的比例，默认情况下，这个数值是2，意味着老年代是新生代的2倍，换而言之，新生代是堆大小的1/3
-- XX:NewSize=2.125M：不使用上述比例方式设置新生代大小，直接指定下面的参数，设定具体的内存大小数值
-- XX:MaxNewSize=<br>
+- `-XX:NewRatio` ：老年代和新生代的比例，默认情况下，这个数值是2，意味着老年代是新生代的2倍，换而言之，新生代是堆大小的1/3
+- `-XX:NewSize=2.125M`：不使用上述比例方式设置新生代大小，直接指定下面的参数，设定具体的内存大小数值
+- `X-X:MaxNewSize=`<br>
 	Maximum size of new generation (in bytes). Since 1.4， MaxNewSize is computed as a function of NewRatio.
-- XX:SurvivorRatio=25：Eden和Survivor的大小是按照比例设置的，如果Survivor是8，那么Survivor区域就是Eden的1/8大小，也就是新生代的1/10，因为YG = Eden + 2* Survivor
-- XX:PermSize=<br>
+- `-XX:SurvivorRatio=25`：Eden和Survivor的大小是按照比例设置的，如果Survivor是8，那么Survivor区域就是Eden的1/8大小，也就是新生代的1/10，因为YG = Eden + 2* Survivor
+- `-XX:PermSize=`<br>
 	Initial size of permanent generation
-- XX:MaxPermSize=64m<br>
+- `-XX:MaxPermSize=64m`<br>
 	Size of the Permanent Generation. [5.0 and newer： 64 bit VMs are scaled 30% larger; 1.4 amd64： 96m;1.3.1 -client： 32m.]
+- `-XX:MetaspaceSize`，初始空间大小，达到该值就会触发垃圾收集进行类型卸载，同时GC会对该值进行调整；如果释放了大量的空间，就适当降低该值；如果释放了很少的空间，那么在不超过MaxMetaspaceSize时，适当提高该值；
+- `-XX:MaxMetaspaceSize`， 最大空间，默认是没有限制的，MaxMetaspaceSize并不会在jvm启动的时候分配一块这么大的内存出来，而MaxPermSize是会分配一块这么大的内存的
 
 ## 3.5、提高内存利用率，降低内存风险
 
@@ -653,26 +655,26 @@ java.lang.OutOfMemoryError：PermGen Space
 
 ## 3.7、Java8移除永久代
 
-- **3.7.1、永久代：**
+### 3.7.1、永久代
 
-	- 永久代是一片连续的堆空间；
-	- 可通过设置参数`-XX:MaxPermSize`来设定永久代最大可分配的内存空间，默认大小是64M；
-	- 永久代的垃圾收集是和老年代（old generation）捆绑在一起的，因此无论谁满了，都会触发永久代和老年代的垃圾收集；
-	- 当JVM加载的类信息容量超过了参数`-XX：MaxPermSize`设定的值时，应用将会报OOM的错误
+- 永久代是一片连续的堆空间；
+- 可通过设置参数`-XX:MaxPermSize`来设定永久代最大可分配的内存空间，默认大小是64M；
+- 永久代的垃圾收集是和老年代（old generation）捆绑在一起的，因此无论谁满了，都会触发永久代和老年代的垃圾收集；
+- 当JVM加载的类信息容量超过了参数`-XX：MaxPermSize`设定的值时，应用将会报OOM的错误
 
-- **3.7.2、为什么移除永久代？**
+### 3.7.2、为什么移除永久代
 
-	- 在JDK7之前的版本，对于HopSpot JVM，interned-strings存储在永久代（又名PermGen），会导致大量的性能问题和OOM错误；在JDK1.7中，已经把原本放在永久代的字符串常量池移出，放在堆中；
-	
-	- 在JDK7的版本中，提供了完整支持G1垃圾收集器，以取代在JDK5中发布的CMS收集器，使用G1，PermGen仅仅在FullGC（STW）时才会被收集，G1仅仅在PermGen满了或者应用分配内存的速度比G1并发垃圾收集速度快的时候才触发FullGC；
+- 在JDK7之前的版本，对于HopSpot JVM，interned-strings存储在永久代（又名PermGen），会导致大量的性能问题和OOM错误；在JDK1.7中，已经把原本放在永久代的字符串常量池移出，放在堆中；
 
-	- 通常使用PermSize和MaxPermSize设置永久代的大小，这个大小就决定了永久代的上限，但是不是总是知道应该设置为多大的，如果使用默认值容易遇到OOM错误。这两个配置在 JDK8 后失效了；
+- 在JDK7的版本中，提供了完整支持G1垃圾收集器，以取代在JDK5中发布的CMS收集器，使用G1，PermGen仅仅在FullGC（STW）时才会被收集，G1仅仅在PermGen满了或者应用分配内存的速度比G1并发垃圾收集速度快的时候才触发FullGC；
 
-	- 建议JVM的实现中将类的元数据放入native memory，将字符串池和类的静态变量放入java堆中。这样可以加载多少类的元数据就不在由MaxPermSize控制，而由系统的实际可用空间来控制
+- 通常使用PermSize和MaxPermSize设置永久代的大小，这个大小就决定了永久代的上限，但是不是总是知道应该设置为多大的，如果使用默认值容易遇到OOM错误。这两个配置在 JDK8 后失效了；
 
-	- 类的元数据信息转移到Metaspace的原因是PermGen很难调整，PermGen中类的元数据信息在每次FullGC的时候可能会被收集，而且应该为PermGen分配多大的空间很难确定，因为PermSize的大小依赖于很多因素；由于在HotSpot中的每个垃圾收集器需要专门的代码来处理存储在PermGen中的类的元数据信息，从PermGen分离类的元数据信息到Metaspace，由于Metaspace的分配具有和Java Heap相同的地址空间，因此Metaspace和Java Heap可以无缝的管理，而且简化了FullGC的过程
+- 建议JVM的实现中将类的元数据放入native memory，将字符串池和类的静态变量放入java堆中。这样可以加载多少类的元数据就不在由MaxPermSize控制，而由系统的实际可用空间来控制
 
-	- 更深层的原因还是要合并HotSpot和JRockit的代码，JRockit从来没有一个叫永久代的东西，但是运行良好，也不需要开发运维人员设置这么一个永久代的大小。
+- 类的元数据信息转移到Metaspace的原因是PermGen很难调整，PermGen中类的元数据信息在每次FullGC的时候可能会被收集，而且应该为PermGen分配多大的空间很难确定，因为PermSize的大小依赖于很多因素；由于在HotSpot中的每个垃圾收集器需要专门的代码来处理存储在PermGen中的类的元数据信息，从PermGen分离类的元数据信息到Metaspace，由于Metaspace的分配具有和Java Heap相同的地址空间，因此Metaspace和Java Heap可以无缝的管理，而且简化了FullGC的过程
+
+- 更深层的原因还是要合并HotSpot和JRockit的代码，JRockit从来没有一个叫永久代的东西，但是运行良好，也不需要开发运维人员设置这么一个永久代的大小。
 
 ## 3.8、元空间
 
@@ -691,7 +693,7 @@ Metaspace背后的一个思想是，类和它的元数据的生命周期是和�
 ### 3.8.2、元空间组成
 
 - 元空间基本组成：
-	- Klass Metaspace：用来存klass，即class文件在jvm里的运行时数据结构，该内存是紧接着heap区的，这块内存大小可通过-XX:CompressedClassSpaceSize参数来控制，这个参数默认是1G，但是该内存也可以没有，假如没有开启压缩指针就不会有这块内存，这种情况下klass都会存在NoKlass Metaspace里；
+	- Klass Metaspace：用来存klass，即class文件在jvm里的运行时数据结构，该内存是紧接着heap区的，这块内存大小可通过`-XX:CompressedClassSpaceSize`参数来控制，这个参数默认是1G，但是该内存也可以没有，假如没有开启压缩指针就不会有这块内存，这种情况下klass都会存在NoKlass Metaspace里；
 	- NoKlass Metaspace：存klass相关的其他的内容，比如method，constantPool等，这块内存是由多块内存组合起来的，所以可以认为是不连续的内存块组成的，块内存是必须的，虽然叫做NoKlass Metaspace，但是也其实可以存klass的内容；
 
 	Klass Metaspace和NoKlass Mestaspace都是所有classloader共享的，所以类加载器们要分配内存，但是每个类加载器都有一个SpaceManager，来管理属于这个类加载的内存小块
@@ -699,7 +701,6 @@ Metaspace背后的一个思想是，类和它的元数据的生命周期是和�
 - 元空间与永久代
 	- 元空间本质和永久代类似，都是对JVM规范中方法区的实现；
 	- 元空间与永久代之间最大的区别在于：元空间并不在虚拟机中，而是使用本地内存；
-
 
 ### 3.8.3、元空间参数
 
@@ -728,6 +729,7 @@ Metaspace背后的一个思想是，类和它的元数据的生命周期是和�
 - 为了限制垃圾回收的频率和延迟，适当的监控和调优元空间是非常有必要的。元空间过多的垃圾收集可能表示类、类加载器内存泄漏或对应用程序来说元空间太小了
 
 ### 3.8.5、比较JDK6、JDK7、JDK8区别
+
 以字符串常量为例，这段程序以2的指数级不断的生成新的字符串，这样可以比较快速的消耗内存
 ```java
 /**
@@ -788,6 +790,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 - 而Perm的话，我们通过配置`-XX:PermSize`以及`-XX:MaxPermSize`来控制这块内存的大小，jvm在启动的时候会根据`-XX:PermSize`初始化分配一块连续的内存块，这样的话，如果`-XX:PermSize`设置过大，就是一种赤果果的浪费。很明显，Metapsace比Perm好多了
 
 ### 3.8.6、使用注意点
+
 - MetaspaceSize和MaxMetaspaceSize设置一样大；
 - 具体设置多大，建议稳定运行一段时间后通过```jstat -gc pid```确认且这个值大一些，对于大部分项目256m即可
 
@@ -803,7 +806,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 		- 指针碰撞：假设Java堆中内存是绝对规整的，所有用过的内存都放在一边，空闲的内存放在另一边，中间放着一个指针作为分界点的指示器，那所分配的内存就仅仅是把那个指针向空闲空间那边挪动一段与对象大小相等的距离；
 		- 空闲列表：如果java堆的内存并不是规整的，已使用的内存和空闲的内存相互交错，没办法进行简单的指针碰撞了，虚拟机必须维护一个列表，记录上哪些内存块是可用的，在分配的时候从列表中找到一块足够大的空间划分给对象实例，并更新列表上的记录；
 
-		选择哪种分配方式由Java堆是规整绝对，而java堆是否规则又由所采用的垃圾收集器是否带有压缩整理功能决定的；
+		选择哪种分配方式由Java堆是规整决定，而java堆是否规则又由所采用的垃圾收集器是否带有压缩整理功能决定的；
 		- 在属于Serial、parNew等待compact过程的收集器时，系统采用的分配算法是指针碰撞；
 		- 而使用 CMS这种基于Mark-sweep算法的收集器时，通常采用的是空闲列表
 	- 并发控制：可能多个对象同时从堆中分配内存因此需要同步，两种解决方案：虚拟机用CAS配上失败重试保证原子操作；把内存分配动作按线程划分在不同空间中进行，即每个线程预先分配一块线程本地缓冲区TLAB，各线程在各自TLAB为各自对象分配内存
@@ -844,7 +847,6 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 不一定，随着JIT编译器的发展，在编译期间，如果JIT经过逃逸分析，发现有些对象没有逃逸出方法，那么有可能堆内存分配会被优化成栈内存分配。但是这也并不是绝对的，在开启逃逸分析之后，也并不是所有对象都没有在堆上分配
 
 什么是[逃逸分析](#10455逃逸分析)
-
 
 # 5、Class 类文件结构
 
@@ -898,7 +900,7 @@ java -Djava.ext.dirs=your_ext_dir HelloWorld
 
 *注意：*
 
-除了Java提供的默认的ClassLoader外，用户还可以自定义ClassLoader，自定义的ClassLoader都必须继承自java.lang.ClassLoader类，也包括：Extension ClassLoader 和 App ClassLoader；但是Bootstrap ClassLoader不继承自 ClassLoader，其不是一个普通Java类，其由 C++编写，已嵌入到 JVM 内核；当JVM启动后，Bootstrap ClassLoader也随着启动，负责加载完核心类库后，并构造Extension ClassLoader和App ClassLoader 类加载器；
+除了Java提供的默认的ClassLoader外，用户还可以自定义ClassLoader，自定义的ClassLoader都必须继承自`java.lang.ClassLoader`类，也包括：Extension ClassLoader 和 App ClassLoader；但是Bootstrap ClassLoader不继承自 ClassLoader，其不是一个普通Java类，其由 C++编写，已嵌入到 JVM 内核；当JVM启动后，Bootstrap ClassLoader也随着启动，负责加载完核心类库后，并构造Extension ClassLoader和App ClassLoader 类加载器；
 
 修改默认的应用类加载器
 ```
@@ -1100,7 +1102,7 @@ try {
 
 ### 6.4.4、破坏双亲委派模型：
 
-- 在JDK1.2发布之前，双亲委派模型是在JDK1.2之后引入的，而类加载器和抽象类 ClassLoader 在JDK1.1时代就已存在，面对已经存在的用户自定义类加载器的代码实现，作出了妥协JDK1.2 后的 ClassLoader 添加了 protected 方法 findClass().用户重写的唯一目的就是重写 loadClass()方法.	
+- 在JDK1.2发布之前，双亲委派模型是在JDK1.2之后引入的，而类加载器和抽象类 ClassLoader 在JDK1.1时代就已存在，面对已经存在的用户自定义类加载器的代码实现，作出了妥协JDK1.2 后的 ClassLoader 添加了 protected 方法 findClass()。用户重写的唯一目的就是重写 loadClass()方法.	
 
 - 线程上下文类加载器：这个类加载器可以通过 Thread 类的 setContextClassLoader()方法进行设置，如果创建线程时还未设置，它将会从父线程中继承一个，如果在应用程序的全局范围内都没有设置过的话，这个类加载器默认就是[应用程序类加载器](http://blog.csdn.net/u013095337/article/details/53609398)有了线程上下文类加载器，JNDI 服务使用这个线程上下文类加载器去加载所需要的SPI代码，也就是父类加载器请求子类加载器去完成类加载的工作，这种行为实际是打通双亲委派模型的层次结构来逆向使用类加载器
 
@@ -1113,8 +1115,9 @@ try {
 Java 中提供的默认 ClassLoader，只加载指定目录下的jar和class，如果我们想加载其它位置的类或jar时，比如：我要加载网络上的一个class文件，通过动态加载到内存之后，要调用这个类中的方法实现我的业务逻辑。在这样的情况下，默认的ClassLoader就不能满足我们的需求了，所以需要定义自己的ClassLoader;	
 
 ### 6.5.2、如何自定义类加载器
-- 继承 java.lang.ClassLoader;
-- 重写父类的 findClass方法;[NetworkClassLoader.java]JDK 已经在loadClass方法中帮我们实现了 ClassLoader 搜索类的算法，当在loadClass方法中搜索不到类时，loadClass方法就会调用findClass方法来搜索类，所以我们只需重写该方法即可.如没有特殊的要求，一般不建议重写loadClass搜索类的算法；
+
+- 继承 `java.lang.ClassLoader`;
+- 重写父类的 `findClass`方法;[NetworkClassLoader.java]JDK 已经在loadClass方法中帮我们实现了 ClassLoader 搜索类的算法，当在loadClass方法中搜索不到类时，loadClass方法就会调用findClass方法来搜索类，所以我们只需重写该方法即可。如没有特殊的要求，一般不建议重写loadClass搜索类的算法；
 
 ```java
 public class NetworkClassLoader extends ClassLoader {					
@@ -1146,9 +1149,9 @@ public class NetworkClassLoader extends ClassLoader {
 
 ### 6.6.2、上述两种加载方式有什么区别?
 
-- Class.forName(name) 实际调用的是 Class.forName(classname， initialized， classloader)，三个参数分别是：需要加载的class的名字、是否需要初始化、指定的类加载器
+- Class.forName(name) 实际调用的是 `Class.forName(classname, initialized, classloader)`，三个参数分别是：需要加载的class的名字、是否需要初始化、指定的类加载器
 
-- ClassLoader.loadClass 实际调用的是ClassLoader.loadClass(name， resolve);参数分别为：需要加载的class的名字、是否需要进行链接
+- ClassLoader.loadClass 实际调用的是`ClassLoader.loadClass(name, resolve);`参数分别为：需要加载的class的名字、是否需要进行链接
 
 - Class.forName 方法执行之后已经对被加载类的静态变量分配完了存储空间，而 ClassLoader.loadClass()方法并没有一定执行完链接这一步；当想动态加载一个类且这个类又存在静态代码块或者静态变量而你在加载时就想同时初始化这些静态代码块则应偏向于使用 Class.forName() 方法。比如在加载数据库驱动的时，一般使用的是Class.forName("com.mysql.Driver")，该类中有一个static方法，注册驱动，就是为什么需要使用Class.forName
 
@@ -1156,17 +1159,17 @@ public class NetworkClassLoader extends ClassLoader {
 
 ## 6.7、什么时候使用类加载器
 
-类加载器是个很强大的概念，很多地方被运用.最经典的例子就是AppletClassLoader，它被用来加载Applet使用的类，而Applets大部分是在网上使用，而非本地的操作系统使用.使用不同的类加载器，你可以从不同的源地址加载同一个类，它们被视为不同的类.J2EE 使用多个类加载器加载不同地方的类，例如WAR文件由 Web-app 类加载器加载，而 EJB-JAR中的类由另外的类加载器加载.有些服务器也支持热部署，这也由类加载器实现.你也可以使用类加载器来加载数据库或者其他持久层的数据；
+类加载器是个很强大的概念，很多地方被运用。最经典的例子就是AppletClassLoader，它被用来加载Applet使用的类，而Applets大部分是在网上使用，而非本地的操作系统使用.使用不同的类加载器，你可以从不同的源地址加载同一个类，它们被视为不同的类.J2EE 使用多个类加载器加载不同地方的类，例如WAR文件由 Web-app 类加载器加载，而 EJB-JAR中的类由另外的类加载器加载。有些服务器也支持热部署，这也由类加载器实现。你也可以使用类加载器来加载数据库或者其他持久层的数据；
 
 ## 6.8、Java 类类生命周期
 
 加载(Loading)、验证(Verification)、准备(Preparation)、解析(Resolution)、初始化(Initialization)、使用(Using)和卸载(Unloading)7个阶段；准备、验证、解析3个部分统称为连接，其中“类加载”的过程包括了加载、验证、准备、解析、初始化五个阶段，加载、验证、准备和初始化这四个阶段发生的顺序是确定的而解析阶段则不一定，它在某些情况下可以在初始化阶段之后开始，这是为了支持Java语言的运行时绑定
 
-*注意这里的几个阶段是按顺序开始.而不是按顺序进行或完成*
+*注意这里的几个阶段是按顺序开始。而不是按顺序进行或完成*
 
 - 动态绑定和静态绑定：绑定指的是把一个方法的调用与方法所在的类(方法主体)关联起来
-	- 动态绑定：即晚期绑定，也叫运行时绑定.在运行时根据具体对象的类型进行绑定.在Java 中，几乎所有的方法都是动态绑定;
-	- 静态绑定：即前期绑定，在程序执行前方法已经被绑定，此时由编译器或其它连接程序实现.在Java中，可以理解为编译期绑定Java 当作只有 final，static，private 和构造方法是前期绑定的
+	- 动态绑定：即晚期绑定，也叫运行时绑定。在运行时根据具体对象的类型进行绑定。在Java 中，几乎所有的方法都是动态绑定;
+	- 静态绑定：即前期绑定，在程序执行前方法已经被绑定，此时由编译器或其它连接程序实现。在Java中，可以理解为编译期绑定Java 当作只有 final，static，private 和构造方法是前期绑定的
 
 *注意：类加载过程中，除了在加载阶段用过可以通过自定义类加载器参与之外，其余的动作完全由虚拟机主导和控制*
 
@@ -1236,7 +1239,7 @@ public class NetworkClassLoader extends ClassLoader {
 
 - 是正式为类变量分配内存并设置类变量初始值的阶段，变量所使用的内存都将在方法区中进行分配：这时候进行内存分配的仅包括类变量（static 修饰的变量），而不包括实例变量，实例变量会在对象实例化时随着对象一块分配在Java堆中；
 
-- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：public static int value=123；那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为123的putstatic指令是程序被编译后，存放于类构造器`<clinit>()`方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;
+- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：`public static int value=123；`那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为123的`putstatic`指令是程序被编译后，存放于类构造器`<clinit>()`方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;
 	```
 	int -> 0	long -> 0L	short -> (short)0	char -> '\u0000'	byte -> (byte)0
 	boolean -> false	float -> 0.0f 	double -> 0.0d 	reference -> null
@@ -1269,11 +1272,11 @@ public class NetworkClassLoader extends ClassLoader {
 - 虚拟机会保证一个类的`<clinit>()`方法在多线程环境中被正确的加锁、同步，如果多个线程同时去初始化一个类，那么只会有一个线程去执行这个类的`<clinit>()`方法，其他线程都需要阻塞等待，直到活动线程执行`<clinit>()`方法完毕；其他线程虽然会被阻塞，但如果执行`<clinit>()`方法的那条线程退出`<clinit>()`方法后，其他线程唤醒之后不会再次进入`<clinit>()`方法。同一个类加载器下，一个类型只会初始化一次；
 
 - 虚拟机规定有且只有 5 种情况(jdk1.7)必须对类进行"初始化"：即对一个类的主动引用
-	- ①、遇到new，getstatic，putstatic，invokestatic这几个调字节码指令时，如果类没有进行过初始化，则需要先触发其初始化;
-	- ②、使用java.lang.reflect包的方法对类进行反射调用的时候，如果类没有进行过初始化，则需要先触发其初始化;
+	- ①、遇到`new`，`getstatic`，`putstatic`，`invokestatic`这几个调字节码指令时，如果类没有进行过初始化，则需要先触发其初始化;
+	- ②、使用`java.lang.reflect`包的方法对类进行反射调用的时候，如果类没有进行过初始化，则需要先触发其初始化;
 	- ③、当初始化一个类的时候，如果发现其父类还没有进行过初始化，则需要先触发其父类的初始化
 	- ④、当虚拟机启动时，用户需要指定一个要执行的主类（包含main()方法的那个类），虚拟机会先初始化这个主类;
-	- ⑤、当使用jdk1.7动态语言支持时，如果一个java.lang.invoke.MethodHandle 实例最后的解析结果REF_getstatic、REF_putstatic、REF_invokeStatic、
+	- ⑤、当使用jdk1.7动态语言支持时，如果一个`java.lang.invoke.MethodHandle` 实例最后的解析结果`REF_getstatic`、`REF_putstatic`、`REF_invokeStatic`、
 		的方法句柄，并且这个方法句柄所对应的类没有进行初始化，则需要先出触发其初始化。抛开虚拟机层面，可以理解为：
 		- ①、当创建某个类的新实例时（如通过new或者反射，克隆，反序列化等）
 		- ②、当调用某个类的静态方法时
@@ -1301,7 +1304,7 @@ public class NetworkClassLoader extends ClassLoader {
 	- ①、准备过程则是创建Java类中的静态域，并将这些域的值设为默认值。准备过程并不会执行代码。在一个Java类中	会包含对其它类或接口的形式引用，
 		包括它的父类、所实现的接口、方法的形式参数和返回值的Java类等；
 
-	- ②、对类的成员变量分配空间.虽然有初始值，但这个时候不会对他们进行初始化（因为这里不会执行任何 Java 代码）。具体如下：所有原始类型的值都为 0；如float：0f、int：0、boolean：0（注意 boolean 底层实现大多使用 int），引用类型则为null。值得注意的是，JVM 可能会在这个时期给一些有助于程序运行效率提高的数据结构分配空间;；
+	- ②、对类的成员变量分配空间。虽然有初始值，但这个时候不会对他们进行初始化（因为这里不会执行任何 Java 代码）。具体如下：所有原始类型的值都为 0；如float：0f、int：0、boolean：0（注意 boolean 底层实现大多使用 int），引用类型则为null。值得注意的是，JVM 可能会在这个时期给一些有助于程序运行效率提高的数据结构分配空间;；
 
 - **resolution解析：**
 
@@ -1372,7 +1375,7 @@ public class NetworkClassLoader extends ClassLoader {
 	```
 	*输出结果：30*
 
-	虽然程序中引用了Father类的常量 m，但是在编译阶段将此常量的值"30"存储到了调用它的类 Test 的常量池中，对常量 Father.m的引用实际上转化为了对Test类的常量池的引用.也就是说 Test 的 Class 文件之中并没有 Father 类的符号引用入口；
+	虽然程序中引用了Father类的常量 m，但是在编译阶段将此常量的值"30"存储到了调用它的类 Test 的常量池中，对常量 `Father.m`的引用实际上转化为了对Test类的常量池的引用。也就是说 Test 的 Class 文件之中并没有 Father 类的符号引用入口；
 
 - 通过数组定义来引用类，不会触发类的初始化
 	```java
@@ -1395,8 +1398,7 @@ public class NetworkClassLoader extends ClassLoader {
 - 接口也有初始化过程，上面的代码中我们都是用静态语句块来输出初始化信息的，而在接口中不能使用“static”语句块，但编译器仍然会为接口生成`<clinit>`类构造器，用于初始化接口中定义的成员变量（实际上是 static final 修饰的全局常量）
 
 - 主要区别：
-	当一个类在初始化时，要求其父类全部已经初始化过了;但是一个接口在初始化时，并不要求其父接口全部都完成了初始化，只有在真正使用
-	到父接口的时候（如引用接口中定义的常量）。才会初始化该父接口
+	当一个类在初始化时，要求其父类全部已经初始化过了；但是一个接口在初始化时，并不要求其父接口全部都完成了初始化，只有在真正使用到父接口的时候（如引用接口中定义的常量）。才会初始化该父接口
 
 ## 6.10、如下例子
 ```java
@@ -1434,7 +1436,7 @@ public class StaticTest{
 	- 执行代码时，有main方法触发静态初始化;
 	- 在初始化Test 类的静态部分时，遇到st这个成员，但是恰好这个变量引用的是本类的实例，此时静态初始化过程还没完成就要初始化实例部分了
 	- 从java的角度，一旦开始初始化静态部分，无论是否完成，后续都不会再重新触发静态初始化流程了；
-	- 因此在实例化st变量时，实际上是把实例初始化嵌入到了静态初始化流程中，并且在上面的问题中，嵌入到了静态初始化的起始位置。这就导致了实例初始化完全至于静态初始化之前.这也是导致a有值b没值的原因；
+	- 因此在实例化st变量时，实际上是把实例初始化嵌入到了静态初始化流程中，并且在上面的问题中，嵌入到了静态初始化的起始位置。这就导致了实例初始化完全至于静态初始化之前。这也是导致a有值b没值的原因；
 	
 - 扩展：如果把上述 static StaticTest st = new StaticTest(); 改为 StaticTest st = new StaticTest();即去掉 static，结果输出：1和4
 
@@ -1665,7 +1667,7 @@ public class StaticPai{
 
 ## 9.1、JVM如何捕获异常
 
-在编译生成的字节码中，每个方法都附带一个异常表。异常表中的每一个条目代表一个异常处理器，并且由from指针、to指针、target指针以及所捕获的异常类型构成。这些指针的值时字节码索引，用以定位字节码。
+在编译生成的字节码中，每个方法都附带一个异常表。异常表中的每一个条目代表一个异常处理器，并且由from指针、to指针、target指针以及所捕获的异常类型构成。这些指针的值是字节码索引，用以定位字节码。
 
 其中from指针、to指针标示了该异常处理器锁监控的范围，例如try代码块所覆盖的范围。target指针则指向异常处理器的其实位置，例如catch代码块的起始位置；
 ```java
@@ -1737,7 +1739,7 @@ finally代码块的编译：复制finally代码块的内容，分别放在try-ca
 - 插入式注解处理器的注解处理过程;
 - 分析与字节码生成过程：标注筛查、数据及控制流分析、解语法糖、字节码生成
 
-javac编译动作的入口是 com.sun.tools.javac.main.JavaCompiler类，上述三个过程逻辑集中在这个类的：compile()和compile2()方法中.
+javac编译动作的入口是 `com.sun.tools.javac.main.JavaCompiler`类，上述三个过程逻辑集中在这个类的：compile()和compile2()方法中.
 
 ### 10.2.2、解析与填充符号表的过程
 
@@ -1750,7 +1752,7 @@ javac编译动作的入口是 com.sun.tools.javac.main.JavaCompiler类，上述�
 
 ### 10.2.3、注解处理器
 
-在Javac的源码中，插入式注解处理器的初始化过程时在initProcessAnnotations()方法中完成的，而它的执行过程则是在 processAnnotations()方法中完成的，这个方法判断是否还有新的注解处理器需要执行，如果有的话，通过com.sun.tools.javac.processing.JavacProcessingEnvironment 类的 doProcessing()方法生成一个新的JavaCompiler 对象对编译的后续步骤进行处理；
+在Javac的源码中，插入式注解处理器的初始化过程时在`initProcessAnnotations()`方法中完成的，而它的执行过程则是在 `processAnnotations()`方法中完成的，这个方法判断是否还有新的注解处理器需要执行，如果有的话，通过`com.sun.tools.javac.processing.JavacProcessingEnvironment` 类的 doProcessing()方法生成一个新的JavaCompiler 对象对编译的后续步骤进行处理；
 
 ### 10.2.4、语义分析与字节码生成
 
@@ -1791,7 +1793,7 @@ javac编译动作的入口是 com.sun.tools.javac.main.JavaCompiler类，上述�
 		}
 	}
 ```
-编译时报错：名称冲突；因为泛型 List<String>和 List<Integer> 编译后都被擦除了，变成了一样的原生类型List，擦除动作导致这两个方法的特征签名变得一模一样，在 Class 类文件结构一文中讲过，Class 文件中不能存在特征签名相同的方法；
+编译时报错：名称冲突；因为泛型 List<String>和 List<Integer> 编译后都被擦除了，变成了一样的原生类型List，擦除动作导致这两个方法的特征签名变得一模一样，在 Class 类文件结构中讲过，Class 文件中不能存在特征签名相同的方法；
 
 ```java
 // 这段代码需要验证，
@@ -1811,15 +1813,15 @@ public class FanxingTest{
 
 ### 10.3.2、自动装箱、拆箱与遍历循环
 
-- 包装类在遇到 == 运算在不遇到运算符的情况下不会自动拆箱，以及他们equals()方法不处理数据转型关系
+- 包装类在遇到 `==` 运算在不遇到运算符的情况下不会自动拆箱，以及他们equals()方法不处理数据转型关系
 
 ### 10.3.3、条件编译
 
-根据布尔常量值的真假，编译器将会把分支中不成立的代码块消除掉.
+根据布尔常量值的真假，编译器将会把分支中不成立的代码块消除掉
 
 ### 10.3.4、switch支持String和枚举
 
-### 10.3.5、方法变长参数
+### 10.3.5、其他语法糖
 
 内部类、枚举类、断言语句、枚举和、try语句中定义与关闭资源、增强for循环
 
