@@ -177,6 +177,11 @@ centOS7
 - 停止防火墙：`systemctl stop firewalld.service`
 - 禁止防火墙：`systemctl disable firewalld.service`
 
+## 6、查看某个进程的线程数
+
+- 查看所有进程：`pstree -p <pid>`
+- 查看所有的进程数量`pstree -p <pid> | wc -l`
+
 
 
 

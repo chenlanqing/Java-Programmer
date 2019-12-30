@@ -3533,7 +3533,21 @@ SpringBoot默认使用Tomcat作为嵌入式的Servlet容器
         };
     }
 	```
+
+	内嵌Tomcat的所有配置都可以在`spring-boot-autoconfigure-2.0.5.RELEASE.jar!/META-INF/spring-configuration-metadata.json`找到
+	
+	比如如下配置：
+	```
+	server.tomcat.accept-count：等待队列长度，默认100
+	server.tomcat.max-connections：最大可被连接数，默认10000
+	server.tomcat.max-threads：最大工作线程数，默认200
+	server.tomcat.min-spare-threads：最小工作线程数，默认10
+	```
+
+	一般情况下，4核CPU 8G内存单进程调度线程数在800-1000以上；
+
 ### 7.2、注册Servlet三大组件：Servlet、Filter、Listener
+
 由于SpringBoot默认是以jar包的方式启动嵌入式的Servlet容器来启动SpringBoot的web应用，没有web.xml文件；
 
 注册三大组件用以下方式：ServletRegistrationBean、FilterRegistrationBean、ServletListenerRegistrationBean，相关web.xml配置都可以再这三大组件中进行设置
@@ -4152,6 +4166,29 @@ servlet3.0有几个规则：
 	}
 	```
 - （7）上述最后调用的run(application);其实就是调用 `org.springframework.boot.SpringApplication#run(java.lang.String...)` 的方法
+
+## 9、打包springboot为jar包
+
+在需要被打包的应用的pom文件加入如下配置：
+```xml
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+			<version>1.5.6.RELEASE</version>
+			<executions>
+				<execution>
+					<goals>
+						<goal>repackage</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+	<finalName>example</finalName>
+</build>
+```
 
 # 十三、SpringBoot启动配置原理
 
