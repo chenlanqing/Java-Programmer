@@ -1733,7 +1733,7 @@ public class ParentThreadSharedDataWithSon {
 
 - ThreadLocalMap使用ThreadLocal的弱引用作为key，如果一个ThreadLocal没有外部强引用来引用它，那么系统 GC 的时候，这个ThreadLocal势必会被回收，这样一来，ThreadLocalMap中就会出现key为null的Entry，就没有办法访问这些key为null的Entry的value；如果当前线程再迟迟不结束的话，这些key为null的Entry的value就会一直存在一条强引用链：Thread Ref -> Thread -> ThreaLocalMap -> Entry -> value，永远无法回收，造成内存泄漏。只有thead退出以后，value的强引用链条才会断掉
 
-- ThreadLocalMap的设计中已经考虑到这种情况，加上了一些防护措施：在ThreadLocal的get()，set()，remove()的时候都会清除线程ThreadLocalMap里所有key为null的value
+- ThreadLocalMap的设计中已经考虑到这种情况，加上了一些防护措施：在ThreadLocal的get()、set()、rehash、remove的时候都会清除线程ThreadLocalMap里所有key为null的value
 
 - 但是这些被动的预防措施并不能保证不会内存泄漏：
 	- 使用线程池的时候，这个线程执行任务结束，ThreadLocal 对象被回收了，线程放回线程池中不销毁，这个线程一直不被使用，导致内存泄漏;
@@ -1937,7 +1937,7 @@ ThreadLocalMap getMap(Thread t) {
 	
 	`private final int threadLocalHashCode = nextHashCode();`
 
-	每当创建ThreadLocal实例时这个值都会累加 0x61c88647.为了让哈希码能均匀的分布在2的N次方的数组里，即Entry[] table
+	每当创建ThreadLocal实例时这个值都会累加 `0x61c88647`。为了让哈希码能均匀的分布在2的N次方的数组里，即Entry[] table
 
 	==> threadLocalHashCode 的使用:
 	```java
