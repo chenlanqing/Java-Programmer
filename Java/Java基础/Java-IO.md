@@ -1283,6 +1283,50 @@ Socket、SocketChannel二者的实质都是一样的，都是为了实现客户�
         ```
     - 而SocketChannel、ServerSocketChannel类需要借助Selector类控制
 
+## 7、Java中怎么快速把InputStream转化为String
+
+### 7.1、使用 Apachecommons包的工具类 IOUtils
+
+```java
+StringWriter writer = new StringWriter();
+IOUtils.copy(in, writer, encoding);
+String str = writer.toString();
+// 或者
+String str = IOUtils.toString(in, encoding);
+```
+
+### 7.2、使用guava
+
+`CharStreams.toString(new InputStreamReader(in, encoding));`
+
+### 7.3、使用Scanner
+
+```java
+Scanner scanner = new Scanner(in).useDelimiter("\\A");
+String str = scanner.hasNext() ? scanner.next() : "";
+```
+
+### 7.4、使用Stream API
+
+`String str = new BufferedReader(new InputStreamReader(in)).lines().collect(Collectors.joining("\n"));`
+
+`String str = new BufferedReader(new InputStreamReader(in)).lines().parallel().collect(Collectors.joining("\n"));`
+
+### 7.5、使用InputStreamReader and StringBuilder
+
+```java
+final int bufferSize = 1024;
+final char[] buffer = new char[bufferSize];
+final StringBuilder sb = new StringBuilder();
+Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
+int charRead;
+while ( (charRead = reader.read(buffer, 0, buffer.length)) > 0) {
+    sb.append(buffer, 0 , charRead);
+}
+return sb.toString();
+```
+
+
 # 参考文章
 
 * [Java-NIO系列](http://ifeve.com/java-nio-all/)

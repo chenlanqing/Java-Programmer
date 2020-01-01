@@ -2245,19 +2245,51 @@ Java 的线程调度是不分时的，同时启动多个线程后，不能保证
 
 ## 1、JUC原子类
 
-目的是对相应的数据进行原子操作.所谓原子操作，是指操作过程不会被中断，保证数据操作是以原子方式进行的
+目的是对相应的数据进行原子操作。所谓原子操作，是指操作过程不会被中断，保证数据操作是以原子方式进行的，原子类都是在java.util.concurrent.atomic
 
+### 1.1、原子类概览
+
+原子都是在
 - 基本类型：AtomicInteger、AtomicLong、AtomicBoolean；JDK8 新增原子化累加器：DoubleAdder、DoubleAccumulator、LongAdder、LongAccumulator，这四个类仅仅用来支持累加操作；
 - 数组类型：AtomicIntegerArray、AtomicLongArray、AtomicReferenceArray；
 - 引用类型：AtomicReference、AtomicStampedRerence、AtomicMarkableReference；
-- 对象的属性修改类型：AtomicIntegerFieldUpdater、AtomicLongFieldUpdater、AtomicReferenceFieldUpdater，对象必须是volatile类型的，只有这样才能保证可见性。否则会抛出IllegalArgumentException异常；
+- 对象的属性修改类型：AtomicIntegerFieldUpdater、AtomicLongFieldUpdater、AtomicReferenceFieldUpdater，对普通变量可以进行升级操作，使用这三个原子类需要注意以下几点：
+    - 对象必须是volatile类型的，只有这样才能保证可见性。否则会抛出IllegalArgumentException异常；
+    - 不能将变量声明为static的；
+    - 不能是私有变量，即private修饰的； 
+- Adder累加器：LongAdder、DoubleAdder；本质上是空间换时间；
+- Accumulator累加器：LongAccumulator、DoubleAccumulator，适合大量和并行计算
 
+### 1.2、各类原子类使用
 
 - AtomicLong 是作用是对长整形进行原子操作。
-在32位操作系统中，64位的long和double变量由于会被JVM当作两个分离的32位来进行操作，所以不具有原子性。而使用AtomicLong能让long的操作保持原子型。<br>
-long foo = 65465498L;  <br>
-非原子操作，Java 会分两步写入 long 变量，先写32位，再写后32位，就非线程安全的.<br>
-private volatile long foo;  ==> 原子性操作
+
+    在32位操作系统中，64位的long和double变量由于会被JVM当作两个分离的32位来进行操作，所以不具有原子性。而使用AtomicLong能让long的操作保持原子型。<br>
+    `long foo = 65465498L;` 非原子操作，Java 会分两步写入 long 变量，先写32位，再写后32位，就非线程安全的。
+    `private volatile long foo;`  ==> 原子性操作
+
+- AtomicIntegerFieldUpdater用法：
+    ```java
+    static Student tom;
+    static Student peter;
+    private static AtomicIntegerFieldUpdater<Student> updater = AtomicIntegerFieldUpdater.newUpdater(Student.class, "score");
+    @Override
+    public void run() {
+        for (int i = 0; i < 10000; i++) {
+            peter.score ++;
+            updater.getAndIncrement(tom);
+        }
+    }
+    static class Student {
+       volatile int score;
+    }
+    ```
+    可以将Student对象里的score用过`AtomicIntegerFieldUpdater`变为原子操作；
+
+- Adder累加器：高并发下LongAdder比AtomicLong效率高，其本质是空间换时间，竞争激烈的情况下，LongAdder把不同线程对应到不同的Cell上进行修改，降低了冲突的概率，是利用多段锁的理念；AtomicLong由于竞争激烈，每一次加法，都要flush和refresh，即与主内存通信；而LongAdder每个线程都会有自己的计数器，仅在自己线程内计数；最后再通过sum方法来汇总这些操作，而sum方法是同步的；
+
+    使用场景的区别：在竞争激烈的情况下，LongAdder的预期吞吐量要高，但是会消耗更多的空间；LongAdder适合的场景是统计求和和计数的场景，LongAdder基本只提供了add方法，而AtomicLong提供了CAS方法
+
 
 ## 2、锁的相关概念
 
@@ -3227,7 +3259,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 - 但是Concurrent往往有较低的遍历一致性，就是所谓的弱一致性，可能发生fail-fast
 - LinkedBlcokingQueue内部是基于锁的，并提供了BlockingQueue的等待方法；
 
-# 五、JUC 包核心与算法
+# 五、JUC包核心与算法
 
 ## 1、AQS：AbstractQueuedSynchronizer-抽象队列同步器
 
@@ -3520,16 +3552,34 @@ Executors 提供了5种不同的线程池创建方式
 真正的导致OOM的其实是LinkedBlockingQueue.offer
 - ArrayBlockingQueue是一个用数组实现的有界阻塞队列，必须设置容量。
 - LinkedBlockingQueue是一个用链表实现的有界阻塞队列，容量可以选择进行设置，不设置的话，将是一个无边界的阻塞队列，最大长度为Integer.MAX_VALUE
-
+     
 除了调用`ThreadPoolExecutor`构造器之外，还可以使用Apache和Guava来使用线程池，可以使用guava的`ThreadFactoryBuilder`
 
 ## 3、ThreadPoolExecutor实现
+
+构造函数
+```java
+public ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue,
+                              ThreadFactory threadFactory,  RejectedExecutionHandler handler) {
+    if (corePoolSize < 0 || maximumPoolSize <= 0 || maximumPoolSize < corePoolSize ||  keepAliveTime < 0)
+        throw new IllegalArgumentException();
+    if (workQueue == null || threadFactory == null || handler == null)
+        throw new NullPointerException();
+    this.acc = System.getSecurityManager() == null ? null : AccessController.getContext();
+    this.corePoolSize = corePoolSize;
+    this.maximumPoolSize = maximumPoolSize;
+    this.workQueue = workQueue;
+    this.keepAliveTime = unit.toNanos(keepAliveTime);
+    this.threadFactory = threadFactory;
+    this.handler = handler;
+}
+```
 
 ### 3.1、核心参数
 
 - corePoolSize：核心线程数大小，`当线程数 < corePoolSize`，会创建线程执行runnable；如果等于0，则任务执行完之后，没有任何请求进入时销毁线程池的线程；如果大于0，即使本地任务执行完毕，核心线程也不会被销毁；
 - maximumPoolSize：最大线程数， `当线程数 >= corePoolSize`的时候，会把runnable放入workQueue中；largestPoolSize：记录了曾经出现的最大线程个数；如果待执行的线程数大于此值，需要借助第5个参数的帮助，缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
-- keepAliveTime：保持存活时间，当线程数大于`corePoolSize`的空闲线程能保持的最大时间。在默认情况下，当线程池的线程数大于 `corePoolSize` 时，keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收.
+- keepAliveTime：保持存活时间，当线程数大于`corePoolSize`的空闲线程能保持的最大时间。在默认情况下，当线程池的线程数大于 `corePoolSize` 时，keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收。
 - unit：时间单位
 - workQueue：保存任务的阻塞队列；当请求的线程数大于 `corePoolSize` 时，线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表，使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取，是一个生产消费模型队列；
 - threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时，就可以知道线程任务是由哪个线程工厂产生的
@@ -3958,99 +4008,102 @@ public <T> Future<T> submit(Callable<T> task) {
 }
 ```
 
-### 3.12、任务取消与线程池关闭
+### 3.12、线程池任务取消
 
-- 通过Future取消线程池中的任务
-	```java
-	// 该方法是非阻塞的
-	// 如果任务运行之前调用了该方法，那么任务就不会被运行；
-	// 如果任务已经完成或者已经被取消，那么该方法方法不起作用；
-	// 如果任务正在运行，并且 cancel 传入参数为 true，那么便会去终止与 Future 关联的任务
-	// cancel(false) 与 cancel(true）的区别在于，cancel(false) 只 取消已经提交但还没有被运行的任务（即任务就不会被安排运行）；而 cancel(true) 会取消所有已经提交的任务，包括 正在等待的 和 正在运行的 任务
-	boolean cancel(boolean mayInterruptIfRunning);
-	// 该方法是非阻塞的。在任务结束之前，如果任务被取消了，该方法返回 true，否则返回 false；如果任务已经完成，该方法则一直返回 false
-    boolean isCancelled();
-	// 该方法同样是非阻塞的。如果任务已经结束（正常结束，或者被取消，或者执行出错），返回 true，否则返回 false
-	boolean isDone();
-	```
-	当任务被取消时，Future 的 get 方法抛出了 CancellationException 异常，并且成功的取消了任务；
+通过Future取消线程池中的任务
+```java
+// 该方法是非阻塞的
+// 如果任务运行之前调用了该方法，那么任务就不会被运行；
+// 如果任务已经完成或者已经被取消，那么该方法方法不起作用；
+// 如果任务正在运行，并且 cancel 传入参数为 true，那么便会去终止与 Future 关联的任务
+// cancel(false) 与 cancel(true）的区别在于，cancel(false) 只 取消已经提交但还没有被运行的任务（即任务就不会被安排运行）；而 cancel(true) 会取消所有已经提交的任务，包括 正在等待的 和 正在运行的 任务
+boolean cancel(boolean mayInterruptIfRunning);
+// 该方法是非阻塞的。在任务结束之前，如果任务被取消了，该方法返回 true，否则返回 false；如果任务已经完成，该方法则一直返回 false
+boolean isCancelled();
+// 该方法同样是非阻塞的。如果任务已经结束（正常结束，或者被取消，或者执行出错），返回 true，否则返回 false
+boolean isDone();
+```
+当任务被取消时，Future 的 get 方法抛出了 CancellationException 异常，并且成功的取消了任务；
 
-	虽然取消了任务，Future 的 get 方法也对我们的取消做出了响应（即抛出 CancellationException 异常），但是任务并没有停止，而是直到任务运行完毕了，程序才结束；
-	FutureTask中cancel的实现中：cancel(true) 方法的原理是向正在运行任务的线程发送中断指令 —— 即调用运行任务的 Thread 的 interrupt() 方法。 如果一个任务是可取消的，那么它应该可以对 Thread 的 interrupt() 方法做出被取消时的响应。
-	```java
-	public boolean cancel(boolean mayInterruptIfRunning) {
-        if (!(state == NEW &&
-              UNSAFE.compareAndSwapInt(this, stateOffset, NEW,
-                  mayInterruptIfRunning ? INTERRUPTING : CANCELLED)))
-            return false;
-        try {    // in case call to interrupt throws exception
-            if (mayInterruptIfRunning) {
-                try {
-                    Thread t = runner;
-                    if (t != null)
-                        t.interrupt();
-                } finally { // final state
-                    UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
-                }
+虽然取消了任务，Future 的 get 方法也对我们的取消做出了响应（即抛出 CancellationException 异常），但是任务并没有停止，而是直到任务运行完毕了，程序才结束；
+FutureTask中cancel的实现中：cancel(true) 方法的原理是向正在运行任务的线程发送中断指令 —— 即调用运行任务的 Thread 的 interrupt() 方法。 如果一个任务是可取消的，那么它应该可以对 Thread 的 interrupt() 方法做出被取消时的响应。
+```java
+public boolean cancel(boolean mayInterruptIfRunning) {
+    if (!(state == NEW &&
+            UNSAFE.compareAndSwapInt(this, stateOffset, NEW,
+                mayInterruptIfRunning ? INTERRUPTING : CANCELLED)))
+        return false;
+    try {    // in case call to interrupt throws exception
+        if (mayInterruptIfRunning) {
+            try {
+                Thread t = runner;
+                if (t != null)
+                    t.interrupt();
+            } finally { // final state
+                UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
             }
-        } finally {
-            finishCompletion();
         }
-        return true;
+    } finally {
+        finishCompletion();
     }
-	```
+    return true;
+}
+```
 
-	如果要通过 Future 的 cancel 方法取消正在运行的任务，那么该任务必定是可以对线程中断做出响应 的任务。通过 Thread.currentThread().isInterrupted() 方法，我们可以判断任务是否被取消，从而做出相应的取消任务的响应
+如果要通过 Future 的 cancel 方法取消正在运行的任务，那么该任务必定是可以对线程中断做出响应 的任务。通过 Thread.currentThread().isInterrupted() 方法，我们可以判断任务是否被取消，从而做出相应的取消任务的响应
 
-- 线程池关闭
-	- shutdown：
-		```java
-		public void shutdown() {
-			final ReentrantLock mainLock = this.mainLock;
-			mainLock.lock();
-			try {
-				checkShutdownAccess();
-				advanceRunState(SHUTDOWN); // 原子性的修改线程池的状态为SHUTDOWN状态
-				interruptIdleWorkers();// 中断空闲的线程
-				onShutdown(); // hook for ScheduledThreadPoolExecutor
-			} finally {
-				mainLock.unlock();
-			}
-			tryTerminate();
-		}
-		```
-		如果线程正在执行线程池里的任务，即便任务处于阻塞状态，线程也不会被中断，而是继续执行。
-		如果线程池阻塞等待从队列里读取任务，则会被唤醒，但是会继续判断队列是否为空，如果不为空会继续从队列里读取任务，为空则线程退出
+### 3.13、线程池关闭
 
-	- shutdownNow执行逻辑：将线程池状态修改为STOP，然后调用线程池里的所有线程的interrupt方法
-		```java
-		public List<Runnable> shutdownNow() {
-			List<Runnable> tasks;
-			final ReentrantLock mainLock = this.mainLock;
-			mainLock.lock();
-			try {
-				checkShutdownAccess();
-				advanceRunState(STOP);// 原子性的修改线程池的状态为STOP状态
-				interruptWorkers();// 遍历线程池里的所有工作线程，然后调用线程的interrupt方法
-				tasks = drainQueue();// 将队列里还没有执行的任务放到列表里，返回给调用方
-			} finally {
-				mainLock.unlock();
-			}
-			tryTerminate();
-			return tasks;
-		}
-		```
+- shutdown：
+    ```java
+    public void shutdown() {
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            checkShutdownAccess();
+            advanceRunState(SHUTDOWN); // 原子性的修改线程池的状态为SHUTDOWN状态
+            interruptIdleWorkers();// 中断空闲的线程
+            onShutdown(); // hook for ScheduledThreadPoolExecutor
+        } finally {
+            mainLock.unlock();
+        }
+        tryTerminate();
+    }
+    ```
+    - 如果线程正在执行线程池里的任务，即便任务处于阻塞状态，线程也不会被中断，而是继续执行。
+    - 如果线程池阻塞等待从队列里读取任务，则会被唤醒，但是会继续判断队列是否为空，如果不为空会继续从队列里读取任务，为空则线程退出；
+    - 可以通过isShutdown方法判断当前线程是否停止了；
+    - isTerminated 是否线程池中断；
+    - awaitTermination 等待中断
 
-		当我们调用线程池的shutdownNow时：
-		- 如果线程正在getTask方法中执行，则会通过for循环进入到if语句，于是getTask返回null。从而线程退出。不管线程池里是否有未完成的任务。
-		- 如果线程因为执行提交到线程池里的任务而处于阻塞状态，则会导致报错(如果任务里没有捕获InterruptedException异常)，否则线程会执行完当前任务，然后通过getTask方法返回为null来退出
+- shutdownNow执行逻辑：将线程池状态修改为STOP，然后调用线程池里的所有线程的interrupt方法
+    ```java
+    public List<Runnable> shutdownNow() {
+        List<Runnable> tasks;
+        final ReentrantLock mainLock = this.mainLock;
+        mainLock.lock();
+        try {
+            checkShutdownAccess();
+            advanceRunState(STOP);// 原子性的修改线程池的状态为STOP状态
+            interruptWorkers();// 遍历线程池里的所有工作线程，然后调用线程的interrupt方法
+            tasks = drainQueue();// 将队列里还没有执行的任务放到列表里，返回给调用方
+        } finally {
+            mainLock.unlock();
+        }
+        tryTerminate();
+        return tasks;
+    }
+    ```
+    当我们调用线程池的shutdownNow时：
+    - 如果线程正在getTask方法中执行，则会通过for循环进入到if语句，于是getTask返回null。从而线程退出。不管线程池里是否有未完成的任务。
+    - 如果线程因为执行提交到线程池里的任务而处于阻塞状态，则会导致报错(如果任务里没有捕获InterruptedException异常)，否则线程会执行完当前任务，然后通过getTask方法返回为null来退出；
+    - 该方法会返回被中断的线程
 
+### 3.14、Hook
 
-### 3.13、Hook
+ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，允许用户在任务执行之前会执行之后做一些事情。我们可以通过它来实现比如初始化 ThreadLocal、收集统计信息、如记录日志等操作。这类 Hook 如 beforeExecute 和 afterExecute。另外还有一个 Hook 可以用来在任务被执行完的时候让用户插入逻辑，如 rerminated。如果 hook 方法执行失败，则内部的工作线程的执行将会失败或被中断；另外还可以通过hook来暂停线程或恢复线程
 
-ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，允许用户在任务执行之前会执行之后做一些事情。我们可以通过它来实现比如初始化 ThreadLocal、收集统计信息、如记录日志等操作。这类 Hook 如 beforeExecute 和 afterExecute。另外还有一个 Hook 可以用来在任务被执行完的时候让用户插入逻辑，如 rerminated。如果 hook 方法执行失败，则内部的工作线程的执行将会失败或被中断
-
-### 3.14、总结
+### 3.15、总结
 
 - 所谓线程池本质是一个hashSet。多余的任务会放在阻塞队列中
 - 线程池提供了两个钩子（beforeExecute，afterExecute）给我们，我们继承线程池，在执行任务前后做一些事情
@@ -4061,8 +4114,8 @@ ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，�
 
 ### 4.1、不同业务场景如何配置线程池参数
 
-- CPU密集型任务：需要尽量压榨CPU，参考值可以设为NCPU + 1;	
-- IO密集型任务：参考值可以设置为 2*NCPU
+- CPU密集型任务：需要尽量压榨CPU，参考值可以设为NCPU + 1；	
+- IO密集型任务：参考值可以设置为 2*NCPU；
 
 ### 4.2、科学设置线程池
 
