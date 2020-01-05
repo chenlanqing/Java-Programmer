@@ -231,7 +231,7 @@ nginx -V            显示 nginx 的版本，编译器版本和配置参数
 		```
 	- `=`：精确匹配
 		```
-		location = /imooc/img/face1.png {
+		location = /test/img/face1.png {
 			root /home;
 		}
 		```
@@ -251,7 +251,7 @@ nginx -V            显示 nginx 的版本，编译器版本和配置参数
 		```
 	- `^~`：以某个字符路径开头
 		```
-		location ^~ /imooc/img {
+		location ^~ /test/img {
 			root /home;
 		}
 		```
@@ -625,7 +625,7 @@ server {
 
 ```conf
 location /files {
-    alias /home/imooc;
+    alias /home/test;
     expires 10s; # 10s中过期
     expires @22h30m; # 绝对时间：22:30分过期
     expires -1h; # 当前时间的前一个小时过期
@@ -726,13 +726,13 @@ server {
 	```conf
 	server {
 		listen       443;
-		server_name  www.imoocdsp.com;
+		server_name  www.testdsp.com;
 		# 开启ssl
 		ssl     on;
 		# 配置ssl证书
-		ssl_certificate      1_www.imoocdsp.com_bundle.crt;
+		ssl_certificate      1_www.testdsp.com_bundle.crt;
 		# 配置证书秘钥
-		ssl_certificate_key  2_www.imoocdsp.com.key;
+		ssl_certificate_key  2_www.testdsp.com.key;
 		# ssl会话cache
 		ssl_session_cache    shared:SSL:1m;
 		# ssl会话超时时间

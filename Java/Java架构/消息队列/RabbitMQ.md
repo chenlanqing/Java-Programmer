@@ -393,5 +393,5 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 
 * [RabbitMQ官方文档](http://www.rabbitmq.com/documentation.html)
 * [RabbitMQ命令操作](https://blog.csdn.net/noonebirdyou/article/details/54645755)
-* [RabbitMQ可靠消息投递方案](https://www.imooc.com/article/49814)
+* [RabbitMQ可靠消息投递方案](https://www.test.com/article/49814)
 * [AMQP协议](http://rabbitmq.mr-ping.com/AMQP/amqp-0-9-1-quickref.html)

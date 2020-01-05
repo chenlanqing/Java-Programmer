@@ -182,6 +182,13 @@ centOS7
 - 查看所有进程：`pstree -p <pid>`
 - 查看所有的进程数量`pstree -p <pid> | wc -l`
 
+## 7、切换用户
 
+ - 添加用户：`useradd esuser`
+- 授权用户：`chown -R esuser:esuser /usr/local/elasticsearch-7.4.2`，授权某个目录
+- 切换到新建的用户：`su esuser`
+- 查看当前用户：`whoami`
 
+## 8、过滤掉配置的注释
 
+`more elasticsearch.yml | grep ^[^#]`

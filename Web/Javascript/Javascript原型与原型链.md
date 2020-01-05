@@ -13,7 +13,7 @@
 
 * http://www.nowamagic.net/librarys/veda/detail/1648
 * http://web.jobbole.com/9648/
-* http://www.imooc.com/article/2088
+* http://www.test.com/article/2088
 * 理论上:只有函数对象才具有原型对象属性
 
 图: Javascript原型关系图.png

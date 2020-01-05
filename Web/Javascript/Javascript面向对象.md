@@ -275,7 +275,7 @@
 		alert(1..toString()); // "1"
 ## 8.严格模式:"use strict":
     严格模式是一种特殊的执行模式,它修复了部分语言上的不足,提供更强的错误检查，并增强安全性
-    * http://www.imooc.com/article/2214
+    * http://www.test.com/article/2214
 	8.1.严格模式向上兼容,可以使用在任何位置:
 		function foo(){
 			"use strict"

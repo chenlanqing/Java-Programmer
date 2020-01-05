@@ -240,8 +240,8 @@ OK
 **常用命令：**
 ```
 hset key property value：
--> hset user name imooc
--> 创建一个user对象，这个对象中包含name属性，name值为imooc
+-> hset user name test
+-> 创建一个user对象，这个对象中包含name属性，name值为test
 
 hget user name：获得用户对象中name的值
 
