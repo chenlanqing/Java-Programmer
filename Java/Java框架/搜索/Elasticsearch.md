@@ -1416,6 +1416,17 @@ Elasticsearch设计的理念就是分布式搜索引擎，底层其实还是基�
 - 索引可以拆分成多个shard，每个shard存储部分数据；shard的数据实际是有多个备份，就是说每个shard都有一个primary shard，负责写入数据，但是还有几个replica shard。primary shard写入数据之后，会将数据同步到其他几个replica shard上去；
 - es集群多个节点，会自动选举一个节点为master节点，这个master节点其实就是干一些管理的工作的，比如维护索引元数据拉，负责切换 primary shard（主分片）和 replica shard（备份）身份，之类的。要是master节点宕机了，那么会重新选举一个节点为master节点
 
+## 9、mysql与ElasticSearch数据同步
+
+使用开源中间件
+- binlog订阅：
+    - [canal](https://github.com/alibaba/canal)
+    - go-mysql-elasticsearch
+- logstash
+
+# 三、ElasticSearch整合SpringBoot
+
+# 四、ELK
 
 
 # 面试题
@@ -1439,3 +1450,4 @@ Elasticsearch设计的理念就是分布式搜索引擎，底层其实还是基�
 
 * [ElasticSearch基本操作](http://www.ruanyifeng.com/blog/2017/08/elasticsearch.html)
 * [What is Elasticsearch](https://www.elastic.co/cn/what-is/elasticsearch)
+* [Springboot+Elasticsearch](https://docs.spring.io/spring-data/elasticsearch/docs/)

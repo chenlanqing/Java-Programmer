@@ -429,6 +429,7 @@ http {
         server 192.168.56.101:80   weight=5;
         server 192.168.56.102:80   weight=1;
         server 192.168.56.103:80   weight=6;
+		keepalived 60; # 支持keepalived长连接模式
     }
 
    #HTTP服务器
@@ -446,10 +447,12 @@ http {
 
             #以下是一些反向代理的配置(可选择性配置)
             #proxy_redirect off;
-            proxy_set_header Host $host;
+            proxy_set_header Host $http_host:$proxy_port;
             proxy_set_header X-Real-IP $remote_addr;
             #后端的Web服务器可以通过X-Forwarded-For获取用户真实IP
             proxy_set_header X-Forwarded-For $remote_addr;
+			proxy_http_version 1.1; # 支持keepalived长连接模式
+			proxy_set_header Connection ""; # 支持keepalived长连接模式
             proxy_connect_timeout 90;          #nginx跟后端服务器连接超时时间(代理连接超时)
             proxy_send_timeout 90;             #后端服务器数据回传时间(代理发送超时)
             proxy_read_timeout 90;             #连接成功后，后端服务器响应时间(代理接收超时)
@@ -464,6 +467,7 @@ http {
     }
 }
 ```
+Nginx与代理服务器之间都是使用的短连接，如果需要使用长连接，可以增加上面注释长连接的配置
 
 ### 6.2、有多个 webapp 的配置
 
@@ -643,6 +647,7 @@ location /files {
 #       max_size 设置缓存大小
 #       inactive 超过此时间则被清理
 #       use_temp_path 临时目录，使用后会影响nginx性能
+#		levels 设置目录级别
 proxy_cache_path /usr/local/nginx/upstream_cache keys_zone=mycache:5m max_size=1g inactive=1m use_temp_path=off;
 
 location / {
@@ -1176,17 +1181,60 @@ ipvs工作于内核空间的INPUT链上，当收到用户请求某集群服务�
 
 # 四、Nginx深入
 
-## 1、Nginx的进程模型
+## 1、Nginx高性能
 
-- master进程
-- process进程
+采用单线程来异步非阻塞处理请求(管理员可以配置Nginx主进程的工作进程的数量)(epoll)，不会为每个请求分配cpu和内存资源，节省了大量资源，同时也减少了大量的CPU的上下文切换
+
+### 1.1、epoll多路复用
+
+epoll 观察多个流，只通知 I/O 事件的流，避免 select 的轮询操作
+
+### 1.2、master、worker进程模型
+
+#### 1.2.1、Nginx进程模型
+
+nginx采用多进程模型，单Master-多Worker，Master进程主要用了管理Worker进程。
+
+Worker进程采用单线程、非阻塞的事件模型（Event Loop，事件循环）来实现端口的监听及客户端请求的处理和响应，同时Worker还要处理来自Master的信号。Worker进程个数一般设置为机器CPU核数
+
+![](image/Nginx线程模型.png)
+
+- master 进程用来管理 worker 进程
+    - 接收来自外界的信号，向各 worker 进程发送信号
+    - 监控 worker 进程的运行状态，当 worker 进程退出后(异常情况下)，会自动重新启动新的 worker 进程
+
+- worker进程用来处理基本的网络事件
+	- 多个 worker 进程间同等竞争来自客户端的请求，各进程间相互独立
+	- 一个请求，只能在一个 worker 进程中处理，一个 worker 进程，不能处理其它进程的请求
+	- worker 进程的个数一般与机器 cpu 核数一致 
+
+#### 1.2.2、请求处理-11个步骤
+
+- NGX_HTTP_POST_READ_PHASE：post_read，读取请求头阶段Nginx读取并解析完请求头之后立即开始运行；
+- NGX_HTTP_SERVER_REWRITE_PHASE：server请求地址重写阶段，rewrite_handler
+- NGX_HTTP_FIND_CONFIG_PHASE：配置查找阶段，用来完成当前请求与location模块的配对；
+- NGX_HTTP_REWRITE_PHASE：location请求地址重写阶段，当ngx_rewrite指令用于location模块中，就是在这个阶段运行
+- NGX_HTTP_POST_REWRITE_PHASE：请求地址重写阶段，当nginx完成rewite阶段的要求的内部跳转动作
+- NGX_HTTP_PREACCESS_PHASE：认证预处理，请求限制，连接限制 -> limit_conn_handler、limit_req_handler
+- NGX_HTTP_ACCESS_PHASE：认证处理，权限检查 -> auth_basic_handler、access_handler
+- NGX_HTTP_POST_ACCESS_PHASE：认证后处理，认证不通过，丢包
+- NGX_HTTP_TRY_FILES_PHASE：配置项try-file处理阶段
+- NGX_HTTP_CONTENT_PHASE：内容产生阶段，通常用来生成HTTP响应
+- NGX_HTTP_LOG_PHASE：日志模块处理阶段
+
+### 1.3、协程机制
+
+将每个用户的请求对应到线程中的某一个协程，然后在协程中，依靠 epoll 多路复用机制来完成同步调用开发；Lua 脚本也是基于协程机制
+- 进程的出现是为了更好的利用CPU资源使到并发成为可能
+- 线程的出现是为了降低上下文切换的消耗，提高系统的并发性，并突破一个进程只能干一样事的缺陷，使到进程内并发成为可能
+- 协程通过在线程中实现调度，避免了陷入内核级别的上下文切换造成的性能损失，进而突破了线程在IO上的性能瓶颈
 
 ## 2、Nginx的请求抢占机制
 
 
 ## 3、Nginx的事件处理
 
-https://juejin.im/post/5cdea826e51d4510b934dcb5
+异步非阻塞
 
 ## 4、Nginx 模块化设计
 
@@ -1328,6 +1376,48 @@ https://juejin.im/post/5cdea826e51d4510b934dcb5
 		...
 	}
 	```
+
+# 五、Openresty 与 Lua脚本
+
+## 1、Openresty
+
+是一个基于nginx与Lua的高性能Web平台，其内部集成了大量精良的Lua库、第三方模块以及大多数的依赖项。用于方便地搭建能够处理超高并发、扩展性极高的动态Web应用、Web服务和动态网关
+- 工作原理：通过汇聚各种设计精良的nginx模块，从而将nginx有效地变成一个强大的通用Web应用平台。这样，Web开发人员和系统工程师可以使用Lua脚本语言调动nginx支持的各种C以及Lua模块，快速构造出足以胜任10K乃至1000K以上单机并发连接的高性能Web应用系统；
+- 目标：让你的Web服务直接跑在nginx服务内部，充分利用nginx的非阻塞I/O模型，不仅仅对HTTP客户端请求，甚至对于远程后端诸如MySQL、PostgreSQL、Memcached以及Redis等都进行一致的高性能响应
+
+OpenResty是个package，打包了nginx和各种精良的库，将简单的转发工作，扩充为可以编写动态脚本，nginx转变为业务服务器，可以进行增删改查，可以进行业务处理；
+
+## Nginx的lua指令
+
+属于nginx的一部分，它的执行指令都包含在nginx的11个步骤中，相应的处理阶段可以做插入式处理，即可插拔式架构，不过ngx_lua并不是所有阶段都会运行的；另外指令可以在http、server if、location、location if几个范围进行配置：
+
+指令| 所处处理阶段 | 使用范围 | 说明 
+----| ----------| --------|------
+init_by_lua<br/>init_by_lua_file | loading-config | http |nginx master进程加载配置执行，通常用于初始化全局配置、预加载lua模块
+init_worker_by_lua<br/>init_worker_by_lua_file  | starting-worker | http | 每个nginx worker启动时调用的计时器，如果master进程不允许，则只会在init_by_lua只会调用；通常用于定义拉取配置、数据或者后端服务端的健康检查；
+set_by_lua <br/> set_by_lua_file | rewrite | server、server if、location、location if | 设置nginx变量，可以实现复杂的赋值逻辑；此处是阻塞的
+rewrite_by_lua <br/> rewrite_by_lua_file | rewrite tail | http、server、location、location if | rewrite阶段处理，可以实现复杂的转发、重定向逻辑
+
+# 六、面试题
+
+## 1、惊群现象
+
+### 1.1、什么是惊群现象
+
+惊群简单来说就是多个进程或者线程在等待同一个事件，当事件发生时，所有线程和进程都会被内核唤醒。唤醒后通常只有一个进程获得了该事件并进行处理，其他进程发现获取事件失败后又继续进入了等待状态，在一定程度上降低了系统性能。具体来说惊群通常发生在服务器的监听等待调用上，服务器创建监听socket，后fork多个进程，在每个进程中调用accept或者epoll_wait等待终端的连接；
+
+### 1.2、nginx的惊群现象
+
+每个worker进程都是从master进程fork过来。在master进程里面，先建立好需要listen的socket之 后，然后再fork出多个worker进程，这样每个worker进程都可以去accept这个socket(当然不是同一个socket，只是每个进程 的这个socket会监控在同一个ip地址与端口，这个在网络协议里面是允许的)。一般来说，当一个连接进来后，所有在accept在这个socket上 面的进程，都会收到通知，而只有一个进程可以accept这个连接，其它的则accept失败
+
+### 1.3、nginx如何处理惊群
+
+内核解决epoll的惊群效应是比较晚的，因此nginx自身解决了该问题（更准确的说是避免了）。
+
+其具体思路是：不让多个进程在同一时间监听接受连接的socket，而是让每个进程轮流监听，这样当有连接过来的时候，就只有一个进程在监听那肯定就没有惊群的问题。
+
+具体做法是：利用一把进程间锁，每个进程中都尝试获得这把锁，如果获取成功将监听socket加入wait集合中，并设置超时等待连接到来，没有获得所的进程则将监听socket从wait集合去除。这里只是简单讨论nginx在处理惊群问题基本做法，实际其代码还处理了很多细节问题，例如简单的连接的负载均衡、定时事件处理等等
+
 
 # 参考文档
 

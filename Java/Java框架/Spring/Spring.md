@@ -3487,6 +3487,7 @@ protected ModelAndView resolveErrorView(HttpServletRequest request,
 	```
 
 ## 7、嵌入式Servlet
+
 SpringBoot默认使用Tomcat作为嵌入式的Servlet容器
 
 ![](image/SpringBoot-Tomcat依赖.png)
@@ -3604,6 +3605,7 @@ protected static class DispatcherServletRegistrationConfiguration {
 ```
 
 ### 7.3、替换为其他嵌入式Servlet容器
+
 依赖关系
 
 - 1.5.X
@@ -3669,6 +3671,7 @@ protected static class DispatcherServletRegistrationConfiguration {
 ### 7.4、嵌入式Servlet容器自动配置原理
 
 #### 7.4.1、SpringBoot-1.5.x版本
+
 EmbeddedServletContainerAutoConfiguration：嵌入式的Servlet容器自动配置
 ```java
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -3847,6 +3850,7 @@ public class EmbeddedServletContainerAutoConfiguration {
 - （3）后置处理器，从容器中获取所有的**EmbeddedServletContainerCustomizer**，调用定制器的定制方法
 
 #### 7.4.2、SpringBoot-2.x版本
+
 - （1）ServletWebServerFactoryAutoConfiguration
 ```java
 // 自动配置类
@@ -3976,6 +3980,7 @@ class ServletWebServerFactoryConfiguration {
 - （5）配置修改默认是通过`TomcatServletWebServerFactoryCustomizer`来实现定制的
 
 ### 7.5、嵌入式Servlet容器启动原理
+
 什么时候创建嵌入式的Servlet容器工厂？什么时候获取嵌入式的Servlet容器并启动Tomcat；
 
 **获取嵌入式的Servlet容器工**
@@ -3987,58 +3992,42 @@ class ServletWebServerFactoryConfiguration {
 		synchronized (this.startupShutdownMonitor) {
 			// Prepare this context for refreshing.
 			prepareRefresh();
-
 			// Tell the subclass to refresh the internal bean factory.
 			ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-
 			// Prepare the bean factory for use in this context.
 			prepareBeanFactory(beanFactory);
-
 			try {
 				// Allows post-processing of the bean factory in context subclasses.
 				postProcessBeanFactory(beanFactory);
-
 				// Invoke factory processors registered as beans in the context.
 				invokeBeanFactoryPostProcessors(beanFactory);
-
 				// Register bean processors that intercept bean creation.
 				registerBeanPostProcessors(beanFactory);
-
 				// Initialize message source for this context.
 				initMessageSource();
-
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
-
 				// Initialize other special beans in specific context subclasses.
 				onRefresh();
-
 				// Check for listener beans and register them.
 				registerListeners();
-
 				// Instantiate all remaining (non-lazy-init) singletons.
 				finishBeanFactoryInitialization(beanFactory);
-
 				// Last step: publish corresponding event.
 				finishRefresh();
 			}
-
 			catch (BeansException ex) {
 				if (logger.isWarnEnabled()) {
 					logger.warn("Exception encountered during context initialization - " +
 						"cancelling refresh attempt: " + ex);
 				}
-
 				// Destroy already created singletons to avoid dangling resources.
 				destroyBeans();
-
 				// Reset 'active' flag.
 				cancelRefresh(ex);
-
 				// Propagate exception to caller.
 				throw ex;
 			}
-
 			finally {
 				// Reset common introspection caches in Spring's core, since we
 				// might not ever need metadata for singleton beans anymore...
@@ -4049,15 +4038,26 @@ class ServletWebServerFactoryConfiguration {
 	```
 - （4）onRefresh(); web的ioc容器重写了onRefresh方法
 - （5）webioc容器会创建嵌入式的Servlet容器；**createEmbeddedServletContainer**();
-- （6）获取嵌入式的Servlet容器工厂：
-
-	EmbeddedServletContainerFactory containerFactory = getEmbeddedServletContainerFactory();
-	
+- （6）获取嵌入式的Servlet容器工厂：`EmbeddedServletContainerFactory containerFactory = getEmbeddedServletContainerFactory();`
 	从ioc容器中获取EmbeddedServletContainerFactory 组件；**TomcatEmbeddedServletContainerFactory**创建对象，后置处理器一看是这个对象，就获取所有的定制器来先定制Servlet容器的相关配置；
-- （7）**使用容器工厂获取嵌入式的Servlet容器**：this.embeddedServletContainer = containerFactory.getEmbeddedServletContainer(getSelfInitializer());
+- （7）**使用容器工厂获取嵌入式的Servlet容器**：`this.embeddedServletContainer = containerFactory.getEmbeddedServletContainer(getSelfInitializer());`
 - （8）嵌入式的Servlet容器创建对象并启动Servlet容器；
 
 	**先启动嵌入式的Servlet容器，再将ioc容器中剩下没有创建出的对象获取出来**
+
+### 7.6、自定义配置
+
+- 开启Tomcat的access_log日志
+	```
+	# 日志开关
+	server.tomcat.accesslog.enabled=true
+	# 日志格式
+	server.tomcat.accesslog.pattern=%h %l %u %t "%r" %s %b %D
+	# 日志目录
+	server.tomcat.accesslog.directory=/var/www/springboot/tomcat
+	```
+
+
 
 ## 8、使用外置的Servlet容器
 
@@ -5755,6 +5755,7 @@ Spring 提供了以下五种标准的事件：
 
 # 参考资料
 
+* [Spring整合其他组件文档](https://docs.spring.io/spring-data/)
 * [Spring框架的设计理念与设计模式分析](https：//www.ibm.com/developerworks/cn/java/j-lo-spring-principle/)
 * [Spring中涉及的设计模式](https://mp.weixin.qq.com/s/Hy-qxNT0nJzcAkanbH93eA)
 * [Spring中的设计模式](http://www.iocoder.cn/Spring/DesignPattern-1/)
