@@ -77,15 +77,18 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 - ReentrantLock中，包含了Sync对象.而且，Sync 是 AQS 的子类;更重要的是，Sync 有两个子类 FairSync（公平锁）和	NonFairSync（非公平锁）；ReentrantLock 是一个独占锁，至于它到底是公平锁还是非公平锁，就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"；
 - 提供了一个Condition类，可以分组唤醒需要唤醒的线程.
 - 公平性、可重入、可中断、超时机制；
-- Sync为ReentrantLock里面的一个内部类，它继承AQS（[AbstractQueuedSynchronizer](AbstractQueuedSynchronizer.md)），它有两个子类：公平锁FairSync和非公平锁NonfairSync。ReentrantLock里面大部分的功能都是委托给Sync来实现的，同时Sync内部定义了lock()抽象方法由其子类去实现，默认实现了nonfairTryAcquire(int acquires)方法，可以看出它是非公平锁的默认实现方式。下面我们看非公平锁的lock()方法：
-
+- Sync为ReentrantLock里面的一个内部类，它继承AQS（[AbstractQueuedSynchronizer](AbstractQueuedSynchronizer.md)），它有两个子类：公平锁FairSync和非公平锁NonfairSync。ReentrantLock里面大部分的功能都是委托给Sync来实现的，同时Sync内部定义了lock()抽象方法由其子类去实现，默认实现了nonfairTryAcquire(int acquires)方法，可以看出它是非公平锁的默认实现方式。
 ## 3、公平锁
 
-是按照通过CLH等待线程按照先来先得的规则，公平的获取锁；获取锁是通过lock()函数，是在ReentrantLock.java的FairSync类中实现
+是按照通过CLH等待线程按照先来先得的规则，公平的获取锁；获取锁是通过lock()函数，是在ReentrantLock.java的FairSync类中实现，吞吐量比较低；
 
 ## 4、非公平锁
 
-则当线程要获取锁时，它会无视CLH等待队列而直接获取锁
+- 在当线程要获取锁时，它会无视CLH等待队列而直接获取锁；
+- 是不完全按照请求的顺序，在一定的情况下，可以插队；
+- 提交效率，避免唤醒带来的空档期；减少切换成本
+- 可能存在饥饿问题，也就是某些线程在长时间内得不到执行。
+- tryLock使用的是非公平锁
 
 ## 5、保证可见性
 
