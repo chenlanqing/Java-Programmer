@@ -119,13 +119,16 @@ top [参数]
 
 ## 2、查看程序运行
 
-```ps –ef|grep tomcat``` 查看所有有关tomcat的进程
+`ps –ef|grep tomcat` 查看所有有关tomcat的进程
 
-```ps -ef|grep --color java``` 高亮要查询的关键字
+`ps -ef|grep --color java` 高亮要查询的关键字
 
-```ps aux|grep java``` 查看java进程
+`ps aux|grep java` 查看java进程
 
-```lsof -i:8080``` 查看端口属于哪个进程
+`lsof -i:8080` 查看端口属于哪个进程
+
+`ps -ef | grep nginx | grep -v grep` 判断nginx进程是否存在，使用`echo $?` 返回1 
+
 
 ## 3、查看端口占用
 
@@ -184,7 +187,7 @@ centOS7
 
 ## 7、切换用户
 
- - 添加用户：`useradd esuser`
+- 添加用户：`useradd esuser`
 - 授权用户：`chown -R esuser:esuser /usr/local/elasticsearch-7.4.2`，授权某个目录
 - 切换到新建的用户：`su esuser`
 - 查看当前用户：`whoami`
@@ -192,3 +195,7 @@ centOS7
 ## 8、过滤掉配置的注释
 
 `more elasticsearch.yml | grep ^[^#]`
+
+## 9、查看脚本过程
+
+`sh -x str.sh`
