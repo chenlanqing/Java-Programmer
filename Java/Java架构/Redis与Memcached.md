@@ -1759,6 +1759,22 @@ Redission通过Netty支持非阻塞I/O
 
 ## 3、Lettuce
 
+### 3.1、介绍
+
+Lettuce是一个高性能基于Java编写的Redis驱动框架，底层集成了Project Reactor提供天然的反应式编程，通信框架集成了Netty使用了非阻塞IO，5.x版本之后融合了JDK1.8的异步编程特性，在保证高性能的同时提供了十分丰富易用的API，5.1版本的新特性如下：
+- 支持Redis的新增命令ZPOPMIN, ZPOPMAX, BZPOPMIN, BZPOPMAX。
+- 支持通过Brave模块跟踪Redis命令执行。
+- 支持Redis Streams。
+- 支持异步的主从连接。
+- 支持异步连接池。
+- 新增命令最多执行一次模式（禁止自动重连）。
+- 全局命令超时设置（对异步和反应式命令也有效）
+
+**Redis的版本至少需要2.6**
+
+- [Lettuce介绍](https://mp.weixin.qq.com/s/1O9qT3rPDHGlNV9D-64bow)
+
+### 3.2、
 
 # 十一、redis基准测试
 

@@ -4190,6 +4190,22 @@ servlet3.0有几个规则：
 </build>
 ```
 
+## 10、SpringBoot优雅停机
+
+### 10.1、配置方式
+
+```properties
+management.endpoint.shutdown.enabled=true
+management.endpoints.web.exposure.include=shutdown
+# 配置停机端口
+management.server.port=23456
+# 配置能够停止的ip，一般默认为本机
+management.server.address=127.0.0.1
+```
+
+停止命令：`curl -X POST http://127.0.0.1:23456/actuator/shutdown`
+
+
 # 十三、SpringBoot启动配置原理
 
 ## 1、注解
