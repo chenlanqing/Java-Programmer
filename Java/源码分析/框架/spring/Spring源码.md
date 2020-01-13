@@ -1,14 +1,16 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
+目录
 
 - [一、IOC](#%E4%B8%80ioc)
   - [1、IOC的生命周期](#1ioc%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
-  - [2、ApplicationContext Bean 生命周期](#2applicationcontext-bean-%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
-  - [3、BeanFactory Bean生命周期-面向Spring本身](#3beanfactory-bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%E9%9D%A2%E5%90%91spring%E6%9C%AC%E8%BA%AB)
+  - [2、IOC生命周期](#2ioc%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
+    - [2.1、BeanFactory Bean生命周期-面向Spring本身](#21beanfactory-bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%E9%9D%A2%E5%90%91spring%E6%9C%AC%E8%BA%AB)
+    - [2.2、BeanFactory Bean生命周期-面向Spring本身](#22beanfactory-bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%E9%9D%A2%E5%90%91spring%E6%9C%AC%E8%BA%AB)
+  - [3、IOC源码体系](#3ioc%E6%BA%90%E7%A0%81%E4%BD%93%E7%B3%BB)
   - [4、IOC容器的启动过程](#4ioc%E5%AE%B9%E5%99%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
   - [5、Bean加载过程](#5bean%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B)
-  - [6、IOC容器源码](#6ioc%E5%AE%B9%E5%99%A8%E6%BA%90%E7%A0%81)
+  - [6、refresh方法源码](#6refresh%E6%96%B9%E6%B3%95%E6%BA%90%E7%A0%81)
     - [6.1、prepareRefresh()：刷新前预处理](#61preparerefresh%E5%88%B7%E6%96%B0%E5%89%8D%E9%A2%84%E5%A4%84%E7%90%86)
     - [6.2、obtainFreshBeanFactory()：获取BeanFactory](#62obtainfreshbeanfactory%E8%8E%B7%E5%8F%96beanfactory)
     - [6.3、prepareBeanFactory(beanFactory)](#63preparebeanfactorybeanfactory)
@@ -32,6 +34,10 @@
     - [2.5、事务回滚规则](#25%E4%BA%8B%E5%8A%A1%E5%9B%9E%E6%BB%9A%E8%A7%84%E5%88%99)
   - [3、Spring事务实现原理](#3spring%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
 - [四、SpringFactoriesLoader](#%E5%9B%9Bspringfactoriesloader)
+- [五、Spring事件](#%E4%BA%94spring%E4%BA%8B%E4%BB%B6)
+  - [1、理解Spring事件、监听机制](#1%E7%90%86%E8%A7%A3spring%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC%E6%9C%BA%E5%88%B6)
+  - [2、Spring事件发布](#2spring%E4%BA%8B%E4%BB%B6%E5%8F%91%E5%B8%83)
+    - [2.1、ApplicationEventMulticaster注册 ApplicationListener](#21applicationeventmulticaster%E6%B3%A8%E5%86%8C-applicationlistener)
 - [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
@@ -559,7 +565,86 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 
 # 四、SpringFactoriesLoader
 
+# 五、Spring事件
 
+## 1、理解Spring事件、监听机制
+
+Spring事件监听机制属于事件/监听模式，可以视为观察者模式的扩展。
+
+在Java中，事件监听器模式发布的内容有类型限制，它必须是EventObject对象。所以Spring的事件抽象类 ApplicationEvent 必然扩展 EventObject
+```java
+public abstract class ApplicationEvent extends EventObject {
+	public ApplicationEvent(Object source) {
+		super(source);
+		this.timestamp = System.currentTimeMillis();
+	}
+	public final long getTimestamp() {
+		return this.timestamp;
+	}
+}
+```
+
+EventObject不提供默认构造器，需要外部传入一个名为 source 的构造器参数，用于记录并跟踪事件的来源，同时Java事件的监听者必须是 EventListener的扩展，不过 EventListener只是一个标签接口，没有提供任何实现方法；
+```
+public interface ApplicationListener<E extends ApplicationEvent> extends EventListener {
+	void onApplicationEvent(E event);
+}
+```
+早期 ApplicationListener不支持泛型监听，在SPring3.0之后，支持泛型监听，无需借助instanceof方式来过滤事件。但是由于泛型化的 ApplicationListener 无法监听不同类型的 ApplicationEvent，因此又引入了 SmartApplicationListener接口：
+```java
+public interface SmartApplicationListener extends ApplicationListener<ApplicationEvent>, Ordered {
+	boolean supportsEventType(Class<? extends ApplicationEvent> eventType);
+	default boolean supportsSourceType(@Nullable Class<?> sourceType) {
+		return true;
+	}
+	@Override
+	default int getOrder() {
+		return LOWEST_PRECEDENCE;
+	}
+}
+```
+该接口通过supports*方法过滤需要监听的 ApplicationEvent类型和事件源类型，从而达到监听不同类型的 ApplicationEvent
+
+## 2、Spring事件发布
+
+ApplicationEventMulticaster 接口负责关联 ApplicationListener和广播 ApplicationEvent：
+```java
+public interface ApplicationEventMulticaster {
+	void addApplicationListener(ApplicationListener<?> listener);
+	void addApplicationListenerBean(String listenerBeanName);
+	void removeApplicationListener(ApplicationListener<?> listener);
+	void removeApplicationListenerBean(String listenerBeanName);
+	void removeAllListeners();
+	void multicastEvent(ApplicationEvent event);
+	void multicastEvent(ApplicationEvent event, @Nullable ResolvableType eventType);
+}
+```
+
+### 2.1、ApplicationEventMulticaster注册 ApplicationListener
+
+该接口前半部分与 ApplicationListener有关，添加和移除ApplicationListener。该类有个抽象实现类：AbstractApplicationEventMulticaster，有一个具体子类：SimpleApplicationEventMulticaster。
+
+AbstractApplicationEventMulticaster 其并未直接关联 ApplicationListener，而是通过两个属性：defaultRetriever 和 retrieverCache 关联，映射数量分别是：`0..1` 和 `0..N`
+```
+private final ListenerRetriever defaultRetriever = new ListenerRetriever(false);
+final Map<ListenerCacheKey, ListenerRetriever> retrieverCache = new ConcurrentHashMap<>(64);
+```
+其中 ListenerRetriever、ListenerCacheKey 为 AbstractApplicationEventMulticaster 内部类；
+
+按照 AbstractApplicationEventMulticaster 定义的两个属性， AbstractApplicationEventMulticaster与 ApplicationListener应该是一堆多的关系。AbstractApplicationEventMulticaster 对 ApplicationListener 做了分类，集合 retrieverCache 的定义，它是一个 ListenerCacheKey 为key、ListenerRetriever为value的缓存，同时 ListenerCacheKey 关联了事件类型和数据源类型
+```java
+private static final class ListenerCacheKey implements Comparable<ListenerCacheKey> {
+    private final ResolvableType eventType;
+    @Nullable
+    private final Class<?> sourceType;
+    public ListenerCacheKey(ResolvableType eventType, @Nullable Class<?> sourceType) {
+        Assert.notNull(eventType, "Event type must not be null");
+        this.eventType = eventType;
+        this.sourceType = sourceType;
+    }
+}
+```
+ 
 # 参考资料
 
 * [Spring AOP原理](https://mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
