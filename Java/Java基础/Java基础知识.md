@@ -1767,11 +1767,13 @@ public class OutClass{
 	类的 private 方法会隐式地被指定为final方法
 
 - 修饰类：当用 `final` 修饰一个类时，表明这个类不能被继承，final 类中的所有成员方法都会被隐式地指定为 ``final`` 方法；Java 中许多类都是 ``final`` 类，如：String，Integer
+- 不能修饰构造方法；
+- 不能修饰`static`方法；
+- 如果`final`修饰对象的时候，只是对象的引用不可变，而对象本身的内部属性是可以变化的；
 
 ### 3.3、注意点
 
-- `final` 和 static：static 作用于成员变量用来表示只保存一份副本，而 `final` 的作用是用来保证变量不可变看代码：每次打印的两个j值都是一样的，而i的值却是不同的
-
+- `final` 和 `static`：static 作用于成员变量用来表示只保存一份副本，而 `final` 的作用是用来保证变量不可变看代码：每次打印的两个j值都是一样的，而i的值却是不同的
 ```java
 public class Demo01 {
 	public static void main(String[] args) {
@@ -1788,8 +1790,15 @@ class MyDemo1{
 	public static double j = Math.random();
 }
 ```
-
 - 匿名内部类中使用的外部局部变量为什么只能是 `final` 变量(参考上面内部类)
+- 成员变量如果使用`final`修饰，可以使用如下三种方式赋值：
+	- 定义变量直接final变量后直接赋值：`private final int a = 1;`
+	- 在构造方法中对定义的成员变量进行赋值操作；
+	- 在构造代码块中赋值；
+- 成员变量如果使用`static final`修饰，可以使用如下两种种方式赋值：
+	- 定义变量直接final变量后直接赋值：`private static final int a = 1;`
+	- 在静态代码块中对成员变量进行赋值操作；
+- 如果是在方法体内定义的`final`变量，需要在使用该变量前对其进行赋值；
 
 ### 3.4、为什么使用 `final`
 

@@ -309,7 +309,7 @@ public boolean equals(Object obj){
 
 	- 当两个对象使用equals()方法比较的结果是不同的，hashCode()返回的整数值可以不同。然而，hashCode()的返回值不同可以提高哈希表的性能。
 
-**重写equals方法必须重写hashCode方法：**如果不这样做，那么在使用基于散列的的集合时，无法正常运行，如：HashMap、HashSet、HashTable；
+**重写equals方法必须重写hashCode方法：**如果不这样做，那么在使用基于散列的的集合时，无法正常运行，如：HashMap、HashSet、Hashtable；
 
 # 4、finalize()方法
 

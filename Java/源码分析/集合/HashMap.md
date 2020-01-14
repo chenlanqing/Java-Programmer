@@ -7,9 +7,9 @@
 		- [1.1、HashMap 基本结构](#11hashmap-%e5%9f%ba%e6%9c%ac%e7%bb%93%e6%9e%84)
 		- [1.2、HashMap的特点](#12hashmap%e7%9a%84%e7%89%b9%e7%82%b9)
 		- [1.3、不可变对象与 HashMap 的key](#13%e4%b8%8d%e5%8f%af%e5%8f%98%e5%af%b9%e8%b1%a1%e4%b8%8e-hashmap-%e7%9a%84key)
-	- [2、HashMap和HashTable的区别](#2hashmap%e5%92%8chashtable%e7%9a%84%e5%8c%ba%e5%88%ab)
+	- [2、HashMap和Hashtable的区别](#2hashmap%e5%92%8cHashtable%e7%9a%84%e5%8c%ba%e5%88%ab)
 	- [3、HashMap与HashSet的关系](#3hashmap%e4%b8%8ehashset%e7%9a%84%e5%85%b3%e7%b3%bb)
-	- [4、HashTable和ConcurrentHashMap 的关系](#4hashtable%e5%92%8cconcurrenthashmap-%e7%9a%84%e5%85%b3%e7%b3%bb)
+	- [4、Hashtable和ConcurrentHashMap 的关系](#4Hashtable%e5%92%8cconcurrenthashmap-%e7%9a%84%e5%85%b3%e7%b3%bb)
 	- [5、键的不变性](#5%e9%94%ae%e7%9a%84%e4%b8%8d%e5%8f%98%e6%80%a7)
 	- [6、Java8 中 HashMap 的改进](#6java8-%e4%b8%ad-hashmap-%e7%9a%84%e6%94%b9%e8%bf%9b)
 	- [7、延迟加载机制](#7%e5%bb%b6%e8%bf%9f%e5%8a%a0%e8%bd%bd%e6%9c%ba%e5%88%b6)
@@ -39,7 +39,7 @@
 		- [3.2、JDK7的实现](#32jdk7%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [3.3、JDK8的实现](#33jdk8%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [3.4、关于性能](#34%e5%85%b3%e4%ba%8e%e6%80%a7%e8%83%bd)
-		- [3.5、对比HashTable的hash方法](#35%e5%af%b9%e6%af%94hashtable%e7%9a%84hash%e6%96%b9%e6%b3%95)
+		- [3.5、对比Hashtable的hash方法](#35%e5%af%b9%e6%af%94Hashtable%e7%9a%84hash%e6%96%b9%e6%b3%95)
 	- [4、resize 的实现](#4resize-%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [4.1、JDK6的实现](#41jdk6%e7%9a%84%e5%ae%9e%e7%8e%b0)
 		- [4.2、JDK7实现](#42jdk7%e5%ae%9e%e7%8e%b0)
@@ -74,7 +74,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 ### 1.2、HashMap的特点
 
-- 线程非安全，并且允许key与value都为 null 值，HashTable 与之相反，为线程安全，key与value都不允许 null 值；
+- 线程非安全，并且允许key与value都为 null 值，Hashtable 与之相反，为线程安全，key与value都不允许 null 值；
 - 不保证其内部元素的顺序，而且随着时间的推移，同一元素的位置也可能改变（resize的情况）
 - put、get操作的时间复杂度为O(1)。
 - 遍历其集合视角的时间复杂度与其容量（capacity，槽的个数）和现有元素的大小（entry的个数）成正比，所以如果遍历的性能要求很高，不要把capactiy设置的过高或把平衡因子（load factor，当entry数大于capacity*loadFactor时，会进行resize，reside会导致key进行rehash）设置的过低
@@ -86,15 +86,15 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 - 如果 HashMap Key 的哈希值在存储键值对后发生改变，Map 可能再也查找不到这个 Entry 了。如果Key对象是可变的，那么Key的哈希值就可能改变。在HashMap中可变对象作为Key会造成数据丢失
 - 在 HashMap 中使用不可变对象。在 HashMap 中，使用 String、Integer 等不可变类型用作Key是非常明智的定义属于自己的不可变类时，在改变对象状态的时候，不要改变它的哈希值了
 
-## 2、HashMap和HashTable的区别
+## 2、HashMap和Hashtable的区别
 
-- HashTable的方法是同步的，在方法的前面都有synchronized来同步，HashMap未经同步，所以在多线程场合要手动同步；
-- HashTable不允许null值(key和value都不可以) ，HashMap允许null值(key和value都可以)。
-- HashTable有一个contains(Object value)功能和containsValue(Object value)功能一样。
-- HashTable是基于Dictionary类继承的；HashMap继承抽象类AbstractMap实现了Map接口；
-- HashTable使用Enumeration进行遍历，HashMap使用Iterator进行遍历。
-- HashTable中hash数组默认大小是11，增加的方式是 2n+1。HashMap中hash数组的默认大小是16，之后每次扩充是都是2的倍数。在取模计算时，如果模数是2的幂，那么我们可以直接使用位运算来得到结果，效率要大大高于做除法
-- 哈希值的使用不同，HashTable 直接使用对象的 hashCode，代码是这样的：
+- Hashtable的方法是同步的，在方法的前面都有synchronized来同步，HashMap未经同步，所以在多线程场合要手动同步；
+- Hashtable不允许null值(key和value都不可以) ，HashMap允许null值(key和value都可以)。
+- Hashtable有一个contains(Object value)功能和containsValue(Object value)功能一样。
+- Hashtable是基于Dictionary类继承的；HashMap继承抽象类AbstractMap实现了Map接口；
+- Hashtable使用Enumeration进行遍历，HashMap使用Iterator进行遍历。
+- Hashtable中hash数组默认大小是11，增加的方式是 2n+1。HashMap中hash数组的默认大小是16，之后每次扩充是都是2的倍数。在取模计算时，如果模数是2的幂，那么我们可以直接使用位运算来得到结果，效率要大大高于做除法
+- 哈希值的使用不同，Hashtable 直接使用对象的 hashCode，代码是这样的：
 	```java
 	int hash = key.hashCode();
 	int index = (hash & 0x7FFFFFFF) % tab.length;
@@ -131,9 +131,9 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 	}
 	```
 
-## 4、HashTable和ConcurrentHashMap 的关系
+## 4、Hashtable和ConcurrentHashMap 的关系
 
-- ConcurrentHashMap 也是一种线程安全的集合类，他和 HashTable 也是有区别的，主要区别：就是加锁的粒度以及如何加锁；ConcurrentHashMap 的加锁粒度要比 HashTable 更细一点。将数据分成一段一段的存储，然后给每一段数据配一把锁，当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问
+- ConcurrentHashMap 也是一种线程安全的集合类，他和 Hashtable 也是有区别的，主要区别：就是加锁的粒度以及如何加锁；ConcurrentHashMap 的加锁粒度要比 Hashtable 更细一点。将数据分成一段一段的存储，然后给每一段数据配一把锁，当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问
 - ConcurrentHashMap 如何实现写分段锁，如何实现弱一致性和读不加锁，不加锁情况能否保证每次获取的元素都是最新的？ConcurrentHashMap Segment
 - 为什么需要ConcurrentHashMap和CopyOnWriteArrayList
 	- 同步的集合类(Hashtable和Vector)同步的封装类(使用Collections.synchronizedMap()方法和 Collections.synchronizedList()方法返回的对象)可以创建出线程安全的Map和List。但是有些因素使得它们不适合高并发的系统。它们仅有单个锁，对整个集合加锁，以及为了防止ConcurrentModificationException异常经常要在迭代的时候要将集合锁定一段时间，这些特性对可扩展性来说都是障碍；
@@ -722,7 +722,7 @@ static final int hash(Object key) {
 
 HashMap的数据是存储在链表数组里面的，在对HashMap进行插入/删除等操作时，都需要根据K-V对的键值定位到他应该保存在数组的哪个下标中.而这个通过键值求取下标的操作就叫做哈希。HashMap的数组是有长度的，Java中规定这个长度只能是2的倍数，初始值为16.简单的做法是先求取出键值的hashcode，然后在将hashcode得到的int值对数组长度进行取模.为了考虑性能，Java总采用按位与操作实现取模操作。
 
-### 3.5、对比HashTable的hash方法
+### 3.5、对比Hashtable的hash方法
 
 - JDK7：
 	```java
@@ -736,9 +736,9 @@ HashMap的数据是存储在链表数组里面的，在对HashMap进行插入/�
 
 	为啥要把hash值和`0x7FFFFFFF`做一次按位与操作呢，主要是为了保证得到的index的的二进制的第一位为0（一个32位的有符号数和0x7FFFFFFF做按位与操作，其实就是在取绝对值。），也就是为了得到一个正数。因为有符号数第一位0代表正数，1代表负数；
 
-	**为什么HashTable不使用 & 代替 % 进行取模运算？**
-	- HashTable的构造函数和扩容函数
-	- HashTable默认的初始大小为11，之后每次扩充为原来的2n+1。也就是说，HashTable的链表数组的默认大小是一个素数、奇数。之后的每次扩充结果也都是奇数。由于HashTable会尽量使用素数、奇数作为容量的大小。当哈希表的大小为素数时，简单的取模哈希的结果会更加均匀
+	**为什么Hashtable不使用 & 代替 % 进行取模运算？**
+	- Hashtable的构造函数和扩容函数
+	- Hashtable默认的初始大小为11，之后每次扩充为原来的2n+1。也就是说，Hashtable的链表数组的默认大小是一个素数、奇数。之后的每次扩充结果也都是奇数。由于Hashtable会尽量使用素数、奇数作为容量的大小。当哈希表的大小为素数时，简单的取模哈希的结果会更加均匀
 
 ## 4、resize 的实现
 

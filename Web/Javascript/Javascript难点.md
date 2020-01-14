@@ -39,7 +39,7 @@
 ## 3.给基本类型数据添加属性,不报错,但取值时是undefined
 
 ## 4.判断一个字符串中出现次数最多的字符,并统计次数
-	(1).HashTable方式:
+	(1).Hashtable方式:
 			var s = 'aaabbbcccaaabbbaaa';
 			var obj = {};
 			var maxn = -1;

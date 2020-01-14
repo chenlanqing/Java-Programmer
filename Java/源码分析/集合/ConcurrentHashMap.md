@@ -364,7 +364,7 @@ if ((as = counterCells) != null ||
 
 
 
-## 3、HashMap、HashTable、ConcurrenHashMap区别
+## 3、HashMap、Hashtable、ConcurrenHashMap区别
 
 
 # 参考资料:

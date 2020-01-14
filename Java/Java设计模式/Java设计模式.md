@@ -1008,7 +1008,7 @@ public class ConcreteObserver implements Observer{
 
 ## 5、应用场景
 
-- JDK中早期集合的都实现了一个elements()方法，其会返回一个Enumeration；JDK新的集合中开始使用Iterator（迭代器），和Enumeration接口很像，但是其支持删除元素能力，为了将枚举适配到迭代器，对应的集合中有个Enumerator，其实现了两个接口，比如HashTable中`private class Enumerator<T> implements Enumeration<T>, Iterator<T>`，因为枚举是个只读接口，适配器无法实现一个有实际功能的remove方法，只能抛出异常；
+- JDK中早期集合的都实现了一个elements()方法，其会返回一个Enumeration；JDK新的集合中开始使用Iterator（迭代器），和Enumeration接口很像，但是其支持删除元素能力，为了将枚举适配到迭代器，对应的集合中有个Enumerator，其实现了两个接口，比如Hashtable中`private class Enumerator<T> implements Enumeration<T>, Iterator<T>`，因为枚举是个只读接口，适配器无法实现一个有实际功能的remove方法，只能抛出异常；
     - 将一个枚举适配为迭代器
         ```java
         /**

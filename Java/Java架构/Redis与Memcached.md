@@ -613,7 +613,7 @@ SINTER tag：1：news tag：2：news tag：10：news tag：27：news<br>
 
 ZADD key score member
 
-注意：有序集合是通过双端(dual-ported)数据结构实现的，包括跳跃表(skiplist)和哈希表(hashtable)，每次添加元素时 Redis 执行 O(log(N)) 的操作，请求有序元素时，Redis 根本不需要做什么工作；
+注意：有序集合是通过双端(dual-ported)数据结构实现的，包括跳跃表(skiplist)和哈希表(Hashtable)，每次添加元素时 Redis 执行 O(log(N)) 的操作，请求有序元素时，Redis 根本不需要做什么工作；
 
 **10.3、ZRANGE 命令正序获取有序集合的元素；**
 
