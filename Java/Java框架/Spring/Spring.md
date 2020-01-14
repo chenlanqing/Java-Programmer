@@ -1065,6 +1065,15 @@ Spring 在创建 bean 的时候并不是等它完全完成，而是在创建过�
 - 这个时候 C 又开始初始化进程，但是在初始化的过程中发现自己依赖 A，于是尝试 get(A)，这个时候由于 A 已经添加至缓存中（一般都是添加至三级缓存 singletonFactories ），通过 ObjectFactory 提前曝光，所以可以通过 ObjectFactory#getObject() 方法来拿到 A 对象，C 拿到 A 对象后顺利完成初始化，然后将自己添加到一级缓存中
 - 回到 B ，B 也可以拿到 C 对象，完成初始化，A 可以顺利拿到 B 完成初始化。到这里整个链路就已经完成了初始化过程了；
 
+```java
+/** Cache of singleton factories: bean name --> ObjectFactory */
+private final Map<String, ObjectFactory> singletonFactories = new HashMap<String, ObjectFactory>();
+/** Cache of early singleton objects: bean name --> bean instance */
+private final Map<String, Object> earlySingletonObjects = new HashMap<String, Object>();
+```
+- singletonFactories，用于存储在spring内部所使用的beanName->对象工厂的引用，一旦最终对象被创建(通过objectFactory.getObject())，此引用信息将删除
+- earlySingletonObjects，用于存储在创建Bean早期对创建的原始bean的一个引用，注意这里是原始bean，即使用工厂方法或构造方法创建出来的对象，一旦对象最终创建好，此引用信息将删除
+
 SpringBoot解决循环依赖：加`@Lazy`注解
 ```java
 @Autowired
@@ -4430,6 +4439,7 @@ https://www.cnblogs.com/paddix/p/8204916.html
 ## 1、Spring-IOC容器中注册组件
 
 ### 1.1、bean配置
+
 - 定义一个Bean
     ```java
     public class Person {
@@ -4469,6 +4479,7 @@ https://www.cnblogs.com/paddix/p/8204916.html
     Person bean = context.getBean(Person.class);
     ```
 - 注解方法
+
     ```java
     // Spring知道一个配置类
     @Configuration
@@ -4498,6 +4509,7 @@ https://www.cnblogs.com/paddix/p/8204916.html
     ```
 
 ### 1.2、包扫描配置
+
 - 配置文件配置
     ```xml
     <context:component-scan base-package="com.blue.fish.annotation" use-default-filters="false">
@@ -4505,6 +4517,7 @@ https://www.cnblogs.com/paddix/p/8204916.html
         <context:include-filter type="annotation" expression="org.springframework.stereotype.Service"/>
     </context:component-scan>
     ```
+
 - 注解方式：`@ComponentScan`（JDK8后可以配置多个）或者 `@ComponentScans`，@ComponentScans其value是个`ComponentScan[] value();`
     ```java
     @Configuration
@@ -4570,7 +4583,6 @@ public @interface Conditional {
 */
 @Override
 public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
-
     //1、能获取到ioc使用的beanfactory
     ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
     //2、获取类加载器
@@ -4590,6 +4602,7 @@ public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata)
 ```
 
 ### 1.4、@Import-快速给容器中导入一个组件
+
 - @Import(要导入到容器中的组件)；容器中就会自动注册这个组件，id默认是全类名
     ```java
     @Target(ElementType.TYPE)
@@ -4653,7 +4666,9 @@ public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata)
 
     }
     ```
+
 ### 1.5、使用Spring提供的 FactoryBean（工厂Bean）
+
 - 默认获取到的是工厂bean调用getObject创建的对象
 - 要获取工厂Bean本身，我们需要给id前面加一个&，写法如下：`&colorFactoryBean`
 
@@ -4691,7 +4706,31 @@ public ColorFactoryBean colorFactoryBean(){
 }
 ```
 
-### 1.6、属性赋值
+### 1.8、实现BeanDefinitionRegistryPostProcessor
+
+```java
+@Component
+public class MyBeanRegister implements BeanDefinitionRegistryPostProcessor {
+    @Override
+    public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) throws BeansException {
+        RootBeanDefinition rootBeanDefinition = new RootBeanDefinition();
+        rootBeanDefinition.setBeanClass(Blue.class);
+        registry.registerBeanDefinition("blue", rootBeanDefinition);
+    }
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+    }
+}
+```
+使用时
+```java
+@Autowired
+@Quanlifier("blue")
+private Color color;
+```
+
+### 1.7、属性赋值
+
 **1、使用@Value赋值**
 
 - 基本数值：`@Value("张三")`
@@ -5426,6 +5465,7 @@ public interface ApplicationListener<E extends ApplicationEvent> extends EventLi
 }
 ```
 #### 6.3.1、步骤
+
 - 写一个监听器（ApplicationListener实现类）来监听某个事件（ApplicationEvent及其子类）
     ```java
     @Component

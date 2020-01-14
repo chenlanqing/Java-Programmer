@@ -144,7 +144,7 @@ web环境下`Spring\SpringMVC`容器启动过程
 
 ## 6、refresh方法源码
 
-`AbstractApplicationContext.refresh()`
+`AbstractApplicationContext.refresh()`，其实一个同步方法
 ```java
 // org.springframework.context.support.AbstractApplicationContext.refresh() 方法实现如下：
 @Override
@@ -152,61 +152,41 @@ public void refresh() throws BeansException, IllegalStateException {
     synchronized (this.startupShutdownMonitor) {
         // Prepare this context for refreshing.
         prepareRefresh();
-
         // Tell the subclass to refresh the internal bean factory.
         ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-
         // Prepare the bean factory for use in this context.
         prepareBeanFactory(beanFactory);
-
         try {
             // Allows post-processing of the bean factory in context subclasses.
             postProcessBeanFactory(beanFactory);
-
             // Invoke factory processors registered as beans in the context.
             invokeBeanFactoryPostProcessors(beanFactory);
-
             // Register bean processors that intercept bean creation.
             registerBeanPostProcessors(beanFactory);
-
             // Initialize message source for this context.
             initMessageSource();
-
             // Initialize event multicaster for this context.
             initApplicationEventMulticaster();
-
             // Initialize other special beans in specific context subclasses.
             onRefresh();
-
             // Check for listener beans and register them.
             registerListeners();
-
             // Instantiate all remaining (non-lazy-init) singletons.
             finishBeanFactoryInitialization(beanFactory);
-
             // Last step: publish corresponding event.
             finishRefresh();
         }
-
         catch (BeansException ex) {
-            if (logger.isWarnEnabled()) {
-                logger.warn("Exception encountered during context initialization - " +
-                        "cancelling refresh attempt: " + ex);
-            }
-
+            ...
             // Destroy already created singletons to avoid dangling resources.
             destroyBeans();
-
             // Reset 'active' flag.
             cancelRefresh(ex);
-
             // Propagate exception to caller.
             throw ex;
         }
-
         finally {
-            // Reset common introspection caches in Spring's core, since we
-            // might not ever need metadata for singleton beans anymore...
+            // Reset common introspection caches in Spring's core, since we might not ever need metadata for singleton beans anymore...
             resetCommonCaches();
         }
     }
@@ -220,28 +200,25 @@ protected void prepareRefresh() {
     this.startupDate = System.currentTimeMillis();
     this.closed.set(false);
     this.active.set(true);
-
     if (logger.isInfoEnabled()) {
         logger.info("Refreshing " + this);
     }
-
     // Initialize any placeholder property sources in the context environment
     initPropertySources();
-
     // Validate that all properties marked as required are resolvable
     // see ConfigurablePropertyResolver#setRequiredProperties
     getEnvironment().validateRequiredProperties();
-
     // Allow for the collection of early ApplicationEvents,
     // to be published once the multicaster is available...
     this.earlyApplicationEvents = new LinkedHashSet<ApplicationEvent>();
 }
 ```
-- `initPropertySources()`：初始化一些属性设置;子类自定义个性化的属性设置方法；这个方法是由子类来实现的
+- `initPropertySources()`：初始化一些属性设置；子类自定义个性化的属性设置方法；这个方法是由子类来实现的
 - `getEnvironment().validateRequiredProperties();`检验属性的合法等;
 - `earlyApplicationEvents= new LinkedHashSet<ApplicationEvent>();`保存容器中的一些早期的事件；
 
 ### 6.2、obtainFreshBeanFactory()：获取BeanFactory
+
 ```java
 protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
     refreshBeanFactory();
@@ -267,8 +244,8 @@ protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
 - 添加编译时的AspectJ；
 - 给BeanFactory中注册一些能用的组件；
     - environment【ConfigurableEnvironment】、
-    - systemProperties【Map<String, Object>】、
-    - systemEnvironment【Map<String, Object>】
+    - systemProperties【`Map<String, Object>`】、
+    - systemEnvironment【`Map<String, Object>`】
 
 ### 6.4、postProcessBeanFactory(beanFactory);
 
@@ -279,6 +256,17 @@ BeanFactory准备工作完成后进行的后置处理工作；子类通过重写
 
 ### 6.5、invokeBeanFactoryPostProcessors(beanFactory);
 
+```java
+protected void invokeBeanFactoryPostProcessors(ConfigurableListableBeanFactory beanFactory) {
+    PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(beanFactory, getBeanFactoryPostProcessors());
+    // Detect a LoadTimeWeaver and prepare for weaving, if found in the meantime
+    // (e.g. through an @Bean method registered by ConfigurationClassPostProcessor)
+    if (beanFactory.getTempClassLoader() == null && beanFactory.containsBean(LOAD_TIME_WEAVER_BEAN_NAME)) {
+        beanFactory.addBeanPostProcessor(new LoadTimeWeaverAwareProcessor(beanFactory));
+        beanFactory.setTempClassLoader(new ContextTypeMatchClassLoader(beanFactory.getBeanClassLoader()));
+    }
+}
+```
 执行`BeanFactoryPostProcessor`的方法；`BeanFactoryPostProcessor：BeanFactory`的后置处理器。在BeanFactory标准初始化之后执行的；
 
 两个接口：`BeanFactoryPostProcessor、BeanDefinitionRegistryPostProcessor`；执行BeanFactoryPostProcessor的方法，其具体调用的方法是：`PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors(oConfigurableListableBeanFactory, List<BeanFactoryPostProcessor>)`
@@ -310,7 +298,7 @@ List<String> nonOrderedPostProcessorNames = new ArrayList<String>();
 
 `BeanPostProcessor、DestructionAwareBeanPostProcessor、InstantiationAwareBeanPostProcessor、SmartInstantiationAwareBeanPostProcessor、MergedBeanDefinitionPostProcessor【internalPostProcessors】、`
 
-- 获取所有的 BeanPostProcessor;后置处理器都默认可以通过PriorityOrdered、Ordered接口来执行优先级;
+- 获取所有的 BeanPostProcessor；后置处理器都默认可以通过PriorityOrdered、Ordered接口来执行优先级;
 - 先注册PriorityOrdered优先级接口的BeanPostProcessor；把每一个BeanPostProcessor；添加到BeanFactory中,`beanFactory.addBeanPostProcessor(postProcessor);`
 - 再注册Ordered接口的;
 - 最后注册没有实现任何优先级接口的;
@@ -350,7 +338,7 @@ protected void initApplicationEventMulticaster() {
 
 ### 6.9、onRefresh()
 
-子类重写这个方法，在容器刷新的时候可以自定义逻辑；
+子类重写这个方法，在容器刷新的时候可以自定义逻辑；在web应用中，主要是创建web容器
 ```java
 protected void onRefresh() throws BeansException {
     // For subclasses: do nothing by default.
@@ -359,7 +347,7 @@ protected void onRefresh() throws BeansException {
 
 ### 6.10、registerListeners();
 
-给容器中将所有项目里面的ApplicationListener注册进来；
+给容器中将所有项目里面的ApplicationListener注册进来；派发早期事件
 ```java
 protected void registerListeners() {
     // 从容器中拿到所有的ApplicationListener，并将每个监听器添加到事件派发器中；
@@ -447,8 +435,8 @@ protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory b
                     - 拿到InstantiationAwareBeanPostProcessor后置处理器；postProcessPropertyValues()；
                     - 应用Bean属性的值；为属性利用setter方法等进行赋值；applyPropertyValues(beanName, mbd, bw, pvs);
                 - 【Bean初始化】initializeBean(beanName, exposedObject, mbd);
-                    - 【执行Aware接口方法】invokeAwareMethods(beanName, bean);执行xxxAware接口的方法：BeanNameAware\BeanClassLoaderAware\BeanFactoryAware
-                    - 【执行后置处理器初始化之前】applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);BeanPostProcessor.postProcessBeforeInitialization（）;
+                    - 【执行Aware接口方法】invokeAwareMethods(beanName, bean);执行xxxAware接口的方法：`BeanNameAware\BeanClassLoaderAware\BeanFactoryAware`
+                    - 【执行后置处理器初始化之前】`applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);``BeanPostProcessor.postProcessBeforeInitialization（）;`
                     - 【执行初始化方法】invokeInitMethods(beanName, wrappedBean, mbd);
                         - 是否是InitializingBean接口的实现；执行接口规定的初始化；
                         - 是否自定义初始化方法；
@@ -487,6 +475,39 @@ protected void finishRefresh() {
 - `getLifecycleProcessor().onRefresh();`拿到前面定义的生命周期处理器（BeanFactory）；回调onRefresh()；
 - `publishEvent(new ContextRefreshedEvent(this));`发布容器刷新完成事件；
 - `liveBeansView.registerApplicationContext(this);`
+
+## 7、注册钩子函数
+
+上面refresh函数式在refreshContext调用的，执行完refresh函数后回去注册shutdownhook，即钩子函数
+```java
+private void refreshContext(ConfigurableApplicationContext context) {
+    refresh(context);
+    if (this.registerShutdownHook) {
+        try {
+            context.registerShutdownHook();
+        }
+        catch (AccessControlException ex) {
+            // Not allowed in some environments.
+        }
+    }
+}
+// AbstractApplicationContext
+@Override
+public void registerShutdownHook() {
+    if (this.shutdownHook == null) {
+        // No shutdown hook registered yet.
+        this.shutdownHook = new Thread(SHUTDOWN_HOOK_THREAD_NAME) {
+            @Override
+            public void run() {
+                synchronized (startupShutdownMonitor) {
+                    doClose();
+                }
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+    }
+}
+```
 
 # 二、AOP
 

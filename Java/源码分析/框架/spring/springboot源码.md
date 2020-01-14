@@ -619,3 +619,52 @@ public class FourthListener implements SmartApplicationListener {
 - 实现 SmartApplicationListener 接口可以针对多种事件监听；
 - Order值越小越先执行；
 - `application.properties`中定义的优先于其他方式；
+
+## 5、refresh方法
+
+[](Spring源码.md#6refresh方法源码)
+
+## 6、banner配置
+
+### 6.1、配置方式
+
+- 输出文本：在resources目录下创建文件：banner.txt，里面填入需要输入的文字；
+- 图片：可以再resources目录创建一个`banner.jpg(gif|png)`，也可以直接输出；
+- 在application.properties中增加如下配置：
+    - `spring.banner.location=favorite.txt`，在resources目录下有个文本文件：favorite.txt；
+    - `spring.banner.image.location=favorite.jpg`，在resources目录有个图片文件：favorite.jpg；
+- 如果需要关闭banner的打印，在application.properties增加配置：`spring.main.banner-mode=off`
+
+### 6.2、banner获取原理
+
+在SpringApplication的run方法中有如下代码:
+```java
+try {
+    ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+    ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
+    configureIgnoreBeanInfo(environment);
+    // 打印banner
+    Banner printedBanner = printBanner(environment);
+    context = createApplicationContext();
+    ...
+}
+// SpringApplication
+private Banner printBanner(ConfigurableEnvironment environment) {
+    if (this.bannerMode == Banner.Mode.OFF) {
+        return null;
+    }
+    ResourceLoader resourceLoader = (this.resourceLoader != null) ? this.resourceLoader
+            : new DefaultResourceLoader(getClassLoader());
+    SpringApplicationBannerPrinter bannerPrinter = new SpringApplicationBannerPrinter(resourceLoader, this.banner);
+    if (this.bannerMode == Mode.LOG) {
+        return bannerPrinter.print(environment, this.mainApplicationClass, logger);
+    }
+    return bannerPrinter.print(environment, this.mainApplicationClass, System.out);
+}
+```
+
+![](image/SpringBoot-banner获取.png)
+
+
+
+
