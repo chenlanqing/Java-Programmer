@@ -65,6 +65,7 @@ ConcurrentHashMap 由一个个 Segment 组成，ConcurrentHashMap 是一个 Segm
 
 ConcurrentHashMap初始化时，计算出Segment数组的大小ssize和每个Segment中HashEntry数组的大小cap，并初始化Segment数组的第一个元素；其中ssize大小为2的幂次方，默认为16，cap大小也是2的幂次方，最小值为2，最终结果根据根据初始化容量initialCapacity进行计算，计算过程如下
 
+![](image/JDK7-ConcurrentHashMap结构.png)
 
 ### 2.3、JDK8版本
 
@@ -75,6 +76,8 @@ ConcurrentHashMap初始化时，计算出Segment数组的大小ssize和每个Seg
 - JDK1.8的实现降低锁的粒度，JDK1.7版本锁的粒度是基于Segment的，包含多个HashEntry，而JDK1.8锁的粒度就是HashEntry（首节点）；
 - JDK1.8版本的数据结构变得更加简单，使得操作也更加清晰流畅，因为已经使用synchronized来进行同步，所以不需要分段锁的概念，也就不需要Segment这种数据结构了，由于粒度的降低，实现的复杂度也增加了
 - JDK1.8使用红黑树来优化链表，基于长度很长的链表的遍历是一个很漫长的过程，而红黑树的遍历效率是很快的，代替一定阈值的链表，这样形成一个最佳拍档
+
+![](image/JDK8-ConcurrentHashMap结构.png)
 
 ##  3、分段锁形式如何保证size的一致性
 

@@ -2587,22 +2587,29 @@ springboot 启动会扫描以下位置的application.properties或者application
 java -jar springboot-02-0.0.1-SNAPSHOT.jar --spring.config.location=G:/application.properties
 
 ## 7、外部配置加载顺序
+
 SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优先级的配置覆盖低优先级的配置，所有的配置会形成互补配置
+- Devtools全局配置
+- 测试环境`@TestPropertySource`注解
+- 测试环境`properties`属性
 - 命令行参数：所有的配置都可以在命令行上进行指定：
 
 	java -jar springboot-02-0.0.1-SNAPSHOT.jar --server.port=8087  --server.context-path=/abc
 
 	多个配置用空格分开； --配置项=值
-- 来自java:comp/env的JNDI属性
-- Java系统属性（System.getProperties()）
+- `SPRING_APPLICATION_JSON`属性
+- `ServletConfig`初始化参数
+- `ServletContext`初始化参数
+- 来自`java:comp/env`的JNDI属性
+- Java系统属性（`System.getProperties()`）
 - 操作系统环境变量
-- RandomValuePropertySource配置的random.*属性值；
-- jar包外部的application-{profile}.properties或application.yml(带spring.profile)配置文件；
-- jar包内部的application-{profile}.properties或application.yml(带spring.profile)配置文件；
-- jar包外部的application.properties或application.yml(不带spring.profile)配置文件；
-- jar包内部的application.properties或application.yml(不带spring.profile)配置文件；
-- @Configuration注解类上的@PropertySource
-- 通过SpringApplication.setDefaultProperties指定的默认属性
+- `RandomValuePropertySource`配置的`random.*`属性值；
+- jar包外部的`application-{profile}.properties`或`application.yml`(带spring.profile)配置文件；
+- jar包内部的`application-{profile}.properties`或`application.yml`(带spring.profile)配置文件；
+- jar包外部的`application.properties`或`application.yml`(不带spring.profile)配置文件；
+- jar包内部的`application.properties`或`application.yml`(不带spring.profile)配置文件；
+- `@Configuration`注解类上的`@PropertySource`
+- 通过`SpringApplication.setDefaultProperties`指定的默认属性
 
 **由jar包外向jar包内进行寻找；优先加载带profile，再来加载不带profile**
 
@@ -2611,6 +2618,7 @@ SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优
 ## 8、自动配置原理
 
 ### 8.1、自动配置原理
+
 [配置文件属性参考](https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties)
 
 - （1）SpringBoot启动的时候加载主配置类，开启了自动配置功能@**EnableAutoConfiguration**
