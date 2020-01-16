@@ -2621,11 +2621,11 @@ SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优
 
 [配置文件属性参考](https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties)
 
-- （1）SpringBoot启动的时候加载主配置类，开启了自动配置功能@**EnableAutoConfiguration**
-- （2）@**EnableAutoConfiguration** 作用：
+- （1）SpringBoot启动的时候加载主配置类，开启了自动配置功能 **@EnableAutoConfiguration**
+- （2）**@EnableAutoConfiguration** 作用：
 	- 利用EnableAutoConfigurationImportSelector给容器中导入一些组件；
 	- 可以查看selectImports()方法的内容；
-	- List<String> configurations = getCandidateConfigurations(annotationMetadata,attributes);获取候选的配置
+	- `List<String> configurations = getCandidateConfigurations(annotationMetadata,attributes);`获取候选的配置
 		```
 		SpringFactoriesLoader.loadFactoryNames()
 		扫描所有jar包类路径下  META-INF/spring.factories
@@ -2691,22 +2691,50 @@ xxxxAutoConfigurartion：自动配置类；给容器中添加组件；xxxxProper
 
 ### 8.2、@Conditional派生注解
 
-作用：必须是@Conditional指定的条件成立，才给容器中添加组件，配置配里面的所有内容才生效；
+作用：必须是`@Conditional`指定的条件成立，才给容器中添加组件，配置配里面的所有内容才生效；
 
-| @Conditional扩展注解                | 作用（判断是否满足当前指定条件）               |
+| `@Conditional扩展注解                | 作用（判断是否满足当前指定条件）               |
 | ------------------------------- | ------------------------------ |
-| @ConditionalOnJava              | 系统的java版本是否符合要求                |
-| @ConditionalOnBean              | 容器中存在指定Bean；                   |
-| @ConditionalOnMissingBean       | 容器中不存在指定Bean；                  |
-| @ConditionalOnExpression        | 满足SpEL表达式指定                    |
-| @ConditionalOnClass             | 系统中有指定的类                       |
-| @ConditionalOnMissingClass      | 系统中没有指定的类                      |
-| @ConditionalOnSingleCandidate   | 容器中只有一个指定的Bean，或者这个Bean是首选Bean |
-| @ConditionalOnProperty          | 系统中指定的属性是否有指定的值                |
-| @ConditionalOnResource          | 类路径下是否存在指定资源文件                 |
-| @ConditionalOnWebApplication    | 当前是web环境                       |
-| @ConditionalOnNotWebApplication | 当前不是web环境                      |
-| @ConditionalOnJndi              | JNDI存在指定项                      |
+| `@ConditionalOnJava`            | 系统的java版本是否符合要求                |
+| `@ConditionalOnBean`              | 容器中存在指定Bean；                   |
+| `@ConditionalOnMissingBean`       | 容器中不存在指定Bean；                  |
+| `@ConditionalOnExpression`        | 满足SpEL表达式指定                    |
+| `@ConditionalOnClass`             | 系统中有指定的类                       |
+| `@ConditionalOnMissingClass`      | 系统中没有指定的类                      |
+| `@ConditionalOnSingleCandidate`   | 容器中只有一个指定的Bean，或者这个Bean是首选Bean |
+| `@ConditionalOnProperty`          | 系统中指定的属性是否有指定的值                |
+| `@ConditionalOnResource`          | 类路径下是否存在指定资源文件                 |
+| `@ConditionalOnWebApplication`    | 当前是web环境                       |
+| `@ConditionalOnNotWebApplication` | 当前不是web环境                      |
+| `@ConditionalOnJndi`             | JNDI存在指定项                      |
+
+**自定义conditional注解**
+- 实现一个自定义注解并且引入Conditional注解；
+	```java
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Conditional(MyCondition.class)
+	public @interface MyConditionAnnotation {
+		String[] value() default {};
+	}
+	```
+- 实现Condition接口重写matches方法，符合条件返回true；
+	```java
+	public class MyCondition implements Condition {
+		@Override
+		public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+			String[] properties = (String[])metadata.getAnnotationAttributes("MyConditionAnnotation").get("value");
+			for (String property : properties) {
+				if (StringUtils.isEmpty(context.getEnvironment().getProperty(property))) {
+					return false;
+				}
+			}
+			return true;
+		}
+	}
+	```
+- 自定义注解银瑞Condition接口实现类
 
 **自动配置类必须在一定的条件下才能生效；**
 
@@ -3637,9 +3665,9 @@ protected static class DispatcherServletRegistrationConfiguration {
 - Tomcat（默认使用）
 	```xml
 	<dependency>
-	<groupId>org.springframework.boot</groupId>
-	<artifactId>spring-boot-starter-web</artifactId>
-	<!-- 引入web模块默认就是使用嵌入式的Tomcat作为Servlet容器； -->
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+		<!-- 引入web模块默认就是使用嵌入式的Tomcat作为Servlet容器； -->
 	</dependency>
 	```
 
@@ -3647,20 +3675,19 @@ protected static class DispatcherServletRegistrationConfiguration {
 	```xml
 	<!-- 引入web模块 -->
 	<dependency>
-	<groupId>org.springframework.boot</groupId>
-	<artifactId>spring-boot-starter-web</artifactId>
-	<exclusions>
-		<exclusion>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<groupId>org.springframework.boot</groupId>
-		</exclusion>
-	</exclusions>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+		<exclusions>
+			<exclusion>
+				<artifactId>spring-boot-starter-tomcat</artifactId>
+				<groupId>org.springframework.boot</groupId>
+			</exclusion>
+		</exclusions>
 	</dependency>
-
 	<!--引入其他的Servlet容器-->
 	<dependency>
-	<artifactId>spring-boot-starter-jetty</artifactId>
-	<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-jetty</artifactId>
+		<groupId>org.springframework.boot</groupId>
 	</dependency>
 	```
 
@@ -3668,20 +3695,20 @@ protected static class DispatcherServletRegistrationConfiguration {
 	```xml
 	<!-- 引入web模块 -->
 	<dependency>
-	<groupId>org.springframework.boot</groupId>
-	<artifactId>spring-boot-starter-web</artifactId>
-	<exclusions>
-		<exclusion>
-			<artifactId>spring-boot-starter-tomcat</artifactId>
-			<groupId>org.springframework.boot</groupId>
-		</exclusion>
-	</exclusions>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-web</artifactId>
+		<exclusions>
+			<exclusion>
+				<artifactId>spring-boot-starter-tomcat</artifactId>
+				<groupId>org.springframework.boot</groupId>
+			</exclusion>
+		</exclusions>
 	</dependency>
 
 	<!--引入其他的Servlet容器-->
 	<dependency>
-	<artifactId>spring-boot-starter-undertow</artifactId>
-	<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-undertow</artifactId>
+		<groupId>org.springframework.boot</groupId>
 	</dependency>
 	```
 
@@ -3778,7 +3805,6 @@ public class EmbeddedServletContainerAutoConfiguration {
 		this.autoStart = autoStart;
 		initialize();
 	}
-
 	// this.tomcat.start() 真正启动tomcat
 	private void initialize() throws EmbeddedServletContainerException {
 		TomcatEmbeddedServletContainer.logger.info("Tomcat initialized with port(s): " + getPortsDescription(false));
@@ -3789,40 +3815,23 @@ public class EmbeddedServletContainerAutoConfiguration {
 					// Remove service connectors to that protocol binding doesn't happen
 					// yet
 					removeServiceConnectors();
-
 					// Start the server to trigger initialization listeners
 					this.tomcat.start();
-
 					// We can re-throw failure exception directly in the main thread
 					rethrowDeferredStartupExceptions();
 
 					Context context = findContext();
-					try {
-						ContextBindings.bindClassLoader(context, getNamingToken(context),
-								getClass().getClassLoader());
-					}
-					catch (NamingException ex) {
-						// Naming is not enabled. Continue
-					}
-
+					...
 					// Unlike Jetty, all Tomcat threads are daemon threads. We create a
 					// blocking non-daemon to stop immediate shutdown
 					startDaemonAwaitThread();
 				}
-				catch (Exception ex) {
-					containerCounter.decrementAndGet();
-					throw ex;
-				}
 			}
-			catch (Exception ex) {
-				throw new EmbeddedServletContainerException(
-						"Unable to start embedded Tomcat", ex);
-			}
+			...
 		}
 	}
 	```
-- （4）对嵌入式容器的配置修改是怎么生效
-	ServerProperties、EmbeddedServletContainerCustomizer，定制器帮我们修改了Servlet容器的配置
+- （4）对嵌入式容器的配置修改是怎么生效：ServerProperties、EmbeddedServletContainerCustomizer，定制器帮我们修改了Servlet容器的配置
 
 - （5）配置修改如何生效？容器中导入了`EmbeddedServletContainerCustomizerBeanPostProcessor`
 
@@ -3843,7 +3852,6 @@ public class EmbeddedServletContainerAutoConfiguration {
 				customizer.customize(bean);
 			}
 		}
-
 		private Collection<EmbeddedServletContainerCustomizer> getCustomizers() {
 			if (this.customizers == null) {
 				// Look up does not include the parent context
@@ -4000,7 +4008,7 @@ class ServletWebServerFactoryConfiguration {
 
 什么时候创建嵌入式的Servlet容器工厂？什么时候获取嵌入式的Servlet容器并启动Tomcat；
 
-**获取嵌入式的Servlet容器工**
+**获取嵌入式的Servlet容器，基于1.5.9.RELEASE版本**
 - （1）SpringBoot应用启动运行run方法；
 - （2）refreshContext(context);SpringBoot刷新IOC容器【创建IOC容器对象，并初始化容器，创建容器中的每一个组件】；如果是web应用创建`AnnotationConfigEmbeddedWebApplicationContext`，否则：`AnnotationConfigApplicationContext**`
 - （3）refresh(context); **刷新刚才创建好的ioc容器；**
@@ -4033,23 +4041,7 @@ class ServletWebServerFactoryConfiguration {
 				// Last step: publish corresponding event.
 				finishRefresh();
 			}
-			catch (BeansException ex) {
-				if (logger.isWarnEnabled()) {
-					logger.warn("Exception encountered during context initialization - " +
-						"cancelling refresh attempt: " + ex);
-				}
-				// Destroy already created singletons to avoid dangling resources.
-				destroyBeans();
-				// Reset 'active' flag.
-				cancelRefresh(ex);
-				// Propagate exception to caller.
-				throw ex;
-			}
-			finally {
-				// Reset common introspection caches in Spring's core, since we
-				// might not ever need metadata for singleton beans anymore...
-				resetCommonCaches();
-			}
+			...
 		}
 	}	
 	```
@@ -4073,8 +4065,6 @@ class ServletWebServerFactoryConfiguration {
 	# 日志目录
 	server.tomcat.accesslog.directory=/var/www/springboot/tomcat
 	```
-
-
 
 ## 8、使用外置的Servlet容器
 
@@ -4226,11 +4216,11 @@ management.server.address=127.0.0.1
 
 ## 1、自动装配Bean
 
-自动装配使用配置类(@Configuration)结合Spring4 提供的条件判断注解@Conditional及Spring Boot的派生注解如@ConditionOnClass完成;
+自动装配使用配置类(`@Configuration`)结合Spring4 提供的条件判断注解`@Conditional`及Spring Boot的派生注解如`@ConditionOnClass`完成;
 
 ## 2、配置自动装配Bean
 
-将标注@Configuration的自动配置类，放在classpath下META-INF/spring.factories文件中
+将标注`@Configuration`的自动配置类，放在classpath下`META-INF/spring.factories`文件中
 ```
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
@@ -4238,10 +4228,11 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 ```
 
 ## 3、自动装配顺序
+
 - 在特定自动装配Class之前
 
-	- @AutoConfigureBefore – 在特定自动装配Class之后
-	- @AutoConfigureAfter
+	- `@AutoConfigureBefore` – 在特定自动装配Class之后
+	- `@AutoConfigureAfter`
 
 - 指定顺序：@AutoConfigureOrder
 
@@ -4250,7 +4241,6 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 @ConditionalOnXXX  //在指定条件成立的情况下自动配置类生效
 @AutoConfigureAfter  //指定自动配置类的顺序
 @Bean  //给容器中添加组件
-
 @ConfigurationPropertie结合相关xxxProperties类来绑定相关的配置
 @EnableConfigurationProperties //让xxxProperties生效加入到容器中
 ```
@@ -4260,19 +4250,17 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 启动器模块是一个空 JAR 文件，仅提供辅助性依赖管理，这些依赖可能用于自动装配或者其他类库
 
 命名规约：
-- 推荐使用以下命名规约：
-
-	xxxx-starter -> xxxx-starter-autoconfigurer
+- 推荐使用以下命名规约：`xxxx-starter -> xxxx-starter-autoconfigurer`
 
 - 官方命名空间
-	- 前缀：“spring-boot-starter-”
-	- 模式：spring-boot-starter-模块名
-	- 举例：spring-boot-starter-web、spring-boot-starter-actuator、spring-boot-starter-jdbc
+	- 前缀：`spring-boot-starter-`
+	- 模式：`spring-boot-starter-模块名`
+	- 举例：`spring-boot-starter-web、spring-boot-starter-actuator、spring-boot-starter-jdbc`
 
 - 自定义命名空间
-	- 后缀：“-spring-boot-starter”
-	- 模式：模块-spring-boot-starter
-	- 举例：mybatis-spring-boot-starter
+	- 后缀：`xx-spring-boot-starter`
+	- 模式：`模块-spring-boot-starter`
+	- 举例：`mybatis-spring-boot-starter`
 
 启动器只用来做依赖导入；
 
@@ -4338,7 +4326,6 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-starter-web</artifactId>
 			</dependency>
-
 		</dependencies>
 
 	</project>
@@ -4348,49 +4335,38 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 	import org.springframework.boot.context.properties.ConfigurationProperties;
 	@ConfigurationProperties(prefix = "spring.hello")
 	public class HelloProperties {
-
 		private String prefix;
 		private String suffix;
-
 		public String getPrefix() {
 			return prefix;
 		}
-
 		public void setPrefix(String prefix) {
 			this.prefix = prefix;
 		}
-
 		public String getSuffix() {
 			return suffix;
 		}
-
 		public void setSuffix(String suffix) {
 			this.suffix = suffix;
 		}
 	}
-
 	public class HelloService {
 		HelloProperties helloProperties;
-
 		public HelloProperties getHelloProperties() {
 			return helloProperties;
 		}
-
 		public void setHelloProperties(HelloProperties helloProperties) {
 			this.helloProperties = helloProperties;
 		}
-
 		public String sayHello(String name){
 			return helloProperties.getPrefix()+ "-" +name + "-" + helloProperties.getSuffix();
 		}
 	}
-
 	@Configuration
 	@ConditionalOnWebApplication
 	@EnableConfigurationProperties(HelloProperties.class)
 	public class HelloServiceAutoConfiguration {
-
-		@Autowired
+		@Autowied
 		HelloProperties helloProperties;
 		@Bean
 		public HelloService helloService(){
@@ -4406,12 +4382,14 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 	com.demo.starter.demo.springboot.HelloServiceAutoConfiguration
 	```
 
-- （3）引入
+- （3）在使用的地方引入对应的starter即可
 
 ## 6、starter原理
 
-利用starter实现自动化配置只需要两个条件——maven依赖、配置文件。starter实现自动化配置的流程：
-引入maven实质上就是导入jar包，spring-boot启动的时候会找到starter jar包中的`resources/META-INF/spring.factories`文件，根据`spring.factories`文件中的配置，找到需要自动配置的类
+利用starter实现自动化配置只需要两个条件——maven依赖、配置文件。
+
+starter实现自动化配置的流程：
+引入maven实质上就是导入jar包，spring-boot启动的时候会通过`@SpringBootApplication` 上关联的`AutoConfigurationImportSelector` 获取所有的 EnableAutoConfiguration 注解的实现类，其会找到 `starter jar`包中的`resources/META-INF/spring.factories`文件，根据`spring.factories`文件中的配置，找到需要自动配置的类，然后根据其 Conditional 注解进行过滤；
 
 # 十五、SpringBoot面试题
 

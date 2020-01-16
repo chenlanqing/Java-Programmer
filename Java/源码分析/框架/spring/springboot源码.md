@@ -1,3 +1,6 @@
+
+**注意：**以下所有源码分析都是基于`2.2.2.RELEASE`版本的代码
+
 # 1、注解
 
 ```java
@@ -1285,4 +1288,153 @@ protected void doClose() {
     }
 }
 ```
+
+# 10、配置类解析
+
+入库方法：`ConfigurationClassPostProcessor#postProcessBeanDefinitionRegistry`
+
+ConfigurationClassParser#doProcessConfigurationClass
+
+# 11、Servlet容器
+
+## 11.1、嵌入式Servlet容器启动
+
+- （1）获取当前应用的具体类型：
+    ```java
+    // SpringApplication 的构造函数
+    public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
+        ...
+		this.webApplicationType = WebApplicationType.deduceFromClasspath();
+		...
+	}
+    // WebApplicationType：主要是根据classpath中是否存在某些类来判断的
+    static WebApplicationType deduceFromClasspath() {
+		if (ClassUtils.isPresent(WEBFLUX_INDICATOR_CLASS, null) && !ClassUtils.isPresent(WEBMVC_INDICATOR_CLASS, null)
+				&& !ClassUtils.isPresent(JERSEY_INDICATOR_CLASS, null)) {
+			return WebApplicationType.REACTIVE;
+		}
+		for (String className : SERVLET_INDICATOR_CLASSES) {
+			if (!ClassUtils.isPresent(className, null)) {
+				return WebApplicationType.NONE;
+			}
+		}
+		return WebApplicationType.SERVLET;
+	}
+    ```
+- （2）创建 `ConfigurableApplicationContext`，根据在SpingApplication中获取的 webApplicationType 来生成对应的上下文
+    ```java
+    protected ConfigurableApplicationContext createApplicationContext() {
+		Class<?> contextClass = this.applicationContextClass;
+		if (contextClass == null) {
+			try {
+				switch (this.webApplicationType) {
+				case SERVLET: contextClass = Class.forName(DEFAULT_SERVLET_WEB_CONTEXT_CLASS);
+					break;
+				case REACTIVE: contextClass = Class.forName(DEFAULT_REACTIVE_WEB_CONTEXT_CLASS);
+					break;
+				default: contextClass = Class.forName(DEFAULT_CONTEXT_CLASS);
+				}
+			}
+		}
+		return (ConfigurableApplicationContext) BeanUtils.instantiateClass(contextClass);
+	}
+    ```
+- （3）调用 AbstractApplicationContext 的refresh方法，refresh方法有调用onRefresh方法，AbstractApplicationContext 其内的实现为空，有具体的子类去实现，web应用对应的context是：ServletWebServerApplicationContext，该类类图如下：
+    
+    ![](image/SpringBoot-ServletWebServerContext.png)
+
+    ```java
+    @Override
+	protected void onRefresh() {
+		super.onRefresh();
+		try {
+			createWebServer();
+		}
+	}
+    ```
+- （4）创建webServer：createWebServe
+    ```java
+    private void createWebServer() {
+		WebServer webServer = this.webServer;
+		ServletContext servletContext = getServletContext();
+		if (webServer == null && servletContext == null) {
+            // 首先获取 ServletWebServerFactory
+			ServletWebServerFactory factory = getWebServerFactory();
+			this.webServer = factory.getWebServer(getSelfInitializer());
+		} else if (servletContext != null) {
+			try {
+				getSelfInitializer().onStartup(servletContext);
+			}
+			...
+		}
+		initPropertySources();
+	}
+    ```
+    这里返回的Factory是 TomcatServletWebServerFactory，ServletWebServerFactory的一个实现类
+- （5）调用 TomcatServletWebServerFactory 获取webServer
+    ```java
+    @Override
+	public WebServer getWebServer(ServletContextInitializer... initializers) {
+		if (this.disableMBeanRegistry) {
+			Registry.disableRegistry();
+		}
+        // 创建tomcat
+		Tomcat tomcat = new Tomcat();
+		File baseDir = (this.baseDirectory != null) ? this.baseDirectory : createTempDir("tomcat");
+		tomcat.setBaseDir(baseDir.getAbsolutePath());
+        // tomcat 内部组件
+		Connector connector = new Connector(this.protocol);
+		connector.setThrowOnFailure(true);
+		tomcat.getService().addConnector(connector);
+		customizeConnector(connector);
+		tomcat.setConnector(connector);
+		tomcat.getHost().setAutoDeploy(false);
+		configureEngine(tomcat.getEngine());
+		for (Connector additionalConnector : this.additionalTomcatConnectors) {
+			tomcat.getService().addConnector(additionalConnector);
+		}
+		prepareContext(tomcat.getHost(), initializers);
+        // 获取tomcat server
+		return getTomcatWebServer(tomcat);
+	}
+    protected TomcatWebServer getTomcatWebServer(Tomcat tomcat) {
+		return new TomcatWebServer(tomcat, getPort() >= 0);
+	}
+    public TomcatWebServer(Tomcat tomcat, boolean autoStart) {
+		Assert.notNull(tomcat, "Tomcat Server must not be null");
+		this.tomcat = tomcat;
+		this.autoStart = autoStart;
+        // 初始化资源
+		initialize();
+	}
+    ```
+- （6）启动tomcat：finishRefresh
+    ```java
+    @Override
+	protected void finishRefresh() {
+		super.finishRefresh();
+        // 启动tomcat服务器
+		WebServer webServer = startWebServer();
+		if (webServer != null) {
+            // 发布事件 servlet容器已经初始化事件
+			publishEvent(new ServletWebServerInitializedEvent(webServer, this));
+		}
+	}
+    ```
+
+## 11.2、ServletWebServerFactory加载
+
+导入类的：AutoConfigurationImportSelector
+
+
+
+# 12、starter配置原理
+
+## 12.1、自定义starter
+
+[starter原理](../../../Java框架/Spring/Spring.md#十三自定义Starter)
+
+
+# 面试题
+
 

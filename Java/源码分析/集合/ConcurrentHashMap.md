@@ -365,9 +365,11 @@ if ((as = counterCells) != null ||
 
 ## 1、多线程环境下如何进行扩容
 
+## 2、HashMap、Hashtable、ConcurrenHashMap区别
 
+## 3、使用concurrenthashMap中，如何避免组合操作的线程安全问题
 
-## 3、HashMap、Hashtable、ConcurrenHashMap区别
+可以使用replace方法
 
 
 # 参考资料:

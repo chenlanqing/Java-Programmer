@@ -3012,12 +3012,12 @@ JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFut
 
 相当于线程安全的 ArrayList，和 ArrayList 一样，是个可变数组；不同的是，具有以下几个特性
 
-- 最适合于应用程序:List 大小通常保持很小，只读操作远多于可变操作，需要在遍历期间防止线程间的冲突;
-- 线程安全的
-- 因为通常要复制整个基础数组，所以可变操作(add()、set() 和 remove() 等等)的开销很大.
+- 最适合于应用程序：List 大小通常保持很小，只读操作远多于可变操作，需要在遍历期间防止线程间的冲突；
+- 线程安全的；
+- 因为通常要复制整个基础数组，所以可变操作(add()、set() 和 remove() 等等)的开销很大；
 - 迭代器支持hasNext()， next()等不可变操作，但不支持可变 remove()等操作；即迭代器是只读的；
-- 使用迭代器进行遍历的速度很快，并且不会与其他线程发生冲突。在构造迭代器时，迭代器依赖于不变的数组快照；
-- 元素可以为null
+- 使用迭代器进行遍历的速度很快，并且不会与其他线程发生冲突。在构造迭代器时，迭代器依赖于不变的数组快照；如果在迭代过程中修改了数据，正在迭代的过程中的数据还是老数据；
+- 元素可以为null；
 
 ### 2.2、签名
 
@@ -3025,7 +3025,7 @@ JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFut
 public class CopyOnWriteArrayList<E>  implements List<E>， RandomAccess， Cloneable， Serializable{}
 ```
 
-- 包含了成员lock.每一个CopyOnWriteArrayList都和一个互斥锁lock绑定，通过lock，实现了对CopyOnWriteArrayList的互斥访问
+- 包含了成员lock。每一个CopyOnWriteArrayList都和一个互斥锁lock绑定，通过lock，实现了对CopyOnWriteArrayList的互斥访问
 - CopyOnWriteArrayList 本质上通过数组实现的
 
 ### 2.3、实现原理
@@ -3034,7 +3034,7 @@ public class CopyOnWriteArrayList<E>  implements List<E>， RandomAccess， Clon
 
 - 线程安全：是通过volatile和互斥锁来（ReentrantLock）实现的
 	- CopyOnWriteArrayList 是通过`volatile数组`来保存数据的；一个线程读取volatile数组时，总能看到其它线程对该volatile变量最后的写入。通过volatile提供了`读取到的数据总是最新的`这个机制的保证。
-	- 通过互斥锁来保护数据.在`添加/修改/删除`数据时，会先`获取互斥锁`，再修改完毕之后，先将数据更新到`volatile数组`中，然后再`释放互斥锁`
+	- 通过互斥锁来保护数据。在`添加/修改/删除`数据时，会先`获取互斥锁`，再修改完毕之后，先将数据更新到`volatile数组`中，然后再`释放互斥锁`
 
 ### 2.4、ArrayList的线程安全集合
 
@@ -3222,12 +3222,21 @@ BlockingQueue 是一个接口，继承自 Queue
 - Transferer 有两个内部实现类，是因为构造 SynchronousQueue 的时候，可以指定公平策略。公平模式意味着，所有的读写线程都遵守先来后到，FIFO 嘛，对应 TransferQueue。而非公平模式则对应 TransferStack；
 - SynchronousQueue非常适合做交换工作，生产者的线程和消费者的线程同步以传递某些信息、事件或者任务
 
-#### 7.4.6、LinkedTransferQueue
+#### 7.4.6、LinkedBlockingDeque
+
+- 链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争；支持FIFO、FILO两种操作方式
+- LinkedBlockingDeque是可选容量的，在初始化时可以设置容量防止其过度膨胀，如果不设置，默认容量大小为`Integer.MAX_VALUE`；
+- LinkedBlockingDeque 继承AbstractQueue，实现接口BlockingDeque，而BlockingDeque又继承接口BlockingQueue，BlockingDeque是支持两个附加操作的 Queue，这两个操作是：获取元素时等待双端队列变为非空；存储元素时等待双端队列中的空间变得可用；
+- 通过互斥锁ReentrantLock 来实现，notEmpty 、notFull 两个Condition做协调生产者、消费者问题
+
+### 7.5、非阻塞队列
+
+#### 7.5.1、LinkedTransferQueue
 
 - 由链表结构组成的FIFO无界阻塞队列TransferQueue队列，相对于其他阻塞队列，多了tryTransfer和transfer方法；
 - LinkedTransferQueue采用一种预占模式：有就直接拿走，没有就占着这个位置直到拿到或者超时或者中断。即消费者线程到队列中取元素时，如果发现队列为空，则会生成一个null节点，然后park住等待生产者。后面如果生产者线程入队时发现有一个null元素节点，这时生产者就不会入列了，直接将元素填充到该节点上，唤醒该节点的线程，被唤醒的消费者线程拿东西走人
 
-#### 7.4.7、ConcurrentLinkedQueue
+#### 7.5.2、ConcurrentLinkedQueue
 
 ```java
 public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<E>, java.io.Serializa{
@@ -3260,16 +3269,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 - 内部类Node：Node是个单向链表节点，next用于指向下一个Node，item用于存储数据。Node中操作节点数据的API，都是通过Unsafe机制的CAS函数实现的；
 - ConcurrentLinkedQueue就是通过volatile来实现多线程对竞争资源的互斥访问的
 
-#### 7.4.8、LinkedBlockingDeque
 
-- 链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争；支持FIFO、FILO两种操作方式
-- LinkedBlockingDeque是可选容量的，在初始化时可以设置容量防止其过度膨胀，如果不设置，默认容量大小为`Integer.MAX_VALUE`；
-- LinkedBlockingDeque 继承AbstractQueue，实现接口BlockingDeque，而BlockingDeque又继承接口BlockingQueue，BlockingDeque是支持两个附加操作的 Queue，这两个操作是：获取元素时等待双端队列变为非空；存储元素时等待双端队列中的空间变得可用；
-- 通过互斥锁ReentrantLock 来实现，notEmpty 、notFull 两个Condition做协调生产者、消费者问题
+#### 7.5.3、ConcurrentLinkedDeque
 
-#### 7.4.9、ConcurrentLinkedDeque
-
-### 7.5、如何选择队列
+### 7.6、如何选择队列
 
 - 考虑应用场景对队列边界的需求：ArrayBlockingQueue是有明确容量限制的，而LinkedBlockingQueue则取决于我们是否在创建时指定，SynchronousQueue则不缓存任何元素；
 - 从空间利用角度：数组结构ArrayBlockingQueue要比LinkedBlockingQueue紧凑，因为其不需要创建所谓节点；但是ArrayBlockingQueue其初始分配阶段需要一段连续的空间，所以其初始内存需求更大；
