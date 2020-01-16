@@ -1,3 +1,69 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+目录
+
+- [1、注解](#1%E6%B3%A8%E8%A7%A3)
+- [2、启动流程](#2%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B)
+  - [2.1、启动流程分析](#21%E5%90%AF%E5%8A%A8%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90)
+  - [2.2、SpringFactoriesLoader](#22springfactoriesloader)
+- [3、系统初始化器](#3%E7%B3%BB%E7%BB%9F%E5%88%9D%E5%A7%8B%E5%8C%96%E5%99%A8)
+  - [3.1、自定义初始化器的三种方式](#31%E8%87%AA%E5%AE%9A%E4%B9%89%E5%88%9D%E5%A7%8B%E5%8C%96%E5%99%A8%E7%9A%84%E4%B8%89%E7%A7%8D%E6%96%B9%E5%BC%8F)
+    - [3.1.1、factories方式](#311factories%E6%96%B9%E5%BC%8F)
+    - [3.1.2、在启动类中添加](#312%E5%9C%A8%E5%90%AF%E5%8A%A8%E7%B1%BB%E4%B8%AD%E6%B7%BB%E5%8A%A0)
+    - [3.1.3、在application.properties中添加配置](#313%E5%9C%A8applicationproperties%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%85%8D%E7%BD%AE)
+    - [3.1.4、注意点](#314%E6%B3%A8%E6%84%8F%E7%82%B9)
+  - [3.2、initializer方法执行时机](#32initializer%E6%96%B9%E6%B3%95%E6%89%A7%E8%A1%8C%E6%97%B6%E6%9C%BA)
+- [4、监听器](#4%E7%9B%91%E5%90%AC%E5%99%A8)
+  - [4.1、监听器设计模式](#41%E7%9B%91%E5%90%AC%E5%99%A8%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
+  - [4.2、Spring监听器实现](#42spring%E7%9B%91%E5%90%AC%E5%99%A8%E5%AE%9E%E7%8E%B0)
+    - [4.2.1、spring监听器具体实现](#421spring%E7%9B%91%E5%90%AC%E5%99%A8%E5%85%B7%E4%BD%93%E5%AE%9E%E7%8E%B0)
+    - [4.2.2、框架事件发送顺序](#422%E6%A1%86%E6%9E%B6%E4%BA%8B%E4%BB%B6%E5%8F%91%E9%80%81%E9%A1%BA%E5%BA%8F)
+    - [4.2.3、SpringApplicationRunListeners](#423springapplicationrunlisteners)
+    - [4.2.4、SpringApplicationRunListener](#424springapplicationrunlistener)
+    - [4.2.5、Spring事件/监听器设计](#425spring%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC%E5%99%A8%E8%AE%BE%E8%AE%A1)
+  - [4.3、监听器事件触发机制](#43%E7%9B%91%E5%90%AC%E5%99%A8%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91%E6%9C%BA%E5%88%B6)
+    - [4.3.1、监听器注册](#431%E7%9B%91%E5%90%AC%E5%99%A8%E6%B3%A8%E5%86%8C)
+    - [4.3.2、获取感兴趣的监听器列表](#432%E8%8E%B7%E5%8F%96%E6%84%9F%E5%85%B4%E8%B6%A3%E7%9A%84%E7%9B%91%E5%90%AC%E5%99%A8%E5%88%97%E8%A1%A8)
+    - [4.3.3、事件触发条件](#433%E4%BA%8B%E4%BB%B6%E8%A7%A6%E5%8F%91%E6%9D%A1%E4%BB%B6)
+  - [4.4、自定义监听器](#44%E8%87%AA%E5%AE%9A%E4%B9%89%E7%9B%91%E5%90%AC%E5%99%A8)
+    - [4.4.1、factories方式](#441factories%E6%96%B9%E5%BC%8F)
+    - [4.4.2、在启动类中添加](#442%E5%9C%A8%E5%90%AF%E5%8A%A8%E7%B1%BB%E4%B8%AD%E6%B7%BB%E5%8A%A0)
+    - [4.4.3、在application.properties中添加配置](#443%E5%9C%A8applicationproperties%E4%B8%AD%E6%B7%BB%E5%8A%A0%E9%85%8D%E7%BD%AE)
+    - [4.4.4、实现SmartApplicationListener接口](#444%E5%AE%9E%E7%8E%B0smartapplicationlistener%E6%8E%A5%E5%8F%A3)
+    - [4.4.5、总结](#445%E6%80%BB%E7%BB%93)
+- [5、refresh方法](#5refresh%E6%96%B9%E6%B3%95)
+- [6、banner配置](#6banner%E9%85%8D%E7%BD%AE)
+  - [6.1、配置方式](#61%E9%85%8D%E7%BD%AE%E6%96%B9%E5%BC%8F)
+  - [6.2、banner获取原理](#62banner%E8%8E%B7%E5%8F%96%E5%8E%9F%E7%90%86)
+- [7、启动加载器](#7%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8)
+  - [7.1、计时器](#71%E8%AE%A1%E6%97%B6%E5%99%A8)
+  - [7.2、启动加载器](#72%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8)
+  - [7.3、启动加载器原理分析](#73%E5%90%AF%E5%8A%A8%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%8E%9F%E7%90%86%E5%88%86%E6%9E%90)
+- [8、属性配置](#8%E5%B1%9E%E6%80%A7%E9%85%8D%E7%BD%AE)
+  - [8.1、属性配置顺序](#81%E5%B1%9E%E6%80%A7%E9%85%8D%E7%BD%AE%E9%A1%BA%E5%BA%8F)
+  - [8.2、SpringAware](#82springaware)
+    - [8.2.1、常用的Aware](#821%E5%B8%B8%E7%94%A8%E7%9A%84aware)
+    - [8.2.2、aware实现原理](#822aware%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [8.2.3、自定义aware](#823%E8%87%AA%E5%AE%9A%E4%B9%89aware)
+  - [8.3、属性加载](#83%E5%B1%9E%E6%80%A7%E5%8A%A0%E8%BD%BD)
+  - [8.4、Spring Profile](#84spring-profile)
+    - [8.4.1、集合profile](#841%E9%9B%86%E5%90%88profile)
+    - [8.4.2、profile原理解析](#842profile%E5%8E%9F%E7%90%86%E8%A7%A3%E6%9E%90)
+- [9、异常与异常报告器](#9%E5%BC%82%E5%B8%B8%E4%B8%8E%E5%BC%82%E5%B8%B8%E6%8A%A5%E5%91%8A%E5%99%A8)
+  - [9.1、异常报告器](#91%E5%BC%82%E5%B8%B8%E6%8A%A5%E5%91%8A%E5%99%A8)
+  - [9.2、异常处理流程](#92%E5%BC%82%E5%B8%B8%E5%A4%84%E7%90%86%E6%B5%81%E7%A8%8B)
+    - [9.2.1、handleExitCode：处理退出码](#921handleexitcode%E5%A4%84%E7%90%86%E9%80%80%E5%87%BA%E7%A0%81)
+    - [9.2.2、reportFailure](#922reportfailure)
+    - [9.2.3、context.close()](#923contextclose)
+- [10、配置类解析](#10%E9%85%8D%E7%BD%AE%E7%B1%BB%E8%A7%A3%E6%9E%90)
+- [11、Servlet容器](#11servlet%E5%AE%B9%E5%99%A8)
+  - [11.1、嵌入式Servlet容器启动](#111%E5%B5%8C%E5%85%A5%E5%BC%8Fservlet%E5%AE%B9%E5%99%A8%E5%90%AF%E5%8A%A8)
+  - [11.2、ServletWebServerFactory加载](#112servletwebserverfactory%E5%8A%A0%E8%BD%BD)
+- [12、starter配置原理](#12starter%E9%85%8D%E7%BD%AE%E5%8E%9F%E7%90%86)
+  - [12.1、自定义starter](#121%E8%87%AA%E5%AE%9A%E4%B9%89starter)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 **注意：**以下所有源码分析都是基于`2.2.2.RELEASE`版本的代码
 
@@ -224,8 +290,9 @@ private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoad
 
 ![](image/SpringFactoriesLoader.loadFactories.png)
 
-# 3、系统初始化器：ApplicationContextInitializer
+# 3、系统初始化器
 
+ApplicationContextInitializer
 - 上下文沙墟即refresh方法前调用；
 - 用来编码设置一些属性变量，通常用在web环境中；
 - 可以通过`@Order`注解进行排序
@@ -1433,8 +1500,5 @@ ConfigurationClassParser#doProcessConfigurationClass
 ## 12.1、自定义starter
 
 [starter原理](../../../Java框架/Spring/Spring.md#十三自定义Starter)
-
-
-# 面试题
 
 
