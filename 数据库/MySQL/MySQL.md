@@ -1676,6 +1676,7 @@ https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
 所谓的反范式化是为了性能和读取效率的考虑而适当的对数据库设计范式的要求进行违反，而允许存在的少量的数据冗余.即反范式化就是使用空间来换取时间
 
 # 十二、mysql高可用架构设计
+
 ## 1、mysql复制功能
 
 mysql复制功能提供分担读负载，基于主库的二进制日志，异步的。无法保证主库与从库的延迟。
@@ -1687,37 +1688,32 @@ mysql复制解决了什么问题
 - 实现数据库高可用和故障切换；避免mysql的单点故障
 - 实现数据库在线升级
 
-## 2、Mysql日志
-
-- mysql存储引擎层日志
-
-	重做日志、回滚日志
-
-- mysql服务处日志
-
-	二进制日志、慢查日志、通用日志
-
-只有redo日志和undo日志跟事务相关；
-
-## 3、mysql二进制日志
+## 2、mysql binlog
 
 记录了所有对mysql数据库的修改事件，包括增删查改事件和对表结构的修改事件。且二进制日志中记录是已执行成功的记录
 
-### 3.1、mysql二进制日志格式
+`log_bin`：binlog日志是否打开
+
+### 2.1、mysql二进制日志格式
 
 查看二进制日志格式：show variables like 'binlog_format';
 
 修改二进制日志格式：set binlog_format=''
 
-- 基于段的格式：binlog_format=STATEMENT，mysql5.7之前默认的格式，主要记录的执行sql语句
+- 基于段的格式：`binlog_format=STATEMENT`，mysql5.7之前默认的格式，主要记录的执行sql语句
 	- 优点：日志记录量相对较小，节约磁盘及网络IO
 	- 缺点：必须记录上下文信息，保证语句在从服务器上的执行结果与主服务器上执行结果相同，但是非确定性函数还是无法正确复制，有可能mysql主从服务器数据不一致
+- 基于行的格式：`binlog_format=ROW`，mysql5.7之后的默认格式，可以避免主从服务器数据不一致情况
+- 混合模式：`binlog_format=MIXED`
 
-- 基于行的格式：binlog_format=ROW，mysql5.7之后的默认格式，可以避免主从服务器数据不一致情况
+### 2.2、管理binlog
 
-? 数据库如何实现 rollback 的？
+- show master logs：查看所有binlog的日志列表
+- show master status：查看最后一个binlog日志的编号名称，及最后一个事件结束的位置
+- flush logs：刷新binlog，此刻开始产生一个新编号的binlog日志文件
+- reset master：情况所有的binlog日志
 
-binlog
+### 2.3、查看binlog日志
 
 # 十三、数据库分库分表
 

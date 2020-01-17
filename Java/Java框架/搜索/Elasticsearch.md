@@ -1422,6 +1422,7 @@ Elasticsearch设计的理念就是分布式搜索引擎，底层其实还是基�
 - binlog订阅：
     - [canal](https://github.com/alibaba/canal)
     - go-mysql-elasticsearch
+    - mysql-binlog-connector-java： 监听binlog
 - logstash
 
 # 三、ElasticSearch整合SpringBoot
