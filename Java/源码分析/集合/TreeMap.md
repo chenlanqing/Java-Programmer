@@ -104,6 +104,8 @@ public TreeMap(SortedMap<K, ? extends V> m) {
 
 # 六、TreeSet
 
+## 1、底层结构
+
 TreeSet是基于TreeMap来实现的，其构造方法都是去构造一个TreeMap：
 ```java
 public TreeSet() {
@@ -111,7 +113,9 @@ public TreeSet() {
 }
 ```
 
-往TreeSet里添加对象方法：
+## 2、添加元素
+
+往TreeSet里添加对象方法是基于TreeMap的put方法实现
 ```java
 private static final Object PRESENT = new Object();
 public boolean add(E e) {
@@ -138,11 +142,30 @@ Exception in thread "main" java.lang.ClassCastException: java.lang.String cannot
 ```
 因为TreeMap要实现有序，必须需要比较，代码2操作的时候，使用Integer的compareTo方法比较的时候，无法将字符串转为Integer，所以会报异常
 
+## 3、获取元素
 
+## 4、迭代
 
+```java
+// NavigableSet 接口，定义了迭代的一些规范，和一些取值的特殊方法，TreeSet 实现了该方法，也就是说 TreeSet 本身已经定义了迭代的规范
+public interface NavigableSet<E> extends SortedSet<E> {
+    Iterator<E> iterator();
+    E lower(E e);
+}  
+// m.navigableKeySet() 是 TreeMap 写了一个子类实现了 NavigableSet接口，实现了 TreeSet 定义的迭代规范
+public Iterator<E> iterator() {
+    return m.navigableKeySet().iterator();
+}
+```
+TreeSet定义了接口的规范，TreeMap 负责去实现。
 
+**为什么要如此实现呢？**
 
+因为TreeSet要求能够从头开始迭代，或者要取第一个值，或者只取最后一个值，再加上TreeMap本身结构实现比较复杂，而TreeSet又不清楚TreeMap内部结构，所以为了避免TreeSet实现复杂的场景，不如由TreeSet定义好规范，有TreeMap去实现
 
+## 5、常见使用场景
+
+一般需要把元素进行排序的时候使用TreeSet，但是使用时需要注意实现Comparable接口
 
 
 

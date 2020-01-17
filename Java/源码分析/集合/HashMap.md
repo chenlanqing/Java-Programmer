@@ -806,7 +806,36 @@ final Node<K,V>[] resize()
 - 当put时，如果发现目前的bucket占用程度已经超过了Load Factor所希望的比例，那么就会发生resize。在resize的过程，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点再放到新的bucket中
 - 扩充HashMap的时候，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0就好了，是0的话索引没变，是1的话索引变成“原索引+oldCap”
 
-# 六、面试题
+# 六、HashSet
+
+HashSet 使用HashMap作为成员变量
+```java
+// 把 HashMap 组合进来，key 是 Hashset 的 key，value 是下面的 PRESENT
+private transient HashMap<E,Object> map;
+// HashMap 中的 value
+private static final Object PRESENT = new Object();
+```
+初始化，当有原始集合数据进行初始化的情况下，会对HashMap的容量进行计算
+```java
+public HashSet(Collection<? extends E> c) {
+	map = new HashMap<>(Math.max((int) (c.size()/.75f) + 1, 16));
+	addAll(c);
+}
+```
+在直接打印HashSet时，会去调用其迭代方法，最后会调用到HashMap中的keySet方法：
+```java
+public Set<K> keySet() {
+	Set<K> ks = keySet;
+	if (ks == null) {
+		// KeySet 为HashMap的内部类，实现自 AbstractSet
+		ks = new KeySet();
+		keySet = ks;
+	}
+	return ks;
+}
+```
+
+# 七、面试题
 
 ## 1、get和put的原理？JDK8
 

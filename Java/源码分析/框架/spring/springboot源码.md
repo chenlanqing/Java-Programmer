@@ -721,6 +721,31 @@ stopwatch.start();
 stopwatch.stop();
 ```
 
+使用例子：
+```java
+// 准备拷贝数据
+ArrayList<Integer> list = new ArrayList<>();
+for(int i=0;i<3000000;i++){
+    list.add(i);
+}
+
+StopWatch stopWatch = new StopWatch();
+stopWatch.start("单个 for 循环新增 300 w 个");
+ArrayList<Integer> list2 = new ArrayList<>();
+for(int i=0;i<list.size();i++){
+    list2.add(list.get(i));
+}
+stopWatch.stop();
+
+// 批量新增
+stopWatch.start("批量新增 300 w 个");
+ArrayList<Integer> list3 = new ArrayList<>();
+list3.addAll(list);
+stopWatch.stop();
+
+System.out.println(stopWatch.prettyPrint());
+```
+
 ## 7.2、启动加载器
 
 Spring中有两种启动类加载器：`ApplicationRunner`、`CommandLineRunner`，可以通过实现这两个接口来在Springboot框架启动进行一些处理：
