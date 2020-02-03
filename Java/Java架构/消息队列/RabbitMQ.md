@@ -1,5 +1,5 @@
 
-# 二、RabbitMQ
+# 一、RabbitMQ
 
 ## 1、概述
 
@@ -9,11 +9,12 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 
 ### 1.2、具有以下特点
 
-- 开源、性能优秀，稳定性保障；
-- 提供可靠性消息投递模式、返回模式；
-- 与SpringAMQP完美整合，API丰富；
-- 集群模式丰富，表达式配置，HA模式，镜像对象模型；
-- 保障数据不丢失的前提做到高可靠性、可用性
+- 采用Erlang语言作为底层实现：Erlang有着和原生Socket一样的延迟
+- 开源、性能优秀，稳定性保障
+- 提供可靠性消息投递模式（confirm）、返回模式（ return ）
+- 与SpringAMQP完美的整合、API丰富
+- 集群模式丰富，表达式配置，HA模式，镜像队列模型
+- 保证数据不丢失的前提做到高可靠性、可用性
 
 ### 1.3、高性能原因
 
@@ -204,7 +205,7 @@ comfirm机制其实是一个异步监听的机制 ，是为了保证系统的高
 - RabbitMQ提供了一种QOS（服务质量保证）功能，即在非自动确认消息的前提下，如果一定数据的消息（通过基于consume或者channel设置的qos的值）未被确认前，不进行消费新的消息
 - void basicQos(int prefetchSize, int prefetchCount, boolean global)
 
-  *注意：* prefetchSize和global这两个选型，rabbitmq没有实现，暂且不研究prefetch_count在no_ack=false的情况下生效，即在自动应答的情况下这两个值是不生效的
+  **注意：** prefetchSize和global这两个选型，rabbitmq没有实现，暂且不研究prefetch_count在no_ack=false的情况下生效，即在自动应答的情况下这两个值是不生效的
 
 ## 10、消费端ACK与重回队列
 
@@ -239,7 +240,7 @@ comfirm机制其实是一个异步监听的机制 ，是为了保证系统的高
 - 当这个队列中有死信时，RabbitMQ就会自动的将这个消息重新发布到设置的Exchange上，进而被路由到另一个队列；
 - 可以监听这个队列中消息做相应的处理，这个特性可以弥补RabbitMQ3.0以前致辞的immediate参数的功能；
 
-# 三、RabbitMQ与Spring整合
+# 二、RabbitMQ与Spring整合
 
 ## 1、RabbitMQ整合Spring AMQP
 
@@ -362,7 +363,7 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 - 主要有json转换器（Jackson2JsonMessageConverter）、DefaultJackson2JavaTypeMapper映射器，可以进行java对象的映射关系；
 - 自定义二进制转换器：比如图片类型、PDF、PPT、流媒体等
 
-# 四、RabbitMQ集群
+# 三、RabbitMQ集群
 
 ## 1、集群架构模式
 
@@ -376,7 +377,7 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
     server bhz76 192.168.11.76:5672 check inter 5000 rise 2 fall 2
     server bhz77 192.168.11.77:5672 backup check inter 5000 rise 2 fall 2 # 备用节点
     ```
-    备注：rabbitmq集群节点配置#inter 每个5秒对mq集群做健康检查，2次正确证明服务器可用，2次失败证明服务器不可用，并且配置主备机制
+    备注：rabbitmq集群节点配置`#inter` 每个5秒对mq集群做健康检查，2次正确证明服务器可用，2次失败证明服务器不可用，并且配置主备机制
 
 - 远程模式：可以实现双活的一种模式，简称shovel模式，所谓shovel就是可以把消息进行不同数据中心的复制工作，可以跨地域的让两个mq集群互联；
     
@@ -388,11 +389,11 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 
 - 镜像模式：保证100%数据不丢失，目的是为了保证RabbitMQ数据的高可靠性解决方案，主要是实现数据的同步；   
 
-- 多活模式：实现异地数据复制的主流模式，一般采用双中心（多中心）模式，
+- 多活模式：实现异地数据复制的主流模式，一般采用双中心（多中心）模式，其依赖rabbitmq的federation插件
 
 
 
-# 五、RabbitMQ-SET化架构实现
+# 四、RabbitMQ-SET化架构实现
 
 使用RabbitMQ的通信插件：Federation
 

@@ -50,9 +50,7 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 ## 1、设计思想
 
 AQS，抽象队列同步器，是构建锁或者其他同步组件的基础框架，是JUC并发包中的核心基础组件
-
 - 仅从 AQS 本身来说，它仅仅提供独占锁和共享锁两种方式， AQS 本身不存在所谓的公平和非公平锁。
-- AQS 基于模板模式设计， 其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种，所以 AQS 没有抽象方法，所有方法都有默认实现
 - AQS 是继承自 AbstractOwnableSynchronizer(AOS)，AOS 里面只有一个属性：exclusiveOwnerThread--用来标识当前占有锁的线程，加上该属性的get和set方法。<br>
 	
 	***为什么需要将持有锁的线程的标识向上抽取***<br>
@@ -60,7 +58,11 @@ AQS，抽象队列同步器，是构建锁或者其他同步组件的基础框�
 
 	AQS 是在1.5产生， 而 AOS 是在1.6之后才产生的.也就是说在AQS的整个声明过程中，都没有用到 AOS 中声明的属性或者方法，这些属性或者方法是在 AQS 的子类中才用的到.也就是在 1.6之后对子类进行增强.为什么不把 AOS 声明的属性直接放到 AQS中？可能是因为 AQS 不需要这些属性，不对 AQS 做过多侵入。
 
-- AQS 核心是通过一个共享变量state来同步状态，变量的状态由子类去维护，AQS需要做的是：线程阻塞队列维护， 线程阻塞和唤醒；一个先进先出的等待线程队列，以实现多线程间竞争和等待；当`state>0`时表示已经获取了锁，当`state = 0`时表示释放了锁。它提供了三个方法`（getState()、setState(int newState)、compareAndSetState(int expect,int update)）`来对同步状态state进行操作，当然AQS可以确保对state的操作是安全的
+- AQS 核心是通过一个共享变量state来同步状态，变量的状态由子类去维护，AQS需要做的是：线程阻塞队列维护、线程阻塞和唤醒；一个先进先出的等待线程队列，以实现多线程间竞争和等待；当`state>0`时表示已经获取了锁，当`state = 0`时表示释放了锁。它提供了三个方法`（getState()、setState(int newState)、compareAndSetState(int expect,int update)）`来对同步状态state进行操作，当然AQS可以确保对state的操作是安全的
+
+- AQS内部维护着一个FIFO队列，该队列就是CLH同步队列；
+
+- AQS 基于模板模式设计， 其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种，所以 AQS 没有抽象方法，所有方法都有默认实现
 
 ## 2、AQS 对外公开的方法不需要子类实现的
 

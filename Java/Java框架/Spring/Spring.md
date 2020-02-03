@@ -964,49 +964,26 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 	
 ## 8、编程式事务管理
 
-## 9、Spring 中的部分注解配置	
+## 9、手动控制Spring事务
 
-从JDK5.0开始，提供了注解，泛型，新for循环，自动装箱，拆箱；目前框架利用注解替代XML配置内容，注解是一种标记(@标记)，可以写在类定义前，方法定义前，属性变量定义前
+主要通过两个类来控制：PlatformTransactionManager、TransactionDefinition，具体写法如下：
+```java
+@Autowired
+private PlatformTransactionManager platformTransactionManager;
+@Autowired
+private TransactionDefinition transactionDefinition;
 
-- 组件自动扫描技术：
+public void create(){
+	// 获取事务
+	TransactionStatus transaction = platformTransactionManager.getTransaction(transactionDefinition);
 
-	可以指定一个包路径，Spring会自动扫描该包及其子包下所有的Class组件，当发现class有指定的注解标记，会转化成原XML配置中的bean定义;使用方法：
-	```
-	---在Spring的主配置中开启组件自动扫描：
-		<context：component-scan base-package="包路径" />
-	---在需要扫描进入Spring容器的Class中，在类定义前使用下面注解标记之一：
-		@Controller 	：	Action组件
-		@Service		：	业务组件
-		@Repository ：DAO组件
-		@Component ：其他组件
-		
-		◆示例：@Repository("jdbcCostDao")-----引号里内容表示：Bean组件的id
-		
-	---如果需要注入Bean对象，在属性变量或者set方法前使用下面标记：注入注解标记
-		@Resource，默认按照名称注入，找不到对于名称时按类型装配；
-			----@Resource：注入注解标记，按类型
-			----@Resource(name="指定的Bean的Id")：注入指定的Bean对象
-		@Autowired：按类型注入
-			---如果使用@Autowired标记需要注入指定的Bean对象需要按照如下格式写：
-				@Autowired(required=true)：
-				@Qualifier("指定的Bean")
-	```
-- AOP注解配置：
-	使用方法如下：
-	```
-	---在Spring的主配置中开启AOP注解配置：
-		<aop：aspectj-autoproxy />
-	---编写方面组件，在组件中使用下列注解标记：
-		@Component：将Bean扫描到Spring容器;
-		@Aspect：将Bean指定为方面组件;
-		通知标记：
-			--@Before ：前置通知
-			--@After	：最终通知
-			--@AfterReurning 	：后置通知
-			--@AfterThrowing	：异常通知
-			--@Around	：环绕通知
-	可以加注解标记：@Scope()-----表示是否为单例	
-	```
+	// 回滚事务
+	platformTransactionManager.rollback(transaction);
+
+	// 提交事务
+	platformTransactionManager.commit(transaction);
+}
+```
 	
 # 六、Spring的三种配置方式
 

@@ -2491,6 +2491,7 @@ protected final void setState(long newState) {
 	- 通过这种方式，必须有count个线程调用countDown()之后，“锁计数器”才为0，而前面提到的等待线程才能继续运行！
 
 - 使用例子
+
 ```java
 private final static int threadCount = 200;
 public static void main(String[] args)throws Exception {
@@ -2607,7 +2608,7 @@ public class CyclicBarrierDemo {
 	
 	![image](image/Semaphore.png)
 
-- 信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可；当信号量中有可用的许可时，线程能获取该许可；否则线程必须等待，直到有可用的许可为止。线程可以通过release()来释放它所持有的信号量许可
+- 信号量维护了一个信号量许可集.线程可以通过调用acquire()来获取信号量的许可；当信号量中有可用的许可时，线程能获取该许可；否则线程必须等待，直到有可用的许可为止。线程可以通过release()来释放它所持有的信号量许可；一次性可以获取和释放可以多个许可证，但是获取和释放的信号量必须一致；
 
 - Semaphore 包含了sync对象，sync是 Sync 类型;而且，Sync 也是一个继承于 AQS 的抽象类。Sync包括两个子类："公平信号量"FairSync和"非公平信号量"NonfairSync。默认情况下，sync是NonfairSync(即，默认是非公平信号量)。
 
@@ -2618,6 +2619,10 @@ public class CyclicBarrierDemo {
 - 如果Semaphore的数值初始化为1，那么一个线程就可以通过acquire进入互斥状态，本质上和互斥锁类似，；但区别也必将明显，比如互斥锁是有持有者的；
 
 - Semaphore内部包含公平锁（FairSync）和非公平锁（NonfairSync），继承内部类Sync，其中Sync继承AQS；Semaphore默认选择非公平锁
+
+- 其内有tryAcquire及其对应的超时方法，尝试获取锁，没有获取到信号量，则去做其他事情；
+
+- 并不是必须由获取许可证的线程释放那个许可证，事实上，获取和释放许可证对线程并无要求；
 
 - 例子:
 ```java
@@ -2659,7 +2664,7 @@ public class SemaphoreDemo {
 
 ## 8、Condition
 
-- 在使用 notify 和 notifyAll 方法进行通知时，被通知的线程是由JVM随机选择的.但是 ReentrantLock 集合Condition 类就实现选择性通知。线程可以注册在指定的 Condition 中，从而可以有选择性的进行线程通知
+- 在使用 notify 和 notifyAll 方法进行通知时，被通知的线程是由JVM随机选择的。但是 ReentrantLock 集合Condition 类就实现选择性通知。线程可以注册在指定的 Condition 中，从而可以有选择性的进行线程通知
 
 - synchronized 就相当于整个 Lock 对象中只有一个单一的 Condition 对象，所有的线程都注册在它的一个对象上，线程开始 notifyAll 时，需要通知所有的 waitin线程，没有选择权；Object 中的 wait()，notify()，notifyAll()方法是和"同步锁"(synchronized关键字)捆绑使用的。而Condition是需要与"互斥锁"/"共享锁"捆绑使用的
 
@@ -2675,11 +2680,12 @@ public class SemaphoreDemo {
 	void awaitUninterruptibly()
 	// 造成当前线程在接到信号、被中断或到达指定最后期限之前一直处于等待状态。
 	boolean awaitUntil(Date deadline)
-	// 唤醒一个等待线程。
+	// 唤醒一个等待线程。等待时间最长的线程
 	void signal()
 	// 唤醒所有等待线程。
 	void signalAll()
 	```
+
 ## 9、LockSupport
 
 是用来创建锁和其他同步类的基本线程阻塞原语。`park()`和`unpark()`的作用分别是阻塞线程和解除阻塞线程，而且`park()和unpark()`不会遇到`Thread.suspend 和 Thread.resume所可能引发的死锁`问题。因为`park()` 和 `unpark()`有许可的存在；调用 `park()` 的线程和另一个试图将其 `unpark()` 的线程之间的竞争将保持活性。
@@ -2711,21 +2717,23 @@ park和wait的区别：wait让线程阻塞前，必须通过synchronized获取�
 
 ## 10、Callable、Future
 
+### 10.1、Callable
+
 Callable 是类似于 Runnable 的接口，实现Callable接口的类和实现Runnable的类都是可被其它线程执行的任务；Callable 和 Runnable 有几点不同：
 - Callable规定的方法是call()，而Runnable规定的方法是run()；
 - Callable的任务执行后可返回值，而Runnable的任务是不能返回值的。
 - call()方法可抛出异常，而run()方法是不能抛出异常的。
 - 运行 Callable 任务可拿到一个 Future 对象，Future 表示异步计算的结果。它提供了检查计算是否完成的方法，以等待计算的完成，并检索计算的结果。通过Future对象可了解任务执行情况，可取消任务的执行，还可获取任务执行的结果.
 
-如果需要获取线程的执行结果，需要使用到Future，Callable用于产生结果，Future用于获取结果，Callabl接口使用泛型来定义结果的返回值类型，在线程池提交Callable任务后返回了一个Future对象
+### 10.2、Future
 
-Future的方法
+如果需要获取线程的执行结果，需要使用到Future，Callable用于产生结果，Future用于获取结果，Callable接口使用泛型来定义结果的返回值类型，在线程池提交Callable任务后返回了一个Future对象，Future的方法
 ```java
 // 该方法是非阻塞的
 // 如果任务运行之前调用了该方法，那么任务就不会被运行；
 // 如果任务已经完成或者已经被取消，那么该方法方法不起作用；
 // 如果任务正在运行，并且 cancel 传入参数为 true，那么便会去终止与 Future 关联的任务
-// cancel(false) 与 cancel(true）的区别在于，cancel(false) 只 取消已经提交但还没有被运行的任务（即任务就不会被安排运行）；而 cancel(true) 会取消所有已经提交的任务，包括 正在等待的 和 正在运行的 任务
+// cancel(false) 与 cancel(true）的区别在于，cancel(false) 只 取消已经提交但还没有被运行的任务（即任务就不会被安排运行）；而 cancel(true) 会取消所有已经提交的任务，包括 正在等待的 和 正在运行的 任务，如果传入的是true，有线程正在运行，那么线程内部有响应中断异常的，会响应该中断异常
 boolean cancel(boolean mayInterruptIfRunning);
 // 该方法是非阻塞的。在任务结束之前，如果任务被取消了，该方法返回 true，否则返回 false；如果任务已经完成，该方法则一直返回 false
 boolean isCancelled();
@@ -2733,9 +2741,11 @@ boolean isCancelled();
 boolean isDone();
 // 获取任务结果，get方法是阻塞式的，如果被调用的时候，任务还没有执行完，那么调用get方法的线程会阻塞，直到任务执行完才会唤醒
 V get() throws InterruptedException, ExecutionException;
-// 获取任务结果，支持超时
+// 获取任务结果，支持超时，ExecutionException 是Callable内的call执行时产生的异常信息
 V get(long timeout, TimeUnit unit)throws InterruptedException, ExecutionException, TimeoutException;
 ```
+
+使用Future时需要注意，在批量获取结果时，有些线程很快，有些线程很慢；Future的生命周期不能后退；
 
 ## 11、FutureTask
 
@@ -2799,8 +2809,7 @@ public class FutureTaskDemo {
 - 高并发环境下，能够确保任务只执行一次：下面代码保证了在高并发环境下不会多次创建连接或者多次锁的出现
 
 ```java
-private ConcurrentHashMap<String， FutureTask<Connection>> connectionPool
-            = new ConcurrentHashMap<String， FutureTask<Connection>>();
+private ConcurrentHashMap<String， FutureTask<Connection>> connectionPool = new ConcurrentHashMap<String， FutureTask<Connection>>();
 public Connection getConnection(String key) throws Exception{
 	FutureTask<Connection> connectionTask = connectionPool.get(key);
 	if (connectionTask != null){
@@ -2820,6 +2829,7 @@ public Connection getConnection(String key) throws Exception{
 	return connectionTask.get();
 }
 ```
+
 ## 12、Fork/Join框架
 
 ### 12.1、概述

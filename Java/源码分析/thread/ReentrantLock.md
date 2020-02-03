@@ -78,9 +78,32 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 - 提供了一个Condition类，可以分组唤醒需要唤醒的线程.
 - 公平性、可重入、可中断、超时机制；
 - Sync为ReentrantLock里面的一个内部类，它继承AQS（[AbstractQueuedSynchronizer](AbstractQueuedSynchronizer.md)），它有两个子类：公平锁FairSync和非公平锁NonfairSync。ReentrantLock里面大部分的功能都是委托给Sync来实现的，同时Sync内部定义了lock()抽象方法由其子类去实现，默认实现了nonfairTryAcquire(int acquires)方法，可以看出它是非公平锁的默认实现方式。
+
 ## 3、公平锁
 
 是按照通过CLH等待线程按照先来先得的规则，公平的获取锁；获取锁是通过lock()函数，是在ReentrantLock.java的FairSync类中实现，吞吐量比较低；
+
+```java
+protected final boolean tryAcquire(int acquires) {
+	final Thread current = Thread.currentThread();
+	int c = getState();
+	if (c == 0) {
+		if (!hasQueuedPredecessors() &&
+			compareAndSetState(0, acquires)) {
+			setExclusiveOwnerThread(current);
+			return true;
+		}
+	}
+	else if (current == getExclusiveOwnerThread()) {
+		int nextc = c + acquires;
+		if (nextc < 0)
+			throw new Error("Maximum lock count exceeded");
+		setState(nextc);
+		return true;
+	}
+	return false;
+}
+```
 
 ## 4、非公平锁
 
@@ -89,6 +112,29 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 - 提交效率，避免唤醒带来的空档期；减少切换成本
 - 可能存在饥饿问题，也就是某些线程在长时间内得不到执行。
 - tryLock使用的是非公平锁
+
+```java
+final boolean nonfairTryAcquire(int acquires) {
+	final Thread current = Thread.currentThread();
+	int c = getState();
+	if (c == 0) {
+		if (compareAndSetState(0, acquires)) {
+			setExclusiveOwnerThread(current);
+			return true;
+		}
+	}
+	else if (current == getExclusiveOwnerThread()) {
+		int nextc = c + acquires;
+		if (nextc < 0) // overflow
+			throw new Error("Maximum lock count exceeded");
+		setState(nextc);
+		return true;
+	}
+	return false;
+}
+```
+
+对比公平与非公平锁，发现主要区别是：hasQueuedPredecessors，公平锁是将所有的线程放在一个队列中，一个线程执行完成后，从队列中取出下一个线程，而非公平锁则没有这个队列
 
 ## 5、保证可见性
 
