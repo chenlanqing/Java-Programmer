@@ -267,6 +267,29 @@ generateBackupPoms用于配置是否生成备份Pom，用于版本回滚。配�
 mvn versions:set -DnewVersion=1.0.1
 ```
 
+## 4、Javac编译版本不一致问题
+
+需要早pom文件中加入如下插件：
+```xml
+<build>
+	<plugins>
+		<plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+		</plugin>
+		<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-compiler-plugin</artifactId>
+			<version>3.1</version>
+			<configuration>
+				<source>${java.version}</source>
+				<target>${java.version}</target>
+			</configuration>
+		</plugin>
+	</plugins>
+</build>
+```
+
 # 十、Maven私服仓库搭建
 
 
