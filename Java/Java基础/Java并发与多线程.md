@@ -2454,7 +2454,6 @@ Doug Lea 将持有写锁的线程，去获取读锁的过程称为锁降级（Lo
 
 其有写锁、悲观读锁、乐观读
 
-
 ## 5、共享锁-闭锁：CountDownLatch
 
 [CountDownLatch原理和示例](http://www.cnblogs.com/skywang12345/p/3533887.html)
@@ -2476,7 +2475,7 @@ protected final void setState(long newState) {
 	state = newState;
 }
 ```
-在AQS中，state是一个private volatile long类型的对象。对于CountDownLatch而言，state表示的“锁计数器”；CountDownLatch中的getCount()最终是调用AQS中的getState()，返回的state对象，即”锁计数器“
+在AQS中，state是一个`private volatile long`类型的对象。对于CountDownLatch而言，state表示的“锁计数器”；CountDownLatch中的`getCount()`最终是调用AQS中的getState()，返回的state对象，即`锁计数器`
 
 - 使用场景：并行计算
 
@@ -2740,6 +2739,7 @@ boolean isCancelled();
 // 该方法同样是非阻塞的。如果任务已经结束（正常结束，或者被取消，或者执行出错），返回 true，否则返回 false
 boolean isDone();
 // 获取任务结果，get方法是阻塞式的，如果被调用的时候，任务还没有执行完，那么调用get方法的线程会阻塞，直到任务执行完才会唤醒
+// 如果任务被取消了，抛 CancellationException 异常；如果等待过程中被打断了，抛 InterruptedException 异常
 V get() throws InterruptedException, ExecutionException;
 // 获取任务结果，支持超时，ExecutionException 是Callable内的call执行时产生的异常信息
 V get(long timeout, TimeUnit unit)throws InterruptedException, ExecutionException, TimeoutException;
@@ -2749,13 +2749,75 @@ V get(long timeout, TimeUnit unit)throws InterruptedException, ExecutionExceptio
 
 ## 11、FutureTask
 
+### 11.1、基本概述
+
 ```java
-public class FutureTask<V> implements RunnableFuture<V>{};
+public class FutureTask<V> implements RunnableFuture<V>{
+    // 任务状态
+    private volatile int state;
+    private static final int NEW          = 0;//线程任务创建
+    private static final int COMPLETING   = 1;//任务执行中
+    private static final int NORMAL       = 2;//任务执行结束
+    private static final int EXCEPTIONAL  = 3;//任务异常
+    private static final int CANCELLED    = 4;//任务取消成功
+    private static final int INTERRUPTING = 5;//任务正在被打断中
+    private static final int INTERRUPTED  = 6;//任务被打断成功
+
+    // 组合了 Callable ，Callable 是作为 FutureTask 的属性之一，这也就让 FutureTask 具备了转化 Callable 和 Runnable 的功能
+    private Callable<V> callable;
+    // 异步线程返回的结果
+    private Object outcome; 
+    // 当前任务所运行的线程
+    private volatile Thread runner;
+    // 记录调用 get 方法时被等待的线程
+    private volatile WaitNode waiters;
+}
 
 public interface RunnableFuture<V> extends Runnable, Future<V>{};
 ```
+- 从类定义上可以看出来 FutureTask 实现了 RunnableFuture 接口，也就是说间接实现了 Runnnable 接口（RunnableFuture 实现了 Runnnable 接口），就是说 FutureTask 本身就是个 Runnnable，同时 FutureTask 也实现了 Future，也就是说 FutureTask 具备对任务进行管理的功能（Future 具备对任务进行管理的功能）
 
 - 可用于异步获取执行结果或取消执行任务的场景：通过传入Runnable或者Callable的任务给FutureTask，直接调用其run方法或者放入线程池执行，之后可以在外部通过FutureTask的get方法异步获取执行结果。FutureTask非常适合用于耗时的计算，主线程可以在完成自己的任务后，再去获取结果。FutureTask还可以确保即使调用了多次run方法，它都只会执行一次Runnable或者Callable任务，或者通过cancel取消FutureTask的执行等;
+
+### 11.2、构造器
+
+FutureTask 有两个构造器，分别接受 Callable 和 Runnable，如下
+```java
+// 使用 Callable 进行初始化
+public FutureTask(Callable<V> callable) {
+    if (callable == null)
+        throw new NullPointerException();
+    this.callable = callable;
+    // 任务状态初始化
+    this.state = NEW;       // ensure visibility of callable
+}
+// 使用 Runnable 初始化，并传入 result 作为返回结果。
+// Runnable 是没有返回值的，所以 result 一般没有用，置为 null 就好了
+public FutureTask(Runnable runnable, V result) {
+    // Executors.callable 方法把 runnable 适配成 RunnableAdapter，RunnableAdapter 实现了 callable，所以也就是把 runnable 直接适配成了 callable。
+    this.callable = Executors.callable(runnable, result);
+    this.state = NEW;       // ensure visibility of callable
+}
+```
+
+Runnable 转换成 Callable：`Executors.callable(runnable, result);`
+```java
+// 转化 Runnable 成 Callable 的工具类，RunnableAdapter 为 Executors 的静态内部类
+static final class RunnableAdapter<T> implements Callable<T> {
+    final Runnable task;
+    final T result;
+    RunnableAdapter(Runnable task, T result) {
+        this.task = task;
+        this.result = result;
+    }
+    public T call() {
+        task.run();
+        return result;
+    }
+}
+```
+
+### 11.3、使用
 
 - FutureTask执行多任务计算：利用FutureTask和ExecutorService，可以用多线程的方式提交计算任务，主线程继续执行其他任务，当主线程需要子线程的计算结果时，在异步获取子线程的执行结果
 
@@ -2828,6 +2890,22 @@ public Connection getConnection(String key) throws Exception{
 	}
 	return connectionTask.get();
 }
+```
+
+### 11.4、线程API之间的关系
+
+Thread、Runnable、Callable、Future、FutureTask 之间的关系
+
+![](image/Thread相关类图.png)
+
+其中FutureTask有个 Callable属性，虽然 Thread的构造方法只接收 Runnable函数，但是实际上其也可以接收 Callable，但是需要通过FutureTask进行包装下，因为FutureTask实现了Runnable接口，具体写法如下：
+```java
+Callable<String> callable = () -> {
+    System.out.println("使用 callable");
+    return "执行完成";
+};
+FutureTask<String> futureTask = new FutureTask<>(callable);
+new Thread(futureTask).start();
 ```
 
 ## 12、Fork/Join框架
@@ -3133,7 +3211,67 @@ ConcurrentSkipListMap是通过`HeadIndex`维护索引层次，通过`Index`从�
 
 BlockingQueue 是一个接口，继承自 Queue
 
-### 7.2、应用场景
+可以看下其中 LinkedBlockingQueue的类图
+
+![](image/LinkedBlockingQueue类图.png)
+
+对比其他几个阻塞队列的类图可以发现，阻塞队列一般存在两条实现路径：
+- AbstractQueue -> AbstractCollection -> Collection ->Iterable 这条路径依赖，主要是想复用  Collection 和 迭代器的一些操作，这些我们在说集合的时候，都知道这些类是干什么，能干什么，就不细说了；
+- BlockingQueue -> Queue -> Collection，BlockingQueue 和 Queue 是新出来的两个接口；其中Queue是队列最基础的接口，几乎所有的队列都要实现这个接口
+
+### 7.2、Queue与BlockingQueue
+
+```java
+public interface Queue<E> extends Collection<E> {
+    boolean add(E e);
+    boolean offer(E e);
+    E remove();
+    E poll();
+    E element();
+    E peek();
+}
+public interface BlockingQueue<E> extends Queue<E> {
+    boolean add(E e);
+    boolean offer(E e);
+    void put(E e) throws InterruptedException;
+    boolean offer(E e, long timeout, TimeUnit unit)  throws InterruptedException;
+    E take() throws InterruptedException;
+    E poll(long timeout, TimeUnit unit) throws InterruptedException;
+    int remainingCapacity();
+    boolean remove(Object o);
+    public boolean contains(Object o);
+    int drainTo(Collection<? super E> c);
+    int drainTo(Collection<? super E> c, int maxElements);
+}
+
+```
+
+Queue中定义了队列的三大操作：
+- 新增操作：
+    - add 队列满的时候抛出异常；
+    - offer 队列满的时候返回false；
+- 查看并删除操作：
+    - remove 队列为空的时候抛出异常；
+    - poll 队列空的时候返回 null；
+- 只查看不删除操作：
+    - element 队列空的时候抛异常；
+    - peek 队列空的时候返回 null；
+
+| 方法处理方式 | 抛出异常    |  返回特殊值  | 一直阻塞| 超时退出 |
+| --------    | --------   | ----------- |--------|----------|
+| 插入方法     | add(e)     | offer(e)    |put(e)  | offer(e，time，unit)|
+| 移除方法     | remove     | poll()      |take()  | poll(time，unit)|
+| 检查方法     | element()  | peek()      |不可用   | 不可用|
+
+这四类方法分别对应的是：
+- ThrowsException：如果操作不能马上进行，则抛出异常
+- SpecialValue：如果操作不能马上进行，将会返回一个特殊的值，一般是true或者false
+- Blocks：如果操作不能马上进行，操作会被阻塞
+- TimesOut：如果操作不能马上进行，操作会被阻塞指定的时间，如果指定时间没执行，则返回一个特殊值，一般是true或者false
+
+BlockingQueue在 Queue新增和查看并删除的基础，增加了阻塞功能，可以选择是一直阻塞、或者阻塞一段时间后，返回特殊值；
+
+### 7.3、应用场景
 
 - 常用于生产者与消费者：生产者是向队列中添加元素的线程，消费者是从队列中取元素的线程。简而言之:阻塞队列是生产者用来存放元素、消费者获取元素的容器；
 
@@ -3146,21 +3284,6 @@ BlockingQueue 是一个接口，继承自 Queue
 - BlockingQueue 不接受 null 值的插入，相应的方法在碰到 null 的插入时会抛出 NullPointerException 异常;
 - BlockingQueue 的实现都是线程安全的，但是批量的集合操作如 addAll, containsAll, retainAll 和 removeAll 不一定是原子操作；
 - BlockingQueue 不支持 close 或 shutdown 等关闭操作
-
-### 7.3、几个方法
-
-| 方法处理方式 | 抛出异常    |  返回特殊值  | 一直阻塞| 超时退出 |
-| --------    | --------   | ----------- |--------|----------|
-| 插入方法     | add(e)     | offer(e)    |put(e)  | offer(e，time，unit)|
-| 移除方法     | remove     | poll()      |take()  | poll(time，unit)|
-| 检查方法     | element()  | peek()      |不可用   | 不可用|
-
-这四类方法分别对应的是：
-
-- ThrowsException：如果操作不能马上进行，则抛出异常
-- SpecialValue：如果操作不能马上进行，将会返回一个特殊的值，一般是true或者false
-- Blocks：如果操作不能马上进行，操作会被阻塞
-- TimesOut：如果操作不能马上进行，操作会被阻塞指定的时间，如果指定时间没执行，则返回一个特殊值，一般是true或者false
 
 ### 7.4、Java的阻塞队列
 
@@ -3185,6 +3308,7 @@ BlockingQueue 是一个接口，继承自 Queue
 	private final Condition notEmpty;
 	private final Condition notFull;
 	```
+    当 takeIndex、putIndex 到队尾的时候，都会重新从 0 开始循环
 - ArrayBlockingQueue 实现并发同步的原理就是，读操作和写操作都需要获取到 AQS 独占锁才能进行操作。如果队列为空，这个时候读操作的线程进入到读线程队列排队，等待写线程写入新的元素，然后唤醒读线程队列的第一个等待线程。如果队列已满，这个时候写操作的线程进入到写线程队列排队，等待读线程将队列元素移除腾出空间，然后唤醒写线程队列的第一个等待线程
 
 #### 7.4.2、LinkedBlockingQueue
@@ -3201,15 +3325,18 @@ BlockingQueue 是一个接口，继承自 Queue
 	}
 	```
 
-- 此队列按照先出先进的原则对元素进行排序
+- 基于链表的阻塞队列，其底层的数据结构是链表；
+- 链表维护先入先出队列，新元素被放在队尾，获取元素从队头部拿；
 - 其不同于ArrayBlockingQueue的是，其对于头尾操作时基于不同的锁的；
-- LinkedBlockingQueue在实现“多线程对竞争资源的互斥访问”时，对于“插入”和“取出(删除)”操作分别使用了不同的锁。对于插入操作，通过“插入锁putLock”进行同步；对于取出操作，通过“取出锁takeLock”进行同步。此外，插入锁putLock和“非满条件notFull”相关联，取出锁takeLock和“非空条件notEmpty”相关联。通过notFull和notEmpty更细腻的控制锁
+- 可以使用 Collection 和 Iterator 两个接口的所有操作，因为实现了两者的接口
+- LinkedBlockingQueue在实现“多线程对竞争资源的互斥访问”时，对于`插入`和`取出(删除)`操作分别使用了不同的锁。对于插入操作，通过`插入锁putLock`进行同步；对于取出操作，通过`取出锁takeLock`进行同步。此外，`插入锁putLock`和`非满条件notFull`相关联，`取出锁takeLock`和`非空条件notEmpty`相关联。通过notFull和notEmpty更细腻的控制锁
 	```java
     private final ReentrantLock takeLock = new ReentrantLock(); // 取出锁
     private final Condition notEmpty = takeLock.newCondition(); // 非空条件
     private final ReentrantLock putLock = new ReentrantLock(); // 插入锁
     private final Condition notFull = putLock.newCondition(); // 未满条件
 	```
+- 初始化：在对给定的集合进行初始化时，源码给了一个不优雅的示范，我们不反对在每次 for 循环的时候，都去检查当前链表的大小是否超过容量，但我们希望在 for 循环开始之前就做一步这样的工作。举个列子，给定集合大小是 1 w，链表大小是 9k，按照现在代码实现，只能在 for 循环 9k 次时才能发现，原来给定集合的大小已经大于链表大小了，导致 9k 次循环都是在浪费资源，还不如在 for 循环之前就 check 一次，如果 1w > 9k，直接报错即可。
 
 #### 7.4.3、PriorityBlockingQueue
 
@@ -3220,24 +3347,32 @@ BlockingQueue 是一个接口，继承自 Queue
 
 #### 7.4.4、DelayQueue
 
+```java
+public class DelayQueue<E extends Delayed> extends AbstractQueue<E> implements BlockingQueue<E> {}
+```
+DelayQueue 中的元素必须是 Delayed 的子类，Delayed 是表达延迟能力的关键接口，其继承了 Comparable 接口，并定义了还剩多久过期的方法
+
 - 支持延时获取元素的无界阻塞队列，即可以指定多久才能从队列中获取当前元素。如果队列里面没有元素到期，是不能从列头获取元素的，哪怕有元素也不行。也就是说只有在延迟期到时才能够从队列中取元素；
 
 - DelayQueue主要用于两个方面：（1）缓存：清掉缓存中超时的缓存数据；（2）任务超时处理
 
-- 在内部用一个PriorityQueue保存所有的`Delayed`对象，Delayed接口中只有一个方法long getDelay(TimeUnit unit);，返回该任务的deadline距离当前时间还有多久，堆顶保存了最快到期的任务；以支持优先级无界队列的PriorityQueue作为一个容器，容器里面的元素都应该实现Delayed接口，在每次往优先级队列中添加元素时以元素的过期时间作为排序条件，最先过期的元素放在优先级最高
+- 在内部使用用一个PriorityQueue保存所有的`Delayed`对象，即复用了PriorityQueue的方法，Delayed接口中只有一个方法long getDelay(TimeUnit unit);，返回该任务的deadline距离当前时间还有多久，堆顶保存了最快到期的任务；以支持优先级无界队列的PriorityQueue作为一个容器，容器里面的元素都应该实现Delayed接口，在每次往优先级队列中添加元素时以元素的过期时间作为排序条件，最先过期的元素放在优先级最高；
+
+- 底层使用了排序和超时阻塞实现了延迟队列，排序使用的是 PriorityQueue 排序能力，超时阻塞使用得是锁的等待能力
 
 #### 7.4.5、SynchronousQueue
 
 [SynchronousQueue](http://cmsblogs.com/?p=2418)
 
-- 不存储元素的阻塞队列，该队列的容量为0，每一个put必须等待一个take操作，否则不能继续添加元素。并且他支持公平访问队列
+- 不存储元素的阻塞队列，该队列的容量为0，每一个put必须等待一个take操作，否则不能继续添加元素。并且他支持公平访问队列；
 - SynchronousQueue分为公平和非公平，默认情况下采用非公平性访问策略，当然也可以通过构造函数来设置为公平性访问策略
 - 在JDK6之后，用CAS替换了原本基于锁的逻辑，同步开销比较小；
 - 是Executors.newCachedThreadPool()的默认队列；
 - 不能在 SynchronousQueue 中使用 peek 方法（在这里这个方法直接返回 null），peek 方法的语义是只读取不移除；
-- SynchronousQueue 也不能被迭代，因为根本就没有元素可以拿来迭代的；
-- Transferer 有两个内部实现类，是因为构造 SynchronousQueue 的时候，可以指定公平策略。公平模式意味着，所有的读写线程都遵守先来后到，FIFO 嘛，对应 TransferQueue。而非公平模式则对应 TransferStack；
-- SynchronousQueue非常适合做交换工作，生产者的线程和消费者的线程同步以传递某些信息、事件或者任务
+- SynchronousQueue 也不能被迭代，因为根本就没有元素可以拿来迭代的；因为其不储存数据结构，有一些方法是没有实现的，比如说 isEmpty、size、contains、remove 和迭代等方法，这些方法都是默认实现
+- Transferer 有两个内部实现类，是因为构造 SynchronousQueue 的时候，可以指定公平策略。公平模式意味着，所有的读写线程都遵守先来后到，FIFO 嘛，对应 TransferQueue。而非公平模式则对应 TransferStack；队列由两种数据结构组成，分别是后入先出的堆栈和先入先出的队列，堆栈是非公平的，队列是公平的
+- SynchronousQueue 的整体设计比较抽象，在内部抽象出了两种算法实现，一种是先入先出的队列，一种是后入先出的堆栈，两种算法被两个内部类实现，而直接对外的 put，take 方法的实现就非常简单，都是直接调用两个内部类的 transfer 方法进行实现。默认的就是堆栈，即非公平的
+- SynchronousQueue非常适合做交换工作，生产者的线程和消费者的线程同步以传递某些信息、事件或者任务；
 
 #### 7.4.6、LinkedBlockingDeque
 
@@ -3297,6 +3432,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 - ArrayBlockingQueue实现简单，性能更好预测，稳定；
 - 如果需要实现两个线程之间的接力性，SynchronousQueue是完美符合该场景的，而且线程间协调和数据传输统一起来，代码更加规范；
 - 在元素队列较小的场景下，SynchronousQueue有优异的性能；
+
+### 7.7、队列整体设计
+
+![](image/队列整体设计.png)
 
 ## 8、三类并发容器比较
 
@@ -3531,11 +3670,24 @@ Executor是基于生产者-消费者模式，提交任务的操作相当于生�
 
 这个接口继承自Executor，主要是添加了一些线程池生命周期的管理方法；
 ```java
+// 关闭，不会接受新的任务，也不会等待未完成的任务
+// 如果需要等待未完成的任务，可以使用 awaitTermination 方法
 void shutdown();
-List<Runnable> shutdownNow();
+// executor 是否已经关闭了，返回值 true 表示已关闭
 boolean isShutdown();
+// 所有的任务是否都已经终止，是的话，返回 true
 boolean isTerminated();
-boolean awaitTermination(long timeout, TimeUnit unit)throws InterruptedException;
+// 在超时时间内，等待剩余的任务终止
+boolean awaitTermination(long timeout, TimeUnit unit)
+    throws InterruptedException;
+// 提交有返回值的任务，使用 get 方法可以阻塞等待任务的执行结果返回
+<T> Future<T> submit(Callable<T> task);
+// 提交没有返回值的任务，如果使用 get 方法的话，任务执行完之后得到的是 null 值
+Future<?> submit(Runnable task);
+// 给定任务集合，返回已经执行完成的 Future 集合，每个返回的 Future 都是 isDone = true 的状态
+<T> List<Future<T>> invokeAll(Collection<? extends Callable<T>> tasks) throws InterruptedException;
+// 给定任务中有一个执行成功就返回，如果抛异常，其余未完成的任务将被取消
+<T> T invokeAny(Collection<? extends Callable<T>> tasks) throws InterruptedException, ExecutionException;
 ```
 ExecutorService的生命周期有三种状态：运行、关闭、终止。
 - ExecutorService在创建时处于运行状态；
@@ -3544,11 +3696,43 @@ ExecutorService的生命周期有三种状态：运行、关闭、终止。
 
 在ExecutorService关闭后提交的任务将由拒绝策略来进行处理；
 
-### 2.3、ThreadPoolExecutor
+### 2.3、AbstractExecutorService
 
-ExecutorService的默认实现，线程池中最核心的一个类
+其是一个抽象类，封装了 Executor 的很多通用功能：
+```java
+// 把 Runnable 转化成 RunnableFuture
+// RunnableFuture 是一个接口，实现了 Runnable 和 Future
+// FutureTask 是 RunnableFuture 的实现类，主要是对任务进行各种管理
+// Runnable + Future => RunnableFuture => FutureTask
+protected <T> RunnableFuture<T> newTaskFor(Runnable runnable, T value) {
+    return new FutureTask<T>(runnable, value);
+}
+protected <T> RunnableFuture<T> newTaskFor(Callable<T> callable) {
+    return new FutureTask<T>(callable);
+}
+// 提交无返回值的任务
+public Future<?> submit(Runnable task) {
+    if (task == null) throw new NullPointerException();
+    // ftask 其实是 FutureTask
+    RunnableFuture<Void> ftask = newTaskFor(task, null);
+    execute(ftask);
+    return ftask;
+}
+// 提交有返回值的任务
+public <T> Future<T> submit(Callable<T> task) {
+    if (task == null) throw new NullPointerException();
+    // ftask 其实是 FutureTask
+    RunnableFuture<T> ftask = newTaskFor(task);
+    execute(ftask);
+    return ftask;
+}
+```
 
-### 2.4、ScheduledThreadPoolExecutor
+### 2.4、ThreadPoolExecutor
+
+ExecutorService的默认实现，线程池中最核心的一个类，其继承自 AbstractExecutorService
+
+### 2.5、ScheduledThreadPoolExecutor
 
 Timer/TimerTask存在问题：
 - Timer支持基于绝对时间而不是相对时间的调度机制，因此任务的执行对系统时钟变化很敏感，而ScheduledThreadPoolExecutor只支持基于相对时间的调度；
@@ -3563,7 +3747,7 @@ ScheduledExecutorService：和Timer/TimerTask类似，解决那些需要任务�
 - 它所使用的阻塞队列变成了DelayedWorkQueue，而不是`ThreadLocalhExecutor`的LinkedBlockingQueue；
 - DelayedWorkQueue为ScheduledThreadPoolExecutor中的内部类，它其实和阻塞队列DelayQueue有点儿类似。DelayQueue是可以提供延迟的阻塞队列，它只有在延迟期满时才能从中提取元素，其列头是延迟期满后保存时间最长的Delayed元素。如果延迟都还没有期满，则队列没有头部，并且 poll 将返回 null
 
-### 2.5、Executors创建线程池
+### 2.6、Executors创建线程池
 
 Executors 提供了5种不同的线程池创建方式
 - newCachedThreadPool()：用来处理大量短时间工作任务的线程池，其内部使用 SynchronousQueue作为工作队列具有以下几个特点：
@@ -3604,42 +3788,131 @@ Executors 提供了5种不同的线程池创建方式
 
 构造函数
 ```java
-public ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue,
-                              ThreadFactory threadFactory,  RejectedExecutionHandler handler) {
-    if (corePoolSize < 0 || maximumPoolSize <= 0 || maximumPoolSize < corePoolSize ||  keepAliveTime < 0)
-        throw new IllegalArgumentException();
-    if (workQueue == null || threadFactory == null || handler == null)
-        throw new NullPointerException();
-    this.acc = System.getSecurityManager() == null ? null : AccessController.getContext();
-    this.corePoolSize = corePoolSize;
-    this.maximumPoolSize = maximumPoolSize;
-    this.workQueue = workQueue;
-    this.keepAliveTime = unit.toNanos(keepAliveTime);
-    this.threadFactory = threadFactory;
-    this.handler = handler;
+public class ThreadPoolExecutor extends AbstractExecutorService {
+    public ThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue,
+                                ThreadFactory threadFactory,  RejectedExecutionHandler handler) {
+        if (corePoolSize < 0 || maximumPoolSize <= 0 || maximumPoolSize < corePoolSize ||  keepAliveTime < 0)
+            throw new IllegalArgumentException();
+        if (workQueue == null || threadFactory == null || handler == null)
+            throw new NullPointerException();
+        this.acc = System.getSecurityManager() == null ? null : AccessController.getContext();
+        this.corePoolSize = corePoolSize;
+        this.maximumPoolSize = maximumPoolSize;
+        this.workQueue = workQueue;
+        this.keepAliveTime = unit.toNanos(keepAliveTime);
+        this.threadFactory = threadFactory;
+        this.handler = handler;
+    }
+    // 已完成任务的计数
+    volatile long completedTasks;
+    // 线程池最大容量
+    private int largestPoolSize;
+    // 已经完成的任务数
+    private long completedTaskCount;
+    // 用户可控制的参数都是 volatile 修饰的
+    // 可以使用 threadFactory 创建 thread
+    // 创建失败一般不抛出异常，只有在 OutOfMemoryError 时候才会
+    private volatile ThreadFactory threadFactory;
+    // 饱和或者运行中拒绝任务的 handler 处理类
+    private volatile RejectedExecutionHandler handler;
+    // 线程存活时间设置
+    private volatile long keepAliveTime;
+    // 设置 true 的话，核心线程空闲 keepAliveTime 时间后，也会被回收
+    private volatile boolean allowCoreThreadTimeOut;
+    // coreSize
+    private volatile int corePoolSize;
+    // maxSize 最大限制 (2^29)-1
+    private volatile int maximumPoolSize;
+    // 默认的拒绝策略
+    private static final RejectedExecutionHandler defaultHandler =new AbortPolicy();
+    // 队列会 hold 住任务，并且利用队列的阻塞的特性，来保持线程的存活周期
+    private final BlockingQueue<Runnable> workQueue;
+    // 大多数情况下是控制对 workers 的访问权限
+    private final ReentrantLock mainLock = new ReentrantLock();
+    private final Condition termination = mainLock.newCondition();
+    // 包含线程池中所有的工作线程
+    private final HashSet<Worker> workers = new HashSet<Worker>();
+...
 }
 ```
+
+![](image/线程池属性关系.png)
 
 ### 3.1、核心参数
 
 - corePoolSize：核心线程数大小，`当线程数 < corePoolSize`，会创建线程执行runnable；如果等于0，则任务执行完之后，没有任何请求进入时销毁线程池的线程；如果大于0，即使本地任务执行完毕，核心线程也不会被销毁；
+
 - maximumPoolSize：最大线程数， `当线程数 >= corePoolSize`的时候，会把runnable放入workQueue中；largestPoolSize：记录了曾经出现的最大线程个数；如果待执行的线程数大于此值，需要借助第5个参数的帮助，缓存在队列中；如果`maximumPoolSize=corePoolSize`，即是固定大小线程池；
-- keepAliveTime：保持存活时间，当线程数大于`corePoolSize`的空闲线程能保持的最大时间。在默认情况下，当线程池的线程数大于 `corePoolSize` 时，keepAliveTime才起作用。但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收。
+
+- keepAliveTime：保持存活时间，当线程数大于`corePoolSize`的空闲线程能保持的最大时间。在默认情况下，当线程池的线程数大于 `corePoolSize` 时，并且线程空闲的时间超过 keepAliveTime，当前线程就会被回收，keepAliveTime才起作用；但是当 ThreadPoolExecutor的 `allowCoreThreadTimeOut=true`时，核心线程超时后也会被回收。通过 setKeepAliveTime 方法可以动态的设置 keepAliveTime 的值；
+
+    如果 keepAliveTime 设置成负数，在线程池初始化时，就会直接报 IllegalArgumentException 的异常，而设置成 0，队列如果是 LinkedBlockingQueue 的话，执行 workQueue.poll (keepAliveTime, TimeUnit.NANOSECONDS) 方法时，如果队列中没有任务，会直接返回 null，导致线程立马返回，不会无限阻塞
+
 - unit：时间单位
-- workQueue：保存任务的阻塞队列；当请求的线程数大于 `corePoolSize` 时，线程进入 BlockingQueue。后续示例代码中使用的LinkedBlockingQueue是单向链表，使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取，是一个生产消费模型队列；
-- threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时，就可以知道线程任务是由哪个线程工厂产生的
+
+- workQueue：保存任务的阻塞队列；当请求的线程数大于 `corePoolSize` 时，线程进入 BlockingQueue。比如使用的LinkedBlockingQueue是单向链表，使用锁来控制入队和出队的原子性；两个锁分别控制元素的添加和获取，是一个生产消费模型队列；线程池提供了 getQueue () 方法方便我们进行监控和调试，严禁用于其他目的，remove 和 purge 两个方法可以对队列中的元素进行操作
+
+- threadFactory：创建线程的工厂；线程池的命名是通过给这个factory增加组名前缀来实现的。在虚拟机栈分析时，就可以知道线程任务是由哪个线程工厂产生的；新的线程被默认 ThreadFactory 创建时，优先级会被限制成 `NORM_PRIORITY`，默认会被设置成非守护线程，这个和新建线程的继承是不同的
+
 - handler：拒绝策略，默认有四种拒绝策略；当超过参数 workQueue的任务缓存区上限的时候，就可以通过该策略处理请求，这是一种简单的限流保护
+
 - workers：保持工作线程的集合，线程的工作线程被抽象为静态内部类，是基于AQS实现的，线程池底层的存储结构其实就是一个HashSet
 
-### 3.2、参数关系
+### 3.2、核心线程数与最大线程数
+
+#### 3.2.1、两者之间的关系
 
 - corePoolSize 与 maximumPoolSize:
 	* 如果线程池中的实际线程数 < corePoolSize， 新增一个线程处理新的任务；
 	* 如果线程池中的实际线程数 >= corePoolSize， 新任务会放到workQueue中；
 	* 如果阻塞队列达到上限，且当前线程池的实际线程数 < maximumPoolSize，新增线程来处理任务；
 	* 如果阻塞队列满了，且这时线程池的实际线程数 >= maximumPoolSize，那么线程池已经达到极限，会根据拒绝策略`RejectedExecutionHandler`拒绝新的任务。
+    * 核心线程（core threads）需要到任务提交后才创建的，但我们可以分别使用 prestartCoreThread、prestartAllCoreThreads 两个方法来提前创建一个、所有的 core threads；
 
 - 如果线程池阻塞队列达到极限时，在运行一段时间后，阻塞队列中的任务执行完成了，线程池会将超过核心线程数的线程在一段时间内自动回收，在秒杀的业务场景中会有这样的情况发生。
+
+#### 3.2.2、动态设置核心线程数与最大线程数
+
+一般来说，coreSize 和 maxSize 在线程池初始化时就已经设定了，但我们也可以通过 setCorePoolSize、setMaximumPoolSize 方法动态的修改这两个值；
+
+**setCorePoolSize**
+```java
+// 如果新设置的值小于 coreSize，多余的线程在空闲时会被回收（不保证一定可以回收成功）， 如果大于 coseSize，会新创建线程
+public void setCorePoolSize(int corePoolSize) {
+    if (corePoolSize < 0)
+        throw new IllegalArgumentException();
+    int delta = corePoolSize - this.corePoolSize;
+    this.corePoolSize = corePoolSize;
+    // 活动的线程大于新设置的核心线程数
+    if (workerCountOf(ctl.get()) > corePoolSize)
+        // 尝试将可以获得锁的 worker 中断，只会循环一次
+        // 最后并不能保证活动的线程数一定小于核心线程数
+        interruptIdleWorkers();
+    // 设置的核心线程数大于原来的核心线程数
+    else if (delta > 0) {
+        // 并不清楚应该新增多少线程，取新增核心线程数和等待队列数据的最小值，够用就好
+        int k = Math.min(delta, workQueue.size());
+        // 新增线程直到k，如果期间等待队列空了也不会再新增
+        while (k-- > 0 && addWorker(null, true)) {
+            if (workQueue.isEmpty())
+                break;
+        }
+    }
+}
+```
+
+**setMaximumPoolSize**
+```java
+// 如果 maxSize 大于原来的值，直接设置。
+// 如果 maxSize 小于原来的值，尝试干掉一些 worker
+public void setMaximumPoolSize(int maximumPoolSize) {
+    if (maximumPoolSize <= 0 || maximumPoolSize < corePoolSize)
+        throw new IllegalArgumentException();
+    this.maximumPoolSize = maximumPoolSize;
+    if (workerCountOf(ctl.get()) > maximumPoolSize)
+        interruptIdleWorkers();
+}
+```
 
 ### 3.3、线程池状态
 
@@ -3695,7 +3968,42 @@ private static boolean isRunning(int c) {
 
 `RUNNING 定义为 -1，SHUTDOWN 定义为 0，其他的都比 0 大，所以等于 0 的时候不能提交任务，大于 0 的话，连正在执行的任务也需要中断`
 
-### 3.4、任务执行顺序
+状态转变过程：
+- `RUNNING -> SHUTDOWN`：调用 shudown(),finalize()；
+- `(RUNNING or SHUTDOWN) -> STOP`：调用shutdownNow()
+- `SHUTDOWN -> TIDYING`：workerCount ==0
+- `STOP -> TIDYING`: workerCount ==0
+- `TIDYING -> TERMINATED` -> terminated() 执行完成之后
+
+### 3.4、任务提交
+
+**submit()方法执行机制：**
+
+```java
+public Future<?> submit(Runnable task) {
+    if (task == null) throw new NullPointerException();
+    RunnableFuture<Void> ftask = newTaskFor(task, null);
+    execute(ftask);
+    return ftask;
+}
+public <T> Future<T> submit(Runnable task, T result) {
+    if (task == null) throw new NullPointerException();
+    RunnableFuture<T> ftask = newTaskFor(task, result);
+    execute(ftask);
+    return ftask;
+}
+public <T> Future<T> submit(Callable<T> task) {
+    if (task == null) throw new NullPointerException();
+    RunnableFuture<T> ftask = newTaskFor(task);
+    execute(ftask);
+    return ftask;
+}
+```
+- submit 返回一个 Future 对象，我们可以调用其 get 方法获取任务执行的结果；就是将 Runnable 包装成 FutureTask 而已。可以看到，最终还是调用 Execute 方法
+- Runnable 和 Callable 是通过 FutureTask 进行统一的，FutureTask 有个属性是 Callable，同时也实现了 Runnable 接口，两者的统一转化是在 FutureTask 的构造器里实现的，FutureTask 的最终目标是把 Runnable 和 Callable 都转化成 Callable，Runnable 转化成 Callable 是通过 RunnableAdapter 适配器进行实现的。
+- 线程池的 submit 底层的逻辑只认 FutureTask，不认 Runnable 和 Callable 的差异，所以只要都转化成 FutureTask，底层实现都会是同一套
+
+**execute方法执行机制：**
 
 ![image](image/线程池主要处理流程.png)
 
@@ -3703,7 +4011,6 @@ private static boolean isRunning(int c) {
 
 ![image](image/ThreadPool-execute.png)
 
-**execute方法执行机制：**
 - 一个任务提交，如果线程池大小没达到corePoolSize，则每次都启动一个worker也就是一个线程来立即执行；(执行这个步骤时需要获取全局锁)
 - 如果来不及执行，则把多余的线程放到workQueue，等待已启动的worker来循环执行；
 - 如果队列workQueue都放满了还没有执行，则在maximumPoolSize下面启动新的worker来循环执行workQueue；
@@ -3719,9 +4026,9 @@ private static boolean isRunning(int c) {
 		if (workerCountOf(c) < corePoolSize) {
 			if (addWorker(command， true))// true表示会再次检查workCount是否小于corePoolSize
 				return;
-			c = ctl.get();
+			c = ctl.get();// 线程池状态可能发生变化
 		}
-		// 如果上面没有完成任务提交;状态为运行并且能发成功加入任务到工作队列后，在进行一次check，如果状态在任务
+		// 如果上面没有完成任务提交；状态为运行并且能发成功加入任务到工作队列后，在进行一次check，如果状态在任务
 		// 加入了任务队列后变为非运行(可能线程池被关闭了)，非运行状态下当然需要reject;
 		// 然后在判断当前线程数是否为0，如果是，新增一个线程;
 		if (isRunning(c) && workQueue.offer(command)) {
@@ -3743,19 +4050,11 @@ private static boolean isRunning(int c) {
 	private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
 	```
 
-**submit()方法执行机制：**
+具体方法调用过程：
 
-```java
-public Future<?> submit(Runnable task) {
-	if (task == null) throw new NullPointerException();
-	RunnableFuture<Void> ftask = newTaskFor(task, null);
-	execute(ftask);
-	return ftask;
-}
-```
-- submit 返回一个 Future 对象，我们可以调用其 get 方法获取任务执行的结果；就是将 Runnable 包装成 FutureTask 而已。可以看到，最终还是调用 Execute 方法
+![](image/ThreadPoolExecutor任务提交.png)
 
-### 3.5、新任务添加到队列
+### 3.5、新任务添加到队列：addWorker
 
 线程池使用 addWorker 方法新建线程，第一个参数代表要执行的任务，线程会将这个任务执行完毕后再从队列取任务执行。第二参数是核心线程的标志，它并不是 Worker 本身的属性，在这里只用来判断工作线程数量是否超标；
 
@@ -3766,36 +4065,118 @@ private boolean addWorker(Runnable firstTask, boolean core) {
     for (;;) {
         int c = ctl.get();
         int rs = runStateOf(c);
-        
-        // firstTask 不为空代表这个方法用于添加任务，为空代表新建线程。SHUTDOWN 状态下不接受新任务，但处理队列中的任务。这就是第二个判断的逻辑。
-        if (rs >= SHUTDOWN &&
-        ! (rs == SHUTDOWN &&
-           firstTask == null &&
-           ! workQueue.isEmpty()))
+        // rs >= SHUTDOWN 表示线程状态不正常，firstTask 不为空代表这个方法用于添加任务，为空代表新建线程。SHUTDOWN 状态下不接受新任务，但处理队列中的任务。这就是第二个判断的逻辑。
+        if (rs >= SHUTDOWN && !(rs == SHUTDOWN && firstTask == null && !workQueue.isEmpty()))
         return false;
         
         // 使用循环 CAS 自旋，增加线程数量直到成功为止
         for (;;) {
-        int wc = workerCountOf(c);
-        //判断是否超过线程容量
-        if (wc >= CAPACITY ||
-            wc >= (core ? corePoolSize : maximumPoolSize))
-            return false;
-        //使用 CAS 将线程数量加1
-        if (compareAndIncrementWorkerCount(c))
-            break retry;
-        //修改不成功说明线程数量有变化
-        //重新判断线程池状态，有变化时跳到外层循环重新获取线程池状态
-        c = ctl.get();  // Re-read ctl
-        if (runStateOf(c) != rs)
-            continue retry;
-        //到这里说明状态没有变化，重新尝试增加线程数量
+            int wc = workerCountOf(c);
+            //判断是否超过线程容量
+            if (wc >= CAPACITY ||
+                wc >= (core ? corePoolSize : maximumPoolSize))
+                return false;
+            //使用 CAS 将线程数量加1
+            if (compareAndIncrementWorkerCount(c))
+                break retry;
+            //修改不成功说明线程数量有变化
+            //重新判断线程池状态，有变化时跳到外层循环重新获取线程池状态
+            c = ctl.get();  // Re-read ctl
+            if (runStateOf(c) != rs)
+                continue retry;
+            //到这里说明状态没有变化，重新尝试增加线程数量
         }
     }
-    ... ...
+    boolean workerStarted = false;
+    boolean workerAdded = false;
+    Worker w = null;
+    try {
+        // 巧妙的设计，Worker 本身是个 Runnable.
+        // 在初始化的过程中，会把 worker 丢给 thread 去初始化
+        w = new Worker(firstTask);
+        final Thread t = w.thread;
+        if (t != null) {
+            final ReentrantLock mainLock = this.mainLock;
+            mainLock.lock();
+            try {
+                int rs = runStateOf(ctl.get());
+                if (rs < SHUTDOWN || (rs == SHUTDOWN && firstTask == null)) {
+                    if (t.isAlive()) // precheck that t is startable
+                        throw new IllegalThreadStateException();
+                    workers.add(w);
+                    int s = workers.size();
+                    if (s > largestPoolSize)
+                        largestPoolSize = s;
+                    workerAdded = true;
+                }
+            } finally {
+                mainLock.unlock();
+            }
+            if (workerAdded) {
+                // 启动线程，实际上去执行 Worker.run 方法
+                t.start();
+                workerStarted = true;
+            }
+        }
+    } finally {
+        if (! workerStarted)
+            addWorkerFailed(w);
+    }
+    return workerStarted;
 }
 ```
 第二部分负责新建并启动线程，并将 Worker 添加至 Hashset 中。代码很简单，没什么好注释的，用了 ReentrantLock 确保线程安全
+
+上面代码中 `t.start();`会执行到 Worker 的 run 方法上：
+```java
+public void run() {
+    runWorker(this);
+}
+final void runWorker(Worker w) {
+    Thread wt = Thread.currentThread();
+    Runnable task = w.firstTask;
+    //帮助gc回收
+    w.firstTask = null;
+    w.unlock(); // allow interrupts
+    boolean completedAbruptly = true;
+    try {
+        // task 为空的情况：
+        // 1：任务入队列了，极限情况下，发现没有运行的线程，于是新增一个线程；
+        // 2：线程执行完任务执行，再次回到 while 循环。
+        // 如果 task 为空，会使用 getTask 方法阻塞从队列中拿数据，如果拿不到数据，会阻塞住，循环从阻塞队列中拿去数据执行
+        while (task != null || (task = getTask()) != null) {
+            //锁住 worker
+            w.lock();
+            // 线程池 stop 中,但是线程没有到达中断状态，帮助线程中断
+            if ((runStateAtLeast(ctl.get(), STOP) ||  (Thread.interrupted() && runStateAtLeast(ctl.get(), STOP))) &&  !wt.isInterrupted())
+                wt.interrupt();
+            try {
+                //执行 before 钩子函数
+                beforeExecute(wt, task);
+                Throwable thrown = null;
+                try {
+                    //同步执行任务，task是 FutureTask 类
+                    task.run();
+                    ...
+                } finally {
+                    //执行 after 钩子函数,如果这里抛出异常，会覆盖 catch 的异常
+                    //所以这里异常最好不要抛出来
+                    afterExecute(task, thrown);
+                }
+            } finally {
+                //任务执行完成，计算解锁
+                task = null;
+                w.completedTasks++;
+                w.unlock();
+            }
+        }
+        completedAbruptly = false;
+    } finally {
+        //做一些抛出异常的善后工作
+        processWorkerExit(w, completedAbruptly);
+    }
+}
+```
 
 下面主要是不同队列策略表现：
 - 直接递交：一种比较好的默认选择是使用 SynchronousQueue，这种策略会将提交的任务直接传送给工作线程，而不持有。如果当前没有工作线程来处理，即任务放入队列失败，则根据线程池的实现，会引发新的工作线程创建，因此新提交的任务会被处理。这种策略在当提交的一批任务之间有依赖关系的时候避免了锁竞争消耗。值得一提的是，这种策略最好是配合 unbounded 线程数来使用，从而避免任务被拒绝。同时我们必须要考虑到一种场景，当任务到来的速度大于任务处理的速度，将会引起无限制的线程数不断的增加。
@@ -3806,7 +4187,7 @@ private boolean addWorker(Runnable firstTask, boolean core) {
 
 ### 3.6、worker
 
-Worker 本身并不区分核心线程和非核心线程，核心线程只是概念模型上的叫法，特性是依靠对线程数量的判断来实现的
+Worker 本身并不区分核心线程和非核心线程，核心线程只是概念模型上的叫法，特性是依靠对线程数量的判断来实现的，可以理解成线程池中任务运行的最小单元
 - 继承自 AQS，本身实现了一个最简单的不公平的不可重入锁
 - 构造方法传入 Runnable，代表第一个执行的任务，可以为空。构造方法中新建一个线程；构造函数主要是做三件事：
 	- 设置同步状态state为-1，同步状态大于0表示就已经获取了锁；
@@ -3814,6 +4195,60 @@ Worker 本身并不区分核心线程和非核心线程，核心线程只是概�
 	- 利用Worker本身对象this和ThreadFactory创建线程对象。
 - 实现了 Runnable 接口，在新建线程时传入 this。因此线程启动时，会执行 Worker 本身的 run 方法；
 - run 方法调用了 ThreadPoolExecutor 的 runWorker 方法，负责实际执行任务
+```java
+// 线程池中任务执行的最小单元：Worker 继承 AQS，具有锁功能；Worker 实现 Runnable，本身是一个可执行的任务
+private final class Worker extends AbstractQueuedSynchronizer implements Runnable{
+    // 任务运行的线程
+    final Thread thread;
+    // 需要执行的任务
+    Runnable firstTask;
+    // 非常巧妙的设计,Worker本身是个 Runnable,把自己作为任务传递给 thread
+    // 内部有个属性又设置了 Runnable
+    Worker(Runnable firstTask) {
+        setState(-1); // inhibit interrupts until runWorker
+        this.firstTask = firstTask;
+        // 把 Worker 自己作为 thread 运行的任务
+        this.thread = getThreadFactory().newThread(this);
+    }
+
+   /** Worker 本身是 Runnable，run 方法是 Worker 执行的入口， runWorker 是外部的方法 */
+    public void run() {
+        runWorker(this);
+    }
+    // Lock methods
+    // 0 代表没有锁住，1 代表锁住
+    protected boolean isHeldExclusively() {
+        return getState() != 0;
+    }
+    // 尝试加锁，CAS 赋值为 1，表示锁住
+    protected boolean tryAcquire(int unused) {
+        if (compareAndSetState(0, 1)) {
+            setExclusiveOwnerThread(Thread.currentThread());
+            return true;
+        }
+        return false;
+    }
+    // 尝试释放锁，释放锁没有 CAS 校验，可以任意的释放锁
+    protected boolean tryRelease(int unused) {
+        setExclusiveOwnerThread(null);
+        setState(0);
+        return true;
+    }
+    public void lock()        { acquire(1); }
+    public boolean tryLock()  { return tryAcquire(1); }
+    public void unlock()      { release(1); }
+    public boolean isLocked() { return isHeldExclusively(); }
+    void interruptIfStarted() {
+        Thread t;
+        if (getState() >= 0 && (t = thread) != null && !t.isInterrupted()) {
+            try {
+                t.interrupt();
+            } catch (SecurityException ignore) {
+            }
+        }
+    }
+}
+```
 
 ### 3.7、拒绝策略
 
@@ -4144,9 +4579,11 @@ public boolean cancel(boolean mayInterruptIfRunning) {
     - 如果线程因为执行提交到线程池里的任务而处于阻塞状态，则会导致报错(如果任务里没有捕获InterruptedException异常)，否则线程会执行完当前任务，然后通过getTask方法返回为null来退出；
     - 该方法会返回被中断的线程
 
-### 3.14、Hook
+### 3.14、钩子函数
 
 ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，允许用户在任务执行之前会执行之后做一些事情。我们可以通过它来实现比如初始化 ThreadLocal、收集统计信息、如记录日志等操作。这类 Hook 如 beforeExecute 和 afterExecute。另外还有一个 Hook 可以用来在任务被执行完的时候让用户插入逻辑，如 rerminated。如果 hook 方法执行失败，则内部的工作线程的执行将会失败或被中断；另外还可以通过hook来暂停线程或恢复线程
+- 提供在每个任务执行之前 beforeExecute 和执行之后 afterExecute 的钩子方法，主要用于操作执行环境，比如初始化 ThreadLocals、收集统计数据、添加日志条目等；
+- 如果在执行器执行完成之后想干一些事情，可以实现 terminated 方法，如果钩子方法执行时发生异常，工作线程可能会失败并立即终止
 
 ### 3.15、总结
 
@@ -4177,15 +4614,76 @@ ThreadPoolExecutor 提供了 protected 类型可以被覆盖的钩子方法，�
 	队列大小 = 线程数 * (目标相应时间/任务实际处理时间)<br>
 	假设目标相应时间为0.4s，计算阻塞队列的长度为20 * (0.4 / 0.2) = 40。<br>
 
+假设现在机器上某一时间段只会运行一种业务，业务的实时性要求较高，每个请求的平均 rt 是 200ms，请求超时时间是 2000ms，机器是 4 核 CPU，内存 16G，一台机器的 qps 是 100，这时候我们可以模拟一下如何设置：
+- 4 核 CPU，假设 CPU 能够跑满，每个请求的 rt 是 200ms，就是 200 ms 能执行 4 条请求，2000ms 内能执行 2000/200 * 4 = 40 条请求；
+- 200 ms 能执行 4 条请求，实际上 4 核 CPU 的性能远远高于这个，我们可以拍脑袋加 10 条，也就是说 2000ms 内预估能够执行 50 条；
+- 一台机器的 qps 是 100，此时我们计算一台机器 2 秒内最多处理 50 条请求，所以此时如果不进行 rt 优化的话，我们需要加至少一台机器
+
+线程池可以大概这么设置：`ThreadPoolExecutor executor = new ThreadPoolExecutor(15, 15, 365L, TimeUnit.DAYS, new LinkedBlockingQueue(35));`
+
 ## 5、线程池最佳实践
+
+### 5.1、核心线程数等于最大线程数
+
+`ThreadPoolExecutor executor = new ThreadPoolExecutor(10, 10, 600000L, TimeUnit.DAYS, new LinkedBlockingQueue());`
+
+在初始化 ThreadPoolExecutor 的时候，coreSize 和 maxSize 是相等的，这样设置的话，随着请求的不断增加，会是这样的现象：
+- 请求数 < coreSize 时，新增线程；
+- 请求数 >= coreSize && 队列不满时，添加任务入队；
+- 队列满时，此时因为 coreSize 和 maxSize 相等，任务会被直接拒绝；
+
+这样写的目的是：是想让线程一下子增加到 maxSize，并且不要回收线程，防止线程回收，避免不断增加回收的损耗，一般来说业务流量都有波峰低谷，在流量低谷时，线程不会被回收；流量波峰时，maxSize 的线程可以应对波峰，不需要慢慢初始化到 maxSize 的过程
+
+这样设置的前提是：
+- allowCoreThreadTimeOut 我们采取默认 false，而不会主动设置成 true，allowCoreThreadTimeOut 是 false 的话，当线程空闲时，就不会回收核心线程；
+- keepAliveTime 和 TimeUnit 我们都会设置很大，这样线程空闲的时间就很长，线程就不会轻易的被回收。
+
+### 5.2、maxSize无界与SynchronousQueue
+
+如果要使用 SynchronousQueue 的话，我们需要尽量将 maxSize 设置大一点，这样就可以接受更多的请求，不然存在如下情况：
+
+假设我们设置 maxSize 是 10 的话，选择 SynchronousQueue 队列，假设所有请求都执行 put 操作，没有请求执行 take 操作，前 10 个 put 请求会消耗 10 个线程，都阻塞在 put 操作上，第 11 个请求过来后，请求就会被拒绝，所以我们才说尽量把 maxSize 设置大一点，防止请求被拒绝；
+
+maxSize 无界 + SynchronousQueue 这样的组合方式优缺点都很明显：
+
+**优点：**当任务被消费时，才会返回，这样请求就能够知道当前请求是已经在被消费了，如果是其他的队列的话，我们只知道任务已经被提交成功了，但无法知道当前任务是在被消费中，还是正在队列中堆积；
+
+**缺点：**
+- 比较消耗资源，大量请求到来时，我们会新建大量的线程来处理请求；
+- 如果请求的量难以预估的话，maxSize 的大小也很难设置；
+
+### 5.3、maxSize 有界与Queue 无界
+
+在一些对实时性要求不大，但流量忽高忽低的场景下，可以使用 maxSize 有界 + Queue 无界的组合方式；
+
+**优点：**
+- 电脑 cpu 固定的情况下，每秒能同时工作的线程数是有限的，此时开很多的线程其实也是浪费，还不如把这些请求放到队列中去等待，这样可以减少线程之间的 CPU 的竞争；
+- LinkedBlockingQueue 默认构造器构造出来的链表的最大容量是 Integer 的最大值，非常适合流量忽高忽低的场景，当流量高峰时，大量的请求被阻塞在队列中，让有限的线程可以慢慢消费；
+
+**缺点：**流量高峰时，大量的请求被阻塞在队列中，对于请求的实时性难以保证，所以当对请求的实时性要求较高的场景，不能使用该组合；
+
+### 5.4、maxSize 有界 与 Queue 有界
+
+是对上面Queue无界组合缺点的弥补
+
+### 5.5、keepAliveTime 设置无穷大
+
+有些场景下我们不想让空闲的线程被回收，于是就把 keepAliveTime 设置成 0，实际上这种设置是错误的，当我们把 keepAliveTime 设置成 0 时，线程使用 poll 方法在队列上进行超时阻塞时，会立马返回 null，也就是空闲线程会立马被回收。
+
+所以如果我们想要空闲的线程不被回收，我们可以设置 keepAliveTime 为无穷大值，并且设置 TimeUnit 为时间的大单位，比如我们设置 keepAliveTime 为 365，TimeUnit 为 TimeUnit.DAYS，意思是线程空闲 1 年内都不会被回收。
+
+在实际的工作中，机器的内存一般都够大，我们合理设置 maxSize 后，即使线程空闲，我们也不希望线程被回收，我们常常也会设置 keepAliveTime 为无穷大
+
+### 5.6、线程池使用注意点
 
 - 线程池的使用要考虑线程最大数量和最小数最小数量，避免任务堆积
 - 对于单部的服务，线程的最大数量应该等于线程的最小数量，而混布的服务，适当的拉开最大最小数量的差距，能够整体调整CPU内核的利用率.
 - 线程队列大小一定要设置有界队列，否则压力过大就会拖垮整个服务，避免过度扩展线程池
-- 必要时才使用线程池，须进行设计性能评估和压测.
-- 须考虑线程池的失败策略，失败后的补偿.
-- 后台批处理服务须与线上面向用户的服务进行分离.
+- 必要时才使用线程池，须进行设计性能评估和压测；
+- 须考虑线程池的失败策略，失败后的补偿；
+- 后台批处理服务须与线上面向用户的服务进行分离；
 - 避免在线程池中使用`ThreadLocal`，因为可能存在造成数据混乱的情况
+- 线程池不共用
 
 # 七、多线程并发最佳实践
 
@@ -4922,7 +5420,58 @@ super关键字并没有新建一个父类的对象，比如说widget，然后再
 
 如果一个线程有子类对象的引用loggingWidget，然后调用loggingWidget.doSomething方法的时候，会请求子类对象loggingWidget 的对象锁；又因为loggingWidget 的doSomething方法中调用的父类的doSomething方法，实际上还是要请求子类对象loggingWidget 的对象锁，那么如果synchronized 关键字不是个可重入锁的话，就会在子类对象持有的父类doSomething方法上产生死锁了。正因为synchronized 关键字的可重入锁，当前线程因为已经持有了子类对象loggingWidget 的对象锁，后面再遇到请求loggingWidget 的对象锁就可以畅通无阻地执行同步方法了
 
+## 4、队列相关面试题
 
+### 4.1、什么是队列？队列与集合的区别
+
+**队列：**
+- 首先队列本身也是个容器，底层也会有不同的数据结构，比如 LinkedBlockingQueue 是底层是链表结构，所以可以维持先入先出的顺序，比如 DelayQueue 底层可以是队列或堆栈，所以可以保证先入先出，或者先入后出的顺序等等，底层的数据结构不同，也造成了操作实现不同；
+- 部分队列（比如 LinkedBlockingQueue ）提供了暂时存储的功能，我们可以往队列里面放数据，同时也可以从队列里面拿数据，两者可以同时进行；
+- 队列把生产数据的一方和消费数据的一方进行解耦，生产者只管生产，消费者只管消费，两者之间没有必然联系，队列就像生产者和消费者之间的数据通道一样，如 LinkedBlockingQueue；
+- 队列还可以对消费者和生产者进行管理，比如队列满了，有生产者还在不停投递数据时，队列可以使生产者阻塞住，让其不再能投递，比如队列空时，有消费者过来拿数据时，队列可以让消费者 hodler 住，等有数据时，唤醒消费者，让消费者拿数据返回，如 ArrayBlockingQueue；
+- 队列还提供阻塞的功能，比如我们从队列拿数据，但队列中没有数据时，线程会一直阻塞到队列有数据可拿时才返回
+
+**队列与集合的区别：**
+- 和集合的相同点，队列（部分例外）和集合都提供了数据存储的功能，底层的储存数据结构是有些相似的，比如说 LinkedBlockingQueue 和 LinkedHashMap 底层都使用的是链表，ArrayBlockingQueue 和 ArrayList 底层使用的都是数组。
+- 和集合的区别：
+    - 部分队列和部分集合底层的存储结构很相似的，但两者为了完成不同的事情，提供的 API 和其底层的操作实现是不同的。
+    - 队列提供了阻塞的功能，能对消费者和生产者进行简单的管理，队列空时，会阻塞消费者，有其他线程进行 put 操作后，会唤醒阻塞的消费者，让消费者拿数据进行消费，队列满时亦然。
+    - 解耦了生产者和消费者，队列就像是生产者和消费者之间的管道一样，生产者只管往里面丢，消费者只管不断消费，两者之间互不关心
+
+### 4.2、队列是如何阻塞的
+
+队列主要提供了两种阻塞功能，如下：
+- LinkedBlockingQueue 链表阻塞队列和 ArrayBlockingQueue 数组阻塞队列是一类，前者容量是 Integer 的最大值，后者数组大小固定，两个阻塞队列都可以指定容量大小，当队列满时，如果有线程 put 数据，线程会阻塞住，直到有其他线程进行消费数据后，才会唤醒阻塞线程继续 put，当队列空时，如果有线程 take 数据，线程会阻塞到队列不空时，继续 take。
+- SynchronousQueue 同步队列，当线程 put 时，必须有对应线程把数据消费掉，put 线程才能返回，当线程 take 时，需要有对应线程进行 put 数据时，take 才能返回，反之则阻塞，举个例子，线程 A put 数据 A1 到队列中了，此时并没有任何的消费者，线程 A 就无法返回，会阻塞住，直到有线程消费掉数据 A1 时，线程 A 才能返回；
+
+### 4.3、队列阻塞的实现原理
+
+队列本身并没有实现阻塞的功能，而是利用 Condition 的等待唤醒机制，阻塞底层实现就是更改线程的状态为睡眠；
+
+### 4.4、往队列里面 put 数据是线程安全的么？为什么？
+
+是线程安全的，在 put 之前，队列会自动加锁，put 完成之后，锁会自动释放，保证了同一时刻只会有一个线程能操作队列的数据，以 LinkedBlockingQueue 为例子，put 时，会加 put 锁，并只对队尾 tail 进行操作，take 时，会加 take 锁，并只对队头 head 进行操作，remove 时，会同时加 put 和 take 锁，所以各种操作都是线程安全的
+
+### 4.5、take 与 put 方法
+
+**take 的时候也会加锁么？**
+- 是的，take 时也会加锁的，像 LinkedBlockingQueue 在执行 take 方法时，在拿数据的同时，会把当前数据删除掉，就改变了链表的数据结构，所以需要加锁来保证线程安全。
+
+**既然 put 和 take 都会加锁，是不是同一时间只能运行其中一个方法？**
+- 这个需要看情况而言，对于 LinkedBlockingQueue 来说，队列的 put 和 take 都会加锁，但两者的锁是不一样的，所以两者互不影响，可以同时进行的，对于 ArrayBlockingQueue 而言，put 和 take 是同一个锁，所以同一时刻只能运行一个方法
+
+**使用队列的 put、take 方法有什么危害，如何避免**
+- 当队列满时，使用 put 方法，会一直阻塞到队列不满为止。
+- 当队列空时，使用 take 方法，会一直阻塞到队列有数据为止
+- 两个方法都是无限（永远、没有超时时间的意思）阻塞的方法，容易使得线程全部都阻塞住，大流量时，导致机器无线程可用，所以建议在流量大时，使用 offer 和 poll 方法来代替两者，我们只需要设置好超时阻塞时间，这两个方法如果在超时时间外，还没有得到数据的话，就会返回默认值（LinkedBlockingQueue 为例），这样就不会导致流量大时，所有的线程都阻塞住了
+
+### 4.6、SynchronousQueue
+
+假设 SynchronousQueue 底层使用的是堆栈，线程 1 执行 take 操作阻塞住了，然后有线程 2 执行 put 操作，问此时线程 2 是如何把 put 的数据传递给 take 的？
+
+首先线程 1 被阻塞住，此时堆栈头就是线程 1 了，此时线程 2 执行 put 操作，会把 put 的数据赋值给堆栈头的 match 属性，并唤醒线程 1，线程 1 被唤醒后，拿到堆栈头中的 match 属性，就能够拿到 put 的数据了。
+
+严格上说并不是 put 操作直接把数据传递给了 take，而是 put 操作改变了堆栈头的数据，从而 take 可以从堆栈头上直接拿到数据，堆栈头是 take 和 put 操作之间的沟通媒介
 
 # 参考文章
 

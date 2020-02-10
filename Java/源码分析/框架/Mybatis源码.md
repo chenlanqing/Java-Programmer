@@ -31,6 +31,10 @@
 
 ![](image/Mybatis层次结构.png)
 
+整体架构：
+
+![](image/Mybatis框架整体设计.png)
+
 ## 1.2、MyBatis的初始化
 
 MyBatis的初始化的过程其实就是解析配置文件和初始化Configuration的过程，MyBatis的初始化过程可用以下几行代码来表述：

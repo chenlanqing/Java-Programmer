@@ -20,9 +20,11 @@
 
 # 一、ReentrantLock
 
-## 1、签名
+整体结构：
 
-![](image/ReentrantLock类图.png)
+![](image/ReentrantLock整体结构.png)
+
+## 1、签名
 
 ```java
 public class ReentrantLock implements Lock, java.io.Serializable {
@@ -79,33 +81,119 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 - 公平性、可重入、可中断、超时机制；
 - Sync为ReentrantLock里面的一个内部类，它继承AQS（[AbstractQueuedSynchronizer](AbstractQueuedSynchronizer.md)），它有两个子类：公平锁FairSync和非公平锁NonfairSync。ReentrantLock里面大部分的功能都是委托给Sync来实现的，同时Sync内部定义了lock()抽象方法由其子类去实现，默认实现了nonfairTryAcquire(int acquires)方法，可以看出它是非公平锁的默认实现方式。
 
-## 3、公平锁
+## 3、Sync同步器
 
-是按照通过CLH等待线程按照先来先得的规则，公平的获取锁；获取锁是通过lock()函数，是在ReentrantLock.java的FairSync类中实现，吞吐量比较低；
+![](image/ReentrantLock-Sync.png)
+
+从其类图中可以看出，lock 方法是个抽象方法，留给 FairSync 和 NonfairSync 两个子类去实现
+
+### 3.1、非公平获取锁：nonfairTryAcquire
 
 ```java
-protected final boolean tryAcquire(int acquires) {
-	final Thread current = Thread.currentThread();
-	int c = getState();
-	if (c == 0) {
-		if (!hasQueuedPredecessors() &&
-			compareAndSetState(0, acquires)) {
-			setExclusiveOwnerThread(current);
-			return true;
-		}
-	}
-	else if (current == getExclusiveOwnerThread()) {
-		int nextc = c + acquires;
-		if (nextc < 0)
-			throw new Error("Maximum lock count exceeded");
-		setState(nextc);
-		return true;
-	}
-	return false;
+// 尝试获得非公平锁
+final boolean nonfairTryAcquire(int acquires) {
+    final Thread current = Thread.currentThread();
+    int c = getState();
+    // 同步器的状态是 0，表示同步器的锁没有人持有
+    if (c == 0) {
+        // 当前线程持有锁
+        if (compareAndSetState(0, acquires)) {
+            // 标记当前持有锁的线程是谁
+            setExclusiveOwnerThread(current);
+            return true;
+        }
+    }
+    // 如果当前线程已经持有锁了，同一个线程可以对同一个资源重复加锁，代码实现的是可重入锁
+    else if (current == getExclusiveOwnerThread()) {
+        // 当前线程持有锁的数量 + acquires
+        int nextc = c + acquires;
+        // int 是有最大值的，<0 表示持有锁的数量超过了 int 的最大值
+        if (nextc < 0) // overflow
+            throw new Error("Maximum lock count exceeded");
+        setState(nextc);
+        return true;
+    }
+    //否则线程进入同步队列
+    return false;
+}
+```
+通过代码可以看出：
+- 通过判断 AQS 的 state 的状态来决定是否可以获得锁，0 表示锁是空闲的；
+- else if 的代码体现了可重入加锁，同一个线程对共享资源重入加锁，底层实现就是把 state + 1，并且可重入的次数是有限制的，为 Integer 的最大值；
+- 这个方法是非公平的，所以只有非公平锁才会用到，公平锁是另外的实现
+
+无参的 tryLock 方法调用的就是此方法，tryLock 的方法源码如下：
+```java
+public boolean tryLock() {
+    // 入参数是 1 表示尝试获得一次锁
+    return sync.nonfairTryAcquire(1);
 }
 ```
 
-## 4、非公平锁
+### 3.2、释放锁：tryRelease
+
+```java
+// 释放锁方法，非公平和公平锁都使用
+protected final boolean tryRelease(int releases) {
+    // 当前同步器的状态减去释放的个数，releases 一般为 1
+    int c = getState() - releases;
+    // 当前线程根本都不持有锁，报错
+    if (Thread.currentThread() != getExclusiveOwnerThread())
+        throw new IllegalMonitorStateException();
+    boolean free = false;
+    // 如果 c 为 0，表示当前线程持有的锁都释放了
+    if (c == 0) {
+        free = true;
+        setExclusiveOwnerThread(null);
+    }
+    // 如果 c 不为 0，那么就是可重入锁，并且锁没有释放完，用 state 减去 releases 即可，无需做其他操作
+    setState(c);
+    return free;
+}
+```
+tryRelease 方法是公平锁和非公平锁都公用的，在锁释放的时候，是没有公平和非公平的说法的。
+
+从代码中可以看到，锁最终被释放的标椎是 state 的状态为 0，在重入加锁的情况下，需要重入解锁相应的次数后，才能最终把锁释放，比如线程 A 对共享资源 B 重入加锁 5 次，那么释放锁的话，也需要释放 5 次之后，才算真正的释放该共享资源了
+
+## 4、公平锁
+
+FairSync 公平锁只实现了 lock 和 tryAcquire 两个方法，lock 方法非常简单，如下：
+```java
+// acquire 是 AQS 的方法，表示先尝试获得锁，失败之后进入同步队列阻塞等待
+final void lock() {
+    acquire(1);
+}
+```
+tryAcquire 方法是 AQS 在 acquire 方法中留给子类实现的抽象方法，FairSync 中实现的源码如下：
+```java
+// 是按照通过CLH等待线程按照先来先得的规则，公平的获取锁；获取锁是通过lock()函数，是在ReentrantLock.java的FairSync类中实现，吞吐量比较低；
+protected final boolean tryAcquire(int acquires) {
+    final Thread current = Thread.currentThread();
+    int c = getState();
+    if (c == 0) {
+        // hasQueuedPredecessors 是实现公平的关键
+        // 会判断当前线程是不是属于同步队列的头节点的下一个节点(头节点是释放锁的节点)
+        // 如果是(返回false)，符合先进先出的原则，可以获得锁
+        // 如果不是(返回true)，则继续等待
+        if (!hasQueuedPredecessors() &&
+            compareAndSetState(0, acquires)) {
+            setExclusiveOwnerThread(current);
+            return true;
+        }
+    }
+    // 可重入锁
+    else if (current == getExclusiveOwnerThread()) {
+        int nextc = c + acquires;
+        if (nextc < 0)
+            throw new Error("Maximum lock count exceeded");
+        setState(nextc);
+        return true;
+    }
+    return false;
+}
+```
+
+## 5、非公平锁
 
 - 在当线程要获取锁时，它会无视CLH等待队列而直接获取锁；
 - 是不完全按照请求的顺序，在一定的情况下，可以插队；
@@ -113,30 +201,65 @@ protected final boolean tryAcquire(int acquires) {
 - 可能存在饥饿问题，也就是某些线程在长时间内得不到执行。
 - tryLock使用的是非公平锁
 
+NonfairSync 底层实现了 lock 和 tryAcquire 两个方法
 ```java
-final boolean nonfairTryAcquire(int acquires) {
-	final Thread current = Thread.currentThread();
-	int c = getState();
-	if (c == 0) {
-		if (compareAndSetState(0, acquires)) {
-			setExclusiveOwnerThread(current);
-			return true;
-		}
-	}
-	else if (current == getExclusiveOwnerThread()) {
-		int nextc = c + acquires;
-		if (nextc < 0) // overflow
-			throw new Error("Maximum lock count exceeded");
-		setState(nextc);
-		return true;
-	}
-	return false;
+// 加锁
+final void lock() {
+    // cas 给 state 赋值
+    if (compareAndSetState(0, 1))
+        // cas 赋值成功，代表拿到当前锁，记录拿到锁的线程
+        setExclusiveOwnerThread(Thread.currentThread());
+    else
+        // acquire 是抽象类AQS的方法,
+        // 会再次尝试获得锁，失败会进入到同步队列中
+        acquire(1);
+}
+// 直接使用的是 Sync.nonfairTryAcquire 方法 
+protected final boolean tryAcquire(int acquires) {
+    return nonfairTryAcquire(acquires);
+}
+```
+对比公平与非公平锁，发现主要区别是：hasQueuedPredecessors，公平锁是将所有的线程放在一个队列中，一个线程执行完成后，从队列中取出下一个线程，而非公平锁则没有这个队列
+
+## 6、如何将lock、tryLock、unlock串起来
+
+### 6.1、加锁
+
+```java
+public void lock() {
+    sync.lock();
 }
 ```
 
-对比公平与非公平锁，发现主要区别是：hasQueuedPredecessors，公平锁是将所有的线程放在一个队列中，一个线程执行完成后，从队列中取出下一个线程，而非公平锁则没有这个队列
+![](image/ReentranLock-lock基本关系.png)
 
-## 5、保证可见性
+### 6.2、tryLock 尝试加锁
+
+tryLock 有两个方法，一种是无参的，一种提供了超时时间的入参，两种内部是不同的实现机制，代码分别如下：
+```java
+// 无参构造器
+public boolean tryLock() {
+    return sync.nonfairTryAcquire(1);
+}
+// timeout 为超时的时间，在时间内，仍没有得到锁，会返回 false
+public boolean tryLock(long timeout, TimeUnit unit)
+        throws InterruptedException {
+    return sync.tryAcquireNanos(1, unit.toNanos(timeout));
+}
+```
+
+- 无参方法调用关系：`非公平的 tryLock -> Sync.nonfairTryAcquire`；无参的tryLock没有公平锁的实现，只有非公平锁的实现；
+- 带有超时时间的有参 tryLock 的调用实现图：
+	- 公平锁：FairSync.tryAcquire
+	- 非公平锁：`NonFairSync.tryAcquire -> Sync.nonfairTryAcquire`
+
+### 6.3、释放锁
+
+unlock 释放锁的方法，底层调用的是 Sync 同步器的 release 方法，release 是 AQS 的方法，分成两步：
+- 尝试释放锁，如果释放失败，直接返回 false；
+- 释放成功，从同步队列的头节点的下一个节点开始唤醒，让其去竞争锁
+
+## 7、保证可见性
 
 ```java
 class LockDemo{
