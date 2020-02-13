@@ -1904,34 +1904,122 @@ ThreadLocalMap提供了一种为ThreadLocal定制的高效实现，并且自带�
 其定义在 ThreadLocal 类内部的私有类，它是采用"开放定址法"解决冲突的hashmap。key是ThreadLocal对象（ThreadLocal中存放的是ThreadLocal的弱引用）。当调用某个ThreadLocal对象的get或put方法时，首先会从当前线程中取出ThreadLocalMap，然后查找对应的value。ThreadLocalMap 实例是作为 java.lang.Thread 的成员变量存储的，每个线程有唯一的一个 threadLocalMap
 ```java
 public T get() {
-	Thread t = Thread.currentThread();
-	ThreadLocalMap map = getMap(t);     //拿到当前线程的ThreadLocalMap
-	if (map != null) {
-		ThreadLocalMap.Entry e = map.getEntry(this);    // 以该ThreadLocal对象为key取value
-		if (e != null)
-			return (T)e.value;
-	}
-	return setInitialValue();
+    // 因为 threadLocal 属于线程的属性，所以需要先把当前线程拿出来
+    Thread t = Thread.currentThread();
+    // 从线程中拿到 ThreadLocalMap
+    ThreadLocalMap map = getMap(t);
+    if (map != null) {
+        // 从 map 中拿到 entry，由于 ThreadLocalMap 在 set 时的 hash 冲突的策略不同，导致拿的时候逻辑也不太一样
+        ThreadLocalMap.Entry e = map.getEntry(this);
+        // 如果不为空，读取当前 ThreadLocal 中保存的值
+        if (e != null) {
+            @SuppressWarnings("unchecked")
+            T result = (T)e.value;
+            return result;
+        }
+    }
+    // 否则给当前线程的 ThreadLocal 初始化，并返回初始值 null
+    return setInitialValue();
 }
 ThreadLocalMap getMap(Thread t) {
 	return t.threadLocals;
 }
+// 得到当前 thradLocal 对应的值，值的类型是由 thradLocal 的泛型决定的
+// 由于 thradLocalMap set 时解决数组索引位置冲突的逻辑，导致 thradLocalMap get 时的逻辑也是对应的
+// 首先尝试根据 hashcode 取模数组大小-1 = 索引位置 i 寻找，找不到的话，自旋把 i+1，直到找到索引位置不为空为止
+private Entry getEntry(ThreadLocal<?> key) {
+    // 计算索引位置：ThreadLocal 的 hashCode 取模数组大小-1
+    int i = key.threadLocalHashCode & (table.length - 1);
+    Entry e = table[i];
+    // e 不为空，并且 e 的 ThreadLocal 的内存地址和 key 相同，直接返回，否则就是没有找到，继续通过 getEntryAfterMiss 方法找
+    if (e != null && e.get() == key)
+        return e;
+    else
+    // 这个取数据的逻辑，是因为 set 时数组索引位置冲突造成的  
+        return getEntryAfterMiss(key, i, e);
+}
+/ 自旋 i+1，直到找到为止
+private Entry getEntryAfterMiss(ThreadLocal<?> key, int i, Entry e) {
+    Entry[] tab = table;
+    int len = tab.length;
+    // 在大量使用不同 key 的 ThreadLocal 时，其实还蛮耗性能的
+    while (e != null) {
+        ThreadLocal<?> k = e.get();
+        // 内存地址一样，表示找到了
+        if (k == key)
+            return e;
+        // 删除没用的 key
+        if (k == null)
+            expungeStaleEntry(i);
+        // 继续使索引位置 + 1
+        else
+            i = nextIndex(i, len);
+        e = tab[i];
+    }
+    return null;
+}
+
 ```
 - 将 ThreadLocalMap 作为 Thread 类的成员变量的好处是：<br>
 	当线程死亡时，threadLocalMap被回收的同时，保存的"线程局部变量"如果不存在其它引用也可以同时被回收。同一个线程下，可以有多个treadLocal实例，保存多个"线程局部变量"。同一个threadLocal实例，可以有多个线程使用，保存多个线程的"线程局部变量"。
 - ThreadLocalMap类内部有个静态内部类：Entry，其继承自WeakReference
 	```java
 	static class Entry extends WeakReference<ThreadLocal<?>> {
-		/** The value associated with this ThreadLocal. */
+		// 当前 ThreadLocal 关联的值
 		Object value;
-
+        // WeakReference 的引用 referent 就是 ThreadLocal
 		Entry(ThreadLocal<?> k, Object v) {
 			super(k);
 			value = v;
 		}
+        // 数组的初始化大小
+        private static final int INITIAL_CAPACITY = 16;
+        // 存储 ThreadLocal 的数组
+        private Entry[] table;
+        // 扩容的阈值，默认是数组大小的三分之二
+        private int threshold;
 	}
 	```
 - ThreadLocalMap维护了Entry环形数组，数组中元素Entry的逻辑上的key为某个ThreadLocal对象（实际上是指向该ThreadLocal对象的弱引用），value为代码中该线程往该ThreadLoacl变量实际塞入的值
+
+**ThreadLocalMap扩容：**
+```java
+private void resize() {
+    // 拿出旧的数组
+    Entry[] oldTab = table;
+    int oldLen = oldTab.length;
+    // 新数组的大小为老数组的两倍
+    int newLen = oldLen * 2;
+    // 初始化新数组
+    Entry[] newTab = new Entry[newLen];
+    int count = 0;
+    // 老数组的值拷贝到新数组上
+    for (int j = 0; j < oldLen; ++j) {
+        Entry e = oldTab[j];
+        if (e != null) {
+            ThreadLocal<?> k = e.get();
+            if (k == null) {
+                e.value = null; // Help the GC
+            } else {
+                // 计算 ThreadLocal 在新数组中的位置
+                int h = k.threadLocalHashCode & (newLen - 1);
+                // 如果索引 h 的位置值不为空，往后+1，直到找到值为空的索引位置
+                while (newTab[h] != null)
+                    h = nextIndex(h, newLen);
+                // 给新数组赋值
+                newTab[h] = e;
+                count++;
+            }
+        }
+    }
+    // 给新数组初始化下次扩容阈值，为数组长度的三分之二
+    setThreshold(newLen);
+    size = count;
+    table = newTab;
+}
+```
+- 扩容后数组大小是原来数组的两倍；
+- 扩容时是绝对没有线程安全问题的，因为 ThreadLocalMap 是线程的一个属性，一个线程同一时刻只能对 ThreadLocalMap 进行操作，因为同一个线程执行业务逻辑必然是串行的，那么操作 ThreadLocalMap 必然也是串行的
 
 ### 12.5、碰撞解决与神奇的 0x61c88647
 

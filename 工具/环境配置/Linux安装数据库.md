@@ -79,6 +79,15 @@ updates                                                                         
 ALTER USER 'root'@'localhost' IDENTIFIED BY 'new password';
 ```
 
+新增用户：
+```sql
+create user 'test'@'%' identified with mysql_native_password by '123456';
+```
+这里使用mysql_native_password是因为mysql8使用了新的加密方式，如果我们需要使用老的加密方式来连接，需要加上 mysql_native_password
+```
+授权：grant all on *.* to 'test'@'%'
+```
+
 ## 8、查看MySQL数据库的配置信息
 
 MySQL的配置文件依然是`/etc/my.cnf`，其它安装信息可以通过mysql_config命令查看。其中，动态库文件存放在`/usr/lib64/mysql`目录下
