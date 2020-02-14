@@ -134,3 +134,5 @@ MySQL的配置文件依然是`/etc/my.cnf`，其它安装信息可以通过mysql
 因为安装了MySQL的Yum Repository，所以以后每次执行yum操作时，都会去检查更新。如果想要去掉这种自动检查操作的话，可以使用如下命令卸载MySQL的Repository即可
 
 `[root@localhost mysql]# yum -y remove mysql57-community-release-el7-7.noarch.rpm`
+
+# 二、主从配置

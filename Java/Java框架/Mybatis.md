@@ -1,44 +1,5 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
 
-- [一、Mybatis基础](#%E4%B8%80mybatis%E5%9F%BA%E7%A1%80)
-  - [1、ORM框架对比](#1orm%E6%A1%86%E6%9E%B6%E5%AF%B9%E6%AF%94)
-    - [1.1、Hibernate 的优点](#11hibernate-%E7%9A%84%E4%BC%98%E7%82%B9)
-    - [1.2、Hibernate的缺点](#12hibernate%E7%9A%84%E7%BC%BA%E7%82%B9)
-    - [1.3、Mybatis的优点](#13mybatis%E7%9A%84%E4%BC%98%E7%82%B9)
-    - [1.4、Mybatis的缺点](#14mybatis%E7%9A%84%E7%BC%BA%E7%82%B9)
-- [二、使用Mybatis一般过程](#%E4%BA%8C%E4%BD%BF%E7%94%A8mybatis%E4%B8%80%E8%88%AC%E8%BF%87%E7%A8%8B)
-  - [1、创建配置文件](#1%E5%88%9B%E5%BB%BA%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
-  - [2、创建实体类](#2%E5%88%9B%E5%BB%BA%E5%AE%9E%E4%BD%93%E7%B1%BB)
-  - [3、将Mapper映射文件引入到基本配置文件](#3%E5%B0%86mapper%E6%98%A0%E5%B0%84%E6%96%87%E4%BB%B6%E5%BC%95%E5%85%A5%E5%88%B0%E5%9F%BA%E6%9C%AC%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6)
-  - [4、获取sqlSessionFactory和sqlSession](#4%E8%8E%B7%E5%8F%96sqlsessionfactory%E5%92%8Csqlsession)
-  - [5、根据相应的增删改查,调用sqlSession的方法](#5%E6%A0%B9%E6%8D%AE%E7%9B%B8%E5%BA%94%E7%9A%84%E5%A2%9E%E5%88%A0%E6%94%B9%E6%9F%A5%E8%B0%83%E7%94%A8sqlsession%E7%9A%84%E6%96%B9%E6%B3%95)
-- [三、常见使用](#%E4%B8%89%E5%B8%B8%E8%A7%81%E4%BD%BF%E7%94%A8)
-  - [1、mybatis完成两件事](#1mybatis%E5%AE%8C%E6%88%90%E4%B8%A4%E4%BB%B6%E4%BA%8B)
-  - [2、typeAliases属性](#2typealiases%E5%B1%9E%E6%80%A7)
-  - [3、字段名与实体类属性名不相同的冲突](#3%E5%AD%97%E6%AE%B5%E5%90%8D%E4%B8%8E%E5%AE%9E%E4%BD%93%E7%B1%BB%E5%B1%9E%E6%80%A7%E5%90%8D%E4%B8%8D%E7%9B%B8%E5%90%8C%E7%9A%84%E5%86%B2%E7%AA%81)
-  - [4、关联表查询](#4%E5%85%B3%E8%81%94%E8%A1%A8%E6%9F%A5%E8%AF%A2)
-    - [4.1、一对一查询](#41%E4%B8%80%E5%AF%B9%E4%B8%80%E6%9F%A5%E8%AF%A2)
-    - [4.2、一对多查询](#42%E4%B8%80%E5%AF%B9%E5%A4%9A%E6%9F%A5%E8%AF%A2)
-  - [5、调用存储过程](#5%E8%B0%83%E7%94%A8%E5%AD%98%E5%82%A8%E8%BF%87%E7%A8%8B)
-  - [6、批量插入](#6%E6%89%B9%E9%87%8F%E6%8F%92%E5%85%A5)
-    - [6.1、mybatis-foreach处理](#61mybatis-foreach%E5%A4%84%E7%90%86)
-    - [6.2、mybatis代码处理](#62mybatis%E4%BB%A3%E7%A0%81%E5%A4%84%E7%90%86)
-    - [6.3、JDBC批处理 + 事务](#63jdbc%E6%89%B9%E5%A4%84%E7%90%86--%E4%BA%8B%E5%8A%A1)
-    - [6.4、数据分批 + JDBC批处理 + 事务](#64%E6%95%B0%E6%8D%AE%E5%88%86%E6%89%B9--jdbc%E6%89%B9%E5%A4%84%E7%90%86--%E4%BA%8B%E5%8A%A1)
-- [四、Mybatis与Spring整合](#%E5%9B%9Bmybatis%E4%B8%8Espring%E6%95%B4%E5%90%88)
-- [五、MyBatis原理](#%E4%BA%94mybatis%E5%8E%9F%E7%90%86)
-  - [1、mybatis的初始化](#1mybatis%E7%9A%84%E5%88%9D%E5%A7%8B%E5%8C%96)
-  - [2、mybatis的sql查询流程](#2mybatis%E7%9A%84sql%E6%9F%A5%E8%AF%A2%E6%B5%81%E7%A8%8B)
-- [六、MyBatis中的设计模式](#%E5%85%ADmybatis%E4%B8%AD%E7%9A%84%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
-- [七、面试题](#%E4%B8%83%E9%9D%A2%E8%AF%95%E9%A2%98)
-  - [1、为什么mybatis的mapper没有实现类？](#1%E4%B8%BA%E4%BB%80%E4%B9%88mybatis%E7%9A%84mapper%E6%B2%A1%E6%9C%89%E5%AE%9E%E7%8E%B0%E7%B1%BB)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# 一、Mybatis基础
+# 一、Mybatis概述
 
 ## 1、ORM框架对比
 Hibernate与mybatis框架比较
@@ -79,6 +40,7 @@ Hibernate与mybatis框架比较
 - 编写动态sql时，不方便调试，尤其逻辑复杂时.
 - 提供的写动态sql的xml标签功能简单，编写动态sql仍然受限，且可读性低
 
+## 2、为什么要使用mybatis等orm框架
 
 # 二、使用Mybatis一般过程
 
@@ -546,3 +508,4 @@ Mybatis将所有Xml配置信息都封装到`All-In-One`重量级对象Configurat
 # 参考资料
 
 - [Hibernate与Mybatis对比](http://www.cnblogs.com/inspurhaitian/p/4647485.html)
+- [Mybatis使用教程](https://blog.csdn.net/hellozpc/article/details/80878563)

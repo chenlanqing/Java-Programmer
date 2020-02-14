@@ -1,0 +1,160 @@
+Classfile /workspace/base/java-code/java-se/java-se-basis/target/classes/com/blue/fish/se/basis/lambda/LambdaDemo.class
+  Last modified 2020-2-14; size 1518 bytes
+  MD5 checksum 890d13fc276205be157166f11167120e
+  Compiled from "LambdaDemo.java"
+public class com.blue.fish.se.basis.lambda.LambdaDemo
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+Constant pool:
+   #1 = Methodref          #14.#33        // java/lang/Object."<init>":()V
+   #2 = Class              #34            // java/lang/Thread
+   #3 = InvokeDynamic      #0:#39         // #0:run:()Ljava/lang/Runnable;
+   #4 = Methodref          #2.#40         // java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
+   #5 = Methodref          #2.#41         // java/lang/Thread.start:()V
+   #6 = Class              #42            // com/blue/fish/se/basis/lambda/LambdaDemo$1
+   #7 = Methodref          #6.#33         // com/blue/fish/se/basis/lambda/LambdaDemo$1."<init>":()V
+   #8 = Methodref          #13.#43        // com/blue/fish/se/basis/lambda/LambdaDemo.runThreadUseLambda:()V
+   #9 = Methodref          #13.#44        // com/blue/fish/se/basis/lambda/LambdaDemo.runWithInnerClass:()V
+  #10 = Fieldref           #45.#46        // java/lang/System.out:Ljava/io/PrintStream;
+  #11 = String             #47            // 我是Lambda线程
+  #12 = Methodref          #48.#49        // java/io/PrintStream.println:(Ljava/lang/String;)V
+  #13 = Class              #50            // com/blue/fish/se/basis/lambda/LambdaDemo
+  #14 = Class              #51            // java/lang/Object
+  #15 = Utf8               InnerClasses
+  #16 = Utf8               <init>
+  #17 = Utf8               ()V
+  #18 = Utf8               Code
+  #19 = Utf8               LineNumberTable
+  #20 = Utf8               LocalVariableTable
+  #21 = Utf8               this
+  #22 = Utf8               Lcom/blue/fish/se/basis/lambda/LambdaDemo;
+  #23 = Utf8               runThreadUseLambda
+  #24 = Utf8               runWithInnerClass
+  #25 = Utf8               main
+  #26 = Utf8               ([Ljava/lang/String;)V
+  #27 = Utf8               args
+  #28 = Utf8               [Ljava/lang/String;
+  #29 = Utf8               MethodParameters
+  #30 = Utf8               lambda$runThreadUseLambda$0
+  #31 = Utf8               SourceFile
+  #32 = Utf8               LambdaDemo.java
+  #33 = NameAndType        #16:#17        // "<init>":()V
+  #34 = Utf8               java/lang/Thread
+  #35 = Utf8               BootstrapMethods
+  #36 = MethodHandle       #6:#52         // invokestatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #37 = MethodType         #17            //  ()V
+  #38 = MethodHandle       #6:#53         // invokestatic com/blue/fish/se/basis/lambda/LambdaDemo.lambda$runThreadUseLambda$0:()V
+  #39 = NameAndType        #54:#55        // run:()Ljava/lang/Runnable;
+  #40 = NameAndType        #16:#56        // "<init>":(Ljava/lang/Runnable;)V
+  #41 = NameAndType        #57:#17        // start:()V
+  #42 = Utf8               com/blue/fish/se/basis/lambda/LambdaDemo$1
+  #43 = NameAndType        #23:#17        // runThreadUseLambda:()V
+  #44 = NameAndType        #24:#17        // runWithInnerClass:()V
+  #45 = Class              #58            // java/lang/System
+  #46 = NameAndType        #59:#60        // out:Ljava/io/PrintStream;
+  #47 = Utf8               我是Lambda线程
+  #48 = Class              #61            // java/io/PrintStream
+  #49 = NameAndType        #62:#63        // println:(Ljava/lang/String;)V
+  #50 = Utf8               com/blue/fish/se/basis/lambda/LambdaDemo
+  #51 = Utf8               java/lang/Object
+  #52 = Methodref          #64.#65        // java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #53 = Methodref          #13.#66        // com/blue/fish/se/basis/lambda/LambdaDemo.lambda$runThreadUseLambda$0:()V
+  #54 = Utf8               run
+  #55 = Utf8               ()Ljava/lang/Runnable;
+  #56 = Utf8               (Ljava/lang/Runnable;)V
+  #57 = Utf8               start
+  #58 = Utf8               java/lang/System
+  #59 = Utf8               out
+  #60 = Utf8               Ljava/io/PrintStream;
+  #61 = Utf8               java/io/PrintStream
+  #62 = Utf8               println
+  #63 = Utf8               (Ljava/lang/String;)V
+  #64 = Class              #67            // java/lang/invoke/LambdaMetafactory
+  #65 = NameAndType        #68:#71        // metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #66 = NameAndType        #30:#17        // lambda$runThreadUseLambda$0:()V
+  #67 = Utf8               java/lang/invoke/LambdaMetafactory
+  #68 = Utf8               metafactory
+  #69 = Class              #73            // java/lang/invoke/MethodHandles$Lookup
+  #70 = Utf8               Lookup
+  #71 = Utf8               (Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+  #72 = Class              #74            // java/lang/invoke/MethodHandles
+  #73 = Utf8               java/lang/invoke/MethodHandles$Lookup
+  #74 = Utf8               java/lang/invoke/MethodHandles
+{
+  public com.blue.fish.se.basis.lambda.LambdaDemo();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 7: 0
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       5     0  this   Lcom/blue/fish/se/basis/lambda/LambdaDemo;
+
+  public static void runThreadUseLambda();
+    descriptor: ()V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=3, locals=0, args_size=0
+         0: new           #2                  // class java/lang/Thread
+         3: dup
+         4: invokedynamic #3,  0              // InvokeDynamic #0:run:()Ljava/lang/Runnable;
+         9: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
+        12: invokevirtual #5                  // Method java/lang/Thread.start:()V
+        15: return
+      LineNumberTable:
+        line 11: 0
+        line 12: 15
+
+  public static void runWithInnerClass();
+    descriptor: ()V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=4, locals=0, args_size=0
+         0: new           #2                  // class java/lang/Thread
+         3: dup
+         4: new           #6                  // class com/blue/fish/se/basis/lambda/LambdaDemo$1
+         7: dup
+         8: invokespecial #7                  // Method com/blue/fish/se/basis/lambda/LambdaDemo$1."<init>":()V
+        11: invokespecial #4                  // Method java/lang/Thread."<init>":(Ljava/lang/Runnable;)V
+        14: invokevirtual #5                  // Method java/lang/Thread.start:()V
+        17: return
+      LineNumberTable:
+        line 15: 0
+        line 20: 14
+        line 21: 17
+
+  public static void main(java.lang.String[]);
+    descriptor: ([Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_STATIC
+    Code:
+      stack=0, locals=1, args_size=1
+         0: invokestatic  #8                  // Method runThreadUseLambda:()V
+         3: invokestatic  #9                  // Method runWithInnerClass:()V
+         6: return
+      LineNumberTable:
+        line 24: 0
+        line 26: 3
+        line 27: 6
+      LocalVariableTable:
+        Start  Length  Slot  Name   Signature
+            0       7     0  args   [Ljava/lang/String;
+    MethodParameters:
+      Name                           Flags
+      args
+}
+SourceFile: "LambdaDemo.java"
+InnerClasses:
+     static #6; //class com/blue/fish/se/basis/lambda/LambdaDemo$1
+     public static final #70= #69 of #72; //Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+BootstrapMethods:
+  0: #36 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #37 ()V
+      #38 invokestatic com/blue/fish/se/basis/lambda/LambdaDemo.lambda$runThreadUseLambda$0:()V
+      #37 ()V

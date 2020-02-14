@@ -1155,7 +1155,7 @@ else x= a;
 ### 4.3、JDK7
 
 - switch语句块中允许以字符串作为分支条件；
-- 在创建泛型对象时应用类型推断；钻石语法:Map<String， List<String>> data = new HashMap()；
+- 在创建泛型对象时应用类型推断；钻石语法:`Map<String， List<String>> data = new HashMap()；`
 - 在一个语句块中捕获多种异常；
 - 支持动态语言；
 - 支持 try-with-resources；
@@ -1396,9 +1396,7 @@ java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的�
 
 Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现
 
-### 8.2、Lambda表达式
-
-#### 8.2.1、语法格式
+### 8.2、Lambda表达式语法
 
 ```java
 // 之前的语法
@@ -1412,7 +1410,7 @@ new Thread(new Runnable() {
 new Thread(() -> System.out.println("我是Lambda线程")).start();
 ```
 
-#### 8.2.2、Lambda原理
+### 8.3、Lambda原理
 
 如下代码：启动一个线程，包含lambda表达式和匿名内部类的方式
 ```java
@@ -1434,7 +1432,7 @@ public class LambdaDemo {
     }
 }
 ```
-通过`javap -c LambdaDemo`查看字节码
+通过`javap -c LambdaDemo`查看字节码，[详细字节码](Lambda-字节码.txt)
 ```java
 ...
 public static void runThreadUseLambda();
@@ -1470,9 +1468,40 @@ JVM指令：
 
 在java7 JVM中增加了一个新的指令invokedynamic，用于支持动态语言，即允许方法调用可以在运行时指定类和方法，不必在编译的时候确定；字节码中每条invokedynamic指令出现的位置称为一个动态调用点，invokedynamic指令后面会跟一个指向常量池的调用点限定符，这个限定符会被解析为一个动态调用点；
 
-Lambda采用的是invokedynamic指令；
+**Lambda采用的是invokedynamic指令；**
 
-#### 8.2.3、Lambda性能
+上面是从JVM虚拟层面上来看的，下面从Java源代码中看，首先从字节码常量池中可以看到：
+
+![](image/Lambda字节码-常量池.png)
+
+从上面可以看到类似代码：`java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;`
+
+MethodHandles 和 LambdaMetafactory 都是 java.lang.invoke 包下面的重要方法，invoke 包主要实现了动态语言的功能，java 语言属于静态编译语言，在编译的时候，类、方法、字段等等的类型都已经确定了，而 invoke 实现的是一种动态语言，也就是说编译的时候并不知道类、方法、字段是什么类型，只有到运行的时候才知道，其实质上调用的是：
+```java
+// LambdaMetafactory.java
+public static CallSite metafactory(MethodHandles.Lookup caller, String invokedName, MethodType invokedType, MethodType samMethodType,
+                                       MethodHandle implMethod, MethodType instantiatedMethodType) throws LambdaConversionException {
+	AbstractValidatingLambdaMetafactory mf;
+	mf = new InnerClassLambdaMetafactory(caller, invokedType, invokedName, samMethodType, implMethod, instantiatedMethodType,
+											false, EMPTY_CLASS_ARRAY, EMPTY_MT_ARRAY);
+	mf.validateMetafactoryArgs();
+	return mf.buildCallSite();
+}
+```
+metafactory 方法入参：
+- caller 代表实际发生动态调用的位置
+- invokedName 表示调用方法名称；
+- invokedType 表示调用的多个入参和出参
+- samMethodType 表示具体的实现者的参数
+- implMethod 表示实际上的实现者
+- instantiatedMethodType 等同于 implMethod
+
+通过debug，可以获取到的信息如下：
+
+![](image/Lambda-debug信息.png)
+
+
+### Lambda性能
 
 # 五、正则表达式
 
