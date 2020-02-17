@@ -791,6 +791,7 @@ Spring 会扫描 basePackage 下的所有Mapper接口并注册为MapperFactoryBe
 
 其中`ParameterHandler`、`ResultSetHandler`、`StatementHandler`、`Executor`这4个接口都可以自定义扩展实现，通过拦截器的模式嵌入到mybatis中；
 
+
 # 参考资料
 
 - [MyBatis实现原理](https://www.cnblogs.com/luoxn28/p/6417892.html)

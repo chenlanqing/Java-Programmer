@@ -311,7 +311,137 @@ http://www.crazyant.net/2022.html
 
 # 七、Mybatis插件
 
-## 1、
+## 1、插件原理
+
+在`ParameterHandler`、`ResultSetHandler`、`StatementHandler`、`Executor`四个对象创建的时候：
+- 上述四个对象创建时不是直接返回，而是调用：`interceptorChain.pluginAll(parameterHandler);`进行包装；
+- 获取到所有的Interceptor实现类，调用  interceptor.plugin 进行包装：
+    ```java
+    public Object pluginAll(Object target) {
+        for (Interceptor interceptor : interceptors) {
+            target = interceptor.plugin(target);
+        }
+        return target;
+    }
+    ```
+- plugin 方法会为目标对象创建一个代理对象；
+- 等到真正执行具体方法的时候，其实是执行创建代理类时指定的InvocationHandler的invoke方法，可以发现在指定的InvocationHandler是Plugin对象，Plugin本身也是继承于InvocationHandler；首先从signatureMap中获取拦截类对应的方法列表，然后检查当前执行的方法是否在要拦截的方法列表中，如果在则调用自定义的插件interceptor，否则执行默认的invoke操作；interceptor调用intercept方法的时候是传入的Invocation对象
+
+## 2、编写插件
+
+### 2.1、基本步骤
+
+- 编写`org.apache.ibatis.plugin.Interceptor`的实现类；
+- 使用`@Intercepts`注解完成插件的签名
+- 将写好的插件注册到全局配置文件中（注意插件配置的顺序）
+
+### 2.2、示例
+
+- 编写实现类：
+    ```java
+    /**
+    * 同 Signature注解 完成插件签名，告诉插件拦截哪个对象的哪个方法
+    */
+    @Intercepts({
+        // 这里需要拦截的是 StatementHandler 里的 parameterize 方法
+        @Signature(type = StatementHandler.class, method = "parameterize", args = Statement.class)
+    })
+    public class FirstMyBatisPlugin implements Interceptor {
+        /**
+        * 拦截目标对象的目标方法的执行
+        */
+        @Override
+        public Object intercept(Invocation invocation) throws Throwable {
+            // 执行目标方法
+            System.out.println("FirstMyBatisPlugin....intercept：" + invocation.getMethod());
+            Object proceed = invocation.proceed();
+            return proceed;
+        }
+        /**
+        * 包装目标对象，为目标对象创建一个代理对象，可以使用 Plugin.wrap 包装
+        */
+        @Override
+        public Object plugin(Object target) {
+            System.out.println("FirstMyBatisPlugin....plugin...需要包装的对象" + target);
+            Object wrap = Plugin.wrap(target, this);
+            return wrap;
+        }
+        /**
+        * 将插件注册时的property属性设置进来
+        */
+        @Override
+        public void setProperties(Properties properties) {
+            System.out.println("插件属性：" + properties);
+        }
+    }
+    ```
+- 配置文件配置：
+    ```xml
+    <configuration>
+        <properties>...</properties>
+        <settings>...</settings>
+        <typeAliases>...</typeAliases>
+        <typeHandlers>...</typeHandlers>
+        <objectFactory>...</objectFactory>
+        <objectWrapperFactory>...</objectWrapperFactory>
+        <plugins>
+            <plugin interceptor="com.blue.fish.plugin.FirstMyBatisPlugin">
+                // 配置属性，在setProperties方法中可以获取到这些属性
+                <property name="username" value="root"/>
+                <property name="password" value="root"/>
+            </plugin>
+        </plugins>
+        <environments>...</environments>
+        <databaseIdProvider>...</databaseIdProvider>
+        <mappers>...</mappers>
+    </configuration>
+    ```
+
+上面插件的输出结果：
+```
+插件属性：{password=root, username=root}
+FirstMyBatisPlugin....plugin...需要包装的对象org.apache.ibatis.executor.CachingExecutor@5442a311
+FirstMyBatisPlugin....plugin...需要包装的对象org.apache.ibatis.scripting.defaults.DefaultParameterHandler@56ac3a89
+FirstMyBatisPlugin....plugin...需要包装的对象org.apache.ibatis.executor.resultset.DefaultResultSetHandler@4566e5bd
+FirstMyBatisPlugin....plugin...需要包装的对象org.apache.ibatis.executor.statement.RoutingStatementHandler@ff5b51f
+FirstMyBatisPlugin....intercept：public abstract void org.apache.ibatis.executor.statement.StatementHandler.parameterize(java.sql.Statement) throws java.sql.SQLException
+```
+
+## 3、多个插件
+
+多个插件会产生多层代理，创建代理的时候，是按照配置的插件顺序创建层层代理的，执行目标方法治好，按照逆向顺序执行；
+
+编写两个插件，两个插件拦截同一个对象的同一个方法，其代理对象的结构：
+
+![](image/Mybatis-插件代理对象结构.png)
+
+执行结果：
+
+![](image/Mybatis-多个插件包装与执行顺序.png)
+
+## 4、获取插件拦截对象的属性
+
+```java
+public Object intercept(Invocation invocation) throws Throwable {
+    // 执行目标方法
+    System.out.println("FirstMyBatisPlugin....intercept：" + invocation.getMethod());
+    Object target = invocation.getTarget();
+    System.out.println("当前对象：" + target);
+    // 需要对当前查询重新赋值操作，可以拿到 StatementHandler -> ParameterHandler -> ParameterObject
+    // 通过mybatis提供的 SystemMetaObject 从对象中获取元信息
+    MetaObject metaObject = SystemMetaObject.forObject(target);
+    Object value = metaObject.getValue("parameterHandler.parameterObject");
+    System.out.println("sql语句的参数是：" + value);
+    metaObject.setValue("parameterHandler.parameterObject",2);
+
+    Object proceed = invocation.proceed();
+    return proceed;
+}
+```
+
+## 5、常用分页插件
+
+PageHelper
 
 # 八、面试题
 
@@ -504,6 +634,26 @@ TypeHandler有两个作用，一是完成从javaType至jdbcType的转换，二�
 Mybatis将所有Xml配置信息都封装到`All-In-One`重量级对象Configuration内部。在Xml映射文件中，`<parameterMap>`标签会被解析为ParameterMap对象，其每个子元素会被解析为ParameterMapping对象。
 
 `<resultMap>`标签会被解析为ResultMap对象，其每个子元素会被解析为ResultMapping对象。每一个`<select>、<insert>、<update>、<delete>`标签均会被解析为MappedStatement对象，标签内的sql会被解析为BoundSql对象
+
+## 19、mybatis配置文件需要注意什么
+
+配置mybatis配置文件时需要注意各个节点的顺序，顺序如下：
+```xml
+<properties>...</properties>
+<settings>...</settings>
+<typeAliases>...</typeAliases>
+<typeHandlers>...</typeHandlers>
+<objectFactory>...</objectFactory>
+<objectWrapperFactory>...</objectWrapperFactory>
+<plugins>...</plugins>
+<environments>...</environments>
+<databaseIdProvider>...</databaseIdProvider>
+<mappers>...</mappers>
+```
+如果配置未按照上述顺序进行配置，则会报错：
+```
+Caused by: org.xml.sax.SAXParseException; lineNumber: 47; columnNumber: 17; 元素类型为 "configuration" 的内容必须匹配 "(properties?,settings?,typeAliases?,typeHandlers?,objectFactory?,objectWrapperFactory?,reflectorFactory?,plugins?,environments?,databaseIdProvider?,mappers?)"。
+```
 
 # 参考资料
 
