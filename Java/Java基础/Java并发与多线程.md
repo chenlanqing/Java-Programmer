@@ -2456,7 +2456,7 @@ synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁�
 
 [ReentantLock](../源码分析/thread/ReentrantLock.md)可重入锁，又是独占锁
 
-## 4、共享锁-ReentrantReadWriteLock-读写锁
+## 4、读写锁：ReentrantReadWriteLock
 
 ### 4.1、ReadWriteLock
 
@@ -2538,9 +2538,135 @@ Doug Lea 将持有写锁的线程，去获取读锁的过程称为锁降级（Lo
     }
     ```
 
-### 4.5、StampedLock：比读写锁性能更高的锁
+### 4.5、StampedLock
 
-其有写锁、悲观读锁、乐观读
+比读写锁性能更高的锁，ReadWriteLock支持两种锁模式：读锁和写锁，而 StampedLock 支持三种锁模式：写锁、悲观读锁、乐观读。其中写锁、悲观读锁的语义和 ReadWriteLock的写锁、读锁的语义非常类似，允许多个线程同时获取悲观读锁，但是只允许一个线程获取写锁，写锁和悲观锁是互斥。不同的是：StampedLock 里的写锁和悲观读锁加锁成功之后，都会返回一个 stamp，在解锁的时候需要传入 stamp；
+
+```java
+final StampedLock sl = new StampedLock();
+// 乐观读
+long stamp = sl.tryOptimisticRead();
+// 读入方法局部变量
+......
+// 校验stamp
+if (!sl.validate(stamp)){
+  // 升级为悲观读锁
+  stamp = sl.readLock();
+  try {
+    // 读入方法局部变量
+    .....
+  } finally {
+    //释放悲观读锁
+    sl.unlockRead(stamp);
+  }
+}
+//使用方法局部变量执行业务操作
+......
+```
+StampedLock性能之所以比ReadWriteLock要好，关键是 StampedLock 支持乐观读的方式，StampedLock 提供的乐观读，是允许一个线程获取写锁的，即不是所有的写操作都被阻塞；乐观读操作是无锁的；
+
+JDK官方的代码：
+```java
+class Point {
+    private int x, y;
+    final StampedLock sl =new StampedLock();
+    //计算到原点的距离
+    int distanceFromOrigin() {
+        // 乐观读
+        long stamp = sl.tryOptimisticRead();
+        // 读入局部变量，
+        // 读的过程数据可能被修改
+        int curX = x, curY = y;
+        // 判断执行读操作期间，
+        // 是否存在写操作，如果存在，
+        // 则sl.validate返回false
+        if (!sl.validate(stamp)) {
+            // 升级为悲观读锁
+            stamp = sl.readLock();
+            try {
+                curX = x;
+                curY = y;
+            } finally {
+                //释放悲观读锁
+                sl.unlockRead(stamp);
+            }
+        }
+        return (int) Math.sqrt(curX * curX + curY * curY);
+    }
+}
+```
+如果在执行乐观读操作期间，存在写操作，会把乐观锁升级为悲观读锁；不然就需要在一个循环里反复执行乐观读，直到执行乐观读操作的期间没有写操作；而循环读会浪费大量的CPU；升级为悲观读锁，不易出错；
+
+**使用 StampedLock 注意事项：**
+
+对于读多写少简单的应用场景，基本可用替代 ReadWriteLock，但是 StampedLock 功能仅仅是 ReadWriteLock的子集，需要注意：
+- StampedLock 不支持重入锁；
+- StampedLock 的悲观读锁、写锁不支持条件变量；
+- 如果线程阻塞在 StampedLock 的readLock 或者 writeLock上时，此时调用该阻塞线程的 interrupt 方法，会导致CPU飙升；使用 StampedLock 如果需要一定使用可中断的悲观读锁 readLockInterruptibly() 和写锁 writeLockInterruptibly。
+
+**使用 StampedLock 读模板：**
+```java
+final StampedLock sl = new StampedLock();
+// 乐观读
+long stamp = sl.tryOptimisticRead();
+// 读入方法局部变量
+......
+// 校验stamp
+if (!sl.validate(stamp)){
+  // 升级为悲观读锁
+  stamp = sl.readLock();
+  try {
+    // 读入方法局部变量
+    .....
+  } finally {
+    //释放悲观读锁
+    sl.unlockRead(stamp);
+  }
+}
+//使用方法局部变量执行业务操作
+......
+```
+
+**使用 StampedLock 写模板：**
+```java
+long stamp = sl.writeLock();
+try {
+  // 写共享变量
+  ......
+} finally {
+  sl.unlockWrite(stamp);
+}
+```
+
+Stamped 支持锁的降级（tryConvertToReadLock）和升级（tryConvertToWriteLock），但是不建议使用。
+
+下列代码存在的问题：锁的升级会生成新的 stamp，而finally 中释放锁用的是升级之前的 stamp，所以需要重新赋值
+```java
+private double x, y;
+final StampedLock sl = new StampedLock();
+// 存在问题的方法
+void moveIfAtOrigin(double newX, double newY){
+ long stamp = sl.readLock();
+ try {
+  while(x == 0.0 && y == 0.0){
+    long ws = sl.tryConvertToWriteLock(stamp);
+    if (ws != 0L) {
+      //问题出在没有对stamp重新赋值
+      // 需要对升级之后生成的stamp赋值操作
+      stamp = ws;
+      x = newX;
+      y = newY;
+      break;
+    } else {
+      sl.unlockRead(stamp);
+      stamp = sl.writeLock();
+    }
+  }
+ } finally {
+  //此处unlock的是stamp
+  sl.unlock(stamp);
+}
+```
 
 ## 5、共享锁-闭锁：CountDownLatch
 
@@ -3171,7 +3297,6 @@ JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFut
 ## 16、CompletionService
 
 批量的并行任务
-
 
 # 四、并发容器
 
@@ -5249,6 +5374,33 @@ LMAX是一种新型零售金融交易平台，它能够以很低的延迟(latenc
 
 ## 2、Disruptor介绍
 
+Disruptor 是一款高性能的有界内存队列，高性能原因：
+- 内存分配更加合理，利用RingBuffer数据结构，数组元素在初始化时一次性全部创建；
+- 提高缓存命中率；对象循环利用，避免频繁GC；
+- 避免伪共享，提高缓存利用率：使用缓存行填充，每个变量占用一个缓存行，不共享缓存行
+- 采用无锁算法，避免频繁加锁、解锁的性能消耗，比如Disruptor入队操作：如果没有足够的空余位置，就让出CPU使用权，然后重新计算，反之则使用CAS设置入队索引
+- 支持批量消费，消费者可以无锁方式消费多个消息；
+
+### 2.1、RingBuffer提高性能
+
+RingBuffer本质上也是数组，其在结构上做了很多优化，其中一项是和内存分配相关的。首先看下局部性原理：所谓局部性原理是指在一段时间内程序的执行还有限定在一个局部范围内，局部性可以从两个方面来理解：
+* 时间局部性：如果某个数据被访问，那么在不久的将来它很可能再次被访问；
+* 空间局部性：如果某块内存被访问，不久之后这块内存附近的内存也很可能被访问；
+
+首先是 ArrayBlockingQueue。生产者线程向 ArrayBlockingQueue 增加一个元素，每次增加元素 E 之前，都需要创建一个对象 E，如下图所示，ArrayBlockingQueue 内部有 6 个元素，这 6 个元素都是由生产者线程创建的，由于创建这些元素的时间基本上是离散的，所以这些元素的内存地址大概率也不是连续的。
+
+Disruptor 内部的 RingBuffer 也是用数组实现的，但是这个数组中的所有元素在初始化时是一次性全部创建的，所以这些元素的内存地址大概率是连续的，相关的代码如下所示。
+```java
+for (int i=0; i<bufferSize; i++){
+  //entries[]就是RingBuffer内部的数组
+  //eventFactory就是前面示例代码中传入的LongEvent::new
+  entries[BUFFER_PAD + i] 
+    = eventFactory.newInstance();
+}
+```
+**数组中所有元素内存地址连续能提升性能吗？**能！为什么呢？因为消费者线程在消费的时候，是遵循空间局部性原理的，消费完第 1 个元素，很快就会消费第 2 个元素；当消费第 1 个元素 E1 的时候，CPU 会把内存中 E1 后面的数据也加载进 Cache，如果 E1 和 E2 在内存中的地址是连续的，那么 E2 也就会被加载进 Cache 中，然后当消费第 2 个元素的时候，由于 E2 已经在 Cache 中了，所以就不需要从内存中加载了，这样就能大大提升性能。
+
+除此之外，在 Disruptor 中，生产者线程通过 publishEvent() 发布 Event 的时候，并不是创建一个新的 Event，而是通过 event.set() 方法修改 Event， 也就是说 RingBuffer 创建的 Event 是可以循环利用的，这样还能避免频繁创建、删除 Event 导致的频繁 GC 问题。
 
 ## 3、Disruptor快速入门
 
@@ -5432,7 +5584,6 @@ Disruptor可以实现串并行同时编码
 
 使用WorkPool来处理
 
-
 ## 6、源码分析
 
 ### 6.1、Disruptor底层性能特点
@@ -5470,12 +5621,21 @@ Disruptor的RingBuffer，做到完全无锁是因为单线程写；注入Redis�
 
 ### 6.7、WaitStrategy等待策略
 
-
 对于YieldingWaitStrategy实现类，尝试去修改源代码，降低高性能对CPU和内存资源的损耗
 
 ### 6.8、EventProcessor核心机制
 
-# 十、线程与并发相关面试题
+# 十、多线程与并发设计模式
+
+## 1、不可变
+
+## 2、Copy-on-Write
+
+## 3、避免共享
+
+## 4、等待唤醒机制
+
+# 十一、线程与并发相关面试题
 
 ## 1、为什么线程池的底层数据接口采用HashSet来实现
 
@@ -5588,6 +5748,40 @@ super关键字并没有新建一个父类的对象，比如说widget，然后再
 ### 6.3、在执行task的时候都做了什么事情
 
 ### 6.4、nodewaiters是干什么的
+
+## 7、synchronized 无法禁止指令重排序，确能够保证有序性？
+
+主要考察点：Java内存模型、并发编程有序性问题、指令重排、synchronized锁、可重入锁、排它锁、as-if-serial语义、单线程&多线程
+
+答案点：
+- 为了进一步提升计算机各方面能力，在硬件层面做了很多优化，如处理器优化和指令重排等，但是这些技术的引入就会导致有序性问题
+- 最好的解决有序性问题的办法，就是禁止处理器优化和指令重排，就像volatile中使用内存屏障一样；
+- 虽然很多硬件都会为了优化做一些重排，但是在Java中，不管怎么排序，都不能影响单线程程序的执行结果。这就是as-if-serial语义，所有硬件优化的前提都是必须遵守as-if-serial语义；
+- synchronized，是Java提供的锁，可以通过其对Java中的对象加锁，并且他是一种排他的、可重入的锁；其是JVM层面上实现的锁；
+- 当某个线程执行到一段被synchronized修饰的代码之前，会先进行加锁，执行完之后再进行解锁。在加锁之后，解锁之前，其他线程是无法再次获得锁的，只有这条加锁线程可以重复获得该锁；
+- synchronized通过排他锁的方式就保证了同一时间内，被synchronized修饰的代码是单线程执行的。所以呢，这就满足了as-if-serial语义的一个关键前提，那就是单线程，因为有as-if-serial语义保证，单线程的有序性就天然存在了
+
+## 8、为什么Integer、String等对象不适合用作锁
+
+因为这些类中都用到了享元设计模式，这会导致锁看上去是私有的，但是实际上是共有的；不过可以直接使用new这些来创建新的对象，不使用其内部的对象池，这样创建出来的对象就不会共有
+```java
+class A {
+  Long al=Long.valueOf(1); // 可以使用 new Long
+  public void setAX(){
+    synchronized (al) {
+      //省略代码无数
+    }
+  }
+}
+class B {
+  Long bl=Long.valueOf(1);
+  public void setBY(){
+    synchronized (bl) {
+      //省略代码无数
+    }
+  }
+}
+```
 
 # 参考文章
 
