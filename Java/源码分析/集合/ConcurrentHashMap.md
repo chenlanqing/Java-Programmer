@@ -384,7 +384,7 @@ if ((as = counterCells) != null ||
 可以使用replace方法
 
 
-# 参考资料:
+# 参考资料
 
 * [ConcurrentHashMap高并发性的实现机制](http://www.importnew.com/16147.html)
 * [ConcurrentHashMap面试必问](https://mp.weixin.qq.com/s/HUvHUBRqp4I4ShyUJr5xDw)

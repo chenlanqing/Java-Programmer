@@ -1792,7 +1792,17 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 
 ## 2、
 
-# 十三、Redis面试题
+# 十三、Lua
+
+## 1、Lua介绍
+
+嵌入式开发、插件开发、Redis集成了lua编译器
+
+## 2、Lua基本语法
+
+## 3、Redis中使用Lua
+
+# 十四、Redis面试题
 
 [Redis常见面试题](https://mp.weixin.qq.com/s/LAWkUOn2iQaDC_bxm_NwbQ)
 

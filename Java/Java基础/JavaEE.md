@@ -630,7 +630,9 @@ public class HelloAsyncServlet extends HttpServlet {
 	<!-- Javascript防重复提交不安全，易被攻破-->
 ```
 - ②、服务器端session防表单重复提交：<br>
-	表单页面由servlet程序生成，servlet为每次产生的表单页面分配一个唯一的随机标识号，并在FORM表单的一个隐藏字段中设置这个标识号，同时在当前用户的Session域中保存这个标识号。当用户提交FORM表单时，负责处理表单提交的serlvet得到表单提交的标识号，并与session中存储的标识号比较，如果相同则处理表单提交，处理完后清除当前用户的Session域中存储的标识号		
+	表单页面由servlet程序生成，servlet为每次产生的表单页面分配一个唯一的随机标识号，并在FORM表单的一个隐藏字段中设置这个标识号，同时在当前用户的Session域中保存这个标识号。当用户提交FORM表单时，负责处理表单提交的serlvet得到表单提交的标识号，并与session中存储的标识号比较，如果相同则处理表单提交，处理完后清除当前用户的Session域中存储的标识号	
+
+	访问页面时调用服务端返回一个token，前端提交表单时需要带上该token，服务端对比前端传回的token和后端存储的token
 
 # 参考资料
 

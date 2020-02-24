@@ -147,6 +147,8 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 
 ## 6、Java8 中 HashMap 的改进
 
+### 6.1、底层数据结构变化
+
 - 在Java 8中，使用数组，但它会被保存在Node中，Node 中包含了和之前 Entry 对象一样的信息，并且也会使用链表
 - 和JDK7相比，最大区别在于 Node可以被扩展成TreeNode。TreeNode是一个红黑树的数据结构，它可以存储更多的信息这样我们可以在O(log(n))的复杂度下添加、删除或者获取一个元素；
 	```java
@@ -205,6 +207,10 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 	**但是为什么会有链表与红黑树的相互转化？**
 
 	红黑树属于平衡二叉树，为了保持“平衡”是需要付出代价的，但是该代价所损耗的资源要比遍历线性链表要少。所以当长度大于8的时候，会使用红黑树；如果链表长度很短的话，根本不需要引入红黑树，引入反而会慢
+
+### 6.2、扩容时插入顺序的改进
+
+### 6.3、新增函数方法
 
 ## 7、延迟加载机制
 
@@ -687,6 +693,7 @@ private V getForNullKey() {
 ```java
 final int hash(Object k) {
 	int h = hashSeed;
+	// 如果是字符串作为key，其不使用string自带的hashcode函数，而是使用JDK另外定义的一套hashcode函数，防止生成链表的安全隐患，避免DOS
 	if (0 != h && k instanceof String) {
 					return sun.misc.Hashing.stringHash32((String) k);
 	}

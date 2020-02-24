@@ -755,6 +755,12 @@ public class Test{
 
 另外，大部分指令都没有支持整数类型byte、char、short。编译器在编译期或运行期将byte和short类型的数据带符号扩展为相应的int类型数据，将boolean和char类型数据零位扩展为相应的int类型数据；
 
+## 8、如何计算比一个数大的2的幂
+
+`Integer.highestOneBit((number) - 1) << 1)`
+
+比如 比17大的2的幂是32
+
 # 三、进制基础
 
 ## 1、进制基础
