@@ -370,6 +370,7 @@ Write once， run anywhere
 - 封装：通常认为封装是把数据和操作数据的方法绑定起来，对数据的访问只能通过已定义的接口；面向对象的本质就是：将现实世界描绘成一系列完全自然、封闭的对象。在类中的编写的方法就是对实现细节的一种封装；编写一个类就是对数据和数据操作的封装；
 - 继承：继承是从已有类中得到继承信息并创建新类的过程。提供继承信息的类被称为父类；得到继承信息的类被称为子类。继承让变化中的软件系统有了一定的延续性，同时继承也是封装程序中可变因素的重要手段；
 - 多态：指允许不同子类型的对象对同一消息作出不同的响应；
+- 抽象：抽象是将一类对象的共同特征总结出来构造类的过程，包括数据抽象和行为抽象两方面。抽象只关注对 象有哪些属性和行为，并不关注这些行为的细节是什么
 
 ## 6、五大基本原则
 
@@ -425,7 +426,7 @@ public class Main{
 ```
 **2.1、String+的写法要比 Stringbuffer 快，是因为在编译这段程序的时候，编译器会进行常量优化。**
 
-它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中{}，看如下反编译的代码：
+它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中，看如下反编译的代码：
 
 ```java
 public class Main{}
@@ -564,14 +565,14 @@ public class TestExecuteCode {
 
 ## 4、给出一个表达式计算其可以按多少进制计算
 
-- 式子7*15=133成立，则用的是几进制？可以通过解方程来解决，上述式子可以转换为方程：
+- 式子`7*15=133`成立，则用的是几进制？可以通过解方程来解决，上述式子可以转换为方程：
 	```
 	7 * (1 * x + 5) = 1 * x^2 + 3 * x + 3
 	x^2 -4x - 32 = 0
 	x = -4 或 x = 8
 	```
 
-- 如果下列的公式成立：78+78=123，则采用的是_______进制表示的：
+- 如果下列的公式成立：`78+78=123`，则采用的是_______进制表示的：
 	```
 	7 * x + 8 + 7 * x + 8 = 1 * x^2 + 2 * x + 3
 	x^2 - 12 * x - 13 = 0
@@ -685,7 +686,7 @@ public class PrintDirectory {
 
 ## 7、boolean占用字节数
 
-- 在Java虚拟机中没有任何供 `boolean`值专用的字节码指令,Java语言表达式所操作的 `boolean`值,在编译之后都使用Java虚拟机中的`int`数据类型来代替。
+- 在Java虚拟机中没有任何供 `boolean`值专用的字节码指令，Java语言表达式所操作的 `boolean`值，在编译之后都使用Java虚拟机中的`int`数据类型来代替。
 - Java虚拟机直接支持 boolean类型的数组，虚拟机的 navarra指令参见第6章的newarray小节可以创建这种数组。boolean类型数组的访问与修改共用byte类型数组的baload和 bastore指令；
 - 因为在虚拟机规范中说了，boolean值在编译之后都使用Java虚拟机中的int数据类型来代替，而int是4个字节，那么boolean值就是4个字节。
 - boolean类型数组的访问与修改共用byte类型数组的baload和 bastore指令，因为两者共用，只有两者字节一样才能通用呀，所以byte数组中一个byte是1个字节，那么boolean数组中boolean是1个字节。
@@ -759,7 +760,7 @@ public class Test{
 
 `Integer.highestOneBit((number) - 1) << 1)`
 
-比如 比17大的2的幂是32
+比如：比17大的2的幂是32
 
 # 三、进制基础
 
@@ -788,11 +789,13 @@ public class Test{
 
 **2.2.1、只要有一个为 1，结果就为 1**
 
-	0|0 = 0		1|0 = 1		0|1	= 1		1|1 = 1
-	51|5 = 55 即:
-		51 => 00000000 00000000 00000000 00110011
-		5  => 00000000 00000000 00000000 00000101
-		|  => 00000000 00000000 00000000 00110111
+```
+0|0 = 0		1|0 = 1		0|1	= 1		1|1 = 1
+51|5 = 55 即:
+	51 => 00000000 00000000 00000000 00110011
+	5  => 00000000 00000000 00000000 00000101
+	|  => 00000000 00000000 00000000 00110111
+```
 
 **2.2.3、用法**
 
@@ -815,18 +818,15 @@ public class Test{
 	如:x = 10101110， 使 x 低四位翻转， 用 x ^ 0000 1111 = 1010 0001
 - 与 0 相异或，保留原值<br>
 	如: x ^ 00000000 = 10101110
-- 两个变量交换值:<br>
-	- ①、借助第三个变量来实现:<br>
-		c = a， a = b， b = c；<br>
-	- ②、利用加减法来实现:<br>
-		a = a + b， b = a - b， a = a-b；<br>
-	- ③、用异或运算来实现，也是效率最高的:<br>
-		原理:利用一个数异或本身等于 0 和 异或运算符合交换率<br>
-		a = a ^ b； b = a ^ b； a = a ^ b
+- 两个变量交换值：
+	- ①、借助第三个变量来实现：c = a， a = b， b = c；
+	- ②、利用加减法来实现：a = a + b， b = a - b， a = a-b；
+	- ③、用异或运算来实现，也是效率最高的，原理：利用一个数异或本身等于 0 和 异或运算符合交换率：
+		`a = a ^ b； b = a ^ b； a = a ^ b`
 
 ### 2.4、取反运算：~ 
 
-	取反:对一个二进制数按位取反，即将 0 变为 1，1 变为 0
+	取反：对一个二进制数按位取反，即将 0 变为 1，1 变为 0
 		~1 = 0		~0 = 1	
 
 ### 2.5、左移：<< 
@@ -934,7 +934,7 @@ public class Test{
 
 ### 4.2、常用的数
 
-0xff ==> 11111111
+0xff ==> 11111111（255）
 
 f ==> 1111
 
@@ -1258,7 +1258,7 @@ Stream 就如同一个迭代器（Iterator），单向，不可往复，数据�
 	```
 - **filter：方法用于通过设置的条件过滤出元素**
 	```java
-	// 。以下代码片段使用 filter 方法过滤出空字符串
+	// 以下代码片段使用 filter 方法过滤出空字符串
 	List<String> list = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
 	long count = list.stream().filter(String::isEmpty).count();
 	System.out.println(count);
@@ -1331,17 +1331,30 @@ public String getCity(User user) throws Exception{
 
 ### 7.2、JDK8新API
 
-JDK8.0之后, 新增加了以下几个类用来表示日期时间：
-- LocalDate：用来表示日期(年、月、日)，LocalDate是不可变对象, 如果想改变对象的状态, 最终得到都是一个新的LocalDate对象, 并不会对旧的LocalDate对象产生影
-- LocalTime：用来表示时间(时、分、秒)
-- LocalDateTime：用来表示日期时间(年、月、日、时、分、秒)
-- DataTimeFomatter：用来格式化日期
-- ZonedDateTime：无论是LocalDate、LocalTime、LocalDateTime，它们基本是时区无关的，内部并没有存储时区属性，而基本用的系统默认时区；ZonedDateTime 可以被理解为 LocalDateTime 的外层封装，它的内部存储了一个 LocalDateTime 的实例，专门用于普通的日期时间处理。此外，它还定义了 ZoneId 和 ZoneOffset 来描述时区的概念；
-- Instant：用于表示一个时间戳，可以精确到纳秒
+#### 1、包分类
+
+- `java.time` 包:这是新的 Java 日期/时间 API 的基础包，所有的主要基础类都是这个包的一部分，如:LocalDate, LocalTime, LocalDateTime, Instant, Period, Duration 等等。所有这些类都是不可变的和线程安全的，在绝大多 数情况下，这些类能够有效地处理一些公共的需求。
+- `java.time.chrono` 包:这个包为非 ISO 的日历系统定义了一些泛化的 API，我们可以扩展 AbstractChronology 类来创建自己的日历系统。
+- `java.time.format` 包:这个包包含能够格式化和解析日期时间对象的类，在绝大多数情况下，我们不应该直接使 用它们，因为 java.time 包中相应的类已经提供了格式化和解析的方法。
+- `java.time.temporal`包:这个包包含一些时态对象，我们可以用其找出关于日期/时间对象的某个特定日期或时间， 比如说，可以找到某月的第一天或最后一天。你可以非常容易地认出这些方法，因为它们都具有“withXXX”的格 式。
+- `java.time.zone` 包:这个包包含支持不同时区以及相关规则的类
+
+#### 2、常见API**
+
+- `java.time.LocalDate`：用来表示日期(年、月、日)，它表示默认格式(`yyyy-MM-dd`)的日期，LocalDate是不可变对象, 如果想改变对象的状态, 最终得到都是一个新的LocalDate对象, 并不会对旧的LocalDate对象产生影；使用 now()方法得到当前时间，也可以提供输入年份、月份和日期的输入参数来创建一个 LocalDate 实例；也可以传入 ZoneId 来获得指定时区的日期
+
+- `java.time.LocalTime`：LocalTime 是一个不可变的类，它的实例代表一个符合人类可读格式的时间，默认格式是 `hh:mm:ss.zzz`。像 LocalDate 一样，该类也提供了时区支持，同时也可以传入小时、分钟和秒等输入参数创建实例；
+
+- `java.time.LocalDateTime`：LocalDateTime 是一个不可变的日期-时间对象，它表示一组日期-时间，默认格式是 `yyyy-MM-dd-HH-mm-ss.zzz`。它提供了一个工厂方法，接收 LocalDate 和 LocalTime 输入参数，创建 LocalDateTime 实例
+
+- `java.time.format.DateTimeFormatter`：用来格式化日期
+- `java.time.ZonedDateTime`：无论是LocalDate、LocalTime、LocalDateTime，它们基本是时区无关的，内部并没有存储时区属性，而基本用的系统默认时区；ZonedDateTime 可以被理解为 LocalDateTime 的外层封装，它的内部存储了一个 LocalDateTime 的实例，专门用于普通的日期时间处理。此外，它还定义了 ZoneId 和 ZoneOffset 来描述时区的概念；
+- `java.time.Instant`：Instant 类是用在机器可读的时间格式上的，它以 Unix 时间戳的形式存储日期时间，用于表示一个时间戳，可以精确到纳秒
+- 日期 API 工具：TemporalAdjuster
 
 ### 7.3、新API基本操作
 
-- 格式化时间：
+#### 1、格式化时间：
 	```java
 	public static void main(String[] a){
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
@@ -1506,7 +1519,6 @@ metafactory 方法入参：
 
 ![](image/Lambda-debug信息.png)
 
-
 ### Lambda性能
 
 # 五、正则表达式
@@ -1570,7 +1582,7 @@ public class ChildInnerClass1 extends OutClass.InnerClass {
 }
 ```
 
-成员内部类的继承语法格式要求继承引用方式为 Outter.Inner 形式且继承类的构造器中必须有指向外部类对象的引用，并通过这个引用调用 super()，其实这个要求就是因为成员内部类默认持有外部类的引用，外部类不先实例化则无法实例化自己；
+成员内部类的继承语法格式要求继承引用方式为 Outter.Inner 形式且继承类的构造器中必须有指向外部类对象的引用的参数，并通过这个引用调用 super()，其实这个要求就是因为成员内部类默认持有外部类的引用，外部类不先实例化则无法实例化自己；
 
 **友情提示：**
 
@@ -1580,7 +1592,7 @@ public class ChildInnerClass1 extends OutClass.InnerClass {
 ## 3、静态内部类
 
 是static修饰的内部类
-- 静态内部类不能直接访问外部类的非静态成员，但可以通过 `new 外部类().成员` 的方式访问
+- `静态内部类`不能直接访问外部类的`非静态成员`，但可以通过 `new 外部类().成员` 的方式访问
 - 如果外部类的静态成员与内部类的成员名称相同，可通过`类名.静态成员`访问外部类的静态成员；如果外部类的静态成员与内部类的成员名称不相同，则可通过`成员名`直接调用外部类的静态成员
 - 创建静态内部类的对象时，不需要外部类的对象，可以直接创建 `内部类 对象名 = new 内部类()`;
 
@@ -1622,7 +1634,7 @@ public class Outer{
  */
 public class Outer{
 	public void Show(){
-		`final` int a = 25;
+		final int a = 25;
 		int b = 13;
 		class Inner{
 			int c = 2;
@@ -1640,7 +1652,7 @@ public class Outer{
 	}
 }
 ```
-- 注意：在JDK8版本之中，方法内部类中调用方法中的局部变量，可以不需要修饰为``final``，匿名内部类也是一样的，主要是JDK8之后增加了`Effectively `final``功能反编译jdk8编译之后的`class`文件，发现内部类引用外部的局部变量都是``final``修饰的
+- 注意：在JDK8版本之中，方法内部类中调用方法中的局部变量，可以不需要修饰为`final`，匿名内部类也是一样的，主要是JDK8之后增加了`Effectively final`功能，反编译jdk8编译之后的`class`文件，发现内部类引用外部的局部变量都是`final`修饰的
 
 [参考文章](http://docs.oracle.com/javase/tutorial/java/javaOO/localclasses.html) <br>
 
@@ -1736,7 +1748,7 @@ interface InnerClass {
 List list1 = new ArrayList();
 List list2 = new ArrayList(){};
 List list3 = new ArrayList(){{}};
-List list4 = new ArrayList(){{}{}{}};(
+List list4 = new ArrayList(){{}{}{}};
 System.out.println(list1.getClass() == list2.getClass()); // false
 System.out.println(list1.getClass() == list3.getClass()); // false
 System.out.println(list1.getClass() == list4.getClass()); // false
@@ -1796,12 +1808,9 @@ public class OutClass{
 
 ### 3.2、final 修饰符
 
-- 修饰变量：对于一个 ``final`` 变量，如果是基本数据类型的变量，则其数值一旦在初始化之后便不能更改；如果是引用类型的变量，则在对其初始化之后便不能再让其指向另一个对象;
-- 修饰方法：方法前面加上 ``final`` 关键字，代表这个方法不可以被子类的方法重写；``final`` 方法比非 ``final`` 方法要快，因为在编译的时候已经静态绑定了，不需要在运行时再动态绑定
-
-	类的 private 方法会隐式地被指定为final方法
-
-- 修饰类：当用 `final` 修饰一个类时，表明这个类不能被继承，final 类中的所有成员方法都会被隐式地指定为 ``final`` 方法；Java 中许多类都是 ``final`` 类，如：String，Integer
+- 修饰变量：对于一个 `final` 变量，如果是基本数据类型的变量，则其数值一旦在初始化之后便不能更改；如果是引用类型的变量，则在对其初始化之后便不能再让其指向另一个对象;
+- 修饰方法：方法前面加上 `final` 关键字，代表这个方法不可以被子类的方法重写；`final` 方法比非 `final` 方法要快，因为在编译的时候已经静态绑定了，不需要在运行时再动态绑定；类的 private 方法会隐式地被指定为final方法
+- 修饰类：当用 `final` 修饰一个类时，表明这个类不能被继承，final 类中的所有成员方法都会被隐式地指定为 `final` 方法；Java 中许多类都是 `final` 类，如：String，Integer
 - 不能修饰构造方法；
 - 不能修饰`static`方法；
 - 如果`final`修饰对象的时候，只是对象的引用不可变，而对象本身的内部属性是可以变化的；
@@ -1869,14 +1878,14 @@ class MyDemo1{
 
 - 只能用于对象的判断，不能用于基本类型的判断;
 - 若左操作数是 null 则结果直接返回 false，不再运算右操作数是什么类：`(String)null instanceof String; // false;`；因为 null 没有类型，所以即使做类型转换还是 null
-- `instanceof`的右操作符必须是一个接口或者类： `"demo" instanceof null; // 编译错误`
+- `instanceof`的右操作符必须是一个接口或者类： `demo instanceof null; // 编译错误`
 - 数组类型也可以使用 instanceof 判断：
 	```java
 	String[] str = new String[10];
 	str instanceof String[]; //  true
 	```
 
-### 4.2、`instanceof`与`clazz.isInstance(obj)`
+### 4.2、instanceof与clazz.isInstance(obj)
 
 - `instanceof`运算符用来在运行时指出对象是否是特定类的一个实例，通过返回一个布尔值来指出这个对象是否是这个特定类或者是它的子类的一个实例。
 	```
@@ -1995,7 +2004,7 @@ String s = (String) b.get(1); // 返回类型是 Object
 ```
 先检查再擦除的类型检查是针对引用的，用引用调用泛型方法就会对这个引用调用的方法进行类型检测而无关它真正引用的对象：
 
-- （2）、泛型中参数化类型无法支持继承关系：因为泛型设计之初就是为了解决 Object 类型转换弊端而存在的，如果泛型参数支持继承操作就违背了泛型设计转而继续回到原始的 Object 类型转换的弊端.
+- （2）、泛型中参数化类型无法支持继承关系：因为泛型设计之初就是为了解决 Object 类型转换弊端而存在的，如果泛型参数支持继承操作就违背了泛型设计转而继续回到原始的 Object 类型转换的弊端
 ```java
 ArrayList<Object> a = new ArrayList<Object>();
 a.add(new Object());
@@ -2065,7 +2074,7 @@ public void setValue(java.lang.Object);
 			0       9     0  this   Lcom/learning/StringCreater;
 }
 ```
-reater 泛型类在编译后类型被擦除为 Object，子类的本意是进行重写实现多态，可类型擦除后子类就和多态产生了冲突，所以编译后的字节码里就出现了桥方法来实现多态;
+Creater 泛型类在编译后类型被擦除为 Object，子类的本意是进行重写实现多态，可类型擦除后子类就和多态产生了冲突，所以编译后的字节码里就出现了桥方法来实现多态;
 
 可以看到桥方法的参数类型都是 Object，也就是说子类中真正覆盖父类方法的是桥方法，而子类 String 参数 setValue、getValue 方法上的 @Oveerride 注解只是个假象;
 
@@ -2113,7 +2122,7 @@ Java 的泛型数组初始化时数组类型不能是具体的泛型类型，只
 ```java
 T t = new T();
 ```
-因为Java编译期没法确定泛型参数化类型，也就找不到对应的字节码文件.此外由于泛型被擦除为 Object，如果可以通过 new T则成了 new Object.如果要实例化一个泛型对象，可以同反射实现：
+因为Java编译期没法确定泛型参数化类型，也就找不到对应的字节码文件。此外由于泛型被擦除为 Object，如果可以通过 new T则成了 new Object.如果要实例化一个泛型对象，可以同反射实现：
 
 ```java
 static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAccessException{
@@ -2307,7 +2316,9 @@ public Employee clone() throws CloneNotSupportedException {
 
 ## 2、泛型重载
 
-- Java的方法重载一般指在同一个类中的两个同名方法，规则很简单：两个方法必须具有不同的方法签名；换句话说：就是这两个方法的参数必须不相同，使得编译器能够区分开这两个重载的方法；由于编译器不能仅仅通过方法的返回值类型来区分重载方法，所以如果两个方法只有返回类型不同，其它完全一样，编译是不能通过的。在泛型方法的重载时，这个规则稍微有一点变化，看如下代码：
+**注意：泛型重载在JDK7之后是不支持的**
+
+~~- Java的方法重载一般指在同一个类中的两个同名方法，规则很简单：两个方法必须具有不同的方法签名；换句话说：就是这两个方法的参数必须不相同，使得编译器能够区分开这两个重载的方法；由于编译器不能仅仅通过方法的返回值类型来区分重载方法，所以如果两个方法只有返回类型不同，其它完全一样，编译是不能通过的。在泛型方法的重载时，这个规则稍微有一点变化，看如下代码：~~
 
 ```java
 class Overloaded {
@@ -2320,20 +2331,20 @@ class Overloaded {
 }
 ```
 
-上面是两个泛型方法的重载例子，由于Java的泛型采用擦除法实现，List<Integer>和List<String>在运行时是完全一样的，都是List类型。也就是，擦除后的方法签名如下：
+~~上面是两个泛型方法的重载例子，由于Java的泛型采用擦除法实现，List<Integer>和List<String>在运行时是完全一样的，都是List类型。也就是，擦除后的方法签名如下：~~
 	```
 	int sum(List)
 	String sum(List)
 	```
 
-- Java允许这两个方法进行重载，虽然它们的方法签名相同，只有返回值类型不同，这在两个普通方法的重载中是不允许的；当然了，如果两个泛型方法的参数在擦除后相同，而且返回值类型也完全一样，那编译肯定是不能通过的；类似地，一个类不能同时继承两个具有相同擦除类型的父类，也不能同时实现两个具有相同擦除的接口。如 `Class A implements Comparable<Integer>,Comparable<Long>。`
-- 总结一下：两个泛型方法在擦除泛型信息后，如果具有相同的参数类型，而返回值不一样，是可以进行重载的；Java有足够的信息来区分这两个重载的方法
+~~- Java允许这两个方法进行重载，虽然它们的方法签名相同，只有返回值类型不同，这在两个普通方法的重载中是不允许的；当然了，如果两个泛型方法的参数在擦除后相同，而且返回值类型也完全一样，那编译肯定是不能通过的；类似地，一个类不能同时继承两个具有相同擦除类型的父类，也不能同时实现两个具有相同擦除的接口。如 `Class A implements Comparable<Integer>,Comparable<Long>。`~~
+~~- 总结一下：两个泛型方法在擦除泛型信息后，如果具有相同的参数类型，而返回值不一样，是可以进行重载的；Java有足够的信息来区分这两个重载的方法~~
 
 ## 3、重写与重载
 
 ### 3.1、两者的比较
 
-- 重载是一个编译期概念、重写是一个运行期间概念;
+- 重载是一个编译期概念、重写是一个运行期间概念；
 - 重载遵循所谓"编译期绑定"，即在编译时根据参数变量的类型判断应该调用哪个方法。
 - 重写遵循所谓"运行期绑定"，即在运行的时候，根据引用变量所指向的实际对象的类型来调用方法
 - 因为在编译期已经确定调用哪个方法，所以重载并不是多态。而重写是多态。重载只是一种语言特性，是一种语法规则，与多态无关，与面向对象也无关。(注：严格来说，重载是编译时多态，即静态多态。但是，Java中提到的多态，在不特别说明的情况下都指动态多态)
@@ -2342,18 +2353,16 @@ class Overloaded {
 
 - 参数列表必须完全与被重写方法的相同；
 - 返回类型必须完全与被重写方法的返回类型相同；
-- 访问级别的限制性一定不能比被重写方法的强；
-- 访问级别的限制性可以比被重写方法的弱；
+- 访问权限不能比父类中被重写的方法的访问权限更低，一般重写方法默认为 public 即可；
 - 重写方法一定不能抛出新的检查异常或比被重写的方法声明的检查异常更广泛的检查异常
 - 重写的方法能够抛出更少或更有限的异常(也就是说，被重写的方法声明了异常，但重写的方法可以什么也不声明)
 - 不能重写被标示为final的方法；
 - 如果不能继承一个方法，则不能重写这个方法
-- 参数列表必须完全与被重写方法的相同；
 
 ### 3.3、重载的条件
 
-- 被重载的方法必须改变参数列表；
-- 被重载的方法可以改变返回类型；
+- 被重载的方法必须改变参数列表，包括参数的顺序、类型、个数等
+- 重载的方法跟返回值没有关系，因为Java识别一个方法是根据方法名加参数列表实现的，与返回值无关
 - 被重载的方法可以改变访问修饰符；
 - 被重载的方法可以声明新的或更广的检查异常；
 - 方法能够在同一个类中或者在一个子类中被重载;
@@ -2366,6 +2375,7 @@ class Overloaded {
 
 ```java			 
 public class NullArguementOverloading {
+	// 方法2和方法3两个方法并存，会报错，因为其不知道到底该调用哪个方法；
 	public static void main(String[] args) {
 		NullArguementOverloading obj = new NullArguementOverloading();
 		obj.overLoad(null); // Double array argument method.
@@ -2411,14 +2421,7 @@ public class OverridePuzzle {
 
 ## 5、重写
 
-涉及到继承这个概念中的问题，子类继承了父类的方法，但是它可能需要有不同的操作行为，就需要在子类中重写这个父类方法.父类如果将方法声明为 `final` 的就可保证所有子类的调用此方法时调用的都是父类的方法;
-
-## 6、两者的比较
-
-- 重载是一个编译期概念、重写是一个运行期间概念;
-- 重载遵循所谓"编译期绑定"，即在编译时根据参数变量的类型判断应该调用哪个方法。
-- 重写遵循所谓"运行期绑定"，即在运行的时候，根据引用变量所指向的实际对象的类型来调用方法
-- 因为在编译期已经确定调用哪个方法，所以重载并不是多态。而重写是多态。重载只是一种语言特性，是一种语法规则，与多态无关，与面向对象也无关。(注：严格来说，重载是编译时多态，即静态多态。但是，Java中提到的多态，在不特别说明的情况下都指动态多态)
+涉及到继承这个概念中的问题，子类继承了父类的方法，但是它可能需要有不同的操作行为，就需要在子类中重写这个父类方法；父类如果将方法声明为 `final` 的就可保证所有子类的调用此方法时调用的都是父类的方法；
 
 # 十、Java 序列化
 
@@ -2433,7 +2436,7 @@ JDK 1.1 中引入的一组开创性特性之一，用于作为一种将 Java 对
 - 通过 `ObjectOutputStream` 和 `ObjectInputStream` 对对象进行序列化及反序列化;
 - 虚拟机是否允许反序列化，不仅取决于类路径和功能代码是否一致，一个非常重要的一点是两个类的序列化 ID 是否一致，就是 `private static final long serialVersionUID;`
 - transient 关键字的作用是控制变量的序列化，在变量声明前加上该关键字，可以阻止该变量被序列化到文件中，在被反序列化后，transient 变量的值被设为初始值，如 int 型的是 0，对象型的是 null；
-- Java 序列化机制为了节省磁盘空间，具有特定的存储规则，当写入文件的为同一对象时，并不会再将对象的内容进行存储，而只是再次存储一份引用，上面增加的 5 字节的存储空间就是新增引用和一些控制信息的空间.反序列化时，恢复引用关系；该存储规则极大的节省了存储空间;
+- Java 序列化机制为了节省磁盘空间，具有特定的存储规则，当写入文件的为同一对象时，并不会再将对象的内容进行存储，而只是再次存储一份引用，上面增加的 5 字节的存储空间就是新增引用和一些控制信息的空间。反序列化时，恢复引用关系；该存储规则极大的节省了存储空间;
 
 ```java
 ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream("result.obj"));
@@ -2444,8 +2447,7 @@ out.flush();
 test.i = 2;
 out.writeObject(test);
 out.close();
-ObjectInputStream oin = new ObjectInputStream(new FileInputStream(
-					"result.obj"));
+ObjectInputStream oin = new ObjectInputStream(new FileInputStream("result.obj"));
 Test t1 = (Test) oin.readObject();
 Test t2 = (Test) oin.readObject();
 System.out.println(t1.i);// 1
@@ -2486,7 +2488,7 @@ private void readObject(java.io.ObjectInputStream in) throws IOException{
 
 - 为什么要写方法：`writeObject and readObject`
 
-	前面提到为了防止一个包含大量空对象的数组被序列化，为了优化存储，所以，ArrayList 使用 transient 来声明elementData作为一个集合，在序列化过程中还必须保证其中的元素可以被持久化下来，所以，通过重写writeObject 和 readObject方法的方式把其中的元素保留下来.writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中。readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
+	前面提到为了防止一个包含大量空对象的数组被序列化，为了优化存储，所以，ArrayList 使用 transient 来声明elementData作为一个集合，在序列化过程中还必须保证其中的元素可以被持久化下来，所以，通过重写writeObject 和 readObject方法的方式把其中的元素保留下来。writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中。readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
 
 ### 2.2、自定义序列化和反序列化策略
 
@@ -2530,14 +2532,13 @@ if (obj instanceof String) {
 
 `Serializable`除提供了writeObject和readObject标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve)
 
-- 2.4.1、writeReplace：序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象，该方法会返回替换后的对象.接着系统将再次调用另一个对象的 writeReplace 方法，直到该方法不再返回另一个对象为止，程序最后将调用该对象的writeObject() 方法来保存该对象的状态
-
-	- 实现了 writeReplace 的序列化类就不要再实现 writeObject 了，因为该类的 writeObject 方法就不会被调用；
+- 2.4.1、writeReplace：序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象，该方法会返回替换后的对象。接着系统将再次调用另一个对象的 writeReplace 方法，直到该方法不再返回另一个对象为止，程序最后将调用该对象的writeObject() 方法来保存该对象的状态
+	- 实现 writeReplace 的序列化类就不要再实现 writeObject 了，因为该类的 writeObject 方法就不会被调用；
 	- 实现 writeReplace 的返回对象必须是可序列化的对象；
 	- 通过 writeReplace 序列化替换的对象在反序列化中无论实现哪个方法都是无法恢复原对象的。
 	- 所以 writeObject 只和 readObject 配合使用，一旦实现了 writeReplace 在写入时进行替换就不再需要writeObject 和 readObject 了。
 
-- 2.4.2、readResolve：方法可以实现保护性复制整个对象，会紧挨着序列化类实现的 readObject() 之后被调用，该方法的返回值会代替原来反序列化的对象而原来序列化类中 readObject() 反序列化的对象将会立即丢弃.readObject()方法在序列化单例类时尤其有用，单例序列化都应该提供 readResolve() 方法，这样才可以保证反序列化的对象依然正常。
+- 2.4.2、readResolve：方法可以实现保护性复制整个对象，会紧挨着序列化类实现的 readObject() 之后被调用，该方法的返回值会代替原来反序列化的对象而原来序列化类中 readObject() 反序列化的对象将会立即丢弃。readObject()方法在序列化单例类时尤其有用，单例序列化都应该提供 readResolve() 方法，这样才可以保证反序列化的对象依然正常。
 
 ## 3、serialVersionUID
 
@@ -2555,19 +2556,19 @@ if (obj instanceof String) {
 ## 4、反序列化
 
 - 实现 Serializable 接口的对象在反序列化时不需要调用对象所在类的构造方法，完全基于字节，如果是子类继承父类的序列化，那么将调用父类的构造方法;
-- 实现 Externalizable  接口的对象在反序列化时会调用构造方法.该接口继承自 Serializable，使用该接口后基于 Serializable 接口的序列化机制就会失效，因为：
-	* Externalizable 不会主动序列化，当使用该接口时序列化的细节需要由我们自己去实现.
+- 实现 Externalizable  接口的对象在反序列化时会调用构造方法。该接口继承自 Serializable，使用该接口后基于 Serializable 接口的序列化机制就会失效，因为：
+	* Externalizable 不会主动序列化，当使用该接口时序列化的细节需要由我们自己去实现；
 	* 使用 Externalizable 主动进行序列化时当读取对象时会调用被序列化类的无参构方法去创建一个新的对象，然后再将被保存对象的字段值分别填充到新对象中。
 	* 所以 所以实现 Externalizable 接口的类必须提供一个无参 public 的构造方法，readExternal 方法必须按照与 writeExternal 方法写入值时相同的顺序和类型来读取属性值。
 
 ## 5、序列化实现对象的拷贝
 
-内存中通过字节流的拷贝是比较容易实现的.把母对象写入到一个字节流中，再从字节流中将其读出来，这样就可以创建一个新的对象了，并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
+内存中通过字节流的拷贝是比较容易实现的。把母对象写入到一个字节流中，再从字节流中将其读出来，这样就可以创建一个新的对象了，并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
 
 ```java
 public class CloneUtils {
 	@SuppressWarnings("unchecked")
-	public static <T extends Serializable> T clone(T   obj){
+	public static <T extends Serializable> T clone(T obj){
 		T cloneObj = null;
 		try {
 			//写入字节流
@@ -2654,7 +2655,7 @@ System.out.println(JSONObject.toJSON(object));// {"b"："2"，"a"："1"，"c"：
 	- 对序列化数据进行完整性校验；
 	- 针对信息泄露：使用transient标记敏感字段；
 	- 针对数据篡改：实现ObjectInputValidation接口并重写其方法；
-	- 针对整个对象伪造：通过重写ObjectInputStream的resolveClass来实现
+	- 针对整个对象伪造：通过重写ObjectInputStream的resolveClass来实现；
 
 ## 9、Java默认序列化与二进制编码
 
@@ -2679,7 +2680,11 @@ Throwable是Java中的最顶级的异常类，继承Object，实现了序列化�
 
 ### 4.1、运行时异常
 
+运行时异常只有当代码在运行时才发行的异常，编译时不需要 try catch
+
 ### 4.2、非运行时异常
+
+Java 认为 Checked 异常都是可以被处理的异常，所以 Java 程序必须显式处理 Checked 异常。如果程序没有处理 Checked 异 常，该程序在编译时就会发生错误无法编译
 
 ## 5、常见异常
 
@@ -2688,7 +2693,7 @@ Throwable是Java中的最顶级的异常类，继承Object，实现了序列化�
 - NullpointException
 - ClassCastException
 - IllegalArgumentException
-- IndexOutOfBoundException
+- IndexOutOfBoundException、ArrayIndexOutOfBoundsException
 - NumberFormatException
 - UnsupportedOperationException
 
@@ -2756,7 +2761,9 @@ public boolean returnTest(){
 	}
 }
 ```
+
 ## 1、关于try...catch...finally使用
+
 - `try、catch、finally`语句中，在如果`try`语句有`retur`语句，则返回的之后当前 try 中变量此时对应的值，此后对变量做任何的修改，都不影响 try 中 return 的返回值；
 - 如果 finally 块中有 return 语句，则 try 或 catch 中的返回语句忽略；
 - 如果 finally 块中抛出异常，则整个 try、catch、finally 块中抛出异常；
@@ -2769,8 +2776,8 @@ public boolean returnTest(){
 - finally 块中避免再次抛出异常，如果 try 或者 catch 中抛出的异常信息会被覆盖掉。
 ```java
 public static void main(String[] args) throws Exception {
-		test1();
-	}
+	test1();
+}
 public static void test1()throws Exception {
 	try{
 		int[] arr = new int[5];
@@ -2787,13 +2794,25 @@ Exception in thread "main" java.lang.ArithmeticException： / by zero
 
 ## 3、如何退出
 
-在 try 里面通过 System.exit(0) 来退出 JVM 的情况下 finally 块中的代码才不会执行。其他 return 等情况都会调用，所以在不终止 JVM 的情况下 finally 中的代码一定会执行
+在 try 里面通过 System.exit(0) 来退出 JVM 的情况下 finally 块中的代码才不会执行。其他 return 等情况都会调用，所以在不终止 JVM 的情况下 finally 中的代码一定会执行：
+```java
+public static void main(String[] args) {
+	try {
+		System.out.println("执行 try 代码块");
+		System.exit(0);
+	} catch (Exception e) {
+		System.out.println("执行 catch 代码块");
+	} finally {
+		System.out.println("执行 finally 代码块");
+	}
+}
+```
 
 ## 4、JVM中实现
 
-在编译生成的字节码中，每个方法都附带一个异常表。异常表中的每一个条目代表一个异常处理器，并且由from指针、to指针、target指针以及所捕获的异常类型构成。这些指针的值时字节码索引，用以定位字节码。
+在编译生成的字节码中，每个方法都附带一个异常表。异常表中的每一个条目代表一个异常处理器，并且由`from指针、to指针、target指针以及所捕获的异常类型`构成。这些指针的值是字节码索引，用以定位字节码。
 
-其中from指针、to指针标示了该异常处理器锁监控的范围，例如try代码块所覆盖的范围。target指针则指向异常处理器的其实位置，例如catch代码块的起始位置；
+其中`from指针、to指针`标示了该异常处理器锁监控的范围，例如try代码块所覆盖的范围。target指针则指向异常处理器的其实位置，例如catch代码块的起始位置；
 ```java
 
 public static void main(String[] args) {
@@ -2868,21 +2887,25 @@ String result = String .format("%.2f");
 ## 3、Math
 
 ```java
-double d1=-0.5;
-System.out.println("Ceil d1="+Math.ceil(d1)); // -0.0
-System.out.println("floor d1="+Math.floor(d1)); // -1.0
-System.out.println("floor d1="+Math.round(d1)); // 0
+double d1 = -0.5;
+System.out.println("Ceil d1=" + Math.ceil(d1)); // -0.0
+System.out.println("floor d1=" + Math.floor(d1)); // -1.0
+System.out.println("floor d1=" + Math.round(d1)); // 0
+System.out.println(Math.ceil(-0)); // 0.0
+System.out.println(Math.ceil(-0.0)); // -0.0
+System.out.println(Math.floor(-0)); // 0.0
+System.out.println(Math.floor(-0.0)); // -0.0
 ```
-- ceil()：该方法返回的是一个 double 类型数据;返回一个大于该参数的最小 double 值，等于某个整数，特殊情况：
+- ceil()：该方法返回的是一个 double 类型数据；返回一个大于该参数的最小 double 值，等于某个整数，特殊情况：
 	- ①.如果参数小于0且大于-1.0，则结果为-0.0；
-	- ②.如果参数数学上等于某个整数，则结果与该参数相同;如：5.0；
-	- ③.如果参数为 NaN，无穷大，正0或负0，那么结果与参数相同；
+	- ②.如果参数数学上等于某个整数，则结果与该参数相同；如：5.0；
+	- ③.如果参数为 NaN，无穷大，正0.0或负0.0，那么结果与参数相同；如果是-0，则结果是0.0
 
-	==> 特别注意：Math.ceil(d1) == -Math.floor(-d1)；
+	==> 特别注意：`Math.ceil(d1) == -Math.floor(-d1)；// true`
 
 - floor()：返回 double 类型数据，返回一个小于该参数的最大 double 值，等于某个整数
-	- ①.如果参数数学上等于某个整数，则结果与该参数相同;如：5.0；
-	- ②.如果参数为 NaN，无穷大，正0或负0，那么结果与参数相同；
+	- ①.如果参数数学上等于某个整数，则结果与该参数相同；如：5.0；
+	- ②.如果参数为 NaN，无穷大，正0.0或负0.0，那么结果与参数相同；如果是-0，则结果是0.0
 
 - round()：返回一个整数，如果参数为 float，返回 int 类型；如果参数为 double，返回 long 类型
 	`(int)Math.floor(a + 0.5f);`、`(long)Math.floor(a + 0.5d);`
@@ -2955,20 +2978,20 @@ System.out.print(String.format("%a %n"， num)); // 0x1.edd3c0bb46929p6
 System.out.print(String.format("%g %n"， num)); // 123.457
 ```
 - 可用标识符
-	- -，在最小宽度内左对齐，不可以与0标识一起使用。
-	- 0，若内容长度不足最小宽度，则在左边用0来填充。
+	- `-`，在最小宽度内左对齐，不可以与0标识一起使用。
+	- `0`，若内容长度不足最小宽度，则在左边用0来填充。
 	- `#`，对8进制和16进制，8进制前添加一个0，16进制前添加0x。
-	- +，结果总包含一个+或-号。
-	- 空格，正数前加空格，负数前加-号。
-	- ，，只用与十进制，每3位数字间用，分隔。
-	- (，若结果为负数，则用括号括住，且不显示符号。
+	- `+`，结果总包含一个+或-号。
+	- `空格`，正数前加空格，负数前加-号。
+	- `,`，只用与十进制，每3位数字间用，分隔。
+	- `(`，若结果为负数，则用括号括住，且不显示符号。
 - 可用转换符：
-	- b，布尔类型，只要实参为非false的布尔类型，均格式化为字符串true，否则为字符串false。
-	- n，平台独立的换行符， 也可通过System.getProperty("line.separator")获取。
-	- f，浮点数型(十进制)。显示9位有效数字，且会进行四舍五入。如99.99。
-	- a，浮点数型(十六进制)。
-	- e，指数类型。如9.38e+5。
-	- g，浮点数型(比%f，%a长度短些，显示6位有效数字，且会进行四舍五入)
+	- `b`，布尔类型，只要实参为非false的布尔类型，均格式化为字符串true，否则为字符串false。
+	- `n`，平台独立的换行符， 也可通过System.getProperty("line.separator")获取。
+	- `f`，浮点数型(十进制)。显示9位有效数字，且会进行四舍五入。如99.99。
+	- `a`，浮点数型(十六进制)。
+	- `e`，指数类型。如9.38e+5。
+	- `g`，浮点数型(比%f，%a长度短些，显示6位有效数字，且会进行四舍五入)
 
 # 十五、数组
 
@@ -2976,7 +2999,7 @@ System.out.print(String.format("%g %n"， num)); // 123.457
 
 - 什么是对象：
 
-	语言层面：对象是根据某个类创建出来的一个实例，表示某类事物中一个具体的个体.对象具有各种属性，并且具有一些特定的行为计算机层面：对象就是内存中的一个内存块，在这个内存块封装了一些数据，也就是类中定义的各个属性
+	语言层面：对象是根据某个类创建出来的一个实例，表示某类事物中一个具体的个体。对象具有各种属性，并且具有一些特定的行为计算机层面：对象就是内存中的一个内存块，在这个内存块封装了一些数据，也就是类中定义的各个属性
 
 - 数组：
 
@@ -2992,7 +3015,7 @@ System.out.print(String.format("%g %n"， num)); // 123.457
 	a.toString();
 	```
 
-这基本上可以认定，java中的数组也是对象，它具有java中其他对象的一些基本特点：封装了一些数据，可以访问属性，也可以调用方法.所以：Java数组是对象
+这基本上可以认定，java中的数组也是对象，它具有java中其他对象的一些基本特点：封装了一些数据，可以访问属性，也可以调用方法。所以：Java数组是对象
 
 而在C++中，数组虽然封装了数据，但数组名只是一个指针，指向数组中的首个元素，既没有属性，也没有方法可以调用；所以 C++中的数组不是对象，只是一个数据的集合，而不能当做对象来使用
 
@@ -3297,7 +3320,7 @@ Java 枚举类比较使用 == 或者 equals()都一样，因为枚举类 Enum �
 
 ## 2、枚举类本质
 
-枚举类本质是通过普通类来实现的，只是编译器进行了相应的处理，每个枚举类编译之后的字节码实质都是继承自`java.lang.Enum`的枚举类类型同名普通类.而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象，所有枚举常量都通过静态代码块进行初始化实例赋值.
+枚举类本质是通过普通类来实现的，只是编译器进行了相应的处理，每个枚举类编译之后的字节码实质都是继承自`java.lang.Enum`的枚举类类型同名普通类。而每个枚举常量实质是一个枚举类型同名普通类的静态常量对象，所有枚举常量都通过静态代码块进行初始化实例赋值.
 
 ```java
 public enum Status{
@@ -3536,21 +3559,22 @@ public class switchDemoString{
 	- static 修饰的方法是类的方法，而抽象方法还没被实现；
 	- native 是本地方法，不是由 Java 来实现的，
 - （8）abstract 类中定义的抽象方法必须在具体的子类中实现，所以不能有抽象构造方法或抽象静态方法；
+- （9）抽象类中可以定义构造器
 
 ## 2、接口
 
-接口本身就不是类，在软件工程中，接口泛指供别人调用的方法或者函数，类使用 interface Demo{} 修饰
+接口本身就不是类，在软件工程中，接口泛指供别人调用的方法或者函数，类使用 `interface` 修饰
 
-接口是用来建立类与类之间的协议，它所提供的只是一种形式，而没有具体的实现；实现该接口的实现类必须要实现该接口的所有方法，通过使用 implements 关键字
+接口是用来建立类与类之间的协议，它所提供的只是一种形式，而没有具体的实现；实现该接口的实现类必须要实现该接口的所有方法，通过使用 `implements` 关键字
 
 接口是抽象类的延伸，Java 中是不能多继承的，子类只能有一个父类；但是接口不同，一个类可以实现多个接口，接口之间可以没有任何联系；
 
 ### 2.1、接口使用注意事项
 
-- （1）接口之间也可以继承，但只能是接口继承接口，接口也不能实现接口；抽象类不能继承接口，只能是使用实现；接口之间可以是继承关系，类- （抽象类）与接口是实现关系；**一个接口可以继承多个接口**
-- （2）接口中的所有方法默认都是 public abstract 修饰的;接口中不能有静态代码块和静态方法；		
-- （3）接口中可以定义"成员变量"，该成员变量会自动被 public static final 修饰，且必须赋值，访问直接使用接口名变量名称；
-- （4）接口中不存在已经实现的方法，所有方法都是抽象的;实现接口的非抽象类必须实现接口所有的方法抽象类可以不用实现；
+- （1）接口之间也可以继承，但只能是接口继承接口，接口也不能实现接口；抽象类不能继承接口，只能是使用实现；接口之间可以是继承关系，类-（抽象类）与接口是实现关系；**一个接口可以继承多个接口**
+- （2）接口中的所有方法默认都是 `public abstract` 修饰的；接口中不能有静态代码块和静态方法；		
+- （3）接口中可以定义"成员变量"，该成员变量会自动被 `public static final` 修饰，且必须赋值，访问直接使用接口名变量名称；
+- （4）接口中不存在已经实现的方法，所有方法都是抽象的；实现接口的非抽象类必须实现接口所有的方法抽象类可以不用实现；（JDK8之后，接口中包含默认方法的实现）
 - （5）接口不能直接实例化，但可以声明接口变量引用指向接口的实现类对象使用 instanceof 检查一个对象实现了某个特点接口；
 - （6）如果一个类中实现了两个接口，且两个接口有同名方法，那么默认情况下实现的是第一个接口的方法；
 
@@ -3592,7 +3616,7 @@ public interface A{
 空接口一般是作为一个标记接口，标记某些功能；Cloneable、Serializable这一类接口表示某个标志，实现 Cloneable 表示该类可以被克隆，实现 Serializable 表示该类可以被序列化;
 
 - Serializable 序列化
-- RandomAccess：List 实现所使用的标记接口,用来表明其支持快速(通常是固定时间)随机访问，此接口的主要目的是允许一般的算法更改其行为,从而在将其应用到随机或连续访问列表时能提供良好的性能
+- RandomAccess：List 实现所使用的标记接口，用来表明其支持快速(通常是固定时间)随机访问，此接口的主要目的是允许一般的算法更改其行为，从而在将其应用到随机或连续访问列表时能提供良好的性能
 - Cloneable 克隆
 - EventListener 事件监听
 
@@ -3664,7 +3688,18 @@ public class SubClassDemo extends DefaultMethodDemo1 implements DefaultMethodDem
 	@Override
 	public void add() {}
 }
-// 3.抽象类、接口存在同样的签名方法，抽象类有实现体但是不是 public 修饰的，编译报错.但如果子类实现对应的方法，则编译通过
+// 3.抽象类、接口存在同样的签名方法，抽象类有实现体但是不是 public 修饰的，编译报错
+// 可以通过如果子类实现对应的方法  或者  将抽象类中同名方法缩小访问权限，设置其权限为 private
+interface InterfaceClass1 {
+	default int add(int a, int b) {return a + b;}
+}
+abstract class AbsClass2 {
+	int add(int a, int b) {return a + b;}
+}
+class implClass extends AbsClass2 implements InterfaceClass1 {
+	@Override
+	public int add(int a, int b) {return a + b;}
+}
 // 4.一个声明在类里面的方法优先于任何默认方法，优先选取最具体的实现;
 public interface A {
 	default void hello(){System.out.println("Interface A hello ： A");}
@@ -3826,12 +3861,12 @@ public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.l
 	- `Method`：方法相关类，`getDeclaredMethods();`，`method.invoke()`方法执行时，如果第一个参数为 null，则表示反射的方法为静态方法
 	- `Constructor`： 构造器相关类，`getDeclaredConstructors()`;
 
-	如果需要访问私有的，则需setAccessible(true);
+	如果需要访问私有的，则需`setAccessible(true);`
 
 - 反射机制性能问题：反射会降低程序的效率，如果在开发中确实需要使用到反射，可以将setAccessible设为 true ：即取消Java语言访问检查;
 
 - 反射操作泛型：
-	- ①、Java 采用泛型擦除的机制来引入泛型.Java中的泛型仅仅是给编译器使用的，确保数据的安全性和免去强制类型转换的麻烦；	但是一旦编译完成，所有和泛型有关的类型全部擦除;
+	- ①、Java 采用泛型擦除的机制来引入泛型。Java中的泛型仅仅是给编译器使用的，确保数据的安全性和免去强制类型转换的麻烦；但是一旦编译完成，所有和泛型有关的类型全部擦除;
 	- ②、为了通过反射操作泛型，Java有 `ParameterizedType、GenericArrayType、TypeVariable、WildcardType`几种类型来代表不能被归一到Class类中的类型但是又和原始类型齐名的类型；
 
 		- `Type`是Java编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型
@@ -3842,7 +3877,7 @@ public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.l
 
 - 反射操作注解
 
-	```
+	```java
 	getAnnotation(Class<A> annotationClass);
 	getAnnotations();
 	```
@@ -3851,7 +3886,7 @@ public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.l
 
 	- ①、使用反射调用类的main方法：
 		
-		```
+		```java
 		Method method = Demo.class.getMethod("main"，String[].class);
 		method.invoke(null， (Object)new String[]{"111"，"222"，"333"});
 		```
@@ -3921,7 +3956,7 @@ public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.l
 
 ```java
 JavaCompiler compile = ToolProvider.getSystemJavaCompiler();
-int result = compile.run(null， null， null， "F：/class/HelloWorld.java");
+int result = compile.run(null， null， null， "F:/class/HelloWorld.java");
 /*
 * run(InputStream in， OutputStream out， OutputStream err， String... arguments);
 * 第一个参数： 为Java编译器提供参数;
@@ -3984,7 +4019,7 @@ int result = compile.run(null， null， null， "F：/class/HelloWorld.java");
 - `Comparator` 是一个专用的比较器，当这个对象不支持自比较或者自比较函数不能满足你的要求时，你可以写一个比较器来完成两个对象之间大小的比较；
 - 可以说一个是自已完成比较，一个是外部程序实现比较的差别而已
 - 用 `Comparator` 是策略模式(strategy design pattern)，就是不改变对象自身；Comparable 而用一个策略对象(strategy object)来改变它的行为
-- 有时在实现 `Comparator` 接口时，并没有实现equals方法，可程序并没有报错.原因是实现该接口的类也是Object类的子类，而Object类已经实现了equals方法
+- 有时在实现 `Comparator` 接口时，并没有实现equals方法，可程序并没有报错。原因是实现该接口的类也是Object类的子类，而Object类已经实现了equals方法
 
 ## 2、Comparable
 
@@ -4069,8 +4104,7 @@ System.out.println(al);
 ## 4、如何选择
 
 - 一个类如果实现 Comparable 接口，那么他就具有了可比较性，意思就是说它的实例之间相互直接可以进行比较
-- 通常在两种情况下会定义一个实现 Comparator 类可以把一个Comparator的子类传递给Collections.sort()、Arrays.sort()等方法，用于自定义排序规则。用于初始化特定的数据结构。常见的有可排序的Set(TreeSet)和可排序的Map(TreeMap);
-
+- 通常在两种情况下会定义一个实现 Comparator 类可以把一个Comparator的子类传递给`Collections.sort()`、`Arrays.sort()`等方法，用于自定义排序规则。用于初始化特定的数据结构。常见的有可排序的Set(TreeSet)和可排序的Map(TreeMap);
 
 # 二十一、Jar包
 
@@ -4384,7 +4418,6 @@ Java SPI 实际上是`基于接口的编程＋策略模式＋配置文件`组合
 比如Mysql的驱动类：
 
 ![](image/mysql-spi接口.png)
-
 
 ## 4、示例
 

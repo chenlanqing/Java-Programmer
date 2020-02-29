@@ -41,7 +41,7 @@ clone()可以产生一个相同的类并且返回给调用者
 
 ## 1.2、clone()工作原理
 
-Object将clone()作为一个本地方法来实现，这意味着它的代码存放在本地的库中；当代码执行的时候，将会检查调用对象的类(或者父类)是否实现了`java.lang.Cloneable`接口(Object类不实现Cloneable)；如果没有实现这个接口，clone()将会抛出一个检查异常：`java.lang.Clon eNotSupportedException`，如果实现了这个接口，clone()会创建一个新的对象，并将原来对象的内容复制到新对象，最后返回这个新对象的引用	
+Object将clone()作为一个本地方法来实现，这意味着它的代码存放在本地的库中；当代码执行的时候，将会检查调用对象的类(或者父类)是否实现了`java.lang.Cloneable`接口(Object类不实现Cloneable)；如果没有实现这个接口，clone()将会抛出一个检查异常：`java.lang.CloneNotSupportedException`，如果实现了这个接口，clone()会创建一个新的对象，并将原来对象的内容复制到新对象，最后返回这个新对象的引用	
 ```java
 public class CloneDemo implements Cloneable {
 	int x;
@@ -49,9 +49,9 @@ public class CloneDemo implements Cloneable {
 	public static void main(String[] args) throws CloneNotSupportedException {
 		CloneDemo cd = new CloneDemo();
 		cd.x = 5;
-		System.out.printf("cd.x = %d%n"， cd.x);
+		System.out.printf("cd.x = %d%n", cd.x);
 		CloneDemo cd2 = (CloneDemo) cd.clone();
-		System.out.printf("cd2.x = %d%n"， cd2.x);
+		System.out.printf("cd2.x = %d%n", cd2.x);
 	}
 }
 ```
@@ -61,10 +61,9 @@ public class CloneDemo implements Cloneable {
 调用clone()的代码是位于被克隆的类(即CloneDemo类)里面的，所以就不需要覆盖clone()了。但是，如果调用别的类中的clone()，就需要覆盖clone()了。否则，将会看到“clone在Object中是被保护的”
 
 ```java
-// 提示：因为clone()在Object中的权限是protected	
 class Data implements Cloneable {
 	int x;
-
+	// 如果这里没有实现clone方法，代码编译报错，提示信息：因为clone()在Object中的权限是protected	
 	@Override
 	public Object clone() throws CloneNotSupportedException {
 		return super.clone();
@@ -75,9 +74,9 @@ public class CloneDemo {
 	public static void main(String[] args) throws CloneNotSupportedException {
 		Data data = new Data();
 		data.x = 5;
-		System.out.printf("data.x = %d%n"， data.x);
+		System.out.printf("data.x = %d%n", data.x);
 		Data data2 = (Data) data.clone();
-		System.out.printf("data2.x = %d%n"， data2.x);
+		System.out.printf("data2.x = %d%n", data2.x);
 	}
 }
 ```
@@ -137,16 +136,12 @@ public class Employee implements Cloneable {
 public class CloneDemo {
 	public static void main(String[] args) throws CloneNotSupportedException {
 		Employee e = new Employee("John Doe"， 49， new Address("Denver"));
-		System.out.printf("%s： %d： %s%n"， e.getName()， e.getAge()， e
-				.getAddress().getCity());
+		System.out.printf("%s： %d： %s%n"， e.getName()， e.getAge()， e.getAddress().getCity());
 		Employee e2 = (Employee) e.clone();
-		System.out.printf("%s： %d： %s%n"， e2.getName()， e2.getAge()， e2
-				.getAddress().getCity());
+		System.out.printf("%s： %d： %s%n"， e2.getName()， e2.getAge()， e2.getAddress().getCity());
 		e.getAddress().setCity("Chicago");
-		System.out.printf("%s： %d： %s%n"， e.getName()， e.getAge()， e
-				.getAddress().getCity());
-		System.out.printf("%s： %d： %s%n"， e2.getName()， e2.getAge()， e2
-				.getAddress().getCity());
+		System.out.printf("%s： %d： %s%n"， e.getName()， e.getAge()， e.getAddress().getCity());
+		System.out.printf("%s： %d： %s%n"， e2.getName()， e2.getAge()， e2.getAddress().getCity());
 	}
 }	
 ```
@@ -185,6 +180,7 @@ public class CloneUtils {
 	}
 }
 ```
+
 ## 1.7、String的clone的特殊性以及StringBuilder和StringBuffer
 
 - 由于基本数据类型都能自动实现深度clone，引用类型默认实现的是浅度clone；而String是引用类型的一个特例，我们可以和操作基本数据类型一样认为其实现了深度 clone（实质是浅克隆，切记只是一个假象）。由于 String 是不可变类，对于 String 类中的很多修改操作都是通过新new对象复制处理的，所以当我们修改 clone 前后对象里面 String 属性的值时其实都是属性引用的重新指向操作，自然对 clone 前后对象里 String 属性是没有相互影响的，类似于深度克隆；所以虽然他是引用类型而且我们在深度克隆时无法调用其 clone 方法，但是其不影响我们深度克隆的使用；
@@ -234,75 +230,97 @@ public static <T extends Serializable> List<T> deepCopy(List<T> src) throws IOEx
 ==> 集合中实体类实现 Cloneable 接口，拷贝时逐个拷贝克隆：destList.add((InfoBean)srcLisdt.get(index).clone());
 
 # 2、Object 中 equals()方法
+
 ```java
 public boolean equals(Object obj){
 	return (this == obj);
 }
 ```
-基本原则：一致性、传递性、对称性、自反性、【对于任意的非空引用值x，x.equals(null)必须返回假】
+基本原则：一致性、传递性、对称性、自反性、【对于任意的非空引用值x，x.equals(null)必须返回false】
 
-- **2.1、用途：用来检查一个对象与调用这个equals()的这个对象是否相等;**
+**特别注意：**equals方法里的参数必须是Object类型，不要写为具体的对象类型，重写是必须加上`@Override`注解；
 
-	对象都拥有标识(内存地址)和状态(数据)，默认实现就是使用"=="比较，即比较两个对象的内存地址
+### 2.1、用途
+
+用来检查一个对象与调用这个equals()的这个对象是否相等
+
+对象都拥有标识(内存地址)和状态(数据)，默认实现就是使用"=="比较，即比较两个对象的内存地址
 	
-- **2.2、为什么不用“==”运算符来判断两个对象是否相等呢？**
-	- 虽然“==”运算符可以比较两个数据是否相等，但是要来比较对象的话，恐怕达不到预期的结果。就是说，“==”通过是否引用了同一个对象来判断两个对象是否相等，这被称为“引用相等”。这个运算符不能通过比较两个对象的内容来判断它们是不是逻辑上的相等。	
-	- 使用Object的equals()方法比较的依据：调用它的对象和传入的对象的引用是否相等；也就是说，默认的equals()方法进行的是引用比较，如果相同引用返回true，否则返回false;
+### 2.2、为什么不用“==”运算符来判断两个对象是否相等呢
+
+- 虽然“==”运算符可以比较两个数据是否相等，但是要来比较对象的话，恐怕达不到预期的结果。就是说，“==”通过是否引用了同一个对象来判断两个对象是否相等，这被称为“引用相等”。这个运算符不能通过比较两个对象的内容来判断它们是不是逻辑上的相等。	
+
+- 使用Object的equals()方法比较的依据：调用它的对象和传入的对象的引用是否相等；也就是说，默认的equals()方法进行的是引用比较，如果相同引用返回true，否则返回false;
 	
-- **2.3、equals()和继承：在重写 equals的时候推荐使用getClass进行类型判断**
-	```java
-	class Employee {
-		private String name;
-		private int age;
+### 2.3、equals()和继承
 
-		Employee(String name， int age) {
-			this.name = name;
-			this.age = age;
-		}
+在重写 equals的时候推荐使用getClass进行类型判断
+```java
+class Employee {
+	private String name;
+	private int age;
 
-		@Override
-		public boolean equals(Object o) {
-			if (!(o instanceof Employee))
-				return false;
-
-			Employee e = (Employee) o;
-			return e.getName().equals(name) && e.getAge() == age;
-		}
-
-		String getName() {
-			return name;
-		}
-
-		int getAge() {
-			return age;
-		}
+	Employee(String name， int age) {
+		this.name = name;
+		this.age = age;
 	}
-	```
-	当Employee类被继承的时候，上述代码就存在问题：假如SaleRep类继承了Employee类，这个类中也有基于字符串类型的变量，equals()可以对其进行比较。假设你创建的Employee对象和SaleRep对象都有相同的“名字”和“年龄”。但是，SaleRep中还是添加了一些内容;会违背传递性原则
 
-- **2.4、在 java 中进行比较，我们需要根据比较的类型来选择合适的比较方式：**
+	@Override
+	public boolean equals(Object o) {
+		if( o == this) return true;
+		if (!(o instanceof Employee))
+			return false;
 
-	- 对象域，使用 equals 方法;
-	- 类型安全的枚举，使用 equals 或==;
-	- 可能为 null 的对象域 ： 使用 == 和 equals;
-	- 数组域 ： 使用 Arrays.equals
-	- 除 float 和 double 外的原始数据类型 ： 使用 == 
-	- float 类型： 使用 Float.foatToIntBits 转换成 int 类型，然后使用==，float 重写的equals()：
-		- ①.当且仅当参数不是 null 而是 Float 对象时，且表示 Float 对象的值相同，结果为 true，
-		- ②.当且仅当将方法 foatToIntBits 应用于两个值所返回的 int 值相同时，才认为两个值相同;
-		- ③.注意：在大多数情况下，对于 Float 的两个实例 f1 和 f2，当且仅当 f1.floatValue() == f2.floatValue() 为 true 时，f1.equals(f2)的值才为 true ，但是存在两种例外情况：
-			- 如果 f1 和 f2 都表示 Float.NAN，那么即使 Float.NaN == Float.NaN 的值为 false， equals方法也返回 true;
-			- 如果 f1 表示 +0.0f， 而 f2 表示 -0.0f，或相反，那么即使 0.0f == -0.0f 的值为 true，equals方法也返回 false<br>
-		这样情况下使得哈希表得意正确操作
-	- double 类型： 使用 Double.doubleToLongBit 转换成 long 类型，然后使用==。
-		理由同上
+		Employee e = (Employee) o;
+		return e.getName().equals(name) && e.getAge() == age;
+	}
+
+	String getName() {
+		return name;
+	}
+
+	int getAge() {
+		return age;
+	}
+}
+```
+当Employee类被继承的时候，上述代码就存在问题：假如SaleRep类继承了Employee类，这个类中也有基于字符串类型的变量，equals()可以对其进行比较。假设你创建的Employee对象和SaleRep对象都有相同的“名字”和“年龄”。但是，SaleRep中还是添加了一些内容;会违背传递性原则
+
+### 2.4、比较方式的选择
+
+在 java 中进行比较，我们需要根据比较的类型来选择合适的比较方式：
+- 对象域，使用 equals 方法;
+- 类型安全的枚举，使用 equals 或==;
+- 可能为 null 的对象域 ： 使用 == 和 equals;
+- 数组域 ： 使用 `Arrays.equals`
+- 除 float 和 double 外的原始数据类型： 使用 == 
+- float 类型： 使用 Float.foatToIntBits 转换成 int 类型，然后使用==，float 重写的equals()：
+	- ①.当且仅当参数不是 null 而是 Float 对象时，且表示 Float 对象的值相同，结果为 true，
+	- ②.当且仅当将方法 foatToIntBits 应用于两个值所返回的 int 值相同时，才认为两个值相同;
+	- ③.注意：在大多数情况下，对于 Float 的两个实例 f1 和 f2，当且仅当 f1.floatValue() == f2.floatValue() 为 true 时，f1.equals(f2)的值才为 true ，但是存在两种例外情况：
+		- 如果 f1 和 f2 都表示 Float.NAN，那么即使 Float.NaN == Float.NaN 的值为 false， equals方法也返回 true;
+		- 如果 f1 表示 +0.0f， 而 f2 表示 -0.0f，或相反，那么即使 0.0f == -0.0f 的值为 true，equals方法也返回 false<br>
+	这样情况下使得哈希表得意正确操作
+- double 类型： 使用 Double.doubleToLongBit 转换成 long 类型，然后使用==。
+	理由同上
+
+### 2.5、equals重写最佳实践
+
+- 使用`==`操作符检查"参数是否为这个对象的引用"；
+- 使用 `instanceof` 操作符检查"参数是否为正确的类型"；
+- 对于类中的关键属性，检查参数传入对象 的属性是否与之相匹配；
+- 编写完 equals 方法后，问自己它是否满足对称性、传递性、一致性；
+- 重写 equals 时 总是要重写 hashCode；
+- 不要将 equals 方法参数中的 Object 对象替换为其他的类型，在重写时不要忘掉 `@Override` 注解。
 
 # 3、hashCode()方法
 
-- 用途： hashCode()方法返回给调用者此对象的哈希码(其值由一个hash函数计算得来)；这个方法通常用在基于hash的集合类中，像java.util.HashMap，java.until.HashSet和java.util.Hashtable
+`public native int hashCode();`
+
+- 用途： hashCode()方法返回给调用者此对象的哈希码(其值由一个hash函数计算得来)；这个方法通常用在基于hash的集合类中，像`java.util.HashMap`，`java.until.HashSet`和`java.util.Hashtable`
 - 在覆盖equals()时，同时覆盖hashCode()：保证对象的功能兼容于hash集合
 - hashCode()方法的规则：
-	- 在同一个Java程序中，对一个相同的对象，无论调用多少次hashCode()，hashCode()返回的整数必须相同，因此必须保证equals()方法比较的内容不会更改.但不必在另一个相同的Java程序中也保证返回值相同;
+	- 在同一个Java程序中，对一个相同的对象，无论调用多少次hashCode()，hashCode()返回的整数必须相同，因此必须保证equals()方法比较的内容不会更改，但不必在另一个相同的Java程序中也保证返回值相同;
 	- 如果两个对象用equals()方法比较的结果是相同的，那么这两个对象调用hashCode()应该返回相同的整数值
 
 		假如两个Java对象A和B，A和B相等（eqauls结果为true），但A和B的哈希码不同，则A和B存入HashMap时的哈希码计算得到的HashMap内部数组位置索引可能不同，那么A和B很有可能允许同时存入HashMap，显然相等/相同的元素是不允许同时存入HashMap，HashMap不允许存放重复元素
