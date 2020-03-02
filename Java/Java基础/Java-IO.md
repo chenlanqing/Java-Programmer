@@ -6,7 +6,7 @@
 
 - **同步**：如果有多个任务或者事件要发生，这些任务或者事件必须逐个地进行，一个事件或者任务的执行会导致整个流程的暂时等待，这些事件没有办法并发地执行；
 
-- **异步**：如果有多个任务或者事件发生，这些事件可以并发地执行，一个事件或者任务的执行不会导致整个流程的暂时等待;
+- **异步**：如果有多个任务或者事件发生，这些事件可以并发地执行，一个事件或者任务的执行不会导致整个流程的暂时等待；
 
 ## 2、阻塞与非阻塞
 
@@ -22,7 +22,7 @@
 
 - **完整的IO请求操作包括两个阶段**：
     - 查看数据是否就绪；
-    - 进行数据拷贝(内核将数据拷贝到用户线程)；
+    - 进行数据拷贝（内核将数据拷贝到用户线程）；
 
 - **阻塞(blocking IO)和非阻塞(non-blocking IO)的区别**：其区别就在于第一个阶段，如果数据没有就绪，在查看数据是否就绪的过程中是一直等待，还是直接返回一个标志信息。
 
@@ -107,7 +107,7 @@ I/O多路复用模型会用到`select、poll、epoll`函数，这几个函数也
     - 需要维护一个用来存放大量fd的数据结构，这样会使得用户空间和内核空间在传递该结构时复制开销大
 
 **（2）poll：**
-- 基本原理：poll本质上和select没有区别，它将用户传入的数组拷贝到内核空间，然后查询每个fd对应的设备状态，如果设备就绪则在设备等待队列中加入一项并继续遍历，如果遍历完所有fd后没有发现就绪设备，则挂起当前进程，直到设备就绪或者主动超时，被唤醒后它又要再次遍历fd。这个过程经历了多次无谓的遍历
+- 基本原理：poll本质上和select没有区别，它将用户传入的数据拷贝到内核空间，然后查询每个fd对应的设备状态，如果设备就绪则在设备等待队列中加入一项并继续遍历，如果遍历完所有fd后没有发现就绪设备，则挂起当前进程，直到设备就绪或者主动超时，被唤醒后它又要再次遍历fd。这个过程经历了多次无谓的遍历
 
 - 它没有最大连接数的限制，原因是它是基于链表来存储的，但是同样有一个缺点：
     - 大量的fd的数组被整体复制于用户态和内核地址空间之间，而不管这样的复制是不是有意义；
@@ -256,9 +256,9 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 
 ![](image/Java-BIO通信模型图.png)
 
-- 采用BIO通信模型的服务端，由一个独立的 Acceptor现场负责监听客户端连接，它接收到客户端连接请求之后为每个客户端创建一个新的线程进行链路处理，处理完成后，通过输出流返回给应答给客户端，线程销毁.这是典型的一请求一应答通信模型。
+- 采用BIO通信模型的服务端，由一个独立的 Acceptor现场负责监听客户端连接，它接收到客户端连接请求之后为每个客户端创建一个新的线程进行链路处理，处理完成后，通过输出流返回给应答给客户端，线程销毁。这是典型的一请求一应答通信模型。
 
-- 该模型最大的问题是缺乏弹性伸缩能力，当客户端并发访问量增加后，服务端的线程个数和客户端并发访问数呈`1:1`的正比关系.由于线程是Java虚拟机的非常宝贵的系统资源，当线程数膨胀后，系统的性能急剧下降，系统可能会发生线程堆栈溢出，创建线程失败等。
+- 该模型最大的问题是缺乏弹性伸缩能力，当客户端并发访问量增加后，服务端的线程个数和客户端并发访问数呈`1:1`的正比关系。由于线程是Java虚拟机的非常宝贵的系统资源，当线程数膨胀后，系统的性能急剧下降，系统可能会发生线程堆栈溢出，创建线程失败等。
 
 ### 7.2、伪异步IO
 
@@ -463,7 +463,7 @@ Reader：类似 Writer
 
 **6.3、System.out：**
 
-System.out 是一个 PrintStream 流.System.out一般会把你写到其中的数据输出到控制台上
+System.out 是一个 PrintStream 流。System.out一般会把你写到其中的数据输出到控制台上
 
 **6.4、System.err：**
 
@@ -491,7 +491,7 @@ System.in、System.out、System.err这3个流是java.lang.System类中的静态�
 
 **7.4、组合流：将流整合起来以便实现更高级的输入和输出操作**
 
-`InputStream input = new BufferedInputStream(new FileInputStream("c：\\data\\input-file.txt"));`
+`InputStream input = new BufferedInputStream(new FileInputStream("c:\\data\\input-file.txt"));`
 
 一个流要么是输入流，要么是输出流，不可能同时是输入流、输出流。因为`InputStream`和`OutputStream`是抽象类，而Java中对于类只能单继承，不能继承多个类。
 
@@ -506,7 +506,6 @@ System.in、System.out、System.err这3个流是java.lang.System类中的静态�
 - 整合 Reader 与 InputStream：<br>
 如果你有一个InputStream输入流，并且想从其中读取字符，可以把这个InputStream包装到InputStreamReader中Reader reader = new InputStreamReader(inputStream);在构造函数中可以指定解码方式
   
-
 **8.2、Writer类：是Java IO中所有Writer的基类，子类包括BufferedWriter和PrintWriter等等**
 
 - 整合 Writer 和 OutputStream：
@@ -646,7 +645,7 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 	- ③、从 Buffer 中读取数据
 	- ④、调用clear()方法或者compact()方法
 
-- 当向buffer写入数据时，buffer会记录下写了多少数据。一旦要读取数据，需要通过flip()方法将Buffer从写模式切换到读模式;在读模式下，可以读取之前写入到buffer的所有数据；
+- 当向buffer写入数据时，buffer会记录下写了多少数据。一旦要读取数据，需要通过flip()方法将Buffer从写模式切换到读模式；在读模式下，可以读取之前写入到buffer的所有数据；
 
 - 一旦读完了所有的数据，就需要清空缓冲区，让它可以再次被写入。有两种方式能清空缓冲区：调用clear()或compact()方法。clear()方法会清空整个缓冲区。compact()方法只会清除已经读过的数据。任何未读的数据都被移到缓冲区的起始处，新写入的数据将放到缓冲区未读数据的后面；
 
@@ -654,10 +653,10 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 	- （1）缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存。这块内存被包装成 NIO Buffer 对象，并提供了一组方法，用来方便的访问该块内存
 	- （2）Buffer 对象的四个属性：
 		capacity、position、limit、mark；其中position和limit的含义取决于 Buffer 处在读模式还是写模式。不管Buffer处在什么模式，capacity的含义总是一样的
-	- （3）capacity：最大存储数据的容量，一旦声明不能改变，且不会为负数；作为一个内存块，Buffer 有一个固定的大小值，也叫"capacity".你只能往里写capacity个 byte、long，char 等类型；一旦Buffer满了，需要将其清空(通过读数据或者清除数据)才能继续写数据往里写数据
+	- （3）capacity：最大存储数据的容量，一旦声明不能改变，且不会为负数；作为一个内存块，Buffer 有一个固定的大小值，也叫"capacity"。你只能往里写capacity个 byte、long，char 等类型；一旦Buffer满了，需要将其清空(通过读数据或者清除数据)才能继续写数据往里写数据
 	- （4）position：
 		- ①、当你写数据到 Buffer 中时，position表示当前的位置，初始的position值为0，当一个 byte、long 等数据写到 Buffer 后，position会向前移动到下一个可插入数据的 Buffer 单元。position最大可为capacity – 1。永远不会大于limit
-		- ②、当读取数据时，也是从某个特定位置读.当将Buffer从写模式切换到读模式，position会被重置为0. 当从 Buffer的position处读取数据时，position向前移动到下一个可读的位置
+		- ②、当读取数据时，也是从某个特定位置读。当将Buffer从写模式切换到读模式，position会被重置为0；当从 Buffer的position处读取数据时，position向前移动到下一个可读的位置
 	- （5）limit：
 		- ①、在写模式下，Buffer 的limit表示你最多能往Buffer里写多少数据，永远不会超过capacity。写模式下，limit等于Buffer的capacity
 		- ②、当切换Buffer到读模式时，limit表示你最多能读到多少数据，当切换Buffer到读模式时，limit会被设置成写模式下的position值
@@ -692,11 +691,11 @@ Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数�
 	
 ### 3.8、clear()与compact()方法
 
-- 一旦读完Buffer中的数据，需要让Buffer准备好再次被写入.可以通过clear()或compact()方法来完成
-- 如果调用的是clear()方法，position将被设回0，limit被设置成 capacity的值.换句话说，Buffer 被清空了。Buffer 中的数据并未清除，只是这些标记告诉我们可以从哪里开始往 Buffer 里写数据
+- 一旦读完Buffer中的数据，需要让Buffer准备好再次被写入。可以通过clear()或compact()方法来完成
+- 如果调用的是clear()方法，position将被设回0，limit被设置成 capacity的值。换句话说，Buffer 被清空了。Buffer中的数据并未清除，只是这些标记告诉我们可以从哪里开始往 Buffer 里写数据；
 - 如果Buffer中有一些未读的数据，调用clear()方法，数据将“被遗忘”，意味着不再有任何标记会告诉你哪些数据被读过，哪些还没有;
 - 如果 Buffer 中仍有未读的数据，且后续还需要这些数据，但是此时想要先先写些数据，那么使用compact()方法
-- compact()方法将所有未读的数据拷贝到Buffer起始处.然后将position设到最后一个未读元素正后面.limit属性依然像clear()方法一样，设置成capacity.现在Buffer准备好写数据了，但是不会覆盖未读的数据
+- compact()方法将所有未读的数据拷贝到Buffer起始处。然后将position设到最后一个未读元素正后面。limit属性依然像clear()方法一样，设置成capacity。现在Buffer准备好写数据了，但是不会覆盖未读的数据
 
 ### 3.9、更多方法
 
@@ -808,7 +807,7 @@ Selector selector = Selector.open();
 ```java
 /**
  * 与Selector一起使用时，Channel必须处于非阻塞模式下
- * 这意味着不能将FileChannel与Selector一起使用，因为FileChannel不能切换到非阻塞模式.而套接字通道都可以
+ * 这意味着不能将FileChannel与Selector一起使用，因为FileChannel不能切换到非阻塞模式。而套接字通道都可以
 */
 channel.configureBlocking(false);
 SelectionKey key = channel.register(selector， Selectionkey.OP_READ);
@@ -1131,8 +1130,7 @@ public static void copyFileByMappedByteBuffer(String source, String dest) throws
 
 但是值得注意的是，DirectBuffer创建和销毁过程中，都会比一般的堆内存Buffer增加部分开销，通常建议用于长期使用、数据较大的场景
 
-因为DirectBuffer不在堆上，所以其参数设置大小可以用如下参数：```-XX:MaxDirectMemorySize=512M```；意味着在计算Java可以使用的内存大小的时候，不能只考虑堆的需要，还有DirectBuffer等一系列堆外因素，
-如果出现内存不足，堆外内存占用也是一种可能性；
+因为DirectBuffer不在堆上，所以其参数设置大小可以用如下参数：`-XX:MaxDirectMemorySize=512M`；意味着在计算Java可以使用的内存大小的时候，不能只考虑堆的需要，还有DirectBuffer等一系列堆外因素，如果出现内存不足，堆外内存占用也是一种可能性；
 
 另外，大多数垃圾收集过程中，都不会主动收集DirectBuffer，它的垃圾收集过程，是基于Cleaner和幻象引用机制，其本身不是public类型，内部实现了一个Deallocator负责销毁的逻辑，对它的销毁往往需要到FullGC的时候，使用不当的话很容易引起OOM
 

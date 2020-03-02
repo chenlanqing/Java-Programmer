@@ -74,10 +74,10 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 ## 2、概述
 
 - 在同一个时间点只能被一个线程持有，而可重入即可以被单个线程多次获取。主要是修改state值，重入多少次，就得释放多少次锁，保证释放之后state变为0；
-- ReentrantLock 分为"公平锁"和"非公平锁"，区别在于获取锁的机制上是否公平.
+- ReentrantLock 分为"公平锁"和"非公平锁"，区别在于获取锁的机制上是否公平；
 - ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程。"公平锁"的机制下，线程依次排队获取；而"非公平锁"在锁是可获取状态时，不管自己是不是在队列的开头都会获取锁。
-- ReentrantLock中，包含了Sync对象.而且，Sync 是 AQS 的子类;更重要的是，Sync 有两个子类 FairSync（公平锁）和	NonFairSync（非公平锁）；ReentrantLock 是一个独占锁，至于它到底是公平锁还是非公平锁，就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"；
-- 提供了一个Condition类，可以分组唤醒需要唤醒的线程.
+- ReentrantLock中，包含了Sync对象。而且Sync 是 AQS 的子类，其中Sync 有两个子类 FairSync（公平锁）和	NonFairSync（非公平锁）；ReentrantLock 是一个独占锁，至于它到底是公平锁还是非公平锁，就取决于sync对象是"FairSync的实例"还是"NonFairSync的实例"；默认是非公平锁
+- 提供了一个Condition类，可以分组唤醒需要唤醒的线程。
 - 公平性、可重入、可中断、超时机制；
 - Sync为ReentrantLock里面的一个内部类，它继承AQS（[AbstractQueuedSynchronizer](AbstractQueuedSynchronizer.md)），它有两个子类：公平锁FairSync和非公平锁NonfairSync。ReentrantLock里面大部分的功能都是委托给Sync来实现的，同时Sync内部定义了lock()抽象方法由其子类去实现，默认实现了nonfairTryAcquire(int acquires)方法，可以看出它是非公平锁的默认实现方式。
 

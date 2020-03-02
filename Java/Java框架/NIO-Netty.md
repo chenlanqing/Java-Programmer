@@ -11,7 +11,7 @@ Netty是一个异步事件驱动的网络应用框架，用于快速开发可维
 
 - NIO 类库和API繁杂，使用麻烦，你需要熟练掌握 Selector、ServerSocketChannel、SocketChannel、ByteBuffer等；
 - 需要具备其他的额外技能做铺垫，例如熟悉Java多线程编程.这时因为NIO编程设计到Reactor模式，你必须对多线程和网络编程非常熟悉，才能编写出高质量的NIO程序；
-- 可靠性能力补齐，工作量和难度非常大。例如客户端面临断连重连、网络闪断、半包读写、失败缓存、网络拥塞和异常码流的处理问题.NIO 编程的特点是功能开发相对容易、但是可靠性能力补齐的工作量和难度都非常大；
+- 可靠性能力补齐，工作量和难度非常大。例如客户端面临断连重连、网络闪断、半包读写、失败缓存、网络拥塞和异常码流的处理问题。NIO 编程的特点是功能开发相对容易、但是可靠性能力补齐的工作量和难度都非常大；
 - JDK NIO的bug，如臭名昭著的 epoll bug会导致Selector空轮询，最终导致CPU 100%；
 
 ## 2、Netty 的特点
@@ -192,8 +192,7 @@ Netty服务端启动过程：
 - （1）创建ServerBootstrap实例：ServerBootstrap是Netty服务器的启动辅助类，它提供了一系列的方法用于服务端启动相关的参数；该类使用了Builder模式
 - （2）设置并绑定Reactor线程池：Netty的Reactor线程池是EventLoopGroup，它实际就是EventLoop数组。
 
-要启动一份Netty服务端，必须具备三个属性：线程模型、IO模型、连接读写处理逻辑
-
+要启动Netty服务端，必须具备三个属性：线程模型、IO模型、连接读写处理逻辑
 
 ## 1、创建服务端channel
 
@@ -322,16 +321,16 @@ Netty服务端启动过程：
 
 从三个角度：
 - 池化：Pooled 和 Unpooled
-    - Pooled池化内存分配每次从预先分配好的一块内存取一段连续内存封装成ByteBuf提供给应用程序,
+    - Pooled池化内存分配每次从预先分配好的一块内存取一段连续内存封装成ByteBuf提供给应用程序；
     - Unpooled非池化每次进行内存分配的时候调用系统API向操作系统申请一块内存
 
 - Unsafe 和 非Unsafe
-    - Unsafe直接获取ByteBuf在JVM内存地址调用JDK的Unsafe进行读写操作,通过ByteBuf分配内存首地址和当前指针基于内存偏移地址获取值,
-    - 非Unsafe不依赖JDK的Unsafe对象,通过内存数组和索引获取值
+    - Unsafe直接获取ByteBuf在JVM内存地址调用JDK的Unsafe进行读写操作，通过ByteBuf分配内存首地址和当前指针基于内存偏移地址获取值；
+    - 非Unsafe不依赖JDK的Unsafe对象，通过内存数组和索引获取值
 
 - Heap和Direct
-    - Heap在堆上进行内存分配,分配内存需要被GC管理,无需手动释放内存,依赖底层byte数组,
-    - Direct调用JDK的API进行内存分配,分配内存不受JVM控制最终不会参与GC过程,需要手动释放内存避免造成内存无法释放,依赖DirectByteBuffer对象内存
+    - Heap在堆上进行内存分配，分配内存需要被GC管理，无需手动释放内存，依赖底层byte数组，
+    - Direct调用JDK的API进行内存分配，分配内存不受JVM控制最终不会参与GC过程，需要手动释放内存避免造成内存无法释放，依赖DirectByteBuffer对象内存
 
 ## 3、内存分配管理器：ByteBufAllocator
 
