@@ -359,7 +359,7 @@ Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容�
 - BeanFactory和FactoryBean的区别：
 	- BeanFactory是接口，提供了IOC容器最基本的形式，给具体的IOC容器的实现提供了规范；
 	- FactoryBean也是接口，为IOC容器中Bean的实现提供了更加灵活的方式，FactoryBean在IOC容器的基础上给Bean的实现加上了一个简单工厂模式和装饰模式；
-	- BeanFactory是个Factory，也就是IOC容器或对象工厂，FactoryBean是个Bean。在Spring中，所有的Bean都是由BeanFactory(也就是IOC容器)来进行管理的。但对FactoryBean而言，这个Bean不是简单的Bean，而是一个能生产或者修饰对象生成的工厂Bean,它的实现与设计模式中的工厂模式和修饰器模式类似；
+	- BeanFactory是个Factory，也就是IOC容器或对象工厂，FactoryBean是个Bean。在Spring中，所有的Bean都是由BeanFactory(也就是IOC容器)来进行管理的。但对FactoryBean而言，这个Bean不是简单的Bean，而是一个能生产或者修饰对象生成的工厂Bean，它的实现与设计模式中的工厂模式和修饰器模式类似；
 	- org.springframework.bean.factory.FactoryBean工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑
 
 ## 3、DI(Dependency Injection)
@@ -462,7 +462,7 @@ AOP（Aspect-Oriented Programming），面向切面编程
 ## 2、AOP 的优势
 
 - 每个事物逻辑位于一个位置，代码不分散，便于维护和升级
-- 业务模块更简洁，只包含核心业务代码;
+- 业务模块更简洁，只包含核心业务代码；
 	
 ## 3、AOP 的术语
 
@@ -618,10 +618,8 @@ try{
 		```java
 		@Around("execution(public int com.atguigu.spring.aop.ArithmeticCalculator.*(..))")
 		public Object aroundMethod(ProceedingJoinPoint pjd){
-			
 			Object result = null;
 			String methodName = pjd.getSignature().getName();
-			
 			try {
 				//前置通知
 				System.out.println("The method " + methodName + " begins with " + Arrays.asList(pjd.getArgs()));
@@ -636,7 +634,6 @@ try{
 			}
 			//后置通知
 			System.out.println("The method " + methodName + " ends");
-			
 			return result;
 		}
 		```
@@ -839,9 +836,9 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 - 5.1、Spring 支持的事务传播行为：
 	- REQUIRED：业务方法需要在一个容器里运行。如果方法运行时，已经处在一个事务中，那么加入到这个事务，否则自己新建一个新的事务。
-	- REQUIRES_NEW：不管是否存在事务，该方法总汇为自己发起一个新的事务。如果方法已经运行在一个事务中，则原有事务挂起，新的事务被创建。
+	- REQUIRES_NEW：不管是否存在事务，该方法总会为自己发起一个新的事务。如果方法已经运行在一个事务中，则原有事务挂起，新的事务被创建。
 	- NOT_SUPPORTED：声明方法不需要事务。如果方法没有关联到一个事务，容器不会为他开启事务，如果方法在一个事务中被调用，该事务会被挂起，调用结束后，原先的事务会恢复执行。
-	- SUPPORTS：该方法在某个事务范围内被调用，则方法成为该事务的一部分.如果方法在该事务范围外被调用，该方法就在没有事务的环境下执行。
+	- SUPPORTS：该方法在某个事务范围内被调用，则方法成为该事务的一部分。如果方法在该事务范围外被调用，该方法就在没有事务的环境下执行。
 	- MANDATORY：该方法只能在一个已经存在的事务中执行，业务方法不能发起自己的事务。如果在没有事务的环境下被调用，容器抛出例外。
 	- NEVER：该方法绝对不能在事务范围内执行。如果在就抛例外。只有该方法没有关联到任何事务，才正常执行。
 	- NESTED：如果一个活动的事务存在，则运行在一个嵌套的事务中。如果没有活动事务，则按REQUIRED属性执行，它使用了一个单独的事务，这个事务拥有多个可以回滚的保存点。内部事务的回滚不会对外部事务造成影响。它只对 DataSourceTransactionManager 事务管理器起效;
@@ -1092,11 +1089,11 @@ Servlet一般会延迟加载，当第一个请求达到时，Tomcat&Jetty发现D
 
 ## 3、Spring注解@Resource和@Autowired以及@Inject区别对比
 
-- `@Resource`和`@Autowired`都是做bean的注入时使用，其实`@Resource`并不是Spring的注解，它的包是`javax.annotation.Resource`，需要导入，但是Spring支持该注解的注入；`@Autowired和@Inject`基本是一样的，因为两者都是使用AutowiredAnnotationBeanPostProcessor来处理依赖注入。但是@Resource是个例外，它使用的是CommonAnnotationBeanPostProcessor来处理依赖注入
+- `@Resource`和`@Autowired`都是做bean的注入时使用，其实`@Resource`并不是Spring的注解，它的包是`javax.annotation.Resource`，需要导入，但是Spring支持该注解的注入；`@Autowired和@Inject`基本是一样的，因为两者都是使用AutowiredAnnotationBeanPostProcessor来处理依赖注入。但是`@Resource`是个例外，它使用的是CommonAnnotationBeanPostProcessor来处理依赖注入
 
-- `@Autowired`注解是按照类型（byType）装配依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false；如果我们想使用按照名称（byName）来装配，可以结合@Qualifier注解一起使用；
+- `@Autowired`注解是按照类型（byType）装配依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false；如果我们想使用按照名称（byName）来装配，可以结合`@Qualifier`注解一起使用；
 
-- `@Resource`默认按照ByName自动注入，由J2EE提供，需要导入包javax.annotation.Resource。@Resource有两个重要的属性：name和type，而Spring将@Resource注解的name属性解析为bean的名字，而type属性则解析为bean的类型。所以，如果使用name属性，则使用byName的自动注入策略，而使用type属性时则使用byType自动注入策略。如果既不制定name也不制定type属性，这时将通过反射机制使用byName自动注入策略
+- `@Resource`默认按照ByName自动注入，由J2EE提供，需要导入包`javax.annotation.Resource`。`@Resource`有两个重要的属性：name和type，而Spring将`@Resource`注解的name属性解析为bean的名字，而type属性则解析为bean的类型。所以，如果使用name属性，则使用byName的自动注入策略，而使用type属性时则使用byType自动注入策略。如果既不制定name也不制定type属性，这时将通过反射机制使用byName自动注入策略
 
 	@Resource装配顺序：
 	- ①、如果同时指定了name和type，则从Spring上下文中找到唯一匹配的bean进行装配，找不到则抛出异常。
@@ -1262,12 +1259,9 @@ value、method、params 及 heads分别表示请求 URL、请求方法、请求�
 		public boolean supportsParameter(MethodParameter parameter) {
 			return parameter.hasParameterAnnotation(RequestXuner.class);
 		}
-
 		@Override
-		public Object resolveArgument(MethodParameter methodParameter,
-									ModelAndViewContainer modelAndViewContainer,
-									NativeWebRequest nativeWebRequest,
-									WebDataBinderFactory webDataBinderFactory){
+		public Object resolveArgument(MethodParameter methodParameter, ModelAndViewContainer modelAndViewContainer,
+									NativeWebRequest nativeWebRequest, WebDataBinderFactory webDataBinderFactory){
 			//获取参数上的注解
 			RequestXuner annotation = methodParameter.getParameterAnnotation(RequestXuner.class);
 			String name = annotation.name();
@@ -1613,10 +1607,10 @@ protected View createView(String viewName， Locale locale) throws Exception {
 - 若将 DispatcherServlet 请求映射配置为 /，则 Spring MVC 将捕获WEB 容器的所有请求，包括静态资源的请求，SpringMVC 会将他们当成一个普通请求处理，因找不到对应处理器将导致错
 
 ### 8.2、解决方法
-- 在 SpringMVC 的配置文件中配置 ```<mvc：default-servlet-handler/>``` 的方式解决静态资源的问题； 其原理是：
-	- ①、```<mvc：default-servlet-handler/>```将在 SpringMVC 上下文中定义一个DefaultServletHttpRequestHandler，它会对进入 DispatcherServlet 的请求进行筛查，如果发现是没有经过映射的请求，就将该请求交由 WEB 应用服务器默认的 Servlet 处理，如果不是静态资源的请求，才由 DispatcherServlet 继续处理;
+- 在 SpringMVC 的配置文件中配置 `<mvc:default-servlet-handler/>` 的方式解决静态资源的问题； 其原理是：
+	- ①、`<mvc:default-servlet-handler/>`将在 SpringMVC 上下文中定义一个DefaultServletHttpRequestHandler，它会对进入 DispatcherServlet 的请求进行筛查，如果发现是没有经过映射的请求，就将该请求交由 WEB 应用服务器默认的 Servlet 处理，如果不是静态资源的请求，才由 DispatcherServlet 继续处理;
 	- ②、一般 WEB 应用服务器默认的 Servlet 的名称都是 default。若所使用的WEB 服务器的默认 Servlet 名称不是 default，则需要通过 default-servlet-name 属性显式指定
-- 加入配置：```<mvc：default-servlet-handler/>```后，如果映射的请求无法访问，则需要加上：```<mvc：annotation-driven />```
+- 加入配置：`<mvc:default-servlet-handler/>`后，如果映射的请求无法访问，则需要加上：`<mvc:annotation-driven />`
 
 ## 9、数据绑定
 
@@ -1714,7 +1708,6 @@ java.util.UUID -> java.lang.String ： ObjectToStringConverter@112b07f ……
 - @InitBinder 方法的参数通常是是 WebDataBinder
 - 如果需要不绑定相关数据，可以设置dataBinder.setDisallowedFields("");
 
-
 ## 12、数据格式化
 
 - 对属性对象的输入/输出进行格式化，从其本质上讲依然属于 “类型转换” 的范畴;
@@ -1752,7 +1745,9 @@ java.util.UUID -> java.lang.String ： ObjectToStringConverter@112b07f ……
 		F：完整日期/时间格式、
 		-：忽略日期或时间格式
 	```
+
 ### 12.2、FormattingConversionServiceFactroyBean
+
 装配了 FormattingConversionServiceFactroyBean 后，就可以在 Spring MVC 入参绑定及模型数据输出时使用注解驱动了，```<mvc：annotation-driven/>```默认创建的 ConversionService 实例即为 FormattingConversionServiceFactroyBean，自定义的转换器和默认的如果要能同时使用需配置：
 ```xml
 <bean id="conversionService"
@@ -1931,6 +1926,7 @@ java.util.UUID -> java.lang.String ： ObjectToStringConverter@112b07f ……
 		return "success";
 	}
 	```
+
 ## 17、拦截器
 
 ### 17.1、自定义拦截器(Interceptor)
@@ -1952,7 +1948,7 @@ public class FirstInterceptor implements HandlerInterceptor {
 		return true;
 	}
 	/**
-	* 调用目标方法之后， 但渲染视图之前. 是DispatcherServlet 向客户端返回响应前被调用
+	* 调用目标方法之后，但渲染视图之前. 是DispatcherServlet 向客户端返回响应前被调用
 	* 可以对请求域中的属性或视图做出修改.
 	*/
 	@Override
@@ -2044,6 +2040,7 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 		}
 	}
 	```
+
 ### 18.2、ResponseStatusExceptionResolver
 在异常及异常父类中找到 @ResponseStatus 注解，然后使用这个注解的属性进行处理
 	
@@ -2057,6 +2054,7 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 - 若在处理器方法中抛出了上述异常：若ExceptionHandlerExceptionResolver 不解析述异常。由于触发的异常 UnauthorizedException 带有@ResponseStatus注解。因此会被ResponseStatusExceptionResolver 解析到。最后响应 HttpStatus.UNAUTHORIZED 代码给客户端。HttpStatus.UNAUTHORIZED 代表响应码401，无权限.
 
 ### 18.3、DefaultHandlerExceptionResolver
+
 对一些特殊的异常进行处理，比如：NoSuchRequestHandlingMethodException、HttpRequestMethodNotSupportedException、HttpMediaTypeNotSupportedException、HttpMediaTypeNotAcceptableException
 
 ### 18.4、SimpleMappingExceptionResolver
@@ -2105,7 +2103,6 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 - 视图解析器向`DispatcherServlet`返回View
 - `DispatcherServlet`进行视图渲染(视图渲染将模型数据(在ModelAndView对象中)填充到request域)
 - `DispatcherServlet`向用户响应结果
-
 
 ## 20、SpringMVC注解配置
 
@@ -2287,17 +2284,21 @@ public class RootConfig {
 J2EE开发的一站式解决方案；
 
 ## 2、SpringBoot项目结构
+
 ### 2.1、pom文件
+
 ```xml
 <parent>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-parent</artifactId>
+	<!-- 具体版本 -->
     <version>1.5.9.RELEASE</version>
 </parent>
 <!-- 其父项目是 -->
 <parent>
   <groupId>org.springframework.boot</groupId>
   <artifactId>spring-boot-dependencies</artifactId>
+  <!-- 指定版本 -->
   <version>1.5.9.RELEASE</version>
   <relativePath>../../spring-boot-dependencies</relativePath>
 </parent>
@@ -2306,6 +2307,7 @@ J2EE开发的一站式解决方案；
 导入依赖默认是不需要写版本；
 
 ### 2.2、启动器
+
 ```xml
 <dependency>
     <groupId>org.springframework.boot</groupId>
@@ -2317,6 +2319,7 @@ spring-boot-starter：spring-boot场景启动器；导入了web模块正常运�
 Spring Boot将所有的功能场景都抽取出来，做成一个个的starters（启动器），只需要在项目里面引入这些starter相关场景的所有依赖都会导入进来。要用什么功能就导入什么场景的启动器
 
 ### 2.3、主程序
+
 ```java
 /**
  *  @SpringBootApplication 来标注一个主程序类，说明这是一个Spring Boot应用
@@ -2344,11 +2347,11 @@ public class HelloWorldMainApplication {
       @Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
 public @interface SpringBootApplication {}
 ```
-- @**SpringBootConfiguration**：Spring Boot的配置类；注在某个类上，表示这是一个Spring Boot的配置类；
+- **@SpringBootConfiguration**：Spring Boot的配置类；注在某个类上，表示这是一个Spring Boot的配置类；
 
-- @**Configuration**：配置类上来标注这个注解；配置类 <----->  配置文件；配置类也是容器中的一个组件；@Component
+- **@Configuration**：配置类上来标注这个注解；配置类 <----->  配置文件；配置类也是容器中的一个组件；@Component
 
-- @**EnableAutoConfiguration**：开启自动配置功能；以前需要配置的东西，SpringBoot自动配置；@**EnableAutoConfiguration** 告诉SpringBoot开启自动配置功能；这样自动配置才能生效；
+- **@EnableAutoConfiguration**：开启自动配置功能；以前需要配置的东西，SpringBoot自动配置；**@EnableAutoConfiguration** 告诉SpringBoot开启自动配置功能；这样自动配置才能生效；
 	```java
 	@AutoConfigurationPackage
 	@Import(EnableAutoConfigurationImportSelector.class)
@@ -2362,15 +2365,15 @@ public @interface SpringBootApplication {}
 
  @**Import**(EnableAutoConfigurationImportSelector.class)：给容器中导入组件
 
-	EnableAutoConfigurationImportSelector 导入哪些组件的选择器；将所有需要导入的组件以全类名的方式返回；这些组件会被添加到容器中；会给容器中导入非常多的自动配置类```（xxxAutoConfiguration）```就是给容器中导入这个场景需要的所有组件，并配置好这些组件；有了自动配置类，免去了我们手动编写配置注入功能组件等的工作；
+EnableAutoConfigurationImportSelector 导入哪些组件的选择器；将所有需要导入的组件以全类名的方式返回；这些组件会被添加到容器中；会给容器中导入非常多的自动配置类```（xxxAutoConfiguration）```就是给容器中导入这个场景需要的所有组件，并配置好这些组件；有了自动配置类，免去了我们手动编写配置注入功能组件等的工作；
 
-	```java
-	SpringFactoriesLoader.loadFactoryNames(EnableAutoConfiguration.class,classLoader)；
-	```
+```java
+SpringFactoriesLoader.loadFactoryNames(EnableAutoConfiguration.class,classLoader)；
+```
 
-	SpringBoot在启动的时候从类路径下的 ```META-INF/spring.factories``` 中获取```EnableAutoConfiguration```指定的值，将这些值作为自动配置类导入到容器中，自动配置类就生效，帮我们进行自动配置工作；以前我们需要自己配置的东西，自动配置类都帮我们；
+SpringBoot在启动的时候从类路径下的 `META-INF/spring.factories` 中获取`EnableAutoConfiguration`指定的值，将这些值作为自动配置类导入到容器中，自动配置类就生效，帮我们进行自动配置工作；以前我们需要自己配置的东西，自动配置类都帮我们；
 
-	**J2EE的整体整合解决方案和自动配置都在spring-boot-autoconfigure-1.5.9.RELEASE.jar；**
+**J2EE的整体整合解决方案和自动配置都在spring-boot-autoconfigure-1.5.9.RELEASE.jar；**
 
 # 十一、SpringBoot配置
 
@@ -2387,6 +2390,7 @@ SpringBoot使用一个全局的配置文件，配置文件名是固定的；
 ## 3、配置文件值注入
 
 ### 3.1、注入方式
+
 有如下配置文件：
 ```yaml
 person:
@@ -2442,8 +2446,8 @@ public class Person {
 | 复杂类型封装     | 支持                       | 不支持    |
 
 - 配置文件yml还是properties他们都能获取到值；
-- 如果说，我们只是在某个业务逻辑中需要获取一下配置文件中的某项值，使用@Value；
-- 如果说，我们专门编写了一个javaBean来和配置文件进行映射，我们就直接使用@ConfigurationProperties；
+- 如果说，我们只是在某个业务逻辑中需要获取一下配置文件中的某项值，使用`@Value`；
+- 如果说，我们专门编写了一个javaBean来和配置文件进行映射，我们就直接使用`@ConfigurationProperties`；
 
 ### 3.3、@PropertySource&@ImportResource&@Bean
 
@@ -2493,12 +2497,14 @@ SpringBoot推荐给容器中添加组件的方式
 ## 4、配置文件占位符
 
 ### 4.1、随机数
+
 ```java
 ${random.value}、${random.int}、${random.long}
 ${random.int(10)}、${random.int[1024,65536]}
 ```
 
 ### 4.2、占位符获取之前配置的值，如果没有可以是用“:”指定默认值
+
 ```properties
 person.last-name=张三${random.uuid}
 person.age=${random.int}
@@ -2516,9 +2522,10 @@ person.dog.age=15
 
 ### 5.1、多Profile文件
 
-在主配置文件编写的时候，文件名可以是   application-{profile}.properties/yml；默认使用application.properties的配置；
+在主配置文件编写的时候，文件名可以是：`application-{profile}.properties/yml`；默认使用`application.properties`的配置；
 
 ### 5.2、yml支持多文档块方式
+
 ```yaml
 server:
   port: 8081
@@ -2539,7 +2546,7 @@ spring:
 
 ### 5.3、激活指定profile
 
-- 在配置文件中指定：spring.profiles.active=dev
+- 在配置文件中指定：`spring.profiles.active=dev`
 - 命令行：
 ​	java -jar springboot-0.0.1-SNAPSHOT.jar --spring.profiles.active=dev；
 ​	可以直接在测试的时候，配置传入命令行参数
@@ -2654,7 +2661,7 @@ SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优
 		}
 	```
 	根据当前不同的条件判断，决定这个配置类是否生效。一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的properties类中获取的，这些类里面的每一个属性又是和配置文件绑定的；
-- （5）所有在配置文件中能配置的属性都是在xxxxProperties类中封装者‘；配置文件能配置什么就可以参照某个功能对应的这个属性类
+- （5）所有在配置文件中能配置的属性都是在xxxxProperties类中封装者；配置文件能配置什么就可以参照某个功能对应的这个属性类
 	```java
 	@ConfigurationProperties(prefix = "spring.http.encoding")  //从配置文件中获取指定的值和bean的属性进行绑定
 	public class HttpEncodingProperties {
@@ -2767,6 +2774,7 @@ Unconditional classes:
 # 十二、SprinBoot-Web开发
 
 ## 1、静态资源映射
+
 ```java
 @ConfigurationProperties(prefix = "spring.resources", ignoreUnknownFields = false)
 public class ResourceProperties implements ResourceLoaderAware {
@@ -2783,20 +2791,16 @@ public void addResourceHandlers(ResourceHandlerRegistry registry) {
 	}
 	Integer cachePeriod = this.resourceProperties.getCachePeriod();
 	if (!registry.hasMappingForPattern("/webjars/**")) {
-		customizeResourceHandlerRegistration(
-				registry.addResourceHandler("/webjars/**")
-						.addResourceLocations(
-								"classpath:/META-INF/resources/webjars/")
-				.setCachePeriod(cachePeriod));
+		customizeResourceHandlerRegistration(registry.addResourceHandler("/webjars/**")
+						.addResourceLocations("classpath:/META-INF/resources/webjars/")
+						.setCachePeriod(cachePeriod));
 	}
 	String staticPathPattern = this.mvcProperties.getStaticPathPattern();
 	//静态资源文件夹映射
 	if (!registry.hasMappingForPattern(staticPathPattern)) {
-		customizeResourceHandlerRegistration(
-				registry.addResourceHandler(staticPathPattern)
-						.addResourceLocations(
-								this.resourceProperties.getStaticLocations())
-				.setCachePeriod(cachePeriod));
+		customizeResourceHandlerRegistration(registry.addResourceHandler(staticPathPattern)
+						.addResourceLocations(this.resourceProperties.getStaticLocations())
+						.setCachePeriod(cachePeriod));
 	}
 }
 
@@ -2812,34 +2816,27 @@ public WelcomePageHandlerMapping welcomePageHandlerMapping(
 @Configuration
 @ConditionalOnProperty(value = "spring.mvc.favicon.enabled", matchIfMissing = true)
 public static class FaviconConfiguration {
-
 	private final ResourceProperties resourceProperties;
-
 	public FaviconConfiguration(ResourceProperties resourceProperties) {
 		this.resourceProperties = resourceProperties;
 	}
-
 	@Bean
 	public SimpleUrlHandlerMapping faviconHandlerMapping() {
 		SimpleUrlHandlerMapping mapping = new SimpleUrlHandlerMapping();
 		mapping.setOrder(Ordered.HIGHEST_PRECEDENCE + 1);
 		//所有  **/favicon.ico 
-		mapping.setUrlMap(Collections.singletonMap("**/favicon.ico",
-				faviconRequestHandler()));
+		mapping.setUrlMap(Collections.singletonMap("**/favicon.ico",faviconRequestHandler()));
 		return mapping;
 	}
-
 	@Bean
 	public ResourceHttpRequestHandler faviconRequestHandler() {
 		ResourceHttpRequestHandler requestHandler = new ResourceHttpRequestHandler();
-		requestHandler
-				.setLocations(this.resourceProperties.getFaviconLocations());
+		requestHandler.setLocations(this.resourceProperties.getFaviconLocations());
 		return requestHandler;
 	}
-
 }
 ```
-- （1）所有 /webjars/** ，都去 classpath:/META-INF/resources/webjars/ 找资源；
+- （1）所有 `/webjars/**` ，都去 `classpath:/META-INF/resources/webjars/` 找资源；
 
 	[webjars](http://www.webjars.org/)：以jar包的方式引入静态资源；
 
@@ -2870,6 +2867,7 @@ public static class FaviconConfiguration {
 ## 2、模板引擎
 
 ### 2.1、引入[thymeleaf](https://www.thymeleaf.org/doc/tutorials/3.0/usingthymeleaf.html)
+
 ```xml
 <dependency>
 	<groupId>org.springframework.boot</groupId>
@@ -2886,20 +2884,17 @@ public static class FaviconConfiguration {
 ```
 
 ### 2.2、thymeleaf使用
+
 ```java
 @ConfigurationProperties(prefix = "spring.thymeleaf")
 public class ThymeleafProperties {
-
 	private static final Charset DEFAULT_ENCODING = Charset.forName("UTF-8");
-
 	private static final MimeType DEFAULT_CONTENT_TYPE = MimeType.valueOf("text/html");
-
 	public static final String DEFAULT_PREFIX = "classpath:/templates/";
-
 	public static final String DEFAULT_SUFFIX = ".html";
-  	//
+}
 ```
-只要我们把HTML页面放在classpath:/templates/，thymeleaf就能自动渲染
+只要我们把HTML页面放在`classpath:/templates/`，thymeleaf就能自动渲染
 - （1）导入thymeleaf的名称空间
 	```html
 	<html lang="en" xmlns:th="http://www.thymeleaf.org">
@@ -2907,6 +2902,7 @@ public class ThymeleafProperties {
 - （2）使用thymeleaf语法；
 
 ### 2.3、thymeleaf公共页面元素抽取
+
 **2.3.1、基本步骤**
 
 - 抽取公共片段
@@ -2979,6 +2975,7 @@ public class ThymeleafProperties {
 -[SpringMVC自动配置官方](https://docs.spring.io/spring-boot/docs/1.5.10.RELEASE/reference/htmlsingle/#boot-features-developing-web-applications)
 
 ### 3.1、Spring MVC auto-configuration
+
 WebMvcAutoConfiguration
 - 自动配置了ViewResolver（视图解析器：根据方法的返回值得到视图对象（View），视图对象决定如何渲染（转发？重定向？））；
 - ContentNegotiatingViewResolver：组合所有的视图解析器的；
@@ -2999,6 +2996,7 @@ WebMvcAutoConfiguration
 - `HttpMessageConverters` 是从容器中确定；获取所有的HttpMessageConverter；自己给容器中添加HttpMessageConverter，只需要将自己的组件注册容器中
 
 ### 3.2、扩展SpringMVC
+
 ```xml
 <mvc:view-controller path="/hello" view-name="success"/>
 <mvc:interceptors>
@@ -3047,6 +3045,7 @@ public class MyMvcConfig extends WebMvcConfigurerAdapter {
 - 自定义配置的类也会被调用：SpringMVC的自动配置和扩展配置都会起作用；
 
 ### 3.3、自动配置SpringMVC失效
+
 SpringBoot对SpringMVC的自动配置不需要了，所有都是我们自己配置；所有的SpringMVC的自动配置都失效了，**只需要在配置类中添加@EnableWebMvc即可**
 
 ```java
@@ -3089,32 +3088,29 @@ public class MyMvcConfig extends WebMvcConfigurerAdapter {
 - 导入的WebMvcConfigurationSupport只是SpringMVC最基本的功能；
 
 ### 3.4、修改SpringBoot的默认配置
+
 - SpringBoot在自动配置很多组件的时候，先看容器中有没有用户自己配置的（@Bean、@Component）如果有就用用户配置的，如果没有，才自动配置；如果有些组件可以有多个（ViewResolver）将用户配置的和自己默认的组合起来；
 - 在SpringBoot中会有非常多的xxxConfigurer帮助我们进行扩展配置；
 - 在SpringBoot中会有很多的xxxCustomizer帮助我们进行定制配置；
 
 ## 4、SpringBoot国际化
+
 ### 4.1、基本步骤
+
 - 编写国际化配置文件
 - 使用ResourceBundleMessageSource管理国际化资源文件
 - 在页面使用fmt:message取出国际化内容
 
 ### 4.2、编写国际化配置文件
+
 ![](image/SpringBoot-国际化.png)
 
 ### 4.3、SpringBoot自动配置管理国际化资源文件的组件
 ```java
 @ConfigurationProperties(prefix = "spring.messages")
 public class MessageSourceAutoConfiguration {
-    /**
-	 * Comma-separated list of basenames (essentially a fully-qualified classpath
-	 * location), each following the ResourceBundle convention with relaxed support for
-	 * slash based locations. If it doesn't contain a package qualifier (such as
-	 * "org.mypackage"), it will be resolved from the classpath root.
-	 */
 	private String basename = "messages";  
     //我们的配置文件可以直接放在类路径下叫messages.properties；
-    
     @Bean
 	public MessageSource messageSource() {
 		ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
@@ -3132,12 +3128,13 @@ public class MessageSourceAutoConfiguration {
 		return messageSource;
 	}
 ```
-在application.properties中加入配置，即指定basename
+在`application.properties`中加入配置，即指定basename
 ```
 spring.messages.basename=i18n.login
 ```
 
 ### 4.4、在页面中使用
+
 如果是thymeleaf模板的话，直接使用：```th:text="#{login.tip}"```
 
 页面根据浏览器设置的语言信息来实现国际化，其springboot实现是有个国际化（Locale-区域信息对象）和LocaleResolver（区域对象解析器）来实现的
@@ -3177,7 +3174,9 @@ public class AcceptHeaderLocaleResolver implements LocaleResolver{
 	}
 }
 ```
+
 ### 4.5、根据连接来实现切换国际化
+
 ```java
 /**
  * 可以在连接上携带区域信息
@@ -3193,10 +3192,8 @@ public class MyLocaleResolver implements LocaleResolver {
         }
         return locale;
     }
-
     @Override
     public void setLocale(HttpServletRequest request, HttpServletResponse response, Locale locale) {
-
     }
 }
 
@@ -3213,6 +3210,7 @@ public LocaleResolver localeResolver(){
 ```
 
 ## 5、拦截器
+
 在SpringBoot1.x版本中，静态资源不会被拦截，spring boot 2.x静态资源会被HandlerInterceptor拦截，是因为spring boot 2.x依赖的spring 5.x版本，相对于spring boot 1.5.x依赖的spring 4.3.x版本而言，针对资源的拦截器初始化时有区别，具体源码在WebMvcConfigurationSupport中
 
 spring 4.3.x源码如下
@@ -3288,12 +3286,12 @@ protected final Object[] getInterceptors() {
     }
     return this.interceptors.toArray();
 }
-
 ```
 
 ## 6、错误处理机制
 
 ### 6.1、SpringBoot默认的错误处理机制
+
 **1、默认效果**
 - 浏览器，返回一个默认的错误页面
 
@@ -3433,6 +3431,7 @@ protected ModelAndView resolveErrorView(HttpServletRequest request,
 ```
 
 ### 6.2、定制错误响应
+
 **6.2.1、定制错误页面**
 
 - 有模板引擎的情况下；error/状态码;【将错误页面命名为  错误状态码.html 放在模板引擎文件夹里面的 error文件夹下】，发生此状态码的错误就会来到对应的页面；可以使用4xx和5xx作为错误页面的文件名来匹配这种类型的所有错误，精确优先（优先寻找精确的状态码.html）；页面能获取的信息：
@@ -4207,10 +4206,8 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 ## 3、自动装配顺序
 
 - 在特定自动装配Class之前
-
 	- `@AutoConfigureBefore` – 在特定自动装配Class之后
 	- `@AutoConfigureAfter`
-
 - 指定顺序：@AutoConfigureOrder
 
 ```java
@@ -4714,10 +4711,10 @@ bean创建---初始化----销毁的过程
 
 ### 2.2、初始化和销毁过程
 
-- 指定初始化和销毁方法：通过@Bean指定initMethod和destroyMethod；
-`
+- 指定初始化和销毁方法：通过`@Bean`指定`initMethod`和`destroyMethod`；
+```
 @Bean(initMethod="init",destroyMethod="detory")
-`
+```
 
 - 通过让Bean实现`InitializingBean`（定义初始化逻辑）、`DisposableBean`（定义销毁逻辑）
     ```java
@@ -4845,6 +4842,7 @@ Spring利用依赖注入（DI），完成对IOC容器中中各个组件的依赖
 AutowiredAnnotationBeanPostProcessor：解析完成自动装配功能
 
 ### 3.1、@Autowired：自动注入
+
 以下面代码为例：
 ```java
 BookService{
@@ -4898,6 +4896,7 @@ Spring还支持使用`@Resource(JSR250)`和`@Inject(JSR330)`【java规范的注�
 *`@Autowired`：Spring定义的； `@Resource、@Inject`都是java规范*
 
 ### 3.3、方法与构造器自动装配
+
 @Autowired：构造器，参数，方法，属性；都是从容器中获取参数组件的值
 ```java
 @Component
@@ -4948,6 +4947,7 @@ public class Boss {
     ```
 
 ### 3.4、自定义组件注入
+
 定义组件想要使用Spring容器底层的一些组件（ApplicationContext，BeanFactory，xxx），自定义组件实现xxxAware；在创建对象的时候，会调用接口规定的方法注入相关组件；
 
 `Aware`把Spring底层一些组件注入到自定义的Bean中；
@@ -4992,6 +4992,7 @@ Spring提供一种可以根据当前环境，动态的激活和切换一系列�
 指在程序运行期间动态的将某段代码切入到指定方法指定位置进行运行的编程方式，实际上是动态代理
 
 ### 4.1、AOP基于注解写法
+
 - 导入aop模块；Spring AOP：(spring-aspects)；
 - 定义一个业务逻辑类；在业务逻辑运行的时候将日志进行打印（方法之前、方法运行结束、方法出现异常，xxx）
 - 定义一个日志切面类（LogAspects）：切面类里面的方法需要动态感知MathCalculator.div运行到哪里然后执行；通知方法：
@@ -5227,16 +5228,16 @@ AnnotationAwareAspectJAutoProxyCreator实现自`InstantiationAwareBeanPostProces
 
 - @EnableAspectJAutoProxy 开启AOP功能；
 - @EnableAspectJAutoProxy 会给容器中注册一个组件 AnnotationAwareAspectJAutoProxyCreator；
-- AnnotationAwareAspectJAutoProxyCreator是一个后置处理器；
+- AnnotationAwareAspectJAutoProxyCreator 是一个后置处理器；
 - 容器的创建流程
-    - registerBeanPostProcessors（）注册后置处理器；创建AnnotationAwareAspectJAutoProxyCreator对象
-    - finishBeanFactoryInitialization（）初始化剩下的单实例bean
+    - registerBeanPostProcessors() 注册后置处理器；创建 AnnotationAwareAspectJAutoProxyCreator 对象
+    - finishBeanFactoryInitialization() 初始化剩下的单实例bean
         - 创建业务逻辑组件和切面组件；
         - AnnotationAwareAspectJAutoProxyCreator拦截组件的创建过程；
         - 组件创建完之后，判断组件是否需要增强：`是`：切面的通知方法，包装成增强器（Advisor）;给业务逻辑组件创建一个代理对象（cglib）；
 - 执行目标方法：
     - 代理对象执行目标方法；
-    - CglibAopProxy.intercept()；
+    - `CglibAopProxy.intercept();`
         - 得到目标方法的拦截器链（增强器包装成拦截器MethodInterceptor）
         - 利用拦截器的链式机制，依次进入每一个拦截器进行执行；
         - 效果：
@@ -5246,6 +5247,7 @@ AnnotationAwareAspectJAutoProxyCreator实现自`InstantiationAwareBeanPostProces
 ## 5、声明式事务
 
 ### 5.1、配置数据源
+
 ```java
 @EnableTransactionManagement
 @ComponentScan("com.blue.fish.spring.tx")
@@ -5281,7 +5283,9 @@ public class TxConfig {
     @Bean
     public PlatformTransactionManager transactionManager(){}
     ```
+
 ### 5.2、原理
+
 - （1）`@EnableTransactionManagement`：该注解利用TransactionManagementConfigurationSelector给容器中会导入组件，导入两个组件
     ```java
     @Target(ElementType.TYPE)
@@ -5366,9 +5370,8 @@ beanFactory的后置处理器，在BeanFactory标准初始化之后调用，来�
     - 直接在BeanFactory中找到所有类型是BeanFactoryPostProcessor的组件，并执行他们的方法；
     - 在初始化创建其他组件前面执行；
 
-
-
 ### 6.2、BeanDefinitionRegistryPostProcessor
+
 ```java
 public interface BeanDefinitionRegistryPostProcessor extends BeanFactoryPostProcessor{
     // BeanDefinitionRegistry的Bean定义信息的保存中心，以后BeanFactory就是按照BeanDefinitionRegistry里面保存的每一个bean定义信息创建bean实例；
@@ -5413,6 +5416,7 @@ public interface ApplicationListener<E extends ApplicationEvent> extends EventLi
 	void onApplicationEvent(E event);
 }
 ```
+
 #### 6.3.1、步骤
 
 - 写一个监听器（ApplicationListener实现类）来监听某个事件（ApplicationEvent及其子类）

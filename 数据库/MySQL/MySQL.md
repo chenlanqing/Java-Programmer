@@ -369,9 +369,9 @@ innodb_ buffer_pool_size -> 修改该配置 <br>
 
 - 长字符串的处理：
 
-- 日期的处理： MYSQL日期字段分DATE和TIME、时间戳等多种，ORACLE日期字段只有DATE，包含年月日时分秒信息，用当前数据库的系统时间为SYSDATE, 精确到秒，或者用字符串转换成日期型函数；
+- 日期的处理：MYSQL日期字段分DATE和TIME、时间戳等多种，ORACLE日期字段只有DATE，包含年月日时分秒信息，用当前数据库的系统时间为SYSDATE, 精确到秒，或者用字符串转换成日期型函数；
 
-- 空字符的处理： MYSQL的非空字段也有空的内容，ORACLE里定义了非空字段就不容许有空的内容。按MYSQL的NOT NULL来定义ORACLE表结构, 导数据的时候会产生错误。因此导数据时要对空字符进行判断，如果为NULL或空字符，需要把它改成一个空格的字符串；
+- 空字符的处理：MYSQL的非空字段也有空的内容，ORACLE里定义了非空字段就不容许有空的内容。按MYSQL的NOT NULL来定义ORACLE表结构, 导数据的时候会产生错误。因此导数据时要对空字符进行判断，如果为NULL或空字符，需要把它改成一个空格的字符串；
 
 - 字符串的模糊比较： MYSQL里用 字段名 like '%字符串%',ORACLE里也可以用 字段名 like '%字符串%' 但这种方法不能使用索引, 速度不快，用字符串比较函数 instr(字段名,'字符串')>0 会得到更精确的查找结果。
 
@@ -397,7 +397,7 @@ create database 数据库名 [数据库选项]
 
 ## 4、数据库的查询
 
-	show databases
+show databases
 
 - 查看数据库(表)的创建语句：show create database db_name
 - 数据库删除：drop database db_name；
@@ -436,7 +436,7 @@ create database 数据库名 [数据库选项]
 - delete删除时对于auto_increment类型的字段，值不会从1开始，truncate可以实现删除数据后，auto_increment类型的字段值从1开始；
 - delete属于DML，这个操作会放到rollback segement中，事务提交之后才生效；
 - truncate和drop属于DDL，操作立即生效，原数据不放到rollback segment中，不能回滚，操作不触发trigger；
-- delete语句不影响表所占用的extent，高水线(high watermark)保持原位置不动；drop语句将表所占用的空间全部释放。truncate 语句缺省情况下见空间释放到 minextents个 extent,除非使用reuse storage; truncate会将高水线复位(回到最开始)；
+- delete语句不影响表所占用的extent，高水线(high watermark)保持原位置不动；drop语句将表所占用的空间全部释放。truncate 语句缺省情况下见空间释放到 minextents个 extent，除非使用reuse storage; truncate会将高水线复位(回到最开始)；
 - 执行速度：`drop> truncate > delete`；
 - 使用建议：
 	- drop：完全删除表；
@@ -447,7 +447,7 @@ create database 数据库名 [数据库选项]
 
 - 产生原因：数据库中有些表使用delete删除了一些行后，发现空间并未释放；
 	- delete 不会释放文件高水位 
-	- truncate会释放 ，实际是把.ibd文件删掉了，再建一个。
+	- truncate会释放 ，实际是把`.ibd`文件删掉了，再建一个。
 	- delete + alter engine=innodb会释放， 相当于重建表。
 
 - 解决方案：
@@ -597,12 +597,12 @@ type(M，D)--M表示的所有位数(不包括小数点和符号)，D表示允许
 
 *注意：字段属性最好不用 null：*
 
-- 所有使用 null 值的情况，都可以通过一个有意义的值的表示，这样有利于代码的可读性和可维护性，并能从约束上增强业务数据的规范性.
+- 所有使用 null 值的情况，都可以通过一个有意义的值的表示，这样有利于代码的可读性和可维护性，并能从约束上增强业务数据的规范性。
 - null 值到非 null 值的更新无法做到原地更新，容易发生索引分裂从而影响性能； 但 NULL列改为NOT NULL 来的性能提示很小，除非确定它带来了问题，否则不要把它当成优先的优化措施，最重要的是使用的列的类型的适当性
 - NULL 值在 timestamp 类型下容易出问题，特别是没有启用参数 explicit_defaults_for_timestamp；
 - NOT IN， != 等负向条件查询在有 NULL 值的情况下返回永远为空结果，查询容易出错：
 	- NOT IN 子查询在有 NULL 值的情况下返回永远为空结果，查询容易出错；
-	- 单列索引不存 null 值，复合索引不存全为null的值，如果列允许为null，可能会得到"不符合预期"的结果集，如果name允许为null，索引不存储null值，结果集中不会包含这些记录.所以，请使用 not null 约束以及默认值；
+	- 单列索引不存 null 值，复合索引不存全为null的值，如果列允许为null，可能会得到"不符合预期"的结果集，如果name允许为null，索引不存储null值，结果集中不会包含这些记录。所以，请使用 not null 约束以及默认值；
 	- 如果在两个字段进行拼接：比如题号+分数，首先要各字段进行非 null 判断，否则只要任意一个字段为空都会造成拼接的结果为 null；
 	- 如果有 Null column 存在的情况下，count(Null column)需要格外注意， null 值不会参与统计
 	- 注意 Null 字段的判断方式， column = null 将会得到错误的结果；
@@ -676,6 +676,7 @@ LIMIT <limit_number>
 场景：假设两张表：emp， dept. emp表中的deptId为dept表中的主键。MySQL 不支持 full join
 
 ### 1.1、内连接
+
 ```sql
 select * from emp inner join dept on emp.deptId=dept.id；
 ```
@@ -685,6 +686,7 @@ select * from emp， dept where emp.deptId=dept.id
 ```
 
 ### 1.2、左外连接
+
 ```sql
 select * from emp a left join dept b on a.deptId=b.id
 ```
@@ -696,19 +698,22 @@ select * from emp a left join dept b on a.deptId=b.id where b.id is null；
 ```
 查询emp独有的数据
 
-### 1.4、右外连接
+### 1.4、右连接
+
 ```sql
 select * from emp a right join dept b on a.deptId=b.id；
 ```
 查询dept独有的数据和查询emp与dept共有的数据
 
 ### 1.5、右外连接
+
 ```sql
 select * from emp a right join dept b on a.deptId=b.id where a.id is null；
 ```
 查询dept独有的数据
 
 ### 1.6、全连接
+
 ```sql
 select * from emp a left join dept b on a.deptId=b.id
 union
@@ -717,6 +722,7 @@ select * from emp a right join dept b on a.deptId=b.id；
 查询所有emp和dept独有和共有的数据
 
 ### 1.7、全连接（去除共有数据）
+
 ```sql
 select * from emp a left join dept b on a.deptId=b.id where b.id is null
 union
@@ -728,7 +734,7 @@ select * from emp a right join dept b on a.deptId=b.id where a.id is null；
 
 - **1.8.1、union：**
 
-用于合并两个或多个 SELECT 语句的结果集，并消去表中任何重复行. union 内部的 SELECT 语句必须拥有相同数量的列，列也必须拥有相似的数据类型，每条 SELECT 语句中的列的顺序必须相同
+用于合并两个或多个 SELECT 语句的结果集，并消去表中任何重复行，union 内部的 SELECT 语句必须拥有相同数量的列，列也必须拥有相似的数据类型，每条 SELECT 语句中的列的顺序必须相同
 
 基本语法：
 ```sql
@@ -748,7 +754,7 @@ SELECT column_name FROM table2
 
 - **1.8.3、union 使用注意事项：**
 
-如果子句中有 order by 或 limit， 需要用括号括起来，推荐放到所有子句之后，即对最终合并的结果来排序或筛选在子句中，order by 需要配合limit使用才有意义.如果不配合limit使用，会被语法分析器优化分析时去除
+如果子句中有 order by 或 limit， 需要用括号括起来，推荐放到所有子句之后，即对最终合并的结果来排序或筛选在子句中，order by 需要配合limit使用才有意义。如果不配合limit使用，会被语法分析器优化分析时去除
 ```sql
 select * from emp a left join dept b on a.deptId=b.id order by id desc
 union
@@ -908,6 +914,7 @@ repair table tableName 修复表
 ### 1.2、InnoDB：5.5之后的版本默认存储引擎
 
 InnoDB使用表空间进行数据存储：innodb_file_per_table，对InnoDB使用独立表空间
+
 - **1.2.1、表转移步骤：把原来存在于系统表空间中的表转移到独立表空间**
 
 	- 使用mysqldump导出所有数据库表的数据
@@ -1299,7 +1306,7 @@ MyISAM 的读写锁调度是写优先，这也是 MyISAM 不适合做写为主�
 ### 5.4、死锁案例
 
 - 不同表相同记录行锁冲突：事务A和事务B操作两张表，但出现循环等待锁情况
-- 相同表记录行锁冲突.这种情况比较常见：遇到两个job在执行数据批量更新时，jobA处理的的id列表为[1，2，3，4]，	而job处理的id列表为[8，9，10，4，2]，这样就造成了死锁
+- 相同表记录行锁冲突，这种情况比较常见：遇到两个job在执行数据批量更新时，jobA处理的的id列表为[1，2，3，4]，	而job处理的id列表为[8，9，10，4，2]，这样就造成了死锁
 - 不同索引锁冲突：事务A在执行时，除了在二级索引加锁外，还会在聚簇索引上加锁，在聚簇索引上加锁的顺序是[1，4，2，3，5]，而事务B执行时，只在聚簇索引上加锁，加锁顺序是[1，2，3，4，5]，这样就造成了死锁的可能性.
 - gap锁冲突：innodb在RR级别下，如下的情况也会产生死锁
 
@@ -1673,7 +1680,7 @@ https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
 
 ## 3、反范式化设计
 
-所谓的反范式化是为了性能和读取效率的考虑而适当的对数据库设计范式的要求进行违反，而允许存在的少量的数据冗余.即反范式化就是使用空间来换取时间
+所谓的反范式化是为了性能和读取效率的考虑而适当的对数据库设计范式的要求进行违反，而允许存在的少量的数据冗余，即反范式化就是使用空间来换取时间
 
 # 十二、mysql高可用架构设计
 
@@ -1934,7 +1941,7 @@ sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192
 
 ## 1、索引
 
-帮助MySQL高效获取数据的数据结构.索引是数据结构
+帮助MySQL高效获取数据的数据结构，索引是数据结构
 
 - 可以理解为：排好序的快速查找数据结，主要影响 where 子句和 order by 子句
 - 如何理解索引是数据结构：数据本身之外，数据库还维护着一个满足特定查找算法的数据结构，这些结构以某种方式指向数据，这样可以在这些数据的基础之上实现高级查找算法，这种数据结构就是索引。
@@ -2112,7 +2119,7 @@ B+树还有一个在索引外的特点，却是至关重要的特点，卫星数
 - 单行范围：B+树会自顶向下查找节点，最终找到匹配到的叶子节点.
 	- ①、首先B+树的中间节点没有卫星数据，所以同样的大小的磁盘页可以容纳更多的节点元素。在数据量相同的情况下B+树结构比B-树更"矮胖"，因此查询时IO次数也更少
 	- ②、其次，B+树查询必须最终查找到叶子节点，而B-树只要找到匹配元素即可，无论是叶子节点还是中间节点。因此B-树的查找性能不稳定(最好的情况时只查找根节点，最坏情况时查找到叶子节点)B+树的每一次查找都是稳定的.
-- 范围查询：B-树只能依靠繁琐的中序遍历.而B+树只需要在链表上遍历即可
+- 范围查询：B-树只能依靠繁琐的中序遍历。而B+树只需要在链表上遍历即可
 
 #### 9.3.4、B+树相对于B-树的优势
 
@@ -2189,6 +2196,7 @@ mysql中每个表都有一个聚簇索引（clustered index ），除此之外�
 主键长度越小，普通索引的叶子节点就越小，普通索引占用的空间也就越小
 
 **何时使用聚簇索引与非聚簇索引**
+
 动作 | 使用聚簇索引 | 使用非聚簇索引
 ----|-------------|-----------
 列经常被分组排序|是|是

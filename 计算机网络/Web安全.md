@@ -73,7 +73,7 @@ CSRF：Cross Site Request Forgery，跨站点请求伪造，是一种常见的we
 
 - 尽量使用POST，限制GET，GET接口太容易被拿来做CSRF攻击；
 
-- 将cookie设置为HttpOnly：CRSF攻击很大程度上是利用了浏览器的cookie，为了防止站内的XSS漏洞盗取cookie,需要在cookie中设置“HttpOnly”属性，这样通过程序（如JavaScript脚
+- 将cookie设置为HttpOnly：CRSF攻击很大程度上是利用了浏览器的cookie，为了防止站内的XSS漏洞盗取cookie，需要在cookie中设置“HttpOnly”属性，这样通过程序（如JavaScript脚
 本、Applet等）就无法读取到cookie信息，避免了攻击者伪造cookie的情况出现；
 
 - 增加token：

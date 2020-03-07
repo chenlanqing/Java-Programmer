@@ -60,7 +60,7 @@ Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等�
 - `BeanPostProcessor`接口的`postProcessBeforeInitialization`方法和`postProcessAfterInitialization`方法不会自动调用，必须自己通过代码手动注册
 - `BeanFactory`容器启动的时候，不会去实例化所有bean，包括所有scope为singleton且非延迟加载的bean也是一样，而是在调用的时候去实例化
 
-### 2.2、BeanFactory Bean生命周期-面向Spring本身
+### 2.2、BeanFactory Bean生命周期-面向开发者
 
 ![image](image/ApplicationContext-Bean的生命周期.png)
 

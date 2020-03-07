@@ -2,6 +2,7 @@
 # 一、Mybatis概述
 
 ## 1、ORM框架对比
+
 Hibernate与mybatis框架比较
 
 ### 1.1、Hibernate 的优点
@@ -10,13 +11,13 @@ Hibernate与mybatis框架比较
 - 功能强大，数据库无关性好，O/R映射能力强，需要写的代码很少，开发速度很快；
 - 有更好的二级缓存机制，可以使用第三方缓存；
 - 数据库移植性良好；
-- hibernate拥有完整的日志系统，hibernate日志系统非常健全，涉及广泛，包括sql记录).关系异常).优化警告).缓存提示).脏数据警告等
+- hibernate拥有完整的日志系统，hibernate日志系统非常健全，涉及广泛，包括sql记录、关系异常、优化警告、缓存提示、脏数据警告等；
 - 是面向对象支持的最好的框架了
 
 ### 1.2、Hibernate的缺点
 
 - 学习门槛高，精通门槛更高，程序员如何设计O/R映射，在性能和对象模型之间如何取得平衡，以及怎样用好Hibernate方面需要的经验和能力都很强才行
-- hibernate的sql很多都是自动生成的，无法直接维护sql；虽然有hql查询，但功能还是不及sql强大，见到报表等变态需求时，hql查询要虚，也就是说hql查询是有局限的；hibernate虽然也支持原生sql查询，但开发模式上却与orm不同，需要转换思维，因此使用上有些不方便.总之写sql的灵活度上hibernate不及mybatis；
+- hibernate的sql很多都是自动生成的，无法直接维护sql；虽然有hql查询，但功能还是不及sql强大，见到报表等变态需求时，hql查询要虚，也就是说hql查询是有局限的；hibernate虽然也支持原生sql查询，但开发模式上却与orm不同，需要转换思维，因此使用上有些不方便。总之写sql的灵活度上hibernate不及mybatis；
 - 在复杂关联中往往会带来严重的性能问题，也就是N+1的问题
 
 ### 1.3、Mybatis的优点
@@ -30,15 +31,15 @@ Hibernate与mybatis框架比较
 
 ### 1.4、Mybatis的缺点
 
-- 关联表多时，字段多的时候，sql工作量很大.
-- sql依赖于数据库，导致数据库移植性差.
-- 由于xml里标签id必须唯一，导致DAO中方法不支持方法重载.
-- 对象关系映射标签和字段映射标签仅仅是对映射关系的描述，具体实现仍然依赖于sql.
-- DAO 层过于简单，对象组装的工作量较大.
-- 不支持级联更新).级联删除.
-- Mybatis 的日志除了基本记录功能外，其它功能薄弱很多.
-- 编写动态sql时，不方便调试，尤其逻辑复杂时.
-- 提供的写动态sql的xml标签功能简单，编写动态sql仍然受限，且可读性低
+- 关联表多时，字段多的时候，sql工作量很大；
+- sql依赖于数据库，导致数据库移植性差；
+- 由于xml里标签id必须唯一，导致DAO中方法不支持方法重载；
+- 对象关系映射标签和字段映射标签仅仅是对映射关系的描述，具体实现仍然依赖于sql；
+- DAO 层过于简单，对象组装的工作量较大；
+- 不支持级联更新、级联删除；
+- Mybatis 的日志除了基本记录功能外，其它功能薄弱很多；
+- 编写动态sql时，不方便调试，尤其逻辑复杂时；
+- 提供的写动态sql的xml标签功能简单，编写动态sql仍然受限，且可读性低；
 
 ## 2、为什么要使用mybatis等orm框架
 
@@ -118,6 +119,7 @@ SqlSession session = ssf.openSession();
 - 通过Annotation/XML + Java反射技术，实现Java对象与关系数据库之间的相互转化；
 
 ## 2、typeAliases属性
+
 类型别名是为 Java 类型命名一个短的名字。 它只和 XML 配置有关, 只用来减少类完全 限定名的多余部分
 ```xml
 <typeAliases>
@@ -139,7 +141,7 @@ public class User {
     
 ## 3、字段名与实体类属性名不相同的冲突
 
-在Mapper文件中配置,如下所示:select元素中resultMap的值需跟定义的resultMap元素中id属性值一样
+在Mapper文件中配置，如下所示：select元素中resultMap的值需跟定义的resultMap元素中id属性值一样
 ```xml
 <mapper namespace="com.mybatis.orderMapper">
     <select id="getOrder" parameterType="int" resultMap="orderBean">
@@ -409,7 +411,7 @@ FirstMyBatisPlugin....intercept：public abstract void org.apache.ibatis.executo
 
 ## 3、多个插件
 
-多个插件会产生多层代理，创建代理的时候，是按照配置的插件顺序创建层层代理的，执行目标方法治好，按照逆向顺序执行；
+多个插件会产生多层代理，创建代理的时候，是按照配置的插件顺序创建层层代理的，执行目标方法是按照逆向顺序执行；
 
 编写两个插件，两个插件拦截同一个对象的同一个方法，其代理对象的结构：
 
