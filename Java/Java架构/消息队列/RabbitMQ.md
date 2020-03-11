@@ -222,7 +222,7 @@ comfirm机制其实是一个异步监听的机制 ，是为了保证系统的高
 ## 11、TTL-Time To Live，生存时间
 
 - RabbitMQ 支持消息的过期时间，在消息发送时可以进行指定；
-- RabbitMQ 支付队列的怄气时间，从消息入队列开始计算，只要超过了队列的超时时间配置，那么消息会自动的清除；
+- RabbitMQ 支付队列的过期时间，从消息入队列开始计算，只要超过了队列的超时时间配置，那么消息会自动的清除；
 
 ## 12、死信队列-Dead Letter Exchane
 
@@ -252,7 +252,7 @@ autoStartup必须设置为true，否则Spring不会加载RabbitAdmin类；
 ```java
 @Bean
 public ConnectionFactory connectionFactory() {
-    CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
+    å connectionFactory = new CachingConnectionFactory();
     connectionFactory.setAddresses("192.168.56.101:5672");
     connectionFactory.setUsername("guest");
     connectionFactory.setPassword("guest");

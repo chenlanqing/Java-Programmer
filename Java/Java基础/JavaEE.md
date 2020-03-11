@@ -261,7 +261,7 @@ session机制采用的是一种在服务器端保持状态的解决方案.由于
 
 - SessionID 是连接 Cookie 和 Session 的一道桥梁，大部分系统也是根据此原理来验证用户登录状态
 - 如果禁用了cookie，可以：
-	- 每次请求中都携带一个 SessionID 的参数；
+	- 每次请求中都携带一个 SessionID 的参数；重写URL，携带sessionId参数
 	- Token 机制。Token 机制多用于 App 客户端和服务器交互的模式，也可以用于 Web 端做用户状态管理
 
 ### 9.4、分布式Session

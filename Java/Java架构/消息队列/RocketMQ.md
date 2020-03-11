@@ -281,7 +281,7 @@ RocketMQ架构
 
 ## 2、Rocket整体流程
 
-- 启动 Namesrv，Namesrv起 来后监听端口，等待 Broker、Producer、Consumer 连上来，相当于一个路由控制中心。
+- 启动 Namesrv，Namesrv起来后监听端口，等待 Broker、Producer、Consumer 连上来，相当于一个路由控制中心。
 - Broker 启动，跟所有的 Namesrv 保持长连接，定时发送心跳包。
 
     心跳包中，包含当前 Broker 信息(IP+端口等)以及存储所有 Topic 信息。
@@ -464,6 +464,7 @@ public enum SendStatus {
 RcoketMQ事务消息的实现原理是基于两阶段提交和定时事务状态回查来决定消息最终是提交还是回滚；交互如下：
 
 ![](image/RocketMQ事务消息机制.png)
+
 - 应用程序在事务内完成相关业务数据落库后，需要同步调用RocketMQ消息发送接口，发送状态为prepare的消息。消息发送成功后，RocketMQ服务器会回调RocketMQ消息发送者的时间监听程序，记录消息的本地事务状态，该相关标记与本地业务操作同属于一个事务，确保消息的发送与本地事务是原子性的。
 - RocketMQ在收到类型为prepare的消息时，会首先备份消息的原主题与原消息消费队列，然后将消息存储在主题为：`RMQ_SYS_TRANS_HALF_TOPIC`的消息消费队列中；
 - RocketMQ消息服务器开启一个定时任务，消费`RMQ_SYS_TRANS_HALF_TOPIC`的消息，向消息发送端发起消息事务状态回查，应用程序根据保存的事务状态回馈消息服务器的事务状态。如果是提交或回滚，则消息服务器提交或回滚，如果是未知（ LocalTransactionState.UNKNOW），则待下一次回查，RocketMQ允许设置一条消息的回查间隔与回查次数，如果在超过回查次数后依然无法获取消息的事务状态，则默认回滚消息；
@@ -489,9 +490,12 @@ RocketMQ的事务消息发送者为：org.apache.rocketmq.client.producer.Transa
 - 全局顺序消费：在某个topic下，所有的消息都要保证顺序；
 - 局部顺序消费：可以确保同一个消息消费队列中的消息被顺序消费。
 
-### 5.2、应用场景
+### 5.2、如何保证有序
 
-高并发下的用户下单订单场景
+顺序消息一般可以拆分为顺序发送、顺序消费，顺序需要由3个阶段去保障：
+- 消息被发送时保持顺序
+- 消息被存储时保持和发送的顺序一致
+- 消息被消费时保持和存储的顺序一致
 
 ### 5.3、实现原理
 
@@ -499,6 +503,10 @@ RocketMQ的事务消息发送者为：org.apache.rocketmq.client.producer.Transa
 - 在获取到路由信息以后，会根据MessageQueueSelector实现的算法来选择一个队列，同一个OrderId获取到的肯定是同一个队列
 
 顺序消息的实现类：org.apache.rocketmq.client.impl.consumer.ConsumeMessageOrderlyService
+
+### 5.4、应用场景
+
+用户下单流程：创建订单消息、扣库存消息、折扣消息、订单支付
 
 ## 6、消息重复消费问题
 
@@ -512,11 +520,19 @@ RocketMQ不保证消息不重复，如果你的业务需要保证严格的不重
 
 - 延迟消息：消息发送到Broker之后，要特定的时间才会被Consumer消费；
 - 目前只支持固定精度的定时消息：RocketMQ 支持发送延迟消息，但不支持任意时间的延迟消息的设置，仅支持内置预设值的延迟时间间隔的延迟消息。预设值的延迟时间间隔为：`1s、 5s、 10s、 30s、 1m、 2m、 3m、 4m、 5m、 6m、 7m、 8m、 9m、 10m、 20m、 30m、 1h、 2h`。如果需要支持任意时间精度的定时调度，不可表面的需要在Broker层错消息排序（可以参考ScheduleExecutorService实现），在加上持久化方面的考虑，不可避免带来比较大的性能消耗；
-- MessageStoreConfig配置类、ScheduleMessageService 任务类；
+- MessageStoreConfig配置类、ScheduleMessageService 任务类，该类的实例在 DefaultMessageStore 中创建，通过 DefaultMessageStore 中调用load方法加载并调用 start 方法进行启动
 - 在消息创建的时候，调用 setDelayTimeLevel(int level) 方法设置延迟时间。broker在接收到延迟消息的时候会把对应延迟级别的消息先存储到对应的延迟队列中，等延迟消息时间到达时，会把消息重新存储到对应的topic的queue里面
 - 主要原理：
-    - 定时消息发送到 Broker 后，会被存储 Topic 为 SCHEDULE_TOPIC_XXXX 中，并且所在 Queue 编号为延迟级别 - 1；需要 -1 的原因是，延迟级别是从 1 开始的。如果延迟级别为 0 ，意味着无需延迟。
+    - 定时消息发送到 Broker 后，会被存储 Topic 为 SCHEDULE_TOPIC_XXXX 中，并且所在 Queue 编号为延迟级别 -1；需要 -1 的原因是，延迟级别是从 1 开始的。如果延迟级别为 0 ，意味着无需延迟。
     - Broker 针对每个 SCHEDULE_TOPIC_XXXX 的队列，都创建一个定时任务，顺序扫描到达时间的延迟消息，重新存储到延迟消息原始的 Topic 的原始 Queue 中，这样它就可以被 Consumer 消费到
+
+整体流程：
+- （1）消息消费者发送消息，如果发送消息的delayLevel大于0，则该表消息主题为 SCHEDULE_TOPIC_XXXX，消息队列的 delayLevel 减1；
+- （2）消息经由commitlog 转发到消息消费队列 SCHEDULE_TOPIC_XXXX 的消息消费队列为0；
+- （3）定时任务每隔1s根据上次拉取偏移量从消费队列中取出所有的消息；
+- （4）根据消息的物理偏移量与消息大小从 CommitLog 中拉取消息；
+- （5）根据消息属性重新创建消息，并恢复原主题 topicA、原队列ID，清楚 delayLevel 属性，存入 commitlog文件；
+- （6）转发到原主题topicA的消息消费队列，供消费者消费；
 
 ## 8、消息过滤机制
 
@@ -586,6 +602,23 @@ RocketMWQ支持表达式过滤和类过滤两种模式，其中表达式又分�
 ## 2、幂等性保证
 
 ## 3、可靠性投递
+
+## 4、rocketmq消息类型
+
+### 4.1、根据发送的特点
+
+- 同步消息
+- 异步消息
+- 单向消息
+
+### 4.2、按照使用功能
+
+- 普通消息（订阅）
+- 顺序消息
+- 广播消息
+- 延时消息
+- 批量消息
+- 事务消息
 
 # 参考资料
 
