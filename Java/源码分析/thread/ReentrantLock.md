@@ -283,7 +283,6 @@ class LockDemo{
 - volatile变量规则：由于state=1会先读取state，所以线程T1的 unlock() 操作 happens-before 线程T2的 lock 操作；
 - 传递性规则：线程T1的`value+1` happens-before 线程T2的 lock 操作
 
-
 # 二、Condition
 
 ## 1、签名

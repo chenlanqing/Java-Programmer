@@ -268,13 +268,13 @@ Java内存模型是一种规范，描述了在多线程代码中哪些行为是�
 	- 抽象示例：`Load1; LoadLoad; Load2` 
 	- 描述：在Load2要读取的数据被访问前，保证Load1要读取的数据被读取完毕
 - `StoreStore Barriers`
-	- 抽象示例：`Store1; StoreStore; Store2 `
+	- 抽象示例：`Store1; StoreStore; Store2`
 	- 描述： 在Store2写入执行前，确保Store1数据对其他处理器可见(刷新到内存)
-- `LoadStore Barriers `
+- `LoadStore Barriers`
 	- 抽象示例：`Load1; LoadStore; Store2`
 	- 描述：在Store2被写入前，保证Load1要读取的数据被读取完毕
 - `StoreLoad Barriers`
-	- 抽象示例：`Store1; StoreLoad; Load2  `
+	- 抽象示例：`Store1; StoreLoad; Load2`
 	- 描述：在Load2读取操作执行前，保证Store1的写入对所有处理器可见。StoreLoad Barriers 会使该屏障之前的所有内存访问指令(存储和装载指令)完成之后。才执行该屏障之后的内存访问指令。StoreLoad Barriers 是一个“全能型”的屏障，它同时具有其他三个屏障的效果，同时也是开销最大的屏障
 
 ## 4、JMM-顺序一致性
@@ -412,7 +412,7 @@ class VolatileFeaturesExample {
 ```
 把对volatile变量的单个读/写，看成是使用同一个监视器锁对这些单个读/写操作做了同步
 
-- 如上面示例程序所示，对一个volatile变量的单个读/写操作，与对一个普通变量的读/写操作使用同一个监视器锁来同步，它们之间的执行效果相同：volatile写和监视器的释放有相同的内存语义;volatile读与监视器的获取有相同的内存语义；
+- 如上面示例程序所示，对一个volatile变量的单个读/写操作，与对一个普通变量的读/写操作使用同一个监视器锁来同步，它们之间的执行效果相同：volatile写和监视器的释放有相同的内存语义；volatile读与监视器的获取有相同的内存语义；
 
 - 监视器锁的happens-before规则保证释放监视器和获取监视器的两个线程之间的内存可见性，这意味着对一个volatile变量的读，总是能看到(任意线程)对这个volatile变量最后的写入;
 
@@ -462,7 +462,7 @@ stop = true;
 
 - 解决异步死循环：
 
-	JVM 在设置 -server 时出现死循环：一个变量存在与公共堆栈中和线程的私有堆栈中.JVM 被设置了-server是为了线程运行的效率，线程一直在私有堆栈中获取变量的值，而调用 set 方法时虽然被执行了，但是更新的却是公共堆栈中的变量值；造成这样的原因就是私有堆栈中的值和公共堆栈的值不同步造成的；
+	JVM 在设置 -server 时出现死循环：一个变量存在与公共堆栈中和线程的私有堆栈中。JVM 被设置了-server是为了线程运行的效率，线程一直在私有堆栈中获取变量的值，而调用 set 方法时虽然被执行了，但是更新的却是公共堆栈中的变量值；造成这样的原因就是私有堆栈中的值和公共堆栈的值不同步造成的；
 
 - 为什么 volatile 有这样的特性？因为 Java 的 happens-before(先行发生)对于一个volatile变量的写操作先行发生于后面对这个变量的读操作可见性：基于CPU的内存屏障指令，被JSR-133抽象为happens-before原则
 
@@ -503,7 +503,7 @@ volatile也无法保证对变量的任何操作都是原子性的
 	mov    %r8d，0xc(%r10) ; Store
 	lock addl $0x0，(%rsp) ; StoreLoad Barrier (内存屏障)
 	```
-	从Load到store到内存屏障，一共4步，其中最后一步jvm让这个最新的变量的值在所有线程可见，也就是最后一步让所有的CPU内核都获得了最新的值，但中间的几步(从Load到Store)是不安全的，中间如果其他的CPU修改了值将会丢失.
+	从Load到store到内存屏障，一共4步，其中最后一步jvm让这个最新的变量的值在所有线程可见，也就是最后一步让所有的CPU内核都获得了最新的值，但中间的几步(从Load到Store)是不安全的，中间如果其他的CPU修改了值将会丢失。
 	代码如下：
 	```java
 	public static void main(String[] args) {

@@ -817,6 +817,7 @@ JDK中有使用的了简单工厂模式：
 - ConcreteObserver：具体观察者，不同观察者有不同的处理逻辑
 
 ## 3、基本实现
+
 - Subject
 ```java
 public abstract class Subject {
@@ -903,6 +904,7 @@ public class ConcreteObserver implements Observer{
 ## 4、事件驱动模型
 
 ## 5、优缺点
+
 ### 5.1、优点
 
 - 抽象主题只依赖于抽象观察者
@@ -1178,7 +1180,6 @@ public class ConcreteObserver implements Observer{
 
 # 十、模板模式
 
-
 ## 1、定义
 
 定义一个操作中的算法的骨架，而将步骤延迟到子类中。模板方法使得子类可以不改变一个算法的结构即可重定义算法的某些特定步骤；
@@ -1287,7 +1288,7 @@ public class ConcreteObserver implements Observer{
 
 #### 5.1.1、基本概念
     
-代理和被代理的对象在代理之前是确定的.都实现了相同的接口或者继承相同的抽象类;
+代理和被代理的对象在代理之前是确定的，都实现了相同的接口或者继承相同的抽象类；
 
 #### 5.1.2、实现方式
 
@@ -1307,7 +1308,7 @@ public class ConcreteObserver implements Observer{
 
 - 两个核心类：位于`java.lang.reflect`包下
 
-    - Proxy：动态代理类：`public static Object newProxyInstance(ClassLoader loader，Class<?>[] interfaces，InvocationHandler h)`返回代理类的一个实例，返回后的代理类可以被当作代理类使用
+    - Proxy 动态代理类：`public static Object newProxyInstance(ClassLoader loader，Class<?>[] interfaces，InvocationHandler h)`返回代理类的一个实例，返回后的代理类可以被当作代理类使用
 
     - InvocationHandler：该接口值定义了一个方法，`public Object invoke(Object proxy， Method method， Object[] args)throws Throwable;`
     
@@ -1345,9 +1346,9 @@ public class ConcreteObserver implements Observer{
 
 #### 5.2.3、JDK 与 CGLIB 代理的比较
 
-- JDK：只能代理实现了接口的类；没有实现接口的类不能实现 JDK 的动态代理
+- JDK：只能代理实现了接口的类；没有实现接口的类不能实现 JDK 的动态代理；
 - CGLIB：针对类来实现代理的，对指定目标产生一个子类，通过方法拦截技术拦截所有父类方法的调用；CGLib是通过继承来实现的，因此不能代理被final修饰的类；
-- JDK动态代理通过JVM实现代理类字节码的创建，cglib通过ASM创建字节码
+- JDK动态代理通过JVM实现代理类字节码的创建，cglib通过ASM创建字节码；
 
 #### 5.2.4、Spring中代理的选择
 

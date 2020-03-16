@@ -252,7 +252,7 @@ LinkedList需要实现双向的迭代访问，Iterator接口不行，其只支�
 
 LinkedList里有个内部类：ListItr实现了ListIterator：
 ```java
- private class ListItr implements ListIterator<E> {
+private class ListItr implements ListIterator<E> {
     private Node<E> lastReturned;//上一次执行 next() 或者 previos() 方法时的节点位置
     private Node<E> next;// 下一个节点
     private int nextIndex;// 下一个节点的位置

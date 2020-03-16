@@ -16,9 +16,9 @@ LinkedHashMap实现与HashMap的不同之处在于，后者维护着一个运行
 
 根据链表中元素的顺序可以分为：按插入顺序的链表，和按访问顺序(调用get方法)的链表。  
 
-默认是按插入顺序排序，如果指定按访问顺序排序，那么调用get方法后，会将这次访问的元素移至链表尾部，不断访问可以形成按访问顺序排序的链表。  可以重写removeEldestEntry方法返回true值指定插入元素时移除最老的元素；
+默认是按插入顺序排序，如果指定按访问顺序排序，那么调用get方法后，会将这次访问的元素移至链表尾部，不断访问可以形成按访问顺序排序的链表。可以重写removeEldestEntry方法返回true值指定插入元素时移除最老的元素；
 
-对于LinkedHashMap而言，它继承与HashMap、底层使用哈希表与双向链表来保存所有元素。其基本操作与父类HashMap相似，它通过重写父类相关的方法，来实现自己的链接列表特性
+对于LinkedHashMap而言，它继承于HashMap、底层使用哈希表与双向链表来保存所有元素。其基本操作与父类HashMap相似，它通过重写父类相关的方法，来实现自己的链接列表特性
 
 ## 2、LinkedHashMap链表结构
 
@@ -48,7 +48,7 @@ public LinkedHashMap() {
     accessOrder = false;
 }
 ```
-插入方法是使用的是父类的put方法，不过重写了 put方法调用执行的newNode\newTreeNode 和 afterNodeAccess 方法：
+插入方法是使用的是父类的put方法，不过重写了 put方法调用执行的 newNode\newTreeNode 和 afterNodeAccess 方法：
 ```java
 // 新增节点，并追加到链表的尾部
 Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {

@@ -17,7 +17,7 @@
                         - 线程池的生命周期？
                         - 线程池的核心模型Worker对象的运作流程是怎样的？
                         - 线程池的拒绝策略有哪4种？
-                        - 线程池的提交，execute与submit有什么区别？在实际开发中需要注意哪些问题？
+                        - 线程池的提交，execute与submit有什么区别？在实际开发中需要注意哪些问题？需要注意异常的处理、是否需要获取记过等
                         - threadlocal原理，数据结构
                         - 并发集合类了解哪些？
                                 - ConcurrentHashMap
@@ -25,15 +25,15 @@
                                 - ConcurrentLinkedQueue、LinkedTransferQueue、ArrayBlockingQueue、PriorityBlockingQueue、SynchronousQueue、DelayQueue
                         - AQS 原理：
                                 - 独占 & 共享
-                                - state & CHL队列 
+                                - state & CHL队列
                         - 锁：
                                 - Synchronized、ReentrantLock、RWLock、Condition、LockSupport、StampedLock、
                                 - 概念：CAS 自旋、重入、偏向
                         - volatile：
-                                - 多线程共享 & 阻止指令重排序 
-                                - jvm的逃逸分析  & Tlab & 消除伪共享 & UNsafe & 
+                                - 多线程共享 & 阻止指令重排序
+                                - jvm的逃逸分析  & Tlab & 消除伪共享 & UNsafe &
                         - atomic:
-                                - CAS的缺点，自旋、ABA问题 
+                                - CAS的缺点，自旋、ABA问题
                                 - atomic 原子性、Reference、referenceArray、longadder
                         - 并发控制：
                                  - barrier、countdownlatch、exchanger、future、semaphore
@@ -47,13 +47,13 @@
                         - 内存溢出分析：堆内、堆外 （含义、如何设置）
                         - CPU飙升：死锁、线程阻塞
                         - 关于GC: minor major full
-                         - stw，安全点等
-                                              
+                        - stw，安全点等
+
         - 数据结构&算法
                 - 数组、链表、树、队列..
                 - 关于时间复杂度，时间换空间转换案例
                 - 关于排序、冒泡、快排、递归、二分搜索、位运算
-                
+
 
 
 
@@ -75,7 +75,7 @@
         - 如何实现动态注入一个Bean？
         - 如何把自定义注解所在的Class 初始化注入到Spring容器？
         - BeanDefinition指的是什么，与BeanDefinitionHolder的区别，Spring如何存储BeanDefinition实例？
-        - ASM 与 CGlib 
+        - ASM 与 CGlib
         - Spring的条件装配，自动装配
 
 - RPC通信框架
@@ -96,7 +96,7 @@
                 - Channel的概念、Bytebuf的概念，flip、position...
                 - FileChannel 如何使用？
                 - RAF使用，seek、skip方法
-                
+
         - Netty
                 - 关于Netty的Reactor实现？
                 - Netty的ByteBuf有哪些？
@@ -121,7 +121,7 @@
                 - Kafka
                 - RabbitMQ
                 - ActiveMQ
-        
+
 - 缓存
         - 内存缓存
                 - 堆外内存缓存 回收释放
@@ -131,7 +131,7 @@
                 - Redis的分布式锁实现
                 - Redis的原子性，Redis的特点
                 - Redis集群相关问题、一致性hash、slot概念等
-                
+
 基础3：-----------------------
 - 流控组件
         - Hystrix
@@ -140,10 +140,10 @@
 - 高可用服务中间件
         - Zookeeper / Curator
         - Nginx
-        - Haproxy 
+        - Haproxy
         - LVS
         - Haproxy
-        
+
 - 数据库存储 & 调度
         - Sharding-JDBC
         - ElasticJob
@@ -153,7 +153,7 @@
         - ELK ，数据库加速、主搜（算法）
          - Logback、Slf4j2
          - Solr & Lucene
-        
+
 - BPM相关
         - JBPM
          - Activiti

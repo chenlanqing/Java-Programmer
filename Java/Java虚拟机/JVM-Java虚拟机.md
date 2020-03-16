@@ -441,7 +441,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 在HotSpot虚拟机中，对象的内存中存储的布局可以分为3大区域：对象头（Header）、实例数据（Instance Area）和对齐填充（padding）
 - 对象头：标记字（32位虚拟机4B，64位虚拟机8B） + 类型指针（32位虚拟机4B，64位虚拟机8B）+ [`数组长（对于数组对象才需要此部分信息）`]
-	- Mark Word 部分数据的长度在32位和64位虚拟机（未开启压缩指针）中分别为32bit和64bit，存储对象自身的运行时数据如哈希值等。Mark Word一般被设计为非固定的数据结构，以便存储更多的数据信息和复用自己的存储空间。
+	- Mark Word 部分数据的长度在32位和64位虚拟机（未开启压缩指针）中分别为32bit和64bit，存储对象自身的运行时数据如哈希值、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等。Mark Word一般被设计为非固定的数据结构，以便存储更多的数据信息和复用自己的存储空间。
 	- 类型指针 指向它的类元数据的指针，用于判断对象属于哪个类的实例
 
 - 实例数据：对象真正存储的有效数据。如各种字段内容，各字段的分配策略为`longs/doubles、ints、shorts/chars、bytes/boolean、oops(ordinary object pointers)`，相同宽度的字段总是被分配到一起，便于之后取数据。父类定义的变量会出现在子类定义的变量的前面
@@ -981,28 +981,27 @@ JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相�
 - 检查类是否已经加载顺序：自底向上，`Custom ClassLoader(自定义加载) --> App ClassLoader --> Extension ClassLoader --> Bootstrap ClassLoader`
 
 - 加载类顺序
-	`Load JRE\lib\rt.jar`或者 `-Xbootclasspath` 选项指定的jar包；<br>
-	`Load JRE\lib\ext\*.jar`或者 `-Djava.ext.dirs`指定目录下的jar包；<br>
-	`Load CLASSPATH`或`-Djava.class.path`所指定目录下的jar包；<br>
-	通过`java.lang.ClassLoader` 的子类自定义加载class；	
+	- `Load JRE\lib\rt.jar`或者 `-Xbootclasspath` 选项指定的jar包；
+	- `Load JRE\lib\ext\*.jar`或者 `-Djava.ext.dirs`指定目录下的jar包；
+	- `Load CLASSPATH`或`-Djava.class.path`所指定目录下的jar包；
+	- 通过`java.lang.ClassLoader` 的子类自定义加载class；
 
 - 验证加载顺序：代码如下
 	- 测试1：
-	```JAVA
-	ClassLoader loader = ClassLoaderDemo.class.getClassLoader();
-	while(loader != null){
+		```JAVA
+		ClassLoader loader = ClassLoaderDemo.class.getClassLoader();
+		while(loader != null){
+			System.out.println(loader);
+			loader = loader.getParent();
+		}
 		System.out.println(loader);
-		loader = loader.getParent();
-	}
-	System.out.println(loader);
-	// 输出结果：
-	sun.misc.Launcher$AppClassLoader@4bb8d481 --> ClassLoaderDemo的类加载器是AppClassLoader
-	sun.misc.Launcher$ExtClassLoader@538787fd --> AppClassLoader的类加器是ExtClassLoader
-	null --> ExtClassLoader的类加器是Bootstrap ClassLoader，因为 Bootstrap ClassLoader 不是一个普通的
-			Java 类 Bootstrap ClassLoader 使用 C++ 编写的
-	```
+		// 输出结果：
+		sun.misc.Launcher$AppClassLoader@4bb8d481 --> ClassLoaderDemo的类加载器是AppClassLoader
+		sun.misc.Launcher$ExtClassLoader@538787fd --> AppClassLoader的类加器是ExtClassLoader
+		null --> ExtClassLoader的类加器是Bootstrap ClassLoader，因为 Bootstrap ClassLoader 不是一个普通的Java 类 Bootstrap ClassLoader 使用 C++ 编写的
+		```
 	- 测试2：<br>
-		将ClassLoaderDemo.class打包成ClassLoaderDemo.jar，放在JAVA_HOME/jre/lib/ext下，重新运行上述代码sun.misc.Launcher$ExtClassLoader@155787fd --> ClassLoader的委托模型机制，当我们要用ClassLoaderDemo.clas这个类的时候，AppClassLoader在试图加载之前，先委托给 Bootstrcp ClassLoader，Bootstracp ClassLoader发现自己没找到，它就告诉 ExtClassLoader<br>
+		将`ClassLoaderDemo.class`打包成`ClassLoaderDemo.jar`，放在`JAVA_HOME/jre/lib/ext`下，重新运行上述代码`sun.misc.Launcher$ExtClassLoader@155787fd --> ClassLoader`的委托模型机制，当我们要用ClassLoaderDemo.clas这个类的时候，AppClassLoader在试图加载之前，先委托给 Bootstrcp ClassLoader，Bootstracp ClassLoader发现自己没找到，它就告诉 ExtClassLoader<br>
 		null --> ExtClassLoader的父类加载器是Bootstrap ClassLoader.
 
 	- 测试3：用 Bootstrcp ClassLoader 来加载 ClassLoaderDemo.class	
@@ -1061,9 +1060,9 @@ protected Class<?> loadClass(String name， boolean resolve)throws ClassNotFound
 	}
 }
 ```
-- 方法的声明：protected Class<?> loadClass(String name， boolean resolve) throws ClassNotFoundException；该方法同包内和派生类中可用，返回值类型 Class；String name要查找的类的名字，boolean resolve，一个标志，true 表示将调用resolveClass(c)处理该类；
+- 方法的声明：`protected Class<?> loadClass(String name， boolean resolve) throws ClassNotFoundException`；该方法同包内和派生类中可用，返回值类型 Class；String name要查找的类的名字，boolean resolve，一个标志，true 表示将调用resolveClass(c)处理该类；
 
-- synchronized (getClassLoadingLock(name))：同步代码块<br>
+- `synchronized (getClassLoadingLock(name))`：同步代码块<br>
 	getClassLoadingLock(name)：为类的加载操作返回一个锁对象，这个方法这样实现：如果当前的 Classloader对象注册了并行能力，方法返回一个与指定的名字	className相关联的特定对象，否则，直接返回当前的 ClassLoader对象
 	- 在ClassLoader类中有一个静态内部类ParallelLoaders，他会指定的类的并行能力
 	- 果当前的加载器被定位为具有并行能力，那么他就给parallelLockMap定义，就是 new ConcurrentHashMap<>()，那么这个时候，我们知道如果当前的加载器是具有并行能力的，那么parallelLockMap就不是 Null；判断parallelLockMap是不是 Null，如果是 null，说明该加载器没有注册并行能力，那么我们没有必要给他一个加锁的对象
@@ -1154,9 +1153,9 @@ public class NetworkClassLoader extends ClassLoader {
 
 ## 6.7、什么时候使用类加载器
 
-类加载器是个很强大的概念，很多地方被运用。最经典的例子就是AppletClassLoader，它被用来加载Applet使用的类，而Applets大部分是在网上使用，而非本地的操作系统使用.使用不同的类加载器，你可以从不同的源地址加载同一个类，它们被视为不同的类.J2EE 使用多个类加载器加载不同地方的类，例如WAR文件由 Web-app 类加载器加载，而 EJB-JAR中的类由另外的类加载器加载。有些服务器也支持热部署，这也由类加载器实现。你也可以使用类加载器来加载数据库或者其他持久层的数据；
+类加载器是个很强大的概念，很多地方被运用。最经典的例子就是AppletClassLoader，它被用来加载Applet使用的类，而Applets大部分是在网上使用，而非本地的操作系统使用.使用不同的类加载器，你可以从不同的源地址加载同一个类，它们被视为不同的类。J2EE 使用多个类加载器加载不同地方的类，例如WAR文件由 Web-app 类加载器加载，而 EJB-JAR中的类由另外的类加载器加载。有些服务器也支持热部署，这也由类加载器实现。你也可以使用类加载器来加载数据库或者其他持久层的数据；
 
-## 6.8、Java 类类生命周期
+## 6.8、Java类生命周期
 
 加载(Loading)、验证(Verification)、准备(Preparation)、解析(Resolution)、初始化(Initialization)、使用(Using)和卸载(Unloading)7个阶段；准备、验证、解析3个部分统称为连接，其中“类加载”的过程包括了加载、验证、准备、解析、初始化五个阶段，加载、验证、准备和初始化这四个阶段发生的顺序是确定的而解析阶段则不一定，它在某些情况下可以在初始化阶段之后开始，这是为了支持Java语言的运行时绑定
 
@@ -1196,7 +1195,7 @@ public class NetworkClassLoader extends ClassLoader {
 
 - （1）文件格式验证：验证字节流是否符合Class文件格式的规范，并且能被当前版本的虚拟机处理，主要验证点：
 
-	- 是否以魔术0xCAFEBABE开头；
+	- 是否以魔数0xCAFEBABE开头；
 	- 主次版本号是否在当前虚拟机的处理范围之内；
 	- 常量池中的常量是否有不被支持的类型(检测常量 tag 标志)；
 	- 指向常量的各种索引值使用有执行不存在的常量或不符合类型的常量；
@@ -1228,7 +1227,7 @@ public class NetworkClassLoader extends ClassLoader {
 	- 在指定类中是否存在符合方法的字段描述以及简单名称所描述的方法和字段;
 	= 符号引用中的类，字段，方法的访问性是否可被当前类访问
 
-	如果无法通过符号引用验证，那么将抛出一个java.lang.IncompatibleClassChangeError异常的子类。验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响。如果所运行的的全部代码都已经被反复使用和验证，那么在实施阶段可以考虑采用 -Xverifynone参数来关闭大部分的类验证措施，缩短虚拟机加载的时间
+	如果无法通过符号引用验证，那么将抛出一个`java.lang.IncompatibleClassChangeError`异常的子类。验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响。如果所运行的的全部代码都已经被反复使用和验证，那么在实施阶段可以考虑采用 `-Xverifynone`参数来关闭大部分的类验证措施，缩短虚拟机加载的时间
 
 ### 6.8.3、准备
 
@@ -1281,7 +1280,6 @@ public class NetworkClassLoader extends ClassLoader {
 		- ⑥、当虚拟机启动某个被标明为启动类的类（即包含main方法的那个类）
 
 - 不触发类的初始化：所有引用类的方式不会触发初始化，称为被动引用
-
 	- ①、通过子类引用父类的静态字段，不会导致子类初始化；对于 HotSpot 虚拟机，可以通过 `-XX:+TraceClassLoading` 参数观察到此操作会导致子类的加载
 	- ②、通过数组定义来引用类，不会触发此类的初始化
 	- ③、常量在编译阶段会存入调用类的常量池中，本质上并没有直接引用到定义常量的类，因此不会触发定义常量的类的初始化
@@ -1396,6 +1394,7 @@ public class NetworkClassLoader extends ClassLoader {
 	当一个类在初始化时，要求其父类全部已经初始化过了；但是一个接口在初始化时，并不要求其父接口全部都完成了初始化，只有在真正使用到父接口的时候（如引用接口中定义的常量）。才会初始化该父接口
 
 ## 6.10、如下例子
+
 ```java
 //  http://www.importnew.com/18566.html
 public class StaticTest{

@@ -382,7 +382,7 @@ Write once， run anywhere
 
 # 二、Java隐蔽问题
 
-## 1、基本类型与引用类型的比较
+## 1、基本类型与引用类型
 
 **1.1、如下四个变量，哪两个比较为 false**
 
@@ -408,6 +408,17 @@ Integer i04 = new Integer(59);
 
 - Integer i = 1; 做了自动装箱：使用 valueOf() 方法将 int 装箱为 Integer 类型
 - i += 1; 先将 Integer 类型的 i 自动拆箱成 int(使用 intValue() 方法将 Integer 拆箱为 int)，完成加法运行之后的 i 再装箱成 Integer 类型
+
+**1.4、int与long精度丢失问题**
+- `byte→short`、`short→int`、`int→long`、`int→double`、`char→int`、`float→double`转换是不会发生精度丢失的，因为后者所包含的范围比前者大且完全包含前者
+- int转float、long转float，long转double都会发生精度丢失。精度丢失包括两种，一是有效数字丢失，一是目标类型完全无法表示数据；
+
+	int和float都是32位，但是内存结构也就是存储结构是不一样的，float只有24（含隐含的一位整数位）位来确定精度，而int是32位。long转float，long转double精度丢失原理是一样；我们知道，float的存储结构是1个符号位，8个指数位，23个尾数。
+	- 符号位，表述浮点数的正或者负，0代表正，1代表负。
+	- 指数位，实际也是有正负的，但是没有单独的符号位，在计算机的世界里，进位都是二进制的，指数表示的也是2的N次幂，8位指数表达的范围是0到255，而对应的实际的指数是－127到128。也就是说实际的指数等于指数位表示的数值减127。
+	- 尾数位，只代表了二进制的小数点后的部分，小数点前的那位被省略了，当指数位全部为0时省略的是0否则省略的是1。
+
+	所以可以说，实际上尾数确定了浮点数的精度，而数的大小主要是靠指数位，尾数只有23位，加上隐含的一位整数位便是24位。也就是说int类型的值在2^24以内，float是可以精确表示的，但是当超过这个数的时候就不一定能精确表示了。
 
 ## 2、关于String +和StringBuffer的比较
 
@@ -1481,7 +1492,7 @@ JVM指令：
 - invokeinterface：调用接口方法；
 - invokespecial：专门用来调用父类方法、私有方法和初始化方法；
 - invokestatic：调用静态方法；
-- invokevirtual：调用对象的一般方法
+- invokevirtual：调用对象的一般方法；
 
 上述这四个指令所对应的类、调用的方法在编译时几乎是固定的：invokestatic所对应的类为静态方法所在的类，方法为静态方法本身；invokespecial所对应的类为当前对象，方法是固定的；invokeinterface和invokevirtual所对应的类也为当前对象，方法可以因为继承和实现进行选择，但也仅限于整个继承体系中选择；
 
@@ -4451,7 +4462,7 @@ public static void main(String[] args) {
 
 ## 5、原理
 
-ServiceLoader类的成员变量
+ServiceLoader 类的成员变量
 ```java
 public final class ServiceLoader<S> implements Iterable<S> {
     private static final String PREFIX = "META-INF/services/";

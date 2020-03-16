@@ -1302,9 +1302,9 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 
 #### 7.4.2、轻量级锁的加锁过程
 
-- （1）在代码块进入同步块的时候，如果同步对象锁状态为无锁状态（锁标志位为"01"状态，是否偏向锁为"0"）虚拟机首先将在当前线程的栈桢建立一个名为锁记录(Lock Record)的空间，用于存储锁对象目前的 Mark Word 的拷贝；
+- （1）在代码块进入同步块的时候，如果同步对象锁状态为无锁状态（锁标志位为"01"状态，是否偏向锁为"0"）虚拟机首先将在当前线程的栈桢建立一个名为锁记录(Lock Record)的空间，用于存储锁对象目前的 Mark Word 的拷贝，拷贝的mark word前加了个 displaced 前缀
 - （2）拷贝对象头中的 Mark Word 复制到锁记录中；
-- （3）拷贝成功后，虚拟机将使用CAS操作尝试将对Mark Word更新为指向Lock Record的指针，并将Lock Record里的owner针指向object mark word.如果执行成功，
+- （3）拷贝成功后，虚拟机将使用CAS操作尝试将对Mark Word更新为指向Lock Record的指针，并将Lock Record里的owner针指向object mark word，如果执行成功，
 	则执行步骤（4），如果失败则执行步骤（5）；
 - （4）如果更新成功，那么这个线程就拥有了该对象的锁，并且对象 Mark Word 的锁标志位设置为"00"，即表示对象处于轻量级锁定状；
 - （5）如果更新失败，虚拟机首先会检查对象的 Mark Word 是否指向当前线程的栈帧，如果是就说明当前线程已经拥有了这个对象的锁，那就可以直接进入同步块继续执行。否则说明多个线程竞争锁，轻量级锁就要膨胀为重量级锁，锁标志的状态值变为“10”，Mark Word 中存储的就是指向重量级锁（互斥量）的指针，后面等待锁的线程也要进入阻塞状态。而当前线程便尝试使用自旋来获取锁，自旋就是为了不让线程阻塞，而采用循环去获取锁的过程；
@@ -1317,13 +1317,15 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 
 ### 7.5、偏向锁
 
+偏向锁的意思是这个锁会偏向第一个获得它的锁，如果在接下来的执行过程中，该锁一直没有被其他线程获取，则持有偏向锁的线程不需要进行同步；
+
 偏向锁的目的是在某个线程获得锁之后，消除这个线程锁重入(CAS)的开销，看起来让这个线程得到了偏护。
 
 引入偏向锁是为了在无多线程环境的情况下尽可能减少不必要的轻量级锁执行路径。因为轻量级锁的获取及释放依赖多次CAS原子指令，而偏向锁只需要在置换ThreadID的时候依赖一次CAS原子指令，偏向锁是在只有一个线程执行同步块时进一步提高性能。
 
-偏向锁在JDK 6及以后的JVM里是默认启用的，可以通过JVM参数关闭偏向锁：`-XX:-UseBiasedLocking=false`，关闭之后程序默认会进入轻量级锁状态；不适合锁竞争激烈的情况
+偏向锁在JDK 6及以后的JVM里是默认启用的，可以通过JVM参数关闭偏向锁：`-XX:-UseBiasedLocking=false`，关闭之后程序默认会进入轻量级锁状态；不适合锁竞争激烈的情况；偏向锁默认不是立即就启动的，在程序启动后，通常有几秒的延迟，可以通过命令`-XX:BiasedLockingStartupDelay=0`来关闭延迟。
 
-偏向锁默认不是立即就启动的，在程序启动后，通常有几秒的延迟，可以通过命令`-XX:BiasedLockingStartupDelay=0`来关闭延迟
+如果虚拟机开启了偏向锁模式，那么当锁对象第一次被线程获取的时候，虚拟机将会把对象头中的标志位设置为`01`、把偏向模式设置为`1`，表示进入偏向模式；
 
 ![](image/偏向锁获取与释放过程.png)
 
@@ -1331,7 +1333,7 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 
 - （1）访问 Mark Word 中偏向锁的标识是否设置为1，锁标志位是否为01--确认可偏向状态
 - （2）如果为可偏向状态，则测试线程ID是否指向当前线程，如果是进入步骤（5），否则进入步骤（3）.
-- （3）如果线程ID并未指向当前线程，则通过 CAS 操作竞争锁；如果竞争成功，则将 Mark Word 中线程ID设置为当前线程ID，然后值（5）；如果竞争失败，执行（4）
+- （3）如果线程ID并未指向当前线程，则通过 CAS 操作竞争锁；如果竞争成功，则将 Mark Word 中线程ID设置为当前线程ID，然后执行（5）；如果竞争失败，执行（4）
 - （4）如果 CAS 获取偏向锁失败，则表示有竞争，当到达全局安全点(safepoint)时获得偏向锁的线程被挂起，偏向锁升级为轻量级锁，然后被阻塞在安全点的线程继续往下执行同步代码;
 - （5）执行同步代码；
 
@@ -1342,6 +1344,12 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 偏向锁的释放仅仅将栈中的最近一条lock record的obj字段设置为null。需要注意的是，偏向锁的解锁步骤中并不会修改对象头中的thread id
 
 偏向锁是可以重偏向的，但是STW期间不能
+
+**注意点：**
+
+当多谢进入偏向状态的时候，mark word的大部分空间都存储持有锁的线程id了，这部分空间占用了原有存储哈希码的位置，那原对象的哈希码如何处理呢？
+
+当一个对象已经计算过一致性哈希后，它就再也无法进入偏向锁的状态了；而当一个对象当前正处于偏向锁状态时，又收到需要计算其一致性哈希码请求时（调用System::identityHashCode），它的偏向状态会立即被撤销，并且锁会膨胀为重量级锁。
 
 ### 7.6、其他优化
 
@@ -1620,7 +1628,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 ## 11、ThreadLocal类
 
-存放每个线程的共享变量，解决变量在不同线程间的隔离性，能让线程拥有了自己内部独享的变量；覆盖initialValue方法指定线程独享的值
+存放每个线程的共享变量，解决变量在不同线程间的隔离性，能让线程拥有了自己内部独享的变量；覆盖 initialValue 方法指定线程独享的值
 
 每一个线程都有一个私有变量，是`ThreadLocalMap`类型。当为线程添加`ThreadLocal`对象时，就是保存到这个map中，所以线程与线程间不会互相干扰
 
@@ -1651,6 +1659,9 @@ private ThreadLocal myThreadLocal = new ThreadLocal<String>() {
 	}
 };
 ```
+
+在JDK8之后，有个withInitial方法，可以初始化，其接受一个Lambda表达式，它其实是调用 initialValue 初始化的
+`ThreadLocal<SimpleDateFormat> threadLocal1 = ThreadLocal.withInitial(() -> new SimpleDateFormat(""));`
 
 ### 11.5、完整的ThreadLocal 实例
 
@@ -1769,9 +1780,7 @@ public class ParentThreadSharedDataWithSon {
 	在拦截器或者AOP 中设置需要传输的参数；注意：在请求结束后一定要调用remove方法，移出不必要的键值对，以免造成内存泄漏。
 
 - 父子线程数据传递：InheritableThreadLocal
-
 	- 该类继承自 ThreadLocal
-
 		```java
 		public class InheritableThreadLocal<T> extends ThreadLocal<T> {
 			protected T childValue(T parentValue) {
@@ -1797,15 +1806,15 @@ public class ParentThreadSharedDataWithSon {
 		```
 	- InheritableThreadLocal是如何实现在子线程中能拿到当前父线程中的值的呢？创建线程时，init(....)方法里有如下代码：<br>
 	```java
-	if (parent.inheritableThreadLocals != null)
+    // inheritThreadLocals 是传入的参数，默认创建线程都是true，最主要是判断父类的 inheritableThreadLocals 是否为空
+	if (inheritThreadLocals && parent.inheritableThreadLocals != null)
 		//这句话的意思大致不就是，copy父线程parent的map，创建一个新的map赋值给当前线程的inheritableThreadLocals。
 		this.inheritableThreadLocals = ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
 	```
 	拷贝 parentMap 的数据，在copy过程中是浅拷贝，key和value都是原来的引用地址
 	- 在创建 InheritableThreadLocal 对象的时候赋值给线程的 t.inheritableThreadLocals 变量
-	- 在创建新线程的时候会check父线程中t.inheritableThreadLocals变量是否为 null，如果不为null则copy一份ThradLocalMap 到子线程的t.inheritableThreadLocals成员变量中去
-	- 因为复写了getMap(Thread)和CreateMap()方法，所以get值得时候，就可以在getMap(t)的时候就会从t.inheritableThreadLocals中拿到map对象，从而实现了可以拿到父线程ThreadLocal中的值;
-
+	- 在创建新线程的时候会check父线程中`t.inheritableThreadLocals`变量是否为 null，如果不为null则copy一份ThradLocalMap 到子线程的`t.inheritableThreadLocals`成员变量中去
+	- 因为复写了getMap(Thread)和CreateMap()方法，所以get值得时候，就可以在getMap(t)的时候就会从`t.inheritableThreadLocals`中拿到map对象，从而实现了可以拿到父线程ThreadLocal中的值;
 	- InheritableThreadLocal问题：在线程池中，会缓存之前使用过的线程
 		- ①、问题场景：<br>
 			有两个线程A，B， 如果A线程先执行后，将InheritableThreadLocal中的value已经被更新了，由于B是获取到缓存线程，直接从t.InheritableThreadLocal 中获得值，而此时获取的值是 A 线程修改过后的值，而不是原来父线程的值。
@@ -1929,7 +1938,7 @@ private Entry getEntry(ThreadLocal<?> key) {
     // 这个取数据的逻辑，是因为 set 时数组索引位置冲突造成的  
         return getEntryAfterMiss(key, i, e);
 }
-/ 自旋 i+1，直到找到为止
+// 自旋 i+1，直到找到为止
 private Entry getEntryAfterMiss(ThreadLocal<?> key, int i, Entry e) {
     Entry[] tab = table;
     int len = tab.length;
@@ -2015,11 +2024,9 @@ private void resize() {
 ### 12.5、碰撞解决与神奇的 0x61c88647
 
 既然ThreadLocal用map就避免不了冲突的产生
-
 - 碰撞的类型:
 	- 只有一个ThreadLocal实例的时候，当向thread-local变量中设置多个值的时产生的碰撞，碰撞解决是通过开放定址法，且是线性探测(linear-probe)
 	- 多个ThreadLocal实例的时候，最极端的是每个线程都new一个ThreadLocal实例，此时利用特殊的哈希码0x61c88647大大降低碰撞的几率，同时利用开放定址法处理碰撞
-
 - 神奇的`0x61c88647`:注意 0x61c88647 的利用主要是为了多个ThreadLocal实例的情况下用的
 	
 	`private final int threadLocalHashCode = nextHashCode();`
@@ -2454,9 +2461,7 @@ synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁�
 - 写入锁：用于写入操作，是"独占锁"，只能被一个线程获取。
 - 不能同时存在读取锁和写入锁
 
-ReadWriteLock 是一个接口，ReentrantReadWriteLock 是它的实现类。ReentrantReadWriteLock 包括内部类 ReadLock 和 WriteLock
-
-适合读多写少的情况
+ReadWriteLock 是一个接口，ReentrantReadWriteLock 是它的实现类。ReentrantReadWriteLock 包括内部类 ReadLock 和 WriteLock；适合读多写少的情况
 
 ### 4.2、如何获取读写锁
 
@@ -2777,7 +2782,6 @@ public class CyclicBarrierDemo {
     });
     public static void main(String[] args)throws Exception {
         ExecutorService executorService = Executors.newCachedThreadPool();
-
         for (int i = 0; i < 10; i++) {
             final int count = i;
             Thread.sleep(1000);
@@ -3001,7 +3005,6 @@ public FutureTask(Runnable runnable, V result) {
     this.state = NEW;       // ensure visibility of callable
 }
 ```
-
 Runnable 转换成 Callable：`Executors.callable(runnable, result);`
 ```java
 // 转化 Runnable 成 Callable 的工具类，RunnableAdapter 为 Executors 的静态内部类
@@ -3408,7 +3411,6 @@ public static Object getLast(Vector list) {
 	int lastIndex = list.size() - 1;
 	return list.get(lastIndex);
 }
-
 // 删除Vector最后一个元素
 public static void deleteLast(Vector list) {
 	int lastIndex = list.size() - 1;
@@ -3427,10 +3429,35 @@ CopyOnWriteArrayList 则不存在这个问题
 
 ## 3、CopyOnWriteArraySet：(HashSet)
 
-- 线程安全的无序的集合，可以将它理解成线程安全的HashSet.CopyOnWriteArraySet 和 HashSet 虽然都继承于共同的父类 AbstractSet；但是HashSet是通过 HashMap 来实现的，而 CopyOnWriteArraySet 是通过 CopyOnWriteArrayList来实现的。特性同 CopyOnWriteArrayList
+- 线程安全的无序的集合，可以将它理解成线程安全的HashSet.CopyOnWriteArraySet 和 HashSet 虽然都继承于共同的父类 AbstractSet；但是HashSet是通过 HashMap 来实现的，而 CopyOnWriteArraySet 是通过 CopyOnWriteArrayList 来实现的。特性同 CopyOnWriteArrayList
 - 实现：
 	- CopyOnWriteArraySet 继承于 AbstractSet，这就意味着它是一个集合；
 	- CopyOnWriteArraySet 包含 CopyOnWriteArrayList 对象，它是通过 CopyOnWriteArrayList 实现的，而CopyOnWriteArrayList中允许有重复的元素，但是，CopyOnWriteArraySet 是一个集合不能有重复元素。CopyOnWriteArrayList 额外提供了addIfAbsent()和addAllAbsent()这两个添加元素的API，通过这些API来添加元素时，只有当元素不存在时才执行添加操作
+
+    ```java
+    public boolean addIfAbsent(E e) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            // Copy while checking if already present.
+            // This wins in the most common case where it is not present
+            Object[] elements = getArray();
+            int len = elements.length;
+            Object[] newElements = new Object[len + 1];
+            for (int i = 0; i < len; ++i) {
+                if (eq(e, elements[i])) // 判断元素是否存在，如果存在，返回false
+                    return false; // exit, throwing away copy
+                else
+                    newElements[i] = elements[i];
+            }
+            newElements[len] = e;
+            setArray(newElements);
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+    ```
 
 ## 4、ConcurrentHashMap：
 
@@ -3477,9 +3504,7 @@ ConcurrentSkipListMap是通过`HeadIndex`维护索引层次，通过`Index`从�
 * 支持阻塞的插入方法：队列满时，队列会阻塞插入元素的线程，直到队列不满时；
 * 支持阻塞的移除方法：队列空时，获取元素的线程会等待队列变为非空；
 
-BlockingQueue 是一个接口，继承自 Queue
-
-可以看下其中 LinkedBlockingQueue的类图
+BlockingQueue 是一个接口，继承自 Queue，可以看下其中 LinkedBlockingQueue的类图
 
 ![](image/LinkedBlockingQueue类图.png)
 
@@ -3558,7 +3583,6 @@ BlockingQueue在 Queue新增和查看并删除的基础，增加了阻塞功能�
 #### 7.4.1、ArrayBlockingQueue
 
 - [ArrayBlockingQueue](http://www.cnblogs.com/skywang12345/p/3498652.html)是典型的有界队列，一个由数组结构组成的有界阻塞队列，内部是`final`数组保存数据，数组的大小就是队列的边界
-
 - 此队列按照先进先出（FIFO）的原则对元素进行排序，但是默认情况下不保证线程公平的访问队列，即如果队列满了，那么被阻塞在外面的线程对队列访问的顺序是不能保证线程公平（即先阻塞，先插入）的，其并发控制采用可重入锁来控制，不管是插入操作还是读取操作，都需要获取到锁才能进行操作；
 - 看到`ArrayBlockingQueue`继承`AbstractQueue`，实现`BlockingQueue`接口；`AbstractQueue`在Queue接口中扮演着非常重要的作用，该类提供了对queue操作的骨干实现；`BlockingQueue`继承`java.util.Queue`为阻塞队列的核心接口，提供了在多线程环境下的出列、入列操作，作为使用者，则不需要关心队列在什么时候阻塞线程，什么时候唤醒线程，所有一切均由`BlockingQueue`来完成
 - 其内部是采用一个 ReentrantLock 和相应的两个 Condition 来实现：
@@ -3592,7 +3616,6 @@ BlockingQueue在 Queue新增和查看并删除的基础，增加了阻塞功能�
 		last = head = new Node<E>(null);
 	}
 	```
-
 - 基于链表的阻塞队列，其底层的数据结构是链表；
 - 链表维护先入先出队列，新元素被放在队尾，获取元素从队头部拿；
 - 其不同于ArrayBlockingQueue的是，其对于头尾操作时基于不同的锁的；
@@ -3689,7 +3712,6 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 - 内部类Node：Node是个单向链表节点，next用于指向下一个Node，item用于存储数据。Node中操作节点数据的API，都是通过Unsafe机制的CAS函数实现的；
 - ConcurrentLinkedQueue就是通过volatile来实现多线程对竞争资源的互斥访问的
 
-
 #### 7.5.3、ConcurrentLinkedDeque
 
 ### 7.6、如何选择队列
@@ -3715,7 +3737,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 
 ## 1、AQS：AbstractQueuedSynchronizer-抽象队列同步器
 
-[AbstractQueuedSynchronizer](../../源码分析/thread/AbstractQueuedSynchronizer.md)
+[AbstractQueuedSynchronizer](../源码分析/thread/AbstractQueuedSynchronizer.md)
 
 ## 2、CAS：Compare and Swap-比较与交换
 
@@ -4706,6 +4728,62 @@ static ThreadPoolExecutor executorTwo = new ThreadPoolExecutor(5, 5, 1, TimeUnit
 ### 3.9、空闲线程回收
 
 如果当前池子中的工作线程数大于 corePoolSize，如果超过这个数字的线程处于空闲的时间大于 keepAliveTime，则这些线程将会被终止，这是一种减少不必要资源消耗的策略。这个参数可以在运行时被改变，我们同样可以将这种策略应用给核心线程，我们可以通过调用 allowCoreThreadTimeout 来实现
+
+回收实现：
+
+在方法runwoker中
+```java
+final void runWorker(Worker w) {
+    Thread wt = Thread.currentThread();
+    Runnable task = w.firstTask;
+    w.firstTask = null;
+    w.unlock(); // allow interrupts
+    boolean completedAbruptly = true;
+    try {
+        // 当执行任务时getTask为null的时候，会跳出while信息
+        while (task != null || (task = getTask()) != null) {
+            w.lock();
+            ....
+        }
+        completedAbruptly = false;
+    } finally {
+        // processWorkerExit 会调用tryTerminate()，向任意空闲线程发出中断信号。所有被阻塞的线程，最终都会被一个个唤醒，回收
+        processWorkerExit(w, completedAbruptly);
+    }
+}
+private Runnable getTask() {
+    boolean timedOut = false; // 上次从队列中 poll() 是否超时
+    for (;;) {
+        int c = ctl.get();
+        int rs = runStateOf(c);
+
+        // Check if queue empty only if necessary.
+        if (rs >= SHUTDOWN && (rs >= STOP || workQueue.isEmpty())) {
+            decrementWorkerCount();
+            return null;
+        }
+        int wc = workerCountOf(c);// 获取当前工作线程数
+        // 是否剔除 worker？核心线程是否超时或工作线程数大于核心线程数
+        boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
+        // 
+        if ((wc > maximumPoolSize || (timed && timedOut)) && (wc > 1 || workQueue.isEmpty())) {
+            if (compareAndDecrementWorkerCount(c))
+                return null;
+            continue;
+        }
+        try {
+            // //poll() 和 take() 都可以从队列中获取任务出来。具体使用哪个方法根据 timed 来判断。take() 是没有就阻塞直到有，这里的 poll() 加了一个超时控制。
+48        try {
+            Runnable r = timed ? workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) : workQueue.take();
+            if (r != null)
+                return r;
+            timedOut = true;
+        } catch (InterruptedException retry) {
+            timedOut = false;
+        }
+    }
+}
+```
 
 ### 3.10、线程池异常处理
 
