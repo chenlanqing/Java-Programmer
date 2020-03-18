@@ -931,6 +931,7 @@ auto-aof-rewrite-percentage	设置重写的基准值，上次重写的比例
 	auto-aof-rewrite-percentage 100
 	auto-aof-rewrite-min-size 64mb
 	```
+	
 ### 2.5、优势与劣势
 
 **2.5.1、优势：**

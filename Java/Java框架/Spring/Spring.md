@@ -1023,11 +1023,11 @@ public void create(){
 
 - 构造器的循环依赖：Spring是无法解决的，只能抛出`BeanCurrentlyInCreationException`异常表示循环依赖；
 
-	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。 形成环状依赖， 从而被Spring抛出
+	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。形成环状依赖，从而被Spring抛出
 
-- field 属性的循环依赖
+- setter的循环依赖
 
-Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean
+	Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean
 
 ### 1.3、解决循环依赖
 
@@ -4188,6 +4188,52 @@ management.server.address=127.0.0.1
 
 停止命令：`curl -X POST http://127.0.0.1:23456/actuator/shutdown`
 
+### 10.2、原理
+
+上述访问地址最终到达的类为：`org.springframework.boot.actuate.context.ShutdownEndpoint#shutdown`，SpringBoot内部提供了一个接口：`ShutdownEndpoint`，该接口最终会调用 context.close 方法：
+```java
+@Endpoint(id = "shutdown", enableByDefault = false)
+public class ShutdownEndpoint implements ApplicationContextAware {
+	private static final Map<String, String> NO_CONTEXT_MESSAGE = Collections.unmodifiableMap(Collections.singletonMap("message", "No context to shutdown."));
+	private static final Map<String, String> SHUTDOWN_MESSAGE = Collections.unmodifiableMap(Collections.singletonMap("message", "Shutting down, bye..."));
+	private ConfigurableApplicationContext context;
+	@WriteOperation
+	public Map<String, String> shutdown() {
+		if (this.context == null) {
+			return NO_CONTEXT_MESSAGE;
+		}
+		try {
+			return SHUTDOWN_MESSAGE;
+		}
+		finally {
+			// 开启一个线程
+			Thread thread = new Thread(this::performShutdown);
+			// 设置上下文类加载器
+			thread.setContextClassLoader(getClass().getClassLoader());
+			thread.start();
+		}
+	}
+	private void performShutdown() {
+		try {
+			Thread.sleep(500L);
+		}
+		catch (InterruptedException ex) {
+			Thread.currentThread().interrupt();
+		}
+		// 真正关闭应用的代码
+		this.context.close();
+	}
+	// 项目启动的时候，会设置context
+	@Override
+	public void setApplicationContext(ApplicationContext context) throws BeansException {
+		if (context instanceof ConfigurableApplicationContext) {
+			this.context = (ConfigurableApplicationContext) context;
+		}
+	}
+
+}
+```
+
 # 十三、自定义Starter
 
 ## 1、自动装配Bean
@@ -5515,7 +5561,7 @@ Spring 提供了以下五种标准的事件：
     ```
 
 
-# 十六、SpringBoot面试题
+# 十六、面试题
 
 ## 1、SpringApplication.run都做了些什么？
 
@@ -5593,6 +5639,128 @@ Spring 提供了以下五种标准的事件：
 ## 34、SpringBoot Starter作用
 
 ## 35、conditional注解原理
+
+## 36、Spring生命周期，流程梳理
+
+## 37、Spring扩展点作用
+
+## 38、Spring IOC AOP 基本原理
+
+## 39、动态代理
+
+## 40、BeanPostProcessor 与 BeanFactoryPostProcessor
+
+Spring提供了两种处理bean的扩展接口，分别为BeanPostProcessor和BeanFactoryPostProcessor，这两者在使用上是有区别的；
+
+- BeanPostProcessor：主要针对所有Bean的，允许自定义修改新bean实例的工厂钩子——例如，检查标记接口或用代理包装bean；ApplicationContext可以自动检测其bean定义中的BeanPostProcessor bean，并将这些后处理器应用于随后创建的任何bean
+
+	该接口内部有两个方法：
+	```java
+	public interface BeanPostProcessor {
+		// Bean初始化之前调用的方法，第一个参数是每个bean的实例，第二个参数是每个bean的name或者id属性的值
+		default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+			return bean;
+		}
+		// Bean初始化之后调用后的方法
+		default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+			return bean;
+		}
+	}
+	```
+	- 如果一个Bean实现了接口 InitializingBean ，那么其方法 afterPropertiesSet 会在BeanPostProcessor两个方法之间执行；
+	- 如果一个Bean有自定义的init方法，那么其自定义方法会在BeanPostProcessor两个方法之间执行；
+	- afterPropertiesSet 优先于 init 方法的执行；
+
+	其执行时在Spring容器实例化和依赖注入之后
+
+- BeanFactoryPostProcessor：BeanFactory的处理，管理我们的bean工厂内所有的beandefinition（未实例化）数据；该接口只有一个方法，方法的参数是 ConfigurableListableBeanFactory
+
+	```java
+	@FunctionalInterface
+	public interface BeanFactoryPostProcessor {
+		void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;
+	}
+	```
+	比如我们需要修改某个Bean的定义，可以通过 ConfigurableListableBeanFactory.getBeanDefinition进行相关属性的修改，其执行逻辑如下：
+
+	![](image/BeanFactoryPostProcessor-执行过程.png)
+
+
+## 41、ApplicationContextAware 的作用和使用
+
+ApplicationContextAware是Spring提供的拓展性接口，可以拿到 ApplicationContext实例，然后我们可以利用这个实例做一些bean的信息获取。
+
+最常见的应该就是利用它来获取bean的信息，以及封装成Spring工具类，比如在一些静态方法中需要获取Bean的时候，可以通过该方法获取：
+```java
+@Component
+public class MySpringUtils implements ApplicationContextAware {
+    private static ApplicationContext applicationContext;
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
+        MySpringUtils.applicationContext = applicationContext;
+    }
+    public static ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+    public static <T> T getBean(String beanName, Class<T> clazz){
+        return applicationContext.getBean(beanName, clazz);
+    }
+}
+```
+执行主要是通过： ApplicationContextAwareProcessor （是一个 BeanPostProcessor） 来执行的，执行过程：
+
+![](image/ApplicationContextAware-执行过程.png)
+
+## 42、BeanNameAware与BeanFactoryAware的先后顺序？
+
+## 43、InitializingBean 和 BeanPostProcessor 的after方法先后顺序？
+
+InitializingBean 作为一个Bean，是在 BeanPostProcessor 的before和after方法之间执行
+```java
+// org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#initializeBean(java.lang.String, java.lang.Object, org.springframework.beans.factory.support.RootBeanDefinition)
+protected Object initializeBean(final String beanName, final Object bean, @Nullable RootBeanDefinition mbd) {
+	if (System.getSecurityManager() != null) {
+		AccessController.doPrivileged((PrivilegedAction<Object>) () -> {
+			invokeAwareMethods(beanName, bean);
+			return null;
+		}, getAccessControlContext());
+	}
+	else {
+		invokeAwareMethods(beanName, bean);
+	}
+	Object wrappedBean = bean;
+	if (mbd == null || !mbd.isSynthetic()) {
+		// 执行 BeanPostProcessor的postProcessBeforeInitialization
+		wrappedBean = applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);
+	}
+	try {
+		// 执行 InitializingBean 的 afterPropertiesSet 方法，如果其有配置对应的 init方法，在也会执行自定义的init方法
+		invokeInitMethods(beanName, wrappedBean, mbd);
+	}
+	catch (Throwable ex) {
+		throw new BeanCreationException((mbd != null ? mbd.getResourceDescription() : null), beanName, "Invocation of init method failed", ex);
+	}
+	if (mbd == null || !mbd.isSynthetic()) {
+		// 执行 BeanPostProcessor的 postProcessAfterInitialization
+		wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+	}
+	return wrappedBean;
+}
+```
+
+## 44、ApplicationListener监控的Application事件有哪些？
+
+## 45、Spring模块装配的概念，比如@EnableScheduling @EnableRetry @EnableAsync，@Import注解的作用？
+
+## 46、ImportBeanDefinitionRegistrar 扩展点用于做什么事情？
+
+## 47、ClassPathBeanDefinitionScanner 的作用？
+## 48、NamespaceHandlerSupport 命名空间扩展点的作用？
+## 49、如何实现动态注入一个Bean？
+## 50、如何把自定义注解所在的Class 初始化注入到Spring容器？
+## 51、BeanDefinition指的是什么，与BeanDefinitionHolder的区别，Spring如何存储BeanDefinition实例？
+## 52、ASM 与 CGlib
+## 53、Spring的条件装配，自动装配
 
 # 参考资料
 

@@ -242,7 +242,7 @@ public @interface SpringBootApplication {
 **介绍：**
 - 框架内部使用通用的工厂加载机制；
 - 从classpath下多个jar包特定的位置读取文件并初始化类；
-- 文件内容必须是kv形式，即properties形式；
+- 文件内容必须是`key-value`形式，即properties形式；
 - key是全限定名（抽象类|接口），value是实现类的全限定名，如果有多个，使用`,`分隔
 
 **加载类流程**

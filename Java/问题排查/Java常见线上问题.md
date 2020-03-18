@@ -81,7 +81,7 @@
 
 - 查看持久代空间，通过jmap查看持久代，发现持久代到达99%
     ```
-    jmap -haap <pid>
+    jmap -heap <pid>
     ```
 - 通过```jmap -histo <pid>```查看后发现 ```org.codehaus.groovy.runtime.metaclass.MetaMethodIndex$Entry```数量非常多；
 - 查看系统日志，发现很多sql操作的地方报如下异常:

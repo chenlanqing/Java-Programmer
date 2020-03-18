@@ -1139,7 +1139,6 @@ public class ConcreteObserver implements Observer{
 
 # 九、外观（门面）模式
 
-
 ## 1、定义
 
 又叫门面模式，提供了一个统一的接口，用来访问子系统中的一群接口；

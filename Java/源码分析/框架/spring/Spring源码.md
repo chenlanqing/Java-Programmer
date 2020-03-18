@@ -46,7 +46,7 @@
 
 ## 1、IOC的生命周期
 
-Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等功能。`BeanFactory`和`ApplicationContext`是Spring两种很重要的容器，前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播、资源访问和国际化的消息访问等功能；
+Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等功能。`BeanFactory`和`ApplicationContext`是Spring两种很重要的容器，前者提供了最基本的依赖注入的支持，而后者在继承前者的基础进行了功能的拓展，例如增加了事件传播、资源访问和国际化的消息访问等功能；
 
 ## 2、IOC生命周期
 
@@ -60,7 +60,7 @@ Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等�
 - `BeanPostProcessor`接口的`postProcessBeforeInitialization`方法和`postProcessAfterInitialization`方法不会自动调用，必须自己通过代码手动注册
 - `BeanFactory`容器启动的时候，不会去实例化所有bean，包括所有scope为singleton且非延迟加载的bean也是一样，而是在调用的时候去实例化
 
-### 2.2、BeanFactory Bean生命周期-面向开发者
+### 2.2、ApplicationContext Bean生命周期-面向开发者
 
 ![image](image/ApplicationContext-Bean的生命周期.png)
 
@@ -104,7 +104,7 @@ Spring的ioc容器功能非常强大，负责Spring的Bean的创建和管理等�
     - BeanFactory 有三个直接子类 ListableBeanFactory、HierarchicalBeanFactory 和 AutowireCapableBeanFactory 。
     - DefaultListableBeanFactory 为最终默认实现，它实现了所有接口
 
-- BeanDefinition 体系：`org.springframework.beans.factory.config.BeanDefinition`，用来描述 Spring 中的 Bean 对象；
+- BeanDefinition 体系：`org.springframework.beans.factory.config.BeanDefinition`，用来描述 Spring 中的 Bean 对象；比如这个 Bean 指向的是哪个类、是否是单例的、是否懒加载、这个 Bean 依赖了哪些 Bean 等等
 
 - BeanDefinitionReader 体系：`org.springframework.beans.factory.support.BeanDefinitionReader` 的作用是读取 Spring 的配置文件的内容，并将其转换成 Ioc 容器内部的数据结构 ：BeanDefinition；
 
@@ -150,11 +150,12 @@ web环境下`Spring\SpringMVC`容器启动过程
 @Override
 public void refresh() throws BeansException, IllegalStateException {
     synchronized (this.startupShutdownMonitor) {
-        // Prepare this context for refreshing.
+        // 准备工作，记录下容器的启动时间、标记“已启动”状态、处理配置文件中的占位符
         prepareRefresh();
-        // Tell the subclass to refresh the internal bean factory.
+        // 这步比较关键，这步完成后，配置文件就会解析成一个个 Bean 定义，注册到 BeanFactory 中，当然，这里说的 Bean 还没有初始化，只是配置信息都提取出来了，
+        // 注册也只是将这些信息都保存到了注册中心(说到底核心是一个 beanName-> beanDefinition 的 map)
         ConfigurableListableBeanFactory beanFactory = obtainFreshBeanFactory();
-        // Prepare the bean factory for use in this context.
+        // 设置 BeanFactory 的类加载器，添加几个 BeanPostProcessor，手动注册几个特殊的 bean
         prepareBeanFactory(beanFactory);
         try {
             // Allows post-processing of the bean factory in context subclasses.
@@ -221,6 +222,7 @@ protected void prepareRefresh() {
 
 ```java
 protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
+    // 关闭旧的 BeanFactory (如果有)，创建新的 BeanFactory，加载 Bean 定义、注册 Bean 等等
     refreshBeanFactory();
     ConfigurableListableBeanFactory beanFactory = getBeanFactory();
     if (logger.isDebugEnabled()) {
@@ -230,6 +232,33 @@ protected ConfigurableListableBeanFactory obtainFreshBeanFactory() {
 }
 ```
 - `refreshBeanFactory();`刷新【创建】BeanFactory；创建了一个 `this.beanFactory = new DefaultListableBeanFactory();`设置id；
+
+    ```java
+    @Override
+    protected final void refreshBeanFactory() throws BeansException {
+        // 如果 ApplicationContext 中已经加载过 BeanFactory 了，销毁所有 Bean，关闭 BeanFactory
+        // 注意，应用中 BeanFactory 本来就是可以多个的，这里可不是说应用全局是否有 BeanFactory，而是当前
+        // ApplicationContext 是否有 BeanFactory
+        if (hasBeanFactory()) {
+            destroyBeans();
+            closeBeanFactory();
+        }
+        try {
+            // 初始化一个 DefaultListableBeanFactory，为什么用这个，我们马上说。
+            DefaultListableBeanFactory beanFactory = createBeanFactory();
+            // 用于 BeanFactory 的序列化，我想不部分人应该都用不到
+            beanFactory.setSerializationId(getId());
+            // 设置 BeanFactory 的两个配置属性：是否允许 Bean 覆盖、是否允许循环引用
+            customizeBeanFactory(beanFactory);
+            // 根据配置，加载各个 Bean 到 BeanFactory 中
+            loadBeanDefinitions(beanFactory);
+            synchronized (this.beanFactoryMonitor) {
+                this.beanFactory = beanFactory;
+            }
+        }
+        ...
+    }
+    ```
 - `getBeanFactory();`返回刚才GenericApplicationContext创建的BeanFactory对象；
 - 将创建的BeanFactory即`DefaultListableBeanFactory`返回；
 
