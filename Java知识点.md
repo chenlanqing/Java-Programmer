@@ -60,7 +60,7 @@
 基础2：-----------------------
 - Spring
         - Spring生命周期，流程梳理
-        - Spring扩展点作用
+        - Spring扩展点作用：BeanFactoryPostProcessor
         - Spring IOC AOP 基本原理
         - 动态代理
         - BeanPostProcessor 作用？
