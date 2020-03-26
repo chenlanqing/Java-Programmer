@@ -1,3 +1,18 @@
+dubbo的源码版本是2.7.5
+# 1、Dubbo架构描述
+
+![](image/dubbo-framework.jpg)
+
+- config 配置层：对外配置接口，以 `ServiceConfig, ReferenceConfig` 为中心，可以直接初始化配置类，也可以通过 spring 解析配置生成配置类
+- proxy 服务代理层：服务接口透明代理，生成服务的客户端 Stub 和服务器端 `Skeleton`, 以 `ServiceProxy` 为中心，扩展接口为 `ProxyFactory`
+- registry 注册中心层：封装服务地址的注册与发现，以服务 URL 为中心，扩展接口为 `RegistryFactory, Registry, RegistryService`
+- cluster 路由层：封装多个提供者的路由及负载均衡，并桥接注册中心，以 Invoker 为中心，扩展接口为 `Cluster, Directory, Router, LoadBalance`
+- monitor 监控层：RPC 调用次数和调用时间监控，以 Statistics 为中心，扩展接口为 `MonitorFactory, Monitor, MonitorService`
+- protocol 远程调用层：封装 RPC 调用，以 Invocation, Result 为中心，扩展接口为 `Protocol, Invoker, Exporter`
+- exchange 信息交换层：封装请求响应模式，同步转异步，以 Request, Response 为中心，扩展接口为 `Exchanger, ExchangeChannel, ExchangeClient, ExchangeServer`
+- transport 网络传输层：抽象 mina 和 netty 为统一接口，以 Message 为中心，扩展接口为 `Channel, Transporter, Client, Server, Codec`
+- serialize 数据序列化层：可复用的一些工具，扩展接口为 `Serialization, ObjectInput, ObjectOutput, ThreadPool`
+
 # 2、Dubbo扩展点加载机制
 
 ## 2.1、加载机制概述
@@ -39,7 +54,7 @@ Dubbo SPI可以分为 Class缓存、实例缓存；这两种缓存又能根据�
 
 根据不同的特性分为不同的类别：
 - 普通扩展类：配置在SPI配置文件中扩展类实现；
-- 包装扩展类：这类Wrapper类没有具体的实现，只是做了通用逻辑的抽象，并且需要抽象方法中传入一个具体的扩展接口的实现；
+- 包装扩展类：这类Wrapper类没有具体的实现，只是做了通用逻辑的抽象，并且需要抽象方法中传入一个具体的扩展接口的实现；wrapper包装类包装顺序是否有相关限制
 - 自适应扩展类：一个扩展接口会有多个实现类，具体使用哪个实现类可以不写死在配置或代码中，在运行时，通过传入URL中的某个参数动态来确定，使用Adaptive注解来出咯；
 - 其他缓存：扩展类加载器缓存、扩展名缓存；
 
@@ -220,9 +235,11 @@ private T createExtension(String name) {
         }
         // 向扩展类中注入依赖的属性
         injectExtension(instance);
+        // ？？？？ warpper包装类的执行是否有顺序限制？
         Set<Class<?>> wrapperClasses = cachedWrapperClasses;
         if (CollectionUtils.isNotEmpty(wrapperClasses)) {
-            // 遍历扩展点包装类，用于初始化包装类实例
+            // 遍历扩展点包装类，用于初始化包装类实例，比如服务暴露过程中 Protocol 具体调用，经过包装后其调用链
+            // QosProtocolWrapper.export -> ProtocolListenerWrapper.export -> ProtocolFilterWrapper.export -> DubboProtocol.export
             for (Class<?> wrapperClass : wrapperClasses) {
                 // 找到构造方法参数类型为type的包装类，为其注入扩展类实例
                 instance = injectExtension((T) wrapperClass.getConstructor(type).newInstance(instance));
@@ -318,7 +335,7 @@ private void loadClass(Map<String, Class<?>> extensionClasses, java.net.URL reso
         // 如果是自适应（Adaptive）则缓存，缓存的自适应只有一个，如果存在多个会抛出异常
         cacheAdaptiveClass(clazz);
     } else if (isWrapperClass(clazz)) {
-        // 如果是包装类扩展，则直接加入到对应的Set集合中
+        // 如果是包装类扩展，则直接加入到对应的Set集合中，
         cacheWrapperClass(clazz);
     } else {
         clazz.getConstructor();
@@ -534,3 +551,1523 @@ consistenthash=com.alibaba.dubbo.rpc.cluster.loadbalance.ConsistentHashLoadBalan
 ## 2.5、SPI与IOC
 
 objectFactory就是dubbo的IoC提供对象。SpiExtensionFactory
+
+## 2.6、Dubbo扩展点
+
+
+
+# 3、配置解析
+
+## 3.1、基于schema设计解析
+
+利用Spring配置文件扩展出自定义的解析方式，dubbo配置约束文件在 `dubbo-config/dubbo-config-spring/src/main/resources/duubo.xsd`。
+
+duubo.xsd 文件用来约束使用xml配置是的标签和对应的属性，如`<dubbo:service>、<dubbo:reference>`等，Spring在解析到自定义的namespace标签时，会查找对应的`spring.schemas`和`spring.handlers`文件，最终触发Dubbo的`DubboNamespaceHandler`类来进行初始化和解析
+```
+// spring.schemas文件内容：
+http\://dubbo.apache.org/schema/dubbo/dubbo.xsd=META-INF/dubbo.xsd
+http\://code.alibabatech.com/schema/dubbo/dubbo.xsd=META-INF/compat/dubbo.xsd
+
+// spring.handlers文件内容：
+http\://dubbo.apache.org/schema/dubbo=org.apache.dubbo.config.spring.schema.DubboNamespaceHandler
+http\://code.alibabatech.com/schema/dubbo=org.apache.dubbo.config.spring.schema.DubboNamespaceHandler
+```
+spring.schemas 文件指明约束文件的具体路径，spring.handlers 文件指明使用 DubboNamespaceHandler 类解析标签；Spring 解析扩展代码可以参考：`BeanDefinitionParserDelegate#parseCustomElement(org.w3c.dom.Element)`
+
+Dubbo的很多配置粒度是针对方法级别的；
+
+## 3.2、基于xml配置
+
+Dubbo注册属性解析处理器：
+```java
+public class DubboNamespaceHandler extends NamespaceHandlerSupport implements ConfigurableSourceBeanMetadataElement {
+    static {
+        Version.checkDuplicate(DubboNamespaceHandler.class);
+    }
+    @Override
+    public void init() {
+        // 针对不同的配置解析类
+        registerBeanDefinitionParser("application", new DubboBeanDefinitionParser(ApplicationConfig.class, true));
+        registerBeanDefinitionParser("module", new DubboBeanDefinitionParser(ModuleConfig.class, true));
+        registerBeanDefinitionParser("registry", new DubboBeanDefinitionParser(RegistryConfig.class, true));
+        registerBeanDefinitionParser("config-center", new DubboBeanDefinitionParser(ConfigCenterBean.class, true));
+        registerBeanDefinitionParser("metadata-report", new DubboBeanDefinitionParser(MetadataReportConfig.class, true));
+        registerBeanDefinitionParser("monitor", new DubboBeanDefinitionParser(MonitorConfig.class, true));
+        registerBeanDefinitionParser("metrics", new DubboBeanDefinitionParser(MetricsConfig.class, true));
+        registerBeanDefinitionParser("ssl", new DubboBeanDefinitionParser(SslConfig.class, true));
+        registerBeanDefinitionParser("provider", new DubboBeanDefinitionParser(ProviderConfig.class, true));
+        registerBeanDefinitionParser("consumer", new DubboBeanDefinitionParser(ConsumerConfig.class, true));
+        registerBeanDefinitionParser("protocol", new DubboBeanDefinitionParser(ProtocolConfig.class, true));
+        registerBeanDefinitionParser("service", new DubboBeanDefinitionParser(ServiceBean.class, true));
+        registerBeanDefinitionParser("reference", new DubboBeanDefinitionParser(ReferenceBean.class, false));
+        // 针对注解的配置
+        registerBeanDefinitionParser("annotation", new AnnotationBeanDefinitionParser());
+    }
+    @Override
+    public BeanDefinition parse(Element element, ParserContext parserContext) {
+        BeanDefinitionRegistry registry = parserContext.getRegistry();
+        registerAnnotationConfigProcessors(registry);
+        registerApplicationListeners(registry);
+        BeanDefinition beanDefinition = super.parse(element, parserContext);
+        setSource(beanDefinition);
+        return beanDefinition;
+    }
+    private void registerApplicationListeners(BeanDefinitionRegistry registry) {
+        registerBeans(registry, DubboLifecycleComponentApplicationListener.class);
+        registerBeans(registry, DubboBootstrapApplicationListener.class);
+    }
+    private void registerAnnotationConfigProcessors(BeanDefinitionRegistry registry) {
+        AnnotationConfigUtils.registerAnnotationConfigProcessors(registry);
+    }
+}
+```
+
+在启动的时候，通过Spring解析器，会调用 BeanDefinitionParser 实现类的parse方法：
+```java
+/**
+*
+* 本质是把属性注入到Spring框架的BeanDefinition，如果属性是引用对象，则dubbo默认会创建 RuntimeBeanReference类型注入，运行时又spring注入引用对象；
+*
+* dubbo只做属性提取的事情，运行时属性注入和转换都是Spring来处理的，Spring做数据初始化和换号参考：{@link BeanWrapperImpl}
+*/
+@SuppressWarnings("unchecked")
+private static BeanDefinition parse(Element element, ParserContext parserContext, Class<?> beanClass, boolean required) {
+    // 生成Spring的Bean定义，指定BeanClass交给Spring反射创建实例
+    RootBeanDefinition beanDefinition = new RootBeanDefinition();
+    beanDefinition.setBeanClass(beanClass);
+    beanDefinition.setLazyInit(false);
+    String id = element.getAttribute("id");
+    // 确保Spring容器没有重复的Bean定义
+    if (StringUtils.isEmpty(id) && required) {
+        // 依次尝试xml配置标签的name和interface作为Bean唯一id
+        String generatedBeanName = element.getAttribute("name");
+        if (StringUtils.isEmpty(generatedBeanName)) {
+            // 如果协议标签没有指定name，默认使用dubbo
+            if (ProtocolConfig.class.equals(beanClass)) {
+                generatedBeanName = "dubbo";
+            } else {
+                generatedBeanName = element.getAttribute("interface");
+            }
+        }
+        if (StringUtils.isEmpty(generatedBeanName)) {
+            generatedBeanName = beanClass.getName();
+        }
+        id = generatedBeanName;
+        int counter = 2;
+        // 检查重复Bean，如果有则生成唯一id
+        while (parserContext.getRegistry().containsBeanDefinition(id)) {
+            id = generatedBeanName + (counter++);
+        }
+    }
+    if (StringUtils.isNotEmpty(id)) {
+        if (parserContext.getRegistry().containsBeanDefinition(id)) {
+            throw new IllegalStateException("Duplicate spring bean id " + id);
+        }
+        // 每次解析会向Spring注册新的BeanDefinition，后续会追加属性
+        parserContext.getRegistry().registerBeanDefinition(id, beanDefinition);
+        beanDefinition.getPropertyValues().addPropertyValue("id", id);
+    }
+    if (ProtocolConfig.class.equals(beanClass)) {
+        // 如果时候<dubbo:protocol>配置
+        for (String name : parserContext.getRegistry().getBeanDefinitionNames()) {
+            BeanDefinition definition = parserContext.getRegistry().getBeanDefinition(name);
+            PropertyValue property = definition.getPropertyValues().getPropertyValue("protocol");
+            if (property != null) {
+                Object value = property.getValue();
+                if (value instanceof ProtocolConfig && id.equals(((ProtocolConfig) value).getName())) {
+                    definition.getPropertyValues().addPropertyValue("protocol", new RuntimeBeanReference(id));
+                }
+            }
+        }
+    } else if (ServiceBean.class.equals(beanClass)) {
+        // 如果<dubbo:service>配置了class属性，那么为具体的class配置的类注册Bean，并注入ref属性，类似如下配置：
+        /**
+            * <dubbo:service interface="com.blue.fish.dubbo.service.UserService" class="com.blue.fish.dubbo.provider.user.UserServiceImpl"/>
+            * 这里会将赋值给 beanDefinition 的ref属性
+            */
+        String className = element.getAttribute("class");
+        if (StringUtils.isNotEmpty(className)) {
+            RootBeanDefinition classDefinition = new RootBeanDefinition();
+            classDefinition.setBeanClass(ReflectUtils.forName(className));
+            classDefinition.setLazyInit(false);
+            // 主要解析<dubbo:service>标签中的 name、class和ref等属性，其会把key-value的键值对提取出来放到BeanDefinition中，运行时，Spring会自动处理注入值
+            parseProperties(element.getChildNodes(), classDefinition);
+            beanDefinition.getPropertyValues().addPropertyValue("ref", new BeanDefinitionHolder(classDefinition, id + "Impl"));
+        }
+    } else if (ProviderConfig.class.equals(beanClass)) {
+        // <dubbo:provider>，该标签可能嵌套了 <dubbo:service> 如果使用了嵌套标签，则内部的标签对象会自动持有外层标签的对象；
+        parseNested(element, parserContext, ServiceBean.class, true, "service", "provider", id, beanDefinition);
+    } else if (ConsumerConfig.class.equals(beanClass)) {
+        // <dubbo:consumer>
+        parseNested(element, parserContext, ReferenceBean.class, false, "reference", "consumer", id, beanDefinition);
+    }
+    Set<String> props = new HashSet<>();
+    ManagedMap parameters = null;
+    // 获取具体配置对象的所有方法，比如ProviderConfig类
+    /**
+    * 当前标签的 attribute 获取方式
+    * 1、查找配置对象的get、set和is前缀的方法，如果标签属性名和方法名相同，则通过反射调用存储标签对应的值；
+    * 2、如果没有与get、set和is前缀匹配的方法，则当做parameters参数存储，是一个map对象，其定义在 AbstractMethodConfig 中；
+    */
+    for (Method setter : beanClass.getMethods()) {
+        String name = setter.getName();
+        // 查找所有set前缀的方法，并且只有一个参数的public方法
+        if (name.length() > 3 && name.startsWith("set")
+                && Modifier.isPublic(setter.getModifiers())
+                && setter.getParameterTypes().length == 1) {
+            Class<?> type = setter.getParameterTypes()[0];
+            // 获取具体的属性，按照驼峰命名规则，比如setTimeout，那么其属性为 timeout
+            String beanProperty = name.substring(3, 4).toLowerCase() + name.substring(4);
+            String property = StringUtils.camelToSplitName(beanProperty, "-");
+            props.add(property);
+            // 判断setter方法和getter方法是否匹配
+            Method getter = null;
+            try {
+                getter = beanClass.getMethod("get" + name.substring(3), new Class<?>[0]);
+            } catch (NoSuchMethodException e) {
+                try {
+                    getter = beanClass.getMethod("is" + name.substring(3), new Class<?>[0]);
+                } catch (NoSuchMethodException e2) {
+                }
+            }
+            // 如果没有对应的getter方法或者is前缀的方法，跳过
+            if (getter == null
+                    || !Modifier.isPublic(getter.getModifiers())
+                    || !type.equals(getter.getReturnType())) {
+                continue;
+            }
+            if ("parameters".equals(property)) {
+                // 如果是 parameters，按照parameter解析
+                parameters = parseParameters(element.getChildNodes(), beanDefinition);
+            } else if ("methods".equals(property)) {
+                parseMethods(id, element.getChildNodes(), beanDefinition, parserContext);
+            } else if ("arguments".equals(property)) {
+                parseArguments(id, element.getChildNodes(), beanDefinition, parserContext);
+            } else {
+                // 直接获取标签的属性值
+                String value = element.getAttribute(property);
+                if (value != null) {
+                    value = value.trim();
+                    if (value.length() > 0) {
+                        if ("registry".equals(property) && RegistryConfig.NO_AVAILABLE.equalsIgnoreCase(value)) {
+                            // 注册中心的配置，且配置为 N/A
+                            RegistryConfig registryConfig = new RegistryConfig();
+                            registryConfig.setAddress(RegistryConfig.NO_AVAILABLE);
+                            beanDefinition.getPropertyValues().addPropertyValue(beanProperty, registryConfig);
+                        } else if ("provider".equals(property) || "registry".equals(property) || ("protocol".equals(property) && AbstractServiceConfig.class.isAssignableFrom(beanClass))) {
+                            beanDefinition.getPropertyValues().addPropertyValue(beanProperty + "Ids", value);
+                        } else {
+                            Object reference;
+                            if (isPrimitive(type)) {
+                                if ("async".equals(property) && "false".equals(value)
+                                        || "timeout".equals(property) && "0".equals(value)
+                                        || "delay".equals(property) && "0".equals(value)
+                                        || "version".equals(property) && "0.0.0".equals(value)
+                                        || "stat".equals(property) && "-1".equals(value)
+                                        || "reliable".equals(property) && "false".equals(value)) {
+                                    // backward compatibility for the default value in old version's xsd
+                                    value = null;
+                                }
+                                reference = value;
+                            } else if (ONRETURN.equals(property) || ONTHROW.equals(property) || ONINVOKE.equals(property)) {
+                                int index = value.lastIndexOf(".");
+                                String ref = value.substring(0, index);
+                                String method = value.substring(index + 1);
+                                reference = new RuntimeBeanReference(ref);
+                                beanDefinition.getPropertyValues().addPropertyValue(property + METHOD, method);
+                            } else {
+                                if ("ref".equals(property) && parserContext.getRegistry().containsBeanDefinition(value)) {
+                                    BeanDefinition refBean = parserContext.getRegistry().getBeanDefinition(value);
+                                    if (!refBean.isSingleton()) {
+                                        throw new IllegalStateException("The exported service ref " + value + " must be singleton! Please set the " + value + " bean scope to singleton, eg: <bean id=\"" + value + "\" scope=\"singleton\" ...>");
+                                    }
+                                }
+                                reference = new RuntimeBeanReference(value);
+                            }
+                            // 把匹配到的属性注入到Spring的bean中
+                            beanDefinition.getPropertyValues().addPropertyValue(beanProperty, reference);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // 剩余不匹配的attribute当做parameter注入到Bean，props中保存了所有正确解析的属性
+    NamedNodeMap attributes = element.getAttributes();
+    int len = attributes.getLength();
+    for (int i = 0; i < len; i++) {
+        Node node = attributes.item(i);
+        String name = node.getLocalName();
+        // 排除已经解析的值；
+        if (!props.contains(name)) {
+            if (parameters == null) {
+                parameters = new ManagedMap();
+            }
+            String value = node.getNodeValue();
+            parameters.put(name, new TypedStringValue(value, String.class));
+        }
+    }
+    if (parameters != null) {
+        beanDefinition.getPropertyValues().addPropertyValue("parameters", parameters);
+    }
+    return beanDefinition;
+}
+```
+Dubbo只做了属性获取，运行时属性注入和转换都是Spring处理的，Spring如何做数据初始化和转换参考：BeanWrapperImpl
+
+## 3.2、基于注解配置解析
+
+相关注解：
+```java
+@EnableDubboConfig
+@DubboComponentScan
+public @interface EnableDubbo {
+    ...
+}
+
+@Import(DubboConfigConfigurationRegistrar.class)
+public @interface EnableDubboConfig {
+    boolean multiple() default true;
+}
+
+@Import(DubboComponentScanRegistrar.class)
+public @interface DubboComponentScan {
+    ...
+}
+```
+
+- 对于服务提供端：ServiceAnnotationBeanPostProcessor
+- 对于服务消费端：ReferenceAnnotationBeanPostProcessor
+
+# 4、服务暴露原理
+
+## 4.1、配置初始化
+
+Dubbo根据有优先级会对配置信息做聚合处理，默认覆盖策略遵循以下规则：
+- （1）`-D` 传递给JVM参数优先级最高，比如：`-Dduubo.protocol.port=20880`
+- （2）代码或xml配置优先级次高；
+- （3）配置文件优先级最低
+
+一般使用`dubbo.properties`作为默认是，只有xml没有配置时，`dubbo.properties`配置项才会生效，通常用于共享公共配置；
+
+Dubbo配置也会受到provider的影响
+- 如果只有provider端指定配置，则会自动透传都客户端，比如超时
+- 如果客户端也配置了相应属性，则服务端配置会被覆盖
+
+不同配置查找顺序：
+- 方法级优先，接口级次之，全局配置再次之。
+- 如果级别一样，则消费方优先，提供方次之
+
+## 4.2、远程服务暴露
+
+整体来看，Dubbo做服务暴露分为两部分，第一步将持有的服务实例通过代理转换成 Invoker，第二步把Invoker通过具体的协议转换成Exporter。Invoker 是实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
+
+Dubbo服务暴露的入口点在ServiceConfig.doExport，无论是xml还是注解，都会转化成ServiceBean，其继承ServiceConfig，在服务暴露前会按照配置覆盖策略完成配置读取，这两者关系如下：
+
+![](image/Dubbo-ServiceBean-ServiceConfig.png)
+
+Dubbo服务暴露的入口是：`OneTimeExecutionApplicationContextEventListener.onApplicationEvent`，onApplicationEvent 是一个事件响应方法，该方法会在收到 Spring 上下文刷新事件后执行服务暴露操作：
+
+![](image/Dubbo-服务暴露debug图.png)
+
+### 4.2.1、服务入口
+
+OneTimeExecutionApplicationContextEventListener 类有一个模板方法onApplicationContextEvent，其有两个具体的实现类：DubboBootstrapApplicationListener、DubboLifecycleComponentApplicationListener，那么服务暴露的是是 DubboBootstrapApplicationListener：
+```java
+// Dubbo启动器监听器，其 onApplicationContextEvent 会调用 {@link DubboBootstrap} 的 start 或者 stop 方法；
+public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicationContextEventListener implements Ordered {
+    public static final String BEAN_NAME = "dubboBootstrapApplicationListener";
+    private final DubboBootstrap dubboBootstrap;
+    // 获取 dubboBootstrap实例
+    public DubboBootstrapApplicationListener() {
+        this.dubboBootstrap = DubboBootstrap.getInstance();
+    }
+    @Override
+    public void onApplicationContextEvent(ApplicationContextEvent event) {
+        // 判断具体的事件
+        if (event instanceof ContextRefreshedEvent) {
+            // context刷新事件，会调用 DubboBootstrap 的start方法
+            onContextRefreshedEvent((ContextRefreshedEvent) event);
+        } else if (event instanceof ContextClosedEvent) {
+            // context关闭事件，会调用 DubboBootstrap 的stop方法
+            onContextClosedEvent((ContextClosedEvent) event);
+        }
+    }
+    private void onContextRefreshedEvent(ContextRefreshedEvent event) {
+        dubboBootstrap.start();
+    }
+    private void onContextClosedEvent(ContextClosedEvent event) {
+        dubboBootstrap.stop();
+    }
+    @Override
+    public int getOrder() {
+        return LOWEST_PRECEDENCE;
+    }
+}
+```
+### 4.2.2、启动：DubboBootstrap
+```java
+// DubboBootstrap 构造函数
+private DubboBootstrap() {
+    configManager = ApplicationModel.getConfigManager();
+    environment = ApplicationModel.getEnvironment();
+    DubboShutdownHook.getDubboShutdownHook().register();
+    ShutdownHookCallbacks.INSTANCE.addCallback(new ShutdownHookCallback() {
+        @Override
+        public void callback() throws Throwable {
+            DubboBootstrap.this.destroy();
+        }
+    });
+}
+// DubboBootstrap.start 方法
+public DubboBootstrap start() {
+    // CAS 操作
+    if (started.compareAndSet(false, true)) {
+        // 初始化参数
+        initialize();
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " is starting...");
+        }
+        // 1. 暴露服务
+        exportServices();
+        // Not only provider register
+        if (!isOnlyRegisterProvider() || hasExportedServices()) {
+            // 2. export MetadataService
+            exportMetadataService();
+            //3. Register the local ServiceInstance if required
+            registerServiceInstance();
+        }
+        referServices();
+        if (logger.isInfoEnabled()) {
+            logger.info(NAME + " has started.");
+        }
+    }
+    return this;
+}
+private void exportServices() {
+    // 获取所有需要暴露的服务循环处理
+    configManager.getServices().forEach(sc -> {
+        // TODO, compatible with ServiceConfig.export()
+        ServiceConfig serviceConfig = (ServiceConfig) sc;
+        serviceConfig.setBootstrap(this);
+        // 是否异步操作
+        if (exportAsync) {
+            ExecutorService executor = executorRepository.getServiceExporterExecutor();
+            Future<?> future = executor.submit(() -> {
+                sc.export();
+            });
+            asyncExportingFutures.add(future);
+        } else {
+            sc.export();
+            exportedServices.add(sc);
+        }
+    });
+}
+```
+
+### 4.2.3、ServiceConfig.export
+
+```java
+public synchronized void export() {
+    ...
+    // 检查和更新配置
+    checkAndUpdateSubConfigs();
+    //init serviceMetadata
+    serviceMetadata.setVersion(version);
+    serviceMetadata.setGroup(group);
+    serviceMetadata.setDefaultGroup(group);
+    serviceMetadata.setServiceType(getInterfaceClass());
+    serviceMetadata.setServiceInterfaceName(getInterface());
+    serviceMetadata.setTarget(getRef());
+    // 是否延迟暴露服务等
+    if (shouldDelay()) {
+        DELAY_EXPORT_EXECUTOR.schedule(this::doExport, getDelay(), TimeUnit.MILLISECONDS);
+    } else {
+        doExport();
+    }
+    exported();
+}
+protected synchronized void doExport() {
+    ....
+    // 真正暴露服务的接口
+    doExportUrls();
+}
+// 上面主要是做些配置校验：
+/*
+检测 <dubbo:service> 标签的 interface 属性合法性，不合法则抛出异常
+检测 ProviderConfig、ApplicationConfig 等核心配置类对象是否为空，若为空，则尝试从其他配置类对象中获取相应的实例。
+检测并处理泛化服务和普通服务类
+检测本地存根配置，并进行相应的处理
+对 ApplicationConfig、RegistryConfig 等配置类进行检测，为空则尝试创建，若无法创建则抛出异常
+*/
+```
+
+### 4.2.4、多协议多注册中心暴露：ServiceConfig.doExportUrls
+
+```java
+private void doExportUrls() {
+    // 注册一个当前Service服务到ServiceRepository中
+    ServiceRepository repository = ApplicationModel.getServiceRepository();
+    ServiceDescriptor serviceDescriptor = repository.registerService(getInterfaceClass());
+    repository.registerProvider(
+            getUniqueServiceName(),
+            ref,
+            serviceDescriptor,
+            this,
+            serviceMetadata
+    );
+    // 获取当前服务对应的注册中心实例，loadRegistries主要做如下事情：
+    List<URL> registryURLs = ConfigValidationUtils.loadRegistries(this, true);
+    // 遍历 protocols，并在每个协议下导出服务
+    for (ProtocolConfig protocolConfig : protocols) {
+        String pathKey = URL.buildKey(getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), group, version);
+        // In case user specified path, register service one more time to map it to path.
+        repository.registerService(pathKey, interfaceClass);
+        // TODO, uncomment this line once service key is unified
+        serviceMetadata.setServiceKey(pathKey);
+        // 如果服务指定暴露多个协议，则依次暴露服务
+        doExportUrlsFor1Protocol(protocolConfig, registryURLs);
+    }
+}
+```
+loadRegistries 方法主要包含如下的逻辑：
+- 检测是否存在注册中心配置类，不存在则抛出异常
+- 构建参数映射集合，也就是 map
+- 构建注册中心链接列表
+- 遍历链接列表，并根据条件决定是否将其添加到 registryList 中
+
+### 4.2.5、ServiceConfig.doExportUrlsFor1Protocol：
+
+构造URL：com.alibaba.dubbo.common.URL
+
+```java
+private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
+    // 协议默认是dubbo
+    String name = protocolConfig.getName();
+    if (StringUtils.isEmpty(name)) {
+        name = DUBBO;
+    }
+    // 添加 side、版本、时间戳以及进程号等信息到 map 中
+    Map<String, String> map = new HashMap<String, String>();
+    map.put(SIDE_KEY, PROVIDER_SIDE);
+    // 读取其他配置到map中，用于构造URL
+    ServiceConfig.appendRuntimeParameters(map);
+    AbstractConfig.appendParameters(map, getMetrics());
+    AbstractConfig.appendParameters(map, getApplication());
+    AbstractConfig.appendParameters(map, getModule());
+    // remove 'default.' prefix for configs from ProviderConfig
+    // appendParameters(map, provider, Constants.DEFAULT_KEY);
+    AbstractConfig.appendParameters(map, provider);
+    AbstractConfig.appendParameters(map, protocolConfig);
+    AbstractConfig.appendParameters(map, this);
+    MetadataReportConfig metadataReportConfig = getMetadataReportConfig();
+    if (metadataReportConfig != null && metadataReportConfig.isValid()) {
+        map.putIfAbsent(METADATA_KEY, REMOTE_METADATA_STORAGE_TYPE);
+    }
+    // methods 为 MethodConfig 集合，MethodConfig 中存储了 <dubbo:method> 标签的配置信息
+    if (CollectionUtils.isNotEmpty(getMethods())) {
+        ....
+    }
+    // 检测 generic 是否为 "true"，并根据检测结果向 map 中添加不同的信息
+    if (ProtocolUtils.isGeneric(generic)) {
+        map.put(GENERIC_KEY, generic);
+        map.put(METHODS_KEY, ANY_VALUE);
+    } else {
+        String revision = Version.getVersion(interfaceClass, version);
+        if (revision != null && revision.length() > 0) {
+            map.put(REVISION_KEY, revision);
+        }
+        // 为接口生成包裹类 Wrapper，Wrapper 中包含了接口的详细信息，比如接口方法名数组，字段信息等
+        String[] methods = Wrapper.getWrapper(interfaceClass).getMethodNames();
+        if (methods.length == 0) {
+            logger.warn("No method found in service interface " + interfaceClass.getName());
+            map.put(METHODS_KEY, ANY_VALUE);
+        } else {
+            map.put(METHODS_KEY, StringUtils.join(new HashSet<String>(Arrays.asList(methods)), ","));
+        }
+    }
+    // token
+    if(ConfigUtils.isEmpty(token) && provider != null) {
+        token = provider.getToken();
+    }
+
+    if (!ConfigUtils.isEmpty(token)) {
+        if (ConfigUtils.isDefault(token)) {
+            map.put(TOKEN_KEY, UUID.randomUUID().toString());
+        } else {
+            map.put(TOKEN_KEY, token);
+        }
+    }
+
+    //init serviceMetadata attachments
+    serviceMetadata.getAttachments().putAll(map);
+
+    // export service
+    String host = findConfigedHosts(protocolConfig, registryURLs, map);
+    Integer port = findConfigedPorts(protocolConfig, name, map);
+    URL url = new URL(name, host, port, getContextPath(protocolConfig).map(p -> p + "/" + path).orElse(path), map);
+
+    // You can customize Configurator to append extra parameters
+    if (ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
+            .hasExtension(url.getProtocol())) {
+        url = ExtensionLoader.getExtensionLoader(ConfiguratorFactory.class)
+                .getExtension(url.getProtocol()).getConfigurator(url).configure(url);
+    }
+    .....
+}
+```
+
+### 4.2.6、导出服务：服务导出分为导出到本地 (JVM)，和导出到远程
+
+```java
+private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> registryURLs) {
+    ....
+    String scope = url.getParameter(SCOPE_KEY);
+    if (!SCOPE_NONE.equalsIgnoreCase(scope)) {
+
+        // 本地服务暴露: scope != remote
+        if (!SCOPE_REMOTE.equalsIgnoreCase(scope)) {
+            exportLocal(url);
+        }
+        // 远程服务暴露: scope != local
+        if (!SCOPE_LOCAL.equalsIgnoreCase(scope)) {
+            if (CollectionUtils.isNotEmpty(registryURLs)) {
+                for (URL registryURL : registryURLs) {
+                    // 如果协议名称是 injvm，不注册
+                    if (LOCAL_PROTOCOL.equalsIgnoreCase(url.getProtocol())) {
+                        continue;
+                    }
+                    url = url.addParameterIfAbsent(DYNAMIC_KEY, registryURL.getParameter(DYNAMIC_KEY));
+                    URL monitorUrl = ConfigValidationUtils.loadMonitor(this, registryURL);
+                    if (monitorUrl != null) {
+                        // 如果配置了监控地址，则服务调用信息会上报
+                        url = url.addParameterAndEncoded(MONITOR_KEY, monitorUrl.toFullString());
+                    }
+                    if (logger.isInfoEnabled()) {
+                        if (url.getParameter(REGISTER_KEY, true)) {
+                            logger.info("Register dubbo service " + interfaceClass.getName() + " url " + url + " to registry " + registryURL);
+                        } else {
+                            logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
+                        }
+                    }
+                    // For providers, this is used to enable custom proxy to generate invoker
+                    String proxy = url.getParameter(PROXY_KEY);
+                    if (StringUtils.isNotEmpty(proxy)) {
+                        registryURL = registryURL.addParameter(PROXY_KEY, proxy);
+                    }
+                    // 通过动态代理转换成 Invoker，registryUrl存储的是注册中心地址，使用export作为key追加服务元数据信息
+                    Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, registryURL.addParameterAndEncoded(EXPORT_KEY, url.toFullString()));
+                    // 将生产的代理 Invoker 和 当前ServiceConfig包装一下
+                    DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+                    // 服务暴露后向注册中心注册服务信息
+                    /**
+                        * 这里在真正执行的时候会根据 invoker.getUrl.getProtocol来判断具体的Protocol实现类。
+                        * Protocol有三个包装类：ProtocolFilterWrapper、ProtocolListenerWrapper、QosProtocolWrapper，
+                        * 那边在通过ExtensionLoader获取扩展的时候，会将这三个包装类放到缓存：cacheWrapperClass。
+                        * 在getExtension的时候，比如当前是registry，其对于的Protocol实现类是：RegistryProtocol，会将上述三个包装类包装 RegistryProtocol，
+                        * 那么最终的 PROTOCOL 真正形成如下调用链：QosProtocolWrapper.export -> ProtocolListenerWrapper.export -> ProtocolFilterWrapper.export -> RegistryProtocol.export
+                        */
+                    Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
+                    exporters.add(exporter);
+                }
+            } else {
+                // 处理没有注册中心场景，直接暴露服务
+                if (logger.isInfoEnabled()) {
+                    logger.info("Export dubbo service " + interfaceClass.getName() + " to url " + url);
+                }
+                Invoker<?> invoker = PROXY_FACTORY.getInvoker(ref, (Class) interfaceClass, url);
+                DelegateProviderMetaDataInvoker wrapperInvoker = new DelegateProviderMetaDataInvoker(invoker, this);
+                Exporter<?> exporter = PROTOCOL.export(wrapperInvoker);
+                exporters.add(exporter);
+            }
+            /**
+                * @since 2.7.0
+                * ServiceData Store
+                */
+            WritableMetadataService metadataService = WritableMetadataService.getExtension(url.getParameter(METADATA_KEY, DEFAULT_METADATA_STORAGE_TYPE));
+            if (metadataService != null) {
+                metadataService.publishServiceDefinition(url);
+            }
+        }
+    }
+    this.urls.add(url);
+}
+```
+根据URL中scope参数值，判断：
+* 1、scope = none，不导出服务
+* 2、scope != remote，导出到本地
+* 3、scope != local，导出到远程
+
+#### 4.2.6.1、创建invoker
+
+#### 4.2.6.2、导出服务到本地
+
+#### 4.2.6.3、导出服务到远程
+
+dubbo://192.168.31.196:20880/org.apache.dubbo.samples.annotation.api.GreetingService?anyhost=true&application=samples-annotation-provider&bind.ip=192.168.31.196&bind.port=20880&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.samples.annotation.api.GreetingService&methods=greeting,replyGreeting&pid=11517&release=2.7.5&revision=1.0.0_annotation&side=provider&timeout=1000&timestamp=1584849181681&version=1.0.0_annotation
+
+# 5、服务消费原理
+
+Dubbo 服务引用的时机有两个，第一个是饿汉式的，第二个是懒汉式的。
+- 第一个是在 Spring 容器调用 ReferenceBean 的 afterPropertiesSet 方法时引用服务；
+- 第二个是在 ReferenceBean 对应的服务被注入到其他类中时引用。这两个引用服务的时机区别在于；
+
+默认情况下，Dubbo 使用懒汉式引用服务。如果需要使用饿汉式，可通过配置 `<dubbo:reference>` 的 init 属性开启。
+
+按照 Dubbo 默认配置进行分析，整个分析过程从 ReferenceBean 的 getObject 方法开始：
+- 当我们的服务被注入到其他类中时，Spring 会第一时间调用 getObject 方法，并由该方法执行服务引用逻辑。按照惯例，在进行具体工作之前，需先进行配置检查与收集工作；
+- 接着根据收集到的信息决定服务用的方式，有三种，第一种是引用本地 (JVM) 服务，第二是通过直连方式引用远程服务，第三是通过注册中心引用远程服务。不管是哪种引用方式，最后都会得到一个 Invoker 实例。如果有多个注册中心，多个服务提供者，这个时候会得到一组 Invoker 实例，此时需要通过集群管理类 Cluster 将多个 Invoker 合并成一个实例。合并后的 Invoker 实例已经具备调用本地或远程服务的能力了，但并不能将此实例暴露给用户使用，这会对用户业务代码造成侵入。此时框架还需要通过代理工厂类 (ProxyFactory) 为服务接口生成代理类，并让代理类去调用 Invoker 逻辑。避免了 Dubbo 框架代码对业务代码的侵入；
+
+# 6、优雅停机
+
+![](image/Dubbo-优雅停机原理.png)
+
+Dubbo实现的优雅停机机制包括6个步骤：
+- （1）收到进程退出信号，Spring容器会触发容器销毁事件；
+- （2）provider端会取消注册服务元数据信息；
+- （3）consumer端会收到最新地址列表（不包括准备停止的地址）；
+- （4）Dubbo协议会发生readonly事件报文通知consumer服务不可用；（考虑到注册中心推送服务的网络延迟）
+- （5）服务端等待已经执行的任务结束并拒绝信任务执行；
+
+# 7、Dubbo编解码器
+
+其大致结构：
+
+![](image/Dubbo-编解码器类结构.png)
+
+Dubbo协议设计参考了TCP/IP协议，16字节长的报文头部主要携带了魔法数（0xdabb），以及请求报文是否Request、Response、心跳和事件的信息，请求时也会携带当前报文体内序列化协议编号
+
+其协议结构如下：
+
+![](image/Dubbo-协议结构.png)
+
+Dubbo协议字段解析：
+偏移比特位 | 字段描述 | 作用
+---------|----------|-----
+0~7 | 魔数高位 | 存储的是魔法数的高位（0xda00）
+8~15|魔法数低位 | 存储的是魔法数的低位（0xbb）
+16 | 数据包类型 | 是否为双向的RPC调用（比如方法调用有返回值），0-Response、1-Request
+17 | 调用方式 | 仅在第16位被被设置为1的情况下有效，0位单向调用、1-双向调用
+18 | 事件标识 | 0-为当前数据包是请求或响应包；1-当前数据包是心跳包，设置了心跳报文不会透传到业务方法调用，仅用于框架内部保活机制；
+19~23 | 序列化器编号 | 2-Hessian2Serialization、3-JavaSerialization、4-CompactedSerialization、6-FastJsonSerialization、7-NativeJavaSerialization、8-KroySerialization、9-FastSerialization
+24~31 | 状态 | 20-OK、30-CLIENT_TIMEOUT、31-SERVER_TIMEOUT、40-BAD_REQUEST、50-BAD_RESPONSE ...
+32~95 | 请求编号 | 这8个字节存储RPC请求的唯一ID，用来将请求和响应关联
+96~127 | 消息体长度 | 占用4个字节存储消息体长度，在一次RPC请求过程中，消息体中一次会存储7部分内容，严格按照顺序写入和读取：Dubbo版本号、服务接口名、服务接口版本、方法名、参数类型、方法参数值和请求额外参数（attachment）
+
+
+在网络通信中（基于TCP）需要解决网络粘包/拆包的问题，一些常用的方法比如：回车、换行和特殊分隔符，而通过前面Dubbo协议设计可以看出Dubbo是使用特殊符号 0xdabb 魔法数来分割处理粘包问题的；
+
+客户端在多线程并发调用服务时，Dubbo通过协议头中全局请求ID标识找正确响应调用线程的
+
+# 8、ChannelHandler
+
+# 9、Dubbo调用过程
+
+![](image/Dubbo-调用流程.png)
+
+- 首先在客户端启动时会从注册中心拉取和订阅对应的服务列表，Cluster会把拉取的服务列表聚合成一个invoker，每次RPC调用前都会通过Directory#list获取providers，获取这些服务列表给后续路由和负载均衡使用；
+- Dubbo发起服务调用时，所有路由和负载均衡都是在客户端实现的。客户端调用首先会触发路由操作，然后将路由结果得到的服务列表作为负载均衡的参数，经过负载均衡后选择一台机器进行RPC调用；
+- 客户端会将请求交给底层IO线程处理，主要处理读写、序列化与反序列等逻辑，这里不能足额色操作；Dubbo中有两种类似线程池：一种是IO线程池，另一种是Dubbo业务线程；
+- Dubbo将服务调用和telent调用做了端口复用。
+
+# 10、集群容错
+
+## 10.1、Cluster层
+
+Cluster可以看做是一个集群容错层，该层中包含Cluster、Directory、Router、LoadBalance 几大核心接口。Cluster是容错接口，提供Failover、Failfast等容错策略；
+
+Cluster层总体工作流程：
+- 生成invoker对象。不同的Cluster实现会生成不同类型的ClusterInvoker对象并返回。然后调用 ClusterInvoker 的 invoke 方法，正式开始调用流程；
+- 获得可调用的服务列表，首先做前置校验，检查远程服务是否已被销毁。然后通过Directory#list 方法获取所有可用的服务列表。接着使用Router接口处理该服务列表，根据路由规则过滤一部分服务，最终返回剩余的服务列表；
+- 做负载均衡，根据得到的服务列表还需要通过不同的负载均衡策略选出一个服务，用作最后的调用；
+- 做RPC调用，首先保存每次调用 Invoker 到RPC上下文，并做RPC调用。然后处理调用结果，对应调用出现异常、成功、失败等成功，每种容错策略会有不同的处理方式；
+
+![](image/Dubbo-Cluster层.jpg)
+
+- 这里的 Invoker 是 Provider 的一个可调用 Service 的抽象，Invoker 封装了 Provider 地址及 Service 接口信息
+- Directory 代表多个 Invoker，可以把它看成 `List<Invoker>` ，但与 List 不同的是，它的值可能是动态变化的，比如注册中心推送变更
+- Cluster 将 Directory 中的多个 Invoker 伪装成一个 Invoker，对上层透明，伪装过程包含了容错逻辑，调用失败后，重试另一个
+- Router 负责从多个 Invoker 中按路由规则选出子集，比如读写分离，应用隔离等
+- LoadBalance 负责从多个 Invoker 中选出具体的一个用于本次调用，选的过程包含了负载均衡算法，调用失败后，需要重选
+
+## 10.2、容错机制实现
+
+Cluster接口一共有9种不同的实现，每种实现分别对应不同的ClusterInvoker。
+
+### 10.2.1、容错机制描述
+
+容错机制的特性：
+- Failover：当出现失败时，会重试其他服务器。用户可以 retries=2 设置重试次数。Dubbo的默认容错机制，会对请求做负载均衡。通常使用在读操作或幂等的写操作上，但重试会导致接口延迟增大；
+- Failfast：快速失败，当请求失败后，快速返回异常结果，不做任何重试。会对请求做负载均衡，通常使用在非幂等接口的调用上；
+- Failsafe：当出现异常，直接忽略异常。会对请求做负载均衡。不关心调用成功，并且不想抛出异常影响外层调用，如果某些不重要的日志同步；
+- Failback：请求失败，会自动记录在失败队列中，并由一个定时线程池定时重试，适用于一些异步或最终一致性的请求。请求做负载均衡；
+- Forking：同时调用多个相同的服务，只要其中一个返回，则立即返回结果。用过可以配置fork="最大并行调用数" 参数来确定最大并行调用的服务数据量；
+- Broadcast：广播调用所有可用的服务，任意一节点报错则报错，由于是广播，因此请求不需要做负载均衡；
+
+**配置**
+
+按照以下示例在服务提供方和消费方配置集群模式
+
+`<dubbo:service cluster="failsafe" />` 或者 `<dubbo:reference cluster="failsafe" />`
+
+### 10.2.2、Cluster接口关系
+
+当上层调用 Invoker 时，无论实际存在多少个，只需要同Cluster，即可完成整个调用容错逻辑，包括获取服务列表、路由、负载均衡等；Cluster接口知识串联起整个逻辑，其中 ClusterInvoker 只实现了容错策略部分；
+
+```java
+@SPI(FailoverCluster.NAME)
+public interface Cluster {
+    @Adaptive
+    <T> Invoker<T> join(Directory<T> directory) throws RpcException;
+}
+public abstract class AbstractCluster implements Cluster {
+    ...
+}
+public class FailoverCluster extends AbstractCluster {
+    public final static String NAME = "failover";
+    @Override
+    public <T> AbstractClusterInvoker<T> doJoin(Directory<T> directory) throws RpcException {
+        return new FailoverClusterInvoker<>(directory);
+    }
+```
+
+Cluster接口的类图关系
+
+![](image/Dubbo-Cluster结构关系图.png)
+
+ClusterInvoker总体类结构
+
+![](image/Dubbo-ClusterInvoker结构关系图.png)
+
+### 10.2.3、Failover策略
+
+Cluster接口有SPI注解 `@SPI(FailoverCluster.NAME)`，即默认是实现 Failover，相应的逻辑实现代码：
+
+```java
+public class FailoverClusterInvoker<T> extends AbstractClusterInvoker<T> {
+    public FailoverClusterInvoker(Directory<T> directory) {
+        super(directory);
+    }
+    @Override
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Result doInvoke(Invocation invocation, final List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        List<Invoker<T>> copyInvokers = invokers;
+        // 校验 invoker列表是否为空，该方法是在父类 AbstractClusterInvoker 上的，很多具体实现类都可以复用
+        checkInvokers(copyInvokers, invocation);
+        String methodName = RpcUtils.getMethodName(invocation);
+        // 获取重试次数的配置
+        int len = getUrl().getMethodParameter(methodName, RETRIES_KEY, DEFAULT_RETRIES) + 1;
+        if (len <= 0) {
+            len = 1;
+        }
+        // retry loop.
+        RpcException le = null; // last exception.
+        List<Invoker<T>> invoked = new ArrayList<Invoker<T>>(copyInvokers.size()); // invoked invokers.
+        Set<String> providers = new HashSet<String>(len);
+        for (int i = 0; i < len; i++) {
+            //Reselect before retry to avoid a change of candidate `invokers`.
+            //NOTE: if `invokers` changed, then `invoked` also lose accuracy.
+            if (i > 0) {
+                // 如果i>0，表示有过一次失败，，那么会再次校验节点是否被销毁、传入的invoker列表是否为空
+                checkWhetherDestroyed();
+                copyInvokers = list(invocation);
+                // check again
+                checkInvokers(copyInvokers, invocation);
+            }
+            // 负载均衡策略，调用的是父类的方法，统一的负载均衡策略
+            Invoker<T> invoker = select(loadbalance, invocation, copyInvokers, invoked);
+            invoked.add(invoker);
+            RpcContext.getContext().setInvokers((List) invoked);
+            try {
+                // 真正远程调用
+                Result result = invoker.invoke(invocation);
+                if (le != null && logger.isWarnEnabled()) {
+                    logger.warn("Although retry the method " + methodName + " in the service " + getInterface().getName()  + " was successful by the provider " + invoker.getUrl().getAddress() + ", but there have been failed providers " + providers + " (" + providers.size() + "/" + copyInvokers.size()  + ") from the registry " + directory.getUrl().getAddress()  + " on the consumer " + NetUtils.getLocalHost()  + " using the dubbo version " + Version.getVersion() + ". Last error is: " + le.getMessage(), le);
+                }
+                return result;
+            } catch (RpcException e) {
+                if (e.isBiz()) { // biz exception.
+                    throw e;
+                }
+                le = e;
+            } catch (Throwable e) {
+                le = new RpcException(e.getMessage(), e);
+            } finally {
+                providers.add(invoker.getUrl().getAddress());
+            }
+        }
+        // 如果重试次数执行完，仍未正确执行，抛出异常信息
+        throw new RpcException(le.getCode(), "Failed to invoke the method " + methodName + " in the service " + getInterface().getName() + ". Tried " + len + " times of the providers " + providers + " (" + providers.size() + "/" + copyInvokers.size() + ") from the registry " + directory.getUrl().getAddress() + " on the consumer " + NetUtils.getLocalHost() + " using the dubbo version " + Version.getVersion() + ". Last error is: "  + le.getMessage(), le.getCause() != null ? le.getCause() : le);
+    }
+}
+```
+- 校验：校验从AbstractClusterInvoker传入的 Invoker 列表是否为空；
+- 获取配置参数：从调用URL中获取对应的 retries重试次数；
+- 初始化一些集合和对象：用于保存调用过程中出现的异常、记录调用了哪些节点；
+- 使用for循环实现重试，for循环的次数就是重试的次数，成功则返回，否则继续循环。如果for循环完，还没有一个成功的返回，则抛出异常；
+    - 校验：如果for循环次数大于1，即有过一次失败，则会再次校验节点是否被销毁、传入的Invoker列表是否为空；
+    - 负载均衡：调用 select 方法做负载均衡，得到要调用的节点，把已经调用的节点信息放进 RPC 上下文中；
+    - 远程调用：调用 invoker#invoke 方法做远程调用，成功则返回，异常则记录异常信息，再做下次循环；
+
+![](image/Dubbo-Failover容错流程.png)
+
+### 10.2.4、Failfast策略
+
+Failfast会在失败后直接抛出异常并返回，过程非常简单，也不做任何中间信息的记录
+```java
+public class FailfastClusterInvoker<T> extends AbstractClusterInvoker<T> {
+    public FailfastClusterInvoker(Directory<T> directory) {
+        super(directory);
+    }
+    @Override
+    public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        // 校验
+        checkInvokers(invokers, invocation);
+        // 负载均衡
+        Invoker<T> invoker = select(loadbalance, invocation, invokers, null);
+        try {
+            // 远程调用
+            return invoker.invoke(invocation);
+        } catch (Throwable e) {
+            // 捕获异常，直接封装成 RpcException
+            if (e instanceof RpcException && ((RpcException) e).isBiz()) { // biz exception.
+                throw (RpcException) e;
+            }
+            throw new RpcException(e instanceof RpcException ? ((RpcException) e).getCode() : 0, "Failfast invoke providers "+invoker.getUrl() + " "+loadbalance.getClass().getSimpleName() +" select from all providers " + invokers + " for service " + getInterface().getName()+" method " + invocation.getMethodName() + " on consumer " + NetUtils.getLocalHost()  + " use dubbo version " + Version.getVersion() + ", but no luck to perform the invocation. Last error is: " + e.getMessage(), e.getCause() != null ? e.getCause() : e);
+        }
+    }
+}
+```
+
+### 10.2.5、Failsafe策略
+
+Failsafe调用时如果出现异常，则会直接忽略：
+```java
+public class FailsafeClusterInvoker<T> extends AbstractClusterInvoker<T> {
+    public FailsafeClusterInvoker(Directory<T> directory) {
+        super(directory);
+    }
+    @Override
+    public Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        try {
+            // 校验
+            checkInvokers(invokers, invocation);
+            // 负载均衡
+            Invoker<T> invoker = select(loadbalance, invocation, invokers, null);
+            // 远程调用
+            return invoker.invoke(invocation);
+        } catch (Throwable e) {
+            logger.error("Failsafe ignore exception: " + e.getMessage(), e);
+            // 异常发生，直接返回一个空的结果集
+            return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation); // ignore
+        }
+    }
+}
+```
+
+### 10.2.6、Failback策略
+
+Failback调用失败时会定期重试。Failback内部定义了一个 RetryTimerTask 重试的定时任务，如果调用失败，会创建一个 RetryTimerTask ，交由Timer来执行；
+```java
+public class FailbackClusterInvoker<T> extends AbstractClusterInvoker<T> {
+
+    private static final Logger logger = LoggerFactory.getLogger(FailbackClusterInvoker.class);
+
+    private static final long RETRY_FAILED_PERIOD = 5;
+
+    private final int retries;
+
+    private final int failbackTasks;
+
+    private volatile Timer failTimer;
+
+    public FailbackClusterInvoker(Directory<T> directory) {
+        super(directory);
+
+        int retriesConfig = getUrl().getParameter(RETRIES_KEY, DEFAULT_FAILBACK_TIMES);
+        if (retriesConfig <= 0) {
+            retriesConfig = DEFAULT_FAILBACK_TIMES;
+        }
+        int failbackTasksConfig = getUrl().getParameter(FAIL_BACK_TASKS_KEY, DEFAULT_FAILBACK_TASKS);
+        if (failbackTasksConfig <= 0) {
+            failbackTasksConfig = DEFAULT_FAILBACK_TASKS;
+        }
+        retries = retriesConfig;
+        failbackTasks = failbackTasksConfig;
+    }
+
+    private void addFailed(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, Invoker<T> lastInvoker) {
+        if (failTimer == null) {
+            synchronized (this) {
+                if (failTimer == null) {
+                    failTimer = new HashedWheelTimer(
+                            new NamedThreadFactory("failback-cluster-timer", true),
+                            1,
+                            TimeUnit.SECONDS, 32, failbackTasks);
+                }
+            }
+        }
+        RetryTimerTask retryTimerTask = new RetryTimerTask(loadbalance, invocation, invokers, lastInvoker, retries, RETRY_FAILED_PERIOD);
+        try {
+            failTimer.newTimeout(retryTimerTask, RETRY_FAILED_PERIOD, TimeUnit.SECONDS);
+        } catch (Throwable e) {
+            logger.error("Failback background works error,invocation->" + invocation + ", exception: " + e.getMessage());
+        }
+    }
+
+    @Override
+    protected Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException {
+        Invoker<T> invoker = null;
+        try {
+            checkInvokers(invokers, invocation);
+            invoker = select(loadbalance, invocation, invokers, null);
+            return invoker.invoke(invocation);
+        } catch (Throwable e) {
+            logger.error("Failback to invoke method " + invocation.getMethodName() + ", wait for retry in background. Ignored exception: "
+                    + e.getMessage() + ", ", e);
+            // 执行发生异常时，会添加到失败任务里做重试
+            addFailed(loadbalance, invocation, invokers, invoker);
+            return AsyncRpcResult.newDefaultAsyncResult(null, null, invocation); // ignore
+        }
+    }
+
+    @Override
+    public void destroy() {
+        super.destroy();
+        if (failTimer != null) {
+            failTimer.stop();
+        }
+    }
+
+    /**
+     * RetryTimerTask
+     */
+    private class RetryTimerTask implements TimerTask {
+        private final Invocation invocation;
+        private final LoadBalance loadbalance;
+        private final List<Invoker<T>> invokers;
+        private final int retries;
+        private final long tick;
+        private Invoker<T> lastInvoker;
+        private int retryTimes = 0;
+        RetryTimerTask(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, Invoker<T> lastInvoker, int retries, long tick) {
+            this.loadbalance = loadbalance;
+            this.invocation = invocation;
+            this.invokers = invokers;
+            this.retries = retries;
+            this.tick = tick;
+            this.lastInvoker=lastInvoker;
+        }
+        @Override
+        public void run(Timeout timeout) {
+            try {
+                Invoker<T> retryInvoker = select(loadbalance, invocation, invokers, Collections.singletonList(lastInvoker));
+                lastInvoker = retryInvoker;
+                retryInvoker.invoke(invocation);
+            } catch (Throwable e) {
+                logger.error("Failed retry to invoke method " + invocation.getMethodName() + ", waiting again.", e);
+                if ((++retryTimes) >= retries) {
+                    logger.error("Failed retry times exceed threshold (" + retries + "), We have to abandon, invocation->" + invocation);
+                } else {
+                    rePut(timeout);
+                }
+            }
+        }
+        private void rePut(Timeout timeout) {
+            if (timeout == null) {
+                return;
+            }
+            Timer timer = timeout.timer();
+            if (timer.isStop() || timeout.isCancelled()) {
+                return;
+            }
+            timer.newTimeout(timeout.task(), tick, TimeUnit.SECONDS);
+        }
+    }
+}
+```
+
+## 10.3、Directory实现
+
+整个容错过程中首先会使用 Directory#list 获取所有的 Invoker列表，主要有两种实现：静态的Invoker列表和动态的Invoker列表。静态Invoker是用户自己设置的invoker列表；动态列表是根据注册中心的数据动态变化，动态更新invoker列表；其类结构如下：
+
+![](image/Dubbo-Directory类结构.png)
+
+- AbstractDirectory 实现了 Directory 接口的所有方法，并提供一个 doList的模板方法，由具体子类来实现；
+- RegistryDirectory 属于 Directory 的动态列表实现，会自动从注册中心更新 Invoker列表、配置信息、路由列表等；其实现了NofityListener，当注册中心节点信息发生变化后，RegistryDirectory 可以通过此接口方法得到变更信息，并根据变更信息动态调整内部 Invoker 列表；
+
+    RegistryDirectory 中有几个比较重要的逻辑：
+    - Invoker 的列举逻辑；
+    - 第接收服务配置变更的逻辑；
+    - Invoker 列表的刷新逻辑；
+- StaticRegistry：Directory的静态列表实现，即传入的 Invoker列表封装成静态的 Directory 对象，里面的列表是不会变的；
+
+## 10.4、路由的实现
+
+在Directory获取所有 Invoker列表时候，会调用路由接口，路由接口根据用户配置的不同路由策略对 Invoker 列表进行过滤，只返回符合规则的 Invoker。
+
+路由的总体结构，路由分为：条件路由、脚本路由、文件路由、App路由、Service路由以及Tag路由。
+
+![](image/Dubbo-Router相关类结构.png)
+
+所有路由策略都是由对应的RouterFactory来创建，其是一个SPI接口，没有设置默认值，但是有 Adaptive 注解，因此其会根据URL中的protocol参数确定要初始化哪一个具体的Router实现。
+```java
+@SPI
+public interface RouterFactory {
+    @Adaptive("protocol")
+    Router getRouter(URL url);
+}
+```
+对应的SPI配置文件能够看到，URL中protocol可以设置的值：
+```
+file=org.apache.dubbo.rpc.cluster.router.file.FileRouterFactory
+script=org.apache.dubbo.rpc.cluster.router.script.ScriptRouterFactory
+condition=org.apache.dubbo.rpc.cluster.router.condition.ConditionRouterFactory
+service=org.apache.dubbo.rpc.cluster.router.condition.config.ServiceRouterFactory
+app=org.apache.dubbo.rpc.cluster.router.condition.config.AppRouterFactory
+tag=org.apache.dubbo.rpc.cluster.router.tag.TagRouterFactory
+mock=org.apache.dubbo.rpc.cluster.router.mock.MockRouterFactory
+```
+
+## 10.5、负载均衡的实现
+
+### 10.5.1、概述
+
+负载均衡的整体结构：
+
+![](image/Dubbo-LoadBalance类结构.png)
+
+前面所有容错策略中都调用了 抽象父类 AbstractClusterInvoker 中定义的 `Invoker<T> select` 方法，并不是直接调用 LoadBalance的方法，其在封装了一些新的特性：
+- 粘滞连接：主要用于状态服务，尽可能让客户端总数向同一提供者发起调用，除非该提供者宕机了，再连接一台。粘滞连接将自动开启延迟连接，以减少长连接数：`<dubbo:reference interface="com.blue.fish.dubbo.service.UserService" id="userService" sticky="true"/>`
+- 可用检测：如果调用的URL中含有`cluster.availablecheck=false`，则不会检测远程服务是否可用，直接调用；如果不设置，则默认会开启检查，对所有服务都做是否可用检查，如果不可用，则重新负载均衡
+- 避免重复调用：对于已经调用过的远程服务，避免重复选择，每次都使用同一个节点。
+
+```java
+    protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation,
+                                List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
+        if (CollectionUtils.isEmpty(invokers)) {
+            return null;
+        }
+        String methodName = invocation == null ? StringUtils.EMPTY_STRING : invocation.getMethodName();
+        // 判断是否是粘滞连接
+        boolean sticky = invokers.get(0).getUrl()
+                .getMethodParameter(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
+        // 如果有粘滞的Invoker 且当前的 Invoker 列表不包含该粘滞的 Invoker，将之前设置的粘滞的 Invoker 置为 null
+        if (stickyInvoker != null && !invokers.contains(stickyInvoker)) {
+            stickyInvoker = null;
+        }
+        // 如果是支持粘滞连接，（粘滞的Invoker不为null，或者 选择的 Invokers 不包含 粘滞的Invoker）
+        if (sticky && stickyInvoker != null && (selected == null || !selected.contains(stickyInvoker))) {
+            // 可用性检查且粘滞的Invoker可用，直接返回
+            if (availablecheck && stickyInvoker.isAvailable()) {
+                return stickyInvoker;
+            }
+        }
+        Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
+        if (sticky) {
+            stickyInvoker = invoker;
+        }
+        return invoker;
+    }
+
+    private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,  List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
+        if (CollectionUtils.isEmpty(invokers)) {
+            return null;
+        }
+        if (invokers.size() == 1) {
+            return invokers.get(0);
+        }
+        Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
+
+        //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
+        if ((selected != null && selected.contains(invoker))
+                || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
+            try {
+                // 重新做负载均衡
+                Invoker<T> rInvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
+                if (rInvoker != null) {
+                    invoker = rInvoker;
+                } else {
+                    //Check the index of current selected invoker, if it's not the last one, choose the one at index+1.
+                    int index = invokers.indexOf(invoker);
+                    try {
+                        //Avoid collision
+                        invoker = invokers.get((index + 1) % invokers.size());
+                    } catch (Exception e) {
+                        logger.warn(e.getMessage() + " may because invokers list dynamic change, ignore.", e);
+                    }
+                }
+            } catch (Throwable t) {
+                logger.error("cluster reselect fail reason is :" + t.getMessage() + " if can not solve, you can set cluster.availablecheck=false in url", t);
+            }
+        }
+        return invoker;
+    }
+    private Invoker<T> reselect(LoadBalance loadbalance, Invocation invocation,
+                                List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availablecheck) throws RpcException {
+
+        //Allocating one in advance, this list is certain to be used.
+        List<Invoker<T>> reselectInvokers = new ArrayList<>(
+                invokers.size() > 1 ? (invokers.size() - 1) : invokers.size());
+
+        // First, try picking a invoker not in `selected`.
+        for (Invoker<T> invoker : invokers) {
+            if (availablecheck && !invoker.isAvailable()) {
+                continue;
+            }
+
+            if (selected == null || !selected.contains(invoker)) {
+                reselectInvokers.add(invoker);
+            }
+        }
+
+        if (!reselectInvokers.isEmpty()) {
+            return loadbalance.select(reselectInvokers, getUrl(), invocation);
+        }
+
+        // Just pick an available invoker using loadbalance policy
+        if (selected != null) {
+            for (Invoker<T> invoker : selected) {
+                if ((invoker.isAvailable()) // available first
+                        && !reselectInvokers.contains(invoker)) {
+                    reselectInvokers.add(invoker);
+                }
+            }
+        }
+        if (!reselectInvokers.isEmpty()) {
+            return loadbalance.select(reselectInvokers, getUrl(), invocation);
+        }
+
+        return null;
+    }
+    @Override
+    public Result invoke(final Invocation invocation) throws RpcException {
+        checkWhetherDestroyed();
+
+        // binding attachments into invocation.
+        Map<String, Object> contextAttachments = RpcContext.getContext().getObjectAttachments();
+        if (contextAttachments != null && contextAttachments.size() != 0) {
+            ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
+        }
+
+        List<Invoker<T>> invokers = list(invocation);
+        LoadBalance loadbalance = initLoadBalance(invokers, invocation);
+        RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+        return doInvoke(invocation, invokers, loadbalance);
+    }
+```
+
+### 10.5.2、负载均衡的策略
+
+在集群负载均衡时，Dubbo 提供了多种均衡策略，缺省为 random 随机调用
+- Random LoadBalance：随机，按权重设置随机概率。在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，有利于动态调整提供者权重；
+- RoundRobin LoadBalance：轮循，按公约后的权重设置轮循比率。存在慢的提供者累积请求的问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上；
+- LeastActive LoadBalance：最少活跃调用数，相同活跃数的随机，活跃数指调用前后计数差。使慢的提供者收到更少请求，因为越慢的提供者的调用前后计数差会越大。
+- ConsistentHash LoadBalance：一致性 Hash，相同参数的请求总是发到同一提供者。当某一台提供者挂时，原本发往该提供者的请求，基于虚拟节点，平摊到其它提供者，不会引起剧烈变动。[算法](http://en.wikipedia.org/wiki/Consistent_hashing)参见：缺省只对第一个参数 Hash，如果要修改，请配置 `<dubbo:parameter key="hash.arguments" value="0,1" />`；缺省用 160 份虚拟节点，如果要修改，请配置 `<dubbo:parameter key="hash.nodes" value="320" />`
+
+负载配置有如下几种方式：
+- 服务端服务级别：`<dubbo:service interface="..." loadbalance="roundrobin" />`
+
+- 客户端服务级别：`<dubbo:reference interface="..." loadbalance="roundrobin" />`
+
+- 服务端方法级别：
+    ```xml
+    <dubbo:service interface="...">
+        <dubbo:method name="..." loadbalance="roundrobin"/>
+    </dubbo:service>
+    ```
+
+- 客户端方法级别：
+    ```xml
+    <dubbo:reference interface="...">
+        <dubbo:method name="..." loadbalance="roundrobin"/>
+    </dubbo:reference>
+    ```
+
+负载均衡除还可以自行进行扩展，已有的扩展：
+```
+org.apache.dubbo.rpc.cluster.loadbalance.RandomLoadBalance
+org.apache.dubbo.rpc.cluster.loadbalance.RoundRobinLoadBalance
+org.apache.dubbo.rpc.cluster.loadbalance.LeastActiveLoadBalance
+```
+扩展的接口：`org.apache.dubbo.rpc.cluster.LoadBalance`，扩展需要的工程目录：
+```
+src
+ |-main
+    |-java
+        |-com
+            |-xxx
+                |-XxxLoadBalance.java (实现LoadBalance接口)
+    |-resources
+        |-META-INF
+            |-dubbo
+                |-org.apache.dubbo.rpc.cluster.LoadBalance (纯文本文件，内容为：xxx=com.xxx.XxxLoadBalance)
+```
+
+### 10.5.3、Random负载均衡
+
+Random 负载均衡是按照权重设置随机概率做负载均衡的。
+
+按照权重设置随机概率做负载均衡，计算步骤：
+* 1、计算总权重并判断每个 Invoker 的权重是否一样，遍历整个 Invoker 列表，求和总权重。在遍历过程中，会对比每个 Invoker 的权重，判断所有 Invoker 的权重是否相同；
+* 2、如果权重相同，则说明每个 Invoker 的概率都一样，那么直接用 nextInt 随机选一个 Invoker 返回即可；
+* 3、如果权重不同，则首先得到偏移值，然后根据偏移值找到对应的 Invoker
+
+```java
+public class RandomLoadBalance extends AbstractLoadBalance {
+    public static final String NAME = "random";
+    @Override
+    protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+        // Number of invokers
+        int length = invokers.size();
+        // Every invoker has the same weight?
+        boolean sameWeight = true;
+        // the weight of every invokers
+        int[] weights = new int[length];
+        // the first invoker's weight
+        int firstWeight = getWeight(invokers.get(0), invocation);
+        weights[0] = firstWeight;
+        // The sum of weights
+        int totalWeight = firstWeight;
+        for (int i = 1; i < length; i++) {
+            int weight = getWeight(invokers.get(i), invocation);
+            // save for later use
+            weights[i] = weight;
+            // Sum
+            totalWeight += weight;
+            if (sameWeight && weight != firstWeight) {
+                sameWeight = false;
+            }
+        }
+        if (totalWeight > 0 && !sameWeight) {
+            // If (not every invoker has the same weight & at least one invoker's weight>0), select randomly based on totalWeight.
+            int offset = ThreadLocalRandom.current().nextInt(totalWeight);
+            // Return a invoker based on the random value.
+            for (int i = 0; i < length; i++) {
+                offset -= weights[i];
+                if (offset < 0) {
+                    return invokers.get(i);
+                }
+            }
+        }
+        // 如果所有权重都相同 或者 总权重等于 0，随机返回一个
+        return invokers.get(ThreadLocalRandom.current().nextInt(length));
+    }
+}
+```
+
+算法思路：
+
+假设我们有一组服务器 servers = [A, B, C]，他们对应的权重为 weights = [5, 3, 2]，权重总和为10。现在把这些权重值平铺在一维坐标值上，[0, 5) 区间属于服务器 A，[5, 8) 区间属于服务器 B，[8, 10) 区间属于服务器 C。接下来通过随机数生成器生成一个范围在 [0, 10) 之间的随机数，然后计算这个随机数会落到哪个区间上。比如数字3会落到服务器 A 对应的区间上，此时返回服务器 A 即可
+
+### 10.5.4、RoundRobin负载均衡
+
+权重轮询负载均衡会根据设置的权重来判断轮询的比例；权重轮询又分为普通权重轮询和平滑权重轮询。普通权重轮询会造成某个节点会突然被频繁选中，很容易让一个节点流量暴增；平滑权重轮询时会穿插选中其他节点，让整个服务器选中的过程比较均匀，不会频繁调用某一个几点；Dubbo主要是平滑权重轮询；
+
+Dubbo中轮询算法主要逻辑：
+- （1）每次请求做负载均衡，会遍历所有课调用的节点（Invoker列表）。对于每个Invoker，让它的 current = current + weight。同时累加每个Invoker的 weight 到 totalWeight，即 totalWeight = totalWeight + weight；
+- （2）遍历完所有 Invoker 后， current 值最大的节点就是本次要选中的节点。最后把该节点的 current 值减去 totalWeight，即 current = current - totalWeight
+
+```java
+public class RoundRobinLoadBalance extends AbstractLoadBalance {
+    public static final String NAME = "roundrobin";
+    private static final int RECYCLE_PERIOD = 60000;
+    // 封装了每个Invoker的权重，对象保存了三个属性
+    protected static class WeightedRoundRobin {
+        // 对象设置的权重
+        private int weight;
+        // 表示该节点被所有线程选中的权重综合
+        private AtomicLong current = new AtomicLong(0);
+        // 最后一次更新的时间，用于后续缓存超时的判断
+        private long lastUpdate;
+        public int getWeight() {
+            return weight;
+        }
+        public void setWeight(int weight) {
+            this.weight = weight;
+            current.set(0);
+        }
+        public long increaseCurrent() {
+            return current.addAndGet(weight);
+        }
+        public void sel(int total) {
+            current.addAndGet(-1 * total);
+        }
+        public long getLastUpdate() {
+            return lastUpdate;
+        }
+        public void setLastUpdate(long lastUpdate) {
+            this.lastUpdate = lastUpdate;
+        }
+    }
+    private ConcurrentMap<String, ConcurrentMap<String, WeightedRoundRobin>> methodWeightMap = new ConcurrentHashMap<String, ConcurrentMap<String, WeightedRoundRobin>>();
+    private AtomicBoolean updateLock = new AtomicBoolean();
+    protected <T> Collection<String> getInvokerAddrList(List<Invoker<T>> invokers, Invocation invocation) {
+        String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
+        Map<String, WeightedRoundRobin> map = methodWeightMap.get(key);
+        if (map != null) {
+            return map.keySet();
+        }
+        return null;
+    }
+    @Override
+    protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+        // key是URL的serviceKey + 方法名
+        String key = invokers.get(0).getUrl().getServiceKey() + "." + invocation.getMethodName();
+        // 初始化权重缓存map
+        ConcurrentMap<String, WeightedRoundRobin> map = methodWeightMap.computeIfAbsent(key, k -> new ConcurrentHashMap<>());
+        int totalWeight = 0;
+        long maxCurrent = Long.MIN_VALUE;
+        long now = System.currentTimeMillis();
+        Invoker<T> selectedInvoker = null;
+        WeightedRoundRobin selectedWRR = null;
+        for (Invoker<T> invoker : invokers) {
+            String identifyString = invoker.getUrl().toIdentityString();
+            int weight = getWeight(invoker, invocation);
+            WeightedRoundRobin weightedRoundRobin = map.get(identifyString);
+
+            if (weightedRoundRobin == null) {
+                // 没有权重信息生成权重信息
+                weightedRoundRobin = new WeightedRoundRobin();
+                weightedRoundRobin.setWeight(weight);
+                map.putIfAbsent(identifyString, weightedRoundRobin);
+                weightedRoundRobin = map.get(identifyString);
+            }
+            if (weight != weightedRoundRobin.getWeight()) {
+                // 权重已经变化
+                weightedRoundRobin.setWeight(weight);
+            }
+            long cur = weightedRoundRobin.increaseCurrent();
+            weightedRoundRobin.setLastUpdate(now);
+            if (cur > maxCurrent) {
+                maxCurrent = cur;
+                selectedInvoker = invoker;
+                selectedWRR = weightedRoundRobin;
+            }
+            totalWeight += weight;
+        }
+        if (!updateLock.get() && invokers.size() != map.size()) {
+            if (updateLock.compareAndSet(false, true)) {
+                try {
+                    // copy -> modify -> update reference
+                    ConcurrentMap<String, WeightedRoundRobin> newMap = new ConcurrentHashMap<>(map);
+                    newMap.entrySet().removeIf(item -> now - item.getValue().getLastUpdate() > RECYCLE_PERIOD);
+                    methodWeightMap.put(key, newMap);
+                } finally {
+                    updateLock.set(false);
+                }
+            }
+        }
+        if (selectedInvoker != null) {
+            selectedWRR.sel(totalWeight);
+            return selectedInvoker;
+        }
+        // should not happen here
+        return invokers.get(0);
+    }
+}
+```
+
+### 10.5.5、LeastActive负载均衡
+
+LeastActive负载均衡为最少活跃调用数负载均衡，即框架会绩效每个Invoker的活跃数，每次只从活跃数最少的Invoker里选一个节点。这个负载均衡策略需要配置 ActiveLimitFilter 过滤器来计算每个接口方法的活跃数。其最终还是会根据权重做负载均衡的时候使用的算法和Random是一样的。
+
+```java
+public class LeastActiveLoadBalance extends AbstractLoadBalance {
+
+    public static final String NAME = "leastactive";
+
+    @Override
+    protected <T> Invoker<T> doSelect(List<Invoker<T>> invokers, URL url, Invocation invocation) {
+        // Invoker的数量
+        int length = invokers.size();
+        // The least active value of all invokers
+        int leastActive = -1;
+        // The number of invokers having the same least active value (leastActive)
+        int leastCount = 0;
+        // The index of invokers having the same least active value (leastActive)
+        int[] leastIndexes = new int[length];
+        // the weight of every invokers
+        int[] weights = new int[length];
+        // The sum of the warmup weights of all the least active invokers
+        int totalWeight = 0;
+        // The weight of the first least active invoker
+        int firstWeight = 0;
+        // Every least active invoker has the same weight value?
+        boolean sameWeight = true;
+        //遍历所有Invoker，不断寻找最小的活跃数，如果有多个Invoker的活跃数都等于 leastActive，则把他们保存到同一个集合中，最后在这个Invoker中随机选择一个Invoker
+        for (int i = 0; i < length; i++) {
+            Invoker<T> invoker = invokers.get(i);
+            // Get the active number of the invoker
+            int active = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName()).getActive();
+            // Get the weight of the invoker's configuration. The default value is 100.
+            int afterWarmup = getWeight(invoker, invocation);
+            // save for later use
+            weights[i] = afterWarmup;
+            // If it is the first invoker or the active number of the invoker is less than the current least active number
+            if (leastActive == -1 || active < leastActive) {
+                // Reset the active number of the current invoker to the least active number
+                leastActive = active;
+                // Reset the number of least active invokers
+                leastCount = 1;
+                // Put the first least active invoker first in leastIndexes
+                leastIndexes[0] = i;
+                // Reset totalWeight
+                totalWeight = afterWarmup;
+                // Record the weight the first least active invoker
+                firstWeight = afterWarmup;
+                // Each invoke has the same weight (only one invoker here)
+                sameWeight = true;
+                // If current invoker's active value equals with leaseActive, then accumulating.
+            } else if (active == leastActive) {
+                // 当前 Invoker的活跃数与技术相同，说明有N个Invoker都是最小技术，全部保存到集合中，后续就在里面根据权重选择一个节点
+                // Record the index of the least active invoker in leastIndexes order
+                leastIndexes[leastCount++] = i;
+                // Accumulate the total weight of the least active invoker
+                totalWeight += afterWarmup;
+                // If every invoker has the same weight?
+                if (sameWeight && i > 0
+                        && afterWarmup != firstWeight) {
+                    sameWeight = false;
+                }
+            }
+        }
+        // 如果只有一个Invoker，直接返回
+        if (leastCount == 1) {
+            // If we got exactly one invoker having the least active value, return this invoker directly.
+            return invokers.get(leastIndexes[0]);
+        }
+        // 如果权重不一样，则使用和Random负载均衡一样的权重算法找到一个 Invoker 返回
+        if (!sameWeight && totalWeight > 0) {
+            // If (not every invoker has the same weight & at least one invoker's weight>0), select randomly based on 
+            // totalWeight.
+            int offsetWeight = ThreadLocalRandom.current().nextInt(totalWeight);
+            // Return a invoker based on the random value.
+            for (int i = 0; i < leastCount; i++) {
+                int leastIndex = leastIndexes[i];
+                offsetWeight -= weights[leastIndex];
+                if (offsetWeight < 0) {
+                    return invokers.get(leastIndex);
+                }
+            }
+        }
+        // If all invokers have the same weight value or totalWeight=0, return evenly.
+        // 如果权重相同，则直接随机选择一个返回
+        return invokers.get(leastIndexes[ThreadLocalRandom.current().nextInt(leastCount)]);
+    }
+}
+```
+
+最少活跃的计数是如何知道的呢？
+
+在 ActiveLimitFilter 中，只要进来一个请求，该方法的调用的计数就会原子性+1，整个Invoker调用过程会包在 try...catch...finally 中，无论调用结束或出现异常，finally 都会把计算原子-1。该原子计数就是最少活跃数；
+
+### 10.5.5、一致性Hash负载均衡
+
+一致性Hash负载均衡可以让参数相同的请求每次都路由到相同的机器上。这种方式可以让负载均衡方式相对平均
+
+![](image/Dubbo-一致性Hash轮询.png)
+
+这里相同颜色的节点均属于同一个服务提供者，比如 Invoker1-1，Invoker1-2，……, Invoker1-160。这样做的目的是通过引入虚拟节点，让 Invoker 在圆环上分散开来，避免数据倾斜问题。所谓数据倾斜是指，由于节点不够分散，导致大量请求落到了同一个节点上，而其他节点只会接收到了少量请求的情况。
+
+# 11、Dubbo扩展点

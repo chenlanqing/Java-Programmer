@@ -137,6 +137,9 @@ top [参数]
 
 ```netstat -tln | grep 8080``` 查看端口8080的使用情况
 
+- Linux：`netstat -nltp | grep PID`
+- Mac下查看进程占用端口：`lsof -nP -iTCP -sTCP:LISTEN | grep PID`
+
 ## 4、查看空间
 
 ```df```
