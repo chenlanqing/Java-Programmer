@@ -3896,18 +3896,13 @@ public class ServletWebServerFactoryAutoConfiguration {
 			if (this.beanFactory == null) {
 				return;
 			}
-			registerSyntheticBeanIfMissing(registry,
-					"webServerFactoryCustomizerBeanPostProcessor",
-					WebServerFactoryCustomizerBeanPostProcessor.class);
-			registerSyntheticBeanIfMissing(registry,
-					"errorPageRegistrarBeanPostProcessor",
-					ErrorPageRegistrarBeanPostProcessor.class);
+			registerSyntheticBeanIfMissing(registry,"webServerFactoryCustomizerBeanPostProcessor",WebServerFactoryCustomizerBeanPostProcessor.class);
+			registerSyntheticBeanIfMissing(registry,"errorPageRegistrarBeanPostProcessor",ErrorPageRegistrarBeanPostProcessor.class);
 		}
 
 		private void registerSyntheticBeanIfMissing(BeanDefinitionRegistry registry,
 				String name, Class<?> beanClass) {
-			if (ObjectUtils.isEmpty(
-					this.beanFactory.getBeanNamesForType(beanClass, true, false))) {
+			if (ObjectUtils.isEmpty(this.beanFactory.getBeanNamesForType(beanClass, true, false))) {
 				RootBeanDefinition beanDefinition = new RootBeanDefinition(beanClass);
 				beanDefinition.setSynthetic(true);
 				registry.registerBeanDefinition(name, beanDefinition);
@@ -5565,6 +5560,26 @@ Spring 提供了以下五种标准的事件：
 
 ## 1、SpringApplication.run都做了些什么？
 
+- SpringApplication.run(主程序类)
+	- new SpringApplication(主程序类)
+		- 判断是否web应用
+		- 加载并保存所有ApplicationContextInitializer(`META-INF/spring.factories`)，加载并保存所有ApplicationListener
+		- 获取到主程序类
+	- run()
+		- 回调所有的SpringApplicationRunListener(`META-INF/spring.factories`)的starting
+		- 获取ApplicationArguments
+		- 准备环境&回调所有监听器( SpringApplicationRunListener )的environmentPrepared，打印banner信息
+		- 创建ioc容器对象
+	- AnnotationConfigEmbeddedWebApplicationContext(web环境容器) – AnnotationConfigApplicationContext(普通环境容器)
+- 准备环境
+- 执行ApplicationContextInitializer.initialize()
+- 监听器SpringApplicationRunListener回调contextPrepared – 加载主配置类定义信息
+- 监听器SpringApplicationRunListener回调contextLoaded
+	- 刷新启动IOC容器;
+- 扫描加载所有容器中的组件
+- 包括从`META-INF/spring.factories`中获取的所有EnableAutoConfiguration组件
+	- 回调容器中所有的ApplicationRunner、CommandLineRunner的run方法 • 监听器SpringApplicationRunListener回调finished
+
 ## 2、SpringBoot常用注解
 
 - @SpringBootApplication：包含@Configuration、@EnableAutoConfiguration、@ComponentScan通常用在主类上
@@ -5573,24 +5588,89 @@ Spring 提供了以下五种标准的事件：
 	- @ComponentScan 组件扫描，可自动发现和装配一些Bean
 
 - @MapperScan：开启MyBatis的DAO扫描  
+- @Bean 注解
 
-## 3、介绍下SpringFactoriesLoader
+## 3、介绍下 SpringFactoriesLoader
+
+- 框架内部使用通用的工厂加载机制；
+- 从classpath下多个jar包特定的位置读取文件并初始化类，位置是jar包下的：`META-INF/spring.factories`
+- 文件内容必须是`key-value`形式，即properties形式；
+- key是全限定名（抽象类|接口），value是实现类的全限定名，如果有多个，使用`,`分隔
 
 ## 4、SpringFactoriesLoader是如何加载工厂类的
 
+- 首先根据classloader从缓存中获取，是否有加载过，如果有，则直接返回结果；
+- 扫描jar包下的配置文件：`META-INF/spring.factories`，将扫描到classpath下所有jar文件形成URL集合；
+- 遍历URL集合，加载资源为 Properties，按照`Map<String, List<String>>` ，key是对应配置文件中的key，由于value可能是多个逗号分割的；
+- 将结果存到缓存中，key是当前加载的classloader
+
 ## 5、系统初始化器作用及调用时机，如何实现系统初始化器以及注意事项
+
+主要用于设置一些属性；
+
+调用时机：调用链 SpringApplication.run ->  prepareContext（上下文准备） -> applyInitializers -> 遍历调用各个Initializer的initialize方法
+
+主要有三种实现方式：
+- 在`resources`目录下新建目录文件：`META-INF/spring.factories`，配置的key为`org.springframework.context.ApplicationContextInitializer`，value为自定义初始化器的全类名路径
+    ```
+    org.springframework.context.ApplicationContextInitializer=com.blue.fish.web.initializer.FirstInitializer
+    ```
+- 添加方法：在启动类中添加如下代码，替换`SpringApplication.run(SpringBootSourceApplication.class, args);`
+    ```java
+    @SpringBootApplication
+    public class SpringBootSourceApplication {
+        public static void main(String[] args) {
+            SpringApplication application = new SpringApplication(SpringBootSourceApplication.class);
+            application.addInitializers(new SecondFirstInitializer());
+            application.run(args);
+        }
+    }
+    ```
+- 在配置文件application.properties中添加如下，在`application.properties`中添加配置会被定义成环境变量被`DelegatingApplicationContextInitializer`发现并注册
+	```
+	context.initializer.classes=com.blue.fish.source.initializer.ThirdInitializer
+	```
+
+注意点：
+- 都要实现 `ApplicationContextInitializer`接口；
+- `@Order`值越小越先执行；
+- `application.properties`中定义的优先于其他方式；
 
 ## 6、什么是监听器模式
 
+监听器模式四要素：
+- 事件
+- 监听器
+- 广播器
+- 触发机制
+
 ## 7、SpringBoot关于监听器的实现类有哪些
+
+Spring中主要有7类事件
+事件实现类 | 对应 SpringApplicationRunListener 方法 | 说明
+---------|---------------------------------------|--------
+ApplicationContextInitializedEvent| contextPrepared | ConfigurableApplicationContext准备完成，对应
+ApplicationEnvironmentPreparedEvent|  environmentPrepared   | ConfigurableEnvironment准备完成
+ApplicationPreparedEvent|  contextLoaded   | ConfigurableApplicationContext已装载，但是仍未启动
+ApplicationReadyEvent|  running   | Spring应用正在运行
+ApplicationStartingEvent|  starting   | Spring应用刚启动
+ApplicationStartedEvent|  started   | ConfigurableApplicationContext 已启动，此时Spring Bean已经初始化完成
+ApplicationFailedEvent|  failed   | Spring应用运行失败
 
 ## 8、SpringBoot框架有哪些框架事件以及他们的顺序
 
 ## 9、监听事件触发机制是怎么样的
 
+SpringApplicationRunListener 触发
+
 ## 10、如何自定义实现系统监听器及注意事项
 
+基本条件：实现`ApplicationListener`
+
 ## 11、实现ApplicationListener接口与SmartApplicationListener接口区别
+
+- 实现 ApplicationListener 接口只针对单一事件监听；
+- 实现 SmartApplicationListener 接口可以针对多种事件监听；
 
 ## 12、介绍下IOC思想
 
@@ -5624,7 +5704,7 @@ Spring 提供了以下五种标准的事件：
 
 ## 27、如何自定义事件Springboot异常报告器
 
-## 28、什么是配置了，有什么注解
+## 28、什么是配置类，有什么注解
 
 ## 29、SPringBoot框架对配置类的处理流程
 

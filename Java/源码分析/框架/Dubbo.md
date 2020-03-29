@@ -870,6 +870,10 @@ Dubbo服务暴露的入口是：`OneTimeExecutionApplicationContextEventListener
 
 ![](image/Dubbo-服务暴露debug图.png)
 
+大致流程图：
+
+![](image/Dubbo服务暴露流程图.png)
+
 ### 4.2.1、服务入口
 
 OneTimeExecutionApplicationContextEventListener 类有一个模板方法onApplicationContextEvent，其有两个具体的实现类：DubboBootstrapApplicationListener、DubboLifecycleComponentApplicationListener，那么服务暴露的是是 DubboBootstrapApplicationListener：
@@ -1218,6 +1222,353 @@ Dubbo 服务引用的时机有两个，第一个是饿汉式的，第二个是�
 - 当我们的服务被注入到其他类中时，Spring 会第一时间调用 getObject 方法，并由该方法执行服务引用逻辑。按照惯例，在进行具体工作之前，需先进行配置检查与收集工作；
 - 接着根据收集到的信息决定服务用的方式，有三种，第一种是引用本地 (JVM) 服务，第二是通过直连方式引用远程服务，第三是通过注册中心引用远程服务。不管是哪种引用方式，最后都会得到一个 Invoker 实例。如果有多个注册中心，多个服务提供者，这个时候会得到一组 Invoker 实例，此时需要通过集群管理类 Cluster 将多个 Invoker 合并成一个实例。合并后的 Invoker 实例已经具备调用本地或远程服务的能力了，但并不能将此实例暴露给用户使用，这会对用户业务代码造成侵入。此时框架还需要通过代理工厂类 (ProxyFactory) 为服务接口生成代理类，并让代理类去调用 Invoker 逻辑。避免了 Dubbo 框架代码对业务代码的侵入；
 
+服务引用的入口方法为 ReferenceBean 的 getObject 方法，该方法定义在 Spring 的 FactoryBean 接口中，ReferenceBean 实现了这个方法：
+```java
+/**
+* 如果使用的是xml，那么入口方法在这里
+* @return
+*/
+@Override
+public Object getObject() {
+    return get();
+}
+// ReferenceConfig：服务引用的真正入口点，无论是xml还是注解
+public synchronized T get() {
+    if (destroyed) {
+        throw new IllegalStateException("The invoker of ReferenceConfig(" + url + ") has already destroyed!");
+    }
+    if (ref == null) {
+        init();
+    }
+    return ref;
+}
+```
+注解入口：org.apache.dubbo.config.spring.beans.factory.annotation.ReferenceAnnotationBeanPostProcessor#doGetInjectedBean
+
+## 5.1、ReferenceConfig.init 方法
+
+```java
+public synchronized void init() {
+    // 省略代码：主要是做一些校验、加载配置
+    String hostToRegistry = ConfigUtils.getSystemProperty(DUBBO_IP_TO_REGISTRY);
+    if (StringUtils.isEmpty(hostToRegistry)) {
+        hostToRegistry = NetUtils.getLocalHost();
+    } else if (isInvalidLocalHost(hostToRegistry)) {
+        throw new IllegalArgumentException("Specified invalid registry ip from property:" + DUBBO_IP_TO_REGISTRY + ", value:" + hostToRegistry);
+    }
+    map.put(REGISTER_IP_KEY, hostToRegistry);
+
+    serviceMetadata.getAttachments().putAll(map);
+
+    // 创建代理类
+    ref = createProxy(map);
+
+    serviceMetadata.setTarget(ref);
+    serviceMetadata.addAttribute(PROXY_CLASS_REF, ref);
+    ConsumerModel consumerModel = repository.lookupReferredService(serviceMetadata.getServiceKey());
+    consumerModel.setProxyObject(ref);
+    consumerModel.init(attributes);
+
+    initialized = true;
+
+    // dispatch a ReferenceConfigInitializedEvent since 2.7.4
+    dispatch(new ReferenceConfigInitializedEvent(this, invoker));
+}
+```
+
+## 5.2、服务引用：createProxy
+
+从字面意思上来看，createProxy 似乎只是用于创建代理对象的。但实际上并非如此，该方法还会调用其他方法构建以及合并 Invoker 实例
+```java
+/**
+    * 1、用于创建代理对象；
+    * 2、调用其他方法构建以及合并 Invoker 实例
+    * @param map
+    * @return
+    */
+@SuppressWarnings({"unchecked", "rawtypes", "deprecation"})
+private T createProxy(Map<String, String> map) {
+    // shouldJvmRefer() 主要判断是否为JVM内部引用
+    if (shouldJvmRefer(map)) {
+        // 生成本地引用 URL，协议为 injvm
+        URL url = new URL(LOCAL_PROTOCOL, LOCALHOST_VALUE, 0, interfaceClass.getName()).addParameters(map);
+        // 调用 refer 方法构建 InjvmInvoker 实例
+        invoker = REF_PROTOCOL.refer(interfaceClass, url);
+        if (logger.isInfoEnabled()) {
+            logger.info("Using injvm service " + interfaceClass.getName());
+        }
+    } else {
+        // 远程引用
+        urls.clear();
+        if (url != null && url.length() > 0) { // url 不为空，表明用户可能想进行点对点调用
+            // 当需要配置多个 url 时，可用分号进行分割，这里会进行切分
+            String[] us = SEMICOLON_SPLIT_PATTERN.split(url);
+            if (us != null && us.length > 0) {
+                for (String u : us) {
+                    URL url = URL.valueOf(u);
+                    if (StringUtils.isEmpty(url.getPath())) {
+                        url = url.setPath(interfaceName);
+                    }
+                    // 检测 url 协议是否为 registry，若是，表明用户想使用指定的注册中心
+                    if (UrlUtils.isRegistry(url)) {
+                        urls.add(url.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+                    } else {
+                        // 合并 url，移除服务提供者的一些配置（这些配置来源于用户配置的 url 属性），
+                        // 比如线程池相关配置。并保留服务提供者的部分配置，比如版本，group，时间戳等
+                        // 最后将合并后的配置设置为 url 查询字符串中。
+                        urls.add(ClusterUtils.mergeUrl(url, map));
+                    }
+                }
+            }
+        } else { // assemble URL from register center's configuration
+            // 如果协议不是JVM，检查注册中心
+            if (!LOCAL_PROTOCOL.equalsIgnoreCase(getProtocol())) {
+                checkRegistry();
+                // 获取注册中心URLS
+                List<URL> us = ConfigValidationUtils.loadRegistries(this, false);
+                if (CollectionUtils.isNotEmpty(us)) {
+                    for (URL u : us) {
+                        URL monitorUrl = ConfigValidationUtils.loadMonitor(this, u);
+                        if (monitorUrl != null) {
+                            map.put(MONITOR_KEY, URL.encode(monitorUrl.toFullString()));
+                        }
+                        urls.add(u.addParameterAndEncoded(REFER_KEY, StringUtils.toQueryString(map)));
+                    }
+                }
+                // 未配置注册中心，抛出异常
+                if (urls.isEmpty()) {
+                    throw new IllegalStateException("No such any registry to reference " + interfaceName + " on the consumer " + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion() + ", please config <dubbo:registry address=\"...\" /> to your spring config.");
+                }
+            }
+        }
+        // 单个注册中心或服务提供者，服务直连
+        if (urls.size() == 1) {
+            // 调用 RegistryProtocol 的 refer 构建 Invoker 实例
+            invoker = REF_PROTOCOL.refer(interfaceClass, urls.get(0));
+        } else {
+            // 多个注册中心或多个服务提供者，或者两者混合
+            List<Invoker<?>> invokers = new ArrayList<Invoker<?>>();
+            URL registryURL = null;
+            for (URL url : urls) {
+                invokers.add(REF_PROTOCOL.refer(interfaceClass, url));
+                if (UrlUtils.isRegistry(url)) {
+                    registryURL = url; // use last registry url
+                }
+            }
+            if (registryURL != null) { // registry url is available
+                // 如果注册中心链接不为空，则将使用 AvailableCluster
+                URL u = registryURL.addParameterIfAbsent(CLUSTER_KEY, ZoneAwareCluster.NAME);
+                // 创建 StaticDirectory 实例，并由 Cluster 对多个 Invoker 进行合并
+                // The invoker wrap relation would be like: ZoneAwareClusterInvoker(StaticDirectory) -> FailoverClusterInvoker(RegistryDirectory, routing happens here) -> Invoker
+                invoker = CLUSTER.join(new StaticDirectory(u, invokers));
+            } else { // not a registry url, must be direct invoke.
+                invoker = CLUSTER.join(new StaticDirectory(invokers));
+            }
+        }
+    }
+    // 判断：是否需要做检查 且 当前 invoker是否可用
+    if (shouldCheck() && !invoker.isAvailable()) {
+        invoker.destroy();
+        throw new IllegalStateException("Failed to check the status of the service "
+                + interfaceName
+                + ". No provider available for the service "
+                + (group == null ? "" : group + "/")
+                + interfaceName +
+                (version == null ? "" : ":" + version)
+                + " from the url "
+                + invoker.getUrl()
+                + " to the consumer "
+                + NetUtils.getLocalHost() + " use dubbo version " + Version.getVersion());
+    }
+    
+    /**
+        * @since 2.7.0
+        * ServiceData Store
+        */
+    String metadata = map.get(METADATA_KEY);
+    WritableMetadataService metadataService = WritableMetadataService.getExtension(metadata == null ? DEFAULT_METADATA_STORAGE_TYPE : metadata);
+    if (metadataService != null) {
+        URL consumerURL = new URL(CONSUMER_PROTOCOL, map.remove(REGISTER_IP_KEY), 0, map.get(INTERFACE_KEY), map);
+        metadataService.publishServiceDefinition(consumerURL);
+    }
+    // 生成服务代理类
+    return (T) PROXY_FACTORY.getProxy(invoker, ProtocolUtils.isGeneric(generic));
+}
+```
+
+## 5.3、创建 Invoker
+
+Invoker 是 Dubbo 的核心模型，代表一个可执行体。在服务提供方，Invoker 用于调用服务提供类。在服务消费方，Invoker 用于执行远程调用。Invoker 是由 Protocol 实现类构建而来。Protocol主要实现类：RegistryProtocol、DubboProtocol。
+```java
+//  refer方法在父类AbstractProtocol上，提供看一个模板方法 protocolBindingRefer 由具体子类来实现
+@Override
+public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+    return new AsyncToSyncInvoker<>(protocolBindingRefer(type, url));
+}
+protected abstract <T> Invoker<T> protocolBindingRefer(Class<T> type, URL url) throws RpcException;
+// DubboProtocol
+@Override
+public <T> Invoker<T> protocolBindingRefer(Class<T> serviceType, URL url) throws RpcException {
+    optimizeSerialization(url);
+    // 创建RPC Invoker， getClients 方法用于获取客户端实例，实例类型为 ExchangeClient
+    DubboInvoker<T> invoker = new DubboInvoker<T>(serviceType, url, getClients(url), invokers);
+    invokers.add(invoker);
+    return invoker;
+}
+```
+getClients获取客户端实例：
+```java
+private ExchangeClient[] getClients(URL url) {
+    // 是否共享连接
+    boolean useShareConnect = false;
+    // 获取连接数，默认为0
+    int connections = url.getParameter(CONNECTIONS_KEY, 0);
+    List<ReferenceCountExchangeClient> shareClients = null;
+    // 如果未配置 connections，则共享连接，否则就用一个连接
+    if (connections == 0) {
+        useShareConnect = true;
+        /*
+            * The xml configuration should have a higher priority than properties.
+            */
+        String shareConnectionsStr = url.getParameter(SHARE_CONNECTIONS_KEY, (String) null);
+        connections = Integer.parseInt(StringUtils.isBlank(shareConnectionsStr) ? ConfigUtils.getProperty(SHARE_CONNECTIONS_KEY,
+                DEFAULT_SHARE_CONNECTIONS) : shareConnectionsStr);
+        // 获取共享客户端
+        shareClients = getSharedClient(url, connections);
+    }
+    ExchangeClient[] clients = new ExchangeClient[connections];
+    for (int i = 0; i < clients.length; i++) {
+        if (useShareConnect) {
+            clients[i] = shareClients.get(i);
+        } else {
+            // 初始化新的客户端
+            clients[i] = initClient(url);
+        }
+    }
+    return clients;
+}
+private ExchangeClient initClient(URL url) {
+    // 获取客户端类型，默认为 netty
+    String str = url.getParameter(CLIENT_KEY, url.getParameter(SERVER_KEY, DEFAULT_REMOTING_CLIENT));
+    // 添加编解码和心跳包参数到 url 中
+    url = url.addParameter(CODEC_KEY, DubboCodec.NAME);
+    // enable heartbeat by default
+    url = url.addParameterIfAbsent(HEARTBEAT_KEY, String.valueOf(DEFAULT_HEARTBEAT));
+    // 检测客户端类型是否存在，不存在则抛出异常
+    if (str != null && str.length() > 0 && !ExtensionLoader.getExtensionLoader(Transporter.class).hasExtension(str)) {
+        throw new RpcException("Unsupported client type: " + str + "," +
+                " supported client type is " + StringUtils.join(ExtensionLoader.getExtensionLoader(Transporter.class).getSupportedExtensions(), " "));
+    }
+    ExchangeClient client;
+    try {
+        // 获取 lazy 配置，并根据配置值决定创建的客户端类型
+        if (url.getParameter(LAZY_CONNECT_KEY, false)) {
+            // 懒加载实例
+            client = new LazyConnectExchangeClient(url, requestHandler);
+        } else {
+            // 创建普通 ExchangeClient 实例
+            client = Exchangers.connect(url, requestHandler);
+        }
+    }
+    ...
+    return client;
+}
+// Exchangers
+public static ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
+    if (url == null) {
+        throw new IllegalArgumentException("url == null");
+    }
+    if (handler == null) {
+        throw new IllegalArgumentException("handler == null");
+    }
+    url = url.addParameterIfAbsent(Constants.CODEC_KEY, "exchange");
+    // 获取 Exchanger 实例，默认为 HeaderExchangeClient
+    return getExchanger(url).connect(url, handler);
+}
+// HeaderExchanger
+@Override
+public ExchangeClient connect(URL url, ExchangeHandler handler) throws RemotingException {
+    // 这里包含了多个调用，分别如下：
+    // 1. 创建 HeaderExchangeHandler 对象
+    // 2. 创建 DecodeHandler 对象
+    // 3. 通过 Transporters 构建 Client 实例
+    // 4. 创建 HeaderExchangeClient 对象
+    return new HeaderExchangeClient(Transporters.connect(url, new DecodeHandler(new HeaderExchangeHandler(handler))), true);
+}
+```
+最终是通过Transporter.connect创建连接，默认是Netty的，那么创建Client就是NettyClient
+```java
+/**
+ * Default extension of {@link Transporter} using netty4.x.
+ */
+public class NettyTransporter implements Transporter {
+    public static final String NAME = "netty";
+    // 省略代码
+    @Override
+    public Client connect(URL url, ChannelHandler listener) throws RemotingException {
+        return new NettyClient(url, listener);
+    }
+}
+```
+
+## 5.4、创建代理
+
+Invoker 创建完毕后，接下来要做的事情是为服务接口生成代理对象。有了代理对象，即可进行远程调用。代理对象生成的入口方法为 ProxyFactory 的 getProxy。具体调用的是 AbstractProxyFactory
+```java
+public abstract class AbstractProxyFactory implements ProxyFactory {
+    @Override
+    public <T> T getProxy(Invoker<T> invoker) throws RpcException {
+        // 调用重载方法
+        return getProxy(invoker, false);
+    }
+    @Override
+    public <T> T getProxy(Invoker<T> invoker, boolean generic) throws RpcException {
+        Set<Class<?>> interfaces = new HashSet<>();
+        // 获取接口列表
+        String config = invoker.getUrl().getParameter(INTERFACES);
+        if (config != null && config.length() > 0) {
+            // 切分接口列表
+            String[] types = COMMA_SPLIT_PATTERN.split(config);
+            for (String type : types) {
+                // TODO can we load successfully for a different classloader?.
+                interfaces.add(ReflectUtils.forName(type));
+            }
+        }
+
+        if (generic) {
+            if (!GenericService.class.isAssignableFrom(invoker.getInterface())) {
+                interfaces.add(com.alibaba.dubbo.rpc.service.GenericService.class);
+            }
+            try {
+                // find the real interface from url
+                String realInterface = invoker.getUrl().getParameter(Constants.INTERFACE);
+                interfaces.add(ReflectUtils.forName(realInterface));
+            } catch (Throwable e) {
+                // ignore
+            }
+        }
+
+        interfaces.add(invoker.getInterface());
+        interfaces.addAll(Arrays.asList(INTERNAL_INTERFACES));
+        // 模板方法，由具体的子类实现，默认是：JavassistProxyFactory
+        return getProxy(invoker, interfaces.toArray(new Class<?>[0]));
+    }
+    public abstract <T> T getProxy(Invoker<T> invoker, Class<?>[] types);
+}
+```
+JavassistProxyFactory.getProxy
+```java
+public class JavassistProxyFactory extends AbstractProxyFactory {
+    @Override
+    @SuppressWarnings("unchecked")
+    public <T> T getProxy(Invoker<T> invoker, Class<?>[] interfaces) {
+        // 生成 Proxy 子类（Proxy 是抽象类）。并调用 Proxy 子类的 newInstance 方法创建 Proxy 实例
+        return (T) Proxy.getProxy(interfaces).newInstance(new InvokerInvocationHandler(invoker));
+    }
+    // 省略代码
+}
+```
+
 # 6、优雅停机
 
 ![](image/Dubbo-优雅停机原理.png)
@@ -1267,8 +1618,151 @@ Dubbo协议字段解析：
 
 - 首先在客户端启动时会从注册中心拉取和订阅对应的服务列表，Cluster会把拉取的服务列表聚合成一个invoker，每次RPC调用前都会通过Directory#list获取providers，获取这些服务列表给后续路由和负载均衡使用；
 - Dubbo发起服务调用时，所有路由和负载均衡都是在客户端实现的。客户端调用首先会触发路由操作，然后将路由结果得到的服务列表作为负载均衡的参数，经过负载均衡后选择一台机器进行RPC调用；
-- 客户端会将请求交给底层IO线程处理，主要处理读写、序列化与反序列等逻辑，这里不能足额色操作；Dubbo中有两种类似线程池：一种是IO线程池，另一种是Dubbo业务线程；
+- 客户端会将请求交给底层IO线程处理，主要处理读写、序列化与反序列等逻辑，这里不能阻塞操作；Dubbo中有两种类似线程池：一种是IO线程池，另一种是Dubbo业务线程；
 - Dubbo将服务调用和telent调用做了端口复用。
+
+首先服务消费者通过代理对象 Proxy 发起远程调用，接着通过网络客户端 Client 将编码后的请求发送给服务提供方的网络层上，也就是 Server。Server 在收到请求后，首先要做的事情是对数据包进行解码。然后将解码后的请求发送至分发器 Dispatcher，再由分发器将请求派发到指定的线程池上，最后由线程池调用具体的服务
+
+## 9.1、调用方式
+
+Dubbo 支持同步和异步两种调用方式，其中异步调用还可细分为“有返回值”的异步调用和“无返回值”的异步调用。所谓“无返回值”异步调用是指服务消费方只管调用，但不关心调用结果，此时 Dubbo 会直接返回一个空的 RpcResult。若要使用异步特性，需要服务消费方手动进行配置。默认情况下，Dubbo 使用同步调用方式
+
+真正调用时，Dubbo会创建一个代理类，假设这里只有一个服务PayService，Dubbo 默认使用 Javassist 框架为服务接口生成动态代理类，反编译可以查看到其代码：
+```java
+/*
+ * Arthas 反编译步骤：
+ * 1. 启动 Arthas
+ *    java -jar arthas-boot.jar
+ *
+ * 2. 输入编号选择进程
+ *    Arthas 启动后，会打印 Java 应用进程列表，如下：
+ *   [1]: 8161 org.apache.zookeeper.server.quorum.QuorumPeerMain
+ *   [2]: 37540 org.jetbrains.jps.cmdline.Launcher
+ *   [3]: 30820 org.jetbrains.jps.cmdline.Launcher
+ *   [4]: 37541 com.blue.fish.dubbo.ConsumerAnnotation
+ *   [5]: 36166 com.blue.fish.dubbo.provider.ProviderAnnotation
+ *   [6]: 14317
+ * 这里输入编号 4，让 Arthas 关联到启动类为 com.....ConsumerAnnotation 的 Java 进程上
+ *
+ * 3. 由于 Demo 项目中只有一个服务接口，因此此接口的代理类类名为 proxy0，此时使用 sc 命令搜索这个类名。
+ *    $ sc *.proxy0
+ *    org.apache.dubbo.common.bytecode.proxy0
+ *
+ * 4. 使用 jad 命令反编译 org.apache.dubbo.common.bytecode.proxy0
+ *    $ jad org.apache.dubbo.common.bytecode.proxy0
+ */
+public class proxy0 implements ClassGenerator.DC,PayService,Destroyable,EchoService {
+    public static Method[] methods;
+    private InvocationHandler handler;
+    public proxy0(InvocationHandler invocationHandler) {
+        this.handler = invocationHandler;
+    }
+
+    public proxy0() {
+    }
+    @Override
+    public void $destroy() {
+        Object[] arrobject = new Object[]{};
+        Object object = this.handler.invoke(this, methods[0], arrobject);
+    }
+    // 回声测试
+    @Override
+    public Object $echo(Object object) {
+        // 将参数存储到 Object 数组中
+        Object[] arrobject = new Object[]{object};
+        // 调用 InvocationHandler 实现类的 invoke 方法得到调用结果
+        Object object2 = this.handler.invoke(this, methods[1], arrobject);
+        // 返回调用结果
+        return object2;
+    }
+    public String pay(String string) {
+        Object[] arrobject = new Object[]{string};
+        Object object = this.handler.invoke(this, methods[2], arrobject);
+        return (String)object;
+    }
+}
+```
+真正执行的是调用 InvocationHandler的invoke方法去执行的，Dubbo中有一个实现类：InvokerInvocationHandler：
+```java
+InvokerInvocationHandler implements InvocationHandler {
+    private static final Logger logger = LoggerFactory.getLogger(InvokerInvocationHandler.class);
+    private final Invoker<?> invoker;
+    @Override
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // 拦截定义在 Object 类中的方法（未被子类重写），比如 wait/notify
+        if (method.getDeclaringClass() == Object.class) {
+            return method.invoke(invoker, args);
+        }
+        String methodName = method.getName();
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        // 如果 toString、hashCode 和 equals 等方法被子类重写了，这里也直接调用
+        if (parameterTypes.length == 0) {
+            if ("toString".equals(methodName)) {
+                return invoker.toString();
+            } else if ("$destroy".equals(methodName)) {
+                invoker.destroy();
+                return null;
+            } else if ("hashCode".equals(methodName)) {
+                return invoker.hashCode();
+            }
+        } else if (parameterTypes.length == 1 && "equals".equals(methodName)) {
+            return invoker.equals(args[0]);
+        }
+        // 将 method 和 args 封装到 RpcInvocation 中，并执行后续的调用
+        RpcInvocation rpcInvocation = new RpcInvocation(method, invoker.getInterface().getName(), args);
+        String serviceKey = invoker.getUrl().getServiceKey();
+        rpcInvocation.setTargetServiceUniqueName(serviceKey);
+        if (consumerModel != null) {
+            rpcInvocation.put(Constants.CONSUMER_MODEL, consumerModel);
+            rpcInvocation.put(Constants.METHOD_MODEL, consumerModel.getMethodModel(method));
+        }
+        return invoker.invoke(rpcInvocation).recreate();
+    }
+}
+```
+InvokerInvocationHandler 中的 invoker 成员变量类型为 MockClusterInvoker，MockClusterInvoker 内部封装了服务降级逻辑：
+```java
+public class MockClusterInvoker<T> implements Invoker<T> {
+    @Override
+    public Result invoke(Invocation invocation) throws RpcException {
+        Result result = null;
+        // 获取 mock 配置值
+        String value = getUrl().getMethodParameter(invocation.getMethodName(), MOCK_KEY, Boolean.FALSE.toString()).trim();
+        if (value.length() == 0 || "false".equalsIgnoreCase(value)) {
+            // 无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法，比如 FailoverClusterInvoker
+            result = this.invoker.invoke(invocation);
+        } else if (value.startsWith("force")) {
+            if (logger.isWarnEnabled()) {
+                logger.warn("force-mock: " + invocation.getMethodName() + " force-mock enabled , url : " + getUrl());
+            }
+            // force:xxx 直接执行 mock 逻辑，不发起远程调用
+            result = doMockInvoke(invocation, null);
+        } else {
+            // fail:xxx 表示消费方对调用服务失败后，再执行 mock 逻辑，不抛出异常
+            try {
+                result = this.invoker.invoke(invocation);
+                //fix:#4585
+                if(result.getException() != null && result.getException() instanceof RpcException){
+                    RpcException rpcException= (RpcException)result.getException();
+                    if(rpcException.isBiz()){
+                        throw  rpcException;
+                    }else {
+                        // 调用失败，执行 mock 逻辑
+                        result = doMockInvoke(invocation, rpcException);
+                    }
+                }
+
+            } catch (RpcException e) {
+                ...
+                // 调用失败，执行 mock 逻辑
+                result = doMockInvoke(invocation, e);
+            }
+        }
+        return result;
+    }
+}
+```
+无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法，比如 FailoverClusterInvoker，默认就是 FailoverClusterInvoker
 
 # 10、集群容错
 
@@ -2071,3 +2565,178 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
 这里相同颜色的节点均属于同一个服务提供者，比如 Invoker1-1，Invoker1-2，……, Invoker1-160。这样做的目的是通过引入虚拟节点，让 Invoker 在圆环上分散开来，避免数据倾斜问题。所谓数据倾斜是指，由于节点不够分散，导致大量请求落到了同一个节点上，而其他节点只会接收到了少量请求的情况。
 
 # 11、Dubbo扩展点
+
+从前面Dubbo架构中可以看出，Dubbo按照逻辑来分的话，可以从上到下分为业务、RPC、Remote桑额领域。
+
+# 12、高级特性
+
+# 13、过滤器
+
+## 13.1、过滤器概述
+
+过滤器提供了服务提供者和服务消费者调用过程的拦截，每次调用RPC的时候，对应的过滤器都会生效。Dubbo内置的过滤器都是默认生效的，如果我们自行扩展过滤器，启用方式有两种：使用@Activate注解默认启用，另一种方式是在配置文件中配置，如：
+```xml
+<!-- 消费方调用过程拦截 -->
+<dubbo:reference filter="xxx,yyy" />
+<!-- 消费方调用过程缺省拦截器，将拦截所有reference -->
+<dubbo:consumer filter="xxx,yyy"/>
+<!-- 提供方调用过程拦截 -->
+<dubbo:service filter="xxx,yyy" />
+<!-- 提供方调用过程缺省拦截器，将拦截所有service -->
+<dubbo:provider filter="xxx,yyy"/>
+```
+Filter配置的一些默认规则：
+- 过滤器顺序：
+    - 用户自定义的过滤器的顺序默认会在框架内置过滤器之后，也可使用`filter="xxx,default"`这种配置方式让自定义的过滤器顺序靠前；
+    - 在配置`filter="xxx,yyy"`时，写在前面的xxx会比yyy的顺序靠前；
+- 剔除过滤器：对于一些默认过滤器或自动激活的过滤器，有些方法不想使用这些过滤器，可以使用 `-` 加过滤器名称来过滤，如`filter="-xxFilter"`会让xxFilter不生效；如果不想使用所有默认启用的过滤器，可以配置 `filter="-default"`来进行剔除；
+- 过滤器的叠加：如果服务提供者、消费者都配置了过滤器，则两边的过滤器不会相互覆盖，而是相互叠加，都会生效；如果需要覆盖，可以再消费方使用`-`的方式剔除相应的过滤器；
+
+## 13.2、过滤器的整体结构
+
+![](image/Dubbo-Filter类接口关系.png)
+
+从上图中可以看到 CompatibleFilter 比较突出，其只继承了Filter的接口，不会被默认激活的，其他的内置过滤器都使用了@Activate注解，默认被激活的。
+
+所有的过滤器会被分为消费者和服务提供者两种类型，消费者类型的过滤器只会在服务引入时被加入Invoker，服务提供者类型的过滤器只会在服务暴露的时候被加入对应的 Invoker。MonitorFilter 会同时在暴露和引用时被加入 Invoker。
+
+过滤器名称  |                   作用            |   使用方
+-----------|----------------------------------|------------
+AccessLogFilter | 打印每一次请求的访问日志，如果需要访问的日志只出现在指定的appender中，可以再log的配置文件配置additivity | 服务提供者
+ActiveLimitFilter | 用于限制消费者端对服务端的最大并行调用数 | 消费端
+ExecuteLimitFilter | 用于限制服务端的最大并行调用数 | 服务提供者
+ClassLoderFilter | 用于切换不同线程的类加载器，服务调用完成后会还原回去 | 服务提供方
+CompatibleFilter | 用于实验返回值与调用程序的对象版本兼容，默认不启用； | -
+ConsumerContextFilter| 为消费者把一些上下文信息设置到当前线程的RpcContext对象中，包括 invocation、localhost、remote host等； | 消费者
+ContextFilter | 同 ConsumerContextFilter，但是是为服务提供者服务的 | 服务提供者
+DeprecatedFilter | 如果调用的方法被标记为已弃用，那么 DeprecatedFilter 将记录一个错误消息 | 消费者
+EchoFilter | 用于回声测试 | 服务提供者
+ExceptionFilter | 用于统一的异常处理，防止出现序列化失败 | 服务提供者
+GenericFilter | 用于服务提供者端实现泛化调用，实现序列化的检查和处理 | 服务提供者
+GenericImplFilter | 同 GenericFilter，但是用于消费者端 | 消费者
+TimeoutFilter | 如果某些服务调用超时，则自动记录告警日志 | 服务提供者
+TokenFilter | 服务提供者下发令牌给消费者，通常用于防止消费者绕过注册中心直接调用服务提供者 | 服务提供者
+TpsLimitFilter | 用于服务端的限流，注意与 ExecuteLimitFilter 的区别 | 服务提供者
+FutureFilter | 在发起 Invoker或得到返回值、出现异常时触发回调事件 | 消费者
+TraceFilter | Trace指令的使用 | 服务提供者
+MonitorFilter | 监控统计所有接口的调用情况 | 服务提供者、消费者
+
+**Dubbo如何保证服务提供者不会使用消费者的过滤器呢？**
+
+在@Activat注解上，该注解可以设置过滤器激活的条件和顺序，比如TokenFilter，其有相关注解：`@Activate(group = CommonConstants.PROVIDER, value = TOKEN_KEY)`
+```java
+@Activate(group = CommonConstants.PROVIDER, value = TOKEN_KEY)
+public class TokenFilter implements Filter {
+    ...
+}
+```
+
+## 13.3、过滤器链初始化
+
+默认的过滤器实现类都会在扩展点初始化时进行加载和排序（ExtensionLoader.getActivateExtension）。所有的Filter都会连接成一个过滤器链，每个请求都会经过整个链路中的每个Filter。
+
+过滤器链的形成，服务暴露和引用都会使用 Protocol层，而 ProtocolFilterWrapper 则实现了过滤器链组装的
+```java
+public class ProtocolFilterWrapper implements Protocol {
+    ... 
+    @Override
+    public <T> Exporter<T> export(Invoker<T> invoker) throws RpcException {
+        if (UrlUtils.isRegistry(invoker.getUrl())) {
+            return protocol.export(invoker);
+        }
+        // 构造拦截器链（会过滤 provider 端分组），然后出发dubbo协议暴露，这里传入group是 provider，表示自己是服务提供者类型的调用链
+        return protocol.export(buildInvokerChain(invoker, SERVICE_FILTER_KEY, CommonConstants.PROVIDER));
+    }
+    @Override
+    public <T> Invoker<T> refer(Class<T> type, URL url) throws RpcException {
+        if (UrlUtils.isRegistry(url)) {
+            return protocol.refer(type, url);
+        }
+        // 这里传入group是 consumer，表示自己是消费者类型的调用链
+        return buildInvokerChain(protocol.refer(type, url), REFERENCE_FILTER_KEY, CommonConstants.CONSUMER);
+    }
+    ...
+}
+```
+buildInvokerChain 的过程，总体上说分为两步：
+- （1）获取并遍历所有过滤器；
+- （2）使用装饰器模式，增强原有Invoker，组装过滤器链；
+```java
+private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String key, String group) {
+    // 保存真实的Invoker引用，后续用于把真正的调用者保存到过滤器的最后
+    Invoker<T> last = invoker;
+    // 根据group等从扩展中获取激活的Filter
+    List<Filter> filters = ExtensionLoader.getExtensionLoader(Filter.class).getActivateExtension(invoker.getUrl(), key, group);
+    if (!filters.isEmpty()) {
+        for (int i = filters.size() - 1; i >= 0; i--) {// 倒序遍历，即从尾到头
+            final Filter filter = filters.get(i);
+            // 把真实的invoker放到拦截器的末尾，保证真实的服务调用是在最后触发的
+            final Invoker<T> next = last;
+            // 为每个Filter生成一个exporter
+            last = new Invoker<T>() {
+                // 省略代码
+                @Override
+                public Result invoke(Invocation invocation) throws RpcException {
+                    Result asyncResult;
+                    try {
+                        // 每次调用的都会传递给下一个拦截器，设置过滤器链的下一个几点，不断循环成过滤器链
+                        asyncResult = filter.invoke(next, invocation);
+                    } catch (Exception e) {
+                        if (filter instanceof ListenableFilter) {
+                            ListenableFilter listenableFilter = ((ListenableFilter) filter);
+                            try {
+                                Filter.Listener listener = listenableFilter.listener(invocation);
+                                if (listener != null) {
+                                    listener.onError(e, invoker, invocation);
+                                }
+                            } finally {
+                                listenableFilter.removeListener(invocation);
+                            }
+                        } else if (filter instanceof Filter.Listener) {
+                            Filter.Listener listener = (Filter.Listener) filter;
+                            listener.onError(e, invoker, invocation);
+                        }
+                        throw e;
+                    } finally {
+
+                    }
+                    return asyncResult.whenCompleteWithContext((r, t) -> {
+                        if (filter instanceof ListenableFilter) {
+                            ListenableFilter listenableFilter = ((ListenableFilter) filter);
+                            Filter.Listener listener = listenableFilter.listener(invocation);
+                            try {
+                                if (listener != null) {
+                                    if (t == null) {
+                                        listener.onResponse(r, invoker, invocation);
+                                    } else {
+                                        listener.onError(t, invoker, invocation);
+                                    }
+                                }
+                            } finally {
+                                listenableFilter.removeListener(invocation);
+                            }
+                        } else if (filter instanceof Filter.Listener) {
+                            Filter.Listener listener = (Filter.Listener) filter;
+                            if (t == null) {
+                                listener.onResponse(r, invoker, invocation);
+                            } else {
+                                listener.onError(t, invoker, invocation);
+                            }
+                        }
+                    });
+                }
+                // 省略无关代码
+            };
+        }
+    }
+    return last;
+}
+```
+倒序遍历时因为通过从里到外构造匿名类的方式构造Invoker，只有倒序，最外层的Invoker才能是第一个过滤器，假设：
+
+有过滤器 A、B、C 和 Invoker，会按照C、B、A倒序遍历，过滤器构建顺序为：C->Invoker，B->C->Invoker，A->B->C->Invoker。
+
+
+# 参考资料
+
+- [Dubbo官方文档](http://dubbo.apache.org/zh-cn/docs/user/quick-start.html)

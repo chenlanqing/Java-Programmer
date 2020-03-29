@@ -206,7 +206,7 @@ public @interface SpringBootApplication {
 - 6） 根据用户是否明确设置了applicationContextClass类型以及初始化阶段的推断结果，决定该为当前SpringBoot应用创建什么类型的ApplicationContext并创建完成，然后根据条件决定是否添加ShutdownHook，决定是否使用自定义的BeanNameGenerator，决定是否使用自定义的ResourceLoader，当然，最重要的，将之前准备好的Environment设置给创建好的ApplicationContext使用。
 - 7） ApplicationContext创建好之后，SpringApplication会再次借助Spring-FactoriesLoader，查找并加载classpath中所有可用的ApplicationContext-Initializer，然后遍历调用这些ApplicationContextInitializer的initialize（applicationContext）方法来对已经创建好的ApplicationContext进行进一步的处理。
 - 8） 遍历调用所有SpringApplicationRunListener的contextPrepared()方法。
-- 9） 最核心的一步，将之前通过@EnableAutoConfiguration获取的所有配置以及其他形式的IOC容器配置加载到已经准备完毕的ApplicationContext。
+- 9） 最核心的一步，将之前通过`@EnableAutoConfiguration`获取的所有配置以及其他形式的IOC容器配置加载到已经准备完毕的ApplicationContext。
 - 10） 遍历调用所有SpringApplicationRunListener的contextLoaded()方法。
 - 11） 调用ApplicationContext的refresh()方法，完成IOC容器可用的最后一道工序。
 - 12） 查找当前ApplicationContext中是否注册有CommandLineRunner，如果有，则遍历执行它们。
@@ -293,7 +293,7 @@ private static Map<String, List<String>> loadSpringFactories(@Nullable ClassLoad
 # 3、系统初始化器
 
 ApplicationContextInitializer
-- 上下文沙墟即refresh方法前调用；
+- 上下文即refresh方法前调用；
 - 用来编码设置一些属性变量，通常用在web环境中；
 - 可以通过`@Order`注解进行排序
 
@@ -346,7 +346,7 @@ public class FirstInitializer implements ApplicationContextInitializer<Configura
 
 - **实现原理：** 
 
-    调用`SpringApplication.addInitializers`方法，将其添加到初始化`SpringApplicatio`里面添加的`initializers`中，手动添加数据；
+    调用`SpringApplication.addInitializers`方法，将其添加到初始化`SpringApplication`里面添加的`initializers`中，手动添加数据；
 
 ### 3.1.3、在application.properties中添加配置
 
@@ -512,7 +512,7 @@ public EventPublishingRunListener(SpringApplication application, String[] args) 
 
 ### 4.3.2、获取感兴趣的监听器列表
 
-SpringApplication获取到 SpringApplicationRunListeners 后，以其执行starting为例，获取其感兴趣的监听器：
+SpringApplication 获取到 SpringApplicationRunListeners 后，以其执行starting为例，获取其感兴趣的监听器：
 ```java
 // SpringApplication
 public ConfigurableApplicationContext run(String... args) {
@@ -591,7 +591,6 @@ private void doInvokeListener(ApplicationListener listener, ApplicationEvent eve
 基本条件：实现`ApplicationListener`
 
 ### 4.4.1、factories方式
-
 
 - **添加方法：**
 
