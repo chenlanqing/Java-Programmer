@@ -791,6 +791,171 @@ Spring 会扫描 basePackage 下的所有Mapper接口并注册为MapperFactoryBe
 
 其中`ParameterHandler`、`ResultSetHandler`、`StatementHandler`、`Executor`这4个接口都可以自定义扩展实现，通过拦截器的模式嵌入到mybatis中；
 
+# 5、分页
+
+## 5.1、Rowbounds介绍
+
+Mybatis提供了RowBounds类进行分页处理，属于逻辑分页，内部提供了offset和limit两个值，分别用来指定查询数据的开始位置和查询数据量：
+```java
+public class RowBounds {
+  public static final int NO_ROW_OFFSET = 0;
+  public static final int NO_ROW_LIMIT = Integer.MAX_VALUE;
+  public static final RowBounds DEFAULT = new RowBounds();
+  private final int offset;
+  private final int limit;
+  public RowBounds() {
+    this.offset = NO_ROW_OFFSET;
+    this.limit = NO_ROW_LIMIT;
+  }
+  public RowBounds(int offset, int limit) {
+    this.offset = offset;
+    this.limit = limit;
+  }
+  public int getOffset() {
+    return offset;
+  }
+  public int getLimit() {
+    return limit;
+  }
+}
+```
+默认是从0下标开始，查询数据量为`Integer.MAX_VALUE`；查询的时候没有指定`RowBounds`的时候默认`RowBounds.DEFAULT`:
+```java
+// DefaultSqlSession.java
+@Override
+public <E> List<E> selectList(String statement, Object parameter) {
+  return this.selectList(statement, parameter, RowBounds.DEFAULT);
+}
+```
+
+## 5.2、RowBounds分析
+
+在创建 PreparedStatementHandler 时会传入对应的 Rowbounds，那么其会创建 ResultSetHandler，即 DefaultResultSetHandler，Mybatis处理分页的相关代码就是在该类中，部分代码如下：
+```java
+private void handleRowValuesForSimpleResultMap(ResultSetWrapper rsw, ResultMap resultMap, ResultHandler<?> resultHandler, RowBounds rowBounds, ResultMapping parentMapping) throws SQLException {
+    DefaultResultContext<Object> resultContext = new DefaultResultContext<>();
+    ResultSet resultSet = rsw.getResultSet();
+    //跳过指定的下标Offset
+    skipRows(resultSet, rowBounds);
+    ////判定当前是否读取是否在limit内
+    while (shouldProcessMoreRows(resultContext, rowBounds) && !resultSet.isClosed() && resultSet.next()) {
+      ResultMap discriminatedResultMap = resolveDiscriminatedResultMap(resultSet, resultMap, null);
+      Object rowValue = getRowValue(rsw, discriminatedResultMap, null);
+      storeObject(resultHandler, resultContext, rowValue, parentMapping, resultSet);
+    }
+  }
+//跳过指定的下标Offset
+private void skipRows(ResultSet rs, RowBounds rowBounds) throws SQLException {
+  if (rs.getType() != ResultSet.TYPE_FORWARD_ONLY) {
+    if (rowBounds.getOffset() != RowBounds.NO_ROW_OFFSET) {
+      rs.absolute(rowBounds.getOffset());
+    }
+  } else {
+    for (int i = 0; i < rowBounds.getOffset(); i++) {
+      if (!rs.next()) {
+        break;
+      }
+    }
+  }
+}
+//判定当前是否读取是否在limit内
+private boolean shouldProcessMoreRows(ResultContext<?> context, RowBounds rowBounds) {
+  return !context.isStopped() && context.getResultCount() < rowBounds.getLimit();
+}
+```
+
+在处理ResultSet首先需要跳过指定的下标Offset，这里跳过方式分成了两种情况：resultSetType为`TYPE_FORWARD_ONLY`和resultSetType为非`TYPE_FORWARD_ONLY类型`，Mybatis也提供了类型配置，可选项包括：
+
+-   FORWARD_ONLY：只能向前滚动；
+-   SCROLL_SENSITIVE： 能够实现任意的前后滚动，对修改敏感；
+-   SCROLL_INSENSITIVE：能够实现任意的前后滚动，对修不改敏感；
+-   DEFAULT：默认值为FORWARD_ONLY；
+
+类型为FORWARD_ONLY的情况下只能遍历到指定的下标，而其他两种类型可以直接通过absolute方法定位到指定下标，可以通过如下方式指定类型：
+
+```xml
+<select id="selectBlogs" parameterType="string" resultType="blog" resultSetType="SCROLL_INSENSITIVE ">
+    select * from blog where author = #{author}
+</select>
+```
+
+limit限制，通过ResultContext中记录的resultCount记录当前读取的记录数，然后判定是否已经达到limit限制；
+
+## 5.3、Pagehelper分页插件
+
+Pagehelper主要利用了Mybatis的插件功能，所以在使用的时候首先需要配置插件类PageInterceptor：
+```xml
+<plugin interceptor="com.github.pagehelper.PageInterceptor">
+    <property name="helperDialect" value="mysql" />
+</plugin>
+```
+
+Pagehelper通过对Executor的query方法进行拦截，具体如下：
+
+```java
+@Intercepts(
+  {
+    @Signature(type = Executor.class, method = "query", args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class}),
+    @Signature(type = Executor.class, method = "query", args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class, CacheKey.class, BoundSql.class}),
+  }
+)
+public class PageInterceptor implements Interceptor {
+}
+```
+Mybatis插件是利用了动态代理技术，在执行Executor的query方法时，会自动触发 InvocationHandler 的invoke方法，方法内会调用`PageInterceptor`的intercept方法：
+```java
+// 因为其在构造Executor时已经将 PageInterceptor 包装到对应的 Executor中了
+public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+    try {
+      Set<Method> methods = signatureMap.get(method.getDeclaringClass());
+      if (methods != null && methods.contains(method)) {
+        return interceptor.intercept(new Invocation(target, method, args));
+      }
+      return method.invoke(target, args);
+    } catch (Exception e) {
+      throw ExceptionUtil.unwrapThrowable(e);
+    }
+  }
+```
+可以看到最终query的相关参数args（4个或者6个），都封装到了Invocation中，其中就包括了用于分页的RowBounds类；Pagehelper会将RowBounds中的offset和limit映射到功能更强大的Page类， Page里面包含了很多属性，这里就简单看一下和RowBounds相关的：
+```java
+public Page(int[] rowBounds, boolean count) {
+    super(0);
+    if (rowBounds[0] == 0 && rowBounds[1] == Integer.MAX_VALUE) {
+        pageSizeZero = true;
+        this.pageSize = 0;
+    } else {
+        this.pageSize = rowBounds[1];
+        this.pageNum = rowBounds[1] != 0 ? (int) (Math.ceil(((double) rowBounds[0] + rowBounds[1]) / rowBounds[1])) : 0;
+    }
+    this.startRow = rowBounds[0];
+    this.count = count;
+    this.endRow = this.startRow + rowBounds[1];
+}
+```
+
+offset映射到了startRow，limit映射到了pageSize；有了相关分页的参数，然后通过配置的数据库方言类型，生成不同的方言生成sql，比如Mysql提供了MySqlRowBoundsDialect类：
+
+```
+public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
+    StringBuilder sqlBuilder = new StringBuilder(sql.length() + 14);
+    sqlBuilder.append(sql);
+    if (rowBounds.getOffset() == 0) {
+        sqlBuilder.append(" LIMIT ");
+        sqlBuilder.append(rowBounds.getLimit());
+    } else {
+        sqlBuilder.append(" LIMIT ");
+        sqlBuilder.append(rowBounds.getOffset());
+        sqlBuilder.append(",");
+        sqlBuilder.append(rowBounds.getLimit());
+        pageKey.update(rowBounds.getOffset());
+    }
+    pageKey.update(rowBounds.getLimit());
+    return sqlBuilder.toString();
+}
+```
+
+mysql的物理分页关键字是Limit，提供offset和limit即可实现分页；
 
 # 参考资料
 
