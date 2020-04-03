@@ -54,7 +54,7 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 ![image](image/BeanFactory.png)
 
-`BeanFactoty`容器中， Bean的生命周期如上图所示，与`ApplicationContext`相比，有如下几点不同：
+`BeanFactoty`容器中，Bean的生命周期如上图所示，与`ApplicationContext`相比，有如下几点不同：
 
 - `BeanFactory`容器中，不会调用`ApplicationContextAware`接口的`setApplicationContext()`方法
 - `BeanPostProcessor`接口的`postProcessBeforeInitialization`方法和`postProcessAfterInitialization`方法不会自动调用，必须自己通过代码手动注册
@@ -67,8 +67,8 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
 面向开发者的，几乎大部分应用场景都是直接使用`ApplicationContex`t 而非底层的`BeanFactory`
 
 - （1）Bean的实例化：
-	* 首先容器启动后，会对`scope`为`singleton`且非懒加载的bean进行实例化;
-	* 容器在内部实现的时候，采用`策略模式`来决定采用何种方式初始化bean实例.通常，可以通过反射或者CGLIB动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 `CglibSubclassingInstantiationStrategy`。容器只要根据相应bean定义的`BeanDefinitio`n取得实例化信息，结合`CglibSubclassingInstantiationStrategy`以及不同的bean定义类型，就可以返回实例化完成的对象实例。但不是直接返回构造完成的对象实例，而是以BeanWrapper对构	造完成的对象实例进行包裹，返回相应的`BeanWrapper`实例，这个`BeanWrapper`的实现类`BeanWrapperImpl`是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
+	* 首先容器启动后，会对`scope`为`singleton`且非懒加载的bean进行实例化；
+	* 容器在内部实现的时候，采用`策略模式`来决定采用何种方式初始化bean实例。通常，可以通过反射或者CGLIB动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 `CglibSubclassingInstantiationStrategy`。容器只要根据相应bean定义的`BeanDefinitio`n取得实例化信息，结合`CglibSubclassingInstantiationStrategy`以及不同的bean定义类型，就可以返回实例化完成的对象实例。但不是直接返回构造完成的对象实例，而是以BeanWrapper对构造完成的对象实例进行包裹，返回相应的`BeanWrapper`实例，这个`BeanWrapper`的实现类`BeanWrapperImpl`是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
 
 - （2）设置对象属性：
 
@@ -132,7 +132,7 @@ web环境下`Spring\SpringMVC`容器启动过程
 
 - `BeanDefinitionReader`读取`Resource`所指向的配置文件资源，然后解析配置文件。配置文件中每一个`<bean>`解析成一个`BeanDefinition`对象，并保存到`BeanDefinitionRegistry`中；
 
-- 容器扫描`BeanDefinitionRegistry`中的`BeanDefinition`，使用Java的反射机制自动识别出Bean工厂后处理后器（实现`BeanFactoryPostProcessor`接口）的Bean，然后调用这些Bean工厂后处理器对`BeanDefinitionRegistry`中的`BeanDefinition`进行加工处理.主要完成以下两项工作：
+- 容器扫描`BeanDefinitionRegistry`中的`BeanDefinition`，使用Java的反射机制自动识别出Bean工厂后处理后器（实现`BeanFactoryPostProcessor`接口）的Bean，然后调用这些Bean工厂后处理器对`BeanDefinitionRegistry`中的`BeanDefinition`进行加工处理。主要完成以下两项工作：
 	* 对使用到占位符的`<bean>`元素标签进行解析，得到最终的配置值，这意味对一些半成品式的`BeanDefinition`对象进行加工处理并得到成品的`BeanDefinition`对象;
 	* 对`BeanDefinitionRegistry`中的`BeanDefinition`进行扫描，通过Java反射机制找出所有属性编辑器的Bean（实现`java.beans.PropertyEditor`接口的Bean），并自动将它们注册到Spring容器的属性编辑器注册表中（`PropertyEditorRegistry`）
 
@@ -558,7 +558,7 @@ CGLIB代理主要通过对字节码的操作，为对象引入间接级别，以
 
 - CGLIB缺点：对于final方法，无法进行代理
 
-# 三、spring事务
+# 三、Spring事务
 
 ## 1、Spring事务管理方式
 

@@ -731,9 +731,7 @@ private static BeanDefinition parse(Element element, ParserContext parserContext
                 }
             }
             // 如果没有对应的getter方法或者is前缀的方法，跳过
-            if (getter == null
-                    || !Modifier.isPublic(getter.getModifiers())
-                    || !type.equals(getter.getReturnType())) {
+            if (getter == null || !Modifier.isPublic(getter.getModifiers()) || !type.equals(getter.getReturnType())) {
                 continue;
             }
             if ("parameters".equals(property)) {

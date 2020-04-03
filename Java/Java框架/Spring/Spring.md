@@ -304,15 +304,15 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 	IOC是通过反射机制来实现的。当我们的需求出现变动时，工厂模式会需要进行相应的变化。但是IOC的反射机制允许我们不重新编译代码，因为它的对象都是动态生成的
 
 - Spring 中的 IOC
-	- Spring 中的 `org.springframework.beans` 包和 `org.springframework.context`包构成了Spring框架IOC容器的基础
-	- BeanFactory 接口提供了一个先进的配置机制，使得任何类型的对象的配置成为可能：`ApplicationContex` 接口对 `BeanFactory`（是一个子接口）进行了扩展，在`BeanFactory`的基础上添加了其他功能，比如与Spring的AOP更容易集成，也提供了处理message resource的机制(用于国际化)、事件传播以及应用层的特别配置，比如针对Web应用的`WebApplicationContext`
-	- `org.springframework.beans.factory.BeanFactory` 是 Spring IOC 容器的具体实现，用来包装和管理前面提到的各种bean。BeanFactory接口是Spring IOC 容器的核心接口
+	- Spring 中的 `org.springframework.beans` 包和 `org.springframework.context` 包构成了Spring框架IOC容器的基础
+	- BeanFactory 接口提供了一个先进的配置机制，使得任何类型的对象的配置成为可能：`ApplicationContex` 接口对 `BeanFactory`（是一个子接口）进行了扩展，在`BeanFactory`的基础上添加了其他功能，比如与Spring的AOP更容易集成，也提供了处理message resource的机制(用于国际化)、事件传播以及应用层的特别配置，比如针对Web应用的 `WebApplicationContext`；
+	- `org.springframework.beans.factory.BeanFactory` 是 Spring IOC 容器的具体实现，用来包装和管理前面提到的各种bean。BeanFactory接口是Spring IOC 容器的核心接口；
 
 ## 2、Spring容器
 
-在 Spring IOC 容器读取 Bean 配置创建 Bean 实例之前，必须对它进行实例化. 只有在容器实例化后，才可以从 IOC 容器里获取 Bean 实例并使用
+在 Spring IOC 容器读取 Bean 配置创建 Bean 实例之前，必须对它进行实例化。只有在容器实例化后，才可以从 IOC 容器里获取 Bean 实例并使用
 
-Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容器的基本实现；（2）ApplicationContext：提供了更多的高级特性。是BeanFactory的子接口.
+Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容器的基本实现；（2）ApplicationContext：提供了更多的高级特性。是BeanFactory的子接口
 
 ![](image/SpringIOC容器层级关系.png)
 
@@ -326,7 +326,7 @@ Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容�
 - Spring容器对Bean的管理：
 	- 控制Bean对象创建模式：在bean元素中，利用scope属性可以指定Bean组件创建对象的方式：
 		- prototype：非单例模式
-		- singleton：单例模式(默认是单例模式)，Spring不关心bean是否线程安全，当然，但实际上，大部分的 Spring Bean 并没有可变的状态(比如Serview 类和 DAO 类)，所以在某种程度上说 Spring 的单例 Bean 是线程安全的；在web程序中，通过一些配置，可以扩展出request，session等属性值;
+		- singleton：单例模式(默认是单例模式)，Spring不关心bean是否线程安全，当然，但实际上，大部分的 Spring Bean 并没有可变的状态(比如Serview类和DAO类)，所以在某种程度上说 Spring 的单例 Bean 是线程安全的；在web程序中，通过一些配置，可以扩展出request，session等属性值;
 
 	- 可以控制单例模式的创建时机：
 		- singleton模式的Bean组件，默认是在 ApplicationContext 容器实例化时就创建了组件；可以在bean元素中追加属性`lazy-init="true"`，将singleton模式创建对象推迟到getBean()方法
@@ -360,7 +360,7 @@ Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容�
 	- BeanFactory是接口，提供了IOC容器最基本的形式，给具体的IOC容器的实现提供了规范；
 	- FactoryBean也是接口，为IOC容器中Bean的实现提供了更加灵活的方式，FactoryBean在IOC容器的基础上给Bean的实现加上了一个简单工厂模式和装饰模式；
 	- BeanFactory是个Factory，也就是IOC容器或对象工厂，FactoryBean是个Bean。在Spring中，所有的Bean都是由BeanFactory(也就是IOC容器)来进行管理的。但对FactoryBean而言，这个Bean不是简单的Bean，而是一个能生产或者修饰对象生成的工厂Bean，它的实现与设计模式中的工厂模式和修饰器模式类似；
-	- org.springframework.bean.factory.FactoryBean工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑
+	- `org.springframework.bean.factory.FactoryBean`工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑
 
 ## 3、DI(Dependency Injection)
 
@@ -722,7 +722,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 ## 1、IOC原理
 
-[IOC原理](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/%E6%A1%86%E6%9E%B6/spring/Spring%E6%BA%90%E7%A0%81.md#%E4%B8%80ioc)
+[IOC原理](Java/源码分析/框架/spring/Spring源码.md#一IOC)
 
 ## 2、AOP原理
 
@@ -804,7 +804,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 - 2.2、Spring 事务管理核心：TransactionManager，其为事务管理封装了一组独立于技术的方法。对于JDBC，JavaEE，Hibernate 等都实现了相应的事务管理器;
 
-***Spring事务默认地只在抛出RuntimeException和Error时才标识事务回滚，从事务方法中抛出的Checked exceptions将不被标识进行事务回滚***
+***Spring事务默认地只在抛出RuntimeException和Error时才标识事务回滚，从事务方法中抛出的 Checked exceptions 将不被标识进行事务回滚***
 
 ## 3、声明式事务管理
 
@@ -849,7 +849,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 	```
 - 5.2、传播行为：REQUIRED(Spring 事务的默认传播行为)
 
-	buy()方法被 buyMany()方法调用，其会默认在 buyMany()方法中现有的事务中运行，因此 buyMany()方法的开始和终止边界内只有一个事务. 如果buyMany()方法出现异常或buy()方法出现异常，则全部回滚，或全部成功后全部提交
+	buy()方法被 buyMany()方法调用，其会默认在 buyMany()方法中现有的事务中运行，因此 buyMany()方法的开始和终止边界内只有一个事务。如果buyMany()方法出现异常或buy()方法出现异常，则全部回滚，或全部成功后全部提交
 	
 - 5.3、传播行为：REQUIRES_NEW
 	
@@ -2042,6 +2042,7 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 	```
 
 ### 18.2、ResponseStatusExceptionResolver
+
 在异常及异常父类中找到 @ResponseStatus 注解，然后使用这个注解的属性进行处理
 	
 - 定义一个 @ResponseStatus 注解修饰的异常类，该注解也可以修饰目标方法
@@ -2262,7 +2263,7 @@ public class RootConfig {
 				expression="org.springframework.web.bind.annotation.ControllerAdvice"/>
 		</context：component-scan>
 		```
-- SpringMVC 的 IOC 容器中的 bean 可以来引用 Spring IOC 容器中的 bean. 返回来呢 ? 反之则不行. Spring IOC 容器中的 bean 却不能来引用 SpringMVC IOC 容器中的 bean!
+- SpringMVC 的 IOC 容器中的 bean 可以来引用 Spring IOC 容器中的 bean。返回来呢 ? 反之则不行，Spring IOC容器中的bean却不能来引用 SpringMVC IOC 容器中的 bean!
 	- 多个 Spring IOC 容器之间可以设置为父子关系，以实现良好的解耦。
 	- Spring MVC WEB 层容器可作为 “业务层” Spring 容器的子容器：即 WEB 层容器可以引用业务层容器的 Bean，而业务层容器却访问不到 WEB 层容器的 Bean
 
@@ -2271,7 +2272,7 @@ public class RootConfig {
 - Spring MVC 的入口是 Servlet， 而 Struts2 是 Filter
 - Spring MVC 会稍微比 Struts2 快些. Spring MVC 是基于方法设计， 而 Sturts2 是基于类， 每次发一次请求都会实	例一个 Action.
 - Spring MVC 使用更加简洁， 开发效率 Spring MVC 确实比 struts2 高： 支持 JSR303， 处理 ajax 的请求更方便
-- Struts2 的 OGNL 表达式使页面的开发效率相比Spring MVC 更高些.
+- Struts2 的 OGNL 表达式使页面的开发效率相比Spring MVC 更高些。
 
 # 十、SpringBoot
 
@@ -3514,6 +3515,7 @@ SpringBoot默认使用Tomcat作为嵌入式的Servlet容器
 ![](image/SpringBoot-Tomcat依赖.png)
 
 ### 7.1、定制和修改Servlet容器的相关配置
+
 - 修改和server有关的配置（ServerProperties）
 	```properties
 	server.port=8081
@@ -3979,7 +3981,7 @@ class ServletWebServerFactoryConfiguration {
 
 什么时候创建嵌入式的Servlet容器工厂？什么时候获取嵌入式的Servlet容器并启动Tomcat；
 
-**获取嵌入式的Servlet容器，基于1.5.9.RELEASE版本**
+**获取嵌入式的Servlet容器，基于2.1.8.RELEASE版本**
 - （1）SpringBoot应用启动运行run方法；
 - （2）refreshContext(context);SpringBoot刷新IOC容器【创建IOC容器对象，并初始化容器，创建容器中的每一个组件】；如果是web应用创建`AnnotationConfigEmbeddedWebApplicationContext`，否则：`AnnotationConfigApplicationContext**`
 - （3）refresh(context); **刷新刚才创建好的ioc容器；**
@@ -4003,7 +4005,7 @@ class ServletWebServerFactoryConfiguration {
 				initMessageSource();
 				// Initialize event multicaster for this context.
 				initApplicationEventMulticaster();
-				// Initialize other special beans in specific context subclasses.
+				// 初始化其他特殊的Bean，由 AbstractApplicationContext 子类来实现，其是一个模板方法
 				onRefresh();
 				// Check for listener beans and register them.
 				registerListeners();
@@ -4016,12 +4018,52 @@ class ServletWebServerFactoryConfiguration {
 		}
 	}	
 	```
-- （4）onRefresh(); web的ioc容器重写了onRefresh方法
-- （5）webioc容器会创建嵌入式的Servlet容器；**createEmbeddedServletContainer**();
-- （6）获取嵌入式的Servlet容器工厂：`EmbeddedServletContainerFactory containerFactory = getEmbeddedServletContainerFactory();`
-	从ioc容器中获取EmbeddedServletContainerFactory 组件；**TomcatEmbeddedServletContainerFactory**创建对象，后置处理器一看是这个对象，就获取所有的定制器来先定制Servlet容器的相关配置；
-- （7）**使用容器工厂获取嵌入式的Servlet容器**：`this.embeddedServletContainer = containerFactory.getEmbeddedServletContainer(getSelfInitializer());`
-- （8）嵌入式的Servlet容器创建对象并启动Servlet容器；
+- （4）onRefresh(); web的ioc容器（ServletWebServerApplicationContext）重写了onRefresh方法
+	```java
+	@Override
+	protected void onRefresh() {
+		super.onRefresh();
+		try {
+			createWebServer();
+		}
+		catch (Throwable ex) {
+			throw new ApplicationContextException("Unable to start web server", ex);
+		}
+	}
+	```
+- （5）webioc容器会创建嵌入式的Servlet容器；**createWebServer**();
+	```java
+	private void createWebServer() {
+		WebServer webServer = this.webServer;
+		ServletContext servletContext = getServletContext();
+		if (webServer == null && servletContext == null) {
+			ServletWebServerFactory factory = getWebServerFactory();
+			this.webServer = factory.getWebServer(getSelfInitializer());
+		}
+		else if (servletContext != null) {
+			try {
+				getSelfInitializer().onStartup(servletContext);
+			}
+			catch (ServletException ex) {
+				throw new ApplicationContextException("Cannot initialize servlet context", ex);
+			}
+		}
+		initPropertySources();
+	}
+	```
+- （6）获取嵌入式的Servlet容器工厂：`ServletWebServerFactory factory = getWebServerFactory();`
+	从ioc容器中获取 TomcatServletWebServerFactory 组件；**TomcatServletWebServerFactory**创建对象，后置处理器一看是这个对象，就获取所有的定制器来先定制Servlet容器的相关配置；
+- （7）**使用容器工厂获取嵌入式的Servlet容器**：`this.webServer = factory.getWebServer(getSelfInitializer());`
+- （8）设置属性，嵌入式的Servlet容器创建对象并启动Servlet容器：TomcatWebServer，在 TomcatWebServer 构造方法中进行初始化：
+	```java
+	public TomcatWebServer(Tomcat tomcat, boolean autoStart) {
+		Assert.notNull(tomcat, "Tomcat Server must not be null");
+		this.tomcat = tomcat;
+		this.autoStart = autoStart;
+		// 初始化，并启动Tomcat
+		initialize();
+	}
+	```
 
 	**先启动嵌入式的Servlet容器，再将ioc容器中剩下没有创建出的对象获取出来**
 
@@ -4092,20 +4134,16 @@ servlet3.0有几个规则：
 
 整体过程：
 - （1）启动Tomcat
-- （2）Spring下的web模块：spring-web，对应目下有个文件：
-	org\springframework\spring-web\4.3.14.RELEASE\spring-web-4.3.14.RELEASE.jar!\META-INF\services\javax.servlet.ServletContainerInitializer
-
-	Spring的web模块里面有这个文件：**org.springframework.web.SpringServletContainerInitializer**
-- （3）`SpringServletContainerInitializer`将`@HandlesTypes(WebApplicationInitializer.class)`标注的所有这个类型的类都传入到onStartup方法的Set<Class<?>>；为这些WebApplicationInitializer类型的类创建实例
-- （4）每一个WebApplicationInitializer都调用自己的onStartup
+- （2）Spring下的web模块：spring-web，在jar：`spring-web-5.2.2.RELEASE.jar` 中有个文件：`META-INF/services/javax.servlet.ServletContainerInitializer`，该文件配置的内容是：`org.springframework.web.SpringServletContainerInitializer`
+- （3）`SpringServletContainerInitializer`将`@HandlesTypes(WebApplicationInitializer.class)`标注的所有这个类型的类都传入到onStartup方法的`Set<Class<?>>`；为这些WebApplicationInitializer类型的类创建实例
+- （4）每一个`WebApplicationInitializer`都调用自己的onStartup
 
 	![](image/WebApplicationInitializer实现类.png)
 
-- （5）因为在项目中实现了SpringBootServletInitializer，所以该类的实现类会被创建对象，并执行onStartup方法
-- （6）SpringBootServletInitializer实例执行onStartup的时候会createRootApplicationContext；创建容器
+- （5）因为在项目中实现了`SpringBootServletInitializer`，所以该类的实现类会被创建对象，并执行onStartup方法
+- （6）SpringBootServletInitializer 实例执行onStartup的时候会 createRootApplicationContext；创建容器
 	```java
-	protected WebApplicationContext createRootApplicationContext(
-		ServletContext servletContext) {
+	protected WebApplicationContext createRootApplicationContext(ServletContext servletContext) {
 		//1、创建SpringApplicationBuilder
 		SpringApplicationBuilder builder = createSpringApplicationBuilder();
 		StandardServletEnvironment environment = new StandardServletEnvironment();
@@ -4115,35 +4153,29 @@ servlet3.0有几个规则：
 		ApplicationContext parent = getExistingRootWebApplicationContext(servletContext);
 		if (parent != null) {
 			this.logger.info("Root context already created (using as parent).");
-			servletContext.setAttribute(
-					WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, null);
+			servletContext.setAttribute(WebApplicationContext.ROOT_WEB_APPLICATION_CONTEXT_ATTRIBUTE, null);
 			builder.initializers(new ParentContextApplicationContextInitializer(parent));
 		}
-		builder.initializers(
-				new ServletContextApplicationContextInitializer(servletContext));
+		builder.initializers(new ServletContextApplicationContextInitializer(servletContext));
 		builder.contextClass(AnnotationConfigEmbeddedWebApplicationContext.class);
-			
-			//调用configure方法，子类重写了这个方法，将SpringBoot的主程序类传入了进来
+		//调用configure方法，子类重写了这个方法，将SpringBoot的主程序类传入了进来
 		builder = configure(builder);
-			
-			//使用builder创建一个Spring应用
+		//使用builder创建一个Spring应用
 		SpringApplication application = builder.build();
-		if (application.getSources().isEmpty() && AnnotationUtils
-				.findAnnotation(getClass(), Configuration.class) != null) {
+		if (application.getSources().isEmpty() && AnnotationUtils.findAnnotation(getClass(), Configuration.class) != null) {
 			application.getSources().add(getClass());
 		}
-		Assert.state(!application.getSources().isEmpty(),
-				"No SpringApplication sources have been defined. Either override the "
+		Assert.state(!application.getSources().isEmpty(),"No SpringApplication sources have been defined. Either override the "
 					+ "configure method or add an @Configuration annotation");
 		// Ensure error pages are registered
 		if (this.registerErrorPageFilter) {
 			application.getSources().add(ErrorPageFilterConfiguration.class);
 		}
-			//启动Spring应用
+		//启动Spring应用
 		return run(application);
 	}
 	```
-- （7）上述最后调用的run(application);其实就是调用 `org.springframework.boot.SpringApplication#run(java.lang.String...)` 的方法
+- （7）上述最后调用的`run(application);`其实就是调用 `org.springframework.boot.SpringApplication#run(java.lang.String...)` 的方法
 
 ## 9、打包springboot为jar包
 
@@ -4404,7 +4436,7 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 利用starter实现自动化配置只需要两个条件——maven依赖、配置文件。
 
 starter实现自动化配置的流程：
-引入maven实质上就是导入jar包，spring-boot启动的时候会通过`@SpringBootApplication` 上关联的`AutoConfigurationImportSelector` 获取所有的 EnableAutoConfiguration 注解的实现类，其会找到 `starter jar`包中的`resources/META-INF/spring.factories`文件，根据`spring.factories`文件中的配置，找到需要自动配置的类，然后根据其 Conditional 注解进行过滤；
+引入maven实质上就是导入jar包，spring-boot启动的时候会通过`@SpringBootApplication` 上关联的`AutoConfigurationImportSelector` 获取所有的 `EnableAutoConfiguration` 注解的实现类，其会找到 `starter.jar`包中的`resources/META-INF/spring.factories`文件，根据`spring.factories`文件中的配置，找到需要自动配置的类，然后根据其 Conditional 注解进行过滤；
 
 # 十四、SpringBoot整合
 
@@ -5563,10 +5595,10 @@ Spring 提供了以下五种标准的事件：
 - SpringApplication.run(主程序类)
 	- new SpringApplication(主程序类)
 		- 判断是否web应用
-		- 加载并保存所有ApplicationContextInitializer(`META-INF/spring.factories`)，加载并保存所有ApplicationListener
+		- 加载并保存所有 ApplicationContextInitializer (`META-INF/spring.factories`)；加载并保存所有 ApplicationListener
 		- 获取到主程序类
 	- run()
-		- 回调所有的SpringApplicationRunListener(`META-INF/spring.factories`)的starting
+		- 回调所有的 SpringApplicationRunListener(`META-INF/spring.factories`)的 starting
 		- 获取ApplicationArguments
 		- 准备环境&回调所有监听器( SpringApplicationRunListener )的environmentPrepared，打印banner信息
 		- 创建ioc容器对象
@@ -5578,7 +5610,8 @@ Spring 提供了以下五种标准的事件：
 	- 刷新启动IOC容器;
 - 扫描加载所有容器中的组件
 - 包括从`META-INF/spring.factories`中获取的所有EnableAutoConfiguration组件
-	- 回调容器中所有的ApplicationRunner、CommandLineRunner的run方法 • 监听器SpringApplicationRunListener回调finished
+	- 回调容器中所有的ApplicationRunner、CommandLineRunner的run方法；
+	- 监听器SpringApplicationRunListener回调finished
 
 ## 2、SpringBoot常用注解
 
@@ -5593,7 +5626,7 @@ Spring 提供了以下五种标准的事件：
 ## 3、介绍下 SpringFactoriesLoader
 
 - 框架内部使用通用的工厂加载机制；
-- 从classpath下多个jar包特定的位置读取文件并初始化类，位置是jar包下的：`META-INF/spring.factories`
+- 从classpath下多个jar包特定的位置读取文件并初始化类，位置是jar包下的：`META-INF/spring.factories`；
 - 文件内容必须是`key-value`形式，即properties形式；
 - key是全限定名（抽象类|接口），value是实现类的全限定名，如果有多个，使用`,`分隔
 
@@ -5608,7 +5641,7 @@ Spring 提供了以下五种标准的事件：
 
 主要用于设置一些属性；
 
-调用时机：调用链 SpringApplication.run ->  prepareContext（上下文准备） -> applyInitializers -> 遍历调用各个Initializer的initialize方法
+调用时机：调用链 `SpringApplication.run ->  prepareContext（上下文准备） -> applyInitializers -> 遍历调用各个Initializer的initialize方法`
 
 主要有三种实现方式：
 - 在`resources`目录下新建目录文件：`META-INF/spring.factories`，配置的key为`org.springframework.context.ApplicationContextInitializer`，value为自定义初始化器的全类名路径
@@ -5747,7 +5780,7 @@ Spring提供了两种处理bean的扩展接口，分别为BeanPostProcessor和Be
 		}
 	}
 	```
-	- 如果一个Bean实现了接口 InitializingBean ，那么其方法 afterPropertiesSet 会在BeanPostProcessor两个方法之间执行；
+	- 如果一个Bean实现了接口 InitializingBean ，那么其方法 afterPropertiesSet 会在 BeanPostProcessor 两个方法之间执行；
 	- 如果一个Bean有自定义的init方法，那么其自定义方法会在BeanPostProcessor两个方法之间执行；
 	- afterPropertiesSet 优先于 init 方法的执行；
 
@@ -5792,6 +5825,8 @@ public class MySpringUtils implements ApplicationContextAware {
 ![](image/ApplicationContextAware-执行过程.png)
 
 ## 42、BeanNameAware与BeanFactoryAware的先后顺序？
+
+
 
 ## 43、InitializingBean 和 BeanPostProcessor 的after方法先后顺序？
 
