@@ -1,8 +1,87 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+目录
+
+- [1、Dubbo架构描述](#1dubbo%E6%9E%B6%E6%9E%84%E6%8F%8F%E8%BF%B0)
+- [2、Dubbo扩展点加载机制](#2dubbo%E6%89%A9%E5%B1%95%E7%82%B9%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6)
+  - [2.1、加载机制概述](#21%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6%E6%A6%82%E8%BF%B0)
+    - [2.1.1、Dubbo中SPI概述](#211dubbo%E4%B8%ADspi%E6%A6%82%E8%BF%B0)
+    - [2.1.2、Dubbo中SPI与JDK中的SPI区别](#212dubbo%E4%B8%ADspi%E4%B8%8Ejdk%E4%B8%AD%E7%9A%84spi%E5%8C%BA%E5%88%AB)
+    - [2.1.5、扩展点分类与缓存](#215%E6%89%A9%E5%B1%95%E7%82%B9%E5%88%86%E7%B1%BB%E4%B8%8E%E7%BC%93%E5%AD%98)
+    - [2.1.4、扩展点特性](#214%E6%89%A9%E5%B1%95%E7%82%B9%E7%89%B9%E6%80%A7)
+  - [2.2、扩展点注解](#22%E6%89%A9%E5%B1%95%E7%82%B9%E6%B3%A8%E8%A7%A3)
+    - [2.2.1、扩展点注解：@SPI](#221%E6%89%A9%E5%B1%95%E7%82%B9%E6%B3%A8%E8%A7%A3spi)
+    - [2.2.2、扩展点自适应注解：@Adaptive](#222%E6%89%A9%E5%B1%95%E7%82%B9%E8%87%AA%E9%80%82%E5%BA%94%E6%B3%A8%E8%A7%A3adaptive)
+    - [2.2.3、扩展点自动激活注解：@Activate](#223%E6%89%A9%E5%B1%95%E7%82%B9%E8%87%AA%E5%8A%A8%E6%BF%80%E6%B4%BB%E6%B3%A8%E8%A7%A3activate)
+  - [2.3、ExtensionLoader 工作原理](#23extensionloader-%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
+    - [2.3.1、ExtensionLoader初始化](#231extensionloader%E5%88%9D%E5%A7%8B%E5%8C%96)
+    - [2.3.2、getExtension实现原理](#232getextension%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [2.3.3、getAdaptiveExtension实现原理](#233getadaptiveextension%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [2.3.4、getActivateExtension实现原理](#234getactivateextension%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+    - [2.3.5、ExtensionFactory实现原理](#235extensionfactory%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
+  - [2.2、Dubbo中已经实现的扩展](#22dubbo%E4%B8%AD%E5%B7%B2%E7%BB%8F%E5%AE%9E%E7%8E%B0%E7%9A%84%E6%89%A9%E5%B1%95)
+  - [2.3、自定义扩展的实现，以Filter为例](#23%E8%87%AA%E5%AE%9A%E4%B9%89%E6%89%A9%E5%B1%95%E7%9A%84%E5%AE%9E%E7%8E%B0%E4%BB%A5filter%E4%B8%BA%E4%BE%8B)
+  - [2.5、SPI与IOC](#25spi%E4%B8%8Eioc)
+  - [2.6、Dubbo扩展点](#26dubbo%E6%89%A9%E5%B1%95%E7%82%B9)
+- [3、配置解析](#3%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90)
+  - [3.1、基于schema设计解析](#31%E5%9F%BA%E4%BA%8Eschema%E8%AE%BE%E8%AE%A1%E8%A7%A3%E6%9E%90)
+  - [3.2、基于xml配置](#32%E5%9F%BA%E4%BA%8Exml%E9%85%8D%E7%BD%AE)
+  - [3.2、基于注解配置解析](#32%E5%9F%BA%E4%BA%8E%E6%B3%A8%E8%A7%A3%E9%85%8D%E7%BD%AE%E8%A7%A3%E6%9E%90)
+- [4、服务暴露原理](#4%E6%9C%8D%E5%8A%A1%E6%9A%B4%E9%9C%B2%E5%8E%9F%E7%90%86)
+  - [4.1、配置初始化](#41%E9%85%8D%E7%BD%AE%E5%88%9D%E5%A7%8B%E5%8C%96)
+  - [4.2、远程服务暴露](#42%E8%BF%9C%E7%A8%8B%E6%9C%8D%E5%8A%A1%E6%9A%B4%E9%9C%B2)
+    - [4.2.1、服务入口](#421%E6%9C%8D%E5%8A%A1%E5%85%A5%E5%8F%A3)
+    - [4.2.2、启动：DubboBootstrap](#422%E5%90%AF%E5%8A%A8dubbobootstrap)
+    - [4.2.3、ServiceConfig.export](#423serviceconfigexport)
+    - [4.2.4、多协议多注册中心暴露：ServiceConfig.doExportUrls](#424%E5%A4%9A%E5%8D%8F%E8%AE%AE%E5%A4%9A%E6%B3%A8%E5%86%8C%E4%B8%AD%E5%BF%83%E6%9A%B4%E9%9C%B2serviceconfigdoexporturls)
+    - [4.2.5、ServiceConfig.doExportUrlsFor1Protocol：](#425serviceconfigdoexporturlsfor1protocol)
+    - [4.2.6、导出服务：服务导出分为导出到本地 (JVM)，和导出到远程](#426%E5%AF%BC%E5%87%BA%E6%9C%8D%E5%8A%A1%E6%9C%8D%E5%8A%A1%E5%AF%BC%E5%87%BA%E5%88%86%E4%B8%BA%E5%AF%BC%E5%87%BA%E5%88%B0%E6%9C%AC%E5%9C%B0-jvm%E5%92%8C%E5%AF%BC%E5%87%BA%E5%88%B0%E8%BF%9C%E7%A8%8B)
+- [5、服务消费原理](#5%E6%9C%8D%E5%8A%A1%E6%B6%88%E8%B4%B9%E5%8E%9F%E7%90%86)
+  - [5.1、ReferenceConfig.init 方法](#51referenceconfiginit-%E6%96%B9%E6%B3%95)
+  - [5.2、服务引用：createProxy](#52%E6%9C%8D%E5%8A%A1%E5%BC%95%E7%94%A8createproxy)
+  - [5.3、创建 Invoker](#53%E5%88%9B%E5%BB%BA-invoker)
+  - [5.4、创建代理](#54%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86)
+- [6、优雅停机](#6%E4%BC%98%E9%9B%85%E5%81%9C%E6%9C%BA)
+- [7、Dubbo编解码器](#7dubbo%E7%BC%96%E8%A7%A3%E7%A0%81%E5%99%A8)
+- [8、ChannelHandler](#8channelhandler)
+- [9、Dubbo调用过程](#9dubbo%E8%B0%83%E7%94%A8%E8%BF%87%E7%A8%8B)
+  - [9.1、调用方式](#91%E8%B0%83%E7%94%A8%E6%96%B9%E5%BC%8F)
+- [10、集群容错](#10%E9%9B%86%E7%BE%A4%E5%AE%B9%E9%94%99)
+  - [10.1、Cluster层](#101cluster%E5%B1%82)
+  - [10.2、容错机制实现](#102%E5%AE%B9%E9%94%99%E6%9C%BA%E5%88%B6%E5%AE%9E%E7%8E%B0)
+    - [10.2.1、容错机制描述](#1021%E5%AE%B9%E9%94%99%E6%9C%BA%E5%88%B6%E6%8F%8F%E8%BF%B0)
+    - [10.2.2、Cluster接口关系](#1022cluster%E6%8E%A5%E5%8F%A3%E5%85%B3%E7%B3%BB)
+    - [10.2.3、Failover策略](#1023failover%E7%AD%96%E7%95%A5)
+    - [10.2.4、Failfast策略](#1024failfast%E7%AD%96%E7%95%A5)
+    - [10.2.5、Failsafe策略](#1025failsafe%E7%AD%96%E7%95%A5)
+    - [10.2.6、Failback策略](#1026failback%E7%AD%96%E7%95%A5)
+  - [10.3、Directory实现](#103directory%E5%AE%9E%E7%8E%B0)
+  - [10.4、路由的实现](#104%E8%B7%AF%E7%94%B1%E7%9A%84%E5%AE%9E%E7%8E%B0)
+  - [10.5、负载均衡的实现](#105%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%9A%84%E5%AE%9E%E7%8E%B0)
+    - [10.5.1、概述](#1051%E6%A6%82%E8%BF%B0)
+    - [10.5.2、负载均衡的策略](#1052%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E7%9A%84%E7%AD%96%E7%95%A5)
+    - [10.5.3、Random负载均衡](#1053random%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
+    - [10.5.4、RoundRobin负载均衡](#1054roundrobin%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
+    - [10.5.5、LeastActive负载均衡](#1055leastactive%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
+    - [10.5.5、一致性Hash负载均衡](#1055%E4%B8%80%E8%87%B4%E6%80%A7hash%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1)
+- [11、Dubbo扩展点](#11dubbo%E6%89%A9%E5%B1%95%E7%82%B9)
+- [12、高级特性](#12%E9%AB%98%E7%BA%A7%E7%89%B9%E6%80%A7)
+- [13、过滤器](#13%E8%BF%87%E6%BB%A4%E5%99%A8)
+  - [13.1、过滤器概述](#131%E8%BF%87%E6%BB%A4%E5%99%A8%E6%A6%82%E8%BF%B0)
+  - [13.2、过滤器的整体结构](#132%E8%BF%87%E6%BB%A4%E5%99%A8%E7%9A%84%E6%95%B4%E4%BD%93%E7%BB%93%E6%9E%84)
+  - [13.3、过滤器链初始化](#133%E8%BF%87%E6%BB%A4%E5%99%A8%E9%93%BE%E5%88%9D%E5%A7%8B%E5%8C%96)
+- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 dubbo的源码版本是2.7.5
+
+
 # 1、Dubbo架构描述
 
 ![](image/dubbo-framework.jpg)
 
+Dubbo从逻辑上来看，大致可以分为三层结构：业务层（Service）、RPC、Remote三层：
 - config 配置层：对外配置接口，以 `ServiceConfig, ReferenceConfig` 为中心，可以直接初始化配置类，也可以通过 spring 解析配置生成配置类
 - proxy 服务代理层：服务接口透明代理，生成服务的客户端 Stub 和服务器端 `Skeleton`, 以 `ServiceProxy` 为中心，扩展接口为 `ProxyFactory`
 - registry 注册中心层：封装服务地址的注册与发现，以服务 URL 为中心，扩展接口为 `RegistryFactory, Registry, RegistryService`
@@ -858,9 +937,9 @@ Dubbo配置也会受到provider的影响
 
 ## 4.2、远程服务暴露
 
-整体来看，Dubbo做服务暴露分为两部分，第一步将持有的服务实例通过代理转换成 Invoker，第二步把Invoker通过具体的协议转换成Exporter。Invoker 是实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
+整体来看，Dubbo做服务暴露分为两部分，第一步将持有的服务实例通过代理转换成 Invoker，第二步把 Invoker 通过具体的协议转换成 Exporter。Invoker 是实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
 
-Dubbo服务暴露的入口点在ServiceConfig.doExport，无论是xml还是注解，都会转化成ServiceBean，其继承ServiceConfig，在服务暴露前会按照配置覆盖策略完成配置读取，这两者关系如下：
+Dubbo服务暴露的入口点在 ServiceConfig.doExport，无论是xml还是注解，都会转化成ServiceBean，其继承ServiceConfig，在服务暴露前会按照配置覆盖策略完成配置读取，这两者关系如下：
 
 ![](image/Dubbo-ServiceBean-ServiceConfig.png)
 
@@ -907,7 +986,9 @@ public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicati
     }
 }
 ```
+
 ### 4.2.2、启动：DubboBootstrap
+
 ```java
 // DubboBootstrap 构造函数
 private DubboBootstrap() {
@@ -1602,7 +1683,6 @@ Dubbo协议字段解析：
 24~31 | 状态 | 20-OK、30-CLIENT_TIMEOUT、31-SERVER_TIMEOUT、40-BAD_REQUEST、50-BAD_RESPONSE ...
 32~95 | 请求编号 | 这8个字节存储RPC请求的唯一ID，用来将请求和响应关联
 96~127 | 消息体长度 | 占用4个字节存储消息体长度，在一次RPC请求过程中，消息体中一次会存储7部分内容，严格按照顺序写入和读取：Dubbo版本号、服务接口名、服务接口版本、方法名、参数类型、方法参数值和请求额外参数（attachment）
-
 
 在网络通信中（基于TCP）需要解决网络粘包/拆包的问题，一些常用的方法比如：回车、换行和特殊分隔符，而通过前面Dubbo协议设计可以看出Dubbo是使用特殊符号 0xdabb 魔法数来分割处理粘包问题的；
 
