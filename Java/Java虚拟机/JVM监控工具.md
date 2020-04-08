@@ -206,7 +206,7 @@ Compiled  Size  Type Method
 
     先输入top -p [pid]，比如21125进程，然后再按shift+h。这里意思为只查看21125的进程，并且显示线程
 
-- （3）.jstack查找这个线程的信息 
+- （3）jstack查找这个线程的信息 
 
     jstack [进程]|grep -A 10
 
@@ -221,7 +221,6 @@ Compiled  Size  Type Method
 *注：*上述获取相应过程可以使用[vjtools](https://github.com/vipshop/vjtools)中的vjtop来实现 来实现
 
 # 三、jmap
-
 
 ## 1、实例个数以及占用内存大小
 ```
@@ -257,6 +256,7 @@ num     #instances         #bytes  class name
 - class name：类名称
 
 ## 2、堆信息
+
 ```
 C:\Users\Administrator>jmap -heap 4284
 Attaching to process ID 4284, please wait...
@@ -313,6 +313,7 @@ concurrent mark-sweep generation:
 ```
 
 ## 3、即将垃圾回收对象个数
+
 ```
 C:\Users\Administrator>jmap -finalizerinfo 4284
 Attaching to process ID 4284, please wait...
@@ -323,6 +324,7 @@ Number of objects pending for finalization: 0
 ```
 
 ## 4、堆内存dump
+
 ```
 C:\Users\Administrator>jmap -dump:format=b,file=D:/chu 4284
 Dumping heap to D:\chu ...
@@ -330,6 +332,7 @@ Heap dump file created
 ```
 
 ## 5、可以通过jhat查看上述dump文件
+
 ```
 C:\Users\Administrator>jhat -J-Xmx500m D:/chu
 Reading from D:/haha...
