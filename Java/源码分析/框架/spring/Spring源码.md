@@ -719,3 +719,4 @@ private static final class ListenerCacheKey implements Comparable<ListenerCacheK
 * [Spring加载应用程序Bean类分析](https://blog.csdn.net/u013095337/article/details/53609398)
 * [Spring中Bean的this调用导致AOP失效的原因](https://my.oschina.net/guangshan/blog/1807721)
 * [死磕Spring源码系列](http://cmsblogs.com/?p=4047)
+* [Spring的Bean生命周期](https://mp.weixin.qq.com/s/UBVgYuFA5PUP52MxTTXk2w)
