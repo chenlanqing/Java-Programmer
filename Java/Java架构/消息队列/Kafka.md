@@ -35,14 +35,14 @@ Kafka的整体架构非常简单，是显式分布式架构，producer、broker�
 
 
 使用 Kafka
-功能	启动命令	备注
-启动 ZK	bin/zookeeper-server-start.sh -daemon config/zookeeper.properties	Kafka 安装包自带 ZK，可以单节点启动
-启动 Kafka 服务器	bin/kafka-server-start.sh config/server.properties	
-创建 Topic（test）	bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test	
-Topic 列表	bin/kafka-topics.sh --list --zookeeper localhost:2181	
-启动 Producer	bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test	
-启动 Consumer	bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning	
-Topic 相关信息（test）	bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic test
+功能	            启动命令	备注
+启动  ZK	        bin/zookeeper-server-start.sh -daemon config/zookeeper.properties	Kafka 安装包自带 ZK，可以单节点启动
+启动Kafka服务器      bin/kafka-server-start.sh config/server.properties	
+创建 Topic（test）	 bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test	
+Topic 列表	        bin/kafka-topics.sh --list --zookeeper localhost:2181	
+启动 Producer	    bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test	
+启动 Consumer	    bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning	
+Topic相关信息（test) bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic test
 
 https://mp.weixin.qq.com/s/d9KIz0xvp5I9rqnDAlZvXw
 
