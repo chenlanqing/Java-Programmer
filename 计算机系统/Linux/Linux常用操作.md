@@ -145,6 +145,7 @@ top [参数]
 ```df```
 
 ```dh -sh *```
+
 ## 5、[监控工具SAR](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
 
 
@@ -175,13 +176,12 @@ yum install -y lrzsz
 ## 4、远程拷贝文件与文件夹
 
 - 拷贝文件：`scp shutdown-tomcat.sh root@192.168.56.104:/root/`
-- 拷贝文件夹：`scp -r /root/software/ root@192.168.56.104:/root/`
+- 拷贝文件夹：`scp -rq /root/software/ root@192.168.56.104:/root/`
 - 远程下载文件：`cp -r root@192.168.56.104:/root/ /root/software/`
 
 ## 5、永久关闭防火墙
 
-centOS7
-
+针对CentOS7：
 - 查看状态：`systemctl status firewalld.service`；
 - 停止防火墙：`systemctl stop firewalld.service`
 - 禁止防火墙：`systemctl disable firewalld.service`
@@ -205,3 +205,29 @@ centOS7
 ## 9、查看脚本过程
 
 `sh -x str.sh`
+
+## 10、修改hostname
+
+`hostnamectl set-hostname <yourhostname>`
+
+## 11、ssh免密登录
+
+机器环境，有三台机器，配置了对应的hosts和hostname
+- 192.168.89.141 hadoop001
+- 192.168.89.142 hadoop002
+- 192.168.89.143 hadoop003
+
+### 11.1、本机免密登录
+
+在hadoop001机器上免密登录 hadoop001，那么操作如下：
+- 生成公钥：`ssh-keygen -t rsa`，执行这个命令以后，需要连续按 4 次回车键回到 linux 命令行才表示这个操作执行 结束，在按回车的时候不需要输入任何内容
+- 向本机复制公钥：`cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys`
+- 免密登录：`ssh hadoop100`
+
+### 11.2、免密登录远程机器
+
+比如上面hadoop001需要免密登录 hadoop002、hadoop003 两台机器，由于hadoop001上已经生成了公钥，分别执行如下命令：
+```
+ssh-copy-id -i hadoop002
+ssh-copy-id -i hadoop003
+```

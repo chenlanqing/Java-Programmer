@@ -85,3 +85,26 @@ Enviroment  -> Source -> Tranform -> Sink
 ## 4.5、UDF函数
 
 ## 4.6、Sink
+
+
+
+https://github.com/apache/flink
+
+https://github.com/CheckChe0803/flink-recommandSystem-demo
+
+https://github.com/flink-china/flink-training-course
+
+https://github.com/zhisheng17/flink-learning
+
+https://cloud.tencent.com/developer/article/1448608
+
+https://yq.aliyun.com/articles/744741?spm=a2c4e.11153940.0.0.69bc12ecS2IswO
+
+
+https://yq.aliyun.com/articles/81743?spm=a2c4e.11153940.0.0.69bc12ecS2IswO
+
+
+https://yq.aliyun.com/articles/738451?utm_content=g_1000094637
+
+
+http://www.54tianzhisheng.cn/2019/12/31/Flink-resources/
