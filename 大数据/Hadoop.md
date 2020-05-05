@@ -20,6 +20,11 @@
 
 ## 1.2、基础原理与架构
 
+
+## 1.3、hadoop序列化机制
+
+
+
 # 2、Hadoop安装
 
 ## 2.1、伪集群安装
@@ -314,20 +319,160 @@ NameNode维护了两份关系：
 
 ## 4.1、概述
 
-MapReduce是一个编程模型，主要负责海量数据计算，主要由两个阶段Map和Reduce阶段
+MapReduce是一个分布式计算编程模型，主要负责海量数据计算，主要由两个阶段Map和Reduce阶段
 
 其使用的是分而治之的思想，基本概念：
 - Job & JobTask
 - JobTracker：作业调度、分配任务、监控任务执行进度；监控TaskTracker的状态
 - TaskTracker：执行任务，汇报任务状态
 
-## 4.2、架构
+## 4.2、原理与执行过程
+
+### 4.2.1、原理
+
+### 4.2.2、MapReduce之 map 阶段执行过程
+
+- 框架会把输入文件划分为很多 InputSplit，默认情况下每个HDFS把Block对应一个 InputSplit 通过 RecordReader类，把每个InputSplit解析成一个个`<k1,v1>`，默认情况下，每一行会被解析成一`<k1,v1>`；
+- 框架调用Mapper类的map函数，map函数的形参是 `<k1,v1>`，输出是 `<k2,v2>`，一个 InputSplit 对应一个map task；
+- 框架对map函数输出的`<k2,v2>` 进行分区，不同分区中 `<k2,v2>` 由不同的 reduce task处理，默认只有一个分区；
+- 框架对每个分区中的数据，按照 k2 进行排序、分组；  分组指的是相同的 k2 的 v2 分成一个组；
+- 在map节点上，框架可以执行 reduce 归约，为可选项；
+- 框架会把map task 输出的 `<k2,v2>` 写入到 Linux 的磁盘文件中；
+
+### 4.2.3、MapReduce之 reduce 阶段执行过程
+
+- 框架对多个map任务的输出，按照不同的分区，通过网络 copy 到不同的 reduce 节点，这个过程称作 shuffle
+- 框架对reduce端接收到的相同分区的`<k2,v2>`数据进行合并、排序、分组；
+- 框架调用 Reducer类的reduce方法，输入是`<k2,{v2...}>`，输出是`<k3,v3>`；一个 `<k2,{v2...}>` 调用一次 reduce 函数；
+- 框架把reduce的输出结果保存到HDFS中；
+
+### 4.2.4、MapReduce之 shuffle 过程
+
+## 4.3、架构
+
+## 4.4、WordCount示例
+
+### 4.4.1、编写代码
+
+需要的依赖：
+```xml
+<dependencies>
+    <!-- hadoop-client依赖 -->
+    <dependency>
+        <groupId>org.apache.hadoop</groupId>
+        <artifactId>hadoop-client</artifactId>
+        <version>3.2.0</version>
+        <scope>provided</scope>
+    </dependency>
+</dependencies>
+```
+
+```java
+public class WordCount {
+    public static class MyMapper extends Mapper<LongWritable, Text, Text, LongWritable> {
+        @Override
+        protected void map(LongWritable k1, Text v1, Context context) throws IOException, InterruptedException {
+            // k1代表的是每一行的行首偏移量，v1代表的是每一行内容
+            String[] words = v1.toString().split(" ");
+            for (String word : words) {
+                // 把迭代出来的单次封装<k2,v2>的形式
+                Text k2 = new Text(word);
+                LongWritable v2 = new LongWritable(1L);
+                System.out.println("k2:" + k2.toString() + " --->" + v2.get());
+                // 把 <k2,v2> 写出去
+                context.write(k2, v2);
+            }
+        }
+    }
+    public static class MyReduce extends Reducer<Text, LongWritable, Text, LongWritable> {
+        /**
+         * @param v2s     已经对k1进行分组的数据
+         */
+        @Override
+        protected void reduce(Text k2, Iterable<LongWritable> v2s, Context context)
+                throws IOException, InterruptedException {
+            long sum = 0L;
+            for (LongWritable v2 : v2s) {
+                sum += v2.get();
+            }
+            Text k3 = k2;
+            LongWritable v3 = new LongWritable(sum);
+            System.out.println("k3:" + k3.toString() + " --->" + v3.get());
+            context.write(k3, v3);
+        }
+    }
+    public static void main(String[] args) throws Exception {
+        if (args.length != 2) {
+            System.exit(100);
+        }
+        Configuration conf = new Configuration();
+        // 创建job = map + reduce
+        Job job = Job.getInstance(conf);
+        // 设置jar的执行class，否则集群找打不到对应的class
+        job.setJarByClass(WordCount.class);
+        // 设置输入路径
+        FileInputFormat.setInputPaths(job, new Path(args[0]));
+        // 设置输出文件的路径，都是HDFS上的路径
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        // 设置map方法的class
+        job.setMapperClass(MyMapper.class);
+        // 设置map输出参数key的类型
+        job.setMapOutputKeyClass(Text.class);
+        // 设置map输出数据的value的类型
+        job.setMapOutputValueClass(LongWritable.class);
+
+        // 指定 reduce的代码
+        job.setReducerClass(MyReduce.class);
+        // 指定 k3 类型
+        job.setOutputKeyClass(Text.class);
+        // 指定 v3 类型
+        job.setMapOutputValueClass(LongWritable.class);
+
+        job.waitForCompletion(true);
+    }
+}
+```
+
+### 4.4.2、编译
+
+将代码编译成jar包
+
+### 4.4.3、提交任务
+
+将编译好的jar上传到hadoop集群的主节点上，执行如下命令：
+
+`hadoop jar hadoop.jar WordCount hdfs://hadoop001:9000/hello.txt hdfs://hadoop001:9000/out`
+
+## 4.5、MapReduce任务日志查看
+
+- 开启yarn的日志聚合功能，把散落在 nodemanager 节点上的日志统一收集管理，方便查看日志；
+- 需要修改 `yarn-site.xml` 中的 `yarn.log-aggregation-enable` 和 `yarn.log.server.url`，三台机器都需要修改
+    ```xml
+    <property> 
+        <name>yarn.log-aggregation-enable</name>  
+        <value>true</value>
+    </property>
+    <property>
+        <name>yarn.log.server.url</name>
+        <value>http://hadoop001:19888/jobhistory/logs/</value>
+    </property>
+    ```
+- 启动 historyserver： sbin/mr-jobhistory-daemon.sh start historyserver
+
+## 4.6、停止提交的任务
+
+可以通过yarn application -list查看正在运行的任务
+yarn application -kill application_id
 
 # 5、Yarn
 
 ## 5.1、Yarn概述
 
-主要负责集群资源的管理和调度
+主要负责集群资源的管理和调度，Yarn目前支持三种调度器：
+- FIFO Scheduler：先进先出（first in， first out）调度策略；
+- Capacoty Scheduler：可以看做是 FIFO Scheduler 多队列
+- Fair Scheduler：多队列，多用户共享资源
 
 
 # 参考资料

@@ -137,4 +137,5 @@ hbase 依赖zookeeper，一般不使用hbase内置的zookeeper
 # 参考资料
 
 - [HBase官网](http://hbase.apache.org/)
+- [弄懂HBase](https://blog.csdn.net/oTengYue/article/details/86751260)
 
