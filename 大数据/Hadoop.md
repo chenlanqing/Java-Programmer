@@ -27,244 +27,7 @@
 
 # 2、Hadoop安装
 
-## 2.1、伪集群安装
-
-**环境**
-- 系统：CentOS7.4
-- Hadoop版本：3.2.0
-- JDK版本：1.8.0_231
-- 机器IP，静态地址：192.168.89.141
-- hostname：hadoop001
-- 免密SSH登录
-
-**配置步骤**
-- 解压缩 hadoop.3.2.tar.gz 到目录：`/data/soft/`
-- 创建目录：`mkdir -p /data/hadoop_repo/logs/hadoop`
-- 修改 `etc/hadoop-env.sh`配置，增加环境变量信息：
-    ```
-    export JAVA_HOME=/usr/java/jdk1.8.0_231-amd64
-    export HADOOP_LOG_DIR=/data/hadoop_repo/logs/hadoop
-    ```
-- 修改 `etc/core-site.xml`，注意 `fs.defaultFS` 属性中的主机名需要和你配置的主机名保持一致：
-    ```xml
-    <configuration>
-        <property>
-            <name>fs.defaultFS</name>
-            <value>hdfs://hadoop001:9000</value>
-        </property>
-        <property>
-            <name>hadoop.tmp.dir</name>
-            <value>/data/hadoop_repo</value>
-        </property>
-    </configuration>
-    ```
-- 修改 `etc/hdfs-site.xml`，把 hdfs 中文件副本的数量设置为 1，因为现在伪分布集群只有一 个节点
-    ```xml
-    <configuration>
-        <property>
-            <name>dfs.replication</name>
-            <value>1</value>
-        </property>
-    </configuration>
-    ```    
-
-- 修改 `etc/mapred-site.xml`，设置 mapreduce 使用的资源调度框架
-    ```xml
-    <configuration>
-        <property>
-            <name>mapreduce.framework.name</name>
-            <value>yarn</value>
-        </property>
-    </configuration>
-    ```
-
-- 修改 `etc/yarn-site.xml`，设置 yarn 上支持运行的服务和环境变量白名单
-    ```xml
-    <configuration>
-        <property>
-            <name>yarn.nodemanager.aux-services</name>
-            <value>mapreduce_shuffle</value>
-        </property>
-        <property>
-            <name>yarn.nodemanager.env-whitelist</name>
-            <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CL ASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
-        </property>
-    </configuration>
-    ```
-- 格式化 namenode： `bin/hdfs namenode -format`
-
-    如果在后面的日志信息中能看到这一行，则说明 namenode 格式化成功。 `common.Storage: Storage directory /data/hadoop_repo/dfs/name has been successfully formatted.`
-- 启动hadoop：`sbin/start-all.sh`，直接启动会报错，报错信息：
-    ```
-    [root@hadoop001 hadoop-3.2.0]# sbin/start-all.sh
-    ERROR: Attempting to operate on hdfs namenode as root
-    ERROR: but there is no HDFS_NAMENODE_USER defined. Aborting operation.
-    Starting datanodes
-    ERROR: Attempting to operate on hdfs datanode as root
-    ERROR: but there is no HDFS_DATANODE_USER defined. Aborting operation.
-    Starting secondary namenodes [hadoop100]
-    ERROR: Attempting to operate on hdfs secondarynamenode as root
-    ERROR: but there is no HDFS_SECONDARYNAMENODE_USER defined. Aborting operation. 2019-07-25 10:04:25,993 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
-    Starting resourcemanager
-    ERROR: Attempting to operate on yarn resourcemanager as root
-    ERROR: but there is no YARN_RESOURCEMANAGER_USER defined. Aborting operation.
-    Starting nodemanagers
-    ERROR: Attempting to operate on yarn nodemanager as root
-    ERROR: but there is no YARN_NODEMANAGER_USER defined. Aborting operation
-    ```
-- 修改脚本：`sbin/start-dfs.sh, sbin/stop-dfs.sh`，增加如下内容：
-    ```
-    HDFS_DATANODE_USER=root
-    HDFS_DATANODE_SECURE_USER=hdfs
-    HDFS_NAMENODE_USER=root
-    HDFS_SECONDARYNAMENODE_USER=root
-    ```
-
-- 修改脚本：`sbin/start-yarn.sh, sbin/stop-yarn.sh`，增加如下内容：
-    ```
-    YARN_RESOURCEMANAGER_USER=root
-    HADOOP_SECURE_DN_USER=yarn
-    YARN_NODEMANAGER_USER=root
-    ```
-- 启动集群：`sbin/start-all.sh`
-- 验证集群是否正常：`jps`，或者通过页面访问
-    ```
-    # 执行 jps 命令可以查看集群的进程信息，抛出 Jps 这个进程之外还需要有 5 个进程才说明 集群是正常启动的
-    [root@hadoop001 sbin]# jps
-    2882 ResourceManager
-    2420 DataNode
-    3365 Jps
-    2619 SecondaryNameNode
-    2315 NameNode
-    2988 NodeManager
-    ```
-    还可以通过 webui 界面来验证集群服务是否正常:
-    - hdfs webui 界面: http://192.168.89.141:9870
-    - yarn webui 界面: http://192.168.89.141:8088
-
-## 2.2、集群部署安装
-
-**环境**
-- 系统：CentOS7.4
-- Hadoop版本：3.2.0
-- JDK版本：1.8.0_231
-- 三台机器：
-    - 192.168.89.141 hadoop001（主）
-    - 192.168.89.142 hadoop002
-    - 192.168.89.143 hadoop003
-- 免密SSH登录，需要hadoop001能够免密登录hadoop002、hadoop003
-
-**配置步骤**
-- 解压缩 hadoop.3.2.tar.gz 到目录：`/data/soft/`
-- 创建目录：`mkdir -p /data/hadoop_repo/logs/hadoop`
-- 修改 `etc/hadoop-env.sh`配置，增加环境变量信息：
-    ```
-    export JAVA_HOME=/usr/java/jdk1.8.0_231-amd64
-    export HADOOP_LOG_DIR=/data/hadoop_repo/logs/hadoop
-    ```
-- 修改 `etc/core-site.xml`，注意 `fs.defaultFS` 属性中的主机名需要和你配置的主机名保持一致：
-    ```xml
-    <configuration>
-        <property>
-            <name>fs.defaultFS</name>
-            <value>hdfs://hadoop001:9000</value>
-        </property>
-        <property>
-            <name>hadoop.tmp.dir</name>
-            <value>/data/hadoop_repo</value>
-        </property>
-    </configuration>
-    ```
-- 修改 `etc/hdfs-site.xml`，把 hdfs 中文件副本的数量设置为 2，小于集群的节点数
-    ```xml
-    <configuration>
-        <property>
-            <name>dfs.replication</name>
-            <value>2</value>
-        </property>
-        <property>
-            <name>dfs.namenode.secondary.http-address</name>
-            <value>hadoop001:50090</value>
-        </property>
-    </configuration>
-    ```    
-- 修改 `etc/mapred-site.xml`，设置 mapreduce 使用的资源调度框架
-    ```xml
-    <configuration>
-        <property>
-            <name>mapreduce.framework.name</name>
-            <value>yarn</value>
-        </property>
-    </configuration>
-    ```
-- 修改 `etc/yarn-site.xml`，设置 yarn 上支持运行的服务和环境变量白名单，`yarn.resourcemanager.hostname` 配置主节点
-    ```xml
-    <configuration>
-        <property>
-            <name>yarn.nodemanager.aux-services</name>
-            <value>mapreduce_shuffle</value>
-        </property>
-        <property>
-            <name>yarn.nodemanager.env-whitelist</name>
-            <value>JAVA_HOME,HADOOP_COMMON_HOME,HADOOP_HDFS_HOME,HADOOP_CONF_DIR,CL ASSPATH_PREPEND_DISTCACHE,HADOOP_YARN_HOME,HADOOP_MAPRED_HOME</value>
-        </property>
-        <property>
-            <name>yarn.resourcemanager.hostname</name>
-            <value>hadoop001</value>
-        </property>
-    </configuration>
-    ```
-- 修改 `etc/workers` 文件，增加所有从节点的主机名，一个一行
-    ```
-    hadoop002
-    hadoop003
-    ```
-- 修改脚本：`sbin/start-dfs.sh, sbin/stop-dfs.sh`，增加如下内容：
-    ```
-    HDFS_DATANODE_USER=root
-    HDFS_DATANODE_SECURE_USER=hdfs
-    HDFS_NAMENODE_USER=root
-    HDFS_SECONDARYNAMENODE_USER=root
-    ```
-- 修改脚本：`sbin/start-yarn.sh, sbin/stop-yarn.sh`，增加如下内容：
-    ```
-    YARN_RESOURCEMANAGER_USER=root
-    HADOOP_SECURE_DN_USER=yarn
-    YARN_NODEMANAGER_USER=root
-    ```
-- 回到hadoop安装包的上级目录，把 `hadoop001` 节点上修改好配置的安装包拷贝到其他两个从节点：
-    ```
-    [root@hadoop100 soft]# scp -rq hadoop-3.2.0 hadoop002:/data/soft/ 
-    [root@hadoop100 soft]# scp -rq hadoop-3.2.0 hadoop003:/data/soft/
-    ```
-- 在`hadoop001`节点上格式化 namenode：`bin/hdfs namenode -format`
-- 启动集群，在 hadoop001 节点上执行下面命令：`sbin/start-all.sh`，启动和停止都只需要在 hadoop001 节点上操作
-    ```
-    [root@hadoop001 hadoop-3.2.0]# sbin/start-all.sh
-    Starting namenodes on [hadoop001]
-    Starting datanodes
-    Starting secondary namenodes [hadoop001]
-    Starting resourcemanager
-    Starting nodemanagers
-    ```
-- 验证集群：分别在三台机器上执行jps命令：
-    ```
-    [root@hadoop001 hadoop-3.2.0]# jps
-    10627 NameNode
-    10900 SecondaryNameNode
-    11480 Jps
-    11147 ResourceManager
-
-    [root@hadoop002 hadoop-3.2.0]# jps
-    2066 DataNode
-    2184 NodeManager
-    2286 Jps
-
-    [root@hadoop003 hadoop-3.2.0]# jps
-    2113 Jps
-    1890 DataNode
-    2008 NodeManager
-    ```
+[Hadoop环境安装](../工具/环境配置/大数据环境.md#1Hadoop环境搭建)
 
 # 3、HDFS
 
@@ -315,16 +78,33 @@ NameNode维护了两份关系：
 - 提供真实文件数据的存储服务；
 - HDFS会按照固定的带下，顺序对文件进行划分并编号，划分好的每一个块成为一个Block，HDFS默认Block大小是128 M
 
+## 3.4、HDFS读、写数据过程
+
+### 3.4.1、HDFS读数据过程
+
+
+### 3.4.2、HDFS写数据过程
+
 # 4、Mapreduce
 
 ## 4.1、概述
 
-MapReduce是一个分布式计算编程模型，主要负责海量数据计算，主要由两个阶段Map和Reduce阶段
+MapReduce是一个分布式计算编程模型，主要负责海量数据离线计算，主要由两个阶段Map和Reduce阶段；核心思想：分而治之
 
-其使用的是分而治之的思想，基本概念：
-- Job & JobTask
-- JobTracker：作业调度、分配任务、监控任务执行进度；监控TaskTracker的状态
-- TaskTracker：执行任务，汇报任务状态
+
+**核心概念：**
+- Split：
+
+- InputFormat
+
+- OutputFormat
+
+- Combiner
+
+    使用场景：适用于求和、次数
+
+- Partitioner
+
 
 ## 4.2、原理与执行过程
 
@@ -349,6 +129,18 @@ MapReduce是一个分布式计算编程模型，主要负责海量数据计算�
 ### 4.2.4、MapReduce之 shuffle 过程
 
 ## 4.3、架构
+
+### 4.3.1、MapReduce1.x架构
+
+- Job & JobTask
+- JobTracker：作业调度、分配任务、监控任务执行进度；监控TaskTracker的状态
+- TaskTracker：执行任务，汇报任务状态
+- MapTask：自己开发的map任务交由给Task处理
+- ReduceTask：将Map Task 输出的数据进行读取；
+
+### 4.3.2、MapReduce2.x架构
+
+
 
 ## 4.4、WordCount示例
 
@@ -467,12 +259,22 @@ yarn application -kill application_id
 
 # 5、Yarn
 
-## 5.1、Yarn概述
+## 5.1、Yarn 产生的背景
+
+在Hadoop1.X时，MapReduce的
+
+## 5.2、Yarn概述
 
 主要负责集群资源的管理和调度，Yarn目前支持三种调度器：
 - FIFO Scheduler：先进先出（first in， first out）调度策略；
 - Capacoty Scheduler：可以看做是 FIFO Scheduler 多队列
 - Fair Scheduler：多队列，多用户共享资源
+
+## 5.3、Yarn架构
+
+## 5.4、Yarn执行流程
+
+## 5.5、Yarn环境搭建
 
 
 # 参考资料
@@ -480,3 +282,4 @@ yarn application -kill application_id
 - [Hadoop官方](http://hadoop.apache.org/)
 - [Hadoop发展](https://www.infoq.cn/article/hadoop-ten-years-interpretation-and-development-forecast)
 - [Hadoop CDH 版本下载](http://archive.cloudera.com/cdh5/cdh/5/)
+- [HDFS读写数据原理](https://www.cnblogs.com/jonty666/p/9905352.html)

@@ -206,20 +206,68 @@ WantedBy=multi-user.target
 ```
 因为配置pid，在启动的时候会再tomcat根目录生成`tomcat.pid`文件，停止之后删除。同时tomcat在启动时候，执行start不会启动两个tomcat，保证始终只有一个tomcat服务在运行。多个tomcat可以配置在多个目录下，互不影响	
     	
-# 五、windows下tomcat和mave配置
+# 五、windows下tomcat
 
-通用步骤: `【我的电脑】--> 【属性】-->【高级系统设置】 --> 【环境变量】`;
-
-## 1、Maven环境配置
-
-- 在系统变量中添加：`MAVEN_HOME`，变量值为maven的安装目录
-- 在变量：`PATH` 后面添加：`%MAVEN_HOME%\bin`
-
-## 2、Tomcat环境配置
+编辑路径: `【我的电脑】--> 【属性】-->【高级系统设置】 --> 【环境变量】`;
 
 - 新建变量名：`CATALINA_BASE`，变量值为tomcat的安装目录
 - 新建变量名：`CATALINA_HOME`，变量值为tomcat的安装目录
 - 打开PATH,添加变量值：`%CATALINA_HOME%\lib;%CATALINA_HOME%\bin`
+
+
+# 六、Maven 
+
+下载对应文件，一般下载binary文件，如下载：[apache-maven-3.3.9-bin.zip](下载地址:http://maven.apache.org/download.cgi)；
+
+## 1、windows
+
+- 解压该文件到对应的目录下，比如D盘，具体目录：`D:\develop\Java\apache-maven-3.3.9`；
+- 右击`【我的电脑】--->【属性】----->【高级】--->【环境变量】`；
+- 新建系统变量，变量名：`MAVEN_HOME`，变量值：`D:\develop\Java\apache-maven-3.3.9`；
+- 修改变量名`PATH`，追加值：`;%MAVEN_HOME%\bin`，注意前面的分号不能少；
+- 在dos下执行命令：`mvn --version`，输出如下结果，表示配置成功
+	```
+	Apache Maven 3.3.9 (bb52d8502b132ec0a5a3f4c09453c07478323dc5; 2015-11-11T00:41:47+08:00)
+	Maven home: D:\develop\Java\apache-maven-3.3.9
+	Java version: 1.7.0_67, vendor: Oracle Corporation
+	Java home: D:\develop\Java\jdk1.7.0_67\jre
+	Default locale: zh_CN, platform encoding: GBK
+	OS name: "windows 8.1", version: "6.3", arch: "amd64", family: "windows"
+	```
+- 修改本地仓库地址，在目录 `D:\develop\Java\apache-maven-3.3.9\conf` 找到 `settings.xml`，修改对应的配置：`<localRepository>D:/repo</localRepository>`；不修改的话默认是用户目录下的 `.m2/repository`
+- 国外的镜像仓库maven下载速度比较慢，可以使用国内的镜像，比如阿里云，在 settings.xml 下 的 mirros 节点下新增内容:
+	```xml
+	<mirrors>
+		<mirror>
+			<id>alimaven</id>
+			<name>aliyun maven</name>
+			<url>http://maven.aliyun.com/nexus/content/groups/public/</url>
+			<mirrorOf>central</mirrorOf>        
+		</mirror>
+	</mirrors>
+	```
+
+## 2、Linux（Mac等）
+
+- 解压文件到对应的目录，比如：`/usr/local/apache-maven-3.3.9`
+- 编辑文件：`/etc/profile`，需要root权限，增加如下：
+	```
+	export M2_HOME=/usr/local/apache-maven-3.3.9
+	export PATH=$PATH:$JAVA_HOME/bin:$M2_HOME/bin:
+	```
+- 使文件`/etc/profile`生效：`source /etc/profile`；
+- 同理按照windows环境下配置本地Maven仓库和远程镜像仓库；
+ 
+
+
+
+
+
+
+
+
+
+
 
 # 参考文档
 

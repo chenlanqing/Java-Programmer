@@ -34,34 +34,31 @@ Apache Flink 是一个框架和分布式处理引擎，用于在无边界和有�
 
 ## 2.2、standlone模式
 
-提交任务：
+- 提交任务：`./flink run -c com.blue.fish.StreamWordCount /Users/bluefish/Documents/workspace/bigdata/flink-demo/target/flink-demo-1.0-SNAPSHOT-jar-with-dependencies.jar --host localhost --port 7777`
 
-./flink run -c com.blue.fish.StreamWordCount /Users/bluefish/Documents/workspace/bigdata/flink-demo/target/flink-demo-1.0-SNAPSHOT-jar-with-dependencies.jar --host localhost --port 7777
+- 获取正在运行任务列表：`./flink list`
+    ```
+    Waiting for response...
+    ------------------ Running/Restarting Jobs -------------------
+    18.04.2020 20:33:23 : 5b656bb6de0911c0301c1b0479c91f07 : stream word count job (RUNNING)
+    --------------------------------------------------------------
+    ```
 
-获取正在运行任务列表：`./flink list`
-```
-Waiting for response...
------------------- Running/Restarting Jobs -------------------
-18.04.2020 20:33:23 : 5b656bb6de0911c0301c1b0479c91f07 : stream word count job (RUNNING)
---------------------------------------------------------------
-```
-
-获取所有任务列表：`./flink list --all`
-```
-Waiting for response...
-No running jobs.
-No scheduled jobs.
----------------------- Terminated Jobs -----------------------
-18.04.2020 20:24:01 : af34e90c87b4c6d7a8ed2a7e7491b731 : stream word count job (CANCELED)
-18.04.2020 20:27:27 : c2cce314180b0d2aa0cd20f8b942e614 : stream word count job (CANCELED)
-18.04.2020 20:33:23 : 5b656bb6de0911c0301c1b0479c91f07 : stream word count job (CANCELED)
---------------------------------------------------------------
-```
-
-取消任务：
-```
-./flink cancel 5b656bb6de0911c0301c1b0479c91f07
-```
+- 获取所有任务列表：`./flink list --all`
+    ```
+    Waiting for response...
+    No running jobs.
+    No scheduled jobs.
+    ---------------------- Terminated Jobs -----------------------
+    18.04.2020 20:24:01 : af34e90c87b4c6d7a8ed2a7e7491b731 : stream word count job (CANCELED)
+    18.04.2020 20:27:27 : c2cce314180b0d2aa0cd20f8b942e614 : stream word count job (CANCELED)
+    18.04.2020 20:33:23 : 5b656bb6de0911c0301c1b0479c91f07 : stream word count job (CANCELED)
+    --------------------------------------------------------------
+    ```
+- 取消任务：
+    ```
+    ./flink cancel 5b656bb6de0911c0301c1b0479c91f07
+    ```
 
 # 3、运行架构
 
@@ -87,27 +84,16 @@ Enviroment  -> Source -> Tranform -> Sink
 ## 4.6、Sink
 
 
+# 参考资料
 
-https://github.com/apache/flink
+- [官方代码](https://github.com/apache/flink)
+- [Flink实现推荐系统](https://github.com/CheckChe0803/flink-recommandSystem-demo)
+- [Flink中文视频课程](https://github.com/flink-china/flink-training-course)
+- [Flink系列](http://wuchong.me/categories/Flink/)
+- [Flink入门](https://github.com/zhisheng17/flink-learning)
+- [Flink-CEP复杂事件](https://cloud.tencent.com/developer/article/1448608)
+- [Flink知识图谱](https://yq.aliyun.com/articles/744741?spm=a2c4e.11153940.0.0.69bc12ecS2IswO)
+- [Apache Flink 精选PDF下载](https://yq.aliyun.com/articles/81743?spm=a2c4e.11153940.0.0.69bc12ecS2IswO)
+- [Apache Flink CEP 实战](https://yq.aliyun.com/articles/738451?utm_content=g_1000094637)
+- [Flink基础理论](https://blog.csdn.net/oTengYue/article/details/102689538)
 
-https://github.com/CheckChe0803/flink-recommandSystem-demo
-
-https://github.com/flink-china/flink-training-course
-
-https://github.com/zhisheng17/flink-learning
-
-https://cloud.tencent.com/developer/article/1448608
-
-https://yq.aliyun.com/articles/744741?spm=a2c4e.11153940.0.0.69bc12ecS2IswO
-
-
-https://yq.aliyun.com/articles/81743?spm=a2c4e.11153940.0.0.69bc12ecS2IswO
-
-
-https://yq.aliyun.com/articles/738451?utm_content=g_1000094637
-
-
-http://www.54tianzhisheng.cn/2019/12/31/Flink-resources/
-
-
-https://blog.csdn.net/oTengYue/article/details/102689538

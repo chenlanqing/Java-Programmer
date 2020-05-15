@@ -1948,3 +1948,4 @@ Set、List大小多少合适？
 - [Redis数据结构-SkipList](https://juejin.im/post/57fa935b0e3dd90057c50fbc)
 - [Redis Cluster](http://www.redis.cn/topics/cluster-tutorial.html)
 - [Redis内存数据结构](https://mp.weixin.qq.com/s/DpNzFRUMwtz0-YY0gdQGgA)
+- [面试之Redis持久化](https://mp.weixin.qq.com/s/vfooUVhLSrpDLYdm3GDhRg)
