@@ -276,6 +276,8 @@ yarn application -kill application_id
 
 ## 5.5、Yarn环境搭建
 
+# 6、Hive
+
 
 # 参考资料
 

@@ -5877,6 +5877,8 @@ protected Object initializeBean(final String beanName, final Object bean, @Nulla
 ## 52、ASM 与 CGlib
 ## 53、Spring的条件装配，自动装配
 
+## 54、统一异常管理
+
 # 参考资料
 
 * [Spring整合其他组件文档](https://docs.spring.io/spring-data/)

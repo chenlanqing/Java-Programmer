@@ -64,7 +64,7 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 ![image](image/ApplicationContext-Bean的生命周期.png)
 
-面向开发者的，几乎大部分应用场景都是直接使用`ApplicationContex`t 而非底层的`BeanFactory`
+面向开发者的，几乎大部分应用场景都是直接使用`ApplicationContext` 而非底层的`BeanFactory`
 
 - （1）Bean的实例化：
 	* 首先容器启动后，会对`scope`为`singleton`且非懒加载的bean进行实例化；

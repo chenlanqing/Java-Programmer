@@ -90,7 +90,7 @@ Enviroment  -> Source -> Tranform -> Sink
 - [Flink实现推荐系统](https://github.com/CheckChe0803/flink-recommandSystem-demo)
 - [Flink中文视频课程](https://github.com/flink-china/flink-training-course)
 - [Flink系列](http://wuchong.me/categories/Flink/)
-- [Flink入门](https://github.com/zhisheng17/flink-learning)
+- [Flink入门示例](https://github.com/zhisheng17/flink-learning)
 - [Flink-CEP复杂事件](https://cloud.tencent.com/developer/article/1448608)
 - [Flink知识图谱](https://yq.aliyun.com/articles/744741?spm=a2c4e.11153940.0.0.69bc12ecS2IswO)
 - [Apache Flink 精选PDF下载](https://yq.aliyun.com/articles/81743?spm=a2c4e.11153940.0.0.69bc12ecS2IswO)

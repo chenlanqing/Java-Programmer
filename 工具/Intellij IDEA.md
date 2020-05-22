@@ -64,14 +64,27 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 
 ![](image/IDEA-Maven.png)
 
-## 2.4、安全插件
-
-File -> Settings -> Plugins
+# 3、IDEA常用插件
 
 - 阿里巴巴代码插件：Alibaba Java Coding Guidelines
 - 背景图片插件：Background Image Plus
 - 格式化xml：Eclipse Code Fromatter
-- Mybtis插件：Free Mybatis Plugin
+- Mybtis插件：Free Mybatis Plugin、Mybatis plugin、Mybatis xml validator、MyBatisCodeHelperPro
 - Lombok
 - 主题插件：Material Theme UI
 - 代码扫描插件：SonarLint
+- CodeGlance：可以显示代码的缩略图
+- GenerateAllSetter：一键调用一个对的所有set方法
+- GrepConsole
+- GsonFormat：可以将一个json字符串转成对象
+- HOCON
+- idea-mybatis-generator
+- jclasslib ByteCode viewer
+- JMH Plugin
+- Key Promoter X
+- Maven Helper
+- RestfulToolkit
+- SonarLint
+- Statistic
+- VisualVM Launcher
+
