@@ -76,7 +76,34 @@ updates                                                                         
 
 进入mysql控制台
 ```sql
-ALTER USER 'root'@'localhost' IDENTIFIED BY 'new password';
+ALTER USER 'root'@'localhost' IDENTIFIED with mysql_native_password BY '123456';
+```
+如果上述命令报如下错误信息：
+```
+ERROR 1819 (HY000): Your password does not satisfy the current policy requirements
+```
+可以修改其密码策略：
+```sql
+-- 查看密码策略
+SHOW VARIABLES LIKE 'validate_password%';
+-- 首先需要设置密码的验证强度等级，设置 validate_password_policy 的全局参数为 LOW 即可
+set global validate_password_policy=LOW; 
+-- 当前密码长度为 8 ，如果不介意的话就不用修改了，按照通用的来讲，设置为 6 位的密码，设置 validate_password_length 的全局参数为 6
+set global validate_password_length=6;
+```
+
+**关于mysql密码策略相关参数：**
+```
+1）、validate_password_length  固定密码的总长度；
+2）、validate_password_dictionary_file 指定密码验证的文件路径；
+3）、validate_password_mixed_case_count  整个密码中至少要包含大/小写字母的总个数；
+4）、validate_password_number_count  整个密码中至少要包含阿拉伯数字的个数；
+5）、validate_password_policy 指定密码的强度验证等级，默认为 MEDIUM；
+关于 validate_password_policy 的取值：
+0/LOW：只验证长度；
+1/MEDIUM：验证长度、数字、大小写、特殊字符；
+2/STRONG：验证长度、数字、大小写、特殊字符、字典文件；
+6）、validate_password_special_char_count 整个密码中至少要包含特殊字符的个数；
 ```
 
 新增用户：
