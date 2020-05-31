@@ -1,8 +1,10 @@
-# 一、CentOS安装mysql数据库
+# 一、安装数据库
 
 [CentOS7.2使用yum安装MYSQL5.7.10](https://typecodes.com/linux/yuminstallmysql5710.html)
 
-## 1、环境
+## 1、CentOS7安装mysql版本数据
+
+### 1.1、环境
 
 centOS7，查看Linux发行版本
 ```
@@ -10,7 +12,7 @@ centOS7，查看Linux发行版本
 CentOS Linux release 7.0.1406 (Core) 
 ```
 
-## 2、下载MySQL官方的Yum Repository
+### 1.2、下载MySQL官方的Yum Repository
 
 根据Linux发行版本（CentOS、Fedora都属于红帽系），从[mysql官方](http://dev.mysql.com/downloads/repo/yum/)获取Yum Repository
 ```
@@ -27,7 +29,7 @@ CentOS Linux release 7.0.1406 (Core)
 ...
 ```
 
-## 3、安装MySQL的Yum Repository
+### 1.3、安装MySQL的Yum Repository
 
 安装完MySQL的Yum Repository，每次执行yum update都会检查MySQL是否更新
 ```
@@ -42,7 +44,7 @@ mysql57-community-release-el7-7.noarch.rpm 将被安装
 ...
 ```
 
-## 4、安装MySQL数据库的服务器版本
+### 1.4、安装MySQL数据库的服务器版本
 
 ```
 [root@localhost mysql]# yum -y install mysql-community-server
@@ -56,14 +58,14 @@ updates                                                                         
 ...
 ```
 
-## 5、启动数据库
+### 1.5、启动数据库
 
 ```
 [root@localhost mysql]# systemctl start mysqld.service
 ```
 然后使用命令 systemctl status mysqld.service 查看MySQL数据库启动后的服务状态
 
-## 6、获取初始密码
+### 1.6、获取初始密码
 
 使用YUM安装并启动MySQL服务后，MySQL进程会自动在进程日志中打印root用户的初始密码
 ```
@@ -72,7 +74,7 @@ updates                                                                         
 2018-06-04T06:30:42.150462Z 1 [ERROR] Failed to open the bootstrap file /var/lib/mysql-files/install-validate-password-plugin.Zf9heV.sql
 ```
 
-## 7、修改root用户密码
+### 1.7、修改root用户密码
 
 进入mysql控制台
 ```sql
@@ -115,11 +117,11 @@ create user 'test'@'%' identified with mysql_native_password by '123456';
 授权：grant all on *.* to 'test'@'%'
 ```
 
-## 8、查看MySQL数据库的配置信息
+### 1.8、查看MySQL数据库的配置信息
 
 MySQL的配置文件依然是`/etc/my.cnf`，其它安装信息可以通过mysql_config命令查看。其中，动态库文件存放在`/usr/lib64/mysql`目录下
 
-## 9、解决外部无法连接mysql
+### 1.9、解决外部无法连接mysql
 
 - （1）查看是否打开3306端口：
 
@@ -149,18 +151,96 @@ MySQL的配置文件依然是`/etc/my.cnf`，其它安装信息可以通过mysql
 - （3）授权支持远程登录
     - 支持所有用户远程连接：允许远程主机以 root 账号（密码是root）连接数据库
         ```sql
-        grant all privileges on *.* to 'root'@'%' identified by 'root' with grant option;
+        grant all privileges on *.* to 'root'@'%' identified by '123456' with grant option;
         ```
     - 如果只允许某台主机连接root从1.1.1.1的主机连接到服务器
         ```sql
-        grant all privileges on *.* to 'root'@'1.1.1.1' identified by 'root' with grant option;
+        grant all privileges on *.* to 'root'@'127.0.0.1' identified by 'root' with grant option;
         ```
 
-## 10、删除MySQL的Repository
+### 1.10、删除MySQL的Repository
 
 因为安装了MySQL的Yum Repository，所以以后每次执行yum操作时，都会去检查更新。如果想要去掉这种自动检查操作的话，可以使用如下命令卸载MySQL的Repository即可
 
 `[root@localhost mysql]# yum -y remove mysql57-community-release-el7-7.noarch.rpm`
+
+## 2、安装MariaDB数据库
+
+### 2.1、下载安装包
+
+这里安装的是 `MariaDB10.4.8` 版本
+```
+galera-4-26.4.2-1.rhel7.el7.centos.x86_64.rpm  
+jemalloc-3.6.0-1.el7.x86_64.rpm                
+jemalloc-devel-3.6.0-1.el7.x86_64.rpm          
+MariaDB-client-10.4.8-1.el7.centos.x86_64.rpm
+MariaDB-common-10.4.8-1.el7.centos.x86_64.rpm
+MariaDB-compat-10.4.8-1.el7.centos.x86_64.rpm
+MariaDB-server-10.4.8-1.el7.centos.x86_64.rpm
+```
+
+### 2.2、安装依赖包
+
+`yum install rsync nmap lsof perl-DBI nc`
+
+`rpm -ivh jemalloc-3.6.0-1.el7.x86_64.rpm`
+
+`rpm -ivh jemalloc-devel-3.6.0-1.el7.x86_64.rpm`
+
+### 2.3、卸载冲突的mariadb-libs
+
+搜索：`rpm -qa | grep mariadb-libs`
+
+如果有，比如如下，删除即可：`rpm -ev --nodeps mariadb-libs-5.5.60-1.el7_5.x86_64`
+
+### 2.4、安装 boost-devel 依赖环境
+
+`yum install boost-devel.x86_64`
+
+### 2.5、导入MariaDB的key
+
+`rpm --import http://yum.mariadb.org/RPM-GPG-KEY-MariaDB`
+
+### 2.6、安装 galera 环境
+
+`rpm -ivh galera-4-26.4.2-1.rhel7.el7.centos.x86_64.rpm`
+
+### 2.7、安装MariaDB的4个核心包
+
+注意：如果是MariaDB10.4.8需要安装 libaio
+```
+wget http://mirror.centos.org/centos/6/os/x86_64/Packages/libaio-0.3.107-10.el6.x86_64.rpm
+rpm -ivh libaio-0.3.107-10.el6.x86_64.rpm
+```
+安装MariaDB的4个核心包：
+
+`rpm -ivh MariaDB-common-10.4.7-1.el7.centos.x86_64.rpm MariaDB-compat-10.4.7-1.el7.centos.x86_64.rpm MariaDB-client-10.4.7-1.el7.centos.x86_64.rpm MariaDB-server-10.4.7-1.el7.centos.x86_64.rpm`
+
+启动MariaDB：`service mysql start`
+
+### 2.8、启动后配置：
+
+启动成功后运行如下命令进行安全配置：`mysql_secure_installation`
+
+进行如下配置：
+```
+1.输入当前密码，初次安装后是没有密码的，直接回车
+2.询问是否使用`unix_socket`进行身份验证：n
+3.为root设置密码：y
+4.输入root的新密码：root
+5.确认输入root的新密码：root
+6.是否移除匿名用户，这个随意，建议删除：y
+7.拒绝用户远程登录，这个建议开启：n
+8.删除test库，可以保留：n
+9.重新加载权限表：y
+```
+
+### 2.9、配置远程连接
+
+```
+grant all privileges on *.* to 'root'@'%' identified by 'root密码';
+flush privileges;
+```
 
 # 二、MySQL主从配置
 

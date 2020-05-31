@@ -290,19 +290,28 @@ top [参数]
 
 `ps -ef | grep nginx | grep -v grep` 判断nginx进程是否存在，使用`echo $?` 返回1 
 
-
 ## 3、查看端口占用
 
-```netstat -tln | grep 8080``` 查看端口8080的使用情况
+`netstat -tln | grep 8080` 查看端口8080的使用情况
 
 - Linux：`netstat -nltp | grep PID`
 - Mac下查看进程占用端口：`lsof -nP -iTCP -sTCP:LISTEN | grep PID`
 
 ## 4、查看空间
 
-```df```
+**df**
+```
+[root@bluefish ~]# df
+Filesystem     1K-blocks    Used Available Use% Mounted on
+/dev/vda1       51473888 4594408  44241732  10% /
+devtmpfs          930600       0    930600   0% /dev
+tmpfs             941376      24    941352   1% /dev/shm
+tmpfs             941376     560    940816   1% /run
+tmpfs             941376       0    941376   0% /sys/fs/cgroup
+tmpfs             188276       0    188276   0% /run/user/0
+```
 
-```dh -sh *```
+dh -sh *
 
 ## 5、[监控工具SAR](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
 
@@ -327,9 +336,9 @@ mkdir -p project/{a,b,c}/src，该命令最终创建的目录结构：
         └── src
 ```
 
-## 3、按照rz、sz命令
+## 3、安装rz、sz命令
 
-yum install -y lrzsz
+`yum install -y lrzsz`
 
 ## 4、远程拷贝文件与文件夹
 
