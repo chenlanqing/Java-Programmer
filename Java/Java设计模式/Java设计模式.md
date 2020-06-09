@@ -830,6 +830,12 @@ public class ConcreteObserver implements Observer{
 
 ## 5、注意事项
 
+## 6、责任链使用
+
+https://www.jianshu.com/p/a9b772bbe31a
+
+https://github.com/zengfr/stepchain
+
 # 七、适配器模式
 
 

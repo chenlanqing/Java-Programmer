@@ -300,17 +300,17 @@ innodb_ buffer_pool_size -> 修改该配置 <br>
 - MariaDB
 
 上述三个版本的主要区别：
-- 服务器特性：都是开源，都支持分区表；MYsql是InnoDB引擎；其他是XtraDB引擎，两者是兼容的；
-- 高可用特性：基于日志点复制；基于gtid复制；但是MariaDB的gtig同mysql不兼容；
-- 安全特性：防火墙、审计、用户密码以及密码加密算法
+- 服务器特性：都是开源，都支持分区表；Mysql是InnoDB引擎；其他是XtraDB引擎，两者是兼容的；
+- 高可用特性：基于日志点复制；基于gtid复制；但是MariaDB的gtid同mysql不兼容；
+- 安全特性：防火墙、审计、用户密码以及密码加密算法；
 
 ### 2.2、版本升级
 
 - 升级之前需要考虑什么：
 	- 升级对业务的好处：是否解决业务上某一方面的痛点、是否解决运维上某一个方面的痛点；
 	- 升级对业务的影响：对原业务程序的支持是否有影响、对原业务程序的性能是否有影响；
-	- 数据库升级的方案：评估受影响的业务系统、升级的详细步骤、升级后的数据库环境检查、升级后的业务检查
-	- 升级失败的回滚方案：升级失败回滚的步骤、回滚后的数据库环境检查、回滚后的业务检查
+	- 数据库升级的方案：评估受影响的业务系统、升级的详细步骤、升级后的数据库环境检查、升级后的业务检查；
+	- 升级失败的回滚方案：升级失败回滚的步骤、回滚后的数据库环境检查、回滚后的业务检查；
 
 - 升级的步骤
 	- 对升级的数据库进行备份
@@ -375,7 +375,16 @@ innodb_ buffer_pool_size -> 修改该配置 <br>
 
 - 字符串的模糊比较： MYSQL里用 字段名 like '%字符串%',ORACLE里也可以用 字段名 like '%字符串%' 但这种方法不能使用索引, 速度不快，用字符串比较函数 instr(字段名,'字符串')>0 会得到更精确的查找结果。
 
--
+## 5、MySQL日志
+
+### 5.1、mysql日志分类
+
+mysql日志主要分为以下：
+- 错误日志（error_log）：记录mysql在启动、运行或停止时出现的问题；
+- 常规日志（general_log）：记录所有发现mysql的请求；
+- 慢查询日志（slow_query_log）：记录符合慢查询条件的日志；
+- 二进制日志（binary_log）：记录全部有效的数据修改日志；
+- 中继日志（raly_log）：用于主从复制，临时存储从主库同步的二进制日志；
 
 # 二、MySQL操作
 
@@ -384,6 +393,9 @@ innodb_ buffer_pool_size -> 修改该配置 <br>
 mysql -hlocalhost -P3306 -uroot -p	--(-h：主机host， -P：端口，-u用户，-p：密码)； 
 --select user()；查看当前用户
 ```
+
+查看命令行帮助文档，进入到mysql控制台：`help create user;`，查看 create user 帮助
+
 ## 2、SQL操作
 
 ## 3、创建数据库
@@ -470,7 +482,6 @@ show variables like 'character_set_%';	查看当前数据库的校对规则
 | character_set_server     | utf8（服务器的编码）                                     |
 | character_set_system     | utf8                                                    |
 | character_sets_dir       | C:\Program Files\MySQL\MySQL Server 5.6\share\charsets\ |
-
 
 设置变量：set 变量=值，变量可以是上述的变量
 
@@ -591,7 +602,7 @@ type(M，D)--M表示的所有位数(不包括小数点和符号)，D表示允许
 - 考虑应用程序语言的处理；
 - 考虑移植兼容性；
 
-# 四、列属性
+## 5、列的属性
 
 **1、是否为空：规定一个字段的值是否可以为null，设置字段值不为空not null；**
 
@@ -618,6 +629,120 @@ type(M，D)--M表示的所有位数(不包括小数点和符号)，D表示允许
 **4、自动增长：auto_increment，为每条记录提供一个唯一标识**
 
 	列名 primary key auto_increment
+
+# 四、MySQL权限、配置
+
+## 1、用户与用户权限
+
+[账号管理](https://dev.mysql.com/doc/refman/8.0/en/account-management-statements.html)
+
+### 1.1、创建、修改用户
+
+**创建用户：**
+
+创建账号一般格式：`create user 用户名@可访问控制列表' identified by '<password>' password <密码策略>`；
+
+可访问控制列表可以包含如下格式：
+- `%`：表示可以从所有外部主机访问；
+- `192.168.1.%`：表示可以从192.168.1网段访问；
+- `localhost`：DB服务器本地访问；
+
+查询是否有某个用户：`select * from mysql.user where user='test'`
+
+**修改用户密码：**
+
+- 修改当前用户密码：`alter user user() identified by '<password>'`
+- 使用root账号修改其他用户密码：`alter user <user@ip> identified by '<password>';`
+
+### 1.2、常用用户权限
+
+查看所有权限：show privileges；
+
+**服务器管理权限：Admin**
+- Create User：建立新的用户的权限；
+- Grant Option：为其他用户授权的权限；
+- Super：管理服务器的权限；
+
+**DDL权限：**
+- Create：新建数据库，表的权限；
+- Alter：修改表结构的权限；
+- Drop：删除数据库和表的权限；
+- Index：建立和删除索引的权限
+
+**DML权限：**
+- Select：查询表中数据的权限；
+- Insert：向表插入数据的权限；
+- Update：更新表中数据的权限；
+- Delete：删除表中数据的权限；
+- Execute：执行存储过程的权限；
+
+### 1.3、授权
+
+遵循最小权限原则，使用grant命令对用户授权，格式：`grant <privileges> on database.table to user@ip;`
+- privileges：即前面的用户权限；
+- database.table：表示哪个数据库的哪张表；
+- user@ip：创建的用户和访问的ip
+
+使用revoke回收权限：`revoke <privileges> on database.table from user@ip;`
+
+如果给用户与grant权限，使用 `with grant option`：`grant select on testdb.* to dba@localhost with grant option;`
+
+### 1.4、保证数据库账号的安全
+
+- 数据库用户管理流程规范；
+	- 最小权限原则；
+	- 密码强度策略；
+	- 密码过期原则；
+	- 现在历史密码重用原则；
+- 密码管理策略
+
+### 1.5、迁移数据库账号
+
+思路：
+数据库版本是否一致
+- 是：备份mysql数据库，在目的实例恢复；
+- 否：导出授权语句，在目的实例执行
+
+导出用户建立及授权语句：`pt-show-grants u=root,p=123456,h=localhost`
+
+### 1.6、关于用户其他常见SQL
+
+- 查看当前登录用户：`SELECT CURRENT_USER();`
+
+## 2、MySQL配置
+
+比较配置文件，可以使用工具：pe-config-diff，格式：`pt-config-diff u=root,p=,h=localhost /etc/my.cnf`
+
+在mysql控制台查看某个参数：`select @@<参数名称>`
+
+### 2.1、SQL_MODE
+
+主要配置mysql中处理sql的方式：`set [session/global/persit] sql_mode='';`
+
+常用的 [SQL_MODE](https://dev.mysql.com/doc/refman/8.0/en/sql-mode.html) 值
+
+### 2.2、mysql中关键性能参数
+
+**服务器配置参数：**
+- max_connections：设置mysql允许访问的最大连接数量；
+- interactive_timeout：设置交互连接的timeout时间
+- wait_timeout：设置非交互连接的timeout时间；
+- max_allow_packet：控制mysql可以接收的数据包的大小；
+- sync_binlog：表示每写多少缓冲会向磁盘同步一次binlog；
+- sort_buffer_size：设置每个会话使用的排序缓存区的大小；
+- join_buffer_size：设置每个会话所使用的连接缓冲的大小；
+- read_buffer_size：指定了对一个myisam进行表扫描时锁分配的读缓存池的大小；
+- read_rnd_buffer_size：设置控制索引缓冲区的大小；
+- binlog_cache_size：设置每个会话用于缓存未提交的事务缓存大小；
+
+**存储引擎参数：**
+- innodb_flush_log_at_trx_commit：
+	- 0：每秒进行一次重做日志的磁盘刷新操作；
+	- 1：每次事务提交都会刷新事务日志到磁盘中；
+	- 2：每次事务提交写入系统缓存每秒向磁盘刷新一次；
+- innodb_buffer_pool_size：设置innodb缓冲池的大小，应为系统可用内存的75%；
+- innodb_buffer_pool_instances：innodb缓冲池的实例个数，每个实例的大小为缓冲池大小/实例个数，一般为8个
+- innodb_file_per_table：设置每个表独立使用一个表空间文件；
 
 # 五、查询 SQL 执行顺序
 
@@ -904,16 +1029,19 @@ order by user_name,COURSE;
 check table tableName  检查表<br>
 repair table tableName 修复表
 
-- myisam 支持数据压缩：myisam pack，压缩后的表示只读的
+- myisam 支持数据压缩：myisampack，压缩后的表示只读的
+- 以堆表方式存储，使用表级锁；
 - 在5.0版本之前，单表默认大小为4G，如存储大表，需要修改：max_rows和avg_row_length 在5.0之后，默认支持的大小256TB
 - 适用场景：
-	* 非事务型应用
-	* 只读类应用
+	* 不需要使用事务的场景；
+	* 只读类应用，读操作远远大于写操作的场景；
 	* 空间类应用(空间函数：GPS数据等)
 
-### 1.2、InnoDB：5.5之后的版本默认存储引擎
+### 1.2、InnoDB存储引擎
 
-InnoDB使用表空间进行数据存储：innodb_file_per_table，对InnoDB使用独立表空间
+[The InnoDB Storage Engine](https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html)
+
+5.5之后的版本默认存储引擎，InnoDB使用表空间进行数据存储：innodb_file_per_table ，对InnoDB使用独立表空间
 
 - **1.2.1、表转移步骤：把原来存在于系统表空间中的表转移到独立表空间**
 
@@ -924,51 +1052,57 @@ InnoDB使用表空间进行数据存储：innodb_file_per_table，对InnoDB使�
 
 - **1.2.2、存储特性：**
 
-	- 事务性存储引擎
-	- 完全支持事务的ACID特性
+	- 事务性存储引擎，完全支持事务的ACID特性；
+	- 数据按主键聚集存储；
 	- Redo Log 和Undo Log
-	- 支持行级锁，是在存储引擎实现的，可以最大程度实现并发；
-	- 支持全文索引，空间函数；
+	- 支持行级锁，是在存储引擎实现的，可以最大程度实现并发，以及MVCC
+	- 支持全文索引、空间索引；
 	- Innodb默认使用的是行锁。而行锁是基于索引的，因此要想加上行锁，在加锁时必须命中索引，否则将使用表锁
 
 - **1.2.3、状态检查**
 
 	show engine innodb status
 
-### 1.3、CSV存储引擎是基于 CSV 格式文件存储数据
+- **1.2.4、使用场景**
 
+### 1.3、CSV存储引擎
+
+基于 CSV 格式文件存储数据
 - **1.3.1、特性：**
-	- CSV 存储引擎因为自身文件格式的原因，所有列必须强制指定 NOT NULL；
+	- CSV 存储引擎因为自身文件格式的原因，所有列必须强制指定 NOT NULL；非事务型存储
 	- CSV 引擎也不支持索引，不支持分区；
-	- CSV 存储引擎也会包含一个存储表结构的 .frm 文件、一个 .csv 存储数据的文件、一个同名的元信息文件，该文件的扩展名为.CSM，用来保存表的状态及表中保存的数据量
-	- 每个数据行占用一个文本行
+	- CSV 存储引擎也会包含一个存储表结构的 `.frm 文件`、一个 `.csv` 存储数据的文件、一个同名的元信息文件，该文件的扩展名为`.CSM`，用来保存表的状态及表中保存的数据量
+	- 每个数据行占用一个文本行，列之间使用逗号分割；
 
-- **1.3.2、适合作为数据交换的中间表**
+- **1.3.2、适用场景**
+	- 适合作为数据交换的中间表
 
 ### 1.4、Archive
 
 - **1.4.1、特性：**
-
+	- 非事务型存储引擎；
 	- 以zlib对表数据进行压缩，磁盘I/O更少；
-	- 数据存储在arz为后缀的文件；
+	- 数据存储在`arz`为后缀的文件；
 	- 只支持insert和select操作；
-	- 只允许在自增ID列上增加索引；
+	- 只允许在自增ID列上增加索引，最多只能存在一个索引
 
 - **1.4.2、使用场景：**
+	- 日志和数据采集类应用；
+	- 数据归档存储；
 
-	日志和数据采集类应用
+### 1.5、Memory
 
-### 1.5、Memory：也称为heap存储引擎，所以数据保存在内存中
-
+也称为heap存储引擎，所以数据保存在内存中
 - **1.5.1、特性：**
-	- 支持hash 和btree索引
+	- 非事务型存储引擎；
+	- 所有数据保存在内存中
+	- 支持hash 和 btree 索引，默认使用hash索引
 	- 所有字段都为固定长度 varchar(10) = char(10)
 	- 不支持blob 和 text 等大字段
 	- 使用表级锁
-	- 最大大小由max_heap_table_size参数决定，不会对已经存在的表生效。如果需要生效，需重启服务重建数据
+	- 最大大小由`max_heap_table_size`参数决定，不会对已经存在的表生效。如果需要生效，需重启服务重建数据
 
 - **1.5.2、使用场景：**
-
 	- 用于查找或者是映射表，例如邮编和地区的对应表
 	- 用于保存数据分析中产生的中间表；
 	- 用于缓存周期性聚合数据的结果表；memory数据易丢失，所以要求数据可再生
@@ -984,6 +1118,18 @@ InnoDB使用表空间进行数据存储：innodb_file_per_table，对InnoDB使�
 默认禁止的，启用需要在配置文件中开启federated；
 
 连接方法：`mysql://user_name[:password]@host_name[:port]/db_name/table_name`
+
+### 1.7、NDB引擎
+
+特点：
+- 事务型存储引擎，只支持读已提交隔离级别；
+- 数据存储在内存中，会保存在磁盘中；
+- 支持行级锁；
+- 支持高可用集群；
+- 支持 Ttree索引
+
+适用场景：
+- 需要数据完全同步的高可用场景
 
 ## 2、MyISAM 和 InnoDB 引擎的区别
 
@@ -1050,6 +1196,7 @@ mysql> show engines；
 | PERFORMANCE_SCHEMA | YES     | Performance Schema                                             | NO           | NO   | NO         |
 +--------------------+---------+----------------------------------------------------------------+--------------+------+------------+
 ```
+或者：`SELECT * FROM INFORMATION_SCHEMA.ENGINES;`
 
 - 查看默认存储引擎
 
@@ -1090,6 +1237,12 @@ InnoDB是基于聚簇索引建立的。其二级索引（非主键索引）中�
 ### 6.1、存储方式
 
 InnoDB采取的方式是：将数据划分为若干个页，以页作为磁盘和内存之间交互的基本单位，InnoDB中页的大小一般为 16 KB。在一般情况下，一次最少从磁盘中读取16KB的内容到内存中，一次最少把内存中的16KB内容刷新到磁盘中
+
+### InnoDB最佳实践
+
+- 为表指定一个自增的主键；
+- 不要使用LOCK TABLES语句，如果需要锁定，可以使用 `SELECT ... FOR UPDATE` 锁定你需要操作的数据行；
+- `--sql_mode=NO_ENGINE_SUBSTITUTION`，防止在创建表或者修改表的时候存储引擎不支持
 
 # 八、高级特性
 
@@ -1358,7 +1511,9 @@ MyISAM 的读写锁调度是写优先，这也是 MyISAM 不适合做写为主�
 - 分表：指的是通过一定规则，将一张表分解成多张不同的表
 - 表与分区的区别在于：分区从逻辑上来讲只有一张表，而分表则是将一张表分解成多张表
 
-## 3、表分区的优点
+## 3、表分区的优缺点
+
+### 3.1、优点
 
 - 分区表的数据可以分布在不同的物理设备上，从而高效地利用多个硬件设备；
 - 和单个磁盘或者文件系统相比，可以存储更多数据；
@@ -1366,7 +1521,7 @@ MyISAM 的读写锁调度是写优先，这也是 MyISAM 不适合做写为主�
 - 分区表更容易维护.例如：想批量删除大量数据可以清除整个分区；
 - 可以使用分区表来避免某些特殊的瓶颈.例如InnoDB的单个索引的互斥访问，ext3问价你系统的inode锁竞争等；
 
-## 4、表分区的限制因素
+### 3.2、表分区的限制因素
 
 - 一个表最多只能有1024个分区；
 - MySQL5.1中，分区表达式必须是整数，或者返回整数的表达式。在MySQL5.5中提供了非整数表达式分区的支持；
@@ -1374,7 +1529,8 @@ MyISAM 的读写锁调度是写优先，这也是 MyISAM 不适合做写为主�
 - 分区表中无法使用外键约束；
 - MySQL 的分区适用于一个表的所有数据和索引，不能只对表数据分区而不对索引分区，也不能只对索引分区而不对表分区，也不能只对表的一部分数据分区；
 
-## 5、查看分区：判断 MySQL 是否支持表分区
+## 4、查看分区：判断 MySQL 是否支持表分区
+
 ```
 mysql> show variables like '%partition%'；
 +-------------------+-------+
@@ -1384,6 +1540,10 @@ mysql> show variables like '%partition%'；
 +-------------------+-------+
 1 row in set (0.00 sec)
 ```
+
+## 5、分区表的原理
+
+
 ## 6、MySQL 支持的分区类型
 
 - RANGE分区：按照数据的区间范围分区；
@@ -1419,8 +1579,7 @@ partition by range (store_id) (
 ERROR 1493 (HY000)： VALUES LESS THAN value must be strictly increasing for each partition
 
 - RANGE分区存在问题:
-
-	- range 范围覆盖问题：当插入的记录中对应的分区键的值不在分区定义的范围中的时候，插入语句会失败。上面的例子，如果我插入一条store_id = 30的记录会怎么样呢？我们上面分区的时候，最大值是20，如果插入一条超过20的记录，会报错：<br>
+	- range 范围覆盖问题：当插入的记录中对应的分区键的值不在分区定义的范围中的时候，插入语句会失败。上面的例子，如果我插入一条`store_id = 30`的记录会怎么样呢？我们上面分区的时候，最大值是20，如果插入一条超过20的记录，会报错：<br>
 		mysql> insert into emp value(30，30)；<br>
 		ERROR 1526 (HY000)： Table has no partition for value 30.<br>
 		解决方案：
@@ -1456,10 +1615,9 @@ create table emp1 (
 MySQL5.5中引入的分区类型，解决了5.5版本之前range分区和list分区只支持整数分区的问题
 
 Columns分区可以细分为 range columns分区和 list columns分区，他们都支持整数、日期时间、字符串三大数据类型；
-
 - 与 RANGE分区 和 LIST分区区别：
 
-	针对日期字段的分区就不需要再使用函数进行转换了，例如针对date字段进行分区不需要再使用YEAR()表达式进行转换；COLUMN分区支持多个字段作为分区键但是不支持表达式作为分区键；
+	针对日期字段的分区就不需要再使用函数进行转换了，例如针对date字段进行分区不需要再使用`YEAR()`表达式进行转换；COLUMN分区支持多个字段作为分区键但是不支持表达式作为分区键；
 
 - COLUMNS支持的类型：
 
@@ -1551,14 +1709,15 @@ create table listvardou (
 
 	- 常规Hash分区-使用取模算法，语法如下：
 
-		partition by hash(store_id) partitions 4；<br>
-		上面的语句，根据store_id对4取模，决定记录存储位置.比如store_id = 234的记录，MOD(234，4)=2，所以会被存储在第二个分区.
+		`partition by hash(store_id) partitions 4;`
+		
+		上面的语句，根据store_id对4取模，决定记录存储位置。比如store_id = 234的记录，MOD(234，4)=2，所以会被存储在第二个分区.
 
-		常规Hash分区的优点和不足-优点：能够使数据尽可能的均匀分布；缺点：不适合分区经常变动的需求。如果需要增加两个分区变成6个分区，大部分数据都要重新计算分区.线性Hash分区可以解决。
+		常规Hash分区的优点和不足-优点：能够使数据尽可能的均匀分布；缺点：不适合分区经常变动的需求。如果需要增加两个分区变成6个分区，大部分数据都要重新计算分区。线性Hash分区可以解决。
 
 	- 线性Hash分区-分区函数是一个线性的2的幂的运算法则，语法如下：
 
-		partition by LINER hash(store_id) partitions 4；
+		`partition by LINER hash(store_id) partitions 4;`
 
 		算法介绍：假设要保存记录的分区编号为N，num为一个非负整数，表示分割成的分区的数量，那么N可以通过以下步骤得到：
 
@@ -1596,35 +1755,23 @@ MySQ允许分区键值为NULL，分区键可能是一个字段或者一个用户
 ## 13、分区管理
 
 - **13.1、增加分区**
-
-	- RANGE分区和LIST分区：
-
-		alter table table_name add partition (partition p0 values ...(exp))：
-		values后面的内容根据分区的类型不同而不同
-
-	- Hash分区和Key分区：
-
-		alter table table_name add partition partitions 8； -- 指的是新增8个分区
+	- RANGE分区和LIST分区：`alter table table_name add partition (partition p0 values ...(exp))`，values后面的内容根据分区的类型不同而不同
+	- Hash分区和Key分区：`alter table table_name add partition partitions 8`； -- 指的是新增8个分区
 
 - **13.2、删除分区：**
-
-	- RANGE分区和LIST分区：
-
-		alter table table_name drop partition p0； --p0为要删除的分区名称，删除了分区，同时也将删除该分区中的所有数据。同时，如果删除了分区导致分区不能覆盖所有值，那么插入数据的时候会报错.
-
-	- Hash分区和Key分区：
-
-		alter table table_name coalesce partition 2； --将分区缩减到2个
+	- RANGE分区和LIST分区：`alter table table_name drop partition p0`； --p0为要删除的分区名称，删除了分区，同时也将删除该分区中的所有数据。同时，如果删除了分区导致分区不能覆盖所有值，那么插入数据的时候会报错.
+	- Hash分区和Key分区：`alter table table_name coalesce partition 2`； --将分区缩减到2个
 
 - **13.3、移除分区：**
 
-alter table members remove partitioning；
-使用remove移除分区是仅仅移除分区的定义.并不会删除数据和 drop PARTITION 不一样，后者会连同数据一起删除
+	`alter table members remove partitioning;`
+	
+	使用remove移除分区是仅仅移除分区的定义.并不会删除数据和 drop PARTITION 不一样，后者会连同数据一起删除
 
 ## 14、分区查询
 
 - 查询某张表一共有多少个分区：
-```sql
+	```sql
 	SELECT
 		partition_name                   part，
 		partition_expression             expr，
@@ -1636,21 +1783,27 @@ alter table members remove partitioning；
 	WHERE
 		TABLE_SCHEMA = SCHEMA ()
 		AND TABLE_NAME = 'emp'；
-```
+	```
 
 - 查看执行计划，判断查询数据是否进行了分区过滤
-```
-mysql> explain partitions select * from emp where store_id=5；
-+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
-| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | Extra       |
-+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
-|  1 | SIMPLE      | emp   | p1         | ALL  | NULL          | NULL | NULL    | NULL |    2 | Using where |
-+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
-1 row in set
-```
+	```
+	mysql> explain partitions select * from emp where store_id=5；
+	+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
+	| id | select_type | table | partitions | type | possible_keys | key  | key_len | ref  | rows | Extra       |
+	+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
+	|  1 | SIMPLE      | emp   | p1         | ALL  | NULL          | NULL | NULL    | NULL |    2 | Using where |
+	+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
+	1 row in set
+	```
 上面的结果：partitions：p1 表示数据在p1分区进行检索
 
 https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
+
+## 15、注意事项
+
+- 结合业务场景选择分区键，避免跨分区查询
+- 对分区表进行过滤的查询最好在WHERE从句中都包括分区键
+- 对于具有主键或唯一索引的表，主键或唯一索引必须是分区键的一部分
 
 # 十一、数据库结构设计
 
@@ -1682,7 +1835,7 @@ https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
 
 所谓的反范式化是为了性能和读取效率的考虑而适当的对数据库设计范式的要求进行违反，而允许存在的少量的数据冗余，即反范式化就是使用空间来换取时间
 
-# 十二、mysql高可用架构设计
+# 十二、mysql高可用
 
 ## 1、mysql复制功能
 
@@ -1703,9 +1856,9 @@ mysql复制解决了什么问题
 
 ### 2.1、mysql二进制日志格式
 
-查看二进制日志格式：show variables like 'binlog_format';
+查看二进制日志格式：`show variables like 'binlog_format';`
 
-修改二进制日志格式：set binlog_format=''
+修改二进制日志格式：`set binlog_format=''`
 
 - 基于段的格式：`binlog_format=STATEMENT`，mysql5.7之前默认的格式，主要记录的执行sql语句
 	- 优点：日志记录量相对较小，节约磁盘及网络IO
@@ -1721,6 +1874,8 @@ mysql复制解决了什么问题
 - reset master：情况所有的binlog日志
 
 ### 2.3、查看binlog日志
+
+ `mysqlbinlog --no-defaults -vv --base64-output=DECODE-ROWS <binlog文件>`
 
 ## 3、mysql数据库备份
 
@@ -2354,19 +2509,26 @@ set global log_queries_not_using_indexes=on; -- 是否将未使用索引的sql�
 set global long_query_time=1; --将超过多少秒的sql记录到慢查询日志中，需要重新连接数据库服务器
 ```
 慢日志的信息：
+```
+# Time: 2020-06-06T09:18:09.015669Z
+# User@Host: root[root] @ localhost []  Id:   626
+# Query_time: 0.000231  Lock_time: 0.000103 Rows_sent: 3  Rows_examined: 3
+SET timestamp=1591435089;
+select * from customer_login_log;
+```
+- SQL开始执行的时间戳
+	```
+	# SET timestamp=1460268587;
+	```
 - 执行SQL的主机信息：
 	```
 	# User@Host： root[root] @ localhost [127.0.0.1]
 	```
-- SQL的执行信息：
+- SQL的执行详细信息：
 	```
 	# Query_time： 0.002000  Lock_time： 0.001000 Rows_sent： 2  Rows_examined： 2
 	```
-- SQL的执行时间
-	```
-	# SET timestamp=1460268587;
-	```
-- SQL的内容
+- SQL的详细内容
 
 ## 5、慢查询日志分析查看
 
@@ -3630,6 +3792,43 @@ percona提供了维护mysql的perconaTookit工具包，pt-online-schema-change�
 因为MyIsam不支持崩溃恢复，所以即使用lock table实现也是问题多多：
 - ACID里面，原子性和持久性做不到；
 - 隔离性只能实现基本用不上串行化；
+
+## 8、InnoDB相关面试题
+
+**在什么情况下InnoDB无法在线修改表结构？**
+- 不支持在线修改表结构的场景：
+	- 加全文索引： `create fulltext index name on table(column);`
+	- 加空间索引： `alter table geom add spatial index(g);`
+	- 删除主键： `alter table table_name drop primary key;`
+	- 增加自增列： `alter table table_name add column id int auto_increment not null primary key;`
+	- 修改类类型： `alter table table_name change c1 c1 new_type;`
+	- 修改表的字符集： `alter table table_name character set=charset_name`
+
+- 在线DDL存在问题：
+	- 有部分语句不支持在线DDL；
+	- 长时间DDL操作会引起严重的主从延迟；
+	- 无法对DDL操作进行资源限制；
+
+**在无法进行在线修改表结构的情况下，要如何操作？**
+
+pt-onlinbe-schema-change [options] DSN
+
+**InnoDB是如何实现事务的**
+
+事务的实现方式：
+- 原子性：回滚日志（Undo Log），用于记录数据修改前的状态；
+- 一致性：重作日志（Redo Log），用于记录数据修改后的状态；
+- 隔离性：锁，用于资源隔离，分为共享锁和排它锁；
+- 持久性：重作认知（Redo Log） + 回滚日志（Undo Log）
+
+**innodb读操作是否会阻塞写操作**
+
+- 查询需要对资源加共享锁；
+- 数据修改需要对资源加排它锁
+
+排它锁和共享锁是不兼容
+
+
 
 
 

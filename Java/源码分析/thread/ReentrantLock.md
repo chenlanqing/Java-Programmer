@@ -195,6 +195,8 @@ protected final boolean tryAcquire(int acquires) {
 
 ## 5、非公平锁
 
+### 5.1、lock()
+
 - 在当线程要获取锁时，它会无视CLH等待队列而直接获取锁；
 - 是不完全按照请求的顺序，在一定的情况下，可以插队；
 - 提交效率，避免唤醒带来的空档期；减少切换成本
@@ -220,6 +222,16 @@ protected final boolean tryAcquire(int acquires) {
 }
 ```
 对比公平与非公平锁，发现主要区别是：hasQueuedPredecessors，公平锁是将所有的线程放在一个队列中，一个线程执行完成后，从队列中取出下一个线程，而非公平锁则没有这个队列
+
+### 5.2、lockInterruptibly()
+
+### 5.1、lock 与 lockInterruptibly 的区别
+
+- lock有限考虑获取锁，待获取锁成功后才响应中断。ReentrantLock.lock 方法不允许Thread.interrupt中断，及时检测到 Thread.isInterrupted = true，也一样会继续尝试获取锁，失败则继续休眠；只是在最后获取锁成功会把当前线程置为 interrupted 状态；
+
+- lockInterruptibly 有限考虑响应中断，而不是响应锁的普通获取或重入获取； lockInterruptibly 允许在等待时，有其他线程调用等待线程的 Thread.interrupt 并直接返回，时不用获取锁，而是抛出 InterruptedException；
+
+由于 lock 方法的强制忽略中断，所以只有 acquireQueued方法内部真正获得许可以后，去判断 Thread.isInterrupted 是否是中断状态。如果不是则无所谓，是中断状态会做中断操作，当然这个中断操作仅仅是一个标记，会向商场进行传递，最终由 selfInterrupt()来做真正的中断操作；
 
 ## 6、如何将lock、tryLock、unlock串起来
 

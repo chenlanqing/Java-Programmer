@@ -1,21 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-目录
-
-- [一、查找命令](#%E4%B8%80%E6%9F%A5%E6%89%BE%E5%91%BD%E4%BB%A4)
-- [二、系统监控](#%E4%BA%8C%E7%B3%BB%E7%BB%9F%E7%9B%91%E6%8E%A7)
-  - [1、top](#1top)
-  - [2、查看程序运行](#2%E6%9F%A5%E7%9C%8B%E7%A8%8B%E5%BA%8F%E8%BF%90%E8%A1%8C)
-  - [3、查看端口占用](#3%E6%9F%A5%E7%9C%8B%E7%AB%AF%E5%8F%A3%E5%8D%A0%E7%94%A8)
-  - [4、查看空间](#4%E6%9F%A5%E7%9C%8B%E7%A9%BA%E9%97%B4)
-  - [5、监控工具SAR](#5%E7%9B%91%E6%8E%A7%E5%B7%A5%E5%85%B7sar)
-- [三、其他](#%E4%B8%89%E5%85%B6%E4%BB%96)
-  - [1、查看Linux发行版本](#1%E6%9F%A5%E7%9C%8Blinux%E5%8F%91%E8%A1%8C%E7%89%88%E6%9C%AC)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
-
 # 一、文件操作命令
 
 ## 1、find 命令
@@ -278,28 +260,143 @@ top [参数]
     - TIME+ : 进程使用的 CPU 时间总计，单位 1/100 秒
     - COMMAND : 进程名称
 
-## 2、查看程序运行
+## 2、ps 命令
 
-`ps –ef|grep tomcat` 查看所有有关tomcat的进程
+用于报告当前系统的进程状态。可以搭配kill指令随时中断、删除不必要的程序。ps命令是最基本同时也是非常强大的进程查看命令，使用该命令可以确定有哪些进程正在运行和运行的状态、进程是否结束、进程有没有僵死、哪些进程占用了过多的资源等等，总之大部分信息都是可以通过执行该命令得到的
 
-`ps -ef|grep --color java` 高亮要查询的关键字
+**常用命令参数：**
+```bash
+ps axo pid,comm,pcpu # 查看进程的PID、名称以及CPU 占用率
+ps aux | sort -rnk 4 # 按内存资源的使用量对进程进行排序
+ps aux | sort -nk 3  # 按 CPU 资源的使用量对进程进行排序
+ps -A # 显示所有进程信息
+ps -u root # 显示指定用户信息
+ps -efL # 查看线程数
+ps -e -o "%C : %p :%z : %a"|sort -k5 -nr # 查看进程并按内存使用大小排列
+ps -ef # 显示所有进程信息，连同命令行
+ps -ef | grep ssh # ps 与grep 常用组合用法，查找特定进程
+ps -C nginx # 通过名字或命令搜索进程
+ps aux --sort=-pcpu,+pmem # CPU或者内存进行排序,-降序，+升序
+ps -f --forest -C nginx # 用树的风格显示进程的层次关系
+ps -o pid,uname,comm -C nginx # 显示一个父进程的子进程
+ps -e -o pid,uname=USERNAME,pcpu=CPU_USAGE,pmem,comm # 重定义标签
+ps -e -o pid,comm,etime # 显示进程运行的时间
+ps -aux | grep named # 查看named进程详细信息
+ps -o command -p 91730 | sed -n 2p # 通过进程id获取服务名称
+```
 
-`ps aux|grep java` 查看java进程
+**查看进程信息：**
+- `ps –ef|grep tomcat` 查看所有有关tomcat的进程
+- `ps -ef|grep --color java` 高亮要查询的关键字
+- `ps aux|grep java` 查看java进程
+- `lsof -i:8080` 查看端口属于哪个进程
+- `ps -ef | grep nginx | grep -v grep` 判断nginx进程是否存在，使用`echo $?` 返回1 
 
-`lsof -i:8080` 查看端口属于哪个进程
+将目前属于您自己这次登入的 PID 与相关信息列示出来
+```
+[root@bluefish ~]# ps -l
+F S   UID   PID  PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+4 S     0 11315  7342  0  80   0 -   993 poll_s pts/0    00:00:00 bash
+4 S     0 26278 26276  0  80   0 - 28992 do_wai pts/0    00:00:00 bash
+0 R     0 27483 26278  0  80   0 - 38301 -      pts/0    00:00:00 ps
+```
 
-`ps -ef | grep nginx | grep -v grep` 判断nginx进程是否存在，使用`echo $?` 返回1 
+## 3、netstat 命令
 
-## 3、查看端口占用
+用来打印Linux中网络系统的状态信息，可让你得知整个Linux系统的网络情况，选项：
+```
+-a或--all：显示所有连线中的Socket；
+-A<网络类型>或--<网络类型>：列出该网络类型连线中的相关地址；
+-c或--continuous：持续列出网络状态；
+-C或--cache：显示路由器配置的快取信息；
+-e或--extend：显示网络其他相关信息；
+-F或--fib：显示FIB；
+-g或--groups：显示多重广播功能群组组员名单；
+-h或--help：在线帮助；
+-i或--interfaces：显示网络界面信息表单；
+-l或--listening：显示监控中的服务器的Socket；
+-M或--masquerade：显示伪装的网络连线；
+-n或--numeric：直接使用ip地址，而不通过域名服务器；
+-N或--netlink或--symbolic：显示网络硬件外围设备的符号连接名称；
+-o或--timers：显示计时器；
+-p或--programs：显示正在使用Socket的程序识别码和程序名称；
+-r或--route：显示Routing Table；
+-s或--statistice：显示网络工作信息统计表；
+-t或--tcp：显示TCP传输协议的连线状况；
+-u或--udp：显示UDP传输协议的连线状况；
+-v或--verbose：显示指令执行过程；
+-V或--version：显示版本信息；
+-w或--raw：显示RAW传输协议的连线状况；
+-x或--unix：此参数的效果和指定"-A unix"参数相同；
+--ip或--inet：此参数的效果和指定"-A inet"参数相同。
+```
+
+**列出所有端口 (包括监听和未监听的)：**
+```bash
+netstat -a     #列出所有端口
+netstat -at    #列出所有tcp端口
+netstat -au    #列出所有udp端口       
+```
+
+**列出所有处于监听状态的 Sockets：**
+```bash
+netstat -l        #只显示监听端口
+netstat -lt       #只列出所有监听 tcp 端口
+netstat -lu       #只列出所有监听 udp 端口
+netstat -lx       #只列出所有监听 UNIX 端口
+```
+
+显示每个协议的统计信息：
+```bash
+netstat -s   显示所有端口的统计信息
+netstat -st   显示TCP端口的统计信息
+netstat -su   显示UDP端口的统计信息
+```
+
+**查看端口8080的使用情况：**
 
 `netstat -tln | grep 8080` 查看端口8080的使用情况
-
 - Linux：`netstat -nltp | grep PID`
 - Mac下查看进程占用端口：`lsof -nP -iTCP -sTCP:LISTEN | grep PID`
 
+**找出程序运行的端口：** `netstat -ap | grep ssh`
+
+**通过端口找进程ID：** `netstat -anp|grep 3306 | grep LISTEN|awk '{printf $7}'|cut -d/ -f1`
+
+**查看连接某服务端口最多的的IP地址：** 
+
+`netstat -ntu | grep :80 | awk '{print $5}' | cut -d: -f1 | awk '{++ip[$1]} END {for(i in ip) print ip[i],"\t",i}' | sort -nr`
+
+**TCP各种状态列表：**
+
+`netstat -nt | grep -e 127.0.0.1 -e 0.0.0.0 -e ::: -v | awk '/^tcp/ {++state[$NF]} END {for(i in state) print i,"\t",state[i]}'`
+
 ## 4、查看空间
 
-**df**
+### 4.2、df 命令
+
+显示磁盘的相关信息，用于显示磁盘分区上的可使用的磁盘空间。默认显示单位为KB。可以利用该命令来获取硬盘被占用了多少空间，目前还剩下多少空间等信息
+
+```
+-a或--all：包含全部的文件系统；
+--block-size=<区块大小>：以指定的区块大小来显示区块数目；
+-h或--human-readable：以可读性较高的方式来显示信息；
+-H或--si：与-h参数相同，但在计算时是以1000 Bytes为换算单位而非1024 Bytes；
+-i或--inodes：显示inode的信息；
+-k或--kilobytes：指定区块大小为1024字节；
+-l或--local：仅显示本地端的文件系统；
+-m或--megabytes：指定区块大小为1048576字节；
+--no-sync：在取得磁盘使用信息前，不要执行sync指令，此为预设值；
+-P或--portability：使用POSIX的输出格式；
+--sync：在取得磁盘使用信息前，先执行sync指令；
+-t<文件系统类型>或--type=<文件系统类型>：仅显示指定文件系统类型的磁盘信息；
+-T或--print-type：显示文件系统的类型；
+-x<文件系统类型>或--exclude-type=<文件系统类型>：不要显示指定文件系统类型的磁盘信息；
+--help：显示帮助；
+--version：显示版本信息
+```
+
+查看系统磁盘设备，默认是KB为单位：
 ```
 [root@bluefish ~]# df
 Filesystem     1K-blocks    Used Available Use% Mounted on
@@ -310,10 +407,60 @@ tmpfs             941376     560    940816   1% /run
 tmpfs             941376       0    941376   0% /sys/fs/cgroup
 tmpfs             188276       0    188276   0% /run/user/0
 ```
+使用-h选项以KB以上的单位来显示，可读性高：
+```
+[root@bluefish ~]# df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/vda1        50G  4.4G   43G  10% /
+devtmpfs        909M     0  909M   0% /dev
+tmpfs           920M   24K  920M   1% /dev/shm
+tmpfs           920M  552K  919M   1% /run
+tmpfs           920M     0  920M   0% /sys/fs/cgroup
+tmpfs           184M     0  184M   0% /run/user/0
+```
 
-dh -sh *
+### 4.2、du 命令
 
-## 5、[监控工具SAR](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
+显示每个文件和目录的磁盘使用空间
+
+```
+-a或-all 显示目录中个别文件的大小。
+-b或-bytes 显示目录或文件大小时，以byte为单位。
+-c或--total 除了显示个别目录或文件的大小外，同时也显示所有目录或文件的总和。
+-k或--kilobytes 以KB(1024bytes)为单位输出。
+-m或--megabytes 以MB为单位输出。
+-s或--summarize 仅显示总计，只列出最后加总的值。
+-h或--human-readable 以K，M，G为单位，提高信息的可读性。
+-x或--one-file-xystem 以一开始处理时的文件系统为准，若遇上其它不同的文件系统目录则略过。
+-L<符号链接>或--dereference<符号链接> 显示选项中所指定符号链接的源文件大小。
+-S或--separate-dirs 显示个别目录的大小时，并不含其子目录的大小。
+-X<文件>或--exclude-from=<文件> 在<文件>指定目录或文件。
+--exclude=<目录或文件> 略过指定的目录或文件。
+-D或--dereference-args 显示指定符号链接的源文件大小。
+-H或--si 与-h参数相同，但是K，M，G是以1000为换算单位。
+-l或--count-links 重复计算硬件链接的文件。
+```
+
+```
+[root@bluefish ~]# du
+31836   ./software
+8       ./.cache/abrt
+12      ./.cache
+8       ./.pip
+4       ./.config/abrt
+8       ./.config
+4       ./.pki/nssdb
+8       ./.pki
+4       ./.ssh
+31916   .
+```
+只显示当前目录下面的子目录的目录大小和当前目录的总的大小，最下面的1288为当前目录的总大小
+
+## 5、free 命令
+
+
+
+## 6、[监控工具SAR](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
 
 
 # 三、常用命令
