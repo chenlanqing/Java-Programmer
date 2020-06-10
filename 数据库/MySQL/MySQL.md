@@ -3828,7 +3828,11 @@ pt-onlinbe-schema-change [options] DSN
 
 排它锁和共享锁是不兼容
 
+## 9、mysql单表最优数量
 
+MySQL单表可以存储10亿级数据，只是这时候性能比较差，业界公认MySQL单表容量在1KW量级是最佳状态，因为这时它的BTREE索引树高在3~5之间
+
+## 10、大数量存储方案
 
 
 
