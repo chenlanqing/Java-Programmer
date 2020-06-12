@@ -603,6 +603,8 @@ Netty 中使用 FileRegion 实现文件传输的零拷贝, 不过在底层 FileR
 通过 RandomAccessFile 打开一个文件, 然后 Netty 使用了 DefaultFileRegion 来封装一个 FileChannel：`new DefaultFileRegion(raf.getChannel(), 0, length)`；
 有了 FileRegion 后, 我们就可以直接通过它将文件的内容直接写入 Channel 中, 而不需要像传统的做法: 拷贝文件内容到临时 buffer, 然后再将 buffer 写入 Channel
 
+### 14.5、Kafka实现零拷贝
+
 ## 15、Netty的高性能体现
 
 ## 16、Netty组件之间的关系
