@@ -3629,7 +3629,7 @@ BlockingQueue在 Queue新增和查看并删除的基础，增加了阻塞功能�
 - BlockingQueue 的实现都是线程安全的，但是批量的集合操作如 addAll, containsAll, retainAll 和 removeAll 不一定是原子操作；
 - BlockingQueue 不支持 close 或 shutdown 等关闭操作
 
-### 7.4、Java的阻塞队列
+### 7.4、阻塞队列
 
 #### 7.4.1、ArrayBlockingQueue
 
@@ -3726,8 +3726,48 @@ DelayQueue 中的元素必须是 Delayed 的子类，Delayed 是表达延迟能�
 
 #### 7.4.7、LinkedTransferQueue
 
-- 由链表结构组成的FIFO无界阻塞队列TransferQueue队列，相对于其他阻塞队列，多了tryTransfer和transfer方法；
-- LinkedTransferQueue采用一种预占模式：有就直接拿走，没有就占着这个位置直到拿到或者超时或者中断。即消费者线程到队列中取元素时，如果发现队列为空，则会生成一个null节点，然后park住等待生产者。后面如果生产者线程入队时发现有一个null元素节点，这时生产者就不会入列了，直接将元素填充到该节点上，唤醒该节点的线程，被唤醒的消费者线程拿东西走人
+[LinkedTransferQueue](https://segmentfault.com/a/1190000016460411)
+
+- LinkedTransferQueue是在JDK1.7时，J.U.C包新增的一种比较特殊的阻塞队列，它除了具备阻塞队列的常用功能外，还有一个比较特殊的transfer方法。
+
+    在普通阻塞队列中，当队列为空时，消费者线程（调用take或poll方法的线程）一般会阻塞等待生产者线程往队列中存入元素。而LinkedTransferQueue的transfer方法则比较特殊：
+    - 当有消费者线程阻塞等待时，调用transfer方法的生产者线程不会将元素存入队列，而是直接将元素传递给消费者；
+    - 如果调用transfer方法的生产者线程发现没有正在等待的消费者线程，则会将元素入队，然后会阻塞等待，直到有一个消费者线程来获取该元素
+- 由链表结构组成的FIFO无界阻塞队列TransferQueue队列，LinkedTransferQueue基于无锁算法实现；
+- LinkedTransferQueue采用一种预占模式：有就直接拿走，没有就占着这个位置直到拿到或者超时或者中断。即消费者线程到队列中取元素时，如果发现队列为空，则会生成一个null节点，然后park住等待生产者。后面如果生产者线程入队时发现有一个null元素节点，这时生产者就不会入列了，直接将元素填充到该节点上，唤醒该节点的线程，被唤醒的消费者线程拿东西走人；
+
+```java
+// LinkedTransferQueue提供了两种构造器，也没有参数设置队列初始容量，所以是一种无界队列：
+public class LinkedTransferQueue<E> extends AbstractQueue<E> implements TransferQueue<E>, java.io.Serializable {
+    public LinkedTransferQueue() {}
+    public LinkedTransferQueue(Collection<? extends E> c) {
+        this();
+        addAll(c);
+    }
+}
+// JDK1.7时J.U.C包新增的接口
+public interface TransferQueue<E> extends BlockingQueue<E> {
+    // 当生产者线程调用tryTransfer方法时，如果没有消费者等待接收元素，则会立即返回false。该方法和transfer方法的区别就是tryTransfer方法无论消费者是否接收，方法立即返回，而transfer方法必须等到消费者消费后才返回
+    boolean tryTransfer(E e);
+    void transfer(E e) throws InterruptedException;
+    // tryTransfer（E e，long timeout，TimeUnit unit）方法则是加上了限时等待功能，如果没有消费者消费该元素，则等待指定的时间再返回；如果超时还没消费元素，则返回false，如果在超时时间内消费了元素，则返回true
+    boolean tryTransfer(E e, long timeout, TimeUnit unit) throws InterruptedException;
+    // 判断是否有正在等待的消费者，至少有一个就返回true
+    boolean hasWaitingConsumer();
+    // 返回正在等待消费者的个数
+    int getWaitingConsumerCount();
+}
+```
+
+其内部节点分为两种：数据结点、请求结点，通过字段isData区分，只有不同类型的结点才能相互匹配；Node结点的值保存在item字段，匹配前后值会发生变化；
+```java
+static final class Node {
+    final boolean isData;   // true: 数据结点; false: 请求结点
+    volatile Object item;   // 结点值
+    volatile Node next;
+    volatile Thread waiter; // 等待线程
+}
+```
 
 ### 7.5、非阻塞队列
 
@@ -4772,11 +4812,23 @@ super关键字并没有新建一个父类的对象，比如说widget，然后再
 
 ### 5.7、runworker里面是如何执行处理的
 
-### 5.8、空闲线程在线程池里面是如何回收的
+### 5.8、线程的回收
 
-## 6、TaskFuture
+**核心线程数会被回收吗？需要什么设置？**
 
-### 6.1、taskfuture里面有多少种状态
+核心线程数默认是不会被回收的，如果需要回收核心线程数，需要调用下面的方法：allowCoreThreadTimeout，其对应的参数默认值时false；
+
+**空闲线程如何回收**
+
+### 5.9、线程池被创建后里面有线程吗？如果没有的话，你知道有什么方法对线程池进行预热吗？
+
+线程池被创建后如果没有任务过来，里面是不会有线程的。如果需要预热的话可以调用下面的两个方法：
+- 全部启动：preStartAllCoreThread；
+- 启动一个：preStartCoreThread
+
+## 6、FutureTask
+
+### 6.1、FutureTask里面有多少种状态
 
 ### 6.2、里面是什么数据结构
 
@@ -4856,3 +4908,4 @@ class B {
 * [LMAX架构](https://www.jianshu.com/p/5e0c4481efb7)
 * [生产者消费者的Java实现](https://blog.csdn.net/monkey_d_meng/article/details/6251879)
 * [一文看清楚生产者消费者](https://juejin.im/post/5aeec675f265da0b7c072c56)
+* [透彻理解Java并发编程](https://segmentfault.com/blog/ressmix_multithread)

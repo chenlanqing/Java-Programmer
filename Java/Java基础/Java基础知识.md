@@ -4001,6 +4001,8 @@ int result = compile.run(null， null， null， "F:/class/HelloWorld.java");
 - CGLIB：基于asm实现
 - javaasist：性能比较差，使用简单
 
+https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html
+
 ### 6.3、Javasist
 
 ## 7、反射存在问题
@@ -4988,6 +4990,56 @@ public enum FileType {
 ```
 
 如何通过魔数判断文件类型？
+
+# 三十三、Java路径
+
+## 1、绝对路径与相对路径
+
+- 绝对路径：绝对路径的英文全称是Absolute Path，就是真实的路径，是计算机中完整路径，必须准确，否则不能找到，起点是系统的根目录，也就是各个盘符；
+- 相对路径：就是相对于自己的目标文件位置。但是相对路径最重要是相对的概念，到底相对的是项目的根目录还是classpath目录，很难判断；
+
+## 2、File类中的路径
+
+在project中，相对路径的根目录是project的根文件夹，创建文件的写法是：
+- 相对路径：`/Users/user/workspace/JavaSE`（也就是工程的相对路径），注意路径不能以"/"开头
+
+	`File file = new File("javaSE/src/main/java/com/test/配置文件.properties");`
+
+- 绝对路径：
+
+	`File file = new File("/Users/user/workspace/JavaSE/src/main/java/com/test/配置文件.properties");`
+
+## 3、class.getResource和class.getClassLoader
+
+在我们Java开发中往往需要去获取文件中的内容，一般的我们会使用File的形式获取。但是这样有一个弊端，就是我们的文件路径是一种硬编码的形式，在Java编码过程中我们极其不推荐这种写法；当然在web项目下，我们可以通过application对象的getRealPath(“文件名”)的方式获取文件的绝对路径，但是这样也不是很推荐
+
+### 3.1、class.getResource(path)
+
+其中的参数path有两种形式，一种是以“/”开头的，另一种是不以"/"开头；
+- 以`/`开头的表示：从项目的根路径下去获取文件即classPath目录下
+- 不以`/`开头：以该类对象所在位置为根路径来进行查找的
+```java
+public class ClassGetResourcePath {
+    public static void main(String[] args) {
+		// file:/Users/.../base-example/example/target/classes/com/blue/fish/example/classpath/
+        System.out.println(ClassGetResourcePath.class.getResource(""));
+		// file:/Users/.../base-example/example/target/classes/
+        System.out.println(ClassGetResourcePath.class.getResource("/"));
+    }
+}
+```
+
+### 3.2、Class.getClassLoader().getResource(String path)
+
+该方法中的参数path不能以“/“开头，path表示的是从classpath下获取资源的
+```java
+// sun.misc.Launcher$AppClassLoader@135fbaa4
+System.out.println(ClassGetResourcePath.class.getClassLoader());
+// file:/Users/bluefish/Documents/workspace/base/java-component/base-example/example/target/classes/
+System.out.println(ClassGetResourcePath.class.getClassLoader().getResource(""));
+// null
+System.out.println(ClassGetResourcePath.class.getClassLoader().getResource("/"));
+```
 
 # 参考文章
 
