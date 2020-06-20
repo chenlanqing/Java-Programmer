@@ -67,11 +67,11 @@
 	```
 	[root@localhost usr]# vi /etc/profile
 	编辑该文件，在该文件后追加如下配置:
-		JAVA_HOME=/usr/java/jdk1.8.0_144
-		JRE_HOME=/usr/java/jdk1.8.0_144/jre
+		JAVA_HOME=/usr/java/jdk1.8.0_231-amd64
+		JRE_HOME=/usr/java/jdk1.8.0_231-amd64/jre
 		PATH=$PATH:$JAVA_HOME/bin:$JRE_HOME/bin
 		CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar:$JRE_HOME/lib
-		export JAVA_HOME JRE_HOME PATH CLASSPATH
+		export JAVA_HOME JRE_HOME PATH CLASSPATHec
 	[root@localhost ~]# source /etc/profile   //使修改立即生效
 	[root@localhost ~]# echo $PATH   //查看PATH值
     ```	

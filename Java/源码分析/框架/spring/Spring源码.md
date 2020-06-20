@@ -1,48 +1,51 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-目录
+# 一、Spring结构
 
-- [一、IOC](#%E4%B8%80ioc)
-  - [1、IOC的生命周期](#1ioc%E7%9A%84%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
-  - [2、IOC生命周期](#2ioc%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
-    - [2.1、BeanFactory Bean生命周期-面向Spring本身](#21beanfactory-bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%E9%9D%A2%E5%90%91spring%E6%9C%AC%E8%BA%AB)
-    - [2.2、BeanFactory Bean生命周期-面向Spring本身](#22beanfactory-bean%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F-%E9%9D%A2%E5%90%91spring%E6%9C%AC%E8%BA%AB)
-  - [3、IOC源码体系](#3ioc%E6%BA%90%E7%A0%81%E4%BD%93%E7%B3%BB)
-  - [4、IOC容器的启动过程](#4ioc%E5%AE%B9%E5%99%A8%E7%9A%84%E5%90%AF%E5%8A%A8%E8%BF%87%E7%A8%8B)
-  - [5、Bean加载过程](#5bean%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B)
-  - [6、refresh方法源码](#6refresh%E6%96%B9%E6%B3%95%E6%BA%90%E7%A0%81)
-    - [6.1、prepareRefresh()：刷新前预处理](#61preparerefresh%E5%88%B7%E6%96%B0%E5%89%8D%E9%A2%84%E5%A4%84%E7%90%86)
-    - [6.2、obtainFreshBeanFactory()：获取BeanFactory](#62obtainfreshbeanfactory%E8%8E%B7%E5%8F%96beanfactory)
-    - [6.3、prepareBeanFactory(beanFactory)](#63preparebeanfactorybeanfactory)
-    - [6.4、postProcessBeanFactory(beanFactory);](#64postprocessbeanfactorybeanfactory)
-    - [6.5、invokeBeanFactoryPostProcessors(beanFactory);](#65invokebeanfactorypostprocessorsbeanfactory)
-    - [6.6、registerBeanPostProcessors(beanFactory);](#66registerbeanpostprocessorsbeanfactory)
-    - [6.7、initMessageSource();](#67initmessagesource)
-    - [6.8、initApplicationEventMulticaster();](#68initapplicationeventmulticaster)
-    - [6.9、onRefresh()](#69onrefresh)
-    - [6.10、registerListeners();](#610registerlisteners)
-    - [6.11、finishBeanFactoryInitialization(beanFactory)](#611finishbeanfactoryinitializationbeanfactory)
-    - [6.12、finishRefresh();](#612finishrefresh)
-- [二、AOP](#%E4%BA%8Caop)
-- [三、spring事务](#%E4%B8%89spring%E4%BA%8B%E5%8A%A1)
-  - [1、Spring事务管理方式](#1spring%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E6%96%B9%E5%BC%8F)
-  - [2、Spring的事务特性](#2spring%E7%9A%84%E4%BA%8B%E5%8A%A1%E7%89%B9%E6%80%A7)
-    - [2.1、Spring的事务管理策略](#21spring%E7%9A%84%E4%BA%8B%E5%8A%A1%E7%AE%A1%E7%90%86%E7%AD%96%E7%95%A5)
-    - [2.2、Spring的事务隔离级别](#22spring%E7%9A%84%E4%BA%8B%E5%8A%A1%E9%9A%94%E7%A6%BB%E7%BA%A7%E5%88%AB)
-    - [2.3、Spring事务传播行为](#23spring%E4%BA%8B%E5%8A%A1%E4%BC%A0%E6%92%AD%E8%A1%8C%E4%B8%BA)
-    - [2.4、事务超时时间](#24%E4%BA%8B%E5%8A%A1%E8%B6%85%E6%97%B6%E6%97%B6%E9%97%B4)
-    - [2.5、事务回滚规则](#25%E4%BA%8B%E5%8A%A1%E5%9B%9E%E6%BB%9A%E8%A7%84%E5%88%99)
-  - [3、Spring事务实现原理](#3spring%E4%BA%8B%E5%8A%A1%E5%AE%9E%E7%8E%B0%E5%8E%9F%E7%90%86)
-- [四、SpringFactoriesLoader](#%E5%9B%9Bspringfactoriesloader)
-- [五、Spring事件](#%E4%BA%94spring%E4%BA%8B%E4%BB%B6)
-  - [1、理解Spring事件、监听机制](#1%E7%90%86%E8%A7%A3spring%E4%BA%8B%E4%BB%B6%E7%9B%91%E5%90%AC%E6%9C%BA%E5%88%B6)
-  - [2、Spring事件发布](#2spring%E4%BA%8B%E4%BB%B6%E5%8F%91%E5%B8%83)
-    - [2.1、ApplicationEventMulticaster注册 ApplicationListener](#21applicationeventmulticaster%E6%B3%A8%E5%86%8C-applicationlistener)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
+## 1、Spring的模块结构
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+![](image/SpringFramework.png)
 
-# 一、IOC
+### 1.1、Spring 核心容器
+
+对应图上的Core Container，该层基本上是 Spring Framework 的核心。它包含以下模块：
+- Spring Core
+- Spring Bean：核心容器提供 Spring 框架的基本功能。核心容器的主要组件是 BeanFactory，它是工厂模式的实现。BeanFactory 使用控制反转 （IOC）模式将应用程序的配置和依赖性规范与实际的应用程序代码分开
+- Spring Context：Spring 上下文是一个配置文件，向 Spring 框架提供上下文信息。Spring 上下文包括企业服务，例如 JNDI、EJB、电子邮件、国际化、事件机制、校验和调度功能
+- SpEL (Spring Expression Language)：Spring 表达式语言全称为 “Spring Expression Language”，缩写为 “SpEL” ，类似于 Struts2 中使用的 OGNL 表达式语言，能在运行时构建复杂表达式、存取对象图属性、对象方法调用等等，并且能与 Spring 功能完美整合，如能用来配置 Bean 定义
+
+或者说这块就是IOC
+
+### 1.2、数据访问
+
+对应图中，Data Access；该层提供与数据库交互的支持。它包含以下模块：
+- JDBC (Java DataBase Connectivity)：Spring 对 JDBC 的封装模块，提供了对关系数据库的访问。
+- ORM (Object Relational Mapping)：Spring ORM 模块，提供了对 hibernate5 和 JPA 的集成
+- OXM (Object XML Mappers)：Spring 提供了一套类似 ORM 的映射机制，用来将 Java 对象和 XML 文件进行映射。这就是 Spring 的对象 XML 映射功能，有时候也成为 XML 的序列化和反序列化；
+- Transaction：Spring 简单而强大的事务管理功能，包括声明式事务和编程式事务。
+
+### 1.3、Web
+
+该层提供了创建 Web 应用程序的支持。它包含以下模块：
+
+- WebMVC：MVC 框架是一个全功能的构建 Web 应用程序的 MVC 实现。通过策略接口，MVC 框架变成为高度可配置的，MVC 容纳了大量视图技术，其中包括 JSP、Velocity、Tiles、iText 和 POI
+- WebFlux：基于 Reactive 库的响应式的 Web 开发框架；
+- WebSocket：Spring 4.0 的一个最大更新是增加了对 Websocket 的支持。Websocket 提供了一个在 Web 应用中实现高效、双向通讯，需考虑客户端(浏览器)和服务端之间高频和低延时消息交换的机制。一般的应用场景有：在线交易、网页聊天、游戏、协作、数据可视化等
+
+### 1.4、AOP
+
+该层支持面向切面编程。它包含以下模块：
+
+- AOP：通过配置管理特性，Spring AOP 模块直接将面向方面的编程功能集成到了 Spring 框架中。所以，可以很容易地使 Spring 框架管理的任何对象支持 AOP。Spring AOP 模块为基于 Spring 的应用程序中的对象提供了事务管理服务。通过使用 Spring AOP，不用依赖 EJB 组件，就可以将声明性事务管理集成到应用程序中；
+- Aspects：该模块为与 AspectJ 的集成提供支持；
+- Instrumentation：该层为类检测和类加载器实现提供支持
+
+### 1.5、其它
+
+- JMS (Java Messaging Service)：提供了一个 JMS 集成框架，简化了 JMS API 的使用。
+- Test：该模块为使用 JUnit 和 TestNG 进行测试提供支持；
+- Messaging：该模块为 STOMP 提供支持。它还支持注解编程模型，该模型用于从 WebSocket 客户端路由和处理 STOMP 消息
+
+
+# 二、IOC
 
 ## 1、IOC的生命周期
 
@@ -538,7 +541,7 @@ public void registerShutdownHook() {
 }
 ```
 
-# 二、AOP
+# 三、AOP
 
 ## 1、Spring Aop实现方式
 
@@ -558,7 +561,7 @@ CGLIB代理主要通过对字节码的操作，为对象引入间接级别，以
 
 - CGLIB缺点：对于final方法，无法进行代理
 
-# 三、Spring事务
+# 四、Spring事务
 
 ## 1、Spring事务管理方式
 
@@ -625,9 +628,11 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 ## 3、Spring事务实现原理
 
 
-# 四、SpringFactoriesLoader
+# 、五、SpringFactoriesLoader
 
-# 五、Spring事件
+[SpringFactoriesLoader](Springboot源码.md#2.2SpringFactoriesLoader)
+
+# 六、Spring事件
 
 ## 1、理解Spring事件、监听机制
 

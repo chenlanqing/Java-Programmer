@@ -1,5 +1,4 @@
 
-
 ## 1、核心概念
 
 ### 1.1、主要特点
@@ -47,3 +46,5 @@ Topic相关信息（test) bin/kafka-topics.sh --describe --zookeeper localhost:2
 https://mp.weixin.qq.com/s/d9KIz0xvp5I9rqnDAlZvXw
 
 https://blog.csdn.net/hmsiwtv/article/details/46960053
+
+http://cmsblogs.com/?p=10502

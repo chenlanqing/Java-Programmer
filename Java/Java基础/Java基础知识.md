@@ -4353,7 +4353,7 @@ publicclass ManifestUtil {
 
 每个开源项目都有一个文件：CONTRIBUTING.md，阅读该文件可以找到对应的方法。JDK打包可以搜索文件：jdk building.jdk
 
-# 二十二、Java Agent
+# 二十二、JavaAgent
 
 - [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
 - [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
