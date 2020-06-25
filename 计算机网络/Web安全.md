@@ -1,51 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [浏览器安全](#%E6%B5%8F%E8%A7%88%E5%99%A8%E5%AE%89%E5%85%A8)
-  - [1、同源策略](#1%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5)
-- [一、CSRF](#%E4%B8%80csrf)
-  - [1、概述](#1%E6%A6%82%E8%BF%B0)
-  - [2、攻击原理](#2%E6%94%BB%E5%87%BB%E5%8E%9F%E7%90%86)
-  - [3、CSRF的防御](#3csrf%E7%9A%84%E9%98%B2%E5%BE%A1)
-- [二、XSS](#%E4%BA%8Cxss)
-  - [1、概述](#1%E6%A6%82%E8%BF%B0-1)
-  - [2、攻击原理](#2%E6%94%BB%E5%87%BB%E5%8E%9F%E7%90%86-1)
-  - [3、如何防御](#3%E5%A6%82%E4%BD%95%E9%98%B2%E5%BE%A1)
-    - [3.1、HttpOnly](#31httponly)
-    - [3.2、输入检查](#32%E8%BE%93%E5%85%A5%E6%A3%80%E6%9F%A5)
-    - [3.3、输出检查](#33%E8%BE%93%E5%87%BA%E6%A3%80%E6%9F%A5)
-    - [3.4、富文本的处理](#34%E5%AF%8C%E6%96%87%E6%9C%AC%E7%9A%84%E5%A4%84%E7%90%86)
-- [三、点击劫持](#%E4%B8%89%E7%82%B9%E5%87%BB%E5%8A%AB%E6%8C%81)
-  - [1、概述](#1%E6%A6%82%E8%BF%B0-2)
-  - [2、Flash点击劫持](#2flash%E7%82%B9%E5%87%BB%E5%8A%AB%E6%8C%81)
-  - [3、图片覆盖攻击](#3%E5%9B%BE%E7%89%87%E8%A6%86%E7%9B%96%E6%94%BB%E5%87%BB)
-- [四、注入攻击](#%E5%9B%9B%E6%B3%A8%E5%85%A5%E6%94%BB%E5%87%BB)
-  - [1、SQL注入](#1sql%E6%B3%A8%E5%85%A5)
-    - [1.1、如何理解SQL注入](#11%E5%A6%82%E4%BD%95%E7%90%86%E8%A7%A3sql%E6%B3%A8%E5%85%A5)
-    - [1.2、SQL注入如何产生](#12sql%E6%B3%A8%E5%85%A5%E5%A6%82%E4%BD%95%E4%BA%A7%E7%94%9F)
-    - [1.3、如何寻找SQL注入漏洞](#13%E5%A6%82%E4%BD%95%E5%AF%BB%E6%89%BEsql%E6%B3%A8%E5%85%A5%E6%BC%8F%E6%B4%9E)
-    - [1.4、如何进行SQL注入攻击](#14%E5%A6%82%E4%BD%95%E8%BF%9B%E8%A1%8Csql%E6%B3%A8%E5%85%A5%E6%94%BB%E5%87%BB)
-    - [1.5、如何防御SQL注入攻击](#15%E5%A6%82%E4%BD%95%E9%98%B2%E5%BE%A1sql%E6%B3%A8%E5%85%A5%E6%94%BB%E5%87%BB)
-  - [2、操作系统命令注入](#2%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F%E5%91%BD%E4%BB%A4%E6%B3%A8%E5%85%A5)
-  - [3、XML注入攻击](#3xml%E6%B3%A8%E5%85%A5%E6%94%BB%E5%87%BB)
-- [五、DDOS](#%E4%BA%94ddos)
-  - [1、概述](#1%E6%A6%82%E8%BF%B0-3)
-  - [2、DDOS分类](#2ddos%E5%88%86%E7%B1%BB)
-  - [3、SYN Flood](#3syn-flood)
-- [六、文件上传漏洞](#%E5%85%AD%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E6%BC%8F%E6%B4%9E)
-  - [1、概述](#1%E6%A6%82%E8%BF%B0-4)
-  - [2、设计安全的文件上传功能](#2%E8%AE%BE%E8%AE%A1%E5%AE%89%E5%85%A8%E7%9A%84%E6%96%87%E4%BB%B6%E4%B8%8A%E4%BC%A0%E5%8A%9F%E8%83%BD)
-- [七、中间人攻击（MITM）](#%E4%B8%83%E4%B8%AD%E9%97%B4%E4%BA%BA%E6%94%BB%E5%87%BBmitm)
-- [八、Java安全机制](#%E5%85%ABjava%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6)
-  - [1、运行时安全机制](#1%E8%BF%90%E8%A1%8C%E6%97%B6%E5%AE%89%E5%85%A8%E6%9C%BA%E5%88%B6)
-  - [2、Java提供的安全框架API](#2java%E6%8F%90%E4%BE%9B%E7%9A%84%E5%AE%89%E5%85%A8%E6%A1%86%E6%9E%B6api)
-  - [3、JDK集成的各种安全工具](#3jdk%E9%9B%86%E6%88%90%E7%9A%84%E5%90%84%E7%A7%8D%E5%AE%89%E5%85%A8%E5%B7%A5%E5%85%B7)
-  - [4、安全漏洞](#4%E5%AE%89%E5%85%A8%E6%BC%8F%E6%B4%9E)
-- [九、Zip炸弹](#%E4%B9%9Dzip%E7%82%B8%E5%BC%B9)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 浏览器安全
 
@@ -258,6 +210,10 @@ DDOS又称为分布式拒绝服务，全称是：Distributed Denial of Services�
 # 九、Zip炸弹
 
 - 概述：是指解压缩后能够产生巨大的数据量的可疑压缩文件，这样的压缩文件解压缩可能对解压程序造成严重负担或崩溃，如果带有格式化参数的压缩包，双击压缩包后，所在的硬盘分区被完全格式化了
+
+# 十、计时攻击
+
+
 
 # 参考资料
 * 《白帽子讲Web安全》

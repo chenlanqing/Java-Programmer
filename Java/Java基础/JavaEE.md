@@ -1,58 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、Servlet](#%e4%b8%80servlet)
-	- [1、不使用开发工具开发一个servlet](#1%e4%b8%8d%e4%bd%bf%e7%94%a8%e5%bc%80%e5%8f%91%e5%b7%a5%e5%85%b7%e5%bc%80%e5%8f%91%e4%b8%80%e4%b8%aaservlet)
-	- [2、load-on-startup](#2load-on-startup)
-	- [3、servlet-mapping](#3servlet-mapping)
-	- [4、Servlet线程安全问题](#4servlet%e7%ba%bf%e7%a8%8b%e5%ae%89%e5%85%a8%e9%97%ae%e9%a2%98)
-	- [5、Servlet初始化参数](#5servlet%e5%88%9d%e5%a7%8b%e5%8c%96%e5%8f%82%e6%95%b0)
-	- [6、ServletContext](#6servletcontext)
-	- [7、HttpServletResponse](#7httpservletresponse)
-	- [8、HttpServletResquest](#8httpservletresquest)
-	- [9、状态管理](#9%e7%8a%b6%e6%80%81%e7%ae%a1%e7%90%86)
-		- [9.1、Cookie](#91cookie)
-		- [9.2、Session](#92session)
-		- [9.3、Cookie 与 Session](#93cookie-%e4%b8%8e-session)
-		- [9.4、分布式Session](#94%e5%88%86%e5%b8%83%e5%bc%8fsession)
-	- [10、Servlet 与 Servlet 容器](#10servlet-%e4%b8%8e-servlet-%e5%ae%b9%e5%99%a8)
-		- [10.1、两者直接的关系](#101%e4%b8%a4%e8%80%85%e7%9b%b4%e6%8e%a5%e7%9a%84%e5%85%b3%e7%b3%bb)
-		- [10.2、Servlet 容器的启动过程](#102servlet-%e5%ae%b9%e5%99%a8%e7%9a%84%e5%90%af%e5%8a%a8%e8%bf%87%e7%a8%8b)
-		- [10.3、Servlet 对象创建](#103servlet-%e5%af%b9%e8%b1%a1%e5%88%9b%e5%bb%ba)
-		- [10.4、Servlet 是如何运行的](#104servlet-%e6%98%af%e5%a6%82%e4%bd%95%e8%bf%90%e8%a1%8c%e7%9a%84)
-		- [10.5、servlet的生命周期](#105servlet%e7%9a%84%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f)
-		- [10.6、Servlet结构](#106servlet%e7%bb%93%e6%9e%84)
-			- [10.6.1、Servlet框架组成](#1061servlet%e6%a1%86%e6%9e%b6%e7%bb%84%e6%88%90)
-			- [10.6.2、Servlet框架核心是 Servlet类](#1062servlet%e6%a1%86%e6%9e%b6%e6%a0%b8%e5%bf%83%e6%98%af-servlet%e7%b1%bb)
-			- [10.6.3、service方法注意事项](#1063service%e6%96%b9%e6%b3%95%e6%b3%a8%e6%84%8f%e4%ba%8b%e9%a1%b9)
-		- [10.7、创建Servlet对象的时机](#107%e5%88%9b%e5%bb%baservlet%e5%af%b9%e8%b1%a1%e7%9a%84%e6%97%b6%e6%9c%ba)
-		- [10.8、销毁Servlet对象的时机](#108%e9%94%80%e6%af%81servlet%e5%af%b9%e8%b1%a1%e7%9a%84%e6%97%b6%e6%9c%ba)
-	- [11、Context、ServletContext、ApplicationContext](#11contextservletcontextapplicationcontext)
-- [二、HTTP协议](#%e4%ba%8chttp%e5%8d%8f%e8%ae%ae)
-- [三、Servlet高级应用](#%e4%b8%89servlet%e9%ab%98%e7%ba%a7%e5%ba%94%e7%94%a8)
-	- [1、监听器](#1%e7%9b%91%e5%90%ac%e5%99%a8)
-		- [1.1、什么是监听器](#11%e4%bb%80%e4%b9%88%e6%98%af%e7%9b%91%e5%90%ac%e5%99%a8)
-		- [1.2、监听器应用](#12%e7%9b%91%e5%90%ac%e5%99%a8%e5%ba%94%e7%94%a8)
-		- [1.3、servlet组件启动顺序](#13servlet%e7%bb%84%e4%bb%b6%e5%90%af%e5%8a%a8%e9%a1%ba%e5%ba%8f)
-		- [1.4、监听器分类](#14%e7%9b%91%e5%90%ac%e5%99%a8%e5%88%86%e7%b1%bb)
-		- [1.5、监听域对象自身的创建与销毁](#15%e7%9b%91%e5%90%ac%e5%9f%9f%e5%af%b9%e8%b1%a1%e8%87%aa%e8%ba%ab%e7%9a%84%e5%88%9b%e5%bb%ba%e4%b8%8e%e9%94%80%e6%af%81)
-		- [1.6、监听域对象的属性增加与删除，实现接口](#16%e7%9b%91%e5%90%ac%e5%9f%9f%e5%af%b9%e8%b1%a1%e7%9a%84%e5%b1%9e%e6%80%a7%e5%a2%9e%e5%8a%a0%e4%b8%8e%e5%88%a0%e9%99%a4%e5%ae%9e%e7%8e%b0%e6%8e%a5%e5%8f%a3)
-	- [2、过滤器：Filter](#2%e8%bf%87%e6%bb%a4%e5%99%a8filter)
-		- [2.1、工作原理](#21%e5%b7%a5%e4%bd%9c%e5%8e%9f%e7%90%86)
-		- [2.2、生命周期](#22%e7%94%9f%e5%91%bd%e5%91%a8%e6%9c%9f)
-		- [2.3、过滤器分类](#23%e8%bf%87%e6%bb%a4%e5%99%a8%e5%88%86%e7%b1%bb)
-		- [2.4、多个过滤器](#24%e5%a4%9a%e4%b8%aa%e8%bf%87%e6%bb%a4%e5%99%a8)
-		- [2.5、过滤器应用](#25%e8%bf%87%e6%bb%a4%e5%99%a8%e5%ba%94%e7%94%a8)
-- [四、Servlet3.0](#%e5%9b%9bservlet30)
-	- [1、runtimes pluggability（运行时插件能力）](#1runtimes-pluggability%e8%bf%90%e8%a1%8c%e6%97%b6%e6%8f%92%e4%bb%b6%e8%83%bd%e5%8a%9b)
-	- [2、开启异步支持](#2%e5%bc%80%e5%90%af%e5%bc%82%e6%ad%a5%e6%94%af%e6%8c%81)
-- [五、其他](#%e4%ba%94%e5%85%b6%e4%bb%96)
-	- [1、防止表单重复提交](#1%e9%98%b2%e6%ad%a2%e8%a1%a8%e5%8d%95%e9%87%8d%e5%a4%8d%e6%8f%90%e4%ba%a4)
-- [参考资料](#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 # 一、Servlet
 
@@ -266,7 +211,7 @@ session机制采用的是一种在服务器端保持状态的解决方案.由于
 
 ### 9.4、分布式Session
 
-[分布式Session](../Java架构/分布式.md#四分布式session)
+[分布式Session](../分布式架构/分布式.md#四分布式session)
 
 ## 10、Servlet 与 Servlet 容器
 

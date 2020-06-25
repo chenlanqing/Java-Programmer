@@ -5376,11 +5376,11 @@ Actuator
 
 SpringBoot Admin
 - 集成client模式
-- 服务发现模式
+- 服务发现模式：注册到Eureka上，避免侵入业务代码
 
 Prmoetheus + Granfana
 
-
+http://micrometer.io/docs
 
 # 十七、面试题
 

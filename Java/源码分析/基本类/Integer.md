@@ -402,8 +402,10 @@ private static class IntegerCache {
 有 CharacterCache 用于缓存 Character 对象<br>
 Byte， Short， Long 有固定范围： -128 到 127。对于 Character， 范围是 0 到 127。除了 Integer 以外，这个范围都不能改变
 
-# 六、int与Integer
+# 六、面试问题
+
 ## 1、int范围问题
+
 - 看如下代码，会不会产生问题？
 	```java
 	// a、b、c 都是int类型数据
@@ -426,5 +428,23 @@ Byte， Short， Long 有固定范围： -128 到 127。对于 Character， 范�
 	boolean f2 = a < 0 && b < 0 && x > 0;
 	```
 
+## 2、int整数转换为完整二进制表示
 
+```java
+public class IntegerToFullBinary{
+	/**
+	 * 将一个int整数转换为完整二进制表示
+	 * 如 2=> 00000000 00000000 00000000 00000010
+	 * @param  num [description]
+	 * @return     [description]
+	 */
+	public static String toFullBinaryString(int num) {
+        char[] chs = new char[Integer.SIZE];
+        for (int i = 0; i < Integer.SIZE; i++) {
+            chs[Integer.SIZE - 1 - i] = (char) (((num >> i) & 1) + '0');
+        }
+        return new String(chs);
+    }
+}
+```
 

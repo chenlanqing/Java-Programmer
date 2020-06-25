@@ -1,15 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [1、Socket](#1socket)
-  - [1.1、Socket之TCP](#11socket%E4%B9%8Btcp)
-  - [1.2、Socket之UDP](#12socket%E4%B9%8Budp)
-  - [1.3、UDP的API](#13udp%E7%9A%84api)
-- [2、基本概念](#2%E5%9F%BA%E6%9C%AC%E6%A6%82%E5%BF%B5)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 
 # 1、Socket
 
@@ -58,5 +46,35 @@ IP地址与端口的结合协议，在网络传输中用于唯一标示两个端
 
 
 
+### 获取IP地址
+
+```java
+public static String getIp() throws Exception{
+	return InetAddress.getLocalHost().getHostAddress();
+}
+
+public static String getLocalIPAddress()throws Exception{
+	String ipstr = null;
+	Enumeration<NetworkInterface> allNetInterfaces = NetworkInterface.getNetworkInterfaces();
+	InetAddress ip = null;
+	while (allNetInterfaces.hasMoreElements()) {
+		NetworkInterface netInterface = (NetworkInterface) allNetInterfaces.nextElement();
+		if(netInterface.getName().startsWith("eth")){
+			Enumeration<InetAddress> addresses = netInterface.getInetAddresses();
+			while (addresses.hasMoreElements()) {
+				ip = (InetAddress) addresses.nextElement();
+				if(ip != null && ip instanceof Inet4Address){
+					ipstr = ip.getHostAddress();
+				}
+			}
+		}
+		
+	}
+	if(ipstr != null)
+		return ipstr;
+	else
+		throw new Exception("Can not get local ip address!");
+}
+```
 
 
