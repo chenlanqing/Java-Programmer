@@ -251,7 +251,61 @@ mysql目前最新版是8.0，启动mysql后，通过IDE工具无法连接mysql�
 - 更新一下用户的密码：`ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';`
 - 刷新权限：`flush privileges;`
 
-# 二、MySQL主从配置
+# 二、MySQL主从复制
+
+主要步骤：
+- 配置主从数据库服务器参数；
+- 在Master服务器上创建用于复制的数据库账号；
+- 备份Master服务器上的数据并初始化Salve服务器数据；
+- 启动复制链路；
+
+## 1、环境准备
+
+- MySQL版本：5.7.30，可以登录到mysql中，使用`select @@version;` 查看版本号；
+- 两台服务器：CentOS7，分配如下：
+    - Master:  192.168.89.141
+    - Slave:   192.168.89.142
+
+## 2、配置主服务器
+
+- 修改`/etc/my.cnf`配置文件：
+    - 开启binlog，配置log-bin；
+    - 修改server-id；
+
+    基本配置如下：
+    ```cnf
+    log-bin=mysql-bin
+    server-id=141
+    ```
+- 创建用于复制的账号：
+    ```
+    create user 'repl'@'192.168.89.%' identified by '123456';
+    grant replication slave on *.* to 'repl'@'192.168.89.%';
+    ```
+- 创建日志点，将当前master数据导出
+    ```
+    mysqldump -uroot -p --single-transaction --master-data --triggers --routines --all-databases > all.sql
+    ```
+- 将all.sql拷贝到Slave服务器上：`scp all.sql root@192.168.89.142:/root/software/`
+
+## 3、配置从服务器
+
+- 修改server-id，可以按照ip地址后缀
+- 启用read_only = on
+- 将之前从主库中拷贝过来的all.sql文件导入到从库中：`mysql -uroot -p < all.sql`
+- 设置主从关系：`change master to master_host='192.168.89.141',master_user='repl',master_password='123456',MASTER_LOG_FILE='mysql-bin.000001',MASTER_LOG_POS=617;`
+
+    其中 MASTER_LOG_FILE、MASTER_LOG_POS，可以从all.sql查看到，或者可以再主库上执行：
+    ```
+    mysql> SHOW MASTER STATUS;
+    +------------------+----------+--------------+------------------+-------------------+
+    | File             | Position | Binlog_Do_DB | Binlog_Ignore_DB | Executed_Gtid_Set |
+    +------------------+----------+--------------+------------------+-------------------+
+    | mysql-bin.000001 |      617 |              |                  |                   |
+    +------------------+----------+--------------+------------------+-------------------+
+    ```
+- 启动：`start salves;`
+- 查看状态：`show slave status;`
 
 # 三、Redis安装
 

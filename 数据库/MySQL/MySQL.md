@@ -518,9 +518,11 @@ HAVING <having_condition>
 ORDER BY <order_by_condition>
 LIMIT <limit_number>
 ```
+
 ## 2、数据执行的顺序：前面括号的数据表示执行顺序
 
 ![image](image/SQL执行顺序.jpg)
+
 ```
 (7)     SELECT
 (8)     DISTINCT <select_list>
@@ -547,7 +549,30 @@ LIMIT <limit_number>
 
 *除非你确定要有序行，否则不要指定ORDER BY 子句*
 
-## 3、SQL性能下降的原因
+## 3、MySQL查询执行路径
+
+![](image/MySQL查询执行路径.png)
+
+
+### 查询优化器
+
+```
+mysql> select sql_no_cache count(*) from film_actor;
++----------+
+| count(*) |
++----------+
+|     5462 |
++----------+
+1 row in set, 1 warning (0.02 sec)
+
+mysql> show status like 'last_query_cost';
++-----------------+-------------+
+| Variable_name   | Value       |
++-----------------+-------------+
+| Last_query_cost | 1104.399000 |
++-----------------+-------------+
+1 row in set (0.04 sec)
+```
 
 # 六、高级查询
 
@@ -1028,14 +1053,14 @@ InnoDB采取的方式是：将数据划分为若干个页，以页作为磁盘�
 
 ## 1、事务特性
 
-### 1.2、ACID特性
+### 1.1、ACID特性
 
 - 原子性（Atomic）：指事务的原子性操作，对数据的修改要么全部执行成功，要么全部失败，实现事务的原子性，是基于日志的Redo/Undo机制
 - 一致性（Consistency）：一致性是指事务必须使数据库从一个一致性状态变换到另一个一致性状态，也就是说一个事务执行之前和执行之后都必须处于一致性状态
 - 隔离性（Isolation）：隔离性是当多个用户并发访问数据库时，比如操作同一张表时，数据库为每一个用户开启的事务，不能被其他事务的操作所干扰，多个并发事务之间要相互隔离；
 - 持久性（Durability）：持久性是指一个事务一旦被提交了，那么对数据库中的数据的改变就是永久性的，即便是在数据库系统遇到故障的情况下也不会丢失提交事务的操作
 
-### 1.3、Redo/Undo机制
+### 1.2、Redo/Undo机制
 
 Redo/Undo机制是将所有对数据的更新操作都写到日志中；
 
@@ -1044,6 +1069,59 @@ Redo log用来记录某数据块被修改后的值，可以用来恢复未写入
 假如数据库在执行的过程中，不小心崩了，可以通过该日志的方式，回滚之前已经执行成功的操作，实现事务的一致性
 
 具体的实现流程：假如某个时刻数据库崩溃，在崩溃之前有事务A和事务B在执行，事务A已经提交，而事务B还未提交。当数据库重启进行 crash-recovery 时，就会通过Redo log将已经提交事务的更改写到数据文件，而还没有提交的就通过Undo log进行roll back
+
+### 1.3、原子性实现
+
+InnoDB存储引擎还提供了两种事务日志：redo log(重做日志)和undo log(回滚日志)。其中redo log用于保证事务持久性；undo log则是事务原子性和隔离性实现的基础；
+
+实现原子性的关键：是当事务回滚时能够撤销所有已经成功执行的sql语句。InnoDB实现回滚，靠的是undo log：当事务对数据库进行修改时，InnoDB会生成对应的undo log；如果事务执行失败或调用了rollback，导致事务需要回滚，便可以利用undo log中的信息将数据回滚到修改之前的样子；
+
+undo log属于逻辑日志，它记录的是sql执行相关的信息。当发生回滚时，InnoDB会根据undo log的内容做与之前相反的工作：对于每个insert，回滚时会执行delete；对于每个delete，回滚时会执行insert；对于每个update，回滚时会执行一个相反的update，把数据改回去；
+
+### 1.4、持久性实现
+
+主要是基于redo log来实现
+
+InnoDB提供了缓存(Buffer Pool)，Buffer Pool中包含了磁盘中部分数据页的映射，作为访问数据库的缓冲：当从数据库读取数据时，会首先从Buffer Pool中读取，如果Buffer Pool中没有，则从磁盘读取后放入Buffer Pool；当向数据库写入数据时，会首先写入Buffer Pool，Buffer Pool中修改的数据会定期刷新到磁盘中（这一过程称为刷脏）；
+
+Buffer Pool的使用大大提高了读写数据的效率，但是也带了新的问题：如果MySQL宕机，而此时Buffer Pool中修改的数据还没有刷新到磁盘，就会导致数据的丢失，事务的持久性无法保证；
+
+`redo log`被引入来解决这个问题：当数据修改时，除了修改Buffer Pool中的数据，还会在redo log记录这次操作；当事务提交时，会调用fsync接口对redo log进行刷盘。如果MySQL宕机，重启时可以读取redo log中的数据，对数据库进行恢复。redo log采用的是WAL（Write-ahead logging，预写式日志），所有修改先写入日志，再更新到Buffer Pool，保证了数据不会因MySQL宕机而丢失，从而满足了持久性要求；
+
+比直接将Buffer Pool中修改的数据写入磁盘(即刷脏)要快主要有以下两方面的原因：
+- 刷脏是随机IO，因为每次修改的数据位置随机，但写redo log是追加操作，属于顺序IO。
+- 刷脏是以数据页（Page）为单位的，MySQL默认页大小是16KB，一个Page上一个小修改都要整页写入；而redo log中只包含真正需要写入的部分，无效IO大大减少
+
+**redo log与binlog：**
+- 作用不同：redo log是用于crash recovery的，保证MySQL宕机也不会影响持久性；binlog是用于point-in-time recovery的，保证服务器可以基于时间点恢复数据，此外binlog还用于主从复制；
+- 层次不同：redo log是InnoDB存储引擎实现的，而binlog是MySQL的服务器层实现的，同时支持InnoDB和其他存储引擎；
+- 内容不同：redo log是物理日志，内容基于磁盘的Page；binlog的内容是二进制的，根据`binlog_format`参数的不同，可能基于sql语句、基于数据本身或者二者的混合；
+- 写入时机不同：binlog在事务提交时写入；redo log的写入时机相对多元；
+
+### 1.5、隔离性实现
+
+隔离性实现主要基于以下两点：
+- (一个事务)写操作对(另一个事务)写操作的影响：锁机制保证隔离性
+- (一个事务)写操作对(另一个事务)读操作的影响：MVCC保证隔离性
+
+**锁机制：**
+
+锁机制的基本原理可以概括为：事务在修改数据之前，需要先获得相应的锁；获得锁之后，事务便可以修改数据；该事务操作期间，这部分数据是锁定的，其他事务如果需要修改数据，需要等待当前事务提交或回滚后释放锁；
+
+查看锁信息：
+```
+select * from information_schema.innodb_locks; #锁的概况
+show engine innodb status; #InnoDB整体状态，其中包括锁的情况
+```
+
+InnoDB实现的RR，通过锁机制、数据的隐藏列、undo log和类next-key lock，实现了一定程度的隔离性
+
+### 1.6、一致性实现
+
+实现一致性的措施包括：
+- 保证原子性、持久性和隔离性，如果这些特性无法保证，事务的一致性也无法保证
+- 数据库本身提供保障，例如不允许向整形列插入字符串值、字符串长度不能超过列的限制等
+- 应用层面进行保障，例如如果转账操作只扣除转账者的余额，而没有增加接收者的余额，无论数据库实现的多么完美，也无法保证状态的一致
 
 ## 2、数据库隔离级别
 
@@ -1647,7 +1725,7 @@ https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
 
 所谓的反范式化是为了性能和读取效率的考虑而适当的对数据库设计范式的要求进行违反，而允许存在的少量的数据冗余，即反范式化就是使用空间来换取时间
 
-# 十二、mysql高可用
+# 十二、MySQL高可用
 
 ## 1、mysql复制功能
 
@@ -1662,32 +1740,7 @@ mysql复制解决了什么问题
 
 ## 2、mysql binlog
 
-记录了所有对mysql数据库的修改事件，包括增删查改事件和对表结构的修改事件。且二进制日志中记录是已执行成功的记录
-
-`log_bin`：binlog日志是否打开
-
-### 2.1、mysql二进制日志格式
-
-查看二进制日志格式：`show variables like 'binlog_format';`
-
-修改二进制日志格式：`set binlog_format=''`
-
-- 基于段的格式：`binlog_format=STATEMENT`，mysql5.7之前默认的格式，主要记录的执行sql语句
-	- 优点：日志记录量相对较小，节约磁盘及网络IO
-	- 缺点：必须记录上下文信息，保证语句在从服务器上的执行结果与主服务器上执行结果相同，但是非确定性函数还是无法正确复制，有可能mysql主从服务器数据不一致
-- 基于行的格式：`binlog_format=ROW`，mysql5.7之后的默认格式，可以避免主从服务器数据不一致情况
-- 混合模式：`binlog_format=MIXED`
-
-### 2.2、管理binlog
-
-- show master logs：查看所有binlog的日志列表
-- show master status：查看最后一个binlog日志的编号名称，及最后一个事件结束的位置
-- flush logs：刷新binlog，此刻开始产生一个新编号的binlog日志文件
-- reset master：情况所有的binlog日志
-
-### 2.3、查看binlog日志
-
- `mysqlbinlog --no-defaults -vv --base64-output=DECODE-ROWS <binlog文件>`
+[BinaryLog](binlog.md)
 
 ## 3、mysql数据库备份
 
@@ -1697,17 +1750,62 @@ xtrabackup
 
 ## 4、mysql主从复制
 
-## 5、mysql读写分离
+### 4.1、MySQL主从复制的实现原理
 
-### 5.1、概述
+[主从配置](../../辅助资料/环境配置/Linux环境.md#二MySQL主从配置)
+
+MySQL 的主从复制是一个异步的复制过程，数据库数据从一个 MySQL 数据库（我们称之为 Master）复制到另一个 MySQL 数据库（我们称之为 Slave）。
+
+在 Master 与 Slave 之间实现整个主从复制的过程是由三个线程参与完成的。其中有两个线程（SQL 线程和 IO 线程）在 Slave 端，另外一个线程（IO 线程）在 Master 端；
+
+**主从复制原理：**
+
+MySQL主从复制涉及到三个线程，一个运行在主节点（log dump thread），其余两个(I/O thread, SQL thread)运行在从节点，如下图所示:
+
+![](image/MySQL-主从复制原理.png)
+- 主节点 binary log dump 线程：当从节点连接主节点时，主节点会创建一个log dump 线程，用于发送bin-log的内容。在读取bin-log中的操作时，此线程会对主节点上的bin-log加锁，当读取完成，直到发送给从节点之前，锁会被释放；
+- 从节点I/O线程：当从节点上执行`start slave`命令之后，从节点会创建一个I/O线程用来连接主节点，请求主库中更新的bin-log。I/O线程接收到主节点binlog dump 线程发来的更新之后，保存在本地relay-log中
+
+**异步复制：默认复制**
+
+- Slave 服务器上执行`start slave`，开启主从复制开关；
+- Slave 服务器上的 IO 线程会通过 Master 服务器上授权的有复制权限的用户请求连接 Master 服务器，并请求从指定 binlog 日志文件的指定位置之后发送 binlog 日志内容。（日志文件名和位置就是在配置主从复制任务时执行change master命令时指定的）；
+- Master 服务器接收到来自 Slave 服务器的 IO 线程的请求后，Master 服务器上的 IO 线程根据 Slave 服务器的 IO 线程请求的信息，读取指定 binlog 日志文件指定位置之后的 binlog 日志信息，然后返回给 Slave 端的 IO 线程。返回的信息中除了 binlog 日志内容外，还有本次返回日志内容后在 Master 服务器端的新的 binlog 文件名以及在 binlog 中的下一个指定更新位置；
+- 当 Slave 服务器的 IO 线程获取来自 Master 服务器上 IO 线程发送的日志内容及日志文件和位置点后，将 binlog 日志内容依次写入到 Slave 端自身的 relay log（即中继日志）文件（mysql-relay-bin.xxxxxx）的最末端，并将新的 binlog 文件名和位置记录到 master-info 文件中，以便下一次读取 Master 端新 binlog 日志时，能告诉 Master 服务器需要从新 binlog 日志的哪个文件哪个位置开始请求新的 binlog 日志内容；
+- Slave 服务器端的 SQL 线程会实时检测本地 relay log 中新增加的日志内容，然后及时的把 relay log 文件中的内容解析成在 Master 端曾经执行的 SQL 语句的内容，并在自身 Slave 服务器上按语句的顺序执行应用这些 SQL 语句，应用完毕后清理应用过的日志。
+- 经过了上面的过程，就可以确保在 Master 端和 Slave 端执行了同样的 SQL 语句。当复制状态正常的情况下，Master 端和 Slave 端的数据是完全一样的
+
+这种模式存在的问题：节点不会主动push bin log到从节点，这样有可能导致failover的情况下，也许从节点没有即时地将最新的bin log同步到本地
+
+**半同步复制**
+
+可以解决MySQL主库宕机导致的数据丢失情况。
+
+只需要接收到其中一台从节点的返回信息，就会commit；否则需要等待直到超时时间然后切换成异步模式再提交；这样做的目的可以使主从数据库的数据延迟缩小，可以提高数据安全性，确保了事务提交后，binlog至少传输到了一个从节点上，不能保证从节点将此事务更新到db中。性能上会有一定的降低，响应时间会变长；
+
+半同步模式不是mysql内置的，从mysql 5.5开始集成，需要master 和slave 安装插件开启半同步模式
+
+### 4.2、基于GTID复制与基于日志点的复制
+
+#### 4.2.1、基于日志点的复制
 
 
-### 5.2、应用程序代码读写分离
+#### 4.2.2、基于GTID的复制
 
+GTID：Global Transaction ID，是MySQL5.6引入的功能，可以在集群全局范围标识事务，用于取代过去通过binlog文件偏移量定位复制位置的传统方式。
 
-### 5.3、中间件读写分离
+GTID由source_id加transaction_id构成
 
-## 6、负载均衡
+**原理：**
+- 主节点更新数据时，会在事务前产生GTID，一起记录到binlog日志中。
+- 从节点的I/O线程将变更的bin log，写入到本地的relay log中。
+- SQL线程从relay log中获取GTID，然后对比本地binlog是否有记录（所以MySQL从节点必须要开启binary log）。
+- 如果有记录，说明该GTID的事务已经执行，从节点会忽略。
+- 如果没有记录，从节点就会从relay log中执行该GTID的事务，并记录到bin log。
+- 在解析过程中会判断是否有主键，如果没有就用二级索引，如果有就用全部扫描
+
+## 5、MMM与MHA架构
+
 
 # 十三、数据库分库分表
 
@@ -2321,7 +2419,7 @@ from SUser;
 	- 没有用到索引；
 	- 数据库选择了错误的索引；
 
-## 3、MySQL 性能优化
+## 3、数据库查询优化
 
 - 服务器硬件对性能的优化：
 	- CPU：(目前不支持多CPU对同一sql进行处理)
@@ -2338,6 +2436,8 @@ from SUser;
 	- 利用好MySQL自身提供的功能，如索引等
 	- 横向扩展：MySQL集群、负载均衡、读写分离
 	- SQL语句的优化（收效甚微）
+- 应用层面上
+	- 切分查询：比如业务上有一个复杂的查询，可能涉及到几张表，那么在应用层面上可以将查询拆分为单表查询；
 
 ## 4、慢查询日志包含的内容
 
@@ -3417,7 +3517,235 @@ MySQL可以通过启动时指定配置参数和使用配置文件两种方法进
 	call insert_emp(100000,500000);
 	```
 
-# 十八、MySQL常用sql
+# 十八、MySQL系统库
+
+- [information-schema-introduction](https://dev.mysql.com/doc/refman/8.0/en/information-schema-introduction.html)
+
+## 1、information_schema
+
+information_schema 数据库中保存了MySQL服务器所有数据库的信息。如数据库名，数据库的表，表栏的数据类型与访问权限等。简而言之，这台MySQL服务器上，到底有哪些数据库、各个数据库有哪些表，每张表的字段类型是什么，各个数据库要什么权限才能访问，等等信息都保存在 information_schema 对应的表里面；
+
+information_schema 数据库中的数据是只读的，不能对其进行增删改操作，且其实际上都是视图，不是基表，数据库中没有文件与其关联
+
+主要的表：
+```
+mysql> show tables;
++---------------------------------------+
+| Tables_in_information_schema          |
++---------------------------------------+
+| CHARACTER_SETS                        |
+| COLLATIONS                            |
+| COLLATION_CHARACTER_SET_APPLICABILITY |
+| COLUMNS                               |
+| COLUMN_PRIVILEGES                     |
+| ENGINES                               |
+| EVENTS                                |
+| FILES                                 |
+| GLOBAL_STATUS                         |
+| GLOBAL_VARIABLES                      |
+| KEY_COLUMN_USAGE                      |
+| OPTIMIZER_TRACE                       |
+| PARAMETERS                            |
+| PARTITIONS                            |
+| PLUGINS                               |
+| PROCESSLIST                           |
+| PROFILING                             |
+| REFERENTIAL_CONSTRAINTS               |
+| ROUTINES                              |
+| SCHEMATA                              |
+| SCHEMA_PRIVILEGES                     |
+| SESSION_STATUS                        |
+| SESSION_VARIABLES                     |
+| STATISTICS                            |
+| TABLES                                |
+| TABLESPACES                           |
+| TABLE_CONSTRAINTS                     |
+| TABLE_PRIVILEGES                      |
+| TRIGGERS                              |
+| USER_PRIVILEGES                       |
+| VIEWS                                 |
+| INNODB_LOCKS                          |
+| INNODB_TRX                            |
+| INNODB_SYS_DATAFILES                  |
+| INNODB_FT_CONFIG                      |
+| INNODB_SYS_VIRTUAL                    |
+| INNODB_CMP                            |
+| INNODB_FT_BEING_DELETED               |
+| INNODB_CMP_RESET                      |
+| INNODB_CMP_PER_INDEX                  |
+| INNODB_CMPMEM_RESET                   |
+| INNODB_FT_DELETED                     |
+| INNODB_BUFFER_PAGE_LRU                |
+| INNODB_LOCK_WAITS                     |
+| INNODB_TEMP_TABLE_INFO                |
+| INNODB_SYS_INDEXES                    |
+| INNODB_SYS_TABLES                     |
+| INNODB_SYS_FIELDS                     |
+| INNODB_CMP_PER_INDEX_RESET            |
+| INNODB_BUFFER_PAGE                    |
+| INNODB_FT_DEFAULT_STOPWORD            |
+| INNODB_FT_INDEX_TABLE                 |
+| INNODB_FT_INDEX_CACHE                 |
+| INNODB_SYS_TABLESPACES                |
+| INNODB_METRICS                        |
+| INNODB_SYS_FOREIGN_COLS               |
+| INNODB_CMPMEM                         |
+| INNODB_BUFFER_POOL_STATS              |
+| INNODB_SYS_COLUMNS                    |
+| INNODB_SYS_FOREIGN                    |
+| INNODB_SYS_TABLESTATS                 |
++---------------------------------------+
+61 rows in set (0.00 sec)
+```
+
+### 1.1、数据库元信息：SCHEMATA
+
+主要存储的是MySQL中所有数据库的元信息，比如数据库名称、编码等；
+
+表结构：
+```
++----------------------------+--------------+------+-----+---------+-------+
+| Field                      | Type         | Null | Key | Default | Extra |
++----------------------------+--------------+------+-----+---------+-------+
+| CATALOG_NAME               | varchar(512) | NO   |     |         |       |
+| SCHEMA_NAME                | varchar(64)  | NO   |     |         |       |
+| DEFAULT_CHARACTER_SET_NAME | varchar(32)  | NO   |     |         |       |
+| DEFAULT_COLLATION_NAME     | varchar(32)  | NO   |     |         |       |
+| SQL_PATH                   | varchar(512) | YES  |     | NULL    |       |
++----------------------------+--------------+------+-----+---------+-------+
+```
+主要数据
+```
+mysql> select * from schemata;
++--------------+--------------------+----------------------------+------------------------+----------+
+| CATALOG_NAME | SCHEMA_NAME        | DEFAULT_CHARACTER_SET_NAME | DEFAULT_COLLATION_NAME | SQL_PATH |
++--------------+--------------------+----------------------------+------------------------+----------+
+| def          | information_schema | utf8                       | utf8_general_ci        | NULL     |
+| def          | imooc_ad_data      | utf8                       | utf8_general_ci        | NULL     |
+| def          | mysql              | latin1                     | latin1_swedish_ci      | NULL     |
+| def          | performance_schema | utf8                       | utf8_general_ci        | NULL     |
+| def          | sakila             | latin1                     | latin1_swedish_ci      | NULL     |
+| def          | sys                | utf8                       | utf8_general_ci        | NULL     |
+| def          | test               | utf8mb4                    | utf8mb4_general_ci     | NULL     |
++--------------+--------------------+----------------------------+------------------------+----------+
+```
+
+### 1.2、表信息：TABLES
+
+主要是存储的是MySQL所有数据库表的元数据信息，比如：存储引擎、表的行数，还有自增序列的值
+
+表结构：
+```
+mysql> desc tables;
++-----------------+---------------------+------+-----+---------+-------+
+| Field           | Type                | Null | Key | Default | Extra |
++-----------------+---------------------+------+-----+---------+-------+
+| TABLE_CATALOG   | varchar(512)        | NO   |     |         |       |
+| TABLE_SCHEMA    | varchar(64)         | NO   |     |         | 数据库名称 |
+| TABLE_NAME      | varchar(64)         | NO   |     |         |表名    |
+| TABLE_TYPE      | varchar(64)         | NO   |     |         |       |
+| ENGINE          | varchar(64)         | YES  |     | NULL    |存储引擎 |
+| VERSION         | bigint(21) unsigned | YES  |     | NULL    |       |
+| ROW_FORMAT      | varchar(10)         | YES  |     | NULL    |       |
+| TABLE_ROWS      | bigint(21) unsigned | YES  |     | NULL    |       |
+| AVG_ROW_LENGTH  | bigint(21) unsigned | YES  |     | NULL    |       |
+| DATA_LENGTH     | bigint(21) unsigned | YES  |     | NULL    |       |
+| MAX_DATA_LENGTH | bigint(21) unsigned | YES  |     | NULL    |       |
+| INDEX_LENGTH    | bigint(21) unsigned | YES  |     | NULL    |       |
+| DATA_FREE       | bigint(21) unsigned | YES  |     | NULL    |       |
+| AUTO_INCREMENT  | bigint(21) unsigned | YES  |     | NULL    |       |
+| CREATE_TIME     | datetime            | YES  |     | NULL    |       |
+| UPDATE_TIME     | datetime            | YES  |     | NULL    |       |
+| CHECK_TIME      | datetime            | YES  |     | NULL    |       |
+| TABLE_COLLATION | varchar(32)         | YES  |     | NULL    |       |
+| CHECKSUM        | bigint(21) unsigned | YES  |     | NULL    |       |
+| CREATE_OPTIONS  | varchar(255)        | YES  |     | NULL    |       |
+| TABLE_COMMENT   | varchar(2048)       | NO   |     |         |       |
++-----------------+---------------------+------+-----+---------+-------+
+```
+
+### 1.3、列信息：COLUMNS
+
+主要存储的是MySQL中所有表的列信息，主要是数据库名称、表名、列名称、列所处的位置、编码等信息，这个位置有在解析binlog时可以根据binlog去映射对应的列名称；
+
+```
+mysql> desc columns;
++--------------------------+---------------------+------+-----+---------+-------+
+| Field                    | Type                | Null | Key | Default | Extra |
++--------------------------+---------------------+------+-----+---------+-------+
+| TABLE_CATALOG            | varchar(512)        | NO   |     |         |       |
+| TABLE_SCHEMA             | varchar(64)         | NO   |     |         |       |
+| TABLE_NAME               | varchar(64)         | NO   |     |         |       |
+| COLUMN_NAME              | varchar(64)         | NO   |     |         |       |
+| ORDINAL_POSITION         | bigint(21) unsigned | NO   |     | 0       |       |
+| COLUMN_DEFAULT           | longtext            | YES  |     | NULL    |       |
+| IS_NULLABLE              | varchar(3)          | NO   |     |         |       |
+| DATA_TYPE                | varchar(64)         | NO   |     |         |       |
+| CHARACTER_MAXIMUM_LENGTH | bigint(21) unsigned | YES  |     | NULL    |       |
+| CHARACTER_OCTET_LENGTH   | bigint(21) unsigned | YES  |     | NULL    |       |
+| NUMERIC_PRECISION        | bigint(21) unsigned | YES  |     | NULL    |       |
+| NUMERIC_SCALE            | bigint(21) unsigned | YES  |     | NULL    |       |
+| DATETIME_PRECISION       | bigint(21) unsigned | YES  |     | NULL    |       |
+| CHARACTER_SET_NAME       | varchar(32)         | YES  |     | NULL    |       |
+| COLLATION_NAME           | varchar(32)         | YES  |     | NULL    |       |
+| COLUMN_TYPE              | longtext            | NO   |     | NULL    |       |
+| COLUMN_KEY               | varchar(3)          | NO   |     |         |       |
+| EXTRA                    | varchar(30)         | NO   |     |         |       |
+| PRIVILEGES               | varchar(80)         | NO   |     |         |       |
+| COLUMN_COMMENT           | varchar(1024)       | NO   |     |         |       |
+| GENERATION_EXPRESSION    | longtext            | NO   |     | NULL    |       |
++--------------------------+---------------------+------+-----+---------+-------+
+```
+
+比如查询test库中user表的列信息：
+```
+mysql> select table_schema,table_name, column_name,ordinal_position from columns where table_schema ='test' and table_name='user';
++--------------+------------+-------------+------------------+
+| table_schema | table_name | column_name | ordinal_position |
++--------------+------------+-------------+------------------+
+| test         | user       | id          |                1 |
+| test         | user       | username    |                2 |
+| test         | user       | password    |                3 |
++--------------+------------+-------------+------------------+
+```
+
+### 1.4、分区信息：PARTITIONS
+
+主要是存储的表的分区信息，在该表中的每一行对应于一个分区表的单个分区或子分区
+```
+mysql> desc partitions;
++-------------------------------+---------------------+------+-----+---------+-------+
+| Field                         | Type                | Null | Key | Default | Extra |
++-------------------------------+---------------------+------+-----+---------+-------+
+| TABLE_CATALOG                 | varchar(512)        | NO   |     |         |       |
+| TABLE_SCHEMA                  | varchar(64)         | NO   |     |         |       |
+| TABLE_NAME                    | varchar(64)         | NO   |     |         |       |
+| PARTITION_NAME                | varchar(64)         | YES  |     | NULL    |       |
+| SUBPARTITION_NAME             | varchar(64)         | YES  |     | NULL    |       |
+| PARTITION_ORDINAL_POSITION    | bigint(21) unsigned | YES  |     | NULL    |       |
+| SUBPARTITION_ORDINAL_POSITION | bigint(21) unsigned | YES  |     | NULL    |       |
+| PARTITION_METHOD              | varchar(18)         | YES  |     | NULL    |       |
+| SUBPARTITION_METHOD           | varchar(12)         | YES  |     | NULL    |       |
+| PARTITION_EXPRESSION          | longtext            | YES  |     | NULL    |       |
+| SUBPARTITION_EXPRESSION       | longtext            | YES  |     | NULL    |       |
+| PARTITION_DESCRIPTION         | longtext            | YES  |     | NULL    |       |
+| TABLE_ROWS                    | bigint(21) unsigned | NO   |     | 0       |       |
+| AVG_ROW_LENGTH                | bigint(21) unsigned | NO   |     | 0       |       |
+| DATA_LENGTH                   | bigint(21) unsigned | NO   |     | 0       |       |
+| MAX_DATA_LENGTH               | bigint(21) unsigned | YES  |     | NULL    |       |
+| INDEX_LENGTH                  | bigint(21) unsigned | NO   |     | 0       |       |
+| DATA_FREE                     | bigint(21) unsigned | NO   |     | 0       |       |
+| CREATE_TIME                   | datetime            | YES  |     | NULL    |       |
+| UPDATE_TIME                   | datetime            | YES  |     | NULL    |       |
+| CHECK_TIME                    | datetime            | YES  |     | NULL    |       |
+| CHECKSUM                      | bigint(21) unsigned | YES  |     | NULL    |       |
+| PARTITION_COMMENT             | varchar(80)         | NO   |     |         |       |
+| NODEGROUP                     | varchar(12)         | NO   |     |         |       |
+| TABLESPACE_NAME               | varchar(64)         | YES  |     | NULL    |       |
++-------------------------------+---------------------+------+-----+---------+-------+
+```
+
+# 十九、MySQL常用sql
 
 ## 1、根据A表来更新B表的数据
 
@@ -3474,7 +3802,7 @@ t_b表中的数据：
 ```
 需要将`#1#2#3#`其展示为对应的类型的中文
 
-# 十九、MySQL面试题
+# 二十、MySQL面试题
 
 ## 1、MySQL自增主键问题
 
@@ -3682,6 +4010,29 @@ MySQL单表可以存储10亿级数据，只是这时候性能比较差，业界�
 
 ## 10、大数量存储方案
 
+## 11、MySQL主从复制
+
+### 11.1、主从复制是如何工作的
+
+### 11.2、比较基于GTID方式的复制和基于日志点的复制
+
+### 11.3、比较MMM和MHA两种高可用架构的优缺点
+
+### 11.4、如何减少主从复制的延迟
+
+**产生延迟原因？**
+- 主节点如果执行一个很大的事务(更新千万行语句，总之执行很长时间的事务)，那么就会对主从延迟产生较大的影响
+- 网络延迟，日志较大，slave数量过多。
+- 主上多线程写入，从节点只有单线程恢复；
+
+**处理办法：**
+- 大事务：将大事务分为小事务，分批更新数据。
+- 减少Slave的数量，不要超过5个，减少单次事务的大小。
+- MySQL 5.7之后，可以使用多线程复制，使用MGR复制架构；
+
+### 11.5、对MGR的认识
+
+### 11.6、如何解决数据库读写负载大的问题
 
 # 参考文章
 
@@ -3706,4 +4057,5 @@ MySQL单表可以存储10亿级数据，只是这时候性能比较差，业界�
 * [Mysql主从同步延迟](https://www.cnblogs.com/cnmenglang/p/6393769.html)
 * [Mysql数据库主从](http://blog.51cto.com/wangwei007/965575)
 * [MySQL事务实现](https://juejin.im/post/5ede6436518825430c3acaf4)
-
+* [事务实现原理](https://www.cnblogs.com/kismetv/p/10331633.html)
+* [MySQL-GTID复制](https://dbaplus.cn/news-11-857-1.html)

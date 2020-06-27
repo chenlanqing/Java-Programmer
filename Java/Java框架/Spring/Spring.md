@@ -5382,6 +5382,8 @@ Prmoetheus + Granfana
 
 http://micrometer.io/docs
 
+https://class.imooc.com/lesson/1256#mid=34650
+
 # 十七、面试题
 
 ## 1、SpringApplication.run都做了些什么？
