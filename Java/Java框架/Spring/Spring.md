@@ -5384,6 +5384,21 @@ http://micrometer.io/docs
 
 https://class.imooc.com/lesson/1256#mid=34650
 
+```
+scrape_configs:
+- job_name: 'spring'
+  scrape_interval: 15s
+  scrape_timeout: 10s
+  metrics_path: '/actuator/prometheus'
+  static_configs:
+  - targets: ['119.45.13.206:8080']
+```
+
+
+docker run -d -p 9090:9090 -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus --config.file=/etc/prometheus/prometheus.yml
+
+docker run -d -p 9090:9090 prom/prometheus
+
 # 十七、面试题
 
 ## 1、SpringApplication.run都做了些什么？

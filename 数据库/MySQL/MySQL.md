@@ -204,10 +204,10 @@ show databases
 #### 6.3.2、delete、truncate、drop的区别
 
 - delete和truncate操作只删除表中数据，而不删除表结构；
-- delete删除时对于auto_increment类型的字段，值不会从1开始，truncate可以实现删除数据后，auto_increment类型的字段值从1开始；
-- delete属于DML，这个操作会放到rollback segement中，事务提交之后才生效；
-- truncate和drop属于DDL，操作立即生效，原数据不放到rollback segment中，不能回滚，操作不触发trigger；
-- delete语句不影响表所占用的extent，高水线(high watermark)保持原位置不动；drop语句将表所占用的空间全部释放。truncate 语句缺省情况下见空间释放到 minextents个 extent，除非使用reuse storage; truncate会将高水线复位(回到最开始)；
+- delete删除时对于`auto_increment`类型的字段，值不会从1开始，truncate可以实现删除数据后，`auto_increment`类型的字段值从1开始；
+- delete属于DML，这个操作会放到`rollback segement`中，事务提交之后才生效；
+- truncate和drop属于DDL，操作立即生效，原数据不放到`rollback segment`中，不能回滚，操作不触发trigger；
+- delete语句不影响表所占用的`extent`，高水线(high watermark)保持原位置不动；drop语句将表所占用的空间全部释放。truncate 语句缺省情况下见空间释放到 min extents个 extent，除非使用reuse storage; truncate会将高水线复位(回到最开始)；
 - 执行速度：`drop> truncate > delete`；
 - 使用建议：
 	- drop：完全删除表；
@@ -376,7 +376,11 @@ type(M，D)--M表示的所有位数(不包括小数点和符号)，D表示允许
 	- 如果在两个字段进行拼接：比如题号+分数，首先要各字段进行非 NULL 判断，否则只要任意一个字段为空都会造成拼接的结果为 null；
 	- 如果有 NULL column 存在的情况下，count(NULL column)需要格外注意， NULL 值不会参与统计
 	- 注意 NULL 字段的判断方式， column = NULL 将会得到错误的结果；
-- Null 列需要更多的存储空间：需要一个额外字节作为判断是否为 NULL 的标志位
+- Null 列需要更多的存储空间：需要一个额外字节作为判断是否为 NULL 的标志位；
+- `NULL<>NULL` 的返回结果是 NULL，而不是 false。 
+- `NULL=NULL` 的返回结果是 NULL，而不是 true。 
+- `NULL<>1` 的返回结果是 NULL，而不是 true。
+- 在MySQL8之前的版本，如果某个列是允许为null，那么 is not null 是不会使用索引的，而 is null 则会使用索引；在Mysql8之后的版本都会使用索引；
 
 **2、默认值属性：default value，只有在没有给字段设值的时才会使用默认值；常跟not null搭配；**
 
@@ -1055,10 +1059,10 @@ InnoDB采取的方式是：将数据划分为若干个页，以页作为磁盘�
 
 ### 1.1、ACID特性
 
-- 原子性（Atomic）：指事务的原子性操作，对数据的修改要么全部执行成功，要么全部失败，实现事务的原子性，是基于日志的Redo/Undo机制
-- 一致性（Consistency）：一致性是指事务必须使数据库从一个一致性状态变换到另一个一致性状态，也就是说一个事务执行之前和执行之后都必须处于一致性状态
+- 原子性（Atomic）：指事务的原子性操作，对数据的修改要么全部执行成功，要么全部失败，实现事务的原子性，是基于日志的Redo/Undo机制；
+- 一致性（Consistency）：一致性是指事务必须使数据库从一个一致性状态变换到另一个一致性状态，事务的中间状态不能被观察到的；
 - 隔离性（Isolation）：隔离性是当多个用户并发访问数据库时，比如操作同一张表时，数据库为每一个用户开启的事务，不能被其他事务的操作所干扰，多个并发事务之间要相互隔离；
-- 持久性（Durability）：持久性是指一个事务一旦被提交了，那么对数据库中的数据的改变就是永久性的，即便是在数据库系统遇到故障的情况下也不会丢失提交事务的操作
+- 持久性（Durability）：持久性是指一个事务一旦被提交了，那么对数据库中的数据的改变就是永久性的，即便是在数据库系统遇到故障的情况下也不会丢失提交事务的操作。
 
 ### 1.2、Redo/Undo机制
 
@@ -1069,6 +1073,9 @@ Redo log用来记录某数据块被修改后的值，可以用来恢复未写入
 假如数据库在执行的过程中，不小心崩了，可以通过该日志的方式，回滚之前已经执行成功的操作，实现事务的一致性
 
 具体的实现流程：假如某个时刻数据库崩溃，在崩溃之前有事务A和事务B在执行，事务A已经提交，而事务B还未提交。当数据库重启进行 crash-recovery 时，就会通过Redo log将已经提交事务的更改写到数据文件，而还没有提交的就通过Undo log进行roll back
+
+- redo log 通常是物理日志，记录的是数据页的物理修改，而不是某一行或某几行修改成怎样怎样，它用来恢复提交后的物理数据页(恢复数据页，且只能恢复到最后一次提交的位置)；
+- undo log 用来回滚行记录到某个版本。undo log一般是逻辑日志，根据每行记录进行记录；
 
 ### 1.3、原子性实现
 
@@ -1086,9 +1093,10 @@ InnoDB提供了缓存(Buffer Pool)，Buffer Pool中包含了磁盘中部分数�
 
 Buffer Pool的使用大大提高了读写数据的效率，但是也带了新的问题：如果MySQL宕机，而此时Buffer Pool中修改的数据还没有刷新到磁盘，就会导致数据的丢失，事务的持久性无法保证；
 
-`redo log`被引入来解决这个问题：当数据修改时，除了修改Buffer Pool中的数据，还会在redo log记录这次操作；当事务提交时，会调用fsync接口对redo log进行刷盘。如果MySQL宕机，重启时可以读取redo log中的数据，对数据库进行恢复。redo log采用的是WAL（Write-ahead logging，预写式日志），所有修改先写入日志，再更新到Buffer Pool，保证了数据不会因MySQL宕机而丢失，从而满足了持久性要求；
+`redo log`被引入来解决这个问题：当数据修改时，除了修改Buffer Pool中的数据，还会在redo log记录这次操作；当事务提交时，会调用fsync接口对redo log进行刷盘。如果MySQL宕机，重启时可以读取redo log中的数据，对数据库进行恢复。redo log采用的是WAL（Write-ahead logging，预写式日志），所有修改先写入日志，再更新到Buffer Pool，保证了数据不会因MySQL宕机而丢失，从而满足了持久性要求；可以通过`innodb_flush_log_at_trx_commit`来控制redo log刷磁盘的策略
 
-比直接将Buffer Pool中修改的数据写入磁盘(即刷脏)要快主要有以下两方面的原因：
+比直接将Buffer Pool中修改的数据写入磁盘(即刷脏)要快主要原因：
+- 采用预写日志（WAL）方式将随机写入变成顺序追加写入，提升事务性能
 - 刷脏是随机IO，因为每次修改的数据位置随机，但写redo log是追加操作，属于顺序IO。
 - 刷脏是以数据页（Page）为单位的，MySQL默认页大小是16KB，一个Page上一个小修改都要整页写入；而redo log中只包含真正需要写入的部分，无效IO大大减少
 
@@ -1127,37 +1135,31 @@ InnoDB实现的RR，通过锁机制、数据的隐藏列、undo log和类next-ke
 
 ### 2.1、不考虑隔离性发生的问题
 
-- 脏读：指在一个事务处理过程里读取了另一个未提交的事务中的数据；
+- 脏读：A事务读取B事务尚未提交的数据，此时如果B事务由于某些原因执行了回滚操作，那么A事务读取到的数据就是脏数据；
 - 不可重复读：指在一个事务执行的过程中多次查询某一数据的时候结果不一致的现象，由于在执行的过程中被另一个事务修改了这个数据并提交了事务。
 
 	在对于数据库中的某个数据，一个事务范围内多次查询却返回了不同的数据值，这是由于在查询间隔，被另一个事务修改并提交了；脏读是某一事务读取了另一个事务未提交的脏数据，而不可重复读则是读取了前一事务提交的数据；不可重复读重点在于update和delete
 
-- 虚读（幻读）：幻读通常指的是对一批数据的操作完成后，有其他事务又插入了满足条件的数据导致的现象。指当用户读取某一范围的数据行时，B事务在该范围内插入了新行，当用户再读取该范围的数据行时，会发现有新的“幻影”行；事务非独立执行时发生的一种现象；幻读的重点在于insert。
+- 幻读：一个事务内前后多次读取，数据总量不一致；幻读通常指的是对一批数据的操作完成后，有其他事务又插入了满足条件的数据导致的现象。指当用户读取某一范围的数据行时，B事务在该范围内插入了新行，当用户再读取该范围的数据行时，会发现有新的“幻影”行；事务非独立执行时发生的一种现象；幻读的重点在于insert。
 
 	比如：第一个事务查询一个User表id=100发现不存在该数据行，这时第二个事务又进来了，新增了一条id=100的数据行并且提交了事务；这时第一个事务新增一条id=100的数据行会报主键冲突，第一个事务再select一下，发现id=100数据行已经存在，这就是幻读
 
-不可重复读的和幻读很容易混淆，不可重复读侧重于修改，幻读侧重于新增或删除。解决不可重复读的问题只需锁住满足条件的行，解决幻读需要锁表
+**不可重复读的和幻读很容易混淆，不可重复读侧重于修改，幻读侧重于新增或删除。解决不可重复读的问题只需锁住满足条件的行，解决幻读需要锁表**
 
 ### 2.2、事务隔离级别
 
 事务的隔离级别有4个，由低到高依次，级别越高执行效率越低
-- READ_UNCOMMITTED（未授权读取、读未提交）：如果一个事务已经开始写数据，则另外一个事务则不允许同时进行写操作，但允许其他事务读此行数据。该隔离级别可以通过“排他写锁”实现.最低级别，任何情况都无法保证；存在脏读，不可重复读，幻读的问题
+- READ_UNCOMMITTED（未授权读取、读未提交）：如果一个事务已经开始写数据，则另外一个事务则不允许同时进行写操作，但允许其他事务读此行数据，即一个事务可以读取到另一个事务未提交的修改。该隔离级别可以通过“排他写锁”实现。最低级别，任何情况都无法保证；存在脏读，不可重复读，幻读的问题
 
-- READ_COMMITTED（授权读取、读提交）：该隔离级别避免了脏读，但是却可能出现不可重复读读取数据的事务允许其他事务继续访问该行数据，但是未提交的写事务将会禁止其他事务访问该行；一个事务只能看见已经提交事务所做的改变
+- READ_COMMITTED（授权读取、读提交）：一个事务只能看见已经提交事务所做的改变；该隔离级别避免了脏读，但是却可能出现不可重复读读取数据的事务允许其他事务继续访问该行数据，但是未提交的写事务将会禁止其他事务访问该行；针对当前读，RC隔离级别保证对读取到的记录加锁 (记录锁)，存在幻读现象
 
-	针对当前读，RC隔离级别保证对读取到的记录加锁 (记录锁)，存在幻读现象
+- REPEATABLE_READ（可重复读取）：它确保同一事务的多个实例在并发读取数据时，会看到同样的数据行。可避免脏读、不可重复读的发生读取数据的事务将会禁止写事务(但允许读事务)，写事务则禁止任何其他事务。避免了不可重复读取和脏读，但是有时可能出现幻读。针对当前读，RR隔离级别保证对读取到的记录加锁 (记录锁)，同时保证对读取的范围加锁，新的满足查询条件的记录不能够插入 (间隙锁)，不存在幻读现象，主要是通过多版本并发控制（MVCC）、Next-key Lock等技术解决了幻读问题
 
-- REPEATABLE_READ（可重复读取）：它确保同一事务的多个实例在并发读取数据时，会看到同样的数据行。可避免脏读、不可重复读的发生读取数据的事务将会禁止写事务(但允许读事务)，写事务则禁止任何其他事务。避免了不可重复读取和脏读，但是有时可能出现幻读。这可以通过“共享读锁”和“排他写锁”实现；
-
-	针对当前读，RR隔离级别保证对读取到的记录加锁 (记录锁)，同时保证对读取的范围加锁，新的满足查询条件的记录不能够插入 (间隙锁)，不存在幻读现象
-
-- SERIALIZABLE（序列化）：提供严格的事务隔离。它要求事务序列化执行。事务只能一个接着一个地执行，但不能并发执行。
-
-	从MVCC并发控制退化为基于锁的并发控制。不区别快照读与当前读，所有的读操作均为当前读，读加读锁 (S锁)，写加写锁 (X锁)。Serializable隔离级别下，读写冲突，因此并发度急剧下降
+- SERIALIZABLE（序列化）：提供严格的事务隔离。它要求事务序列化执行。事务只能一个接着一个地执行，但不能并发执行。从MVCC并发控制退化为基于锁的并发控制。不区别快照读与当前读，所有的读操作均为当前读，读加读锁 (S锁)，写加写锁 (X锁)。Serializable隔离级别下，读写冲突，因此并发度急剧下降
 
 **隔离级别越高，越能保证数据的完整性和一致性，但是对并发性能的影响也越大.对于多数应用程序，可以优先考虑把数据库系统的隔离级别设为 Read Committed。它能够避免脏读取，而且具有较好的并发性能。可以通过悲观锁和乐观锁来控制不可重复读，幻读等并发问题。**
 
-### 2.3、数据库默认隔离级别
+### 2.3、默认隔离级别
 
 大多数数据库的默认级别就是 READ_COMMITTED ，比如 Sql Server、Oracle，MySQL 的默认隔离级别就是 `REPETABLE_READ`
 - 查看MySQL事务隔离级别：`select @@transaction_isolation;` 或者 `show variables like 'transaction_isolation'`；
@@ -1659,16 +1661,16 @@ MySQ允许分区键值为NULL，分区键可能是一个字段或者一个用户
 - 查询某张表一共有多少个分区：
 	```sql
 	SELECT
-		partition_name                   part，
-		partition_expression             expr，
-		partition_description            descr，
-		FROM_DAYS(partition_description) lessthan_sendtime，
+		partition_name                   part,
+		partition_expression             expr,
+		partition_description            descr,
+		FROM_DAYS(partition_description) lessthan_sendtime,
 		table_rows
 	FROM
 		INFORMATION_SCHEMA.partitions
 	WHERE
 		TABLE_SCHEMA = SCHEMA ()
-		AND TABLE_NAME = 'emp'；
+		AND TABLE_NAME = 'emp';
 	```
 
 - 查看执行计划，判断查询数据是否进行了分区过滤
@@ -2082,12 +2084,27 @@ sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192
 
 ## 7、索引失效
 
+### 7.1、索引失效的情况
+
 - 如果条件中有or，如果两边都字段都有索引，则索引可用，一旦有一边无索引可用就会导致整个SQL语句的全表扫描；
 - Like 查询是以 %开头，例如SELECT * FROM mytable WHEREt Name like’%admin’，会导致全文搜索
 - 如果列类型是字符串，那一定要在条件中使用引号引起来，否则不会使用索引；
 - 应尽量避免在 where 子句中使用!=或<>操作符
-- in 和 not in 也要慎用，否则会导致全表扫描
+- in 和 not in 也要慎用，当使用in或者not in时扫描表的数据量过大时，会全表扫描；
 - 如果第一个筛选条件是范围查询，MySQL 不再使用剩下的索引；
+- 索引列不要在表达式或者函数中出现，这样会导致索引失效，如：`SELECT ...... WHERE id+1=5`；
+- 索引列不要作为函数的参数使用；
+- 在索引列的字段中不要出现NULL值，NULL值会使索引失效，可以用特殊的字符比如空字符串' '或者0来代替NULL值；
+- 有索引还是走全表扫描了：针对查询的数据行占总数据量过多时会转化成全表查询；
+- 隐式编码转换：如果两张表的编码不一致，比如表A示uft8，表B示utf8mb4，而utf8mb4是 utf8 的超集，所以会自动将 utf8 转成 utf8mb4：`CONVERT(a.id USING utf8mb4))`，从而触发了：索引列不能是函数的一部分，那么表A就不会走索引；
+
+### 7.2、解决索引失效问题
+
+**不可避免要使用表达式或者函数：**
+
+可以在代码层面上进行优化，比如需要查询 2016 ~ 2018 所有年份 7月份的数据
+- 使用函数的写法：`SELECT count(*) FROM tradelog WHERE month(t_modified)=7`；
+- 不使用函数：`SELECT count(*) FROM tradelog WHERE  (t_modified >= '2016-7-1' AND t_modified<'2016-8-1') or (t_modified >= '2017-7-1' AND t_modified<'2017-8-1') or  (t_modified >= '2018-7-1' AND t_modified<'2018-8-1');`
 
 ## 8、索引原则
 
@@ -2557,12 +2574,12 @@ select_type -> 数据读取操作的操作类型
 
 ### 6.3、type：显示查询使用了何种类型，主要有：all， index， range， ref， eq_ref， const， system
 
-从最好到最差依次为：system > const > eq_ref > ref > range > index > all
+从最好到最差依次为：`system > const > eq_ref > ref > range > index > all`
 
 - system：表只有一行记录(等于系统表)，这时const类型的特例，平时不会出现，基本上日常优化可以忽略
 - const：表示通过索引一次就找到了，const 用于比较 primary key 和 unique 索引.因为只匹配一行数据，所以很快.如将主键置于 where 列表中，MySQL能将该查询转换为一个常量.
-- eq_ref：唯一性索引扫描，对于每个索引键，表中只有一条记录.常见于主键或唯一性扫描
-- ref：非唯一性索引扫描，返回匹配某个单独值的所有行.本质上也是一种索引访问，返回的是某个单独值匹配的所有行，但是其可能会找到多个符合条件的行.
+- eq_ref：唯一性索引扫描，对于每个索引键，表中只有一条记录，常见于主键或唯一性扫描。当连接使用的是完整的索引并且是 PRIMARY KEY 或 UNIQUE NOT NULL INDEX 时使用它
+- ref：非唯一性索引扫描，返回匹配某个单独值的所有行。本质上也是一种索引访问，返回的是某个单独值匹配的所有行，但是其可能会找到多个符合条件的行。当连接使用的是前缀索引或连接条件不是 PRIMARY KEY 或 UNIQUE INDEX 时则使用它；
 - index_merge：使用了索引合并优化方法；
 - range：只检索给定范围的行，使用一个索引来选择行。key列显示使用了哪个索引。一般是在 where 语句中使用了 `between、<、>、in` 等的查询.这种范围扫描索引比全表扫描要好，因为其只需要开始于索引的某一点，而结束于另一点，不需要扫描全部索引。
 - index：Full index scan， index 和 all 区别为 index 类型只遍历索引树，这通常比all快.因为索引文件通常比数据文件小.(即两者虽然都是读全表，但是index 是从索引中读取，而all是从硬盘读取)
@@ -2591,7 +2608,7 @@ select_type -> 数据读取操作的操作类型
 	+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
 	1 row in set
 	```
-- key_len：表示索引中使用的字节数，可通过查询该列计算查询中使用的索引长度。在不损失精度的情况下，长度越短越好，key_len显示的值为该索引最大的可能长度，并非实际使用的长度。即 key_len 是根据表定义计算而得，不是通过表内检索出的。key_len 的计算规则和三个因素有关：数据类型、字符编码、是否为 NULL，如果是 null 的话需要判断是否为 null 的标识长度，所以索引字段最好不要为 null，因为 null 会使索引，索引统计和值更加复杂，并且需要额外一个字节的存储空间
+- key_len：表示索引中使用的字节数，可通过查询该列计算查询中使用的索引长度。在不损失精度的情况下，长度越短越好，key_len显示的值为该索引最大的可能长度，并非实际使用的长度。即 key_len 是根据表定义计算而得，不是通过表内检索出的。key_len 的计算规则和三个因素有关：数据类型、字符编码、是否为 NULL，如果是 null 的话需要判断是否为 null 的标识长度，所以索引字段最好不要为 null，因为 null 会使索引，索引统计和值更加复杂，并且需要额外一个字节的存储空间；
 
 ### 6.5、ref：显示索引的哪一列被使用了，如果可能的话是一个常数.哪些列或常量被用于查找索引列上的值.
 
@@ -2649,7 +2666,31 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 	```
 - impossible where：where子句的值总是false，不能用来获取任何元祖
 - select table optimized away：在没有 group by 子句的情况下，基于索引优化 mix/max 操作或者对于 MyISAM 存储引擎优化 count(*)操作，不必等到执行阶段在进行计算，查询执行计划生成的阶段即可完成优化
-- distinct：优化 distinct 操作，在找第一匹配的元祖后即停止找同样值的操作.
+- distinct：优化 distinct 操作，在找第一匹配的元祖后即停止找同样值的操作。
+
+### 6.8、查看Mysql优化器优化之后的SQL
+
+假设有一张表student，表结果如下：
+```sql
+CREATE TABLE `student` (
+  `id` bigint(21) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL,
+  `age` int(10) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_name_age` (`name`,`age`) USING BTREE
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8;
+```
+
+```sql
+# 在命令行界面操作：
+explain extended select * from student where age = 11 and name = 'aa';
+# 再执行
+show warnings;
+# 最终执行结果：
+/* select#1 */ select `test`.`student`.`id` AS `id`,`test`.`student`.`name` AS `name`,`test`.`student`.`age` AS `age` from `test`.`student` where ((`test`.`student`.`name` = 'aa') and (`test`.`student`.`age` = 11))
+```
+
+Mysql有一个最左匹配原则，那么如果索引建的是`name,age`，那我以`age,name`这样的顺序去查询能否使用到索引呢？实际上是可以的，就是因为Mysql查询优化器可以自动对SQL的执行顺序等进行优化，以选取代价最低的方式进行查询（注意是代价最低，不是时间最短）
 
 ## 7、索引优化
 
@@ -2886,22 +2927,23 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 
 ### 8.2、查询优化
 
-**8.2.1、小表驱动大表：即小的数据集驱动大的数据集**
+#### 8.2.1、exist和in
 
-- ```select * from A where id in(select id from B)```：当B表的数据集小于A表的数据集时，in 优于 exists
+小表驱动大表：即小的数据集驱动大的数据集
+- `select * from A where id in(select id from B)`：当B表的数据集小于A表的数据集时，in 优于 exists。in 是在内存中遍历比较，只执行一次，把B表中的所有id字段缓存起来，之后检查A表的id是否与B表中的id相等，如果id相等则将A表的记录加入到结果集中，直到遍历完A表的所有记录。如：A表有10000条记录，B表有1000000条记录，那么最多有可能遍历10000*1000000次，效率很差
 
-- ```select * from A where exists(select 1 from B where B.id=A.id)``` 当A表的数据集小于A表的数据集时， exists 优于 in
+- `select * from A where exists(select 1 from B where B.id=A.id)` 当A表的数据集小于A表的数据集时， exists 优于 in。需要查询数据库，所以当B的数据量比较大时，exists效率优于in。当B表比A表数据大时适合使用exists()，因为它没有那么多遍历操作，只需要再执行一次查询就行。如：A表有10000条记录，B表有1000000条记录，那么exists()会执行10000次去判断A表中的id是否与B表中的id相等
 
-- exists：```select ... from table where exists(subquery)```
+- exists：`select ... from table where exists(subquery)`
 
 	该语法可以理解为：将主查询的数据放到子查询中做条件验证，根据验证结果来决定主查询的数据结果是否保留
 
 	注意：
 	- exists(subquery)只返回 true 和 false，因此子查询中 select * 可以是 select 1或者其他官方说法是实际执行时会忽略 select 清单.
 	- exists 子查询的实际执行过程可能经过了优化；
-	- exists 子查询往往也可以用条件表达式，其他子查询或者join来替代.
+	- exists 子查询往往也可以用条件表达式，其他子查询或者join来替代；
 
-**8.2.2、order by：**
+#### 8.2.2、order by
 
 - （1）order by 子句尽量使用 index 方式来排序，避免使用 fileSort 方式排序。mysql 支持两种方式的排序：filesort(效率低)，index(可以扫描索引本身完成排序，效率高)。
 
@@ -2958,7 +3000,7 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 		where a in (...) order by b，c --对于排序来说， 多个相等的条件也是范围查询
 		```
 		
-**8.2.3、group by：实质是先排序后进行分组，遵照索引建的最佳左前缀**
+#### 8.2.3、group by：实质是先排序后进行分组，遵照索引建的最佳左前缀
 
 当无法使用索引列时，增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置；where 高于 having，能写在 where 中的限定条件不要去使用 having 限定了
 
@@ -3263,6 +3305,8 @@ explain select max(payment_date) from payment；
 		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
 		```
 		注意：这里的主键必须是有序的且中间没有缺失
+
+在很多情况下我们已知数据仅存在一条，此时我们应该告知数据库只用查一条，否则将会转化为全表扫描，这时候可以使用：`limit 1`；
 
 ## 11、索引优化
 
@@ -3922,6 +3966,9 @@ select * from table where id>= 5000000 and i <= 5000000 + 10;
 对于使用 id 限定优化中的问题，需要 id 是连续递增的，但是在一些场景下，比如使用历史表的时候，或者出现过数据缺失问题时，可以考虑使用临时存储的表来记录分页的id，使用分页的id来进行 in 查询。这样能够极大的提高传统的分页查询速度，尤其是数据量上千万的时候
 
 #### 3.2.3、在业务上限定不可用查询早期的数据
+
+- 限制查询的总页数，比如淘宝、京东等搜索某个商品时是只能查询100页以内的数据；
+- 改写超过特定阈值的SQL；
 
 ## 4、在线修改数据库结构
 
