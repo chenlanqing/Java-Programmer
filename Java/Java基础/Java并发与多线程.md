@@ -604,6 +604,7 @@ Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 
         }
     }
     ```
+    其实现原理是不停的检查 join 线程是否存活，如果 join 线程存活，则 wait(0) 永远的等下去，直至 join 线程终止后，线程的 this.notifyAll() 方法会被调用
 - join中有wait操作，那么其是如何被唤醒的：当子线程threadA执行完毕的时候，jvm会自动唤醒阻塞在threadA对象上的线程
     ```c++
     // 位于/hotspot/src/share/vm/runtime/thread.cpp中
@@ -2478,16 +2479,48 @@ void moveIfAtOrigin(double newX, double newY){
 - CountDownLatch 中3个核心函数: CountDownLatch(int count)、await()】、countDown()
 
 ```java
-CountDownLatch(int count):
-public CountDownLatch(int count) {
-	if (count < 0) throw new IllegalArgumentException("count < 0");
-	this.sync = new Sync(count);
-}
-Sync(int count) {
-	setState(count);
-}
-protected final void setState(long newState) {
-	state = newState;
+public class CountDownLatch {
+    public CountDownLatch(int count) {
+        if (count < 0) throw new IllegalArgumentException("count < 0");
+        this.sync = new Sync(count);
+    }
+    private static final class Sync extends AbstractQueuedSynchronizer {
+        Sync(int count) {
+            setState(count);
+        }
+        int getCount() {
+            return getState();
+        }
+        protected int tryAcquireShared(int acquires) {
+            // 判断同步状态变量 state 的值是否为 0， 如果为零 （子线程已经全部执行完毕）则返回1， 否则返回 -1
+            return (getState() == 0) ? 1 : -1;
+        }
+        protected boolean tryReleaseShared(int releases) {
+            for (;;) {
+                int c = getState();
+                if (c == 0)
+                    return false;
+                int nextc = c-1;
+                if (compareAndSetState(c, nextc))
+                    return nextc == 0;
+            }
+        }
+    }
+    public void await() throws InterruptedException {
+        // aqs的模板方法
+        sync.acquireSharedInterruptibly(1);
+    }
+    // 主线程设定等待超时时间，如果该时间内子线程没有执行完毕，主线程也会直接返回
+    public boolean await(long timeout, TimeUnit unit)throws InterruptedException {
+        return sync.tryAcquireSharedNanos(1, unit.toNanos(timeout));
+    }
+    public void countDown() {
+        // aqs的模板方法
+        sync.releaseShared(1);
+    }
+    public long getCount() {
+        return sync.getCount();
+    }
 }
 ```
 在AQS中，state是一个`private volatile long`类型的对象。对于CountDownLatch而言，state表示的“锁计数器”；CountDownLatch中的`getCount()`最终是调用AQS中的getState()，返回的state对象，即`锁计数器`
@@ -2498,49 +2531,48 @@ protected final void setState(long newState) {
 
 	![image](image/CountdownLatch.png)
 
-	- CountDownLatch是通过“共享锁”实现的。
-	- 在创建CountDownLatch中时，会传递一个int类型参数count，该参数是“锁计数器”的初始状态，表示该“共享锁”最多能被count给线程同时获取。
-	- 当某线程调用该CountDownLatch对象的await()方法时，该线程会等待“共享锁”可用时，才能获取“共享锁”进而继续运行。
-	- 而“共享锁”可用的条件，就是“锁计数器”的值为0！而“锁计数器”的初始值为count，每当一个线程调用该CountDownLatch对象的countDown()方法时，才将“锁计数器”-1；
-	- 通过这种方式，必须有count个线程调用countDown()之后，“锁计数器”才为0，而前面提到的等待线程才能继续运行！
+	- CountDownLatch是基于AQS的`共享锁`实现的。
+	- 在创建CountDownLatch中时，会传递一个int类型参数count，该参数是`锁计数器`的初始状态，表示该`共享锁`最多能被count给线程同时获取。
+	- 当某线程调用该CountDownLatch对象的await()方法时，该线程会等待`共享锁`可用时，才能获取`共享锁`进而继续运行。
+	- 而`共享锁`可用的条件：就是`锁计数器`的值为`0`！而`锁计数器`的初始值为count，每当一个线程调用该CountDownLatch对象的countDown()方法时，将`锁计数器-1`；
+	- 通过这种方式，必须有count个线程调用countDown()之后，`锁计数器`才为0，而前面提到的等待线程才能继续运行！
 
-- 使用例子
-
-```java
-private final static int threadCount = 200;
-public static void main(String[] args)throws Exception {
-	final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
-	ExecutorService exec = Executors.newCachedThreadPool();
-	for (int i = 1; i <= threadCount; i++) {
-		final int count = i;
-		exec.execute(() -> {
-			try{
-				test(count);
-			} catch (Exception e){
-				log.error("exception", e);
-			} finally {
-				countDownLatch.countDown();
-			}
-		});
-	}
-	// 等待线程池中所有线程执行完毕后,main方法线程才继续执行
-	countDownLatch.await();
-	// 可以设置等待时长,即等待多少时间后执行main方法线程
-//        countDownLatch.await(10, TimeUnit.MILLISECONDS);
-	log.info("~~~~~~~~main method finish {}", Thread.currentThread().getName());
-	exec.shutdown();
-}
-private static void test(int count) throws Exception {
-	Thread.sleep(100);
-	log.info("{}, {}", count, Thread.currentThread().getName());
-}
-```
+- 使用例子：
+    ```java
+    private final static int threadCount = 200;
+    public static void main(String[] args)throws Exception {
+        final CountDownLatch countDownLatch = new CountDownLatch(threadCount);
+        ExecutorService exec = Executors.newCachedThreadPool();
+        for (int i = 1; i <= threadCount; i++) {
+            final int count = i;
+            exec.execute(() -> {
+                try{
+                    test(count);
+                } catch (Exception e){
+                    log.error("exception", e);
+                } finally {
+                    countDownLatch.countDown();
+                }
+            });
+        }
+        // 等待线程池中所有线程执行完毕后,main方法线程才继续执行
+        countDownLatch.await();
+        // 可以设置等待时长,即等待多少时间后执行main方法线程
+        // ountDownLatch.await(10, TimeUnit.MILLISECONDS);
+        log.info("~~~~~~~~main method finish {}", Thread.currentThread().getName());
+        exec.shutdown();
+    }
+    private static void test(int count) throws Exception {
+        Thread.sleep(100);
+        log.info("{}, {}", count, Thread.currentThread().getName());
+    }
+    ```
 
 ## 6、独占锁-栅栏：CyclicBarrier
 
 * [CyclicBarrier原理和示例](http://www.cnblogs.com/skywang12345/p/3533995.html)
 
-- 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。让一组线程到达一个屏障时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续干活；因为该 barrier 在释放等待线程后可以重用，所以称它为循环的barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过独占锁实现的；
+- 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。让一组线程到达一个屏障时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续干活；因为该 barrier 在释放等待线程后可以重用，所以称它为循环的barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过`独占锁`实现的；
 
 	CyclicBarrier 的原理不是 AQS 的共享模式，是 AQS Condition 和 ReentrantLock 的结合使用
 
@@ -2549,9 +2581,9 @@ private static void test(int count) throws Exception {
 	![image](image/CyclicBarrier.png)
 
 - 6.2、主要方法：
-	- CyclicBarrier(int parties)：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，但它不会在启动 barrier 时执行预定义的操作。
-	- CyclicBarrier(int parties， Runnable barrierAction)：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，并在启动 barrier 时执行给定的屏障操作，该操作由最后一个进入 barrier 的线程执行。
-	- int await()：在所有参与者都已经在此 barrier 上调用 await 方法之前，将一直等待。如果该线程不是到达的最后一个线程，则他会一直处于等待状态，除非发生以下情况：
+	- `CyclicBarrier(int parties)`：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，但它不会在启动 barrier 时执行预定义的操作。
+	- `CyclicBarrier(int parties, Runnable barrierAction)`：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，并在启动 barrier 时执行给定的屏障操作，该操作由最后一个进入 barrier 的线程执行。barrierAction 是在每次冲破屏障时串行化执行，如果barrierAction 是很耗时的汇总操作可以使用线程池来替代执行；
+	- `int await()`：在所有参与者都已经在此 barrier 上调用 await 方法之前，将一直等待。如果该线程不是到达的最后一个线程，则他会一直处于等待状态，除非发生以下情况：
 		- 最后一个线程到达，即index == 0；
 		- 超出了指定时间（超时等待）；
 		- 其他的某个线程中断当前线程；
@@ -2565,11 +2597,11 @@ private static void test(int count) throws Exception {
 
 		当barrier损坏了或者有一个线程中断了，则通过breakBarrier()来终止所有的线程；在breakBarrier()中除了将broken设置为true，还会调用signalAll将在CyclicBarrier处于等待状态的线程全部唤醒。
 
-	- int await(long timeout， TimeUnit unit)：在所有参与者都已经在此屏障上调用 await 方法之前将一直等待，或者超出了指定的等待时间。
-	- int getNumberWaiting()：返回当前在屏障处等待的参与者数目。
-	- int getParties()：返回要求启动此 barrier 的参与者数目。
-	- boolean isBroken()：查询此屏障是否处于损坏状态。
-	- void reset()：将屏障重置为其初始状态。
+	- `int await(long timeout， TimeUnit unit)`：在所有参与者都已经在此屏障上调用 await 方法之前将一直等待，或者超出了指定的等待时间。
+	- `int getNumberWaiting()`：返回当前在屏障处等待的参与者数目。
+	- `int getParties()`：返回要求启动此 barrier 的参与者数目。
+	- `boolean isBroken()`：查询此屏障是否处于损坏状态。
+	- `void reset()`：将屏障重置为其初始状态。调用 reset 会使当前处在等待中的线程最终抛出 BrokenBarrierException 并立即被唤醒，所以说 reset() 只会在你想打破屏障时才会使用
 
 - 6.3、使用场景：并行计算等。当一组线程（任务）并发的执行一件工作的时候，必须等待所有的线程（任务）都完成时才能进行下一个步骤
 
@@ -2580,38 +2612,133 @@ private static void test(int count) throws Exception {
 	- CoundDownLatch操作的是事件，而CyclicBarrier侧重点是线程，而不是调用事件
 
 - 6.5、例子：
-```java
-@Slf4j
-public class CyclicBarrierDemo {
-    static CyclicBarrier barrier = new CyclicBarrier(5);
-    // 到达屏障后执行某个回调
-    static CyclicBarrier barrier = new CyclicBarrier(5, ()->{
-        log.info("sdasdasdasdasdas");
-    });
-    public static void main(String[] args)throws Exception {
-        ExecutorService executorService = Executors.newCachedThreadPool();
-        for (int i = 0; i < 10; i++) {
-            final int count = i;
-            Thread.sleep(1000);
-            executorService.execute(() -> {
-                try {
-                    race(count);
-                } catch (Exception e) {
-                    log.error("exception", e);
-                }
-            });
+    ```java
+    @Slf4j
+    public class CyclicBarrierDemo {
+        static CyclicBarrier barrier = new CyclicBarrier(5);
+        // 到达屏障后执行某个回调
+        static CyclicBarrier barrier = new CyclicBarrier(5, ()->{
+            log.info("sdasdasdasdasdas");
+        });
+        public static void main(String[] args)throws Exception {
+            ExecutorService executorService = Executors.newCachedThreadPool();
+            for (int i = 0; i < 10; i++) {
+                final int count = i;
+                Thread.sleep(1000);
+                executorService.execute(() -> {
+                    try {
+                        race(count);
+                    } catch (Exception e) {
+                        log.error("exception", e);
+                    }
+                });
+            }
+            executorService.shutdown();
         }
-        executorService.shutdown();
+        private static void race(int count) throws Exception{
+            Thread.sleep(1000);
+            log.info("{} is ready", count);
+            barrier.await();
+            log.info("{} continue",count);
+        }
     }
-    private static void race(int count) throws Exception{
-        Thread.sleep(1000);
-        log.info("{} is ready", count);
-        barrier.await();
-        log.info("{} continue",count);
+    ```
+- 6.6、源码：核心方法doWait
+    ```java
+    private int dowait(boolean timed, long nanos) throws InterruptedException, BrokenBarrierException,TimeoutException {
+        final ReentrantLock lock = this.lock;
+        lock.lock();
+        try {
+            final Generation g = generation;
+                    // *******************************
+                    // 每一个循环都会生成一个新的generation；触发或者重置都会发生改变；
+                    private static class Generation {
+                        boolean broken = false;
+                    }
+                    // *******************************
+            // broken 是静态内部类 Generation唯一的一个成员变量，用于记录当前屏障是否被打破，如果打破，则抛出 BrokenBarrierException 异常
+            // 这里感觉挺困惑的，我们要【冲破】屏障，这里【打破】屏障却抛出异常，注意我这里的用词
+            if (g.broken)
+                throw new BrokenBarrierException();
+            // 如果线程被中断，则会通过breakBarrier方法将broken设置为true，也就是说，如果有线程收到中断通知，直接就打破屏障，停止CyclicBarrier，并唤醒所有线程
+            if (Thread.interrupted()) {
+                breakBarrier(); // breakBarrier实现如下：
+                    // ************************************
+                    private void breakBarrier() {
+                        // 将打破屏障标识 设置为 true
+                        generation.broken = true;
+                        // 重置计数器
+                        count = parties;
+                        // 唤醒所有等待的线程
+                        trip.signalAll();
+                    }
+                    // ************************************
+                throw new InterruptedException();
+            }
+            // 每当一个线程调用 await 方法，计数器 count 就会减1
+            int index = --count;
+            // 当 count 值减到 0 时，说明这是最后一个调用 await() 的子线程，则会突破屏障
+            if (index == 0) {  // tripped
+                boolean ranAction = false;
+                try {
+                    // 获取构造函数中的 barrierCommand，如果有值，则运行该方法
+                    final Runnable command = barrierCommand;
+                    if (command != null)
+                        command.run();
+                    ranAction = true;
+                    // 激活其他因调用 await 方法而被阻塞的线程，并重置 CyclicBarrier
+                    nextGeneration();
+                    // ************************************
+                        private void nextGeneration() {
+                            // signal completion of last generation
+                            trip.signalAll();
+                            // set up next generation
+                            count = parties;
+                            generation = new Generation();
+                        }
+                        // ************************************
+                    return 0;
+                } finally {
+                    if (!ranAction)
+                        breakBarrier();
+                }
+            }
+            // index 不等于0， 说明当前不是最后一个线程调用 await 方法
+            // loop until tripped, broken, interrupted, or timed out
+            for (;;) {
+                try {
+                    // 没有设置超时时间
+                    if (!timed)
+                    // 进入条件等待
+                        trip.await();
+                    else if (nanos > 0L)
+                         // 否则，判断超时时间，这个我们在 AQS 中有说明过，包括为什么最后超时阈值 spinForTimeoutThreshold 不再比较的原因，大家会看就好
+                        nanos = trip.awaitNanos(nanos);
+                } catch (InterruptedException ie) {
+                    // 条件等待被中断，则判断是否有其他线程已经使屏障破坏。若没有则进行屏障破坏处理，并抛出异常；否则再次中断当前线程
+                    if (g == generation && ! g.broken) {
+                        breakBarrier();
+                        throw ie;
+                    } else {
+                        Thread.currentThread().interrupt();
+                    }
+                }
+                if (g.broken)
+                    throw new BrokenBarrierException();
+                // 如果新一轮回环结束，会通过 nextGeneration 方法新建 generation 对象
+                if (g != generation)
+                    return index;
+                if (timed && nanos <= 0L) {
+                    breakBarrier();
+                    throw new TimeoutException();
+                }
+            }
+        } finally {
+            lock.unlock();
+        }
     }
-}
-```
-- 6.6、在并行任务计算中，如果单个线程完成了任务还需要等待其他线程完成，假如有10个线程正在跑任务，有9个线程已经完成了任务，那么这9个线程就得都等待该线程，这可能是很大的资源浪费，使用CountDownLatch也有这个问题。
+    ```
+- 6.7、在并行任务计算中，如果单个线程完成了任务还需要等待其他线程完成，假如有10个线程正在跑任务，有9个线程已经完成了任务，那么这9个线程就得都等待该线程，这可能是很大的资源浪费，使用CountDownLatch也有这个问题。
 
 ## 7、共享锁-信号量：Semaphore
 

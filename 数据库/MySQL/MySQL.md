@@ -1184,6 +1184,8 @@ InnoDB实现的RR，通过锁机制、数据的隐藏列、undo log和类next-ke
 
 ### 2.4、RC、RR级别下InnoDB的非阻塞读
 
+[MySQL当前读与快照读](../数据库锁机制.md#1.2MySQL当前读与快照读)
+
 ### 2.5、RR可重复读如何避免幻读
 
 MySQL InnoDB的可重复读并不保证避免幻读，需要应用使用加锁读来保证。而这个加锁度使用到的机制就是next-key locks；Innodb 的 RR 隔离界别对范围会加上 GAP，理论上不会存在幻读。

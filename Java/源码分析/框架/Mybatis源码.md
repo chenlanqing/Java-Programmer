@@ -1,33 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-目录
-
-- [1、Mybatis源码概述](#1mybatis%E6%BA%90%E7%A0%81%E6%A6%82%E8%BF%B0)
-- [2、SqlSessionFactory](#2sqlsessionfactory)
-  - [2.1、初始化过程](#21%E5%88%9D%E5%A7%8B%E5%8C%96%E8%BF%87%E7%A8%8B)
-  - [2.2、environment配置](#22environment%E9%85%8D%E7%BD%AE)
-  - [2.3、MappedStatement](#23mappedstatement)
-  - [2.4、configuration默认属性设置](#24configuration%E9%BB%98%E8%AE%A4%E5%B1%9E%E6%80%A7%E8%AE%BE%E7%BD%AE)
-  - [2.5、流程图](#25%E6%B5%81%E7%A8%8B%E5%9B%BE)
-  - [2.6、Spring中SqlSessionFactory初始化](#26spring%E4%B8%ADsqlsessionfactory%E5%88%9D%E5%A7%8B%E5%8C%96)
-- [3、SqlSession](#3sqlsession)
-  - [3.1、获取SqlSession过程](#31%E8%8E%B7%E5%8F%96sqlsession%E8%BF%87%E7%A8%8B)
-  - [3.2、Spring中SqlSession获取](#32spring%E4%B8%ADsqlsession%E8%8E%B7%E5%8F%96)
-- [4、Mapper接口运行原理](#4mapper%E6%8E%A5%E5%8F%A3%E8%BF%90%E8%A1%8C%E5%8E%9F%E7%90%86)
-  - [4.1、获取Mapper](#41%E8%8E%B7%E5%8F%96mapper)
-  - [4.2、运行Mapper的方法](#42%E8%BF%90%E8%A1%8Cmapper%E7%9A%84%E6%96%B9%E6%B3%95)
-  - [4.3、query方法](#43query%E6%96%B9%E6%B3%95)
-  - [4.4、处理结果集](#44%E5%A4%84%E7%90%86%E7%BB%93%E6%9E%9C%E9%9B%86)
-  - [4.5、Spring中如何找到Mapper](#45spring%E4%B8%AD%E5%A6%82%E4%BD%95%E6%89%BE%E5%88%B0mapper)
-  - [4.6、总结](#46%E6%80%BB%E7%BB%93)
-- [5、分页](#5%E5%88%86%E9%A1%B5)
-  - [5.1、Rowbounds介绍](#51rowbounds%E4%BB%8B%E7%BB%8D)
-  - [5.2、RowBounds分析](#52rowbounds%E5%88%86%E6%9E%90)
-  - [5.3、Pagehelper分页插件](#53pagehelper%E5%88%86%E9%A1%B5%E6%8F%92%E4%BB%B6)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # 1、Mybatis源码概述
 
 MyBatis的主要成员
@@ -992,5 +962,6 @@ mysql的物理分页关键字是Limit，提供offset和limit即可实现分页�
 - [MyBatis实现原理](https://www.cnblogs.com/luoxn28/p/6417892.html)
 - [Mybatis-SqlSession原理分析](https://mp.weixin.qq.com/s/tTTLDOoqPfqHJLW12Zdo6A)
 - [Mybatis之Mapper接口如何执行SQL](https://github.com/ksfzhaohui/blog/blob/master/mybatis/Mybatis之Mapper接口如何执行SQL.md)
+- [Mybatis源码分析](http://www.tianxiaobo.com/2018/07/16/MyBatis-源码分析系列文章导读)
 
 

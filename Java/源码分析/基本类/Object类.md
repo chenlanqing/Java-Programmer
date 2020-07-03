@@ -1,35 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [1、Object 类中 clone() 方法](#1object-%E7%B1%BB%E4%B8%AD-clone-%E6%96%B9%E6%B3%95)
-  - [1.1、作用](#11%E4%BD%9C%E7%94%A8)
-  - [1.2、clone()工作原理](#12clone%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86)
-  - [1.3、什么情况下需要覆盖clone()方法呢](#13%E4%BB%80%E4%B9%88%E6%83%85%E5%86%B5%E4%B8%8B%E9%9C%80%E8%A6%81%E8%A6%86%E7%9B%96clone%E6%96%B9%E6%B3%95%E5%91%A2)
-  - [1.4、浅克隆](#14%E6%B5%85%E5%85%8B%E9%9A%86)
-  - [1.5、深克隆](#15%E6%B7%B1%E5%85%8B%E9%9A%86)
-  - [1.6、序列化实现对象的拷贝](#16%E5%BA%8F%E5%88%97%E5%8C%96%E5%AE%9E%E7%8E%B0%E5%AF%B9%E8%B1%A1%E7%9A%84%E6%8B%B7%E8%B4%9D)
-  - [1.7、String的clone的特殊性以及StringBuilder和StringBuffer](#17string%E7%9A%84clone%E7%9A%84%E7%89%B9%E6%AE%8A%E6%80%A7%E4%BB%A5%E5%8F%8Astringbuilder%E5%92%8Cstringbuffer)
-  - [1.8、Java中集合的克隆](#18java%E4%B8%AD%E9%9B%86%E5%90%88%E7%9A%84%E5%85%8B%E9%9A%86)
-- [2、Object 中 equals()方法](#2object-%E4%B8%AD-equals%E6%96%B9%E6%B3%95)
-- [3、hashCode()方法](#3hashcode%E6%96%B9%E6%B3%95)
-- [4、finalize()方法](#4finalize%E6%96%B9%E6%B3%95)
-- [5、toString()方法：](#5tostring%E6%96%B9%E6%B3%95)
-- [6、wait/notifAll](#6waitnotifall)
-  - [6.1、wait](#61wait)
-  - [6.2、notify](#62notify)
-  - [6.3、notifyAll](#63notifyall)
-  - [6.4、wait/notify存在的一些问题](#64waitnotify%E5%AD%98%E5%9C%A8%E7%9A%84%E4%B8%80%E4%BA%9B%E9%97%AE%E9%A2%98)
-    - [6.4.1、notify早期通知](#641notify%E6%97%A9%E6%9C%9F%E9%80%9A%E7%9F%A5)
-    - [6.4.2、wait等待条件发生变化](#642wait%E7%AD%89%E5%BE%85%E6%9D%A1%E4%BB%B6%E5%8F%91%E7%94%9F%E5%8F%98%E5%8C%96)
-    - [6.4.3、“假死”状态](#643%E5%81%87%E6%AD%BB%E7%8A%B6%E6%80%81)
-  - [6.5、wait/notify通知机制使用条件](#65waitnotify%E9%80%9A%E7%9F%A5%E6%9C%BA%E5%88%B6%E4%BD%BF%E7%94%A8%E6%9D%A1%E4%BB%B6)
-- [7、registerNatives](#7registernatives)
-- [8、getClass：其定义：](#8getclass%E5%85%B6%E5%AE%9A%E4%B9%89)
-- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 * Object 类是 Java 中的终极父类，任何类都默认继承Object类，然而接口是不继承Object类;
 * ????为什么接口不继承Object类????
 
@@ -601,7 +569,8 @@ synchronized (sharedObject) {
 
 # 7、registerNatives
 
-# 8、getClass：其定义：
+# 8、getClass
+
 	public final native Class<?> getClass();
 	final 的方法，不可重写
 

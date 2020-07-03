@@ -4711,6 +4711,10 @@ System.out.println(ClassGetResourcePath.class.getClassLoader().getResource(""));
 System.out.println(ClassGetResourcePath.class.getClassLoader().getResource("/"));
 ```
 
+# 三十四、Java实现动态脚本
+
+https://mp.weixin.qq.com/s/01fj7l3xsxHVstlkrJ0epw
+
 # 参考文章
 
 * [枚举的线程安全性及序列化问题](http://www.hollischuang.com/archives/197)

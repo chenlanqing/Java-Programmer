@@ -64,6 +64,10 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 
 ![](image/IDEA-Maven.png)
 
+## 2.4、方法分割线以及字符缩进
+
+![](image/IDEA-设置方法分割线.png)
+
 # 3、IDEA常用插件
 
 - 阿里巴巴代码插件：Alibaba Java Coding Guidelines
@@ -87,4 +91,3 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - SonarLint
 - Statistic
 - VisualVM Launcher
-
