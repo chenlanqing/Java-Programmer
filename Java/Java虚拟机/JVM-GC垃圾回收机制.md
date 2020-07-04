@@ -88,11 +88,11 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 - JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refefence）、软引用（Soft Refefence）、弱引用（Weak Refefence）、虚引用（Phantom Refefence），4种引用强度依次逐渐减弱
 	- 强引用(Strong Refefence)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
 
-	- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存
+	- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
 
 	- 弱引用(Weak Refefence)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakRefefence 类来实现弱引用；
 
-	- 虚引用(Phantom Refefence)：幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomRefefence 类来实现弱引用；必须和引用队列ReferenceQueue联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；
+	- 虚引用(Phantom Refefence)：幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomRefefence 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；
 
 - 引用队列：
 	- 无实际存储结构，存储逻辑依赖于内部节点之间的关系来表达；
@@ -204,6 +204,11 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 
 - **安全区域（Safe Region）**
 
+## 6、STW（Stop The World）
+
+全局停顿，Java代码停止运行，native代码继续运行，但是不能与JVM进行交互；
+
+多半由于垃圾回收导致；也可能由Dump线程、死锁检测、Dump堆等导致；
 
 # 四、垃圾收集器
 
@@ -249,7 +254,7 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 - ParNew收集器，可以认为是Serial收集器的多线程版本，在多核CPU环境下有着比Serial更好的表现；其他与Serial收集器实现基本差不多；
 - 是运行在 Server 模式下的虚拟机中首选的新生代收集器，其中与性能无关的是：只有 Serial 收集器和 ParNew 收集器能与 CMS 收集配合工作；
 - 在JDK1.5中使用CMS来收集老年代的时候，新生代只能选用Serial、ParNew收集器中的一个，ParNew收集器使用`-XX:UseConcMarkSweepGC`选项后的默认新生代收集器，也可以使用 `-XX:+UseParNewGC` 选项来强制指定它；
-- ParNew 收集器在单 CPU 的环境中绝对不会有比 Serial 收集器有更好的效果，甚至由于存在线程交互的开销，该收集器在通过超线程技术实现的两个CP 的环境中都不能百分之百地保证可以超越
+- ParNew 收集器在单 CPU 的环境中绝对不会有比 Serial 收集器有更好的效果，甚至由于存在线程交互的开销，该收集器在通过超线程技术实现的两个CP 的环境中都不能百分之百地保证可以超越；
 
 ## 3、Parallel Scavenge 收集器
 
@@ -259,6 +264,7 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 - GC 自适应调整策略；`-XX:+UseAdaptiveSizePolicy`
 - 无法与 CMS 收集器配合工作：Parallel Scavenge没有使用原本HotSpot其它GC通用的那个GC框架，所以不能跟使用了那个框架的CMS搭配使用；有一个分代式GC框架，Serial/Serial Old/ParNew/CMS都在这个框架内；在该框架内的young collector和old collector可以任意搭配使用，所谓的“mix-and-match”。 
 而ParallelScavenge与G1则不在这个框架内，而是各自采用了自己特别的框架。这是因为新的GC实现时发现原本的分代式GC框架用起来不顺手。
+- 适用于吞吐量的
 
 ## 4、Serial Old 收集器
 
@@ -296,7 +302,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 - 优点：并发收集，低停顿
 - 缺点：
-	- CMS 收集器对CPU资源非常敏感
+	- CMS 收集器对CPU资源非常敏感，导致应用吞吐量的降低
 	- CMS 收集无法处理浮动垃圾(Floating Garbage)，可能出现 Concurrent Mode Failure 失败而导致一次 Full GC 的产生
 	- CMS 基于标记-清除算法实现的，那么垃圾收集结束后会产生大量的空间碎片，空间碎片过多时，将会给大对象的分配带来很大麻烦，往往出现老年代还有很大空间剩余，但是无法找到足够大的连续空间来分配当前对象们，不得不提前触发一次 Full GC。
 
@@ -405,7 +411,12 @@ G1提供了两种GC模式，Young GC和Mixed GC，两种都是完全Stop The Wor
 - Young GC：选定所有年轻代里的Region。通过控制年轻代的region个数，即年轻代内存大小，来控制young GC的时间开销；
 - Mixed GC：选定所有年轻代里的Region，外加根据global concurrent marking统计得出收集收益高的若干老年代Region。在用户指定的开销目标范围内尽可能选择收益高的老年代Region
 
-Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC实在无法跟上程序分配内存的速度，导致老年代填满无法继续进行Mixed GC，就会使用serial old GC（full GC）来收集整个GC heap，G1 GC 没有Full GC；
+Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC实在无法跟上程序分配内存的速度，导致老年代填满无法继续进行Mixed GC，就会使用serial old GC（Full GC）来收集整个GC heap，G1 GC 没有Full GC；
+
+为了避免G1引发FullGC，实践思路：
+- 增加预留内存（增大 -XX:G1ReservePercent，默认为堆的10%）；
+- 更早的回收垃圾（减少 -XX:InitiatingHeapOccupancyPercent，老年代达到该值时就触发Mixed GC，默认是45%）
+- 增加并发阶段使用的线程数（增大 -XX:ConcGCThreads）;
 
 #### 7.3.2、global concurrent marking
 
@@ -457,7 +468,8 @@ global concurrent marking的执行过程分为四个步骤：
 如果存在下列问题，可以切换到G1垃圾收集器
 - 50%以上的堆被存活对象占用；
 - 对象分配和晋升的速度变化非常大；
-- 垃圾回收时间特别长，超过了1秒
+- 垃圾回收时间特别长，超过了1秒；
+- 内存空间占用比较大，比如超过6G；
 
 ## 8、垃圾收集器比较
 
@@ -506,13 +518,125 @@ global concurrent marking的执行过程分为四个步骤：
 
 ## 10、新版本JDK增加的垃圾收集器
 
-### 10.1、ZGC
+### 10.1、Shenandoah
+
+有RedHat贡献给OpenJDK，Oracle JDK无法使用；是低延迟垃圾收集器，目前还是处于实验性的，
+
+**和G1对比，相同点：**
+- 基于Region的内存布局；
+- 有用于存放大对象的Humongous Region；
+- 回收策略也同样是优先处理回收价值最大的Region；
+
+**和G1对比，不同点：**
+- 并发的整理算法
+- Shenandoah默认是不使用分代收集的
+- 解决跨region引用的机制不同，G1主要基于Rememberd Set、CardTable，而Shenandoah是基于连接矩阵（Connection Matrix）去实现的。
+
+**启用参数：**`-XX:+UnlockExperimentalVMOptions  -XX:+UseShenandoahGC`
+
+**适用场景：**低延迟、响应快的业务场景
+
+**工作步骤：**
+
+- 初始标记（Initial Marking）：与G1一样，首先标记与GC Roots直接关联的对象，存在Stop The World
+
+- 并发标记（Concurrent Marking）：与G1一样，标记出全部可达的对象，该阶段并发执行，无Stop The World
+
+- 最终标记（Final Marking）：统计出回收价值最高的Region、构建回收集（Collection Set）。存在Stop The World
+
+- 并发清理（Concurrent Cleanup）：用于清理那些整个区域内连一个存活对象都没有找到的Region（这类Region被称为Immediate Garbage Region）
+
+- 并发回收（Concurrent Evacuation）：并发回收阶段是Shenandoah与之前HotSpot中其他收集器的核心差异。在这个阶段，Shenandoah要把回收集里面的存活对象先复制一份到其他未被使用的Region之中。**复制对象这件事情如果将用户线程冻结起来再做那是相当简单的，但如果两者必须要同时并发进行的话，就变得复杂起来了。**其困难点是在移动对象的同时，用户线程仍然可能不停对被移动的对象进行读写访问，移动对象是一次性的行为，但移动之后整个内存中所有指向该对象的引用都还是旧对象的地址，这是很难一瞬间全部改变过来的。对于并发回收阶段遇到的这些困难，Shenandoah将会通过读屏障和被称为“Brooks Pointers”的转发指针来解决。并发回收阶段运行的时间长短取决于回收集的大小。
+
+- 初始引用更新（Initial Update Reference）：并发回收阶段复制对象结束后，还需要把堆中所有指向旧对象的引用修正到复制后的新地址，这个操作称为引用更新。引用更新的初始化阶段实际上并未做什么具体的处理，设立这个阶段只是为了建立一个线程集合点，确保所有并发回收阶段中进行的收集器线程都已完成分配给它们的对象移动任务而已。初始引用更新时间很短，会产生一个非常短暂的停顿。
+
+- 并发引用更新（Concurrent Update Reference）：真正开始进行引用更新操作，这个阶段是与用户线程一起并发的，时间长短取决于内存中涉及的引用数量的多少。主要是按照内存物理地址的顺序，线性地搜索出引用类型，把旧值改为新值即可；
+
+- 最终引用更新（Final Update Reference）：解决了堆中的引用更新后，还要修正存在于GC Roots中的引用。这个阶段是Shenandoah的最后一次停顿，停顿时间只与GC Roots的数量相关；
+
+- 并发清理（Concurrent Cleanup）：经过并发回收和引用更新之后，整个回收集中所有的Region已再无存活对象，这些Region都变成Immediate Garbage Regions了，最后再调用一次并发清理过程来回收这些Region的内存空间，供以后新对象分配使用；
+
+### 10.2、ZGC
 
 ZGC几乎在所有地方并发执行的，除了初始标记的是STW的。所以停顿时间几乎就耗费在初始标记上，这部分的实际是非常少的
 
 ZGC主要新增了两项技术，一个是着色指针`Colored Pointer`，另一个是读屏障`Load Barrier`
 
 ZGC 是一个并发、基于区域（region）、增量式压缩的收集器。Stop-The-World 阶段只会在根对象扫描（root scanning）阶段发生，这样的话 GC 暂停时间并不会随着堆和存活对象的数量而增加。
+
+**启用参数：** `-XX:+UnlockExperimentalVMOptions -XX:+UseZGC`；
+
+**内存布局：**
+
+ZGC也采用基于Region的堆内存布局，但与它们不同的是，ZGC的Region（在一些官方资料中将它称为Page或者ZPage，本章为行文一致继续称为Region）具有动态性，可以动态创建和销毁，以及动态的区域容量大小。region的容量：
+- 小型Region（Small Region）：容量固定为2MB，用于放置小于256KB的小对象。
+- 中型Region（Medium Region）：容量固定为32MB，用于放置大于等于256KB但小于4MB的对象。
+- 大型Region（Large Region）：容量不固定，可以动态变化，但必须为2MB的整数倍，用于放置4MB或以上的大对象。每个大型Region中只会存放一个大对象，这也预示着虽然名字叫作“大型Region”，但它的实际容量完全有可能小于中型Region，最小容量可低至4MB。大型Region在ZGC的实现中是不会被重分配（重分配是ZGC的一种处理动作，用于复制对象的收集器阶段，稍后会介绍到）的，因为复制一个大对象的代价非常高昂
+
+**工作步骤：**
+- 并发标记（Concurrent Mark）：与G1、Shenandoah一样，并发标记是遍历对象图做可达性分析的阶段，前后也要经过类似于G1、Shenandoah的初始标记、最终标记（尽管ZGC中的名字不叫这些）的短暂停顿，而且这些停顿阶段所做的事情在目标上也是相类似的。与G1、Shenandoah不同的是，ZGC的标记是在指针上而不是在对象上进行的，标记阶段会更新染色指针中的Marked 0、Marked 1标志位。
+- 并发预备重分配（Concurrent Prepare for Relocate）：这个阶段需要根据特定的查询条件统计得出本次收集过程要清理哪些Region，将这些Region组成重分配集（Relocation Set）。重分配集与G1收集器的回收集（Collection Set）还是有区别的，ZGC划分Region的目的并非为了像G1那样做收益优先的增量回收。相反，ZGC每次回收都会扫描所有的Region，用范围更大的扫描成本换取省去G1中记忆集的维护成本。因此，ZGC的重分配集只是决定了里面的存活对象会被重新复制到其他的Region中，里面的Region会被释放，而并不能说回收行为就只是针对这个集合里面的Region进行，因为标记过程是针对全堆的。此外，在JDK 12的ZGC中开始支持的类卸载以及弱引用的处理，也是在这个阶段中完成的。
+- 并发重分配（Concurrent Relocate）：重分配是ZGC执行过程中的核心阶段，这个过程要把重分配集中的存活对象复制到新的Region上，并为重分配集中的每个Region维护一个转发表（Forward Table），记录从旧对象到新对象的转向关系。
+- 并发重映射（Concurrent Remap）：重映射所做的就是修正整个堆中指向重分配集中旧对象的所有引用，这一点从目标角度看是与Shenandoah并发引用更新阶段一样的，但是ZGC的并发重映射并不是一个必须要“迫切”去完成的任务，因为前面说过，即使是旧引用，它也是可以自愈的，最多只是第一次使用时多一次转发和修正操作；
+
+### 10.3、Epsilon
+
+Epsilon（A No-Op Garbage Collector）垃圾回收器控制内存分配，但是不执行任何垃圾回收工作。一旦java的堆被耗尽，jvm就直接关闭。设计的目的是提供一个完全消极的GC实现，分配有限的内存分配，最大限度降低消费内存占用量和内存吞吐时的延迟时间。一个好的实现是隔离代码变化，不影响其他GC，最小限度的改变其他的JVM代码；
+
+**启用参数：** `-XX:+UnlockExperimentalVMOptions -XX:+UseEpsilonGC`
+
+**适用场景：**
+- Performance testing,什么都不执行的GC非常适合用于差异性分析。no-op GC可以用于过滤掉GC诱发的新能损耗，比如GC线程的调度，GC屏障的消耗，GC周期的不合适触发，内存位置变化等。此外有些延迟者不是由于GC引起的，比如scheduling hiccups, compiler transition hiccups，所以去除GC引发的延迟有助于统计这些延迟。
+- Memory pressure testing, 在测试java代码时，确定分配内存的阈值有助于设置内存压力常量值。这时no-op就很有用，它可以简单地接受一个分配的内存分配上限，当内存超限时就失败。例如：测试需要分配小于1G的内存，就使用-Xmx1g参数来配置no-op GC，然后当内存耗尽的时候就直接crash。
+- VM interface testing, 以VM开发视角，有一个简单的GC实现，有助于理解VM-GC的最小接口实现。它也用于证明VM-GC接口的健全性。
+- Extremely short lived jobs, 一个短声明周期的工作可能会依赖快速退出来释放资源，这个时候接收GC周期来清理heap其实是在浪费时间，因为heap会在退出时清理。并且GC周期可能会占用一会时间，因为它依赖heap上的数据量。
+- Last-drop latency improvements, 对那些极端延迟敏感的应用，开发者十分清楚内存占用，或者是几乎没有垃圾回收的应用，此时耗时较长的GC周期将会是一件坏事；
+- Last-drop throughput improvements, 即便对那些无需内存分配的工作，选择一个GC意味着选择了一系列的GC屏障，所有的OpenJDK GC都是分代的，所以他们至少会有一个写屏障。避免这些屏障可以带来一点点的吞吐量提升；
+
+## 11、垃圾收集器参数
+
+|收集器 |	参数及默认值 |	备注|
+|------| --------------|--------|
+|Serial |	-XX:+UseSerialGC |	虚拟机在Client模式下的默认值，开启后，使用 Serial + Serial Old 的组合|
+|ParNew |	-XX:+UseParNewGC |	开启后，使用ParNew + Serial Old的组合|
+|      |-XX:ParallelGCThreads=n| 设置垃圾收集器在并行阶段使用的垃圾收集线程数，当逻辑处理器数量小于8时，n的值与逻辑处理器数量相同；如果逻辑处理器数量大于8个，则n的值大约为逻辑处理器数量的5/8，大多数情况下是这样，除了较大的SPARC系统，其中n的值约为逻辑处理器的5/16。|
+|Parallel Scavenge	|-XX:+UseParallelGC	|虚拟机在Server模式下的默认值，开启后，使用 Parallel Scavenge + Serial Old的组合|
+| |-XX:MaxGCPauseMillis=n|	收集器尽可能保证单次内存回收停顿的时间不超过这个值，但是并不保证不超过该值|
+||-XX:GCTimeRatio=n|	设置吞吐量的大小，取值范围0-100，假设 GCTimeRatio 的值为 n，那么系统将花费不超过 1/(1+n) 的时间用于垃圾收集|
+||-XX:+UseAdaptiveSizePolicy|开启后，无需人工指定新生代的大小（-Xmn）、 Eden和Survisor的比例（-XX:SurvivorRatio）以及晋升老年代对象的年龄（-XX:PretenureSizeThreshold）等参数，收集器会根据当前系统的运行情况自动调整|
+|Serial Old	|无	|Serial Old是Serial的老年代版本，主要用于 Client 模式下的老生代收集，同时也是 CMS 在发生 Concurrent Mode Failure时的后备方案|
+|Parallel Old|	-XX:+UseParallelOldGC|	开启后，使用Parallel Scavenge + Parallel Old的组合。Parallel Old是Parallel Scavenge的老年代版本，在注重吞吐量和 CPU 资源敏感的场合，可以优先考虑这个组合|
+|CMS|-XX:+UseConcMarkSweepGC|开启后，使用ParNew + CMS的组合；Serial Old收集器将作为CMS收集器出现 Concurrent Mode Failure 失败后的后备收集器使用|
+||-XX:CMSInitiatingOccupancyFraction=68	|CMS 收集器在老年代空间被使用多少后触发垃圾收集，默认68%|
+||-XX:+UseCMSCompactAtFullCollection	|在完成垃圾收集后是否要进行一次内存碎片整理，默认开启|
+||-XX:CMSFullGCsBeforeCompaction=0|	在进行若干次Full GC后就进行一次内存碎片整理，默认0|
+||-XX:+UseCMSInitiatingOccupancyOnly|	允许使用占用值作为启动CMS收集器的唯一标准，一般和CMSFullGCsBeforeCompaction配合使用。如果开启，那么当CMSFullGCsBeforeCompaction达到阈值就开始GC，如果关闭，那么JVM仅在第一次使用CMSFullGCsBeforeCompaction的值，后续则自动调整，默认关闭。|
+||-XX:+CMSParallelRemarkEnabled	|重新标记阶段并行执行，使用此参数可降低标记停顿，默认打开（仅适用于ParNewGC）|
+||-XX:+CMSScavengeBeforeRemark|	开启或关闭在CMS重新标记阶段之前的清除（YGC）尝试。新生代里一部分对象会作为GC Roots，让CMS在重新标记之前，做一次YGC，而YGC能够回收掉新生代里大多数对象，这样就可以减少GC Roots的开销。因此，打开此开关，可在一定程度上降低CMS重新标记阶段的扫描时间，当然，开启此开关后，YGC也会消耗一些时间。PS. 开启此开关并不保证在标记阶段前一定会进行清除操作，生产环境建议开启，默认关闭。|
+|CMS-Precleaning|	-XX:+CMSPrecleaningEnabled|	是否启用并发预清理，默认开启|
+|CMS-AbortablePreclean|	-XX:CMSScheduleRemark EdenSizeThreshold=2M	|如果伊甸园的内存使用超过该值，才可能进入“并发可中止的预清理”这个阶段|
+|CMS-AbortablePreclean	|-XX:CMSMaxAbortablePrecleanLoops=0	|“并发可终止的预清理阶段”的循环次数，默认0，表示不做限制|
+|CMS-AbortablePreclean	|-XX:+CMSMaxAbortablePrecleanTime=5000|	“并发可终止的预清理”阶段持续的最大时间|
+||-XX:+CMSClassUnloadingEnabled|	使用CMS时，是否启用类卸载，默认开启|
+||-XX:+ExplicitGCInvokesConcurrent	|显示调用System.gc()会触发Full GC，会有Stop The World，开启此参数后，可让System.gc()触发的垃圾回收变成一次普通的CMS GC。|
+|G1|-XX:+UseG1GC|	使用G1收集器|
+||-XX:G1HeapRegionSize=n|	设置每个region的大小，该值为2的幂，范围为1MB到32MB，如不指定G1会根据堆的大小自动决定|
+||-XX:MaxGCPauseMillis=200|	设置最大停顿时间，默认值为200毫秒。|
+||-XX:G1NewSizePercent=5|	设置年轻代占整个堆的最小百分比，默认值是5，这是个实验参数。需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数。|
+||-XX:G1MaxNewSizePercent=60|	设置年轻代占整个堆的最大百分比，默认值是60，这是个实验参数。需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数。|
+||-XX:ParallelGCThreads=n|	设置垃圾收集器在并行阶段使用的垃圾收集线程数，当逻辑处理器数量小于8时，n的值与逻辑处理器数量相同；如果逻辑处理器数量大于8个，则n的值大约为逻辑处理器数量的5/8，大多数情况下是这样，除了较大的SPARC系统，其中n的值约为逻辑处理器的5/16。|
+||-XX:ConcGCThreads=n	|设置垃圾收集器并发阶段使用的线程数量，设置n大约为ParallelGCThreads的1/4。|
+||-XX:InitiatingHeapOccupancyPercent=45	|老年代大小达到该阈值，就触发Mixed GC，默认值为45。|
+||-XX:G1MixedGCLiveThresholdPercent=85|	Region中的对象，活跃度低于该阈值，才可能被包含在Mixed GC收集周期中，默认值为85，这是个实验参数。需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数。|
+||-XX:G1HeapWastePercent=5|	设置浪费的堆内存百分比，当可回收百分比小于浪费百分比时，JVM就不会启动Mixed GC，从而避免昂贵的GC开销。此参数相当于用来设置允许垃圾对象占用内存的最大百分比。|
+||-XX:G1MixedGCCountTarget=8|	设置在标记周期完成之后，最多执行多少次Mixed GC，默认值为8。|
+||-XX:G1OldCSetRegionThresholdPercent=10|	设置在一次Mixed GC中被收集的老年代的比例上限，默认值是Java堆的10%，这是个实验参数。需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数。|
+||-XX:G1ReservePercent=10	|设置预留空闲内存百分比，虚拟机会保证Java堆有这么多空间可用，从而防止对象晋升时无空间可用而失败，默认值为Java堆的10％。|
+||-XX:-G1PrintHeapRegions|	输出Region被分配和回收的信息，默认false|
+||-XX:-G1PrintRegionLivenessInfo	|在清理阶段的并发标记环节，输出堆中的所有Regions的活跃度信息，默认false|
+|Shenandoah|	-XX:+UseShenandoahGC	|使用UseShenandoahGC，这是个实验参数，需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数；另外该参数只能在Open JDK中使用，Oracle JDK无法使用|
+|ZGC|	-XX:+UseZGC	|使用ZGC，这是个实验参数，需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数；|
+|Epsilon|	-XX:+UseEpsilonGC|	使用EpsilonGC，这是个实验参数，需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数；|
 
 # 五、GC 执行机制：Minor GC和Full GC
 
@@ -577,7 +701,7 @@ public class JVM {
 
 有如下原因可能导致 Full GC：
 - 老年代被写满
-- 方法区被写满（JDM7之前会存在）
+- 方法区被写满（元空间不足）
 - System.gc()被显示调用;
 - 上一次GC之后Heap的各域分配策略动态变化；MinorGC晋升到老年代的平均大小大于老年代的剩余空间；
 - CMS GC 时出现`promotion failed`和`concurrent mode failure`<br>

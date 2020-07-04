@@ -639,9 +639,25 @@ JDK 1.4.2和5.0的默认值是60000毫秒，即1分钟；JDK6以及以后的版�
 - 监控指定应用的堆大小是否足够。
 - 检查你运行的JVM版本，是否有与长时间停顿相关的BUG，然后升级到修复问题的最新JDK。
 
-# 线上问题排查神器：btrace
+# 四、Java动态追踪技术
 
+## 1、直接操作字节码
 
+ASM
+
+## 2、btrace
+
+BTrace是基于Java语言的一个安全的、可提供动态追踪服务的工具。BTrace基于ASM、Java Attach Api、Instruments开发，为用户提供了很多注解；
+
+BTrace主要有下面几个模块：
+- BTrace脚本：利用BTrace定义的注解，我们可以很方便地根据需要进行脚本的开发。
+- Compiler：将BTrace脚本编译成BTrace class文件。
+- Client：将class文件发送到Agent。
+- Agent：基于Java的Attach Api，Agent可以动态附着到一个运行的JVM上，然后开启一个BTrace Server，接收client发过来的BTrace脚本；解析脚本，然后根据脚本中的规则找到要修改的类；修改字节码后，调用Java Instrument的reTransform接口，完成对对象行为的修改并使之生效
+
+## 3、Arthas
+
+(https://alibaba.github.io/arthas/index.html)
 
 # 参考资料
 

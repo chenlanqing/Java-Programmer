@@ -3062,20 +3062,36 @@ Fork/Join 框架采用了工作窃取（work-stealing）算法来实现，其算
 
 通过这种算法就可以充分利用线程进行并行操作，同时减少了线程间的竞争。但缺点就是在某些情况下还是存在竞争（双端队列里只有一个任务时）且消耗了更多的系统资源（创建多个线程和多个双端队列），可以说是一种空间换时间的优化
 
-### 12.3、相关类
+### 12.3、核心组件
+
+F/J框架的实现非常复杂，内部大量运用了位操作和无锁算法，撇开这些实现细节不谈，该框架主要涉及三大核心组件：ForkJoinPool（线程池）、ForkJoinTask（任务）、ForkJoinWorkerThread（工作线程），外加WorkQueue（任务队列）：
 
 - ForkJoinTask：如果需要使用ForkJoin框架，必须首先创建一个ForkJoin任务，其提供在任务中执行fork()和join()操作机制；通常情况下，不需要直接继承ForkJoinTask，而只需要继承其子类即可。Fork/Join框架提供了以下两个子类：
 	- RecursiveTask：用于有返回结果的任务；
 	- RecusiveAction：用于没有返回结果的任务
 
-	**注意：ForkJoinTask是实现自接口Future的，其为一个抽象类**
+	**注意：ForkJoinTask是实现自接口Future的，其为一个抽象类，线程池内部调度的其实都是ForkJoinTask任务**
 
 - ForkJoinPool：ForkJoinTask需要通过ForkJoinPool来执行，任务分割出的子任务会添加到当前工作线程所维护的双端队列中，进入队列的头部；当一个工作线程的队列里暂时没有任务时，它会随机从其他工作线程的队列的尾部获取一个任务；比起传统的线程池类ThreadPoolExecutor，ForkJoinPool 实现了工作窃取算法，使得空闲线程能够主动分担从别的线程分解出来的子任务，从而让所有的线程都尽可能处于饱满的工作状态，提高执行效率；
 
 	ForkJoin提供了三个方法：
 	- execute：异步执行指定任务
-	- invoke和invokeAll：执行指定的任务，等待完成返回结果；
-	- submit：异步执行指定的任务并立即返回一个Future对象
+	- invoke和invokeAll：执行指定的任务，等待完成返回结果；这是个同步方法
+	- submit：异步执行指定的任务并立即返回一个Future对象，是一个异步方法，且有返回结果
+
+- ForkJoinWorkerThread：Thread的子类，作为线程池中的工作线程（Worker）执行任务；
+
+    每个工作线程（Worker）都有一个自己的任务队列（WorkerQueue）， 所以需要对一般的Thread做些特性化处理，J.U.C提供了ForkJoinWorkerThread类作为ForkJoinPool中的工作线程；
+
+    ForkJoinWorkerThread 在构造过程中，会保存所属线程池信息和与自己绑定的任务队列信息。同时，它会通过ForkJoinPool的registerWorker方法将自己注册到线程池中
+
+- WorkQueue：任务队列，用于保存任务；任务队列（WorkQueue）是 ForkJoinPool 与其它线程池区别最大的地方，在ForkJoinPool内部，维护着一个WorkQueue[]数组，它会在外部首次提交任务）时进行初始化；
+
+    WorkQueue作为ForkJoinPool的内部类，表示一个双端队列。双端队列既可以作为栈使用(LIFO)，也可以作为队列使用(FIFO)。ForkJoinPool的“工作窃取”正是利用了这个特点，当工作线程从自己的队列中获取任务时，默认总是以栈操作（LIFO）的方式从栈顶取任务；当工作线程尝试窃取其它任务队列中的任务时，则是FIFO的方式
+
+    ForkJoinPool中的工作队列可以分为两类：
+    - 有工作线程（Worker）绑定的任务队列：数组下标始终是奇数，称为task queue，该队列中的任务均由工作线程调用产生（工作线程调用FutureTask.fork方法）；
+    - 没有工作线程（Worker）绑定的任务队列：数组下标始终是偶数，称为submissions queue，该队列中的任务全部由其它线程提交（也就是非工作线程调用execute/submit/invoke或者FutureTask.fork方法）
 
 ### 12.4、使用
 
@@ -3148,6 +3164,12 @@ Fork/Join框架适合能够进行拆分再合并的计算密集型（CPU密集�
 - 除了fork() 和 join()方法外，线程不得使用其他的同步工具。线程最好也不要sleep()；
 - 线程不得进行I/O操作；
 - 线程不得抛出checked exception
+
+### 12.8、源码分析
+
+![ForkJoin源码分析](https://segmentfault.com/a/1190000016877931)
+
+![](image/ForkJoin框架-整体流程.png)
 
 ## 13、Exchanger
 
@@ -4753,6 +4775,14 @@ class B {
   }
 }
 ```
+
+## 9、锁调优策略
+
+- 减少锁持有的时间；
+- 锁的细粒度化：ConcurrentHashMap
+- 锁粗化
+- 锁分离：读写分离、操作分离；
+- 无锁（CAS）
 
 # 参考文章
 

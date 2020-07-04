@@ -4234,8 +4234,6 @@ starter实现自动化配置的流程：
 
 https://www.cnblogs.com/paddix/p/8204916.html
 
-## 5、
-
 # 十五、Spring注解使用
 
 ## 1、Spring-IOC容器中注册组件
@@ -5369,6 +5367,33 @@ Spring 提供了以下五种标准的事件：
     // 发布事件
     applicationContext.publishEvent(customEvent);
     ```
+
+## 7、Spring异步化
+
+### 7.1、本地异步调用
+
+Spring可以通过使用`@Async`注解来实现异步化调用，示例：
+```java
+@Component
+public class AsyncJob {
+	@Async
+	public Future<String> saveOpLog() throws InterruptedException {
+		Thread.sleep(1000L);
+		String result = new Date() + "插入操作日志";
+		System.out.println(result);
+		return new AsyncResult<>(result);
+	}
+}
+```
+Async实现原理：其主要实现类是 ThreadPoolTaskExecutor，Spring自己实现的线程池；使用 @Async 注意点：
+- @Async 标准的方法必须返回void或者Future；
+- 建议将 @Async 标注的方法放到独立的类中去，因为其真正执行的时候是使用代理类来执行的；如果使用的是 this.method 来调用异步方法，异步方法会失效；
+- 建议自定义 BlockingQueue 的大小，因为其默认是 Integer.MAX_VALUE，如果没有指定容量；任何大于0的值使用的是LinkedBlockingQueue，否则使用的是 SynchronousQueue；
+
+### 7.2、远程异步调用
+
+Spring5.0 WebClient
+
 
 # 十六、SpringBoot监控
 

@@ -1,19 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、JVM参数](#%E4%B8%80jvm%E5%8F%82%E6%95%B0)
-  - [1、标准参数](#1%E6%A0%87%E5%87%86%E5%8F%82%E6%95%B0)
-  - [2、非标准参数](#2%E9%9D%9E%E6%A0%87%E5%87%86%E5%8F%82%E6%95%B0)
-  - [3、运行时参数](#3%E8%BF%90%E8%A1%8C%E6%97%B6%E5%8F%82%E6%95%B0)
-  - [4、JIT编译器参数](#4jit%E7%BC%96%E8%AF%91%E5%99%A8%E5%8F%82%E6%95%B0)
-  - [5、高级服务能力参数](#5%E9%AB%98%E7%BA%A7%E6%9C%8D%E5%8A%A1%E8%83%BD%E5%8A%9B%E5%8F%82%E6%95%B0)
-  - [6、垃圾回收参数](#6%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6%E5%8F%82%E6%95%B0)
-- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 # 一、JVM参数
 
 查看虚拟机的参数：
@@ -48,17 +32,13 @@ java [options] -jar filename [args]
 
 标准参数是被所有JVM实现都要支持的参数。用于做一些常规的通用的动作，比如检查版本、设置classpath等
 
-- `-agentlib:libname[=options]` <br>
-    这个命令加载指定的native agent库。理论上这条option出现后，JVM会到本地固定路径下LD_LIBRARY_PATH这里加载名字为libxxx.so的库
+- `-agentlib:libname[=options]`：这个命令加载指定的native agent库。理论上这条option出现后，JVM会到本地固定路径下LD_LIBRARY_PATH这里加载名字为libxxx.so的库
 
-- `-agentpath:pathname[=options]` <br>
-    这个参数指定了从哪个绝对路径加载agent库。与-agentlib相同，只不过是用绝对路径来指明库文件
+- `-agentpath:pathname[=options]`：这个参数指定了从哪个绝对路径加载agent库。与-agentlib相同，只不过是用绝对路径来指明库文件
 
-- `-client、-server` <br>
-    指定JVM的启动模式是client模式还是server模式，具体就是 Java HotSpot Client(Server) VM 版本。目前64位的JDK启动，一定是server模式，会忽略这个参数
+- `-client、-server`：指定JVM的启动模式是client模式还是server模式，具体就是 Java HotSpot Client(Server) VM 版本。目前64位的JDK启动，一定是server模式，会忽略这个参数
 
-- `-Dproperty=value` <br>
-    设置系统属性，设置后的属性可以在代码中System.getProperty方法获取到
+- `-Dproperty=value`： 设置系统属性，设置后的属性可以在代码中System.getProperty方法获取到
 
 - `disableassertions[:[packagename]...|:classname] 和 -da[:[packagename]...|:classname] `<br>
     关闭指定包或类下的assertion，默认是关闭的
@@ -178,31 +158,28 @@ java [options] -jar filename [args]
 - `-XX:+LogCompilation` <br>
     编译时日志输出，在编译时会有一个hotspot.log的日志输出到当前工作目录下。可以用`-XX:LogFile`指定不同的目录。默认这个参数是关闭的，即编译日志不输出。这个参数需要和`-XX:UnlockDiagnosticVMOptions`一起使用。也可以使用`-XX:+PrintCompilation`选项在控制台打印编译过程信息
 
-- `-XX:MaxInlineSize=size` <br>
-    编译内联的方法的最大byte code大小。默认是35，高于35个字节的字节码不会被内联
+- `-XX:MaxInlineSize=size`：编译内联的方法的最大byte code大小。默认是35，高于35个字节的字节码不会被内联
 
-- `-XX:+OptimizeStringConcat` <br>
-    字符串concat优化。默认开启
+- `-XX:+OptimizeStringConcat`： 字符串concat优化。默认开启
 
-- `-XX:+PrintAssembly` <br>
-    通过使用外部的disassembler.so库打印汇编的字节码和native方法来辅助分析。默认是不开启的，需要和`-XX:UnlockDiagnosticVMOptions`一起使用
+- `-XX:+PrintAssembly`：通过使用外部的disassembler.so库打印汇编的字节码和native方法来辅助分析。默认是不开启的，需要和`-XX:UnlockDiagnosticVMOptions`一起使用
 
-- `-XX:+PrintCompilation` <br>
-    将方法编译过程打印到控制台。默认不开启
+- `-XX:+PrintCompilation`：将方法编译过程打印到控制台。默认不开启
 
-- `-XX:+PrintInlining` <br>
-    将内联方法打印出来。默认不开启
+- `-XX:+PrintInlining`：将内联方法打印出来。默认不开启
 
-- `-XX:ReservedCodeCacheSize=size` <br>
-    设置为了JIT编译代码的最大代码cache大小。这个设置默认是240MB，如果关掉了tiered编译，则大小是48MB。这个设置必须比初始化的`-XX:InitialCodeCacheSize=size`设置值大
+- `-XX:ReservedCodeCacheSize=size`：设置为了JIT编译代码的最大代码cache大小。这个设置默认是240MB，如果关掉了tiered编译，则大小是48MB。这个设置必须比初始化的`-XX:InitialCodeCacheSize=size`设置值大
 
-- `-XX:-TieredCompilation` <br>
-    关闭tiered编译，默认是开启的。只有Hotspot支持这个参数
+- `-XX:-TieredCompilation`：关闭tiered编译，默认是开启的。只有Hotspot支持这个参数
 
-- `-XX:+UseCodeCacheFlushing` <br>
-    支持在关闭编译器之前清除code cache。默认是开启的，要关闭就把+换成-
+- `-XX:+UseCodeCacheFlushing`：支持在关闭编译器之前清除code cache。默认是开启的，要关闭就把+换成-
+
+- `-XX:+EliminateAllocations`：是否开启标量替换，JDK8默认开启
+
+- `-XX:+EliminateLokcs`：是否开启锁消除
 
 ## 5、高级服务能力参数
+
 可以做系统信息收集和扩展性的debug
 
 - `-XX:+ExtendedDTraceProbes` <br>
@@ -227,8 +204,6 @@ java [options] -jar filename [args]
 
 - `-XX:+UnlockDiagnosticVMOptions` <br>
     解锁对JVM进行诊断的选项参数。默认是关闭的，开启后支持一些特定参数对JVM进行诊断
-
-- 
 
 ## 6、垃圾回收参数
 这部分参数控制JVM如何进行垃圾回收
@@ -424,3 +399,4 @@ java [options] -jar filename [args]
 * [JVM参数优化](https://blog.csdn.net/liuxinghao/article/details/73963399)
 * [JVM命令参数大全](https://blog.csdn.net/zero__007/article/details/52848040)
 * [Java HotSpot VM Command-Line Options](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/clopts001.html)
+* [JDK8 Hotspot VM Options](https://chriswhocodes.com/hotspot_options_jdk8.html)
