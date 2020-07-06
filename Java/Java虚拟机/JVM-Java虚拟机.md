@@ -720,7 +720,7 @@ java -Xbooclasspath/p:<your_dir> your_app
 ```
 ### 6.2.2、Extension ClassLoader-扩展类加载器
 
-负责加载Java的扩展类库，默认加载`JAVA_HOME/jre/lib/ext/`目下的所有jar；将加载类的请求先委托给它的父加载器，也就是Bootstrap，如果没有成功加载的话，再从`jre/lib/ext`目录下或者java.ext.dirs系统属性定义的目录下加载类; Extension 加载器由 sun.misc.Launcher$ExtClassLoader 实现；
+负责加载Java的扩展类库，默认加载`JAVA_HOME/jre/lib/ext/`目下的所有jar；将加载类的请求先委托给它的父加载器，也就是Bootstrap，如果没有成功加载的话，再从`jre/lib/ext`目录下或者`java.ext.dirs`系统属性定义的目录下加载类; Extension 加载器由 sun.misc.Launcher$ExtClassLoader 实现；
 
 覆盖extension目录
 ```
@@ -758,10 +758,10 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 
 正确理解类加载器能够帮你解决 NoClassDefFoundError 和 java.lang.ClassNotFoundException
 
-### 6.3.2、ClassLoader加载机制
+### 6.3.2、ClassLoader加载机制：双亲委派
 
 使用的是双亲委托模型来搜索类的
-- 双亲委派模型要求除了顶层的启动类加载器（Bootstrap ClassLoader）外，其余的类加载器都应该有自己的父类加载器，这里的类加载器之间的父子关系不是以继承的关系来实现的，而是都使用组合关系来复用父加载器的代码；启动类加载器(Bootstrap ClassLoader)本身没有父类加载器，但可以用作其它 ClassLoader 实例的的父类加载器；
+- 双亲委派模型要求除了顶层的启动类加载器（Bootstrap ClassLoader）外，其余的类加载器都应该有自己的父类加载器，这里的类加载器之间的父子关系不是以继承的关系来实现的，而是都使用`组合关系`来复用父加载器的代码；启动类加载器(Bootstrap ClassLoader)本身没有父类加载器，但可以用作其它 ClassLoader 实例的的父类加载器；
 
 - 当一个 ClassLoader 实例需要加载某个类时，它会试图亲自搜索某个类之前，先把这个任务委托给它的父类加载器；
 
@@ -932,13 +932,23 @@ try {
 	- 解析：将符号引用转成直接引用
 - 初始化：对静态变量，静态代码块执行初始化工作
 
-### 6.4.4、破坏双亲委派模型：
+### 6.4.4、破坏双亲委派模型
 
 - 在JDK1.2发布之前，双亲委派模型是在JDK1.2之后引入的，而类加载器和抽象类 ClassLoader 在JDK1.1时代就已存在，面对已经存在的用户自定义类加载器的代码实现，作出了妥协JDK1.2 后的 ClassLoader 添加了 protected 方法 findClass()。用户重写的唯一目的就是重写 loadClass()方法.	
 
 - 线程上下文类加载器：这个类加载器可以通过 Thread 类的 setContextClassLoader()方法进行设置，如果创建线程时还未设置，它将会从父线程中继承一个，如果在应用程序的全局范围内都没有设置过的话，这个类加载器默认就是[应用程序类加载器](http://blog.csdn.net/u013095337/article/details/53609398)有了线程上下文类加载器，JNDI 服务使用这个线程上下文类加载器去加载所需要的SPI代码，也就是父类加载器请求子类加载器去完成类加载的工作，这种行为实际是打通双亲委派模型的层次结构来逆向使用类加载器
 
 - 代码热替换、模块热部署等
+
+	热部署步骤：
+	- 销毁自定义classloader(被该加载器加载的class也会自动卸载)；
+	- 更新class
+	- 使用新的ClassLoader去加载class
+
+	JVM中的Class只有满足以下三个条件，才能被GC回收，也就是该Class被卸载（unload）：
+	- 该类所有的实例都已经被GC，也就是JVM中不存在该Class的任何实例。
+	- 加载该类的ClassLoader已经被GC。
+	- 该类的java.lang.Class 对象没有在任何地方被引用，如不能在任何地方通过反射访问该类的方法；
 
 ## 6.5、自定义类加载器
 
@@ -948,7 +958,7 @@ Java 中提供的默认 ClassLoader，只加载指定目录下的jar和class，�
 
 ### 6.5.2、如何自定义类加载器
 
-- 继承 `java.lang.ClassLoader`;
+- 继承 `java.lang.ClassLoader`；如果要符合双亲委派规范，则重写`findClass`方法（用户自定义类加载逻辑）；要破坏的话，重写loadClass方法(双亲委派的具体逻辑实现)
 - 重写父类的 `findClass`方法;[NetworkClassLoader.java]JDK 已经在loadClass方法中帮我们实现了 ClassLoader 搜索类的算法，当在loadClass方法中搜索不到类时，loadClass方法就会调用findClass方法来搜索类，所以我们只需重写该方法即可。如没有特殊的要求，一般不建议重写loadClass搜索类的算法；
 
 ```java
@@ -972,22 +982,20 @@ public class NetworkClassLoader extends ClassLoader {
 	}
 }
 ```
+
 ## 6.6、显示的加载类
 
 ### 6.6.1、显示加载类的方式
 
-- Class.forName(classname)、Class.forName(classname， initialized， classloader)
-- 通过调用 java.lang.ClassLoader 的 loadClass()方法，而 loadClass()方法则调用了findClass()方法来定位相应类的字节码
+- `Class.forName(classname)`、`Class.forName(classname， initialized， classloader)`
+- 通过调用` java.lang.ClassLoade`r 的 `loadClass()`方法，而 `loadClass()`方法则调用了`findClass()`方法来定位相应类的字节码，最终调用的是 findBootstrapClass
 
 ### 6.6.2、上述两种加载方式有什么区别?
 
-- Class.forName(name) 实际调用的是 `Class.forName(classname, initialized, classloader)`，三个参数分别是：需要加载的class的名字、是否需要初始化、指定的类加载器
-
-- ClassLoader.loadClass 实际调用的是`ClassLoader.loadClass(name, resolve);`参数分别为：需要加载的class的名字、是否需要进行链接
-
-- Class.forName 方法执行之后已经对被加载类的静态变量分配完了存储空间，而 ClassLoader.loadClass()方法并没有一定执行完链接这一步；当想动态加载一个类且这个类又存在静态代码块或者静态变量而你在加载时就想同时初始化这些静态代码块则应偏向于使用 Class.forName() 方法。比如在加载数据库驱动的时，一般使用的是Class.forName("com.mysql.Driver")，该类中有一个static方法，注册驱动，就是为什么需要使用Class.forName
-
--  Class.forName() 方法可以获取原生类型的 Class，而 ClassLoader.loadClass() 则会报错
+- `Class.forName(name)` 实际调用的是 `Class.forName(classname, initialized, classloader)`，三个参数分别是：需要加载的class的名字、是否需要初始化、指定的类加载器，保证一个Java类被有效得加载到内存中；类默认会被初始化，即执行内部的静态块代码以及保证静态属性被初始化；默认会使用当前的类加载器来加载对应的类。
+- `ClassLoader.loadClass` 实际调用的是`ClassLoader.loadClass(name, resolve);`参数分别为：需要加载的class的名字、是否需要进行链接，如果采用这种方式的类加载策略，由于双亲托管模型的存在，最终都会将类的加载任务交付给`Bootstrap ClassLoader`进行加载；
+- `Class.forNam`e 方法执行之后已经对被加载类的静态变量分配完了存储空间；而 `ClassLoader.loadClass()`方法并没有一定执行完链接这一步；当想动态加载一个类且这个类又存在静态代码块或者静态变量而你在加载时就想同时初始化这些静态代码块则应偏向于使用 `Class.forName()` 方法。比如在加载数据库驱动的时，一般使用的是`Class.forName("com.mysql.Driver")`，该类中有一个static方法，注册驱动，就是为什么需要使用`Class.forName`，可以根据自身的需求继承ClassLoader类实现一个自定义的类加载器实现类的加载；
+- `Class.forName()` 方法可以获取原生类型的 Class，而 `ClassLoader.loadClass()` 则会报错
 
 ## 6.7、什么时候使用类加载器
 
@@ -1065,37 +1073,49 @@ public class NetworkClassLoader extends ClassLoader {
 	- 在指定类中是否存在符合方法的字段描述以及简单名称所描述的方法和字段;
 	= 符号引用中的类，字段，方法的访问性是否可被当前类访问
 
-	如果无法通过符号引用验证，那么将抛出一个`java.lang.IncompatibleClassChangeError`异常的子类。验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响。如果所运行的的全部代码都已经被反复使用和验证，那么在实施阶段可以考虑采用 `-Xverifynone`参数来关闭大部分的类验证措施，缩短虚拟机加载的时间
+	如果无法通过符号引用验证，那么将抛出一个`java.lang.IncompatibleClassChangeError`异常的子类。
+	
+验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响。如果所运行的的全部代码都已经被反复使用和验证，那么在实施阶段可以考虑采用 `-Xverifynone`参数来关闭大部分的类验证措施，缩短虚拟机加载的时间
 
 ### 6.8.3、准备
 
 - 是正式为类变量分配内存并设置类变量初始值的阶段，变量所使用的内存都将在方法区中进行分配：这时候进行内存分配的仅包括类变量（static 修饰的变量），而不包括实例变量，实例变量会在对象实例化时随着对象一块分配在Java堆中；
 
-- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：`public static int value=123；`那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为123的`putstatic`指令是程序被编译后，存放于类构造器`<clinit>()`方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;
+- 这里所说的初始值"通常情况"下是数据类型的零值，假设一个类变量的定义为：`public static int value=123；`那变量value在准备阶段过后的初始值为 0 而不是 123。因为这时候尚未开始执行任何java方法，而把value赋值为`123`的`putstatic`指令是程序被编译后，存放于类构造器`<clinit>()`方法之中，所以把value赋值为123的动作将在初始化阶段才会执行；`static 引用类型为 null，其他都是默认值，int 默认为 0，boolean 默认为 false;`
 	```
 	int -> 0	long -> 0L	short -> (short)0	char -> '\u0000'	byte -> (byte)0
 	boolean -> false	float -> 0.0f 	double -> 0.0d 	reference -> null
 	```
 
-- 特殊情况是指：public static final int value=123，即当类字段的字段属性是 ConstantValue时，会在准备阶段初始化为指定的值，所以标注为 final 之后，value的值在准备阶段初始化为123而非 0
+- 特殊情况是指：`public static final int value=123`，即当类字段的字段属性是 ConstantValue时，会在准备阶段初始化为指定的值，所以标注为 final 之后，value的值在准备阶段初始化为`123`而`非0`
 	
 ### 6.8.4、解析
 
 解析阶段是虚拟机将常量池内的符号引用替换为直接引用的过程
 
-- 虚拟机要求在执行anewarray、checkcast、getfield、getstatic、instanceof、invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual、ldc、ldc_w、multianewarray、new、putstatic、putfield这16个用于操作符合引用的字节码指令之前，先对它们所使用的符号进行解析。虚拟机可以根据需要来判断是在类加载器加载时就对常量池中的符号引用进行解析，还是等到一个符号引用将要被使用前才去解析他；
+- 虚拟机要求在执行`anewarray、checkcast、getfield、getstatic、instanceof、invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual、ldc、ldc_w、multianewarray、new、putstatic、putfield`这16个用于操作符合引用的字节码指令之前，先对它们所使用的符号进行解析。虚拟机可以根据需要来判断是在类加载器加载时就对常量池中的符号引用进行解析，还是等到一个符号引用将要被使用前才去解析他；
 
-- 除invokedynamic指令外，虚拟机实现可以对第一次解析的结果进行缓存（在运行时常量池中记录直接引用，并把常量标记为已解析状态）从而避免解析动作重复。无论是否真正执行了多次解析动作，虚拟机需要保证的是在同一个实体中。
+- 除`invokedynamic`指令外，虚拟机实现可以对第一次解析的结果进行缓存（在运行时常量池中记录直接引用，并把常量标记为已解析状态）从而避免解析动作重复。无论是否真正执行了多次解析动作，虚拟机需要保证的是在同一个实体中。
 
-- 解析动作主要针对类或接口、字段、类方法、接口方法、方法类型、方法句柄和调用点限定符7类符号引用进行；分别对应常量池的：CONSTANT_Class_info、CONSTANT_Fieldref_info、CONSTANT_Methodref_info、CONSTANT_InterfaceMethodref_info、CONSTANT_MethodType_info、CONSTANT_MethodHandle_info、CONSTANT_InvokeDynamic_info；
+- 解析动作主要针对类或接口、字段、类方法、接口方法、方法类型、方法句柄和调用点限定符7类符号引用进行；分别对应常量池的：`CONSTANT_Class_info、CONSTANT_Fieldref_info、CONSTANT_Methodref_info、CONSTANT_InterfaceMethodref_info、CONSTANT_MethodType_info、CONSTANT_MethodHandle_info、CONSTANT_InvokeDynamic_info`；
 
 ### 6.8.5、初始化
 
 类初始化阶段是类加载过程的最后一步，真正开始执行类中定义的java程序代码
 
-- 初始化阶段是执行类构造器`<clinit>()`方法的过程。`<clinit>()`方法是由编译器自动收集类中的所有类变量的赋值动作和静态语句块 `static` 中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序所决定的，静态语句块中只能访问到定义在静态语句块之前的变量，定义在它之后的变量，在前面的静态语句块可以赋值，但是并不能访问；
+- 初始化阶段是执行类构造器`<clinit>()`方法的过程。`<clinit>()`方法是由编译器自动收集类中的所有类变量的赋值动作和静态语句块`static`中的语句合并产生的，编译器收集的顺序是由语句在源文件中出现的顺序所决定的，静态语句块中只能访问到定义在静态语句块之前的变量，定义在它之后的变量，在前面的静态语句块可以赋值，但是并不能访问；
+	```java
+	static {
+        a = 10;
+        System.out.println(a); // 编译报错 illegal forward reference
+    }
+    static int a = 5;
+	public static void main(String[] args){
+		System.out.println(a); // 5 在准备阶段我们知道 a=0，然后类初始化阶段按照顺序执行，首先执行 static 块中的 a=10,接着执行 static赋值操作a=5, 最后在 main 方法中获取 a 的值为5
+	}
+	```
 
-- `<clinit>()`方法与实例构造器`<init>`()方法不同，它不需要显示地调用父类构造器，虚拟机会保证在子类`<clinit>()`方法执行之前，父类的`<clinit>()`方法方法已经执行完毕；因此在虚拟机中第一个被执行的`<clinit>()`方法类肯定是 java.lang.Object，由于父类的`<clinit>()`方法先执行，也就意味着父类中定义的静态语句块要优先于子类的变量赋值操作；
+- `<clinit>()`方法与实例构造器`<init>`()方法不同，它不需要显示地调用父类构造器，虚拟机会保证在子类`<clinit>()`方法执行之前，父类的`<clinit>()`方法方法已经执行完毕；因此在虚拟机中第一个被执行的`<clinit>()`方法类肯定是`java.lang.Object`，由于父类的`<clinit>()`方法先执行，也就意味着父类中定义的静态语句块要优先于子类的变量赋值操作；
 
 - `<clinit>()`方法对于类或者接口来说并不是必需的，如果一个类中没有静态语句块，也没有对类变量的赋值操作，那么编译器可以不为这个类生产`<clinit>()`方法；
 
@@ -1121,6 +1141,8 @@ public class NetworkClassLoader extends ClassLoader {
 	- ①、通过子类引用父类的静态字段，不会导致子类初始化；对于 HotSpot 虚拟机，可以通过 `-XX:+TraceClassLoading` 参数观察到此操作会导致子类的加载
 	- ②、通过数组定义来引用类，不会触发此类的初始化
 	- ③、常量在编译阶段会存入调用类的常量池中，本质上并没有直接引用到定义常量的类，因此不会触发定义常量的类的初始化
+
+- `<init>()`: 在实例创建出来的时候调用，包括调用new操作符；调用 Class 或 Java.lang.reflect.Constructor 对象的newInstance()方法；调用任何现有对象的clone()方法；通过 java.io.ObjectInputStream 类的getObject() 方法反序列化
 
 ### 6.8.6、Java 类的链接
 

@@ -108,6 +108,9 @@ Enviroment  -> Source -> Tranform -> Sink
 ## 4.6、Sink
 
 
+
+
+
 # 参考资料
 
 - [官方代码](https://github.com/apache/flink)
@@ -120,4 +123,5 @@ Enviroment  -> Source -> Tranform -> Sink
 - [Apache Flink 精选PDF下载](https://yq.aliyun.com/articles/81743?spm=a2c4e.11153940.0.0.69bc12ecS2IswO)
 - [Apache Flink CEP 实战](https://yq.aliyun.com/articles/738451?utm_content=g_1000094637)
 - [Flink基础理论](https://blog.csdn.net/oTengYue/article/details/102689538)
+- [基于flink和drools的实时日志处理](https://www.cnblogs.com/luxiaoxun/p/13197981.html)
 

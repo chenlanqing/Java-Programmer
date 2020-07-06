@@ -106,6 +106,12 @@ ConditionObject 我们就称为条件队列，我们需要使用时，直接 new
     static final int PROPAGATE = -3;
 	```
 
+## 7、主要方法与属性
+
+![](image/AQS-框架结构.png)
+
+上图中有颜色的为Method，无颜色的为Attribution。
+
 # 二、源码分析
 
 ## 1、基本数据结构-Node
@@ -726,6 +732,8 @@ AbstractQueuedSynchronizer的一个版本，其中同步状态由long类型维�
 * [AQS独占模式](http://www.cnblogs.com/xrq730/p/7056614.html)
 * [AQS源码分析](http://blog.csdn.net/pfnie/article/category/7161421)
 * [AQS框架概述](http://www.cnblogs.com/zhanjindong/p/java-concurrent-package-aqs-overview.html)
+* [AQS](https://segmentfault.com/a/1190000017372067)
+* [AQS原理分析](https://tech.meituan.com/2019/12/05/aqs-theory-and-apply.html)
 
 
 
