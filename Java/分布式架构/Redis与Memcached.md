@@ -1,151 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-目录
-
-- [一、Redis 基本知识](#%E4%B8%80redis-%E5%9F%BA%E6%9C%AC%E7%9F%A5%E8%AF%86)
-  - [1、Redis](#1redis)
-  - [2、Redis的数据类型-支持五种数据类型](#2redis%E7%9A%84%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B-%E6%94%AF%E6%8C%81%E4%BA%94%E7%A7%8D%E6%95%B0%E6%8D%AE%E7%B1%BB%E5%9E%8B)
-    - [2.1、字符串：是字节序列](#21%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%98%AF%E5%AD%97%E8%8A%82%E5%BA%8F%E5%88%97)
-    - [2.2、哈希/散列-hashes](#22%E5%93%88%E5%B8%8C%E6%95%A3%E5%88%97-hashes)
-    - [2.3、列表-lists](#23%E5%88%97%E8%A1%A8-lists)
-    - [2.4、集合：Sets-不允许相同成员存在](#24%E9%9B%86%E5%90%88sets-%E4%B8%8D%E5%85%81%E8%AE%B8%E7%9B%B8%E5%90%8C%E6%88%90%E5%91%98%E5%AD%98%E5%9C%A8)
-    - [2.5、有序集合](#25%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88)
-    - [2.6、位图(bitmaps)和超重对数(hyperloglogs)两种基于字符串基本类型](#26%E4%BD%8D%E5%9B%BEbitmaps%E5%92%8C%E8%B6%85%E9%87%8D%E5%AF%B9%E6%95%B0hyperloglogs%E4%B8%A4%E7%A7%8D%E5%9F%BA%E4%BA%8E%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B)
-    - [2.7、总结](#27%E6%80%BB%E7%BB%93)
-  - [3、Redis-keys](#3redis-keys)
-  - [4、Redis Strings：在Redis的管理字符串值](#4redis-strings%E5%9C%A8redis%E7%9A%84%E7%AE%A1%E7%90%86%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%80%BC)
-  - [5、改变和查询键值空间](#5%E6%94%B9%E5%8F%98%E5%92%8C%E6%9F%A5%E8%AF%A2%E9%94%AE%E5%80%BC%E7%A9%BA%E9%97%B4)
-  - [6、Redis过期（expires）-有限生存时间的键](#6redis%E8%BF%87%E6%9C%9Fexpires-%E6%9C%89%E9%99%90%E7%94%9F%E5%AD%98%E6%97%B6%E9%97%B4%E7%9A%84%E9%94%AE)
-  - [7、Redis 列表](#7redis-%E5%88%97%E8%A1%A8)
-  - [8、Redis 哈希/散列 (Hashes)](#8redis-%E5%93%88%E5%B8%8C%E6%95%A3%E5%88%97-hashes)
-  - [9、Redis集合Sets-是无序的字符串集合](#9redis%E9%9B%86%E5%90%88sets-%E6%98%AF%E6%97%A0%E5%BA%8F%E7%9A%84%E5%AD%97%E7%AC%A6%E4%B8%B2%E9%9B%86%E5%90%88)
-  - [10、Redis有序集合-Sorted sets](#10redis%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88-sorted-sets)
-  - [11、Redis配置文件-redis.conf常用配置介绍](#11redis%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6-redisconf%E5%B8%B8%E7%94%A8%E9%85%8D%E7%BD%AE%E4%BB%8B%E7%BB%8D)
-- [二、Redis内部数据结构](#%E4%BA%8Credis%E5%86%85%E9%83%A8%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84)
-  - [1、字符串处理-SDS](#1%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%A4%84%E7%90%86-sds)
-  - [2、链表](#2%E9%93%BE%E8%A1%A8)
-  - [3、字典(Hash)](#3%E5%AD%97%E5%85%B8hash)
-    - [3.1、rehash优化](#31rehash%E4%BC%98%E5%8C%96)
-  - [4、skiplist](#4skiplist)
-    - [4.1、特性](#41%E7%89%B9%E6%80%A7)
-    - [4.2、实现](#42%E5%AE%9E%E7%8E%B0)
-    - [4.3、Redis为什么用skiplist而不用平衡树？](#43redis%E4%B8%BA%E4%BB%80%E4%B9%88%E7%94%A8skiplist%E8%80%8C%E4%B8%8D%E7%94%A8%E5%B9%B3%E8%A1%A1%E6%A0%91)
-  - [5、整数集合(intset)](#5%E6%95%B4%E6%95%B0%E9%9B%86%E5%90%88intset)
-  - [6、压缩列表(ziplist)](#6%E5%8E%8B%E7%BC%A9%E5%88%97%E8%A1%A8ziplist)
-  - [7、快速列表(quicklist)](#7%E5%BF%AB%E9%80%9F%E5%88%97%E8%A1%A8quicklist)
-- [三、Redis 持久化](#%E4%B8%89redis-%E6%8C%81%E4%B9%85%E5%8C%96)
-  - [1、rdb（Redis Datbase）](#1rdbredis-datbase)
-    - [1.1、什么是RDB](#11%E4%BB%80%E4%B9%88%E6%98%AFrdb)
-    - [1.2、关于 fork](#12%E5%85%B3%E4%BA%8E-fork)
-    - [1.3、配置位置](#13%E9%85%8D%E7%BD%AE%E4%BD%8D%E7%BD%AE)
-    - [1.4、触发RDB快照](#14%E8%A7%A6%E5%8F%91rdb%E5%BF%AB%E7%85%A7)
-    - [1.5、将备份文件移动到 redis 安装目录并启动服务即可](#15%E5%B0%86%E5%A4%87%E4%BB%BD%E6%96%87%E4%BB%B6%E7%A7%BB%E5%8A%A8%E5%88%B0-redis-%E5%AE%89%E8%A3%85%E7%9B%AE%E5%BD%95%E5%B9%B6%E5%90%AF%E5%8A%A8%E6%9C%8D%E5%8A%A1%E5%8D%B3%E5%8F%AF)
-    - [1.6、优势与劣势](#16%E4%BC%98%E5%8A%BF%E4%B8%8E%E5%8A%A3%E5%8A%BF)
-    - [1.7、停止RBD保存](#17%E5%81%9C%E6%AD%A2rbd%E4%BF%9D%E5%AD%98)
-  - [2、aof-append only file](#2aof-append-only-file)
-    - [2.1、AOF 是什么](#21aof-%E6%98%AF%E4%BB%80%E4%B9%88)
-    - [2.2、对应配置](#22%E5%AF%B9%E5%BA%94%E9%85%8D%E7%BD%AE)
-    - [2.3、AOF 启动/恢复/修复](#23aof-%E5%90%AF%E5%8A%A8%E6%81%A2%E5%A4%8D%E4%BF%AE%E5%A4%8D)
-    - [2.4、Rewrite：重写机制](#24rewrite%E9%87%8D%E5%86%99%E6%9C%BA%E5%88%B6)
-  - [3、关于持久化方案选择](#3%E5%85%B3%E4%BA%8E%E6%8C%81%E4%B9%85%E5%8C%96%E6%96%B9%E6%A1%88%E9%80%89%E6%8B%A9)
-  - [4、性能建议](#4%E6%80%A7%E8%83%BD%E5%BB%BA%E8%AE%AE)
-  - [5、Redis的持久化方案](#5redis%E7%9A%84%E6%8C%81%E4%B9%85%E5%8C%96%E6%96%B9%E6%A1%88)
-- [四、Redis 事务](#%E5%9B%9Bredis-%E4%BA%8B%E5%8A%A1)
-  - [1、事务](#1%E4%BA%8B%E5%8A%A1)
-  - [2、如何使用](#2%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8)
-    - [2.1、case1-正常执行](#21case1-%E6%AD%A3%E5%B8%B8%E6%89%A7%E8%A1%8C)
-    - [2.2、放弃事务](#22%E6%94%BE%E5%BC%83%E4%BA%8B%E5%8A%A1)
-    - [2.3、全体连坐](#23%E5%85%A8%E4%BD%93%E8%BF%9E%E5%9D%90)
-    - [2.4、冤头债主：即正确的命令执行，错误的抛出](#24%E5%86%A4%E5%A4%B4%E5%80%BA%E4%B8%BB%E5%8D%B3%E6%AD%A3%E7%A1%AE%E7%9A%84%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%E9%94%99%E8%AF%AF%E7%9A%84%E6%8A%9B%E5%87%BA)
-    - [2.5、watch 监控](#25watch-%E7%9B%91%E6%8E%A7)
-    - [2.6、三阶段：总的来说事务可以概括为3个阶段](#26%E4%B8%89%E9%98%B6%E6%AE%B5%E6%80%BB%E7%9A%84%E6%9D%A5%E8%AF%B4%E4%BA%8B%E5%8A%A1%E5%8F%AF%E4%BB%A5%E6%A6%82%E6%8B%AC%E4%B8%BA3%E4%B8%AA%E9%98%B6%E6%AE%B5)
-    - [2.7、事务的三个特性](#27%E4%BA%8B%E5%8A%A1%E7%9A%84%E4%B8%89%E4%B8%AA%E7%89%B9%E6%80%A7)
-- [五、Redis高可用架构](#%E4%BA%94redis%E9%AB%98%E5%8F%AF%E7%94%A8%E6%9E%B6%E6%9E%84)
-  - [1、Redis 的复制](#1redis-%E7%9A%84%E5%A4%8D%E5%88%B6)
-  - [2、主从复制](#2%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
-  - [3、主从的配置](#3%E4%B8%BB%E4%BB%8E%E7%9A%84%E9%85%8D%E7%BD%AE)
-  - [4、常用的主从模式](#4%E5%B8%B8%E7%94%A8%E7%9A%84%E4%B8%BB%E4%BB%8E%E6%A8%A1%E5%BC%8F)
-    - [4.1、一主二仆：即配置一台主库，两台从库](#41%E4%B8%80%E4%B8%BB%E4%BA%8C%E4%BB%86%E5%8D%B3%E9%85%8D%E7%BD%AE%E4%B8%80%E5%8F%B0%E4%B8%BB%E5%BA%93%E4%B8%A4%E5%8F%B0%E4%BB%8E%E5%BA%93)
-    - [4.2、薪火相传](#42%E8%96%AA%E7%81%AB%E7%9B%B8%E4%BC%A0)
-    - [4.3、反客为主](#43%E5%8F%8D%E5%AE%A2%E4%B8%BA%E4%B8%BB)
-  - [5、复制的流程](#5%E5%A4%8D%E5%88%B6%E7%9A%84%E6%B5%81%E7%A8%8B)
-    - [5.1、复制的原理](#51%E5%A4%8D%E5%88%B6%E7%9A%84%E5%8E%9F%E7%90%86)
-    - [5.2、复制的完整流程](#52%E5%A4%8D%E5%88%B6%E7%9A%84%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B)
-    - [5.3、数据同步相关的核心机制](#53%E6%95%B0%E6%8D%AE%E5%90%8C%E6%AD%A5%E7%9B%B8%E5%85%B3%E7%9A%84%E6%A0%B8%E5%BF%83%E6%9C%BA%E5%88%B6)
-    - [5.4、全量复制](#54%E5%85%A8%E9%87%8F%E5%A4%8D%E5%88%B6)
-    - [5.5、增量复制](#55%E5%A2%9E%E9%87%8F%E5%A4%8D%E5%88%B6)
-    - [5.6、heartbeat](#56heartbeat)
-    - [5.7、异步复制](#57%E5%BC%82%E6%AD%A5%E5%A4%8D%E5%88%B6)
-    - [5.8、无磁盘化复制](#58%E6%97%A0%E7%A3%81%E7%9B%98%E5%8C%96%E5%A4%8D%E5%88%B6)
-  - [6、哨兵模式-sentinel](#6%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8F-sentinel)
-    - [6.1、什么是哨兵模式](#61%E4%BB%80%E4%B9%88%E6%98%AF%E5%93%A8%E5%85%B5%E6%A8%A1%E5%BC%8F)
-    - [6.2、使用步骤](#62%E4%BD%BF%E7%94%A8%E6%AD%A5%E9%AA%A4)
-    - [6.3、哨兵核心点](#63%E5%93%A8%E5%85%B5%E6%A0%B8%E5%BF%83%E7%82%B9)
-    - [6.4、数据丢失及解决方案](#64%E6%95%B0%E6%8D%AE%E4%B8%A2%E5%A4%B1%E5%8F%8A%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
-    - [6.5、哨兵失败状态转换机制](#65%E5%93%A8%E5%85%B5%E5%A4%B1%E8%B4%A5%E7%8A%B6%E6%80%81%E8%BD%AC%E6%8D%A2%E6%9C%BA%E5%88%B6)
-    - [6.6、哨兵集群的自动发现机制](#66%E5%93%A8%E5%85%B5%E9%9B%86%E7%BE%A4%E7%9A%84%E8%87%AA%E5%8A%A8%E5%8F%91%E7%8E%B0%E6%9C%BA%E5%88%B6)
-    - [6.7、slave配置的自动纠正](#67slave%E9%85%8D%E7%BD%AE%E7%9A%84%E8%87%AA%E5%8A%A8%E7%BA%A0%E6%AD%A3)
-    - [6.8、slave->master选举算法](#68slave-master%E9%80%89%E4%B8%BE%E7%AE%97%E6%B3%95)
-    - [6.9、quorum和majority](#69quorum%E5%92%8Cmajority)
-    - [6.10、configuration epoch](#610configuration-epoch)
-    - [6.11、configuraiton传播](#611configuraiton%E4%BC%A0%E6%92%AD)
-    - [6.12、哨兵配置实战](#612%E5%93%A8%E5%85%B5%E9%85%8D%E7%BD%AE%E5%AE%9E%E6%88%98)
-  - [7、Redis Cluster](#7redis-cluster)
-    - [7.1、Redis集群](#71redis%E9%9B%86%E7%BE%A4)
-    - [7.2、分片算法与槽（Slot）](#72%E5%88%86%E7%89%87%E7%AE%97%E6%B3%95%E4%B8%8E%E6%A7%BDslot)
-    - [7.3、Redis集群通信机制](#73redis%E9%9B%86%E7%BE%A4%E9%80%9A%E4%BF%A1%E6%9C%BA%E5%88%B6)
-    - [7.4、集群容错](#74%E9%9B%86%E7%BE%A4%E5%AE%B9%E9%94%99)
-    - [7.5、集群扩展](#75%E9%9B%86%E7%BE%A4%E6%89%A9%E5%B1%95)
-    - [7.6、总结](#76%E6%80%BB%E7%BB%93)
-  - [8、Redis Cluster 与 主从复制](#8redis-cluster-%E4%B8%8E-%E4%B8%BB%E4%BB%8E%E5%A4%8D%E5%88%B6)
-- [六、Redis内存模型](#%E5%85%ADredis%E5%86%85%E5%AD%98%E6%A8%A1%E5%9E%8B)
-  - [1、Redis内存统计](#1redis%E5%86%85%E5%AD%98%E7%BB%9F%E8%AE%A1)
-  - [2、Redis单线程、高性能](#2redis%E5%8D%95%E7%BA%BF%E7%A8%8B%E9%AB%98%E6%80%A7%E8%83%BD)
-    - [2.1、Redis单线程](#21redis%E5%8D%95%E7%BA%BF%E7%A8%8B)
-    - [2.4、Redis线程模型](#24redis%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B)
-    - [2.3、高性能](#23%E9%AB%98%E6%80%A7%E8%83%BD)
-- [七、Redis应用](#%E4%B8%83redis%E5%BA%94%E7%94%A8)
-  - [1、使用场景](#1%E4%BD%BF%E7%94%A8%E5%9C%BA%E6%99%AF)
-  - [2、Redis数据淘汰策略](#2redis%E6%95%B0%E6%8D%AE%E6%B7%98%E6%B1%B0%E7%AD%96%E7%95%A5)
-  - [3、Redis过期策略](#3redis%E8%BF%87%E6%9C%9F%E7%AD%96%E7%95%A5)
-- [八、Redis安全](#%E5%85%ABredis%E5%AE%89%E5%85%A8)
-  - [1、禁止一些高危命令](#1%E7%A6%81%E6%AD%A2%E4%B8%80%E4%BA%9B%E9%AB%98%E5%8D%B1%E5%91%BD%E4%BB%A4)
-  - [2、以低权限运行 Redis 服务](#2%E4%BB%A5%E4%BD%8E%E6%9D%83%E9%99%90%E8%BF%90%E8%A1%8C-redis-%E6%9C%8D%E5%8A%A1)
-  - [3、为 Redis 添加密码验证](#3%E4%B8%BA-redis-%E6%B7%BB%E5%8A%A0%E5%AF%86%E7%A0%81%E9%AA%8C%E8%AF%81)
-  - [4、禁止外网访问 Redis](#4%E7%A6%81%E6%AD%A2%E5%A4%96%E7%BD%91%E8%AE%BF%E9%97%AE-redis)
-  - [5、修改默认端口](#5%E4%BF%AE%E6%94%B9%E9%BB%98%E8%AE%A4%E7%AB%AF%E5%8F%A3)
-  - [6、保证 authorized_keys 文件的安全](#6%E4%BF%9D%E8%AF%81-authorized_keys-%E6%96%87%E4%BB%B6%E7%9A%84%E5%AE%89%E5%85%A8)
-- [九、Redis管道pipeline](#%E4%B9%9Dredis%E7%AE%A1%E9%81%93pipeline)
-  - [1、单条命令的执行步骤](#1%E5%8D%95%E6%9D%A1%E5%91%BD%E4%BB%A4%E7%9A%84%E6%89%A7%E8%A1%8C%E6%AD%A5%E9%AA%A4)
-  - [2、Redis管道技术](#2redis%E7%AE%A1%E9%81%93%E6%8A%80%E6%9C%AF)
-- [十、Redis与Java](#%E5%8D%81redis%E4%B8%8Ejava)
-  - [1、Jedis](#1jedis)
-  - [2、Redission](#2redission)
-  - [3、Lettuce](#3lettuce)
-- [十一、redis基准测试](#%E5%8D%81%E4%B8%80redis%E5%9F%BA%E5%87%86%E6%B5%8B%E8%AF%95)
-- [十二、Memcached](#%E5%8D%81%E4%BA%8Cmemcached)
-  - [1、原理](#1%E5%8E%9F%E7%90%86)
-  - [2、](#2)
-- [十三、Redis面试题](#%E5%8D%81%E4%B8%89redis%E9%9D%A2%E8%AF%95%E9%A2%98)
-  - [1、redis如何用作缓存？ 如何确保不脏数据](#1redis%E5%A6%82%E4%BD%95%E7%94%A8%E4%BD%9C%E7%BC%93%E5%AD%98-%E5%A6%82%E4%BD%95%E7%A1%AE%E4%BF%9D%E4%B8%8D%E8%84%8F%E6%95%B0%E6%8D%AE)
-  - [2、Redis 和 Memcache区别](#2redis-%E5%92%8C-memcache%E5%8C%BA%E5%88%AB)
-  - [3、动态字符串sds的优缺点](#3%E5%8A%A8%E6%80%81%E5%AD%97%E7%AC%A6%E4%B8%B2sds%E7%9A%84%E4%BC%98%E7%BC%BA%E7%82%B9)
-  - [4、redis的单线程特性有什么优缺点](#4redis%E7%9A%84%E5%8D%95%E7%BA%BF%E7%A8%8B%E7%89%B9%E6%80%A7%E6%9C%89%E4%BB%80%E4%B9%88%E4%BC%98%E7%BC%BA%E7%82%B9)
-  - [5、Redis的并发竞争问题如何解决](#5redis%E7%9A%84%E5%B9%B6%E5%8F%91%E7%AB%9E%E4%BA%89%E9%97%AE%E9%A2%98%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3)
-  - [6、redis通讯协议](#6redis%E9%80%9A%E8%AE%AF%E5%8D%8F%E8%AE%AE)
-  - [7、Redis有哪些架构模式](#7redis%E6%9C%89%E5%93%AA%E4%BA%9B%E6%9E%B6%E6%9E%84%E6%A8%A1%E5%BC%8F)
-  - [8、Redis是基于CAP的](#8redis%E6%98%AF%E5%9F%BA%E4%BA%8Ecap%E7%9A%84)
-  - [9、从海量Key里查询出某一固定前缀的key](#9%E4%BB%8E%E6%B5%B7%E9%87%8Fkey%E9%87%8C%E6%9F%A5%E8%AF%A2%E5%87%BA%E6%9F%90%E4%B8%80%E5%9B%BA%E5%AE%9A%E5%89%8D%E7%BC%80%E7%9A%84key)
-  - [10、大量的key同时过期需要注意什么](#10%E5%A4%A7%E9%87%8F%E7%9A%84key%E5%90%8C%E6%97%B6%E8%BF%87%E6%9C%9F%E9%9C%80%E8%A6%81%E6%B3%A8%E6%84%8F%E4%BB%80%E4%B9%88)
-  - [11、使用redis做异步队列](#11%E4%BD%BF%E7%94%A8redis%E5%81%9A%E5%BC%82%E6%AD%A5%E9%98%9F%E5%88%97)
-  - [12、Redis如何保证高并发和高可用](#12redis%E5%A6%82%E4%BD%95%E4%BF%9D%E8%AF%81%E9%AB%98%E5%B9%B6%E5%8F%91%E5%92%8C%E9%AB%98%E5%8F%AF%E7%94%A8)
-  - [13、Redis的key和value的大小多少合适？](#13redis%E7%9A%84key%E5%92%8Cvalue%E7%9A%84%E5%A4%A7%E5%B0%8F%E5%A4%9A%E5%B0%91%E5%90%88%E9%80%82)
-  - [14、Redis 常见性能问题和解决方案](#14redis-%E5%B8%B8%E8%A7%81%E6%80%A7%E8%83%BD%E9%97%AE%E9%A2%98%E5%92%8C%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88)
-  - [15、Redis内存](#15redis%E5%86%85%E5%AD%98)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # 一、Redis 基本知识
 
 ## 1、Redis
@@ -1778,9 +1630,89 @@ Lettuce是一个高性能基于Java编写的Redis驱动框架，底层集成了P
 
 ### 3.2、
 
-# 十一、redis基准测试
+# 十一、Redis监控
 
-redis-benchmark
+## 1、Redis监控指标
+
+主要从一下几个方面考虑：
+- 性能指标：Performance
+- 内存指标: Memory
+- 基本活动指标：Basic activity
+- 持久性指标: Persistence
+- 错误指标：Error
+
+### 1.1、性能指标：Performance
+
+- `latency`：Redis响应一个请求的时间
+- `instantaneous_ops_per_sec`：平均每秒处理请求总数
+- `hi rate(calculated)`：缓存命中率（计算出来的）
+
+### 1.2、内存指标: Memory
+
+- `used_memory`：已使用内存
+- `mem_fragmentation_ratio`：内存碎片率
+- `evicted_keys`：由于最大内存限制被移除的key的数量
+- `blocked_clients`：由于BLPOP,BRPOP,or BRPOPLPUSH而备阻塞的客户端
+
+### 1.3、基本活动指标：Basic activity
+
+- `connected_clients`：客户端连接数
+- `conected_laves`：slave数量
+- `master_last_io_seconds_ago`：最近一次主从交互之后的秒数
+- `keyspace`：数据库中的key值总数；
+
+### 1.4、持久性指标: Persistence
+
+- `rdb_last_save_time`：最后一次持久化保存磁盘的时间戳；
+- `rdb_changes_sice_last_save`：自最后一次持久化以来数据库的更改数；
+
+### 1.5、错误指标：Error
+
+- `rejected_connections`：由于达到maxclient限制而被拒绝的连接数
+- `keyspace_misses`：key值查找失败(没有命中)次数
+- `master_link_down_since_seconds`：主从断开的持续时间（以秒为单位)
+
+## 2、监控方式
+
+- redis-benchmark
+- redis-stat
+- redis-faina
+- redislive
+- redis-cli
+- monitor
+- showlog
+```
+slowlog-log-slower-than 1000 # 设置慢查询的时间下线，单位：微秒
+slowlog-max-len 100 # 设置慢查询命令对应的日志显示长度，单位：命令数
+```
+
+### 2.1、redis-benchmark
+
+redis性能测试命令：`./redis-benchmark -c 100 -n 5000`，100个连接，5000次请求对应的性能；
+
+### 2.2、redis-cli
+
+info（可以一次性获取所有的信息，也可以按块获取信息），命令使用：
+```
+./redis-cli info 按块获取信息 | grep 需要过滤的参数
+./redis-cli info stats | grep ops
+```
+交互式：
+```
+ #./redis-cli 
+> info server
+```
+
+**内存监控：**
+```bash
+[root@CombCloud-2020110836 src]# ./redis-cli info | grep used | grep human       
+used_memory_human:2.99M  # 内存分配器从操作系统分配的内存总量
+used_memory_rss_human:8.04M  #操作系统看到的内存占用，top命令看到的内存
+used_memory_peak_human:7.77M # redis内存消耗的峰值
+used_memory_lua_human:37.00K   # lua脚本引擎占用的内存大小
+```
+...
+
 
 # 十二、Memcached
 

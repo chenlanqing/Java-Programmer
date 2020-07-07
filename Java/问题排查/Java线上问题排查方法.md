@@ -1,40 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、线程栈（thread dump）](#%E4%B8%80%E7%BA%BF%E7%A8%8B%E6%A0%88thread-dump)
-  - [1、概念](#1%E6%A6%82%E5%BF%B5)
-  - [2、线程栈信息](#2%E7%BA%BF%E7%A8%8B%E6%A0%88%E4%BF%A1%E6%81%AF)
-  - [3、线程状态](#3%E7%BA%BF%E7%A8%8B%E7%8A%B6%E6%80%81)
-  - [3、如何输出线程栈](#3%E5%A6%82%E4%BD%95%E8%BE%93%E5%87%BA%E7%BA%BF%E7%A8%8B%E6%A0%88)
-  - [4、如何使用线程栈定位问题](#4%E5%A6%82%E4%BD%95%E4%BD%BF%E7%94%A8%E7%BA%BF%E7%A8%8B%E6%A0%88%E5%AE%9A%E4%BD%8D%E9%97%AE%E9%A2%98)
-    - [4.1、发现死锁](#41%E5%8F%91%E7%8E%B0%E6%AD%BB%E9%94%81)
-    - [4.2、定位 CPU 过高的原因](#42%E5%AE%9A%E4%BD%8D-cpu-%E8%BF%87%E9%AB%98%E7%9A%84%E5%8E%9F%E5%9B%A0)
-    - [4.3、定位性能下降原因](#43%E5%AE%9A%E4%BD%8D%E6%80%A7%E8%83%BD%E4%B8%8B%E9%99%8D%E5%8E%9F%E5%9B%A0)
-    - [4.4、定位系统假死原因](#44%E5%AE%9A%E4%BD%8D%E7%B3%BB%E7%BB%9F%E5%81%87%E6%AD%BB%E5%8E%9F%E5%9B%A0)
-- [二、Java线上问题排查思路](#%E4%BA%8Cjava%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E6%80%9D%E8%B7%AF)
-  - [1、常见线上问题](#1%E5%B8%B8%E8%A7%81%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98)
-  - [2、问题定位](#2%E9%97%AE%E9%A2%98%E5%AE%9A%E4%BD%8D)
-    - [2.1、定位流程](#21%E5%AE%9A%E4%BD%8D%E6%B5%81%E7%A8%8B)
-  - [3、Linux常用的性能分析工具](#3linux%E5%B8%B8%E7%94%A8%E7%9A%84%E6%80%A7%E8%83%BD%E5%88%86%E6%9E%90%E5%B7%A5%E5%85%B7)
-    - [3.1、CPU](#31cpu)
-    - [3.2、内存](#32%E5%86%85%E5%AD%98)
-    - [3.3、磁盘](#33%E7%A3%81%E7%9B%98)
-    - [3.4、网络](#34%E7%BD%91%E7%BB%9C)
-    - [3.5、其他](#35%E5%85%B6%E4%BB%96)
-  - [4、常见线上问题排查思路](#4%E5%B8%B8%E8%A7%81%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E6%80%9D%E8%B7%AF)
-    - [4.1、Full GC次数过多](#41full-gc%E6%AC%A1%E6%95%B0%E8%BF%87%E5%A4%9A)
-    - [4.2、CPU过高](#42cpu%E8%BF%87%E9%AB%98)
-    - [4.3、不定期出现的接口耗时现象](#43%E4%B8%8D%E5%AE%9A%E6%9C%9F%E5%87%BA%E7%8E%B0%E7%9A%84%E6%8E%A5%E5%8F%A3%E8%80%97%E6%97%B6%E7%8E%B0%E8%B1%A1)
-    - [4.4、某个线程进入WAITING状态](#44%E6%9F%90%E4%B8%AA%E7%BA%BF%E7%A8%8B%E8%BF%9B%E5%85%A5waiting%E7%8A%B6%E6%80%81)
-    - [4.5、死锁](#45%E6%AD%BB%E9%94%81)
-    - [4.6、长时间GC停顿](#46%E9%95%BF%E6%97%B6%E9%97%B4gc%E5%81%9C%E9%A1%BF)
-- [线上问题排查神器：btrace](#%E7%BA%BF%E4%B8%8A%E9%97%AE%E9%A2%98%E6%8E%92%E6%9F%A5%E7%A5%9E%E5%99%A8btrace)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 # 一、线程栈（thread dump）
 
 ## 1、概念
@@ -329,7 +292,7 @@ PID USER PR NI VIRT RES SHR S %CPU %MEM TIME+ COMMAND
 3374 zmw2 15 0 256m 9620 6460 S 0.0 0.7 0:00.00 java
 3375 zmw2 15 0 256m 9620 6460 S 0.0 0.7 0:00.00 java
 ```
-这个命令输出的PID代表的是 native 线程的id，如上所示，id为 3368 的 native 线程消耗 CPU最高。在Java ThreadDump文件中，每个线程都有tid=...nid=...的属性，其中nid就是native thread id，只不过nid中用16进制来表示。例如上面的例子中3368的十六进制表示为0xd28.在Java线程中查找nid=0xd28即是本地线程对应Java线程
+这个命令输出的PID代表的是 native 线程的id，如上所示，id为 3368 的 native 线程消耗 CPU最高。在Java ThreadDump文件中，每个线程都有`tid=...nid=...`的属性，其中nid就是native thread id，只不过nid中用16进制来表示。例如上面的例子中3368的十六进制表示为0xd28.在Java线程中查找nid=0xd28即是本地线程对应Java线程
 
 ```
 "main" prio=1 tid=0x0805c988 nid=0xd28 runnable [0xfff65000..0xfff659c8]
@@ -351,6 +314,8 @@ at MyTest.main(MyTest.java:26)
 如果在Java线程堆栈中找到了对应的线程ID,并且该Java线程正在执行Native code,说明导致CPU过高的问题代码在JNI调用中，此时需要打印出 Native 线程的线程栈，在 linux 下，使用 `pstack <pid>` 命令。
 
 如果在 native 线程堆栈中可以找到对应的消耗 CPU 过高的线程 id，可以直接定位为 native 代码的问题;
+
+PS：十进制转换为16进制：`printf '%x\n' 6642`
 
 ### 4.3、定位性能下降原因
 
@@ -666,5 +631,6 @@ BTrace主要有下面几个模块：
 * [Java 线上问题排查思路与工具使用](https://blog.csdn.net/gitchat/article/details/79019454)
 * [java问题排查工具单](https://yq.aliyun.com/articles/69520?utm_content=m_10360)
 * [Java问题排查工具箱](https://mp.weixin.qq.com/s/X4l9LhjZybqr5jc7RLfcOA)
+* [Java线上问题排查套路](https://mp.weixin.qq.com/s?__biz=MzI4ODQ3NjE2OA==&mid=2247486948&idx=1&sn=54cec00fabc562384ac72266e003cbbd)
 * [线程堆栈分析](http://fastthread.io/)
 * [系统问题、CPU、FullGC问题排查思路](https://mp.weixin.qq.com/s/wTEMbOGiXA8xfyFascoMpA)
