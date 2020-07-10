@@ -854,7 +854,7 @@ else x= a;
   Java7中支持在数字量中间添加’_'作为分隔符。更直观，如（12_123_456）。下划线仅仅能在数字中间。编译时编译器自己主动删除数字中的下划线
 
 - null 值的自动处理；
-- JSR292与InvokeDynamic指令
+- JSR292与InvokeDynamic指令：JSR292 实现提供在 Java 语言层面上的 invokedynamic 调用
 - fork/join framework
 
 ### 4.4、JDK8

@@ -1324,6 +1324,24 @@ while ( (charRead = reader.read(buffer, 0, buffer.length)) > 0) {
 return sb.toString();
 ```
 
+## 8、输入流与输出流
+
+### 8.1、输出入流转换为字节数组
+
+```java
+public static byte[] getFileContent(String filePath) throws Throwable {
+    InputStream stream = SameLoaderLoadOneClassMore.class.getClassLoader().getResourceAsStream(filePath);
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    byte[] buffer = new byte[1024 * 4];
+    int n = 0;
+    assert stream != null;
+    while ((n = stream.read(buffer)) != -1) {
+        out.write(buffer, 0, n);
+    }
+    return out.toByteArray();
+}
+```
+
 
 # 参考文章
 

@@ -505,7 +505,7 @@ Exception in thread "main" java.lang.OutOfMemoryError
 通过参数优化虚拟机内存的参数如下所示
 
 - `Xms`：初始Heap大小，等价于`-XX:InitialHeapSize`；这个值的大小必须是1024的倍数，并且大于1M
-- `Xmx`：java heap最大值，等价于`-XX:MaxHeapSize`；
+- `Xmx`：java heap最大值，等价于`-XX:MaxHeapSize`；HeapSize是512K对齐的，如果你设置的大小，并不是512K的整数倍，那么会取比你设置的值要大的512K的最小公倍数，如果 `Xmx` 和 `-XX:MaxHeapSize` 两个同时存在，比如：`java Xmx=125M -XX:MaxHeapSize=256M -jar hello.jar`，那么其取的是 MaxHeapSize 里配置的值； 
 - `Xmn`：young generation的heap大小，还可以通过其他两个选项来代替这个选项来指定年轻代最小和最大内存：`-XX:NewSize`指定初始化大小,`-XX:MaxNewSize`指定最大内存大小
 - `Xss`：每个线程的Stack大小，和`-XX:ThreadStackSize`相同
 - `-XX:MinHeapFreeRatio=40`<br>
@@ -2373,8 +2373,7 @@ public void addShutdownHook(Thread hook) {
 
 ## 1、同一个类加载器对象是否可以加载同一个类文件多次并且得到多个Class对象而都可以被java层使用吗
 
-可以通过Unsafe的defineAnonymousClass来实现同一个类文件被同一个类加载器对象加载多遍的效果，因为并没有将其放到SystemDictonary里，因此我们可以无穷次加载同一个类
-
+可以通过`Unsafe`的`defineAnonymousClass`来实现同一个类文件被同一个类加载器对象加载多遍的效果，因为并没有将其放到`SystemDictonary`里，因此我们可以无穷次加载同一个类；
 - 正常的类加载：在JVM里有一个数据结构叫做SystemDictonary，这个结构主要就是用来检索我们常说的类信息，这些类信息对应的结构是klass，对SystemDictonary的理解，可以认为就是一个Hashtable，key是类加载器对象+类的名字，value是指向klass的地址；这样当我们任意一个类加载器去正常加载类的时候，就会到这个SystemDictonary中去查找，看是否有这么一个klass可以返回，如果有就返回它，否则就会去创建一个新的并放到结构里；
 
 - defineAnonymousClass：
@@ -2382,6 +2381,19 @@ public void addShutdownHook(Thread hook) {
 	创建了一个匿名的类，不过这种匿名的概念和我们理解的匿名是不太一样的。这种类的创建通常会有一个宿主类，也就是第一个参数指定的类，这样一来，这个创建的类会使用这个宿主类的定义类加载器来加载这个类，最关键的一点是这个类被创建之后并不会丢到上述的SystemDictonary里，也就是说我们通过正常的类查找，比如Class.forName等api是无法去查到这个类是否被定义过的。因此过度使用这种api来创建这种类在一定程度上会带来一定的内存泄露；
 
 	jvm通过InvokeDynamic可以支持动态类型语言，这样一来其实我们可以提供一个类模板，在运行的时候加载一个类的时候先动态替换掉常量池中的某些内容，这样一来，同一个类文件，我们通过加载多次，并且传入不同的一些cpPatches，也就是defineAnonymousClass的第三个参数， 这样就能做到运行时产生不同的效果
+	
+	```java
+	public static void main(String args[]) throws Throwable {
+        Field f = Unsafe.class.getDeclaredField("theUnsafe");
+        f.setAccessible(true);
+        Unsafe unsafe = (Unsafe) f.get(null);
+        String filePath = "A.class";
+        byte[] buffer = getFileContent(filePath); // 读取class文件
+        Class<?> c1 = unsafe.defineAnonymousClass(SameLoaderLoadOneClassMore.class, buffer, null);
+        Class<?> c2 = unsafe.defineAnonymousClass(SameLoaderLoadOneClassMore.class, buffer, null);
+        System.out.println(c1 == c2);
+    }
+	```
 
 ## 2、JVM理论上最多支持多少个线程
 
@@ -2390,6 +2402,8 @@ public void addShutdownHook(Thread hook) {
 - JVMMemory         JVM内存
 - ReservedOsMemory  保留的操作系统内存
 - ThreadStackSize   线程栈的大小-
+
+[一个Java进程创建多少个线程](https://club.perfma.com/article/244079)
 
 ## 3、进程分配内存不够时向Linux申请内存时，Linux系统如何处理
 
