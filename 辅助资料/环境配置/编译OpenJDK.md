@@ -1,3 +1,4 @@
+
 ```
 安装 alsa
 
@@ -35,3 +36,5 @@ unset CLASSPATH
 CLASSPATH=.:/usr/java/jdk1.8.0_60/lib/dt.jar:/usr/java/jdk1.8.0_60/lib/tools.jar:/usr/java/jdk1.8.0_60/jre/lib
 JAVA_HOME=/usr/java/jdk1.8.0_60
 ```
+
+[编译OpenJDK](https://hunterzhao.io/post/2018/01/29/compile-openjdk10-source-code-on-mac/)

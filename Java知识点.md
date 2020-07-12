@@ -185,4 +185,9 @@
                 - 灰度、埋点、热变更
 - 数据同步
         - mysql binlog、文件同步
+
+- 操作系统
+        - 命令：AWK、top、netstat、grep
+        - 内存分页管理与 Swap 机制、任务队列与 CPU Load 
+        - 内存屏障、指令乱序、分支预测、NUMA 与 CPU 亲和性等
 ```

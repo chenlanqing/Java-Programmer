@@ -117,3 +117,12 @@ magic、minor_version、major_version、constant_pool_count、constant_pool、ac
 	- LocalVariableTable：Code 属性，方法的局部变量描述用于描述栈帧中局部变量表中的变量与Java源码中定义的变量之间的对应关系
 	- SourceFile：类文件，源文件名称它用于记录生成这个Class文件的源码文件名称
 	- Synthetic：类，方法表，字段表;标示类，方法，字段等是编译器自动生成的；该属性代表此字段，方法并不是Java源代码直接生成的，而是由编译器自行添加的，如this和实例构造器、类构造器等
+
+# 3、查看class字节码
+
+## 3.1、javap
+
+javap 是 JDK 自带的反解析工具。它的作用是将 `.class` 字节码文件解析成可读的文件格式。在使用 javap 时我一般会添加 `-v` 参数，尽量多打印一些信息。同时，我也会使用 `-p` 参数，打印一些私有的字段和方法
+
+## 3.2、jclasslib
+
