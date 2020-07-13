@@ -11,23 +11,23 @@
 - 无符号数：无符号数属于基本数据类型，以 u1、u2、u4、u8 来分别代表 1、2、4、8 个字节的无符号数；
 - 表：由多个无符号数或其他表作为数据项构成的符合数据类型，所有的表都习惯性地以_info结尾_；
 
-## 2.2.Class 文件格式
+## 2.2、Class 文件格式
 
-![image](image/class类文件格式.jpg)
+![image](image/class字节码结构.png)
 
 magic、minor_version、major_version、constant_pool_count、constant_pool、access_flag、this_class、super_clas、interfaces_count、interfaces、fields_count、fields、methods_count、methods、attributes_count、attributes；从图中可以看出当需要描述同一类型但数量不定的多个数据时，经常会在其前面使用一个前置的容量计数器来记录其数量，而便跟着若干个连续的数据项，称这一系列连续的某一类型的数据为某一类型的集合；Class 文件中各数据项是按照上表的顺序和数量被严格限定的，每个字节代表的含义、长度、先后顺序都不允许改变；
 
 - （1）magic与version：
-	- ①、每个Class文件的头4个字节称为魔数(magic)，唯一作用是判断该文件是否为一个能被虚拟机接受的 Class 文件，它的值固定：0xCAFEBAB()
-	- ②、紧接着magic的4个字节存储的是 Class 文件的次版本号和主版本号，高版本的JDK能向下兼容低版本的Class文件但不能运行更高版本的Class文件(即向下兼容)
+	- ①、每个Class文件的头4个字节称为魔数(magic)，唯一作用是判断该文件是否为一个能被虚拟机接受的 Class 文件，它的值固定：`0xCAFEBABE`；魔数放在文件开头，JVM可以根据文件的开头来判断这个文件是否可能是一个.class文件，如果是，才会继续进行之后的操作
+	- ②、紧接着magic的4个字节存储的是 Class 文件的次版本号（Minor Version）和主版本号（Major Version），高版本的JDK能向下兼容低版本的Class文件但不能运行更高版本的Class文件(即向下兼容)
 
 - （2）、constant_pool：major_version(主版本号)之后是常量池的入口，它是 Class 文件中与其他项目关联最多的数据类型，也是占用Class文件空间最大的数据项目之一
 	- ①、常量池中主要存放两大类常量：字面量和符号引用
 		- 字面量比较接近于Java层面的常量概念，如文本字符串、被声明为final的常量值等；
 		- 符号引用总结起来则包括了下面三类常量：
-			- 类和接口的全限定名（即带有包名的 Class 名，如：java.lang.Strin）<br>
-			- 字段的名称和描述符（private，static 等描述符）；<br>
-			- 方法的名称和描述符（private，static 等描述符）；<br>
+			- 类和接口的全限定名（即带有包名的 Class 名，如：java.lang.Strin）
+			- 字段的名称和描述符（private，static 等描述符）；
+			- 方法的名称和描述符（private，static 等描述符）；
 
 		当虚拟机运行时，需要从常量池中获得对应的符号引用，再在类加载过程中的解析阶段将其替换为直接引用，并翻译到具体的内存地址中
 
@@ -55,12 +55,24 @@ magic、minor_version、major_version、constant_pool_count、constant_pool、ac
 
 - （3）access_flag：在常量池结束之后，紧接着的"2个字节"代表访问标志，这个标志用于识别一些类或接口层次的访问信息，包括：Class 是类还是接口，是否定义为 public 或 abstract 类型，如果是的话是否声明为 final。每种访问信息都由一个十六进制的标志值表示，如果同时具有多种访问信息，则得到的标志值为这几种访问信息的标志值的逻辑或；
 
+	|标志名称				|标志值			 | 含义|
+	|----------------------|---------------|---------------------------------------|
+	|ACC_PIBLIC			   	|0x0001			|是否为public|
+	|ACC_FINAL				|0x0010			|是否被声明为final，只有类可以设置|
+	|ACC_SUPER				|0x0020			|是否允许使用invokespecial字节码指令的新语义|
+	|ACC_INTERFACE			|0x0200			|标识是一个接口|
+	|ACC_ABSTRACT			|0x0400			|是否为abstract类型，对于接口或者抽象类来说，此标志值为真，其他类型类型为假|
+	|ACC_SYNTHETIC			|0x1000			|标识这个类并未由用户代码产生的|
+	|ACC_ANNOTATION			|0x2000			|标识这是一个注解|
+	|ACC_ENUM				|0x4000			|标识是一个枚举|
+	|ACC_MODULE				|0x8000			|标识是一个模块|
+
 - （4）this_class、super_class、interfaces
-	- ①、this_class(类索引)，super_class(父类索引)都是一个 u2 类型的数据，而interfaces（接口索引集合）则是一组u2类型的数据集合，Class 文件中由这三项数据来确定这个类的继承关系;
+	- ①、this_class(类索引)，super_class(父类索引)都是一个 u2 类型的数据，而interfaces（接口索引集合）则是一组u2类型的数据集合（描述了该类或父类实现的接口数量），Class 文件中由这三项数据来确定这个类的继承关系;
 	- ②、类索引，父类索引和接口索引集合都按照顺序排列在访问标志之后，类索引和父类索引两个 u2 类型的索引值表示：
 		它们各自执行一个类型为 CONSTANT_Class_info 的类描述符常量，通过该常量中的索引值找到定义在CONSTANT_Utf8_info 类型的常量中的全限定名字符串；而接口索引集合就用来描述这个类实现了哪些接口，这些被实现的接口将按 implements{} 语句（如果这个类本身是个接口，则应当是 extends 语句）后的接口顺序从左到右排列在接口的索引集合中
 
-- （5）fields：字段表用于描述接口或类中声明的变量;字段包括了类级变量或实例级变量，但不包含在方法内声明的变量；字段的名字、数据类型、修饰符等都是无法固定的，只能引用常量池中的常量来描述
+- （5）fields：字段表用于描述接口或类中声明的变量；字段包括了类级变量或实例级变量，但不包含在方法内声明的变量；字段的名字、数据类型、修饰符等都是无法固定的，只能引用常量池中的常量来描述；字段表也分为两部分，第一部分为两个字节，描述字段个数；第二部分是每个字段的详细信息fields_info
 	
 	|类型			|名称				|数量		|
 	|---------------|------------------|------------|
@@ -94,7 +106,12 @@ magic、minor_version、major_version、constant_pool_count、constant_pool、ac
 		用方法描述符描述方法时，按照先参数后返回值的顺序描述，参数要按照严格的顺序放在一组小括号内。字段表包含的固定数据项目到descriptor_index为止就结束了，但它之后还紧跟着一个属性表集合用于存储一些额外的信息<br>
 		★ 注意：字段表集合中不会列出从父类或接口中继承而来的字段，但有可能列出原本Java代码中不存在的字段；比如：比如在内部类中为了保持对外部类的访问性，会自动添加指向外部类实例的字段；
 
-- （6）methods：方法表的结构与属性表的结构相同;方法里的Java代码经过编译器编译程字节码指令后存放在方法属性表集合中一个名为"Code"的属性里；如果父类在子类中没有被覆盖，方法表集合中就不会出现来自父类的方法信息;但同样，有可能会出现由编译器自动添加的方法，最典型的便是类构造器"<clinit>"方法和实例构造器"<init>"方法重载的方法必须是拥有相同的简单名称和一个与原方法不同的特征签名，特征签名就是一个方法中各个参数在常量池中的字段符号引用的集合，也就是说返回值不会包含在特征签名内，因此方法重载跟方法返回值没有关系；
+- （6）methods：方法表的结构与属性表的结构相同；方法里的Java代码经过编译器编译程字节码指令后存放在方法属性表集合中一个名为"Code"的属性里；如果父类在子类中没有被覆盖，方法表集合中就不会出现来自父类的方法信息；但同样，有可能会出现由编译器自动添加的方法，最典型的便是类构造器`<clinit>`方法和实例构造器`<init>`方法重载的方法必须是拥有相同的简单名称和一个与原方法不同的特征签名，特征签名就是一个方法中各个参数在常量池中的字段符号引用的集合，也就是说返回值不会包含在特征签名内，因此方法重载跟方法返回值没有关系；主要包含三部分：
+	- “Code区”：源代码对应的JVM指令操作码，在进行字节码增强时重点操作的就是“Code区”这一部分。
+	- “LineNumberTable”：行号表，将Code区的操作码和源代码中的行号对应，Debug时会起到作用（源代码走一行，需要走多少个JVM指令操作码）。
+	- “LocalVariableTable”：本地变量表，包含This和局部变量，之所以可以在每一个方法内部都可以调用This，是因为JVM将This作为每一个方法的第一个参数隐式进行传入。当然，这是针对非Static方法而言
+	
+	![](image/字节码-反编译后方法列表属性.png)
 
 - （7）attributes：属性表，在 Class 文件、字段表、方法表中都可以携带自己的属性表集合。Java 虚拟机运行时会忽略掉他不认识的属性.Java 虚拟机规范中预定义了9项虚拟机应当能识别的属性（JDK1.5之后新增了部分属性），9个基本属性，对于每个属性，它的名称都需要从常量池中引用一个CONSTANT_Utf8_info类型的常量来表示，每个属性值的结构是完全可以自定义的，只需说明属性值所占用的位数长度即可，一个符合规则的属性表至少应具有"attribute_name_info"、"attribute_length"和至少一项信息属性；
 
@@ -118,11 +135,65 @@ magic、minor_version、major_version、constant_pool_count、constant_pool、ac
 	- SourceFile：类文件，源文件名称它用于记录生成这个Class文件的源码文件名称
 	- Synthetic：类，方法表，字段表;标示类，方法，字段等是编译器自动生成的；该属性代表此字段，方法并不是Java源代码直接生成的，而是由编译器自行添加的，如this和实例构造器、类构造器等
 
-# 3、查看class字节码
+## 2.3、字节码操作集合
 
-## 3.1、javap
+在方法列表图中中，Code区的红色编号0～17，就是`.java`中的方法源代码编译后让JVM真正执行的操作码。为了帮助人们理解，反编译后看到的是十六进制操作码所对应的助记符，十六进制值操作码与助记符的对应关系，以及每一个操作码的用处可以查看Oracle官方文档进行了解，在需要用到时进行查阅即可。比如上图中第一个助记符为iconst_2，对应到图2中的字节码为0x05，用处是将int值2压入操作数栈中。以此类推，对0~17的助记符理解后，就是完整的add()方法的实现；
+
+## 2.4、操作数栈和字节码
+
+JVM的指令集是基于栈而不是寄存器，基于栈可以具备很好的跨平台性（因为寄存器指令集往往和硬件挂钩），但缺点在于，要完成同样的操作，基于栈的实现需要更多指令才能完成（因为栈只是一个FILO结构，需要频繁压栈出栈）。另外，由于栈是在内存实现的，而寄存器是在CPU的高速缓存区，相较而言，基于栈的速度要慢很多，这也是为了跨平台性而做出的牺牲
+
+## 2.5、查看class字节码
+
+### 2.5.1、javap
 
 javap 是 JDK 自带的反解析工具。它的作用是将 `.class` 字节码文件解析成可读的文件格式。在使用 javap 时我一般会添加 `-v` 参数，尽量多打印一些信息。同时，我也会使用 `-p` 参数，打印一些私有的字段和方法
 
-## 3.2、jclasslib
+### 2.5.2、jclasslib
 
+idea的一个插件
+
+![](image/字节码-jclasslib查看字节码.png)
+
+# 3、字节码增强
+
+字节码增强技术就是一类对现有字节码进行修改或者动态生成全新字节码文件的技术
+
+## 3.1、ASM
+
+
+## 3.2、Javassist
+
+# 4、运行时类的重载
+
+如果我们在一个JVM中，先加载了一个类，然后又对其进行字节码增强并重新加载会发生什么呢？模拟这种情况，在增强前就先让JVM加载Base类，然后在执行到c.toClass()方法时会抛出错误，JVM是不允许在运行时动态重载一个类的：
+```
+Exception in thread "main" javassist.CannotCompileException: by java.lang.ClassFormatError: loader (instance of  sun/misc/Launcher$AppClassLoader): attempted  duplicate class definition for name: "com/blue/fish/example/bytecode/Base"
+	at javassist.util.proxy.DefineClassHelper.toClass(DefineClassHelper.java:271)
+	at javassist.ClassPool.toClass(ClassPool.java:1240)
+	at javassist.ClassPool.toClass(ClassPool.java:1098)
+	at javassist.ClassPool.toClass(ClassPool.java:1056)
+	at javassist.CtClass.toClass(CtClass.java:1298)
+	at com.blue.fish.example.bytecode.javassist.JavassistTest.main(JavassistTest.java:16)
+Caused by: java.lang.ClassFormatError: loader (instance of  sun/misc/Launcher$AppClassLoader): attempted  duplicate class definition for name: "com/blue/fish/example/bytecode/Base"
+	at javassist.util.proxy.DefineClassHelper$Java7.defineClass(DefineClassHelper.java:182)
+	at javassist.util.proxy.DefineClassHelper.toClass(DefineClassHelper.java:260)
+	... 5 more
+```
+
+那如何解决JVM不允许运行时重加载类信息的问题呢？
+
+## 4.1、instrument
+
+instrument是JVM提供的一个可以修改已加载类的类库，专门为Java语言编写的插桩服务提供支持。它需要依赖JVMTI的Attach API机制实现。
+
+在JDK 1.6以前，instrument只能在JVM刚启动开始加载类时生效，而在JDK 1.6之后，instrument支持了在运行时对类定义的修改。要使用instrument的类修改功能，我们需要实现它提供的ClassFileTransformer接口，定义一个类文件转换器。接口中的transform()方法会在类文件被加载时调用，而在transform方法里，我们可以利用上文中的ASM或Javassist对传入的字节码进行改写或替换，生成新的字节码数组后返回
+
+# 参考资料
+
+* [字节码操作](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
+* [javassist教程](http://www.javassist.org/tutorial/tutorial.html)
+* [JVM Tool Interface](https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html)
+* [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
+* [ASM](https://asm.ow2.io/index.html)
+* [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)

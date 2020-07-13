@@ -266,7 +266,7 @@ java [options] -jar filename [args]
     设置最大堆大小，这个值需要大于2MB，且是1024的整数倍。等价于-Xmx
 
 - `-XX:MaxHeapFreeRatio=percent` <br>
-    设置在一次GC后最大的堆空闲空间占比。如果空闲堆空间超过这个值，堆空间会被收缩。默认是70%
+    设置在一次GC后最大的堆空闲空间占比。如果空闲堆空间超过这个值，堆空间会被收缩。默认是70%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
 
 - `-XX:MaxMetaspaceSize=size` <br>
     为类的元数据进行分配的metaspace最大native内存大小，默认情况这个值无限制。该值依赖于当前的JVM、其他在运行的JVM和系统可用内存
@@ -284,7 +284,7 @@ java [options] -jar filename [args]
     启用CCS，设置压缩类空间大小
 
 - `-XX:MinHeapFreeRatio=percent` <br>
-    设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%
+    设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
 
 - `-XX:NewRatio=ratio` <br>
     设置年轻代和年老代的比例，默认是2。

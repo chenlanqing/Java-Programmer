@@ -683,7 +683,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 
 # 5、Class 类文件结构
 
-[class类文件结构](JVM-class类文件结构.md)
+[class类文件结构](JVM-字节码.md)
 
 # 6、虚拟机类加载机制
 	
