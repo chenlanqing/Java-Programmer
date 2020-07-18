@@ -629,8 +629,7 @@ Java 提供 ThreadGroup 类来组织线程。ThreadGroup 对象可以由 Thread 
         // Clear the native thread instance - this makes isAlive return false and allows the join()
         // to complete once we've done the notify_all below
         java_lang_Thread::set_thread(threadObj(), NULL);
-        // 同志们看到了没，别的不用看，就看这一句
-        // thread就是当前线程，是啥？就是刚才例子中说的t1线程啊。
+        // 主要是这一句 thread就是当前线程；
         lock.notify_all(thread);
         // Ignore pending exception (ThreadDeath), since we are exiting anyway
         thread->clear_pending_exception();
@@ -3832,6 +3831,24 @@ CPU提供了两种方法来实现多处理器的原子操作：总线加锁或�
 	- Ⅰ、确保对内存的`读-改-写`操作原子执行
 	- Ⅱ、禁止该指令与之前和之后的读和写指令重排序
 	- Ⅲ、把写缓冲区中的所有数据刷新到内存中
+
+Unsafe在JDK11无法直接使用：sun.misc.Unsafe，需要在 源码包中新建文件： module-info.java，该文件内容如下：
+```java
+module unsafe{
+    requires jdk.unsupported;
+}
+// 最终目录结构是：
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   ├── com
+│   │   │   │   └── blue
+│   │   │   │       └── fish
+│   │   │   │           └── example
+│   │   │   │               ├── ExampleApplication.java
+│   │   │   └── module-info.java
+```
+
 
 ### 2.3、CAS 使用场景
 

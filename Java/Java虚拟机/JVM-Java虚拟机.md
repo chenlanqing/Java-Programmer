@@ -86,7 +86,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 #### 2.2.2.2、该区域存在的异常情况
 
 - 如果线程请求的栈深度大于虚拟机所允许的深度，将抛出 StackOverflowError 异常
-- 如果虚拟机在动态扩展栈时无法申请到足够的内存空间，则抛出 OutOfMemoryError 异常
+- 如果虚拟机在动态扩展栈时无法申请到足够的内存空间，则抛出 OutOfMemoryError 异常（Hotspot虚拟机栈内存不可扩展）
 
 #### 2.2.2.3、栈帧中所存放的各部分信息的作用和数据结构
 
@@ -147,7 +147,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 - Java 堆可以处在物理上不连续的内存空间中，只要逻辑上是连续的即可;
 - 其大小可以通过`-Xmx`和`-Xms`来控制;
 - Java 堆分为新生代和老生代，新生代又被分为 Eden 和 Survivor 组成。对象主要分配在 Eden 区上新建的对象分配在新生代中。新生代大小可以由`-Xmn` 来控制，也可以用`-XX:SurvivorRatio` 来控制Eden和Survivor的比例；老生代存放新生代中经过多次垃圾回收(也即Minor GC)仍然存活的对象和较大内处对象，通常是从Survivor区域拷贝过来的对象，但并不绝对。
-- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做TLAB(Thread Local Allocation Buffer)。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度，
+- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做TLAB(Thread Local Allocation Buffer)。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度；大对象无法再TLAB分配
 
 **堆与栈的区别：**
 - 管理方式：栈自动释放，堆需要GC
@@ -209,7 +209,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 - 堆外内存会溢出么
 
-	通过修改JVM参数：`-XX:MaxDirectMemorySize=40M`，将最大堆外内存设置为40M。既然堆外内存有限，则必然会发生内存溢出。
+	通过修改JVM参数：`-XX:MaxDirectMemorySize=40M`，将最大堆外内存设置为40M。既然堆外内存有限，则必然会发生内存溢出。MaxDirectMemorySize 参数对 Unsafe 类不起作用
 	
 	为模拟内存溢出，可以设置JVM参数：`-XX:+DisableExplicitGC`，禁止代码中显式调用`System.gc()`。可以看到出现OOM。得到的结论是，堆外内存会溢出，并且其垃圾回收依赖于代码显式调用System.gc();
 	```java
@@ -2075,6 +2075,12 @@ jvm使用了的内存，即使GC后也不会还给操作系统
 
 Direct Memory内存查看：如果是JDK 7及以上版本，可以用jconsole或者VisualVM的MBeans窗口查看java.nio.BufferPool.direct属性。
 
+## 13.9、代码缓冲区满
+
+CodeCache 满了的话，JIT会停止工作
+
+- 设置合理的代码缓存区大小；
+- 如果项目平时性能OK，但是突然出现性能下降，业务没有问题，可排查是否由代码缓存区满所导致的；
 
 # 14、钩子函数(ShutdownHook)
 
@@ -2155,11 +2161,7 @@ public void addShutdownHook(Thread hook) {
 
 	如果我们使用Java Security Managers，则执行添加/删除shutdownHook的代码需要在运行时具有shutdownHooks权限。否则会导致SecurityException
 
-# 15、JVM问题排查
-
-	https://blog.csdn.net/GitChat/article/details/79019454
-	
-# 16、JVM面试题
+# 15、JVM面试题
 
 ## 1、同一个类加载器对象是否可以加载同一个类文件多次并且得到多个Class对象而都可以被java层使用吗
 

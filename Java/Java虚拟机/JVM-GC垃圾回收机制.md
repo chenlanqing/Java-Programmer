@@ -328,10 +328,27 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 CMS GC 时出现`promotion failed`和`concurrent mode failure`
 - promotion failed：是在进行 Minor GC时，survivor空间放不下、对象只能放入老生代，而此时老生代也放不下造成的；
-
+	
+	产生的原因即问题定位：
+	- survivor 区太小，对象过早进入老年代：
+		- `jstat -gcutil pid 1000` 观察内存运行情况；
+		- `jinfo pid` 查看 SurvivorRatio 参数；
+	- 大对象分配，没有足够的内存：
+		- 日志查找关键字 “allocating large”；
+		- `profiler` 查看内存概况大对象分布；
+	- old 区存在大量对象：
+		- 实例数量前十的类：`jmap -histo pid | sort -n -r -k 2 | head -10`
+		- 实例容量前十的类：`jmap -histo pid | sort -n -r -k 3 | head -10`
+		- dump 堆，profiler 分析对象占用情况
+	
 	解决办法：`-XX:UseCMSCompactAtFullCollection -XX:CMSFullGCBeforeCompaction=5` 或者调大新生代或者Survivor空间
 
 - concurrent mode failure：在执行 CMS GC 的过程中同时有对象要放入老生代，而此时老生代空间不足造成的；
+
+	- fgc 触发比例过大，导致老年代占用过多，并发收集时用户线程持续产生对象导致达到触发 FGC 比例。
+		- `jinfo` 查看 `CMSInitiatingOccupancyFraction` 参数，一般 70~80 即可
+	- 老年代存在内存碎片。
+		- `jinfo` 查看 `UseCMSCompactAtFullCollection` 参数，在 FullGC 后整理内存
 
 	解决办法：`+XX:CMSInitiatingOccupancyFraction`，调大老年代的空间，`+XX:CMSMaxAbortablePrecleanTime`
 
@@ -665,6 +682,7 @@ YGC是JVM GC当前最为频繁的一种GC，一个高并发的服务在运行期
 - 查找GC Roots，拷贝所引用的对象到 to 区;
 - 递归遍历步骤1中对象，并拷贝其所引用的对象到 to 区，当然可能会存在自然晋升，或者因为to 区空间不足引起的提前晋升的情况；
 	
+
 **1.3、YGC细节**
 
 - 如果触发的YGC顺利执行完，.期间没有发生任何问题，垃圾回收完成后，正常的分配内存；
@@ -782,12 +800,12 @@ Heap
 
 - **5.1、JVM的GC日志的主要参数包括如下几个：**
 
-	- -XX:+PrintGC 输出GC日志
-	- -XX:+PrintGCDetails 输出GC的详细日志
-	- -XX:+PrintGCTimeStamps 输出GC的时间戳（以基准时间的形式）
-	- -XX:+PrintGCDateStamps 输出GC的时间戳（以日期的形式，如 2017-09-04T21:53:59.234+0800）
-	- -XX:+PrintHeapAtGC 在进行GC的前后打印出堆的信息
-	- -Xloggc:../logs/gc.log 日志文件的输出路径
+	- `-XX:+PrintGC` 输出GC日志
+	- `-XX:+PrintGCDetails` 输出GC的详细日志
+	- `-XX:+PrintGCTimeStamps` 输出GC的时间戳（以基准时间的形式）
+	- `-XX:+PrintGCDateStamps` 输出GC的时间戳（以日期的形式，如 2017-09-04T21:53:59.234+0800）
+	- `-XX:+PrintHeapAtGC` 在进行GC的前后打印出堆的信息
+	- `-Xloggc:../logs/gc.log` 日志文件的输出路径
 
 	在生产环境中，根据需要配置相应的参数来监控JVM运行情况
 
@@ -1046,6 +1064,23 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 	- Full GC 执行时间不到1s；
 	- Full GC 执行频率不算频繁，不低于10分钟1次。
 
+**调优的不可能三角：**
+- 内存占用（Footprint）
+- 吞吐量（Throughput）
+- 延迟（Latency）
+
+比如，对于特定软件，GC要回收的垃圾总量基本是确定的。那么要想回收垃圾，提高GC的频率，这样每次GC的时间就比较少；要么少做几次GC，每次多停顿一些时间。
+
+又比如，而为了降低延迟，CMS/G1采用了并发收集，并发阶段GC线程和业务线程同时运行。但这样做，并发阶段GC线程和业务线程互相都有影响，吞吐量会有所降低。
+
+因此，以上三者最多只能选其二
+
+**如下配置可获得较高的吞吐量：** `java -server -XX:+UseParallelGC -XX:+UseLargePages -Xmn10g -Xms26g -Xmx26g`
+
+**如下配置可获得较低的延迟：** `java -XX:+UseG1GC -Xms26g Xmx26g -XX:MaxGCPauseMillis=500 -XX:+PrintGCTimeStamp`
+
+**如下配置可让堆内存比较小，并可减少动态内存分配的占用：** `-XX:MaxHeapFreeRatio=10 -XX:MinHeapFreeRatio=5`；默认情况下这两个值是70和40。`空闲内存>70%`才会收缩堆；`<40%`才会扩展堆。意味着大量的内存都是动态分配的；
+
 # 九、减少GC开销
 
 ## 1、避免隐式的 String 字符串
@@ -1086,6 +1121,680 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 - 问题：当方法返回一个集合，通常会很明智的在方法中创建一个集合对象（如ArrayList），填充它，并以不变的集合的形式返回；
 - 解决方案：这种情况的解决方案将不会返回新的集合，而是通过使用单独的集合当做参数传入到那些方法代替组合的集合；
 
+# 十、JVM日志
+
+* [Xlog](https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-BE93ABDC-999C-4CB5-A88B-1994AAAC74D5)
+
+## 1、打印GC、运行时日志
+
+JDK 8垃圾收集日志打印参数：`-Xms50m -Xmx50m -XX:+PrintGCDetails -XX:+PrintGCDateStamps -XX:+PrintGCTimeStamps -XX:+PrintGCCause -Xloggc:./gclog.log`
+
+JDK8运行时日志打印参数：`-XX:+TraceClassLoading -XX:+TraceBiasedLocking`
+
+上述打印的日志毫无规律，在JDK9之后，使用Xlog进行统一日志管理
+
+## 2、Xlog
+
+### 2.1、什么是Xlog
+
+统一日志管理，适用于JDK 9及更高版本；可使用`-Xlog`选项，启用统一日志管理。
+
+Xlog选项支持的参数如下：
+- `-Xlog`：使用info级别启用JVM日志，如果只指定了 -Xlog，其等价于：`-Xlog:all=warning:stdout:uptime,level,tags`
+- `-Xlog:help`：打印Xlog帮助文档
+- `-Xlog:disable`：关闭所有日志记录并清除日志记录框架的所有配置，包括警告和错误的默认配置
+- `-Xlog[:option]`：按照命令行上出现的顺序应用多个参数。同一输出的多个参数按其给定顺序覆盖。option的格式为：`[:[what][:[output][:[decorators][:output-options[,...]]]]]`，其中：
+	- what：指定level和tag的组合，格式：tag1[+tag2...][*][=level][,...] 。除非用 * 指定了通配符，否则只有匹配了指定tag的日志消息才会被匹配。详见 [Xlog标签和级别]
+	- output：设置输出类型。默认为stdout，详见 Xlog输出
+	- decorators：使用一系列自定义的装饰器去配置output。缺省的装饰器为uptime、level和tags。详见 装饰器
+	- output-options：设置Xlog的日志输出选项，格式：`filecount=file-count filesize=file size with optional K, M or G suffix`
+
+### 2.2、Xlog标签和级别
+
+每个日志消息都有一个级别和与之关联的tag集合。消息的级别与其详细信息相对应，tag集与消息包含的内容或者消息所涉及的JVM组件（例如GC、编译器或线程）相对应。
+
+- 可用的日志级别：off、trace、debug、info、warning、error；
+
+- 可用的日志标签（ 如指定为all，则表示下面所有标签的组合）：`add, age, alloc, annotation, aot, arguments, attach, barrier, biasedlocking, blocks, bot, breakpoint, bytecode, census, class, classhisto, cleanup, compaction, comparator, constraints, constantpool, coops, cpu, cset, data, defaultmethods, dump, ergo, event, exceptions, exit, fingerprint, freelist, gc, hashtables, heap, humongous, ihop, iklass, init, itables, jfr, jni, jvmti, liveness, load, loader, logging, mark, marking, metadata, metaspace, method, mmu, modules, monitorinflation, monitormismatch, nmethod, normalize, objecttagging, obsolete, oopmap, os, pagesize, parser, patch, path, phases, plab, preorder, promotion, protectiondomain, purge, redefine, ref, refine, region, remset, resolve, safepoint, scavenge, scrub, setting, stackmap, stacktrace, stackwalk, start, startuptime, state, stats, stringdedup, stringtable, subclass, survivor, sweep, system, task, thread, time, timer, tlab, unload, update, verification, verify, vmoperation, vtables, workgang`；
+
+下表描述了标签和级别的组合：
+<table>
+    <tr>
+        <td align="left"><code>-Xlog:gc</code></td>
+        <td align="left">打印 <code>gc</code> 信息以及垃圾回收发生的时间。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:gc*</code></td>
+        <td align="left">打印至少包含 <code>gc</code> 标签的日志消息。它还可以具有与其关联的其他标签。但是，它不会提供<code>phase</code>级别信息。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:gc*=trace</code></td>
+        <td align="left">打印trace级别及更高的<code>gc</code>日志记录信息。输出显示所有<code>gc</code>相关标签以及详细的日志记录信息。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:gc+phases=debug</code></td>
+        <td align="left">打印不同的<code>phase</code>级别信息。这提供了在<code>debug</code>级别记录的详细信息级别。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:gc+heap=debug</code></td>
+        <td align="left">在gc之前和之后打印堆的使用详细。这将会以debug级别打印带有tag和heap的标记的日志</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:safepoint</code></td>
+        <td align="left">在同一级别上打印有关应用并发时间（application concurrent time）和停顿时间（application stop time）的详细信息。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:gc+ergo*=trace</code></td>
+        <td align="left">以<code>trace</code> 级别同时打印<code>gc</code>和<code>ergo</code>消息的组合。该信息包括有关堆大小和收集集构造的所有详细信息。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:gc+age=trace</code></td>
+        <td align="left">以trace级别 打印存活区的大小、以及存活对象在存活区的年龄分布</td>
+    </tr>
+    <tr>
+        <td align="left"><code>-Xlog:gc*:file=::filecount=,filesize=</code></td>
+        <td align="left">将输出重定向到文件，在其中指定要使用的文件数和文件大小，单位 <code>kb</code></td>
+    </tr>
+</table>
+
+### 2.3、-Xlog输出
+
+-Xlog 支持以下类型的输出：
+- `stdout` ：将输出发送到标准输出
+- `stderr` ：将输出发送到stderr
+- `file=filename` ：将输出发送到文本文件。你还可以让文件按照文件大小轮换，例如每记录10M就轮换，只保留5个文件等。默认情况下，最多保留5个20M的文件。可使用 filesize=10M, filecount=5 格式去指定文件大小和保留的文件数。
+
+### 2.4、装饰器
+
+装饰器用来装饰消息，记录与消息有关的信息。可以为每个输出配置一组自定义的装饰器，输出顺序和定义的顺序相同。缺省的装饰器为uptime、level和tags。none表示禁用所有的装饰器。
+
+下表展示了所有可用的装饰器：
+<table>
+    <tr>
+        <th align="left">装饰器</th><th align="left">描述</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td align="left"><code>time</code> or <code>t</code></td>
+        <td align="left">ISO-8601格式的当前日期时间</td>
+    </tr>
+    <tr>
+        <td align="left"><code>utctime</code> or <code>utc</code></td>
+        <td align="left">Universal Time Coordinated or Coordinated Universal Time.</td>
+    </tr>
+    <tr>
+        <td align="left"><code>uptime</code> or <code>u</code></td>
+        <td align="left">JVM启动了多久，以秒或毫秒为单位。例如6.567s.</td>
+    </tr>
+    <tr>
+        <td align="left"><code>timemillis</code> or <code>tm</code></td>
+        <td align="left">相当于 <code>System.currentTimeMillis()</code></td>
+    </tr>
+    <tr>
+        <td align="left"><code>uptimemillis</code> or <code>um</code></td>
+        <td align="left">JVM启动以来的毫秒数</td>
+    </tr>
+    <tr>
+        <td align="left"><code>timenanos</code> or <code>tn</code></td>
+        <td align="left">相当于 <code>System.nanoTime()</code></td>
+    </tr>
+    <tr>
+        <td align="left"><code>uptimenanos</code> or <code>un</code></td>
+        <td align="left">JVM启动以来的纳秒数</td>
+    </tr>
+    <tr>
+        <td align="left"><code>hostname</code> or <code>hn</code></td>
+        <td align="left">主机名</td>
+    </tr>
+    <tr>
+        <td align="left"><code>pid</code> or <code>p</code></td>
+        <td align="left">The process identifier.</td>
+    </tr>
+    <tr>
+        <td align="left"><code>tid</code> or <code>ti</code></td>
+        <td align="left">打印线程号</td>
+    </tr>
+    <tr>
+        <td align="left"><code>level</code> or <code>l</code></td>
+        <td align="left">与日志消息关联的级别</td>
+    </tr>
+    <tr>
+        <td align="left"><code>tags</code> or <code>tg</code></td>
+        <td align="left">与日志消息关联的标签集</td>
+    </tr>
+</table>
+
+### 2.5、使用示例
+
+```bash
+# 示例1：使用info级别记录所有信息到stdout，装饰器使用uptime、level及tags
+# 等价于-Xlog:all=info:stdout:uptime,levels,tags
+-Xlog
+
+# 示例2：以info级别打印使用了gc标签的日志到stdout
+-Xlog:gc
+
+# 示例3：使用默认装饰器，info级别，将使用gc或safepoint标签的消息记录到stdout。
+# 如果某个日志同时标签了gc及safepoint，不会被记录
+-Xlog:gc,safepoint
+
+# 示例4：使用默认装饰器，debug级别，打印同时带有gc和ref标签的日志。
+# 仅使用gc或ref的日志不会被记录
+-Xlog:gc+ref=debug
+
+# 示例5：不使用装饰器，使用debug级别，将带有gc标签的日志记录到gc.txt中
+-Xlog:gc=debug:file=gc.txt:none
+
+# 示例6：以trace级别记录所有带有gc标签的日志到gctrace.txt文件集中，该文件集中的文件最大1M，保留5个文件；使用的装饰器是uptimemillis、pids
+-Xlog:gc=trace:file=gctrace.txt:uptimemillis,pids:filecount=5,filesize=1024
+
+# 示例7：使用trace级别，记录至少带有gc及meta标签的日志到gcmetatrace.txt，同时关闭带有class的日志。某个消息如果同时带有gc、meta及class，将不会被记录，因为class标签被关闭了。
+-Xlog:gc+meta*=trace,class*=off:file=gcmetatrace.txt
+```
+
+### 2.6、旧式日志和Xlog的对照
+
+**旧式GC日志和Xlog的对照：**
+
+<table>
+    <thead>
+    <tr>
+        <th align="left">旧式GC标记</th>
+        <th align="left">Xlog配置</th>
+        <th align="left">注释</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td align="left"><code>G1PrintHeapRegions</code></td>
+        <td align="left"><code>-Xlog:gc+region=trace</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>GCLogFileSize</code></td>
+        <td align="left">No configuration available</td>
+        <td align="left">日志轮换由框架处理</td>
+    </tr>
+    <tr>
+        <td align="left"><code>NumberOfGCLogFiles</code></td>
+        <td align="left">Not Applicable</td>
+        <td align="left">日志轮换由框架处理</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintAdaptiveSizePolicy</code></td>
+        <td align="left"><code>-Xlog:gc+ergo*=level</code></td>
+        <td align="left">使用debug级别可打印大部分信息，使用trace级别可打印所有 <code>PrintAdaptiveSizePolicy</code> 打印的信息</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGC</code></td>
+        <td align="left"><code>-Xlog:gc</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCApplicationConcurrentTime</code></td>
+        <td align="left"><code>-Xlog:safepoint</code></td>
+        <td align="left">注意： <code>PrintGCApplicationConcurrentTime</code> 和 <code>PrintGCApplicationStoppedTime</code>  是记录在同一tag之上的，并且没有被分开</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCApplicationStoppedTime</code></td>
+        <td align="left"><code>-Xlog:safepoint</code></td>
+        <td align="left">注意： <code>PrintGCApplicationConcurrentTime</code> 和 <code>PrintGCApplicationStoppedTime</code>  是记录在同一tag之上的，并且没有被分开</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCCause</code></td>
+        <td align="left">Not Applicable</td>
+        <td align="left">Xlog总是会记录GC cause</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCDateStamps</code></td>
+        <td align="left">Not Applicable</td>
+        <td align="left">日期戳由框架记录</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCDetails</code></td>
+        <td align="left"><code>-Xlog:gc*</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCID</code></td>
+        <td align="left">Not Applicable</td>
+        <td align="left">Xlog总是会记录GC ID</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCTaskTimeStamps</code></td>
+        <td align="left"><code>-Xlog:gc+task*=debug</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintGCTimeStamps</code></td>
+        <td align="left">Not Applicable</td>
+        <td align="left">时间戳由框架记录</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintHeapAtGC</code></td>
+        <td align="left"><code>-Xlog:gc+heap=trace</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintReferenceGC</code></td>
+        <td align="left"><code>-Xlog:gc+ref*=debug</code></td>
+        <td align="left">注意：旧式写法中，<code>PrintGCDetails</code>启用时， <code>PrintReferenceGC</code> 才会生效</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintStringDeduplicationStatistics</code></td>
+        <td align="left"><code>-Xlog:gc+stringdedup*=debug</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>PrintTenuringDistribution</code></td>
+        <td align="left"><code>-Xlog:gc+age*=level</code></td>
+        <td align="left">使用debug日志级别记录最相关信息；trace级别记录所有 <code>PrintTenuringDistribution</code> 会打印的信息。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>UseGCLogFileRotation</code></td>
+        <td align="left">Not Applicable</td>
+        <td align="left">用来记录 <code>PrintTenuringDistribution</code></td>
+    </tr>
+    </tbody>
+</table>
+
+**旧式运行时日志和Xlog的对照：**
+
+<table>
+    <thead>
+    <tr>
+        <th align="left">旧式运行时标记</th>
+        <th align="left">Xlog配置</th>
+        <th align="left">注释</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr>
+        <td align="left"><code>TraceExceptions</code></td>
+        <td align="left"><code>-Xlog:exceptions=info</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceClassLoading</code></td>
+        <td align="left"><code>-Xlog:class+load=level</code></td>
+        <td align="left">使用info级别记录常规信息，debug级别记录额外信息。在统一日志记录语法中， <code>-verbose:class</code> 等价于 <code>-Xlog:class+load=info,class+unload=info</code>.</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceClassLoadingPreorder</code></td>
+        <td align="left"><code>-Xlog:class+preorder=debug</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceClassUnloading</code></td>
+        <td align="left"><code>-Xlog:class+unload=level</code></td>
+        <td align="left">使用info级别记录常规信息，debug级别记录额外信息。在统一日志记录语法中， <code>-verbose:class</code> 等价于 <code>-Xlog:class+load=info,class+unload=info</code>.</td>
+    </tr>
+    <tr>
+        <td align="left"><code>VerboseVerification</code></td>
+        <td align="left"><code>-Xlog:verification=info</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceClassPaths</code></td>
+        <td align="left"><code>-Xlog:class+path=info</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceClassResolution</code></td>
+        <td align="left"><code>-Xlog:class+resolve=debug</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceClassInitialization</code></td>
+        <td align="left"><code>-Xlog:class+init=info</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceLoaderConstraints</code></td>
+        <td align="left"><code>-Xlog:class+loader+constraints=info</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceClassLoaderData</code></td>
+        <td align="left"><code>-Xlog:class+loader+data=level</code></td>
+        <td align="left">使用info级别记录常规信息，debug级别记录额外信息。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceSafepointCleanupTime</code></td>
+        <td align="left"><code>-Xlog:safepoint+cleanup=info</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceSafepoint</code></td>
+        <td align="left"><code>-Xlog:safepoint=debug</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceMonitorInflation</code></td>
+        <td align="left"><code>-Xlog:monitorinflation=debug</code></td>
+        <td align="left">-</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceBiasedLocking</code></td>
+        <td align="left"><code>-Xlog:biasedlocking=level</code></td>
+        <td align="left">使用info级别记录常规信息，debug级别记录额外信息。</td>
+    </tr>
+    <tr>
+        <td align="left"><code>TraceRedefineClasses</code></td>
+        <td align="left"><code>-Xlog:redefine+class*=level</code></td>
+        <td align="left">使用level=info，level=debug和level=trace提供越来越多的信息。</td>
+    </tr>
+    </tbody>
+</table>
+
+## 3、GC日志
+
+### 3.1、JDK8中Serial等垃圾收集器日志
+
+GC日志打印相关参数：
+<table>
+	<thead>
+	<tr>
+		<th>参数</th><th>作用</th><th>默认值</th>
+	</tr>
+	</thead>
+	<tbody>
+	<tr>
+		<td>-XX:+PrintGC</td><td>输出GC日志</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCDetails</td><td>打印GC的详情</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCCause</td><td>是否在GC日志中打印造成GC的原因</td><td>打开</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCID</td><td>打印垃圾GC的唯一标识</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCDateStamps</td><td>以日期的格式输出GC的时间戳，如 2013-05-04T21:53:59.234+0800</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCTimeStamps</td><td>以基准时间的格式，打印GC的时间戳</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCTaskTimeStamps</td><td>为每个GC工作线程的任务打印时间戳</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintHeapAtGC</td><td>在GC前后打印堆信息</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintHeapAtGCExtended</td><td>在开启PrintHeapAtGC的前提下，额外打印更多堆相关的信息</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCApplicationStoppedTime</td><td>打印垃圾回收期间程序暂停的时间</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintGCApplicationConcurrentTime</td><td>打印每次垃圾回收前,程序未中断的执行时间，可与PrintGCApplicationStoppedTime配合使用</td>
+		<td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintClassHistogramAfterFullGC</td><td>Full GC之后打印堆直方图</td><td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintClassHistogramBeforeFullGC</td>
+		<td>Full GC之前打印堆直方图</td>
+		<td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintReferenceGC</td>
+		<td>打印处理引用对象的时间消耗，需开启PrintGCDetails才有效</td>
+		<td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintTLAB</td>
+		<td>查看TLAB空间的使用情况</td>
+		<td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:-UseGCLogFileRotation</td>
+		<td>轮换文件，日志文件达到一定大小后，就创建一个新的日志文件。需指定-Xloggc:时才有效。</td>
+		<td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:GCLogFileSize</td>
+		<td>设置单个日志文件的大小，需开启UseGCLogFileRotation才有效</td>
+		<td>8KB</td>
+	</tr>
+	<tr>
+		<td>-XX:NumberOfGCLogFiles</td>
+		<td>日志轮换时，保留几个日志文件，默认0，保留所有日志</td>
+		<td>0</td>
+	</tr>
+	<tr>
+		<td>-Xloggc:文件路径</td>
+		<td>指定GC日志文件路径</td>
+		<td>-</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintAdaptiveSizePolicy</td>
+		<td>某些GC收集器有自适应策略，自适应调整策略会动态调整Eden、Survivor、老年代的大小。使用该标记，可打印自适应调节策略相关的信息</td>
+		<td>关闭</td>
+	</tr>
+	<tr>
+		<td>-XX:+PrintTenuringDistribution</td>
+		<td>查看每次minor GC后新的存活周期的阈值。Desired survivor size 1048576 bytes, new threshold 7 (max 15)。其中，7新的存活周期的阈值为7</td>
+		<td>关闭</td>
+	</tr>
+	</tbody>
+</table>
+
+示例：`java -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+UseSerialGC -Xmx50m -Xloggc:./gc.log xxx.jar`
+
+youngGC日志
+```log
+SerialGC：
+2020-07-18T19:33:17.044-0800: 1.127: [GC (Allocation Failure) 2020-07-18T19:33:17.044-0800: 1.128: [DefNew: 14339K->1250K(15360K), 0.0028567 secs] 16974K->3885K(49536K), 0.0029588 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+
+ParallelGC
+2020-07-18T19:45:56.995-0800: 0.701: [GC (Allocation Failure) [PSYoungGen: 12800K->1878K(14848K)] 12800K->1886K(49152K), 0.0025563 secs] [Times: user=0.01 sys=0.00, real=0.00 secs] 
+```
+其中Young GC日志含义如下：
+<ul>
+	<li>2020-07-18T19:33:17.044-0800：当前时间戳，由PrintGCDateStamps控制</li>
+	<li>1.127：当前相对时间戳，表示应用启动多久后触发，由PrintGCTimeStamps控制</li>
+	<li>GC (Allocation Failure)：造成GC的原因，由PrintGCCause控制</li>
+	<li>[DefNew: 14339K->1250K(15360K), 0.0028567 secs]：
+		<ul>
+			<li>DefNew：使用不同垃圾收集器，这里的展示不同：
+				<ul>
+					<li>使用Serial收集器：显示DefNew，表示Default New</li>
+					<li>使用ParNew收集器：显示ParNew</li>
+					<li>使用Paralle Scavenge收集器：显示PSYoungGen</li>
+					<li>使用G1：G1格式和这个日志格式不一样，很好区分</li>
+				</ul>
+			</li>
+			<li>14339K：回收前，年轻代使用的大小</li>
+			<li>1250K：回收后，年轻代使用的大小</li>
+			<li>15360K：年轻代总大小</li>
+			<li>0.0028567：花费了多久</li>
+		</ul>
+	</li>
+	<li>16974K：回收前，堆使用的大小</li>
+	<li>3885K：回收后，堆使用的大小</li>
+	<li>(49536K)：堆的总大小</li>
+	<li>0.0029588 secs：花费时间</li>
+	<li>user=0.00：用户耗时</li>
+	<li>sys=0.00：系统耗时</li>
+	<li>real=0.00：实际耗时</li>
+</ul>
+
+Full GC日志：
+```log
+SerialOld日志
+2020-07-18T19:33:17.566-0800: 1.649: [Full GC (Metadata GC Threshold) 2020-07-18T19:33:17.566-0800: 1.650: [Tenured: 4802K->6349K(34176K), 0.0206760 secs] 16930K->6349K(49536K), [Metaspace: 20585K->20585K(1067008K)], 0.0207847 secs] [Times: user=0.02 sys=0.00, real=0.02 secs]  
+
+ParallelOld日志
+2020-07-18T19:45:58.133-0800: 1.840: [Full GC (Metadata GC Threshold) [PSYoungGen: 757K->0K(12800K)] [ParOldGen: 8276K->5730K(23040K)] 9033K->5730K(35840K), [Metaspace: 20555K->20554K(1067008K)], 0.0297490 secs] [Times: user=0.10 sys=0.00, real=0.03 secs] 
+
+-- CMS日志，有清晰的CMS的过程
+2020-07-18T19:49:16.307-0800: 5.104: [GC (CMS Initial Mark) [1 CMS-initial-mark: 22937K(34176K)] 24340K(49536K), 0.0005405 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+2020-07-18T19:49:16.308-0800: 5.104: [CMS-concurrent-mark-start]
+2020-07-18T19:49:16.337-0800: 5.133: [CMS-concurrent-mark: 0.026/0.029 secs] [Times: user=0.08 sys=0.00, real=0.03 secs] 
+2020-07-18T19:49:16.337-0800: 5.133: [CMS-concurrent-preclean-start]
+2020-07-18T19:49:16.338-0800: 5.134: [CMS-concurrent-preclean: 0.001/0.001 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+2020-07-18T19:49:16.338-0800: 5.135: [GC (CMS Final Remark) [YG occupancy: 2219 K (15360 K)]2020-07-18T19:49:16.338-0800: 5.135: [Rescan (parallel) , 0.0015166 secs]2020-07-18T19:49:16.340-0800: 5.136: [weak refs processing, 0.0017947 secs]2020-07-18T19:49:16.341-0800: 5.138: [class unloading, 0.0050460 secs]2020-07-18T19:49:16.347-0800: 5.143: [scrub symbol table, 0.0069897 secs]2020-07-18T19:49:16.354-0800: 5.150: [scrub string table, 0.0005613 secs][1 CMS-remark: 22937K(34176K)] 25157K(49536K), 0.0164867 secs] [Times: user=0.02 sys=0.00, real=0.02 secs] 
+2020-07-18T19:49:16.355-0800: 5.151: [CMS-concurrent-sweep-start]
+2020-07-18T19:49:16.365-0800: 5.162: [CMS-concurrent-sweep: 0.010/0.010 secs] [Times: user=0.02 sys=0.00, real=0.01 secs] 
+2020-07-18T19:49:16.365-0800: 5.162: [CMS-concurrent-reset-start]
+2020-07-18T19:49:16.365-0800: 5.162: [CMS-concurrent-reset: 0.000/0.000 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+```
+Full GC日志含义：
+<ul>
+	<li>2020-07-18T19:33:17.566-0800：当前时间戳，由PrintGCDateStamps控制</li>
+	<li>1.649：当前相对时间戳，表示应用启动多久后触发，由PrintGCTimeStamps控制</li>
+	<li>[Full GC (Metadata GC Threshold) ：造成GC的原因，由PrintGCCause控制</li>
+	<li>[Tenured: 4802K->6349K(34176K), 0.0206760 secs]
+		<ul>
+			<li>Tenured：使用不同垃圾收集器，这里的展示不同：
+				<ul>
+					<li>使用Serial Old收集器：显示Tenured</li>
+					<li>使用Parallel Old收集器：显示ParOldGen</li>
+					<li>使用CMS收集器：显示CMS</li>
+				</ul>
+			</li>
+			<li>4802K：回收前，老年代使用的大小</li>
+			<li>6349K：回收后，老年代使用的大小</li>
+			<li>(34176K)：老年代总大小</li>
+			<li>0.0206760：花费时间</li>
+		</ul>
+	</li>
+	<li>16930K：回收前，堆使用的大小</li>
+	<li>6349K：回收后，堆使用的大小</li>
+	<li>49536K：堆的总大小</li>
+	<li>[Metaspace: 20585K->20585K(1067008K)], 0.0207847 secs]：元空间的使用情况</li>
+	<li>[Times: user=0.03 sys=0.00, real=0.03 secs] ：同新生代日志</li>
+</ul>
+
+###  3.2、JDK8中G1垃圾收集日志
+
+- [G1垃圾收集器日志官方解读](https://blogs.oracle.com/poonam/understanding-g1-gc-logs)
+
+```bash
+# 这是一个年轻代GC，花费了0.721。下面的缩进，表示这行日志的子任务
+2020-07-18T20:46:19.339-0800: 0.721: [GC pause (G1 Evacuation Pause) (young), 0.0056601 secs]
+	# 并行任务，并行GC花费3.6毫秒，并行阶段有8个线程
+   [Parallel Time: 3.6 ms, GC Workers: 8]
+	  # 表示各个GC工作线程在应用启动多久(毫秒)后启动。
+      # 同时还做了个统计，例如这些GC线程最早启动的那个线程在应用启动后847.9毫秒后启动等
+      [GC Worker Start (ms): Min: 721.4, Avg: 721.4, Max: 721.4, Diff: 0.1]
+	  # 表示各个GC工作线程扫描跟对象花费的时间的统计
+      [Ext Root Scanning (ms): Min: 0.1, Avg: 0.6, Max: 3.2, Diff: 3.1, Sum: 5.2]
+	  # 表示各个GC工作线程更新Remembered Sets花费的时间的统计
+      # Remembered Sets是保存到堆中的区域的跟踪引用。设值方法线程持续改变对象图，自此引指向一个特定的区域。我们保存这些改变的跟踪信息到叫作Update Buffers的更新缓存中。Update RS子任务不能并发的处理更新缓存，更新一致所有区域的Remembered Sets
+      [Update RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+	     # 表示每个GC工作线程处理的Update Buffers的数量统计
+         [Processed Buffers: Min: 0, Avg: 0.0, Max: 0, Diff: 0, Sum: 0]
+	  # 每个GC工作线程扫描Remembered Sets花费的时间
+      # 一个区域的Remembered Sets包含指向这个区域的引用的相符合的卡片。这个阶段扫描这些卡片寻找指向所有这些区域的Collection Set的引用
+      [Scan RS (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.0]
+	  # 扫描Code Root耗时统计。Code Root是JIT编译后的代码里引用了heap中的对象
+      [Code Root Scanning (ms): Min: 0.0, Avg: 0.1, Max: 0.3, Diff: 0.3, Sum: 0.9]
+	  # 拷贝存活对象到新的Region耗时统计
+      [Object Copy (ms): Min: 0.0, Avg: 2.0, Max: 2.8, Diff: 2.8, Sum: 16.3]
+	  # 各个GC工作线程完成任务后尝试中断GC线程到真正中断的耗时统计
+      # 在某个GC线程中断之前，会检查其它线程的工作队列，如果发现依然有任务，会帮助处理，之后再中断
+      [Termination (ms): Min: 0.0, Avg: 0.4, Max: 0.7, Diff: 0.7, Sum: 3.2]
+	     # 尝试中断次数统计
+         [Termination Attempts: Min: 1, Avg: 9.6, Max: 16, Diff: 15, Sum: 77]
+	  # GC工作线程花费在其他工作上的时间统计
+      [GC Worker Other (ms): Min: 0.0, Avg: 0.0, Max: 0.0, Diff: 0.0, Sum: 0.1]
+	  # 各个GC工作线程花费的时间总和统计
+      [GC Worker Total (ms): Min: 3.2, Avg: 3.2, Max: 3.2, Diff: 0.1, Sum: 25.6]
+	  # 各个GC工作线程线程的结束时间，min|max分别表示第一个|最后一个线程的结束时间。
+      [GC Worker End (ms): Min: 724.6, Avg: 724.6, Max: 724.6, Diff: 0.0]
+   # 串行任务，修复GC期间code root指针改变的耗时
+   [Code Root Fixup: 0.1 ms]
+   # 串行任务，清除Code Root耗时
+   [Code Root Purge: 0.0 ms]
+   # 清除Card Table中的Dirty Card的耗时
+   [Clear CT: 0.2 ms]
+   # 其他任务
+   [Other: 1.8 ms]
+      # 为Collection Set选择区域所花费的时间
+      [Choose CSet: 0.0 ms]
+	  # 花费在处理引用对象上的时间
+      [Ref Proc: 1.5 ms]
+	  # 引用入队到ReferenceQueues花费的时间，可用-XX:+ParallelRefProcEnabled，并行处理这一步
+      [Ref Enq: 0.0 ms]
+      [Redirty Cards: 0.2 ms]
+	  # 处理超大对象
+      [Humongous Register: 0.0 ms]
+      [Humongous Reclaim: 0.0 ms]
+	  # 释放Collection Set数据结构花费的时间
+      [Free CSet: 0.0 ms]
+   # 各个区域的内存变化。
+   # 24.0M：伊甸园当前占用24.0M
+   # (24.0M)：伊甸园总大小(24.0M)
+   # 0.0B：收集后，伊甸园占用将会变成0
+   # (27.0M)：伊甸园的目标大小（如有需要，JVM可能会自动增加伊甸园大小）
+   [Eden: 24.0M(24.0M)->0.0B(27.0M) Survivors: 0.0B->3072.0K Heap: 24.0M(50.0M)->2717.6K(50.0M)]
+ # 用户耗时、系统耗时、实际耗时
+ [Times: user=0.02 sys=0.00, real=0.01 secs] 
+# 开始扫描初始标记阶段Survivor区的Root Region
+2020-07-18T20:46:20.367-0800: 1.749: [GC concurrent-root-region-scan-start]
+# 扫描完成
+2020-07-18T20:46:20.369-0800: 1.751: [GC concurrent-root-region-scan-end, 0.0021777 secs]
+# 2. 并发标记，标记线程数可用-XX:ConcGCThreads指定
+2020-07-18T20:46:20.369-0800: 1.751: [GC concurrent-mark-start]
+# 并发标记结束
+2020-07-18T20:46:20.373-0800: 1.755: [GC concurrent-mark-end, 0.0039610 secs]
+# 3. 最终标记(stop the world)
+2020-07-18T20:46:20.373-0800: 1.756: [GC remark 2020-07-18T20:46:20.373-0800: 1.756: [Finalize Marking, 0.0003239 secs] 2020-07-18T20:46:20.374-0800: 1.756: [GC ref-proc, 0.0006212 secs] 2020-07-18T20:46:20.374-0800: 1.757: [Unloading, 0.0021714 secs], 0.0033509 secs]
+ [Times: user=0.01 sys=0.00, real=0.00 secs] 
+2020-07-18T20:46:20.377-0800: 1.759: [GC cleanup 12M->12M(50M), 0.0006202 secs]
+ [Times: user=0.00 sys=0.01, real=0.00 secs] 
+# 4. 筛选回收(stop the world)
+# 没有存活对象的Old Region和Humongous Region将被释放和清空。
+# 为了准备下次GC，在CSets中的Old Regions会根据他们的回收收益的大小排序。
+2020-07-18T20:46:20.373-0800: 1.114: [GC cleanup 15M->14M(30M), 0.0006027 secs]
+ [Times: user=0.00 sys=0.00, real=0.00 secs] 
+# 并发清理开始
+2020-07-18T20:46:20.373-0800: 1.115: [GC concurrent-cleanup-start]
+# 并发清理结束
+2020-07-18T20:46:20.373-0800: 1.115: [GC concurrent-cleanup-end, 0.0000133 secs]
+```
+
+### 3.3、JDK11垃圾收集日志
+
+在JDK9之后，可以使用 `-Xlog:gc` 来查看GC日志
+
+示例：`-Xmx30m -XX:+UseSerialGC -Xlog:gc*:file=./gc-xlog.log`
+```bash
+# 打印使用的垃圾收集器
+# 0.016s指的是应用启动后过了多久
+[0.016s][info][gc] Using Serial
+# 打印内存概览，例如堆内存地址、堆内存总大小、压缩指针模式等
+[0.016s][info][gc,heap,coops] Heap address: 0x00000007fe200000, size: 30 MB, Compressed Oops mode: Zero based, Oop shift amount: 3
+# 发生了年轻代GC，原因是Allocation Failure
+# GC(0)中的0，是对垃圾收集的次数统计，从0开始
+[0.374s][info][gc,start     ] GC(0) Pause Young (Allocation Failure)
+# 年轻代占用情况：回收前占用8192K，回收后占用1024K，年轻代总大小9216K
+[0.379s][info][gc,heap      ] GC(0) DefNew: 8192K->1024K(9216K)
+# 老年代占用情况：回收前、回收后、总大小
+[0.379s][info][gc,heap      ] GC(0) Tenured: 0K->3147K(20480K)
+# 元数据占用情况：回收前、回收后、总大小
+[0.379s][info][gc,metaspace ] GC(0) Metaspace: 6042K->6042K(1056768K)
+# 整个堆的占用情况：回收前、回收后、总大小
+[0.379s][info][gc           ] GC(0) Pause Young (Allocation Failure) 8M->4M(29M) 5.180ms
+# 用户耗时、系统耗时、实际耗时
+[0.379s][info][gc,cpu       ] GC(0) User=0.00s Sys=0.00s Real=0.01s
+```
+
+### 3.4、GC日志可视化分析工具
+
+- GCEasy：https://www.gceasy.io/
+
+- GCViewer：https://github.com/chewiebug/GCViewer
+
+- GCPlot：https://github.com/dmart28/gcplot
+
 # 参考文章
 
 * [深入理解java垃圾回收机制](http://www.cnblogs.com/sunniest/p/4575144.html)
@@ -1105,4 +1814,4 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 * [G1垃圾收集器](https://mp.weixin.qq.com/s/9-NFMt4I9Hw2nP0fjR8JCg)
 * [ZGC垃圾收集器](https://www.jianshu.com/p/6f89fd5842bf)
 * [ZGC垃圾收集器](https://club.perfma.com/article/679812)
-* [JVM垃圾回收](https://mp.weixin.qq.com/s/aA1eDYIUHuIfigTw2ffouw)
+* [JVM垃圾回收](https://mp.weixin.qq.com/s/aA1eDYIUHuIfigTw2ffouw-)

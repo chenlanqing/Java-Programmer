@@ -30,34 +30,48 @@ java [options] -jar filename [args]
 
 ## 1、标准参数
 
-标准参数是被所有JVM实现都要支持的参数。用于做一些常规的通用的动作，比如检查版本、设置classpath等
+- [JDK8-标准参数](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABDJJFI)
+- [JDK11-标准参数](https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE)
+
+标准参数是被所有JVM实现都要支持的参数。用于做一些常规的通用的动作，比如检查版本、设置classpath等，查看支持的参数：`java -help`
 
 - `-agentlib:libname[=options]`：这个命令加载指定的native agent库。理论上这条option出现后，JVM会到本地固定路径下LD_LIBRARY_PATH这里加载名字为libxxx.so的库
 
-- `-agentpath:pathname[=options]`：这个参数指定了从哪个绝对路径加载agent库。与-agentlib相同，只不过是用绝对路径来指明库文件
+- `-agentpath:pathname[=options]`：这个参数指定了从哪个绝对路径加载agent库。与`-agentlib`相同，只不过是用绝对路径来指明库文件
 
 - `-client、-server`：指定JVM的启动模式是client模式还是server模式，具体就是 Java HotSpot Client(Server) VM 版本。目前64位的JDK启动，一定是server模式，会忽略这个参数
 
-- `-Dproperty=value`： 设置系统属性，设置后的属性可以在代码中System.getProperty方法获取到
+- `-Dproperty=value`： 设置系统属性，设置后的属性可以在代码中`System.getProperty`方法获取到
 
 - `disableassertions[:[packagename]...|:classname] 和 -da[:[packagename]...|:classname] `<br>
     关闭指定包或类下的assertion，默认是关闭的
 
-- `-disablesystemassertions、-dsa` <br>
-    关闭系统包类下的assertion
+- `-disablesystemassertions、-dsa`：关闭系统包类下的assertion
 
 - `-verbose:class、-verbose:gc、-verbose:jni` <br>
     这些组合都是用来展示信息的，class展示的每个class的信息，gc展示每个GC事件的信息，jni开启展示JNI调用信息
 
-- `-javaagent:jarpath[=options]` <br>
-    加载指定的java agent，具体需要传入jar路径
+- `-javaagent:jarpath[=options]`：加载指定的java agent，具体需要传入jar路径
+
+- `–class-path classpath, -classpath classpath, or -cp classpath` ： 通知JVM类搜索路径。如果指定了-classpath，则JVM就忽略CLASSPATH中指定的路径。各路径之间以分号隔开。如果-classpath和CLASSPATH都没有指定，则JVM从当前路径寻找class;
+
+- `-verbose:class`：显示类加载相关的信息，当报找不到类或者类冲突时可用此参数诊断
+
+- `-verbose:gc`：显示垃圾收集事件的相关信息
+
+- `-verbose:jni`：显示本机方法和其他Java本机接口（JNI）的相关信息
 
 ## 2、非标准参数
 
-针对官方JVM也就是HotSpot的，不同的虚拟机有各自的非标准参数
+- [JDK8-非标准参数](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABHDABI)
+- [JDK11-额外参数](https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE)
+
+针对官方JVM也就是HotSpot的，不同的虚拟机有各自的非标准参数，在JDK11中叫做额外参数
 
 - `-X` <br>
     展示所有-X开头的参数说明
+
+- `-Xcomp` ：在第一次调用时强制编译方法。默认情况下，client模式下会解释执行1000次（JDK 11下），server模式下会解释执行10000次，并收集信息，此后才可能编译运行。指定该选项将禁用解释方法调用。此外，还可使用 `-XX:CompileThreshold` 选项更改在编译之前解释执行方法的调用次数；
 
 - `-Xbatch` <br>
     禁止后台编译。将编译过程放到前台任务执行。JVM默认会将编译任务当做后台任务执行。这个参数等价于`-XX:-BackgroundCompilation`
@@ -96,13 +110,50 @@ java [options] -jar filename [args]
     查看settings信息，category可以是all、locale、properties和vm几部分
 
 - `-Xsssize` <br>
-    设置thread stack大小，一般默认的几个系统参数如下，这个选项和`-XX:ThreadStackSize`相同
+    设置thread stack大小，一般默认的几个系统参数如下，这个选项和`-XX:ThreadStackSize`相同，默认值取决于平台：
+    - Linux / x64（64位）：1024 KB
+    - macOS（64位）：1024 KB
+    - Oracle Solaris / x64（64位）：1024 KB
+    - Windows：默认值取决于虚拟内存
 
 - `-Xverify:mode` <br>
     设置字节码校验器的模式，默认是remote，即只校验那些不是通过bootstrap类加载器加载的字节码。而还有一个模式还all，即全部都校验。虽然还有一个模式是none，但是本质上jvm不生效这个参数
 
-## 3、运行时参数
+## 3、高级选项
+
+- 查看支持的参数：
+
+**使用如下命令：**
+
+`java -XX:+UnlockExperimentalVMOptions -XX:+UnlockDiagnosticVMOptions -XX:+PrintFlagsInitial`
+
+其中：
+- UnlockExperimentalVMOptions：用于解锁实验性参数，如果不加该标记，不会打印实验性参数
+- UnlockDiagnosticVMOptions：用于解锁诊断性参数，如果不加该标记，不会打印诊断性参数
+- PrintFlagsInitial：打印支持的XX选项，并展示默认值。如需获得程序运行时生效值，用PrintFlagsFinal；
+
+**使用格式**
+- 如果选项的类型是boolean：那么配置格式是 `-XX:(+/-)`选项 即可。+表示将选项设置为true，-表示设置为false，例如：-XX:+PrintGC
+- 如果选项的类型不是boolean，那么配置格式是 `-XX:选项=值` ，例如：-XX:NewRatio=4
+
+**JDK  11对高级选项的细分**
+<li><a href="https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE__BABCBGHF">Advanced Runtime Options for Java</a> ：高级运行时选项，控制HotSpot VM的运行时行为</li>
+<li><a href="https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE__BABDDFII">Advanced JIT Compiler Options for java</a> ：高级JIT编译器选项：控制HotSpot VM执行的JIT编译</li>
+<li><a href="https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE__BABFJDIC">Advanced Serviceability Options for Java</a> ：高级可服务性选项：系统信息收集与调试支持</li>
+<li><a href="https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE__BABFAFAE">Advanced Garbage Collection Options for Java</a> ：高级垃圾收集选项：控制HotSpot如何执行垃圾收集</li>
+
+**JDK 8对高级选项的细分**
+
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABCBGHF">Advanced Runtime Options</a></li>
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABDDFII">Advanced JIT Compiler Options</a></li>
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABFJDIC">Advanced Serviceability Options</a></li>
+<li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABFAFAE">Advanced Garbage Collection Options</a></li>
+
+### 3.1、运行时参数
+
 这类参数控制Java HotSpot VM在运行时的行为
+
+- `-XX:ActiveProcessorCount=x`：JVM使用多少个CPU核心去计算用于执行垃圾收集或ForkJoinPool线程池的大小
 
 - `-XX:+DisableAttachMechanism` <br>
     设置JVM的attach模式，如果启动了这个参数，jvm将不允许attach，这样类似jmap等程序就无法使用了
@@ -111,13 +162,13 @@ java [options] -jar filename [args]
     当不可恢复的错误发生时，错误信息记录到哪个文件。默认是在当前目录的一个叫做hs_err_pid pid.log的文件。如果指定的目录没有写权限，这时候文件会创建到/tmp目录下
 
 - `-XX:MaxDirectMemorySize=size` <br>
-    为NIO的direct-buffer分配时指定最大的内存大小。默认是0，意思是JVM自动选择direct-buffer的大小
+    为NIO的direct-buffer分配时指定最大的内存大小。默认是0，意思是JVM自动选择direct-buffer的大小，以字节为单位也可在size后追加字母 k 或 K 表示千字节， m 或 M 表示兆字节，或 g 或 G 表示千兆字节
 
 - `-XX:ObjectAlignmentInBytes=alignment` <br>
     java对象的内存对齐大小。默认是8字节，JVM实际计算堆内存上限的方法是
 
 - `-XX:OnError=string` <br>
-    在jvm出现错误(不可恢复）的时候，执行哪些命令，具体例子如下：`-XX:OnError="gcore %p;dbx - %p"`
+    在jvm出现错误(不可恢复）的时候，执行哪些命令，具体例子如下：`-XX:OnError="gcore %p;dbx - %p"`，多个命令使用逗号分割
 
 - `-XX:OnOutOfMemoryError=string` <br>
     同`-XX:OnError=string`，具体错误是OOM
@@ -128,7 +179,16 @@ java [options] -jar filename [args]
 - `-XX:+UseLargePages` <br>
     使用大页内存[4]，默认关闭，使用该参数后开启
 
-## 4、JIT编译器参数
+- `-XX:+PrintCommandLineFlags`：打印命令行标记，默认关闭
+
+- `-XX:-UseBiasedLocking`：禁用偏向锁
+
+- `-XX:-UseCompressedOops`：禁用压缩指针。默认情况下，启用此选项，并且当Java堆大小小于32 GB时，将使用压缩指针。启用此选项后，对象引用将表示为32位偏移量，而非64位指针，这通常会在运行Java堆大小小于32GB的应用程序时提高性能。此选项仅适用于64位JVM。当Java堆大小大于32 GB时，使用 -XX:ObjectAlignmentInBytes 选项。
+
+- `-XX:VMOptionsFile=filename`：允许用户在文件中指定VM选项。例如 java -XX:VMOptionsFile=/var/my_vm_options HelloWorld。
+
+### 3.2、JIT编译器参数
+
 主要是在JIT编译时用到
 
 - `-XX:+BackgroundCompilation` <br>
@@ -144,10 +204,7 @@ java [options] -jar filename [args]
     编译前解释型方法调用次数。设置这个值，在编译前，会用解释器执行方法若干次用于收集信息，从而可以更高效率的进行编译。默认这个值在JIT中是10000次。可以通过使用-Xcomp参数来禁止编译时的解释执行
 
 - `-XX:+DoEscapeAnalysis` <br>
-    支持转义分析，默认是开启的
-
-- `-XX:InitialCodeCacheSize=size` <br>
-    初始化的code cache的大小，默认500KB。这个值应该不小于系统最小内存页的大小
+    开启逃逸分析，默认是开启的
 
 - `-XX:+Inline` <br>
     编译时方法内联。默认是开启的
@@ -168,19 +225,33 @@ java [options] -jar filename [args]
 
 - `-XX:+PrintInlining`：将内联方法打印出来。默认不开启
 
-- `-XX:ReservedCodeCacheSize=size`：设置为了JIT编译代码的最大代码cache大小。这个设置默认是240MB，如果关掉了tiered编译，则大小是48MB。这个设置必须比初始化的`-XX:InitialCodeCacheSize=size`设置值大
-
 - `-XX:-TieredCompilation`：关闭tiered编译，默认是开启的。只有Hotspot支持这个参数
-
-- `-XX:+UseCodeCacheFlushing`：支持在关闭编译器之前清除code cache。默认是开启的，要关闭就把+换成-
 
 - `-XX:+EliminateAllocations`：是否开启标量替换，JDK8默认开启
 
 - `-XX:+EliminateLokcs`：是否开启锁消除
 
-## 5、高级服务能力参数
+- `-XX:CompileCommand=command,method[,option]`，在指定方法上执行指定command。command可选项：
+
+**代码缓存（Code Cache）:**
+
+- `-XX:InitialCodeCacheSize=size`：初始化的code cache的大小，默认500KB。这个值应该不小于系统最小内存页的大小；
+
+- `-XX:ReservedCodeCacheSize=size`：设置为了JIT编译代码的最大代码cache大小。这个设置默认是`240MB`，如果关掉了tiered编译，则大小是48MB。这个设置必须比初始化的`-XX:InitialCodeCacheSize=size`设置值大；
+
+- `-XX:-PrintCodeCache`：在JVM停止时打印代码缓存的使用情况，默认是关闭的；
+
+- `-XX:-PrintCodeCacheOnCompilation`：每当方法被编译后，就打印一下代码缓存区的使用情况，默认是关闭的；
+
+- `-XX:+UseCodeCacheFlushing`：支持在关闭编译器之前清除code cache。默认是开启的，要关闭就把+换成-
+
+- `-XX:-SegmentedCodeCache`：是否使用分段的代码缓存区，默认关闭，表示使用整体的代码缓存区；
+
+### 3.3、高级服务能力参数
 
 可以做系统信息收集和扩展性的debug
+
+- `-XX:LargePageSizeInBytes=size`:设置用于Java堆的大页面尺寸。单位字节，数值必须是2的次幂。也可在size后追加字母 k 或 K 表示千字节， m 或 M 表示兆字节，或 g 或 G 表示千兆字节
 
 - `-XX:+ExtendedDTraceProbes` <br>
     支持dtrace探测，默认是关闭的
@@ -205,8 +276,55 @@ java [options] -jar filename [args]
 - `-XX:+UnlockDiagnosticVMOptions` <br>
     解锁对JVM进行诊断的选项参数。默认是关闭的，开启后支持一些特定参数对JVM进行诊断
 
-## 6、垃圾回收参数
+### 3.4、垃圾回收参数
+
 这部分参数控制JVM如何进行垃圾回收
+
+**常用堆参数**
+
+- `-XX:NewSize=size` ：设置初始的年轻代的大小。年轻代是分配新对象的地方，是 GC经常发生的地方。设置太低，会频繁minor GC，设置太高的话就只会发生Full GC了。Oracle推荐设置为整体内存的一半或者1/4。该参数等价于-Xmn
+
+- `-XX:InitialHeapSize=size`：设置初始堆内存大小，需要设置为0或者1024的倍数，设置为0说明初始堆大小等于年轻代加年老代的大小；等价于 -Xms
+
+- `-XX:MaxHeapSize=size`：设置最大堆大小，这个值需要大于2MB，且是1024的整数倍。等价于-Xmx
+
+- `-XX:NewRatio=ratio`：设置年轻代和年老代的比例，默认是2；
+
+- `-XX:SurvivorRatio=ratio`：新生代eden区和survivor区的比例。默认是8。
+
+- `-XX:InitialSurvivorRatio=ratio`：设置初始的survivor空间占比，默认值是8；当使用throughput型的GC时有效（即`-XX:+UseParallelGC` 或`-XX:+UseParallelOldGC`）。运行过程中survivor空间占比会自动根据应用运行调整，如果关闭了自适应调整策略（`-XX:-UseAdaptiveSizePolicy`），则`XX:SurvivorRatio`参数会成为survivor空间占比。计算survivor空间大小，依赖young的空间大小，计算公式如下：`S=Y/(R+2)`，其中Y是young空间大小，R是survivor空间占比。一个例子就是如果young空间大小是2MB，而survivor默认占比是8，那么survivor的空间就是0.2MB；
+
+- `-XX:MinSurvivorRatio`：Eden和1个Survivor区的最小比值，默认是 3
+
+- `-XX:TargetSurvivorRatio=percent`：设置在YGC后的期望的survivor空间占比。默认是50%。
+
+- `-XX:InitialTenuringThreshold`：晋升到老年代的对象的初始年龄阈值，默认值是：7
+
+- `-XX:MaxTenuringThreshold=threshold`：设置在自适应GC大小的使用占有最大阈值，默认对于parallel（throughput）的是15，对于CMS的是6
+
+- `-XX:MinHeapFreeRatio=percent`：设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
+
+- `-XX:MaxHeapFreeRatio=percent`：设置在一次GC后最大的堆空闲空间占比。如果空闲堆空间超过这个值，堆空间会被收缩。默认是70%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
+
+- `-XX:+ShrinkHeapInSteps`：是否要逐步地根据`–XX:MaxHeapFreeRatio`的设置，减少分配的堆内存。默认情况下启用该选项，如禁用该参数，那么将会在下一个Full GC时将Java堆直接减少到目标大小，而无需在多个GC周期中“逐步”减少。因此，如果想要让使用的堆内存尽量小，可禁用此选项。
+
+- `-XX:SoftRefLRUPolicyMSPerMB=time`：设置一个软引用对象在上次被引用后在堆内存中保存的时间。默认是每1MB保存1秒钟。该参数对于client模式和server模式有不同的动作，因为client模式JVM在回收时会强制flush掉软引用，然而server模式会尝试先扩容堆空间；
+
+- `-XX:+UseTLAB`：在年轻代支持thread-local分配block，是否启用线程私有分配缓存区（thread-local allocation buffer），默认开启；
+
+- `-XX:MinTLABSize`：最小TLAB大小，单位字节，默认是 2048K；
+
+- `-XX:+ResizeTLAB`：是否动态调整TLAB的大小，默认 是；
+
+- `-XX:TLABRefillWasteFraction`：默认是64K，由于TLAB空间比较小，因此很容易装满。比如TLAB 100K，已使用80KB，当需要再分配一个30KB的对象时，就无法分配到这个TLAB了。这时虚拟机会有两种选择，第一，废弃当前TLAB，这样就会浪费20KB空间；第二，保留当前的TLAB并将这30KB的对象直接分配在堆上，这样将来有小于20KB的对象时，仍可使用这块空间。实际上虚拟机内部维护了一个叫作refill_waste的值，当请求对象大于refill_waste时，会在堆中分配；若小于该值，则会废弃当前TLAB，新建TLAB分配对象。TLABRefillWasteFraction来调整该阈值，它表示TLAB中允许产生这种浪费的比例，默认值为64，即允许使用1/64的TLAB空间作为refill_waste。默认情况下，TLAB和refill_waste都会在运行时不断调整，使系统的运行状态达到最优。如果想要禁用自动调整TLAB的大小，可以使用-XX:-ResizeTLAB禁用ResizeTLAB，并使用-XX:TLABSize手工指定一个TLAB的大小；
+
+- `-XX:+TLABStats`：是否提供详细的TLAB的统计信息，默认是开启的
+
+- `-XX:TLABSize=size`：设置thread-local allocation buffer (TLAB)的初始化大小，默认是 0；
+
+- `-XX:TLABWasteTargetPercent`：允许TLAB占用Eden空间百分比，默认是 1
+
+
 
 - `-XX:+AggressiveHeap` <br>
     java堆内存优化。默认是关闭的，如果开启后，针对一些长时间运行的且有密集的内存分配操作，JVM根据系统cpu和内存的配置参数来进行优化
@@ -250,23 +368,11 @@ java [options] -jar filename [args]
 - `-XX:G1ReservePercent=percent` <br>
     设置一个堆内存的百分比用来作为false ceiling，从而降低使用G1时晋升失败的可能性。默认是10%
 
-- `-XX:InitialHeapSize=size` <br>
-    设置初始堆内存大小，需要设置为0或者1024的倍数，设置为0说明初始堆大小等于年轻代加年老代的大小
-
-- `-XX:InitialSurvivorRatio=ratio` <br>
-    设置初始的survivor空间占比，当使用throughput型的GC时有效（即`-XX:+UseParallelGC` 或`-XX:+UseParallelOldGC`）。运行过程中survivor空间占比会自动根据应用运行调整，如果关闭了自适应调整策略（`-XX:-UseAdaptiveSizePolicy`），则`XX:SurvivorRatio`参数会成为survivor空间占比。计算survivor空间大小，依赖young的空间大小，计算公式如下：S=Y/(R+2)，其中Y是young空间大小，R是survivor空间占比。一个例子就是如果young空间大小是2MB，而survivor默认占比是8，那么survivor的空间就是0.2MB
-
 - `-XX:InitiatingHeapOccupancyPercent=percent` <br>
     设置一个触发并发GC的堆占用百分比。这个值对于基于整体内存的垃圾回收器有效，比如G1。默认是45%，如果设置为0表示无停顿GC
 
 - `-XX:MaxGCPauseMillis=time` <br>
-    设置一个最大的GC停顿时间（毫秒），这是个软目标，JVM会尽最大努力去实现它，默认没有最大值设置
-
-- `-XX:MaxHeapSize=size` <br>
-    设置最大堆大小，这个值需要大于2MB，且是1024的整数倍。等价于-Xmx
-
-- `-XX:MaxHeapFreeRatio=percent` <br>
-    设置在一次GC后最大的堆空闲空间占比。如果空闲堆空间超过这个值，堆空间会被收缩。默认是70%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
+    设置一个最大的GC停顿时间（毫秒），这是个软目标，JVM会尽最大努力去实现它，默认值200ms
 
 - `-XX:MaxMetaspaceSize=size` <br>
     为类的元数据进行分配的metaspace最大native内存大小，默认情况这个值无限制。该值依赖于当前的JVM、其他在运行的JVM和系统可用内存
@@ -274,23 +380,11 @@ java [options] -jar filename [args]
 - `-XX:MaxNewSize=size` <br>
     设置最大的年轻代的堆大小。默认自动检测
 
-- `-XX:MaxTenuringThreshold=threshold` <br>
-    设置在自适应GC大小的使用占有最大阈值，默认对于parallel（throughput）的是15，对于CMS的是6
-
 - `-XX:MetaspaceSize=size` <br>
     设置一个metaspace的大小，第一次超出该分配后会触发GC。默认值依赖于平台，该值会在运行时增加或减少
 
 - `-XX:CompressedClassSpaceSize`<br>
     启用CCS，设置压缩类空间大小
-
-- `-XX:MinHeapFreeRatio=percent` <br>
-    设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
-
-- `-XX:NewRatio=ratio` <br>
-    设置年轻代和年老代的比例，默认是2。
-
-- `-XX:NewSize=size` <br>
-    设置初始的年轻代的大小。年轻代是分配新对象的地方，是 GC经常发生的地方。设置太低，会频繁minor GC，设置太高的话就只会发生Full GC了。Oracle推荐设置为整体内存的一半或者1/4。该参数等价于-Xmn
 
 - `-XX:ParallelGCThreads=threads` <br>
     并行GC时的线程数。默认值是CPU数
@@ -338,20 +432,8 @@ java [options] -jar filename [args]
 - `-XX:+ScavengeBeforeFullGC` <br>
     在每次Full GC前做一次年轻代的GC。该项默认是开启的。
 
-- `-XX:SoftRefLRUPolicyMSPerMB=time` <br>
-    设置一个软引用对象在上次被引用后在堆内存中保存的时间。默认是每1MB保存1秒钟。该参数对于client模式和server模式有不同的动作，因为client模式JVM在回收时会强制flush掉软引用，然而server模式会尝试先扩容堆空间
-
 - `-XX:StringDeduplicationAgeThreshold=threshold` <br>
     string对象到达特定的age后会去除重复数据。默认是3，jvm中每次gc后存活的对象，age会加一。string对象在晋升为年老代之前都是去除重复数据的候选对象
-
-- `-XX:SurvivorRatio=ratio` <br>
-    eden区和survivor区的比例。默认是8。
-
-- `-XX:TargetSurvivorRatio=percent` <br>
-    设置在YGC后的期望的survivor空间占比。默认是50%。
-
-- `-XX:TLABSize=size` <br>
-    设置thread-local allocation buffer (TLAB)的初始化大小
 
 - `-XX:+UseAdaptiveSizePolicy` <br>
     使用自适应分代大小。默认是开启的
@@ -389,8 +471,7 @@ java [options] -jar filename [args]
 - `-XX:+UseStringDeduplication` <br>
     支持string的去重存储。默认关闭，要使用该选项，必须使用G1垃圾回收器`-XX:+UseG1GC`。
 
-- `-XX:+UseTLAB` <br>
-    在年轻代支持thread-local分配block，默认开启
+- `-XX:GCLogFileSize=number`：处理大型日志文件，默认为512K
 
 
 # 参考文章

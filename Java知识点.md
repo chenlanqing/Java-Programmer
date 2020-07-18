@@ -148,6 +148,7 @@
         - Sharding-JDBC
         - ElasticJob
         - 调度平台相关：DAG、airflow等
+        - 数据库巡检（https://tech.meituan.com/2020/06/04/mysql-detection-system.html）
 
 - 搜索相关
         - ELK ，数据库加速、主搜（算法）

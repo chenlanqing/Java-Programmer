@@ -513,7 +513,7 @@ vmstat：是Virtual Meomory Statistics（虚拟内存统计）的缩写，是实
 
 **问题特征：**
 - 线上多个线程的CPU都超过了100%，通过jstack命令可以看到这些线程主要是垃圾回收线程
-- 通过jstat命令监控GC情况，可以看到Full GC次数非常多，并且次数在不断增加
+- 通过jstat命令监控GC情况，可以看到Full GC次数非常多，并且次数在不断增加：`jstat -gcutil pid` 查看内存使用和 gc 情况
 
 **排查过程：**
 - 通过 `top` 命令找到占用cpu最高的 `pid[进程id]`；
@@ -525,10 +525,20 @@ vmstat：是Virtual Meomory Statistics（虚拟内存统计）的缩写，是实
 - 代码中一次获取了大量的对象，导致内存溢出，此时可以通过eclipse的mat工具查看内存中有哪些对象比较多；
 - 内存占用不高，但是Full GC次数还是比较多，此时可能是显示的 System.gc()调用导致GC次数过多，这可以通过添加 -XX:+DisableExplicitGC来禁用JVM对显示GC的响应
 
+**持续 FullGC：**
+
+[CMS引起的持续Full GC](../Java虚拟机/JVM-GC垃圾回收机制.md#64CMS中YoungGc的实现过程)
+
 ### 4.2、CPU过高
 
 - CPU过高可能是系统频繁的进行Full GC，导致系统缓慢；
 - Full GC次数过多
+- 无限while循环
+- 频繁GC
+- 频繁创建新的对象：合理使用单例
+- 序列化与反序列化
+- 正则表达式
+- 频繁的线程上下文切换
 
 ### 4.3、不定期出现的接口耗时现象
 
@@ -540,7 +550,7 @@ vmstat：是Virtual Meomory Statistics（虚拟内存统计）的缩写，是实
 
 解决这个问题的思路主要如下：
 - 通过grep在jstack日志中找出所有的处于`TIMED_WAITING`状态的线程，将其导出到某个文件中；
-- 等待一段时间之后，比如10s，再次对jstack日志进行grep，将其导出到另一个文件；
+- 等待一段时间之后，比如10s，再次对jstack日志进行grep，将其导出到另一个文件：`jstack -l pid | grep BLOCKED`
 - 重复步骤2，待导出3~4个文件之后，我们对导出的文件进行对比，找出其中在这几个文件中一直都存在的用户线程，这个线程基本上就可以确认是包含了处于等待状态有问题的线程。因为正常的请求线程是不会在20~30s之后还是处于等待状态的。
 - 经过排查得到这些线程之后，我们可以继续对其堆栈信息进行排查，如果该线程本身就应该处于等待状态，比如用户创建的线程池中处于空闲状态的线程，那么这种线程的堆栈信息中是不会包含用户自定义的类的。这些都可以排除掉，而剩下的线程基本上就可以确认是我们要找的有问题的线程。通过其堆栈信息，我们就可以得出具体是在哪个位置的代码导致该线程处于等待状态了；
 
@@ -604,6 +614,32 @@ JDK 1.4.2和5.0的默认值是60000毫秒，即1分钟；JDK6以及以后的版�
 - 监控指定应用的堆大小是否足够。
 - 检查你运行的JVM版本，是否有与长时间停顿相关的BUG，然后升级到修复问题的最新JDK。
 
+### 4.7、线程池满
+
+Java 线程池以有界队列的线程池为例，当新任务提交时，如果运行的线程少于 corePoolSize，则创建新线程来处理请求。如果正在运行的线程数等于 corePoolSize 时，则新任务被添加到队列中，直到队列满。当队列满了后，会继续开辟新线程来处理任务，但不超过 maximumPoolSize。当任务队列满了并且已开辟了最大线程数，此时又来了新任务，ThreadPoolExecutor 会拒绝服务。
+
+**下游 RT 高，超时时间不合理：**
+- 业务监控
+- sunfire
+- eagleeye
+
+**数据库慢 sql 或者数据库死锁：**
+- 日志关键字 “Deadlock found when trying to get lock”
+- Jstack 或 zprofiler 查看阻塞态线程；
+
+**Java 代码死锁：**
+- `jstack –l pid | grep -i –E 'BLOCKED | deadlock'`
+- dump thread 通过 zprofiler 分析阻塞线程和持锁情况
+
+### 4.8、NoSuchMethodException
+
+**jar 包冲突：**
+
+java 在装载一个目录下所有 jar 包时，它加载的顺序完全取决于操作系统。
+- `mvn dependency:tree` 分析报错方法所在的 jar 包版本，留下新的
+- `arthas：sc -d ClassName`
+- `XX：+TraceClassLoading`
+
 # 四、Java动态追踪技术
 
 ## 1、直接操作字节码
@@ -634,3 +670,4 @@ BTrace主要有下面几个模块：
 * [Java线上问题排查套路](https://mp.weixin.qq.com/s?__biz=MzI4ODQ3NjE2OA==&mid=2247486948&idx=1&sn=54cec00fabc562384ac72266e003cbbd)
 * [线程堆栈分析](http://fastthread.io/)
 * [系统问题、CPU、FullGC问题排查思路](https://mp.weixin.qq.com/s/wTEMbOGiXA8xfyFascoMpA)
+* [问题排查与优化手册](https://developer.aliyun.com/article/767550?utm_content=g_1000152822)
