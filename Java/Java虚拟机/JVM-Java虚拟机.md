@@ -254,6 +254,8 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 - CodeCache：JIT编译后的本地代码，JNI使用的C代码
 
+	JVM生成的native code存放的内存空间称之为Code Cache；JIT编译、JNI等都会编译代码到native code，其中JIT生成的native code占用了Code Cache的绝大部分空间
+
 # 3、对象访问与内存分配
 
 ## 3.1、对象的创建
@@ -405,8 +407,40 @@ Exception in thread "main" java.lang.OutOfMemoryError： Java heap space
 
 生成大量的动态类，或无限循环调用 String 的intern()方法产生不同的String对象实例，并在List中保存其引用，以不被垃圾收集器回收;
 
-- JDK1.6以及之前的版本，由于常量池分配在永久代中，我们可以通过 `-XX:PermSize` 和 `-XX:MaxPermSize` 限制方法区的的大小，从而简介限制其中常量池的容量;
-- 方法区存放 Class 相关信息，如类名、访问修饰符、常量池、字段描述、方法描述等。对于这些区域的测试，基本思路是：运行时产生大量的类去填满方法区，直到溢出。当前很多主类框架，如图Spring等，在对类进行增强时，都会用到CGLib这类字节码技术，增强的类越多，就需要越大的方法区来保证动态生存的Class可以载入内存.常见大量生存类的场景：大量JSP或者动态产生JSP文件的应用，基于OSGI的应用;
+- JDK1.6以及之前的版本，由于常量池分配在永久代中，我们可以通过 `-XX:PermSize` 和 `-XX:MaxPermSize` 限制方法区的的大小，从而简介限制其中常量池的容量；常量池对象太大；
+- 方法区存放 Class 相关信息，如类名、访问修饰符、常量池、字段描述、方法描述等。对于这些区域的测试，基本思路是：运行时产生大量的类去填满方法区，直到溢出。当前很多主类框架，如图Spring等，在对类进行增强时，都会用到CGLib这类字节码技术，增强的类越多，就需要越大的方法区来保证动态生存的Class可以载入内存。
+- 常见大量生存类的场景：
+	- 大量JSP或者动态产生JSP文件的应用；
+	- 基于OSGI的应用；
+	- 动态代理的操作库生成了大量的动态类；
+	- 脚本语言动态类加载；
+
+```java
+/**
+ * JDK 6: -XX:PermSize=6m -XX:MaxPermSize=6m
+ * 报永久代溢出(java.lang.OutOfMemoryError: PermGen space)
+ * ==========
+ * JDK 7: -XX:PermSize=6m -XX:MaxPermSize=6m
+ * 不报错，原因：JDK 7把字符串常量池放到堆了，设置-Xmx6m会报堆内存溢出
+ * ==========
+ * JDK 8+：同JDK 7
+ */
+public class MethodAreaOOMTest1 {
+    public static void main(String[] args) {
+        // 使用Set保持着常量池引用
+        Set<String> set = new HashSet<String>();
+        int i = 0;
+        while (true) {
+            // intern()：native方法
+            // 如果字符串常量池里面已经包含了等于字符串x的字符串；那么
+            // 就返回常量池中这个字符串的引用
+            // 如果常量池中不存在，那么就会把当前字符串添加到常量池，
+            // 并返回这个字符串的引用
+            set.add(String.valueOf(i++).intern());
+        }
+    }
+}
+```
 
 ### 4.3.3、虚拟机栈和本地方法栈
 
@@ -475,6 +509,30 @@ public class StackOOM {
 
 - ②、在开发多线程应用时需要特别注意，出现 StackOverflowError 异常有时错误可以阅读，相对来说，比较容易找到问题所在。而且，如果使用虚拟机默认参数，栈深度在大多数情况下达到1000-2000完全没有问题。对于正常的方法调用(包括递归)，这个深深度完全够用。如果建立过多线程导致内存溢出，在不能减少线程数或者更换64位虚拟机的情况下，只能通过减少最大堆或减少栈容量来换取更多的线程。
 
+```java
+private int stackLength = 1;
+private void stackLeak() {
+	long unused1, unused2, unused3, unused4, unused5,unused6, unused7, unused8, unused9, unused10,unused11, unused12, unused13, unused14, 
+	unused15,unused16, unused17, unused18, unused19, unused20,unused21, unused22, unused23, unused24, unused25,unused26, unused27, 
+	unused28, unused29, unused30,unused31, unused32, unused33, unused34, unused35,unused36, unused37, unused38, unused39, unused40,
+	unused41, unused42, unused43, unused44, unused45,unused46, unused47, unused48, unused49, unused50,unused51, unused52, unused53, 
+	unused54, unused55, unused56, unused57, unused58, unused59, unused60, unused61, unused62, unused63, unused64, unused65, unused66, unused67, unused68, unused69, unused70, unused71, unused72, unused73, unused74, unused75, unused76, unused77, unused78, unused79, unused80, unused81, unused82, unused83, unused84, unused85, unused86, unused87, unused88, unused89, unused90, unused91, unused92, 
+	unused93, unused94, unused95, unused96, unused97, unused98, unused99, unused100 = 0;
+	stackLength++;
+	this.stackLeak();
+}
+public static void main(String[] args) {
+	StackOOMTest2 oom = new StackOOMTest2();
+	try {
+		oom.stackLeak();
+	} catch (Error e) {
+		System.out.println("stack length:" + oom.stackLength);
+		throw e;
+	}
+}
+```
+上述代码中能够创建的栈深度其实很低，因为在 stackLeak 存在很多局部变量，而局部变量是存在栈帧当中的，每个栈帧占用空间变大；
+
 ### 4.3.4、本机直接内存溢出
 
 DirectMemory 容量可通过 `-XX:MaxDirectMemorySize` 指定，如果不指定，则默认与Java堆最大值(`-Xmx`指定)一样。使用 Unsafe 来操作。
@@ -499,6 +557,53 @@ Exception in thread "main" java.lang.OutOfMemoryError
 	at demo1.DirectMemoryOOM.main(DirectMemoryOOM.java：21)
 ```
 由直接内存导致的内存溢出，一个明显的特征是在 Heap Dump 文件中不会看见明显的异常，如果发现OOM后dump文件很小，而程序又间接或直接使用了NIO，可以考虑检查是不是直接内存的问题。
+
+```java
+// 1. ByteBuffer直接内存溢出报错是java.lang.OutOfMemoryError: Direct buffer memory
+// 2. -XX:MaxDirectMemorySize对ByteBuffer有效
+public class DirectMemoryTest4 {
+    private static final int GB_1 = 1024 * 1024 * 1024;
+    /**
+     * ByteBuffer参考文档：
+     * https://blog.csdn.net/z69183787/article/details/77102198/
+     */
+    public static void main(String[] args) {
+        int i= 0;
+        while (true) {
+            ByteBuffer buffer = ByteBuffer.allocateDirect(GB_1);
+            System.out.println(++i);
+        }
+    }
+}
+```
+
+### 4.3.5、代码缓存区满（CodeCache）
+
+代码缓存区是存储编译后的代码，[JVM参数](JVM参数.md)
+
+如果CodeCache太小，之前已经编译过的代码会编译执行，未编译的代码会解释执行，可能造成应用性能下降；
+```
+CodeCache: size=3000Kb used=2499Kb max_used=2499Kb free=500Kb
+Java HotSpot(TM) 64-Bit Server VM warning: CodeCache is full. Compiler has been disabled.
+ bounds [0x00000001050df000, 0x00000001053bf000, 0x00000001053cd000]
+ total_blobs=1211 nmethods=860 adapters=272
+ compilation: disabled (not enough contiguous free space left)
+```
+
+**Code Cache 满了怎么办**
+- JIT编译器被停止了，并且不会被重新启动，此时会回归到解释执行；
+- 被编译过的代码仍然以编译方式执行，但是尚未被编译的代码就 只能以解释方式执行了;
+
+针对这种情况，JVM提供了一种比较激进的codeCache回收方式：Speculative flushing。在JDK1.7.0_4之后这种回收方式默认开启，而之前的版本需要通过一个启动参数来开启：`-XX:+UseCodeCacheFlushing`。在Speculative flushing开启的情况下，当codeCache将要耗尽时:
+- 最早被编译的一半方法将会被放到一个old列表中等待回收；
+- 在一定时间间隔内，如果old列表中方法没有被调用，这个方法就会被从codeCache充清除；
+
+但是在实际应用中，JIT编译并没有恢复正常，并且系统整体性能下降很多，出现大量超时；由于codeCache回收算法的问题，当codeCache满了之后会导致编译线程无法继续，并且消耗大量CPU导致系统运行变慢
+
+目前来看，开启UseCodeCacheFlushing会导致问题，如下：
+- Code Cache满了时紧急进行清扫工作，它会丢弃一半老的编译代码；
+- Code Cache空间降了一半，方法编译工作仍然可能不会重启；
+- flushing可能导致高的cpu使用，从而影响性能下降；
 
 ## 4.4、JVM参数
 
@@ -1844,15 +1949,7 @@ int d  = 13 * E + 2 * a;
 - 如果数组下标是一个常量，如foo[3]，只要在编译器根据数据流分析来确定foo.length的值，并判断下标3没有越界，则执行的时候就无需判断了。
 - 如果数组访问是发生在循环中，并且使用循环变量来进行数组访问，如果编译器只要通过数据流分析就可以判定循环变量的取值范围永远在[0,foo.length)之内，那在整个循环中就可以把数组的上下界检查消除；
 
-#### 10.4.5.4、方法内联：编译器最重要的优化手段之一
-
-- 优点：
-	- 取出调用方法的成本，比如建立栈帧；
-	- 为其他优化建立基础
-
-- 涉及技术：用于解决多态特征
-	- 类型继承关系分析（CHA，Class Hierarchy Analysis）技术：用于确定目前的加载类中，某个接口是否有多个实现，某个类是否有子类和子类是否抽象等；
-	- 内联缓存：在未发生方法调用钱，内联缓存为空，第一个调用后，缓存下方法接收者的版本信息，并且每次进行方法调取时都比较接收者版本，如果每次调用方法接收者版本一样，那么内联缓存可以继续用，但发现不一样时，即发生了虚函数的多态性，取消内联，，查找虚方法表进行方法分派；
+#### 10.4.5.4、方法内联
 
 ```java
  // 优化前
@@ -1872,6 +1969,30 @@ public static void testInline(String[] args){
     }
 }
 ```
+
+- 优点：
+	- 取出调用方法的成本，比如建立栈帧；
+	- 为其他优化建立基础
+
+- 涉及技术：用于解决多态特征
+	- 类型继承关系分析（CHA，Class Hierarchy Analysis）技术：用于确定目前的加载类中，某个接口是否有多个实现，某个类是否有子类和子类是否抽象等；
+	- 内联缓存：在未发生方法调用钱，内联缓存为空，第一个调用后，缓存下方法接收者的版本信息，并且每次进行方法调取时都比较接收者版本，如果每次调用方法接收者版本一样，那么内联缓存可以继续用，但发现不一样时，即发生了虚函数的多态性，取消内联，查找虚方法表进行方法分派；
+
+- 方法内联条件：
+	- 方法体足够小：
+		- 热点方法：如果方法体小于325字节会尝试内联，可以使用  `-XX:FreqInlineSize` 来修改大小；
+		- 非热点方法：如果方法体小于35字节，会尝试内联，可用 `-XX:MaxInlineSize` 修改大小；
+	- 被调用方法运行时的实现被可以唯一确定：
+		- static、private、final 方法，JIT可以唯一确定具体的实现代码；
+		- public 的实例方法，指向的实现可能是自身、父类、子类的代码，当且仅当JIT能够唯一确定方法的具体实现时，才有可能完成内联；
+
+- 方法内联注意点：
+	- 尽量让方法体小一些；
+	- 尽量使用 final、private、static 关键字修饰方法，避免因为多态需要对方法做额外的检查；
+	- 一些场景下，可以通过JVM参数修改阈值，从而让更多方法内联；
+
+- 方法内联可能带来的问题：
+	- CodeCache的溢出，导致JVM退化成解释执行模式
 
 #### 10.4.5.5、逃逸分析
 
@@ -2082,6 +2203,10 @@ CodeCache 满了的话，JIT会停止工作
 - 设置合理的代码缓存区大小；
 - 如果项目平时性能OK，但是突然出现性能下降，业务没有问题，可排查是否由代码缓存区满所导致的；
 
+以client模式或者是分层编译模式运行的应用，由于需要编译的类更多（C1编译器编译阈值低，更容易达到编译标准），所以更容易耗尽codeCache。当发现codeCache有不够用的迹象（通过上一节提到的监控方式）时，可以通过启动参数：`-XX:ReservedCodeCacheSize=256M` 来调整codeCache的大小；需要注意的是，这个codeCache的值不是越大越好
+
+在JDK 8中，提供了一个启动参数 -XX:+PrintCodeCache 在JVM停止的时候打印出codeCache的使用情况。其中max_used就是在整个运行过程中codeCache的最大使用量。可以通过这个值来设置一个合理的codeCache大小，在保证应用正常运行的情况下减少内存使用
+
 # 14、钩子函数(ShutdownHook)
 
 ## 1、概述
@@ -2196,6 +2321,24 @@ public void addShutdownHook(Thread hook) {
 - ThreadStackSize   线程栈的大小-
 
 [一个Java进程创建多少个线程](https://club.perfma.com/article/244079)
+
+**如何运行更多线程：**
+- 减少Xss配置；
+- 栈能够分配的内存：机器总内存 - 操作系统内存 - 堆内存 - 方法区内存 - 程序计数器内存 - 直接内存
+- 尽量杀死其他程序；
+- 操作系统对线程数目的限制：
+	- `cat /proc/sys/kernel/threads-max`
+		- 作用：系统支持的最大线程数，表示物理内存决定的理论系统进程数上限，一般会很大
+		- 修改：sysctl -w kernel.threads-max=7726
+	- `cat /proc/sys/kernel/pid_max`
+		- 作用：查看系统限制某用户下最多可以运行多少进程或线程
+		- 修改：sysctl -w kernel.pid_max=65535
+	- `cat /proc/sys/vm/max_map_count`
+		- 作用：限制一个进程可以拥有的VMA(虚拟内存区域)的数量，虚拟内存区域是一个连续的虚拟地址空间区域。在进程的生命周期中，每当程序尝试在内存中映射文件，链接到共享内存段，或者分配堆空间的时候，这些区域将被创建。
+		- 修改：sysctl -w vm.max_map_count=262144
+	- `ulimit –u`
+		- 作用：查看用户最多可启动的进程数目
+		- 修改：ulimit -u 65535
 
 ## 3、进程分配内存不够时向Linux申请内存时，Linux系统如何处理
 

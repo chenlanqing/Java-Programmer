@@ -181,13 +181,122 @@ Caused by: java.lang.ClassFormatError: loader (instance of  sun/misc/Launcher$Ap
 	... 5 more
 ```
 
-那如何解决JVM不允许运行时重加载类信息的问题呢？
+那如何解决JVM不允许运行时重加载类信息的问题呢？比如，运行下列程序，需要在 AttachBase 运行过程中对 process 方法进行增强，在其前后加上start和end
+```java
+public class AttachBase {
+    public static void main(String[] args) {
+        String name = ManagementFactory.getRuntimeMXBean().getName();
+        String s = name.split("@")[0];
+        //打印当前Pid
+        System.out.println("pid:"+s);
+        while (true) {
+            try {
+                Thread.sleep(5000L);
+            } catch (Exception e) {
+                break;
+            }
+            process();
+        }
+    }
+    public static void process() {
+        System.out.println("process");
+    }
+}
+```
 
 ## 4.1、instrument
 
 instrument是JVM提供的一个可以修改已加载类的类库，专门为Java语言编写的插桩服务提供支持。它需要依赖JVMTI的Attach API机制实现。
 
 在JDK 1.6以前，instrument只能在JVM刚启动开始加载类时生效，而在JDK 1.6之后，instrument支持了在运行时对类定义的修改。要使用instrument的类修改功能，我们需要实现它提供的ClassFileTransformer接口，定义一个类文件转换器。接口中的transform()方法会在类文件被加载时调用，而在transform方法里，我们可以利用上文中的ASM或Javassist对传入的字节码进行改写或替换，生成新的字节码数组后返回
+
+我们定义一个实现了ClassFileTransformer接口的类TestTransformer，依然在其中利用Javassist对Base类中的process()方法进行增强，在前后分别打印“start”和“end”，代码如下：
+```java
+public class TestTransformer implements ClassFileTransformer {
+    @Override
+    public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined, ProtectionDomain protectionDomain, byte[] classfileBuffer) {
+        System.out.println("Transforming " + className);
+        try {
+            ClassPool cp = ClassPool.getDefault();
+            CtClass cc = cp.get("com.blue.fish.example.bytecode.jvmti.AttachBase");
+            CtMethod m = cc.getDeclaredMethod("process");
+            m.insertBefore("{ System.out.println(\"start\"); }");
+            m.insertAfter("{ System.out.println(\"end\"); }");
+            return cc.toBytecode();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+}
+```
+
+有了Transformer，那么它要如何注入到正在运行的JVM呢？还需要定义一个Agent，借助Agent的能力将Instrument注入到JVM中。在JDK 1.6之后，Instrumentation可以做启动后的Instrument、本地代码（Native Code）的Instrument，以及动态改变Classpath等等。我们可以向Instrumentation中添加上文中定义的Transformer，并指定要被重加载的类，代码如下所示。这样，当Agent被Attach到一个JVM中时，就会执行类字节码替换并重载入JVM的操作
+```java
+public class TestAgent {
+    public static void agentmain(String args, Instrumentation inst) {
+        //指定我们自己定义的Transformer，在其中利用Javassist做字节码替换
+        inst.addTransformer(new TestTransformer(), true);
+        try {
+            //重定义类并载入新的字节码
+            inst.retransformClasses(AttachBase.class);
+            System.out.println("Agent Load Done.");
+        } catch (Exception e) {
+            System.out.println("agent load failed!");
+        }
+    }
+}
+```
+
+## 4.2、JVMTI & Agent & Attach API
+
+如果JVM启动时开启了JPDA，那么类是允许被重新加载的。在这种情况下，已被加载的旧版本类信息可以被卸载，然后重新加载新版本的类。正如JDPA名称中的Debugger，JDPA其实是一套用于调试Java程序的标准，任何JDK都必须实现该标准。
+
+JPDA定义了一整套完整的体系，它将调试体系分为三部分，并规定了三者之间的通信接口。三部分由低到高分别是Java 虚拟机工具接口（JVMTI），Java 调试协议（JDWP）以及 Java 调试接口（JDI），三者之间的关系如下图所示：
+
+![](image/JPDA-体系.png)
+
+可以借助JVMTI的一部分能力，帮助动态重载类信息。JVM TI（JVM TOOL INTERFACE，JVM工具接口）是JVM提供的一套对JVM进行操作的工具接口。通过JVMTI，可以实现对JVM的多种操作，它通过接口注册各种事件勾子，在JVM事件触发时，同时触发预定义的勾子，以实现对各个JVM事件的响应，事件包括类文件加载、异常产生与捕获、线程启动和结束、进入和退出临界区、成员变量修改、GC开始和结束、方法调用进入和退出、临界区竞争与等待、VM启动与退出等等。
+
+Agent就是JVMTI的一种实现，Agent有两种启动方式：
+- 随Java进程启动而启动，经常见到的`java -agentlib`就是这种方式；
+- 运行时载入，通过attach API，将模块（jar包）动态地Attach到指定进程id的Java进程内。
+
+Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了让另外一个JVM进程把线上服务的线程Dump出来，会运行jstack或jmap的进程，并传递pid的参数，告诉它要对哪个进程进行线程Dump，这就是Attach API做的事情。在下面，我们将通过Attach API的loadAgent()方法，将打包好的Agent jar包动态Attach到目标JVM上。
+
+具体实现起来的步骤如下：
+- 定义Agent，并在其中实现AgentMain方法，比如之前定义的TestAgent类；
+- 然后将TestAgent类打成一个包含`MANIFEST.MF`的jar包，其中`MANIFEST.MF`文件中将Agent-Class属性指定为TestAgent的全限定名；
+	```
+	Manifest-Version: 1.0
+	Agent-Class: com.blue.fish.example.bytecode.jvmti.TestAgent
+	Created-By: QingFan
+	Can-Redefine-Classes: true
+	Can-Retransform-Classes: true
+	Boot-Class-Path: javassist-3.27.0-GA.jar
+
+	```
+	如何打包成jar包，参考：[打包Java工程](../Java基础/Java基础知识.md#5.1打包Java工程)
+- 最后利用Attach API，将我们打包好的jar包Attach到指定的JVM pid上，代码如下：
+	```java
+	public class TestAttach {
+		public static void main(String[] args) throws Exception {
+			// 传入目标 JVM pid
+			VirtualMachine vm = VirtualMachine.attach("62480");
+			// 上面打包好的jar
+			vm.loadAgent("attacher.jar");
+		}
+	}
+	```
+
+由于在MANIFEST.MF中指定了Agent-Class，所以在Attach后，目标JVM在运行时会走到TestAgent类中定义的agentmain()方法，而在这个方法中，我们利用Instrumentation，将指定类的字节码通过定义的类转化器TestTransformer做了Base类的字节码替换（通过javassist），并完成了类的重新加载。由此，我们达成了“在JVM运行时，改变类的字节码并重新载入类信息”的目的
+
+## 4.3、使用场景
+
+节码增强技术的可使用范围就不再局限于JVM加载类前了。通过上述几个类库，我们可以在运行时对JVM中的类进行修改并重载了。通过这种手段，可以做的事情就变得很多了：
+- 热部署：不部署服务而对线上服务做修改，可以做打点、增加日志等操作。
+- Mock：测试时候对某些服务做Mock。
+- 性能诊断工具：比如bTrace就是利用Instrument，实现无侵入地跟踪一个正在运行的JVM，监控到类和方法级别的状态信息。
 
 # 参考资料
 

@@ -140,6 +140,12 @@
 - Percona的pt-kill工具使用；
 - 使用更高版本的MySQL
 
+# 六、线程堆积
+
+一个线上应用开始频繁报警：异常日志、接口rt超时、load高、tcp重传率高等等，cpu使用率不算特别异常，而load高说明等待cpu资源的线程队列长，配合rt上涨来看，推测是线程出现了堆积，而线程堆积一般有两种情况：
+- 线程内部处理耗时变长：比如缓存未命中、被下游请求block、慢sql、循环逻辑耗时等。
+- JVM因GC、锁擦除等jvm操作原因触发stop the world，导致线程等待
+
 # 参考资料
 
 - [官方文档：思路和工具](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html#CIHIEEFH)
@@ -150,3 +156,4 @@
 - [CPU与老年代占用过高问题排查](https://mp.weixin.qq.com/s/-LjR4zSEF0loIexqHJ9hUw)
 - [JVM发生OOM的8种原因](https://mp.weixin.qq.com/s/dzZjCx1WzjLZCXLr8V-ukA)
 - [数据库的死锁问题排查过程-由索引问题引起的死锁](https://mp.weixin.qq.com/s/3vTElAcvQk-CfgAb4bAiXw)
+- [Metaspace内存泄露排查](https://yq.aliyun.com/articles/603830)

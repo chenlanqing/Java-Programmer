@@ -80,20 +80,20 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 
 - 第二次标记：如果被筛选判定位有必要执行，则会放入FQueue队列，并自动创建一个低优先级的finalize线程来执行释放操作。如果在一个对象释放前被其他对象引用，则该对象会被移除FQueue队列;
 
-## 3、再谈引用
+## 3、Java中的引用
 
-- 无论是引用计数器判断对象引用的数量，还是可达性分析判断对象的引用链是否可达，判定对象的是否存活都与"引用"有关；
+无论是引用计数器判断对象引用的数量，还是可达性分析判断对象的引用链是否可达，判定对象的是否存活都与"引用"有关；
 
-- JDK1.2以前，Java中的引用：如果reference类型的数据中存储的数值代表的是另一块内存的起始地址，就称为这块内存代表一个引用；
+JDK1.2以前，Java中的引用：如果reference类型的数据中存储的数值代表的是另一块内存的起始地址，就称为这块内存代表一个引用；
 
-- JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refefence）、软引用（Soft Refefence）、弱引用（Weak Refefence）、虚引用（Phantom Refefence），4种引用强度依次逐渐减弱
-	- 强引用(Strong Refefence)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
+JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refefence）、软引用（Soft Refefence）、弱引用（Weak Refefence）、虚引用（Phantom Refefence），4种引用强度依次逐渐减弱
+- 强引用(Strong Refefence)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
 
-	- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
+- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
 
-	- 弱引用(Weak Refefence)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakRefefence 类来实现弱引用；
+- 弱引用(Weak Refefence)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakRefefence 类来实现弱引用；
 
-	- 虚引用(Phantom Refefence)：幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomRefefence 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；
+- 虚引用(Phantom Refefence)：幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomRefefence 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；
 
 - 引用队列：
 	- 无实际存储结构，存储逻辑依赖于内部节点之间的关系来表达；
@@ -107,6 +107,48 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 - 一个对象真正的死亡，至少经历两次标记过程：如果对象在进行可达性分析后发现没有GC Roots相连接的引用链，那它将会被第一次标记并且进行一次筛选，筛选的条件是此对象是否有必要执行 finalize() 方法;
 - 当对象没有覆盖 finalize() 方法，或是 finalize() 方法已经被虚拟机调用过，虚拟机将这两种情况视为没有必要执行；
 - 如果这个对象被判定为有必要执行 finalize() 方法，那么这个对象将会被放置在一个叫做 F-Queue 的队列中，并在稍后由一个虚拟机自动建立的，低优先级的 Finalizer 线程去执行它;
+
+```java
+/**
+ * 1、对象可在被GC时自我拯救；
+ * 2、这种自救的机会只有一次，因为一个对象的 finalize 方法最大只会被系统调用一次
+ */
+public class FinalizeEscapeGC {
+    public static FinalizeEscapeGC SAVE_HOOK = null;
+    public void isAlive() {
+        System.out.println("yes i am still alive");
+    }
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        System.out.println("finalize method executed");
+        SAVE_HOOK = this;
+    }
+    public static void main(String[] args) throws Throwable {
+        SAVE_HOOK = new FinalizeEscapeGC();
+        // 对象第一次自我拯救
+        SAVE_HOOK = null;
+        System.gc();
+        // 因为 finalize 优先级很低，暂停0.5s，以等待
+        Thread.sleep(500);
+        if (SAVE_HOOK != null) {
+            SAVE_HOOK.isAlive();
+        } else {
+            System.out.println("Oh, i adm dead:(");
+        }
+		// 与上面代码完全一样，但是这次自救失败，因为  finalize 只会被系统自动调用一次；
+        SAVE_HOOK=null;
+        System.gc();
+        // 因为 finalize 优先级很低，暂停0.5s，以等待
+        Thread.sleep(500);
+        if (SAVE_HOOK != null) {
+            SAVE_HOOK.isAlive();
+        } else {
+            System.out.println("Oh, i adm dead:(");
+        }
+    }
+}
+```
 
 ## 5、回收方法区
 

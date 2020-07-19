@@ -1,64 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-目录
-
-- [一、Tomcat](#%E4%B8%80tomcat)
-  - [1、Tomcat架构](#1tomcat%E6%9E%B6%E6%9E%84)
-    - [1.1、Tomcat整体架构](#11tomcat%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84)
-    - [1.2、连接器Connector](#12%E8%BF%9E%E6%8E%A5%E5%99%A8connector)
-    - [1.3、容器Container](#13%E5%AE%B9%E5%99%A8container)
-  - [2、Tomcat-NIO模型](#2tomcat-nio%E6%A8%A1%E5%9E%8B)
-  - [3、Tomcat与Jetty](#3tomcat%E4%B8%8Ejetty)
-    - [3.1、Jetty](#31jetty)
-- [二、Tomcat生命周期](#%E4%BA%8Ctomcat%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F)
-  - [1、一键启停：LifeCycle接口](#1%E4%B8%80%E9%94%AE%E5%90%AF%E5%81%9Clifecycle%E6%8E%A5%E5%8F%A3)
-  - [2、可扩展性：LifeCycle事件](#2%E5%8F%AF%E6%89%A9%E5%B1%95%E6%80%A7lifecycle%E4%BA%8B%E4%BB%B6)
-  - [3、重用性：LifeCycleBase抽象基类](#3%E9%87%8D%E7%94%A8%E6%80%A7lifecyclebase%E6%8A%BD%E8%B1%A1%E5%9F%BA%E7%B1%BB)
-  - [4、生命周期管理总体类图](#4%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86%E6%80%BB%E4%BD%93%E7%B1%BB%E5%9B%BE)
-- [三、Tomcat启动组件](#%E4%B8%89tomcat%E5%90%AF%E5%8A%A8%E7%BB%84%E4%BB%B6)
-  - [1、Catalina](#1catalina)
-  - [2、Server组件](#2server%E7%BB%84%E4%BB%B6)
-  - [3、Service组件](#3service%E7%BB%84%E4%BB%B6)
-  - [4、Engine组件](#4engine%E7%BB%84%E4%BB%B6)
-  - [5、从Tomcat看设计规范](#5%E4%BB%8Etomcat%E7%9C%8B%E8%AE%BE%E8%AE%A1%E8%A7%84%E8%8C%83)
-- [四、Tomcat 类加载](#%E5%9B%9Btomcat-%E7%B1%BB%E5%8A%A0%E8%BD%BD)
-  - [1、Web服务器需要解决的问题](#1web%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%9C%80%E8%A6%81%E8%A7%A3%E5%86%B3%E7%9A%84%E9%97%AE%E9%A2%98)
-  - [2、Tomcat类库结构](#2tomcat%E7%B1%BB%E5%BA%93%E7%BB%93%E6%9E%84)
-  - [3、Tomcat类加载器机制](#3tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E6%9C%BA%E5%88%B6)
-    - [3.1、Tomcat中的类加载器](#31tomcat%E4%B8%AD%E7%9A%84%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
-    - [3.2、tomcat 类加载顺序](#32tomcat-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E9%A1%BA%E5%BA%8F)
-    - [3.3、Tomcat类加载过程](#33tomcat%E7%B1%BB%E5%8A%A0%E8%BD%BD%E8%BF%87%E7%A8%8B)
-    - [3.4、tomcat 如何隔离多个应用](#34tomcat-%E5%A6%82%E4%BD%95%E9%9A%94%E7%A6%BB%E5%A4%9A%E4%B8%AA%E5%BA%94%E7%94%A8)
-    - [3.5、如何破坏双亲委托](#35%E5%A6%82%E4%BD%95%E7%A0%B4%E5%9D%8F%E5%8F%8C%E4%BA%B2%E5%A7%94%E6%89%98)
-  - [4、线程上下文类加载器-ThreadContextClassLoader（TCCL）](#4%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8-threadcontextclassloadertccl)
-    - [4.1、线程上下文类加载器的产生](#41%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E7%9A%84%E4%BA%A7%E7%94%9F)
-    - [4.2、线程上下文类加载器应用](#42%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8%E5%BA%94%E7%94%A8)
-    - [4.3、Tomcat为什么要设置线程上下文类加载器](#43tomcat%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AE%BE%E7%BD%AE%E7%BA%BF%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%E7%B1%BB%E5%8A%A0%E8%BD%BD%E5%99%A8)
-  - [5、问题扩展](#5%E9%97%AE%E9%A2%98%E6%89%A9%E5%B1%95)
-- [五、Tomcat与HTTP请求](#%E4%BA%94tomcat%E4%B8%8Ehttp%E8%AF%B7%E6%B1%82)
-- [六、Web应用加载](#%E5%85%ADweb%E5%BA%94%E7%94%A8%E5%8A%A0%E8%BD%BD)
-- [七、Tomcat与数据源](#%E4%B8%83tomcat%E4%B8%8E%E6%95%B0%E6%8D%AE%E6%BA%90)
-- [八、Tomcat调试与监控](#%E5%85%ABtomcat%E8%B0%83%E8%AF%95%E4%B8%8E%E7%9B%91%E6%8E%A7)
-  - [1、远程调试Tomcat](#1%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95tomcat)
-    - [1.1、JDWP协议](#11jdwp%E5%8D%8F%E8%AE%AE)
-    - [1.2、配置tomcat远程调试](#12%E9%85%8D%E7%BD%AEtomcat%E8%BF%9C%E7%A8%8B%E8%B0%83%E8%AF%95)
-  - [2、tomcat-manager监控](#2tomcat-manager%E7%9B%91%E6%8E%A7)
-- [九、Tomcat优化](#%E4%B9%9Dtomcat%E4%BC%98%E5%8C%96)
-  - [1、提高Tomcat启动速度](#1%E6%8F%90%E9%AB%98tomcat%E5%90%AF%E5%8A%A8%E9%80%9F%E5%BA%A6)
-  - [2、内存优化](#2%E5%86%85%E5%AD%98%E4%BC%98%E5%8C%96)
-  - [3、线程优化](#3%E7%BA%BF%E7%A8%8B%E4%BC%98%E5%8C%96)
-  - [4、配置优化](#4%E9%85%8D%E7%BD%AE%E4%BC%98%E5%8C%96)
-- [十、其他](#%E5%8D%81%E5%85%B6%E4%BB%96)
-  - [1、Tomcat中设计模式](#1tomcat%E4%B8%AD%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
-    - [1.1、门面模式（外观模式）](#11%E9%97%A8%E9%9D%A2%E6%A8%A1%E5%BC%8F%E5%A4%96%E8%A7%82%E6%A8%A1%E5%BC%8F)
-    - [1.2、观察者模式](#12%E8%A7%82%E5%AF%9F%E8%80%85%E6%A8%A1%E5%BC%8F)
-    - [1.3、命令模式](#13%E5%91%BD%E4%BB%A4%E6%A8%A1%E5%BC%8F)
-    - [1.4、责任链模式](#14%E8%B4%A3%E4%BB%BB%E9%93%BE%E6%A8%A1%E5%BC%8F)
-    - [1.5、模板设计模式](#15%E6%A8%A1%E6%9D%BF%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F)
-  - [2、Tomcat控制输出乱码](#2tomcat%E6%8E%A7%E5%88%B6%E8%BE%93%E5%87%BA%E4%B9%B1%E7%A0%81)
-- [参考文章](#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一、Tomcat
 
@@ -684,6 +623,7 @@ https://www.cnblogs.com/ShawnYang/p/7451459.html
 ## 1、远程调试Tomcat
 
 ### 1.1、JDWP协议
+
 Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟机之间通信协议
 
 ### 1.2、配置tomcat远程调试
@@ -725,6 +665,18 @@ Java Debug Wire Protocol缩写，它定义了调试器与被调试的java虚拟�
 - 开启步骤：
     - conf/tomcat-users.xml 添加用户
     - conf/Catalina/localhost/manager.xml 配置允许的远程连接
+
+## 3、Tomcat调优参数
+
+在做Tomcat的调优时，最重要是就是Connector（连接器）的调优了（少数情况下，也可能会配置Executor）
+```xml
+<Executor name="tomcatThreadPool" namePrefix="catalina-exec-" maxThreads="150" minSpareThreads="4"/>
+
+<Connector port="8080" protocol="HTTP/1.1" connectionTimeout="20000" redirectPort="8443" executor="tomcatThreadPool"/>
+<!-- 一个文件中可以有多个Connector以及多个Executor -->
+```
+- Connector：负责接收客户端的请求以及向客户端回送响应的消息
+- Executor：指定线程池，从而在多个Connector(主要)及其他组件之间共享
 
 # 九、Tomcat优化
 
