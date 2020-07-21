@@ -594,7 +594,7 @@ Java HotSpot(TM) 64-Bit Server VM warning: CodeCache is full. Compiler has been 
 - JIT编译器被停止了，并且不会被重新启动，此时会回归到解释执行；
 - 被编译过的代码仍然以编译方式执行，但是尚未被编译的代码就 只能以解释方式执行了;
 
-针对这种情况，JVM提供了一种比较激进的codeCache回收方式：Speculative flushing。在JDK1.7.0_4之后这种回收方式默认开启，而之前的版本需要通过一个启动参数来开启：`-XX:+UseCodeCacheFlushing`。在Speculative flushing开启的情况下，当codeCache将要耗尽时:
+针对这种情况，JVM提供了一种比较激进的codeCache回收方式：Speculative flushing。在`JDK1.7.0_4`之后这种回收方式默认开启，而之前的版本需要通过一个启动参数来开启：`-XX:+UseCodeCacheFlushing`。在Speculative flushing开启的情况下，当codeCache将要耗尽时:
 - 最早被编译的一半方法将会被放到一个old列表中等待回收；
 - 在一定时间间隔内，如果old列表中方法没有被调用，这个方法就会被从codeCache充清除；
 
@@ -1508,9 +1508,7 @@ http://osgi.com.cn/article/7289378
 	- ④、invokeinterface：调用接口方法，会在运行时再确定一个实现此接口的对象
 	- ⑤、invokedynamic：只要能被invokestatic和invokespecial指令调用的方法，都可以在解析阶段确定唯一的调用版本，符合这个条件的有：静态方法、私有方法、实例构造器和父类方法四类，它们在类加载时就会把符号引用解析为该方法的直接引用.这类方法称为非虚方法(包括 final 方法)，与之相反，其他方法称为虚方法（final 方法除外），JDK8后新增的lambda表达式是基于该指令执行的
 
-	*注意：*
-
-	虽然调用final方法使用的是invokevirtual指令，但由于它无法覆盖，没有其他版本，所以也无需对方发接收者进行多态选择.在Java语言规范中明确说明了final方法是一种非虚方法
+	***注意：***虽然调用final方法使用的是invokevirtual指令，但由于它无法覆盖，没有其他版本，所以也无需对方发接收者进行多态选择.在Java语言规范中明确说明了final方法是一种非虚方法
 
 - 解析调用：一定是个静态过程，在编译期间就完全确定，在类加载的解析阶段就会把涉及的符号引用转化为可确定的直接引用不会延迟到运行期再去完成；分派调用：可能是静态的也可能是动态，根据分派依据的宗量数（方法的调用者和方法的参数统称为方法的宗量），又可分为单分派和多分派，两类分派方式两两组合便构成了静态单分派、静态多分派、动态单分派、动态多分派四种分派情况；分派调用过程将会揭示多态特征的最基本体现：重载和重写；
 
@@ -1996,167 +1994,167 @@ public static void testInline(String[] args){
 
 #### 10.4.5.5、逃逸分析
 
-- **1、基本概念**
+##### 1、基本概念
 
-	逃逸分析的基本行为就是分析对象动态作用域：当一个对象在方法中被定义之后，它可能被外部所引用。例如作为调用参数传递到其他地方中，称为方法逃逸，主要包括：全局变量赋值逃逸、方法返回值逃逸、实例引用逃逸、线程逃逸
-	```java
-	public static StringBuffer craeteStringBuffer(String s1， String s2) {
-		StringBuffer sb = new StringBuffer();
-		sb.append(s1);
-		sb.append(s2);
-		// StringBuffer sb是一个方法内部变量，上述代码中直接将sb返回，这样这个StringBuffer有可能被其他
-		// 方法所改变，这样它的作用域就不只是在方法内部，虽然它是一个局部变量，称其逃逸到了方法外部
-		return sb;
-		// 如果想要 StringBuffer sb 不逃逸出方法，可以使用 sb.toString();
-	}
-	```
-	使用逃逸分析，编译器对代码做了如下优化：
-	- 同步省略：如果一个对象被发现只能从一个线程被访问到，那么对于这个对象的操作可以不考虑同步
-	- 将堆分配转化为栈分配：如果一个对象在子程序中被分配，要使指向该对象的指针永远不会逃逸，对象可能是栈分配的候选，而不是堆分配
-	- 分离对象或标量替换：有的对象可能不需要作为一个连续的内存结构存在也可以被访问到，那么对象的部分（或全部）可以不存储在内存，而是存储在CPU寄存器中；
+逃逸分析的基本行为就是分析对象动态作用域：当一个对象在方法中被定义之后，它可能被外部所引用。例如作为调用参数传递到其他地方中，称为方法逃逸，主要包括：全局变量赋值逃逸、方法返回值逃逸、实例引用逃逸、线程逃逸
+```java
+public static StringBuffer craeteStringBuffer(String s1， String s2) {
+	StringBuffer sb = new StringBuffer();
+	sb.append(s1);
+	sb.append(s2);
+	// StringBuffer sb是一个方法内部变量，上述代码中直接将sb返回，这样这个StringBuffer有可能被其他
+	// 方法所改变，这样它的作用域就不只是在方法内部，虽然它是一个局部变量，称其逃逸到了方法外部
+	return sb;
+	// 如果想要 StringBuffer sb 不逃逸出方法，可以使用 sb.toString();
+}
+```
+使用逃逸分析，编译器对代码做了如下优化：
+- 同步省略：如果一个对象被发现只能从一个线程被访问到，那么对于这个对象的操作可以不考虑同步
+- 将堆分配转化为栈分配：如果一个对象在子程序中被分配，要使指向该对象的指针永远不会逃逸，对象可能是栈分配的候选，而不是堆分配
+- 分离对象或标量替换：有的对象可能不需要作为一个连续的内存结构存在也可以被访问到，那么对象的部分（或全部）可以不存储在内存，而是存储在CPU寄存器中；
 
-	如果重写了某个类的finalize方法，那么这个类的对象都会被标记为全局逃逸，并且一定会放在堆内存中；
+如果重写了某个类的finalize方法，那么这个类的对象都会被标记为全局逃逸，并且一定会放在堆内存中；
 
-	在Java代码运行时，通过JVM参数可指定是否开启逃逸分析，
-	- -XX:+DoEscapeAnalysis ： 表示开启逃逸分析
-	- -XX:-DoEscapeAnalysis ： 表示关闭逃逸分析 从jdk 1.7开始已经默认开始逃逸分析，如需关闭，需要指定-XX:-DoEscapeAnalysis
+在Java代码运行时，通过JVM参数可指定是否开启逃逸分析，
+- `-XX:+DoEscapeAnalysis` ： 表示开启逃逸分析
+- `-XX:-DoEscapeAnalysis` ： 表示关闭逃逸分析 从jdk 1.7开始已经默认开始逃逸分析，如需关闭，需要指定-XX:-DoEscapeAnalysis
 
-- **2、同步省略**
+##### 2、同步省略
 
-	在动态编译同步块的时候，JIT编译器可以借助逃逸分析来判断同步块所使用的锁对象是否只能够被一个线程访问而没有被发布到其他线程；
+在动态编译同步块的时候，JIT编译器可以借助逃逸分析来判断同步块所使用的锁对象是否只能够被一个线程访问而没有被发布到其他线程；
 
-	如果同步块所使用的锁对象通过这种分析被证实只能够被一个线程访问，那么JIT编译器在编译这个同步块的时候就会取消对这部分代码的同步。这个取消同步的过程就叫同步省略，也叫锁消除；在使用synchronized的时候，如果JIT经过逃逸分析之后发现并无线程安全问题的话，就会做锁消除
+如果同步块所使用的锁对象通过这种分析被证实只能够被一个线程访问，那么JIT编译器在编译这个同步块的时候就会取消对这部分代码的同步。这个取消同步的过程就叫同步省略，也叫锁消除；在使用synchronized的时候，如果JIT经过逃逸分析之后发现并无线程安全问题的话，就会做锁消除
 
-	如下代码
-	```java
-	public void hello() {
-		Object object = new Object();
-		synchronized(object) {
-			System.out.println(object);
-		}
-	}
-	// 上述代码中对object进行加锁，但是object对象的生命周期只存在于hello方法中，并不会被其他方法访问到，因此在JIT编译阶段就被优化掉了，优化成如下代码：
-	public void hello(){
-		Object object = new Object();
+如下代码
+```java
+public void hello() {
+	Object object = new Object();
+	synchronized(object) {
 		System.out.println(object);
 	}
-	```
+}
+// 上述代码中对object进行加锁，但是object对象的生命周期只存在于hello方法中，并不会被其他方法访问到，因此在JIT编译阶段就被优化掉了，优化成如下代码：
+public void hello(){
+	Object object = new Object();
+	System.out.println(object);
+}
+```
 
-- **3、标量替换**
+##### 3、标量替换
 
-	标量（Scalar）是指一个无法再分解成更小的数据的数据。Java中的原始数据类型就是标量。相对的，那些还可以分解的数据叫做聚合量（Aggregate），Java中的对象就是聚合量，因为他可以分解成其他聚合量和标量
+标量（Scalar）是指一个无法再分解成更小的数据的数据。Java中的原始数据类型就是标量。相对的，那些还可以分解的数据叫做聚合量（Aggregate），Java中的对象就是聚合量，因为他可以分解成其他聚合量和标量
 
-	在JIT阶段，如果经过逃逸分析，发现一个对象不会被外界访问的话，那么经过JIT优化，就会把这个对象拆解成若干个其中包含的若干个成员变量来代替。这个过程就是标量替换；
-	```java
-	public static void main(String[] args) {
+在JIT阶段，如果经过逃逸分析，发现一个对象不会被外界访问的话，那么经过JIT优化，就会把这个对象拆解成若干个其中包含的若干个成员变量来代替。这个过程就是标量替换；
+```java
+public static void main(String[] args) {
+	alloc();
+}
+private static void alloc() {
+	Point point = new Point（1,2）;
+	System.out.println("point.x="+point.x+"; point.y="+point.y);
+}
+class Point{
+	private int x;
+	private int y;
+}
+```
+
+以上代码中，point对象并没有逃逸出alloc方法，并且point对象是可以拆解成标量的。那么，JIT就会不会直接创建Point对象，而是直接使用两个标量int x ，int y来替代Point对象
+```java
+private static void alloc() {
+	int x = 1;
+	int y = 2;
+	System.out.println("point.x="+x+"; point.y="+y);
+}
+```
+可以看到，Point这个聚合量经过逃逸分析后，发现他并没有逃逸，就被替换成两个标量了。
+
+那么标量替换有什么好处呢？就是可以大大减少堆内存的占用。因为一旦不需要创建对象了，那么就不再需要分配堆内存了，标量替换为栈上分配提供了很好的基础；
+
+##### 4、栈上分配
+
+在Java虚拟机中，对象是在Java堆中分配内存的；但是，有一种特殊情况，那就是如果经过逃逸分析后发现，一个对象并没有逃逸出方法的话，那么就可能被优化成栈上分配。这样就无需在堆上分配内存，也无须进行垃圾回收了；
+
+*其实在现有的虚拟机中，并没有真正的实现栈上分配，其实是标量替换实现的，官方文档中，表示其不是实现非全局逃逸对象栈上分配替换堆上分配，具体[参考文档](https://docs.oracle.com/javase/8/docs/technotes/guides/vm/performance-enhancements-7.html#escapeAnalysis)*
+
+```java
+public static void main(String[] args) {
+	long a1 = System.currentTimeMillis();
+	for (int i = 0; i < 1000000; i++) {
 		alloc();
 	}
-	private static void alloc() {
-		Point point = new Point（1,2）;
-		System.out.println("point.x="+point.x+"; point.y="+point.y);
+	// 查看执行时间
+	long a2 = System.currentTimeMillis();
+	// 为了方便查看堆内存中对象个数，线程sleep
+	try {
+		Thread.sleep(100000);
+	} catch (InterruptedException e1) {
+		e1.printStackTrace();
 	}
-	class Point{
-		private int x;
-		private int y;
-	}
+}
+private static void alloc() {
+	User user = new User();
+}
+static class User {}
+
+```
+在alloc方法中定义了User对象，但是并没有在方法外部引用他。也就是说，这个对象并不会逃逸到alloc外部。经过JIT的逃逸分析之后，就可以对其内存分配进行优化；
+
+- **未开启逃逸分析，指定JVM参数**
+	```
+	-Xmx4G -Xms4G -XX:-DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError 
+	```
+	通过jmap命令，可以看到在堆中一共创建了100万个EscapeAnalysis$User对象，虽然在alloc方法中创建的User对象并没有逃逸到方法外部，但是还是被分配在堆内存中；
+	```
+	root@localhost~|⇒  jps
+	5095 Launcher
+	5096 EscapeAnalysis
+	5097 Jps
+	4922 
+	4957 RemoteMavenServer
+	root@localhost~|⇒  jmap -histo 5096
+
+	num     #instances         #bytes  class name
+	----------------------------------------------
+	1:           557       67396184  [I
+	2:       1000000       16000000  com.learning.example.jvm.optimization.EscapeAnalysis$User
+	3:          2947        1353320  [B
+	4:          5138         756256  [C
+	```
+- **开启逃逸分析，指定JVM参数**
+	```
+	-Xmx4G -Xms4G -XX:+DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError
+	```
+	开启了逃逸分析之后（-XX:+DoEscapeAnalysis），在堆内存中只有12万多个，而因为堆上分配的被优化成了栈上分配，所以GC次数明显减少
+	```
+	num     #instances         #bytes  class name
+	----------------------------------------------
+	1:           583       81745912  [I
+	2:        122982        1967712  com.learning.example.jvm.optimization.EscapeAnalysis$User
+	3:          2009        1200336  [B
+	4:          4250         623352  [C
+
 	```
 
-	以上代码中，point对象并没有逃逸出alloc方法，并且point对象是可以拆解成标量的。那么，JIT就会不会直接创建Point对象，而是直接使用两个标量int x ，int y来替代Point对象
-	```java
-	private static void alloc() {
-		int x = 1;
-		int y = 2;
-		System.out.println("point.x="+x+"; point.y="+y);
-	}
-	```
-	可以看到，Point这个聚合量经过逃逸分析后，发现他并没有逃逸，就被替换成两个标量了。
+##### 5、总结
 
-	那么标量替换有什么好处呢？就是可以大大减少堆内存的占用。因为一旦不需要创建对象了，那么就不再需要分配堆内存了，标量替换为栈上分配提供了很好的基础；
-
-- **4、栈上分配**
-
-	在Java虚拟机中，对象是在Java堆中分配内存的；但是，有一种特殊情况，那就是如果经过逃逸分析后发现，一个对象并没有逃逸出方法的话，那么就可能被优化成栈上分配。这样就无需在堆上分配内存，也无须进行垃圾回收了；
-
-	*其实在现有的虚拟机中，并没有真正的实现栈上分配，其实是标量替换实现的，官方文档中，表示其不是实现非全局逃逸对象栈上分配替换堆上分配，具体[参考文档](https://docs.oracle.com/javase/8/docs/technotes/guides/vm/performance-enhancements-7.html#escapeAnalysis)*
-
-	```java
-	public static void main(String[] args) {
-		long a1 = System.currentTimeMillis();
-		for (int i = 0; i < 1000000; i++) {
-			alloc();
-		}
-		// 查看执行时间
-		long a2 = System.currentTimeMillis();
-		// 为了方便查看堆内存中对象个数，线程sleep
-		try {
-			Thread.sleep(100000);
-		} catch (InterruptedException e1) {
-			e1.printStackTrace();
-		}
-	}
-	private static void alloc() {
-		User user = new User();
-	}
-	static class User {}
-
-	```
-	在alloc方法中定义了User对象，但是并没有在方法外部引用他。也就是说，这个对象并不会逃逸到alloc外部。经过JIT的逃逸分析之后，就可以对其内存分配进行优化；
-
-	- **未开启逃逸分析，指定JVM参数**
-		```
-		-Xmx4G -Xms4G -XX:-DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError 
-		```
-		通过jmap命令，可以看到在堆中一共创建了100万个EscapeAnalysis$User对象，虽然在alloc方法中创建的User对象并没有逃逸到方法外部，但是还是被分配在堆内存中；
-		```
-		root@localhost~|⇒  jps
-		5095 Launcher
-		5096 EscapeAnalysis
-		5097 Jps
-		4922 
-		4957 RemoteMavenServer
-		root@localhost~|⇒  jmap -histo 5096
-
-		num     #instances         #bytes  class name
-		----------------------------------------------
-		1:           557       67396184  [I
-		2:       1000000       16000000  com.learning.example.jvm.optimization.EscapeAnalysis$User
-		3:          2947        1353320  [B
-		4:          5138         756256  [C
-		```
-	- **开启逃逸分析，指定JVM参数**
-		```
-		-Xmx4G -Xms4G -XX:+DoEscapeAnalysis -XX:+PrintGCDetails -XX:+HeapDumpOnOutOfMemoryError
-		```
-		开启了逃逸分析之后（-XX:+DoEscapeAnalysis），在堆内存中只有12万多个，而因为堆上分配的被优化成了栈上分配，所以GC次数明显减少
-		```
-		num     #instances         #bytes  class name
-		----------------------------------------------
-		1:           583       81745912  [I
-		2:        122982        1967712  com.learning.example.jvm.optimization.EscapeAnalysis$User
-		3:          2009        1200336  [B
-		4:          4250         623352  [C
-
-		```
-
-- **5、总结**
-
-	逃逸分析技术并不成熟，其根本原因就是无法保证逃逸分析的性能消耗一定能高于他的消耗，虽然经过逃逸分析可以做标量替换、栈上分配、和锁消除。但是逃逸分析自身也是需要进行一系列复杂的分析的，这其实也是一个相对耗时的过程
+逃逸分析技术并不成熟，其根本原因就是无法保证逃逸分析的性能消耗一定能高于他的消耗，虽然经过逃逸分析可以做标量替换、栈上分配、和锁消除。但是逃逸分析自身也是需要进行一系列复杂的分析的，这其实也是一个相对耗时的过程
 
 ## 10.5、Java与C/C++编译器对比
 
-- **Java的劣势**
-	- JIT及时编译器运行占用用户运行时间；
-	- Java语言是动态类型安全语言，JVM频繁进行动态监测，如：实例方法访问时检查空指针、数组元素访问检查上下界、类型转换时检查继承关系；
-	- Java使用虚方法频率高于C/C++，即多台选择频率大于C/C++；
-	- Java是可以动态拓展的语言，运行时加载新的类可能改变程序类型的继承关系，即编译器需要时刻注意类型变化并在运行时撤销或重新进行一些优化；
-	- Java对象在堆上分配，垃圾回收比C/C++语言由用户管理开销大；
+**Java的劣势**
+- JIT及时编译器运行占用用户运行时间；
+- Java语言是动态类型安全语言，JVM频繁进行动态监测，如：实例方法访问时检查空指针、数组元素访问检查上下界、类型转换时检查继承关系；
+- Java使用虚方法频率高于C/C++，即多台选择频率大于C/C++；
+- Java是可以动态拓展的语言，运行时加载新的类可能改变程序类型的继承关系，即编译器需要时刻注意类型变化并在运行时撤销或重新进行一些优化；
+- Java对象在堆上分配，垃圾回收比C/C++语言由用户管理开销大；
 
-- **Java的优势**
-	- 开发效率高；
-	- C/C++编译器属于静态优化，不能在运行期间进行优化，如
-		- 调用频率预测；
-		- 分支频率预测；
-		- 裁剪未被选择的；
+**Java的优势**
+- 开发效率高；
+- C/C++编译器属于静态优化，不能在运行期间进行优化，如
+	- 调用频率预测；
+	- 分支频率预测；
+	- 裁剪未被选择的；
 
 # 11、Java 垃圾收集机制
 
@@ -2297,7 +2295,7 @@ public void addShutdownHook(Thread hook) {
 
 	创建了一个匿名的类，不过这种匿名的概念和我们理解的匿名是不太一样的。这种类的创建通常会有一个宿主类，也就是第一个参数指定的类，这样一来，这个创建的类会使用这个宿主类的定义类加载器来加载这个类，最关键的一点是这个类被创建之后并不会丢到上述的SystemDictonary里，也就是说我们通过正常的类查找，比如Class.forName等api是无法去查到这个类是否被定义过的。因此过度使用这种api来创建这种类在一定程度上会带来一定的内存泄露；
 
-	jvm通过InvokeDynamic可以支持动态类型语言，这样一来其实我们可以提供一个类模板，在运行的时候加载一个类的时候先动态替换掉常量池中的某些内容，这样一来，同一个类文件，我们通过加载多次，并且传入不同的一些cpPatches，也就是defineAnonymousClass的第三个参数， 这样就能做到运行时产生不同的效果
+	jvm通过invokeDynamic可以支持动态类型语言，这样一来其实我们可以提供一个类模板，在运行的时候加载一个类的时候先动态替换掉常量池中的某些内容，这样一来，同一个类文件，我们通过加载多次，并且传入不同的一些cpPatches，也就是defineAnonymousClass的第三个参数， 这样就能做到运行时产生不同的效果
 	
 	```java
 	public static void main(String args[]) throws Throwable {

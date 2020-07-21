@@ -350,8 +350,7 @@ java [options] -jar filename [args]
 - `-XX:ConcGCThreads=threads` <br>
     设置支持并发GC的线程数。默认值依赖于给JVM的CPU数目
 
-- `-XX:+DisableExplicitGC` <br>
-    关闭显式GC调用，即关闭System.gc()。默认是可以调用的
+- `-XX:+DisableExplicitGC`：关闭显式GC调用，即关闭System.gc()。默认是可以调用的
 
 - `-XX:+ExplicitGCInvokesConcurrent` <br>
     支持通过System.gc()来做并发的GC。默认是不支持的。该参数一定要和-XX:+UseConcMarkSweepGC一起使用
@@ -473,6 +472,9 @@ java [options] -jar filename [args]
 
 - `-XX:GCLogFileSize=number`：处理大型日志文件，默认为512K
 
+## 4、线上参数配置
+
+java -Xmx4096m -Xms4096m -Xss256k -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=14 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:./logs/app_gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./logs/172.16.11.172.dump -jar /home/admin/application.jar -Ddubbo.application.qos.enable=false --spring.profiles.active=prod
 
 # 参考文章
 

@@ -1,3 +1,4 @@
+
 * www.mongodb.org, www.mongoing.com, mongod
 ## 1.关系型与非关系型数据库(NoSQL)
 	(1).关系型支持实时一致性,支持完整的事务,支持多表联合查询
@@ -8,6 +9,9 @@
 	(2).解压缩
 
 
+
+
+存储二进制数据用MongoDB的GridFS，不用MySQL
 
 
 

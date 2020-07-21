@@ -1155,6 +1155,17 @@ Code:
     14: invokevirtual #5                  // Method java/lang/Thread.start:()V
     17: return
 ...
+SourceFile: "LambdaDemo.java"
+InnerClasses:
+     static #6; //class com/blue/fish/se/basis/lambda/LambdaDemo$1
+     public static final #70= #69 of #72; //Lookup=class java/lang/invoke/MethodHandles$Lookup of class java/lang/invoke/MethodHandles
+BootstrapMethods:
+  0: #36 invokestatic java/lang/invoke/LambdaMetafactory.metafactory:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;Ljava/lang/invoke/MethodType;)Ljava/lang/invoke/CallSite;
+    Method arguments:
+      #37 ()V
+      #38 invokestatic com/blue/fish/se/basis/lambda/LambdaDemo.lambda$runThreadUseLambda$0:()V
+      #37 ()V
+
 ```
 对比上述两个方法，发现lambda的是`invokeDynamic`，而内部类的是`invokespecial`；
 
@@ -3828,14 +3839,14 @@ Jar 包的本质是将多个文件聚集为一个 ZIP 包，与传统的 ZIP 文
 ## 2、Jar包下META-INF作用
 
 很多 Jar 包包含一个 META-INF 目录，它用来存储包和扩展的配置数据（如安全性和版本信息），Java 平台会识别并解释 META-INF 目录下的文件来配置应用程序、扩展和类装载器。META-INF 目录包含的常见文件如下：
-- MANIFEST.MF：这个 manifest 文件定义了与扩展和包相关的数据（譬如 java -jar 命令执行的 MainClass 就在这里面指定）。
+- `MANIFEST.MF`：这个 manifest 文件定义了与扩展和包相关的数据（譬如 java -jar 命令执行的 MainClass 就在这里面指定）。
 - XXX.SF：这是 Jar 包的签名文件，其中 XXX 表示签名者。
 - XXX.DSA：这是与签名文件相关联的签名程序块文件，它存储了用于签名 Jar 文件的公共签名。
 
 ## 3、MANIFEST.MF 文件解析
 
 该文件包含了该Jar包的版本、创建人和类搜索路径等信息，当然如果是可执行Jar包，会包含Main-Class属性，表明Main方法入口，下面是从commons-io.jar下的MANIFEST.MF内容
-```
+```yml
 Manifest-Version: 1.0
 Export-Package: org.apache.commons.io;version="1.4.9999",org.apache.co
  mmons.io.comparator;version="1.4.9999",org.apache.commons.io.filefilt
@@ -3879,6 +3890,7 @@ Implementation-Build: tags/commons-io-2.5@r1739098; 2016-04-14 09:19:5
 Archiver-Version: Plexus Archiver
 
 ```
+
 ### 3.1、格式规则
 
 - 基本格式  属性名称：(空格)属性值 ;
@@ -3889,6 +3901,7 @@ Archiver-Version: Plexus Archiver
 ### 3.2、内容分类
 
 #### 3.2.1、一般属性
+
 - Manifest-Version：用来定义manifest文件的版本，例如：Manifest-Version: 1.0
 - Created-By：声明该文件的生成者，一般该属性是由jar命令行工具生成的，例如：Created-By: Apache Ant 1.5.3
 - Signature-Version：定义jar文件的签名版本
@@ -3936,18 +3949,19 @@ import java.util.jar.JarFile;
 import java.util.jar.Manifest;  
 publicclass ManifestUtil {  
     publicstaticvoid main(String[] args) throws Exception {  
-       JarFile jar=new JarFile(new File("F:\\workspace\\simplecd\\WebContent\\WEB-INF\\lib\\ant.jar"));  
-       Manifest manifest = jar.getManifest();  
-       Attributes mainAttributes = manifest.getMainAttributes();  
-       for(Map.Entry<Object, Object> attrEntry : mainAttributes.entrySet()){         System.out.println("main\t"+attrEntry.getKey()+"-->"+attrEntry.getValue());  
-       }  
-       Map<String, Attributes> entries = manifest.getEntries();  
-       for(Map.Entry<String, Attributes> entry : entries.entrySet()){  
-           Attributes values = entry.getValue();  
-           for(Map.Entry<Object, Object> attrEntry : values.entrySet()){  
-            System.out.println(attrEntry.getKey()+"-->"+attrEntry.getValue());  
-           }  
-       }  
+        JarFile jar = new JarFile(new File("out/artifacts/attacher/attacher.jar"));
+        Manifest manifest = jar.getManifest();
+        Attributes mainAttributes = manifest.getMainAttributes();
+        for (Map.Entry<Object, Object> attrEntry : mainAttributes.entrySet()) {
+            System.out.println("main\t" + attrEntry.getKey() + "-->" + attrEntry.getValue());
+        }
+        Map<String, Attributes> entries = manifest.getEntries();
+        for (Map.Entry<String, Attributes> entry : entries.entrySet()) {
+            Attributes values = entry.getValue();
+            for (Map.Entry<Object, Object> attrEntry : values.entrySet()) {
+                System.out.println(attrEntry.getKey() + "-->" + attrEntry.getValue());
+            }
+        }
     }  
 }  
 ```
@@ -3972,7 +3986,7 @@ publicclass ManifestUtil {
 	```java
 	package agent;
 	import java.lang.instrument.Instrumentation;
-	public class AgentBoot {
+	public class TestAgent {
 		/**
 		* 该方法在main方法之前运行，与main方法运行在同一个JVM中 并被同一个System ClassLoader装载
 		* 被统一的安全策略(security policy)和上下文(context)管理
@@ -3996,24 +4010,26 @@ publicclass ManifestUtil {
 - 在`MANIFEST.MF` 添加需要添加的数据：
 	```
 	Manifest-Version: 1.0
-	Premain-Class: agent.AgentBoot
+	Premain-Class: com.blue.fish.example.bytecode.jvmti.TestAgent
 	Can-Redefine-Classes: true
 	Can-Retransform-Classes: true
 	Boot-Class-Path: javassist-3.18.1-GA.jar
 	```
-- 打开：`File -> Project Structure`，找到`Artifacts`
+- 打开：`File -> Project Structure`，找到`Artifacts`，点击 `+` 添加操作，如下：
 
-	![](image/新建artifacts.png)
+	![](image/Artifacts-新建jar包.png)
 
 - 编辑该artifacts：
 
-	![](image/update-artifacts.png)
+	![](image/Artifacts-编辑jar包.png)
 
 - 指定`MainClass`
 
-	![](image/mainClass.png)
+	![](image/Artifacts-设置MainClass.png)
 
 - 选择 `Buile -> Build Artifacts`，弹出选择action，执行`build`
+
+	![](image/Artifacts-Build-action.png)
 
 ### 5.2、maven工程打包
 
