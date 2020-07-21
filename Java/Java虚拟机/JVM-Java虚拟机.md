@@ -180,7 +180,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 其并不是虚拟机运行时数据区的一部分，也不是Java虚拟机规范中定义的内存区域。它直接从操作系统中分配，因此不受Java堆大小的限制，但是会受到本机总内存的大小及处理器寻址空间的限制，因此它也可能导致 OutOfMemoryError 异常出现。
 
-在JAVA中，可以通过Unsafe和NIO包下的ByteBuffer（DirectBuffer）来操作堆外内存。
+在JAVA中，可以通过[Unsafe](../源码分析/Unsafe.md#2.1内存操作)和NIO包下的ByteBuffer（DirectBuffer）来操作堆外内存。
 
 最底层是通过malloc方法申请的，但是这块内存需要进行手动释放，JVM并不会进行回收，幸好Unsafe提供了另一个接口freeMemory可以对申请的堆外内存进行释放
 

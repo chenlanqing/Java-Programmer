@@ -89,16 +89,46 @@ JDK1.2以前，Java中的引用：如果reference类型的数据中存储的数�
 JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refefence）、软引用（Soft Refefence）、弱引用（Weak Refefence）、虚引用（Phantom Refefence），4种引用强度依次逐渐减弱
 - 强引用(Strong Refefence)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
 
-- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
+- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常，JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
+    ```java
+    Object o = new Object();
+    SoftReference<Object> softReference = new SoftReference<>(o);
+    ``` 
 
 - 弱引用(Weak Refefence)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakRefefence 类来实现弱引用；
+    ```java
+    Object o = new Object();
+    WeakReference<Object> weakReference = new WeakReference<>(o);
+    ```
 
-- 虚引用(Phantom Refefence)：幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomRefefence 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；
+- 虚引用(Phantom Refefence)：虚引用并不会决定对象的生命周期，幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomRefefence 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；当虚引用被加入到引用队列的时候，说明这个对象已经被回收，可以在所引用的对象回收之后可以采取必要的行动
+    ```java
+    Object o = new Object();
+    // 必须结合引用队列
+    ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
+    // 虚引用
+    PhantomReference<Object> phantomReference = new PhantomReference<>(o, referenceQueue);
+    ```
 
-- 引用队列：
-	- 无实际存储结构，存储逻辑依赖于内部节点之间的关系来表达；
-	- 存储关联的且被GC的软引用，弱引用以及虚引用；
-	- 进行垃圾回收之后，会将需要垃圾回收的软引用、弱引用、虚引用放入到引用队列
+关于引用队列：
+- 无实际存储结构，存储逻辑依赖于内部节点之间的关系来表达；
+- 存储关联的且被GC的软引用，弱引用以及虚引用；
+- 进行垃圾回收之后，会将需要垃圾回收的软引用、弱引用、虚引用放入到引用队列
+```java
+public static void main(String[] args) throws InterruptedException{
+    Object o = new Object();
+    ReferenceQueue<Object> referenceQueue = new ReferenceQueue<>();
+    WeakReference<Object> weakReference = new WeakReference<>(o,referenceQueue);
+    System.out.println(weakReference.get());
+    System.out.println(referenceQueue.poll());// o没有被回收时，队列为空
+
+    o = null;
+    System.gc();
+    Thread.sleep(500);
+    System.out.println(weakReference.get());//o==null
+    System.out.println(referenceQueue.poll());// o被回收以后，队列有值
+}
+```
 
 ## 4、对象的生存或死亡
 

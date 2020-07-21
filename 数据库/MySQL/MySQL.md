@@ -2525,7 +2525,7 @@ select_type -> 数据读取操作的操作类型
 		left join actor on fa.actor_id=actor.actor_id where first_name = 'sandra'；
 	+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
 	| id | select_type | table | type   | possible_keys          | key     | key_len | ref                   | rows | Extra                    |
-	+----+-------------+-------+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
+	+----+-------------+-------–+--------+------------------------+---------+---------+-----------------------+------+--------------------------+
 	|  1 | SIMPLE      | actor | ALL    | PRIMARY                | NULL    | NULL    | NULL                  |  200 | Using where              |
 	|  1 | SIMPLE      | fa    | ref    | PRIMARY，idx_fk_film_id | PRIMARY | 2       | sakila.actor.actor_id |   13 | Using where； Using index |
 	|  1 | SIMPLE      | film  | eq_ref | PRIMARY                | PRIMARY | 2       | sakila.fa.film_id     |    1 |                          |

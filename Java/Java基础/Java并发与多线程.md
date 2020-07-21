@@ -1553,7 +1553,7 @@ public class ParentThreadSharedDataWithSon {
 
 - 但是这些被动的预防措施并不能保证不会内存泄漏：
 	- 使用线程池的时候，这个线程执行任务结束，ThreadLocal 对象被回收了，线程放回线程池中不销毁，这个线程一直不被使用，导致内存泄漏;
-	- 分配使用了ThreadLocal又不再调用get()，set()，remove()方法，那么这个期间就会发生内存泄漏
+	- 分配使用了ThreadLocal又不再调用get()，set()，remove()方法，那么这个期间就会发生内存泄漏；
 
 #### 11.7.3、为什么使用弱引用
 
@@ -3742,11 +3742,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 
 [AbstractQueuedSynchronizer](../源码分析/thread/AbstractQueuedSynchronizer.md)
 
-## 2、CAS：Compare and Swap-比较与交换
+## 2、CAS
 
 ![](image/CAS.png)
 
 ### 2.1、什么是CAS
+
+什么是CAS？Compare and Swap-比较与交换
 
 cpu指令，在大多数处理器架构，包括 IA32，Space 中采用的都是 CAS 指令.
 
@@ -3831,24 +3833,6 @@ CPU提供了两种方法来实现多处理器的原子操作：总线加锁或�
 	- Ⅰ、确保对内存的`读-改-写`操作原子执行
 	- Ⅱ、禁止该指令与之前和之后的读和写指令重排序
 	- Ⅲ、把写缓冲区中的所有数据刷新到内存中
-
-Unsafe在JDK11无法直接使用：sun.misc.Unsafe，需要在 源码包中新建文件： module-info.java，该文件内容如下：
-```java
-module unsafe{
-    requires jdk.unsupported;
-}
-// 最终目录结构是：
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   ├── com
-│   │   │   │   └── blue
-│   │   │   │       └── fish
-│   │   │   │           └── example
-│   │   │   │               ├── ExampleApplication.java
-│   │   │   └── module-info.java
-```
-
 
 ### 2.3、CAS 使用场景
 

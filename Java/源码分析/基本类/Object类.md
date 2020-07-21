@@ -303,30 +303,33 @@ class Employee {
 
 finalize()方法不会被调用第二次；finalize()方法对于虚拟机来说不是轻量级的程序;
 
-- 4.1、用途： 
+## 4.1、用途
 
-	finalize()方法可以被子类对象所覆盖，然后作为一个终结者，当GC被调用的时候完成最后的清理工作(例如释放系统资源之类)；这就是终止。默认的finalize()方法什么也不做，当被调用时直接返回;
+finalize()方法可以被子类对象所覆盖，然后作为一个终结者，当GC被调用的时候完成最后的清理工作(例如释放系统资源之类)；这就是终止。默认的finalize()方法什么也不做，当被调用时直接返回;
 
-- 4.2、避免使用finalize()方法：
+## 4.2、避免使用finalize()方法
 
 	相对于其他JVM实现，终结器被调用的情况较少——可能是因为终结器线程的优先级别较低的原因。如果你依靠终结器来关闭文件或者其他系统资源，可能会将资源耗尽，当程序试图打开一个新的文件或者新的系统资源的时候可能会崩溃，就因为这个缓慢的终结器
 	
-- 4.3、finalize()方法可以作为一个安全保障，以防止声明的终结方法未被调用	
+## 4.3、用途
 
-	如何实现finalize()方法：子类终结器一般会通过调用父类的终结器来实现	
-	```java
-	@Override
-	protected void finalize() throws Throwable{
-		try{
-			// Finalize the subclass state.
-			// ...
-		}
-		finally{
-			super.finalize();
-		}
+finalize()方法可以作为一个安全保障，以防止声明的终结方法未被调用	
+
+如何实现finalize()方法：子类终结器一般会通过调用父类的终结器来实现	
+```java
+@Override
+protected void finalize() throws Throwable{
+	try{
+		// Finalize the subclass state.
+		// ...
 	}
-	```
-- 4.4、finalize方法存在问题
+	finally{
+		super.finalize();
+	}
+}
+```
+
+## 4.4、finalize方法存在问题
 
 不建议使用finalize，在Java9甚至将该方法标记为deprecated，如果没有特殊原因，不要实现finalize方法，为什么？因为无法保证finalize什么时候执行，执行的是否符合预期。使用不当会影响性能，导致程序死锁、挂起
 
@@ -359,11 +362,59 @@ private void runFinalizer(JavaLangAccess jla) {
 }
 ```
 
-- 4.5、finalize的替代机制
+## 4.5、finalize的替代机制
 
 Java平台目前正在使用Cleaner来替换掉原来的finalize实现。Cleaner实现利用了幻象引用，这是一种常见所谓post-mortem清理机制。
 
 吸取finalize的教训，每个Cleaner的操作都是独立的，它有自己的运行线程，可以避免死锁；
+
+## 4.6、finalize与C++的析构函数
+
+- C++的析构函数调用时确认的；而finalize调用是不确定的；
+- 将未被引用的对象放入到F-Queue队列中；
+- 方法执行随时可能被终止；
+- finalize是给与对象最后一次重生的机会； 
+
+```java
+/**
+ * 1、对象可在被GC时自我拯救；
+ * 2、这种自救的机会只有一次，因为一个对象的 finalize 方法最大只会被系统调用一次
+ */
+public class FinalizeEscapeGC {
+    public static FinalizeEscapeGC SAVE_HOOK = null;
+    public void isAlive() {
+        System.out.println("yes i am still alive");
+    }
+    @Override
+    protected void finalize() throws Throwable {
+        super.finalize();
+        System.out.println("finalize method executed");
+        SAVE_HOOK = this;
+    }
+    public static void main(String[] args) throws Throwable {
+        SAVE_HOOK = new FinalizeEscapeGC();
+        // 对象第一次自我拯救
+        SAVE_HOOK = null;
+        System.gc();
+        // 因为 finalize 优先级很低，暂停0.5s，以等待
+        Thread.sleep(500);
+        if (SAVE_HOOK != null) {
+            SAVE_HOOK.isAlive();
+        } else {
+            System.out.println("Oh, i adm dead:(");
+        }
+        SAVE_HOOK=null;
+        System.gc();
+        // 因为 finalize 优先级很低，暂停0.5s，以等待
+        Thread.sleep(500);
+        if (SAVE_HOOK != null) {
+            SAVE_HOOK.isAlive();
+        } else {
+            System.out.println("Oh, i adm dead:(");
+        }
+    }
+}
+```
 
 # 5、toString()方法：
 
