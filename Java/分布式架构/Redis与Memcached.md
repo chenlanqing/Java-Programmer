@@ -1627,6 +1627,7 @@ Lettuce是一个高性能基于Java编写的Redis驱动框架，底层集成了P
 **Redis的版本至少需要2.6**
 
 - [Lettuce介绍](https://mp.weixin.qq.com/s/1O9qT3rPDHGlNV9D-64bow)
+- [Lettuce使用](https://juejin.im/post/5d8eb73ff265da5ba5329c66#heading-21)
 
 ### 3.2、
 

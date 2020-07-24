@@ -302,9 +302,11 @@ java [options] -jar filename [args]
 
 - `-XX:MaxTenuringThreshold=threshold`：设置在自适应GC大小的使用占有最大阈值，默认对于parallel（throughput）的是15，对于CMS的是6
 
-- `-XX:MinHeapFreeRatio=percent`：设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
+- `-XX:MinHeapFreeRatio=percent`：设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代；`Xminf`和`MinHeapFreeRatio`是等价的，如`-Xminf0.4`等价于`-XX:MinHeapFreeRatio=40`
 
-- `-XX:MaxHeapFreeRatio=percent`：设置在一次GC后最大的堆空闲空间占比。如果空闲堆空间超过这个值，堆空间会被收缩。默认是70%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代
+- `-XX:MaxHeapFreeRatio=percent`：设置在一次GC后最大的堆空闲空间占比。如果空闲堆空间超过这个值，堆空间会被收缩。默认是70%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代；`Xmaxf`和`MaxHeapFreeRatio`是等价的，如`-Xmaxf0.7`等价于`-XX:MaxHeapFreeRatio=70`
+
+- `-XX:MinHeapDeltaBytes`：表示当我们要扩容或者缩容的时候，决定是否要做或者尝试扩容的时候最小扩多少，默认为192K；
 
 - `-XX:+ShrinkHeapInSteps`：是否要逐步地根据`–XX:MaxHeapFreeRatio`的设置，减少分配的堆内存。默认情况下启用该选项，如禁用该参数，那么将会在下一个Full GC时将Java堆直接减少到目标大小，而无需在多个GC周期中“逐步”减少。因此，如果想要让使用的堆内存尽量小，可禁用此选项。
 
@@ -339,7 +341,9 @@ java [options] -jar filename [args]
     设置一个时间百分比，用来加权并发回收统计的指数平均的样本。默认是25%
 
 - `-XX:CMSInitiatingOccupancyFraction=percent` <br>
-    设置一个年老代的占比，达到多少会触发CMS回收。默认是-1，任何一个负值的设定都表示了用-XX:CMSTriggerRatio来做真实的初始化值。设置方法如下：`-XX:CMSInitiatingOccupancyFraction=20`
+    设置一个年老代的占比，达到多少会触发CMS回收。默认是92%，任何一个负值的设定都表示了用-XX:CMSTriggerRatio来做真实的初始化值。设置方法如下：`-XX:CMSInitiatingOccupancyFraction=20`；CMS GC下如果没有指定老生代固定使用率触发CMS GC的阈值，那么MinHeapFreeRatio配合CMSTriggerRatio(默认80)参数会计算出触发CMS GC的老生代使用率阈值，具体算法是`((100 -MinHeapFreeRatio) + CMSTriggerRatio* MinHeapFreeRatio) / 100.0)  / 100.0`
+
+    比如 MinHeapFreeRatio 默认是 40， CMSTriggerRatio 默认是 80，那么 `((100-40) + 80*40/100))/100 = 92%`
 
 - `-XX:+CMSScavengeBeforeRemark` <br>
     开启功能在CMSremark前进行Scavenge。默认是关闭的

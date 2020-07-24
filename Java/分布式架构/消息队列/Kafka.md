@@ -1,4 +1,3 @@
-
 ## 1、核心概念
 
 ### 1.1、主要特点
@@ -17,12 +16,14 @@ Kafka是分布式发布-订阅消息系统。它最初由LinkedIn公司开发，
 Kafka的整体架构非常简单，是显式分布式架构，producer、broker（kafka）和consumer都可以有多个。Producer，consumer实现Kafka注册的接口，数据从producer发送到broker，broker承担一个中间缓存和分发的作用。broker分发注册到系统中的consumer。broker的作用类似于缓存，即活跃的数据和离线处理系统之间的缓存。客户端和服务器端的通信，是基于简单，高性能，且与编程语言无关的TCP协议。
 
 基本概念：
-- Topic：特指Kafka处理的消息源（feeds of messages）的不同分类。
-- Partition：Topic物理上的分组，一个topic可以分为多个partition，每个partition是一个有序的队列。partition中的每条消息都会被分配一个有序的id（offset）。
 - Message：消息，是通信的基本单位，每个producer可以向一个topic（主题）发布一些消息。
 - Producers：消息和数据生产者，向Kafka的一个topic发布消息的过程叫做producers。
 - Consumers：消息和数据消费者，订阅topics并处理其发布的消息的过程叫做consumers。
-- Broker：缓存代理，Kafka集群中的一台或多台服务器统称为broker。
+- Consumer Group (CG)：消费者组，由多个 consumer 组成。消费者组内每个消费者负 责消费不同分区的数据，一个分区只能由一个组内消费者消费;消费者组之间互不影响。所有的消费者都属于某个消费者组，即消费者组是逻辑上的一个订阅者
+- Broker：缓存代理，Kafka集群中的一台或多台服务器统称为broker。一台 kafka 服务器就是一个 broker。一个集群由多个 broker 组成。一个 broker 可以容纳多个 topic；
+- Topic：特指Kafka处理的消息源（feeds of messages）的不同分类。
+- Partition：Topic物理上的分组，一个topic可以分为多个partition，每个partition是一个有序的队列。partition中的每条消息都会被分配一个有序的id（offset）。
+- Replica:副本，为保证集群中的某个节点发生故障时，该节点上的 partition 数据不丢失，且 kafka 仍然能够继续工作，kafka 提供了副本机制，一个 topic 的每个分区都有若干个副本， 一个 leader 和若干个 follower
 
 **发送消息的流程：**
 - Producer根据指定的partition方法（round-robin、hash等），将消息发布到指定topic的partition里面
