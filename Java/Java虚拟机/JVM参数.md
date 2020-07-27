@@ -235,7 +235,7 @@ java [options] -jar filename [args]
 
 **代码缓存（Code Cache）:**
 
-- `-XX:InitialCodeCacheSize=size`：初始化的code cache的大小，默认500KB。这个值应该不小于系统最小内存页的大小；
+- `-XX:InitialCodeCacheSize=size`：初始化的`code cache`的大小，默认500KB。这个值应该不小于系统最小内存页的大小；
 
 - `-XX:ReservedCodeCacheSize=size`：设置为了JIT编译代码的最大代码cache大小。这个设置默认是`240MB`，如果关掉了tiered编译，则大小是48MB。这个设置必须比初始化的`-XX:InitialCodeCacheSize=size`设置值大；
 
@@ -326,13 +326,10 @@ java [options] -jar filename [args]
 
 - `-XX:TLABWasteTargetPercent`：允许TLAB占用Eden空间百分比，默认是 1
 
-
-
 - `-XX:+AggressiveHeap` <br>
     java堆内存优化。默认是关闭的，如果开启后，针对一些长时间运行的且有密集的内存分配操作，JVM根据系统cpu和内存的配置参数来进行优化
 
-- `-XX:+AlwaysPreTouch` <br>
-    支持在JVM启动时touch每一页，这样做会导致每页都会进入内存。可以用来模拟测试长时间运行的任务，将虚拟内存全部映射到物理内存。默认是关闭的
+- `-XX:+AlwaysPreTouch`：支持在JVM启动时touch每一页，这样做会导致每页都会进入内存。可以用来模拟测试长时间运行的任务，将虚拟内存全部映射到物理内存。默认是关闭的
 
 - `-XX:+CMSClassUnloadingEnabled` <br>
     支持CMS垃圾回收下的类卸载。默认是开启的。
@@ -362,8 +359,7 @@ java [options] -jar filename [args]
 - `-XX:+ExplicitGCInvokesConcurrentAndUnloadsClasses` <br>
     支持通过System.gc()来做并发的GC并且卸载类。默认是不支持的。该参数一定要和-XX:+UseConcMarkSweepGC一起使用
 
-- `-XX:G1HeapRegionSize=size` <br>
-    设置在使用G1收集器时Java堆被划分为子区域的大小。在1MB到32MB之间，默认会根据Java堆的大小自动检测
+- `-XX:G1HeapRegionSize=size`：设置在使用G1收集器时Java堆被划分为子区域的大小。在1MB到32MB之间，默认会根据Java堆的大小自动检测
 
 - `-XX:+G1PrintHeapRegions` <br>
     打印出哪些region是被分配的，哪些是被G1取回的。默认是关闭打印的

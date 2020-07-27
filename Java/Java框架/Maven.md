@@ -203,6 +203,9 @@ Maven的最近依赖策略：如果一个项目依赖相同的groupId、artifact
 
 # 八、编写Maven插件
 
+* [Maven插件开发指南](https://maven.apache.org/plugin-developers/index.html)
+* [Maven插件官方文档](http://maven.apache.org/plugins/index.html)
+
 ## 1、常用的maven插件
 
 ### 1.1、maven-antrun-plugin
@@ -338,7 +341,124 @@ mvn versions:set -DnewVersion=1.0.1
 
 # 十、Maven私服仓库搭建
 
-# 十一、常用Maven依赖
+# 十一、Maven运行web项目
+
+## 1、idea运行maven项目
+
+- 创建maven项目，项目结构如下：
+	```
+	├── pom.xml
+	├── src
+	│   ├── main
+	│   │   ├── java
+	│   │   │   └── com
+	│   │   │       └── blue
+	│   │   │           └── fish
+	│   │   │               ├── HelloServlet.java
+	│   │   ├── resources
+	│   │   │   └── log4j.properties
+	│   └── test
+	│       └── java
+	```
+	HelloServlet.java：
+	```java
+	@WebServlet("/hello")
+	public class HelloServlet extends HttpServlet {
+		@Override
+		public  void init(){
+			System.out.println("初始化Servlet ...");
+		}
+		@Override
+		protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+			String name = "webservlet";
+			log.debug("name is " + name);
+			req.setAttribute("name", name);
+			req.getRequestDispatcher("/WEB-INF/jsp/hello.jsp").forward(req, resp);
+		}
+		@Override
+		public  void destroy(){
+			System.out.println("Destroy...");
+		}
+	}
+	```
+
+- 添加依赖：
+	```xml
+	<!-- 注意打包类型选择：war -->
+	<packaging>war</packaging>
+	<properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <dependencies>
+        <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>4.0.1</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet.jsp</groupId>
+            <artifactId>javax.servlet.jsp-api</artifactId>
+            <version>2.3.3</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+    <build>
+        <finalName>custom-framework</finalName>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>3.8.1</version>
+                    <configuration>
+                        <source>8</source>
+                        <target>8</target>
+                    </configuration>
+                </plugin>
+                <plugin>
+					<!-- 内嵌tomcat，该插件只兼容到tomcat7 -->
+                    <groupId>org.apache.tomcat.maven</groupId>
+                    <artifactId>tomcat7-maven-plugin</artifactId>
+                    <version>2.2</version>
+                    <configuration>
+                        <path>/${project.artifactId}</path>
+                        <systemProperties>
+                            <java.util.logging.SimpleFormatter.format>%1$tT %3$s %5$s %n</java.util.logging.SimpleFormatter.format>
+                        </systemProperties>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+	```
+- 添加webapp目录，最终目录结构如下；在servlet3.0之后，可以不用web.xml来配置，使用注解可以替代
+	```
+	├── pom.xml
+	├── src
+	│   ├── main
+	│   │   ├── java
+	│   │   │   └── com
+	│   │   │       └── blue
+	│   │   │           └── fish
+	│   │   │               ├── HelloServlet.java
+	│   │   ├── resources
+	│   │   │   └── log4j.properties
+	│   │   └── webapp
+	│   │       ├── WEB-INF
+	│   │       │   └── jsp
+	│   │       │       └── hello.jsp
+	│   │       ├── static
+	│   │       └── templates
+	│   └── test
+	│       └── java
+	```
+- 运行项目，在idea中如下操作：
+
+	![](image/maven-运行web项目.png)
+
+# 十二、常用Maven依赖
 
 ## 1、Hutool
 
@@ -357,8 +477,7 @@ XSS防御工具类
 # 参考资料
 
 * [Maven工程](https://www.jianshu.com/p/34740cd1fb58)
-* [Maven插件开发指南](https://maven.apache.org/plugin-developers/index.html)
-* [Maven插件官方文档](http://maven.apache.org/plugins/index.html)
+
 
 
 
