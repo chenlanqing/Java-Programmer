@@ -2047,7 +2047,7 @@ sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192
 
 ## 2、索引分类
 
-- 普通索引(它没有任何限制) ，如单值索引-一个索引只包含一个列
+- 普通索引(它没有任何限制) ，如单值索引-一个索引只包含一个列；
 - 唯一性索引(索引列的值必须唯一，但允许有空值) 
 - 主键索引(一种特殊的唯一索引，不允许有空值。一般是在建表的时候同时创建主键索引) 
 - 组合索引：最左匹配原则，一般是
@@ -2161,11 +2161,13 @@ MySQL中，只有 InnoDB 的表是按照主键方式创建的索引组织表，�
 
  *等值查询。哈希索引具有绝对优势（前提是：没有大量重复键值，如果大量重复键值时，哈希索引的效率很低，因为存在所谓的哈希碰撞问题。）*
 
- InnoDB有一个特殊的功能是：自适应哈希索引，当InnoDB注意到某些索引被使用得非常频繁时，会在内存中基于B-Tree索引之上再创建一个Hash索引，提高查找效率；
+ InnoDB有一个特殊的功能是：自适应哈希索引，当InnoDB注意到某些索引被使用得非常频繁时，会在内存中基于B-Tree索引之上再创建一个Hash索引，提高查找效率；无法直接创建，可以通过参数`innodb_adaptive_hash_index` 查看开关情况；
 
 #### 9.1.3、空间索引(R-树)索引
 
-MyISAM支持空间索引，主要用于GIS中空间数据的存储，但是MySQL的空间索引支持并不好，现在多使用PostgreSQL
+MyISAM支持空间索引，主要用于GIS中空间数据的存储，但是MySQL的空间索引支持并不好，现在多使用PostgreSQL。
+
+从5.7开始InnoDB支持空间索引；
 
 #### 9.1.4、全文索引(Full-text)索引
 
@@ -2198,15 +2200,15 @@ MyISAM支持空间索引，主要用于GIS中空间数据的存储，但是MySQL
 - B树的删除：
 - B树主要应用于文件系统以及部分数据库索引，如非关系型数据库 MongoDB
 
-### 9.3、B+树-基于B-树的一种变体
+### 9.3、B+树-基于B-Tree的一种变体
 
 InnoDB存储引擎中索引使用的B+树
 
 #### 9.3.1、一个m阶的B+树具有如下几个特征
 
-- 有k个子树的中间节点包含有k个元素(B树中是k-1个元素)每个元素不保存数据，只用来索引，所有数据都保存在叶子节点.
-- 所有的叶子结点中包含了全部元素的信息，及指向含这些元素记录的指针，且叶子结点本身依关键字的大小自小而大顺序链接.
-- 所有的中间节点元素都同时存在于子节点，在子节点元素中是最大(或最小)元素.
+- 有k个子树的中间节点包含有k个元素(B树中是k-1个元素)每个元素不保存数据，只用来索引，所有数据都保存在叶子节点；
+- 所有的叶子结点中包含了全部元素的信息，及指向含这些元素记录的指针，且叶子结点本身依关键字的大小自小而大顺序链接；
+- 所有的中间节点元素都同时存在于子节点，在子节点元素中是最大(或最小)元素；
 
 在图片中，根节点元素8是子节点2，5，8的最大元素，也是叶子节点6，8的最大元素根节点的最大元素等同于整个B+树的最大元素，无论插入删除多少元素，始终保持最大元素在根节点中.
 
@@ -2242,6 +2244,15 @@ B+树还有一个在索引外的特点，却是至关重要的特点，卫星数
 - 哈希索引就是采用一定的哈希算法，把键值换算成新的哈希值，检索时不需要类似B+树那样从根节点到叶子节点逐级查找，只需一次哈希算法即可,是无序的；
 
 #### 9.3.4、Btree怎么分裂的，什么时候分裂，为什么是平衡的
+
+#### 9.3.5、存储引擎在B+Tree中存储方式
+
+**InnoDB存储方式：**
+- 主键索引：叶子节点存储主键及数据；
+- 非主键索引：叶子节点存储索引和主键；
+
+**MyISAM存储方式**
+- 主键/非主键索引的叶子节点都是存储指向数据块的指针，也就是数据和索引是分开来存储的
 
 ### 9.4、稀疏索引与密集索引（聚簇索引）
 
@@ -2366,19 +2377,23 @@ insert into T values(100,1, 'aa'),(200,2,'bb'),(300,3,'cc'),(500,5,'ee'),(600,6,
 - 对多个索引做联合操作时（通常是多个or条件）：查询SELECT * FROM TB1 WHERE c1="xxx" OR c2=""xxx"时，如果c1和c2列上分别有索引，可以按照c1和c2条件进行查询，再将查询结果合并（union）操作，得到最终结果；
 - 对AND和OR组合语句求结果；
 
-如果在explain中出现索引合并（index_merge），需要检查下表的结构，是不是最优的；也可以通过参数 optimizer_switch 来关闭索引合并功能，也可以使用ingore index提示让优化器忽略掉某些索引；
+如果SQL存在多个条件，多个单列索引，会使用索引合并，如果出现索引合并，说明索引不够合理，需要检查下表的结构，是不是最优的；也可以通过参数 optimizer_switch 来关闭索引合并功能，也可以使用ingore index提示让优化器忽略掉某些索引；
 
-## 12、如何创建索引
+### 11.4、前缀索引
 
-### 12.1、字符串字段如何创建索引
-
-可以使用前缀索引，定义好长度，就可以做到既节省空间，又不用增加太多的查询成本，比如：
+长字符串字段如何创建索引？可以使用前缀索引，定义好长度，就可以做到既节省空间，又不用增加太多的查询成本，比如：
 ```sql
 -- 创建的索引里，每个记录都是只取前6个字节
 alter table SUser add index index2(email(6));
 ```
 
+- 列类型为char，varchar，binary，varbinary可以创建前缀索引；
+- 前缀限制是以字节为单位的，但是在create table，alter table，create index语句中索引指定的前缀长度的值为：非二进制类型的（cahr varchar，text）的字符串数据量、二进制类型的（binary，varbinary，blob）的字节数量。当用多字节字符串集为非二进制字符串列创建前缀索引长度时，需要考虑这一点；
+- 是否支持前缀索引和前缀的长度跟存储引擎有关系。例如，innodb引擎表前缀索引支持767字节长度，如果开启`innodb_large_prefix`参数，支持3072字节长度。myisam存储引擎表，前缀长度为1000字节。NDB引擎不支持前缀索引
+
 **如何确定应该使用多长的前缀：**
+
+在数据增长不是很快的表，可以通过以下方式来计算出合适的前缀索引的选择长度值：`SELECT COUNT(DISTINCT index_column)/COUNT(*) FROM table_name;`
 
 在建立索引时，关注的是区分度，区分度越高越好。因为区分度越高，意味着重复的键值越少，可以通过下列语句算出该列上有多少个不同的值：
 ```sql
@@ -2405,11 +2420,13 @@ from SUser;
 	mysql> alter table t add id_card_crc int unsigned, add index(id_card_crc);
 	```
 
-但是使用前缀所以无法做Group By 和Order By，也无法使用前缀索引做覆盖扫描；
+**但是使用前缀所以无法做Group By 和Order By，也无法使用前缀索引做覆盖扫描；**
 
-### 12.2、后缀索引
+### 11.5、后缀索引
 
-有时候后缀索引也有用途（例如找某个域名的所有电子遇见地址），mysql原生并不支持反向索引，但是可以把字符串反转后存储，并基于此建立前缀索引。可以通过触发器来维护这种索引；
+有时候后缀索引也有用途（例如找某个域名的所有电子遇见地址），mysql原生并不支持反向索引，但是可以把字符串反转后存储，并基于此建立前缀索引或者说是使用额外的字段来存储反转的字符串。可以通过触发器来维护这种索引；
+
+### 11.6、重复索引
 
 # 十七、数据库优化
 
@@ -2458,66 +2475,235 @@ from SUser;
 - 应用层面上
 	- 切分查询：比如业务上有一个复杂的查询，可能涉及到几张表，那么在应用层面上可以将查询拆分为单表查询；
 
-## 4、慢查询日志包含的内容
+## 4、慢查询日志
 
-使用MySQL慢查询日志对有效率问题的SQL进行监控
-```sql
-show variables like '%slow_queries%%'; -- 查看慢sql的条数
-show variables	like 'slow_query_log';
+### 4.1、慢查询日志参数
 
-set global slow_query_log_file='/home/mysql/sql_log/mysql_slow_log'; -- 慢查询日志存储的硬盘位置
-set global log_queries_not_using_indexes=on; -- 是否将未使用索引的sql记录到慢查询日志中
-set global long_query_time=1; --将超过多少秒的sql记录到慢查询日志中，需要重新连接数据库服务器
-```
-慢日志的信息：
-```
-# Time: 2020-06-06T09:18:09.015669Z
-# User@Host: root[root] @ localhost []  Id:   626
-# Query_time: 0.000231  Lock_time: 0.000103 Rows_sent: 3  Rows_examined: 3
-SET timestamp=1591435089;
-select * from customer_login_log;
-```
-- SQL开始执行的时间戳
-	```
-	# SET timestamp=1460268587;
-	```
-- 执行SQL的主机信息：
-	```
-	# User@Host： root[root] @ localhost [127.0.0.1]
-	```
-- SQL的执行详细信息：
-	```
-	# Query_time： 0.002000  Lock_time： 0.001000 Rows_sent： 2  Rows_examined： 2
-	```
-- SQL的详细内容
+参数 |	作用 |	默认值
+-----|------| ------
+log_output|	日志输出到哪儿，默认FILE，表示文件；设置成TABLE，则将日志记录到mysql.slow_log中。也可设置多种格式，比如 FILE,TABLE|	FILE
+long_query_time	|执行时间超过这么久才记录到慢查询日志，单位秒，可使用小数表示小于秒的时间	|10
+log_queries_not_using_indexes	|是否要将未使用索引的SQL记录到慢查询日志中，此配置会无视long_query_time的的配置。生产环境建议关闭；开发环境建议开启。	|OFF
+log_throttle_queries_not_using_indexes|	和log_queries_not_using_indexes配合使用，如果log_queries_not_using_indexes打开，则该参数将限制每分钟写入的、未使用索引的SQL数量。	|0
+min_examined_row_limit|	扫描行数至少达到这么多才记录到慢查询日志|	0
+log_slow_admin_statements	|是否要记录管理语句，默认关闭。管理语句包括ALTER TABLE, ANALYZE TABLE, CHECK TABLE, CREATE INDEX, DROP INDEX, OPTIMIZE TABLE, and REPAIR TABLE。	|OFF
+slow_query_log_file	|指定慢查询日志文件路径	|/var路径
+log_slow_slave_statements	|该参数在从库上设置，决定是否记录在复制过程中超过long_query_time的SQL。如果binlog格式是row，则该参数无效|	OFF
+log_slow_extra|	当log_output=FILE时，是否要记录额外信息（MySQL 8.0.14开始提供），对log_output=TABLE的结果无影响。	|OFF
 
-## 5、慢查询日志分析查看
+**使用方式:**
+- 修改配置文件my.cnf，在[mysqld]段落中加入如上参数即可
+	```
+	[mysqld]
+	# ...
+	log_output = 'FILE,TABLE';
+	slow_query_log = ON
+	long_query_time = 0.001
+	```
+	配置完，重启mysql服务器
+- 通过全局变量设置：这种方式无需重启即可生效，但一旦重启，配置又会丢失。
+	```sql
+	set global log_output = 'FILE,TABLE';-- 输出到文件并存储到mysql.slow_log表中
+	set global slow_query_log = 'ON';
+	set global slow_query_log_file='/home/mysql/sql_log/mysql_slow_log'; -- 慢查询日志存储的硬盘位置
+	set global log_queries_not_using_indexes=on; -- 是否将未使用索引的sql记录到慢查询日志中
+	set global long_query_time =0.001;-- 将超过多少秒的sql记录到慢查询日志中，需要重新连接数据库服务器，切换session
+	```
+	设置之后，就会将慢查询日志同时记录到文件以及mysql.slow_log表中
 
-- mysqldumpslow 
-- pt-query-digest 工具
-- 如何发现 SQL 存在问题：
-	- 查询次数多且每次查询占用时间长的SQL，通常为pt-query-digest分析的前几个查询
-	- IO大的SQL；注意pt-query-digest分析中的rows examine
-	- 未命中索引的SQL：注意pt-query-digest分钟中的rows examine和rows send 的对比
+### 4.2、分析慢查询
 
-## 6、分析SQL查询
+#### 4.2.2、慢查询表
+
+当log_output = TABLE时，可直接用如下语句分析：`select * from mysql.slow_log`
+
+#### 4.2.2、慢查询日志
+
+- （1）慢查询日志是 MySQL提供的一种日志记录，用来记录在mysql中响应时间超过阀值的语句，具体指运行的时间超过 long_query_time 值的sql则会被记录到慢查询日志中。long_query_time 默认值为 10，意思是指运行时间超过10秒的sql
+
+- （2）如何设置：
+	- 默认情况下，MySQL数据库没有开启慢查询日志，需要手动设置该参数。当然，如果不是在调优的情况下，一般不建议开启该参数.因为其对性能会带来一定影响.
+	- 查看是否开启：
+		```
+		show variables like '%slow_query_log%'
+		mysql> show variables like 'slow_query_log%'；
+		+---------------------+-----------------------------------------------------------------+
+		| Variable_name       | Value                                                           |
+		+---------------------+-----------------------------------------------------------------+
+		| slow_query_log      | OFF                                                             |
+		| slow_query_log_file | C：\ProgramData\MySQL\MySQL Server 5.5\Data\BlueFish-PC-slow.log |
+		+---------------------+-----------------------------------------------------------------+
+		```
+		slow_query_log OFF 表示关闭
+
+		slow_query_log_file ==> 表示慢查询日志文件位置
+
+	- 开启慢查询日志：
+
+		```set global slow_query_log=1```，只对当前数据库有效。如果 mysql 重启后会失效，如果需要永久生效，需要修改配置文件，在相应的配置文件中增加或修改如下配置：
+		```
+		slow_query_log=1
+		slow_query_log_file=/var/lib/mysql/mysql-slow.log
+		```
+		然后重启mysql服务器。
+
+		如果没有指定慢查询日志文件的存放路径，系统默认会给一个缺省路径 host_name-slow.log
+
+	- 什么样的sql会被认为是慢查询sql的：主要有参数 long_query_time 来控制，默认情况下是 10s；查看参数 long_query_time 的设置：
+		```
+		mysql> show variables like '%long_query_time%'；
+		+-----------------+-----------+
+		| Variable_name   | Value     |
+		+-----------------+-----------+
+		| long_query_time | 10.000000 |
+		+-----------------+-----------+
+		```
+		在mysql源码里是判断大于 long_query_time，而非大于等于的.
+
+	- 设置慢sql查询：
+		```
+		set global long_query_time=3
+		```
+		一般在一个会话中设置之后查看不出来，需要重新连接或者重新打开一个会话或者使用 global 来查看：
+		```
+		mysql> set global long_query_time=3；
+		mysql> show variables like '%long_query_time%'；
+		+-----------------+-----------+
+		| Variable_name   | Value     |
+		+-----------------+-----------+
+		| long_query_time | 10.000000 |
+		+-----------------+-----------+
+		mysql> show global variables like '%long_query_time%'；
+		+-----------------+----------+
+		| Variable_name   | Value    |
+		+-----------------+----------+
+		| long_query_time | 3.000000 |
+		+-----------------+----------+
+		```
+	- 在配置文件中配置上述慢查询日志开关：
+		```
+		slow_query_log=1
+		slow_query_log_file=/var/lib/mysql/mysql-slow.log
+		long_query_time=3
+		log_output=FILE
+		```
+- （3）慢查询日志分析工具：mysqldumpslow-mysql提供的日志分析工具
+	- 查看帮助信息：`mysqldumpslow --help`
+		```sql
+		➜ mysqldumpslow --help
+		Usage: mysqldumpslow [ OPTS... ] [ LOGS... ]
+
+		Parse and summarize the MySQL slow query log. Options are
+
+		--verbose    verbose
+		--debug      debug
+		--help       write this text to standard output
+
+		-v           展示更详细的信息
+		-d           debug
+		-s ORDER     以哪种方式排序，默认at
+						al: 平均锁定时间
+						ar: 平均返回记录数
+						at: 平均查询时间
+						c: 访问计数
+						l: 锁定时间
+						r: 返回记录
+						t: 查询时间
+		-r           将-s的排序倒序
+		-t NUM       top n的意思，展示最前面的几条
+		-a           不去将数字展示成N，将字符串展示成'S'
+		-n NUM       abstract numbers with at least n digits within names
+		-g PATTERN   后边可以写一个正则，只有符合正则的行会展示
+		-h HOSTNAME  慢查询日志以 主机名-slow.log的格式命名，-h可指定读取指定主机名的慢查询日志，默认情况下是*，读取所有的慢查询日志
+		-i NAME      MySQL Server的实例名称（如果使用了mysql.server startup脚本的话）
+		-l           不将锁定时间从总时间中减去
+
+		# 得到返回记录集最多的10条SQL
+		mysqldumpslow -s r -t 10 /var/lib/mysql/8945073c23e0-slow.log
+
+		# 得到按照查询时间排序，并且带有left join的10条SQL
+		mysqldumpslow -s t -t 10 -g “left join” /var/lib/mysql/8945073c23e0-slow.log
+		```
+	- 常用参考：
+		- 得到返回记录集最多的10个sql：```mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log```
+		- 得到访问次数最多的10个SQL：```mysqldumpslow -s c -t 10 /var/lib/mysql/mysql-slow.log```
+		- 得到按照时间排序的前10条里面含有左连接的查询语句：```mysqldumpslow -s t -t 10 -g "left join" /var/lib/mysql/mysql-slow.log```
+		- 建议在使用这些命令时集合 | 或者 more 使用，否则可能出现爆屏现象：```mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log | more```
+
+- （4）慢查询日志内容
+	```
+	# Time: 2020-06-06T09:18:09.015669Z
+	# User@Host: root[root] @ localhost []  Id:   626
+	# Query_time: 0.000231  Lock_time: 0.000103 Rows_sent: 3  Rows_examined: 3
+	SET timestamp=1591435089;
+	select * from customer_login_log;
+	```
+	- SQL开始执行的时间戳
+		```
+		# SET timestamp=1460268587;
+		```
+	- 执行SQL的主机信息：
+		```
+		# User@Host： root[root] @ localhost [127.0.0.1]
+		```
+	- SQL的执行详细信息：
+		```
+		# Query_time： 0.002000  Lock_time： 0.001000 Rows_sent： 2  Rows_examined： 2
+		```
+	- SQL的详细内容
+
+### 4.2.3、pt-query-digest
+
+如何发现 SQL 存在问题：
+- 查询次数多且每次查询占用时间长的SQL，通常为pt-query-digest分析的前几个查询
+- IO大的SQL；注意pt-query-digest分析中的rows examine
+- 未命中索引的SQL：注意pt-query-digest分钟中的rows examine和rows send 的对比
+
+## 5、SQL执行计划
 
 使用 explain 查询SQL的执行计划：`explain select * from customer；`
+```sql
+{EXPLAIN | DESCRIBE | DESC}
+    tbl_name [col_name | wild]
+
+{EXPLAIN | DESCRIBE | DESC}
+    [explain_type]
+    {explainable_stmt | FOR CONNECTION connection_id}
+
+{EXPLAIN | DESCRIBE | DESC} ANALYZE select_statement
+explain_type: {
+    FORMAT = format_name
+}
+format_name: {
+    TRADITIONAL
+  | JSON
+  | TREE
+}
+explainable_stmt: {
+    SELECT statement
+  | TABLE statement
+  | DELETE statement
+  | INSERT statement
+  | REPLACE statement
+  | UPDATE statement
+}
+```
 
 id -> 表的读取顺序
 
 select_type -> 数据读取操作的操作类型
 ```
-+----+-------------+----------+------+---------------+------+---------+------+------+-------+
-| id | select_type | table    | type | possible_keys | key  | key_len | ref  | rows | Extra |
-+----+-------------+----------+------+---------------+------+---------+------+------+-------+
-|  1 | SIMPLE      | customer | ALL  | NULL          | NULL | NULL    | NULL |  646 |       |
-+----+-------------+----------+------+---------------+------+---------+------+------+-------+
++----+-------------+----------------------------+------------+------+---------------+------+---------+------+-------+----------+-------------+
+| id | select_type | table                      | partitions | type | possible_keys | key  | key_len | ref  | rows  | filtered | Extra       |
++----+-------------+----------------------------+------------+------+---------------+------+---------+------+-------+----------+-------------+
+|  1 | SIMPLE      | log					    | NULL       | ALL  | NULL          | NULL | NULL    | NULL | 10000 |    10.00 | Using where |
++----+-------------+----------------------------+------------+------+---------------+------+---------+------+-------+----------+-------------+
+
 ```
 
 查看优化后的SQL：`explain extended sql`语句，然后`show warnings`查看。`explain extended`会输出sql的执行计划，查询记录的方式(全表扫描、全索引扫描、索引范围扫描等)、是否用上索引；`show warnings`会看到优化器重写后的sql
 
-### 6.1、id：select的查询序列号，包含一组数字，表示在查询中执行 select 子句或者操作表的顺序
+### 5.1、id：select的查询序列号，包含一组数字，表示在查询中执行 select 子句或者操作表的顺序
 
 - id相同，执行顺序由上而下
 	```sql
@@ -2565,16 +2751,22 @@ select_type -> 数据读取操作的操作类型
 	+----+--------------------+------------+-----------------+---------------+----------------+---------+------+------+--------------------------+
 	```
 
-### 6.2、select_type：查询类型，主要用于区别普通查询，联合查询，子查询等复杂查询，主要有以下值
+### 5.2、select_type：查询类型，主要用于区别普通查询，联合查询，子查询等复杂查询，主要有以下值
 
 - SIMPLE：简单的select查询，查询中不包含子查询或者union
 - PRIMARY：查询中若包含任何复杂的子查询，最外层的查询则被标记为 primary
-- SUBQUERY：在 select 或者 where 列表中包含了子查询
+- SUBQUERY：在 select 或者 where 列表中包含了子查询，子查询中的第一个 SELECT
 - DERIVED：在 from 列表中包含的子查询被标记为 DERIVED，MySQL 会递归执行这些子查询，把结果放在临时表中
 - UNION：若第二个 select 出现在 union 之后，则被标记为union；若 union 包含在 from 子句的子查询中， 外层 select 将被标记为 DERIVED
 - UNION RESULT：从 union 中获取结果的 select
+- DEPENDENT UNION：-UNION中的第二个或后面的查询，依赖了外面的查询
+- DEPENDENT SUBQUERY：子查询中的第一个 SELECT，依赖了外面的查询
+- DEPENDENT DERIVED：派生表，依赖了其他的表
+- MATERIALIZED：物化子查询
+- UNCACHEABLE SUBQUERY：子查询，结果无法缓存，必须针对外部查询的每一行重新评估
+- UNCACHEABLE UNION：UNION属于UNCACHEABLE SUBQUERY的第二个或后面的查询
 
-### 6.3、type：显示查询使用了何种类型，主要有：all， index， range， ref， eq_ref， const， system
+### 5.3、type：显示查询使用了何种类型，主要有：all， index， range， ref， eq_ref， const， system
 
 从最好到最差依次为：`system > const > eq_ref > ref > range > index > all`
 
@@ -2582,14 +2774,20 @@ select_type -> 数据读取操作的操作类型
 - const：表示通过索引一次就找到了，const 用于比较 primary key 和 unique 索引.因为只匹配一行数据，所以很快.如将主键置于 where 列表中，MySQL能将该查询转换为一个常量.
 - eq_ref：唯一性索引扫描，对于每个索引键，表中只有一条记录，常见于主键或唯一性扫描。当连接使用的是完整的索引并且是 PRIMARY KEY 或 UNIQUE NOT NULL INDEX 时使用它
 - ref：非唯一性索引扫描，返回匹配某个单独值的所有行。本质上也是一种索引访问，返回的是某个单独值匹配的所有行，但是其可能会找到多个符合条件的行。当连接使用的是前缀索引或连接条件不是 PRIMARY KEY 或 UNIQUE INDEX 时则使用它；
-- index_merge：使用了索引合并优化方法；
+- fulltext：全文索引
+- ref_or_null：该类型类似于ref，但是MySQL会额外搜索哪些行包含了NULL。这种类型常见于解析子查询：`SELECT * FROM ref_table WHERE key_column=expr OR key_column IS NULL;`
+- index_merge：使用了索引合并优化方法，表示一个查询里面用到了多个索引；
+- unique_subquery：该类型和eq_ref类似，但是使用了IN查询，且子查询是主键或者唯一索引。例如：`value IN (SELECT primary_key FROM single_table WHERE some_expr)`；
+- index_subquery：和unique_subquery类似，只是子查询使用的是非唯一索引：`value IN (SELECT key_column FROM single_table WHERE some_expr)`
 - range：只检索给定范围的行，使用一个索引来选择行。key列显示使用了哪个索引。一般是在 where 语句中使用了 `between、<、>、in` 等的查询.这种范围扫描索引比全表扫描要好，因为其只需要开始于索引的某一点，而结束于另一点，不需要扫描全部索引。
-- index：Full index scan， index 和 all 区别为 index 类型只遍历索引树，这通常比all快.因为索引文件通常比数据文件小.(即两者虽然都是读全表，但是index 是从索引中读取，而all是从硬盘读取)
+- index：Full index scan， index 和 all 区别为 index 类型只遍历索引树，这通常比all快.因为索引文件通常比数据文件小.(即两者虽然都是读全表，但是index 是从索引中读取，而all是从硬盘读取)，有两种场景会触发：
+	- 如果索引是查询的覆盖索引，并且索引查询的数据就可以满足查询中所需的所有数据，则只扫描索引树。此时，explain的Extra 列的结果是Using index。index通常比ALL快，因为索引的大小通常小于表数据。
+	- 按索引的顺序来查找数据行，执行了全表扫描。此时，explain的Extra列的结果不会出现Uses index。
 - all：遍历全表以匹配到相应的行
 
 **一般来说，type在查询中能保证到range级别，最好能达到 ref**
 
-### 6.4、possible_keys、key、key_len
+### 5.4、possible_keys、key、key_len
 
 - possible_keys：显示可能应用在这张表上的索引，一个或者多个。查询涉及到的字段上若存在索引，则将该索引列出，但不一定被查询实际使用。
 - key：实际使用的索引。如果为 NULL，则没有使用索引；查询中如果使用了覆盖索引，则该索引和查询的 select 字段重叠；message 表中字段 conversation_id 有加上索引
@@ -2610,10 +2808,11 @@ select_type -> 数据读取操作的操作类型
 	+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
 	1 row in set
 	```
-- key_len：表示索引中使用的字节数，可通过查询该列计算查询中使用的索引长度。在不损失精度的情况下，长度越短越好，key_len显示的值为该索引最大的可能长度，并非实际使用的长度。即 key_len 是根据表定义计算而得，不是通过表内检索出的。key_len 的计算规则和三个因素有关：数据类型、字符编码、是否为 NULL，如果是 null 的话需要判断是否为 null 的标识长度，所以索引字段最好不要为 null，因为 null 会使索引，索引统计和值更加复杂，并且需要额外一个字节的存储空间；
+- key_len：表示索引中使用的字节数，可通过查询该列计算查询中使用的索引长度。在不损失精度的情况下，长度越短越好，key_len显示的值为该索引最大的可能长度，并非实际使用的长度。即 key_len 是根据表定义计算而得，不是通过表内检索出的。key_len 的计算规则和三个因素有关：数据类型、字符编码、是否为 NULL，如果是 null 的话需要判断是否为 null 的标识长度，所以索引字段最好不要为 null，因为 null 会使索引，索引统计和值更加复杂，并且需要额外一个字节的存储空间；key_len计算规则参考[key_len计算](https://www.cnblogs.com/gomysql/p/4004244.html)
 
-### 6.5、ref：显示索引的哪一列被使用了，如果可能的话是一个常数.哪些列或常量被用于查找索引列上的值.
+### 5.5、ref：显示索引的哪一列被使用了
 
+如果可能的话是一个常数。哪些列或常量被用于查找索引列上的值。如果ref是一个函数，则使用的值是函数的结果
 ```sql
 mysql> EXPLAIN SELECT n.*  FROM news n， `user` u WHERE n.user_id=u.id AND n.title=''；
 +----+-------------+-------+--------+---------------+---------+---------+-------------------+------+--------------------------+
@@ -2626,11 +2825,19 @@ toutiao.n.user_id
 ```
 toutiao：表示数据库名称， n：表示对应的表格， user_id：n表对应的字段
 
-### 6.6、rows：根据表统计信息及索引选用的情况
+### 5.6、rows：根据表统计信息及索引选用的情况
 
-大致估算出找到所需记录所需要读取的行数，即有多少条记录被优化器所查询
+大致估算出找到所需记录所需要读取的行数，即有多少条记录被优化器所查询；数值越小越好
 
-### 6.7、Extra：包含不适合在其他列显示但非常重要的额外信息
+### 5.7、filtered：表示符合查询条件的数据百分比
+
+最大100。用rows × filtered可获得和下一张表连接的行数。例如rows = 1000，filtered = 50%，则和下一张表连接的行数是500。
+
+**注意：**
+- 在MySQL 5.7之前，想要显示此字段需使用explain extended命令；
+- MySQL.5.7及更高版本，explain默认就会展示filtered
+
+### 5.8、Extra：包含不适合在其他列显示但非常重要的额外信息
 
 - using filesort：说明 mysql中会对数据使用一个外部的索引排序，而不是按照表内的索引顺序进行读取。MySQL中无法利用索引完成的排序称为"文件排序"
 	```sql
@@ -2670,7 +2877,19 @@ toutiao：表示数据库名称， n：表示对应的表格， user_id：n表�
 - select table optimized away：在没有 group by 子句的情况下，基于索引优化 mix/max 操作或者对于 MyISAM 存储引擎优化 count(*)操作，不必等到执行阶段在进行计算，查询执行计划生成的阶段即可完成优化
 - distinct：优化 distinct 操作，在找第一匹配的元祖后即停止找同样值的操作。
 
-### 6.8、查看Mysql优化器优化之后的SQL
+Extra的其他信息查看[官方文档](https://dev.mysql.com/doc/refman/8.0/en/explain-output.html#explain-extra-information)
+
+### 5.9、其他
+
+- table：表示当前这一行正在访问哪张表，如果SQL定义了别名，则展示表的别名
+
+- partitions：当前查询匹配记录的分区。对于未分区的表，返回null
+
+### 5.10、explain 扩展
+
+EXPLAIN可产生额外的扩展信息，可通过在EXPLAIN语句后紧跟一条`SHOW WARNING`语句查看扩展信息
+- 在MySQL 8.0.12及更高版本，扩展信息可用于SELECT、DELETE、INSERT、REPLACE、UPDATE语句；在MySQL 8.0.12之前，扩展信息仅适用于SELECT语句；
+- 在MySQL 5.6及更低版本，需使用EXPLAIN EXTENDED xxx语句；而从MySQL 5.7开始，无需添加EXTENDED关键词。
 
 假设有一张表student，表结果如下：
 ```sql
@@ -2691,8 +2910,239 @@ show warnings;
 # 最终执行结果：
 /* select#1 */ select `test`.`student`.`id` AS `id`,`test`.`student`.`name` AS `name`,`test`.`student`.`age` AS `age` from `test`.`student` where ((`test`.`student`.`name` = 'aa') and (`test`.`student`.`age` = 11))
 ```
+由于SHOW WARNING的结果并不一定是一个有效SQL，也不一定能够执行（因为里面包含了很多特殊标记）。
 
-Mysql有一个最左匹配原则，那么如果索引建的是`name,age`，那我以`age,name`这样的顺序去查询能否使用到索引呢？实际上是可以的，就是因为Mysql查询优化器可以自动对SQL的执行顺序等进行优化，以选取代价最低的方式进行查询（注意是代价最低，不是时间最短）
+详细标记值查看[官方文档](https://dev.mysql.com/doc/refman/5.7/en/explain-extended.html)
+
+Mysql有一个最左匹配原则，那么如果索引建的是`name,age`，那我以`age,name`这样的顺序去查询能否使用到索引呢？实际上是可以的，就是因为Mysql查询优化器可以自动对SQL的执行顺序等进行优化，以选取代价最低的方式进行查询（注意是代价最低，不是时间最短）；
+
+### 5.11、估算查询性能
+
+[estimating-performance.html](https://dev.mysql.com/doc/refman/8.0/en/estimating-performance.html)
+
+多数情况下，你可以通过计算磁盘的搜索次数来估算查询性能。对于比较小的表，通常可以在一次磁盘搜索中找到行（因为索引可能已经被缓存了），而对于更大的表，你可以使用B-tree索引进行估算：你需要进行多少次查找才能找到行：`log(row_count) / log(index_block_length / 3 * 2 / (index_length + data_pointer_length)) + 1`
+
+在MySQL中，index_block_length通常是1024字节，数据指针一般是4字节。比方说，有一个500,000的表，key是3字节，那么根据计算公式 `log(500,000)/log(1024/3*2/(3+4)) + 1 = 4` 次搜索。
+
+该索引将需要500,000 * 7 * 3/2 = 5.2MB的存储空间（假设典型的索引缓存的填充率是2/3），因此你可以在内存中存放更多索引，可能只要一到两个调用就可以找到想要的行了。
+
+但是，对于写操作，你需要四个搜索请求来查找在何处放置新的索引值，然后通常需要2次搜索来更新索引并写入行。
+
+前面的讨论并不意味着你的应用性能会因为log N而缓慢下降。只要内容被OS或MySQL服务器缓存，随着表的变大，只会稍微变慢。在数据量变得太大而无法缓存后，将会变慢很多，直到你的应用程序受到磁盘搜索约束（按照log N增长）。为了避免这种情况，可以根据数据的增长而增加key的。对于MyISAM表，key的缓存大小由名为key_buffer_size的系统变量控制
+
+## 6、SQL性能分析
+
+### 6.1、Show Profile
+
+SHOW PROFILE是MySQL的一个性能分析命令，可以跟踪SQL各种资源消耗；使用格式如下：
+```
+SHOW PROFILE [type [, type] ... ]
+    [FOR QUERY n]
+    [LIMIT row_count [OFFSET offset]]
+
+type: {
+    ALL                     显示所有信息
+  | BLOCK IO                显示阻塞的输入输出次数
+  | CONTEXT SWITCHES		显示自愿及非自愿的上下文切换次数
+  | CPU						显示用户与系统CPU使用时间
+  | IPC						显示消息发送与接收的次数
+  | MEMORY					显示内存相关的开销，目前未实现此功能
+  | PAGE FAULTS				显示页错误相关开销信息
+  | SOURCE					列出相应操作对应的函数名及其在源码中的位置(行)
+  | SWAPS					显示swap交换次数
+}
+```
+默认情况下，SHOW PROFILE只展示Status和Duration两列，如果想展示更多信息，可指定type
+
+- 查看是否支持和关闭状态：
+	```
+	mysql> show variables like '%profil%'；
+	+------------------------+-------+
+	| Variable_name          | Value |
+	+------------------------+-------+
+	| have_profiling         | YES   |
+	| profiling              | OFF   |
+	| profiling_history_size | 15    |
+	+------------------------+-------+
+	```
+- 开启profiling：使用SHOW PROFILES命令，可为最近发送的SQL语句做一个概要的性能分析。展示的条目数目由profiling_history_size会话变量控制，该变量的默认值为15。最大值为100。将值设置为0具有禁用分析的实际效果
+	```
+	mysql> set profiling=on； ## 开启方式
+	mysql> show variables like '%profiling%'；
+	+------------------------+-------+
+	| Variable_name          | Value |
+	+------------------------+-------+
+	| have_profiling         | YES   |
+	| profiling              | ON    |
+	| profiling_history_size | 15    |
+	+------------------------+-------+
+	```
+- （3）运行相关的sql，可以通过show profiles 查出所有的历史查询子句：
+	```
+	mysql> show profiles；
+	+----------+------------+-----------------------------------------------+
+	| Query_ID | Duration   | Query                                         |
+	+----------+------------+-----------------------------------------------+
+	|        1 |   0.002309 | show variables like 'profiling'               |
+	|        2 |   0.000889 | select * from dept                            |
+	|        3 | 0.07644575 | select * from book                            |
+	|        4 |   1.520539 | select * from emp group by id%10 limit 150000 |
+	|        5 | 1.57117675 | select * from emp group by id%20 order by 5   |
+	|        6 |  0.0002625 | show profiling                                |
+	+----------+------------+-----------------------------------------------+
+	```
+- （4）sql诊断：可以通过 show profile相关参数来查看cpu和io情况
+	```
+	mysql> show profile cpu，block io for query 5；
+	+----------------------+----------+----------+------------+--------------+---------------+
+	| Status               | Duration | CPU_user | CPU_system | Block_ops_in | Block_ops_out |
+	+----------------------+----------+----------+------------+--------------+---------------+
+	| starting             | 0.000112 | 0        | 0          | NULL         | NULL          |
+	| checking permissions | 1.6E-5   | 0        | 0          | NULL         | NULL          |
+	| Opening tables       | 4.6E-5   | 0        | 0          | NULL         | NULL          |
+	| System lock          | 1.9E-5   | 0        | 0          | NULL         | NULL          |
+	| init                 | 4.9E-5   | 0        | 0          | NULL         | NULL          |
+	| optimizing           | 9E-6     | 0        | 0          | NULL         | NULL          |
+	| statistics           | 4.5E-5   | 0        | 0          | NULL         | NULL          |
+	| preparing            | 2E-5     | 0        | 0          | NULL         | NULL          |
+	| Creating tmp table   | 0.000508 | 0        | 0          | NULL         | NULL          |
+	| executing            | 8E-6     | 0        | 0          | NULL         | NULL          |
+	| Copying to tmp table | 1.569976 | 1.57561  | 0          | NULL         | NULL          |
+	| Sorting result       | 4.8E-5   | 0        | 0          | NULL         | NULL          |
+	| Sending data         | 6.1E-5   | 0        | 0          | NULL         | NULL          |
+	| end                  | 5E-6     | 0        | 0          | NULL         | NULL          |
+	| removing tmp table   | 1.3E-5   | 0        | 0          | NULL         | NULL          |
+	| end                  | 6E-6     | 0        | 0          | NULL         | NULL          |
+	| query end            | 6E-6     | 0        | 0          | NULL         | NULL          |
+	| closing tables       | 1.2E-5   | 0        | 0          | NULL         | NULL          |
+	| freeing items        | 0.000216 | 0        | 0          | NULL         | NULL          |
+	| logging slow query   | 3E-6     | 0        | 0          | NULL         | NULL          |
+	| cleaning up          | 3E-6     | 0        | 0          | NULL         | NULL          |
+	+----------------------+----------+----------+------------+--------------+---------------+
+	```
+	相关参数：
+	- all：显示所有开销信息
+	- block io：显示块IO相关开销
+	- context switches：上下文切换相关开销
+	- cpu：显示cpu相关开销信息
+	- ipc：显示发送和接收相关开销信息
+	- memory：显示内存相关开销信息
+	- page faults：显示页面错误相关开销信息
+	- source：显示和source_function，source_file，source_line 相关的开销信息
+	- swaps：显示交换次数相关开销信息
+
+- （5）开发中需要注意的点：
+	- converting HEAP to MyISAM：查询结果太大，内存都不够用了往磁盘上搬；
+	- creating tmp table：创建临时表(拷贝数据到临时表，用完再删除临时表)；
+	- Copying to temp table on disk：把内存中临时表复制到磁盘-很危险
+	- locked
+
+**注意：**MySQL官方文档声明SHOW PROFILE已被废弃，并建议使用Performance Schema作为替代品；
+
+### 6.2、INFORMATION_SCHEMA.PROFILING
+
+`INFORMATION_SCHEMA.PROFILING`用来做性能分析。它的内容对应`SHOW PROFILE`和`SHOW PROFILES` 语句产生的信息。除非设置了 set profiling = 1; ，否则该表不会有任何数据。该表包括以下字段：
+```
+QUERY_ID：语句的唯一标识
+SEQ：一个序号，展示具有相同QUERY_ID值的行的显示顺序
+STATE：分析状态
+DURATION：在这个状态下持续了多久（秒）
+CPU_USER，CPU_SYSTEM：用户和系统CPU使用情况（秒）
+CONTEXT_VOLUNTARY，CONTEXT_INVOLUNTARY：发生了多少自愿和非自愿的上下文转换
+BLOCK_OPS_IN，BLOCK_OPS_OUT：块输入和输出操作的数量
+MESSAGES_SENT，MESSAGES_RECEIVED：发送和接收的消息数
+PAGE_FAULTS_MAJOR，PAGE_FAULTS_MINOR：主要和次要的页错误信息
+SWAPS：发生了多少SWAP
+SOURCE_FUNCTION，SOURCE_FILE，SOURCE_LINE：当前状态是在源码的哪里执行的
+```
+`SHOW PROFILE`本质上使用的也是`INFORMATION_SCHEMA.PROFILING`表；`INFORMATION_SCHEMA.PROFILING`表已被废弃，在未来可能会被删除。未来将可使用Performance Schema替代；
+
+下面两个SQL是等价的：
+```
+SHOW PROFILE FOR QUERY 2;
+
+SELECT STATE, FORMAT(DURATION, 6) AS DURATION FROM INFORMATION_SCHEMA.PROFILING WHERE QUERY_ID = 2 ORDER BY SEQ;
+```
+
+### 6.3、PERFORMANCE_SCHEMA
+
+`PERFORMANCE_SCHEMA`是MySQL建议的性能分析方式，未来`SHOW PROFILE、INFORMATION_SCHEMA.PROFILING`都会废弃。`PERFORMANCE_SCHEMA`在MySQL 5.6引入，因此，在MySQL 5.6及更高版本才能使用。可使用`SHOW VARIABLES LIKE 'performance_schema'`; 查看启用情况，MySQL 5.7开始默认启用；
+
+PERFORMANCE_SCHEMA去实现SHOW PROFILE类似的效果：
+- 查看是否开启性能监控，默认是开启的
+	```
+	mysql> SELECT * FROM performance_schema.setup_actors;
+	+------+------+------+---------+---------+
+	| HOST | USER | ROLE | ENABLED | HISTORY |
+	+------+------+------+---------+---------+
+	| %    | %    | %    | YES     | YES     |
+	+------+------+------+---------+---------+
+	```
+
+- 也可以只监控指定用户，执行的SQL：
+	```sql
+	mysql> UPDATE performance_schema.setup_actors SET ENABLED = 'NO', HISTORY = 'NO' WHERE HOST = '%' AND USER = '%';
+
+	mysql> INSERT INTO performance_schema.setup_actors (HOST,USER,ROLE,ENABLED,HISTORY) VALUES('localhost','test_user','%','YES','YES');
+	```
+	这样，就只会监控localhost机器上test_user用户发送过来的SQL。其他主机、其他用户发过来的SQL统统不监控
+- 执行如下SQL语句，开启相关监控项：
+	```sql
+	mysql> UPDATE performance_schema.setup_instruments SET ENABLED = 'YES', TIMED = 'YES' WHERE NAME LIKE '%statement/%';
+
+	mysql> UPDATE performance_schema.setup_instruments SET ENABLED = 'YES', TIMED = 'YES' WHERE NAME LIKE '%stage/%';
+
+	mysql> UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%events_statements_%';
+
+	mysql> UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%events_stages_%';
+	```
+- 使用开启监控的用户，执行SQL语句，比如：
+	```sql
+	mysql> SELECT * FROM employees.employees WHERE emp_no = 10001;
+	+--------+------------+------------+-----------+--------+------------+
+	| emp_no | birth_date | first_name | last_name | gender | hire_date |
+	+--------+------------+------------+-----------+--------+------------+
+	|  10001 | 1953-09-02 | Georgi     | Facello   | M      | 1986-06-26 |
+	+--------+------------+------------+-----------+--------+------------+	
+	```
+- 执行如下SQL，获得语句的EVENT_ID，类似 SHOW PROFILES
+	```sql
+	mysql> SELECT EVENT_ID, TRUNCATE(TIMER_WAIT/1000000000000,6) as Duration, SQL_TEXT FROM performance_schema.events_statements_history_long WHERE SQL_TEXT like '%10001%';
+	+----------+----------+--------------------------------------------------------+
+	| event_id | duration | sql_text                                               |
+	+----------+----------+--------------------------------------------------------+
+	|       31 | 0.028310 | SELECT * FROM employees.employees WHERE emp_no = 10001 |
+	+----------+----------+--------------------------------------------------------+
+	```
+- 执行如下SQL语句做性能分析，这样就可以知道这条语句各种阶段的信息了：
+	```sql
+	mysql> SELECT event_name AS Stage, TRUNCATE(TIMER_WAIT/1000000000000,6) AS Duration FROM performance_schema.events_stages_history_long WHERE NESTING_EVENT_ID=31;
+	+--------------------------------+----------+
+	| Stage                          | Duration |
+	+--------------------------------+----------+
+	| stage/sql/starting             | 0.000080 |
+	| stage/sql/checking permissions | 0.000005 |
+	| stage/sql/Opening tables       | 0.027759 |
+	| stage/sql/init                 | 0.000052 |
+	| stage/sql/System lock          | 0.000009 |
+	| stage/sql/optimizing           | 0.000006 |
+	| stage/sql/statistics           | 0.000082 |
+	| stage/sql/preparing            | 0.000008 |
+	| stage/sql/executing            | 0.000000 |
+	| stage/sql/Sending data         | 0.000017 |
+	| stage/sql/end                  | 0.000001 |
+	| stage/sql/query end            | 0.000004 |
+	| stage/sql/closing tables       | 0.000006 |
+	| stage/sql/freeing items        | 0.000272 |
+	| stage/sql/cleaning up          | 0.000001 |
+	+--------------------------------+----------+
+	```
+
+### 6.4、OPTIMIZER_TRACE
+
+OPTIMIZER_TRACE是MySQL 5.6引入的一项跟踪功能，它可以跟踪优化器做出的各种决策（比如访问表的方法、各种开销计算、各种转换等），并将跟踪结果记录到 INFORMATION_SCHEMA.OPTIMIZER_TRACE 表中。此功能默认关闭，开启后，可分析如下语句：`SELECT、INSERT、REPLACE、UPDATE、DELETE、EXPLAIN、SET、DECLARE、CASE、IF、RETURN、CALL`
+
+详细参考：[OPTIMIZER_TRACE](OPTIMIZER_TRACE.md)
 
 ## 7、索引优化
 
@@ -2918,7 +3368,7 @@ Mysql有一个最左匹配原则，那么如果索引建的是`name,age`，那�
 	+----+-------------+--------+------+---------------+------+---------+------+------+-------------+
 	```
 
-## 8、查询分析
+## 8、查询优化
 
 ### 8.1、如何进行优化
 
@@ -2927,9 +3377,8 @@ Mysql有一个最左匹配原则，那么如果索引建的是`name,age`，那�
 - show profile 查询sql在 MySQL 服务器里面执行的细节和生命周期情况；
 - SQL数据库服务器参数的优化(由运维或者DBA完成)
 
-### 8.2、查询优化
 
-#### 8.2.1、exist和in
+### 8.2、exist和in
 
 小表驱动大表：即小的数据集驱动大的数据集
 - `select * from A where id in(select id from B)`：当B表的数据集小于A表的数据集时，in 优于 exists。in 是在内存中遍历比较，只执行一次，把B表中的所有id字段缓存起来，之后检查A表的id是否与B表中的id相等，如果id相等则将A表的记录加入到结果集中，直到遍历完A表的所有记录。如：A表有10000条记录，B表有1000000条记录，那么最多有可能遍历10000*1000000次，效率很差
@@ -2945,7 +3394,7 @@ Mysql有一个最左匹配原则，那么如果索引建的是`name,age`，那�
 	- exists 子查询的实际执行过程可能经过了优化；
 	- exists 子查询往往也可以用条件表达式，其他子查询或者join来替代；
 
-#### 8.2.2、order by
+### 8.3、order by
 
 - （1）order by 子句尽量使用 index 方式来排序，避免使用 fileSort 方式排序。mysql 支持两种方式的排序：filesort(效率低)，index(可以扫描索引本身完成排序，效率高)。
 
@@ -3002,9 +3451,9 @@ Mysql有一个最左匹配原则，那么如果索引建的是`name,age`，那�
 		where a in (...) order by b，c --对于排序来说， 多个相等的条件也是范围查询
 		```
 		
-#### 8.2.3、group by：实质是先排序后进行分组，遵照索引建的最佳左前缀
+### 8.4、group by
 
-当无法使用索引列时，增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置；where 高于 having，能写在 where 中的限定条件不要去使用 having 限定了
+实质是先排序后进行分组，遵照索引建的最佳左前缀；当无法使用索引列时，增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置；where 高于 having，能写在 where 中的限定条件不要去使用 having 限定了
 
 group by 的优化
 ```
@@ -3029,185 +3478,6 @@ explain select actor.first_name， actor.last_name， c.cnt from actor inner joi
 |  2 | DERIVED     | film_actor | index  | NULL          | PRIMARY | 4       | NULL       | 4354 | Using index |
 +----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
 ```
-
-### 8.3、慢查询日志
-
-- （1）慢查询日志是 MySQL提供的一种日志记录，用来记录在mysql中响应时间超过阀值的语句，具体指运行的时间超过 long_query_time 值的sql则会被记录到慢查询日志中。long_query_time 默认值为 10，意思是指运行时间超过10秒的sql
-
-- （2）如何设置：
-	- 默认情况下，MySQL数据库没有开启慢查询日志，需要手动设置该参数。当然，如果不是在调优的情况下，一般不建议开启该参数.因为其对性能会带来一定影响.
-	- 查看是否开启：
-		```
-		show variables like '%slow_query_log%'
-		mysql> show variables like 'slow_query_log%'；
-		+---------------------+-----------------------------------------------------------------+
-		| Variable_name       | Value                                                           |
-		+---------------------+-----------------------------------------------------------------+
-		| slow_query_log      | OFF                                                             |
-		| slow_query_log_file | C：\ProgramData\MySQL\MySQL Server 5.5\Data\BlueFish-PC-slow.log |
-		+---------------------+-----------------------------------------------------------------+
-		```
-		slow_query_log OFF 表示关闭
-
-		slow_query_log_file ==> 表示慢查询日志文件位置
-
-	- 开启慢查询日志：
-
-		```set global slow_query_log=1```，只对当前数据库有效。如果 mysql 重启后会失效，如果需要永久生效，需要修改配置文件，在相应的配置文件中增加或修改如下配置：
-		```
-		slow_query_log=1
-		slow_query_log_file=/var/lib/mysql/mysql-slow.log
-		```
-		然后重启mysql服务器。
-
-		如果没有指定慢查询日志文件的存放路径，系统默认会给一个缺省路径 host_name-slow.log
-
-	- 什么样的sql会被认为是慢查询sql的：主要有参数 long_query_time 来控制，默认情况下是 10s；查看参数 long_query_time 的设置：
-		```
-		mysql> show variables like '%long_query_time%'；
-		+-----------------+-----------+
-		| Variable_name   | Value     |
-		+-----------------+-----------+
-		| long_query_time | 10.000000 |
-		+-----------------+-----------+
-		```
-		在mysql源码里是判断大于 long_query_time，而非大于等于的.
-
-	- 设置慢sql查询：
-		```
-		set global long_query_time=3
-		```
-		一般在一个会话中设置之后查看不出来，需要重新连接或者重新打开一个会话或者使用 global 来查看：
-		```
-		mysql> set global long_query_time=3；
-		mysql> show variables like '%long_query_time%'；
-		+-----------------+-----------+
-		| Variable_name   | Value     |
-		+-----------------+-----------+
-		| long_query_time | 10.000000 |
-		+-----------------+-----------+
-		mysql> show global variables like '%long_query_time%'；
-		+-----------------+----------+
-		| Variable_name   | Value    |
-		+-----------------+----------+
-		| long_query_time | 3.000000 |
-		+-----------------+----------+
-		```
-	- 在配置文件中配置上述慢查询日志开关：
-		```
-		slow_query_log=1
-		slow_query_log_file=/var/lib/mysql/mysql-slow.log
-		long_query_time=3
-		log_output=FILE
-		```
-- （3）慢查询日志分析工具：mysqldumpslow-mysql提供的日志分析工具
-	- 查看帮助信息：```mysqldumpslow --help```
-		```
-		-s：表示按照何种方式排序
-		c：访问次数
-		l：锁定时间
-		r：返回记录
-		t：查询时间
-		al：平均锁定时间
-		ar：平均返回记录
-		at：平均查询时间
-		-t num：为返回前面多少条数据
-		g：后边接正则表达式，大小写不敏感
-		```
-	- 常用参考：
-		- 得到返回记录集最多的10个sql：```mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log```
-		- 得到访问次数最多的10个SQL：```mysqldumpslow -s c -t 10 /var/lib/mysql/mysql-slow.log```
-		- 得到按照时间排序的前10条里面含有左连接的查询语句：```mysqldumpslow -s t -t 10 -g "left join" /var/lib/mysql/mysql-slow.log```
-		- 建议在使用这些命令时集合 | 或者 more 使用，否则可能出现爆屏现象：```mysqldumpslow -s r -t 10 /var/lib/mysql/mysql-slow.log | more```
-
-### 8.4、Show Profile
-
-- （1）其是 mysql提供可以用来分析当前会话中语句执行的资源消耗情况.可以用于sql调优测量；
-
-- （2）该值默认情况下是关闭的，并保存最近15次的运行结果；
-
-	- 查看是否支持和关闭状态：
-		```
-		mysql> show variables like '%profil%'；
-		+------------------------+-------+
-		| Variable_name          | Value |
-		+------------------------+-------+
-		| have_profiling         | YES   |
-		| profiling              | OFF   |
-		| profiling_history_size | 15    |
-		+------------------------+-------+
-		```
-	- 开启profiling：
-		```
-		mysql> set profiling=on； ## 开启方式
-		mysql> show variables like '%profiling%'；
-		+------------------------+-------+
-		| Variable_name          | Value |
-		+------------------------+-------+
-		| have_profiling         | YES   |
-		| profiling              | ON    |
-		| profiling_history_size | 15    |
-		+------------------------+-------+
-		```
-- （3）运行相关的sql，可以通过show profiles 查出所有的历史查询子句：
-	```
-	mysql> show profiles；
-	+----------+------------+-----------------------------------------------+
-	| Query_ID | Duration   | Query                                         |
-	+----------+------------+-----------------------------------------------+
-	|        1 |   0.002309 | show variables like 'profiling'               |
-	|        2 |   0.000889 | select * from dept                            |
-	|        3 | 0.07644575 | select * from book                            |
-	|        4 |   1.520539 | select * from emp group by id%10 limit 150000 |
-	|        5 | 1.57117675 | select * from emp group by id%20 order by 5   |
-	|        6 |  0.0002625 | show profiling                                |
-	+----------+------------+-----------------------------------------------+
-	```
-- （4）sql诊断：可以通过 show profile相关参数来查看cpu和io情况
-	```
-	mysql> show profile cpu，block io for query 5；
-	+----------------------+----------+----------+------------+--------------+---------------+
-	| Status               | Duration | CPU_user | CPU_system | Block_ops_in | Block_ops_out |
-	+----------------------+----------+----------+------------+--------------+---------------+
-	| starting             | 0.000112 | 0        | 0          | NULL         | NULL          |
-	| checking permissions | 1.6E-5   | 0        | 0          | NULL         | NULL          |
-	| Opening tables       | 4.6E-5   | 0        | 0          | NULL         | NULL          |
-	| System lock          | 1.9E-5   | 0        | 0          | NULL         | NULL          |
-	| init                 | 4.9E-5   | 0        | 0          | NULL         | NULL          |
-	| optimizing           | 9E-6     | 0        | 0          | NULL         | NULL          |
-	| statistics           | 4.5E-5   | 0        | 0          | NULL         | NULL          |
-	| preparing            | 2E-5     | 0        | 0          | NULL         | NULL          |
-	| Creating tmp table   | 0.000508 | 0        | 0          | NULL         | NULL          |
-	| executing            | 8E-6     | 0        | 0          | NULL         | NULL          |
-	| Copying to tmp table | 1.569976 | 1.57561  | 0          | NULL         | NULL          |
-	| Sorting result       | 4.8E-5   | 0        | 0          | NULL         | NULL          |
-	| Sending data         | 6.1E-5   | 0        | 0          | NULL         | NULL          |
-	| end                  | 5E-6     | 0        | 0          | NULL         | NULL          |
-	| removing tmp table   | 1.3E-5   | 0        | 0          | NULL         | NULL          |
-	| end                  | 6E-6     | 0        | 0          | NULL         | NULL          |
-	| query end            | 6E-6     | 0        | 0          | NULL         | NULL          |
-	| closing tables       | 1.2E-5   | 0        | 0          | NULL         | NULL          |
-	| freeing items        | 0.000216 | 0        | 0          | NULL         | NULL          |
-	| logging slow query   | 3E-6     | 0        | 0          | NULL         | NULL          |
-	| cleaning up          | 3E-6     | 0        | 0          | NULL         | NULL          |
-	+----------------------+----------+----------+------------+--------------+---------------+
-	```
-	相关参数：
-	- all：显示所有开销信息
-	- block io：显示块IO相关开销
-	- context switches：上下文切换相关开销
-	- cpu：显示cpu相关开销信息
-	- ipc：显示发送和接收相关开销信息
-	- memory：显示内存相关开销信息
-	- page faults：显示页面错误相关开销信息
-	- source：显示和source_function，source_file，source_line 相关的开销信息
-	- swaps：显示交换次数相关开销信息
-
-- （5）开发中需要注意的点：
-	- converting HEAP to MyISAM：查询结果太大，内存都不够用了往磁盘上搬；
-	- creating tmp table：创建临时表(拷贝数据到临时表，用完再删除临时表)；
-	- Copying to temp table on disk：把内存中临时表复制到磁盘-很危险
-	- locked
 
 ## 9、count和max优化
 
@@ -3456,7 +3726,17 @@ MySQL可以通过启动时指定配置参数和使用配置文件两种方法进
 
 ### 13.3、第三方配置优化
 
-## 14、批量插入大量数据
+## 14、MySQL数据库诊断命令
+
+[Show Statement](https://dev.mysql.com/doc/refman/8.0/en/show.html)
+
+### 14.1、SHOW PROCESSLIST
+
+SHOW [FULL] PROCESSLIST用于查看当前正在运行的线程。如果执行此命令的用户拥有 PROCESS 权限，则可看到所有线程；否则只能看到自己的线程（即与当前登录用户关联的线程）。如果不使用FULL关键字，只在Info字段中展示前100个字符；
+
+当遇到“too many connections”错误信息时，想要了解发生了什么，SHOW PROCESSLIST就非常有用。MySQL保留了一个额外的连接，用于让拥有 CONNECTION_ADMIN （或已废弃的 SUPER ）权限的账户使用，从而确保管理员始终能够连接并检查系统。可使用 KILL 语句杀死线程
+
+## 15、批量插入大量数据
 
 - 创建表格：
 	```sql

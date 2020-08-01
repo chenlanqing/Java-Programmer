@@ -710,7 +710,7 @@ SecondThread: 4
 - join 是 final 的实例方法，yield是原生静态方法；
 - yield 只是使当前线程重新回到可执行状态，所以执行yield()的线程有可能在进入到可执行状态后马上又被执行，只能使同优先级或更高优先级的线程有执行的机会。
 - join 等待该线程终止，等待调用join方法的线程结束，再继续执行；
-- join方法内部调用的是wait方法，那么其是会释放锁的；
+- join 方法内部调用的是 wait 方法，那么其是会释放锁的；
 
 ### 2.15、线程的优先级
 
@@ -2577,9 +2577,7 @@ public class CountDownLatch {
 
 * [CyclicBarrier原理和示例](http://www.cnblogs.com/skywang12345/p/3533995.html)
 
-- 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。让一组线程到达一个屏障时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续干活；因为该 barrier 在释放等待线程后可以重用，所以称它为循环的barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过`独占锁`实现的；
-
-	CyclicBarrier 的原理不是 AQS 的共享模式，是 AQS Condition 和 ReentrantLock 的结合使用
+- 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。让一组线程到达一个屏障时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续干活；因为该 barrier 在释放等待线程后可以重用，所以称它为循环的barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过`独占锁`实现的；CyclicBarrier 的原理不是 AQS 的共享模式，是 AQS Condition 和 ReentrantLock 的结合使用
 
 	下图应该从下往上看才正确
 
@@ -3192,7 +3190,9 @@ V exchange(V x) throws InterruptedException
 //同上一个方法功能基本一样，只不过这个方法同步等待的时候，增加了超时时间
 V exchange(V x, long timeout, TimeUnit unit)throws InterruptedException, TimeoutException 
 ```
+
 ### 13.2、使用例子
+
 ```java
 public class ExchangerDemo {
     public static void main(String[] args) {
