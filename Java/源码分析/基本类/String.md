@@ -23,8 +23,8 @@
 
 	-Xms — 设置堆内存初始大小
 	-Xmx — 设置堆内存最大值
-	-XX：MaxTenuringThreshold — 设置对象在新生代中存活的次数
-	-XX：PretenureSizeThreshold — 设置超过指定大小的大对象直接分配在旧生代中
+	-XX:MaxTenuringThreshold — 设置对象在新生代中存活的次数
+	-XX:PretenureSizeThreshold — 设置超过指定大小的大对象直接分配在旧生代中
 
 # 三、String 类型
 

@@ -300,7 +300,7 @@ java [options] -jar filename [args]
 
 - `-XX:InitialTenuringThreshold`：晋升到老年代的对象的初始年龄阈值，默认值是：7
 
-- `-XX:MaxTenuringThreshold=threshold`：设置在自适应GC大小的使用占有最大阈值，默认对于parallel（throughput）的是15，对于CMS的是6
+- `-XX:MaxTenuringThreshold=threshold`：设置在自适应GC大小的使用占有最大阈值，默认对于ParallelGC（throughput）的是15（为什么一个对象最多经过15次ygc就回晋升到老生代？是因为对象头里就分配了4个bit来存age属性，所以最大就是1111，即15）；对于CMS的是6。当设置了这个值得时候，第一次会以它为准，后面就不一定了，因为晋升的阈值是动态调整的。
 
 - `-XX:MinHeapFreeRatio=percent`：设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代；`Xminf`和`MinHeapFreeRatio`是等价的，如`-Xminf0.4`等价于`-XX:MinHeapFreeRatio=40`
 
@@ -348,8 +348,7 @@ java [options] -jar filename [args]
 - `-XX:CMSTriggerRatio=percent` <br>
     设置一个在CMS开始前的内存的触发百分比，针对的是由`-XX:MinHeapFreeRatio`分配的内存。默认是80
 
-- `-XX:ConcGCThreads=threads` <br>
-    设置支持并发GC的线程数。默认值依赖于给JVM的CPU数目
+- `-XX:ConcGCThreads=threads`：设置支持并发GC的线程数。默认值依赖于给JVM的CPU数目
 
 - `-XX:+DisableExplicitGC`：关闭显式GC调用，即关闭System.gc()。默认是可以调用的
 
@@ -385,8 +384,7 @@ java [options] -jar filename [args]
 - `-XX:CompressedClassSpaceSize`<br>
     启用CCS，设置压缩类空间大小
 
-- `-XX:ParallelGCThreads=threads` <br>
-    并行GC时的线程数。默认值是CPU数
+- `-XX:ParallelGCThreads=threads`：并行GC时的线程数。默认值是CPU数
 
 - `-XX:+ParallelRefProcEnabled` <br>
     支持并发引用处理，默认是关闭的。

@@ -93,7 +93,7 @@ JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refefe
     ```java
     Object o = new Object();
     SoftReference<Object> softReference = new SoftReference<>(o);
-    ``` 
+    ```
 
 - 弱引用(Weak Refefence)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakRefefence 类来实现弱引用；
     ```java

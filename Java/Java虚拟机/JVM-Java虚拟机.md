@@ -290,6 +290,8 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 ![](image/Java对象的存储布局.png)
 
+通过[JOL](http://openjdk.java.net/projects/code-tools/jol/)分析Java对象的内存布局，使用参考：[JOL使用方式](http://zhongmingmao.me/2016/07/03/jvm-jol-tutorial-3/)
+
 ## 3.3、对象的访问定位
 
 对象的访问定位也取决于具体的虚拟机实现。当我们在堆上创建一个对象实例后，就要通过虚拟机栈中的reference类型数据来操作堆上的对象。现在主流的访问方式有两种（HotSpot虚拟机采用的是第二种）：
@@ -2353,7 +2355,6 @@ public void addShutdownHook(Thread hook) {
 * [深入理解Java逃逸分析](http://www.hollischuang.com/archives/2583)
 * [内存管理工具Memory Analyzer的使用](https://www.zybuluo.com/frank-shaw/note/206287)
 * [Java代码与编译过程](http://www.codeceo.com/article/java-complie-run.html)
-* [对象的内存布局](https://segmentfault.com/a/1190000009740021)
 * [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
 * [JVM源码分析之Metaspace解密](http://lovestblog.cn/blog/2016/10/29/metaspace/)
 * [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)
