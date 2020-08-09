@@ -28,7 +28,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 
 ### 1.6、AMQP：高级消息队列协议
 
-是二进制协议，为面向消息的中间件设计。是一个进程间传递异步消息的网络协议
+是二进制协议，为面向消息的中间件设计。是一个进程间传递异步消息的网络协议，是应用层协议的一个开放标准，为面向消息的中间件设计；
 
 **AMQP架构图：**
 
@@ -76,7 +76,13 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
 
 ## 2、RabbitMQ整体架构
 
+### 2.1、整体架构
 
+![](image/RabbitMQ-架构.png)
+
+### 2.2、消息流转
+
+![](image/RabbitMQ-消息流转.png)
 
 ## 3、Exchange交换机
 
@@ -363,13 +369,13 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 - 主要有json转换器（Jackson2JsonMessageConverter）、DefaultJackson2JavaTypeMapper映射器，可以进行java对象的映射关系；
 - 自定义二进制转换器：比如图片类型、PDF、PPT、流媒体等
 
-# 三、RabbitMQ集群
+# 三、RabbitMQ集群架构
 
 ## 1、集群架构模式
 
 - 主备模式：实现RabbitMQ的高可用集群，一般在并发和数据量不高的情况下，这种模型非常好用且简单。主备模式也称之为Warren模式。主节点如果挂了，从节点提供服务而已，和activemq利用zookeeper做主备一样。主要利用好HaProxy来进行配置
-    ```
-    HaProxy配置
+    ```bash
+    #HaProxy配置
     listen rabbimq-cluster
     bind 0.0.0.0:5672 # 配置TCP模式
     mode tcp # 简单的轮询
@@ -387,9 +393,9 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
     rabbitmq-plugins enable rabbitmq_shovel
     ```
 
-- 镜像模式：保证100%数据不丢失，目的是为了保证RabbitMQ数据的高可靠性解决方案，主要是实现数据的同步；   
+- 镜像模式：保证100%数据不丢失，目的是为了保证RabbitMQ数据的高可靠性解决方案，主要是实现数据的同步；无法横向扩容（一般三个节点即可） 
 
-- 多活模式：实现异地数据复制的主流模式，一般采用双中心（多中心）模式，其依赖rabbitmq的federation插件
+- 多活模式：实现异地数据复制的主流模式，一般采用双中心（多中心）模式，其依赖rabbitmq的federation插件，可以实现持续的可靠地AMQP数据通信；
 
 
 
