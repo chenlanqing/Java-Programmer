@@ -675,9 +675,11 @@ select * from emp a right join dept b on a.deptId=b.id order by id desc
 ```
 ==> 报错：1221 - Incorrect usage of UNION and ORDER BY
 
+如果确认数据库中不会有重复数据，推荐使用 union all，如果使用union，不管检索结果有没有重复，都会尝试进行合并，然后在输出最终结果前进行排序。如果已知检索结果没有重复记录，使用union all 代替union，这样会提高效率；
+
 ## 2、连接使用注意事项
 
-- 关于 `A LEFT JOIN B ON 条件表达式` 的一点提醒：ON 条件（“A LEFT JOIN B ON 条件表达式”中的ON）用来决定如何从 B 表中检索数据行。如果 B 表中没有任何一行数据匹配 ON 的条件,将会额外生成一行所有列为 NULL 的数据
+- 关于 `A LEFT JOIN B ON 条件表达式` 的一点提醒：ON 条件（“A LEFT JOIN B ON 条件表达式”中的ON）用来决定如何从 B 表中检索数据行。如果 B 表中没有任何一行数据匹配 ON 的条件，将会额外生成一行所有列为 NULL 的数据
 
 - 对于 `A LEFT JOIN B ON 条件表达式`中，如果on后面的条件有关于A表的过滤条件，其是不生效的；类似如下的SQL
 	```sql
@@ -1910,7 +1912,7 @@ sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192
 - 如果条件中有or，如果两边都字段都有索引，则索引可用，一旦有一边无索引可用就会导致整个SQL语句的全表扫描；
 - Like 查询是以 %开头，例如SELECT * FROM mytable WHEREt Name like’%admin’，会导致全文搜索
 - 如果列类型是字符串，那一定要在条件中使用引号引起来，否则不会使用索引；
-- 应尽量避免在 where 子句中使用!=或<>操作符
+- 应尽量避免在 where 子句中使用`!=`或`<>`操作符
 - in 和 not in 也要慎用，当使用in或者not in时扫描表的数据量过大时，会全表扫描；
 - 如果第一个筛选条件是范围查询，MySQL 不再使用剩下的索引；
 - 索引列不要在表达式或者函数中出现，这样会导致索引失效，如：`SELECT ...... WHERE id+1=5`；
@@ -1920,6 +1922,14 @@ sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192
 - 隐式编码转换：如果两张表的编码不一致，比如表A示uft8，表B示utf8mb4，而utf8mb4是 utf8 的超集，所以会自动将 utf8 转成 utf8mb4：`CONVERT(a.id USING utf8mb4))`，从而触发了：索引列不能是函数的一部分，那么表A就不会走索引；
 
 ### 7.2、解决索引失效问题
+
+**`<>`操作**
+
+`select * from accounts where age <> 18;`可以写成两条SQL：
+```
+select * from accounts where age > 18;
+select * from accounts where age < 18;
+```
 
 **不可避免要使用表达式或者函数：**
 
@@ -3226,7 +3236,7 @@ OPTIMIZER_TRACE是MySQL 5.6引入的一项跟踪功能，它可以跟踪优化�
 小表驱动大表：即小的数据集驱动大的数据集
 - `select * from A where id in(select id from B)`：当B表的数据集小于A表的数据集时，in 优于 exists。in 是在内存中遍历比较，只执行一次，把B表中的所有id字段缓存起来，之后检查A表的id是否与B表中的id相等，如果id相等则将A表的记录加入到结果集中，直到遍历完A表的所有记录。如：A表有10000条记录，B表有1000000条记录，那么最多有可能遍历10000*1000000次，效率很差
 
-- `select * from A where exists(select 1 from B where B.id=A.id)` 当A表的数据集小于A表的数据集时， exists 优于 in。需要查询数据库，所以当B的数据量比较大时，exists效率优于in。当B表比A表数据大时适合使用exists()，因为它没有那么多遍历操作，只需要再执行一次查询就行。如：A表有10000条记录，B表有1000000条记录，那么exists()会执行10000次去判断A表中的id是否与B表中的id相等
+- `select * from A where exists(select 1 from B where B.id=A.id)` 当A表的数据集小于B表的数据集时， exists 优于 in。需要查询数据库，所以当B的数据量比较大时，exists效率优于in。当B表比A表数据大时适合使用exists()，因为它没有那么多遍历操作，只需要再执行一次查询就行。如：A表有10000条记录，B表有1000000条记录，那么exists()会执行10000次去判断A表中的id是否与B表中的id相等
 
 - exists：`select ... from table where exists(subquery)`
 

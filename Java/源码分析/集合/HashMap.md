@@ -184,6 +184,25 @@ static final int tableSizeFor(int cap) {
 
 例如：想要用 HashMap 存放 1k 条数据，应该设置 `1000 / 0.75`，实际传递进去的值是 1333，然后会被 tableSizeFor() 方法调整到 2048，足够存储数据而不会触发扩容；
 
+当我们明确知道 HashMap 中元素的个数的时候，把默认容量设置成 `expectedSize / 0.75F + 1.0F` 是一个在性能上相对好的选择，但 是，同时也会牺牲些内存；当然我们可以使用guava来创建HashMap：`Maps.newHashMapWithExpectedSize(7);`，其会按照 `expectedSize / 0.75F + 1.0F` 计算公式来计算：
+```java
+public static <K, V> HashMap<K, V> newHashMapWithExpectedSize(int expectedSize) {
+	return new HashMap<K, V>(capacity(expectedSize));
+}
+static int capacity(int expectedSize) {
+	if (expectedSize < 3) {
+		checkNonnegative(expectedSize, "expectedSize");
+		return expectedSize + 1;
+	}
+	if (expectedSize < Ints.MAX_POWER_OF_TWO) {
+		// This is the calculation used in JDK8 to resize when a putAll happens; it seems to be the most conservative calculation we
+		// can make.  0.75 is the default load factor.
+		return (int) ((float) expectedSize / 0.75F + 1.0F);
+	}
+	return Integer.MAX_VALUE; // any large value
+}
+```
+
 在JDK 1.7和JDK 1.8中，HashMap初始化这个容量的时机不同。JDK 1.8中，在调用HashMap的构造函数定义HashMap的时候，就会进行容量的设定。而在JDK 1.7中，要等到第一次put操作时才进行这一操作
 
 # 二、签名

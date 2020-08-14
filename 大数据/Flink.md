@@ -124,4 +124,5 @@ Enviroment  -> Source -> Tranform -> Sink
 - [Apache Flink CEP 实战](https://yq.aliyun.com/articles/738451?utm_content=g_1000094637)
 - [Flink基础理论](https://blog.csdn.net/oTengYue/article/details/102689538)
 - [基于flink和drools的实时日志处理](https://www.cnblogs.com/luxiaoxun/p/13197981.html)
+- [Flink 精进学习](https://www.yuque.com/docs/share/a4b45fed-7417-4789-8df3-071abb9b3cac)
 

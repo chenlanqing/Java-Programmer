@@ -149,7 +149,7 @@ BEGIN
 - error_code: 错误码，0意味着没有发生错误
 - type:事件类型Query
 
-# 二、BinaryLog解析工具
+# 二、Binlog 解析工具
 
 ## 1、MaxWell
 
@@ -176,8 +176,23 @@ docker run -ti --rm zendesk/maxwell bin/maxwell --user='root' --password='123456
 
 docker run -it --rm zendesk/maxwell bin/maxwell --user='maxwell' --password='123456' --host='10.206.0.6' --producer=kafka --kafka.bootstrap.servers='119.45.13.206:9092' --kafka_topic=maxwell --log_level=debug
 
+## 2、Canal
+
+- [Canal源码](https://github.com/alibaba/canal.git)
+
+- 定位：基于数据库增量日志解析，提供增量数据订阅&消费，目前主要支持了mysql。
+
+- 原理：
+       - canal模拟mysql slave的交互协议，伪装自己为mysql slave，向mysql master发送dump协议
+       - mysql master收到dump请求，开始推送binary log给slave(也就是canal)
+       - canal解析binary log对象(原始为byte流)
+
+## 3、Databus
+
+Databus是一种低延迟变化捕获系统，已成为LinkedIn数据处理管道不可或缺的一部分。Databus解决了可靠捕获，流动和处理主要数据更改的基本要求
 
 # 参考资料
 
 
 - [MySQL BinaryLog](https://dev.mysql.com/doc/internals/en/binary-log-overview.html)
+- [MySQL 的 Binlog 日志处理工具对比](https://mp.weixin.qq.com/s/EJVUY4qCqKFqMudLZ2y09g)

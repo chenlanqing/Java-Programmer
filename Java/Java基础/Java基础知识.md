@@ -298,7 +298,7 @@ System.out.println(a == b); // 这里比较的时候会调用 Integer 类的 int
 
 在使用三目运算符时，尽量保证两个返回值的类型一致，不然会触发类型转换，转换规则如下：
 - （1）如果返回值`X`和返回值`Y`是同种类型，那么返回类型毫无疑问就是这种类型；
-- （2）如果两个返回值`X`和`Y`的类型不同，那么返回值类型为他们两最接近的父类。举例：
+- （2）如果两个返回值`X`和`Y`的类型不同，那么返回值类型为他们俩最接近的父类。举例：
 	```java
 	// String 和 Boolean 都实现了 Serializable 接口
 	Serializable serializable = a == b ? "true" : Boolean.FALSE;
@@ -3718,7 +3718,8 @@ int result = compile.run(null， null， null， "F:/class/HelloWorld.java");
 - CGLIB：基于asm实现
 - javaasist：性能比较差，使用简单
 
-https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html
+- [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
+- [字节码开源库](https://java-source.net/open-source/bytecode-libraries)
 
 ### 6.3、Javasist
 

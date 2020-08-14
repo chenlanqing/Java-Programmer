@@ -1,28 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、ArrayList](#%e4%b8%80arraylist)
-	- [1、Arraylist 类定义](#1arraylist-%e7%b1%bb%e5%ae%9a%e4%b9%89)
-	- [2、构造方法](#2%e6%9e%84%e9%80%a0%e6%96%b9%e6%b3%95)
-	- [3、成员变量](#3%e6%88%90%e5%91%98%e5%8f%98%e9%87%8f)
-	- [4、新增和扩容](#4%e6%96%b0%e5%a2%9e%e5%92%8c%e6%89%a9%e5%ae%b9)
-	- [5、ArrayList 安全隐患](#5arraylist-%e5%ae%89%e5%85%a8%e9%9a%90%e6%82%a3)
-- [二、Vector](#%e4%ba%8cvector)
-	- [1、签名：](#1%e7%ad%be%e5%90%8d)
-	- [2、方法与变量：](#2%e6%96%b9%e6%b3%95%e4%b8%8e%e5%8f%98%e9%87%8f)
-	- [3、Vector 多一种迭代方式](#3vector-%e5%a4%9a%e4%b8%80%e7%a7%8d%e8%bf%ad%e4%bb%a3%e6%96%b9%e5%bc%8f)
-- [三、面试题](#%e4%b8%89%e9%9d%a2%e8%af%95%e9%a2%98)
-	- [1、ArrayList 与 Vector](#1arraylist-%e4%b8%8e-vector)
-		- [1.1、区别](#11%e5%8c%ba%e5%88%ab)
-		- [1.2、关于Vector线程安全](#12%e5%85%b3%e4%ba%8evector%e7%ba%bf%e7%a8%8b%e5%ae%89%e5%85%a8)
-	- [2、ArrayList的sublist修改是否影响list本身](#2arraylist%e7%9a%84sublist%e4%bf%ae%e6%94%b9%e6%98%af%e5%90%a6%e5%bd%b1%e5%93%8dlist%e6%9c%ac%e8%ba%ab)
-	- [3、为什么最好在newArrayList的时候最好指定容量？](#3%e4%b8%ba%e4%bb%80%e4%b9%88%e6%9c%80%e5%a5%bd%e5%9c%a8newarraylist%e7%9a%84%e6%97%b6%e5%80%99%e6%9c%80%e5%a5%bd%e6%8c%87%e5%ae%9a%e5%ae%b9%e9%87%8f)
-	- [4、SynchronizedList、Vector有什么区别](#4synchronizedlistvector%e6%9c%89%e4%bb%80%e4%b9%88%e5%8c%ba%e5%88%ab)
-	- [5、Arrays.asList(T...args)获得的List特点](#5arraysaslisttargs%e8%8e%b7%e5%be%97%e7%9a%84list%e7%89%b9%e7%82%b9)
-	- [6、Iterator和ListIterator区别](#6iterator%e5%92%8clistiterator%e5%8c%ba%e5%88%ab)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 # 一、ArrayList
 
@@ -253,28 +228,89 @@ public static void main(String[] args) {
 	public List<E> subList(int fromIndex， int toIndex) {
 		// 边界校验
 		subListRangeCheck(fromIndex， toIndex， size);
+		// subList 返回是一个视图
 		return new SubList(this， 0， fromIndex， toIndex);
 	}
+	// ArrayList 的内部类，这个类中单独定义了 set、get、size、add、remove 等方法
 	private class SubList extends AbstractList<E> implements RandomAccess {
 		private final AbstractList<E> parent; // parent的具体实现类是 ArrayList
 		private final int parentOffset;
 		private final int offset;
 		int size;
-		SubList(AbstractList<E> parent，
-				int offset， int fromIndex， int toIndex) {
+		SubList(AbstractList<E> parent，int offset， int fromIndex， int toIndex) {
 			this.parent = parent;
 			this.parentOffset = fromIndex;
 			this.offset = offset + fromIndex;
 			this.size = toIndex - fromIndex;
 			this.modCount = ArrayList.this.modCount;
 		}
+		public E set(int index, E e) {
+            rangeCheck(index);
+            checkForComodification();
+            E oldValue = ArrayList.this.elementData(offset + index);
+            ArrayList.this.elementData[offset + index] = e;
+            return oldValue;
+        }
+        public E get(int index) {
+            rangeCheck(index);
+            checkForComodification();
+            return ArrayList.this.elementData(offset + index);
+        }
+        public int size() {
+            checkForComodification();
+            return this.size;
+        }
+        public void add(int index, E e) {
+            rangeCheckForAdd(index);
+            checkForComodification();
+			// 添加直接调用父类的添加元素的方法
+            parent.add(parentOffset + index, e);
+			// subList 添加的元素后，会同步父集合的modCount 修改到 subList的modCount，
+            this.modCount = parent.modCount;
+            this.size++;
+        }
+        public E remove(int index) {
+            rangeCheck(index);
+            checkForComodification();
+            E result = parent.remove(parentOffset + index);
+            this.modCount = parent.modCount;
+            this.size--;
+            return result;
+        }
+		private void checkForComodification() {
+            if (ArrayList.this.modCount != this.modCount)
+                throw new ConcurrentModificationException();
+        }
 	}
 	```	
 	subList 可以做集合的任何操作
 - 调用该方法后的生成的新的集合的操作都会对原集合有影响，在subList集合后面添加元素，添加的第一个元素的位置就是上述toIndex的值，而原始集合中toIndex的元素往后移动。其add方法调用过程：
 
-	add(element) --> AbstractList.add(e) --> SubList.add(index， e)	--> parent.add(index + parentOffset， e) --> ArrayList.add(newIndex， e)
+	`add(element) --> AbstractList.add(e) --> SubList.add(index， e) --> parent.add(index + parentOffset， e) --> ArrayList.add(newIndex， e)`
 		
+- List 的 subList 方法并没有创建一个新的 List，而是使用了 原 List 的视图，这个视图使用内部类 SubList 表示；不能把 subList 方法返回的 List 强制转换成 ArrayList 等类，因为他 们之间没有继承关系；
+
+视图和原 List 的修改还需要注意几点，尤其是他们之间的相互影响：
+- 对 父 (sourceList) 子 (subList)List 做 的 非 结 构 性 修 改(non-structural changes)，都会影响到彼此；
+- 对`子List` 做结构性修改，操作同样会反映到`父List` 上；子List的 add 是直接调用父集合的add方法来添加的元素的：
+	```java
+	public void add(int index, E e) {
+		rangeCheckForAdd(index);
+		checkForComodification();
+		parent.add(parentOffset + index, e);
+		this.modCount = parent.modCount;
+		this.size++;
+	}
+	```
+- 对`父List` 做结构性修改（增加、删除），均会导致`子List`的遍历、增加、删除抛出异常 ConcurrentModificationException；因为其迭代的时候会对比`父List的modCount`和`子集合的modCount`：
+	```java
+	private void checkForComodification() {
+		// ArrayList.this.modCount 表示父List的 modCount，this.modCount表示 子List的modCount
+		if (ArrayList.this.modCount != this.modCount)
+			throw new ConcurrentModificationException();
+	}
+	```
+
 ## 3、为什么最好在newArrayList的时候最好指定容量？
 
 ## 4、SynchronizedList、Vector有什么区别
