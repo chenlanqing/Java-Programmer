@@ -2,6 +2,8 @@
 
 https://www.cnblogs.com/itbsl/p/10998696.html#commentform
 
+`cd /etc/sysconfig/network-scripts`
+
 网卡配置：
 ``` 
 TYPE="Ethernet"

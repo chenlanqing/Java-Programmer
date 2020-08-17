@@ -442,7 +442,7 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 - G1是一个有整理内存过程的垃圾收集器，不会产生很多内存碎片；
 - G1的Stop The World(STW)更可控，G1在停顿时间上添加了预测机制，用户可以指定期望停顿时间；
 
-与其他收集器的区别：其将整个Java堆划分为多个大小相等的独立区域(Region).虽然还保留了新生代和老年代的概念，但是新生代和老年代不再是物理隔离的，它们都是一部分独立区域(不要求连续)的集合
+与其他收集器的区别：其将整个Java堆划分为多个大小相等的独立区域(Region)。虽然还保留了新生代和老年代的概念，但是新生代和老年代不再是物理隔离的，它们都是一部分独立区域(不要求连续)的集合
 
 ### 7.2、G1中重要的概念
 
@@ -450,16 +450,16 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 
 #### 7.2.1、Region
 
-传统的GC收集器将连续的内存空间划分为新生代、老年代和永久代（JDK 8去除了永久代，引入了元空间Metaspace），这种划分的特点是各代的存储地址是连续的；而G1的各代存储地址是不连续的，每一代都使用了n个不连续的大小相同的Region，每个Region占有一块连续的虚拟内存地址：
+传统的GC收集器将连续的内存空间划分为`新生代、老年代和永久代（JDK 8去除了永久代，引入了元空间Metaspace）`，这种划分的特点是各代的存储地址是连续的；而G1的各代存储地址是不连续的，每一代都使用了n个不连续的大小相同的Region，每个Region占有一块连续的虚拟内存地址：
 
 ![image](image/G1-Region.jpg)
 
-region的大小是一致，数值在1M到32M字节之间的一个2的幂值，JVM会尽量划分2048个左右、同等大小的region，这点从源码[heapRegionBounds.hpp](http://hg.openjdk.java.net/jdk/jdk/file/fa2f93f99dbc/src/hotspot/share/gc/g1/heapRegionBounds.hpp)可以看到；
+region的大小是一致，数值在`1M到32M字节之间的一个2的幂值`，`JVM会尽量划分2048个左右、同等大小的region`，这点从源码[heapRegionBounds.hpp](http://hg.openjdk.java.net/jdk/jdk/file/fa2f93f99dbc/src/hotspot/share/gc/g1/heapRegionBounds.hpp)可以看到；
 
 在上图中，我们注意到还有一些Region标明了H，它代表Humongous，这表示这些Region存储的是巨大对象（humongous object，H-obj），即大小大于等于region一半的对象；H-obj有如下几个特征：
-- H-obj直接分配到了old gen，防止了反复拷贝移动；
-- H-obj在global concurrent marking阶段的cleanup 和 full GC阶段回收
-- 在分配H-obj之前先检查是否超过initiating heap occupancy percent和the marking threshold, 如果超过的话，就启动global concurrent marking，为的是提早回收，防止evacuation failures 和full GC
+- H-obj直接分配到了`old gen`，防止了反复拷贝移动；
+- H-obj在`global concurrent marking`阶段的`cleanup 和 full GC`阶段回收
+- 在分配H-obj之前先检查是否超过`initiating heap occupancy percent`和`the marking threshold`, 如果超过的话，就启动`global concurrent marking`，为的是提早回收，防止`evacuation failures` 和full GC
 
 为了减少连续H-objs分配对GC的影响，需要把大对象变为普通的对象，建议增大Region size
 

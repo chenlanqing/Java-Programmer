@@ -382,3 +382,39 @@ mysql目前最新版是8.0，启动mysql后，通过IDE工具无法连接mysql�
 
 
 # 六、ElasticSearch
+
+# 七、zookeeper 集群安装
+
+
+开机启动：
+```bash
+cd /etc/rc.d/init.d/
+创建 zookeeper： touch zookeeper
+授予权限： chmod 777 zookeeper
+```
+开启启动脚本：
+```bash
+#!/bin/bash
+
+
+#chkconfig:2345 20 90
+#description:zookeeper
+#processname:zookeeper
+
+export JAVA_HOME=/usr/java/jdk1.8.0_231-amd64
+export PATH=$PATH:$JAVA_HOME/bin
+case $1 in
+    start) /usr/local/zookeeper-3.4.12/bin/zkServer.sh start;;
+    stop) /usr/local/zookeeper-3.4.12/bin/zkServer.sh stop;;
+    status) /usr/local/zookeeper-3.4.12/bin/zkServer.sh status;;
+    restart) /usr/local/zookeeper-3.4.12/bin/zkServer.sh restart;;
+    *) echo "require start|stop|status|restart" ;;
+esac
+```
+开机启动配置： chkconfig zookeeper on
+
+验证：
+chkconfig -add zookeeper
+
+chkconfig --list zookeeper
+

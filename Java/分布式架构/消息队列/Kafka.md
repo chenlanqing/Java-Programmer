@@ -1,3 +1,4 @@
+
 # 1、核心概念
 
 ## 1.1、主要特点
@@ -25,7 +26,10 @@ Kafka的整体架构非常简单，是显式分布式架构，producer、broker�
 - Broker：缓存代理，Kafka集群中的一台或多台服务器统称为broker。一台 kafka 服务器就是一个 broker。一个集群由多个 broker 组成。一个 broker 可以容纳多个 topic；
 - Topic：特指Kafka处理的消息源（feeds of messages）的不同分类。
 - Partition：Topic物理上的分组，一个topic可以分为多个partition，每个partition是一个有序的队列。partition中的每条消息都会被分配一个有序的id（offset）。
-- Replica:副本，为保证集群中的某个节点发生故障时，该节点上的 partition 数据不丢失，且 kafka 仍然能够继续工作，kafka 提供了副本机制，一个 topic 的每个分区都有若干个副本， 一个 leader 和若干个 follower
+- Replica副本，为保证集群中的某个节点发生故障时，该节点上的 partition 数据不丢失，且 kafka 仍然能够继续工作，kafka 提供了副本机制，一个 topic 的每个分区都有若干个副本， 一个 leader 和若干个 follower
+- In Sync Replicas（ISR）：
+    - HW：High Watermark，高水位线
+    - LEO：Log End offset，
 
 **发送消息的流程：**
 - Producer根据指定的partition方法（round-robin、hash等），将消息发布到指定topic的partition里面
@@ -45,18 +49,90 @@ Kafka的整体架构非常简单，是显式分布式架构，producer、broker�
 
 [零拷贝](../../Java框架/NIO-Netty.md#14.1零拷贝Zero-Copy技术)
 
+## 1.6、Kafka应用场景
 
-功能	            启动命令	备注
-启动  ZK	        bin/zookeeper-server-start.sh -daemon config/zookeeper.properties	Kafka 安装包自带 ZK，可以单节点启动
-启动Kafka服务器      bin/kafka-server-start.sh config/server.properties	
-创建 Topic（test）	 bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test	
-Topic 列表	        bin/kafka-topics.sh --list --zookeeper localhost:2181	
-启动 Producer	    bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test	
-启动 Consumer	    bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning	
-Topic相关信息（test) bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic test
+- 异步化、服务解耦、削峰填谷
+- 海量日志手机
+- 数据同步应用
+- 实时计算分析
+
+# 2、kafka配置安装
+
+|功能	 |            启动命令	|备注|
+|-------|---------------------|----|
+|启动  ZK	        | `bin/zookeeper-server-start.sh -daemon config/zookeeper.properties`	|Kafka 安装包自带 ZK，可以单节点启动|
+|启动Kafka服务器      | `bin/kafka-server-start.sh config/server.properties` || 	
+|创建 Topic（test）	 | `bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 1 --partitions 1 --topic test`|	|
+|Topic 列表	        | `bin/kafka-topics.sh --list --zookeeper localhost:2181`	||
+|启动 Producer	    | `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test`	||
+|启动 Consumer	    | `bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning`	||
+|Topic相关信息（test) | `bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic test` || 
+
+# 3、Kafka入门
+
+
+# 4、kafka生产者
+
+## 4.1、生产者API
+
+ProducerConfig
+
+KafkaProducer
+
+ProducerRecord
+
+KafkaProducer消息发送重试
+
+## 4.2、kafka生产者重要参数
+
+- `acks`：指定消息发送后，Broker端至少有多个副本接收该消息，默认为1；
+    - acks=0表示生产者发送消息之后不需要等到任何服务端的响应；
+    - acks=-1， acks=all：生成在消息发送之后，需要等待ISP中的所有副本都成功写入消息后才能收到服务端的成功响应；但是有并不代表kafka高可用；
+
+- `max.request.size`：该参数用来限制生产者客户端能发送的消息的最大值；默认是1M；
+
+- `retries 和 retry.backoff.msretries`：重试次数（默认是0）和重试间隔（默认是100ms）；
+
+- `compression.type`：用来指定的消息的压缩方式，默认值为`none`，可选配置：`gzip`、`snappy`、`lz4`；
+
+- `connections.max.idle.ms`：用来指定在多久之后关闭限制的连接，默认是 54000ms，即9分钟；
+
+- `linger.ms`：用来指定生产者发送 ProducerBatch 之前等待更多的消息（ProducerRecord）加入 ProducerBatch的时间，默认是0；
+
+- `batch.size`：累计多少条消息，则一次进行批量发送；只要满足 linger.ms 和 batch.size 一个，都会发生的；
+
+- `buffer.memory`：缓存提示性能参数，默认是32M；
+
+- `receive.buffer.bytes`：用来设置Socket接收消息缓冲区（SO_RECBUF）的大小，默认是32k；
+
+- `send.buffer.bytes`：用来设置socket发送消息缓冲区（SO_SNDBUF）的大小，默认是128k；
+
+- `request.timeout.ms`：用来配置Producer等待请求响应的最长时间，默认是 30000ms
+
+## 4.3、kafka拦截器
+
+- 生产者实现接口：ProducerInterceptor
+    
+    添加拦截器到
+    ```java
+    properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, CustromProducerInterceptor.class.getName());
+    ```
+
+- 消费者实现接口：ConsumerInterceptor
+
+    `properties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, CustomConsumerInterceptor.class.getName());`
+
+## 4.4、kafka序列化与反序列化
+
+- 序列化接口：Serializer
+- 反序列化接口：Deserializer
 
 # 参考资料
 
 * [Kafka详解](https://mp.weixin.qq.com/s/d9KIz0xvp5I9rqnDAlZvXw)
 * [Kafka入门](https://blog.csdn.net/hmsiwtv/article/details/46960053)
-* [Kafka面试题](http://cmsblogs.com/?p=10502)
+* [Kafka面试题](https://juejin.im/post/6844903837614997518)
+* [Kafka进阶面试题](https://mp.weixin.qq.com/s/CFzd7rwMFWtqc8xzCQ8vVw)
+* [Kafka进阶面试题2](https://mp.weixin.qq.com/s/2QA_UIE_ciTJDQ4kbUkl-A)
+* [Kafka与RocketMQ](https://mp.weixin.qq.com/s/WwHnyrOnw_io7G3uviim3Q)
+* [Kafka高性能原因](https://mp.weixin.qq.com/s/XhJl90DnprNsI8KxFfdyVw)
