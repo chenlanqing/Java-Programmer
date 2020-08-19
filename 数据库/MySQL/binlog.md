@@ -18,7 +18,7 @@
 修改二进制日志格式：`set binlog_format=''`
 
 - 基于段的格式：`binlog_format=STATEMENT`，mysql5.7之前默认的格式，每一条会修改数据的 SQL 都会记录在 Binlog 中：只需要记录执行语句的细节和上下文环境，避免了记录每一行的变化，在一些修改记录较多的情况下相比 ROW 类型能大大减少 Binlog 日志量，节约IO，提高性能；还可以用于实时的还原；同时主从版本可以不一样，从服务器版本可以比主服务器版本高
-	- 优点：日志记录量相对较小，节约磁盘及网络IO
+       - 优点：日志记录量相对较小，节约磁盘及网络IO
 	- 缺点：必须记录上下文信息，保证语句在从服务器上的执行结果与主服务器上执行结果相同，但是非确定性函数还是无法正确复制，有可能mysql主从服务器数据不一致
 - 基于行的格式：`binlog_format=ROW`，mysql5.7之后的默认格式，可以避免主从服务器数据不一致情况，仅保存记录被修改细节，不记录SQL语句上下文相关信息；能非常清晰的记录下每行数据的修改细节，不需要记录上下文相关信息，因此不会发生某些特定情况下的 procedure、function、及 trigger 的调用触发无法被正确复制的问题，任何情况都可以被复制，且能加快从库重放日志的效率，保证从库数据的一致性；
 - 混合模式：`binlog_format=MIXED`，上面两种方式混合使用；
@@ -180,12 +180,14 @@ docker run -it --rm zendesk/maxwell bin/maxwell --user='maxwell' --password='123
 
 - [Canal源码](https://github.com/alibaba/canal.git)
 
+ Canal 一个非常常用的使用场景：数据异构，一种更高级别的数据读写分离架构设计方法
+
 - 定位：基于数据库增量日志解析，提供增量数据订阅&消费，目前主要支持了mysql。
 
 - 原理：
-       - canal模拟mysql slave的交互协议，伪装自己为mysql slave，向mysql master发送dump协议
-       - mysql master收到dump请求，开始推送binary log给slave(也就是canal)
-       - canal解析binary log对象(原始为byte流)
+    - canal模拟mysql slave的交互协议，伪装自己为mysql slave，向mysql master发送dump协议
+    - mysql master收到dump请求，开始推送binary log给slave(也就是canal)
+    - canal解析binary log对象(原始为byte流)
 
 ## 3、Databus
 

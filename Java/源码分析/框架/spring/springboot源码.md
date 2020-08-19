@@ -2,6 +2,8 @@
 
 # 1、注解
 
+## 1.1、SpringBootApplication注解
+
 ```java
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -25,11 +27,115 @@ public @interface SpringBootApplication {
 
 	借助于Spring框架原有的一个工具类：SpringFactoriesLoader的支持，SpringFactoriesLoader属于Spring框架私有的一种扩展方案，其主要功能就是从指定的配置文件`META-INF/spring.factories`加载配置
 
-	从classpath中搜寻所有的`META-INF/spring.factories`配置文件，并将其中`org.springframework.boot.autoconfigure.EnableutoConfiguration`对应的配置项通过反射（Java Refletion）实例化为对应的标注了@Configuration的JavaConfig形式的IOC容器配置类，然后汇总为一个并加载到IOC容器。
+	从classpath中搜寻所有的`META-INF/spring.factories`配置文件，并将其中`org.springframework.boot.autoconfigure.EnableutoConfiguration`对应的配置项通过反射（Java Refletion）实例化为对应的标注了`@Configuration`的JavaConfig形式的IOC容器配置类，然后汇总为一个并加载到IOC容器。
 
 	配置在`META-INF/spring.factories`：**ApplicationContextInitializer**、**SpringApplicationRunListener**
 	
 	只需要放在ioc容器中：**ApplicationRunner**、**CommandLineRunner**
+
+## 1.2、EnableAutoConfiguration注解加载
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+// 要导入到容器中的组件： AutoConfigurationImportSelector，实现自接口 DeferredImportSelector，处理自动配置。如果需要@EnableAutoConfiguration的自定义变体，也可以创建该类的子类。
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {
+	String ENABLED_OVERRIDE_PROPERTY = "spring.boot.enableautoconfiguration";
+	Class<?>[] exclude() default {};
+	String[] excludeName() default {};
+}
+
+public class AutoConfigurationImportSelector implements DeferredImportSelector, BeanClassLoaderAware,ResourceLoaderAware, BeanFactoryAware, EnvironmentAware, Ordered {
+    protected AutoConfigurationEntry getAutoConfigurationEntry(AutoConfigurationMetadata autoConfigurationMetadata,AnnotationMetadata annotationMetadata) {
+		if (!isEnabled(annotationMetadata)) {
+			return EMPTY_ENTRY;
+		}
+        // 获取类路径下spring.factories下key为EnableAutoConfiguration全限定名对应值
+		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
+        // 去除重复的 自动配置类
+		configurations = removeDuplicates(configurations);
+        // 获取排除 EnableAutoConfiguration 配置的 exclude 
+		Set<String> exclusions = getExclusions(annotationMetadata, attributes);
+		checkExcludedClasses(configurations, exclusions);
+        // 将所有排除的都从集合中移除掉
+		configurations.removeAll(exclusions);
+        // 过滤，主要是通过 Conditional相关注解来实现的
+		configurations = filter(configurations, autoConfigurationMetadata);
+		fireAutoConfigurationImportEvents(configurations, exclusions);
+		return new AutoConfigurationEntry(configurations, exclusions);
+	}
+}
+```
+主要是在 `AbstractApplicationContext`的`refresh`方法中执行方法：`invokeBeanFactoryPostProcessors(beanFactory)`
+
+![](image/SpringBoot-AutoConfigurationImportSelector-调用链.png)
+
+getAutoConfigurationEntry 执行详情：
+
+### 1.2.1、getCandidateConfigurations方法
+
+```java
+// 获取类路径下spring.factories下key为 EnableAutoConfiguration 全限定名对应值
+protected List<String> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) {
+    List<String> configurations = SpringFactoriesLoader.loadFactoryNames(getSpringFactoriesLoaderFactoryClass(), getBeanClassLoader());
+    Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you "
+            + "are using a custom packaging, make sure that file is correct.");
+    return configurations;
+}
+// 获取 EnableAutoConfiguration 
+protected Class<?> getSpringFactoriesLoaderFactoryClass() {
+    return EnableAutoConfiguration.class;
+}
+```
+
+### 1.2.2、filter方法
+
+```java
+private List<String> filter(List<String> configurations, AutoConfigurationMetadata autoConfigurationMetadata) {
+    long startTime = System.nanoTime();
+    String[] candidates = StringUtils.toStringArray(configurations);
+    boolean[] skip = new boolean[candidates.length];
+    boolean skipped = false;
+    // 获取到所有 AutoConfigurationImportFilter 的实现类，配置在 spring.factories 文件中
+    for (AutoConfigurationImportFilter filter : getAutoConfigurationImportFilters()) {
+        invokeAwareMethods(filter);
+        // 调用 FilteringSpringBootCondition 的 match 方法，根据对应注解，比如 ConditionalOnBean等来匹配
+        boolean[] match = filter.match(candidates, autoConfigurationMetadata);
+        for (int i = 0; i < match.length; i++) {
+            if (!match[i]) {
+                skip[i] = true;
+                candidates[i] = null;
+                skipped = true;
+            }
+        }
+    }
+    if (!skipped) {
+        return configurations;
+    }
+    List<String> result = new ArrayList<>(candidates.length);
+    for (int i = 0; i < candidates.length; i++) {
+        if (!skip[i]) {
+            result.add(candidates[i]);
+        }
+    }
+    ...
+    return new ArrayList<>(result);
+}
+/**
+org.springframework.boot.autoconfigure.AutoConfigurationImportFilter=\
+org.springframework.boot.autoconfigure.condition.OnBeanCondition,\
+org.springframework.boot.autoconfigure.condition.OnClassCondition,\
+org.springframework.boot.autoconfigure.condition.OnWebApplicationCondition
+*/
+protected List<AutoConfigurationImportFilter> getAutoConfigurationImportFilters() {
+    return SpringFactoriesLoader.loadFactories(AutoConfigurationImportFilter.class, this.beanClassLoader);
+}
+```
 
 # 2、启动流程
 
@@ -134,14 +240,14 @@ public @interface SpringBootApplication {
 	- 推断并设置main方法的定义类。
 - 2） SpringApplication实例初始化完成并且完成设置后，就开始执行run方法的逻辑了，方法执行伊始，首先遍历执行所有通过SpringFactoriesLoader可以查找到并加载的SpringApplicationRunListener。调用它们的started()方法，告诉这些SpringApplicationRunListener，“嘿，SpringBoot应用要开始执行咯！”。
 - 3） 创建并配置当前Spring Boot应用将要使用的Environment（包括配置要使用的PropertySource以及Profile）。
-- 4） 遍历调用所有SpringApplicationRunListener的environmentPrepared()的方法，告诉他们：“当前SpringBoot应用使用的Environment准备好了咯！”。
+- 4） 遍历调用所有SpringApplicationRunListener的`environmentPrepared()`的方法，告诉他们：“当前SpringBoot应用使用的Environment准备好了咯！”。
 - 5） 如果SpringApplication的showBanner属性被设置为true，则打印banner。
 - 6） 根据用户是否明确设置了applicationContextClass类型以及初始化阶段的推断结果，决定该为当前SpringBoot应用创建什么类型的ApplicationContext并创建完成，然后根据条件决定是否添加ShutdownHook，决定是否使用自定义的BeanNameGenerator，决定是否使用自定义的ResourceLoader，当然，最重要的，将之前准备好的Environment设置给创建好的ApplicationContext使用。
-- 7） ApplicationContext创建好之后，SpringApplication会再次借助Spring-FactoriesLoader，查找并加载classpath中所有可用的ApplicationContext-Initializer，然后遍历调用这些ApplicationContextInitializer的initialize（applicationContext）方法来对已经创建好的ApplicationContext进行进一步的处理。
-- 8） 遍历调用所有SpringApplicationRunListener的contextPrepared()方法。
-- 9） 最核心的一步，将之前通过`@EnableAutoConfiguration`获取的所有配置以及其他形式的IOC容器配置加载到已经准备完毕的ApplicationContext。
-- 10） 遍历调用所有SpringApplicationRunListener的contextLoaded()方法。
-- 11） 调用ApplicationContext的refresh()方法，完成IOC容器可用的最后一道工序。
+- 7） ApplicationContext创建好之后，SpringApplication会再次借助SpringFactoriesLoader，查找并加载classpath中所有可用的ApplicationContext-Initializer，然后遍历调用这些ApplicationContextInitializer的initialize（applicationContext）方法来对已经创建好的ApplicationContext进行进一步的处理。
+- 8） 遍历调用所有SpringApplicationRunListener的`contextPrepared()`方法。
+- 9） 最核心的一步，将之前通过`@EnableAutoConfiguration`获取的所有配置以及其他形式的IOC容器配置加载到已经准备完毕的`ApplicationContext`。
+- 10） 遍历调用所有`SpringApplicationRunListener`的`contextLoaded()`方法。
+- 11） 调用`ApplicationContext`的`refresh()`方法，完成IOC容器可用的最后一道工序。
 - 12） 查找当前ApplicationContext中是否注册有CommandLineRunner，如果有，则遍历执行它们。
 - 13） 正常情况下，遍历执行SpringApplicationRunListener的finished()方法、（如果整个过程出现异常，则依然调用所有SpringApplicationRunListener的finished()方法，只不过这种情况下会将异常信息一并传入处理）
 
@@ -160,7 +266,7 @@ public @interface SpringBootApplication {
 	- AnnotationConfigEmbeddedWebApplicationContext(web环境容器) – AnnotationConfigApplicationContext(普通环境容器)
 
 - 准备环境
-- 执行ApplicationContextInitializer. initialize()
+- 执行`ApplicationContextInitializer.initialize()`
 - 监听器SpringApplicationRunListener回调contextPrepared – 加载主配置类定义信息
 - 监听器SpringApplicationRunListener回调contextLoaded
 	- 刷新启动IOC容器;

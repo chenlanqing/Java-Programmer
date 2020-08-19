@@ -2156,7 +2156,7 @@ public @interface SpringBootApplication {}
 
 		将主配置类（@SpringBootApplication标注的类）的所在包及下面所有子包里面的所有组件扫描到Spring容器；
 
- @**Import**(EnableAutoConfigurationImportSelector.class)：给容器中导入组件
+ 	**@Import(EnableAutoConfigurationImportSelector.class)**：给容器中导入组件
 
 EnableAutoConfigurationImportSelector 导入哪些组件的选择器；将所有需要导入的组件以全类名的方式返回；这些组件会被添加到容器中；会给容器中导入非常多的自动配置类```（xxxAutoConfiguration）```就是给容器中导入这个场景需要的所有组件，并配置好这些组件；有了自动配置类，免去了我们手动编写配置注入功能组件等的工作；
 
@@ -2398,10 +2398,11 @@ SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优
 
 [配置文件属性参考](https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties)
 
+下列分析是基于`1.5.9.RELEASE`版本
 - （1）SpringBoot启动的时候加载主配置类，开启了自动配置功能 **@EnableAutoConfiguration**
 - （2）**@EnableAutoConfiguration** 作用：
 	- 利用EnableAutoConfigurationImportSelector给容器中导入一些组件；
-	- 可以查看selectImports()方法的内容；
+	- 可以查看`selectImports()`方法的内容；
 	- `List<String> configurations = getCandidateConfigurations(annotationMetadata,attributes);`获取候选的配置
 		```
 		SpringFactoriesLoader.loadFactoryNames()
@@ -2463,8 +2464,8 @@ SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优
 	```
 
 **总结几点**
-
-xxxxAutoConfigurartion：自动配置类；给容器中添加组件；xxxxProperties:封装配置文件中相关属性；
+- `xxxxAutoConfigurartion`：自动配置类；给容器中添加组件；
+- `xxxxProperties`：封装配置文件中相关属性；
 
 ### 8.2、@Conditional派生注解
 
@@ -2511,7 +2512,7 @@ xxxxAutoConfigurartion：自动配置类；给容器中添加组件；xxxxProper
 		}
 	}
 	```
-- 自定义注解银瑞Condition接口实现类
+- 自定义注解Condition接口实现类
 
 **自动配置类必须在一定的条件下才能生效；**
 
@@ -3920,7 +3921,7 @@ war包：启动服务器，**服务器启动SpringBoot应用**【SpringBootServl
 
 servlet3.0有几个规则：
 - 服务器启动（web应用启动）会创建当前web应用里面每一个jar包里面ServletContainerInitializer实例
-- ServletContainerInitializer的实现放在jar包的META-INF/services文件夹下，有一个名为javax.servlet.ServletContainerInitializer的文件，内容就是ServletContainerInitializer的实现类的全类名
+- ServletContainerInitializer的实现放在jar包的`META-INF/services`文件夹下，有一个名为`javax.servlet.ServletContainerInitializer`的文件，内容就是ServletContainerInitializer的实现类的全类名
 - 可以使用@HandlesTypes，在应用启动的时候加载需要的类；
 
 整体过程：
