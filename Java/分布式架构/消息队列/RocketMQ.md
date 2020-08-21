@@ -594,33 +594,9 @@ RocketMWQ支持表达式过滤和类过滤两种模式，其中表达式又分�
 - 消费消息：`org.apache.rocketmq.example.quickstart.Consumer`，修改代码：`consumer.setNamesrvAddr("127.0.0.1:9876");` 执行，看是否消费成功；
 
 
-
-# 面试题
-
-## 1、RocketMQ如何保证消息不被重复消费
-
-## 2、幂等性保证
-
-## 3、可靠性投递
-
-## 4、rocketmq消息类型
-
-### 4.1、根据发送的特点
-
-- 同步消息
-- 异步消息
-- 单向消息
-
-### 4.2、按照使用功能
-
-- 普通消息（订阅）
-- 顺序消息
-- 广播消息
-- 延时消息
-- 批量消息
-- 事务消息
-
 # 参考资料
 
 * [RocketMQ的原理与实践](https://www.jianshu.com/p/453c6e7ff81c)
 * [RocketMQ术语](http://jaskey.github.io/blog/2016/12/15/rocketmq-concept/)
+* [RocketMQ查缺补漏](https://juejin.im/post/6862865811137101837)
+* [RocketMQ保证消息可靠性](https://juejin.im/post/6862875289786662926)
