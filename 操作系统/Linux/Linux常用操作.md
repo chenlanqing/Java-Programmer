@@ -546,6 +546,34 @@ ssh-copy-id -i hadoop002
 ssh-copy-id -i hadoop003
 ```
 
+## 12、nohup
+
+nohup 全称：no hang up（不挂起），即当前交互命令行退出的时候，程序还在运行；
+```bash
+nohup Command [Arg...] [ &]
+最后的" &"：表示后台运行，不霸占交互命令行
+如果不将 nohup 命令的输出重定向，输出将附加到当前目录的 nohup.out 文件中。
+如果当前目录的 nohup.out 文件不可写，输出重定向到 $HOME/nohup.out 文件中。
+如果没有文件能创建或打开以用于追加，那么 Command 参数指定的命令不可调用。
+如果标准错误是一个终端，那么把指定的命令写给标准错误的所有输出作为标准输出重定向到相同的文件描述符。
+
+nohup命令提交作业时，指定输出文件：
+
+nohup command > myout.file 2>&1 &
+
+0 – stdin (standard input，标准输入) 
+1 – stdout (standard output，标准输出)
+2 – stderr (standard error，标准错误输出) 
+2>&1解释：
+将标准错误（2）重定向到标准输出（&1），
+标准输出（&1）再被重定向输入到myout.file文件中。
+
+如：./startup.sh 2>&1 | tee startup.log
+表示将执行startup.sh脚本后到标准输出和标准错误输出内容写入到startup.log文件中。tee 默认是覆盖的方式写入文件中，加-a表示追加。
+
+最终解释：表示命令执行后退出交互命令行也不挂起，通过最后一个 &，表示后台运行，不霸占交互命令行，同时将标准输出和标准错误输出合并到myout.file文件中。
+```
+
 # 四、Linux工具
 
 vmstat 可以获得有关进程、内存页面交换、虚拟内存、线程上下文切换、等待队列等信息。能够反映系统的负载情况。一般用来查看进程等待数量、内存换页情况、系统上下文切换是否频繁等

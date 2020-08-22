@@ -792,6 +792,113 @@ else x= a;
 
 ### 1.6、拓宽注解的应用场景
 
+### 1.7、行为参数化
+
+行为参数化是一个很有用的模式，它能够轻松地使用不断变化的需求，这种模式可以把一个行为封装起来，并通过传递和使用创建的行为将方法的行为参数化，其可以代替匿名类
+
+**需求1**：筛选出红色的花
+```java
+public static List<Flower> filterFlower(List<Flower> flowers) {
+    List<Flower> resList = new ArrayList<>();
+    for (Flower flower : flowers) {
+        if (StringUtils.equals("red", flower.getColor())) {
+            resList.add(flower);
+        }
+    }
+}
+```
+**需求2**：筛选出绿色的话，正常情况下一般是会用color作为参数传入：
+```java
+public static List<Flower> filterFlowerByColor(List<Flower> flowers, String color) {
+    List<Flower> resList = new ArrayList<>();
+    for (Flower flower : flowers) {
+        if (StringUtils.equals(color, flower.getColor())) {
+            resList.add(flower);
+        }
+    }
+}
+```
+**需求3**：筛选出价格小于8块钱的花；我们只能再写一个方法来实现这个需求，为了防止后续价格的变化，聪明的我们提前将价格设置成可变参数
+```java
+public static List<Flower> filterFlowerByPrice(List<Flower> flowers, Integer price) {
+    List<Flower> resList = new ArrayList<>();
+    for (Flower flower : flowers) {
+        if (flower.getPrice() < price) {
+            resList.add(flower);
+        }
+    }
+}
+```
+为了保证代码整洁，把上述代码合并为一个方法，通过flag来控制要筛选价格类型的花还是颜色类型的花
+```java
+public static List<Flower> filterFlower(List<Flower> flowers, String color, Integer price, Boolean flag) {
+    List<Flower> resList = new ArrayList<>();
+    for (Flower flower : flowers) {
+        if ((flag && flower.getPrice() < price) ||
+            (!flag && StringUtils.equals(color, flower.getColor()))) {
+            resList.add(flower);
+        }
+    }
+    return resList;
+}
+```
+
+我们既然都能把花的属性作为参数进行传递，那么我们能不能我们能不能把过滤花的这种行为也作为一个参数进行传递，定义行为接口
+```java
+public interface FilterPrecidate {
+    boolean test(Flower flower);
+}
+```
+自定义两个过滤类来实现接口：
+```java
+public class RedColorFilterPredicate implements FilterPrecidate {
+    @Override
+    public boolean test(Flower flower) {
+        return StringUtils.equals("red", flower.getColor());
+    }
+}
+public class LowPriceFilterPredicate implements FilterPrecidate {
+    @Override
+    public boolean test(Flower flower) {
+        return flower.getPrice() < 8;
+    }
+}
+```
+重写我们的过滤方法，通过将行为作为参数传递：
+```java
+public static List<Flower> filterFlower(List<Flower> flowers, FilterPrecidate filter) {
+    List<Flower> resList = new ArrayList<>();
+    for (Flower flower : flowers) {
+        if (filter.test(flower)) {
+            resList.add(flower);
+        }
+    }
+    return resList;
+}
+/*****    使用    *****/
+filterFlower(flowerList, new RedColorFilterPredicate());
+filterFlower(flowerList, new LowPriceFilterPredicate());
+```
+如果有其他新增的过滤条件，为了避免增加新的类，可以使用lambda表达式：
+```
+filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);
+```java
+甚至可以将多种行为作为作为一个参数传递：
+```java
+filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8 && StringUtils.equals("red", flower.getColor()));
+```
+行为参数化是一个很有用的模式，它能够轻松地使用不断变化的需求，这种模式可以把一个行为封装起来，并通过传递和使用创建的行为将方法的行为参数化；
+
+如果我们将一个鲜花的集合按照价格进行排序，我们会这样做：
+```java
+Collections.sort(flowerList, new Comparator<Flower>() {
+    @Override
+    public int compare(Flower o1, Flower o2) {
+        return o1.getPrice().compareTo(o2.getPrice());
+    }
+});
+```
+
 ## 2、编译器新特性
 
 ### 2.1、参数名称
@@ -1089,16 +1196,7 @@ public String getCity(User user) throws Exception{
 
 ## 8、Lambda表达式与函数式接口
 
-### 8.1、函数式接口
-
-函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
-
-java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解@FunctionalInterface进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
-
-Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现
-
-### 8.2、Lambda表达式语法
-
+Lambda表达式语法
 ```java
 // 之前的语法
 new Thread(new Runnable() {
@@ -1109,6 +1207,154 @@ new Thread(new Runnable() {
 }).start();
 // lambda语法
 new Thread(() -> System.out.println("我是Lambda线程")).start();
+```
+
+### 8.1、函数式接口
+
+函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
+
+java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解@FunctionalInterface进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
+
+Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现；Lambda 表达式对于全局变量和静态变量可以没有限制的使用，但是对于局部变量必须显示声明为 final
+
+**Predicate**
+
+这个接口中定义了一个test()的抽象方法，它接受泛型 T 对象，并返回一个 boolean。你如果需要 表示一个涉及类型 T 的布尔表达式时，就可以使用这个接口；
+```java
+public static List<Flower> filterFlower(List<Flower> flowers, Predicate<Flower> p) {
+    List<Flower> resList = new ArrayList<>();
+    for (Flower flower : flowers) {
+        if (p.test(flower)) {
+            resList.add(flower);
+        }
+    }
+    return resList;
+}
+/*****      使用方式        *****/
+filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);
+```
+
+**Consumer**
+
+这个接口定义了一个accept()的抽象方法，它接受泛型 T 对象，没有返回（void）。你如果需要访问类型 T 的对象，并对其执行某些操作，就可以使用这个接口
+```java
+List<Integer> nums = Arrays.asList(1,2,3,4);
+nums.forEach(integer -> System.out.println(integer));
+```
+
+**Function**
+
+这个接口定义了一个apply()的抽象方法，它接受泛型 T 对象，并返回一个泛型 R 的对象。你如果需要定义一个Lambda，将输入对象的信息映射输出，就可以使用这个接口
+```java
+(String s) -> s.length()
+```
+
+**Supplier**
+
+这个接口定义了一个get()的抽象方法，它没有传入参数，会返回一个泛型 T 的对象，如果你需要定义一个 Lambda，输出自定义的对象，就可以使用这个接口
+```java
+Callable<Integer> call = () -> 1 ;
+```
+
+### 8.2、类型检查
+
+```java
+filter(flowerList, (Flower flower) -> flower.getPrice() > 8);
+```
+- 首先找出 filter 方法的声明
+- 要求第二个参数是 Predicate 类型的对象
+- Predicate 是一个函数式接口，定义了一个 test()的抽象方法，并返回一个boolean 类型的值
+
+### 8.3、类型推断
+
+`filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);`
+
+我们可以继续将这个代码简化为：`filterFlower(flowerList, f -> f.getPrice() > 8);`
+
+### 8.4、使用局部变量
+
+Lambda 表达式不仅能够使用主体里面的参数，也能够使用自由变量（在外层作用域中定义的变量）
+```java
+int tmpNum = 1；
+Runnable r = () -> System.out.println(tmpNum);
+```
+**注意：Lambda 表达式对于全局变量和静态变量可以没有限制的使用，但是对于局部变量必须显示声明为 final**
+
+因为实例变量是存储在堆中，而局部变量是存储在栈中，属于线程私有的。而 Lambda 是在一个线程中使用的，访问局部变量只是在访问这个变量的副本，而不是访问原始值
+
+### 8.5、方法引用
+
+方法引用就是让你根据已有的方法实现来创建 Lambda表达式。可以看做是单一方法的 Lambda 的语法糖
+```java
+List<Flower> flowerList = Arrays.asList(new Flower("red", 6), new Flower("yellow", 7), new Flower("pink", 8));
+
+(Flower f)->f.getPrice();   ==>  Flower::getPrice
+flowerList.stream().map(t -> t.getPrice()).collect(Collectors.toList());      ===>   flowerList.stream().map(Flower::getPrice).collect(Collectors.toList());
+```
+**如何构建方法引用**：
+- 指向静态方法的方法引用`（Integer的sum方法 == Integer::sum）`
+- 指向任意类型示例方法的方法引用`（String的length方法 == String::length）`
+- 指向现有对象的示例方法的方法引用`（flower实例的getPrice方法 == flower::getPrice）`
+
+### 8.6、复合 Lambda 表达式
+
+#### 8.6.1、比较器复合
+
+按鲜花的价格进行排序：
+```
+flowerList.sort(Comparator.comparing(Flower::getPrice));
+```
+这样子默认是使用升序进行排列的，那么我们如果想进项降序：使用 `reversed()`
+```
+flowerList.sort(Comparator.comparing(Flower::getPrice).reversed());
+```
+这里的粉花和白花的价格一样，那我们在价格排序完后再按照颜色排序那应该怎么做：使用 thenComparing()
+```java
+flowerList.sort(Comparator.comparing(Flower::getPrice).thenComparing(Flower::getColor));
+```
+
+#### 8.6.2、谓词复合
+
+用于`Predicate`接口
+
+**negate：非**
+```java
+Predicate<Flower> redFlower = (t) -> StringUtils.equals("red",t.getColor());
+Predicate<Flower> notRedFlower = redFlower.negate();
+```
+
+**and：且**
+```java
+Predicate<Flower> redFlower = (t) -> StringUtils.equals("red", t.getColor());
+Predicate<Flower> lowPriceFlower = (t) -> t.getPrice() < 8;
+Predicate<Flower> redAndLowPriceFlower = redFlower.and(lowPriceFlower);
+```
+
+**or：或**
+```java
+Predicate<Flower> redFlower = (t) -> StringUtils.equals("red", t.getColor());
+Predicate<Flower> lowPriceFlower = (t) -> t.getPrice() < 8;
+Predicate<Flower> redOrLowPriceFlower = redFlower.or(lowPriceFlower);
+```
+
+#### 8.6.3、函数复合
+
+用于`Function`接口
+
+**andThen**
+```java
+Function<Integer, Integer> addRes = a1 -> a1 + 1;
+Function<Integer, Integer> mulRes = a1 -> a1 * 2;
+Function<Integer, Integer> andThenResult = addRes.andThen(mulRes);
+Integer apply = andThenResult.apply(1);   // 结果为 4 ==> (1 + 1) * 2
+```
+
+**compose**
+```java
+Function<Integer, Integer> addRes = a1 -> a1 + 1;
+Function<Integer, Integer> mulRes = a1 -> a1 * 2;
+Function<Integer, Integer> composeResult = addRes.compose(mulRes);
+Integer apply = composeResult.apply(1);  // 结果为 3 ==> (1 * 2) + 1
 ```
 
 ### 8.3、Lambda原理
