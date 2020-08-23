@@ -1021,15 +1021,51 @@ Stream 就如同一个迭代器（Iterator），单向，不可往复，数据�
 最常用的创建Stream有两种途径：
 - 通过Stream接口的静态工厂方法；
 - 通过Collection接口的默认方法–stream()，把一个Collection对象转换成Stream；或者使用parallelStream()创建并行
-- 通过Arrays.stream(Object[])方法。
-- BufferedReader.lines()从文件中获得行的流。
+- 通过`Arrays.stream(Object[])`方法。
+- `BufferedReader.lines()`从文件中获得行的流。
 - Files类的操作路径的方法，如list、find、walk等。
 - 随机数流Random.ints()。
-- 其它一些类提供了创建流的方法，如BitSet.stream(), Pattern.splitAsStream(java.lang.CharSequence), 和 JarFile.stream()
+- 其它一些类提供了创建流的方法，如`BitSet.stream(), Pattern.splitAsStream(java.lang.CharSequence), 和 JarFile.stream()`
 
 其实最终都是依赖StreamSupport类来完成Stream创建的；
 
-### 5.3、常见用法
+流的操作：
+```java
+List<String> colorList =  flowerList.stream()                     //获取流
+                                    .filter(t->t.getPrice()<10)   //中间操作
+                                    .limit(3)                     //中间操作
+                                    .map(Flower::getColor)        //中间操作
+                                    .collect(Collectors.toList());//终端操作
+
+```
+
+**中间操作：**
+
+操作 | 返回类型 |  操作参数
+-----|--------|---------
+filter | Stream | Predicate
+map | Stream | `Funcation<T, R>`
+sorted | Stream | Comparator 
+distinct | Stream | -
+skip  | Stream| long
+limit | Stream | long
+flatMap | Stream| `Funcation<T, Steam>`
+
+**终端操作**
+
+操作 | 返回类型 |  操作参数 
+-----|--------|---------
+forEach | void |Consumer 
+count   | long | - 
+collect | R |`Collector<T, A,R>`
+anyMatch | boolean | Predicate
+noneMatch | boolean |Predicate
+allMatch | boolean | Predicate
+findAny | Optional | -
+findFirst | Optional | - 
+reduce | Optional | BinaryOperator
+
+### 5.3、常见流的操作
 
 - **foreach：迭代流中的每个数据**
 	```java
@@ -1057,14 +1093,104 @@ Stream 就如同一个迭代器（Iterator），单向，不可往复，数据�
 	Random random = new Random();
 	random.ints().limit(10).sorted().forEach(System.out::println);
 	```
-- **Collectors：实现了很多归约操作，例如将流转换成集合和聚合元素。Collectors 可用于返回列表或字符串：**
+- **归约：reduce**
+	- 元素求和
 	```java
-	List<String>strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
-	List<String> filtered = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.toList());
-	String mergedString = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.joining(", "));
+	// 两个参数版
+	int res = nums.stream().reduce(0,(a, b) -> a + b);
+	int res = nums.stream().reduce(0,Integer::sum);
+	// 一个参数版
+	Optional<Integer> o = nums.stream().reduce(Integer::sum);
 	```
+	- 最大值和最小值
+	```java
+	// 两个参数版
+	int max = nums.stream().reduce(0,Integer::max);
+	int min = nums.stream().reduce(Integer.MAX_VALUE,Integer::min);
+	// 一个参数版
+	Optional<Integer> maxOption = nums.stream().reduce(Integer::max);
+	Optional<Integer> minOption = nums.stream().reduce(Integer::min);
+	```
+### 5.4、收集器的使用
+
+Collectors：实现了很多归约操作，例如将流转换成集合和聚合元素。Collectors 可用于返回列表或字符串：
+```java
+List<String>strings = Arrays.asList("abc", "", "bc", "efg", "abcd","", "jkl");
+List<String> filtered = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.toList());
+String mergedString = strings.stream().filter(string -> !string.isEmpty()).collect(Collectors.joining(", "));
+```
+
+一组集合：`List<Flower> flowerList = Arrays.asList(new Flower("red", 10), new Flower("yellow", 7), new Flower("pink", 8), new Flower("yellow", 8), new Flower("red", 12));`
+
+**计算总数：**
+```
+Long c1 = flowerList.stream().collect(Collectors.counting());
+//也可以直接用 count() 方法来计数
+Long c2 = flowerList.stream().count();
+```
+
+**查找最大值和最小值：**
+```java
+Optional<Flower> max = flowerList.stream().collect(Collectors.maxBy(Comparator.comparing(Flower::getPrice)));
+Optional<Flower> min = flowerList.stream().collect(Collectors.minBy(Comparator.comparing(Flower::getPrice)));
+```
+
+**求和**
+```java
+Integer sum = flowerList.stream().collect(Collectors.summingInt(Flower::getPrice));
+```
+
+**求平均数：**
+```java
+Double avg = flowerList.stream().collect(Collectors.averagingInt(Flower::getPrice));
+```
+
+### 5.5、分组的使用
+
+**按照颜色分组**
+```java
+Map<String,List<Flower>> map = flowerList.stream().collect(Collectors.groupingBy(Flower::getColor));
+```
+
+**统计每种颜色的数量：Map<String, Long>**
+```java
+Map<String, Long> longMap = flowerList.stream().collect(Collectors.groupingBy(Flower::getColor, Collectors.counting()));
+```
+
+也可以支持多级分组
+
+**先按颜色分组，再按价格分组：Map<String, Map<String, List<Flower>>>**
+```java
+Map<String, Map<String, List<Flower>>> collect = flowerList.stream().collect(Collectors.groupingBy(Flower::getColor, Collectors.groupingBy(t -> {
+            if (t.getPrice() < 8) {
+                return "LOW_PRICE";
+            } else {
+                return "HIGH_PRICE";
+            }
+        })));
+```
+
+Collectors常用的方法：
+
+方法 | 返回类型 | 用途 
+----|---------|-------
+toList | List | 把流中所有项目都收集到一个List
+toSet | Set | 把流中所有项目都收集到一个Set，删除重复项
+toCollection | Collection | 把流中所有项目收集到给定的供应源创建的集合
+counting | Long | 计算流中元素的个数
+summingInt | Integer | 对流中项目的一个整数属性求和
+averagingInt | Double | 计算流中项目Integer属性的平均值
+joining | String | 连接对流中每个项目调用toString方法所生成的字符串
+maxBy | Optional | 一个包裹了流中按照给定比较器选出最大元素的Optional，如果为空则为Optional.empty()
+minBy | Optional | 一个包裹了流中按照给定比较器选出最小元素的Optional，如果为空则为Optional.empty()
+reducing | 归约操作产生的类型 | 从一个作为累加器的初始值开始，利用 BinaryOperator 与流中的元素组个结合，从而将流归约成单个值
+collectingAndThen | 转换函数返回的类型 | 包裹另一个收集器，对其结果应用转换函数
+groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项目作为组，并将属性值作为结果Map的键
+
 
 ## 6、Optional
+
+### 6.1、解决问题
 
 [Optional使用](https://www.cnblogs.com/rjzheng/p/9163246.html)
 
@@ -1094,9 +1220,41 @@ public String getCity(User user) throws Exception{
 
 **Optional(T value)、empty()、of(T value)、ofNullable(T value)**
 
-- Optional(T value)，即构造函数，它是private权限的，不能由外部调用的；
+- `Optional(T value)`，即构造函数，它是private权限的，不能由外部调用的；
 - 其余三个函数是public权限；
 - Optional的本质，就是内部储存了一个真实的值，在构造的时候，就直接判断其值是否为空
+
+Optional相当于是一个容器，里面可以装 T 类型的对象。当变量不存在的时候，缺失的值就会被建模成一个“空”的Optional对象，由方法Optional.empty()返回。这就是Optional.empty()和null的区别，如果引用一个 null，那结果肯定是会触发NullPointException异常，但是引用Optional.empty()则没事
+
+### 6.2、如何使用
+
+**创建Optional对象**
+- 创建一个空的Optional：`Optional<Person> personOpt = Optional.empty()`
+- 创建一个非空的Optional：`Optional<Person> personOpt = Optional.of(person)`，Optional.of()不接受空值。如果 person 是一个空值则会抛出 NPE 异常，而不是等你试图访问 person 的属性才抛出异常；
+- 创建一个可接受空值的Optional：`Optional<Person> personOpt = Optional.ofNullable(Person)`，如果 person 是 null ，那么得到的 Optional 对象就是个空对象。
+
+**使用map**
+
+Optional 中的 map()方法和流中的map()相似，都是从Optional对象中提取和转换值。
+```
+Optional<String> name = Optional.ofNullable(person).map(Person::getName);
+```
+获取到的是一个Optional对象是为了防止获取到一个 null，我们可以通过Optional.get()来获取值
+
+**默认行为**
+
+可以使用get()方法来获取 Optional 的值，也可以使用orElse()来定义一个默认值，遭遇到空的Optional值的时候，默认值会作为该方法的调用返回值。以下是Optional的常用方法：
+- `get()`：最简单但又是最不安全的方法，如果变量存在，则直接返回封装的变量值，反之则抛出NullpointException异常
+- `orElse(T other)`：允许自己定义一个默认值在Optional为空的时候返回；
+- `orElseGet(Supplier<? extend T> other)`：是orElse()方法的延迟调用版，在Optional对象不含值的时候执行调用；
+- `orElseThrow(Supplier<? extend X> excetionSupplier)`：和get()方法类似，在Optional对象为空的时候会抛出一个异常，但是这个异常我们可以自定义；
+- `ifPresent(Consumer<? extend T>)`：如果值存在，就执行使用该值的方法调用，否则什么也不做
+
+### 6.3、注意实现
+
+- Optional不能被序列化，因此不能使用于字段；
+- Optional不建议用于函数的入参。试想传入一个Optional.empty()有多奇怪，可以使用相同函数名来避免；
+- 不建议在使用isPresent后接着使用get，那将和用==判断无异，不能体现Optional的优越性，反而麻烦
 
 ## 7、JDK8时间
 
