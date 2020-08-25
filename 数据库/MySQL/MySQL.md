@@ -1899,7 +1899,7 @@ sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192
 ### 7.1、索引失效的情况
 
 - 如果条件中有or，如果两边都字段都有索引，则索引可用，一旦有一边无索引可用就会导致整个SQL语句的全表扫描；
-- Like 查询是以 %开头，例如SELECT * FROM mytable WHEREt Name like’%admin’，会导致全文搜索
+- Like 查询是以 `%`开头，例如`SELECT * FROM mytable WHEREt Name like '%admin'`，会导致全文搜索
 - 如果列类型是字符串，那一定要在条件中使用引号引起来，否则不会使用索引；
 - 应尽量避免在 where 子句中使用`!=`或`<>`操作符
 - in 和 not in 也要慎用，当使用in或者not in时扫描表的数据量过大时，会全表扫描；

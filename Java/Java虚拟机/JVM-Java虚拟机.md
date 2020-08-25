@@ -2,6 +2,8 @@
 
 `java -XX:+PrintCommandLineFlags -version`：查看初始默认参数
 
+一句话：JVM屏蔽了与具体操作系统平台相关的信息，使得Java程序只需生成在Java虚拟机上运行的目标代码（字节码），就可以在多种平台上不加修改地运行
+
 # 0、虚拟机历史
 
 - Sun Classic：世界上第一款商用Java虚拟机，在JDK1.2之前是 Sun JDK中唯一的虚拟机，在JDK1.2时，它与HotSpot虚拟机共存，但默认的是Classic VM，在JDK1.3时成为默认虚拟机，直到1.4之后才完全退出历史舞台.

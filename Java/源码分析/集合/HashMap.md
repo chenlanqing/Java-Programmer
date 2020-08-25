@@ -1,28 +1,28 @@
 
 # 一、HashMap 概述
 
-HashMap 是基于一个数组和多个链表来实现的，HashMap继承AbstractMap, 实现了 Map、Cloneable、Serializable
+HashMap 是基于一个数组和多个链表来实现的，HashMap继承`AbstractMap`, 实现了 `Map、Cloneable、Serializable`
 
 ## 1、HashMap的特点
 
 ### 1.1、HashMap 基本结构
 
-在JDK8之前使用了一个内部类 Entry<K, V>来存储数据，这个内部类是一个简单的键值对，HashMap将数据存储到多个单向Entry链表中，所有的列表都被注册到一个Entry数组中(Entry<K, V>[]数组)，这个内部数组的默认长度是 16；
+在JDK8之前使用了一个内部类 `Entry<K, V>`来存储数据，这个内部类是一个简单的键值对，HashMap将数据存储到多个单向Entry链表中，所有的列表都被注册到一个Entry数组中(`Entry<K, V>[]`数组)，这个内部数组的默认长度是 16；
 
-在JDK8之后，内部采用的是Node<K,V>节点来存储数据的
+在JDK8之后，内部采用的是`Node<K,V>`节点来存储数据的；
 
 ### 1.2、HashMap的特点
 
 - 线程非安全，并且允许key与value都为 null 值，Hashtable 与之相反，为线程安全，key与value都不允许 null 值；
 - 不保证其内部元素的顺序，而且随着时间的推移，同一元素的位置也可能改变（resize的情况）
 - put、get操作的时间复杂度为O(1)。
-- 遍历其集合视角的时间复杂度与其容量（capacity，槽的个数）和现有元素的大小（entry的个数）成正比，所以如果遍历的性能要求很高，不要把capactiy设置的过高或把平衡因子（load factor，当entry数大于capacity*loadFactor时，会进行resize，reside会导致key进行rehash）设置的过低
-- 由于HashMap是线程非安全的，这也就是意味着如果多个线程同时对一hashmap的集合试图做迭代时有结构的上改变（添加、删除entry，只改变entry的value的值不算结构改变），那么会报ConcurrentModificationException专业术语叫fail-fast
-- Map m = Collections.synchronizedMap(new HashMap())； 通过这种方式可以得到一个线程安全的map
+- 遍历其集合视角的时间复杂度与其容量（capacity，槽的个数）和现有元素的大小（entry的个数）成正比，所以如果遍历的性能要求很高，不要把`capactiy`设置的过高或把平衡因子（load factor，当entry数大于`capacity*loadFactor`时，会进行resize，reside会导致key进行rehash）设置的过低
+- 由于HashMap是线程非安全的，这也就是意味着如果多个线程同时对一hashmap的集合试图做迭代时有结构的上改变（添加、删除entry，只改变entry的value的值不算结构改变），那么会报`ConcurrentModificationException`专业术语叫fail-fast
+- `Map m = Collections.synchronizedMap(new HashMap());` 通过这种方式可以得到一个线程安全的map；
 
 ### 1.3、不可变对象与 HashMap 的key
 
-- 如果 HashMap Key 的哈希值在存储键值对后发生改变，Map 可能再也查找不到这个 Entry 了。如果Key对象是可变的，那么Key的哈希值就可能改变。在HashMap中可变对象作为Key会造成数据丢失
+- 如果 key 的哈希值在存储键值对后发生改变，Map 可能再也查找不到这个 Entry 了。如果Key对象是可变的，那么Key的哈希值就可能改变。在HashMap中可变对象作为Key会造成数据丢失
 - 在 HashMap 中使用不可变对象。在 HashMap 中，使用 String、Integer 等不可变类型用作Key是非常明智的定义属于自己的不可变类时，在改变对象状态的时候，不要改变它的哈希值了
 
 ## 2、HashMap和Hashtable的区别
@@ -99,7 +99,6 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 		TreeNode<K,V> prev;    // needed to unlink next upon deletion
 		boolean red;
 	}
-
 	static class Entry<K,V> extends HashMap.Node<K,V> {
 		Entry<K,V> before, after;
 		Entry(int hash, K key, V value, Node<K,V> next) {
@@ -107,10 +106,10 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 		}
 	}
 	```
-- 红黑树是自平衡的二叉搜索树，不管是添加还是删除节点，它的内部机制可以保证它的长度总是log(n)。使用这种类型的树，最主要的好处是针对内部表中许多数据都具有相同索引（桶）的情况，这时对树进行搜索的复杂度是O(log(n))，而对于链表来说，执行相同的操作，复杂度是O(n)；
+- 红黑树是自平衡的二叉搜索树，不管是添加还是删除节点，它的内部机制可以保证它的长度总是`log(n)`。使用这种类型的树，最主要的好处是针对内部表中许多数据都具有相同索引（桶）的情况，这时对树进行搜索的复杂度是`O(log(n))`，而对于链表来说，执行相同的操作，复杂度是`O(n)`；
 
 - JDK8中HashMap有三个关于红黑树的关键参数：
-	* TREEIFY_THRESHOLD = 8：
+	* `TREEIFY_THRESHOLD = 8`：
 
 		一个桶的树化阈值，当桶中元素超过这个值时，使用红黑树节点替换链表节点值为8，应该跟加载因子类似；
 
@@ -126,28 +125,27 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承Abstract
 		7: 0.00000094
 		8: 0.00000006
 		```
+		红黑树的平均查找长度是`log(n)`，长度为8，查找长度为`log(8)=3`，链表的平均查找长度为`n/2`，当长度为8时，平均查找长度为`8/2=4`，这才有转换成树的必要；链表长度如果是小于等于6，`6/2=3`，虽然速度也很快的，但是转化为树结构和生成树的时间并不会太短；
 
-		红黑树的平均查找长度是log(n)，长度为8，查找长度为log(8)=3，链表的平均查找长度为n/2，当长度为8时，平均查找长度为8/2=4，这才有转换成树的必要；链表长度如果是小于等于6，6/2=3，虽然速度也很快的，但是转化为树结构和生成树的时间并不会太短；
-
-	* UNTREEIFY_THRESHOLD = 6：
+	* `UNTREEIFY_THRESHOLD = 6`：
 
 		一个树的链表还原阈值，当扩容时，桶中元素个数小于这个值，会把树形的桶元素还原为链表结构，这个值是6，应该比 `TREEIFY_THRESHOLD` 小
 
 		为什么是6和8？中间有个差值7可以防止链表和树之间频繁的转换。假设一下，如果设计成链表个数超过8则链表转换成树结构，链表个数小于8则树结构转换成链表，如果一个HashMap不停的插入、删除元素，链表个数在8左右徘徊，就会频繁的发生树转链表、链表转树，效率会很低。
 
-	* MIN_TREEIFY_CAPACITY = 64：
+	* `MIN_TREEIFY_CAPACITY = 64`：
 	
-		哈希表（数组）的最小树形化容量，当哈希表（数组）中的容量大于这个值时，表中的桶才能进行树形化，否则桶内元素太多时会扩容，而不是树形化。为了避免进行扩容、树形化选择的冲突，这个值不能小于 4 * TREEIFY_THRESHOLD
+		哈希表（数组）的最小树形化容量，当哈希表（数组）中的容量大于这个值时，表中的桶才能进行树形化，否则桶内元素太多时会扩容，而不是树形化。为了避免进行扩容、树形化选择的冲突，这个值不能小于 4*TREEIFY_THRESHOLD
 
 - 为什么使用红黑树而不使用二叉树？
 
 	之所以选择红黑树是为了解决二叉查找树的缺陷：二叉查找树在特殊情况下会变成一条线性结构（这就跟原来使用链表结构一样了，造成层次很深的问题），遍历查找会非常慢。而红黑树在插入新数据后可能需要通过左旋、右旋、变色这些操作来保持平衡。引入红黑树就是为了查找数据快，解决链表查询深度的问题；
 
-	红黑树的查询性能略微逊色于AVL树，因为他比avl树会稍微不平衡最多一层，也就是说红黑树的查询性能只比相同内容的avl树最多多一次比较，但是，红黑树在插入和删除上完爆avl树，avl树每次插入删除会进行大量的平衡度计算，而红黑树为了维持红黑性质所做的红黑变换和旋转的开销，相较于avl树为了维持平衡的开销要小得多
+	红黑树的查询性能略微逊色于AVL树，因为他比avl树会稍微不平衡最多一层，也就是说红黑树的查询性能只比相同内容的avl树最多多一次比较，但是，红黑树在插入和删除上完爆avl树，avl树每次插入删除会进行大量的平衡度计算，而红黑树为了维持红黑性质所做的红黑变换和旋转的开销，相较于avl树为了维持平衡的开销要小得多；
 
 	**但是为什么会有链表与红黑树的相互转化？**
 
-	红黑树属于平衡二叉树，为了保持“平衡”是需要付出代价的，但是该代价所损耗的资源要比遍历线性链表要少。所以当长度大于8的时候，会使用红黑树；如果链表长度很短的话，根本不需要引入红黑树，引入反而会慢
+	红黑树属于平衡二叉树，为了保持“平衡”是需要付出代价的，但是该代价所损耗的资源要比遍历线性链表要少。所以当长度大于8的时候，会使用红黑树；如果链表长度很短的话，根本不需要引入红黑树，引入反而会慢；
 
 ### 6.2、扩容时插入顺序的改进
 
@@ -211,12 +209,12 @@ static int capacity(int expectedSize) {
 public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable, Serializable
 ```
 
-- 实现标记接口 Cloneable，用于表明 HashMap 对象会重写 java.lang.Object#clone()方法，HashMap 实现的是浅拷贝(shallow copy)；
+- 实现标记接口 Cloneable，用于表明 HashMap 对象会重写 `java.lang.Object#clone()`方法，HashMap 实现的是浅拷贝(shallow copy)；
 - 实现标记接口 Serializable，用于表明 HashMap 对象可以被序列化；
 - HashMap 继承 AbstractMap 抽象类的同时又实现了 Map 接口：在语法层面继承接口Map是多余的，这么做仅仅是为了让阅读代码的人明确知道 HashMap 是属于 Map 体系的，起到了文档的作用AbstractMap 相当于个辅助类，Map 的一些操作这里面已经提供了默认实现，后面具体的子类如果没有特殊行为，可直接使用AbstractMap提供的实现；
 
 - AbstractMap 抽象类：对 Map 中的方法提供了一个基本实现，减少了实现Map接口的工作量
-	- 如果要实现个不可变(unmodifiable)的map，那么只需继承 AbstractMap，然后实现其entrySet方法，这个方法返回的set不支持add与remove，同时这个set的迭代器(iterator)不支持remove操作即可。
+	- 如果要实现个`不可变(unmodifiable)的map`，那么只需继承 AbstractMap，然后实现其entrySet方法，这个方法返回的set不支持add与remove，同时这个set的迭代器(iterator)不支持remove操作即可。
 	- 如果要实现个可变(modifiable)的map，首先继承 AbstractMa，然后重写 AbstractMap 的put方法，同时实现entrySet所返回set的迭代器的remove方法即可
 
 ***为什么继承了 AbstractMap 还需要实现 Map 接口？*** HashMap的作者说这是一个写法错误；并没有其他意思；也有可能是为了语义和代码上更清晰吧；
@@ -249,7 +247,7 @@ HashMap是一种基于哈希表（hash table）实现的map，既满足了数据
 
 可以理解为其存储数据的容器就是一个线性数组，HashMap里面实现一个静态内部类 Entry，其重要的属性有 key、value、next，从属性key、value我们就能很明显的看出来 Entry 就是 HashMap 键值对实现的一个基础bean，我们上面说到HashMap的基础就是一个线性数组，这个数组就是 Entry[],Map 里面的内容都保存在 Entry[]里面
 
-***在 JDK8中,HashMap中内容保存在 Node[] 数组中的***
+***在 JDK8中，HashMap中内容保存在 Node[] 数组中的***
 
 ## 4、HashMap 的工作原理
 
@@ -681,9 +679,9 @@ static final int hash(Object key) {
 	return (key == null) ? 0 : (h = key.hashCode()) ^ (h >>> 16);
 }
 ```
-在JDK1.8的实现中，优化了高位运算的算法，通过hashCode()的高16位异或低16位实现的：(h = k.hashCode()) ^ (h >>> 16)，主要是从速度、功效、质量来考虑的。以上方法得到的int的hash值，然后再通过h & (table.length -1)来得到该对象在数据中保存的位置
+在JDK1.8的实现中，优化了高位运算的算法，通过hashCode()的高16位异或低16位实现的：`(h = k.hashCode()) ^ (h >>> 16)`，主要是从速度、功效、质量来考虑的。以上方法得到的int的hash值，然后再通过`h & (table.length -1)`来得到该对象在数据中保存的位置
 
-在Java 8之前的实现中是用链表解决冲突的，在产生碰撞的情况下，进行get时，两步的时间复杂度是O(1)+O(n)。因此，当碰撞很厉害的时候n很大，O(n)的速度显然是影响速度的。因此在Java 8中，利用红黑树替换链表，这样复杂度就变成了O(1)+O(logn)了，这样在n很大的时候，能够比较理想的解决这个问题；
+在Java 8之前的实现中是用链表解决冲突的，在产生碰撞的情况下，进行get时，两步的时间复杂度是`O(1)+O(n)`。因此，当碰撞很厉害的时候n很大，O(n)的速度显然是影响速度的。因此在Java 8中，利用红黑树替换链表，这样复杂度就变成了`O(1)+O(logn)`了，这样在n很大的时候，能够比较理想的解决这个问题；
 
 ### 3.4、关于性能
 
@@ -719,7 +717,6 @@ void resize(int newCapacity) {
 		threshold = Integer.MAX_VALUE;
 		return;
 	}
-
 	Entry[] newTable = new Entry[newCapacity];
 	transfer(newTable);
 	table = newTable;
@@ -856,7 +853,7 @@ public Set<K> keySet() {
 
 ## 6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂
 
-之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法。从key映射到HashMap 数组对应的位置，会用到一个hash函数。实现高效的hash算法，HashMap 中使用位运算。index = hashcode(key) & (length - 1)。  hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位。长度是2的幂不仅提高了性能，因为length - 1的二进制值位全是1，这种情况下，index的结果等同于Hashcode后几位的值，只要输入hashcode均匀分布，hash算法的结果就是均匀的。
+之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法。从key映射到HashMap 数组对应的位置，会用到一个hash函数。实现高效的hash算法，HashMap 中使用位运算。`index = hashcode(key) & (length - 1)`。hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位。长度是2的幂不仅提高了性能，因为`length - 1`的二进制值位全是1，这种情况下，index的结果等同于Hashcode后几位的值，只要输入hashcode均匀分布，hash算法的结果就是均匀的。
 
 ## 7、泊松分布与指数分布
 
@@ -874,14 +871,14 @@ Poisson分布，是一种统计与概率论中常见的离散概率分布，其�
 
 ## 8、如果HashMap在put的时候，如果数组已有某个key，不想覆盖怎么办？取值时，如果得到的value是空时，如何返回默认值；
 
-- 如果数组有了key，但是不想覆盖value，可以选择putIfAbsent方法，这个方法有个内置变量onlyIfAbsent，内置是true，就不会覆盖；在平时使用put的时候，内置onlyIfAbsent是false，允许覆盖；
+- 如果数组有了key，但是不想覆盖value，可以选择`putIfAbsent`方法，这个方法有个内置变量`onlyIfAbsent`，内置是true，就不会覆盖；在平时使用put的时候，内置onlyIfAbsent是false，允许覆盖；
 	```java
 	@Override
     public V putIfAbsent(K key, V value) {
         return putVal(hash(key), key, value, true, true);
     }	
 	```
-- 取值时，如果为空，想返回默认值，可以使用getOrDefault方法，第一个参数为key，第二个参数为想返回的默认值；
+- 取值时，如果为空，想返回默认值，可以使用`getOrDefault`方法，第一个参数为key，第二个参数为想返回的默认值；
 	```java
 	@Override
     public V getOrDefault(Object key, V defaultValue) {
