@@ -191,4 +191,31 @@
         - 命令：AWK、top、netstat、grep
         - 内存分页管理与 Swap 机制、任务队列与 CPU Load 
         - 内存屏障、指令乱序、分支预测、NUMA 与 CPU 亲和性等
+
+1. javaagent
+2. asm
+3. jvmti
+4. javaassit
+5. netty
+6. 算法，搜索引擎
+7. cglib
+8. 混沌工程
+9. 中间件开发
+10. 高级测试；压力测试、链路测试、流量回放、流量染色
+11. 故障系列；突袭、重现、演练
+12. 分布式的数据一致性
+13. 文件操作；es、hive
+14. 注册中心；zookeeper、Eureka
+15. 互联网工程开发技术栈；spring、mybaits、网关、rpc(thrift, grpc, dubbo)、mq、缓存redis、分库分表、定时任务、分布式事物、限流、熔断、降级
+16. 数据库binlog解析 
+17. 架构设计；DDD领域驱动设计、微服务、服务治理
+18. 容器；k8s, docker
+19. 分布式存储；ceph
+20. 服务istio
+21. 压测 jmter
+22. Jenkins-部署java代码项目 + ansible
+23. 全链路监控，分布式追踪
+24. 语音识别、语音合成
+26. lvs nginx haproxy iptables
+27. hadoop mapreduce hive sqoop hbase flink kylin druid
 ```

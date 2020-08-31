@@ -377,6 +377,42 @@ mysql目前最新版是8.0，启动mysql后，通过IDE工具无法连接mysql�
 
 # 四、RabbitMQ
 
+## 1、单机安装
+
+准备：`yum install build-essential openssl openssl-devel unixODBC unixODBC-devel make gcc gcc-c++ kernel-devel m4 ncurses-devel tk tc xz`
+
+下载依赖：
+```
+wget www.rabbitmq.com/releases/erlang/erlang-18.3-1.el7.centos.x86_64.rpm
+wget http://repo.iotti.biz/CentOS/7/x86_64/socat-1.7.3.2-5.el7.lux.x86_64.rpm
+wget www.rabbitmq.com/releases/rabbitmq-server/v3.6.5/rabbitmq-server-3.6.5-1.noarch.rpm
+```
+
+配置文件：
+```
+vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
+```
+比如修改密码、配置等等，例如：loopback_users 中的 `<<"guest">>`，只保留guest
+
+服务启动和停止：
+- 启动 `rabbitmq-server start &`
+- 停止 `rabbitmqctl app_stop`
+
+管理插件：`rabbitmq-plugins enable rabbitmq_management`
+
+访问地址：http://192.168.11.76:15672/
+
+## 2、镜像集群安装
+
+### 2.1、环境准备
+
+三台服务器：
+- IP地址： `192.168.89.152/153/154`
+- hostname 分别为： `rabbitmq1、rabbitmq2、rabbitmq3`
+
+### 2.2、安装步骤
+
+https://juejin.im/post/6844903826332319757
 
 # 五、RocketMQ
 

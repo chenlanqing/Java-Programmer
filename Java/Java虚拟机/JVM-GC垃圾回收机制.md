@@ -528,17 +528,17 @@ global concurrent marking的执行过程分为四个步骤：
 
 	其实是由一些参数控制着的,另外也控制着哪些老年代Region会被选入CSet
 
-	- G1HeapWastePercent：global concurrent marking结束之后，可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC；
-	- G1MixedGCLiveThresholdPercent：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet；
-	- G1MixedGCCountTarget：一次global concurrent marking之后，最多执行Mixed GC的次数；
-	- G1OldCSetRegionThresholdPercent：一次Mixed GC中能被选入CSet的最多old generation region数量
-	- -XX:G1HeapRegionSize=n设置Region大小，并非最终值
-	- -XX:MaxGCPauseMillis设置G1收集过程目标时间，默认值200ms，不是硬性条件
-	- -XX:G1NewSizePercent新生代最小值，默认值5%
-	- -XX:G1MaxNewSizePercent新生代最大值，默认值60%
-	- -XX:ParallelGCThreadsSTW期间，并行GC线程数
-	- -XX:ConcGCThreads=n并发标记阶段，并行执行的线程数
-	- -XX:InitiatingHeapOccupancyPercent设置触发标记周期的 Java 堆占用率阈值。默认值是45%
+	- `G1HeapWastePercent`：global concurrent marking结束之后，可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC；
+	- `G1MixedGCLiveThresholdPercent`：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet；
+	- `G1MixedGCCountTarget`：一次global concurrent marking之后，最多执行Mixed GC的次数；
+	- `G1OldCSetRegionThresholdPercent`：一次Mixed GC中能被选入CSet的最多old generation region数量
+	- `-XX:G1HeapRegionSize=n`设置Region大小，并非最终值
+	- `-XX:MaxGCPauseMillis`设置G1收集过程目标时间，默认值200ms，不是硬性条件
+	- `-XX:G1NewSizePercent`新生代最小值，默认值5%
+	- `-XX:G1MaxNewSizePercent`新生代最大值，默认值60%
+	- `-XX:ParallelGCThreads`STW期间，并行GC线程数
+	- `-XX:ConcGCThreads=n`并发标记阶段，并行执行的线程数
+	- `-XX:InitiatingHeapOccupancyPercent`设置触发标记周期的 Java 堆占用率阈值。默认值是45%
 
 ### 7.4、最佳实践
 

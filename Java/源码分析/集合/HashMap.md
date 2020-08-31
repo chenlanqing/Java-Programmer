@@ -653,7 +653,7 @@ final int hash(Object k) {
 	int h = hashSeed;
 	// 如果是字符串作为key，其不使用string自带的hashcode函数，而是使用JDK另外定义的一套hashcode函数，防止生成链表的安全隐患，避免DOS
 	if (0 != h && k instanceof String) {
-					return sun.misc.Hashing.stringHash32((String) k);
+		return sun.misc.Hashing.stringHash32((String) k);
 	}
 	h ^= k.hashCode();
 	// 是为了对key的hashCode进行扰动计算，防止不同hashCode的高位不同但低位相同导致的hash冲突
@@ -943,6 +943,7 @@ Poisson分布，是一种统计与概率论中常见的离散概率分布，其�
 * [高并发下的HashMap](https://www.jianshu.com/p/c15f7c180375)
 * [彻底理解HashMap](https://mp.weixin.qq.com/s/DfAoqmjh2tt5nZaUc8Dxwg)
 * [HashMap与Hashtable](https://mp.weixin.qq.com/s/h3Cg1O0pjfqp5E8ckDz_Jg)
+* [深入理解HashMap](https://xie.infoq.cn/article/b9e870e6083ef36abe230b8dd)
 
 
 

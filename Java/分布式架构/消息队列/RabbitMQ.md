@@ -51,28 +51,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 
 ### 1.7、RabbitMQ安装
 
-准备：
-`yum install build-essential openssl openssl-devel unixODBC unixODBC-devel make gcc gcc-c++ kernel-devel m4 ncurses-devel tk tc xz`
-
-下载：
-```
-wget www.rabbitmq.com/releases/erlang/erlang-18.3-1.el7.centos.x86_64.rpm
-wget http://repo.iotti.biz/CentOS/7/x86_64/socat-1.7.3.2-5.el7.lux.x86_64.rpm
-wget www.rabbitmq.com/releases/rabbitmq-server/v3.6.5/rabbitmq-server-3.6.5-1.noarch.rpm
-```
-
-配置文件：
-```
-vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
-```
-比如修改密码、配置等等，例如：loopback_users 中的 <<"guest">>,只保留guest
-服务启动和停止：
-- 启动 rabbitmq-server start &
-- 停止 rabbitmqctl app_stop
-
-管理插件：rabbitmq-plugins enable rabbitmq_management
-
-访问地址：http://192.168.11.76:15672/
+[单机安装](../../../辅助资料/环境配置/Linux环境.md#1单机安装)
 
 ## 2、RabbitMQ整体架构
 
@@ -88,35 +67,30 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
 
 接收消息，并根据路由键转发消息所绑定的队列
 
+**注意**：发送消息时一定要经过Exchange，如果没有指定Exchange，其会使用默认的Exchange，直接发到对应的队列上（队列名称）
+
 ### 3.1、属性
 
 - Name：交换名称
-- Type：交换机类型direct、topic、fanout、headers；
+- Type：交换机类型`direct、topic、fanout、headers；`
 - Durability：是否需要持久化，true为持久化；
-- Auto Delete：当最后一个绑定到Exchange上队列删除后，自动删除该Exchange；
+- Auto Delete：当最后一个绑定到Exchange上队列删除后，自动删除该 Exchange；一般正式环境是不会做自动删除的
 - Iternal：当前exchange是否用于RabbitMQ内部使用，默认为false；
 - Arguments：扩展参数，用于扩展AMQP协议自制定化使用
 
 ### 3.2、交换机类型
 
-- Direct Exchange
+- `Direct Exchange`：所有发生到Direct Exchange的消息被转到到RoutingKey中指定的Queue；
 
-  所有发生到Direct Exchange的消息被转到到RoutingKey中指定的Queue；
+  **注意**：Driect模式可以使用RabbitMQ自带的Exchange：`default Exchange`，所以不需要讲Exchange进行任何绑定操作，消息传递时，`RouteKey`必须完全匹配才会被队列接受，否则该消息会被抛弃；
 
-  *注意：*Driect模式可以使用RabbitMQ自带的Exchange：default Exchange，所以不需要讲Exchange进行任何绑定操作，消息传递时，RouteKey必须完全匹配才会被队列接受，否则该消息会被抛弃；
+- `Topic Exchange`：所有发送到Topic Exchange的消息被转发到所有关心`RouteKey`中指定的`Topic`的`Queue`上；Exchange将`RouteKey`和某`Topic`进行模糊匹配，此时队列需要绑定一个`Topic`；可以使用通配符进行模糊匹配。模糊匹配规则：
+  - `#` 匹配一个或多个词，`log.#` 能匹配到`log.info.oa`
+  - `*` 匹配到不多不少一个词，`log.*`，只会匹配到 `log.eorror`
 
-- Topic Exchange
+  建议是按照完全匹配的规则，避免消费混乱的问题；
 
-  所有发送到Topic Exchange的消息被转发到所有关心RouteKey中指定的Topic的Queue上；Exchange将RouteKey和某Topic进行模糊匹配，此时队列需要绑定一个Topic；
-  
-  可以使用通配符进行模糊匹配。模糊匹配规则：
-
-  - “#” 匹配一个或多个词，“log.#” 能匹配到log.info.oa
-  - “*” 匹配到不多不少一个词，“log.*” 只会匹配到 log.eorror
-
-- Fanout Exchange
-
-  不处理路由键，只需要简单的将队列绑定到交换机上；发送到交换机的消息都会被转发到与该交换机绑定的所有队列上，Fanout交换机转发消息是最快的
+- `Fanout Exchange`：不处理路由键，只需要简单的将队列绑定到交换机上；发送到交换机的消息都会被转发到与该交换机绑定的所有队列上，Fanout交换机转发消息是最快的；
 
 ## 4、其他概念
 
@@ -139,8 +113,10 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
 
 - Virtual host-虚拟主机
   - 虚拟地址，用于进行逻辑隔离，最上层的消息路由；
+  - 一个 Virtula Host 里面可以有若干个Exchange 和Queue；
+  - 同一个 Virtual Host 里面不能有相同名称的Exchange 和Queue
 
-## 5、消息如何保障100%投递成功
+## 5、生产端可靠性与消费端幂等性
 
 ### 5.1、生产端的可靠性消息投递
 
@@ -151,7 +127,7 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
   - 完善的消息进行补偿机制
 
 - 生产端可靠性投递解决方案
-    - 消息落库，对消息进行状态打标；在高并发场景下，可能存在大量的数据库操作
+    - 消息落库，对消息进行状态打标；保证业务数据和消息数据在一个事务中；在高并发场景下，可能存在大量的数据库操作；
     - 消息的延迟投递，做二次确认，回调检查，回调检查是补偿机制
 
     ![image](image/生产端可靠性消息投递-二次确认.png)
@@ -164,9 +140,7 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
 
 ### 5.2、消费端幂等性保障
 
-*在海量订单产生的业务高峰期，如何避免消息的重复消费问题*
-
-消费端实现幂等性，意味着消息永远不可能被消费多次，即使收到了多条一样的消息
+*在海量订单产生的业务高峰期，如何避免消息的重复消费问题*：消费端实现幂等性，意味着消息永远不可能被消费多次，即使收到了多条一样的消息
 
 消费端幂等性解决方案：
 - 唯一ID + 指纹码机制，利用数据库主键去重；
@@ -176,7 +150,7 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
 
 - 利用redis的原子性实现
 
-  需要注意的问题：
+需要注意的问题：
   - 是否需要对数据进行落库，如果落库的话，关键解决的问题是数据库和缓存如何做到原子性；
   - 如果不进行落库，那么都存到缓存中，如何设置定时同步策略；
 
@@ -189,8 +163,8 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
 
 ### 6.2、如何实现Confirm确认消息
 
-- （1）在channel上开启确认模式：channel.confirmSelect();
-- （2）在channel上添加监听：addConfirmListner，监听成功和失败的返回结果，根据具体的结果对消息进行重新发送，或记录日志等待后续处理；
+- （1）在channel上开启确认模式：`channel.confirmSelect();`
+- （2）在channel上添加监听：`addConfirmListner`，监听成功和失败的返回结果，根据具体的结果对消息进行重新发送，或记录日志等待后续处理；
 
 comfirm机制其实是一个异步监听的机制 ，是为了保证系统的高吞吐量 ，这样就导致了还是不能够100%保障消息不丢失
 
@@ -208,10 +182,10 @@ comfirm机制其实是一个异步监听的机制 ，是为了保证系统的高
 ## 9、消费端限流
 
 - 巨量的消息瞬间全部推送到消费端，但是单个客户端无法同时处理这么多的数据；
-- RabbitMQ提供了一种QOS（服务质量保证）功能，即在非自动确认消息的前提下，如果一定数据的消息（通过基于consume或者channel设置的qos的值）未被确认前，不进行消费新的消息
-- void basicQos(int prefetchSize, int prefetchCount, boolean global)
+- RabbitMQ提供了一种`QOS（服务质量保证）`功能，即在非自动确认消息的前提下，如果一定数据的消息（通过基于consume或者channel设置的qos的值）未被确认前，不进行消费新的消息
+- `void basicQos(int prefetchSize, int prefetchCount, boolean global)`，限制可以限制在Channel 或者 Consumer 上
 
-  **注意：** prefetchSize和global这两个选型，rabbitmq没有实现，暂且不研究prefetch_count在no_ack=false的情况下生效，即在自动应答的情况下这两个值是不生效的
+  **注意**：prefetchSize和global这两个选型，rabbitmq没有实现，暂且不研究prefetch_count在no_ack=false的情况下生效，即在自动应答的情况下这两个值是不生效的
 
 ## 10、消费端ACK与重回队列
 
@@ -219,32 +193,43 @@ comfirm机制其实是一个异步监听的机制 ，是为了保证系统的高
 
 - 消费端进行消费的时候，如果由于业务异常可以进行日志的尽量，然后进行补偿；
 - 如果由于服务器宕机等严重问题，那就需要手工进行ACK保障消费端消费成功；
+- 实际工作中，一般是手动ACK；
 
 ### 10.2、消费端重回队列
 
 - 消费端重回队列是为了对没有处理成功的消息，把消息重新会传递给broker；
 - 一般在实际的应用中，都会关闭重回队列，也就是这种为false；
 
-## 11、TTL-Time To Live，生存时间
+## 11、TTL队列/消息
 
+TTL-Time To Live，生存时间
 - RabbitMQ 支持消息的过期时间，在消息发送时可以进行指定；
-- RabbitMQ 支付队列的过期时间，从消息入队列开始计算，只要超过了队列的超时时间配置，那么消息会自动的清除；
+- RabbitMQ 支持队列的过期时间，从消息入队列开始计算，只要超过了队列的超时时间配置，那么消息会自动的清除；
 
-## 12、死信队列-Dead Letter Exchane
+## 12、死信队列
 
-- 利用DLX，当消息在一个队列中变成死信时，它能被重新publish到另一个Exchange，这个Exchange就是DLX；
+DLX：Dead Letter Exchane
+- 利用DLX，当消息在一个队列中变成死信时，它能被重新publish到另一个Exchange，这个Exchange就是`DLX`；
 
 ### 12.1、消息变成死信的情况
 
-- 消息被拒绝（basic.rejec/basic.nack），并且requeue=fals；
-- 消息TTL过去
-- 队列达到最大长度
+- 消息被拒绝（`basic.rejec/basic.nack`），并且`requeue=fals`；
+- 消息TTL过去；
+- 队列达到最大长度；
 
 ### 12.2、死信队列
 
-- DLX也是正常的Exchange，和一般的Exchange没有区别，它能在任何的队列上被指定，实际上就是设置某个队列的属性；
+- `DLX`也是正常的Exchange，和一般的Exchange没有区别，它能在任何的队列上被指定，实际上就是设置某个队列的属性；
 - 当这个队列中有死信时，RabbitMQ就会自动的将这个消息重新发布到设置的Exchange上，进而被路由到另一个队列；
-- 可以监听这个队列中消息做相应的处理，这个特性可以弥补RabbitMQ3.0以前致辞的immediate参数的功能；
+- 可以监听这个队列中消息做相应的处理，这个特性可以弥补`RabbitMQ3.0`以前支持的immediate参数的功能；
+
+### 12.3、死信队列设置
+
+- 首先需要设置死信队列的 exchange 和 queue，然后进行绑定：
+  - Exchange： dlx.exchange
+  - Queue： dlx.queue
+  - RoutingKey： #
+- 进行正常声明exchange、queue、routingkey，不过需要在队列加上一个参数： arguments.put("x-dead-letter-exchange", "dlx.exchange)
 
 # 二、RabbitMQ与Spring整合
 
@@ -397,7 +382,9 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 
 - 多活模式：实现异地数据复制的主流模式，一般采用双中心（多中心）模式，其依赖rabbitmq的federation插件，可以实现持续的可靠地AMQP数据通信；
 
+## 2、镜像进群安装
 
+[单机安装](../../../辅助资料/环境配置/Linux环境.md#2镜像集群安装)
 
 # 四、RabbitMQ-SET化架构实现
 

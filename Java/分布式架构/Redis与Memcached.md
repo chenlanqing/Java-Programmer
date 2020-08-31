@@ -6,23 +6,22 @@
 
 redis为了达到最快的读写速度，将数据都读到内存中，并通过异步的方式将数据写入磁盘。如果不将数据放在内存中，磁盘IO速度会严重影响redis的性能
 
-**1.1、特点：**
+### 1.1、特点
 
 - Redis 数据库完全在内存中，使；用磁盘仅用于持久性；
 - 相比许多键值数据存储，Redis 拥有一套较为丰富的数据类型；
 - Redis 可以将数据复制到任意数量的从服务器；
 
-**1.2、优点：**
+### 1.2、优点
 
 - 异常快速：Redis 的速度非常快，每秒能执行约11万集合，每秒约81000+条记录
 - 支持丰富的数据类型：Redis 支持最大多数开发人员已经知道像列表，集合，有序集合，散列数据类型
 - 操作都是原子性：所有 Redis 操作是原子的，这保证了如果两个客户端同时访问的 Redis 服务器将获得更新后的值；
 - 多功能实用工具：Redis 是一个多实用的工具，可以在多个用例如缓存，消息，队列使用(Redis 原生支持发布/订阅)，任何短暂的数据，应用程序，如Web应用程序会话，网页命中计数等
 
-**1.3、Redis 安装配置：**
+### 1.3、启动
 
-**1.4、启动： redis-server**
-
+redis-server
 ```
 运行：redis-cli
 	127.0.0.1：6379> 127.0.0.1是本机的IP地址，6379为Redis服务器运行的端口
@@ -34,12 +33,12 @@ PONG > 表示成功地安装Redis在您的机器上
 
 ### 2.1、字符串：是字节序列
 
-- Redis 字符串是二进制安全的，这意味着他们有一个已知的长度没有任何特殊字符终止，所以你可以存储任何东西，512M为上限；如一张图片等；
+- Redis 字符串是二进制安全的，这意味着他们有一个已知的长度没有任何特殊字符终止，所以你可以存储任何东西，`512M`为上限；如一张图片等；
 - 使用场景：
-	- ①、使用 INCR 命令族（INCR，DECR，INCRBY），将字符串作为原子计数器
-	- ②、使用 APPEND 命令追加字符串
-	- ③、使用 GETRANGE 和 SETRANGE 命令，使字符串作为随机访问向量（vectors）
-	- ④、编码大量数据到很小的空间，或者使用 GETBIT 和 SETBIT 命令，创建一个基于 Redis 的布隆 (Bloom) 过滤器
+	- ①、使用 `INC`R 命令族（INCR，DECR，INCRBY），将字符串作为原子计数器
+	- ②、使用 `APPEND` 命令追加字符串
+	- ③、使用 `GETRANGE` 和 `SETRANGE` 命令，使字符串作为随机访问向量（vectors）
+	- ④、编码大量数据到很小的空间，或者使用 `GETBIT` 和 `SETBIT` 命令，创建一个基于 Redis 的布隆 (Bloom) 过滤器
 
 **常用命令：**
 - get/set/del：查询/设置/删除
@@ -839,8 +838,6 @@ AOF的整个流程大体来看可以分为两步：
 ## 5、Redis从持久化中恢复数据
 
 启动时会先检查AOF文件是否存在，如果不存在就尝试加载RDB。那么为什么会优先加载AOF呢？因为AOF保存的数据更完整，通过上面的分析我们知道AOF基本上最多损失1s的数据
-
-
  		
 # 四、Redis 事务
 
@@ -1535,7 +1532,7 @@ Redis 还会 fork 一个子进程，来进行重负荷任务的处理。Redis
 | allkeys-random | 从所有数据集中任意选择数据进行淘汰 |
 | noeviction | 禁止淘汰数据 |
 
-如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key。抽样数量可通过 maxmemory-samples 配置。
+如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key。抽样数量可通过 `maxmemory-samples` 配置。
 
 默认是noeviction
 
@@ -1774,8 +1771,6 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 
 ## 3、Redis中使用Lua
 
-# 十四、Redis面试题
-
 # 参考资料
 - [Redis官方资料-命令](https://redis.io/commands)
 - [Redis持久化](https://redis.io/topics/persistence)
@@ -1789,3 +1784,4 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 - [Redis Cluster](http://www.redis.cn/topics/cluster-tutorial.html)
 - [Redis内存数据结构](https://mp.weixin.qq.com/s/DpNzFRUMwtz0-YY0gdQGgA)
 - [面试之Redis持久化](https://mp.weixin.qq.com/s/vfooUVhLSrpDLYdm3GDhRg)
+- [Redis基本数据类型与底层原理](https://mp.weixin.qq.com/s/ipP35Zho9STAgu_lFT79rQ)

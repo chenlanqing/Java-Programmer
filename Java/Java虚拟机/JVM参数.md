@@ -290,17 +290,17 @@ java [options] -jar filename [args]
 
 - `-XX:NewRatio=ratio`：设置年轻代和年老代的比例，默认是2；
 
-- `-XX:SurvivorRatio=ratio`：新生代eden区和survivor区的比例。默认是8。
+- `-XX:SurvivorRatio=ratio`：新生代eden区和survivor区的比例。默认是8，最小值是1；
 
-- `-XX:InitialSurvivorRatio=ratio`：设置初始的survivor空间占比，默认值是8；当使用throughput型的GC时有效（即`-XX:+UseParallelGC` 或`-XX:+UseParallelOldGC`）。运行过程中survivor空间占比会自动根据应用运行调整，如果关闭了自适应调整策略（`-XX:-UseAdaptiveSizePolicy`），则`XX:SurvivorRatio`参数会成为survivor空间占比。计算survivor空间大小，依赖young的空间大小，计算公式如下：`S=Y/(R+2)`，其中Y是young空间大小，R是survivor空间占比。一个例子就是如果young空间大小是2MB，而survivor默认占比是8，那么survivor的空间就是0.2MB；
+- `-XX:InitialSurvivorRatio=ratio`：设置初始的survivor空间占比，默认值是8，最小值时3；当使用throughput型的GC时有效（即`-XX:+UseParallelGC` 或`-XX:+UseParallelOldGC`）。运行过程中survivor空间占比会自动根据应用运行调整，如果关闭了自适应调整策略（`-XX:-UseAdaptiveSizePolicy`），则`XX:SurvivorRatio`参数会成为survivor空间占比。计算survivor空间大小，依赖young的空间大小，计算公式如下：`S=Y/(R+2)`，其中Y是young空间大小，R是survivor空间占比。一个例子就是如果young空间大小是2MB，而survivor默认占比是8，那么survivor的空间就是0.2MB；
 
-- `-XX:MinSurvivorRatio`：Eden和1个Survivor区的最小比值，默认是 3
+- `-XX:MinSurvivorRatio`：Eden和1个Survivor区的最小比值，默认是 3，在GC之后，如果需要重新计算 Survivor 的值，Survivor 的新值不能低于根据它算出来的值；
 
 - `-XX:TargetSurvivorRatio=percent`：设置在YGC后的期望的survivor空间占比。默认是50%。
 
 - `-XX:InitialTenuringThreshold`：晋升到老年代的对象的初始年龄阈值，默认值是：7
 
-- `-XX:MaxTenuringThreshold=threshold`：设置在自适应GC大小的使用占有最大阈值，默认对于ParallelGC（throughput）的是15（为什么一个对象最多经过15次ygc就回晋升到老生代？是因为对象头里就分配了4个bit来存age属性，所以最大就是1111，即15）；对于CMS的是6。当设置了这个值得时候，第一次会以它为准，后面就不一定了，因为晋升的阈值是动态调整的。
+- `-XX:MaxTenuringThreshold=threshold`：设置在自适应GC大小的使用占有最大阈值，默认对于ParallelGC（throughput）的是15（为什么一个对象最多经过15次ygc就回晋升到老生代？是因为对象头里就分配了4个bit来存age属性，所以最大就是1111，即15）；对于CMS的是6。当设置了这个值得时候，第一次会以它为准，后面就不一定了，因为晋升的阈值是动态调整的。如果在CMS GC下设置该值为0的话，相当于每次Minor GC都直接晋升到老年代，此时如果 SurvivorRatio 没有设置的话，会将 SurvivorRatio 默认设置为 1024；
 
 - `-XX:MinHeapFreeRatio=percent`：设置在一次GC后最小的空闲堆内存占比。如果空闲堆内存小于该值，则堆内存扩展。默认是40%；在G1收集器，是针对整个堆，在SerialGC、ParalleGC、CMS GC是针对老年代；`Xminf`和`MinHeapFreeRatio`是等价的，如`-Xminf0.4`等价于`-XX:MinHeapFreeRatio=40`
 
