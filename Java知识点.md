@@ -216,6 +216,6 @@
 22. Jenkins-部署java代码项目 + ansible
 23. 全链路监控，分布式追踪
 24. 语音识别、语音合成
-26. lvs nginx haproxy iptables
+26. lvs nginx haproxy iptabåles
 27. hadoop mapreduce hive sqoop hbase flink kylin druid
 ```

@@ -41,26 +41,26 @@ PONG > 表示成功地安装Redis在您的机器上
 	- ④、编码大量数据到很小的空间，或者使用 `GETBIT` 和 `SETBIT` 命令，创建一个基于 Redis 的布隆 (Bloom) 过滤器
 
 **常用命令：**
-- get/set/del：查询/设置/删除
-- set rekey data：设置已经存在的key，会覆盖
-- setnx rekey data：设置已经存在的key，不会覆盖
-- set key value ex time：设置带过期时间的数据
-- expire key：设置过期时间
-- ttl：查看剩余时间，-1永不过期，-2过期
-- append key：合并字符串
-- strlen key：字符串长度
-- incr key：累加1
-- decr key：类减1
-- incrby key num：累加给定数值
-- decrby key num：累减给定数值
-- getrange key start end：截取数据，end=-1 代表到最后
-- setrange key start newdata：从start位置开始替换数据
-- mset：连续设值
-- mget：连续取值
-- msetnx：连续设置，如果存在则不设置
-- select index：切换数据库，总共默认16个
-- flushdb：删除当前下边db中的数据（不建议使用）
-- flushall：删除所有db中的数据（不建议使用）
+- `get/set/del`：查询/设置/删除
+- `set rekey data`：设置已经存在的key，会覆盖
+- `setnx rekey data`：设置已经存在的key，不会覆盖
+- `set key value ex time`：设置带过期时间的数据
+- `expire key`：设置过期时间
+- `ttl`：查看剩余时间，-1永不过期，-2过期
+- `append key`：合并字符串
+- `strlen key`：字符串长度
+- `incr key`：累加1
+- `decr key`：类减1
+- `incrby key num`：累加给定数值
+- `decrby key num`：累减给定数值
+- `getrange key start end`：截取数据，end=-1 代表到最后
+- `setrange key start newdata`：从start位置开始替换数据
+- `mset`：连续设值
+- `mget`：连续取值
+- `msetnx`：连续设置，如果存在则不设置
+- `select index`：切换数据库，总共默认16个
+- `flushdb`：删除当前下边db中的数据（不建议使用）
+- `flushall`：删除所有db中的数据（不建议使用）
 
 - 例子：
 ```
@@ -85,38 +85,44 @@ OK
 6) "200"
 ```
 - 使用场景：由于哈希主要用来表示对象，对象能存储很多元素
-- - 散列表（是说散列表里面存储的数少）使用的内存非常小，所以应该尽可能的将数据模型抽象到一个散列表里面；
-- 每个哈希可以存储多达 2^23-1 个字段值对 (field-value pair)(多于 40 亿个)；
+- 散列表（是说散列表里面存储的数少）使用的内存非常小，所以应该尽可能的将数据模型抽象到一个散列表里面；
+- 每个哈希可以存储多达 `2^32-1` 个字段值对 (field-value pair)(多于 40 亿个)；
 
 **常用命令：**
-```
-hset key property value：
--> hset user name test
--> 创建一个user对象，这个对象中包含name属性，name值为test
+- `hset key property value`：`hset user name test` 创建一个user对象，这个对象中包含name属性，name值为test
 
-hget user name：获得用户对象中name的值
+- `hget user name`：获得用户对象中name的值
 
-hmset：设置对象中的多个键值对
--> hset user age 18 phone 139123123
-hmsetnx：设置对象中的多个键值对，存在则不添加
--> hset user age 18 phone 139123123
+- `hmset`：设置对象中的多个键值对
+	- `hset user age 18 phone 139123123`
+	- `hmsetnx`：设置对象中的多个键值对，存在则不添加
+	- `hset user age 18 phone 139123123`
 
-hmget：获得对象中的多个属性
--> hmget user age phone
+- `hmget`：获得对象中的多个属性, `hmget user age phone`
 
-hgetall user：获得整个对象的内容
-hincrby user age 2：累加属性
-hincrbyfloat user age 2.2：累加属性
-hlen user：有多少个属性
-hexists user age：判断属性是否存在
-hkeys user：获得所有属性
-hvals user：获得所有值
-hdel user：删除对象
-```
+- `hgetall user`：获得整个对象的内容
+	```
+	127.0.0.1:6379> hgetall user
+	1) "name"
+	2) "test"
+	3) "age"
+	4) "18"
+	5) "sex"
+	6) "gender"
+	7) "phone"
+	8) "18955555555"
+	```
+- `hincrby user age 2`：累加属性
+- `hincrbyfloat user age 2.2`：累加属性
+- `hlen user`：有多少个属性
+- `hexists user field`：判断某个属性是否存在
+- `hkeys user`：获得所有属性
+- `hvals user`：获得所有值
+- `hdel user field`：删除对象的属性，可以删除多个或者一个
 
 ### 2.3、列表-lists
 
-- Redis 的列表是简单的字符串列表，是按照插入顺序排序的字符串列表.您可以添加元素到 Redis 的列表的头部或尾部，表的最大长度为 2^32 - 1 元素（4294967295，每个列表中可容纳超过4十亿的元素）
+- Redis 的列表是简单的字符串列表，是`按照插入顺序排序`的字符串列表，您可以添加元素到 Redis 的列表的头部或尾部，表的最大长度为 `2^32 - 1` 元素（4294967295，每个列表中可容纳超过四十亿的元素）
 
 - 例子：
 ```
@@ -131,26 +137,26 @@ hdel user：删除对象
 2) "mongodb"
 3) "redis"
 ```
-- LPUSH 命令插入一个新元素到列表头部，而 RPUSH 命令 插入一个新元素到列表的尾部当这两个命令操作在一个不存在的键时，将会创建一个新的列表
-- 从时间复杂度的角度来看，Redis 列表主要特性就是支持时间常数的插入和靠近头尾部元素的删除，即使是需要插入上百万的条目访问列表两端的元素是非常快的，但如果你试着访问一个非常大 的列表的中间元素仍然是十分慢的；
+- `LPUSH` 命令插入一个新元素到列表头部，而 `RPUSH` 命令插入一个新元素到列表的尾部，当这两个命令操作在一个不存在的键时，将会创建一个新的列表
+- 从时间复杂度的角度来看，Redis 列表主要特性就是`支持时间常数的插入和靠近头尾部元素的删除`，即使是需要插入上百万的条目访问列表两端的元素是非常快的，但如果你试着访问一个非常大的列表的中间元素仍然是十分慢的；
 - 使用场景：
-	- ①、为社交网络时间轴 (timeline) 建模，使用 LPUSH 命令往用户时间轴插入元素，使用 LRANGE 命令获得最近事项；
-	- ②、使用 LPUSH 和 LTRIM 命令创建一个不会超出给定数量元素的列表，只存储最近的 N 个元素；
+	- ①、为社交网络时间轴 (timeline) 建模，使用 `LPUSH` 命令往用户时间轴插入元素，使用 LRANGE 命令获得最近事项；
+	- ②、使用 `LPUSH` 和 LTRIM 命令创建一个不会超出给定数量元素的列表，只存储最近的 N 个元素；
 	- ③、列表可以用作消息传递原语，例如，众所周知的用于创建后台任务的 Ruby 库 Resque；
 	- ④、你可以用列表做更多的事情，这种数据类型支持很多的命令，包括阻塞命令，如 BLPOP
 
 **常用命令：**
-- lpush userList 1 2 3 4 5：构建一个list，从左边开始存入数据
-- rpush userList 1 2 3 4 5：构建一个list，从右边开始存入数据
-- lrange list start end：获得数据
-- lpop：从左侧开始拿出一个数据
-- rpop：从右侧开始拿出一个数据
-- llen list：list长度
-- lindex list index：获取list下标的值
-- lset list index value：把某个下标的值替换
-- linsert list before/after value：插入一个新的值
-- lrem list num value：删除几个相同数据
-- ltrim list start end：截取值，替换原来的list
+- `lpush userList 1 2 3 4 5`：构建一个list，从左边开始存入数据
+- `rpush userList 1 2 3 4 5`：构建一个list，从右边开始存入数据
+- `lrange list start end`：获得数据
+- `lpop`：从左侧开始拿出一个数据
+- `rpop`：从右侧开始拿出一个数据
+- `llen list`：list长度
+- `lindex list index`：获取list下标的值
+- `lset list index value`：把某个下标的值替换
+- `linsert list before/after value`：插入一个新的值
+- `lrem list num value`：删除几个相同数据
+- `ltrim list start end`：截取值，替换原来的list
 
 ### 2.4、集合：Sets-不允许相同成员存在
 
@@ -172,12 +178,12 @@ hdel user：删除对象
 3) "redis"
 ```
 - 使用场景：
-	- ①、你可以使用 Redis 集合追踪唯一性的事情，访问某篇博客文章的所有唯一 IP 吗？
+	- ①、你可以使用 Redis 集合追踪唯一性的事情，访问某篇博客文章的所有唯一 IP
 	- ②、Redis 集合可以表示关系；
-	- ③、你可以使用 SPOP 或 SRANDMEMBER 命令来从集合中随机抽取元素
-- sdiff set1 set2：存在于set1中但是不存在set2中的数据，差集；
-- sinter set1 set2：两个set的交集；
-- sunion set1 set2：两个集合的并集；
+	- ③、你可以使用 `SPOP` 或 `SRANDMEMBER` 命令来从集合中随机抽取元素；
+- `sdiff set1 set2`：存在于set1中但是不存在set2中的数据，差集；
+- `sinter set1 set2`：两个set的交集；
+- `sunion set1 set2`：两个集合的并集；
 
 ### 2.5、有序集合
 
@@ -189,19 +195,21 @@ hdel user：删除对象
 	- ③、有序集合或许是最高级的 Redis 数据类型
 
 **常用命令：**
-- zadd zset 10 value1 20 value2 30 value3：设置member和对应的分数
-- zrange zset 0 -1：查看所有zset中的内容
-- zrange zset 0 -1 withscores：带有分数
-- zrank zset value：获得对应的下标
-- zscore zset value：获得对应的分数
-- zcard zset：统计个数
-- zcount zset 分数1 分数2：统计个数
-- zrangebyscore zset 分数1 分数2：查询分数之间的member(包含分数1 分数2)
-- zrangebyscore zset (分数1 (分数2：查询分数之间的member（不包含分数1 和 分数2）
-- zrangebyscore zset 分数1 分数2 limit start end：查询分数之间的member(包含分数1 分数2)，获得的结果集再次根据下标区间做查询
-- zrem zset value：删除member
+- `zadd zset 10 value1 20 value2 30 value3`：设置member和对应的分数
+- `zrange zset 0 -1`：查看所有zset中的内容
+- `zrange zset 0 -1 withscores`：带有分数
+- `zrank zset value`：获得对应的下标
+- `zscore zset value`：获得对应的分数
+- `zcard zset`：统计个数
+- `zcount zset` 分数1 分数2：统计个数
+- `zrangebyscore zset` 分数1 分数2：查询分数之间的member(包含分数1 分数2)
+- `zrangebyscore zset (分数1 (分数2`：查询分数之间的member（不包含分数1 和 分数2）
+- `zrangebyscore zset 分数1 分数2 limit start end`：查询分数之间的member(包含分数1 分数2)，获得的结果集再次根据下标区间做查询
+- `zrem zset value`：删除member
 
 ### 2.6、位图(bitmaps)和超重对数(hyperloglogs)两种基于字符串基本类型
+
+https://juejin.im/post/6844903561839525902
 
 ### 2.7、总结
 
@@ -217,16 +225,17 @@ Redis在互联网公司一般有以下应用：
 用于在Redis的管理键，二进制安全的，可以用任何二进制序列作为key值
 
 **3.1、Redis keys命令使用语法如下所示：**
+
 ```
-	127.0.0.1：6379> COMMAND KEY_NAME
+127.0.0.1：6379> COMMAND KEY_NAME
 ```
 **3.2、关于key的几条规则：**
 
 - 太长的键值不是个好主意，例如1024字节的键值就不是个好主意，不仅因为消耗内存，而且在数据中查找这类键值的计算成本很高。
 
-- 太短的键值通常也不是好主意，如果你要用"u：1000：pwd"来代替"user：1000：password"，这没有什么问题，但后者更易阅读，并且由此增加的空间消耗相对于key object和value object本身来说很小。
+- 太短的键值通常也不是好主意，如果你要用"u:1000:pwd"来代替"user:1000:password"，这没有什么问题，但后者更易阅读，并且由此增加的空间消耗相对于key object和value object本身来说很小。
 
-- 最好坚持一种模式。例如："object-type：id：field"就是个不错的注意，像这样"user：1000：password"。我喜欢对多单词的字段名中加上一个点，就像这样："comment：1234：reply.to"
+- 最好坚持一种模式，例如："object-type:id:field"就是个不错的注意，像这样"user:1000:password"，或者"comment:1234:reply.to"
 
 - 键值最大值为 512MB
 
@@ -271,7 +280,7 @@ Redis 中的普通 string 采用 raw encoding 即原始编码方式，该编
 
 - 有一些命令并不定义在特定的类型上，但是对键空间的交互很有用，因此他们能作用在任意键上
 
-- EXISTS 命令返回 1(存在) 或 0(不存在)，来表示键在数据库是否存在；DEL 命令删除键极其关联的值，无论值是什么，删除成功返回 1，失败返回 0
+- `EXISTS 命令返回 1(存在) 或 0(不存在)`，来表示键在数据库是否存在；DEL 命令删除键极其关联的值，无论值是什么，删除成功返回 1，失败返回 0
 ```
 127.0.0.1：6379> EXISTS name
 (integer) 1
@@ -335,7 +344,7 @@ Redis 的 list 列表，是一个快速双向链表，存储了一系列的 
 
 - 对于数据库系统来说，快速插入一个元素到一个很长的列表非常重要
 - Redis 列表能在常数时间内获得常数长度
-- 访问拥有大量数据的集合数据结构，使用另外称为 有序集合 的数据结果
+- 访问拥有大量数据的集合数据结构，使用另外称为 `有序集合` 的数据结果
 
 **7.3、列表相关命令：**
 
@@ -371,7 +380,7 @@ LTRIM 和 LPUSH 组合使用实现一个添加操作和一个修剪操作一起�
 
 - 案例：假设你想往一个进程的列表中添加项，用另一个进程来处理这些项，这就是通常的生产者消费者模式，可以使用如下方式：
 	- ①、生产者调用 LPUSH 添加项到列表中；
-	- ②、.消费者调用 RPOP 从列表提取/处理项；有时候列表是空的，没有需要处理的，RPOP 就返回 NULL，所以消费者被强制等待一段时间并重试 RPOP 命令。这称为轮询(polling)
+	- ②、消费者调用 RPOP 从列表提取/处理项；有时候列表是空的，没有需要处理的，RPOP 就返回 NULL，所以消费者被强制等待一段时间并重试 RPOP 命令。这称为轮询(polling)
 - 上述方式不适用的情况：
 	- ①、强制 Redis 和客户端处理无用的命令 (当列表为空时的所有请求都没有执行实际的工作，只会返回 NULL).
 	- ②、由于工作者受到一个 NULL 后会等待一段时间，这会延迟对项的处理。
@@ -478,114 +487,88 @@ ZREVRANGE 命令按相反的顺序获取有序集合的元素；也可以同时�
 
 ## 11、Redis配置文件-redis.conf常用配置介绍
 
-- daemonize no<br>
-	Redis 默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程
+- `daemonize no`：Redis 默认不是以守护进程的方式运行，可以通过该配置项修改，使用yes启用守护进程
 
-- pidfile /var/run/redis.pid<br>
-	当Redis以守护进程方式运行时，Redis默认会把pid写入/var/run/redis.pid文件，可以通过pidfile指定
+- `pidfile /var/run/redis.pid`：当Redis以守护进程方式运行时，Redis默认会把pid写入`/var/run/redis.pid`文件，可以通过pidfile指定
 
-- port 6379<br>
-	指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字
+- `port 6379`：指定Redis监听端口，默认端口为6379，作者在自己的一篇博文中解释了为什么选用6379作为默认端口，因为6379在手机按键上MERZ对应的号码，而MERZ取自意大利歌女Alessia Merz的名字
 
-- bind 127.0.0.1：绑定的主机地址
+- `bind 127.0.0.1`：绑定的主机地址
 
-- timeout 300<br>
-	当客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能
+- `timeout 300`：当客户端闲置多长时间后关闭连接，如果指定为0，表示关闭该功能
 
-- loglevel verbose	<br>
-	指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose
+- `loglevel verbose`：指定日志记录级别，Redis总共支持四个级别：debug、verbose、notice、warning，默认为verbose
 
-- logfile stdout<br>	
-	日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null
+- `logfile stdout`：日志记录方式，默认为标准输出，如果配置Redis为守护进程方式运行，而这里又配置为日志记录方式为标准输出，则日志将会发送给/dev/null
 
-- databases 16<br>
-	设置数据库的数量，默认数据库为0，可以使用`SELECT <dbid>`命令在连接上指定数据库id
+- `databases 16`：设置数据库的数量，默认数据库为0，可以使用`SELECT <dbid>`命令在连接上指定数据库id
 
 - `save <seconds> <changes>`	
 	指定在多长时间内，有多少次更新操作，就将数据同步到数据文件，可以多个条件配合；Redis默认配置文件中提供了三个条件：<br>
-	save 900 1<br>
-	save 300 10<br>
-	save 60 10000<br>
+	`save 900 1`<br>
+	`save 300 10`<br>
+	`save 60 10000`<br>
 	分别表示900秒（15分钟）内有1个更改，300秒（5分钟）内有10个更改以及60秒内有10000个更改。
 
-- rdbcompression yes	<br>
-	指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大
+- `rdbcompression yes`：指定存储至本地数据库时是否压缩数据，默认为yes，Redis采用LZF压缩，如果为了节省CPU时间，可以关闭该选项，但会导致数据库文件变的巨大
 
-- dbfilename dump.rdb<br>
-	指定本地数据库文件名，默认值为dump.rdb
+- `dbfilename dump.rdb`：指定本地数据库文件名，默认值为dump.rdb
 
-- dir ./	<br>
-	指定本地数据库存放目录
+- `dir ./`：指定本地数据库存放目录
 
-- `slaveof <masterip> <masterport>`	<br>
-	设置当本机为slav服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步
+- `slaveof <masterip> <masterport>`：设置当本机为slav服务时，设置master服务的IP地址及端口，在Redis启动时，它会自动从master进行数据同步
 
-- masterauth <master-password><br>	
-	当master服务设置了密码保护时，slav服务连接master的密码
+- `masterauth <master-password>`：当master服务设置了密码保护时，slav服务连接master的密码
 
-- requirepass foobared	<br>
-	设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过`AUTH <password>`命令提供密码，默认关闭
+- `requirepass foobared`：设置Redis连接密码，如果配置了连接密码，客户端在连接Redis时需要通过`AUTH <password>`命令提供密码，默认关闭
 
-- maxclients 128	<br>
-	设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置 maxclients 0，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息
+- `maxclients 128`：设置同一时间最大客户端连接数，默认无限制，Redis可以同时打开的客户端连接数为Redis进程可以打开的最大文件描述符数，如果设置 maxclients 0，表示不作限制。当客户端连接数到达限制时，Redis会关闭新的连接并向客户端返回max number of clients reached错误信息
 
-- `maxmemory <bytes>`	 <br>
-	指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，Value会存放在swap区
+- `maxmemory <bytes>`：指定Redis最大内存限制，Redis在启动时会把数据加载到内存中，达到最大内存后，Redis会先尝试清除已到期或即将到期的Key，当此方法处理 后，仍然到达最大内存设置，将无法再进行写入操作，但仍然可以进行读取操作。Redis新的vm机制，会把Key存放内存，Value会存放在swap区
+	```
+	(1)volatile-lru：使用LRU算法移除key，只对设置了过期时间的键
+	(2)allkeys-lru：使用LRU算法移除key
+	(3)volatile-random：在过期集合中移除随机的key，只对设置了过期时间的键
+	(4)allkeys-random：移除随机的key
+	(5)volatile-ttl：移除那些TTL值最小的key，即那些最近要过期的key
+	(6)noeviction：不进行移除。针对写操作，只是返回错误信息
+	```
 
-		(1)volatile-lru：使用LRU算法移除key，只对设置了过期时间的键
-		(2)allkeys-lru：使用LRU算法移除key
-		(3)volatile-random：在过期集合中移除随机的key，只对设置了过期时间的键
-		(4)allkeys-random：移除随机的key
-		(5)volatile-ttl：移除那些TTL值最小的key，即那些最近要过期的key
-		(6)noeviction：不进行移除。针对写操作，只是返回错误信息
+- `appendonly no`：指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no，开启AOF持久化
 
-- appendonly no<br>
-	指定是否在每次更新操作后进行日志记录，Redis在默认情况下是异步的把数据写入磁盘，如果不开启，可能会在断电时导致一段时间内的数据丢失。因为 redis本身同步数据文件是按上面save条件来同步的，所以有的数据会在一段时间内只存在于内存中。默认为no
+- `appendfilename appendonly.aof`：指定更新日志文件名，默认为`appendonly.aof`
 
-- appendfilename appendonly.aof	<br>
-	指定更新日志文件名，默认为appendonly.aof
-
-- appendfsync everysec	<br>
+- `appendfsync everysec`	<br>
 	指定更新日志条件，共有3个可选值： <br>
 	no：表示等操作系统进行数据缓存同步到磁盘（快）<br> 
 	always：表示每次更新操作后手动调用fsync()将数据写到磁盘（慢，安全） <br>
 	everysec：表示每秒同步一次（折衷，默认值）<br>
 
-- vm-enabled no	<br>
-	指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）
+- `vm-enabled no`：指定是否启用虚拟内存机制，默认值为no，简单的介绍一下，VM机制将数据分页存放，由Redis将访问量较少的页即冷数据swap到磁盘上，访问多的页面由磁盘自动换出到内存中（在后面的文章我会仔细分析Redis的VM机制）
 
-- vm-swap-file /tmp/redis.swap<br>	
-	虚拟内存文件路径，默认值为/tmp/redis.swap，不可多个Redis实例共享
+- `vm-swap-file /tmp/redis.swap`：虚拟内存文件路径，默认值为`/tmp/redis.swap`，不可多个Redis实例共享
 
-- vm-max-memory 0<br>	
-	将所有大于vm-max-memory的数据存入虚拟内存，无论vm-max-memory设置多小，所有索引数据都是内存存储的（Redis的索引数据 就是keys），也就是说，当vm-max-memory设置为0的时候，其实是所有value都存在于磁盘。默认值为0
+- `vm-max-memory 0`：将所有大于vm-max-memory的数据存入虚拟内存，无论vm-max-memory设置多小，所有索引数据都是内存存储的（Redis的索引数据 就是keys），也就是说，当vm-max-memory设置为0的时候，其实是所有value都存在于磁盘。默认值为0
 	
-- vm-page-size 32<br>
-	Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，vm-page-size是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值
+- `vm-page-size 32`：Redis swap文件分成了很多的page，一个对象可以保存在多个page上面，但一个page上不能被多个对象共享，vm-page-size是要根据存储的 数据大小来设定的，作者建议如果存储很多小对象，page大小最好设置为32或者64bytes；如果存储很大大对象，则可以使用更大的page，如果不 确定，就使用默认值
 
-- vm-pages 134217728<br>	
-	设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。
+- `vm-pages 134217728`：设置swap文件中的page数量，由于页表（一种表示页面空闲或使用的bitmap）是在放在内存中的，，在磁盘上每8个pages将消耗1byte的内存。
 
-- vm-max-threads 4<br>	
-	设置访问swap文件的线程数，最好不要超过机器的核数，如果设置为0，那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4
+- `vm-max-threads 4`：设置访问swap文件的线程数，最好不要超过机器的核数，如果设置为0，那么所有对swap文件的操作都是串行的，可能会造成比较长时间的延迟。默认值为4
 
-- glueoutputbuf yes	<br>
-	设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启
+- `glueoutputbuf yes`：设置在向客户端应答时，是否把较小的包合并为一个包发送，默认为开启
 
-- hash-max-zipmap-entries 64、hash-max-zipmap-value 512	<br>
-	指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法
+- `hash-max-zipmap-entries 64、hash-max-zipmap-value 512`：指定在超过一定的数量或者最大的元素超过某一临界值时，采用一种特殊的哈希算法
 
-- activerehashing yes	<br>
-	指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍）
+- `activerehashing yes`：指定是否激活重置哈希，默认为开启（后面在介绍Redis的哈希算法时具体介绍）
 
-- include /path/to/local.conf<br>
-	指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件
+- `include /path/to/local.conf`：指定包含其它的配置文件，可以在同一主机上多个Redis实例之间使用同一份配置文件，而同时各个实例又拥有自己的特定配置文件
 	
 # 二、Redis内部数据结构
 
 ## 1、字符串处理-SDS
 
-Redis自己构建了一种名叫Simple dynamic string(SDS)的数据结构
+Redis自己构建了一种名叫`Simple dynamic string(SDS)`的数据结构
 ```c
 struct sdshdr{
 	//记录buf数组中已使用字节的数量
@@ -687,17 +670,17 @@ redis为什么需要持久化？故障恢复
 
 ### 1.1、什么是RDB
 
-RDB：在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的Snapshot快照，它恢复时是将快照文件直接读到内存里；是保存为 `dump.rdb`
+RDB：在指定的时间间隔内将内存中的数据集快照写入磁盘，也就是行话讲的Snapshot快照，它恢复时是将快照文件直接读到内存里；其保存的文件名是 `dump.rdb`
 
-Redis会单独创建(fork)一个子进程来进行持久化，会先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不进行任何IO操作的，这就确保了极高的性能 如果需要进行大规模数据的恢复，且对于数据恢复的完整性不是非常敏感，那RDB方式要比AOF方式更加的高效。
+Redis会单独创建(fork)一个子进程来进行持久化，会先将数据写入到一个临时文件中，待持久化过程都结束了，再用这个临时文件替换上次持久化好的文件。整个过程中，主进程是不进行任何IO操作的，这就确保了极高的性能如果需要进行大规模数据的恢复，且对于数据恢复的完整性不是非常敏感，那RDB方式要比AOF方式更加的高效。
 
-RDB的缺点是最后一次持久化后的数据可能丢失；
+RDB的缺点：最后一次持久化后的数据可能丢失；
 
 ### 1.2、关于 fork
 
 Fork 的作用是复制一个与当前进程一样的进程。新进程的所有数据(变量、环境变量、程序计数器等)数值都和原进程一致，但是是一个全新的进程，并作为原进程的子进程。
 
-### 1.3、配置位置
+### 1.3、配置
 ```
 ################################################################ SNAPSHOTTING  ################################################################
 # Save the DB on disk：
@@ -722,16 +705,16 @@ save 60 10000
 ### 1.4、触发RDB快照
 
 - 配置文件中默认的快照配置
-- 命令 save 或者 bgsave <br>
-	- save：会阻塞当前Redis服务器，直到持久化完成，线上应该禁止使用；
-	- bgsave：该触发方式会fork一个子进程，由子进程负责持久化过程，因此阻塞只会发生在fork子进程的时候。
+- 命令 `save` 或者 `bgsave`：
+	- `save`：会阻塞当前Redis服务器，直到持久化完成，线上应该禁止使用；
+	- `bgsave`：该触发方式会fork一个子进程，由子进程负责持久化过程，因此阻塞只会发生在fork子进程的时候。
 
 **自动触发场景：**
-- 根据我们的 save m n 配置规则自动触发；
-- 从节点全量复制时，主节点发送rdb文件给从节点完成复制操作，主节点会触发 bgsave；
-- 执行 debug reload 时；
+- 根据我们的 `save m n` 配置规则自动触发；
+- `从节点`全量复制时，`主节点`发送rdb文件给`从节点`完成复制操作，主节点会触发 bgsave；
+- 执行 `debug reload` 时；
 - 执行 shutdown 时，如果没有开启aof，也会触发。
-- 执行 flushall 命令，也会产生 dump.rdb 文件将，但里面是空的
+- 执行 flushall 命令，也会产生 `dump.rdb` 文件将，但里面是空的
 
 ### 1.5、将备份文件移动到 redis 安装目录并启动服务即可
 
@@ -743,7 +726,7 @@ config get dir 获取当前rdb文件存放的目录；
 	- 适合大规模的数据恢复，对数据完整性和一致性要求不高的；
 	- 相对于AOF持久化机制来说，直接基于RDB数据文件来重启和恢复redis进程，更加快速
 - 劣势：
-	- 在一定时间间隔做一次，如果redis意外宕机，就会丢失最后一次快照后的所有修改。fork 的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑.
+	- 在一定时间间隔做一次，如果redis意外宕机，就会丢失最后一次快照后的所有修改。fork 的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑；
 	- RDB容易造成数据的丢失。假设每5分钟保存一次快照，如果Redis因为某些原因不能正常工作，那么从上次产生快照到Redis出现问题这段时间的数据就会丢失了。
 	- RDB使用fork()产生子进程进行数据的持久化，如果数据比较大的话可能就会花费点时间，造成Redis停止服务几毫秒。如果数据量很大且CPU性能不是很好的时候，停止服务的时间甚至会到1秒。
 
@@ -755,7 +738,7 @@ config get dir 获取当前rdb文件存放的目录；
 
 ### 2.1、AOF 是什么
 
-以日志的形式记录每个操作，将 Redis 执行过的所有`写指令`记录下来(读操作不记录)，只许追加但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话会根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作；
+以日志的形式记录每个操作，将 Redis 执行过的所有`写指令`记录下来(`读操作不记录`)，只许追加但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话会根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作；
 
 ### 2.2、对应配置
 
@@ -764,7 +747,7 @@ appendonly					是否开启aof持久化，默认为 no
 appendfilename				aof持久化名称，默认是："appendonly.aof"			
 appendfsync 				持久化的时间，有三种模式
 		always：同步持久化，每次发生数据变更会被立即记录到磁盘，性能较差但数据完整性比较好
-		everysec：出厂默认推荐，异步操作，每秒记录，如果一秒内宕机，有数据丢失
+		everysec：默认推荐，异步操作，每秒记录，如果一秒内宕机，有数据丢失
 		no：从不同步
 no-appendfsync-on-rewrite	重写时是否可以运用 Appendfsync，用默认no即可，保证数据安全性。
 auto-aof-rewrite-min-size	设置重写的基准值，aof重写的最小值
@@ -784,22 +767,38 @@ auto-aof-rewrite-percentage	设置重写的基准值，上次重写的比例
 
 #### 2.3.3、AOF原理
 
-AOF的整个流程大体来看可以分为两步：
-- 一步是命令的实时写入（如果是 appendfsync everysec 配置，会有1s损耗）；
-- 第二步是对aof文件的重写；
+AOF需要记录Redis的每个写命令，步骤为：命令追加（append）、文件写入（write）和文件同步（sync）
+
+**命令追加**：开启AOF持久化功能后，服务器每执行一个写命令，都会把该命令以协议格式先追加到`aof_buf缓存区`的末尾，而不是直接写入文件，避免每次有命令都直接写入硬盘，减少硬盘IO次数；
+
+**文件写入(write)和文件同步(sync)**
+
+对于何时把`aof_buf缓冲区`的内容写入保存在AOF文件中，Redis提供了多种策略
+- `appendfsync always`：将`aof_buf缓冲区`的所有内容写入并同步到AOF文件，每个写命令同步写入磁盘；
+- `appendfsync everysec`：将`aof_buf缓存区`的内容写入AOF文件，每秒同步一次，该操作由一个线程专门负责；
+- `appendfsync no`：将`aof_buf缓存区`的内容写入AOF文件，什么时候同步由操作系统来决定；
+
+`appendfsync`选项的默认配置为`everysec`，即每秒执行一次同步；
+
+写入的数据，操作系统并不一定会马上同步到磁盘，所以Redis才提供了`appendfsync`的选项配置。
+- 当该选项时为always时，数据安全性是最高的，但是会对磁盘进行大量的写入，Redis处理命令的速度会受到磁盘性能的限制；
+- `appendfsync everysec`选项则兼顾了数据安全和写入性能，以每秒一次的频率同步AOF文件，即便出现系统崩溃，最多只会丢失一秒内产生的数据；
+- 如果是`appendfsync no`选项，Redis不会对AOF文件执行同步操作，而是有操作系统决定何时同步，不会对Redis的性能带来影响，但假如系统崩溃，可能会丢失不定数量的数据
 
 ### 2.4、Rewrite：重写机制
 
-- 什么是重写：AOF采用文件追加方式，文件会越来越大为避免出现此种情况，新增了重写机制，当AOF文件的大小超过所设定的阈值时，Redis 就会启动AOF文件的内容压缩，只保留可以恢复数据的最小指令集。可以使用命令 bgrewriteaof；
+- 什么是重写：AOF采用文件追加方式，文件会越来越大为避免出现此种情况，新增了重写机制，当AOF文件的大小超过所设定的阈值时，Redis 就会启动AOF文件的内容压缩，只保留可以恢复数据的最小指令集。AOF文件中通常会有一些冗余命令，比如：过期数据的命令、无效的命令（重复设置、删除）、多个命令可合并为一个命令（批处理命令）
 
-- 重写原理：AOF文件持续增长而过大时，会fork出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句。重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似；
+- 重写原理：AOF文件持续增长而过大时，会fork出一条新进程来将文件重写(也是先写临时文件最后再rename)，遍历新进程的内存中数据，每条记录有一条的Set语句。重写aof文件的操作，并没有读取旧的aof文件，而是将整个内存中的数据库内容用命令的方式重写了一个新的aof文件，这点和快照有点类似；在重写期间，服务器进程继续处理命令请求，如果有写入的命令，追加到aof_buf的同时，还会追加到`aof_rewrite_buf AOF`重写缓冲区；当子进程完成重写之后，会给父进程一个信号，然后父进程会把AOF重写缓冲区的内容写进新的AOF临时文件中，再对新的AOF文件改名完成替换，这样可以保证新的AOF文件与当前数据库数据的一致性
 
-- 触发：Redis 会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次 rewrite 后大小的一倍且文件大于64M时触发；配置：`auto-aof-rewrite-min-size 64M`
-	```
-	no-appendfsync-on-rewrite no
-	auto-aof-rewrite-percentage 100
-	auto-aof-rewrite-min-size 64mb
-	```
+- 触发：
+	- 自动触发：Redis 会记录上次重写时的AOF大小，默认配置是当AOF文件大小是上次 rewrite 后大小的一倍且文件大于64M时触发；配置：`auto-aof-rewrite-min-size 64M`
+		```
+		no-appendfsync-on-rewrite no
+		auto-aof-rewrite-percentage 100
+		auto-aof-rewrite-min-size 64mb
+		```
+	- 手动触发：可以使用命令 `bgrewriteaof`；fork一个子进程做具体的工作
 	
 ### 2.5、优势与劣势
 
@@ -807,19 +806,19 @@ AOF的整个流程大体来看可以分为两步：
 
 - 使用AOF Redis更持久：可以使用不同的fsync策略：完全不使用fsync，每秒使用fsync，每次查询时使用fsync。使用fsync的默认策略，每秒写操作的性能仍然很好(fsync是使用后台线程执行的，当没有fsync执行时，主线程会努力执行写操作)，但是只会损失一秒的写操作。
 - AOF日志只是一个附加日志，所以如果出现断电，也不会有查找或损坏问题。即使日志以半写的命令结束，出于某种原因(磁盘已满或其他原因)，redis-check-aof工具也可以轻松修复它。
-- 当AOF变得太大时，Redis能够在后台自动重写它。重写是完全安全,复述,继续追加到旧文件,产生一个全新的最小集合操作需要创建当前数据集,而一旦准备复述,开关的两个和第二个文件附加到新的一个开始。
+- 当AOF变得太大时，Redis能够在后台自动重写它。重写是完全安全、复述、继续追加到旧文件，产生一个全新的最小集合操作需要创建当前数据集，而一旦准备复述，开关的两个和第二个文件附加到新的一个开始。
 - AOF以一种易于理解和解析的格式，包含所有操作的一个接一个的日志。您甚至可以轻松导出AOF文件。例如，即使您使用FLUSHALL命令清除了所有的错误，如果在此期间没有重写日志，您仍然可以保存您的数据集，只需停止服务器，删除最新的命令，并重新启动Redis。
 
 **2.5.2、劣势：**
 
 - 相同数据集的数据而言aof文件要远大于rdb文件，恢复速度慢于rdb。Aof 运行效率要慢于rdb，每秒同步策略效率较好，不同步效率和rdb相同
 - 根据精确的fsync策略，AOF可能比RDB慢。一般来说，将fsync设置为每秒一次，性能仍然非常高，禁用fsync后，即使在高负载情况下，其速度也应该与RDB一样快。即使在写负载很大的情况下，RDB仍然能够提供关于最大延迟的更多保证。
-- 在特定的命令中(例如，有一个涉及到阻塞命令，如BRPOPLPUSH)，导致生成的AOF在重新加载时不能完全复制相同的数据集。；
+- 在特定的命令中(例如，有一个涉及到阻塞命令，如`BRPOPLPUSH`)，导致生成的AOF在重新加载时不能完全复制相同的数据集；
 
 ## 3、关于持久化方案选择
 
 - RDB 持久化方式能够在指定的时间间隔能对你的数据进行快照存储；
-- AOF 持久化方式记录每次对服务器写的操作，当服务器重启的时候会重新执行这些 命令来恢复原始的数据，AOF命令以redis协议追加保存每次写的操作到文件末尾.。Redis还能对AOF文件进行后台重写，使得AOF文件的体积不至于过大；
+- AOF 持久化方式记录每次对服务器写的操作，当服务器重启的时候会重新执行这些 命令来恢复原始的数据，AOF命令以redis协议追加保存每次写的操作到文件末尾，Redis还能对AOF文件进行后台重写，使得AOF文件的体积不至于过大；
 - 只做缓存：如果你只希望你的数据在服务器运行的时候存在，你也可以不使用任何持久化方式。
 - 同时开启RDB和AOF：
 
@@ -828,6 +827,12 @@ AOF的整个流程大体来看可以分为两步：
 	*RDB 的数据不实时，同时使用两者时服务器重启也只会找AOF文件。那要不要只使用AOF呢？*
 
 	作者建议不要，因为RDB更适合用于备份数据库(AOF在不断变化不好备份)，快速重启，而且不会有AOF可能潜在的bug，留着作为一个万一的手段。
+
+Redis4.0开始支持RDB和AOF的混合持久化（可以通过配置项 aof-use-rdb-preamble 开启）
+- 如果是redis进程挂掉，那么重启redis进程即可，直接基于AOF日志文件恢复数据
+- 如果是redis进程所在机器挂掉，那么重启机器后，尝试重启redis进程，尝试直接基于AOF日志文件进行数据恢复，如果AOF文件破损，那么用redis-check-aof fix命令修复
+- 如果没有AOF文件，会去加载RDB文件
+- 如果redis当前最新的AOF和RDB文件出现了丢失/损坏，那么可以尝试基于该机器上当前的某个最新的RDB数据副本进行数据恢复
 
 ## 4、性能建议
 
@@ -853,11 +858,11 @@ Redis事务没有像MySQL等关系型数据库事务隔离概念，不能保证�
 - 执行事务（Exec）、撤销事务（Discard）
 
 事务实现的主要命令：
-- Multi：事务开始的命令，执行该命令后，后面执行的redis操作都会按照顺序放入队列中，等待exec命令后才会被执行；
-- Discard：放弃执行队列中的命令，并且将当前状态从事务状态变为非事务状态；
-- Exec：执行事务中的commands队列，恢复连接状态。如果WATCH在之前被调用，只有监测中的Keys没有被修改，命令才会被执行，否则停止执行
-- Watch key：将给出的Keys标记为监测态，作为事务执行的条件；该命令只能在multi命令执行之前执行；如果被监视的key被其他客户端修改，exec会放弃执行命令队列中的命令；
-- UNWATCH：清除事务中Keys的 监测态，如果调用了EXEC or DISCARD，则没有必要再手动调用UNWATCH；
+- `Multi`：事务开始的命令，执行该命令后，后面执行的redis操作都会按照顺序放入队列中，等待exec命令后才会被执行；
+- `Discard`：放弃执行队列中的命令，并且将当前状态从事务状态变为非事务状态；
+- `Exec`：执行事务中的commands队列，恢复连接状态。如果`WATCH`在之前被调用，只有监测中的Keys没有被修改，命令才会被执行，否则停止执行；
+- `Watch key`：将给出的Keys标记为监测态，作为事务执行的条件；该命令只能在`multi`命令执行之前执行；如果被监视的key被其他客户端修改，exec会放弃执行命令队列中的命令；
+- `UNWATCH`：清除事务中Keys的监测态，如果调用了`EXEC or DISCARD`，则没有必要再手动调用UNWATCH；
 
 ## 2、如何使用
 
@@ -885,9 +890,9 @@ QUEUED
 127.0.0.1：6379[1]> DISCARD  ==> 取消事务，放弃执行事务块内的所有命令
 ```
 
-### 2.3、全体连坐
+### 2.3、全体连坐：命令存在语法错误
 
-如果中间有一个命令发生错误，都不执行。这种情况下就是在命令中发生了(error)。类似于Java的非运行异常，需要在编译阶段捕获的异常信息，如 IOException；比如存在语法错误的命令
+如果中间有一个命令发生错误，都不执行。这种情况下就是在`命令中发生了(error)`。类似于Java的非运行异常，需要在编译阶段捕获的异常信息，如 IOException；比如存在语法错误的命令
 ```
 127.0.0.1：6379[1]> MULTI
 OK
@@ -937,21 +942,21 @@ QUEUED
 
 - （1）开启事务：以 multi 开始一个事务；
 - （2）入队：将多个命令进入到事务的队列，接到这些命令并不会立即执行，而是放到等到执行的事务队列里.
-- （3）执行：有exec触发事务执行.
+- （3）执行：有exec触发事务执行
 
 ### 2.7、事务的三个特性
 
 - 单独的隔离操作：事务中的所有命令都会序列化、按顺序地执行。事务在执行的过程中，不会被其他客户端发送来的命令请求所打断；
 - 没有隔离级别的概念：队列中的命令没有提交之前都不会实际的被执行，因为事务提交前任何指令都不会被实际执行，也就不存在"事务内的查询要看到事务里的更新，在事务外查询不能看到"这个让人万分头痛的问题
-- 不保证原子性：redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚
+- 不保证原子性：redis同一个事务中如果有一条命令执行失败，其后的命令仍然会被执行，没有回滚；
 
 # 五、Redis高可用架构
 
 ## 1、Redis 的复制
 
-- 就是我们所说的主从复制，主机数据更新后根据配置和策略，自动同步到备机的 master/slaver机制，Master 以写为主，Slave 以读为主；
+- 主要是主从复制，主节点数据更新后根据配置和策略，自动同步到从节点的 master/slaver机制，Master 以写为主，Slave 以读为主；
 - 如果采用了主从架构，那么建议必须开启master的持久化，保证在master宕机的情况下，恢复时数据不被清空。
-- 不建议用slave node作为master node的数据热备，因为那样的话，如果你关掉master的持久化，可能在master宕机重启的时候数据是空的，然后可能一经过复制，salve - node数据也丢了
+- 不建议用`slave node`作为`master node`的数据热备，因为那样的话，如果你关掉master的持久化，可能在master宕机重启的时候数据是空的，然后可能一经过复制，salve  node数据也丢了
 
 ## 2、主从复制
 
@@ -1021,7 +1026,7 @@ repl_backlog_histlen：0
 
 **4.1.2、一主二仆问题：**
 
-- 切入点问题？slave1、slave2是从头开始复制还是从切入点开始复制？ 比如从k4进来，那之前的123是否也可以复制每次连接都都是全量复制数据
+- 切入点问题：slave1、slave2是从头开始复制还是从切入点开始复制？ 比如从k4进来，那之前的123是否也可以复制每次连接都都是全量复制数据
 - 从机是否可以写？set可否？从库不能写，主库写，从库读
 - 主机shutdown后情况如何？从机是上位还是原地待命？主机shutdown之后，从库原地待命，等到主机响应，"master_link_status：up"这个会变成："master_link_status：down"
 - 主机又回来了后，主机新增记录，从机还能否顺利复制？从库还是能顺利复制的.
@@ -1042,21 +1047,21 @@ slaveof no one
 
 ### 5.1、复制的原理
 
-- slave启动成功连接到master后会发送一个sync命令，redis 2.8开始，slave node会周期性地确认自己每次复制的数据量；
+- slave启动成功连接到master后会发送一个`sync`命令，redis 2.8开始，slave node会周期性地确认自己每次复制的数据量；
 
-	- 如果这是slave node重新连接master node，那么master node仅仅会复制给slave部分缺少的数据; 否则如果是slave node第一次连接master node，那么会触发一次full resynchronization；
+	- 如果这是`slave node`重新连接`master node`，那么`master node`仅仅会复制给`slave`部分缺少的数据; 否则如果是`slave node`第一次连接`master node`，那么会触发一次`full resynchronization`；
 	
-	- 开始full resynchronization的时候，master会启动一个后台线程，开始生成一份RDB快照文件，同时还会将从客户端收到的所有写命令缓存在内存中。RDB文件生成完毕之后，master会将这个RDB发送给slave，slave会先写入本地磁盘，然后再从本地磁盘加载到内存中。然后master会将内存中缓存的写命令发送给slave，slave也会同步这些数据；
+	- 开始`full resynchronization`的时候，`master`会启动一个后台线程，开始生成一份RDB快照文件，同时还会将从客户端收到的所有写命令缓存在内存中。RDB文件生成完毕之后，master会将这个RDB发送给slave，slave会先写入本地磁盘，然后再从本地磁盘加载到内存中。然后master会将内存中缓存的写命令发送给slave，slave也会同步这些数据；
 	
-	- slave node如果跟master node有网络故障，断开了连接，会自动重连。master如果发现有多个slave node都来重新连接，仅仅会启动一个rdb save操作，用一份数据服务所有slave node；
+	- `slave node`如果跟`master node`有网络故障，断开了连接，会自动重连。`master`如果发现有多个`slave node`都来重新连接，仅仅会启动一个`rdb save`操作，用一份数据服务所有slave node；
 
-- 主从复制的断点续传：从redis 2.8开始，就支持主从复制的断点续传，如果主从复制过程中，网络连接断掉了，那么可以接着上次复制的地方，继续复制下去，而不是从头开始复制一份。master node会在内存中常见一个backlog，master和slave都会保存一个replica offset还有一个master id，offset就是保存在backlog中的。如果master和slave网络连接断掉了，slave会让master从上次的replica offset开始继续复制；但是如果没有找到对应的offset，那么就会执行一次resynchronization；
+- 主从复制的断点续传：从redis 2.8开始，就支持主从复制的断点续传，如果主从复制过程中，网络连接断掉了，那么可以接着上次复制的地方，继续复制下去，而不是从头开始复制一份。`master node`会在内存中常见一个`backlog`，master和slave都会保存一个`replica offset`还有一个`master id`，offset就是保存在backlog中的。如果master和slave网络连接断掉了，slave会让master从上次的`replica offset`开始继续复制；但是如果没有找到对应的offset，那么就会执行一次`resynchronization`；
 
 - 过期key：slave不会过期key，只会等待master过期key。如果master过期了一个key，或者通过LRU淘汰了一个key，那么会模拟一条del命令发送给slave。
 
 ### 5.2、复制的完整流程
 
-- （1）slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程没开始；master host和ip是从redis.conf里面的slaveof获取；
+- （1）slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程没开始；master host和ip是从`redis.conf`里面的slaveof获取；
 - （2）slave node内部有个定时任务，每秒检查是否有新的master node要连接和复制，如果发现，就跟master node建立socket网络连接
 - （3）slave node发送ping命令给master node
 - （4）口令认证，如果master设置了requirepass，那么salve node必须发送masterauth的口令过去进行认证
@@ -1077,7 +1082,7 @@ slaveof no one
 
 - （3）master run id
 
-	nfo server，可以看到master run id；如果根据host+ip定位master node，是不靠谱的，如果master node重启或者数据出现了变化，那么slave node应该根据不同的run id区分，run id不同就做全量复制；如果需要不更改run id重启redis，可以使用redis-cli debug reload命令
+	info server，可以看到master run id；如果根据host+ip定位master node，是不靠谱的，如果master node重启或者数据出现了变化，那么slave node应该根据不同的run id区分，run id不同就做全量复制；如果需要不更改run id重启redis，可以使用`redis-cli debug reload`命令
 
 - （4）psync
 
@@ -1126,14 +1131,15 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 
 ## 6、哨兵模式-sentinel
 
+- [哨兵模式](http://www.redis.cn/topics/sentinel.html)
+- [哨兵模式-EN](https://redis.io/topics/sentinel)
+
 ### 6.1、什么是哨兵模式
 
-由一个或多个`Sentinel` 实例 组成的`Sentinel` 系统可以监视任意多个主服务器，以及这些主服务器属下的所有从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器属下的某个从服务器升级为新的主服务器；
-
-主要功能：
-- （1）集群监控，负责监控`redis master`和`slave`进程是否正常工作；
+由一个或多个`Sentinel`实例组成的，`Sentinel` 系统可以监视任意多个主服务器，以及这些主服务器属下的所有从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器下的某个从服务器升级为新的主服务器；主要功能：
+- （1）主从监控，负责监控`redis master`和`slave`进程是否正常工作；
 - （2）消息通知，如果某个redis实例有故障，那么哨兵负责发送消息作为报警通知给管理员；
-- （3）故障转移，如果master node挂掉了，会自动转移到slave node上；
+- （3）故障转移，如果`master node`挂掉了，会自动转移到`slave node`上；
 - （4）配置中心，如果故障转移发生了，通知client客户端新的master地址；
 
 ### 6.2、使用步骤
@@ -1163,12 +1169,12 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 	```
 	`sentinel monitor 被监控数据库名字(自己起名字) 127.0.0.1 6379 1`，最后一个数字1，表示主机挂掉后salve投票看让谁接替成为主机，得票数多少后成为主机；
 - 启动哨兵：`redis-sentinel sentinel.conf`
-- 原有的master挂了，投票新选，重新主从继续开工，info replication查查看
+- 原有的master挂了，投票新选，重新主从继续开工，`info replication`查查看
 
 ### 6.3、哨兵核心点
 
-- 哨兵至少需要3个实例，来保证自己的健壮性
-- 哨兵 + redis主从的部署架构，是不会保证数据零丢失的，只能保证redis集群的高可用性
+- 哨兵至少需要3个实例，来保证自己的健壮性；
+- `哨兵 + redis主从`的部署架构，是不会保证数据零丢失的，只能保证redis集群的高可用性；
 
 #### 6.3.1、为什么redis哨兵至少需要3个实例
 
@@ -1179,11 +1185,11 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 | S1 |         | S2 |
 +----+         +----+
 ```
-如果哨兵集群仅仅部署了个2个哨兵实例，quorum=1；如果master宕机，s1和s2中只要有1个哨兵认为master宕机就可以还行切换，同时s1和s2中会选举出一个哨兵来执行故障转移
+如果哨兵集群仅仅部署了个2个哨兵实例，`quorum=1`；如果master宕机，s1和s2中只要有1个哨兵认为master宕机就可以还行切换，同时s1和s2中会选举出一个哨兵来执行故障转移；
 
-同时这个时候，需要`majority`，也就是大多数哨兵都是运行的，2个哨兵的majority就是2（2的majority=2，3的majority=2，5的majority=3，4的majority=2），2个哨兵都运行着，就可以允许执行故障转移；
+同时这个时候，需要`majority`，也就是大多数哨兵都是运行的，2个哨兵的`majority`就是2（2的majority=2，3的majority=2，5的majority=3，4的majority=2），2个哨兵都运行着，就可以允许执行故障转移；
 
-但是如果整个M1和S1运行的机器宕机了，那么哨兵只有1个了，此时就没有majority来允许执行故障转移，虽然另外一台机器还有一个R1，但是故障转移不会执行
+但是如果整个M1和S1运行的机器宕机了，那么哨兵只有1个了，此时就没有`majority`来允许执行故障转移，虽然另外一台机器还有一个R1，但是故障转移不会执行
 
 **经典的3节点哨兵集群**
 ```
@@ -1197,7 +1203,7 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 | S2 |         | S3 |
 +----+         +----+
 ```
-Configuration: quorum = 2，majority
+Configuration: `quorum = 2，majority`
 
 如果M1所在机器宕机了，那么三个哨兵还剩下2个，S2和S3可以一致认为master宕机，然后选举出一个来执行故障转移；同时3个哨兵的`majority`是2，所以还剩下的2个哨兵运行着，就可以允许执行故障转移；
 
@@ -1215,22 +1221,21 @@ Configuration: quorum = 2，majority
 
 	某个master所在机器突然脱离了正常的网络，跟其他slave机器不能连接，但是实际上master还运行着。此时哨兵可能就会认为master宕机了，然后开启选举，将其他slave切换成了master这个时候，集群里就会有两个master，也就是所谓的脑裂；
 
-	此时虽然某个slave被切换成了master，但是可能client还没来得及切换到新的master，还继续写向旧master的数据可能也丢失了。因此旧master再次恢复的时候，会被作为一个slave挂到新的master上去，自己的数据会清空，重新从新的master复制数据
+	此时虽然某个slave被切换成了master，但是可能client还没来得及切换到新的master，还继续写向旧master的数据可能也丢失了。因此旧master再次恢复的时候，会被作为一个slave挂到新的master上去，自己的数据会清空，重新从新的master复制数据；
 
 #### 6.4.2、解决方案
 
-redis.confg存在两个配置：
+`redis.confg`存在两个配置：
 ```
 min-slaves-to-write 1  要求至少有1个slave，数据复制和同步的延迟不能超过10秒
 min-slaves-max-lag 10  如果说一旦所有的slave，数据复制和同步的延迟都超过了10秒钟，那么这个时候，master就不会再接收任何请求了
 ```
-
 上面两个配置可以减少异步复制和脑裂导致的数据丢失
-- 减少异步复制的数据丢失：有了min-slaves-max-lag这个配置，就可以确保说，一旦slave复制数据和ack延时太长，就认为可能master宕机后损失的数据太多了，那么就拒绝写请求，这样可以把master宕机时由于部分数据未同步到slave导致的数据丢失降低的可控范围内；
+- 减少异步复制的数据丢失：有了`min-slaves-max-lag`这个配置，就可以确保说，一旦slave复制数据和ack延时太长，就认为可能master宕机后损失的数据太多了，那么就拒绝写请求，这样可以把master宕机时由于部分数据未同步到slave导致的数据丢失降低的可控范围内；
 
 - 减少脑裂的数据丢失：
 
-	如果一个master出现了脑裂，跟其他slave丢了连接，那么上面两个配置可以确保说，如果不能继续给指定数量的slave发送数据，而且slave超过10秒没有给自己ack消息，那么就直接拒绝客户端的写请求
+	如果一个master出现了脑裂，跟其他slave丢了连接，那么上面两个配置可以确保说，如果不能继续给指定数量的slave发送数据，而且slave超过10秒没有给自己ack消息，那么就直接拒绝客户端的写请求；
 
 	这样脑裂后的旧master就不会接受client的新数据，也就避免了数据丢失
 
@@ -1240,40 +1245,40 @@ min-slaves-max-lag 10  如果说一旦所有的slave，数据复制和同步的�
 
 ### 6.5、哨兵失败状态转换机制
 
-sdown和odown转换机制：sdown和odown两种失败状态
-- sdown是主观宕机，就一个哨兵如果自己觉得一个master宕机了，那么就是主观宕机；
-- odown是客观宕机，如果quorum数量的哨兵都觉得一个master宕机了，那么就是客观宕机；
+`sdown`和`odown`转换机制：`sdown`和`odown`两种失败状态
+- `sdown`是主观宕机，就一个哨兵如果自己觉得一个master宕机了，那么就是主观宕机；
+- `odown`是客观宕机，如果quorum数量的哨兵都觉得一个master宕机了，那么就是客观宕机；
 
-sdown达成的条件很简单，如果一个哨兵ping一个master，超过了`is-master-down-after-milliseconds`指定的毫秒数之后，就主观认为master宕机
+`sdown`达成的条件很简单，如果一个哨兵ping一个master，超过了`is-master-down-after-milliseconds`指定的毫秒数之后，就主观认为master宕机
 
-sdown到odown转换的条件很简单，如果一个哨兵在指定时间内，收到了quorum指定数量的其他哨兵也认为那个master是sdown了，那么就认为是odown了，客观认为master宕机
+`sdown`到`odown`转换的条件很简单，如果一个哨兵在指定时间内，收到了quorum指定数量的其他哨兵也认为那个master是sdown了，那么就认为是odown了，客观认为master宕机
 
 **master在宕机之后，如果恢复之后存在不同步问题：**
 
-有可能是从节点配置了masterauth，这是用于同步master的数据，但是主节点一开始是master是不受影响的，当master转变为slave后，由于他没有设置masterauth，所以他不能从新的master同步数据，随之导致info replication的时候，同步状态为down，所以只需要修改redis.conf中的masterauth统一即可；
+有可能是从节点配置了masterauth，这是用于同步master的数据，但是主节点一开始是master是不受影响的，当master转变为slave后，由于他没有设置masterauth，所以他不能从新的master同步数据，随之导致`info replication`的时候，同步状态为down，所以只需要修改redis.conf中的masterauth统一即可；
 
 一般master数据无法同步给slave的方案检查为如下：
 - 网络通信问题，要保证互相ping通，内网互通。
 - 关闭防火墙，对应的端口开发（虚拟机中建议永久关闭防火墙，云服务器的话需要保证内网互通）。
-- 统一所有的密码，不要漏了某个节点没有设置。
+- 统一所有的密码，不要漏了某个节点没有设置；
 
 ### 6.6、哨兵集群的自动发现机制
 
 哨兵互相之间的发现，是通过redis的`pub/sub`系统实现的，每个哨兵都会往`__sentinel__:hello`这个channel里发送一个消息，这时候所有其他哨兵都可以消费到这个消息，并感知到其他的哨兵的存在
 
-每隔两秒钟，每个哨兵都会往自己监控的某个master+slaves对应的`__sentinel__:hello channel`里发送一个消息，内容是自己的host、ip和runid还有对这个master的监控配置
+每隔两秒钟，每个哨兵都会往自己监控的某个`master+slaves`对应的`__sentinel__:hello channel`里发送一个消息，内容是自己的`host、ip`和`runid`还有对这个master的监控配置
 
-每个哨兵也会去监听自己监控的每个master+slaves对应的`__sentinel__:hello channel`，然后去感知到同样在监听这个master+slaves的其他哨兵的存在
+每个哨兵也会去监听自己监控的每个`master+slaves`对应的`__sentinel__:hello channel`，然后去感知到同样在监听这个`master+slaves`的其他哨兵的存在
 
-每个哨兵还会跟其他哨兵交换对master的监控配置，互相进行监控配置的同步
+每个哨兵还会跟其他哨兵交换对master的监控配置，互相进行监控配置的同步；
 
 ### 6.7、slave配置的自动纠正
 
-哨兵会负责自动纠正slave的一些配置，比如slave如果要成为潜在的master候选人，哨兵会确保slave在复制现有master的数据; 如果slave连接到了一个错误的master上，比如故障转移之后，那么哨兵会确保它们连接到正确的master上
+哨兵会负责自动纠正slave的一些配置，比如slave如果要成为潜在的master候选人，哨兵会确保slave在复制现有master的数据; 如果slave连接到了一个错误的master上，比如故障转移之后，那么哨兵会确保它们连接到正确的master上；
 
 ### 6.8、slave->master选举算法
 
-如果一个master被认为odown了，而且majority哨兵都允许了主备切换，那么某个哨兵就会执行主备切换操作，此时首先要选举一个slave来，会考虑slave的一些信息
+如果一个master被认为odown了，而且`majority`哨兵都允许了主备切换，那么某个哨兵就会执行主备切换操作，此时首先要选举一个slave来，会考虑slave的一些信息
 - （1）跟master断开连接的时长
 - （2）slave优先级
 - （3）复制offset
@@ -1282,25 +1287,25 @@ sdown到odown转换的条件很简单，如果一个哨兵在指定时间内，�
 如果一个slave跟master断开连接已经超过了`down-after-milliseconds`的10倍，外加master宕机的时长，那么slave就被认为不适合选举为master：`(down-after-milliseconds * 10) + milliseconds_since_master_is_in_SDOWN_state`
 
 接下来会对slave进行排序：
-- （1）按照slave优先级进行排序，`slave-priority`越低，优先级就越高
-- （2）如果`slave-priority`相同，那么看replica offset，哪个slave复制了越多的数据，offset越靠后，优先级就越高
-- （3）如果上面两个条件都相同，那么选择一个run id比较小的那个slave
+- （1）按照slave优先级进行排序，`slave-priority`越低，优先级就越高；
+- （2）如果`slave-priority`相同，那么看`replica offset`，哪个slave复制了越多的数据，offset越靠后，优先级就越高；
+- （3）如果上面两个条件都相同，那么选择一个`run id`比较小的那个slave；
 
 ### 6.9、quorum和majority
 
-每次一个哨兵要做主备切换，首先需要quorum数量的哨兵认为odown，然后选举出一个哨兵来做切换，这个哨兵还得得到majority哨兵的授权，才能正式执行切换
+每次一个哨兵要做主备切换，首先需要quorum数量的哨兵认为odown，然后选举出一个哨兵来做切换，这个哨兵还得得到majority哨兵的授权，才能正式执行切换；
 
-如果quorum < majority，比如5个哨兵，majority就是3，quorum设置为2，那么就3个哨兵授权就可以执行切换
+如果`quorum < majority`，比如5个哨兵，majority就是3，quorum设置为2，那么就3个哨兵授权就可以执行切换
 
-但是如果quorum >= majority，那么必须quorum数量的哨兵都授权，比如5个哨兵，quorum是5，那么必须5个哨兵都同意授权，才能执行切换
+但是如果`quorum >= majority`，那么必须quorum数量的哨兵都授权，比如5个哨兵，quorum是5，那么必须5个哨兵都同意授权，才能执行切换；
 
 ### 6.10、configuration epoch
 
 哨兵会对一套redis master+slave进行监控，有相应的监控的配置
 
-执行切换的那个哨兵，会从要切换到的新master（salve->master）那里得到一个configuration epoch，这就是一个version号，每次切换的version号都必须是唯一的
+执行切换的那个哨兵，会从要切换到的新master（salve->master）那里得到一个`configuration epoch`，这就是一个version号，每次切换的version号都必须是唯一的
 
-如果第一个选举出的哨兵切换失败了，那么其他哨兵，会等待failover-timeout时间，然后接替继续执行切换，此时会重新获取一个新的configuration epoch，作为新的version号
+如果第一个选举出的哨兵切换失败了，那么其他哨兵，会等待`failover-timeout`时间，然后接替继续执行切换，此时会重新获取一个新的`configuration epoch`，作为新的version号
 
 ### 6.11、configuraiton传播
 
@@ -1312,7 +1317,52 @@ sdown到odown转换的条件很简单，如果一个哨兵在指定时间内，�
 
 ### 6.12、哨兵配置实战
 
-// TODO 
+```conf
+# 哨兵sentinel实例运行的端口，默认26379  
+port 26379
+# 哨兵sentinel的工作目录
+dir ./
+
+# 哨兵sentinel监控的redis主节点的 
+## ip：主机ip地址
+## port：哨兵端口号
+## master-name：可以自己命名的主节点名字（只能由字母A-z、数字0-9 、这三个字符".-_"组成。）
+## quorum：当这些quorum个数sentinel哨兵认为master主节点失联 那么这时 客观上认为主节点失联了  
+# sentinel monitor <master-name> <ip> <redis-port> <quorum>  
+sentinel monitor mymaster 127.0.0.1 6379 2
+
+# 当在Redis实例中开启了requirepass <foobared>，所有连接Redis实例的客户端都要提供密码。
+# sentinel auth-pass <master-name> <password>  
+sentinel auth-pass mymaster 123456  
+
+# 指定主节点应答哨兵sentinel的最大时间间隔，超过这个时间，哨兵主观上认为主节点下线，默认30秒  
+# sentinel down-after-milliseconds <master-name> <milliseconds>
+sentinel down-after-milliseconds mymaster 30000  
+
+# 指定了在发生failover主备切换时，最多可以有多少个slave同时对新的master进行同步。这个数字越小，完成failover所需的时间就越长；反之，但是如果这个数字越大，就意味着越多的slave因为replication而不可用。可以通过将这个值设为1，来保证每次只有一个slave，处于不能处理命令请求的状态。
+# sentinel parallel-syncs <master-name> <numslaves>
+sentinel parallel-syncs mymaster 1  
+
+# 故障转移的超时时间failover-timeout，默认三分钟，可以用在以下这些方面：
+## 1. 同一个sentinel对同一个master两次failover之间的间隔时间。  
+## 2. 当一个slave从一个错误的master那里同步数据时开始，直到slave被纠正为从正确的master那里同步数据时结束。  
+## 3. 当想要取消一个正在进行的failover时所需要的时间。
+## 4.当进行failover时，配置所有slaves指向新的master所需的最大时间。不过，即使过了这个超时，slaves依然会被正确配置为指向master，但是就不按parallel-syncs所配置的规则来同步数据了
+# sentinel failover-timeout <master-name> <milliseconds>  
+sentinel failover-timeout mymaster 180000
+
+# 当sentinel有任何警告级别的事件发生时（比如说redis实例的主观失效和客观失效等等），将会去调用这个脚本。一个脚本的最大执行时间为60s，如果超过这个时间，脚本将会被一个SIGKILL信号终止，之后重新执行。
+# 对于脚本的运行结果有以下规则：  
+## 1. 若脚本执行后返回1，那么该脚本稍后将会被再次执行，重复次数目前默认为10。
+## 2. 若脚本执行后返回2，或者比2更高的一个返回值，脚本将不会重复执行。  
+## 3. 如果脚本在执行过程中由于收到系统中断信号被终止了，则同返回值为1时的行为相同。
+# sentinel notification-script <master-name> <script-path>  
+sentinel notification-script mymaster /var/redis/notify.sh
+
+# 这个脚本应该是通用的，能被多次调用，不是针对性的。
+# sentinel client-reconfig-script <master-name> <script-path>
+sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
+```
 
 ## 7、Redis Cluster
 
@@ -1333,29 +1383,29 @@ redis cluster（多master + 读写分离 + 高可用）
 
 Redis集群没有使用hash算法和一致性hash的算法，使用的是hash槽（hash slot）算法
 
-redis cluster有固定的16384个hash slot，对每个key计算`CRC16`值，然后对16384取模，可以获取key对应的hash slot；redis cluster中每个master都会持有部分slot。hash slot让node的增加和移除很简单，增加一个master，就将其他master的hash slot移动部分过去，减少一个master，就将它的hash slot移动到其他master上去；移动hash slot的成本是非常低的
+redis cluster有固定的`16384个hash slot`，对每个key计算`CRC16`值，然后对·取模，可以获取key对应的hash slot；redis cluster中每个master都会持有部分slot。hash slot让node的增加和移除很简单，增加一个master，就将其他master的hash slot移动部分过去，减少一个master，就将它的hash slot移动到其他master上去；移动hash slot的成本是非常低的
 
-Slots属性是一个二进制位数组（bit array），这个数组的长度为16384/8=2048个字节，共包含16384个二进制位。Master节点用bit来标识对于某个槽自己是否拥有。
+Slots属性是一个二进制位数组（bit array），这个数组的长度为`16384/8=2048个字节`，共包含16384个二进制位。Master节点用bit来标识对于某个槽自己是否拥有。
 
-所以Redis集群的最大节点个数是：16384个，因为其slot槽只有16384个
+**所以Redis集群的最大节点个数是：16384个，因为其slot槽只有16384个**
 
 **为什么RedisCluster会设计成16384个槽呢？**
 
-- 如果槽位为65536，发送心跳信息的消息头达8k，发送的心跳包过于庞大：在消息头中，最占空间的是 myslots[CLUSTER_SLOTS/8]。当槽位为65536时，这块的大小是: 65536÷8÷1024=8kb因为每秒钟，redis节点需要发送一定数量的ping消息作为心跳包，如果槽位为65536，这个ping消息的消息头太大了，浪费带宽；
+- 如果槽位为`65536`，发送心跳信息的消息头达`8k`，发送的心跳包过于庞大：在消息头中，最占空间的是 `myslots[CLUSTER_SLOTS/8]`。当槽位为65536时，这块的大小是: `65536÷8÷1024=8kb因为每秒钟`，redis节点需要发送一定数量的ping消息作为心跳包，如果槽位为65536，这个ping消息的消息头太大了，浪费带宽；
 - redis的集群主节点数量基本不可能超过1000个：集群节点越多，心跳包的消息体内携带的数据越多。如果节点过1000个，也会导致网络拥堵；
-- 槽位越小，节点少的情况下，压缩率高：Redis主节点的配置信息中，它所负责的哈希槽是通过一张bitmap的形式来保存的，在传输过程中，会对bitmap进行压缩，但是如果bitmap的填充率slots / N很高的话(N表示节点数)，bitmap的压缩率就很低。如果节点数很少，而哈希槽数量很多的话，bitmap的压缩率就很低；
+- 槽位越小，节点少的情况下，压缩率高：Redis主节点的配置信息中，`它所负责的哈希槽是通过一张bitmap的形式来保存的`，在传输过程中，会对bitmap进行压缩，但是如果bitmap的填充率`slots / N很高的话(N表示节点数)`，bitmap的压缩率就很低。如果节点数很少，而哈希槽数量很多的话，bitmap的压缩率就很低；
 
 ### 7.3、Redis集群通信机制
 
 **1、基础通信原理**
 
-redis cluster 节点间采取 gossip 协议进行通信，跟集中式不同，不是将集群元数据（节点信息，故障，等等）集中存储在某个节点上，而是互相之间不断通信，保持整个集群所有节点的数据是完整的
+redis cluster 节点间采取 `gossip` 协议进行通信，跟集中式不同，不是将集群元数据（节点信息，故障，等等）集中存储在某个节点上，而是互相之间不断通信，保持整个集群所有节点的数据是完整的；
 
-10000端口：每个节点都有一个专门用于节点间通信的端口，就是自己提供服务的端口号+10000，比如7001，那么用于节点间通信的就是17001端口；每个节点每隔一段时间都会往另外几个节点发送ping消息，同时其他节点点接收到ping之后返回pong
+10000端口：每个节点都有一个专门用于节点间通信的端口，就是自己提供服务的`端口号+10000，比如7001`，那么用于节点间通信的就是`17001`端口；每个节点每隔一段时间都会往另外几个节点发送`ping`消息，同时其他节点点接收到`ping`之后返回`pong`
 
 **3、gossip协议**
 
-gossip协议包含多种消息，包括ping，pong，meet，fail，等等
+gossip协议包含多种消息，包括`ping，pong，meet，fail`，等等
 - meet：某个节点发送meet给新加入的节点，让新节点加入集群中，然后新节点就会开始与其他节点进行通信；`redis-trib.rb add-node` 其实内部就是发送了一个gossip meet消息，给新加入的节点，通知那个节点去加入我们的集群
 - ping：每个节点都会频繁给其他节点发送ping，其中包含自己的状态还有自己维护的集群元数据，互相通过ping交换元数据；
 - pong：返回ping和meet，包含自己的状态和其他信息，也可以用于信息广播和更新；
@@ -1373,13 +1423,13 @@ gossip协议包含多种消息，包括ping，pong，meet，fail，等等
 
 有两种不同的重定向场景：
 - MOVED错误：请求的key对应的槽不在该节点上，节点将查看自身内部所保存的哈希槽到节点ID的映射记录，节点回复一个MOVED错误；需要客户端进行再次重试；
-- ASK错误：请求的key对应的槽目前的状态属于MIGRATING状态，并且当前节点找不到这个key了，节点回    复ASK错误。ASK会把对应槽的IMPORTING节点返回给你，告诉你去IMPORTING的节点尝试找找。客户端进行重试首先发送ASKING命令，节点将为客户端设置一个一次性的标志（flag），使得 客户端可以执行一次针对IMPORTING状态的槽的命令请求，然后再发送真正的命令请求
+- ASK错误：请求的key对应的槽目前的状态属于`MIGRATING状`态，并且当前节点找不到这个key了，节点回复ASK错误。ASK会把对应槽的IMPORTING节点返回给你，告诉你去IMPORTING的节点尝试找找。客户端进行重试首先发送ASKING命令，节点将为客户端设置一个一次性的标志（flag），使得客户端可以执行一次针对IMPORTING状态的槽的命令请求，然后再发送真正的命令请求
 
 #### 7.4.2、集群失效检测 
 
 集群不可用情况：
-- 集群任意 master 挂掉，并且当前 master 没有 slave，集群不可用；比如有 A，B，C 三个节点的集群，在没有复制模型的情况下,如果节点 B 失败了，那么整个集群就会以为缺少 5501-11000 这个范围的槽而不可用；
-- 集群超过半数以上 master 挂掉，无论是否有 slave，集群不可用
+- 集群任意 master 挂掉，并且当前 master 没有 slave，集群不可用；比如有 A，B，C 三个节点的集群，在没有复制模型的情况下，如果节点 B 失败了，那么整个集群就会以为缺少 5501-11000 这个范围的槽而不可用；
+- 集群超过半数以上 master 挂掉，无论是否有 slave，集群不可用；
 
 当某个Master或者Slave不能被大多数Nodes可达时，用于故障迁移并将合适Slave提升为Master。当Slave提升未能成功，集群不能正常工作。即集群不能处理Client的命令的请求，当Client发出命令请求时，集群节点都将返回错误内容的respone
 

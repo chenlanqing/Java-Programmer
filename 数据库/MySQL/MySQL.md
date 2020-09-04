@@ -3979,6 +3979,32 @@ t_b表中的数据：
 ```
 需要将`#1#2#3#`其展示为对应的类型的中文
 
+## 7、排名
+
+**比如获取某个学生成绩排名并计算该学生和上一名学生成绩差，是并列排名：**
+```sql
+SELECT *,
+	( SELECT count(DISTINCT score) FROM table_score AS b WHERE a.score < b.score) +1 AS rank, # 获取排名，并列
+	( SELECT b.score FROM table_score AS b WHERE b.score > a.score ORDER BY b.score LIMIT 1) - a.score AS subtract # 获取和上一名学生成绩的差 
+FROM table_score AS a WHERE a.s_id = 13; #获取学生周三的成绩排名和与上一名的成绩差
+```
+
+**获取所有学生成绩排名-并列排名**
+```sql
+SELECT *,
+	( SELECT count(DISTINCT score) FROM table_score AS b WHERE a.score < b.score) + 1 AS rank # 获取排名-并列
+FROM table_score AS a ORDER BY rank; #获取学生成绩排名
+```
+
+**获取所有学生成绩排名，不是并列排名。计算行号进行排名**
+```sql
+SELECT a.*,
+(@rowNum:=@rowNum+1) AS rank #计算行号
+FROM table_score AS a,
+( SELECT (@rowNum :=0) ) b
+ORDER BY a.score DESC;
+```
+
 
 # 参考文章
 
