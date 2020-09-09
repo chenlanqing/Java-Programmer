@@ -819,6 +819,12 @@ order by user_name,COURSE;
 
 **注意：关于查询缓存的相关参数已经在MySQL8.0.3版本被移除了**
 
+## 6、join原理
+
+NLJ、BNLJ 原理
+
+BKA、hash join 原理
+
 # 七、MySQL 存储引擎
 
 ## 1、MySQL 的数据库引擎
@@ -2272,6 +2278,8 @@ explain select * from salaries where from_date = '1986-06-26' order by emp_no;
 
 # 十七、数据库优化
 
+- [优化用数据库](https://github.com/datacharmer/test_db)
+
 ## 1、数据库优化的目的
 
 - 避免页面访问出错：数据库连接超时、慢查询造成页面无法加载、阻塞造成数据无法提交
@@ -3139,8 +3147,9 @@ OPTIMIZER_TRACE是MySQL 5.6引入的一项跟踪功能，它可以跟踪优化�
 
 	- 尽可能的减少 join 语句中的 nestedLooop 的循环总次数，永远用小结果驱动大的结果集
 	- 优先优化 nestedLooop 的内层循环；
-	- 保证 join 语句中被驱动表上的 join 条件字段已经被索引；
-	- 当无法保证被驱动表的join条件字段被索引且内存资源充足的情况下，不要太吝惜 joinBuffer 的设置
+	- 保证 join 语句中被驱动表上的 join 条件字段已经被索引，且该字段在两张表上的类型都是一致的；
+	- 当无法保证被驱动表的join条件字段被索引且内存资源充足的情况下，不要太吝惜 joinBuffer 的设置；
+	- join表的数量尽量不超过三张表；
 
 ### 7.4、索引失效
 
@@ -3251,9 +3260,11 @@ OPTIMIZER_TRACE是MySQL 5.6引入的一项跟踪功能，它可以跟踪优化�
 
 	order by 满足两种情况下，会使用 index 方式排序：
 	- order by 语句使用索引最左前列；
-	- 使用 where 子句与 order by 子句条件组合满足索引最左前列.
+	- 使用 where 子句与 order by 子句条件组合满足索引最左前列
 
 	*尽可能在索引上完成排序操作，遵照索引建的最左前列*
+
+	当mysql优化器发现全表扫描开销更低时，会直接使用全表扫描：`select * from employees order by first_name, last_name;`
 
 - （2）如果不在索引列上排序，fileSort有两种排序算法：双路排序和单路排序
 
@@ -3270,39 +3281,42 @@ OPTIMIZER_TRACE是MySQL 5.6引入的一项跟踪功能，它可以跟踪优化�
 			- 增大 max_length_for_sort_data 参数的设置
 
 - （3）提高 order by 速度：
-	- order by 时 select * 是一个大忌，只查询需要的字段，主要产生的影响：
-		- 当查询的字段大小总和小于 max_length_for_sort_data 而且排序字段不是 text|blob 类型时，会用改进后的算法，单路排序
-		- 两种算法的数据都可能超出 sort_buffer的容量，超出之后会创建临时文件进行多路合并，导致多次I/O使用单路排序算法风险更大先.
-	- 尝试提高 sort_buffer的容量大小。根据系统能力来进行提高，因为这个参数是针对每个进程的.
-	- 尝试提高 max_length_for_sort_data 的大小：会增加改进算法的效率.但是如果设置的太高，数据总容量超出 sort_buffer_size的概率就增大。明显症状是高磁盘IO和低的处理器使用率
+	- order by 时 `select *` 是一个大忌，只查询需要的字段，主要产生的影响：
+		- 当查询的字段大小总和小于 `max_length_for_sort_data` 而且排序字段不是 text|blob 类型时，会用改进后的算法，单路排序
+		- 两种算法的数据都可能超出 `sort_buffer`的容量，超出之后会创建临时文件进行多路合并，导致多次I/O使用单路排序算法风险更大先.
+	- 尝试提高 `sort_buffer`的容量大小。根据系统能力来进行提高，因为这个参数是针对每个进程的.
+	- 尝试提高 `max_length_for_sort_data` 的大小：会增加改进算法的效率.但是如果设置的太高，数据总容量超出 sort_buffer_size的概率就增大。明显症状是高磁盘IO和低的处理器使用率
 
-- （4）总结：为排序使用索引.
+- （4）总结：为排序使用索引，MySQL能为排序与查询使用相同的索引 
 
-	MySQL能为排序与查询使用相同的索引 index a_b_c(a，b，c)
-
+	假设表有`(id, a, b, c)`四个字段，其中 id 为主键，另外三个字段为组合索引：`index a_b_c(a，b，c)`
 	- order by 能使用索引最左前缀
-		```
+		```sql
 		order by a
 		order by a，b
 		order by a，b，c
 		order by a desc， b desc， c desc
 		```
 	- 如果 where 子句使用索引的最左前缀为常量，order by 能使用索引：
-		```
+		```sql
 		where a= const order by b，c
 		where a= const and b = const order by c
-		where a= const and b> const order by b， c 
+		where a= const and b > const order by b， c 
 		```
 	- 不能使用索引进行排序：
-		```
-		order by a asc， b desc， c desc --排序不一致
+		```sql
+		order by a asc， b desc， c desc --排序不一致 升降序不一致
 		where g = const order by b，c -- 丢失a 索引
 		where a = const order by c -- 丢失 b 索引
 		where a = const order by a，d -- d 不是索引的一部分
-		where a in (...) order by b，c --对于排序来说， 多个相等的条件也是范围查询
+		where a in (...) order by b，c -- 对于排序来说， 多个相等的条件也是范围查询
+		where a > order by b  -- 无法利用索引避免排序【使用key_part1范围查询，使用key_part2排序】
+		order by a, id -- 不能使用索引，因为排序字段存在于多个索引中；
 		```
 		
 ### 8.4、group by
+
+松散索引扫描、紧凑索引扫描
 
 实质是先排序后进行分组，遵照索引建的最佳左前缀；当无法使用索引列时，增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置；where 高于 having，能写在 where 中的限定条件不要去使用 having 限定了
 
@@ -3329,6 +3343,8 @@ explain select actor.first_name， actor.last_name， c.cnt from actor inner joi
 |  2 | DERIVED     | film_actor | index  | NULL          | PRIMARY | 4       | NULL       | 4354 | Using index |
 +----+-------------+------------+--------+---------------+---------+---------+------------+------+-------------+
 ```
+
+### 8.5、distinct 
 
 ## 9、count和max优化
 
@@ -3364,6 +3380,22 @@ explain select max(payment_date) from payment；
 
 *count 是不计算 null 的；*
 
+**优化方式：**
+- 创建一个更小的非主键索引；
+- 把把数据库引擎换成 MyISAM-实际项目用的很少，一般不会修改数据库引擎；
+- 汇总表，结果比较准确，但是增加了维护成本；
+- 使用 sql_calc_found_rows，一般用法：
+	```sql
+	-- 在做完本条查询之后，自动的执行count
+	select sql_calc_found_rows * from salaries limit 0, 10;
+	select found_rows() as salary_count;
+	```
+	mysql8.0.17之后会被废除；需要在mysql终端中执行；
+- 使用缓存：存放到缓存；性能比较高，结果比较准确，误差比较少；
+- information_schema.tables，`select * from information_schema.tables where table_schema = '' and table_name = ''`，不操作原表，但是其返回的是个估算值；
+- `show table status where Name = 'salaries';` 估算值
+- `explain select * from salaries;` 估算值；
+
 ### 9.3、count
 
 **1、简介：**
@@ -3389,13 +3421,22 @@ explain select max(payment_date) from payment；
 
 **4、COUNT(*)和COUNT(1)：**
 
-官方文档的描述：InnoDB handles SELECT COUNT(*) and SELECT COUNT(1) operations in the same way. There is no performance difference
+官方文档的描述：`InnoDB handles SELECT COUNT(*) and SELECT COUNT(1) operations in the same way. There is no performance difference`
 
-所以说对于COUNT(1)和COUNT(*)，MySQL的优化是完全一样的，根本不存在谁比谁快！建议用`count(*)`，因为这个是SQL92定义的标准统计行数的语法；
+所以说对于`COUNT(1)`和`COUNT(*)`，MySQL的优化是完全一样的，根本不存在谁比谁快！建议用`count(*)`，因为这个是SQL92定义的标准统计行数的语法；
+
+对于MyISAM引擎，如果`count(*)`没有where条件(形如 `select count(*) from 表名`)，查询会非常的快；
+
+对于MySQL 8.0.13，InnoDB引擎，如果`count(*)`没有where条件(形如 `select count(*) from 表名`)，查询也会被优化，性能有所提升
 
 **5、COUNT(字段)：**
 
-进行全表扫描，然后判断指定字段的值是不是为NULL，不为NULL则累加；相比`COUNT(*)`，`COUNT(字段)`多了一个步骤就是判断所查询的字段是否为NULL，所以他的性能要比`COUNT(*)`慢；
+进行全表扫描，然后判断指定字段的值是不是为NULL，不为NULL则累加；相比`COUNT(*)`，`COUNT(字段)`多了一个步骤就是判断所查询的字段是否为NULL，所以他的性能要比`COUNT(*)`慢；并且会使用该字段上面的索引（如果字段有索引的话）
+
+**6、count与索引**
+- 当没有非主键索引时，会使用主键索引；
+- 如果存在非主键索引的话，会使用非主键索引；
+- 如果存在多个非主键索引，会使用一个最小的非主键索引；主要是因为在innodb存储引擎中，一个page页，非主键索引存储的数据更多；
 
 ## 10、limit 优化
 
@@ -3428,6 +3469,21 @@ explain select max(payment_date) from payment；
 		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
 		```
 		注意：这里的主键必须是有序的且中间没有缺失
+	- 优化方式3：使用覆盖索引 + join的方式
+		```sql
+		mysql> explain select * from employees e inner join ( select emp_no from employees limit 300000, 10) t on e.emp_no = t.emp_no;
+		+----+-------------+------------+------------+--------+---------------+---------+---------+----------+--------+----------+-------------+
+		| id | select_type | table      | partitions | type   | possible_keys | key     | key_len | ref      | rows   | filtered | Extra       |
+		+----+-------------+------------+------------+--------+---------------+---------+---------+----------+--------+----------+-------------+
+		|  1 | PRIMARY     | <derived2> | NULL       | ALL    | NULL          | NULL    | NULL    | NULL     | 299512 |   100.00 | NULL        |
+		|  1 | PRIMARY     | e          | NULL       | eq_ref | PRIMARY       | PRIMARY | 4       | t.emp_no |      1 |   100.00 | NULL        |
+		|  2 | DERIVED     | employees  | NULL       | index  | NULL          | PRIMARY | 4       | NULL     | 299512 |   100.00 | Using index |
+		```
+	- 优化方式4：范围查询 + limit语句
+
+	- 优化方式5：如果获得起始主键 + 结束主键，使用范围查询
+
+	- 优化方式6：限制分页的数量
 
 在很多情况下我们已知数据仅存在一条，此时我们应该告知数据库只用查一条，否则将会转化为全表扫描，这时候可以使用：`limit 1`；
 

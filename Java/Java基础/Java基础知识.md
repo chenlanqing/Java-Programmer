@@ -606,6 +606,14 @@ public class Test{
 
 ## 4、Java 二进制
 
+Java7以及以后版本支持直接书写除十进制以外的其它进制字面量
+```
+二进制：前置0b/0B
+八进制：前置0
+十进制：默认的，无需前置
+十六进制：前置0x/0X
+```
+
 ### 4.1、Java 基本数据类型
 
 - 整型：`byte(8 bit)、short(16 bit)、int(32 bit)、long(64 bit)`
@@ -677,6 +685,27 @@ public class CovertToRadix {
 	}
 }
 ```
+
+### 4.7、进制转换
+
+```java
+public void test2() {
+    int i = 192;
+    System.out.println("---------------------------------");
+    System.out.println("十进制转二进制：" + Integer.toBinaryString(i)); //11000000
+    System.out.println("十进制转八进制：" + Integer.toOctalString(i)); //300
+    System.out.println("十进制转十六进制：" + Integer.toHexString(i)); //c0
+    System.out.println("---------------------------------");
+    // 统一利用的为Integer的valueOf()方法,parseInt方法也是ok的
+    System.out.println("二进制转十进制：" + Integer.valueOf("11000000", 2).toString()); //192
+    System.out.println("八进制转十进制：" + Integer.valueOf("300", 8).toString()); //192
+    System.out.println("十六进制转十进制：" + Integer.valueOf("c0", 16).toString()); //192
+    System.out.println("---------------------------------");
+}
+```
+
+### 4.8、
+
 ## 5、如何利用位运算
 
 ### 5.1、子网掩码

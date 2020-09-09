@@ -1463,12 +1463,9 @@ key 迁移过程中，涉及到 `CLUSTER SETSLOT slot8 MIGRATING node` 命令和
 
 ## 8、Redis Cluster 与 主从复制
 
-如果你的数据量很少，主要是承载高并发高性能的场景，比如你的缓存一般就几个G，单机足够了
-
-replication，一个mater，多个slave，要几个slave跟你的要求的读吞吐量有关系，然后自己搭建一个sentinal集群，去保证redis主从架构的高可用性，就可以了
-
-redis cluster，主要是针对海量数据+高并发+高可用的场景，海量数据，如果你的数据量很大，那么建议就用redis cluster
-
+- 如果你的数据量很少，主要是承载高并发高性能的场景，比如你的缓存一般就几个G，单机足够了；
+- replication，一个mater，多个slave，要几个slave跟你的要求的读吞吐量有关系，然后自己搭建一个sentinal集群，去保证redis主从架构的高可用性，就可以了；
+- redis cluster，主要是针对海量数据+高并发+高可用的场景，海量数据，如果你的数据量很大，那么建议就用redis cluster；
 
 # 六、Redis内存模型
 
@@ -1501,40 +1498,40 @@ mem_allocator:libc
 active_defrag_running:0
 lazyfree_pending_objects:0
 ```
-- `used_memory`：Redis分配器分配的内存总量（单位是字节），包括使用的虚拟内存（即swap）；used_memory_human只是显示更友好；
+- `used_memory`：Redis分配器分配的内存总量（单位是字节），包括使用的虚拟内存（即swap）；`used_memory_human`只是显示更友好；
 - `used_memory_rss`：Redis进程占据操作系统的内存（单位是字节），与top及ps命令看到的值是一致的；除了分配器分配的内存之外，`used_memory_rss`还包括进程运行本身需要的内存、内存碎片等，但是不包括虚拟内存；
 
 	`used_memory`和`used_memory_rss`，前者是从Redis角度得到的量，后者是从操作系统角度得到的量。二者之所以有所不同，一方面是因为内存碎片和Redis进程运行需要占用内存，使得前者可能比后者小，另一方面虚拟内存的存在，使得前者可能比后者大；
 
 	由于在实际应用中，Redis的数据量会比较大，此时进程运行占用的内存与Redis数据量和内存碎片相比，都会小得多；因此`used_memory_rss`和`used_memory`的比例，便成了衡量Redis内存碎片率的参数；这个参数就是`mem_fragmentation_ratio`；
 
-- `mem_fragmentation_ratio`：内存碎片比率，该值是`used_memory_rss` / `used_memory`的比值；
+- `mem_fragmentation_ratio`：内存碎片比率，该值是`used_memory_rss / used_memory`的比值；
 
-	`mem_fragmentation_ratio`一般大于1，且该值越大，内存碎片比例越大。`mem_fragmentation_ratio`<1，说明Redis使用了虚拟内存，由于虚拟内存的媒介是磁盘，比内存速度要慢很多，当这种情况出现时，应该及时排查，如果内存不足应该及时处理，如增加Redis节点、增加Redis服务器的内存、优化应用等。
+	`mem_fragmentation_ratio`一般大于1，且该值越大，内存碎片比例越大。`mem_fragmentation_ratio< 1`，说明Redis使用了虚拟内存，由于虚拟内存的媒介是磁盘，比内存速度要慢很多，当这种情况出现时，应该及时排查，如果内存不足应该及时处理，如增加Redis节点、增加Redis服务器的内存、优化应用等。
 
 	一般来说，`mem_fragmentation_ratio`在1.03左右是比较健康的状态（对于jemalloc来说）；上面截图中的`mem_fragmentation_ratio`值很大，是因为还没有向Redis中存入数据，Redis进程本身运行的内存使得`used_memory_rss` 比`used_memory`大得多
 
-- `mem_allocator：Redis`使用的内存分配器，在编译时指定；可以是 `libc 、jemalloc或者tcmalloc`，默认是`jemalloc`；
+- `mem_allocator:Redis`使用的内存分配器，在编译时指定；可以是 `libc 、jemalloc或者tcmalloc`，默认是`jemalloc`；
 
 ## 2、Redis单线程、高性能
 
 ### 2.1、Redis单线程
 
 - 为什么采用单线程：Redis是基于内存的操作，CPU不是Redis的瓶颈，Redis的瓶颈最有可能是机器内存的大小或者网络带宽。既然单线程容易实现，而且CPU不会成为瓶颈，那就顺理成章地采用单线程的方案了；
-- 单线程多进程集群方案
+- 单线程多进程集群方案：多个redis实例
 - 采用单线程，避免了不必要的上下文切换和竞争条件，也不存在多进程或者多线程导致的切换而消耗 CPU
 
 Redis单线程的优劣势：
 - 优势：
 	- 代码更清晰，处理逻辑更简单
-	- 不用去考虑各种锁的问题，不存在加锁释放锁操作，没有因为可能出现死锁而导致的性能消耗
-	- 不存在多进程或者多线程导致的切换而消耗CPU
-	- 单线程天然支持原子操作
+	- 不用去考虑各种锁的问题，不存在加锁释放锁操作，没有因为可能出现死锁而导致的性能消耗；
+	- 不存在多进程或者多线程导致的切换而消耗CPU；
+	- 单线程天然支持原子操作；
 - 劣势：无法发挥多核CPU性能，不过可以通过在单机开多个Redis实例来完善
 
 ### 2.4、Redis线程模型
 
-- redis 内部使用文件事件处理器 file event handler，这个文件事件处理器是单线程的，所以 redis 才叫做单线程的模型。
+- redis 内部使用`文件事件处理器（file event handler）`，这个文件事件处理器是单线程的，所以 redis 才叫做单线程的模型。
 - 它采用 IO 多路复用机制同时监听多个 socket，根据 socket 上的事件来选择对应的事件处理器进行处理
 
 ![](image/Redis-线程模型.png)
@@ -1571,7 +1568,7 @@ Redis 还会 fork 一个子进程，来进行重负荷任务的处理。Redis
 
 ## 2、Redis数据淘汰策略
 
-可以设置内存最大使用量，当内存使用量超过时施行淘汰策略，具体有 6 种淘汰策略。
+可以设置内存最大使用量，当内存使用量超过时施行淘汰策略，具体有 6 种淘汰策略：
 
 | 策略 | 描述 |
 | -- | -- |
@@ -1580,13 +1577,17 @@ Redis 还会 fork 一个子进程，来进行重负荷任务的处理。Redis
 | volatile-random | 从已设置过期时间的数据集中任意选择数据淘汰 |
 | allkeys-lru | 从所有数据集中挑选最近最少使用的数据淘汰 |
 | allkeys-random | 从所有数据集中任意选择数据进行淘汰 |
-| noeviction | 禁止淘汰数据 |
+| noeviction | 禁止淘汰数据（默认策略） |
+
+设置淘汰策略，在配置文件中添加配置：`maxmemory-policy noeviction`
 
 如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key。抽样数量可通过 `maxmemory-samples` 配置。
 
-默认是noeviction
+比较推荐的是两种lru策略，根据自己的业务需求：
+- 如果你使用Redis只是作为缓存，不作为DB持久化，那推荐选择allkeys-lru；
+- 如果你使用Redis同时用于缓存和数据持久化，那推荐选择`volatile-lru`
 
-## 3、Redis过期策略
+## 3、Redis数据过期策略
 
 - 定期删除：redis 会将每个设置了过期时间的 key 放入到一个独立的字典中，以后会定期遍历这个字典来删除到期的 key；Redis 默认会每秒进行十次过期扫描（100ms一次），过期扫描不会遍历过期字典中所有的 key，而是采用了一种简单的贪心策略
 	- 从过期字典中随机 20 个 key；
@@ -1600,7 +1601,7 @@ Redis 还会 fork 一个子进程，来进行重负荷任务的处理。Redis
 
 - 惰性删除：是在客户端访问这个 key 的时候，redis 对 key 的过期时间进行检查，如果过期了就立即删除，不会给你返回任何东西。
 
-定期删除是集中处理，惰性删除是零散处理。
+**定期删除是集中处理，惰性删除是零散处理**。
 
 ***为什么要采用定期删除+惰性删除2种策略呢？***
 - 如果过期就删除。假设redis里放了10万个key，都设置了过期时间，你每隔几百毫秒，就检查10万个key，那redis基本上就死了，cpu负载会很高的，消耗在你的检查过期key上了；
@@ -1612,7 +1613,7 @@ Redis安全防范
 
 ## 1、禁止一些高危命令
   
-修改 redis.conf 文件，禁用远程修改 DB 文件地址
+修改 redis.conf 文件，禁用远程修改 DB 文件地址，禁止一些高危的命令，
 ```
 rename-command FLUSHALL ""
 rename-command CONFIG ""
@@ -1633,48 +1634,50 @@ groupadd -r redis && useradd -r -g redis redis
 ## 4、禁止外网访问 Redis
 
 修改 redis.conf 文件，添加或修改，使得 Redis 服务只在当前主机可用
-
+```
 bind 127.0.0.1
+```
 
 在redis3.2之后，redis增加了protected-mode，在这个模式下，非绑定IP或者没有配置密码访问时都会报错
 
 ## 5、修改默认端口
 
 修改配置文件redis.conf文件
-
-Port 6379
-
+```
+port 6379
+```
 默认端口是6379，可以改变成其他端口（不要冲突就好）
 
 ## 6、保证 authorized_keys 文件的安全
 
 为了保证安全，您应该阻止其他用户添加新的公钥。
 
-将 authorized_keys 的权限设置为对拥有者只读，其他用户没有任何权限：
+将 `authorized_keys` 的权限设置为对拥有者只读，其他用户没有任何权限：
 
-chmod 400 ~/.ssh/authorized_keys
+`chmod 400 ~/.ssh/authorized_keys`
 
 为保证 authorized_keys 的权限不会被改掉，您还需要设置该文件的 immutable 位权限:
 
-chattr +i ~/.ssh/authorized_keys
+`chattr +i ~/.ssh/authorized_keys`
 
-然而，用户还可以重命名 ~/.ssh，然后新建新的 ~/.ssh 目录和 authorized_keys 文件。要避免这种情况，需要设置 ~./ssh 的 immutable 权限：
+然而，用户还可以重命名 `~/.ssh`，然后新建新的 `~/.ssh` 目录和 authorized_keys 文件。要避免这种情况，需要设置 ~./ssh 的 immutable 权限：
 
-chattr +i ~/.ssh
-
+`chattr +i ~/.ssh`
 
 # 九、Redis管道pipeline
 
 ## 1、单条命令的执行步骤
 
-- 客户端把命令发送到服务器，然后阻塞客户端，等待着从socket读取服务器的返回结果
-- 服务器处理命令并将结果返回给客户端
+- 客户端把命令发送到服务器，然后阻塞客户端，等待着从socket读取服务器的返回结果；
+- 服务器处理命令并将结果返回给客户端；
 
-每个命令的执行时间 = 客户端发送时间+服务器处理和返回时间+一个网络来回的时间；其中一个网络来回的时间是不固定的，它的决定因素有很多
+`每个命令的执行时间` =` 客户端发送时间+服务器处理和返回时间` + `一个网络来回的时间`；其中一个网络来回的时间是不固定的，它的决定因素有很多
 
 ## 2、Redis管道技术
 
-管道的基本含义是，客户端可以向服务器发送多个请求，而不必等待回复，并最终在一个步骤中读取回复
+管道的基本含义是，客户端可以向服务器发送多个请求，而不必等待回复，并最终在一个步骤中读取回复；
+
+redis本身是基于request/response模式，每一个命令都需要等待上一个命令响应后进行处理，中间需要经过RTT（Round Time Trip，往返延时，表示发送端从发送数据开始，到发送端收到来自接收端的确认，所需要的时间。），并且需要频繁调用系统IO
 
 客户端可以一次发送多条命令，不用逐条等待命令的返回值，而是到最后一起读取返回结果，这样只需要一次网络开销，速度就会得到明显的提升；
 
@@ -1684,6 +1687,60 @@ chattr +i ~/.ssh
 - 使用管道技术可以显著提升Redis处理命令的速度，其原理就是将多条命令打包，只需要一次网络开销，在服务器端和客户端各一次read()和write()系统调用，以此来节约时间。
 - 管道中的命令数量要适当，并不是越多越好。
 - Redis2.6版本以后，脚本在大部分场景中的表现要优于管道
+
+## 3、pipeline 用法
+
+### 3.1、jedis客户端
+
+```java
+Pipeline pipelined = jedis.pipelined();
+String key = "key";
+for (int i = 0; i < 10; i++) {
+	pipelined.set(key + ":" + i, String.valueOf((i + 1)));
+}
+pipelined.close();
+```
+
+### 3.2、Lettuce客户端
+
+```java
+RedisURI uri = RedisURI.create(RedisConstant.redis_host, RedisConstant.port);
+RedisClient client = RedisClient.create(uri);
+StatefulRedisConnection<String, String> connect = client.connect();
+RedisAsyncCommands<String, String> commands = connect.async();
+// disable auto-flushing
+commands.setAutoFlushCommands(false);
+List<RedisFuture<?>> futures = Lists.newArrayList();
+for (int i = 0; i < 10; i++) {
+	futures.add(commands.set("key-" + i, "value-" + i));
+}
+// write all commands to the transport layer
+commands.flushCommands();
+// synchronization example: Wait until all futures complete
+LettuceFutures.awaitAll(5, TimeUnit.SECONDS, futures.toArray(new RedisFuture[futures.size()]));
+connect.close();
+```
+
+## 3、mget与pipeline
+
+- mget和mset命令也是为了减少网络连接和传输时间所设置的，其本质和pipeline的应用区别不大，但是在特定场景下只能用pipeline实现，例如：
+	```
+	get a
+	set b ‘1’
+	incr b
+	```
+	pipeline适合执行这种连续，且无相关性的命令；
+
+- pipeline应用场景：多个命令需要被及时提交，且这些命令的响应结果没有相互依赖；但是需要注意以下几点：
+	- 不要和常规命令client共用一个链接，因为pipeline是独占连接的，如果管道内命令太多，可能会造成请求超时；
+	- 可发送命令数量受到客户端缓冲区大小限制，如超过限制，则flush到redis
+	- redis server存在query buffer限制，默认是1GB，如果超过这个值，客户端会被强制断掉；
+	- redis server存在output buffer限制，受到maxmemory配置限制；
+	- 要实现pipeline，同时需要服务器端和客户端的支持
+	- redis cluster不建议使用pipeline，容易产生max redirect错误
+	- twem proxy可以支持pipeline
+
+	局限性：当某个命令的执行需要依赖前一个命令的返回结果时，无法使用pipeline。
 
 # 十、Redis与Java
 
