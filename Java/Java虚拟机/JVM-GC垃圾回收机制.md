@@ -331,7 +331,7 @@ public class FinalizeEscapeGC {
 
 ## 3、Parallel Scavenge 收集器
 
-- 算法：堆内存年轻代采用“复制算法”；配合收集器：ParallelOldGC，堆内存老年代采用“标记-整理算法”；
+- 算法：堆内存年轻代采用“复制算法”；配合收集器：`ParallelOldGC`，堆内存老年代采用“标记-整理算法”；
 - 并行的多线程收集器；只适用于新生代；在Server模式下的默认的年轻代收集器
 - Parallel Scavenge 收集器目标是达到一个控制的吞吐量（Throughput，CPU 运行用户代码的时间与CPU总消耗的时间的比值）；
 - GC 自适应调整策略；`-XX:+UseAdaptiveSizePolicy`
@@ -383,7 +383,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 ### 6.3、CMS相关参数
 
--XX:+UseConcMarkSweepGC
+- `-XX:+UseConcMarkSweepGC`
 - `-XX:ConcGCThreads`：并发的GC线程数；
 - `-XX:+UseCMSCompactAtFullCollection`：Full GC之后做压缩
 - `-XX:CMSFullGCsBeforeCompaction`：多少次Full GC之后压缩一次

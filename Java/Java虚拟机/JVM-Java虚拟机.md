@@ -1,7 +1,3 @@
-*任何一个JVM参数的默认值可以通过 `java -XX:+PrintFlagsFinal -version |grep JVMParamName` 获取，例如：`java -XX:+PrintFlagsFinal -version |grep MetaspaceSize`*
-
-`java -XX:+PrintCommandLineFlags -version`：查看初始默认参数
-
 一句话：JVM屏蔽了与具体操作系统平台相关的信息，使得Java程序只需生成在Java虚拟机上运行的目标代码（字节码），就可以在多种平台上不加修改地运行
 
 # 0、虚拟机历史

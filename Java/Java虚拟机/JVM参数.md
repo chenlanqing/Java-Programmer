@@ -28,6 +28,10 @@ java [options] -jar filename [args]
 
 所有参数文件都可以再OpenJDK中 [globals.hpp](https://github.com/chenlanqing/openjdk/blob/jdk/jdk/src/hotspot/share/runtime/globals.hpp)文件中找到
 
+*任何一个JVM参数的默认值可以通过 `java -XX:+PrintFlagsFinal -version |grep JVMParamName` 获取，例如：`java -XX:+PrintFlagsFinal -version |grep MetaspaceSize`*
+
+**查看默认参数：**`java -XX:+PrintCommandLineFlags -version`：查看初始默认参数
+
 ## 1、标准参数
 
 - [JDK8-标准参数](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABDJJFI)
