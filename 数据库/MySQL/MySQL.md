@@ -3316,11 +3316,97 @@ OPTIMIZER_TRACE是MySQL 5.6引入的一项跟踪功能，它可以跟踪优化�
 		
 ### 8.4、group by
 
-松散索引扫描、紧凑索引扫描
+**1、松散索引扫描（Loose Index Scan）**
+
+无需扫描满足条件的所有索引键即可返回结果
+
+explain 的extra 展示`Using index for group-by`，说明使用了松散索引扫描
+分析SQL：`select emp_no, min(salary) from salaries group by emp_no`，有组合索引 [emp_no, salary] 
+```sql
+/*
+ * 分析这条SQL如何执行：
+ * 
+ * [10001,50000]
+ * [10001,51000]
+ * ...
+ * [10002,30000]
+ * [10002,32000]
+ * ...
+ * 正常秩序逻辑
+ * 1. 先扫描emp_no = 10001的数据，并计算出最小的salary是多少，[10001,50000]
+ * 2. 扫描emp_no = 10002，并计算出最小的salary是多少，[10002,30000]
+ * 3. 遍历出每个员工的最小薪资，并返回
+ * ===
+ * 改进：（松散索引扫描）
+ * 1. 先扫描emp_no = 10001的数据，取出第一条 => 就是这个员工工资最小的数据
+ * 2. 直接跳过所有的emp_no = 10001的数据，继续扫描emp_no = 10002的数据，取第一条
+ * 3. 以此类推
+ */
+```
+
+*使用松散索引扫描的条件：*
+- 查询作用在单张表上；
+- group by 指定的所有字段要符合最左前缀原则，且没有其他字段；比如有索引 index(c1,c2,c3)
+	- 如果 group by c1,c2 则可以使用松散索引扫描；
+	- 如果 group by c2,c3 或者 group by c1,c2,c4 则不能使用；
+- 如果存在聚合函数，只支持 min()/max()，并且如果使用了 min()和max() ，则必须作用在同一个字段；聚合函数作用的字段必须在索引中，并且要尽更 group by 所指定的字段；比如有索引 index(c1,c2,c3)， `select c1,c2 min(c3), max(c3) from t1 group by c1,c2`，则可以使用松散索引扫描；
+- 如果查询中存在group by 指定的列意外的其他部分，则必须以常理的形式出现：
+	- `select c1,c3 from t1 grouo by c1,c2`：不能使用松散索引扫描
+	- `select c1,c3 from t1 where c3= 3 group by c1,c2`：可以使用松散索引扫描
+- 索引必须索引整个字段的值，不能是前缀索引；
+
+*能够使用松散索引扫描的SQL：*
+```sql
+-- 假设有 index(c1,c2,c3) 作用在表 t1(c1,c2,c3,c4)，下面这些SQL都能使用松散索引扫描
+select c1, c2 from t1 group by c1,c2;
+select distinct c1, c2 from t1;
+select c1, min(c2) from t1 group by c1;
+select c1, c2 from t1 where c1 < const group by c1, c2;
+select max(c3), min(c3), c1, c2 from t1 where c2 > const group by c1, c2;
+select c2 from t1 where c1 < const group by c1, c2;
+select c1, c2 from t1 where c3 = const group by c1,c2;
+```
+
+*不能使用松散索引扫描的SQL：*
+```sql
+-- 假设有 index(c1,c2,c3) 作用在表 t1(c1,c2,c3,c4)，下面这些SQL不能使用松散索引扫描
+-- 聚合函数不是 min()/max()
+select c1, sum(c2) from t1 group by c1;
+
+-- 不符合最左前缀原则
+select c1, c2 from t1 group by c2, c3;
+-- 查询了c3字段，但是c3字段上没有等值查询
+select c1, c3 from t1 group by c1, c2;
+```
+
+*特定聚合函数用法能够使用松散索引扫描的条件：*
+- avg(distinct)、sum(distinct)、count(distinct)，其中 avg(distinct)、sum(distinct) 可以接受单个参数，count(distinct) 可以接受多个参数；
+- 查询中必须不存在group bvu 或 distinct 语句；
+- 满足签名所有使用松散索引扫描的条件；
+```sql
+-- 假设有 index(c1,c2,c3) 作用在表 t1(c1,c2,c3,c4)，下面这些SQL能使用松散索引扫描
+select count(distinct c1), sum(distinct c1) from t1;
+select count(distinct c1, c2), count(distinct c2, c1) from t1;
+```
+
+**2、紧凑索引扫描（Tight Index Scan）**
+
+需要扫描满足条件的所有索引建才能返回结果；如果无法使用松散索引扫描，会尝试使用紧凑索引扫描；性能相对差点
+```sql
+explain select emp_no, sum(salary) from salaries group by emp_no
+```
+
+**3、临时表（Temporary Table）**
+
+紧凑索引扫描如果也没办法使用的话，mysql会读取需要的数据，并创建一张临时表，然后使用临时表实现group by 操作；
+```sql
+-- 一旦出现临时表，将会在explain-extra显示Using temporary
+explain select max(hire_date) from employees group by hire_date;
+```
+
+**4、group by 的优化**
 
 实质是先排序后进行分组，遵照索引建的最佳左前缀；当无法使用索引列时，增大 max_length_for_sort_data 和 sort_buffer_size 参数的设置；where 高于 having，能写在 where 中的限定条件不要去使用 having 限定了
-
-group by 的优化
 ```
 explain select actor.first_name，actor.last_name， count(*) from film_actor inner join actor USING(actor_id)
 group by film_actor.actor_id；
@@ -3346,9 +3432,12 @@ explain select actor.first_name， actor.last_name， c.cnt from actor inner joi
 
 ### 8.5、distinct 
 
+disintct 优化同 group by 优化思路类似；
+
 ## 9、count和max优化
 
 ### 9.1、max 优化
+
 ```
 explain select max(payment_date) from payment；
 +----+-------------+---------+------+---------------+------+---------+------+-------+-------+
@@ -3643,7 +3732,354 @@ SHOW [FULL] PROCESSLIST用于查看当前正在运行的线程。如果执行此
 
 当遇到“too many connections”错误信息时，想要了解发生了什么，SHOW PROCESSLIST就非常有用。MySQL保留了一个额外的连接，用于让拥有 CONNECTION_ADMIN （或已废弃的 SUPER ）权限的账户使用，从而确保管理员始终能够连接并检查系统。可使用 KILL 语句杀死线程
 
-## 15、批量插入大量数据
+## 15、数据库调优工具：Percona Toolkit
+
+### 15.1、安装
+
+该工具不支持Windows
+
+**基于Deban的Linux**
+```bash
+# 配置镜像，加速下载
+# 备份源配置文件
+mv /etc/apt/sources.list /etc/apt/sources.list.bak
+
+# 使用中科大源
+echo 'deb http://mirrors.ustc.edu.cn/debian/ buster main
+deb-src http://mirrors.ustc.edu.cn/debian/ buster main
+deb http://mirrors.ustc.edu.cn/debian-security buster/updates main
+deb-src http://mirrors.ustc.edu.cn/debian-security buster/updates main
+deb http://mirrors.ustc.edu.cn/debian/ buster-updates main
+deb-src http://mirrors.ustc.edu.cn/debian/ buster-updates main' > /etc/apt/sources.list
+
+# 更新
+apt-get update
+
+# 下载安装包
+wget https://repo.percona.com/apt/percona-release_latest.generic_all.deb
+
+sudo dpkg -i percona-release_latest.generic_all.deb
+
+sudo apt-get install percona-toolkit
+```
+
+**基于RPM的Linux**
+```
+sudo yum install https://repo.percona.com/yum/percona-release-latest.noarch.rpm
+sudo yum install percona-toolkit
+```
+
+
+### 15.2、pt-query-digest
+
+- [官方资料](https://www.percona.com/doc/percona-toolkit/3.0/pt-query-digest.html)
+
+**作用：**
+
+分析日志（包括binlog、General log、slowlog）、processlist以及tcpdump中的查询
+
+**语法**
+
+`pt-query-digest [OPTIONS] [FILES] [DSN]`
+
+**常用OPTIONS**
+```sql
+--create-review-table			当使用--review参数把分析结果输出到表中时，如果没有表就自动创建
+--create-history-table		当使用--history参数把分析结果输出到表中时，如果没有表就自动创建
+--filter	输出符合条件的内容
+--limit     限制输出的百分比或数量。可指定百分比或数字，例如90%表示按响应时间从小到大排序，输出90%的结果；20表示输出最慢的20条
+--host  	指定MySQL地址，也可用-h指定
+--port		指定MySQL端口
+--user  	指定MySQL用户名，也可用-u指定
+--password  指定MySQL密码，也可用-p指定
+--history 	将分析结果保存到表中，分析结果比较详细，下次再使用--history时，如果存在相同的语句，且查询所在的时间区间和历史表中的不同，可通过查询同一CHECKSUM来比较某类型查询的历史变化
+--review 	将分析结果保存到表中，从而方便未来review。这个分析只是对查询条件进行参数化，一个类型的查询一条记录，比较简单。当下次使用--review时，如果存在相同的语句分析，就不会记录到数据表中
+--output 	指定将结果输出输出到哪里，值可以是report(标准分析报告)、slowlog(Mysql slow log)、json、json-anon，一般使用report，以便于阅读
+--since 	指定分析的起始时间，值为字符串，可以是指定的某个”yyyy-mm-dd [hh:mm:ss]”格式的时间点，也可以是简单的一个时间值：s(秒)、h(小时)、m(分钟)、d(天)，如12h就表示从12小时前开始统计
+--until 	指定分析的截止时间，配合--since可以分析一段时间内的慢查询
+```
+
+**常用DSN**   DSN使用key=value的形式配置；多个DSN使用,分隔
+```
+A    指定字符集
+D    指定连接的数据库
+P    连接数据库端口
+S    连接Socket file
+h    连接数据库主机名
+p    连接数据库的密码
+t    使用--review或--history时把数据存储到哪张表里
+u    连接数据库用户名
+```
+
+**使用示例**
+```bash
+# 展示slow.log中最慢的查询的报表
+pt-query-digest slow.log
+
+# 分析最近12小时内的查询
+pt-query-digest --since=12h slow.log
+
+# 分析指定范围内的查询
+pt-query-digest slow.log --since '2020-06-20 00:00:00' --until '2020-06-25 00:00:00'
+
+# 把slow.log中查询保存到query_history表
+pt-query-digest --user=root --password=root --review h=localhost,D=test,t=query_history --create-review-table slow.log
+
+# 连上localhost，并读取processlist，输出到slowlog
+pt-query-digest --processlist h=localhost --user=root --password=root123 --interval=0.01 --output slowlog
+
+# 利用tcpdump获取MySQL协议数据，然后产生最慢查询的报表
+# tcpdump使用说明：https://blog.csdn.net/chinaltx/article/details/87469933
+tcpdump -s 65535 -x -nn -q -tttt -i any -c 1000 port 3306 > mysql.tcp.txt
+pt-query-digest --type tcpdump mysql.tcp.txt
+
+# 分析binlog
+mysqlbinlog mysql-bin.000093 > mysql-bin000093.sql
+pt-query-digest  --type=binlog mysql-bin000093.sql
+
+# 分析general log
+pt-query-digest  --type=genlog  localhost.log
+```
+
+比如pt-query-digest slow.log执行结果：
+```bash
+[root@localhost mysql]# pt-query-digest localhost-slow.log 
+
+# 150ms user time, 80ms system time, 26.05M rss, 220.49M vsz
+# Current date: Sat Sep 12 11:23:45 2020
+# Hostname: localhost.localdomain
+# Files: localhost-slow.log
+# Overall: 3 total, 3 unique, 0.05 QPS, 0.03x concurrency ________________
+# Time range: 2020-09-12T03:22:42 to 2020-09-12T03:23:40
+# Attribute          total     min     max     avg     95%  stddev  median
+# ============     ======= ======= ======= ======= ======= ======= =======
+# Exec time             1s   314ms   846ms   498ms   816ms   236ms   323ms
+# Lock time          318us    74us   160us   106us   159us    39us    80us
+# Rows sent        174.00k       1 174.00k  58.00k 165.97k  78.24k    0.99
+# Rows examine       1.02M 174.00k 522.00k 348.67k 509.78k 140.40k 345.04k
+# Query size            80      19      31   26.67   30.19    5.19   28.75
+
+# Profile
+# Rank Query ID                           Response time Calls R/Call V/M  
+# ==== ================================== ============= ===== ====== =====
+#    1 0x08BB20ABD48C5A93D6290634B13AA52E  0.8459 56.6%     1 0.8459  0.00 SELECT items
+#    2 0x2C249A3BCA1D6369859A740C2E3F594D  0.3350 22.4%     1 0.3350  0.00 SELECT items_img
+#    3 0x3FC4A228A3C17A851EDE597DCE9D7CD6  0.3144 21.0%     1 0.3144  0.00 SELECT items_spec
+
+具体执行的sql
+# Query 1: 0 QPS, 0x concurrency, ID 0x08BB20ABD48C5A93D6290634B13AA52E at byte 0
+# This item is included in the report because it matches --limit.
+# Scores: V/M = 0.00
+# Time range: all events occurred at 2020-09-12T03:22:42
+# Attribute    pct   total     min     max     avg     95%  stddev  median
+# ============ === ======= ======= ======= ======= ======= ======= =======
+# Count         33       1
+# Exec time     56   846ms   846ms   846ms   846ms   846ms       0   846ms
+# Lock time     50   160us   160us   160us   160us   160us       0   160us
+# Rows sent     99 174.00k 174.00k 174.00k 174.00k 174.00k       0 174.00k
+# Rows examine  16 174.00k 174.00k 174.00k 174.00k 174.00k       0 174.00k
+# Query size    23      19      19      19      19      19       0      19
+# String:
+# Databases    mall
+# Hosts        192.168.89.1
+# Users        root
+# Query_time distribution
+#   1us
+#  10us
+# 100us
+#   1ms
+#  10ms
+# 100ms  ################################################################
+#    1s
+#  10s+
+# Tables
+#    SHOW TABLE STATUS FROM `mall` LIKE 'items'\G
+#    SHOW CREATE TABLE `mall`.`items`\G
+# EXPLAIN /*!50100 PARTITIONS*/
+select * from items\G
+```
+
+### 15.3、pt-index-usage
+
+- [官方文档](https://www.percona.com/doc/percona-toolkit/3.0/pt-index-usage.html)
+
+通过日志文件分析查询，并分析查询如何使用索引
+
+其原理：
+- 清点数据库中所有的表与索引，并将库中现有的索引和日志中的查询所使用的索引进行比较；
+- 对日志中的每个查询运行EXPLAIN（这一步使用单独的数据库连接清点表并执行EXPLAIN）；
+- 对于无用的索引，展示删除的语句；
+
+**语法**：`pt-index-usage [OPTIONS] [FILES]`
+
+**常用options**
+```
+--drop				打印建议删除的索引，取值primary、unique、non-unique、all。默认值non-unique，只会打印未使用的二级索引
+--databases			只分析指定数据库的索引，多个库用,分隔
+--tables			只分析指定表的索引，多张表用,分隔
+--progress			打印执行进度
+--host  			指定MySQL地址，也可用-h指定
+--port				指定MySQL端口
+--user  			指定MySQL用户名，也可用-u指定
+--password  		指定MySQL密码，也可用-p指定
+```
+
+**常用DSN**
+```
+A    指定字符集
+D    指定连接的数据库
+h    连接数据库主机名
+p    连接数据库的密码
+P    连接数据库端口
+S    连接Socket file
+u    连接数据库用户名
+```
+
+**使用示例：**
+```bash
+# 读取slow.log，并连上localhost，去分析有哪些索引是可以删除的
+pt-index-usage slow.log --user=root --password=root123 --host=localhost --port=
+# 读取slow.log，并连上localhost，只分析employees库中，有有哪些索引是可以删除的
+pt-index-usage slow.log --user=root --password=root123 --host=localhost --databases=employees
+```
+
+**注意点：**
+- 此工具使用MySQL资源比较多，因此，在使用此工具时候：
+	- 如果有条件，尽量不要直接在生产环境执行，而应在有相同表结构的数据库环境执行；
+	- 如果必须在生产环境执行，请避开高峰期，比如在凌晨低谷期执行
+- 此工具分析大文件比较慢，使用时需注意这点，并做一定处理（比如把遗留的超大的慢查询日志先删除，而可以新建一个慢查询日志，并运行一段时间后用pt-index-usage分析）
+- 由于pt-index-usage只会扫描慢查询，而非所有的查询，所以有可能某个索引在慢查询日志中未使用，但其实还是被使用了的（只是使用这个索引的SQL并非慢查询）。因此：
+	- 正式删除之前，应当先review下，确保可以删除该索引后再操作，避免发生问题
+	- 对于MySQL 8.0及更高版本，善用“ 不可见索引 ”，进一步降低风险。
+
+pt-duplicate-key-checker ：可以帮助我们找到重复的索引或外键，使用方式基本类似
+
+### 15.4、pt-variable-advisor
+
+- [官方文档](https://www.percona.com/doc/percona-toolkit/3.0/pt-variable-advisor.html)
+
+分析MySQL变量，并对可能出现的问题提出建议
+
+**原理：**执行 SHOW VARIABLES ，并分析哪些变量的值设置不合理，给出建议
+
+**语法：**`pt-variable-advisor [OPTIONS] [DSN]`
+
+**常用OPTIONS**
+```
+--source-of-variable			指定变量来源，可选mysql/none或者文件
+--user  									指定MySQL用户名，也可用-u指定
+--password  							指定MySQL密码，也可用-p指定
+```
+
+**常用DSN**
+```
+A    指定字符集
+D    指定连接的数据库
+h    连接数据库主机名
+p    连接数据库的密码
+P    连接数据库端口
+S    连接Socket file
+u    连接数据库用户名
+```
+
+**使用示例：**
+```bash
+# 连接上localhost:3306，并分析变量
+pt-variable-advisor localhost --user=root --password=123456
+pt-variable-advisor P=3306,u=root,p=root123 localhost:3306
+
+# 先将show global variables生成文件，然后用pt-variable-advisor分析文件
+mysql -uroot -proot123 -e'show global variables' > /root/vars.txt
+pt-variable-advisor --source-of-variables /root/vars.txt
+```
+
+### 15.5、pt-online-schema-change
+
+在线修改表结构，无需锁表地ALTER表结构；但是MySQL从5.6开始，已支持[online DDL](https://dev.mysql.com/doc/refman/8.0/en/innodb-online-ddl-operations.html)功能，这两者之间的对比：https://blog.csdn.net/cuanzhutang8944/article/details/100491865
+
+**原理：**
+- 创建一张一模一样的表，表名一般是_new后缀
+- 在新表上执行更改字段操作
+- 在原表上加三个触发器，分别对应于DELETE/UPDATE/INSERT操作，并将原表中要执行的语句也在新表中执行
+- 将原表的数据拷贝到新表中
+- 使用原子的`RENAME TABLE`操作同时重命名原始表和新表，完成此操作后，删除原始表。
+
+**语法：**`pt-online-schema-change [OPTIONS] DSN`
+```
+--dry-run											创建并修改新表的结构，但不会创建触发器、拷贝旧表数据也不会替换旧表
+--execute											如果指定该选项，则会修改表结构，否则只会做一些安全检查
+--charset											指定编码
+--alter												修改表结构的语句（其实就是你alter table语句，去掉alter table后剩下的部分），多条语句使用,分隔。该选项有一些限制，详见 https://www.percona.com/doc/percona-toolkit/3.0/pt-online-schema-change.html#cmdoption-pt-online-schema-change-alter
+--no-version-check						是否检查版本
+--alter-foreign-keys-method		处理带有外键约束的表，以保证它们可以引用到正确的表。取值：auto（自动选择最佳策略）、rebuild_constraints（适用于删除和重新添加引用新表的外键约束）、drop_swap（禁用外键检查，然后在重命名新表之前将其删除）、none（无）
+```
+
+**使用示例：**
+```bash
+# 为employees库的employees表添加字段my_test_column
+pt-online-schema-change -uroot -proot123 --alter='add column my_test_column int' --alter-foreign-keys-method=rebuild_constraints --execute D=employees,t=employees --charset=utf8mb4
+
+# 修改字段
+pt-online-schema-change -uroot -proot123 --alter='modify column my_test_column bigint(25)' --alter-foreign-keys-method=rebuild_constraints --execute D=employees,t=employees --charset=utf8mb4
+
+# 添加索引
+pt-online-schema-change -uroot -proot123 --alter='add key indx_my_test_column(my_test_column)' --alter-foreign-keys-method=rebuild_constraints --execute D=employees,t=employees
+
+# 删除索引
+pt-online-schema-change -uroot -proot123 --alter='drop key indx_my_test_column' --alter-foreign-keys-method=rebuild_constraints --execute D=employees,t=employees
+
+# 删除字段
+pt-online-schema-change -uroot -proot123 --alter='drop column my_test_column int' --alter-foreign-keys-method=rebuild_constraints --execute D=employees,t=employees
+```
+
+**注意点：**
+```
+尽管用pt-online-schema-change 在线修改表结构不会锁表，但是对性能还是有一定的影响的。这是因为在执行过程中会做全表扫描，所以大表应在业务低峰期执行该操作；
+对于主从复制架构，考虑到主从的一致性，应在主库上执行pt-online-schema-change操作
+```
+
+### 15.6、其他官方文档
+
+<ul>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-align.html">pt-align</a>：对齐其他工具的输出</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-archiver.html">pt-archiver</a>：将数据归档到其他表或文件</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-config-diff.html">pt-config-diff</a> ：比较配置文件和变量</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-deadlock-logger.html">pt-deadlock-logger</a>：记录MySQL死锁</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-diskstats.html">pt-diskstats</a>：交互式IO监控工具</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-duplicate-key-checker.html">pt-duplicate-key-checker</a>：找到重复的索引或外键</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-fifo-split.html">pt-fifo-split</a>：模拟分割文件并输出</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-find.html">pt-find</a>：查找表，并执行命令</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-fingerprint.html">pt-fingerprint</a>：将查询转换成fingerprint</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-fk-error-logger.html">pt-fk-error-logger</a>：记录外键错误信息</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-heartbeat.html">pt-heartbeat</a>：监控MySQL复制延迟</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-index-usage.html">pt-index-usage</a>：通过日志分析查询，并分析查询如何使用索引</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-ioprofile.html">pt-ioprofile</a>：监控进程IO并打印IO活动表</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-kill.html">pt-kill</a>：kill掉符合条件查询</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-mext.html">pt-mext</a>：并行查询SHOW GLOBAL STATUS的样本信息</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-mongodb-query-digest.html">pt-mongodb-query-digest</a>：通过汇总来自MongoDB查询分析器（query profiler）的查询来报告查询使用情况统计信息</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-mongodb-summary.html">pt-mongodb-summary</a>：收集有关MongoDB集群的信息，它从多个来源收集信息从而提供集群的概要信息</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-mysql-summary.html">pt-mysql-summary</a> ：展示MySQL相关的概要信息</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-online-schema-change.html">pt-online-schema-change</a>：在线修改表结构。无需锁表地ALTER表结构</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-pg-summary.html">pt-pg-summary</a>：收集有关PostgreSQL集群的信息</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-pmp.html">pt-pmp</a>：针对指定程序，聚合GDB的stack traces</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-query-digest.html">pt-query-digest</a>：从日志、processlist以及tcpdump中分析MySQL查询</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-secure-collect.html">pt-secure-collect</a>：收集、清理、打包、加密数据</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-show-grants.html">pt-show-grants</a>：规范化打印MySQL授权</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-sift.html">pt-sift</a>：浏览由pt-stalk创建的文件</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-slave-delay.html">pt-slave-delay</a>：使MySQL从属服务器滞后于其Master</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-slave-find.html">pt-slave-find</a>：查找和打印MySQL slave的复制层级树</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-slave-restart.html">pt-slave-restart</a>：监控MySQL slave，并在发生错误后重启</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-stalk.html">pt-stalk</a>：发生问题时收集有关MySQL的诊断数据</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-summary.html">pt-summary</a>：展示系统概要信息</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-table-checksum.html">pt-table-checksum</a>：验证MySQL主从复制的一致性</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-table-sync.html">pt-table-sync</a>：高效同步表数据</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-table-usage.html">pt-table-usage</a>：分析查询是如何使用表的</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-upgrade.html">pt-upgrade</a>：验证不同服务器上的查询结果是否相同</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-variable-advisor.html">pt-variable-advisor</a>：分析MySQL变量，并对可能出现的问题提出建议</li>
+	<li><a href="https://www.percona.com/doc/percona-toolkit/3.0/pt-visual-explain.html">pt-visual-explain</a>：将explain的结果格式化成树形展示</li>
+</ul>
+
+## 16、批量插入大量数据
 
 - 创建表格：
 	```sql
