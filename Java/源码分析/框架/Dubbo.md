@@ -2598,7 +2598,7 @@ Filter配置的一些默认规则：
 
 ![](image/Dubbo-Filter类接口关系.png)
 
-从上图中可以看到 CompatibleFilter 比较突出，其只继承了Filter的接口，不会被默认激活的，其他的内置过滤器都使用了@Activate注解，默认被激活的。
+从上图中可以看到 CompatibleFilter 比较突出，其只继承了Filter的接口，不会被默认激活的，其他的内置过滤器都使用了`@Activate`注解，默认被激活的。
 
 所有的过滤器会被分为消费者和服务提供者两种类型，消费者类型的过滤器只会在服务引入时被加入Invoker，服务提供者类型的过滤器只会在服务暴露的时候被加入对应的 Invoker。MonitorFilter 会同时在暴露和引用时被加入 Invoker。
 

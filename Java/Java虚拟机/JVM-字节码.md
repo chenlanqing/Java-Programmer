@@ -159,6 +159,11 @@ idea的一个插件
 
 字节码增强技术就是一类对现有字节码进行修改或者动态生成全新字节码文件的技术
 
+- BCEL：apache
+- ASM：轻量级的字节码操作框架，涉及到jvm底层的操作和指令
+- CGLIB：基于asm实现
+- javaasist：性能比较差，使用简单
+
 ## 3.1、ASM
 
 
@@ -298,6 +303,98 @@ Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了
 - Mock：测试时候对某些服务做Mock。
 - 性能诊断工具：比如bTrace就是利用Instrument，实现无侵入地跟踪一个正在运行的JVM，监控到类和方法级别的状态信息。
 
+# 5、字节码运用-JavaAgent
+
+## 1、Java agent
+
+JDK1.5之后引进的，也可以叫做Java代理，JavaAgent 是运行在 main方法之前的拦截器，它内定的方法名叫 premain ，也就是说先执行 premain 方法然后再执行 main 方法
+- 支持方法执行耗时范围抓取设置，根据耗时范围抓取系统运行时出现在设置耗时范围的代码运行轨迹。
+- 支持抓取特定的代码配置，方便对配置的特定方法进行抓取，过滤出关系的代码执行耗时情况。
+- 支持APP层入口方法过滤，配置入口运行前的方法进行监控，相当于监控特有的方法耗时，进行方法专题分析。
+- 支持入口方法参数输出功能，方便跟踪耗时高的时候对应的入参数。
+- 提供WEB页面展示接口耗时展示、代码调用关系图展示、方法耗时百分比展示、可疑方法凸显功能
+
+Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同，Java agent并不能单独启动，必须依附在一个应用程序中运行；
+
+**其原理：**
+我们利用Java代理和ASM字节码技术，在JVM加载class二进制文件的时候，利用ASM动态的修改加载的class文件，在监控的方法前后添加计时器功能，用于计算监控方法耗时，同时将方法耗时及内部调用情况放入处理器，处理器利用栈先进后出的特点对方法调用先后顺序做处理，当一个请求处理结束后，将耗时方法轨迹和入参map输出到文件中，然后根据map中相应参数或耗时方法轨迹中的关键代码区分出我们要抓取的耗时业务。最后将相应耗时轨迹文件取下来，转化为xml格式并进行解析，通过浏览器将代码分层结构展示出来，方便耗时分析
+
+## 2、手动编写java agent
+
+- 在`META-INF`目录下创建`MANIFEST`文件
+    ```
+    Manifest-Version: 1.0
+    Agent-Class: com.blue.fish.agent.AgentBoot
+    Premain-Class: com.blue.fish.agent.AgentBoot
+    Can-Redefine-Classes: true
+    Can-Retransform-Classes: true
+    ```
+	如果不想手写该文件，可以使用maven来生成：
+	```xml
+	<plugin>
+		<artifactId>maven-assembly-plugin</artifactId>
+		<configuration>
+			<archive>
+				<manifestEntries>
+					<Premain-Class>com.blue.fish.agent.AgentBoot</Premain-Class>
+					<Agent-Class>com.blue.fish.agent.AgentBoot</Agent-Class>
+					<Can-Redefine-Classes>true</Can-Redefine-Classes>
+					<Can-Retransform-Classes>true</Can-Retransform-Classes>
+				</manifestEntries>
+			</archive>
+		</configuration>
+	</plugin>
+	```
+
+- 并在`MANIFEST`文件中指定Agent的启动类， 在加载Java Agent之后，会找到`Agent-Class`或者`Premain-Class`指定的类，并运行对应的agentmain或者premain方法
+
+    ```java
+    /**
+     * 以vm参数的方式载入，在Java程序的main方法执行之前执行
+     */
+    public static void premain(String agentArgs, Instrumentation inst);
+    /**
+     * 以Attach的方式载入，在Java程序启动后执行
+     */
+    public static void agentmain(String agentArgs, Instrumentation inst);
+    ```
+
+## 3、启动时加载Agent
+
+将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 “-javaagent:[=]“，具体的使用方法可以使用“Java -Help”来查看
+
+## 4、运行时加载Agent
+
+运行时挂载Agent到目标JVM，就需要做一些额外的开发；
+
+`com.sun.tools.attach.VirtualMachine` 这个类代表一个JVM抽象，可以通过这个类找到目标JVM，并且将Agent挂载到目标JVM上。下面是使用`com.sun.tools.attach.VirtualMachine`进行动态挂载Agent的一般实现：
+```java
+private void attachAgentToTargetJVM() throws Exception {
+	List<VirtualMachineDescriptor> virtualMachineDescriptors = VirtualMachine.list();
+	VirtualMachineDescriptor targetVM = null;
+	for (VirtualMachineDescriptor descriptor : virtualMachineDescriptors) {
+		if (descriptor.id().equals(configure.getPid())) {
+			targetVM = descriptor;
+			break;
+		}
+	}
+	if (targetVM == null) {
+		throw new IllegalArgumentException("could not find the target jvm by process id:" + configure.getPid());
+	}
+	VirtualMachine virtualMachine = null;
+	try {
+		virtualMachine = VirtualMachine.attach(targetVM);
+		virtualMachine.loadAgent("{agent}", "{params}");
+	} catch (Exception e) {
+		if (virtualMachine != null) {
+			virtualMachine.detach();
+		}
+	}
+}
+```
+
+首先通过指定的进程ID找到目标JVM，然后通过Attach挂载到目标JVM上，执行加载Agent操作。VirtualMachine的Attach方法就是用来将Agent挂载到目标JVM上去的，而Detach则是将Agent从目标JVM卸载；
+
 # 参考资料
 
 * [字节码操作](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
@@ -306,3 +403,9 @@ Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了
 * [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
 * [ASM](https://asm.ow2.io/index.html)
 * [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)
+* [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
+* [字节码开源库](https://java-source.net/open-source/bytecode-libraries)
+* [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
+* [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
+* [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
+* [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)

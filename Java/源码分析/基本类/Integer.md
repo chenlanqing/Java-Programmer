@@ -1,47 +1,22 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
 
-- [一、类定义](#%E4%B8%80%E7%B1%BB%E5%AE%9A%E4%B9%89)
-- [二、属性](#%E4%BA%8C%E5%B1%9E%E6%80%A7)
-  - [1、私有属性](#1%E7%A7%81%E6%9C%89%E5%B1%9E%E6%80%A7)
-  - [2、公共属性](#2%E5%85%AC%E5%85%B1%E5%B1%9E%E6%80%A7)
-- [三、方法](#%E4%B8%89%E6%96%B9%E6%B3%95)
-  - [1、Integer构造方法](#1integer%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
-  - [2、valueOf](#2valueof)
-  - [3、String 转成 Integer（int）的方法](#3string-%E8%BD%AC%E6%88%90-integerint%E7%9A%84%E6%96%B9%E6%B3%95)
-    - [3.1、getInteger(String nm)：确定具有指定名称的系统属性的整数值](#31getintegerstring-nm%E7%A1%AE%E5%AE%9A%E5%85%B7%E6%9C%89%E6%8C%87%E5%AE%9A%E5%90%8D%E7%A7%B0%E7%9A%84%E7%B3%BB%E7%BB%9F%E5%B1%9E%E6%80%A7%E7%9A%84%E6%95%B4%E6%95%B0%E5%80%BC)
-    - [3.2、public static Integer decode(String nm) throws NumberFormatException](#32public-static-integer-decodestring-nm-throws-numberformatexception)
-    - [3.3、public static int parseInt(String s， int radix)throws NumberFormatException](#33public-static-int-parseintstring-s-int-radixthrows-numberformatexception)
-    - [3.4、将 String 转成 Integer 的方法之间有哪些区别](#34%E5%B0%86-string-%E8%BD%AC%E6%88%90-integer-%E7%9A%84%E6%96%B9%E6%B3%95%E4%B9%8B%E9%97%B4%E6%9C%89%E5%93%AA%E4%BA%9B%E5%8C%BA%E5%88%AB)
-  - [4、int 转为 String 的方法：](#4int-%E8%BD%AC%E4%B8%BA-string-%E7%9A%84%E6%96%B9%E6%B3%95)
-    - [4.1、toString(int i)：](#41tostringint-i)
-  - [5、public int compareTo(Integer anotherInteger)](#5public-int-comparetointeger-anotherinteger)
-  - [6、实现 Number 的方法](#6%E5%AE%9E%E7%8E%B0-number-%E7%9A%84%E6%96%B9%E6%B3%95)
-- [四、Integer 缓存机制](#%E5%9B%9Binteger-%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6)
-  - [1、看代码](#1%E7%9C%8B%E4%BB%A3%E7%A0%81)
-  - [2、Java 中 Integer 的缓存实现](#2java-%E4%B8%AD-integer-%E7%9A%84%E7%BC%93%E5%AD%98%E5%AE%9E%E7%8E%B0)
-  - [3、valueOf的实现](#3valueof%E7%9A%84%E5%AE%9E%E7%8E%B0)
-  - [4、IntegerCache：是 Integer 类中定义的一个 private static 的内部类](#4integercache%E6%98%AF-integer-%E7%B1%BB%E4%B8%AD%E5%AE%9A%E4%B9%89%E7%9A%84%E4%B8%80%E4%B8%AA-private-static-%E7%9A%84%E5%86%85%E9%83%A8%E7%B1%BB)
-  - [5、其他缓存的对象](#5%E5%85%B6%E4%BB%96%E7%BC%93%E5%AD%98%E7%9A%84%E5%AF%B9%E8%B1%A1)
-- [六、int与Integer](#%E5%85%ADint%E4%B8%8Einteger)
-  - [1、int范围问题](#1int%E8%8C%83%E5%9B%B4%E9%97%AE%E9%A2%98)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-* Integer 类在对象中包装了一个基本类型 int 的值。Integer 类型的对象包含一个 int 类型的字段
 
 # 一、类定义
+
 ```java
-public final class Integer extends Number implements Comparable<Integer>
+public final class Integer extends Number implements Comparable<Integer>{
+
+}
 ```
 - Integer类不能被继承；
 - Integer类实现了Comparable 接口，所以可以用compareTo进行比较并且 Integer 对象只能和 Integer 类型的对象进行比较，不能和其他类型比较(至少调用compareTo方法无法比较)；
 - Integer继承了Number 类，所以该类可以调用longValue、floatValue、doubleValue等系列方法返回对应的类型的值；
+- Integer 类在对象中包装了一个基本类型 int 的值。Integer 类型的对象包含一个 int 类型的字段
 
 # 二、属性
+
 ## 1、私有属性
-private final int value;
+
+`private final int value;`
 
 Integer 对象中真正保存 int 值的，我们使用 new Integer(10)创建一个 Integer 对象的时候，就会用以下形式给value赋值
 - 关于 Integer 对象的"可变性"：从value的定义形式中可以看出value被定义成final类型.也就说明，一旦一个Integer对象被初始化之后，就无法再改变value的值
@@ -59,6 +34,7 @@ i = Integer.valueOf(5);
 i=5操作并没有改变使用 Integer i = new Integer(10)；创建出来的i中的value属性的值.要么是直接返回一个已有对象，要么新建一个对象；这里跟 valueOf 的实现细节相关
 
 ## 2、公共属性
+
 ```java
 //值为 -2^31 的常量，它表示 int 类型能够表示的最小值。
 public static final int   MIN_VALUE = 0x80000000;
@@ -74,7 +50,9 @@ public static final int BYTES = SIZE / Byte.SIZE;
 以上属性可直接使用，因为他们已经定义成 publis static final 能用的时候尽量使用他们，这样不仅能使代码有很好的可读性，也能提高性能节省资源
 
 # 三、方法
+
 ## 1、Integer构造方法
+
 ```java
 //构造一个新分配的 Integer 对象，它表示指定的 int 值。
 public Integer(int value) {
@@ -88,10 +66,11 @@ public Integer(String s) throws NumberFormatException {
 从构造方法中我们可以知道，初始化一个 Integer 对象的时候只能创建一个十进制的整数
 
 ## 2、valueOf
+
 ```java
 public static Integer valueOf(int i)；
 ```
-- 通常情况下： IntegerCache.low=-128，IntegerCache.high=127（）除非显示声明 java.lang.Integer.IntegerCache.high 的值），Integer 中有一段动态代码块，该部分内容会在 Integer 类被加载的时候就执行：
+- 通常情况下： `IntegerCache.low=-128，IntegerCache.high=127`，除非显示声明` java.lang.Integer.IntegerCache.high` 的值），Integer 中有一段动态代码块，该部分内容会在 Integer 类被加载的时候就执行：
 ```java
 // 虚拟机初始化时，该段代码就加载，通过 VM 参数： -XX:AutoBoxCacheMax=<size> 控制其初始化
 // java.lang.Integer.IntegerCache.high property may be set and saved in the 
@@ -140,6 +119,7 @@ public static Integer valueOf(String s， int radix) throws NumberFormatExceptio
 - 返回一个 Integer 对象。如果指定第二个参数radix，将第一个参数解释为用第二个参数指定的基数表示的有符号整数。如果没指定则按照十进制进行处理
 
 ## 3、String 转成 Integer（int）的方法
+
 ```java
 Integer getInteger(String nm)
 Integer getInteger(String nm, int val)
@@ -155,6 +135,7 @@ int parseInt(String s, int radix)
 	getInteger(String nm) ---> getInteger(nm， null)；--->Integer.decode()--->Integer.valueOf()--->parseInt()
 	
 ### 3.1、getInteger(String nm)：确定具有指定名称的系统属性的整数值
+
 - 第一个参数被视为系统属性的名称，通过 System.getProperty(java.lang.String) 方法可以访问系统属性然后，将该属性的字符串值解释为一个整数值，并返回表示该值的 Integer 对象：代码中可以用以下形式使用该方法：
 ```java
 Properties props = System.getProperties();
@@ -170,21 +151,28 @@ getInteger(String nm， Integer val)
 - 第二个参数是默认值.如果未具有指定名称的属性，或者属性的数字格式不正确，或者指定名称为空或 null，则返回默认值。
 - 具体实现细节：public static Integer getInteger(String nm， Integer val) 先按照nm作为key从系统配置中取出值，然后调用 Integer.decode方法将其转换成整数并返回
 
-### 3.2、public static Integer decode(String nm) throws NumberFormatException
+### 3.2、decode
+
+`public static Integer decode(String nm) throws NumberFormatException`
+
 将 String 解码为 Integer，接受十进制、十六进制和八进制数字
 - 根据要解码的 String（mn)的形式转成不同进制的数字。 mn由三部分组成：符号、基数说明符和字符序列。—0X123中-是符号位，0X是基数说明符（0表示八进制，0x，0X，#表示十六进制，什么都不写则表示十进制），123是数字字符序列；
 - decode方法的具体实现也比较简单，首先就是判断 String 类型的参数mn是否以(+/—)符号开头。然后再依次判断是否以”0x”、“#”、“0”开头，确定基数说明符的值。然后将字符串mn进行截取，只保留其中纯数字部分。在用截取后的纯数字和基数调用valueOf(String s， int radix)方法并返回其值；
 
-### 3.3、public static int parseInt(String s， int radix)throws NumberFormatException
+### 3.3、parseInt
+
 public static int parseInt(String s) throws NumberFormatException
+
 - 使用第二个参数指定的基数(如果没指定，则按照十进制处理），将字符串参数解析为有符号的整数
 - 如果发生以下任意一种情况，则抛出一个 NumberFormatException 类型的异常;第一个参数为 null 或一个长度为零的字符串。基数小于 Character.MIN_RADIX 或者大于 Character.MAX_RADIX。假如字符串的长度超过 1，那么除了第一个字符可以是减号 ‘-‘ (‘u002D’) 外，字符串中存在任意不是由指定基数的数字表示的字符。字符串表示的值不是 int 类型的值。
 
 ### 3.4、将 String 转成 Integer 的方法之间有哪些区别
+
 - parseInt方法返回的是基本类型 int，其他的方法返回的是 Integer，valueOf（String）方法会调用valueOf(int)方法。
 - 如果只需要返回一个基本类型，而不需要一个对象，可以直接使用Integert.parseInt("123")；如果需要一个对象，那么建议使用valueOf()，因为该方法可以借助缓存带来的好处。如果和进制有关，那么就是用decode方法。如果是从系统配置中取值，那么就是用getInteger
 
 ## 4、int 转为 String 的方法：
+
 ```java
 String  toString()
 static String   toString(int i)
@@ -195,7 +183,9 @@ static String   toOctalString(int i)
 static String   toUnsignedString(int i)
 static String   toUnsignedString(int i， int radix)
 ```
-### 4.1、toString(int i)：
+
+### 4.1、toString(int i)
+
 - 4.1.1.实现代码：
 	```java
 	public static String toString(int i) {
@@ -298,6 +288,7 @@ static String   toUnsignedString(int i， int radix)
 			- ②.重复利用计算结果：在获取r(i%100)时，充分利用了除法的结果，结合位移避免重复计算。
 			- ③.位移比乘法高效：r = i – (( q << 6) + ( q << 5) + ( q << 2))； = >等价于r = i – (q * 100)；
 			- ④.局部性原理之空间局部性 buf[–charPos] =DigitOnes[r]； buf[–charPos] =DigitTens[r]；通过查找数组，实现快速访问，避免除法计算buf [–charPos ] = digits [ r]；
+
 - 4.1.2.一般在要使用String的，可以使用如下形式：
 	```java
 	Integer s = new Integer(199);
@@ -314,6 +305,7 @@ Integer 类实现了 Comparable<Integer>接口，所以 Integer 对象可以和�
 ## 6、实现 Number 的方法
 
 # 四、Integer 缓存机制
+
 ## 1、看代码
 ```java
 public class JavaIntegerCache {
@@ -347,6 +339,7 @@ JDK5 之后，在Integer的操作上， 整型对象通过使用相同的对象�
 但是在特别的应用场景下，比如明确知道应用会频繁的使用更大的值，缓存的上限是可以根据需要调整的，JVM提供了参数设置 “-XX：AutoBoxCacheMax=N”，在Integer的源码可以看到体现；
 
 ## 3、valueOf的实现
+
 ```java
 public static Integer valueOf(int i) {
 	if (i >= IntegerCache.low && i <= IntegerCache.high)
@@ -355,16 +348,16 @@ public static Integer valueOf(int i) {
 }
 ```
 在创建对象之前先从 IntegerCacheCcache 中寻找。如果没找到才使用 new {}新建对象
-## 4、IntegerCache：是 Integer 类中定义的一个 private static 的内部类
 
-缓存支持 -128 到 127 之间的自动装箱过程。最大值 127 可以通过 -XX：AutoBoxCacheMax=size 修改，缓存通过一个 for 循环实现。从低到高并创建尽可能多的整数并存储在一个整数数组中。这个缓存会在 Integer 类第一次被使用的时候被初始化出来。就可以使用缓存中包含的实例对象，而不是创建一个新的实例(在自动装箱的情况下)
+## 4、IntegerCache
+
+是 Integer 类中定义的一个 private static 的内部类；缓存支持 -128 到 127 之间的自动装箱过程。最大值 127 可以通过 -XX：AutoBoxCacheMax=size 修改，缓存通过一个 for 循环实现。从低到高并创建尽可能多的整数并存储在一个整数数组中。这个缓存会在 Integer 类第一次被使用的时候被初始化出来。就可以使用缓存中包含的实例对象，而不是创建一个新的实例(在自动装箱的情况下)
 
 ```java
 private static class IntegerCache {
 	static final int low = -128；
 	static final int high；
 	static final Integer cache[]；
-
 	static {
 		// high value may be configured by property
 		int h = 127；
@@ -394,6 +387,7 @@ private static class IntegerCache {
 	private IntegerCache() {}
 }
 ```
+
 ## 5、其他缓存的对象
 
 有 ByteCache 用于缓存 Byte 对象<br>
@@ -427,6 +421,37 @@ Byte， Short， Long 有固定范围： -128 到 127。对于 Character， 范�
 	boolean f1 = a > 0 && b > 0 && x < 0;
 	boolean f2 = a < 0 && b < 0 && x > 0;
 	```
+
+整数相加范围问题：Math 类中实现了相关的代码：
+```java
+// 加法
+public static int addExact(int x, int y) {
+	int r = x + y;
+	// HD 2-12 Overflow iff both arguments have the opposite sign of the result
+	if (((x ^ r) & (y ^ r)) < 0) {
+		throw new ArithmeticException("integer overflow");
+	}
+	return r;
+}
+// 减法
+public static int subtractExact(int x, int y) {
+	int r = x - y;
+	// HD 2-12 Overflow iff the arguments have different signs and
+	// the sign of the result is different than the sign of x
+	if (((x ^ y) & (x ^ r)) < 0) {
+		throw new ArithmeticException("integer overflow");
+	}
+	return r;
+}
+// 乘法
+public static int multiplyExact(int x, int y) {
+	long r = (long)x * (long)y;
+	if ((int)r != r) {
+		throw new ArithmeticException("integer overflow");
+	}
+	return (int)r;
+}
+```
 
 ## 2、int整数转换为完整二进制表示
 
