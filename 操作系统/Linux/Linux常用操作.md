@@ -178,6 +178,39 @@ head 与 tail 就像它的名字一样的浅显易懂，它是用来显示开头
     -c<字节> 显示字节数
     -n<行数> 显示的行数
     ```
+## 7、uname
+
+显示系统信息
+```
+Usage: uname [OPTION]...
+Print certain system information.  With no OPTION, same as -s.
+  -a, --all                打印所有信息
+  -s, --kernel-name        打印内核名称
+  -n, --nodename           打印网络节点主机名
+  -r, --kernel-release     打印内核版本
+  -v, --kernel-version     打印内核版本
+  -m, --machine            打印硬件名称
+  -p, --processor          打印处理器类型
+  -i, --hardware-platform  打印硬件平台
+  -o, --operating-system   打印操作系统
+      --help     帮助
+      --version  显示版本
+```
+
+```
+[root@localhost ~]# uname -a
+Linux localhost.localdomain 3.10.0-327.el7.x86_64 #1 SMP Thu Nov 19 22:10:57 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux
+
+含义：
+Linux：内核名称
+localhost.localdomain：主机名
+3.10.0-327.el7.x86_64：内核版本
+#1 SMP Thu Nov 19 22:10:57 UTC 2015：内核版本
+x86_64：硬件名称
+x86_64：处理器类型
+x86_64：硬件平台
+GNU/Linux：操作系统
+```
 
 # 二、系统监控
 
@@ -467,7 +500,15 @@ tmpfs           184M     0  184M   0% /run/user/0
 
 ## 1、查看Linux发行版本
 
+```bash
 cat /etc/redhat-release
+cat /etc/os-release
+cat /etc/system-release
+cat /etc/redhat-release
+cat /etc/centos-release
+cat /etc/issue
+执行 lsb_release -a
+```
 
 ## 2、级联创建目录
 
@@ -610,3 +651,7 @@ traceroute 是一个网络路由分析工具，利用 ICMP 协议定位本地计
 # 参考资料
 
 - [Linux命令搜索](https://github.com/jaywcjlove/linux-command)
+
+
+sysstate
+xxxtop
