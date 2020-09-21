@@ -315,7 +315,7 @@ public class FinalizeEscapeGC {
 
 	- 使用一个CPU或一条收集线程去完成垃圾收集工作；
 	- 它进行垃圾收集时，必须暂停其他所有的工作线程，直到它收集结束，又称为STOP THE WORLD（STW）；
-	- 虚拟机运行在 Client 模式下默认新生代收集器
+	- 依然是虚拟机运行在 Client 模式下默认新生代收集器
 
 - **1.3、特点：**
 
@@ -333,8 +333,8 @@ public class FinalizeEscapeGC {
 
 - 算法：堆内存年轻代采用“复制算法”；配合收集器：`ParallelOldGC`，堆内存老年代采用“标记-整理算法”；
 - 并行的多线程收集器；只适用于新生代；在Server模式下的默认的年轻代收集器
-- Parallel Scavenge 收集器目标是达到一个控制的吞吐量（Throughput，CPU 运行用户代码的时间与CPU总消耗的时间的比值）；
-- GC 自适应调整策略；`-XX:+UseAdaptiveSizePolicy`
+- Parallel Scavenge 收集器目标是达到一个控制的吞吐量（Throughput，CPU 运行用户代码的时间与CPU总消耗的时间的比值）；提供了两个参数用于控制吞吐量，分别是控制最大垃圾收集停顿时间的：`-XX:MaxGCPauseMillis`，其值是一个大于0的毫秒数；以及直接设置吞吐量大小的：`-XX:GCTimeRatio`参数，其值时0~100之间的整数
+- GC 自适应调整策略；`-XX:+UseAdaptiveSizePolicy`，这个是一个开关参数，当参数被激活之后，不需要人工指定新生代的大小、Ende和Survivor的比例、晋升老年代对象的大小等细节参数；
 - 无法与 CMS 收集器配合工作：Parallel Scavenge没有使用原本HotSpot其它GC通用的那个GC框架，所以不能跟使用了那个框架的CMS搭配使用；有一个分代式GC框架，Serial/Serial Old/ParNew/CMS都在这个框架内；在该框架内的young collector和old collector可以任意搭配使用，所谓的“mix-and-match”。 
 而ParallelScavenge与G1则不在这个框架内，而是各自采用了自己特别的框架。这是因为新的GC实现时发现原本的分代式GC框架用起来不顺手。
 - 适用于吞吐量的
