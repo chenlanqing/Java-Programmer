@@ -1021,6 +1021,143 @@ public class NioClient {
 
 ![](image/NIO客户端通信序列图.jpg)
 
+# 四、零拷贝
+
+## 1、直接内存访问
+
+### 1.1、IO一般访问流程
+
+- CPU 发出对应的指令给磁盘控制器，然后返回；
+- 磁盘控制器收到指令后，于是就开始准备数据，会把数据放入到磁盘控制器的内部缓冲区中，然后产生一个中断；
+- CPU 收到中断信号后，停下手头的工作，接着把磁盘控制器的缓冲区的数据一次一个字节地读进自己的寄存器，然后再把寄存器里的数据写入到内存，而在数据传输的期间 CPU 是无法执行其他任务的；
+
+![](image/系统IO流程.png)
+
+可以看到，整个数据的传输过程，都要需要 CPU 亲自参与搬运数据的过程，而且这个过程，CPU 是不能做其他事情的；简单数据的传输是没有问题的，但是如果是大量数据，都由CPU来处理的话，肯定处理不过来；
+
+### 1.2、什么是DMA技术
+
+DMA(Direct Memory Access)-直接内存访问；
+
+在进行 I/O 设备和内存的数据传输的时候，数据搬运的工作全部交给 DMA 控制器，而 CPU 不再参与任何与数据搬运相关的事情，这样 CPU 就可以去处理别的事务；
+
+其基本流程：
+- 用户进程调用 read 方法，向操作系统发出 I/O 请求，请求读取数据到自己的内存缓冲区中，进程进入阻塞状态；
+- 操作系统收到请求后，进一步将 I/O 请求发送 DMA，然后让 CPU 执行其他任务；
+- DMA 进一步将 I/O 请求发送给磁盘；
+- 磁盘收到 DMA 的 I/O 请求，把数据从磁盘读取到磁盘控制器的缓冲区中，当磁盘控制器的缓冲区被读满后，向 DMA 发起中断信号，告知自己缓冲区已满；
+- DMA 收到磁盘的信号，将磁盘控制器缓冲区中的数据拷贝到内核缓冲区中，此时不占用 CPU，CPU 可以执行其他任务；
+- 当 DMA 读取了足够多的数据，就会发送中断信号给 CPU；
+- CPU 收到 DMA 的信号，知道数据已经准备好，于是将数据从内核拷贝到用户空间，系统调用返回；
+
+![](image/系统-DMA-IO流程.png)
+
+## 2、传统文件传输流程
+
+传统 I/O 的工作方式是，数据读取和写入是从用户空间到内核空间来回复制，而内核空间的数据是通过操作系统层面的 I/O 接口从磁盘读取或写入，代码通常如下，一般会需要两个系统调用：
+```
+read(file, tmp_buf, len);
+write(socket, tmp_buf, len);
+```
+但是实际上的流程：
+
+![](image/系统-传统文件IO流程.png)
+
+首先，期间共发生了 4 次用户态与内核态的上下文切换，因为发生了两次系统调用，一次是 read() ，一次是 write()，每次系统调用都得先从用户态切换到内核态，等内核完成任务后，再从内核态切换回用户态。上下文切换到成本并不小，一次切换需要耗时几十纳秒到几微秒，虽然时间看上去很短，但是在高并发的场景下，这类时间容易被累积和放大，从而影响系统的性能。
+
+其次，还发生了 4 次数据拷贝，其中两次是 DMA 的拷贝，另外两次则是通过 CPU 拷贝的，过程如下：
+- 第一次拷贝：把磁盘上的数据拷贝到操作系统内核的缓冲区里，这个拷贝的过程是通过 DMA 搬运的。
+- 第二次拷贝：把内核缓冲区的数据拷贝到用户的缓冲区里，于是我们应用程序就可以使用这部分数据了，这个拷贝到过程是由 CPU 完成的。
+- 第三次拷贝：把刚才拷贝到用户的缓冲区里的数据，再拷贝到内核的 socket 的缓冲区里，这个过程依然还是由 CPU 搬运的。
+- 第四次拷贝：把内核的 socket 缓冲区里的数据，拷贝到网卡的缓冲区里，这个过程又是由 DMA 搬运的-
+
+要想提高文件传输的性能，就需要`减少用户态与内核态的上下文切换（比如减少系统调用的次数）`和`内存拷贝的次数`
+
+## 3、零拷贝Zero-Copy技术
+
+零拷贝主要的任务就是避免CPU将数据从一块存储拷贝到另外一块存储，主要就是利用各种零拷贝技术，避免让CPU做大量的数据拷贝任务，减少不必要的拷贝，或者让别的组件来做这一类简单的数据传输任务，让CPU解脱出来专注于别的任务；
+
+通常是指计算机在网络上发送文件时，不需要将文件内容拷贝到用户空间（User Space）而直接在内核空间（Kernel Space）中传输到网络的方式；
+
+## 4、系统零拷贝实现
+
+零拷贝技术实现的方式通常有 2 种：
+- mmap + write
+- sendfile
+
+体现在Java，NIO中的`FileChannel.transferTo()`方法都实现了零拷贝的功能，而在Netty中也通过在`FileRegion`中包装了NIO的`FileChannel.transferTo()`方法实现了零拷贝；在Netty中还有另一种形式的零拷贝，即Netty允许我们将多段数据合并为一整段虚拟数据供用户使用，而过程中不需要对数据进行拷贝操作；
+
+### 4.1、mmap + write
+
+
+### 4.2、sendfile
+
+
+
+## 5、Netty实现零拷贝
+
+Netty 的 Zero-copy 体现在如下几个个方面：
+- Netty的接收和发送ByteBuffer采用Direct Buffer，使用堆外直接内存进行Socket读写，不需要进行字节缓冲区的二次拷贝；
+- Netty 提供了 CompositeByteBuf 类, 它可以将多个 ByteBuf 合并为一个逻辑上的 ByteBuf, 避免了各个 ByteBuf 之间的拷贝。
+- 通过 wrap 操作, 我们可以将 byte[] 数组、ByteBuf、ByteBuffer等包装成一个 Netty ByteBuf 对象, 进而避免了拷贝操作。
+- ByteBuf 支持 slice 操作, 因此可以将 ByteBuf 分解为多个共享同一个存储区域的 ByteBuf, 避免了内存的拷贝。
+- 通过 FileRegion 包装的FileChannel.tranferTo 实现文件传输, 可以直接将文件缓冲区的数据发送到目标 Channel, 避免了传统通过循环 write 方式导致的内存拷贝问题
+
+### 5.1、通过 CompositeByteBuf 实现零拷贝
+
+如果希望将两个ByteBuf合并为一个ByteBuf，通常做法是：
+```java
+ByteBuf header = ...
+ByteBuf body = ...
+ByteBuf allBuf = Unpooled.buffer(header.readableBytes() + body.readableBytes());
+allBuf.writeBytes(header);
+allBuf.writeBytes(body);
+```
+将 header 和 body 都拷贝到了新的 allBuf 中了, 这无形中增加了两次额外的数据拷贝操作了；
+
+CompositeByteBuf实现合并：
+```java
+ByteBuf header = ...
+ByteBuf body = ...
+
+CompositeByteBuf compositeByteBuf = Unpooled.compositeBuffer();
+compositeByteBuf.addComponents(true, header, body);
+// 或者使用如下方式
+ByteBuf allByteBuf = Unpooled.wrappedBuffer(header, body);
+```
+
+不过需要注意的是, 虽然看起来 CompositeByteBuf 是由两个 ByteBuf 组合而成的, 不过在 CompositeByteBuf 内部, 这两个 ByteBuf 都是单独存在的, CompositeByteBuf 只是逻辑上是一个整体；
+
+Unpooled.wrappedBuffer 方法, 它底层封装了 CompositeByteBuf 操作
+
+### 5.2、通过 wrap 操作实现零拷贝
+
+有一个 byte 数组, 希望将它转换为一个 ByteBuf 对象，通常做法是：
+```java
+byte[] bytes = ...
+ByteBuf byteBuf = Unpooled.buffer();
+byteBuf.writeBytes(bytes);
+```
+显然这样的方式也是有一个额外的拷贝操作的, 我们可以使用 Unpooled 的相关方法, 包装这个 byte 数组, 生成一个新的 ByteBuf 实例, 而不需要进行拷贝操作. 上面的代码可以改为：
+```java
+byte[] bytes = ...
+ByteBuf byteBuf = Unpooled.wrappedBuffer(bytes);
+```
+通过 `Unpooled.wrappedBuffer`方法来将 bytes 包装成为一个 `UnpooledHeapByteBuf` 对象, 而在包装的过程中，是不会有拷贝操作的。即最后我们生成的生成的 ByteBuf 对象是和 bytes 数组共用了同一个存储空间，对 bytes 的修改也会反映到 ByteBuf 对象中；
+
+### 5.3、通过 slice 操作实现零拷贝
+
+slice 操作和 wrap 操作刚好相反, Unpooled.wrappedBuffer 可以将多个 ByteBuf 合并为一个, 而 slice 操作可以将一个 ByteBuf 切片 为多个共享一个存储区域的 ByteBuf 对象
+
+### 5.4、通过 FileRegion 实现零拷贝
+
+Netty 中使用 FileRegion 实现文件传输的零拷贝, 不过在底层 FileRegion 是依赖于 `Java NIO FileChannel.transfer` 的零拷贝功能；
+
+通过 RandomAccessFile 打开一个文件, 然后 Netty 使用了 DefaultFileRegion 来封装一个 FileChannel：`new DefaultFileRegion(raf.getChannel(), 0, length)`；
+有了 FileRegion 后, 我们就可以直接通过它将文件的内容直接写入 Channel 中, 而不需要像传统的做法: 拷贝文件内容到临时 buffer, 然后再将 buffer 写入 Channel
+
+## 6、Kafka实现零拷贝
+
 
 # 参考文章
 
@@ -1028,3 +1165,5 @@ public class NioClient {
 * [浅析I/O模型](http://www.cnblogs.com/dolphin0520/p/3916526.html)
 * [Reactor设计模式分析](https://juejin.im/post/5ba3845e6fb9a05cdd2d03c0)
 * [Unix-IO模型](http://matt33.com/2017/08/06/unix-io/)
+* [零拷贝技术](https://mp.weixin.qq.com/s/LbgTjnX0u2DQ1fA13FzD1g)
+* [全面介绍零拷贝](https://juejin.im/post/6844903949359644680)

@@ -90,7 +90,7 @@ Kafka 的复制机制既不是完全的同步复制，也不是单纯的异步�
 
 ## 1.5、kafka零拷贝
 
-[零拷贝](../../Java框架/NIO-Netty.md#14.1零拷贝Zero-Copy技术)
+[零拷贝](../../Java基础/Java-IO.md#四零拷贝)
 
 ## 1.6、Kafka应用场景
 

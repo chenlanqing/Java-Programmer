@@ -2,7 +2,7 @@
 
 ## 1、Spring的模块结构
 
-![](image/SpringFramework.png)
+![](image/spring-overview.png)
 
 ### 1.1、Spring 核心容器
 
