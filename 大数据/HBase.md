@@ -893,4 +893,5 @@ HBase启动时发生了什么
 - [弄懂HBase](https://blog.csdn.net/oTengYue/article/details/86751260)
 - [HBase架构](https://segmentfault.com/a/1190000019959411)
 - [HBase架构-英文版](https://mapr.com/blog/in-depth-look-hbase-architecture/)
+- [BulkLoad快速导入海量数据到HBase](https://mp.weixin.qq.com/s/Po-RZWLYUHL71kr7B8Rg3w)
 
