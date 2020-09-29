@@ -381,7 +381,69 @@ OK
 
 #### 2.6.5、计算Bitmaps中第一个值为 bit 的偏移量
 
+**BITPOS**
+
 语法：`BITPOS key bit [start][end]`
+
+说明：
+- 返回字符串里面第一个被设置为 1 或者 0 的bit位；
+- 返回一个位置，把字符串当做一个从左到右的字节数组；
+- 默认情况下整个字符串都会被检索一次，只有在指定 start 和 end 参数(指定start和end位是可行的)，该范围被解释为一个字节的范围，而不是一系列的位。所以start=0 并且 end=2是指前三个字节范围内查找；
+- 不存在的key将会被当做空字符串来处理
+
+返回值：
+- 命令返回字符串里面第一个被设置为 1 或者 0 的 bit 位
+- 如果我们在空字符串或者 0 字节的字符串里面查找 bit 为1的内容，那么结果将返回-1；
+- 如果你用指定 start 和 end 范围进行查找指定值时，如果该范围内没有对应值，结果将返回 -1；
+
+示例：
+```
+127.0.0.1:6379> SETBIT bits 3 1
+(integer) 0
+127.0.0.1:6379> BITPOS bits 1
+(integer) 3
+127.0.0.1:6379> BITPOS bits 0
+(integer) 0
+```
+
+**BITFIELD**
+
+语法：`BITFIELD key [GET type offset][SET type offset value][INCRBY type offset increment][OVERFLOW WRAP|SAT|FAIL]`
+
+说明：
+- BITFIELD 命令可以在一次调用中同时对多个位范围进行操作：它接受一系列待执行的操作作为参数， 并返回一个数组作为回复， 数组中的每个元素就是对应操作的执行结果
+
+#### 2.6.7、存储空间计算
+
+比如有100亿的数据，那么它需要的字节数组：`1000000000÷8÷1024÷1024≈119.21MB`
+
+也就是存储10亿的数据只需要119MB左右的内存空间，这对于现在16G、32G集群版的redis，完全没有问题。
+
+需要注意的是，如果你的数据量不大，那就不要把起始偏移量搞的很大，这样也是占空间的，比如我们只需要存储几百条数据，但是其中的偏移量却很大，这就会造成了很大的内存空间浪费
+
+#### 2.6.8、使用场景
+
+**用户签到**
+
+每天的日期字符串作为一个key，用户Id作为offset，统计每天用户的签到情况，总的用户签到数
+
+**统计活跃用户数**
+
+用户日活、月活、留存率等均可以用redis位数组来存储，还是以每天的日期作为key，用户活跃了就写入offset为用户id的位值1
+
+**用户是否在线以及总在线人数统计**
+
+同样是使用一个位数组，用户的id映射偏移量，在线标识为1，下线标识为0。即可实现用户上下线查询和总在线人数的统计
+
+**APP内用户的全局消息提示小红点**
+
+现在大多数的APP里都有站内信的功能，当有消息的时候，则提示一个小红点，代表用户有新的消息
+
+#### 2.6.9、注意事项
+
+Redis BitMap 的底层数据结构实际上是 String 类型，Redis 对于 String 类型有最大值限制不得超过 512M，即 `2^32 次方 byte`；
+
+所以如果 offset 偏移量超过了 `2^32` 次方，会报错`ERR bit offset is not an integer or out of range`
 
 ### 2.7、超重对数
 
@@ -742,7 +804,7 @@ ZREVRANGE 命令按相反的顺序获取有序集合的元素；也可以同时�
 
 ## 1、字符串处理-SDS
 
-Redis自己构建了一种名叫`Simple dynamic string(SDS)`的数据结构
+Redis自己构建了一种名叫`Simple dynamic string(SDS)`的数据结构，它是一种二进制安全的，在大多数的情况下redis中的字符串都用SDS来存储
 ```c
 struct sdshdr{
 	//记录buf数组中已使用字节的数量
@@ -756,9 +818,12 @@ struct sdshdr{
 ```
 
 其优点：
+- 时间复杂度为O(1)；
 - 开发者不用担心字符串变更造成的内存溢出问题。
 - 常数时间复杂度获取字符串长度len字段。
 - 空间预分配free字段，会默认留够一定的空间防止多次重分配内存
+
+Redis中的Bitsmap就是采用该数据结构来存储的
 
 ## 2、链表
 
@@ -2058,7 +2123,7 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 - [Redis官方资料-命令](https://redis.io/commands)
 - [Redis持久化](https://redis.io/topics/persistence)
 - [Redis集群规范](https://redis.io/topics/cluster-spec)
-- [Redis中文文档](http://redisdoc.com/)
+- [Redis 命令参考手册](http://redisdoc.com/)
 - [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 - [Redis未授权访问详解](http://www.freebuf.com/column/158065.html)
 - [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
