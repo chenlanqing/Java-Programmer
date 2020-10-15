@@ -5433,6 +5433,14 @@ docker run -d -p 9090:9090 -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.y
 
 docker run -d -p 9090:9090 prom/prometheus
 
+# 十七、Spring其他
+
+## 1、Spring中获取HttpServletRequest
+
+```java
+HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+```
+
 
 # 参考资料
 

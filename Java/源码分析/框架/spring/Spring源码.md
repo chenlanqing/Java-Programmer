@@ -628,7 +628,7 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 ## 3、Spring事务实现原理
 
 
-# 、五、SpringFactoriesLoader
+# 五、SpringFactoriesLoader
 
 [SpringFactoriesLoader](Springboot源码.md#2.2SpringFactoriesLoader)
 

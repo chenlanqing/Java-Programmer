@@ -705,7 +705,7 @@ String在运行期也是有限制的，也就是 Integer.MAX_VALUE，约为4G。
 
 ## 1、数字前补0
 ```java
-	String.format("%05d"， 1)
+String.format("%05d"， 1)
 ```
 
 # 参考文章
