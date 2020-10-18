@@ -1790,6 +1790,13 @@ FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#ha
 - 过滤器和拦截器触发时机不一样：过滤器是在请求进入容器后，但请求进入servlet之前进行预处理的。请求结束返回也是，是在servlet处理完后，返回给前端之前
 - Filter是Servlet规范规定的，只能用于web程序中；
 
+### 17.3、拦截器的应用场景
+
+不管是Spring还是其他框架都有很多使用拦截器的
+- Mybatis
+- Feign
+- SpringMVC
+
 ## 18、SpringMVC 异常处理
 
 - Spring MVC 通过 HandlerExceptionResolver 处理程序的异常，包括 Handler 映射、数据绑定以及目标方法执行时发生的异常
