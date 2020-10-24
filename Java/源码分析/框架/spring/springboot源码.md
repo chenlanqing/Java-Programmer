@@ -1855,3 +1855,73 @@ ContextClosedEvent
 RequestHandledEvent
 
 这是一个 web-specific 事件，告诉所有 bean HTTP 请求已经被服务。只能应用于使用DispatcherServlet的Web应用。在使用Spring作为前端的MVC控制器时，当Spring处理用户请求结束后，系统会自动触发该事件
+
+# 14、如何控制加载顺序
+
+springboot遵从约定大于配置的原则，在此基础上，又提供了spi机制，用spring.factories可以完成一个小组件的自动装配功能；
+
+## 14.1、为什么要控制加载顺序
+
+当你在项目启动时需要提前做一个业务的初始化工作时，或者你正在开发某个中间件需要完成自动装配时。你会声明自己的Configuration类，但是可能你面对的是好几个有互相依赖的Bean。如果不加以控制，这时候可能会报找不到依赖的错误；
+
+**关于加载顺序的误区：**
+- 在标注了`@Configuration`的类中，写在前面的@Bean一定会被先注册：这个是不存在的，spring在以前xml的时代，也不存在写在前面一定会被先加载的逻辑。因为xml不是渐进的加载，而是全部parse好，再进行依赖分析和注册。到了springboot中，只是省去了xml被parse成spring内部对象的这一过程，但是加载方式并没有大的改变
+
+- 利用`@Order`这个标注能进行加载顺序的控制：严格的说，不是所有的Bean都可以通过@Order这个标注进行顺序的控制。把@Order这个标注加在普通的方法上或者类上一点用都没有
+    最开始`@Order`注解用于切面的优先级指定；在4.0之后对它的功能进行了增强，支持集合的注入时，指定集合中 bean 的顺序，并且特别指出了，它对于但实例的 bean 之间的顺序，没有任何影响。目前用的比较多的有以下3点：
+    - 控制AOP的类的加载顺序，也就是被@Aspect标注的类；
+    - 控制ApplicationListener实现类的加载顺序；
+    - 控制CommandLineRunner实现类的加载顺序；
+
+## 14.2、如何控制加载顺序
+
+### 14.2.1、@DependsOn
+
+`@DependsOn`注解可以用来控制bean的创建顺序，该注解用于声明当前bean依赖于另外一个bean。所依赖的bean会被容器确保在当前bean实例化之前被实例化
+```java
+@Configuration
+public class DependsOnDemo {
+    @Bean
+    @DependsOn("beanB")
+    public BeanA beanA() {
+        System.out.println("bean A init");
+        return new BeanA();
+    }
+    @Bean
+    public BeanB beanB() {
+        System.out.println("bean B init");
+        return new BeanB();
+    }
+}
+```
+`@DependsOn`的使用：
+- 直接或者间接标注在带有`@Component`注解的类上面;
+- 直接或者间接标注在带有`@Bean`注解的方法上面;
+- 使用`@DependsOn`注解到类层面仅仅在使用 component-scanning 方式时才有效，如果带有`@DependsOn`注解的类通过XML方式使用，该注解会被忽略，`<bean depends-on="..."/>`这种方式会生效
+
+### 14.2.2、参数注入
+
+在`@Bean`标注的方法上，如果你传入了参数，springboot会自动会为这个参数在spring上下文里寻找这个类型的引用。并先初始化这个类的实例。
+
+利用此特性，我们也可以控制bean的加载顺序
+```java
+@Bean
+public BeanA beanA(BeanB demoB){
+  System.out.println("bean A init");
+  return new BeanA();
+}
+@Bean
+public BeanB beanB(){
+  System.out.println("bean B init");
+  return new BeanB();
+}
+```
+需要注意的是，springboot会按类型去寻找。如果这个类型有多个实例被注册到spring上下文，那你就需要加上`@Qualifier("Bean的名称")`来指定
+
+### 14.2.3、利用bean的生命周期中的扩展点
+
+在spring体系中，从容器到Bean实例化&初始化都是有生命周期的，并且提供了很多的扩展点，允许你在这些步骤时进行逻辑的扩展。
+
+这些可扩展点的加载顺序由spring自己控制，大多数是无法进行干预的。我们可以利用这一点，扩展spring的扩展点。在相应的扩展点加入自己的业务初始化代码。从来达到顺序的控制
+
+### 14.2.4、@AutoConfigureOrder

@@ -555,9 +555,11 @@ consistenthash=com.alibaba.dubbo.rpc.cluster.loadbalance.ConsistentHashLoadBalan
 
 objectFactory就是dubbo的IoC提供对象。SpiExtensionFactory
 
-## 2.6、Dubbo扩展点
+injectExtension
 
+## 2.6、SPI与AOP
 
+WrapperClass
 
 # 3、配置解析
 
@@ -859,6 +861,8 @@ Dubbo配置也会受到provider的影响
 - 方法级优先，接口级次之，全局配置再次之。
 - 如果级别一样，则消费方优先，提供方次之
 
+Dubbo在暴露服务之前，要检查各种配置、设置参数信息，还要补充一些缺省的配置项，然后封装URL对象信息 。在这里，我们必须重视URL对象，Dubbo 使用 URL 作为配置载体，所有的拓展点都是通过 URL 获取配置
+
 ## 4.2、远程服务暴露
 
 整体来看，Dubbo做服务暴露分为两部分，第一步将持有的服务实例通过代理转换成 Invoker，第二步把 Invoker 通过具体的协议转换成 Exporter。Invoker 是实体域，它是 Dubbo 的核心模型，其它模型都向它靠扰，或转换成它，它代表一个可执行体，可向它发起 invoke 调用，它有可能是一个本地的实现，也可能是一个远程的实现，也可能一个集群实现。
@@ -875,9 +879,14 @@ Dubbo服务暴露的入口是：`OneTimeExecutionApplicationContextEventListener
 
 ![](image/Dubbo服务暴露流程图.png)
 
+主要分为三步：
+- （1）检测配置，如果有些配置空的话会默认创建，并且组装成 URL；
+- （2）暴露服务，包括暴露到本地的服务和远程的服务；
+- （3）注册服务至注册中心；
+
 ### 4.2.1、服务入口
 
-OneTimeExecutionApplicationContextEventListener 类有一个模板方法onApplicationContextEvent，其有两个具体的实现类：DubboBootstrapApplicationListener、DubboLifecycleComponentApplicationListener，那么服务暴露的是是 DubboBootstrapApplicationListener：
+OneTimeExecutionApplicationContextEventListener 类有一个模板方法 onApplicationContextEvent，其有两个具体的实现类：DubboBootstrapApplicationListener、DubboLifecycleComponentApplicationListener，那么服务暴露的是是 DubboBootstrapApplicationListener：
 ```java
 // Dubbo启动器监听器，其 onApplicationContextEvent 会调用 {@link DubboBootstrap} 的 start 或者 stop 方法；
 public class DubboBootstrapApplicationListener extends OneTimeExecutionApplicationContextEventListener implements Ordered {
@@ -1213,7 +1222,7 @@ private void doExportUrlsFor1Protocol(ProtocolConfig protocolConfig, List<URL> r
 
 dubbo://192.168.31.196:20880/org.apache.dubbo.samples.annotation.api.GreetingService?anyhost=true&application=samples-annotation-provider&bind.ip=192.168.31.196&bind.port=20880&deprecated=false&dubbo=2.0.2&dynamic=true&generic=false&interface=org.apache.dubbo.samples.annotation.api.GreetingService&methods=greeting,replyGreeting&pid=11517&release=2.7.5&revision=1.0.0_annotation&side=provider&timeout=1000&timestamp=1584849181681&version=1.0.0_annotation
 
-# 5、服务消费原理
+# 5、服务引入与消费原理
 
 Dubbo 服务引用的时机有两个，第一个是饿汉式的，第二个是懒汉式的。
 - 第一个是在 Spring 容器调用 ReferenceBean 的 afterPropertiesSet 方法时引用服务；

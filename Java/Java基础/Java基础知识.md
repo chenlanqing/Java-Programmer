@@ -4853,6 +4853,39 @@ JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢�
 - [JMH教程](http://tutorials.jenkov.com/java-performance/jmh.html)
 - [JMH使用](https://www.xncoding.com/2018/01/07/java/jmh.html)
 
+## 1、介绍
+
+JVM 在执行时，会对一些代码块，或者一些频繁执行的逻辑，进行 JIT 编译和内联优化，在得到一个稳定的测试结果之前，需要先循环上万次进行预热。预热前和预热后的性能差别非常大
+
+JMH 是一个 jar 包，它和单元测试框架 JUnit 非常像，可以通过注解进行一些基础配置。这部分配置有很多是可以通过 main 方法的 OptionsBuilder 进行设置的；
+
+通过开启多个进程，多个线程，先执行预热，然后执行迭代，最后汇总所有的测试数据进行分析。在执行前后，还可以根据粒度处理一些前置和后置操作
+
+## 2、示例
+
+## 3、关键主键
+
+### 3.1、@Warmup
+
+可以用在类或者方法上，进行预热配置
+```java
+// 对代码预热总计 5 秒（迭代 5 次，每次一秒）。预热过程的测试数据，是不记录测量结果的
+@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+```
+各个参数的意思：
+- timeUnit：时间的单位，默认的单位是秒；
+- iterations：预热阶段的迭代数；
+- time：每次预热的时间；
+- batchSize：批处理大小，指定了每次操作调用几次方法
+
+执行效果
+```
+# Warmup: 3 iterations, 1 s each 
+# Warmup Iteration   1: 0.281 ops/ns 
+# Warmup Iteration   2: 0.376 ops/ns 
+# Warmup Iteration   3: 0.483 ops/ns
+```
+
 # 二十九、本地方法(native)
 
 ## 1、本地方法加载
