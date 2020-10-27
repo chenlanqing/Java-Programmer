@@ -278,17 +278,60 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 ## 3.2、对象的内存布局
 
 在HotSpot虚拟机中，对象的内存中存储的布局可以分为3大区域：对象头（Header）、实例数据（Instance Area）和对齐填充（padding）
-- 对象头：标记字（32位虚拟机4B，64位虚拟机8B） + 类型指针（32位虚拟机4B，64位虚拟机8B）+ [`数组长（对于数组对象才需要此部分信息）`]
+- 对象头：标记字（Mark Word 32位虚拟机4B，64位虚拟机8B） + 类型指针（32位虚拟机4B，64位虚拟机8B）+ [`数组长（对于数组对象才需要此部分信息）`]
 	- Mark Word 部分数据的长度在32位和64位虚拟机（未开启压缩指针）中分别为32bit和64bit，存储对象自身的运行时数据如哈希值、GC分代年龄、锁状态标志、线程持有的锁、偏向线程ID、偏向时间戳等。Mark Word一般被设计为非固定的数据结构，以便存储更多的数据信息和复用自己的存储空间。
-	- 类型指针 指向它的类元数据的指针，用于判断对象属于哪个类的实例
 
-- 实例数据：对象真正存储的有效数据。如各种字段内容，各字段的分配策略为`longs/doubles、ints、shorts/chars、bytes/boolean、oops(ordinary object pointers)`，相同宽度的字段总是被分配到一起，便于之后取数据。父类定义的变量会出现在子类定义的变量的前面
+	![](image/Java对象布局-Markdown结构.png)
+
+	- 类型指针：指向它的类元数据的指针，用于判断对象属于哪个类的实例；虚拟机（默认）通过指针压缩将长度压缩到 4 个字节，通过以下虚拟机参数控制`-XX:+UseCompressedClassPointers -XX:+UseCompressedOops`
+		注意：并不是所有虚拟机实现都将类型指针存在对象数据上。具体取决于虚拟机使用的对象的访问定位方式，如果是使用直接指针的方式，对象的内存布局就必须放置访问类型数据的指针
+	- 数组长度：
+
+- 实例数据：对象真正存储的有效数据。如各种字段内容，各字段的分配策略为`longs/doubles、ints、shorts/chars、bytes/boolean、oops(ordinary object pointers)`，相同宽度的字段总是被分配到一起，便于之后取数据。父类定义的变量会出现在子类定义的变量的前面；使用`-XX：FieldsAllocationStyle、+XX：CompactFields`可以影响分配策略；
 
 - 对齐填充：对于64位虚拟机来说，对象大小必须是8字节的整数倍，不够的话需要占位填充
 
 ![](image/Java对象的存储布局.png)
 
 通过[JOL](http://openjdk.java.net/projects/code-tools/jol/)分析Java对象的内存布局，使用参考：[JOL使用方式](http://zhongmingmao.me/2016/07/03/jvm-jol-tutorial-3/)
+
+查看对象布局
+```
+步骤一：添加依赖
+<dependency>
+    <groupId>org.openjdk.jol</groupId>
+    <artifactId>jol-core</artifactId>
+    <version>0.14</version>
+</dependency>
+
+步骤二：创建对象
+Object obj = new Object();
+
+步骤三：打印对象内存布局
+
+1. 输出虚拟机与对象内存布局相关的信息
+System.out.println(VM.current().details());
+2. 输出对象内存布局信息
+System.out.println(ClassLayout.parseInstance(obj).toPrintable());
+```
+输出结果如下：
+```
+# Running 64-bit HotSpot VM.    				表示运行在64位的 HotSpot 虚拟机
+# Using compressed oop with 3-bit shift.
+# Using compressed klass with 3-bit shift.
+# Objects are 8 bytes aligned.
+# Field sizes by type: 4, 1, 1, 2, 2, 4, 4, 8, 8 [bytes]	依次表示引用、boolean、byte、char、short、int、float、long、double类型占用的长度
+# Array element sizes: 4, 1, 1, 2, 2, 4, 4, 8, 8 [bytes]	依次表示数组元素长度
+
+java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION        VALUE
+      0     4        (object header)    01 00 00 00 (00000001 00000000 00000000 00000000) (1)
+      4     4        (object header)    00 00 00 00 (00000000 00000000 00000000 00000000) (0)
+      8     4        (object header)    e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+```
 
 ## 3.3、对象的访问定位
 
@@ -1662,7 +1705,7 @@ finally代码块的编译：复制finally代码块的内容，分别放在try-ca
 
 # 10、Java编译
 
-[Javac编译与JIT编译](http://www.importnew.com/20109.html)
+[JIT编译](https://tech.meituan.com/2020/10/22/java-jit-practice-in-meituan.html)
 
 ## 10.1、编译步骤
 
@@ -1680,7 +1723,7 @@ finally代码块的编译：复制finally代码块的内容，分别放在try-ca
 - 可以把这些步骤和执行引擎全部集中在一起实现，如大多数的JavaScript执行器
 
 **编译器**
-- 前端编译器：Javac 编译器将`*.java文`件编译成为`*.class`文件的过程，Javac 编译器，其他的前端编译器还有诸如Eclipse JDT 的增量式编译器ECJ等；
+- 前端编译器：Javac 编译器将`*.java文`件编译成为`*.class`文件的过程，Javac 编译器，其他的前端编译器还有诸如Eclipse JDT 的增量式编译器ECJ等，在这个过程中会进行词法分析、语法分析、语义分析；
 - 后端编译器：在程序运行时期间将字节码转变成机器码，如 HotSpot 虚拟机自带的JIT(Just In Time Compiler)编译器另外还有可能会碰到静态提前编译器直接将`*.java`文件编译成本地机器码，如GCJ等；
 - AOT编译器：`.java`文件将直接转变为机器码
 

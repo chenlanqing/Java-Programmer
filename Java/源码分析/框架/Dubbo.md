@@ -1627,7 +1627,7 @@ Dubbo协议字段解析：
 
 ![](image/Dubbo-调用流程.png)
 
-- 首先在客户端启动时会从注册中心拉取和订阅对应的服务列表，Cluster会把拉取的服务列表聚合成一个invoker，每次RPC调用前都会通过Directory#list获取providers，获取这些服务列表给后续路由和负载均衡使用；
+- 首先在客户端启动时会从注册中心拉取和订阅对应的服务列表，Cluster会把拉取的服务列表聚合成一个invoker，每次RPC调用前都会通过`Directory#list`获取providers，获取这些服务列表给后续路由和负载均衡使用；
 - Dubbo发起服务调用时，所有路由和负载均衡都是在客户端实现的。客户端调用首先会触发路由操作，然后将路由结果得到的服务列表作为负载均衡的参数，经过负载均衡后选择一台机器进行RPC调用；
 - 客户端会将请求交给底层IO线程处理，主要处理读写、序列化与反序列等逻辑，这里不能阻塞操作；Dubbo中有两种类似线程池：一种是IO线程池，另一种是Dubbo业务线程；
 - Dubbo将服务调用和telent调用做了端口复用。
@@ -1773,7 +1773,24 @@ public class MockClusterInvoker<T> implements Invoker<T> {
     }
 }
 ```
-无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法，比如 FailoverClusterInvoker，默认就是 FailoverClusterInvoker
+无 mock 逻辑，直接调用其他 Invoker 对象的 invoke 方法，实际上会调用 AbstractClusterInvoker#invoker，该方法会调用AbstractClusterInvoker的抽象方法 doInvoker，那么实际上是调用其子类的，比如 FailoverClusterInvoker，默认就是 FailoverClusterInvoker；
+```java
+// AbstractClusterInvoker
+public Result invoke(final Invocation invocation) throws RpcException {
+    checkWhetherDestroyed();
+    // binding attachments into invocation.
+    Map<String, Object> contextAttachments = RpcContext.getContext().getObjectAttachments();
+    if (contextAttachments != null && contextAttachments.size() != 0) {
+        ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
+    }
+    // 通过方法名找 Invoker，然后服务的路由过滤一波，也有再造一个 MockInvoker 的，list是调用 AbstractDirectory的list方法
+    List<Invoker<T>> invokers = list(invocation);
+    LoadBalance loadbalance = initLoadBalance(invokers, invocation);
+    RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+    return doInvoke(invocation, invokers, loadbalance);
+}
+protected abstract Result doInvoke(Invocation invocation, List<Invoker<T>> invokers, LoadBalance loadbalance) throws RpcException;
+```
 
 # 10、集群容错
 

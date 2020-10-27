@@ -1048,12 +1048,14 @@ Stream 就如同一个迭代器（Iterator），单向，不可往复，数据�
 ### 5.2、创建Stream
 
 最常用的创建Stream有两种途径：
-- 通过Stream接口的静态工厂方法；
+- 通过Stream接口的静态工厂方法：Stream.of、Stream.iterate、Stream.builder
+- StreamSupport 的静态方法
 - 通过Collection接口的默认方法–stream()，把一个Collection对象转换成Stream；或者使用parallelStream()创建并行
 - 通过`Arrays.stream(Object[])`方法。
 - `BufferedReader.lines()`从文件中获得行的流。
 - Files类的操作路径的方法，如list、find、walk等。
-- 随机数流Random.ints()。
+- 随机数流 Random.ints()。
+- IntStream：
 - 其它一些类提供了创建流的方法，如`BitSet.stream(), Pattern.splitAsStream(java.lang.CharSequence), 和 JarFile.stream()`
 
 其实最终都是依赖StreamSupport类来完成Stream创建的；
@@ -1140,6 +1142,7 @@ reduce | Optional | BinaryOperator
 	Optional<Integer> maxOption = nums.stream().reduce(Integer::max);
 	Optional<Integer> minOption = nums.stream().reduce(Integer::min);
 	```
+
 ### 5.4、收集器的使用
 
 Collectors：实现了很多归约操作，例如将流转换成集合和聚合元素。Collectors 可用于返回列表或字符串：
@@ -1215,7 +1218,6 @@ minBy | Optional | 一个包裹了流中按照给定比较器选出最小元素�
 reducing | 归约操作产生的类型 | 从一个作为累加器的初始值开始，利用 BinaryOperator 与流中的元素组个结合，从而将流归约成单个值
 collectingAndThen | 转换函数返回的类型 | 包裹另一个收集器，对其结果应用转换函数
 groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项目作为组，并将属性值作为结果Map的键
-
 
 ## 6、Optional
 
@@ -1396,13 +1398,19 @@ new Thread(new Runnable() {
 new Thread(() -> System.out.println("我是Lambda线程")).start();
 ```
 
-### 8.1、函数式接口
+### 8.1、函数式接口与函数式编程
 
 函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
 
 java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解@FunctionalInterface进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
 
 Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现；Lambda 表达式对于全局变量和静态变量可以没有限制的使用，但是对于局部变量必须显示声明为 final
+
+函数式编程更加强调程序执行的结果而非执行的过程，倡导利用若干简单的执行单元让计算结果不断渐进，逐层推导复杂的运算，而不是设计一个复杂的执行过程；
+- 函数的执行没有副作用；
+- 返回值仅依赖于输入参数；
+- 函数的参数可以是一个/多个函数；
+- 函数的返回值也可以是一个函数；
 
 **Predicate**
 
@@ -1544,7 +1552,7 @@ Function<Integer, Integer> composeResult = addRes.compose(mulRes);
 Integer apply = composeResult.apply(1);  // 结果为 3 ==> (1 * 2) + 1
 ```
 
-### 8.3、Lambda原理
+### 8.4、Lambda原理
 
 如下代码：启动一个线程，包含lambda表达式和匿名内部类的方式
 ```java
@@ -1645,7 +1653,7 @@ metafactory 方法入参：
 
 ![](image/Lambda-debug信息.png)
 
-### Lambda性能
+### 8.8、Lambda性能
 
 # 五、正则表达式
 

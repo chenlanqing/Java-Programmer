@@ -1064,6 +1064,8 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 	
 ## 7、synchronized底层实现及锁优化
 
+![](image/Java-synchronized原理.jpg)
+
 - 可以通过反编译字节码 --> `javap -c SyncDemo.class` 查看底层实现
 - synchronized 的优化借鉴了锁的CAS操作
 
