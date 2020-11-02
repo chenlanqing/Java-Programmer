@@ -5442,6 +5442,9 @@ docker run -d -p 9090:9090 -v $(pwd)/prometheus.yml:/etc/prometheus/prometheus.y
 
 docker run -d -p 9090:9090 prom/prometheus
 
+如何添加Acutator：
+可以通过 @EndPoint 属性 来进行扩展
+
 # 十七、Spring其他
 
 ## 1、Spring中获取HttpServletRequest

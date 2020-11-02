@@ -1383,6 +1383,16 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
     }
 	```
 
+#### 2、转换为秒/毫秒
+
+```java
+//获取秒数
+Long second = LocalDateTime.now().toEpochSecond(ZoneOffset.of("+8"));
+//获取毫秒数
+Long milliSecond = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMilli();
+```
+
+
 ## 8、Lambda表达式与函数式接口
 
 Lambda表达式语法
