@@ -1562,7 +1562,7 @@ Function<Integer, Integer> composeResult = addRes.compose(mulRes);
 Integer apply = composeResult.apply(1);  // 结果为 3 ==> (1 * 2) + 1
 ```
 
-### 8.4、Lambda原理
+### 8.7、Lambda原理
 
 如下代码：启动一个线程，包含lambda表达式和匿名内部类的方式
 ```java
