@@ -58,3 +58,43 @@ Linux系统：CentOS7
 ssh-copy-id -i hadoop002
 ssh-copy-id -i hadoop003
 ```
+
+# 四、宿主机与虚拟机网络连通
+
+## 1、Mac连接到虚拟机的docker网络
+
+```
+Mac IP地址: 192.168.31.196
+虚拟机IP: 192.168.31.221
+docker网络IP地址: 172.19.0.3
+
+添加路由到Mac的路由表：
+sudo route -n add -net 172.19.0.0 -netmask 255.255.255.0 192.168.31.221
+
+路由表信息如下：
+Internet:
+Destination        Gateway            Flags        Refs      Use   Netif Expire
+172.19/24          192.168.31.221     UGSc            0        3     en0
+
+如果要删除路由表信息:
+sudo route delete 172.19/24
+```
+
+**注意：**需要关闭虚拟机的防火墙
+- ubuntu关闭防火墙：`sudo ufw disable`
+
+## 2、Windows连接到虚拟机的docker网络
+
+```
+Windows IP地址: 192.168.31.196
+虚拟机IP: 192.168.31.221
+docker网络IP地址: 172.19.0.3
+
+ROUTE -p add 172.19.0.0 mask 255.255.255.0 192.168.31.221
+
+添加网络路由，172.19.0.0 mask 255.255.255.0 都由 192.168.31.221 来帮忙转发
+
+删除路由：
+route delete 172.19.0.0 mask 255.255.255.0 192.168.31.221
+```
+**注意：**需要关闭虚拟机的防火墙

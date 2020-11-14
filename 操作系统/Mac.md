@@ -27,4 +27,3 @@ $ netstat -n | awk '/^tcp/ {++S[$NF]} END {for(a in S) print a, S[a]}'
 ESTABLISHED 1154
 TIME_WAIT 1645
 ```
-

@@ -3428,7 +3428,7 @@ select c1, c3 from t1 group by c1, c2;
 
 *特定聚合函数用法能够使用松散索引扫描的条件：*
 - avg(distinct)、sum(distinct)、count(distinct)，其中 avg(distinct)、sum(distinct) 可以接受单个参数，count(distinct) 可以接受多个参数；
-- 查询中必须不存在group bvu 或 distinct 语句；
+- 查询中必须不存在group by 或 distinct 语句；
 - 满足签名所有使用松散索引扫描的条件；
 ```sql
 -- 假设有 index(c1,c2,c3) 作用在表 t1(c1,c2,c3,c4)，下面这些SQL能使用松散索引扫描
