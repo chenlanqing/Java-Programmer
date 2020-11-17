@@ -215,6 +215,40 @@ http.cors.enabled: true
 http.cors.allow-origin: "*"
 ```
 
+### 2.3、通过docker安装
+
+这里通过docker-compose安装es和head插件
+（1）创建docker-compose.yml文件
+```yml
+version: '2'
+services:
+  elasticsearch:
+    image: elasticsearch:6.8.5
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - es_network
+  elasticsearch-head:
+    image: mobz/elasticsearch-head:5-alpine
+    container_name: elasticsearch-head
+    restart: always
+    ports:
+      - 9100:9100
+
+networks:
+  es_network:
+    external: true
+```
+（2）启动：
+```
+docker-compose -f docker-compose.yml up -d elasticsearch
+docker-compose -f docker-compose.yml up -d elasticsearch-head
+```
+（3）关于跨域问题同上面的配置方式
+
 ## 3、核心术语
 
 - 索引（index）：含有相同属性的文档集合；相当于sql的database；
@@ -957,7 +991,7 @@ POST     /shop/_doc/_search
 		"match": {
 			"desc": "慕课网游戏"
 		}	
-    },m
+    },
     "post_filter": {
 		"range": {
 			"money": {
@@ -1321,6 +1355,8 @@ action 必须是以下选项之一：
 分片机制：每个索引可以被分片
 - 副本分片是主分片的备份，主挂了，备份还是可以访问，这就需要用到集群了。
 - 同一个分片的主与副本是不会放在同一个服务器里的，因为一旦宕机，这个分片就没了
+
+docker-compose配置集群： https://juejin.im/post/6844903682950037518
 
 ### 7.2、集群安装es
 

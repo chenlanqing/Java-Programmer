@@ -152,8 +152,8 @@
 
 - 搜索相关
         - ELK ，数据库加速、主搜（算法）
-         - Logback、Slf4j2
-         - Solr & Lucene
+        - Logback、Slf4j2
+        - Solr & Lucene
 
 - BPM相关
         - JBPM

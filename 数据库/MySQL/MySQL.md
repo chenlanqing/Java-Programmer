@@ -4544,6 +4544,10 @@ FROM table_score AS a,
 ORDER BY a.score DESC;
 ```
 
+# 二十、MySQL索引规约
+
+https://mp.weixin.qq.com/s/nRl4g4DQSCVhgTmqR6rYiA
+
 
 # 参考文章
 

@@ -796,6 +796,7 @@ public void create(){
 # 八、Spring常见问题
 
 ## 1、循环依赖问题
+
 - [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
 - [Spring循环依赖处理](http://cmsblogs.com/?p=2887)
 
@@ -809,13 +810,105 @@ public void create(){
 
 - 构造器的循环依赖：Spring是无法解决的，只能抛出`BeanCurrentlyInCreationException`异常表示循环依赖；
 
-	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。形成环状依赖，从而被Spring抛出
+	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。形成环状依赖，从而被Spring抛出；类似先有蛋还是先有鸡
 
-- setter的循环依赖
+- setter的循环依赖：包含两种循环依赖问题，`多例（原型）模式下产生的循环依赖问题`和`单例模式下产生的循环依赖问题`
 
-	Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean
+	Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean，因为每一次getBean()时，都会产生一个新的Bean，如此反复下去就会有无穷无尽的Bean产生了，最终就会导致OOM问题的出现；
 
-### 1.3、解决循环依赖
+### 1.3、Spring三大缓存
+
+Spring中有三个缓存，用于存储单例的Bean实例，这三个缓存是彼此互斥的，不会针对同一个Bean的实例同时存储；
+
+如果调用getBean，则需要从三个缓存中依次获取指定的Bean实例。 读取顺序依次是`一级缓存-->二级缓存-->三级缓存`
+```java
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+	// 从一级缓存中获取单例对象
+	Object singletonObject = this.singletonObjects.get(beanName);
+	// isSingletonCurrentlyInCreation:
+	// 判断当前单例bean是否正在创建中，也就是没有初始化完成；
+	// 比如A的构造器依赖了B对象，所以得先去创建B对象，或者在A的populateBean过程中依赖了B对象，得先去创建B对象，这时的A就是出于创建中状态；
+	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+		singletonObject = this.earlySingletonObjects.get(beanName);
+		if (singletonObject == null && allowEarlyReference) {
+			synchronized (this.singletonObjects) {
+				// 从二级缓存中获取单例bean
+				singletonObject = this.singletonObjects.get(beanName);
+				if (singletonObject == null) {
+					// 是否允许从 singletonFactories 中通过 getObject拿到对象
+					singletonObject = this.earlySingletonObjects.get(beanName);
+					if (singletonObject == null) {
+						// 从三级缓存中获取单例bean
+						ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+						if (singletonFactory != null) {
+							// 通过单例工厂获取单例bean
+							singletonObject = singletonFactory.getObject();
+							// 从三级缓存移到了二级缓存
+							this.earlySingletonObjects.put(beanName, singletonObject);
+							this.singletonFactories.remove(beanName);
+						}
+					}
+				}
+			}
+		}
+	}
+	return singletonObject;
+}
+```
+
+**一级缓存：Map<String, Object> singletonObjects**
+
+第一级缓存的作用：
+- 用于存储单例模式下创建的Bean实例（已经创建完毕）；
+- 该缓存是对外使用的，指的就是使用Spring框架的程序员
+
+存储的数据：
+- key:   bean的名称
+- value: bean的实例对象（有代理对象则指的是代理对象，已经创建完毕）
+
+**二级缓存：Map<String, Object> earlySingletonObjects**
+
+第二级缓存的作用：
+- 用于存储单例模式下创建的Bean实例（该Bean被提前暴露的引用,该Bean还在创建中）。
+- 该缓存是对内使用的，指的就是Spring框架内部逻辑使用该缓存。
+
+存储的数据：
+- key: bean的名称
+- value: bean的实例对象（有代理对象则指的是代理对象，该Bean还在创建中）
+
+**三级缓存：Map<String, ObjectFactory<?>> singletonFactories**
+
+第三级缓存的作用：
+- 通过ObjectFactory对象来存储单例模式下提前暴露的Bean实例的引用（正在创建中）。
+- 该缓存是对内使用的，指的就是Spring框架内部逻辑使用该缓存。
+- 主要使用此缓存来解决循环依赖
+
+存储的数据：
+- key: bean的名称
+- values: ObjectFactory，该对象持有提前暴露的bean的引用
+
+```java
+protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
+protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
+	Assert.notNull(singletonFactory, "Singleton factory must not be null");
+	synchronized (this.singletonObjects) {
+		/**
+		 * 如果单例池中不存在才会add，因为这里主要是为了解决循环依赖的代码
+		 * 如果bean存在单例池的话，已经是一个完整的bean了，一个完整的bean是已经完成属性注入的，循环依赖已经依赖上了，
+		 * 所以如果这个对象已经是一个完整的bean，就不需要关心了
+		 */
+		if (!this.singletonObjects.containsKey(beanName)) {
+			// 放入三级缓存
+			this.singletonFactories.put(beanName, singletonFactory);
+			this.earlySingletonObjects.remove(beanName);
+			this.registeredSingletons.add(beanName);
+		}
+	}
+}
+```
+为什么第三级缓存使用 ObjectFactory：需要提前产生代理对象
+
+### 1.4、解决循环依赖
 
 Spring 在创建 bean 的时候并不是等它完全完成，而是在创建过程中将创建中的 bean 的 ObjectFactory 提前曝光（即加入到 singletonFactories 缓存中）。
 这样，一旦下一个 bean 创建的时候需要依赖 bean，则直接使用 ObjectFactory 的 `#getObject()` 方法来获取了；
@@ -2354,6 +2447,90 @@ spring:
 ​	可以直接在测试的时候，配置传入命令行参数
 - 虚拟机参数：
 ​	-Dspring.profiles.active=dev
+
+### 5.4、通过maven构建时指定
+
+```
+├── pom.xml
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   └── com
+│   │   │       ├── SpringBootApplication.java
+│   │   ├── resources
+│   │   │   ├── application-dev.properties
+│   │   │   ├── application-prod.properties
+│   │   │   ├── application.properties
+```
+
+上面的方式打包成jar包时仍然会保留所有profile的文件，按照上面的文件结构，仍然会保留`application-prod.properties`、`application-dev.properties`两个文件；
+
+如何通过maven的方式打包出来的jar包只包含需要的文件？
+
+**（1）application.properties改为如下代码：**
+```
+spring.profiles.active=@build.profile.id@
+```
+
+**（2）pom.xml增加如下代码：**
+```xml
+<project>
+	...
+	<build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <excludes>
+                    <exclude>application-*.properties</exclude>
+                </excludes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>application-${build.profile.id}.properties</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>
+    <profiles>
+        <!--开发环境-->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <build.profile.id>dev</build.profile.id>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <!--生产环境-->
+        <profile>
+            <id>prod</id>
+            <properties>
+                <build.profile.id>prod</build.profile.id>
+            </properties>
+        </profile>
+    </profiles>
+</project>
+```
+**（3）通过如下maven命令执行：**
+```
+mvn clean install -DskipTests -P prod
+```
+执行完上述命令之后打开target目录，可以看到只包含了 `application-prod.properties` 文件，多余的文件没有包含在里面；
+```
+├── classes
+│   ├── application-prod.properties
+│   ├── application.properties
+│   ├── com
+│   │   ├── SpringBootApplication.class
+```
+
+或者通过idea中maven的lifecycle创建clean相关命令操作，添加如下命令：`clean install -DskipTests -P prod -f pom.xml`
+
+![](image/maven-构建Springboot-profile.png)
 
 ## 6、配置文件加载位置
 

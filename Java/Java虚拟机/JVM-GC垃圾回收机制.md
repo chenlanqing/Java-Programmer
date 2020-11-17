@@ -1090,7 +1090,7 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 - 新生代空间:
 	- -XX:NewRatio：Ratio of New area and Old area，新生代和老年代的占比
 	- -XX:NewSize：New area size，ret新生代空间
-	- -XX:SurvivorRati：Ratio ofEdenarea and Survivor area，Eden 和 Suvivor 空间的占比
+	- -XX:SurvivorRatio：Ratio ofEdenarea and Survivor area，Eden 和 Suvivor 空间的占比
 
 - -server参数
 
