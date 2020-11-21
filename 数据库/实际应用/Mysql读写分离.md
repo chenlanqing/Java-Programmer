@@ -5,6 +5,7 @@
 
 https://gitee.com/xuliugen/aop-choose-db-demo
 
+主从同步解决数据同步问题: https://blog.csdn.net/zhanghan18333611647/article/details/91638443
 
 
 # 参考文章

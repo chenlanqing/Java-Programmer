@@ -84,6 +84,7 @@ enabled=1
 - 停止：`./nginx -s stop`
 - 重新加载：`./nginx -s reload`
 
+
 ## 3、Nginx命令
 
 查看其安装目录 rpm -ql nginx
