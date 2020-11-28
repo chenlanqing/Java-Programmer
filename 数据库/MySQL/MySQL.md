@@ -3285,21 +3285,37 @@ OPTIMIZER_TRACE是MySQL 5.6引入的一项跟踪功能，它可以跟踪优化�
 - SQL数据库服务器参数的优化(由运维或者DBA完成)
 
 
-### 8.2、exist和in
+### 8.2、exists和in
 
 小表驱动大表：即小的数据集驱动大的数据集
-- `select * from A where id in(select id from B)`：当B表的数据集小于A表的数据集时，in 优于 exists。in 是在内存中遍历比较，只执行一次，把B表中的所有id字段缓存起来，之后检查A表的id是否与B表中的id相等，如果id相等则将A表的记录加入到结果集中，直到遍历完A表的所有记录。如：A表有10000条记录，B表有1000000条记录，那么最多有可能遍历10000*1000000次，效率很差
+- `select * from A where id in(select id from B)`：当B表的数据集小于A表的数据集时，in 优于 exists。in 是在内存中遍历比较，只执行一次，把B表中的所有id字段缓存起来，之后检查A表的id是否与B表中的id相等，如果id相等则将A表的记录加入到结果集中，直到遍历完A表的所有记录。如：A表有10000条记录，B表有1000000条记录，那么最多有可能遍历10000*1000000次，效率很差；
 
 - `select * from A where exists(select 1 from B where B.id=A.id)` 当A表的数据集小于B表的数据集时， exists 优于 in。需要查询数据库，所以当B的数据量比较大时，exists效率优于in。当B表比A表数据大时适合使用exists()，因为它没有那么多遍历操作，只需要再执行一次查询就行。如：A表有10000条记录，B表有1000000条记录，那么exists()会执行10000次去判断A表中的id是否与B表中的id相等
 
 - exists：`select ... from table where exists(subquery)`
 
-	该语法可以理解为：将主查询的数据放到子查询中做条件验证，根据验证结果来决定主查询的数据结果是否保留
+	该语法可以理解为：将主查询的数据放到子查询中做条件验证，根据验证结果来决定主查询的数据结果是否保留；exists 返回的结果是一个 boolean 值 true 或者 false ，而不是某个结果集。因为它不关心返回的具体数据是什么，只是外层查询需要拿这个布尔值做判断
 
 	注意：
-	- exists(subquery)只返回 true 和 false，因此子查询中 select * 可以是 select 1或者其他官方说法是实际执行时会忽略 select 清单.
+	- exists(subquery)只返回 true 和 false，因此子查询中 `select *` 可以是 `select 1`或者其他官方说法是实际执行时会忽略 select 清单.
 	- exists 子查询的实际执行过程可能经过了优化；
 	- exists 子查询往往也可以用条件表达式，其他子查询或者join来替代；
+
+- `not in` 和 `not exists`
+	```sql
+	select * from t1 where name not in (select name from t2);
+	或者用
+	select * from t1 where not exists (select name from t2 where t1.name=t2.name);
+	```
+	上面的结果是一样的，但是还是有不同点：在使用 `not in` 的时候，需要保证子查询的匹配字段是非空的。如此表 t2 中的 name 需要有非空限制。如若不然，就会导致 `not in` 返回的整个结果集为空；
+
+	`not exists` 与 `exists`：用 exists 时，若子查询查到了数据，则返回真。用 not exists 时，若子查询没有查到数据，则返回真，可以将上述语句改为：
+	```sql
+	-- 子查询中 name 可以修改为其他任意的字段，如此处改为 1 。
+	select * from t1 where not exists (select 1 from t2 where t1.name=t2.name);
+	```
+
+**关于索引优化：**
 
 ### 8.3、order by
 

@@ -1436,3 +1436,5 @@ https://zhuanlan.zhihu.com/p/102500311
 * [What is Elasticsearch](https://www.elastic.co/cn/what-is/elasticsearch)
 * [Springboot+Elasticsearch](https://docs.spring.io/spring-data/elasticsearch/docs/)
 * [ElasticSearch父子文档](https://blog.csdn.net/laoyang360/article/details/82950393)
+* [ElasticSearch脑图](https://juejin.cn/post/6898505457485217806)
+* [Elasticsearch时间指南](https://juejin.cn/post/6898926871191224334)
