@@ -366,7 +366,9 @@ PS：十进制转换为16进制：`printf '%x\n' 6642`
 - 如果是Metaspace/PermGen OOM，一般是Class对象问题；
 - 如果是Heap Space OOME，瞄准占空间最大的对象；
 
-# 三、Java线上问题排查思路
+# 三、线上问题排查思路
+
+![](image/线上问题排查.png)
 
 [Java 线上问题排查思路与工具使用](https://blog.csdn.net/gitchat/article/details/79019454)
 
@@ -639,6 +641,67 @@ java 在装载一个目录下所有 jar 包时，它加载的顺序完全取决�
 - `mvn dependency:tree` 分析报错方法所在的 jar 包版本，留下新的
 - `arthas：sc -d ClassName`
 - `XX：+TraceClassLoading`
+
+## 5、Redis线上问题
+
+### 5.1、问题处理思路
+
+
+### 5.2、内存告警
+
+如果出现如下异常提示信息：
+```
+OOM command not allowed when used memory
+```
+**设置合理的内存大小：**
+
+设置maxmemory和相对应的回收策略算法，设置最好为物理内存的3/4，或者比例更小，因为redis复制数据等其他服务时，也是需要缓存的，以防缓存数据过大导致redis崩溃，造成系统出错不可用
+- 通过redis.conf配置文件指定：`maxmemory xxx`
+- 通过命令修改：`config set maxmemory xxx`
+
+**设置合理的内存淘汰策略：**
+
+[Redis数据淘汰](../分布式架构/Redis与Memcached.md#2Redis数据淘汰策略)
+
+**查看大key：**
+
+- 有工具的情况下，安装工具dbatools redisTools,列出最大的前N个key：`/data/program/dbatools-master/redisTools/redis-cli-new -h <ip> -p <port> --bigkeys --bigkey-numb 3`
+- 原生命令：`/usr/local/redis-3.0.5/src/redis-cli -c -h <ip> -p <port> --bigkeys`
+- 分析rdb文件中的全部key/某种类型的占用量：`rdb -c memory dump.rdb -t list -f dump-formal-list.csv`
+- 无工具情况下：`debug object key`
+
+### 5.3、Redis的慢命令
+
+**设置Redis的慢命令的时间阈值(单位：微秒)**
+- 通过redis.conf命令：
+    ```
+    # 执行时间大于多少微秒(microsecond，1秒 = 1,000,000 微秒)的查询进行记录。
+    slowlog-log-lower-than 1000
+    # 最多能保存多少条日志
+    slowlog-max-len 200
+    ```
+- 通过命令方式：
+    ```
+    # 配置查询时间超过1毫秒的， 第一个参数单位是微秒
+    config set slowlog-log-lower-than 1000
+    # 保存200条慢查记录
+    config set slowlog-max-len 200
+    ```
+
+**查看Redis的慢命令：** `slowlog get`
+
+### 5.4、连接过多
+
+- 通过redis.conf 配置文件指定最大连接数：`maxclients 10000`
+- 通过命令行：`config set maxclients xxx`
+
+### 5.5、线上Redis节点挂掉一个之后的处理流程
+
+**查看节点状态：**
+
+执行 cluster nodes 后发现会有一个节点dead
+
+**移除错误的节点**
 
 # 四、Java动态追踪技术
 
