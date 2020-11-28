@@ -159,6 +159,8 @@ scala> spark.sql("select * from dept").show
 only showing top 20 rows
 ```
 
+还可以通过spark—sql命令进入交互界面：
+
 ## 4.5、thriftserver
 
 thriftserver/beeline的使用
@@ -314,7 +316,53 @@ public static void program(SparkSession session) {
 
 # 6、外部数据源
 
+[数据源](http://spark.apache.org/docs/2.4.7/sql-data-sources.html)
 
+默认处理的格式：parquet
+
+```java
+val DEFAULT_DATA_SOURCE_NAME = SQLConfigBuilder("spark.sql.sources.default")
+    .doc("The default data source to use in input/output.")
+    .stringConf
+    .createWithDefault("parquet")
+```
+
+## 6.1、parquet
+
+
+## 6.2、Hive
+
+往hive里面输出数据：
+```
+scala> spark.sql("select deptno, count(1) as cnt from emp group by deptno").write.saveAsTable("emp_statistics")
+```
+可能存在的问题：`org.apache.spark.sql.AnalysisException: Attribute name "count(1)" contains invalid character(s) among " ,;{}()\n\t=". Please use alias to rename it.;`
+
+```
+spark.sqlContext.setConf("spark.sql.shuffle.partitions","10")
+```
+在生产环境中一定要注意设置spark.sql.shuffle.partitions，默认是200
+
+## 6.3、MySQL
+
+```
+scala> val jdbcDF2 = spark.read.format("jdbc") \
+.option("url", "jdbc:mysql://localhost:3306/sparksql") \
+.option("dbtable", "sparksql.TBLS") \
+.option("user", "root") \
+.option("password", "root") \
+.option("driver", "com.mysql.jdbc.Driver").load()
+```
+或者是：
+```
+import java.util.Properties
+val connectionProperties = new Properties()
+connectionProperties.put("user", "root")
+connectionProperties.put("password", "root")
+connectionProperties.put("driver", "com.mysql.jdbc.Driver")
+
+val jdbcDF2 = spark.read.jdbc("jdbc:mysql://localhost:3306", "hive.TBLS", connectionProperties)
+```
 
 # 参考资料
 
