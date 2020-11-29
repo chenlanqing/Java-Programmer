@@ -44,6 +44,13 @@ start-all.sh   会在 hadoop1机器上启动master进程，在slaves文件配置
 spark-shell  --master spark://bluefish:7077
 ```
 
+## 3.3、YARN
+
+建议大家在生产上使用该模式，统一使用YARN进行整个集群作业(MR、Spark)的资源调度
+
+## 3.4、Mesos
+
+
 # 4、SparkSQL
 
 ## 4.1、SqlContext
@@ -210,6 +217,68 @@ Could not open client transport with JDBC Uri: jdbc:hive2://bluefish:14000:
 java.net.ConnectException: Connection refused
 ```
 
+## 4.7、SparkSQL使用场景
+
+
+## 4.8、处理json的复杂场景：
+
+### 4.8.1、数组
+
+```json
+{"name":"zhangsan", "nums":[1,2,3,4,5,6]}
+{"name":"lisi", "nums":[6,7,8,9]}
+```
+可以输出如下：
+```
+scala> spark.sql("select name,nums[1] from json_table").show
++--------+-------+
+|    name|nums[1]|
++--------+-------+
+|zhangsan|      2|
+|    lisi|      7|
++--------+-------+
+scala> spark.sql("select name, explode(nums) from json_table").show
++--------+---+
+|    name|col|
++--------+---+
+|zhangsan|  1|
+|zhangsan|  2|
+|zhangsan|  3|
+|zhangsan|  4|
+|zhangsan|  5|
+|zhangsan|  6|
+|    lisi|  6|
+|    lisi|  7|
+|    lisi|  8|
+|    lisi|  9|
++--------+---+
+```
+
+### 4.8.2、对象
+
+```json
+{"name":"Yin", "address":{"city":"Columbus","state":"Ohio"}}
+{"name":"Michael", "address":{"city":null, "state":"California"}}
+```
+输出如下结果：
+```
+scala> spark.sql("select * from json_tables").show
++----------------+-------+
+|         address|   name|
++----------------+-------+
+|[Columbus, Ohio]|    Yin|
+|  [, California]|Michael|
++----------------+-------+
+scala> spark.sql("select name, address.city,address.state from json_tables").show
++-------+--------+----------+
+|   name|    city|     state|
++-------+--------+----------+
+|    Yin|Columbus|      Ohio|
+|Michael|    null|California|
++-------+--------+----------+
+```
+
+
 # 5、DataFrame
 
 ## 5.1、概述
@@ -314,6 +383,12 @@ public static void program(SparkSession session) {
 }
 ```
 
+## 5.3、DataFrame与Spark SQL
+
+- DataFrame = RDD + Schema
+- DataFrame 实际上是一个Row
+- DataFrame over RDD
+
 # 6、外部数据源
 
 [数据源](http://spark.apache.org/docs/2.4.7/sql-data-sources.html)
@@ -326,6 +401,8 @@ val DEFAULT_DATA_SOURCE_NAME = SQLConfigBuilder("spark.sql.sources.default")
     .stringConf
     .createWithDefault("parquet")
 ```
+
+输出默认的模式是 ErrorIfExists，除了其还有 append、overwrite、ignore
 
 ## 6.1、parquet
 
@@ -363,6 +440,23 @@ connectionProperties.put("driver", "com.mysql.jdbc.Driver")
 
 val jdbcDF2 = spark.read.jdbc("jdbc:mysql://localhost:3306", "hive.TBLS", connectionProperties)
 ```
+
+# 7、性能优化
+
+- 存储格式
+
+- 压缩格式：压缩速度、压缩文件的可分割性
+
+    设置压缩格式：`config("spark.sql.parquet.compression.codec","gzip")`
+
+- 代码：选用高性能算子
+
+- 代码：复用已有的数据
+
+- 参数：并行度选择`spark.sql.shuffle.partitions`
+
+- 参数：分区字段类型推测`spark.sql.sources.paritionsColumnTypeInference.enabled`，默认是开启的
+
 
 # 参考资料
 
