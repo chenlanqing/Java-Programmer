@@ -83,13 +83,13 @@
 - 在当前登录用户下找到 .bash_profile文件，添加如下配置:
 	```bash
 	# 配置环境变量
-	PATH=$PATH:$HOME/bin
-	export PATH
-	export JAVA_HOME=/home/root/software/jdk1.7.0_79
-	export PATH=$JAVA_HOME/bin:$PATH
-	export MAVEN_HOME=/home/root/software/apache-maven-3.5.0
-	export PATH=${PATH}:${MAVEN_HOME}/bin
-	export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+PATH=$PATH:$HOME/bin
+export PATH
+export JAVA_HOME=/usr/local/jdk1.8.0_271
+export PATH=$JAVA_HOME/bin:$PATH
+export MAVEN_HOME=/usr/local/apache-maven-3.6.3
+export PATH=${PATH}:${MAVEN_HOME}/bin
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
 	
 	# 配置别名
 	alias base="cd /home/root/software"
