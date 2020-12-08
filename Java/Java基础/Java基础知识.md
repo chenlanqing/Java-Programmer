@@ -4030,6 +4030,8 @@ public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.l
 
 ## 3、反射机制：(Reflection)
 
+### 3.1、基本介绍
+
 运行时加载，探知使用编译期间完全未知的类；反射：将一个Java类中的所有信息映射成相应的Java类；
 
 反射机制是在运行状态，对于任意一个类，都能够知道这个的类的所有属性和方法；对于任意一个对象，都能够调用它的任意方法和属性；
@@ -4046,49 +4048,121 @@ public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.l
 
 - 反射机制性能问题：反射会降低程序的效率，如果在开发中确实需要使用到反射，可以将setAccessible设为 true ：即取消Java语言访问检查;
 
-- 反射操作泛型：
-	- ①、Java 采用泛型擦除的机制来引入泛型。Java中的泛型仅仅是给编译器使用的，确保数据的安全性和免去强制类型转换的麻烦；但是一旦编译完成，所有和泛型有关的类型全部擦除;
-	- ②、为了通过反射操作泛型，Java有 `ParameterizedType、GenericArrayType、TypeVariable、WildcardType`几种类型来代表不能被归一到Class类中的类型但是又和原始类型齐名的类型；
+### 3.2、反射获取构造函数
 
-		- `Type`是Java编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型
-		- `ParameterizedType` ：参数化类型
-		- `GenericArrayType`：元素类型是参数化类型或者类型变量的数组类型
-		- `TypeVariable`：各种类型变量的公共父接口
-		- `WildcardType`：表示一种通配符类型表达式;
+通过Class对象可以获取某个类中的：构造方法
 
-- 反射操作注解
+**批量的方法：**
+```java
+public Constructor[] getConstructors(); // 所有"公有的"构造方法
+public Constructor[] getDeclaredConstructors(); // 获取所有的构造方法(包括私有、受保护、默认、公有)
+```
 
+**获取单个的方法，并调用：**
+```java
+public Constructor getConstructor(Class... parameterTypes); // 获取单个的"公有的"构造方法：
+public Constructor getDeclaredConstructor(Class... parameterTypes); // 获取"某个构造方法"可以是私有的，或受保护、默认、公有；
+```
+
+**调用构造方法：**
+```java
+// Constructor 的 newInstance 方法
+public T newInstance(Object ... initargs){}
+```
+
+忽略访问权限：`con.setAccessible(true);`
+
+### 3.3、反射获取属性
+
+**批量的获取属性：**
+```java
+Field[] getFields(); // 获取所有的"公有字段"
+Field[] getDeclaredFields(); // 获取所有字段，包括：私有、受保护、默认、公有；
+```
+
+**获取单个：**
+```java
+public Field getField(String fieldName); // 获取某个"公有的"字段；
+public Field getDeclaredField(String fieldName); // 获取某个字段(可以是私有的)
+```
+
+**设置字段的值：**
+```java
+// Field类
+public void set(Object obj,Object value){
+	// obj: 要设置的字段所在的对象；
+	// value: 要为字段设置的值；
+}
+```
+
+### 3.4、反射获取方法
+
+**批量获取方法：**
+```java
+public Method[] getMethods(); // 获取所有"公有方法"；（包含了父类的方法也包含Object类）
+public Method[] getDeclaredMethods(); // 获取所有的成员方法，包括私有的(不包括继承的)
+```
+
+**获取单个方法：**
+```java
+// 参数
+// name: 方法名；
+// Class ... : 形参的Class类型对象
+public Method getMethod(String name,Class<?>... parameterTypes){} // 获取指定公有的方法
+public Method getDeclaredMethod(String name,Class<?>... parameterTypes){}
+```
+
+**调用方法：**
+```java
+public Object invoke(Object obj, Object... args) {
+	// obj : 要调用方法的对象；
+ 	// args:调用方式时所传递的实参；
+}
+```
+
+- 使用反射调用类的main方法：
 	```java
-	getAnnotation(Class<A> annotationClass);
-	getAnnotations();
+	Method method = Demo.class.getMethod("main"，String[].class);
+	method.invoke(null， (Object)new String[]{"111"，"222"，"333"});
 	```
+*注意：传入参数时不能直接传一个数组，jdk为了兼容1.5版本以下的，会将其拆包；因此这里将其强转或者直接将String数组放入Object数组也可以*
 
-- 反射操作
+### 3.5、反射操作泛型
 
-	- ①、使用反射调用类的main方法：
-		
-		```java
-		Method method = Demo.class.getMethod("main"，String[].class);
-		method.invoke(null， (Object)new String[]{"111"，"222"，"333"});
-		```
+- ①、Java 采用泛型擦除的机制来引入泛型。Java中的泛型仅仅是给编译器使用的，确保数据的安全性和免去强制类型转换的麻烦；但是一旦编译完成，所有和泛型有关的类型全部擦除;
+- ②、为了通过反射操作泛型，Java有 `ParameterizedType、GenericArrayType、TypeVariable、WildcardType`几种类型来代表不能被归一到Class类中的类型但是又和原始类型齐名的类型；
 
-	*注意：传入参数时不能直接传一个数组，jdk为了兼容1.5版本以下的，会将其拆包；因此这里将其强转或者直接将String数组放入Object数组也可以*
+	- `Type`是Java编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型
+	- `ParameterizedType` ：参数化类型
+	- `GenericArrayType`：元素类型是参数化类型或者类型变量的数组类型
+	- `TypeVariable`：各种类型变量的公共父接口
+	- `WildcardType`：表示一种通配符类型表达式;
 
-	- ②、数组的反射
-		- 一个问题：
-		```java
-		int[] a1 = new int[]{1，2，3};<br>
-		String[] a2 = new String[]{"a"，"b"，"c"};<br>
-		System.out.println(Arrays.asList(a1)); // 输出： [[I@24c98b07]
-		System.out.println(Arrays.asList(a2)); // 输出：[a， b， c]
-		// 原因：
-		// 在jdk1.4：asList(Object[] a);<br>
-		// 在jdk1.5：asList(T... a);<br>
-		```
-		int数组在编译运行时不会被认为为一个Object数组，因此其将按照一个数组对象来处理；
+### 3.6、反射操作注解
 
-		- 基本类型的一维数组可以被当作Object类型处理，不能被当作`Object[]`类型使用非基本类型的一维数组既可以当作Object类型使用，也可以当作Object[]类型使用；
-		Array 工具类可完成数组的反射操作;
+```java
+getAnnotation(Class<A> annotationClass);
+getAnnotations();
+```
+
+### 3.7、数组的反射
+
+- 一个问题：
+```java
+int[] a1 = new int[]{1，2，3};<br>
+String[] a2 = new String[]{"a"，"b"，"c"};<br>
+System.out.println(Arrays.asList(a1)); // 输出： [[I@24c98b07]
+System.out.println(Arrays.asList(a2)); // 输出：[a， b， c]
+// 原因：
+// 在jdk1.4：asList(Object[] a);<br>
+// 在jdk1.5：asList(T... a);<br>
+```
+int数组在编译运行时不会被认为为一个Object数组，因此其将按照一个数组对象来处理；
+
+- 基本类型的一维数组可以被当作Object类型处理，不能被当作`Object[]`类型使用非基本类型的一维数组既可以当作Object类型使用，也可以当作Object[]类型使用；
+Array 工具类可完成数组的反射操作;
+
+### 3.8、反射注意点
 
 - 反射的应用：实现框架功能，使用类加载器加载文件
 

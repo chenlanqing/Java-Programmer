@@ -280,6 +280,34 @@ yarn application -kill application_id
 
 # 6、Hive
 
+# 7、Hadoop调优
+
+NameNode有一个工作线程池，用来处理不同DataNode的并发心跳以及客户端并发的元数据操作。
+对于大集群或者有大量客户端的集群来说，通常需要增大参数dfs.namenode.handler.count的默认值10。
+```xml
+<property>
+    <name>dfs.namenode.handler.count</name>
+    <value>10</value>
+</property>
+```
+dfs.namenode.handler.count=，比如集群规模（DataNode台数）为8台时，此参数设置为41。可通过简单的python代码计算该值，代码如下
+```
+>>> import math
+>>> print int(20*math.log(8))
+41
+>>> quit()
+```
+
+Yarn调优
+
+（1）情景描述：总共7台机器，每天几亿条数据，数据源->Flume->Kafka->HDFS->Hive
+面临问题：数据统计主要用HiveSQL，没有数据倾斜，小文件已经做了合并处理，开启的JVM重用，而且IO没有阻塞，内存用了不到50%。但是还是跑的非常慢，而且数据量洪峰过来时，整个集群都会宕掉。基于这种情况有没有优化方案。
+（2）解决办法：
+内存利用率不够。这个一般是Yarn的2个配置造成的，单个任务可以申请的最大内存大小，和Hadoop单个节点可用内存大小。调节这两个参数能提高系统内存的利用率。
+（a）yarn.nodemanager.resource.memory-mb
+表示该节点上YARN可使用的物理内存总量，默认是8192（MB），注意，如果你的节点内存资源不够8GB，则需要调减小这个值，而YARN不会智能的探测节点的物理内存总量。
+（b）yarn.scheduler.maximum-allocation-mb
+单个任务可申请的最多物理内存量，默认是8192（MB）
 
 # 参考资料
 

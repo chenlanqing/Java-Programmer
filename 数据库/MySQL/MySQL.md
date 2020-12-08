@@ -4580,6 +4580,10 @@ FROM table_score AS a,
 ORDER BY a.score DESC;
 ```
 
+## 8、分组获取数据
+
+https://www.xaprb.com/blog/2006/12/07/how-to-select-the-firstleastmax-row-per-group-in-sql/
+
 # 二十、MySQL索引规约
 
 https://mp.weixin.qq.com/s/nRl4g4DQSCVhgTmqR6rYiA
