@@ -550,3 +550,16 @@ zookeeper.connect=localhost:2181/kafka
 ```
 bin/kafka-server-start.sh config/server.properties
 ```
+
+## 2、安装kafka-manager
+
+- 下载 kafka-manager-2.0.0.2.zip 包，解压：`unzip kafka-manager-2.0.0.2.zip -d /usr/local/`
+
+- 修改配置内容：`vim /usr/local/kafka-manager-2.0.0.2/conf/application.conf`
+    ```
+     kafka-manager.zkhosts="localhost:2181"
+    ```
+
+- 启动kafka-manager: `/usr/local/kafka-manager-2.0.0.2/bin/kafka-manager &`
+
+- 其默认访问端口是: 9200
