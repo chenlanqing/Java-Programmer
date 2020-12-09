@@ -425,8 +425,63 @@ https://juejin.im/post/6844903826332319757
 
 # 六、ElasticSearch
 
-# 七、zookeeper 集群安装
+# 七、Zookeeper安装
 
+## 1、zookeeper单机安装
+
+第一步：从官网获取到安装包，将其解压：
+```bash
+[root@node1 opt]# tar zxvf zookeeper-3.4.12.tar.gz 
+# 解压之后当前/opt目录下生成一个名为zookeeper-3.4.12的文件夹
+[root@node1 opt]# cd zookeeper-3.4.12
+[root@node1 zookeeper-3.4.12]# pwd
+/opt/zookeeper-3.4.12
+```
+
+第二步，向/etc/profile 配置文件中添加如下内容，并执行 source /etc/profile 命令使配置生效：
+```bash
+export ZOOKEEPER_HOME=/opt/zookeeper-3.4.12
+export PATH=$PATH:$ZOOKEEPER_HOME/bin
+```
+
+第三步，修改 ZooKeeper 的配置文件。首先进入$ZOOKEEPER_HOME/conf目录，并将zoo_sample.cfg 文件修改为 zoo.cfg：
+```bash
+[root@node1 zookeeper-3.4.12]# cd conf
+[root@node1 conf]# cp zoo_sample.cfg zoo.cfg
+```
+
+然后修改 zoo.cfg 配置文件，zoo.cfg 文件的内容参考如下：
+```bash
+# ZooKeeper服务器心跳时间，单位为ms
+tickTime=2000
+# 允许follower连接并同步到leader的初始化连接时间，以tickTime的倍数来表示
+initLimit=10
+# leader与follower心跳检测最大容忍时间，响应超过syncLimit*tickTime，leader认为
+# follower“死掉”，从服务器列表中删除follower
+syncLimit=5
+# 数据目录,需要创建目录
+dataDir=/tmp/zookeeper/data
+# 日志目录，需要创建目录
+dataLogDir=/tmp/zookeeper/log
+# ZooKeeper对外服务端口
+clientPort=2181
+```
+
+第四步，在${dataDir}目录（也就是/tmp/zookeeper/data）下创建一个 myid 文件，并写入一个数值，比如0。myid 文件里存放的是服务器的编号
+
+第五步，启动 Zookeeper 服务，详情如下：
+```bash
+[root@node1 conf]# zkServer.sh start
+JMX enabled by default
+Using config: /opt/zookeeper-3.4.6/bin/../conf/zoo.cfg
+Starting zookeeper ... STARTED
+[root@node1 ]# zkServer.sh status
+JMX enabled by default
+Using config: /opt/zookeeper-3.4.12/bin/../conf/zoo.cfg
+Mode: Standalone
+```
+
+## 2、zookeeper集群安装
 
 开机启动：
 ```bash
@@ -460,3 +515,38 @@ chkconfig -add zookeeper
 
 chkconfig --list zookeeper
 
+# 八、Kafka
+
+依赖：
+- JDK安装
+- Zookeeper安装
+
+## 1、Kafka单机安装
+
+下载安装包，并解压：
+```bash
+[root@node1 opt]# ll kafka_2.11-2.0.0.tgz 
+-rw-r--r-- 1 root root 55751827 Jul 31 10:45 kafka_2.11-2.0.0.tgz
+[root@node1 opt]# tar zxvf kafka_2.11-2.0.0.tgz
+# 解压之后当前/opt目录下生成一个名为kafka_2.11-2.0.0的文件夹
+[root@node1 opt]# cd kafka_2.11-2.0.0
+[root@node1 kafka_2.11-2.0.0]#
+# Kafka的根目录$KAFKA_HOME即为/opt/kafka_2.11-2.0.0，可以将Kafka_HOME添加到/etc/profile文件中
+```
+
+需要修改 broker 的配置文件 $KAFKA_HOME/conf/server.properties。主要关注以下几个配置参数即可：
+```bash
+# broker的编号，如果集群中有多个broker，则每个broker的编号需要设置的不同
+broker.id=0
+# broker对外提供的服务入口地址
+listeners=PLAINTEXT://localhost:9092
+# 存放消息日志文件的地址
+log.dirs=/tmp/kafka-logs
+# Kafka所需的ZooKeeper集群地址，为了方便演示，我们假设Kafka和ZooKeeper都安装在本机
+zookeeper.connect=localhost:2181/kafka
+```
+
+单机模式下，修改完上述配置参数之后就可以启动服务
+```
+bin/kafka-server-start.sh config/server.properties
+```
