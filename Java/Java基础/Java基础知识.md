@@ -4002,27 +4002,6 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 
 虚处理器 AbstractProcessor
 
-### 1.6、注解实现原理
-
-注解本质是一个继承了`java.lang.annotation.Annotation`的特殊接口，其具体实现类是Java运行时生成的动态代理类。而我们通过反射获取注解时，返回的是Java 运行时生成的动态代理对象$Proxy1。通过代理对象调用自定义注解（接口）的方法，会最终调用`AnnotationInvocationHandler`的invoke方法。该方法会从memberValues这个Map中索引出对应的值
-
-**定义一个注解：**
-```java
-@Target(ElementType.TYPE)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface TestAnnotation {
-}
-```
-**反编译查看字节码：javap -verbose TestAnnotation**
-```java
-Classfile se/basis/annotation/TestAnnotation.class
-  Last modified 2019-7-5; size 413 bytes
-  MD5 checksum 11f8b11847f9f3a3813b91a80c97607d
-  Compiled from "TestAnnotation.java"
-public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.lang.annotation.Annotation
-
-```
-
 ## 2、Java 动态加载与静态加载
 
 - 编译时加载类是静态加载类：new 创建对象是静态加载类，在编译时刻时需要加载所有的可能使用到的类;
@@ -4200,6 +4179,64 @@ Array 工具类可完成数组的反射操作;
 
 - 反射与工厂模式
 
+### 3.9、注解实现原理
+
+如何获取到注解里的数据呢？通过反射
+
+通过观察 Class、Contructor、Method、Field 几个跟反射先关的类，发现最终会实现一个接口: `AnnotatedElement`
+```java
+public final class Class<T> implements java.io.Serializable, GenericDeclaration, Type, AnnotatedElement {}
+public final class Constructor<T> extends Executable {}
+public final class Method extends Executable {}
+public final class Field extends AccessibleObject implements Member {}
+// Executable 继承自AccessibleObject, AccessibleObject 则是实现了
+public abstract class Executable extends AccessibleObject implements Member, GenericDeclaration {}
+public class AccessibleObject implements AnnotatedElement {}
+
+public interface AnnotatedElement {
+	// 判断是否包含某个注解
+    default boolean isAnnotationPresent(Class<? extends Annotation> annotationClass) {
+        return getAnnotation(annotationClass) != null;
+    }
+	// 获取具体的注解
+    <T extends Annotation> T getAnnotation(Class<T> annotationClass);
+	// 获取所有注解
+    Annotation[] getAnnotations();
+	 // 根据类型获得注解
+    default <T extends Annotation> T[] getAnnotationsByType(Class<T> annotationClass) {
+    }
+	// 获取声明的注解
+    default <T extends Annotation> T getDeclaredAnnotation(Class<T> annotationClass) {
+    }
+	// 通过类型获取声明的注解
+    default <T extends Annotation> T[] getDeclaredAnnotationsByType(Class<T> annotationClass) {
+    }
+	// 获取声明注解列表
+    Annotation[] getDeclaredAnnotations();
+}
+```
+
+注解本质是一个继承了`java.lang.annotation.Annotation`的特殊接口，其具体实现类是Java运行时生成的动态代理类。而我们通过反射获取注解时，返回的是Java 运行时生成的动态代理对象`$Proxy1`。通过代理对象调用自定义注解（接口）的方法，会最终调用`AnnotationInvocationHandler`的invoke方法。该方法会从memberValues这个Map中索引出对应的值；
+
+可以通过指定属性保存代理类：`-Djdk.proxy.ProxyGenerator.saveGeneratedFiles=true -XX:+TraceClassLoading`
+
+**定义一个注解：**
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+public @interface TestAnnotation {
+}
+```
+**反编译查看字节码：javap -verbose TestAnnotation**
+```java
+Classfile se/basis/annotation/TestAnnotation.class
+  Last modified 2019-7-5; size 413 bytes
+  MD5 checksum 11f8b11847f9f3a3813b91a80c97607d
+  Compiled from "TestAnnotation.java"
+public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.lang.annotation.Annotation
+
+```
+
 ## 4、动态编译：Java6.0引入动态编译
 
 ### 4.1.动态编译的两种方法
@@ -4207,7 +4244,7 @@ Array 工具类可完成数组的反射操作;
 - 通过Runtime调用javac，启动新的进程去操作;
 - 通过Javacompiler动态编译;
 
-### 4.2.Javacompiler 动态编译
+### 4.2、Javacompiler 动态编译
 
 ```java
 JavaCompiler compile = ToolProvider.getSystemJavaCompiler();
@@ -4240,7 +4277,6 @@ int result = compile.run(null， null， null， "F:/class/HelloWorld.java");
 优势：比反射开销小，性能高；
 
 ### 6.2、常见的字节码操作类库
-
 
 
 ### 6.3、Javasist
