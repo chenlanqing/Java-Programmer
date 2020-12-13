@@ -99,6 +99,8 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 ## 3、IOC源码体系
 
+- Bean：本质是Java对象，该对象由容器来生成
+
 - Resource 体系：`org.springframework.core.io.Resource`，对资源的抽象。它的每一个实现类都代表了一种资源的访问策略，如 ClassPathResource、RLResource、FileSystemResource 等；
 
 - ResourceLoader 体系：有了资源，就应该有资源加载，Spring 利用 `org.springframework.core.io.ResourceLoader` 来进行统一资源加载
@@ -107,9 +109,9 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
     - BeanFactory 有三个直接子类 ListableBeanFactory、HierarchicalBeanFactory 和 AutowireCapableBeanFactory 。
     - DefaultListableBeanFactory 为最终默认实现，它实现了所有接口
 
-- BeanDefinition 体系：`org.springframework.beans.factory.config.BeanDefinition`，用来描述 Spring 中的 Bean 对象；比如这个 Bean 指向的是哪个类、是否是单例的、是否懒加载、这个 Bean 依赖了哪些 Bean 等等
+- BeanDefinition 体系：`org.springframework.beans.factory.config.BeanDefinition`，用来描述 Spring 中的 Bean 对象；比如这个 Bean 指向的是哪个类、是否是单例的（scope）、是否懒加载（lazy-init或@Lazy）、这个 Bean 依赖了哪些 Bean、首选 primary（@Primary）是true的表示bean该bean回事优先的实现类、factory-bean和factory-method
 
-- BeanDefinitionReader 体系：`org.springframework.beans.factory.support.BeanDefinitionReader` 的作用是读取 Spring 的配置文件的内容，并将其转换成 Ioc 容器内部的数据结构 ：BeanDefinition；
+- BeanDefinitionReader 体系：`org.springframework.beans.factory.support.BeanDefinitionReader` 的作用是读取 Spring 的配置文件的内容，并将其转换成 Ioc 容器内部的数据结构 ：BeanDefinition；并借助 BeanDefinitionRegistry注册到容器中
 
 - ApplicationContext 体系：org.springframework.context.ApplicationContext ，Spring 容器，它叫做应用上下文。它继承 BeanFactory ，所以它是 BeanFactory 的扩展升级版，由于 ApplicationContext 的结构就决定了它与 BeanFactory 的不同，其主要区别有：
     - 继承 `org.springframework.context.MessageSource` 接口，提供国际化的标准访问策略。
@@ -716,7 +718,7 @@ private static final class ListenerCacheKey implements Comparable<ListenerCacheK
 
 * [Spring AOP原理](https://mp.weixin.qq.com/s/f-Nnov2knru68KT6gWtvBQ)
 * [源码解读Spring IOC原理](https://www.cnblogs.com/ITtangtang/p/3978349.html)
-* [tiny-spring](https://github.com/code4craft/tiny-spring)
+* [tiny](https://github.com/code4craft/tiny-spring)
 * [源代码](https://github.com/spring-projects/spring-framework)
 * [IoC容器及Bean的生命周期](https://www.cnblogs.com/IvySue/p/6484599.html)
 * [IOC容器源码分析](https://javadoop.com/post/spring-ioc)
@@ -725,3 +727,4 @@ private static final class ListenerCacheKey implements Comparable<ListenerCacheK
 * [Spring中Bean的this调用导致AOP失效的原因](https://my.oschina.net/guangshan/blog/1807721)
 * [死磕Spring源码系列](http://cmsblogs.com/?p=4047)
 * [Spring的Bean生命周期](https://mp.weixin.qq.com/s/UBVgYuFA5PUP52MxTTXk2w)
+* [Spring源码解析系列汇总](http://www.spring4all.com/article/16302)

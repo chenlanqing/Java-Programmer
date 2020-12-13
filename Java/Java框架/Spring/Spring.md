@@ -103,9 +103,10 @@ Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容�
 - BeanFactory是Spring框架的基础设施，面向Spring本身；ApplicationContext，面向使用Spring框架的开发者，几乎所有的应用场合都直接使用 ApplicationContext，而非底层的 BeanFactory；但是无论使用何种方式，配置文件是相同的。常用的BeanFactory容器是`XmlBeanFactory`，它可以根据 XML 文件中定义的内容，创建相应的 Bean；BeanFactory是IOC容器的核心接口，它的职责包括：实例化、定位、配置应用程序中的对象及建立这些对象间的依赖
 
 - ApplicationContext 的主要实现类：【 ApplicationContext 在初始化上下文时就实例化所有单例的 Bean】
-	- ①、ClassPathXmlApplicationContext：从类路径下加载配置文件；
-	- ②、FileSystemXmlApplicationContext：从文件系统中加载配置文件；
-	- ③、WebApplicationContext：是专门为 WEB 应用而准备的，它允许从相对于 WEB 根目录的路径中完成初始化工作；
+	- ClassPathXmlApplicationContext：从类路径下加载配置文件；
+	- FileSystemXmlApplicationContext：从文件系统中加载配置文件；
+	- WebApplicationContext：是专门为 WEB 应用而准备的，它允许从相对于 WEB 根目录的路径中完成初始化工作；
+	- AnnotationConfigApplicationContext: 基于注解
 
 - Spring容器对Bean的管理：
 	- 控制Bean对象创建模式：在bean元素中，利用scope属性可以指定Bean组件创建对象的方式：
@@ -4919,8 +4920,7 @@ BookService{
     // 按照上述注入的话，会直接使用@Component上，而不是configuration配置的bean
     ```
 
-
-- `@Qualifier("bookDao")`：使用@Qualifier指定需要装配的组件的id，而不是使用属性名；
+- `@Qualifier("bookDao")`：使用`@Qualifier`指定需要装配的组件的id，而不是使用属性名；
 
 - 自动装配默认一定要将属性赋值好，没有就会报错，可以使用`@Autowired(required=false)`；
 
