@@ -459,10 +459,10 @@ context.initializer.classes=com.blue.fish.source.initializer.ThirdInitializer
 ## 4.1、监听器设计模式
 
 **监听器模式四要素：**
-- 事件
-- 监听器
-- 广播器
-- 触发机制
+- 事件： ApplicationEvent 抽象类
+- 监听器： ApplicationListener 接口
+- 广播器： ApplicationEventPublisher 以及 ApplicationEventMulticaster， 默认实现 SimpleApplicationEventMulticaster
+- 触发机制： 
 
 **监听器原理**
 

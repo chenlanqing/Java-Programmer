@@ -171,7 +171,8 @@ Elasticsearch 使用的是一种名为倒排索引的数据结构，这一结构
     使用root用户启动报错如下：
     ```
     [2020-01-04T10:37:56,991][WARN ][o.e.b.ElasticsearchUncaughtExceptionHandler] [es-node0] uncaught exception in thread [main]
-    org.elasticsearch.bootstrap.StartupException: java.lang.RuntimeException: can not run elasticsearch as root
+    org.elasticsearch.bootstrap.Startu
+    pException: java.lang.RuntimeException: can not run elasticsearch as root
             at org.elasticsearch.bootstrap.Elasticsearch.init(Elasticsearch.java:163) ~[elasticsearch-7.4.2.jar:7.4.2]
             at org.elasticsearch.bootstrap.Elasticsearch.execute(Elasticsearch.java:150) ~[elasticsearch-7.4.2.jar:7.4.2]
             at org.elasticsearch.cli.EnvironmentAwareCommand.execute(EnvironmentAwareCommand.java:86) ~[elasticsearch-7.4.2.jar:7.4.2]
@@ -1432,6 +1433,7 @@ https://zhuanlan.zhihu.com/p/102500311
 
 # 参考资料
 
+* [Elasticsearch下载](https://www.elastic.co/cn/downloads/past-releases#elasticsearch)
 * [ElasticSearch基本操作](http://www.ruanyifeng.com/blog/2017/08/elasticsearch.html)
 * [What is Elasticsearch](https://www.elastic.co/cn/what-is/elasticsearch)
 * [Springboot+Elasticsearch](https://docs.spring.io/spring-data/elasticsearch/docs/)

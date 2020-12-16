@@ -1195,7 +1195,15 @@ JFR 提供了深入到 JVM 内部去看运行时状态的能力，是一个非�
 
 # 十七、Arthas
 
-[Arthas官方文档](https://alibaba.github.io/arthas/)
+- [Arthas官方文档](https://alibaba.github.io/arthas/)
+- [Arthas原理](https://juejin.cn/post/6904280021632974856)
+
+## 1、Arthas介绍
+
+## 2、Arthas使用
+
+## 3、Arthas原理
+
 
 # 十八、其他工具
 

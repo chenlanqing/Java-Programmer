@@ -445,6 +445,8 @@ public class Test{
 
 # 三、进制基础
 
+- [位运算高级应用](https://graphics.stanford.edu/~seander/bithacks.html)
+
 ## 1、进制基础
 
 ## 2、二进制运算
