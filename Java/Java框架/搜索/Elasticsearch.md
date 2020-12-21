@@ -89,7 +89,7 @@ lucene 的索引结构中，即保存了正向信息，也保存了反向信息
 
 ## 5、倒排索引原理
 
-它相反于一篇文章包含了哪些词，它从词出发，记载了这个词在哪些文档中出现过，由两部分组成——词典和倒排表。
+它相反于一篇文章包含了哪些词，它从词出发，记载了这个词在哪些文档中出现过，由两部分组成：`词典和倒排表`。
 
 词典结构尤为重要，有很多种词典结构，各有各的优缺点，常用的有：B+树、跳跃表、FST
 - B+树：外存索引、可更新；空间大、速度不够快
@@ -205,7 +205,9 @@ Elasticsearch 使用的是一种名为倒排索引的数据结构，这一结构
 
 - 执行命令：`./bin/elasticsearch`，可以看到启动日志，通过访问：127.0.0.1:9200可以看到响应的数据；如果需要后台启动执行命令：`./bin/elasticsearch -d`
 
-### 2.2、安装head插件
+### 2.2、控制台
+
+#### 2.2.1、head插件
 
 从 [github](https://github.com/mobz/elasticsearch-head)下载，使用node安装以及运行，npm run start 运行；
 
@@ -215,6 +217,10 @@ Elasticsearch 使用的是一种名为倒排索引的数据结构，这一结构
 http.cors.enabled: true
 http.cors.allow-origin: "*"
 ```
+
+#### 2.2.2、cerebro
+
+从[Cerebro](https://github.com/lmenezes/cerebro 下载zip包，解压缩安装即可
 
 ### 2.3、通过docker安装
 
@@ -254,7 +260,7 @@ docker-compose -f docker-compose.yml up -d elasticsearch-head
 
 - 索引（index）：含有相同属性的文档集合；相当于sql的database；
 - 类型（type）：索引可以定义为一个或多个类型，文档必须属于一个类型；相当于database里的table；
-- 文档（document）：是可以被索引的基本数据单位；相当于table的一行记录；
+- 文档（document）：是可以被索引的基本数据单位；相当于table的一行记录；文档是所有可搜索数据的最小单位，会被序列化为json格式；每个文档都有一个UniqueID，可以直接指定，也可以自动生成；
 - Mapping：type中定义的结构
 - 字段（fields）：对应表的每一列；
 - 分片：每个索引都有多个分片，每个分片是一个Lucene索引；
@@ -264,13 +270,11 @@ docker-compose -f docker-compose.yml up -d elasticsearch-head
 
 ### 4.1、基本操作
 
-- 查看集群健康：`GET     /_cluster/health`；
+- 查看集群健康：`GET  /_cluster/health`；
 
 - 创建索引：
     ```json
-    PUT     /index_test    其中 index_test索引名称
-    
-    body消息体：
+    PUT  /index_test    // 其中 index_test索引名称
     {
         "settings": {
             "index": {
@@ -281,149 +285,122 @@ docker-compose -f docker-compose.yml up -d elasticsearch-head
     }
     ```
 
-- 查看索引：`GET     _cat/indices?v`
+- 查看索引：`GET _cat/indices?v`
 
-- 删除索引：`DELETE   /index_test`，其中 index_test 为索引名称
+- 删除索引：`DELETE  /index_test`，其中 index_test 为索引名称
 
-### 4.2、创建自定义mappings
-
-index：默认true，设置为false的话，那么这个字段就不会被索引
-
-- 创建索引的同时创建mappings：
-    ```json
-    PUT     /index_str
-    {
-        "mappings": {
-            "properties": {
-                "realname": {
-                    "type": "text",
-                    "index": true
-                },
-                "username": {
-                    "type": "keyword",
-                    "index": false
-                }
-            }
-        }
-    }   
+- Index的API操作
     ```
-- 查看分词效果：
-    ```json
-    GET         /index_mapping/_analyze
+    #查看索引相关信息
+    GET kibana_sample_data_ecommerce
 
-    body消息体
+    #查看索引的文档总数
+    GET kibana_sample_data_ecommerce/_count
+
+    #查看前10条文档，了解文档格式
+    POST kibana_sample_data_ecommerce/_search
     {
-        "field": "realname",
-        "text": "test is good"
     }
-    ```
-- 修改mappings，某个属性一旦被建立，就不能修改了，但是可以新增额外属性
-    ```json
-    POST        /index_str/_mapping
-    {
-        "properties": {
-            "name": {
-                "type": "long"
-            }
-        }
-    }
-    ```
-    如果修改一个已经存在的，会报错：
-    ```json
-    {
-        "error": {
-            "root_cause": [
-                {
-                    "type": "illegal_argument_exception",
-                    "reason": "mapper [realname] of different type, current_type [text], merged_type [long]"
-                }
-            ],
-            "type": "illegal_argument_exception",
-            "reason": "mapper [realname] of different type, current_type [text], merged_type [long]"
-        },
-        "status": 400
-    }
-    ```
-- 为已存在的索引创建或创建mappings
-    ```json
-    POST        /index_str/_mapping
-    {
-        "properties": {
-            "id": {
-                "type": "long"
-            },
-            "age": {
-                "type": "integer"
-            },
-            "nickname": {
-                "type": "keyword"
-            },
-            "money1": {
-                "type": "float"
-            },
-            "money2": {
-                "type": "double"
-            },
-            "sex": {
-                "type": "byte"
-            },
-            "score": {
-                "type": "short"
-            },
-            "is_teenager": {
-                "type": "boolean"
-            },
-            "birthday": {
-                "type": "date"
-            },
-            "relationship": {
-                "type": "object"
-            }
-        }
-    }
+
+    #_cat indices API
+    #查看indices
+    GET /_cat/indices/kibana*?v&s=index
+
+    #查看状态为绿的索引
+    GET /_cat/indices?v&health=green
+
+    #按照文档个数排序
+    GET /_cat/indices?v&s=docs.count:desc
+
+    #查看具体的字段
+    GET /_cat/indices/kibana*?pri&v&h=health,index,pri,rep,docs.count,mt
+
+    #How much memory is used per index?
+    GET /_cat/indices?v&h=i,tm&s=tm:desc
+
+    get _cat/nodes?v
+    GET /_nodes/es7_01,es7_02
+    GET /_cat/nodes?v
+    GET /_cat/nodes?v&h=id,ip,port,v,m
+
+    GET _cluster/health
+    GET _cluster/health?level=shards
+    GET /_cluster/health/kibana_sample_data_ecommerce,kibana_sample_data_flights
+    GET /_cluster/health/kibana_sample_data_flights?level=shards
+
+    #### cluster state
+    The cluster state API allows access to metadata representing the state of the whole cluster. This includes information such as
+    GET /_cluster/state
+
+    #cluster get settings
+    GET /_cluster/settings
+    GET /_cluster/settings?include_defaults=true
+
+    GET _cat/shards
+    GET _cat/shards?h=index,shard,prirep,state,unassigned.reason
     ```
 
-- 主要数据类型:
-    - text, keyword, string
-    - long, integer, short, byte
-    - double, float
-    - boolean
-    - date
-    - object
-    - 数组不能混，类型一致
-
-- 字符串
-    - text：文字类需要被分词被倒排索引的内容，比如商品名称，商品详情，商品介绍，使用text；
-    - keyword：不会被分词，不会被倒排索引，直接匹配搜索，比如订单状态，用户qq，微信号，手机号等，这些精确匹配，无需分词
-
-### 4.3、文档操作
+### 4.2、文档操作
 
 - 添加文档：`POST /my_doc/_doc/1` -> `{索引名}/_doc/{索引ID}`（是指索引在es中的id，而不是这条记录的id，比如记录的id从数据库来是1001，并不是这个。如果不写，则自动生成一个字符串。建议和数据id保持一致 ），可以是如下body
     ```json
+    POST users/_doc
     {
-        "id": 1001,
-        "name": "test-1",
-        "desc": "test is very good, 测试网非常牛！",
-        "create_date": "2019-12-24"
+        "user" : "Mike",
+        "post_date" : "2019-04-15T14:12:12",
+        "message" : "trying out Kibana"
     }
     ```
     如果索引没有手动建立mappings，那么当插入文档数据的时候，会根据文档类型自动设置属性类型。这个就是es的动态映射，帮我们在index索引库中去建立数据结构的相关配置信息
     - 该索引的mapping属性：`"fields":{"keyword":{"type":"keyword","ignore_above":256}}`：对一个字段设置多种索引模式，使用text类型做全文检索，也可使用keyword类型做聚合和排序
     - `"ignore_above":256`：设置字段索引和存储的长度最大值，超过则被忽略；
+    ```json
+    // create document. 自动生成 _id
+    POST users/_doc
+    {
+        "user" : "Mike",
+        "post_date" : "2019-04-15T14:12:12",
+        "message" : "trying out Kibana"
+    }
+    // create document. 指定Id。如果id已经存在，报错
+    PUT users/_doc/1?op_type=create
+    {
+        "user" : "Jack",
+        "post_date" : "2019-05-15T14:12:12",
+        "message" : "trying out Elasticsearch"
+    }
+    // create document. 指定 ID 如果已经存在，就报错: version_conflict_engine_exception
+    PUT users/_create/1
+    {
+        "user" : "Jack",
+        "post_date" : "2019-05-15T14:12:12",
+        "message" : "trying out Elasticsearch"
+    }
+    ```
 
 - 删除文档：`DELETE /my_doc/_doc/1` -> `{索引名}/_doc/{索引ID}`；文档删除不是立即删除，文档还是保存在磁盘上，索引增长越来越多，才会把那些曾经标识过删除的，进行清理，从磁盘上移出去
 
 - 修改文档：
-    - 局部替换：`POST /my_doc/_doc/1/_update`，后面需要跟上`_update`
+    - Update 指定 ID  (先删除，在写入)
         ```json
+        PUT users/_doc/1
         {
-            "doc": {
-                "name": "测试"
+            "user" : "Mike"
+        }
+        ```
+    - 在原文档上增加字段:
+        ```json
+        POST users/_update/1/
+        {
+            "doc":{
+                "post_date" : "2019-05-15T14:12:12",
+                "message" : "trying out Elasticsearch"
             }
         }
         ```
     - 全量替换：`PUT /my_doc/_doc/1`
         ```json
+        PUT /my_doc/_doc/1
         {
             "id": 1001,
             "name": "test-1",
@@ -435,22 +412,21 @@ index：默认true，设置为false的话，那么这个字段就不会被索引
     **每次修改、删除后，version会更改**
 
 - 查询：
-    - `GET /index_demo/_doc/1`：返回指定id的数据
-    - `GET /index_demo/_doc/_search`：该文档下的所有数据
+    - `GET users/_doc/1`：返回指定id的数据
+    - `GET users/_doc/_search`：该文档下的所有数据
     ```json
     {
-        "_index": "my_doc",
-        "_type": "_doc",
-        "_id": "EY76bm8BttnCZlT0Kbp1",
-        "_version": 3,
-        "_seq_no": 11,
-        "_primary_term": 1,
-        "found": true,
-        "_source": {
-            "id": 1001,
-            "name": "test-1",
-            "desc": "test is very good, 测试网非常牛！",
-            "create_date": "2019-12-24"
+        "_index" : "users",
+        "_type" : "_doc",
+        "_id" : "1",
+        "_version" : 1,
+        "_seq_no" : 1,
+        "_primary_term" : 1,
+        "found" : true,
+        "_source" : {
+            "user" : "Jack",
+            "post_date" : "2019-05-15T14:12:12",
+            "message" : "trying out Elasticsearch"
         }
     }
     ```
@@ -468,7 +444,32 @@ index：默认true，设置为false的话，那么这个字段就不会被索引
 
 - 判断文档是否存在：`HEAD /index_demo/_doc/1`，判断http返回码，如果存在则是200，不存在则是404；
 
-### 4.4、并发控制
+- Bulk 操作:
+    ```json
+    // 执行第1次
+    POST _bulk
+    { "index" : { "_index" : "test", "_id" : "1" } }
+    { "field1" : "value1" }
+    { "delete" : { "_index" : "test", "_id" : "2" } }
+    { "create" : { "_index" : "test2", "_id" : "3" } }
+    { "field1" : "value3" }
+    { "update" : {"_id" : "1", "_index" : "test"} }
+    { "doc" : {"field2" : "value2"} }
+    ```
+
+
+    #执行第2次
+    POST _bulk
+    { "index" : { "_index" : "test", "_id" : "1" } }
+    { "field1" : "value1" }
+    { "delete" : { "_index" : "test", "_id" : "2" } }
+    { "create" : { "_index" : "test2", "_id" : "3" } }
+    { "field1" : "value3" }
+    { "update" : {"_id" : "1", "_index" : "test"} }
+    { "doc" : {"field2" : "value2"} }
+    ```
+
+### 4.3、并发控制
 
 - 插入新数据：
     ```json
@@ -511,7 +512,7 @@ index：默认true，设置为false的话，那么这个字段就不会被索引
     }
     ```
 
-### 4.5、内置分词
+### 4.4、内置分词
 
 - 分词：把文本转换为一个个的单词，分词称之为analysis。es默认只对英文语句做分词，中文不支持，每个中文字都会被拆分为独立的个体
     ```json
@@ -558,7 +559,10 @@ index：默认true，设置为false的话，那么这个字段就不会被索引
     - standard：默认分词，单词会被拆分，大小会转换为小写。
     - simple：按照非字母分词。大写转为小写。
     - whitespace：按照空格分词。忽略大小写。
-    - stop：去除无意义单词，比如the/a/an/is…
+    - Simple Analyzer – 按照非字母切分（符号被过滤），小写处理
+    - Patter Analyzer – 正则表达式，默认 \W+ (非字符分隔)
+    - Language – 提供了30多种常见语言的分词器
+    - stop：去除无意义单词，比如`the/a/an/is…`
     - keyword：不做分词。把整个文本作为一个单独的关键词：
         ```json
         {
@@ -580,12 +584,12 @@ index：默认true，设置为false的话，那么这个字段就不会被索引
         }
         ```
 
-### 4.6、中文分词器
+### 4.5、中文分词器
 
 IK中文分词器：[elasticsearch-analysis-ik](https://github.com/medcl/elasticsearch-analysis-ik)
 
 - 安装：在elasticsearch的目录下的`plugin`新建目录`ik`，将下载对应的zip包解压到该目录下，重启elasticsearch即可；
-    
+  
     或者：`./bin/elasticsearch-plugin install https://github.com/medcl/elasticsearch-analysis-ik/releases/download/v6.8.5/elasticsearch-analysis-ik-6.8.5.zip`
 
 - 支持分词器类型：
@@ -629,18 +633,138 @@ IK中文分词器：[elasticsearch-analysis-ik](https://github.com/medcl/elastic
 
 ### 5.1、请求参数的查询
 
-查询[字段]包含[内容]的文档
+**URI Query**：在URL中使用参数
 ```
-GET     /shop/_doc/_search?q=desc:慕课网
-GET     /shop/_doc/_search?q=nickname:慕&q=age:25
+GET kibana_sample_data_ecommerce/_search?q=customer_first_name:Eddie
+GET kibana*/_search?q=customer_first_name:Eddie
+GET /_all/_search?q=customer_first_name:Eddie
 ```
-text与keyword搜索对比测试(keyword不会被倒排索引，不会被分词)，下列查询中，username 没有索引，其 type 为 keyword
+**REQUEST Body**：使用elasticsearch基于json的更加完备的DSL查询
+```json
+POST kibana_sample_data_ecommerce/_search
+{
+	"profile": true,
+	"query": {
+		"match_all": {}
+	}
+}
 ```
-GET     /shop/_doc/_search?q=nickname:super
-GET     /shop/_doc/_search?q=username:super
-GET     /shop/_doc/_search?q=username:super hero
+
+**URI Search：**
 ```
-这种方式称之为QueryString查询方式，参数都是放在url中作为请求参数的
+GET /movies/_search?q=2012&df=title&sort=year:desc&from=0&size=10&timeout=1s
+{ 
+    "profile": true
+}
+```
+- `q`：指定查询语句，使用 Query String Syntax
+- `df`：默认字段，不指定时；
+- `sort：排序/ from 和 size 用于分页`
+- `profile`：可以查看查询时如何执行的
+
+**Query String Syntax**
+- 指定查询 vs 泛查询：`q=title:2012 /  q=2012`
+- Term 与 Phrase
+    - `Beautiful Mind` 等效于 `Beautiful OR Mind`
+    - `"Beautiful Mind"` 等效于 `Beautiful AND Mind`，Phrase查询还邀请前后顺序保持一致
+- 分组与引号
+    - `title:(Beautiful AND Mind)`
+    - `title="Beautiful Mind"`
+- 布尔操作
+    - `AND OR NOT 或者 && || !`：必须大写，`title:(+Martix -reloaded)`，可以通过 + 或者 - 替代
+- 分组：
+    - `+` 表示 must
+    - `-` 表示 must_not
+    - `title:(+Martix -reloaded)`
+- 范围查询
+    - 区间表示: `[]`表示闭区间，`{}`表示开区间
+        - `year:{2019 TO 2018}`
+        - `year:[* TO 2018]` 
+- 算数符号
+    - `year:>2010`
+    - `year:(>2010 && <= 2018)`
+    - `year:(+>2010 +<=2018)`
+- 通配符：通配符查询效率低，占用内存大，不建议使用，特别是放在最前面
+    - `?` 代表1个字符，`*` 代表 0 或多个字符
+- 正则表达式：`title:[bt]oy`
+- 模糊匹配与近似查询
+    - `title:beautifu~1`
+    - `title:"lord rings"~2`
+
+```json
+#基本查询
+GET /movies/_search?q=2012&df=title&sort=year:desc&from=0&size=10&timeout=1s
+// 带profile
+GET /movies/_search?q=2012&df=title
+{
+	"profile":"true"
+}
+// 泛查询，正对_all,所有字段
+GET /movies/_search?q=2012
+{
+	"profile":"true"
+}
+// 指定字段
+GET /movies/_search?q=title:2012&sort=year:desc&from=0&size=10&timeout=1s
+{
+	"profile":"true"
+}
+// 查找美丽心灵, Mind为泛查询
+GET /movies/_search?q=title:Beautiful Mind
+{
+	"profile":"true"
+}
+// 泛查询
+GET /movies/_search?q=title:2012
+{
+	"profile":"true"
+}
+// 使用引号，Phrase查询
+GET /movies/_search?q=title:"Beautiful Mind"
+{
+	"profile":"true"
+}
+// 分组，Bool查询
+GET /movies/_search?q=title:(Beautiful Mind)
+{
+	"profile":"true"
+}
+// 布尔操作符
+// 查找美丽心灵
+GET /movies/_search?q=title:(Beautiful AND Mind)
+{
+	"profile":"true"
+}
+// 查找美丽心灵
+GET /movies/_search?q=title:(Beautiful NOT Mind)
+{
+	"profile":"true"
+}
+// 查找美丽心灵
+GET /movies/_search?q=title:(Beautiful +Mind)
+{
+	"profile":"true"
+}
+// 范围查询 ,区间写法
+GET /movies/_search?q=title:beautiful AND year:[2002 TO 2018]
+{
+	"profile":"true"
+}
+// 通配符查询
+GET /movies/_search?q=title:b*
+{
+	"profile":"true"
+}
+// 模糊匹配&近似度匹配
+GET /movies/_search?q=title:beautifl~1
+{
+	"profile":"true"
+}
+GET /movies/_search?q=title:"Lord Rings"~2
+{
+	"profile":"true"
+}
+```
 
 ### 5.2、DSL基本语法
 
@@ -672,6 +796,186 @@ POST     /shop/_doc/_search
 ```
 语法格式为一个json object，内容都是key-value键值对，json可以嵌套；key可以是一些es的关键字，也可以是某个field字段；
 
+```json
+# ignore_unavailable=true，可以忽略尝试访问不存在的索引“404_idx”导致的报错
+# 查询movies分页
+POST /movies,404_idx/_search?ignore_unavailable=true
+{
+  "profile": true,
+	"query": {
+		"match_all": {}
+	}
+}
+POST /kibana_sample_data_ecommerce/_search
+{
+  "from":10,
+  "size":20,
+  "query":{
+    "match_all": {}
+  }
+}
+#对日期排序
+POST kibana_sample_data_ecommerce/_search
+{
+  "sort":[{"order_date":"desc"}],
+  "query":{
+    "match_all": {}
+  }
+
+}
+#source filtering
+POST kibana_sample_data_ecommerce/_search
+{
+  "_source":["order_date"],
+  "query":{
+    "match_all": {}
+  }
+}
+// 脚本字段
+GET kibana_sample_data_ecommerce/_search
+{
+  "script_fields": {
+    "new_field": {
+      "script": {
+        "lang": "painless",
+        "source": "doc['order_date'].value+'hello'"
+      }
+    }
+  },
+  "query": {
+    "match_all": {}
+  }
+}
+POST movies/_search
+{
+  "query": {
+    "match": {
+      "title": "last christmas"
+    }
+  }
+}
+POST movies/_search
+{
+  "query": {
+    "match": {
+      "title": {
+        "query": "last christmas",
+        "operator": "and"
+      }
+    }
+  }
+}
+POST movies/_search
+{
+  "query": {
+    "match_phrase": {
+      "title":{
+        "query": "one love"
+
+      }
+    }
+  }
+}
+POST movies/_search
+{
+  "query": {
+    "match_phrase": {
+      "title":{
+        "query": "one love",
+        "slop": 1
+
+      }
+    }
+  }
+}
+```
+
+QueryString与SimpleQueryString
+```json
+PUT /users/_doc/1
+{
+  "name":"Ruan Yiming",
+  "about":"java, golang, node, swift, elasticsearch"
+}
+PUT /users/_doc/2
+{
+  "name":"Li Yiming",
+  "about":"Hadoop"
+}
+POST users/_search
+{
+  "query": {
+    "query_string": {
+      "default_field": "name",
+      "query": "Ruan AND Yiming"
+    }
+  }
+}
+POST users/_search
+{
+  "query": {
+    "query_string": {
+      "fields":["name","about"],
+      "query": "(Ruan AND Yiming) OR (Java AND Elasticsearch)"
+    }
+  }
+}
+// Simple Query 默认的operator是 Or
+POST users/_search
+{
+  "query": {
+    "simple_query_string": {
+      "query": "Ruan AND Yiming",
+      "fields": ["name"]
+    }
+  }
+}
+POST users/_search
+{
+  "query": {
+    "simple_query_string": {
+      "query": "Ruan Yiming",
+      "fields": ["name"],
+      "default_operator": "AND"
+    }
+  }
+}
+GET /movies/_search
+{
+	"profile": true,
+	"query":{
+		"query_string":{
+			"default_field": "title",
+			"query": "Beafiful AND Mind"
+		}
+	}
+}
+// 多fields
+GET /movies/_search
+{
+	"profile": true,
+	"query":{
+		"query_string":{
+			"fields":[
+				"title",
+				"year"
+			],
+			"query": "2012"
+		}
+	}
+}
+GET /movies/_search
+{
+	"profile":true,
+	"query":{
+		"simple_query_string":{
+			"query":"Beautiful +mind",
+			"fields":["title"]
+		}
+	}
+}
+```
+
 ### 5.3、查询所有与分页
 
 **在索引中查询所有的文档：**
@@ -691,7 +995,7 @@ POST     /shop/_doc/_search
 
 **分页：**
 ```json
-POST     /shop/_doc/_search
+POST  /shop/_doc/_search
 {
 	"query": {
 		"match_all": {}
@@ -703,59 +1007,6 @@ POST     /shop/_doc/_search
 	],
 	"from": 5, # 从第几条开始，默认是0开始的，
 	"size": 5 # 每页的数据
-}
-```
-
-### 5.4、term与match
-
-- term：精确搜索
-- match：分词搜索
-- terms：多个词语匹配检索，相当于是tag标签查询，比如给个人打标之类的；至少精确匹配到一个即可；
-```json
-POST     /shop/_doc/_search
-{
-    "query": {
-        "term": {
-            "desc": "慕课网"
-        }
-    }
-}
-对比
-{
-    "query": {
-        "match": {
-            "desc": "慕课网"
-        }
-    }
-}
-
-POST     /shop/_doc/_search
-{
-    "query": {
-        "terms": {
-            "desc": ["慕课网", "学习", "骚年"]
-        }
-    }
-}
-```
-**注：**match会对慕课网先进行分词（其实就是全文检索），在查询，而term则不会，直接把慕课网作为一个整的词汇去搜索
-
-### 5.5、match_phrase：短语匹配
-
-match：分词后只要有匹配就返回；match_phrase：分词结果必须在text字段分词中都包含，而且顺序必须相同，而且必须都是连续的。（搜索比较严格）
-
-其中slop表示允许词语间跳过的数量
-```json
-POST     /shop/_doc/_search
-{
-    "query": {
-        "match_phrase": {
-            "desc": {
-            	"query": "大学 毕业 研究生",
-            	"slop": 2
-            }
-        }
-    }
 }
 ```
 
@@ -859,7 +1110,6 @@ POST     /shop/_doc/_search
 
 ```json
 POST     /shop/_doc/_search
-
 {
     "query": {
         "bool": {
@@ -1025,7 +1275,7 @@ POST     /shop/_doc/_search
 
 ### 5.10、排序
 
-es的排序同sql，可以desc也可以asc。也支持组合排序
+es的排序同sql，可以desc也可以asc。也支持组合排序，最好在数字型与日期型字段上排序
 ```json
 POST     /shop/_doc/_search
 {
@@ -1349,9 +1599,1036 @@ action 必须是以下选项之一：
     {"delete": {"_id": "2005"}}
     ```
 
-## 7、Elasticsearch集群
+## 7、Mapping
 
-### 7.1、集群概念
+### 7.1、介绍
+
+Mapping类似数据库中的 schema 的定义，主要作用：
+- 定义索引中的字段名称
+- 定义字段的数据类型，例如字符串、数字、布尔等；
+- 字段，倒排索引的相关配置
+
+Mappinhg会把json文档映射成 Lucene 所需要的扁平格式；
+
+一个Mapping属于一个索引的 Type
+- 每个文档都属于一个 Type
+- 一个Type有一个Mapping定义；
+- 7.0开始，不需要在Mapping定义中指定 Type信息；
+
+字段的数据类型：
+- 简单类型：
+    - Text Keyword
+        - text：文字类需要被分词被倒排索引的内容，比如商品名称，商品详情，商品介绍，使用text；
+        - keyword：不会被分词，不会被倒排索引，直接匹配搜索，比如订单状态，用户qq，微信号，手机号等，这些精确匹配，无需分词
+    - Date
+    - Integer  Floating
+    - Boolean
+    - IPV4 & IPV6
+- 复杂类型：对象和嵌套对象
+- 特殊类型：geo_point & geo_shape/ percolator
+
+### 7.2、DynamicMapping
+
+在写入文档的时候，如果索引不存在，会自动创建索引；
+
+DynamicMapping机制使得在创建索引的时候无需指定 Mappings，Elasticsearch 会自动根据文档信息推算出字段的类型，但是在有些情况下，推算出字段类型不对，比如地理位置信息等；
+
+查看索引的Mapping信息
+```json
+GET movies/_mapping
+// 结果
+{
+  "movies" : {
+    "mappings" : {
+      "_source" : {
+        "excludes" : [
+          "_id"
+        ]
+      },
+      "properties" : {
+        "@version" : {
+          "type" : "text",
+          "fields" : {
+            "keyword" : {
+              "type" : "keyword",
+              "ignore_above" : 256
+            }
+          }
+        },
+      }
+    }
+  }
+}
+```
+
+### 7.3、类型的自动识别
+
+| JSON类型 | Elasticsearch类型                                            |
+| -------- | ------------------------------------------------------------ |
+| 字符串   | 匹配日期格式，设置成Date；<br/>配置成数字设置为float或long，该选型默认关闭 <br/>设置为text，并且增加 keyword 子字段 |
+| 布尔值   | boolean                                                      |
+| 浮点数   | float                                                        |
+| 整数     | long                                                         |
+| 对象     | Object                                                       |
+| 数组     | 由第一个非空数值的类型所决定                                 |
+| 空值     | 忽略                                                         |
+
+**注意：**
+- 数字或者布尔值如果用引号包裹，默认推导的类型是 TEXT
+- 日期格式如：`2018-07-24T10:29:48.103Z`或者`2020-12-19T00:00:00`会推导成Date类型，但是如`2020-12-19 00:00:00` 会被推导为text
+
+**如何更改Mapping的字段类型**：
+- 新增字段：
+    - dynamic 设为true时，一旦有新增字段的文档写入，Mappin同时也会被更新；
+    - dynamic 设为false时，Mapping不会被更新，新增字段的数据无法被索引，但是信息会出现在 _source 中；
+    - dynamic 设为strict，文档写入失败；
+        ```json
+        {
+            "error": {
+                "root_cause": [
+                {
+                    "type": "strict_dynamic_mapping_exception",
+                    "reason": "mapping set to strict, dynamic introduction of [lastField] within [_doc] is not allowed"
+                }
+                ],
+                "type": "strict_dynamic_mapping_exception",
+                "reason": "mapping set to strict, dynamic introduction of [lastField] within [_doc] is not allowed"
+            },
+            "status": 400
+        }
+        ```
+- 对已有字段，一旦已经有数据写入，就不再支持修改字段定义，Lucene实现的倒排索引，一旦生成后，就不允许修改；
+- 如果希望改变字段类型，必须 reindex API，重建索引，原因是：
+    - 如果修改了字段的数据类型，会导致已被索引的数据无法被搜索；
+    - 但是如果是新增的字段，就不会有这样的影响；
+
+```json
+PUT moives
+{
+    "mapping":{
+        "_doc":{
+            "dynamic":"false"
+        }
+    }
+}
+```
+
+### 7.4、自定义mappings
+
+建议：
+- 参考API手册，纯手写；
+- 为了减少工作量、出错概率：
+    - 创建一个临时的index，写入一些样本数据；
+    - 通过访问 Mapping API 获得该临时文件的动态 Mapping 定义；
+    - 修改后使用该配置创建你的索引；
+    - 删除临时索引数据；
+
+**控制当前字段是否被索引：**
+
+index：控制当前字段是否被索引，默认为true；如果设置成false，表示该字段不可被搜索
+```json
+PUT users
+{
+    "mappings" : {
+        "properties" : {
+            "firstName" : {
+                "type" : "text"
+            },
+            "lastName" : {
+                "type" : "text"
+            },
+            "mobile" : {
+                "type" : "text",
+                "index": false // 如果对该字段索引，会报错：Cannot search on field [mobile] since it is not indexed.
+            }
+        }
+    }
+}
+```
+**index options：**四种不同级别的 index options，可以控制倒排索引记录的内容
+- docs：记录doc id
+- freqs：记录doc id 和 term frequencies
+- positions：记录 doc id 、term frequencies、term position
+- offsets：doc id 、term frequencies、term position、character offsets
+
+Text类型默认记录 positions，其他默认为 docs，记录内容越多，占用存储空间越大；
+
+**null_value**
+- 需要对 Null 值实现搜索；
+- 只有 keyword 类型支持设定 null_value
+```json
+PUT users
+{
+    "mappings" : {
+      "properties" : {
+        "firstName" : {
+          "type" : "text"
+        },
+        "lastName" : {
+          "type" : "text"
+        },
+        "mobile" : {
+          "type" : "keyword",
+          "null_value": "NULL"
+        }
+
+      }
+    }
+}
+PUT users/_doc/1
+{
+  "firstName":"Ruan",
+  "lastName": "Yiming",
+  "mobile": null
+}
+PUT users/_doc/2
+{
+  "firstName":"Ruan2",
+  "lastName": "Yiming2"
+
+}
+
+GET users/_search
+{
+  "query": {
+    "match": {
+      "mobile":"NULL"
+    }
+  }
+}
+```
+**copy_to设置**
+- `_all` 在 7中被`copy_to`所替代；
+- 可以满足一些特定的搜索需求，`copy_to`将字段的数值拷贝到目标字典，实现类似`_all`的作用；
+- `copy_to`的目标字段不出现在 _source 中
+```json
+PUT users
+{
+  "mappings": {
+    "properties": {
+      "firstName":{
+        "type": "text",
+        "copy_to": "fullName"
+      },
+      "lastName":{
+        "type": "text",
+        "copy_to": "fullName"
+      }
+    }
+  }
+}
+PUT users/_doc/1
+{
+  "firstName":"Ruan",
+  "lastName": "Yiming"
+}
+GET users/_search?q=fullName:(Ruan Yiming)
+POST users/_search
+{
+  "query": {
+    "match": {
+       "fullName":{
+        "query": "Ruan Yiming",
+        "operator": "and"
+      }
+    }
+  }
+}
+```
+**数组类型：**
+- Elasticsearch不提供专门的数组类型，但是任何字段，都可以包含多个相同类型的数值；
+```json
+PUT users/_doc/1
+{
+  "name":"onebird",
+  "interests":"reading"
+}
+PUT users/_doc/1
+{
+  "name":"twobirds",
+  "interests":["reading","music"]
+}
+POST users/_search
+{
+  "query": {
+		"match_all": {}
+	}
+}
+GET users/_mapping
+```
+
+- 为已存在的索引创建或创建mappings
+    ```json
+    POST  /index_str/_mapping
+    {
+        "properties": {
+            "id": {
+                "type": "long"
+            },
+            "age": {
+                "type": "integer"
+            },
+            "nickname": {
+                "type": "keyword"
+            },
+            "money1": {
+                "type": "float"
+            },
+            "money2": {
+                "type": "double"
+            },
+            "sex": {
+                "type": "byte"
+            },
+            "score": {
+                "type": "short"
+            },
+            "is_teenager": {
+                "type": "boolean"
+            },
+            "birthday": {
+                "type": "date"
+            },
+            "relationship": {
+                "type": "object"
+            }
+        }
+    }
+    ```
+
+### 7.5、多字段类型与自定义分词
+
+- 如果要实现精准匹配：增加一个keyword字段；
+- 使用不同的analyzer：
+    - 不同语言
+    - pinyin字段的搜索
+    - 还支持位搜索和索引指定不同的 analyzer
+```
+PUT products
+{
+  "mappings": {
+    "properties": {
+      "company": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      },
+      "comment": {
+        "type": "text",
+        "fields": {
+          "english_comment": {
+            "type": "text",
+            "analyzer": "english",
+            "search_analyzer": "english"
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**Exact Values & Full Test**
+- Exact Values： 包括数字/日期/具体一个字符串，在elasticsearch中使用keyword；在索引的时候，不需要做特殊的分词处理；
+- 全文本，非结构化的文本数据，elasticsearch中的text；
+
+**自定义分词：**
+
+当elasticsearch自带的分词器无法满足时，可以自定义分词器，通过自组合不同的组件实现：
+- Character Filter：在 tokenizer之前对文本进行处理，例如增加删除以及替换字符，可以配置多个 character filter。会影响 Tokenizer的 position 和 offset信息，一些自带的 Character Filters：
+    - html strip：去除html标签
+    - mapping：字符串替换
+    - pattern replace：正在匹配替换
+- Tokenizer：将原始的文本按照一定的规则，切分为词；elasticsearch内置的tokenizer：whitespace、standard、uax_url_emali、pattern、keyword、path hierarchy；另外也可以使用Java开发插件，实现自己的tokenizer；
+- Token Filter：将 tokenizer输出的单词进行增加、修改、删除；自带的token filters：lowercase、stop、synonym（添加近义词）
+
+示例：
+```json
+POST _analyze
+{
+  "tokenizer":"keyword",
+  "char_filter":["html_strip"],
+  "text": "<b>hello world</b>"
+}
+POST _analyze
+{
+  "tokenizer":"path_hierarchy",
+  "text":"/user/ymruan/a/b/c/d/e"
+}
+// 使用char filter进行替换
+POST _analyze
+{
+  "tokenizer": "standard",
+  "char_filter": [
+      {
+        "type" : "mapping",
+        "mappings" : [ "- => _"]
+      }
+    ],
+  "text": "123-456, I-test! test-990 650-555-1234"
+}
+// char filter 替换表情符号
+POST _analyze
+{
+  "tokenizer": "standard",
+  "char_filter": [
+      {
+        "type" : "mapping",
+        "mappings" : [ ":) => happy", ":( => sad"]
+      }
+    ],
+    "text": ["I am felling :)", "Feeling :( today"]
+}
+// white space and snowball
+GET _analyze
+{
+  "tokenizer": "whitespace",
+  "filter": ["stop","snowball"],
+  "text": ["The gilrs in China are playing this game!"]
+}
+// whitespace与stop
+GET _analyze
+{
+  "tokenizer": "whitespace",
+  "filter": ["stop","snowball"],
+  "text": ["The rain in Spain falls mainly on the plain."]
+}
+//remove 加入lowercase后，The被当成 stopword删除
+GET _analyze
+{
+  "tokenizer": "whitespace",
+  "filter": ["lowercase","stop","snowball"],
+  "text": ["The gilrs in China are playing this game!"]
+}
+//正则表达式
+GET _analyze
+{
+  "tokenizer": "standard",
+  "char_filter": [
+      {
+        "type" : "pattern_replace",
+        "pattern" : "http://(.*)",
+        "replacement" : "$1"
+      }
+    ],
+    "text" : "http://www.elastic.co"
+}
+```
+
+设置一个 Custom Analyzer
+
+### 7.6、index template 和 dynamic template
+
+为了管理更多的索引，管理数据，提高性能，可以创建一些模板
+
+**index template**
+
+帮助你设置Mappings 和Settings，并按照一定的规则，自动匹配到新创建的索引之上
+- 模板仅在一个索引被新创建时才会产生作用；修改模板不会影响到已经创建的索引；
+- 可以设定多个索引模板，这些设置会被merge在一起；
+- 可以知道 order 数值，控制 merge 的过程
+```json
+PUT _template/template_default
+{
+  "index_patterns": ["*"],
+  "order" : 0,
+  "version": 1,
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas":1
+  }
+}
+PUT /_template/template_test
+{
+    "index_patterns" : ["test*"],
+    "order" : 1,
+    "settings" : {
+    	"number_of_shards": 1,
+        "number_of_replicas" : 2
+    },
+    "mappings" : {
+    	"date_detection": false,
+    	"numeric_detection": true
+    }
+}
+```
+
+**index template工作方式**
+
+当一个索引被创建时：
+- 应该elasticsearch默认的settings 和 mappings
+- 应用 order 数值第的 index template 中的设定；
+- 应用 order 高的 index template 中的设定，之前的设定会被覆盖；
+- 应用场景索引时，用户指定的 settings 和 mappings 会覆盖之前模板中的设定
+```json
+// 写入新的数据，index以test开头
+PUT testtemplate/_doc/1
+{
+	"someNumber":"1",
+	"someDate":"2019/01/01"
+}
+GET testtemplate/_mapping
+get testtemplate/_settings
+```
+
+**dynamic template**
+
+根据elasticsearch识别的数据类型，结合字段名称，来动态设定字段类型
+- 所有的字符串类型都设定成 keyword，或者关闭 keyword字段；
+- is 开头的字段都伸出boolean
+- long_开头的都设置成long类型
+
+## 8、聚合（agg）
+
+elasticsearch除搜索外，提供了针对es数据进行统计分析的功能：实时高，不像Hadoop的（T+1）的数据；
+
+通过聚合，会得到一个数据的概览，是分析和总结的数据，而不是寻找单个文档；
+
+高性能，且只需要一条语句，就可以从elasticsearch得到分析的结果，无需在客户端自己去实现分析逻辑；
+
+聚合的分类：
+- Bucket Aggregation：一些列满足特定条件的文旦的集合；
+- Metric Aggregation：一些数学运算，可以对文档字段进行统计分析；metric 会基于数据集计算结果，除了支持在字段上进行计算，同样也支持在脚本产生的结果之上进行计算；大多数metric是数学计算，仅输出一个值：min、max、sum、avg、cardinality
+- Pipeline Aggregation：对其他的聚合结果进行二次聚合；
+- Matrix Aggragation：支持对多个字段的操作并提供一个结果矩阵
+
+示例：
+```json
+// 按照目的地进行分桶统计
+GET kibana_sample_data_flights/_search
+{
+	"size": 0,
+	"aggs":{
+		"flight_dest":{
+			"terms":{
+				"field":"DestCountry"
+			}
+		}
+	}
+}
+// 查看航班目的地的统计信息，增加平均，最高最低价格
+GET kibana_sample_data_flights/_search
+{
+	"size": 0,
+	"aggs":{
+		"flight_dest":{
+			"terms":{
+				"field":"DestCountry"
+			},
+			"aggs":{
+				"avg_price":{
+					"avg":{
+						"field":"AvgTicketPrice"
+					}
+				},
+				"max_price":{
+					"max":{
+						"field":"AvgTicketPrice"
+					}
+				},
+				"min_price":{
+					"min":{
+						"field":"AvgTicketPrice"
+					}
+				}
+			}
+		}
+	}
+}
+// 价格统计信息+天气信息
+GET kibana_sample_data_flights/_search
+{
+	"size": 0,
+	"aggs":{
+		"flight_dest":{
+			"terms":{
+				"field":"DestCountry"
+			},
+			"aggs":{
+				"stats_price":{
+					"stats":{
+						"field":"AvgTicketPrice"
+					}
+				},
+				"wather":{
+				  "terms": {
+				    "field": "DestWeather",
+				    "size": 5
+				  }
+				}
+
+			}
+		}
+	}
+}
+
+```
+
+## 9、深入搜索
+
+### 9.1、基于term的查询
+
+term 的表达语义的最小单位，搜索和利用统计语言模型进行自然语言处理都需要处理term
+
+主要特点：
+- term level query： Term Query / Range Query / Exists Query / Prefix Query / Wildcard Query
+- 在ES中，term 查询，对输入不做分词。会将输入作为一个整体，在倒排索引中查找准确的词项，并且使用相关度算分公式为每个包含该词项的文档进行相关度算分；
+- 可以通过 Constant Score 将查询转换成一个 filtering ，避免算分，并利用缓存，提高性能；将Query转成Filter，忽略TF-IDF计算，避免相关性算分的开销；
+```json
+PUT products
+{
+  "settings": {
+    "number_of_shards": 1
+  }
+}
+POST /products/_bulk
+{ "index": { "_id": 1 }}
+{ "productID" : "XHDK-A-1293-#fJ3","desc":"iPhone" }
+{ "index": { "_id": 2 }}
+{ "productID" : "KDKE-B-9947-#kL5","desc":"iPad" }
+{ "index": { "_id": 3 }}
+{ "productID" : "JODL-X-1937-#pV7","desc":"MBP" }
+GET /products
+// 下面两个查询分别查询
+POST /products/_search
+{
+  "query": {
+    "term": {
+      "desc": {
+        //"value": "iPhone"
+        "value":"iphone"
+      }
+    }
+  }
+}
+POST /products/_search
+{
+  "query": {
+    "term": {
+      "desc.keyword": {
+        "value": "iPhone"
+        //"value":"iphone"
+      }
+    }
+  }
+}
+// 查询不到
+POST /products/_search
+{
+  "query": {
+    "term": {
+      "productID": {
+        "value": "XHDK-A-1293-#fJ3"
+      }
+    }
+  }
+}
+// 不要分词查询
+POST /products/_search
+{
+  //"explain": true, // explain可以查看算分过程
+  "query": {
+    "term": {
+      "productID.keyword": {
+        "value": "XHDK-A-1293-#fJ3"
+      }
+    }
+  }
+}
+// 使用 constant_score 
+POST /products/_search
+{
+  "explain": true,
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "productID.keyword": "XHDK-A-1293-#fJ3"
+        }
+      }
+    }
+  }
+}
+```
+
+### 9.2、基于全文的查询
+
+基于全文的查询：Match Query / Match Phrase Query / Query String Quer
+
+特点：
+- 索引和搜索时都会进行分词，查询字符串先传递到一个合适的分词器，然后生成一个供查询的词项列表；
+- 查询的时候，先会对输入的查询进行分词，然后每个词项逐个进行底层的查询，最终将结果进行合并；并为每个文档生成一个算分；比如查询“Matrxi reloaded” 会查询包括 Matrix 或者 Reload 的所有结果；
+
+**Match Query Result**
+```json
+POST movies/_search
+{
+    "query":{
+        "match":{
+            "title":{
+                "query":"Matrix reloaded"
+            }
+        }
+    }
+}
+// 上述查询结果：
+"hits" : [
+    {
+        "_index" : "movies",
+        "_type" : "_doc",
+        "_id" : "6365",
+        "_score" : 16.501785,
+        "_source" : {
+            "year" : 2003,
+            "genre" : [
+                "Action",
+                "Adventure",
+                "Sci-Fi",
+                "Thriller",
+                "IMAX"
+            ],
+            "@version" : "1",
+            "id" : "6365",
+            "title" : "Matrix Reloaded, The"
+        }
+    }
+]
+```
+**Operator**
+```json
+POST movies/_search
+{
+    "query":{
+        "match":{
+            "title":{
+                "query":"Matrix reloaded",
+                "operator": "AND"
+            }
+        }
+    }
+}
+// Result结果
+{
+  "hits" : {
+    "total" : {
+      "value" : 1,
+      "relation" : "eq"
+    },
+    "max_score" : 16.501785,
+    "hits" : [
+      {
+        "_index" : "movies",
+        "_type" : "_doc",
+        "_id" : "6365",
+        "_score" : 16.501785,
+        "_source" : {
+          "year" : 2003,
+          "genre" : [
+            "Action",
+            "Adventure",
+            "Sci-Fi",
+            "Thriller",
+            "IMAX"
+          ],
+          "@version" : "1",
+          "id" : "6365",
+          "title" : "Matrix Reloaded, The"
+        }
+      }
+    ]
+  }
+}
+```
+**Minimum_should_match**
+```json
+POST movies/_search
+{
+  "profile": "true", 
+  "query": {
+    "match": {
+      "title": {
+        "query": "Matrix reloaded",
+        "minimum_should_match": 2
+      }
+    }
+  }
+}
+```
+**match_phrase：短语匹配**
+- match：分词后只要有匹配就返回；
+- match_phrase：分词结果必须在text字段分词中都包含，而且顺序必须相同，而且必须都是连续的。（搜索比较严格）
+
+其中 slop 表示允许词语间跳过的数量
+```json
+POST  movies/_search
+{
+    "query": {
+        "match_phrase": {
+            "title": {
+                "query": "Matrix reloaded",
+                "slop": 2
+            }
+        }
+    }
+}
+```
+
+**Match Query 查询过程**
+
+![](image/Elasticsearch-MatchQuery查询过程.png)
+
+### 9.3、结构化数据
+
+结构化搜索是指对结构化数据的搜索，日期、布尔类型和数字都是结构化的；
+
+文本也可以是结构化的：
+- 如彩色笔可以有离散的颜色集合：红（red）、绿（green）、蓝（blue）
+- 一个博客可能被标记了标签，例如，分布式（distributed）和搜索（search）
+- 电商网站上的商品都有 UPCs或其他唯一的标识，都需要遵循严格的规定、结构化的格式；
+
+es中的结构化搜索
+- 布尔、时间、日期和数字这类结构化数据：有精确的格式，可以对这些格式进行逻辑操作，包括比较数字或时间的范围，或判断两个值的大小；
+- 结构化的文本可以做精确匹配或者部分匹配：term查询 、Prefix前缀查询；
+- 结构化结果只有`是`和`否`两个值，根据场景需要，可以决定结构化搜索是否需要打分；
+- 使用exist查询处理非空 null 值
+
+对搜索出来的结果进行数据过滤。不会到es库里去搜，不会去计算文档的相关度分数，所以过滤的性能会比较高，过滤器可以和全文搜索结合在一起使用。post_filter元素是一个顶层元素，只会对搜索结果进行过滤。不会计算数据的匹配度相关性分数，不会根据分数去排序，query则相反，会计算分数，也会按照分数去排序
+- query：根据用户搜索条件检索匹配记录
+- post_filter：用于查询后，对结果数据的筛选，也可以单独使用
+
+过滤操作：
+- gte：大于等于
+- lte：小于等于
+- gt：大于
+- lt：小于
+
+```json
+// 对布尔值 match 查询，有算分
+POST products/_search
+{
+  "profile": "true",
+  "explain": true,
+  "query": {
+    "term": {
+      "avaliable": true
+    }
+  }
+}
+// 对布尔值，通过constant score 转成 filtering，没有算分
+POST products/_search
+{
+  "profile": "true",
+  "explain": true,
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "avaliable": true
+        }
+      }
+    }
+  }
+}
+// 数字类型 Term
+POST products/_search
+{
+  "profile": "true",
+  "explain": true,
+  "query": {
+    "term": {
+      "price": 30
+    }
+  }
+}
+// 数字类型 terms
+POST products/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "terms": {
+          "price": [
+            "20",
+            "30"
+          ]
+        }
+      }
+    }
+  }
+}
+// 数字 Range 查询
+GET products/_search
+{
+    "query" : {
+        "constant_score" : {
+            "filter" : {
+                "range" : {
+                    "price" : {
+                        "gte" : 20,
+                        "lte"  : 30
+                    }
+                }
+            }
+        }
+    }
+}
+// 日期 range
+POST products/_search
+{
+    "query" : {
+        "constant_score" : {
+            "filter" : {
+                "range" : {
+                    "date" : {
+                      "gte" : "now-1y"
+                    }
+                }
+            }
+        }
+    }
+}
+// exists查询
+POST products/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "exists": {
+          "field": "date"
+        }
+      }
+    }
+  }
+}
+POST products/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "bool": {
+          "must_not": {
+            "exists": {
+              "field": "date"
+            }
+          }
+        }
+      }
+    }
+  }
+}
+// 处理多值字段
+POST /movies/_bulk
+{ "index": { "_id": 1 }}
+{ "title" : "Father of the Bridge Part II","year":1995, "genre":"Comedy"}
+{ "index": { "_id": 2 }}
+{ "title" : "Dave","year":1993,"genre":["Comedy","Romance"] }
+// 处理多值字段，term 查询是包含，而不是等于
+POST movies/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "term": {
+          "genre.keyword": "Comedy"
+        }
+      }
+    }
+  }
+}
+// 查找多个精确的值
+POST products/_search
+{
+  "query": {
+    "constant_score": {
+      "filter": {
+        "terms": {
+          "productID.keyword": [
+            "QQPX-R-3956-#aD8",
+            "JODL-X-1937-#pV7"
+          ]
+        }
+      }
+    }
+  }
+}
+```
+
+### 9.4、搜索算分
+
+**相关性和相关性算分**
+- 相关性（Relevance）：
+    - 搜索的相关性算分，描述了一个文档和查询语句匹配的成都；ES会对每个匹配查询条件的结果进行算法 _score；
+    - 打分的本质是排序，需要把最符合用户需求的文档排在最前面；ES5之前，默认的相关性算法采用的 TF-IDF，现在采用 BM25；
+
+| 词（Term） |                       文档（Doc Id）                        |
+| :--------: | :---------------------------------------------------------: |
+|   大数据   |                           1，2，3                           |
+|     的     | 2，3，4，5，6，7，8，11，34，45，56，67，89，90，92，93，94 |
+|    应用    |                 2，3，4，5，89，92，93，94                  |
+
+**词频：TF**
+- Term Frequency：检索词在一篇文档中出现的频率（检索词出现的次数除以文档的总字数）；
+- 度量一条查询和结果文档的相关性简单方法：简单将搜索中每一个词的TF进行相加（TF(大数据) + TF(的) + TF(应用)）
+- Stop Word：`的`在文档中出现了很多次，但是对贡献相关度几乎没有用处，不应该考虑他的 TF
+
+**逆文档频率：IDF**
+- IDF：检索词在所有文档中出现的频率：
+    - `大数据`在相对比较少的文档中出现；
+    - `应用`在相对比较多的文档中出现；
+    - `Stop Word`在大量的文档中出现；
+- Inverse Document Frequency：简单说=log(全部文档数/检索词出现过的文档总数)
+- TF-IDF 本质上就是将 TF 求和变成了加权求和： `TF(大数据)*IDF(大数据) + TF(的)*IDF(的) + TF(应用)*IDF(应用)`
+
+    |        | 出现的文档数 | 总文档数 |      IDF      |
+    | :----: | :----------: | :------: | :-----------: |
+    | 大数据 |    200万     |   10亿   | log(500)=8.96 |
+    |   的   |     10亿     |   10亿   |   log(1)=0    |
+    |  应用  |     5亿      |   10亿   |   log(2)=1    |
+
+**TF-IDF概念**：被公认为信息检索领域最重要的发明
+
+Lucene中 TF-IDF的评分公式：
+
+![](image/Elasticsearch-Lucene-TF-IDF评分公式.png)
+
+**BM 25**
+- 从ES5开始，默认改为`BM 25`；
+- 和经典的TF-IDF相比，当TF无限增加时，`BM 25`算分会趋于一个数值
+
+![](image/Elasticsearch-BM25.png)
+
+可以通过explain API查看 TF-IDF
+```json
+
+```
+
+**Boosting Revelance**
+- Boosting是控制相关度的一种手段：索引、字段或查询子条件；
+- 参数 boost的含义：
+    - 当 `boost > 1` 时，打分的相关度相对性提升；
+    - 当 `0 < boost < 1` 时，打分的权重相对性降低；
+    - 当 `boost < 0` 时，贡献负分
+```json
+POST     /shop/_doc/_search
+{
+    "query": {
+        "multi_match": {
+                "query": "皮特帕克慕课网",
+                "fields": ["desc", "nickname^10"]
+
+        }
+    }
+}
+```
+`nickname^10` 代表搜索提升10倍相关性，也就是说用户搜索的时候其实以这个nickname为主，desc为辅，nickname的匹配相关度当然要提高权重比例了
+
+## 8、Elasticsearch集群
+
+### 8.1、集群概念
 
 分片机制：每个索引可以被分片
 - 副本分片是主分片的备份，主挂了，备份还是可以访问，这就需要用到集群了。
@@ -1359,7 +2636,7 @@ action 必须是以下选项之一：
 
 docker-compose配置集群： https://juejin.im/post/6844903682950037518
 
-### 7.2、集群安装es
+### 8.2、集群安装es
 
 在配置文件`conf/elasticsearch.yml`配置如下：
 ```yml
@@ -1385,18 +2662,19 @@ cluster.initial_master_nodes: ["es-node1"]
 
 集群和节点：节点(node)是一个运行着的Elasticsearch实例。集群(cluster)是一组具有相同cluster.name的节点集合，他们协同工作，共享数据并提供故障转移和扩展功能，当然一个节点也可以组成一个集群
 
-## 8、ElasticSearch分布式架构原理
+### 8.3、
+
+## 9、ElasticSearch分布式架构原理
 
 Elasticsearch设计的理念就是分布式搜索引擎，底层其实还是基于lucene的。其核心思想就是在多台机器上启动多个es进程实例，组成了一个es集群。
-
-- es中存储数据的基本单位是索引：index
+- ES中存储数据的基本单位是索引：index
 - 一个index里面会有多个type，每个type可以认为是一个mysql中的表
 - 每个type有一个mapping。mapping代表了这个type的表结构的定义，定义了这个type中每个字段名称，字段是什么类型的，然后还有这个字段的各种配置；
 - 往index里的一个type里面写的一条数据，叫做一条document，一条document就代表了mysql中某个表里的一行给，每个document有多个field，每个field就代表了这个document中的一个字段的值；
 - 索引可以拆分成多个shard，每个shard存储部分数据；shard的数据实际是有多个备份，就是说每个shard都有一个primary shard，负责写入数据，但是还有几个replica shard。primary shard写入数据之后，会将数据同步到其他几个replica shard上去；
 - es集群多个节点，会自动选举一个节点为master节点，这个master节点其实就是干一些管理的工作的，比如维护索引元数据拉，负责切换 primary shard（主分片）和 replica shard（备份）身份，之类的。要是master节点宕机了，那么会重新选举一个节点为master节点
 
-## 9、mysql与ElasticSearch数据同步
+## 10、mysql与ElasticSearch数据同步
 
 使用开源中间件
 - binlog订阅：
@@ -1434,7 +2712,7 @@ https://zhuanlan.zhihu.com/p/102500311
 # 参考资料
 
 * [Elasticsearch下载](https://www.elastic.co/cn/downloads/past-releases#elasticsearch)
-* [ElasticSearch基本操作](http://www.ruanyifeng.com/blog/2017/08/elasticsearch.html)
+* [Elasticsearch官方文档](https://www.elastic.co/guide/en/elasticsearch/reference/7.1/index.html)
 * [What is Elasticsearch](https://www.elastic.co/cn/what-is/elasticsearch)
 * [Springboot+Elasticsearch](https://docs.spring.io/spring-data/elasticsearch/docs/)
 * [ElasticSearch父子文档](https://blog.csdn.net/laoyang360/article/details/82950393)
