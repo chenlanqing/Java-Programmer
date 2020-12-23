@@ -629,6 +629,23 @@ IK中文分词器：[elasticsearch-analysis-ik](https://github.com/medcl/elastic
     - 添加需要添加的中文词库，比如：`骚年` 等网络用语；
     - 配置自定义扩展词典，在ik的配置文件：`{es}/plugins/ik/config/IKAnalyzer.cfg.xml`，加入自定义的文件
 
+**其他分词**
+- [Elasticsearch IK分词插件](https://github.com/medcl/elasticsearch-analysis-ik/releases)
+- [Elasticsearch hanlp 分词插件](https://github.com/KennFalcon/elasticsearch-analysis-hanlp)
+- [分词算法综述](https://zhuanlan.zhihu.com/p/50444885)
+
+一些分词工具，供参考：
+- [中科院计算所NLPIR](http://ictclas.nlpir.org/nlpir/)
+- ansj分词器 https://github.com/NLPchina/ansj_seg
+- 哈工大的LTP https://github.com/HIT-SCIR/ltp
+- 清华大学THULAC https://github.com/thunlp/THULAC
+- 斯坦福分词器 https://nlp.stanford.edu/software/segmenter.shtml
+- Hanlp分词器 https://github.com/hankcs/HanLP
+- 结巴分词 https://github.com/yanyiwu/cppjieba
+- KCWS分词器(字嵌入+Bi-LSTM+CRF) https://github.com/koth/kcws
+- ZPar https://github.com/frcchang/zpar/releases
+- IKAnalyzer https://github.com/wks/ik-analyzer
+
 ## 5、DSL搜索
 
 ### 5.1、请求参数的查询
@@ -1069,159 +1086,6 @@ POST     /shop/_doc/_search
 }
 ```
 
-### 5.7、multi_match/boost
-
-**multi_match**：满足使用match在多个字段中进行查询的需求
-
-比如在`desc`和`nickname`中查询“皮特帕克慕课网”
-```json
-POST     /shop/_doc/_search
-{
-    "query": {
-        "multi_match": {
-                "query": "皮特帕克慕课网",
-                "fields": ["desc", "nickname"]
-
-        }
-    }
-}
-```
-**boost**：权重，为某个字段设置权重，权重越高，文档相关性得分就越高。通畅来说搜索商品名称要比商品简介的权重更高
-```json
-POST     /shop/_doc/_search
-{
-    "query": {
-        "multi_match": {
-                "query": "皮特帕克慕课网",
-                "fields": ["desc", "nickname^10"]
-
-        }
-    }
-}
-```
-`nickname^10` 代表搜索提升10倍相关性，也就是说用户搜索的时候其实以这个nickname为主，desc为辅，nickname的匹配相关度当然要提高权重比例了
-
-### 5.8、布尔查询
-
-可以组合多重查询
-- must：查询必须匹配搜索条件，譬如 and
-- should：查询匹配满足1个以上条件，譬如 or
-- must_not：不匹配搜索条件，一个都不要满足，跟should相反
-
-```json
-POST     /shop/_doc/_search
-{
-    "query": {
-        "bool": {
-            "must": [
-                {
-                    "multi_match": {
-                        "query": "慕课网",
-                        "fields": ["desc", "nickname"]
-                    }
-                },
-                {
-                    "term": {
-                        "sex": 1
-                    }
-                },
-                {
-                    "term": {
-                        "birthday": "1996-01-14"
-                    }
-                }
-            ]
-        }
-    }
-}
-{
-    "query": {
-        "bool": {
-            "should（must_not）": [
-                {
-                    "multi_match": {
-                        "query": "学习",
-                        "fields": ["desc", "nickname"]
-                    }
-                },
-                {
-                	"match": {
-                		"desc": "游戏"
-                	}	
-                },
-                {
-                    "term": {
-                        "sex": 0
-                    }
-                }
-            ]
-        }
-    }
-}
-```
-```json
-{
-    "query": {
-        "bool": {
-            "must": [
-                {
-                	"match": {
-                		"desc": "慕"
-                	}	
-                },
-                {
-                	"match": {
-                		"nickname": "慕"
-                	}	
-                }
-            ],
-            "should": [
-                {
-                	"match": {
-                		"sex": "0"
-                	}	
-                }
-            ],
-            "must_not": [
-                {
-                	"term": {
-                		"birthday": "1992-12-24"
-                	}	
-                }
-            ]
-        }
-    }
-}
-```
-为指定词语加权：特殊场景下，某些词语可以单独加权，这样可以排得更加靠前
-```json
-POST     /shop/_doc/_search
-{
-    "query": {
-        "bool": {
-            "should": [
-            	{
-            		"match": {
-            			"desc": {
-            				"query": "律师",
-            				"boost": 18
-            			}
-            		}
-            	},
-            	{
-            		"match": {
-            			"desc": {
-            				"query": "进修",
-            				"boost": 2
-            			}
-            		}
-            	}
-            ]
-        }
-    }
-}
-```
-
 ### 5.9、过滤器
 
 对搜索出来的结果进行数据过滤。不会到es库里去搜，不会去计算文档的相关度分数，所以过滤的性能会比较高，过滤器可以和全文搜索结合在一起使用。post_filter元素是一个顶层元素，只会对搜索结果进行过滤。不会计算数据的匹配度相关性分数，不会根据分数去排序，query则相反，会计算分数，也会按照分数去排序
@@ -1270,64 +1134,6 @@ POST     /shop/_doc/_search
             ]
         }
     }
-}
-```
-
-### 5.10、排序
-
-es的排序同sql，可以desc也可以asc。也支持组合排序，最好在数字型与日期型字段上排序
-```json
-POST     /shop/_doc/_search
-{
-	"query": {
-		"match": {
-			"desc": "慕课网游戏"
-		}
-    },
-    "post_filter": {
-    	"range": {
-    		"money": {
-    			"gt": 55.8,
-    			"lte": 155.8
-    		}
-    	}
-    },
-    "sort": [
-        {
-            "age": "desc"
-        },
-        {
-            "money": "desc"
-        }
-    ]
-}
-```
-**对文本排序：**由于文本会被分词，所以往往要去做排序会报错，通常我们可以为这个字段增加额外的一个附属属性，类型为keyword，用于做排序
-```json
-POST        /shop2/_mapping
-{
-    "properties": {
-        "id": {
-            "type": "long"
-        },
-        "nickname": {
-            "type": "text",
-            "analyzer": "ik_max_word",
-            "fields": {
-                "keyword": {
-                    "type": "keyword"
-                }
-            }
-        }
-    }
-}
-排序的使用如下：
-{
-    "sort": [
-        {
-            "nickname.keyword": "desc"
-        }
-    ]
 }
 ```
 
@@ -2625,6 +2431,750 @@ POST     /shop/_doc/_search
 }
 ```
 `nickname^10` 代表搜索提升10倍相关性，也就是说用户搜索的时候其实以这个nickname为主，desc为辅，nickname的匹配相关度当然要提高权重比例了
+
+### 9.5、Query Context & Filter Context
+
+在elasticsearch中，有Query和Filter两种不同的Context
+- Query Context：相关性算分
+- Filter Context：不需要算分，可以利用 cache，获得更好的性能；
+
+布尔查询，可以组合多重查询，是一个或多个查询子句的组合
+- must：查询必须匹配搜索条件，譬如 and；贡献算分
+- should：查询匹配满足1个以上条件，譬如 or；贡献算分
+- must_not：不匹配搜索条件，一个都不要满足，跟should相反；Filter Context
+- filter：必须匹配，但不贡献算分；
+
+查询语法：
+- 子查询可以任意顺序出现；
+- 可以嵌套多个查询；bool嵌套，可以实现类似 should not 的功能
+- 如果bool查询中，没有must条件，should 中必须至少满足一条查询；
+
+查询语句的结构会对相关度算分产生影响：
+- 同一层级下的竞争字段，具有相同的权重；
+- 通过嵌套bool查询，可以改变对算法的营销；
+
+```json
+POST     /shop/_doc/_search
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                    "multi_match": {
+                        "query": "慕课网",
+                        "fields": ["desc", "nickname"]
+                    }
+                },
+                {
+                    "term": {
+                        "sex": 1
+                    }
+                },
+                {
+                    "term": {
+                        "birthday": "1996-01-14"
+                    }
+                }
+            ]
+        }
+    }
+}
+{
+    "query": {
+        "bool": {
+            "should（must_not）": [
+                {
+                    "multi_match": {
+                        "query": "学习",
+                        "fields": ["desc", "nickname"]
+                    }
+                },
+                {
+                	"match": {
+                		"desc": "游戏"
+                	}	
+                },
+                {
+                    "term": {
+                        "sex": 0
+                    }
+                }
+            ]
+        }
+    }
+}
+```
+```json
+{
+    "query": {
+        "bool": {
+            "must": [
+                {
+                	"match": {
+                		"desc": "慕"
+                	}	
+                },
+                {
+                	"match": {
+                		"nickname": "慕"
+                	}	
+                }
+            ],
+            "should": [
+                {
+                	"match": {
+                		"sex": "0"
+                	}	
+                }
+            ],
+            "must_not": [
+                {
+                	"term": {
+                		"birthday": "1992-12-24"
+                	}	
+                }
+            ]
+        }
+    }
+}
+```
+为指定词语加权：特殊场景下，某些词语可以单独加权，这样可以排得更加靠前
+```json
+POST     /shop/_doc/_search
+{
+    "query": {
+        "bool": {
+            "should": [
+            	{
+            		"match": {
+            			"desc": {
+            				"query": "律师",
+            				"boost": 18
+            			}
+            		}
+            	},
+            	{
+            		"match": {
+            			"desc": {
+            				"query": "进修",
+            				"boost": 2
+            			}
+            		}
+            	}
+            ]
+        }
+    }
+}
+```
+
+### 9.6、单字符串多字段查询
+
+#### 9.6.1、Disjunction Max Query
+
+Disjunction Max Query：将任何与任一查询匹配的文档作为结果返回。采用字段上最匹配的评分作为最终评分返回
+```json
+// title 和 body 相互竞争，不应该将分数简单叠加，而是应该找到单个最佳匹配的字段的评分
+POST blogs/_search
+{
+  "query": {
+    "bool": {
+      "should": [
+        {"match":{"title":"Brown fox"}},
+        {"match":{"body": "Brown fox"}}
+      ]
+    }
+  }
+}
+// Disjunction Max Query
+POST blogs/_search
+{
+  "query": {
+    "dis_max": {
+      "queries": [
+        {"match":{"title":"Brown fox"}},
+        {"match":{"body": "Brown fox"}}
+      ]
+    }
+  }
+}
+```
+有一些情况下，同时匹配title和body字段的文档只比一个字段匹配的文档的相关度更高，但是 Disjunction Max Query 查询只会简单地使用单个最佳匹配语句的评分 _score 作为整体评分；
+```json
+POST blogs/_search
+{
+  "query": {
+    "dis_max": {
+      "queries": [
+        {"match":{"title":"Quick pets"}},
+        {"match":{"body": "Quick pets"}}
+      ]
+    }
+  }
+}
+// Result
+{ 
+    "hits" : [
+      {
+        "_index" : "blogs",
+        "_type" : "_doc",
+        "_id" : "1",
+        "_score" : 0.6931472,
+        "_source" : {
+          "title" : "Quick brown rabbits",
+          "body" : "Brown rabbits are commonly seen."
+        }
+      },
+      {
+        "_index" : "blogs",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 0.6931472,
+        "_source" : {
+          "title" : "Keeping pets healthy",
+          "body" : "My quick brown fox eats rabbits on a regular basis."
+        }
+      }
+    ]
+}
+```
+
+可以通过 Tie Breaker 参数调整： tie_breaker 是一个介于 0~1 之间的浮点数，0代表使用最佳匹配，1代表所有语句同等重要；
+- 获得最佳匹配语句的 _score
+- 将其他匹配语句的评分与 tie_breaker 相乘；
+- 对以上评分求和并规范化
+```json
+POST blogs/_search
+{
+  "query": {
+    "dis_max": {
+      "queries": [
+        {"match":{"title":"Quick pets"}},
+        {"match":{"body": "Quick pets"}}
+      ],
+      "tie_breaker": 0.2
+    }
+  }
+}
+{
+    "hits" : [
+      {
+        "_index" : "blogs",
+        "_type" : "_doc",
+        "_id" : "2",
+        "_score" : 0.8151411,
+        "_source" : {
+          "title" : "Keeping pets healthy",
+          "body" : "My quick brown fox eats rabbits on a regular basis."
+        }
+      },
+      {
+        "_index" : "blogs",
+        "_type" : "_doc",
+        "_id" : "1",
+        "_score" : 0.6931472,
+        "_source" : {
+          "title" : "Quick brown rabbits",
+          "body" : "Brown rabbits are commonly seen."
+        }
+      }
+    ]
+}
+```
+
+#### 9.6.2、Multi Match Query
+
+常见查询三种场景：
+- 最佳字段（Best Fields）：当字段之间相互竞争，又相互关联；评分来自最匹配字段；
+- 多数字段（Most Fields）：处理英文内容时，一种常见手段是在主字段（English Analyzer）中抽取词干，加入同义词，以匹配更多的文档。相同的文本，加入子字段（Standard Analyzer）以提高更加精确的匹配。其他字段作为匹配文档提高相关度的信号。匹配字段越多则越好；
+- 混合字段（Cross Field）：对于某些实体，例如人名、地址、图书信息等。需要在多个字段中确定信息，单个字段只能作为整体的一部分；
+
+在 Multi Match Query 中，Best Fields 是默认类型，可以不用指定， minimum_should_match等参数可以传递到query中；
+```json
+POST blogs/_search
+{
+  "query": {
+    "multi_match": {
+      "type": "best_fields",
+      "query": "Quick pets",
+      "fields": ["title","body"],
+      "tie_breaker": 0.2,
+      "minimum_should_match": "20%"
+    }
+  }
+}
+```
+`minimum_should_match`: 最低匹配精度，至少有`[分词后的词语个数]x百分百`，得出一个数据值取整。举个例子：当前属性设置为70，若一个用户查询检索内容分词后有10个词语，那么匹配度按照 10x70%=7，则desc中至少需要有7个词语匹配，就展示；若分词后有8个，则 8x70%=5.6，则desc中至少需要有5个词语匹配，就展示。minimum_should_match 也能设置具体的数字，表示个数；
+
+在英文分词器中，会导致精确度降低，时态信息丢失
+
+![](image/Elastichsearch-英文分词查询问题.png)
+```json
+PUT /titles
+{
+  "mappings": {
+    "properties": {
+      "title": {
+        "type": "text",
+        "analyzer": "english",
+        "fields": {"std": {"type": "text","analyzer": "standard"}}
+      }
+    }
+  }
+}
+```
+
+**多数字段**
+- 无法使用 operator
+- 可以使用 copy_to 解决，但是需要额外的存储空间；
+```json
+{
+    "streets": "5 Poland Street",
+    "city": "London",
+    "country" : "United Kingdom",
+    "postcode" : "W1V 3DG"
+}
+POST address/_search
+{
+   "query": {
+        "multi_match": {
+            "query":  "Poland Street W1V",
+            "type":   "most_fields",
+            "fields": [ "streets", "city", "country", "postcode"]
+        }
+    }
+}
+```
+
+**跨字段搜索**
+- 支持 operator
+- 与 copy_to 相比，其中一个优势就是它可以再搜索时为单个字段提升权重；
+
+### 9.7、Search Template
+
+- 避免在多个地方重复代码
+- 更容易测试和执行您的查询
+- 在应用程序间共享查询
+- 允许用户只执行一些预定义的查询
+- 将搜索逻辑与应用程序逻辑分离
+
+定义searchTemplate
+```json
+POST _scripts/tmdb
+{
+  "script": {
+    "lang": "mustache",
+    "source": {
+      "_source": [
+        "title","overview"
+      ],
+      "size": 20,
+      "query": {
+        "multi_match": {
+          "query": "{{q}}",
+          "fields": ["title","overview"]
+        }
+      }
+    }
+  }
+}
+```
+使用 Search Template 进行查询
+```json
+POST tmdb/_search/template
+{
+    "id":"tmdb",
+    "params": {
+        "q": "basketball with cartoon aliens"
+    }
+}
+```
+
+### 9.8、Index Alias
+
+通过索引别名，可以实现零停机运维
+```json
+POST _aliases
+{
+  "actions": [
+    {
+      "add": {
+        "index": "movies-2019", // 这个是elasticsearch中的索引
+        "alias": "movies-latest" // 为 movies-2019 定一个别名
+      }
+    }
+  ]
+}
+// 通过别名读取数据
+POST movies-latest/_search
+{
+  "query": {
+    "match_all": {}
+  }
+}
+```
+使用 Alias创建不同查询的视图：
+```json
+POST _aliases
+{
+  "actions": [
+    {
+      "add": {
+        "index": "movies-2019",
+        "alias": "movies-lastest-highrate",
+        "filter": { // 过滤条件并创建索引别名
+          "range": {
+            "rating": {
+              "gte": 4
+            }
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+### 9.9、综合排序
+
+**算分与排序**
+- Elasticsearch 默认会以文档的相关度算分进行排序；
+- 可以指定一个或多个字段进行排序；
+- 使用相关度算分（score）排序，不能满足某些特定条件；
+
+**Function Score Query**
+- 可以再查下结束后，对每一匹配的文档进行一系列的重写算分，根据新生成的分数进行排序；
+- 提供了几种默认的计算分值的函数
+  - Weight：为每一个文档设置一个简单而不被规范化的权重；
+  - Field Value Factor：使用该数值来修改 _score，例如将 热度 和 点赞数 作为算分的参考因素；
+  - Random Score：为每个用户使用一个不同的随机算分结果；
+  - 衰减函数：以某个字段的值为标准，距离某个值越近，得分越高；
+  - Script Score：自定义脚本完全控制所需逻辑；
+
+```json
+// 按受欢迎度提升权重：
+POST /blogs/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "multi_match": {
+          "query":    "popularity",
+          "fields": [ "title", "content" ]
+        }
+      },
+      "field_value_factor": {
+        "field": "votes"
+      }
+    }
+  }
+}
+// 使用 Modifier 平滑曲线  新的算分 = 老的算分 * log(1 + 投票数)
+POST /blogs/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "multi_match": {
+          "query":    "popularity",
+          "fields": [ "title", "content" ]
+        }
+      },
+      "field_value_factor": {
+        "field": "votes",
+        "modifier": "log1p"
+      }
+    }
+  }
+}
+// 引入 Factor
+POST /blogs/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "multi_match": {
+          "query":    "popularity",
+          "fields": [ "title", "content" ]
+        }
+      },
+      "field_value_factor": {
+        "field": "votes",
+        "modifier": "log1p" ,
+        "factor": 0.1
+      }
+    }
+  }
+}
+```
+
+**Boost Mode 和 Max Boost**
+- Boost Mode：
+  - Multiply：算分与函数值的乘积；
+  - Sum：算分与函数的和
+  - Min/Max：算分与函数取 最小/最大 值
+  - Replace：使用函数值取代算分
+- Max Boost：可以将算分控制在一个最大值
+
+```json
+// boost
+POST /blogs/_search
+{
+  "query": {
+    "function_score": {
+      "query": {
+        "multi_match": {
+          "query":    "popularity",
+          "fields": [ "title", "content" ]
+        }
+      },
+      "field_value_factor": {
+        "field": "votes",
+        "modifier": "log1p" ,
+        "factor": 0.1
+      },
+      "boost_mode": "sum",
+      "max_boost": 3
+    }
+  }
+}
+// 一致性随机函数，使用场景：网站的广告需要提高展现率
+POST /blogs/_search
+{
+  "query": {
+    "function_score": {
+      "random_score": {
+        "seed": 911119
+      }
+    }
+  }
+}
+```
+
+es的排序同sql，可以desc也可以asc。也支持组合排序，最好在数字型与日期型字段上排序
+```json
+POST     /shop/_doc/_search
+{
+	"query": {
+		"match": {
+			"desc": "慕课网游戏"
+		}
+    },
+    "post_filter": {
+    	"range": {
+    		"money": {
+    			"gt": 55.8,
+    			"lte": 155.8
+    		}
+    	}
+    },
+    "sort": [
+        {
+            "age": "desc"
+        },
+        {
+            "money": "desc"
+        }
+    ]
+}
+```
+**对文本排序：**由于文本会被分词，所以往往要去做排序会报错，通常我们可以为这个字段增加额外的一个附属属性，类型为keyword，用于做排序
+```json
+POST        /shop2/_mapping
+{
+    "properties": {
+        "id": {
+            "type": "long"
+        },
+        "nickname": {
+            "type": "text",
+            "analyzer": "ik_max_word",
+            "fields": {
+                "keyword": {
+                    "type": "keyword"
+                }
+            }
+        }
+    }
+}
+排序的使用如下：
+{
+    "sort": [
+        {
+            "nickname.keyword": "desc"
+        }
+    ]
+}
+```
+
+### 9.10、搜索建议
+
+- 帮助用户在输入搜索的过程中，进行自动补全或者纠错，通过协助用户输入更加精准的关键词，提高后续搜索阶段文档匹配的程度；
+- 在Google上搜索时，一开始会自动补全，当输入到一定长度，如因为单次错误无法补全，就会爱是提示相似的词或者句子；
+
+Elasticsearch Suggester API
+- 原理：将输入的文本分解为 Token，然后在索引的字段里查找相似的 Term 并返回；
+- 根据不用的使用场景，Elasticsearch 设计了4中类别的 Suggesters
+  - Term & Phrase Suggester
+  - Complete & Context Suggester
+
+**Term Suggester**
+- Suggester是一种特殊类型的搜索，test 里是调用的时候提供文本，通常用来用户界面上用户输入的内容；
+- 用户输入lucen是一个错误的拼写，会到指定的字段的 body 上搜索，当无法搜索到结果时（missing），返回建议的词
+- 几种 Siggesstion Mode：
+  - Missing：如果索引中已经存在，就不提供建议；
+  - Popular：推荐出现频率更高的词；
+  - Always：无论是否存在，都提供建议；
+```json
+POST /articles/_search
+{
+  "size": 1,
+  "query": {
+    "match": {
+      "body": "lucen rock"
+    }
+  },
+  "suggest": {
+    "term-suggestion": {
+      "text": "lucen rock",
+      "term": {
+        "suggest_mode": "missing",
+        "field": "body"
+      }
+    }
+  }
+}
+```
+
+**Phrase Suggester**
+- Phrase Suggester 在  Term Suggester 上增加了一些额外的逻辑；
+- 主要参数：
+  - Suggest Mode： missing、popular、always
+  - Max Errors：最多可以拼错的 terms 数；
+  - Confidence：限制返回结果数，默认为1
+```json
+POST /articles/_search
+{
+  "suggest": {
+    "my-suggestion": {
+      "text": "lucne and elasticsear rock hello world ",
+      "phrase": {
+        "field": "body",
+        "max_errors":2,
+        "confidence":0,
+        "direct_generator":[{
+          "field":"body",
+          "suggest_mode":"always"
+        }],
+        "highlight": {
+          "pre_tag": "<em>",
+          "post_tag": "</em>"
+        }
+      }
+    }
+  }
+}
+```
+
+**自动补全：Completion Suggester**
+- Completion Suggester 提供了字段完成的功能，用户每输入一个字符时，就需要即时发送一个查询请求到后端查找匹配项；
+- 对性能要求比较苛刻，Elasticsearch 采用了不同的数据结构，并非通过倒排索引来完成的，而是将 Analyze 的数据编程 FST 和索引放在一起；FST会被ES整个加载进内存；
+- FST 只能用于前缀查找
+
+使用Completion Suggester的步骤：
+- 定义Mapping，使用`completion` type；
+- 索引数据
+- 运行 suggest 查询，得到搜索建议
+```json
+// 定义mapping
+POST articles
+{
+  "mappings":{
+    "properties":{
+      "title_completion":{
+        "type":"completion"
+      }
+    }
+  }
+}
+// 搜索数据
+POST articles/_search?pretty
+{
+  "size": 0,
+  "suggest": {
+    "article-suggester": { // 定一个 suggester
+      "prefix": "elk ",
+      "completion": {
+        "field": "title_completion"
+      }
+    }
+  }
+}
+```
+
+**Context Suggester**
+- Completion Suggester 的扩展，可以再搜索中加入更多的上下文，例如：star
+  - 咖啡相关：建议 starbucks
+  - 电影相关：star wars
+- 可以定义两种类型的 Context
+  - Category：任意的字符串
+  - Geo：地理位置信息
+
+实现 Context Suggester 的具体步骤：
+- 定制一个mapping
+- 索引数据，并且为每个文档加入 context 信息；
+- 结合 context 进行 suggestion 查询
+```json
+// 定制 Mapping
+PUT comments/_mapping
+{
+  "properties": {
+    "comment_autocomplete":{
+      "type": "completion",
+      "contexts":[{
+        "type":"category",
+        "name":"comment_category"
+      }]
+    }
+  }
+}
+// 索引数据，设置不同的 category
+POST comments/_doc
+{
+  "comment":"I love the star war movies",
+  "comment_autocomplete":{
+    "input":["star wars"],
+    "contexts":{
+      "comment_category":"movies"
+    }
+  }
+}
+POST comments/_doc
+{
+  "comment":"Where can I find a Starbucks",
+  "comment_autocomplete":{
+    "input":["starbucks"],
+    "contexts":{
+      "comment_category":"coffee"
+    }
+  }
+}
+// 不同的上下文，自动提示
+POST comments/_search
+{
+  "suggest": {
+    "MY_SUGGESTION": {
+      "prefix": "sta",
+      "completion":{
+        "field":"comment_autocomplete",
+        "contexts":{
+          "comment_category":"coffee"
+        }
+      }
+    }
+  }
+}
+```
+
 
 ## 8、Elasticsearch集群
 
