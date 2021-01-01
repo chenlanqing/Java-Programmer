@@ -4408,7 +4408,6 @@ elasticsearch的搜索会分两阶段进行：
 - 数据量不大时，可以将主分片设置为1，当数据量足够大时，只要保证文档均匀分散在各个分片上，结果一般就不会出现偏差；
 - 使用 DFS Query Then Fetch：搜索的url中指定参数：`_search?search_type=dfs_query_then_fetch`；到每个分片把各个分片的词频和文档频率进行搜集，然后完整的进行一次相关性算分，耗费更加多的CPU和内存，执行性能低下，一般不建议使用；
 
-## 9、ElasticSearch分布式架构原理
 
 Elasticsearch设计的理念就是分布式搜索引擎，底层其实还是基于lucene的。其核心思想就是在多台机器上启动多个es进程实例，组成了一个es集群。
 - ES中存储数据的基本单位是索引：index
@@ -4417,6 +4416,710 @@ Elasticsearch设计的理念就是分布式搜索引擎，底层其实还是基�
 - 往index里的一个type里面写的一条数据，叫做一条document，一条document就代表了mysql中某个表里的一行给，每个document有多个field，每个field就代表了这个document中的一个字段的值；
 - 索引可以拆分成多个shard，每个shard存储部分数据；shard的数据实际是有多个备份，就是说每个shard都有一个primary shard，负责写入数据，但是还有几个replica shard。primary shard写入数据之后，会将数据同步到其他几个replica shard上去；
 - es集群多个节点，会自动选举一个节点为master节点，这个master节点其实就是干一些管理的工作的，比如维护索引元数据拉，负责切换 primary shard（主分片）和 replica shard（备份）身份，之类的。要是master节点宕机了，那么会重新选举一个节点为master节点
+
+## 13、文档关联关系
+
+### 13.1、文档关联关系
+
+相对于数据的范式化设计，ES一般都是反范式化设计，反范式化设计就是不使用关联关系，而是在文档中保存冗余的数据拷贝；
+- 优点：无需要处理joins操作，数据读取性能好；ES通过压缩 _source 字段，减少磁盘空间的开销；
+- 缺点： 不适合在数据频繁修改的场景
+
+ES不擅长处理关联关系，一般采用以下四种方法处理关联：
+- 对象类型
+- 嵌套对象（Nested Object）
+- 父子关联关系（Parent/Child）
+- 应用端关联
+
+**搜索包含对象数组的文档**
+```json
+POST my_movies/_doc/1
+{
+  "title":"Speed",
+  "actors":[
+    {
+      "first_name":"Keanu",
+      "last_name":"Reeves"
+    },
+    {
+      "first_name":"Dennis",
+      "last_name":"Hopper"
+    }
+  ]
+}
+POST my_movies/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"actors.first_name": "Keanu"}},
+        {"match": {"actors.last_name": "Hopper"}}
+      ]
+    }
+  }
+}
+```
+存储时，内部对象的边界并没有考虑在内，JSON格式被处理成扁平式键值对的结构，当对多个字段进行查询时，导致了意外的搜索结果，可以使用 Nested data Type解决这个问题
+
+### 13.2、Nested Data Type
+
+- Nested 数据类型：允许对象数组中的对象被独立索引；
+- 使用 nested 和 properties 关键字，将其索引到多个分隔的文档；
+- 在内部， nested 文档会被保存在两个Lucene文档中，在查询时做join处理；
+```json
+# 创建 Nested 对象 Mapping
+PUT my_movies
+{
+  "mappings": {
+    "properties": {
+      "actors": {
+        "type": "nested", // 指定类型
+        "properties": {
+          "first_name": {
+            "type": "keyword"
+          },
+          "last_name": {
+            "type": "keyword"
+          }
+        }
+      },
+      "title": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 256
+          }
+        }
+      }
+    }
+  }
+}
+```
+
+**嵌套查询**
+- 在内部，nested会被保存在两个Lucene文档中，会在查询时做join处理
+```json
+// Nested 查询
+POST my_movies/_search
+{
+  "query": {
+    "bool": {
+      "must": [
+        {"match": {"title": "Speed"}},
+        {
+          "nested": {
+            "path": "actors",
+            "query": {
+              "bool": {
+                "must": [
+                  {"match": {"actors.first_name": "Keanu"}},
+                  {"match": {"actors.last_name": "Hopper"}}
+                ]
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
+```
+
+**嵌套聚合**
+```json
+POST my_movies/_search
+{
+  "size": 0,
+  "aggs": {
+    "actors": {
+      "nested": {
+        "path": "actors"
+      },
+      "aggs": {
+        "actor_name": {
+          "terms": {
+            "field": "actors.first_name",
+            "size": 10
+          }
+        }
+      }
+    }
+  }
+}
+// 普通 aggregation不工作
+POST my_movies/_search
+{
+  "size": 0,
+  "aggs": {
+    "NAME": {
+      "terms": {
+        "field": "actors.first_name",
+        "size": 10
+      }
+    }
+  }
+}
+```
+
+### 13.3、父子文档（Parent/Child）
+
+对象和nested对象的局限性：每次更新时，需要重新索引整个根对象（包括根对象和嵌套对象）
+
+ES提供了类似关系型数据库中join的实现，使用join数据类型实现，可以通过维护 Parent/Child的关系，从而分离两个对象
+- 父文档和子文档是两个独立的文档；
+- 更新父文档无需重新索引子文档。子文档被添加，更新或者删除也不会影响搭配父文档和其他的子文档；
+
+**定义父子关系的几个步骤：**
+- 设置索引的mapping
+  ```json
+  PUT my_blogs
+  {
+    "settings": {
+      "number_of_shards": 2
+    },
+    "mappings": {
+      "properties": {
+        "blog_comments_relation": {// 定义父子关系
+          "type": "join", // 指定join类型
+          "relations": { // 声明  Parent/Child关系
+            "blog": "comment" // blog 表示parent名称，comment 表示child名称 
+          }
+        },
+        "content": {
+          "type": "text"
+        },
+        "title": {
+          "type": "keyword"
+        }
+      }
+    }
+  }
+  ```
+- 索引父文档
+  ```json
+  // 索引父文档
+  PUT my_blogs/_doc/blog1   // blog1 表示父文档id
+  {
+    "title":"Learning Elasticsearch",
+    "content":"learning ELK @ geektime",
+    "blog_comments_relation":{  // 申明文档的类型
+      "name":"blog"
+    }
+  }
+  ```
+- 索引子文档
+  - 父文档和子文档必须保存在相同的分片上，确保查询join的性能；
+  - 当指定子文档的时候，必须要指定它的父文档id，使用route参数来保证分片到相同的分片；
+  ```json
+  PUT my_blogs/_doc/comment1?routing=blog1  // comment1 表示子文档的id； routing=blog1 指定 routing，确保和父文档索引到相同的分片；
+  {
+    "comment":"I am learning ELK",
+    "username":"Jack",
+    "blog_comments_relation":{
+      "name":"comment",
+      "parent":"blog1" // 父文档的id
+    }
+  }
+  ```
+- 按需查询文档，父子文档支持的查询：
+  - 查询所有文档
+  - parent id 查询
+  - has child 查询
+  - has parent 查询
+
+**使用has_child查询**
+- 返回父文档；
+- 通过对子文档进行查询，返回具有相关子文档的父文档，父子文档在相同的分片是哪个，因此join效率高；
+```json
+POST my_blogs/_search
+{
+  "query": {
+    "has_child": {
+      "type": "comment", // child relation name
+      "query": {
+        "match": {
+          "username": "Jack"
+        }
+      }
+    }
+  }
+}
+```
+
+**使用has_parent查询**
+- 返回相关的子文档
+- 通过对父文档进行查询，返回所有相关的子文档
+```json
+POST my_blogs/_search
+{
+  "query": {
+    "has_parent": {
+      "parent_type": "blog", // parent relation name
+      "query": {
+        "match": {
+          "title": "Learning Hadoop"
+        }
+      }
+    }
+  }
+}
+```
+
+**使用parent_id查询**
+- 返回相关子文档；
+- 通过对父文档id进行查询，返回相关子文档
+```json
+// Parent Id 查询
+POST my_blogs/_search
+{
+  "query": {
+    "parent_id": {
+      "type": "comment",
+      "id": "blog2" // parent id
+    }
+  }
+}
+```
+
+**访问子文档**
+- 需要指定父文档 routing 参数
+```json
+// 通过ID ，访问子文档，没有指定routing
+GET my_blogs/_doc/comment3
+// 上面没有指定routing的返回结果：
+{
+  "_index" : "my_blogs",
+  "_type" : "_doc",
+  "_id" : "comment3",
+  "found" : false
+}
+// 指定routing
+// 通过子文档ID和routing ，访问子文档
+GET my_blogs/_doc/comment3?routing=blog2
+{
+  "_index" : "my_blogs",
+  "_type" : "_doc",
+  "_id" : "comment3",
+  "_version" : 1,
+  "_seq_no" : 4,
+  "_primary_term" : 1,
+  "_routing" : "blog2",
+  "found" : true,
+  "_source" : {
+    "comment" : "Hello Hadoop",
+    "username" : "Bob",
+    "blog_comments_relation" : {
+      "name" : "comment",
+      "parent" : "blog2"
+    }
+  }
+}
+```
+
+**更新子文档**
+- 更新子文档不会影响到父文档
+```json
+PUT my_blogs/_doc/comment3?routing=blog2
+{
+  "comment": "Hello Hadoop??",
+  "blog_comments_relation": {
+    "name": "comment",
+    "parent": "blog2"
+  }
+}
+```
+
+### 13.4、嵌套对象与父子文档
+
+|          | Nested Object                        | Parent / Child                         |
+| :------- | ------------------------------------ | -------------------------------------- |
+| 优点     | 文档存储在一起，读取性能高           | 父子文档可以独立更新                   |
+| 缺点     | 更新嵌套的子文档时，需要更新整个文档 | 需要额外的内存维护关系，读取性能相对差 |
+| 适用场景 | 子文档偶尔更新，以查询为主           | 子文档更新频繁                         |
+
+## 14、索引重建
+
+一般在以下几种情况下，需要重建索引：
+- 索引的mapping发生变更：字段类型变更、分词器以及字典更新；
+- 索引的settings发生变更：索引的主分片数发生变化；
+- 集群内、集群间需要做数据迁移
+
+Elasticsearch的内置重建API：
+- update by query：在现有索引上重建；
+- reindex：在其他索引上重建
+
+### 14.1、update By query 
+
+update_by_query 在不更改源的情况下对索引中的每个文档执行更新。这对于获取新属性或其他一些在线映射更改很有用
+
+为索引增加字段：
+```json
+# 修改 Mapping，增加子字段，使用英文分词器
+PUT blogs/_mapping
+{
+  "properties" : {
+    "content" : {
+      "type" : "text",
+      "fields" : {
+        "english" : {
+          "type" : "text",
+          "analyzer":"english"
+        }
+      }
+    }
+  }
+}
+//  写入文档
+PUT blogs/_doc/2
+{
+  "content":"Elasticsearch rocks",
+    "keyword":"elasticsearch"
+}
+// 写入新的文档
+POST blogs/_search
+{
+  "query": {
+    "match": {
+      "content.english": "Elasticsearch"
+    }
+  }
+}
+// 上面是没有返回结果的
+```
+执行 update by query:
+```json
+# Update所有文档
+POST blogs/_update_by_query
+{
+}
+```
+ES不允许在原有mapping上对字段类型进行修改，只能创建新的索引，并且设定正确的字段类型，再重新导入数据
+
+### 14.2、Reindex
+
+Reindex 支持把文档从一个索引拷贝另外一个索引，一般使用reindex API的场景：
+- 修改索引的主分片数；
+- 改变字段的mapping中的字段类型；
+- 集群内数据迁移/跨集群的数据迁移；
+```json
+# Reindx API
+POST  _reindex
+{
+  "source": {
+    "index": "blogs"
+  },
+  "dest": {
+    "index": "blogs_fix"
+  }
+}
+```
+
+使用 Reindex需要注意的两个点：
+- reindex 需要 `_source` 是 enabled，默认情况下，mapping 的 _source 字段都是 enabled；
+- reindex 不会去修改目标索引信息，需要在reindex之前修改目标索引的设置信息、mapping信息等；
+
+**op type**
+- _reindex 只会创建不存在的文档；
+- 如果文档已经存在，会导致版本冲突；
+```json
+POST _reindex
+{
+  "source":{
+    "index":"user"
+  },
+  "dest":{
+    "index":"user2",
+    "op_type":"create"
+  }
+}
+```
+
+**跨集群reindex**
+- 需要修改elasticsearch.yml配置文件，并且重启节点：`reindex.remote.whitelist: "host:port,host1:port1"`
+```json
+POST _reindex
+{
+  "source": {
+    "remote": {
+      "host": "http://host:port"
+    },
+    "index": "user",
+    "size": 1000,
+    "query": {
+      "match": {
+        "test": "data"
+      }
+    }
+  },
+  "dest": {
+    "index": "user"
+  }
+}
+```
+Reindex 支持异常操作，执行只返回 task_id
+
+## 15、Script
+
+### 15.1、Ingest Pipeline
+
+比如有一个需求：tags字段中，逗号分割的文本应该是数组，而不是一个字符串，后期需要对 tags 进行 aggregation 统计
+```json
+PUT user_portrait/_doc/1
+{
+  "title":"introducing big data.....",
+  "tags":"hadoop,elasticsearch,spark,flink",
+  "content":"you know, big data"
+}
+```
+
+**Ingest Node**
+
+在ES5.0之后，引入了一种新的节点类型，默认配置下，每个节点都是 Ingest Node：
+- 具有预处理数据的能开，可拦截 index 或 bulk API的请求；
+- 对数据进行转换，并重新返回给 index 或 bulk api
+
+无需 logstash就可以进行数据的预处理，比如：
+- 为某个字段设置默认值，重命名某个字段的字段名，对字段进行 split 操作；
+- 支持设置 painless脚本，对数据进行更加复杂加工；
+
+**Pipeline & Processor**
+- Pipeline：管道会对通道的数据按照顺序进行加工
+- Processor：elasticsearch对一些加工的行为进行了抽象包装，有很多内置的 processor，也支持通过插件的方式实现直接的 processor；Pipeline就是一组 processor
+
+使用Pipeline切分字符串
+```json
+POST _ingest/pipeline/_simulate  // _simulate API，模拟 pipeline
+{
+  "pipeline": {
+    "description": "to split blog tags",
+    "processors": [ // 在数组中定义 processors
+      {
+        "split": {
+          "field": "tags",
+          "separator": ","
+        }
+      }
+    ]
+  },
+  "docs": [ // 使用不同的测试文档
+    {
+      "_index": "index",
+      "_id": "id",
+      "_source": {
+        "title": "Introducing big data......",
+        "tags": "hadoop,elasticsearch,spark",
+        "content": "You konw, for big data"
+      }
+    }
+  ]
+}
+```
+为文档增加字段：
+```json
+// 同时为文档，增加一个字段。blog查看量
+POST _ingest/pipeline/_simulate
+{
+  "pipeline": {
+    "description": "to split blog tags",
+    "processors": [
+      {
+        "split": {
+          "field": "tags",
+          "separator": ","
+        }
+      },
+      {
+        "set": { // 为文档增加 views 字段
+          "field": "views",
+          "value": 0
+        }
+      }
+    ]
+  },
+  "docs": [
+    {
+      "_index": "index",
+      "_id": "idxx",
+      "_source": {
+        "title": "Introducing cloud computering",
+        "tags": "openstack,k8s",
+        "content": "You konw, for cloud"
+      }
+    }
+  ]
+}
+```
+
+**Pipeline API**
+
+- 添加或者更新
+  ```json
+  PUT _ingest/pipeline/blog_pipeline // blog_pipeline 表示 pipeline uid
+  {
+    "description": "a blog pipeline",
+    "processors": [
+      {
+        "set": {
+          "field": "views",
+          "value": 0
+        }
+      }
+    ]
+  }
+  ```
+- 获取：`GET _ingest/pipeline/blog_pipeline`
+- 删除：`DELETE _ingest/pipeline/blog_pipeline `
+
+添加完pipeline，使用其做测试
+```json
+POST _ingest/pipeline/blog_pipeline/_simulate
+{
+  "docs": [
+    {
+      "_source": {
+        "title": "Introducing cloud computering",
+        "tags": "openstack,k8s",
+        "content": "You konw, for cloud"
+      }
+    }
+  ]
+}
+```
+
+内置的processor：https://www.elastic.co/guide/en/elasticsearch/reference/7.1/ingest-processors.html
+
+
+### 15.2、Painless
+
+Painless 支持所有java的数据类型以及java api 子集，painless script具备以下特性：
+- 高性能、安全；
+- 支持显示类型或者动态定义类型
+
+Painless主要用途：
+- 可以对文档字段进行加工处理：更新或删除字段，处理数据聚合操作；script field对返回字段提前进行计算；function score 对文档的算分进行处理
+- 在 ingest pipeline中执行脚本；
+- 在 reindex api、update by query 时对数据进行处理
+
+**通过Painless脚本访问字段**
+
+|        上下文        |          语法          |
+| :------------------: | :--------------------: |
+|      Ingestion       |     ctx.field_name     |
+|        Update        | ctx._source.field_name |
+| Search & Aggregation |   doc["field_name"]    |
+
+**案例1：Script Processor**
+```json
+POST _ingest/pipeline/_simulate
+{
+  "pipeline": {
+    "description": "to split blog tags",
+    "processors": [
+      {
+        "split": {
+          "field": "tags",
+          "separator": ","
+        }
+      },
+      {
+        "script": {
+          "source": """
+            if(ctx.containsKey("content")){ // script processor
+              ctx.content_length = ctx.content.length();    // ctx.field_name
+            }else{
+              ctx.content_length=0;
+            }
+          """
+        }
+      },
+      {
+        "set": {
+          "field": "views",
+          "value": 0
+        }
+      }
+    ]
+  },
+  "docs": [
+    {
+      "_index": "index",
+      "_id": "id",
+      "_source": {
+        "title": "Introducing big data......",
+        "tags": "hadoop,elasticsearch,spark",
+        "content": "You konw, for big data"
+      }
+    }
+  ]
+}
+```
+
+```json
+PUT tech_blogs/_doc/1
+{
+  "title":"Introducing big data......",
+  "tags":"hadoop,elasticsearch,spark",
+  "content":"You konw, for big data",
+  "views":0
+}
+POST tech_blogs/_update/1
+{
+  "script": {
+    "source": "ctx._source.views += params.new_views", // 脚本控制字段，通过 ctx._source 访问数据
+    "params": {
+      "new_views":100
+    }
+  }
+}
+```
+
+### 15.3、script存储
+
+Inline & Stored
+```json
+// inline 脚本
+POST tech_blog/_update/1
+{
+  "script":{
+    "source":"ctx._source.views += params.new_views",
+    "params": {
+      "new_views":100
+    }
+  }
+}
+// 脚本保存在 cluster state中
+POST _scripts/update_views
+{
+  "script":{
+    "lang":"painless",
+    "source":"ctx._source.views += params.new_views"
+  }
+}
+// 通过id使用，使用 params，减少编译的条数
+POST tech_blogs/_update/1
+{
+  "script":{
+    "id":"update_views",
+    "params": {
+      "new_views":100
+    }
+  }
+}
+```
+
+**脚本缓存**
+- 编译的开销比较大，elasticsearch会将脚本编译后缓存在 cache中
+- inline 和 storeds 都会被缓存，默认缓存100个脚本
+
+| 参数                         | 说明                  |
+| ---------------------------- | --------------------- |
+| script.cache.max_size        | 说明最大缓存数        |
+| script.cache.expire          | 设置缓存超时          |
+| script.max_compilations_rate | 默认5分钟最多75次编译 |
+
+
+
 
 ## 10、mysql与ElasticSearch数据同步
 
@@ -4462,3 +5165,4 @@ https://zhuanlan.zhihu.com/p/102500311
 * [ElasticSearch父子文档](https://blog.csdn.net/laoyang360/article/details/82950393)
 * [ElasticSearch脑图](https://juejin.cn/post/6898505457485217806)
 * [Elasticsearch时间指南](https://juejin.cn/post/6898926871191224334)
+* [高性能elasticsearch ORM开发库](https://my.oschina.net/bboss/blog/1556866)
