@@ -5118,10 +5118,133 @@ POST tech_blogs/_update/1
 | script.cache.expire          | 设置缓存超时          |
 | script.max_compilations_rate | 默认5分钟最多75次编译 |
 
+## 16、数据建模
 
+在ES中如何对字段进行建模：`字段类型 ——> 是否要搜索或分词 --> 是否需要聚合及排序 --> 是否要额外的存储`
 
+### 16.1、字段类型
 
-## 10、mysql与ElasticSearch数据同步
+**Text v.s KeyWork**
+- Text：用于全文本字段，文本会被分词，默认不支持聚合分析及排序。需要设置fielddata为true才支持；
+- Keyword：用于id、枚举及不需要分词的文本，例如电话号码、email地址、手机号码、邮政编码等；适用于filter（精确匹配）、sorting、aggregations
+- 设置多字段类型：默认会为文本类型设置成text，并设置一个keyword字段；在处理人类语言时，通过增加英文、拼音和标准分词器，提供搜索结果；
+
+**结构化数据**
+- 数值类型：尽量选择贴近的类型，例如可以用byte就不要用long；
+- 枚举类型：设置为 keyword，即便是数字也应该设置keyword，获取更加好的性能；
+- 其他：日期、布尔、地理信息；
+
+### 16.2、检索
+
+- 如果不需要检索、排序和聚合分析，enable设置为false；
+- 如如果不需要搜索，index 可以设置为 false
+
+### 16.3、建模最佳实践
+
+**如果某个索引字段过大**
+- 会导致 _source 的内容过大，source filtering 只是传输给客户端时进行过滤，fetch数据时，es节点还是会传输_source 中的数据;
+- 解决办法：关闭 _source，返回结果的不包含 _source字段；然后将每个字段的store设置为true；对于需要显示的信息，可以在查询中指定 store_fields；另外禁止 _source 之后，还是支使用 highlights api，高亮显示匹配的相关信息
+
+```json
+#新增 Content字段。数据量很大。选择将Source 关闭
+PUT books
+{
+  "mappings": {
+    "_source": { // source 设置为false
+      "enabled": false
+    },
+    "properties": {
+      "author": {
+        "type": "keyword",
+        "store": true
+      },
+      "cover_url": {
+        "type": "keyword",
+        "index": false,
+        "store": true
+      },
+      "description": {
+        "type": "text",
+        "store": true
+      },
+      "content": {
+        "type": "text",
+        "store": true
+      },
+      "title": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword",
+            "ignore_above": 100
+          }
+        },
+        "store": true
+      }
+    }
+  }
+}
+// 查询结果中，Source不包含数据
+get books/_search
+// 搜索，通过store 字段显示数据，同时高亮显示 conent的内容
+POST books/_search
+{
+  "stored_fields": [
+    "title",
+    "author",
+    "public_date"
+  ],
+  "query": {
+    "match": {
+      "content": "searching"
+    }
+  },
+  "highlight": {
+    "fields": {
+      "content": {}
+    }
+  }
+}
+```
+
+**处理关联关系**
+- Object：优先考虑 Denormlization；
+- Nested：当数据包含多数据对象（比如电影的演员），同时有查询需求；
+- Parent/Child：关联文档更新非常频繁时
+
+**避免过多字段**
+- 一个文档中，最后避免大量的字段，过多的字段数不容易维护；Mapping的信息保存在 cluster state中，数据量过大，对集群性能会有影响（Cluster state信息需要和所有的节点同步），删除或者修改数据需要 reindex；
+- 默认最大字段是1000，可以设置 `index.mapping.total_fields.limit` 限定最大字段数
+
+**Dynamic v.s Strict**
+- 生成环境尽量不要打开 dynamic
+
+**避免正则查询**
+- 正则、通配符查询、前缀查询属于 term 查询，但是性能不够好；
+- 特别是通配符放在开头
+
+**避免控制引起的聚合不准**
+- 可以使用null_value解决空值问题
+```json
+PUT ratings
+{
+  "mappings": {
+      "properties": {
+        "rating": {
+          "type": "float",
+          "null_value": 1.0
+        }
+      }
+    }
+}
+```
+
+**为索引的mapping加入meta信息**
+- mapping设置非常重要，需要从两个维度进行考虑
+  - 功能：搜索、聚合、排序
+  - 性能：存储的开销、内存的开销、搜索的性能
+
+mysql与ElasticSearch数据同步
 
 使用开源中间件
 - binlog订阅：

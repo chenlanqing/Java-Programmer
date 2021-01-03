@@ -19,3 +19,11 @@ LOAD DATA LOCAL INPATH 'filepath' INTO TABLE tablename
 
 load data local inpath '/home/hadoop/data/hello.txt' into table hive_wordcount;
 ```
+
+Hive中null值时用    `\N` 表示
+在mysql中 null 值时用 null 表示，在mysql同步数据到hive中时需要注意空值的处理
+
+
+# Tez
+
+Hive基础 Tez

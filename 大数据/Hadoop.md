@@ -31,7 +31,7 @@
 
 # 3、HDFS
 
-https://mp.weixin.qq.com/s/rY6diHTjXHSLzuS0uPTRcQ
+- [HDFS实现原理](https://mp.weixin.qq.com/s/rY6diHTjXHSLzuS0uPTRcQ)
 
 主要负责海量数据的分布式存储，支持主从结构，主节点支持多个NameNode，从节点支持多个DataNode
 
