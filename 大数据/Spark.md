@@ -3,7 +3,7 @@
 
 ## 1.1、什么是Spark
 
-是用于大规模数据处理的统一分析引擎
+Spark 是一种基于内存的快速、通用、可扩展的大数据分析计算引擎
 
 ## 1.2、Spark发展
 
@@ -13,40 +13,270 @@ MapReduce的局限性：
 - 执行效率低下；
 - 不适合迭代多次、交互式、流式的处理；
 
-# 2、Spark编译安装
+Spark是一种由Scala语言开发的快速、通用、可扩展的大数据分析引擎
+- SparkCore中提供了Spark最基础与最核心的功能
+- Spark SQL是Spark用来操作结构化数据的组件。通过Spark SQL，用户可以使用SQL 或者 Apache Hive 版本的 SQL 方言(HQL)来查询数据。
+- Spark Streaming 是 Spark 平台上针对实时数据进行流式计算的组件，提供了丰富的处理数据流的 API；
+- 丰富的类库支持：包括 SQL，MLlib，GraphX 和 Spark Streaming 等库，并且可以将它们无缝地进行组合；  
+- 丰富的部署模式：支持本地模式和自带的集群模式，也支持在 Hadoop，Mesos，Kubernetes 上运行；
+
+**Spark 和 Hadoop 的根本差异是多个作业之间的数据通信问题**: Spark 多个作业之间数据 通信是基于内存，而 Hadoop 是基于磁盘
+
+## 1.3、Spark核心组件
+
+Spark 基于 Spark Core 扩展了四个核心组件，分别用于满足不同领域的计算需求。
+
+![](image/spark-stack.png)
+
+### 1.3.1、Spark Core
+
+Spark Core 中提供了 Spark 最基础与最核心的功能，Spark 其他的功能如：Spark SQL、Spark Streaming、GraphX,、MLlib 都是在 Spark Core 的基础上进行扩展的；
+
+### 1.3.2、Spark SQL
+
+Spark SQL 主要用于结构化数据的处理。其具有以下特点：
+
+- 能够将 SQL 查询与 Spark 程序无缝混合，允许您使用 SQL 或 DataFrame API 对结构化数据进行查询；
+- 支持多种数据源，包括 Hive，Avro，Parquet，ORC，JSON 和 JDBC；
+- 支持 HiveQL 语法以及用户自定义函数 (UDF)，允许你访问现有的 Hive 仓库；
+- 支持标准的 JDBC 和 ODBC 连接；
+- 支持优化器，列式存储和代码生成等特性，以提高查询效率。
+
+### 1.3.2、Spark Streaming
+
+Spark Stream主要用于快速构建可扩展，高吞吐量，高容错的流处理程序。支持从 HDFS，Flume，Kafka，Twitter 和 ZeroMQ 读取数据，并进行处理；
+
+![](image/spark-streaming-arch.png)
+
+ Spark Streaming 的本质是微批处理，它将数据流进行极小粒度的拆分，拆分为多个批处理，从而达到接近于流处理的效果。
+
+![](image/spark-streaming-flow.png)
+
+### 1.3.3、MLlib
+
+MLlib 是 Spark 的机器学习库。其设计目标是使得机器学习变得简单且可扩展。它提供了以下工具：
+
+- **常见的机器学习算法**：如分类，回归，聚类和协同过滤；
+- **特征化**：特征提取，转换，降维和选择；
+- **管道**：用于构建，评估和调整 ML 管道的工具；
+- **持久性**：保存和加载算法，模型，管道数据；
+- **实用工具**：线性代数，统计，数据处理等。
+
+### 1.3.4、Graphx
+
+GraphX 是 Spark 中用于图形计算和图形并行计算的新组件。在高层次上，GraphX 通过引入一个新的图形抽象来扩展 RDD(一种具有附加到每个顶点和边缘的属性的定向多重图形)。为了支持图计算，GraphX 提供了一组基本运算符（如： subgraph，joinVertices 和 aggregateMessages）以及优化后的 Pregel API。此外，GraphX 还包括越来越多的图形算法和构建器，以简化图形分析任务
+
+# 2、Spark安装与入门使用
+
+## 2.1、编译安装
 
 [Spark编译安装](../辅助资料/环境配置/大数据环境.md#4Spark编译安装)
 
-# 3、Spark基本使用
+# 3、Spark运行环境
 
-## 3.1、local模式
+## 3.1、spark-submit
 
-`spark-shell --master local[2]`
+Spark 所有模式均使用 `spark-submit` 命令提交作业，其格式如下：
 
-## 3.2、standlone
-
-Standlone模式的架构和Hadoop HDFS/YARN很类似的
-
-需要在配置文件`spark-env.sh`配置如下
+```shell
+./bin/spark-submit \
+  --class <main-class> \        # 应用程序主入口类
+  --master <master-url> \       # 集群的 Master Url
+  --deploy-mode <deploy-mode> \ # 部署模式
+  --conf <key>=<value> \        # 可选配置       
+  ... # other options    
+  <application-jar> \           # Jar 包路径 
+  [application-arguments]       #传递给主入口类的参数  
 ```
-SPARK_MASTER_HOST=hadoop001
-SPARK_WORKER_CORES=2
-SPARK_WORKER_MEMORY=2g
-SPARK_WORKER_INSTANCES=1
+
+需要注意的是：在集群环境下，`application-jar` 必须能被集群中所有节点都能访问，可以是 HDFS 上的路径；也可以是本地文件系统路径，如果是本地文件系统路径，则要求集群中每一个机器节点上的相同路径都存在该 Jar 包。
+
+### 3.1.1、deploy-mode
+
+deploy-mode 有 `cluster` 和 `client` 两个可选参数，默认为 `client`。这里以 Spark On Yarn 模式对两者进行说明 ：
+- 在 cluster 模式下，Spark Drvier 在应用程序的 Master 进程内运行，该进程由群集上的 YARN 管理，提交作业的客户端可以在启动应用程序后关闭；
+- 在 client 模式下，Spark Drvier 在提交作业的客户端进程中运行，Master 进程仅用于从 YARN 请求资源；
+
+### 3.1.2、master-url
+
+master-url 的所有可选参数如下表所示：
+
+| Master URL                        | Meaning                                                      |
+| --------------------------------- | ------------------------------------------------------------ |
+| `local`                           | 使用一个线程本地运行 Spark                                    |
+| `local[K]`                        | 使用 K 个 worker 线程本地运行 Spark                          |
+| `local[K,F]`                      | 使用 K 个 worker 线程本地运行 , 第二个参数为 Task 的失败重试次数 |
+| `local[*]`                        | 使用与 CPU 核心数一样的线程数在本地运行 Spark                   |
+| `local[*,F]`                      | 使用与 CPU 核心数一样的线程数在本地运行 Spark<br/>第二个参数为 Task 的失败重试次数 |
+| `spark://HOST:PORT`               | 连接至指定的 standalone 集群的 master 节点。端口号默认是 7077。 |
+| `spark://HOST1:PORT1,HOST2:PORT2` | 如果 standalone 集群采用 Zookeeper 实现高可用，则必须包含由 zookeeper 设置的所有 master 主机地址。 |
+| `mesos://HOST:PORT`               | 连接至给定的 Mesos 集群。端口默认是 5050。对于使用了 ZooKeeper 的 Mesos cluster 来说，使用 `mesos://zk://...` 来指定地址，使用 `--deploy-mode cluster` 模式来提交。 |
+| `yarn`                            | 连接至一个 YARN 集群，集群由配置的 `HADOOP_CONF_DIR` 或者 `YARN_CONF_DIR` 来决定。使用 `--deploy-mode` 参数来配置 `client` 或 `cluster` 模式。 |
+
+## 3.2、Local模式
+
+Local 模式，就是不需 要其他任何节点资源就可以在本地执行 Spark 代码的环境，一般用于教学、调试、演示
+```shell
+# 本地模式提交应用
+spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master local[2] \
+examples/jars/spark-examples_2.11-2.4.0.jar \
+100   # 传给 SparkPi 的参数
 ```
 
-启动standlone模式：
+`spark-examples_2.11-2.4.0.jar` 是 Spark 提供的测试用例包，`SparkPi` 用于计算 Pi 值，执行结果如下：
+
+![](image/大数据-Spark-local模式运行结果.png)
+
+进入交互界面：
+```
+bin/spark
+```
+![](image/大数据-Spark-Local模式交互界面.png)
+
+## 3.3、Standlone模式
+
+Standlone模式的架构和Hadoop HDFS/YARN很类似的，Standalone 是 Spark 提供的一种内置的集群模式，采用内置的资源管理器进行管理。下面按照如图所示演示 1 个 Mater 和 2 个 Worker 节点的集群配置，这里使用两台主机进行演示：
+
+![](image/spark-集群模式.png)
+
+### 3.3.1、环境配置
+
+首先需要保证 Spark 已经解压在两台主机的相同路径上。然后进入 hadoop001 的 `${SPARK_HOME}/conf/` 目录下，将`spark-env.sh.template`重命名为`spark-env.sh`，需要在配置文件`spark-env.sh`配置如下
+```
+JAVA_HOME=/usr/java/jdk1.8.0_201
+```
+完成后将该配置使用 scp 命令分发到 hadoop002 上
+
+### 3.3.2、集群配置
+
+在 `${SPARK_HOME}/conf/` 目录下，拷贝集群配置样本并进行相关配置：`slaves.template`重命名为`slaves`，在slaves中指定所有 Worker 节点的主机名：
+```shell
+# A Spark Worker will be started on each of the machines listed below.
+hadoop001
+hadoop002
+```
+这里需要注意以下三点：
+- 主机名与 IP 地址的映射必须在 `/etc/hosts` 文件中已经配置，否则就直接使用 IP 地址；
+- 每个主机名必须独占一行；
+- Spark 的 Master 主机是通过 SSH 访问所有的 Worker 节点，所以需要预先配置免密登录；
+
+### 3.3.3、启动standlone模式
+
 ```
 start-all.sh   会在 hadoop1机器上启动master进程，在slaves文件配置的所有hostname的机器上启动worker进程
 ```
-进入shell界面：
+访问 8080 端口，查看 Spark 的 Web-UI 界面,，此时应该显示有两个有效的工作节点：
+
+### 3.3.4、提交作业
+
+```shell
+# 以client模式提交到standalone集群 
+spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master spark://hadoop001:7077 \
+--executor-memory 2G \
+--total-executor-cores 10 \
+/usr/app/spark-2.4.0-bin-hadoop2.6/examples/jars/spark-examples_2.11-2.4.0.jar \
+100
+
+# 以cluster模式提交到standalone集群 
+spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master spark://207.184.161.138:7077 \
+--deploy-mode cluster \
+--supervise \  # 配置此参数代表开启监督，如果主应用程序异常退出，则自动重启 Driver
+--executor-memory 2G \
+--total-executor-cores 10 \
+/usr/app/spark-2.4.0-bin-hadoop2.6/examples/jars/spark-examples_2.11-2.4.0.jar \
+100
+```
+
+### 3.3.5、进入交互界面
+
 ```
 spark-shell  --master spark://bluefish:7077
 ```
 
-## 3.3、YARN
+### 3.3.6、资源问题
 
-建议大家在生产上使用该模式，统一使用YARN进行整个集群作业(MR、Spark)的资源调度
+在虚拟机上提交作业时经常出现一个的问题是作业无法申请到足够的资源：
+
+```properties
+Initial job has not accepted any resources; 
+check your cluster UI to ensure that workers are registered and have sufficient resources
+```
+
+可以查看 Web UI，内存空间不足：提交命令中要求作业的 `executor-memory` 是 2G，但是实际的工作节点的 `Memory` 只有 1G，这时候你可以修改 `--executor-memory`，也可以修改 Woker 的 `Memory`，其默认值为主机所有可用内存值减去 1G
+
+关于 Master 和 Woker 节点的所有可选配置如下，可以在 `spark-env.sh` 中进行对应的配置：    
+
+| Environment Variable（环境变量） | Meaning（含义）                                              |
+| -------------------------------- | ------------------------------------------------------------ |
+| `SPARK_MASTER_HOST`              | master 节点地址                                              |
+| `SPARK_MASTER_PORT`              | master 节点地址端口（默认：7077）                            |
+| `SPARK_MASTER_WEBUI_PORT`        | master 的 web UI 的端口（默认：8080）                        |
+| `SPARK_MASTER_OPTS`              | 仅用于 master 的配置属性，格式是 "-Dx=y"（默认：none）,所有属性可以参考官方文档：[spark-standalone-mode](https://spark.apache.org/docs/latest/spark-standalone.html#spark-standalone-mode) |
+| `SPARK_LOCAL_DIRS`               | spark 的临时存储的目录，用于暂存 map 的输出和持久化存储 RDDs。多个目录用逗号分隔 |
+| `SPARK_WORKER_CORES`             | spark worker 节点可以使用 CPU Cores 的数量。（默认：全部可用）  |
+| `SPARK_WORKER_MEMORY`            | spark worker 节点可以使用的内存数量（默认：全部的内存减去 1GB）； |
+| `SPARK_WORKER_PORT`              | spark worker 节点的端口（默认： random（随机））              |
+| `SPARK_WORKER_WEBUI_PORT`        | worker 的 web UI 的 Port（端口）（默认：8081）               |
+| `SPARK_WORKER_DIR`               | worker 运行应用程序的目录，这个目录中包含日志和暂存空间（default：SPARK_HOME/work） |
+| `SPARK_WORKER_OPTS`              | 仅用于 worker 的配置属性，格式是 "-Dx=y"（默认：none）。所有属性可以参考官方文档：[spark-standalone-mode](https://spark.apache.org/docs/latest/spark-standalone.html#spark-standalone-mode) |
+| `SPARK_DAEMON_MEMORY`            | 分配给 spark master 和 worker 守护进程的内存。（默认： 1G）  |
+| `SPARK_DAEMON_JAVA_OPTS`         | spark master 和 worker 守护进程的 JVM 选项，格式是 "-Dx=y"（默认：none） |
+| `SPARK_PUBLIC_DNS`               | spark master 和 worker 的公开 DNS 名称。（默认：none）       |
+
+
+## 3.4、YARN
+
+Spark 支持将作业提交到 Yarn 上运行，此时不需要启动 Master 节点，也不需要启动 Worker 节点；建议在生产上使用该模式，统一使用YARN进行整个集群作业(MR、Spark)的资源调度
+
+### 3.4.1、
+配置
+
+在 `spark-env.sh` 中配置 hadoop 的配置目录的位置，可以使用 `YARN_CONF_DIR` 或 `HADOOP_CONF_DIR` 进行指定：
+
+```properties
+YARN_CONF_DIR=/usr/app/hadoop-2.6.0-cdh5.15.2/etc/hadoop
+# JDK安装位置
+JAVA_HOME=/usr/java/jdk1.8.0_201
+```
+
+### 3.2 启动
+
+必须要保证 Hadoop 已经启动，这里包括 YARN 和 HDFS 都需要启动，因为在计算过程中 Spark 会使用 HDFS 存储临时文件，如果 HDFS 没有启动，则会抛出异常。
+
+```shell
+# start-yarn.sh
+# start-dfs.sh
+```
+
+### 3.3 提交应用
+
+```shell
+#  以client模式提交到yarn集群 
+spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master yarn \
+--deploy-mode client \
+--executor-memory 2G \
+--num-executors 10 \
+/usr/app/spark-2.4.0-bin-hadoop2.6/examples/jars/spark-examples_2.11-2.4.0.jar \
+100
+
+#  以cluster模式提交到yarn集群 
+spark-submit \
+--class org.apache.spark.examples.SparkPi \
+--master yarn \
+--deploy-mode cluster \
+--executor-memory 2G \
+--num-executors 10 \
+/usr/app/spark-2.4.0-bin-hadoop2.6/examples/jars/spark-examples_2.11-2.4.0.jar \
+100
+```
 
 ## 3.4、Mesos
 
