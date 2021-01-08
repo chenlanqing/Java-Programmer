@@ -127,13 +127,13 @@ examples/jars/spark-examples_2.11-2.4.0.jar \
 
 `spark-examples_2.11-2.4.0.jar` 是 Spark 提供的测试用例包，`SparkPi` 用于计算 Pi 值，执行结果如下：
 
-![](image/大数据-Spark-local模式运行结果.png)
+![](image/Spark-local模式运行结果.png)
 
 进入交互界面：
 ```
 bin/spark
 ```
-![](image/大数据-Spark-Local模式交互界面.png)
+![](image/Spark-Local模式交互界面.png)
 
 ## 3.3、Standlone模式
 
@@ -234,8 +234,7 @@ check your cluster UI to ensure that workers are registered and have sufficient 
 
 Spark 支持将作业提交到 Yarn 上运行，此时不需要启动 Master 节点，也不需要启动 Worker 节点；建议在生产上使用该模式，统一使用YARN进行整个集群作业(MR、Spark)的资源调度
 
-### 3.4.1、
-配置
+### 3.4.1、配置
 
 在 `spark-env.sh` 中配置 hadoop 的配置目录的位置，可以使用 `YARN_CONF_DIR` 或 `HADOOP_CONF_DIR` 进行指定：
 
@@ -248,7 +247,6 @@ JAVA_HOME=/usr/java/jdk1.8.0_201
 ### 3.2 启动
 
 必须要保证 Hadoop 已经启动，这里包括 YARN 和 HDFS 都需要启动，因为在计算过程中 Spark 会使用 HDFS 存储临时文件，如果 HDFS 没有启动，则会抛出异常。
-
 ```shell
 # start-yarn.sh
 # start-dfs.sh
