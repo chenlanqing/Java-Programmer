@@ -3619,6 +3619,7 @@ POST _aliases
         "filter": { // 过滤条件并创建索引别名
           "range": {
             "rating": {
+              
               "gte": 4
             }
           }
