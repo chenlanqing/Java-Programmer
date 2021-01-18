@@ -965,8 +965,8 @@ while (((double) bytesRemaining)/splitSize > SPLIT_SLOP) {
 ## 4.8、MapReduce性能优化
 
 在实际开发中写MapReduce场景已经很少了，后面有Hive可以支持SQL，其将SQL转换为MapReduce程序执行。但是MapReduce的性能优化场景有不少，典型的优化场景：
-- 小文件问题
-- 数据倾斜问题
+- [小文件问题](大数据问题.md#一海量小文件问题)
+- [数据倾斜问题](大数据问题.md#二数据倾斜问题)
 
 # 5、Yarn
 
