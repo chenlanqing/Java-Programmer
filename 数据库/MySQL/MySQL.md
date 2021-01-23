@@ -4585,6 +4585,10 @@ ORDER BY a.score DESC;
 
 https://www.xaprb.com/blog/2006/12/07/how-to-select-the-firstleastmax-row-per-group-in-sql/
 
+## 9、从本地文件导入数据
+
+load data local infile '/ret.txt' into table user_sign_data fields TERMINATED  by ',' lines TERMINATED  by '\n';
+
 # 二十、MySQL索引规约
 
 https://mp.weixin.qq.com/s/nRl4g4DQSCVhgTmqR6rYiA

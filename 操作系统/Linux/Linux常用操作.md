@@ -626,6 +626,26 @@ nohup command > myout.file 2>&1 &
     - `rm -f $HOME/.bash_history` 删除记录文件，清空历史。
 - 临时不记录：在执行的命令前添加空格。例如：` history`
 
+## 14、删除文件报错解决方法
+
+使用root用户的，提示删除文件失败
+```
+[root@xiaoxiao .ssh]# rm -rf authorized_keys 
+rm: cannot remove ‘authorized_keys’: Operation not permitted
+```
+可以通过如下方式解决：
+```
+# 查看文件属性
+[root@xiaoxiao .ssh]# lsattr authorized_keys 
+----i--------e-- authorized_keys
+
+# 取消被设置的属性
+[root@xiaoxiao .ssh]# chattr -i authorized_keys 
+
+# 删除文件成功
+# rm -f authorized_keys
+```
+
 # 四、Linux工具
 
 vmstat 可以获得有关进程、内存页面交换、虚拟内存、线程上下文切换、等待队列等信息。能够反映系统的负载情况。一般用来查看进程等待数量、内存换页情况、系统上下文切换是否频繁等
