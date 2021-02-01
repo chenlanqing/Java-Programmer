@@ -23,7 +23,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>
 
 `System.out.println(2 / 0)`  -> `ArithmeticException: / by zero`
 
-`System.out.println(2.0/ 0);` -> `Infinity`
+`System.out.println(2.0 / 0);` -> `Infinity`
 ```
 double i = 1.0 / 0;                
 System.out.println(i);             //Infinity

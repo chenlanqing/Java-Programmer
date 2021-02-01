@@ -244,7 +244,7 @@ YARN_CONF_DIR=/usr/app/hadoop-2.6.0-cdh5.15.2/etc/hadoop
 JAVA_HOME=/usr/java/jdk1.8.0_201
 ```
 
-### 3.2 启动
+### 3.4.2、启动
 
 必须要保证 Hadoop 已经启动，这里包括 YARN 和 HDFS 都需要启动，因为在计算过程中 Spark 会使用 HDFS 存储临时文件，如果 HDFS 没有启动，则会抛出异常。
 ```shell
@@ -252,7 +252,7 @@ JAVA_HOME=/usr/java/jdk1.8.0_201
 # start-dfs.sh
 ```
 
-### 3.3 提交应用
+### 3.4.3、提交应用
 
 ```shell
 #  以client模式提交到yarn集群 

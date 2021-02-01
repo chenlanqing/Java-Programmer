@@ -677,7 +677,4 @@ Grafana
 # 参考资料
 
 - [Linux命令搜索](https://github.com/jaywcjlove/linux-command)
-
-
-sysstate
-xxxtop
+- [Linux调优指令](https://mp.weixin.qq.com/s/ZKVpfO6VaqwmNs5Yed7Ang)

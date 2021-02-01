@@ -234,7 +234,7 @@ hive (default)>
 
 hive的日志分为启动日志和分析日志，可以修改conf目录下的两个配置文件：`hive-log4j2.properties.template `和 h`ive-exec-log4j2.properties.template`，可以修改其日志级以及即日志目录等
 
-# 5、Hive操作
+# 5、DDL操作
 
 ## 5.1、数据库操作
 
@@ -903,6 +903,17 @@ drwxr-xr-x   - root supergroup          0 2021-01-24 19:32 /user/hive/warehouse/
 - `select * from partition_2 where year=2020;` 用到了一个分区字段进行过滤
 - `select * from partition_2 where year=2020 and school='xk';` 用到了两个分区字段进行过滤
 
+**动态分区**
+
+关系型数据库中，对分区表insert数据的时候，数据库自动会根据分区字段的值，将数据插入到相应的分区中，hive也提供了类似的机制，即动态分区，如果在hive中要使用动态分区，需要做相应的配置：
+- 开启动态分区参数设置：`hive.exec.dynamic.partition=true`，默认是true，开启的；
+- 设置为非严格模式（动态分区的模式，默认是 strict，表示必须知道至少一个分区为静态分区， nonstrict 模式表示允许所有的分区字段都可以使用动态分区）：
+`hive.exec.dynamic.mode=nonstrict`;
+- 在所有执行MR的节点上，最大一共可以创建多少个动态分区，默认是 1000，`hive.exec.max.dynamic.partitions=1000`；
+- 在每个执行MR的节点上，默认最大可以创建多少个动态分区，该参数需要根据实际的数据来设置。比如：源数据中包含了一年的数据，即day字段有365个值，那么该参数就需要设置成大于365，如果使用默认100，则会报错：`hive.exec.max.dynamic.partitions.pernode=100`；
+- 整个MR job中，最大可以创建多少个HDFS文件，默认是 100000：`hive.exec.max.created.files=100000`；
+- 当有空分区生成时，是否抛出异常，一般不需要设置，默认是false：`hive.error.on.empty.partition=false`
+
 ### 5.4.4、外部分区表
 
 即在外部表中增加分区信息
@@ -945,20 +956,971 @@ alter table ex_par add partition(dt='2021-01-24') location '/data/ex_par/dt=2021
 
 ### 5.4.5、桶表
 
+桶表是对数据进行哈希取值，然后放到不同的文件中存储，物理上，每个桶就是表（或分区）里的一个文件。
+
+桶表的使用场景：比如在使用分区表的时候，如果数据集中在某几个分区，其他分区的数据不会很多，在计算的时候可能会出现数据倾斜的情况，从源头上解决，可以采用分桶的概念，即使用桶表
+
+创建一张桶表：
+```sql
+-- 按照id进行分桶，分成4个桶
+create table bucket_tb(
+    id int
+)clustered by(id) into 4 buckets;
+```
+此时如果往桶里面加载数据，就不能使用 load data 了，而是需要使用其他表中的数据，类似：`insert into table .... select ... from` 的写法
+
+> 注意：在插入数据之前需要设置开启桶操作，不然数据就无法分到不同的桶里面；其实这里的分桶就是设置reduce任务的数量，因为你分了多少个桶，最终结果就会产生多少个文件，最终结果中文件的饿数量和reduce任务的数量是挂钩的
+
+设置分桶：`set hive.enforce.bucketing=true` 可以自动控制reduce的数量从而适配bucket的个数;
+```sql
+-- 有如下数据
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+-- 创建表
+create table b_source(id int);
+-- 加载上面的数据到表中
+load data local inpath '/data/hivedata/b_source.data' into table b_source;
+
+-- 向桶表中加载数据
+hive (default)> insert into table bucket_tb select id from b_source where id is not null;
+2021-01-25 20:55:06,034 Stage-1 map = 0%,  reduce = 0%
+2021-01-25 20:55:12,263 Stage-1 map = 100%,  reduce = 0%, Cumulative CPU 3.59 sec
+2021-01-25 20:55:21,088 Stage-1 map = 100%,  reduce = 25%, Cumulative CPU 7.02 sec
+2021-01-25 20:55:22,150 Stage-1 map = 100%,  reduce = 50%, Cumulative CPU 10.17 sec
+2021-01-25 20:55:23,186 Stage-1 map = 100%,  reduce = 100%, Cumulative CPU 16.98 sec
+```
+按照我们设置的桶的数量为4，那么在hdfs中会存在4个对应的文件，每个文件的大小是相似的
+```sh
+[root@bluefish ~]# hdfs dfs -ls /user/hive/warehouse/bucket_tb
+Found 4 items
+-rw-r--r--   2 root supergroup          7 2021-01-25 20:55 /user/hive/warehouse/bucket_tb/000000_0
+-rw-r--r--   2 root supergroup          6 2021-01-25 20:55 /user/hive/warehouse/bucket_tb/000001_0
+-rw-r--r--   2 root supergroup          7 2021-01-25 20:55 /user/hive/warehouse/bucket_tb/000002_0
+-rw-r--r--   2 root supergroup          7 2021-01-25 20:55 /user/hive/warehouse/bucket_tb/000003_0
+```
+
+**桶表的主要作用：**
+- 数据抽样：如果是大规模的数据集，我们只想抽取部分数据查看，使用bucket表可以变得更家高效
+    ```
+    select * from bucket_tb tablesample(bucket 1 out of 4 on id);
+    ```
+    tablesample 是抽样语句；语法解析 `tablesample(bucket x out of y on id);`
+    - y 尽可能是桶表的bucket数的倍数或者因子，而且y必须大于等于x；
+    - y 表示是把桶表的数据随机分为多少桶；
+    - x表示取出第几桶数据；
+    
+    例如：
+    - `bucket 1 out of 4 on id`：根据id对桶表中的数据重新分桶，分成4桶，取出第1桶数据；
+    - `bucket 2 out of 4 on id`：根据id对桶表中的数据重新分桶，分成4桶，取出第2桶数据；
+    - `bucket 3 out of 4 on id`：根据id对桶表中的数据重新分桶，分成4桶，取出第3桶数据；
+    - `bucket 4 out of 4 on id`：根据id对桶表中的数据重新分桶，分成4桶，取出第4桶数据；
+- 提高某些查询效率：比如join查询，可以避免产生笛卡尔积的操作
+
+    `select a.id, a.name, b.addr from a join b on a.id = b.id;` 如果a表和b表已经是分桶表，而且分桶的字段都是id字段，那么这个操作就不需要进行全表笛卡尔积了，因为分桶之后相同规则的id已经在相同的文件里面了；
+
+### 5.4.6、视图
+
+Hive中也有视图的概念，视图实际上一张虚拟的表，是对数据的逻辑表示，主要作用是为了降低查询的复杂度；
+
+Hive中创建视图：`create view`
+```sql
+-- 创建视图
+create view v1 as select t3_new.id,t3_new.stu_name from t3_new;
+
+-- 通过show tables可以查看到视图信息
+hive (default)> show tables;
+OK
+tab_name
+t3_new
+v1
+Time taken: 0.032 seconds, Fetched: 14 row(s)
+-- 查看视图结构
+hive (default)> desc v1;
+OK
+col_name        data_type       comment
+id                      int                                         
+stu_name                string                                      
+Time taken: 0.06 seconds, Fetched: 2 row(s)
+
+-- 通过视图查询数据
+hive (default)> select * from v1;
+OK
+v1.id   v1.stu_name
+1       张三
+2       李四
+3       王五
+```
+> 注意：视图在`/user/hive/warehouse` 中是不存在的，因为其只是一个虚拟的表；
+
+在mysql中元数据的显示：
+```sql
+mysql> select TBL_ID,DB_ID,OWNER,SD_ID,TBL_NAME,TBL_TYPE,VIEW_EXPANDED_TEXT FROM TBLS;
++--------+-------+--------+-------+-----------+----------------+------------------------------------------------------------------+
+| TBL_ID | DB_ID | OWNER  | SD_ID | TBL_NAME  | TBL_TYPE       | VIEW_EXPANDED_TEXT                                               |
++--------+-------+--------+-------+-----------+----------------+------------------------------------------------------------------+
+|     28 |     1 | root   |    38 | v1        | VIRTUAL_VIEW   | select `t3_new`.`id`,`t3_new`.`stu_name` from `default`.`t3_new` |
++--------+-------+--------+-------+-----------+----------------+------------------------------------------------------------------+
+```
+
+### 5.4.7、操作案例
+
+需求：Flume按天把日志数据采集到HDFS中对应的目录红，使用sql按天统计数据的相关指标
+
+# 6、DML操作
+
+## 6.1、数据导入
+
+### 6.1.1、向表中加载数据
 
 
+# 7、Hive函数
 
+## 7.1、系统内置函数
 
+查看系统自带的函数
+```
+hive (default)> show functions;
+abs
+avg
+year
+```
 
+显示自带函数的用法：
+```
+hive (default)> desc function year;
+OK
+tab_name
+year(param) - Returns the year component of the date/timestamp/interval
+Time taken: 0.021 seconds, Fetched: 1 row(s)
+```
 
+详细显示自带函数的用法：
+```
+hive (default)> desc function extended year;
+OK
+tab_name
+year(param) - Returns the year component of the date/timestamp/interval
+param can be one of:
+1. A string in the format of 'yyyy-MM-dd HH:mm:ss' or 'yyyy-MM-dd'.
+2. A date value
+3. A timestamp value
+4. A year-month interval valueExample:
+   > SELECT year('2009-07-30') FROM src LIMIT 1;
+  2009
+Function class:org.apache.hadoop.hive.ql.udf.UDFYear
+Function type:BUILTIN
+Time taken: 0.021 seconds, Fetched: 10 row(s)
+```
 
+## 7.2、常用内置函数
 
+### 7.2.1、NVL函数
 
+NVL：给值为NULL的数据赋值，其格式是：`NVL(value, default_Value)`，含义是如果value为MULL，则 NVL 函数返回 default_value，否则返回value的值，如果两个参数都为 NULL，则返回 NULL
 
+示例：
+```sql
+-- 表中有如下数据，其中第二条数据的 favors[2]为NULL
+hive (default)> select * from stu;
+OK
+stu.id  stu.name        stu.favors
+1       zhangsan        ["swing","sing","coding"]
+2       lisi    ["music","football"]
+-- 不使用 NVL 函数
+hive (default)> select id,name,favors[2] from stu;
+OK
+id      name    _c2
+1       zhangsan        coding
+2       lisi    NULL
+-- 使用NVL函数，将 NULL 用 - 替换
+hive (default)> select id,name,NVL(favors[2], '-') from stu;
+OK
+id      name    _c2
+1       zhangsan        coding
+2       lisi    -
+```
 
+### 7.2.2、CASE...WHEN
 
+`CASE WHEN THEN ELSE END`
 
+```sql
+-- 有如下数据
+hive (default)> select * from emp_sex;
+OK
+emp_sex.name    emp_sex.dept_id emp_sex.sex
+悟空    A       男
+大海    A       男
+宋宋    B       男
+凤姐    A       女
+婷姐    A       女
+婷婷    B       女
+-- 需要统计每个男的数量和女的数量
+select 
+    dept_id, 
+    sum(case sex when '男' then 1 else 0 end) male_count,
+    sum(case sex when '女' then 1 else 0 end) female_count
+from emp_sex group by dept_id;
 
+-- 执行结果
+dept_id male_count      female_count
+A       2       2
+B       1       1
+```
+
+### 7.2.3、行转列
+
+行转列就是把多行数据转为一列数据，针对行转列，主要用到的函数：`concat_ws()、collect_set()、collect_list()`
+
+**concat_ws() 函数**
+```sql
+hive (default)> desc function concat_ws;
+OK
+tab_name
+concat_ws(separator, [string | array(string)]+) - returns the concatenation of the strings separated by the separator.
+
+```
+函数可以实现根据指定的分隔符拼接多个字段的值，最终转换为一个带有分隔符的字符串，可以接受多个参数，第一个参数是分隔符，后面的参数可以是字符串或者字符串数组，最终使用分隔符把后面的所有字符串拼接到一块；
+
+**collect_list() 函数**
+```sql
+hive (default)> desc function collect_list;
+OK
+tab_name
+collect_list(x) - Returns a list of objects with duplicates
+Time taken: 0.021 seconds, Fetched: 1 row(s)
+```
+函数可以返回一个list集合，集合中的元素会重复，一般和group by结合使用
+
+**collect_set() 函数**
+```sql
+hive (default)> desc function collect_set;
+OK
+tab_name
+collect_set(x) - Returns a set of objects with duplicate elements eliminated
+```
+函数可以返回一个set集合，集合中的元素不会重复，一般和group by结合使用
+
+有如下数据：
+```
+zs      swing
+zs      footbal
+zs      sing
+zs      codeing
+zs      swing
+-- 希望将上面的数据输出如下结果：
+zs      swing,footbal,sing,codeing,swing
+```
+其实就是对数据进行了分组，分组之后把相同人的爱好保存到一个数组中，再把数组中的数据转换使用逗号分割的字符串；
+```sql
+-- 开始建表
+create external table student_favors(
+    name string,
+    favor string
+)row format delimited fields terminated by '\t' location '/data/student_favors';
+-- 加载数据
+load data local inpath '/data/hivedata/student_favors.data' into table student_favors;
+-- 查看数据
+hive (default)> select * from student_favors;
+OK
+student_favors.name     student_favors.favor
+zs      swing
+zs      footbal
+zs      sing
+zs      codeing
+zs      swing
+-- 需要输出上面的结果：先把favor转成一个数组
+hive (default)> select name,collect_list(favor) from student_favors group by name;
+OK
+name    _c1
+zs      ["swing","footbal","sing","codeing","swing"]
+-- 然后在使用 concat_ws 函数把数组中的元素按照指定分隔符转成字符串
+hive (default)> select name,concat_ws(",",collect_list(favor)) from student_favors group by name;
+OK
+name    _c1
+zs      swing,footbal,sing,codeing,swing
+```
+上面就完成行转列，查看上面结果，发现结果中有重复的，可以使用 collect_set 去重
+```sql
+hive (default)> select name,concat_ws(",",collect_set(favor)) from student_favors group by name;
+OK
+name    _c1
+zs      swing,footbal,sing,codeing
+```
+
+### 7.2.4、列转行
+
+列转行是跟行转列相反的，列转行可以把一列数据转成多行，主要使用的函数：`split()、explode()、lateral view`
+
+**split() 函数**
+```sql
+hive (default)> desc function split;
+OK
+tab_name
+split(str, regex) - Splits str around occurances that match regex
+```
+该函数接收一个字符串和切割规则，类似于java的split函数，使用切割规则对字符粗中的数据进行切割，最终返回一个array数组
+
+**explode() 函数**
+```sql
+hive (default)> desc function explode;
+OK
+tab_name
+explode(a) - separates the elements of array a into multiple rows, or the elements of a map into multiple rows and columns 
+```
+该函数可以接收array 或 map 作为参数，
+- explode(array)：把数组中的每个元素转成一行；
+- explode(map)：把map中每个key-value对转成一行，key为一列，value为一列
+
+**lateral view**
+
+lateral view通常和split、explode等函数一起使用，split可以对表中某一列进行切割，返回一个数组类型的字段，explode可以对这几个数组中国的每一个元素转为一行，lateral view 可以对这份数据产生一个支持别名的虚拟表；
+
+用法：`lateral view udtf(expression) tableAlias as columnAlias`，主要是用于跟 UDTF 一起使用；
+
+**案例**
+```sql
+-- 有人如下数据
+zs      swing,footbal,sing
+ls      codeing,swing
+-- 希望结果是这样的
+zs	swing
+zs	footbal
+zs	sing
+ls	codeing
+ls	swing
+```
+准备如下数据：表、加载数据
+```sql
+-- 创建表
+create external table student_favors_2(
+    name string,
+    favorlist string
+)row format delimited fields terminated by '\t' location '/data/student_favors_2';
+-- 加载数据
+load data local inpath '/data/hivedata/student_favors_2.data' into table student_favors_2;
+-- 查看数据
+hive (default)> select * from student_favors_2;
+OK
+student_favors_2.name   student_favors_2.favorlist
+zs      swing,footbal,sing
+ls      codeing,swing
+```
+生成上面结果的操作流程：
+```sql
+-- 1、使用split对favorlist字段进行切割
+hive (default)> select split(favorlist, ',') from student_favors_2;
+OK
+_c0
+["swing","footbal","sing"]
+["codeing","swing"]
+
+-- 2、使用explode对数据进行操作
+hive (default)> select explode(split(favorlist, ',')) from student_favors_2;
+OK
+col
+swing
+footbal
+sing
+codeing
+swing
+
+-- 3、将name拼接上，这里需要使用的 lateral view，否则这届查询会报错
+hive (default)> select name,favor_new from student_favors_2 lateral view explode(split(favorlist, ',')) table1 as favor_new ;
+OK
+name    favor_new
+zs      swing
+zs      footbal
+zs      sing
+ls      codeing
+ls      swing
+```
+lateral view 相当于把explode返回的数据作为一个虚拟表来使用了，起名字为table1，然后给这个表里的那一列数据命名为 favor_new，如果有多个字段，可以在后面指定多个。这样在select 后面就可以使用这个名字了，类似于join操作
+
+### 7.2.5、窗口函数
+
+- [窗口分析函数](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+WindowingAndAnalytics)
+
+OVER()：指定分析函数工作的数据窗口大小，这个数据窗口大小可能会随着行的变化而变化
+- current row：当前行
+- n preceding：往前n行数据
+- n following：往后n行数据
+- unbounded：起点
+    - unbounded preceding：表示从前面的起点；
+    - unbounded following：表示到后面的重点
+- lag(col, n default_val)：往前第n行数据
+- lead(col, n, default_val)：往后第n行数据
+- ntile(n)：把有序窗口的行分发到指定数据的组中，各组有编号，编号从1开始，对于每一行，ntile返回此行所属组的编号；n必须为int类型
+
+有如下数据：
+```
+jack,2017-01-01,10
+tony,2017-01-02,15
+jack,2017-02-03,23
+tony,2017-01-04,29
+jack,2017-01-05,46
+jack,2017-04-06,42
+tony,2017-01-07,50
+jack,2017-01-08,55
+mart,2017-04-08,62
+mart,2017-04-09,68
+neil,2017-05-10,12
+mart,2017-04-11,75
+neil,2017-06-12,80
+mart,2017-04-13,94
+```
+针对上述数据，有如下需求：
+- 查询在2017年4月份购买过的顾客及总人数；
+- 查询顾客的购买明细及月购买总额；
+- 上述场景中，将每个顾客的cost按照日期进行累加；
+- 查询每个顾客上次的购买时间；
+- 查询前20%时间的订单信息
+
+根据上面的数据及需求，在hive中创建表，并导入数据
+```sql
+-- 创建表
+create table business(
+    name string,
+    orderdata string,
+    cost int
+)row format delimited fields terminated by ',';
+-- 加载数据
+load data local inpath '/data/hivedata/window_func.data' into table business;
+-- （1）查询在2017年4月份购买过的顾客及总人数：最终统计的 count_window_0 是总的
+hive (default)> select name, count(*) over() from business where substring(orderdata,1,7)='2017-04' group by name;
+name    count_window_0
+mart    2
+jack    2
+
+-- （2）查询顾客的购买明细及月购买总额：这个是不区分，只按月份来统计的
+hive (default)> select name, orderdata, cost,
+              > sum(cost) over(partition by month(orderdata)) from business;
+name    orderdata       cost    sum_window_0
+jack    2017-01-01      10      205
+jack    2017-01-08      55      205
+tony    2017-01-07      50      205
+jack    2017-01-05      46      205
+tony    2017-01-04      29      205
+tony    2017-01-02      15      205
+jack    2017-02-03      23      23
+mart    2017-04-13      94      341
+jack    2017-04-06      42      341
+mart    2017-04-11      75      341
+mart    2017-04-09      68      341
+mart    2017-04-08      62      341
+neil    2017-05-10      12      12
+neil    2017-06-12      80      80
+
+-- （3）上述场景中，将每个顾客的cost按照日期进行累加：首先按照
+select name, orderdata, cost, sum(cost) over(partition by name order by orderdata) from business;
+name    orderdata       cost    sum_window_0
+jack    2017-01-01      10      10
+jack    2017-01-05      46      56
+jack    2017-01-08      55      111
+jack    2017-02-03      23      134
+jack    2017-04-06      42      176
+mart    2017-04-08      62      62
+mart    2017-04-09      68      130
+mart    2017-04-11      75      205
+mart    2017-04-13      94      299
+neil    2017-05-10      12      12
+neil    2017-06-12      80      92
+tony    2017-01-02      15      15
+tony    2017-01-04      29      44
+tony    2017-01-07      50      94
+-- 上述案例扩展
+select name, orderdata, cost,
+sum(cost) over() as sample1, -- 所有行相加
+sum(cost) over(partition by name) as sample2, -- 按 name分组，组内数据相加
+sum(cost) over(partition by name order by orderdata) as sample3,-- 按 name 分组，组内数据累加
+sum(cost) over(partition by name order by orderdata rows between unbounded preceding and current row) as sample4, -- 和sample3一样，由起点到当前行的聚合
+sum(cost) over(partition by name order by orderdata rows between 1 preceding and current row) as sample5,-- 当前行和前面一行做聚合
+sum(cost) over(partition by name order by orderdata rows between 1 preceding and 1 following) as sample6,-- 当前行和前边一行和后面一行
+sum(cost) over(partition by name order by orderdata rows between current row and unbounded following) as sample7 -- 当前行及后面所有行
+from business;
+
+name    orderdata       cost    sample1 sample2 sample3 sample4 sample5 sample6 sample7
+jack    2017-01-01      10      661     176     10      10      10      56      176
+jack    2017-01-05      46      661     176     56      56      56      111     166
+jack    2017-01-08      55      661     176     111     111     101     124     120
+jack    2017-02-03      23      661     176     134     134     78      120     65
+jack    2017-04-06      42      661     176     176     176     65      65      42
+mart    2017-04-08      62      661     299     62      62      62      130     299
+mart    2017-04-09      68      661     299     130     130     130     205     237
+mart    2017-04-11      75      661     299     205     205     143     237     169
+mart    2017-04-13      94      661     299     299     299     169     169     94
+neil    2017-05-10      12      661     92      12      12      12      92      92
+neil    2017-06-12      80      661     92      92      92      92      92      80
+tony    2017-01-02      15      661     94      15      15      15      44      94
+tony    2017-01-04      29      661     94      44      44      44      94      79
+tony    2017-01-07      50      661     94      94      94      79      79      50
+```
+> 注意：rows 必须跟在 order by 子句后面，对排序的结果进行限制，使用固定的行数来限制分区中的数据行数量
+
+```sql
+-- 查看顾客上次的购买时间
+select name,orderdata,cost,
+lag(orderdata, 1, '1900-01-01') over(partition by name order by orderdata) as time1,
+lag(orderdata, 2) over(partition by name order by orderdata) as time2 
+from business;
+name    orderdata       cost    time1   time2
+jack    2017-01-01      10      1900-01-01      NULL
+jack    2017-01-05      46      2017-01-01      NULL
+jack    2017-01-08      55      2017-01-05      2017-01-01
+jack    2017-02-03      23      2017-01-08      2017-01-05
+jack    2017-04-06      42      2017-02-03      2017-01-08
+mart    2017-04-08      62      1900-01-01      NULL
+mart    2017-04-09      68      2017-04-08      NULL
+mart    2017-04-11      75      2017-04-09      2017-04-08
+mart    2017-04-13      94      2017-04-11      2017-04-09
+neil    2017-05-10      12      1900-01-01      NULL
+neil    2017-06-12      80      2017-05-10      NULL
+tony    2017-01-02      15      1900-01-01      NULL
+tony    2017-01-04      29      2017-01-02      NULL
+tony    2017-01-07      50      2017-01-04      2017-01-02
+-- 查询前20%时间的订单信息
+select * from(
+    select name,orderdata,cost,ntile(5) over(order by orderdata) sorted from business
+) t where sorted = 1;
+t.name  t.orderdata     t.cost  t.sorted
+jack    2017-01-01      10      1
+tony    2017-01-02      15      1
+tony    2017-01-04      29      1
+```
+
+> 注意：相同值排序问题：如果有相同的行，其窗口值是一样的
+
+### 7.2.6、TopN函数
+
+- Rank()：排序相同时会重复，总数不会变
+- Dense_rank()：排序相同时会重复，总数会减少，连续排序，有两个第一时仍然跟着第二名；
+- row_number()：会根据顺序计算，有两个第一名时接下来是第三名；
+
+上面几个函数都需要配合到 over 窗口函数来使用；来看示例，有如下数据：
+```
+孙悟空,语文,87
+孙悟空,数学,95
+孙悟空,英语,68
+大海,语文,94
+大海,数学,56
+大海,英语,84
+宋宋,语文,64
+宋宋,数学,86
+宋宋,英语,84
+婷婷,语文,65
+婷婷,数学,85
+婷婷,英语,78
+```
+根据上面的数据，有如下需求：计算每门学科的成绩排名
+```sql
+-- 创建表
+create table score(
+    name string,
+    subject string,
+    score int
+)row format delimited fields terminated by ',';
+-- 加载数据
+load data local inpath '/data/hivedata/score.data' into table score;
+
+-- 按照需求查询数据
+select name, subject, score, 
+rank() over(partition by subject order by score desc) rp,
+dense_rank() over(partition by subject order by score desc) drp,
+row_number() over(partition by subject order by score desc) rmp
+from score;
+name  subject score   rp      drp     rmp
+孙悟空  数学    95      1       1       1
+宋宋    数学    86      2       2       2
+婷婷    数学    85      3       3       3
+大海    数学    56      4       4       4
+
+宋宋    英语    84      1       1       1
+大海    英语    84      1       1       2
+婷婷    英语    78      3       2       3
+孙悟空  英语    68      4       3       4
+
+大海    语文    94      1       1       1
+孙悟空  语文    87      2       2       2
+婷婷    语文    65      3       3       3
+宋宋    语文    64      4       4       4
+```
+需求：取每门学科前三名的学生
+```sql
+select * from (
+    select name,subject,score, row_number() over(partition by subject order by score desc) row_num from score
+    ) t 
+where t.row_num <= 3;
+name  subject score   row_num
+孙悟空  数学    95      1
+宋宋    数学    86      2
+婷婷    数学    85      3
+宋宋    英语    84      1
+大海    英语    84      2
+婷婷    英语    78      3
+大海    语文    94      1
+孙悟空  语文    87      2
+婷婷    语文    65      3
+```
+
+### 7.2.7、排序相关函数
+
+**Order By**
+
+Hive中的Order by跟传统的sql语言中的order by作用是一样的，会对查询结果做一次全局排序，使用这个语句的时候，生成的reduce任务只有一个；
+
+**Sort By**
+
+Hive中指定了sort by，如果有多个reduce，那么在每个reduce端都会做排序，也就是说保证了局部有序（每个reduce出来的数据是有序的，但是不能保证所有的数据全局有序，除非只有一个 reduce）
+```sql
+-- 有如下数据
+hive (default)> select * from t2_bak;
+t2_bak.id       t2_bak.name
+1       NULL
+2       NULL
+3       NULL
+4       NULL
+5       NULL
+1       NULL
+2       NULL
+3       NULL
+4       NULL
+5       NULL
+-- 执行sort by排序，因为其只有一个reduce任务，所以是全局有序的
+hive (default)> select * from t2_bak sort by id;
+t2_bak.id       t2_bak.name
+1       NULL
+1       NULL
+2       NULL
+2       NULL
+3       NULL
+3       NULL
+4       NULL
+4       NULL
+5       NULL
+5       NULL
+-- 动态设置 reduce 任务数量为2，然后再执行排序sql，可以发现下面排序就没有全局排序了
+hive (default)> set mapreduce.job.reduces=2;
+hive (default)> select * from t2_bak sort by id;
+t2_bak.id       t2_bak.name
+1       NULL
+3       NULL
+3       NULL
+4       NULL
+5       NULL
+5       NULL
+1       NULL
+2       NULL
+2       NULL
+4       NULL
+```
+> 对于Order by 来说，动态设置再多的 reduce 数量都没有用，最后还是只产生一个reduce
+
+**distribute by**
+
+distribute by 是控制map的输出到reduce是如何划分的，其只会根据指定的 key 对数据进行分区，但是不会排序；
+
+一般情况下可以和 sort by 结合使用，先对数据分区，再进行排序，两者结合使用的时候 distribute 必须要写在 sort by 前面
+```sql
+-- distribute by 单独使用
+hive (default)> set mapreduce.job.reduces=2;
+hive (default)> select id from t2_bak distribute by id;
+OK
+id
+4
+2
+4
+2
+5
+3
+1
+5
+3
+1
+```
+可以结合 sort by 实现分区内的排序，默认是升序，可以通过 desc 来设置倒序
+```sql
+hive (default)> set mapreduce.job.reduces=2;
+hive (default)> select id from t2_bak distribute by id sort by id;
+OK
+id
+2
+2
+4
+4
+1
+1
+3
+3
+5
+5
+```
+
+**cluster by**
+
+cluster by 的功能就是 distribute by 和sort by 的简写形式，也就是说 `cluster by id` 等同于 `distribute by id sort by id`
+
+> 注意：cluster by 指定的列只能是升序，不能指定 asc 和desc；
+
+```sql
+hive (default)> set mapreduce.job.reduces=2;
+hive (default)> select id from t2_bak cluster by id;
+```
+
+### 7.2.8、分组与去重函数
+
+- group by： 对数据按照指定的字段进行分组；
+- distinct：对数据中指定字段的重复值进行去重
+
+```sql
+-- 使用distinct 将所有的name都shuffle到一个reduce里面，性能较低；
+select count(distinct name) from order;
+-- 先对name分组，因为分组的同时其实就是去重，此时是可以并行计算的，然后再计算count即可，有较高的性能；
+select count(tmp.name) from(select name from order group by name) tmp;
+```
+
+## 7.3、其他内置函数
+
+```
+常用日期函数
+unix_timestamp:返回当前或指定时间的时间戳	
+select unix_timestamp();
+select unix_timestamp("2020-10-28",'yyyy-MM-dd');
+
+from_unixtime：将时间戳转为日期格式
+select from_unixtime(1603843200);
+
+current_date：当前日期
+select current_date;
+
+current_timestamp：当前的日期加时间
+select current_timestamp;
+
+to_date：抽取日期部分
+select to_date('2020-10-28 12:12:12');
+
+year：获取年
+select year('2020-10-28 12:12:12');
+
+month：获取月
+select month('2020-10-28 12:12:12');
+
+day：获取日
+select day('2020-10-28 12:12:12');
+
+hour：获取时
+select hour('2020-10-28 12:12:12');
+
+minute：获取分
+select minute('2020-10-28 12:12:12');
+
+second：获取秒
+select second('2020-10-28 12:12:12');
+
+weekofyear：当前时间是一年中的第几周
+select weekofyear('2020-10-28 12:12:12');
+
+dayofmonth：当前时间是一个月中的第几天
+select dayofmonth('2020-10-28 12:12:12');
+
+months_between： 两个日期间的月份
+select months_between('2020-04-01','2020-10-28');
+
+add_months：日期加减月
+select add_months('2020-10-28',-3);
+
+datediff：两个日期相差的天数
+select datediff('2020-11-04','2020-10-28');
+
+date_add：日期加天数
+select date_add('2020-10-28',4);
+
+date_sub：日期减天数
+select date_sub('2020-10-28',-4);
+
+last_day：日期的当月的最后一天
+select last_day('2020-02-30');
+
+date_format(): 格式化日期
+select date_format('2020-10-28 12:12:12','yyyy/MM/dd HH:mm:ss');
+
+常用取整函数
+round： 四舍五入
+select round(3.14);
+select round(3.54);
+
+ceil：  向上取整
+select ceil(3.14);
+select ceil(3.54);
+
+floor： 向下取整
+select floor(3.14);
+select floor(3.54);
+
+常用字符串操作函数
+upper： 转大写
+select upper('low');
+
+lower： 转小写
+select lower('low');
+
+length： 长度
+select length("atguigu");
+
+trim：  前后去空格
+select trim(" atguigu ");
+
+lpad： 向左补齐，到指定长度
+select lpad('atguigu',9,'g');
+
+rpad：  向右补齐，到指定长度
+select rpad('atguigu',9,'g');
+
+regexp_replace：使用正则表达式匹配目标字符串，匹配成功后替换！
+SELECT regexp_replace('2020/10/25', '/', '-');
+
+集合操作
+size： 集合中元素的个数
+select size(friends) from test3;
+
+map_keys： 返回map中的key
+select map_keys(children) from test3;
+
+map_values: 返回map中的value
+select map_values(children) from test3;
+
+array_contains: 判断array中是否包含某个元素
+select array_contains(friends,'bingbing') from test3;
+
+sort_array： 将array中的元素排序
+select sort_array(friends) from test3;
+
+grouping_set:多维分析
+```
+
+## 7.4、自定义函数
+
+- [HivePlugins](https://cwiki.apache.org/confluence/display/Hive/HivePlugins)
+
+当hive提供的内置函数无法满足业务处理需求时，可以考虑使用用户自定义函数：UDF（user-defined function）;
+
+根据用户自定义函数类别，分为以下三种：
+- UDF：一输入、一输出；
+- UDAF（user defined aggregation function）：聚集函数，多条输入、一条输出，类似于 count、max、min 等；
+- UDTF（user defined table-generating functions）：一输入、多输出，如果lateral view explode()；
+
+### 7.4.1、开发流程
+
+- 继承hive提供的类：`org.apache.hadoop.hive.ql.udf.generic.GenericUDF`、`org.apache.hadoop.hive.ql.udf.generic.GenericUDTF`；
+- 实现类中的抽象方法；
+- 在hive的命令窗口操作：
+    - 添加jar包： `add jar jar_path`；
+    - 创建function：`create [temporary] function [dbname.]function_name as class_name`；class_name 是自定义函数的全路径，temporary表示当前session有效；
+- 在hive命令行窗口删除函数：`drop [temporary] function [if exists] [dbname.]function_name;`
+
+### 7.4.2、自定义UDF函数
+
+需求：自定义一个udf实现计算给定字符串的长度
+
+- （1）定义一个java类，继承`org.apache.hadoop.hive.ql.udf.generic.GenericUDF`
+```java
+public class MyUDF extends GenericUDF {
+    /**
+     * @param objectInspectors 输入参数类型的鉴别器对象
+     * @return 返回类型的鉴别器对象
+     */
+    @Override
+    public ObjectInspector initialize(ObjectInspector[] objectInspectors) throws UDFArgumentException {
+        // 判断输入参数的个数
+        if (objectInspectors.length != 1) {
+            throw new UDFArgumentException("one argument required, but found " + objectInspectors.length + " arguments");
+        }
+        ObjectInspector inspector = objectInspectors[0];
+        if(!ObjectInspector.Category.PRIMITIVE.equals(inspector.getCategory())) {
+            throw new UDFArgumentException("argument type not match");
+        }
+        // 函数需要返回int类型，那么需要返回int类型对应的鉴别器对象
+        return PrimitiveObjectInspectorFactory.javaIntObjectInspector;
+    }
+    /**
+     * 函数的处理逻辑
+     * @param deferredObjects 输入的参数
+     * @return 返回值
+     */
+    @Override
+    public Object evaluate(DeferredObject[] deferredObjects) throws HiveException {
+        DeferredObject deferredObject = deferredObjects[0];
+        if (deferredObject == null || deferredObject.get() == null) {
+            return 0;
+        }
+        return deferredObject.get().toString().length();
+    }
+    @Override
+    public String getDisplayString(String[] strings) {
+        return "";
+    }
+}
+```
+- （2）添加jars：`add jar /data/soft/hive-3.1.2/lib/hive-demo-1.0.0.jar`
+- （3）创建临时函数与开发的java类关联：`create temporary function my_len as "com.blue.fish.hive.MyUDF";`
+- （4）即可使用该函数
+
+### 7.4.3、自定义UDTF函数
+
+需求：自定义一个UDTF实现将一个任意分割符的字符串分割成独立的词，类似split 功能
+
+- （1）定义一个类，继承自`org.apache.hadoop.hive.ql.udf.generic.GenericUDTF`
+```java
+public class MyUDTF extends GenericUDTF {
+    //输出数据的集合
+    private ArrayList<String> outPutList = new ArrayList<>();
+    @Override
+    public StructObjectInspector initialize(StructObjectInspector argOIs) throws UDFArgumentException {
+        // 定义输出输出的列名和类型
+        List<String> fieldNames = new ArrayList<>();
+        List<ObjectInspector> fieldOIs = new ArrayList<>();
+        // 添加输出数据的列名和类型
+        fieldNames.add("lineToWord");
+        fieldOIs.add(PrimitiveObjectInspectorFactory.javaStringObjectInspector);
+        return ObjectInspectorFactory.getStandardStructObjectInspector(fieldNames, fieldOIs);
+    }
+    @Override
+    public void process(Object[] args) throws HiveException {
+        // 原始数据
+        String arg = args[0].toString();
+        // 获取分隔符
+        String splitKey = args[1].toString();
+        String[] fields = arg.split(splitKey);
+        for (String field : fields) {
+            outPutList.clear();
+            outPutList.add(field);
+            // 将集合内容写出
+            forward(outPutList);
+        }
+    }
+    @Override
+    public void close() throws HiveException {}
+}
+```
+其余步骤同上面一致，自定义函数 myudtf 输出结果：
+```sql
+hive (default)> select myudtf("hello,world,hadoop,hive",",");
+OK
+linetoword
+hello
+world
+hadoop
+hive
+```
 
 # Tez
 
@@ -968,3 +1930,4 @@ Hive基础 Tez
 # 参考资料
 
 - [Hive官方文档](https://cwiki.apache.org/confluence/display/Hive/GettingStarted)
+- [Hive查询](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+Select)
