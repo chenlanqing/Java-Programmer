@@ -499,7 +499,7 @@ val list = List(1,2,3,4,5,6)
 sc.parallelize(list, 3).mapPartitions(iterator =>{
     var buffer = new ListBuffer[Int]
     while (iterator.hasNext) {
-    buffer.append(iterator.next() * 100)
+      buffer.append(iterator.next() * 100)
     }
     buffer.toIterator
 }).foreach(println(_))
@@ -507,7 +507,8 @@ sc.parallelize(list, 3).mapPartitions(iterator =>{
 **map与mapPartitions区别：**
 - 数据处理角度：map算子时分区内的一个数据一个数据的执行，类似与串行操作；mapPartitions算子是以分区为单位进行批处理操作；
 - 功能的角度：map算子主要目的是将数据源的数据进行转换和改变，但是不会减少或增多数据；mapPartitions算子需要传递一个迭代器，返回一个迭代器，没有要求的元素个数保持不变，所以可以增加或减少数据；
-- 性能的角度：map算子类似于串行操作，性能较低；mapPartitions算子类似于批处理，性能较高。但是mapPartitions算子会长时间占用内存，这样会导致内存可能不够用，出现内存溢出的情况
+- 性能的角度：map算子类似于串行操作，性能较低；mapPartitions算子类似于批处理，性能较高。但是mapPartitions算子会长时间占用内存，这样会导致内存可能不够用，出现内存溢出的情况；
+- 建议针对初始化链接之类的操作，使用mapPartitions，放在mapPartitions内部；需要注意的是，创建数据库代码的链接需要放在算子内部，不要放在Driver端或者 it.foreach内部，因为这会导致无法序列化，无法传递到对应的task执行，算子在执行的时候会报错；如果放在it.foreach效果等同于 map操作；
 
 **mapPartitionsWithIndex 算子**
 
@@ -906,7 +907,61 @@ val conf = new SparkConf()
 
 从计算的角度，算子以外的代码都是在Driver端执行的，算子里面的代码都是在Executor端执行，那么在scala的函数式编程中，就会导致算子内经常用到算子外的数据，这样就形成了闭包的效果，如果使用的算子外的数据无法序列化，就意味着无法传值给Executor端执行，就会发生错误，所以在执行任务计算前，检测闭包内的对象是否可以进行序列化，这个操作称为闭包检测；
 
-Spark2.0开始，处于性能考虑，从2.0开始之初另外一种Kryo序列化机制。当RDD在shuffle数据的时候，简单数据类型、数组和字符串类型以及在spark内部使用 kryo来序列化
+Spark2.0开始，处于性能考虑，从2.0开始之初另外一种Kryo序列化机制。当RDD在shuffle数据的时候，简单数据类型、数组和字符串类型以及在spark内部使用 kryo来序列化；
+
+遇到没有实现序列化的对象，解决方法有两种：
+- 如果此对象可以支持序列化，则将其实现 Serializable 接口，让它支持序列化；
+- 如果此对象不支持序列化，针对一些数据库连接之类的对象，这种对象时不支持序列化的，所以可以将代码放到算子内部，这样就不会通过Driver端传过去了，它会直接在executor中执行；
+
+Spark默认情况下，倾向于序列化的便捷性，使用了Java自身的序列化机制；但是Java序列化机制性能并不高，序列化的速度相对较慢，而且序列化后的数据占用空间相对来说比较大。Spark除了默认支持Java的序列化机制外，还支持了 Kryo序列化机制；
+
+Kryo序列化机制比Java序列化机制更快，而且序列化后的数据占用的空间更小，通常来说比Java序列化的数据占用的空间要小10倍左右；
+
+> Kryo序列化机制不是Spark默认序列化的原因：
+> - 有些类型虽然实现了 Serializable 接口，但是它不一定能够被 Kryo 进行序列化；
+> - 如果需要得到最佳性能，Kryo还要求在Spark应用中对所需序列化的类型都进行手工注册；
+
+**如何使用 Kryo序列化**
+- 首先要用 SparkConf 设置`spark.serializer` 的值为 `org.apache.spark.serializer.KryoSerializer`，即指定Spark的序列化器为 KryoSerializer；
+- 注册需要使用 Kryo序列化的类，这样才能获得最佳性能；如果没有注册的话，Kryo也能正常工作，只是Kryo必须时刻保存类型的全类名，反而会占用不少内存；
+
+> Spark默认对Scala中常用的类型在Kryo中做了注册，但是，如果在自己的算子中，使用了外部的自定义类型的对象，那么需要对其进行注册；
+
+**案例：**
+```scala
+val conf = new SparkConf()
+conf.setAppName("KryoSerScala")
+  .setMaster("local[1]")
+  // 指定Kryo序列化，如果 使用了 registerKryoClasses，那么指定Kryo序列化可以忽略，因为 registerKryoClasses 内部默认也指定了
+  .set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+  // 注册自定义的数据类型
+  .registerKryoClasses(Array(classOf[Person]))
+val sc = new SparkContext(conf)
+val dataRdd = sc.parallelize(Array("hello you", "hello me"))
+val personRdd = dataRdd.flatMap(_.split(" "))
+  .map(word => Person(word, 18))
+  .persist(StorageLevel.MEMORY_ONLY_SER)
+personRdd.foreach(println(_))
+
+// registerKryoClasses 方法：
+def registerKryoClasses(classes: Array[Class[_]]): SparkConf = {
+    val allClassNames = new LinkedHashSet[String]()
+    allClassNames ++= get(KRYO_CLASSES_TO_REGISTER).map(_.trim)
+      .filter(!_.isEmpty)
+    allClassNames ++= classes.map(_.getName)
+
+    set(KRYO_CLASSES_TO_REGISTER, allClassNames.toSeq)
+    // spark.serializer
+    set(SERIALIZER, classOf[KryoSerializer].getName)
+    this
+  }
+```
+
+> 注意：如果要序列化的自定义类型，字段特别多，此时需要对Kryo本身进行优化，因为Kryo内部的缓存可能不能够放那么大的class对象；需要调用SparkConf的set方法，设置`spark.kryoserializer.buffer.md`参数的值，将其调大，默认是2M；
+
+**使用Kryo的场景：**
+
+主要是针对一些自定义对象，该对象内包含了大量的数据，然后在算子内部使用到了这个外部的大对象，在这种情况下，比较适合Kryo序列化类型，来对外部的大对象进行序列化，提高序列化速度，减少序列化后的内存空间占用；
 
 ## 4.2、共享变量
 
@@ -1037,180 +1092,488 @@ object CustomAccumulatorDemo {
 }
 ```
 
-## 4.3、宽窄依赖问题
+## 4.3、依赖关系
 
-## 4.4、shuffle介绍
+### 4.3.1、血缘关系
+
+- 相邻的两个RDD称为依赖关系；
+- 多个连续的RDD的依赖关系，称之为血缘关系；每个RDD都会保存血缘关系，RDD不会保存数据，为了提供容错性，需要将RDD间的关系保存下来，一旦出现错误，可以根据血缘关系重新读取数据进行计算；
+
+以wordCount为例，查看其血缘关系
+```scala
+def main(args: Array[String]): Unit = {
+    val conf = new SparkConf()
+    conf.setAppName("WordCountScala").setMaster("local[1]") // 通过 spark-submit提交任务，可以将其注释掉
+    val sc = new SparkContext(conf)
+    val path = "data/hello.txt"
+    val linesRdd = sc.textFile(path)
+    println(linesRdd.toDebugString)  // toDebugString可以打印出许愿关系
+    println("*******************************************************")
+    val wordRdd = linesRdd.flatMap(_.split(","))
+    println(wordRdd.toDebugString)
+    println("*******************************************************")
+    val wordCountMap = wordRdd.map((_, 1))
+    println(wordCountMap.toDebugString)
+    println("*******************************************************")
+    val reduceRdd = wordCountMap.reduceByKey(_ + _)
+    println(reduceRdd.toDebugString)
+    println("*******************************************************")
+    reduceRdd.foreach(word => println(word._1 + " -> " + word._2))
+    sc.stop()
+}
+```
+上述输出结果：
+```
+(1) data/hello.txt MapPartitionsRDD[1] at textFile at WordCountScala.scala:19 []
+ |  data/hello.txt HadoopRDD[0] at textFile at WordCountScala.scala:19 []
+*******************************************************
+(1) MapPartitionsRDD[2] at flatMap at WordCountScala.scala:22 []
+ |  data/hello.txt MapPartitionsRDD[1] at textFile at WordCountScala.scala:19 []
+ |  data/hello.txt HadoopRDD[0] at textFile at WordCountScala.scala:19 []
+*******************************************************
+(1) MapPartitionsRDD[3] at map at WordCountScala.scala:25 []
+ |  MapPartitionsRDD[2] at flatMap at WordCountScala.scala:22 []
+ |  data/hello.txt MapPartitionsRDD[1] at textFile at WordCountScala.scala:19 []
+ |  data/hello.txt HadoopRDD[0] at textFile at WordCountScala.scala:19 []
+*******************************************************
+(1) ShuffledRDD[4] at reduceByKey at WordCountScala.scala:28 []
+ +-(1) MapPartitionsRDD[3] at map at WordCountScala.scala:25 []
+    |  MapPartitionsRDD[2] at flatMap at WordCountScala.scala:22 []
+    |  data/hello.txt MapPartitionsRDD[1] at textFile at WordCountScala.scala:19 []
+    |  data/hello.txt HadoopRDD[0] at textFile at WordCountScala.scala:19 []
+*******************************************************
+```
+
+![](image/Spark-血缘依赖关系.png)
+
+### 4.3.2、宽依赖与窄依赖
+
+**窄依赖：**
+
+指父RDD的每个分区只被子RDD的一个人去所使用，例如map、filter等算子；一个RDD，对它的父RDD只有简单的一对一的关系，也就是说，RDD的每个partition 仅仅依赖于父RDD中的一个 partition，父RDD和子RDD的partition之间的对应关系，是一对一的；
+
+```scala
+class OneToOneDependency[T](rdd: RDD[T]) extends NarrowDependency[T](rdd) {
+}
+```
+
+**宽依赖：**
+
+父RDD的每个分区都可能被子RDD的多个分区使用，例如groupByKey、reduceByKey、sortByKey等算子，这些算子都会产生shuffle操作，也就是说，每一个父RDD的partition中的数据都可能传输一部分到下一个RDD的每个partition中，此时就会出现，父RDD和子RDD的partition之间存在比较复杂的关系，这种情况称为两个RDD之间的宽依赖，同时，他们之间会产生shuffle操作；
+
+```scala
+class ShuffleDependency[K: ClassTag, V: ClassTag, C: ClassTag](
+    @transient private val _rdd: RDD[_ <: Product2[K, V]],
+    val partitioner: Partitioner,
+    val serializer: Serializer = SparkEnv.get.serializer,
+    val keyOrdering: Option[Ordering[K]] = None,
+    val aggregator: Option[Aggregator[K, V, C]] = None,
+    val mapSideCombine: Boolean = false,
+    val shuffleWriterProcessor: ShuffleWriteProcessor = new ShuffleWriteProcessor)
+  extends Dependency[Product2[K, V]] {
+  }
+```
+
+分析一个案例：，以单次计数案例为例分析：
+
+![](image/Spark-宽窄依赖分析图.png)
+
+- 最左侧linesRDD，表示通过textFile读取文件的数据之后获取的RDD
+- 使用flatMap算子，对每一行数据按照空格切分，获取到第二个RDD，这个RDD中包含的切开的每一个单次；这两个RDD之间属于一个窄依赖，因为父RDD的每个分区只被子RDD的一个分区所使用，分区是一对一的，不需要经过shuffle
+- 使用map算子，将每个单次转换成(单词,1)这种形式了；此时两个RDD依然是一个窄依赖的关系，父RDD的分区和子RDD的分区也是一对一的；
+- 使用reduceByKey算子，此时会对相同的key数据进行分区，分到一个分区里面，并且进行聚合从中，此时父RDD的每个分区都可能被子RDD的多个分区使用，那这两个RDD属于宽依赖；
+
+### 4.3.3、stage
+
+spark job是根据action算子触发的，遇到action算子就会起一个job；spark job会被划分为多个stage，每一个stage是由一组并行的task组成的；
+
+> 注意：stage的划分依据是看是否产生了shuffle（即宽依赖），遇到一个shuffle操作就会划分为前后两个stage，stage是由一组并行的task组成，stage会将一批task用于TaskSet来封装，提交到 TaskScheduler进行分配，最后发送到Executor执行；
+> stage的划分规则：从后往前，遇到宽依赖就划分stage
+
+为什么是从后往前呢？因为RDD之间是有血缘关系的，后面的RDD依赖前面的RDD，也就是说后面的RDD要等前面的RDD执行完才会执行，所以从后往前遇到宽依赖（Shuffle依赖）就划分为两个Stage，shuffle前一个、shuffle后一个。如果整个过程没有产生shuffle，就只有一个Stage：ResultStage；Stage划分的时候是从后往前的，但是stage执行的时候是从前往后的；
+
+RDD切分Stage过程
+```scala
+private[scheduler] def handleJobSubmitted(jobId: Int,finalRDD: RDD[_],func: (TaskContext, Iterator[_]) => _,
+      partitions: Array[Int], callSite: CallSite,listener: JobListener,properties: Properties): Unit = {
+    var finalStage: ResultStage = null
+    try {
+      // New stage creation may throw an exception if, for example, jobs are run on a
+      // HadoopRDD whose underlying HDFS files have been deleted.
+      finalStage = createResultStage(finalRDD, func, partitions, jobId, callSite)
+    } catch {
+    }
+}
+private def createResultStage(rdd: RDD[_],func: (TaskContext, Iterator[_]) => _,  partitions: Array[Int],jobId: Int,
+      callSite: CallSite): ResultStage = {
+    checkBarrierStageWithDynamicAllocation(rdd)
+    checkBarrierStageWithNumSlots(rdd)
+    checkBarrierStageWithRDDChainPattern(rdd, partitions.toSet.size)
+    val parents = getOrCreateParentStages(rdd, jobId)
+    val id = nextStageId.getAndIncrement()
+    val stage = new ResultStage(id, rdd, func, partitions, parents, jobId, callSite)
+    stageIdToStage(id) = stage
+    updateJobIdStageIdMaps(jobId, stage)
+    stage
+  }
+```
+
+RDD任务划分：RDD任务切分中间分为：Application、Job、Stage 和 Task
+- Application：初始化一个SparkContext 即生成一个 Application；
+- Job：一个Action算子就会生成一个Job；
+- Stage：Stage等于宽依赖（ShuffleDependency）的个数加1；当RDD中存在shuffle依赖时，Stage会自动增加一个；ShuffleMapStage 有多个，但是 ResultStage 只有一个，最后需要执行的阶段；
+- Task：一个Stage阶段，最后一个RDD的分区个数就是Task的个数
+
+## 4.4、shuffle机制
+
+在MapReduce框架中，shuffle是连接Map和Reduce之间的桥梁，Map阶段通过shuffle读取数据并输出到对应的Reduce；而Reduce阶段负责从Map中拉取数据并进行计算，整个shuffle过程中，往往伴随着大量的磁盘和网络IO。所以shuffle的性能的高低也直接决定了整个程序的性能高低。
+
+在Spark中，什么情况下会产生shuffle？reduceByKey、groupByKey、sortByKey、countByKey、join等操作都会产生shuffle；
+
+Spark的shuffle过程：
+- spark0.8之前使用 Hash Based Shuffle；
+- Spark0.8.1 为 Hash Based Shuffle 引入 File Consolidation（文件合并）机制；
+- Spark1.6之后使用Sort-Base Shuffle
+
+**未优化的Hash Based Shuffle**
+
+## 4.5、checkpoint
+
+### 4.5.1、checkpoint概述
+
+checkpoint是Spark提供的高级功能，针对复杂的Spark Job，如果担心某些关键的、在后面会反复使用的RDD，因为节点故障导致数据丢失，可以针对该RDD启动checkpoint机制，实现容错和高可用；
+
+对于特别复杂的Spark任务，有比较高的风险会出现反复使用的RDD因为节点的故障导致丢失，虽然有持久化过，但还是导致数据丢失了，也就是说，出现失败的时候，没有容错机制，所以当后面的transformation算子，又需要使用该RDD的时候，就会发现数据丢失了，次数如果没有进行容错处理的话，那么就需要重新计算一次数据了，而使用checkpoint机制，可以避免；
+
+**如何使用checkpoint**
+- 首先调用SparkContext的setCheckpointDir方法，设置一个容错的文件系统目录，比如HDFS；
+- 然后对RDD调用checkpoint方法
+- 最后在RDD所在的job运行结束之后，会启动一个单独的job，将checkpoint设置过的RDD的数据写入之前设置的文件系统中；
+```scala
+val sc = new SparkContext(conf)
+sc.setCheckpointDir("hdfs://bigdata01:9000/data/")
+val linesRdd = sc.textFile(path)
+linesRdd.checkpoint()
+```
+
+### 4.5.2、RDD之checkpoint流程
+
+- （1）SparkContext设置checkpoint目录，用于存放checkpoint数据；对RDD调用checkpoint方法，然后它就会被RDDCheckpointData对象进行管理，此时这这个RDD的checkpoint状态会被设置为 initialized；
+- （2）待RDD所在的job运行结束，会调用job中最后一个RDD的 doCheckpoint 方法，该方法沿着RDD的血缘关系向上查找被checkpoint方法标记过的RDD，并将其checkpoint状态从 initialized 设置为 checkpointingInProgress
+- （3）启动一个单独的job，来将血缘关系中标记为 checkpointingInProgress的RDD执行checkpoint操作，也就是讲其数据写入checkpoint目录；
+- （4）将RDD数据写入checkpoint目录之后，会将RDD状态改变的为 checkpointed；并且还好改变RDD的血缘关系，即会清除掉所有依赖的RDD；最后还会设置其父RDD为新创建的 checkpointRDD；
+- （5）读取数据的话是从RDD中 iterator 方法中进行读取的
+
+### 4.5.3、checkpoint与持久化
+
+主要区别：
+- 血缘关系是否发生改变：
+  - 持久化只是将数据保存在内存中或者本地磁盘文件中，RDD的血缘关系是不变的；
+  - checkpoint执行之后，RDD没有依赖的RDD，它的血缘关系发生了变化；
+- 丢失数据的可能性：
+  - 持久化的数据丢失可能性比较到，如果采用 persist 把数据存在内存的话，虽然速度快，但是不可靠；
+  - checkpoint的数据通常保存在高可用文件系统中，丢失可能性相对较低
+
+> 建议：对需要 checkpoint 的RDD，先执行 persist(StorageLevel.DISK_ONLY)
+> 为什么呢？因为默认情况下，如果某个RDD没有持久化，但是设置了checkpoint，那这个时候，本来spark任务已经执行结束，但是由于中间的RDD没有持久化，在进行checkpoint的时候想要将这个RDD的数据写入外部存储系统的话，就需要重新计算这个RDD的数据，再将其checkpoint到外部存储系统中，如果对需要checkpoint的RDD进行了磁盘的持久化，那么后面的checkpoint操作时，就会直接从磁盘读取RDD的数据，不需要重新计算一次了；
+
+### 4.5.4、checkpoint写操作
+
+
+### 4.5.5、checkpoint读操作
+
 
 # 5、SparkSQL
 
-## 5.1、SqlContext
+## 5.1、概述
 
-```java
-public static void main(String[] args) {
-    String path = "file:///workspace/scala/spark-sql-demo/people.json";
-    //1)创建相应的Context
-    SparkConf conf = new SparkConf();
-    //在测试或者生产中，AppName和Master我们是通过脚本进行指定
-    conf.setAppName("SQLContextApp").setMaster("local[2]");
-    SparkContext sc = new SparkContext(conf);
-    SQLContext sqlContext = new SQLContext(sc);
-    Dataset<Row> json = sqlContext.read().json(path);
-    json.printSchema();
-    json.show();
-    sc.stop();
-}
-```
-如果打包到服务器上运行：
-```
-spark-submit \
---name SQLContextApp \
---class com.blue.fish.spark.SQLContextApp \
---master local[2] \
-/root/lib/spark-sql.jar \
-/root/software/spark-2.4.7/examples/src/main/resources/people.json
+Spark Sql 是Spark自身实现的一套SQL处理引擎，其是Spark的一个模块，主要用于结构化数据的处理，它提供的最核心的编程抽象，就是DataFrame；
+
+`DataFrame = RDD + Schema`，其实和关系型数据库表很类似，RDD可以认为是表的数据，Schema 可以认为是表结构的信息；DataFrame 可以通过很多来源构建，包括：结构化的数据文件、Hive中的表、外部的关系型数据库以及RDD；
+
+Spark1.3中出现的DataFrame，Spark1.6出现了DataSet，Spark2.0后将两者统一，DataFrame 等于 `DataSet[Row]`
+
+**主要特点：**
+- 易整合：无缝对接了SQL查询和Spark编程；
+- 统一的数据访问：使用相同的方式连接不同的数据源；
+- 兼容Hive：在已有的仓库上直接运行SQL和HiveQL；
+- 标准数据库连接：使用JDBC或者ODBC来连接；
+
+## 5.2、SparkSession
+
+要使用SparkSQL，首先需要创建一个SparkSession对象，SparkSession包含了SparkContext 和 SqlContext；如果通过SparkSession 操作RDD的话需要首先通过它来获取 SparkContext；SqlContext 是使用 SparkSql操作Hive时用到的
+```scala
+val conf = new SparkConf()
+conf.setMaster("local[1]")
+val session = SparkSession.builder().appName("SparkSQLDemo").config(conf).getOrCreate()
+val sparkContext = session.sparkContext
 ```
 
-## 5.2、HiveContext
+## 5.3、DataFrame
 
-```java
-public static void main(String[] args) {
-    //1)创建相应的Context
-    SparkConf conf = new SparkConf();
-    SparkContext sc = new SparkContext(conf);
-    // hiveContext 是过期API
-    HiveContext hc = new HiveContext(sc);
-    hc.table("emp").show();
-    sc.stop();
-}
-```
-这个需要部署打包到服务器上运行：
-```
-spark-submit \
---name HiveContextApp \
---class com.blue.fish.spark.HiveContextApp \
---master local[2] \
---jars /root/spark-log/mysql-connector-java-5.1.28.jar \
-/root/lib/spark-sql.jar
-```
-- `--class`：指定运行的类
-- `--master`：指定spark的启动模式
-- `--jars`：指定外部依赖的类，这里需要依赖mysql驱动，因为hive的元数据信息存储在mysql里的
+### 5.3.1、概述
 
-## 5.3、SparkSession
+`DataFrame = RDD + Schema`，其实和关系型数据库表很类似，RDD可以认为是表的数据，Schema 可以认为是表结构的信息；DataFrame 可以通过很多来源构建，包括：结构化的数据文件、Hive中的表、外部的关系型数据库以及RDD；
 
-在Spark2.0之后，主要使用SparkSession来处理了
-```java
-public static void main(String[] args) {
-    String path = "file:///workspace/scala/spark-sql-demo/people.json";
-    SparkSession session = SparkSession.builder().appName("JavaSparkSessionContext")
-            .master("local[2]").getOrCreate();
-    Dataset<Row> dataset = session.read().json(path);
-    dataset.printSchema();
-    dataset.show();
-    session.stop();
+DataFrame也是懒执行的，但性能上比RDD要高，主要原因：优化的执行计划，即查询计划通过 Spark catalyst optimiser进行优化
+
+DataSet 是分布式数据集合，是DataFrame一个扩展
+
+### 5.3.2、创建DataFrame
+
+在SparkSQL中SparkSession是创建DataFrame和执行SQL的入口，创建DataFrame有三种方式：通过Spark的数据源进行创建、从一个存在的RDD进行转换、从HiveTable进行查询返回；
+
+Spark支持的数据源格式：
+```
+scala> spark.read.
+csv   format   jdbc   json   load   option   options   orc   parquet   schema   table   text   textFile
+```
+> 注意：如果从内存中获取数据，spark可以知道数据类型具体是什么。如果是数字，默认为Int处理，但是从文件中读取的数字，不能确定是什么类型，所以用bigint接收，可以和Long类型进行转换
+
+```scala
+def main(args: Array[String]): Unit = {
+    val conf = new SparkConf()
+    conf.setMaster("local[1]")
+    val session = SparkSession.builder().appName("SparkSQLDemo").config(conf).getOrCreate()
+    val stuDf = session.read.json("data/student.json")
+    stuDf.printSchema()
+    session.stop()
 }
 ```
 
-## 5.4、spark-shell方式使用
+### 5.3.3、DataFrame常见操作
 
-spark-shell 要访问hive里面的表需要将hive-site.xml 拷贝到spark的conf目录下
+常见的操作有：printSchema、show、select、filter、where、groupBy、count 等
 
-进入spark-shell控制台访问hive的表
-```
-[root@bluefish lib]# spark-shell --master local[2] --jars /root/spark-log/mysql-connector-java-5.1.28.jar 
-Spark context available as 'sc' (master = local[2], app id = local-1606538300252).
-Spark session available as 'spark'.
-Welcome to
-      ____              __
-     / __/__  ___ _____/ /__
-    _\ \/ _ \/ _ `/ __/  '_/
-   /___/ .__/\_,_/_/ /_/\_\   version 2.4.6
-      /_/
-Using Scala version 2.11.12 (Java HotSpot(TM) 64-Bit Server VM, Java 1.8.0_271)
-Type in expressions to have them evaluated.
-Type :help for more information.
-
-scala> 
-```
-因为hive的元数据信息存储在mysql中，需要知道mysql的驱动包地址
-
-比如查询表，执行查询等：
-```
-scala> spark.sql("show tables").show
-20/11/28 12:39:28 WARN ObjectStore: Failed to get database global_temp, returning NoSuchObjectException
-+--------+--------------+-----------+
-|database|     tableName|isTemporary|
-+--------+--------------+-----------+
-| default|          dept|      false|
-| default|           emp|      false|
-| default|hive_wordcount|      false|
-+--------+--------------+-----------+
-scala> spark.sql("select * from dept").show
-+---+------+----------+--------+
-| id|deptno|     dname|     loc|
-+---+------+----------+--------+
-|  1|    11|KOMvRWiYwm|TGBPuCDj|
-|  2|    12|nKNLpqLGXT|AWjcLvYD|
-|  3|    13|WXZfDzOvMx|ZIrLDIFd|
-+---+------+----------+--------+
-only showing top 20 rows
-```
-
-还可以通过spark—sql命令进入交互界面：
-
-## 5.5、thriftserver
-
-thriftserver/beeline的使用
-- 启动thriftserver: 默认端口是10000 ，可以修改：
-    ```
-    ./start-thriftserver.sh  \
-    --master local[2] \
-    --jars /root/spark-log/mysql-connector-java-5.1.28.jar  \
-    ```
-- 启动beeline：`beeline -u jdbc:hive2://localhost:10000 -n root`
-
-修改thriftserver启动占用的默认端口号：
-```
-./start-thriftserver.sh  \
---master local[2] \
---jars /root/spark-log/mysql-connector-java-5.1.28.jar  \
---hiveconf hive.server2.thrift.port=14000
-```
-那么使用beeline访问时：`beeline -u jdbc:hive2://localhost:14000 -n root`
-
-**thriftserver和普通的spark-shell/spark-sql有什么区别？**
-- spark-shell、spark-sql都是一个spark  application；
-- thriftserver， 不管你启动多少个客户端(beeline/code)，永远都是一个spark application；解决了一个数据共享的问题，多个客户端可以共享数据；
-
-## 5.6、使用jdbc连接thriftserver
-
-```java
-public static void main(String[] args) throws Exception{
-    Class.forName("org.apache.hive.jdbc.HiveDriver");
-    Connection conn = DriverManager.getConnection("jdbc:hive2://localhost:10000", "root", "");
-    PreparedStatement statement = conn.prepareStatement("select empno, ename, sal from emp limit 10");
-    ResultSet rs = statement.executeQuery();
-    while (rs.next()) {
-        System.out.println("empno:" + rs.getInt("empno") +
-                " , ename:" + rs.getString("ename") +
-                " , sal:" + rs.getDouble("sal"));
-    }
-    rs.close();
-    statement.close();
-    conn.close();
+案例：
+```scala
+def main(args: Array[String]): Unit = {
+    val conf = new SparkConf()
+    conf.setMaster("local[1]")
+    val session = SparkSession.builder().appName("SparkSQLDemo").config(conf).getOrCreate()
+    val stuDf = session.read.json("data/student.json")
+    // 打印Schema信息
+    stuDf.printSchema()
+    // 默认显示20条数据，可以通过参数控制显示多少条：def show(): Unit = show(20)
+    stuDf.show()
+    // 查询数据中指定的字段信息
+    stuDf.select("name", "age").show()
+    // 在使用select对数据进行一些操作的时候，需要添加隐式转换函数，否则语法报错
+    import session.implicits._
+    stuDf.select($"name", ($"age" + 1).alias("age")).show()
+    // 对数据进行过滤，需要添加隐式转换函数
+    stuDf.filter($"age" > 18).show()
+    // where底层调用的是 filter： def where(condition: Column): Dataset[T] = filter(condition)
+    stuDf.where($"age" > 18).show()
+    // 对数据进行分组、求和
+    stuDf.groupBy("age").count().show()
+    session.stop()
 }
 ```
-**注意事项**：在使用jdbc开发时，一定要先启动thriftserver
+> 注意：涉及到运算的时候，每列必须都用 `$` 或者采用引号表达式：单引号 + 字段名:
+> - `stuDf.select($"name", ($"age" + 1).alias("age")).show()`
+> - `stuDf.select('name, 'age + 1).show()`
+
+### 5.3.4、DataFrame的SQL操作
+
+如果需要实现支持SQL语句查询DataFrame中的数据，按照如下步骤：
+- 先将DataFrame注册为一个临时表；
+- 使用sparkSession中的sql函数执行sql语句
+
+```scala
+val stuDf = session.read.json("data/student.json")
+// 将DataFrame注册为一个临时视图
+stuDf.createOrReplaceTempView("student")
+// 使用sql查询临时表中的数据
+session.sql("select age, count(*) as num from student group by age").show()
 ```
-Exception in thread "main" java.sql.SQLException:
-Could not open client transport with JDBC Uri: jdbc:hive2://bluefish:14000:
-java.net.ConnectException: Connection refused
+
+### 5.3.5、RDD转换为DataFrame
+
+如果需要将RDD与DataFrame或DataSet之间相互操作，需要引入隐式转换：`import session.implicits._`，这里的session不是包名，而是创建的SparkSession的变量名称，所以必须先创建SparkSession 对象再导入，这里的Spark对象不能使用var声明，因为scala只支持val修饰的对象导入；
+
+Spark SQL支持两种方式将RDD转换为DataFrame
+- 反射方式：前提是事先需要知道你的字段、字段类型    
+- 编程方式：如果第一种情况不能满足你的要求（事先不知道列）
+
+**反射方式：**
+
+这种方式是使用反射来推断RDD中的元数据，基于反射的方式，代码比较简洁，在编码之前，已经知道了RDD中的元数据
+```scala
+object RddToDfByReflect {
+  def main(args: Array[String]): Unit = {
+    val conf = new SparkConf()
+    conf.setMaster("local[1]")
+    val session = SparkSession.builder().appName("SparkSQLDemo").config(conf).getOrCreate()
+    val sc = session.sparkContext
+    val rdd = sc.parallelize(Array(("jack", 18), ("tom", 20), ("jessica", 30)))
+    // 隐式转换，将RDD转换为DataFrame
+    import session.implicits._
+    val stuDf = rdd.map(word => Student(word._1, word._2)).toDF()
+    stuDf.createOrReplaceTempView("student")
+    val resultDF = session.sql("select name,age from student where age > 18")
+    // 将DataFrame转换为RDD
+    val resultRdd = resultDF.rdd
+    resultRdd.map(row => Student(row(0).toString, row(1).toString.toInt))
+      .collect()
+      .foreach(println(_))
+    resultRdd.map(row => Student(row.getAs[String]("name"), row.getAs[Int]("age")))
+      .collect()
+      .foreach(println(_))
+    session.close()
+  }
+}
+case class Student(name: String, age: Int)
 ```
 
-## 5.7、SparkSQL使用场景
+**编程方式：**
 
+可以再程序运行时构建一份元数据，就是schema，将其应用到已存在的RDD上。如果在编写程序时，还不知道RDD的元数据，只有在程序运行时，才能动态得知其元数据，只能通过这种动态构建元数据的方式；
+```scala
+def main(args: Array[String]): Unit = {
+    val conf = new SparkConf()
+    conf.setMaster("local[1]")
+    val session = SparkSession.builder().appName("SparkSQLDemo").config(conf).getOrCreate()
+    val sc = session.sparkContext
+    val rdd = sc.parallelize(Array(("jack", 18), ("tom", 20), ("jessica", 30)))
+    // 组装RowRDD
+    val rowRdd = rdd.map(word => Row(word._1, word._2))
+    // 知道元数据信息，这个元数据信息可以动态从外部获取，
+    val schema = StructType(Array(
+      StructField("name", StringType, nullable = true),
+      StructField("age", IntegerType, nullable = true)
+    ))
+    // 创建DataFrame
+    val stuDf = session.createDataFrame(rowRdd, schema)
+    stuDf.createOrReplaceTempView("student")
+    val resultDF = session.sql("select name,age from student where age > 18")
+    // 将DataFrame转换为RDD
+    val resultRdd = resultDF.rdd
+    resultRdd.map(row => (row(0).toString, row(1).toString.toInt))
+      .collect()
+      .foreach(println(_))
 
-## 5.8、处理json的复杂场景：
+    session.close()
+}
+```
+
+### 5.3.6、DataFrame转换为RDD
+
+DataFrame就是对RDD的封装，可以直接获取内部的RDD
+```
+// 将DataFrame转换为RDD，此时得到的RDD存储类型为Row
+val resultRdd = resultDF.rdd
+resultRdd.map(row => Student(row(0).toString, row(1).toString.toInt))
+  .collect()
+  .foreach(println(_))
+```
+
+### 5.3.7、DataSet
+
+DataSet是具有强类型的数据集合，需要提高对应的类型信息，创建DataSet
+```scala
+// 引入隐式转换
+import session.implicits._
+val stuDs = rdd.map(tup => Student(tup._1, tup._2)).toDS()
+// DataSet与DataFrame互相转换
+val stuDf = stuDs.toDF()
+val stuDs1 = stuDf.as[Student]
+```
+
+### 5.3.8、load和save操作
+
+- load操作主要用于加载数据，创建出DataFrame；
+- save主要用于将DataFrame中的数据保存到文件中；
+
+如果使用原始的format和load方法加载数据，如果不指定format，则默认读取的数据源格式是 parquet，也可以手动指定数据源格式；其内置了一些场景的数据源类型，通过load和save可以在不同类型的数据源进行转换
+
+案例：读取本地json文件，以csv格式写入到hdfs中
+```scala
+val stuDf = session.read.format("json").load("data/student.json")
+stuDf.select("name", "age")
+  .write.format("csv").save("hdfs://bluefish:9000/spark/out-save002")
+```
+
+### 5.3.9、saveMode
+
+Spark SQL对于save操作，提供了不同的save mode，主要用来处理当目标位置已经有数据时该如何处理。save操作不会执行锁操作，并且也不是原子的，因此有一定风险出现脏数据的
+
+写数据模式有以下四种可选项：
+
+| Scala/Java               | 描述                                                         |
+| :----------------------- | :----------------------------------------------------------- |
+| `SaveMode.ErrorIfExists` | 如果给定的路径已经存在文件，则抛出异常，这是写数据默认的模式 |
+| `SaveMode.Append`        | 数据以追加的方式写入                                         |
+| `SaveMode.Overwrite`     | 数据以覆盖的方式写入                                         |
+| `SaveMode.Ignore`        | 如果给定的路径已经存在文件，忽略且不做任何操作 |
+
+```scala
+val stuDf = session.read.format("json").load("data/student.json")
+stuDf.select("name", "age")
+  // 设置追加的模式
+  .write.mode(SaveMode.Append).format("csv").save("hdfs://bluefish:9000/spark/out-save002")
+```
+该目录下的文件
+```
+[root@bluefish script]# hdfs dfs -ls /spark/out-save002/ 
+Found 3 items
+-rw-r--r--   3 bluefish supergroup   0 2021-02-19 18:44 /spark/out-save002/_SUCCESS
+-rw-r--r--   3 bluefish supergroup  42 2021-02-19 18:44 /spark/out-save002/part-00000-8832578a-25b5-4231-8b82-f6a529ba3ee0-c000.csv
+-rw-r--r--   3 bluefish supergroup  42 2021-02-19 18:22 /spark/out-save002/part-00000-bc38c2bd-47f9-471c-93bf-a4143c0be7d2-c000.csv
+```
+
+## 5.4、RDD、DataFrame、DataSet的关系
+
+从版本上来看：Spark1.3中出现的DataFrame，Spark1.6出现了DataSet，Spark2.0后将两者统一，DataFrame 等于 `DataSet[Row]`
+
+**三者的共性**
+- RDD、DataFrame、DataSet 都是Spark下的分布式弹性数据集
+- 三者都有惰性机制，在进行创建、转换时不会立即执行，只有在遇到Action算子的时候才会进行相应的transformation算子操作；
+- 三者有许多相同的函数；
+- 在对DataFrame 和 DataSet 进行操作都需要这个包 `import sparkSession.implicits._`
+- 三者都会根据Spark内存情况自动缓存运算，即使数据量很大，也不用担心内存溢出；
+- 三者都有分区的概念；
+
+## 5.5、SparkSQL内置函数
+
+```
+种类				  函数
+聚合函数			  avg, count, countDistinct, first, last, max, mean, min, sum, sumDistinct
+集合函数			  array_contains, explode, size
+日期/时间函数	  datediff, date_add, date_sub, add_months, last_day, next_day, months_between, current_date, current_timestamp, date_format
+数学函数			  abs, ceil, floor, round
+混合函数			  if, isnull, md5, not, rand, when
+字符串函数		  concat, get_json_object, length, reverse, split, upper
+窗口函数			  denseRank, rank, rowNumber
+```
+SparkSQL里面的函数和Hive中的函数是类似的，文档可以查看Hive中的用法类似
+
+## 5.6、SparkSQL运行原理
+
+DataFrame、DataSet 和 Spark SQL 的实际执行流程都是相同的：
+
+- 进行 DataFrame/Dataset/SQL 编程；
+- 如果是有效的代码，即代码没有编译错误，Spark 会将其转换为一个逻辑计划；
+- Spark 将此逻辑计划转换为物理计划，同时进行代码优化；
+- Spark 然后在集群上执行这个物理计划 (基于 RDD 操作) 。
+
+### 5.6.1、逻辑计划(Logical Plan)
+
+执行的第一个阶段是将用户代码转换成一个逻辑计划。它首先将用户代码转换成 `unresolved logical plan`(未解决的逻辑计划)，之所以这个计划是未解决的，是因为尽管您的代码在语法上是正确的，但是它引用的表或列可能不存在。 Spark 使用 `analyzer`(分析器) 基于 `catalog`(存储的所有表和 `DataFrames` 的信息) 进行解析。解析失败则拒绝执行，解析成功则将结果传给 `Catalyst` 优化器 (`Catalyst Optimizer`)，优化器是一组规则的集合，用于优化逻辑计划，通过谓词下推等方式进行优化，最终输出优化后的逻辑执行计划。
+
+![](image/spark-Logical-Planning.png)
+
+### 5.6.2、物理计划(Physical Plan) 
+
+得到优化后的逻辑计划后，Spark 就开始了物理计划过程。 它通过生成不同的物理执行策略，并通过成本模型来比较它们，从而选择一个最优的物理计划在集群上面执行的。物理规划的输出结果是一系列的 RDDs 和转换关系 (transformations)。
+
+![](image/spark-Physical-Planning.png)
+
+### 5.6.3、执行
+
+在选择一个物理计划后，Spark 运行其 RDDs 代码，并在运行时执行进一步的优化，生成本地 Java 字节码，最后将运行结果返回给用户。 
+
+## 5.8、处理json的复杂场景
 
 ### 5.8.1、数组
 
@@ -1268,117 +1631,6 @@ scala> spark.sql("select name, address.city,address.state from json_tables").sho
 +-------+--------+----------+
 ```
 
-
-# 6、DataFrame
-
-## 6.1、概述
-
-- DataSet：分布式的数据集；
-- DataFrame：以列（列名、列的类型、列值）的形式构成的分布式数据集，按照列赋予不同的名称
-
-以往RDD的方式：
-- java/scala  ==> jvm
-- python ==> python runtime
-
-这样往往对耗时比较高，而DataFrame是：java/scala/python ==> Logic Plan
-
-将所有提交的逻辑执行计划里面去，而不是在JVM或者Python的环境中执行
-
-## 6.2、DataFrame 与 RDD
-
-### 6.2.1、DataFrame使用
-
-```java
-public static void main(String[] args) {
-    SparkSession session = SparkSession.builder().appName("JavaSparkSessionContext")
-            .master("local[2]").getOrCreate();
-    Dataset<Row> df = session.read().json("file:///workspace/scala/spark-sql-demo/people.json");
-    df.printSchema();
-    df.show();
-    df.select("name").show();
-    df.select(df.col("name"), df.col("age")).show();
-    df.select(df.col("name"), df.col("age").plus(10).as("age2")).show();
-    // select * from table where age > 35
-    df.filter(df.col("age").gt(35)).show();
-    df.groupBy(df.col("age")).count().show();
-    session.stop();
-}
-```
-
-- [DataFrame与RDD交互](http://spark.apache.org/docs/2.4.7/sql-getting-started.html#interoperating-with-rdds)
-
-DataFrame和RDD互操作的两种方式：
-- 反射：case class   前提：事先需要知道你的字段、字段类型    
-- 编程：Row          如果第一种情况不能满足你的要求（事先不知道列）
-
-**选型**：优先考虑第一种
-
-### 6.2.2、反射操作方式：
-
-```java
-public static void infer(SparkSession session) {
-    JavaRDD<Info> map = session.read()
-            .textFile("file:///Users/bluefish/Documents/workspace/scala/spark-sql-demo/infos.txt")
-            .toJavaRDD()
-            .map(line -> {
-                String[] lines = line.split(",");
-                return new Info(Integer.parseInt(lines[0]), lines[1], Integer.parseInt(lines[2]));
-            });
-    Dataset<Row> df = session.createDataFrame(map, Info.class);
-    df.printSchema();
-    df.show();
-    df.createOrReplaceTempView("infos");
-    session.sql("select * from infos where age > 35").show();
-    session.stop();
-}
-public static class Info {
-    public int id;
-    public String name;
-    public int age;
-    public Info(int id, String name, int age) {
-        this.id = id;
-        this.name = name;
-        this.age = age;
-    }
-}
-```
-
-### 6.2.3、编程
-
-```java
-public static void program(SparkSession session) {
-    JavaRDD<String> rdd = session.read()
-            .textFile("file:///Users/bluefish/Documents/workspace/scala/spark-sql-demo/infos.txt")
-            .toJavaRDD();
-    // 定义schema
-    String schema = "id name age";
-
-    List<StructField> fields = new ArrayList<>();
-    for (String fieldName : schema.split(" ")) {
-        StructField field = DataTypes.createStructField(fieldName, DataTypes.StringType, true);
-        fields.add(field);
-    }
-    StructType structType = DataTypes.createStructType(fields);
-    JavaRDD<Row> javaRDD = rdd.map((Function<String, Row>) record -> {
-        String[] lines = record.split(",");
-        return RowFactory.create(lines[0], lines[1], lines[2]);
-    });
-
-    Dataset<Row> df = session.createDataFrame(javaRDD, structType);
-    df.printSchema();
-    df.show();
-    df.createOrReplaceTempView("infos");
-    session.sql("select * from infos where age > 35").show();
-    session.stop();
-}
-```
-
-## 6.3、DataFrame与Spark SQL
-
-- DataFrame = RDD + Schema
-- DataFrame 实际上是一个Row
-- DataFrame over RDD
-
 # 7、外部数据源
 
 [数据源](http://spark.apache.org/docs/2.4.7/sql-data-sources.html)
@@ -1433,19 +1685,72 @@ val jdbcDF2 = spark.read.jdbc("jdbc:mysql://localhost:3306", "hive.TBLS", connec
 
 # 8、性能优化
 
-- 存储格式
+## 8.1、基本优化思路
 
+- 存储格式
 - 压缩格式：压缩速度、压缩文件的可分割性
 
     设置压缩格式：`config("spark.sql.parquet.compression.codec","gzip")`
 
 - 代码：选用高性能算子
-
 - 代码：复用已有的数据
-
 - 参数：并行度选择`spark.sql.shuffle.partitions`
-
 - 参数：分区字段类型推测`spark.sql.sources.paritionsColumnTypeInference.enabled`，默认是开启的
+
+一个计算任务的执行主要依赖于CPU、内存、带宽；Spark是一个基于内存的计算引擎，所以影响性能的最大可能是内存，一般遇到性能的瓶颈基本上都是内存问题；
+
+Spark的性能优化主要都是基于内存的的优化；
+
+## 8.2、内存的占用
+
+- 每个Java对象，都有一个对象头，会占用16个字节，主要是包括了一些对象的元信息，比如指向它的类的指针。如果一个对象本身很小，比如就包括了一个int类型的field，那么它的对象头实际上比对象自身还要大；
+- Java的String对象的对象头，会比它内部的原始数据，要多出40个字节。因为它内部使用char数组来保存内部的字符序列，并且还要保存数组长度之类的信息；
+- Java中的集合类型，比如HashMap和LinkedList，内部使用的是链表数据结构，所以对链表中的每一个数据，都使用了Entry对象来包装。Entry对象不光有对象头，还有指向下一个Entry的指针，通常占用8个字节
+
+## 8.3、选用高性能序列化类库
+
+不使用默认的Java序列化机制，使用Kryo序列化机制
+
+> 持久化与checkpoint的优化，都可以使用高性能序列化类库来操作；
+
+## 8.4、Jvm垃圾回收调优
+
+针对Spark任务如果内存设置不合理会导致大部分时间消耗在垃圾回收上；对于垃圾回收来说，最重要的就是调节RDD缓存占用的内存空间和算子执行时创建的对象占用的内存空间的比例；
+
+默认情况下，Spark使用每个Executor 60% 的内存空间来缓存RDD，那么只有 40% 的内存空间来存储算子执行期间创建的对象。这种情况下，可能由于内存空间的不足，并且算子对应的task任务在运行时创建的对象过大，那么一旦发生 40% 的内存空间不够用了，就会触发JVM的垃圾回收操作，因此在极端情况下，垃圾回收操作可能会被频繁触发；
+
+可以对该比例进行设置，通过参数：`spark.storage.memoryFraction`，其默认值是 0.6，通过SparkConf可以设置；
+
+如果发现在task执行期间，大量full gc发生，说明年轻代的Eden区域空间不够大，可以通过如下方式优化：
+- 最直接的是提高Executor的内存，在spark-submit中，通过参数指定executor内存：`--executor-memory 1G`；
+- 调整年轻代Eden和s1、s2的比例（一般不建议），具体在使用的时候再 spark-submit 中通过 --conf 参数指定：`--conf "spark.executor.extraJavaOptions= -XX:SurvivorRatio=4 -XX:NewRatio=4"`
+
+## 8.5、提高并行度
+
+```
+--name mySparkJobName：指定任务名称
+--class com.imooc.scala.xxxxx ：指定入口类
+--master yarn ：指定集群地址，on yarn模式指定yarn
+--deploy-mode cluster ：client代表yarn-client，cluster代表yarn-cluster
+--executor-memory 1G ：executor进程的内存大小，实际工作中设置2~4G即可
+--num-executors 2 ：分配多少个executor进程
+--executor-cores 2 : 一个executor进程分配多少个cpu core
+--driver-cores 1 ：driver进程分配多少cpu core，默认为1即可
+--driver-memory 1G：driver进程的内存，如果需要使用类似于collect之类的action算子向driver端拉取数据，则这里可以设置大一些
+--jars fastjson.jar,abc.jar 在这里可以设置job依赖的第三方jar包【不建议把第三方依赖jar包整体打包进saprk的job中，那样会导致任务jar包过大，并且也不方便统一管理依赖jar包的版本，这里的jar包路径可以指定本地磁盘路径，或者是hdfs路径，建议使用hdfs路径，因为spark在提交任务的时候会把本地磁盘的依赖jar包也上传到hdfs的一个临时目录中，如果在这里本来指定的就是hdfs的路径，那么spark在提交任务的时候就不会重复提交依赖的这个jar包了，这样其实可以提高任务提交的效率，并且这样可以方便统一管理第三方依赖jar包，所有人都统一使用hdfs中的共享的这些第三方jar包，这样版本就统一了，所以我们可以在hdfs中创建一个类似于commonLib的目录，统一存放第三方依赖的jar包，如果一个Spark job需要依赖多个jar包，在这里可以一次性指定多个，多个jar包之间通过逗号隔开即可】
+--conf "spark.default.parallelism=10"：可以动态指定一些spark任务的参数，指定多个参数可以通过多个--conf来指定，或者在一个--conf后面的双引号中指定多个，多个参数之间用空格隔开即可
+```
+
+## 8.6、数据本地化
+
+```
+数据本地化级别			解释
+PROCESS_LOCAL		进程本地化，性能最好：数据和计算它的代码在同一个JVM进程中
+NODE_LOCAL			节点本地化：数据和计算它的代码在一个节点上，但是不在一个JVM进程中，数据需要跨进程传输
+NO_PREF				数据从哪里过来，性能都是一样的，比如从数据库中获取数据，对于task而言没有区别
+RACK_LOCAL			数据和计算它的代码在一个机架上，数据需要通过网络在节点之间进行传输
+ANY					数据可能在任意地方，比如其它网络环境内，或者其它机架上，性能最差
+```
 
 
 # 参考资料
