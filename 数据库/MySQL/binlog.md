@@ -180,6 +180,8 @@ docker run -it --rm zendesk/maxwell bin/maxwell --user='maxwell' --password='123
 
 - [Canal源码](https://github.com/alibaba/canal.git)
 
+### 2.1、基本介绍
+
  Canal 一个非常常用的使用场景：数据异构，一种更高级别的数据读写分离架构设计方法
 
 - 定位：基于数据库增量日志解析，提供增量数据订阅&消费，目前主要支持了mysql。

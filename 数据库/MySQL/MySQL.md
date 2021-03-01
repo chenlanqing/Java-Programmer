@@ -3652,7 +3652,10 @@ explain select max(payment_date) from payment；
 		|  1 | PRIMARY     | e          | NULL       | eq_ref | PRIMARY       | PRIMARY | 4       | t.emp_no |      1 |   100.00 | NULL        |
 		|  2 | DERIVED     | employees  | NULL       | index  | NULL          | PRIMARY | 4       | NULL     | 299512 |   100.00 | Using index |
 		```
-	- 优化方式4：范围查询 + limit语句
+	- 优化方式4：范围查询 + limit语句，`select * from employees where emp_no > 10010 limit 10;`  这里关键点是需要获得上一次分页查询的最大的ID，这里是根据id排序的数据；
+
+		如果是根据其他字段排序，比如一般使用的创建时间（createTime）排序，因为 createTime不是唯一的，所以不能确定上一次最后一条记录对应的创建时间，哪些是下一页的，哪些是上一页的；这时候，增加一个请求参数`lastEndCount`：表示上一次查询最后一条记录对应的创建时间，有多少条是这同一时间的，这个根据上一次的数据统计；
+
 
 	- 优化方式5：如果获得起始主键 + 结束主键，使用范围查询
 

@@ -548,7 +548,7 @@ zookeeper.connect=localhost:2181/kafka
 
 单机模式下，修改完上述配置参数之后就可以启动服务
 ```
-bin/kafka-server-start.sh config/server.properties
+bin/kafka-server-start.sh -daemon config/server.properties
 ```
 
 ## 2、安装kafka-manager
