@@ -1,4 +1,4 @@
-# 一、安装数据库
+# 一、安装MySQL数据库
 
 [CentOS7.2使用yum安装MYSQL5.7.10](https://typecodes.com/linux/yuminstallmysql5710.html)
 
@@ -157,6 +157,12 @@ MySQL的配置文件依然是`/etc/my.cnf`，其它安装信息可以通过mysql
         ```sql
         grant all privileges on *.* to 'root'@'127.0.0.1' identified by 'root' with grant option;
         ```
+
+**MySQL8支持远程访问：**
+- 登录mysql，切换数据库为mysql：`use mysql`；
+- 更新域属性，'%'表示允许外部访问：`update user set host='%' where user ='root';`
+- 执行以上语句之后再执行：`FLUSH PRIVILEGES;`
+- 再执行授权语句：`GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'WITH GRANT OPTION;`
 
 ### 1.10、删除MySQL的Repository
 

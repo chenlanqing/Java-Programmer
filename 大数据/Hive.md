@@ -576,7 +576,7 @@ Hive 表中的列支持以下基本数据类型：
 
 | 大类                                    | 类型                                                         |
 | --------------------------------------- | ------------------------------------------------------------ |
-| **INT/Integers（整型）**                    | TINYINT—1 字节的有符号整数 <br/>SMALLINT—2 字节的有符号整数<br/> INT—4 字节的有符号整数<br/> BIGINT—8 字节的有符号整数 |
+| **INT/Integers（整型）**  | TINYINT—1 字节的有符号整数 <br/>SMALLINT—2 字节的有符号整数<br/> INT—4 字节的有符号整数<br/> BIGINT—8 字节的有符号整数 |
 | **Boolean（布尔型）**                   | BOOLEAN—TRUE/FALSE                                           |
 | **Floating point numbers（浮点型）**    | FLOAT— 单精度浮点型 <br/>DOUBLE—双精度浮点型                 |
 | **Fixed point numbers（定点数）**       | DECIMAL—用户自定义精度定点数，比如 DECIMAL(7,2)               |
