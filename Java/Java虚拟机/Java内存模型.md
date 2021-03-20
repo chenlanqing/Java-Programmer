@@ -25,9 +25,28 @@
 * 写失效：当一个CPU修改数据，如果有其他CPU修改数据，则通知其为无效；
 * 写更新：当一个CPU修改数据，如果有其他CPU有该数据，则通知其更新数据；
 
-### 2.2、cache line
+### 2.2、缓存行-cache line
 
 `cache line`是cache与内存数据交换的最小单位，根据操作系统一般是32byte或者64byte。在MESI协议中，状态可以是`M、E、S、I`；地址则是`cache line`中映射的内存地址，数据则是从内存读取的数据
+
+如在centos上查看缓存行的大小：
+```
+cat /sys/devices/system/cpu/cpu0/cache/index0/coherency_line_size
+cat /sys/devices/system/cpu/cpu0/cache/index1/coherency_line_size
+cat /sys/devices/system/cpu/cpu0/cache/index2/coherency_line_size
+cat /sys/devices/system/cpu/cpu0/cache/index3/coherency_line_size
+
+或者通过cpuinfo也可以得到一样的结果
+[root@bluefish ~]# cat /proc/cpuinfo | grep cache
+cache size      : 33792 KB
+cache_alignment : 64
+cache size      : 33792 KB
+cache_alignment : 64
+cache size      : 33792 KB
+cache_alignment : 64
+cache size      : 33792 KB
+cache_alignment : 64
+```
 
 ### 2.3、状态介绍
 

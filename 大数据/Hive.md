@@ -238,15 +238,20 @@ hive的日志分为启动日志和分析日志，可以修改conf目录下的两
 
 ## 5.1、数据库操作
 
-**查看数据库列表：**
+### 5.1.1、查看数据库列表
+
 ```
 hive (default)> show databases;
 OK
 default
 Time taken: 1.057 seconds, Fetched: 1 row(s)
+hive (default)> show databases like 'db_%';
+OK
+database_name
 ```
 
-**选择数据库：**
+### 5.1.2、选择数据库
+
 ```
 Time taken: 1.057 seconds, Fetched: 1 row(s)
 hive (default)> use default;
@@ -272,7 +277,8 @@ mysql> select * from DBS;
 1 row in set (0.00 sec)
 ```
 
-**创建数据库：**
+### 5.1.3、创建数据库
+
 ```
 hive (default)> create database mydb;
 OK
@@ -314,7 +320,13 @@ mysql> select * from DBS;
 3 rows in set (0.00 sec)
 ```
 
-**显示数据库详情**
+修改数据库：用户可以使用 ALTER DATABASE 命令为某个数据库的 DBPROPERTIES 设置键-值对属性值，来描述这个数据库的属性信息
+```
+hive (default)> alter database db_hive set dbproperties('createtime'='20200830');
+```
+
+### 5.1.4、显示数据库详情
+
 ```sql
 -- 显示数据库信息
 hive (default)> desc database mydb;
@@ -331,18 +343,29 @@ mydb            hdfs://bluefish:9000/user/hive/warehouse/mydb.db        root    
 Time taken: 0.026 seconds, Fetched: 1 row(s)
 ```
 
-**删除数据库**
+### 5.1.5、删除数据库
+
 ```
 hive (default)> drop database mydb2;
 OK
 Time taken: 0.06 seconds
+```
+如果数据库不为空，可以采用 cascade 命令，强制删除
+```
+hive> drop database db_hive;
+FAILED: Execution Error, return code 1 from
+org.apache.hadoop.hive.ql.exec.DDLTask.
+InvalidOperationException(message:Database db_hive is not empty. One or
+more tables exist.)
+hive> drop database db_hive cascade;
 ```
 
 ## 5.2、表操作
 
 > 注意：在hive建表语句中，缩进不要使用tab制表位，拷贝到hive命令行中执行会提示语句错误；
 
-**创建表**
+### 5.2.1、创建表
+
 ```sql
 -- 基本语法：
 CREATE [EXTERNAL] TABLE [IF NOT EXISTS] table_name
@@ -362,7 +385,8 @@ CREATE [EXTERNAL] TABLE [IF NOT EXISTS] table_name
 - `ROW FORMAT DELIMITED [FIELDS TERMINATED BY char] [COLLECTION ITEMS TERMINATED BY char] [MAP KEYS TERMINATED BY char] [LINES TERMINATED BY char] | SERDE serde_name [WITH SERDEPROPERTIES (property_name=property_value, property_name=property_value, ...)]`；用户在建表的时候可以自定义 SerDe 或者使用自带的 SerDe。如果没有指定 ROW FORMAT 或者 ROW FORMAT DELIMITED，将会使用自带的 SerDe。在建表的时候，用户还需 要为表指定列，用户在指定表的列的同时也会指定自定义的 SerDe，Hive 通过 SerDe 确定表 的具体的列的数据；
 - stored as 指定存储文件类型，常用的存储文件；诶下：sequenceFile（二进制序列文件）、textfile（文本）、rcfile（列式存储格式文件）；如果是纯文本，可以使用stored as textfile。如果数据需要压缩，使用 stored as sequencefile
 
-**查看当前数据库中表信息**
+### 5.2.2、查看当前数据库中表信息
+
 ```sql
 hive (default)> show tables;
 OK
@@ -371,16 +395,64 @@ t2
 Time taken: 0.033 seconds, Fetched: 3 row(s)
 ```
 
-**查看表结构信息**
+### 5.2.3、查看表结构信息
+
 ```sql
 hive (default)> desc t2;
 OK
 col_name        data_type       comment
 id                      int                                         
 Time taken: 0.064 seconds, Fetched: 1 row(s)
+
+hive (default)> desc formatted video_orc;
+OK
+col_name        data_type       comment
+# col_name              data_type               comment             
+videoid                 string                                      
+uploader                string                                      
+age                     int                                         
+category                array<string>                               
+length                  int                                         
+views                   int                                         
+rate                    float                                       
+ratings                 int                                         
+comments                int                                         
+relatedid               array<string>                               
+                 
+# Detailed Table Information             
+Database:               default                  
+OwnerType:              USER                     
+Owner:                  root                     
+CreateTime:             Sat Mar 13 09:54:28 CST 2021     
+LastAccessTime:         UNKNOWN                  
+Retention:              0                        
+Location:               hdfs://bluefish:9000/user/hive/warehouse/video_orc   
+Table Type:             MANAGED_TABLE            
+Table Parameters:                
+        COLUMN_STATS_ACCURATE   {\"BASIC_STATS\":\"true\"}
+        bucketing_version       2                   
+        numFiles                1                   
+        numRows                 743569              
+        orc.compress            SNAPPY              
+        rawDataSize             1612270774          
+        totalSize               120893183           
+        transient_lastDdlTime   1615600754          
+                 
+# Storage Information            
+SerDe Library:          org.apache.hadoop.hive.ql.io.orc.OrcSerde        
+InputFormat:            org.apache.hadoop.hive.ql.io.orc.OrcInputFormat  
+OutputFormat:           org.apache.hadoop.hive.ql.io.orc.OrcOutputFormat         
+Compressed:             No                       
+Num Buckets:            -1                       
+Bucket Columns:         []                       
+Sort Columns:           []                       
+Storage Desc Params:             
+        serialization.format    1                   
+Time taken: 0.216 seconds, Fetched: 41 row(s)
 ```
 
-**查看表的创建信息**
+### 5.2.4、查看表的创建信息
+
 ```sql
 hive (default)> show create table t2;
 OK
@@ -423,14 +495,30 @@ mysql> SELECT * FROM COLUMNS_V2;
 +-------+---------+-------------+---------------+-------------+
 ```
 
-**修改表名**，对表名进行重命名，同步的hdfs中目录的名称也发生了变化
+### 5.2.5、修改表
+
+**表重命名：**
+
+对表名进行重命名，同步的hdfs中目录的名称也发生了变化：`alter table table_name renamt to new_table_name`
 ```sql
 hive (default)> alter table t2 rename to t2_bak;
 OK
 Time taken: 0.161 seconds
 ```
 
-**加载数据**
+**修改列与更新列：**
+- 更新列：` ALTER TABLE table_name CHANGE [COLUMN] col_old_name col_new_name column_type [COMMENT col_comment] [FIRST|AFTER column_name]`
+
+    更新列时需要注意的是，如果修改字段的类型只能向上转，比如将int转为string；但是如果将string转为int是不支持的；如果只是修改字段的名称，需要将字段的类型加上，避免SQL报错
+    ```sql
+    alter table test1 change id stu_id string;
+    ```
+
+- 增加和替换列：`ALTER TABLE table_name ADD|REPLACE COLUMNS (col_name data_type [COMMENTcol_comment], ...)`
+    - add：代表是新增一个字段，字段的位置放在最后（在partition字段之前）
+    - replace：表示替换表中的所有字段，对于已存在的数据则根据表定义时指定的列分隔符；
+
+### 5.2.6、加载数据
 
 一般很少使用insert命令往hive的表中添加数据，向表中加载数据通常是有load命令。以上面表 t2_bak为例，假设在服务器 `/data/hivedata`目录下有个 t2.data 文件，需要将其加载到 `t2_bak` 中
 ```sql
@@ -462,7 +550,8 @@ Found 1 items
 ```
 如果通过hdfs的put命令将数据上传到对应的表的hdfs目录下，对应的数据也可以直接在hive中显示的；
 
-**表增加字段及注释**
+### 5.2.7、表增加字段及注释
+
 ```sql
 -- 添加字段
 hive (default)> alter table t2_bak add columns(name string);
@@ -492,14 +581,15 @@ alter table PARTITION_PARAMS modify column PARAM_VALUE varchar(4000) character s
 alter table PARTITION_KEYS modify column PKEY_COMMENT varchar(4000) character set utf8;
 ```
 
-**删除表**
+### 5.2.8、删除表
+
 ```sql
 hive (default)> drop table t2;
 OK
 Time taken: 0.26 seconds
 ```
 
-**指定列和行分隔符**
+### 5.2.9、指定列和行分隔符
 
 比如下面的表需要记载的数据
 ```sql
@@ -563,6 +653,12 @@ t3_new.id       t3_new.stu_name t3_new.stu_birthday     t3_new.online
 3       王五    2020-03-01      NULL
 ```
 > 针对无法识别的数据显示NULL；hive不会提前检查数据，只有在使用的时候才会检查数据，如果数据有问题就显示NULL，也不报错；
+
+总结：
+- `row format delimited fields terminated by ','`  指定列分隔符；
+- `collection items terminated by '_'`   MAP STRUCT 和 ARRAY 的分隔符(数据分割符号)
+- `map keys terminated by ':'`    MAP 中的 key 与 value 的分隔符
+- `lines terminated by '\n';`     行分隔符，可以忽略不写，如果要写，只能写到最后面
 
 ## 5.3、数据类型
 
@@ -1082,6 +1178,38 @@ mysql> select TBL_ID,DB_ID,OWNER,SD_ID,TBL_NAME,TBL_TYPE,VIEW_EXPANDED_TEXT FROM
 
 ### 6.1.1、向表中加载数据
 
+`load data [local] inpath '数据的 path' [overwrite] into table student [partition (partcol1=val1,...)];`
+- `load data`：表示加载数据
+- `local`：表示从本地加载数据到 hive 表;否则从 HDFS 加载数据到 hive 表
+- `inpath`：表示加载数据的路径
+- `overwrite`：表示覆盖表中已有数据，否则表示追加
+- `into table`：表示加载到哪张表
+- `student`：表示具体的表
+- `partition`：表示上传到指定分区
+
+### 6.1.2、通过查询语句向表中插入数据(Insert)
+
+- `insert into`：以追加数据的方式插入到表或分区，原有数据不会删除 
+- `insert overwrite`：会覆盖表中已存在的数据
+
+> 注意：insert 不支持插入部分字段
+
+**多表(多分区)插入模式(根据多张表查询结果)**
+```sql
+from student
+insert overwrite table student partition(month='201707')
+select id, name where month='201709'
+insert overwrite table student partition(month='201706')
+select id, name where month='201709';
+```
+
+### 6.1.3、查询语句中创建表并加载数据(As Select)
+
+根据查询结果创建表(查询的结果会添加到新创建的表中)
+```
+create table if not exists student3
+as select id, name from student;
+```
 
 # 7、Hive函数
 
@@ -1690,6 +1818,8 @@ select count(tmp.name) from(select name from order group by name) tmp;
 
 ## 7.3、其他内置函数
 
+[Hive函数列表](https://cwiki.apache.org/confluence/display/Hive/LanguageManual+UDF#LanguageManualUDF-DateFunctions)
+
 ```
 常用日期函数
 unix_timestamp:返回当前或指定时间的时间戳	
@@ -1922,9 +2052,8 @@ hadoop
 hive
 ```
 
-# Tez
+# 8、Tez引擎
 
-Hive基础 Tez
 
 
 # 参考资料

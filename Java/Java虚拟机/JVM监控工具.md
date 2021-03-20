@@ -1,5 +1,5 @@
 
- ***以下使用的 JDK 版本为 1.8***
+ ***说明：以下使用的 JDK 版本为 1.8***
 
 - 当你排查线上问题，需要查看 GC 日志，发现没有打印 GC 的详细信息，可以通过 jinfo 开启 JVM 参数 PrintGCDetails 来动态生效。
 - 当你分析内存泄露风险时，可以通过 jmap 或 jcmd 定期获取堆对象的统计信息，来发现持续增长的可疑对象。
@@ -13,6 +13,25 @@
 - 功能：用于监视虚拟机各种运行状态信息的命令行工具。它可以显示本地或者远程虚拟机进程中类装载、内存垃圾收集、JIT 编译等运行数据，在没有GUI图形界面，只提供了纯文本控制台环境的服务器上，是运行期定位虚拟机性能问题的首选工具；
 
 - 用法：`jstat [option vmid [interval [s|ms] [count]]]`
+   ```
+   ➜ jstat -h
+   Usage: jstat --help|-options
+          jstat -<option> [-t] [-h<lines>] <vmid> [<interval> [<count>]]
+
+   Definitions:
+   <option>      指定参数，取值可用jstat -options查看
+   <vmid>        VM标识，格式为<lvmid>[@<hostname>[:<port>]]
+                  <lvmid>：如果lvmid是本地VM，那么用进程号即可; 
+                  <hostname>：目标JVM的主机名;
+                  <port>：目标主机的rmiregistry端口;
+   -t            用来展示每次采样花费的时间
+   <lines>       每抽样几次就列一个标题，默认0，显示数据第一行的列标题
+   <interval>    抽样的周期，格式使用:<n>["ms"|"s"]，n是数字，ms/s是时间单位，默认是ms
+   <count>       采样多少次停止
+   -J<flag>      将<flag>传给运行时系统，例如：-J-Xms48m
+   -? -h --help  Prints this help message.
+   -help         Prints this help message.
+   ```
    
    注意：如果是本地虚拟机进行，则 VMID 和 LVMID 是一致的，如果远程虚拟机进程，那 VMID 格式为：`[protocol：][//] lvmid[@hostname[：port]/servername]`
    
@@ -41,11 +60,11 @@ C:\Users\BlueFish>jstat -class 2120
 Loaded  Bytes  Unloaded  Bytes     Time
 	3043  2819.6        0     0.0      12.47 
 ```
-Loaded：加载class的数量 <br>
-Bytes：所占用空间大小（kb） <br>
-Unloaded：未加载数量，卸载类的数量 <br>
-Bytes：当前卸载的空间(单位KB) <br>
-Time：执行类加载/卸载操作所花费的时间
+- Loaded：加载class的数量
+- Bytes：所占用空间大小（kb）
+- Unloaded：未加载数量，卸载类的数量 
+- Bytes：当前卸载的空间(单位KB) 
+- Time：执行类加载/卸载操作所花费的时间
 
 ## 2、编译统计
 
@@ -54,12 +73,12 @@ C:\Users\BlueFish>jstat -compiler 2120
 Compiled Failed Invalid   Time   FailedType FailedMethod
      536      0       0     0.45          0
 ```
-Compiled：执行了多少次编译任务<br>
-多少次编译任务执行失败<br>
-Invalid：无效的编译任务数<br>
-Time：执行编译任务所花费的时间<br>
-FailedType：上次失败的编译的编译类型<br>
-FailedMethod：上次失败的编译的类名和方法<br>
+- Compiled：执行了多少次编译任务
+- Failed：多少次编译任务执行失败
+- Invalid：无效的编译任务数
+- Time：执行编译任务所花费的时间
+- FailedType：上次失败的编译的编译类型
+- FailedMethod：上次失败的编译的类名和方法
 
 ## 3、垃圾回收统计
 
@@ -96,24 +115,24 @@ C:\Users\BlueFish>jstat -gccapacity 2120
  NGCMN    NGCMX     NGC     S0C   S1C       EC      OGCMN      OGCMX       OGC         OC       MCMN     MCMX      MC     CCSMN    CCSMX     CCSC    YGC    FGC
   5440.0 262144.0   5504.0  512.0  512.0   4480.0    10944.0   524288.0    10944.0    10944.0      0.0  10624.0   9728.0      0.0      0.0      0.0     15     1
 ```
-- NGCMN：新生代最小容量
-- NGCMX：新生代最大容量
-- NGC：当前新生代容量
-- S0C：第一个Survivor space的大小
-- S1C：第二个Survivor space的大小
-- EC：Eden space 伊甸园区的大小
-- OGCMN：老年代最小容量
-- OGCMX：老年代最大容量
-- OGC：当前老年代大小
-- OC ：当前老年代大小
-- MCMN：最小元数据容量
-- MCMX：最大元数据容量
-- MC ：当前元数据空间大小
-- CCSMN：最小压缩类空间大小
-- CCSMX：最大压缩类空间大小
-- CCSC：当前压缩类空间大小
+- NGCMN：新生代最小容量（KB）
+- NGCMX：新生代最大容量（KB）
+- NGC：当前新生代容量（KB）
+- S0C：第一个Survivor space的大小（KB）
+- S1C：第二个Survivor space的大小（KB）
+- EC：Eden space 伊甸园区的大小（KB）
+- OGCMN：老年代最小容量（KB）
+- OGCMX：老年代最大容量（KB）
+- OGC：当前老年代大小（KB）
+- OC ：当前老年代大小（KB）
+- MCMN：最小元数据容量（KB）
+- MCMX：最大元数据容量（KB）
+- MC ：当前元数据空间大小（KB）
+- CCSMN：最小压缩类空间大小（KB）
+- CCSMX：最大压缩类空间大小（KB）
+- CCSC：当前压缩类空间大小（KB）
 - YGCT：年轻代gc次数
-- FGCT：老年代GC次数
+- FGCT：Full GC次数
 
 ## 5、新生代回收统计
 
@@ -122,15 +141,15 @@ C:\Users\Administrator>jstat -gcnew 7172
  S0C    S1C    S0U    S1U   TT MTT  DSS       EC        EU     		YGC    YGCT
 40960.0 40960.0 25443.1    0.0 15  15 20480.0 327680.0 222697.8     12    0.736
 ```
-- S0C：第一个幸存区大小
-- S1C：第二个幸存区的大小
-- S0U：第一个幸存区的使用大小
-- S1U：第二个幸存区的使用大小
+- S0C：第一个幸存区大小（KB）
+- S1C：第二个幸存区的大小（KB）
+- S0U：第一个幸存区的使用大小（KB）
+- S1U：第二个幸存区的使用大小（KB）
 - TT：对象在新生代存活的次数
 - MTT：对象在新生代存活的最大次数
-- DSS：期望的幸存区大小
-- EC：伊甸园区的大小
-- EU：伊甸园区的使用大小
+- DSS：期望的幸存区大小（KB）
+- EC：伊甸园区的大小（KB）
+- EU：伊甸园区的使用大小（KB）
 - YGC：年轻代垃圾回收次数
 - YGCT：年轻代垃圾回收消耗时间
 
@@ -141,17 +160,17 @@ C:\Users\Administrator>jstat -gcnewcapacity 7172
 NGCMN      NGCMX       NGC      S0CMX     S0C     S1CMX     S1C       ECMX        EC      YGC   FGC
 409600.0   409600.0   409600.0  40960.0  40960.0  40960.0  40960.0   327680.0   327680.0    12     0
 ```
-- NGCMN：新生代最小容量
-- NGCMX：新生代最大容量
-- NGC：当前新生代容量
-- S0CMX：最大幸存1区大小
-- S0C：当前幸存1区大小
-- S1CMX：最大幸存2区大小
-- S1C：当前幸存2区大小
-- ECMX：最大伊甸园区大小
-- EC：当前伊甸园区大小
+- NGCMN：新生代最小容量（KB）
+- NGCMX：新生代最大容量（KB）
+- NGC：当前新生代容量（KB）
+- S0CMX：最大幸存1区大小（KB）
+- S0C：当前幸存1区大小（KB）
+- S1CMX：最大幸存2区大小（KB）
+- S1C：当前幸存2区大小（KB）
+- ECMX：最大伊甸园区大小（KB）
+- EC：当前伊甸园区大小（KB）
 - YGC：年轻代垃圾回收次数
-- FGC：老年代回收次数
+- FGC：Full GC回收次数
 
 ## 7、老年代垃圾回收统计
 
@@ -160,16 +179,16 @@ C:\Users\Administrator>jstat -gcold 7172
    MC       MU      CCSC     CCSU       OC          OU       YGC    FGC    FGCT     GCT
  33152.0  31720.8      0.0      0.0    638976.0    184173.0     12     0    0.000    0.736
 ```
-- MC：方法区大小
-- MU：方法区使用大小
-- CCSC:压缩类空间大小
-- CCSU:压缩类空间使用大小
-- OC：老年代大小
-- OU：老年代使用大小
-- YGC：年轻代垃圾回收次数
-- FGC：老年代垃圾回收次数
-- FGCT：老年代垃圾回收消耗时间
-- GCT：垃圾回收消耗总时间
+- MC：方法区大小（KB）
+- MU：方法区使用大小（KB）
+- CCSC:压缩类空间大小（KB）
+- CCSU:压缩类空间使用大小（KB）
+- OC：老年代大小（KB）
+- OU：老年代使用大小（KB）
+- YGC：年轻代垃圾回收次数（KB）
+- FGC：Full GC 垃圾回收次数（KB）
+- FGCT：Full GC消耗时间（KB）
+- GCT：垃圾回收消耗总时间（KB）
 
 ## 8、老年代内存统计
 
@@ -178,13 +197,13 @@ C:\Users\Administrator>jstat -gcoldcapacity 7172
 OGCMN       OGCMX        OGC         OC       YGC   FGC    FGCT     GCT
 638976.0    638976.0    638976.0    638976.0    12     0    0.000    0.736
 ```
-- OGCMN：老年代最小容量
-- OGCMX：老年代最大容量
-- OGC：当前老年代大小
-- OC：老年代大小
+- OGCMN：老年代最小容量（KB）
+- OGCMX：老年代最大容量（KB）
+- OGC：当前老年代大小（KB）
+- OC：老年代大小（KB）
 - YGC：年轻代垃圾回收次数
-- FGC：老年代垃圾回收次数
-- FGCT：老年代垃圾回收消耗时间
+- FGC：Full GC次数
+- FGCT：Full GC消耗时间
 - GCT：垃圾回收消耗总时间
 
 ## 9、元数据空间统计
@@ -194,15 +213,15 @@ C:\Users\Administrator>jstat -gcmetacapacity 7172
 MCMN       MCMX        MC       CCSMN      CCSMX       CCSC     YGC   FGC    FGCT     GCT
 0.0    33152.0    33152.0        0.0        0.0        0.0    12     0    0.000    0.736
 ```
-- MCMN:最小元数据容量
-- MCMX：最大元数据容量
-- MC：当前元数据空间大小
-- CCSMN：最小压缩类空间大小
-- CCSMX：最大压缩类空间大小
-- CCSC：当前压缩类空间大小
+- MCMN:最小元数据容量（KB）
+- MCMX：最大元数据容量（KB）
+- MC：当前元数据空间大小（KB）
+- CCSMN：最小压缩类空间大小（KB）
+- CCSMX：最大压缩类空间大小（KB）
+- CCSC：当前压缩类空间大小（KB）
 - YGC：年轻代垃圾回收次数
-- FGC：老年代垃圾回收次数
-- FGCT：老年代垃圾回收消耗时间
+- FGC：Full GC 次数
+- FGCT：Full GC 消耗时间
 - GCT：垃圾回收消耗总时间
 
 ## 10、总结垃圾回收统计
@@ -233,12 +252,11 @@ Compiled  Size  Type Method
 - Compiled：最近编译方法的数量
 - Size：最近编译方法的字节码数量
 - Type：最近编译方法的编译类型。
-- Method：方法名标识
+- Method：标识最近编译方法的类目和方法名，类目使用/代替点作为名称空间分隔符，方法名称是指定类中的方法，这两个字段的格式与HotSpot：`-XX:+PrintCompilation` 选项一致；
 
 # 二、jstack
 
 Java 堆栈跟踪工具(Stack Trace for Java)：
-
 - 功能：用于生成虚拟机当前时刻的线程快照（一般称为 threaddump 或者 javacore 文件）线程快照就是当前虚拟机内每一条线程正在执行的方法堆栈的集合，生成线程快照的主要目的是定位线程出现长时间停顿的原因，如线程间死锁，死循环，请求外部资源导致的长时间等待.线程出现停顿的时候通过jstack来查看各个线程的调用堆栈，就可以知道没有响应的线程到底在后台做什么；
 
 - 用法：jstack [option] vmid
@@ -250,8 +268,7 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 
 ## 1、使用jstack分析cpu消耗过高的问题
 
-当linux出现cpu被java程序消耗过高时，可以使用如下步骤来进行问题排查
-
+当linux出现cpu被java程序消耗过高时或者长时间线程等待时，可以使用如下步骤来进行问题排查
 - （1）top查找出哪个进程消耗的cpu高
 - （2）top中shift+h查找出哪个线程消耗的cpu高 
 
@@ -271,20 +288,22 @@ Java 堆栈跟踪工具(Stack Trace for Java)：
 
 *注：*上述获取相应过程可以使用[vjtools](https://github.com/vipshop/vjtools)中的vjtop来实现 来实现
 
+**备注：**JDK11没有该工具了
+
 # 三、jmap
 
 Java 内存映像工具(Memory Map for Java)
 - 功能：用于生成堆转储快照（一般称为 heapdump 或 dump 文件）不使jmap命令也可以暴力获取堆转储快照，如使用 `-XX:+HeapDumpOnOutOfMemoryError`，可以让虚拟机在 OOM异常后自动生存 dump 文件jmap的作用不仅仅是为了获取 dump 文件，它还可以查询finalize执行队列、Java堆和永久代的详细信息，如空间使用率，当前用的哪种收集器等；
 
-- jmap 命令在 windows平台下是受限的，除了生存dump文件的 -dump 选项和用于查看每个类的实例、空间占用统计的 -histo 选项在所有操作系统都提供之外，其余的选项只能在 Linux/Solaris 下使用：jmap [option] vmid
+- jmap 命令在 windows平台下是受限的，除了生存dump文件的 -dump 选项和用于查看每个类的实例、空间占用统计的 -histo 选项在所有操作系统都提供之外，其余的选项只能在 Linux/Solaris 下使用：`jmap [option] vmid`
 
-- option选项含义：<br>
-	`-dump` ： 生成 Java 堆转储快照.格式为：` -dump：[live，] format=b， file=<filename>`，其中live子参数说明是否只dump出存活的对象<br>
-	`-finalizerinfo`：显示在F-Queue中等待Finalize 线程执行finalize 方法的对象，只能在 Linux/Solaris 下使用<br>
-	`-heap`：显示 Java 堆的详细信息，如使用哪种回收器，参数配置，分代状况等.只能在 Linux/Solaris 下使用<br>
-	`-histo`：显示堆中对象统计信息，包括类，实例数量，合计容量<br>
-	`-permstat`：以ClassLoader 为统计口径显示永久代内存状态，只能在 Linux/Solaris 下使用<br>
-	`-F`： 当虚拟机进程对 -dump 选项没有响应时，可以使用该选项强制生成dump快照，只能在 Linux/Solaris 下使用<br>
+option选项含义：
+- `-dump` ： 生成 Java 堆转储快照，格式为：`-dump:[live，] format=b, file=<filename>`，其中live子参数说明是否只dump出存活的对象
+- `-finalizerinfo`：显示在F-Queue中等待Finalize 线程执行finalize 方法的对象，只能在 Linux/Solaris 下使用；
+- `-heap`：显示 Java 堆的详细信息，如使用哪种回收器，参数配置，分代状况等，只能在 Linux/Solaris 下使用；
+- `-histo[:live]`：显示堆中对象统计信息，包括类，实例数量，合计容量；如果指定了live子选项，则仅统计活动对象；
+- `-permstat`：以ClassLoader 为统计口径显示永久代内存状态，只能在 Linux/Solaris 下使用；
+- `-F`： 当虚拟机进程对 -dump 选项没有响应时，可以使用该选项强制生成dump快照，只能在 Linux/Solaris 下使用；
 
 ## 1、实例个数以及占用内存大小
 
@@ -446,17 +465,23 @@ jps 可以通过RMI协议查询开启了RMI服务的远程虚拟机进程状态�
 	- `-m`：输出虚拟机进程启动时传递给主类 main() 函数的参数；
 	- `-l`：输出主类的全名，如果进程执行的是 jar包，输出 jar 路径；
 	- `-v`：输出虚拟机进程启动时的 JVM 参数
+   - `-V`：禁止输出类名、JAR文件名和传递给main方法的参数，仅显示本地JVM标识符的列表
 
-*当然也可以通过linux系统中的命令来获取进程ID*
+当然也可以通过linux系统中的命令来获取进程ID：`ps -ef | grep java`
 
-ps -ef | grep tomcat
-
-查看远程主机：
+**查看远程主机：**
 hostid：想要查看的主机的标识符，格式为：`[protocol:][[//]hostname][:port][/servername]` ，其中：
 - protocol：通信协议，默认rmi
 - hostname：目标主机的主机名或IP地址
 - port：通信端口，对于默认rmi协议，该参数用来指定 rmiregistry远程主机上的端口号。如省略该参数，并且该protocol指示rmi，则使用默认使用1099端口。
 - servicename：服务名称，取值取决于实现方式，对于rmi协议，此参数代表远程主机上RMI远程对象的名称
+
+```
+# 查看remote.domain这台服务器中JVM进程的信息，使用rmi协议，端口1099
+jps -l remote.domain
+# 查看remote.domain这台服务器中JVM进程的信息，使用rmi协议，端口1231
+jps -l rmi://remote.comain:1231
+```
 
 # 五、jinfo
 
@@ -485,11 +510,11 @@ Java 配置信息工具(Configuration Info for Java)
 
 - 打印42342这个进程的VM参数及Java系统属性：`jinfo 42342`
 
-- 打印42342这个进程的Java系统属性：`jinfo -sysprops 42342`
+- 只查看Java系统属性：`jinfo -sysprops 42342`
 
-- 打印42342这个进程的VM参数：`jinfo -flags 42342`
+- 只查看进程的VM参数：`jinfo -flags 42342`
 
-- 打印42342这个进程ConcGCThreads参数的值：`jinfo -flag ConcGCThreads 42342`
+- 只查看进程ConcGCThreads参数的值：`jinfo -flag ConcGCThreads 42342`
 
 ## 2、动态修改参数
 
@@ -502,8 +527,31 @@ Java 配置信息工具(Configuration Info for Java)
 虽然可用jinfo动态修改VM参数，但并非所有参数都支持动态修改，如果操作了不支持的修改的参数，将会报类似如下的异常：`Exception in thread "main" com.sun.tools.attach.AttachOperationFailedException: flag 'xxx' cannot be changed`
 
 使用如下命令显示出来的参数，基本上都是支持动态修改的：`java -XX:+PrintFlagsInitial | grep manageable`
+```
+java -XX:+PrintFlagsInitial | grep manageable
+     intx CMSAbortablePrecleanWaitMillis            = 100                                 {manageable}
+     intx CMSTriggerInterval                        = -1                                  {manageable}
+     intx CMSWaitDuration                           = 2000                                {manageable}
+     bool HeapDumpAfterFullGC                       = false                               {manageable}
+     bool HeapDumpBeforeFullGC                      = false                               {manageable}
+     bool HeapDumpOnOutOfMemoryError                = false                               {manageable}
+    ccstr HeapDumpPath                              =                                     {manageable}
+    uintx MaxHeapFreeRatio                          = 70                                  {manageable}
+    uintx MinHeapFreeRatio                          = 40                                  {manageable}
+     bool PrintClassHistogram                       = false                               {manageable}
+     bool PrintClassHistogramAfterFullGC            = false                               {manageable}
+     bool PrintClassHistogramBeforeFullGC           = false                               {manageable}
+     bool PrintConcurrentLocks                      = false                               {manageable}
+     bool PrintGC                                   = false                               {manageable}
+     bool PrintGCDateStamps                         = false                               {manageable}
+     bool PrintGCDetails                            = false                               {manageable}
+     bool PrintGCID                                 = false                               {manageable}
+     bool PrintGCTimeStamps                         = false                               {manageable}
+```
 
 # 六、jhat
+
+jdk11已被废弃
 
 ## 1、用法概述
 
@@ -1005,7 +1053,7 @@ jhsdb是一款基于Serviceability Agent（可维护性代理，简写为SA）�
 
 ## 2、JDK8中使用
 
-尽管JDK 8及更低版本不直接提供jhsdb命令，但依然其实也是可以使用jhsdb的，只需找到 JAVA_HOME/lib 目录下的sa-jdi.jar文件，然后启动即可。步骤如下：
+尽管JDK 8及更低版本不直接提供jhsdb命令，但依然其实也是可以使用jhsdb的，只需找到 `JAVA_HOME/lib` 目录下的`sa-jdi.jar`文件，然后启动即可。步骤如下：
 ```bash
 # 修改环境变量JAVA_HOME（这里用export临时修改环境变量，当然也可永久修改）
 export JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.8.0_201.jdk/Contents/Home"
@@ -1043,6 +1091,136 @@ jhsdb jinfo [--pid pid | --exe executable --core coredump] [options]
 
 # 打印性能计数器信息
 jhsdb jsnap [options] [--pid pid | --exe executable --core coredump] 
+```
+- `pid`：进程号
+- `server-id`：当多个调试服务器在同一远程主机上运行时使用的可选唯一id
+- `executable`：从中生成核心转储的Java可执行文件，和pid选项二选一必填
+- `coredump`：jhsdb工具连接到dump文件
+- `options`：
+
+## 4、clhsdb
+
+进入clhsdb：`jhsdb clhsdb --pid 24426`，进入交互界面后，输入help，查看相关命令：
+```
+Attaching to process 24426, please wait...
+Warning: Nashorn engine is planned to be removed from a future JDK release
+javax.script.ScriptException: TypeError: sapkg.runtime.VM.getVM is not a function in sa.js at line number 54
+javax.script.ScriptException: TypeError: sapkg.runtime.VM.getVM is not a function in sa.js at line number 54
+Warning! JS Engine can't start, some commands will not be available.
+hsdb> help
+Available commands:
+  assert true | false
+  attach pid | exec core
+  buildreplayjars [ all | app | boot ]  | [ prefix ]
+  detach
+  dis address [length]
+  disassemble address
+  dumpcfg { -a | id }
+  dumpcodecache
+  dumpideal { -a | id }
+  dumpilt { -a | id }
+  dumpreplaydata { <address > | -a | <thread_id> }
+  echo [ true | false ]
+  examine [ address/count ] | [ address,address]
+  field [ type [ name fieldtype isStatic offset address ] ]
+  findpc address
+  flags [ flag | -nd ]
+  g1regiondetails
+  help [ command ]
+  history
+  inspect expression
+  intConstant [ name [ value ] ]
+  jdis address
+  jhisto
+  jstack [-v]
+  livenmethods
+  longConstant [ name [ value ] ]
+  pmap
+  print expression
+  printall
+  printas type expression
+  printmdo [ -a | expression ]
+  printstatics [ type ]
+  pstack [-v]
+  quit
+  reattach
+  revptrs address
+  scanoops start end [ type ]
+  search [ heap | perm | rawheap | codecache | threads ] value
+  source filename
+  symbol address
+  symboldump
+  symboltable name
+  thread { -a | id }
+  threads
+  tokenize ...
+  type [ type [ name super isOop isInteger isUnsigned size ] ]
+  universe
+  verbose true | false
+  versioncheck [ true | false ]
+  vmstructsdump
+  where { -a | id }
+```
+
+## 5、hsdb子命令
+
+图形化模式，和clhsdb对标：`jhsdb hsdb --pid 24426`，即可进入如下图像界面
+
+### 5.1、Java Threads
+
+![](image/jhsdb-进入页面.png)
+
+进入后，可以看到如上所示的界面，其中：
+- OS Thread ID：线程id
+- Java Thread Name：线程名称
+
+### 5.2、inspect thread
+
+选择一个线程，点击该对话框中的第一个图标，即可弹出 inspector对话框，从中可看到对线程的诊断
+
+其中展示了对现有和执行对象元数据的指针，里面包含了Java类型的名字、继承关系、实现接口关系，字段信息、方法信息、运行时常量池的指针、内嵌的方法续表（vtable）以及接口方法表等，其实都是Hotspot虚拟机记录线程的一些基本信息的C++对象内容；
+
+![](image/jhsdb-inspectThread.png)
+
+### 5.3、StackMemory
+
+选择一个线程，点击Java Thread对话框中的第二个图标，即可弹出 Stack Memory对话框，里面是线程栈的内存数据
+
+![](image/jhsdb-StackMemory.png)
+
+其中
+- 第一列：内存地址（虚拟地址，非物理内存地址）
+- 第二列：该地址上存储的数据，以字宽为单位，比如在macos 64位上 jdk11跑的字段是64位（8字节）
+- 第三列：定对数据的注释，竖线表示范围，横线或斜线连接范围与注释文字；
+
+如果向查看某个对象的内容，可以如下操作：`window  ---> console`，在控制天输入：`inspect 想要查看对象的地址`
+
+### 5.4、Stack Trace
+
+选择一个线程，点击Java Thread对话框中的第三个图标，即可弹出 Show Java Stack Trace 对话框，里面是线程的线程栈
+
+![](image/jhsdb-StackTrace.png)
+
+### 5.5、Show Thread Information
+
+选择一个线程，点击Java Thread对话框中的第四个图标，即可弹出 Show Java Stack Trace 对话框，里面是线程的信息
+
+![](image/jhsdb-线程信息.png)
+
+### 5.6、Find Crashes
+
+最后一个图标是可找到线程崩溃的原因。
+
+### 5.7、工具之：Heap Parameters
+
+可以查看到内存分配
+```
+Heap Parameters:
+Gen 0:   eden [0x0000000123a00000,0x00000001240d4e50,0x0000000127e50000) space capacity = 71630848, 10.00054054923376 used
+  from [0x0000000127e50000,0x0000000127e50000,0x00000001286d0000) space capacity = 8912896, 0.0 used
+  to   [0x00000001286d0000,0x00000001286d0000,0x0000000128f50000) space capacity = 8912896, 0.0 usedInvocations: 0
+
+Gen 1:   old  [0x0000000178f50000,0x0000000178f50000,0x0000000183a00000) space capacity = 178978816, 0.0 usedInvocations: 0
 ```
 
 # 十、MAT
@@ -1101,15 +1279,17 @@ BTrace 可以做什么：
 ```
 JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=9004 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.net.preferIP4Stack=true -Djava.rmi.server.hostname=127.0.0.1"
 ```
-- -Dcom.sun.management.jmxremote=true 
-- -Dcom.sun.management.jmxremote.port=8099（配置远程 connection 的端口号的） 
-- -Dcom.sun.management.jmxremote.ssl=false(指定了 JMX 是否启用 ssl) 
-- -Dcom.sun.management.jmxremote.authenticate=false（ 指定了JMX 是否启用鉴权（需要用户名，密码鉴权）） 
-- -Djava.rmi.server.hostname=192.168.0.1（配置 server 的 IP）
+- `-Dcom.sun.management.jmxremote=true` 
+- `-Dcom.sun.management.jmxremote.port=8099`（配置远程 connection 的端口号的） 
+- `-Dcom.sun.management.jmxremote.ssl=false`(指定了 JMX 是否启用 ssl) 
+- `-Dcom.sun.management.jmxremote.authenticate=false`（ 指定了JMX 是否启用鉴权（需要用户名，密码鉴权）） 
+- `-Djava.rmi.server.hostname=192.168.0.1`（配置 server 的 IP）
 
 ### java应用
 
 主要是jar包启动的，在jar启动的时添加跟tomcat一样的参数
+
+对于性能优化来说，我们主要用到它的采样器。注意，由于抽样分析过程对程序运行性能有较大的影响，一般我们只在测试环境中使用此功能
 
 # 十四、JMC：Java Mission Control
 
