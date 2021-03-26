@@ -4993,6 +4993,43 @@ JMH 是一个 jar 包，它和单元测试框架 JUnit 非常像，可以通过�
 
 ## 2、示例
 
+```java
+@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@State(Scope.Thread)
+@Warmup(iterations = 3, time = 1, timeUnit = TimeUnit.SECONDS)
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+@Fork(1)
+@Threads(2)
+public class BenchmarkDemo {
+    @Benchmark
+    public long shift() {
+        long t = 455565655225562L;
+        long a = 0;
+        for (int i = 0; i < 1000; i++) {
+            a = t >> 30;
+        }
+        return a;
+    }
+    @Benchmark
+    public long div() {
+        long t = 455565655225562L;
+        long a = 0;
+        for (int i = 0; i < 1000; i++) {
+            a = t / 1024 / 1024 / 1024;
+        }
+        return a;
+    }
+    public static void main(String[] args) throws Exception {
+        Options options = new OptionsBuilder()
+                .include(BenchmarkDemo.class.getSimpleName())
+                .resultFormat(ResultFormatType.JSON)
+                .build();
+        new Runner(options).run();
+    }
+}
+```
+
 ## 3、关键主键
 
 ### 3.1、@Warmup
@@ -5014,6 +5051,18 @@ JMH 是一个 jar 包，它和单元测试框架 JUnit 非常像，可以通过�
 # Warmup Iteration   1: 0.281 ops/ns 
 # Warmup Iteration   2: 0.376 ops/ns 
 # Warmup Iteration   3: 0.483 ops/ns
+```
+
+### 3.2、@Measurement
+
+```java
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+```
+measurement与warmup的参数是一样的，不同于预热，其指的是真正的迭代次数
+
+其执行效果：
+```
+
 ```
 
 # 二十九、本地方法(native)
