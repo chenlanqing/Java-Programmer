@@ -1752,6 +1752,73 @@ RACK_LOCAL			数据和计算它的代码在一个机架上，数据需要通过�
 ANY					数据可能在任意地方，比如其它网络环境内，或者其它机架上，性能最差
 ```
 
+# 9、Spark Streaming
+
+## 9.1、基本原理
+
+Spark Streaming 是 Spark Core API的一种扩展，它可以用于进行大规模、高吞吐量、容错的实时数据流处理；但是需要注意的是，这里的实时是近实时的，最小可以支持秒级别的实时处理
+
+其工作原理：
+接收实时输入的数据流，然后向数据拆分成多个batch，比如每收集一秒的数据封装为一个batch，然后将中国batch交给Spark计算引擎进行处理，最后会产生一个结果数据流，其中的数据，也是由一个一个batch所组成的；
+
+## 9.2、实时wordCount
+
+需要添加spark-streaming的依赖
+```xml
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-streaming_2.12</artifactId>
+    <version>3.0.0</version>
+</dependency>
+```
+wordCount代码如下：
+```scala
+import org.apache.spark.SparkConf
+import org.apache.spark.streaming.{Seconds, StreamingContext}
+/**
+ * 需求：通过socket模拟产生数据，实时计算数据中单词出现的次数
+ */
+object StreamWordCountScala {
+  def main(args: Array[String]): Unit = {
+    //创建SparkConf配置对象
+    val conf = new SparkConf()
+      //注意，此处的local[2]表示启动2个进程，一个进程负责读取数据源的数据，一个进程负责处理数据
+      .setMaster("local[2]")
+      .setAppName("StreamWordCountScala")
+    //创建StreamingContext，指定数据处理间隔为5秒
+    val ssc = new StreamingContext(conf, Seconds(5))
+
+    //通过socket获取实时产生的数据
+    val linesRDD = ssc.socketTextStream("bigdata04",9001)
+
+    //对接收到的数据使用空格进行切割，转换成单个单词
+    val wordsRDD = linesRDD.flatMap(_.split(" "))
+    //把每个单词转换为tuple2的形式
+    val tupRDD = wordsRDD.map((_,1))
+    //执行reduceByKey操作
+    val wordcountRDD = tupRDD.reduceByKey(_ + _)
+
+    //将结果数据打印到控制台
+    wordcountRDD.print()
+    //启动任务
+    ssc.start()
+    //等待任务停止
+    ssc.awaitTermination()
+  }
+}
+```
+
+## 9.3、Spark Streaming 和 Kafka
+
+使用spark streaming 实时消费kafka中的数据，需要引入的依赖如下：
+```xml
+<dependency>
+    <groupId>org.apache.spark</groupId>
+    <artifactId>spark-streaming-kafka-0-10_2.12</artifactId>
+    <version>3.0.0</version>
+</dependency>
+```
+
 
 # 参考资料
 

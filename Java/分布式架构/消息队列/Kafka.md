@@ -120,6 +120,13 @@ Kafka 的复制机制既不是完全的同步复制，也不是单纯的异步�
 |启动 Consumer	    | `bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning`	||
 |Topic相关信息（test) | `bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic test` || 
 
+如果create topic出现如下问题：
+```
+Error while executing topic command : Replication factor: 2 larger than available brokers: 0.
+[2021-03-28 20:26:59,369] ERROR org.apache.kafka.common.errors.InvalidReplicationFactorException: Replication factor: 2 larger than available brokers: 0.
+```
+可以尝试使用命令：`kafka-topics.sh --create --zookeeper localhost:2181/kafka --partitions 1 --replication-factor 1 --topic t1`
+
 # 3、Kafka入门
 
 

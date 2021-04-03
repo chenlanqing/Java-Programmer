@@ -104,6 +104,8 @@ public TreeMap(SortedMap<K, ? extends V> m) {
 
 # 六、TreeSet
 
+是树实现的集合
+
 ## 1、底层结构
 
 TreeSet是基于TreeMap来实现的，其构造方法都是去构造一个TreeMap：

@@ -551,9 +551,10 @@ log.dirs=/tmp/kafka-logs
 # Kafka所需的ZooKeeper集群地址，为了方便演示，我们假设Kafka和ZooKeeper都安装在本机
 zookeeper.connect=localhost:2181/kafka
 ```
+注意：如果zookeeper.connect的地址后面跟上了具体 路径，在使用的时候也需要跟上相应的路径
 
 单机模式下，修改完上述配置参数之后就可以启动服务
-```
+``
 bin/kafka-server-start.sh -daemon config/server.properties
 ```
 

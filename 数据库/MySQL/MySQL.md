@@ -4588,9 +4588,31 @@ ORDER BY a.score DESC;
 
 https://www.xaprb.com/blog/2006/12/07/how-to-select-the-firstleastmax-row-per-group-in-sql/
 
-## 9、从本地文件导入数据
+## 9、导入导出数据
 
-load data local infile '/ret.txt' into table user_sign_data fields TERMINATED  by ',' lines TERMINATED  by '\n';
+**导入本地文件**
+
+[load命令](https://dev.mysql.com/doc/refman/8.0/en/load-data.html)
+
+进入mysql命令行：
+```
+mysql> load data local infile '/ret.txt' into table user_sign_data fields TERMINATED  by ',' lines TERMINATED  by '\n';
+```
+
+**导入**
+进入mysql命令行：
+```
+mysql> source db.sql
+```
+或者在shell：`mysql -uroot -p < db.sql`
+
+**导出数据**
+```
+-- 连接本地机器
+mysql -uroot -p -e "select * from table_name" >> /data/soft/table.log
+-- 连接远程mysql
+mysql -uroot -p -h <remove_ip> -e "select * from table_name" >> /data/soft/table.log
+```
 
 # 二十、MySQL索引规约
 
