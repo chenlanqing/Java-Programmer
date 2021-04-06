@@ -187,6 +187,69 @@ KiB Swap:        0 total,        0 free,        0 used. 11375436 avail Mem
 
 - nmon —— 获取系统性能数据
 
+## 7、性能分析
+
+### 7.1、缓冲区优化
+
+- IO缓冲区
+- 日志缓冲：Logback 性能也很高，其中一个原因就是异步日志，它在记录日志时，使用了一个缓冲队列，当缓冲的内容达到一定的阈值时，才会把缓冲区的内容写到文件里
+
+缓冲区是可以提高性能的，但它通常会引入一个异步的问题，使得编程模型变复杂；
+
+虽然缓冲区可以帮我们大大地提高应用程序的性能，但同时它也有不少问题，在我们设计时，要注意这些异常情况。
+
+其中，比较严重就是缓冲区内容的丢失。即使你使用 addShutdownHook 做了优雅关闭，有些情形依旧难以防范避免，比如机器突然间断电，应用程序进程突然死亡等。这时，缓冲区内未处理完的信息便会丢失，尤其金融信息，电商订单信息的丢失都是比较严重的。
+
+所以，内容写入缓冲区之前，需要先预写日志，故障后重启时，就会根据这些日志进行数据恢复。在数据库领域，文件缓冲的场景非常多，一般都是采用 WAL 日志（Write-Ahead Logging）解决。对数据完整性比较严格的系统，甚至会通过电池或者 UPS 来保证缓冲区的落地。如果预写日志不成功，一般不会给予客户端ACK，调用方会知晓这个状态。也就是返回给客户端OK的，预写就一定成功。服务只管自己不丢数据即可，至于客户端有没有做异常处理
+
+### 7.2、缓存
+
+一般分为进程内缓存、进程外缓存，在 Java 中，进程内缓存，就是我们常说的堆内缓存。Spring 的默认实现里，就包含 Ehcache、JCache、Caffeine、Guava Cache 等
+
+**Guava 的 LoadingCache**
+
+- [Cache](https://segmentfault.com/a/1190000011105644)
+
+回收策略：
+- 基于容量：就是说如果缓存满了，就会按照 LRU 算法来移除其他元素
+- 基于时间：
+  - 通过 expireAfterWrite 方法设置数据写入以后在某个时间失效；
+  - 通过 expireAfterAccess 方法设置最早访问的元素，并优先将其删除；
+- 基于 JVM 的垃圾回收：对象的引用有强、软、弱、虚等四个级别，通过 weakKeys 或者 weakValues 等函数即可设置相应的引用级别。当 JVM 垃圾回收的时候，会主动清理这些数据
+
+问题：如果你同时设置了 weakKeys 和 weakValues函数，LC 会有什么反应？
+
+答案：如果同时设置了这两个函数，它代表的意思是，当没有任何强引用，与 key 或者 value 有关系时，就删掉整个缓存项
+```java
+public static void main(String[] args) {
+    LoadingCache<String, Object> cache = CacheBuilder.newBuilder()
+            .weakValues()
+            .build(new CacheLoader<String, Object>() {
+                @Override
+                public Object load(String key) throws Exception {
+                    return slowMethod(key);
+                }
+            });
+    Object value = new Object();
+    cache.put("key1", value);
+    value = new Object(); // 原对象不再有强引用
+    System.gc(); // 显示调用GC，cache弱引用会被回收
+    System.out.println(cache.getIfPresent("key1"));
+}
+private static String slowMethod(String key) throws Exception {
+    Thread.sleep(1000);
+    return key + ".result";
+}
+```
+LC 可以通过 recordStats 函数，对缓存加载和命中率等情况进行监控。值得注意的是：LC 是基于数据条数而不是基于缓存物理大小的，所以如果你缓存的对象特别大，就会造成不可预料的内存占用
+
+**缓存算法**
+
+堆内缓存最常用的有 FIFO、LRU、LFU 这三种算法
+- FIFO：这是一种先进先出的模式。如果缓存容量满了，将会移除最先加入的元素。这种缓存实现方式简单，但符合先进先出的队列模式场景的功能不多，应用场景较少；
+- LRU：是最近最少使用的意思，当缓存容量达到上限，它会优先移除那些最久未被使用的数据，LRU是目前最常用的缓存算法
+- LFU：LFU 是最近最不常用的意思。相对于 LRU 的时间维度，LFU 增加了访问次数的维度。如果缓存满的时候，将优先移除访问次数最少的元素；而当有多个访问次数相同的元素时，则优先移除最久未被使用的元素
+
 # 二、优化工具
 
 ## 1、Arthas

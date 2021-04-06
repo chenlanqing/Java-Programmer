@@ -538,6 +538,10 @@ Writer writer = new OutputStreamWriter(outputStream);
 		br.readLine();
 		```
 
+# 10、缓冲流
+
+缓冲流的默认缓冲区大小是 8192 字节，也就是 8KB，算是一个比较折中的值
+
 # 三、Java NIO
 
 ## 1、Java NIO 概述

@@ -1819,6 +1819,8 @@ object StreamWordCountScala {
 </dependency>
 ```
 
+关于SparkStreaming数据乱序问题
+
 
 # 参考资料
 
