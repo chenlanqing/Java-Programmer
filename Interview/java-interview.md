@@ -735,6 +735,62 @@ https://juejin.cn/post/6936390496122044423
 
 TLAB：https://juejin.cn/post/6925217498723778568
 
+## 5、一个线程OOM后，其他线程还能运行吗
+
+java中OOM又分很多类型，比如：
+- 堆溢出（“java.lang.OutOfMemoryError: Java heap space”）
+- 永久带溢出（“java.lang.OutOfMemoryError:Permgen space”）
+- 不能创建线程（“java.lang.OutOfMemoryError:Unable to create new native thread”）
+
+其实是还能运行的，下面验证结果：
+```java
+// jvm启动参数：-Xms16m -Xmx32m
+public class JvmOomThread {
+    public static void main(String[] args) {
+        new Thread(() -> {
+            List<byte[]> list = new ArrayList<>();
+            while (true) {
+                System.out.println(new Date().toString() + Thread.currentThread() + "==");
+                byte[] b = new byte[1024 * 1024];
+                list.add(b);
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+        new Thread(() -> {
+            while (true) {
+                System.out.println(new Date().toString() + Thread.currentThread() + "==");
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+    }
+}
+```
+运行结果如下
+```
+Sun Apr 11 20:53:47 CST 2021Thread[Thread-1,5,main]==
+Sun Apr 11 20:53:47 CST 2021Thread[Thread-0,5,main]==
+Exception in thread "Thread-0" java.lang.OutOfMemoryError: Java heap space
+	at com.blue.fish.example.jvm.JvmOomThread.lambda$main$0(JvmOomThread.java:18)
+	at com.blue.fish.example.jvm.JvmOomThread$$Lambda$1/2093631819.run(Unknown Source)
+	at java.lang.Thread.run(Thread.java:748)
+Sun Apr 11 20:53:48 CST 2021Thread[Thread-1,5,main]==
+```
+通过jvisualvm查看到其堆的变化：
+
+![](image/Java堆内存-OOM变化情况.png)
+
+上图是JVM对空间的边界，观察到在20:53:48~20:53:50之间曲线变化，发现使用堆的数量急剧下滑，这里可以表面一点：当一个线程抛出OOM异常后，它所占据的内存资源会全部被释放掉，从而不影响其他线程的运行；上面是对内存异常的情况，如果是栈溢出，结果也是一样的
+
+总结：发生OOM的线程一般情况下回死亡，也就是会被终结掉，该线程持有的对象占用的heap都会被gc，释放内存。因为发生OOM之前都要进行GC，就算其他线程能够正常工作，也会因为频繁GC产生较大的影响；
+
 # 六、MySQL
 
 - [100道MySQL数据库经典面试题解析](https://juejin.im/post/5ec15ab9f265da7bc60e1910)

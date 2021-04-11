@@ -266,7 +266,7 @@ ETL主要考察点：
 4. [关于MQ面试的几件小事 | 如何保证消息不丢失](https://mp.weixin.qq.com/s/EaJbOLabVd2YGWznDjGoNQ)
 5. [关于MQ面试的几件小事 | 如何保证消息按顺序执行](https://mp.weixin.qq.com/s/KNrsKLakgOPde2Tmw3viaA)
 
-
+[大数据面试](https://blog.csdn.net/qq_43259670/article/details/105927827)
 
 - [MapReduce/HDFS/YARN面试题](https://mp.weixin.qq.com/s/_qFd-v3TF0W8lBo6ci-17w)
 - [Flink企业级面试题60连击](https://mp.weixin.qq.com/s/FWit1b_6Me4Ay7UF6NtL3Q)
