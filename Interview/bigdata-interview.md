@@ -203,7 +203,7 @@ ETL主要考察点：
 ### 6.1、数仓分层好处
 
 
-
+https://mp.weixin.qq.com/s/9Y1Mv8qtCwcvkf6BJuI0Ug
 
 
 ## 语言和计算机基础
