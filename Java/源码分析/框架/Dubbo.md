@@ -1583,6 +1583,22 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
 
 # 6、优雅停机
 
+## 6.1、停机不当问题
+
+- 服务停止时，没有关闭对应的监控，导致应用停止后发生大量报警。
+- 应用停止时，没有通知外部调用方，很多请求还会过来，导致很多调用失败。
+- 应用停止时，有线程正在执行中，执行了一半，JVM进程就被干掉了。
+- 应用启动时，服务还没准备好，就开始对外提供服务，导致很多失败调用。
+- 应用启动时，没有检查应用的健康状态，就开始对外提供服务，导致很多失败调用
+
+`kill -9`之所以不建议使用，是因为`kill -9`特别强硬，系统会发出`SIGKILL`信号，他要求接收到该信号的程序应该立即结束运行，不能被阻塞或者忽略；
+
+当使用`kill -15`时，系统会发送一个SIGTERM的信号给对应的程序。当程序接收到该信号后，具体要如何处理是自己可以决定的。`kill -15`会通知到应用程序，这就是操作系统对于优雅上下线的最基本的支持
+
+## 6.2、dubbo优雅停机原理
+
+主要是借助JVM的 shutdown hook机制或者说是 Spring的事件机制实现优雅停机；
+
 ![](image/Dubbo-优雅停机原理.png)
 
 Dubbo实现的优雅停机机制包括6个步骤：
@@ -1591,6 +1607,31 @@ Dubbo实现的优雅停机机制包括6个步骤：
 - （3）consumer端会收到最新地址列表（不包括准备停止的地址）；
 - （4）Dubbo协议会发生readonly事件报文通知consumer服务不可用；（考虑到注册中心推送服务的网络延迟）
 - （5）服务端等待已经执行的任务结束并拒绝信任务执行；
+
+## 6.3、dubbo2.5X缺陷
+
+ Dubbo 2.5.x 的优雅停机时序：
+```
+Registry 注销
+等待 -Ddubbo.service.shutdown.wait 秒，等待消费方收到下线通知
+Protocol 注销
+    DubboProtocol 注销
+		NettyServer 注销
+			等待处理中的请求完毕
+            停止发送心跳
+            关闭 Netty 相关资源
+		NettyClient 注销
+            停止发送心跳
+            等待处理中的请求完毕
+            关闭 Netty 相关资源
+```
+如果在不使用spring的情况下确实是没有问题的，但由于现在大多数开发者选择使用 Spring 构建 Dubbo 应用，上述的方案会存在一些缺陷；由于 Spring 框架本身也依赖于 shutdown hook 执行优雅停机，并且与 Dubbo 的优雅停机会并发执行，而 Dubbo 的一些 Bean 受 Spring 托管，当 Spring 容器优先关闭时，会导致 Dubbo 的优雅停机流程无法获取相关的 Bean，从而优雅停机失效；
+
+## 6.4、Spring 容器下 Dubbo 的优雅停机
+
+增加 ShutdownHookListener
+
+https://www.cnkirito.moe/dubbo-gracefully-shutdown/
 
 # 7、Dubbo编解码器
 

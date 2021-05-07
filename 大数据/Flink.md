@@ -351,7 +351,15 @@ historyserver.archive.fs.refresh-interval: 10000
 ```
 > 注意：hadoop的historyserver进程也需要启动
 
-# 4、Flink核心API
+# 4、Flink运行时架构
+
+## 4.1、运行时组件
+
+- 作业管理器（JobManager）
+- 
+
+
+# 5、Flink核心API之DataStream
 
 ![](image/Flink-基本核心API.png)
 
@@ -361,7 +369,6 @@ Flink提供了4种层次不同的API，每种API在适用不同的场景，常�
 - Table API：一般与DataSet或者DataStream紧密关联，可以通过一个DataSet或DataStream创建出一个Table，然后使用类似filter、join或者select操作；还可以将一个Table对象装好DataSet或DataStream
 - SQL：Flink的SQL底层是基于Apache Calcite，其实现了标准的SQL
 
-# 5、Flink核心API之DataStream
 
 DataStream API 主要分为三块：DataSource、Transformatio、DataSink
 

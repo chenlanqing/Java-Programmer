@@ -190,6 +190,10 @@ ETL主要考察点：
 
 ### 2.3、hiveSQL怎么调优
 
+### 2.4、sql面试题
+
+https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
+
 ## 3、Flume
 
 ### 3.1、Flume的事务机制是如何实现的

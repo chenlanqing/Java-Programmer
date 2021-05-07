@@ -886,7 +886,7 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 
 存储的数据：
 - key: bean的名称
-- values: ObjectFactory，该对象持有提前暴露的bean的引用
+- values: ObjectFactory，该对象持有提前暴露的bean的引用，ObjectFactory<?> 类型的 lambda 表达式，就是这用于处理 AOP 循环依赖的
 
 ```java
 protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {

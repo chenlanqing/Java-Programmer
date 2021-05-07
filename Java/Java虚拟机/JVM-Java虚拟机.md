@@ -962,6 +962,8 @@ private ProtectionDomain preDefineClass(String name, ProtectionDomain pd){
 
 JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相同，而且要判断是否由同一个类加载器实例加载的；只有两者同时满足的情况下，JVM才认为这两个 class是相同的；如果两个类来源于同一个 Class 文件，被同一个虚拟机加载，只要加载它们的类加载器不同，那这两个类必定不相等；这里的"相等"包括代表类的Clas 对象的equals()方法、isAssignaleFrom()方法、isInstance()方法的返回结果，也包括使用 instanceof关键字做对象所属关系判定等情况；
 
+**一个类的全限定名以及加载该类的加载器两者共同形成了这个类在JVM中的惟一标识**
+
 ### 6.3.5、ClassLoader 的体系架构
 
 - 检查类是否已经加载顺序：自底向上，`Custom ClassLoader(自定义加载) --> App ClassLoader --> Extension ClassLoader --> Bootstrap ClassLoader`
@@ -1152,6 +1154,8 @@ public class NetworkClassLoader extends ClassLoader {
 ## 6.8、Java类生命周期
 
 加载(Loading)、验证(Verification)、准备(Preparation)、解析(Resolution)、初始化(Initialization)、使用(Using)和卸载(Unloading)7个阶段；准备、验证、解析3个部分统称为连接，其中“类加载”的过程包括了加载、验证、准备、解析、初始化五个阶段，加载、验证、准备和初始化这四个阶段发生的顺序是确定的而解析阶段则不一定，它在某些情况下可以在初始化阶段之后开始，这是为了支持Java语言的运行时绑定
+
+可以使用一句话来表达其加载的整个过程：`家宴准备了西式菜`，即`家（加载）宴（验证）准备（准备）了西（解析）式（初始化）菜`
 
 *注意这里的几个阶段是按顺序开始。而不是按顺序进行或完成*
 
@@ -1401,7 +1405,7 @@ public class NetworkClassLoader extends ClassLoader {
 - 主要区别：
 	当一个类在初始化时，要求其父类全部已经初始化过了；但是一个接口在初始化时，并不要求其父接口全部都完成了初始化，只有在真正使用到父接口的时候（如引用接口中定义的常量）。才会初始化该父接口
 
-## 6.10、如下例子
+## 6.10、类加载案例分析
 
 ```java
 //  http://www.importnew.com/18566.html
@@ -1506,6 +1510,10 @@ http://osgi.com.cn/article/7289378
 	list.getClass()
 	Class.forName('全路径')
 	```
+
+## 6.17、热加载
+
+通过classloader我们可以完成对变更内容的加载；常用的热加载方案有好几个，比如spring官方推荐的热加载方案：spring boot devtools
 
 # 7、字节码指令与执行引擎
 
