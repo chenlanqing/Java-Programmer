@@ -355,9 +355,41 @@ historyserver.archive.fs.refresh-interval: 10000
 
 ## 4.1、运行时组件
 
-- 作业管理器（JobManager）
-- 
+Flink运行时主要包括四个不同的组件，会在运行流处理应用程序时协同工作：作业管理器你（JobManager）、资源管理器（ResourceManager）、任务管理（TaskManager）以及分发器（Dispacther），所有组件都会运行在Java虚拟机上；
 
+### 4.1.1、作业管理器（JobManager）
+
+控制一个经验程序执行的主进程，也就是说，每个应用程序都会被一个不同的JobManager所控制执行；
+
+JobManager会接收到要执行的应用程序，这个应用程序会包括：作业图（JobGraph）、逻辑数据流图（Logical dataflow graph）和打包了所有的类、库和其他资源的jar包。
+
+JobManager会把JobGraph转换成一个物理层面的数据流图，这个图被叫做执行图（ExecutionGraph），包含了所有路由并发执行的任务。JobManager 会向资源管理器（ResourceManager）请求执行任务必要的资源，也就是任务管理器（TaskManager）上的槽（Slot）。一旦获取到了足够的资源，就会将执行图分发到真正运行它们的TaskManager上。而在运行过程中，JobManager会负责所有需要中央协调的操作，比如说检查点（CheckPoints）的协调
+
+### 4.1.2、资源管理器（ResourceManager）
+
+主要负责管理任务管理器（TaskManager）的插槽（Slot），TaskManager插槽是Flink定义的处理资源单元。Flink为不同的环境和资源管理工具提供了不同的资源管理器，比如YARN、Mesos、K8S，以及standalone部署。当 JobManager 申请 slot资源时， ResourceManager 会将由空闲 slot 的 TaskManager 分配给 JobManager。
+
+如果ResourceManager 没有足够的 slot 来满足 JobManager的请求，它还可以向资源提供平台发起会话，以提高启动 TaskManager 进程的容器。另外 ResourceManager 还负责终止空闲的 TaskManager，释放计算资源；
+
+### 4.1.3、任务管理器（TaskManager）
+
+Flink中的工作进程，通常在Flink中会有多个 TaskManager运行，每一个 TaskManager 都包含了一定数量的 slots。 slots的数量限制了TaskManager能够执行的任务数量，启动之后，TaskManager 会向资源管理器注册它的 slots；收到资源管理器的指令后， TaskManager就会将一个或者多个 slots提供给 JobManager调用。JobManager就可以向 slots 分配任务（tasks）来执行了。在执行过程中，一个 TaskManager可以跟其它运行同一应用程序的 TaskManager交换数据；
+
+### 4.1.4、分发器（Dispatcher）
+
+可以跨作业运行，它为应用提交提供了REST接口。当一个应用被提交执行时，分发器就会启动并将应用移交给一个JobManager，由于是Rest接口，所以Dispatcher可以作为集群的一个HTTP接入点，这样能不受防火墙的阻挡。Dispatcher 也会启动一个web ui，用来方便的展示和监控作业的执行信息。Dispatcher在架构中不是必需的。取决于应用提交运行的方式；
+
+## 4.2、任务提交流程
+
+当应用提交时，Flink各个组件是如何交互协作的：
+
+![](image/Flink-任务提交流程.png)
+
+比如将Flink集群部署到YARN上，那么就会有如下的提交流程：
+
+![](image/Flink-YARN集群任务提交流程.png)
+
+Flink任务提交后，会向HDFS上传FLink的jar包和配置，之后向 YARN ResourceManager 提交任务，ResourceManager 分配Container资源并通知对应的NodeManager启动ApplicationMaster，ApplicationMaster启动后加载Flink的jar包和配置构建环境，然后启动JobManager，之后ApplicationMaster向ResourceManager申请资源启动 TaskManager，ResourceManager 分配 container 资源后，由 ApplicationMaster 通知资源所在节点的 NodeManager 启动 TaskManager，NodeManager 加载 Flink 的jar包和配置构建环境并启动 TaskManager， TaskManager 启动后向JobManager发送心跳包，并等待 JobManager 向其他分配任务；
 
 # 5、Flink核心API之DataStream
 
