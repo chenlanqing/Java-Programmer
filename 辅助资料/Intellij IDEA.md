@@ -91,3 +91,7 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - SonarLint
 - Statistic
 - VisualVM Launcher
+
+# 4、idea插件开发
+
+https://plugins.jetbrains.com/docs/intellij/getting-started.html

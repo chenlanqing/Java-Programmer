@@ -518,13 +518,20 @@ public class QuickstartConsumer {
 
 ### 5.4.2、重要参数
 
-- `fetch.min.bytes`：一次拉取最小数据量，默认为1B；
-- `fetch.max.bytes`：一次拉取最大数据量，默认为50M；如果这个参数设置的值比任何一条写入 Kafka 中的消息要小，那么会不会造成无法消费呢？该参数设定的不是绝对的最大值，如果在第一个非空分区中拉取的第一条消息大于该值，那么该消息将仍然返回，以确保消费者继续工作；
-- `max.partition.fetch.bytes`：一次fetch请求，从一个parition中获得的records最大大小，默认为1M
-- `fetch.max.wait.ms`：Fetch请求发给broker后，在broker中可能会被阻塞的时长，默认为500ms；
-- `max.poll.records`：Consumer每次调用 poll() 时渠道的records的最大数，默认为500条；
+- `fetch.min.bytes`：一次拉取最小数据量，默认为1B；Kafka在收到Consumer的拉取请求时，如果返回给Consumer 的数据量小于这个参数所配置的值，那么它就需要进行等待，直到数据量满足这个参数的配置大小；
+- `fetch.max.bytes`：一次拉取最大数据量，与 `fetch.min.bytes` 参数对应，默认为50M；如果这个参数设置的值比任何一条写入 Kafka 中的消息要小，那么会不会造成无法消费呢？该参数设定的不是绝对的最大值，如果在第一个非空分区中拉取的第一条消息大于该值，那么该消息将仍然返回，以确保消费者继续工作；与此相关，Kafka中所能接收的最大消息的大小通过服务端参数： `message.max.bytes`来设置；
+- `max.partition.fetch.bytes`：一次fetch请求，从一个parition中获得的records最大大小，默认为1M；这个参数`fetch.min.bytes`参数相似，`max.partition.fetch.bytes` 用来限制一次拉取中每个分区的消息大小，`fetch.min.bytes` 是用来限制一次拉取中整体消息的大小；
+- `fetch.max.wait.ms`：如果kafka仅仅参考 fetch.min.bytes 参数的要求，那么有可能一直阻塞等待而无法发送响应给Consumer，显然这是不合理的。`fetch.max.wait.ms` 参数用于指定 Kafka 的等待时间，默认值为500ms。如果Kafka中没有足够多的消息而满足不了 `fetch.min.bytes` 参数的要求，那么最终会等待500ms；
+- `max.poll.records`：Consumer每次调用 poll() 时渠道的records的最大数，默认为500条；如果消息的大小都比较小，则可以适当调大这个参数值来提升一定的消费速度；
+- `connections.max.idle.ms`：用来指定指定在多久之后关闭闲置的连接，默认540000（ms），即9分钟；
+- `exclude.internal.topics`：kafka中有两个内部的主题：`__consumer_offsets` 和 `__transaction_state`。`exclude.internal.topics` 用来指定Kafka中的内部主题是否可以向消费者公开，默认值为true；如果设置为true，那么只能使用 subscribe(Collection) 的方式，而不能使用 subscribe(Pattern)的方式来订阅内部主题，设置为false，则没有这个限制；
+- `receive.buffer.bytes`：这个参数来设置 socket 接收消息缓冲区（SO_RECBUF）的大小，默认值为65536（B），即64KB；如果设置为 -1，则使用操作系统的默认值。如果Consumer 和 Kafka处于不同的机房，则可以适当调大这个参数值；
+- `send.buffer.bytes`：这个参数用来设置 socket 发送消息缓冲区（SO_SNDBUF）的大小，默认值为 131072（B），即128KB。与`receive.buffer.byte`参数意义，如果设置为 -1，则使用操作系统的默认值；
+- `request.timeout.ms`：这个参数用来配置 consumer 等待请求响应的最长时间，默认追为 30000（ms）
 
 ## 5.5、订阅主题与分区
+
+主题作为消息的归类，可以再细分为一个或多个分区，分区也可以看作对消息的二次归类
 
 创建消费者：
 ```java
@@ -892,7 +899,26 @@ acquire() 方法与锁（synchronized、Lock 等）不同，它不会造成阻�
 
 与此对应的第二种方式是多个消费线程同时消费同一个分区，这个通过 assign()、seek() 等方法实现，这样可以打破原有的消费线程的个数不能超过分区数的限制，进一步提高了消费的能力；
 
-不过这种实现方式对于位移提交和顺序控制的处理就会变得非常复杂，实际应用中使用得极少
+不过这种实现方式对于位移提交和顺序控制的处理就会变得非常复杂，实际应用中使用得极少。一般而言，分区是消费线程的最小划分单位
+
+# 6、主题、分区与副本
+
+主题和分区是 Kafka 的两个核心概念，主题作为消息的归类，可以再细分为一个或多个分区，分区也可以看作对消息的二次归类。分区的划分不仅为 Kafka 提供了可伸缩性、水平扩展的功能，还通过多副本机制来为 Kafka 提供数据冗余以提高数据可靠性；
+
+## 6.1、主题管理
+
+主题的管理包括创建主题、查看主题信息、修改主题和删除主题等操作。可以通过 Kafka 提供的 kafka-topics.sh 脚本来执行这些操作，这个脚本位于$KAFKA_HOME/bin/目录下，其核心代码仅有一行，具体如下：`exec $(dirname $0)/kafka-run-class.sh kafka.admin.TopicCommand "$@"`
+
+可以看到其实质上是调用了 kafka.admin.TopicCommand 类来执行主题管理的操作；主题的管理除了使用 kafka-topics.sh 脚本这一种方式，还可以通过 KafkaAdminClient 的方式实现（这种方式实质上是通过发送 CreateTopicsRequest、DeleteTopicsRequest 等请求来实现的），甚至我们还可以通过直接操纵日志文件和 ZooKeeper 节点来实现；
+
+### 6.1.1、创建主题
+
+如果 broker 端配置参数 `auto.create.topics.enable` 设置为 true（默认值就是 true），那么当生产者向一个尚未创建的主题发送消息时，会自动创建一个分区数为 n`um.partitions`（默认值为1）、副本因子为 `default.replication.factor`（默认值为1）的主题。除此之外，当一个消费者开始从未知主题中读取消息时，或者当任意一个客户端向未知主题发送元数据请求时，都会按照配置参数 `num.partitions` 和 `default.replication.factor` 的值来创建一个相应的主题；除非有特殊应用需求，否则不建议将 auto.create.topics.enable 参数设置为 true，这个参数会增加主题的管理与维护的难度；
+
+```
+[root@node1 kafka_2.11-2.0.0]# bin/kafka-topics.sh --zookeeper localhost:2181/kafka --create --topic topic-create --partitions 4 --replication-factor 2
+Created topic "topic-create". #此为控制台执行的输出结果
+```
 
 # 参考资料
 

@@ -1229,6 +1229,52 @@ SpringApplicationRunListener 触发
 
 ## 15、介绍下bean的实例化流程
 
+Bean的实例化过程：
+- 容器的启动
+- Bean实例化阶段
+
+### 15.1、容器启动阶段
+
+**1、配置元信息**
+
+Spring管理Bean，就需要知道创建一个对象所需要的一些必要的信息，可以是xml文件、或者是其他形式的例如properties的磁盘文件，也可以是现在主流的注解；
+```xml
+<bean id="role" class="com.wbg.springxmlbean.entity.Role">
+    <!-- property元素是定义类的属性，name属性定义的是属性名称 value是值
+    相当于：
+    Role role=new Role();
+    role.setId(1);
+    role.setRoleName("高级工程师");
+    role.setNote("重要人员");-->
+    <property name="id" value="1"/>
+    <property name="roleName" value="高级工程师"/>
+    <property name="note" value="重要人员"/>
+</bean>
+```
+
+**2、BeanDefinition**
+
+在Spring中，配置元信息被加载到内存之后是以 BeanDefinition 的形式存在的
+
+**3、BeanDefinitionReader**
+
+要读取xml配置元信息，那么可以使用`XmlBeanDefinitionReader`。如果我们要读取properties配置文件，那么可以使用`PropertiesBeanDefinitionReader`加载；如果我们要读取注解配置元信息，那么可以使用 `AnnotatedBeanDefinitionReader`加载；
+
+总的来说，BeanDefinitionReader的作用就是加载配置元信息，并将其转化为内存形式的 BeanDefinition ，存在内存中；
+
+**4、BeanDefinitionRegistry**
+
+Spring通过BeanDefinitionReader将配置元信息加载到内存生成相应的BeanDefinition之后，就将其注册到BeanDefinationRegistry中，BeanDefinitionRegistry就是一个存放BeanDefinition的大篮子，它也是一种键值对的形式，通过特定的Bean定义的id，映射到相应的BeanDefination；
+
+**5、BeanFactoryPostProcessor**
+
+BeanFactoryPostProcessor是容器启动阶段Spring提供的一个扩展点，主要负责对注册到BeanDefinationRegistry中的一个个的BeanDefination进行一定程度上的修改与替换
+
+### 15.2、Bean实例化阶段
+
+如果选择懒加载的方式，再向Spring获取依赖对象实例之前，其都是以BeanDefinitionRegistry中的一个个的BeanDefinition的形式存在，也就是Spring只有在我们需要依赖对象的时候才开启相应对象的实例化阶段。而如果不是选择懒加载的方式，容器启动阶段完成之后，将立即启动Bean实例化阶段，通过隐式的调用所有依赖对象的getBean方法来实例化所有配置的Bean并保存起来；
+
+
 ## 16、bean实例化的扩展点及其作用
 
 ## 17、怎么实现在Springboot启动后台执行程序

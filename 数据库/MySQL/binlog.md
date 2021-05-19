@@ -190,6 +190,15 @@ docker run -it --rm zendesk/maxwell bin/maxwell --user='maxwell' --password='123
     - mysql master收到dump请求，开始推送binary log给slave(也就是canal)
     - canal解析binary log对象(原始为byte流)
 
+优点：
+- 实时性好、分布式、ACK机制
+
+缺点：
+- 只支持增量同步、不支持全量同步；
+- 支持数据源比较少；
+- 一个instance只能有一个消费端消费；
+- 单点压力大；
+
 ## 3、Databus
 
 Databus是一种低延迟变化捕获系统，已成为LinkedIn数据处理管道不可或缺的一部分。Databus解决了可靠捕获，流动和处理主要数据更改的基本要求；Databus提供以下功能：

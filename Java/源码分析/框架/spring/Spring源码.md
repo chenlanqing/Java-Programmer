@@ -517,7 +517,7 @@ protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory b
 - `org.springframework.beans.factory.support.AbstractBeanFactory#doGetBean`
 
 - 获取容器中的所有Bean，依次进行初始化和创建对象;
-- 获取Bean的定义信息；RootBeanDefinition;
+- 获取Bean的定义信息：RootBeanDefinition;
 - Bean不是抽象的，是单实例的，是懒加载；
     - 判断是否是FactoryBean；是否是实现FactoryBean接口的Bean；
     - 不是工厂Bean。利用getBean(beanName);创建对象

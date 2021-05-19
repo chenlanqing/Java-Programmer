@@ -401,14 +401,449 @@ Flink提供了4种层次不同的API，每种API在适用不同的场景，常�
 - Table API：一般与DataSet或者DataStream紧密关联，可以通过一个DataSet或DataStream创建出一个Table，然后使用类似filter、join或者select操作；还可以将一个Table对象装好DataSet或DataStream
 - SQL：Flink的SQL底层是基于Apache Calcite，其实现了标准的SQL
 
+DataStream API 主要分为三块：DataSource、Transformation、DataSink
+- DataSource是程序的输入数据源；
+- transformation是具体的操作，它对一个或多个输入数据源进行计算处理，例如map、flatMap等；
+- DataSink是程序的输出，它可以把transformation处理之后的数据输出到指定的存储介质中；
 
-DataStream API 主要分为三块：DataSource、Transformatio、DataSink
+## 5.1、source api
+
+DataSource是程序的输入源，Flink内置了很多DataSource，也支持自定义DataSource。Flink内置的输入数据源包括：基于socket、基于collection以及一批Connectors，可以实现读取第三方数据源；
+
+| Flink内置       | Apache Bahir |
+| --------------- | ------------ |
+| Kafka           | ActiveMQ     |
+| Kinesis Streams | Metty        |
+| RabbitMQ        |              |
+| Nifi            |              |
+
+- Flink内置：表示Flink默认自带的；
+- Apache Bahir：表示需要添加这个依赖包后才能使用
+
+针对source的这些connector，实际工作中使用最多的是Kafka；
+
+当程序出现错误的时候，Flink 的容错机制能恢复并继续运行程序，这种错误包括机器故障、网络故障、程序故障灯；针对Flink常用的数据源接口，如果程序开启了checkpoint快照机制，Flink可以提供这些容错保障
+
+| DataSource | 容错保障     | 备注                     |
+| ---------- | ------------ | ------------------------ |
+| Socket     | at most once |                          |
+| Collection | exactly once |                          |
+| Kafka      | exactly once | 需要使用0.10及以上的版本 |
+
+```java
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import java.util.Arrays;
+public class StreamCollectionSourceJava {
+    public static void main(String[] args) throws Exception{
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        //使用collection集合生成DataStream
+        DataStreamSource<Integer> text = env.fromCollection(Arrays.asList(1, 2, 3, 4, 5));
+        text.print().setParallelism(1);
+        env.execute("StreamCollectionSourceJava");
+    }
+}
+```
+
+## 5.2、transformation api
+
+transformation是Flink程序的计算算子，负责对数据进行处理，Flink提供了大量的算子，其中大部分算子使用和spark中算子的使用是一样的
+
+| 算子         | 解释                                       |
+| ------------ | ------------------------------------------ |
+| map          | 输入一个元素进行处理，返回一个元素         |
+| flatMap      | 输入一个元素进行处理，可以返回多个元素     |
+| filter       | 对数据进行过滤，符合条件的数据会被留下     |
+| keyBy        | 根据key分组，相同key的数据会进入同一个分区 |
+| reduce       | 对当前元素和上一次的结果进行聚合操作       |
+| aggregations | sum()、min()、max()等                      |
+
+上面的算子用法和spark中是一致的；再看一些其他算子
+
+| 算子            | 解释                                     |
+| --------------- | ---------------------------------------- |
+| union           | 合并多个流，多个流的类型必须一致         |
+| connect         | 只能连接两个流，两个流的数据类型可以不同 |
+| split           | 根据规则把一个流切分为多个流             |
+| shuffle         | 随机分区                                 |
+| rebalance       | 对数据进行再平衡、重分区，消除数据倾斜   |
+| rescale         | 重分区                                   |
+| partitionCustom | 自定义分区                               |
+
+**注意：**
+
+在使用Java的lambda表达式的时，可能会报如下错误：
+```
+Caused by: org.apache.flink.api.common.functions.InvalidTypesException: The generic type parameters of 'Collector' are missing
+Exception in thread "main" org.apache.flink.api.common.functions.InvalidTypesException: The return type of function
+```
+解决办法：需要加上返回值泛型
+```java
+// flatMap算子，返回string，使用lambda表达式：
+DataStream<String> flatMap = inputStream.flatMap((FlatMapFunction<String, String>) (value, out) -> {
+            String[] fields = value.split(",");
+            for (String field : fields)
+                out.collect(field);
+        }).returns(Types.STRING);
+// 如果返回tuple：
+DataStream<Tuple2<String, String>> flatMap = inputStream.flatMap((FlatMapFunction<String, Tuple2<String, String>>) (value, out) -> {
+            String[] fields = value.split(",");
+            out.collect(new Tuple2<>(fields[0], fields[1]));
+        }).returns(Types.TUPLE(Types.STRING, Types.STRING));
+```
+
+### 5.2.1、union算子
+
+表示合并多个流，但是多个流的数据类型必须一致；多个流join之后，变成了一个流
+
+应用场景：多种数据源的数据类型一致，数据处理规则也一直
+
+示例代码：
+```java
+/**
+ * 合并多个流，多个流的数据类型必须一致
+ * 应用场景：多种数据源的数据类型一致，数据处理规则也一致
+ */
+public class StreamUnionJava {
+    public static void main(String[] args) throws Exception{
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        //第1份数据流
+        DataStreamSource<Integer> text1 = env.fromCollection(Arrays.asList(1, 2, 3, 4, 5));
+        //第2份数据流
+        DataStreamSource<Integer> text2 = env.fromCollection(Arrays.asList(6, 7, 8, 9, 10));
+        //合并流
+        DataStream<Integer> unionStream = text1.union(text2);
+        //打印流中的数据
+        unionStream.print().setParallelism(1);
+        env.execute("StreamUnionJava");
+    }
+}
+```
+
+### 5.2.2、connect算子
+
+只能连接两个流，两个流的数据类型可以不同；两个流被connect之后，只是被放到了同一个流冲，内部依然保持各自的数据和形式不发生变化，两个流相互独立；
+
+connect方法返回connectedStream，在connectedStream中需要使用 CoMap、CoFlatMap这种函数，类似于map和flatMap
+```java
+/**
+ * 只能连接两个流，两个流的数据类型可以不同
+ */
+public class StreamConnectJava {
+    public static void main(String[] args) throws Exception{
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        //第1份数据流
+        DataStreamSource<String> text1 = env.fromElements("user:tom,age:18");
+        //第2份数据流
+        DataStreamSource<String> text2 = env.fromElements("user:jack_age:20");
+        //连接两个流
+        ConnectedStreams<String, String> connectStream = text1.connect(text2);
+        connectStream.map(new CoMapFunction<String, String, String>() {
+            //处理第1份数据流中的数据
+            @Override
+            public String map1(String value) throws Exception {
+                return value.replace(",","-");
+            }
+            //处理第2份数据流中的数据
+            @Override
+            public String map2(String value) throws Exception {
+                return value.replace("_","-");
+            }
+        }).print().setParallelism(1);
+        env.execute("StreamConnectJava");
+    }
+}
+```
+
+### 5.2.3、split算子
+
+根据规则把一个数据流切分为多个流
+
+> 注意：split只能分一次流，切分出来你的流不能继续分流
+
+split需要跟select配合使用，选择切分后的流；
+
+应用场景：将一份数据流切分为多份，便于针对每一份数据使用不同的处理逻辑；
+```java
+/**
+ * 根据规则把一个数据流切分为多个流
+ * 注意：split只能分一次流，切分出来的流不能继续分流； split需要和select配合使用，选择切分后的流
+ * 应用场景：将一份数据流切分为多份，便于针对每一份数据使用不同的处理逻辑
+ */
+public class StreamSplitJava {
+    public static void main(String[] args) throws Exception{
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        DataStreamSource<Integer> text = env.fromCollection(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        //按照数据的奇偶性对数据进行分流
+        SplitStream<Integer> splitStream = text.split(new OutputSelector<Integer>() {
+            @Override
+            public Iterable<String> select(Integer value) {
+                ArrayList<String> list = new ArrayList<>();
+                if (value % 2 == 0) {
+                    list.add("even");//偶数
+                } else {
+                    list.add("odd");//奇数
+                }
+                return list;
+            }
+        });
+        //选择流
+        DataStream<Integer> evenStream = splitStream.select("even");
+        evenStream.print().setParallelism(1);
+        env.execute("StreamSplitJava");
+    }
+}
+```
+split切分的流无法进行二次切分，并且split已经标记为过时了；
+```java
+@Deprecated
+public SplitStream<T> split(OutputSelector<T> outputSelector) {
+    return new SplitStream<>(this, clean(outputSelector));
+}
+```
+官方不推荐使用，现在官方推荐使用 side output方式实现，使用 ProcessFunction 底层API来实现的
+```java
+/**
+ * 使用sideoutput切分流
+ */
+public class StreamSideoutputJava {
+    public static void main(String[] args) throws Exception{
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        DataStreamSource<Integer> text = env.fromCollection(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        //按照数据的奇偶性对数据进行分流
+        //首先定义两个sideoutput来准备保存切分出来的数据
+        OutputTag<Integer> outputTag1 = new OutputTag<Integer>("even") {};
+        OutputTag<Integer> outputTag2 = new OutputTag<Integer>("odd") {};
+
+        SingleOutputStreamOperator<Integer> outputStream = text.process(new ProcessFunction<Integer, Integer>() {
+            @Override
+            public void processElement(Integer value, Context ctx, Collector<Integer> out)
+                    throws Exception {
+                if (value % 2 == 0) {
+                    ctx.output(outputTag1, value);
+                } else {
+                    ctx.output(outputTag2, value);
+                }
+            }
+        });
+        //获取偶数数据流
+        DataStream<Integer> evenStream = outputStream.getSideOutput(outputTag1);
+        //获取奇数数据流
+        DataStream<Integer> oddStream = outputStream.getSideOutput(outputTag2);
+        //对evenStream流进行二次切分
+        OutputTag<Integer> outputTag11 = new OutputTag<Integer>("low") {};
+        OutputTag<Integer> outputTag12 = new OutputTag<Integer>("high") {};
+        SingleOutputStreamOperator<Integer> subOutputStream = evenStream.process(new ProcessFunction<Integer, Integer>() {
+            @Override
+            public void processElement(Integer value, Context ctx, Collector<Integer> out)
+                    throws Exception {
+                if (value <= 5) {
+                    ctx.output(outputTag11, value);
+                } else {
+                    ctx.output(outputTag12, value);
+                }
+            }
+        });
+        //获取小于等于5的数据流
+        DataStream<Integer> lowStream = subOutputStream.getSideOutput(outputTag11);
+        //获取大于5的数据流
+        DataStream<Integer> highStream = subOutputStream.getSideOutput(outputTag12);
+
+        lowStream.print().setParallelism(1);
+
+        env.execute("StreamSideoutputJava");
+    }
+}
+```
+
+### 5.2.4、分区相关算子
+
+- random：随机分区
+- rebalance：对数据集中进行再平衡、重分区，消除数据倾斜；
+- rescale：重分区
+- broadcast：广播分区
+- custom partition：自定义分区
+
+**random：随机**
+
+表示将上游数据随机你分发到下游算子是来的每个分区中，在代码层皮调用shuffle()函数。shuffle底层对应的是 ShufflePartitioner类，其有一个 selectChannel 函数，这个函数会计算数据将会被发送给哪个分区，里面使用的是 random.nextInt。
+
+```java
+@Override
+public int selectChannel(SerializationDelegate<StreamRecord<T>> record) {
+  return random.nextInt(numberOfChannels);
+}
+```
+
+**rebalance：重新平衡分区**
+
+重新平衡分区（循环分区）表示对数据进行再平衡，消除数据倾斜，为每个分区创建相同的负载，其实就是通过循环的方式给下游算子实例的每个分区分配数据，在代码体现调用 rebalance() 函数。其实现类是 RebalancePartitioner，该类中 setup 函数会根据分区初始化一个随机值 nextChannelToSendTo，然后 selectChannel 函数会使用 nextChannelToSendTo 加1和分区数取模，把计算的值再赋给 nextChannelToSendTo，后面以此类推，
+
+```java
+@Override
+public void setup(int numberOfChannels) {
+  super.setup(numberOfChannels);
+  nextChannelToSendTo = ThreadLocalRandom.current().nextInt(numberOfChannels);
+}
+
+@Override
+public int selectChannel(SerializationDelegate<StreamRecord<T>> record) {
+  nextChannelToSendTo = (nextChannelToSendTo + 1) % numberOfChannels;
+  return nextChannelToSendTo;
+}
+```
+
+**rescale：重分区**
+
+rescale底层对应的是：RescalePartitioner，有一个 selectChannel 函数，里面的 numberOfChannels 是分区数量，其实也有认为是我们所说的算子的并行度，因为一个分区是由一个线程负责处理的，它们两个是一一对应的；
+```java
+@Override
+public int selectChannel(SerializationDelegate<StreamRecord<T>> record) {
+  if (++nextChannelToSendTo >= numberOfChannels) {
+    nextChannelToSendTo = 0;
+  }
+  return nextChannelToSendTo;
+}
+```
+如果上游操作有2个并发，而下游操作有4个并发，那么上游的1个并发结果循环分配给下游的2个并发操作，上游的另外1个并发结果循环分配给下游的另外2个并发操作。另一种情况，如果上游有4个并发而下游有2个并发操作，那么上游的其中2个并发操作的结果会分配给下游的1个并发操作，而上游的另外2个并发操作的结果会分配给下游的另外1个并发操作；
+
+> 注意 rescale 与 Rebalance 的区别：Rebalance 会产生全量的重分区，而 rescale不会；
+
+**broadcast：广播分区**
+
+将上游算子实例中的数据输出到下游算子实例的每个分区中，适用于大数据集 join 小数据集的场景，可以提高性能
+
+broadcast 底层对应的是 BroadcastPartitioner，其selectChannel 方法提示广播分区不支持选择 Channel，因为会输出数据到下游的每个Channel中，就是发送到下游算子实例的每个分区中；
+```java
+@Override
+public int selectChannel(SerializationDelegate<StreamRecord<T>> record) {
+  throw new UnsupportedOperationException("Broadcast partitioner does not support select channels.");
+}
+```
+
+**custom partition：自定义分区**
+
+可以按照自愿规则实现，自定义分区需要实现 Partitioner 接口
+
+完整代码示例：
+```java
+package com.imooc.java.stream.transformation;
+
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.functions.KeySelector;
+import org.apache.flink.streaming.api.datastream.DataStreamSource;
+import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+
+import java.util.Arrays;
+
+/**
+ * 分区规则的使用
+ * Created by xuwei
+ */
+public class StreamPartitionOpJava {
+    public static void main(String[] args) throws Exception{
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        DataStreamSource<Integer> text = env.fromCollection(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9, 10));
+        //使用shuffle分区规则
+        //shuffleOp(text);
+
+        //使用rebalance分区规则
+        //rebalanceOp(text);
+
+        //使用rescale分区规则
+        //rescaleOp(text);
+
+        //使用broadcast分区规则
+        //broadcastOp(text);
+
+        //自定义分区规则
+        //custormPartitionOp(text);
+
+        env.execute("StreamPartitionOpJava");
+    }
+    private static void custormPartitionOp(DataStreamSource<Integer> text) {
+        text.map(new MapFunction<Integer, Integer>() {
+            @Override
+            public Integer map(Integer integer) throws Exception {
+                return integer;
+            }
+        }).setParallelism(2)
+                .partitionCustom(new MyPartitionerJava(), new KeySelector<Integer, Integer>() {
+                    @Override
+                    public Integer getKey(Integer integer) throws Exception {
+                        return integer;
+                    }
+                })
+                .print()
+                .setParallelism(4);
+    }
+    private static void broadcastOp(DataStreamSource<Integer> text) {
+        text.map(new MapFunction<Integer, Integer>() {
+            @Override
+            public Integer map(Integer integer) throws Exception {
+                return integer;
+            }
+        }).setParallelism(2)
+                .broadcast()
+                .print()
+                .setParallelism(4);
+    }
+    private static void rescaleOp(DataStreamSource<Integer> text) {
+        text.map(new MapFunction<Integer, Integer>() {
+            @Override
+            public Integer map(Integer integer) throws Exception {
+                return integer;
+            }
+        }).setParallelism(2)
+                .rescale()
+                .print()
+                .setParallelism(4);
+    }
+    private static void rebalanceOp(DataStreamSource<Integer> text) {
+        text.map(new MapFunction<Integer, Integer>() {
+            @Override
+            public Integer map(Integer integer) throws Exception {
+                return integer;
+            }
+        }).setParallelism(2)
+                .rebalance()
+                .print()
+                .setParallelism(4);
+    }
+    private static void shuffleOp(DataStreamSource<Integer> text) {
+        text.map(new MapFunction<Integer, Integer>() {
+            @Override
+            public Integer map(Integer integer) throws Exception {
+                return integer;
+            }
+        }).setParallelism(2)
+                .shuffle()
+                .print()
+                .setParallelism(4);
+    }
+}
+```
+
+### 5.2.5、富函数：RichFunction
+
+"富函数"是DataStream API 提供的一个函数类的接口，所有Flink 函数类都会有其Rich版本，其跟常规函数的不同之处在于可以获取运行环境的上下文，并拥有一些生命周期方法，可以实现更复杂的功能：RichMapFunction、RichFlatMapFunction等
+
+RichFunction 有一个生命周期的概念，典型的生命周期方法有：
+- open：是rich function的初始化方法，当一个算子例如map或者filter被调用之前open会被调用；
+- close：方法是生命周期的最后一个调用的方法，做一些清理工作；
+- getRuntimeContext 提供了函数的 RuntimeContext 的一些信息，例如函数执行的并行度，任务的明智以及state状态；
+
+## 5.3、sink api
+
 
 
 # 6、Flink核心API之DataSet
 
 
+
 # 7、Flink核心API之Table API与SQL
+
+
 
 
 # 8、窗口window
@@ -433,7 +868,6 @@ window根据类型可以分为两种：
 - Sliding Windows：滑动窗口，表示窗口内的数据有重叠
 
   ![](image/Flink-滑动窗口描述.png)
-  
 
 ![](image/Flink-窗口类型总结.png)
 
