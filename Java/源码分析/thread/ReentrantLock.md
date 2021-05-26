@@ -53,6 +53,7 @@ public class ReentrantLock implements Lock, java.io.Serializable {
 
 ## 2、概述
 
+ReentrantLock意思为可重入锁，指的是一个线程能够对一个临界资源重复加锁
 - 在同一个时间点只能被一个线程持有，而可重入即可以被单个线程多次获取。主要是修改state值，重入多少次，就得释放多少次锁，保证释放之后state变为0；
 - ReentrantLock 分为"公平锁"和"非公平锁"，区别在于获取锁的机制上是否公平；
 - ReentrantLock 是通过一个 FIFO 的等待队列来管理获取该锁的所有线程。"公平锁"的机制下，线程依次排队获取；而"非公平锁"在锁是可获取状态时，不管自己是不是在队列的开头都会获取锁。
@@ -187,11 +188,12 @@ NonfairSync 底层实现了 lock 和 tryAcquire 两个方法
 ```java
 // 加锁
 final void lock() {
-    // cas 给 state 赋值
+    // 若通过CAS设置变量State（同步状态）成功，也就是获取锁成功，则将当前线程设置为独占线程。
     if (compareAndSetState(0, 1))
         // cas 赋值成功，代表拿到当前锁，记录拿到锁的线程
         setExclusiveOwnerThread(Thread.currentThread());
     else
+        // 若通过CAS设置变量State（同步状态）失败，也就是获取锁失败，则进入Acquire方法进行后续处理
         // acquire 是抽象类AQS的方法,
         // 会再次尝试获得锁，失败会进入到同步队列中
         acquire(1);

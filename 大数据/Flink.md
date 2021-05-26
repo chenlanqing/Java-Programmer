@@ -835,15 +835,203 @@ RichFunction 有一个生命周期的概念，典型的生命周期方法有：
 
 ## 5.3、sink api
 
+DataSink是输出组件，负责把计算好的数据输出到其他存储介质中；Flink支持把流的数据输出到文件中，不过在实际工作中，一般是先存储到一些消息队列中或者数据库里面；
 
+Flink提供了谊品Connectors，可以实现输出到第三方目的地
+
+| Flink内置         | Apache Bahir |
+| ----------------- | ------------ |
+| Kafka             | ActiveMQ     |
+| Cassandra         | Flume        |
+| Elasticsearch     | Redis        |
+| Hadoop FileSystem | Akka         |
+| RabbitMQ          |              |
+| JDBC              |              |
+
+在实际工作中最常用的Kafka、Redis，针对Flink提供的常用sink组件，可以提供以下容错性保证
+- Redis：at least once
+- Kafka：at least once / exactly once。kafka0.9和0.10 提供at least once，kafka0.11及以上提供 exactly once
+
+### 5.3.1、kafka sink
+
+需要添加对应的依赖：
+```xml
+<dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-connector-kafka-0.11_2.12</artifactId>
+    <version>1.10.1</version>
+</dependency>
+```
+代码实例
+```java
+public class SinkToKafka {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+
+        Properties properties = new Properties();
+        properties.setProperty("bootstrap.servers", "localhost:9092");
+        properties.setProperty("group.id", "consumer-group");
+        properties.setProperty("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        properties.setProperty("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        properties.setProperty("auto.offset.reset", "latest");
+        // 从kafka topic sensor中读取数据
+        DataStream<String> inputStream = env.addSource( new FlinkKafkaConsumer011<String>("sensor", new SimpleStringSchema(), properties));
+        // 数据处理
+        DataStream<String> dataStream = inputStream.map((MapFunction<String, String>) value -> {
+            String[] fields = value.split(",");
+            return new SensorReading(fields[0], new Long(fields[1]), new Double(fields[2])).toString();
+        });
+        dataStream.addSink(new FlinkKafkaProducer011<>("localhost:9092", "sinktest", new SimpleStringSchema()));
+        env.execute();
+    }
+}
+```
+
+### 5.3.2、Redis Sink
+
+添加的依赖
+```xml
+<dependency>
+    <groupId>org.apache.bahir</groupId>
+    <artifactId>flink-connector-redis_2.11</artifactId>
+    <version>1.0</version>
+</dependency>
+```
+代码实例：
+```java
+public class SinkToRedis {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+        DataStream<String> inputStream = env.readTextFile("data/sensor.txt");
+        // 数据处理
+        DataStream<SensorReading> dataStream = inputStream.map((MapFunction<String, SensorReading>) value -> {
+            String[] fields = value.split(",");
+            return new SensorReading(fields[0], new Long(fields[1]), new Double(fields[2]));
+        });
+        FlinkJedisConfigBase config = new FlinkJedisPoolConfig.Builder()
+                .setHost("localhost")
+                .setPort(6379)
+                .build();
+        dataStream.addSink(new RedisSink<>(config, new JavaRedisMapper()));
+        env.execute();
+    }
+    private static class JavaRedisMapper implements RedisMapper<SensorReading> {
+        // 设置操作命令
+        @Override
+        public RedisCommandDescription getCommandDescription() {
+            return new RedisCommandDescription(RedisCommand.HSET, "sensor_type");
+        }
+        @Override
+        public String getKeyFromData(SensorReading data) {
+            return data.getId();
+        }
+        @Override
+        public String getValueFromData(SensorReading data) {
+            return String.valueOf(data.getTemperature());
+        }
+    }
+}
+```
+
+### 5.3.3、elasticsearch sink
+
+依赖：
+```xml
+<dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-connector-elasticsearch6_2.12</artifactId>
+    <version>1.10.1</version>
+</dependency>
+```
+
+实例：
+```java
+public class SinkToEs {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+        DataStream<String> inputStream = env.readTextFile("data/sensor.txt");
+        // 数据处理
+        DataStream<SensorReading> dataStream = inputStream.map((MapFunction<String, SensorReading>) value -> {
+            String[] fields = value.split(",");
+            return new SensorReading(fields[0], new Long(fields[1]), new Double(fields[2]));
+        });
+        List<HttpHost> posts = Collections.singletonList(new HttpHost("localhost", 9200));
+        dataStream.addSink(new ElasticsearchSink.Builder<>(posts, new MyEsSink()).build());
+        env.execute();
+    }
+    private static class MyEsSink implements ElasticsearchSinkFunction<SensorReading> {
+        @Override
+        public void process(SensorReading element, RuntimeContext ctx, RequestIndexer indexer) {
+            // 定义写入的数据source
+            HashMap<String, String> dataSource = new HashMap<>();
+            dataSource.put("id", element.getId());
+            dataSource.put("temp", element.getTemperature().toString());
+            dataSource.put("ts", element.getTimestamp().toString());
+            IndexRequest request = Requests.indexRequest()
+                    .index("sensor")
+                    .type("readingdata")
+                    .source(dataSource);
+            indexer.add(request);
+        }
+    }
+}
+```
+
+### 5.3.4、jdbc sink
+
+```java
+public class SinkToJdbc {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+        env.addSource(new CustomSourceDemo.MySensorSource()).addSink(new MyJdbcSink());
+        env.execute();
+    }
+    private static class MyJdbcSink extends RichSinkFunction<SensorReading> {
+        private Connection connection;
+        private PreparedStatement insertStmt;
+        private PreparedStatement updateStmt;
+        @Override
+        public void open(Configuration parameters) throws Exception {
+            connection = DriverManager.getConnection("jdbc:mysql://localhost:3306/test", "root", "root");
+            insertStmt = connection.prepareStatement("insert into sensor_temp (id, temp) values (?, ?)");
+            updateStmt = connection.prepareStatement("update sensor_temp set temp = ? where id = ?");
+        }
+        @Override
+        public void close() throws Exception {
+            if (insertStmt != null) {
+                insertStmt.close();
+            }
+            if (updateStmt != null) {
+                updateStmt.close();
+            }
+            if (connection != null) {
+                connection.close();
+            }
+        }
+        @Override
+        public void invoke(SensorReading value, Context context) throws Exception {
+            // 直接执行更新语句，如果没有更新那么就插入
+            updateStmt.setDouble(1, value.getTemperature());
+            updateStmt.setString(2, value.getId());
+            updateStmt.execute();
+            if (updateStmt.getUpdateCount() == 0) {
+                insertStmt.setString(1, value.getId());
+                insertStmt.setDouble(2, value.getTemperature());
+                insertStmt.execute();
+            }
+        }
+    }
+}
+```
 
 # 6、Flink核心API之DataSet
 
 
-
 # 7、Flink核心API之Table API与SQL
-
-
 
 
 # 8、窗口window
@@ -873,7 +1061,7 @@ window根据类型可以分为两种：
 
 ## 8.3、TimeWindow
 
-TimeWindow是根据时间对数据切分的窗口，TimeWindow可以支持滚动窗口和滑动窗口
+TimeWindow是根据时间对数据切分的窗口，TimeWindow可以支持滚动时间窗口和滑动时间窗口
 - `timewindow(Time.seconds(10))`：表示滚动窗口的窗口大小为10秒，对每10秒内的数据进行聚合计算；
 - `timewindow(Time.seconds(10), Time.seconds(5))`：表示滑动窗口的窗口大小是10秒，滑动间隔为5秒，就是每个5秒计算前10秒内的数据
 

@@ -192,6 +192,9 @@ ETL主要考察点：
 
 ### 2.4、sql面试题
 
+https://mp.weixin.qq.com/s/QtuQ9TFITLVN9QhFxnEsIA
+https://mp.weixin.qq.com/s/sJO3_0ycVrwScM_lYtmfZA
+https://mp.weixin.qq.com/s/C93z_j9v1l5EwyuPyMUo-A
 https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
 
 ## 3、Flume

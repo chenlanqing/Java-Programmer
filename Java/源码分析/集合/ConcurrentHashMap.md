@@ -382,6 +382,9 @@ if ((as = counterCells) != null ||
 
 可以使用replace方法
 
+## 4、ConcurrentHashMap在jdk8中的bug
+
+https://juejin.cn/post/6844904191077384200
 
 # 参考资料
 

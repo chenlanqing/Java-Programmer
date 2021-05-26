@@ -22,6 +22,8 @@ public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchron
 
 ## 1、设计思想
 
+AQS核心思想是：如果被请求的共享资源空闲，那么就将当前请求资源的线程设置为有效的工作线程，将共享资源设置为锁定状态；如果共享资源被占用，就需要一定的阻塞等待唤醒机制来保证锁分配。这个机制主要用的是CLH队列的变体实现的，将暂时获取不到锁的线程加入到队列中
+
 AQS，抽象队列同步器，是构建锁或者其他同步组件的基础框架，是JUC并发包中的核心基础组件
 - 仅从 AQS 本身来说，它仅仅提供独占锁和共享锁两种方式， AQS 本身不存在所谓的公平和非公平锁。
 - AQS 是继承自 AbstractOwnableSynchronizer(AOS)，AOS 里面只有一个属性：`exclusiveOwnerThread--用来标识当前占有锁的线程`，加上该属性的get和set方法。<br>
@@ -31,7 +33,7 @@ AQS，抽象队列同步器，是构建锁或者其他同步组件的基础框�
 
 	AQS 是在1.5产生， 而 AOS 是在1.6之后才产生的。也就是说在AQS的整个声明过程中，都没有用到 AOS 中声明的属性或者方法，这些属性或者方法是在 AQS 的子类中才用的到，也就是在 1.6之后对子类进行增强。为什么不把 AOS 声明的属性直接放到 AQS中？可能是因为 AQS 不需要这些属性，不对 AQS 做过多侵入。
 
-- AQS 核心是通过一个共享变量state来同步状态，变量的状态由子类去维护，AQS需要做的是：线程阻塞队列维护、线程阻塞和唤醒；一个先进先出的等待线程队列，以实现多线程间竞争和等待；当`state>0`时表示已经获取了锁，当`state = 0`时表示释放了锁。它提供了三个方法`（getState()、setState(int newState)、compareAndSetState(int expect,int update)）`来对同步状态state进行操作，当然AQS可以确保对state的操作是安全的
+- AQS 核心是通过一个volatile 共享变量state来同步状态，变量的状态由子类去维护，AQS需要做的是：线程阻塞队列维护、线程阻塞和唤醒；一个先进先出的等待线程队列，以实现多线程间竞争和等待；当`state>0`时表示已经获取了锁，当`state = 0`时表示释放了锁。它提供了三个方法`（getState()、setState(int newState)、compareAndSetState(int expect,int update)）`来对同步状态state进行操作，当然AQS可以确保对state的操作是安全的；一句话概括：AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改
 
 - AQS内部维护着一个FIFO队列，该队列就是CLH同步队列；AQS 底层是由同步队列 + 条件队列联手组成，同步队列管理着获取不到锁的线程的排队和释放，条件队列是在一定场景下，对同步队列的补充，比如获得锁的线程从空队列中拿数据，肯定是拿不到数据的，这时候条件队列就会管理该线程，使该线程阻塞
 
@@ -67,7 +69,7 @@ AQS 一共有五处方法供子类实现：
 ## 4、CLH同步队列
 
 - AQS内部维护着一个FIFO队列，该队列就是CLH同步队列；
-- CLH同步队列是一个FIFO双向队列，底层是一个双向链表，AQS依赖它来完成同步状态的管理，当前线程如果获取同步状态失败时，AQS则会将当前线程已经等待状态等信息构造成一个节点（Node）并将其加入到CLH同步队列，同时会阻塞当前线程，当同步状态释放时，会把首节点唤醒（公平锁），使其再次尝试获取同步状态；
+- CLH同步队列是一个FIFO双向队列，尾部插入、头部删除；底层是一个单向链表，AQS中的队列是CLH变体的虚拟双向队列（FIFO）,AQS依赖它来完成同步状态的管理，当前线程如果获取同步状态失败时，AQS则会将当前线程已经等待状态等信息构造成一个节点（Node）并将其加入到CLH同步队列，同时会阻塞当前线程，当同步状态释放时，会把首节点唤醒（公平锁），使其再次尝试获取同步状态；
 - 同步队列的作用：阻塞获取不到锁的线程，并在适当时机释放这些线程
 - 在CLH同步队列中，一个节点表示一个线程，它保存着线程的引用（thread）、状态（waitStatus）、前驱节点（prev）、后继节点（next）
 
@@ -89,28 +91,99 @@ ConditionObject 我们就称为条件队列，我们需要使用时，直接 new
 ## 6、同步状态
 
 在同步器中，我们有两个状态，一个叫做 state，一个叫做 waitStatus，两者是完全不同的概念
-- **state是锁的状态**
-	- 对于独占模式来说，通常就是 0 代表可获取锁，1 代表锁被别人获取了，可重入锁例外；
-	- 共享模式下，每个线程都可以对 state 进行加减操作；独占模式和共享模式对于 state 的操作完全不一样；
 
-- **waitStatus 是节点（Node）的状态**，其种类很多，一共有初始化 (0)、CANCELLED (1)、SIGNAL (-1)、CONDITION (-2)、PROPAGATE (-3)：
-	```java
-	// waitStatus 的状态有以下几种
-    // 被取消
-    static final int CANCELLED =  1;
-    // SIGNAL 状态的意义：同步队列中的节点在自旋获取锁的时候，如果前一个节点的状态是 SIGNAL，那么自己就可以阻塞休息了，否则自己一直自旋尝试获得锁
-    static final int SIGNAL    = -1;
-    // 表示当前 node 正在条件队列中，当有节点从同步 队列转移到条件队列时，状态就会被更改成 CONDITION
-    static final int CONDITION = -2;
-    // 无条件传播,共享模式下，该状态的进程处于可运行状态
-    static final int PROPAGATE = -3;
-	```
+### 6.1、state
+
+state是锁的状态，意为同步状态，是由Volatile修饰的，用于展示当前临界资源的获锁情况
+```java
+private volatile int state;
+```
+AQS提供了对这个字段的访问方法，这些方法都是 final 修饰的，说明子类中无法重写它们
+```java
+// 获取state的值
+protected final int getState() {
+	return state;
+}
+// 设置 state 的值
+protected final void setState(int newState) {
+	state = newState;
+}
+// 使用CAS方式更新State
+protected final boolean compareAndSetState(int expect, int update) {
+	// See below for intrinsics setup to support this
+	return unsafe.compareAndSwapInt(this, stateOffset, expect, update);
+}
+```
+- 对于独占模式来说，通常就是 0 代表可获取锁，1 代表锁被别人获取了，可重入锁例外；
+- 共享模式下，每个线程都可以对 state 进行加减操作；独占模式和共享模式对于 state 的操作完全不一样；
+
+可以通过修改State字段表示的同步状态来实现多线程的独占模式和共享模式的加锁过程
+
+![](image/AQS-state-独占模式.png)	![](image/AQS-state-共享模式.png)
+
+### 6.2、waitStatus 
+
+waitStatus是节点（Node）的状态，其种类很多，一共有初始化 (0)、CANCELLED (1)、SIGNAL (-1)、CONDITION (-2)、PROPAGATE (-3)：
+```java
+// waitStatus 的状态有以下几种
+// 被取消
+static final int CANCELLED =  1;
+// SIGNAL 状态的意义：同步队列中的节点在自旋获取锁的时候，如果前一个节点的状态是 SIGNAL，那么自己就可以阻塞休息了，否则自己一直自旋尝试获得锁
+static final int SIGNAL    = -1;
+// 表示当前 node 正在条件队列中，当有节点从同步 队列转移到条件队列时，状态就会被更改成 CONDITION
+static final int CONDITION = -2;
+// 无条件传播,共享模式下，该状态的进程处于可运行状态
+static final int PROPAGATE = -3;
+```
 
 ## 7、主要方法与属性
 
 ![](image/AQS-框架结构.png)
 
-上图中有颜色的为Method，无颜色的为Attribution。
+- 上图中有颜色的为Method，无颜色的为Attribution；
+- 总的来说，AQS框架共分为五层，自上而下由浅入深，从AQS对外暴露的API到底层基础数据；
+- 当有自定义同步器接入时，只需重写第一层所需要的部分方法即可，不需要关注底层具体的实现流程。当自定义同步器进行加锁或者解锁操作时，先经过第一层的API进入AQS内部方法，然后经过第二层进行锁的获取，接着对于获取锁失败的流程，进入第三层和第四层的等待队列处理，而这些处理方式均依赖于第五层的基础数据提供层
+
+从架构图中可以得知，AQS提供了大量用于自定义同步器实现的Protected方法。自定义同步器实现的相关方法也只是为了通过修改State字段来实现多线程的独占模式或者共享模式。自定义同步器需要实现以下方法（ReentrantLock需要实现的方法如下，并不是全部）：
+```java
+// 该线程是否正在独占资源。只有用到Condition才需要去实现它。
+protected boolean isHeldExclusively() {
+	throw new UnsupportedOperationException();
+}
+// 独占方式：arg为获取锁的次数，尝试获取资源，成功则返回True，失败则返回False。
+protected boolean tryAcquire(int arg) {
+	throw new UnsupportedOperationException();
+}
+// 独占方式：arg为释放锁的次数，尝试释放资源，成功则返回True，失败则返回False。
+protected boolean tryRelease(int arg) {
+	throw new UnsupportedOperationException();
+}
+// 共享方式：arg为获取锁的次数，尝试获取资源。负数表示失败；0表示成功，但没有剩余可用资源；正数表示成功，且有剩余资源。
+protected int tryAcquireShared(int arg) {
+	throw new UnsupportedOperationException();
+}
+// 共享方式：arg为释放锁的次数，尝试释放资源，如果释放后允许唤醒后续等待结点返回True，否则返回False。
+protected boolean tryReleaseShared(int arg) {
+	throw new UnsupportedOperationException();
+}
+```
+一般来说，自定义同步器要么是独占方式，要么是共享方式，它们也只需实现tryAcquire-tryRelease、tryAcquireShared-tryReleaseShared中的一种即可。AQS也支持自定义同步器同时实现独占和共享两种方式，如ReentrantReadWriteLock。ReentrantLock是独占锁，所以实现了tryAcquire-tryRelease；
+
+以ReentrantLock与AQS交互为例，非公平锁获取
+
+![](image/ReentrantLock-AQS-加解锁过程.png)
+
+**加锁：**
+- 通过ReentrantLock的加锁方法Lock进行加锁操作。
+- 会调用到内部类Sync的Lock方法，由于Sync#lock是抽象方法，根据ReentrantLock初始化选择的公平锁和非公平锁，执行相关内部类的Lock方法，本质上都会执行AQS的Acquire方法。
+- AQS的Acquire方法会执行tryAcquire方法，但是由于tryAcquire需要自定义同步器实现，因此执行了ReentrantLock中的tryAcquire方法，由于ReentrantLock是通过公平锁和非公平锁内部类实现的tryAcquire方法，因此会根据锁类型不同，执行不同的tryAcquire。
+- tryAcquire是获取锁逻辑，获取失败后，会执行框架AQS的后续逻辑，跟ReentrantLock自定义同步器无关。
+
+**解锁：**
+- 通过ReentrantLock的解锁方法Unlock进行解锁。
+- Unlock会调用内部类Sync的Release方法，该方法继承于AQS。
+- Release中会调用tryRelease方法，tryRelease需要自定义同步器实现，tryRelease只在ReentrantLock中的Sync实现，因此可以看出，释放锁的过程，并不区分是否为公平锁。
+- 释放成功后，所有处理由AQS框架完成，与自定义同步器无关。
 
 # 二、源码分析
 
@@ -118,6 +191,7 @@ ConditionObject 我们就称为条件队列，我们需要使用时，直接 new
 
 ### 1.1、关于 Node 需要注意点
 
+为CLH队列中的节点
 - AQS 的等待队列是 CLH lock队列，CLH 经常用于自旋锁，AQS 中的CLH可以简单的理解为"等待锁的线程队列"，队列中每个节点(线程)只需要等待其前驱节点释放锁；
 - 每个节点持有一个 "status" 字段用于是否一条线程应当阻塞的追踪， 但是 state 字段并不保证加锁；
 - 一条线程所在节点如果它处于队列头的下一个节点，那么它会尝试 acquire， 但是 acquire 并不保证成功，只是有权利去竞争
@@ -135,13 +209,9 @@ next-与prev相反，指向后置节点；<br>
 
 关键不同就是next指针，因为 AQS 中线程不是一直在自旋的，可能会返回睡眠和唤醒，这就需要前继释放锁的时候通过next指针找到其后继将其唤醒。也就是 AQS 的等待队列中后继是被前继唤醒的。AQS 结合了自旋和睡眠/唤醒两种方法的优点；
 
-### 1.3、Node 主要代码
+### 1.3、Node主要属性
 
 ```java
-//标记当前结点是共享模式
-static final Node SHARED = new Node();
-//标记当前结点是独占模式
-static final Node EXCLUSIVE = null;
 //代表线程已经被取消
 static final int CANCELLED = 1;
 //代表后续节点需要唤醒
@@ -150,27 +220,36 @@ static final int SIGNAL = -1;
 static final int CONDITION = -2;
 //代表后续结点会传播唤醒的操作，共享模式下起作用
 static final int PROPAGATE = -3;
-//结点的等待状态，用来控制线程的阻塞/唤醒，以及避免不必要的调用LockSupport的park/unpark方法，主要值上述四个
+//当前节点在队列中的状态，用来控制线程的阻塞/唤醒，以及避免不必要的调用LockSupport的park/unpark方法，主要值上述四个
 volatile int waitStatus
-//拥有当前结点的线程。
+//表示处于该节点的线程
 volatile Thread thread；
 // 当前节点的前驱节点
 volatile Node prev;
 // 当前节点的后继节点
 volatile Node next;
 ```
-
-### 1.4、Node节点的状态
+Node节点的状态
 
 ```java
-//代表线程已经被取消
+// 0：当一个Node被初始化的时候的默认值
+// 表示线程获取锁的请求已经取消了
 static final int CANCELLED = 1;
-//代表后续节点需要唤醒
+//表示线程已经准备好了，就等资源释放了
 static final int SIGNAL = -1;
-//代表线程在condition queue中，等待某一条件
+//表示节点在等待队列中，节点线程等待唤醒
 static final int CONDITION = -2;
-//代表后续结点会传播唤醒的操作，共享模式下起作用
+//当前线程处在SHARED情况下，该字段才会使用
 static final int PROPAGATE = -3;
+```
+
+### 1.4、线程两种锁的模式
+
+```java
+//表示线程以共享的模式等待锁
+static final Node SHARED = new Node();
+//表示线程正在以独占的方式等待锁
+static final Node EXCLUSIVE = null;
 ```
 
 ## 2、独占锁与共享锁

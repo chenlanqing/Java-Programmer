@@ -913,9 +913,9 @@ filterFlower(flowerList, new LowPriceFilterPredicate());
 如果有其他新增的过滤条件，为了避免增加新的类，可以使用lambda表达式：
 ```
 filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);
-```java
+​```java
 甚至可以将多种行为作为作为一个参数传递：
-```java
+​```java
 filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8 && StringUtils.equals("red", flower.getColor()));
 ```
 行为参数化是一个很有用的模式，它能够轻松地使用不断变化的需求，这种模式可以把一个行为封装起来，并通过传递和使用创建的行为将方法的行为参数化；
@@ -1340,12 +1340,12 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
 		LocalDateTime localDateTime = LocalDateTime.now();
 		System.out.println(formatter.format(localDateTime));
-
+	
 		String str = "2008年08月23日 23:59:59";
 		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
 		LocalDateTime localDateTime2 = LocalDateTime.parse(str,formatter2);
 		System.out.println(localDateTime2);
-
+	
 	}
 	```
 - java8时间与老版本时间转换：
@@ -1355,30 +1355,30 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
         Instant instant = Instant.now();
         Date date = Date.from(instant);
         Instant instant2 = date.toInstant();
-
+	
         //Date转为LocalDateTime
         Date date2 = new Date();
         LocalDateTime localDateTime2 = LocalDateTime.ofInstant(date2.toInstant(), ZoneId.systemDefault());
-
+	
         //LocalDateTime转Date
         LocalDateTime localDateTime3 = LocalDateTime.now();
         Instant instant3 = localDateTime3.atZone(ZoneId.systemDefault()).toInstant();
         Date date3 = Date.from(instant);
-
+	
         //LocalDate转Date
         //因为LocalDate不包含时间，所以转Date时，会默认转为当天的起始时间，00:00:00
         LocalDate localDate4 = LocalDate.now();
         Instant instant4 = localDate4.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
         Date date4 = Date.from(instant);
-
+	
         // Calendar to Instant
         Instant time = Calendar.getInstance().toInstant();
         System.out.println(time);
-
+	
         // TimeZone to ZoneId
         ZoneId defaultZone = TimeZone.getDefault().toZoneId();
         System.out.println(defaultZone);
-
+	
         // ZonedDateTime from specific Calendar
         ZonedDateTime gregorianCalendarDateTime = new GregorianCalendar().toZonedDateTime();
         GregorianCalendar gc = GregorianCalendar.from(gregorianCalendarDateTime);
@@ -3619,7 +3619,7 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 			throw new NotSerializableException(cl.getName());
 		}
 	}
-
+	
 	private void writeEnum(Enum<?> en,ObjectStreamClass desc, boolean unshared) throws IOException {
         bout.writeByte(TC_ENUM);
         ObjectStreamClass sdesc = desc.getSuperDesc();
@@ -4106,7 +4106,7 @@ public Object invoke(Object obj, Object... args) {
 	Method method = Demo.class.getMethod("main"，String[].class);
 	method.invoke(null， (Object)new String[]{"111"，"222"，"333"});
 	```
-*注意：传入参数时不能直接传一个数组，jdk为了兼容1.5版本以下的，会将其拆包；因此这里将其强转或者直接将String数组放入Object数组也可以*
+	*注意：传入参数时不能直接传一个数组，jdk为了兼容1.5版本以下的，会将其拆包；因此这里将其强转或者直接将String数组放入Object数组也可以*
 
 ### 3.5、反射操作泛型
 
@@ -5315,6 +5315,48 @@ public enum FileType {
 ```
 
 如何通过魔数判断文件类型？
+
+## 3、JDK魔数
+
+为了方便虚拟机识别一个文件是否是class类型的文件，SUN公司规定每个class文件都必须以一个word(四个字节)作为开始，这个数字就是魔数。魔数是由四个字节的无符号数组成的，而class文件的名字还挺好听的的，其魔数就是`0xCAFEBABE`
+
+可以随便编译一个class文件，然后然后用十六进制编辑器打开编译后的class文件，基本格式如下：
+```
+00000000: cafe babe 0000 0034 005b 0a00 1800 2a07  .......4.[....*.
+00000010: 002b 0900 2c00 2d0a 0002 002e 0a00 1700  .+..,.-.........
+00000020: 2f0a 0002 0030 0a00 0200 3108 0032 0a00  /....0....1..2..
+00000030: 3300 340a 0035 0036 0a00 3700 380a 0035  3.4..5.6..7.8..5
+00000040: 0039 0a00 3500 3a07 003b 0a00 0e00 2a08  .9..5.:..;....*.
+00000050: 003c 0a00 0e00 3d08 003e 0a00 0e00 3f08  .<....=..>....?.
+00000060: 0040 0a00 0e00 410a 000e 0042 0700 4307  .@....A....B..C.
+00000070: 0044 0100 063c 696e 6974 3e01 0003 2829  .D...<init>...()
+00000080: 5601 0004 436f 6465 0100 0f4c 696e 654e  V...Code...LineN
+00000090: 756d 6265 7254 6162 6c65 0100 124c 6f63  umberTable...Loc
+000000a0: 616c 5661 7269 6162 6c65 5461 626c 6501  alVariableTable.
+000000b0: 0004 7468 6973 0100 284c 636f 6d2f 7970  ..this..(Lcom/yp
+```
+> 如何使用16进制打开class文件：使用 vim test.class ，然后在交互模式下，输入:%!xxd 即可。
+
+紧接着`cafe babe`后面的4个字节表示编译此Class文件的JDK的版本号，其中第5，6个字节表示的次版本号（Minor Version），第7-8个字节表述的主版本号（Major Verson），JDK的版本号：
+
+| JDK 版本 | 魔数      | 版本号 |
+| -------- | --------- | ------ |
+| JDK 1.2  | 0000 002E | 46     |
+| JDK 1.3  | 0000 002F | 47     |
+| JDK 1.4  | 0000 0030 | 48     |
+| JDK 5    | 0000 0031 | 49     |
+| JDK 6    | 0000 0032 | 50     |
+| JDK 7    | 0000 0033 | 51     |
+| JDK 8    | 0000 0034 | 52     |
+| JDK 9    | 0000 0035 | 53     |
+| JDK 10   | 0000 0036 | 54     |
+| JDK 11   | 0000 0037 | 55     |
+| JDK 12   | 0000 0038 | 56     |
+| JDK 13   | 0000 0039 | 57     |
+| JDK 14   | 0000 003A | 58     |
+| JDK 15   | 0000 003B | 59     |
+
+
 
 # 三十三、Java路径
 

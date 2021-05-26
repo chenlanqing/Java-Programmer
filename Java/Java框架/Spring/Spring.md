@@ -700,13 +700,13 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 		boolean isCompleted; // 是否已完成
 	}
 	```
-- `@Transactional`注解只能使用在public方法中：
+- `@Transactional`注解只能使用在public方法中，当注解在非public方法上时，`@Transactional`注解将会不起作用
 
 	在获取注解属性的时候，`AbstractFallbackTransactionAttributeSource#computeTransactionAttribute`这个方法有判断
 	```java
 	@Nullable
 	protected TransactionAttribute computeTransactionAttribute(Method method, @Nullable Class<?> targetClass) {
-		// Don't allow no-public methods as required.
+		// 标注@Transactional的方法如果修饰符不是public，那么就默认方法的@Transactional信息为空，那么将不会对bean进行代理对象创建或者不会对方法进行代理调用
 		if (allowPublicMethodsOnly() && !Modifier.isPublic(method.getModifiers())) {
 			return null;
 		}
@@ -716,6 +716,24 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 		return false;
 	}
 	```
+	另外在类内部调用类中`@Transactional`标注的public方法，这种情况下也会导致事务不开启
+	```java
+	@Transactional
+    public void insertTestInnerInvoke() {
+        //正常public修饰符的事务方法
+        int re = testMapper.insert(new Test(10,20,30));
+        if (re > 0) {
+            throw new NeedToInterceptException("need intercept");
+        }
+        testMapper.insert(new Test(210,20,30));
+    }
+    public void testInnerInvoke(){
+        //类内部调用@Transactional标注的方法。
+        insertTestInnerInvoke();
+    }
+	```
+	事务方法内部捕捉了异常，没有抛出新的异常，导致事务操作不会进行回滚
+
 
 ## 7、xml方式配置Spring事务：使用AOP来实现的，即使用动态代理
 

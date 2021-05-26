@@ -589,6 +589,18 @@ Java中天然有序性：如果在本线程内观察，所有操作都是天然�
 - 新建内部类继承 AQS，并实现 AQS 的 tryAcquire 和 tryRelease 两个方法，在 tryAcquire 方法里面实现控制能否获取锁，比如当同步器状态 state 是 0 时，即可获得锁，在 tryRelease 方法里面控制能否释放锁，比如将同步器状态递减到 0 时，即可释放锁；
 - 对外提供 lock、release 两个方法，lock 表示获得锁的方法，底层调用 AQS 的 acquire 方法，release 表示释放锁的方法，底层调用 AQS 的 release 方法
 
+### 11.7、AQS用来做什么
+
+### 11.8、AQS如何工作的
+
+### 11.9、手写程序：如何使用AQS实现Mutex
+
+### 11.10、AQS如何实现公平性
+
+### 11.11、CAS在AQS中的作用
+
+### 11.12、AQS内部的CHL算法的工作原理
+
 ## 12、多线程面试题
 
 https://segmentfault.com/a/1190000013813740
@@ -2527,3 +2539,5 @@ https://mp.weixin.qq.com/s/kzyfdj0MpCo31D55MY1O5A
 https://mp.weixin.qq.com/s/crv7m7A12-xjnjWeqZh82g
 
 https://developer.aliyun.com/article/751673?utm_content=g_1000109939
+
+https://mp.weixin.qq.com/s?__biz=MzIyNDU2ODA4OQ==&mid=2247486846&idx=1&sn=75bd4dcdbaad73191a1e4dbf691c118a
