@@ -885,6 +885,11 @@ HBase启动时发生了什么
 
 当HMaster失效后会发生什么
 
+# 12、HBase与其他数据源
+
+## 12.1、HBase同步到ES
+
+https://gitee.com/eminem89/Hbase-Observer-ElasticSearch
 
 
 # 参考资料

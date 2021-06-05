@@ -33,3 +33,11 @@
 ## 消息队列
 
 # 三、大数据体系
+
+# 四、技术选型
+
+开源中国软件更新栏目：https://www.oschina.net/news/project
+
+ThoughtWorks技术雷达： https://www.thoughtworks.com/cn/radar
+
+http://www.spring4all.com

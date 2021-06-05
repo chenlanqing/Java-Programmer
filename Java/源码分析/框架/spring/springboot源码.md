@@ -208,7 +208,6 @@ protected List<AutoConfigurationImportFilter> getAutoConfigurationImportFilters(
 			//回调所有的SpringApplicationRunListener的contextPrepared()；
 			prepareContext(context, environment, listeners, applicationArguments,printedBanner);
 			//prepareContext运行完成以后回调所有的SpringApplicationRunListener的contextLoaded（）；
-			
 			//刷新容器；ioc容器初始化（如果是web应用还会创建嵌入式的Tomcat）；Spring注解版
 			//扫描，创建，加载所有组件的地方；（配置类，组件，自动配置）
 			refreshContext(context);

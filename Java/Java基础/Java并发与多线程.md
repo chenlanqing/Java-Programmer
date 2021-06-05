@@ -2357,50 +2357,6 @@ ReentrantLock中，有一个方法：hasQueuedPredecessors()，该方法主要�
 
 独享锁与共享锁也是通过AQS来实现的，通过实现不同的方法，来实现独享或者共享
 
-```
-### 2.1、同步锁：通过synchronized关键字来进行同步
-
-同步锁的原理是，对于每一个对象，有且仅有一个同步锁：不同的线程能共同访问该同步锁。但是，在同一个时间点，该同步锁能且只能被一个线程获取到；
-
-### 2.2、JUC包中的锁
-
-包括：Lock接口、ReadWriteLock接口、LockSupport阻塞、Condition条件 和 AbstractOwnableSynchronizer、AbstractQueuedSynchronizer、AbstractQueuedLongSynchronizer 三个抽象类，ReentrantLock独占锁、ReentrantReadWriteLock读写锁。CountDownLatch、CyclicBarrier 和 Semaphore 也是通过AQS来实现的
-
-### 2.3、可重入锁
-
-synchronized和ReentrantLock都是可重入锁，锁基于线程的分配，而不是基于方法调用的分配。
-
-线程可以进入任何一个它已经拥有的锁所同步着的代码块。可重入锁最大的作用是用来解决死锁的；
-
-### 2.4、AQS-AbstractQueuedSynchronizer类
-
-是java中管理"锁"的抽象类，锁的许多公共方法都是在这个类中实现。AQS 是独占锁（例如:ReentrantLock）和共享锁（例如:Semaphore）的公共父类。
-
-AQS锁的分类:
-- 独占锁：锁在一个时间点只能被一个线程锁占有。根据锁的获取机制，它又划分为"公平锁"和"非公平锁"。
-	- 公平锁，是按照通过CLH等待线程按照先来先得的规则，公平的获取锁；
-	- 非公平锁，则当线程要获取锁时，它会无视CLH等待队列而直接获取锁；
-
-    两者主要的区别是：随机访问、插入访问；非公平锁有两次抢锁机会，如果线程一旦获取锁失败进入到AQS同步队列后，就会一直排队，直到其他获取到锁的线程唤醒它或者它被其他线程中断，才会出队；
-    
-    公平锁和非公平锁的性能是不一样的，非公平锁的性能会优于公平锁。为什么呢？因为公平锁在获取锁时，永远是等待时间最长的线程获取到锁，这样当线程释放锁以后，如果还想继续再获取锁，它也得去同步队列尾部排队，这样就会频繁的发生线程的上下文切换，当线程越多，对CPU的损耗就会越严重。
-    
-    非公平锁性能虽然优于公平锁，但是会存在导致线程饥饿的情况。在最坏的情况下，可能存在某个线程一直获取不到锁。不过相比性能而言，饥饿问题可以暂时忽略，这可能就是ReentrantLock默认创建非公平锁的原因之一了
-
-	独占锁的典型实例子是 ReentrantLock，此外，ReentrantReadWriteLock.WriteLock 也是独占锁
-
-- 共享锁：能被多个线程同时拥有，能被共享的锁。JUC 包中的 ReentrantReadWriteLock.ReadLock，CyclicBarrier，CountDownLatch 和 Semaphore 都是共享锁。
-
-### 2.5、CLH队列-Craig Landin and Hagersten lock queue
-
-CLH 队列是 AQS 中"等待锁"的线程队列。在多线程中，为了保护竞争资源不被多个线程同时操作而起来错误，常常需要通过锁来保护这些资源在独占锁中，竞争资源在一个时间点只能被一个线程锁访问；而其它线程则需要等待。CLH 就是管理这些"等待锁"的线程的队列。CLH 是一个非阻塞的 FIFO 队列。也就是说往里面插入或移除一个节点的时候，在并发条件下不会阻塞，而是通过自旋锁和 CAS 保证节点插入和移除的原子性。
-
-### 2.6、CAS:Compare And Swap
-
-是比较并交换函数，它是原子操作函数；即通过CAS操作的数据都是以原子方式进行的。
-
-synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁的实现
-
 ### 2.7、对象锁、类锁、私有锁
 
 - 对象锁：使用 synchronized 修饰非静态的方法以及 synchronized(this) 同步代码块使用的锁是对象锁；
@@ -2415,7 +2371,12 @@ synchronized、Lock 都采用了悲观锁的机制，而 CAS 是一种乐观锁�
 - 类锁和对象锁不会产生竞争。
 - 私有锁和对象锁也不会产生竞争。
 - 使用私有锁可以减小锁的细粒度，减少由锁产生的开销。
-```
+
+### 2.8、无锁编程
+
+Lock-free：线程之间互相隔离（一个线程的延迟、阻塞、故障）不会影响其他线程，同一时刻且至少有一个线程可以进步（达成计算目标）
+- 场景：CLH队列，线程通过CAS竞争加入CLH队列
+- SynchrounousQueue：cas竞争实现 transfer操作（双向队列、双向栈）
 
 ## 3、独占锁
 
@@ -3452,7 +3413,9 @@ private volatile Node slot;
 
 ## 14、Phaser
 
-
+Phaser提供的也是屏障能力，可以把Phaser理解成一种实现屏障能力的框架，其可以用来实现 CycleBarrier 和 CountdownLatch
+- 屏障（Barrier）：合作的线程们在屏障上等待，然后进入屏障点；
+- 同步点（Synchronization Point）通过屏障后执行的同步代码；
 
 ## 15、CompletableFuture
 
@@ -3843,6 +3806,11 @@ static final class Node {
     volatile Thread waiter; // 等待线程
 }
 ```
+
+**与SynchronousQueue区别：**
+- SynchronousQueue 支持dualQueue和dualStack，而LinkedTransferQueue仅支持 dualQueue；
+- LinkedTransferQueue 可以当做 LinkedBlockingQueue；
+- SynchronousQueue 支持公平和非公平
 
 ### 7.5、非阻塞队列
 

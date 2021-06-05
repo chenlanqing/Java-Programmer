@@ -30,5 +30,37 @@ TIME_WAIT 1645
 
 ## 4、Mac下装机软件
 
+https://xclient.info/
+
+- idea
+- navicat
+- mat
+- postman
+- wireshark
+- 百度网盘
+- 滴答清单
+- Alfred3
+- Charles
+- Cheatsheet
+- ClashX（VPN）
+- CleanMyMac
+- Clipber  粘贴板
+- iState Menus
+- iTerm   终端工具
+- JProfiler
+- MarkEditor  markdown文件编辑
+- rdm  redis客户端
+- SecureCRT  SSH连接客户端
+- StarUML       uml画图工具
+- Sublime
+- SwitchHosts
+- The Unarchiver   解压缩工具
+- Typora    markdown编辑
+- Visual Studio Code
+- VMware Fusion  虚拟机工具
+- WireShark   抓包工具
+- Xmin      脑图工具
+- atom
+- worktile
 
 

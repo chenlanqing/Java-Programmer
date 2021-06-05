@@ -601,6 +601,18 @@ Java中天然有序性：如果在本线程内观察，所有操作都是天然�
 
 ### 11.12、AQS内部的CHL算法的工作原理
 
+## 12、阻塞队列
+
+### 12.1、有界队列与无界队列
+
+有界：缓冲区大小恒定（ArrayBlockingQueue）
+
+无界：缓冲区大小无限
+
+### 12.2、LinkedBlockingQueue 的双向队列与 SynchronousQueue 的双向队列有什么区别
+
+有无match操作；生产者与消费者是否匹配
+
 ## 12、多线程面试题
 
 https://segmentfault.com/a/1190000013813740
@@ -802,6 +814,41 @@ Sun Apr 11 20:53:48 CST 2021Thread[Thread-1,5,main]==
 上图是JVM对空间的边界，观察到在20:53:48~20:53:50之间曲线变化，发现使用堆的数量急剧下滑，这里可以表面一点：当一个线程抛出OOM异常后，它所占据的内存资源会全部被释放掉，从而不影响其他线程的运行；上面是对内存异常的情况，如果是栈溢出，结果也是一样的
 
 总结：发生OOM的线程一般情况下回死亡，也就是会被终结掉，该线程持有的对象占用的heap都会被gc，释放内存。因为发生OOM之前都要进行GC，就算其他线程能够正常工作，也会因为频繁GC产生较大的影响；
+
+## 6、JVM的内存布局
+
+## 7、JVM中Object有哪些数据
+
+## 8、JVM运行时数据有哪些
+
+堆、栈、方法区、本地方法栈、本地内存
+
+## 9、什么是STW
+
+
+
+## 10、如何提高throughput（吞吐量）
+
+GC的吞吐量：程序工作时间占比，`-XX:GCTimeRatio=99`，意味着吞吐量占比99%
+
+如何提高throughput
+- 给更大的内存，提高GC的工作效率；
+- 更高GC的算法，优化算法；
+- 多线程能否提高throughput：阿姆达定律
+
+什么应用需要高吞吐量
+- 离线任务
+- 抢购服务
+- 竞技游戏服务
+- 音视频服务
+
+## 11、延迟（Latency）
+
+指GC造成的停顿（STW）时间
+
+内存大也能减少延迟
+
+## 12、高吞吐量、低延迟和低FootPrint可以兼得吗
 
 # 六、MySQL
 
@@ -1321,6 +1368,122 @@ BeanFactoryPostProcessor是容器启动阶段Spring提供的一个扩展点，�
 
 ## 32、SpringBoot框架为什么默认启动的是tomcat
 
+Springboot启动的时候，最终会调用到：org.springframework.context.support.AbstractApplicationContext#refresh
+```java
+public ConfigurableApplicationContext run(String... args) {
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
+    ConfigurableApplicationContext context = null;
+    Collection<springbootexceptionreporter> exceptionReporters = new ArrayList&lt;&gt;();
+    //设置系统属性『java.awt.headless』，为true则启用headless模式支持
+    configureHeadlessProperty();
+    //通过*SpringFactoriesLoader*检索*META-INF/spring.factories*，找到声明的所有SpringApplicationRunListener的实现类并将其实例化，之后逐个调用其started()方法，广播SpringBoot要开始执行了
+    SpringApplicationRunListeners listeners = getRunListeners(args);
+    //发布应用开始启动事件
+    listeners.starting();
+    try {
+      //初始化参数
+      ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+      //创建并配置当前SpringBoot应用将要使用的Environment（包括配置要使用的PropertySource以及Profile）,
+      //并遍历调用所有的SpringApplicationRunListener的environmentPrepared()方法，广播Environment准备完毕。
+      ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
+      configureIgnoreBeanInfo(environment);
+      //打印banner
+      Banner printedBanner = printBanner(environment);
+      //创建应用上下文
+      context = createApplicationContext();
+      //通过*SpringFactoriesLoader*检索*META-INF/spring.factories*，获取并实例化异常分析器
+      exceptionReporters = getSpringFactoriesInstances(SpringBootExceptionReporter.class,
+          new Class[] { ConfigurableApplicationContext.class }, context);
+      //为ApplicationContext加载environment，之后逐个执行ApplicationContextInitializer的initialize()方法来进一步封装ApplicationContext，
+        //并调用所有的SpringApplicationRunListener的contextPrepared()方法，【EventPublishingRunListener只提供了一个空的contextPrepared()方法】，
+        //之后初始化IoC容器，并调用SpringApplicationRunListener的contextLoaded()方法，广播ApplicationContext的IoC加载完成，
+        //这里就包括通过**@EnableAutoConfiguration**导入的各种自动配置类。
+      prepareContext(context, environment, listeners, applicationArguments, printedBanner);
+      //刷新上下文
+      refreshContext(context);
+      //再一次刷新上下文,其实是空方法，可能是为了后续扩展。
+      afterRefresh(context, applicationArguments);
+      stopWatch.stop();
+      if (this.logStartupInfo) {
+        new StartupInfoLogger(this.mainApplicationClass).logStarted(getApplicationLog(), stopWatch);
+      }
+      //发布应用已经启动的事件
+      listeners.started(context);
+      //遍历所有注册的ApplicationRunner和CommandLineRunner，并执行其run()方法。
+        //我们可以实现自己的ApplicationRunner或者CommandLineRunner，来对SpringBoot的启动过程进行扩展。
+      callRunners(context, applicationArguments);
+    }
+    try {
+    //应用已经启动完成的监听事件
+      listeners.running(context);
+    }
+    return context;
+}
+```
+这个方法我们可以简单的总结下步骤为 ：
+`1. 配置属性 -> 2. 获取监听器，发布应用开始启动事件 -> 3. 初始化输入参数 -> 4. 配置环境，输出 banner -> 5. 创建上下文 -> 6. 预处理上下文 -> 7. 刷新上下文 -> 8. 再刷新上下文 -> 9. 发布应用已经启动事件 -> 10. 发布应用启动完成事件`
+
+tomcat启动只需要关注：上下文是如何创建的，上下文是如何刷新的，分别对应的方法就是 `createApplicationContext()` 和 `refreshContext(context)`
+
+### 32.1、createApplicationContext
+
+根据 webApplicationType 来判断创建哪种类型的 Servlet,代码中分别对应着 Web 类型(SERVLET)、响应式 Web 类型（REACTIVE)、非 Web 类型（default)，这里建立的是 Web 类型，所以肯定实例化 `DEFAULT_SERVLET_WEB_CONTEXT_CLASS` 指定的类，也就是 `org.springframework.boot.web.servlet.context.AnnotationConfigServletWebServerApplicationContext` 类，其继承 `ServletWebServerApplicationContext`
+```java
+protected ConfigurableApplicationContext createApplicationContext() {
+    Class<?> contextClass = this.applicationContextClass;
+    if (contextClass == null) {
+      try {
+        switch (this.webApplicationType) {
+        case SERVLET:
+          contextClass = Class.forName(DEFAULT_SERVLET_WEB_CONTEXT_CLASS);
+          break;
+        case REACTIVE:
+          contextClass = Class.forName(DEFAULT_REACTIVE_WEB_CONTEXT_CLASS);
+          break;
+        default:
+          contextClass = Class.forName(DEFAULT_CONTEXT_CLASS);
+        }
+      }
+    }
+    return (ConfigurableApplicationContext) BeanUtils.instantiateClass(contextClass);
+}
+```
+
+### 32.2、refreshContext 方法
+
+最终是强转成父类 AbstractApplicationContext 调用其 refresh()方法，其中 onRefresh() 方法是调用其子类的实现，根据我们上文的分析，我们这里的子类是 ServletWebServerApplicationContext
+```java
+protected void onRefresh() {
+    super.onRefresh();
+    try {
+        createWebServer();
+    }
+    catch (Throwable ex) {
+        throw new ApplicationContextException("Unable to start web server", ex);
+    }
+}
+private void createWebServer() {
+    WebServer webServer = this.webServer;
+    ServletContext servletContext = getServletContext();
+    if (webServer == null && servletContext == null) {
+        ServletWebServerFactory factory = getWebServerFactory();
+        this.webServer = factory.getWebServer(getSelfInitializer());
+    }
+    else if (servletContext != null) {
+        try {
+            getSelfInitializer().onStartup(servletContext);
+        }
+        catch (ServletException ex) {
+            throw new ApplicationContextException("Cannot initialize servlet context", ex);
+        }
+    }
+    initPropertySources();
+}
+```
+
+
+
 ## 33、常见web容器自定义配置参数有哪些
 
 ## 34、SpringBoot Starter作用
@@ -1440,6 +1603,26 @@ protected Object initializeBean(final String beanName, final Object bean, @Nulla
 ## 44、ApplicationListener监控的Application事件有哪些？
 
 ## 45、Spring模块装配的概念，比如@EnableScheduling @EnableRetry @EnableAsync，@Import注解的作用？
+
+### 45.1、import注解原理
+
+`@Import`表示要导入的一个或多个@Configuration类，value通常是一个普通的组件，Configuration、ImportSelector、ImportBeanDefinitionRegistrar
+
+`@Import`注解也是用来给容器注册组件的，使用`@Import`注解快速给容器中导入一个组件有三种方法
+- 导入`@Configuration`注解的配置类使用`@Import`（要导入到容器中的组件）：容器中就会自动注册这个组件，ID默认为全类名
+- 导入`ImportSelector`的实现类：通过实现ImportSelector类，实现selectImports方法，返回需要导入组件的全类名数组
+- 导入`ImportBeanDefinitionRegistrar`的实现类：通过实现`ImportBeanDefinitionRegistrar`类，实现registerBeanDefinitions方法手动注册Bean到容器中
+
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface Import {
+	Class<?>[] value();
+}
+```
+通过注解源码可以看到，`@Import`注解作用在类上，并且参数可以是class类型的数组，从这里可以看出可以使用`@Import`注解一次导入多个组件到容器中
+
 
 ## 46、ImportBeanDefinitionRegistrar 扩展点用于做什么事情？
 

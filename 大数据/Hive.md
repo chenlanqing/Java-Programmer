@@ -2055,6 +2055,9 @@ hive
 # 8、Tez引擎
 
 
+# 9、原理分析
+
+https://mp.weixin.qq.com/s/Xc5-XrAjNAI1sy3bYRtbHg
 
 # 参考资料
 

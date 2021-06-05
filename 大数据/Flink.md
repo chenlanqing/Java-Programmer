@@ -1975,7 +1975,7 @@ Flink提供了很多Connector组件，其中应用较广泛的是Kafka这个Conn
 针对Flink的流处理，最常用的组件是kafka，原始日志数据产生后会被日志采集工具采集到Kafak中，让Flink去处理，处理之后的数据可能也会继续写入到Kafka中，Kafka可以被作为Flink的DataSource和DataSink来使用，并且Kafka中Partition 机制和Flink的并行度机制可以深度结合，提高数据的读取效率和写入效率
 
 Kafka-connector依赖：
-```
+```xml
 <dependency>
     <groupId>org.apache.flink</groupId>
     <artifactId>flink-connector-kafka_2.12</artifactId>
