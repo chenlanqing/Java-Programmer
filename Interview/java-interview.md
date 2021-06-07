@@ -2619,6 +2619,7 @@ nosql、数据冗余
 
 binlog 方案
 
+https://mp.weixin.qq.com/s/aCWkUiE1-h5mtDrqEiPKHQ
 
 # 其他面试题
 

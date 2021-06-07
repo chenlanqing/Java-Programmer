@@ -706,8 +706,6 @@ public void test2() {
 }
 ```
 
-### 4.8、
-
 ## 5、如何利用位运算
 
 ### 5.1、子网掩码
@@ -4796,7 +4794,7 @@ http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
 
 ## 1、为什么需要编码
 
-- 计算机中存储信息的最小单元是一个字节即 8 个 bit，所以能表示的字符范围是 0~255 个
+- 计算机中存储信息的最小单元是一个字节即 8 个 bit，所以能表示的字符范围是 `0~255` 个
 - 人类要表示的符号太多，无法用一个字节来完全表示
 - 要解决这个矛盾必须需要一个新的数据结构 char，从 char 到 byte 必须编码
 
@@ -4827,9 +4825,9 @@ http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html
 
 涉及到编码的地方一般都在字符到字节或者字节到字符的转换上，而需要这种转换的场景主要是在 I/O 的时候，这个 I/O 包括磁盘 I/O 和网络 I/O
 
-IO中读写是StreamEncoder 类负责将字符编码成字节，编码格式和默认编码规则与解码是一致的，关系如下：
+IO中读写是 StreamEncoder 类负责将字符编码成字节，编码格式和默认编码规则与解码是一致的，关系如下：
 
-![](image/InputStreamReaderEcode.png)  <br/>  ![](image/OutputStreamWriterEncide.png) 
+![](image/InputStreamReaderEcode.png)   ![](image/OutputStreamWriterEncide.png) 
 
 IO编码示例：涉及到 I/O 操作时只要注意指定统一的编解码 Charset 字符集，一般不会出现乱码问题
 ```java
@@ -4884,6 +4882,58 @@ Java编码中需要用到的类图
 ![](image/Java编码类图.png)
 
 首先根据指定的 charsetName 通过 Charset.forName(charsetName) 设置 Charset 类，然后根据 Charset 创建 CharsetEncoder 对象，再调用 CharsetEncoder.encode 对字符串进行编码，不同的编码类型都会对应到一个类中，实际的编码过程是在这些类中完成的；
+
+## 5、中文处理
+
+字符依赖于系统编码（这里是UTF-8，每个字符占两个字节），写入的时候每个字符占两个字节，但读取的时候却不知道编码，最后导致出现乱码；
+
+由于缓冲区的大小读取的字节数并不一定就是能够转换为中文的；
+
+CharBuffer统一以两个字节存储一个字符，而ByteBuffer则依赖于编码，可能是两个字节，也可能是三个字节，最后导致512个字符，CharBuffer的limit为512，换算为ByteBuffer后为1024个字节，而直接用ByteBuffer存储字节则为1200；
+
+关于乱码，如果是以CharBuffer放入的数据，因为没有对应的字符集解码器，必定是乱码，只有通过同样的CharBuufer方式读出，才能正确解决，所以在这里，char是一种数据存储格式，就如同long数据、int数据一样，并不是操作系统上对应的字符集，所以无法解析
+```java
+public void test_charset() throws Exception {
+	String raw = "长坂桥头杀气生，横枪立马眼圆睁。一声好似轰雷震，独退曹家百万兵。";
+	Charset charset = StandardCharsets.UTF_8;
+//        byte[] bytes = charset.encode(raw).array();
+	byte[] bytes = raw.getBytes(charset);
+	byte[] bytes2 = Arrays.copyOfRange(bytes, 0, 11);
+	ByteBuffer bbuf = ByteBuffer.allocate(12);
+	CharBuffer cbuf = CharBuffer.allocate(12);
+	bbuf.put(bytes2);
+	bbuf.flip();
+	// decode 这里如果不能解析就不去读
+	charset.newDecoder().decode(bbuf, cbuf, true);
+	cbuf.flip();
+
+	char[] tmp = new char[cbuf.length()];
+	if(cbuf.hasRemaining()){
+		cbuf.get(tmp);
+		System.out.println("here:" + new String(tmp));
+	}
+	System.out.format("limit: %d\t position: %d", bbuf.limit(), bbuf.position());
+	System.out.println();
+	System.out.println("==========================");
+	// 通过上面可以看到bbuf还有两个字节没有读取，然后重新再读取 bytes 剩下的字符串
+	byte[] bytes3 = Arrays.copyOfRange(bytes, bbuf.position(), bytes.length);
+	ByteBuffer bbuf1 = ByteBuffer.allocate(bytes.length - bbuf.position());
+	CharBuffer cbuf1 = CharBuffer.allocate(bytes.length - bbuf.position());
+
+	bbuf1.put(bytes3);
+	bbuf1.flip();
+
+	// decode 这里如果不能解析就不去读
+	charset.newDecoder().decode(bbuf1, cbuf1, true);
+	cbuf1.flip();
+
+	char[] tmp1 = new char[cbuf1.length()];
+	if (cbuf1.hasRemaining()) {
+		cbuf1.get(tmp1);
+		System.out.println("here:" + new String(tmp1));
+	}
+}
+```
 
 # 二十六、JMS
 

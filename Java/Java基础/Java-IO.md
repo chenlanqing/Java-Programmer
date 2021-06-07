@@ -310,15 +310,33 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 
 # 二、Java-IO流
 
-## 1、输入与输出-数据源和目标媒介
+![](image/Java-IO流.png)
 
-**1.1、Java IO关注的是从原始数据源的读取以及输出原始数据到目标媒介： 数据源--> 程序 --> 目标媒介**
+![](image/IO流链接.png)
 
-**1.2、一个程序需要InputStream或者Reader从数据源读取数据，需要 OutputStream或者Writer将数据写入到目标媒介中;**
+**流和数组不一样，不能通过索引读写数据。在流中，你也不能像数组那样前后移动读取数据，除非使用 RandomAccessFile 处理文件.**
+
+**InputStream：java.io.InputStream 类是所有 Java IO 输入流的基类**
+
+- 如果你需要将读过的数据推回到流中，你必须使用 PushbackInputStream，这意味着你的流变量只能是这个类型，否则在代码中就不能调用 PushbackInputStream的unread()方法；
+- 通常使用输入流中的read()方法读取数据.read()方法返回一个整数，代表了读取到的字节的内容，当达到流末尾没有更多数据可以读取的时候，read()方法返回-1<br>
+    注意：InputStream的read()方法返回一个字节，意味着这个返回值的范围在0到255之间
+
+**OutputStream：java.io.OutputStream 是 Java IO 中所有输出流的基类**
+
+**组合流：将流整合起来以便实现更高级的输入和输出操作**
+
+`InputStream input = new BufferedInputStream(new FileInputStream("c:\\data\\input-file.txt"));`
+
+一个流要么是输入流，要么是输出流，不可能同时是输入流、输出流。因为`InputStream`和`OutputStream`是抽象类，而Java中对于类只能单继承，不能继承多个类。
+
+**Java IO关注的是从原始数据源的读取以及输出原始数据到目标媒介： 数据源--> 程序 --> 目标媒介**
+
+**一个程序需要InputStream或者Reader从数据源读取数据，需要 OutputStream或者Writer将数据写入到目标媒介中;**
 
 InputStream和Reader与数据源相关联，OutputStream和Writer与目标媒介相关联
 
-**1.3、Java IO操作类都在包 java.io 下，大概有将近 80 个类，但是这些类大概可以分成四组，分别如下：**
+**Java IO操作类都在包 java.io 下，大概有将近 80 个类，但是这些类大概可以分成四组，分别如下：**
 
 - 基于字节操作的 I/O 接口：InputStream 和 OutputStream
 - 基于字符操作的 I/O 接口：Writer 和 Reader
@@ -329,40 +347,180 @@ InputStream和Reader与数据源相关联，OutputStream和Writer与目标媒介
 
 ==> "数据格式"和"传输方式"是影响效率最关键的因素了
 
-## 2、文件
 
-一种常用的数据源或者存储数据的媒介
+## 1、文件的编码
 
-**2.1、读文件：**
+- GBK编码中文占用两个字节，英文占用一个字节；
+- utf-8编码，中文占用3个字节，英文占用一个字节；
+- utf-16be：java是双字节编码：utf-16be，中文占用2个字节，英文占用两个字节
 
-- 如果你需要在不同端之间读取文件，你可以根据该文件是二进制文件还是文本文件来选择使用 FileInputStream 或者 FileReader;
-- 如果你需要跳跃式地读取文件其中的某些部分，可以使用 RandomAccessFile
+> 当你的字节序列是某种编码时，这个时候如果想把字节序列变成字符串，也需要使用这种字符编码，否则会出现乱码
+> 文本文件就是字节序列，可以是任意编码的字节序列，如果在中文的机器上直接创建文本文件，那么该文本文件只认识 ansi 编码；
 
-**2.2、写文件：**
+```java
+public static void main(String[] args) throws Exception {
+    String s = "慕课ABC";
+    byte[] byte1 = s.getBytes(Charset.forName("GBK"));
 
-如果你需要在不同端之间进行文件的写入，你可以根据你要写入的数据是二进制型数据还是字符型数据选用FileOutputStream 或者 FileWriter
+    for (byte b : byte1) {
+        System.out.print(Integer.toHexString(b & 0xff) + " ");
+    }
+    System.out.println();
+    byte[] byte2 = s.getBytes(Charset.forName("UTF-8"));
+    for (byte b : byte2) {
+        System.out.print(Integer.toHexString(b & 0xff) + " ");
+    }
 
-**2.3、随机存取文件：通过 RandomAccessFile 对文件进行随机存取**
+    System.out.println();
+    byte[] byte3 = s.getBytes(Charset.forName("utf-16be"));
+    for (byte b : byte3) {
+        System.out.print(Integer.toHexString(b & 0xff) + " ");
+    }
+    System.out.println();
+    String str = new String(byte3, StandardCharsets.UTF_16BE);
+    System.out.println(str);
+}
+```
 
-随机存取并不意味着你可以在真正随机的位置进行读写操作，它只是意味着你可以跳过文件中某些部分进行操作，并且支持同时读写，不要求特定的存取顺序
+## 2、File类使用
 
-**2.4、文件和目录信息的获取：**
+`java.io.File`类用于表示文件（目录）；File类只用于表示文件（目录）的信息（名称、大小等），不能用于文件内容的访问；
+- file.isDirectory：是否Wie一个目录，如果是返回true，如果不是或者目录不存在则返回false；
 
-通过 File 类可以获取文件和目录的信息
+遍历目录
 
-## 3、管道
+## 3、RandomAccessFile
+
+通过 RandomAccessFile 对文件进行随机存取
+
+随机存取并不意味着你可以在真正随机的位置进行读写操作，它只是意味着你可以跳过文件中某些部分进行操作，并且支持同时读写，不要求特定的存取顺序；
+
+随机读写是通过文件指针，允许在文件的任何位置读或者写一个块，通过控制这个文件指针，你可以在文件中来回移动，在你想要的任何位置，以随机的方式进行读写操作
+```java
+public class RandomAccessFile implements DataOutput, DataInput, Closeable {
+}
+```
+
+### 3.1、创建 RandomAccessFile
+
+```java
+public RandomAccessFile(File file, String mode)
+public RandomAccessFile(String name, String mode)
+```
+mode 的值可以是如下的：
+- `"r"`：只读模式
+- `"rw"`：读写模式
+- `"rws"`：同读写模式，对文件的任何更改立即生效；
+- `"rwd"`：同读写模式，对文件的任何修改延迟生效；
+
+上面提高文件指针（file pointer），RandomAccessFile 提高了如下方法来控制：
+- `seek(long pos)`：将文件指针移动到文件中的一个指定位置。这个偏移量是以字节为单位，从文件的开头开始计算；下一次读或写发生在这个位置；
+- `skipBytes(int n)`：将文件指针从当前位置向前移动n个字节，即跳过了n个字节；
+- `getFilePointer()`：返回File pointer的当前位置
+
+RandomAccessFile 提高了读和写的相关方法
+- 读方法：read(byte[]), readByte(), readInt(), readLong() 等；raf.read 读一个字节
+- 写方法：write(byte[]), writeByte(), writeInt(), writeLong() 等；`raf.write(int)`只写一个字节（后8位)，同时指针指向下一个位置，准备再次写入；
+
+### 3.2、读写文件示例
+
+```java
+public class RafWriteFile {
+    public static void main(String[] args) throws Exception {
+        File file = new File("data/raf.data");
+        if (!file.exists()) {
+            file.createNewFile();
+        }
+        RandomAccessFile raf = new RandomAccessFile(file, "rw");
+        // 获取文件指针位置
+        System.out.println("初始文件指针：" + raf.getFilePointer());
+        // 一次只写入一个字节
+        raf.write('A');
+        System.out.println("第一次文件指针：" + raf.getFilePointer());
+
+        int i = 0x7fffffff;
+        // 用write方法每次只能写一个字节，如果要把i写进去就得写4次
+        raf.write(i >>> 24); // 高位8字节
+        raf.write(i >>> 16);
+        raf.write(i >>> 8);
+        raf.write(i);
+        System.out.println("第二次文件指针：" + raf.getFilePointer());
+        raf.write(i);
+        // 读文件，必须把指针移到头部
+        raf.seek(0);
+        // 一次性读取,把文件中的内容都读到字节数组中
+        byte[] buf = new byte[(int)raf.length()];
+        raf.read(buf);
+    }
+}
+```
+
+### 3.3、RandomAccessFile 与 NIO
+
+raf.getChannel()
+
+## 4、字节流
+
+InputStream、OutputStream
+- InputStream：抽象了应用程序读取数据的方式
+- OutputStream：抽象了应用程序写出数据的方式
+
+EOF = End   读到-1就读到结尾
+
+- 输入流基本是读：`int  b = in.read();`读取一个字节无符号填充到int低八位.-1是 EOF
+- 输出流基本是写
+    ```
+    out.write(int b)  写出一个byte到流，b的低8位，每次都是写低8位
+    out.write(byte[] buf)将buf字节数组都写入到流
+    out.write(byte[] buf,int start,int size)
+    ```
+
+具体实现：
+- FileInputStream：具体实现了在文件上读取数据
+- FileOutputStream：实现了向文件中写出byte数据的方法
+- DataOutputStream/DataInputStream：对"流"功能的扩展，可以更加方面的读取int,long，字符等类型数据
+- BufferedInputStream&BufferedOutputStream：这两个流类位IO提供了带缓冲区的操作，一般打开文件进行写入或读取操作时，都会加上缓冲，这种流模式提高了IO的性能从应用程序中把输入放入文件，相当于将一缸水倒入到另一个缸中:
+    - `FileOutputStream.write()`方法相当于一滴一滴地把水“转移”过去
+    - `DataOutputStream.writeXxx()`方法会方便一些，相当于一瓢一瓢把水“转移”过去
+    - `BufferedOutputStream.write`方法更方便，相当于一飘一瓢先放入桶中，再从桶中倒入到另一个缸中，性能提高了
+
+## 5、字符流
+
+
+
+- 将字节流转换成字符缓冲流
+	```java
+	// 读取文件，读取文件注意编码问题
+	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("D:/1.txt")));
+	// 获取控制台输入
+	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
+	```
+- 获取控制台输入
+
+	- 用Scanner包装System.in，Scanner取得的输入以space, tab, enter 键为结束符
+		```java
+		Scanner scan = new Scanner(System.in);
+		String read = scan.nextLine();
+		```
+	- 使用BufferedReader取得含空格的输入：取得包含space在内的输入
+		```java
+		BufferedReader br = new BufferedReader(new InputStreamReader(System.in ));
+		br.readLine();
+		```
+
+## 6、管道
 
 为运行在同一个JVM中的两个线程提供了通信的能力，所以管道也可以作为"数据源以及目标媒介"
 
-**3.1、不能利用管道与不同的JVM中的线程通信(不同的进程)，其与 Unix/Linux 系统的管道不一致**
+**不能利用管道与不同的JVM中的线程通信(不同的进程)，其与 Unix/Linux 系统的管道不一致**
 
-**3.2、创建管道：**
+**创建管道：**
     
 - 通过Java IO 中的PipedOutputStream和PipedInputStream创建管道
 - 一个PipedInputStream流应该和一个PipedOutputStream流相关联.
 - 一个线程通过PipedOutputStream写入的数据可以被另一个线程通过相关联的PipedInputStream读取出来
 
-**3.3、例子：可以使用两个管道共有的connect()方法使之相关联**
+**例子：可以使用两个管道共有的connect()方法使之相关联**
 ```java
 public class PipedExample {
     public static void main(String[] args) throws IOException {
@@ -398,29 +556,29 @@ public class PipedExample {
     }
 }
 ```
-**3.4、管道与线程：**
+**管道与线程：**
 
 当使用两个相关联的管道流时，务必将它们分配给不同的线程。read()方法和write()方法调用时会导致流阻塞，这意味着如果你尝试在一个线程中同时进行读和写，可能会导致线程死锁;
 
-## 4、网络
+## 7、网络
 
-**4.1、当两个进程之间建立了网络连接之后，他们通信的方式如同操作文件一样：**
+**当两个进程之间建立了网络连接之后，他们通信的方式如同操作文件一样：**
 
 利用 InputStream 读取数据，利用 OutputStream 写入数据，Java 网络 API 用来在不同进程之间建立网络连接，而 Java IO 则用来在建立了连接之后的进程之间交换数据
 
-## 5、字节和字符数组
+## 8、字节和字符数组
 
 ![](image/Java-IO层次结构.png)
 
-**5.1、从InputStream或者Reader中读入数组**
+**从InputStream或者Reader中读入数组**
 
 用 ByteArrayInputStream或者CharArrayReader封装字节或者字符数组从数组中读取数据：
 
-**5.2、从OutputStream或者Writer中写数组：**
+**从OutputStream或者Writer中写数组：**
 
 把数据写到ByteArrayOutputStream或者CharArrayWriter 中
 
-**5.3、基于字节流的操作层次结构**
+**基于字节流的操作层次结构**
 ```
 InputStream：
     ByteArrayInputStream
@@ -434,7 +592,7 @@ InputStream：
     PipedInputStream
 OutputStream：与上述 InputStream 类似
 ```
-**5.4、Writer/Reader相关类层次结构**
+**Writer/Reader相关类层次结构**
 ```
 Writer：
     OutputStreamWriter
@@ -447,100 +605,60 @@ Writer：
 Reader：类似 Writer
 ```
 
-**5.5、InputStreamReader-字节流与字符流转换接口**
+**InputStreamReader-字节流与字符流转换接口**
 
 是字节到字符的转化桥梁，InputStream到Reader的过程要指定编码字符集，否则将采用操作系统默认字符集，很可能会出现乱码问题.StreamDecoder正是完成字节到字符的解码的实现类
 
-## 6、标准输出
+## 9、标准输出
 
 `System.in`、`System.out`、`System.err`
 
-**6.1、JVM 启动的时候通过Java运行时初始化这3个流，所以你不需要初始化它们**
+**JVM 启动的时候通过Java运行时初始化这3个流，所以你不需要初始化它们**
 
-**6.2、System.in：**
+**System.in：**
 
 一个典型的连接控制台程序和键盘输入的 InputStream 流
 
-**6.3、System.out：**
+**System.out：**
 
 System.out 是一个 PrintStream 流。System.out一般会把你写到其中的数据输出到控制台上
 
-**6.4、System.err：**
+**System.err：**
 
 System.err 是一个 PrintStream 流.System.err 与 System.out 的运行方式类似，但它更多的是用于打印错误文本
 
-**6.5、替换系统流：**
+**替换系统流：**
 
 System.in、System.out、System.err这3个流是java.lang.System类中的静态成员，并且已经预先在JVM启动的时候初始化完成，你依然可以更改它们；要把一个新的InputStream设置给System.in或者一个新的OutputStream设置给System.out或者System.err；可以使用 System.setIn()， System.setOut()， System.setErr()方法设置新的系统流
 
 注意：请记住，务必在JVM关闭之前冲刷System.out(译者注：调用flush())，确保System.out把数据输出到了文件中
 
-## 7、流-仅仅只是一个连续的数据流
 
-![](image/IO流链接.png)
+## 10、Reader、Writer
 
-**7.1、流和数组不一样，不能通过索引读写数据.在流中，你也不能像数组那样前后移动读取数据，除非使用 RandomAccessFile 处理文件.**
-
-**7.2、InputStream：java.io.InputStream 类是所有 Java IO 输入流的基类**
-
-- 如果你需要将读过的数据推回到流中，你必须使用 PushbackInputStream，这意味着你的流变量只能是这个类型，否则在代码中就不能调用 PushbackInputStream的unread()方法；
-- 通常使用输入流中的read()方法读取数据.read()方法返回一个整数，代表了读取到的字节的内容，当达到流末尾没有更多数据可以读取的时候，read()方法返回-1<br>
-    注意：InputStream的read()方法返回一个字节，意味着这个返回值的范围在0到255之间
-
-**7.3、OutputStream：java.io.OutputStream 是 Java IO 中所有输出流的基类**
-
-**7.4、组合流：将流整合起来以便实现更高级的输入和输出操作**
-
-`InputStream input = new BufferedInputStream(new FileInputStream("c:\\data\\input-file.txt"));`
-
-一个流要么是输入流，要么是输出流，不可能同时是输入流、输出流。因为`InputStream`和`OutputStream`是抽象类，而Java中对于类只能单继承，不能继承多个类。
-
-![](image/Java-IO流.png)
-
-## 8、Reader、Writer
-
-**8.1、Reader类：是Java IO 中所有Reader的基类**
+**Reader类：是Java IO 中所有Reader的基类**
 
 - 子类包括BufferedReader，PushbackReader，InputStreamReader，StringReader和其他Reader
 - Reader的read()方法返回一个字符，意味着这个返回值的范围在0到65535之间
 - 整合 Reader 与 InputStream：<br>
 如果你有一个InputStream输入流，并且想从其中读取字符，可以把这个InputStream包装到InputStreamReader中Reader reader = new InputStreamReader(inputStream);在构造函数中可以指定解码方式
   
-**8.2、Writer类：是Java IO中所有Writer的基类，子类包括BufferedWriter和PrintWriter等等**
+**Writer类：是Java IO中所有Writer的基类，子类包括BufferedWriter和PrintWriter等等**
 
 - 整合 Writer 和 OutputStream：
 一个Writer可以和一个 OutputStream 相结合。把OutputStream包装到OutputStreamWriter中，所有写入到OutputStreamWriter的字符都将会传递给OutputStream；<br>
 Writer writer = new OutputStreamWriter(outputStream);
 
-**8.3、整合Reader和Writer**
+**整合Reader和Writer**
 
 以通过将 Reader 包装到 BufferedReader、Writer 包装到 BufferedWriter 中实现缓冲
 
-## 9、流的使用
 
-- 将字节流转换成字符缓冲流
-	```java
-	// 读取文件，读取文件注意编码问题
-	BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream("D:/1.txt")));
-	// 获取控制台输入
-	BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-	```
-- 获取控制台输入
-
-	- 用Scanner包装System.in，Scanner取得的输入以space, tab, enter 键为结束符
-		```java
-		Scanner scan = new Scanner(System.in);
-		String read = scan.nextLine();
-		```
-	- 使用BufferedReader取得含空格的输入：取得包含space在内的输入
-		```java
-		BufferedReader br = new BufferedReader(new InputStreamReader(System.in ));
-		br.readLine();
-		```
-
-# 10、缓冲流
+## 11、缓冲流
 
 缓冲流的默认缓冲区大小是 8192 字节，也就是 8KB，算是一个比较折中的值
+
+缓冲的本质是排队、流的本质是数据
 
 # 三、Java NIO
 
@@ -1076,6 +1194,10 @@ write(socket, tmp_buf, len);
 - 第四次拷贝：把内核的 socket 缓冲区里的数据，拷贝到网卡的缓冲区里，这个过程又是由 DMA 搬运的-
 
 要想提高文件传输的性能，就需要`减少用户态与内核态的上下文切换（比如减少系统调用的次数）`和`内存拷贝的次数`
+
+**为什么不直接将设备的数据拷贝到用户空间**
+- 进程隔离
+- 内核是连接设备和进程的桥梁，用户程序直接沟通设备会非常危险；
 
 ## 3、零拷贝Zero-Copy技术
 

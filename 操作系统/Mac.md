@@ -46,7 +46,7 @@ https://xclient.info/
 - CleanMyMac
 - Clipber  粘贴板
 - iState Menus
-- iTerm   终端工具
+- iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
 - JProfiler
 - MarkEditor  markdown文件编辑
 - rdm  redis客户端
