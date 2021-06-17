@@ -2003,6 +2003,8 @@ public class MyUDF extends GenericUDF {
 - （2）添加jars：`add jar /data/soft/hive-3.1.2/lib/hive-demo-1.0.0.jar`
 - （3）创建临时函数与开发的java类关联：`create temporary function my_len as "com.blue.fish.hive.MyUDF";`
 - （4）即可使用该函数
+- （5）永久注册：一般永久注册的时候最好是将其放到HDFS上，避免无法找到：`create function udf_name as 'com.blue.fish.hive.MyUDF' using jar 'hdfs://hive_udf/hive-demo-1.0.0.jar'`
+- （6）删除注册的函数：`drop function udf_name`
 
 ### 7.4.3、自定义UDTF函数
 

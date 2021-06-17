@@ -296,27 +296,28 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 ![](image/Java对象的存储布局.png)
 
+### 3.2.1、查看对象内存布局
+
 通过[JOL](http://openjdk.java.net/projects/code-tools/jol/)分析Java对象的内存布局，使用参考：[JOL使用方式](http://zhongmingmao.me/2016/07/03/jvm-jol-tutorial-3/)
 
 查看对象布局
-```
-步骤一：添加依赖
+**步骤一：添加依赖**
+```xml
 <dependency>
     <groupId>org.openjdk.jol</groupId>
     <artifactId>jol-core</artifactId>
     <version>0.14</version>
 </dependency>
-
-步骤二：创建对象
-Object obj = new Object();
-
-步骤三：打印对象内存布局
-
-1. 输出虚拟机与对象内存布局相关的信息
-System.out.println(VM.current().details());
-2. 输出对象内存布局信息
-System.out.println(ClassLayout.parseInstance(obj).toPrintable());
 ```
+
+**步骤二：创建对象**
+
+`Object obj = new Object();`
+
+**步骤三：打印对象内存布局**
+- 输出虚拟机与对象内存布局相关的信息：`System.out.println(VM.current().details());`
+- 输出对象内存布局信息：`System.out.println(ClassLayout.parseInstance(obj).toPrintable());`
+
 输出结果如下：
 ```
 # Running 64-bit HotSpot VM.    				表示运行在64位的 HotSpot 虚拟机
@@ -334,6 +335,60 @@ java.lang.Object object internals:
      12     4        (loss due to the next object alignment)
 Instance size: 16 bytes
 Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+```
+
+### 3.2.2、空Object的大小
+
+通过 Instrumentation 来实现
+```java
+import java.lang.instrument.Instrumentation;
+class InstrumentationAgent {
+    private static volatile Instrumentation globalInstrumentation;
+	// 注意，这里的 inst 无法手动构造，需要通过-javaagent来处理
+    public static void premain(final String agentArgs, final Instrumentation inst) {
+        globalInstrumentation = inst;
+    }
+    public static long getObjectSize(final Object object) {
+        if (globalInstrumentation == null) {
+            throw new IllegalStateException("Agent not initialized.");
+        }
+        return globalInstrumentation.getObjectSize(object);
+    }
+}
+```
+将上述类编译，并打包：InstrumentationAgent.jar
+
+```java
+/**
+使用 -javaagent:InstrumentationAgent.jar 指定上述编译的jar文件
+*/
+public class EmptyObject {
+    public static void main(String[] argv){
+        System.out.println(InstrumentationAgent.getObjectSize(new Object()));
+        System.out.println(InstrumentationAgent.getObjectSize(new int[0]));
+        System.out.println(InstrumentationAgent.getObjectSize(""));
+        Integer y = 1;
+        System.out.println(InstrumentationAgent.getObjectSize(y));
+        int x = 1;
+        System.out.println(InstrumentationAgent.getObjectSize(x));
+    }
+}
+```
+执行上述代码，结果如下：
+```
+16   // 一个填充行占 8 字节
+16
+24
+16
+16
+```
+去除指针压缩等： `-XX:-UseCompressedClassPointers -XX:-UseCompressedOops`，结果如下
+```
+16
+24
+32
+24
+24
 ```
 
 ## 3.3、对象的访问定位
@@ -354,6 +409,10 @@ Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
 不一定，随着JIT编译器的发展，在编译期间，如果JIT经过逃逸分析，发现有些对象没有逃逸出方法，那么有可能堆内存分配会被优化成栈内存分配。但是这也并不是绝对的，在开启逃逸分析之后，也并不是所有对象都没有在堆上分配
 
 什么是[逃逸分析](#10455逃逸分析)
+
+## 3.5、对象的生命周期
+
+![](image/对象生命周期.png)
 
 # 4、内存溢出与内存泄漏
 

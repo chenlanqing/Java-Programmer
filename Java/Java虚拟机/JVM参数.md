@@ -2,7 +2,7 @@
 
 查看虚拟机的参数：
 ```
-roo@xxx-mac：~|=> java -XX:+PrintFlagsFinal -XX:+UnlockDiagnosticVMOptions -version | wc -l
+root@xxx-mac：~|=> java -XX:+PrintFlagsFinal -XX:+UnlockDiagnosticVMOptions -version | wc -l
 java version "1.8.0_151"
 Java(TM) SE Runtime Environment (build 1.8.0_151-b12)
 Java HotSpot(TM) 64-Bit Server VM (build 25.151-b12, mixed mode)
@@ -24,7 +24,7 @@ java [options] -jar filename [args]
 - `-XX:+option` 启用选项 
 - `-XX:-option` 不启用选项 
 - `-XX:option=number` 给选项设置一个数字类型值，可跟单位，例如 128k, 256m, 1g 
-- `-XX:option=string` 给选项设置一个字符串值，例如-XX:HeapDumpPath=./dump.core
+- `-XX:option=string` 给选项设置一个字符串值，例如`-XX:HeapDumpPath=./dump.core`
 
 所有参数文件都可以再OpenJDK中 [globals.hpp](https://github.com/chenlanqing/openjdk/blob/jdk/jdk/src/hotspot/share/runtime/globals.hpp)文件中找到
 
@@ -476,7 +476,7 @@ java [options] -jar filename [args]
 
 ## 4、线上参数配置
 
-java -Xmx4096m -Xms4096m -Xss256k -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=14 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:./logs/app_gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./logs/172.16.11.172.dump -jar /home/admin/application.jar -Ddubbo.application.qos.enable=false --spring.profiles.active=prod
+`java -Xmx4096m -Xms4096m -Xss256k -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=14 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:./logs/app_gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./logs/172.16.11.172.dump -jar /home/admin/application.jar -Ddubbo.application.qos.enable=false --spring.profiles.active=prod`
 
 # 参考文章
 

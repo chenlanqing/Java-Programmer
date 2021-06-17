@@ -4294,6 +4294,10 @@ int result = compile.run(null， null， null， "F:/class/HelloWorld.java");
 - 使用缓存：需要多次动态创建一个类的实例的时候.
 - 使用代码动态生成技术，通过调用代理类的方式来模拟反射
 
+## 8、元编程
+
+一个程序可以把另一个程序作为数据；
+
 # 二十、比较器：Comparale、Comparator
 
 ## 1、区别
@@ -4397,6 +4401,8 @@ System.out.println(al);
 - 通常在两种情况下会定义一个实现 Comparator 类可以把一个Comparator的子类传递给`Collections.sort()`、`Arrays.sort()`等方法，用于自定义排序规则。用于初始化特定的数据结构。常见的有可排序的Set(TreeSet)和可排序的Map(TreeMap);
 
 # 二十一、Jar包
+
+https://juejin.cn/post/6971822360810749966
 
 ## 1、Jar包本质
 
@@ -4537,7 +4543,7 @@ publicclass ManifestUtil {
 - Jar 包可以用 jarsigner 工具或者直接通过 java.security API 进行签名来保证安全性。一个签名的 Jar 包与原来的 Jar 包代码部分完全相同，只是更新了它的  manifest 且在 META-INF 目录中增加了一个签名文件和一个签名块文件；
 - Jar 包签名采用公钥/密钥机制，通过公钥对被秘钥加密的文件进行解密来验证文件的安全性。Jar 包签名可以防止恶意者冒充某个组织发布 Jar 包，从而避免了被篡改的恶意安全风险。当 Jar 包被签名时，一个签名文件（XXX.SF）会自动在 META-INF 文件夹中生成，该文件夹中同时还含有 manifest 文件、公钥文件，manifest 文件中包含 Jar 包中每个文件的摘要信息，然而签名文件中则包含的是 manifest 文件中每个摘要项的摘要，当 Jar 签名被验证时首先对 Jar 中每个文件进行摘要计算，然后与 manifest 中已记录的摘要进行比较来判断文件是否更改过，同时还要计算 manifest 文件的摘要，并与签名文件比较，以验证 manifest 文件是否被修改过
 
-## 5、IDEA打jar包
+## 5、打包包
 
 使用Idea打包生成指定的`MANIFEST.MF`文件
 
@@ -4621,6 +4627,77 @@ publicclass ManifestUtil {
 	</configuration>
 </plugin>
 ```
+
+### 5.3、使用jar命令打包
+
+```
+用法: jar {ctxui}[vfmn0PMe] [jar-file] [manifest-file] [entry-point] [-C dir] files ...
+选项:
+    -c  创建新档案
+    -t  列出档案目录
+    -x  从档案中提取指定的 (或所有) 文件
+    -u  更新现有档案
+    -v  在标准输出中生成详细输出
+    -f  指定档案文件名
+    -m  包含指定清单文件中的清单信息
+    -n  创建新档案后执行 Pack200 规范化
+    -e  为捆绑到可执行 jar 文件的独立应用程序
+        指定应用程序入口点
+    -0  仅存储; 不使用任何 ZIP 压缩
+    -P  保留文件名中的前导 '/' (绝对路径) 和 ".." (父目录) 组件
+    -M  不创建条目的清单文件
+    -i  为指定的 jar 文件生成索引信息
+    -C  更改为指定的目录并包含以下文件
+如果任何文件为目录, 则对其进行递归处理。
+清单文件名, 档案文件名和入口点名称的指定顺序
+与 'm', 'f' 和 'e' 标记的指定顺序相同。
+
+示例 1: 将两个类文件归档到一个名为 classes.jar 的档案中:
+       jar cvf classes.jar Foo.class Bar.class
+示例 2: 使用现有的清单文件 'mymanifest' 并
+           将 foo/ 目录中的所有文件归档到 'classes.jar' 中:
+       jar cvfm classes.jar mymanifest -C foo/ .
+```
+> 注意：m f 这两个指令的顺序要和后面 清单文件名和归档文件名的顺序保持一致
+
+#### 5.3.1、打包一个可执行的jar
+
+```
+public class Main {
+    public static void main(String[] args) {
+        System.out.println("hello world");
+        People people = new People("mike",22);
+        people.print();
+    }
+}
+```
+
+#### 5.3.2、打包一个agent
+
+比如在目录`jvm`下有一个Java源文件：InstrumentionAgent.java，内容如下
+```java
+package jvm;
+import java.lang.instrument.Instrumentation;
+class InstrumentationAgent {
+    private static volatile Instrumentation globalInstrumentation;
+    public static void premain(final String agentArgs, final Instrumentation inst) {
+        globalInstrumentation = inst;
+    }
+    public static long getObjectSize(final Object object) {
+        if (globalInstrumentation == null) {
+            throw new IllegalStateException("Agent not initialized.");
+        }
+        return globalInstrumentation.getObjectSize(object);
+    }
+}
+```
+首先编译该文件：`javac InstrumentionAgent.java`
+
+创建文件：`MANIFEST.MF`，文件内容如下：
+```
+Premain-class: jvm.InstrumentationAgent
+```
+打包文件：`jar -cvmf MANIFEST.MF InstrumentationAgent.jar InstrumentionAgent.class`
 
 ## 6、war包和jar包的区别
 

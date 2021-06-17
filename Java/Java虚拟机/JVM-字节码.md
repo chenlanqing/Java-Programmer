@@ -143,13 +143,134 @@ magic、minor_version、major_version、constant_pool_count、constant_pool、ac
 
 JVM的指令集是基于栈而不是寄存器，基于栈可以具备很好的跨平台性（因为寄存器指令集往往和硬件挂钩），但缺点在于，要完成同样的操作，基于栈的实现需要更多指令才能完成（因为栈只是一个FILO结构，需要频繁压栈出栈）。另外，由于栈是在内存实现的，而寄存器是在CPU的高速缓存区，相较而言，基于栈的速度要慢很多，这也是为了跨平台性而做出的牺牲
 
-## 2.5、查看class字节码
+## 2.5、字节码指令
 
-### 2.5.1、javap
+**invoke(调用）**
+- invokespecial：call super(), private, init()
+- invokedynamic
+	- duck typing……：绕过检查、限制等
+	- call lambda
+	- 操作符+-*/
+- invokestatic：call static method
+- invokevirtual
+	- 虚函数-可以重写的函数
+	- 排除：static,private,final
+- invokeinterface
 
-javap 是 JDK 自带的反解析工具。它的作用是将 `.class` 字节码文件解析成可读的文件格式。在使用 javap 时我一般会添加 `-v` 参数，尽量多打印一些信息。同时，我也会使用 `-p` 参数，打印一些私有的字段和方法
+**load（压栈）**
+- local variable
+	- stack
+	- getxxxx
+- store(存储）：ref -> local variable
 
-### 2.5.2、jclasslib
+**计算：**
+	add/mul/div/sub……
+
+**跳转：**
+	jsr/jsr_w/return/goto……
+
+## 2.6、查看class字节码
+
+### 2.6.1、javap
+
+javap 是 JDK 自带的反解析工具。它的作用是将 `.class` 字节码文件解析成可读的文件格式。在使用 javap 时我一般会添加 `-v` 参数，尽量多打印一些信息。同时，我也会使用 `-p` 参数，打印一些私有的字段和方法；
+
+Java源文件：
+```java
+public class DecompileTest {
+    public static String s = "@Hello";
+    public String add(int a, int b){
+        int d = (a + b) * 100;
+        return d + s;
+    }
+    public static void main(String[] argv) {
+    }
+}
+```
+编译源文件为class文件：`javac DecompileTest`
+
+反编译：`javap -c DecompileTest.class`，得到如下内容：
+
+**JDK8反编译的字节码内容**
+```java
+Compiled from "DecompileTest.java"
+public class jvm.DecompileTest {
+  public static java.lang.String s;
+
+  public jvm.DecompileTest();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: return
+
+  public java.lang.String add(int, int);
+    Code:
+       0: iload_1
+       1: iload_2
+       2: iadd
+       3: bipush        100
+       5: imul
+       6: istore_3
+       7: new           #2                  // class java/lang/StringBuilder
+      10: dup
+      11: invokespecial #3                  // Method java/lang/StringBuilder."<init>":()V
+      14: iload_3
+      15: invokevirtual #4                  // Method java/lang/StringBuilder.append:(I)Ljava/lang/StringBuilder;
+      18: getstatic     #5                  // Field s:Ljava/lang/String;
+      21: invokevirtual #6                  // Method java/lang/StringBuilder.append:(Ljava/lang/String;)Ljava/lang/StringBuilder;
+      24: invokevirtual #7                  // Method java/lang/StringBuilder.toString:()Ljava/lang/String;
+      27: areturn
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: return
+
+  static {};
+    Code:
+       0: ldc           #8                  // String @Hello
+       2: putstatic     #5                  // Field s:Ljava/lang/String;
+       5: return
+}
+```
+**JDK11反编译的内容：**
+```java
+Compiled from "DecompileTest.java"
+public class jvm.DecompileTest {
+  public static java.lang.String s;
+
+  public jvm.DecompileTest();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+       4: return
+
+  public java.lang.String add(int, int);
+    Code:
+       0: iload_1
+       1: iload_2
+       2: iadd
+       3: bipush        100
+       5: imul
+       6: istore_3
+       7: iload_3
+       8: getstatic     #2                  // Field s:Ljava/lang/String;
+      11: invokedynamic #3,  0              // InvokeDynamic #0:makeConcatWithConstants:(ILjava/lang/String;)Ljava/lang/String;
+      16: areturn
+
+  public static void main(java.lang.String[]);
+    Code:
+       0: return
+
+  static {};
+    Code:
+       0: ldc           #4                  // String @Hello
+       2: putstatic     #2                  // Field s:Ljava/lang/String;
+       5: return
+}
+```
+通过对比不同jdk版本的实现，可以发现，对于 通过 `+` 拼接在字节码实现上是不一样的，在jdk8使用的是 `StringBuilder.append` 方法来实现的，而在jdk11则是使用 invokedynamic 指令来实现的
+
+### 2.6.2、jclasslib
 
 idea的一个插件
 

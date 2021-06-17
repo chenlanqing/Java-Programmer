@@ -190,7 +190,21 @@ ETL主要考察点：
 
 ### 2.3、hiveSQL怎么调优
 
-### 2.4、sql面试题
+### 2.4、提交到一条SQL到hive后，hive的执行流程
+
+### 2.5、Hive的表存储模型有哪些？分区分桶表的作用
+
+### 2.6、如何解决数据倾斜问题
+
+
+### 2.7、Hive的存储格式
+
+
+### 2.8、Hive查询时的优化项
+
+
+
+### sql面试题
 
 https://mp.weixin.qq.com/s/QtuQ9TFITLVN9QhFxnEsIA
 https://mp.weixin.qq.com/s/sJO3_0ycVrwScM_lYtmfZA

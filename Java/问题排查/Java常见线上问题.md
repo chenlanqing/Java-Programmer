@@ -146,6 +146,9 @@
 - 线程内部处理耗时变长：比如缓存未命中、被下游请求block、慢sql、循环逻辑耗时等。
 - JVM因GC、锁擦除等jvm操作原因触发stop the world，导致线程等待
 
+# 七、场景GC场景解决方案
+
+
 # 参考资料
 
 - [官方文档：思路和工具](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/memleaks004.html#CIHIEEFH)

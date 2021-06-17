@@ -3413,9 +3413,21 @@ private volatile Node slot;
 
 ## 14、Phaser
 
-Phaser提供的也是屏障能力，可以把Phaser理解成一种实现屏障能力的框架，其可以用来实现 CycleBarrier 和 CountdownLatch
+Phaser提供的也是屏障能力，可以把Phaser理解成一种实现屏障能力的框架，适用于一些需要分阶段的任务的处理，其可以用来实现 CycleBarrier 和 CountdownLatch，类似于一个多阶段的栅栏；
 - 屏障（Barrier）：合作的线程们在屏障上等待，然后进入屏障点；
 - 同步点（Synchronization Point）通过屏障后执行的同步代码；
+
+### 14.1、基本概念
+
+**phase(阶段)：**
+
+Phaser有栅栏，在Phaser中，栅栏的名称叫做phase(阶段)，在任意时间点，Phaser只处于某一个phase(阶段)，初始阶段为0，最大达到`Integerr.MAX_VALUE`，然后再次归零。当所有parties参与者都到达后，phase值会递增。Phaser中的phase(阶段)这个概念其实和`CyclicBarrier`中的Generation很相似，只不过Generation没有计数；
+
+**parties(参与者)：**
+
+parties(参与者)其实就是CyclicBarrier中的参与线程的概念。
+
+CyclicBarrier中的参与者在初始构造指定后就不能变更，而Phaser既可以在初始构造时指定参与者的数量，也可以中途通过register、bulkRegister、arriveAndDeregister等方法注册/注销参与者；
 
 ## 15、CompletableFuture
 

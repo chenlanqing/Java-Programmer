@@ -366,26 +366,34 @@ CARD_TABLE [this address >> 9] = 0;
 
 ## 1、Serial 收集器
 
-- **1.1、算法：**
+**算法：**
 
-	Serial收集器对于新生代采用复制算法实现，对于老年代采用标记-整理算法实现，使用JVM参数`-XX:UseSerialGC`开启
+Serial收集器对于新生代采用复制算法实现，对于老年代采用标记-整理算法实现，使用JVM参数`-XX:UseSerialGC`开启
 
-- **1.2、单线程收集器：**
-	- 使用一个CPU或一条收集线程去完成垃圾收集工作；
-	- 它进行垃圾收集时，必须暂停其他所有的工作线程，直到它收集结束，又称为STOP THE WORLD（STW）；
-	- 依然是虚拟机运行在 Client 模式下默认新生代收集器
+**单线程收集器**
+- 使用一个CPU或一条收集线程去完成垃圾收集工作；
+- 它进行垃圾收集时，必须暂停其他所有的工作线程，直到它收集结束，又称为STOP THE WORLD（STW）；
+- 依然是虚拟机运行在 Client 模式下默认新生代收集器
 
-- **1.3、特点：**
+**特点：**
 
-	简单而高效（与其他收集器的单线程比），对于限定单个CPU环境来说， Serial 收集器由于没有线程交互的开销，专心做垃圾收集自然可以获得最高的单线程收集效率；
+简单而高效（与其他收集器的单线程比），对于限定单个CPU环境来说， Serial 收集器由于没有线程交互的开销，专心做垃圾收集自然可以获得最高的单线程收集效率；
+
+***适用场景：**
+- 吞吐量小：内存回收工作量不大；
+- 容忍延迟：不在意卡顿；
+- 单核、内存小：0~100M
+
 
 ## 2、ParNew 收集器
 
 - 算法：新生代采用复制算法
+- 提高最大量的吞吐量（Throughput）
 - ParNew收集器，可以认为是Serial收集器的多线程版本，在多核CPU环境下有着比Serial更好的表现；其他与Serial收集器实现基本差不多；
 - 是运行在 Server 模式下的虚拟机中首选的新生代收集器，其中与性能无关的是：只有 Serial 收集器和 ParNew 收集器能与 CMS 收集配合工作；
 - 在JDK1.5中使用CMS来收集老年代的时候，新生代只能选用Serial、ParNew收集器中的一个，ParNew收集器使用`-XX:UseConcMarkSweepGC`选项后的默认新生代收集器，也可以使用 `-XX:+UseParNewGC` 选项来强制指定它；
 - ParNew 收集器在单 CPU 的环境中绝对不会有比 Serial 收集器有更好的效果，甚至由于存在线程交互的开销，该收集器在通过超线程技术实现的两个CP 的环境中都不能百分之百地保证可以超越；
+- 场景：吞吐量要求 > 延迟要求
 
 ## 3、Parallel Scavenge 收集器
 
@@ -415,7 +423,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 它管理新生代的方式与Parallel收集器和Serial收集器相同，而在老年代则是尽可能得并发执行，每个垃圾收集器周期只有2次短停顿
 
-追求最短 GC 回收停顿时间，为了消除Throught收集器和Serial收集器在Full GC周期中的长时间停顿
+追求最短 GC 回收停顿时间，为了消除Throught收集器和Serial收集器在Full GC周期中的长时间停顿，核心是减少停顿时间
 
 ### 6.1、实现
 
@@ -481,6 +489,11 @@ CMS GC 时出现`promotion failed`和`concurrent mode failure`
 		- `jinfo` 查看 `UseCMSCompactAtFullCollection` 参数，在 FullGC 后整理内存
 
 	解决办法：`+XX:CMSInitiatingOccupancyFraction`，调大老年代的空间，`+XX:CMSMaxAbortablePrecleanTime`
+
+### 6.5、场景
+
+- 覆盖Serial、Parallel的场景；
+- 需要减少Pause Time 的场景；
 
 ## 7、G1收集器（Garbage First）
 
@@ -636,7 +649,7 @@ global concurrent marking的执行过程分为四个步骤：
 
 ### 8.1、概述
 
-ZGC几乎在所有地方并发执行的，除了初始标记的是STW的。所以停顿时间几乎就耗费在初始标记上，这部分的实际是非常少的
+低延迟的GC，ZGC几乎在所有地方并发执行的，除了初始标记的是STW的。所以停顿时间几乎就耗费在初始标记上，这部分的实际是非常少的
 
 ZGC主要新增了两项技术，一个是着色指针`Colored Pointer`，另一个是读屏障`Load Barrier`
 
