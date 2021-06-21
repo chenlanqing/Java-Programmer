@@ -58,6 +58,8 @@ Hive 通过给用户提供的一系列交互接口，接收到用户的指令(SQ
 
 Hive详细运行参考美团技术文章：[Hive SQL 的编译过程](https://tech.meituan.com/2014/02/12/hive-sql-to-mapreduce.html)
 
+[Hive底层执行原理](https://mp.weixin.qq.com/s/uZco-b3TfLLDxLh8br-BTg)
+
 ## 1.4、Hive与数据库比较
 
 由于 Hive 采用了类似 SQL 的查询语言 HQL(Hive Query Language)，因此很容易将 Hive 理解为数据库。其实从结构上来看，Hive 和数据库除了拥有类似的查询语言，再无类似之处。数据库可以用在 Online 的应用中，但是 Hive 是为数据仓库而设计的；

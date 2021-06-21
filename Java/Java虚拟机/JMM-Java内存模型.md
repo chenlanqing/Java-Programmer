@@ -311,26 +311,24 @@ Happens-Before 约束了编译器的优化行为，虽允许编译器优化，�
 ### 5.3、as-if-serial语义
 
 - 所有的操作均可以为了优化而被重排序，但是你必须要保证重排序后执行的结果不能被改变，也就是不管怎么重排序，单线程程序的执行结果不能被改变；编译器、runtime、处理器都必须遵守`as-if-serial`语义。注意`as-if-serial`只保证单线程环境，多线程环境下无效；
-- 为了保证`as-if-serial`语义，Java异常处理机制对重排序做了一种特殊的处理：JIT在重排序时会在catch语句中插入错误代偿代码，这样做虽然会导致cathc里面的逻辑变得复杂，但是JIT优化原则是：尽可能地优化程序正常运行下的逻辑，哪怕以catch块逻辑变得复杂为代价
+- 为了保证`as-if-serial`语义，Java异常处理机制对重排序做了一种特殊的处理：JIT在重排序时会在catch语句中插入错误代偿代码，这样做虽然会导致cathc里面的逻辑变得复杂，但是JIT优化原则是：尽可能地优化程序正常运行下的逻辑，哪怕以catch块逻辑变得复杂为代价；
 
-	例子：
-	```java
-	public class RecordExample1 {
-		public static void main(String[] args){
-			int a = 1;
-			int b = 2;
-
-			try {
-				a = 3;           //A
-				b = 1 / 0;       //B
-			} catch (Exception e) {
-
-			} finally {
-				System.out.println("a = " + a);
-			}
+例子：
+```java
+public class RecordExample1 {
+	public static void main(String[] args){
+		int a = 1;
+		int b = 2;
+		try {
+			a = 3;           //A
+			b = 1 / 0;       //B
+		} catch (Exception e) {
+		} finally {
+			System.out.println("a = " + a);
 		}
 	}
-	```
+}
+```
 
 # 三、volatile 的特性
 
@@ -573,9 +571,13 @@ volatile 变量的正确使用：确保它们自身状态的可见性，确保�
 - volatile不会进行加锁操作，volatile变量是一种稍弱的同步机制在访问volatile变量时不会执行加锁机制，因此也就不会使执行线程阻塞，因此volatile变量是一种比 synchronized 关键字更轻量级的同步机制；
 - volatile 本质是在告诉JVM当前变量在寄存器中的值是不确定的，需要从主存中读取；synchronized则是锁定当前变量，只是当前线程可以访问该变量，其他线程被阻塞; JDK1.6之后对 synchronized 进行了优化
 - volatile 只能使用在变量上，synchronized 则可以使用在变量\方法\类级别上；
-- volatile 只能保证可见性，不能保证原子性；synchronized 可以保证原子性和可见性；
+- volatile 只能保证可见性，不能保证原子性；synchronized 可以保证原子性和可见性，synchronized通过monitorenter和monitorexit两个指令，可以保证被synchronized修饰的代码在同一时间只能被一个线程访问，即可保证不会出现CPU时间片在多个线程间切换，即可保证原子性
 - volatile 不会造成线程的阻塞；synchronized 可能会造成线程的阻塞；
 - volatile 标记的变量不会被编译器优化；synchronized 标记的变量可以被编译器优化；
+- 一方面是因为synchronized是一种锁机制，存在阻塞问题和性能问题，而volatile并不是锁，所以不存在阻塞和性能问题。
+另外一方面，因为volatile借助了内存屏障来帮助其解决可见性和有序性问题，而内存屏障的使用还为其带来了一个禁止指令重排的附件功能，所以在有些场景中是可以避免发生指令重排的问题的
+
+一句话总结：volatile是通过在volatile变量的操作前后插入内存屏障的方式，保证了变量在并发场景下的可见性和有序性
 
 # 四、锁
 

@@ -1091,8 +1091,71 @@ synchronized(非this对象的x) 是将x对象本身作为"对象监视器"，这
 
 ![](image/Java-synchronized原理.jpg)
 
-- 可以通过反编译字节码 --> `javap -c SyncDemo.class` 查看底层实现
+- 可以通过反编译字节码 --> `javap -verbose SyncDemo.class` 查看底层实现
 - synchronized 的优化借鉴了锁的CAS操作
+
+```java
+Classfile example/thread/SyncDemo.class
+  Last modified 2021-6-21; size 671 bytes
+  MD5 checksum f3b170ec80d0f33dd06c30e7d5a29846
+  Compiled from "SyncDemo.java"
+public class com.blue.fish.example.thread.SyncDemo
+  minor version: 0
+  major version: 52
+  flags: ACC_PUBLIC, ACC_SUPER
+{
+  public com.blue.fish.example.thread.SyncDemo();
+    descriptor: ()V
+    flags: ACC_PUBLIC
+    Code:
+      stack=1, locals=1, args_size=1
+         0: aload_0
+         1: invokespecial #1                  // Method java/lang/Object."<init>":()V
+         4: return
+      LineNumberTable:
+        line 7: 0
+
+  public synchronized void log1(java.lang.String, java.lang.String);
+    descriptor: (Ljava/lang/String;Ljava/lang/String;)V
+    flags: ACC_PUBLIC, ACC_SYNCHRONIZED
+    Code:
+      stack=2, locals=3, args_size=3
+         0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         3: aload_1
+         4: invokevirtual #3                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+         7: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        10: aload_2
+        11: invokevirtual #3                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        14: return
+        ...
+  public void log2(java.lang.String, java.lang.String);
+    descriptor: (Ljava/lang/String;Ljava/lang/String;)V
+    flags: ACC_PUBLIC
+    Code:
+      stack=2, locals=5, args_size=3
+         0: ldc           #4                  // class com/blue/fish/example/thread/SyncDemo
+         2: dup
+         3: astore_3
+         4: monitorenter
+         5: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+         8: aload_1
+         9: invokevirtual #3                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        12: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+        15: aload_2
+        16: invokevirtual #3                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+        19: aload_3
+        20: monitorexit
+        21: goto          31
+        24: astore        4
+        26: aload_3
+        27: monitorexit
+        28: aload         4
+        30: athrow
+        31: return
+      ...
+}
+SourceFile: "SyncDemo.java"
+```
 
 ### 7.1、同步代码块的实现
 
@@ -1291,7 +1354,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 ## 8、volatile
 
-[volatile特性](../Java虚拟机/Java内存模型.md#三volatile的特性)
+[volatile特性](../Java虚拟机/JMM-Java内存模型.md#三volatile的特性)
 
 ## 9、线程安全
 
@@ -2067,7 +2130,7 @@ CPU 缓存可以分为一级缓存，二级缓存，部分高端 CPU 还具有�
 
 ### 15.2、缓存行
 
-[缓存行](../Java虚拟机/Java内存模型.md#22cache-line)
+[缓存行](../Java虚拟机/JMM-Java内存模型.md#22cache-line)
 
 ### 15.3、什么是伪共享
 
@@ -3418,6 +3481,8 @@ Phaser提供的也是屏障能力，可以把Phaser理解成一种实现屏障�
 - 同步点（Synchronization Point）通过屏障后执行的同步代码；
 
 ### 14.1、基本概念
+
+- [Phaser实现原理](https://segmentfault.com/a/1190000015979879)
 
 **phase(阶段)：**
 

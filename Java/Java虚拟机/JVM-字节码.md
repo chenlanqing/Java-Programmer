@@ -268,7 +268,7 @@ public class jvm.DecompileTest {
        5: return
 }
 ```
-通过对比不同jdk版本的实现，可以发现，对于 通过 `+` 拼接在字节码实现上是不一样的，在jdk8使用的是 `StringBuilder.append` 方法来实现的，而在jdk11则是使用 invokedynamic 指令来实现的
+通过对比不同jdk版本的实现，可以发现，对于 通过 `+` 拼接在字节码实现上是不一样的，在jdk8使用的是 `StringBuilder.append` 方法来实现的，而在jdk11则是使用 invokedynamic 指令来实现的；因为invoke dynamic很快。比如传一个方法给thread，看接口定义需要用这个方法产生一个callable或者一个runnable。但是调用方法完全没有必要再生成一个object。所以编译器可以将方法调用处生成一条invoke dynamic指令；
 
 ### 2.6.2、jclasslib
 
@@ -291,6 +291,24 @@ http://asm.itstack.org/#/
 
 
 ## 3.2、Javassist
+
+```java
+public class GenerateClass {
+    public static byte[] genClass() throws CannotCompileException, IOException {
+        ClassPool pool = ClassPool.getDefault();
+        CtClass ctClass = pool.getOrNull("jvm.loader.Go");
+        if (ctClass != null) {
+            ctClass.defrost();
+        }
+        ctClass = pool.makeClass("jvm.loader.Go");
+        CtMethod method = new CtMethod(CtClass.voidType, "greeting", new CtClass[]{}, ctClass);
+        method.setModifiers(Modifier.PUBLIC);
+        method.setBody("{System.out.println(\"Hello World\");}");
+        ctClass.addMethod(method);
+        return ctClass.toBytecode();
+    }
+}
+```
 
 # 4、运行时类的重载
 

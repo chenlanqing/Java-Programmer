@@ -204,7 +204,7 @@ Maven的最近依赖策略：如果一个项目依赖相同的groupId、artifact
 # 八、编写Maven插件
 
 * [Maven插件开发指南](https://maven.apache.org/plugin-developers/index.html)
-* [Maven插件官方文档](http://maven.apache.org/plugins/index.html)
+* [Maven插件官方文档](https://maven.apache.org/plugins/index.html)
 
 ## 1、常用的maven插件
 
@@ -233,6 +233,29 @@ maven-enforcer-plugin 允许你创建一系列规则强制大家遵守，包括�
 maven-release-plugin的用途是帮助自动化项目版本发布，它依赖于POM中的SCM信息。release:prepare用来准备版本发布， 具体的工作包括检查是否有未提交代码、检查是否有SNAPSHOT依赖、升级项目的SNAPSHOT版本至RELEASE版本、为项目打 标签等等。release:perform则 是签出标签中的RELEASE源码，构建并发布。版本发布是非常琐碎的工作，它涉及了各种检查， 而且由于该工作仅仅是偶尔需要，因此手动操作很容易遗漏一 些细节，maven-release-plugin让该工作变得非常快速简便，不 易出错。maven-release-plugin的各种目标通常直接在 命令行调用，因为版本发布显然不是日常构建生命周期的一部分
 
 ### 1.7、maven-resources-plugin
+
+### 1.8、maven-compiler-plugin
+
+Maven的编译插件： https://maven.apache.org/plugins/maven-compiler-plugin/compile-mojo.html
+```xml
+<plugin>
+	<groupId>org.apache.maven.plugins</groupId>
+	<artifactId>maven-compiler-plugin</artifactId>
+	<version>3.8.1</version>
+	<configuration>
+		<source>14</source>
+		<target>14</target>
+		<!-- 注解元素处理器路径 -->
+		<annotationProcessorPaths>
+			<path>
+				<groupId>org.projectlombok</groupId>
+				<artifactId>lombok</artifactId>
+				<version>${lombok-version}</version>
+			</path>
+		</annotationProcessorPaths>                 
+	</configuration>
+</plugin>
+```
 
 ## 2、编写插件步骤
 
