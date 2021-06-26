@@ -963,5 +963,6 @@ mysql的物理分页关键字是Limit，提供offset和limit即可实现分页�
 - [Mybatis-SqlSession原理分析](https://mp.weixin.qq.com/s/tTTLDOoqPfqHJLW12Zdo6A)
 - [Mybatis之Mapper接口如何执行SQL](https://github.com/ksfzhaohui/blog/blob/master/mybatis/Mybatis之Mapper接口如何执行SQL.md)
 - [Mybatis源码分析](http://www.tianxiaobo.com/2018/07/16/MyBatis-源码分析系列文章导读)
+- [聊聊Mybatis的缓存机制](https://tech.meituan.com/2018/01/19/mybatis-cache.html)
 
 
