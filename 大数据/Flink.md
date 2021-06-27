@@ -2159,6 +2159,10 @@ transaction.max.timeout.ms=3600000
 ```
 重启kafka后，再次执行，代码正常执行了
 
+# 12、Flink CEP
+
+
+
 # 参考资料
 
 - [官方代码](https://github.com/apache/flink)
@@ -2173,4 +2177,5 @@ transaction.max.timeout.ms=3600000
 - [Flink基础理论](https://blog.csdn.net/oTengYue/article/details/102689538)
 - [基于flink和drools的实时日志处理](https://www.cnblogs.com/luxiaoxun/p/13197981.html)
 - [Flink 精进学习](https://www.yuque.com/docs/share/a4b45fed-7417-4789-8df3-071abb9b3cac)
+- [Flink CEP学习](https://juejin.cn/post/6844903970964520974)
 

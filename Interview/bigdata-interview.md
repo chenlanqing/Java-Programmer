@@ -221,7 +221,11 @@ https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
 
 ## 6、数仓
 
-### 6.1、数仓分层好处
+### 6.1、数仓分层
+
+### 6.2、数据仓库和数据库的区别
+
+### 6.3、
 
 
 https://mp.weixin.qq.com/s/9Y1Mv8qtCwcvkf6BJuI0Ug
@@ -229,25 +233,25 @@ https://mp.weixin.qq.com/s/9Y1Mv8qtCwcvkf6BJuI0Ug
 
 ## 语言和计算机基础
 
-1. [你不得不知道的知识-零拷贝](https://mp.weixin.qq.com/s/zQ0KdPFl34AllB01MHi03A)
-2. [阿里云Redis开发规范](https://mp.weixin.qq.com/s/6a6ydm3CxUQfZtzA4lCIcA)
-3. [面试系列：十个海量数据处理方法大总结](https://mp.weixin.qq.com/s/1IYi-uOWTxhkZcT830jMTg)
-4. [一致性协议浅析：从逻辑时钟到Raft](https://mp.weixin.qq.com/s/U9RtZkyqqGRQP3Y4xO6Icw)
-5. [你确定不来了解一下Redis中字符串的原理吗](https://mp.weixin.qq.com/s/pV1clfZkTXZlcRNlfBU5uA)
-6. [关于Redis的几件小事 | 使用目的与问题及线程模型](https://mp.weixin.qq.com/s/wmuaZfi6K0s3gWix5zft-g)
-7. [关于Redis的几件小事 | Redis的数据类型/过期策略/内存淘汰](https://mp.weixin.qq.com/s/069J8hxfzhZXbV3Ca8seaA)
-8. [关于Redis的几件小事 | 高并发和高可用](https://mp.weixin.qq.com/s/ElFO-OEKsWO08upz8mp_yQ)
-9. [一个细节 | Java中asList的缺陷](https://mp.weixin.qq.com/s/4Q0uQSzuA3KRkacT26iu8w)
+- [你不得不知道的知识-零拷贝](https://mp.weixin.qq.com/s/zQ0KdPFl34AllB01MHi03A)
+- [阿里云Redis开发规范](https://mp.weixin.qq.com/s/6a6ydm3CxUQfZtzA4lCIcA)
+- [面试系列：十个海量数据处理方法大总结](https://mp.weixin.qq.com/s/1IYi-uOWTxhkZcT830jMTg)
+- [一致性协议浅析：从逻辑时钟到Raft](https://mp.weixin.qq.com/s/U9RtZkyqqGRQP3Y4xO6Icw)
+- [你确定不来了解一下Redis中字符串的原理吗](https://mp.weixin.qq.com/s/pV1clfZkTXZlcRNlfBU5uA)
+- [关于Redis的几件小事 | 使用目的与问题及线程模型](https://mp.weixin.qq.com/s/wmuaZfi6K0s3gWix5zft-g)
+- [关于Redis的几件小事 | Redis的数据类型/过期策略/内存淘汰](https://mp.weixin.qq.com/s/069J8hxfzhZXbV3Ca8seaA)
+- [关于Redis的几件小事 | 高并发和高可用](https://mp.weixin.qq.com/s/ElFO-OEKsWO08upz8mp_yQ)
+- [一个细节 | Java中asList的缺陷](https://mp.weixin.qq.com/s/4Q0uQSzuA3KRkacT26iu8w)
 
 
 
 ## 离线数据框架面试
 
-1. [面试必备技能-HiveSQL优化](https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzU3MzgwNTU2Mg==&scene=124#wechat_redirect)
-2. [一篇文章入门Hbase](https://mp.weixin.qq.com/s/YhhD9jA7kkJuKM8JLLn-PQ)
-3. [敲黑板：HBase的RowKey设计](https://mp.weixin.qq.com/s/LzPaZ0znIEs34NMbYTHmjA)
-4. [Hive/HiveSQL常用优化方法全面总结](https://mp.weixin.qq.com/s/DfvN7S_00oYw1hqAQDr48g)
-5. [Hive面试题](https://my.oschina.net/u/4101357/blog/3229802)
+- [面试必备技能-HiveSQL优化](https://mp.weixin.qq.com/mp/profile_ext?action=home&__biz=MzU3MzgwNTU2Mg==&scene=124#wechat_redirect)
+- [一篇文章入门Hbase](https://mp.weixin.qq.com/s/YhhD9jA7kkJuKM8JLLn-PQ)
+- [敲黑板：HBase的RowKey设计](https://mp.weixin.qq.com/s/LzPaZ0znIEs34NMbYTHmjA)
+- [Hive/HiveSQL常用优化方法全面总结](https://mp.weixin.qq.com/s/DfvN7S_00oYw1hqAQDr48g)
+- [Hive面试题](https://my.oschina.net/u/4101357/blog/3229802)
 
 ## 实时计算面试系列
 

@@ -41,3 +41,9 @@
 ThoughtWorks技术雷达： https://www.thoughtworks.com/cn/radar
 
 http://www.spring4all.com
+
+## 1、活跃度
+
+- issue解决
+- 提交时间
+- 社区活跃度
