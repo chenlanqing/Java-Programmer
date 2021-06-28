@@ -221,14 +221,19 @@ https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
 
 ## 6、数仓
 
+[数据仓库面试题](https://mp.weixin.qq.com/s/pus1MhfEWhN9oOCSPlYGxQ)
+
 ### 6.1、数仓分层
 
 ### 6.2、数据仓库和数据库的区别
 
 ### 6.3、
 
+## 7、HBase
 
-https://mp.weixin.qq.com/s/9Y1Mv8qtCwcvkf6BJuI0Ug
+[HBase面试题](https://mp.weixin.qq.com/s/TYmXgThj5Y_zBhm7YS_Fiw)
+
+[大数据面试进阶系列](https://mp.weixin.qq.com/s/9Y1Mv8qtCwcvkf6BJuI0Ug)
 
 
 ## 语言和计算机基础

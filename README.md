@@ -36,14 +36,13 @@
 
 # 四、技术选型
 
-开源中国软件更新栏目：https://www.oschina.net/news/project
-
-ThoughtWorks技术雷达： https://www.thoughtworks.com/cn/radar
-
-http://www.spring4all.com
-
 ## 1、活跃度
 
 - issue解决
 - 提交时间
 - 社区活跃度
+
+## 2、排行
+
+- [DB Ranking](https://db-engines.com/en/ranking)
+- [TIOBE](https://www.tiobe.com/tiobe-index/)

@@ -168,6 +168,10 @@
 
 选择Profile进行打包？实质上就是在执行`mvn package -Pxxx`而已
 
+## 3、bom与pom
+
+https://blog.csdn.net/LoveJavaYDJ/article/details/86594226
+
 # 七、依赖：冲突、聚合、继承
 
 ## 1、查找依赖树

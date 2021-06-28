@@ -1544,38 +1544,25 @@ ThreadLocal.ThreadLocalMap threadLocals = null;
 ThreadLocal.ThreadLocalMap inheritableThreadLocals = null;
 ```
 
-### 11.1、创建ThreadLocal对象
+### 11.1、ThreadLocal 使用
+
+**创建ThreadLocal对象**
 
 `private ThreadLocal myThreadLocal = new ThreadLocal();`
 每个线程仅需要实例化一次即可。虽然不同的线程执行同一段代码时，访问同一个ThreadLocal变量，但是每个线程只能看到私有的ThreadLocal实例
 
-### 11.2、访问ThreadLocal对象
+**访问ThreadLocal对象**
 
 - 一旦创建了一个ThreadLocal对象，你就可以通过以下方式来存储此对象的值：`myThreadLocal.set("a thread local value");`
 - 可以直接读取一个 ThreadLocal 对象的值：`String threadLocalValue = (String) myThreadLocal.get();`
 
-### 11.3、ThreadLocal泛型
+**ThreadLocal泛型**
 
 可以创建一个泛型化的ThreadLocal对象，当你从此ThreadLocal实例中获取值的时候，就不必要做强制类型转换
 
 `private ThreadLocal myThreadLocal1 = new ThreadLocal<String>();`
 
-### 11.4、初始化 ThreadLocal
-
-由于ThreadLocal对象的set()方法设置的值只对当前线程可见，那有什么方法可以为ThreadLocal 对象设置的值对所有线程都可见？通过 ThreadLocal 子类的实现，并覆写initialValue()方法，就可以为 ThreadLocal 对象指定一个初始化值：
-```java
-private ThreadLocal myThreadLocal = new ThreadLocal<String>() {
-	@Override
-	protected String initialValue() {
-		return "This is the initial value";
-	}
-};
-```
-在JDK8之后，有个withInitial方法，可以初始化，其接受一个Lambda表达式，它其实是调用 initialValue 初始化的
-`ThreadLocal<SimpleDateFormat> threadLocal1 = ThreadLocal.withInitial(() -> new SimpleDateFormat(""));`
-
-### 11.5、完整的ThreadLocal 实例
-
+完整实例：
 ```java
 public class ThreadLocalExample {
 	public static class MyRunnable implements Runnable {
@@ -1604,7 +1591,37 @@ public class ThreadLocalExample {
 }
 ```
 
-### 11.6、InheritableThreadLocal
+### 11.2、初始化 ThreadLocal
+
+由于ThreadLocal对象的set()方法设置的值只对当前线程可见，那有什么方法可以为ThreadLocal 对象设置的值对所有线程都可见？通过 ThreadLocal 子类的实现，并覆写initialValue()方法，就可以为 ThreadLocal 对象指定一个初始化值：
+```java
+private ThreadLocal myThreadLocal = new ThreadLocal<String>() {
+	@Override
+	protected String initialValue() {
+		return "This is the initial value";
+	}
+};
+```
+在JDK8之后，有个`withInitial`方法，可以初始化，其接受一个Lambda表达式，它其实是调用 `initialValue` 初始化的
+`ThreadLocal<SimpleDateFormat> threadLocal1 = ThreadLocal.withInitial(() -> new SimpleDateFormat(""));`
+
+```java
+public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier) {
+    return new SuppliedThreadLocal<>(supplier);
+}
+static final class SuppliedThreadLocal<T> extends ThreadLocal<T> {
+    private final Supplier<? extends T> supplier;
+    SuppliedThreadLocal(Supplier<? extends T> supplier) {
+        this.supplier = Objects.requireNonNull(supplier);
+    }
+    @Override
+    protected T initialValue() {
+        return supplier.get();
+    }
+}
+```
+
+### 11.3、InheritableThreadLocal
 
 正常情况下，父线程中在`ThreadLocal`设置的变量在子线程中是获取不到的，那么子线程如何获取父线程中的值呢？使用`InheritableThreadLocal`
 
@@ -1644,23 +1661,27 @@ public class ParentThreadSharedDataWithSon {
 }	
 ```
 
-### 11.7、ThreadLocal内存泄露
+子线程获取父线程的信息：
+- InheritableThreadLocal
+- 初始化时使用重写方法：initialValue；jdk8可以使用：`ThreadLocal.withInitial(Supplier<? extends S> supplier);`
 
-#### 11.7.1、ThreadLocal 的实现
+### 11.4、ThreadLocal内存泄露
 
-每个 Thread 维护一个ThreadLocalMap映射表，这个映射表的key是ThreadLocal实例本身，value是真正需要存储的Object。就是说ThreadLocal本身并不存储值，它只是作为一个key来让线程从ThreadLocalMap获取 value。ThreadLocalMap 是使用ThreadLocal的弱引用作为Key 的，弱引用的对象在 GC 时会被回收.
+#### 11.4.1、ThreadLocal 的实现
 
-#### 11.7.2、为什么会内存泄漏
+每个 Thread 维护一个 ThreadLocalMap 映射表，这个映射表的 key 是 ThreadLocal 实例本身，value 是真正需要存储的 Object。就是说 ThreadLocal 本身并不存储值，它只是作为一个 key 来让线程从 ThreadLocalMap 获取 value。ThreadLocalMap 是使用 ThreadLocal 的弱引用作为Key 的，弱引用的对象在 GC 时会被回收.
 
-- ThreadLocalMap使用ThreadLocal的弱引用作为key，如果一个ThreadLocal没有外部强引用来引用它，那么系统 GC 的时候，这个ThreadLocal势必会被回收，这样一来，ThreadLocalMap中就会出现key为null的Entry，就没有办法访问这些key为null的Entry的value；如果当前线程再迟迟不结束的话，这些key为null的Entry的value就会一直存在一条强引用链：Thread Ref -> Thread -> ThreaLocalMap -> Entry -> value，永远无法回收，造成内存泄漏。只有thread退出以后，value的强引用链条才会断掉
+#### 11.4.2、为什么会内存泄漏
 
-- ThreadLocalMap的设计中已经考虑到这种情况，加上了一些防护措施：在ThreadLocal的get()、set()、rehash、remove的时候都会清除线程ThreadLocalMap里所有key为null的value
+- ThreadLocalMap 使用 ThreadLocal 的弱引用作为key，如果一个ThreadLocal没有外部强引用来引用它，那么系统 GC 的时候，这个ThreadLocal 将会被回收，这样一来，ThreadLocalMap 中就会出现key 为null的 Entry，就没有办法访问这些key为null的Entry的value；如果当前线程再迟迟不结束的话，这些key为null的Entry的value就会一直存在一条强引用链：Thread Ref -> Thread -> ThreaLocalMap -> Entry -> value，永远无法回收，造成内存泄漏。只有thread退出以后，value的强引用链条才会断掉
+
+- ThreadLocalMap的设计中已经考虑到这种情况，加上了一些防护措施：在ThreadLocal的get()、set()、rehash、remove的时候都会清除线程ThreadLocalMap里所有key为null的value；
 
 - 但是这些被动的预防措施并不能保证不会内存泄漏：
 	- 使用线程池的时候，这个线程执行任务结束，ThreadLocal 对象被回收了，线程放回线程池中不销毁，这个线程一直不被使用，导致内存泄漏;
 	- 分配使用了ThreadLocal又不再调用get()，set()，remove()方法，那么这个期间就会发生内存泄漏；
 
-#### 11.7.3、为什么使用弱引用
+#### 11.4.3、为什么使用弱引用
 
 - key使用强引用：引用的ThreadLocal的对象被回收了，但是ThreadLocalMap还持有ThreadLocal的强引用，如果没有手动删除，ThreadLocal不会被回收，导致 Entry 内存泄漏
 
@@ -1670,16 +1691,14 @@ public class ParentThreadSharedDataWithSon {
 
 - ThreadLocal内存泄漏的根源是：由于ThreadLocalMap的生命周期跟Thread一样长，如果没有手动删除对应key就会导致内存泄漏，而不是因为弱引用；
 
-#### 11.7.4、ThreadLocal最佳实践：如何避免内存泄漏
+#### 11.4.4、ThreadLocal最佳实践：如何避免内存泄漏
 
 每次使用完ThreadLocal，都调用它的remove()方法，清除数据。在使用线程池的情况下，没有及时清理ThreadLocal，不仅是内存泄漏的问题，更严重的是可能导致业务逻辑出现问题。
 
-### 11.8、ThreadLocal的应用场景
+### 11.5、ThreadLocal的应用场景
 
 使用场合主要解决多线程中数据数据因并发产生不一致问题
-
 - 最常见的ThreadLocal使用场景为用来解决数据库连接、Session 管理等
-
 - 参数传递
 
 	场景：如果方法一层一层调用，调用了很多层，但是有个别参数只需要第一层方法和最后一层方式使用，如何传递？可以使用 ThreadLocal 来操作：
@@ -1733,9 +1752,9 @@ public class ParentThreadSharedDataWithSon {
 		- ③、解决方案：
 			在使用完这个线程的时候清除所有的localMap，在submit新任务的时候在重新重父线程中copy所有的Entry。然后重新给当前线程的t.inhertableThreadLocal赋值；阿里巴巴有一套解决方案：[transmittable-thread-local](https://github.com/chenlanqing/transmittable-thread-local)
 
-ThreadLocal 无法解决共享对象的更新问题，ThreadLocal 对象建议使用 static 修饰。这个变量是针对一个线程内所有操作共享的，所以设置为静态变量，所有此类实例共享 此静态变量 ，也就是说在类第一次被使用时装载，只分配一块存储空间，所有此类的对象(只 要是这个线程内定义的)都可以操控这个变量
+ThreadLocal 无法解决共享对象的更新问题，ThreadLocal 对象建议使用 static 修饰。这个变量是针对一个线程内所有操作共享的，所以设置为静态变量，所有此类实例共享此静态变量 ，也就是说在类第一次被使用时装载，只分配一块存储空间，所有此类的对象(只 要是这个线程内定义的)都可以操控这个变量；
 
-### 11.9、FastThreadLocal
+### 11.6、FastThreadLocal
 
 **1、用法：**
 
