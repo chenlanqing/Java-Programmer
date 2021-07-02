@@ -220,7 +220,7 @@ http.cors.allow-origin: "*"
 
 #### 2.2.2、cerebro
 
-从[Cerebro](https://github.com/lmenezes/cerebro 下载zip包，解压缩安装即可
+从[Cerebro](https://github.com/lmenezes/cerebro) 下载zip包，解压缩安装即可
 
 ### 2.3、通过docker安装
 

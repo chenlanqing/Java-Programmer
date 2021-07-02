@@ -205,6 +205,8 @@ Maven的最近依赖策略：如果一个项目依赖相同的groupId、artifact
 
 如果使用IDEA的话，其有一个 Maven Helper 插件，在插件安装好之后，打开pom.xml文件，在底部会多出一个Dependency Analyzer选项
 
+maven-shade-plugin 插件
+
 # 八、编写Maven插件
 
 * [Maven插件开发指南](https://maven.apache.org/plugin-developers/index.html)

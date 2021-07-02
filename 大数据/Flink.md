@@ -1053,11 +1053,13 @@ window根据类型可以分为两种：
   
   ![](image/Flink-滚动窗口描述.png)
 
-- Sliding Windows：滑动窗口，表示窗口内的数据有重叠
+- Sliding Windows：滑动窗口，表示窗口内的数据有重叠;
 
   ![](image/Flink-滑动窗口描述.png)
 
-![](image/Flink-窗口类型总结.png)
+- Session Windows：会话窗口
+
+- Global Windows：全局窗口
 
 ## 8.3、TimeWindow
 
@@ -1418,25 +1420,25 @@ Window API总览
 KeydWindow：基于keyBy之后的KeyStream
 ```
 stream
-  .keyBy(...)                         <- keyed versus non-keyd windows
-  .window(...)                        <- required: "assigner"
-  [.trigger(...)]                     <- optional: "trigger"(else default trigger)
-  [.evictor(...)]                     <- optional: "evictor"(else no evictor)
-  [.allowedLateness(...)]             <- optional: "lateness"(else zero)
-  [.sideOutputLateData(...)]          <- optional: "output tag"(else no side output for late data)
-  .reduce/aggreagte/fold/apply(...)   <- required: "function"
-  [.getSideOutput(...)]               <- optional: "output tag"
+       .keyBy(...)               <-  keyed versus non-keyed windows
+       .window(...)              <-  required: "assigner"
+      [.trigger(...)]            <-  optional: "trigger" (else default trigger)
+      [.evictor(...)]            <-  optional: "evictor" (else no evictor)
+      [.allowedLateness(...)]    <-  optional: "lateness" (else zero)
+      [.sideOutputLateData(...)] <-  optional: "output tag" (else no side output for late data)
+       .reduce/aggregate/apply()      <-  required: "function"
+      [.getSideOutput(...)]      <-  optional: "output tag"
 ```
 Non-KeydWindow：
 ```
 stream
-  .windowAll(...)                     <- required: "assigner"
-  [.trigger(...)]                     <- optional: "trigger"(else default trigger)
-  [.evictor(...)]                     <- optional: "evictor"(else no evictor)
-  [.allowedLateness(...)]             <- optional: "lateness"(else zero)
-  [.sideOutputLateData(...)]          <- optional: "output tag"(else no side output for late data)
-  .reduce/aggreagte/fold/apply(...)   <- required: "function"
-  [.getSideOutput(...)]               <- optional: "output tag"
+       .windowAll(...)           <-  required: "assigner"
+      [.trigger(...)]            <-  optional: "trigger" (else default trigger)
+      [.evictor(...)]            <-  optional: "evictor" (else no evictor)
+      [.allowedLateness(...)]    <-  optional: "lateness" (else zero)
+      [.sideOutputLateData(...)] <-  optional: "output tag" (else no side output for late data)
+       .reduce/aggregate/apply() <-  required: "function"
+      [.getSideOutput(...)]      <-  optional: "output tag"
 ```
 
 # 9、Time
