@@ -51,11 +51,13 @@ public @interface EnableAutoConfiguration {
 
 public class AutoConfigurationImportSelector implements DeferredImportSelector, BeanClassLoaderAware,ResourceLoaderAware, BeanFactoryAware, EnvironmentAware, Ordered {
     protected AutoConfigurationEntry getAutoConfigurationEntry(AutoConfigurationMetadata autoConfigurationMetadata,AnnotationMetadata annotationMetadata) {
+        // 判断自动装配开关是否打开。默认spring.boot.enableautoconfiguration=true，可在 application.properties 或 application.yml 中设置
 		if (!isEnabled(annotationMetadata)) {
 			return EMPTY_ENTRY;
 		}
         // 获取类路径下spring.factories下key为EnableAutoConfiguration全限定名对应值
 		AnnotationAttributes attributes = getAttributes(annotationMetadata);
+        // 获取需要自动装配的所有配置类，读取 META-INF/spring.factories
 		List<String> configurations = getCandidateConfigurations(annotationMetadata, attributes);
         // 去除重复的 自动配置类
 		configurations = removeDuplicates(configurations);
@@ -74,8 +76,6 @@ public class AutoConfigurationImportSelector implements DeferredImportSelector, 
 主要是在 `AbstractApplicationContext`的`refresh`方法中执行方法：`invokeBeanFactoryPostProcessors(beanFactory)`
 
 ![](image/SpringBoot-AutoConfigurationImportSelector-调用链.png)
-
-getAutoConfigurationEntry 执行详情：
 
 ### 1.2.1、getCandidateConfigurations方法
 
@@ -96,6 +96,7 @@ protected Class<?> getSpringFactoriesLoaderFactoryClass() {
 ### 1.2.2、filter方法
 
 ```java
+// @ConditionalOnXXX 中的所有条件都满足，该类才会生效
 private List<String> filter(List<String> configurations, AutoConfigurationMetadata autoConfigurationMetadata) {
     long startTime = System.nanoTime();
     String[] candidates = StringUtils.toStringArray(configurations);
@@ -136,6 +137,8 @@ protected List<AutoConfigurationImportFilter> getAutoConfigurationImportFilters(
     return SpringFactoriesLoader.loadFactories(AutoConfigurationImportFilter.class, this.beanClassLoader);
 }
 ```
+
+总结：Spring Boot 通过@EnableAutoConfiguration开启自动装配，通过 SpringFactoriesLoader 最终加载META-INF/spring.factories中的自动配置类实现自动装配，自动配置类其实就是通过@Conditional按需加载的配置类，想要其生效必须引入spring-boot-starter-xxx包实现起步依赖
 
 # 2、启动流程
 

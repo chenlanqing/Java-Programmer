@@ -2603,70 +2603,77 @@ SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优
 
 [配置文件属性参考](https://docs.spring.io/spring-boot/docs/1.5.9.RELEASE/reference/htmlsingle/#common-application-properties)
 
-下列分析是基于`1.5.9.RELEASE`版本
-- （1）SpringBoot启动的时候加载主配置类，开启了自动配置功能 **@EnableAutoConfiguration**
-- （2）**@EnableAutoConfiguration** 作用：
-	- 利用EnableAutoConfigurationImportSelector给容器中导入一些组件；
-	- 可以查看`selectImports()`方法的内容；
-	- `List<String> configurations = getCandidateConfigurations(annotationMetadata,attributes);`获取候选的配置
-		```
-		SpringFactoriesLoader.loadFactoryNames()
-		扫描所有jar包类路径下  META-INF/spring.factories
-		把扫描到的这些文件的内容包装成properties对象
-		从properties中获取到EnableAutoConfiguration.class类（类名）对应的值，然后把他们添加在容器中
-		```
-	将类路径下```META-INF/spring.factories```里面配置的所有EnableAutoConfiguration的值加入到了容器中：
-	```
-	# Auto Configure
-	org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
-	org.springframework.boot.autoconfigure.admin.SpringApplicationAdminJmxAutoConfiguration,\
-	org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
-	org.springframework.boot.autoconfigure.amqp.RabbitAutoConfiguration,\
-	org.springframework.boot.autoconfigure.batch.BatchAutoConfiguration,\
-	org.springframework.boot.autoconfigure.cache.CacheAutoConfiguration,\
-	org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration,\
-	org.springframework.boot.autoconfigure.cloud.CloudAutoConfiguration,\
-	```
-	每一个这样的  xxxAutoConfiguration类都是容器中的一个组件，都加入到容器中；用他们来做自动配置；
-- （3）每一个自动配置类进行自动配置功能；
-- （4）以 **HttpEncodingAutoConfiguration**（Http编码自动配置）为例解释自动配置原理；
-	```java
-	//表示这是一个配置类，以前编写的配置文件一样，也可以给容器中添加组件
-	@Configuration
-	//启动指定类的ConfigurationProperties功能；将配置文件中对应的值和HttpEncodingProperties绑定起来；并把HttpEncodingProperties加入到ioc容器中
-	@EnableConfigurationProperties(HttpEncodingProperties.class)  
-	//Spring底层@Conditional注解（Spring注解版），根据不同的条件，如果满足指定的条件，整个配置类里面的配置就会生效；    判断当前应用是否是web应用，如果是，当前配置类生效
-	@ConditionalOnWebApplication 
-	//判断当前项目有没有这个类CharacterEncodingFilter；SpringMVC中进行乱码解决的过滤器；
-	@ConditionalOnClass(CharacterEncodingFilter.class) 
-	//判断配置文件中是否存在某个配置  spring.http.encoding.enabled；如果不存在，判断也是成立的，即使我们配置文件中不配置pring.http.encoding.enabled=true，也是默认生效的；
-	@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)  
-	public class HttpEncodingAutoConfiguration {
-		//已经和SpringBoot的配置文件映射了
-		private final HttpEncodingProperties properties;
-		//只有一个有参构造器的情况下，参数的值就会从容器中拿
-		public HttpEncodingAutoConfiguration(HttpEncodingProperties properties) {
-			this.properties = properties;
-		}
-	
-		@Bean   //给容器中添加一个组件，这个组件的某些值需要从properties中获取
-		@ConditionalOnMissingBean(CharacterEncodingFilter.class) //判断容器没有这个组件？
-		public CharacterEncodingFilter characterEncodingFilter() {
-			CharacterEncodingFilter filter = new OrderedCharacterEncodingFilter();
-			filter.setEncoding(this.properties.getCharset().name());
-			filter.setForceRequestEncoding(this.properties.shouldForce(Type.REQUEST));
-			filter.setForceResponseEncoding(this.properties.shouldForce(Type.RESPONSE));
-			return filter;
-		}
-	```
-	根据当前不同的条件判断，决定这个配置类是否生效。一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的properties类中获取的，这些类里面的每一个属性又是和配置文件绑定的；
-- （5）所有在配置文件中能配置的属性都是在xxxxProperties类中封装者；配置文件能配置什么就可以参照某个功能对应的这个属性类
-	```java
-	@ConfigurationProperties(prefix = "spring.http.encoding")  //从配置文件中获取指定的值和bean的属性进行绑定
-	public class HttpEncodingProperties {
-		public static final Charset DEFAULT_CHARSET = Charset.forName("UTF-8");
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+<1.>@SpringBootConfiguration
+<2.>@ComponentScan
+<3.>@EnableAutoConfiguration
+public @interface SpringBootApplication {
+}
+
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Configuration //实际上它也是一个配置类
+public @interface SpringBootConfiguration {
+}
+```
+可以把 `@SpringBootApplication`看作是 `@Configuration`、`@EnableAutoConfiguration`、`@ComponentScan` 注解的集合。这三个注解的作用分别是：
+- `@EnableAutoConfiguration`：启用 SpringBoot 的自动配置机制；
+- `@Configuration`：允许在上下文中注册额外的 bean 或导入其他配置类；
+- `@ComponentScan`： 扫描被`@Component (@Service,@Controller)`注解的 bean，注解默认会扫描启动类所在的包下所有的类 ，可以自定义不扫描某些 bean。如下图所示，容器中将排除`TypeExcludeFilter`和`AutoConfigurationExcludeFilter`；
+
+**@EnableAutoConfiguration:实现自动装配的核心注解**
+
+`EnableAutoConfiguration `只是一个简单地注解，自动装配核心功能的实现实际是通过 `AutoConfigurationImportSelector`类
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage //作用：将main包下的所欲组件注册到容器中
+@Import({AutoConfigurationImportSelector.class}) //加载自动装配类 xxxAutoconfiguration
+public @interface EnableAutoConfiguration {
+    String ENABLED_OVERRIDE_PROPERTY = "spring.boot.enableautoconfiguration";
+    Class<?>[] exclude() default {};
+    String[] excludeName() default {};
+}
+```
+
+以 **HttpEncodingAutoConfiguration**（Http编码自动配置）为例解释自动配置原理；
+```java
+//表示这是一个配置类，以前编写的配置文件一样，也可以给容器中添加组件
+@Configuration
+//启动指定类的ConfigurationProperties功能；将配置文件中对应的值和HttpEncodingProperties绑定起来；并把HttpEncodingProperties加入到ioc容器中
+@EnableConfigurationProperties(HttpEncodingProperties.class)  
+//Spring底层@Conditional注解（Spring注解版），根据不同的条件，如果满足指定的条件，整个配置类里面的配置就会生效；    判断当前应用是否是web应用，如果是，当前配置类生效
+@ConditionalOnWebApplication 
+//判断当前项目有没有这个类CharacterEncodingFilter；SpringMVC中进行乱码解决的过滤器；
+@ConditionalOnClass(CharacterEncodingFilter.class) 
+//判断配置文件中是否存在某个配置  spring.http.encoding.enabled；如果不存在，判断也是成立的，即使我们配置文件中不配置pring.http.encoding.enabled=true，也是默认生效的；
+@ConditionalOnProperty(prefix = "spring.http.encoding", value = "enabled", matchIfMissing = true)  
+public class HttpEncodingAutoConfiguration {
+	//已经和SpringBoot的配置文件映射了
+	private final HttpEncodingProperties properties;
+	//只有一个有参构造器的情况下，参数的值就会从容器中拿
+	public HttpEncodingAutoConfiguration(HttpEncodingProperties properties) {
+		this.properties = properties;
 	}
-	```
+
+	@Bean   //给容器中添加一个组件，这个组件的某些值需要从properties中获取
+	@ConditionalOnMissingBean(CharacterEncodingFilter.class) //判断容器没有这个组件？
+	public CharacterEncodingFilter characterEncodingFilter() {
+		CharacterEncodingFilter filter = new OrderedCharacterEncodingFilter();
+		filter.setEncoding(this.properties.getCharset().name());
+		filter.setForceRequestEncoding(this.properties.shouldForce(Type.REQUEST));
+		filter.setForceResponseEncoding(this.properties.shouldForce(Type.RESPONSE));
+		return filter;
+	}
+```
+根据当前不同的条件判断，决定这个配置类是否生效。一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的properties类中获取的，这些类里面的每一个属性又是和配置文件绑定的；
 
 **总结几点**
 - `xxxxAutoConfigurartion`：自动配置类；给容器中添加组件；
@@ -4262,6 +4269,8 @@ public class ShutdownEndpoint implements ApplicationContextAware {
 
 ## 1、自动装配Bean
 
+SpringBoot 在启动时会扫描外部引用 jar 包中的`META-INF/spring.factories`文件，将文件中配置的类型信息加载到 Spring 容器（此处涉及到 JVM 类加载机制与 Spring 的容器知识），并执行类中定义的各种操作。对于外部 jar 来说，只需要按照 SpringBoot 定义的标准，就能将自己的功能装置进 SpringBoot
+
 自动装配使用配置类(`@Configuration`)结合Spring4 提供的条件判断注解`@Conditional`及Spring Boot的派生注解如`@ConditionOnClass`完成;
 
 ## 2、配置自动装配Bean
@@ -4278,7 +4287,7 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 - 在特定自动装配Class之前
 	- `@AutoConfigureBefore` – 在特定自动装配Class之后
 	- `@AutoConfigureAfter`
-- 指定顺序：@AutoConfigureOrder
+- 指定顺序：`@AutoConfigureOrder`
 
 ```java
 @Configuration  //指定这个类是一个配置类

@@ -1216,6 +1216,53 @@ Java的线程是映射到操作系统原生线程之上的，如果要阻塞或�
 
 	- *但是：但是锁升降级效率较低，如果频繁升降级的话对JVM性能会造成影响*
 
+**为什么需要锁升级？**
+
+首先明确早起jdk1.2效率非常低。那时候syn就是重量级锁，申请锁必须要经过操作系统老大kernel进行系统调用，入队进行排序操作，操作完之后再返回给用户态；
+
+**锁的升级验证**
+
+- 代码片段1：
+```java
+private static Object o;
+public static void main(String[] args) {
+    o = new Object();
+    synchronized (o) {
+        System.out.println(ClassLayout.parseInstance(o).toPrintable());
+    }
+}
+// 输出结果：
+java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           f8 68 ba 06 (11111000 01101000 10111010 00000110) (112879864)
+      4     4        (object header)                           00 70 00 00 (00000000 01110000 00000000 00000000) (28672)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+```
+- 代码片段2
+```java
+private static Object o;
+public static void main(String[] args) throws InterruptedException {
+    Thread.sleep(5000);
+    o = new Object();
+    synchronized (o) {
+        System.out.println(ClassLayout.parseInstance(o).toPrintable());
+    }
+}
+// 输出结果：
+java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           05 68 00 83 (00000101 01101000 00000000 10000011) (-2097125371)
+      4     4        (object header)                           f6 7f 00 00 (11110110 01111111 00000000 00000000) (32758)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+```
+Syn锁升级之后，jdk1.8版本的一个底层默认设置4s之后偏向锁开启。也就是说在4s内是没有开启偏向锁的，加了锁就直接升级为轻量级锁了
+
 #### 7.4.2、什么是偏向锁
 
 偏向锁的意思是这个锁会偏向第一个获得它的锁，如果在接下来的执行过程中，该锁一直没有被其他线程获取，则持有偏向锁的线程不需要进行同步；

@@ -317,6 +317,18 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 **步骤三：打印对象内存布局**
 - 输出虚拟机与对象内存布局相关的信息：`System.out.println(VM.current().details());`
 - 输出对象内存布局信息：`System.out.println(ClassLayout.parseInstance(obj).toPrintable());`
+```java
+public class SyncMarkWord {
+    private static Object object = new Object();
+    public static void main(String[] args) {
+        System.out.println(ClassLayout.parseInstance(object).toPrintable());
+        System.out.println("-----------加锁-------------");
+        synchronized (object) {
+            System.out.println(ClassLayout.parseInstance(object).toPrintable());
+        }
+    }
+}
+```
 
 输出结果如下：
 ```
@@ -328,14 +340,26 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 # Array element sizes: 4, 1, 1, 2, 2, 4, 4, 8, 8 [bytes]	依次表示数组元素长度
 
 java.lang.Object object internals:
- OFFSET  SIZE   TYPE DESCRIPTION        VALUE
-      0     4        (object header)    01 00 00 00 (00000001 00000000 00000000 00000000) (1)
-      4     4        (object header)    00 00 00 00 (00000000 00000000 00000000 00000000) (0)
-      8     4        (object header)    e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           01 00 00 00 (00000001 00000000 00000000 00000000) (1)
+      4     4        (object header)                           00 00 00 00 (00000000 00000000 00000000 00000000) (0)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
+     12     4        (loss due to the next object alignment)
+Instance size: 16 bytes
+Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
+
+-----------加锁-------------
+java.lang.Object object internals:
+ OFFSET  SIZE   TYPE DESCRIPTION                               VALUE
+      0     4        (object header)                           f8 a8 c7 08 (11111000 10101000 11000111 00001000) (147302648)
+      4     4        (object header)                           00 70 00 00 (00000000 01110000 00000000 00000000) (28672)
+      8     4        (object header)                           e5 01 00 f8 (11100101 00000001 00000000 11111000) (-134217243)
      12     4        (loss due to the next object alignment)
 Instance size: 16 bytes
 Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
 ```
+
+![](image/JVM-对象内存结构.png)
 
 ### 3.2.2、空Object的大小
 

@@ -2097,6 +2097,8 @@ MyISAM支持空间索引，主要用于GIS中空间数据的存储，但是MySQL
 
 ### 9.3、B+树-基于B-Tree的一种变体
 
+- [详解B+树](https://mp.weixin.qq.com/s/7JkLNt7Fhkx7d_ifv290iA)
+
 InnoDB存储引擎中索引使用的B+树
 
 #### 9.3.1、一个m阶的B+树具有如下几个特征
@@ -4630,6 +4632,7 @@ https://mp.weixin.qq.com/s/nRl4g4DQSCVhgTmqR6rYiA
 
 # 参考文章
 
+* [MySQL官方中文文档](https://www.docs4dev.com/docs/zh/mysql/5.7/reference)
 * [数据库原理](http://blog.csdn.net/albertfly/article/details/51318995)
 * [How does a relational database work](http://coding-geek.com/how-databases-work/)
 * [MySQL索引背后的数据结构及算法原理](http://blog.codinglabs.org/articles/theory-of-mysql-index.html)
