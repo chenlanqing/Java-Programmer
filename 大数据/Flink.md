@@ -492,6 +492,10 @@ DataStream<Tuple2<String, String>> flatMap = inputStream.flatMap((FlatMapFunctio
         }).returns(Types.TUPLE(Types.STRING, Types.STRING));
 ```
 
+**flatMap与map算子**
+- flatMap：输入一个，输出有多个（0个、1个、2个...）
+- map：输入一个，输出一个，类似jdk中stream的map
+
 ### 5.2.1、union算子
 
 表示合并多个流，但是多个流的数据类型必须一致；多个流join之后，变成了一个流
@@ -1040,7 +1044,7 @@ public class SinkToJdbc {
 
 Flink认为批处理是流处理的一个特例，所以Flink底层引擎是一个流式引擎，其在上面实现了流处理和批处理，而Window是从流处理到批处理的一个桥梁。
 
-通常来讲，window是一张可以把无界无数据切割为有界数据块的手段；Window 是无限数据流处理的核心，Window 将一个无限的 stream 拆分成有限大 小的”buckets”桶；
+通常来讲，window是一张可以把无界无数据切割为有界数据块的手段；Window 是无限数据流处理的核心，Window 将一个无限的 stream 拆分成有限大小的”buckets”桶；
 
 比如：对流中所有元素进行计数是不可能的，因为通常流是无限的（无界的），所以，流上的聚合需要由window来划定范围，比如`计算过去5分钟`或者`最后100个元素的和`
 
@@ -1051,248 +1055,186 @@ window可以是时间驱动的（time window）或者数据驱动（count window
 window根据类型可以分为两种：
 - Tumbling Windows：滚动窗口，表示窗口内的数据没有重叠；
   
-  ![](image/Flink-滚动窗口描述.png)
-
 - Sliding Windows：滑动窗口，表示窗口内的数据有重叠;
-
-  ![](image/Flink-滑动窗口描述.png)
 
 - Session Windows：会话窗口
 
 - Global Windows：全局窗口
 
-## 8.3、TimeWindow
+## 8.3、滚动窗口（Tumbling Windows）
 
-TimeWindow是根据时间对数据切分的窗口，TimeWindow可以支持滚动时间窗口和滑动时间窗口
+概述：将数据依据固定的窗口长度对数据进行切片。只有一个工作参数，就是窗口大小；
+
+特点：时间对齐，窗口长度对齐，没有重叠
+
+滚动窗口分配器将每个元素分配到一个指定窗口大小的窗口中，滚动窗口有一个固定的大小，并且不会出现重叠（前后时间点是连接着的）。
+
+比如指定了一个5分钟大小的滚动窗口，窗口创建入如下图所示
+
+![](image/Flink-滚动窗口描述.png)
+
+适合场景：适合做BI统计（做每个时间段的聚合计算）
+
+## 8.4、滑动窗口（Sliding Windows）
+
+概述：滑动窗口是固定窗口的更广义的一种形式，滑动窗口工作参数由固定的窗口长度和滑动间隔组成。
+
+特点：时间对齐，窗口长度固定，有重叠。
+​
+滑动窗口分配器将元素分配到固定长度的窗口中，与滚动窗口类似，窗口的大小由窗口大小参数来配置，另一个窗口滑动参数控制滑动窗口开始的频率。因此，滑动窗口如果滑动参数小于窗口大小的话，窗口是可以重叠的，在这种情况下元素会被分配到多个窗口中。
+
+例如，你有10分钟的窗口和5分钟的滑动，那么每个窗口中5分钟的窗口里包含着上个10分钟产生的数据，如下图所示：
+
+![](image/Flink-滑动窗口描述.png)
+
+适用场景：对最近一个时间段内的统计（求某接口最近5min的失败率来决定是否要报警）
+
+## 8.5、会话窗口（Session Windows）
+
+概述：由一系列事件组合一个指定时间长度的timeout间隙组成，类似于web应用的session，也就是一段时间没有接收到新数据就会生成新的窗口。
+
+特点：时间无对齐。窗口无固定长度
+
+​session窗口分配器通过session活动来对元素进行分组，session窗口跟滚动窗口和滑动窗口相比，不会有重叠和固定的开始时间和结束时间的情况，相反，当它在一个固定的时间周期内不再收到元素，即非活动间隔产生，那个这个窗口就会关闭。一个session窗口通过一个session间隔来配置，这个session间隔定义了非活跃周期的长度，当这个非活跃周期产生，那么当前的session将关闭并且后续的元素将被分配到新的session窗口中去；
+
+![](image/Flink-会话窗口.png)
+
+## 8.6、窗口API
+
+### 8.6.1、窗口API分类
+
+window数据源分为两种，一种是典型的KV类型（KeyedStream），另一种是非KV类型（Non-KeyedStream），主要区别是：
+- KeyedStream：需要在窗口操作之前调用 keyBy 对KV按照 key 进行分组，然后才可以调用window的操作API，比如 countWindow、timeWindow 等；
+- Non-KeyedStream：如果使用窗口操作前，没有使用 keyBy 算子，那么就认为是 Non-KeyedStream，调用window api就是 xxxWindowAll，比如 countWindowAll等，因为是非KV，所以无法分区，也就是只有一个分区，那么这个窗口的并行度只能是 1；
+
+### 8.6.2、countWindow
+
+CountWindow根据窗口中相同key元素的数量来触发执行，执行时只计算元素到达窗口大小的key对应的结果；
+- countWindow(5)：只指定大小，表示滚动窗口的窗口大小是5个元素，也就是当窗口填满5个元素时会对窗口进行计算了；
+- countWindow(5, 1) 表示互动窗口的窗口大小是5个元素，滑动的间隔为1个元素，也就是每增加一个元素就会对前面的5个元素计算一次
+
+> 注意：countWindow 的 window_size 指的是相同 key 的元素的个数，并不是输入的所有元素的总数；
+
+**1、滚动窗口**
+
+默认的countWindow 是一个滚动窗口，只需要指定窗口大小即可，当元素数量达到窗口大小时，就会触发窗口的执行
+```java
+/**
+* 注意：由于我们在这里使用了keyBy，会先对数据分组
+* 如果某个分组对应的数据窗口内达到了5个元素，这个窗口才会被触发执行
+*/
+//CountWindow之滚动窗口：每隔5个元素计算一次前5个元素
+dataStream.flatMap(new FlatMapFunction<String, String>() {
+    @Override
+    public void flatMap(String value, Collector<String> out) throws Exception {
+        String[] split = value.split(" ");
+        for (String s : split) {
+            out.collect(s);
+        }
+    }
+}).map(new MapFunction<String, Tuple2<String, Integer>>() {
+    @Override
+    public Tuple2<String, Integer> map(String value) throws Exception {
+        return new Tuple2<>(value, 1);
+    }
+}).keyBy(0)
+        .countWindow(5)
+        .sum(1).print();
+```
+
+**2、滑动窗口**
+
+滑动窗口和滚动窗口的函数名是完全一致的，只是在传参数时需要传入两个参数，一个是window_size，一个是sliding_size。
+
+下面代码中的sliding_size设置为了2，也就是说，每收到两个相同key的数据就计算一次，每一次计算的window范围是5个元素
+```java
+dataStream.flatMap(new FlatMapFunction<String, String>() {
+    @Override
+    public void flatMap(String value, Collector<String> out) throws Exception {
+        String[] split = value.split(" ");
+        for (String s : split) {
+            out.collect(s);
+        }
+    }
+}).map(new MapFunction<String, Tuple2<String, Integer>>() {
+    @Override
+    public Tuple2<String, Integer> map(String value) throws Exception {
+        return new Tuple2<>(value, 1);
+    }
+}).keyBy(0)
+    // 第一个参数：窗口大小，第二个参数：滑动间隔
+    .countWindow(5, 2)
+    .sum(1).print();
+```
+
+### 8.6.3、timeWindow
+
+timeWindow 是将指定时间范围内的所有数据组成一个 window，一次对一个 window 里面所有的数据进行计算；同样支持类似上面的滚动窗口和滑动窗口模式。有两个工作参数 window_size 和 slide，只指定 window_size 时是滚动窗口；
 - `timewindow(Time.seconds(10))`：表示滚动窗口的窗口大小为10秒，对每10秒内的数据进行聚合计算；
 - `timewindow(Time.seconds(10), Time.seconds(5))`：表示滑动窗口的窗口大小是10秒，滑动间隔为5秒，就是每个5秒计算前10秒内的数据
 
-示例：
+**1、滚动窗口**
+
+Flink默认的时间窗口根据Processing Time 进行窗口的划分，将Flink获取到的数据根据进入Flink的时间划分到不同的窗口中。
+
 ```java
-/**
- * TimeWindow的使用
- * 1：滚动窗口
- * 2：滑动窗口
- */
-public static void main(String[] args) throws Exception {
-    StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-    env.setParallelism(1);
-
-    DataStream<String> dataStream = env.socketTextStream("localhost", 7777);
-
-    // 滚动时间窗口：每隔10秒计算一次前10秒时间窗口内的数据
-    dataStream.flatMap(new FlatMapFunction<String, String>() {
-        @Override
-        public void flatMap(String value, Collector<String> out) throws Exception {
-            String[] split = value.split(" ");
-            for (String s : split) {
-                out.collect(s);
-            }
+// Flink 1.12 版本 滚动时间窗口：每隔10秒计算一次前10秒时间窗口内的数据
+dataStream.flatMap(new FlatMapFunction<String, String>() {
+    @Override
+    public void flatMap(String value, Collector<String> out) throws Exception {
+        String[] split = value.split(" ");
+        for (String s : split) {
+            out.collect(s);
         }
-    }).map(new MapFunction<String, Tuple2<String, Integer>>() {
-        @Override
-        public Tuple2<String, Integer> map(String value) throws Exception {
-            return new Tuple2<>(value, 1);
-        }
-    }).keyBy(0)
-            .timeWindow(Time.seconds(10))
-            .sum(1).print();
-
-    // 滑动时间窗口：每隔5秒计算一次前10秒时间窗口内的数据
-    dataStream.flatMap(new FlatMapFunction<String, String>() {
-        @Override
-        public void flatMap(String value, Collector<String> out) throws Exception {
-            String[] split = value.split(" ");
-            for (String s : split) {
-                out.collect(s);
-            }
-        }
-    }).map(new MapFunction<String, Tuple2<String, Integer>>() {
-        @Override
-        public Tuple2<String, Integer> map(String value) throws Exception {
-            return new Tuple2<>(value, 1);
-        }
-    }).keyBy(0)
-            // 第一个参数：窗口大小，二个参数：滑动间隔
-            .timeWindow(Time.seconds(10), Time.seconds(5))
-            .sum(1).print();
-
-    env.execute();
-}
-```
-开启socket，输入数据
-```
-[root@bigdata04 soft]# nc -l 7777
-hello you
-```
-如果执行的是TimeWindow的滚动窗口的话：
-```
-5> (you,1)
-3> (hello,1)
-```
-如果执行的是TimeWindow的滑动窗口的话：
-```
-5> (you,1)
-3> (hello,1)
-3> (hello,1)
-5> (you,1)
+    }
+}).map(new MapFunction<String, Tuple2<String, Integer>>() {
+    @Override
+    public Tuple2<String, Integer> map(String value) throws Exception {
+        return new Tuple2<>(value, 1);
+    }
+}).keyBy(0)
+    .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
+    .sum(1).print();
 ```
 
-## 8.4、CountWindow
+**2、滑动窗口**
 
-CountWindow是根据元素个数对数据流切分窗口，CountDown也可以支持滚动窗口和滑动窗口：
-- 其中countWindow(5) 表示滚动窗口的窗口大小是5个元素，也就是当窗口填满5个元素时会对窗口进行计算了；
-- countWindow(5, 1) 表示互动窗口的窗口大小是5个元素，滑动的间隔为1个元素，也就是每增加一个元素就会对前面的5个元素计算一次
-
-示例：
+和上面类似，就是参数里面增加了slide参数，也就是滑动时间间隔。时间间隔可以通过Time.milliseconds(x)，Time.seconds(x)，Time.minutes(x)等其中的一个来指定。
 ```java
-/**
- * CountWindow的使用
- * 1：滚动窗口
- * 2：滑动窗口
- */
-public static void main(String[] args) throws Exception {
-    StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-    env.setParallelism(1);
-    DataStream<String> dataStream = env.socketTextStream("localhost", 7777);
-    /**
-      * 注意：由于我们在这里使用了keyBy，会先对数据分组
-      * 如果某个分组对应的数据窗口内达到了5个元素，这个窗口才会被触发执行
-      */
-    //CountWindow之滚动窗口：每隔5个元素计算一次前5个元素
-    dataStream.flatMap(new FlatMapFunction<String, String>() {
-        @Override
-        public void flatMap(String value, Collector<String> out) throws Exception {
-            String[] split = value.split(" ");
-            for (String s : split) {
-                out.collect(s);
-            }
+dataStream.flatMap(new FlatMapFunction<String, String>() {
+    @Override
+    public void flatMap(String value, Collector<String> out) throws Exception {
+        String[] split = value.split(" ");
+        for (String s : split) {
+            out.collect(s);
         }
-    }).map(new MapFunction<String, Tuple2<String, Integer>>() {
-        @Override
-        public Tuple2<String, Integer> map(String value) throws Exception {
-            return new Tuple2<>(value, 1);
-        }
-    }).keyBy(0)
-            .countWindow(5)
-            .sum(1).print();
-
-    // CountWindow之滑动窗口：每隔1个元素计算一次前5个元素
-    dataStream.flatMap(new FlatMapFunction<String, String>() {
-        @Override
-        public void flatMap(String value, Collector<String> out) throws Exception {
-            String[] split = value.split(" ");
-            for (String s : split) {
-                out.collect(s);
-            }
-        }
-    }).map(new MapFunction<String, Tuple2<String, Integer>>() {
-        @Override
-        public Tuple2<String, Integer> map(String value) throws Exception {
-            return new Tuple2<>(value, 1);
-        }
-    }).keyBy(0)
-            // 第一个参数：窗口大小，第二个参数：滑动间隔
-            .countWindow(5, 1)
-            .sum(1).print();
-
-    env.execute();
-}
-```
-通过socket输入数据：
-```
-[root@bigdata04 soft]# nc -l 7777
-hello you
-hello me
-hello hello hello
-you you you you
-hello
-you
-```
-执行CoundWindow之滚动窗口的代码，输出结果如下：
-```
-3> (hello,5)
-5> (you,5)
-```
-执行CountWindow之滑动窗口的代码，输出结果如下：
-```
-5> (you,1)
-3> (hello,1)
-4> (me,1)
-3> (hello,2)
-3> (hello,3)
-3> (hello,4)
-3> (hello,5)
-5> (you,2)
-5> (you,3)
-5> (you,4)
-5> (you,5)
-3> (hello,5)
-5> (you,5)
+    }
+}).map(new MapFunction<String, Tuple2<String, Integer>>() {
+    @Override
+    public Tuple2<String, Integer> map(String value) throws Exception {
+        return new Tuple2<>(value, 1);
+    }
+}).keyBy(0)
+    // 第一个参数：窗口大小，二个参数：滑动间隔
+    .window(SlidingProcessingTimeWindows.of(Time.seconds(5), Time.seconds(2)))
+    .sum(1).print();
 ```
 
-## 8.5、自定义window
+### 8.6.4、其他算子
 
-window其实还可以细分为：
-- 基于key的window；
-- 不基于key的window；
+- window reduce：也就是在窗口算子之后执行reduce算子，用法和普通的reduce一样，只不过reduce的单位是一个窗口。即每一个窗口返回一次reduce结果。程序在上面，不重复了。
 
-前面的都是基于key 的window，就是在使用window之前，先执行了keyBy的分组操作，如果需求中不需要根据key进行分组的话，可以不使用keyBy，这样在使用window的时候需要使用timeWindowAll() 或者 countWindowAll()
-- 针对基于key的window需要使用window函数；
-- 针对不基于key的window需要使用windowAll函数
+- window fold：也就是在窗口算子之后执行fold算子，用法和普通的fold一样，只不过fold的单位是一个窗口。即每一个窗口返回一次reduce结果。程序在上面，不重复了。
 
-TimeWindow和TimeWindowAll底层使用的是window和WindowAll函数：
-```scala
-// timeWindow() 函数
-public WindowedStream<T, KEY, TimeWindow> timeWindow(Time size, Time slide) {
-		if (environment.getStreamTimeCharacteristic() == TimeCharacteristic.ProcessingTime) {
-			return window(SlidingProcessingTimeWindows.of(size, slide));
-		} else {
-			return window(SlidingEventTimeWindows.of(size, slide));
-		}
-}
-// timeWindowAll() 函数
-public AllWindowedStream<T, TimeWindow> timeWindowAll(Time size) {
-		if (environment.getStreamTimeCharacteristic() == TimeCharacteristic.ProcessingTime) {
-			return windowAll(TumblingProcessingTimeWindows.of(size));
-		} else {
-			return windowAll(TumblingEventTimeWindows.of(size));
-		}
-}
-```
+- window聚合操作：指的是max、min等这些聚合算子，只不过是在window算子之后使用，以窗口为单位，每一个窗口返回一次聚合结果，而不是像普通那样，每一次聚合结果都返回
 
-自定义window示例：
-```
-import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.apache.flink.streaming.api.windowing.assigners.TumblingProcessingTimeWindows
-import org.apache.flink.streaming.api.windowing.time.Time
-/**
- * 需求：自定义MyTimeWindow
- */
-object MyTimeWindowScala {
-  def main(args: Array[String]): Unit = {
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    val text = env.socketTextStream("bigdata04", 9001)
-    import org.apache.flink.api.scala._
-    //自定义MyTimeWindow滚动窗口：每隔10秒计算一次前10秒时间窗口内的数据
-    text.flatMap(_.split(" "))
-      .map((_,1))
-      .keyBy(0)
-      //窗口大小
-      .window(TumblingProcessingTimeWindows.of(Time.seconds(10)))
-      .sum(1).print()
-    env.execute("MyTimeWindowScala")
-  }
-}
-```
-
-## 8.6、window聚合
+## 8.7、window聚合
 
 在进行widow聚合操作可以分为两种：
 - 增量聚合：增量聚合函数(incremental aggregation functions) 每条数据到来就进行计算，保持一个简单的状态。典型的增量聚合函数有 ReduceFunction, AggregateFunction。
 - 全量聚合：全窗口函数(full window functions) 先把窗口所有数据收集起来，等到计算的时候会遍历所有数据。 ProcessWindowFunction 就是一个全窗口函数
 
-### 8.6.1、增量聚合
+### 8.7.1、增量聚合
 
 增量聚合：窗口每进入一条数据，就进行一次计算；场景的一些增量聚合函数如下：reduce、aggregate、sum、min、max
 
@@ -1348,7 +1290,7 @@ sensor_1,1547718209,32.8
 sensor_1,1547718212,37.1
 ```
 
-### 8.6.2、全量聚合
+### 8.7.2、全量聚合
 
 全量聚合：等数据窗口的数据到齐，才开始进行聚合计算【可以实现对窗口内的数据进行排序等需求】，场景的一些全量聚合函数为：apply(windowFunction) 和 process(processWindowFunction)
 
@@ -1368,7 +1310,7 @@ dataStream.keyBy("id")
   });
 ```
 
-## 8.7、其他API
+## 8.8、其他API
 
 - trigger：触发器，定义 window 什么时候关闭，触发计算并输出结果；
 - evitor：移除器，定义移除某些数据的逻辑；
@@ -1385,7 +1327,7 @@ SingleOutputStreamOperator<SensorReading> minTempStream = dataStream.keyBy("id")
         .minBy("temperature");
 ```
 
-## 8.8、窗口起始点和偏移量
+## 8.9、窗口起始点和偏移量
 
 以事件时间滚动时间窗口为例：
 ```java
@@ -1413,7 +1355,7 @@ public static long getWindowStartWithOffset(long timestamp, long offset, long wi
 }
 ```
 
-## 8.9、总结
+## 8.10、总结
 
 Window API总览
 
@@ -1444,13 +1386,17 @@ stream
 # 9、Time
 
 针对流数据中的Time（时间），可以分为以下三种：
-- Event Time：事件产生的时间，它通常由事件中的时间戳描述；
+- Event Time：事件产生的时间，它通常由事件中的时间戳描述；是事件创建的时间。它通常由事件中的时间戳描述，例如采集的日志数据中，每一条日志都会记录自己的生成时间，Flink通过时间戳分配器访问事件时间戳
 - Ingestion Time：事件进入Flink的时间；
-- Processing Time：事件被处理时当前系统的时间；默认的时间属性；
+- Processing Time：是每一个执行基于时间操作的算子的本地系统时间，与机器相关，默认的时间属性就是Processing Time。也就是数据被处理时的当前时间
 
 这几种时间的对应关系：
 
 ![](image/Flink-Time关系图.png)
+
+​在Flink的流式处理中，绝大部分的业务都会使用eventTime，一般只在eventTime无法使用时，才会被迫使用ProcessingTime或者IngestionTime。默认使用的是ProcessingTime。
+
+> 新版本默认是以 Event Time进行窗口划分的
 
 ## 9.1、Time案例分析
 
@@ -1469,27 +1415,53 @@ stream
 ## 9.2、Time类型设置
 
 在Flink中，默认情况下Flink流处理中使用的时间是：Processing Time，可以通过类StreamExecutionEnvironment看到：
-```scala
+
+```java
+// 1.10版本
 private TimeCharacteristic timeCharacteristic = DEFAULT_TIME_CHARACTERISTIC;
 private static final TimeCharacteristic DEFAULT_TIME_CHARACTERISTIC = TimeCharacteristic.ProcessingTime;
+// 高版本，默认时间已经变成了 EventTime，所以如果使用窗口的话必须要带上时间，否则需要显示指定为 ProcessingTime
+private static final TimeCharacteristic DEFAULT_TIME_CHARACTERISTIC = TimeCharacteristic.EventTime;
 ```
 如果要修改话可以调用：setTimeCharacteristic
-```scala
-// TimeCharacteristic 是个枚举类，其定义了三种时间
-env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
+```java
+// TimeCharacteristic 是个枚举类，其定义了三种时间，老版本的设置，新版本一般使用 对应的窗口上带上具体的时间
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+env.setStreamTimeCharacteristic(时间类型);
+// 三种类型的time对应如下：
+TimeCharacteristic.EventTime；  eventtime
+TimeCharacteristic.IngestionTime;  到达flink的时间
+TimeCharacteristic.ProcessingTime;  处理数据的时间
+stream.window(TumblingEventTimeWindows.of(Time.seconds(5)))
+
+.window这个api就是所有窗口总的api，其他窗口api都是通过这个api封装出来的。可以通过这个总api，参数直接窗口的类型，比如上面的就是指定eventtime 的timewindow，这样并不会影响整个env的时间类型。
+
+同样的，其他时间类型窗口，比如：
+SlidingEventTimeWindows  滑动eventtime窗口
+
+基本上看名字就知道是什么时间类型（三大时间类型）、以及什么类型（滑动、滚动、会话窗口）的窗口了。注意：eventtime没有session窗口，processingTime和
 ```
 
 # 10、Watermark
 
 ## 10.1、概述
 
-当使用EventTime处理流数据的时候会遇到数据乱序的问题，流数据从数据产生，到流经source，再到具体的算子，中间是有一个过程和世界的；虽然在大部分情况下，传输到算子的数据都是按照数据产生的时间顺序来的，但是也不排除由于网络延迟等原因导致数据乱序的产生，特别是在使用kafka的时候，多个分区直接的数据无法保证有序
+当使用 EventTime 处理流数据的时候会遇到数据乱序的问题，流数据从数据产生，到流经source，再到具体的算子，中间是有一个过程和时间的；虽然在大部分情况下，传输到算子的数据都是按照数据产生的时间顺序来的，但是也不排除由于网络延迟等原因导致数据乱序的产生，特别是在使用kafka的时候，多个分区直接的数据无法保证有序
 
 所以在进行window计算的时候，又不能无限期等待，必须要有一个机制来保证特点的时间后，必须触发window去进行计算，这个特别的机制就是watermark，使用`watermark + EventTime` 处理乱序数据；
 
 可以通过遇到一个时间戳达到了窗口关闭事件，不应该立即触发窗口计算，而是等待一段时间，等迟到的数据来了再关闭你窗口；
 
-数据流中的 Watermark 用于表示 timestamp 小于 Watermark 的数据，都已经 到达了，因此，window 的执行也是由 Watermark 触发的
+数据流中的 Watermark 用于表示 timestamp 小于 Watermark 的数据，都已经到达了，因此，window 的执行也是由 Watermark 触发的； Watermark可以理解成一个延迟触发机制，我们可以设置Watermark的延时时长t，每次系统会校验已经到达的数据中最大的`maxEventTime`，然后认定eventTime小于`maxEventTime - t`的所有数据都已经到达，如果有窗口的停止时间等于`maxEventTime – t`，那么这个窗口被watermark触发执行；
+
+watermark是一种概率性的机制。假设`event1~5`，如果event5已经到达了，那么其实按照event产生的先后顺序，正常情况下，前面的`event1~4`应该也到达了。而为了保证前面的`event1~4`的到达（其实是更多的到达，但是不一定全部都到达），在`event5`到达了之后，提供一定的延迟时间`t`。当`event5`到达，且经过 `t` 时间之后，正常情况下，前面的`event1~4` 大概率会到达了，如果没有到达，属于少数情况，那么就认为event5之前的event都到达了，无论是否真的全部到达了。如果在延迟时间之后到达了，这个旧数据直接会被丢弃。所以其实watermark就是一种保障更多event乱序到达的机制，提供了一定的延时机制，而因为只会延迟一定的时间，所以也不会导致flink无限期地等待下去；
+
+Window会不断产生，属于这个Window范围的数据会被不断加入到Window中，所有未被触发的Window都会等待触发，只要Window还没触发，属于这个Window范围的数据就会一直被加入到Window中，直到Window被触发才会停止数据的追加，而当Window触发之后才接受到的属于被触发Window的数据会被丢弃。如果产生的窗口中没有新到的数据，也就不会有watermark，那么窗口就不会被触发计算
+
+**watermark的特点：**
+- watermark是一条特殊的数据记录；
+- watermark必须单调递增，以确保任务的事件时间在向前推进；
+- watermark与数据的时间戳相关；
 
 ### 10.1.1、有序数据流的watermark
 
@@ -1514,20 +1486,19 @@ env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
 
 在多并行度的情况下，watermark会有一个对齐机制，这个对齐机制会取所有channel中最小的watermark，图中的14和29这两个watermark，最终取值时14，这样才不会漏掉数据；
 
-## 10.2、watermark生成方式
+## 10.2、watermark生成
 
-### 10.2.1、watermark的特点
+### 10.2.1、watermark的触发计算的条件
 
-- watermark是一条特殊的数据记录；
-- watermark必须单调递增，以确保任务的事件时间在向前推进；
-- watermark与数据的时间戳相关；
+watermark时间（`max_eventTime-t） >= window_end_time`；
+
+在`[window_start_time,window_end_time)`中有数据存在。
 
 ### 10.2.2、watermark的生成
 
-
 通常情况下，在接收到source的数据之后，应该立刻生成watermark，但是也可以再使用Map或者Filter操作之后，再生成watermark
 
-watermark的生成方式有两种：
+watermark的生成方式有两种：周期性产生和不间断产生
 - `with periodic watermars`：周期性触发watermark的生成和发送，每隔N秒自动向流里面注入一个watermark，时间间隔由 `ExecutionConfig.setAutoWaterMarkInterval` 决定，现在新版本的Flink默认是200毫秒，之前默认是100毫秒，可以定义一个最大允许乱序的世界；这种生成watermark的方式比较常用；
 
   产生watermark的逻辑：每隔5秒钟，Flink会调用 AssignerWithPeriodicWatermarks 的 getCurrentWatermark() 方法。如果方法时间戳大于之前水位的时间戳，新的watermark会被插入流中。这个检查保证了水位线是单调递增的。如果方法返回的时间戳小于等于之前水位的时间戳，则不会产生新的 watermark
@@ -1545,11 +1516,15 @@ watermark的生成方式有两种：
   ```
   EventTime 的使用一定要指定数据源的时间戳。否则程序无法知道事件的EventTime 是什么；
 
-  BoundedOutOfOrdernessTimestampExtractor 该类实现起始是分配时间戳的接口。Flink提供了一个 TimestampAssigner 接口供我们实现，可以自定义如何从事件数据中抽取时间戳
+  BoundedOutOfOrdernessTimestampExtractor 该类实现起始是分配时间戳的接口。Flink提供了一个 TimestampAssigner 接口供我们实现，可以自定义如何从事件数据中抽取时间戳；
 
-- `with punctuated watermarks`：基于某些事件触发watermark的生成和发送，基于事件向流里面注入一个watermark，每一个元素都有机会判断是否生成一个watermark；可以根据需要对每条数据进行筛选和处理；
+  在实际的生产中Periodic的方式必须结合时间和积累条数两个维度继续周期性产生Watermark，否则在极端情况下会有很大的延时
 
+- `with punctuated watermarks`：基于某些事件触发watermark的生成和发送，基于事件向流里面注入一个watermark，每一个元素都有机会判断是否生成一个watermark；可以根据需要对每条数据进行筛选和处理；在实际的生产中Punctuated方式在TPS很高的场景下会产生大量的Watermark在一定程度上对下游算子造成压力，所以只有在实时性要求非常高的场景才会选择Punctuated的方式进行Watermark的生成
 
+https://blog.51cto.com/kinglab/2457255
+
+### 10.2.3、
 
 ## 10.3、案例：乱序数据处理
 
@@ -1968,6 +1943,11 @@ threadId:74,key:0001,eventTime:[1790820697000|2026-10-01 10:11:37],currentMaxTim
 - 结合业务以及数据情况去设置，如果 outOfOrderness 设置的太小，而自身数据发送时由于网络等原因导致乱序或者迟到太多，那么最终的结果就是会有很多数据被丢弃，对数据的正确性影响很大；
 - 对于严重乱序的数据，需要严格统计数据最大延迟时间，才能最大成簇保证计算数据的准确度，延迟时间设置太小会影响数据准确性，延迟时间设置太大不仅影响数据的实时性，更会增加Flink作业负担，不是对EventTime邀请特别严格的数据，尽量不要采用EventTime方式来处理；
 
+
+# 11、状态管理
+
+# 12、Flink CEP
+
 # 11、Flink与Kafka
 
 ## 11.1、Kafka-Connector
@@ -2161,7 +2141,6 @@ transaction.max.timeout.ms=3600000
 ```
 重启kafka后，再次执行，代码正常执行了
 
-# 12、Flink CEP
 
 
 
@@ -2180,4 +2159,5 @@ transaction.max.timeout.ms=3600000
 - [基于flink和drools的实时日志处理](https://www.cnblogs.com/luxiaoxun/p/13197981.html)
 - [Flink 精进学习](https://www.yuque.com/docs/share/a4b45fed-7417-4789-8df3-071abb9b3cac)
 - [Flink CEP学习](https://juejin.cn/post/6844903970964520974)
+- [Flink动态欺诈检测系统](https://mp.weixin.qq.com/s/SGFQqY7LoAp0BWvmP9BfAw)
 
