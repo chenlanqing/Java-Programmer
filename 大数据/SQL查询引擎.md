@@ -9,6 +9,22 @@
 
 ## 1、简介
 
+### 1.1、架构
+
+![](image/Presto-架构.png)
+
+Presto查询引擎是一个Master-Slave的架构，由一个Coordinator节点，一个Discovery Server节点，多个Worker节点组成，Discovery Server通常内嵌于Coordinator节点中。Coordinator负责解析SQL语句，生成执行计划，分发执行任务给Worker节点执行。Worker节点负责实际执行查询任务。Worker节点启动后向Discovery Server服务注册，Coordinator从Discovery Server获得可以正常工作的Worker节点。如果配置了Hive Connector，需要配置一个Hive MetaStore服务为Presto提供Hive元信息，Worker节点与HDFS交互读取数据；
+
+### 1.2、Presto执行查询过程简介
+
+- 完全基于内存的并行计算
+- 流水线
+- 本地化计算
+- 动态编译执行计划
+- 小心使用内存和数据结构
+- 类BlinkDB的近似查询
+- GC控制
+
 ## 2、环境搭建
 
 启动presto：  ./launcher start
