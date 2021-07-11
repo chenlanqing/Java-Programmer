@@ -620,6 +620,8 @@ public void registerShutdownHook() {
 
 # 三、AOP
 
+[SpringAOP实现原理](https://mp.weixin.qq.com/s/1sC2KNSWyHRuPZr6NrDRnQ)
+
 ## 1、Spring Aop实现方式
 
 AOP的实现：jdkProxy和Cglib

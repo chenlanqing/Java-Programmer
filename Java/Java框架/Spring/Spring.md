@@ -509,7 +509,7 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 
 ## 1、IOC原理
 
-[IOC原理](Java/源码分析/框架/spring/Spring源码.md#一IOC)
+[IOC原理](../..//源码分析/框架/spring/Spring源码.md#一IOC)
 
 ## 2、AOP原理
 
@@ -962,6 +962,8 @@ Spring通过三级缓存解决了循环依赖，其中一级缓存为单例池�
 如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理；
 
 ## 2、Spring与SpringMVC容器
+
+- [父子容器的关系](https://mp.weixin.qq.com/s/EOwnfUQUhjwCtMWzdkUZRw)
 
 ### 2.1、Spring父子容器的关系
 

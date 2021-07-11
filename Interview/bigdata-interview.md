@@ -131,6 +131,16 @@ job.setInputFormatClass(SequenceFileInputFormat.class);
 
 # 二、数据倾斜问题
 
+**数据倾斜原理：**
+
+在做数据运算的时候会设计到，countdistinct、group by、join等操作，都会触发Shuffle动作。一旦触发，所有相同 key 的值就会拉到一个或几个节点上，发生单点问题。
+一个简单的场景，在订单表中，北京和上海两个地区的订单数量比其他地区高几个数量级。那么进行聚合的时候就会出现数据热点
+
+**解决数据倾斜的几个思路：**
+- 业务上：避免热点key的设计或者打散热点key，例如可以把北京和上海分成地区，然后单独汇总。
+- 技术上：在热点出现时，需要调整方案避免直接进行聚合，可以借助框架本身的能力，例如进行mapside-join。
+- 参数上：无论是Hadoop、Spark还是Flink都提供了大量的参数可以调整
+
 ## 1、MapReduce中数据倾斜问题
 
 想要提升MapReduce的执行效率，其实就是提高Map和Reduce阶段的执行效率，默认情况下，Map阶段的map任务的个数是 InputSplit有关， InputSplit的个数一般是和Block块有关联的，针对map任务的个数正常情况下不用干预的，除非是海量小文件，考虑文件合并问题。
@@ -170,7 +180,23 @@ if("5".equals(key)){
 
 ## 2、Hive中数据倾斜问题
 
-# 面试系列
+## 3、Spark数据倾斜
+
+Spark中的数据倾斜也很常见，Spark中一个 stage 的执行时间受限于最后那个执行完的 task，因此运行缓慢的任务会拖累整个程序的运行速度。过多的数据在同一个task中执行，将会把executor撑爆，造成OOM，程序终止运行；
+
+解决方案：
+- 使用map join 代替reduce join
+- 提高shuffle并行度
+
+## 4、Flink数据倾斜
+
+使用Window、GroupBy、Distinct等聚合函数时，频繁出现反压，消费速度很慢，个别的task会出现OOM，调大资源也无济于事
+
+解决方案：
+- MiniBatch设置
+- 并行度设置
+
+# 三、面试系列
 
 ETL主要考察点：
 数仓的知识，如何分层，sql高级函数：分组ton之类的，sql倾斜问题，主要还是和hive相关的知识
@@ -218,6 +244,14 @@ https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
 ## 4、Spark
 
 ## 5、Flink
+
+### Flink的Window处理过程中如果出现了数据倾斜
+
+### Flink中的窗口有哪些？各自的区别是什么？举例说明你在什么场景下选择的是哪种窗口，为什么要这么选择
+
+
+
+
 
 ## 6、数仓
 

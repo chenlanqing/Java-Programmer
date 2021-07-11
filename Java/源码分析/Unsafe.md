@@ -315,6 +315,10 @@ static int pageCount(long size) {
 }
 ```
 
+# 3、内存拷贝
+
+Slice使用Unsafe#copyMemory实现了高效的内存拷贝：  https://github.com/airlift/slice
+
 # 参考资料
 
 - [Java魔法类Unsafe](https://tech.meituan.com/2019/02/14/talk-about-java-magic-class-unsafe.html)
