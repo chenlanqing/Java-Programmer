@@ -2160,8 +2160,6 @@ https://xie.infoq.cn/article/0a1848dd6e6ae390d14017f9f
 
 ## 46、Raft协议
 
-Raft协议：https://raft.github.io/
-
 
 
 # 十、分布式
