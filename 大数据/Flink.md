@@ -1524,7 +1524,17 @@ watermark的生成方式有两种：周期性产生和不间断产生
 
 https://blog.51cto.com/kinglab/2457255
 
-### 10.2.3、
+### 10.2.3、watermark引入
+
+```java
+StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+DataStreamSource<String> source = env.socketStream("localhost", 7777);
+//引入的watermark的实现类
+source.assignTimestampsAndWatermarks(xx)
+```
+watermark的实现有两大类，对应上面的两种watermark的产生方式，有两个接口：
+- AssignerWithPeriodicWatermarks;   周期性产生watermark，即Period
+- AssignerWithPunctuatedWatermarks;  Punctuated：不间断产生
 
 ## 10.3、案例：乱序数据处理
 
@@ -1536,70 +1546,69 @@ https://blog.51cto.com/kinglab/2457255
 
 ### 10.3.2、基本代码
 
-```scala
-object WatermarkOpScala {
-  def main(args: Array[String]): Unit = {
-    val env = StreamExecutionEnvironment.getExecutionEnvironment
-    // 设置使用数据产生的时间：EventTime
-    env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime)
-    // 设置全局并行度为1
-    env.setParallelism(1)
-    // 设置自动周期性的产生watermark，默认值为200毫秒
-    env.getConfig.setAutoWatermarkInterval(200)
-    import org.apache.flink.api.scala._
-    val text = env.socketTextStream("localhost", 9001)
-    val tupStream = text.map(line => {
-      //将数据转换为tuple2的形式
-      //第一列表示具体的数据，第二列表示是数据产生的时间戳
-      val arr = line.split(",")
-      (arr(0), arr(1).toLong)
-    })
+```java
+public class WatermarkOutOfOrderDemo {
+    public static void main(String[] args) throws Exception {
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        // 设置使用数据产生的时间：EventTime 过期的
+//        env.setStreamTimeCharacteristic(TimeCharacteristic.EventTime);
+        // 设置全局并行度为1;
+        env.setParallelism(1);
+        // 设置自动周期性的产生watermark，默认值为200毫秒
+        env.getConfig().setAutoWatermarkInterval(200);
 
-    //分配(提取)时间戳和watermark
-    val watermarkStream = tupStream.assignTimestampsAndWatermarks(
-      WatermarkStrategy.forBoundedOutOfOrderness(Duration.ofSeconds(10)) //最大允许的数据乱序时间 10s
-      .withTimestampAssigner(new SerializableTimestampAssigner[(String, Long)] {
-        val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        var currentMaxTimestamp = 0L
-        //从数据流中抽取时间戳作为EventTime
-        override def extractTimestamp(element: (String, Long), recordTimestamp: Long): Long = {
-          val timestamp = element._2
-          currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp)
-          val currentWatermark = currentMaxTimestamp - 10000L
+        DataStream<Tuple2<String, Long>> tupStream = env.socketTextStream("localhost", 7777)
+                .map(line -> {
+                    //将数据转换为tuple2的形式
+                    //第一列表示具体的数据，第二列表示是数据产生的时间戳
+                    String[] arr = line.split(",");
+                    return Tuple2.of(arr[0], Long.parseLong(arr[1]));
+                }).returns(Types.TUPLE(Types.STRING, Types.LONG));
 
-          println("key:" + element._1 + "," + "eventTime:[" + element._2 + "|" + sdf.format(element._2) + "" +
-            "],currentMaxTimestamp:[" + currentWatermark + "|" + sdf.format(currentMaxTimestamp) + "" +
-            "],watermark:[" + currentWatermark + "|" + sdf.format(currentWatermark) + "]")
+        //分配(提取)时间戳和watermark
+        DataStream<Tuple2<String, Long>> watermarkStream = tupStream.assignTimestampsAndWatermarks(
+                WatermarkStrategy.<Tuple2<String, Long>>forBoundedOutOfOrderness(Duration.ofSeconds(10))
+                        .withTimestampAssigner(new SerializableTimestampAssigner<Tuple2<String, Long>>() {
+                            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                            long currentMaxTimestamp = 0L;
 
-          element._2
-        }
-      })
-    )
-    watermarkStream.keyBy(0)
-      //按照消息的EventTime分配窗口，和调用TimeWindow效果一样
-      .window(TumblingEventTimeWindows.of(Time.seconds(3)))
-      //使用全量聚合的方式处理window中的数据
-      .apply(new WindowFunction[(String, Long), String, Tuple, TimeWindow] {
-        override def apply(key: Tuple, window: TimeWindow, input: Iterable[(String, Long)], out: Collector[String]): Unit = {
-          val keyStr = key.toString
+                            @Override
+                            public long extractTimestamp(Tuple2<String, Long> element, long recordTimestamp) {
+                                long timestamp = element.f1;
+                                currentMaxTimestamp = Math.max(timestamp, currentMaxTimestamp);
+                                long currentWatermark = currentMaxTimestamp - 10000L;
 
-          val arrBuffer = ArrayBuffer[Long]()
+                                System.out.println("key:" + element.f0 + "," + "eventTime:[" + element.f1 + "|" + sdf.format(element.f1) + "" +
+                                        "],currentMaxTimestamp:[" + currentWatermark + "|" + sdf.format(currentMaxTimestamp) + "" +
+                                        "],watermark:[" + currentWatermark + "|" + sdf.format(currentWatermark) + "]");
 
-          input.foreach(tup => {
-            arrBuffer.append(tup._2)
-          })
+                                return element.f1;
+                            }
+                        })
+        );
 
-          val arr = arrBuffer.toArray
+        watermarkStream.keyBy(value -> value.f0)
+                //按照消息的 EventTime 分配窗口，和调用TimeWindow效果一样
+                .window(TumblingEventTimeWindows.of(Time.seconds(3)))
+                //使用全量聚合的方式处理window中的数据
+                .apply(new WindowFunction<Tuple2<String, Long>, String, String, TimeWindow>() {
+                    @Override
+                    public void apply(String keyStr, TimeWindow window, Iterable<Tuple2<String, Long>> input, Collector<String> out) throws Exception {
+                        ArrayList<Long> arrayList = new ArrayList<>();
+                        input.forEach(i -> arrayList.add(i.f1));
+                        Long[] arr = new Long[arrayList.size()];
+                        arr = arrayList.toArray(arr);
 
-          Sorting.quickSort(arr)
+                        Arrays.sort(arr);
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
-          val sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-          val result = keyStr + "," + arr.length + "," + sdf.format(arr.head) + "," + sdf.format(arr.last) + "," + sdf.format(window.getStart) + "," + sdf.format(window.getEnd)
-          out.collect(result)
-        }
-      }).print()
-    env.execute("WatermarkOpScala")
-  }
+                        String result = keyStr + "," + arr.length + "," + sdf.format(arr[0]) + "," + sdf.format(arr[arr.length - 1]) + "," + sdf.format(window.getStart()) + "," + sdf.format(window.getEnd());
+                        out.collect(result);
+                    }
+                }).print();
+
+        env.execute("WatermarkOpScala");
+    }
 }
 ```
 
@@ -1945,6 +1954,24 @@ threadId:74,key:0001,eventTime:[1790820697000|2026-10-01 10:11:37],currentMaxTim
 
 
 # 11、状态管理
+
+## 11.1、Flink的状态
+
+什么是Flink中的状态？为什么需要状态管理？
+
+​Flink运行计算任务的过程中，会有很多中间处理过程。在整个任务运行的过程中，中间存在着多个临时状态，比如说某些数据正在执行一个operator，但是只处理了一半数据，另外一般还没来得及处理，这也是一个状态。
+​假设运行过程中，由于某些原因，任务挂掉了，或者Flink中的多个task中的一个task挂掉了，那么它在内存中的状态都会丢失，如果这时候我们没有存储中间计算的状态，那么就意味着重启这个计算任务时，需要从头开始将原来处理过的数据重新计算一遍。如果存储了中间状态，就可以恢复到中间状态，并从该状态开始继续执行任务。这就是状态管理的意义。所以需要一种机制去保存记录执行过程中的中间状态，这种机制就是状态管理机制;
+
+## 11.2、状态分类
+
+Flink中包括两种基础状态：keyed state（keyed状态）和 operator state（operator状态）
+- keyed状态：总是与key一起，且只能用在keyedStream中。这个状态是跟特定的key绑定的，对KeyedStream流上的每一个key，可能都对应一个state。唯一组合成（operator–key，state）的形式；
+
+- operator状态：与Keyed State不同，Operator State跟一个特定operator的一个并发实例绑定，整个operator只对应一个state。相比较而言，在一个operator上，可能会有很多个key，从而对应多个keyed state。而且operator state可以应用于非keyed stream中。
+
+    举例来说，Flink中的Kafka Connector，就使用了operator state。它会在每个connector实例中，保存该实例中消费topic的所有(partition, offset)映射；
+
+## 11.3、
 
 # 12、Flink CEP
 

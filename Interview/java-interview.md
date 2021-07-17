@@ -1877,11 +1877,13 @@ EventLoop 是用来处理连接的生命周期中所发生的事情，EventLoop,
 
 # 九、Redis
 
-[Redis常见面试题](https://mp.weixin.qq.com/s/LAWkUOn2iQaDC_bxm_NwbQ)
+- [Redis常见面试题](https://mp.weixin.qq.com/s/LAWkUOn2iQaDC_bxm_NwbQ)
+- [Redis面试题](https://xie.infoq.cn/article/0a1848dd6e6ae390d14017f9f)
 
-## 1、redis如何用作缓存？ 如何确保不脏数据
+## 1、redis如何用作缓存？如何确保不脏数据
 
 - 设置过期时间
+- 缓存与数据一致性；
 
 ## 2、Redis 和 Memcache区别
 
@@ -2155,8 +2157,6 @@ MULTI、EXEC、DISCARD、WATCH
 ## 44、如何预防缓存穿透与雪崩？
 
 ## 45、Redis如何实现延时队列
-
-https://xie.infoq.cn/article/0a1848dd6e6ae390d14017f9f
 
 ## 46、Raft协议
 
