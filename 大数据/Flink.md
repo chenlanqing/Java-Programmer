@@ -1396,7 +1396,7 @@ stream
 
 ​在Flink的流式处理中，绝大部分的业务都会使用eventTime，一般只在eventTime无法使用时，才会被迫使用ProcessingTime或者IngestionTime。默认使用的是ProcessingTime。
 
-> 新版本默认是以 Event Time进行窗口划分的
+> 1.12版本开始默认是以 Event Time进行窗口划分的
 
 ## 9.1、Time案例分析
 
@@ -1462,6 +1462,7 @@ Window会不断产生，属于这个Window范围的数据会被不断加入到Wi
 - watermark是一条特殊的数据记录；
 - watermark必须单调递增，以确保任务的事件时间在向前推进；
 - watermark与数据的时间戳相关；
+- 本质是个时间戳
 
 ### 10.1.1、有序数据流的watermark
 
@@ -1490,9 +1491,20 @@ Window会不断产生，属于这个Window范围的数据会被不断加入到Wi
 
 ### 10.2.1、watermark的触发计算的条件
 
-watermark时间（`max_eventTime-t） >= window_end_time`；
+窗口计算的触发条件：
+- 窗口中有数据；
+- watermark >= 窗口的结束时间（其中watermark = 当前窗口的最大事件事件 - 最大允许的延迟时间或乱序时间；）
 
-在`[window_start_time,window_end_time)`中有数据存在。
+也就是说只要不断有数据来，就可以保证watermark是会一直上升/变大的，不会下降/减小的，所以最终一定会触发窗口计算的；
+
+**注意：**
+上面触发公式进行如下变形：
+- watermark >= 窗口的结束时间；
+- watermark = 当前窗口的最大事件时间 - 最大允许的延迟时间或乱序时间；
+- 当前窗口的最大事件时间 - 最大允许的延迟时间或乱序时间 >= 窗口的结束时间；
+- 当前窗口的最大事件时间 >= 窗口的结束时间 + 最大允许的延迟时间或乱序时间；
+
+
 
 ### 10.2.2、watermark的生成
 
