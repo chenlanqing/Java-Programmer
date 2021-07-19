@@ -677,6 +677,8 @@ int ISOLATION_SERIALIZABLE = Connection.TRANSACTION_SERIALIZABLE;
 
 ### 2.3、Spring事务传播行为
 
+事务管理的传播机制，是使用 ThreadLocal 实现的。因为 ThreadLocal 是线程私有的，所以 Spring 的事务传播机制是不能够跨线程的。在问到 Spring 事务管理是否包含子线程时，要能够想到面试官的真实意图；
+
 事务传播行为是指如果在开始当前事务之前，一个事务上下文已经存在了，此时有若干选项可以指定一个事务性方法的执行行为。在TransactionDefinition中同样定义了如下几种事务传播行为
 
 ```java

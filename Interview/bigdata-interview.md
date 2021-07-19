@@ -249,7 +249,11 @@ https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
 
 ### Flink中的窗口有哪些？各自的区别是什么？举例说明你在什么场景下选择的是哪种窗口，为什么要这么选择
 
+### Flink 如何实现 Exactly-once 语义？
 
+### Flink 时间类型的分类和各自的实现原理？
+
+### Flink 如何处理数据乱序和延迟？
 
 
 

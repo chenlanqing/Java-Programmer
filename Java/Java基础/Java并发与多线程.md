@@ -180,7 +180,7 @@ CPU、 内存、磁盘速度的差异，CPU缓存 -> 可见性，线程切换 ->
 - 原子性：互斥锁
 - 重排序：volatile、禁止重排序
 
-## 6、并发编程的三要素：
+## 6、并发编程的三要素
 
 - 原子性：指的是一个或者多个操作，要么全部执行并且在执行的过程中不被其他操作打断，要么就全部都不执行。
 - 可见性：指多个线程操作一个共享变量时，其中一个线程对变量进行修改后，其他线程可以立即看到修改的结果。
@@ -1818,7 +1818,7 @@ FastThreadLocalRunnable在执行完之后都会调用`FastThreadLocal.removeAll(
 FastThreadLocal并不是什么情况都快。 使用`FastThreadLocalThread`线程才会快，如果是普通线程还更慢！ 注意：使用`FastThreadLocalThread`线程才会快，如果是普通线程还更慢！
 
 Netty中有两个基准测试类：FastThreadLocalFastPathBenchmark、FastThreadLocalSlowPathBenchmark
-
+- ThreadLocalMap 在 rehash 的时候，并没有采用类似 HashMap 的数组+链表+红黑树的做法，它只使用了一个数组，使用开放寻址（遇到冲突，依次查找，直到空闲位置）的方法，这种方式是非常低效的；
 - FastThreadLocal操作元素的时候，使用常量下标在数组中进行定位元素来替代ThreadLocal通过哈希和哈希表，这个改动特别在频繁使用的时候，效果更加显著！
 - 想要利用上面的特征，线程必须是FastThreadLocalThread或者其子类，默认DefaultThreadFactory都是使用FastThreadLocalThread的
 - 只用在FastThreadLocalThread或者子类的线程使用FastThreadLocal才会更快，因为FastThreadLocalThread 定义了属性threadLocalMap类型是InternalThreadLocalMap。如果普通线程会借助ThreadLocal

@@ -250,6 +250,50 @@ LC 可以通过 recordStats 函数，对缓存加载和命中率等情况进行�
 - LRU：是最近最少使用的意思，当缓存容量达到上限，它会优先移除那些最久未被使用的数据，LRU是目前最常用的缓存算法
 - LFU：LFU 是最近最不常用的意思。相对于 LRU 的时间维度，LFU 增加了访问次数的维度。如果缓存满的时候，将优先移除访问次数最少的元素；而当有多个访问次数相同的元素时，则优先移除最久未被使用的元素
 
+### 7.3、池化技术
+
+比如线程池、数据库连接池
+- ThreadPoolExecutor
+- JedisPool
+- HikariCP：SpringBoot 中默认的数据库连接池
+
+总体来说，当你遇到下面的场景，就可以考虑使用池化来增加系统性能：
+- 对象的创建或者销毁，需要耗费较多的系统资源；
+- 对象的创建或者销毁，耗时长，需要繁杂的操作和较长时间的等待；
+- 对象创建后，通过一些状态重置，可被反复使用；
+
+### 7.4、大对象
+
+大对象为什么影响性能？
+- 第一，大对象占用的资源多，垃圾回收器要花一部分精力去对它进行回收；
+- 第二，大对象在不同的设备之间交换，会耗费网络流量，以及昂贵的 I/O；
+- 第三，对大对象的解析和处理操作是耗时的，对象职责不聚焦，就会承担额外的性能开销
+
+如何解决：
+- 如果你创建了比较大的对象，并基于这个对象生成了一些其他的信息，这个时候，一定要记得去掉和这个大对象的引用关系，比如String的subString方法，在jdk1.6之前的版本会存在问题；
+- 保持合适的对象粒度：比如，在缓存对象的时候，可以不采用string的形式，针对这种大粒度 json 信息，就可以采用打散的方式进行优化，使得每次更新和查询，都有聚焦的目标；采用 hash 结构；
+- Bitmap 把对象变小：比如Java 的 Boolean 占用的是多少位，在 Java 虚拟机规范里，描述是：将 Boolean 类型映射成的是 1 和 0 两个数字，它占用的空间是和 int 相同的 32 位。即使有的虚拟机实现把 Boolean 映射到了 byte 类型上，它所占用的空间，对于大量的、有规律的 Boolean 值来说，也是太大了；
+    BitSet 底层是使用 long 数组实现的，所以它的最小容量是 64。10 亿的 Boolean 值，只需要 128MB 的内存，下面既是一个占用了 256MB 的用户性别的判断逻辑，可以涵盖长度为 10 亿的 ID；
+    ```java
+    static BitSet missSet = new BitSet(010_000_000_000); 
+    static BitSet sexSet = new BitSet(010_000_000_000); 
+    String getSex(int userId) { 
+       boolean notMiss = missSet.get(userId); 
+       if (!notMiss) { 
+           //lazy fetch 
+           String lazySex = dao.getSex(userId); 
+           missSet.set(userId, true); 
+           sexSet.set(userId, "female".equals(lazySex)); 
+       } 
+       return sexSet.get(userId) ? "female" : "male"; 
+    }
+    ```
+
+### 7.5、设计模式优化性能
+
+- 如何找到动态代理慢逻辑的原因：使用 arthas 找到动态代理慢逻辑的具体原因；
+
+
 # 二、优化工具
 
 ## 1、Arthas

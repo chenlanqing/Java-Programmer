@@ -1301,8 +1301,32 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 	- 重置日期对象cal的属性值；
 	- 使用calb中中属性设置cal；
 	- 返回设置好的cal对象；
-  
+
   	这三步不是原子操作
+
+	如果需要在多线程环境下使用 SimpleDateFormat，可以使用 ThreadLocal 局部变量
+	```java
+	ThreadLocal<SimpleDateFormat> format = new ThreadLocal<SimpleDateFormat>(){
+        @Override
+        protected SimpleDateFormat initialValue() {
+            return new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        }
+    };
+    public static void main(String[] args) {
+       final GoodDateFormat faultDateFormat = new GoodDateFormat();
+       ExecutorService executor = Executors.newCachedThreadPool();
+       for(int i=0;i<1000;i++){
+           executor.submit(()-> {
+               try {
+                   System.out.println(faultDateFormat.format.get().parse("2020-07-25 08:56:40"));
+               } catch (ParseException e) {
+                   throw new IllegalStateException();
+               }
+           });
+       }
+       executor.shutdown();
+    }
+	```
 
 - 设计很差：Java的日期/时间类的定义并不一致，在`java.util`和`java.sql`的包中都有日期类，此外用于格式化和解析的类在`java.text`包中定义。`java.util.Date`同时包含日期和时间，而`java.sql.Date`仅包含日期，将其纳入`java.sql`包并不合理。另外这两个类都有相同的名字，这本身就是一个非常糟糕的设计。
 - 时区处理麻烦：日期类并不提供国际化，没有时区支持，因此Java引入了`java.util.Calendar`和`java.util.TimeZone`类，但他们同样存在上述所有的问题；
