@@ -151,7 +151,7 @@ private volatile int ioRatio = 50;
 
 Netty中最核心的概念是事件循环（EventLoop），即Ractor模式中的 Reactor，负责监听网络事件并调用事件处理器处理
 
-Netty可以同时支持Reactor单线程模型、多线程模型和主从Reactor多线程模型。
+Netty可以同时支持Reactor单线程模型、多线程模型和主从Reactor多线程模型。这个 Reactor 模型就是 Netty 设计的基础。在 Netty 中，Boss 线程对应着对连接的处理和分派，相当于 mainReactor；Worker 线程对应着 subReactor，使用多线程负责读写事件的分发和处理
 
 服务端启动的时候，创建了两个NioEventLoopGroup，他们实际是两个独立的Reactor线程池。一个用于接收客户端的TCP连接，另一个用于处理IO相关的读写操作或者执行系统的Task、定时任务Task；
 

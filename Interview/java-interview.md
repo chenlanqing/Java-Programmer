@@ -2736,6 +2736,13 @@ Caused by: org.xml.sax.SAXParseException; lineNumber: 47; columnNumber: 17; 元�
 
 所以把控制的逻辑独立出来成 TCP 层，让真正的接收端来处理，这样网络整体的传输效率就高了
 
+## 2、Http与底层TCP/IP连接的关系
+
+从几个方面：
+- http与tcp、ip的概念
+- http如何从tcp、ip中获取数据；
+- 数据传输方式；
+
 # 十六、操作系统
 
 https://juejin.cn/post/6934500044057870350

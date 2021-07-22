@@ -673,13 +673,13 @@ global concurrent marking的执行过程分为四个步骤：
 	- `G1MixedGCLiveThresholdPercent`：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet；
 	- `G1MixedGCCountTarget`：一次global concurrent marking之后，最多执行Mixed GC的次数；
 	- `G1OldCSetRegionThresholdPercent`：一次Mixed GC中能被选入CSet的最多old generation region数量
-	- `-XX:G1HeapRegionSize=n`设置Region大小，并非最终值
-	- `-XX:MaxGCPauseMillis`设置G1收集过程目标时间，默认值200ms，不是硬性条件
-	- `-XX:G1NewSizePercent`新生代最小值，默认值5%
-	- `-XX:G1MaxNewSizePercent`新生代最大值，默认值60%
-	- `-XX:ParallelGCThreads`STW期间，并行GC线程数
-	- `-XX:ConcGCThreads=n`并发标记阶段，并行执行的线程数
-	- `-XX:InitiatingHeapOccupancyPercent`设置触发标记周期的 Java 堆占用率阈值。默认值是45%
+	- `-XX:G1HeapRegionSize=n`：设置Region大小，并非最终值
+	- `-XX:MaxGCPauseMillis`：设置G1收集过程目标时间，默认值200ms，不是硬性条件
+	- `-XX:G1NewSizePercent`：新生代最小值，默认值5%
+	- `-XX:G1MaxNewSizePercent`：新生代最大值，默认值60%
+	- `-XX:ParallelGCThreads`：STW期间，并行GC线程数
+	- `-XX:ConcGCThreads=n`：并发标记阶段，并行执行的线程数
+	- `-XX:InitiatingHeapOccupancyPercent`：设置触发标记周期的 Java 堆占用率阈值。默认值是45%
 
 ### 7.4、最佳实践
 
