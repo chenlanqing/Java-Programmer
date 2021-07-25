@@ -748,10 +748,20 @@ SecondThread: 4
 
 ### 2.15、线程的优先级
 
+```java
+// 线程可以拥有的最小优先级
+public final static int MIN_PRIORITY = 1;
+// 线程默认优先级
+public final static int NORM_PRIORITY = 5;
+// 线程可以拥有的最大优先级
+public final static int MAX_PRIORITY = 10;
+```
+- 线程的优先级可以理解为线程抢占 CPU 时间片的概率，优先级越高的线程优先执行的概率就越大，但并不能保证优先级高的线程一定先执行
 - 线程的优先级具有继承性，比如A线程启动B线程，则B线程的优先级与A是一样的；
 - 优先级具有规则性：线程的优先级与代码执行顺序无关，CPU 尽量将执行资源让给优先级比较高的线程；高优先级的线程总是大部分先执行完的，但不代表高优先级的线程全部不执行完;
 - 优先级具有随机性：也就是优先级较高的线程不一定每次都先执行完；不要把线程的优先级与运行结果的顺序作为衡量的标准，线程优先级与打印顺序无关；
 - 优先级不应该去使用：因为不同的系统对优先级的支持不一样，可能有的系统会无视优先级；
+- 可以通过 Thread.setPriority() 来设置优先级
 
 ### 2.16、守护线程
 
@@ -772,7 +782,7 @@ public class Daemon extends Thread{
 
 ### 2.17、线程的生命周期
 
-**1、通用的线程生命周期**
+#### 2.17.1、通用的线程生命周期
 
 通用的线程生命周期可以用五态模型来描述：初始状态、可运行状态、运行状态、休眠状态、终止状态
 - 初始状态：指的是线程已经被创建，但是不允许分配CPU执行；这是编程语言层面的，在操作系统层面，真正的线程还没有创建；
@@ -780,47 +790,66 @@ public class Daemon extends Thread{
 - 当有空闲CPU时，操作系统会将其分配给一个处于可运行状态的线程，被分配到CPU的线程的状态转换成了运行状态；
 - 运行状态的线程如果调用了一个阻塞API或者等待某个事件，那么线程就会转换到休眠状态，同时释放CPU使用权 
 
-**2、Java线程的生命周期**
+#### 2.17.2、Java线程的生命周期
 
 Java语言中线程共有6种状态，其中 BLOCKED、WAITING、TIME_WAITING 是一种状态即休眠状态，一般称为阻塞状态，分别是：
 - NEW（初始化状态）
 - RUNNABLE（可运行/运行状态）：对应系统中的可运行、运行中；
-- BLOCKED（阻塞状态）
-- WAITING（无时限等待）
+- BLOCKED（阻塞状态）：可以理解为当前线程还处于活跃状态，只是在阻塞等待其他线程使用完某个锁资源；
+- WAITING（无时限等待）：是因为自身调用了 Object.wait() 或着是 Thread.join() 又或者是 LockSupport.park() 而进入等待状态，只能等待其他线程执行某个特定的动作才能被继续唤醒，比如当线程因为调用了 Object.wait() 而进入 WAITING 状态之后，则需要等待另一个线程执行 Object.notify() 或 Object.notifyAll() 才能被唤醒；
 - TIME_WAITING（有时限等待）
 - TERMINATED（终止状态）
 
-**3、状态转换过程**
+```java
+public enum State {
+    // 新建状态，线程被创建出来，但尚未启动时的线程状态
+    NEW,
+    // 就绪状态，表示可以运行的线程状态，但它在排队等待来自操作系统的 CPU 资源
+    RUNNABLE,
+    // 阻塞等待锁的线程状态，表示正在处于阻塞状态的线程
+    // 正在等待监视器锁，比如等待执行 synchronized 代码块或者
+    // 使用 synchronized 标记的方法
+    BLOCKED,
+    // 等待状态，一个处于等待状态的线程正在等待另一个线程执行某个特定的动作
+    WAITING,
+    // 计时等待状态，和等待状态 (WAITING) 类似，只是多了超时时间
+    TIMED_WAITING,
+    // 终止状态，表示线程已经执行完成
+    TERMINATED;
+}
+```
 
-- **（1）RUNNABLE 与 BLOCKED 状态转换**
+#### 2.17.3、状态转换过程
 
-	只有一种常见会触发这种转换，就是现场等待synchronized的隐式锁。synchronized修饰的代码同一时刻只允许一个线程执行，其他线程只能等待，在这种情况下，等待的线程就会从 RUNNABLE 转换到 BLOCKED状态，而当等待的线程获得 synchronized 隐式锁时，又会从BLOCKED转换为RUNNABLE状态；
+**（1）RUNNABLE 与 BLOCKED 状态转换**
 
-- **（2）RUNNABLE 与 WAITING 状态转换**
+只有一种常见会触发这种转换，就是现场等待synchronized的隐式锁。synchronized修饰的代码同一时刻只允许一个线程执行，其他线程只能等待，在这种情况下，等待的线程就会从 RUNNABLE 转换到 BLOCKED状态，而当等待的线程获得 synchronized 隐式锁时，又会从BLOCKED转换为RUNNABLE状态；
 
-	有三种场景会触发这种隐式转换：
-	- 获得 synchronized 隐式锁的线程，调用无参的 Object.wait方法；
-	- 调用无参数的Thread.join方法。等待的线程状态会从 RUNNABLE 转换到 WAITING。当线程执行完，原来等待它的线程又会从 WAITING 状态转换到 RUNNABLE；
-	- 调用 LockSupport.park() 方法。调用该方法，线程状态会从 RUNNABLR 转换到 WAITING。调用LockSupport.unpark(Thread thread)可以唤醒目标线程，目标线程的状态又会从 WAITING 转换到 RUNNABLE
+**（2）RUNNABLE 与 WAITING 状态转换**
 
-- **（3）RUNNABLE 与 TIME_WAITING 状态转换**
+有三种场景会触发这种隐式转换：
+- 获得 synchronized 隐式锁的线程，调用无参的 Object.wait方法；
+- 调用无参数的Thread.join方法。等待的线程状态会从 RUNNABLE 转换到 WAITING。当线程执行完，原来等待它的线程又会从 WAITING 状态转换到 RUNNABLE；
+- 调用 LockSupport.park() 方法。调用该方法，线程状态会从 RUNNABLR 转换到 WAITING。调用LockSupport.unpark(Thread thread)可以唤醒目标线程，目标线程的状态又会从 WAITING 转换到 RUNNABLE
 
-	有五种场景会触发这种转法：
-	- 调用带超时参数的 `Thread.sleep(long millis)`方法；
-	- 获得 synchronized 隐式锁的线程，调用到超时的 `Object.waiting(long timeout)`方法；
-	- 调用带超时参数的 Thread.join(long miliis)方法；
-	- 调用带超时参数的 `LockSupport.parkNanos(Object blocker, long deadline)`方法；
-	- 调用带超时参数的 `LockSupport.parkUntil(long deadline)`方法；
+**（3）RUNNABLE 与 TIME_WAITING 状态转换**
 
-	TIME_WAITING 和 WAITING状态的区别仅仅是触发条件多了超时参数；
+有五种场景会触发这种转法：
+- 调用带超时参数的 `Thread.sleep(long millis)`方法；
+- 获得 synchronized 隐式锁的线程，调用到超时的 `Object.waiting(long timeout)`方法；
+- 调用带超时参数的 Thread.join(long miliis)方法；
+- 调用带超时参数的 `LockSupport.parkNanos(Object blocker, long deadline)`方法；
+- 调用带超时参数的 `LockSupport.parkUntil(long deadline)`方法；
 
-- **（4）从 NEW 到 RUNNABLE 状态**
+TIME_WAITING 和 WAITING状态的区别仅仅是触发条件多了超时参数；
 
-	Java刚创建出来的Thread对象就是NEW状态。NEW状态的线程不会被操作系统调度，因此不会被执行。从NEW状态转换到RUNNABLE状态，只需要调用线程对象的start()方法即可；
+**（4）从 NEW 到 RUNNABLE 状态**
 
-- **（5）从 RUNNABLE 与 TERMINATED 状态**
+Java刚创建出来的Thread对象就是NEW状态。NEW状态的线程不会被操作系统调度，因此不会被执行。从NEW状态转换到RUNNABLE状态，只需要调用线程对象的start()方法即可；
 
-	线程执行完了或者因异常退出了run()方法，该线程结束生命周期
+**（5）从 RUNNABLE 与 TERMINATED 状态**
+
+线程执行完了或者因异常退出了run()方法，该线程结束生命周期
 
 ![image](image/thread-status.png)
 
