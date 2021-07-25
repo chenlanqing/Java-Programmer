@@ -1095,7 +1095,7 @@ window根据类型可以分为两种：
 
 特点：时间无对齐。窗口无固定长度
 
-​session窗口分配器通过session活动来对元素进行分组，session窗口跟滚动窗口和滑动窗口相比，不会有重叠和固定的开始时间和结束时间的情况，相反，当它在一个固定的时间周期内不再收到元素，即非活动间隔产生，那个这个窗口就会关闭。一个session窗口通过一个session间隔来配置，这个session间隔定义了非活跃周期的长度，当这个非活跃周期产生，那么当前的session将关闭并且后续的元素将被分配到新的session窗口中去；
+session窗口分配器通过session活动来对元素进行分组，session窗口跟滚动窗口和滑动窗口相比，不会有重叠和固定的开始时间和结束时间的情况，相反，当它在一个固定的时间周期内不再收到元素，即非活动间隔产生，那个这个窗口就会关闭。一个session窗口通过一个session间隔来配置，这个session间隔定义了非活跃周期的长度，当这个非活跃周期产生，那么当前的session将关闭并且后续的元素将被分配到新的session窗口中去；
 
 ![](image/Flink-会话窗口.png)
 
@@ -1394,7 +1394,7 @@ stream
 
 ![](image/Flink-Time关系图.png)
 
-​在Flink的流式处理中，绝大部分的业务都会使用eventTime，一般只在eventTime无法使用时，才会被迫使用ProcessingTime或者IngestionTime。默认使用的是ProcessingTime。
+在Flink的流式处理中，绝大部分的业务都会使用eventTime，一般只在eventTime无法使用时，才会被迫使用ProcessingTime或者IngestionTime。默认使用的是ProcessingTime。
 
 > 1.12版本开始默认是以 Event Time进行窗口划分的
 
@@ -1462,7 +1462,9 @@ Window会不断产生，属于这个Window范围的数据会被不断加入到Wi
 - watermark是一条特殊的数据记录；
 - watermark必须单调递增，以确保任务的事件时间在向前推进；
 - watermark与数据的时间戳相关；
-- 本质是个时间戳
+- 本质是个时间戳；
+
+> 总结：watermark触发窗口的计算，窗口计算的数据是处于窗口时间范围内的数据，左开右闭区间
 
 ### 10.1.1、有序数据流的watermark
 
@@ -1504,8 +1506,6 @@ Window会不断产生，属于这个Window范围的数据会被不断加入到Wi
 - 当前窗口的最大事件时间 - 最大允许的延迟时间或乱序时间 >= 窗口的结束时间；
 - 当前窗口的最大事件时间 >= 窗口的结束时间 + 最大允许的延迟时间或乱序时间；
 
-
-
 ### 10.2.2、watermark的生成
 
 通常情况下，在接收到source的数据之后，应该立刻生成watermark，但是也可以再使用Map或者Filter操作之后，再生成watermark
@@ -1518,7 +1518,7 @@ watermark的生成方式有两种：周期性产生和不间断产生
   有一种特殊情况，如果事先得知数据流的时间戳是单调递增的，也就是没有乱序，可以使用 AscendingTimestampExtractor，这个类会直接用数据的时间戳生成watermark；
 
   对于乱序数据：
-  ```
+  ```java
   inputStream.assignTimestampsAndWatermarks(new BoundedOutOfOrdernessTimestampExtractor<SensorReading>(Time.seconds(2)) {
         @Override
         public long extractTimestamp(SensorReading element) {
@@ -1967,25 +1967,536 @@ threadId:74,key:0001,eventTime:[1790820697000|2026-10-01 10:11:37],currentMaxTim
 
 # 11、状态管理
 
+- [Flink状态管理](https://blog.51cto.com/kinglab/2457257)
+
 ## 11.1、Flink的状态
 
 什么是Flink中的状态？为什么需要状态管理？
 
-​Flink运行计算任务的过程中，会有很多中间处理过程。在整个任务运行的过程中，中间存在着多个临时状态，比如说某些数据正在执行一个operator，但是只处理了一半数据，另外一般还没来得及处理，这也是一个状态。
+Flink运行计算任务的过程中，会有很多中间处理过程。在整个任务运行的过程中，中间存在着多个临时状态，比如说某些数据正在执行一个operator，但是只处理了一半数据，另外一般还没来得及处理，这也是一个状态。
 ​假设运行过程中，由于某些原因，任务挂掉了，或者Flink中的多个task中的一个task挂掉了，那么它在内存中的状态都会丢失，如果这时候我们没有存储中间计算的状态，那么就意味着重启这个计算任务时，需要从头开始将原来处理过的数据重新计算一遍。如果存储了中间状态，就可以恢复到中间状态，并从该状态开始继续执行任务。这就是状态管理的意义。所以需要一种机制去保存记录执行过程中的中间状态，这种机制就是状态管理机制;
+
+无状态计算与有状态计算：
+- 无状态计算，不需要考虑历史值；
+- 有状态计算，需要考虑历史值；
+
+需要有状态计算的场景：
+- 去重
+- 窗口计算
 
 ## 11.2、状态分类
 
-Flink中包括两种基础状态：keyed state（keyed状态）和 operator state（operator状态）
-- keyed状态：总是与key一起，且只能用在keyedStream中。这个状态是跟特定的key绑定的，对KeyedStream流上的每一个key，可能都对应一个state。唯一组合成（operator–key，state）的形式；
+从Flink是否接管角度：可以分为
+- ManagedState(托管状态)；
+- RawState(原始状态)
 
-- operator状态：与Keyed State不同，Operator State跟一个特定operator的一个并发实例绑定，整个operator只对应一个state。相比较而言，在一个operator上，可能会有很多个key，从而对应多个keyed state。而且operator state可以应用于非keyed stream中。
+从状态管理方式来看，ManagedState 与 RawState 状态的区别：
+- 从状态管理方式的方式来说，Managed State 由 Flink Runtime 管理，自动存储，自动恢复，在内存管理上有优化；而 Raw State 需要用户自己管理，需要自己序列化，Flink 不知道 State 中存入的数据是什么结构，只有用户自己知道，需要最终序列化为可存储的数据结构；
+- 从状态数据结构来说，Managed State 支持已知的数据结构，如 Value、List、Map 等。而 Raw State只支持字节数组 ，所有状态都要转换为二进制字节数组才可以；
+- 从推荐使用场景来说，Managed State 大多数情况下均可使用，而 Raw State 是当 Managed State 不够用时，比如需要自定义 Operator 时，才会使用 Raw State；
 
-    举例来说，Flink中的Kafka Connector，就使用了operator state。它会在每个connector实例中，保存该实例中消费topic的所有(partition, offset)映射；
+Flink中 Managed State 分为两种基础状态：keyed state（keyed状态）和 operator state（operator状态）
+- keyed状态：总是与key一起，且只能用在keyedStream中。这个状态是跟特定的key绑定的，对KeyedStream流上的每一个key，可能都对应一个state。唯一组合成（operator–key，state）的形式；支持的数据结构：ValueState、ListState、ReducingState、AggregationState、MapState
 
-## 11.3、
+- operator状态：与Keyed State不同，Operator State跟一个特定operator的一个并发实例绑定，整个operator只对应一个state。相比较而言，在一个operator上，可能会有很多个key，从而对应多个keyed state。而且operator state可以应用于非keyed stream中；ListState
 
-# 12、Flink CEP
+## 11.3、State的数据结构与API
+
+Flink为了方便不同分类的State的存储和管理,提供了如下的API/数据结构来存储State：
+
+![](image/Flink-状态数据结构与API.png)
+
+**Keyed State** 通过 RuntimeContext 访问，这需要 Operator 是一个RichFunction。保存Keyed state的数据结构：
+- `ValueState<T>`：这保留了一个可以更新和检索的值。即类型为T的单值状态。这个状态与对应的key绑定，是最简单的状态了。它可以通过update方法更新状态值，通过value()方法获取状态值。
+- `ListState<T>`：这保存了一个元素列表，即key上的状态值为一个列表。可以追加元素并检索Iterable所有当前存储的元素。可以通过add方法往列表中附加值；也可以通过get()方法返回一个Iterable<T>来遍历状态值。
+- `ReducingState<T>`：这保留了一个值，该值表示添加到状态的所有值的聚合。接口类似于ListState，但是添加的元素使用add(T)。每次调用add方法添加值的时候，会调用reduceFunction，最后合并到一个单一的状态值。
+- `AggregatingState<IN, OUT>`：这保留了一个值，该值表示添加到状态的所有值的聚合。和ReducingState不同的是，聚合类型可能与添加到状态的元素类型不同
+- `FoldingState<T, ACC>`：这保留了一个值，该值表示添加到状态的所有值的聚合。违背ReducingState，聚合类型可能与添加到状态的元素类型不同。接口类似于ListState但是添加的元素使用add(T)使用指定的FoldFunction.这个基本弃用，请用AggregatingState代替
+- `MapState<UK, UV>`：它保存了一个映射列表。可以将键值对放入状态并检索Iterable所有当前存储的映射。映射使用put(UK, UV)或`putAll(Map<UK, UV>)`添加元素。使用get(UK)获取元素。映射、键和值的可迭代视图可以分别使用entries(), keys()和values()
+
+需要注意的是，以上所述的State对象，仅仅用于与状态进行交互(更新、删除、清空等)，而真正的状态值，有可能是存在内存、磁盘、或者其他分布式存储系统中。相当于我们只是持有了这个状态的句柄；
+Flink通过StateDescriptor来定义一个状态。这是一个抽象类，内部定义了状态名称、类型、序列化器等基础信息：
+```
+ValueStateDescriptor
+ListStateDescriptor
+ReducingStateDescriptor
+FoldingStateDescriptor
+AggregatingStateDescriptor
+MapStateDescriptor
+```
+
+**Operator State** 需要自己实现 CheckpointedFunction 或 ListCheckpointed 接口。保存Operator state的数据结构：
+- ListState<T>
+- BroadcastState<K,V>
+
+举例来说，Flink中的FlinkKafkaConsumer，就使用了operator state。它会在每个connector实例中，保存该实例中消费topic的所有(partition, offset)映射
+
+## 11.4、代码示例
+
+使用状态管理基本流程，以keyed state为例：
+- 首先，普通Function接口是不支持状态管理的，也就是一般故障的情况下，状态并没有保存下来，后面需要将所有数据进行重新计算。如果需要支持状态管理，那么我们需要继承实现 RichFunction类。基本常用的function，flink都再封装了对应的RichFunction接口给我们使用，比如普通function中的MapFunction，对应的RichFunction抽象类为RichMapFunction。命名方式对应关系很简单，基本就是 xxxFunciotn -->RichxxxFunction；
+- 接着，需要在覆盖实现RichFunction中的对应的算子方法（如map、flatMap等），里面需要实现算子业务逻辑，并将对keyed state进行更新、管理。然后还要重写open方式，用于获取状态句柄；
+
+例如：
+```java
+class ValueStateMapFunction extends RichMapFunction<Tuple2<String, Long>, Tuple3<String, Long, Long>> {
+    private transient ValueState<Long> maxValue;
+    @Override
+    public Tuple3<String, Long, Long> map(Tuple2<String, Long> value) throws Exception {
+        Long current = value.f1;
+        Long history = maxValue.value();
+        if (history == null || current > history) {
+            history = current;
+            maxValue.update(history);
+            return Tuple3.of(value.f0, current, history);
+        }
+        return Tuple3.of(value.f0, current, history);
+    }
+    @Override
+    public void open(Configuration parameters) throws Exception {
+        ValueStateDescriptor<Long> valueStateDescriptor = new ValueStateDescriptor<Long>("maxValueState", Long.class);
+        maxValue = getRuntimeContext().getState(valueStateDescriptor);
+    }
+}
+```
+
+### 11.4.1、Keyed State
+
+使用ValueState计算最大值
+```java
+public class KeyedStateValueState {
+    public static void main(String[] args) throws Exception {
+        // 1、create execution environment
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        env.setParallelism(1);
+        // 2、source
+        DataStream<Tuple2<String, Long>> tupleDS = env.fromElements(
+                Tuple2.of("北京", 1L), Tuple2.of("上海", 2L), Tuple2.of("北京", 6L), Tuple2.of("上海", 8L), Tuple2.of("北京", 3L), Tuple2.of("上海", 4L)
+        );
+        // 3、transformation operation
+        SingleOutputStreamOperator<Tuple3<String, Long, Long>> result2 = tupleDS.keyBy(t -> t.f0)
+                .map(new RichMapFunction<Tuple2<String, Long>, Tuple3<String, Long, Long>>() {
+                    private transient ValueState<Long> maxValue;
+                    @Override
+                    public Tuple3<String, Long, Long> map(Tuple2<String, Long> value) throws Exception {
+                        Long current = value.f1;
+                        Long history = maxValue.value();
+                        if (history == null || current > history) {
+                            history = current;
+                            maxValue.update(history);
+                            return Tuple3.of(value.f0, current, history);
+                        }
+                        return Tuple3.of(value.f0, current, history);
+                    }
+                    @Override
+                    public void open(Configuration parameters) throws Exception {
+                        ValueStateDescriptor<Long> valueStateDescriptor = new ValueStateDescriptor<Long>("maxValueState", Long.class);
+                        maxValue = getRuntimeContext().getState(valueStateDescriptor);
+                    }
+                });
+
+        // 4、sink
+        result2.printToErr();
+
+        // 5、execute
+        env.execute();
+    }
+}
+```
+
+### 11.4.2、Operator State
+
+```java
+public class OperateStateListState {
+    public static void main(String[] args) throws Exception {
+        // 1、create execution environment
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setParallelism(1);
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        env.setParallelism(1);//并行度设置为1方便观察
+        // 下面的Checkpoint和重启策略配置先直接使用,
+        env.enableCheckpointing(1000);//每隔1s执行一次Checkpoint
+        env.setStateBackend(new FsStateBackend("file:///Users/bluefish/Documents/temp/flink/checkpoint"));
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        //固定延迟重启策略: 程序出现异常的时候，重启2次，每次延迟3秒钟重启，超过2次，程序退出
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(2, 3000));
+
+        // 2、source
+        env.addSource(new MyKafkaSource()).setParallelism(1).print();
+        env.execute();
+    }
+    //使用OperatorState中的ListState模拟KafkaSource进行offset维护
+    public static class MyKafkaSource extends RichParallelSourceFunction<String> implements CheckpointedFunction {
+        private boolean flag = true;
+        //-1.声明ListState
+        private ListState<Long> offsetState = null; //用来存放offset
+        private Long offset = 0L;//用来存放offset的值
+        //-2.初始化/创建ListState
+        @Override
+        public void initializeState(FunctionInitializationContext context) throws Exception {
+            ListStateDescriptor<Long> stateDescriptor = new ListStateDescriptor<>("offsetState", Long.class);
+            offsetState = context.getOperatorStateStore().getListState(stateDescriptor);
+        }
+        //-3.使用state
+        @Override
+        public void run(SourceContext<String> ctx) throws Exception {
+            while (flag) {
+                Iterator<Long> iterator = offsetState.get().iterator();
+                if (iterator.hasNext()) {
+                    offset = iterator.next();
+                }
+                offset += 1;
+                int subTaskId = getRuntimeContext().getIndexOfThisSubtask();
+                ctx.collect("subTaskId:" + subTaskId + ",当前的offset值为:" + offset);
+                Thread.sleep(1000);
+
+                //模拟异常
+                if (offset % 5 == 0) {
+                    System.err.println(">>>> 出现bug了: " + offset);
+                    throw new Exception("bug出现了.....");
+                }
+            }
+        }
+        //-4.state持久化
+        //该方法会定时执行将state状态从内存存入Checkpoint磁盘目录中
+        @Override
+        public void snapshotState(FunctionSnapshotContext context) throws Exception {
+            offsetState.clear();//清理内容数据并存入Checkpoint磁盘目录中
+            offsetState.add(offset);
+        }
+        @Override
+        public void cancel() {
+            flag = false;
+        }
+    }
+}
+```
+
+# 12、容错机制-checkpoint
+
+## 12.1、概述
+
+在使用了flink的状态管理之后，因为此时所有的state的读写都只是在task本地的内存中进行，也就是state数据此时只存储在内存中。假设当任务出现故障之后，这些在内存中的state数据也会丢失，就无法恢复了。所以需要一种机制来保障这些state数据的不丢失，这也就是容错机制。flink通过checkpoint来实现。flink开启了checkpoint之后，会定时将状态数据的快照持久存储到指定的 statebackend；
+
+## 12.2、checkpoint基本原理
+
+- flink定期对整个job任务进行快照，将快照产生的备份数据保存到指定的statebacked中。
+- 当出现故障时，将job 的状态恢复到最近的一个快照点。
+- Flink 的容错机制的核心部分是生成分布式数据流和operator状态一致的快照。这些快照充当checkpoint（检查点）, 系统可以早发生故障时将其回滚。
+- 分布式快照是由 Chandy-Lamport 算法实现的。
+- 每个checkpoint由checkpoint ID和timestamp来唯一标识，其中checkpoint ID可以是standalone（基于内存，保存在jobmanager内存中）的，也可能是基于ZK的；
+
+使用checkpoint的先决条件
+- 持续的数据源，比如消息队列或者文件系统上的文件等；
+- 状态数据的持久化存储，比如采用分布式文件系统存储状态数据；
+
+## 12.3、checkpoint执行流程
+
+### 12.3.1、简单流程
+
+![](image/Flink-checkpoint-执行流程.png)
+
+- Flink的JobManager创建CheckpointCoordinator
+- Coordinator向所有的SourceOperator发送Barrier栅栏(理解为执行Checkpoint的信号)
+- SourceOperator接收到Barrier之后,暂停当前的操作(暂停的时间很短,因为后续的写快照是异步的),并制作State快照, 然后将自己的快照保存到指定的介质中(如HDFS), 一切 ok之后向Coordinator汇报并将Barrier发送给下游的其他Operator
+- 其他的如TransformationOperator接收到Barrier,重复第2步,最后将Barrier发送给Sink
+- Sink接收到Barrier之后重复第2步
+- Coordinator接收到所有的Operator的执行ok的汇报结果,认为本次快照执行成功
+
+**注意**
+- 在往介质(如HDFS)中写入快照数据的时候是异步的(为了提高效率)
+- 分布式快照执行时的数据一致性由Chandy-Lamport algorithm分布式快照算法保证! 
+
+Flink中的Checkpoint底层使用了Chandy-Lamport algorithm分布式快照算法可以保证数据的在分布式环境下的一致性! https://zhuanlan.zhihu.com/p/53482103
+
+Chandy-Lamport algorithm算法的作者也是ZK中Paxos 一致性算法的作者：https://www.cnblogs.com/shenguanpu/p/4048660.html
+
+Flink中使用Chandy-Lamport algorithm分布式快照算法取得了成功,后续Spark的StructuredStreaming也借鉴了该算法
+
+### 12.3.2、复杂流程
+
+（1）Checkpoint Coordinator 向所有 source 节点 trigger Checkpoint
+
+（2）source 节点向下游广播 barrier，这个 barrier 就是实现 Chandy-Lamport 分布式快照算法的核心，下游的 task 只有收到所有 input 的 barrier 才会执行相应的 Checkpoint；
+
+（3）当 task 完成 state 备份后，会将备份数据的地址（state handle）通知给 Checkpoint coordinator
+
+（4）下游的 sink 节点收集齐上游两个 input 的 barrier 之后，会执行本地快照，(栅栏对齐)
+
+（5）同样的，sink 节点在完成自己的 Checkpoint 之后，会将 state handle 返回通知 Coordinator
+
+（6）最后，当 Checkpoint coordinator 收集齐所有 task 的 state handle，就认为这一次的 Checkpoint 全局完成了，向持久化存储中再备份一个 Checkpoint meta 文件；
+
+## 12.4、checkpoint与state
+
+**state：**
+- 维护/存储的是某一个Operator的运行的状态/历史值,是维护在内存中!
+- 一般指一个具体的Operator的状态(operator的状态表示一些算子在运行的过程中会产生的一些历史结果,如前面的maxBy底层会维护当前的最大值,也就是会维护一个keyedOperator,这个State里面存放就是maxBy这个Operator中的最大值)
+- State数据默认保存在Java的堆内存中/TaskManage节点的内存中；
+- State可以被记录，在失败的情况下数据还可以恢复；
+
+**checkpoint：**
+- 某一时刻，Flink中所有的Operator的当前State的全局快照，一般存在磁盘上；
+- 表示了一个Flink Job在一个特定时刻的一份全局状态快照，即包含了所有Operator的状态；
+- 可以理解为Checkpoint是把State数据定时持久化存储了：比如KafkaConsumer算子中维护的Offset状态,当任务重新恢复的时候可以从Checkpoint中获取；
+
+## 12.5、StateBackend
+
+Checkpoint其实就是Flink中某一时刻,所有的Operator的全局快照，那么快照应该要有一个地方进行存储，而这个存储的地方叫做StateBackend
+
+Flink中的State Backend 有很多种：
+- MemoryStateBackend(内存状态)
+- FsStateBackend(文件状态)
+- RocksDBStateBackend(RocksDB状态)
+
+### 12.5.1、MemoryStateBackend
+
+**概念：**
+- MemoryStateBackend将State作为Java对象保存（在堆内存），存储着key/value状态、window运算符、触发器等的哈希表。
+- 在Checkpoint时，State Backend将对State进行快照，并将其作为checkpoint 发送到 JobManager 机器上，JobManager 将这个 State 数据存储在Java堆内存。
+- MemoryStateBackend 默认使用异步快照，来避免阻塞管道。如果需要修改，可以在 MemoryStateBackend 的构造函数将布尔值改为false（仅用于调试）；
+- state 的存储在 TaskManager上；checkpoint 存储在 JobManager上；
+
+**注意点：**
+- 异步快照方式：operator操作符在做快照的同时也会处理新流入的数据，默认异步方式；
+- 同步快照方式：operator操作符在做快照的时候，不会处理新流入的数据，同步快照会增加数据处理的延迟度；
+
+**局限性：**
+- 单次状态大小最大（maxState）默认被限制为5MB，这个值可以通过构造函数来更改；
+- 无论单次状态大小最大（maxState）被限制为多少，都不可用大过akka的frame大小；akka的framesize默认是10M
+- 聚合的状态都会写入 jobmanager 的内存，总大小不超过 JobManager 的内存；
+
+**适用场景：**
+- 本地开发和调试
+- 状态比较少的作业
+
+> 注意：不推荐在生产场景使用
+
+### 12.5.2、FsStateBackend
+
+生产环境最常用
+
+**概念：**
+- FsStateBackend将正在运行的数据（state）保存在TaskManager的内存中。
+- 在checkpoint时，它将State的快照写入文件系统对应的目录下的文件中。
+- 最小元数据存储在JobManager的内存中（如果是高可用模式下，元数据存储在checkpoint中）。
+- FsStateBackend默认使用异步快照，来避免阻塞处理的管道。如果需要禁用，在FsStateBackend构造方法中将布尔值设为false
+
+**适用场景：**
+- 状态比较大, 窗口比较长, 大的 KV 状态
+- 需要做 HA 的场景
+
+**使用文件系统保存时：**
+- 如果使用HDFS，则初始化FsStateBackend时，需要传入以 `hdfs://`开头的路径(即: `new FsStateBackend("hdfs:///hacluster/checkpoint")`)， 
+- 如果使用本地文件，则需要传入以`file://`开头的路径(即:`new FsStateBackend("file:///Data"`))。
+
+### 12.5.3、RocksDBStateBackend
+
+**概念：**
+- 此种方式kv state需要由rockdb数据库来管理，这是和内存或file backend最大的不同，即状态数据是直接写入到rockdb的，不像前面两种，只有在checkpoint的时候才会将数据保存到指定的backend。
+- RocksDBStateBackend使用RocksDB数据库保存数据，这个数据库保存在TaskManager的数据目录中。注意的是：RocksDB，它是一个高性能的Key-Value数据库。数据会放到先内存当中，在一定条件下触发写到磁盘文件上。
+- 在 checkpoint时, 整个 RocksDB数据库的数据会快照一份, 然后存到配置的文件系统中(一般是 hdfs)。同时, Apache Flink将一些最小的元数据存储在 JobManager 的内存或者 Zookeeper 中(对于高可用性情况)。RocksD始终配置为执行异步快照
+
+**容量限制：**
+- 单TaskManager上的state总量不超过它的内存 + 磁盘；
+- 单 key 大于 2G；
+- 总大小不超过配置的文件系统容量；
+
+**适用场景：**
+- RocksDBStateBackend适用于非常大的状态，长窗口、大键值状态的高可用作业；
+- RocksDBStateBackend是目前唯一可用于支持有状态流处理应用程序的增量检查点；
+
+## 12.6、配置checkpoint
+
+### 12.6.1、全局配置
+
+在`conf/flink-conf.yaml`中可以配置的参数
+
+| 参数                           | 默认值 | 作用                                                         |
+| ------------------------------ | ------ | ------------------------------------------------------------ |
+| state.backend                  | (无)   | 用于存储状态的检查点数据的后端。有三种backend，如：jobmanager(MemoryStateBackend，默认是这个)，filesystem(FsStateBackend)，rocksdb(RocksDBStateBackend)。 |
+| state.backend.async            | true   | 是否异步快照                                                 |
+| state.checkpoints.dir          | 无     | checkpoint的目录，例如：hdfs://192.168.1.1/checkpoint        |
+| state.backend.incremental      | false  | 是否选择增量检查点。即每次快照都只存储上一个检查点的差异数据，而不是完整的数据。可能某些后端不支持这种方式 |
+| state.checkpoints.num-retained | 1      | 要保留的已完成检查点的最大数量。                             |
+| state.savepoints.dir           | 无     | 保存点默认目录                                               |
+
+### 12.6.2、代码配置
+
+```java
+//TODO ===========Checkpoint参数设置====
+//===========类型1:必须参数=============
+//设置Checkpoint的时间间隔为1000ms做一次Checkpoint/其实就是每隔1000ms发一次Barrier!
+env.enableCheckpointing(1000);
+//设置State状态存储介质/状态后端
+//Memory:State存内存,Checkpoint存内存--开发不用!
+//Fs:State存内存,Checkpoint存FS(本地/HDFS)--一般情况下使用
+//RocksDB:State存RocksDB(内存+磁盘),Checkpoint存FS(本地/HDFS)--超大状态使用,但是对于状态的读写效率要低一点
+/*if(args.length > 0){
+    env.setStateBackend(new FsStateBackend(args[0]));
+}else {
+    env.setStateBackend(new FsStateBackend("file:///D:\\data\\ckp"));
+}*/
+if (SystemUtils.IS_OS_WINDOWS) {
+    env.setStateBackend(new FsStateBackend("file:///D:/ckp"));
+} else {
+    env.setStateBackend(new FsStateBackend("hdfs://node1:8020/flink-checkpoint/checkpoint"));
+}
+//===========类型2:建议参数===========
+//设置两个Checkpoint 之间最少等待时间,如设置Checkpoint之间最少是要等 500ms(为了避免每隔1000ms做一次Checkpoint的时候,前一次太慢和后一次重叠到一起去了)
+//如:高速公路上,每隔1s关口放行一辆车,但是规定了两车之前的最小车距为500m
+env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);//默认是0
+//设置如果在做Checkpoint过程中出现错误，是否让整体任务失败：true是  false不是
+//env.getCheckpointConfig().setFailOnCheckpointingErrors(false);//默认是true
+env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);//默认值为0，表示不容忍任何检查点失败
+//设置是否清理检查点,表示 Cancel 时是否需要保留当前的 Checkpoint，默认 Checkpoint会在作业被Cancel时被删除
+//ExternalizedCheckpointCleanup.DELETE_ON_CANCELLATION：true,当作业被取消时，删除外部的checkpoint(默认值)
+//ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION：false,当作业被取消时，保留外部的checkpoint
+env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+
+//===========类型3:直接使用默认的即可===============
+//设置checkpoint的执行模式为EXACTLY_ONCE(默认)
+env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+//设置checkpoint的超时时间,如果 Checkpoint在 60s内尚未完成说明该次Checkpoint失败,则丢弃。
+env.getCheckpointConfig().setCheckpointTimeout(60000);//默认10分钟
+//设置同一时间有多少个checkpoint可以同时执行
+//env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);//默认为1
+```
+
+> 注意：RocksDBStateBackend还需要引入依赖
+```xml
+<dependency>
+    <groupId>org.apache.flink</groupId>
+    <artifactId>flink-statebackend-rocksdb_2.11</artifactId>
+    <version>1.7.2</version>
+</dependency>
+```
+
+## 12.7、状态恢复与重启
+
+重启策略分类
+- 默认重启策略
+- 无重启策略
+- 固定延迟重启策略--开发中使用
+- 失败率重启策略--开发偶尔使用
+
+### 12.7.1、设置重启策略
+
+**配置文件：**
+
+在`flink-conf.yml`中可以进行配置,示例如下:
+```yml
+restart-strategy: fixed-delay
+restart-strategy.fixed-delay.attempts: 3
+restart-strategy.fixed-delay.delay: 10 s
+```
+
+**代码设置：**
+
+在代码中配置的只是针对单个任务的配置：
+```java
+env.setRestartStrategy(RestartStrategies.fixedDelayRestart(
+    3, // 重启次数
+    Time.of(10, TimeUnit.SECONDS) // 延迟时间间隔
+));
+```
+
+### 12.7.2、重启策略分类
+
+**1、默认重启策略**
+
+如果配置了Checkpoint，而没有配置重启策略，那么代码中出现了非致命错误时，程序会无限重启；
+
+**2、无重启策略**
+
+job直接失败，不会尝试进行重启
+- 配置设置：`restart-strategy: none`
+- 代码设置：`env.setRestartStrategy(RestartStrategies.noRestart())`
+
+**3、固定重启策略-开发中使用**
+
+比如需要设置：如果job失败，重启3次，每次间隔10，可以按照如下方式设置
+- 配置中设置：重启策略可以配置flink-conf.yaml的下面配置参数来启用，作为默认的重启策略
+    ```yml
+    restart-strategy: fixed-delay 
+    restart-strategy.fixed-delay.attempts: 3 
+    restart-strategy.fixed-delay.delay: 10 s
+    ```
+- 代码中设置:
+    ```java
+    env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, // 最多重启3次数   
+        Time.of(10, TimeUnit.SECONDS) // 重启时间间隔 
+    ));
+    ```
+
+**失败率重启策略-开发偶尔使用**
+
+比如需要设置：如果5分钟内job失败不超过三次，自动重启，每次间隔10s (如果5分钟内程序失败超过3次，则程序退出)
+- 配置中设置：重启策略可以配置flink-conf.yaml的下面配置参数来启用，作为默认的重启策略
+    ```yml
+    restart-strategy:failure-rate 
+    restart-strategy.failure-rate.max-failures-per-interval: 3 
+    restart-strategy.failure-rate.failure-rate-interval: 5 min 
+    restart-strategy.failure-rate.delay: 10 s
+    ```
+- 代码中设置
+    ```java
+    env.setRestartStrategy(RestartStrategies.failureRateRestart(3, // 每个测量时间间隔最大失败次数   
+        Time.of(5, TimeUnit.MINUTES), //失败率测量的时间间隔   
+        Time.of(10, TimeUnit.SECONDS) // 两次连续重启的时间间隔 
+    ));
+    ```
+
+## 12.8、savepoint
+
+### 12.8.1、概念
+
+在实际开发中，可能会遇到这样的情况：如要对集群进行停机维护/扩容...
+
+那么这时候需要执行一次Savepoint，也就是执行一次手动的Checkpoint/也就是手动的发一个barrier栅栏，那么这样的话，程序的所有状态都会被执行快照并保存，当维护/扩容完毕之后，可以从上一次Savepoint的目录中进行恢复；
+
+类似与玩游戏的时候，遇到难关了/遇到boss了，赶紧手动存个档，然后接着玩，如果失败了，赶紧从上次的存档中恢复，然后接着玩；
+
+### 12.8.2、savepoint 与 checkpoint
+
+|              | checkpoint                                   | savepoint                                                    |
+| ------------ | -------------------------------------------- | ------------------------------------------------------------ |
+| 触发管理方式 | 由Flink自动触发管理                          | 由用手动触发并管理                                           |
+| 主要用途     | 在Task发送异常时快速恢复，比如网络抖动等     | 有计划的进行备份，是作业能停止后恢复，比如修改代码、调整并发等 |
+| 特点         | 轻量、自动从故障中恢复、在作业停止后默认清除 | 持久、以标准格式存储，允许代码或配置发生改变、手动触发从savepoint的恢复 |
+
+- 目标：从概念上讲，savepoint 和 checkpoint的不同之处类似于传统数据库的数据库中备份和恢复日志的不同，checkpoint 的作用是确保程序有潜在失败的可能，可以正常恢复；相反，savepoint的作用是让用户手动触发备份后，通过重启来恢复程序；
+
+- 实现：checkpoint 和 savepoint 在实现上有所不同。checkpoint轻量并且快速，可以利用底层状态存储的各种特性来实现快速备份和恢复；savepoint 更注重数据的可移植性，并且支持对任务的修改，同时也让savepoint的备份和恢复成本相对较高；
+
+- 生命周期：checkpoint本身是定时自动触发的，它们的维护、创建和删除都是由Flink自身操作的，不需要任何用户的干预；savepoint的触发、删除和管理都是用户手动触发；
+
+## 12.9、演示代码
+
+### 12.9.1、checkpoint的配置例子
+
+### 12.9.2、状态恢复例子
+
+### 12.9.3、savepoint例子
+
+### 12.9.4、UI界面操作
+
+
+# 13、Flink CEP
+
+
+
+
+
+
+
+
+
+
+
+
 
 # 11、Flink与Kafka
 
