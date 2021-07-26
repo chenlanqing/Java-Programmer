@@ -2777,6 +2777,98 @@ binlog 方案
 
 https://mp.weixin.qq.com/s/aCWkUiE1-h5mtDrqEiPKHQ
 
+# 十八、其他
+
+## 1、lombok实现原理
+
+Lombok，它属于 Java 的一个热门工具类，使用它可以有效的解决代码工程中那些繁琐又重复的代码，如 Setter、Getter、toString、equals 和 hashCode 等等，向这种方法都可以使用 Lombok 注解来完成
+
+Lombok 的实现和反射没有任何关系，反射是程序在运行期的一种自省（introspect）能力，而 Lombok 的实现是在编译期就完成了，为什么这么说呢？
+
+我们可以打开你使用Getter和Setter，原始类是：
+```java
+@Data
+public class Person {
+    private Integer id;
+    private String name;
+}
+```
+可以打开其编译的类，使用了 Lombok 的 @Data 注解后的源码编译的class如下：
+```java
+public class Person {
+    private Integer id;
+    private String name;
+    public Person() {
+    }
+    public Integer getId() {
+        return this.id;
+    }
+    public String getName() {
+        return this.name;
+    }
+    public void setId(Integer id) {
+        this.id = id;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public boolean equals(Object o) {
+        if (o == this) {
+            return true;
+        } else if (!(o instanceof Person)) {
+            return false;
+        } else {
+            Person other = (Person)o;
+            if (!other.canEqual(this)) {
+                return false;
+            } else {
+                Object this$id = this.getId();
+                Object other$id = other.getId();
+                if (this$id == null) {
+                    if (other$id != null) {
+                        return false;
+                    }
+                } else if (!this$id.equals(other$id)) {
+                    return false;
+                }
+
+                Object this$name = this.getName();
+                Object other$name = other.getName();
+                if (this$name == null) {
+                    if (other$name != null) {
+                        return false;
+                    }
+                } else if (!this$name.equals(other$name)) {
+                    return false;
+                }
+
+                return true;
+            }
+        }
+    }
+    protected boolean canEqual(Object other) {
+        return other instanceof Person;
+    }
+    public int hashCode() {
+        int PRIME = true;
+        int result = 1;
+        Object $id = this.getId();
+        int result = result * 59 + ($id == null ? 43 : $id.hashCode());
+        Object $name = this.getName();
+        result = result * 59 + ($name == null ? 43 : $name.hashCode());
+        return result;
+    }
+    public String toString() {
+        return "Person(id=" + this.getId() + ", name=" + this.getName() + ")";
+    }
+}
+```
+可以看出 Lombok 是在编译期就为我们生成了对应的字节码；其实 Lombok 是基于 Java 1.6 实现的 JSR 269: Pluggable Annotation Processing API 来实现的，也就是通过编译期自定义注解处理器来实现的，它的执行步骤如下：
+
+![](image/Lombok-执行过程.png)
+
+从流程图中可以看出，在编译期阶段，当 Java 源码被抽象成语法树（AST）之后，Lombok 会根据自己的注解处理器动态修改 AST，增加新的代码（节点），在这一切执行之后就生成了最终的字节码（.class）文件，这就是 Lombok 的执行原理；
+
 # 其他面试题
 
 1. volatile修饰的user对象，里面有两个属性，int a=1和int b=2.（注意:a，b没有被volatile修饰） 这个user对象是另外一个对象Tasker的成员变量。然后tasker对象已经在程序中运行起来了（一个线程运行，我们叫A线程吧）。紧接着又有另外一个线程（B线程）修改了user对象里的a属性，把1修改成了3；那么请问，A线程能否第一时间感知到a属性发生变化呢，也就是知道他变成了3。

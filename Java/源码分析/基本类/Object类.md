@@ -7,13 +7,17 @@
 
 clone()可以产生一个相同的类并且返回给调用者
 
+Object 对 clone() 方法的约定有三条：
+- 对于所有对象来说，`x.clone() !=x` 应当返回 true，因为克隆对象与原对象不是同一个对象；
+- 对于所有对象来说，`x.clone().getClass() == x.getClass()` 应当返回 true，因为克隆对象与原对象的类型是一样的；
+- 对于所有对象来说，`x.clone().equals(x)` 应当返回 true，因为使用 equals 比较时，它们的值都是相同的；
+
 ## 1.2、clone()工作原理
 
 Object将clone()作为一个本地方法来实现，这意味着它的代码存放在本地的库中；当代码执行的时候，将会检查调用对象的类(或者父类)是否实现了`java.lang.Cloneable`接口(Object类不实现Cloneable)；如果没有实现这个接口，clone()将会抛出一个检查异常：`java.lang.CloneNotSupportedException`，如果实现了这个接口，clone()会创建一个新的对象，并将原来对象的内容复制到新对象，最后返回这个新对象的引用	
 ```java
 public class CloneDemo implements Cloneable {
 	int x;
-
 	public static void main(String[] args) throws CloneNotSupportedException {
 		CloneDemo cd = new CloneDemo();
 		cd.x = 5;
@@ -51,10 +55,12 @@ public class CloneDemo {
 
 ## 1.4、浅克隆
 
-- 浅克隆(也叫做浅拷贝)仅复制了这个对象本身的成员变量，该对象如果引用了其他对象的话，也不对其复制。上述代码演示了浅克隆；新的对象中的数据包含在了这个对象本身中，不涉及对别的对象的引用；
+- 浅克隆（Shadow Clone）是把原型对象中成员变量为值类型的属性都复制给克隆对象，把原型对象中成员变量为引用类型的引用地址也复制给克隆对象，也就是原型对象中如果有成员变量为引用对象，则此引用对象的地址是共享给原型对象和克隆对象的；
 - 如果一个对象中的所有成员变量都是原始类型，并且其引用了的对象都是不可改变的(大多情况下都是)时，使用浅克隆效果很好！但是，如果其引用了可变的对象，那么这些变化将会影响到该对象和它克隆出的所有对象。
 
 ***浅克隆在复制引用了可变对象的对象时存在着问题，克隆后的对象修改，同样会影响到被克隆的对象***
+
+Arrays.copyOf()是浅克隆
 	
 ## 1.5、深克隆
 
