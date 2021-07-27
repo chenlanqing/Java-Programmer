@@ -170,7 +170,6 @@ protected List<AutoConfigurationImportFilter> getAutoConfigurationImportFilters(
 	public SpringApplication(Class<?>... primarySources) {
 		this(null, primarySources);
 	}
-
 	public SpringApplication(ResourceLoader resourceLoader, Class<?>... primarySources) {
 		this.resourceLoader = resourceLoader;
 		Assert.notNull(primarySources, "PrimarySources must not be null");
@@ -240,7 +239,7 @@ protected List<AutoConfigurationImportFilter> getAutoConfigurationImportFilters(
 	- 使用SpringFactoriesLoader在应用的classpath中查找并加载所有可用的ApplicationContextInitializer。
 	- 使用SpringFactoriesLoader在应用的classpath中查找并加载所有可用的ApplicationListener。
 	- 推断并设置main方法的定义类。
-- 2） SpringApplication实例初始化完成并且完成设置后，就开始执行run方法的逻辑了，方法执行伊始，首先遍历执行所有通过SpringFactoriesLoader可以查找到并加载的SpringApplicationRunListener。调用它们的started()方法，告诉这些SpringApplicationRunListener，“嘿，SpringBoot应用要开始执行咯！”。
+- 2） SpringApplication实例初始化完成并且完成设置后，就开始执行run方法的逻辑了，方法执行开水，首先遍历执行所有通过SpringFactoriesLoader可以查找到并加载的SpringApplicationRunListener。调用它们的started()方法，告诉这些SpringApplicationRunListener，“嘿，SpringBoot应用要开始执行咯！”。
 - 3） 创建并配置当前Spring Boot应用将要使用的Environment（包括配置要使用的PropertySource以及Profile）。
 - 4） 遍历调用所有SpringApplicationRunListener的`environmentPrepared()`的方法，告诉他们：“当前SpringBoot应用使用的Environment准备好了咯！”。
 - 5） 如果SpringApplication的showBanner属性被设置为true，则打印banner。

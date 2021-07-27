@@ -2547,17 +2547,14 @@ object StreamKafkaSourceScala {
 - setStartFromEarliest 或者 setStartFromLatest
 - setStartFromTimestamp
 
-```scala
+```java
 //kafka consumer的消费策略设置
 //默认策略，读取group.id对应保存的offset开始消费数据，读取不到则根据kafka中`auto.offset.reset`参数的值开始消费数据
 kafkaConsumer.setStartFromGroupOffsets()
-
 //从最早的记录开始消费数据，忽略已提交的offset信息
 kafkaConsumer.setStartFromEarliest()
-
 //从最新的记录开始消费数据，忽略已提交的offset信息
 kafkaConsumer.setStartFromLatest()
-
 //从指定的时间戳开始消费数据，对于每个分区，其时间戳大于或等于指定时间戳的记录将被作为起始位置
 kafkaConsumer.setStartFromTimestamp(1769498624)
 ```
@@ -2618,17 +2615,7 @@ Kafka consumers offset自动提交机制需要根据job是否开启checkpoint来
 ### 11.3.1、基本使用
 
 Flink除了可以消费kafka的数据外，还可以向kafka中写数据
-```scala
-package com.imooc.scala.kafkaconnector
-
-import java.util.Properties
-
-import org.apache.flink.api.common.serialization.SimpleStringSchema
-import org.apache.flink.streaming.api.scala.StreamExecutionEnvironment
-import org.apache.flink.streaming.connectors.kafka.FlinkKafkaProducer
-import org.apache.flink.streaming.connectors.kafka.internals.KafkaSerializationSchemaWrapper
-import org.apache.flink.streaming.connectors.kafka.partitioner.FlinkFixedPartitioner
-
+```java
 /**
  * Flink向Kafka中生产数据
  * Created by xuwei

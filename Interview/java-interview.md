@@ -2734,6 +2734,202 @@ Mybatis将所有Xml配置信息都封装到`All-In-One`重量级对象Configurat
 Caused by: org.xml.sax.SAXParseException; lineNumber: 47; columnNumber: 17; 元素类型为 "configuration" 的内容必须匹配 "(properties?,settings?,typeAliases?,typeHandlers?,objectFactory?,objectWrapperFactory?,reflectorFactory?,plugins?,environments?,databaseIdProvider?,mappers?)"。
 ```
 
+## 20、Mybatis的设计模式
+
+- [Mybatis使用设计模式](http://www.crazyant.net/2022.html)
+- [设计模式](../Java/系统设计/设计模式.md)
+
+### 20.1、工厂模式
+
+工厂模式在 MyBatis 中的典型代表是 SqlSessionFactory；SqlSession 是 MyBatis 中的重要 Java 接口，可以通过该接口来执行 SQL 命令、获取映射器示例和管理事务，而 SqlSessionFactory 正是用来产生 SqlSession 对象的，所以它在 MyBatis 中是比较核心的接口之一；
+
+工厂模式应用解析：SqlSessionFactory 是一个接口类，它的子类 DefaultSqlSessionFactory 有一个 openSession(ExecutorType execType) 的方法，其中使用了工厂模式，源码如下：
+```java
+private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
+    Transaction tx = null;
+    try {
+        final Environment environment = configuration.getEnvironment();
+        final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
+        tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
+        // configuration.newExecutor(tx, execType) 读取对应的环境配置
+        final Executor executor = configuration.newExecutor(tx, execType);
+        return new DefaultSqlSession(configuration, executor, autoCommit);
+    } catch (Exception e) {
+        closeTransaction(tx); // may have fetched a connection so lets call close()
+        throw ExceptionFactory.wrapException("Error opening session.  Cause: " + e, e);
+    } finally {
+        ErrorContext.instance().reset();
+    }
+}
+```
+newExecutor() 方法为标准的工厂模式，它会根据传递 ExecutorType 值生成相应的对象然后进行返回
+```java
+public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
+    executorType = executorType == null ? defaultExecutorType : executorType;
+    executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
+    Executor executor;
+    if (ExecutorType.BATCH == executorType) {
+        executor = new BatchExecutor(this, transaction);
+    } else if (ExecutorType.REUSE == executorType) {
+        executor = new ReuseExecutor(this, transaction);
+    } else {
+        executor = new SimpleExecutor(this, transaction);
+    }
+    if (cacheEnabled) {
+        executor = new CachingExecutor(executor);
+    }
+    executor = (Executor) interceptorChain.pluginAll(executor);
+    return executor;
+  }
+```
+
+### 20.2、建造者模式
+
+建造者模式在 MyBatis 中的典型代表是 SqlSessionFactoryBuilder
+
+普通的对象都是通过 new 关键字直接创建的，但是如果创建对象需要的构造参数很多，且不能保证每个参数都是正确的或者不能一次性得到构建所需的所有参数，那么就需要将构建逻辑从对象本身抽离出来，让对象只关注功能，把构建交给构建类，这样可以简化对象的构建，也可以达到分步构建对象的目的，而 SqlSessionFactoryBuilder 的构建过程正是如此。
+
+在 SqlSessionFactoryBuilder 中构建 SqlSessionFactory 对象的过程是这样的，首先需要通过 XMLConfigBuilder 对象读取并解析 XML 的配置文件，然后再将读取到的配置信息存入到 Configuration 类中，然后再通过 build 方法生成我们需要的 DefaultSqlSessionFactory 对象，实现源码如下（在 SqlSessionFactoryBuilder 类中）：
+```java
+public SqlSessionFactory build(InputStream inputStream, String environment, Properties properties) {
+    try {
+        XMLConfigBuilder parser = new XMLConfigBuilder(inputStream, environment, properties);
+        return build(parser.parse());
+    } catch (Exception e) {
+        throw ExceptionFactory.wrapException("Error building SqlSession.", e);
+    } finally {
+        ErrorContext.instance().reset();
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            // Intentionally ignore. Prefer previous error.
+        }
+    }
+}
+```
+SqlSessionFactoryBuilder 类相当于一个建造工厂，先读取文件或者配置信息、再解析配置、然后通过反射生成对象，最后再把结果存入缓存，这样就一步步构建造出一个 SqlSessionFactory 对象
+
+### 20.3、单例模式
+
+在Mybatis中有两个地方用到单例模式， ErrorContext 和 LogFactory，其中ErrorContext是用在每个线程范围内的单例，用于记录该线程的执行环境错误信息，而LogFactory则是提供给整个Mybatis使用的日志工厂，用于获得针对项目配置好的日志对象
+```java
+public class ErrorContext {
+	private static final ThreadLocal<ErrorContext> LOCAL = ThreadLocal.withInitial(ErrorContext::new);
+	private ErrorContext() {
+	}
+	public static ErrorContext instance() {
+		ErrorContext context = LOCAL.get();
+		if (context == null) {
+			context = new ErrorContext();
+			LOCAL.set(context);
+		}
+		return context;
+	}
+}
+```
+
+### 20.4、适配器模式
+
+而这个转换头就相当于程序中的适配器模式，适配器模式在 MyBatis 中的典型代表是 Log。
+
+MyBatis 中的日志模块适配了以下多种日志类型：
+- SLF4J
+- Apache Commons Logging
+- Log4j 2
+- Log4j
+- JDK logging
+
+### 20.5、代理模式
+
+代理模式在 MyBatis 中的典型代表是 MapperProxyFactory， MapperProxyFactory 的 newInstance() 方法就是生成一个具体的代理来实现功能的，源码如下：
+```java
+// 在这里，先通过T newInstance(SqlSession sqlSession)方法会得到一个MapperProxy对象，然后调用T newInstance(MapperProxy<T> mapperProxy)生成代理对象然后返回。
+public class MapperProxyFactory<T> {
+    private final Class<T> mapperInterface;
+    private final Map<Method, MapperMethodInvoker> methodCache = new ConcurrentHashMap<>();
+    public MapperProxyFactory(Class<T> mapperInterface) {
+        this.mapperInterface = mapperInterface;
+    }
+    public Class<T> getMapperInterface() {
+        return mapperInterface;
+    }
+    public Map<Method, MapperMethodInvoker> getMethodCache() {
+        return methodCache;
+    }
+    @SuppressWarnings("unchecked")
+    protected T newInstance(MapperProxy<T> mapperProxy) {
+        return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[] { mapperInterface }, mapperProxy);
+    }
+    public T newInstance(SqlSession sqlSession) {
+        final MapperProxy<T> mapperProxy = new MapperProxy<>(sqlSession, mapperInterface, methodCache);
+        return newInstance(mapperProxy);
+    }
+}
+// 而查看MapperProxy的代码，可以看到如下内容：
+public class MapperProxy<T> implements InvocationHandler, Serializable {
+	@Override
+	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		try {
+			if (Object.class.equals(method.getDeclaringClass())) {
+				return method.invoke(this, args);
+			} else if (isDefaultMethod(method)) {
+				return invokeDefaultMethod(proxy, method, args);
+			}
+		} catch (Throwable t) {
+			throw ExceptionUtil.unwrapThrowable(t);
+		}
+		final MapperMethod mapperMethod = cachedMapperMethod(method);
+		return mapperMethod.execute(sqlSession, args);
+	}
+}
+```
+通过这种方式，我们只需要编写`Mapper.java`接口类，当真正执行一个Mapper接口的时候，就会转发给`MapperProxy.invoke`方法，而该方法则会调用后续的`sqlSession.cud>executor.execute>prepareStatement`等一系列方法，完成SQL的执行和返回；
+
+### 20.6、模板方法模式
+
+模板方法在 MyBatis 中的典型代表是 BaseExecutor。在 MyBatis 中 BaseExecutor 实现了大部分 SQL 执行的逻辑，然后再把几个方法交给子类来实现，它的继承关系如下图所示：
+
+![](image/Mybatis-BaseExecutor-UML图.png)
+
+- `简单 SimpleExecutor`：每执行一次update或select，就开启一个Statement对象，用完立刻关闭Statement对象。（可以是Statement或PrepareStatement对象）
+- `重用 ReuseExecutor`：执行update或select，以sql作为key查找Statement对象，存在就使用，不存在就创建，用完后，不关闭Statement对象，而是放置于`Map<String, Statement>`内，供下一次使用。（可以是Statement或PrepareStatement对象）
+- `批量 BatchExecutor`：执行update（没有select，JDBC批处理不支持select），将所有sql都添加到批处理中（addBatch()），等待统一执行（executeBatch()），它缓存了多个Statement对象，每个Statement对象都是addBatch()完毕后，等待逐一执行executeBatch()批处理的；BatchExecutor相当于维护了多个桶，每个桶里都装了很多属于自己的SQL，就像苹果蓝里装了很多苹果，番茄蓝里装了很多番茄，最后，再统一倒进仓库。（可以是Statement或PrepareStatement对象）
+
+```java
+// 比如 doUpdate() 就是交给子类自己去实现的，它在 BaseExecutor 中的定义如下：
+protected abstract int doUpdate(MappedStatement ms, Object parameter) throws SQLException;
+// SimpleExecutor 实现的 doUpdate 方法
+public class SimpleExecutor extends BaseExecutor {
+    @Override
+    public int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
+        Statement stmt = null;
+        try {
+        Configuration configuration = ms.getConfiguration();
+        StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+        stmt = prepareStatement(handler, ms.getStatementLog());
+        return handler.update(stmt);
+        } finally {
+        closeStatement(stmt);
+        }
+    }
+    ...
+}
+```
+
+### 20.7、装饰器模式
+
+装饰器模式在 MyBatis 中的典型代表是 Cache，Cache 除了有数据存储和缓存的基本功能外（由 PerpetualCache 永久缓存实现），还有其他附加的 Cache 类，比如先进先出的 FifoCache、最近最少使用的 LruCache、防止多线程并发访问的 SynchronizedCache 等众多附加功能的缓存类，用于装饰PerpetualCache的标准装饰器共有8个（全部在org.apache.ibatis.cache.decorators包中）：
+- FifoCache：先进先出算法，缓存回收策略
+- LoggingCache：输出缓存命中的日志信息
+- LruCache：最近最少使用算法，缓存回收策略
+- ScheduledCache：调度缓存，负责定时清空缓存
+- SerializedCache：缓存序列化和反序列化存储
+- SoftCache：基于软引用实现的缓存管理策略
+- SynchronizedCache：同步的缓存装饰器，用于防止多线程并发访问
+- WeakCache：基于弱引用实现的缓存管理策略
+
+Cache对象之间的引用顺序为：`SynchronizedCache –> LoggingCache –> SerializedCache –> ScheduledCache –> LruCache –> PerpetualCache`
+
 # 十四、数据结构与算法
 
 ## 1、如何判断两个链表是否相交

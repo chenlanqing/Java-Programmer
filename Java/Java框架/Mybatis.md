@@ -306,12 +306,7 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 - 真正的doQuery操作是由SimplyExecutor代理来完成的，该方法中有2个子流程，一个是SQL参数的设置，另一个是SQL查询操作和结果集的封装。
     - 首先获取数据库connection连接，然后准备statement，然后就设置SQL查询中的参数值。打开一个connection连接，在使用完后不会close，而是存储下来，当下次需要打开连接时就直接返回。
 
-
-# 六、MyBatis中的设计模式
-
-http://www.crazyant.net/2022.html
-
-# 七、Mybatis插件
+# 六、Mybatis插件
 
 ## 1、插件原理
 
@@ -445,7 +440,7 @@ public Object intercept(Invocation invocation) throws Throwable {
 
 PageHelper
 
-# 八、Tkmapper
+# 七、Tkmapper
 
 
 # 参考资料
