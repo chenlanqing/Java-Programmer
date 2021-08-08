@@ -2483,6 +2483,684 @@ job直接失败，不会尝试进行重启
 
 ### 12.9.4、UI界面操作
 
+# 13、End-to-End Exactly-Once
+
+## 13.1、数据一致性语义分类
+
+分布式情况下是由多个Source(读取数据)节点、多个Operator(数据处理)节点、多个Sink(输出)节点构成，每个节点的并行数可以有差异，且每个节点都有可能发生故障，对于数据正确性最重要的一点，就是当发生故障时，是怎样容错与恢复的
+
+因此流出来引擎通常为应用程序提供了三种数据处理语义：
+- `At-most-noce`：最多一次，有可能丢失；
+- `At-least-once`：至少一次，有可能重复处理；
+- `Exactly-once`：精确一次，恰好被正确处理一次；
+
+而Flink在1.4.0中定义的 `End-to-End Exactly-Once`：端到端精确一次，指的是从Source-Transformation-Sink都可以保证Exactly Once
+
+如下是对这些不同处理语义的宽松定义(一致性由弱到强)：
+`At most noce < At least once < Exactly once < End to End Exactly once`
+
+## 13.2、各种语义详解
+
+### 13.2.1、At-most-once-最多一次
+
+有可会有数据丢失；本质上是最简单的恢复防水，也就是直接从失败处的下个数据开始恢复程序，之前的失败数据处理就不管了。可以保证数据或事件最多是由应用程序中所有算子处理一次，意味着如果数据在被流应用程序完全处理之前发生丢失，则不会进行其他冲水或者重新发送；
+
+### 13.2.2、At-least-once-至少一次
+
+有可能重复处理数据。应用程序中所有算子都保证数据或事件至少被处理一次。通常意味着如果事件在流应用程序完全处理之前丢失，则将从源头重放或者重新传输事件；然而由于事件是可以被重传的，因此一个事件有时会被处理多次（至少一次），至于有没有重复数据，不会关心，所以这种场景需要人工干预自己处理重复数据；
+
+### 13.2.3、Exactly-once-精确一次
+
+Exactly-Once 是 Flink、Spark 等流处理系统的核心特性之一，这种语义会保证每一条消息只被流处理系统处理一次。即使是在各种故障的情况下，流应用程序中的所有算子都保证事件只会被『精确一次』的处理；
+
+Fink实现『精确一次』的分布式快照/状态检查点方法受到 Chandy-Lamport 分布式快照算法的启发。通过这种机制，流应用程序中每个算子的所有状态都会定期做 checkpoint。如果是在系统中的任何地方发生失败，每个算子的所有状态都回滚到最新的全局一致 checkpoint 点。在回滚期间，将暂停所有处理。源也会重置为与最近 checkpoint 相对应的正确偏移量。整个流应用程序基本上是回到最近一次的一致状态，然后程序可以从该状态重新启动
+
+> 注意：
+> Exactly-Once 更准确的理解 应该是: 数据只会被正确的处理一次！而不是说数据只被处理一次，有可能多次，但只有最后一次是正确的、成功的！即是【有效一次】
+
+### 13.2.4、End-to-End Exactly-Once-端到端的精确一次
+
+Flink 在1.4.0 版本引入『exactly-once』并号称支持『End-to-End Exactly-Once』“端到端的精确一次”语义，它指的是 Flink 应用从 Source 端开始到 Sink 端结束，数据必须经过的起始点和结束点；
+
+与 Exactly-Once 区别：
+- `Exactly-Once`：保证所有记录仅影响内部状态一次；
+- `End-to-End Exactly-Once`：保证所有记录仅影响内部和外部状态；
+
+### 13.2.5、流系统如何支持Exactly-Once语义
+
+- `At-least-once + 去重`：每个算子维护一个事务日志，跟踪已处理的事件，重放失败事件，在事件进入下个算子之前，移除重复事件；
+- `At-least-once + 幂等`：依赖Sink端存储的去重性和数据特征，如输出到数据库，通过 replace into + unique key
+- 分布式快照/checkpoint：Chandy-Lamport分布式快照算法
+    - 引入barrier，把input stream分为 preshot records 和 postshot records
+    - operator 收到上所有的 barrier的时候做一个 snapshot，继续往下处理；
+    - 所有所有 sink operator 都完成了 snapshot，这一轮 snapshot 就完成了；
+
+这三种实现方式的区别：
+
+![](image/Flink-ExactlyOnce-实现方式对比.png)
+
+## 13.3、End-to-End Exactly-Once的实现
+
+Flink内部借助分布式快照Checkpoint已经实现了内部的Exactly-Once，但是Flink 自身是无法保证外部其他系统“精确一次”语义的，所以 Flink 若要实现所谓“端到端（End to End）的精确一次”的要求，那么外部系统必须支持“精确一次”语义；然后借助一些其他手段才能实现
+- Flink1.4之前，通过checkpoint只支持内部应用程序的 exactly-once；
+- Flink1.4之后，在通过checkpoint + 两阶段提交（TwoPhaseCommitSinkFunction）支持 End-to-End Exactly-Once；
+
+### 13.3.1、source
+
+发生故障时，需要支持重设数据的读取位置，如kafka可以通过offset里实现，其他没有offset的系统可以自己实现累加器；
+
+### 13.3.2、transformation
+
+这是Flink内部，已经通过checkpoint保证，如果发生故障或出错时，Flink应用重启后会从最新成功完成的checkpoint中恢复——重置应用状态并回滚状态到checkpoint中输入流的正确位置，之后再开始执行数据处理，就好像该故障或崩溃从未发生过一般；
+
+- **分布式快照：**
+
+    Flink 提供了失败恢复的容错机制，而这个容错机制的核心就是持续创建分布式数据流的快照来实现
+
+    ![](image/Flink-checkpoint-执行流程.png)
+
+    同 Spark 相比，Spark 仅仅是针对 Driver 的故障恢复 Checkpoint。而 Flink 的快照可以到算子级别，并且对全局数据也可以做快照。Flink 的分布式快照受到 Chandy-Lamport 分布式快照算法启发，同时进行了量身定做；
+
+- **Barrier：**
+
+    Flink 分布式快照的核心元素之一是 Barrier（数据栅栏），我们也可以把 Barrier 简单地理解成一个标记，该标记是严格有序的，并且随着数据流往下流动。每个 Barrier 都带有自己的 ID，Barrier 极其轻量，并不会干扰正常的数据处理；
+
+    Barrier 会随着正常数据继续往下流动，每当遇到一个算子，算子会插入一个标识，这个标识的插入时间是上游所有的输入流都接收到 snapshot n。与此同时，当我们的 sink 算子接收到所有上游流发送的 Barrier 时，那么就表明这一批数据处理完毕，Flink 会向“协调者”发送确认消息，表明当前的 snapshot n 完成了。当所有的 sink 算子都确认这批数据成功处理后，那么本次的 snapshot 被标识为完成；
+
+    因为 Flink 运行在分布式环境中，一个 operator 的上游会有很多流，每个流的 barrier n 到达的时间不一致怎么办？这里 Flink 采取的措施是：快流等慢流；比如其中一个流到的早，其他的流到的比较晚。当第一个 barrier n到来后，当前的 operator 会继续等待其他流的 barrier n。直到所有的barrier n 到来后，operator 才会把所有的数据向下发送
+
+- **异步和增量：**
+
+    每次在把快照存储到我们的状态后端时，如果是同步进行就会阻塞正常任务，从而引入延迟。因此 Flink 在做快照存储时，可采用异步方式。
+
+    此外，由于 checkpoint 是一个全局状态，用户保存的状态可能非常大，多数达 G 或者 T 级别。在这种情况下，checkpoint 的创建会非常慢，而且执行时占用的资源也比较多，因此 Flink 提出了增量快照的概念。也就是说，每次都是进行的全量 checkpoint，是基于上次进行更新的
+
+### 13.3.3、sink
+
+需要支持幂等写入或事务写入(Flink的两阶段提交需要事务支持)
+
+#### 13.3.3.1、幂等写入（Idempotent Writes）
+
+幂等写操作是指：任意多次向一个系统写入数据，只对目标系统产生一次结果影响；HBase、Redis和Cassandra这样的KV数据库一般经常用来作为Sink，用以实现端到端的Exactly-Once
+
+#### 13.3.3.2、事务写入（Transactional Writes）
+
+Flink借鉴了数据库中的事务处理技术，同时结合自身的Checkpoint机制来保证Sink只对外部输出产生一次影响。大致的流程如下:
+
+Flink先将待输出的数据保存下来暂时不向外部系统提交，等到Checkpoint结束时，Flink上下游所有算子的数据都是一致的时候，Flink将之前保存的数据全部提交（Commit）到外部系统。换句话说，只有经过Checkpoint确认的数据才向外部系统写入
+
+在事务写的具体实现上，Flink目前提供了两种方式：
+- 预写日志（Write-Ahead-Log，WAL）
+- 两阶段提交（Two-Phase-Commit，2PC）
+
+这两种方式区别主要在于：
+- WAL方式通用性更强，适合几乎所有外部系统，但也不能提供百分百端到端的Exactly-Once，因为WAL预写日志会先写内存，而内存是易失介质；
+- 如果外部系统自身就支持事务（比如MySQL、Kafka），可以使用2PC方式，可以提供百分百端到端的Exactly-Once；
+
+事务写的方式能提供`端到端的Exactly-Once一致性`，它的代价也是非常明显的，就是牺牲了延迟。输出数据不再是实时写入到外部系统，而是分批次地提交。目前来说，没有完美的故障恢复和Exactly-Once保障机制，对于开发者来说，需要在不同需求之间权衡；
+
+## 13.4、Flink-Kafka的End-to-End Exactly-Once
+
+在分布式系统中协调提交和回滚的一个常见方法就是使用两阶段提交协议，那么 Flink的TwoPhaseCommitSinkFunction是如何支持End-to-End Exactly-Once的
+
+> 注意：Flink 1.4版本之后，通过两阶段提交(TwoPhaseCommitSinkFunction)支持End-To-End Exactly Once，而且要求Kafka 0.11+。利用TwoPhaseCommitSinkFunction是通用的管理方案，只要实现对应的接口，而且Sink的存储支持变乱提交，即可实现端到端的划一性语义
+
+### 13.4.1、两阶段提交API
+
+在 Flink 中的Two-Phase-Commit-2PC两阶段提交的实现方法被封装到了 TwoPhaseCommitSinkFunction 这个抽象类中，只需要实现其中的beginTransaction、preCommit、commit、abort 四个方法就可以实现“精确一次”的处理语义，如FlinkKafkaProducer就实现了该类并实现了这些方法
+```java
+public class FlinkKafkaProducer<IN> extends 
+TwoPhaseCommitSinkFunction<IN, FlinkKafkaProducer.KafkaTransactionState, FlinkKafkaProducer.KafkaTransactionContext> {
+}
+```
+- （1）beginTransaction：在开启事务之前，在目标文件系统的临时目录中创建一个临时文件，后面再处理数据时将数据写入此文件；
+- （2）preCommit：在预提交阶段，刷写（flush）文件，然后关闭文件，之后就不能写入到文件了，还将为属于下一个检查点的任何后续写入启动新事事务；
+- （3）commit：在提交阶段，将预提交的文件原子性移动到真正的目标目录中，需要注意的是这会增加输出数据的可见性延迟；
+- （4）abort：在中止阶段，删除临时文件
+
+### 13.4.2、两阶段提交简单流程
+
+![](image/Flink-两阶段提交-简单流程.png)
+
+整个过程可以总结为下面几个阶段：
+- 一旦 Flink 开始做 checkpoint 操作，那么就会进入 pre-commit “预提交”阶段，同时JobManager的Coordinator 会将 Barrier 注入数据流中 ；
+- 当所有的 barrier 在算子中成功进行一遍传递(就是Checkpoint完成)，并完成快照后，则“预提交”阶段完成；
+- 等所有的算子完成“预提交”，就会发起一个commit“提交”动作，但是任何一个“预提交”失败都会导致 Flink 回滚到最近的 checkpoint；
+
+在sink的时候会执行两阶段提交:
+- 开启事务
+- 各个Operator执行barrier的Checkpoint, 成功则进行预提交
+- 所有Operator执行完预提交则执行真正的提交
+- 如果有任何一个预提交失败则回滚到最近的Checkpoint
+
+### 13.4.3、两阶段提交详细流程
+
+参考文档：[详细流程](Flink-两阶段提交详细流程.pdf)
+
+## 13.5、代码实现
+
+```java
+public class ExactlyOnceImpl {
+    public static void main(String[] args) throws Exception {
+        // 1、create execution environment
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        env.enableCheckpointing(1000);
+        env.setStateBackend(new FsStateBackend("file:///Users/bluefish/Documents/temp/flink/checkpoint"));
+        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);//默认是0
+        env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);//默认值为0，表示不容忍任何检查点失败
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().setCheckpointTimeout(60000);//默认10分钟
+        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);//默认为1
+        env.setRestartStrategy(RestartStrategies.fixedDelayRestart(3, Time.of(5, TimeUnit.SECONDS)));
+        // 2、source
+        Properties sourceProp = new Properties();
+        sourceProp.setProperty("bootstrap.servers", "localhost:9092");//集群地址
+        sourceProp.setProperty("group.id", "flink");//消费者组id
+        //latest有offset记录从记录位置开始消费,没有记录从最新的/最后的消息开始消费 /earliest有offset记录从记录位置开始消费,没有记录从最早的/最开始的消息开始消费
+        sourceProp.setProperty("auto.offset.reset", "latest");
+        sourceProp.setProperty("flink.partition-discovery.interval-millis", "5000");//会开启一个后台线程每隔5s检测一下Kafka的分区情况,实现动态分区检测
+        FlinkKafkaConsumer<String> kafkaConsumer = new FlinkKafkaConsumer<String>("flink_kafka_source", new SimpleStringSchema(), sourceProp);
+        kafkaConsumer.setCommitOffsetsOnCheckpoints(true);
+        // 3、transformation operation
+        SingleOutputStreamOperator<String> result = env.addSource(kafkaConsumer)
+                .flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
+                    Random random = new Random();
+                    @Override
+                    public void flatMap(String value, Collector<Tuple2<String, Integer>> out)
+                            throws Exception {
+                        String[] s = value.split(" ");
+                        for (String word : s) {
+                            int num = random.nextInt(5);
+                            if(num > 3){
+                                System.out.println("随机异常产生了");
+                                throw new Exception("随机异常产生了");
+                            }
+                            out.collect(Tuple2.of(word, 1));
+                        }
+                    }
+                })
+                .keyBy(f -> f.f0)
+                .sum(1)
+                .map(new MapFunction<Tuple2<String, Integer>, String>() {
+                    @Override
+                    public String map(Tuple2<String, Integer> value) throws Exception {
+                        return value.f0 + ":" + value.f1;
+                    }
+                });
+        // 4、sink
+        result.print();
+        // kafka sink topic :  flink_kafka_sink
+        Properties sinkProp = new Properties();
+        sinkProp.setProperty("bootstrap.servers", "localhost:9092");//集群地址
+        FlinkKafkaProducer<String> kafkaSink = new FlinkKafkaProducer<String>(
+                "flink_kafka_sink",
+//                new KeyedSerializationSchemaWrapper(new SimpleStringSchema()),
+                new KafkaSerializationSchemaWrapper<String>(
+                        "flink_kafka_sink",
+                        new FlinkFixedPartitioner<String>(),
+                        false,
+                        new SimpleStringSchema()
+                ),
+                sinkProp,
+                FlinkKafkaProducer.Semantic.EXACTLY_ONCE
+        );
+        result.addSink(kafkaSink);
+
+        // 5、execute
+        env.execute("ExactlyOnceImpl");
+    }
+}
+```
+
+# 14、Flink其他特性
+
+## 14.1、双流join
+
+### 14.1.1、介绍
+
+双流join大体分为两种：Window join 和 Interval join
+- window join 可以根据window的类型细分出3种：Tumbling window join、sliding window join、session window joiin。window 类型的 join 都是利用 widow的机制，先将数据缓存在window state中，当窗口触发计算时，执行 join 操作；
+- interval join：利用state存储数据再处理，区别在于state中数据有失效机制，依靠数据触发数据青睐
+
+> 目前 stream join 的结果是笛卡尔积；
+
+### 14.1.2、Window Join-Tumbling Window Join
+
+执行滚动创建连接时，具有公共键和公共滚动窗口的所有元素将作为组合连接，并传递给 JoinFunction或FlatJoinFunction。因为它的行为类似于内部连接，所以一个流中的元素在其滚动窗口没有来自另一个流的元素，因此其不会被释放；
+
+如图所示，定义了一个大小为2毫秒的滚动窗口，结果窗口的形式为：`[0,1]、[2,3]...`，该图显示了每个窗口所有元素成对组合，这些元素将传递给JoinFunction。注意，在滚动窗口`[6,7]`中没有释放任何东西，因为绿色流中不存在与橙色元素6和7结合的元素
+
+![](image/Flink-Join-TumblinWindowJoin.png)
+
+示例代码：
+```java
+DataStream<Integer> orangeStream = ...
+DataStream<Integer> greenStream = ...
+orangeStream.join(greenStream)
+    .where(<KeySelector>)
+    .equalTo(<KeySelector>)
+    .window(TumblingEventTimeWindows.of(Time.milliseconds(2)))
+    .apply (new JoinFunction<Integer, Integer, String> (){
+        @Override
+        public String join(Integer first, Integer second) {
+            return first + "," + second;
+        }
+    });
+```
+
+### 14.1.3、Window Join-Sliding Window Join
+
+在执行滑动窗口连接时，具有公共键和公共滑动窗口的所有元素将作为成对组合连接，并传递给JoinFunction或FlatJoinFunction。在当前滑动窗口中，一个流的元素没有来自另一个流的元素，则不会释放；注意：某些元素可能会连接到一个滑动窗口中，但不会连接到另一个滑动窗口中；
+
+比如，使用大小为2毫秒的滑动窗口，并将其滑动1毫秒，从而产生滑动窗口：`[-1,0],[0,1],[1,2].....`，下方的连接元素是传递给每个滑动窗口JoinFunction的元素，从下图中你可以看到，在窗口`[2,3]`中，橙色2和绿色3连接，但在窗口`[1，2]`中没有任何对象连接；
+
+![](image/Flink-Join-SlidingWindowJoin.png)
+
+```java
+DataStream<Integer> orangeStream = ...
+DataStream<Integer> greenStream = ...
+orangeStream.join(greenStream)
+    .where(<KeySelector>)
+    .equalTo(<KeySelector>)
+    .window(SlidingEventTimeWindows.of(Time.milliseconds(2) /* size */, Time.milliseconds(1) /* slide */))
+    .apply (new JoinFunction<Integer, Integer, String> (){
+        @Override
+        public String join(Integer first, Integer second) {
+            return first + "," + second;
+        }
+    });
+```
+
+### 14.1.4、Window Join-Session Window Join
+
+在执行会话窗口联接时，具有相同键（当“组合”时满足会话条件）的所有元素以成对组合方式联接，并传递给JoinFunction或FlatJoinFunction。同样，这执行一个内部连接，所以如果有一个会话窗口只包含来自一个流的元素，则不会发出任何输出！
+
+在这里，我们定义了一个会话窗口连接，其中每个会话被至少1ms的间隔分割。有三个会话，在前两个会话中，来自两个流的连接元素被传递给JoinFunction。在第三个会话中，绿色流中没有元素，所以⑧和⑨没有连接！
+
+![](image/Flink-Join-SessionWindowJoin.png)
+
+```java
+DataStream<Integer> orangeStream = ...
+DataStream<Integer> greenStream = ...
+orangeStream.join(greenStream)
+    .where(<KeySelector>)
+    .equalTo(<KeySelector>)
+    .window(EventTimeSessionWindows.withGap(Time.milliseconds(1)))
+    .apply (new JoinFunction<Integer, Integer, String> (){
+        @Override
+        public String join(Integer first, Integer second) {
+            return first + "," + second;
+        }
+    });
+```
+
+### 14.1.5、Interval Join
+
+interval join 是使用相同的key来join两个流（A流、B流）的，并且流B中的元素中时间戳和流A元素的时间戳，有一个时间间隔
+```
+b.timestamp ∈ [a.timestamp + lowerBound, a.timestamp + upperBound]
+or
+a.timestamp + lowerBound <= b.timestamp <= a.timestamp + upperBound
+```
+也就是流B的元素的时间戳 ≥ 流A的元素时间戳 + 下界，且，流B的元素的时间戳 ≤ 流A的元素时间戳 + 上界
+
+![](image/Flink-Join-IntervalJoin.png)
+
+在上面的示例中，我们将两个流“orange”和“green”连接起来，其下限为-2毫秒，上限为+1毫秒。默认情况下，这些边界是包含的，但是可以应用
+.lowerBoundExclusive（）和.upperBoundExclusive来更改行为 `orangeElem.ts + lowerBound <= greenElem.ts <= orangeElem.ts + upperBound`
+
+```java
+DataStream<Integer> orangeStream = ...
+DataStream<Integer> greenStream = ...
+orangeStream
+    .keyBy(<KeySelector>)
+    .intervalJoin(greenStream.keyBy(<KeySelector>))
+    .between(Time.milliseconds(-2), Time.milliseconds(1))
+    .process (new ProcessJoinFunction<Integer, Integer, String(){
+
+        @Override
+        public void processElement(Integer left, Integer right, Context ctx, Collector<String> out) {
+            out.collect(first + "," + second);
+        }
+    });
+```
+
+### 14.1.6、WindowJoin完整示例
+
+使用两个指定source模拟数据，一个source是订单明细，一个source是商品数据，通过window join，将数据关联在一起
+
+```java
+public class WindowJoinApp {
+    public static void main(String[] args) throws Exception {
+        // 1、create execution environment
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        // 2、source
+        DataStreamSource<Goods> goodsDS = env.addSource(new GoodsSource());
+        DataStreamSource<OrderItem> orderItemDS = env.addSource(new OrderItemSource());
+        SingleOutputStreamOperator<Goods> goodsWatermarkDS = goodsDS.assignTimestampsAndWatermarks(new GoodsWatermark());
+        SingleOutputStreamOperator<OrderItem> orderItemWatermarkDS = orderItemDS.assignTimestampsAndWatermarks(new OrderItemWatermark());
+        // 3、transformation operation
+        DataStream<FactOrderItem> result = goodsWatermarkDS.join(orderItemWatermarkDS)
+                .where(Goods::getGoodsId)
+                .equalTo(OrderItem::getGoodsId)
+                .window(TumblingEventTimeWindows.of(Time.seconds(5)))
+                .apply(new JoinFunction<Goods, OrderItem, FactOrderItem>() {
+                    @Override
+                    public FactOrderItem join(Goods first, OrderItem second) throws Exception {
+                        FactOrderItem result = new FactOrderItem();
+                        result.setGoodsId(first.getGoodsId());
+                        result.setGoodsName(first.getGoodsName());
+                        result.setCount(new BigDecimal(second.getCount()));
+                        result.setTotalMoney(
+                                new BigDecimal(second.getCount()).multiply(first.getGoodsPrice()));
+                        return result;
+                    }
+                });
+        // 4、sink
+        result.print();
+        // 5、execute
+        env.execute("WindowJoinApp");
+    }
+    /**
+     * 实时生成商品数据流，构建一个商品Stream源（这个好比就是维表）
+     */
+    private static class GoodsSource extends RichSourceFunction<Goods> {
+        private Boolean isCancel;
+        @Override
+        public void open(Configuration parameters) throws Exception {
+            isCancel = false;
+        }
+        @Override
+        public void run(SourceContext<Goods> sourceContext) throws Exception {
+            while (!isCancel) {
+                Goods.GOODS_LIST.forEach(sourceContext::collect);
+                TimeUnit.SECONDS.sleep(1);
+            }
+        }
+        @Override
+        public void cancel() {
+            isCancel = true;
+        }
+    }
+    /**
+     * 实时生成订单数据流,构建订单明细Stream源
+     */
+    private static class OrderItemSource extends RichSourceFunction<OrderItem> {
+        private Boolean isCancel;
+        private Random r;
+        @Override
+        public void open(Configuration parameters) throws Exception {
+            isCancel = false;
+            r = new Random();
+        }
+        @Override
+        public void run(SourceContext<OrderItem> sourceContext) throws Exception {
+            while (!isCancel) {
+                com.blue.fish.flink.feature.model.Goods goods = com.blue.fish.flink.feature.model.Goods
+                        .randomGoods();
+                OrderItem orderItem = new OrderItem();
+                orderItem.setGoodsId(goods.getGoodsId());
+                orderItem.setCount(r.nextInt(10) + 1);
+                orderItem.setItemId(UUID.randomUUID().toString());
+                sourceContext.collect(orderItem);
+                orderItem.setGoodsId("111");
+                sourceContext.collect(orderItem);
+                TimeUnit.SECONDS.sleep(1);
+            }
+        }
+        @Override
+        public void cancel() {
+            isCancel = true;
+        }
+    }
+    private static class GoodsWatermark implements WatermarkStrategy<Goods> {
+        @Override
+        public WatermarkGenerator<Goods> createWatermarkGenerator(
+                WatermarkGeneratorSupplier.Context context) {
+            return new WatermarkGenerator<Goods>() {
+                @Override
+                public void onEvent(Goods event, long eventTimestamp, WatermarkOutput output) {
+                    output.emitWatermark(new Watermark(System.currentTimeMillis()));
+                }
+
+                @Override
+                public void onPeriodicEmit(WatermarkOutput output) {
+                    output.emitWatermark(new Watermark(System.currentTimeMillis()));
+                }
+            };
+        }
+        @Override
+        public TimestampAssigner<Goods> createTimestampAssigner(
+                TimestampAssignerSupplier.Context context) {
+            return (element, recordTimestamp) -> System.currentTimeMillis();
+        }
+    }
+    private static class OrderItemWatermark implements WatermarkStrategy<OrderItem> {
+        @Override
+        public WatermarkGenerator<OrderItem> createWatermarkGenerator(
+                WatermarkGeneratorSupplier.Context context) {
+            return new WatermarkGenerator<>() {
+                @Override
+                public void onEvent(OrderItem event, long eventTimestamp, WatermarkOutput output) {
+                    output.emitWatermark(new Watermark(System.currentTimeMillis()));
+                }
+                @Override
+                public void onPeriodicEmit(WatermarkOutput output) {
+                    output.emitWatermark(new Watermark(System.currentTimeMillis()));
+                }
+            };
+        }
+        @Override
+        public TimestampAssigner<OrderItem> createTimestampAssigner(
+                TimestampAssignerSupplier.Context context) {
+            return (element, recordTimestamp) -> System.currentTimeMillis();
+        }
+    }
+}
+@Data
+public class Goods {
+    private String goodsId;
+    private String goodsName;
+    private BigDecimal goodsPrice;
+    public static List<Goods> GOODS_LIST;
+    public static Random r;
+    static {
+        r = new Random();
+        GOODS_LIST = new ArrayList<>();
+        GOODS_LIST.add(new Goods("1", "小米12", new BigDecimal(4890)));
+        GOODS_LIST.add(new Goods("2", "iphone12", new BigDecimal(12000)));
+        GOODS_LIST.add(new Goods("3", "MacBookPro", new BigDecimal(15000)));
+        GOODS_LIST.add(new Goods("4", "Thinkpad X1", new BigDecimal(9800)));
+        GOODS_LIST.add(new Goods("5", "MeiZu One", new BigDecimal(3200)));
+        GOODS_LIST.add(new Goods("6", "Mate 40", new BigDecimal(6500)));
+    }
+    public static Goods randomGoods() {
+        int rIndex = r.nextInt(GOODS_LIST.size());
+        return GOODS_LIST.get(rIndex);
+    }
+    public Goods() {
+    public Goods(String goodsId, String goodsName, BigDecimal goodsPrice) {
+        this.goodsId = goodsId;
+        this.goodsName = goodsName;
+        this.goodsPrice = goodsPrice;
+    }
+    @Override
+    public String toString() {
+        return JSON.toJSONString(this);
+    }
+}
+@Data
+public class OrderItem {
+
+    private String itemId;
+    private String goodsId;
+    private Integer count;
+
+    @Override
+    public String toString() {
+        return JSON.toJSONString(this);
+    }
+}
+/**
+ * 商品类(商品id,商品名称,商品价格)
+ * 订单明细类(订单id,商品id,商品数量)
+ * 关联结果(商品id,商品名称,商品数量,商品价格*商品数量)
+ */
+@Data
+public class FactOrderItem {
+
+    private String goodsId;
+    private String goodsName;
+    private BigDecimal count;
+    private BigDecimal totalMoney;
+
+    @Override
+    public String toString() {
+        return JSON.toJSONString(this);
+    }
+}
+```
+
+### 14.1.7、IntervalJoin完整示例
+
+- 通过keyBy将两个流join到一起
+- interval join需要设置流A去关联哪个时间范围的流B中的元素。此处，设置的下界为-2、上界为1，且上界是一个开区间。表达的意思就是流A中某个元素的时间，对应上一秒的流B中的元素
+```java
+public class IntervalJoinApp {
+
+    public static void main(String[] args) throws Exception {
+        // 1、create execution environment
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+
+        // 2、source
+        DataStreamSource<Goods> goodsDS = env.addSource(new GoodsSource());
+        DataStreamSource<OrderItem> orderItemDS = env.addSource(new OrderItemSource());
+
+        SingleOutputStreamOperator<Goods> goodsWatermarkDS = goodsDS.assignTimestampsAndWatermarks(new GoodsWatermark());
+        SingleOutputStreamOperator<OrderItem> orderItemWatermarkDS = orderItemDS.assignTimestampsAndWatermarks(new OrderItemWatermark());
+
+        // 3、transformation operation
+        SingleOutputStreamOperator<FactOrderItem> result = goodsWatermarkDS
+                .keyBy(Goods::getGoodsId)
+                .intervalJoin(orderItemWatermarkDS.keyBy(OrderItem::getGoodsId))
+                .between(Time.seconds(-2), Time.seconds(1))
+                .process(new ProcessJoinFunction<Goods, OrderItem, FactOrderItem>() {
+                    @Override
+                    public void processElement(Goods left, OrderItem right, Context ctx,
+                            Collector<FactOrderItem> out) throws Exception {
+                        FactOrderItem result = new FactOrderItem();
+                        result.setGoodsId(left.getGoodsId());
+                        result.setGoodsName(left.getGoodsName());
+                        result.setCount(new BigDecimal(right.getCount()));
+                        result.setTotalMoney(
+                                new BigDecimal(right.getCount()).multiply(left.getGoodsPrice()));
+                        out.collect(result);
+                    }
+                });
+
+        // 4、sink
+        result.print();
+        // 5、execute
+        env.execute("IntervalJoinApp");
+    }
+}
+```
+
+
+
+## 14.2、Streaming File Sink
+
+### 14.2.1、概述
+
+StreamingFileSink 是Flink1.7中推出的新特性，是为了解决如下的问题：大数据业务场景中，经常有一种场景：外部数据发送到kafka中，flink作为中间件消费kafka数据并进行业务处理；处理完成之后的数据可能还需要写入到数据库或者文件系统中，比如写入hdfs中；
+
+StreamingFileSink 就可以用来将分区文件写入到支持 Flink FileSystem 接口的文件系统中，支持Exactly-Once语义。这种sink实现的Exactly-Once都是基于Flink checkpoint来实现的两阶段提交模式来保证的，主要应用在实时数仓、topic拆分、基于小时分析处理等场景下；
+
+### 14.2.2、Bucket和SubTask、PartFile
+
+- **Bucket**
+
+    StreamingFileSink可向由Flink FileSystem抽象支持的文件系统写入分区文件（因为是流式写入，数据被视为无界）。该分区行为可配，默认按时间，具体来说每小时写入一个Bucket，该Bucket包括若干文件，内容是这一小时间隔内流中收到的所有record；
+
+- **PartFile**
+
+    每个Bukcket内部分为多个PartFile来存储输出数据，该Bucket生命周期内接收到数据的sink的每个子任务至少有一个PartFile。而额外文件滚动由可配的滚动策略决定，默认策略是根据文件大小和打开超时（文件可以被打开的最大持续时间）以及文件最大不活动超时等决定是否滚动
+    
+### 14.2.3、代码演示
+
+编写Flink程序，接收socket的字符串数据，然后将接收到的数据流式方式存储到hdfs
+
+```java
+**
+ * Author itcast
+ * Desc 演示Flink StreamingFileSink将流式数据写入到HDFS 数据一致性由Checkpoint + 两阶段提交保证
+ */
+public class StreamingFileSinkDemo {
+    public static void main(String[] args) throws Exception {
+        //TODO 0.env
+        StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.setRuntimeMode(RuntimeExecutionMode.AUTOMATIC);
+        env.enableCheckpointing(1000);
+        env.setStateBackend(new FsStateBackend("hdfs://node1:8020/flink-checkpoint/checkpoint"));
+        env.getCheckpointConfig().setMinPauseBetweenCheckpoints(500);//默认是0
+        env.getCheckpointConfig().setTolerableCheckpointFailureNumber(10);//默认值为0，表示不容忍任何检查点失败
+        env.getCheckpointConfig().enableExternalizedCheckpoints(CheckpointConfig.ExternalizedCheckpointCleanup.RETAIN_ON_CANCELLATION);
+        env.getCheckpointConfig().setCheckpointingMode(CheckpointingMode.EXACTLY_ONCE);
+        env.getCheckpointConfig().setCheckpointTimeout(60000);//默认10分钟
+        env.getCheckpointConfig().setMaxConcurrentCheckpoints(1);//默认为1
+        //TODO 1.source
+        DataStream<String> lines = env.socketTextStream("node1", 9999);
+        //TODO 2.transformation
+        //注意:下面的操作将上面的2步合成了1步,直接切割单词并记为1返回
+        SingleOutputStreamOperator<Tuple2<String, Integer>> wordAndOne = lines.flatMap(new FlatMapFunction<String, Tuple2<String, Integer>>() {
+            @Override
+            public void flatMap(String value, Collector<Tuple2<String, Integer>> out) throws Exception {
+                String[] arr = value.split(" ");
+                for (String word : arr) {
+                    out.collect(Tuple2.of(word, 1));
+                }
+            }
+        });
+        SingleOutputStreamOperator<String> result = wordAndOne.keyBy(t -> t.f0).sum(1)
+                .map(new MapFunction<Tuple2<String, Integer>, String>() {
+                    @Override
+                    public String map(Tuple2<String, Integer> value) throws Exception {
+                        return value.f0 + ":" + value.f1;
+                    }
+                });
+        //TODO 3.sink
+        result.print();
+        //使用StreamingFileSink将数据sink到HDFS
+        OutputFileConfig config = OutputFileConfig
+                .builder()
+                .withPartPrefix("prefix")//设置文件前缀
+                .withPartSuffix(".txt")//设置文件后缀
+                .build();
+        StreamingFileSink<String> streamingFileSink = StreamingFileSink.
+                forRowFormat(new Path("hdfs://node1:8020/FlinkStreamFileSink/parquet"), new SimpleStringEncoder<String>("UTF-8"))
+                .withRollingPolicy(
+                        DefaultRollingPolicy.builder()
+                                .withRolloverInterval(TimeUnit.MINUTES.toMillis(15))//每隔15分钟生成一个新文件
+                                .withInactivityInterval(TimeUnit.MINUTES.toMillis(5))//每隔5分钟没有新数据到来,也把之前的生成一个新文件
+                                .withMaxPartSize(1024 * 1024 * 1024)
+                                .build())
+                .withOutputFileConfig(config)
+                .build();
+        result.addSink(streamingFileSink);
+        //TODO 4.execute
+        env.execute();
+    }
+}
+```
+
+### 14.2.4、PartFile
+
+每个Bucket内部分为多个部分文件，该Bucket内接收到数据的sink的每个子任务至少有一个PartFile。而额外文件滚动由可配的滚动策略决定
+
 
 # 13、Flink CEP
 
@@ -2679,6 +3357,11 @@ transaction.max.timeout.ms=3600000
 重启kafka后，再次执行，代码正常执行了
 
 
+
+
+
+
+两阶段提交：https://www.ververica.com/blog/end-to-end-exactly-once-processing-apache-flink-apache-kafka
 
 
 # 参考资料
