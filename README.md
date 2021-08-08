@@ -2,11 +2,13 @@
 
 # 一、计算机基础
 
-## 计算机网络
+## 1、计算机网络
 
-## 数据结构
+## 2、数据结构
 
-## 算法
+## 3、算法
+
+[LeetCode解题的常见模式套路](https://mp.weixin.qq.com/s/BPZLCZoTxlFJOjE0jquoHw)
 
 # 二 、J2EE体系
 
