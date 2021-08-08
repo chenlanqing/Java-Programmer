@@ -208,6 +208,67 @@ ETL主要考察点：
 
 ### 1.2、hadoop中数据文件格式
 
+### 1.3、Hadoop客户端节点是怎么识别Hadoop集群的？
+
+- Hadoop客户端节点是怎么知道Hadoop集群的节点信息的？
+- Hadoop客户端节点都需要配置什么内容？是否需要启动进程？
+
+### 1.4、HDFS集群之间是否可以实现数据迁移？
+
+### 1.5、Hadoop中必须要有SecondaryNameNode进程吗？
+
+- 分析SecondaryNameNode都做了哪些事情？
+- 如果没有SecondaryNameNode会出现什么现象？
+- 是否有SecondaryNameNode的替代品？
+
+### 1.6、HDFS中的安全模式有什么意义？
+
+- HDFS中安全模式起了什么作用？
+- 集群在安全模式期间都做了什么事情？
+
+### 1.7、HDFS中NameNode内存将要耗尽，有什么解决方案？
+
+如果排查发现HDFS中存储了海量的小文件？
+
+### 1.8、如何查找HDFS中的大文件？
+
+当Hadoop集群从节点的磁盘空间占满的时候，从节点就不可用了，此时需要给从节点扩容磁盘，或者删除从节点上的部分数据
+
+从节点磁盘中存储的数据主要都是HDFS文件系统中的数据，不能直接在从节点磁盘上删除，这样会让集群误认为HDFS中的部分数据丢失了，会导致集群状态不正常。
+
+此时想要删除文件就需要在HDFS中进行操作，找出大文件，以及一些无用的垃圾文件
+
+- 如何查看HDFS中的大文件，需要使用什么命令？
+- 注意：如果开启了回收站，在删除文件的时候一定要注意使用-skipTrash参数，否则删除的文件会进入回收站，回收站还是会占用HDFS存储空间。
+
+### 1.9、MR中的Combiner阶段在什么场景下适合使用
+
+- Combiner有什么作用？
+- 在哪些场景下适合使用Combiner？
+
+### 1.10、能不能使用zip或者rar文件解决HDFS中的小文件问题？
+
+- 如果可以使用zip或者rar文件解决HDFS中的小文件问题，为什么？如果不可以，为什么？
+- 使用zip或者rar文件和Hadoop提供的小文件解决方案(SquenceFile和MapFile)有什么区别？
+
+### 1.11、如何从一批数据中找出倾斜的key？
+
+
+
+### 1.12、分析一下Hadoop中的RPC框架？
+
+- RPC框架的架构是什么样的？
+- RPC框架可以解决什么问题？
+- RPC框架的特点？
+- Hadoop中在哪些地方用到RPC框架？
+
+### 1.13、HDFS的存储（写）过程
+
+- Client端发送写文件请求，NameNode检查文件是否存在，如果已存在，直接返回错误信息，否则，发送给client一些可用DataNode节点<br>
+- Client将文件分块，并行存储到不同节点的DataNode上，发送完成后，Client同时发送信息给NameNode和DataNode<br>
+- NameNode收到的Client信息后，发送确认信息给DataNode<br>
+- DataNode同时收到NameNode和Client的确认信息后，提交写操作。</p>
+
 ## 2、Hive
 
 ### 2.1、hive中的row_number,rank 这些开窗函数有什么区别
@@ -229,6 +290,13 @@ ETL主要考察点：
 ### 2.8、Hive查询时的优化项
 
 
+### 2.9、生产环境中为什么建议使用Hive外部表？
+
+### 2.10、Hive分区表如何开启自动加载分区？
+
+### 2.11、分析Hive中数据的序列化格式？
+
+
 
 ### sql面试题
 
@@ -239,11 +307,17 @@ https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
 
 ## 3、Flume
 
-### 3.1、Flume的事务机制是如何实现的
+### 3.1、Flume中哪些地方用到事务机制
+
+
+
+
 
 ## 4、Spark
 
 ## 5、Flink
+
+### Flink哪些算子容易产生数据倾斜
 
 ### Flink的Window处理过程中如果出现了数据倾斜
 
@@ -256,6 +330,8 @@ https://mp.weixin.qq.com/s/KvmR2ftgPBP7MMurcROAFg
 ### Flink 如何处理数据乱序和延迟？
 
 ### 基于Flink的分组TopN的实现思路及数据倾斜的解决方案
+
+### Flink SQL的执行流程
 
 
 
