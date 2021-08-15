@@ -2590,11 +2590,11 @@ Flink借鉴了数据库中的事务处理技术，同时结合自身的Checkpoin
 Flink先将待输出的数据保存下来暂时不向外部系统提交，等到Checkpoint结束时，Flink上下游所有算子的数据都是一致的时候，Flink将之前保存的数据全部提交（Commit）到外部系统。换句话说，只有经过Checkpoint确认的数据才向外部系统写入
 
 在事务写的具体实现上，Flink目前提供了两种方式：
-- 预写日志（Write-Ahead-Log，WAL）
+- 预写日志（Write-Ahead-Log，WAL）：把数据先当成状态保存，然后在收到 checkpoint完成的通知的时一次性写入sink系统；Flink提供了模板类：GenericWriteAheadSink 实现预写日志；
 - 两阶段提交（Two-Phase-Commit，2PC）
 
 这两种方式区别主要在于：
-- WAL方式通用性更强，适合几乎所有外部系统，但也不能提供百分百端到端的Exactly-Once，因为WAL预写日志会先写内存，而内存是易失介质；
+- WAL方式简单易于实现，通用性更强，适合几乎所有外部系统，但也不能提供百分百端到端的Exactly-Once，因为WAL预写日志会先写内存，而内存是易失介质；
 - 如果外部系统自身就支持事务（比如MySQL、Kafka），可以使用2PC方式，可以提供百分百端到端的Exactly-Once；
 
 事务写的方式能提供`端到端的Exactly-Once一致性`，它的代价也是非常明显的，就是牺牲了延迟。输出数据不再是实时写入到外部系统，而是分批次地提交。目前来说，没有完美的故障恢复和Exactly-Once保障机制，对于开发者来说，需要在不同需求之间权衡；
@@ -3380,4 +3380,5 @@ transaction.max.timeout.ms=3600000
 - [Flink 精进学习](https://www.yuque.com/docs/share/a4b45fed-7417-4789-8df3-071abb9b3cac)
 - [Flink CEP学习](https://juejin.cn/post/6844903970964520974)
 - [Flink动态欺诈检测系统](https://mp.weixin.qq.com/s/SGFQqY7LoAp0BWvmP9BfAw)
+- [火山引擎](https://mp.weixin.qq.com/s/JoCEScKkKPSwSBGKZW4pCw)
 
