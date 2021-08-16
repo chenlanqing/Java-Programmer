@@ -4484,7 +4484,6 @@ Specification-Version: 2.5
 Implementation-Build: tags/commons-io-2.5@r1739098; 2016-04-14 09:19:5
  4-0400
 Archiver-Version: Plexus Archiver
-
 ```
 
 ### 3.1、格式规则
@@ -4734,6 +4733,76 @@ Premain-class: jvm.InstrumentationAgent
 ## 7、如何将开源项目本地打包
 
 每个开源项目都有一个文件：CONTRIBUTING.md，阅读该文件可以找到对应的方法。JDK打包可以搜索文件：jdk building.jdk
+
+## 8、调试jar包启动
+
+调试springboot的jar包启动
+
+### 8.1、配置准备
+
+比如我们要调试jar包的启动，创建一个springboot应用：debug-jar-launch，在pom中增加如下配置：
+```xml
+<build>
+	<finalName>debug-jar-launcher</finalName>
+	<plugins>
+		<plugin>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-maven-plugin</artifactId>
+			<configuration>
+				<mainClass>com.blue.fish.debug.jar.DebugJarLaunchApplication</mainClass>
+			</configuration>
+			<executions>
+				<execution>
+					<goals>
+						<goal>repackage</goal>
+					</goals>
+				</execution>
+			</executions>
+		</plugin>
+	</plugins>
+</build>
+```
+因为引入了spring-boot-maven-plugin，package生成的jar里包含META-INF/MANIFEST.MF文件，其内容如下
+```
+Manifest-Version: 1.0
+Spring-Boot-Classpath-Index: BOOT-INF/classpath.idx
+Implementation-Title: debug-jar-launch
+Implementation-Version: 0.0.1-SNAPSHOT
+Spring-Boot-Layers-Index: BOOT-INF/layers.idx
+Start-Class: com.blue.fish.debug.jar.DebugJarLaunchApplication
+Spring-Boot-Classes: BOOT-INF/classes/
+Spring-Boot-Lib: BOOT-INF/lib/
+Build-Jdk-Spec: 1.8
+Spring-Boot-Version: 2.5.3
+Created-By: Maven Jar Plugin 3.2.0
+Main-Class: org.springframework.boot.loader.JarLauncher
+```
+其中Main-Class: org.springframework.boot.loader.JarLauncher才是真正的项目运行开始之地，而Start-Class: com.blue.fish.debug.jar.DebugJarLaunchApplication 也就是我们定义的main方法只在Main-Class之后运行的。
+
+### 8.2、准备jar包
+
+因为debug的是 org.springframework.boot.loader.JarLauncher，需要特殊操作，首先，在项目中引入spring-boot-loader依赖
+```xml
+<dependency>
+	<groupId>org.springframework.boot</groupId>
+	<artifactId>spring-boot-loader</artifactId>
+</dependency>
+```
+打包
+```
+mvn clean package -DskipTests
+```
+在target目录下有一个jar包：debug-jar-launcher.jar
+
+### 8.3、调试
+
+在idea上：Edit Configuration ，通过idea的JAR Application配置jar和源码的位置
+
+![](image/Jar包-idea配置debug.png)
+
+debuging开始，在代码中打开JarLauncher MainMethodRunner并打上断点标记
+
+![](image/Jar包-idea中debug-JarLaunch.png)
 
 # 二十二、Java Agent
 

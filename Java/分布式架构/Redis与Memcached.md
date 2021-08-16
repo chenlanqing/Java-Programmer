@@ -926,25 +926,12 @@ RDB的缺点：最后一次持久化后的数据可能丢失；
 Fork 的作用是复制一个与当前进程一样的进程。新进程的所有数据(变量、环境变量、程序计数器等)数值都和原进程一致，但是是一个全新的进程，并作为原进程的子进程。
 
 ### 1.3、配置
-```
-################################################################ SNAPSHOTTING  ################################################################
-# Save the DB on disk：
-#   save <seconds> <changes>
-#   Will save the DB if both the given number of seconds and the given
-#   number of write operations against the DB occurred.
-#   In the example below the behaviour will be to save：
-#   after 900 sec (15 min) if at least 1 key changed
-#   after 300 sec (5 min) if at least 10 keys changed
-#   after 60 sec if at least 10000 keys changed
-#   Note： you can disable saving completely by commenting out all "save" lines.
-#   It is also possible to remove all the previously configured save
-#   points by adding a save directive with a single empty string argument
-#   like in the following example：
-#
-#   save ""
-save 900 1  	表示900s内如果有1条是写入命令，就触发产生一次快照，可以理解为就进行一次备份
-save 300 10 	表示300s内有10条写入，就产生快照
-save 60 10000
+
+快照持久化是 Redis 默认采用的持久化方式，在 Redis.conf 配置文件中默认有此下配置：
+```conf
+save 900 1           #在900秒(15分钟)之后，如果至少有1个key发生变化，Redis就会自动触发BGSAVE命令创建快照。
+save 300 10          #在300秒(5分钟)之后，如果至少有10个key发生变化，Redis就会自动触发BGSAVE命令创建快照。
+save 60 10000        #在60秒(1分钟)之后，如果至少有10000个key发生变化，Redis就会自动触发BGSAVE命令创建快照。
 ```
 
 ### 1.4、触发RDB快照
@@ -984,6 +971,8 @@ config get dir 获取当前rdb文件存放的目录；
 ### 2.1、AOF 是什么
 
 以日志的形式记录每个操作，将 Redis 执行过的所有`写指令`记录下来(`读操作不记录`)，只许追加但不可以改写文件，redis启动之初会读取该文件重新构建数据，换言之，redis重启的话会根据日志文件的内容将写指令从前到后执行一次以完成数据的恢复工作；
+
+默认情况下 Redis 没有开启 AOF（append only file）方式的持久化，可以通过 appendonly 参数开启：
 
 ### 2.2、对应配置
 
@@ -1095,7 +1084,7 @@ Redis4.0开始支持RDB和AOF的混合持久化（可以通过配置项 aof-use-
 
 可以一次执行多个命令，本质是一组命令的集合，一个事务中的所有命令都会序列化，按顺序地串行执行而不会被其他命令插入，不允许加塞。所以可以任务事务是部分支持事务的。
 
-Redis事务没有像MySQL等关系型数据库事务隔离概念，不能保证原子操作；
+Redis事务没有像MySQL等关系型数据库事务隔离概念，Redis 是不支持 roll back 的，因而不满足原子性的（而且不满足持久性）
 
 事务执行流程：
 - 开始事务（Multi）
@@ -1785,11 +1774,17 @@ Redis单线程的优劣势：
 
 ### 2.4、Redis线程模型
 
-- redis 内部使用`文件事件处理器（file event handler）`，这个文件事件处理器是单线程的，所以 redis 才叫做单线程的模型。
-- 它采用 IO 多路复用机制同时监听多个 socket，根据 socket 上的事件来选择对应的事件处理器进行处理
+- Redis 基于 Reactor 模式来设计开发了自己的一套高效的事件处理模型 （Netty 的线程模型也基于 Reactor 模式，Reactor 模式不愧是高性能 IO 的基石），这套事件处理模型对应的是 Redis 中的文件事件处理器（file event handler）。由于文件事件处理器（file event handler）是单线程方式运行的，所以我们一般都说 Redis 是单线程模型；
+- 它采用 IO 多路复用机制同时监听多个 socket，根据 socket 上的事件来选择对应的事件处理器进行处理；
+
+**文件事件：**
+- Redis 基于 Reactor 模式开发了自己的网络事件处理器：这个处理器被称为文件事件处理器（file event handler）。文件事件处理器使用 I/O 多路复用（multiplexing）程序来同时监听多个套接字，并根据套接字目前执行的任务来为套接字关联不同的事件处理器。
+- 当被监听的套接字准备好执行连接应答（accept）、读取（read）、写入（write）、关 闭（close）等操作时，与操作相对应的文件事件就会产生，这时文件事件处理器就会调用套接字之前关联好的事件处理器来处理这些事件。
+- 虽然文件事件处理器以单线程方式运行，但通过使用 I/O 多路复用程序来监听多个套接字，文件事件处理器既实现了高性能的网络通信模型，又可以很好地与 Redis 服务器中其他同样以单线程方式运行的模块进行对接，这保持了 Redis 内部单线程设计的简单性；
 
 ![](image/Redis-线程模型.png)
 
+Redis请求流程：
 - 客户端 socket01 向 redis 的 server socket 请求建立连接，此时 server socket 会产生一个 AE_READABLE 事件，IO 多路复用程序监听到 server socket 产生的事件后，将该事件压入队列中。文件事件分派器从队列中获取该事件，交给连接应答处理器。连接应答处理器会创建一个能与客户端通信的 socket01，并将该 socket01 的 AE_READABLE 事件与命令请求处理器关联。
 
 - 假设此时客户端发送了一个 set key value 请求，此时 redis 中的 socket01 会产生 AE_READABLE 事件，IO 多路复用程序将事件压入队列，此时事件分派器从队列中获取到该事件，由于前面 socket01 的 AE_READABLE 事件已经与命令请求处理器关联，因此事件分派器将事件交给命令请求处理器来处理。命令请求处理器读取 socket01 的 key value 并在自己内存中完成 key value 的设置。操作完成后，它会将 socket01 的 AE_WRITABLE 事件与命令回复处理器关联。
@@ -1806,7 +1801,7 @@ Redis 还会 fork 一个子进程，来进行重负荷任务的处理。Redis
 - redis是基于内存的，内存的读写速度非常快；避免磁盘IO
 - 数据结构简单；
 - redis是单线程的，省去了很多上下文切换线程的时间；redis执行客户端命令的请求从:  获取 (socket 读)→解析→执行→内容返回 (socket 写) 等等都是由一个线程处理，所有操作是一个个挨着串行执行的 (主线程)，这就是称redis是单线程的原因
-- redis使用多路复用技术，可以处理并发的连接。非阻塞IO 内部实现采用epoll，采用了epoll+自己实现的简单的事件框架。epoll中的读、写、关闭、连接都转化成了事件，然后利用epoll的多路复用特性，绝不在IO上浪费一点时间
+- redis使用多路复用技术，可以处理并发的连接。非阻塞IO 内部实现采用epoll，采用了epoll+自己实现的简单的事件框架。epoll中的读、写、关闭、连接都转化成了事件，然后利用epoll的多路复用特性，绝不在IO上浪费一点时间；I/O 多路复用技术的使用让 Redis 不需要额外创建多余的线程来监听客户端的大量连接，降低了资源的消耗
 
 ## 3、Redis6的多线程
 
@@ -1815,19 +1810,30 @@ Redis 还会 fork 一个子进程，来进行重负荷任务的处理。Redis
 从Redis自身角度来说，因为读写网络的read/write系统调用占用了Redis执行期间大部分CPU时间，瓶颈主要在于网络的 IO 消耗, 优化主要有两个方向:
 - 提高网络 IO 性能，典型的实现比如使用 DPDK 来替代内核网络栈的方式；
 - 使用多线程充分利用多核，典型的实现比如 Memcached；
+- Redis6.0 引入了多线程，但是 Redis 的多线程只是在网络数据的读写这类耗时操作上使用了，执行命令仍然是单线程顺序执行
 
-Redis的性能瓶颈并不在CPU上，而是在内存和网络上。因此6.0发布的多线程并未将事件处理改成多线程，而是在I/O上，此外，如果把事件处理改成多线程，不但会导致锁竞争，而且会有频繁的上下文切换，即使用分段锁来减少竞争，对Redis内核也会有较大改动，性能也不一定有明显提升
+Redis的性能瓶颈并不在CPU上，而是在内存和网络上。因此6.0发布的多线程并未将事件处理改成多线程，而是在I/O上，此外，如果把事件处理改成多线程，不但会导致锁竞争，而且会有频繁的上下文切换，即使用分段锁来减少竞争，对Redis内核也会有较大改动，性能也不一定有明显提升；
 
 协议栈优化的这种方式跟 Redis 关系不大，支持多线程是一种最有效最便捷的操作方式。所以总结起来，redis支持多线程主要就是两个原因：
 - 可以充分利用服务器 CPU 资源，目前主线程只能利用一个核；
 - 多线程任务可以分摊 Redis 同步 IO 读写负荷；
 
+### 3.2、多线程配置
+
+Redis6.0 的多线程默认是禁用的，只使用主线程。如需开启需要修改 redis 配置文件 redis.conf ：
+```conf
+io-threads-do-reads yes
+```
+开启多线程后，还需要设置线程数，否则是不生效的。同样需要修改 redis 配置文件 redis.conf :
+```conf
+io-threads 4 # 官网建议4核的机器建议设置为2或3个线程，8核的建议设置为6个线程；
+```
+
 # 七、Redis应用
 
 ## 1、使用场景
 
-https://juejin.cn/post/6989108481018036232
-
+[Redis使用场景一览](https://juejin.cn/post/6989108481018036232)
 - 缓存：将热点数据放到内存中
 - 消息队列：List类型是双向链表，很适合用于消息队列；
 - 计数器：Redis支持计数器频繁的读写操作
@@ -1849,6 +1855,10 @@ https://juejin.cn/post/6989108481018036232
 | allkeys-random | 从所有数据集中任意选择数据进行淘汰 |
 | noeviction | 禁止淘汰数据（默认策略） |
 
+4.0 版本后增加以下两种：
+- `volatile-lfu（least frequently used）`：从已设置过期时间的数据集（server.db[i].expires）中挑选最不经常使用的数据淘汰
+- `allkeys-lfu（least frequently used）`：当内存不足以容纳新写入数据时，在键空间中，移除最不经常使用的 key
+
 设置淘汰策略，在配置文件中添加配置：`maxmemory-policy noeviction`
 
 如果使用 Redis 来缓存数据时，要保证所有数据都是热点数据，可以将内存最大使用量设置为热点数据占用的内存量，然后启用 allkeys-lru 淘汰策略，将最近最少使用的数据淘汰。作为内存数据库，出于对性能和内存消耗的考虑，Redis 的淘汰算法(LRU、TTL)实际实现上并非针对所有 key，而是抽样一小部分 key 从中选出被淘汰 key。抽样数量可通过 `maxmemory-samples` 配置。
@@ -1857,7 +1867,11 @@ https://juejin.cn/post/6989108481018036232
 - 如果你使用Redis只是作为缓存，不作为DB持久化，那推荐选择allkeys-lru；
 - 如果你使用Redis同时用于缓存和数据持久化，那推荐选择`volatile-lru`
 
-## 3、Redis数据过期策略
+比如问题：MySQL 里有 2000w 数据，Redis 中只存 20w 的数据，如何保证 Redis 中的数据都是热点数据？可以通过Redis数据淘汰策略
+
+## 3、Redis数据过期
+
+### 3.1、Redis数据过期策略
 
 - 定期删除：redis 会将每个设置了过期时间的 key 放入到一个独立的字典中，以后会定期遍历这个字典来删除到期的 key；Redis 默认会每秒进行十次过期扫描（100ms一次），过期扫描不会遍历过期字典中所有的 key，而是采用了一种简单的贪心策略
 	- 从过期字典中随机 20 个 key；
@@ -1876,6 +1890,26 @@ https://juejin.cn/post/6989108481018036232
 ***为什么要采用定期删除+惰性删除2种策略呢？***
 - 如果过期就删除。假设redis里放了10万个key，都设置了过期时间，你每隔几百毫秒，就检查10万个key，那redis基本上就死了，cpu负载会很高的，消耗在你的检查过期key上了；
 - 定期删除可能会导致很多过期key到了时间并没有被删除掉，那么惰性删除就派上用场了；在你获取某个key的时候，redis会检查一下 ，这个key如果设置了过期时间那么是否过期了？如果过期了此时就会删除，不会给你返回任何东西；并不是key到时间就被删除掉，而是你查询这个key的时候，redis再懒惰的检查一下；
+- 仅仅通过给 key 设置过期时间还是有问题的。因为还是可能存在定期删除和惰性删除漏掉了很多过期 key 的情况。这样就导致大量过期 key 堆积在内存里，然后就 Out of memory 了，可以通过Redis 内存淘汰机制。
+
+### 3.2、Redis如何判断数据过期的
+
+Redis 通过一个叫做过期字典（可以看作是 hash 表）来保存数据过期的时间。过期字典的键指向 Redis 数据库中的某个 key(键)，过期字典的值是一个 long 类型的整数，这个整数保存了 key 所指向的数据库键的过期时间（毫秒精度的 UNIX 时间戳）
+
+过期字典是存储在 redisDb 这个结构里的：
+```c++
+typedef struct redisDb {
+    dict *dict;                 // 数据库键空间,保存着数据库中所有键值对
+    dict *expires;              // 过期字典,保存着键的过期时间
+    dict *blocking_keys;        /* Keys with clients waiting for data (BLPOP)*/
+    dict *ready_keys;           /* Blocked keys that received a PUSH */
+    dict *watched_keys;         /* WATCHED keys for MULTI/EXEC CAS */
+    int id;                     /* Database ID */
+    long long avg_ttl;          /* Average TTL, just for stats */
+    unsigned long expires_cursor; /* Cursor of the active expire cycle. */
+    list *defrag_later;         /* List of key names to attempt to defrag one by one, gradually. */
+} redisDb;
+```
 
 # 八、Redis安全
 

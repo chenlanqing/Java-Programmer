@@ -3,6 +3,8 @@
 
 # 1、Dubbo架构描述
 
+## 1.1、基本架构
+
 ![](image/dubbo-framework.jpg)
 
 Dubbo从逻辑上来看，大致可以分为三层结构：业务层（Service）、RPC、Remote三层：
@@ -15,6 +17,14 @@ Dubbo从逻辑上来看，大致可以分为三层结构：业务层（Service�
 - exchange 信息交换层：封装请求响应模式，同步转异步，以 Request, Response 为中心，扩展接口为 `Exchanger, ExchangeChannel, ExchangeClient, ExchangeServer`
 - transport 网络传输层：抽象 mina 和 netty 为统一接口，以 Message 为中心，扩展接口为 `Channel, Transporter, Client, Server, Codec`
 - serialize 数据序列化层：可复用的一些工具，扩展接口为 `Serialization, ObjectInput, ObjectOutput, ThreadPool`
+
+## 1.2、微内核
+
+Dubbo 采用 微内核（Microkernel） + 插件（Plugin） 模式，简单来说就是微内核架构。微内核只负责组装插件；
+
+微内核架构包含两类组件：核心系统（core system） 和 插件模块（plug-in modules），核心系统提供系统所需核心能力，插件模块可以扩展系统的功能；
+
+通常情况下，微核心都会采用 Factory、IoC、OSGi 等方式管理插件生命周期。Dubbo 不想依赖 Spring 等 IoC 容器，也不想自已造一个小的 IoC 容器（过度设计），因此采用了一种最简单的 Factory 方式管理插件 ：JDK 标准的 SPI 扩展机制 （java.util.ServiceLoader）
 
 # 2、Dubbo扩展点加载机制
 
@@ -2206,131 +2216,113 @@ mock=org.apache.dubbo.rpc.cluster.router.mock.MockRouterFactory
 - 避免重复调用：对于已经调用过的远程服务，避免重复选择，每次都使用同一个节点。
 
 ```java
-    protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation,
-                                List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
-        if (CollectionUtils.isEmpty(invokers)) {
-            return null;
-        }
-        String methodName = invocation == null ? StringUtils.EMPTY_STRING : invocation.getMethodName();
-        // 判断是否是粘滞连接
-        boolean sticky = invokers.get(0).getUrl()
-                .getMethodParameter(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
-        // 如果有粘滞的Invoker 且当前的 Invoker 列表不包含该粘滞的 Invoker，将之前设置的粘滞的 Invoker 置为 null
-        if (stickyInvoker != null && !invokers.contains(stickyInvoker)) {
-            stickyInvoker = null;
-        }
-        // 如果是支持粘滞连接，（粘滞的Invoker不为null，或者 选择的 Invokers 不包含 粘滞的Invoker）
-        if (sticky && stickyInvoker != null && (selected == null || !selected.contains(stickyInvoker))) {
-            // 可用性检查且粘滞的Invoker可用，直接返回
-            if (availablecheck && stickyInvoker.isAvailable()) {
-                return stickyInvoker;
-            }
-        }
-        Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
-        if (sticky) {
-            stickyInvoker = invoker;
-        }
-        return invoker;
+protected Invoker<T> select(LoadBalance loadbalance, Invocation invocation, List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
+    if (CollectionUtils.isEmpty(invokers)) {
+        return null;
     }
-
-    private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,  List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
-        if (CollectionUtils.isEmpty(invokers)) {
-            return null;
+    String methodName = invocation == null ? StringUtils.EMPTY_STRING : invocation.getMethodName();
+    // 判断是否是粘滞连接
+    boolean sticky = invokers.get(0).getUrl().getMethodParameter(methodName, CLUSTER_STICKY_KEY, DEFAULT_CLUSTER_STICKY);
+    // 如果有粘滞的Invoker 且当前的 Invoker 列表不包含该粘滞的 Invoker，将之前设置的粘滞的 Invoker 置为 null
+    if (stickyInvoker != null && !invokers.contains(stickyInvoker)) {
+        stickyInvoker = null;
+    }
+    // 如果是支持粘滞连接，（粘滞的Invoker不为null，或者 选择的 Invokers 不包含 粘滞的Invoker）
+    if (sticky && stickyInvoker != null && (selected == null || !selected.contains(stickyInvoker))) {
+        // 可用性检查且粘滞的Invoker可用，直接返回
+        if (availablecheck && stickyInvoker.isAvailable()) {
+            return stickyInvoker;
         }
-        if (invokers.size() == 1) {
-            return invokers.get(0);
-        }
-        Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
-
-        //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
-        if ((selected != null && selected.contains(invoker))
-                || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
-            try {
-                // 重新做负载均衡
-                Invoker<T> rInvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
-                if (rInvoker != null) {
-                    invoker = rInvoker;
-                } else {
-                    //Check the index of current selected invoker, if it's not the last one, choose the one at index+1.
-                    int index = invokers.indexOf(invoker);
-                    try {
-                        //Avoid collision
-                        invoker = invokers.get((index + 1) % invokers.size());
-                    } catch (Exception e) {
-                        logger.warn(e.getMessage() + " may because invokers list dynamic change, ignore.", e);
-                    }
+    }
+    Invoker<T> invoker = doSelect(loadbalance, invocation, invokers, selected);
+    if (sticky) {
+        stickyInvoker = invoker;
+    }
+    return invoker;
+}
+private Invoker<T> doSelect(LoadBalance loadbalance, Invocation invocation,  List<Invoker<T>> invokers, List<Invoker<T>> selected) throws RpcException {
+    if (CollectionUtils.isEmpty(invokers)) {
+        return null;
+    }
+    if (invokers.size() == 1) {
+        return invokers.get(0);
+    }
+    Invoker<T> invoker = loadbalance.select(invokers, getUrl(), invocation);
+    //If the `invoker` is in the  `selected` or invoker is unavailable && availablecheck is true, reselect.
+    if ((selected != null && selected.contains(invoker)) || (!invoker.isAvailable() && getUrl() != null && availablecheck)) {
+        try {
+            // 重新做负载均衡
+            Invoker<T> rInvoker = reselect(loadbalance, invocation, invokers, selected, availablecheck);
+            if (rInvoker != null) {
+                invoker = rInvoker;
+            } else {
+                //Check the index of current selected invoker, if it's not the last one, choose the one at index+1.
+                int index = invokers.indexOf(invoker);
+                try {
+                    //Avoid collision
+                    invoker = invokers.get((index + 1) % invokers.size());
+                } catch (Exception e) {
                 }
-            } catch (Throwable t) {
-                logger.error("cluster reselect fail reason is :" + t.getMessage() + " if can not solve, you can set cluster.availablecheck=false in url", t);
             }
+        } catch (Throwable t) {
         }
-        return invoker;
     }
-    private Invoker<T> reselect(LoadBalance loadbalance, Invocation invocation,
-                                List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availablecheck) throws RpcException {
-
-        //Allocating one in advance, this list is certain to be used.
-        List<Invoker<T>> reselectInvokers = new ArrayList<>(
-                invokers.size() > 1 ? (invokers.size() - 1) : invokers.size());
-
-        // First, try picking a invoker not in `selected`.
-        for (Invoker<T> invoker : invokers) {
-            if (availablecheck && !invoker.isAvailable()) {
-                continue;
-            }
-
-            if (selected == null || !selected.contains(invoker)) {
+    return invoker;
+}
+private Invoker<T> reselect(LoadBalance loadbalance, Invocation invocation,
+                            List<Invoker<T>> invokers, List<Invoker<T>> selected, boolean availablecheck) throws RpcException {
+    //Allocating one in advance, this list is certain to be used.
+    List<Invoker<T>> reselectInvokers = new ArrayList<>(invokers.size() > 1 ? (invokers.size() - 1) : invokers.size());
+    // First, try picking a invoker not in `selected`.
+    for (Invoker<T> invoker : invokers) {
+        if (availablecheck && !invoker.isAvailable()) {
+            continue;
+        }
+        if (selected == null || !selected.contains(invoker)) {
+            reselectInvokers.add(invoker);
+        }
+    }
+    if (!reselectInvokers.isEmpty()) {
+        return loadbalance.select(reselectInvokers, getUrl(), invocation);
+    }
+    // Just pick an available invoker using loadbalance policy
+    if (selected != null) {
+        for (Invoker<T> invoker : selected) {
+            if ((invoker.isAvailable()) /*available first */ && !reselectInvokers.contains(invoker)) {
                 reselectInvokers.add(invoker);
             }
         }
-
-        if (!reselectInvokers.isEmpty()) {
-            return loadbalance.select(reselectInvokers, getUrl(), invocation);
-        }
-
-        // Just pick an available invoker using loadbalance policy
-        if (selected != null) {
-            for (Invoker<T> invoker : selected) {
-                if ((invoker.isAvailable()) // available first
-                        && !reselectInvokers.contains(invoker)) {
-                    reselectInvokers.add(invoker);
-                }
-            }
-        }
-        if (!reselectInvokers.isEmpty()) {
-            return loadbalance.select(reselectInvokers, getUrl(), invocation);
-        }
-
-        return null;
     }
-    @Override
-    public Result invoke(final Invocation invocation) throws RpcException {
-        checkWhetherDestroyed();
-
-        // binding attachments into invocation.
-        Map<String, Object> contextAttachments = RpcContext.getContext().getObjectAttachments();
-        if (contextAttachments != null && contextAttachments.size() != 0) {
-            ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
-        }
-
-        List<Invoker<T>> invokers = list(invocation);
-        LoadBalance loadbalance = initLoadBalance(invokers, invocation);
-        RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
-        return doInvoke(invocation, invokers, loadbalance);
+    if (!reselectInvokers.isEmpty()) {
+        return loadbalance.select(reselectInvokers, getUrl(), invocation);
     }
+    return null;
+}
+@Override
+public Result invoke(final Invocation invocation) throws RpcException {
+    checkWhetherDestroyed();
+    // binding attachments into invocation.
+    Map<String, Object> contextAttachments = RpcContext.getContext().getObjectAttachments();
+    if (contextAttachments != null && contextAttachments.size() != 0) {
+        ((RpcInvocation) invocation).addObjectAttachments(contextAttachments);
+    }
+    List<Invoker<T>> invokers = list(invocation);
+    LoadBalance loadbalance = initLoadBalance(invokers, invocation);
+    RpcUtils.attachInvocationIdIfAsync(getUrl(), invocation);
+    return doInvoke(invocation, invokers, loadbalance);
+}
 ```
 
 ### 10.5.2、负载均衡的策略
 
-在集群负载均衡时，Dubbo 提供了多种均衡策略，缺省为 random 随机调用
-- Random LoadBalance：随机，按权重设置随机概率。在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，有利于动态调整提供者权重；
-- RoundRobin LoadBalance：轮循，按公约后的权重设置轮循比率。存在慢的提供者累积请求的问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上；
-- LeastActive LoadBalance：最少活跃调用数，相同活跃数的随机，活跃数指调用前后计数差。使慢的提供者收到更少请求，因为越慢的提供者的调用前后计数差会越大。
-- ConsistentHash LoadBalance：一致性 Hash，相同参数的请求总是发到同一提供者。当某一台提供者挂时，原本发往该提供者的请求，基于虚拟节点，平摊到其它提供者，不会引起剧烈变动。[算法](http://en.wikipedia.org/wiki/Consistent_hashing)参见：缺省只对第一个参数 Hash，如果要修改，请配置 `<dubbo:parameter key="hash.arguments" value="0,1" />`；缺省用 160 份虚拟节点，如果要修改，请配置 `<dubbo:parameter key="hash.nodes" value="320" />`
+在集群负载均衡时，Dubbo 提供了多种均衡策略，缺省为按照权重设置随机概率做负载均衡
+- RandomLoadBalance：随机，按权重设置随机概率。在一个截面上碰撞的概率高，但调用量越大分布越均匀，而且按概率使用权重后也比较均匀，有利于动态调整提供者权重；
+- RoundRobinLoadBalance：轮循，按公约后的权重设置轮循比率。存在慢的提供者累积请求的问题，比如：第二台机器很慢，但没挂，当请求调到第二台时就卡在那，久而久之，所有请求都卡在调到第二台上；
+- LeastActiveLoadBalance：最少活跃调用数，相同活跃数的随机，活跃数指调用前后计数差。使慢的提供者收到更少请求，因为越慢的提供者的调用前后计数差会越大；初始状态下所有服务提供者的活跃数均为 0（每个服务提供者的中特定方法都对应一个活跃数，我在后面的源码中会提到），每收到一个请求后，对应的服务提供者的活跃数 +1，当这个请求处理完之后，活跃数 -1；
+- ConsistentHashLoadBalance：一致性 Hash，具体是哪个服务提供者处理请求是由你的请求的参数决定的，也就是说相同参数的请求总是发到同一个服务提供者。当某一台提供者挂时，原本发往该提供者的请求，基于虚拟节点，平摊到其它提供者，不会引起剧烈变动。[算法](http://en.wikipedia.org/wiki/Consistent_hashing)参见：缺省只对第一个参数 Hash，如果要修改，请配置 `<dubbo:parameter key="hash.arguments" value="0,1" />`；缺省用 160 份虚拟节点，如果要修改，请配置 `<dubbo:parameter key="hash.nodes" value="320" />`；
 
 负载配置有如下几种方式：
 - 服务端服务级别：`<dubbo:service interface="..." loadbalance="roundrobin" />`
-
 - 客户端服务级别：`<dubbo:reference interface="..." loadbalance="roundrobin" />`
 
 - 服务端方法级别：
@@ -2535,6 +2527,10 @@ public class RoundRobinLoadBalance extends AbstractLoadBalance {
 
 LeastActive负载均衡为最少活跃调用数负载均衡，即框架会绩效每个Invoker的活跃数，每次只从活跃数最少的Invoker里选一个节点。这个负载均衡策略需要配置 ActiveLimitFilter 过滤器来计算每个接口方法的活跃数。其最终还是会根据权重做负载均衡的时候使用的算法和Random是一样的。
 
+初始状态下所有服务提供者的活跃数均为 0（每个服务提供者的中特定方法都对应一个活跃数，我在后面的源码中会提到），每收到一个请求后，对应的服务提供者的活跃数 +1，当这个请求处理完之后，活跃数 -1。因此，Dubbo 就认为谁的活跃数越少，谁的处理速度就越快，性能也越好，这样的话，我就优先把请求给活跃数少的服务提供者处理。
+
+如果有多个服务提供者的活跃数相等怎么办？很简单，那就再走一遍 RandomLoadBalance
+
 ```java
 public class LeastActiveLoadBalance extends AbstractLoadBalance {
 
@@ -2561,7 +2557,7 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
         //遍历所有Invoker，不断寻找最小的活跃数，如果有多个Invoker的活跃数都等于 leastActive，则把他们保存到同一个集合中，最后在这个Invoker中随机选择一个Invoker
         for (int i = 0; i < length; i++) {
             Invoker<T> invoker = invokers.get(i);
-            // Get the active number of the invoker
+            // 获取 invoker 对应的活跃(active)数
             int active = RpcStatus.getStatus(invoker.getUrl(), invocation.getMethodName()).getActive();
             // Get the weight of the invoker's configuration. The default value is 100.
             int afterWarmup = getWeight(invoker, invocation);
@@ -2620,14 +2616,17 @@ public class LeastActiveLoadBalance extends AbstractLoadBalance {
     }
 }
 ```
-
 最少活跃的计数是如何知道的呢？
 
 在 ActiveLimitFilter 中，只要进来一个请求，该方法的调用的计数就会原子性+1，整个Invoker调用过程会包在 try...catch...finally 中，无论调用结束或出现异常，finally 都会把计算原子-1。该原子计数就是最少活跃数；
 
-### 10.5.5、一致性Hash负载均衡
+活跃数是通过 RpcStatus 中的一个 ConcurrentMap 保存的，根据 URL 以及服务提供者被调用的方法的名称，我们便可以获取到对应的活跃数。也就是说服务提供者中的每一个方法的活跃数都是互相独立的；
+
+### 10.5.5、ConsistentHashLoadBalance
 
 一致性Hash负载均衡可以让参数相同的请求每次都路由到相同的机器上。这种方式可以让负载均衡方式相对平均
+
+Dubbo 为了避免数据倾斜问题（节点不够分散，大量请求落到同一节点），还引入了虚拟节点的概念。通过虚拟节点可以让节点更加分散，有效均衡各个节点的请求量
 
 ![](image/Dubbo-一致性Hash轮询.png)
 
