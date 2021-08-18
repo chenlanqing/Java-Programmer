@@ -6,14 +6,14 @@
 - Hive：由 Facebook 开源用于解决海量结构化日志的数据统计工具。
 - Hive 是基于 Hadoop 的一个数据仓库工具，可以将结构化的数据文件映射为一张表，并提供类 SQL 查询功能
 
-**Hive的本质：**将 HQL 转化成 MapReduce 程序
+**Hive的本质：** 将 HQL 转化成 MapReduce 程序
 
 ![](image/Hive-Hive基本.png)
 
 - Hive处理的数据存储在HDFS上；
 - Hive分析数据底层的实现是MapReduce
 - 执行程序是在Yarn上；
-- 默认可以直接加载文本文件（TextFile），还斥资SequenceFile、RCFile等文件格式；
+- 默认可以直接加载文本文件（TextFile），还支持SequenceFile、RCFile等文件格式；
 
 ## 1.2、Hive优缺点
 
@@ -33,7 +33,7 @@
 
 ![](image/Hive-基本架构.png)
 
-- **Client**：CLI（Command-Line interface）、JDBC（JDBC访问Hive）、WEBUI（浏览器你）；
+- **Client**：CLI（Command-Line interface）、JDBC（JDBC访问Hive）、WEBUI（浏览器你）；Hive3.0中被废弃被BeeLine取代
 - **Mata Store（元数据）**：在 Hive 中，表名、表结构、字段名、字段类型、表的分隔符等统一被称为元数据。所有的元数据默认存储在 Hive 内置的 derby 数据库中，但由于 derby 只能有一个实例，也就是说不能有多个命令行客户端同时访问，所以在实际生产环境中，通常使用 MySQL 代替 derby；
 
     derby数据库的缺点：在同一个目录下一次只能打开一个会话；使用derby存储方式时，Hive会在当前目录生成一个derby.log文件和一个metastore_db目录，metastore_db里面会存储具体的元数据信息，如果下次切换到一个新目录访问Hive，则会重写生成derby.log和metastore_db目录，这样就无法使用之前的元数据信息了；
@@ -59,6 +59,21 @@ Hive 通过给用户提供的一系列交互接口，接收到用户的指令(SQ
 Hive详细运行参考美团技术文章：[Hive SQL 的编译过程](https://tech.meituan.com/2014/02/12/hive-sql-to-mapreduce.html)
 
 [Hive底层执行原理](https://mp.weixin.qq.com/s/uZco-b3TfLLDxLh8br-BTg)
+
+Hive的工作流程步骤：
+- （1）ExecuteQuery（执行查询操作）：命令行或Web UI之类的Hive接口将查询发送给Driver（任何数据驱动程序，如JDBC、ODBC等）执行；
+- （2）GetPlan（获取计划任务）：Driver借助编译器解析查询，检查语法和查询计划或查询需求；
+- （3）GetMetaData（获取元数据信息）：编译器将元数据请求发送到Metastore（任何数据库）；
+- （4）SendMetaData（发送元数据）：MetaStore将元数据作为对编译器的响应发送出去；
+- （5）SendPlan（发送计划任务）：编译器检查需求并将计划重新发送给Driver。到目前为止，查询的解析和编译已经完成；
+- （6）ExecutePlan（执行计划任务）：Driver将执行计划发送到执行引擎；
+    - ExecuteJob（执行Job任务）：在内部，执行任务的过程是MapReduce Job。执行引擎将Job发送到ResourceManager，ResourceManager位于Name节点中，并将job分配给datanode中的NodeManager。在这里，查询执行MapReduce任务；
+    - Metadata Ops（元数据操作）：在执行的同时，执行引擎可以使用Metastore执行元数据操作；
+    - jobDone（完成任务）：完成MapReduce Job；
+    - dfs operations（dfs操作记录）：向namenode获取操作数据；
+- （7）FetchResult（拉取结果集）：执行引擎将从datanode上获取结果集；
+- （8）SendResults（发送结果集至driver）：执行引擎将这些结果值发送给Driver；
+- （9）SendResults （driver将result发送至interface）：Driver将结果发送到Hive接口（即UI）
 
 ## 1.4、Hive与数据库比较
 
@@ -2062,12 +2077,52 @@ hadoop
 hive
 ```
 
-# 8、Tez引擎
+# 8、原理分析
+
+- [Hive底层SQL执行原理](https://mp.weixin.qq.com/s/Xc5-XrAjNAI1sy3bYRtbHg)
+
+## 9.1、HiveSQL转化为MR任务的过程
+
+![](image/Hive-HiveSQL-To-MR.png)
+
+编译 SQL 的任务是由 COMPILER（编译器组件）中完成的。Hive将SQL转化为MapReduce任务，整个编译过程分为六个阶段：
+- 词法、语法解析: Antlr 定义 SQL 的语法规则，完成 SQL 词法，语法解析，将 SQL 转化为抽象语法树 AST Tree；
+- 语义解析: 遍历 AST Tree，抽象出查询的基本组成单元 QueryBlock；
+- 生成逻辑执行计划: 遍历 QueryBlock，翻译为执行操作树 OperatorTree；
+- 优化逻辑执行计划: 逻辑层优化器进行 OperatorTree 变换，合并 Operator，达到减少 MapReduce Job，减少数据传输及 shuffle 数据量；
+- 生成物理执行计划: 遍历 OperatorTree，翻译为 MapReduce 任务；
+- 优化物理执行计划: 物理层优化器进行 MapReduce 任务的变换，生成最终的执行计划
+
+>注意：一个复杂的Hive SQL 可能会转化成多个MapReduce任务执行
 
 
-# 9、原理分析
+# 9、Tez引擎
 
-https://mp.weixin.qq.com/s/Xc5-XrAjNAI1sy3bYRtbHg
+Tez在hive3.0之后为默认的执行引擎
+
+## 9.1、为什么用tez替换MR
+
+为什么抛弃MR任务？因为Hadoop的MapReduce真的太慢了
+
+Tez是Apache开源的支持DAG作业的计算框架，它直接源于MapReduce框架，核心思想是将Map和Reduce两个操作进一步拆分，即Map被拆分成Input、Processor、Sort、Merge和Output， Reduce被拆分成Input、Shuffle、Sort、Merge、Processor和Output等，这样，这些分解后的元操作可以任意灵活组合，产生新的操作，这些操作经过一些控制程序组装后，可形成一个大的DAG作业
+
+# 10、Spark和Hive
+
+- Spark On Hive：Spark通过Spark-SQL使用hive 语句，操作hive，底层运行的还是 spark rdd
+- Hive on Spark：是把hive查询从mapreduce 的mr (Hadoop计算引擎)操作替换为spark rdd（spark 执行引擎） 操作
+
+## 10.1、Spark On Hive
+
+Spark通过Spark-SQL使用Hive 语句，操作Hive，底层运行的还是Spark rdd；
+
+大概的原理是：
+- 通过SparkSql，加载Hive的配置文件，获取到Hive的元数据信息；
+- 通过SparkSql获取到Hive的元数据信息之后就可以拿到Hive的所有表的数据；
+- 接下来就可以通过通过SparkSql来操作Hive表中的数据；
+
+## 10.2、Hive On Spark
+
+
 
 # 参考资料
 
