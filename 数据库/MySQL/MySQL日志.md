@@ -1,4 +1,84 @@
-# 一、BinaryLog
+# 一、MySQL日志分类
+
+- [MySQL三大日志(binlog、redo log和undo log)的作用](https://mp.weixin.qq.com/s/KUv-Mx-FRrfQpx09Xv5Itg)
+
+MySQL 日志 主要包括错误日志、查询日志、慢查询日志、事务日志、二进制日志几大类。其中，比较重要的还要属：二进制日志 binlog（归档日志）、事务日志 redo log（重做日志）和 undo log（回滚日志）
+
+## 1、redo log
+
+redo log（重做日志）是InnoDB存储引擎独有的，它让MySQL拥有了崩溃恢复能力；比如 MySQL 实例挂了或宕机了，重启时，InnoDB存储引擎会使用redo log恢复数据，保证数据的持久性与完整性；
+
+### 1.1、概述
+
+- MySQL 中数据是以页为单位，你查询一条记录，会从硬盘把一页的数据加载出来，加载出来的数据叫数据页，会放入到 Buffer Pool 中；
+- 后续的查询都是先从 Buffer Pool 中找，没有命中再去硬盘加载，减少硬盘 IO 开销，提升性能；
+- 更新表数据的时候，也是如此，发现 Buffer Pool 里存在要更新的数据，就直接在 Buffer Pool 里更新；
+- 然后会把“在某个数据页上做了什么修改”记录到重做日志缓存（redo log buffer）里，接着刷盘到 redo log 文件里；理想情况，事务一提交就会进行刷盘操作，但实际上，刷盘的时机是根据策略来进行的；
+
+> 每条 redo 记录由`表空间号 + 数据页号 + 偏移量 + 修改数据长度 + 具体修改的数据`组成;
+
+### 1.2、redo log 刷盘时机
+
+InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_trx_commit` 参数，它支持三种策略：
+- `0` ：设置为 0 的时候，表示每次事务提交时不进行刷盘操作
+- `1` ：设置为 1 的时候，表示每次事务提交时都将进行刷盘操作（默认值）
+- `2` ：设置为 2 的时候，表示每次事务提交时都只把 redo log buffer 内容写入 page cache；
+
+`innodb_flush_log_at_trx_commit` 参数默认为 1，也就是说当事务提交时会调用 fsync 对 redo log 进行刷盘；另外，InnoDB 存储引擎有一个后台线程，每隔1 秒，就会把 `redo log buffer` 中的内容写到文件系统缓存（page cache），然后调用 fsync 刷盘
+
+也就是说，一个没有提交事务的 redo log 记录，也可能会刷盘？为什么？
+- 因为在事务执行过程 redo log 记录是会写入redo log buffer 中，这些 redo log 记录会被后台线程刷盘；
+- 除了后台线程每秒1次的轮询操作，还有一种情况，当 redo log buffer 占用的空间即将达到 innodb_log_buffer_size 一半的时候，后台线程会主动刷盘；
+
+**innodb_flush_log_at_trx_commit=0 刷盘流程**
+
+为0时，如果MySQL挂了或宕机可能会有1秒数据的丢失
+
+![](image/MySQL-redoLog-0-刷盘策略.png)
+
+**innodb_flush_log_at_trx_commit=1 刷盘流程**
+
+为1时，只要事务提交成功，redo log记录就一定在硬盘里，不会有任何数据丢失。如果事务执行期间MySQL挂了或宕机，这部分日志丢了，但是事务并没有提交，所以日志丢了也不会有损失；
+
+![](image/MySQL-redoLog-1-刷盘策略.png)
+
+**innodb_flush_log_at_trx_commit=2 刷盘流程**
+
+为2时， 只要事务提交成功，redo log buffer中的内容只写入文件系统缓存（page cache）。如果仅仅只是MySQL挂了不会有任何数据丢失，但是宕机可能会有1秒数据的丢失
+
+![](image/MySQL-redoLog-2-刷盘策略.png)
+
+### 1.3、日志文件组
+
+硬盘上存储的 redo log 日志文件不只一个，而是以一个日志文件组的形式出现的，每个的redo日志文件大小都是一样的；比如可以配置为一组4个文件，每个文件的大小是 1GB，整个 redo log 日志文件组可以记录4G的内容；
+
+它采用的是环形数组形式，从头开始写，写到末尾又回到头循环写；
+
+![](image/MySQL-redoLog-日志文件组写流程.png)
+
+在个日志文件组中还有两个重要的属性，分别是 `write pos`、`checkpoint`
+- `write pos` 是当前记录的位置，一边写一边后移；
+- `checkpoint` 是当前要擦除的位置，也是往后推移；
+
+这两个属性关系：
+- 每次刷盘 redo log 记录到日志文件组中，write pos 位置就会后移更新。
+- 每次 MySQL 加载日志文件组恢复数据时，会清空加载过的 redo log 记录，并把 checkpoint 后移更新。
+- write pos 和 checkpoint 之间的还空着的部分可以用来写入新的 redo log 记录；
+- 如果 write pos 追上 checkpoint ，表示日志文件组满了，这时候不能再写入新的 redo log 记录，MySQL 得停下来，清空一些记录，把 checkpoint 推进一下；
+
+### 1.4、总结
+
+问题：只要每次把修改后的数据页直接刷盘不就好了，还有 redo log 什么事？
+
+实际上，数据页大小是16KB，刷盘比较耗时，可能就修改了数据页里的几 Byte 数据，有必要把完整的数据页刷盘吗？
+
+而且数据页刷盘是随机写，因为一个数据页对应的位置可能在硬盘文件的随机位置，所以性能是很差。
+
+如果是写 redo log，一行记录可能就占几十 Byte，只包含表空间号、数据页号、磁盘文件偏移 量、更新值，再加上是顺序写，所以刷盘速度很快。
+
+所以用 redo log 形式记录修改内容，性能会远远超过刷数据页的方式，这也让数据库的并发能力更强
+
+# 二、BinaryLog
 
 ## 1、binlog概述
 
@@ -149,7 +229,7 @@ BEGIN
 - error_code: 错误码，0意味着没有发生错误
 - type:事件类型Query
 
-# 二、Binlog 解析工具
+# 三、Binlog 解析工具
 
 ## 1、MaxWell
 

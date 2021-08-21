@@ -1603,7 +1603,7 @@ mysql复制解决了什么问题
 
 ## 2、mysql binlog
 
-[BinaryLog](binlog.md)
+[BinaryLog](MySQL日志.md#二BinaryLog)
 
 ## 3、mysql数据库备份
 
