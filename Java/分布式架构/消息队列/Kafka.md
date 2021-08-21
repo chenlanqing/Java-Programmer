@@ -907,18 +907,21 @@ acquire() 方法与锁（synchronized、Lock 等）不同，它不会造成阻�
 
 ## 6.1、主题管理
 
-主题的管理包括创建主题、查看主题信息、修改主题和删除主题等操作。可以通过 Kafka 提供的 kafka-topics.sh 脚本来执行这些操作，这个脚本位于$KAFKA_HOME/bin/目录下，其核心代码仅有一行，具体如下：`exec $(dirname $0)/kafka-run-class.sh kafka.admin.TopicCommand "$@"`
+主题的管理包括创建主题、查看主题信息、修改主题和删除主题等操作。可以通过 Kafka 提供的 kafka-topics.sh 脚本来执行这些操作，这个脚本位于`$KAFKA_HOME/bin/`目录下，其核心代码仅有一行，具体如下：`exec $(dirname $0)/kafka-run-class.sh kafka.admin.TopicCommand "$@"`
 
-可以看到其实质上是调用了 kafka.admin.TopicCommand 类来执行主题管理的操作；主题的管理除了使用 kafka-topics.sh 脚本这一种方式，还可以通过 KafkaAdminClient 的方式实现（这种方式实质上是通过发送 CreateTopicsRequest、DeleteTopicsRequest 等请求来实现的），甚至我们还可以通过直接操纵日志文件和 ZooKeeper 节点来实现；
+可以看到其实质上是调用了 `kafka.admin.TopicCommand` 类来执行主题管理的操作；主题的管理除了使用 kafka-topics.sh 脚本这一种方式，还可以通过 KafkaAdminClient 的方式实现（这种方式实质上是通过发送 CreateTopicsRequest、DeleteTopicsRequest 等请求来实现的），甚至我们还可以通过直接操纵日志文件和 ZooKeeper 节点来实现；
 
 ### 6.1.1、创建主题
 
-如果 broker 端配置参数 `auto.create.topics.enable` 设置为 true（默认值就是 true），那么当生产者向一个尚未创建的主题发送消息时，会自动创建一个分区数为 n`um.partitions`（默认值为1）、副本因子为 `default.replication.factor`（默认值为1）的主题。除此之外，当一个消费者开始从未知主题中读取消息时，或者当任意一个客户端向未知主题发送元数据请求时，都会按照配置参数 `num.partitions` 和 `default.replication.factor` 的值来创建一个相应的主题；除非有特殊应用需求，否则不建议将 auto.create.topics.enable 参数设置为 true，这个参数会增加主题的管理与维护的难度；
+如果 broker 端配置参数 `auto.create.topics.enable` 设置为 true（默认值就是 true），那么当生产者向一个尚未创建的主题发送消息时，会自动创建一个分区数为 n`um.partitions`（默认值为1）、副本因子为 `default.replication.factor`（默认值为1）的主题。除此之外，当一个消费者开始从未知主题中读取消息时，或者当任意一个客户端向未知主题发送元数据请求时，都会按照配置参数 `num.partitions` 和 `default.replication.factor` 的值来创建一个相应的主题；除非有特殊应用需求，否则不建议将 `auto.create.topics.enable` 参数设置为 true，这个参数会增加主题的管理与维护的难度；
 
-```
+通用的方式是通过 kafka-topics.sh 脚本来创建主题
+```sh
+# 创建了一个分区数为4、副本因子为2的主题 topic-demo
 [root@node1 kafka_2.11-2.0.0]# bin/kafka-topics.sh --zookeeper localhost:2181/kafka --create --topic topic-create --partitions 4 --replication-factor 2
 Created topic "topic-create". #此为控制台执行的输出结果
 ```
+在执行完脚本之后，Kafka 会在 log.dir 或 log.dirs 参数所配置的目录下创建相应的主题分区，默认情况下这个目录为/tmp/kafka-logs/
 
 # 参考资料
 

@@ -26,6 +26,19 @@ Dubbo 采用 微内核（Microkernel） + 插件（Plugin） 模式，简单来�
 
 通常情况下，微核心都会采用 Factory、IoC、OSGi 等方式管理插件生命周期。Dubbo 不想依赖 Spring 等 IoC 容器，也不想自已造一个小的 IoC 容器（过度设计），因此采用了一种最简单的 Factory 方式管理插件 ：JDK 标准的 SPI 扩展机制 （java.util.ServiceLoader）
 
+## 1.3、URL
+
+Dubbo 中任意的一个实现都可以抽象为一个 URL，Dubbo 使用 URL 来统一描述了所有对象和配置信息，并贯穿在整个 Dubbo 框架之中
+```
+dubbo://172.17.32.91:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=32508&release=&side=provider&timestamp=1593253404714dubbo://172.17.32.91:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=32508&release=&side=provider&timestamp=1593253404714
+```
+- protocol：dubbo 协议。
+- username/password：没有用户名和密码。
+- host/port：172.17.32.91:20880。
+- path：org.apache.dubbo.demo.DemoService。
+- parameters：参数键值对，这里是问号后面的参数。
+
+
 # 2、Dubbo扩展点加载机制
 
 ## 2.1、加载机制概述
@@ -45,6 +58,9 @@ public interface LoadBalance {
 ```
 
 **约定**：在扩展类的 jar 包内，放置扩展点配置文件 `META-INF/dubbo/`接口全限定名，内容为：`配置名=扩展实现类全限定名`，多个实现类用换行符分隔，其配置路径一般有三个：`META-INF/services/`、`META-INF/dubbo/`、`META-INF/dubbo/internal/`
+- `META-INF/services/` 目录：该目录下的 SPI 配置文件用来兼容 JDK SPI 。
+- `META-INF/dubbo/` 目录：该目录用于存放用户自定义 SPI 配置文件。
+- `META-INF/dubbo/internal/` 目录：该目录用于存放 Dubbo 内部使用的 SPI 配置文件
 
 ### 2.1.2、Dubbo中SPI与JDK中的SPI区别
 
@@ -56,7 +72,7 @@ public interface LoadBalance {
 - JDK的spi不支持默认值；dubbo增加了默认值的设计；
 - Dubbo的spi增加了IoC、AOP，一个扩展可以直接注入其他扩展；Dubbo支持包装扩展类，一般是把通用的抽象逻辑放到包装类中，用于实现扩展点的APO特性；
 - JDK的SPI会一次性实例化扩展点的所有实现，如果有扩展实现则初始化很耗时，如果没有也加载，浪费资源；
-- JDK的SPI如果扩展加载失败，则连扩展的名称都获取不到；
+- JDK的SPI如果扩展加载失败，则连扩展的名称都获取不到；Dubbo SPI 在抛出异常的时候，会携带该扩展名信息，而不是简单地提示扩展实现类无法加载；
 - Dubbo的SPI只是加载配置文件中的类，并分成不同的种类缓存在内存中，而不会立即全部初始化，在性能上有更好的表现；
 
 ### 2.1.5、扩展点分类与缓存

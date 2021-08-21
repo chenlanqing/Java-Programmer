@@ -526,6 +526,7 @@ chkconfig --list zookeeper
 依赖：
 - JDK安装
 - Zookeeper安装
+- 下载安装包
 
 ## 1、Kafka单机安装
 
@@ -554,17 +555,22 @@ zookeeper.connect=localhost:2181/kafka
 注意：如果zookeeper.connect的地址后面跟上了具体 路径，在使用的时候也需要跟上相应的路径
 
 单机模式下，修改完上述配置参数之后就可以启动服务
-``
+```
 bin/kafka-server-start.sh -daemon config/server.properties
 ```
 
-## 2、安装kafka-manager
+## 2、kafka集群安装
+
+- 解压缩kafka包
+
+
+## 3、安装kafka-manager
 
 - 下载 kafka-manager-2.0.0.2.zip 包，解压：`unzip kafka-manager-2.0.0.2.zip -d /usr/local/`
 
 - 修改配置内容：`vim /usr/local/kafka-manager-2.0.0.2/conf/application.conf`
     ```
-     kafka-manager.zkhosts="localhost:2181"
+    kafka-manager.zkhosts="localhost:2181"
     ```
 
 - 启动kafka-manager: `/usr/local/kafka-manager-2.0.0.2/bin/kafka-manager &`
