@@ -5,6 +5,8 @@
 
 Kafka是分布式发布-订阅消息系统。它最初由LinkedIn公司开发，之后成为Apache项目的一部分。Kafka是一个分布式的，可划分的，冗余备份的持久性的日志服务，它主要用于处理活跃的流式数据。一个多分区、多副本且基于 ZooKeeper 协调的分布式消息系统
 
+> kafka2.8开始将依赖的外部zookeeper移除了，使用内置的
+
 **主要特点：**
 - 是基于pull的模式来处理消息消费，追求高吞吐量
 - 同时为发布和订阅提供高吞吐量。据了解，Kafka每秒可以生产约25万消息（50 MB），每秒处理55万消息（110 MB）。同时kafka也支持点对点的消息投递，消费者都隶属于一个消费组，相当于点对点模型；
@@ -639,7 +641,7 @@ public interface Deserializer<T> extends Closeable {
         // 用来关闭当前序列化器。
     }
 }
-```
+ ```
 
 **注意**：不建议使用自定义的序列化器或反序列化器，因为这样会增加生产者与消费者之间的耦合度，在系统升级换代的时候很容易出错。自定义的类型有一个不得不面对的问题就是 KafkaProducer 和 KafkaConsumer 之间的序列化和反序列化的兼容性
 
@@ -921,7 +923,358 @@ acquire() 方法与锁（synchronized、Lock 等）不同，它不会造成阻�
 [root@node1 kafka_2.11-2.0.0]# bin/kafka-topics.sh --zookeeper localhost:2181/kafka --create --topic topic-create --partitions 4 --replication-factor 2
 Created topic "topic-create". #此为控制台执行的输出结果
 ```
-在执行完脚本之后，Kafka 会在 log.dir 或 log.dirs 参数所配置的目录下创建相应的主题分区，默认情况下这个目录为/tmp/kafka-logs/
+在执行完脚本之后，Kafka 会在 log.dir 或 log.dirs 参数所配置的目录下创建相应的主题分区，默认情况下这个目录为/tmp/kafka-logs/，这里配置的是kafka目录下的log目录：
+
+节点1中创建的主题分区
+```
+[root@kafka1 kafka_2.12-2.7.0]# ls -al log | grep topic-create
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-0
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-1
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-3
+```
+可以看到 node1 节点中创建了3个文件夹 topic-create-0、topic-create-1、topic-create-3，对应主题 topic-create 的3个分区编号为0、1、3的分区，命名方式可以概括为`<topic>-<partition>`；
+
+```
+[root@kafka2 kafka_2.12-2.7.0]# ls -al log | grep topic-create
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-1
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-2
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-3
+
+[root@kafka3 kafka_2.12-2.7.0]# ls -al log | grep topic-create
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-0
+drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-2
+```
+
+三个 broker 节点一共创建了8个文件夹，这个数字8实质上是分区数4与副本因子2的乘积。每个副本（或者更确切地说应该是日志，副本与日志一一对应）才真正对应了一个命名形式如<topic>-<partition>的文件夹
+
+**Topic、Partition、Replication、Log 之间的关系**
+
+主题、分区、副本和 Log（日志）的关系如下图所示，主题和分区都是提供给上层用户的抽象，而在副本层面或更加确切地说是 Log 层面才有实际物理上的存在
+
+![](image/Kafka-Topic-Partition-Replica-log.png)
+
+同一个分区中的多个副本必须分布在不同的 broker 中，这样才能提供有效的数据冗余。对于示例中的分区数为4、副本因子为2、broker 数为3的情况下，按照2、3、3的分区副本个数分配给各个 broker 是最优的选择。再比如在分区数为3、副本因子为3，并且 broker 数同样为3的情况下，分配3、3、3的分区副本个数给各个 broker 是最优的选择，也就是每个 broker 中都拥有所有分区的一个副本
+
+不仅可以通过日志文件的根目录来查看集群中各个 broker 的分区副本的分配情况，还可以通过 ZooKeeper 客户端来获取。当创建一个主题时会在 ZooKeeper 的/brokers/topics/目录下创建一个同名的实节点，该节点中记录了该主题的分区副本分配方案
+```
+[zk: localhost:2181(CONNECTED) 0] get /brokers/topics/topic-create
+{"version":2,"partitions":{"2":[3,2],"1":[2,1],"0":[1,3],"3":[1,2]},"adding_replicas":{},"removing_replicas":{}}
+```
+示例数据中的`"3":[1,2]`表示分区3分配了2个副本，分别在 brokerId 为1和2的 broker 节点中
+
+通过 describe 指令类型来查看分区副本的分配细节，示例如下：
+```
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-topics.sh --describe --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --topic topic-create
+Topic: topic-create     PartitionCount: 4       ReplicationFactor: 2    Configs: 
+        Topic: topic-create     Partition: 0    Leader: 1       Replicas: 1,3   Isr: 1,3
+        Topic: topic-create     Partition: 1    Leader: 2       Replicas: 2,1   Isr: 2,1
+        Topic: topic-create     Partition: 2    Leader: 3       Replicas: 3,2   Isr: 3,2
+        Topic: topic-create     Partition: 3    Leader: 1       Replicas: 1,2   Isr: 1,2
+```
+示例中的 Topic 和 Partition 分别表示主题名称和分区号。PartitionCount 表示主题中分区的个数，ReplicationFactor 表示副本因子，而 Configs 表示创建或修改主题时指定的参数配置。Leader 表示分区的 leader 副本所对应的 brokerId，Isr 表示分区的 ISR 集合，Replicas 表示分区的所有的副本分配情况，即AR集合，其中的数字都表示的是 brokerId
+
+使用kafka-topic.sh创建主题的命令：
+`kafka-topics.sh -–zookeeper <String: hosts> –create –-topic [String: topic] -–partitions <Integer: # of partitions> –replication-factor <Integer: replication factor>`，这个创建主题时的分区副本都是按照既定的内部逻辑来进行分配的；kafka-topics.sh 脚本中还提供了一个 replica-assignment 参数来手动指定分区副本的分配方案。replica-assignment 参数的用法归纳如下：`--replica-assignment <String: broker_id_for_part1_replica1:broker_id_for_ part1_replica2, broker_id_for_part2_replica1:broker_id_for_part2_replica2, …>`
+
+这种方式根据分区号的数值大小按照从小到大的顺序进行排列，分区与分区之间用逗号“,”隔开，分区内多个副本用冒号“:”隔开。并且在使用 replica-assignment 参数创建主题时不需要原本必备的 partitions 和 replication-factor 这两个参数
+
+我们可以通过 replica-assignment 参数来创建一个与主题 topic-create 相同的分配方案的主题 topic-create-same 和不同的分配方案的主题 topic-create-diff，示例如下：
+```
+bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:218 --create --topic topic-create-same --replica-assignment 2:0,0:1,1:2,2:1
+```
+注意同一个分区内的副本不能有重复，比如指定了0:0,1:1这种，就会报出 AdminCommand- FailedException 异常，示例如下：
+```
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --create --topic topic-create-same-1 --replica-assignment 0:0,0:1,1:2,2:1
+Error while executing topic command : Partition replica lists may not contain duplicate entries: 0
+[2021-08-21 14:57:36,956] ERROR kafka.common.AdminCommandFailedException: Partition replica lists may not contain duplicate entries: 0
+        at kafka.admin.TopicCommand$.$anonfun$parseReplicaAssignment$1(TopicCommand.scala:581)
+        at kafka.admin.TopicCommand$.parseReplicaAssignment(TopicCommand.scala:577)
+        at kafka.admin.TopicCommand$TopicCommandOptions.replicaAssignment(TopicCommand.scala:712)
+        at kafka.admin.TopicCommand$CommandTopicPartition.<init>(TopicCommand.scala:98)
+        at kafka.admin.TopicCommand$TopicService.createTopic(TopicCommand.scala:208)
+        at kafka.admin.TopicCommand$TopicService.createTopic$(TopicCommand.scala:207)
+        at kafka.admin.TopicCommand$ZookeeperTopicService.createTopic(TopicCommand.scala:380)
+        at kafka.admin.TopicCommand$.main(TopicCommand.scala:64)
+        at kafka.admin.TopicCommand.main(TopicCommand.scala)
+ (kafka.admin.TopicCommand$)
+```
+
+### 6.1.2、修改主题
+
+当一个主题被创建之后，依然允许我们对其做一定的修改，比如修改分区个数、修改配置等，这个修改的功能就是由 kafka-topics.sh 脚本中的 alter 指令提供的，目前 Kafka 只支持增加分区数而不支持减少分区数；
+
+**为什么不支持减少分区？** 按照 Kafka 现有的代码逻辑，此功能完全可以实现，不过也会使代码的复杂度急剧增大。实现此功能需要考虑的因素很多，比如删除的分区中的消息该如何处理？如果随着分区一起消失则消息的可靠性得不到保障；如果需要保留则又需要考虑如何保留。直接存储到现有分区的尾部，消息的时间戳就不会递增，如此对于 Spark、Flink 这类需要消息时间戳（事件时间）的组件将会受到影响；如果分散插入现有的分区，那么在消息量很大的时候，内部的数据复制会占用很大的资源，而且在复制期间，此主题的可用性又如何得到保障？与此同时，顺序性问题、事务性问题，以及分区和副本的状态机切换问题都是不得不面对的。反观这个功能的收益点却是很低的，如果真的需要实现此类功能，则完全可以重新创建一个分区数较小的主题，然后将现有主题中的消息按照既定的逻辑复制过去即可
+
+### 6.1.3、删除主题
+
+如果确定不再使用一个主题，那么最好的方式是将其删除，这样可以释放一些资源，比如磁盘、文件句柄等。kafka-topics.sh 脚本中的 delete 指令就可以用来删除主题
+```
+bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic topic-delete
+```
+可以看到在执行完删除命令之后会有相关的提示信息，这个提示信息和 broker 端配置参数 `delete.topic.enable` 有关。必须将 `delete.topic.enable` 参数配置为 true 才能够删除主题，这个参数的默认值就是 true，如果配置为 false，那么删除主题的操作将会被忽略。在实际生产环境中，建议将这个参数的值设置为 true；如果要删除的主题是 Kafka 的内部主题，那么删除时就会报错；尝试删除一个不存在的主题也会报错
+
+### 6.1.4、总结
+
+通过执行无任何参数的 kafka-topics.sh 脚本，或者执行 kafka-topics.sh –help 来查看帮助信息。
+
+<table>
+    <thead>
+        <tr>
+            <th>参 数 名 称</th>
+            <th>释 义</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>alter</td>
+            <td>用于修改主题，包括分区数及主题的配置</td>
+        </tr>
+        <tr>
+            <td>config &lt;键值对&gt;</td>
+            <td>创建或修改主题时，用于设置主题级别的参数</td>
+        </tr>
+        <tr>
+            <td>create</td>
+            <td>创建主题</td>
+        </tr>
+        <tr>
+            <td>delete</td>
+            <td>删除主题</td>
+        </tr>
+        <tr>
+            <td>delete-config &lt;配置名称&gt;</td>
+            <td>删除主题级别被覆盖的配置</td>
+        </tr>
+        <tr>
+            <td>describe</td>
+            <td>查看主题的详细信息</td>
+        </tr>
+        <tr>
+            <td>disable-rack-aware</td>
+            <td>创建主题时不考虑机架信息</td>
+        </tr>
+        <tr>
+            <td>help</td>
+            <td>打印帮助信息</td>
+        </tr>
+        <tr>
+            <td>if-exists</td>
+            <td>修改或删除主题时使用，只有当主题存在时才会执行动作</td>
+        </tr>
+        <tr>
+            <td>if-not-exists</td>
+            <td>创建主题时使用，只有主题不存在时才会执行动作</td>
+        </tr>
+        <tr>
+            <td>list</td>
+            <td>列出所有可用的主题</td>
+        </tr>
+        <tr>
+            <td>partitions &lt;分区数&gt;</td>
+            <td>创建主题或增加分区时指定分区数</td>
+        </tr>
+        <tr>
+            <td>replica-assignment &lt;分配方案&gt;</td>
+            <td>手工指定分区副本分配方案</td>
+        </tr>
+        <tr>
+            <td>replication-factor &lt;副本数&gt;</td>
+            <td>创建主题时指定副本因子</td>
+        </tr>
+        <tr>
+            <td>topic &lt;主题名称&gt;</td>
+            <td>指定主题名称</td>
+        </tr>
+        <tr>
+            <td>topics-with-overrides</td>
+            <td>使用 describe 查看主题信息时，只展示包含覆盖配置的主题</td>
+        </tr>
+        <tr>
+            <td>unavailable-partitions</td>
+            <td>使用 describe 查看主题信息时，只展示包含没有 leader 副本的分区</td>
+        </tr>
+        <tr>
+            <td>under-replicated-partitions</td>
+            <td>使用 describe 查看主题信息时，只展示包含失效副本的分区</td>
+        </tr>
+        <tr>
+            <td>zookeeper</td>
+            <td>指定连接的 ZooKeeper 地址信息（必填项）</td>
+        </tr>
+    </tbody>
+</table>
+
+## 6.2、KafkaAdminClient
+
+### 6.2.1、基本概述
+
+一般情况下，习惯使用 kafka-topics.sh 脚本来管理主题，但有些时候我们希望将主题管理类的功能集成到公司内部的系统中，打造集管理、监控、运维、告警为一体的生态平台，那么就需要以程序调用 API 的方式去实现
+
+在 Kafka 0.11.0.0 版本之前，我们可以通过 kafka-core 包（Kafka 服务端代码）下的 kafka.admin.AdminClient 和 kafka.admin.AdminUtils 来实现部分 Kafka 的管理功能，但它们都已经过时了，在未来的版本中会被删除。从0.11.0.0版本开始，Kafka 提供了另一个工具类 `org.apache.kafka.clients.admin.KafkaAdminClient` 来作为替代方案。KafkaAdminClient 不仅可以用来管理 broker、配置和 ACL（Access Control List），还可以用来管理主题
+
+KafkaAdminClient 继承了 `org.apache.kafka.clients.admin.AdminClient` 抽象类
+- 创建主题：CreateTopicsResult createTopics(Collection newTopics)。
+- 删除主题：DeleteTopicsResult deleteTopics(Collection topics)。
+- 列出所有可用的主题：ListTopicsResult listTopics()。
+- 查看主题的信息：DescribeTopicsResult describeTopics(Collection topicNames)。
+- 查询配置信息：DescribeConfigsResult describeConfigs(Collection resources)。
+- 修改配置信息：AlterConfigsResult alterConfigs(Map<ConfigResource, Config> configs)。
+- 增加分区：CreatePartitionsResult createPartitions(Map<String, NewPartitions> newPartitions)
+
+### 6.2.2、主题合法性验证
+
+一般情况下，Kafka 生产环境中的 auto.create.topics.enable 参数会被设置为 false，即自动创建主题这条路会被堵住；
+
+普通用户在创建主题的时候，有可能由于误操作或其他原因而创建了不符合运维规范的主题，比如命名不规范，副本因子数太低等，这些都会影响后期的系统运维。如果创建主题的操作封装在资源申请、审核系统中，那么在前端就可以根据规则过滤不符合规范的申请操作；
+
+Kafka broker 端有一个这样的参数：`create.topic.policy.class.name`，默认值为 null，它提供了一个入口用来验证主题创建的合法性；
+
+使用方式很简单，只需要自定义实现 `org.apache.kafka.server.policy.CreateTopicPolicy` 接口，比如下面示例中的 PolicyDemo。然后在 broker 端的配置文件 config/server.properties 中配置参数 `create.topic.policy.class.name` 的值为 org.apache.kafka.server.policy.PolicyDemo，最后启动服务
+
+## 6.3、优先副本选举
+
+分区使用多副本机制来提升可靠性，但只有 leader 副本对外提供读写服务，而 follower 副本只负责在内部进行消息的同步；如果一个分区的 leader 副本不可用，那么就意味着整个分区变得不可用，此时就需要 Kafka 从剩余的 follower 副本中挑选一个新的 leader 副本来继续对外提供服务。虽然不够严谨，但从某种程度上说，broker 节点中 leader 副本个数的多少决定了这个节点负载的高低；
+
+针对同一个分区而言，同一个 broker 节点中不可能出现它的多个副本，即 Kafka 集群的一个 broker 中最多只能有它的一个副本，我们可以将 leader 副本所在的 broker 节点叫作分区的 leader 节点，而 follower 副本所在的 broker 节点叫作分区的 follower 节点。
+
+随着时间的更替，Kafka 集群的 broker 节点不可避免地会遇到宕机或崩溃的问题，当分区的 leader 节点发生故障时，其中一个 follower 节点就会成为新的 leader 节点，这样就会导致集群的负载不均衡，从而影响整体的健壮性和稳定性。当原来的 leader 节点恢复之后重新加入集群时，它只能成为一个新的 follower 节点而不再对外提供服务
+
+**优先副本（preferred replica）：**
+
+为了能够有效地治理负载失衡的情况，Kafka 引入了`优先副本（preferred replica）`的概念，谓的优先副本是指在AR集合列表中的第一个副本
+```
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --describe --topic topic-partitions
+Topic: topic-partitions PartitionCount: 3       ReplicationFactor: 3    Configs: 
+        Topic: topic-partitions Partition: 0    Leader: 2       Replicas: 2,3,1 Isr: 2,3,1
+        Topic: topic-partitions Partition: 1    Leader: 3       Replicas: 3,1,2 Isr: 3,1,2
+        Topic: topic-partitions Partition: 2    Leader: 1       Replicas: 1,2,3 Isr: 1,2,3
+```
+将 brokerId 为2 的机器停止服务，然后在重启服务，
+```
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --describe --topic topic-partitions
+Topic: topic-partitions PartitionCount: 3       ReplicationFactor: 3    Configs: 
+        Topic: topic-partitions Partition: 0    Leader: 3       Replicas: 2,3,1 Isr: 3,1,2
+        Topic: topic-partitions Partition: 1    Leader: 3       Replicas: 3,1,2 Isr: 3,1,2
+        Topic: topic-partitions Partition: 2    Leader: 1       Replicas: 1,2,3 Isr: 1,3,2
+```
+可以看到原本分区0的 leader 节点为2，现在变成了3，如此一来原本均衡的负载变成了失衡：节点3的负载最高，而节点2的负载最低
+
+比如上面主题 topic-create 中分区0的AR集合列表（Replicas）为[2,3,1]，那么分区0的优先副本即为1；理想情况下，优先副本就是该分区的leader 副本，所以也可以称之为 preferred leader。Kafka 要确保所有主题的优先副本在 Kafka 集群中均匀分布，这样就保证了所有分区的 leader 均衡分布。如果 leader 分布过于集中，就会造成集群负载不均衡；
+
+**优先副本的选举：**
+
+所谓的优先副本的选举是指通过一定的方式促使优先副本选举为 leader 副本，以此来促进集群的负载均衡，这一行为也可以称为`分区平衡`；
+
+在 Kafka 中可以提供分区自动平衡的功能，与此对应的 broker 端参数是 `auto.leader. rebalance.enable`，此参数的默认值为 true，即默认情况下此功能是开启的。如果开启分区自动平衡的功能，则 Kafka 的控制器会启动一个定时任务，这个定时任务会轮询所有的 broker 节点，计算每个 broker 节点的分区不平衡率（broker 中的不平衡率=非优先副本的 leader 个数/分区总数）是否超过 `leader.imbalance.per.broker.percentage` 参数配置的比值，默认值为10%，如果超过设定的比值则会自动执行优先副本的选举动作以求分区平衡。执行周期由参数 `leader.imbalance.check.interval.seconds` 控制，默认值为300秒，即5分钟；
+
+不过在生产环境中不建议将 `auto.leader.rebalance.enable` 设置为默认的 true，因为这可能引起负面的性能问题，也有可能引起客户端一定时间的阻塞。因为执行的时间无法自主掌控，如果在关键时期（比如电商大促波峰期）执行关键任务的关卡上执行优先副本的自动选举操作，势必会有业务阻塞、频繁超时之类的风险。前面也分析过，分区及副本的均衡也不能完全确保集群整体的均衡，并且集群中一定程度上的不均衡也是可以忍受的，为防止出现关键时期“掉链子”的行为；
+
+Kafka 中 kafka-perferred-replica-election.sh 脚本提供了对分区 leader 副本进行重新平衡的功能；优先副本的选举过程是一个安全的过程，Kafka 客户端可以自动感知分区 leader 副本的变更
+```
+bin/kafka-preferred-replica-election.sh --zookeeper localhost:2181
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --describe --topic topic-partitions
+Topic: topic-partitions PartitionCount: 3       ReplicationFactor: 3    Configs: 
+        Topic: topic-partitions Partition: 0    Leader: 2       Replicas: 2,3,1 Isr: 3,1,2
+        Topic: topic-partitions Partition: 1    Leader: 3       Replicas: 3,1,2 Isr: 3,1,2
+        Topic: topic-partitions Partition: 2    Leader: 1       Replicas: 1,2,3 Isr: 1,3,2
+```
+可以看到在脚本执行之后，主题 topic-partitions 中的所有 leader 副本的分布已经和刚创建时的一样了，所有的优先副本都成为 leader 副本；
+
+leader 副本的转移也是一项高成本的工作，如果要执行的分区数很多，那么必然会对客户端造成一定的影响。如果集群中包含大量的分区，那么上面的这种使用方式有可能会失效；
+
+优先副本的选举过程中，具体的元数据信息会被存入 ZooKeeper 的/admin/preferred_replica_election 节点，如果这些数据超过了 ZooKeeper 节点所允许的大小，那么选举就会失败。默认情况下 ZooKeeper 所允许的节点数据大小为1MB；
+
+kafka-perferred-replica-election.sh 脚本中还提供了 path-to-json-file 参数来小批量地对部分分区执行优先副本的选举操作。通过 path-to-json-file 参数来指定一个 JSON 文件，这个 JSON 文件里保存需要执行优先副本选举的分区清单；
+```json
+{
+    "partitions":[
+        {
+            "partition":0,
+            "topic":"topic-partitions"
+        },
+        {
+            "partition":1,
+            "topic":"topic-partitions"
+        },
+        {
+            "partition":2,
+            "topic":"topic-partitions"
+        }
+    ]
+}
+```
+然后通过 kafka-perferred-replica-election.sh 脚本配合 path-to-json-file 参数来对主题 topic-partitions 执行优先副本的选举操作，具体示例如下：
+```
+bin/kafka-preferred-replica-election.sh --zookeeper localhost:2181 --path-to-json-file election.json
+```
+在实际生产环境中，一般使用 path-to-json-file 参数来分批、手动地执行优先副本的选举操作。尤其是在应对大规模的 Kafka 集群时，理应杜绝采用非 path-to-json-file 参数的选举操作方式。同时，优先副本的选举操作也要注意避开业务高峰期，以免带来性能方面的负面影响；
+
+## 6.4、分区重分配
+
+当要对集群中的一个节点进行有计划的下线操作时，为了保证分区及副本的合理分配，我们也希望通过某种方式能够将该节点上的分区副本迁移到其他的可用节点上。
+
+当集群中新增 broker 节点时，只有新创建的主题分区才有可能被分配到这个节点上，而之前的主题分区并不会自动分配到新加入的节点中，因为在它们被创建时还没有这个新节点，这样新节点的负载和原先节点的负载之间严重不均衡；
+
+为了解决上述问题，需要让分区副本再次进行合理的分配，也就是所谓的分区重分配。Kafka 提供了 kafka-reassign-partitions.sh 脚本来执行分区重分配的工作，它可以在集群扩容、broker 节点失效的场景下对分区进行迁移。 kafka-reassign-partitions.sh 脚本的使用分为3个步骤：首先创建需要一个包含主题清单的 JSON 文件，其次根据主题清单和 broker 节点清单生成一份重分配方案，最后根据这份方案执行具体的重分配动作；
+
+kafka-reassign-partitions.sh 脚本的用法。首先在一个由3个节点（broker 0、broker 1、broker 2）组成的集群中创建一个主题 topic-reassign，主题中包含4个分区和2个副本：
+```
+bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --create --topic topic-reassign --replication-factor 2 --partitions 4
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --describe --topic topic-reassign
+Topic: topic-reassign   PartitionCount: 4       ReplicationFactor: 2    Configs: 
+        Topic: topic-reassign   Partition: 0    Leader: 1       Replicas: 1,2   Isr: 1,2
+        Topic: topic-reassign   Partition: 1    Leader: 2       Replicas: 2,3   Isr: 2,3
+        Topic: topic-reassign   Partition: 2    Leader: 3       Replicas: 3,1   Isr: 3,1
+        Topic: topic-reassign   Partition: 3    Leader: 1       Replicas: 1,3   Isr: 1,3
+```
+主题 topic-reassign 在3个节点中都有相应的分区副本分布，由于某种原因，我们想要下线 brokerId 为1的 broker 节点，在此之前，我们要做的就是将其上的分区副本迁移出去，迁移过程过程：
+- 创建一个 JSON 文件（文件的名称假定为 reassign.json），文件内容为要进行分区重分配的主题清单
+    ```json
+    {
+        "topics":[
+            {
+                "topic":"topic-reassign"
+            }
+        ],
+        "version":1
+    }
+    ```
+- 根据这个 JSON 文件和指定所要分配的 broker 节点列表来生成一份候选的重分配方案
+    ```sh
+    [root@kafka2 kafka_2.12-2.7.0]# bin/kafka-reassign-partitions.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --generate --topics-to-move-json-file reassign.json --broker-list 2,3
+    Warning: --zookeeper is deprecated, and will be removed in a future version of Kafka.
+    Current partition replica assignment
+    {"version":1,"partitions":[{"topic":"topic-reassign","partition":0,"replicas":[1,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":1,"replicas":[2,3],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":2,"replicas":[3,1],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":3,"replicas":[1,3],"log_dirs":["any","any"]}]}
+
+    Proposed partition reassignment configuration
+    {"version":1,"partitions":[{"topic":"topic-reassign","partition":0,"replicas":[3,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":1,"replicas":[2,3],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":2,"replicas":[3,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":3,"replicas":[2,3],"log_dirs":["any","any"]}]}
+    ```
+    generate 是 kafka-reassign-partitions.sh 脚本中指令类型的参数，可以类比于 kafka-topics.sh 脚本中的 create、list 等，它用来生成一个重分配的候选方案。topic-to-move-json 用来指定分区重分配对应的主题清单文件的路径，该清单文件的具体的格式可以归纳为`{"topics": [{"topic": "foo"},{"topic": "foo1"}],"version": 1}`，broker-list 用来指定所要分配的 broker 节点列表，比如示例中的“2,3”；
+
+    第二个“Proposed partition reassignment configuration”所对应的 JSON 内容为重分配的候选方案，注意这里只是生成一份可行性的方案，并没有真正执行重分配的动作
+- 执行具体的重分配动作
+    ```sh
+    [root@kafka2 kafka_2.12-2.7.0]# bin/kafka-reassign-partitions.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --execute --reassignment-json-file project.json
+    Warning: --zookeeper is deprecated, and will be removed in a future version of Kafka.
+    Current partition replica assignment
+
+    {"version":1,"partitions":[{"topic":"topic-reassign","partition":0,"replicas":[1,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":1,"replicas":[2,3],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":2,"replicas":[3,1],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":3,"replicas":[1,3],"log_dirs":["any","any"]}]}
+
+    Save this to use as the --reassignment-json-file option during rollback
+    Successfully started partition reassignments for topic-reassign-0,topic-reassign-1,topic-reassign-2,topic-reassign-3
+    ```
+执行完上述命令之后，可以看到 topic-reassign 的所有分区副本都只在2和3的 broker 节点上分布了；
+```
+[root@kafka2 kafka_2.12-2.7.0]# bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --describe --topic topic-reassign
+Topic: topic-reassign   PartitionCount: 4       ReplicationFactor: 2    Configs: 
+        Topic: topic-reassign   Partition: 0    Leader: 3       Replicas: 3,2   Isr: 2,3
+        Topic: topic-reassign   Partition: 1    Leader: 2       Replicas: 2,3   Isr: 2,3
+        Topic: topic-reassign   Partition: 2    Leader: 3       Replicas: 3,2   Isr: 3,2
+        Topic: topic-reassign   Partition: 3    Leader: 2       Replicas: 2,3   Isr: 3,2
+```
+**分区重分配的基本原理：** 是先通过控制器为每个分区添加新副本（增加副本因子），新的副本将从分区的 leader 副本那里复制所有的数据。根据分区的大小不同，复制过程可能需要花一些时间，因为数据是通过网络复制到新副本上的。在复制完成之后，控制器将旧副本从副本清单里移除（恢复为原先的副本因子数）。注意在重分配的过程中要确保有足够的空间；
+
+分区重分配对集群的性能有很大的影响，需要占用额外的资源，比如网络和磁盘。在实际操作中，我们将降低重分配的粒度，分成多个小批次来执行，以此来将负面的影响降到最低，这一点和优先副本的选举有异曲同工之妙；
 
 # 参考资料
 
