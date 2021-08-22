@@ -1011,7 +1011,31 @@ Error while executing topic command : Partition replica lists may not contain du
 ```
 bin/kafka-topics.sh --zookeeper localhost:2181 --delete --topic topic-delete
 ```
-可以看到在执行完删除命令之后会有相关的提示信息，这个提示信息和 broker 端配置参数 `delete.topic.enable` 有关。必须将 `delete.topic.enable` 参数配置为 true 才能够删除主题，这个参数的默认值就是 true，如果配置为 false，那么删除主题的操作将会被忽略。在实际生产环境中，建议将这个参数的值设置为 true；如果要删除的主题是 Kafka 的内部主题，那么删除时就会报错；尝试删除一个不存在的主题也会报错
+可以看到在执行完删除命令之后会有相关的提示信息，这个提示信息和 broker 端配置参数 `delete.topic.enable` 有关。必须将 `delete.topic.enable` 参数配置为 true 才能够删除主题，这个参数的默认值就是 true，如果配置为 false，那么删除主题的操作将会被忽略。在实际生产环境中，建议将这个参数的值设置为 true；如果要删除的主题是 Kafka 的内部主题，那么删除时就会报错；尝试删除一个不存在的主题也会报错；可以通过 if-exists 参数来忽略异常，参考如下：
+```
+[root@node1 kafka_2.11-2.0.0]# bin/kafka-topics.sh --zookeeper kafka1:2181 --delete --topic topic-unknown --if-exists
+```
+使用 kafka-topics.sh 脚本删除主题的行为本质上只是在 ZooKeeper 中的/admin/delete_topics路径下创建一个与待删除主题同名的节点，以此标记该主题为待删除的状态。与创建主题相同的是，真正删除主题的动作也是由 Kafka 的控制器负责完成的；
+
+可以直接通过 ZooKeeper 的客户端来删除主题。下面示例中使用 ZooKeeper 客户端 zkCli.sh 来删除主题 topic-delete：
+
+可以通过手动的方式来删除主题：主题中的元数据存储在 ZooKeeper 中的/brokers/topics和/config/topics路径下，主题中的消息数据存储在 log.dir 或 log.dirs 配置的路径下，我们只需要手动删除这些地方的内容即可。下面的示例中演示了如何删除主题 topic-delete，总共分3个步骤，第一步和第二步的顺序可以互换：
+- 删除 ZooKeeper 中的节点/config/topics/topic-delete
+    ```
+    [zk: localhost:2181/kafka (CONNECTED) 7] delete /config/topics/topic-delete
+    ```
+- 第二步，删除 ZooKeeper 中的节点/brokers/topics/topic-delete 及其子节点，（高版本zookeeper使用 deleteall）
+    ```
+    [zk: localhost:2181/kafka (CONNECTED) 8] rmr /brokers/topics/topic-delete
+    ```
+- 第三步，删除集群中所有与主题 topic-delete 有关的文件
+    ```sh
+    # 集群中的各个broker节点中执行rm -rf /tmp/kafka-logs/topic-delete*命令来删除与主题topic-delete有关的文件
+    [root@node1 kafka_2.11-2.0.0]# rm -rf /tmp/kafka-logs/topic-delete*
+    [root@node2 kafka_2.11-2.0.0]# rm -rf /tmp/kafka-logs/topic-delete*
+    [root@node3 kafka_2.11-2.0.0]# rm -rf /tmp/kafka-logs/topic-delete*
+    ```
+> 注意，删除主题是一个不可逆的操作。一旦删除之后，与其相关的所有消息数据会被全部删除，所以在执行这一操作的时候也要三思而后行
 
 ### 6.1.4、总结
 
@@ -1275,6 +1299,145 @@ Topic: topic-reassign   PartitionCount: 4       ReplicationFactor: 2    Configs:
 **分区重分配的基本原理：** 是先通过控制器为每个分区添加新副本（增加副本因子），新的副本将从分区的 leader 副本那里复制所有的数据。根据分区的大小不同，复制过程可能需要花一些时间，因为数据是通过网络复制到新副本上的。在复制完成之后，控制器将旧副本从副本清单里移除（恢复为原先的副本因子数）。注意在重分配的过程中要确保有足够的空间；
 
 分区重分配对集群的性能有很大的影响，需要占用额外的资源，比如网络和磁盘。在实际操作中，我们将降低重分配的粒度，分成多个小批次来执行，以此来将负面的影响降到最低，这一点和优先副本的选举有异曲同工之妙；
+
+## 6.5、选择合适的分区数
+
+从某些角度来做具体的分析，最终还是要根据实际的业务场景、软件条件、硬件条件、负载情况等来做具体的考量
+
+### 6.5.1、性能测试工具
+
+在实际生产环境中，我们需要了解一套硬件所对应的性能指标之后才能分配其合适的应用和负荷，所以性能测试工具必不可少；
+
+Kafka 本身提供了用于生产者性能测试的 `kafka-producer-perf-test.sh` 和用于消费者性能测试的 `kafka-consumer-perf-test.sh`
+
+**kafka-producer-perf-test.sh** 使用示例：
+```
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-producer-perf-test.sh --topic topic-1 --num-records 1000000 --record-size 1024 --throughput -1 --producer-props bootstrap.servers=kafka1:9092,kafka2:9092,kafka3:9092 acks=1
+19621 records sent, 3921.8 records/sec (3.83 MB/sec), 1691.6 ms avg latency, 2621.0 ms max latency.
+78963 records sent, 15698.4 records/sec (15.33 MB/sec), 1598.7 ms avg latency, 4728.0 ms max latency.
+79027 records sent, 15805.4 records/sec (15.43 MB/sec), 1904.0 ms avg latency, 5398.0 ms max latency.
+105000 records sent, 20962.3 records/sec (20.47 MB/sec), 1686.5 ms avg latency, 4978.0 ms max latency.
+135510 records sent, 27102.0 records/sec (26.47 MB/sec), 1228.3 ms avg latency, 3607.0 ms max latency.
+131550 records sent, 26304.7 records/sec (25.69 MB/sec), 1142.1 ms avg latency, 3137.0 ms max latency.
+181170 records sent, 36219.5 records/sec (35.37 MB/sec), 964.2 ms avg latency, 3244.0 ms max latency.
+182077 records sent, 36415.4 records/sec (35.56 MB/sec), 837.8 ms avg latency, 2768.0 ms max latency.
+1000000 records sent, 23970.468383 records/sec (23.41 MB/sec), 1192.10 ms avg latency, 5398.00 ms max latency, 218 ms 50th, 4279 ms 95th, 4758 ms 99th, 5239 ms 99.9th.
+```
+示例中在使用 `kafka-producer-perf-test.sh` 脚本时用了多一个参数，其中 topic 用来指定生产者发送消息的目标主题；`num-records` 用来指定发送消息的总条数；`record-size` 用来设置每条消息的字节数；`producer-props` 参数用来指定生产者的配置，可同时指定多组配置，各组配置之间以空格分隔，与 producer-props 参数对应的还有一个 `producer.config` 参数，它用来指定生产者的配置文件；`throughput` 用来进行限流控制，当设定的值小于0时不限流，当设定的值大于0时，当发送的吞吐量大于该值时就会被阻塞一段时间；
+
+kafka-producer-perf-test.sh 脚本中还有一个有意思的参数 print-metrics，指定了这个参数时会在测试完成之后打印很多指标信息，对很多测试任务而言具有一定的参考价值。示例参考如下：
+```
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-producer-perf-test.sh --topic topic-1 --num-records 1000000 --record-size 1024 --throughput -1 --print-metrics --producer-props bootstrap.servers=kafka1:9092,kafka2:9092,kafka3:9092 acks=1 
+68416 records sent, 13683.2 records/sec (13.36 MB/sec), 1454.3 ms avg latency, 2598.0 ms max latency.
+164270 records sent, 32854.0 records/sec (32.08 MB/sec), 821.3 ms avg latency, 2430.0 ms max latency.
+200657 records sent, 40131.4 records/sec (39.19 MB/sec), 827.3 ms avg latency, 2435.0 ms max latency.
+344563 records sent, 68912.6 records/sec (67.30 MB/sec), 465.8 ms avg latency, 1731.0 ms max latency.
+1000000 records sent, 42527.855746 records/sec (41.53 MB/sec), 676.88 ms avg latency, 2598.00 ms max latency, 66 ms 50th, 2268 ms 95th, 2396 ms 99th, 2518 ms 99.9th.
+
+Metric Name                                                                         Value
+app-info:commit-id:{client-id=producer-1}                                         : 448719dc99a19793
+app-info:start-time-ms:{client-id=producer-1}                                     : 1629630461418
+app-info:version:{client-id=producer-1}                                           : 2.7.0
+kafka-metrics-count:count:{client-id=producer-1}                                  : 126.000
+....
+```
+kafka-producer-perf-test.sh 脚本的输出信息，以下面的一行内容为例：
+```
+1000000 records sent, 23970.468383 records/sec (23.41 MB/sec), 1192.10 ms avg latency, 5398.00 ms max latency, 218 ms 50th, 4279 ms 95th, 4758 ms 99th, 5239 ms 99.9th.
+```
+`records sent` 表示测试时发送的消息总数；`records/sec` 表示以每秒发送的消息数来统计吞吐量，括号中的 MB/sec 表示以每秒发送的消息大小来统计吞吐量，注意这两者的维度；`avg latency` 表示消息处理的平均耗时；`max latency` 表示消息处理的最大耗时；50th、95th、99th 和 99.9th 分别表示 50%、95%、99% 和 99.9% 的消息处理耗时;
+
+**kafka-consumer-perf-test.sh**使用示例：
+```
+[root@kafka1 kafka_2.12-2.7.0]# bin/kafka-consumer-perf-test.sh --topic topic-1 --messages 1000000 --broker-list kafka1:9092,kafka2:9092,kafka3:9092
+start.time, end.time, data.consumed.in.MB, MB.sec, data.consumed.in.nMsg, nMsg.sec, rebalance.time.ms, fetch.time.ms, fetch.MB.sec, fetch.nMsg.sec
+2021-08-22 19:10:54:813, 2021-08-22 19:11:02:949, 977.0049, 120.0842, 1000453, 122966.1996, 1629630655630, -1629630647494, -0.0000, -0.0006
+```
+输出结果中包含了多项信息，分别对应起始运行时间（start.time）、结束运行时间（end.time）、消费的消息总量（data.consumed.in.MB，单位为MB）、按字节大小计算的消费吞吐量（MB.sec，单位为MB/s）、消费的消息总数（data.consumed.in.nMsg）、按消息个数计算的吞吐量（nMsg.sec）、再平衡的时间（rebalance.time.ms，单位为ms）、拉取消息的持续时间（fetch.time.ms，单位为ms）、每秒拉取消息的字节大小（fetch.MB.sec，单位为MB/s）、每秒拉取消息的个数（fetch.nMsg.sec）。其中 fetch.time.ms = end.time – start.time – rebalance.time.ms
+
+### 6.5.2、分区数越高吞吐量就越高吗？
+
+分区是 Kafka 中最小的并行操作单元，对生产者而言，每一个分区的数据写入是完全可以并行化的；对消费者而言，Kafka 只允许单个分区中的消息被一个消费者线程消费，一个消费组的消费并行度完全依赖于所消费的分区数；
+
+测试过程：
+```
+1、首先分别创建分区数为1、20、50、100、200、500、1000的主题，对应的主题名称分别为topic-1、topic-20、topic-50、topic-100、topic-200、topic-500、topic-1000，所有主题的副本因子都设置为1；
+2、在相同的机器上使用 kafka-producer-perf-test.sh 命令测试
+```
+
+**生产者：**看到分区数为1时吞吐量最低，随着分区数的增长，相应的吞吐量也跟着上涨。一旦分区数超过了某个阈值之后，整体的吞吐量是不升反降的。也就是说，并不是分区数越多吞吐量也越大。这里的分区数临界阈值针对不同的测试环境也会表现出不同的结果，实际应用中可以通过类似的测试案例（比如复制生产流量以便进行测试回放）来找到一个合理的临界值区间
+
+**消费者：**随着分区数的增加，相应的吞吐量也会有所增长。一旦分区数超过了某个阈值之后，整体的吞吐量也是不升反降的，同样说明了分区数越多并不会使吞吐量一直增长
+
+### 6.5.3、分区数的上限
+
+一味地增加分区数并不能使吞吐量一直得到提升，并且分区数也并不能一直增加，如果超过默认的配置值，还会引起 Kafka 进程的崩溃；比如在一台普通的 Linux 机器上创建包含10000个分区的主题，比如在下面示例中创建一个主题 topic-bomb：
+```
+bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --create --topic topic-bomb --replication-factor 1 --partitions 10000
+```
+执行完成后可以检查 Kafka 的进程是否还存在（比如通过 jps 命令或 ps -aux|grep kafka 命令）。一般情况下，会发现原本运行完好的 Kafka 服务已经崩溃；
+
+打开 Kafka 的服务日志文件（$KAFKA_HOME/logs/server.log）来一探究竟，会发现服务日志中出现大量的异常：
+```
+[2021-08-13 18:36:40,019] ERROR Error while creating log for topic-bomb-xxx in dir /tmp/kafka-logs (kafka.server.LogDirFailureChannel)
+java.io.IOException: Too many open files 
+     at java.io.UnixFileSystem.createFileExclusively(Native Method)
+     at java.io.File.createNewFile(File.java:1012)
+     at kafka.log.AbstractIndex.<init>(AbstractIndex.scala:54)
+     at kafka.log.OffsetIndex.<init>(OffsetIndex.scala:53)
+     at kafka.log.LogSegment$.open(LogSegment.scala:634)
+     at kafka.log.Log.loadSegments(Log.scala:503)
+     at kafka.log.Log.<init>(Log.scala:237)
+```
+异常中最关键的信息是“Too many open flies”，这是一种常见的 Linux 系统错误，通常意味着文件描述符不足，它一般发生在创建线程、创建 Socket、打开文件这些场景下
+在 Linux 系统的默认设置下，这个文件描述符的个数不是很多，通过 ulimit 命令可以查看：
+```
+[root@kafka3 log]# ulimit -n 
+1024
+[root@kafka3 log]# ulimit -Sn
+1024
+[root@kafka3 log]# ulimit -Hn
+4096
+```
+ulimit 是在系统允许的情况下，提供对特定 shell 可利用的资源的控制。-H 和 -S 选项指定资源的硬限制和软限制。硬限制设定之后不能再添加，而软限制则可以增加到硬限制规定的值。如果 -H 和 -S 选项都没有指定，则软限制和硬限制同时设定。限制值可以是指定资源的数值或 hard、soft、unlimited 这些特殊值，其中 hard 代表当前硬限制，soft 代表当前软件限制，unlimited 代表不限制。如果不指定限制值，则打印指定资源的软限制值，除非指定了 -H 选项。硬限制可以在任何时候、任何进程中设置，但硬限制只能由超级用户设置。软限制是内核实际执行的限制，任何进程都可以将软限制设置为任意小于等于硬限制的值
+
+查看当前 Kafka 进程所占用的文件描述符的个数，注意这个值并不是Kafka第一次启动时就需要占用的文件描述符的个数，示例中的 Kafka 环境下已经存在了若干主题）：
+```
+[root@kafka1 log]# ls /proc/2931/fd | wc -l
+3529
+```
+如何避免这种 Too many open files 异常情况？对于一个高并发、高性能的应用来说，1024或4096的文件描述符限制未免太少，可以适当调大这个参数。比如使用 ulimit -n 65535命令将上限提高到65535，这样足以应对大多数的应用情况，再高也完全没有必要了
+```
+[root@kafka1 log]# ulimit -n 65535
+#可以再次查看相应的软硬限制数
+[root@kafka1 log]# ulimit -Hn
+65535
+[root@kafka1 log]# ulimit -Sn
+65535
+```
+也可以在`/etc/security/limits.conf` 文件中设置，参考如下：
+```
+#nofile - max number of open file descriptors
+root soft nofile 65535
+root hard nofile 65535
+```
+
+### 6.5.4、考量因素
+
+- 从吞吐量方面考虑，增加合适的分区数可以在一定程度上提升整体吞吐量，但超过对应的阈值之后吞吐量不升反降。如果应用对吞吐量有一定程度上的要求，则建议在投入生产环境之前对同款硬件资源做一个完备的吞吐量相关的测试，以找到合适的分区数阈值区间；
+
+- 在创建主题时，最好能确定好分区数，这样也可以省去后期增加分区所带来的多余操作。尤其对于与 key 高关联的应用，在创建主题时可以适当地多创建一些分区，以满足未来的需求；
+
+- 有些应用场景会要求主题中的消息都能保证顺序性，这种情况下在创建主题时可以设定分区数为1，通过分区有序性的这一特性来达到主题有序性的目的；
+
+- 分区数的多少还会影响系统的可用性；
+
+- 分区数越多也会让 Kafka 的正常启动和关闭的耗时变得越长，与此同时，主题的分区数越多不仅会增加日志清理的耗时，而且在被删除时也会耗费更多的时间；
+
+> 如果一定要给一个准则，则建议将分区数设定为集群中 broker 的倍数，即假定集群中有3个 broker 节点，可以设定分区数为3、6、9等，至于倍数的选定可以参考预估的吞吐量。不过，如果集群中的 broker 节点数有很多，比如大几十或上百、上千，那么这种准则也不太适用，在选定分区数时进一步可以引入机架等参考因素；
+
+
+
 
 # 参考资料
 
