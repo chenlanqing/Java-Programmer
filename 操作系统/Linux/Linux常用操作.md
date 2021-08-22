@@ -585,8 +585,8 @@ mkdir -p project/{a,b,c}/src，该命令最终创建的目录结构：
 
 比如上面hadoop001需要免密登录 hadoop002、hadoop003 两台机器，由于hadoop001上已经生成了公钥，分别执行如下命令：
 ```
-ssh-copy-id -i hadoop002
-ssh-copy-id -i hadoop003
+ssh-copy-id -i kafka2
+ssh-copy-id -i kafka3
 ```
 
 ## 12、nohup
