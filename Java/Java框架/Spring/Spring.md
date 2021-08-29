@@ -9,7 +9,7 @@
 ## 2、具体描述 Spring
 
 - 轻量级：Spring 是非侵入性的-基于 Spring 开发的应用中的对象可以不依赖于 Spring 的 API
-- 依赖注入(DI --- dependency injection、IOC)
+- 依赖注入(DI --- dependency injection、IOC)，不通过 new() 的方式在类内部创建依赖类对象，而是将依赖的类对象在外部创建好之后，通过构造函数、函数参数等方式传递（或注入）给类使用；
 - 面向切面编程(AOP --- aspect oriented programming)
 - 容器：Spring 是一个容器，因为它包含并且管理应用对象的生命周期
 - 框架：Spring 实现了使用简单的组件配置组合成一个复杂的应用。在 Spring 中可以使用 XML 和 Java 注解组合这些对象
@@ -69,7 +69,7 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 由 Spring IoC 容器来负责对象的生命周期和对象之间的关系
 
-控制反转：把创建对象(Bean)和维护对象(Bean)的关系的权利从程序中转移到Spring容器中，程序不再控制
+控制反转：把创建对象(Bean)和维护对象(Bean)的关系的权利从程序员中转移到框架中，程序不再控制
 - IOC 机制实现Bean之间的调用；
 - IOC 解决的问题：可以降低两个组件对象之间的关联，降低耦合度；
 - Spring IOC 控制反转：获得依赖对象的过程由主动获取变为被动获取

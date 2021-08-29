@@ -7,24 +7,22 @@
 时间复杂度 O(n^2)
 
 ## 1.2、实现
+
 ```java
-public static int[] bullelSort(int[] A， int n){
-	int len = A.length;
-	if(len != n){
-		n = len;
+public void bubble(int[] A) {
+	for (int i = A.length - 1; i >= 0; i--) {
+		// 找到0-i间的最大元素放到A[i]
+		bubble(A, 0, i + 1);
 	}
-	for(int i=n-1;i >= 0;i--){
-		for(int j=0;j < i;j++){
-			if(A[j] > A[j+1]){
-				int temp = A[j];
-				A[j] = A[j+1];
-				A[j+1] = temp;
-			}
+}
+private void bubble(int[] A, int i, int j) {
+	for (int k = 0; k < j - 1; k++) {
+		if (A[k] > A[k + 1]) {
+			ArrayUtils.exchange(A, k, k + 1);
 		}
 	}
-	return A;
 }
-
+// 优化
 public void sort(int[] arr， int n) {
 	for (int i = 0; i < n; i++) {
 		for (int j = 0; j < n - i - 1; j++) { // 每排序一趟，则必然后面有一个已经有序，可以缩小排序的范围
@@ -47,7 +45,7 @@ public void sort(int[] arr， int n) {
 		flag = true;
 		for (int j = 0; j < n - i - 1; j++) {
 			if (arr[j] > arr[j + 1]) {
-				ArrayUtils.exchange(arr， j， j + 1);// 交换数据
+				ArrayUtils.exchange(arr, j, j + 1);// 交换数据
 				flag = false;
 			}
 		}
@@ -82,6 +80,27 @@ public void sort(int[] arr， int n) {
 	}
 }
 ```
+实现2：
+```java
+public void sort(int[] A) {
+    for(int i = A.length - 1; i >= 0; i--) {
+        // 0 - A[i]
+        int j = maxIndex(A, 0, i+1);
+        ArrayUtils.exchange(A, i, j);
+    }
+}
+static private int maxIndex(int[] A, int i, int j) {
+    int max = Integer.MIN_VALUE;
+    int maxIndex = j-1;
+    for(int k = j-1; k >= i; k--) {
+        if(max < A[k]) {
+            max = A[k];
+            maxIndex = k;
+        }
+    }
+    return maxIndex;
+}
+```
 
 # 3、插入排序：O(n^2)
 
@@ -92,11 +111,11 @@ public void sort(int[] arr， int n) {
 ## 3.2、基本实现
 
 ```java
-public static int[] insertionSort(int[] A， int n) {
+public static int[] insertionSort(int[] A, int n) {
 	if(A == null || A.length < 2){
 		return A;
 	}				
-	int index = 0， 
+	int index = 0,
 		len = A.length;				
 	for(int i = 0; i < len; i++){
 		index = i;
@@ -146,6 +165,11 @@ public void sort(int[] arr， int n) {
 }
 ```
 
+## 3.5、插入排序性能
+
+- 对于无序的数组，其性能是O(N^2)；
+- 对于有序的数组，其性能是O(N)
+
 # 4、归并排序-O(n * log n)
 
 ## 4.1、基本思路
@@ -153,6 +177,7 @@ public void sort(int[] arr， int n) {
 归并排序使用了一种叫做"分治"的思想来解决排序问题：也就是把一个大问题分解为众多子问题，而后分别得到每个子问题的解，最终以某种方式合并这些子问题的解就可以得到原问题的解；将待排序数组递归的分解成两半，分别对它们进行排序，然后将结果"归并"(递归的合并)起来归并排序的时间复杂度为O(nlogn)， 它的主要缺点是所需的额外空间与待排序数组的尺寸成正比
 
 ## 4.2、实现
+
 ```java
 public class MergeSort {
 	public static void main(String[] args) {
@@ -201,6 +226,7 @@ public class MergeSort {
 	}
 }
 ```
+
 ## 4.3、归并排序的优化
 ```java
 public void sort(int[] arr， int n) {
@@ -259,6 +285,7 @@ public static void sort(int[] arr， int left， int right) {
 ```
 
 ## 4.4、有k个有序数组，将他们归并为一个有序数组
+
 Leetcode-23
 
 # 5、快速排序-类似于归并排序

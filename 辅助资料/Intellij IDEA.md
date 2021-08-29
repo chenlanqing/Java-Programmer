@@ -75,7 +75,7 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - 格式化xml：Eclipse Code Fromatter
 - Mybtis插件：Free Mybatis Plugin、Mybatis plugin、Mybatis xml validator、MyBatisCodeHelperPro
 - Lombok
-- 主题插件：Material Theme UI
+- 主题插件：Material Theme UI、Atom Material Icons
 - 代码扫描插件：SonarLint
 - CodeGlance：可以显示代码的缩略图
 - GenerateAllSetter：一键调用一个对的所有set方法

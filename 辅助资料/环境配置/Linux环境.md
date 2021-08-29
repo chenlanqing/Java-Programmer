@@ -393,6 +393,8 @@ mysql目前最新版是8.0，启动mysql后，通过IDE工具无法连接mysql�
 
 准备：`yum install build-essential openssl openssl-devel unixODBC unixODBC-devel make gcc gcc-c++ kernel-devel m4 ncurses-devel tk tc xz`
 
+- erlang依赖下载：https://github.com/rabbitmq/erlang-rpm/releases
+
 下载依赖：
 ```
 wget www.rabbitmq.com/releases/erlang/erlang-18.3-1.el7.centos.x86_64.rpm

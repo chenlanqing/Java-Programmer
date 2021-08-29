@@ -2155,7 +2155,7 @@ public class DeadLock{
 
 ### 13.5、死循环导致线程等待如何诊断
 
-如果是死循环导致线程等待，会导致CPU飙升，可以使用top命令配合grep java查找到CPU使用率高的java进程，再通过`top -Hp <pid>`查看该java进程下CPU使用率较高的线程，然后在使用jstack命令查看线程的具体情况
+如果是死循环导致线程等待，会导致CPU飙升，可以使用`top`命令配合`grep java`查找到CPU使用率高的java进程，再通过`top -Hp <pid>`查看该java进程下CPU使用率较高的线程，然后在使用`jstack`命令查看线程的具体情况；
 
 ### 13.6、分布式环境下死锁
 

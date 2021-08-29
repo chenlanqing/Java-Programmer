@@ -3164,9 +3164,7 @@ public class StreamingFileSinkDemo {
 
 # 13、Flink CEP
 
-
-
-
+- [基于事件流的高效模式匹配](https://zhuanlan.zhihu.com/p/72939994)
 
 
 
@@ -3366,6 +3364,7 @@ transaction.max.timeout.ms=3600000
 
 # 参考资料
 
+- [Flink1.7-1.12版本变化](https://mp.weixin.qq.com/s/nHdlIrxSmInDiv_i5NMm9g)
 - [官方代码](https://github.com/apache/flink)
 - [Flink实现推荐系统](https://github.com/CheckChe0803/flink-recommandSystem-demo)
 - [Flink中文视频课程](https://github.com/flink-china/flink-training-course)
