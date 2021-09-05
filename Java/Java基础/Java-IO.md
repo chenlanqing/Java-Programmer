@@ -83,7 +83,6 @@
 - 注意点：多路复用IO模型来说，一旦事件响应体很大，那么就会导致后续的事件迟迟得不到处理，并且会影响新的事件轮询
 
 **IO多路复用技术**
-
 - IO多路复用技术通过把多个IO阻塞复用到同一个select的阻塞上，从而使得系统在单线程的清下可以同时处理多个客户端请求；
 - 与传统的多线程/多进程模型比，IO多路复用的最大优势是系统开销小，系统不需要创建新的额外进程或者线程，也不需要维护这些进程和线程的运行，降低了系统维护的工作量。
 - IO多路复用技术应用场景：
@@ -93,6 +92,7 @@
 #### 5.3.2、多路复用模型select、poll、epoll
 
 * [IO多路复用之select、poll、epoll详解](https://www.jianshu.com/p/dfd940e7fca2)
+* [Linux多路复用](http://zhuuu.work/2020/08/17/Linux/Linux-06-多路复用/)
 
 I/O多路复用模型会用到`select、poll、epoll`函数，这几个函数也会使进程阻塞，但是和阻塞I/O所不同的的，这两个函数可以同时阻塞多个I/O操作；其中`epoll`是Linux所特有，而`select`则应该是POSIX所规定，一般操作系统均有实现；
 
@@ -114,6 +114,10 @@ I/O多路复用模型会用到`select、poll、epoll`函数，这几个函数也
     - poll还有一个特点是“水平触发”，如果报告了fd后，没有被处理，那么下次poll时会再次报告该fd；
 
 **（3）epoll：**内核维护一个高效的二叉搜索树
+
+select 和 poll 的共有缺陷：
+- 第一个缺陷：select 和 poll 函数，这两系统函数每次调用都需要我们提供给它所有的需要监听的socket文件描述符集合，而且主线程是死循环调用select/poll函数的，这里面涉及到用户空间数据到内核空间拷贝的过程；
+- 第二个缺陷：select 和 poll 函数它的返回值都是int整型值，只能代表有几个socket就绪或者有错误了，它没办法表示具体是哪个socket就绪了；这就导致了程序被唤醒以后，还需要新的一轮系统调用去检查哪个socket是就绪状态的，然后再进行socket数据处理逻；
 
 epoll使用一个文件描述符管理多个描述符，将用户关系的文件描述符的事件存放到内核的一个事件表中，这样在用户空间和内核空间的copy只需一次；是之前的select和poll的增强版本。相对于select和poll来说，epoll更加灵活，没有描述符限制
 - 基本原理：epoll支持水平触发和边缘触发，最大的特点在于边缘触发，它只告诉进程哪些fd刚刚变为就绪态，并且只会通知一次。还有一个特点是，epoll使用“事件”的就绪通知方式，通过epoll_ctl注册fd，一旦该fd就绪，内核就会采用类似callback的回调机制来激活该fd，epoll_wait便可以收到通知
@@ -266,7 +270,7 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 
 - 该模型最大的问题是缺乏弹性伸缩能力，当客户端并发访问量增加后，服务端的线程个数和客户端并发访问数呈`1:1`的正比关系。由于线程是Java虚拟机的非常宝贵的系统资源，当线程数膨胀后，系统的性能急剧下降，系统可能会发生线程堆栈溢出，创建线程失败等。
 
-- 在API层面上：操作是会阻塞的，比如等待socket连接；
+- 在API层面上：操作是会阻塞的，比如作为服务端开发，使用ServerSocket 绑定端口号之后会监听该端口,等待accept事件，accept是会阻塞当前线程
 
 - 原理：利用CPU中断
 	- 阻塞的线程进入休眠，将执行权限交给其他线程
@@ -331,6 +335,27 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 |调试难度|简单|简单|复杂|复杂|
 |可靠性|非常差|差|高|高|
 |吞吐量|低|中|高|高|
+
+## 8、C10K与C1000K问题
+
+C10K 和 C1000K 的首字母 C 是 Client 的缩写。
+- C10K 就是单机同时处理 1 万个请求（并发连接 1 万）的问题；
+- C1000K 也就是单机支持处理 100 万个请求（并发连接 100 万）的问题
+
+### 8.1、C10K问题
+
+解决方案：
+- 使用非阻塞 I/O 和水平触发通知，比如使用 select 或者 poll；
+- 第二种，使用非阻塞 I/O 和边缘触发通知，比如 epoll；
+    - epoll 使用红黑树，在内核中管理文件描述符的集合，这样，就不需要应用程序在每次操作时都传入、传出这个集合。
+    - epoll 使用事件驱动的机制，只关注有 I/O 事件发生的文件描述符，不需要轮询扫描整个集合；
+- 使用异步 I/O（Asynchronous I/O，简称为 AIO）；
+
+### 8.2、C1000K
+
+基于 I/O 多路复用和请求处理的优化，C10K 问题很容易就可以解决；
+
+C1000K 的解决方法，本质上还是构建在 epoll 的非阻塞 I/O 模型上。只不过，除了 I/O 模型之外，还需要从应用程序到 Linux 内核、再到 CPU、内存和网络等各个层次的深度优化，特别是需要借助硬件，来卸载那些原来通过软件处理的大量功能
 
 # 二、Java-IO流
 
@@ -665,8 +690,9 @@ System.in、System.out、System.err这3个流是java.lang.System类中的静态�
 - 子类包括BufferedReader，PushbackReader，InputStreamReader，StringReader和其他Reader
 - Reader的read()方法返回一个字符，意味着这个返回值的范围在0到65535之间
 - 整合 Reader 与 InputStream：<br>
-如果你有一个InputStream输入流，并且想从其中读取字符，可以把这个InputStream包装到InputStreamReader中Reader reader = new InputStreamReader(inputStream);在构造函数中可以指定解码方式
+  如果你有一个InputStream输入流，并且想从其中读取字符，可以把这个InputStream包装到InputStreamReader中Reader reader = new InputStreamReader(inputStream);在构造函数中可以指定解码方式
   
+
 **Writer类：是Java IO中所有Writer的基类，子类包括BufferedWriter和PrintWriter等等**
 
 - 整合 Writer 和 OutputStream：
@@ -1307,6 +1333,53 @@ Netty 中使用 FileRegion 实现文件传输的零拷贝, 不过在底层 FileR
 有了 FileRegion 后, 我们就可以直接通过它将文件的内容直接写入 Channel 中, 而不需要像传统的做法: 拷贝文件内容到临时 buffer, 然后再将 buffer 写入 Channel
 
 ## 6、Kafka实现零拷贝
+
+Kafka 中存在大量的网络数据持久化到磁盘（Producer 到 Broker）和磁盘文件通过网络发送（Broker 到 Consumer）的过程。这一过程的性能直接影响 Kafka 的整体吞吐量；
+
+可以把Kafka 的生产和消费简化成如下两个过程来看：
+- 网络数据持久化到磁盘（Producer 到 Broker）；
+- 磁盘文件通过网络发送（Broker 到 Consumer）；
+
+### 6.1、网络数据持久化到磁盘 (Producer 到 Broker)
+
+数据从网络传输到文件需要 4 次数据拷贝、4 次上下文切换和两次系统调用
+```java
+data = socket.read()// 读取网络数据 
+File file = new File() 
+file.write(data)// 持久化到磁盘 
+file.flush()
+```
+这一过程实际上发生了四次数据拷贝：
+- **首先通过 DMA copy 将网络数据拷贝到内核态 Socket Buffer**
+- **然后应用程序将内核态 Buffer 数据读入用户态（CPU copy）**
+- **接着用户程序将用户态 Buffer 再拷贝到内核态（CPU copy）**
+- **最后通过 DMA copy 将数据拷贝到磁盘文件**
+
+数据落盘通常都是非实时的，kafka 生产者数据持久化也是如此。Kafka 的数据并不是实时的写入硬盘，它充分利用了现代操作系统分页存储来利用内存提高 I/O 效率；
+
+对于 kafka 来说，Producer 生产的数据存到 broker，这个过程读取到 socket buffer 的网络数据，其实可以直接在内核空间完成落盘。并没有必要将 socket buffer 的网络数据，读取到应用进程缓冲区；在这里应用进程缓冲区其实就是 broker，broker 收到生产者的数据，就是为了持久化。
+
+**在此特殊场景下**：接收来自 socket buffer 的网络数据，应用进程不需要中间处理、直接进行持久化时。可以使用 mmap 内存文件映射；
+
+### 6.2、磁盘文件通过网络发送（Broker 到 Consumer）
+
+传统方式实现：先读取磁盘、再用 socket 发送，实际也是进过四次 copy
+```
+buffer = File.read 
+Socket.send(buffer)
+```
+Kafka 在这里采用的方案是通过 NIO 的 `transferTo/transferFrom`调用操作系统的 sendfile 实现零拷贝。总共发生 2 次内核数据拷贝、2 次上下文切换和一次系统调用，消除了 CPU 数据拷贝；
+
+## 7、RocketMQ
+
+## 8、RocketMQ与Kafka
+
+RocketMQ 选择了 `mmap + write`这种零拷贝方式，适用于业务级消息这种小块文件的数据持久化和传输；而 Kafka 采用的是 `sendfile` 这种零拷贝方式，适用于系统日志消息这种高吞吐量的大块文件的数据持久化和传输。但是值得注意的一点是，Kafka 的索引文件使用的是 `mmap + write` 方式，数据文件使用的是 `sendfile` 方式；
+
+| 消息队列 | 零拷贝方式   | 优点 | 缺点   |
+| ---- | ---- | ----- | ---- |
+| RocketMQ | mmap + write | 适用于小块文件传输，频繁调用时，效率很高 | 不能很好的利用 DMA 方式，会比 sendfile 多消耗 CPU，内存安全性控制复杂，需要避免 JVM Crash 问题 |
+| Kafka | sendfile | 可以利用 DMA 方式，消耗 CPU 较少，大块文件传输效率高，无内存安全性问题 | 小块文件效率低于 mmap 方式，只能是 BIO 方式传输，不能使用 NIO 方式 |
 
 
 # 参考文章

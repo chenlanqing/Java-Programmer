@@ -88,10 +88,33 @@ Kafka 的复制机制既不是完全的同步复制，也不是单纯的异步�
 
 ## 1.4、高性能原因
 
-- 顺序写，PageCache空中接力，高效读写，避免了随机写；
-- 后台异步、主动Flush；
-- 高性能、高吞吐;
-- 预读策略；
+### 1.4.1、利用 Partition 实现并行处理
+
+每个 Topic 都包含一个或多个 Partition，不同 Partition 可位于不同节点；
+
+一方面，由于不同 Partition 可位于不同机器，因此可以充分利用集群优势，实现机器间的并行处理。另一方面，由于 Partition 在物理上对应一个文件夹，即使多个 Partition 位于同一个节点，也可通过配置让同一节点上的不同 Partition 置于不同的磁盘上，从而实现磁盘间的并行处理，充分发挥多磁盘的优势；
+
+### 1.4.2、顺序写磁盘
+
+Kafka 中每个分区是一个有序的，不可变的消息序列，新的消息不断追加到 partition 的末尾，这个就是顺序写；
+
+由于顺序写入的原因，所以 Kafka 采用各种删除策略删除数据的时候，并非通过使用“读 - 写”模式去修改文件，而是将 Partition 分为多个 Segment，每个 Segment 对应一个物理文件，通过删除整个文件的方式去删除 Partition 内的数据。这种方式清除旧数据的方式，也避免了对文件的随机写操作；
+
+### 1.4.3、充分利用 Page Cache
+
+使用 Page Cache 的好处：
+
+- **I/O Scheduler 会将连续的小块写组装成大块的物理写从而提高性能**
+- **I/O Scheduler 会尝试将一些写操作重新按顺序排好，从而减少磁盘头的移动时间**
+- **充分利用所有空闲内存（非 JVM 内存）。如果使用应用层 Cache（即 JVM 堆内存），会增加 GC 负担**
+- **读操作可直接在 Page Cache 内进行。如果消费和生产速度相当，甚至不需要通过物理磁盘（直接通过 Page Cache）交换数据**
+- **如果进程重启，JVM 内的 Cache 会失效，但 Page Cache 仍然可用**
+
+Broker 收到数据后，写磁盘时只是将数据写入 Page Cache，并不保证数据一定完全写入磁盘；
+
+### 1.4.4、零拷贝技术
+
+[零拷贝](../../Java基础/Java-IO.md#四零拷贝)
 
 ## 1.5、kafka零拷贝
 
@@ -1269,7 +1292,7 @@ Topic: topic-reassign   PartitionCount: 4       ReplicationFactor: 2    Configs:
     Warning: --zookeeper is deprecated, and will be removed in a future version of Kafka.
     Current partition replica assignment
     {"version":1,"partitions":[{"topic":"topic-reassign","partition":0,"replicas":[1,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":1,"replicas":[2,3],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":2,"replicas":[3,1],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":3,"replicas":[1,3],"log_dirs":["any","any"]}]}
-
+    
     Proposed partition reassignment configuration
     {"version":1,"partitions":[{"topic":"topic-reassign","partition":0,"replicas":[3,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":1,"replicas":[2,3],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":2,"replicas":[3,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":3,"replicas":[2,3],"log_dirs":["any","any"]}]}
     ```
@@ -1281,13 +1304,13 @@ Topic: topic-reassign   PartitionCount: 4       ReplicationFactor: 2    Configs:
     [root@kafka2 kafka_2.12-2.7.0]# bin/kafka-reassign-partitions.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --execute --reassignment-json-file project.json
     Warning: --zookeeper is deprecated, and will be removed in a future version of Kafka.
     Current partition replica assignment
-
+    
     {"version":1,"partitions":[{"topic":"topic-reassign","partition":0,"replicas":[1,2],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":1,"replicas":[2,3],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":2,"replicas":[3,1],"log_dirs":["any","any"]},{"topic":"topic-reassign","partition":3,"replicas":[1,3],"log_dirs":["any","any"]}]}
-
+    
     Save this to use as the --reassignment-json-file option during rollback
     Successfully started partition reassignments for topic-reassign-0,topic-reassign-1,topic-reassign-2,topic-reassign-3
     ```
-执行完上述命令之后，可以看到 topic-reassign 的所有分区副本都只在2和3的 broker 节点上分布了；
+    执行完上述命令之后，可以看到 topic-reassign 的所有分区副本都只在2和3的 broker 节点上分布了；
 ```
 [root@kafka2 kafka_2.12-2.7.0]# bin/kafka-topics.sh --zookeeper kafka1:2181,kafka2:2181,kafka3:2181 --describe --topic topic-reassign
 Topic: topic-reassign   PartitionCount: 4       ReplicationFactor: 2    Configs: 
