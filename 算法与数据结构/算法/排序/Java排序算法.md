@@ -69,8 +69,11 @@ public void sort(int[] arr， int n) {
 	if (arr == null || arr.length != n) {
 		return;
 	}
+	// 外层循环从0开始，区间为[i, len)
 	for (int i = 0; i < n; i++) {
+		// 以外层循环索引值认为其是最小值
 		int min = i;
+		// 内层循环从外层循环索引 + 1作为起始位置，从[i+1, len)开始寻找最小位置的索引
 		for (int j = i + 1; j < n; j++) {
 			if (arr[j] < arr[min]) {
 				min = j;
