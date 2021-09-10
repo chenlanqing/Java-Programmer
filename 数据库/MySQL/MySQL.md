@@ -795,10 +795,10 @@ select * from emp a right join dept b on a.deptId=b.id order by id desc
 	```sql
 	SET @EE='';
 	select @EE :=CONCAT(@EE,'sum(if(subject= \'',subject,'\',score,0)) as ',subject, ',') AS aa FROM (SELECT DISTINCT subject FROM tb_score) A ;
-
+	
 	SET @QQ = CONCAT('select ifnull(userid,\'TOTAL\')as userid,',@EE,' sum(score) as TOTAL from tb_score group by userid WITH ROLLUP');
 	-- SELECT @QQ;
-
+	
 	PREPARE stmt FROM @QQ;
 	EXECUTE stmt;
 	DEALLOCATE PREPARE stmt;
@@ -1071,6 +1071,34 @@ InnoDB采取的方式是：将数据划分为若干个页，以页作为磁盘�
 - 为表指定一个自增的主键；
 - 不要使用`LOCK TABLES`语句，如果需要锁定，可以使用 `SELECT ... FOR UPDATE` 锁定你需要操作的数据行；
 - `--sql_mode=NO_ENGINE_SUBSTITUTION`，防止在创建表或者修改表的时候存储引擎不支持
+
+### 6.3、InnoDB体系架构
+
+InnoDB 存储引擎由内存池和一些后台线程组成
+
+**内存池：**
+
+InnoDB 存储引擎是基于磁盘存储的，并将其中的记录按照页的方式进行管理。因此可将其视为基于磁盘的数据库系统（Disk-base Database），在这样的系统中，众所周知，由于 CPU 速度与磁盘速度之间的不匹配，通常会使用缓冲池技术来提高数据库的整体性能；缓冲池其实就是一块内存区域，在 CPU 与磁盘之间加入内存访问，通过内存的速度来弥补磁盘速度较慢对数据库性能的影响
+
+拥有了缓冲池后，“读取页” 操作的具体步骤就是这样的：
+- 首先将从磁盘读到的页存放在缓冲池中；
+- 下一次再读相同的页时，首先判断该页是否在缓冲池中。若在缓冲池中，称该页在缓冲池中被命中，直接读取该页。否则，读取磁盘上的页
+
+“修改页” 操作的具体步骤就是这样的：
+- 首先修改在缓冲池中的页；然后再以一定的频率刷新到磁盘上；
+
+所谓 ”脏页“ 就发生在修改这个操作中，如果缓冲池中的页已经被修改了，但是还没有刷新到磁盘上，那么我们就称缓冲池中的这页是 ”脏页“，即缓冲池中的页的版本要比磁盘的新。
+
+**后台线程：**
+
+后台线程的主要作用就是刷新内存池中的数据，保证内存池中缓存的是最近的数据；此外将已修改的数据文件刷新到磁盘文件，同时保证在数据库发生异常的情况下 InnoDB 能恢复到正常运行状态；
+
+**InnoDB 存储引擎是多线程的模型**，也就是说它拥有多个不同的后台线程，负责处理不同的任务。这里简单列举下几种不同的后台线程：
+
+- **Master Thread**：主要负责将缓冲池中的数据异步刷新到磁盘，保证数据的一致性
+- **IO Thread**：在 InnoDB 存储引擎中大量使用了 AIO（Async IO）来处理写 IO 请求，这样可以极大提高数据库的性能。IO Thread 的工作主要是负责这些 IO 请求的回调（call back）处理
+- **Purge Thread**：回收已经使用并分配的 undo 页
+- **Page Cleaner Thread**：将之前版本中脏页的刷新操作都放入到单独的线程中来完成。其目的是为了减轻原 Master Thread 的工作及对于用户查询线程的阻塞，进一步提高 InnoDB 存储引擎的性能
 
 # 八、MySQL事务
 
@@ -1525,7 +1553,7 @@ MySQ允许分区键值为NULL，分区键可能是一个字段或者一个用户
 	+----+-------------+-------+------------+------+---------------+------+---------+------+------+-------------+
 	1 row in set
 	```
-上面的结果：partitions：p1 表示数据在p1分区进行检索
+	上面的结果：partitions：p1 表示数据在p1分区进行检索
 
 https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
 
@@ -2542,13 +2570,13 @@ log_slow_extra|	当log_output=FILE时，是否要记录额外信息（MySQL 8.0.
 		```sql
 		➜ mysqldumpslow --help
 		Usage: mysqldumpslow [ OPTS... ] [ LOGS... ]
-
+		
 		Parse and summarize the MySQL slow query log. Options are
-
+		
 		--verbose    verbose
 		--debug      debug
 		--help       write this text to standard output
-
+		
 		-v           展示更详细的信息
 		-d           debug
 		-s ORDER     以哪种方式排序，默认at
@@ -2567,10 +2595,10 @@ log_slow_extra|	当log_output=FILE时，是否要记录额外信息（MySQL 8.0.
 		-h HOSTNAME  慢查询日志以 主机名-slow.log的格式命名，-h可指定读取指定主机名的慢查询日志，默认情况下是*，读取所有的慢查询日志
 		-i NAME      MySQL Server的实例名称（如果使用了mysql.server startup脚本的话）
 		-l           不将锁定时间从总时间中减去
-
+		
 		# 得到返回记录集最多的10条SQL
 		mysqldumpslow -s r -t 10 /var/lib/mysql/8945073c23e0-slow.log
-
+		
 		# 得到按照查询时间排序，并且带有left join的10条SQL
 		mysqldumpslow -s t -t 10 -g “left join” /var/lib/mysql/8945073c23e0-slow.log
 		```
@@ -2749,7 +2777,7 @@ select_type -> 数据读取操作的操作类型
 	|  1 | SIMPLE      | message | ALL  | NULL          | NULL | NULL    | NULL |    1 |       |
 	+----+-------------+---------+------+---------------+------+---------+------+------+-------+
 	1 row in set
-
+	
 	mysql> EXPLAIN select conversation_id FROM message；
 	+----+-------------+---------+-------+---------------+--------------------+---------+------+------+-------------+
 	| id | select_type | table   | type  | possible_keys | key                | key_len | ref  | rows | Extra       |
@@ -2764,7 +2792,7 @@ select_type -> 数据读取操作的操作类型
 	```
 	varchr(10)变长字段且允许NULL    =  10 * ( character set：utf8=3,gbk=2,latin1=1)+1(NULL)+2(变长字段)
 	varchr(10)变长字段且不允许NULL =  10 *( character set：utf8=3,gbk=2,latin1=1)+2(变长字段)
-
+	
 	char(10)固定字段且允许NULL        =  10 * ( character set：utf8=3,gbk=2,latin1=1)+1(NULL)
 	char(10)固定字段且不允许NULL        =  10 * ( character set：utf8=3,gbk=2,latin1=1)	
 	```
@@ -3041,18 +3069,18 @@ PERFORMANCE_SCHEMA去实现SHOW PROFILE类似的效果：
 - 也可以只监控指定用户，执行的SQL：
 	```sql
 	mysql> UPDATE performance_schema.setup_actors SET ENABLED = 'NO', HISTORY = 'NO' WHERE HOST = '%' AND USER = '%';
-
+	
 	mysql> INSERT INTO performance_schema.setup_actors (HOST,USER,ROLE,ENABLED,HISTORY) VALUES('localhost','test_user','%','YES','YES');
 	```
 	这样，就只会监控localhost机器上test_user用户发送过来的SQL。其他主机、其他用户发过来的SQL统统不监控
 - 执行如下SQL语句，开启相关监控项：
 	```sql
 	mysql> UPDATE performance_schema.setup_instruments SET ENABLED = 'YES', TIMED = 'YES' WHERE NAME LIKE '%statement/%';
-
+	
 	mysql> UPDATE performance_schema.setup_instruments SET ENABLED = 'YES', TIMED = 'YES' WHERE NAME LIKE '%stage/%';
-
+	
 	mysql> UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%events_statements_%';
-
+	
 	mysql> UPDATE performance_schema.setup_consumers SET ENABLED = 'YES' WHERE NAME LIKE '%events_stages_%';
 	```
 - 使用开启监控的用户，执行SQL语句，比如：
@@ -3690,7 +3718,7 @@ explain select max(payment_date) from payment；
 
 
 	- 优化方式5：如果获得起始主键 + 结束主键，使用范围查询
-
+	
 	- 优化方式6：限制分页的数量
 
 在很多情况下我们已知数据仅存在一条，此时我们应该告知数据库只用查一条，否则将会转化为全表扫描，这时候可以使用：`limit 1`；

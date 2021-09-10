@@ -2396,6 +2396,10 @@ dubbo协议采用单一长连接，假设网络为千兆网卡，根据经验每
 
 ![](image/面试-RPC框架大致流程图.jpeg)
 
+## 27、dubbo服务暴露过程
+
+Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布 ContextRefreshEvent 事件的时候，通知实现了 ApplicationListener 的 ServiceBean 类进行回调 onApplicationEvent 事件方法，Dubbo 会在这个方法中调用 ServiceBean 父类 ServiceConfig 的 export 方法，而该方法真正实现了服务的（异步或者非异步）发布
+
 # 十二、消息队列
 
 ## 1、RocketMQ如何保证消息不被重复消费
@@ -3306,3 +3310,4 @@ https://mp.weixin.qq.com/s?__biz=MzIyNDU2ODA4OQ==&mid=2247486846&idx=1&sn=75bd4d
 # 参考资料
 
 - [Java面试题](https://zwmst.com/)
+- [吴师兄](https://www.cxyxiaowu.com/)

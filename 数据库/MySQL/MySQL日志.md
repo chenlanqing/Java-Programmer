@@ -8,7 +8,7 @@ MySQL 日志 主要包括错误日志、查询日志、慢查询日志、事务�
 
 redo log（重做日志）是InnoDB存储引擎独有的，它让MySQL拥有了崩溃恢复能力；比如 MySQL 实例挂了或宕机了，重启时，InnoDB存储引擎会使用redo log恢复数据，保证数据的持久性与完整性；
 
-redo log 它是物理日志，记录内容是“在某个数据页上做了什么修改”，属于 InnoDB 存储引擎；
+redo log 它是物理日志，记录内容是"在某个数据页上做了什么修改"，属于 InnoDB 存储引擎；
 
 ### 1.1、概述
 
@@ -49,6 +49,8 @@ InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_tr
 为2时， 只要事务提交成功，redo log buffer中的内容只写入文件系统缓存（page cache）。如果仅仅只是MySQL挂了不会有任何数据丢失，但是宕机可能会有1秒数据的丢失
 
 ![](image/MySQL-redoLog-2-刷盘策略.png)
+
+为了避免发生数据丢失的问题，当前事务数据库系统（并非 MySQL 所独有）普遍都采用了` WAL（Write Ahead Log，预写日志）`策略：即当事务提交时，先写重做日志（redo log），再修改页（先修改缓冲池，再刷新到磁盘）；当由于发生宕机而导致数据丢失时，通过 redo log 来完成数据的恢复。这也是事务 ACID 中 D（Durability 持久性）的要求
 
 ### 1.3、日志文件组
 
@@ -93,7 +95,8 @@ binlog作用：MySQL数据库的数据备份、主备、主主、主从都离不
 ### 3.1、redo log 和 binlog
 
 - redo log（重做日志）让InnoDB存储引擎拥有了崩溃恢复能力。
-- binlog（归档日志）保证了MySQL集群架构的数据一致性
+- binlog（归档日志）保证了MySQL集群架构的数据一致性；
+- binlog 是追加写入的，就是说 binlog 文件写到一定大小后会切换到下一个，并不会覆盖以前的日志；而 redo log 是循环写入的；
 
 虽然它们都属于持久化的保证，但是则重点不同；在执行更新语句过程，会记录`redo log`与`binlog`两块日志，以基本的事务为单位，redo log在事务执行过程中可以不断写入，而binlog只有在提交事务时才写入，所以`redo log`与`binlog`的写入时机不一样；
 
