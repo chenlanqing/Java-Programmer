@@ -891,6 +891,12 @@ HBase启动时发生了什么
 
 https://gitee.com/eminem89/Hbase-Observer-ElasticSearch
 
+# 13、常用查询方式
+
+查询rowKey以什么开头的：`scan 'login_log',FILTER=>"PrefixFilter('loginLog:Mobile:15923279403')"`
+
+查询列族中等于某个值的：`scan 'login_log', FILTER=>"ValueFilter(=,'binary:15923279403')"`
+
 
 # 参考资料
 
