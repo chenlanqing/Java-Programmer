@@ -3737,6 +3737,9 @@ Future<V> poll(long timeout, TimeUnit unit) throws InterruptedException;
 ```
 take、poll都是和阻塞队列相关的，take()、poll() 都是从阻塞队列中获取并移除一个元素；它们的区别在于如果阻塞队列是空的，那么调用 take() 方法的线程会被阻塞，而 poll() 方法会返回 null 值。 poll(long timeout, TimeUnit unit) 方法支持以超时的方式获取并移除阻塞队列头部的一个元素，如果等待了 timeout unit 时间，阻塞队列还是空的，那么该方法会返回 null 值；
 
+总结：
+- CompletionService就是监视着 Executor线程池执行的任务，用BlockingQueue将完成的任务的结果存储下来。
+- 要不断遍历与每个任务关联的Future，然后不断去轮询，判断任务是否已经完成，功能比较繁琐
 
 # 四、并发容器
 

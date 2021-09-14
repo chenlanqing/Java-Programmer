@@ -801,6 +801,22 @@ else x= a;
 等价于 x= a ^ b ^ x;
 ```
 
+## 6、其他位运算
+
+- 测试第 k 位: `s & (1 << k)`
+- 设置第 k 位: `s |= (1 << k)`
+- 第 k 位置零: `s &= ~(1 << k)`
+- 切换第 k 位值: `s ^= ~(1 << k)`
+- 乘以 2n: `s << n`
+- 除以 2n: `s >> n`
+- 交集: `s & t`
+- 并集: `s | t`
+- 减法: `s & ~t`
+- 交换 `x = x ^ y ^ (y = x)`
+- 取出最小非 0 位（Extract lowest set bit）: `s & (-s)`
+- 取出最小 0 位（Extract lowest unset bit）: `~s & (s + 1)`
+- 交换值: `x ^= y; y ^= x; x ^= y;`
+
 # 四、JDK8新特性
 
 * [JDK8概览](https://juejin.im/post/6861849472499417096)
