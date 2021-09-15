@@ -48,3 +48,11 @@
 
 - [DB Ranking](https://db-engines.com/en/ranking)
 - [TIOBE](https://www.tiobe.com/tiobe-index/)
+
+# 五、其他
+
+## 1、markdown公式语法
+
+[Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)
+
+[Markdown 公式写法](https://www.jianshu.com/p/e74eb43960a1)
