@@ -1083,7 +1083,9 @@ Redis4.0开始支持RDB和AOF的混合持久化（可以通过配置项 aof-use-
 - 如果是redis进程挂掉，那么重启redis进程即可，直接基于AOF日志文件恢复数据
 - 如果是redis进程所在机器挂掉，那么重启机器后，尝试重启redis进程，尝试直接基于AOF日志文件进行数据恢复，如果AOF文件破损，那么用redis-check-aof fix命令修复
 - 如果没有AOF文件，会去加载RDB文件
-- 如果redis当前最新的AOF和RDB文件出现了丢失/损坏，那么可以尝试基于该机器上当前的某个最新的RDB数据副本进行数据恢复
+- 如果redis当前最新的AOF和RDB文件出现了丢失/损坏，那么可以尝试基于该机器上当前的某个最新的RDB数据副本进行数据恢复；
+
+> Redis 支持同时开启开启两种持久化方式，我们可以综合使用 AOF 和 RDB 两种持久化机 制，用 AOF 来保证数据不丢失，作为数据恢复的第一选择; 用 RDB 来做不同程度的冷备， 在 AOF 文件都丢失或损坏不可用的时候，还可以使用 RDB 来进行快速的数据恢复
 
 ## 4、性能建议
 
@@ -1207,7 +1209,7 @@ QUEUED
 
 - 主要是主从复制，主节点数据更新后根据配置和策略，自动同步到从节点的 master/slaver机制，Master 以写为主，Slave 以读为主；
 - 如果采用了主从架构，那么建议必须开启master的持久化，保证在master宕机的情况下，恢复时数据不被清空。
-- 不建议用`slave node`作为`master node`的数据热备，因为那样的话，如果你关掉master的持久化，可能在master宕机重启的时候数据是空的，然后可能一经过复制，salve  node数据也丢了
+- 不建议用`slave node`作为`master node`的数据热备，因为那样的话，如果你关掉master的持久化，可能在master宕机重启的时候数据是空的，然后可能一经过复制，salve node数据也丢了
 
 ## 2、主从复制
 
@@ -1298,7 +1300,7 @@ slaveof no one
 
 ### 5.1、复制的原理
 
-- slave启动成功连接到master后会发送一个`sync`命令，redis 2.8开始，slave node会周期性地确认自己每次复制的数据量；
+- slave启动成功连接到master后会发送一个`psync`命令，redis 2.8开始，slave node会周期性地确认自己每次复制的数据量；
 
 	- 如果这是`slave node`重新连接`master node`，那么`master node`仅仅会复制给`slave`部分缺少的数据; 否则如果是`slave node`第一次连接`master node`，那么会触发一次`full resynchronization`；
 	
@@ -1312,32 +1314,23 @@ slaveof no one
 
 ### 5.2、复制的完整流程
 
-- （1）slave node启动，仅仅保存master node的信息，包括master node的host和ip，但是复制流程没开始；master host和ip是从`redis.conf`里面的slaveof获取；
-- （2）slave node内部有个定时任务，每秒检查是否有新的master node要连接和复制，如果发现，就跟master node建立socket网络连接
-- （3）slave node发送ping命令给master node
-- （4）口令认证，如果master设置了requirepass，那么salve node必须发送masterauth的口令过去进行认证
-- （5）master node第一次执行全量复制，将所有数据发给slave node
-- （6）master node后续持续将写命令，异步复制给slave node
+- （1）`slave node`启动，仅仅保存`master node`的信息，包括`master node`的host和ip，但是复制流程没开始；`master host`和`ip`是从`redis.conf`里面的`slaveof`获取；
+- （2）`slave node`内部有个定时任务，每秒检查是否有新的`master node`要连接和复制，如果发现，就跟`master node`建立socket网络连接
+- （3）`slave node`发送`ping`命令给`master node`
+- （4）口令认证，如果`master`设置了`requirepass`，那么salve node必须发送masterauth的口令过去进行认证
+- （5）`master node`第一次执行全量复制，将所有数据发给slave node
+- （6）`master node`后续持续将写命令，异步复制给slave node
 
 ### 5.3、数据同步相关的核心机制
 
 指的就是第一次slave连接msater的时候，执行的全量复制
+- （1）`master和slave都会维护一个offset`：master会在自身不断累加offset，slave也会在自身不断累加offset；slave每秒都会上报自己的offset给master，同时master也会保存每个slave的offset；是master和slave都要知道各自的数据的offset，才能知道互相之间的数据不一致的情况；
 
-- （1）master和slave都会维护一个offset
+- （2）`backlog`：master node有一个backlog，默认是1MB大小；master node给slave node复制数据时，也会将数据在backlog中同步写一份；backlog主要是用来做全量复制中断候的增量复制的
 
-	master会在自身不断累加offset，slave也会在自身不断累加offset；slave每秒都会上报自己的offset给master，同时master也会保存每个slave的offset；是master和slave都要知道各自的数据的offset，才能知道互相之间的数据不一致的情况；
+- （3）`master run id`：info server，可以看到master run id；如果根据host+ip定位master node，是不靠谱的，如果master node重启或者数据出现了变化，那么slave node应该根据不同的run id区分，run id不同就做全量复制；如果需要不更改run id重启redis，可以使用`redis-cli debug reload`命令
 
-- （2）backlog
-
-	master node有一个backlog，默认是1MB大小；master node给slave node复制数据时，也会将数据在backlog中同步写一份；backlog主要是用来做全量复制中断候的增量复制的
-
-- （3）master run id
-
-	info server，可以看到master run id；如果根据host+ip定位master node，是不靠谱的，如果master node重启或者数据出现了变化，那么slave node应该根据不同的run id区分，run id不同就做全量复制；如果需要不更改run id重启redis，可以使用`redis-cli debug reload`命令
-
-- （4）psync
-
-	从节点使用psync从master node进行复制，psync runid offset；master node会根据自身的情况返回响应信息，可能是`FULLRESYNC runid offset`触发全量复制，可能是`CONTINUE`触发增量复制；
+- （4）`psync`：从节点使用psync从master node进行复制，`psync runid offset`；master node会根据自身的情况返回响应信息，可能是`FULLRESYNC runid offset`触发全量复制，可能是`CONTINUE`触发增量复制；
 
 ### 5.4、全量复制
 
@@ -1347,7 +1340,7 @@ slaveof no one
 - （4）master node在生成rdb时，会将所有新的写命令缓存在内存中，在salve node保存了rdb之后，再将新的写命令复制给salve node
 - （5）`client-output-buffer-limit slave 256MB 64MB 60`，如果在复制期间，内存缓冲区持续消耗超过64MB，或者一次性超过256MB，那么停止复制，复制失败
 - （6）slave node接收到rdb之后，清空自己的旧数据，然后重新加载rdb到自己的内存中，同时基于旧的数据版本对外提供服务
-- （7）如果slave node开启了AOF，那么会立即执行BGREWRITEAOF，重写AOF
+- （7）如果slave node开启了AOF，那么会立即执行`BGREWRITEAOF`，重写AOF
 
 rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite，很耗费时间
 
@@ -1368,7 +1361,7 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 
 ### 5.7、异步复制	
 
-主节点不但负责数据读写，还负责把写命令同步给从节点，写命令的发送过程是异步完成，也就是说主节点处理完写命令后立即返回客户度，并不等待从节点复制完成
+主节点不但负责数据读写，还负责把写命令同步给从节点，写命令的发送过程是异步完成，也就是说主节点处理完写命令后立即返回客户端，并不等待从节点复制完成
 
 ### 5.8、无磁盘化复制
 
@@ -1388,10 +1381,10 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 ### 6.1、什么是哨兵模式
 
 由一个或多个`Sentinel`实例组成的，`Sentinel` 系统可以监视任意多个主服务器，以及这些主服务器属下的所有从服务器，并在被监视的主服务器进入下线状态时，自动将下线主服务器下的某个从服务器升级为新的主服务器；主要功能：
-- （1）主从监控，负责监控`redis master`和`slave`进程是否正常工作；
-- （2）消息通知，如果某个redis实例有故障，那么哨兵负责发送消息作为报警通知给管理员；
-- （3）故障转移，如果`master node`挂掉了，会自动转移到`slave node`上；
-- （4）配置中心，如果故障转移发生了，通知client客户端新的master地址；
+- （1）主从监控：负责监控`redis master`和`slave`进程是否正常工作；
+- （2）消息通知：如果某个redis实例有故障，那么哨兵负责发送消息作为报警通知给管理员；
+- （3）故障转移：如果`master node`挂掉了，会自动转移到`slave node`上；
+- （4）配置中心：如果故障转移发生了，通知client客户端新的master地址；
 
 ### 6.2、使用步骤
 
@@ -1467,32 +1460,25 @@ Configuration: `quorum = 2，majority`
 #### 6.4.1、两种数据丢失情况
 
 主备切换的过程，可能会导致数据丢失
-- 异步复制导致的数据丢失：因为`master -> slave`的复制是异步的，所以可能有部分数据还没复制到slave，master就宕机了，此时这些部分数据就丢失了
-- 脑裂导致的数据丢失：
+- 异步复制导致的数据丢失：因为`master -> slave`的复制是异步的，所以可能有部分数据还没复制到slave，master就宕机了，此时这些部分数据就丢失了；
 
-	某个master所在机器突然脱离了正常的网络，跟其他slave机器不能连接，但是实际上master还运行着。此时哨兵可能就会认为master宕机了，然后开启选举，将其他slave切换成了master这个时候，集群里就会有两个master，也就是所谓的脑裂；
+- 脑裂导致的数据丢失：某个master所在机器突然脱离了正常的网络，跟其他slave机器不能连接，但是实际上master还运行着。此时哨兵可能就会认为master宕机了，然后开启选举，将其他slave切换成了master这个时候，集群里就会有两个master，也就是所谓的脑裂；
 
 	此时虽然某个slave被切换成了master，但是可能client还没来得及切换到新的master，还继续写向旧master的数据可能也丢失了。因此旧master再次恢复的时候，会被作为一个slave挂到新的master上去，自己的数据会清空，重新从新的master复制数据；
 
 #### 6.4.2、解决方案
 
 `redis.confg`存在两个配置：
-```
-min-slaves-to-write 1  要求至少有1个slave，数据复制和同步的延迟不能超过10秒
-min-slaves-max-lag 10  如果说一旦所有的slave，数据复制和同步的延迟都超过了10秒钟，那么这个时候，master就不会再接收任何请求了
+```conf
+min-slaves-to-write 1  # 要求至少有1个slave，数据复制和同步的延迟不能超过10秒
+min-slaves-max-lag 10  # 如果说一旦所有的slave，数据复制和同步的延迟都超过了10秒钟，那么这个时候，master就不会再接收任何请求了
 ```
 上面两个配置可以减少异步复制和脑裂导致的数据丢失
 - 减少异步复制的数据丢失：有了`min-slaves-max-lag`这个配置，就可以确保说，一旦slave复制数据和ack延时太长，就认为可能master宕机后损失的数据太多了，那么就拒绝写请求，这样可以把master宕机时由于部分数据未同步到slave导致的数据丢失降低的可控范围内；
 
-- 减少脑裂的数据丢失：
+- 减少脑裂的数据丢失：如果一个master出现了脑裂，跟其他slave丢了连接，那么上面两个配置可以确保说，如果不能继续给指定数量的slave发送数据，而且slave超过10秒没有给自己ack消息，那么就直接拒绝客户端的写请求；
 
-	如果一个master出现了脑裂，跟其他slave丢了连接，那么上面两个配置可以确保说，如果不能继续给指定数量的slave发送数据，而且slave超过10秒没有给自己ack消息，那么就直接拒绝客户端的写请求；
-
-	这样脑裂后的旧master就不会接受client的新数据，也就避免了数据丢失
-
-	上面的配置就确保了，如果跟任何一个slave丢了连接，在10秒后发现没有slave给自己ack，那么就拒绝新的写请求
-
-	因此在脑裂场景下，最多就丢失10秒的数据
+	这样脑裂后的旧master就不会接受client的新数据，也就避免了数据丢失，上面的配置就确保了，如果跟任何一个slave丢了连接，在10秒后发现没有slave给自己ack，那么就拒绝新的写请求，因此在脑裂场景下，最多就丢失10秒的数据；
 
 ### 6.5、哨兵失败状态转换机制
 
@@ -1506,7 +1492,7 @@ min-slaves-max-lag 10  如果说一旦所有的slave，数据复制和同步的�
 
 **master在宕机之后，如果恢复之后存在不同步问题：**
 
-有可能是从节点配置了masterauth，这是用于同步master的数据，但是主节点一开始是master是不受影响的，当master转变为slave后，由于他没有设置masterauth，所以他不能从新的master同步数据，随之导致`info replication`的时候，同步状态为down，所以只需要修改redis.conf中的masterauth统一即可；
+有可能是从节点配置了master auth，这是用于同步master的数据，但是主节点一开始是master是不受影响的，当master转变为slave后，由于他没有设置masterauth，所以他不能从新的master同步数据，随之导致`info replication`的时候，同步状态为down，所以只需要修改redis.conf中的masterauth统一即可；
 
 一般master数据无法同步给slave的方案检查为如下：
 - 网络通信问题，要保证互相ping通，内网互通。
@@ -1515,7 +1501,7 @@ min-slaves-max-lag 10  如果说一旦所有的slave，数据复制和同步的�
 
 ### 6.6、哨兵集群的自动发现机制
 
-哨兵互相之间的发现，是通过redis的`pub/sub`系统实现的，每个哨兵都会往`__sentinel__:hello`这个channel里发送一个消息，这时候所有其他哨兵都可以消费到这个消息，并感知到其他的哨兵的存在
+哨兵互相之间的发现，是通过redis的`pub/sub`系统实现的，每个哨兵都会往`__sentinel__:hello`这个channel里发送一个消息，这时候所有其他哨兵都可以消费到这个消息，并感知到其他的哨兵的存在；
 
 每隔两秒钟，每个哨兵都会往自己监控的某个`master+slaves`对应的`__sentinel__:hello channel`里发送一个消息，内容是自己的`host、ip`和`runid`还有对这个master的监控配置
 
@@ -1544,7 +1530,7 @@ min-slaves-max-lag 10  如果说一旦所有的slave，数据复制和同步的�
 
 ### 6.9、quorum和majority
 
-每次一个哨兵要做主备切换，首先需要quorum数量的哨兵认为odown，然后选举出一个哨兵来做切换，这个哨兵还得得到majority哨兵的授权，才能正式执行切换；
+每次一个哨兵要做主备切换，首先需要quorum数量的哨兵认为odown（客观宕机），然后选举出一个哨兵来做切换，这个哨兵还得得到majority数量哨兵的授权，才能正式执行切换；
 
 如果`quorum < majority`，比如5个哨兵，majority就是3，quorum设置为2，那么就3个哨兵授权就可以执行切换
 
@@ -1625,9 +1611,9 @@ sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
 
 是一个提供在多个Redis间节点间共享数据的程序集；Redis集群并不支持处理多个keys的命令，因为这需要在不同的节点间移动数据，从而达不到像Redis那样的性能，在高负载的情况下可能会导致不可预料的错误，另外Redis集群不支持数据库选择，默认在 0 数据库；
 
-Redis 集群通过分区来提供一定程度的可用性,在实际环境中当某个节点宕机或者不可达的情况下继续处理命令. Redis 集群的优势：
+Redis 集群通过分区来提供一定程度的可用性，在实际环境中当某个节点宕机或者不可达的情况下继续处理命令。Redis 集群的优势：
 - 自动分割数据到不同的节点上。
-- 整个集群的部分节点失败或者不可达的情况下能够继续处理命令。集群节点挂掉会自动故障转移
+- 整个集群的部分节点失败或者不可达的情况下能够继续处理命令，集群节点挂掉会自动故障转移；
 - 节点与节点之间通过二进制协议进行通信；
 
 redis cluster（多master + 读写分离 + 高可用）
