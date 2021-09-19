@@ -5062,8 +5062,9 @@ Java SPI 实际上是`基于接口的编程＋策略模式＋配置文件`组合
 概括地说，适用于：调用者根据实际使用需要，启用、扩展、或者替换框架的实现策略，比较常见的例子：
 - 数据库驱动加载接口实现类的加载：JDBC加载不同类型数据库的驱动
 - 日志门面接口实现类加载：SLF4J加载不同提供商的日志实现类
-- Spring：Spring中大量使用了SPI,比如：对servlet3.0规范对ServletContainerInitializer的实现、自动类型转换Type Conversion SPI(Converter SPI、Formatter SPI)等
+- Spring：在springboot的自动装配过程中，最终会加载`META-INF/spring.factories`文件，而加载的过程是由`SpringFactoriesLoader`加载的。从CLASSPATH下的每个Jar包中搜寻所有`META-INF/spring.factories`配置文件，然后将解析properties文件，找到指定名称的配置后返回。需要注意的是，其实这里不仅仅是会去ClassPath路径下查找，会扫描所有路径下的Jar包，只不过这个文件只会在Classpath下的jar包中，Spring的详细参考：[SpringFactoriesLoader](../源码分析/框架/spring/Springboot源码.md#2.2SpringFactoriesLoader)
 - Dubbo：Dubbo中也大量使用SPI的方式实现框架的扩展, 不过它对Java提供的原生SPI做了封装，允许用户扩展实现Filter接口
+- 插件体系：
 
 ## 3、使用规则
 
@@ -5109,21 +5110,153 @@ public static void main(String[] args) {
 
 ## 5、原理
 
-ServiceLoader 类的成员变量
+ServiceLoader 类
 ```java
+//ServiceLoader实现了Iterable接口，可以遍历所有的服务实现者
 public final class ServiceLoader<S> implements Iterable<S> {
+    //查找配置文件的目录
     private static final String PREFIX = "META-INF/services/";
-    // 代表被加载的类或者接口
+    //表示要被加载的服务的类或接口
     private final Class<S> service;
-    // 用于定位，加载和实例化providers的类加载器
+    //这个ClassLoader用来定位，加载，实例化服务提供者
     private final ClassLoader loader;
-    // 创建ServiceLoader时采用的访问控制上下文
+    // 访问控制上下文
     private final AccessControlContext acc;
-    // 缓存providers，按实例化的顺序排列
+    // 缓存已经被实例化的服务提供者，按照实例化的顺序存储
     private LinkedHashMap<String,S> providers = new LinkedHashMap<>();
-    // 懒查找迭代器
+    // 迭代器
     private LazyIterator lookupIterator;
+    //重新加载，就相当于重新创建ServiceLoader了，用于新的服务提供者安装到正在运行的Java虚拟机中的情况。
+    public void reload() {
+        //清空缓存中所有已实例化的服务提供者
+        providers.clear();
+        //新建一个迭代器，该迭代器会从头查找和实例化服务提供者
+        lookupIterator = new LazyIterator(service, loader);
+    }
+    //私有构造器
+    //使用指定的类加载器和服务创建服务加载器
+    //如果没有指定类加载器，使用系统类加载器，就是应用类加载器。
+    private ServiceLoader(Class<S> svc, ClassLoader cl) {
+        service = Objects.requireNonNull(svc, "Service interface cannot be null");
+        loader = (cl == null) ? ClassLoader.getSystemClassLoader() : cl;
+        acc = (System.getSecurityManager() != null) ? AccessController.getContext() : null;
+        reload();
+    }
+    //解析失败处理的方法
+    private static void fail(Class<?> service, String msg, Throwable cause) throws ServiceConfigurationError{
+        throw new ServiceConfigurationError(service.getName() + ": " + msg,cause);
+    }
+    private static void fail(Class<?> service, String msg) throws ServiceConfigurationError{
+        throw new ServiceConfigurationError(service.getName() + ": " + msg);
+    }
+    private static void fail(Class<?> service, URL u, int line, String msg) throws ServiceConfigurationError{
+        fail(service, u + ":" + line + ": " + msg);
+    }
+    //解析服务提供者配置文件中的一行
+    //首先去掉注释校验，然后保存
+    //返回下一行行号
+    //重复的配置项和已经被实例化的配置项不会被保存
+    private int parseLine(Class<?> service, URL u, BufferedReader r, int lc,List<String> names) throws IOException, ServiceConfigurationError {
+        //读取一行
+        String ln = r.readLine();
+        if (ln == null) {
+            return -1;
+        }
+        //#号代表注释行
+        int ci = ln.indexOf('#');
+        if (ci >= 0) ln = ln.substring(0, ci);
+        ln = ln.trim();
+        int n = ln.length();
+        if (n != 0) {
+            if ((ln.indexOf(' ') >= 0) || (ln.indexOf('\t') >= 0))
+                fail(service, u, lc, "Illegal configuration-file syntax");
+            int cp = ln.codePointAt(0);
+            if (!Character.isJavaIdentifierStart(cp))
+                fail(service, u, lc, "Illegal provider-class name: " + ln);
+            for (int i = Character.charCount(cp); i < n; i += Character.charCount(cp)) {
+                cp = ln.codePointAt(i);
+                if (!Character.isJavaIdentifierPart(cp) && (cp != '.'))
+                    fail(service, u, lc, "Illegal provider-class name: " + ln);
+            }
+            if (!providers.containsKey(ln) && !names.contains(ln))
+                names.add(ln);
+        }
+        return lc + 1;
+    }
+
+    //解析配置文件，解析指定的url配置文件
+    //使用parseLine方法进行解析，未被实例化的服务提供者会被保存到缓存中去
+    private Iterator<String> parse(Class<?> service, URL u) throws ServiceConfigurationError {
+        InputStream in = null;
+        BufferedReader r = null;
+        ArrayList<String> names = new ArrayList<>();
+        try {
+            in = u.openStream();
+            r = new BufferedReader(new InputStreamReader(in, "utf-8"));
+            int lc = 1;
+            while ((lc = parseLine(service, u, r, lc, names)) >= 0);
+        }
+        return names.iterator();
+    }
+    //服务提供者查找的迭代器
+    private class LazyIterator implements Iterator<S> {
+
+        Class<S> service;//服务提供者接口
+        ClassLoader loader;//类加载器
+        Enumeration<URL> configs = null;//保存实现类的url
+        Iterator<String> pending = null;//保存实现类的全名
+        String nextName = null;//迭代器中下一个实现类的全名
+	}
+    //获取迭代器
+    //返回遍历服务提供者的迭代器
+    //以懒加载的方式加载可用的服务提供者
+    //懒加载的实现是：解析配置文件和实例化服务提供者的工作由迭代器本身完成
+    public Iterator<S> iterator() {
+        return new Iterator<S>() {
+            //按照实例化顺序返回已经缓存的服务提供者实例
+            Iterator<Map.Entry<String,S>> knownProviders = providers.entrySet().iterator();
+            public boolean hasNext() {
+                if (knownProviders.hasNext())
+                    return true;
+                return lookupIterator.hasNext();
+            }
+            public S next() {
+                if (knownProviders.hasNext())
+                    return knownProviders.next().getValue();
+                return lookupIterator.next();
+            }
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+    //为指定的服务使用指定的类加载器来创建一个ServiceLoader
+    public static <S> ServiceLoader<S> load(Class<S> service,ClassLoader loader){
+        return new ServiceLoader<>(service, loader);
+    }
+    //使用线程上下文的类加载器来创建ServiceLoader
+    public static <S> ServiceLoader<S> load(Class<S> service) {
+        ClassLoader cl = Thread.currentThread().getContextClassLoader();
+        return ServiceLoader.load(service, cl);
+    }
+    //使用扩展类加载器为指定的服务创建ServiceLoader
+    //只能找到并加载已经安装到当前Java虚拟机中的服务提供者，应用程序类路径中的服务提供者将被忽略
+    public static <S> ServiceLoader<S> loadInstalled(Class<S> service) {
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+        ClassLoader prev = null;
+        while (cl != null) {
+            prev = cl;
+            cl = cl.getParent();
+        }
+        return ServiceLoader.load(service, prev);
+    }
+}
 ```
+**首先**，ServiceLoader实现了`Iterable`接口，所以它有迭代器的属性，这里主要都是实现了迭代器的`hasNext`和`next`方法。这里主要都是调用的`lookupIterator`的相应`hasNext`和`next`方法，`lookupIterator`是懒加载迭代器；
+
+**其次**，`LazyIterator`中的`hasNext`方法，静态变量PREFIX就是`”META-INF/services/”`目录，这也就是为什么需要在`classpath`下的`META-INF/services/`目录里创建一个以服务接口命名的文件；
+
+**最后**，通过反射方法`Class.forName()`加载类对象，并用`newInstance`方法将类实例化，并把实例化后的类缓存到`providers`对象中，(`LinkedHashMap<String,S>`类型）然后返回实例对象；
 
 具体流程：
 - 应用程序调用`ServiceLoader.load`方法`ServiceLoader.load`方法内先创建一个新的`ServiceLoader`，并实例化该类中的成员变量，包括：
@@ -5137,11 +5270,27 @@ public final class ServiceLoader<S> implements Iterable<S> {
     - 通过反射方法`Class.forName()`加载类对象，并用`instance()`方法将类实例化
     - 把实例化后的类缓存到providers对象中(LinkedHashMap类型）然后返回实例对象。
 
-## 6、总结
+## 6、SPI与API
+
+SPI - “接口”位于“调用方”所在的“包”中
+
+- 概念上更依赖调用方；
+- 组织上位于调用方所在的包中；
+- 实现位于独立的包中；
+- 常见的例子是：插件模式的插件；
+
+API - “接口”位于“实现方”所在的“包”中
+
+- 概念上更接近实现方；
+- 组织上位于实现方所在的包中；
+- 实现和接口在一个包中；
+
+## 7、总结
 
 - 优点：使用Java SPI机制的优势是实现解耦，使得第三方服务模块的装配控制的逻辑与调用者的业务代码分离，而不是耦合在一起。应用程序可以根据实际业务情况启用框架扩展或替换框架组件
 - 缺点：
-    - 虽然ServiceLoader也算是使用的延迟加载，但是基本只能通过遍历全部获取，也就是接口的实现类全部加载并实例化一遍。如果你并不想用某些实现类，它也被加载并实例化了，这就造成了浪费。获取某个实现类的方式不够灵活，只能通过Iterator形式获取，不能根据某个参数来获取对应的实现类。
+    - 虽然ServiceLoader也算是使用的延迟加载，但是基本只能通过遍历全部获取，也就是接口的实现类全部加载并实例化一遍。如果你并不想用某些实现类，它也被加载并实例化了，这就造成了浪费；
+	- 获取某个实现类的方式不够灵活，只能通过Iterator形式获取，不能根据某个参数来获取对应的实现类。
     - 多个并发多线程使用ServiceLoader类的实例是不安全的
 
 # 二十四、Java中的null
