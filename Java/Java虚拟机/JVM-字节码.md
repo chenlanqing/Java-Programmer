@@ -536,6 +536,10 @@ private void attachAgentToTargetJVM() throws Exception {
 
 首先通过指定的进程ID找到目标JVM，然后通过Attach挂载到目标JVM上，执行加载Agent操作。VirtualMachine的Attach方法就是用来将Agent挂载到目标JVM上去的，而Detach则是将Agent从目标JVM卸载；
 
+# 6、防止反编译
+
+https://mp.weixin.qq.com/s/lPDhZgEys6lTR215aXqlxg
+
 # 参考资料
 
 * [字节码操作](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
