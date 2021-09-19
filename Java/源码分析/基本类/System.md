@@ -13,7 +13,7 @@ public final class System {
 
 # 二、属性
 
-
+System.getProperty("java.specification.version")
 
 # 三、方法
 

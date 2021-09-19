@@ -1,4 +1,5 @@
 
+
 **Java世界里的一切东西都只是在拼Java命令行参数而已**
 
 # 一、Java平台理解
@@ -2505,7 +2506,8 @@ class ClassTest<X extends Number， Y， Z> {
 ## 6、在使用泛型的时候可以遵循一些基本的原则
 
 - 在代码中避免泛型类和原始类型的混用;
-- 在使用带通配符的泛型类的时候，需要明确通配符所代表的一组类型的概念
+- 在使用带通配符的泛型类的时候，需要明确通配符所代表的一组类型的概念；
+- 定义泛型方法时，必须在返回值前边加一个<T>，来声明这是一个泛型方法，持有一个泛型T，然后才可以用泛型T作为方法的返回值
 
 ## 7、Java与C++泛型区别
 
@@ -2910,17 +2912,29 @@ Java 认为 Checked 异常都是可以被处理的异常，所以 Java 程序必
 
 ### 5.1、RuntimeException
 
-- NullpointException
-- ClassCastException
-- IllegalArgumentException
-- IndexOutOfBoundException、ArrayIndexOutOfBoundsException
-- NumberFormatException
-- UnsupportedOperationException
+- java.lang.ArrayIndexOutOfBoundsException 数组索引越界异常。当对数组的索引值为负数或大于等于数组大小时抛出。
+- java.lang.ArithmeticException 算术条件异常。譬如：整数除零等。
+- java.lang.NullPointerException 空指针异常。当应用试图在要求使用对象的地方使用了null时，抛出该异常。譬如：调用null对象的实例方法、访问null对象的属性、计算null对象的长度、使用throw语句抛出null等等
+- java.lang.ClassNotFoundException 找不到类异常。当应用试图根据字符串形式的类名构造类，而在遍历CLASSPAH之后找不到对应名称的class文件时，抛出该异常。
+- java.lang.NegativeArraySizeException  数组长度为负异常
+- java.lang.ArrayStoreException 数组中包含不兼容的值抛出的异常
+- java.lang.SecurityException 安全性异常
+- java.lang.IllegalArgumentException 非法参数异常
 
 ### 5.2、非RuntimeException
 
-- ClassNotFoundException
-- IOException
+- IOException：操作输入流和输出流时可能出现的异常。
+- EOFException 文件已结束异常
+- FileNotFoundException 文件未找到异常
+- ClassCastException    类型转换异常类
+- ArrayStoreException  数组中包含不兼容的值抛出的异常
+- SQLException   操作数据库异常类
+- NoSuchFieldException   字段未找到异常
+- NoSuchMethodException   方法未找到抛出的异常
+- NumberFormatException    字符串转换为数字抛出的异常
+- StringIndexOutOfBoundsException 字符串索引超出范围抛出的异常
+- IllegalAccessException  不允许访问某类异常
+- InstantiationException  当应用程序试图使用Class类中的newInstance()方法创建一个类的实例，而指定的类对象无法被实例化时，抛出该异常
 
 ### 5.3、Error
 
@@ -2965,7 +2979,38 @@ public static void initCause() {
 }
 ```
 
-# 十二、关于try...catch...finally
+## 8、异常最佳实践
+
+- 只针对不正常的情况才使用异常，不应该被用于正常的控制流；
+- 在finally块中清理资源或者使用 try-with-resource 语句；
+- 尽量使用标准的异常，重用异常：比如 IllegalArgumentException
+	Java标准异常中有几个是经常被使用的异常。如下表格：
+	| 异常                            | 使用场合                                   |
+	| ------------------------------- | ------------------------------------------ |
+	| IllegalArgumentException        | 参数的值不合适                             |
+	| IllegalStateException           | 参数的状态不合适                           |
+	| NullPointerException            | 在null被禁止的情况下参数值为null           |
+	| IndexOutOfBoundsException       | 下标越界                                   |
+	| ConcurrentModificationException | 在禁止并发修改的情况下，对象检测到并发修改 |
+	| UnsupportedOperationException   | 对象不支持客户请求的方法                   |
+- 对异常进行文档说明：在 Javadoc 添加 @throws 声明，并且描述抛出异常的场景，目的是为了给调用者提供尽可能多的信息，从而可以更好地避免或处理异常；
+- 优先捕获具体的异常：只有匹配异常的第一个 catch 块会被执行。 因此，如果首先捕获 IllegalArgumentException ，则永远不会到达应该处理更具体的 NumberFormatException 的 catch 块，因为它是 IllegalArgumentException 的子类；
+- 不要捕获 Throwable 类：如果在 catch 子句中使用 Throwable ，它不仅会捕获所有异常，也将捕获所有的错误。JVM 抛出错误，指出不应该由应用程序处理的严重问题。 典型的例子是 OutOfMemoryError 或者 StackOverflowError 。两者都是由应用程序控制之外的情况引起的，无法处理；
+- 不要忽略异常；
+- 不要记录并抛出异常，经常会给同一个异常输出多条日志
+	```java
+	try {
+		new Long("xyz");
+	} catch (NumberFormatException e) {
+		log.error(e);
+		throw e;
+	}
+	```
+- 包装异常时不要抛弃原始的异常：Exception 类提供了特殊的构造函数方法，它接受一个 Throwable 作为参数。否则，你将会丢失堆栈跟踪和原始异常的消息，这将会使分析导致异常的异常事件变得困难；
+- 不要使用异常控制程序的流程，会严重影响应用的性能；
+- 不要在finally块中使用return：try块中的return语句执行成功后，并不马上返回，而是继续执行finally块中的语句，如果此处存在return语句，则在此直接返回，无情丢弃掉try块中的返回点；
+
+# 十二、关于try-catch-finally
 
 * [try、catch、finally中的细节分析](http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)
 
@@ -2982,14 +3027,14 @@ public boolean returnTest(){
 }
 ```
 
-## 1、关于try...catch...finally使用
+## 1、关于try-catch-finally使用
 
 - `try、catch、finally`语句中，在如果`try`语句有`retur`语句，则返回的之后当前 try 中变量此时对应的值，此后对变量做任何的修改，都不影响 try 中 return 的返回值；
 - 如果 finally 块中有 return 语句，则 try 或 catch 中的返回语句忽略；
 - 如果 finally 块中抛出异常，则整个 try、catch、finally 块中抛出异常；
 - 如果 catch 异常中写了多个需要 catch 的异常，可以如果匹配到了捕获的异常，则后面其他的异常都将被忽略
 
-## 2、使用try...catch...finally需要注意
+## 2、使用try-catch-finally需要注意
 
 - 尽量在 try 或者 catch 中使用 return 语句。通过 finally 块中达到对 try 或者 catch 返回值修改是不可行的；
 - finally 块中避免使用 return 语句，因为 finally 块中如果使用 return 语句，会显示的消化掉 try、catch 块中的异常信息，屏蔽了错误的发生；
@@ -3014,7 +3059,14 @@ Exception in thread "main" java.lang.ArithmeticException： / by zero
 
 ## 3、如何退出
 
+finally遇见如下情况不会执行：
+- 在前面的代码中用了System.exit()退出程序。
+- finally语句块中发生了异常。
+- 程序所在的线程死亡。
+- 关闭CPU
+
 在 try 里面通过 System.exit(0) 来退出 JVM 的情况下 finally 块中的代码才不会执行。其他 return 等情况都会调用，所以在不终止 JVM 的情况下 finally 中的代码一定会执行：
+
 ```java
 public static void main(String[] args) {
 	try {
@@ -3034,7 +3086,6 @@ public static void main(String[] args) {
 
 其中`from指针、to指针`标示了该异常处理器锁监控的范围，例如try代码块所覆盖的范围。target指针则指向异常处理器的其实位置，例如catch代码块的起始位置；
 ```java
-
 public static void main(String[] args) {
   try {
     mayThrowException();
@@ -3060,7 +3111,11 @@ public static void main(java.lang.String[]);
 
 如果遍历完所有异常表条目后，Java虚拟机仍未匹配到异常处理器，那么它会弹出当前方法对应的Java栈帧，并且在调用者中重复上述操作。在最坏的情况下，Java虚拟机需要遍历当前线程Java栈上的所有方法的异常表；
 
-finally代码块的编译：复制finally代码块的内容，分别放在try-catch代码块所有正常执行路径以及异常执行路径的出口中。针对异常执行路径，Java编译器会生成一个或多个异常条目，监控整个try-catch代码块，并且捕获所有种类的异常。这些异常表条目的target指针将指向另一份复制的finally代码块。并且，在这个finally代码块的最后，Java编译器会重新抛出所捕获的异常。
+finally代码块的编译：复制finally代码块的内容，分别放在`try-catch`代码块所有正常执行路径以及异常执行路径的出口中。针对异常执行路径，Java编译器会生成一个或多个异常条目，监控整个`try-catch`代码块，并且捕获所有种类的异常。这些异常表条目的target指针将指向另一份复制的finally代码块。并且，在这个finally代码块的最后，Java编译器会重新抛出所捕获的异常；
+
+## 5、try-with-resource
+
+try-with-resource是Java 7中引入的，提供了更优雅的方式来实现资源的自动释放，自动释放的资源需要是实现了 AutoCloseable 接口的类
 
 # 十三、Java 四舍五入
 
@@ -3989,6 +4044,12 @@ public class Test {
 
 JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据，注解不直接影响代码执行。
 
+它主要的作用有以下四方面：
+- 生成文档，通过代码里标识的元数据生成javadoc文档。
+- 编译检查，通过代码里标识的元数据让编译器在编译期间进行检查验证。
+- 编译时动态处理，编译时通过代码里标识的元数据动态处理，例如动态生成代码。
+- 运行时动态处理，运行时通过代码里标识的元数据动态处理，例如使用反射注入实例
+
 ### 1.1、内置注解
 
 - @Override：重写
@@ -4022,30 +4083,100 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 	- 类、接口、枚举、Annotation类型：TYPE
 	- 方法参数：PARAMETER
 	- 局部变量：LOCAL VARIABLE
+	```java
+	public enum ElementType {
+		TYPE, // 类、接口、枚举类
+		FIELD, // 成员变量（包括：枚举常量）
+		METHOD, // 成员方法
+		PARAMETER, // 方法参数
+		CONSTRUCTOR, // 构造方法
+		LOCAL_VARIABLE, // 局部变量
+		ANNOTATION_TYPE, // 注解类
+		PACKAGE, // 可用于修饰：包
+		TYPE_PARAMETER, // 类型参数，JDK 1.8 新增
+		TYPE_USE // 使用类型的任何地方，JDK 1.8 新增
+	}
+	```
 
 - `@Retention`：表示需要在什么级别保存该注释信息，用于描述注解的生命周期：`(RetentionPolicy)`
-	SOURCE：在源文件有效(即源文件保留)
-	CLASS：在class文件中有效
-	RUNTIME：在运行时有效(可被反射读取)
+	- SOURCE：在源文件有效(即源文件保留)
+	- CLASS：在class文件中有效
+	- RUNTIME：在运行时有效(可被反射读取)
 
 - `@Documented`：生成文档的时候会生成注解的注释
 
 - `@Inherited`：允许子类继承
 
+在JDK 1.8中提供了两个元注解 @Repeatable和@Native
+
 ### 1.4、解析注解
 
 通过反射获取类、函数或成员上的运行时注解信息，从而实现动态控制程序运行的逻辑;
 
-### 1.5、注解处理器
+反射包java.lang.reflect下的AnnotatedElement接口提供这些方法。这里注意：只有注解被定义为`RUNTIME`后，该注解才能是运行时可见，当class文件被装载时被保存在class文件中的Annotation才会被虚拟机读取；
+
+### 1.5、注解不支持继承
+
+不能使用关键字extends来继承某个@interface，但注解在编译后，编译器会自动继承`java.lang.annotation.Annotation`接口.，虽然反编译后发现注解继承了Annotation接口，请记住，即使Java的接口可以实现多继承，但定义注解时依然无法使用extends关键字继承@interface。
+
+区别于注解的继承，被注解的子类继承父类注解可以用@Inherited： 如果某个类使用了被@Inherited修饰的Annotation，则其子类将自动具有该注解。
+
+## 2、注解处理器
 
 注解处理器是一个在javac中的，用来编译时扫描和处理的注解的工具；一个注解的注解处理器，以Java代码(或者编译过的字节码)作为输入，生成文件(通常是`.java`文件)作为输出。这具体的含义什么呢？你可以生成Java代码！这些生成的Java代码是在生成的`.java`文件中，所以你不能修改已经存在的Java类，例如向已有的类中添加方法。这些生成的Java文件，会同其他普通的手动编写的Java源代码一样被`javac`编译；
 
-虚处理器 AbstractProcessor
+### 2.1、虚处理器 AbstractProcessor
 
-## 2、Java 动态加载与静态加载
+- [Annotationprocessing](http://hannesdorfmann.com/annotation-processing/annotationprocessing101/)
+- [Annotationprocessing](https://www.race604.com/annotation-processing/)
+- [示例源代码](https://github.com/chenlanqing/annotationprocessing101)
 
-- 编译时加载类是静态加载类：new 创建对象是静态加载类，在编译时刻时需要加载所有的可能使用到的类;
-- 运行时刻加载类是动态加载(Class.forName(""));
+每个处理器继承 AbstractProcessor
+```java
+public abstract class AbstractProcessor implements Processor {
+	...
+}
+public class MyProcessor extends AbstractProcessor {
+    @Override
+    public synchronized void init(ProcessingEnvironment env){ }
+    @Override
+    public boolean process(Set<? extends TypeElement> annoations, RoundEnvironment env) { }
+    @Override
+    public Set<String> getSupportedAnnotationTypes() { }
+    @Override
+    public SourceVersion getSupportedSourceVersion() { }
+}
+```
+- `init(ProcessingEnvironment env)`: 每一个注解处理器类都**必须有一个空的构造函数**。然而，这里有一个特殊的`init()`方法，它会被注解处理工具调用，并输入`ProcessingEnviroment`参数。`ProcessingEnviroment`提供很多有用的工具类`Elements`, `Types`和`Filer`；
+- `process(Set<? extends TypeElement> annotations, RoundEnvironment env)`: 这相当于每个处理器的主函数`main()`。在这里扫描、评估和处理注解的代码，以及生成Java文件。输入参数`RoundEnviroment`，可以查询出包含特定注解的被注解元素；
+- `getSupportedAnnotationTypes()`: 这里必须指定，这个注解处理器是注册给哪个注解的。注意，它的返回值是一个字符串的集合，包含本处理器想要处理的注解类型的合法全称。换句话说，在这里定义你的注解处理器注册到哪些注解上。
+- `getSupportedSourceVersion()`: 用来指定你使用的Java版本。通常这里返回`SourceVersion.latestSupported()`。然而，如果你有足够的理由只支持Java 6的话，你也可以返回`SourceVersion.RELEASE_6`；推荐使用前者
+
+> 在Java 7中，你也可以使用注解来代替getSupportedAnnotationTypes()和getSupportedSourceVersion()，像这样：
+```java
+@SupportedSourceVersion(SourceVersion.latestSupported())
+@SupportedAnnotationTypes({
+   // 合法注解全名的集合
+ })
+public class MyProcessor extends AbstractProcessor {
+    @Override
+    public synchronized void init(ProcessingEnvironment env){ }
+
+    @Override
+    public boolean process(Set<? extends TypeElement> annoations, RoundEnvironment env) { }
+}
+```
+> 注解处理器是运行它自己的虚拟机JVM中。是的，javac启动一个完整Java虚拟机来运行注解处理器；
+
+### 2.2、注册处理器
+
+怎样将处理器MyProcessor注册到javac中
+- 必须提供一个.jar文件，就像其他.jar文件一样，你打包你的注解处理器到此文件中；
+- 并且，在你的jar中，你需要打包一个特定的文件`javax.annotation.processing.Processor`到`META-INF/services`路径下
+
+所以，`.jar文件`看起来就像下面这样，参考 lombok：
+
+![](image/Java-AbstractProcessor.png)
 
 ## 3、反射机制：(Reflection)
 
@@ -4067,9 +4198,57 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 
 - 反射机制性能问题：反射会降低程序的效率，如果在开发中确实需要使用到反射，可以将setAccessible设为 true ：即取消Java语言访问检查;
 
-### 3.2、反射获取构造函数
+class对象是可以说是反射中最常用的，获取class对象的方式的主要有三种
+- 根据类名：类名.class
+- 根据对象：对象.getClass()
+- 根据全限定类名：Class.forName(全限定类名)
 
-通过Class对象可以获取某个类中的：构造方法
+再来看看 **Class类的方法**
+| 方法名                                              | 说明                                                         |
+| --------------------------------------------------- | ------------------------------------------------------------ |
+| forName()                                           | (1)获取Class对象的一个引用，但引用的类还没有加载(该类的第一个对象没有生成)就加载了这个类。 |
+| (2)为了产生Class引用，forName()立即就进行了初始化。 |                                                              |
+| Object-getClass()                                   | 获取Class对象的一个引用，返回表示该对象的实际类型的Class引用。 |
+| getName()                                           | 取全限定的类名(包括包名)，即类的完整名字。                   |
+| getSimpleName()                                     | 获取类名(不包括包名)                                         |
+| getCanonicalName()                                  | 获取全限定的类名(包括包名)                                   |
+| isInterface()                                       | 判断Class对象是否是表示一个接口                              |
+| getInterfaces()                                     | 返回Class对象数组，表示Class对象所引用的类所实现的所有接口。 |
+| getSupercalss()                                     | 返回Class对象，表示Class对象所引用的类所继承的直接基类。应用该方法可在运行时发现一个对象完整的继承结构。 |
+| newInstance()                                       | 返回一个Oject对象，是实现“虚拟构造器”的一种途径。使用该方法创建的类，必须带有无参的构造器。 |
+| getFields()                                         | 获得某个类的所有的公共（public）的字段，包括继承自父类的所有公共字段。 类似的还有getMethods和getConstructors。 |
+| getDeclaredFields                                   | 获得某个类的自己声明的字段，即包括public、private和proteced，默认但是不包括父类声明的任何字段。类似的还有getDeclaredMethods和getDeclaredConstructors。 |
+
+**getName、getCanonicalName与getSimpleName的区别**：
+- getSimpleName：只获取类名
+- getName：类的全限定名，jvm中Class的表示，可以用于动态加载Class对象，例如Class.forName。
+- getCanonicalName：返回更容易理解的表示，主要用于输出（toString）或log打印，大多数情况下和getName一样，但是在内部类、数组等类型的表示形式就不同了。
+```java
+public class Test {
+    private class inner {}
+    public static void main(String[] args) throws ClassNotFoundException {
+        //普通类
+        System.out.println(Test.class.getSimpleName()); //Test
+        System.out.println(Test.class.getName()); //com.blue.fish.example.reflect.Test
+        System.out.println(Test.class.getCanonicalName()); //com.blue.fish.example.reflect..Test
+        //内部类
+        System.out.println(inner.class.getSimpleName()); //inner
+        System.out.println(inner.class.getName()); //com.blue.fish.example.reflect..Test$inner
+        System.out.println(inner.class.getCanonicalName()); //com.blue.fish.example.reflect..Test.inner
+        //数组
+        System.out.println(args.getClass().getSimpleName()); //String[]
+        System.out.println(args.getClass().getName()); //[Ljava.lang.String;
+        System.out.println(args.getClass().getCanonicalName()); //java.lang.String[]
+        //我们不能用getCanonicalName去加载类对象，必须用getName
+        //Class.forName(inner.class.getCanonicalName()); 报错
+        Class.forName(inner.class.getName());
+    }
+}
+```
+
+### 3.2、Constructor:反射获取构造函数
+
+通过Class对象可以获取某个类中的,构造方法
 
 **批量的方法：**
 ```java
@@ -4114,6 +4293,8 @@ public void set(Object obj,Object value){
 }
 ```
 
+> 如果我们不期望获取其父类的字段，则需使用Class类的`getDeclaredField/getDeclaredFields`方法来获取字段即可，倘若需要连带获取到父类的字段，那么请使用Class类的`getField/getFields`；
+
 ### 3.4、反射获取方法
 
 **批量获取方法：**
@@ -4146,11 +4327,14 @@ public Object invoke(Object obj, Object... args) {
 	```
 	*注意：传入参数时不能直接传一个数组，jdk为了兼容1.5版本以下的，会将其拆包；因此这里将其强转或者直接将String数组放入Object数组也可以*
 
+> 在通过getMethods方法获取Method对象时，会把父类的方法也获取到；而`getDeclaredMethod/getDeclaredMethods`方法都只能获取当前类的方法；
+
+> `getReturnType方法/getGenericReturnType`方法都是获取Method对象表示的方法的返回类型，只不过前者返回的Class类型后者返回的Type(前面已分析过)，Type就是一个接口而已，在Java8中新增一个默认的方法实现，返回的就参数类型信息；
+
 ### 3.5、反射操作泛型
 
 - ①、Java 采用泛型擦除的机制来引入泛型。Java中的泛型仅仅是给编译器使用的，确保数据的安全性和免去强制类型转换的麻烦；但是一旦编译完成，所有和泛型有关的类型全部擦除;
 - ②、为了通过反射操作泛型，Java有 `ParameterizedType、GenericArrayType、TypeVariable、WildcardType`几种类型来代表不能被归一到Class类中的类型但是又和原始类型齐名的类型；
-
 	- `Type`是Java编程语言中所有类型的公共高级接口。它们包括原始类型、参数化类型、数组类型、类型变量和基本类型
 	- `ParameterizedType` ：参数化类型
 	- `GenericArrayType`：元素类型是参数化类型或者类型变量的数组类型
@@ -4219,7 +4403,20 @@ Array 工具类可完成数组的反射操作;
 
 - 反射与工厂模式
 
-### 3.9、注解实现原理
+### 3.9、反射原理
+
+![](image/java-basic-reflection-1.png)
+
+用几句话总结反射的实现原理：
+- 反射类及反射方法的获取，都是通过从列表中搜寻查找匹配的方法，所以查找性能会随类的大小方法多少而变化；
+- 每个类都会有一个与之对应的Class实例，从而每个类都可以获取method反射方法，并作用到其他实例身上；
+- 反射也是考虑了线程安全的，放心使用；
+- 反射使用软引用relectionData缓存class信息，避免每次重新从jvm获取带来的开销；
+- 反射调用多次生成新代理Accessor, 而通过字节码生存的则考虑了卸载功能，所以会使用独立的类加载器；
+- 当找到需要的方法，都会copy一份出来，而不是使用原来的实例，从而保证数据隔离；
+- 调度反射方法，最终是由jvm执行invoke0()执行；
+
+### 3.10、注解实现原理
 
 如何获取到注解里的数据呢？通过反射
 
@@ -4257,6 +4454,21 @@ public interface AnnotatedElement {
 ```
 
 注解本质是一个继承了`java.lang.annotation.Annotation`的特殊接口，其具体实现类是Java运行时生成的动态代理类。而我们通过反射获取注解时，返回的是Java 运行时生成的动态代理对象`$Proxy1`。通过代理对象调用自定义注解（接口）的方法，会最终调用`AnnotationInvocationHandler`的invoke方法。该方法会从memberValues这个Map中索引出对应的值；
+
+期间，在创建代理对象之前，解析注解时候 从该注解类的常量池中取出注解的信息，包括之前写到注解中的参数，然后将这些信息在创建 AnnotationInvocationHandler时候 ，传入进去 作为构造函数的参数，当调用该代理实例的获取值的方法时，就会调用执行AnotationInvocationHandler里面的逻辑，将之前存入的注解信息 取出来；
+
+代理的方法调用：`sun.reflect.annotation.AnnotationParser#annotationForMap`
+```java
+public static Annotation annotationForMap(final Class<? extends Annotation> type,final Map<String, Object> memberValues){
+	return AccessController.doPrivileged(new PrivilegedAction<Annotation>() {
+		public Annotation run() {
+			return (Annotation) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
+				new AnnotationInvocationHandler(type, memberValues));
+		}});
+}
+```
+
+![](image/Java-基础-注解执行过程.png)
 
 可以通过指定属性保存代理类：`-Djdk.proxy.ProxyGenerator.saveGeneratedFiles=true -XX:+TraceClassLoading`
 
@@ -4301,10 +4513,15 @@ int result = compile.run(null， null， null， "F:/class/HelloWorld.java");
 
 ### 4.3、动态运行动态编译的Java类
 
-## 5、动态执行Javascript(JDK6.0以上)
+## 5、动态加载
 
+动态执行Javascript(JDK6.0以上)
 - 脚本引擎：Java 应该程序可以通过一套固定的接口与脚本引擎交互，从而可以在Java平台上调用各种脚本语言;
 - js接口：Rhino 引擎，使用Java语言的javascript开源实现;
+
+Java 动态加载与静态加载
+- 编译时加载类是静态加载类：new 创建对象是静态加载类，在编译时刻时需要加载所有的可能使用到的类;
+- 运行时刻加载类是动态加载(Class.forName(""));
 
 ## 6、Java 字节码操作
 
@@ -5647,6 +5864,7 @@ System.out.println(ClassGetResourcePath.class.getClassLoader().getResource("/"))
 # 三十四、Java实现动态脚本
 
 https://mp.weixin.qq.com/s/01fj7l3xsxHVstlkrJ0epw
+
 
 # 参考文章
 
