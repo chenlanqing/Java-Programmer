@@ -1,19 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、签名](#%E4%B8%80%E7%AD%BE%E5%90%8D)
-- [二、设计理念](#%E4%BA%8C%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5)
-- [三、属性](#%E4%B8%89%E5%B1%9E%E6%80%A7)
-- [四、构造方法](#%E5%9B%9B%E6%9E%84%E9%80%A0%E6%96%B9%E6%B3%95)
-- [五、方法](#%E4%BA%94%E6%96%B9%E6%B3%95)
-  - [1、put方法](#1put%E6%96%B9%E6%B3%95)
-  - [2、get方法](#2get%E6%96%B9%E6%B3%95)
-- [六、TreeSet](#%E5%85%ADtreeset)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 # 一、签名
 
 ```java

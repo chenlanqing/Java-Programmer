@@ -219,3 +219,4 @@
 26. lvs nginx haproxy iptabåles
 27. hadoop mapreduce hive sqoop hbase flink kylin druid
 ```
+计算机基础知识：https://github.com/chenlanqing/Crash-Course-Computer-Science-Chinese

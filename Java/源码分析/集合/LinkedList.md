@@ -1,35 +1,11 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [一、类的定义](#%e4%b8%80%e7%b1%bb%e7%9a%84%e5%ae%9a%e4%b9%89)
-- [二、属性](#%e4%ba%8c%e5%b1%9e%e6%80%a7)
-  - [1、节点属性](#1%e8%8a%82%e7%82%b9%e5%b1%9e%e6%80%a7)
-    - [1.1、JDK1.6](#11jdk16)
-    - [1.2、JDK7与JDK8](#12jdk7%e4%b8%8ejdk8)
-  - [2、节点类型](#2%e8%8a%82%e7%82%b9%e7%b1%bb%e5%9e%8b)
-- [三、方法](#%e4%b8%89%e6%96%b9%e6%b3%95)
-  - [1、追加（新增）节点](#1%e8%bf%bd%e5%8a%a0%e6%96%b0%e5%a2%9e%e8%8a%82%e7%82%b9)
-    - [1.1、链表尾部追加：add和addLast](#11%e9%93%be%e8%a1%a8%e5%b0%be%e9%83%a8%e8%bf%bd%e5%8a%a0add%e5%92%8caddlast)
-    - [1.2、链表头部添加：addFirst](#12%e9%93%be%e8%a1%a8%e5%a4%b4%e9%83%a8%e6%b7%bb%e5%8a%a0addfirst)
-  - [2、删除节点](#2%e5%88%a0%e9%99%a4%e8%8a%82%e7%82%b9)
-    - [2.1、从头部删除](#21%e4%bb%8e%e5%a4%b4%e9%83%a8%e5%88%a0%e9%99%a4)
-    - [2.2、从尾部删除](#22%e4%bb%8e%e5%b0%be%e9%83%a8%e5%88%a0%e9%99%a4)
-  - [3、节点查询](#3%e8%8a%82%e7%82%b9%e6%9f%a5%e8%af%a2)
-  - [4、Deque接口的方法](#4deque%e6%8e%a5%e5%8f%a3%e7%9a%84%e6%96%b9%e6%b3%95)
-  - [5、迭代](#5%e8%bf%ad%e4%bb%a3)
-- [参考资料](#%e5%8f%82%e8%80%83%e8%b5%84%e6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 # 一、类的定义
 
 ```java
-public class LinkedList<E> extends AbstractSequentialList<E> implements List<E>, Deque<E>, Cloneable, java.io.Serializable {
-
+public class LinkedList<E> extends AbstractSequentialList<E> 
+    implements List<E>, Deque<E>, Cloneable, java.io.Serializable {
 }
 ```
+LinkedList同时实现了List接口和Deque接口，也就是说它既可以看作一个顺序容器，又可以看作一个队列(Queue)，同时又可以看作一个栈(Stack)
 - `AbstractSequenceList` 提供了 List 接口骨干性的实现以减少实现 List 接口的复杂度
 - `Deque` 接口定义了双端队列的操作，是一个双向链表；
 
@@ -39,6 +15,10 @@ LinkedList的相关概念
 - last是双向链表的尾节点，其后一个节点为null；
 - 当链表中没有数据时，first和last是同一个节点，都指向null；
 - 双向链表只要内存足够，没有大小限制
+
+> 关于栈或队列，现在的首选是ArrayDeque，它有着比LinkedList(当作栈或队列使用时)有着更好的性能
+
+LinkedList的实现方式决定了所有跟下标相关的操作都是线性时间，而在首段或者末尾删除元素只需要常数时间；
 
 # 二、属性
 

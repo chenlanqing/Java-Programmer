@@ -50,9 +50,7 @@ String[]
 
 ## 3、成员变量
 
-- `transient Object[] elementData`
-
-	Object 数组，Arraylist 实际存储的数据。	如果通过不含参数的构造函数ArrayList()来创建ArrayList，默认为空数组
+- `transient Object[] elementData`：Object 数组，Arraylist 实际存储的数据。如果通过不含参数的构造函数ArrayList()来创建ArrayList，默认为空数组
 	```java
 	public ArrayList() {
 		this.elementData = DEFAULTCAPACITY_EMPTY_ELEMENTDATA;
@@ -80,7 +78,6 @@ String[]
 新增元素主要有两步：
 - 判断是否需要扩容，如果需要执行扩容操作；
 - 直接赋值
-
 ```java
 public boolean add(E e) {
   //确保数组大小是否足够，不够执行扩容，size 为当前数组的大小
@@ -92,7 +89,6 @@ public boolean add(E e) {
 ```
 
 如果数组容量不够，对数组进行扩容，JDK7 以后及 JDK7 前的实现不一样。扩容本质上是对数组之间的数据拷贝；
-
 - JDK6：直接扩容，且扩容一般是源数组的 1.5 倍：
 	```java
 	int newCapacity = (oldCapacity * 3)/2 + 1;
@@ -133,8 +129,37 @@ public boolean add(E e) {
 		elementData = Arrays.copyOf(elementData, newCapacity);
 	}
 	```
-	
-## 5、ArrayList 安全隐患
+
+> 在实际添加大量元素前，我也可以使用`ensureCapacity`来手动增加ArrayList实例的容量，以减少递增式再分配的数量；
+
+> 数组进行扩容时，会将老数组中的元素重新拷贝一份到新的数组中，每次数组容量的增长大约是其原容量的1.5倍。这种操作的代价是很高的，因此在实际使用时，我们应该尽量避免数组容量的扩张。当我们可预知要保存的元素的多少时，要在构造ArrayList实例时，就指定其容量，以避免数组扩容的发生。或者根据实际需求，通过调用ensureCapacity方法来手动增加ArrayList实例的容量
+
+## 5、方法
+
+### 5.1、add和addAll
+
+`add(int index, E e)`需要先对元素进行移动，然后完成插入操作，也就意味着该方法有着线性的时间复杂度。
+
+`addAll()`方法能够一次添加多个元素，根据位置不同也有两个把本，一个是在末尾添加的`addAll(Collection<? extends E> c)`方法，一个是从指定位置开始插入的`addAll(int index, Collection<? extends E> c)`方法。跟`add()`方法类似，在插入之前也需要进行空间检查，如果需要则自动扩容；如果从指定位置插入，也会存在移动元素的情况。 `addAll()`的时间复杂度不仅跟插入元素的多少有关，也跟插入的位置相关；
+
+### 5.2、set()
+
+既然底层是一个数组*ArrayList*的`set()`方法也就变得非常简单，直接对数组的指定位置赋值即可
+
+```java
+public E set(int index, E element) {
+    rangeCheck(index);//下标越界检查
+    E oldValue = elementData(index);
+    elementData[index] = element;//赋值到指定位置，复制的仅仅是引用
+    return oldValue;
+}
+```
+
+### 5.3、get()
+
+`get()`方法同样很简单，唯一要注意的是由于底层数组是Object[]，得到元素后需要进行类型转换
+
+## 6、ArrayList 安全隐患
 
 - **当传递 ArrayList 到某个方法中，或者某个方法返回 ArrayList，什么时候要考虑安全隐患？如何修复安全违规这个问题呢？**
 
@@ -188,7 +213,7 @@ while (enu.hasMoreElements()) {
 
 ### 1.2、关于Vector线程安全
 
-（Vector 是同步的.Vector 是线程安全的动态数组.它的操作与 ArrayList 几乎一样）如果集合中的元素的数目大于目前集合数组的长度时，Vector 增长率为目前数组长度的 100%，而 Arraylist 增长率为目前数组长度的 50%.如过在集合中使用数据量比较大的数据，用 Vector 有一定的优势
+（Vector 是同步的，Vector 是线程安全的动态数组，它的操作与 ArrayList 几乎一样）如果集合中的元素的数目大于目前集合数组的长度时，Vector 增长率为目前数组长度的 100%，而 Arraylist 增长率为目前数组长度的 50%，如过在集合中使用数据量比较大的数据，用 Vector 有一定的优势
 
 注意：在某些特殊场合下，Vector并非线程安全的，看如下代码
 ```java
@@ -198,7 +223,6 @@ public static void main(String[] args) {
 		for (int i = 0; i < 10; i++) {
 			vector.add(i);
 		}
-
 		Thread t1 = new Thread() {
 			public void run() {
 				for (int i = 0; i < vector.size(); i++) {
@@ -220,7 +244,7 @@ public static void main(String[] args) {
 ```
 上述代码会抛出异常：java.lang.ArrayIndexOutOfBoundsException: Array index out of range: 9
 
-## 2、ArrayList的sublist修改是否影响list本身
+## 2、ArrayList的subList修改是否影响list本身
 
 - 方法实现
 	```java
@@ -282,16 +306,16 @@ public static void main(String[] args) {
                 throw new ConcurrentModificationException();
         }
 	}
-	```	
+	```
 	subList 可以做集合的任何操作
 - 调用该方法后的生成的新的集合的操作都会对原集合有影响，在subList集合后面添加元素，添加的第一个元素的位置就是上述toIndex的值，而原始集合中toIndex的元素往后移动。其add方法调用过程：
 
 	`add(element) --> AbstractList.add(e) --> SubList.add(index， e) --> parent.add(index + parentOffset， e) --> ArrayList.add(newIndex， e)`
-		
-- List 的 subList 方法并没有创建一个新的 List，而是使用了 原 List 的视图，这个视图使用内部类 SubList 表示；不能把 subList 方法返回的 List 强制转换成 ArrayList 等类，因为他 们之间没有继承关系；
+	
+- List 的 subList 方法并没有创建一个新的 List，而是使用了原List的视图，这个视图使用内部类 SubList 表示；不能把 subList 方法返回的 List 强制转换成 ArrayList 等类，因为他们之间没有继承关系；
 
 视图和原 List 的修改还需要注意几点，尤其是他们之间的相互影响：
-- 对 父 (sourceList) 子 (subList)List 做 的 非 结 构 性 修 改(non-structural changes)，都会影响到彼此；
+- 对 父 (sourceList) 子 (subList)List 做的非结构性修改(non-structural changes)，都会影响到彼此；
 - 对`子List` 做结构性修改，操作同样会反映到`父List` 上；子List的 add 是直接调用父集合的add方法来添加的元素的：
 	```java
 	public void add(int index, E e) {
@@ -312,6 +336,8 @@ public static void main(String[] args) {
 	```
 
 ## 3、为什么最好在newArrayList的时候最好指定容量？
+
+避免频繁的扩容导致的数据拷贝
 
 ## 4、SynchronizedList、Vector有什么区别
 
