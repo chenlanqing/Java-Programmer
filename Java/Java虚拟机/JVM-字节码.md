@@ -540,6 +540,88 @@ private void attachAgentToTargetJVM() throws Exception {
 
 https://mp.weixin.qq.com/s/lPDhZgEys6lTR215aXqlxg
 
+# 7、编译java成汇编代码
+
+编译java代码为汇编需要工具：hsdis 和 jitwatch
+
+## 7.1、hsdis
+
+要查看JIT生成的汇编代码，要先装一个反汇编器：hsdis。从名字来看，即HotSpot disassembler
+
+实际就是一个动态链接库。网络上有已经编绎好的文件，直接下载即可
+
+国内的：http://hllvm.group.iteye.com/
+
+也可以自己编绎，只是编绎hsdis，还是比较快的。参考这里：http://www.chrisnewland.com/building-hsdis-on-linux-amd64-on-debian-369
+
+官方的参考文档：https://wikis.oracle.com/display/HotSpotInternals/PrintAssembly
+
+简而言之，安装只要把下载到，或者编绎好的so文件放到对应的Java安装路径下即可，或者配置环境变量
+```sh
+export LD_LIBRARY_PATH=/opt/tools/assembly/
+```
+验证hsdis是否安装成功：
+```sh
+java -XX:+UnlockDiagnosticVMOptions -XX:+PrintAssembly -version
+```
+如果输出包含如下结果，表示安装成功：
+```
+Java HotSpot(TM) 64-Bit Server VM warning: PrintAssembly is enabled; turning on DebugNonSafepoints to gain additional output
+```
+
+## 7.2、JITWatch
+
+JITWatch，一个分析展现JIT日志等的图形界面工具，地址：https://github.com/AdoptOpenJDK/jitwatch
+
+下载JITWatch之后，可以启动，新建一个 jitwatch.sh 的脚本，脚本内容如下：
+```sh
+JITWATCH_HOME="jitwatch-master/lib";
+JITWATCH_JAR="jitwatch-1.0.0-SNAPSHOT.jar"
+## jdk9之前的版本
+java -cp $JAVA_HOME/lib/tools.jar:$JAVA_HOME/jre/lib/jfxrt.jar:$JITWATCH_JAR:$JITWATCH_HOME/hamcrest-core-1.3.jar:$JITWATCH_HOME/logback-classic-1.1.2.jar:$JITWATCH_HOME/logback-core-1.1.2.jar:$JITWATCH_HOME/slf4j-api-1.7.7.jar org.adoptopenjdk.jitwatch.launch.LaunchUI
+```
+新版本直接下载(https://github.com/AdoptOpenJDK/jitwatch)对应的包即可
+
+[JITWatch介绍](http://www.chrisnewland.com/images/jitwatch/HotSpot_Profiling_Using_JITWatch.pdf)
+
+对应的视频：https://skillsmatter.com/skillscasts/5243-chris-newland-hotspot-profiling-with-jit-watch
+
+## 7.3、实践
+
+比如需要验证 volatile 是如何实现的
+
+**1、生成JIT log**
+
+```java
+java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+PrintAssembly -XX:+LogCompilation -XX:LogFile=jit.log Test
+```
+或者在idea中配置vm options：
+
+![](image/hsdis-idea生成JIT日志.png)
+
+**2、使用jitwatch分析日志**
+
+- 打开jitwatch，点击`open log`，选择上述生成的`jit.log`文件；
+- 配置对应的config：
+
+	![](image/JITWatch-config.png)
+- 点击 start，得到如下界面
+
+	![](image/JITWatch-分析界面展示-1.png)
+
+- 点击右边的 add，可以找到 volatile 相关实现：lock 前缀指令
+	```java
+	0x000000011b0d81d4: movslq %eax,%r11
+	0x000000011b0d81d7: add %r10,%r11
+	0x000000011b0d81da: mov %r11,0x10(%rsi)
+	0x000000011b0d81de: lock addl $0x0,-0x40(%rsp)  ;*putfield sum {reexecute=0 rethrow=0 return_oop=0}
+													; - Test::add@12 (line 5)
+	```
+	![](image/JIIWatch-tree-view.png)
+
+> 如果出现 Assembly not found. Was -XX:+PrintAssembly option used? ，需要将 hsdis-amd64.dylib 拷贝的`$JAVA_HOME`下的lib目录下
+
+
 # 参考资料
 
 * [字节码操作](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)

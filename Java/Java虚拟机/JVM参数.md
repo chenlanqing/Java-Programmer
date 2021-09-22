@@ -1,5 +1,3 @@
-# 一、JVM参数
-
 查看虚拟机的参数：
 ```
 root@xxx-mac：~|=> java -XX:+PrintFlagsFinal -XX:+UnlockDiagnosticVMOptions -version | wc -l
@@ -32,7 +30,180 @@ java [options] -jar filename [args]
 
 **查看默认参数：**`java -XX:+PrintCommandLineFlags -version`：查看初始默认参数
 
-## 1、标准参数
+根据`JVM`参数开头可以区分参数类型，共三类：“`-`”、“`-X`”、“`-XX`”，
+
+- 标准参数（-）：所有的JVM实现都必须实现这些参数的功能，而且向后兼容，例子：`-verbose:class`，`-verbose:gc`，`-verbose:jni……`
+
+- 非标准参数（-X）：默认jvm实现这些参数的功能，但是并不保证所有jvm实现都满足，且不保证向后兼容，例子：`Xms20m`，`-Xmx20m`，`-Xmn20m`，`-Xss128k……`
+
+- 非Stable参数（-XX）：此类参数各个jvm实现会有所不同，将来可能会随时取消，需要慎重使用，例子：`-XX:+PrintGCDetails`，`-XX:-UseParallelGC`，`-XX:+PrintGCTimeStamps……`
+
+## 1、内存各个区域参数
+
+### 1.1、堆参数设置
+
+`-Xms` 初始堆大小，ms是memory start的简称 ，等价于`-XX:InitialHeapSize`；`-Xmx`最大堆大小，mx是memory max的简称 ，等价于参数`-XX:MaxHeapSize`
+
+> 注意：在通常情况下，服务器项目在运行过程中，堆空间会不断的收缩与扩张，势必会造成不必要的系统压力；所以在生产环境中，JVM的Xms和Xmx要设置成大小一样的，能够避免GC在调整堆大小带来的不必要的压力；
+
+`-XX:NewSize=n` 设置年轻代大小`-XX:NewRatio=n` 设置年轻代和年老代的比值；
+
+如:`-XX:NewRatio=3`，表示年轻代与年老代比值为`1：3`，年轻代占整个年轻代年老代和的1/4，`默认新生代和老年代的比例=1:2`。`-XX:SurvivorRatio=n` 年轻代中Eden区与两个Survivor区的比值。
+
+注意Survivor区有两个，默认是8，表示：`Eden:S0:S1=8:1:1`
+
+如：`-XX:SurvivorRatio=3`，表示`Eden：Survivor`=3：2，一个Survivor区占整个年轻代的1/5
+
+### 1.2、元空间参数
+
+**-XX:MetaspaceSize**：`Metaspace` 空间初始大小，如果不设置的话，默认是20.79M，这个初始大小是触发首次 `Metaspace Full GC`的阈值。
+
+例如：`-XX:MetaspaceSize=256M`
+
+**-XX:MaxMetaspaceSize**：`Metaspace` 最大值，默认不限制大小，但是线上环境建议设置。
+
+例如：`-XX:MaxMetaspaceSize=256M`
+
+**-XX:MinMetaspaceFreeRatio**：最小空闲比，当 `Metaspace` 发生 GC 后，会计算 `Metaspace` 的空闲比，如果空闲比(空闲空间/当前 `Metaspace` 大小)小于此值，就会触发 `Metaspace` 扩容。默认值是 40，也就是 40%，例如 `-XX:MinMetaspaceFreeRatio=40`
+
+**-XX:MaxMetaspaceFreeRatio**：最大空闲比，当 `Metaspace`发生 GC 后，会计算 `Metaspace` 的空闲比，如果空闲比(空闲空间/当前 Metaspace 大小)大于此值，就会触发 `Metaspace` 释放空间。默认值是 70 ，也就是 70%，例如 -`XX:MaxMetaspaceFreeRatio=70`
+
+> 建议将 `MetaspaceSize` 和 `MaxMetaspaceSize`设置为同样大小，避免频繁扩容；
+
+### 1.3、栈参数设置
+
+**-Xss**：栈空间大小，栈是线程独占的，所以是一个线程使用栈空间的大小。
+
+例如：`-Xss256K`，如果不设置此参数，默认值是`1M`，一般来讲设置成 `256K` 就足够了
+
+### 1.4、收集器参数设置
+
+Serial垃圾收集器（新生代）
+
+> 开启：-XX:+UseSerialGC 关闭：-XX:-UseSerialGC //新生代使用Serial  老年代则使用SerialOld
+
+ParNew垃圾收集器（新生代）
+
+> 开启 -XX:+UseParNewGC 关闭 -XX:-UseParNewGC //新生代使用功能ParNew 老年代则使用功能CMS
+
+Parallel Scavenge收集器（新生代）
+
+> 开启 -XX:+UseParallelOldGC 关闭 -XX:-UseParallelOldGC //新生代使用功能Parallel Scavenge 老年代将会使用Parallel Old收集器
+
+ParallelOl垃圾收集器（老年代）
+
+> 开启 -XX:+UseParallelGC 关闭 -XX:-UseParallelGC //新生代使用功能Parallel Scavenge 老年代将会使用Parallel Old收集器
+
+CMS垃圾收集器（老年代）
+
+> 开启 -XX:+UseConcMarkSweepGC 关闭 -XX:-UseConcMarkSweepGC
+
+G1垃圾收集器
+
+> 开启 -XX:+UseG1GC 关闭 -XX:-UseG1GC
+
+### 1.5、GC策略参数
+
+GC停顿时间，垃圾收集器会尝试用各种手段达到这个时间，比如减小年轻代
+
+> -XX:MaxGCPauseMillis
+
+堆占用了多少比例的时候触发GC，就即触发标记周期的 Java 堆占用率阈值。默认占用率是整个 Java 堆的 45%
+
+> -XX:InitiatingHeapOccupancyPercent=n
+
+新生代可容纳的最大对象,大于则直接会分配到老年代，0代表没有限制。
+
+> -XX:PretenureSizeThreshold=1000000 //
+
+进入老年代最小的GC年龄,年轻代对象转换为老年代对象最小年龄值，默认值7
+
+> -XX:InitialTenuringThreshol=7
+
+升级老年代年龄，最大值15
+
+> -XX:MaxTenuringThreshold
+
+GC并行执行线程数
+
+> -XX:ParallelGCThreads=16
+
+禁用 System.gc()，由于该方法默认会触发 FGC，并且忽略参数中的 UseG1GC 和 UseConcMarkSweepGC，因此必要时可以禁用该方法。
+
+> -XX:-+DisableExplicitGC
+
+设置吞吐量大小,默认99
+
+> XX:GCTimeRatio
+
+打开自适应策略,各个区域的比率，晋升老年代的年龄等参数会被自动调整。以达到吞吐量，停顿时间的平衡点。
+
+> XX:UseAdaptiveSizePolicy
+
+设置GC时间占用程序运行时间的百分比
+
+> GCTimeRatio
+
+### 1.6、Dump异常快照
+
+```
+-XX:+HeapDumpOnOutOfMemoryError
+-XX:HeapDumpPath
+```
+
+堆内存出现`OOM`的概率是所有内存耗尽异常中最高的，出错时的堆内信息对解决问题非常有帮助。
+
+所以给`JVM`设置这个参数(`-XX:+HeapDumpOnOutOfMemoryError`)，让`JVM`遇到`OOM`异常时能输出堆内信息，并通过（`-XX:+HeapDumpPath`）参数设置堆内存溢出快照输出的文件地址。
+
+这对于特别是对相隔数月才出现的`OOM`异常尤为重要。
+
+```
+-Xms10M -Xmx10M -Xmn2M -XX:SurvivorRatio=8 -XX:+HeapDumpOnOutOfMemoryError 
+-XX:HeapDumpPath=D:\study\log_hprof\gc.hprof
+-XX:OnOutOfMemoryError
+```
+
+表示发生`OOM后`，运行`jconsole.exe`程序。
+
+这里可以不用加“”，因为`jconsole.exe`路径Program Files含有空格。利用这个参数，我们可以在系统`OOM`后，自定义一个脚本，可以用来发送邮件告警信息，可以用来重启系统等等。
+
+```
+-XX:OnOutOfMemoryError="C:\Program Files\Java\jdk1.8.0_151\bin\jconsole.exe"
+```
+
+### 1.7、实践
+
+8G内存的服务器该如何设置
+
+```
+java -Xmx3550m -Xms3550m -Xss128k -XX:NewRatio=4 -XX:SurvivorRatio=4 -XX:MaxPermSize=16m -XX:MaxTenuringThreshold=0
+```
+
+`-Xmx3500m` 设置`JVM`最大可用内存为3550M。
+
+`-Xms3500m` 设置`JVM`初始`内存为`3550m`。此值可以设置与`-Xmx`相同，以避免每次垃圾回收完成后JVM重新分配内存。`-Xmn2g` 设置年轻代大小为`2G`。
+
+> 整个堆大小=年轻代大小 + 年老代大小 + 方法区大小
+
+`-Xss128k` 设置每个线程的堆栈大小。
+
+`JDK1.5`以后每个线程堆栈大小为1M，以前每个线程堆栈大小为256K。更具应用的线程所需内存大小进行调整。在相同物理内存下，减小这个值能生成更多的线程。但是操作系统对一个进程内的线程数还是有限制的，不能无限生成，经验值在3000~5000左右。
+
+`-XX:NewRatio=4` 设置年轻代（包括Eden和两个Survivor区）与年老代的比值（除去持久代）。设置为4，则年轻代与年老代所占比值为1：4，年轻代占整个堆栈的1/5 。
+
+`-XX:SurvivorRatio=4` 设置年轻代中Eden区与Survivor区的大小比值。
+
+设置为4，则两个Survivor区与一个Eden区的比值为2:4，一个Survivor区占整个年轻代的1/6 `-XX:MaxPermSize=16m` 设置持久代大小为16m。
+
+`-XX:MaxTenuringThreshold=0` 设置垃圾最大年龄。
+
+如果设置为0的话，则年轻代对象不经过Survivor区，直接进入年老代。对于年老代比较多的应用，可以提高效率。如果将此值设置为一个较大值，则年轻代对象会在Survivor区进行多次复制，这样可以增加对象在年轻代的存活时间，增加在年轻代即被回收的概论。
+
+
+
+
+
+## 2、标准参数
 
 - [JDK8-标准参数](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABDJJFI)
 - [JDK11-标准参数](https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE)
@@ -65,7 +236,7 @@ java [options] -jar filename [args]
 
 - `-verbose:jni`：显示本机方法和其他Java本机接口（JNI）的相关信息
 
-## 2、非标准参数
+## 3、非标准参数
 
 - [JDK8-非标准参数](https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABHDABI)
 - [JDK11-额外参数](https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE)
@@ -123,7 +294,7 @@ java [options] -jar filename [args]
 - `-Xverify:mode` <br>
     设置字节码校验器的模式，默认是remote，即只校验那些不是通过bootstrap类加载器加载的字节码。而还有一个模式还all，即全部都校验。虽然还有一个模式是none，但是本质上jvm不生效这个参数
 
-## 3、高级选项
+## 4、高级选项
 
 - 查看支持的参数：
 
@@ -147,13 +318,12 @@ java [options] -jar filename [args]
 <li><a href="https://docs.oracle.com/en/java/javase/11/tools/java.html#GUID-3B1CE181-CD30-4178-9602-230B800D4FAE__BABFAFAE">Advanced Garbage Collection Options for Java</a> ：高级垃圾收集选项：控制HotSpot如何执行垃圾收集</li>
 
 **JDK 8对高级选项的细分**
-
 <li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABCBGHF">Advanced Runtime Options</a></li>
 <li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABDDFII">Advanced JIT Compiler Options</a></li>
 <li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABFJDIC">Advanced Serviceability Options</a></li>
 <li><a href="https://docs.oracle.com/javase/8/docs/technotes/tools/windows/java.html#BABFAFAE">Advanced Garbage Collection Options</a></li>
 
-### 3.1、运行时参数
+### 4.1、运行时参数
 
 这类参数控制Java HotSpot VM在运行时的行为
 
@@ -191,7 +361,7 @@ java [options] -jar filename [args]
 
 - `-XX:VMOptionsFile=filename`：允许用户在文件中指定VM选项。例如 java -XX:VMOptionsFile=/var/my_vm_options HelloWorld。
 
-### 3.2、JIT编译器参数
+### 4.2、JIT编译器参数
 
 主要是在JIT编译时用到
 
@@ -251,7 +421,7 @@ java [options] -jar filename [args]
 
 - `-XX:-SegmentedCodeCache`：是否使用分段的代码缓存区，默认关闭，表示使用整体的代码缓存区；
 
-### 3.3、高级服务能力参数
+### 4.3、高级服务能力参数
 
 可以做系统信息收集和扩展性的debug
 
@@ -280,7 +450,7 @@ java [options] -jar filename [args]
 - `-XX:+UnlockDiagnosticVMOptions` <br>
     解锁对JVM进行诊断的选项参数。默认是关闭的，开启后支持一些特定参数对JVM进行诊断
 
-### 3.4、垃圾回收参数
+### 4.4、垃圾回收参数
 
 这部分参数控制JVM如何进行垃圾回收
 
@@ -474,9 +644,9 @@ java [options] -jar filename [args]
 
 - `-XX:GCLogFileSize=number`：处理大型日志文件，默认为512K
 
-## 4、线上参数配置
+## 5、线上参数配置
 
-`java -Xmx4096m -Xms4096m -Xss256k -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=14 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:./logs/app_gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./logs/172.16.11.172.dump -jar /home/admin/application.jar -Ddubbo.application.qos.enable=false --spring.profiles.active=prod`
+`java -Xmx4096m -Xms4096m -Xss256k -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=14 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:./logs/app_gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./logs/localhost.dump -jar /home/admin/application.jar -Ddubbo.application.qos.enable=false --spring.profiles.active=prod`
 
 # 参考文章
 

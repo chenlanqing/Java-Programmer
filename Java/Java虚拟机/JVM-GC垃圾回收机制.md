@@ -567,6 +567,8 @@ CMS GC 时出现`promotion failed`和`concurrent mode failure`
 
 ## 7、G1收集器（Garbage First）
 
+- [G1-GC](https://tech.meituan.com/2016/09/23/g1.html)
+
 通过`-XX:+UseG1GC`参数来启用，作为体验版随着JDK 6u14版本面世，在JDK 7u4版本发行时被正式推出，在JDK 9中，G1被提议设置为默认垃圾收集器；取代之前 Parallel Scavenge 加 Parallel Old的组合，成为服务端模式下的默认垃圾收集器；在JDK9之后的版本中，CMS垃圾收集器被声明为不推荐使用了，如果使用`-XX:+UseConcMarkSweepGC`来开启CMS收集器，会收到一个警告信息； 
 
 G1是一种服务器端的垃圾收集器，应用在多处理器和大容量内存环境中，在实现高吞吐量的同时，尽可能的满足垃圾收集暂停时间的要求；

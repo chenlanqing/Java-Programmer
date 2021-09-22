@@ -271,8 +271,8 @@ public class TestExecuteCode {
 - 如果有一个操作数是 double 型，计算结果是 double 型；
 - final 修饰的变量是常量，如果运算时直接是已常量值进行计算，没有final修饰的变量相加后会被自动提升为int型
 	```java
-	byte b1=1，b2=2，b3，b6;
-	final byte b4=4，b5=6;
+	byte b1=1, b2=2, b3, b6;
+	final byte b4=4, b5=6;
 	b6=b4+b5;// b4， b5是常量，则在计算时直接按原值计算，不提升为int型
 	b3=(b1+b2);// 编译错误
 	System.out.println(b3+b6);
@@ -2028,6 +2028,7 @@ public class OutClass{
 - 不能修饰构造方法；
 - 不能修饰`static`方法；
 - 如果`final`修饰对象的时候，只是对象的引用不可变，而对象本身的内部属性是可以变化的；
+- final方法可以被重载；
 
 ### 3.3、注意点
 

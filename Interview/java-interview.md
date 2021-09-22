@@ -4,6 +4,46 @@ https://segmentfault.com/a/1190000017115722
 
 https://segmentfault.com/a/1190000018855112
 
+## 1、final面试题 
+
+### 所有的final修饰的字段都是编译期常量吗？
+
+```java
+public class Test {
+    //编译期常量
+    final int i = 1;
+    final static int J = 1;
+    final int[] a = {1,2,3,4};
+    //非编译期常量
+    Random r = new Random();
+    final int k = r.nextInt();
+
+    public static void main(String[] args) {
+    }
+}
+```
+k的值由随机数对象决定，所以不是所有的final修饰的字段都是编译期常量，只是k的值在被初始化后无法被更改
+
+### 说说final类型的类如何拓展? 
+
+比如String是final类型，我们想写个MyString复用所有String中方法，同时增加一个新的toMyString()的方法，应该如何做?
+
+一种是组合关系。所以当遇到不能用继承的(final修饰的类),应该考虑用组合, 如下代码大概写个组合实现的意思：
+```java
+class MyString{
+    private String innerString;
+    // ...init & other methods
+    // 支持老的方法
+    public int length(){
+        return innerString.length(); // 通过innerString调用老的方法
+    }
+    // 添加新方法
+    public String toMyString(){
+        //...
+    }
+}
+```
+
 # 二、集合
 
 ConcurrentHashMap、HashMap、Hashtable、LinkedHashMap
