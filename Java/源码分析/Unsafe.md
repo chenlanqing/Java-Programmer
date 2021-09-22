@@ -4,6 +4,8 @@ Unsafe是位于`sun.misc`包下的一个类，主要提供一些用于执行低�
 
 ## 1.1、基本介绍
 
+![](image/Unsafe-功能介绍.png)
+
 如下Unsafe源码所示，Unsafe类为一单例实现，提供静态方法getUnsafe获取Unsafe实例，当且仅当调用getUnsafe方法的类为引导类加载器所加载时才合法，否则抛出SecurityException异常：
 ```java
 public final class Unsafe {
@@ -21,6 +23,15 @@ public final class Unsafe {
         }
     }
 }
+```
+
+从源码中发现，内部使用自旋的方式进行CAS更新(while循环进行CAS更新，如果更新失败，则循环再次重试)。
+
+又从Unsafe类中发现，原子操作其实只支持下面三个方法：
+```java
+public final native boolean compareAndSwapObject(Object paramObject1, long paramLong, Object paramObject2, Object paramObject3);
+public final native boolean compareAndSwapInt(Object paramObject, long paramLong, int paramInt1, int paramInt2);
+public final native boolean compareAndSwapLong(Object paramObject, long paramLong1, long paramLong2, long paramLong3);
 ```
 
 ## 1.2、如何使用
@@ -168,6 +179,16 @@ public final native boolean compareAndSwapLong(Object o, long offset, long expec
 关于CAS，参考[CAS](../Java基础/Java并发与多线程.md#2CAS)
 
 CAS在java.util.concurrent.atomic相关类、Java AQS、CurrentHashMap等实现上有非常广泛的应用。比如，AtomicInteger的实现中，静态字段valueOffset即为字段value的内存偏移地址，valueOffset的值在AtomicInteger初始化时，在静态代码块中通过Unsafe的objectFieldOffset方法获取。在AtomicInteger中提供的线程安全方法中，通过字段valueOffset的值可以定位到AtomicInteger对象中value的内存地址，从而可以根据CAS实现对value字段的原子操作
+
+CAS底层实现位于：unsafe.cpp，可以看到它通过 `Atomic::cmpxchg` 来实现比较和替换操作。其中参数x是即将更新的值，参数e是原内存的值
+```cpp
+UNSAFE_ENTRY(jboolean, Unsafe_CompareAndSwapInt(JNIEnv *env, jobject unsafe, jobject obj, jlong offset, jint e, jint x))
+  UnsafeWrapper("Unsafe_CompareAndSwapInt");
+  oop p = JNIHandles::resolve(obj);
+  jint* addr = (jint *) index_oop_from_field_offset_long(p, offset);
+  return (jint)(Atomic::cmpxchg(x, addr, e)) == e;
+UNSAFE_END
+```
 
 ## 2.3、线程调度
 

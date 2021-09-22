@@ -534,6 +534,15 @@ Java 提供中断机制来通知线程表明我们想要结束它，中断机制
 
 如果在睡眠期间其他线程调用了该线程的interrupt方法中断了该线程，则该线程会在调用sleep方法的地方抛出InterruptedException异常，因为异常不能跨线程传播回 main() 中，因此必须在本地进行处理。线程中抛出的其它异常也同样需要在本地进行处理；
 
+**Thread.sleep()和Object.wait()的区别：**
+- Thread.sleep()不会释放占有的锁，Object.wait()会释放占有的锁；
+- Thread.sleep()必须传入时间，Object.wait()可传可不传，不传表示一直阻塞下去；
+- Thread.sleep()到时间了会自动唤醒，然后继续执行；
+- Object.wait()不带时间的，需要另一个线程使用Object.notify()唤醒；
+- Object.wait()带时间的，假如没有被notify，到时间了会自动唤醒，这时又分好两种情况，一是立即获取到了锁，线程自然会继续执行；二是没有立即获取锁，线程进入同步队列等待获取锁；
+
+> 其实，他们俩最大的区别就是Thread.sleep()不会释放锁资源，Object.wait()会释放锁资源。
+
 ### 2.9、等待线程的终结
 
 - Thread.join()	当前线程调用某个线程的这个方法时，它会暂停当前线程，直到被调用线程执行完成
@@ -1579,7 +1588,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 #### 10.3.4、生产者消费者的不同模式实现
 
-[生产者消费者](https://github.com/chenlanqing/learningNote/blob/master/Java/Java%E6%BA%90%E7%A0%81%E8%A7%A3%E8%AF%BB/thread/生产者与消费者.md)
+[生产者消费者](#八生产者与消费者)
 
 ### 10.4、通过管道进行线程间通信：字节流
 
@@ -2298,7 +2307,7 @@ CPU 缓存可以分为一级缓存，二级缓存，部分高端 CPU 还具有�
 		String value() default "";
 	}
 	```
-    
+  
 ### 15.6、伪共享最佳实践
 
 - 在Thread类中生成随机数是和线程有着关联，多线程下产生随机数的操作是很常见的，JDK为了确保产生随机数的操作不会产生`false sharing` ,把产生随机数的三个相关值设为独占cache line：
@@ -2394,16 +2403,36 @@ Lock框架和Tools类
 ### 1.1、原子类概览
 
 - 基本类型：AtomicInteger、AtomicLong、AtomicBoolean；JDK8 新增原子化累加器：DoubleAdder、DoubleAccumulator、LongAdder、LongAccumulator，这四个类仅仅用来支持累加操作；
-- 数组类型：AtomicIntegerArray、AtomicLongArray、AtomicReferenceArray；
-- 引用类型：AtomicReference、AtomicStampedRerence、AtomicMarkableReference；
-- 对象的属性修改类型：AtomicIntegerFieldUpdater、AtomicLongFieldUpdater、AtomicReferenceFieldUpdater，对普通变量可以进行升级操作，使用这三个原子类需要注意以下几点：
-    - 对象必须是volatile类型的，只有这样才能保证可见性。否则会抛出IllegalArgumentException异常；
+
+- 数组类型（原子更新数组）：AtomicIntegerArray、AtomicLongArray、AtomicReferenceArray；
+
+- 引用类型（原子更新引用类型）：AtomicReference、AtomicStampedReference（原子更新引用类型, 内部使用Pair来存储元素值及其版本号）、AtomicMarkableReference（原子更新带有标记位的引用类型）；这三个类提供的方法都差不多，首先构造一个引用对象，然后把引用对象set进Atomic类，然后调用compareAndSet等一些方法去进行原子操作，原理都是基于Unsafe实现，但AtomicReferenceFieldUpdater略有不同，更新的字段必须用volatile修饰；
+
+- 对象的属性修改类型（原子更新字段类）：AtomicIntegerFieldUpdater、AtomicLongFieldUpdater、AtomicReferenceFieldUpdater，对普通变量可以进行升级操作，使用这三个原子类需要注意以下几点：
+    - 对象必须是volatile类型的，只有这样才能保证可见性。否则会抛出`IllegalArgumentException`异常；
     - 不能将变量声明为static的；
     - 不能是私有变量，即private修饰的； 
+    - 只能是可修改变量，不能使final变量，因为final的语义就是不可修改
+
 - Adder累加器：LongAdder、DoubleAdder；本质上是空间换时间；
+
 - Accumulator累加器：LongAccumulator、DoubleAccumulator，适合大量和并行计算
 
+基本上原子类内部操作：
+- volatile保证线程的可见性，多线程并发时，一个线程修改数据，可以保证其它线程立马看到修改后的值
+- CAS 保证数据更新的原子性；
+
 ### 1.2、各类原子类使用
+
+- AtomicInteger，常用API：
+    ```java
+    public final int get()：获取当前的值
+    public final int getAndSet(int newValue)：获取当前的值，并设置新的值
+    public final int getAndIncrement()：获取当前的值，并自增
+    public final int getAndDecrement()：获取当前的值，并自减
+    public final int getAndAdd(int delta)：获取当前的值，并加上预期的值
+    void lazySet(int newValue): 最终会设置成newValue,使用lazySet设置值后，可能导致其他线程在之后的一小段时间内还是可以读到旧的值。
+    ```
 
 - AtomicLong 是作用是对长整形进行原子操作。
 
@@ -2433,6 +2462,63 @@ Lock框架和Tools类
 
     使用场景的区别：在竞争激烈的情况下，LongAdder的预期吞吐量要高，但是会消耗更多的空间；LongAdder适合的场景是统计求和和计数的场景，LongAdder基本只提供了add方法，而AtomicLong提供了CAS方法
 
+### 1.3、AtomicStampedReference
+
+```java
+public class AtomicStampedReference<V> {
+    private static class Pair<T> {
+        final T reference;  //维护对象引用
+        final int stamp;  //用于标志版本
+        private Pair(T reference, int stamp) {
+            this.reference = reference;
+            this.stamp = stamp;
+        }
+        static <T> Pair<T> of(T reference, int stamp) {
+            return new Pair<T>(reference, stamp);
+        }
+    }
+    private volatile Pair<V> pair;
+    ....
+    
+    /**
+      * expectedReference ：更新之前的原始值
+      * newReference : 将要更新的新值
+      * expectedStamp : 期待更新的标志版本
+      * newStamp : 将要更新的标志版本
+      */
+    public boolean compareAndSet(V  expectedReference,
+                             V  newReference,
+                             int expectedStamp,
+                             int newStamp) {
+        // 获取当前的(元素值，版本号)对
+        Pair<V> current = pair;
+        return
+            // 引用没变
+            expectedReference == current.reference &&
+            // 版本号没变
+            expectedStamp == current.stamp &&
+            // 新引用等于旧引用
+            ((newReference == current.reference &&
+            // 新版本号等于旧版本号
+            newStamp == current.stamp) ||
+            // 构造新的Pair对象并CAS更新
+            casPair(current, Pair.of(newReference, newStamp)));
+    }
+
+    private boolean casPair(Pair<V> cmp, Pair<V> val) {
+        // 调用Unsafe的compareAndSwapObject()方法CAS更新pair的引用为新引用
+        return UNSAFE.compareAndSwapObject(this, pairOffset, cmp, val);
+    }
+}
+```
+
+- 如果元素值和版本号都没有变化，并且和新的也相同，返回true；
+- 如果元素值和版本号都没有变化，并且和新的不完全相同，就构造一个新的Pair对象并执行CAS更新pair。
+
+可以看到，Java中的实现跟我们上面讲的[ABA](#241ABA问题)的解决方法是一致的（CAS）
+- 首先，使用版本号控制；
+- 其次，不重复使用节点(Pair)的引用，每次都新建一个新的Pair来作为CAS比较的对象，而不是复用旧的；
+- 最后，外部传入元素值及版本号，而不是节点(Pair)的引用
 
 ## 2、锁机制
 
@@ -3156,30 +3242,109 @@ public class SemaphoreDemo {
 
 ## 9、LockSupport
 
-是用来创建锁和其他同步类的基本线程阻塞原语。`park()`和`unpark()`的作用分别是阻塞线程和解除阻塞线程，而且`park()和unpark()`不会遇到`Thread.suspend 和 Thread.resume所可能引发的死锁`问题。因为`park()` 和 `unpark()`有许可的存在；调用 `park()` 的线程和另一个试图将其 `unpark()` 的线程之间的竞争将保持活性。
+### 9.1、概述
+
+是用来创建锁和其他同步类的基本线程阻塞原语。简而言之，当调用LockSupport.park时，表示当前线程将会等待，直至获得许可，当调用LockSupport.unpark时，必须把等待获得许可的线程作为参数进行传递，好让此线程继续运行
+
+`park()`和`unpark()`的作用分别是阻塞线程和解除阻塞线程，而且`park()和unpark()`不会遇到`Thread.suspend 和 Thread.resume所可能引发的死锁`问题。因为`park()` 和 `unpark()`有许可的存在；调用 `park()` 的线程和另一个试图将其 `unpark()` 的线程之间的竞争将保持活性。
 
 每个使用LockSupport的线程都会与一个许可关联，如果该许可可用，并且可在进程中使用，则调用park()将会立即返回，否则可能阻塞。如果许可尚不可用，则可以调用 unpark 使其可用。但是注意许可不可重入，也就是说只能调用一次park()方法，否则会一直阻塞
 
+### 9.2、类与方法
+
 函数列表：
 ```java
-// 返回提供给最近一次尚未解除阻塞的 park 方法调用的 blocker 对象，如果该调用不受阻塞，则返回 null。
-static Object getBlocker(Thread t)
-// 为了线程调度，禁用当前线程，除非许可可用。
-static void park()
-// 为了线程调度，在许可可用之前禁用当前线程。
-static void park(Object blocker)
-// 为了线程调度禁用当前线程，最多等待指定的等待时间，除非许可可用。
-static void parkNanos(long nanos)
-// 为了线程调度，在许可可用前禁用当前线程，并最多等待指定的等待时间。
-static void parkNanos(Object blocker， long nanos)
-// 为了线程调度，在指定的时限前禁用当前线程，除非许可可用。
-static void parkUntil(long deadline)
-// 为了线程调度，在指定的时限前禁用当前线程，除非许可可用。
-static void parkUntil(Object blocker， long deadline)
-// 如果给定线程的许可尚不可用，则使其可用。
-static void unpark(Thread thread)
+public class LockSupport {
+    // Hotspot implementation via intrinsics API
+    private static final sun.misc.Unsafe UNSAFE;
+    // 表示内存偏移地址
+    private static final long parkBlockerOffset;
+    // 表示内存偏移地址
+    private static final long SEED;
+    // 表示内存偏移地址
+    private static final long PROBE;
+    // 表示内存偏移地址
+    private static final long SECONDARY;
+    static {
+        try {
+            // 获取Unsafe实例
+            UNSAFE = sun.misc.Unsafe.getUnsafe();
+            // 线程类类型
+            Class<?> tk = Thread.class;
+            // 获取Thread的parkBlocker字段的内存偏移地址
+            parkBlockerOffset = UNSAFE.objectFieldOffset(tk.getDeclaredField("parkBlocker"));
+            // 获取Thread的threadLocalRandomSeed字段的内存偏移地址
+            SEED = UNSAFE.objectFieldOffset(tk.getDeclaredField("threadLocalRandomSeed"));
+            // 获取Thread的threadLocalRandomProbe字段的内存偏移地址
+            PROBE = UNSAFE.objectFieldOffset(tk.getDeclaredField("threadLocalRandomProbe"));
+            // 获取Thread的threadLocalRandomSecondarySeed字段的内存偏移地址
+            SECONDARY = UNSAFE.objectFieldOffset(tk.getDeclaredField("threadLocalRandomSecondarySeed"));
+        } catch (Exception ex) { throw new Error(ex); }
+    }
+    // 返回提供给最近一次尚未解除阻塞的 park 方法调用的 blocker 对象，如果该调用不受阻塞，则返回 null。
+    static Object getBlocker(Thread t)
+    // 为了线程调度，禁用当前线程，除非许可可用。
+    static void park()
+    // 为了线程调度，在许可可用之前禁用当前线程。
+    static void park(Object blocker)
+    // 为了线程调度禁用当前线程，最多等待指定的等待时间，除非许可可用。
+    static void parkNanos(long nanos)
+    // 为了线程调度，在许可可用前禁用当前线程，并最多等待指定的等待时间。
+    static void parkNanos(Object blocker， long nanos)
+    // 为了线程调度，在指定的时限前禁用当前线程，除非许可可用。
+    static void parkUntil(long deadline)
+    // 为了线程调度，在指定的时限前禁用当前线程，除非许可可用。
+    static void parkUntil(Object blocker， long deadline)
+    // 如果给定线程的许可尚不可用，则使其可用。
+    static void unpark(Thread thread)
+}
 ```
 LockSupport 是通过调用 Unsafe 函数中的接口实现阻塞和解除阻塞的
+
+### 9.3、中断响应
+
+```java
+public class ParkUnparkWihInterrupt {
+    public static void main(String[] args) {
+        MyThread myThread = new MyThread(Thread.currentThread());
+        myThread.start();
+        System.out.println("before park");
+        // 获取许可
+        LockSupport.park("ParkUnparkWihInterrupt");
+        System.out.println("after park");
+    }
+    private static class MyThread extends Thread {
+        private Object object;
+
+        public MyThread(Object object) {
+            this.object = object;
+        }
+        @Override
+        public void run() {
+            System.out.println("before interrupt");
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            Thread thread = (Thread) object;
+            thread.interrupt();
+            // 获取blocker
+            System.out.println("after interrupt");
+        }
+    }
+}
+```
+上面代码运行结果：
+```
+before park
+before interrupt
+after interrupt
+after park
+```
+> 说明：可以看到，在主线程调用park阻塞后，在myThread线程中发出了中断信号，此时主线程会继续运行，也就是说明此时interrupt起到的作用与unpark一样；
+
+### 9.4、总结
 
 park和wait的区别：wait让线程阻塞前，必须通过synchronized获取同步锁; park 面向对象不同; 实现机制不一样，因此两者没有交集;
 
@@ -4334,7 +4499,7 @@ CPU提供了两种方法来实现多处理器的原子操作：总线加锁或�
 
 ### 2.4、CAS 缺点
 
-#### 2.4.1、ABA 问题
+#### 2.4.1、ABA问题
 
 - 问题：在运用CAS做Lock-Free 操作中有一个经典的ABA问题。
 
@@ -4348,6 +4513,31 @@ CPU提供了两种方法来实现多处理器的原子操作：总线加锁或�
 		return expectedReference == current.reference && expectedStamp == current.stamp &&
 				((newReference == current.reference && newStamp == current.stamp) || casPair(current， Pair.of(newReference， newStamp)));
 	}
+    // 实现
+    private static final AtomicStampedReference<Integer> atomicStampedRef = new AtomicStampedReference<>(1, 0);
+    public static void main(String[] args) {
+        Thread main = new Thread(() -> {
+            System.out.println("操作线程" + Thread.currentThread() + ",初始值 a = " + atomicStampedRef.getReference());
+            int stamp = atomicStampedRef.getStamp(); //获取当前标识别
+            try {
+                Thread.sleep(1000); // 等待1秒 ，以便让干扰线程执行
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            boolean isCASSuccess = atomicStampedRef.compareAndSet(1, 2, stamp, stamp + 1);  // 此时expectedReference未发生改变，但是stamp已经被修改了,所以CAS失败
+            System.out.println("操作线程" + Thread.currentThread() + ",CAS操作结果: " + isCASSuccess);
+        }, "主操作线程");
+        Thread other = new Thread(() -> {
+            Thread.yield(); // 确保thread-main 优先执行
+            atomicStampedRef.compareAndSet(1, 2, atomicStampedRef.getStamp(),atomicStampedRef.getStamp() + 1);
+            System.out.println("操作线程" + Thread.currentThread() + ",【increment】 ,值 = " + atomicStampedRef.getReference());
+            atomicStampedRef.compareAndSet(2, 1, atomicStampedRef.getStamp(), atomicStampedRef.getStamp() + 1);
+            System.out.println("操作线程" + Thread.currentThread() + ",【decrement】 ,值 = " + atomicStampedRef.getReference());
+        }, "干扰线程");
+  
+        main.start();
+        other.start();
+    }
 	```
 	该类检查了当前引用与当前标志是否与预期相同，如果全部相等，才会以原子方式将该引用和该标志的值设为新的更新值
 
@@ -4359,7 +4549,9 @@ CPU提供了两种方法来实现多处理器的原子操作：总线加锁或�
 
 #### 2.4.3、不能保证代码块的原子性
 
-CAS 机制所保证的只是一个变量的原子性操作，而不能保证整个代码块的原子性。比如需要保证3个变量共同进行原子性的更新，就不得不使用 synchronized;
+CAS 机制所保证的只是一个变量的原子性操作，而不能保证整个代码块的原子性。比如需要保证3个变量共同进行原子性的更新，就不得不使用 synchronized；
+
+从Java 1.5开始，JDK提供了`AtomicReference`类来保证引用对象之间的原子性，就可以把多个变量放在一个对象里来进行CAS操作
 
 ### 2.5、CAS 与 synchronized 的区别
 
@@ -4846,6 +5038,10 @@ public class ExchangerDemo {
     }
 }
 ```
+
+### 2.7、LockSupport实现
+
+
 
 # 九、Disruptor
 

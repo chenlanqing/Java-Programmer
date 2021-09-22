@@ -202,7 +202,7 @@ jcmd <pid> VM.native_memory detail.diff
                 System.out.println(s);
             }
         } while (bytes > 0);
-
+    
         reader.close();
     }
     ```
@@ -226,7 +226,7 @@ jcmd <pid> VM.native_memory detail.diff
         in.close();
         fileChannel.close();
     }
-
+    
     ```
 - （3）内存文件映射，就是把文件内容映射到虚拟内存的一块区域中，从而可以直接操作内存当中的数据而无需每次都通过IO去物理硬盘读取文件，
 
@@ -249,7 +249,7 @@ jcmd <pid> VM.native_memory detail.diff
             byte[] array = new byte[maxSize];
             mapperBuffer.get(array);
             System.out.println(new String(array));
-
+    
         } while (!end);
         in.close();
         fileChannel.close();
@@ -736,6 +736,67 @@ Java 中实现线程同步的方式有很多，大体可以分为以下 8 类。
 - 锁分级
 - 锁分离：读写锁，读写锁适合读多写少的场景；
 - 锁消除：通过 JIT 编译器，JVM 可以消除某些对象的加锁操作；
+
+## 15、LockSupport
+
+AQS框架借助于两个类：Unsafe(提供CAS操作)和LockSupport(提供park/unpark操作)
+
+写出分别通过wait/notify和LockSupport的park/unpark实现同步? 
+
+LockSupport.park()会释放锁资源吗? 那么Condition.await()呢? 
+
+如果在wait()之前执行了notify()会怎样? 
+
+如果在park()之前执行了unpark()会怎样? 
+
+### Thread.sleep()和Object.wait()的区别
+
+首先，我们先来看看Thread.sleep()和Object.wait()的区别，这是一个烂大街的题目了，大家应该都能说上来两点。
+
+- Thread.sleep()不会释放占有的锁，Object.wait()会释放占有的锁；
+- Thread.sleep()必须传入时间，Object.wait()可传可不传，不传表示一直阻塞下去；
+- Thread.sleep()到时间了会自动唤醒，然后继续执行；
+- Object.wait()不带时间的，需要另一个线程使用Object.notify()唤醒；
+- Object.wait()带时间的，假如没有被notify，到时间了会自动唤醒，这时又分好两种情况，一是立即获取到了锁，线程自然会继续执行；二是没有立即获取锁，线程进入同步队列等待获取锁；
+
+其实，他们俩最大的区别就是Thread.sleep()不会释放锁资源，Object.wait()会释放锁资源。
+
+### Thread.sleep()和Condition.await()的区别
+
+Object.wait()和Condition.await()的原理是基本一致的，不同的是Condition.await()底层是调用LockSupport.park()来实现阻塞当前线程的。
+
+实际上，它在阻塞当前线程之前还干了两件事，一是把当前线程添加到条件队列中，二是“完全”释放锁，也就是让state状态变量变为0，然后才是调用LockSupport.park()阻塞当前线程。
+
+### Thread.sleep()和LockSupport.park()的区别
+
+LockSupport.park()还有几个兄弟方法——parkNanos()、parkUtil()等，我们这里说的park()方法统称这一类方法。
+
+- 从功能上来说，Thread.sleep()和LockSupport.park()方法类似，都是阻塞当前线程的执行，且都不会释放当前线程占有的锁资源；
+- Thread.sleep()没法从外部唤醒，只能自己醒过来；
+- LockSupport.park()方法可以被另一个线程调用LockSupport.unpark()方法唤醒；
+- Thread.sleep()方法声明上抛出了InterruptedException中断异常，所以调用者需要捕获这个异常或者再抛出；
+- LockSupport.park()方法不需要捕获中断异常；
+- Thread.sleep()本身就是一个native方法；
+- LockSupport.park()底层是调用的Unsafe的native方法；
+
+### Object.wait()和LockSupport.park()的区别
+
+二者都会阻塞当前线程的运行，他们有什么区别呢? 经过上面的分析相信你一定很清楚了，真的吗? 往下看！
+
+- Object.wait()方法需要在synchronized块中执行；
+- LockSupport.park()可以在任意地方执行；
+- Object.wait()方法声明抛出了中断异常，调用者需要捕获或者再抛出；
+- LockSupport.park()不需要捕获中断异常；
+- Object.wait()不带超时的，需要另一个线程执行notify()来唤醒，但不一定继续执行后续内容；
+- LockSupport.park()不带超时的，需要另一个线程执行unpark()来唤醒，一定会继续执行后续内容；
+- 如果在wait()之前执行了notify()会怎样? 抛出IllegalMonitorStateException异常；
+- 如果在park()之前执行了unpark()会怎样? 线程不会被阻塞，直接跳过park()，继续执行后续内容；
+
+park()/unpark()底层的原理是“二元信号量”，你可以把它相像成只有一个许可证的Semaphore，只不过这个信号量在重复执行unpark()的时候也不会再增加许可证，最多只有一个许可证。
+
+### LockSupport.park()会释放锁资源吗?
+
+不会，它只负责阻塞当前线程，释放锁资源实际上是在Condition的await()方法中实现的。
 
 ## 12、多线程面试题
 
@@ -2052,7 +2113,7 @@ redis> SET mykey "Hello"
 	- 不保证每次执行都返回某个给定数量的元素，支持模糊查询；
 	- 一次返回的数量不可控，只能是大概率符合count参数；
 	- 
-keys 指令会导致线程阻塞一段时间，线上服务会停顿，直到指令执行完毕，服务才能恢复。这个时候可以使用 scan 指令，scan 指令可以无阻塞的提取出指定模式的 key 列表，但是会有一定的重复概率，在客户端做一次去重就可以了，但是整体所花费的时间会比直接用 keys 指令长
+	keys 指令会导致线程阻塞一段时间，线上服务会停顿，直到指令执行完毕，服务才能恢复。这个时候可以使用 scan 指令，scan 指令可以无阻塞的提取出指定模式的 key 列表，但是会有一定的重复概率，在客户端做一次去重就可以了，但是整体所花费的时间会比直接用 keys 指令长
 
 **注意：**
 
