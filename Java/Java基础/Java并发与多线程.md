@@ -2675,9 +2675,25 @@ Lock-free：线程之间互相隔离（一个线程的延迟、阻塞、故障�
 
 ## 4、读写锁：ReentrantReadWriteLock
 
+- [读写锁](https://pdai.tech/md/java/thread/java-thread-x-lock-ReentrantReadWriteLock.html)
+
 ![](image/JUC-ReentrantReadWriteLock类图.png)
 
-在ReentrantReadWriteLock里面，读锁和写锁的锁主体都是Sync，但读锁和写锁的加锁方式不一样。读锁是共享锁，写锁是独享锁。读锁的共享锁可保证并发读非常高效，而读写、写读、写写的过程互斥，因为读锁和写锁是分离的
+在ReentrantReadWriteLock里面，读锁和写锁的锁主体都是Sync，但读锁和写锁的加锁方式不一样。读锁是共享锁，写锁是独享锁。读锁的共享锁可保证并发读非常高效，而读写、写读、写写的过程互斥，因为读锁和写锁是分离的；
+```java
+// 默认是非公平锁
+public ReentrantReadWriteLock() {
+    this(false);
+}
+public ReentrantReadWriteLock(boolean fair) {
+    // 公平策略或者是非公平策略
+    sync = fair ? new FairSync() : new NonfairSync();
+    // 读锁
+    readerLock = new ReadLock(this);
+    // 写锁
+    writerLock = new WriteLock(this);
+}
+```
 
 ### 4.1、ReadWriteLock
 
@@ -2696,17 +2712,63 @@ ReentrantReadWriteLock.ReadLock readLock()
 // 返回用于写入操作的锁。
 ReentrantReadWriteLock.WriteLock writeLock()
 ```
-ReentrantReadWriteLock与ReentrantLock一样，其锁主体依然是Sync，它的读锁、写锁都是依靠Sync来实现的
+ReentrantReadWriteLock与ReentrantLock一样，其锁主体依然是Sync，它的读锁、写锁都是依靠Sync来实现的；Sync类内部存在两个内部类，分别为HoldCounter和ThreadLocalHoldCounter，其中HoldCounter主要与读锁配套使用：
+```java
+// 计数器
+static final class HoldCounter {
+    // 计数
+    int count = 0;
+    // Use id, not reference, to avoid garbage retention
+    // 获取当前线程的TID属性的值
+    final long tid = getThreadId(Thread.currentThread());
+}
+```
+> HoldCounter主要有两个属性，count和tid，其中count表示某个读线程重入的次数，tid表示该线程的tid字段的值，该字段可以用来唯一标识一个线程
+
+ThreadLocalHoldCounter源码如下：
+```java
+// ThreadLocalHoldCounter重写了ThreadLocal的initialValue方法，ThreadLocal类可以将线程与对象相关联。在没有进行set的情况下，get到的均是initialValue方法里面生成的那个HolderCounter对象
+// 本地线程计数器
+static final class ThreadLocalHoldCounter
+    extends ThreadLocal<HoldCounter> {
+    // 重写初始化方法，在没有进行set的情况下，获取的都是该HoldCounter值
+    public HoldCounter initialValue() {
+        return new HoldCounter();
+    }
+}
+```
 
 读写锁ReentrantReadWriteLock内部维护着两个一对锁，需要用一个变量维护多种状态。所以读写锁采用“按位切割使用”的方式来维护这个变量，将其切分为两部分，将 state 这个 32 位的 int 值分为高 16 位和低 16位，分别用于共享模式和独占模式；分割之后，读写锁是如何迅速确定读锁和写锁的状态呢？通过位运算。假如当前同步状态为S，那么写状态等于 `S & 0x0000FFFF`（将高16位全部抹去），读状态等于`S >>> 16(无符号补0右移16位)`。代码如下：
 ```java
-static final int SHARED_SHIFT   = 16;
-static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
-static final int MAX_COUNT      = (1 << SHARED_SHIFT) - 1;
-static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
-
-static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
-static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
+abstract static class Sync extends AbstractQueuedSynchronizer {
+    Sync() {
+        // 在Sync的构造函数中设置了本地线程计数器和AQS的状态state
+        readHolds = new ThreadLocalHoldCounter();
+        setState(getState()); // ensures visibility of readHolds
+    }
+    // 版本序列号
+    private static final long serialVersionUID = 6317671515068378041L;        
+    // 高16位为读锁，低16位为写锁
+    static final int SHARED_SHIFT   = 16;
+    // 读锁单位
+    static final int SHARED_UNIT    = (1 << SHARED_SHIFT);
+    // 读锁最大数量
+    static final int MAX_COUNT      = (1 << SHARED_SHIFT) - 1;
+    // 写锁最大数量
+    static final int EXCLUSIVE_MASK = (1 << SHARED_SHIFT) - 1;
+    // 本地线程计数器
+    private transient ThreadLocalHoldCounter readHolds;
+    // 缓存的计数器
+    private transient HoldCounter cachedHoldCounter;
+    // 第一个读线程
+    private transient Thread firstReader = null;
+    // 第一个读线程的计数
+    private transient int firstReaderHoldCount;
+    // 表示占有读锁的线程数量，直接将state右移16位，就可以得到读锁的线程数量，因为state的高16位表示读锁，对应的低十六位表示写锁数量
+    static int sharedCount(int c)    { return c >>> SHARED_SHIFT; }
+    // 表示占有写锁的线程数量，直接将状态state和(2^16 - 1)做与运算，其等效于将state模上2^16。写锁数量由state的低十六位表示
+    static int exclusiveCount(int c) { return c & EXCLUSIVE_MASK; }
+}
 ```
 - state 的高 16 位代表读锁的获取次数，包括重入次数，获取到读锁一次加 1，释放掉读锁一次减 1
 - state 的低 16 位代表写锁的获取次数，因为写锁是独占锁，同时只能被一个线程获得，所以它代表重入次数；
@@ -2738,7 +2800,9 @@ Doug Lea 将持有写锁的线程，去获取读锁的过程称为锁降级（Lo
 	```
 	为什么锁降级中读锁的获取需要释放写锁？
 
-	假如当前线程A不获取读锁而是直接释放了写锁，这个时候另外一个线程B获取了写锁，那么这个线程B对数据的修改是不会对当前线程A可见的。如果获取了读锁，则线程B在获取写锁过程中判断如果有读锁还没有释放则会被阻塞，只有当前线程A释放读锁后，线程B才会获取写锁成功
+	假如当前线程A不获取读锁而是直接释放了写锁，这个时候另外一个线程B获取了写锁，那么这个线程B对数据的修改是不会对当前线程A可见的。如果获取了读锁，则线程B在获取写锁过程中判断如果有读锁还没有释放则会被阻塞，只有当前线程A释放读锁后，线程B才会获取写锁成功；
+
+    RentrantReadWriteLock不支持锁升级(把持读锁、获取写锁，最后释放读锁的过程)。目的也是保证数据可见性，如果读锁已被多个线程获取，其中任意线程成功获取了写锁并更新了数据，则其更新对其他获取到读锁的线程是不可见的
 
 - 依据公平性原则，判断读锁是否需要阻塞，读锁持有线程数小于最大值（65535），且设置锁状态成功，执行以下代码（对于HoldCounter下面再阐述），并返回1。如果不满足改条件，执行fullTryAcquireShared()；fullTryAcquireShared(Thread current)会根据“是否需要阻塞等待”，“读取锁的共享计数是否超过限制”等等进行处理。如果不需要阻塞等待，并且锁的共享计数没有超过限制，则通过CAS尝试获取锁，并返回1
 - 读锁释放的过程还是比较简单的，主要就是将 hold count 减 1，如果减到 0 的话，还要将 ThreadLocal 中的 remove 掉。然后是在 for 循环中将 state 的高 16 位减 1，如果发现读锁和写锁都释放光了，那么唤醒后继的获取写锁的线程

@@ -924,7 +924,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 [class类文件结构](JVM-字节码.md)
 
 # 6、虚拟机类加载机制
-	
+
 虚拟机把描述类的数据从Class文件加载到内存，并对数据进行校验、转换解析和初始化，最终形成可以被虚拟机直接使用的Java 类型
 
 ## 6.1、ClassLoader
@@ -1016,10 +1016,10 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 
 *E.G.*
 
-String 来动态替代java核心api中定义的类型，这样会存在非常大的安全隐患；而双亲委托的方式，就可以避免这种情况，因 String已经在启动时就被引导类加载器（Bootstrcp ClassLoader）加载；所以用户自定义的 ClassLoader 永远也无法加载一个自己写的 String，除非你改变JDK中ClassLoader搜索类的默认算法；虽然可以正常编译，但是永远无法被加载运行。即使自定义了自己的类加载器，强行用defineClass方法去加载一个以`java.lang`开头的类也不会成功，如果尝试这样做的话，会收到虚拟机抛出的`java.lang.SercurityException:Prohibited package name:java.lang`异常
+String 来动态替代java核心api中定义的类型，这样会存在非常大的安全隐患；而双亲委托的方式，就可以避免这种情况，因 String已经在启动时就被引导类加载器（Bootstrap ClassLoader）加载；所以用户自定义的 ClassLoader 永远也无法加载一个自己写的 String，除非你改变JDK中ClassLoader搜索类的默认算法；虽然可以正常编译，但是永远无法被加载运行。即使自定义了自己的类加载器，强行用defineClass方法去加载一个以`java.lang`开头的类也不会成功，如果尝试这样做的话，会收到虚拟机抛出的`java.lang.SecurityException:Prohibited package name:java.lang`异常
 ```java
 // final的方法
-rotected final Class<?> defineClass(String name, byte[] b, int off, int len, ProtectionDomain protectionDomain)throws ClassFormatError{
+protected final Class<?> defineClass(String name, byte[] b, int off, int len, ProtectionDomain protectionDomain)throws ClassFormatError{
 	protectionDomain = preDefineClass(name, protectionDomain);
 	String source = defineClassSourceLocation(protectionDomain);
 	Class<?> c = defineClass1(name, b, off, len, protectionDomain, source);
@@ -1047,10 +1047,9 @@ private ProtectionDomain preDefineClass(String name, ProtectionDomain pd){
 }
 ```
 
-
 ### 6.3.4、如何判断两个class是否相同
 
-JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相同，而且要判断是否由同一个类加载器实例加载的；只有两者同时满足的情况下，JVM才认为这两个 class是相同的；如果两个类来源于同一个 Class 文件，被同一个虚拟机加载，只要加载它们的类加载器不同，那这两个类必定不相等；这里的"相等"包括代表类的Clas 对象的equals()方法、isAssignaleFrom()方法、isInstance()方法的返回结果，也包括使用 instanceof关键字做对象所属关系判定等情况；
+JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相同，而且要判断是否由同一个类加载器实例加载的；只有两者同时满足的情况下，JVM才认为这两个 class是相同的；如果两个类来源于同一个 Class 文件，被同一个虚拟机加载，只要加载它们的类加载器不同，那这两个类必定不相等；这里的"相等"包括代表类的Class 对象的equals()方法、isAssignaleFrom()方法、isInstance()方法的返回结果，也包括使用 instanceof关键字做对象所属关系判定等情况；
 
 **一个类的全限定名以及加载该类的加载器两者共同形成了这个类在JVM中的惟一标识**
 
@@ -1079,10 +1078,10 @@ JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相�
 		null --> ExtClassLoader的类加器是Bootstrap ClassLoader，因为 Bootstrap ClassLoader 不是一个普通的Java 类 Bootstrap ClassLoader 使用 C++ 编写的
 		```
 	- 测试2：<br>
-		将`ClassLoaderDemo.class`打包成`ClassLoaderDemo.jar`，放在`JAVA_HOME/jre/lib/ext`下，重新运行上述代码`sun.misc.Launcher$ExtClassLoader@155787fd --> ClassLoader`的委托模型机制，当我们要用ClassLoaderDemo.clas这个类的时候，AppClassLoader在试图加载之前，先委托给 Bootstrcp ClassLoader，Bootstracp ClassLoader发现自己没找到，它就告诉 ExtClassLoader<br>
+		将`ClassLoaderDemo.class`打包成`ClassLoaderDemo.jar`，放在`JAVA_HOME/jre/lib/ext`下，重新运行上述代码`sun.misc.Launcher$ExtClassLoader@155787fd --> ClassLoader`的委托模型机制，当我们要用ClassLoaderDemo.class这个类的时候，AppClassLoader在试图加载之前，先委托给 Bootstrap ClassLoader，Bootstrap ClassLoader发现自己没找到，它就告诉 ExtClassLoader<br>
 		null --> ExtClassLoader的父类加载器是Bootstrap ClassLoader.
 
-	- 测试3：用 Bootstrcp ClassLoader 来加载 ClassLoaderDemo.class	
+	- 测试3：用 Bootstrap ClassLoader 来加载 ClassLoaderDemo.class	
 		- 在jvm追加如下参数：`-Xbootclasspath/a:c:\ClassLoaderDemo.jar -verbose`
 		- 将 ClassLoaderDemo.jar解压后，放到 `JAVA_HOME/jre/classes`目录下;
 
@@ -1178,17 +1177,29 @@ try {
 
 - 线程上下文类加载器：这个类加载器可以通过 Thread 类的 setContextClassLoader()方法进行设置，如果创建线程时还未设置，它将会从父线程中继承一个，如果在应用程序的全局范围内都没有设置过的话，这个类加载器默认就是[应用程序类加载器](http://blog.csdn.net/u013095337/article/details/53609398)有了线程上下文类加载器，JNDI 服务使用这个线程上下文类加载器去加载所需要的SPI代码，也就是父类加载器请求子类加载器去完成类加载的工作，这种行为实际是打通双亲委派模型的层次结构来逆向使用类加载器
 
-- 代码热替换、模块热部署等
+**tomcat**
 
-	热部署步骤：
-	- 销毁自定义classloader(被该加载器加载的class也会自动卸载)；
-	- 更新class
-	- 使用新的ClassLoader去加载class
+tomcat 通过 war 包进行应用的发布，它其实是违反了双亲委派机制原则的
 
-	JVM中的Class只有满足以下三个条件，才能被GC回收，也就是该Class被卸载（unload）：
-	- 该类所有的实例都已经被GC，也就是JVM中不存在该Class的任何实例。
-	- 加载该类的ClassLoader已经被GC。
-	- 该类的java.lang.Class 对象没有在任何地方被引用，如不能在任何地方通过反射访问该类的方法；
+![](../源码分析/tomcat/Tomcat类加载器.png)
+
+那么 tomcat 是怎么打破双亲委派机制的呢？可以看图中的 WebAppClassLoader，它加载自己目录下的 .class 文件，并不会传递给父类的加载器。但是，它却可以使用 SharedClassLoader 所加载的类，实现了共享和分离的功能
+
+**代码热替换、模块热部署、OSGI**
+
+热部署步骤：
+- 销毁自定义classloader(被该加载器加载的class也会自动卸载)；
+- 更新class
+- 使用新的ClassLoader去加载class
+
+JVM中的Class只有满足以下三个条件，才能被GC回收，也就是该Class被卸载（unload）：
+- 该类所有的实例都已经被GC，也就是JVM中不存在该Class的任何实例。
+- 加载该类的ClassLoader已经被GC。
+- 该类的java.lang.Class 对象没有在任何地方被引用，如不能在任何地方通过反射访问该类的方法；
+
+**SPI**
+
+Java 中有一个 SPI 机制，全称是 Service Provider Interface，是 Java 提供的一套用来被第三方实现或者扩展的 API，它可以用来启用框架扩展和替换组件
 
 ## 6.5、自定义类加载器
 
@@ -1317,6 +1328,7 @@ public class NetworkClassLoader extends ClassLoader {
 
 	如果无法通过符号引用验证，那么将抛出一个`java.lang.IncompatibleClassChangeError`异常的子类。
 	
+
 验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响。如果所运行的的全部代码都已经被反复使用和验证，那么在实施阶段可以考虑采用 `-Xverifynone`参数来关闭大部分的类验证措施，缩短虚拟机加载的时间
 
 ### 6.8.3、准备
@@ -1813,7 +1825,7 @@ finally代码块的编译：复制finally代码块的内容，分别放在try-ca
 
 	--> 指令流 -->  解释器 --> 解释执行     			==>	解释执行的过程
 	--> 优化器 --> 中间代码 --> 生成器 --> 目标代码		==> 传统编译原理从源代码到目标代码的生成过程
-	
+
 - 其中指令流，中间代码，优化器模块可以选择性的实现
 - 现今大部分遵循现代编译原理的思路：先对程序源码进行词法解析和语法解析处理，把源码转化为抽象语法树
 - 词法和语法分析乃至后面的优化器和目标代码生成器都可以选择独立于执行引擎形成一个完整意义的编译器去实现，这类代表是C/C++语言;
@@ -1838,6 +1850,15 @@ finally代码块的编译：复制finally代码块的内容，分别放在try-ca
 - 分析与字节码生成过程：标注筛查、数据及控制流分析、解语法糖、字节码生成
 
 javac编译动作的入口是 `com.sun.tools.javac.main.JavaCompiler`类，上述三个过程逻辑集中在这个类的：compile()和compile2()方法中.
+
+总结以下四步：
+- 1、词法分析：读取源代码，一个字节一个字节的读取，找出其中我们定义好的关键字（如Java中的if、else、for、while等关键词，识别哪些if是合法的关键词，哪些不是），这就是词法分析器进行词法分析的过程，其结果是从源代码中找出规范化的Token流。
+
+- 2、语法分析：通过语法分析器对词法分析后Token流进行语法分析，这一步检查这些关键字组合再一次是否符合Java语言规范（如在if后面是不是紧跟着一个布尔判断表达式），词法分析的结果是形成一个符合Java语言规范的抽象语法树。
+
+- 3、语义分析：通过语义分析器进行语义分析。语音分析主要是将一些难懂的、复杂的语法转化成更加简单的语法，结果形成最简单的语法（如将foreach转换成for循环 ，好有注解等），最后形成一个注解过后的抽象语法树，这个语法树更为接近目标语言的语法规则。
+
+- 4、生成字节码：通过字节码生产器生成字节码，根据经过注解的语法抽象树生成字节码，也就是将一个数据结构转化为另一个数据结构。最后生成我们想要的.class文件；
 
 ### 10.2.2、解析与填充符号表的过程
 
@@ -2254,7 +2275,7 @@ static class User {}
 	4922 
 	4957 RemoteMavenServer
 	root@localhost~|⇒  jmap -histo 5096
-
+	
 	num     #instances         #bytes  class name
 	----------------------------------------------
 	1:           557       67396184  [I
@@ -2274,7 +2295,7 @@ static class User {}
 	2:        122982        1967712  com.learning.example.jvm.optimization.EscapeAnalysis$User
 	3:          2009        1200336  [B
 	4:          4250         623352  [C
-
+	
 	```
 
 ##### 5、总结
