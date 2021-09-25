@@ -69,7 +69,7 @@ public interface LoadBalance {
     //返回指定名字的扩展
     public T getExtension(String name){}
     ```
-- JDK的spi不支持默认值；dubbo增加了默认值的设计；
+- JDK的SPI不支持默认值；dubbo增加了默认值的设计；
 - Dubbo的spi增加了IoC、AOP，一个扩展可以直接注入其他扩展；Dubbo支持包装扩展类，一般是把通用的抽象逻辑放到包装类中，用于实现扩展点的APO特性；
 - JDK的SPI会一次性实例化扩展点的所有实现，如果有扩展实现则初始化很耗时，如果没有也加载，浪费资源；
 - JDK的SPI如果扩展加载失败，则连扩展的名称都获取不到；Dubbo SPI 在抛出异常的时候，会携带该扩展名信息，而不是简单地提示扩展实现类无法加载；
@@ -1619,7 +1619,7 @@ public class JavassistProxyFactory extends AbstractProxyFactory {
 
 `kill -9`之所以不建议使用，是因为`kill -9`特别强硬，系统会发出`SIGKILL`信号，他要求接收到该信号的程序应该立即结束运行，不能被阻塞或者忽略；
 
-当使用`kill -15`时，系统会发送一个SIGTERM的信号给对应的程序。当程序接收到该信号后，具体要如何处理是自己可以决定的。`kill -15`会通知到应用程序，这就是操作系统对于优雅上下线的最基本的支持
+当使用`kill -15`时，系统会发送一个`SIGTERM`的信号给对应的程序。当程序接收到该信号后，具体要如何处理是自己可以决定的。`kill -15`会通知到应用程序，这就是操作系统对于优雅上下线的最基本的支持
 
 ## 6.2、dubbo优雅停机原理
 
