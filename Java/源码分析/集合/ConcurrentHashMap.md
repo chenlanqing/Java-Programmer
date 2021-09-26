@@ -268,8 +268,7 @@ get操作可以无锁是由于Node的元素val和指针next是用volatile修饰�
 
 ### 5.1、触发扩容
 
-- 如果新增节点之后，所在链表的元素个数达到了阈值 8，则会调用 `treeifyBin()`方法把链表转换成红黑树，不过在结构转换之前，会对数组长度进行判断。如果数组长度n小于阈值 MIN_TREEIFY_CAPACITY，默认是64，则会调用 tryPresize方法把数组长度扩大到原来的两倍，并触发 transfer方法，重新调整节点的位置；
-
+- 如果新增节点之后，所在链表的元素个数达到了阈值 8，则会调用 `treeifyBin()`方法把链表转换成红黑树，不过在结构转换之前，会对数组长度进行判断。如果数组长度n小于阈值 `MIN_TREEIFY_CAPACITY`，默认是64，则会调用 `tryPresize`方法把数组长度扩大到原来的两倍，并触发 `transfer`数据迁移方法，重新调整节点的位置；
 - 新增节点之后，会调用 addCount方法记录元素个数，并检查是否需要进行扩容，当数组元素个数达到阈值时，会触发 transfer方法，重新调整节点的位置；
 
 扩容步骤：
@@ -283,18 +282,71 @@ get操作可以无锁是由于Node的元素val和指针next是用volatile修饰�
 
 tryPresize();
 ```java
-// 方法参数 size 传进来的时候就已经翻了倍了，扩容后数组容量为原来的 2 倍。
+// 需要说明的是：方法参数 size 传进来的时候就已经翻了倍了，扩容后数组容量为原来的 2 倍。
 private final void tryPresize(int size) {
+    // c: size 的 1.5 倍，再加 1，再往上取最近的 2 的 n 次方。
+    int c = (size >= (MAXIMUM_CAPACITY >>> 1)) ? MAXIMUM_CAPACITY : tableSizeFor(size + (size >>> 1) + 1);
+    int sc;
+    while ((sc = sizeCtl) >= 0) {
+        Node<K,V>[] tab = table; int n;
+
+        // 这个 if 分支和之前说的初始化数组的代码基本上是一样的，在这里，我们可以不用管这块代码
+        if (tab == null || (n = tab.length) == 0) {
+            n = (sc > c) ? sc : c;
+            if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
+                try {
+                    if (table == tab) {
+                        @SuppressWarnings("unchecked")
+                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
+                        table = nt;
+                        sc = n - (n >>> 2); // 0.75 * n
+                    }
+                } finally {
+                    sizeCtl = sc;
+                }
+            }
+        }
+        else if (c <= sc || n >= MAXIMUM_CAPACITY)
+            break;
+        else if (tab == table) {
+            // 我没看懂 rs 的真正含义是什么，不过也关系不大
+            int rs = resizeStamp(n);
+
+            if (sc < 0) {
+                Node<K,V>[] nt;
+                if ((sc >>> RESIZE_STAMP_SHIFT) != rs || sc == rs + 1 ||
+                    sc == rs + MAX_RESIZERS || (nt = nextTable) == null ||
+                    transferIndex <= 0)
+                    break;
+                // 2. 用 CAS 将 sizeCtl 加 1，然后执行 transfer 方法
+                //    此时 nextTab 不为 null
+                if (U.compareAndSwapInt(this, SIZECTL, sc, sc + 1))
+                    transfer(tab, nt);
+            }
+            // 1. 将 sizeCtl 设置为 (rs << RESIZE_STAMP_SHIFT) + 2)
+            //     我是没看懂这个值真正的意义是什么? 不过可以计算出来的是，结果是一个比较大的负数
+            //  调用 transfer 方法，此时 nextTab 参数为 null
+            else if (U.compareAndSwapInt(this, SIZECTL, sc, (rs << RESIZE_STAMP_SHIFT) + 2))
+                transfer(tab, null);
+        }
+    }
 }
 ```
-
 这个方法的核心在于 sizeCtl 值的操作，首先将其设置为一个负数，然后执行 transfer(tab, null)，再下一个循环将 sizeCtl 加 1，并执行 transfer(tab, nt)，之后可能是继续 sizeCtl 加 1，并执行 transfer(tab, nt)
 
 扩容的实现的关键点是如何保证线程安全：
-<li>拷贝槽点时，会把原数组的槽点锁住；</li>
-<li>拷贝成功之后，会把原数组的槽点设置成转移节点，这样如果有数据需要 put 到该节点时，发现该槽点是转移节点，会一直等待，直到扩容成功之后，才能继续 put，可以参考 put 方法中的 helpTransfer 方法；</li>
-<li>从尾到头进行拷贝，拷贝成功就把原数组的槽点设置成转移节点。</li>
-<li>等扩容拷贝都完成之后，直接把新数组的值赋值给数组容器，之前等待 put 的数据才能继续 put。</li>
+- 拷贝槽点时，会把原数组的槽点锁住；
+- 拷贝成功之后，会把原数组的槽点设置成转移节点，这样如果有数据需要 put 到该节点时，发现该槽点是转移节点，会一直等待，直到扩容成功之后，才能继续 put，可以参考 put 方法中的 helpTransfer 方法；
+- 从尾到头进行拷贝，拷贝成功就把原数组的槽点设置成转移节点。
+- 等扩容拷贝都完成之后，直接把新数组的值赋值给数组容器，之前等待 put 的数据才能继续 put。
+
+### 5.3、数据迁移：transfer
+
+将原来的 tab 数组的元素迁移到新的 nextTab 数组中
+
+并发操作的机制：原数组长度为 n，所以我们有 n 个迁移任务，让每个线程每次负责一个小任务是最简单的，每做完一个任务再检测是否有其他没做完的任务，帮助迁移就可以了，而 Doug Lea 使用了一个 stride，简单理解就是步长，每个线程每次负责迁移其中的一部分，如每次迁移 16 个小任务。所以，我们就需要一个全局的调度者来安排哪个线程执行哪几个任务，这个就是属性 transferIndex 的作用；
+
+第一个发起数据迁移的线程会将 transferIndex 指向原数组最后的位置，然后从后往前的 stride 个任务属于第一个线程，然后将 transferIndex 指向新的位置，再往前的 stride 个任务属于第二个线程，依此类推。当然，这里说的第二个线程不是真的一定指代了第二个线程，也可以是同一个线程，这个读者应该能理解吧。其实就是将一个大的迁移任务分为了一个个任务包；
 
 ## 6、size与mappingCount方法
 
@@ -362,9 +414,9 @@ if ((as = counterCells) != null ||
 
 ## 1、多线程环境下如何进行扩容
 
-## 2、HashMap、Hashtable、ConcurrenHashMap区别
+## 2、HashMap、Hashtable、ConcurrentHashMap区别
 
-## 3、使用concurrenthashMap中，如何避免组合操作的线程安全问题
+## 3、使用ConcurrentHashMap中，如何避免组合操作的线程安全问题
 
 可以使用replace方法
 
