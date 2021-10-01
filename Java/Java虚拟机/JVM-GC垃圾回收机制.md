@@ -289,11 +289,13 @@ public class FinalizeEscapeGC {
 
 ### 5.2、安全点
 
-安全点，即程序执行时并非在所有地方都能停顿下来开始GC，只有在到达安全点时才能暂停。Safepoint的选定既不能太少以至于让GC等待时间太长，也不能过于频繁以致于过分增大运行时的负荷。
+安全点（SafePoint），即程序执行时并非在所有地方都能停顿下来开始GC，只有在到达安全点时才能暂停。SafePoint的选定既不能太少以至于让GC等待时间太长，也不能过于频繁以致于过分增大运行时的负荷。
 
 安全点的初始目的并不是让其他线程停下，而是找到一个稳定的执行状态。在这个执行状态下，Java虚拟机的堆栈不会发生变化。这么一来，垃圾回收器便能够“安全”地执行可达性分析。只要不离开这个安全点，Java虚拟机便能够在垃圾回收的同时，继续运行这段本地代码。
 
-程序运行时并非在所有地方都能停顿下来开始GC，只有在到达安全点时才能暂停。安全点的选定基本上是以程序“是否具有让程序长时间执行的特征”为标准进行选定的。“长时间执行”的最明显特征就是指令序列复用，例如方法调用、循环跳转、异常跳转等，所以具有这些功能的指令才会产生Safepoint。
+程序运行时并非在所有地方都能停顿下来开始GC，只有在到达安全点时才能暂停。安全点的选定基本上是以程序“是否具有让程序长时间执行的特征”为标准进行选定的。“长时间执行”的最明显特征就是指令序列复用，例如方法调用、循环跳转、异常跳转等，所以具有这些功能的指令才会产生SafePoint。
+
+在 SafePoint 保存了其他位置没有的一些当前线程的运行信息，供其他线程读取。这些信息包括：线程上下文的任何信息，例如对象或者非对象的内部指针等等。一般可以这么理解 SafePoint，就是线程只有运行到了 SafePoint 的位置，他的一切状态信息，才是确定的，也只有这个时候，才知道这个线程用了哪些内存，没有用哪些；并且，只有线程处于 SafePoint 位置，这时候对 JVM 的堆栈信息进行修改，例如回收某一部分不用的内存，线程才会感知到，之后继续运行，每个线程都有一份自己的内存使用快照，这时候其他线程对于内存使用的修改，线程就不知道了，只有再进行到 SafePoint 的时候，才会感知
 
 对于安全点，另一个需要考虑的问题就是如何在GC发生时让所有线程（这里不包括执行JNI调用的线程）都“跑”到最近的安全点上再停顿下来。
 
@@ -346,9 +348,23 @@ CARD_TABLE [this address >> 9] = 0;
 
 ## 6、STW（Stop The World）
 
+- [SafePoint与STW全解](https://juejin.cn/post/6854573211968143373)
+- [JIT Compile](https://krzysztofslusarski.github.io/2021/08/25/monday-jit.html)
+
 全局停顿，Java代码停止运行，native代码继续运行，但是不能与JVM进行交互；
 
-多半由于垃圾回收导致；也可能由Dump线程、死锁检测、Dump堆等导致；
+### 6.1、哪些情况会发生STW
+
+哪些情况下会让所有线程进入 SafePoint， 即发生 Stop the world：
+- **定时进入 SafePoint**：每经过`-XX:GuaranteedSafepointInterval` 配置的时间，都会让所有线程进入 Safepoint，一旦所有线程都进入，立刻从 Safepoint 恢复。这个定时主要是为了一些没必要立刻 Stop the world 的任务执行，可以设置`-XX:GuaranteedSafepointInterval=0`关闭这个定时，推荐关闭；
+- **由于 jstack，jmap 和 jstat 等命令**，也就是 Signal Dispatcher 线程要处理的大部分命令，都会导致 Stop the world：这种命令都需要采集堆栈信息，所以需要所有线程进入 Safepoint 并暂停；
+- **偏向锁取消**（这个不一定会引发整体的 Stop the world）：高并发的情况下，偏向锁会经常失效，导致需要取消偏向锁，取消偏向锁的时候，需要 Stop the world，因为要获取每个线程使用锁的状态以及运行状态；
+- **Java Instrument 导致的 Agent 加载以及类的重定义**：由于涉及到类重定义，需要修改栈上和这个类相关的信息，所以需要 Stop the world；
+- **Java Code Cache相关**：当发生 JIT 编译优化或者去优化，需要 OSR 或者 Bailout 或者清理代码缓存的时候，由于需要读取线程执行的方法以及改变线程执行的方法，所以需要 Stop the world；
+- **GC**：这个由于需要每个线程的对象使用信息，以及回收一些对象，释放某些堆内存或者直接内存，所以需要 Stop the world；
+- **JFR 的一些事件**：如果开启了 JFR 的 OldObject 采集，这个是定时采集一些存活时间比较久的对象，所以需要 Stop the world。同时，JFR 在 dump 的时候，由于每个线程都有一个 JFR 事件的 buffer，需要将 buffer 中的事件采集出来，所以需要 Stop the world
+
+所有的参考：[vmOperation.hpp](https://github.com/openjdk/jdk/blob/master/src/hotspot/share/runtime/vmOperation.hpp)
 
 ## 7、三色标记
 

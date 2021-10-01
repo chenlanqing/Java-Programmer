@@ -2388,6 +2388,8 @@ Java 的线程调度是不分时的，同时启动多个线程后，不能保证
 
 # 三、JUC包
 
+所有AQS和重入锁不是通过继承实现的，而是通过组合实现的
+
 Lock框架和Tools类
 
 ![](image/java-thread-x-juc-overview-lock.png)
@@ -2955,7 +2957,7 @@ void moveIfAtOrigin(double newX, double newY){
 [CountDownLatch原理和示例](http://www.cnblogs.com/skywang12345/p/3533887.html)
 
 - 是一个同步辅助类，在完成一组正在其他线程中执行的操作之前，它允许一个或多个线程一直等待。允许1或N个线程等待其他线程完成执行；
-- 数据结构：CountDownLatch 包含了sync对象，sync是 Sync 类型；CountDownLatch的Sync是实例类，它继承于AQS通过"共享锁"实现；
+- 数据结构：CountDownLatch 包含了sync对象，sync是 Sync 类型；CountDownLatch的Sync是静态内部类，它继承于AQS通过"共享锁"实现；
 - CountDownLatch 中3个核心函数: CountDownLatch(int count)、await()】、countDown()
 
 ```java
@@ -3052,171 +3054,179 @@ public class CountDownLatch {
 
 * [CyclicBarrier原理和示例](http://www.cnblogs.com/skywang12345/p/3533995.html)
 
-- 6.1、是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。让一组线程到达一个屏障时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续干活；因为该 barrier 在释放等待线程后可以重用，所以称它为循环的barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过`独占锁`实现的；CyclicBarrier 的原理不是 AQS 的共享模式，是 AQS Condition 和 ReentrantLock 的结合使用
+### 6.1、概述
 
-	下图应该从下往上看才正确
+是一个同步辅助类，允许一组线程互相等待，直到到达某个公共屏障点 (common barrier point)。让一组线程到达一个屏障时被阻塞，直到最后一个线程到达屏障时，屏障才会开门，所有被屏障拦截的线程才会继续干活；因为该 barrier 在释放等待线程后可以重用，所以称它为循环的barrier；CyclicBarrier 是包含了"ReentrantLock对象lock"和"Condition对象"，它是通过`独占锁`实现的；CyclicBarrier 的原理不是 AQS 的共享模式，是 AQS Condition 和 ReentrantLock 的结合使用，下图应该从下往上看才正确：
 
-	![image](image/CyclicBarrier.png)
+![image](image/CyclicBarrier.png)
 
-- 6.2、主要方法：
-	- `CyclicBarrier(int parties)`：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，但它不会在启动 barrier 时执行预定义的操作。
-	- `CyclicBarrier(int parties, Runnable barrierAction)`：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，并在启动 barrier 时执行给定的屏障操作，该操作由最后一个进入 barrier 的线程执行。barrierAction 是在每次冲破屏障时串行化执行，如果barrierAction 是很耗时的汇总操作可以使用线程池来替代执行；
-	- `int await()`：在所有参与者都已经在此 barrier 上调用 await 方法之前，将一直等待。如果该线程不是到达的最后一个线程，则他会一直处于等待状态，除非发生以下情况：
-		- 最后一个线程到达，即index == 0；
-		- 超出了指定时间（超时等待）；
-		- 其他的某个线程中断当前线程；
-		- 其他的某个线程中断另一个等待的线程；
-		- 其他的某个线程在等待barrier超时；
-		- 其他的某个线程在此barrier调用reset()方法。reset()方法用于将屏障重置为初始状态
+### 6.2、主要方法
 
-		如果一个线程处于等待状态时，如果其他线程调用reset()，或者调用的barrier原本就是被损坏的，则抛出 BrokenBarrierException 异常。同时，任何线程在等待时被中断了，则其他所有线程都将抛出 BrokenBarrierException 异常，并将barrier置于损坏状态
+- `CyclicBarrier(int parties)`：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，但它不会在启动 barrier 时执行预定义的操作。
+- `CyclicBarrier(int parties, Runnable barrierAction)`：创建一个新的 CyclicBarrier，它将在给定数量的参与者（线程）处于等待状态时启动，并在启动 barrier 时执行给定的屏障操作，该操作由最后一个进入 barrier 的线程执行。barrierAction 是在每次冲破屏障时串行化执行，如果barrierAction 是很耗时的汇总操作可以使用线程池来替代执行；
+- `int await()`：在所有参与者都已经在此 barrier 上调用 await 方法之前，将一直等待。如果该线程不是到达的最后一个线程，则他会一直处于等待状态，除非发生以下情况：
+    - 最后一个线程到达，即index == 0；
+    - 超出了指定时间（超时等待）；
+    - 其他的某个线程中断当前线程；
+    - 其他的某个线程中断另一个等待的线程；
+    - 其他的某个线程在等待barrier超时；
+    - 其他的某个线程在此barrier调用reset()方法。reset()方法用于将屏障重置为初始状态
 
-		在 CyclicBarrier 中，同一批线程属于同一代。当有parties个线程到达barrier，generation就会被更新换代。其中broken标识该当前CyclicBarrier是否已经处于中断状态；
+    如果一个线程处于等待状态时，如果其他线程调用reset()，或者调用的barrier原本就是被损坏的，则抛出 BrokenBarrierException 异常。同时，任何线程在等待时被中断了，则其他所有线程都将抛出 BrokenBarrierException 异常，并将barrier置于损坏状态
 
-		当barrier损坏了或者有一个线程中断了，则通过breakBarrier()来终止所有的线程；在breakBarrier()中除了将broken设置为true，还会调用signalAll将在CyclicBarrier处于等待状态的线程全部唤醒。
+    在 CyclicBarrier 中，同一批线程属于同一代。当有parties个线程到达barrier，generation就会被更新换代。其中broken标识该当前CyclicBarrier是否已经处于中断状态；
 
-	- `int await(long timeout， TimeUnit unit)`：在所有参与者都已经在此屏障上调用 await 方法之前将一直等待，或者超出了指定的等待时间。
-	- `int getNumberWaiting()`：返回当前在屏障处等待的参与者数目。
-	- `int getParties()`：返回要求启动此 barrier 的参与者数目。
-	- `boolean isBroken()`：查询此屏障是否处于损坏状态。
-	- `void reset()`：将屏障重置为其初始状态。调用 reset 会使当前处在等待中的线程最终抛出 BrokenBarrierException 并立即被唤醒，所以说 reset() 只会在你想打破屏障时才会使用
+    当barrier损坏了或者有一个线程中断了，则通过breakBarrier()来终止所有的线程；在breakBarrier()中除了将broken设置为true，还会调用signalAll将在CyclicBarrier处于等待状态的线程全部唤醒。
+- `int await(long timeout， TimeUnit unit)`：在所有参与者都已经在此屏障上调用 await 方法之前将一直等待，或者超出了指定的等待时间。
+- `int getNumberWaiting()`：返回当前在屏障处等待的参与者数目。
+- `int getParties()`：返回要求启动此 barrier 的参与者数目。
+- `boolean isBroken()`：查询此屏障是否处于损坏状态。
+- `void reset()`：将屏障重置为其初始状态。调用 reset 会使当前处在等待中的线程最终抛出 BrokenBarrierException 并立即被唤醒，所以说 reset() 只会在你想打破屏障时才会使用；
 
-- 6.3、使用场景：并行计算等。当一组线程（任务）并发的执行一件工作的时候，必须等待所有的线程（任务）都完成时才能进行下一个步骤
+### 6.3、使用场景
 
-- 6.4、CountDownLatch 与 CyclicBarrier 两者的区别：
+- 并行计算等。当一组线程（任务）并发的执行一件工作的时候，必须等待所有的线程（任务）都完成时才能进行下一个步骤
 
-	- CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行；CyclicBarrier 则是允许N个线程相互等待；
-	- CountDownLatch 的计数器无法被重置；CyclicBarrier 的计数器可以被重置后使用，因此它被称为是循环的barrier；
-	- CoundDownLatch操作的是事件，而CyclicBarrier侧重点是线程，而不是调用事件
+### 6.4、与CountDownLatch的区别
 
-- 6.5、例子：
-    ```java
-    @Slf4j
-    public class CyclicBarrierDemo {
-        static CyclicBarrier barrier = new CyclicBarrier(5);
-        // 到达屏障后执行某个回调
-        static CyclicBarrier barrier = new CyclicBarrier(5, ()->{
-            log.info("sdasdasdasdasdas");
-        });
-        public static void main(String[] args)throws Exception {
-            ExecutorService executorService = Executors.newCachedThreadPool();
-            for (int i = 0; i < 10; i++) {
-                final int count = i;
-                Thread.sleep(1000);
-                executorService.execute(() -> {
-                    try {
-                        race(count);
-                    } catch (Exception e) {
-                        log.error("exception", e);
-                    }
-                });
-            }
-            executorService.shutdown();
-        }
-        private static void race(int count) throws Exception{
+- CountDownLatch 的作用是允许1或N个线程等待其他线程完成执行；CyclicBarrier 则是允许N个线程相互等待；
+- CountDownLatch 的计数器无法被重置；CyclicBarrier 的计数器可以被重置后使用，因此它被称为是循环的barrier；
+- CoundDownLatch操作的是事件，而CyclicBarrier侧重点是线程，而不是调用事件
+
+### 6.5、例子
+
+```java
+@Slf4j
+public class CyclicBarrierDemo {
+    static CyclicBarrier barrier = new CyclicBarrier(5);
+    // 到达屏障后执行某个回调
+    static CyclicBarrier barrier = new CyclicBarrier(5, ()->{
+        log.info("sdasdasdasdasdas");
+    });
+    public static void main(String[] args)throws Exception {
+        ExecutorService executorService = Executors.newCachedThreadPool();
+        for (int i = 0; i < 10; i++) {
+            final int count = i;
             Thread.sleep(1000);
-            log.info("{} is ready", count);
-            barrier.await();
-            log.info("{} continue",count);
+            executorService.execute(() -> {
+                try {
+                    race(count);
+                } catch (Exception e) {
+                    log.error("exception", e);
+                }
+            });
         }
+        executorService.shutdown();
     }
-    ```
-- 6.6、源码：核心方法doWait
-    ```java
-    private int dowait(boolean timed, long nanos) throws InterruptedException, BrokenBarrierException,TimeoutException {
-        final ReentrantLock lock = this.lock;
-        lock.lock();
-        try {
-            final Generation g = generation;
-                    // *******************************
-                    // 每一个循环都会生成一个新的generation；触发或者重置都会发生改变；
-                    private static class Generation {
-                        boolean broken = false;
+    private static void race(int count) throws Exception{
+        Thread.sleep(1000);
+        log.info("{} is ready", count);
+        barrier.await();
+        log.info("{} continue",count);
+    }
+}
+```
+
+### 6.6、源码：核心方法doWait
+
+```java
+private int dowait(boolean timed, long nanos) throws InterruptedException, BrokenBarrierException,TimeoutException {
+    final ReentrantLock lock = this.lock;
+    lock.lock();
+    try {
+        final Generation g = generation;
+                // *******************************
+                // 每一个循环都会生成一个新的generation；触发或者重置都会发生改变；
+                private static class Generation {
+                    boolean broken = false;
+                }
+                // *******************************
+        // broken 是静态内部类 Generation唯一的一个成员变量，用于记录当前屏障是否被打破，如果打破，则抛出 BrokenBarrierException 异常
+        // 这里感觉挺困惑的，我们要【冲破】屏障，这里【打破】屏障却抛出异常，注意我这里的用词
+        if (g.broken)
+            throw new BrokenBarrierException();
+        // 如果线程被中断，则会通过breakBarrier方法将broken设置为true，也就是说，如果有线程收到中断通知，直接就打破屏障，停止CyclicBarrier，并唤醒所有线程
+        if (Thread.interrupted()) {
+            breakBarrier(); // breakBarrier实现如下：
+                // ************************************
+                private void breakBarrier() {
+                    // 将打破屏障标识 设置为 true
+                    generation.broken = true;
+                    // 重置计数器
+                    count = parties;
+                    // 唤醒所有等待的线程
+                    trip.signalAll();
+                }
+                // ************************************
+            throw new InterruptedException();
+        }
+        // 每当一个线程调用 await 方法，计数器 count 就会减1
+        int index = --count;
+        // 当 count 值减到 0 时，说明这是最后一个调用 await() 的子线程，则会突破屏障
+        if (index == 0) {  // tripped
+            boolean ranAction = false;
+            try {
+                // 获取构造函数中的 barrierCommand，如果有值，则运行该方法
+                final Runnable command = barrierCommand;
+                if (command != null)
+                    command.run();
+                ranAction = true;
+                // 激活其他因调用 await 方法而被阻塞的线程，并重置 CyclicBarrier
+                nextGeneration();
+                // ************************************
+                    private void nextGeneration() {
+                        // signal completion of last generation
+                        trip.signalAll();
+                        // set up next generation
+                        count = parties;
+                        generation = new Generation();
                     }
-                    // *******************************
-            // broken 是静态内部类 Generation唯一的一个成员变量，用于记录当前屏障是否被打破，如果打破，则抛出 BrokenBarrierException 异常
-            // 这里感觉挺困惑的，我们要【冲破】屏障，这里【打破】屏障却抛出异常，注意我这里的用词
+                    // ************************************
+                return 0;
+            } finally {
+                if (!ranAction)
+                    breakBarrier();
+            }
+        }
+        // index 不等于0， 说明当前不是最后一个线程调用 await 方法
+        // loop until tripped, broken, interrupted, or timed out
+        for (;;) {
+            try {
+                // 没有设置超时时间
+                if (!timed)
+                // 进入条件等待
+                    trip.await();
+                else if (nanos > 0L)
+                        // 否则，判断超时时间，这个我们在 AQS 中有说明过，包括为什么最后超时阈值 spinForTimeoutThreshold 不再比较的原因，大家会看就好
+                    nanos = trip.awaitNanos(nanos);
+            } catch (InterruptedException ie) {
+                // 条件等待被中断，则判断是否有其他线程已经使屏障破坏。若没有则进行屏障破坏处理，并抛出异常；否则再次中断当前线程
+                if (g == generation && ! g.broken) {
+                    breakBarrier();
+                    throw ie;
+                } else {
+                    Thread.currentThread().interrupt();
+                }
+            }
             if (g.broken)
                 throw new BrokenBarrierException();
-            // 如果线程被中断，则会通过breakBarrier方法将broken设置为true，也就是说，如果有线程收到中断通知，直接就打破屏障，停止CyclicBarrier，并唤醒所有线程
-            if (Thread.interrupted()) {
-                breakBarrier(); // breakBarrier实现如下：
-                    // ************************************
-                    private void breakBarrier() {
-                        // 将打破屏障标识 设置为 true
-                        generation.broken = true;
-                        // 重置计数器
-                        count = parties;
-                        // 唤醒所有等待的线程
-                        trip.signalAll();
-                    }
-                    // ************************************
-                throw new InterruptedException();
+            // 如果新一轮回环结束，会通过 nextGeneration 方法新建 generation 对象
+            if (g != generation)
+                return index;
+            if (timed && nanos <= 0L) {
+                breakBarrier();
+                throw new TimeoutException();
             }
-            // 每当一个线程调用 await 方法，计数器 count 就会减1
-            int index = --count;
-            // 当 count 值减到 0 时，说明这是最后一个调用 await() 的子线程，则会突破屏障
-            if (index == 0) {  // tripped
-                boolean ranAction = false;
-                try {
-                    // 获取构造函数中的 barrierCommand，如果有值，则运行该方法
-                    final Runnable command = barrierCommand;
-                    if (command != null)
-                        command.run();
-                    ranAction = true;
-                    // 激活其他因调用 await 方法而被阻塞的线程，并重置 CyclicBarrier
-                    nextGeneration();
-                    // ************************************
-                        private void nextGeneration() {
-                            // signal completion of last generation
-                            trip.signalAll();
-                            // set up next generation
-                            count = parties;
-                            generation = new Generation();
-                        }
-                        // ************************************
-                    return 0;
-                } finally {
-                    if (!ranAction)
-                        breakBarrier();
-                }
-            }
-            // index 不等于0， 说明当前不是最后一个线程调用 await 方法
-            // loop until tripped, broken, interrupted, or timed out
-            for (;;) {
-                try {
-                    // 没有设置超时时间
-                    if (!timed)
-                    // 进入条件等待
-                        trip.await();
-                    else if (nanos > 0L)
-                         // 否则，判断超时时间，这个我们在 AQS 中有说明过，包括为什么最后超时阈值 spinForTimeoutThreshold 不再比较的原因，大家会看就好
-                        nanos = trip.awaitNanos(nanos);
-                } catch (InterruptedException ie) {
-                    // 条件等待被中断，则判断是否有其他线程已经使屏障破坏。若没有则进行屏障破坏处理，并抛出异常；否则再次中断当前线程
-                    if (g == generation && ! g.broken) {
-                        breakBarrier();
-                        throw ie;
-                    } else {
-                        Thread.currentThread().interrupt();
-                    }
-                }
-                if (g.broken)
-                    throw new BrokenBarrierException();
-                // 如果新一轮回环结束，会通过 nextGeneration 方法新建 generation 对象
-                if (g != generation)
-                    return index;
-                if (timed && nanos <= 0L) {
-                    breakBarrier();
-                    throw new TimeoutException();
-                }
-            }
-        } finally {
-            lock.unlock();
         }
+    } finally {
+        lock.unlock();
     }
-    ```
-- 6.7、在并行任务计算中，如果单个线程完成了任务还需要等待其他线程完成，假如有10个线程正在跑任务，有9个线程已经完成了任务，那么这9个线程就得都等待该线程，这可能是很大的资源浪费，使用CountDownLatch也有这个问题。
+}
+```
+
+### 6.7、问题
+
+在并行任务计算中，如果单个线程完成了任务还需要等待其他线程完成，假如有10个线程正在跑任务，有9个线程已经完成了任务，那么这9个线程就得都等待该线程，这可能是很大的资源浪费，使用CountDownLatch也有这个问题。
 
 ## 7、共享锁-信号量：Semaphore
 
@@ -3275,7 +3285,6 @@ public class SemaphoreDemo {
     private static void test(int count) throws Exception {
         Thread.sleep(1000);
         log.info("{}, {}", count, Thread.currentThread().getName());
-        log.info("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~");
     }
 }
 ```
@@ -3442,10 +3451,13 @@ V get() throws InterruptedException, ExecutionException;
 // 获取任务结果，支持超时，ExecutionException 是Callable内的call执行时产生的异常信息
 V get(long timeout, TimeUnit unit)throws InterruptedException, ExecutionException, TimeoutException;
 ```
-
 使用Future时需要注意，在批量获取结果时，有些线程很快，有些线程很慢；Future的生命周期不能后退；
 
 ## 11、FutureTask
+
+FutureTask 为 Future 提供了基础实现，如获取任务执行结果(get)和取消任务(cancel)等。如果任务尚未完成，获取任务执行结果时将会阻塞。一旦执行结束，任务就不能被重启或取消(除非使用runAndReset执行计算)。FutureTask 常用来封装 Callable 和 Runnable，也可以作为一个任务提交到线程池中执行。除了作为一个独立的类之外，此类也提供了一些功能性函数供我们创建自定义 task 类使用，FutureTask 的线程安全由CAS来保证；
+
+![](image/Java-FutureTask类图.png)
 
 ### 11.1、基本概述
 
@@ -3453,14 +3465,20 @@ V get(long timeout, TimeUnit unit)throws InterruptedException, ExecutionExceptio
 public class FutureTask<V> implements RunnableFuture<V>{
     // 任务状态
     private volatile int state;
-    private static final int NEW          = 0;//线程任务创建
-    private static final int COMPLETING   = 1;//任务执行中
-    private static final int NORMAL       = 2;//任务执行结束
-    private static final int EXCEPTIONAL  = 3;//任务异常
-    private static final int CANCELLED    = 4;//任务取消成功
-    private static final int INTERRUPTING = 5;//任务正在被打断中
-    private static final int INTERRUPTED  = 6;//任务被打断成功
-
+    // 线程任务创建，表示是个新的任务或者还没被执行完的任务；这是初始状态；
+    private static final int NEW          = 0;
+    // 任务执行中：任务已经执行完成或者执行任务的时候发生异常，但是任务执行结果或者异常原因还没有保存到outcome字段(outcome字段用来保存任务执行结果，如果发生异常，则用来保存异常原因)的时候，状态会从NEW变更到COMPLETING。但是这个状态会时间会比较短，属于中间状态
+    private static final int COMPLETING   = 1;
+    // 任务执行结束，任务已经执行完成并且任务执行结果已经保存到outcome字段，状态会从COMPLETING转换到NORMAL。这是一个最终态；
+    private static final int NORMAL       = 2;
+    // 任务异常，任务执行发生异常并且异常原因已经保存到outcome字段中后，状态会从COMPLETING转换到EXCEPTIONAL。这是一个最终态。
+    private static final int EXCEPTIONAL  = 3;
+    // 任务取消成功：任务还没开始执行或者已经开始执行但是还没有执行完成的时候，用户调用了cancel(false)方法取消任务且不中断任务执行线程，这个时候状态会从NEW转化为CANCELLED状态。这是一个最终态；
+    private static final int CANCELLED    = 4;
+    // 任务正在被打断中：任务还没开始执行或者已经执行但是还没有执行完成的时候，用户调用了cancel(true)方法取消任务并且要中断任务执行线程但是还没有中断任务执行线程之前，状态会从NEW转化为INTERRUPTING。这是一个中间状态
+    private static final int INTERRUPTING = 5;
+    // 任务被打断成功：调用interrupt()中断任务执行线程之后状态会从INTERRUPTING转换到INTERRUPTED。这是一个最终态；有一点需要注意的是，所有值大于COMPLETING的状态都表示任务已经执行完成(任务正常执行完成，任务执行异常或者任务被取消)
+    private static final int INTERRUPTED  = 6;
     // 组合了 Callable ，Callable 是作为 FutureTask 的属性之一，这也就让 FutureTask 具备了转化 Callable 和 Runnable 的功能
     private Callable<V> callable;
     // 异步线程返回的结果，也可能是异常堆栈信息
@@ -3470,12 +3488,15 @@ public class FutureTask<V> implements RunnableFuture<V>{
     // 记录调用 get 方法时被等待的线程
     private volatile WaitNode waiters;
 }
-
 public interface RunnableFuture<V> extends Runnable, Future<V>{};
 ```
-- 从类定义上可以看出来 FutureTask 实现了 RunnableFuture 接口，也就是说间接实现了 Runnnable 接口（RunnableFuture 实现了 Runnnable 接口），就是说 FutureTask 本身就是个 Runnnable，同时 FutureTask 也实现了 Future，也就是说 FutureTask 具备对任务进行管理的功能（Future 具备对任务进行管理的功能）
+- 从类定义上可以看出来 FutureTask 实现了 RunnableFuture 接口，也就是说间接实现了 Runnnable 接口（RunnableFuture 实现了 Runnnable 接口），就是说 FutureTask 本身就是个 Runnnable，同时 FutureTask 也实现了 Future，也就是说 FutureTask 具备对任务进行管理的功能（Future 具备对任务进行管理的功能）；
 
-- 可用于异步获取执行结果或取消执行任务的场景：通过传入Runnable或者Callable的任务给FutureTask，直接调用其run方法或者放入线程池执行，之后可以在外部通过FutureTask的get方法异步获取执行结果。FutureTask非常适合用于耗时的计算，主线程可以在完成自己的任务后，再去获取结果。FutureTask还可以确保即使调用了多次run方法，它都只会执行一次Runnable或者Callable任务，或者通过cancel取消FutureTask的执行等;
+- 可用于异步获取执行结果或取消执行任务的场景：通过传入Runnable或者Callable的任务给FutureTask，直接调用其run方法或者放入线程池执行，之后可以在外部通过FutureTask的get方法异步获取执行结果。FutureTask非常适合用于耗时的计算，主线程可以在完成自己的任务后，再去获取结果。FutureTask还可以确保即使调用了多次run方法，它都只会执行一次Runnable或者Callable任务，或者通过cancel取消FutureTask的执行等；
+
+各个状态之间的可能转换关系如下图所示：
+
+![](image/Java-FutureTask状态转换关系.png)
 
 ### 11.2、构造器
 
@@ -3500,6 +3521,7 @@ public FutureTask(Runnable runnable, V result) {
 Runnable 转换成 Callable：`Executors.callable(runnable, result);`
 ```java
 // 转化 Runnable 成 Callable 的工具类，RunnableAdapter 为 Executors 的静态内部类
+// 这个适配器很简单，就是简单的实现了Callable接口，在call()实现中调用Runnable.run()方法，然后把传入的result作为任务的结果返回
 static final class RunnableAdapter<T> implements Callable<T> {
     final Runnable task;
     final T result;
@@ -3589,7 +3611,36 @@ public Connection getConnection(String key) throws Exception{
 }
 ```
 
-### 11.4、线程API之间的关系
+### 11.4、cancel方法
+
+```java
+public boolean cancel(boolean mayInterruptIfRunning) {
+    //如果当前Future状态为NEW，根据参数修改Future状态为INTERRUPTING或CANCELLED
+    if (!(state == NEW 
+    && UNSAFE.compareAndSwapInt(this, stateOffset, NEW, mayInterruptIfRunning ? INTERRUPTING : CANCELLED))
+    )
+        return false;
+    try {    // in case call to interrupt throws exception
+        if (mayInterruptIfRunning) {//可以在运行时中断
+            try {
+                Thread t = runner;
+                if (t != null)
+                    t.interrupt();
+            } finally { // final state
+                UNSAFE.putOrderedInt(this, stateOffset, INTERRUPTED);
+            }
+        }
+    } finally {
+        finishCompletion();//移除并唤醒所有等待线程
+    }
+    return true;
+}
+```
+尝试取消任务。如果任务已经完成或已经被取消，此操作会失败
+- 如果当前Future状态为NEW，根据参数修改Future状态为INTERRUPTING或CANCELLED。 
+- 如果当前状态不为NEW，则根据参数mayInterruptIfRunning决定是否在任务运行中也可以中断。中断操作完成后，调用finishCompletion移除并唤醒所有等待线程
+
+### 11.5、线程API之间的关系
 
 Thread、Runnable、Callable、Future、FutureTask 之间的关系
 
@@ -3607,21 +3658,25 @@ new Thread(futureTask).start();
 
 ## 12、Fork/Join框架
 
+- [FokrJoin框架](https://pdai.tech/md/java/thread/java-thread-x-juc-executor-ForkJoinPool.html)
+
 ### 12.1、概述
 
-Fork/Join框架是JDK 1.7提供的一个用于并行执行任务的框架，其核心理念是把一个大任务分割成若干个小任务进行窃取执行，然后最终汇总每个小任务结果后得到大任务结果的并发框架；Fork就是把一个大任务切分为若干子任务进行并行执行，Join就是合并这些子任务的最终执行结果得到这个大任务的结果；
+Fork/Join框架是JDK 1.7提供的一个用于并行执行任务的框架，其核心理念是把一个大任务分割成若干个小任务（分治算法）进行窃取执行，然后最终汇总每个小任务结果后得到大任务结果的并发框架；Fork就是把一个大任务切分为若干子任务进行并行执行，Join就是合并这些子任务的最终执行结果得到这个大任务的结果；
 
-JDK用来执行Fork/Join任务的工作线程池大小等于CPU核心数；在一个4核CPU上，最多可以同时执行4个子任务
+JDK用来执行Fork/Join任务的工作线程池大小等于CPU核心数；在一个4核CPU上，最多可以同时执行4个子任务；
 
 ### 12.2、算法
 
 Fork/Join 框架采用了工作窃取（work-stealing）算法来实现，其算法核心是指某个线程从其他队列里窃取任务来执行；
 
-通过这种算法就可以充分利用线程进行并行操作，同时减少了线程间的竞争。但缺点就是在某些情况下还是存在竞争（双端队列里只有一个任务时）且消耗了更多的系统资源（创建多个线程和多个双端队列），可以说是一种空间换时间的优化
+通过这种算法就可以充分利用线程进行并行操作，同时减少了线程间的竞争。但缺点就是在某些情况下还是存在竞争（双端队列里只有一个任务时）且消耗了更多的系统资源（创建多个线程和多个双端队列），可以说是一种空间换时间的优化；
 
 ### 12.3、核心组件
 
-F/J框架的实现非常复杂，内部大量运用了位操作和无锁算法，撇开这些实现细节不谈，该框架主要涉及三大核心组件：ForkJoinPool（线程池）、ForkJoinTask（任务）、ForkJoinWorkerThread（工作线程），外加WorkQueue（任务队列）：
+F/J框架的实现非常复杂，内部大量运用了位操作和无锁算法，撇开这些实现细节不谈，该框架主要涉及三大核心组件：ForkJoinPool（线程池）、ForkJoinTask（任务对象）、ForkJoinWorkerThread（工作线程），外加WorkQueue（任务队列）：这三者的关系是: ForkJoinPool可以通过池中的ForkJoinWorkerThread来处理ForkJoinTask任务；
+
+ForkJoinPool 只接收 ForkJoinTask 任务(在实际使用中，也可以接收 Runnable/Callable 任务，但在真正运行时，也会把这些任务封装成 ForkJoinTask 类型的任务)，RecursiveTask 是 ForkJoinTask 的子类，是一个可以递归执行的 ForkJoinTask，RecursiveAction 是一个无返回值的 RecursiveTask，CountedCompleter 在任务完成执行后会触发执行一个自定义的钩子函数
 
 - ForkJoinTask：如果需要使用ForkJoin框架，必须首先创建一个ForkJoin任务，其提供在任务中执行fork()和join()操作机制；通常情况下，不需要直接继承ForkJoinTask，而只需要继承其子类即可。Fork/Join框架提供了以下两个子类：
 	- RecursiveTask：用于有返回结果的任务；
@@ -3650,7 +3705,29 @@ F/J框架的实现非常复杂，内部大量运用了位操作和无锁算法�
     - 有工作线程（Worker）绑定的任务队列：数组下标始终是奇数，称为task queue，该队列中的任务均由工作线程调用产生（工作线程调用FutureTask.fork方法）；
     - 没有工作线程（Worker）绑定的任务队列：数组下标始终是偶数，称为submissions queue，该队列中的任务全部由其它线程提交（也就是非工作线程调用execute/submit/invoke或者FutureTask.fork方法）
 
-### 12.4、使用
+### 12.4、核心思想
+
+#### 12.4.1、分治算法(Divide-and-Conquer)
+
+分治算法(Divide-and-Conquer)把任务递归的拆分为各个子任务，这样可以更好的利用系统资源，尽可能的使用所有可用的计算能力来提升应用性能。首先看一下 Fork/Join 框架的任务运行机制
+
+![](image/ForkJoin-核心思想-分治算法.png)
+
+#### 12.4.2、work-stealing(工作窃取)算法
+
+work-stealing(工作窃取)算法：线程池内的所有工作线程都尝试找到并执行已经提交的任务，或者是被其他活动任务创建的子任务(如果不存在就阻塞等待)。这种特性使得 ForkJoinPool 在运行多个可以产生子任务的任务，或者是提交的许多小任务时效率更高。尤其是构建异步模型的 ForkJoinPool 时，对不需要合并(join)的事件类型任务也非常适用。 
+
+在 ForkJoinPool 中，线程池中每个工作线程`(ForkJoinWorkerThread)`都对应一个任务队列`(WorkQueue)`，工作线程优先处理来自自身队列的任务(LIFO或FIFO顺序，参数 mode 决定)，然后以FIFO的顺序随机窃取其他队列中的任务；
+
+具体思路如下:
+- 每个线程都有自己的一个WorkQueue，该工作队列是一个双端队列。
+- 队列支持三个功能push、pop、poll
+- push/pop只能被队列的所有者线程调用，而poll可以被其他线程调用。
+- 划分的子任务调用fork时，都会被push到自己的队列中。
+- 默认情况下，工作线程从自己的双端队列获出任务并执行。
+- 当自己的队列为空时，线程随机从另一个线程的队列末尾调用poll方法窃取任务
+
+### 12.5、使用
 
 使用Fork/Join框架基本步骤：
 - 分割任务：首先需要创建一个ForkJoin任务，执行该类的fork方法可以对任务不断切割，直到分割的子任务足够小；
@@ -3700,9 +3777,9 @@ public class ForkJoinLargeSum {
 }
 ```
 
-### 12.5、异常处理
+### 12.6、异常
 
-ForkJoinTask在执行的时候可能会抛出异常，但是我们没办法在主线程里直接捕获异常，所以ForkJoinTask提供了`isCompletedAbnormally()`方法来检查任务是否已经抛出异常或已经被取消了，并且可以通过ForkJoinTask的getException方法获取异常
+ForkJoinTask在执行的时候可能会抛出异常，但是我们没办法在主线程里直接捕获异常，所以ForkJoinTask提供了`isCompletedAbnormally()`方法来检查任务是否已经抛出异常或已经被取消了，并且可以通过ForkJoinTask的getException方法获取异常，ForkJoinTask中看到内部把受检异常转换成了运行时异常
 ```java
 if(task.isCompletedAbnormally()){
     System.out.println(task.getException());
@@ -3710,19 +3787,28 @@ if(task.isCompletedAbnormally()){
 ```
 getException方法返回Throwable对象，如果任务被取消了则返回CancellationException。如果任务没有完成或者没有抛出异常则返回null
 
-### 12.6、应用场景
+### 12.7、应用场景
 
 Fork/Join框架适合能够进行拆分再合并的计算密集型（CPU密集型）任务。Fork/Join框架是一个并行框架，因此要求服务器拥有多CPU、多核，用以提高计算能力；
 
 如果是单核、单CPU，不建议使用该框架，会带来额外的性能开销，反而比单线程的执行效率低。当然不是因为并行的任务会进行频繁的线程切换，因为Fork/Join框架在进行线程池初始化的时候默认线程数量为`Runtime.getRuntime().availableProcessors()`，单CPU单核的情况下只会产生一个线程，并不会造成线程切换，而是会增加Fork/Join框架的一些队列、池化的开销；
 
-### 12.7、注意
+### 12.8、注意
 
 - 除了fork() 和 join()方法外，线程不得使用其他的同步工具。线程最好也不要sleep()；
 - 线程不得进行I/O操作；
 - 线程不得抛出checked exception
+- 注意fork()、compute()、join()的顺序，如果这三者顺序乱了，则并没有并行执行；
+    ```java
+    right.fork(); // 计算右边的任务
+    long leftAns = left.compute(); // 计算左边的任务(同时右边任务也在计算)
+    long rightAns = right.join(); // 等待右边的结果
+    return leftAns + rightAns;
+    ```
 
-### 12.8、源码分析
+选择合适的子任务粒度：选择划分子任务的粒度(顺序执行的阈值)很重要，因为使用Fork/Join框架并不一定比顺序执行任务的效率高: 如果任务太大，则无法提高并行的吞吐量；如果任务太小，子任务的调度开销可能会大于并行计算的性能提升，我们还要考虑创建子任务、fork()子任务、线程调度以及合并子任务处理结果的耗时以及相应的内存消耗。 官方文档给出的粗略经验是：任务应该执行100~10000个基本的计算步骤。决定子任务的粒度的最好办法是实践，通过实际测试结果来确定这个阈值才是“上上策”
+
+### 12.8、Fork/Join框架执行流程
 
 [ForkJoin源码分析](https://segmentfault.com/a/1190000016877931)
 
@@ -4029,12 +4115,11 @@ take、poll都是和阻塞队列相关的，take()、poll() 都是从阻塞队�
 ### 2.1、特性
 
 相当于线程安全的 ArrayList，和 ArrayList 一样，是个可变数组；不同的是，具有以下几个特性
-
 - 最适合于应用程序：List 大小通常保持很小，只读操作远多于可变操作，需要在遍历期间防止线程间的冲突；
 - 线程安全的；
-- 通过 锁 + 数组拷贝 + volatile关键字保证线程安全；
+- 通过`锁 + 数组拷贝 + volatile关键字`保证线程安全；
 - 因为通常要复制整个基础数组，所以可变操作(add()、set() 和 remove() 等等)的开销很大；
-- 迭代器支持hasNext()， next()等不可变操作，但不支持可变 remove()等操作；即迭代器是只读的；
+- 迭代器支持`hasNext()`、`next()`等不可变操作，但不支持可变`remove()`等操作；即迭代器是只读的；
 - 使用迭代器进行遍历的速度很快，并且不会与其他线程发生冲突。在构造迭代器时，迭代器依赖于不变的数组快照；**如果在迭代过程中修改了数据，正在迭代的过程中的数据还是老数据；**
 - 元素可以为null；
 
@@ -4043,7 +4128,7 @@ take、poll都是和阻塞队列相关的，take()、poll() 都是从阻塞队�
 ```java
 public class CopyOnWriteArrayList<E>  implements List<E>， RandomAccess， Cloneable， Serializable{}
 ```
-
+- CopyOnWriteArrayList实现了List接口，List接口定义了对列表的基本操作；同时实现了RandomAccess接口，表示可以随机访问(数组具有随机访问的特性)；同时实现了Cloneable接口，表示可克隆；同时也实现了Serializable接口，表示可被序列化；
 - 包含了成员lock。每一个CopyOnWriteArrayList都和一个互斥锁lock绑定，通过lock，实现了对`CopyOnWriteArrayList`的互斥访问
 - CopyOnWriteArrayList 本质上通过数组实现的
 
@@ -4068,10 +4153,11 @@ public class CopyOnWriteArrayList<E>  implements List<E>， RandomAccess， Clon
         }
     }
     ```
-
 - 线程安全：是通过volatile和互斥锁来（ReentrantLock）实现的
 	- CopyOnWriteArrayList 是通过`volatile数组`来保存数据的；一个线程读取volatile数组时，总能看到其它线程对该volatile变量最后的写入。通过volatile提供了`读取到的数据总是最新的`这个机制的保证。
 	- 通过互斥锁来保护数据。在`添加/修改/删除`数据时，会先`获取互斥锁`，再修改完毕之后，先将数据更新到`volatile数组`中，然后再`释放互斥锁`
+
+内部类：COWIterator表示迭代器，其也有一个Object类型的数组作为CopyOnWriteArrayList数组的快照，这种快照风格的迭代器方法在创建迭代器时使用了对当时数组状态的引用。此数组在迭代器的生存期内不会更改，因此不可能发生冲突，并且迭代器保证不会抛出 `ConcurrentModificationException`。创建迭代器以后，迭代器就不会反映列表的添加、移除或者更改，在迭代器上进行的元素更改操作(remove、set 和 add)不受支持。这些方法将抛出 UnsupportedOperationException
 
 基本操作步骤时：
 - 加锁
@@ -4101,8 +4187,12 @@ CopyOnWriteArrayList 则不存在这个问题
 
 ### 2.5、CopyOnWriteList缺点
 
-- 内存占用：如果CopyOnWriteArrayList经常要增删改里面的数据，经常要执行add()、set()、remove()的话，那是比较耗费内存的。因为每次`add()、set()、remove()`这些增删改操作都要复制一个数组出来；
-- 数据一致性：CopyOnWrite容器只能保证数据的最终一致性，不能保证数据的实时一致性
+- 内存占用：如果CopyOnWriteArrayList经常要增删改里面的数据，经常要执行add()、set()、remove()的话，那是比较耗费内存的。因为每次`add()、set()、remove()`这些增删改操作都要复制一个数组出来；如果原数组的内容比较多的情况下，可能导致young gc或者full gc；
+- 数据一致性：不能用于实时读的场景，像拷贝数组、新增元素都需要时间，所以调用一个set操作后，读取到数据可能还是旧的,虽然CopyOnWriteArrayList 能做到最终一致性,但是还是没法满足实时性要求；
+
+CopyOnWriteArrayList 合适读多写少的场景，不过这类慎用：因为没法保证CopyOnWriteArrayList 到底要放置多少数据，万一数据稍微有点多，每次add/set都要重新复制数组，这个代价实在太高昂了。在高性能的互联网应用中，这种操作分分钟引起故障；
+
+**CopyOnWriteArrayList为什么并发安全且性能比Vector好?** Vector对单独的add，remove等方法都是在方法上加了synchronized; 并且如果一个线程A调用size时，另一个线程B 执行了remove，然后size的值就不是最新的，然后线程A调用remove就会越界(这时就需要再加一个Synchronized)。这样就导致有了双重锁，效率大大降低，何必呢。于是vector废弃了，要用就用CopyOnWriteArrayList 吧
 
 ## 3、CopyOnWriteArraySet：(HashSet)
 
@@ -4179,9 +4269,8 @@ ConcurrentSkipListMap是通过`HeadIndex`维护索引层次，通过`Index`从�
 ### 7.1、什么是阻塞队列
 
 是一个在队列基础上又支持了两个附加操作的队列。2个附加操作：
-
-* 支持阻塞的插入方法：队列满时，队列会阻塞插入元素的线程，直到队列不满时；
-* 支持阻塞的移除方法：队列空时，获取元素的线程会等待队列变为非空；
+- 支持阻塞的插入方法：队列满时，队列会阻塞插入元素的线程，直到队列不满时；
+- 支持阻塞的移除方法：队列空时，获取元素的线程会等待队列变为非空；
 
 BlockingQueue 是一个接口，继承自 Queue，可以看下其中 LinkedBlockingQueue的类图
 
@@ -4215,9 +4304,11 @@ public interface BlockingQueue<E> extends Queue<E> {
     int drainTo(Collection<? super E> c);
     int drainTo(Collection<? super E> c, int maxElements);
 }
+// 表示一个线程安放入和提取实例的双端队列
+public interface BlockingDeque<E> extends BlockingQueue<E>, Deque<E> {
 
+}
 ```
-
 Queue中定义了队列的三大操作：
 - 新增操作：
     - add 队列满的时候抛出异常；
@@ -4241,7 +4332,9 @@ Queue中定义了队列的三大操作：
 - Blocks：如果操作不能马上进行，操作会被阻塞
 - TimesOut：如果操作不能马上进行，操作会被阻塞指定的时间，如果指定时间没执行，则返回一个特殊值，一般是true或者false
 
-BlockingQueue在 Queue新增和查看并删除的基础，增加了阻塞功能，可以选择是一直阻塞、或者阻塞一段时间后，返回特殊值；
+BlockingQueue 在 Queue 新增和查看并删除的基础，增加了阻塞功能，可以选择是一直阻塞、或者阻塞一段时间后，返回特殊值；
+
+无法向一个 BlockingQueue 中插入 null。如果你试图插入 null，BlockingQueue 将会抛出一个 NullPointerException；
 
 ### 7.3、应用场景
 
@@ -4257,7 +4350,7 @@ BlockingQueue在 Queue新增和查看并删除的基础，增加了阻塞功能�
 - BlockingQueue 的实现都是线程安全的，但是批量的集合操作如 addAll, containsAll, retainAll 和 removeAll 不一定是原子操作；
 - BlockingQueue 不支持 close 或 shutdown 等关闭操作
 
-### 7.4、阻塞队列
+### 7.4、阻塞队列-BlockingQueue
 
 #### 7.4.1、ArrayBlockingQueue
 
@@ -4312,9 +4405,9 @@ BlockingQueue在 Queue新增和查看并删除的基础，增加了阻塞功能�
 
 - 带排序的 BlockingQueue 实现，其并发控制采用的是 ReentrantLock，支持优先级的无界阻塞队列；PriorityBlockingQueue 只能指定初始的队列大小，后面插入元素的时候，如果空间不够的话会自动扩容；
 - 简单地说，它就是 PriorityQueue 的线程安全版本。不可以插入 null 值，同时，插入队列的对象必须是可比较大小的（comparable），否则报 ClassCastException 异常。它的插入操作 put 方法不会 block，因为它是无界队列（take 方法在队列为空的时候会阻塞）；
-- 默认情况下元素采用自然顺序升序排序，此类实现了 Collection 和 Iterator 接口中的所有接口方法，对其对象进行迭代并遍历时，不能保证有序性。如果你想要实现有序遍历，建议采用 Arrays.sort(queue.toArray()) 进行处理
-- PriorityBlockingQueue 使用了基于数组的二叉堆来存放元素，所有的 public 方法采用同一个 lock 进行并发控制。
-- 二叉堆是一种特殊的堆，就结构性而言就是完全二叉树或者是近似完全二叉树，满足树结构性和堆序性。树机构特性就是完全二叉树应该有的结构，堆序性则是：父节点的键值总是保持固定的序关系于任何一个子节点的键值，且每个节点的左子树和右子树都是一个二叉堆。它有两种表现形式：最大堆、最小堆。 最大堆：父节点的键值总是大于或等于任何一个子节点的键值（下右图） 最小堆：父节点的键值总是小于或等于任何一个子节点的键值
+- 默认情况下元素采用自然顺序升序排序，此类实现了 Collection 和 Iterator 接口中的所有接口方法，对其对象进行迭代并遍历时，不能保证有序性。如果你想要实现有序遍历，建议采用 Arrays.sort(queue.toArray()) 进行处理；
+- PriorityBlockingQueue 使用了基于数组的二叉堆来存放元素，所有的 public 方法采用同一个 lock 进行并发控制；
+- 二叉堆是一种特殊的堆，就结构性而言就是完全二叉树或者是近似完全二叉树，满足树结构性和堆序性。树机构特性就是完全二叉树应该有的结构，堆序性则是：父节点的键值总是保持固定的序关系于任何一个子节点的键值，且每个节点的左子树和右子树都是一个二叉堆。它有两种表现形式：最大堆、最小堆。 最大堆：父节点的键值总是大于或等于任何一个子节点的键值（下右图） 最小堆：父节点的键值总是小于或等于任何一个子节点的键值；
 
 #### 7.4.4、DelayQueue
 
@@ -4349,8 +4442,8 @@ DelayQueue 中的元素必须是 Delayed 的子类，Delayed 是表达延迟能�
 
 - 链表结构的双向阻塞队列，优势在于多线程入队时，减少一半的竞争；支持FIFO、FILO两种操作方式
 - LinkedBlockingDeque是可选容量的，在初始化时可以设置容量防止其过度膨胀，如果不设置，默认容量大小为`Integer.MAX_VALUE`；
-- LinkedBlockingDeque 继承AbstractQueue，实现接口BlockingDeque，而BlockingDeque又继承接口BlockingQueue，BlockingDeque是支持两个附加操作的 Queue，这两个操作是：获取元素时等待双端队列变为非空；存储元素时等待双端队列中的空间变得可用；
-- 通过互斥锁ReentrantLock 来实现，notEmpty 、notFull 两个Condition做协调生产者、消费者问题
+- LinkedBlockingDeque 继承 AbstractQueue，实现接口 BlockingDeque，而 BlockingDeque 又继承接口 BlockingQueue，BlockingDeque 是支持两个附加操作的 Queue，这两个操作是：获取元素时等待双端队列变为非空；存储元素时等待双端队列中的空间变得可用；
+- 通过互斥锁 ReentrantLock 来实现，notEmpty 、notFull 两个Condition做协调生产者、消费者问题
 
 #### 7.4.7、LinkedTransferQueue
 
@@ -4406,15 +4499,14 @@ static final class Node {
 
 #### 7.5.1、ConcurrentLinkedQueue
 
-```java
-public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<E>, java.io.Serializa{
-
-}
-```
-
 * [ConcurrentLinkedQueue](http://www.cnblogs.com/skywang12345/p/3498995.html)
 
-- 是一个基于链接节点的无边界的线程安全队列，它采用FIFO原则对元素进行排序。采用“wait-free”算法（即CAS算法）来实现的
+```java
+public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<E>, java.io.Serializa{
+}
+```
+`ConcurrentLinkedQueue`继承了抽象类AbstractQueue，AbstractQueue定义了对队列的基本操作；同时实现了Queue接口，Queue定义了对队列的基本操作，同时，还实现了Serializable接口，表示可以被序列化
+- 是一个基于链表的无边界的线程安全队列，它采用FIFO原则对元素进行排序。采用`wait-free`算法（即CAS算法）来实现的（其利用反射机制和CAS机制来更新item域和next域，保证原子性）
 - 特性：
 	- 在入队的最后一个元素的next为null；
 	- 队列中所有未删除的节点的item都不能为null且都能从head节点遍历到；
