@@ -396,6 +396,9 @@ InputStream和Reader与数据源相关联，OutputStream和Writer与目标媒介
 
 ==> "数据格式"和"传输方式"是影响效率最关键的因素了
 
+从数据传输方式或者说是运输方式角度看，可以将 IO 类分为:
+- 字节流
+- 字符流
 
 ## 1、文件的编码
 
@@ -535,8 +538,6 @@ EOF = End   读到-1就读到结尾
 
 ## 5、字符流
 
-
-
 - 将字节流转换成字符缓冲流
 	```java
 	// 读取文件，读取文件注意编码问题
@@ -556,6 +557,10 @@ EOF = End   读到-1就读到结尾
 		BufferedReader br = new BufferedReader(new InputStreamReader(System.in ));
 		br.readLine();
 		```
+
+字节流和字符流的区别：
+- 字节流读取单个字节，字符流读取单个字符(一个字符根据编码的不同，对应的字节也不同，如 UTF-8 编码是 3 个字节，中文编码是 2 个字节。) 
+- 字节流用来处理二进制文件(图片、MP3、视频文件)，字符流用来处理文本文件(可以看做是特殊的二进制文件，使用了某种编码，人可以阅读)
 
 ## 6、管道
 
@@ -1197,6 +1202,7 @@ public class NioClient {
 
 * [零拷贝技术](https://mp.weixin.qq.com/s/LbgTjnX0u2DQ1fA13FzD1g)
 * [全面介绍零拷贝](https://juejin.im/post/6844903949359644680)
+* [Java NIO - 零拷贝实现](https://pdai.tech/md/java/io/java-io-nio-zerocopy.html)
 
 ## 1、直接内存访问
 
@@ -1225,7 +1231,7 @@ DMA(Direct Memory Access)-直接内存访问；
 
 ![](image/系统-DMA-IO流程.png)
 
-## 2、传统文件传输流程
+### 1.3、传统文件传输流程
 
 传统 I/O 的工作方式是，数据读取和写入是从用户空间到内核空间来回复制，而内核空间的数据是通过操作系统层面的 I/O 接口从磁盘读取或写入，代码通常如下，一般会需要两个系统调用：
 ```
@@ -1250,7 +1256,7 @@ write(socket, tmp_buf, len);
 - 进程隔离
 - 内核是连接设备和进程的桥梁，用户程序直接沟通设备会非常危险；
 
-## 3、零拷贝Zero-Copy技术
+## 2、零拷贝Zero-Copy技术
 
 零拷贝主要的任务就是避免CPU将数据从一块存储拷贝到另外一块存储，主要就是利用各种零拷贝技术，避免让CPU做大量的数据拷贝任务，减少不必要的拷贝，或者让别的组件来做这一类简单的数据传输任务，让CPU解脱出来专注于别的任务；
 
@@ -1262,7 +1268,7 @@ write(socket, tmp_buf, len);
 - 零拷贝机制可以减少数据在内核缓冲区和用户进程缓冲区之间反复的 I/O 拷贝操作；
 - 零拷贝机制可以减少用户进程地址空间和内核地址空间之间因为上下文切换而带来的 CPU 开销；
 
-## 4、系统零拷贝实现
+## 3、系统零拷贝实现
 
 零拷贝技术实现的方式通常有 2 种：
 - mmap + write
@@ -1270,12 +1276,21 @@ write(socket, tmp_buf, len);
 
 体现在Java，NIO中的`FileChannel.transferTo()`方法都实现了零拷贝的功能，而在Netty中也通过在`FileRegion`中包装了NIO的`FileChannel.transferTo()`方法实现了零拷贝；在Netty中还有另一种形式的零拷贝，即Netty允许我们将多段数据合并为一整段虚拟数据供用户使用，而过程中不需要对数据进行拷贝操作；
 
-### 4.1、mmap + write
+### 3.1、mmap + write
 
 
-### 4.2、sendfile
+### 3.2、sendfile
 
+## 4、NIO零拷贝实现
 
+在 Java NIO 中的**通道（Channel）**就相当于操作系统的**内核空间**（kernel space）的缓冲区，而**缓冲区**（Buffer）对应的相当于操作系统的**用户空间**（user space）中的**用户缓冲区**（user buffer）。
+
+- **通道**（Channel）是全双工的（双向传输），它既可能是读缓冲区（read buffer），也可能是网络缓冲区（socket buffer）。
+- **缓冲区**（Buffer）分为堆内存（HeapBuffer）和堆外内存（DirectBuffer），这是通过 malloc() 分配出来的用户态内存。
+
+堆外内存（DirectBuffer）在使用后需要应用程序手动回收，而堆内存（HeapBuffer）的数据在 GC 时可能会被自动回收。因此，在使用 HeapBuffer 读写数据时，为了避免缓冲区数据因为 GC 而丢失，NIO 会先把 HeapBuffer 内部的数据拷贝到一个临时的 DirectBuffer 中的本地内存（native memory），这个拷贝涉及到 `sun.misc.Unsafe.copyMemory()` 的调用，背后的实现原理与 `memcpy()` 类似。 最后，将临时生成的 DirectBuffer 内部的数据的内存地址传给 I/O 调用函数，这样就避免了再去访问 Java 对象处理 I/O 读写；
+
+MappedByteBuffer：
 
 ## 5、Netty实现零拷贝
 
