@@ -79,7 +79,7 @@ public void sort(int[] arr， int n) {
 				min = j;
 			}
 		}
-		ArrayUtils.exchange(arr， i， min);
+		ArrayUtils.exchange(arr, i, min);
 	}
 }
 ```
@@ -177,9 +177,57 @@ public void sort(int[] arr， int n) {
 
 ## 4.1、基本思路
 
-归并排序使用了一种叫做"分治"的思想来解决排序问题：也就是把一个大问题分解为众多子问题，而后分别得到每个子问题的解，最终以某种方式合并这些子问题的解就可以得到原问题的解；将待排序数组递归的分解成两半，分别对它们进行排序，然后将结果"归并"(递归的合并)起来归并排序的时间复杂度为O(nlogn)， 它的主要缺点是所需的额外空间与待排序数组的尺寸成正比
+归并排序使用了一种叫做"分治"的思想来解决排序问题：也就是把一个大问题分解为众多子问题，而后分别得到每个子问题的解，最终以某种方式合并这些子问题的解就可以得到原问题的解；将待排序数组递归的分解成两半，分别对它们进行排序，然后将结果"归并"(递归的合并)起来归并排序的时间复杂度为 $O(N\log\N)$， 它的主要缺点是所需的额外空间与待排序数组的尺寸成正比
 
 ## 4.2、实现
+
+```java
+public void sort(int[] A) {
+	mergeSort(A, 0, A.length);
+}
+private static void mergeSort(int[] A, int l, int r) {
+	// 边界条件
+	if (r - l <= 1) {
+		return;
+	}
+	int mid = (l + r) / 2;
+	/*
+	* 数组元素：55 54 87 73 29 47 50 89 20 78，长度：10
+	* mid = (5)
+	*/
+	mergeSort(A, l, mid); // [0,5)
+	mergeSort(A, mid, r); // [5,10)
+
+	merge(A, l, mid, r);
+}
+// 其实最终是合并两个有序的数组
+private static void merge(int[] A, int l, int mid, int r) {
+	int[] B = copy(A, l, mid + 1);
+	int[] C = copy(A, mid, r + 1);
+	// 超过一个元素，如果越界会补0；
+//        int[] B = Arrays.copyOfRange(A, l, mid + 1);
+//        int[] C = Arrays.copyOfRange(A, mid, r + 1);
+
+	// 临时数组最后一个元素加入哨兵
+	B[B.length - 1] = C[C.length - 1] = Integer.MAX_VALUE;
+	int i = 0, j = 0;
+	for (int k = l; k < r; k++) {
+		if (B[i] > C[j]) {
+			A[k] = C[j++];
+		} else {
+			A[k] = B[i++];
+		}
+	}
+}
+private static int[] copy(int[] A, int l, int r) {
+	int[] res = new int[r - l];
+	int j = 0;
+	for (int i = l; i < r - 1; i++) {
+		res[j++] = A[i];
+	}
+	return res;
+}
+```
 
 ```java
 public class MergeSort {
@@ -231,6 +279,7 @@ public class MergeSort {
 ```
 
 ## 4.3、归并排序的优化
+
 ```java
 public void sort(int[] arr， int n) {
 	mergeSort(arr， 0， n - 1);
@@ -293,11 +342,11 @@ Leetcode-23
 
 # 5、快速排序-类似于归并排序
 
-通常情况下，快速排序的时间复杂度为O(nlogn)，但在最坏情况下它的时间复杂度会退化至O(n^2)
+通常情况下，快速排序的时间复杂度为$O(N\log\N)$，但在最坏情况下它的时间复杂度会退化至$O(n^2)$
 
 ## 5.1、思路
 
-假设待排序数组为a[0..N-1]，递归的对该数组执行以下过程：选取一个切分元素，而后通过数组元素的交换将这个切分元素移动到位置j，使得所有a[0..j-1]的元素都小于等于a[j]，所有a[j+1..N-1]的元素都大于等于a[j]。在快速排序中，切分元素的选取很关键，通常我们可以选取输入数组的第一个元素作为切分元素，然后把它交换到数组中的合适位置使得它左边的元素都小于等于它，右边的元素都大于等于它，而后对其左右两边的子数组递归执行切分过程，即可完成对整个数组的排序。
+假设待排序数组为`a[0..N-1]`，递归的对该数组执行以下过程：选取一个切分元素，而后通过数组元素的交换将这个切分元素移动到位置j，使得所有`a[0..j-1]`的元素都小于等于`a[j]`，所有`a[j+1..N-1]`的元素都大于等于`a[j]`。在快速排序中，切分元素的选取很关键，通常我们可以选取输入数组的第一个元素作为切分元素，然后把它交换到数组中的合适位置使得它左边的元素都小于等于它，右边的元素都大于等于它，而后对其左右两边的子数组递归执行切分过程，即可完成对整个数组的排序；
 
 ## 5.2、基本实现
 
