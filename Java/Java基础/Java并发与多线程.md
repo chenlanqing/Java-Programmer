@@ -1661,6 +1661,8 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 ## 11、ThreadLocal类
 
+ThreadLocal是一个将在多线程中为每一个线程创建单独的变量副本的类；当使用ThreadLocal来维护变量时，ThreadLocal会为每个线程创建单独的变量副本，避免因多线程操作共享变量而导致的数据不一致的情况；
+
 存放每个线程的共享变量，解决变量在不同线程间的隔离性，能让线程拥有了自己内部独享的变量；覆盖 initialValue 方法指定线程独享的值
 
 每一个线程都有一个私有变量，是`ThreadLocalMap`类型。当为线程添加`ThreadLocal`对象时，就是保存到这个map中，所以线程与线程间不会互相干扰
@@ -3230,7 +3232,75 @@ private int dowait(boolean timed, long nanos) throws InterruptedException, Broke
 
 ## 7、共享锁-信号量：Semaphore
 
-* [Semaphore信号量的原理和示例](http://www.cnblogs.com/skywang12345/p/3534050.html)
+* [Semaphore信号量的原理和示例](https://pdai.tech/md/java/thread/java-thread-x-juc-tool-semaphore.html)
+```java
+public class Semaphore implements java.io.Serializable {
+    // 内部类，继承自AQS
+    abstract static class Sync extends AbstractQueuedSynchronizer {
+        // 版本号
+        private static final long serialVersionUID = 1192457210091910933L;
+        // 构造函数
+        Sync(int permits) {
+            // 设置状态数
+            setState(permits);
+        }
+        
+        // 获取许可
+        final int getPermits() {
+            return getState();
+        }
+
+        // 共享模式下非公平策略获取
+        final int nonfairTryAcquireShared(int acquires) {
+            for (;;) { // 无限循环
+                // 获取许可数
+                int available = getState();
+                // 剩余的许可
+                int remaining = available - acquires;
+                if (remaining < 0 ||
+                    compareAndSetState(available, remaining)) // 许可小于0或者比较并且设置状态成功
+                    return remaining;
+            }
+        }
+        
+        // 共享模式下进行释放
+        protected final boolean tryReleaseShared(int releases) {
+            for (;;) { // 无限循环
+                // 获取许可
+                int current = getState();
+                // 可用的许可
+                int next = current + releases;
+                if (next < current) // overflow
+                    throw new Error("Maximum permit count exceeded");
+                if (compareAndSetState(current, next)) // 比较并进行设置成功
+                    return true;
+            }
+        }
+        // 根据指定的缩减量减小可用许可的数目
+        final void reducePermits(int reductions) {
+            for (;;) { // 无限循环
+                // 获取许可
+                int current = getState();
+                // 可用的许可
+                int next = current - reductions;
+                if (next > current) // underflow
+                    throw new Error("Permit count underflow");
+                if (compareAndSetState(current, next)) // 比较并进行设置成功
+                    return;
+            }
+        }
+        // 获取并返回立即可用的所有许可
+        final int drainPermits() {
+            for (;;) { // 无限循环
+                // 获取许可
+                int current = getState();
+                if (current == 0 || compareAndSetState(current, 0)) // 许可为0或者比较并设置成功
+                    return current;
+            }
+        }
+    }
+}
+```
 
 - 是一个计数信号量，它的本质是一个"共享锁"，它的作用是限制某段代码块的并发数
 	
@@ -3238,7 +3308,7 @@ private int dowait(boolean timed, long nanos) throws InterruptedException, Broke
 
 - 信号量维护了一个信号量许可集，线程可以通过调用acquire()来获取信号量的许可；当信号量中有可用的许可时，线程能获取该许可；否则线程必须等待，直到有可用的许可为止。线程可以通过release()来释放它所持有的信号量许可；一次性可以获取和释放可以多个许可证，但是获取和释放的信号量必须一致；
 
-- Semaphore 包含了sync对象，sync是 Sync 类型，是一个继承于 AQS 的抽象类。Sync包括两个子类："公平信号量"FairSync和"非公平信号量"NonfairSync。默认情况下，sync是NonfairSync(即，默认是非公平信号量)。
+- Semaphore 包含了sync对象，sync是 Sync 类型，是一个继承于 AQS 的抽象类。Sync包括两个子类："公平信号量"FairSync和"非公平信号量"NonfairSync。默认情况下，sync是NonfairSync(即，默认是非公平信号量)；Semaphore与ReentrantLock的内部类的结构相同；
 
 - “公平信号量”和“非公平信号量”的释放信号量的机制是一样的！不同的是它们获取信号量的机制：线程在尝试获取信号量许可时，对于公平信号量而言，如果当前线程不在CLH队列的头部，则排队等候；而对于非公平信号量而言，无论当前线程是不是在CLH队列的头部，它都会直接获取信号量。该差异具体的体现在，它们的tryAcquireShared()函数的实现不同
 
@@ -3288,6 +3358,22 @@ public class SemaphoreDemo {
     }
 }
 ```
+
+**semaphore初始化有10个令牌，11个线程同时各调用1次acquire方法，会发生什么**
+
+答案：拿不到令牌的线程阻塞，不会继续往下运行。
+
+**semaphore初始化有10个令牌，一个线程重复调用11次acquire方法，会发生什么?**
+
+答案：线程阻塞，不会继续往下运行。可能你会考虑类似于锁的重入的问题，很好，但是，令牌没有重入的概念。你只要调用一次acquire方法，就需要有一个令牌才能继续运行。
+
+**semaphore初始化有1个令牌，1个线程调用一次acquire方法，然后调用两次release方法，之后另外一个线程调用acquire(2)方法，此线程能够获取到足够的令牌并继续运行吗?**
+
+答案：能，原因是release方法会添加令牌，并不会以初始化的大小为准。
+
+**semaphore初始化有2个令牌，一个线程调用1次release方法，然后一次性获取3个令牌，会获取到吗?**
+
+答案：能，原因是release会添加令牌，并不会以初始化的大小为准。Semaphore中release方法的调用并没有限制要在acquire后调用。
 
 ## 8、Condition
 
@@ -3816,7 +3902,7 @@ Fork/Join框架适合能够进行拆分再合并的计算密集型（CPU密集�
 
 ## 13、Exchanger
 
-是一个用于线程间协作的工具类，用于两个线程之间能够交换。它提供了一个交换的同步点，在这个同步点两个线程能够交换数据；
+是一个用于线程间协作的工具类，用于两个线程之间的数据交换。它提供了一个交换的同步点，在这个同步点两个线程能够交换数据；
 
 具体交换数据是通过exchange方法来实现的，如果一个线程先执行exchange方法，那么它会同步等待另一个线程也执行exchange方法，这个时候两个线程就都达到了同步点，两个线程就可以交换数据；
 
@@ -3905,29 +3991,51 @@ public class ExchangerDemo {
 
 Exchanger算法的核心是通过一个可交换数据的slot，以及一个可以带有数据item的参与者，其文档注释中描述代码如下：
 ```java
- for (;;) {
-	if (slot is empty) {                       // offer
-		place item in a Node;
-		if (can CAS slot from empty to node) {
-		wait for release;
-		return matching item in node;
-		}
-	}
-	else if (can CAS slot from node to empty) { // release
-		get the item in node;
-		set matching item in node;
-		release waiting thread;
-	}
-	// else retry on CAS failure
+for (;;) {
+    if (slot is empty) { // offer
+        // slot为空时，将item 设置到Node 中        
+        place item in a Node;
+        if (can CAS slot from empty to node) {
+            // 当将node通过CAS交换到slot中时，挂起线程等待被唤醒
+            wait for release;
+            // 被唤醒后返回node中匹配到的item
+            return matching item in node;
+        }
+    } else if (can CAS slot from node to empty) { // release
+         // 将slot设置为空
+        // 获取node中的item，将需要交换的数据设置到匹配的item
+        get the item in node;
+        set matching item in node;
+        // 唤醒等待的线程
+        release waiting thread;
+    }
+    // else retry on CAS failure
 }
 ```
+比如有2条线程A和B，A线程交换数据时，发现slot为空，则将需要交换的数据放在slot中等待其它线程进来交换数据，等线程B进来，读取A设置的数据，然后设置线程B需要交换的数据，然后唤醒A线程，原理就是这么简单。但是当多个线程之间进行交换数据时就会出现问题，所以Exchanger加入了slot数组；
+
 - 成员变量
 ```java
+// Participant的作用是为每个线程保留唯一的一个Node节点, 它继承ThreadLocal，说明每个线程具有不同的状态
 private final Participant participant;
+static final class Participant extends ThreadLocal<Node> {
+    public Node initialValue() { return new Node(); }
+}
 private volatile Node[] arena;
 private volatile Node slot;
 ```
 通过数组arena来安排不同的线程使用不同的slot来降低竞争问题，并且可以保证最终一定会成对交换数据。但是Exchanger不是一来就会生成arena数组来降低竞争，只有当产生竞争是才会生成arena数组
+
+**那么怎么将Node与当前线程绑定呢？** Participant，Participant 的作用就是为每个线程保留唯一的一个Node节点，它继承ThreadLocal，同时在Node节点中记录在arena中的下标index；
+
+### 13.4、与SynchronousQueue对比
+
+Exchanger是一种线程间安全交换数据的机制。可以和SynchronousQueue对比一下：线程A通过SynchronousQueue将数据a交给线程B；线程A通过Exchanger和线程B交换数据，线程A把数据a交给线程B，同时线程B把数据b交给线程A。可见，SynchronousQueue是交给一个数据，Exchanger是交换两个数据；
+
+### 13.5、不同JDK实现有何差别
+
+- 在JDK5中Exchanger被设计成一个容量为1的容器，存放一个等待线程，直到有另外线程到来就会发生数据交换，然后清空容器，等到下一个到来的线程；
+- 从JDK6开始，Exchanger用了类似`ConcurrentMap`的分段思想，提供了多个slot，增加了并发执行时的吞吐量。
 
 ## 14、Phaser
 
@@ -3938,6 +4046,7 @@ Phaser提供的也是屏障能力，可以把Phaser理解成一种实现屏障�
 ### 14.1、基本概念
 
 - [Phaser实现原理](https://segmentfault.com/a/1190000015979879)
+- [Phaser实现](https://pdai.tech/md/java/thread/java-thread-x-juc-tool-phaser.html)
 
 **phase(阶段)：**
 

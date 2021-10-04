@@ -1391,6 +1391,10 @@ HikariCP 官方是不推荐设置 minimumIdle 这个值的，它将被默认设�
 - 写完之后，对新、老库作数据对比，将不一致的数据进行修正操作；
 - 经过一段时间后，当数据完全一致了，就 ok 了，基于仅仅使用分库分表的最新代码；
 
+## 20、当update修改数据与原数据相同时会再次执行吗？
+
+https://mp.weixin.qq.com/s/IsaOYm_YAEtP5JWFyPLbHw
+
 # 七、Spring
 
 ## 1、SpringApplication.run都做了些什么？
