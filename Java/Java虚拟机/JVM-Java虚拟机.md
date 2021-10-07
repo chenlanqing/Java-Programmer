@@ -59,18 +59,19 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 ![image](image/Java虚拟机内存区域.png)
 
-### 2.2.1、程序计数器
+### 2.2.1、程序计数器(Program Counter Register)
 
-`无内存溢出异常（PC 寄存器）`
-
+`无内存溢出异常`
 - 一块较小的内存空间，它是当前线程所执行的字节码的行号指示器，字节码解释器工作时通过改变该计数器的值来选择下一条需要执行的字节码指令，分支、跳转、循环等基础功能都要依赖它来实现。
-- 每条线程都有一个独立的的程序计数器，各线程间的计数器互不影响，因此该区域是线程私有的;
-- 当线程在执行一个 Java 方法时，该计数器记录的是正在执行的虚拟机字节码指令的地址，当线程在执行的是Native方法（调用本地操作系统方法）时，该计数器的值为空;
+- 每条线程都有一个独立的的程序计数器，各线程间的计数器互不影响，因此该区域是线程私有的；多线程在一个特定的时间段内只会执行其中某一个线程方法，CPU会不停的做任务切换，这样必然会导致经常中断或恢复。为了能够准确的记录各个线程正在执行的当前字节码指令地址，所以为每个线程都分配了一个PC寄存器，每个线程都独立计算，不会互相影响
+- 当线程在执行一个 Java 方法时，该计数器记录的是正在执行的虚拟机字节码指令的地址，当线程在执行的是Native方法（调用本地操作系统方法）时，该计数器的值为空，则是未指定值（undefined）；
 - 该内存区域是唯一一个在 Java 虚拟机规范中没有规定任何 OOM（内存溢出：OutOfMemoryError）情况的区域；
 
 ### 2.2.2、Java 虚拟机栈
 
 `该区域也是线程私有的，它的生命周期也与线程相同`
+
+主管 Java 程序的运行，它保存方法的局部变量、部分结果，并参与方法的调用和返回
 
 #### 2.2.2.1、虚拟机栈特征
 
@@ -79,23 +80,27 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 	- 对于执行引擎来讲，活动线程中，只有栈顶的栈帧是有效的，称为当前栈帧，这个栈帧所关联的方法称为当前方法，执行引擎所运行的所有字节码指令都只针对当前栈帧进行操作；
 	- 栈帧包含四个区域：`局部变量表、操作数栈、动态链接、方法返回地址和一些额外的附加信息`；
 	- 一个栈帧需要分配多少内存，不会受到程序运行期变量数据的影响，而仅仅取决于具体的虚拟机实现；
-	- 每个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈到出栈的过程；
+	- 不同线程中所包含的栈帧是不允许存在相互引用的，即不可能在一个栈帧中引用另外一个线程的栈帧；
+	- JVM 直接对虚拟机栈的操作只有两个：每个方法执行，伴随着入栈（进栈/压栈），方法执行结束出栈；
+	- Java 方法有两种返回函数的方式：一种是正常的函数返回，使用 return 指令；另一种是抛出异常，不管用哪种方式，都会导致栈帧被弹出
 
 #### 2.2.2.2、该区域存在的异常情况
 
-- 如果线程请求的栈深度大于虚拟机所允许的深度，将抛出 StackOverflowError 异常
-- 如果虚拟机在动态扩展栈时无法申请到足够的内存空间，则抛出 OutOfMemoryError 异常（Hotspot虚拟机栈内存不可扩展）
+- 如果采用固定大小的 Java 虚拟机栈，那每个线程的 Java 虚拟机栈容量可以在线程创建的时候独立选定。如果线程请求分配的栈容量超过 Java 虚拟机栈允许的最大容量，Java 虚拟机将会抛出一个 StackOverflowError 异常；
+- 如果 Java 虚拟机栈可以动态扩展，并且在尝试扩展的时候无法申请到足够的内存，或者在创建新的线程时没有足够的内存去创建对应的虚拟机栈，那 Java 虚拟机将会抛出一个OutOfMemoryError异常（HotSpot虚拟机栈内存不可扩展）；
+
+可以通过参数`-Xss`来设置线程的最大栈空间，栈的大小直接决定了函数调用的最大可达深度
 
 #### 2.2.2.3、栈帧中所存放的各部分信息的作用和数据结构
 
-- 局部变量表：是一组变量值存储空间，用于存放方法参数和方法内部定义的局部变量，存放的数据的类型是编译期可知的各种基本数据类型、对象引用(reference)和returnAddress(它指向了一条字节码指令的地址)类型;
+- 局部变量表：是一组变量值存储空间，用于存放`方法参数`和`方法内部定义的局部变量`，存放的数据的类型是编译期可知的各种基本数据类型、对象引用(reference)和returnAddress(它指向了一条字节码指令的地址)类型；由于局部变量表是建立在线程的栈上，是线程的私有数据，因此不存在数据安全问题；
 
-	- ①、局部变量表所需的内存空间在编译期间完成分配，即在Java程序被编译成Class文件时，在方法的Code属性的max_locals数据项中确定了所需分配的
+	- ①、局部变量表所需的内存空间在编译期间完成分配，即在Java程序被编译成Class文件时，在方法的Code属性的`max_locals`数据项中确定了所需分配的
 		最大局部变量表的容量，方法运行期间不会改变局部变量表的大小；
 
-	- ②、局部变量表的容量以变量槽(Slot)为最小单位，虚拟机规范中没有明确指明一个Slot，应占用的内存空间大小，一个Slot可以存放一个32位以内的数据类型：boolean、byte、char、short、int、float、reference和returnAddresss；对于64位的数据类型(long 和 double)，虚拟机会以高位在前的方式为其分配两个连续的 Slot 空间;
+	- ②、局部变量表的容量以变量槽(Slot)为最小单位，虚拟机规范中没有明确指明一个Slot，应占用的内存空间大小，一个Slot可以存放一个32位以内的数据类型：boolean、byte、char、short、int、float、reference和returnAddress，boolean也被转换为int，0 表示 false，非 0 表示 true；对于64位的数据类型(long 和 double)，虚拟机会以高位在前的方式为其分配两个连续的 Slot 空间;
 
-	- ③、虚拟机通过索引定位的方式使用局部变量表，索引值的范围是从0开始到局部变量表最大的Slot数量，对于32位数据类型的变量，索引n代表第n个Slot，对于64位的，索引n代表第n和第 n+1两个 Slot对于两个相邻的共同存放一个64位数据的两个 Slot，不允许采用任何方式单独访问其中一个，虚拟机规范中要求如果遇到这种操作的字节码序列，虚拟机在类加载的校验阶段抛出异常;
+	- ③、虚拟机通过索引定位的方式使用局部变量表，索引值的范围是从0开始到局部变量表最大的Slot数量，对于32位数据类型的变量，索引n代表第n个Slot，对于64位的，索引n代表第n和第 n+1两个 Slot对于两个相邻的共同存放一个64位数据的两个 Slot，不允许采用任何方式单独访问其中一个，虚拟机规范中要求如果遇到这种操作的字节码序列，虚拟机在类加载的校验阶段抛出异常；
 
 	- ④、在方法执行时，虚拟机是使用局部变量表来完成参数值到参数变量列表的传递过程的，如果是非静态方法，则局部变量表中的第0位索引的Slot默认是用于传递方法所属对象实例的引用，在方法中可以通过关键字this来访问这个隐含的参数，其余参数则按照参数表的顺序来排列，占用从1开始的局部变量Slot，参数表分配完毕后;
 
@@ -103,7 +108,9 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 		- 一次是在准备阶段，赋予系统初始值;
 		- 另一次是在初始化阶段，赋予程序员定义的初始值；
 
-- 操作数栈：是一个先入后出栈，其最大深度在编译时写入到 Code 属性的 max_stacks 数据项中；操作数栈就是具体的字节码指令所操作的栈区域
+	在栈帧中，与性能调优关系最为密切的就是局部变量表。在方法执行时，虚拟机使用局部变量表完成方法的传递
+
+- 操作数栈：是一个先入后出栈，其最大深度在编译时写入到 Code 属性的 max_stacks 数据项中；操作数栈就是具体的字节码指令所操作的栈区域；操作数栈，主要用于保存计算过程的中间结果，同时作为计算过程中变量临时的存储空间；
 	- ①、32位数据类型所占的栈容量为1，64为数据类型所占的栈容量为2;
 	- ②、当方法开始执行时，它的操作数栈是空的，在方法的执行过程中，会有各种字节码指令向操作栈中写于和提取内容，即出栈和入栈
 	- ③、Java 虚拟机是基于栈的，Android 虚拟机是基于寄存器的：
@@ -143,9 +150,9 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 - Java Heap 是垃圾收集器管理的主要区域，因此很多时候也被称为"GC堆"
 - 如果在堆中没有内存可分配时，并且堆也无法扩展时，将会抛出 OutOfMemoryError 异常
 - Java 堆可以处在物理上不连续的内存空间中，只要逻辑上是连续的即可;
-- 其大小可以通过`-Xmx`和`-Xms`来控制;
+- 其大小可以通过`-Xmx`和`-Xms`来控制；如果堆的内存大小超过 -Xmx 设定的最大内存， 就会抛出 OutOfMemoryError 异常；通常会将 -Xmx 和 -Xms 两个参数配置为相同的值，其目的是为了能够在垃圾回收机制清理完堆区后不再需要重新分隔计算堆的大小，从而提高性能；
 - Java 堆分为新生代和老生代，新生代又被分为 Eden 和 Survivor 组成。对象主要分配在 Eden 区上新建的对象分配在新生代中。新生代大小可以由`-Xmn` 来控制，也可以用`-XX:SurvivorRatio` 来控制Eden和Survivor的比例；老生代存放新生代中经过多次垃圾回收(也即Minor GC)仍然存活的对象和较大内处对象，通常是从Survivor区域拷贝过来的对象，但并不绝对。
-- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做`TLAB(Thread Local Allocation Buffer)`。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度；大对象无法再TLAB分配；基于 CAS 的独享线程（Mutator Threads）可以优先将对象分配在 Eden 中的一块内存，因为是 Java 线程独享的内存区没有锁竞争，所以分配速度更快，每个 TLAB 都是一个线程独享的
+- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做`TLAB(Thread Local Allocation Buffer)`。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度；大对象无法再TLAB分配；基于 CAS 的独享线程（Mutator Threads）可以优先将对象分配在 Eden 中的一块内存，因为是 Java 线程独享的内存区没有锁竞争，所以分配速度更快，每个 TLAB 都是一个线程独享的；可以通过 `-XX:UseTLAB` 设置是否开启 TLAB 空间；一旦对象在 TLAB 空间分配内存失败时，JVM 就会尝试着通过使用加锁机制确保数据操作的原子性，从而直接在 Eden 空间中分配内存；
 - 元数据、编译后的代码、常量都都是在堆外的；
 
 **堆与栈的区别：**
@@ -935,7 +942,7 @@ Exception in thread "main" java.lang.OutOfMemoryError: Java heap space
 
 ### 6.2.1、BootStrap ClassLoader-启动类加载器
 
-是Java类加载层次中最顶层的类加载器，负责加载JDK中的核心类库，Bootstrap 类加载器没有任何父类加载器，如果你调用String.class.getClassLoader()，会返回null，任何基于此的代码会抛出NUllPointerException异常。Bootstrap 加载器被称为初始类加载器；如：rt.jar、resources.jar、charsets.jar等，可通过如下程序获得该类加载器从哪些地方加载了相关的jar或class文件：将存放在 `JAVA_HOME\lib` 目录下或者被-Xbootclasspath 参数所指定的路径中，并且是虚拟机识别的类加载虚拟机内存中
+是Java类加载层次中最顶层的类加载器，负责加载JDK中的核心类库，Bootstrap 类加载器没有任何父类加载器，如果你调用String.class.getClassLoader()，会返回null，任何基于此的代码会抛出NUllPointerException异常。Bootstrap 加载器被称为初始类加载器；如：rt.jar、resources.jar、charsets.jar等，可通过如下程序获得该类加载器从哪些地方加载了相关的jar或class文件：将存放在 `JAVA_HOME\lib` 目录下或者被`-Xbootclasspath` 参数所指定的路径中，并且是虚拟机识别的类加载虚拟机内存中
 
 ```java
 URL[] urLs = Launcher.getBootstrapClassPath().getURLs();
@@ -979,6 +986,8 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 ```
 
 如果碰到类似`NoSuchMethodError、NoClassDefFoundError、NoClassDefFoundError`找不到类的错误信息，可以使用jvm参数`-verbose:class`方便地定位该问题，使用该参数可以快速地定位某个类是从哪个jar包加载的
+
+> 注意: 这里父类加载器并不是通过继承关系来实现的，而是采用组合实现的
 
 ## 6.3、ClassLoader 加载类原理
 
@@ -1105,14 +1114,17 @@ JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相�
 */			
 protected Class<?> loadClass(String name， boolean resolve)throws ClassNotFoundException{
 	synchronized (getClassLoadingLock(name)) {
-		// First， check if the class has already been loaded
+		// 首先判断该类型是否已经被加载
 		Class<?> c = findLoadedClass(name);
 		if (c == null) {
 			long t0 = System.nanoTime();
 			try {
+				// 如果没有被加载，就委托给父类加载或者委派给启动类加载器加载
 				if (parent != null) {
+					//如果存在父类加载器，就委派给父类加载器加载
 					c = parent.loadClass(name， false);
 				} else {
+					//如果不存在父类加载器，就检查是否是由启动类加载器加载的类，通过调用本地方法findBootstrapClass
 					c = findBootstrapClassOrNull(name);
 				}
 			} catch (ClassNotFoundException e) {
@@ -1123,6 +1135,7 @@ protected Class<?> loadClass(String name， boolean resolve)throws ClassNotFound
 				// If still not found， then invoke findClass in order
 				// to find the class.
 				long t1 = System.nanoTime();
+				// 如果父类加载器和启动类加载器都不能完成加载任务，才调用自身的加载功能
 				c = findClass(name);
 				// this is the defining class loader; record the stats
 				sun.misc.PerfCounter.getParentDelegationTime().addTime(t1 - t0);
@@ -1245,8 +1258,8 @@ public class NetworkClassLoader extends ClassLoader {
 
 - `Class.forName(name)` 实际调用的是 `Class.forName(classname, initialized, classloader)`，三个参数分别是：需要加载的class的名字、是否需要初始化、指定的类加载器，保证一个Java类被有效得加载到内存中；类默认会被初始化，即执行内部的静态块代码以及保证静态属性被初始化；默认会使用当前的类加载器来加载对应的类。
 - `ClassLoader.loadClass` 实际调用的是`ClassLoader.loadClass(name, resolve);`参数分别为：需要加载的class的名字、是否需要进行链接，如果采用这种方式的类加载策略，由于双亲托管模型的存在，最终都会将类的加载任务交付给`Bootstrap ClassLoader`进行加载；
-- `Class.forNam`e 方法执行之后已经对被加载类的静态变量分配完了存储空间；而 `ClassLoader.loadClass()`方法并没有一定执行完链接这一步；当想动态加载一个类且这个类又存在静态代码块或者静态变量而你在加载时就想同时初始化这些静态代码块则应偏向于使用 `Class.forName()` 方法。比如在加载数据库驱动的时，一般使用的是`Class.forName("com.mysql.Driver")`，该类中有一个static方法，注册驱动，就是为什么需要使用`Class.forName`，可以根据自身的需求继承ClassLoader类实现一个自定义的类加载器实现类的加载；
-- `Class.forName()` 方法可以获取原生类型的 Class，而 `ClassLoader.loadClass()` 则会报错
+- `Class.forName`，方法执行之后已经对被加载类的静态变量分配完了存储空间；而 `ClassLoader.loadClass()`方法并没有一定执行完链接这一步；当想动态加载一个类且这个类又存在静态代码块或者静态变量而你在加载时就想同时初始化这些静态代码块则应偏向于使用 `Class.forName()` 方法。比如在加载数据库驱动的时，一般使用的是`Class.forName("com.mysql.Driver")`，该类中有一个static方法，注册驱动，就是为什么需要使用`Class.forName`，可以根据自身的需求继承ClassLoader类实现一个自定义的类加载器实现类的加载；
+- `Class.forName()` 方法可以获取原生类型的 Class，而 `ClassLoader.loadClass()` 则会报错；
 
 ## 6.7、什么时候使用类加载器
 
@@ -1266,7 +1279,7 @@ public class NetworkClassLoader extends ClassLoader {
 
 *注意：类加载过程中，除了在加载阶段用过可以通过自定义类加载器参与之外，其余的动作完全由虚拟机主导和控制*
 
-### 6.8.1、加载
+### 6.8.1、加载：查找并加载类的二进制数据
 
 在加载阶段，虚拟机需要完成以下3件事情：
 
@@ -1288,23 +1301,20 @@ public class NetworkClassLoader extends ClassLoader {
 
 ---
 
-### 6.8.2、验证
+### 6.8.2、验证：确保被加载的类的正确性
 
 连接阶段的第一步，这一阶段的目的是为了确保 Class 文件的字节流中包含的信息符合当前虚拟机的要求，并且不会危害虚拟机自身的安全；验证阶段大致会完成 4 个阶段的检验动作
-
 - （1）文件格式验证：验证字节流是否符合Class文件格式的规范，并且能被当前版本的虚拟机处理，主要验证点：
-
-	- 是否以魔数0xCAFEBABE开头；
+	- 是否以魔数`0xCAFEBABE`开头；
 	- 主次版本号是否在当前虚拟机的处理范围之内；
 	- 常量池中的常量是否有不被支持的类型(检测常量 tag 标志)；
 	- 指向常量的各种索引值使用有执行不存在的常量或不符合类型的常量；
-	- CONSTANT_Utf8_info 型常量中是否有不符合UTF8编码的数据；
+	- `CONSTANT_Utf8_info` 型常量中是否有不符合UTF8编码的数据；
 	- Class 文件中各个部分及文件本身是否有被删除的或附件的其他信息；
 
 	该验证的主要目的是保证输入的字节流能正确的解析并存储与方法区之内，格式上符合描述的一个Java类型信息的要求。基于二进制字节流进行验证的，只有通过了这个阶段的验证之后，字节流才会进入内存的方法区进行存储，后面的三个验证都是基于方法区的存储结构进行的，不会在直接操作字节流。
 
 - （2）元数据验证：对字节码描述的信息进行语义分析(注意：对比javac编译阶段的语义分析)，以保证其描述的信息符合Java语言规范的要求；验证点如下：
-
 	- 这个类是否有父类，除了 java.lang.Object 之外，所有的类都应当有父类；
 	- 这个类的父类是否继承了不允许被继承的类(被 final 修饰的类)；
 	- 如果这个类不是抽象类，是否实现了其父类或接口之中要求实现的所有方法；
@@ -1313,7 +1323,6 @@ public class NetworkClassLoader extends ClassLoader {
 	主要目的是：对类的元数据进行语义校验，保证不存在不符合Java语言规范的元数据信息
 
 - （3）字节码验证：最复杂的阶段。主要目的：通过数据流和控制流分析，确定程序语义是合法的、符合逻辑的；这个阶段会类的方法体进行校验分析，保证被校验类的方法在运行时不会做出危害虚拟机安全的事件
-
 	- 保证任意时刻操作数栈的数据类型与指令代码序列都能配合工作;
 	- 保证跳转指令不会跳转到方法体以外的字节码指令上;
 	- 保证方法体中的类型转换是有效的.
@@ -1328,10 +1337,9 @@ public class NetworkClassLoader extends ClassLoader {
 
 	如果无法通过符号引用验证，那么将抛出一个`java.lang.IncompatibleClassChangeError`异常的子类。
 	
-
 验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响。如果所运行的的全部代码都已经被反复使用和验证，那么在实施阶段可以考虑采用 `-Xverifynone`参数来关闭大部分的类验证措施，缩短虚拟机加载的时间
 
-### 6.8.3、准备
+### 6.8.3、准备：为类的静态变量分配内存，并将其初始化为默认值
 
 - 是正式为类变量分配内存并设置类变量初始值的阶段，变量所使用的内存都将在方法区中进行分配：这时候进行内存分配的仅包括类变量（static 修饰的变量），而不包括实例变量，实例变量会在对象实例化时随着对象一块分配在Java堆中；
 
@@ -1340,13 +1348,16 @@ public class NetworkClassLoader extends ClassLoader {
 	int -> 0	long -> 0L	short -> (short)0	char -> '\u0000'	byte -> (byte)0
 	boolean -> false	float -> 0.0f 	double -> 0.0d 	reference -> null
 	```
+	- 对基本数据类型来说，对于类变量(static)和全局变量，如果不显式地对其赋值而直接使用，则系统会为其赋予默认的零值，而对于局部变量来说，在使用前必须显式地为其赋值，否则编译时不通过。 
+	- 对于同时被static和final修饰的常量，必须在声明的时候就为其显式地赋值，否则编译时不通过；而只被final修饰的常量则既可以在声明时显式地为其赋值，也可以在类初始化时显式地为其赋值，总之，在使用前必须为其显式地赋值，系统不会为其赋予默认零值。 
+	- 对于引用数据类型reference来说，如数组引用、对象引用等，如果没有对其进行显式地赋值而直接使用，系统都会为其赋予默认的零值，即null；
+	- 如果在数组初始化时没有对数组中的各元素赋值，那么其中的元素将根据对应的数据类型而被赋予默认的零值；
 
 - 特殊情况是指：`public static final int value=123`，即当类字段的字段属性是 ConstantValue时，会在准备阶段初始化为指定的值，所以标注为 final 之后，value的值在准备阶段初始化为`123`而`非0`
 	
-### 6.8.4、解析
+### 6.8.4、解析：把类中的符号引用转换为直接引用
 
 解析阶段是虚拟机将常量池内的符号引用替换为直接引用的过程
-
 - 虚拟机要求在执行`anewarray、checkcast、getfield、getstatic、instanceof、invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual、ldc、ldc_w、multianewarray、new、putstatic、putfield`这16个用于操作符合引用的字节码指令之前，先对它们所使用的符号进行解析。虚拟机可以根据需要来判断是在类加载器加载时就对常量池中的符号引用进行解析，还是等到一个符号引用将要被使用前才去解析他；
 
 - 除`invokedynamic`指令外，虚拟机实现可以对第一次解析的结果进行缓存（在运行时常量池中记录直接引用，并把常量标记为已解析状态）从而避免解析动作重复。无论是否真正执行了多次解析动作，虚拟机需要保证的是在同一个实体中。
@@ -1418,6 +1429,14 @@ public class NetworkClassLoader extends ClassLoader {
 	解析的过程就是确保这些被引用的类能被正确的找到。解析的过程可能会导致其它的Java类被加载。可以在符号引用第一次被使用时完成，即所谓的
 	延迟解析（late resolution）但对用户而言，这一步永远是延迟解析的，即使运行时会执行 early resolution，但程序不会显示的在第一次判断
 	出错误时抛出错误，而会在对应的类第一次主动使用的时候抛出错误！
+
+### 6.8.7、卸载
+
+Java虚拟机将结束生命周期的几种情况
+- 执行了`System.exit()`方法；
+- 程序正常执行结束；
+- 程序在执行过程中遇到了异常或错误而异常终止；
+- 由于操作系统出现错误而导致Java虚拟机进程终止；
 
 ## 6.9、Java 类的初始化
 
