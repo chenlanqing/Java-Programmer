@@ -25,6 +25,12 @@ Presto查询引擎是一个Master-Slave的架构，由一个Coordinator节点，
 - 类BlinkDB的近似查询
 - GC控制
 
+### 1.3、对比hive
+
+- 本质区别：Hive是把一个查询转化成多个MapReduce任务，然后一个接一个执行。执行的中间结果通过对磁盘的读写来同步。然而，Presto没有使用MapReduce，它是通过一个定制的查询和执行引擎来完成的。它的所有的查询处理是在内存中，这也是它的性能很高的一个主要原因；
+
+- presto由于是基于内存的，而hive是在磁盘上读写的，因此presto比hive快很多，但是由于是基于内存的当多张大表关联操作时易引起内存溢出错误；
+
 ## 2、环境搭建
 
 启动presto：  ./launcher start

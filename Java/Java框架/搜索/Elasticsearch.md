@@ -4409,7 +4409,6 @@ elasticsearch的搜索会分两阶段进行：
 - 数据量不大时，可以将主分片设置为1，当数据量足够大时，只要保证文档均匀分散在各个分片上，结果一般就不会出现偏差；
 - 使用 DFS Query Then Fetch：搜索的url中指定参数：`_search?search_type=dfs_query_then_fetch`；到每个分片把各个分片的词频和文档频率进行搜集，然后完整的进行一次相关性算分，耗费更加多的CPU和内存，执行性能低下，一般不建议使用；
 
-
 Elasticsearch设计的理念就是分布式搜索引擎，底层其实还是基于lucene的。其核心思想就是在多台机器上启动多个es进程实例，组成了一个es集群。
 - ES中存储数据的基本单位是索引：index
 - 一个index里面会有多个type，每个type可以认为是一个mysql中的表

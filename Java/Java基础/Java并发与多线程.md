@@ -2129,6 +2129,12 @@ private void resize() {
 
 在线程池中，由于大部分线程都是重用而不是重新创建，那么对应线程中的ThreadLocal没有清理，造成数据篡写；所以在线程执行完成时，要对 ThreadLocal 进行清理（清除掉与本线程相关联的 value 对象）。不然，被复用的线程去执行新的任务时会使用被上一个线程操作过的 value 对象，从而产生不符合预期的结果。
 
+### 12.8、TransmittableThreadLocal
+
+[TransmittableThreadLocal](https://github.com/alibaba/transmittable-thread-local) 是阿里开源的，在使用线程池等会池化复用线程的执行组件情况下，提供ThreadLocal值的传递功能，解决异步执行时上下文传递的问题；
+
+在ThreadLocal的需求场景即是TTL的潜在需求场景，如果你的业务需要『在使用线程池等会池化复用线程的组件情况下传递ThreadLocal』则是TTL目标场景
+
 ## 13、死锁
 
 两个或更多线程阻塞着等待其它处于死锁状态的线程所持有的锁；

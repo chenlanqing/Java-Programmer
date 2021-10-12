@@ -53,9 +53,7 @@
 
     ```java
     public static void main(String[] args) throws InterruptedException {
-
         Thread t1 = new Thread(new Runnable() {
-
             @Override
             public void run() {
                 try {
@@ -68,7 +66,6 @@
         t1.setDaemon(false);
         t1.setName("MyThread1");
         Thread t2 = new Thread(new Runnable() {
-            
             @Override
             public void run() {
                 try {
@@ -78,7 +75,6 @@
                 }
             }
         });
-        
         t2.setDaemon(false);
         t2.setName("MyThread2");
         t1.start();
@@ -118,12 +114,12 @@
 
 - 对于 WAITING 状态的线程栈
     ```java
-        private static final Object lock = new Object();
-            public static void main(String[] args) throws InterruptedException {
-                synchronized (lock) {
-                    lock.wait();
-                }
+    private static final Object lock = new Object();
+        public static void main(String[] args) throws InterruptedException {
+            synchronized (lock) {
+                lock.wait();
             }
+        }
     ```
 
     得到的线程栈为：
@@ -142,7 +138,6 @@
 由于线程栈反映的是 JVM 在某个时间点的线程状态，因此分析线程栈时，为避免偶然性，有必要多输出几份进行分析
 
 - （1）获得JVM进程ID
-
     - jps 命令：
     ```
     [root@localhost ~]# jps
@@ -157,7 +152,6 @@
     ```
 
 - （2）获取线程栈信息
-
     - jstack命令：JDK自带
         ```
         [root@localhost ~]# jstack 5163

@@ -151,7 +151,6 @@ abstract static class Sync extends AbstractQueuedSynchronizer {
         setState(0); // reset to unlocked state
     }
 }　　
-
 ```
 
 ### 3.1、非公平获取锁：nonfairTryAcquire

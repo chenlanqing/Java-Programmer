@@ -92,22 +92,22 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 
 JDK1.2以前，Java中的引用：如果reference类型的数据中存储的数值代表的是另一块内存的起始地址，就称为这块内存代表一个引用；
 
-JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refefence）、软引用（Soft Refefence）、弱引用（Weak Refefence）、虚引用（Phantom Refefence），4种引用强度依次逐渐减弱
-- 强引用(Strong Refefence)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
+JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Reference）、软引用（Soft Reference）、弱引用（Weak Reference）、虚引用（Phantom Reference），4种引用强度依次逐渐减弱；
+- 强引用(Strong Reference)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
 
-- 软引用(Soft Refefence)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常，JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
+- 软引用(Soft Reference)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常，JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
     ```java
     Object o = new Object();
     SoftReference<Object> softReference = new SoftReference<>(o);
     ```
 
-- 弱引用(Weak Refefence)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakRefefence 类来实现弱引用；
+- 弱引用(Weak Reference)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakReference 类来实现弱引用；
     ```java
     Object o = new Object();
     WeakReference<Object> weakReference = new WeakReference<>(o);
     ```
 
-- 虚引用(Phantom Refefence)：虚引用并不会决定对象的生命周期，幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomRefefence 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；当虚引用被加入到引用队列的时候，说明这个对象已经被回收，可以在所引用的对象回收之后可以采取必要的行动
+- 虚引用(Phantom Reference)：虚引用并不会决定对象的生命周期，幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomReference 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；当虚引用被加入到引用队列的时候，说明这个对象已经被回收，可以在所引用的对象回收之后可以采取必要的行动
     ```java
     Object o = new Object();
     // 必须结合引用队列
@@ -200,15 +200,17 @@ public class FinalizeEscapeGC {
 
 - 在大量使用反射、动态代码、CGLib等byteCode框架，动态生存JSP以及OSGi这类自定义ClassLoader的场景都需要虚拟机具备类卸载功能，以保证永久代不会溢出。
 
+可以通过 `-Xnoclassgc` 参数来控制是否对类进行卸载
+
 # 三、垃圾收集算法
 
-## 1、标记-清除算法(Marke-Sweep)-最基础的收集算法
+## 1、标记-清除算法(Mark-Sweep)-最基础的收集算法
 
 **1.1、算法分为"标记"和"清除"两个阶段：**
 
 首先标记出所有需要回收的对象，在标记完成后统一回收所有被标记的对象
 
-回收过程主要分为两个阶段，第一阶段为追踪（Tracing）阶段，即从 GC Root 开始遍历对象图，并标记（Mark）所遇到的每个对象，第二阶段为清除（Sweep）阶段，即回收器检查堆中每一个对象，并将所有未被标记的对象进行回收，整个过程不会发生对象移动。整个算法在不同的实现中会使用三色抽象（Tricolour Abstraction）、位图标记（BitMap）等技术来提高算法的效率，存活对象较多时较高效。
+回收过程主要分为两个阶段，第一阶段为追踪（Tracing）阶段，即从 GC Root 开始遍历对象图，并标记（Mark）所遇到的每个对象，第二阶段为清除（Sweep）阶段，即回收器检查堆中每一个对象，并将所有未被标记的对象进行回收，整个过程不会发生对象移动。整个算法在不同的实现中会使用三色抽象（Tricolor Abstraction）、位图标记（BitMap）等技术来提高算法的效率，存活对象较多时较高效。
 
 **1.2、不足之处**
 
@@ -372,7 +374,7 @@ CARD_TABLE [this address >> 9] = 0;
 
 于垃圾回收算法，基本就是那么几种：标记-清除、标记-复制、标记-整理。在此基础上可以增加分代（新生代/老年代），每代采取不同的回收算法，以提高整体的分配和回收效率。
 
-无论使用哪种算法，标记总是必要的一步。这是理算当然的，你不先找到垃圾，怎么进行回收？垃圾回收器的工作流程大体如下：
+无论使用哪种算法，标记总是必要的一步。这是理算当然的，如果不先找到垃圾，怎么进行回收？垃圾回收器的工作流程大体如下：
 - 标记出哪些对象是存活的，哪些是垃圾（可回收）；
 - 进行回收（清除/复制/整理），如果有移动过对象（复制/整理），还需要更新引用
 
@@ -400,14 +402,18 @@ mark -> sweep -> mutation -> mark -> sweep ...
 
 ### 7.2、三色标记
 
+- [什么是三色标记](https://mp.weixin.qq.com/s/01V4wDOmlodnR4mLpZrm8A)
+
+#### 7.2.1、三色标记思想与过程
+
 三色标记在双色标记的基础上增加了一种颜色（灰色），代表未完成的工作；
 
 ![](image/GC-三色标记-1.png)
 
 我们把遍历对象图过程中遇到的对象，按“是否访问过”这个条件标记成以下三种颜色：
 - 白色：尚未访问过。
-- 本对象已访问过，而且本对象引用到的其他对象也全部访问过了。
-- 本对象已访问过，但是本对象引用到的其他对象尚未全部访问完。全部访问后，会转换为黑色
+- 灰色：本对象已访问过，而且本对象引用到的其他对象也全部访问过了（GC需要从此对象中去寻找垃圾）
+- 黑色：本对象已访问过，但是本对象引用到的其他对象尚未全部访问完。全部访问后，会转换为黑色（程序所需要的对象）
 
 当存在不确定数据时，sweep无法进行，继续标记
 
@@ -424,6 +430,11 @@ mark -> sweep -> mutation -> mark -> sweep ...
 
 ![](image/GC-三色标记-3.png)
 
+#### 7.2.2、三色标记存在问题
+
+- 浮动垃圾：并发标记的过程中，若一个已经被标记成黑色或者灰色的对象，突然变成了垃圾，由于不会再对黑色标记过的对象重新扫描，所以不会被发现，那么这个对象不是白色的但是不会被清除，重新标记也不能从GC Root中去找到，所以成为了浮动垃圾，浮动垃圾对系统的影响不大，留给下一次GC进行处理即可；
+
+- 对象漏标问题（需要的对象被回收）：并发标记的过程中，一个业务线程将一个未被扫描过的白色对象断开引用成为垃圾（删除引用），同时黑色对象引用了该对象（增加引用）（这两部可以不分先后顺序）；因为黑色对象的含义为其属性都已经被标记过了，重新标记也不会从黑色对象中去找，导致该对象被程序所需要，却又要被GC回收，此问题会导致系统出现问题，而CMS与G1，两种回收器在使用三色标记法时，都采取了一些措施来应对这些问题，CMS对增加引用环节进行处理（Increment Update），G1则对删除引用环节进行处理(SATB)
 
 # 四、垃圾收集器
 
@@ -505,9 +516,9 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 ## 6、CMS（Concurrent Mark Sweep）收集器-老年代
 
-它管理新生代的方式与Parallel收集器和Serial收集器相同，而在老年代则是尽可能得并发执行，每个垃圾收集器周期只有2次短停顿
+它管理新生代的方式与Parallel收集器和Serial收集器相同，而在老年代则是尽可能得并发执行，每个垃圾收集器周期只有2次短停顿；能与 CMS 搭配使用的新生代垃圾收集器有 Serial 收集器和 ParNew 收集器；
 
-追求最短 GC 回收停顿时间，为了消除Throught收集器和Serial收集器在Full GC周期中的长时间停顿，核心是减少停顿时间;
+追求最短 GC 回收停顿时间，为了消除throughput收集器和Serial收集器在Full GC周期中的长时间停顿，核心是减少停顿时间;
 
 > 注意：在JDK9 被标记弃用，JDK14 被删除。
 
@@ -532,6 +543,9 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 	- CMS 基于标记-清除算法实现的，那么垃圾收集结束后会产生大量的空间碎片，空间碎片过多时，将会给大对象的分配带来很大麻烦，往往出现老年代还有很大空间剩余，但是无法找到足够大的连续空间来分配当前对象们，不得不提前触发一次 Full GC。
 
 [CMS碎片率](https://mp.weixin.qq.com/s/VnzupPEFTl7Z_Zbdsfw6_Q)
+常见以下场景会触发内存碎片压缩：
+- 新生代 Young GC 出现新生代晋升担保失败（promotion failed)）
+- 程序主动执行System.gc()；
 
 ### 6.3、CMS相关参数
 
@@ -589,6 +603,8 @@ CMS GC 时出现`promotion failed`和`concurrent mode failure`
 
 G1是一种服务器端的垃圾收集器，应用在多处理器和大容量内存环境中，在实现高吞吐量的同时，尽可能的满足垃圾收集暂停时间的要求；
 
+G1 最主要的设计目标是：实现可预期及可配置的 STW 停顿时间
+
 ### 7.1、特点
 
 - 并行与并发
@@ -615,6 +631,8 @@ G1收集器的设计目标是取代CMS收集器，它同CMS相比，在以下方
 
 region的大小是一致，数值在`1M到32M字节之间的一个2的幂值`，`JVM会尽量划分2048个左右、同等大小的region`，这点从源码[heapRegionBounds.hpp](http://hg.openjdk.java.net/jdk/jdk/file/fa2f93f99dbc/src/hotspot/share/gc/g1/heapRegionBounds.hpp)可以看到；
 
+为实现大内存空间的低停顿时间的回收，将划分为多个大小相等的 Region。每个小堆区都可能是 Eden 区，Survivor 区或者 Old 区，但是在同一时刻只能属于某个代；
+
 在上图中，我们注意到还有一些Region标明了H，它代表Humongous，这表示这些Region存储的是巨大对象（humongous object，H-obj），即大小大于等于region一半的对象；H-obj有如下几个特征：
 - H-obj直接分配到了`old gen`，防止了反复拷贝移动；
 - H-obj在`global concurrent marking`阶段的`cleanup 和 full GC`阶段回收
@@ -627,7 +645,11 @@ region的大小是一致，数值在`1M到32M字节之间的一个2的幂值`，
 void HeapRegion::setup_heap_region_size
 ```
 
-*region的设计有什么副作用：*
+G1 把堆内存划分成一个个 Region 的意义在于：
+- 每次 GC 不必都去处理整个堆空间，而是每次只处理一部分 Region，实现大容量内存的 GC；
+- 通过计算每个 Region 的回收价值，包括回收所需时间、可回收空间，在有限时间内尽可能回收更多的垃圾对象，把垃圾回收造成的停顿时间控制在预期配置的时间范围内；
+
+**region的设计有什么副作用：**
 
 region的大小和大对象很难保证一致，这会导致空间浪费；并且region太小不合适，会令你在分配大对象时更难找到连续空间；
 
@@ -656,9 +678,8 @@ G1根据这个模型统计计算出来的历史数据来预测本次收集需要
 #### 7.3.1、GC模式
 
 G1提供了两种GC模式，Young GC和Mixed GC，两种都是完全Stop The World的
-
 - Young GC：选定所有年轻代里的Region。通过控制年轻代的region个数，即年轻代内存大小，来控制young GC的时间开销；
-- Mixed GC：选定所有年轻代里的Region，外加根据global concurrent marking统计得出收集收益高的若干老年代Region。在用户指定的开销目标范围内尽可能选择收益高的老年代Region
+- Mixed GC：当老年代空间达到阈值会触发 Mixed GC时，会选定所有年轻代里的Region，外加根据global concurrent marking统计得出收集收益高的若干老年代Region。在用户指定的开销目标范围内尽可能选择收益高的老年代Region；
 
 Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC实在无法跟上程序分配内存的速度，导致老年代填满无法继续进行Mixed GC，就会使用serial old GC（Full GC）来收集整个GC heap，G1 GC 没有Full GC；
 
@@ -671,8 +692,8 @@ Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC
 
 它的执行过程类似CMS，但是不同的是，在G1 GC中，它主要是为Mixed GC提供标记服务的，并不是一次GC过程的一个必须环节。
 
-global concurrent marking的执行过程分为四个步骤：
-- 初始标记（Initial Marking）：仅仅只是标记一下 GC Roots 能直接关联到的对象，速度很快，需要“Stop TheWorld”
+全局并发标记主要是为 Mixed GC 计算找出回收收益较高的 Region 区域，具体分为 5 个阶段：
+- 初始标记（Initial Marking）：仅仅只是标记一下 GC Roots 能直接关联到的对象，速度很快，需要“Stop TheWorld”，暂停所有应用线程（STW），并发地进行标记从 GC Root 开始直接可达的对象（原生栈对象、全局对象、JNI 对象）；
 - 并发标记（Concurrent Marking）：进行 GC Roots 追溯所有对象的过程，可与用户程序并发执行，并且收集各个Region的存活对象信息
 - 最终标记（Final Marking）：修正在并发标记期间因用户程序继续运作而导致标记产生变动的那一部分标记记录
 - 清除垃圾（Cleanup）：清除空Region（没有存活对象的），加入到free list
@@ -681,23 +702,46 @@ global concurrent marking的执行过程分为四个步骤：
 
 #### 7.3.3、G1 GC发生时机
 
-- **1、YoungGC发生时机**
+**1、YoungGC发生时机**
 
-- **2、Mixed GC发生时机**
+当新生代的空间不足时，G1 触发 Young GC 回收新生代空间。
 
-	其实是由一些参数控制着的,另外也控制着哪些老年代Region会被选入CSet
+Young GC 主要是对 Eden 区进行 GC，它在 Eden 空间耗尽时触发，基于分代回收思想和复制算法，每次 Young GC 都会选定所有新生代的 Region。
 
-	- `G1HeapWastePercent`：global concurrent marking结束之后，可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC；
-	- `G1MixedGCLiveThresholdPercent`：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet；
-	- `G1MixedGCCountTarget`：一次global concurrent marking之后，最多执行Mixed GC的次数；
-	- `G1OldCSetRegionThresholdPercent`：一次Mixed GC中能被选入CSet的最多old generation region数量
-	- `-XX:G1HeapRegionSize=n`：设置Region大小，并非最终值
-	- `-XX:MaxGCPauseMillis`：设置G1收集过程目标时间，默认值200ms，不是硬性条件
-	- `-XX:G1NewSizePercent`：新生代最小值，默认值5%
-	- `-XX:G1MaxNewSizePercent`：新生代最大值，默认值60%
-	- `-XX:ParallelGCThreads`：STW期间，并行GC线程数
-	- `-XX:ConcGCThreads=n`：并发标记阶段，并行执行的线程数
-	- `-XX:InitiatingHeapOccupancyPercent`：设置触发标记周期的 Java 堆占用率阈值。默认值是45%
+同时计算下次 Young GC 所需的 Eden 区和 Survivor 区的空间，动态调整新生代所占 Region 个数来控制 Young GC 开销
+
+**2、Mixed GC发生时机**
+
+其实是由一些参数控制着的,另外也控制着哪些老年代Region会被选入CSet
+- `G1HeapWastePercent`：global concurrent marking结束之后，可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC；
+- `G1MixedGCLiveThresholdPercent`：old generation region中的存活对象的占比，只有在此参数之下，才会被选入CSet；
+- `G1MixedGCCountTarget`：一次global concurrent marking之后，最多执行Mixed GC的次数；
+- `G1OldCSetRegionThresholdPercent`：一次Mixed GC中能被选入CSet的最多old generation region数量
+- `-XX:G1HeapRegionSize=n`：设置Region大小，并非最终值
+- `-XX:MaxGCPauseMillis`：设置G1收集过程目标时间，默认值200ms，不是硬性条件
+- `-XX:G1NewSizePercent`：新生代最小值，默认值5%
+- `-XX:G1MaxNewSizePercent`：新生代最大值，默认值60%
+- `-XX:ParallelGCThreads`：STW期间，并行GC线程数
+- `-XX:ConcGCThreads=n`：并发标记阶段，并行执行的线程数
+- `-XX:InitiatingHeapOccupancyPercent`：设置触发标记周期的 Java 堆占用率阈值。默认值是45%
+
+#### 7.3.4、G1 GC存在问题
+
+**Full GC 问题**
+
+G1 的正常处理流程中没有 Full GC，只有在垃圾回收处理不过来（或者主动触发）时才会出现，G1 的 Full GC 就是单线程执行的 Serial old gc，会导致非常长的 STW，是调优的重点，需要尽量避免 Full GC
+
+常见原因如下：
+- 程序主动执行 System.gc()；
+- 全局并发标记期间老年代空间被填满（并发模式失败）；
+- Mixed GC 期间老年代空间被填满（晋升失败）；
+- Young GC 时 Survivor 空间和老年代没有足够空间容纳存活对象；
+
+常见的解决是：
+
+- 增大 `-XX:ConcGCThreads=n` 选项增加并发标记线程的数量，或者 STW 期间并行线程的数量：-XX:ParallelGCThreads=n。
+- 减小 `-XX:InitiatingHeapOccupancyPercent` 提前启动标记周期。
+- 增大预留内存 `-XX:G1ReservePercent=n`，默认值是 10，代表使用 10% 的堆内存为预留内存，当 Survivor 区域没有足够空间容纳新晋升对象时会尝试使用预留内存
 
 ### 7.4、最佳实践
 
@@ -906,14 +950,14 @@ Epsilon（A No-Op Garbage Collector）垃圾回收器控制内存分配，但是
 |ZGC|	-XX:+UseZGC	|使用ZGC，这是个实验参数，需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数；|
 |Epsilon|	-XX:+UseEpsilonGC|	使用EpsilonGC，这是个实验参数，需用-XX:+UnlockExperimentalVMOptions解锁试验参数后，才能使用该参数；|
 
-# 五、GC 执行机制：Minor GC和Full GC
+# 五、GC 执行机制
 
-- 垃圾收集过程：
-	- （1）Java应用不断创建对象，通常都是分配在Eden区，当其空间占用达到一定阈值时，触发minor gc。仍然被引用的对象存活下来，被复制到JVM选择的Survivor区域，而没有被引用的对象被回收。存活对象的存活时间为1；
-	- （2）经过一次minor gc之后，Eden就空闲下来，直到再次达到minor gc触发条件，此时，另一个survivor区域则成为to区域，Eden区域存活的对象和from区域的对象都会被复制到to区域，并且存活的年龄计数被加1；
-	- （3）类似步骤2的过程发生很多次，直到对象年龄计数达到阈值，此时发生所谓的晋升，超过阈值的对象会被晋升到老年代。这个阈值可以通过参数```-XX:MaxTenuringThreshold```指定；
-	
-	通常把老年代的GC成为major gc，对整个堆进行的清理叫做Full GC
+Minor GC和Full GC垃圾收集过程：
+- （1）Java应用不断创建对象，通常都是分配在Eden区，当其空间占用达到一定阈值时，触发minor gc。仍然被引用的对象存活下来，被复制到JVM选择的Survivor区域，而没有被引用的对象被回收。存活对象的存活时间为1；
+- （2）经过一次minor gc之后，Eden就空闲下来，直到再次达到minor gc触发条件，此时，另一个survivor区域则成为to区域，Eden区域存活的对象和from区域的对象都会被复制到to区域，并且存活的年龄计数被加1；
+- （3）类似步骤2的过程发生很多次，直到对象年龄计数达到阈值，此时发生所谓的晋升，超过阈值的对象会被晋升到老年代。这个阈值可以通过参数`-XX:MaxTenuringThreshold`指定；
+
+通常把老年代的GC成为major gc，对整个堆进行的清理叫做Full GC
 
 ## 1、Minor GC(YGC)
 
@@ -960,9 +1004,11 @@ public class JVM {
 }
 ```
 
-## 2、Major GC
+## 2、Mixed GC/Old GC
 
-对老年代的GC成为major GC
+Old GC：只清理老年代空间的 GC 事件，只有 CMS 的并发收集是这个模式；
+
+Mixed GC：清理整个新生代以及部分老年代的 GC，只有 G1 有这个模式；
 
 ## 3、Full-GC
 
@@ -984,7 +1030,7 @@ FullGC次数过多的原因：
 
 ## 4、内存回收与分配策略
 
-### 4.1、对象优先分配在 Eden 区域:
+### 4.1、对象优先分配在 Eden 区域
 
 大多数情况下，对象在新生代的Eden区中分配，如果Eden区没有足够的空间时，虚拟机将发起一次 MinorGC
 
@@ -1032,7 +1078,7 @@ Heap
 
 - 所谓大对象是指需要大量连续内存空间的Java对象，最典型的大对象就是那种很长的字符串以及数组.
 - 经常出现大对象容易导致内存还有不少空间时就提前触发垃圾收集来获取足够的连续空间分配给新生成的大对象.
-- 虚拟机提供了 `-XX:PertenureSizeThreshold` 参数，令大于这个设置值的对象直接在老年代分配，避免在Eden区和两个Survivor区之间发生大量的内存复制
+- 虚拟机提供了 `-XX:PretenureSizeThreshold` 参数，令大于这个设置值的对象直接在老年代分配，避免在Eden区和两个Survivor区之间发生大量的内存复制
 
 ### 4.3、长期存活的对象将进入老年代
 
@@ -1048,7 +1094,7 @@ Heap
 
 ### 4.5、空间分配担保
 
-在发生 MinorGC 之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间，如果这个条件成立，那么MinorGC可用确保是安全的。如果不成立，则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败，如果允许，那么会继续检查老年代最大可用连续空间是否大于历次晋升到老年代对象的平均大小，如果大于，将尝试着进行一次MinorGC，有风险；如果小于或者 HandlePromotionFailure 设置不允许毛线，那时会改为进行一次 FullGC.
+在发生 YGC 之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间，如果这个条件成立，那么YGC可用确保是安全的。如果不成立，则虚拟机会查看 HandlePromotionFailure 设置是否允许打包失败，如果允许，那么会继续检查老年代最大可用连续空间是否大于历次晋升到老年代对象的平均大小，如果大于，将尝试着进行一次 YGC，有风险；如果小于或者 HandlePromotionFailure 设置不允许冒险，那时会改为进行一次 FullGC.
 
 ## 5、GC参数
 
@@ -1181,7 +1227,7 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 
 - 监听器的使用，在释放对象的同时没有相应删除监听器的时候也可能导致内存泄露
 
-# 八、如何优化GC 
+# 八、GC调优
 
 ## 1、监控GC
 
@@ -1203,7 +1249,13 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 ### 2.1、GC优化的目的
 
 - 将转移到老年代的对象数量降到最少：减少被移到老年代空间对象的数量，可以调整新生代的空间。减少 FullGC 的频率.
-- 减少 Full GC 执行的时间：FullGC 的执行时间要比 MinorGC 要长很多。如果试图通过削减老年代空间来减少 FullGC 的执行时间，可能会导致OutOfMemoryError 或者增加 FullGC 执行此数与之相反，如果你试图通过增加老年代空间来减少 Full GC 执行次数，执行时间会增加
+- 减少 Full GC 执行的时间：FullGC 的执行时间要比 MinorGC 要长很多。如果试图通过削减老年代空间来减少 FullGC 的执行时间，可能会导致OutOfMemoryError 或者增加 FullGC 执行此数与之相反，如果你试图通过增加老年代空间来减少 Full GC 执行次数，执行时间会增加；
+
+目标：
+- 响应速度（Responsiveness）：响应速度指程序或系统对一个请求的响应有多迅速；比如，用户订单查询响应时间，对响应速度要求很高的系统，较大的停顿时间是不可接受的。调优的重点是在短的时间内快速响应。
+- 吞吐量（Throughput）：吞吐量关注在一个特定时间段内应用系统的最大工作量；例如每小时批处理系统能完成的任务数量，在吞吐量方面优化的系统，较长的 GC 停顿时间也是可以接受的，因为高吞吐量应用更关心的是如何尽可能快地完成整个任务，不考虑快速响应用户请求；
+
+> 在 GC 调优中，GC 导致的应用暂停时间影响系统响应速度，GC 处理线程的 CPU 使用率影响系统吞吐量
 
 ### 2.2、GC优化需要考虑的Java参数
 

@@ -3283,7 +3283,23 @@ binlog 方案
 
 https://mp.weixin.qq.com/s/aCWkUiE1-h5mtDrqEiPKHQ
 
-# 十八、其他
+# 十八、elasticsearch
+
+## 1、es查询过程
+
+elasticsearch的搜索会分两阶段进行：
+- 第一阶段： Query
+- 第二阶段： Fetch
+
+**Query阶段**
+- 用户发出搜索请求到es节点，节点收到请求后，会以 coordinating 节点的身份，在6个主副分片中随机选择三个分片，发送查询请求；
+- 被选择的分片执行查询，进行排序，然后每个分片都会返回 from + size 个排序后的文档id 和 排序值给到 coordinating 节点；
+
+**Fetch阶段**
+- coordinating 节点会将query阶段从每个分片获取的排序后的文档id列表，重新进行排序，选取from 到 from + size 个文档；
+- 以multi get 请求的方式，到相应的分片获取详细的文档数据；
+
+# 十九、其他
 
 ## 1、lombok实现原理
 
