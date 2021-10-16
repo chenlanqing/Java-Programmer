@@ -1910,6 +1910,29 @@ public class FirstInterceptor implements HandlerInterceptor {
 
 FirstInterceptor#preHandle ==> SecondInterceptor#preHandle ==> HandlerAdapter#handle ==> SecondInterceptor#postHandle ==> FirstInterceptor#postHandle ==> DispatcherServlet#render ==> SecondInterceptor#afterCompletion ==> FirstInterceptor#afterCompletion
 
+SpringBoot配送顺序
+```java
+@Configuration
+public class InterceptorConfig implements WebMvcConfigurer {
+    @Resource
+    private FirstInterceptor firstInterceptor;
+    @Resource
+    private SecondInterceptor secondInterceptor;
+    @Resource
+    private ThirdInterceptor thirdInterceptor;
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        // 1.加入的顺序就是拦截器执行的顺序，
+        // 2.按顺序执行所有拦截器的preHandle
+        // 3.所有的preHandle 执行完再执行全部postHandle 最后是postHandle
+        registry.addInterceptor(thirdInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(secondInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(firstInterceptor).addPathPatterns("/**");
+
+    }
+}
+```
+
 ### 17.2、拦截器与Servlet的过滤器的区别
 
 - 拦截器是基于Java的反射机制的，而过滤器是基于函数回调；

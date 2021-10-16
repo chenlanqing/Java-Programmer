@@ -488,7 +488,7 @@ Serial收集器对于新生代采用复制算法实现，对于老年代采用�
 - 在JDK1.5中使用CMS来收集老年代的时候，新生代只能选用Serial、ParNew收集器中的一个，ParNew收集器使用`-XX:UseConcMarkSweepGC`选项后的默认新生代收集器，也可以使用 `-XX:+UseParNewGC` 选项来强制指定它；
 - ParNew 收集器在单 CPU 的环境中绝对不会有比 Serial 收集器有更好的效果，甚至由于存在线程交互的开销，该收集器在通过超线程技术实现的两个CP 的环境中都不能百分之百地保证可以超越；
 - 场景：吞吐量要求 > 延迟要求
-- 可以通过 -XX:ParallelGCThreads 参数来控制收集的线程数，整个过程都是 STW 的，常与 CMS 组合使用
+- 可以通过 `-XX:ParallelGCThreads` 参数来控制收集的线程数，整个过程都是 STW 的，常与 CMS 组合使用
 
 ## 3、Parallel Scavenge 收集器
 
@@ -684,9 +684,9 @@ G1提供了两种GC模式，Young GC和Mixed GC，两种都是完全Stop The Wor
 Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC实在无法跟上程序分配内存的速度，导致老年代填满无法继续进行Mixed GC，就会使用serial old GC（Full GC）来收集整个GC heap，G1 GC 没有Full GC；
 
 为了避免G1引发FullGC，实践思路：
-- 增加预留内存（增大 -XX:G1ReservePercent，默认为堆的10%）；
-- 更早的回收垃圾（减少 -XX:InitiatingHeapOccupancyPercent，老年代达到该值时就触发Mixed GC，默认是45%）
-- 增加并发阶段使用的线程数（增大 -XX:ConcGCThreads）;
+- 增加预留内存（增大 `-XX:G1ReservePercent`，默认为堆的10%）；
+- 更早的回收垃圾（减少 `-XX:InitiatingHeapOccupancyPercent`，老年代达到该值时就触发Mixed GC，默认是45%）
+- 增加并发阶段使用的线程数（增大 -`XX:ConcGCThreads`）;
 
 #### 7.3.2、global concurrent marking
 
@@ -738,7 +738,6 @@ G1 的正常处理流程中没有 Full GC，只有在垃圾回收处理不过来
 - Young GC 时 Survivor 空间和老年代没有足够空间容纳存活对象；
 
 常见的解决是：
-
 - 增大 `-XX:ConcGCThreads=n` 选项增加并发标记线程的数量，或者 STW 期间并行线程的数量：-XX:ParallelGCThreads=n。
 - 减小 `-XX:InitiatingHeapOccupancyPercent` 提前启动标记周期。
 - 增大预留内存 `-XX:G1ReservePercent=n`，默认值是 10，代表使用 10% 的堆内存为预留内存，当 Survivor 区域没有足够空间容纳新晋升对象时会尝试使用预留内存
@@ -774,7 +773,7 @@ G1 的正常处理流程中没有 Full GC，只有在垃圾回收处理不过来
 - 垃圾碎片：CMS收集器是使用“标记-清除”算法进行的垃圾回收，容易产生内存碎片；G1收集器使用的是“标记-整理”算法，进行了空间整合，降低了内存空间碎片；
 
 **适用场景：**
-- CMS：与Parallel Scavenge 收集器搭配使用；注重吞吐量。jdk7、jdk8 默认使用该收集器作为老年代收集器，使用 -XX:+UseParallelOldGC 来指定使用 Paralle Old 收集器；
+- CMS：与Parallel Scavenge 收集器搭配使用；注重吞吐量。jdk7、jdk8 默认使用该收集器作为老年代收集器，使用 -XX:+UseParallelOldGC 来指定使用 Parallel Old 收集器；
 - G1：要求尽可能可控GC停顿时间；内存占用较大的应用。可以用 `-XX:+UseG1GC` 使用 G1 收集器，jdk9 默认使用 G1 收集器；
 
 ## 8、ZGC

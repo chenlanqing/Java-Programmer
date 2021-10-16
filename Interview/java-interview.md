@@ -387,7 +387,9 @@ public static byte[] getFileContent(String filePath) throws Throwable {
 
 [模拟超过5W的并发用户](https://mp.weixin.qq.com/s/2BondePBWkfUNSwNyTMcTA)
 
-## 3、可重入锁为什么可以防止死锁
+## 3、可重入锁
+
+### 3.1、为什么可以防止死锁
 
 ```java
 public class Widget {
@@ -407,7 +409,65 @@ public class LoggingWidget extends Widget {
 
 super关键字并没有新建一个父类的对象，比如说widget，然后再去调用widget.doSomething方法，实际上调用父类doSomething方法的还是我们的子类对象；
 
-如果一个线程有子类对象的引用loggingWidget，然后调用loggingWidget.doSomething方法的时候，会请求子类对象loggingWidget 的对象锁；又因为loggingWidget 的doSomething方法中调用的父类的doSomething方法，实际上还是要请求子类对象loggingWidget 的对象锁，那么如果synchronized 关键字不是个可重入锁的话，就会在子类对象持有的父类doSomething方法上产生死锁了。正因为synchronized 关键字的可重入锁，当前线程因为已经持有了子类对象loggingWidget 的对象锁，后面再遇到请求loggingWidget 的对象锁就可以畅通无阻地执行同步方法了
+如果一个线程有子类对象的引用loggingWidget，然后调用loggingWidget.doSomething方法的时候，会请求子类对象loggingWidget 的对象锁；又因为loggingWidget 的doSomething方法中调用的父类的doSomething方法，实际上还是要请求子类对象loggingWidget 的对象锁，那么如果synchronized 关键字不是个可重入锁的话，就会在子类对象持有的父类doSomething方法上产生死锁了。正因为synchronized 关键字的可重入锁，当前线程因为已经持有了子类对象loggingWidget 的对象锁，后面再遇到请求loggingWidget 的对象锁就可以畅通无阻地执行同步方法了；
+
+### 3.2、可重入锁如何实现
+
+通过AQS实现可重入锁，大概思路：
+- 调用 getState方法，判断当前 state 是否为0；如果为 0，加锁成功，返回；
+- 如果不等于0，则判断占用线程是否为当前线程，如果是，cas(state, state+1)；
+
+可以参考 ReentrantLock 的实现方式：
+```java
+// 非公平方式获取
+final boolean nonfairTryAcquire(int acquires) {
+    // 当前线程
+    final Thread current = Thread.currentThread();
+    // 获取状态
+    int c = getState();
+    if (c == 0) { // 表示没有线程正在竞争该锁
+        if (compareAndSetState(0, acquires)) { // 比较并设置状态成功，状态0表示锁没有被占用
+            // 设置当前线程独占
+            setExclusiveOwnerThread(current); 
+            return true; // 成功
+        }
+    } else if (current == getExclusiveOwnerThread()) { // 当前线程拥有该锁
+        int nextc = c + acquires; // 增加重入次数
+        if (nextc < 0) // overflow
+            throw new Error("Maximum lock count exceeded");
+        // 设置状态
+        setState(nextc); 
+        // 成功
+        return true; 
+    }
+    // 失败
+    return false;
+}
+// 公平锁
+protected final boolean tryAcquire(int acquires) {
+    // 获取当前线程
+    final Thread current = Thread.currentThread();
+    // 获取状态
+    int c = getState();
+    if (c == 0) { // 状态为0
+        if (!hasQueuedPredecessors() &&
+            compareAndSetState(0, acquires)) { // 不存在已经等待更久的线程并且比较并且设置状态成功
+            // 设置当前线程独占
+            setExclusiveOwnerThread(current);
+            return true;
+        }
+    } else if (current == getExclusiveOwnerThread()) { // 状态不为0，即资源已经被线程占据
+        // 下一个状态
+        int nextc = c + acquires;
+        if (nextc < 0) // 超过了int的表示范围
+            throw new Error("Maximum lock count exceeded");
+        // 设置状态
+        setState(nextc);
+        return true;
+    }
+    return false;
+}
+```
 
 ## 4、队列相关面试题
 

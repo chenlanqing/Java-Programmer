@@ -648,6 +648,8 @@ java -Xmx3550m -Xms3550m -Xss128k -XX:NewRatio=4 -XX:SurvivorRatio=4 -XX:MaxPerm
 
 `java -Xmx4096m -Xms4096m -Xss256k -XX:SurvivorRatio=8 -XX:MaxTenuringThreshold=14 -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:+UseG1GC -XX:+DisableExplicitGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintHeapAtGC -Xloggc:./logs/app_gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=./logs/localhost.dump -jar /home/admin/application.jar -Ddubbo.application.qos.enable=false --spring.profiles.active=prod`
 
+`-Xms12288m -Xmx12288m -XX:SurvivorRatio=8 -Dspring.profiles.active=prod -XX:ParallelGCThreads=4 -XX:G1HeapRegionSize=16m -XX:+UseG1GC `
+
 # 参考文章
 
 * [Java8 JVM参数解读](https://www.zybuluo.com/changedi/note/975529)
