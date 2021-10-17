@@ -57,8 +57,7 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 ![image](image/BeanFactory.png)
 
-`BeanFactoty`容器中，Bean的生命周期如上图所示，与`ApplicationContext`相比，有如下几点不同：
-
+`BeanFactory`生产 bean 的工厂，它负责生产和管理各个 bean 实例，在容器中，Bean的生命周期如上图所示，与`ApplicationContext`相比，有如下几点不同：
 - `BeanFactory`容器中，不会调用`ApplicationContextAware`接口的`setApplicationContext()`方法
 - `BeanPostProcessor`接口的`postProcessBeforeInitialization`方法和`postProcessAfterInitialization`方法不会自动调用，必须自己通过代码手动注册
 - `BeanFactory`容器启动的时候，不会去实例化所有bean，包括所有scope为singleton且非延迟加载的bean也是一样，而是在调用的时候去实例化
@@ -107,9 +106,11 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 - BeanFactory 体系：`org.springframework.beans.factory.BeanFactory`，是一个非常纯粹的 bean 容器，它是 IoC 必备的数据结构，其中 BeanDefinition 是它的基本结构。BeanFactory 内部维护着一个BeanDefinition map ，并可根据 BeanDefinition 的描述进行 bean 的创建和管理；
     - BeanFactory 有三个直接子类 ListableBeanFactory、HierarchicalBeanFactory 和 AutowireCapableBeanFactory 。
-    - DefaultListableBeanFactory 为最终默认实现，它实现了所有接口
+    - DefaultListableBeanFactory 为最终默认实现，它实现了所有接口，因为其不仅实现了 ConfigurableListableBeanFactory，还实现了 AbstractAutowireCapableBeanFactory；ApplicationContext 接口能获取到 AutowireCapableBeanFactory，然后它向下转型就能得到 DefaultListableBeanFactory 了；
 
-- BeanDefinition 体系：`org.springframework.beans.factory.config.BeanDefinition`，用来描述 Spring 中的 Bean 对象；比如这个 Bean 指向的是哪个类、是否是单例的（scope）、是否懒加载（lazy-init或@Lazy）、这个 Bean 依赖了哪些 Bean、首选 primary（@Primary）是true的表示bean该bean回事优先的实现类、factory-bean和factory-method
+    ![](image/BeanFactory-UML结构.png)
+
+- BeanDefinition 体系：`org.springframework.beans.factory.config.BeanDefinition`，用来描述 Spring 中的 Bean 对象；比如这个 Bean 指向的是哪个类、是否是单例的（scope）、是否懒加载（lazy-init或@Lazy）、这个 Bean 依赖了哪些 Bean、首选 primary（@Primary）是true的表示bean该bean回事优先的实现类、factory-bean和factory-method；Spring 默认不同文件的Bean会出现Bean的覆盖；
 
 - BeanDefinitionReader 体系：`org.springframework.beans.factory.support.BeanDefinitionReader` 的作用是读取 Spring 的配置文件的内容，并将其转换成 Ioc 容器内部的数据结构 ：BeanDefinition；并借助 BeanDefinitionRegistry注册到容器中
 
