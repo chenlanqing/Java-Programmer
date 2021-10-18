@@ -55,7 +55,7 @@ Java字节码的执行是由JVM执行引擎来完成，流程图如下所示：
 
 ## 2.2、内存区域
 
-Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据区：程序计数器、Java 虚拟机栈、本地方法栈、Java 堆、方法区；其中"程序计数器、Java 虚拟机栈、本地方法栈"三者是线程私有内存区；“Java 堆、方法区”为线程共享内存区
+Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据区：程序计数器、Java 虚拟机栈、本地方法栈、Java 堆、方法区；其中`程序计数器、Java虚拟机栈、本地方法栈`三者是线程私有内存区；`Java 堆、方法区`为线程共享内存区
 
 ![image](image/Java虚拟机内存区域.png)
 
@@ -71,7 +71,7 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 `该区域也是线程私有的，它的生命周期也与线程相同`
 
-主管 Java 程序的运行，它保存方法的局部变量、部分结果，并参与方法的调用和返回
+主要管理 Java 程序的运行，它保存方法的局部变量、部分结果，并参与方法的调用和返回
 
 #### 2.2.2.1、虚拟机栈特征
 
@@ -97,13 +97,9 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 	- ①、局部变量表所需的内存空间在编译期间完成分配，即在Java程序被编译成Class文件时，在方法的Code属性的`max_locals`数据项中确定了所需分配的
 		最大局部变量表的容量，方法运行期间不会改变局部变量表的大小；
-
 	- ②、局部变量表的容量以变量槽(Slot)为最小单位，虚拟机规范中没有明确指明一个Slot，应占用的内存空间大小，一个Slot可以存放一个32位以内的数据类型：boolean、byte、char、short、int、float、reference和returnAddress，boolean也被转换为int，0 表示 false，非 0 表示 true；对于64位的数据类型(long 和 double)，虚拟机会以高位在前的方式为其分配两个连续的 Slot 空间;
-
 	- ③、虚拟机通过索引定位的方式使用局部变量表，索引值的范围是从0开始到局部变量表最大的Slot数量，对于32位数据类型的变量，索引n代表第n个Slot，对于64位的，索引n代表第n和第 n+1两个 Slot对于两个相邻的共同存放一个64位数据的两个 Slot，不允许采用任何方式单独访问其中一个，虚拟机规范中要求如果遇到这种操作的字节码序列，虚拟机在类加载的校验阶段抛出异常；
-
 	- ④、在方法执行时，虚拟机是使用局部变量表来完成参数值到参数变量列表的传递过程的，如果是非静态方法，则局部变量表中的第0位索引的Slot默认是用于传递方法所属对象实例的引用，在方法中可以通过关键字this来访问这个隐含的参数，其余参数则按照参数表的顺序来排列，占用从1开始的局部变量Slot，参数表分配完毕后;
-
 	- ⑤、类变量有两次赋初始值的过程：
 		- 一次是在准备阶段，赋予系统初始值;
 		- 另一次是在初始化阶段，赋予程序员定义的初始值；
@@ -255,15 +251,12 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 - 年轻代
 	- S0 + S1
 	- Eden
-
 - 老年代
 
 ### 2.3.2、非堆（metaspace）
 
-- metaspace：主要存放class、package、method、field、字节码、常量池、符号引用等
-
+- Metaspace：主要存放class、package、method、field、字节码、常量池、符号引用等
 - CCS：32位指针的class，使用参数`-XX:+UseCompressedClassPoniters`来开启压缩
-
 - CodeCache：JIT编译后的本地代码，JNI使用的C代码
 
 	JVM生成的native code存放的内存空间称之为Code Cache；JIT编译、JNI等都会编译代码到native code，其中JIT生成的native code占用了Code Cache的绝大部分空间
@@ -301,7 +294,7 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 		注意：并不是所有虚拟机实现都将类型指针存在对象数据上。具体取决于虚拟机使用的对象的访问定位方式，如果是使用直接指针的方式，对象的内存布局就必须放置访问类型数据的指针
 	- 数组长度：
 
-- 实例数据：对象真正存储的有效数据。如各种字段内容，各字段的分配策略为`longs/doubles、ints、shorts/chars、bytes/boolean、oops(ordinary object pointers)`，相同宽度的字段总是被分配到一起，便于之后取数据。父类定义的变量会出现在子类定义的变量的前面；使用`-XX：FieldsAllocationStyle、+XX：CompactFields`可以影响分配策略；
+- 实例数据：对象真正存储的有效数据。如各种字段内容，各字段的分配策略为`longs/doubles、ints、shorts/chars、bytes/boolean、oops(ordinary object pointers)`，相同宽度的字段总是被分配到一起，便于之后取数据。父类定义的变量会出现在子类定义的变量的前面；使用`-XX:FieldsAllocationStyle、+XX:CompactFields`可以影响分配策略；
 
 - 对齐填充：对于64位虚拟机来说，对象大小必须是8字节的整数倍，不够的话需要占位填充
 
@@ -455,17 +448,17 @@ public class EmptyObject {
 
 指程序所需要的内存超出了系统所能分配的内存(包括动态扩展)的上限。
 
-发生OOM的线程一般情况下会死亡，也就是会被终结掉，该线程持有的对象占用的heap都会被gc了，释放内存。因为发生OOM之前要进行gc，就算其他线程能够正常工作，也会因为频繁gc产生较大的影响
+发生OOM的线程一般情况下会死亡，也就是会被终结掉，该线程持有的对象占用的heap都会被gc了，释放内存。因为发生OOM之前要进行gc，就算其他线程能够正常工作，也会因为频繁gc产生较大的影响；
 
 ## 4.2、内存泄漏
 
-指分配出去的内存没有被回收回来，由于失去了对该内存区域的控制，因而造成了资源的浪费；Java 中一般不会产生内存泄露，因为有垃圾回收器自动回收垃圾，但这也不绝对，当我们 new 了对象，并保存了其引用，但是后面一直没用它，而垃圾回收器又不会去回收它，这边会造成内存泄露，耗尽内存资源并降低系统性能。如果不处理，应用程序最终将耗尽其资源，最终以致命的java.lang.OutOfMemoryError终止
+指分配出去的内存没有被回收回来，由于失去了对该内存区域的控制，因而造成了资源的浪费；Java 中一般不会产生内存泄露，因为有垃圾回收器自动回收垃圾，但这也不绝对，当我们 new 了对象，并保存了其引用，但是后面一直没用它，而垃圾回收器又不会去回收它，这边会造成内存泄露，耗尽内存资源并降低系统性能。如果不处理，应用程序最终将耗尽其资源，最终以致命的`java.lang.OutOfMemoryError`终止
 
 垃圾收集器会定期删除未引用的对象，但它永远不会收集仍在引用的对象。这是可能发生内存泄漏的地方
 
 引发内存泄露的对象的特点：
 - 这些对象是可达的，即在有向图中，存在通路可以与其相连；
-- 这些对象是无用的，即程序以后不会再使用这些对象。
+- 这些对象是无用的，即程序以后不会再使用这些对象；
 
 ### 4.2.1、内存泄漏产生症状
 
@@ -477,7 +470,7 @@ public class EmptyObject {
 ### 4.2.2、常见引起泄漏的原因
 
 - static字段引起的内存泄漏
-	- 在Java中，静态字段通常拥有与整个应用程序相匹配的生命周期；大量使用static(静态)变量可能引起内存泄漏
+	- 在Java中，静态字段通常拥有与整个应用程序相匹配的生命周期；大量使用static(静态)变量可能引起内存泄漏；
 	- 如果集合或大对象被声明为static，那么它们将在应用程序的整个生命周期中保留在内存中，从而阻止可能在其他地方使用的重要内存；
 	- 如何预防：最大限度地减少静态变量的使用；另外在使用单例时，依赖于延迟加载对象而不是立即加载的方式；
 
@@ -487,7 +480,7 @@ public class EmptyObject {
 	- 在任一种情况下，资源留下的开放连接都会消耗内存，如果我们不处理他们，他们可能会降低性能，甚至可能导致 OutOfMemoryError；
 	- 如何预防：始终使用 finally块来关闭资源；使用Java 7+时，我们可以使用 try-with-resources块；
 
-- 不正确的 equals()和 hashCode()实现：主要是在使用hashmap等时需要注意是hashcode方法重写，当某个对象的hashcode值变化了，再移除这个对象时无法移除导致的内存泄漏；
+- 不正确的 equals() 和 hashCode() 实现：主要是在使用hashmap等时需要注意是hashcode方法重写，当某个对象的hashcode值变化了，再移除这个对象时无法移除导致的内存泄漏；
 
 - 引用了外部类的内部类
 	- 这种情况发生在非静态内部类（匿名类）的情况下
@@ -495,8 +488,8 @@ public class EmptyObject {
 	- 如果内部类不需要访问包含的类成员，请考虑将其转换为静态类；
 
 - finalize()方法造成的内存泄漏
-	- 每当重写类的 finalize（）方法时，该类的对象不会立即被垃圾收集。相反，GC将它们排队等待最终确定，这将在稍后的时间点发生
-	- 避免 finalizers
+	- 每当重写类的 finalize() 方法时，该类的对象不会立即被垃圾收集。相反，GC将它们排队等待最终确定，这将在稍后的时间点发生；
+	- 避免 finalize()
 
 - 常量字符串造成的内存泄漏
 	- JDK7之前的版本，如果我们读取一个庞大的大量String对象，并在该对象上调用intern（），那么它将转到字符串池，它位于PermGen（永生代）中，并且只要我们的应用程序运行就会保留在那里。这会占用内存并在我们的应用程序中造成重大内存泄漏。
@@ -517,18 +510,18 @@ public class EmptyObject {
 
 ### 4.3.1、Java堆
 
-无限循环的创建对象，在List中保存引用，以不被垃圾收集器回收;
+无限循环的创建对象，在List中保存引用，以不被垃圾收集器回收：
 ```java
-	// VM Args： -Xms20m -Xmx20m -XX：+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<指定dump目录>
-	public class HeapOOM {
-		static class OOMObject{}
-		public static void main(String[] args) {
-			List<OOMObject> list = new ArrayList<>();
-			while(true){
-				list.add(new OOMObject());
-			}
+// VM Args: -Xms20m -Xmx20m -XX：+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<指定dump目录>
+public class HeapOOM {
+	static class OOMObject{}
+	public static void main(String[] args) {
+		List<OOMObject> list = new ArrayList<>();
+		while(true){
+			list.add(new OOMObject());
 		}
 	}
+}
 ```
 `-XX:+HeapDumpOnOutOfMemoryError`：可以让虚拟机在出现内存溢出时Dump当前的内存堆转储快照，事后可以进行分析。运行代码：
 ```
@@ -554,7 +547,6 @@ Exception in thread "main" java.lang.OutOfMemoryError： Java heap space
 	- 基于OSGI的应用；
 	- 动态代理的操作库生成了大量的动态类；
 	- 脚本语言动态类加载；
-
 ```java
 /**
  * JDK 6: -XX:PermSize=6m -XX:MaxPermSize=6m
@@ -585,7 +577,6 @@ public class MethodAreaOOMTest1 {
 ### 4.3.3、虚拟机栈和本地方法栈
 
 由于在 HotSpot 虚拟机中并不区分虚拟机栈和本地方法栈，栈容量只由 `-Xss` 参数设置
-
 - 单线程：递归调用一个简单的方法，如不累积方法，会抛出 StackOverflowError
 - 多线程：无限循环的创建线程，并为每个线程无限循环的增加内存，会抛出 OutOfMemoryError
 
@@ -2197,7 +2188,7 @@ public static StringBuffer craeteStringBuffer(String s1， String s2) {
 
 在Java代码运行时，通过JVM参数可指定是否开启逃逸分析，
 - `-XX:+DoEscapeAnalysis` ： 表示开启逃逸分析
-- `-XX:-DoEscapeAnalysis` ： 表示关闭逃逸分析 从jdk 1.7开始已经默认开始逃逸分析，如需关闭，需要指定-XX:-DoEscapeAnalysis
+- `-XX:-DoEscapeAnalysis` ： 表示关闭逃逸分析 从jdk 1.7开始已经默认开始逃逸分析，如需关闭，需要指定`-XX:-DoEscapeAnalysis`
 
 ##### 2、同步省略
 
@@ -2470,14 +2461,11 @@ public void addShutdownHook(Thread hook) {
 * [Java内存区域与内存溢出](http://www.importnew.com/19946.html)
 * [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
 * [深入理解JVM内幕：从基本结构到Java 7新特性](http://www.importnew.com/1486.html)
-* [Java内存分配](http://www.codeceo.com/article/java-object-memory.html)
-* [JVM 调优](http://www.codeceo.com/article/twitter-jvm-performance.html)
 * [ClassLoader机制](http://www.hollischuang.com/archives/199)
 * [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
 * [JVM逃逸分析](https://my.oschina.net/hosee/blog/638573)
 * [深入理解Java逃逸分析](http://www.hollischuang.com/archives/2583)
 * [内存管理工具Memory Analyzer的使用](https://www.zybuluo.com/frank-shaw/note/206287)
-* [Java代码与编译过程](http://www.codeceo.com/article/java-complie-run.html)
 * [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
 * [JVM源码分析之Metaspace解密](http://lovestblog.cn/blog/2016/10/29/metaspace/)
 * [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)

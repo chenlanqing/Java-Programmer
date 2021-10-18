@@ -1403,6 +1403,11 @@ RocketMQ 选择了 `mmap + write`这种零拷贝方式，适用于业务级消�
 | RocketMQ | mmap + write | 适用于小块文件传输，频繁调用时，效率很高 | 不能很好的利用 DMA 方式，会比 sendfile 多消耗 CPU，内存安全性控制复杂，需要避免 JVM Crash 问题 |
 | Kafka | sendfile | 可以利用 DMA 方式，消耗 CPU 较少，大块文件传输效率高，无内存安全性问题 | 小块文件效率低于 mmap 方式，只能是 BIO 方式传输，不能使用 NIO 方式 |
 
+# 五、IO相关问题
+
+## 1、文件 IO 中如何保证掉电不丢失数据
+
+
 
 # 参考文章
 
@@ -1410,3 +1415,4 @@ RocketMQ 选择了 `mmap + write`这种零拷贝方式，适用于业务级消�
 * [浅析I/O模型](http://www.cnblogs.com/dolphin0520/p/3916526.html)
 * [Reactor设计模式分析](https://juejin.im/post/5ba3845e6fb9a05cdd2d03c0)
 * [Unix-IO模型](http://matt33.com/2017/08/06/unix-io/)
+* [文件IO的操作实践](https://www.cnkirito.moe/file-io-best-practise/)
