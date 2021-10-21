@@ -5587,6 +5587,14 @@ Disruptor的RingBuffer，做到完全无锁是因为单线程写；注入Redis�
 
 ## 4、等待唤醒机制
 
+# 十一、高并发测试
+
+## 1、JCStress
+
+- [Java高并发测试框架JCStress](https://juejin.cn/post/6948434936189681700)
+
+JCStress（Java Concurrency Stress）它是OpenJDK中的一个高并发测试工具，它可以帮助我们研究在高并发场景下JVM，类库以及硬件等状况
+
 
 # 参考文章
 

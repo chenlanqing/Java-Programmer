@@ -2707,11 +2707,8 @@ Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布
 这个缓冲区默认是 16KB，如果生产者的业务突然断电，这 16KB 数据是没有机会发送出去的。此时，就造成了消息丢失。
 
 解决的办法有两种：
-
-把缓冲区设置得非常小，此时消息会退化成单条发送，这会严重影响性能；
-
-消息发送前记录一条日志，消息发送成功后，通过回调再记录一条日志，通过扫描生成的日志，就可以判断哪些消息丢失了
-
+- 把缓冲区设置得非常小，此时消息会退化成单条发送，这会严重影响性能；
+- 消息发送前记录一条日志，消息发送成功后，通过回调再记录一条日志，通过扫描生成的日志，就可以判断哪些消息丢失了
 
 ### 5.2、Kafka 生产者会影响业务的高可用吗
 
@@ -2719,7 +2716,97 @@ Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布
 
 通过配置生产者的超时参数和重试次数，可以让新的消息一直阻塞在业务方。一般来说，这个超时值设置成 1 秒就已经够大了，有的应用在线上把超时参数配置得非常大，比如 1 分钟，就造成了用户的线程迅速占满，整个业务不能再接受新的请求
 
-### 5.3、
+### 5.3、Kafka中是怎么体现消息顺序性的
+
+kafka的topic是无序的，但是一个topic包含多个partition，每个partition内部是有序的；
+
+只要保证生产者写消息时，按照一定的规则写到同一个partition，不同的消费者读不同的partition的消息，就能保证生产和消费者消息的顺序
+
+### 5.4、有哪些情形会造成重复消费？那些情景下会造成消息漏消费？
+
+- 先处理后提交offset，会造成重读消费；
+- 先提交offset后处理，会造成数据丢失；
+
+### 5.5、Kafka在可靠性方面做了哪些改进
+
+（HW, LeaderEpoch）
+
+kafka使用了订阅的模式，并使用isr和ack应答机制，能进入isr中的follower和leader之间的速率不会相差10秒；
+- 当ack=0时，producer不等待broker的ack，不管数据有没有写入成功，都不再重复发该数据
+- 当ack=1时，broker会等到leader写完数据后，就会向producer发送ack，但不会等follower同步数据，如果这时leader挂掉，producer会对新的leader发送新的数据，在old的leader中不同步的数据就会丢失；
+- 当ack=-1或者all时，broker会等到leader和isr中的所有follower都同步完数据，再向producer发送ack，有可能造成数据重复
+
+### 5.6、topic的分区数可不可以增加
+
+如果可以怎么增加？如果不可以，那又是为什么？
+
+`bin/kafka-topics.sh --zookeeper localhost:2181/kafka --alter --topic topic-config --partitions 3`
+
+topic的分区数不可以减少，因为先有的分区数据难以处理；
+
+### 5.7、简述Kafka的日志目录结构
+
+每一个分区对应一个文件夹，命名为topic-0，topic-1，每个文件夹内有.index和.log文件
+
+比如topic-create-same，有3个分区
+```sh
+/temp/kafka/logs  ls -l | grep topic-create-same
+drwxr-xr-x   6 bluefish  staff   192  8  8 13:56 topic-create-same-1
+drwxr-xr-x   6 bluefish  staff   192  8  8 13:56 topic-create-same-2
+drwxr-xr-x   6 bluefish  staff   192  8  8 13:56 topic-create-same-3
+```
+进入到文件夹：topic-create-same-1
+```
+/temp/kafka/logs/topic-create-same-1  ls -l
+total 8
+-rw-r--r--  1 bluefish  staff  0  8  8 13:59 00000000000000000000.index
+-rw-r--r--  1 bluefish  staff  0  5 12 19:58 00000000000000000000.log
+-rw-r--r--  1 bluefish  staff  0  8  8 13:59 00000000000000000000.timeindex
+-rw-r--r--  1 bluefish  staff  8  8  8 13:56 leader-epoch-checkpoint
+```
+
+### 5.8、如何解决消费速率低的问题
+
+增加分区数和消费者数
+
+### 5.9、Kafka中有那些地方需要选举？这些地方的选举策略又有哪些？
+
+在ISR中需要选择，选择策略为先到先得
+
+### 5.10、失效副本是指什么？有那些应对措施？
+
+- 失效副本为速率比leader相差大于10秒的follower
+- 将失效的follower先提出ISR
+- 等速率接近leader10秒内,再加进ISR
+
+### 5.11、Kafka消息是采用Pull模式，还是Push模式？
+
+- 在producer阶段，是向broker用Push模式
+- 在consumer阶段，是向broker用Pull模式
+
+在Pull模式下，consumer可以根据自身速率选择如何拉取数据，避免了低速率的consumer发生崩溃的问题；但缺点是，consumer要时不时的去询问broker是否有新数据，容易发生死循环，内存溢出；
+
+### 5.12、Kafka创建Topic时如何将分区放置到不同的Broker中
+
+首先副本数不能超过broker数
+- 第一分区是随机从Broker中选择一个，然后其他分区相对于0号分区依次向后移
+- 第一个分区是从nextReplicaShift决定的，而这个数也是随机产生的
+
+### 5.13、Kafka中的分区器、序列化器、拦截器是否了解？它们之间的处理顺序是什么？
+
+拦截器>序列化器>分区器
+
+### 5.14、Kafka中的事务是怎么实现的
+
+kafka事务有两种：producer事务和consumer事务
+
+**producer事务**是为了解决kafka跨分区跨会话问题，kafka不能跨分区跨会话的主要问题是每次启动的producer的PID都是系统随机给的；所以为了解决这个问题，我们就要手动给producer一个全局唯一的id,也就是transaction id 简称TID
+
+我们将TID和PID进行绑定,在producer带着TID和PID第一次向broker注册时,broker就会记录TID,并生成一个新的组件transaction_state用来保存TID的事务状态信息。当producer重启后,就会带着TID和新的PID向broker发起请求,当发现TID一致时，producer就会获取之前的PID,将覆盖掉新的PID,并获取上一次的事务状态信息,从而继续上次工作
+
+**consumer事务**相对于producer事务就弱一点，需要先确保consumer的消费和提交位置为一致且具有事务功能，才能保证数据的完整，不然会造成数据的丢失或重复
+
+
 
 Kafka的用途有哪些？使用场景如何？
 
@@ -2727,9 +2814,7 @@ Kafka中的ISR、AR又代表什么？ISR的伸缩又指什么
 
 Kafka中的HW、LEO、LSO、LW等分别代表什么？
 
-Kafka中是怎么体现消息顺序性的？
 
-Kafka中的分区器、序列化器、拦截器是否了解？它们之间的处理顺序是什么？
 
 Kafka生产者客户端的整体结构是什么样子的？
 
@@ -2741,19 +2826,11 @@ Kafka的旧版Scala的消费者客户端的设计有什么缺陷？
 
 消费者提交消费位移时提交的是当前消费到的最新消息的offset还是offset+1?
 
-有哪些情形会造成重复消费？
-
-那些情景下会造成消息漏消费？
-
 KafkaConsumer是非线程安全的，那么怎么样实现多线程消费？
 
 简述消费者与消费组之间的关系
 
 当你使用kafka-topics.sh创建（删除）了一个topic之后，Kafka背后会执行什么逻辑？
-
-topic的分区数可不可以增加？如果可以怎么增加？如果不可以，那又是为什么？
-
-topic的分区数可不可以减少？如果可以怎么减少？如果不可以，那又是为什么？
 
 创建topic时如何选择合适的分区数？
 
@@ -2763,7 +2840,6 @@ Kafka目前有那些内部topic，它们都有什么特征？各自的作用又�
 
 Kafka有哪几处地方有分区分配的概念？简述大致的过程及原理
 
-简述Kafka的日志目录结构
 
 Kafka中有那些索引文件？
 
@@ -2787,15 +2863,13 @@ Kafka中的幂等是怎么实现的
 
 Kafka中的事务是怎么实现的（这题我去面试6加被问4次，照着答案念也要念十几分钟，面试官简直凑不要脸）
 
-Kafka中有那些地方需要选举？这些地方的选举策略又有哪些？
 
-失效副本是指什么？有那些应对措施？
 
 多副本下，各个副本中的HW和LEO的演变过程
 
 为什么Kafka不支持读写分离？
 
-Kafka在可靠性方面做了哪些改进？（HW, LeaderEpoch）
+
 
 Kafka中怎么实现死信队列和重试队列？
 

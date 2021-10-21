@@ -75,7 +75,7 @@ RabbitMQ是一个开源的消息代理和队列服务器器，RabbitMQ是使用E
 - Type：交换机类型`direct、topic、fanout、headers；`
 - Durability：是否需要持久化，true为持久化；
 - Auto Delete：当最后一个绑定到Exchange上队列删除后，自动删除该 Exchange；一般正式环境是不会做自动删除的
-- Iternal：当前exchange是否用于RabbitMQ内部使用，默认为false；
+- Internal：当前exchange是否用于RabbitMQ内部使用，默认为false；
 - Arguments：扩展参数，用于扩展AMQP协议自制定化使用
 
 ### 3.2、交换机类型

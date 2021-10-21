@@ -898,6 +898,8 @@ https://gitee.com/eminem89/Hbase-Observer-ElasticSearch
 查询列族中等于某个值的：`scan 'login_log', FILTER=>"ValueFilter(=,'binary:15923279403')"`
 
 
+
+
 # 参考资料
 
 - [HBase官网](http://hbase.apache.org/)
@@ -906,4 +908,5 @@ https://gitee.com/eminem89/Hbase-Observer-ElasticSearch
 - [HBase架构-英文版](https://mapr.com/blog/in-depth-look-hbase-architecture/)
 - [BulkLoad快速导入海量数据到HBase](https://mp.weixin.qq.com/s/Po-RZWLYUHL71kr7B8Rg3w)
 - [快速入门HBase](https://juejin.cn/post/6923878020277239822)
+- [HBase范围查询](https://cloud.google.com/bigtable/docs/samples/bigtable-filters-limit-timestamp-range-hbase)
 
