@@ -3364,6 +3364,7 @@ transaction.max.timeout.ms=3600000
 
 # 参考资料
 
+- [Flink教程](https://confucianzuoyuan.github.io/flink-tutorial/book/)
 - [Flink1.7-1.12版本变化](https://mp.weixin.qq.com/s/nHdlIrxSmInDiv_i5NMm9g)
 - [官方代码](https://github.com/apache/flink)
 - [Flink实现推荐系统](https://github.com/CheckChe0803/flink-recommandSystem-demo)

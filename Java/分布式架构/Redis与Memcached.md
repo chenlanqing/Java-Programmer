@@ -166,7 +166,7 @@ OK
 
 ### 2.4、集合-Sets
 
-- Redis 的集合是字符串的无序集合。在Redis您可以添加，删除和测试文件是否存在，在成员 O(1)的时间复杂度；
+- Redis 的集合是字符串的无序集合。在Redis您可以添加，删除和测试文件是否存在，在成员 O(1)的时间复杂度；Set是一个特殊的value为空的Hash
 
 - 一个集合最多可以包含 2^32-1个元素（4294967295，每个集合超过40亿个元素）
 ```
@@ -201,9 +201,8 @@ OK
 	- ③、有序集合或许是最高级的 Redis 数据类型
 
 **常用命令：**
-
 - `zadd zset 10 value1 20 value2 30 value3`：设置member和对应的分数
-- `zrange zset 0 -1`：查看所有zset中的内容
+- `zrange zset 0 -1`：查看所有zset中的内容；
 - `zrange zset 0 -1 withscores`：带有分数
 - `zrank zset value`：获得对应的下标
 - `zscore zset value`：获得对应的分数
@@ -213,6 +212,12 @@ OK
 - `zrangebyscore zset (分数1 (分数2`：查询分数之间的member（不包含分数1 和 分数2）
 - `zrangebyscore zset 分数1 分数2 limit start end`：查询分数之间的member(包含分数1 分数2)，获得的结果集再次根据下标区间做查询
 - `zrem zset value`：删除member
+
+总结：
+- 默认升序排列，即通过命令`ZRANGE`实现；如果要按照降序排列，需要通过命令`ZREVRANGE`实现；
+- 当score即得分一样时，按照字典顺序对member进行排序，字典排序用的是二进制，它比较的是字符串的字节数组，所以实际上是比较ASCII码；
+
+Sorted Set默认情况下只能根据一个因子score进行排序。如此一来，局限性就很大，举个栗子：热门排行榜需要按照下载量&最近更新时间排序，即类似数据库中的ORDER BY download_count, update_time DESC。那这样的需求如果用Redis的Sorted Set实现呢？事实上很简单，思路就是将涉及排序的多个维度的列通过一定的方式转换成一个特殊的列，即result = function(x, y, z)，即x，y，z是三个排序因子，例如下载量、时间等，通过自定义函数function()计算得到result，将result作为Sorted Set中的score的值，就能实现任意维度的排序需求了；
 
 ### 2.6、位图-bitmap
 
@@ -817,6 +822,7 @@ ZREVRANGE 命令按相反的顺序获取有序集合的元素；也可以同时�
 # 二、Redis内部数据结构
 
 - [Redis数据结构](https://pdai.tech/md/db/nosql-redis/db-redis-x-redis-ds.html)
+- [Redis高级数据结构](https://mp.weixin.qq.com/s/GLqZf-0sLQ7nnJ8Xb9oVZQ)
 
 ## 1、字符串处理-SDS
 
@@ -911,7 +917,17 @@ Reids对整数存储专门作了优化，intset就是redis用于保存整数值�
 
 ## 6、压缩列表(ziplist)
 
-ziplist是redis为了节约内存而开发的顺序型数据结构。它被用在列表键和哈希键中。一般用于小数据存储
+ziplist是redis为了节约内存而开发的顺序型数据结构。它被用在列表键和哈希键中。一般用于小数据存储；List，Hash，Sorted Set三种对外结构，在特殊情况下的内部编码都是ziplist
+
+以Hash为例，我们首先看一下什么条件下它的内部编码是ziplist：
+- 当哈希类型元素个数小于hash-max-ziplist-entries配置（默认512个）；
+- 所有值都小于hash-max-ziplist-value配置（默认64个字节）；
+
+如果是sorted set的话，同样需要满足两个条件：
+- 元素个数小于zset-max-ziplist-entries配置，默认128；
+- 所有值都小于zset-max-ziplist-value配置，默认64。
+
+一个普通的双向链表，链表中每一项都占用独立的一块内存，各项之间用地址指针（或引用）连接起来。这种方式会带来大量的内存碎片，而且地址指针也会占用额外的内存。而ziplist却是将表中每一项存放在前后连续的地址空间内，一个ziplist整体占用一大块内存。它是一个表（list），但其实不是一个链表（linked list）
 
 ## 7、快速列表(quicklist)
 
