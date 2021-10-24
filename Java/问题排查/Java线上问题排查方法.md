@@ -527,6 +527,8 @@ vmstat：是Virtual Meomory Statistics（虚拟内存统计）的缩写，是实
 
 ### 4.2、CPU过高
 
+- [CPU-100%问题排查](https://mp.weixin.qq.com/s/goL4USSfLOtBxjSENnP0Qg)
+
 - CPU过高可能是系统频繁的进行Full GC，导致系统缓慢；
 - Full GC次数过多
 - 无限while循环
@@ -535,6 +537,12 @@ vmstat：是Virtual Meomory Statistics（虚拟内存统计）的缩写，是实
 - 序列化与反序列化
 - 正则表达式
 - 频繁的线程上下文切换
+
+排查过程：
+- `top oder by with P：1040` ， 首先按进程负载排序找到  axLoad(pid)
+- `top -Hp 进程PID：1073 `，找到相关负载 线程PID
+- `printf “0x%x\n”线程PID`： 0x431 ，比如将线程PID转换为 16进制，为后面查找 jstack 日志做准备
+- `jstack  进程PID | vim +/十六进制线程PID`，例如：`jstack 1040|vim +/0x431`
 
 ### 4.3、不定期出现的接口耗时现象
 
