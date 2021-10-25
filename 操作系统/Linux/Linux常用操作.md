@@ -684,3 +684,4 @@ Grafana
 
 - [Linux命令搜索](https://github.com/jaywcjlove/linux-command)
 - [Linux调优指令](https://mp.weixin.qq.com/s/ZKVpfO6VaqwmNs5Yed7Ang)
+- [Linux常用命令](https://mp.weixin.qq.com/s/gDTe5dF5VoZ7xhGP8aIpCA)
