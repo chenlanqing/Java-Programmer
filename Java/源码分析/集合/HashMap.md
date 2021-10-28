@@ -942,6 +942,25 @@ Poisson分布，是一种统计与概率论中常见的离散概率分布，其�
 	}
 	```
 
+## 10、HashMap的key使用哪种数据结构性能高
+
+首先影响HashMap的性能点：
+- 哈希冲突导致单个哈希桶元素数量过多。操作元素的时间复杂度甚至 退化成O(N)，经红黑树改进后，也得O(logN)。
+- 扩容，为啥扩容？还是为了降低哈希冲突！
+
+主要可以从hash碰撞考虑，hash函数设计的时候是调用对应的类的hashcode方法，对应Integer、Long 等整型类型的数据，其hashcode方法返回的就是对应的整数值，为了减少hash冲突，尽量使用HashCode递增的值作为key，例如递增的int值，这样可以尽可能减少哈希冲突；
+```java
+public final class Integer extends Number implements Comparable<Integer> {
+	@Override
+	public int hashCode() {
+		return Integer.hashCode(value);
+	}
+	public static int hashCode(int value) {
+        return value;
+    }
+}
+```
+
 # 参考资料
 
 * [Java8 HashMap实现原理](http://www.codeceo.com/article/java8-hashmap-learn.html)

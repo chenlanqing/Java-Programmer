@@ -131,7 +131,9 @@ binlog作用：MySQL数据库的数据备份、主备、主主、主从都离不
 
 ## 1、binlog概述
 
-记录了所有对mysql数据库的修改事件，包括增删查改事件和对表结构的修改事件。且二进制日志中记录是已执行成功的记录
+binlog 用于记录数据库执行的写入性操作(不包括查询)信息，以二进制的形式保存在磁盘中。binlog 是 mysql的逻辑日志，并且由 Server 层进行记录，使用任何存储引擎的 mysql 数据库都会记录 binlog 日志；
+
+binlog 是通过追加的方式进行写入的，可以通过max_binlog_size 参数设置每个 binlog文件的大小，当文件大小达到给定值之后，会生成新的文件来保存日志
 
 主要用途：
 - 复制：MySQL 的 Master-Slave 协议，让 Slave 可以通过监听 Binlog 实现数据复制，达到数据一致的目的；
@@ -285,6 +287,19 @@ BEGIN
 - exec_time: 事件执行的花费时间
 - error_code: 错误码，0意味着没有发生错误
 - type:事件类型Query
+
+## 8、binlog与redo log区别
+
+|          | redo log                                                     | binlog                                                       |
+| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| 文件大小 | redo log 大小是固定的    | binlog可以通过 max_binlog_size 设置每个binlog 文件的大小     |
+| 实现方式 | redo log 是通过innoDB引擎层实现的，不是所有引擎都有的        | binlog是Server层实现的，所有引擎都可以使用binlog日志         |
+| 记录方式 | redo log 采用循环写的方式记录，当写到结尾时，会回到开头循环写日志 | binlog通过追加的方式，当文件大小大于给到的值后，后续的日志会记录到新的文件上 |
+| 适用场景 | redo log适用于崩溃恢复（crash-safe）                         | binlog适用于主从复制、数据恢复                               |
+
+由 binlog 和 redo log 的区别可知：binlog 日志只用于归档，只依靠 binlog 是没有 crash-safe 能力的。
+
+但只有 redo log 也不行，因为 redo log 是 InnoDB特有的，且日志上的记录落盘后会被覆盖掉。因此需要 binlog和 redo log二者同时记录，才能保证当数据库发生宕机重启时，数据不会丢失
 
 # 三、Binlog 解析工具
 

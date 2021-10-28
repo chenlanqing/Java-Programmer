@@ -246,6 +246,55 @@ private class ListItr implements ListIterator<E> {
 }
 ```
 
+# 三、ArrayDeque
+
+ArrayDeque 是用数组实现的双端队列，初始化如果没有指定容量，默认容量是16；
+```java
+public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cloneable, Serializable {
+    // 数组存储的元素，数组是可以扩容的，一般是2的N次方，数组内元素不可以为NULL；
+    transient Object[] elements; 
+    // 头结点索引位置
+    transient int head;
+    // 尾节点索引尾椎
+    transient int tail;
+    public ArrayDeque() {
+        elements = new Object[16];
+    }
+}
+```
+
+# 四、Stack、ArrayDeque、LinkedList对比
+
+## 1、底层数据存储方式
+
+|            | 存储方式       |
+| ---------- | -------------- |
+| Stack      | 长度为10的数组 |
+| ArrayDeque | 长度为16的数组 |
+| LinkedList | 链表           |
+
+## 2、方法参照表
+
+| Stack   | ArrayDeque                | LinkedList                |
+| ------- | ------------------------- | ------------------------- |
+| push(e) | addFirst(e)/offerFirst(e) | addFirst(e)/offerFirst(e) |
+| pop()   | removeFirst()/pollFirst() | removeFirst()/pollFirst() |
+| peek()  | getFirst()/peekFirst()    | getFirst()/peekFirst()    |
+
+## 3、线程安全
+
+|            | 线程安全   |
+| ---------- | ---------- |
+| Stack      | 线程同步   |
+| ArrayDeque | 线程不同步 |
+| LinkedList | 线程不同步 |
+
+## 4、其他
+
+- 频繁的插入、删除操作：LinkedList
+- 频繁的随机访问操作：ArrayDeque
+- 未知的初始数据量：LinkedList
+
 
 # 参考资料
 
