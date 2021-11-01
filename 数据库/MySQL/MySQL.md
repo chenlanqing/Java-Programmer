@@ -1218,7 +1218,7 @@ InnoDB实现的RR，通过锁机制、数据的隐藏列、undo log和类next-ke
 
 大多数数据库的默认级别就是 READ_COMMITTED ，比如 Sql Server、Oracle，MySQL 的默认隔离级别就是 `REPETABLE_READ`
 - 查看MySQL事务隔离级别：`select @@transaction_isolation;` 或者 `show variables like 'transaction_isolation'`；
-- 设置事务隔离级别：`set  [glogal | session]  transaction isolation level 隔离级别名称`;
+- 设置事务隔离级别：`set  [global | session]  transaction isolation level 隔离级别名称`;
 - 设置事务隔离级别：`set transaction_isolation='隔离级别名称;'`
 
 ### 2.4、隔离级别性能比较
