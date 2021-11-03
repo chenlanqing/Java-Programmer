@@ -110,16 +110,30 @@ binlog作用：MySQL数据库的数据备份、主备、主主、主从都离不
 
 为了解决两份日志之间的逻辑一致问题，InnoDB存储引擎使用两阶段提交方案；
 
-### 3.2、两阶段提交
+### 3.3、两阶段提交
 
-原理很简单，将redo log的写入拆成了两个步骤prepare和commit，这就是两阶段提交；
+如果不采用两阶段提交：以`update T set c=c+1 where ID=2;`为例，假设当前 ID=2 的行，字段 c 的值是 0，再假设执行 update 语句过程中在写完第一个日志后，第二个日志还没有写完期间发生了 crash，会出现什么情况呢？
+- 先写 `redo log` 后写 `binlog`。假设在 redo log 写完，binlog 还没有写完的时候，MySQL 进程异常重启。由于我们前面说过的，redo log 写完之后，系统即使崩溃，仍然能够把数据恢复回来，所以恢复后这一行 c 的值是 1。但是由于 binlog 没写完就 crash 了，这时候 binlog 里面就没有记录这个语句。因此，之后备份日志的时候，存起来的 binlog 里面就没有这条语句。然后你会发现，如果需要用这个 binlog 来恢复临时库的话，由于这个语句的 binlog 丢失，这个临时库就会少了这一次更新，恢复出来的这一行 c 的值就是 0，与原库的值不同；
+- 先写 `binlog` 后写 `redo log`。如果在 binlog 写完之后 crash，由于 redo log 还没写，崩溃恢复以后这个事务无效，所以这一行 c 的值是 0。但是 binlog 里面已经记录了“把 c 从 0 改成 1”这个日志。所以，在之后用 binlog 来恢复的时候就多了一个事务出来，恢复出来的这一行 c 的值就是 1，与原库的值不同；
+
+什么是两阶段提交：原理很简单，将redo log的写入拆成了两个步骤prepare和commit；
 
 ![](image/MySQL-日志两阶段提交.png)
 
+- 引擎将这行新数据更新到内存中，同时将这个更新操作记录到 redo log 里面，此时 redo log 处于 prepare 状态。然后告知执行器执行完成了，随时可以提交事务；
+- 执行器生成这个操作的 binlog，并把 binlog 写入磁盘
+- 执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交（commit）状态，更新完成；
+
 使用两阶段提交后，写入binlog时发生异常也不会有影响，因为MySQL根据redo log日志恢复数据时，发现redo log还处于prepare阶段，并且没有对应binlog日志，就会回滚该事务；
 
-再看一个问题：redo log设置commit阶段发生异常，那会不会回滚事务呢？
+再看一个问题：redo log的commit阶段发生异常，那会不会回滚事务呢？
 - 并不会回滚事务，它会执行上图框住的逻辑，；虽然redo log是处于prepare阶段，但是能通过事务id找到对应的binlog日志，所以MySQL认为是完整的，就会提交事务恢复数据；
+
+### 3.4、总结
+
+redo log 用于保证 crash-safe 能力。`innodb_flush_log_at_trx_commit` 这个参数设置成 1 的时候，表示每次事务的 redo log 都直接持久化到磁盘。这个参数建议设置成 1，这样可以保证 MySQL 异常重启之后数据不丢失。
+
+sync_binlog 这个参数设置成 1 的时候，表示每次事务的binlog都持久化到磁盘。这个参数建议设置成1，这样可以保证 MySQL 异常重启之后 binlog 不丢失
 
 ## 4、undo log
 
