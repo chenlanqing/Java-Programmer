@@ -54,10 +54,9 @@ segment 数组不能扩容，扩容是 segment 数组某个位置内部的数组
 
 ## 4、ConcurrentHashMap-JDK8
 
-1.8中放弃了Segment臃肿的设计，取而代之的是采用`Node + CAS + Synchronized`来保证并发安全进行实现；只有在执行第一次put方法时才会调用initTable()初始化Node数组；
+JDK7中，最大并发度受Segment的个数限制，所以1.8中放弃了Segment臃肿的设计，取而代之的是采用`Node + CAS + Synchronized`来保证并发安全进行实现；只有在执行第一次put方法时才会调用initTable()初始化Node数组；
 
 底层依然采用"数组+链表+红黑树"的存储结构
-
 - JDK1.8的实现降低锁的粒度，JDK1.7版本锁的粒度是基于Segment的，包含多个HashEntry，而JDK1.8锁的粒度就是HashEntry（首节点）；
 - JDK1.8版本的数据结构变得更加简单，使得操作也更加清晰流畅，因为已经使用synchronized来进行同步，所以不需要分段锁的概念，也就不需要Segment这种数据结构了，由于粒度的降低，实现的复杂度也增加了
 - JDK1.8使用红黑树来优化链表，基于长度很长的链表的遍历是一个很漫长的过程，而红黑树的遍历效率是很快的，代替一定阈值的链表，这样形成一个最佳拍档
@@ -152,79 +151,195 @@ static final class TreeBin<K,V> extends Node<K,V> {
 ## 3、put方法
 
 当执行put方法插入数据时，根据key的hash值，在Node数组中找到相应的位置，实现如下：
-- 判断是否有过初始化Node数组，如果没有，则初始化数组：
-    ```java
-    private final Node<K,V>[] initTable() {
-        Node<K,V>[] tab; int sc;
-        while ((tab = table) == null || tab.length == 0) {
-            if ((sc = sizeCtl) < 0)
-                Thread.yield(); // lost initialization race; just spin
-            else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
-                // 通过对 sizeCtl 进行一个 CAS 操作来控制的，将 sizeCtl 设置为 -1，代表抢到了锁
-                try {
-                    if ((tab = table) == null || tab.length == 0) {
-                        int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
-                        @SuppressWarnings("unchecked")
-                        Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
-                        table = tab = nt;
-                        sc = n - (n >>> 2);
+```java
+final V putVal(K key, V value, boolean onlyIfAbsent) {
+    if (key == null || value == null) throw new NullPointerException();
+    // 得到 hash 值
+    int hash = spread(key.hashCode());
+    // 用于记录相应链表的长度
+    int binCount = 0;
+    for (Node<K,V>[] tab = table;;) {
+        Node<K,V> f; int n, i, fh;
+        // 如果数组"空"，进行数组初始化
+        if (tab == null || (n = tab.length) == 0)
+            // 初始化数组，后面会详细介绍
+            tab = initTable();
+        // 找该 hash 值对应的数组下标，得到第一个节点 f
+        else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+            // 如果数组该位置为空，
+            // 用一次 CAS 操作将这个新值放入其中即可，这个 put 操作差不多就结束了，可以拉到最后面了
+            // 如果 CAS 失败，那就是有并发操作，进到下一个循环就好了
+            if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value, null)))
+                break;                   // no lock when adding to empty bin
+        }
+        // hash 居然可以等于 MOVED，这个需要到后面才能看明白，不过从名字上也能猜到，肯定是因为在扩容
+        else if ((fh = f.hash) == MOVED)
+            // 帮助数据迁移，这个等到看完数据迁移部分的介绍后，再理解这个就很简单了
+            tab = helpTransfer(tab, f);
+        else { // 到这里就是说，f 是该位置的头结点，而且不为空
+            V oldVal = null;
+            // 获取数组该位置的头结点的监视器锁
+            synchronized (f) {
+                if (tabAt(tab, i) == f) {
+                    if (fh >= 0) { // 头结点的 hash 值大于 0，说明是链表
+                        // 用于累加，记录链表的长度
+                        binCount = 1;
+                        // 遍历链表
+                        for (Node<K,V> e = f;; ++binCount) {
+                            K ek;
+                            // 如果发现了"相等"的 key，判断是否要进行值覆盖，然后也就可以 break 了
+                            if (e.hash == hash && ((ek = e.key) == key || (ek != null && key.equals(ek)))) {
+                                oldVal = e.val;
+                                if (!onlyIfAbsent)
+                                    e.val = value;
+                                break;
+                            }
+                            // 到了链表的最末端，将这个新值放到链表的最后面
+                            Node<K,V> pred = e;
+                            if ((e = e.next) == null) {
+                                pred.next = new Node<K,V>(hash, key, value, null);
+                                break;
+                            }
+                        }
                     }
-                } finally {
-                    sizeCtl = sc;
+                    else if (f instanceof TreeBin) { // 红黑树
+                        Node<K,V> p;
+                        binCount = 2;
+                        // 调用红黑树的插值方法插入新节点
+                        if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,value)) != null) {
+                            oldVal = p.val;
+                            if (!onlyIfAbsent)
+                                p.val = value;
+                        }
+                    }
                 }
+            }
+            if (binCount != 0) {
+                // 判断是否要将链表转换为红黑树，临界值和 HashMap 一样，也是 8
+                if (binCount >= TREEIFY_THRESHOLD)
+                    // 这个方法和 HashMap 中稍微有一点点不同，那就是它不是一定会进行红黑树转换，
+                    // 如果当前数组的长度小于 64，那么会选择进行数组扩容，而不是转换为红黑树
+                    // 具体源码我们就不看了，扩容部分后面说
+                    treeifyBin(tab, i);
+                if (oldVal != null)
+                    return oldVal;
                 break;
             }
         }
-        return tab;
     }
-    ```
+    // 
+    addCount(1L, binCount);
+    return null;
+}
+```
+- 判断是否有过初始化Node数组，如果没有，则初始化数组：
+```java
+private final Node<K,V>[] initTable() {
+    Node<K,V>[] tab; int sc;
+    while ((tab = table) == null || tab.length == 0) {
+        // 初始化方法中的并发问题是通过对 sizeCtl 进行一个 CAS 操作来控制的
+        if ((sc = sizeCtl) < 0)
+            Thread.yield(); // lost initialization race; just spin
+        else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
+            // 通过对 sizeCtl 进行一个 CAS 操作来控制的，将 sizeCtl 设置为 -1，代表抢到了锁
+            try {
+                if ((tab = table) == null || tab.length == 0) {
+                    int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
+                    // 初始化数组，长度为 16 或初始化时提供的长度
+                    Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
+                    table = tab = nt;
+                    // 其实就是 0.75 * n
+                    sc = n - (n >>> 2);
+                }
+            } finally {
+                sizeCtl = sc;
+            }
+            break;
+        }
+    }
+    return tab;
+}
+```
 - 如果相应位置的Node还未初始化，则通过CAS插入相应的数据
-    ```java
-    else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
-            if (casTabAt(tab, i, null,
-                            new Node<K,V>(hash, key, value, null)))
-                break;                   // no lock when adding to empty bin
-    }
-    ```
+```java
+else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+        if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value, null)))
+            break;                   // no lock when adding to empty bin
+}
+```
 - 如果相应位置的Node不为空，且当前该节点不处于移动状态，则对该节点加synchronized锁，如果该节点的hash不小于0，则遍历链表更新节点或插入新节点；
-    ```java
-    synchronized (f) {
-        if (tabAt(tab, i) == f) {
-            if (fh >= 0) {
-                binCount = 1;
-                for (Node<K,V> e = f;; ++binCount) {
-                    K ek;
-                    if (e.hash == hash &&
-                        ((ek = e.key) == key ||
-                            (ek != null && key.equals(ek)))) {
-                        oldVal = e.val;
-                        if (!onlyIfAbsent)
-                            e.val = value;
-                        break;
-                    }
-                    Node<K,V> pred = e;
-                    if ((e = e.next) == null) {
-                        pred.next = new Node<K,V>(hash, key,
-                                                    value, null);
-                        break;
-                    }
+```java
+synchronized (f) {
+    if (tabAt(tab, i) == f) {
+        if (fh >= 0) {
+            binCount = 1;
+            for (Node<K,V> e = f;; ++binCount) {
+                K ek;
+                if (e.hash == hash &&
+                    ((ek = e.key) == key ||
+                        (ek != null && key.equals(ek)))) {
+                    oldVal = e.val;
+                    if (!onlyIfAbsent)
+                        e.val = value;
+                    break;
+                }
+                Node<K,V> pred = e;
+                if ((e = e.next) == null) {
+                    pred.next = new Node<K,V>(hash, key,
+                                                value, null);
+                    break;
                 }
             }
-            else if (f instanceof TreeBin) {
-                Node<K,V> p;
-                binCount = 2;
-                if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,
-                                                value)) != null) {
-                    oldVal = p.val;
-                    if (!onlyIfAbsent)
-                        p.val = value;
+        }
+        else if (f instanceof TreeBin) {
+            Node<K,V> p;
+            binCount = 2;
+            if ((p = ((TreeBin<K,V>)f).putTreeVal(hash, key,
+                                            value)) != null) {
+                oldVal = p.val;
+                if (!onlyIfAbsent)
+                    p.val = value;
+            }
+        }
+    }
+}
+```
+- 如果该节点是TreeBin类型的节点，说明是红黑树结构，则通过putTreeVal方法往红黑树中插入节点；
+- 如果binCount不为0，说明put操作对数据产生了影响，如果当前链表的个数达到8个，则通过treeifyBin方法转化为红黑树，如果oldVal不为空，说明是一次更新操作，没有对元素个数产生影响，则直接返回旧值；
+```java
+private final void treeifyBin(Node<K,V>[] tab, int index) {
+    Node<K,V> b; int n, sc;
+    if (tab != null) {
+        // MIN_TREEIFY_CAPACITY 为 64
+        // 所以，如果数组长度小于 64 的时候，其实也就是 32 或者 16 或者更小的时候，会进行数组扩容
+        if ((n = tab.length) < MIN_TREEIFY_CAPACITY)
+            tryPresize(n << 1);
+        // b 是头结点
+        else if ((b = tabAt(tab, index)) != null && b.hash >= 0) {
+            // 加锁
+            synchronized (b) {
+
+                if (tabAt(tab, index) == b) {
+                    // 下面就是遍历链表，建立一颗红黑树
+                    TreeNode<K,V> hd = null, tl = null;
+                    for (Node<K,V> e = b; e != null; e = e.next) {
+                        TreeNode<K,V> p =
+                            new TreeNode<K,V>(e.hash, e.key, e.val,
+                                              null, null);
+                        if ((p.prev = tl) == null)
+                            hd = p;
+                        else
+                            tl.next = p;
+                        tl = p;
+                    }
+                    // 将红黑树设置到数组相应位置中
+                    setTabAt(tab, index, new TreeBin<K,V>(hd));
                 }
             }
         }
     }
-    ```
-- 如果该节点是TreeBin类型的节点，说明是红黑树结构，则通过putTreeVal方法往红黑树中插入节点；
-- 如果binCount不为0，说明put操作对数据产生了影响，如果当前链表的个数达到8个，则通过treeifyBin方法转化为红黑树，如果oldVal不为空，说明是一次更新操作，没有对元素个数产生影响，则直接返回旧值；
+}
+```
 - 如果插入的是一个新节点，则执行addCount()方法尝试更新元素个数baseCount；
 
 ## 4、get方法
@@ -346,7 +461,7 @@ private final void tryPresize(int size) {
 
 并发操作的机制：原数组长度为 n，所以我们有 n 个迁移任务，让每个线程每次负责一个小任务是最简单的，每做完一个任务再检测是否有其他没做完的任务，帮助迁移就可以了，而 Doug Lea 使用了一个 stride，简单理解就是步长，每个线程每次负责迁移其中的一部分，如每次迁移 16 个小任务。所以，我们就需要一个全局的调度者来安排哪个线程执行哪几个任务，这个就是属性 transferIndex 的作用；
 
-第一个发起数据迁移的线程会将 transferIndex 指向原数组最后的位置，然后从后往前的 stride 个任务属于第一个线程，然后将 transferIndex 指向新的位置，再往前的 stride 个任务属于第二个线程，依此类推。当然，这里说的第二个线程不是真的一定指代了第二个线程，也可以是同一个线程，这个读者应该能理解吧。其实就是将一个大的迁移任务分为了一个个任务包；
+第一个发起数据迁移的线程会将 transferIndex 指向原数组最后的位置，然后从后往前的 stride 个任务属于第一个线程，然后将 transferIndex 指向新的位置，再往前的 stride 个任务属于第二个线程，依此类推。当然，这里说的第二个线程不是真的一定指代了第二个线程，也可以是同一个线程。其实就是将一个大的迁移任务分为了一个个任务包；
 
 ## 6、size与mappingCount方法
 
@@ -408,21 +523,8 @@ if ((as = counterCells) != null ||
 
 ## 7、hash冲突解决
 
-在Java 8 之前，HashMap和其他基于map的类都是通过链地址法解决冲突，它们使用单向链表来存储相同索引值的元素。在最坏的情况下，这种方式会将HashMap的get方法的性能从O(1)降低到O(n)。为了解决在频繁冲突时hashmap性能降低的问题，Java 8中使用平衡树来替代链表存储冲突的元素。这意味着我们可以将最坏情况下的性能从O(n)提高到O(logn)
+在Java 8 之前，HashMap和其他基于map的类都是通过链地址法解决冲突，它们使用单向链表来存储相同索引值的元素。在最坏的情况下，这种方式会将HashMap的get方法的性能从O(1)降低到O(n)。为了解决在频繁冲突时hashmap性能降低的问题，Java 8中使用平衡树来替代链表存储冲突的元素。这意味着我们可以将最坏情况下的性能从O(n)提高到$O(\log(N))$
 
-# 面试
-
-## 1、多线程环境下如何进行扩容
-
-## 2、HashMap、Hashtable、ConcurrentHashMap区别
-
-## 3、使用ConcurrentHashMap中，如何避免组合操作的线程安全问题
-
-可以使用replace方法
-
-## 4、ConcurrentHashMap在jdk8中的bug
-
-https://juejin.cn/post/6844904191077384200
 
 # 参考资料
 

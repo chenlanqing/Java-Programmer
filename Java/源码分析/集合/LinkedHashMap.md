@@ -4,7 +4,6 @@
 签名：
 ```java
 public class LinkedHashMap<K,V> extends HashMap<K,V> implements Map<K,V>{
-
 }
 ```
 LinkedHashMap是HashMap的一个子类，它保留插入的顺序，如果需要输出的顺序和输入时的相同，那么就选用LinkedHashMap。
@@ -158,10 +157,3 @@ void afterNodeInsertion(boolean evict) {
     }
 }
 ```
-
-
- * http://www.cnblogs.com/children/archive/2012/10/02/2710624.html
- * http://www.tuicool.com/articles/IRBNB3v
- * LRU算法:http://woming66.iteye.com/blog/1284326
- * LRU算法:http://tomyz0223.iteye.com/blog/1035686
- 
