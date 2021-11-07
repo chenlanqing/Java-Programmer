@@ -5255,6 +5255,8 @@ mysql与ElasticSearch数据同步
 
 # 三、ElasticSearch整合SpringBoot
 
+[Springboot+ELK](https://blog.51cto.com/zhongmayisheng/4292182)
+
 # 四、Kibana
 
 # 五、Logstash

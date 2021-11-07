@@ -46,9 +46,205 @@ class MyString{
 
 # 二、集合
 
-ConcurrentHashMap、HashMap、Hashtable、LinkedHashMap
+## 1、HashMap、Hashtable、LinkedHashMap
 
-TreeMap
+### 1.1、get和put的原理？JDK8
+
+通过对key的hashCode()进行hashing，并计算下标`( n-1 & hash)`，从而获得buckets的位置。如果产生碰撞，则利用key.equals()方法去链表或树中去查找对应的节点.
+	
+### 1.2、你知道hash的实现吗？为什么要这样实现？
+
+在Java 1.8的实现中，是通过hashCode()的高16位异或低16位实现的：`(h = k.hashCode()) ^ (h >>> 16)`；计算下标`( n-1 & hash)`
+
+- 主要是从速度、功效、质量来考虑的，这么做可以在bucket的n比较小的时候，也能保证考虑到高低bit都参与到hash的计算中，同时不会有太大的开销;
+- hash的算法是``(h = k.hashCode()) ^ (h >>> 16)`，为了使得计算出的hash值更分散，所以选择将h无符号右移16位，然后再与h异或时，就能达到h的高16位和低16位都能参与计算，减少碰撞的可能性；
+- 使用&操作，是为了提高处理器处理的数据；
+- 数组的大小是2的幂次方，是因为只有大小是2的幂次方时，才能够使得`( n-1 & hash)`公式成立
+
+**有哪些解决hash冲突的方法：**
+
+- hash的算法尽可能避免的hash冲突；
+- 自动扩容，当数组大小快满的时候，采取自动扩容，可以减少hash冲突；
+- hash冲突发生时，采用链表来解决；
+- hash冲突严重时，链表会自动转换成红黑树，提高查询速度；
+
+### 1.3、容量是如何处理的
+
+- 如果HashMap的大小超过了负载因子(load factor)定义的容量。如何处理？如果超过了负载因子(默认0.75)。则会重新resize一个原来长度两倍的HashMap。并且重新调用hash方法。
+- 如果指定了HashMap的容量，如：new HashMap(17)，那么其容量会变为32。
+
+### 1.4、为什么 JDK8 的 HashMap 使用的跟以往不同的实现
+
+- 一直到JDK7为止，HashMap 的结构都是这么简单，基于一个数组以及多个链表的实现，hash 值冲突时就将对应节点以链表形式存储。这样的 HashMap 在性能上存在问题：如果很多节点在hash时发生碰撞，存储在一个链表中，那么如果要查找其中一个节点时，不可避免要花费O(N)的时间；
+- 在JDK8中，使用红黑树来解决问题。在最坏的情况下，链表的查找时间复杂度是O(N)，而红黑树一直是O(logN)。JDK7 中HashMap采用的是位桶+链表的方式，即我们常说的散列链表的方式；而 JDK8 中采用的是`位桶+链表/红黑树`也是非线程安全的。当某个位桶的链表的长度达到某个阀值的时候，这个链表就将转换成红黑树
+
+### 1.5、为什么HashMap默认的加载因子是0.75
+
+- 5.1、加载因子：表示hash表中元素填满的程度.
+	* 加载因子越大，填满的元素越多，空间利用率越高,但冲突的机会加大；
+	* 反之,加载因子越小，填满的元素越少，冲突的机会减少，但空间利用率不高。冲突的机会越大，则查找的成本越高；反之。查找的成本越小。需要在"冲突的机会" 和 "空间利用率上" 寻找平衡；出于容量和性能之间平衡的结果
+
+- 5.2、为什么HashMap的默认加载因子是0.75：在理想情况下，使用随机哈希码，节点出现的频率在hash桶中遵循泊松分布，同时给出了桶中元素个数和概率的对照表.
+	```
+	0: 0.60653066
+	1: 0.30326533
+	2: 0.07581633
+	3: 0.01263606
+	4: 0.00157952
+	5: 0.00015795
+	6: 0.00001316
+	7: 0.00000094
+	8: 0.00000006
+	```
+	从上面的表中可以看到当桶中元素到达8个的时候，概率已经变得非常小，也就是说用0.75作为加载因子，每个碰撞位置的链表长度超过８个是几乎不可能的
+
+### 1.6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂
+
+之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法。从key映射到HashMap 数组对应的位置，会用到一个hash函数。实现高效的hash算法，HashMap 中使用位运算。`index = hashcode(key) & (length - 1)`。hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位。长度是2的幂不仅提高了性能，因为`length - 1`的二进制值位全是1，这种情况下，index的结果等同于Hashcode后几位的值，只要输入hashcode均匀分布，hash算法的结果就是均匀的。
+
+### 1.7、泊松分布与指数分布
+
+#### 1.7.1、泊松分布
+
+Poisson分布，是一种统计与概率论中常见的离散概率分布，其适合于描述单位时间内随机事件发生的次数的概率分布。
+
+如某一服务设施在一定时间内受到的服务请求的次数，电话交换机接到呼叫的次数、汽车站台的候客人数、机器出现的故障数、自然灾害发生的次数、DNA序列的变异数、放射性原子核的衰变数、激光的光子数分布等等；
+
+#### 1.7.2、指数分布
+
+指数分布（Exponential distribution）是一种连续概率分布。指数分配可以用来表示独立随机事件发生的时间间隔，比如旅客进入机场的时间间隔、打进客服中心电话的时间间隔、中文维基百科新条目出现的时间间隔等等；
+
+与泊松分布相比，其最大的差异就是指数分布是针对连续随机变量定义，即时间这个变量。时间必须是连续的。而泊松分布是针对随机事件发生次数定义的，发生次数是离散的。粗略地可以认为这两个分布之间有一种“倒数”的关系；
+
+### 1.8、如果HashMap在put的时候，如果数组已有某个key，不想覆盖怎么办？取值时，如果得到的value是空时，如何返回默认值；
+
+- 如果数组有了key，但是不想覆盖value，可以选择`putIfAbsent`方法，这个方法有个内置变量`onlyIfAbsent`，内置是true，就不会覆盖；在平时使用put的时候，内置onlyIfAbsent是false，允许覆盖；
+	```java
+	@Override
+    public V putIfAbsent(K key, V value) {
+        return putVal(hash(key), key, value, true, true);
+    }	
+	```
+- 取值时，如果为空，想返回默认值，可以使用`getOrDefault`方法，第一个参数为key，第二个参数为想返回的默认值；
+	```java
+	@Override
+    public V getOrDefault(Object key, V defaultValue) {
+        Node<K,V> e;
+        return (e = getNode(hash(key), key)) == null ? defaultValue : e.value;
+    }
+	```
+	***上述方法都是在JDK1.8之后才有的***
+
+### 1.9、高并发下 HashMap 的使用的问题
+
+- 扩容-resize()：影响resize发生的因素
+	- capacity：HashMap当前的长度(2的幂);
+	- loadfactor：加载因子,默认是0.75f衡量HashMap是否进行resize条件: HashMap.size >= capacity * loadfactor.
+- 扩容步骤
+	- （1）扩容：创建一个新的entry数组，长度是原来数组的两倍；
+	- （2）rehash：遍历原entry数组，把所有的entry重写hash到新的数组。为什么需要重新hash？因为长度扩大异以后，hash规则也随之改变；`index =  HashCode(Key)&(Length - 1)` 当原数组长度为8时，Hash 运算是 和 111B做与运算；新数组长度为16，Hash 运算是和1111B做与运算。
+- 在单线程下上述步骤执行没有任何问题；在多线程环境下，reHash在并发的情况下可能会形成链表环。此时问题并没有直接产生。当调用Get查找一个不存在的Key，而这个Key的Hash结果恰好等于某个值的时候，由于位置该值带有环形链表，所以程序将会进入死循环，从而报内存溢出。
+- 在高并发环境下，通常使用 `ConcurrentHashMap`，兼顾了线程安全和性能；
+- 下面代码只在JDK7以前的版本有效，jdk8之后就不存在这种问题了。因为JDK8中扩容的时候不存在rehash操作。
+	```java
+	private static Map<Long, Set<Integer>> setMap = new ConcurrentHashMap<>();
+	public static void main(String[] args) throws InterruptedException {
+		final long key = 1L;
+		setMap.put(key, new HashSet<Integer>());
+		for (int i = 0; i < 100; i++) {
+			setMap.get(key).add(i);
+		}
+		Thread a = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				for (int j = 100; j < 200000; j++) {
+					setMap.get(key).add(j);
+				}
+			}
+		});
+		Thread b = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				for (int j = 200000; j < (200000 + 200000); j++) {
+					setMap.get(key).add(j);
+				}
+			}
+		});
+		a.start();
+		b.start();
+		Thread.sleep(1000 * 10);
+		System.out.println(setMap.toString()); // 报java.lang.OutOfMemoryError: Java heap space
+	}
+	```
+
+### 1.10、HashMap的key使用哪种数据结构性能高
+
+首先影响HashMap的性能点：
+- 哈希冲突导致单个哈希桶元素数量过多。操作元素的时间复杂度甚至 退化成O(N)，经红黑树改进后，也得O(logN)。
+- 扩容，为啥扩容？还是为了降低哈希冲突！
+
+主要可以从hash碰撞考虑，hash函数设计的时候是调用对应的类的hashcode方法，对应Integer、Long 等整型类型的数据，其hashcode方法返回的就是对应的整数值，为了减少hash冲突，尽量使用HashCode递增的值作为key，例如递增的int值，这样可以尽可能减少哈希冲突；
+```java
+public final class Integer extends Number implements Comparable<Integer> {
+	@Override
+	public int hashCode() {
+		return Integer.hashCode(value);
+	}
+	public static int hashCode(int value) {
+        return value;
+    }
+}
+```
+
+
+## 2、ConcurrentHashMap
+
+### 2.1、使用ConcurrentHashMap中，如何避免组合操作的线程安全问题
+
+可以使用replace方法
+
+### 2.2、ConcurrentHashMap JDK1.8是如何扩容的? 
+
+tryPresize 
+
+- 如果新增节点之后，所在链表的元素个数达到了阈值 8，则会调用 treeifyBin方法把链表转换成红黑树，不过在结构转换之前，会对数组长度进行判断，如果数组长度n小于阈值 MIN_TREEIFY_CAPACITY，默认是64，则会调用 tryPresize方法把数组长度扩大到原来的两倍，并触发 transfer方法，重新调整节点的位置；
+
+- 新增节点之后，会调用 addCount方法记录元素个数，并检查是否需要进行扩容，当数组元素个数达到阈值时，会触发 transfer方法，重新调整节点的位置；
+
+### 2.3、JDK1.8链表转红黑树的时机是什么? 临界值为什么是8? 
+
+- 首先是链表的长度是否为大于等于8，如果是大于等于8的话，再判断数组的长度是否大于64，如果小于64，则进行数组扩容操作；否则会转为红黑树；
+
+**为什么一开始不用红黑树？**
+
+单个 TreeNode 需要占用的空间大约是普通 Node 的两倍，所以只有当包含足够多的 Nodes 时才会转成 TreeNodes，而是否足够多就是由 `TREEIFY_THRESHOLD` 的值决定的。而当桶中节点数由于移除或者 resize 变少后，又会变回普通的链表的形式，以便节省空间；
+
+**为什么是8？**
+
+如果 hashCode 分布良好，也就是 hash 计算的结果离散好的话，那么红黑树这种形式是很少会被用到的，因为各个值都均匀分布，很少出现链表很长的情况。在理想情况下，链表长度符合泊松分布，各个长度的命中概率依次递减，当长度为 8 的时候，概率仅为 0.00000006。这是一个小于千万分之一的概率，通常我们的 Map 里面是不会存储这么多的数据的，所以通常情况下，并不会发生从链表向红黑树的转换；
+
+链表长度超过 8 就转为红黑树的设计，更多的是为了防止用户自己实现了不好的哈希算法时导致链表过长，从而导致查询效率低，而此时转为红黑树更多的是一种保底策略，用来保证极端情况下查询的效率；
+
+**什么时候红黑树会还原成链表？**
+
+当红黑树元素个数小于等于6的时候；
+
+
+### 2.4、JDK1.8是如何进行数据迁移的? 
+
+transfer 
+
+### 2.5、ConcurrentHashMap在jdk8中的bug
+
+https://juejin.cn/post/6844904191077384200
+
+## 3、TreeMap
+
+### 3.1、LinkedHashMap与TreeMap区别
+
+- 这两者都是能够保证一定的顺序的，其中LinkedHashMap是保证key的插入顺序的，而TreeMap是按照key的自然排序的升序来实现的；
+- LinkedHashMap是通过双向链表实现，其还继承自HashMap；TreeMap是基于红黑树来实现的；
+
 
 ConcurrentSkipListMap   基于跳表实现的
 
@@ -1503,6 +1699,417 @@ Server层包含连接器、查询缓存、分析器、优化器、执行器等�
 
 但是更新有两个重要的日志：redo log 和 binlog
 - 当有一条记录需要更新的时候，InnoDB 引擎就会先把记录写到 redo log里面，并更新内存，这个时候更新就算完成了。同时，InnoDB 引擎会在适当的时候，将这个操作记录更新到磁盘里面，而这个更新往往是在系统比较空闲的时候做；
+
+## 23、基数
+
+基数（Cardinality）指的就是MySQL表中某一列的不同值的数量：
+- 如果这一列是唯一索引，那基数 == 行数。
+- 如果这一列是sex，枚举类型只有男女，那它是基数就是2；
+
+Cardinality越高，列就越有成为索引的价值。MySQL执行计划也会基于Cardinality选择索引
+
+## 24、慢查询
+
+一般是由对应的DBA反馈，DBA会联系业务同学来处理，DBA一般会建议直接kill到对应的慢SQL，可以使用 kill 12 来断开它占用的连接，但是可能又马上建立起连接；
+
+一般研发同学对应的会通过explain命令查看执行计划：
+- 通过explain你可能会发现，SQL压根没走任何索引，而且现在表中的数据量巨大无比；这时就得根据select的内容创建合适索引；
+- 可能是数据量太大了，即使走了索引依然超过了阈值；最好的解决方案其实是分表，比如将大表拆分成128张小表；
+- 通过explain查看SQL执行计划中的key字段。如果发现优化器选择的Key和你预期的Key不一样。那显然是优化器选错了索引；那最快的解决方案就是：force index ，强制指定索引；
+
+## 25、对NotNull字段插入Null值有啥现象
+
+```sql
+mysql> create table t3(
+    -> id int(11) not null
+    -> )engine=innodb default charset=latin1;
+Query OK, 0 rows affected, 1 warning (0.04 sec)
+
+mysql> insert into t3()values();
+ERROR 1364 (HY000): Field 'id' doesn't have a default value
+mysql> show errors;
++-------+------+-----------------------------------------+
+| Level | Code | Message                                 |
++-------+------+-----------------------------------------+
+| Error | 1364 | Field 'id' doesn't have a default value |
++-------+------+-----------------------------------------+
+```
+默认情况下，如果该列要求不能为null。用户还往里面写入null，就会报错：cannot be null；
+
+默认情况下MySQL会用严格模式运行SQL：
+```sql
+mysql> select @@sql_mode;
++-----------------------------------------------------------------------------------------------------------------------+
+| @@sql_mode                                                                                                            |
++-----------------------------------------------------------------------------------------------------------------------+
+| ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION |
++-----------------------------------------------------------------------------------------------------------------------+
+```
+覆盖sql_mode，关闭严格的sql mode后发现是 warning + MySQL帮你插入默认值
+```sql
+mysql> set sql_mode="NO_ENGINE_SUBSTITUTION";                    
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> insert into t3()values();
+Query OK, 1 row affected, 1 warning (0.01 sec)
+
+mysql> show warnings;
++---------+------+-----------------------------------------+
+| Level   | Code | Message                                 |
++---------+------+-----------------------------------------+
+| Warning | 1364 | Field 'id' doesn't have a default value |
++---------+------+-----------------------------------------+
+1 row in set (0.00 sec)
+```
+修改严格模式，插入空字符串
+```sql
+mysql> insert into t3(id)values(' ');
+ERROR 1366 (HY000): Incorrect integer value: ' ' for column 'id' at row 1
+mysql> show errors;
++-------+------+-------------------------------------------------------+
+| Level | Code | Message                                               |
++-------+------+-------------------------------------------------------+
+| Error | 1366 | Incorrect integer value: ' ' for column 'id' at row 1 |
++-------+------+-------------------------------------------------------+
+1 row in set (0.00 sec)
+mysql> set sql_mode="NO_ENGINE_SUBSTITUTION"; 
+mysql> insert into t3(id)values(' ');
+Query OK, 1 row affected, 1 warning (0.01 sec)
+
+mysql> show warnings;
++---------+------+-------------------------------------------------------+
+| Level   | Code | Message                                               |
++---------+------+-------------------------------------------------------+
+| Warning | 1366 | Incorrect integer value: ' ' for column 'id' at row 1 |
++---------+------+-------------------------------------------------------+
+1 row in set (0.00 sec)
+```
+无论是否开启了严格模式，MySQL都不允许往not null字段插入null值，它不会因为你插入null，而将null转成该数据类型的0值
+
+关于常见的sql_mode：
+
+**1、STRICT_TRANS_TABLES**
+
+将其加入到sql_mode之后，MySQL会判断是否可以直接把用户给的值插入事务表中，如果不能就中止该语句。对于非事务表，如果该值出现在单行语句或多行语句的第一行中，则中止该语句。
+
+结合上面的例子可以更好的理解STRICT_TRANS_TABLES的作用。
+
+**2、NO_ZERO_IN_DA****TE**
+
+将其加入到sql_model之后，MySQL将不允许你将诸如 0000-10-10、2020-00-10、2020-10-00等年份、月份、日期为零的值插入到Date列中。
+
+目前该参数处于目前该参数默认会生效，但是在未来的版本中将会被删除。
+
+**3、NO_ZERO_DATE：**
+
+- 该参数控制MySQL是否允许将 `'0000-00-00'`作为有效日期。
+- 如果未启用此模式， `'0000-00-00'`允许插入不会产生警告。
+- 如果启用此模式，`'0000-00-00'` 允许插入且产生警告。
+
+如果启用了此模式和严格模式， `'0000-00-00'` 插入产生错误，除非 `IGNORE`同样给出。对于 `INSERT IGNORE`和`UPDATE IGNORE`，`'0000-00-00'`允许插入且产生警告；
+
+## 26、date、datetime、time、timestamp、year区别
+
+有如下表：
+```sql
+create table t2(
+    m_time time default null,
+    m_date date default null,
+    m_datetime datetime default null,
+    m_timestamp timestamp null default null,
+    m_year year(4) default null
+)engine=innodb default charset=utf8;
+```
+### 26.1、year
+
+支持范围：`1901～2155`，在 MySQL5.7.5 中删除了对Year(2)的支持，同一转换为Year(4)。所以如果你使用这个版本的MySQL，会发现它会把年份以4位长度的数字展示给我们看；
+
+尝试插入一个超过它规定的上限2155的值 -- 2156 ，如下：
+```sql
+mysql> insert into t2(m_year) values(2156);
+ERROR 1264 (22003): Out of range value for column 'm_year' at row 1
+```
+为什么会报错，因为这里是严格模式，如下关闭了严格模式的执行过程：然后插入非法值，结果很明显，不会报错。而且MySQL帮你插入了0000值
+```sql
+mysql> insert into t2(m_year) values(2156);
+Query OK, 1 row affected, 1 warning (0.02 sec)
+
+mysql> show warnings;
++---------+------+-------------------------------------------------+
+| Level   | Code | Message                                         |
++---------+------+-------------------------------------------------+
+| Warning | 1264 | Out of range value for column 'm_year' at row 1 |
++---------+------+-------------------------------------------------+
+1 row in set (0.00 sec)
+mysql> select * from t2;
++--------+--------+------------+-------------+--------+
+| m_time | m_date | m_datetime | m_timestamp | m_year |
++--------+--------+------------+-------------+--------+
+| NULL   | NULL   | NULL       | NULL        |   0000 |
++--------+--------+------------+-------------+--------+
+```
+
+### 26.2、Date
+
+支持的范围：`1000-01-01 ～ 9999-12-31`
+```sql
+mysql> insert into t2(m_date)values('2020-10-24');
+Query OK, 1 row affected (0.00 sec)
+mysql> insert into t2(m_date)values('2020-10-31 21:53:59.057627'); # 会将后面的时分秒截断，只保留日期
+Query OK, 1 row affected, 1 warning (0.01 sec)
+mysql> show warnings;
++-------+------+---------------------------------------------------------------------------------+
+| Level | Code | Message                                                                         |
++-------+------+---------------------------------------------------------------------------------+
+| Note  | 1292 | Incorrect date value: '2020-10-31 21:53:59.057627' for column 'm_date' at row 1 |
++-------+------+---------------------------------------------------------------------------------+
+1 row in set (0.00 sec)
+mysql> insert into t2(m_date)values('999-10-24'); # 可以插入早于1000年的时间
+Query OK, 1 row affected (0.00 sec)
+mysql> insert into t2(m_date)values('99999-10-24'); # 不允许插入大于 9999年的时间
+ERROR 1292 (22007): Incorrect date value: '99999-10-24' for column 'm_date' at row 1
+mysql> insert into t2(m_date)values('-2020-10-24'); # 不允许插入非法的日期
+ERROR 1292 (22007): Incorrect date value: '-2020-10-24' for column 'm_date' at row 1
+```
+能不能插入`0000-00-00` 取决于你使用的那种sql mode，默认情况下是插入不进去的，且开启使用了参数NO_ZERO_DATE，如下：
+```sql
+mysql> insert into t2(m_date)values('0000-00-00');
+ERROR 1292 (22007): Incorrect date value: '0000-00-00' for column 'm_date' at row 1
+```
+
+### 26.3、Datetime
+
+支持范围：`1000-01-01 00:00:00.000000  to  9999-12-31 23:59:59.999999`，datetime 比 date 更精确
+- 如果不显示指定时分秒，默认是 00:00:00；
+- 大于9999的年份无法插入；
+- 秒的小数点后面多几位也没有关系，允许插入；
+
+### 26.4、time
+
+支持范围：`-838:59:59.000000  to 838:59:59.000000`，time类型不仅可以用来表示24h，还可以用来表示一个时间范围，这个时间范围可能会很大，甚至是负的
+```sql
+mysql> insert into t2(m_time) values(''); # 插入的都是时间零值 00:00:00
+Query OK, 1 row affected (0.00 sec)
+mysql> insert into t2(m_time) values('0'); # 插入的都是时间零值 00:00:00
+Query OK, 1 row affected (0.01 sec)
+mysql> insert into t2(m_time) values(0); # 插入的都是时间零值 00:00:00
+Query OK, 1 row affected (0.01 sec)
+mysql> insert into t2(m_time) values(12); # 00:00:12
+Query OK, 1 row affected (0.02 sec)
+mysql> insert into t2(m_time) values(1212); # 00:12:12
+Query OK, 1 row affected (0.01 sec)
+mysql> insert into t2(m_time) values(121212); # 12:12:12
+Query OK, 1 row affected (0.01 sec)
+mysql> insert into t2(m_time) values(60);
+ERROR 1292 (22007): Incorrect time value: '60' for column 'm_time' at row 1
+mysql> select * from t2;
++----------+------------+------------+-------------+--------+
+| m_time   | m_date     | m_datetime | m_timestamp | m_year |
++----------+------------+------------+-------------+--------+
+| 00:00:00 | NULL       | NULL       | NULL        |   NULL |
+| 00:00:00 | NULL       | NULL       | NULL        |   NULL |
+| 00:00:00 | NULL       | NULL       | NULL        |   NULL |
+| 00:00:12 | NULL       | NULL       | NULL        |   NULL |
+| 00:12:12 | NULL       | NULL       | NULL        |   NULL |
+| 12:12:12 | NULL       | NULL       | NULL        |   NULL |
++----------+------------+------------+-------------+--------+
+```
+
+### 26.5、Timestamp
+
+支持范围： 1970-01-01 00:00:01 UTC to 2038-01-19 03:14:07 UTC
+
+> 因为32位能表示的最大值是2147483647。另外1年365天的总秒数是 31536000，2147483647/31536000 = 68.1，也就是说32位能表示的最长时间是68年，从1970年开始的话，加上68.1，实际最终到2038年01月19日03时14分07秒。过了这个上线，所有32位操作系统时间都会变成10000000 00000000 00000000 00000000
+
+## 27、表空间与数据表
+
+数据表其实是逻辑上的概念，而表空间是物理层面的概念
+
+在innodb存储引擎中数据是按照表空间来组织存储的，表空间文件是实际存在的物理文件；
+
+**系统表空间**
+
+查看MySQL系统表空间：
+```sql
+mysql> show variables like '%innodb_data_file_path%';
++-----------------------+------------------------+
+| Variable_name         | Value                  |
++-----------------------+------------------------+
+| innodb_data_file_path | ibdata1:12M:autoextend |
++-----------------------+------------------------+
+```
+默认情况下，MySQL会初始化一个大小为12MB，名为ibdata1文件，并且随着数据的增多，它会自动扩容；这个ibdata1文件是系统表空间，也是默认的表空间，也是默认的表空间物理文件，也是传说中的共享表空间；
+
+**file per table 表空间**
+
+如果想让每一个数据表都有一个单独的表空间文件的话，可以通过参数`innodb_file_per_table`设置
+
+> 这个参数只有在MySQL5.6或者是更高的版本中才可以使用。
+```sql
+mysql> show variables like '%innodb_file_per_table%';
++-----------------------+-------+
+| Variable_name         | Value |
++-----------------------+-------+
+| innodb_file_per_table | ON    |
++-----------------------+-------+
+```
+将其设置为ON，那之后InnoDB存储引擎产生的表都会自己独立的表空间文件；独立的表空间文件命名规则：表名.ibd
+
+> 独立表空间文件中仅存放该表对应数据、索引、insert buffer bitmap。
+> 其余的诸如：undo信息、insert buffer 索引页、double write buffer 等信息依然放在默认表空间，也就是共享表空间中；
+
+file per table的优点
+- 提升容错率，表A的表空间损坏后，其他表空间不会收到影响；
+- 使用MySQL Enterprise Backup快速备份或还原在每表文件表空间中创建的表，不会中断其他InnoDB表的使用；
+
+缺点：对fsync系统调用来说不友好，如果使用一个表空间文件的话单次系统调用可以完成数据的落盘，但是如果你将表空间文件拆分成多个。原来的一次fsync可能会就变成针对涉及到的所有表空间文件分别执行一次fsync，增加fsync的次数
+
+**临时表空间：**
+
+临时表空间用于存放用户创建的临时表和磁盘内部临时表，参数`innodb_temp_data_file_path`定义了临时表空间的一些名称、大小、规格属性如下图：
+```sql
+mysql> show variables like '%innodb_temp_data_file_path%';
++----------------------------+-----------------------+
+| Variable_name              | Value                 |
++----------------------------+-----------------------+
+| innodb_temp_data_file_path | ibtmp1:12M:autoextend |
++----------------------------+-----------------------+
+```
+查看临时表空间文件存放的目录：`innodb_data_home_dir`
+
+## 28、数据页
+
+InnoDB从磁盘中读取数据的最小单位是数据页。而你想得到的id = xxx的数据，就是这个数据页众多行中的一行，数据页的逻辑视图：
+
+![](image/MySQL-数据页结构.png)
+
+在InnoDB存储引擎中，数据页是InnoDB磁盘管理的最小的数据单位，数据页的默认大小为16KB。
+
+单个数据页的大小并不是一成不变的。
+
+在MySQL5.6中：你可以通过参数`innodb_page_size`设置每个数据页的大小为4KB、8KB、16KB。一旦设置完成后，所有表中的数据页大小都将是你设置的值且不可变。不论你将`innodb_page_size`设置成多大，一个区（extent）1MB的事实都不会改变。
+
+在MySQL5.7.6中：允许你将`innodb_page_size`设置成 32KB、64KB大小。对于32KB大小的数据页来说区的大小被调整成2MB。对于64KB大小的数据页来说，区的大小被调整成4MB；
+
+**数据区：**
+
+在MySQL的设定中，同一个表空间内的一组连续的数据页为一个extent（区），默认区的大小为1MB，页的大小为16KB。16*64=1024，也就是说一个区里面会有64个连续的数据页。连续的256个数据区为一组数据区
+
+![](image/MySQL-数据页-数据区.png)
+
+**数据页分裂问题**
+
+假设你现在已经有两个数据页了。并且你正在往第二个数据页中写数据。B+Tree中的叶子结点之间是通过双向链表关联起来的。
+
+在InnoDB索引的设定中，要求主键索引是递增的，这样在构建索引树的时候才更加方便。可以思考一下。如果按1、2、3...递增的顺序给你这些数。是不是很方便的构建一棵树。然后可以方便的在这棵树上进行二分查找。
+
+那假设你自定义了主键索引，而且你自定义的这个主键索引并不一定是自增的，然后随着你将数据写入。就导致后一个数据页中的所有行并不一定比前一个数据页中的行的id大。这时就会触发页分裂的逻辑。
+
+页分裂的目的就是保证：后一个数据页中的所有行主键值比前一个数据页中主键值大；
+
+## 29、MySQL的数据行与行溢出机制
+
+可以这样看一下你的数据表的行格式：
+```sql
+mysql> show table status like '%t2%'\G
+*************************** 1. row ***************************
+           Name: t2
+         Engine: InnoDB
+        Version: 10
+     Row_format: Dynamic
+           Rows: 12
+ Avg_row_length: 1365
+    Data_length: 16384
+Max_data_length: 0
+   Index_length: 0
+      Data_free: 0
+ Auto_increment: NULL
+    Create_time: 2021-11-06 09:49:11
+    Update_time: 2021-11-06 10:06:49
+     Check_time: NULL
+      Collation: utf8_general_ci
+       Checksum: NULL
+ Create_options: 
+        Comment: 
+```
+MySQL的数据行有四种格式：一种就是的 Compact格式，还有一种是Redundant格式、以及Dynamic、Compress；Compact是一种紧凑的行格式，设计的初衷就是为了让一个数据页中可以存放更多的数据行；
+
+在MySQL的设定中，单行数据最大能存储65535byte的数据（注意是byte，而不是字符），但是当你像下面这样创建一张数据表时却发生了错误：
+```sql
+mysql> create table t4(a varchar(65535)not null)engine=innodb default charset=latin1;
+ERROR 1118 (42000): Row size too large. The maximum row size for the used table type, not counting BLOBs, is 65535. This includes storage overhead, check the manual. You have to change some columns to TEXT or BLOBs
+```
+MySQL不允许创建一个长度为65535byte的列，因为数据页中每一行中都有之前提到的隐藏列,所以将varchar的长度降低到65532byte即可成功创建该表；所以如果你将charset换成utf8这种编码格式，那varchar(N)中的N其实指的N个字符，而不是N个byte
+
+**行溢出：**
+
+如果数据页默认大小为16KB，换算成byte：16*1024 = 16384 byte，那你有没有发现，单页能存储的16384byte和单行最大能存储的 65535byte 差了好几倍呢
+
+## 30、数据库锁
+
+### 30.1、关于一条sql的加锁与锁释放
+
+有表结构如下：
+```sql
+CREATE TABLE `t` (
+  `id` int(11) NOT NULL,
+  `c` int(11) DEFAULT NULL,
+  `d` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `c` (`c`)
+) ENGINE=InnoDB;
+insert into t values(0,0,0),(5,5,5),(10,10,10),(15,15,15),(20,20,20),(25,25,25);
+```
+在加锁读的时候，用的是这个语句，`select * from t where id=1 lock in share mode`。由于 id 上有索引，所以可以直接定位到 id=1 这一行，因此读锁也是只加在了这一行上；
+
+如果有以下SQL语句
+```sql
+begin;
+select * from t where d=5 for update;
+commit;
+```
+这个语句会命中 d=5 的这一行，对应的主键 id=5，因此在 select 语句执行完成后，id=5 这一行会加一个写锁，而且由于两阶段锁协议，这个写锁会在执行 commit 语句的时候释放。语句执行完成后，InnoDB 就会把不满足条件的行行锁去掉；
+
+### 30.2、为什么这几个sql会发生锁等待
+
+参考上面的表结构与数据
+
+![](image/MySQL-间隙锁-加锁分析-1.png)
+
+上面session B 和 session C 的 insert 语句都会进入锁等待状态，为什么？
+- 由于是 order by c desc，第一个要定位的是索引 c 上“最右边的”c=20 的行，所以会加上间隙锁 (20,25) 和 next-key lock (15,20]。执行c=20的时候，由于要order by c desc, 就要先找到“最右边第一个c=20的行”，这个怎么找呢，只能向右找到25，才能知道它左边那个20是“最右的20”
+- 在索引 c 上向左遍历，要扫描到 c=10 才停下来，所以 next-key lock 会加到 (5,10]，这正是阻塞 session B 的 insert 语句的原因。
+- 在扫描过程中，c=20、c=15、c=10 这三行都存在值，由于是 select *，所以会在主键 id 上加三个行锁。
+
+因此，session A 的 select 语句锁的范围就是：
+- 索引 c 上 (5, 25)；
+- 主键索引上 id=15、20 两个行锁。
+
+## 31、日志
+
+### 31.1、WAL 机制是减少磁盘写，可是每次提交事务都要写 redo log 和 binlog，这磁盘读写次数也没变少呀？
+
+WAL 机制主要得益于两个方面：
+- redo log 和 binlog 都是顺序写，磁盘的顺序写比随机写速度要快；
+- 组提交机制，可以大幅度降低磁盘的 IOPS 消耗；
+
+### 31.2、如果你的 MySQL 现在出现了性能瓶颈，而且瓶颈在 IO 上，可以通过哪些方法来提升性能呢？
+
+针对这个问题，可以考虑以下三种方法：
+- 设置 `binlog_group_commit_sync_delay` 和 `binlog_group_commit_sync_no_delay_count` 参数，减少 binlog 的写盘次数。这个方法是基于“额外的故意等待”来实现的，因此可能会增加语句的响应时间，但没有丢失数据的风险。
+- 将 `sync_binlog` 设置为大于 1 的值（比较常见是 100~1000）。这样做的风险是，主机掉电时会丢 binlog 日志。
+- 将 `innodb_flush_log_at_trx_commit` 设置为 2。这样做的风险是，主机掉电的时候会丢数据。
+
+### 31.3、binlog cache 是每个线程自己维护的，而 redo log buffer 是全局共用的？
+
+- MySQL 这么设计的主要原因是，binlog 是不能“被打断的”。一个事务的 binlog 必须连续写，因此要整个事务完成后，再一起写到文件里。
+- 而 redo log 并没有这个要求，中间有生成的日志可以写到 redo log buffer 中。redo log buffer 中的内容还能“搭便车”，其他事务提交的时候可以被一起写到磁盘中；
+
+### 31.4、crash-safe保证了什么
+
+- 如果客户端收到事务成功的消息，事务就一定持久化了；
+- 如果客户端收到事务失败（比如主键冲突、回滚等）的消息，事务就一定失败了；
+- 如果客户端收到“执行异常”的消息，应用需要重连后通过查询当前状态来继续后续的逻辑。此时数据库只需要保证内部（数据和日志之间，主库和备库之间）一致就可以了。
 
 # 七、Spring
 

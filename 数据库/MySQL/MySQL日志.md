@@ -54,6 +54,8 @@ InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_tr
 
 ### 1.3、日志文件组
 
+通常我们说 MySQL 的“双 1”配置，指的就是 `sync_binlog` 和 `innodb_flush_log_at_trx_commit` 都设置成 1。也就是说，一个事务完整提交前，需要等待两次刷盘，一次是 redo log（prepare 阶段），一次是 binlog
+
 硬盘上存储的 redo log 日志文件不只一个，而是以一个日志文件组的形式出现的，每个的redo日志文件大小都是一样的；比如可以配置为一组4个文件，每个文件的大小是 1GB，整个 redo log 日志文件组可以记录4G的内容；
 
 它采用的是环形数组形式，从头开始写，写到末尾又回到头循环写；
@@ -231,19 +233,27 @@ End_log_pos: 10506
 ## 5、binlog写入机制
 
 binlog的写入时机也非常简单，事务执行过程中，先把日志写到binlog cache，事务提交的时候，再把binlog cache写到binlog文件中；因为一个事务的binlog不能被拆开，无论这个事务多大，也要确保一次性写入，所以系统会给每个线程分配一个块内存作为binlog cache。可以通过`binlog_cache_size`参数控制单个线程 binlog cache 大小，如果存储内容超过了这个参数，就要暂存到磁盘（Swap）；
-
+```sql
+mysql> show variables like '%binlog_cache_size%';
++-----------------------+----------------------+
+| Variable_name         | Value                |
++-----------------------+----------------------+
+| binlog_cache_size     | 32768                |
+| max_binlog_cache_size | 18446744073709547520 |
++-----------------------+----------------------+
+```
 binlog日志刷盘流程如下：
 
 ![](image/MySQL-binlog-刷盘流程.png)
 - 上图的 write，是指把日志写入到文件系统的 page cache，并没有把数据持久化到磁盘，所以速度比较快
-- 上图的 fsync，才是将数据持久化到磁盘的操作
+- 上图的 fsync，才是将数据持久化到磁盘的操作，一般情况下，我们认为 fsync 才占磁盘的 IOPS；
 
 write和fsync的时机，可以由参数`sync_binlog`控制，默认是0；对支持事务的引擎如InnoDB而言，必须要提交了事务才会记录binlog。binlog 什么时候刷新到磁盘跟参数 `sync_binlog` 相关：
 - 如果设置为0，表示每次提交事务都只write，由系统自行判断什么时候执行fsync，即MySQL不控制binlog的刷新，由文件系统去控制它缓存的刷新；虽然性能得到提升，但是机器宕机，page cache里面的 binglog 会丢失；
 - 设置为1，表示每次提交事务都会执行fsync，就如同binlog 日志刷盘流程一样；在系统故障时最多丢失一个事务的更新，但是会对性能有所影响
 - 设置N(N>1)值，表示每次提交事务都write，但累积N个事务后才fsync；如果机器宕机，会丢失最近N个事务的binlog日志；
 
-如果 `sync_binlog=0` 或 `sync_binlog`大于1，当发生数据库崩溃时，可能有一部分已提交但其binlog未被同步到磁盘的事务会被丢失，恢复程序将无法恢复这部分事务。
+因此，在出现 IO 瓶颈的场景里，将 sync_binlog 设置成一个比较大的值，可以提升性能。在实际的业务场景中，考虑到丢失日志量的可控性，一般不建议将这个参数设成 0，比较常见的是将其设置为 100~1000 中的某个数值；如果 `sync_binlog=0` 或 `sync_binlog`大于1，当发生数据库崩溃时，可能有一部分已提交但其binlog未被同步到磁盘的事务会被丢失，恢复程序将无法恢复这部分事务。
 
 在MySQL 5.7.7之前，默认值 `sync_binlog` 是0，MySQL 5.7.7和更高版本使用默认值1，这是最安全的选择。一般情况下会设置为100或者0，牺牲一定的一致性来获取更好的性能；
 
