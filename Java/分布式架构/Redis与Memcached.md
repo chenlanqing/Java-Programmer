@@ -824,6 +824,8 @@ ZREVRANGE 命令按相反的顺序获取有序集合的元素；也可以同时�
 - [Redis数据结构](https://pdai.tech/md/db/nosql-redis/db-redis-x-redis-ds.html)
 - [Redis高级数据结构](https://mp.weixin.qq.com/s/GLqZf-0sLQ7nnJ8Xb9oVZQ)
 
+Redis 整体就是一个 哈希表来保存所有的键值对，无论数据类型是 5 种的任意一种。哈希表，本质就是一个数组，每个元素被叫做哈希桶，不管什么数据类型，每个桶里面的 entry 保存着实际具体值的指针；而哈希表的时间复杂度是 O(1)，只需要计算每个键的哈希值，便知道对应的哈希桶位置，定位桶里面的 entry 找到对应数据；Redis 使用对象（redisObject）来表示数据库中的键值，当我们在 Redis 中创建一个键值对时，至少创建两个对象，一个对象是用做键值对的键对象，另一个是键值对的值对象。也就是每个 entry 保存着 「键值对」的 redisObject 对象，通过 redisObject 的指针找到对应数据。
+
 ## 1、字符串处理-SDS
 
 Redis自己构建了一种名叫`Simple dynamic string(SDS)`的数据结构，它是一种二进制安全的，在大多数的情况下redis中的字符串都用SDS来存储
@@ -1837,6 +1839,7 @@ lazyfree_pending_objects:0
 
 ### 2.1、Redis单线程
 
+- 单线程指的是 Redis 键值对读写指令的执行是单线程
 - 为什么采用单线程：Redis是基于内存的操作，CPU不是Redis的瓶颈，Redis的瓶颈最有可能是机器内存的大小或者网络带宽。既然单线程容易实现，而且CPU不会成为瓶颈，那就顺理成章地采用单线程的方案了；
 - 单线程多进程集群方案：多个redis实例
 - 采用单线程，避免了不必要的上下文切换和竞争条件，也不存在多进程或者多线程导致的切换而消耗 CPU
@@ -1854,6 +1857,7 @@ Redis单线程的优劣势：
 
 ### 2.4、Redis线程模型
 
+Redis 采用 I/O 多路复用技术，并发处理连接。采用了 epoll + 自己实现的简单的事件框架
 - Redis 基于 Reactor 模式来设计开发了自己的一套高效的事件处理模型 （Netty 的线程模型也基于 Reactor 模式，Reactor 模式不愧是高性能 IO 的基石），这套事件处理模型对应的是 Redis 中的文件事件处理器（file event handler）。由于文件事件处理器（file event handler）是单线程方式运行的，所以我们一般都说 Redis 是单线程模型；
 - 它采用 IO 多路复用机制同时监听多个 socket，根据 socket 上的事件来选择对应的事件处理器进行处理；
 
@@ -1883,6 +1887,8 @@ Redis 还会 fork 一个子进程，来进行重负荷任务的处理。Redis
 - 当需要进行全量复制时，master 也会启动一个子进程，子进程将数据库快照保存到 RDB 文件，在写完 RDB 快照文件后，master 就会把 RDB 发给 slave，同时将后续新的写指令都同步给 slave
 
 ### 2.3、高性能
+
+* [Redis基准测试](https://redis.io/topics/benchmarks)
 
 - redis是基于内存的，内存的读写速度非常快；避免磁盘IO
 - 数据结构简单；
