@@ -1,3 +1,4 @@
+### 基本操作
 
 ```sql
 /* Windows服务 */
@@ -9,6 +10,11 @@
 mysql -h 地址 -P 端口 -u 用户名 -p 密码
 SHOW PROCESSLIST -- 显示哪些线程正在运行
 SHOW VARIABLES -- 显示系统变量信息
+```
+
+### 数据库操作
+
+```sql
 /* 数据库操作 */ ------------------
 -- 查看当前数据库
     SELECT DATABASE();
@@ -28,7 +34,11 @@ SHOW VARIABLES -- 显示系统变量信息
 -- 删除库
     DROP DATABASE[ IF EXISTS] 数据库名
         同时删除该数据库相关的目录及其目录内容
-/* 表的操作 */ ------------------
+```
+
+### 表的操作 
+
+```sql
 -- 创建表
     CREATE [TEMPORARY] TABLE[ IF NOT EXISTS] [库名.]表名 ( 表的结构定义 )[ 表选项]
         每个字段必须有数据类型
@@ -61,8 +71,8 @@ SHOW VARIABLES -- 显示系统变量信息
         PARTITION BY ... (详细见手册)
 -- 查看所有表
     SHOW TABLES[ LIKE 'pattern']
-    SHOW TABLES FROM 表名
--- 查看表机构
+    SHOW TABLES FROM  库名
+-- 查看表结构
     SHOW CREATE TABLE 表名 （信息更详细）
     DESC 表名 / DESCRIBE 表名 / EXPLAIN 表名 / SHOW COLUMNS FROM 表名 [LIKE 'PATTERN']
     SHOW TABLE STATUS [FROM db_name] [LIKE 'pattern']
@@ -105,6 +115,11 @@ SHOW VARIABLES -- 显示系统变量信息
     REPAIR [LOCAL | NO_WRITE_TO_BINLOG] TABLE tbl_name [, tbl_name] ... [QUICK] [EXTENDED] [USE_FRM]
 -- 分析表
     ANALYZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE tbl_name [, tbl_name] ...
+```
+
+### 数据操作
+
+```sql
 /* 数据操作 */ ------------------
 -- 增
     INSERT [INTO] 表名 [(字段列表)] VALUES (值列表)[, (值列表), ...]
@@ -122,6 +137,11 @@ SHOW VARIABLES -- 显示系统变量信息
         没有条件子句，则会删除全部
 -- 改
     UPDATE 表名 SET 字段名=新值[, 字段名=新值] [更新条件]
+```
+
+### 字符集编码
+
+```sql
 /* 字符集编码 */ ------------------
 -- MySQL、数据库、表、字段均可设置编码
 -- 数据编码与客户端编码不需一致
@@ -140,6 +160,11 @@ SET NAMES GBK;  -- 相当于完成以上三个设置
     SHOW COLLATION [LIKE 'pattern']     查看所有校对集
     CHARSET 字符集编码     设置字符集编码
     COLLATE 校对集编码     设置校对集编码
+```
+
+### 数据类型(列类型)
+
+```sql
 /* 数据类型（列类型） */ ------------------
 1. 数值类型
 -- a. 整型 ----------
@@ -185,7 +210,7 @@ SET NAMES GBK;  -- 相当于完成以上三个设置
         utf8 最大为21844个字符，gbk 最大为32766个字符，latin1 最大为65532个字符
     varchar 是变长的，需要利用存储空间保存 varchar 的长度，如果数据小于255个字节，则采用一个字节来保存长度，反之需要两个字节来保存。
     varchar 的最大有效长度由最大行大小和使用的字符集确定。
-    最大有效长度是65532字节，因为在varchar存字符串时，第一个字节是空的，不存在任何数据，然后还需两个字节来存放字符串的长度，所以有效长度是64432-1-2=65532字节。
+    最大有效长度是65532字节，因为在varchar存字符串时，第一个字节是空的，不存在任何数据，然后还需两个字节来存放字符串的长度，所以有效长度是65535-1-2=65532字节。
     例：若一个表定义为 CREATE TABLE tb(c1 int, c2 char(30), c3 varchar(N)) charset=utf8; 问N的最大值是多少？ 答：(65535-1-2-4-30*3)/3
 -- b. blob, text ----------
     blob 二进制字符串（字节字符串）
@@ -237,22 +262,11 @@ set(val1, val2, val3...)
     insert into tab values ('男, 女');
     最多可以有64个不同的成员。以bigint存储，共8个字节。采取位运算的形式。
     当创建表时，SET成员值的尾部空格将自动被删除。
-/* 选择类型 */
--- PHP角度
-1. 功能满足
-2. 存储空间尽量小，处理效率更高
-3. 考虑兼容问题
--- IP存储 ----------
-1. 只需存储，可用字符串
-2. 如果需计算，查找等，可存储为4个字节的无符号int，即unsigned
-    1) PHP函数转换
-        ip2long可转换为整型，但会出现携带符号问题。需格式化为无符号的整型。
-        利用sprintf函数格式化字符串
-        sprintf("%u", ip2long('192.168.3.134'));
-        然后用long2ip将整型转回IP字符串
-    2) MySQL函数转换(无符号整型，UNSIGNED)
-        INET_ATON('127.0.0.1') 将IP转为整型
-        INET_NTOA(2130706433) 将整型转为IP
+```
+
+### 列属性(列约束)
+
+```sql
 /* 列属性（列约束） */ ------------------
 1. PRIMARY 主键
     - 能唯一标识记录的字段，可以作为主键。
@@ -302,6 +316,12 @@ set(val1, val2, val3...)
     2. set null，设置为null。主表数据被更新（主键值更新），从表的外键被设置为null。主表记录被删除，从表相关记录外键被设置成null。但注意，要求该外键列，没有not null属性约束。
     3. restrict，拒绝父表删除和更新。
     注意，外键只被InnoDB存储引擎所支持。其他引擎是不支持的。
+
+```
+
+### 建表规范
+
+```sql
 /* 建表规范 */ ------------------
     -- Normal Format, NF
         - 每个表保存一个实体信息
@@ -311,11 +331,16 @@ set(val1, val2, val3...)
         字段不能再分，就满足第一范式。
     -- 2NF, 第二范式
         满足第一范式的前提下，不能出现部分依赖。
-        消除符合主键就可以避免部分依赖。增加单列关键字。
+        消除复合主键就可以避免部分依赖。增加单列关键字。
     -- 3NF, 第三范式
         满足第二范式的前提下，不能出现传递依赖。
         某个字段依赖于主键，而有其他字段依赖于该字段。这就是传递依赖。
         将一个实体信息的数据放在一个表内实现。
+```
+
+### SELECT 
+
+```sql
 /* SELECT */ ------------------
 SELECT [ALL|DISTINCT] select_expr FROM -> WHERE -> GROUP BY [合计函数] -> HAVING -> ORDER BY -> LIMIT
 a. select_expr
@@ -376,6 +401,11 @@ g. LIMIT 子句，限制结果数量子句
 h. DISTINCT, ALL 选项
     distinct 去除重复记录
     默认为 all, 全部记录
+```
+
+###  UNION
+
+```sql
 /* UNION */ ------------------
     将多个select查询的结果组合成一个结果集合。
     SELECT ... UNION [ALL|DISTINCT] SELECT ...
@@ -384,6 +414,11 @@ h. DISTINCT, ALL 选项
     ORDER BY 排序时，需加上 LIMIT 进行结合。
     需要各select查询的字段数量一样。
     每个select查询的字段列表(数量、类型)应一致，因为结果中的字段名以第一条select语句为准。
+```
+
+### 子查询
+
+```sql
 /* 子查询 */ ------------------
     - 子查询需用括号包裹。
 -- from型
@@ -413,6 +448,11 @@ h. DISTINCT, ALL 选项
     = some()    相当于 in。any 是 some 的别名
     != some()   不等同于 not in，不等于其中某一个。
     all, some 可以配合其他运算符一起使用。
+```
+
+### 连接查询(join)
+
+```sql
 /* 连接查询(join) */ ------------------
     将多个表的字段进行连接，可以指定连接条件。
 -- 内连接(inner join)
@@ -437,48 +477,11 @@ h. DISTINCT, ALL 选项
     natural left join
     natural right join
 select info.id, info.name, info.stu_num, extra_info.hobby, extra_info.sex from info, extra_info where info.stu_num = extra_info.stu_id;
-/* 导入导出 */ ------------------
-select * into outfile 文件地址 [控制格式] from 表名;   -- 导出表数据
-load data [local] infile 文件地址 [replace|ignore] into table 表名 [控制格式]; -- 导入数据
-    生成的数据默认的分隔符是制表符
-    local未指定，则数据文件必须在服务器上
-    replace 和 ignore 关键词控制对现有的唯一键记录的重复的处理
--- 控制格式
-fields  控制字段格式
-默认：fields terminated by '\t' enclosed by '' escaped by '\\'
-    terminated by 'string'  -- 终止
-    enclosed by 'char'      -- 包裹
-    escaped by 'char'       -- 转义
-    -- 示例：
-        SELECT a,b,a+b INTO OUTFILE '/tmp/result.text'
-        FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED BY '"'
-        LINES TERMINATED BY '\n'
-        FROM test_table;
-lines   控制行格式
-默认：lines terminated by '\n'
-    terminated by 'string'  -- 终止
-/* INSERT */ ------------------
-select语句获得的数据可以用insert插入。
-可以省略对列的指定，要求 values () 括号内，提供给了按照列顺序出现的所有字段的值。
-    或者使用set语法。
-    INSERT INTO tbl_name SET field=value,...；
-可以一次性使用多个值，采用(), (), ();的形式。
-    INSERT INTO tbl_name VALUES (), (), ();
-可以在列值指定时，使用表达式。
-    INSERT INTO tbl_name VALUES (field_value, 10+10, now());
-可以使用一个特殊值 DEFAULT，表示该列使用默认值。
-    INSERT INTO tbl_name VALUES (field_value, DEFAULT);
-可以通过一个查询的结果，作为需要插入的值。
-    INSERT INTO tbl_name SELECT ...;
-可以指定在插入的值出现主键（或唯一索引）冲突时，更新其他非主键列的信息。
-    INSERT INTO tbl_name VALUES/SET/SELECT ON DUPLICATE KEY UPDATE 字段=值, …;
-/* DELETE */ ------------------
-DELETE FROM tbl_name [WHERE where_definition] [ORDER BY ...] [LIMIT row_count]
-按照条件删除。where
-指定删除的最多记录数。limit
-可以通过排序条件删除。order by + limit
-支持多表删除，使用类似连接语法。
-delete from 需要删除数据多表1，表2 using 表连接操作 条件。
+```
+
+### TRUNCATE 
+
+```sql
 /* TRUNCATE */ ------------------
 TRUNCATE [TABLE] tbl_name
 清空数据
@@ -488,6 +491,11 @@ TRUNCATE [TABLE] tbl_name
 2，truncate 重置auto_increment的值。而delete不会
 3，truncate 不知道删除了几条，而delete知道。
 4，当被用于带分区的表时，truncate 会保留分区
+```
+
+### 备份与还原
+
+```sql
 /* 备份与还原 */ ------------------
 备份，将数据的结构与表内数据保存起来。
 利用 mysqldump 指令完成。
@@ -509,7 +517,11 @@ mysqldump [options] --all--database
 　　source  备份文件
 2. 在不登录的情况下
 　　mysql -u用户名 -p密码 库名 < 备份文件
-/* 视图 */ ------------------
+```
+
+### 视图
+
+```sql
 什么是视图：
     视图是一个虚拟表，其内容由查询定义。同真实的表一样，视图包含一系列带有名称的列和行数据。但是，视图并不在数据库中以存储的数据值集形式存在。行和列数据来自由定义视图的查询所引用的表，并且在引用视图时动态生成。
     视图具有表结构文件，但不存在数据文件。
@@ -539,10 +551,14 @@ CREATE [OR REPLACE] [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}] VIEW view_name
     TEMPTABLE   临时表
         将视图执行完毕后，形成临时表，再做外层查询！
     UNDEFINED   未定义(默认)，指的是MySQL自主去选择相应的算法。
-/* 事务(transaction) */ ------------------
+```
+
+### 事务(transaction) 
+
+```sql
 事务是指逻辑上的一组操作，组成这组操作的各个单元，要不全成功要不全失败。
     - 支持连续SQL的集体成功或集体撤销。
-    - 事务是数据库在数据晚自习方面的一个功能。
+    - 事务是数据库在数据完整性方面的一个功能。
     - 需要利用 InnoDB 或 BDB 存储引擎，对自动提交的特性支持完成。
     - InnoDB被称为事务安全型引擎。
 -- 事务开启
@@ -561,7 +577,7 @@ CREATE [OR REPLACE] [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}] VIEW view_name
         - 事务开始和结束时，外部数据一致
         - 在整个事务过程中，操作是连续的
     3. 隔离性（Isolation）
-        多个用户并发访问数据库时，一个用户的事务不能被其它用户的事物所干扰，多个并发事务之间的数据要相互隔离。
+        多个用户并发访问数据库时，一个用户的事务不能被其它用户的事务所干扰，多个并发事务之间的数据要相互隔离。
     4. 持久性（Durability）
         一个事务一旦被提交，它对数据库中的数据改变就是永久性的。
 -- 事务的实现
@@ -585,6 +601,12 @@ CREATE [OR REPLACE] [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}] VIEW view_name
     - 也可以关闭自动提交来开启事务。但与START TRANSACTION不同的是，
         SET autocommit是永久改变服务器的设置，直到下次再次修改该设置。(针对当前连接)
         而START TRANSACTION记录开启前的状态，而一旦事务提交或回滚后就需要再次开启事务。(针对当前事务)
+
+```
+
+### 锁表
+
+```sql
 /* 锁表 */
 表锁定只用于防止其它客户端进行不正当地读取和写入
 MyISAM 支持表锁，InnoDB 支持行锁
@@ -592,6 +614,11 @@ MyISAM 支持表锁，InnoDB 支持行锁
     LOCK TABLES tbl_name [AS alias]
 -- 解锁
     UNLOCK TABLES
+```
+
+### 触发器
+
+```sql
 /* 触发器 */ ------------------
     触发程序是与表有关的命名数据库对象，当该表出现特定事件时，将激活该对象
     监听：记录的增加、修改、删除。
@@ -640,6 +667,11 @@ end
     如果有重复记录并更新，会触发 before insert, before update, after update;
     如果有重复记录但是没有发生更新，则触发 before insert, before update
 3. Replace 语法 如果有记录，则执行 before insert, before delete, after delete, after insert
+```
+
+### SQL编程
+
+```sql
 /* SQL编程 */ ------------------
 --// 局部变量 ----------
 -- 变量声明
@@ -770,6 +802,11 @@ IN，表示输入型
 OUT，表示输出型
 INOUT，表示混合型
 注意，没有返回值。
+```
+
+### 存储过程
+
+```sql
 /* 存储过程 */ ------------------
 存储过程是一段可执行性代码的集合。相比函数，更偏向于业务逻辑。
 调用：CALL 过程名
@@ -786,6 +823,11 @@ CREATE PROCEDURE 过程名 (参数列表)
 BEGIN
     过程体
 END
+```
+
+### 用户和权限管理
+
+```sql
 /* 用户和权限管理 */ ------------------
 -- root密码重置
 1. 停止MySQL服务
@@ -863,6 +905,11 @@ SUPER   -- 允许使用CHANGE MASTER, KILL, PURGE MASTER LOGS和SET GLOBAL语句
 UPDATE  -- 允许使用UPDATE
 USAGE   -- “无权限”的同义词
 GRANT OPTION    -- 允许授予权限
+```
+
+### 表维护
+
+```sql
 /* 表维护 */
 -- 分析和存储表的关键字分布
 ANALYZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE 表名 ...
@@ -871,8 +918,13 @@ CHECK TABLE tbl_name [, tbl_name] ... [option] ...
 option = {QUICK | FAST | MEDIUM | EXTENDED | CHANGED}
 -- 整理数据文件的碎片
 OPTIMIZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE tbl_name [, tbl_name] ...
+```
+
+### 杂项
+
+```sql
 /* 杂项 */ ------------------
-1. 可用反引号（'`'）为标识符（库名、表名、字段名、索引、别名）包裹，以避免与关键字重名！中文也可以作为标识符！
+1. 可用反引号（`）为标识符（库名、表名、字段名、索引、别名）包裹，以避免与关键字重名！中文也可以作为标识符！
 2. 每个库目录存在一个保存当前数据库的选项文件db.opt。
 3. 注释：
     单行注释 # 注释内容
@@ -881,13 +933,10 @@ OPTIMIZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE tbl_name [, tbl_name] ...
 4. 模式通配符：
     _   任意单个字符
     %   任意多个字符，甚至包括零字符
-    单引号需要进行转义 `\'`
+    单引号需要进行转义 \'
 5. CMD命令行内的语句结束符可以为 ";", "\G", "\g"，仅影响显示结果。其他地方还是用分号结束。delimiter 可修改当前对话的语句结束符。
 6. SQL对大小写不敏感
 7. 清除已有语句：\c
 ```
-
-
-
 
 * [一千行MySQL笔记](https://www.cnblogs.com/shockerli/p/1000-plus-line-mysql-notes.html)
