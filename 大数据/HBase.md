@@ -909,4 +909,5 @@ https://gitee.com/eminem89/Hbase-Observer-ElasticSearch
 - [BulkLoad快速导入海量数据到HBase](https://mp.weixin.qq.com/s/Po-RZWLYUHL71kr7B8Rg3w)
 - [快速入门HBase](https://juejin.cn/post/6923878020277239822)
 - [HBase范围查询](https://cloud.google.com/bigtable/docs/samples/bigtable-filters-limit-timestamp-range-hbase)
+- [HBase常见性能总结](https://mp.weixin.qq.com/s/SzIcZ0cR_wSrn8qfJsPuLg)
 
