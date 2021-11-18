@@ -15,11 +15,11 @@ public class ArrayList<E> extends AbstractList<E> implements List<E>， RandomAc
 ## 2、构造方法
 
 ```java
-// 默认构造函数
+// 默认构造函数，会使用长度为零的数组；
 ArrayList()
 // capacity是ArrayList的默认容量大小，当由于增加数据导致容量不足时，容量会增加到当前容器的1.5倍
 ArrayList(int capacity)
-// 创建一个包含collection的ArrayList
+// 创建一个包含collection的ArrayList，会使用collection的大小作为数组容量
 ArrayList(Collection<? extends E> collection){
 	elementData = c.toArray();
 	if ((size = elementData.length) != 0) {
@@ -73,66 +73,60 @@ String[]
 
 	这个为父类 AbstractList 的成员变量，记录了ArrayList结构性变化的次数在ArrayList的所有涉及结构变化的方法中都增加modCount的值，AbstractList 中的iterator()方法（ArrayList直接继承了这个方法）使用了一个私有内部成员类Itr，该内部类中定义了一个变量 expectedModCount，这个属性在Itr类初始化时被赋予ArrayList对象的modCount属性的值，在next()方法中调用了checkForComodification()方法，进行对修改的同步检查；
 
-## 4、新增和扩容
+## 4、数组容量
 
-新增元素主要有两步：
+ArrayList 初始默认是空数组，待需要添加元素时，判断是否需要扩容；新增元素主要有两步：
 - 判断是否需要扩容，如果需要执行扩容操作；
-- 直接赋值
+- 扩容主要是：扩容的数组容量以及数组的拷贝操作；
+
+如果数组容量不够，对数组进行扩容，JDK7 以后及 JDK7 前的实现不一样。扩容本质上是对数组之间的数据拷贝；
+
+**JDK6：直接扩容，且扩容一般是源数组的 1.5 倍：**
 ```java
-public boolean add(E e) {
-  //确保数组大小是否足够，不够执行扩容，size 为当前数组的大小
-  ensureCapacityInternal(size + 1);  // Increments modCount!!
-  //直接赋值，线程不安全的
-  elementData[size++] = e;
-  return true;
+int newCapacity = (oldCapacity * 3)/2 + 1;
+```
+
+**JDK7：扩容，且一般是之前的 1.5 倍**
+```java
+int newCapacity = oldCapacity + (oldCapacity >> 1);
+// 拷贝数组
+elementData = Arrays.copyOf(elementData， newCapacity);
+```
+
+**JDK8：首次扩容为10，再次扩容一般是之前的1.5倍**
+```java
+private void ensureCapacityInternal(int minCapacity) {
+	ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+}
+private static int calculateCapacity(Object[] elementData, int minCapacity) {
+	if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+		return Math.max(DEFAULT_CAPACITY, minCapacity);
+	}
+	return minCapacity;
+}
+private void ensureExplicitCapacity(int minCapacity) {
+	modCount++;
+	// 如果我们期望的最小容量大于目前数组的长度，那么就扩容
+	if (minCapacity - elementData.length > 0)
+		grow(minCapacity);
+}
+// 扩容，并把现有数据拷贝到新的数组里面去
+private void grow(int minCapacity) {
+	// overflow-conscious code
+	int oldCapacity = elementData.length;
+	int newCapacity = oldCapacity + (oldCapacity >> 1);
+	if (newCapacity - minCapacity < 0)
+		newCapacity = minCapacity;
+	if (newCapacity - MAX_ARRAY_SIZE > 0)
+		newCapacity = hugeCapacity(minCapacity);
+	// minCapacity is usually close to size, so this is a win:
+	elementData = Arrays.copyOf(elementData, newCapacity);
 }
 ```
 
-如果数组容量不够，对数组进行扩容，JDK7 以后及 JDK7 前的实现不一样。扩容本质上是对数组之间的数据拷贝；
-- JDK6：直接扩容，且扩容一般是源数组的 1.5 倍：
-	```java
-	int newCapacity = (oldCapacity * 3)/2 + 1;
-	```
-- JDK7：扩容，且一般是之前的 1.5 倍
-	```java
-	int newCapacity = oldCapacity + (oldCapacity >> 1);
-	// 拷贝数组
-	elementData = Arrays.copyOf(elementData， newCapacity);
-	```
-- JDK8：扩容，一般是之前的1.5倍
-	```java
-    private void ensureCapacityInternal(int minCapacity) {
-        ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
-    }
-	private static int calculateCapacity(Object[] elementData, int minCapacity) {
-        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
-            return Math.max(DEFAULT_CAPACITY, minCapacity);
-        }
-        return minCapacity;
-    }
-    private void ensureExplicitCapacity(int minCapacity) {
-        modCount++;
-        // 如果我们期望的最小容量大于目前数组的长度，那么就扩容
-        if (minCapacity - elementData.length > 0)
-            grow(minCapacity);
-    }
-	// 扩容，并把现有数据拷贝到新的数组里面去
-	private void grow(int minCapacity) {
-		// overflow-conscious code
-		int oldCapacity = elementData.length;
-		int newCapacity = oldCapacity + (oldCapacity >> 1);
-		if (newCapacity - minCapacity < 0)
-			newCapacity = minCapacity;
-		if (newCapacity - MAX_ARRAY_SIZE > 0)
-			newCapacity = hugeCapacity(minCapacity);
-		// minCapacity is usually close to size, so this is a win:
-		elementData = Arrays.copyOf(elementData, newCapacity);
-	}
-	```
-
 > 在实际添加大量元素前，我也可以使用`ensureCapacity`来手动增加ArrayList实例的容量，以减少递增式再分配的数量；
 
-> 数组进行扩容时，会将老数组中的元素重新拷贝一份到新的数组中，每次数组容量的增长大约是其原容量的1.5倍。这种操作的代价是很高的，因此在实际使用时，我们应该尽量避免数组容量的扩张。当我们可预知要保存的元素的多少时，要在构造ArrayList实例时，就指定其容量，以避免数组扩容的发生。或者根据实际需求，通过调用ensureCapacity方法来手动增加ArrayList实例的容量
+> 数组进行扩容时，会将老数组中的元素重新拷贝一份到新的数组中，每次数组容量的增长大约是其原容量的1.5倍。这种操作的代价是很高的，因此在实际使用时，我们应该尽量避免数组容量的扩张。当我们可预知要保存的元素的多少时，要在构造ArrayList实例时，就指定其容量，以避免数组扩容的发生。或者根据实际需求，通过调用ensureCapacity方法来手动增加ArrayList实例的容量；
 
 ## 5、方法
 
@@ -141,6 +135,8 @@ public boolean add(E e) {
 `add(int index, E e)`需要先对元素进行移动，然后完成插入操作，也就意味着该方法有着线性的时间复杂度。
 
 `addAll()`方法能够一次添加多个元素，根据位置不同也有两个把本，一个是在末尾添加的`addAll(Collection<? extends E> c)`方法，一个是从指定位置开始插入的`addAll(int index, Collection<? extends E> c)`方法。跟`add()`方法类似，在插入之前也需要进行空间检查，如果需要则自动扩容；如果从指定位置插入，也会存在移动元素的情况。 `addAll()`的时间复杂度不仅跟插入元素的多少有关，也跟插入的位置相关；
+
+addAll() 时，没有元素时，扩容为`Math.max(10, 实际元素个数)`，有元素时为 `Math.max(原容量的1.5倍, 实际元素个数)`；
 
 ### 5.2、set()
 

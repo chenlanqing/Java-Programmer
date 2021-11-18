@@ -3381,4 +3381,5 @@ transaction.max.timeout.ms=3600000
 - [Flink CEP学习](https://juejin.cn/post/6844903970964520974)
 - [Flink动态欺诈检测系统](https://mp.weixin.qq.com/s/SGFQqY7LoAp0BWvmP9BfAw)
 - [火山引擎](https://mp.weixin.qq.com/s/JoCEScKkKPSwSBGKZW4pCw)
+- [Flink重点知识](https://mp.weixin.qq.com/s/X_wzMWEQgoqLm2ZgxUgKnA)
 
