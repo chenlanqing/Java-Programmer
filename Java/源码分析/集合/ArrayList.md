@@ -331,7 +331,7 @@ public static void main(String[] args) {
 	}
 	```
 
-## 3、为什么最好在newArrayList的时候最好指定容量？
+## 3、为什么最好在new ArrayList的时候最好指定容量？
 
 避免频繁的扩容导致的数据拷贝
 
