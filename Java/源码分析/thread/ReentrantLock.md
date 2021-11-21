@@ -294,6 +294,10 @@ protected final boolean tryAcquire(int acquires) {
 ```
 对比公平与非公平锁，发现主要区别是：hasQueuedPredecessors，公平锁是将所有的线程放在一个队列中，一个线程执行完成后，从队列中取出下一个线程，而非公平锁则没有这个队列
 
+总结：公平锁和非公平锁只有两处不同：
+- 非公平锁在调用 lock 后，首先就会调用 CAS 进行一次抢锁，如果这个时候恰巧锁没有被占用，那么直接就获取到锁返回了；
+- 非公平锁在 CAS 失败后，和公平锁一样都会进入到 tryAcquire 方法，在 tryAcquire 方法中，如果发现锁这个时候被释放了（state == 0），非公平锁会直接 CAS 抢锁，但是公平锁会判断等待队列是否有线程处于等待状态，如果有则不去抢锁，乖乖排到后面；
+
 ### 5.2、lockInterruptibly()
 
 ### 5.1、lock 与 lockInterruptibly 的区别

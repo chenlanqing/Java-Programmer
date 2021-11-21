@@ -530,12 +530,12 @@ Java 提供中断机制来通知线程表明我们想要结束它，中断机制
 - Thread.sleep()
 - TimeUnit.SECONDS.sleep()：传参有问题其不会抛出异常
 
-当一个执行中的线程调用了Thread的sleep方法时，调用线程会暂时让出指定时间的执行权利，但是该线程所有持有的锁不释放；在指定的时间会正常返回，线程处于就绪状态:time_waiting；
+当一个执行中的线程调用了Thread的sleep方法时，调用线程会暂时让出指定时间的执行权利，但是该线程所有持有的锁不释放；在指定的时间会正常返回，线程处于就绪状态:TIME_WAITING；
 
 如果在睡眠期间其他线程调用了该线程的interrupt方法中断了该线程，则该线程会在调用sleep方法的地方抛出InterruptedException异常，因为异常不能跨线程传播回 main() 中，因此必须在本地进行处理。线程中抛出的其它异常也同样需要在本地进行处理；
 
 **Thread.sleep()和Object.wait()的区别：**
-- Thread.sleep()不会释放占有的锁，Object.wait()会释放占有的锁；
+- Thread.sleep()不会释放占有的锁，Object.wait()会释放占有的锁，wait必须放在同步代码块中
 - Thread.sleep()必须传入时间，Object.wait()可传可不传，不传表示一直阻塞下去；
 - Thread.sleep()到时间了会自动唤醒，然后继续执行；
 - Object.wait()不带时间的，需要另一个线程使用Object.notify()唤醒；

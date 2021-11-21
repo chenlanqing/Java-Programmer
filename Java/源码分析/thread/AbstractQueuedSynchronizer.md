@@ -2,17 +2,17 @@
 
 ```java
 public abstract class AbstractQueuedSynchronizer extends AbstractOwnableSynchronizer implements java.io.Serializable{
-	// 头结点，你直接把它当做 当前持有锁的线程 可能是最好理解的
+	// 头结点，当前持有锁的线程
 	private transient volatile Node head;
 	// 阻塞的尾节点，每个新的节点进来，都插入到最后，也就形成了一个链表
 	private transient volatile Node tail;
-	// 这个是最重要的，不过也是最简单的，代表当前锁的状态，0代表没有被占用，大于0代表有线程持有当前锁
+	// 代表当前锁的状态，0代表没有被占用，大于0代表有线程持有当前锁
 	// 之所以说大于0，而不是等于1，是因为锁可以重入嘛，每次重入都加上1
 	private volatile int state;
 	// 代表当前持有独占锁的线程，举个最重要的使用例子，因为锁可以重入
 	// reentrantLock.lock()可以嵌套调用多次，所以每次用这个来判断当前线程是否已经拥有了锁
 	// if (currentThread == getExclusiveOwnerThread()) {state++}
-	private transient Thread exclusiveOwnerThread; //继承自AbstractOwnableSynchronizer
+	private transient Thread exclusiveOwnerThread; //继承自 AbstractOwnableSynchronizer
 }
 ```
 
@@ -35,21 +35,19 @@ AQS，抽象队列同步器，是构建锁或者其他同步组件的基础框�
 
 - AQS 核心是通过一个volatile 共享变量state来同步状态，变量的状态由子类去维护，AQS需要做的是：线程阻塞队列维护、线程阻塞和唤醒；一个先进先出的等待线程队列，以实现多线程间竞争和等待；当`state>0`时表示已经获取了锁，当`state = 0`时表示释放了锁。它提供了三个方法`（getState()、setState(int newState)、compareAndSetState(int expect,int update)）`来对同步状态state进行操作，当然AQS可以确保对state的操作是安全的；一句话概括：AQS使用一个Volatile的int类型的成员变量来表示同步状态，通过内置的FIFO队列来完成资源获取的排队工作，通过CAS完成对State值的修改
 
-- AQS内部维护着一个FIFO队列，该队列就是CLH同步队列；AQS 底层是由同步队列 + 条件队列联手组成，同步队列管理着获取不到锁的线程的排队和释放，条件队列是在一定场景下，对同步队列的补充，比如获得锁的线程从空队列中拿数据，肯定是拿不到数据的，这时候条件队列就会管理该线程，使该线程阻塞
+- AQS内部维护着一个FIFO队列，该队列就是CLH同步队列；AQS 底层是由同步队列 + 条件队列联手组成，同步队列管理着获取不到锁的线程的排队和释放，条件队列是在一定场景下，对同步队列的补充，比如获得锁的线程从空队列中拿数据，肯定是拿不到数据的，这时候条件队列就会管理该线程，使该线程阻塞；同步队列中是不包含 head的；等待队列中每个线程都被包装成了一个 Node；
 
-- AQS 基于模板模式设计， 其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种，所以 AQS 没有抽象方法，所有方法都有默认实现
+- AQS 基于模板模式设计，其任何一个子类只能支持 AQS 当中的独占锁和共享锁中的一种，所以 AQS 没有抽象方法，所有方法都有默认实现；
 
 ## 2、AQS 对外公开的方法不需要子类实现的
 
 - AQS 仅仅只是提供独占锁和共享锁两种方式，但是每种方式都有响应中断和不响应中断的区别，所以说AQS锁的更细粒度的划分为：
-
 	- acquire：不响应中断的独占锁
 	- acquireInterruptibly： 响应中断的独占锁
 	- acquireShared：不响应中断的共享锁
 	- acquireSharedInterruptibly：响应中断的共享锁
 
 - 释放锁的方式只有两种：
-
 	- release：独占锁的释放
 	- releaseShared：共享锁的释放
 
@@ -121,6 +119,8 @@ protected final boolean compareAndSetState(int expect, int update) {
 
 ![](image/AQS-state-独占模式.png)	![](image/AQS-state-共享模式.png)
 
+其在不同的子类中实现的含义是不一样的
+
 ### 6.2、waitStatus 
 
 waitStatus是节点（Node）的状态，其种类很多，一共有初始化 (0)、CANCELLED (1)、SIGNAL (-1)、CONDITION (-2)、PROPAGATE (-3)：
@@ -135,6 +135,7 @@ static final int CONDITION = -2;
 // 无条件传播,共享模式下，该状态的进程处于可运行状态
 static final int PROPAGATE = -3;
 ```
+如果 waitStatus 这个值 大于0 代表此线程取消了等待；
 
 ## 7、主要方法与属性
 
@@ -765,6 +766,7 @@ AbstractQueuedSynchronizer的一个版本，其中同步状态由long类型维�
 * [AQS框架概述](http://www.cnblogs.com/zhanjindong/p/java-concurrent-package-aqs-overview.html)
 * [AQS](https://segmentfault.com/a/1190000017372067)
 * [AQS原理分析](https://tech.meituan.com/2019/12/05/aqs-theory-and-apply.html)
+* [逐行分析AQS](https://javadoop.com/post/AbstractQueuedSynchronizer)
 
 
 

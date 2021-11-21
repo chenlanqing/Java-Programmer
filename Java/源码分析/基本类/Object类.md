@@ -433,7 +433,6 @@ public class FinalizeEscapeGC {
 该方法用来将当前线程置入休眠状态，直到接到通知或被中断为止；在调用 wait()之前，线程必须要获得该对象的对象监视器锁，即只能在同步方法或同步块中调用 wait()方法；调用wait()方法之后，当前线程会释放锁。如果调用wait()方法时，线程并未获取到锁的话，则会抛出`IllegalMonitorStateException`异常，这是一个RuntimeException。如果再次获取到锁的话，当前线程才能从wait()方法处成功返回；wait在线程中断的时候也会被唤醒；
 
 **为什么wait()方法要放在同步块中？**
-
 - 如果wait()方法不在同步块中，代码会抛出异常：IllegalMonitorStateException；
 - Java设计者为了避免使用者出现lost wake up问题而搞出来的；
 - 首先看`Lost Wake-Up Problem`，该问题是会在所有的多线程环境下出现；为了避免不经意间出现这种lost wake up问题，包括java.util.concurrent.locks.Condition的await()/signal()也必须要在同步块中；一定要处于锁对象的同步块中；下面的代码一样出现`IllegalMonitorStateException`
