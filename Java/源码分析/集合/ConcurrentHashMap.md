@@ -12,7 +12,7 @@ HashMap是用得非常频繁的一个集合，但是由于它是非线程安全�
 
 为了解决该问题，提供了`Hashtable`和`Collections.synchronizedMap(hashMap)`两种解决方案，但是这两种方案都是对读写加锁，独占式，一个线程在读时其他线程必须等待，吞吐量较低，性能较为低下；Hashtable之所以效率低下主要是因为其实现使用了synchronized关键字对put等操作进行加锁，而synchronized关键字加锁是对整个对象进行加锁，也就是说在进行put等修改Hash表的操作时，锁住了整个Hash表，从而使得其表现的效率低下
 
-## 2、ConcurrentHashMap-JDK6
+## 2、JDK6
 
 **ConcurrentHashMap 的锁分段技术：** 首先将数据分成一段一段的存储，然后给每一段数据配一把锁，当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问。采用分段锁的机制，实现并发的更新操作，底层采用`数组+链表`的存储结构，其包含两个核心静态内部类 Segment 和 HashEntry.
 
@@ -36,13 +36,13 @@ ConcurrentHashMap 初始化方法是通过 initialCapacity，loadFactor, concurr
 - 用分离锁实现多个线程间的更深层次的共享访问,用 HashEntery 对象的不变性来降低执行读操作的线程在遍历链表期间对加锁的需求通过对同一个 Volatile 变量的写 / 读访问，协调不同线程间读 / 写操作的内存可见性
 - ConcurrentHashMap的并发度跟 segment 的大小有关；
 
-## 3、ConcurrentHashMap-JDK7
+## 3、JDK7
 
-在Jdk1.7中是采用`Segment + HashEntry + ReentrantLock`
+在Jdk1.7中是采用`Segment数组 + HashEntry数组 + 链表`
 
-ConcurrentHashMap 由一个个 Segment 组成，ConcurrentHashMap 是一个 Segment 数组，Segment 通过继承 ReentrantLock 来进行加锁，所以每次需要加锁的操作锁住的是一个 segment，这样只要保证每个 Segment 是线程安全的，也就实现了全局的线程安全；
+ConcurrentHashMap 由一个 Segment[] 组成，Segment 通过继承 ReentrantLock 来进行加锁，所以每次需要加锁的操作锁住的是一个 segment，这样只要保证每个 Segment 是线程安全的，也就实现了全局的线程安全；
 
-ConcurrentHashMap初始化时，计算出Segment数组的大小size和每个Segment中HashEntry数组的大小cap，并初始化Segment数组的第一个元素；其中size大小为2的幂次方，默认为16，cap大小也是2的幂次方，最小值为2，最终结果根据根据初始化容量initialCapacity进行计算，计算过程如下
+ConcurrentHashMap初始化时，计算出Segment数组的大小size（并发度）和每个Segment中HashEntry数组的大小cap，并初始化Segment数组的第一个元素；其中size大小为2的幂次方，默认为16，cap大小也是2的幂次方，最小值为2，最终结果根据根据初始化容量initialCapacity进行计算，计算过程如下
 
 ![](image/JDK7-ConcurrentHashMap结构.png)
 
@@ -52,7 +52,15 @@ ConcurrentHashMap初始化时，计算出Segment数组的大小size和每个Segm
 
 segment 数组不能扩容，扩容是 segment 数组某个位置内部的数组 `HashEntry<K,V>[]` 进行扩容，扩容后，容量为原来的 2 倍
 
-## 4、ConcurrentHashMap-JDK8
+* 数据结构：`Segment(大数组) + HashEntry(小数组) + 链表`，每个 Segment 对应一把锁，如果多个线程访问不同的 Segment，则不会冲突
+* 并发度：Segment 数组大小即并发度，决定了同一时刻最多能有多少个线程并发访问。Segment 数组不能扩容，意味着并发度在 ConcurrentHashMap 创建时就固定了
+* 索引计算
+  * 假设大数组长度是 $2^m$，key 在大数组内的索引是 key 的二次 hash 值的高 m 位
+  * 假设小数组长度是 $2^n$，key 在小数组内的索引是 key 的二次 hash 值的低 n 位
+* 扩容：每个HashEntry数组的扩容相对独立，HashEntry数组在超过扩容因子时会触发扩容，每次扩容翻倍
+* `Segment[0]` 原型：首次创建其它HashEntry数组时，会以此原型为依据，数组长度，扩容因子都会以原型为准；
+
+## 4、JDK8
 
 JDK7中，最大并发度受Segment的个数限制，所以1.8中放弃了Segment臃肿的设计，取而代之的是采用`Node + CAS + Synchronized`来保证并发安全进行实现；只有在执行第一次put方法时才会调用initTable()初始化Node数组；
 
@@ -62,6 +70,21 @@ JDK7中，最大并发度受Segment的个数限制，所以1.8中放弃了Segmen
 - JDK1.8使用红黑树来优化链表，基于长度很长的链表的遍历是一个很漫长的过程，而红黑树的遍历效率是很快的，代替一定阈值的链表，这样形成一个最佳拍档
 
 ![](image/JDK8-ConcurrentHashMap结构.png)
+
+* 扩容条件：Node 数组满 3/4 时就会扩容
+* 扩容单位：以链表为单位从后向前迁移链表，迁移完成的将旧数组头节点替换为 ForwardingNode
+* 扩容时并发 get
+  * 根据是否为 ForwardingNode 来决定是在新数组查找还是在旧数组查找，不会阻塞
+  * 如果链表长度超过 1，则需要对节点进行复制（创建新节点），怕的是节点迁移后 next 指针改变
+  * 如果链表最后几个元素扩容后索引不变，则节点无需复制
+* 扩容时并发 put
+  * 如果 put 的线程与扩容线程操作的链表是同一个，put 线程会阻塞
+  * 如果 put 的线程操作的链表还未迁移完成，即头节点不是 ForwardingNode，则可以并发执行
+  * 如果 put 的线程操作的链表已经迁移完成，即头结点是 ForwardingNode，则可以协助扩容
+* 与 1.7 相比是懒惰初始化
+* capacity 代表预估的元素个数，capacity / factory 来计算出初始数组大小，需要贴近 $2^n$ 
+* loadFactor 只在计算初始数组大小时被使用，之后扩容固定为 3/4
+* 超过树化阈值时的扩容问题，如果容量已经是 64，直接树化，否则在原来容量基础上做 3 轮扩容
 
 ##  5、分段锁形式如何保证size的一致性
 
