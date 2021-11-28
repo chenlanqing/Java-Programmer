@@ -190,6 +190,7 @@ OK
 	- ②、用户标签、点赞、收藏、踩等等；
 	- ③、你可以使用 `SPOP` 或 `SRANDMEMBER` 命令来从集合中随机抽取元素；
 - `sdiff set1 set2`：存在于set1中但是不存在set2中的数据，差集；
+- `SINTERSTORE` 将结果保存到 destination 集合，而不是简单地返回结果集
 - `sinter set1 set2`：两个set的交集；
 - `sunion set1 set2`：两个集合的并集；
 
@@ -451,11 +452,40 @@ Redis BitMap 的底层数据结构实际上是 String 类型，Redis 对于 Stri
 
 所以如果 offset 偏移量超过了 `2^32` 次方，会报错`ERR bit offset is not an integer or out of range`
 
-### 2.7、Hyper Log
+### 2.7、HyperLogLog
+
+- [hyperloglog结构的实现原理](https://www.zhihu.com/question/53416615)
+- [HyperLogLog维基百科](https://en.wikipedia.org/wiki/HyperLogLog)
 
 Redis 的 hyperLogLog 是用来做基数统计的数据类型，当输入巨大数量的元素做统计时，只需要很小的内存即可完成。HyperLogLog 不保存元数据，只记录待统计元素的估算数量，这个估算数量是一个带有 0.81% 标准差的近似值，在大多数业务场景，对海量数据，不足 1% 的误差是可以接受的
 
-### 2.8、geo地理类型
+每个 HyperLogLog 最多只需要花费 12KB 内存就可以计算 2 的 64 次方个元素的基数；Redis 对 HyperLogLog 的存储进行了优化，在计数比较小的时候，存储空间采用系数矩阵，占用空间很小。只有在计数很大，稀疏矩阵占用的空间超过了阈值才会转变成稠密矩阵，占用 12KB 空间；
+
+主要操作命令：
+```bash
+# 将访问页面的每个用户 ID 添加到 HyperLogLog 中
+PFADD page1:uv userId1 userId2 userId3
+# 利用 PFCOUNT 获取 「page1」页面的 UV值
+PFCOUNT page1:uv
+```
+PFMERGE 使用场景：
+- HyperLogLog 除了上面的 PFADD 和 PFCOIUNT 外，还提供了 PFMERGE ，将多个 HyperLogLog  合并在一起形成一个新的 HyperLogLog 值，基本语法：`PFMERGE destkey sourcekey [sourcekey ...]`
+- 主要使用是在需要对页面UV需要合并统计时，也就是同样的用户访问这两个页面则只算做一次
+```
+PFADD page1 user1 user2 user3
+PFADD page2 user1 user2 user4
+PFMERGE page page1 page2
+PFCOUNT page // 返回值 = 4
+```
+
+### 2.8、GEO地理类型
+
+[GEO](https://juejin.cn/post/6982466335670272036)
+
+一般使用场景是附近的人，其核心思想如下：
+- 以 “我” 为中心，搜索附近的 Ta；
+- 以 “我” 当前的地理位置为准，计算出别人和 “我” 之间的距离；
+- 按 “我” 与别人距离的远近排序，筛选出离我最近的用户；
 
 ### 2.9、总结
 
@@ -929,7 +959,7 @@ Reids对整数存储专门作了优化，intset就是redis用于保存整数值�
 
 ## 6、压缩列表(ziplist)
 
-ziplist是redis为了节约内存而开发的顺序型数据结构。它被用在列表键和哈希键中。一般用于小数据存储；List，Hash，Sorted Set三种对外结构，在特殊情况下的内部编码都是ziplist
+ziplist是redis为了节约内存而开发的顺序型数据结构。它被用在列表键和哈希键中。一般用于小数据存储；List，Hash，Sorted Set三种对外结构，在特殊情况下的内部编码都是ziplist，当一个列表只有少量数据的时候，并且每个列表项要么就是小整数值，要么就是长度比较短的字符串，那么 Redis 就会使用压缩列表来做列表键的底层实现；
 
 以Hash为例，我们首先看一下什么条件下它的内部编码是ziplist：
 - 当哈希类型元素个数小于hash-max-ziplist-entries配置（默认512个）；
@@ -971,7 +1001,7 @@ RDB的缺点：最后一次持久化后的数据可能丢失；
 
 Fork 的作用是复制一个与当前进程一样的进程。新进程的所有数据(变量、环境变量、程序计数器等)数值都和原进程一致，但是是一个全新的进程，并作为原进程的子进程。
 
-Redis 会借助操作系统提供的写时复制技术（Copy-On-Write, COW），在执行快照的同时，正常处理写操作
+Redis 会借助操作系统提供的写时复制技术（Copy-On-Write, COW），在执行快照的同时，正常处理写操作；当主线程执行写指令修改数据的时候，这个数据就会复制一份副本， bgsave 子进程读取这个副本数据写到 RDB 文件，所以主线程就可以直接修改原来的数据；
 
 ### 1.3、配置
 
@@ -987,7 +1017,7 @@ save 60 10000        #在60秒(1分钟)之后，如果至少有10000个key发生
 - 配置文件中默认的快照配置
 - Redis 提供了两个命令来生成 RDB 快照文件，分别是：命令 `save` 或者 `bgsave`：
 	- `save`：会阻塞当前Redis服务器，直到持久化完成，线上应该禁止使用；
-	- `bgsave`：该触发方式会fork一个子进程，由子进程负责持久化过程，因此阻塞只会发生在fork子进程的时候，这是Redis RDB 的默认配置
+	- `bgsave`：该触发方式会调用 glibc 的函数fork一个子进程，由子进程负责持久化过程，因此阻塞只会发生在fork子进程的时候，这是Redis RDB 的默认配置
 
 RDB 使用bgsave做快照的时候是可以修改的；那Redis是怎么解决在bgsave做快照的时候允许数据修改呢？这里主要是利用 bgsave的子线程实现的，具体操作如下：
 - 如果主线程执行读操作，则主线程和 bgsave 子进程互相不影响；
@@ -1009,7 +1039,7 @@ config get dir 获取当前rdb文件存放的目录；
 ### 1.6、优势与劣势
 
 - 优势：
-	- 适合大规模的数据恢复，对数据完整性和一致性要求不高的；
+	- 适合大规模的数据恢复，对数据完整性和一致性要求不高的；RDB 采用二进制 + 数据压缩的方式写磁盘，文件体积小，数据恢复速度快；
 	- 相对于AOF持久化机制来说，直接基于RDB数据文件来重启和恢复redis进程，更加快速
 - 劣势：
 	- 在一定时间间隔做一次，如果redis意外宕机，就会丢失最后一次快照后的所有修改。fork 的时候，内存中的数据被克隆了一份，大致2倍的膨胀性需要考虑；
@@ -1105,7 +1135,7 @@ AOF 文件过大带来的性能问题：
 	```
 - 手动触发：可以使用命令 `bgrewriteaof`；fork一个子进程做具体的工作
 
-**总结：**每次 AOF 重写时，Redis 会先执行一个内存拷贝，用于重写；然后，使用两个日志保证在重写过程中，新写入的数据不会丢失。而且，因为 Redis 采用额外的线程进行数据重写，所以，这个过程并不会阻塞主线程
+**总结：**Redis 会将重写过程中的接收到的「写」指令操作同时记录到旧的 AOF 缓冲区和 AOF 重写缓冲区，这样重写日志也保存最新的操作。等到拷贝数据的所有操作记录重写完成后，重写缓冲区记录的最新操作也会写到新的 AOF 文件中；每次 AOF 重写时，Redis 会先执行一个内存拷贝，用于遍历数据生成重写记录；使用两个日志保证在重写过程中，新写入的数据不会丢失，并且保持数据一致性
 	
 ### 2.5、优势与劣势
 
@@ -1281,6 +1311,11 @@ QUEUED
 
 ## 3、主从的配置
 
+可以通过 replicaof（Redis 5.0 之前使用 slaveof）命令形成主库和从库的关系，主要有3种实现方式：
+- 配置文件：在从服务器的配置文件中加入 `replicaof <masterip> <masterport>`
+- 启动命令：redis-server 启动命令后面加入 `--replicaof <masterip> <masterport>`：`src/redis-server --replicaof 192.168.89.135 6379`
+- 客户端命令：启动多个 Redis 实例后，直接通过客户端执行命令：`replicaof <masterip> <masterport>`，则该 Redis 实例成为从节点
+
 [Redis主从配置](../../辅助资料/环境配置/Linux环境.md#3Redis主从配置)
 
 ## 4、常用的主从模式
@@ -1358,6 +1393,8 @@ slaveof no one
 
 ## 5、复制的流程
 
+- [Redis主从复制过程](https://juejin.cn/post/6973928120332058654)
+
 ### 5.1、复制的原理
 
 - slave启动成功连接到master后会发送一个`psync`命令，redis 2.8开始，slave node会周期性地确认自己每次复制的数据量；
@@ -1392,8 +1429,30 @@ slaveof no one
 
 - （4）`psync`：从节点使用psync从master node进行复制，`psync runid offset`；master node会根据自身的情况返回响应信息，可能是`FULLRESYNC runid offset`触发全量复制，可能是`CONTINUE`触发增量复制；
 
+**replication buffer**：一个在 master 端上创建的缓冲区，存放的数据是下面三个时间内所有的 master 数据写操作：
+- master 执行 bgsave 产生 RDB 的期间的写操作；
+- master 发送 rdb 到 slave 网络传输期间的写操作；
+- slave load rdb 文件把数据恢复到内存的期间的写操作；
+
+Redis 和客户端通信也好，和从库通信也好，Redis 都分配一个内存 buffer 进行数据交互，客户端就是一个 client，从库也是一个 client，我们每个 client 连上 Redis 后，Redis 都会分配一个专有 client buffer，所有数据交互都是通过这个 buffer 进行的。
+
+Master 先把数据写到这个 buffer 中，然后再通过网络发送出去，这样就完成了数据交互
+
+replication buffer 太小会引发的问题：replication buffer 由 client-output-buffer-limit slave 设置，当这个值太小会导致主从复制连接断开。
+- 当 master-slave 复制连接断开，master 会释放连接相关的数据。replication buffer 中的数据也就丢失了，此时主从之间重新开始复制过程。
+- 主从复制连接断开，导致主从上出现重新执行 bgsave 和 rdb 重传操作无限循环
+
+这种情况可能引起全量复制 -> replication buffer 溢出导致连接中断 -> 重连 -> 全量复制 -> replication buffer 缓冲区溢出导致连接中断……的循环
+
+配置replication buffer为512M
+```
+默认是：client-output-buffer-limit replica 256mb 64mb 60
+config set client-output-buffer-limit "slave 536870912 536870912 0"
+```
+
 ### 5.4、全量复制
 
+全量复制的过程：
 - （1）master执行bgsave，在本地生成一份rdb快照文件
 - （2）master node将rdb快照文件发送给salve node，如果rdb复制时间超过60秒（repl-timeout），那么slave node就会认为复制失败，可以适当调节大这个参数
 - （3）对于千兆网卡的机器，一般每秒传输100MB，6G文件，很可能超过60s
@@ -1438,6 +1497,8 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 - [哨兵模式](http://www.redis.cn/topics/sentinel.html)
 - [哨兵模式-EN](https://redis.io/topics/sentinel)
 
+主从复制架构面临一个严峻问题，主库挂了，无法执行`写操作`，无法自动选择一个 Slave 切换为 Master，也就是无法故障自动切换；
+
 ### 6.1、什么是哨兵模式
 
 在 Redis 主从集群中，哨兵机制是实现主从库自动切换的关键机制，它有效地解决了主从复制模式下故障转移的这三个问题
@@ -1458,7 +1519,7 @@ rdb生成、rdb通过网络拷贝、slave旧数据的清理、slave aof rewrite�
 ### 6.2、使用步骤
 
 - 在相应的目录下新建：`sentinel.conf`文件，名字绝不能错；
-- `redis.conf`文件配置：
+- 配置：
 	```bash
 	port 26379
 	pidfile "/usr/local/redis/sentinel/redis-sentinel.pid"
@@ -1593,6 +1654,11 @@ min-slaves-max-lag 10  # 如果说一旦所有的slave，数据复制和同步�
 每个哨兵也会去监听自己监控的每个`master+slaves`对应的`__sentinel__:hello channel`，然后去感知到同样在监听这个`master+slaves`的其他哨兵的存在
 
 每个哨兵还会跟其他哨兵交换对master的监控配置，互相进行监控配置的同步；
+
+**哨兵如何跟slave联系的**
+- 利用 master 来实现，哨兵向 master 发送 INFO 命令， master 是知道所有的 salve。所以 master 接收到命令后，便将 slave 列表告诉哨兵；
+- 哨兵根据 master 响应的 slave 名单信息与每一个 salve 建立连接，并且根据这个连接持续监控哨兵；
+- 
 
 ### 6.7、slave配置的自动纠正
 
@@ -1961,6 +2027,7 @@ io-threads-do-reads yes
 ```conf
 io-threads 4 # 官网建议4核的机器建议设置为2或3个线程，8核的建议设置为6个线程；
 ```
+关于线程数的设置，官方有一个建议：4 核的机器建议设置为 2 或 3 个线程，8核的建议设置为 6 个线程，线程数一定要小于机器核数
 
 # 七、Redis应用
 
@@ -2292,8 +2359,17 @@ used_memory_lua_human:37.00K   # lua脚本引擎占用的内存大小
 ```
 ...
 
+# 十二、Redis6.0
 
-# 十二、Memcached
+Redis6.0主要特性如下：
+- 多线程处理网络 IO；
+- 客户端缓存；
+- 细粒度权限控制（ACL）；
+- RESP3 协议的使用；
+- 用于复制的 RDB 文件不在有用，将立刻被删除；
+- RDB 文件加载速度更快；
+
+# 十三、Memcached
 
 ## 1、原理
 
@@ -2305,7 +2381,7 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 
 ## 2、
 
-# 十三、Lua
+# 十四、Lua
 
 ## 1、Lua介绍
 

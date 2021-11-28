@@ -381,6 +381,47 @@ mysql目前最新版是8.0，启动mysql后，通过IDE工具无法连接mysql�
 
 - 配置从节点只读：`replica-read-only yes`
 
+主节点状态：
+```
+127.0.0.1:6379> info replication
+# Replication
+role:master
+connected_slaves:2
+slave0:ip=192.168.89.136,port=6379,state=online,offset=98,lag=1
+slave1:ip=192.168.89.137,port=6379,state=online,offset=98,lag=0
+master_replid:80fcd520080d4e08418f43fcad03b0a7844ad482
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:98
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:98
+```
+从节点：
+```
+127.0.0.1:6379> info replication
+# Replication
+role:slave
+master_host:192.168.89.135
+master_port:6379
+master_link_status:up
+master_last_io_seconds_ago:3
+master_sync_in_progress:0
+slave_repl_offset:42
+slave_priority:100
+slave_read_only:1
+connected_slaves:0
+master_replid:80fcd520080d4e08418f43fcad03b0a7844ad482
+master_replid2:0000000000000000000000000000000000000000
+master_repl_offset:42
+second_repl_offset:-1
+repl_backlog_active:1
+repl_backlog_size:1048576
+repl_backlog_first_byte_offset:1
+repl_backlog_histlen:42
+```
+
 ## 4、Redis哨兵
 
 
