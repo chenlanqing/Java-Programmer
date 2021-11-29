@@ -279,6 +279,47 @@ transfer
 
 https://juejin.cn/post/6844904191077384200
 
+### 2.6、是先CAS还是synchronized
+
+以put为例
+```java
+final V putVal(K key, V value, boolean onlyIfAbsent) {
+    if (key == null || value == null) throw new NullPointerException();
+    int hash = spread(key.hashCode());
+    int binCount = 0;
+    for (Node<K,V>[] tab = table;;) {
+        Node<K,V> f; int n, i, fh;
+        if (tab == null || (n = tab.length) == 0)
+            tab = initTable();
+        else if ((f = tabAt(tab, i = (n - 1) & hash)) == null) {
+            // cas
+            if (casTabAt(tab, i, null, new Node<K,V>(hash, key, value, null)))
+                break;                   // no lock when adding to empty bin
+        }
+        else if ((fh = f.hash) == MOVED)
+            tab = helpTransfer(tab, f);
+        else {
+            V oldVal = null;
+            synchronized (f) {
+                if (tabAt(tab, i) == f) {
+                    .....
+                }
+            }
+            if (binCount != 0) {
+                if (binCount >= TREEIFY_THRESHOLD)
+                    treeifyBin(tab, i);
+                if (oldVal != null)
+                    return oldVal;
+                break;
+            }
+        }
+    }
+    addCount(1L, binCount);
+    return null;
+}
+```
+可以看到上面的CAS是在数组中索引元素为空时，通过CAS填充数据，如果是有元素，即hash冲突了，需要通过synchronized锁住当前链表节点来实现
+
 ## 3、TreeMap
 
 ### 3.1、LinkedHashMap与TreeMap区别
