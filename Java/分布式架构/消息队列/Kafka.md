@@ -83,6 +83,8 @@ LEO 是 `Log End Offset` 的缩写，它标识当前日志文件中下一条待�
 
 Kafka 的复制机制既不是完全的同步复制，也不是单纯的异步复制。事实上，同步复制要求所有能工作的 follower 副本都复制完，这条消息才会被确认为已成功提交，这种复制方式极大地影响了性能。而在异步复制方式下，follower 副本异步地从 leader 副本中复制数据，数据只要被 leader 副本写入就被认为已经成功提交。在这种情况下，如果 follower 副本都还没有复制完而落后于 leader 副本，突然 leader 副本宕机，则会造成数据丢失；
 
+> Kafka 使用的这种 ISR 的方式则有效地权衡了数据可靠性和性能之间的关系
+
 ## 1.4、高性能原因
 
 ### 1.4.1、利用 Partition 实现并行处理
@@ -235,6 +237,8 @@ public class ProducerRecord<K, V> {
 
 ## 4.2、kafka生产者参数
 
+> 生产者的所有参数都可以在 org.apache.kafka.clients.producer.ProducerConfig 中找到，对应的参数的默认值也都在该类中的静态代码块中有相应的处理；
+
 ### 4.2.1、必要参数
 
 - `bootstrap.servers`：该参数用来指定生产者客户端连接 Kafka 集群所需的 broker 地址清单，具体的内容格式为 host1:port1,host2:port2，可以设置一个或多个地址，中间以逗号隔开，此参数的默认值为“”；建议至少要设置两个以上的 broker 地址信息，当其中任意一个宕机时，生产者仍然可以连接到 Kafka 集群上；
@@ -348,7 +352,6 @@ public interface Partitioner extends Configurable, Closeable {
     ...
 }
 ```
-
 在默认分区器 DefaultPartitioner 的实现中，close() 是空方法，而在 partition() 方法中定义了主要的分区分配逻辑。如果 key 不为 null，那么默认的分区器会对 key 进行哈希（采用 MurmurHash2 算法，具备高运算性能及低碰撞率），最终根据得到的哈希值来计算分区号，拥有相同 key 的消息会被写入同一个分区。如果 key 为 null，那么消息将会以轮询的方式发往主题内的各个可用分区：
 ```java
 public class DefaultPartitioner implements Partitioner {
@@ -386,6 +389,17 @@ public class DefaultPartitioner implements Partitioner {
 ```
 除了使用 Kafka 提供的默认分区器进行分区分配，还可以使用自定义的分区器，只需同 DefaultPartitioner 一样实现 Partitioner 接口即可。默认的分区器在 key 为 null 时不会选择非可用的分区，我们可以通过自定义的分区器 DemoPartitioner 来打破这一限制。指定自定义分区器：`props.put(ProducerConfig.PARTITIONER_CLASS_CONFIG,DemoPartitioner.class.getName());`
 
+默认分区器是在 ProducerConfig 类中的静态代码块中初始化的：
+```java
+// ProducerConfig
+static {
+    CONFIG = new ConfigDef()..define(PARTITIONER_CLASS_CONFIG,
+            Type.CLASS,
+            DefaultPartitioner.class,
+            Importance.MEDIUM, PARTITIONER_CLASS_DOC)
+}
+```
+
 ## 4.5、拦截器
 
 生产者拦截器的使用也很方便，主要是自定义实现 `org.apache.kafka.clients.producer.ProducerInterceptor` 接口，ProducerInterceptor 接口中包含3个方法：
@@ -401,7 +415,11 @@ public interface ProducerInterceptor<K, V> extends Configurable {
 在 KafkaProducer 的配置参数 interceptor.classes 中指定拦截器：`properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, CustomProducerInterceptor.class.getName());`；
 
 KafkaProducer 中不仅可以指定一个拦截器，还可以指定多个拦截器以形成拦截链。`拦截链`会按照 `interceptor.classes 参数配置的拦截器的顺序来一一执行`（配置的时候，各个拦截器之间使用逗号隔开）；
-
+```java
+String interceptors = CustomProducerInterceptor.class.getName() + "," + CustomProducerInterceptor2.class.getName();
+// 添加拦截器属性，可以配置多个
+properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, interceptors);
+```
 如果拦截链中的某个拦截器的执行需要依赖于前一个拦截器的输出，那么就有可能产生“副作用”。设想一下，如果前一个拦截器由于异常而执行失败，那么这个拦截器也就跟着无法继续执行。在拦截链中，如果某个拦截器执行失败，那么下一个拦截器会接着从上一个执行成功的拦截器继续执行；
 
 ## 4.6、生产者客户端原理
@@ -461,7 +479,7 @@ Sender 从 RecordAccumulator 中获取缓存的消息之后，会进一步将原
 
 ![](image/Kafka-消费者与消费组.png)
 
-如上图所示，某个主题中共有4个分区（Partition）：P0、P1、P2、P3。有两个消费组A和B都订阅了这个主题，消费组A中有4个消费者（C0、C1、C2和C3），消费组B中有2个消费者（C4和C5）。按照 Kafka 默认的规则，最后的分配结果是消费组A中的每一个消费者分配到1个分区，消费组B中的每一个消费者分配到2个分区，两个消费组之间互不影响。每个消费者只能消费所分配到的分区中的消息。换言之，每一个分区只能被一个消费组中的一个消费者所消费；
+如上图所示，某个主题中共有4个分区（Partition）：P0、P1、P2、P3。有两个消费组A和B都订阅了这个主题，消费组A中有4个消费者（C0、C1、C2和C3），消费组B中有2个消费者（C4和C5）。按照 Kafka 默认的规则，最后的分配结果是消费组A中的每一个消费者分配到1个分区，消费组B中的每一个消费者分配到2个分区，两个消费组之间互不影响。每个消费者只能消费所分配到的分区中的消息。换言之，`每一个分区只能被一个消费组中的一个消费者所消费；`
 
 消费者与消费组这种模型可以让整体的消费能力具备横向伸缩性，我们可以增加（或减少）消费者的个数来提高（或降低）整体的消费能力。对于分区数固定的情况，一味地增加消费者并不会让消费能力一直得到提升，如果消费者过多，出现了消费者的个数大于分区个数的情况，就会有消费者分配不到任何分区；
 
@@ -535,7 +553,7 @@ public class QuickstartConsumer {
 
 - `bootstrap.servers`：该参数用来指定生产者客户端连接 Kafka 集群所需的 broker 地址清单，具体的内容格式为 host1:port1,host2:port2，可以设置一个或多个地址，中间以逗号隔开，此参数的默认值为“”；建议至少要设置两个以上的 broker 地址信息，当其中任意一个宕机时，生产者仍然可以连接到 Kafka 集群上；
 
-- `group.id`：消费者隶属的消费组的名称，默认值为“”。如果设置为空，则会报出异常：`Exception in thread "main" org.apache.kafka.common.errors.InvalidGroupIdException: The configured groupId is invalid`。一般而言，这个参数需要设置成具有一定的业务意义的名称；
+- `group.id`：消费者隶属的消费组的名称，默认值为“”。如果设置为空，且设置`enable.auto.commit`为true，则会报出异常：`Exception in thread "main" org.apache.kafka.common.errors.InvalidGroupIdException: The configured groupId is invalid`。一般而言，这个参数需要设置成具有一定的业务意义的名称；
 
 - `key.serializer` 和 `value.serializer`：broker 端接收的消息必须以字节数组（byte[]）的形式存在
 
@@ -586,7 +604,7 @@ consumer.subscribe(Arrays.asList(topic2));
 
 如果消费者采用的是正则表达式的方式（subscribe(Pattern)）订阅，在之后的过程中，如果有人又创建了新的主题，并且主题的名字与正则表达式相匹配，那么这个消费者就可以消费到新添加的主题中的消息。如果应用程序需要消费多个主题，并且可以处理不同的类型，那么这种订阅方式就很有效：`consumer.subscribe(Pattern.compile("topic-.*"));`
 
-subscribe 的重载方法中有一个参数类型是 ConsumerRebalance- Listener，这个是用来设置相应的再均衡监听器的
+subscribe 的重载方法中有一个参数类型是 ConsumerRebalance-Listener，这个是用来设置相应的再均衡监听器的
 
 ### 5.5.2、assign
 
@@ -710,7 +728,7 @@ Kafka 中的分区而言，它的每条消息都有唯一的 offset，用来表�
 
 在消费者客户端中，消费位移存储在 Kafka 内部的主题`__consumer_offsets`中。这里把将消费位移存储起来（持久化）的动作称为“提交”，消费者在消费完消息之后需要执行`消费位移的提交`；在消费者中还有一个 `committed offset` 的概念，它表示已经提交过的消费位移。
 
-KafkaConsumer 类提供了 position(TopicPartition) 和 committed(TopicPartition) 两个方法来分别获取 position 和 committed offset 的值；
+KafkaConsumer 类提供了 position(TopicPartition) 和 committed(TopicPartition) 两个方法来分别获取 position 和 committed offset 的值；对于位移提交的具体时机的把握也很有讲究，有可能会造成重复消费和消息丢失的现象；如果拉取到消息之后就进行了位移提交，比如提交到了X，但是之前正在处理的消息发生了异常，在故障恢复之后，我们重新拉取的消息是从X开始的，也就是X之前的未被消费数据丢失了；
 
 在 Kafka 中默认的消费位移的提交方式是自动提交，这个由消费者客户端参数 `enable.auto.commit` 配置，默认值为 true；当然这个默认的自动提交不是每消费一条消息就提交一次，而是定期提交，这个定期的周期时间由客户端参数 `auto.commit.interval.ms` 配置，默认值为5秒，此参数生效的前提是 `enable.auto.commit` 参数为 true；
 
@@ -754,7 +772,7 @@ public void commitAsync(final Map<TopicPartition, OffsetAndMetadata> offsets, Of
 }
 ```
 
-### 5.9、控制或关闭消费
+## 5.9、控制或关闭消费
 
 KafkaConsumer 提供了对消费速度进行控制的方法，在有些应用场景下我们可能需要暂停某些分区的消费而先消费其他分区，当达到一定条件时再恢复这些分区的消费。KafkaConsumer 中使用 pause() 和 resume() 方法来分别实现暂停某些分区在拉取操作时返回数据给客户端和恢复某些分区向客户端返回数据的操作：
 ```java

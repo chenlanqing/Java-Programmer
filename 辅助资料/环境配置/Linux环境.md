@@ -602,6 +602,13 @@ zookeeper.connect=localhost:2181/kafka
 bin/kafka-server-start.sh -daemon config/server.properties
 ```
 
+如果是在ECS服务器上配置外网访问：
+```
+# 2. 修改config/server.properties文件，添加如下
+listeners=PLAINTEXT://<内网IP>:9092
+advertised.listeners=PLAINTEXT://<公网IP>:9092
+```
+
 ## 2、kafka集群安装
 
 - 解压缩kafka包
