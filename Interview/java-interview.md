@@ -3768,7 +3768,7 @@ Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布
 
 ## 5、Kafka
 
-### 5.1、Kafka 的生产者，有可能会丢数据吗
+### 5.1、Kafka的生产者，有可能会丢数据吗
 
 生产者会把发送到同一个 partition 的多条消息，封装在一个 batch（缓冲区）中。当 batch 满了（参数 batch.size），或者消息达到了超时时间（参数 linger.ms），缓冲区中的消息就会被发送到 broker 上。
 
@@ -3778,7 +3778,7 @@ Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布
 - 把缓冲区设置得非常小，此时消息会退化成单条发送，这会严重影响性能；
 - 消息发送前记录一条日志，消息发送成功后，通过回调再记录一条日志，通过扫描生成的日志，就可以判断哪些消息丢失了
 
-### 5.2、Kafka 生产者会影响业务的高可用吗
+### 5.2、Kafka生产者会影响业务的高可用吗
 
 缓冲区大小毕竟是有限制的，如果消息产生得过快，或者生产者与 broker 节点之间有网络问题，缓冲区就会一直处于 full 的状态。此时，有新的消息到达，会如何处理呢？
 
@@ -3814,7 +3814,9 @@ topic的分区数不可以减少，因为先有的分区数据难以处理；
 
 ### 5.7、简述Kafka的日志目录结构
 
-每一个分区对应一个文件夹，命名为topic-0，topic-1，每个文件夹内有.index和.log文件
+![](image/Kafka-目录结构.png)
+
+每一个分区对应一个文件夹，命名为`topic-0`，`topic-1`，每个文件夹内有`.index`和`.log`文件
 
 比如topic-create-same，有3个分区
 ```sh
@@ -3836,15 +3838,47 @@ total 8
 ### 5.8、如何解决消费速率低的问题
 
 增加分区数和消费者数
+- 增加Consumer实例个数：可以在进程内直接增加（需要保证每个实例对应一个线程，否则没有太大意义），也可以部署多个消费实例进程；需要注意的是，实例个数超过分区数量后就不再能提高速度，将会有消费实例不工作；
+- 每个Consumer实例内多线程消费数据
 
 ### 5.9、Kafka中有那些地方需要选举？这些地方的选举策略又有哪些？
 
-在ISR中需要选择，选择策略为先到先得
+Kafka需要选举的地方：
+- 控制器（Broker）选举机制
+- 分区副本选举机制
+- 消费组选举机制
+
+https://jishuin.proginn.com/p/763bfbd5e2c6
+
+**控制器选举：**
+
+在Kafka集群中会有一个或多个broker，其中有一个broker会被选举为控制器（Kafka Controller），它负责管理整个集群中所有分区和副本的状态等工作。比如当某个分区的leader副本出现故障时，由控制器负责为该分区选举新的leader副本。再比如当检测到某个分区的ISR集合发生变化时，由控制器负责通知所有broker更新其元数据信息；Kafka Controller的选举是依赖Zookeeper来实现的，在Kafka集群中哪个broker能够成功创建/controller这个临时（EPHEMERAL）节点他就可以成为Kafka Controller
+
+如果集群中有一个Broker发生异常退出了，那么控制器就会检查这个broker是否有分区的副本leader，如果有那么这个分区就需要一个新的leader，此时控制器就会去遍历其他副本，决定哪一个成为新的leader，同时更新分区的ISR集合。
+
+如果有一个Broker加入集群中，那么控制器就会通过Broker ID去判断新加入的Broker中是否含有现有分区的副本，如果有，就会从分区副本中去同步数据
+
+控制器脑裂：如果控制器所在broker挂掉了或者Full GC停顿时间太长超过zookeepersession timeout出现假死，Kafka集群必须选举出新的控制器，但如果之前被取代的控制器又恢复正常了，它依旧是控制器身份，这样集群就会出现两个控制器，这就是控制器脑裂问题；
+
+防止控制器脑裂解决方法：为了解决Controller脑裂问题，ZooKeeper中还有一个与Controller有关的持久节点/controller_epoch，存放的是一个整形值的epoch number（纪元编号，也称为隔离令牌），集群中每选举一次控制器，就会通过Zookeeper创建一个数值更大的epoch number，如果有broker收到比这个epoch数值小的数据，就会忽略消息
+
+**分区副本选举：**
+
+- 从Zookeeper中读取当前分区的所有ISR(in-sync replicas)集合；
+- 调用配置的分区选择算法选择分区的leader
+
+Unclean leader选举：ISR是动态变化的，所以ISR列表就有为空的时候，ISR为空说明leader副本也挂掉了。此时Kafka要重新选举出新的leader。但ISR为空，怎么进行leader选举呢？
+
+Kafka把不在ISR列表中的存活副本称为“非同步副本”，这些副本中的消息远远落后于leader，如果选举这种副本作为leader的话就可能造成数据丢失。所以Kafka broker端提供了一个参数unclean.leader.election.enable，用于控制是否允许非同步副本参与leader选举；如果开启，则当 ISR为空时就会从这些副本中选举新的leader，这个过程称为 Unclean leader选举。
+
+可以根据实际的业务场景选择是否开启Unclean leader选举。一般建议是关闭Unclean leader选举，因为通常数据的一致性要比可用性重要
+
+**消费组选举**
 
 ### 5.10、失效副本是指什么？有那些应对措施？
 
 - 失效副本为速率比leader相差大于10秒的follower
-- 将失效的follower先提出ISR
+- 将失效的follower先踢出ISR
 - 等速率接近leader10秒内,再加进ISR
 
 ### 5.11、Kafka消息是采用Pull模式，还是Push模式？
@@ -3862,7 +3896,10 @@ total 8
 
 ### 5.13、Kafka中的分区器、序列化器、拦截器是否了解？它们之间的处理顺序是什么？
 
-拦截器>序列化器>分区器
+producer端的处理顺序是：`拦截器 -> 序列化器 -> 分区器`，先拦截器处理一遍后，经序列化之后，在根据分区器发送到对应的分区里面；
+- 拦截器：接口 org.apache.kafka.clients.producer.ProducerInterceptor
+- 序列化器：生产者需要用序列化器（Serializer）把对象转换成字节数组才能通过网络发送给 Kafka
+- 分区器：接口 org.apache.kafka.clients.producer.Partitioner，其默认实现是：org.apache.kafka.clients.producer.internals.DefaultPartitioner，初始配置是在 ProducerConfig中配置的
 
 ### 5.14、Kafka中的事务是怎么实现的
 
@@ -3874,48 +3911,181 @@ kafka事务有两种：producer事务和consumer事务
 
 **consumer事务**相对于producer事务就弱一点，需要先确保consumer的消费和提交位置为一致且具有事务功能，才能保证数据的完整，不然会造成数据的丢失或重复
 
+### 5.15、Kafka的用途有哪些？使用场景如何？
 
+- 流式数据处理：与Spark、Flink等集成；
 
-Kafka的用途有哪些？使用场景如何？
+### 5.16、Kafka中的ISR、AR又代表什么？ISR的伸缩又指什么
 
-Kafka中的ISR、AR又代表什么？ISR的伸缩又指什么
+- AR：分区中的所有副本统称为 AR（Assigned Replicas）
+- ISR：所有与 leader 副本保持一定程度同步的副本（包括 leader 副本在内）组成ISR（In-Sync Replicas），ISR 集合是 AR 集合中的一个子集
+- OSR：与 leader 副本同步滞后过多的副本（不包括 leader 副本）组成 OSR（Out-of-Sync Replicas）
 
-Kafka中的HW、LEO、LSO、LW等分别代表什么？
+AR=ISR+OSR。在正常情况下，所有的 follower 副本都应该与 leader 副本保持一定程度的同步，即 AR=ISR，OSR 集合为空
 
+leader 副本负责维护和跟踪 ISR 集合中所有 follower 副本的滞后状态，当 follower 副本落后太多或失效时，leader 副本会把它从 ISR 集合中剔除。如果 OSR 集合中有 follower 副本“追上”了 leader 副本，那么 leader 副本会把它从 OSR 集合转移至 ISR 集合。默认情况下，当 leader 副本发生故障时，只有在 ISR 集合中的副本才有资格被选举为新的 leader，而在 OSR 集合中的副本则没有任何机会（不过这个原则也可以通过修改相应的参数配置来改变）
 
+### 5.17、Kafka中的HW、LEO、LSO、LW等分别代表什么
 
-Kafka生产者客户端的整体结构是什么样子的？
+- HW 是 High Watermark 的缩写，俗称高水位，它标识了一个特定的消息偏移量（offset），消费者只能拉取到这个 offset 之前的消息；
+- LSO：LogStartOffset，即第一条消息的offset
+- LEO： 是 Log End Offset 的缩写，它标识当前日志文件中下一条待写入消息的 offset
+- LW：是 Low Watermark 的缩写，俗称“低水位”，代表 AR 集合中最小的 logStartOffset 值
 
-Kafka生产者客户端中使用了几个线程来处理？分别是什么？
+LEO 的大小相当于当前日志分区中最后一条消息的 offset 值加1。分区 ISR 集合中的每个副本都会维护自身的 LEO，而 ISR 集合中最小的 LEO 即为分区的 HW，对消费者而言只能消费 HW 之前的消息
 
-Kafka的旧版Scala的消费者客户端的设计有什么缺陷？
+### 5.18、Kafka生产者客户端的整体结构
+
+Kafka整体结构如下：
+
+![](../Java/分布式架构/消息队列/image/Kafka-生产者客户端架构.png)
+
+### 5.19、Kafka生产者客户端中使用了几个线程来处理
+
+整个生产者客户端由两个线程协调运行，这两个线程分别为主线程和 Sender 线程（发送线程）
+- 在主线程中由 KafkaProducer 创建消息，然后通过可能的拦截器、序列化器和分区器的作用之后缓存到消息累加器（RecordAccumulator，也称为消息收集器）中
+- Sender 线程负责从 RecordAccumulator 中获取消息并将其发送到 Kafka 中
+
+RecordAccumulator 主要用来缓存消息以便 Sender 线程可以批量发送，进而减少网络传输的资源消耗以提升性能。RecordAccumulator 缓存的大小可以通过生产者客户端参数 buffer.memory 配置，默认值为 33554432B，即32MB。如果生产者发送消息的速度超过发送到服务器的速度，则会导致生产者空间不足，这个时候 KafkaProducer 的 send() 方法调用要么被阻塞，要么抛出异常，这个取决于参数 max.block.ms 的配置，此参数的默认值为60000，即60秒。
+
+主线程中发送过来的消息都会被追加到 RecordAccumulator 的某个双端队列（Deque）中，在 RecordAccumulator 的内部为每个分区都维护了一个双端队列，队列中的内容就是 ProducerBatch，即 Deque。消息写入缓存时，追加到双端队列的尾部；Sender 读取消息时，从双端队列的头部读取；
+
+### 5.20、Kafka的旧版Scala的消费者客户端的设计有什么缺陷
+
+老版本的 Consumer Group 把位移保存在 ZooKeeper 中。Apache ZooKeeper 是一个分布式的协调服务框架，Kafka 重度依赖它实现各种各样的协调管理。将位移保存在 ZooKeeper 外部系统的做法，最显而易见的好处就是减少了 Kafka Broker 端的状态保存开销
+
+ZooKeeper 这类元框架其实并不适合进行频繁的写更新，而 Consumer Group 的位移更新却是一个非常频繁的操作。这种大吞吐量的写操作会极大地拖慢 ZooKeeper 集群的性能；
+
+### 5.21、消费组与topic分区关系
 
 “消费组中的消费者个数如果超过topic的分区，那么就会有消费者消费不到数据”这句话是否正确？如果正确，那么有没有什么hack的手段？
 
-消费者提交消费位移时提交的是当前消费到的最新消息的offset还是offset+1?
+一般来说如果消费者过多，出现了消费者的个数大于分区个数的情况，就会有消费者分配不到任何分区；
 
-KafkaConsumer是非线程安全的，那么怎么样实现多线程消费？
+开发者可以继承AbstractPartitionAssignor实现自定义消费策略，从而实现同一消费组内的任意消费者都可以消费订阅主题的所有分区：
 
-简述消费者与消费组之间的关系
+### 5.22、消费者提交消费位移时提交的是当前消费到的最新消息的offset还是offset+1?
+
+在新消费者客户端中，消费位移存储在 Kafka 内部的主题`__consumer_offsets` 中。
+
+当前消费者需要提交的消费位移是`offset+1`
+```java
+//代码清单11-1 消费位移的演示
+TopicPartition tp = new TopicPartition(topic, 0);
+consumer.assign(Arrays.asList(tp));
+long lastConsumedOffset = -1;//当前消费到的位移
+while (true) {
+    ConsumerRecords<String, String> records = consumer.poll(1000);
+    if (records.isEmpty()) {
+        break;
+    }
+    List<ConsumerRecord<String, String>> partitionRecords = records.records(tp);
+    lastConsumedOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
+    consumer.commitSync();//同步提交消费位移
+}
+System.out.println("comsumed offset is " + lastConsumedOffset);
+OffsetAndMetadata offsetAndMetadata = consumer.committed(tp);
+System.out.println("commited offset is " + offsetAndMetadata.offset());
+long posititon = consumer.position(tp);
+System.out.println("the offset of the next record is " + posititon);
+```
+上面代码得到的结果一般是：
+```
+comsumed offset is 377
+commited offset is 378
+the offset of the next record is 378
+```
+所以消费者提交的消费位移是 offset + 1；
+
+### 5.23、KafkaConsumer是非线程安全的，那么怎么样实现多线程消费？
+
+- 线程封闭：即为每个线程实例化一个 KafkaConsumer 对象，这种实现方式的并发度受限于分区的实际个数，当消费线程的个数大于分区数时，就有部分消费线程一直处于空闲的状态；
+- 多个消费线程同时消费同一个分区：这个通过 assign()、seek() 等方法实现，这样可以打破原有的消费线程的个数不能超过分区数的限制，进一步提高了消费的能力。不过这种实现方式对于位移提交和顺序控制的处理就会变得非常复杂；
+- 将处理消息模块改成多线程的实现方式：可以在消息内部处理时开启线程池来处理任务，但是这里无法保证消费顺序；
+
+### 5.24、简述消费者与消费组之间的关系
+
+消费者（Consumer）负责订阅 Kafka 中的主题（Topic），并且从订阅的主题上拉取消息。与其他一些消息中间件不同的是：在 Kafka 的消费理念中还有一层消费组（Consumer Group）的概念，每个消费者都有一个对应的消费组。当消息发布到主题后，只会被投递给订阅它的每个消费组中的一个消费者；
+- 消费组是一个逻辑上的概念，它将旗下的消费者归为一类，每一个消费者只隶属于一个消费组。每一个消费组都会有一个固定的名称，消费者在进行消费前需要指定其所属消费组的名称，这个可以通过消费者客户端参数 `group.id` 来配置，默认值为空字符串。
+- 消费者并非逻辑上的概念，它是实际的应用实例，它可以是一个线程，也可以是一个进程。同一个消费组内的消费者既可以部署在同一台机器上，也可以部署在不同的机器上；
+
+消费者与消费组这种模型可以让整体的消费能力具备横向伸缩性，我们可以增加（或减少）消费者的个数来提高（或降低）整体的消费能力。对于分区数固定的情况，一味地增加消费者并不会让消费能力一直得到提升，如果消费者过多，出现了消费者的个数大于分区个数的情况，就会有消费者分配不到任何分区
+
+点对点与发布/订阅：
+- 如果所有的消费者都隶属于同一个消费组，那么所有的消息都会被均衡地投递给每一个消费者，即每条消息只会被一个消费者处理，这就相当于点对点模式的应用。
+- 如果所有的消费者都隶属于不同的消费组，那么所有的消息都会被广播给所有的消费者，即每条消息会被所有的消费者处理，这就相当于发布/订阅模式的应用
+
+### 5.25、kafka-topics.sh创建（删除）一个topic的背后逻辑
 
 当你使用kafka-topics.sh创建（删除）了一个topic之后，Kafka背后会执行什么逻辑？
 
-创建topic时如何选择合适的分区数？
+默认创建主题：
+- 如果 broker 端配置参数 `auto.create.topics.enable` 设置为 true（默认值就是 true），那么当生产者向一个尚未创建的主题发送消息时，会自动创建一个分区数为 num.partitions（默认值为1）、副本因子为 d`efault.replication.factor`（默认值为1）的主题；
+- 当一个消费者开始从未知主题中读取消息时，或者当任意一个客户端向未知主题发送元数据请求时，都会按照配置参数 num.partitions 和 default.replication.factor 的值来创建一个相应的主题
 
-Kafka目前有那些内部topic，它们都有什么特征？各自的作用又是什么？
+> 不建议将 auto.create.topics.enable 参数设置为 true
 
-优先副本是什么？它有什么特殊的作用？
+创建主题命令执行后：
+- 在执行完脚本之后，Kafka 会在 log.dir 或 log.dirs 参数所配置的目录下创建相应的主题分区，默认情况下这个目录为/tmp/kafka-logs/，一般会根据主题和分区创建多个文件夹：命名方式可以概括为`<topic>-<partition>`
+- 在 ZooKeeper 的`/brokers/topics/`目录下创建一个同名的实节点，该节点中记录了该主题的分区副本分配方案
+- 校验主题是否已经存在：是不能与已经存在的主题同名，如果创建了同名的主题就会报错
 
-Kafka有哪几处地方有分区分配的概念？简述大致的过程及原理
+删除主题命令执行后：
+- 执行完删除命令之后会有相关的提示信息，这个提示信息和 broker 端配置参数 delete.topic.enable 有关。必须将 delete.topic.enable 参数配置为 true 才能够删除主题，这个参数的默认值就是 true，如果配置为 false，那么删除主题的操作将会被忽略；
+- 使用 kafka-topics.sh 脚本删除主题的行为本质上只是在 ZooKeeper 中的`/admin/delete_topics`路径下创建一个与待删除主题同名的节点，以此标记该主题为待删除的状态
 
+### 5.26、创建topic时如何选择合适的分区数？
 
-Kafka中有那些索引文件？
+一般可以通过性能测试；
 
-如果我指定了一个offset，Kafka怎么查找到对应的消息？
+一般情况下，根据预估的吞吐量及是否与 key 相关的规则来设定分区数即可，后期可以通过增加分区数、增加 broker 或分区重分配等手段来进行改进。如果一定要给一个准则，则建议将分区数设定为集群中 broker 的倍数，即假定集群中有3个 broker 节点，可以设定分区数为3、6、9等，至于倍数的选定可以参考预估的吞吐量。不过，如果集群中的 broker 节点数有很多；
 
-如果我指定了一个timestamp，Kafka怎么查找到对应的消息？
+### 5.27、Kafka的内部topic
 
-聊一聊你对Kafka的Log Retention的理解
+- `__consumer_offsets`：作用是保存 Kafka 消费者的位移信息
+- `__transaction_state`：用来存储事务日志消息
+
+### 5.28、优先副本是什么？它有什么特殊的作用？
+
+优先副本是指在AR集合列表中的第一个副本。
+
+理想情况下，优先副本就是该分区的leader 副本，所以也可以称之为 preferred leader。Kafka 要确保所有主题的优先副本在 Kafka 集群中均匀分布，这样就保证了所有分区的 leader 均衡分布。以此来促进集群的负载均衡，这一行为也可以称为“分区平衡”
+
+### 5.29、Kafka有哪几处地方有分区分配的概念？简述大致的过程及原理
+
+- 生产者的分区分配是指为每条消息指定其所要发往的分区：可以编写一个具体的类实现`org.apache.kafka.clients.producer.Partitioner`接口。
+- 消费者中的分区分配是指为消费者指定其可以消费消息的分区：Kafka 提供了消费者客户端参数 `partition.assignment.strategy` 来设置消费者与订阅主题之间的分区分配策略。
+- 分区副本的分配是指为集群制定创建主题时的分区副本分配方案：即在哪个 broker 中创建哪些分区的副本。kafka-topics.sh 脚本中提供了一个 replica-assignment 参数来手动指定分区副本的分配方案；
+
+### 5.30、Kafka中有那些索引文件
+
+每个日志分段文件对应了两个索引文件，主要用来提高查找消息的效率。
+- 偏移量索引文件`.index`：用来建立消息偏移量（offset）到物理地址之间的映射关系，方便快速定位消息所在的物理文件位置
+- 时间戳索引文件`.timeindex`则根据指定的时间戳（timestamp）来查找对应的偏移量信息。
+- 事务索引文件`.txindex `
+
+### 5.31、如果我指定了一个offset，Kafka怎么查找到对应的消息
+
+偏移量索引文件中的偏移量是单调递增的，查询指定偏移量时，使用二分查找法来快速定位偏移量的位置，如果指定的偏移量不在索引文件中，则会返回小于指定偏移量的最大偏移量；
+
+KafkaConsumer 中的 seek() 方法正好提供了这个功能，让我们得以追前消费或回溯消费
+```java
+public void seek(TopicPartition partition, long offset)
+```
+seek() 方法中的参数 partition 表示分区，而 offset 参数用来指定从分区的哪个位置开始消费。seek() 方法只能重置消费者分配到的分区的消费位置，而分区的分配是在 poll() 方法的调用过程中实现的；在执行 seek() 方法之前需要先执行一次 poll() 方法，等到分配到分区之后才可以重置消费位置
+
+### 5.32、如果我指定了一个timestamp，Kafka怎么查找到对应的消息
+
+找到相应的日志分段之后，在时间戳索引文件中使用二分查找算法查找到不大于targetTimeStamp的最大索引项
+
+KafkaConsumer 同样考虑到了这种情况，它提供了一个 `offsetsForTimes()` 方法，通过 timestamp 来查询与此对应的分区位置：
+```java
+// timestampsToSearch 是一个 Map 类型，key 为待查询的分区，而 value 为待查询的时间戳，该方法会返回时间戳大于等于待查询时间的第一条消息对应的位置和时间戳，对应于 OffsetAndTimestamp 中的 offset 和 timestamp 字段
+public Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartition, Long> timestampsToSearch)
+public Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartition, Long> timestampsToSearch, Duration timeout)
+```
+
+### 5.33、聊一聊你对Kafka的Log Retention的理解
 
 聊一聊你对Kafka的Log Compaction的理解
 
@@ -3931,13 +4101,9 @@ Kafka中的幂等是怎么实现的
 
 Kafka中的事务是怎么实现的（这题我去面试6加被问4次，照着答案念也要念十几分钟，面试官简直凑不要脸）
 
-
-
 多副本下，各个副本中的HW和LEO的演变过程
 
 为什么Kafka不支持读写分离？
-
-
 
 Kafka中怎么实现死信队列和重试队列？
 

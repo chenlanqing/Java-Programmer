@@ -144,6 +144,7 @@ Broker 收到数据后，写磁盘时只是将数据写入 Page Cache，并不�
 |启动 Producer	    | `bin/kafka-console-producer.sh --broker-list localhost:9092 --topic test`	||
 |启动 Consumer	    | `bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic test --from-beginning`	||
 |Topic相关信息（test) | `bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic test` || 
+|group信息查看|`bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group spring-group`||
 
 如果create topic出现如下问题：
 ```
@@ -484,6 +485,15 @@ Sender 从 RecordAccumulator 中获取缓存的消息之后，会进一步将原
 消费者与消费组这种模型可以让整体的消费能力具备横向伸缩性，我们可以增加（或减少）消费者的个数来提高（或降低）整体的消费能力。对于分区数固定的情况，一味地增加消费者并不会让消费能力一直得到提升，如果消费者过多，出现了消费者的个数大于分区个数的情况，就会有消费者分配不到任何分区；
 
 分配逻辑都是基于默认的`分区分配策略`进行分析的，可以通过消费者客户端参数 `partition.assignment.strategy` 来设置消费者与订阅主题之间的分区分配策略
+
+查看消费组信息：`bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group <groupName>`，比如消费组 spring-group，通过命令得到如下数据：
+```
+ bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group spring-group
+GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG CONSUMER-ID    HOST            CLIENT-ID
+spring-group    topic-spring    1          0               5               5   consumer-2-9.. /192.168.3.9    consumer-2
+spring-group    topic-spring    0          0               5               5   consumer-1-f.. /192.168.3.9    consumer-1
+```
+- LAG: 表示消息堆积的
 
 ## 5.2、点对点与发布/订阅模式
 
@@ -855,7 +865,7 @@ public interface ConsumerRebalanceListener {
 
 ## 5.13、消费者拦截器
 
-消费者拦截器需要自定义实现 `org.apache.kafka.clients.consumer. ConsumerInterceptor `接口，该接口包含三个方法：
+消费者拦截器需要自定义实现 `org.apache.kafka.clients.consumer.ConsumerInterceptor`接口，该接口包含三个方法：
 ```java
 public interface ConsumerInterceptor<K, V> extends Configurable, AutoCloseable {
     // 会在 poll() 方法返回之前调用拦截器的 onConsume() 方法来对消息进行相应的定制化操作，比如修改返回的消息内容、按照某种规则过滤消息；如果 onConsume() 方法中抛出异常，那么会被捕获并记录到日志中，但是异常不会再向上传递
@@ -865,7 +875,6 @@ public interface ConsumerInterceptor<K, V> extends Configurable, AutoCloseable {
     public void close();
 }
 ```
-
 配置拦截器：`properties.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, CustomConsumerInterceptor.class.getName());`
 
 在某些业务场景中会对消息设置一个有效期的属性，如果某条消息在既定的时间窗口内无法到达，那么就会被视为无效，它也就不需要再被继续处理了。可以使用消费者拦截器来实现一个简单的消息 TTL（Time to Live，即过期时间）的功能：
@@ -911,7 +920,6 @@ KafkaProducer 是线程安全的，然而 KafkaConsumer 却是非线程安全的
 ```java
 java.util.ConcurrentModificationException: KafkaConsumer is not safe for multi-threaded access.
 ```
-
 KafkaConsumer 中的每个公用方法在执行所要执行的动作之前都会调用这个 acquire() 方法，只有 wakeup() 方法是个例外；acquire () 方法的具体定义如下：
 ```java
 private final AtomicLong currentThread = new AtomicLong(NO_CURRENT_THREAD);
@@ -1474,6 +1482,8 @@ root hard nofile 65535
 - 分区数越多也会让 Kafka 的正常启动和关闭的耗时变得越长，与此同时，主题的分区数越多不仅会增加日志清理的耗时，而且在被删除时也会耗费更多的时间；
 
 > 如果一定要给一个准则，则建议将分区数设定为集群中 broker 的倍数，即假定集群中有3个 broker 节点，可以设定分区数为3、6、9等，至于倍数的选定可以参考预估的吞吐量。不过，如果集群中的 broker 节点数有很多，比如大几十或上百、上千，那么这种准则也不太适用，在选定分区数时进一步可以引入机架等参考因素；
+
+# 7、核心原理
 
 # kafka学习资料
 
