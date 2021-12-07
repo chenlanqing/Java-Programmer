@@ -819,17 +819,61 @@ protected final boolean tryAcquire(int acquires) {
 
 ### 5.1、threadpoolexecutor的内部数据结构是什么样子的
 
-### 5.2、线程的运行状态有多少种
+
+
+### 5.2、线程池的运行状态有多少种
+
+如下代码所示，线程池的状态分为了
+- RUNNING：接受新的任务和处理队列中的任务
+- SHUTDOWN：拒绝新的任务，但是处理队列中的任务
+- STOP：拒绝新的任务，不处理队列中的任务，并且中断在执行的任务
+- TIDYING：所有任务已经终止（terminated），workerCount=0，线程
+- TERMINATED：terminated已完成
+
+线程池的状态按如下方式进行转换
+- RUNNING->SHUTDOWN 调用`shutdown()`方法
+- (RUNNING or SHUTDOWN) -> STOP，调用`shutdownNow()`
+- SHUTDOWN -> TIDYING，当队列和线程池都为空
+- STOP->TIDYING,线程池为空
+- TIDYING -> TERMINATED，当`terminated()` hook method 执行完毕，所有线程都在`awaitTermination()`中等待线程池状态到达TERMINATED。
 
 ### 5.3、工作线程数是怎么存储的
 
-### 5.4、worker对象里面的数据结构是什么样子的
+工作线程一般是存储在HashSet中的，在addWorker时，如果 compareAndIncrementWorkerCount 成功，则会构建一个Worker，并添加到 workers集合中，如果添加到集合中成功，则立刻执行线程；
+
+### 5.4、Worker对象里面的数据结构是什么样子的
+
+Worker是一个继承AQS并实现了Runnable接口的内部类，主要有 Thread的成员变量表示当前正在执行的线程，Runnable表示需要运行的任务，可能为 null
+
+“线程池中的线程”，其实就是Worker；等待队列中的元素，是我们提交的Runnable任务；
+
+构造方法传入 Runnable，代表第一个执行的任务，可以为空。构造方法中新建一个线程；构造函数主要是做三件事：
+- 设置同步状态state为-1，同步状态大于0表示就已经获取了锁；
+- 设置将当前任务task设置为firstTask；
+- 利用Worker本身对象this和ThreadFactory创建线程对象。
 
 ### 5.5、execute里面主要做了什么事情
 
+- 核心线程数小于corePoolSize，则需要创建新的工作线程来执行任务
+- 核心线程数大于等于corePoolSize，需要将线程放入到阻塞任务队列中等待执行
+- 队列满时需要创建非核心线程来执行任务，所有工作线程（核心线程+非核心线程）数量要小于等于maximumPoolSize
+- 如果工作线程数量已经达到maximumPoolSize，则拒绝任务，执行拒绝策略
+
 ### 5.6、addworker是做什么事情
 
+主要是创建一个线程，并且线程开始运行；
+- 首先会判断线程池状态，如果正常，通过CAS增加运行的线程数（该方法有两个参数：需要运行的任务、是否为核心线程数）
+- 然后创建一个Worker对象，需要运行的任务作为构造方法的参数；
+- 如果需要运行的任务不为空，则通过Lock，是否启动该线程；
+
 ### 5.7、runworker里面是如何执行处理的
+
+- 提交任务时如果**工作线程**数量小于核心线程数量，则`firstTask != null`，一路顺利执行然后阻塞在队列的poll上。
+- 提交任务时如果**工作线程**数量大于等于核心线程数量，则`firstTask == null`，需要从任务队列中poll一个任务执行，执行完毕之后继续阻塞在队列的poll上。
+- 提交任务时如果**工作线程**数量大于等于核心线程数量并且任务队列已满，需要创建一个**非核心线程**来执行任务，则`firstTask != null`，执行完毕之后继续阻塞在队列的poll上，不过注意这个poll是允许超时的，最多等待时间为`keepAliveTime`。
+- 工作线程在跳出循环之后，线程池会移除该线程对象，并且试图终止线程池（因为需要考量shutdown的情况）
+- `ThreadPoolExecutor`提供了任务执行前和执行后的钩子方法，分别为`beforeExecute`和`afterExecute`。
+- 工作线程通过实现`AQS`来保证线程安全（每次执行任务的时候都会`lock`和`unlock`）
 
 ### 5.8、线程的回收
 
@@ -839,11 +883,65 @@ protected final boolean tryAcquire(int acquires) {
 
 **空闲线程如何回收**
 
+超过corePoolSize的空闲线程由线程池回收，线程池Worker启动跑第一个任务之后就一直循环遍历线程池任务队列，超过指定超时时间获取不到任务就remove Worker，最后由垃圾回收器回收；
+
+在runWorker方法中，如果循环中没有从队列中获取数据，则跳出循环：
+```java
+final void runWorker(Worker w) {
+    Thread wt = Thread.currentThread();
+    Runnable task = w.firstTask;
+    w.firstTask = null;
+    w.unlock(); // allow interrupts
+    boolean completedAbruptly = true;
+    try {
+        while (task != null || (task = getTask()) != null) {
+            ....
+        }
+        completedAbruptly = false;
+    } finally {
+        processWorkerExit(w, completedAbruptly);
+    }
+}
+private Runnable getTask() {
+    boolean timedOut = false; // Did the last poll() time out?
+    for (;;) {
+        int c = ctl.get();
+        ....
+        // allowCoreThreadTimeOut 表示是否允许核心线程超时，默认是false，如果调用 allowCoreThreadTimeOut(boolean value)，传入true，表示核心线程数需要回收，
+        boolean timed = allowCoreThreadTimeOut || wc > corePoolSize;
+        ... 
+        try {
+            // timed为true，调用poll方法：任务队列取任务了，带了timeOut参数的poll方法超时未能从任务队列获取任务即返回null，从而实现最终的线程回收
+            Runnable r = timed ? workQueue.poll(keepAliveTime, TimeUnit.NANOSECONDS) :
+                workQueue.take();
+            if (r != null)
+                return r;
+            timedOut = true;
+        } catch (InterruptedException retry) {
+            timedOut = false;
+        }
+    }
+}
+private void processWorkerExit(Worker w, boolean completedAbruptly) {
+    if (completedAbruptly) // If abrupt, then workerCount wasn't adjusted
+        decrementWorkerCount();
+    final ReentrantLock mainLock = this.mainLock;
+    mainLock.lock();
+    try {
+        completedTaskCount += w.completedTasks;
+        // 回收线程
+        workers.remove(w);
+    } finally {
+        mainLock.unlock();
+    }
+}
+```
+
 ### 5.9、线程池被创建后里面有线程吗？如果没有的话，你知道有什么方法对线程池进行预热吗？
 
 线程池被创建后如果没有任务过来，里面是不会有线程的。如果需要预热的话可以调用下面的两个方法：
-- 全部启动：preStartAllCoreThread；
-- 启动一个：preStartCoreThread
+- 创建全部核心线程：preStartAllCoreThread
+- 创建一个核心线程：preStartCoreThread
 
 ### 5.10、如果线程池队列满了，仍要执行任务该如何处理？
 
@@ -876,7 +974,7 @@ protected final boolean tryAcquire(int acquires) {
 
 - 线程泄漏：各种类型的线程池中一个严重的风险是线程泄漏，当从池中除去一个线程以执行一项任务，而在任务完成后该线程却没有返回池时，会发生这种情况。发生线程泄漏的一种情形出现在任务抛出一个 RuntimeException 或一个 Error 时；
 
-- 请求过载：
+- 请求过载
 
 ### 5.13、空闲线程过多会有什么问题
 
@@ -909,15 +1007,40 @@ protected final boolean tryAcquire(int acquires) {
 
 > Spring中使用的`@Async`注解，底层就是基于 SimpleAsyncTaskExecutor 去执行任务，只不过它不是线程池，而是每次都新开一个线程
 
+### 5.14、任务执行过程中发生异常怎么处理？
+
+如果某个任务执行出现异常，那么执行任务的线程会被关闭，而不是继续接收其他任务。然后会启动一个新的线程来代替它
+
 ## 6、FutureTask
 
 ### 6.1、FutureTask里面有多少种状态
 
+有7种状态：
+```java
+private static final int NEW          = 0; // 新建
+private static final int COMPLETING   = 1; // 正在处理
+private static final int NORMAL       = 2; // 正常结束，最终态
+private static final int EXCEPTIONAL  = 3; // 异常
+private static final int CANCELLED    = 4; // 被取消
+private static final int INTERRUPTING = 5; // 中断中
+private static final int INTERRUPTED  = 6; // 已被中断
+```
+* NEW -> COMPLETING -> NORMAL
+* NEW -> COMPLETING -> EXCEPTIONAL
+* NEW -> CANCELLED
+* NEW -> INTERRUPTING -> INTERRUPTED
+
 ### 6.2、里面是什么数据结构
+
+WaitNode内部类，记录当前线程以及下一个需要执行的任务；
 
 ### 6.3、在执行task的时候都做了什么事情
 
+task运行实际上执行的是 run方法，
+
 ### 6.4、nodewaiters是干什么的
+
+
 
 ## 7、synchronized 无法禁止指令重排序，确能够保证有序性？
 

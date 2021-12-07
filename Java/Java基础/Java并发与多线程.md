@@ -3723,14 +3723,52 @@ public Connection getConnection(String key) throws Exception{
 }
 ```
 
-### 11.4、cancel方法
+### 11.4、run方法
+
+其实现Runnable方法，具体实现如下
+```java
+public void run() {
+    // 如果当前task状态不是 NEW，CAS替换runner为当前线程
+    if (state != NEW || !RUNNER.compareAndSet(this, null, Thread.currentThread()))
+        return;
+    try {
+        // callable 运行的任务
+        Callable<V> c = callable;
+        if (c != null && state == NEW) {
+            V result;
+            boolean ran;
+            try {
+                // 调用 call方法获取执行结果
+                result = c.call();
+                ran = true;
+            } catch (Throwable ex) {
+                result = null;
+                ran = false;
+                setException(ex);
+            }
+            if (ran)
+                set(result);
+        }
+    } finally {
+        // runner must be non-null until state is settled to
+        // prevent concurrent calls to run()
+        runner = null;
+        // state must be re-read after nulling runner to prevent
+        // leaked interrupts
+        int s = state;
+        if (s >= INTERRUPTING)
+            handlePossibleCancellationInterrupt(s); //处理中断逻辑
+    }
+}
+```
+
+### 11.5、cancel方法
 
 ```java
 public boolean cancel(boolean mayInterruptIfRunning) {
     //如果当前Future状态为NEW，根据参数修改Future状态为INTERRUPTING或CANCELLED
     if (!(state == NEW 
-    && UNSAFE.compareAndSwapInt(this, stateOffset, NEW, mayInterruptIfRunning ? INTERRUPTING : CANCELLED))
-    )
+        && UNSAFE.compareAndSwapInt(this, stateOffset, NEW, mayInterruptIfRunning ? INTERRUPTING : CANCELLED)))
         return false;
     try {    // in case call to interrupt throws exception
         if (mayInterruptIfRunning) {//可以在运行时中断
@@ -3752,7 +3790,7 @@ public boolean cancel(boolean mayInterruptIfRunning) {
 - 如果当前Future状态为NEW，根据参数修改Future状态为INTERRUPTING或CANCELLED。 
 - 如果当前状态不为NEW，则根据参数mayInterruptIfRunning决定是否在任务运行中也可以中断。中断操作完成后，调用finishCompletion移除并唤醒所有等待线程
 
-### 11.5、线程API之间的关系
+### 11.6、线程API之间的关系
 
 Thread、Runnable、Callable、Future、FutureTask 之间的关系
 
