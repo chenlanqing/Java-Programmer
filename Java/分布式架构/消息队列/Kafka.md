@@ -1,5 +1,5 @@
 
-# 1、核心概念
+# 1、基本介绍
 
 ## 1.1、主要特点
 
@@ -99,6 +99,8 @@ Kafka 中每个分区是一个有序的，不可变的消息序列，新的消�
 
 由于顺序写入的原因，所以 Kafka 采用各种删除策略删除数据的时候，并非通过使用“读 - 写”模式去修改文件，而是将 Partition 分为多个 Segment，每个 Segment 对应一个物理文件，通过删除整个文件的方式去删除 Partition 内的数据。这种方式清除旧数据的方式，也避免了对文件的随机写操作；
 
+因为其内部是一个队列，支持追加写
+
 ### 1.4.3、充分利用 Page Cache
 
 应用程序在写文件的时候，操作系统会先把数据写入到 PageCache 中，数据在成功写到 PageCache 之后，对于用户代码来说，写入就结束了；应用程序在读文件的时候，操作系统也是先尝试从 PageCache 中寻找数据，如果找到就直接返回数据，找不到会触发一个缺页中断，然后操作系统把数据从文件读取到 PageCache 中，再返回给应用程序
@@ -116,6 +118,24 @@ Broker 收到数据后，写磁盘时只是将数据写入 Page Cache，并不�
 
 [零拷贝](../../Java基础/Java-IO.md#四零拷贝)
 
+Kafka 的数据并不是实时的写入硬盘，它充分利用了现代操作系统分页存储来利用内存提高 I/O 效率；对于 kafka 来说，Producer 生产的数据存到 broker，这个过程读取到 socket buffer 的网络数据，其实可以直接在内核空间完成落盘。并没有必要将 socket buffer 的网络数据，读取到应用进程缓冲区；在这里应用进程缓冲区其实就是 broker，broker 收到生产者的数据，就是为了持久化。
+
+### 1.4.5、网络模型
+
+Kafka 自己实现了网络模型做 RPC。底层基于 Java NIO，采用和 Netty 一样的 Reactor 线程模型。
+
+Kafka 即基于 Reactor 模型实现了多路复用和处理线程池。其设计如下：
+
+![](image/Kafka-网络模型-Reactor.png)
+
+其中包含了一个Acceptor线程，用于处理新的连接，Acceptor 有 N 个 Processor 线程 select 和 read socket 请求，N 个 Handler 线程处理请求并相应，即处理业务逻辑
+
+### 1.4.6、批量与压缩
+
+Kafka Producer 向 Broker 发送消息不是一条消息一条消息的发送。Producer 有两个重要的参数：batch.size和linger.ms。这两个参数就和 Producer 的批量发送有关：Producer、Broker 和 Consumer 使用相同的压缩算法，在 producer 向 Broker 写入数据，Consumer 向 Broker 读取数据时甚至可以不用解压缩，最终在 Consumer Poll 到消息时才解压，这样节省了大量的网络和磁盘开销；
+
+Kafka 支持多种压缩算法：lz4、snappy、gzip。Kafka 2.1.0 正式支持 ZStandard
+
 ## 1.5、kafka零拷贝
 
 [零拷贝](../../Java基础/Java-IO.md#四零拷贝)
@@ -126,6 +146,16 @@ Broker 收到数据后，写磁盘时只是将数据写入 Page Cache，并不�
 - 海量日志手机
 - 数据同步应用
 - 实时计算分析
+
+## 1.7、zookeeper与kafka
+
+Kafka 将 Broker、Topic 和 Partition 的元数据信息存储在 Zookeeper 上。通过在 Zookeeper 上建立相应的数据节点，并监听节点的变化，Kafka 使用 Zookeeper 完成以下功能：
+- Kafka Controller 的 Leader 选举
+- Kafka 集群成员管理
+- Topic 配置管理
+- 分区副本管理
+
+![](image/Kafka-zookeeper管理的节点.png)
 
 # 2、kafka配置安装
 
@@ -1484,6 +1514,51 @@ root hard nofile 65535
 > 如果一定要给一个准则，则建议将分区数设定为集群中 broker 的倍数，即假定集群中有3个 broker 节点，可以设定分区数为3、6、9等，至于倍数的选定可以参考预估的吞吐量。不过，如果集群中的 broker 节点数有很多，比如大几十或上百、上千，那么这种准则也不太适用，在选定分区数时进一步可以引入机架等参考因素；
 
 # 7、核心原理
+
+## 7.1、Controller
+
+Controller 是从 Broker 中选举出来的，负责分区 Leader 和 Follower 的管理。当某个分区的 leader 副本发生故障时，由 Controller 负责为该分区选举新的 leader 副本。当检测到某个分区的 ISR(In-Sync Replica)集合发生变化时，由控制器负责通知所有 broker 更新其元数据信息。当使用kafka-topics.sh脚本为某个 topic 增加分区数量时，同样还是由控制器负责分区的重新分配；
+
+Kafka 中 Controller 的选举的工作依赖于 Zookeeper，成功竞选为控制器的 broker 会在 Zookeeper 中创建/controller这个临时（EPHEMERAL）节点
+
+**选举过程：**
+
+Broker 启动的时候尝试去读取/controller节点的brokerid的值，如果brokerid的值不等于-1，则表明已经有其他的 Broker 成功成为 Controller 节点，当前 Broker 主动放弃竞选；如果不存在/controller节点，或者 brokerid 数值异常，当前 Broker 尝试去创建/controller这个节点，此时也有可能其他 broker 同时去尝试创建这个节点，只有创建成功的那个 broker 才会成为控制器，而创建失败的 broker 则表示竞选失败。每个 broker 都会在内存中保存当前控制器的 brokerid 值，这个值可以标识为 activeControllerId
+
+**职责：**
+Controller 被选举出来，作为整个 Broker 集群的管理者，管理所有的集群信息和元数据信息。它的职责包括下面几部分：
+- 处理 Broker 节点的上线和下线，包括自然下线、宕机和网络不可达导致的集群变动，Controller 需要及时更新集群元数据，并将集群变化通知到所有的 Broker 集群节点；
+- 创建 Topic 或者 Topic 扩容分区，Controller 需要负责分区副本的分配工作，并主导 Topic 分区副本的 Leader 选举。
+- 管理集群中所有的副本和分区的状态机，监听状态机变化事件，并作出相应的处理。Kafka 分区和副本数据采用状态机的方式管理，分区和副本的变化都在状态机内会引起状态机状态的变更，从而触发相应的变化事件
+
+## 7.2、分区与副本状态
+
+### 7.2.1、分区状态
+
+PartitionStateMachine,管理 Topic 的分区，它有以下 4 种状态：
+- NonExistentPartition：该状态表示分区没有被创建过或创建后被删除了。
+- NewPartition：分区刚创建后，处于这个状态。此状态下分区已经分配了副本，但是还没有选举 leader，也没有 ISR 列表。
+- OnlinePartition：一旦这个分区的 leader 被选举出来，将处于这个状态。
+- OfflinePartition：当分区的 leader 宕机，转移到这个状态。
+
+状态变化过程：
+
+![](image/Kafka-分区状态机变化.png)
+
+### 7.2.2、副本状态
+
+ReplicaStateMachine，副本状态，管理分区副本信息，它也有 4 种状态：
+- NewReplica: 创建 topic 和分区分配后创建 replicas，此时，replica 只能获取到成为 follower 状态变化请求。
+- OnlineReplica: 当replica成为partition的assingned replicas 时，其状态变为OnlineReplica,即一个有效的OnlineReplica。
+- OfflineReplica: 当一个 replica 下线，进入此状态，这一般发生在 broker 宕机的情况下；
+- NonExistentReplica: Replica 成功删除后，replica 进入 NonExistentReplica 状态。
+- ReplicaDeletionStarted：副本被删除时所处的状态
+- ReplicaDeletionSuccessful：副本被成功删除后所处的状态
+- ReplicaDeletionIneligible：开启副本删除，但副本暂时无法被删除时所处的状态
+
+![](image/Kafka-副本状态机.png)
+
+图中的单向箭头表示只允许单向状态转换，双向箭头则表示转换方向可以是双向的。比如，OnlineReplica 和 OfflineReplica 之间有一根双向箭头，这就说明，副本可以在 OnlineReplica 和 OfflineReplica 状态之间随意切换
 
 # kafka学习资料
 

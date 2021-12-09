@@ -2115,6 +2115,12 @@ typedef struct redisDb {
 } redisDb;
 ```
 
+## 4、Redis变慢的原因
+
+- [Redis变慢](http://kaito-kidd.com/2021/01/23/redis-slow-latency-analysis/)
+
+![](image/Redis性能排查与调优.png)
+
 # 八、Redis安全
 
 Redis安全防范
