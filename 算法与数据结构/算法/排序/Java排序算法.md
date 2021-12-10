@@ -709,11 +709,26 @@ public class HeapSort {
 
 - 排序前后两个相等的数相对位置不变，则算法稳定；从一个键上排序，然后再从另一个键上排序，第一个键排序的结果可以为第二个键排序所用
 
-# 10、计数排序
+# 10、桶排序
+
+## 10.1、思想
+
+每一个桶（bucket）代表一个区间范围，里面可以承载一个或多个元素。
+
+- 桶排序的第一步，就是创建这些桶，确定每一个桶的区间范围;
+
+	我们这里创建的桶数量等于原始数列的元素数量，除了最后一个桶只包含数列最大值，前面各个桶的区间按照比例确定。
+	`区间跨度 = （最大值-最小值）/ （桶的数量 - 1）`
+
+- 第二步，遍历原始数列，把元素对号入座放入各个桶中；
+- 第三步，每个桶内部的元素分别排序；
+- 第四步，遍历所有的桶，输出所有元素；
+
+## 10.2、计数排序
 
 计数排序是适用于一定范围内的帧数排序，在取值范围不是很大的情况下，它的性能甚至快过复杂度为$O(N * lgN)$的排序算法；
 
-## 10.1、思路
+### 10.2.1、思路
 
 假设数组中有20个随机整数，取值范围是0~10，要求用最快的速度把这20个整数从小到大排序；
 
@@ -726,7 +741,7 @@ public class HeapSort {
 
 有了统计结果之后，直接遍历数组，输出数组元素的下标值，元素的值是几，就输出几次；
 
-## 10.2、基本实现
+### 10.2.2、基本实现
 
 ```java
 public static int[] countSort(int[] array) {
@@ -755,7 +770,7 @@ public static int[] countSort(int[] array) {
 }
 ```
 
-## 10.3、优化
+### 10.2.3、优化
 
 上面的实现存在比较大的问题，比如有个数组：`[95, 94, 91, 98, 99, 90, 93, 91, 92]`，这个数组的最大值是99，但是最小的整数是92，如果创建长度为100的数组，那么前面0-92空间位置就浪费了；
 
@@ -763,9 +778,45 @@ public static int[] countSort(int[] array) {
 
 以上面的数组为例，统计出数组的长度为 `99 - 90 + 1 = 10`, 偏移量等于数组的最小值90，对于第一个整数95，对应的统计数组下标是 `95 - 90 = 5`；
 
-# 11、桶排序/基数排序
+```java
+public static int[] countSort(int[] array) {
+	int max = array[0];
+	int min = array[0];
+	int len = array.length;
+	// 找出最大和最小的元素，其作为计数数组的索引最大值
+	for (int i = 1; i < len; i++) {
+		if (max < array[i]) {
+			max = array[i];
+		}
+		if (min > array[i]) {
+			min = array[i];
+		}
+	}
+	int subLen = max - min;
+	// 创建统计数组并统计对应元素个数
+	int[] countArr = new int[subLen + 1];
+	for (int i = 0; i < len; i++) {
+		countArr[array[i] - min]++;
+	}
+	// 统计数组变形，后面的元素等于前面的元素之和
+	int sum = 0;
+	for (int i = 0; i < countArr.length; i++) {
+		sum += countArr[i];
+		countArr[i] = sum;
+	}
+	// 倒序遍历元素数列，从统计数组找到正确的位置，输出到结果数组
+	int[] result = new int[len];
+	for (int i = len - 1; i >= 0; i--) {
+		result[countArr[array[i] - min] - 1] = array[i];
+		countArr[array[i] - min]--;
+	}
+	return result;
+}
+```
 
 https://mp.weixin.qq.com/s/qrboxA5SwN7AbAcpZ_dpNQ
+
+## 10.3、基数排序
 
 
 # 参考资料
