@@ -134,6 +134,12 @@ Java语言提供了类似Runtime.exec(....)的API，可以用来执行特定命�
 
 ## 3、XML注入攻击
 
+## 4、JNDI注入攻击
+
+https://www.blackhat.com/docs/us-16/materials/us-16-Munoz-A-Journey-From-JNDI-LDAP-Manipulation-To-RCE.pdf?continueFlag=e64d0e19c6b126cc746264eefd21425d
+
+https://www.veracode.com/blog/research/exploiting-jndi-injections-java?continueFlag=e64d0e19c6b126cc746264eefd21425d
+
 # 五、DDOS
 
 ## 1、概述
