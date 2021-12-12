@@ -158,13 +158,19 @@ Kafka 将 Broker、Topic 和 Partition 的元数据信息存储在 Zookeeper 上
 
 ![](image/Kafka-zookeeper管理的节点.png)
 
-# 2、kafka配置安装
+# 2、kafka安装与配置
 
-## 2.1、安装kafka
+## 2.1、Kafka版本
+
+- Apache Kafka，也称社区版 Kafka。优势在于迭代速度快，社区响应度高，使用它可以让你有更高的把控度；缺陷在于仅提供基础核心组件，缺失一些高级的特性。
+- Confluent Kafka，Confluent 公司提供的 Kafka。优势在于集成了很多高级特性且由 Kafka 原班人马打造，质量上有保证；缺陷在于相关文档资料不全，普及率较低，没有太多可供参考的范例。
+- CDH/HDP Kafka，大数据云公司提供的 Kafka，内嵌 Apache Kafka。优势在于操作简单，节省运维成本；缺陷在于把控度低，演进速度较慢
+
+## 2.2、安装kafka
 
 [](../../../辅助资料/环境配置/Linux环境.md#1Kafka单机安装)
 
-## 2.2、基本使用
+## 2.3、基本使用
 
 |功能	 |            启动命令	|备注|
 |-------|---------------------|----|
@@ -184,8 +190,75 @@ Error while executing topic command : Replication factor: 2 larger than availabl
 ```
 可以尝试使用命令：`kafka-topics.sh --create --zookeeper localhost:2181/kafka --partitions 1 --replication-factor 1 --topic t1`
 
-# 3、Kafka入门
+## 2.4、Kafka监控
 
+kafka manager、 kafka eagle
+
+https://github.com/didi/LogiKM
+
+JMXTrans + InfluxDB + Grafana
+
+## 2.5、Kafka线上集群考量
+
+- 操作系统：主要是操作系统的IO模型，一般建议部署在linux机器上，因为其使用的是epoll；
+- 磁盘：磁盘的IO性能；因为Kafka是顺序写的，所以可以使用机械硬盘即可；不需要磁盘阵列；新增消息数、消息留存时间、平均消息大小、备份数、是否启用压缩
+- 磁盘容量：根据消息条数、留存时间预估容量，一般建议预留20%~30%的磁盘空间；
+- 带宽：根据实际带宽资源和业务
+
+# 3、Kafka配置
+
+## 3.1、broker端
+
+**与存储相关的参数：**
+- `log.dirs`和`log.dir`：只要设置`log.dirs`，即第一个参数就好了，不要设置`log.dir`。而且更重要的是，在线上生产环境中一定要为log.dirs配置多个路径，具体格式是一个 CSV 格式，也就是用逗号分隔的多个路径，比如`/home/kafka1,/home/kafka2,/home/kafka3`这样。如果有条件的话你最好保证这些目录挂载到不同的物理磁盘上；
+
+**zookeeper相关参数：**
+- `zookeeper.connect`：指定zk连接地址，如果是集群，则：`zk1:2181,zk2:2181,zk3:2181`；如果你有两套 Kafka 集群，假设分别叫它们 kafka1 和 kafka2，那么两套集群的`zookeeper.connect`参数可以这样指定：`zk1:2181,zk2:2181,zk3:2181/kafka1`和`zk1:2181,zk2:2181,zk3:2181/kafka2`。切记 chroot 只需要写一次，而且是加到最后的
+
+**broker连接相关参数：**
+- `listeners`和`advertised.listeners`，最好全部使用主机名，即 Broker 端和 Client 端应用配置中全部填写主机名
+
+**关于topic管理的参数：**
+- `auto.create.topics.enable`：是否允许自动创建 Topic，建议设置成false
+- `unclean.leader.election.enable`：是否允许 Unclean Leader 选举；如果设置成 false，那么就坚持之前的原则，不能让那些落后太多的副本竞选 Leader；默认为false
+- `auto.leader.rebalance.enable`：是否允许定期进行 Leader 选举；设置它的值为 true 表示允许 Kafka 定期地对一些 Topic 分区进行 Leader 重选举，它不是选 Leader，而是换 Leader；建议设置成false；
+
+**数据留存参数：**
+- `log.retention.{hours|minutes|ms}`：这是个“三兄弟”，都是控制一条消息数据被保存多长时间。从优先级上来说 ms 设置最高、minutes 次之、hours 最低。
+- `log.retention.bytes`：这是指定 Broker 为消息保存的总磁盘容量大小，默认值是-1，表示在容量方面不会限制；这个参数真正发挥作用的场景其实是在云上构建多租户的 Kafka 集群
+- `message.max.bytes`：控制 Broker 能够接收的最大消息大小，默认为1000012，太少了，还不到 1MB；
+
+## 3.2、topic端
+
+如果同时设置了 Topic 级别参数和全局 Broker 参数，就是 Topic 级别参数会覆盖全局 Broker 参数的值，而每个 Topic 都能设置自己的参数值，这就是所谓的 Topic 级别参数；
+
+- `retention.ms`：规定了该 Topic 消息被保存的时长。默认是 7 天，即该 Topic 只保存最近 7 天的消息。一旦设置了这个值，它会覆盖掉 Broker 端的全局参数值。
+- `retention.bytes`：规定了要为该 Topic 预留多大的磁盘空间。和全局参数作用相似，这个值通常在多租户的 Kafka 集群中会有用武之地。当前默认值是 -1，表示可以无限使用磁盘空间；
+- `max.message.bytes`：它决定了 Kafka Broker 能够正常接收该 Topic 的最大消息大小
+
+Topic 级别参数的设置就是这种情况，我们有两种方式可以设置：
+- 创建 Topic 时进行设置：`bin/kafka-topics.sh --bootstrap-server localhost:9092 --create --topic transaction --partitions 1 --replication-factor 1 --config retention.ms=15552000000 --config max.message.bytes=5242880`
+- 修改 Topic 时设置：`bin/kafka-configs.sh --zookeeper localhost:2181 --entity-type topics --entity-name transaction --alter --add-config max.message.bytes=10485760`
+
+## 3.3、JVM参数
+
+将你的 JVM 堆大小设置成 6GB 吧，这是目前业界比较公认的一个合理值；
+
+可以通过`jinfo -flags pid` 查看kafka默认参数：
+```
+VM Flags:
+-XX:CICompilerCount=4 -XX:ConcGCThreads=2 -XX:+ExplicitGCInvokesConcurrent -XX:G1ConcRefinementThreads=8 -XX:G1HeapRegionSize=1048576 -XX:GCDrainStackTargetSize=64 -XX:InitialHeapSize=1073741824 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ManagementServer -XX:MarkStackSize=4194304 -XX:MaxGCPauseMillis=20 -XX:MaxHeapSize=1073741824 -XX:MaxNewSize=643825664 -XX:MinHeapDeltaBytes=1048576 -XX:NonNMethodCodeHeapSize=5836300 -XX:NonProfiledCodeHeapSize=122910970 -XX:ProfiledCodeHeapSize=122910970 -XX:ReservedCodeCacheSize=251658240 -XX:+SegmentedCodeCache -XX:+UseCompressedClassPointers -XX:+UseCompressedOops -XX:+UseG1GC
+```
+如何对kafka参数进行设置：只需要设置下面这两个环境变量即可：
+- `KAFKA_HEAP_OPTS`：指定堆大小。
+- `KAFKA_JVM_PERFORMANCE_OPTS`：指定 GC 参数。
+
+比如你可以这样启动 Kafka Broker，即在启动 Kafka Broker 之前，先设置上这两个环境变量：
+```bash
+$> export KAFKA_HEAP_OPTS='-Xms6g  -Xmx6g'
+$> export KAFKA_JVM_PERFORMANCE_OPTS='-server -XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent -Djava.awt.headless=true'
+$> bin/kafka-server-start.sh config/server.properties
+```
 
 # 4、Kafka生产者
 
