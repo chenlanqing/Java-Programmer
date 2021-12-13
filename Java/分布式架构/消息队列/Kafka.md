@@ -35,7 +35,7 @@ Kafka的整体架构非常简单，是显式分布式架构，producer、broker�
 - `Consumer Group (CG)`：消费者组，由多个 consumer 组成。消费者组内每个消费者负 责消费不同分区的数据，一个分区只能由一个组内消费者消费;消费者组之间互不影响。所有的消费者都属于某个消费者组，即消费者组是逻辑上的一个订阅者
 - `Broker`：缓存代理，Kafka集群中的一台或多台服务器统称为broker。一台 kafka 服务器就是一个 broker。一个集群由多个 broker 组成。一个 broker 可以容纳多个 topic；
 - `Topic`：特指Kafka处理的消息源（feeds of messages）的不同分类，其是一个逻辑上的概念；
-- `Partition`：Topic物理上的分组，一个topic可以分为多个partition，每个partition是一个有序的队列。；同一主题下的不同分区包含的消息是不同的，分区在存储层面可以看作一个可追加的日志（Log）文件，消息在被追加到分区日志文件的时候都会分配一个特定的偏移量（offset，消息在分区中的唯一标识，Kafka 通过它来保证消息在分区内的顺序性）；在创建主题的时候可以通过指定的参数来设置分区的个数，当然也可以在主题创建完成之后去修改分区的数量，通过增加分区的数量可以实现水平扩展；
+- `Partition`：Topic物理上的分组，一个topic可以分为多个partition，每个partition是一个有序的队列。；同一主题下的不同分区包含的消息是不同的，分区在存储层面可以看作一个可追加的日志（Log）文件，消息在被追加到分区日志文件的时候都会分配一个特定的偏移量（offset，消息在分区中的唯一标识，Kafka 通过它来保证消息在分区内的顺序性）；在创建主题的时候可以通过指定的参数来设置分区的个数，当然也可以在主题创建完成之后去修改分区的数量，通过增加分区的数量可以实现水平扩展；分区的作用就是提供负载均衡的能力，或者说对数据进行分区的主要原因，就是为了实现系统的高伸缩性（Scalability）
 
     ![](image/Kafka-Parition.png)
 
@@ -158,6 +158,9 @@ Kafka 将 Broker、Topic 和 Partition 的元数据信息存储在 Zookeeper 上
 
 ![](image/Kafka-zookeeper管理的节点.png)
 
+
+> 集群元数据持久化在ZooKeeper中，同时也缓存在每台Broker的内存中，因此不需要请求ZooKeeper
+
 # 2、kafka安装与配置
 
 ## 2.1、Kafka版本
@@ -206,6 +209,8 @@ JMXTrans + InfluxDB + Grafana
 - 带宽：根据实际带宽资源和业务
 
 # 3、Kafka配置
+
+- [Kafka官方文档各个配置](https://kafka.apache.org/documentation/#configuration)
 
 ## 3.1、broker端
 
@@ -457,7 +462,10 @@ public interface Partitioner extends Configurable, Closeable {
     ...
 }
 ```
-在默认分区器 DefaultPartitioner 的实现中，close() 是空方法，而在 partition() 方法中定义了主要的分区分配逻辑。如果 key 不为 null，那么默认的分区器会对 key 进行哈希（采用 MurmurHash2 算法，具备高运算性能及低碰撞率），最终根据得到的哈希值来计算分区号，拥有相同 key 的消息会被写入同一个分区。如果 key 为 null，那么消息将会以轮询的方式发往主题内的各个可用分区：
+在默认分区器 DefaultPartitioner 的实现中，close() 是空方法，而在 partition() 方法中定义了主要的分区分配逻辑：
+- 如果消息指定了分区，则使用指定的分区；
+- 如果没有指定分区，但是 key 不为 null，那么默认的分区器会对 key 进行哈希（采用 MurmurHash2 算法，具备高运算性能及低碰撞率），最终根据得到的哈希值来计算分区号，拥有相同 key 的消息会被写入同一个分区；
+- 既没有指定分区也没有对应的key，即key 为 null，那么消息将会以轮询的方式发往主题内的各个可用分区：
 ```java
 public class DefaultPartitioner implements Partitioner {
     private final ConcurrentMap<String, AtomicInteger> topicCounterMap = new ConcurrentHashMap<>();
@@ -498,12 +506,16 @@ public class DefaultPartitioner implements Partitioner {
 ```java
 // ProducerConfig
 static {
-    CONFIG = new ConfigDef()..define(PARTITIONER_CLASS_CONFIG,
+    CONFIG = new ConfigDef().define(PARTITIONER_CLASS_CONFIG,
             Type.CLASS,
             DefaultPartitioner.class,
             Importance.MEDIUM, PARTITIONER_CLASS_DOC)
 }
 ```
+
+> 如果要保证全局有序或者说因果关系，只能使用单分区；
+
+消费者出现reblance的情况，key的有序性可能出现问题，这样可以通过设置`partition.assignment.strategy=Sticky`，因为Sticky算法会最大化保证消费分区方案的不变更。假设你的因果消息都有相同的key，那么结合Sticky算法有可能保证即使出现rebalance，要消费的分区依然有原来的consumer负责
 
 ## 4.5、拦截器
 
@@ -519,7 +531,7 @@ public interface ProducerInterceptor<K, V> extends Configurable {
 ```
 在 KafkaProducer 的配置参数 interceptor.classes 中指定拦截器：`properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, CustomProducerInterceptor.class.getName());`；
 
-KafkaProducer 中不仅可以指定一个拦截器，还可以指定多个拦截器以形成拦截链。`拦截链`会按照 `interceptor.classes 参数配置的拦截器的顺序来一一执行`（配置的时候，各个拦截器之间使用逗号隔开）；
+KafkaProducer 中不仅可以指定一个拦截器，还可以指定多个拦截器以形成拦截链。`拦截链`会按照 `interceptor.classes 参数配置的拦截器的顺序来一一执行`（配置的时候，各个拦截器之间使用逗号隔开）；或者是集合也可以
 ```java
 String interceptors = CustomProducerInterceptor.class.getName() + "," + CustomProducerInterceptor2.class.getName();
 // 添加拦截器属性，可以配置多个
@@ -527,7 +539,25 @@ properties.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, interceptors);
 ```
 如果拦截链中的某个拦截器的执行需要依赖于前一个拦截器的输出，那么就有可能产生“副作用”。设想一下，如果前一个拦截器由于异常而执行失败，那么这个拦截器也就跟着无法继续执行。在拦截链中，如果某个拦截器执行失败，那么下一个拦截器会接着从上一个执行成功的拦截器继续执行；
 
-## 4.6、生产者客户端原理
+Kafka 拦截器可以应用于包括客户端监控、端到端系统性能检测、消息审计等多种功能在内的场景
+
+## 4.6、消息压缩
+
+目前 Kafka 共有两大类消息格式，社区分别称之为 V1 版本和 V2 版本。V2 版本是 Kafka 0.11.0.0 中正式引入的
+
+Kafka 的消息层次都分为两层：消息集合（message set）以及消息（message）。一个消息集合中包含若干条日志项（record item），而日志项才是真正封装消息的地方。Kafka 底层的消息日志由一系列消息集合日志项组成。Kafka 通常不会直接操作具体的一条条消息，它总是在消息集合这个层面上进行写入操作；
+
+在 V1 版本中，每条消息都需要执行 CRC 校验，但有些情况下消息的 CRC 值是会发生变化的；再对每条消息都执行 CRC 校验就有点没必要了，不仅浪费空间还耽误 CPU 时间，因此在 V2 版本中，消息的 CRC 校验工作就被移到了消息集合这一层
+
+**何时压缩：**压缩可能发生在两个地方：生产者端和 Broker 端。
+- 生产者程序中配置 `compression.type` 参数即表示启用指定类型的压缩算法，默认是none，可用的算法：`'gzip', 'snappy', 'lz4', 'zstd'`；
+- broker端如何压缩：大部分情况下 Broker 从 Producer 端接收到消息后仅仅是原封不动地保存而不会对其进行任何修改，有两种情况Broker 重新压缩消息：
+    - Broker 端指定了和 Producer 端不同的压缩算法，Broker 端也有一个参数叫 `compression.type`，但是这个参数的默认值是 producer，这表示 Broker 端会“尊重”Producer 端使用的压缩算法。可一旦你在 Broker 端设置了不同的 compression.type 值，就一定要小心了，因为可能会发生预料之外的压缩/解压缩操作，通常表现为 Broker 端 CPU 使用率飙升；
+    - Broker 端发生了消息格式转换：所谓的消息格式转换主要是为了兼容老版本的消费者程序，为了兼容老版本的格式，Broker 端会对新版本消息执行向老版本格式的转换。这个过程中会涉及消息的解压缩和重新压缩。一般情况下这种消息格式转换对性能是有很大影响的，除了这里的压缩之外，它还让 Kafka 丧失了引以为豪的 Zero Copy 特性；
+
+**何时解压缩：**Producer 发送压缩消息到 Broker 后，Broker 照单全收并原样保存起来。当 Consumer 程序请求这部分消息时，Broker 依然原样发送出去，当消息到达 Consumer 端后，由 Consumer 自行解压缩还原成之前的消息；Kafka 会将启用了哪种压缩算法封装进消息集合中，这样当 Consumer 读取到消息集合时，它自然就知道了这些消息使用的是哪种压缩算法：`Producer 端压缩、Broker 端保持、Consumer 端解压缩`
+
+## 4.7、生产者客户端原理
 
 ![](image/Kafka-生产者客户端架构.png)
 
@@ -562,6 +592,16 @@ public KafkaThread(final String name, Runnable runnable, boolean daemon) {
 }
 ```
 
+### 4.7.1、连接建立
+
+在创建 KafkaProducer 实例时，生产者应用会在后台创建并启动一个名为 Sender 的线程，该 Sender 线程开始运行时首先会创建与 Broker 的连接，会与`bootstrap.servers` 配置的broker地址连接；如果你为这个参数指定了 1000 个 Broker 连接信息，那么很遗憾，你的 Producer 启动时会首先创建与这 1000 个 Broker 的 TCP 连接；
+
+TCP 连接还可能在两个地方被创建：一个是在更新元数据后，另一个是在消息发送时：
+- 场景一：当 Producer 尝试给一个不存在的主题发送消息时，Broker 会告诉 Producer 说这个主题不存在。此时 Producer 会发送 METADATA 请求给 Kafka 集群，去尝试获取最新的元数据信息。
+- 场景二：Producer 通过 `metadata.max.age.ms` 参数定期地去更新元数据信息。该参数的默认值是 300000，即 5 分钟，也就是说不管集群那边是否有变化，Producer 每 5 分钟都会强制刷新一次元数据以保证它是最及时的数据；
+
+### 4.7.2、发送消息过程
+
 主线程中发送过来的消息都会被追加到 RecordAccumulator 的某个双端队列（Deque）中，在 RecordAccumulator 的内部为每个分区都维护了一个双端队列，队列中的内容就是 ProducerBatch，即 Deque。消息写入缓存时，追加到双端队列的尾部；Sender 读取消息时，从双端队列的头部读取。注意 ProducerBatch 不是 ProducerRecord，ProducerBatch 中可以包含一至多个 ProducerRecord。通俗地说，ProducerRecord 是生产者中创建的消息，而 ProducerBatch 是指一个消息批次，ProducerRecord 会被包含在 ProducerBatch 中，这样可以使字节的使用更加紧凑。与此同时，将较小的 ProducerRecord 拼凑成一个较大的 ProducerBatch，也可以减少网络请求的次数以提升整体的吞吐量。ProducerBatch 和消息的具体格式有关，如果生产者客户端需要向很多分区发送消息，则可以将 buffer.memory 参数适当调大以增加整体的吞吐量。
 
 消息在网络上都是以字节（Byte）的形式传输的，在发送之前需要创建一块内存区域来保存对应的消息。在 Kafka 生产者客户端中，通过 `java.io.ByteBuffer` 实现消息内存的创建和释放。不过频繁的创建和释放是比较耗费资源的，在 RecordAccumulator 的内部还有一个 BufferPool，它主要用来实现 ByteBuffer 的复用，以实现缓存的高效利用。不过 BufferPool 只针对特定大小的 ByteBuffer 进行管理，而其他大小的 ByteBuffer 不会缓存进 BufferPool 中，这个特定的大小由 `batch.size` 参数来指定，默认值为16384B，即16KB。可以适当地调大 `batch.size` 参数以便多缓存一些消息。
@@ -574,6 +614,101 @@ Sender 从 RecordAccumulator 中获取缓存的消息之后，会进一步将原
 
 请求在从 Sender 线程发往 Kafka 之前还会保存到 InFlightRequests 中，InFlightRequests 保存对象的具体形式为 `Map<NodeId, Deque>`，它的主要作用是缓存了已经发出去但还没有收到响应的请求（NodeId 是一个 String 类型，表示节点的 id 编号）。与此同时，InFlightRequests 还提供了许多管理类的方法，并且通过配置参数还可以限制每个连接（也就是客户端与 Node 之间的连接）最多缓存的请求数。这个配置参数为 max.in.flight.requests. per. connection，默认值为5，即每个连接最多只能缓存5个未响应的请求，超过该数值之后就不能再向这个连接发送更多的请求了，除非有缓存的请求收到了响应（Response）。通过比较 Deque 的 size 与这个参数的大小来判断对应的 Node 中是否已经堆积了很多未响应的消息，如果真是如此，那么说明这个 Node 节点负载较大或网络连接有问题，再继续向其发送请求会增大请求超时的可能；
 
+### 4.7.3、关闭连接
+
+- 调用 producer.close() 方法；
+- Kafka 帮你关闭，这与 Producer 端参数 connections.max.idle.ms 的值有关。默认情况下该参数值是 9 分钟，即如果在 9 分钟内没有任何请求“流过”某个 TCP 连接，那么 Kafka 会主动帮你把该 TCP 连接关闭。用户可以在 Producer 端设置 connections.max.idle.ms=-1 禁掉这种机制。一旦被设置成 -1，TCP 连接将成为永久长连接。当然这只是软件层面的“长连接”机制，由于 Kafka 创建的这些 Socket 连接都开启了 keepalive，因此 keepalive 探活机制还是会遵守的；
+
+### 4.7.4、关于KafkaProducer线程安全
+
+KafkaProducer 实例创建的线程和前面提到的 Sender 线程共享的可变数据结构只有 RecordAccumulator 类，故维护了 RecordAccumulator 类的线程安全，也就实现了 KafkaProducer 类的线程安全；
+
+从上面可以知道，在创建KafkaProducer的过程中创建了 Sender线程，并启动它
+
+> 在对象构造器中启动线程会造成 this 指针的逃逸。理论上，Sender 线程完全能够观测到一个尚未构造完成的 KafkaProducer 实例；当然，在构造对象时创建线程没有任何问题，但最好是不要同时启动它
+
+## 4.8、Producer幂等性
+
+- [Kafka幂等性](http://matt33.com/2018/10/24/kafka-idempotent/)
+
+可靠消息：
+- 最多一次（at most once）：消息可能会丢失，但绝不会被重复发送；
+- 至少一次（at least once）：消息不会丢失，但有可能被重复发送；
+- 精确一次（exactly once）：消息不会丢失，也不会被重复发送；
+
+Producer 的幂等性指的是当发送同一条消息时，数据在 Server 端只会被持久化一次，数据不丟不重，但是这里的幂等性是有条件的：
+- 只能保证 Producer 在单个会话内不丟不重，如果 Producer 出现意外挂掉再重启是无法保证的（幂等性情况下，是无法获取之前的状态信息，因此是无法做到跨会话级别的不丢不重）;
+- 幂等性不能跨多个 Topic-Partition，只能保证单个 partition 内的幂等性，当涉及多个 Topic-Partition 时，这中间的状态并没有同步；
+
+如果需要跨会话、跨多个 topic-partition 的情况，需要使用 Kafka 的事务性来实现；
+
+producer如何使用使用幂等性：与正常情况下 Producer 使用相比变化不大，只需要把 Producer 的配置 `enable.idempotence` 设置为 true 即可，如下所示：
+```java
+Properties props = new Properties();
+props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+props.put("acks", "all"); // 当 enable.idempotence 为 true，这里默认为 all
+...
+KafkaProducer producer = new KafkaProducer(props);
+```
+幂等性主要是解决数据重复的问题，数据重复问题，通用的解决方案就是加唯一 id，然后根据 id 判断数据是否重复，Producer 的幂等性也是这样实现的
+
+### 4.8.1、Producer幂等性实现原理
+
+幂等性要解决的问题是：Producer 设置 at least once 时，由于异常触发重试机制导致数据重复，幂等性的目的就是为了解决这个数据重复的问题，简单来说就是：`at least once + 幂等 = exactly once`；
+
+Kafka Producer 在实现时有以下两个重要机制：
+- `PID（Producer ID）`，用来标识每个 producer client；每个 Producer 在初始化时都会被分配一个唯一的 PID，这个 PID 对应用是透明的，完全没有暴露给用户。对于一个给定的 PID，sequence number 将会从0开始自增，每个 Topic-Partition 都会有一个独立的 sequence number。Producer 在发送数据时，将会给每条 msg 标识一个 sequence number，Server 也就是通过这个来验证数据是否重复。这里的 PID 是全局唯一的，Producer 故障后重新启动后会被分配一个新的 PID，这也是幂等性无法做到跨会话的一个原因；Server 在给一个 client 初始化 PID 时，实际上是通过 ProducerIdManager 的 generateProducerId() 方法产生一个 PID；
+
+- `sequence numbers`，client 发送的每条消息都会带相应的 sequence number，Server 端就是根据这个值来判断数据是否重复；在 PID + Topic-Partition 级别上添加一个 sequence numbers 信息，就可以实现 Producer 的幂等性了
+
+## 4.9、Kafka事务
+
+- [Kafka Exactly-Once 之事务性实现](http://matt33.com/2018/11/04/kafka-transaction/)
+
+事务型 Producer 能够保证将消息原子性地写入到多个分区中。这批消息要么全部写入成功，要么全部失败。另外，事务型 Producer 也不惧进程的重启。Producer 重启回来后，Kafka 依然保证它们发送消息的精确一次处理；设置事务型 Producer 的方法也很简单，满足两个要求即可：
+- 和幂等性 Producer 一样，开启 `enable.idempotence = true`；
+- 设置 Producer 端参数 `transactional.id`。最好为其设置一个有意义的名字；
+
+Producer 代码中做一些调整，如这段代码所示：
+```java
+// --------Producer端代码
+Properties props = new Properties();
+...
+// 配置幂等性
+properties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+// 配置事务id
+properties.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "TransactionProducer");
+KafkaProducer producer = new KafkaProducer(props);
+producer.initTransactions();
+try {
+    String msg = "matt test";
+    producer.beginTransaction();
+    producer.send(new ProducerRecord(topic, "0", msg.toString()));
+    producer.send(new ProducerRecord(topic, "1", msg.toString()));
+    producer.send(new ProducerRecord(topic, "2", msg.toString()));
+    producer.commitTransaction();
+} catch (KafkaException e2) {
+    producer.abortTransaction();
+}
+producer.close();
+```
+这段代码能够保证 Record1 和 Record2 被当作一个事务统一提交到 Kafka，要么它们全部提交成功，要么全部写入失败。实际上即使写入失败，Kafka 也会把它们写入到底层的日志中，也就是说 Consumer 还是会看到这些消息。因此在 Consumer 端，读取事务型 Producer 发送的消息也是需要一些变更的，需要设置 `isolation.level` 参数的值即可。当前这个参数有两个取值：
+- `read_uncommitted`：这是默认值，表明 Consumer 能够读取到 Kafka 写入的任何消息，不论事务型 Producer 提交事务还是终止事务，其写入的消息都可以读取。很显然，如果你用了事务型 Producer，那么对应的 Consumer 就不要使用这个值;
+- `read_committed`：表明 Consumer 只会读取事务型 Producer 成功提交事务写入的消息。当然了，它也能看到非事务型 Producer 写入的所有消息
+
+> 如果事务型消息abortTransaction，那么实际上消息还是有可能写入到Kafka中的；
+
+Kafka事务从Producer角度来看：
+- 跨会话的幂等性写入：即使中间故障，恢复后依然可以保持幂等性；
+- 跨会话的事务恢复：如果一个应用实例挂了，启动的下一个实例依然可以保证上一个事务完成（commit 或者 abort）；
+- 跨多个 Topic-Partition 的幂等性写入，Kafka 可以保证跨多个 Topic-Partition 的数据要么全部写入成功，要么全部失败，不会出现中间状态；
+
+Consumer端很难保证一个已经 commit 的事务的所有 msg 都会被消费，有以下几个原因：
+- 对于 compacted topic，在一个事务中写入的数据可能会被新的值覆盖；
+- 一个事务内的数据，可能会跨多个 log segment，如果旧的 segmeng 数据由于过期而被清除，那么这个事务的一部分数据就无法被消费到了；
+- Consumer 在消费时可以通过 seek 机制，随机从一个位置开始消费，这也会导致一个事务内的部分数据无法消费；
+- Consumer 可能没有订阅这个事务涉及的全部 Partition
+
 # 5、Kafka消费者
 
 与生产者对应的是消费者，应用程序可以通过 KafkaConsumer 来订阅主题，并从订阅的主题中拉取消息
@@ -581,6 +716,8 @@ Sender 从 RecordAccumulator 中获取缓存的消息之后，会进一步将原
 ## 5.1、消费者与消费组
 
 消费者（Consumer）负责订阅 Kafka 中的主题（Topic），并且从订阅的主题上拉取消息。与其他一些消息中间件不同的是：在 Kafka 的消费理念中还有一层消费组（Consumer Group）的概念，每个消费者都有一个对应的消费组。当消息发布到主题后，只会被投递给订阅它的`每个消费组`中的`一个消费者`；
+
+> Consumer Group 是 Kafka 提供的可扩展且具有容错性的消费者机制
 
 ![](image/Kafka-消费者与消费组.png)
 
@@ -598,6 +735,8 @@ spring-group    topic-spring    1          0               5               5   c
 spring-group    topic-spring    0          0               5               5   consumer-1-f.. /192.168.3.9    consumer-1
 ```
 - LAG: 表示消息堆积的
+
+每个 consumer 会定期将自己消费分区的 offset 提交给 kafka 内部 topic：`__consumer_offsets`，提交过去的时候，key 是 `consumerGroupId+topic+分区号`，value 就是当前 offset 的值，kafka 会定期清理 topic 里的消息，最后就保留最新的那条数据，因为__consumer_offsets 可能会接收高并发的请求，kafka 默认给其分配 50 个分区 (可以通过 `offsets.topic.num.partitions` 设置)，这样可以通过加机器的方式抗大并发
 
 ## 5.2、点对点与发布/订阅模式
 
@@ -836,6 +975,9 @@ ConsumerRecords 类提供了一个 records(TopicPartition) 方法来获取消息
 public List<ConsumerRecord<K, V>> records(TopicPartition partition)
 ```
 
+假如一个消息集合里有10条消息，并且被压缩，但是消费端配置每次只poll 5条消息。这种情况下，消费端怎么解压缩？
+java consumer的设计是一次取出一批，缓存在客户端内存中，然后再过滤出`max.poll.records`条消息返给你，下次可以直接从缓存中取，不用再发请求了
+
 ## 5.8、位移提交
 
 Kafka 中的分区而言，它的每条消息都有唯一的 offset，用来表示消息在分区中对应的位置。对于消费者而言，它也有一个 offset 的概念，消费者使用 offset 来表示消费到分区中某个消息所在的位置；对于消息在分区中的位置，我们将 offset 称为`“偏移量”`；对于消费者消费到的位置，将 offset 称为`“位移”`，对于一条消息而言，它的偏移量和消费者消费它时的消费位移是相等的；
@@ -951,9 +1093,9 @@ public Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartitio
 public Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartition, Long> timestampsToSearch, Duration timeout)
 ```
 
-## 5.12、再均衡
+## 5.12、Rebalance
 
-`再均衡`是指分区的所属权从一个消费者转移到另一消费者的行为，它为消费组具备高可用性和伸缩性提供保障，使我们可以既方便又安全地删除消费组内的消费者或往消费组内添加消费者；不过在再均衡发生期间，消费组内的消费者是无法读取消息的。也就是说，在再均衡发生期间的这一小段时间内，消费组会变得不可用；
+`再均衡`是指分区的所属权从一个消费者转移到另一消费者的行为，它为消费组具备高可用性和伸缩性提供保障，使我们可以既方便又安全地删除消费组内的消费者或往消费组内添加消费者；不过在再均衡发生期间，消费组内的消费者是无法读取消息的。也就是说，在再均衡发生期间的这一小段时间内，消费组会变得不可用；Rebalance 本质上是一种协议，规定了一个 Consumer Group 下的所有 Consumer 如何达成一致，来分配订阅 Topic 的每个分区
 
 另外，当一个分区被重新分配给另一个消费者时，消费者当前的状态也会丢失。比如消费者消费完某个分区中的一部分消息时还没有来得及提交消费位移就发生了再均衡操作，之后这个分区又被分配给了消费组内的另一个消费者，原来被消费完的那部分消息又被重新消费一遍，也就是发生了重复消费；
 
@@ -966,6 +1108,46 @@ public interface ConsumerRebalanceListener {
     void onPartitionsAssigned(Collection<TopicPartition> partitions);
 }
 ```
+Rebalance 的触发条件有 3 个：
+- 组成员数发生变更：比如有新的 Consumer 实例加入组或者离开组，抑或是有 Consumer 实例崩溃被“踢出”组；
+- 订阅主题数发生变更：Consumer Group 可以使用正则表达式的方式订阅主题，比如 consumer.subscribe(Pattern.compile("t.*c")) 就表明该 Group 订阅所有以字母 t 开头、字母 c 结尾的主题。在 Consumer Group 的运行过程中，你新创建了一个满足这样条件的主题，那么该 Group 就会发生 Rebalance；
+- 订阅主题的分区数发生变更：Kafka 当前只能允许增加一个主题的分区数，当分区数增加时，就会触发订阅该主题的所有 Group 开启 Rebalance；
+
+Rebalance 发生时，Group 下所有的 Consumer 实例都会协调在一起共同参与
+
+Rebalance存在问题：
+- Rebalance 过程对 Consumer Group 消费过程有极大的影响，也就是说，在再均衡发生期间的这一小段时间内，消费组会变得不可用；
+- 其次，目前 Rebalance 的设计是所有 Consumer 实例共同参与，全部重新分配所有分区。其实更高效的做法是尽量减少分配方案的变动；这样的话，实例 A 连接这些分区所在 Broker 的 TCP 连接就可以继续用，不用重新创建连接其他 Broker 的 Socket 资源
+- Rebalance 过程很慢；
+
+**消费者 Rebalance 分区分配策略：**
+
+分配策略接口：PartitionAssignor，策略有`range、round-robin、sticky`，Kafka 提供了消费者客户端参数 `partition.assignment.strategy` 来设置消费者与订阅主题之间的分区分配策略；默认情况为 range 分配策略，假设一个主题有 10 个分区 (0-9)，现在有三个 consumer 消费：
+- `range 策略`：按照分区序号排序，假设 `n＝分区数／消费者数量=3`，`m＝分区数%消费者数量 = 1`，那么前 m 个消费者每个分配 n+1 个分区，后面的（消费者数量－m）个消费者每个分配 n 个分区。比如分区 0-3 给一个 consumer，分区 4-6 给一个 consumer，分区 7-9 给一个 consumer。
+- `round-robin 策略`：轮询分配，比如分区 0、3、6、9 给一个 consumer，分区 1、4、7 给一个 consumer，分区 2、5、8 给一个 consumer
+- `sticky 策略`：在 rebalance 的时候，需要保证如下两个原则；
+    - 分区的分配要尽可能均匀；
+    - 分区的分配尽可能与上次分配的保持相同；
+
+sticky 策略当两者发生冲突时，第一个目标优先于第二个目标。
+这样可以最大程度维持原来的分区分配的策略。比如对于第一种 range 情况的分配，如果第三个 consumer 挂了，那么重新用 sticky 策略分配的结果如下：
+- consumer1 除了原有的 0~3，会再分配一个 7
+- consumer2 除了原有的 4~6，会再分配 8 和 9
+
+**如何避免Rebalance**
+- 避免组成员发生变化
+- 避免订阅主题数量发生变化、订阅主题的分区数发生变化
+- 合理设置消费者参数：
+    - 未能及时发送心跳而Rebalance
+    ```
+    session.timeout.ms     一次session的连接超时时间
+    heartbeat.interval.ms  心跳时间，一般为超时时间的1/3，Consumer在被判定为死亡之前，能够发送至少 3 轮的心跳请求
+    ```
+    - Consumer消费超时而Rebalance：
+    ```
+    max.poll.interval.ms ：每隔多长时间去拉取消息。合理设置预期值，尽量但间隔时间消费者处理完业务逻辑，否则就会被coordinator判定为死亡，踢出Consumer Group，进行Rebalance
+    max.poll.records ：一次从拉取出来的数据条数。根据消费业务处理耗费时长合理设置，如果每次max.poll.interval.ms 设置的时间较短，可以max.poll.records设置小点儿，少拉取些，这样不会超时
+    ```
 
 ## 5.13、消费者拦截器
 
@@ -1038,7 +1220,9 @@ private void acquire() {
 ```
 acquire() 方法与锁（synchronized、Lock 等）不同，它不会造成阻塞等待，可以将其看作一个轻量级锁，它仅通过线程操作计数标记的方式来检测线程是否发生了并发操作，以此保证只有一个线程在操作。acquire() 方法和 release() 方法成对出现，表示相应的加锁和解锁操作；
 
-可以通过多线程的方式来实现消息消费，多线程的目的就是为了提高整体的消费能力。多线程的实现方式有哪些呢？
+可以通过多线程的方式来实现消息消费，多线程的目的就是为了提高整体的消费能力。多线程的实现方式有哪些呢？可以参考Flink Kafka Connector源码的多线程实现
+
+- [Kafka多线程消费](https://www.cnblogs.com/huxi2b/p/7089854.html)
 
 ### 5.14.1、线程封闭
 
@@ -1587,9 +1771,104 @@ root hard nofile 65535
 
 > 如果一定要给一个准则，则建议将分区数设定为集群中 broker 的倍数，即假定集群中有3个 broker 节点，可以设定分区数为3、6、9等，至于倍数的选定可以参考预估的吞吐量。不过，如果集群中的 broker 节点数有很多，比如大几十或上百、上千，那么这种准则也不太适用，在选定分区数时进一步可以引入机架等参考因素；
 
-# 7、核心原理
+# 7、Kafka内部主题
 
-## 7.1、Controller
+```scala
+object OffsetConfig {
+  val DefaultMaxMetadataSize = 4096
+  val DefaultLoadBufferSize = 5*1024*1024
+  val DefaultOffsetRetentionMs = 24*60*60*1000L
+  val DefaultOffsetsRetentionCheckIntervalMs = 600000L
+  // 默认的分区数量
+  val DefaultOffsetsTopicNumPartitions = 50
+  val DefaultOffsetsTopicSegmentBytes = 100*1024*1024
+  // 默认的部分因子
+  val DefaultOffsetsTopicReplicationFactor = 3.toShort
+  val DefaultOffsetsTopicCompressionCodec = NoCompressionCodec
+  val DefaultOffsetCommitTimeoutMs = 5000
+  val DefaultOffsetCommitRequiredAcks = (-1).toShort
+}
+```
+
+## 7.1、__consumer_offsets
+
+### 7.1.2、概述
+
+`__consumer_offsets` 在 Kafka 源码中有个更为正式的名字，叫位移主题，即 Offsets Topic
+
+老版本 Consumer 的位移管理是依托于 Apache ZooKeeper 的，它会自动或手动地将位移数据提交到 ZooKeeper 中保存。当 Consumer 重启后，它能自动从 ZooKeeper 中读取位移数据，从而在上次消费截止的地方继续消费。这种设计使得 Kafka Broker 不需要保存位移数据，减少了 Broker 端需要持有的状态空间，因而有利于实现高伸缩性；
+
+新版本 Consumer 的位移管理机制其实也很简单，就是将 Consumer 的位移数据作为一条条普通的Kafka消息，提交到`__consumer_offsets`中。可以这么说，`__consumer_offsets` 的主要作用是保存 Kafka 消费者的位移信息；其内部格式是Kafka定义好了，不能随便向这个主题写消息；消息格式，简单地理解为是一个 KV 对，Key 和 Value 分别表示消息的键值和消息体，在 Kafka 中它们就是字节数组而已；
+
+`__consumer_offsets`中的key主要保存三部分内容：`<Group ID，主题名，分区号 >`
+
+> tombstone 消息，即墓碑消息，主要特点是它的消息体是 null，即空消息体，一旦某个 Consumer Group 下的所有 Consumer 实例都停止了，而且它们的位移数据都已被删除时，Kafka 会向位移主题的对应分区写入 tombstone 消息，表明要彻底删除这个 Group 的信息；
+
+### 7.1.2、创建时机
+
+当 Kafka 集群中的第一个 Consumer 程序启动时，Kafka 会自动创建位移主题，其也是一个普通的topic，对应的分区数取配置：`offsets.topic.num.partitions`，它的默认值是 50，取自上面代码中`DefaultOffsetsTopicNumPartitions`；副本因子是`offsets.topic.replication.factor`，默认值为3，取自代码：`DefaultOffsetsTopicReplicationFactor`
+
+在Kafka-client中 `org.apache.kafka.common.internals.Topic`
+```java
+public class Topic {
+    public static final String GROUP_METADATA_TOPIC_NAME = "__consumer_offsets";
+    ....
+}
+```
+真正创建该topic的类为：`kafka.server.KafkaApis#createTopic`
+```scala
+private def createInternalTopic(topic: String): MetadataResponse.TopicMetadata = {
+    if (topic == null)
+        throw new IllegalArgumentException("topic must not be null")
+    val aliveBrokers = metadataCache.getAliveBrokers
+    topic match {
+        // Topic.GROUP_METADATA_TOPIC_NAME
+        case GROUP_METADATA_TOPIC_NAME =>
+            if (aliveBrokers.size < config.offsetsTopicReplicationFactor) {
+               .....
+            new MetadataResponse.TopicMetadata(Errors.COORDINATOR_NOT_AVAILABLE, topic, true, util.Collections.emptyList())
+            } else {
+                // 创建 __consumer_offsets
+                createTopic(topic, config.offsetsTopicPartitions, config.offsetsTopicReplicationFactor.toInt,groupCoordinator.offsetsTopicConfigs)
+            }
+        ...
+    }
+  }
+```
+
+### 7.1.3、如何查看内容
+
+通过 `kafka-console-consumer.sh` 脚本来查看 `__consumer_offsets` 中的内容，不过要设定 formatter 参数为 `kafka.coordinator.group.GroupMetadataManager$OffsetsMessageFormatter`
+
+假设我们需要查看消费组：`quickstart-group`：
+- 通过如下公式计算分区信息：`Math.abs("quickstart-group".hashCode()) % 50`，得到分区：21
+- 启动 quickstart-group 消费组的消费实例；
+- 通过`kafka-console-consumer.sh`查看，然后向对应的topic中发生消息，可以发现有如下内容变化
+```
+/opt/env/kafka_2.12-2.4.1 $ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 \
+ --topic '__consumer_offsets' --partition 21 \
+ --formatter 'kafka.coordinator.group.GroupMetadataManager$OffsetsMessageFormatter'
+[quickstart-group,topic-quickstart,0]::OffsetAndMetadata(offset=19, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1639397013680, expireTimestamp=None)
+[quickstart-group,topic-quickstart,0]::OffsetAndMetadata(offset=19, leaderEpoch=Optional.empty, metadata=, commitTimestamp=1639397018669, expireTimestamp=None)
+[quickstart-group,topic-quickstart,0]::OffsetAndMetadata(offset=20, leaderEpoch=Optional[0], metadata=, commitTimestamp=1639397023671, expireTimestamp=None)
+[quickstart-group,topic-quickstart,0]::OffsetAndMetadata(offset=20, leaderEpoch=Optional[0], metadata=, commitTimestamp=1639397028674, expireTimestamp=None)
+[quickstart-group,topic-quickstart,0]::OffsetAndMetadata(offset=20, leaderEpoch=Optional[0], metadata=, commitTimestamp=1639397033677, expireTimestamp=None)
+[quickstart-group,topic-quickstart,0]::OffsetAndMetadata(offset=20, leaderEpoch=Optional[0], metadata=, commitTimestamp=1639397038677, expireTimestamp=None)
+```
+
+### 7.1.4、删除过期消息
+
+Kafka通过Compaction策略删除 __consumer_offsets 主题过期的消息；
+
+Compact 策略：对于同一个 Key 的两条消息 M1 和 M2，如果 M1 的发送时间早于 M2，那么 M1 就是过期消息；Compact 的过程就是扫描日志的所有消息，剔除那些过期的消息，然后把剩下的消息整理在一起；
+
+Kafka 提供了专门的后台线程定期地巡检待 Compact 的主题，看看是否存在满足条件的可删除数据。这个后台线程叫 Log Cleaner。很多实际生产环境中都出现过位移主题无限膨胀占用过多磁盘空间的问题，如果你的环境中也有这个问题，建议去检查一下 Log Cleaner 线程的状态，通常都是这个线程挂掉了导致的；
+
+## 7.2、__transaction_state
+
+# 8、核心原理
+
+## 8.1、Controller
 
 Controller 是从 Broker 中选举出来的，负责分区 Leader 和 Follower 的管理。当某个分区的 leader 副本发生故障时，由 Controller 负责为该分区选举新的 leader 副本。当检测到某个分区的 ISR(In-Sync Replica)集合发生变化时，由控制器负责通知所有 broker 更新其元数据信息。当使用kafka-topics.sh脚本为某个 topic 增加分区数量时，同样还是由控制器负责分区的重新分配；
 
@@ -1605,9 +1884,9 @@ Controller 被选举出来，作为整个 Broker 集群的管理者，管理所�
 - 创建 Topic 或者 Topic 扩容分区，Controller 需要负责分区副本的分配工作，并主导 Topic 分区副本的 Leader 选举。
 - 管理集群中所有的副本和分区的状态机，监听状态机变化事件，并作出相应的处理。Kafka 分区和副本数据采用状态机的方式管理，分区和副本的变化都在状态机内会引起状态机状态的变更，从而触发相应的变化事件
 
-## 7.2、分区与副本状态
+## 8.2、分区与副本状态
 
-### 7.2.1、分区状态
+### 8.2.1、分区状态
 
 PartitionStateMachine,管理 Topic 的分区，它有以下 4 种状态：
 - NonExistentPartition：该状态表示分区没有被创建过或创建后被删除了。
@@ -1619,7 +1898,7 @@ PartitionStateMachine,管理 Topic 的分区，它有以下 4 种状态：
 
 ![](image/Kafka-分区状态机变化.png)
 
-### 7.2.2、副本状态
+### 8.2.2、副本状态
 
 ReplicaStateMachine，副本状态，管理分区副本信息，它也有 4 种状态：
 - NewReplica: 创建 topic 和分区分配后创建 replicas，此时，replica 只能获取到成为 follower 状态变化请求。
