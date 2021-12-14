@@ -564,6 +564,37 @@ chkconfig -add zookeeper
 
 chkconfig --list zookeeper
 
+如果是集群启动，在一台机器上管理脚本：
+```bash
+#! /bin/bash
+
+# kafka1 kafka2 kafka3 是三台机器的hostname，需要在/etc/hosts 上配置对应
+
+case $1 in
+"start"){
+        for i in kafka1 kafka2 kafka3
+        do
+                echo " --------启动 $i zookeeper-------"
+                ssh $i "source /etc/profile ; /data/apache-zookeeper-3.6.0-bin/bin/zkServer.sh start"
+        done
+};;
+"stop"){
+        for i in kafka1 kafka2 kafka3
+        do
+                echo " --------停止 $i zookeeper-------"
+                ssh $i " source /etc/profile ; /data/apache-zookeeper-3.6.0-bin/bin/zkServer.sh stop"
+        done
+};;
+"status"){
+        for i in kafka1 kafka2 kafka3
+        do
+                echo " --------停止 $i zookeeper-------"
+                ssh $i " source /etc/profile ; /data/apache-zookeeper-3.6.0-bin/bin/zkServer.sh status"
+        done
+};;
+esac
+```
+
 # 八、Kafka
 
 依赖：
@@ -612,6 +643,29 @@ advertised.listeners=PLAINTEXT://<公网IP>:9092
 ## 2、kafka集群安装
 
 - 解压缩kafka包
+
+Kafka集群启动：
+```bash
+#! /bin/bash
+# kafka1 kafka2 kafka3 是三台机器的hostname，需要在/etc/hosts 上配置对应
+case $1 in
+"start"){
+        for i in kafka1 kafka2 kafka3
+        do
+                echo " --------启动 $i Kafka-------"
+
+                ssh $i "source /etc/profile ; /data/kafka_2.12-2.7.0/bin/kafka-server-start.sh -daemon /data/kafka_2.12-2.7.0/config/server.properties "
+        done
+};;
+"stop"){
+        for i in kafka1 kafka2 kafka3
+        do
+                echo " --------停止 $i Kafka-------"
+                ssh $i " source /etc/profile ; /data/kafka_2.12-2.7.0/bin/kafka-server-stop.sh stop"
+        done
+};;
+esac
+```
 
 
 ## 3、安装kafka-manager
