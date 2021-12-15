@@ -48,20 +48,24 @@ Kafka的整体架构非常简单，是显式分布式架构，producer、broker�
 
 ## 1.3、多副本机制
 
-Kafka是通过在不同节点上的多副本来解决数据可靠性问题
+所谓副本（Replica），本质就是一个只能追加写消息的提交日志。根据 Kafka 副本机制的定义，同一个分区下的所有副本保存有相同的消息序列，这些副本分散保存在不同的 Broker 上，从而能够对抗部分 Broker 宕机带来的数据不可用;
 
-通过增加副本的数量提升kafka的容灾能力；
+Kafka是通过在不同节点上的多副本来解决数据可靠性问题，通过增加副本的数量提升kafka的容灾能力；
 
 同一分区的不同副本中保存的是相同的消息（在同一时刻，副本之间并非完全一样），副本之间是`一主多从`的关系，其中 leader 副本负责处理读写请求，follower 副本只负责与 leader 副本的消息同步。副本处于不同的 broker 中，当 leader 副本出现故障时，从 follower 副本中重新选举新的 leader 副本对外提供服务。Kafka 通过多副本机制实现了故障的自动转移，当 Kafka 集群中某个 broker 失效时仍然能保证服务可用；
 
 ![](image/Kafka-多副本机制.png)
 
-生产者和消费者只与 leader 副本进行交互，而 follower 副本只负责消息的同步，很多时候 follower 副本中的消息相对 leader 副本而言会有一定的滞后。
+生产者和消费者只与 leader 副本进行交互，而 follower 副本只负责消息的同步，很多时候 follower 副本中的消息相对 leader 副本而言会有一定的滞后；
+
+为什么只允许Leader副本提供服务：
+- 方便实现“Read-your-writes”：当你使用生产者 API 向 Kafka 成功写入消息后，马上使用消费者 API 去读取刚才生产的消息；如果允许follow副本提供服务，可能存在延迟；
+- 方便实现单调读（Monotonic Reads）：对于一个消费者用户而言，在多次消费消息时，它不会看到某条消息一会儿存在一会儿不存在
 
 ### 1.3.1、AR、ISR、OSR
 
 - `AR`：分区中的所有副本统称为 `AR（Assigned Replicas）`；
-- `ISR`：所有与 leader 副本保持一定程度同步的副本（包括 leader 副本在内）组成`ISR（In-Sync Replicas）`；`ISR 集合`是 `AR 集合`中的一个子集。消息会先发送到 leader 副本，然后 follower 副本才能从 leader 副本中拉取消息进行同步，同步期间内 follower 副本相对于 leader 副本而言会有一定程度的滞后（默认是不超过10秒）；参数：`replica.lag.time.max.ms`控制
+- `ISR`：所有与 leader 副本保持一定程度同步的副本（包括 leader 副本在内）组成`ISR（In-Sync Replicas）`；`ISR 集合`是 `AR 集合`中的一个子集。消息会先发送到 leader 副本，然后 follower 副本才能从 leader 副本中拉取消息进行同步，同步期间内 follower 副本相对于 leader 副本而言会有一定程度的滞后（默认是不超过10秒）；参数：`replica.lag.time.max.ms`控制；
 - `OSR`：与 leader 副本同步滞后过多（超过10秒）的副本（不包括 leader 副本）组成 `OSR（Out-of-Sync Replicas）`集合；
 
 **综上：**`AR=ISR+OSR`。在正常情况下，所有的 follower 副本都应该与 leader 副本保持一定程度的同步，即 `AR=ISR，OSR 集合为空`；
@@ -193,15 +197,7 @@ Error while executing topic command : Replication factor: 2 larger than availabl
 ```
 可以尝试使用命令：`kafka-topics.sh --create --zookeeper localhost:2181/kafka --partitions 1 --replication-factor 1 --topic t1`
 
-## 2.4、Kafka监控
-
-kafka manager、 kafka eagle
-
-https://github.com/didi/LogiKM
-
-JMXTrans + InfluxDB + Grafana
-
-## 2.5、Kafka线上集群考量
+## 2.4、Kafka线上集群考量
 
 - 操作系统：主要是操作系统的IO模型，一般建议部署在linux机器上，因为其使用的是epoll；
 - 磁盘：磁盘的IO性能；因为Kafka是顺序写的，所以可以使用机械硬盘即可；不需要磁盘阵列；新增消息数、消息留存时间、平均消息大小、备份数、是否启用压缩
@@ -727,13 +723,10 @@ Consumer端很难保证一个已经 commit 的事务的所有 msg 都会被消�
 
 分配逻辑都是基于默认的`分区分配策略`进行分析的，可以通过消费者客户端参数 `partition.assignment.strategy` 来设置消费者与订阅主题之间的分区分配策略
 
-查看消费组信息：`bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group <groupName>`，比如消费组 spring-group，通过命令得到如下数据：
-```
- bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group spring-group
-GROUP           TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG CONSUMER-ID    HOST            CLIENT-ID
-spring-group    topic-spring    1          0               5               5   consumer-2-9.. /192.168.3.9    consumer-2
-spring-group    topic-spring    0          0               5               5   consumer-1-f.. /192.168.3.9    consumer-1
-```
+查看消费组信息：`bin/kafka-consumer-groups.sh --bootstrap-server localhost:9092 --describe --group <groupName>`，比如消费组 quickstart-group，通过命令得到如下数据：
+
+![](image/Kafka-消费组信息查看.png)
+
 - LAG: 表示消息堆积的
 
 每个 consumer 会定期将自己消费分区的 offset 提交给 kafka 内部 topic：`__consumer_offsets`，提交过去的时候，key 是 `consumerGroupId+topic+分区号`，value 就是当前 offset 的值，kafka 会定期清理 topic 里的消息，最后就保留最新的那条数据，因为__consumer_offsets 可能会接收高并发的请求，kafka 默认给其分配 50 个分区 (可以通过 `offsets.topic.num.partitions` 设置)，这样可以通过加机器的方式抗大并发
@@ -980,6 +973,8 @@ java consumer的设计是一次取出一批，缓存在客户端内存中，然�
 
 ## 5.8、位移提交
 
+### 5.8.1、提交方式
+
 Kafka 中的分区而言，它的每条消息都有唯一的 offset，用来表示消息在分区中对应的位置。对于消费者而言，它也有一个 offset 的概念，消费者使用 offset 来表示消费到分区中某个消息所在的位置；对于消息在分区中的位置，我们将 offset 称为`“偏移量”`；对于消费者消费到的位置，将 offset 称为`“位移”`，对于一条消息而言，它的偏移量和消费者消费它时的消费位移是相等的；
 
 在消费者客户端中，消费位移存储在 Kafka 内部的主题`__consumer_offsets`中。这里把将消费位移存储起来（持久化）的动作称为“提交”，消费者在消费完消息之后需要执行`消费位移的提交`；在消费者中还有一个 `committed offset` 的概念，它表示已经提交过的消费位移。
@@ -1000,7 +995,7 @@ KafkaConsumer 类提供了 position(TopicPartition) 和 committed(TopicPartition
 
 手动提交可以细分为`同步提交`和`异步提交`，对应于 KafkaConsumer 中的 `commitSync()` 和 `commitAsync()` 两种类型的方法
 ```java
-// 同步提交
+// 同步提交：调用 commitSync() 时，Consumer 程序会处于阻塞状态，直到远端的 Broker 返回提交结果，这个状态才会结束
 public void commitSync(final Map<TopicPartition, OffsetAndMetadata> offsets, final Duration timeout) {
     acquireAndEnsureOpen();
     try {
@@ -1014,7 +1009,7 @@ public void commitSync(final Map<TopicPartition, OffsetAndMetadata> offsets, fin
         release();
     }
 }
-// 异步提交：异步提交的方式（commitAsync()）在执行的时候消费者线程不会被阻塞
+// 异步提交：异步提交的方式（commitAsync()）在执行的时候消费者线程不会被阻塞,由于它是异步的，Kafka 提供了回调函数（callback），供你实现提交之后的逻辑，比如记录日志或处理异常等
 public void commitAsync(final Map<TopicPartition, OffsetAndMetadata> offsets, OffsetCommitCallback callback) {
     acquireAndEnsureOpen();
     try {
@@ -1027,6 +1022,56 @@ public void commitAsync(final Map<TopicPartition, OffsetAndMetadata> offsets, Of
     }
 }
 ```
+commitAsync 是否能够替代 commitSync 呢？答案是不能。commitAsync 的问题在于，出现问题时它不会自动重试。因为它是异步操作，倘若提交失败后自动重试，那么它重试时提交的位移值可能早已经“过期”或不是最新值了。因此，异步提交的重试其实没有意义，所以 commitAsync 是不会重试的；
+
+如果是手动提交，我们需要将 commitSync 和 commitAsync 组合使用才能达到最理想的效果，原因有两个：
+- 可以利用 commitSync 的自动重试来规避那些瞬时错误，比如网络的瞬时抖动，Broker 端 GC 等。因为这些问题都是短暂的，自动重试通常都会成功，因此，不想自己重试，而是希望 Kafka Consumer 来做这件事
+- 不希望程序总处于阻塞状态，影响 TPS
+```java
+try {
+    while(true) {
+        ConsumerRecords<String, String> records = consumer.poll(Duration.ofSeconds(1));
+        process(records); // 处理消息
+        commitAysnc(); // 使用异步提交规避阻塞
+    }
+} catch(Exception e) {
+            handle(e); // 处理异常
+} finally {
+    try {
+        consumer.commitSync(); // 最后一次提交使用同步阻塞式提交
+    } finally {
+       consumer.close();
+    }
+}
+```
+更细粒度手动提交：Kafka Consumer API 为手动提交提供了这样的方法：`commitSync(Map)` 和 `commitAsync(Map)`。它们的参数是一个 Map 对象，键就是 TopicPartition，即消费的分区，而值是一个 OffsetAndMetadata 对象，保存的主要是位移数据；
+
+### 5.8.2、CommitFailedException
+
+CommitFailedException：是 Consumer 客户端在提交位移时出现了错误或异常，而且还是那种不可恢复的严重异常。如果异常是可恢复的瞬时错误，提交位移的 API 自己就能规避它们了，因为很多提交位移的 API 方法是支持自动错误重试的，比如commitSync 方法
+
+常见发生该异常的场景：当消息处理的总时间超过预设的 `max.poll.interval.ms` 参数值时，Kafka Consumer 端会抛出 CommitFailedException 异常
+```java
+…
+Properties props = new Properties();
+…
+props.put("max.poll.interval.ms", 5000); // 最大拉取间隔时间
+consumer.subscribe(Arrays.asList("test-topic"));
+while (true) {
+    ConsumerRecords<String, String> records = 
+    consumer.poll(Duration.ofSeconds(1));
+    // 使用Thread.sleep模拟真实的消息处理逻辑，消息实际处理时间
+    Thread.sleep(6000L);
+    consumer.commitSync();
+}
+```
+为了防止上述异常的发生，有4中解决办法：
+- 缩短单条消息处理的时间。比如，之前下游系统消费一条消息的时间是 100 毫秒，优化之后成功地下降到 50 毫秒，那么此时 Consumer 端的 TPS 就提升了一倍；
+- 增加 Consumer 端允许下游系统消费一批消息的最大时长：取决于 Consumer 端参数 `max.poll.interval.ms` 的值，该参数的默认值是 5 分钟。如果你的消费逻辑不能简化，那么提高该参数值是一个不错的办法；
+- 减少下游系统一次性消费的消息总数：取决于 Consumer 端参数 `max.poll.records` 的值。当前该参数的默认值是 500 条，表明调用一次 KafkaConsumer.poll 方法，最多返回 500 条消息。可以说，该参数规定了单次 poll 方法能够返回的消息总数的上限；
+- 下游系统使用多线程来加速消费；
+
+还有另外一种场景：如果你的应用中同时出现了设置相同 group.id 值的消费者组程序和独立消费者程序，那么当独立消费者程序手动提交位移时，Kafka 就会立即抛出 CommitFailedException 异常，因为 Kafka 无法识别这个具有相同 group.id 的消费者实例，于是就向它返回一个错误，表明它不是消费者组内合法的成员；
 
 ## 5.9、控制或关闭消费
 
@@ -1109,7 +1154,7 @@ public interface ConsumerRebalanceListener {
 }
 ```
 Rebalance 的触发条件有 3 个：
-- 组成员数发生变更：比如有新的 Consumer 实例加入组或者离开组，抑或是有 Consumer 实例崩溃被“踢出”组；
+- 组成员数发生变更：比如有新的 Consumer 实例加入组或者离开组，抑或是有 Consumer 实例崩溃被“踢出”组；（这是常见的Rebalance发生的情况）
 - 订阅主题数发生变更：Consumer Group 可以使用正则表达式的方式订阅主题，比如 consumer.subscribe(Pattern.compile("t.*c")) 就表明该 Group 订阅所有以字母 t 开头、字母 c 结尾的主题。在 Consumer Group 的运行过程中，你新创建了一个满足这样条件的主题，那么该 Group 就会发生 Rebalance；
 - 订阅主题的分区数发生变更：Kafka 当前只能允许增加一个主题的分区数，当分区数增加时，就会触发订阅该主题的所有 Group 开启 Rebalance；
 
@@ -1137,10 +1182,10 @@ sticky 策略当两者发生冲突时，第一个目标优先于第二个目标�
 **如何避免Rebalance**
 - 避免组成员发生变化
 - 避免订阅主题数量发生变化、订阅主题的分区数发生变化
-- 合理设置消费者参数：
+- 合理设置消费者参数，避免consumer实例数量发生变化：
     - 未能及时发送心跳而Rebalance
     ```
-    session.timeout.ms     一次session的连接超时时间
+    session.timeout.ms     一次session的连接超时时间，如果同一个group 的不同consumer 设置的session.timeout.ms 的不一样，取最大的
     heartbeat.interval.ms  心跳时间，一般为超时时间的1/3，Consumer在被判定为死亡之前，能够发送至少 3 轮的心跳请求
     ```
     - Consumer消费超时而Rebalance：
@@ -1148,8 +1193,40 @@ sticky 策略当两者发生冲突时，第一个目标优先于第二个目标�
     max.poll.interval.ms ：每隔多长时间去拉取消息。合理设置预期值，尽量但间隔时间消费者处理完业务逻辑，否则就会被coordinator判定为死亡，踢出Consumer Group，进行Rebalance
     max.poll.records ：一次从拉取出来的数据条数。根据消费业务处理耗费时长合理设置，如果每次max.poll.interval.ms 设置的时间较短，可以max.poll.records设置小点儿，少拉取些，这样不会超时
     ```
+- 可能是consumer端的GC，因为 GC 设置不合理导致程序频发 Full GC 而引发的非预期 Rebalance 了；
+- 使用 Standalone Consumer，可以避免Rebalance，大数据框架(Spark/Flink)的kafka connector并不使用group机制，而是使用standalone consumer
+- 代码升级过程中，consumer要重启，是会导致Rebalance的，但是2.4引入了静态consumer group成员，可以一定成都上避免该问题
 
-## 5.13、消费者拦截器
+## 5.13、消费者协调器和组协调器
+
+三个问题：
+- 如果消费者客户端中配置了两个分配策略，那么以哪个为准呢？
+- 如果有多个消费者，彼此所配置的分配策略并不完全相同，那么以哪个为准？
+- 多个消费者之间的分区分配是需要协同的，那么这个协同的过程又是怎样的呢？
+
+上面三个问题处理都是交由消费者协调器（ConsumerCoordinator）和组协调器（GroupCoordinator）来完成的，它们之间使用一套组协调协议进行交互；在老版本客户端是使用 ZooKeeper 的监听器（Watcher）来实现这些功能的；
+
+### 5.13.1、旧版客户端问题
+
+每个消费组（`<group>`）在 ZooKeeper 中都维护了一个 `/consumers/<group>/ids` 路径，在此路径下使用临时节点记录隶属于此消费组的消费者的唯一标识（consumerIdString），consumerIdString 由消费者启动时创建。消费者的唯一标识由 `consumer.id+主机名+时间戳+UUID` 的部分信息构成，其中 consumer.id 是旧版消费者客户端中的配置，相当于新版客户端中的 client.id；
+
+每个消费者在启动时都会在 `/consumers/<group>/ids` 和 /brokers/ids 路径上注册一个监听器。当 `/consumers/<group>/ids` 路径下的子节点发生变化时，表示消费组中的消费者发生了变化；当 /brokers/ids 路径下的子节点发生变化时，表示 broker 出现了增减。这样通过 ZooKeeper 所提供的 Watcher，每个消费者就可以监听消费组和 Kafka 集群的状态了;
+
+这种方式下每个消费者对 ZooKeeper 的相关路径分别进行监听，当触发再均衡操作时，一个消费组下的所有消费者会同时进行再均衡操作，而消费者之间并不知道彼此操作的结果，这样可能导致 Kafka 工作在一个不正确的状态;
+
+### 5.13.2、Rebalance原理
+
+新版本客户端将全部消费组分成多个子集，每个消费组的子集在服务端对应一个 GroupCoordinator 对其进行管理，GroupCoordinator 是 Kafka 服务端中用于管理消费组的组件。而消费者客户端中的 ConsumerCoordinator 组件负责与 GroupCoordinator 进行交互；
+
+ConsumerCoordinator 与 GroupCoordinator 之间最重要的职责就是负责执行消费者Rebalance的操作，包括前面提及的分区分配的工作也是在Rebalance期间完成的；
+
+所有 Broker 都有各自的 Coordinator 组件；
+
+目前，Kafka 为某个 Consumer Group 确定 Coordinator 所在的 Broker 的算法有 2 个步骤：
+- 第 1 步：确定由位移主题的哪个分区来保存该 Group 数据：`partitionId=Math.abs(groupId.hashCode() % offsetsTopicPartitionCount)`；
+- 第 2 步：找出该分区 Leader 副本所在的 Broker，该 Broker 即为对应的 Coordinator
+
+## 5.14、消费者拦截器
 
 消费者拦截器需要自定义实现 `org.apache.kafka.clients.consumer.ConsumerInterceptor`接口，该接口包含三个方法：
 ```java
@@ -1200,7 +1277,7 @@ public class ConsumerInterceptorTTL implements ConsumerInterceptor<String, Strin
 
 在消费者中也有拦截链的概念，和生产者的拦截链一样，也是按照 `interceptor.classes` 参数配置的拦截器的顺序来一一执行的（配置的时候，各个拦截器之间使用逗号隔开）。同样也要提防“副作用”的发生。如果在拦截链中某个拦截器执行失败，那么下一个拦截器会接着从上一个执行成功的拦截器继续执行；
 
-## 5.14、消费者多线程实现
+## 5.15、消费者多线程实现
 
 KafkaProducer 是线程安全的，然而 KafkaConsumer 却是非线程安全的。KafkaConsumer 中定义了一个 acquire() 方法，用来检测当前是否只有一个线程在操作，若有其他线程正在操作则会抛出 ConcurrentModifcationException 异常：
 ```java
@@ -1224,7 +1301,7 @@ acquire() 方法与锁（synchronized、Lock 等）不同，它不会造成阻�
 
 - [Kafka多线程消费](https://www.cnblogs.com/huxi2b/p/7089854.html)
 
-### 5.14.1、线程封闭
+### 5.15.1、线程封闭
 
 第一种也是最常见的方式：线程封闭，即为每个线程实例化一个 KafkaConsumer 对象
 
@@ -1232,11 +1309,35 @@ acquire() 方法与锁（synchronized、Lock 等）不同，它不会造成阻�
 
 一个线程对应一个 KafkaConsumer 实例，我们可以称之为消费线程。一个消费线程可以消费一个或多个分区中的消息，所有的消费线程都隶属于同一个消费组。这种实现方式的并发度受限于分区的实际个数，当消费线程的个数大于分区数时，就有部分消费线程一直处于空闲的状态；
 
-### 5.14.2、多个消费线程同时消费同一个分区
+### 5.15.2、多个消费线程同时消费同一个分区
 
 与此对应的第二种方式是多个消费线程同时消费同一个分区，这个通过 assign()、seek() 等方法实现，这样可以打破原有的消费线程的个数不能超过分区数的限制，进一步提高了消费的能力；
 
-不过这种实现方式对于位移提交和顺序控制的处理就会变得非常复杂，实际应用中使用得极少。一般而言，分区是消费线程的最小划分单位
+不过这种实现方式对于位移提交和顺序控制的处理就会变得非常复杂，实际应用中使用得极少。一般而言，分区是消费线程的最小划分单位；
+
+## 5.16、消费者连接管理
+
+消费者端主要的程序入口是 KafkaConsumer 类。和生产者不同的是，**构建 KafkaConsumer 实例时是不会创建任何 TCP 连接的**，也就是说，当你执行完 new KafkaConsumer(properties) 语句后，没有 Socket 连接被创建出来；
+
+TCP 连接是在调用 KafkaConsumer.poll 方法时被创建的。再细粒度地说，在 poll 方法内部有 3 个时机可以创建 TCP 连接：
+- **发起 FindCoordinator 请求时**：当消费者程序首次启动调用 poll 方法时，它需要向 Kafka 集群发送一个名为 FindCoordinator 的请求，希望 Kafka 集群告诉它哪个 Broker 是管理它的协调者；消费者程序会向集群中当前负载最小的那台 Broker 发送请求；
+
+- **连接协调者时**：Broker 处理完上一步发送的 FindCoordinator 请求之后，会返还对应的响应结果（Response），显式地告诉消费者哪个 Broker 是真正的协调者，因此在这一步，消费者知晓了真正的协调者后，会创建连向该 Broker 的 Socket 连接。只有成功连入协调者，协调者才能开启正常的组协调操作，比如加入组、等待组分配方案、心跳请求处理、位移获取、位移提交等；
+
+- **消费数据时**：消费者会为每个要消费的分区创建与该分区领导者副本所在 Broker 连接的 TCP；举个例子，假设消费者要消费 5 个分区的数据，这 5 个分区各自的领导者副本分布在 4 台 Broker 上，那么该消费者在消费时会创建与这 4 台 Broker 的 Socket 连接；
+
+**通常来说，消费者程序会创建 3 类 TCP 连接：**
+- （1）确定协调者和获取集群元数据；
+- （2）连接协调者，令其执行组成员管理操作；
+- （3）执行实际的消息获取；
+
+**何时关闭TCP连接：**
+- kafka自动关闭是由消费者端参数 `connection.max.idle.ms` 控制的；该参数现在的默认值是 9 分钟，即如果某个 Socket 连接上连续 9 分钟都没有任何请求“过境”的话，那么消费者会强行“杀掉”这个 Socket 连接
+- 手动调用 KafkaConsumer.close() 方法，或者是执行 Kill 命令；
+
+当上面第（3）个TCP 连接成功创建后，消费者程序就会废弃第一类 TCP 连接，之后在定期请求元数据时，它会改为使用第三类 TCP 连接。也就是说，最终你会发现，第一类 TCP 连接会在后台被默默地关闭掉。对一个运行了一段时间的消费者程序来说，只会有后面两类 TCP 连接存在。
+
+
 
 # 6、主题、分区与副本
 
@@ -1913,6 +2014,82 @@ ReplicaStateMachine，副本状态，管理分区副本信息，它也有 4 种�
 
 图中的单向箭头表示只允许单向状态转换，双向箭头则表示转换方向可以是双向的。比如，OnlineReplica 和 OfflineReplica 之间有一根双向箭头，这就说明，副本可以在 OnlineReplica 和 OfflineReplica 状态之间随意切换
 
+## 8.3、Broker端处理请求流程
+
+### 8.3.1、处理过程
+
+前面高性能提到[Kafka的网络模型](#145网络模型)是基于[Reactor模型](../../Java基础/Java-IO.md#61Reactor)的，Kafka 的 Broker 端有个 SocketServer 组件，类似于 Reactor 模式中的 Dispatcher，它也有对应的 Acceptor 线程和一个工作线程池，Kafka 提供了 Broker 端参数 
+`num.network.threads`，用于调整该网络线程池的线程数；其默认值是 3，表示每台 Broker 启动时会创建 3 个网络线程，专门处理客户端发送的请求；
+
+> Kafka 网络通信组件主要由两大部分构成：SocketServer 和 KafkaRequestHandlerPool
+
+Acceptor 线程采用轮询的方式将入站请求公平地发到所有网络线程中
+
+![](image/Kafka-Broker-IO处理模型.png)
+
+客户端发来的请求会被Broker端的Acceptor线程分发到任一网络线程处理，处理过程：
+
+![](image/Kafka-Broker请求处理过程.png)
+
+（1） 当网络线程拿到请求后，将请求放入到一个共享的请求队列中；
+
+（2）Broker端还有一个IO线程池，负责从该共享的请求队列（共享队列大小由`queued.max.requests`配置，默认是500）中取出请求，执行真正的处理；
+- 如果是 PRODUCE 生产请求，则将消息写入到底层的磁盘日志；
+- 如果是 FETCH 请求，则从磁盘或页缓存中读取小心；
+
+IO线程池是由Broker端的参数`num.io.threads`来控制的，目前该参数默认值是 8，表示每台 Broker 启动后自动创建 8 个 IO 线程处理请求。你可以根据实际硬件条件设置此线程池的个数
+
+（3）当 IO 线程处理完请求后，会将生成的响应发送到网络线程池的响应队列中，然后由对应的网络线程负责将 Response 返还给客户端
+
+> 求队列是所有网络线程共享的，而响应队列则是每个网络线程专属的。这么设计的原因就在于，Dispatcher 只是用于请求分发而不负责响应回传，因此只能让每个网络线程自己发送 Response 给客户端，所以这些 Response 也就没必要放在一个公共的地方;
+
+（4）Purgatory 的组件：它是用来缓存延时请求（Delayed Request）的。所谓延时请求，就是那些一时未满足条件不能立刻处理的请求。比如设置了 acks=all 的 PRODUCE 请求，一旦设置了 acks=all，那么该请求就必须等待 ISR 中所有副本都接收了消息后才能返回，此时处理该请求的 IO 线程就必须等待其他 Broker 的写入结果。当请求不能立刻处理时，它就会暂存在 Purgatory 中。稍后一旦满足了完成条件，IO 线程会继续处理该请求，并将 Response 放入对应网络线程的响应队列中
+
+### 8.3.2、数据类请求和控制类请求
+
+在 Kafka 内部，除了客户端发送的 PRODUCE 请求和 FETCH 请求之外，还有很多执行其他操作的请求类型，比如负责更新 Leader 副本、Follower 副本以及 ISR 集合的 LeaderAndIsr 请求，负责勒令副本下线的 StopReplica 请求等。与 PRODUCE 和 FETCH 请求相比，这些请求有个明显的不同：它们不是数据类的请求，而是控制类的请求。也就是说，它们并不是操作消息数据的，而是用来执行特定的 Kafka 内部动作的；
+
+> 控制类请求有这样一种能力：它可以直接令数据类请求失效！
+
+社区采取的是两套Listener，即数据类型一个listener，控制类一个listener；对应的就是的网络通信模型，在kafka中有两套！kafka通过两套监听变相的实现了请求优先级，毕竟数据类型请求肯定很多，控制类肯定少，这样看来控制类肯定比大部分数据类型先被处理；
+
+控制类的和数据类区别就在于，就一个Porcessor线程，并且请求队列写死的长度为20；
+
+SocketServer.scala
+```scala
+// data-plane
+// 处理数据类型请求的 Processors 线程池
+private val dataPlaneProcessors = new ConcurrentHashMap[Int, Processor]()
+// 处理数据类请求的 Acceptor 线程池，每套监听器对应一个 Acceptor 线程
+private[network] val dataPlaneAcceptors = new ConcurrentHashMap[EndPoint, Acceptor]()
+// 处理数据类型请求的 RequestChannel对象
+val dataPlaneRequestChannel = new RequestChannel(maxQueuedRequests, DataPlaneMetricPrefix, time, apiVersionManager.newRequestMetrics)
+// control-plane
+// 处理控制类型请求的 Processors，就一个线程
+private var controlPlaneProcessorOpt : Option[Processor] = None
+// 处理控制类请求的 Acceptor 线程，就一个线程
+private[network] var controlPlaneAcceptorOpt : Option[Acceptor] = None
+// 处理控制类型请求的 RequestChannel对象
+val controlPlaneRequestChannelOpt: Option[RequestChannel] = config.controlPlaneListenerName.map(_ => 
+new RequestChannel(20, ControlPlaneMetricPrefix, time, apiVersionManager.newRequestMetrics))
+```
+
+# 9、Kafka监控
+
+Kafka常用监控工具
+- [一站式Apache Kafka集群指标监控与运维管控平台](https://github.com/didi/LogiKM)
+- kafka manager，改为[CMAK](https://github.com/yahoo/CMAK)了，CMAK报JDK版本不对，启动是可以指定版本：`bin/cmak -java-home /usr/java/jdk-11.0.13`
+- kafka eagle
+- JMXTrans + InfluxDB + Grafana
+
+## 9.1、消费者消费进度监控
+
+对于 Kafka 消费者来说，最重要的事情就是监控它们的消费进度了，或者说是监控它们消费的滞后程度。这个滞后程度有个专门的名称：消费者 Lag 或 Consumer Lag；
+
+所谓滞后程度，就是指消费者当前落后于生产者的程度。比方说，Kafka 生产者向某主题成功生产了 100 万条消息，你的消费者当前消费了 80 万条消息，那么我们就说你的消费者滞后了 20 万条消息，即 Lag 等于 20 万；
+
+Kafka 监控 Lag 的层级是在分区上的。如果要计算主题级别的，你需要手动汇总所有主题分区的 Lag，将它们累加起来，合并成最终的 Lag 值
+
 # kafka学习资料
 
 - [官方文档](https://kafka.apache.org/documentation/)，重点关注Configuration 篇、Operations 篇以及 Security 篇，特别是 Configuration 中的参数部分
@@ -1923,7 +2100,6 @@ ReplicaStateMachine，副本状态，管理分区副本信息，它也有 4 种�
 - 社区维护的[Confluence 文档](https://cwiki.apache.org/confluence/display/KAFKA/Index)
 - Google Docs：一篇是 [Kafka 事务的详细设计文档](https://docs.google.com/document/d/11Jqy_GjUGtdXJK94XGsEIK7CP1SnQGdp2eF0wSw9ra8/edit)，另一篇是[Controller 重设计文档](https://docs.google.com/document/d/1rLDmzDOGQQeSiMANP0rC2RYp_L7nUGHzFD9MQISgXYM/edit)
 - [OrcHome](https://www.orchome.com/kafka/issues)问答社区；
-- 
 
 
 # 参考资料
