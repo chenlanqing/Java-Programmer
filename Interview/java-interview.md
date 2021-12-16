@@ -4005,6 +4005,16 @@ Kafka把不在ISR列表中的存活副本称为“非同步副本”，这些副
 
 **消费组选举**
 
+选举消费者的leader分两种情况：
+- 如果消费组内还没有 leader，那么第一个加入消费组的消费者即为消费组的 leader；
+- 如果某一时刻 leader 消费者由于某些原因退出了消费组，那么会重新选举一个新的 leader，新的选举代码：
+    ```scala
+    private val members = new mutable.HashMap[String, MemberMetadata]
+    if (isLeader(memberId))
+        leaderId = members.keys.headOption
+    ```
+    在 GroupCoordinator 中消费者的信息是以 HashMap 的形式存储的，其中 key 为消费者的 member_id，而 value 是消费者相关的元数据信息。leaderId 表示 leader 消费者的 member_id，它的取值为 HashMap 中的第一个键值对的 key
+
 ### 5.10、失效副本是指什么？有那些应对措施？
 
 - 失效副本为速率比leader相差大于10秒的follower

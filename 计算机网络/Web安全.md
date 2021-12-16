@@ -1,7 +1,5 @@
 
-# 浏览器安全
-
-## 1、同源策略
+[火线安全-log4j2](https://log4j2.huoxian.cn/layout)
 
 # 一、CSRF
 

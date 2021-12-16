@@ -568,7 +568,7 @@ chkconfig --list zookeeper
 ```bash
 #! /bin/bash
 
-# kafka1 kafka2 kafka3 是三台机器的hostname，需要在/etc/hosts 上配置对应
+# kafka1 kafka2 kafka3 是三台机器的，需要在/etc/hosts 上配置对应
 
 case $1 in
 "start"){
@@ -647,7 +647,7 @@ advertised.listeners=PLAINTEXT://<公网IP>:9092
 Kafka集群启动：
 ```bash
 #! /bin/bash
-# kafka1 kafka2 kafka3 是三台机器的hostname，需要在/etc/hosts 上配置对应
+
 case $1 in
 "start"){
         for i in kafka1 kafka2 kafka3

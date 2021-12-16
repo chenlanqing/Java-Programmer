@@ -267,6 +267,8 @@ new Thread(task).start();
 
 只能通过新建Thread类这一种方式来创建线程，但是类里面的run方法有两种方式来实现，第一种是重写run方法，第二种实现Runnable接口的run方法，然后再把该runnable实例传给Thread类。除此之外，从表面上看线程池、定时器等工具类也可以创建线程，但是它们的本质都逃不出刚才所说的范围，也就是实现Runnable接口和继承Thread类。
 
+实际上也只有一种实现方式：实现Runnable接口，因为Thread类也是实现Runnable接口的
+
 ### 2.3、创建 Thread 子类还是实现 Runnable 接口
 
 - 实现 Runnable 接口，线程池可以有效的管理实现了 Runnable 接口的线程如果多个线程正在运行中，如果某个线程调用 System.exit()指示终结程序，那么全部的线程都会结束执行；
