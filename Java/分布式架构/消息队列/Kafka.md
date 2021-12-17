@@ -2458,6 +2458,78 @@ Kafka Broker 进程是一个普通的 Java 进程，所有关于 JVM 的监控�
 
 Kafka 监控 Lag 的层级是在分区上的。如果要计算主题级别的，你需要手动汇总所有主题分区的 Lag，将它们累加起来，合并成最终的 Lag 值
 
+# 10、性能调优
+
+对 Kafka 而言，性能一般是指吞吐量和延时：高吞吐量、低延时是我们调优 Kafka 集群的主要目标
+- 吞吐量，也就是 TPS，是指 Broker 端进程或 Client 端应用程序每秒能处理的字节数或消息数，这个值自然是越大越好；
+- 延时，它表示从 Producer 端发送消息到 Broker 端持久化完成之间的时间间隔。这个指标也可以代表端到端的延时（End-to-End，E2E），也就是从 Producer 发送消息到 Consumer 成功消费该消息的总时长。和 TPS 相反，通常希望延时越短越好；
+
+## 10.1、优化漏斗
+
+优化漏斗是一个调优过程中的分层漏斗，我们可以在每一层上执行相应的优化调整。总体来说，层级越靠上，其调优的效果越明显，整体优化效果是自上而下衰减的
+
+![](image/Kafka-调优-优化漏斗.png)
+
+- 第1层-应用程序层：它是指优化 Kafka 客户端应用程序代码，比如使用合理的数据结构、缓存计算开销大的运算结果，抑或是复用构造成本高的对象实例等。这一层的优化效果最为明显，通常也是比较简单的；
+- 第2层-框架层：它指的是合理设置 Kafka 集群的各种参数，毕竟，直接修改 Kafka 源码进行调优并不容易，但根据实际场景恰当地配置关键参数的值；
+- 第3层-JVM层：Kafka Broker 进程是普通的 JVM 进程，各种对 JVM 的优化在这里也是适用的。优化这一层的效果虽然比不上前两层，但有时也能带来巨大的改善效果；
+- 第4层-操作系统层：对操作系统层的优化很重要，但效果往往不如想象得那么好。与应用程序层的优化效果相比，它是有很大差距的
+
+### 10.1.1、操作系统优化
+
+- 在操作系统层面，你最好在挂载（Mount）文件系统时禁掉 atime 更新；atime 的全称是 access time，记录的是文件最后被访问的时间。记录 atime 需要操作系统访问 inode 资源，而禁掉 atime 可以避免 inode 访问时间的写入操作，减少文件系统的写操作数；
+- 文件系统：选择 ext4 或 XFS，或者ZFS 文件系统
+- swap 空间的设置：将 swappiness 设置成一个很小的值，比如 1～10 之间，以防止 Linux 的 OOM Killer 开启随意杀掉进程；
+- ulimit -n 和 vm.max_map_count；
+- 操作系统页缓存大小：Broker 端参数 log.segment.bytes 的值。该参数的默认值是 1GB；预留出一个日志段大小，至少能保证 Kafka 可以将整个日志段全部放入页缓存；
+
+### 10.1.2、JVM 层调优
+
+- 设置堆大小：将你的 JVM 堆大小设置成 6～8GB；可以查看 GC log，特别是关注 Full GC 之后堆上存活对象的总大小，然后把堆大小设置为该值的 1.5～2 倍；如果你发现 Full GC 没有被执行过，手动运行 `jmap -histo:live <pid>` 就能人为触发 Full GC；
+
+- GC 收集器的选择：建议使用 G1 收集器，主要原因是方便省事，至少比 CMS 收集器的优化难度小得多；如果你的 Kafka 环境中经常出现 Full GC，你可以配置 JVM 参数 -XX:+PrintAdaptiveSizePolicy，来探查一下到底是谁导致的 Full GC；大对象问题，反映在 GC 上的错误，就是“too many humongous allocations”；默认情况下，如果一个对象超过了 N/2，就会被视为大对象，从而直接被分配在大对象区。如果你的 Kafka 环境中的消息体都特别大，就很容易出现这种大对象分配的问题
+
+### 10.1.3、Broker 端调优
+
+即尽力保持客户端版本和 Broker 端版本一致
+
+### 10.1.4、应用层调优
+
+- 不要频繁地创建 Producer 和 Consumer 对象实例；
+- 用完及时关闭。这些对象底层会创建很多物理资源，如 Socket 连接、ByteBuffer 缓冲区等。不及时关闭的话，势必造成资源泄露；
+- 合理利用多线程来改善性能。Kafka 的 Java Producer 是线程安全的，你可以放心地在多个线程中共享同一个实例；
+
+## 10.2、性能指标调优
+
+### 10.2.1、调优吞吐量
+
+**Broker端：**
+- 适当增加`num.replica.fetchers`参数值，但不超过CPU核数，该参数表示的是 Follower 副本用多少个线程来拉取消息，默认使用 1 个线程。如果你的 Broker 端 CPU 资源很充足，不妨适当调大该参数值，加快 Follower 副本的同步速度。因为在实际生产环境中，配置了 acks=all 的 Producer 程序吞吐量被拖累的首要因素，就是副本同步性能；
+- 避免经常性的 Full GC。目前不论是 CMS 收集器还是 G1 收集器，其 Full GC 采用的是 Stop The World 的单线程收集策略，非常慢，因此一定要避免；
+
+**Producer端：**
+- 要改善吞吐量，通常的标配是增加消息批次的大小以及批次缓存时间，即 `batch.size` 和 `linger.ms`，目前它们的默认值都偏小，特别是默认的 16KB 的消息批次大小一般都不适用于生产环境；`batch.size`可以适当增加到512KB或者1MB；`linger.ms`可以调整为10~100；
+- 压缩算法配置好，以减少网络 I/O 传输量，从而间接提升吞吐量。当前，和 Kafka 适配最好的两个压缩算法是 LZ4 和 zstd；
+- 如果优化目标是吞吐量，最好不要设置 acks=all 以及开启重试。前者引入的副本同步时间通常都是吞吐量的瓶颈，而后者在执行过程中也会拉低 Producer 应用的吞吐量；
+- 如果你在多个线程中共享一个 Producer 实例，就可能会碰到缓冲区不够用的情形。倘若频繁地遭遇 TimeoutException：Failed to allocate memory within the configured max blocking time 这样的异常，那么你就必须显式地增加 buffer.memory 参数值，确保缓冲区总是有空间可以申请的
+
+**Consumer端：**
+- 利用多线程方案增加整体吞吐量；
+- 增加 fetch.min.bytes 参数值。默认是 1 字节，表示只要 Kafka Broker 端积攒了 1 字节的数据，就可以返回给 Consumer 端，这实在是太小了
+
+### 10.2.2、调优延时
+
+**Broker端：**
+- 增加 num.replica.fetchers 值以加快 Follower 副本的拉取速度，减少整个消息处理的延时
+
+**Producer端：**
+- 希望消息尽快地被发送出去，必须设置 linger.ms=0；
+- 不要启用压缩。因为压缩操作本身要消耗 CPU 时间，会增加消息发送的延时；
+- 最好不要设置 acks=all
+
+**Consumer端：**
+- 保持 fetch.min.bytes=1 即可，也就是说，只要 Broker 端有能返回的数据，立即令其返回给 Consumer，缩短 Consumer 消费延时
+
 # kafka学习资料
 
 - [官方文档](https://kafka.apache.org/documentation/)，重点关注Configuration 篇、Operations 篇以及 Security 篇，特别是 Configuration 中的参数部分
