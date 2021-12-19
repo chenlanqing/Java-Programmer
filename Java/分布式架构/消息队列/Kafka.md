@@ -120,12 +120,6 @@ Follower在接收到Leader的响应（Response）后，首先将消息写入.log
 
 通过上面的表格我们发现，Follower往往需要进行两次Fetch请求才能成功更新HW。Follower HW在某一阶段内总是落后于Leader HW，因此副本在根据HW值截取数据时将有可能发生数据的丢失或不一致
 
-### 1.3.5、Leader Epoch
-
-Kafka引入Leader Epoch后，Follower就不再参考HW，而是根据Leader Epoch信息来截断Leader中不存在的消息。这种机制可以弥补基于HW的副本同步机制的不足，Leader Epoch由两部分组成：
-- Epoch：一个单调增加的版本号。每当Leader副本发生变更时，都会增加该版本号。Epoch值较小的Leader被认为是过期Leader，不能再行使Leader的权力；
-- 起始位移（Start Offset）：Leader副本在该Epoch值上写入首条消息的Offset
-
 ## 1.4、高性能原因
 
 ### 1.4.1、利用 Partition 实现并行处理
@@ -154,6 +148,8 @@ Kafka 中每个分区是一个有序的，不可变的消息序列，新的消�
 - **如果进程重启，JVM 内的 Cache 会失效，但 Page Cache 仍然可用**
 
 Broker 收到数据后，写磁盘时只是将数据写入 Page Cache，并不保证数据一定完全写入磁盘；
+
+Kafka 中大量使用了页缓存，这是 Kafka 实现高吞吐的重要因素之一。虽然消息都是先被写入页缓存，然后由操作系统负责具体的刷盘任务的，但在 Kafka 中同样提供了同步刷盘及间断性强制刷盘（fsync）的功能，这些功能可以通过 `log.flush.interval.messages`、`log.flush.interval.ms`等参数来控制
 
 ### 1.4.4、零拷贝技术
 
@@ -740,88 +736,6 @@ KafkaProducer 实例创建的线程和前面提到的 Sender 线程共享的可�
 从上面可以知道，在创建KafkaProducer的过程中创建了 Sender线程，并启动它
 
 > 在对象构造器中启动线程会造成 this 指针的逃逸。理论上，Sender 线程完全能够观测到一个尚未构造完成的 KafkaProducer 实例；当然，在构造对象时创建线程没有任何问题，但最好是不要同时启动它
-
-## 4.8、Producer幂等性
-
-- [Kafka幂等性](http://matt33.com/2018/10/24/kafka-idempotent/)
-
-可靠消息：
-- 最多一次（at most once）：消息可能会丢失，但绝不会被重复发送；
-- 至少一次（at least once）：消息不会丢失，但有可能被重复发送；
-- 精确一次（exactly once）：消息不会丢失，也不会被重复发送；
-
-Producer 的幂等性指的是当发送同一条消息时，数据在 Server 端只会被持久化一次，数据不丟不重，但是这里的幂等性是有条件的：
-- 只能保证 Producer 在单个会话内不丟不重，如果 Producer 出现意外挂掉再重启是无法保证的（幂等性情况下，是无法获取之前的状态信息，因此是无法做到跨会话级别的不丢不重）;
-- 幂等性不能跨多个 Topic-Partition，只能保证单个 partition 内的幂等性，当涉及多个 Topic-Partition 时，这中间的状态并没有同步；
-
-如果需要跨会话、跨多个 topic-partition 的情况，需要使用 Kafka 的事务性来实现；
-
-producer如何使用使用幂等性：与正常情况下 Producer 使用相比变化不大，只需要把 Producer 的配置 `enable.idempotence` 设置为 true 即可，如下所示：
-```java
-Properties props = new Properties();
-props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-props.put("acks", "all"); // 当 enable.idempotence 为 true，这里默认为 all
-...
-KafkaProducer producer = new KafkaProducer(props);
-```
-幂等性主要是解决数据重复的问题，数据重复问题，通用的解决方案就是加唯一 id，然后根据 id 判断数据是否重复，Producer 的幂等性也是这样实现的
-
-### 4.8.1、Producer幂等性实现原理
-
-幂等性要解决的问题是：Producer 设置 at least once 时，由于异常触发重试机制导致数据重复，幂等性的目的就是为了解决这个数据重复的问题，简单来说就是：`at least once + 幂等 = exactly once`；
-
-Kafka Producer 在实现时有以下两个重要机制：
-- `PID（Producer ID）`，用来标识每个 producer client；每个 Producer 在初始化时都会被分配一个唯一的 PID，这个 PID 对应用是透明的，完全没有暴露给用户。对于一个给定的 PID，sequence number 将会从0开始自增，每个 Topic-Partition 都会有一个独立的 sequence number。Producer 在发送数据时，将会给每条 msg 标识一个 sequence number，Server 也就是通过这个来验证数据是否重复。这里的 PID 是全局唯一的，Producer 故障后重新启动后会被分配一个新的 PID，这也是幂等性无法做到跨会话的一个原因；Server 在给一个 client 初始化 PID 时，实际上是通过 ProducerIdManager 的 generateProducerId() 方法产生一个 PID；
-
-- `sequence numbers`，client 发送的每条消息都会带相应的 sequence number，Server 端就是根据这个值来判断数据是否重复；在 PID + Topic-Partition 级别上添加一个 sequence numbers 信息，就可以实现 Producer 的幂等性了
-
-## 4.9、Kafka事务
-
-- [Kafka Exactly-Once 之事务性实现](http://matt33.com/2018/11/04/kafka-transaction/)
-
-事务型 Producer 能够保证将消息原子性地写入到多个分区中。这批消息要么全部写入成功，要么全部失败。另外，事务型 Producer 也不惧进程的重启。Producer 重启回来后，Kafka 依然保证它们发送消息的精确一次处理；设置事务型 Producer 的方法也很简单，满足两个要求即可：
-- 和幂等性 Producer 一样，开启 `enable.idempotence = true`；
-- 设置 Producer 端参数 `transactional.id`。最好为其设置一个有意义的名字；
-
-Producer 代码中做一些调整，如这段代码所示：
-```java
-// --------Producer端代码
-Properties props = new Properties();
-...
-// 配置幂等性
-properties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
-// 配置事务id
-properties.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "TransactionProducer");
-KafkaProducer producer = new KafkaProducer(props);
-producer.initTransactions();
-try {
-    String msg = "matt test";
-    producer.beginTransaction();
-    producer.send(new ProducerRecord(topic, "0", msg.toString()));
-    producer.send(new ProducerRecord(topic, "1", msg.toString()));
-    producer.send(new ProducerRecord(topic, "2", msg.toString()));
-    producer.commitTransaction();
-} catch (KafkaException e2) {
-    producer.abortTransaction();
-}
-producer.close();
-```
-这段代码能够保证 Record1 和 Record2 被当作一个事务统一提交到 Kafka，要么它们全部提交成功，要么全部写入失败。实际上即使写入失败，Kafka 也会把它们写入到底层的日志中，也就是说 Consumer 还是会看到这些消息。因此在 Consumer 端，读取事务型 Producer 发送的消息也是需要一些变更的，需要设置 `isolation.level` 参数的值即可。当前这个参数有两个取值：
-- `read_uncommitted`：这是默认值，表明 Consumer 能够读取到 Kafka 写入的任何消息，不论事务型 Producer 提交事务还是终止事务，其写入的消息都可以读取。很显然，如果你用了事务型 Producer，那么对应的 Consumer 就不要使用这个值;
-- `read_committed`：表明 Consumer 只会读取事务型 Producer 成功提交事务写入的消息。当然了，它也能看到非事务型 Producer 写入的所有消息
-
-> 如果事务型消息abortTransaction，那么实际上消息还是有可能写入到Kafka中的；
-
-Kafka事务从Producer角度来看：
-- 跨会话的幂等性写入：即使中间故障，恢复后依然可以保持幂等性；
-- 跨会话的事务恢复：如果一个应用实例挂了，启动的下一个实例依然可以保证上一个事务完成（commit 或者 abort）；
-- 跨多个 Topic-Partition 的幂等性写入，Kafka 可以保证跨多个 Topic-Partition 的数据要么全部写入成功，要么全部失败，不会出现中间状态；
-
-Consumer端很难保证一个已经 commit 的事务的所有 msg 都会被消费，有以下几个原因：
-- 对于 compacted topic，在一个事务中写入的数据可能会被新的值覆盖；
-- 一个事务内的数据，可能会跨多个 log segment，如果旧的 segmeng 数据由于过期而被清除，那么这个事务的一部分数据就无法被消费到了；
-- Consumer 在消费时可以通过 seek 机制，随机从一个位置开始消费，这也会导致一个事务内的部分数据无法消费；
-- Consumer 可能没有订阅这个事务涉及的全部 Partition
 
 # 5、Kafka消费者
 
@@ -1558,7 +1472,13 @@ TCP 连接是在调用 KafkaConsumer.poll 方法时被创建的。再细粒度�
 
 当上面第（3）个TCP 连接成功创建后，消费者程序就会废弃第一类 TCP 连接，之后在定期请求元数据时，它会改为使用第三类 TCP 连接。也就是说，最终你会发现，第一类 TCP 连接会在后台被默默地关闭掉。对一个运行了一段时间的消费者程序来说，只会有后面两类 TCP 连接存在。
 
+## 5.17、过期时间
 
+通过消息的 timestamp 字段和 ConsumerInterceptor 接口的 onConsume() 方法来实现消息的 TTL 功能
+
+如果要实现自定义每条消息TTL的功能：可以沿用消息的 timestamp 字段和拦截器 ConsumerInterceptor 接口的 onConsume() 方法，还需要消息中的 headers 字段来做配合。我们可以将消息的 TTL 的设定值以键值对的形式保存在消息的 headers 字段中，这样消费者消费到这条消息的时候可以在拦截器中根据 headers 字段设定的超时时间来判断此条消息是否超时，而不是根据原先固定的 `EXPIRE_INTERVAL` 值来判断；
+
+可以以直接使用 Kafka 提供的实现类 org.apache.kafka.common.header.internals.RecordHeaders 和 org.apache.kafka.common.header.internals.RecordHeader。这里只需使用一个 Header，key 可以固定为`ttl`，而 value 用来表示超时的秒数，超时时间一般用 Long 类型表示，但是 RecordHeader 中的构造方法 RecordHeader(String key, byte[] value) 和 value() 方法的返回值对应的 value 都是 byte[] 类型
 
 # 6、主题、分区与副本
 
@@ -1602,7 +1522,7 @@ drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-0
 drwxr-xr-x.  2 root root  141 8月  21 14:33 topic-create-2
 ```
 
-三个 broker 节点一共创建了8个文件夹，这个数字8实质上是分区数4与副本因子2的乘积。每个副本（或者更确切地说应该是日志，副本与日志一一对应）才真正对应了一个命名形式如<topic>-<partition>的文件夹
+三个 broker 节点一共创建了8个文件夹，这个数字8实质上是分区数4与副本因子2的乘积。每个副本（或者更确切地说应该是日志，副本与日志一一对应）才真正对应了一个命名形式如`<topic>-<partition>`的文件夹
 
 **Topic、Partition、Replication、Log 之间的关系**
 
@@ -2402,6 +2322,435 @@ val controlPlaneRequestChannelOpt: Option[RequestChannel] = config.controlPlaneL
 new RequestChannel(20, ControlPlaneMetricPrefix, time, apiVersionManager.newRequestMetrics))
 ```
 
+## 8.4、日志存储
+
+### 8.4.1、日志布局
+
+如果一个分区只有一份副本，那么一个分区对应一个日志（Log），为了防止 Log 过大，Kafka 又引入了日志分段（LogSegment）的概念，将 Log 切分为多个 LogSegment，相当于一个巨型文件被平均分配为多个相对较小的文件；
+
+Log 和 LogSegment 也不是纯粹物理意义上的概念，Log 在物理上只以文件夹的形式存储，而每个 LogSegment 对应于磁盘上的一个日志文件和两个索引文件，以及可能的其他文件（比如以“.txnindex”为后缀的事务索引文件）
+
+![](image/Kafka-Topic-Partition-Replica-log.png)
+
+前面[创建主题](#611创建主题)的时提到，主题创建后的日志目录结构；
+
+向 Log 中追加消息时是顺序写入的，只有最后一个 LogSegment 才能执行写入操作，在此之前所有的 LogSegment 都不能写入数据。为了方便描述，我们将最后一个 LogSegment 称为“activeSegment”，即表示当前活跃的日志分段。随着消息的不断写入，当 activeSegment 满足一定的条件时，就需要创建新的 activeSegment，之后追加的消息将写入新的 activeSegment；
+
+为了便于消息的检索，每个 LogSegment 中的日志文件（以`.log`为文件后缀）都有对应的两个索引文件：偏移量索引文件（以`.index`为文件后缀）和时间戳索引文件（以`.timeindex`为文件后缀）；每个 LogSegment 都有一个基准偏移量 baseOffset，用来表示当前 LogSegment 中第一条消息的 offset。偏移量是一个64位的长整型数，日志文件和两个索引文件都是根据基准偏移量（baseOffset）命名的，名称固定为20位数字，没有达到的位数则用0填充。比如第一个 LogSegment 的基准偏移量为0，对应的日志文件为`00000000000000000000.log`
+
+> 注意每个 LogSegment 中不只包含`.log`、`.index`、`.timeindex`这3种文件，还可能包含`.deleted`、`.cleaned`、`.swap`等临时文件，以及可能的`.snapshot`、`.txnindex`、`leader-epoch-checkpoint`等文件
+
+消费者提交的位移是保存在 Kafka 内部的主题__consumer_offsets中的，初始情况下这个主题并不存在，当第一次有消费者消费消息时会自动创建这个主题
+
+### 8.4.2、日志格式
+
+- Kafka 消息格式的第一个版本通常称为v0版本，在 Kafka 0.10.0之前都采用的这个消息格式；
+- Kafka 从0.10.0版本开始到0.11.0版本之前所使用的消息格式版本为 v1，比 v0 版本就多了一个 timestamp 字段，表示消息的时间戳；
+- Kafka 从0.11.0版本开始所使用的消息格式版本为 v2，这个版本的消息相比 v0 和 v1 的版本而言改动很大，同时还参考了 Protocol Buffer 而引入了变长整型（Varints）和 ZigZag 编码；
+
+### 8.4.3、日志索引
+
+前面提到每个日志分段文件都对应了两个索引文件，主要用来提高查找消息的效率：
+- 偏移量索引文件用来建立消息偏移量（offset）到物理地址之间的映射关系，方便快速定位消息所在的物理文件位置；
+- 时间戳索引文件则根据指定的时间戳（timestamp）来查找对应的偏移量信息；
+
+Kafka 中的索引文件以稀疏索引（sparse index）的方式构造消息的索引，每当写入一定量（由 broker 端参数 `log.index.interval.bytes` 指定，默认值为4096，即 4KB）的消息时，偏移量索引文件和时间戳索引文件分别增加一个偏移量索引项和时间戳索引项，增大或减小 `log.index.interval.bytes` 的值，对应地可以增加或缩小索引项的密度；稀疏索引通过 MappedByteBuffer 将索引文件映射到内存中，以加快索引的查询速度；；
+
+两个索引文件的查询：
+- 偏移量索引文件中的偏移量是单调递增的，查询指定偏移量时，使用二分查找法来快速定位偏移量的位置，如果指定的偏移量不在索引文件中，则会返回小于指定偏移量的最大偏移量；
+- 时间戳索引文件中的时间戳也保持严格的单调递增，查询指定时间戳时，也根据二分查找法来查找不大于该时间戳的最大偏移量，至于要找到对应的物理文件位置还需要根据偏移量索引文件来进行再次定位；
+
+日志分段文件达到一定的条件时需要进行切分，那么其对应的索引文件也需要进行切分。日志分段文件切分包含以下几个条件，满足其一即可：
+- 当前日志分段文件的大小超过了 broker 端参数 `log.segment.bytes` 配置的值。`log.segment.bytes` 参数的默认值为1073741824，即1GB；
+- 当前日志分段中消息的最大时间戳与当前系统的时间戳的差值大于 `log.roll.ms` 或 `log.roll.hours` 参数配置的值。如果同时配置了 `log.roll.ms` 和 `log.roll.hours` 参数，那么 `log.roll.ms` 的优先级高。默认情况下，只配置了 `log.roll.hours` 参数，其值为168，即7天；
+- 偏移量索引文件或时间戳索引文件的大小达到 broker 端参数 `log.index.size.max.bytes`配置的值。`log.index.size.max.bytes` 的默认值为10485760，即10MB；
+- 追加的消息的偏移量与当前日志分段的偏移量之间的差值大于 `Integer.MAX_VALUE`，即要追加的消息的偏移量不能转变为相对偏移量`（offset - baseOffset > Integer.MAX_VALUE）`
+
+对非当前活跃的日志分段而言，其对应的索引文件内容已经固定而不需要再写入索引项，所以会被设定为只读。而对当前活跃的日志分段（activeSegment）而言，索引文件还会追加更多的索引项，所以被设定为可读写；
+
+在索引文件切分的时候，Kafka 会关闭当前正在写入的索引文件并置为只读模式，同时以可读写的模式创建新的索引文件，索引文件的大小由 broker 端参数 `log.index.size.max.bytes` 配置。Kafka 在创建索引文件的时候会为其预分配 `log.index.size.max.bytes` 大小的空间，注意这一点与日志分段文件不同，只有当索引文件进行切分的时候，Kafka 才会把该索引文件裁剪到实际的数据大小。也就是说，与当前活跃的日志分段对应的索引文件的大小固定为 `log.index.size.max.bytes`，而其余日志分段对应的索引文件的大小为实际的占用空间
+
+为了避免在某一时刻大面积日志段同时间切分，导致瞬时打满磁盘 I/O 带宽，可以通过设置 Broker 端参数 `log.roll.jitter.ms` 值大于 0，即通过给日志段切分执行时间加一个扰动值的方式，来避免大量日志段在同一时刻执行切分动作，从而显著降低磁盘 I/O
+
+**偏移量索引：**
+
+偏移量索引项的格式包含两个字段，每个索引项占用8个字节，分为两个部分：
+- relativeOffset：相对偏移量，表示消息相对于 baseOffset 的偏移量，占用4个字节，当前索引文件的文件名即为 baseOffset 的值。
+- position：物理地址，也就是消息在日志分段文件中对应的物理位置，占用4个字节
+
+消息的偏移量（offset）占用8个字节，也可以称为绝对偏移量。索引项中没有直接使用绝对偏移量而改为只占用4个字节的相对偏移量（`relativeOffset = offset - baseOffset`），这样可以减小索引文件占用的空间。举个例子，一个日志分段的 baseOffset 为32，那么其文件名就是`00000000000000000032.log`，offset 为35的消息在索引文件中的 relativeOffset 的值为35-32=3；
+
+前面日志分段文件切分的第4个条件：追加的消息的偏移量与当前日志分段的偏移量之间的差值大于 Integer.MAX_VALUE。如果彼此的差值超过了 Integer.MAX_VALUE，那么 relativeOffset 就不能用4个字节表示了，进而不能享受这个索引项的设计所带来的便利了
+
+以topic-quickstart-0 目录下的 00000000000000000000.index 为例来进行具体分析，截取 00000000000000000000.index 部分内容如下：
+```
+[root@bigdata kafka_2.7.0]# bin/kafka-dump-log.sh --files /data/log/kafka_log/topic-quickstart-0/00000000000000000000.index 
+Dumping /data/log/kafka_log/topic-quickstart-0/00000000000000000000.index
+offset: 199 position: 4531
+```
+> Kafka 强制要求索引文件大小必须是索引项大小的整数倍，对偏移量索引文件而言，必须为8的整数倍。如果 broker 端参数 `log.index.size.max.bytes` 配置为67，那么 Kafka 在内部会将其转换为64，即不大于67，并且满足为8的整数倍的条件
+
+**时间戳索引：**
+
+时间戳索引项的格式包含两个字段，每个索引项占用12个字节，分为两个部分。
+- timestamp：当前日志分段最大的时间戳。占8个字节
+- relativeOffset：时间戳所对应的消息的相对偏移量，占4个字节；
+
+时间戳索引文件中包含若干时间戳索引项，每个追加的时间戳索引项中的 timestamp 必须大于之前追加的索引项的 timestamp，否则不予追加；如果 broker 端参数 `log.message.timestamp.type` 设置为 LogAppendTime，那么消息的时间戳必定能够保持单调递增；相反，如果是 CreateTime 类型则无法保证。生产者可以使用类似 ProducerRecord(String topic, Integer partition, Long timestamp, K key, V value) 的方法来指定时间戳的值。即使生产者客户端采用自动插入的时间戳也无法保证时间戳能够单调递增，如果两个不同时钟的生产者同时往一个分区中插入消息，那么也会造成当前分区的时间戳乱序:
+
+与偏移量索引文件相似，时间戳索引文件大小必须是索引项大小（12B）的整数倍，如果不满足条件也会进行裁剪。同样假设 broker 端参数 `log.index.size.max.bytes` 配置为67，那么对应于时间戳索引文件，Kafka 在内部会将其转换为60；
+
+每当写入一定量的消息时，就会在偏移量索引文件和时间戳索引文件中分别增加一个偏移量索引项和时间戳索引项。两个文件增加索引项的操作是同时进行的，但并不意味着偏移量索引中的 relativeOffset 和时间戳索引项中的 relativeOffset 是同一个值；
+
+## 8.5、日志清理
+
+Kafka 中每一个分区副本都对应一个 Log，而 Log 又可以分为多个日志分段，这样也便于日志的清理操作。Kafka 提供了两种日志清理策略：
+- 日志删除（Log Retention）：按照一定的保留策略直接删除不符合条件的日志分段。
+- 日志压缩（Log Compaction）：针对每个消息的 key 进行整合，对于有相同 key 的不同 value 值，只保留最后一个版本
+
+通过 broker 端参数 `log.cleanup.policy` 来设置日志清理策略，此参数的默认值为`delete`，即采用日志删除的清理策略。如果要采用日志压缩的清理策略，就需要将 `log.cleanup.policy` 设置为`compact`，并且还需要将 `log.cleaner.enable `（默认值为 true）设定为 true。通过将 `log.cleanup.policy` 参数设置为`delete,compact`，还可以同时支持日志删除和日志压缩两种策略；
+
+日志清理的粒度可以控制到主题级别，比如与 `log.cleanup.policy` 对应的主题级别的参数为 `cleanup.policy`
+
+> 日志删除是指清除整个日志分段，而日志压缩是针对相同 key 的消息的合并清理
+
+### 8.5.1、Log Retention
+
+在 Kafka 的日志管理器中会有一个专门的日志删除任务来周期性地检测和删除不符合保留条件的日志分段文件，这个周期可以通过 broker 端参数 `log.retention.check.interval.ms` 来配置，默认值为300000，即5分钟。当前日志分段的保留策略有3种：
+- 基于时间的保留策略；
+- 基于日志大小的保留策略
+- 基于日志起始偏移量的保留策略
+
+**1、基于时间**
+
+日志删除任务会检查当前日志文件中是否有保留时间超过设定的阈值（retentionMs）来寻找可删除的日志分段文件集合（deletableSegments）
+
+retentionMs 可以通过 broker 端参数 `log.retention.hours、log.retention.minutes 和 log.retention.ms` 来配置，其中 log.retention.ms 的优先级最高，log.retention.minutes 次之，log.retention.hours 最低。默认情况下只配置了 `log.retention.hours` 参数，其值为168，故默认情况下日志分段文件的保留时间为7天；
+
+查找过期的日志分段文件，是根据日志分段中最大的时间戳 largestTimeStamp 来计算的；
+
+删除日志分段时，首先会从 Log 对象中所维护日志分段的跳跃表中移除待删除的日志分段，以保证没有线程对这些日志分段进行读取操作。然后将日志分段所对应的所有文件添加上`.deleted`的后缀（当然也包括对应的索引文件）。最后交由一个以`delete-file`命名的延迟任务来删除这些以“.deleted”为后缀的文件，这个任务的延迟执行时间可以通过 `file.delete.delay.ms` 参数来调配，此参数的默认值为60000，即1分钟；
+
+**2、基于日志大小**
+
+日志删除任务会检查当前日志的大小是否超过设定的阈值（retentionSize）来寻找可删除的日志分段的文件集合（deletableSegments）；
+
+retentionSize 可以通过 broker 端参数 log.retention.bytes 来配置，默认值为-1，表示无穷大。注意 `log.retention.bytes` 配置的是 Log 中所有日志文件的总大小，而不是单个日志分段（确切地说应该为 .log 日志文件）的大小。单个日志分段的大小由 broker 端参数 `log.segment.bytes` 来限制，默认值为1073741824，即 1GB；
+
+基于日志大小的保留策略与基于时间的保留策略类似，首先计算日志文件的总大小 size 和 retentionSize 的差值 diff，即计算需要删除的日志总大小，然后从日志文件中的第一个日志分段开始进行查找可删除的日志分段的文件集合 deletableSegments。查找出 deletableSegments 之后就执行删除操作，这个删除操作和基于时间的保留策略的删除操作相同；
+
+**3、基于日志起始偏移量**
+
+一般情况下，日志文件的起始偏移量 logStartOffset 等于第一个日志分段的 baseOffset，但这并不是绝对的，logStartOffset 的值可以通过 DeleteRecordsRequest 请求（比如使用 KafkaAdminClient 的 deleteRecords() 方法、使用 kafka-delete-records.sh 脚本）、日志的清理和截断等操作进行修改；
+
+基于日志起始偏移量的保留策略的判断依据：是某日志分段的下一个日志分段的起始偏移量 baseOffset 是否小于等于 logStartOffset，若是，则可以删除此日志分段
+
+![](image/Kafka-删除日志-基于偏移量.png)
+
+如上图所示，假设 logStartOffset 等于25，日志分段1的起始偏移量为0，日志分段2的起始偏移量为11，日志分段3的起始偏移量为23，通过如下动作收集可删除的日志分段的文件集合 deletableSegments：
+- 从头开始遍历每个日志分段，日志分段1的下一个日志分段的起始偏移量为11，小于 logStartOffset 的大小，将日志分段1加入 deletableSegments；
+- 日志分段2的下一个日志偏移量的起始偏移量为23，也小于 logStartOffset 的大小，将日志分段2加入 deletableSegments；
+- 日志分段3的下一个日志偏移量在 logStartOffset 的右侧，故从日志分段3开始的所有日志分段都不会加入 deletableSegmens；
+
+收集完可删除的日志分段的文件集合之后的删除操作同基于日志大小的保留策略和基于时间的保留策略相同
+
+### 8.5.2、Log Compaction
+
+Kafka 中的 Log Compaction 是指在默认的日志删除（Log Retention）规则之外提供的一种清理过时数据的方式；Log Compaction 对于有相同 key 的不同 value 值，只保留最后一个版本。如果应用只关心 key 对应的最新 value 值，则可以开启 Kafka 的日志清理功能，Kafka 会定期将相同 key 的消息进行合并，只保留最新的 value 值；
+
+Log Compaction 执行前后，日志分段中的每条消息的偏移量和写入时的偏移量保持一致。Log Compaction 会生成新的日志分段文件，日志分段中每条消息的物理位置会重新按照新文件来组织。Log Compaction 执行过后的偏移量不再是连续的，不过这并不影响日志的查询；
+
+Kafka 中的 Log Compaction 可以类比于 Redis 中的 RDB 的持久化模式；每一个日志目录下都有一个名为“cleaner-offset-checkpoint”的文件，这个文件就是清理检查点文件，用来记录每个主题的每个分区中已清理的偏移量；
+
+通过配置 `log.dir` 或 `log.dirs` 参数来设置 Kafka 日志的存放目录，而每一个日志目录下都有一个名为`cleaner-offset-checkpoint`的文件，这个文件就是清理检查点文件，用来记录每个主题的每个分区中已清理的偏移量；
+
+通过清理检查点文件可以将 Log 分成两个部分，如下图所示。通过检查点 cleaner checkpoint 来划分出一个已经清理过的 clean 部分和一个还未清理过的 dirty 部分。在日志清理的同时，客户端也可以读取日志中的消息。dirty 部分的消息偏移量是逐一递增的，而 clean 部分的消息偏移量是断续的，如果客户端总能赶上 dirty 部分，那么它就能读取日志的所有消息，反之就不可能读到全部的消息
+
+![](image/Kafka-Compaction-日志检查.png)
+
+上图中的 firstDirtyOffset（与 cleaner checkpoint 相等）表示 dirty 部分的起始偏移量，而 firstUncleanableOffset 为 dirty 部分的截止偏移量，整个 dirty 部分的偏移量范围为[firstDirtyOffset, firstUncleanableOffset），注意这里是左闭右开区间；为了避免当前活跃的日志分段 activeSegment 成为热点文件，activeSegment 不会参与 Log Compaction 的执行。同时 Kafka 支持通过参数 `log.cleaner.min.compaction.lag.ms` （默认值为0）来配置消息在被清理前的最小保留时间，默认情况下 firstUncleanableOffset 等于 activeSegment 的 baseOffset
+
+Kafka 中用于保存消费者消费位移的主题 `__consumer_offsets` 使用的就是 Log Compaction 策略
+
+Kafka 中的每个日志清理线程会使用一个名为`SkimpyOffsetMap`的对象来构建 key 与 offset 的映射关系的哈希表。日志清理需要遍历两次日志文件，第一次遍历把每个 key 的哈希值和最后出现的 offset 都保存在 SkimpyOffsetMap 中。第二次遍历会检查每个消息是否符合保留条件，如果符合就保留下来，否则就会被清理。假设一条消息的 offset 为 O1，这条消息的 key 在 SkimpyOffsetMap 中对应的 offset 为 O2，如果 O1 大于等于 O2 即满足保留条件；
+
+默认情况下，SkimpyOffsetMap 使用 MD5 来计算 key 的哈希值，占用空间大小为16B，根据这个哈希值来从 SkimpyOffsetMap 中找到对应的槽位，如果发生冲突则用线性探测法处理。为了防止哈希冲突过于频繁，也可以通过 broker 端参数 log.cleaner.io.buffer.load.factor （默认值为0.9）来调整负载因子；
+
+偏移量占用空间大小为8B，故一个映射项占用大小为24B。每个日志清理线程的 SkimpyOffsetMap 的内存占用大小为 `log.cleaner.dedupe.buffer.size / log.cleaner.thread`，默认值为 = 128MB/1 = 128MB。所以默认情况下 SkimpyOffsetMap 可以保存128MB × 0.9 /24B ≈ 5033164个key的记录。假设每条消息的大小为1KB，那么这个 SkimpyOffsetMap 可以用来映射 4.8GB 的日志文件，如果有重复的 key，那么这个数值还会增大，整体上来说，SkimpyOffsetMap 极大地节省了内存空间且非常高效；
+
+Log Compaction 会保留 key 相应的最新 value 值，那么当需要删除一个 key 时怎么办？Kafka 提供了一个墓碑消息（tombstone）的概念，如果一条消息的 key 不为 null，但是其 value 为 null，那么此消息就是墓碑消息。日志清理线程发现墓碑消息时会先进行常规的清理，并保留墓碑消息一段时间；
+
+Log Compaction 执行过后的日志分段的大小会比原先的日志分段的要小，为了防止出现太多的小文件，Kafka 在实际清理过程中并不对单个的日志分段进行单独清理，而是将日志文件中 offset 从0至 firstUncleanableOffset 的所有日志分段进行分组，每个日志分段只属于一组，分组策略为：按照日志分段的顺序遍历，每组中日志分段的占用空间大小之和不超过 segmentSize（可以通过 broker 端参数 log.segment.bytes 设置，默认值为 1GB），且对应的索引文件占用大小之和不超过 maxIndexSize（可以通过 broker 端参数 log.index.interval.bytes 设置，默认值为 10MB）。同一个组的多个日志分段清理过后，只会生成一个新的日志分段；
+
+Log Compaction 过程中会将每个日志分组中需要保留的消息复制到一个以`.clean`为后缀的临时文件中，此临时文件以当前日志分组中第一个日志分段的文件名命名，例如 `00000000000000000000.log.clean`。Log Compaction 过后将`.clean`的文件修改为`.swap`后缀的文件，例如：`00000000000000000000.log.swap`。然后删除原本的日志文件，最后才把文件的`.swap`后缀去掉。整个过程中的索引文件的变换也是如此，至此一个完整 Log Compaction 操作才算完成；
+
+## 8.6、幂等性
+
+- [Kafka幂等性](http://matt33.com/2018/10/24/kafka-idempotent/)
+
+可靠消息：
+- 最多一次（at most once）：消息可能会丢失，但绝不会被重复发送；
+- 至少一次（at least once）：消息不会丢失，但有可能被重复发送；
+- 精确一次（exactly once）：消息不会丢失，也不会被重复发送；
+
+Producer 的幂等性指的是当发送同一条消息时，数据在 Server 端只会被持久化一次，数据不丟不重，但是这里的幂等性是有条件的：
+- 只能保证 Producer 在单个会话内不丟不重，如果 Producer 出现意外挂掉再重启是无法保证的（幂等性情况下，是无法获取之前的状态信息，因此是无法做到跨会话级别的不丢不重）;
+- 幂等性不能跨多个 Topic-Partition，只能保证单个 partition 内的幂等性，当涉及多个 Topic-Partition 时，这中间的状态并没有同步；
+
+如果需要跨会话、跨多个 topic-partition 的情况，需要使用 Kafka 的事务性来实现；
+
+producer如何使用使用幂等性：与正常情况下 Producer 使用相比变化不大，只需要把 Producer 的配置 `enable.idempotence` 设置为 true 即可，如下所示：
+```java
+Properties props = new Properties();
+props.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
+props.put("acks", "all"); // 当 enable.idempotence 为 true，这里默认为 all
+...
+KafkaProducer producer = new KafkaProducer(props);
+```
+还需要确保生产者客户端的 retries、acks、max.in.flight.requests.per.connection 这几个参数不被配置错；
+- 如果用户显式地指定了 retries 参数，那么这个参数的值必须大于0，否则会报出 ConfigException；
+- 如果用户没有显式地指定 retries 参数，那么 KafkaProducer 会将它置为 `Integer.MAX_VALUE`。同时还需要保证 `max.in.flight.requests.per.connection` 参数的值不能大于5；要求 `max.in.flight.requests.per.connection` 小于等于 5 的主要原因是：Server 端的 ProducerStateManager 实例会缓存每个 PID 在每个 Topic-Partition 上发送的最近 5 个batch 数据；如果超过 5，ProducerStateManager 就会将最旧的 batch 数据清除
+- 如果用户还显式地指定了 acks 参数，那么还需要保证这个参数的值为 -1（all），如果不为 -1（这个参数的值默认为1）那么也会报出 ConfigException
+
+幂等性主要是解决数据重复的问题，数据重复问题，通用的解决方案就是加唯一id，然后根据 id 判断数据是否重复，Producer 的幂等性也是这样实现的
+
+### 8.6.1、Producer幂等性实现原理
+
+幂等性要解决的问题是：Producer 设置 at least once 时，由于异常触发重试机制导致数据重复，幂等性的目的就是为了解决这个数据重复的问题，简单来说就是：`at least once + 幂等 = exactly once`；
+
+Kafka Producer 在实现时有以下两个重要机制：
+- `PID（Producer ID）`，用来标识每个 producer client；每个 Producer 在初始化时都会被分配一个唯一的 PID，这个 PID 对应用是透明的，完全没有暴露给用户。对于一个给定的 PID，sequence number 将会从0开始自增，每个 Topic-Partition 都会有一个独立的 sequence number。Producer 在发送数据时，将会给每条 msg 标识一个 sequence number，Server 也就是通过这个来验证数据是否重复。这里的 PID 是全局唯一的，Producer 故障后重新启动后会被分配一个新的 PID，这也是幂等性无法做到跨会话的一个原因；Server 在给一个 client 初始化 PID 时，实际上是通过 ProducerIdManager 的 generateProducerId() 方法产生一个 PID；
+
+- `sequence numbers`，client 发送的每条消息都会带相应的 sequence number，Server 端就是根据这个值来判断数据是否重复；在 PID + Topic-Partition 级别上添加一个 sequence numbers 信息，就可以实现 Producer 的幂等性了；
+
+broker 端会在内存中为每一对 `<PID，分区>` 维护一个序列号。对于收到的每一条消息，只有当它的序列号的值（SN_new）比 broker 端中维护的对应的序列号的值（SN_old）大1（即 `SN_new = SN_old + 1`）时，broker 才会接收它。如果 `SN_new< SN_old + 1`，那么说明消息被重复写入，broker 可以直接将其丢弃。如果 `SN_new> SN_old + 1`，那么说明中间有数据尚未写入，出现了乱序，暗示可能有消息丢失，对应的生产者会抛出 OutOfOrderSequenceException，这个异常是一个严重的异常，后续的诸如 send()、beginTransaction()、commitTransaction() 等方法的调用都会抛出 IllegalStateException 的异常
+
+```java
+ProducerRecord<String, String> record = new ProducerRecord<>(topic, "key", "msg");
+producer.send(record);
+producer.send(record);
+```
+注意，上面示例中发送了两条相同的消息，不过这仅仅是指消息内容相同，但对 Kafka 而言是两条不同的消息，因为会为这两条消息分配不同的序列号。Kafka 并不会保证消息内容的幂等
+
+## 8.7、Kafka事务
+
+- [Kafka Exactly-Once 之事务性实现](http://matt33.com/2018/11/04/kafka-transaction/)
+
+### 8.7.1、介绍
+
+事务型 Producer 能够保证将消息原子性地写入到多个分区中。这批消息要么全部写入成功，要么全部失败。另外，事务型 Producer 也不惧进程的重启。Producer 重启回来后，Kafka 依然保证它们发送消息的精确一次处理；设置事务型 Producer 的方法也很简单，满足两个要求即可：
+- 和幂等性 Producer 一样，开启 `enable.idempotence = true`；
+- 设置 Producer 端参数 `transactional.id`。最好为其设置一个有意义的名字；如果使用同一个 transactionalId 开启两个生产者，那么前一个开启的生产者会报出如下的错误：`Producer attempted an operation with an old epoch. Either there is a newer producer with the same transactionalId, or the producer's transaction has been expired by the broker.`
+
+事务要求生产者开启幂等特性，因此通过将 `transactional.id` 参数设置为非空从而开启事务特性的同时需要将 enable.idempotence 设置为 true（如果未显式设置，则 KafkaProducer 默认会将它的值设置为 true），如果用户显式地将 enable.idempotence 设置为 false，则会报出 ConfigException
+
+Kafka事务从Producer角度来看：
+- 跨会话的幂等性写入：即使中间故障，恢复后依然可以保持幂等性；表示具有相同 transactionalId 的新生产者实例被创建且工作的时候，旧的且拥有相同 transactionalId 的生产者实例将不再工作；
+- 跨会话的事务恢复：当某个生产者实例宕机后，新的生产者实例可以保证任何未完成的旧事务要么被提交（Commit），要么被中止（Abort），如此可以使新的生产者实例从一个正常的状态开始工作
+- 跨多个 Topic-Partition 的幂等性写入，Kafka 可以保证跨多个 Topic-Partition 的数据要么全部写入成功，要么全部失败，不会出现中间状态；
+
+Consumer端很难保证一个已经 commit 的事务的所有 msg 都会被消费，有以下几个原因：
+- 对于 compacted topic，在一个事务中写入的数据可能会被新的值覆盖（相同key的消息，后写入的消息会覆盖前面写入的消息）
+- 一个事务内的数据，可能会跨多个 log segment，如果旧的 segmeng 数据由于过期而被清除，那么这个事务的一部分数据就无法被消费到了；
+- Consumer 在消费时可以通过 seek 机制，随机从一个位置开始消费，这也会导致一个事务内的部分数据无法消费；
+- Consumer 可能没有订阅这个事务涉及的全部 Partition
+
+Producer 代码中做一些调整，如这段代码所示：
+```java
+// --------Producer端代码
+Properties props = new Properties();
+...
+// 配置幂等性
+properties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+// 配置事务id
+properties.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, "TransactionProducer");
+KafkaProducer producer = new KafkaProducer(props);
+// initTransactions() 方法用来初始化事务，这个方法能够执行的前提是配置了 transactionalId，如果没有则会报出 IllegalStateException：
+producer.initTransactions();
+try {
+    String msg = "matt test";
+    // 用来开启事务
+    producer.beginTransaction();
+    // sendOffsetsToTransaction() 方法为消费者提供在事务内的位移提交的操作
+    producer.send(new ProducerRecord(topic, "0", msg.toString()));
+    producer.send(new ProducerRecord(topic, "1", msg.toString()));
+    producer.send(new ProducerRecord(topic, "2", msg.toString()));
+    producer.commitTransaction();
+} catch (KafkaException e2) {
+    producer.abortTransaction();
+}
+producer.close();
+```
+这段代码能够保证 Record1 和 Record2 被当作一个事务统一提交到 Kafka，要么它们全部提交成功，要么全部写入失败。实际上即使写入失败，Kafka 也会把它们写入到底层的日志中，也就是说 Consumer 还是会看到这些消息。因此在 Consumer 端，读取事务型 Producer 发送的消息也是需要一些变更的，需要设置 `isolation.level` 参数的值即可。当前这个参数有两个取值：
+- `read_uncommitted`：这是默认值，表明 Consumer 能够读取到 Kafka 写入的任何消息，不论事务型 Producer 提交事务还是终止事务，其写入的消息都可以读取。很显然，如果你用了事务型 Producer，那么对应的 Consumer 就不要使用这个值;
+- `read_committed`：表明 Consumer 只会读取事务型 Producer 成功提交事务写入的消息。当然了，它也能看到非事务型 Producer 写入的所有消息
+
+> 如果事务型消息abortTransaction，那么实际上消息还是有可能写入到Kafka中的；
+
+日志文件中除了普通的消息，还有一种消息专门用来标志一个事务的结束，它就是控制消息（ControlBatch）。控制消息一共有两种类型：COMMIT 和 ABORT，分别用来表征事务已经成功提交或已经被成功中止
+
+### 8.7.2、实现原理
+
+为了实现事务的功能，Kafka 还引入了事务协调器（TransactionCoordinator）来负责处理事务，这一点可以类比一下组协调器（GroupCoordinator）。每一个生产者都会被指派一个特定的 TransactionCoordinator，所有的事务逻辑包括分派 PID 等都是由 TransactionCoordinator 来负责实施的。TransactionCoordinator 会将事务状态持久化到内部主题 `__transaction_state` 中
+
+**1、查找TransactionCoordinator**
+
+通过transaction_id找到TransactionCoordinator，具体算法是`Utils.abs(transaction_id.hashCode %transactionTopicPartitionCount)`，获取到partition，再找到该partition的leader，即为TransactionCoordinator；
+
+其中 transactionTopicPartitionCount 为主题 `__transaction_state` 中的分区个数，这个可以通过 broker 端参数 transaction.state.log.num.partitions 来配置，默认值为50
+
+**2、获取PID**
+
+在找到 TransactionCoordinator 节点之后，就需要为当前生产者分配一个 PID 了。凡是开启了幂等性功能的生产者都必须执行这个操作，不需要考虑该生产者是否还开启了事务。生产者获取 PID 的操作是通过 InitProducerIdRequest 请求来实现的
+
+> 注意，如果未开启事务特性而只开启幂等特性，那么 InitProducerIdRequest 请求可以发送给任意的 broker
+
+当 TransactionCoordinator 第一次收到包含该 transactionalId 的 InitProducerIdRequest 请求时，它会把 transactionalId 和对应的 PID 以消息的形式保存到主题 `__transaction_state` 中，这样可以保证 `<transaction_Id, PID>` 的对应关系被持久化，从而保证即使 TransactionCoordinator 宕机该对应关系也不会丢失；
+
+事务状态：包含 Empty(0)、Ongoing(1)、PrepareCommit(2)、PrepareAbort(3)、CompleteCommit(4)、CompleteAbort(5)、Dead(6) 这几种状态；
+
+InitProducerIdResponse 除了返回 PID之外，InitProducerIdRequest 还会触发执行以下任务：
+- 增加该 PID 对应的 producer_epoch。具有相同 PID 但 producer_epoch 小于该 producer_epoch 的其他生产者新开启的事务将被拒绝；
+- 恢复（Commit）或中止（Abort）之前的生产者未完成的事务；
+
+**3、开启事务**
+
+通过 KafkaProducer 的 beginTransaction() 方法可以开启一个事务，调用该方法后，生产者本地会标记已经开启了一个新的事务，只有在生产者发送第一条消息之后 TransactionCoordinator 才会认为该事务已经开启
+
+**4、 Consume-Transform-Produce**
+
+这个阶段囊括了整个事务的数据处理过程，其中还涉及多种请求
+- *（1）AddPartitionsToTxnRequest*：当生产者给一个新的分区（TopicPartition）发送数据前，它需要先向 TransactionCoordinator 发送 AddPartitionsToTxnRequest 请求，这个请求会让 TransactionCoordinator 将 `<transactionId, TopicPartition>` 的对应关系存储在主题 `__transaction_state` 中，有了这个对照关系之后，我们就可以在后续的步骤中为每个分区设置 COMMIT 或 ABORT 标记；如果该分区是对应事务中的第一个分区，那么此时TransactionCoordinator还会启动对该事务的计时
+
+- *（2）ProduceRequest*：生产者通过 ProduceRequest 请求发送消息（ProducerBatch）到用户自定义主题中，这一点和发送普通消息时相同；和普通的消息不同的是，ProducerBatch 中会包含实质的 PID、producer_epoch 和 sequence number；
+
+- *（3）AddOffsetsToTxnRequest*：通过 KafkaProducer 的 sendOffsetsToTransaction() 方法可以在一个事务批次里处理消息的消费和发送，方法中包含2个参数：`Map<TopicPartition, OffsetAndMetadata>` offsets 和 groupId。这个方法会向 TransactionCoordinator 节点发送 AddOffsetsToTxnRequest 请求，TransactionCoordinator 收到这个请求之后会通过 groupId 来推导出在 `__consumer_offsets` 中的分区，之后 TransactionCoordinator 会将这个分区保存在 `__transaction_state` 中；
+
+- *（4）TxnOffsetCommitRequest*：这个请求也是 sendOffsetsToTransaction() 方法中的一部分，在处理完 AddOffsetsToTxnRequest 之后，生产者还会发送 TxnOffsetCommitRequest 请求给 GroupCoordinator，从而将本次事务中包含的消费位移信息 offsets 存储到主题 `__consumer_offsets` 中
+
+**5、提交或者中止事务**
+
+一旦数据被写入成功，我们就可以调用 KafkaProducer 的 commitTransaction() 方法或 abortTransaction() 方法来结束当前的事务
+- *（1）EndTxnRequest*：无论调用 commitTransaction() 方法还是 abortTransaction() 方法，生产者都会向 TransactionCoordinator 发送 EndTxnRequest 请求，以此来通知它提交（Commit）事务还是中止（Abort）事务，TransactionCoordinator 在收到 EndTxnRequest 请求后会执行如下操作：
+    - 将 PREPARE_COMMIT 或 PREPARE_ABORT 消息写入主题 `__transaction_state`，如事务流程图步骤5.1所示。
+    - 通过 WriteTxnMarkersRequest 请求将 COMMIT 或 ABORT 信息写入用户所使用的普通主题和 __consumer_offsets，如事务流程图步骤5.2所示。
+    - 将 COMPLETE_COMMIT 或 COMPLETE_ABORT 信息写入内部主题 `__transaction_state`，如事务流程图步骤5.3所示
+
+- *（2）WriteTxnMarkersRequest*：WriteTxnMarkersRequest 请求是由 TransactionCoordinator 发向事务中各个分区的 leader 节点的，当节点收到这个请求之后，会在相应的分区中写入控制消息（ControlBatch）。控制消息用来标识事务的终结，它和普通的消息一样存储在日志文件中，前面章节中提及了控制消息，RecordBatch 中 attributes 字段的第6位用来标识当前消息是否是控制消息。如果是控制消息，那么这一位会置为1，否则会置为0
+
+- *（3）写入最终的COMPLETE_COMMIT或COMPLETE_ABORT*：TransactionCoordinator 将最终的 COMPLETE_COMMIT 或 COMPLETE_ABORT 信息写入主题 `__transaction_state` 以表明当前事务已经结束，此时可以删除主题 `__transaction_state` 中所有关于该事务的消息。由于主题 `__transaction_state` 采用的日志清理策略为日志压缩，所以这里的删除只需将相应的消息设置为墓碑消息即可
+
+## 8.8、副本
+
+从生产者发出的一条消息首先会被写入分区的 leader 副本，不过还需要等待 ISR 集合中的所有 follower 副本都同步完之后才能被认为已经提交，之后才会更新分区的 HW，进而消费者可以消费到这条消息
+
+### 8.8.1、失效副本
+
+在 ISR 集合之外，也就是处于同步失效或功能失效（比如副本处于非存活状态）的副本统称为失效副本，失效副本对应的分区也就称为同步失效分区，即 under-replicated 分区；（处于同步失效状态的副本也可以看作失效副本）
+
+正常情况下，我们通过 kafka-topics.sh 脚本的 under-replicated-partitions 参数来显示主题中包含失效副本的分区时结果会返回空。比如我们来查看一下主题 topic-partitions 的相关信息：
+```
+[root@node1 kafka_2.11-2.0.0]# bin/kafka-topics.sh --zookeeper localhost:2181 --describe --topic topic-partitions --under-replicated-partitions
+```
+当 ISR 集合中的一个 follower 副本滞后 leader 副本的时间超过参数`replica.lag.time.max.ms`指定的值时则判定为同步失败，需要将此 follower 副本剔除出 ISR 集合；
+
+**实现：**当 follower 副本将 leader 副本 LEO（LogEndOffset）之前的日志全部同步时，则认为该 follower 副本已经追赶上 leader 副本，此时更新该副本的 lastCaughtUpTimeMs 标识。Kafka 的副本管理器会启动一个副本过期检测的定时任务，而这个定时任务会定时检查当前时间与副本的 lastCaughtUpTimeMs 差值是否大于参数 replica.lag.time.max.ms 指定的值；
+
+一般有两种情况会导致副本失效：
+- follower 副本进程卡住，在一段时间内根本没有向 leader 副本发起同步请求，比如频繁的 Full GC；
+- follower 副本进程同步过慢，在一段时间内都无法追赶上 leader 副本，比如 I/O 开销过大；
+
+> 如果通过工具增加了副本因子，那么新增加的副本在赶上 leader 副本之前也都是处于失效状态的。如果一个 follower 副本由于某些原因（比如宕机）而下线，之后又上线，在追赶上 leader 副本之前也处于失效状态；
+
+### 8.8.2、ISR的伸缩
+
+Kafka 在启动的时候会开启两个与ISR相关的定时任务，名称分别为`isr-expiration`和`isr-change-propagation`
+
+**isr-expiration**任务 会周期性地检测每个分区是否需要缩减其 ISR 集合；这个周期和 `replica.lag.time.max.ms` 参数有关，大小是这个参数值的一半，默认值为 5000ms；当检测到 ISR 集合中有失效副本时，就会收缩 ISR 集合
+```scala
+scheduler.schedule("isr-expiration", maybeShrinkIsr _, period = config.replicaLagTimeMaxMs / 2, unit = TimeUnit.MILLISECONDS)
+```
+如果某个分区的 ISR 集合发生变更，则会将变更后的数据记录到 ZooKeeper 对应的 `/brokers/topics/<topic>/partition/<parititon>/state` 节点中，节点的数据：
+```
+[zk: localhost:2181(CONNECTED) 4] get /brokers/topics/topic-quickstart/partitions/0/state
+{"controller_epoch":9,"leader":0,"version":1,"leader_epoch":0,"isr":[0]}
+```
+其中 controller_epoch 表示当前 Kafka 控制器的 epoch，leader 表示当前分区的 leader 副本所在的 broker 的 id 编号，version 表示版本号（当前版本固定为1），leader_epoch 表示当前分区的 leader 纪元，isr 表示变更后的 ISR 列表；当 ISR 集合发生变更时还会将变更后的记录缓存到 isrChangeSet 中
+
+**isr-change-propagation**任务 会周期性（固定值为 2500ms）地检查 isrChangeSet，如果发现 isrChangeSet 中有 ISR 集合的变更记录，那么它会在 ZooKeeper 的 `/isr_change_notification` 路径下创建一个以 isr_change_ 开头的持久顺序节点（比如 `/isr_change_notification/isr_change_0000000000`），并将 isrChangeSet 中的信息保存到这个节点中；
+```scala
+override def start(): Unit = {
+    scheduler.schedule("isr-change-propagation", maybePropagateIsrChanges _,
+      period = isrChangeNotificationConfig.checkIntervalMs, unit = TimeUnit.MILLISECONDS)
+  }
+```
+Kafka 控制器为 `/isr_change_notification` 添加了一个 Watcher，当这个节点中有子节点发生变化时会触发 Watcher 的动作，以此通知控制器更新相关元数据信息并向它管理的 broker 节点发送更新元数据的请求，最后删除 `/isr_change_notification` 路径下已经处理过的节点
+
+当检测到分区的 ISR 集合发生变化时，还需要检查以下两个条件，满足以下两个条件之一才可以将 ISR 集合的变化写入目标节点
+- 上一次 ISR 集合发生变化距离现在已经超过5s；
+- 上一次写入 ZooKeeper 的时间距离现在已经超过60s；
+
+追赶上 leader 副本的判定准则是此副本的 LEO 是否不小于 leader 副本的 HW。ISR 扩充之后同样会更新 ZooKeeper 中的 `/brokers/topics/<topic>/partition/<parititon>/state` 节点和 isrChangeSet，之后的步骤就和 ISR 收缩时的相同；
+
+当 ISR 集合发生增减时，或者 ISR 集合中任一副本的 LEO 发生变化时，都可能会影响整个分区的 HW；
+
+比如一个分区有三个副本，leader 副本的 LEO 为9，follower1 副本的 LEO 为7，而 follower2 副本的 LEO 为6，如果判定这3个副本都处于 ISR 集合中，那么这个分区的 HW 为6；如果 follower3 已经被判定为失效副本被剥离出 ISR 集合，那么此时分区的 HW 为 leader 副本和 follower1 副本中 LEO 的最小值，即为7；
+
+### 8.8.3、LEO与HW
+
+- [HW更新](#134HW更新机制)
+
+对于副本而言，还有两个概念：`本地副本（Local Replica）`和`远程副本（Remote Replica）`，本地副本是指对应的 Log分配在当前的 broker 节点上，远程副本是指对应的Log分配在其他的 broker 节点上。在 Kafka 中，同一个分区的信息会存在多个 broker 节点上，并被其上的副本管理器所管理，这样在逻辑层面每个 broker 节点上的分区就有了多个副本，但是只有本地副本才有对应的日志；
+
+![](image/Kafka-副本-LEO和HW更新.png)
+
+某个分区有3个副本分别位于 broker0、broker1 和 broker2 节点中，其中带阴影的方框表示本地副本。假设 broker0 上的副本1为当前分区的 leader 副本，那么副本2和副本3就是 follower 副本，整个消息追加的过程可以概括如下：
+
+1. 生产者客户端发送消息至 leader 副本（副本1）中。
+2. 消息被追加到 leader 副本的本地日志，并且会更新日志的偏移量。
+3. follower 副本（副本2和副本3）向 leader 副本请求同步数据。
+4. leader 副本所在的服务器读取本地日志，并更新对应拉取的 follower 副本的信息。
+5. leader 副本所在的服务器将拉取结果返回给 follower 副本。
+6. follower 副本收到 leader 副本返回的拉取结果，将消息追加到本地日志中，并更新日志的偏移量信息
+
+> 在一个分区中，leader 副本所在的节点会记录所有副本的 LEO，而 follower 副本所在的节点只会记录自身的 LEO，而不会记录其他副本的 LEO。对 HW 而言，各个副本所在的节点都只记录它自身的 HW，而Leader所在的Broker上还保存了其他Follower的LEO值，称为Remote LEO
+
+leader 副本中带有其他 follower 副本的 LEO，那么它们是什么时候更新的呢？leader 副本收到 follower 副本的 FetchRequest 请求之后，它首先会从自己的日志文件中读取数据，然后在返回给 follower 副本数据前先更新 follower 副本的 LEO；
+
+### 8.8.4、Leader Epoch
+
+在 0.11.0.0 版本之前，Kafka 使用的是基于 HW 的同步机制，但这样有可能出现数据丢失或 leader 副本和 follower 副本数据不一致的问题
+
+**数据丢失问题：**
+
+![](image/Kafka-副本同步-数据丢失场景.png)
+
+如上图所示，Replica B 是当前的 leader 副本（用 L 标记），Replica A 是 follower 副本。参照前面的同步过程来进行分析：
+- 在某一时刻，B 中有2条消息 m1 和 m2，A 从 B 中同步了这两条消息，此时 A 和 B 的 LEO 都为2，同时 HW 都为1；
+- 之后 A 再向 B 中发送请求以拉取消息，FetchRequest 请求中带上了 A 的 LEO 信息，B 在收到请求之后更新了自己的 HW 为2；
+- B 中虽然没有更多的消息，但还是在延时一段时间之后返回 FetchResponse，并在其中包含了 HW 信息；
+- 最后 A 根据 FetchResponse 中的 HW 信息更新自己的 HW 为2
+
+可以看到整个过程中两者之间的 HW 同步有一个间隙：在 A 写入消息 m2 之后（LEO 更新为2）需要再一轮的 FetchRequest/FetchResponse 才能更新自身的 HW 为2。假如如果在这个时候 A 宕机了，那么在 A 重启之后会根据之前HW位置（这个值会存入本地的复制点文件 `replication-offset-checkpoint`）进行日志截断，这样便会将 m2 这条消息删除，此时 A 只剩下 m1 这一条消息，之后 A 再向 B 发送 FetchRequest 请求拉取消息；
+
+此时若 B 再宕机，那么 A 就会被选举为新的 leader，如上图所示。B 恢复之后会成为 follower，由于 follower 副本 HW 不能比 leader 副本的 HW 高，所以还会做一次日志截断，以此将 HW 调整为1。这样一来 m2 这条消息就丢失了（就算B不能恢复，这条消息也同样丢失）
+
+**数据不一致的问题**
+
+假设当前 leader 副本为 A，follower 副本为 B，A 中有2条消息 m1 和 m2，并且 HW 和 LEO 都为2，B 中有1条消息 m1，并且 HW 和 LEO 都为1。假设 A 和 B 同时“挂掉”，然后 B 第一个恢复过来并成为 leader；
+
+之后 B 写入消息 m3，并将 LEO 和 HW 更新至2（假设所有场景中的 min.insync.replicas 参数配置为1）。此时 A 也恢复过来了，根据前面数据丢失场景中的介绍可知它会被赋予 follower 的角色，并且需要根据 HW 截断日志及发送 FetchRequest 至 B，不过此时 A 的 HW 正好也为2，那么就可以不做任何调整了
+
+如此一来 A 中保留了 m2 而 B 中没有，B 中新增了 m3 而 A 也同步不到，这样 A 和 B 就出现了数据不一致的情形
+
+**Leader Epoch**
+
+为了解决上面数据丢失和数据不一致的问题，Kafka引入Leader Epoch后，Follower就不再参考HW，而是根据Leader Epoch信息来截断Leader中不存在的消息。这种机制可以弥补基于HW的副本同步机制的不足，Leader Epoch由两部分组成：
+- Epoch：一个单调增加的版本号。每当Leader副本发生变更时，都会增加该版本号。Epoch值较小的Leader被认为是过期Leader，不能再行使Leader的权力；
+- 起始位移（Start Offset）：Leader副本在该Epoch值上写入首条消息的Offset
+
+对应上面数据丢失的场景：同样A发生重启，之后A不是先忙着截断日志而是先发送OffsetsForLeaderEpochRequest请求给B（OffsetsForLeaderEpochRequest请求体中包含A当前的LeaderEpoch值），B作为目前的leader在收到请求之后会返回当前的LEO；如果 A 中的 LeaderEpoch（假设为 LE_A）和 B 中的不相同，那么 B 此时会查找 LeaderEpoch 为 `LE_A+1` 对应的 StartOffset 并返回给 A，也就是 LE_A 对应的 LEO，所以我们可以将 OffsetsForLeaderEpochRequest 的请求看作用来查找 follower 副本当前 LeaderEpoch 的 LEO；A 在收到2之后发现和目前的 LEO 相同，也就不需要截断日志了。之后 B 发生了宕机，A 成为新的 leader，那么对应的 LE=0 也变成了 LE=1，对应的消息 m2 此时就得到了保留
+
 # 9、Kafka监控
 
 ## 9.1、Kafka常用监控工具
@@ -2529,6 +2878,12 @@ Kafka 监控 Lag 的层级是在分区上的。如果要计算主题级别的，
 
 **Consumer端：**
 - 保持 fetch.min.bytes=1 即可，也就是说，只要 Broker 端有能返回的数据，立即令其返回给 Consumer，缩短 Consumer 消费延时
+
+# 11、Kafka协议
+
+- [Kafka协议官方文档](https://kafka.apache.org/protocol.html#protocol_api_keys)
+
+Kafka 自定义了一组基于 TCP 的二进制协议，只要遵守这组协议的格式，就可以向 Kafka 发送消息，也可以从 Kafka 中拉取消息，或者做一些其他的事情，比如提交消费位移等
 
 # kafka学习资料
 
