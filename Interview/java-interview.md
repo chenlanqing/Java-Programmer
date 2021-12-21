@@ -4003,6 +4003,12 @@ Kafka把不在ISR列表中的存活副本称为“非同步副本”，这些副
 
 可以根据实际的业务场景选择是否开启Unclean leader选举。一般建议是关闭Unclean leader选举，因为通常数据的一致性要比可用性重要
 
+分区Leader副本选举策略：它是由 Controller 独立完成的
+- OfflinePartition Leader 选举：每当有分区上线时，就需要执行 Leader 选举。所谓的分区上线，可能是创建了新分区，也可能是之前的下线分区重新上线。这是最常见的分区 Leader 选举场景；
+- ReassignPartition Leader 选举：当你手动运行 kafka-reassign-partitions 命令，或者是调用 Admin 的 alterPartitionReassignments 方法执行分区副本重分配时，可能触发此类选举；
+- PreferredReplicaPartition Leader 选举：当你手动运行 kafka-preferred-replica-election 命令，或自动触发了 Preferred Leader 选举时，该类策略被激活。所谓的 Preferred Leader，指的是 AR 中的第一个副本；
+- ControlledShutdownPartition Leader 选举：当 Broker 正常关闭时，该 Broker 上的所有 Leader 副本都会下线，因此，需要为受影响的分区执行相应的 Leader 选举
+
 **消费组选举**
 
 选举消费者的leader分两种情况：
@@ -4249,6 +4255,8 @@ public Map<TopicPartition, OffsetAndTimestamp> offsetsForTimes(Map<TopicPartitio
 
 对于Kafka来说，必要性不是很高，因为在Kafka集群中，如果存在多个副本，经过合理的配置，可以让leader副本均匀的分布在各个broker上面，使每个 broker 上的读写负载都是一样的。
 
+但自 Kafka 2.4 版本开始，社区通过引入新的 Broker 端参数，允许 Follower 副本有限度地提供读服务；在broker端，需要配置参数 `replica.selector.class`；
+
 ### 5.37、kafka producer常见参数
 
 Kafka Producer 需要以下必要参数：
@@ -4259,14 +4267,23 @@ Kafka Producer 需要以下必要参数：
 - `request.required.acks`：默认值：0，0 表示 producer 毋须等待 leader 的确认，1 代表需要 leader 确认写入它的本地 log 并立即确认，-1 代表所有的备份都完成后确认。只对 async 模式起作用，这个参数的调整是数据不丢失和发送效率的 tradeoff，如果对数据丢失不敏感而在乎效率的场景可以考虑设置为 0，这样可以大大提高 producer 发送数据的效率；
 - `request.timeout.ms`：默认值：10000，确认超时时间。
 
-### 5.38、为什么只有Leader副本对外提供服务
+**如何设置 Kafka 能接收的最大消息的大小？**你需要同时设置 Broker 端参数和 Consumer 端参数
+- Broker 端参数：`message.max.bytes`、`max.message.bytes`（主题级别）和 `replica.fetch.max.bytes`（调整 Follower 副本能够接收的最大消息的大小）；
+- Consumer 端参数：`fetch.message.max.bytes`
 
+### 5.38、Leader副本与Follower副本
+
+**这两者的区别：**
+- 只有 Leader 副本才能对外提供读写服务，响应 Clients 端的请求。Follower 副本只是采用拉（PULL）的方式，被动地同步 Leader 副本中的数据，并且在 Leader 副本所在的 Broker 宕机后，随时准备应聘 Leader 副本；
+- Follower 副本也能对外提供读服务；自 Kafka 2.4 版本开始，社区通过引入新的 Broker 端参数，允许 Follower 副本有限度地提供读服务；在broker端，需要配置参数 `replica.selector.class`；
+- Leader 和 Follower 的消息序列在实际场景中不一致：比如程序 Bug、网络问题等，之前确保一致性的主要手段是高水位机制，但高水位值无法保证 Leader 连续变更场景下的数据一致性，因此，社区引入了 Leader Epoch 机制，来修复高水位值的弊端；
+
+**为什么只有Leader副本对外提供服务**
 - kafka的分区已经让读是从多个broker读从而负载均衡，不是MySQL的主从，压力都在主上；
 - kafka保存的数据和数据库的性质有实质的区别就是数据具有消费的概念，是流数据，kafka是消息队列，所以消费需要位移，而数据库是实体数据不存在这个概念，如果从kafka的follower读，消费端offset控制更复杂；
 - Kafka副本机制使用的是异步消息拉取，因此存在leader和follower之间的不一致性。如果要采用读写分离，必然要处理副本lag引入的一致性问题，比如如何实现read-your-writes、如何保证单调读（monotonic reads）以及处理消息因果顺序颠倒的问题。相反地，如果不采用读写分离，所有客户端读写请求都只在Leader上处理也就没有这些问题了——当然最后全局消息顺序颠倒的问题在Kafka中依然存在，常见的解决办法是使用单分区，其他的方案还有version vector，但是目前Kafka没有提供。
 
 ### 5.39、聊一聊你对Kafka的Log Compaction的理解
-
 
 
 ### 5.40、聊一聊你对Kafka底层存储的理解（页缓存、内核层、块层、设备层）
@@ -4288,6 +4305,10 @@ Kafka Producer 需要以下必要参数：
 ### 5.45、Kafka中的事务是怎么实现的
 
 ### 5.46、多副本下，各个副本中的HW和LEO的演变过程
+
+
+**follower副本消息同步完整流程：**
+首先，Follower 发送 FETCH 请求给 Leader。接着，Leader 会读取底层日志文件中的消息数据，再更新它内存中的 Follower 副本的 LEO 值，更新为 FETCH 请求中的 fetchOffset 值。最后，尝试更新分区高水位值。Follower 接收到 FETCH 响应之后，会把消息写入到底层日志，接着更新 LEO 和 HW 值。Leader 和 Follower 的 HW 值更新时机是不同的，Follower 的 HW 更新永远落后于 Leader 的 HW。这种时间上的错配是造成各种不一致的原因
 
 ### 5.47、Kafka中怎么实现死信队列和重试队列
 
@@ -4325,6 +4346,33 @@ Kafka Producer 需要以下必要参数：
 主要通过在消息体（value 字段）或在消息头（headers 字段）中内嵌消息对应的时间戳 timestamp 或全局的唯一标识 ID（或者是两者兼备）来实现消息的审计功能；
 
 可以使用的产品：Chaperone（Uber）、Confluent Control Center、Kafka Monitor（LinkedIn）
+
+### 5.52、什么是消费者组
+
+官网上的介绍言简意赅，即消费者组是 Kafka 提供的可扩展且具有容错性的消费者机制；
+
+在 Kafka 中，消费者组是一个由多个消费者实例构成的组。多个实例共同订阅若干个主题，实现共同消费。同一个组下的每个实例都配置有相同的组 ID，被分配不同的订阅分区。当某个实例挂掉的时候，其他实例会自动地承担起它负责消费的分区
+
+### 5.53、Kafka中zk的作用
+
+目前，Kafka 使用 ZooKeeper 存放集群元数据、成员管理、Controller 选举，以及其他一些管理类任务。之后，等 KIP-500 提案完成后，Kafka 将完全不再依赖于 ZooKeeper；
+- “存放元数据”是指主题分区的所有数据都保存在 ZooKeeper 中，且以它保存的数据为权威；
+- “成员管理”是指 Broker 节点的注册、注销以及属性变更；
+- “Controller 选举”是指选举集群 Controller，而其他管理类任务包括但不限于主题删除、参数配置等
+
+KIP-500 思想，是使用社区自研的基于 Raft 的共识算法，替代 ZooKeeper，实现 Controller 自选举
+
+### 5.54、Leader 总是 -1，怎么破
+
+碰到“某个主题分区不能工作了”的情形。使用命令行查看状态的话，会发现 Leader 是 -1，使用各种命令都无济于事，最后只能用“重启大法”
+
+还有一种不需要重启集群的方法：删除 ZooKeeper 节点 `/controller`，触发 Controller 重选举。Controller 重选举能够为所有主题分区重刷分区状态，可以有效解决因不一致导致的 Leader 不可用问题；
+
+### 5.55、Kafka哪些场景使用了零拷贝
+
+主要有两个地方：基于 mmap 的索引和日志文件读写所用的 TransportLayer
+- 索引都是基于 MappedByteBuffer 的，也就是让用户态和内核态共享内核态的数据缓冲区，此时，数据不需要复制到用户态空间；
+- TransportLayer 是 Kafka 传输层的接口。它的某个实现类使用了 FileChannel 的 transferTo 方法。该方法底层使用 sendfile 实现了 Zero Copy。对 Kafka 而言，如果 I/O 通道使用普通的 PLAINTEXT，那么，Kafka 就可以利用 Zero Copy 特性，直接将页缓存中的数据发送到网卡的 Buffer 中，避免中间的多次拷贝；
 
 
 Kafka中有那些配置参数比较有意思？聊一聊你的看法

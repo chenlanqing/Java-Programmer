@@ -60,7 +60,14 @@ Kafka是通过在不同节点上的多副本来解决数据可靠性问题，通
 
 为什么只允许Leader副本提供服务：
 - 方便实现“Read-your-writes”：当你使用生产者 API 向 Kafka 成功写入消息后，马上使用消费者 API 去读取刚才生产的消息；如果允许follow副本提供服务，可能存在延迟；
-- 方便实现单调读（Monotonic Reads）：对于一个消费者用户而言，在多次消费消息时，它不会看到某条消息一会儿存在一会儿不存在
+- 方便实现单调读（Monotonic Reads）：对于一个消费者用户而言，在多次消费消息时，它不会看到某条消息一会儿存在一会儿不存在；
+
+Kafka在2.4版本的时候，推出了新特性，KIP-392: 允许消费者从最近的跟随者副本获取数据，给了读写分离的选择；kafka存在多个数据中心，而数据中心存在于不同机房，当其中一个数据中心需要向另一个数据中心同步数据的时候，如果只能从首领副本进行数据读取的话，需要跨机房来完成，而这些流量带宽又比较昂贵，而利用本地跟随者副本进行消息读取就成了比较明智的选择；
+
+具体配置：
+- 在broker端，需要配置参数 `replica.selector.class`，其默认配置为`LeaderSelector`，意思是：消费者从首领副本获取消息，改为`RackAwareReplicaSelector`，即消费者按照指定的rack id上的副本进行消费。还需要配置`broker.rack`参数，用来指定broker在哪个机房。
+- 在consumer端，需要配置参数`client.rack`，且这个参数和broker端的哪个`broker.rack`匹配上，就会从哪个broker上去获取消息数据；
+
 
 ### 1.3.1、AR、ISR、OSR
 
@@ -1004,6 +1011,8 @@ public List<ConsumerRecord<K, V>> records(TopicPartition partition)
 java consumer的设计是一次取出一批，缓存在客户端内存中，然后再过滤出`max.poll.records`条消息返给你，下次可以直接从缓存中取，不用再发请求了
 
 ## 5.8、位移提交
+
+在 Kafka 中，每个主题分区下的每条消息都被赋予了一个唯一的 ID 数值，用于标识它在分区中的位置。这个 ID 数值，就被称为位移，或者叫偏移量。一旦消息被写入到分区日志，它的位移值将不能被修改
 
 ### 5.8.1、提交方式
 
@@ -2759,6 +2768,7 @@ leader 副本中带有其他 follower 副本的 LEO，那么它们是什么时�
 - kafka manager，改为[CMAK](https://github.com/yahoo/CMAK)了，CMAK报JDK版本不对，启动是可以指定版本：`bin/cmak -java-home /usr/java/jdk-11.0.13`
 - kafka eagle
 - JMXTrans + InfluxDB + Grafana
+- CDH
 
 ## 9.2、Kafka监控什么
 
