@@ -100,12 +100,14 @@ JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refere
     Object o = new Object();
     SoftReference<Object> softReference = new SoftReference<>(o);
     ```
+    应用场景：软引用通常用来实现内存敏感的缓存。如果还有空闲内存，就可以暂时保留缓存，当内存不足时清理掉，这样就保证了使用缓存的同时，不会耗尽内存。
 
 - 弱引用(Weak Reference)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakReference 类来实现弱引用；
     ```java
     Object o = new Object();
     WeakReference<Object> weakReference = new WeakReference<>(o);
     ```
+    应用场景：弱应用同样可用于内存敏感的缓存。
 
 - 虚引用(Phantom Reference)：虚引用并不会决定对象的生命周期，幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomReference 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；当虚引用被加入到引用队列的时候，说明这个对象已经被回收，可以在所引用的对象回收之后可以采取必要的行动
     ```java
@@ -115,6 +117,7 @@ JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refere
     // 虚引用
     PhantomReference<Object> phantomReference = new PhantomReference<>(o, referenceQueue);
     ```
+    应用场景：可用来跟踪对象被垃圾回收器回收的活动，当一个虚引用关联的对象被垃圾收集器回收之前会收到一条系统通知
 
 关于引用队列：
 - 无实际存储结构，存储逻辑依赖于内部节点之间的关系来表达；

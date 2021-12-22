@@ -1,10 +1,7 @@
-
-
 # 一、类定义
 
 ```java
 public final class Integer extends Number implements Comparable<Integer>{
-
 }
 ```
 - Integer类不能被继承；
@@ -351,7 +348,7 @@ public static Integer valueOf(int i) {
 
 ## 4、IntegerCache
 
-是 Integer 类中定义的一个 private static 的内部类；缓存支持 -128 到 127 之间的自动装箱过程。最大值 127 可以通过 -XX：AutoBoxCacheMax=size 修改，缓存通过一个 for 循环实现。从低到高并创建尽可能多的整数并存储在一个整数数组中。这个缓存会在 Integer 类第一次被使用的时候被初始化出来。就可以使用缓存中包含的实例对象，而不是创建一个新的实例(在自动装箱的情况下)
+是 Integer 类中定义的一个 private static 的内部类；缓存支持 -128 到 127 之间的自动装箱过程。最大值 127 可以通过 `-XX:AutoBoxCacheMax=size` 修改，缓存通过一个 for 循环实现。从低到高并创建尽可能多的整数并存储在一个整数数组中。这个缓存会在 Integer 类第一次被使用的时候被初始化出来。就可以使用缓存中包含的实例对象，而不是创建一个新的实例(在自动装箱的情况下)
 
 ```java
 private static class IntegerCache {

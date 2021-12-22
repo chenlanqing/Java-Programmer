@@ -109,7 +109,6 @@ public class Main{
 **2.1、String+的写法要比 Stringbuffer 快，是因为在编译这段程序的时候，编译器会进行常量优化。**
 
 它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中，看如下反编译的代码：
-
 ```java
 public class Main{}
 	public static void main(String[] args){
@@ -120,8 +119,7 @@ public class Main{}
 	}
 }
 ```
-
-原因是因为 String+其实是由 Stringbuilder 完成的，而一般情况下 Stringbuilder 要快于 Stringbuffer，这是因为 Stringbuilder 线程不安全，少了很多线程锁的时间开销，因此这里依然是 string+的写法速度更快;
+原因是因为 String+其实是由 StringBuilder 完成的，而一般情况下 StringBuilder 要快于 StringBuffer，这是因为 StringBuilder 线程不安全，少了很多线程锁的时间开销，因此这里依然是 string+的写法速度更快;
 
 ```java
 /*   1   */
@@ -2104,7 +2102,6 @@ class MyDemo1{
 ### 3.5、不可变类
 
 创建不可变类要使用 `final` 关键字。不可变类是指它的对象一旦被创建了就不能被更改了。String 是不可变类的代表。不可变类有很多好处，譬如它们的对象是只读的，可以在多线程环境下安全的共享，不用额外的同步开销等等；
-
 - 不可变对象：如果某个对象在被创建后其状态不能被修改，那么这个对象就称为不可变对象，不可变对象一定是线程安全的。
 - 如何编写不可变类：
 	- 将类声明为final，所以它不能被继承；
@@ -3051,8 +3048,9 @@ public static void initCause() {
 
 * [try、catch、finally中的细节分析](http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)
 
-首先看如下例子，最终结果是什么? // false
+首先看如下例子，最终结果是什么? 
 ```java
+// 方法返回：false
 public boolean returnTest(){
 	try{
 		return true;
@@ -3066,7 +3064,7 @@ public boolean returnTest(){
 
 ## 1、关于try-catch-finally使用
 
-- `try、catch、finally`语句中，在如果`try`语句有`retur`语句，则返回的之后当前 try 中变量此时对应的值，此后对变量做任何的修改，都不影响 try 中 return 的返回值；
+- `try、catch、finally`语句中，在如果`try`语句有`return`语句，则返回的之后当前 try 中变量此时对应的值，此后对变量做任何的修改，都不影响 try 中 return 的返回值；
 - 如果 finally 块中有 return 语句，则 try 或 catch 中的返回语句忽略；
 - 如果 finally 块中抛出异常，则整个 try、catch、finally 块中抛出异常；
 - 如果 catch 异常中写了多个需要 catch 的异常，可以如果匹配到了捕获的异常，则后面其他的异常都将被忽略
@@ -4144,7 +4142,7 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 
 - `@Inherited`：允许子类继承
 
-在JDK 1.8中提供了两个元注解 @Repeatable和@Native
+在JDK 1.8中提供了两个元注解 `@Repeatable和@Native`
 
 ### 1.4、解析注解
 
@@ -4154,7 +4152,7 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 
 ### 1.5、注解不支持继承
 
-不能使用关键字extends来继承某个@interface，但注解在编译后，编译器会自动继承`java.lang.annotation.Annotation`接口.，虽然反编译后发现注解继承了Annotation接口，请记住，即使Java的接口可以实现多继承，但定义注解时依然无法使用extends关键字继承@interface。
+不能使用关键字extends来继承某个@interface，注解在编译后，编译器会自动继承`java.lang.annotation.Annotation`接口，虽然反编译后发现注解继承了Annotation接口，请记住，即使Java的接口可以实现多继承，但定义注解时依然无法使用extends关键字继承@interface。
 
 区别于注解的继承，被注解的子类继承父类注解可以用@Inherited： 如果某个类使用了被@Inherited修饰的Annotation，则其子类将自动具有该注解。
 
@@ -4224,7 +4222,6 @@ public class MyProcessor extends AbstractProcessor {
 反射机制是在运行状态，对于任意一个类，都能够知道这个的类的所有属性和方法；对于任意一个对象，都能够调用它的任意方法和属性；
 
 【一个类只有一个Class对象，这个对象包含了完整类的结构】
-
 - `Class` 类`[java.lang.Class]`：反射的根源，各种类型----表示Java中的同一类事物
 	- `Class`类获取：`.class、getClass、Class.forName(String className);`
 	- `Field`：属性相关类，获取所有属性(包括 private)，`getDeclaredFields()`;
@@ -4236,15 +4233,14 @@ public class MyProcessor extends AbstractProcessor {
 - 反射机制性能问题：反射会降低程序的效率，如果在开发中确实需要使用到反射，可以将setAccessible设为 true ：即取消Java语言访问检查;
 
 class对象是可以说是反射中最常用的，获取class对象的方式的主要有三种
-- 根据类名：类名.class
-- 根据对象：对象.getClass()
-- 根据全限定类名：Class.forName(全限定类名)
+- 根据类名：`类名.class`
+- 根据对象：`对象.getClass()`
+- 根据全限定类名：`Class.forName(全限定类名)`
 
 再来看看 **Class类的方法**
 | 方法名                                              | 说明                                                         |
 | --------------------------------------------------- | ------------------------------------------------------------ |
-| forName()                                           | (1)获取Class对象的一个引用，但引用的类还没有加载(该类的第一个对象没有生成)就加载了这个类。 |
-| (2)为了产生Class引用，forName()立即就进行了初始化。 |                                                              |
+| forName()                                           | (1)获取Class对象的一个引用，但引用的类还没有加载(该类的第一个对象没有生成)就加载了这个类。<br/>(2)为了产生Class引用，forName()立即就进行了初始化。 |
 | Object-getClass()                                   | 获取Class对象的一个引用，返回表示该对象的实际类型的Class引用。 |
 | getName()                                           | 取全限定的类名(包括包名)，即类的完整名字。                   |
 | getSimpleName()                                     | 获取类名(不包括包名)                                         |
@@ -4304,7 +4300,6 @@ public Constructor getDeclaredConstructor(Class... parameterTypes); // 获取"�
 // Constructor 的 newInstance 方法
 public T newInstance(Object ... initargs){}
 ```
-
 忽略访问权限：`con.setAccessible(true);`
 
 ### 3.3、反射获取属性
@@ -4329,7 +4324,6 @@ public void set(Object obj,Object value){
 	// value: 要为字段设置的值；
 }
 ```
-
 > 如果我们不期望获取其父类的字段，则需使用Class类的`getDeclaredField/getDeclaredFields`方法来获取字段即可，倘若需要连带获取到父类的字段，那么请使用Class类的`getField/getFields`；
 
 ### 3.4、反射获取方法
@@ -4389,8 +4383,8 @@ getAnnotations();
 
 - 一个问题：
 ```java
-int[] a1 = new int[]{1，2，3};<br>
-String[] a2 = new String[]{"a"，"b"，"c"};<br>
+int[] a1 = new int[]{1，2，3};
+String[] a2 = new String[]{"a"，"b"，"c"};
 System.out.println(Arrays.asList(a1)); // 输出： [[I@24c98b07]
 System.out.println(Arrays.asList(a2)); // 输出：[a， b， c]
 // 原因：
@@ -4405,12 +4399,9 @@ Array 工具类可完成数组的反射操作;
 ### 3.8、反射注意点
 
 - 反射的应用：实现框架功能，使用类加载器加载文件
-
 - 反射时基本类型与包装类型注意问题
-
-	反射中基本类型的class和其对应包装类的class是不同的，所以在获得Method指定参数时需要精确指定参数的类型，即基本类型参数 int 是无法使用包装类型 Integer 来获得的
-
-	反射调用基本类型参数方法除了可以通过 基本类型名`.class`外还可以通过对应包装类的静态字段`TYPE`获得，`int.class 等价于 Integer.TYPE`；
+	- 反射中基本类型的class和其对应包装类的class是不同的，所以在获得Method指定参数时需要精确指定参数的类型，即基本类型参数 int 是无法使用包装类型 Integer 来获得的
+	- 反射调用基本类型参数方法除了可以通过 基本类型名`.class`外还可以通过对应包装类的静态字段`TYPE`获得，`int.class 等价于 Integer.TYPE`；
 	
 	```java
 	Class clzss = byte.class;
