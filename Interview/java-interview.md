@@ -3814,6 +3814,12 @@ dubbo协议采用单一长连接，假设网络为千兆网卡，根据经验每
 
 Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布 ContextRefreshEvent 事件的时候，通知实现了 ApplicationListener 的 ServiceBean 类进行回调 onApplicationEvent 事件方法，Dubbo 会在这个方法中调用 ServiceBean 父类 ServiceConfig 的 export 方法，而该方法真正实现了服务的（异步或者非异步）发布
 
+## 28、为什么RPC框架都会自己定义一套格式，而不直接使用HTTP
+
+相较于HTTP的用处，RPC更多的是负责应用间的通信，所以性能要求更高。但HTTP协议的数据包大小相对数据本身要大很多，而且加入了很多无用的内容，如换行符、回车符等。还一个重要原因是，HTTP协议属于无状态协议，客户端无法对请求和相应进行关联，每次请求都要重新建立连接，响应完成后在关闭临界。因此，对于要求高性能的RPC来说，HTTP协议很难满足要求，所以RPC会选择设计更紧凑的私有协议。
+
+现在Http1.1,HTTP1.2已经支持长连接，但是性能不如TCP，gRPC就是基于HTTP2（更容易跨语言支持）
+
 # 十二、消息队列
 
 ## 1、RocketMQ如何保证消息不被重复消费

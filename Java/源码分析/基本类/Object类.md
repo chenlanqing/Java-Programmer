@@ -426,7 +426,7 @@ public class FinalizeEscapeGC {
 
 当编译器遇到 name + "： " + age 的表达时，会生成一个 java.lang.StringBuilder 对象，并调用 append() 方法来对字符串添加变量值和分隔符。最后调用 toString() 方法返回一个包含各个元素的字符串对象
 
-# 6、wait/notifAll
+# 6、wait/notifyAll
 
 ## 6.1、wait
 
@@ -434,7 +434,7 @@ public class FinalizeEscapeGC {
 
 **为什么wait()方法要放在同步块中？**
 - 如果wait()方法不在同步块中，代码会抛出异常：IllegalMonitorStateException；
-- Java设计者为了避免使用者出现lost wake up问题而搞出来的；
+- Java设计者为了避免使用者出现`lost wake up（丢掉了唤醒线程的那条信息）`问题而搞出来的；
 - 首先看`Lost Wake-Up Problem`，该问题是会在所有的多线程环境下出现；为了避免不经意间出现这种lost wake up问题，包括java.util.concurrent.locks.Condition的await()/signal()也必须要在同步块中；一定要处于锁对象的同步块中；下面的代码一样出现`IllegalMonitorStateException`
 	```java
 	private Object obj = new Object();
@@ -462,7 +462,7 @@ public class FinalizeEscapeGC {
 
 该方法也要在同步方法或同步块中调用，即在调用前，线程也必须要获得该对象的对象级别锁，如果调用 notify()时没有持有适当的锁，也会抛出 IllegalMonitorStateException；
 
-该方法任意从WAITTING状态的线程中挑选一个进行通知，使得调用wait()方法的线程从等待队列移入到同步队列中，等待有机会再一次获取到锁，从而使得调用wait()方法的线程能够从wait()方法处退出。
+该方法任意从`WAITTING`状态的线程中挑选一个进行通知，使得调用wait()方法的线程从等待队列移入到同步队列中，等待有机会再一次获取到锁，从而使得调用wait()方法的线程能够从wait()方法处退出。
 
 调用notify后，当前线程不会马上释放该对象锁，要等到程序退出同步块后，当前线程才会释放锁。
 
