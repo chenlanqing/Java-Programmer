@@ -319,6 +319,7 @@ private static void mergeSort(int[] A, int l, int r) {
 	if (r - l <= 1) {
 		return;
 	}
+	// (l + r) / 2 这种写法在l和r比较大的情况下，可能溢出，可以使用：l+(r-l)/2 或者 low + ((high - low) >> 1)
 	int mid = (l + r) / 2;
 	/*
 	* 数组元素：55 54 87 73 29 47 50 89 20 78，长度：10
