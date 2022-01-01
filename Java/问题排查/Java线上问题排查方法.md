@@ -725,6 +725,63 @@ BTrace主要有下面几个模块：
 
 (https://alibaba.github.io/arthas/index.html)
 
+
+
+**1、Java 基础、线程池、JVM**
+
+Java 应用线上问题排查思路、常用工具小结：https://ricstudio.top/archives/java-online-question-probe
+
+详解一次由读写锁引起的内存泄漏 ：https://mp.weixin.qq.com/s/UPCIgL0_SLyOF5SNFgL27w
+
+一次 Java 线程池误用引发的血案（OOM）和总结 - 文西（字节架构师）：https://zhuanlan.zhihu.com/p/32867181
+
+一次线程池引发的线上故障分析：https://mp.weixin.qq.com/s/wFePJPkGv5v34GpalGOkYw  
+
+线程池运用不当的一次线上事故：https://www.heapdump.cn/article/646639  
+
+Java 中 9 种常见的 CMS GC 问题分析与解决: https://tech.meituan.com/2020/11/12/java-9-cms-gc.html
+
+**2、MySQL 死锁、事务、编码、慢查询**
+
+MySQL死锁系列-线上死锁问题排查思路:https://cloud.tencent.com/developer/article/1722416
+
+一个诡异的 MySQL 查询超时问题，居然隐藏着存在了两年的 BUG：https://www.cnblogs.com/coderw/p/14676343.html
+
+MySQL 可重复读，差点就让我背上了一个 P0 事故！：https://mp.weixin.qq.com/s/1nd0OE_6FKklus0FpOlTlA
+
+慢查询引发的车祸现场，案例分析！：https://mp.weixin.qq.com/s/sL64uQP0iHKxkMFx1QGLkg
+
+为什么不建议在MySQL中使用UTF-8？: https://mp.weixin.qq.com/s/X_OV4aUeJiFN9DIWMNpICA
+
+**3、Redis 高可用、高性能、分布式锁**
+
+Redis为什么变慢了？一文讲透如何排查Redis性能问题 | 万字长文：https://mp.weixin.qq.com/s/Qc4t_-_pL4w8VlSoJhRDcg
+
+如何从0到1构建一个稳定、高性能的Redis集群？（附16张图解）：https://mp.weixin.qq.com/s/q79ji-cgfUMo7H0p254QRg
+
+颠覆认知——Redis会遇到的15个「坑」，你踩过几个？：https://mp.weixin.qq.com/s/CHtZI9k2qQ_YJb5Mwzrukw
+
+Redis——由分布式锁造成的重大事故：https://juejin.cn/post/6854573212831842311
+
+**4、Kafka**
+
+一次 Kafka 消息堆积问题排查：https://mp.weixin.qq.com/s/VgXukc39tFBXrR0yKg7vdA
+
+记一次 Kafka 重启失败问题排查：https://mp.weixin.qq.com/s/ee7_mhxnj05DxK3EJihyfQ
+
+记一次 Kafka 集群线上扩容：https://mp.weixin.qq.com/s/n2dMrs21nUU15Vza0VV1pA
+
+
+**5、 Spring Boot**
+
+警惕 Spring Boot Actuator 引发的安全问题 - Kirito 的技术分享：https://mp.weixin.qq.com/s/tC-QjYZVMhCCvIsBX-z9zw
+
+**6、网络**
+
+万字长文让你掌握网络问题排查技巧！：https://mp.weixin.qq.com/s/nEMSqw7nPR_WaZ19gh810A
+
+#面试 #好文分享
+
 # 参考资料
 
 * [Btrace简介](https://www.jianshu.com/p/dbb3a8b5c92f)

@@ -289,7 +289,7 @@ MySQL 要给这个 InnoDB 表创建一个 frm 文件保存表结构定义，还�
 - mediumint：3个字节；
 - int：4个字节；
 - bigint：8位；
-- bool型：0表示false，1表示true；	tinyint(1)
+- bool型：0表示false，1表示true；tinyint(1)；MySQL保存boolean值时用1代表TRUE，0代表FALSE。boolean在MySQL里的类型为tinyint(1)。MySQL里有四个常量：true,false,TRUE,FALSE分别代表1,0,1,0。
 
 *注意：是否有符号，* 可在定义时，使用unsigned标识，没有符号；不写就默认有符号；
 

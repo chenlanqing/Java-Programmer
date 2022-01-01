@@ -547,7 +547,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 - Parallel Scavenge 收集器的老年代版本，使用标记-整理算法
 - JDK1.6 之后才开始提供的
-- 在注重吞吐量一级CPU资源敏感的场合，可以优先考虑Parallel Sacvenge加parallel old收集器
+- 在注重吞吐量一级CPU资源敏感的场合，可以优先考虑Parallel Scavenge加parallel old收集器
 
 ## 6、CMS（Concurrent Mark Sweep）收集器-老年代
 

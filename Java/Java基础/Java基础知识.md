@@ -4413,7 +4413,7 @@ Array 工具类可完成数组的反射操作;
 	Class clzss = double.class;
 	Class clzss = boolean.class;
 	Class clzss = void.class;
-
+	
 	Byte.TYPE = byte.class;
 	Short.TYPE = short.class;
 	Integer.TYPE = int.class;
@@ -4423,7 +4423,7 @@ Array 工具类可完成数组的反射操作;
 	Double.TYPE = double.class;
 	Boolean.TYPE = boolean.class;
 	Void.TYPE = void.class;
-
+	
 	Class clzss = int[].class; //int[] 数组
 	Class clzss = String[].class; //String[] 数组
 	Class clzss = String[][].class; //String[][] 数组的数组
@@ -5764,166 +5764,31 @@ https://www.kancloud.cn/xyang0917/blogjnindk/117014
 
 # 三十、加密与解密
 
+- [加密与解密算法](https://juejin.cn/post/6844903638117122056)
+
 数据的安全是基于密钥，而不是算法的保密。算法的是公开
 
-## 1、Java安全
+## 1、数字签名
 
-### 1.1、网络安全体系
+数字签名，简单来说就是通过提供 可鉴别 的 数字信息 验证 自身身份 的一种方式。一套 数字签名 通常定义两种 互补 的运算，一个用于 签名，另一个用于 验证。分别由 发送者 持有能够 代表自己身份 的 私钥 (私钥不可泄露),由 接受者 持有与私钥对应的 公钥 ，能够在 接受 到来自发送者信息时用于 验证 其身份；
 
-- OSI安全体系
+签名：最根本的用途是要能够唯一 证明发送方的身份，防止 中间人攻击、CSRF 跨域身份伪造。基于这一点在诸如 设备认证、用户认证、第三方认证 等认证体系中都会使用到 签名算法；
 
-- TCP安全体系
+## 2. 加密和解密
 
-### 1.2、Java安全
+### 2.1. 加密
 
-**Java安全组成：**
-- JCA(Java Cryptography Arctitecture)：消息摘要
-- JCE(Java Cryptography Extension)
-- JSSE(Java Secure Socket Extension)：SSL
-- JAAS(Java Authentication and Authorization Service)
+**数据加密** 的基本过程，就是对原来为 **明文** 的文件或数据按 **某种算法** 进行处理，使其成为 **不可读** 的一段代码，通常称为 **“密文”**。通过这样的途径，来达到 **保护数据** 不被 **非法人窃取**、阅读的目的。
 
-**JDK默认的加解密：**
-```
-security.provider.1=sun.security.provider.Sun
-security.provider.2=sun.security.rsa.SunRsaSign
-security.provider.3=sun.security.ec.SunEC
-security.provider.4=com.sun.net.ssl.internal.ssl.Provider
-security.provider.5=com.sun.crypto.provider.SunJCE
-security.provider.6=sun.security.jgss.SunProvider
-security.provider.7=com.sun.security.sasl.Provider
-security.provider.8=org.jcp.xml.dsig.internal.dom.XMLDSigRI
-security.provider.9=sun.security.smartcardio.SunPCSC
-security.provider.10=apple.security.AppleProvider
-```
+### 2.2. 解密
 
-**加载自定义的加解密方式：**
-- 修改对应的java.security文件，按照上面的方式增加配置
-- 通过编码的方式增加：调用Security类的addProviders或者insertProviderAt
+**加密** 的 **逆过程** 为 **解密**，即将该 **编码信息** 转化为其 **原来数据** 的过程
 
-**相关的java包和类：**
-- java.security：消息摘要
-- javax.crypto：安全消息摘要，消息认证码；
-- java.net.ssl：安全套接字
+## 3、对称加密与非对称加密
 
-**第三方扩展：**
-- Bouncy Castle：支持配置和调用
-- Commons Codec：Apache、Base64、二进制、十六进制、字符集编码、URL编码/解码
+加密算法分 **对称加密** 和 **非对称加密**，其中对称加密算法的加密与解密 **密钥相同**，非对称加密算法的加密密钥与解密 **密钥不同**，此外，还有一类 **不需要密钥** 的 **散列算法**。
 
-## 2、Base64加密算法
-
-算法实现
-- JDK
-- Commons codec
-- Bouncy Castle
-
-pom引入：
-```xml
-<dependency>
-    <groupId>commons-codec</groupId>
-    <artifactId>commons-codec</artifactId>
-    <version>1.12</version>
-</dependency>
-<dependency>
-    <groupId>org.bouncycastle</groupId>
-    <artifactId>bcprov-jdk15on</artifactId>
-    <version>1.62</version>
-</dependency>
-```
-Java代码实现
-```java
-private static void bouncyCastleBase64(String src){
-    byte[] encode = org.bouncycastle.util.encoders.Base64.encode(src.getBytes());
-    System.out.println("encoder:" + new String(encode));
-
-    byte[] decode = org.bouncycastle.util.encoders.Base64.decode(encode);
-    System.out.println("decoder:" + new String(decode));
-
-}
-
-private static void commonCodecBase64(String src) {
-    byte[] bytes = Base64.encodeBase64(src.getBytes());
-    System.out.println("encoder:" + new String(bytes));
-
-    byte[] decode = Base64.decodeBase64(bytes);
-    System.out.println("decoder:" + new String(decode));
-
-}
-
-private static void jdkBase64(String src) throws IOException {
-    BASE64Encoder encoder = new BASE64Encoder();
-    String encode = encoder.encode(src.getBytes());
-
-    System.out.println("encoder:" + encode);
-
-    BASE64Decoder decoder = new BASE64Decoder();
-    System.out.println("decoder:" + new String(decoder.decodeBuffer(encode)));
-}
-```
-
-## 3、消息摘要算法
-
-消息摘要算法：验证数据的完整性，数字签名的核心算法
-
-### 3.1、MD
-
-主要是128位摘要算法。MD2、MD4、MD5
-
-单向摘要算法、128位长度
-
-代码实现：
-```java
-// MD2、MD5JDK有对应实现，MD4是由bouncycastle来实现的
-private static void jdkMd5(String src) throws NoSuchAlgorithmException {
-    MessageDigest md = MessageDigest.getInstance("MD5");
-    byte[] digest = md.digest(src.getBytes());
-    System.out.println("JDK MD5: " + Hex.encodeHexString(digest));
-}
-// JDK使用MD4来获取摘要信息
-private static void bcMd4(String src) throws NoSuchAlgorithmException {
-    Security.addProvider(new BouncyCastleProvider());
-    MessageDigest md = MessageDigest.getInstance("MD4");
-    byte[] digest = md.digest(src.getBytes());
-    System.out.println("BC MD4: " + Hex.encodeHexString(digest));
-}
-// 使用bouncycastle来实现MD5摘要算法
-private static void bcMd5(String src) {
-    Digest digest = new MD5Digest();
-    digest.update(src.getBytes(), 0, src.getBytes().length);
-    byte[] md5Bytes = new byte[digest.getDigestSize()];
-    digest.doFinal(md5Bytes, 0);
-    System.out.println("BC MD5: " + org.bouncycastle.util.encoders.Hex.toHexString(md5Bytes));
-}
-// 使用apache-common-codec实现的摘要算法
-public static void ccMD5(String src){
-    System.out.println("Apache MD5: " + DigestUtils.md5Hex(src));
-}
-```
-
-### 3.2、SHA
-
-安全散列算法、固定长度摘要算法：SHA-1、SHA-2(SHA-224、SHA-256、SHA-384、SHA-512)，其中SHA-224是由Bouny Castle来实现的
-
-代码实现
-```java
-// 使用JDK来实现的sha1
-private static void jdkSha1(String src) throws NoSuchAlgorithmException {
-    MessageDigest sha = MessageDigest.getInstance("SHA");
-    sha.update(src.getBytes());
-    System.out.println("jdk SHA-1" + Hex.encodeHexString(sha.digest()));
-}
-// 使用Bouny Castle来实现的sha1
-private static void bcSha1(String src) throws NoSuchAlgorithmException {
-    Digest digest = new SHA1Digest();
-    digest.update(src.getBytes(), 0 , src.getBytes().length);
-    byte[] sha1 = new byte[digest.getDigestSize()];
-    digest.doFinal(sha1, 0);
-    System.out.println("bc SHA-1" + org.bouncycastle.util.encoders.Hex.toHexString(sha1));
-}
-```
-
-### 3.3、MAC
-
-MAC、HMAC-带密钥的MAC
+> 常见的 **对称加密** 算法主要有 `DES`、`3DES`、`AES` 等，常见的 **非对称算法** 主要有 `RSA`、`DSA` 等，**散列算法** 主要有 `SHA-1`、`MD5` 等。
 
 
 # 三十一、调试
@@ -5937,7 +5802,6 @@ MAC、HMAC-带密钥的MAC
 - 如何调试Java程序：
 	- 判断需要调试的代码运行在哪个JVM里；
 	- 找到需要调试的源代码
-
 
 # 三十二、Java魔数
 
