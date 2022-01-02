@@ -23,13 +23,15 @@ Redis是基于CAP的
 
 ### 1.3、启动
 
-redis-server
+redis-server redis.conf
 ```
 运行：redis-cli
 	127.0.0.1：6379> 127.0.0.1是本机的IP地址，6379为Redis服务器运行的端口
 redis 127.0.0.1：6379> ping
 PONG > 表示成功地安装Redis在您的机器上
 ```
+
+停止redis：`src/redis-cli shutdown`，或者可以如此：`src/redis-cli -h 192.168.89.135 -p 6378 shutdown`
 
 ## 2、Redis的数据类型-支持五种数据类型
 

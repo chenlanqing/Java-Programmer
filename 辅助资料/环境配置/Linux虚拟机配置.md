@@ -27,6 +27,8 @@ GATEWAY="192.168.89.2"
 DNS1="192.168.31.1"
 ```
 
+需要注意的是配置的DNS1的地址需要跟你宿主机上配置的DNS保持一尺
+
 # 二、设置hostname
 
 Linux系统：CentOS7
@@ -98,3 +100,16 @@ ROUTE -p add 172.19.0.0 mask 255.255.255.0 192.168.31.221
 route delete 172.19.0.0 mask 255.255.255.0 192.168.31.221
 ```
 **注意：**需要关闭虚拟机的防火墙
+
+# 五、tree命令安装
+
+## 1、yum命令
+
+在centOS系统上可以通过`yum -y install tree` 安装
+
+## 2、源码编译
+
+- 下载安装包：`wget ftp://mama.indstate.edu/linux/tree/tree-1.8.0.tgz`
+- 解压缩
+- 进入到目录，执行: make 
+- 复制tree到/bin，并查看是否安装成功，依次输入命令：`cp tree /bin及tree`

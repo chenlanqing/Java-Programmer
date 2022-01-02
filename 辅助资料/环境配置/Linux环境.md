@@ -427,6 +427,230 @@ repl_backlog_histlen:42
 
 ## 5、Redis集群
 
+- [Redis Cluster搭建方式](https://juejin.cn/post/6844904057044205582)
+
+### 5.1、机器
+
+Redis集群一般由多个节点组成，节点数量至少为 6 个，才能保证组成完整高可用的集群。Redis集群节点规划如下：
+
+主要三台机器：192.168.89.135/136/137，单台机器
+
+| 机器IP         | 节点名称   | 端口号 | 主/从节点 | 复制节点   |
+| -------------- | ---------- | ------ | --------- | ---------- |
+| 192.168.89.135 | redis-6378 | 6378   | 主节点    |            |
+| 192.168.89.135 | redis-6379 | 6379   | 从节点    | redis-6379 |
+| 192.168.89.136 | redis-6378 | 6378   | 主节点    |            |
+| 192.168.89.136 | redis-6379 | 6379   | 从节点    | redis-6379 |
+| 192.168.89.137 | redis-6378 | 6378   | 主节点    |            |
+| 192.168.89.137 | redis-6379 | 6379   | 从节点    | redis-6379 |
+
+### 5.2、目录安排
+
+三台机器上redis目录`/data/redis-5.0.10`下有：data、log、db 三个目录，结构如下
+```
+├── data
+│   ├── redis-6378
+│   └── redis-6379
+├── db
+├── log
+│   ├── redis-6378.log
+│   └── redis-6379.log
+├── redis-6378.conf
+├── redis-6379.conf
+```
+
+### 5.3、修改配置文件
+
+- vim redis-6378.conf
+```conf
+# redis后台运行
+daemonize yes
+# 数据存放目录
+dir /data/redis-5.0.10/data/redis-6378
+# 日志文件
+logfile /data/redis-5.0.10/log/redis-6378.log
+# 端口号
+port 6378
+# 开启集群模式
+cluster-enabled yes
+# 集群的配置，配置文件首次启动自动生成
+# 这里只需指定文件名即可，集群启动成功后会自动在data目录下创建
+cluster-config-file "nodes-6378.conf"
+# 请求超时，设置10秒
+cluster-node-timeout 10000
+```
+其他机器的配置也是类似
+
+### 5.4、启动所有节点
+
+分别在三台机器上执行如下命令：
+```
+src/redis-server redis-6379.conf
+src/redis-server redis-6378.conf
+```
+
+### 5.5、手动配置集群
+
+**（1）节点握手**
+
+Redis Cluster集群模式下的节点彼此通过Gossip协议进行通信，但集群中的节点需要先进行握手通信。节点握手需要由客户端发起命令：cluster meet {ip} {port}
+
+比如进入到`192.168.89.135`的redis-6379这台redis的客户端发起握手
+```
+127.0.0.1:6379> cluster meet 192.168.89.135 6378
+127.0.0.1:6379> cluster meet 192.168.89.136 6378
+127.0.0.1:6379> cluster meet 192.168.89.136 6379
+127.0.0.1:6379> cluster meet 192.168.89.137 6378
+127.0.0.1:6379> cluster meet 192.168.89.137 6379
+```
+查看集群信息：
+```
+127.0.0.1:6379> cluster nodes
+c9f871a0355129a37ba8fc20e8fbe26b0604c209 192.168.89.137:6378@16378 master - 0 1641104128000 4 connected
+6809869bb98a455ea42a31b921a2e3a061eba4c7 192.168.89.135:6378@16378 master - 0 1641104128951 2 connected
+cff7279c90fd23fdf11f320fffe4af7d1665d599 192.168.89.136:6378@16378 master - 0 1641104129963 0 connected
+22fc815b0005623bf06ff5085f7e160255746ab0 192.168.89.137:6379@16379 master - 0 1641104127000 5 connected
+63461b3a68993bc10ea3ea02b1a3b712654abf29 192.168.89.135:6379@16379 myself,master - 0 1641104126000 1 connected
+cb941c2bd75c20fa72cab1f9f2ae9d61a9f2a78b 192.168.89.136:6379@16379 master - 0 1641104126000 3 connected
+```
+但是此时集群还不能使用，因为还没有给节点分配槽，所以不能对数据进行读写操作。
+可以查看集群的信息(集群的状态处于fail状态，且分配的槽为0)：
+```
+127.0.0.1:6379> cluster info
+cluster_state:fail
+cluster_slots_assigned:0
+cluster_slots_ok:0
+cluster_slots_pfail:0
+cluster_slots_fail:0
+cluster_known_nodes:6
+cluster_size:0
+cluster_current_epoch:5
+cluster_my_epoch:1
+cluster_stats_messages_ping_sent:59
+cluster_stats_messages_pong_sent:72
+cluster_stats_messages_meet_sent:5
+cluster_stats_messages_sent:136
+cluster_stats_messages_ping_received:72
+cluster_stats_messages_pong_received:64
+cluster_stats_messages_received:136
+```
+
+**（2）分配槽**
+
+Redis集群将所有的数据映射到16384个槽中，每个key都会对应一个槽，只有把槽分配给了节点，节点才能响应与槽相关的命令，分配槽的命令：
+```
+src/redis-cli -h 192.168.89.135 -p 6378 cluster addslots {0..5461}
+src/redis-cli -h 192.168.89.136 -p 6378 cluster addslots {5462..10922}
+src/redis-cli -h 192.168.89.137 -p 6378 cluster addslots {10922..16383}
+```
+将16384个槽平均的分给3个节点，然后查看集群的状态，可以发现变成了OK
+```
+127.0.0.1:6379> cluster info
+cluster_state:ok
+cluster_slots_assigned:16384
+cluster_slots_ok:16384
+cluster_slots_pfail:0
+```
+再查看集群的槽，可以看到每个节点分配到的槽的范围和节点的信息
+```
+127.0.0.1:6379> cluster slots
+1) 1) (integer) 10922
+   2) (integer) 16383
+   3) 1) "192.168.89.137"
+      2) (integer) 6378
+      3) "c9f871a0355129a37ba8fc20e8fbe26b0604c209"
+2) 1) (integer) 0
+   2) (integer) 5461
+   3) 1) "192.168.89.135"
+      2) (integer) 6378
+      3) "6809869bb98a455ea42a31b921a2e3a061eba4c7"
+3) 1) (integer) 5462
+   2) (integer) 10921
+   3) 1) "192.168.89.136"
+      2) (integer) 6378
+      3) "cff7279c90fd23fdf11f320fffe4af7d1665d599"
+```
+我们一共启动了6个节点，但这里分配槽只用了3个节点，其它3个节点就是用于主从复制的，保证主节点出现故障时可以进行故障转移，从节点负责复制主节点槽信息和相关数据。可以用以下命令让一个节点变成从节点(该命令一定要在从节点客户端上执行)
+```
+src/redis-cli -h 192.168.89.135 -p 6379 cluster replicate 6809869bb98a455ea42a31b921a2e3a061eba4c7 （当前机器6378节点id）
+src/redis-cli -h 192.168.89.136 -p 6379 cluster replicate cff7279c90fd23fdf11f320fffe4af7d1665d599 （当前机器6378节点id）
+src/redis-cli -h 192.168.89.137 -p 6379 cluster replicate c9f871a0355129a37ba8fc20e8fbe26b0604c209 （当前机器6378节点id）
+```
+到此为止，Redis Cluster集群就搭建成功了，最后来看一下集群节点的状态（三主三从）
+```
+127.0.0.1:6379> cluster nodes
+c9f871a0355129a37ba8fc20e8fbe26b0604c209 192.168.89.137:6378@16378 master - 0 1641104460778 4 connected 10922-16383
+6809869bb98a455ea42a31b921a2e3a061eba4c7 192.168.89.135:6378@16378 master - 0 1641104462000 2 connected 0-5461
+cff7279c90fd23fdf11f320fffe4af7d1665d599 192.168.89.136:6378@16378 master - 0 1641104462000 0 connected 5462-10921
+22fc815b0005623bf06ff5085f7e160255746ab0 192.168.89.137:6379@16379 slave c9f871a0355129a37ba8fc20e8fbe26b0604c209 0 1641104462801 5 connected
+63461b3a68993bc10ea3ea02b1a3b712654abf29 192.168.89.135:6379@16379 myself,slave 6809869bb98a455ea42a31b921a2e3a061eba4c7 0 1641104461000 1 connected
+cb941c2bd75c20fa72cab1f9f2ae9d61a9f2a78b 192.168.89.136:6379@16379 slave cff7279c90fd23fdf11f320fffe4af7d1665d599 0 1641104460000 3 connected
+```
+
+### 5.6、自动配置集群
+
+前面集群搭建非常的麻烦(先进行节点通信，然后分配槽，最后还要指定从节点去复制主节点)。好在Redis为我们提供了工具可以让我们轻松的搭建集群
+
+如果手动搭建过集群，需要把手动搭建的集群节点全部停止，并删除数据目录下的所有文件。
+
+如果在之前的集群中的某个节点存储过数据或者集群配置没有删除，会报类似错误[ERR] `Node 127.0.0.1:6378 is not empty. Either the node already knows other nodes (check with CLUSTER NODES) or contains some key in database 0`.如果集群配置未删除，则删除所有集群配置，否则进入之前存储数据的客户端执行flushall和cluster reset清空数据并重置集群。然后重新启动所有节点
+
+只需键入以下内容即可为Redis 5创建集群：
+```
+src/redis-cli --cluster create 192.168.89.135:6378 192.168.89.135:6379 192.168.89.136:6378 192.168.89.136:6379 192.168.89.137:6378 192.168.89.137:6379 --cluster-replicas 1
+```
+create 后面跟着的是6个节点的地址和端口，选项`--cluster-replicas` 1意味着为每个主节点都提供一个从节点。创建结果如下：
+```bash
+[root@kafka1 redis-5.0.10]# src/redis-cli --cluster create 192.168.89.135:6378 192.168.89.135:6379 192.168.89.136:6378 192.168.89.136:6379 192.168.89.137:6378 192.168.89.137:6379 --cluster-replicas 1
+>>> Performing hash slots allocation on 6 nodes...
+Master[0] -> Slots 0 - 5460
+Master[1] -> Slots 5461 - 10922
+Master[2] -> Slots 10923 - 16383
+Adding replica 192.168.89.136:6379 to 192.168.89.135:6378
+Adding replica 192.168.89.137:6379 to 192.168.89.136:6378
+Adding replica 192.168.89.135:6379 to 192.168.89.137:6378
+M: ea667d2a062b5815748abeec78d431816c9dfbd8 192.168.89.135:6378
+   slots:[0-5460] (5461 slots) master
+S: 9883ca2356ab953a7397aa17341913949036e286 192.168.89.135:6379
+   replicates cc131938e7a078174bc981d2cc943cb1018d431e
+M: c184a4ce979fe71ef9ea89d9e012c5a0676d596e 192.168.89.136:6378
+   slots:[5461-10922] (5462 slots) master
+S: 7b5e6b1aca9325b2876ac74a408d4d6fa2ddcf0d 192.168.89.136:6379
+   replicates ea667d2a062b5815748abeec78d431816c9dfbd8
+M: cc131938e7a078174bc981d2cc943cb1018d431e 192.168.89.137:6378
+   slots:[10923-16383] (5461 slots) master
+S: 949410487471a417afca1ed77aa35748dfd38ce9 192.168.89.137:6379
+   replicates c184a4ce979fe71ef9ea89d9e012c5a0676d596e
+Can I set the above configuration? (type 'yes' to accept): yes
+>>> Nodes configuration updated
+>>> Assign a different config epoch to each node
+>>> Sending CLUSTER MEET messages to join the cluster
+Waiting for the cluster to join
+...
+>>> Performing Cluster Check (using node 192.168.89.135:6378)
+M: ea667d2a062b5815748abeec78d431816c9dfbd8 192.168.89.135:6378
+   slots:[0-5460] (5461 slots) master
+   1 additional replica(s)
+S: 7b5e6b1aca9325b2876ac74a408d4d6fa2ddcf0d 192.168.89.136:6379
+   slots: (0 slots) slave
+   replicates ea667d2a062b5815748abeec78d431816c9dfbd8
+M: cc131938e7a078174bc981d2cc943cb1018d431e 192.168.89.137:6378
+   slots:[10923-16383] (5461 slots) master
+   1 additional replica(s)
+S: 949410487471a417afca1ed77aa35748dfd38ce9 192.168.89.137:6379
+   slots: (0 slots) slave
+   replicates c184a4ce979fe71ef9ea89d9e012c5a0676d596e
+M: c184a4ce979fe71ef9ea89d9e012c5a0676d596e 192.168.89.136:6378
+   slots:[5461-10922] (5462 slots) master
+   1 additional replica(s)
+S: 9883ca2356ab953a7397aa17341913949036e286 192.168.89.135:6379
+   slots: (0 slots) slave
+   replicates cc131938e7a078174bc981d2cc943cb1018d431e
+[OK] All nodes agree about slots configuration.
+>>> Check for open slots...
+>>> Check slots coverage...
+[OK] All 16384 slots covered.
+```
 
 # 四、RabbitMQ
 
