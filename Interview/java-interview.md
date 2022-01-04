@@ -709,6 +709,9 @@ public static byte[] getFileContent(String filePath) throws Throwable {
 }
 ```
 
+## 9、为什么数据库连接池不采用多路IO复用
+
+https://mp.weixin.qq.com/s/gYv2F-RFH5xrIbpXDwtgyA
 
 # 四、多线程
 
@@ -2887,13 +2890,11 @@ private void createWebServer() {
 }
 ```
 
-
-
 ## 33、常见web容器自定义配置参数有哪些
 
 ## 34、SpringBoot Starter作用
 
-## 35、conditional注解原理
+## 35、Conditional注解原理
 
 ## 36、Spring生命周期，流程梳理
 
@@ -3045,6 +3046,8 @@ public @interface Import {
 
 ## 53、Spring的条件装配，自动装配
 
+条件装配是一种过滤机制，主要是通过Conditional注解与其他注解的配合使用，比如`@ConditionalOnProperty`
+
 ## 54、统一异常管理
 
 ## 55、ResolvableType
@@ -3057,9 +3060,9 @@ ThreadLocal和线程同步机制都是为了解决多线程中相同变量的访
 
 ## 57、Spring、SpringMVC、SpringBoot、SpringCloud比较
 
-- Spring是核心，提供了基础功能，提供了控制反转(IOC)和面向切面(AOP)的等功能的容器框架；也包含众多衍生产品例如 Boot，Security，JPA等等
+- Spring 是核心，提供了基础功能，提供了控制反转(IOC)和面向切面(AOP)的等功能的容器框架；也包含众多衍生产品例如 Boot，Security，JPA等等
 - Spring MVC 是基于 Servlet 的一个 MVC 框架，主要解决 WEB 开发的问；
-- Spring Boot 是为简化Spring配置的快速开发整合包；Spring 的配置非常复杂，各种xml，properties处理起来比较繁琐。于是为了简化开发者的使用，SpringBoot应运而生；
+- Spring Boot 是为简化Spring配置的快速开发整合包；Spring 的配置非常复杂，各种xml，properties处理起来比较繁琐。于是为了简化开发者的使用，SpringBoot应运而生；使得程序员将更多时间花在业务开发上；
 - Spring Cloud是构建在Spring Boot之上的服务治理框架；
 
 ## 58、Autowired注解实现原理
@@ -3067,6 +3070,27 @@ ThreadLocal和线程同步机制都是为了解决多线程中相同变量的访
 AutowiredAnnotationBeanPostProcessor
 
 核心方法：buildAutowiringMetadata
+
+## 60、如何保存Springboot应用的pid
+
+Spring Boot 提供了在应用程序启动时将应用程序PID写入文件的方法，具体的功能由 ApplicationPidFileWriter 完成 。大致逻辑为：在应用启动时监听启动事件，将 PID 写入指定的文件，默认为 application.pid ；默认路径为当前路径。如果写入文件失败，将会将 PID 值 写入系统环境变量属性 `PID_FAIL_ON_WRITE_ERROR` （不区分大小写），或者写入 Spring 环境变量属性 `spring.pid.fail-on-write-error`
+
+配置 Spring Boot PID 持久化功能:
+```java
+@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
+public class ApplicationStarter {
+	public static void main(String[] args) {
+		File pidFile = new File("app.pid");
+		pidFile.setWritable(true, true);
+		pidFile.setExecutable(false);
+		pidFile.setReadable(true);
+		SpringApplication application = new SpringApplication(ApplicationStarter.class);
+		application.addListeners(new ApplicationPidFileWriter(pidFile));
+		application.run(args);
+	}
+}
+```
+或者说是：`spring.pid.file=` 来配置
 
 # 八、Netty
 

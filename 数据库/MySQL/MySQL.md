@@ -3179,6 +3179,10 @@ select * from t where c=N order by b limit 1;
 
 ### 8.3、order by
 
+排序分析：
+
+![](image/MySQL-索引结构.png)
+
 - （1）order by 子句尽量使用 index 方式来排序，避免使用 fileSort 方式排序。mysql 支持两种方式的排序：filesort(效率低)，index(可以扫描索引本身完成排序，效率高)。order by 满足两种情况下，会使用 index 方式排序：
 	- order by 语句使用索引最左前列；
 	- 使用 where 子句与 order by 子句条件组合满足索引最左前列
@@ -3205,7 +3209,7 @@ select * from t where c=N order by b limit 1;
 
 - （4）总结：为排序使用索引，MySQL能为排序与查询使用相同的索引 
 
-	假设表有`(id, a, b, c)`四个字段，其中 id 为主键，另外三个字段为组合索引：`index a_b_c(a，b，c)`
+	假设表有`(id, a, b, c)`四个字段，其中 id 为主键，另外三个字段为组合索引：`index a_b_c(a,b,c)`
 	- order by 能使用索引最左前缀
 		```sql
 		order by a

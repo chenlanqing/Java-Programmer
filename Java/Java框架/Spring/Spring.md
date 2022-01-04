@@ -3025,9 +3025,21 @@ public @interface SpringBootConfiguration {
 - `@Configuration`：允许在上下文中注册额外的 bean 或导入其他配置类；
 - `@ComponentScan`： 扫描被`@Component (@Service,@Controller)`注解的 bean，注解默认会扫描启动类所在的包下所有的类 ，可以自定义不扫描某些 bean。如下图所示，容器中将排除`TypeExcludeFilter`和`AutoConfigurationExcludeFilter`；
 
+加载过程：
+- `@EnableAutoConfiguration`的主要操作类是：`AutoConfigurationImportSelector`，执行到 `AbstractApplicationContext#invokeBeanFactoryPostProcessors`方法时会调用到 AutoConfigurationImportSelector#getCandidateConfigurations 方法，该方法会通过 SpringFactories 从 jar的配置文件`META-INF/spring.factories`加载 key 为 `EnableAutoConfiguration`全类名的属性列表；
+
+	![](image/SpringBoot-AutoConfigurationImportSelector.png)
+
+- 加载之后，会拿到对应的自动装配配置类，但是并不是直接全部加载进去，它是按需加载的，其会：
+	- 去掉重复的类；
+	- 通过注解exclude的类；
+	- 剩余的装配类需要满足一定条件，主要是通过与 Conditional注解组合 相关的注解实现，比如`@ConditionalOnBean`
+
+	![](image/SpringBoot-自动装配类加载.png)
+
 **@EnableAutoConfiguration:实现自动装配的核心注解**
 
-`EnableAutoConfiguration `只是一个简单地注解，自动装配核心功能的实现实际是通过 `AutoConfigurationImportSelector`类
+`EnableAutoConfiguration`只是一个简单地注解，自动装配核心功能的实现实际是通过 `AutoConfigurationImportSelector`类
 ```java
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
@@ -3041,7 +3053,6 @@ public @interface EnableAutoConfiguration {
     String[] excludeName() default {};
 }
 ```
-
 以 **HttpEncodingAutoConfiguration**（Http编码自动配置）为例解释自动配置原理；
 ```java
 //表示这是一个配置类，以前编写的配置文件一样，也可以给容器中添加组件
@@ -3061,7 +3072,6 @@ public class HttpEncodingAutoConfiguration {
 	public HttpEncodingAutoConfiguration(HttpEncodingProperties properties) {
 		this.properties = properties;
 	}
-
 	@Bean   //给容器中添加一个组件，这个组件的某些值需要从properties中获取
 	@ConditionalOnMissingBean(CharacterEncodingFilter.class) //判断容器没有这个组件？
 	public CharacterEncodingFilter characterEncodingFilter() {
@@ -5596,26 +5606,21 @@ BookService{
     ```java
     @Component
     public class BookDao{
-
     }
-
     @ComponentScan("")
     @Configuration
     public class Config{
         @Bean(name="bookDao2")
         public BookDao bookDao(){
-
         }
     }
     // 按照上述注入的话，会直接使用@Component上，而不是configuration配置的bean
     ```
-
 - `@Qualifier("bookDao")`：使用`@Qualifier`指定需要装配的组件的id，而不是使用属性名；
 
 - 自动装配默认一定要将属性赋值好，没有就会报错，可以使用`@Autowired(required=false)`；
 
 - `@Primary`：让Spring进行自动装配的时候，默认使用首选的bean；也就是在注入的bean上加上注解，Spring进行装配的时候就自动装配`@Primary`修饰的Bean；当然也可以继续使用`@Qualifier`指定需要装配的bean的名字；
-
 
 ### 3.2、`@Resource`和`@Inject`
 
