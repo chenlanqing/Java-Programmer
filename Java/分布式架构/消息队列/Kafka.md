@@ -201,7 +201,6 @@ Kafka 将 Broker、Topic 和 Partition 的元数据信息存储在 Zookeeper 上
 
 ![](image/Kafka-zookeeper管理的节点.png)
 
-
 > 集群元数据持久化在ZooKeeper中，同时也缓存在每台Broker的内存中，因此不需要请求ZooKeeper
 
 # 2、kafka安装与配置

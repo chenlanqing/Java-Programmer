@@ -2231,8 +2231,7 @@ class Point{
 	private int y;
 }
 ```
-
-以上代码中，point对象并没有逃逸出alloc方法，并且point对象是可以拆解成标量的。那么，JIT就会不会直接创建Point对象，而是直接使用两个标量int x ，int y来替代Point对象
+以上代码中，point对象并没有逃逸出alloc方法，并且point对象是可以拆解成标量的。那么，JIT就会不会直接创建Point对象，而是直接使用两个标量x，y来替代Point对象
 ```java
 private static void alloc() {
 	int x = 1;

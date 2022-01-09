@@ -483,35 +483,32 @@ Leetcode-23
 ## 5.2、基本实现
 
 ```java
-public void sort(int[] arr， int n) {
-	quickSort(arr， 0， n - 1);
+public void sort(int[] arr, int n) {
+	quickSort(arr, 0, n - 1);
 }
-
-public void quickSort(int[] arr， int left， int right) {
+public void quickSort(int[] arr, int left, int right) {
 	if (left >= right) {
 		return;
 	}
-	int p = partition(arr， left， right);
-	quickSort(arr， left， p - 1);
-	quickSort(arr， p + 1， right);
+	int p = partition(arr, left, right);
+	quickSort(arr, left, p - 1);
+	quickSort(arr, p + 1, right);
 }
-
 /**
-	* 对arr[l...r]部分进行partition操作
-	* 返回p，使得arr[l...p-1] < arr[p] ; arr[p+1...r] > arr[p]
-	* @return
-	*/
-private int partition(int[] arr， int left， int right) {
+* 对arr[l...r]部分进行partition操作
+* 返回p,使得arr[l...p-1] < arr[p] ; arr[p+1...r] > arr[p]
+*/
+private int partition(int[] arr, int left, int right) {
 	int temp = arr[left];
-	// 使得 arr[left+1...j] < temp， arr[j+1...right] > temp
+	// 使得 arr[left+1...j] < temp, arr[j+1...right] > temp
 	int j = left;
 	for (int i = left + 1; i <= right; i++) {
 		if (arr[i] < temp) {
-			ArrayUtils.exchange(arr， j+1， i);
+			ArrayUtils.exchange(arr, j+1, i);
 			j++;
 		}
 	}
-	ArrayUtils.exchange(arr， j， left);
+	ArrayUtils.exchange(arr, j, left);
 	return j;
 }
 ```
