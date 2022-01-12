@@ -2333,7 +2333,7 @@ mysql> show variables like '%innodb_temp_data_file_path%';
 
 ## 28、数据页
 
-InnoDB从磁盘中读取数据的最小单位是数据页。而你想得到的id = xxx的数据，就是这个数据页众多行中的一行，数据页的逻辑视图：
+InnoDB从磁盘中读取数据的最小单位是数据页。而你想得到的`id = xxx`的数据，就是这个数据页众多行中的一行，数据页的逻辑视图：
 
 ![](image/MySQL-数据页结构.png)
 

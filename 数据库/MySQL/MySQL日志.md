@@ -54,7 +54,7 @@ InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_tr
 
 ### 1.3、日志文件组
 
-通常我们说 MySQL 的“双 1”配置，指的就是 `sync_binlog` 和 `innodb_flush_log_at_trx_commit` 都设置成 1。也就是说，一个事务完整提交前，需要等待两次刷盘，一次是 redo log（prepare 阶段），一次是 binlog
+通常我们说 MySQL 的`双 1`配置，指的就是 `sync_binlog` 和 `innodb_flush_log_at_trx_commit` 都设置成 1。也就是说，一个事务完整提交前，需要等待两次刷盘，一次是 redo log（prepare 阶段），一次是 binlog
 
 硬盘上存储的 redo log 日志文件不只一个，而是以一个日志文件组的形式出现的，每个的redo日志文件大小都是一样的；比如可以配置为一组4个文件，每个文件的大小是 1GB，整个 redo log 日志文件组可以记录4G的内容；
 
@@ -129,7 +129,7 @@ binlog作用：MySQL数据库的数据备份、主备、主主、主从都离不
 使用两阶段提交后，写入binlog时发生异常也不会有影响，因为MySQL根据redo log日志恢复数据时，发现redo log还处于prepare阶段，并且没有对应binlog日志，就会回滚该事务；
 
 再看一个问题：redo log的commit阶段发生异常，那会不会回滚事务呢？
-- 并不会回滚事务，它会执行上图框住的逻辑，；虽然redo log是处于prepare阶段，但是能通过事务id找到对应的binlog日志，所以MySQL认为是完整的，就会提交事务恢复数据；
+- 并不会回滚事务，它会执行上图框住的逻辑；虽然redo log是处于prepare阶段，但是能通过事务id找到对应的binlog日志，所以MySQL认为是完整的，就会提交事务恢复数据；
 
 ### 3.4、总结
 
