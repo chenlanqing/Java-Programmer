@@ -38,6 +38,8 @@ Java 垃圾回收器是一种"自适应的、分代的、停止—复制、标�
 - 优点：算法实现简单，盘点效率也很高，如：Python语言
 - 缺点：很难解决对象之间的循环引用问题；如父对象有一个对子对象的引用，子对象反过来引用父对象。这样，他们的引用计数永远不可能为0；
 
+> 虽然循环引用的问题可通过 Recycler 算法解决，但是在多线程环境下，引用计数变更也要进行昂贵的同步操作，性能较低，早期的编程语言会采用此算法
+
 **1.3、循环引用例子**
 
 ```java
@@ -1185,71 +1187,20 @@ JAVA_OPTS="-server -Xms2000m -Xmx2000m -Xmn800m -XX:PermSize=64m -XX:MaxPermSize
 
 	Metaspace 会保存类的描述信息，JVM 需要根据 Metaspace 中的信息，才能找到堆中类 java.lang.Class 所对应的对象，既然 Metaspace 中会保存类描述信息，可以通过新建类来增加 Metaspace 的占用，于是想到，使用 CGlib 动态代理，生成被代理类的子类
 
-## 7、GC相关题目
+## 7、GC触发
 
-请写一段程序，让其运行时的表现为触发5次YGC，然后3次FGC，然后3次YGC，然后1次FGC，请给出代码以及启动参数
-```java
-/**
- * VM设置：-Xms41m -Xmx41m -Xmn10m -XX:+UseParallelGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps
- * -Xms41m 				堆最小值
- * -Xmx41m 				堆最大值
- * -Xmn10m 				新生代大小大小(推荐 3/8)
- * -XX:+UseParallelGC   使用并行收集器
- *
- * <p>
- * 初始化时：835k(堆内存)
- * 第一次add：3907k
- * 第二次add：6979k
- * 第三次add: eden + survivor1 = 9216k < 6979k + 3072k,区空间不够，开始 YGC
- * YGC  6979k -> 416k(9216k) 表示年轻代 GC前为6979，GC后426k.年轻代总大小9216k
- */
-public class ControlYgcAndFgc {
-    private static final int _1_MB = 1024 * 1024;
-    public static void main(String[] args) {
-        List caches = new ArrayList();
-        System.out.println("--初始化时已用堆值:" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() / 1024 + "k");
-        for (int i = 1; i <= 12; i++) {
-            caches.add(new byte[3 * _1_MB]);
-        }
-        // 释放空间，重新添加 ,如果不释放空间，会报错：java.lang.OutOfMemoryError: Java heap space 【这里这样做，主要为了防止数组对象实际大小超过堆大小】
-        caches.remove(0);
-        caches.add(new byte[3 * _1_MB]);
-        // 这里是为了下次FGC后，直接减少老年代的内存大小，从而正常YGC
-        for (int i = 0; i < 8; i++) {
-            caches.remove(0);
-        }
-        caches.add(new byte[3 * _1_MB]);
-        for (int i = 0; i < 6; i++) {
-            caches.add(new byte[3 * _1_MB]);
-        }
-    }
-}
-```
-运行，控制台打印请如下：
-```java
---初始化时已用堆值:1319k
-0.175: [GC (Allocation Failure) [PSYoungGen: 7463K->586K(9216K)] 7463K->6738K(41984K), 0.0046075 secs] [Times: user=0.02 sys=0.00, real=0.01 secs] 
-0.180: [GC (Allocation Failure) [PSYoungGen: 6890K->634K(9216K)] 13042K->12938K(41984K), 0.0030904 secs] [Times: user=0.02 sys=0.01, real=0.00 secs] 
-0.184: [GC (Allocation Failure) [PSYoungGen: 7075K->570K(9216K)] 19379K->19018K(41984K), 0.0027370 secs] [Times: user=0.01 sys=0.00, real=0.01 secs] 
-0.187: [GC (Allocation Failure) [PSYoungGen: 6855K->618K(9216K)] 25303K->25210K(41984K), 0.0035804 secs] [Times: user=0.02 sys=0.00, real=0.00 secs] 
-0.191: [GC (Allocation Failure) [PSYoungGen: 6910K->554K(9216K)] 31502K->31290K(41984K), 0.0029389 secs] [Times: user=0.01 sys=0.01, real=0.00 secs] 
-0.194: [Full GC (Ergonomics) [PSYoungGen: 554K->0K(9216K)] [ParOldGen: 30736K->31173K(32768K)] 31290K->31173K(41984K), [Metaspace: 2772K->2772K(1056768K)], 0.0079522 secs] [Times: user=0.05 sys=0.00, real=0.01 secs] 
-0.203: [Full GC (Ergonomics) [PSYoungGen: 6296K->3072K(9216K)] [ParOldGen: 31173K->31173K(32768K)] 37469K->34245K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0064756 secs] [Times: user=0.03 sys=0.00, real=0.01 secs] 
-0.210: [Full GC (Ergonomics) [PSYoungGen: 6144K->0K(9216K)] [ParOldGen: 31173K->12741K(32768K)] 37317K->12741K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0043703 secs] [Times: user=0.02 sys=0.00, real=0.00 secs] 
-0.215: [GC (Allocation Failure) [PSYoungGen: 6298K->0K(9216K)] 19039K->18885K(41984K), 0.0011114 secs] [Times: user=0.01 sys=0.00, real=0.01 secs] 
-0.217: [GC (Allocation Failure) [PSYoungGen: 6272K->0K(9216K)] 25157K->25029K(41984K), 0.0010150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
-0.219: [GC (Allocation Failure) [PSYoungGen: 6283K->0K(9216K)] 31313K->31173K(41984K), 0.0008821 secs] [Times: user=0.01 sys=0.00, real=0.00 secs] 
-0.219: [Full GC (Ergonomics) [PSYoungGen: 0K->0K(9216K)] [ParOldGen: 31173K->31173K(32768K)] 31173K->31173K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0024537 secs] [Times: user=0.01 sys=0.00, real=0.00 secs] 
-Heap
- PSYoungGen      total 9216K, used 3236K [0x00000007bf600000, 0x00000007c0000000, 0x00000007c0000000)
-  eden space 8192K, 39% used [0x00000007bf600000,0x00000007bf9290e0,0x00000007bfe00000)
-  from space 1024K, 0% used [0x00000007bff00000,0x00000007bff00000,0x00000007c0000000)
-  to   space 1024K, 0% used [0x00000007bfe00000,0x00000007bfe00000,0x00000007bff00000)
- ParOldGen       total 32768K, used 31173K [0x00000007bd600000, 0x00000007bf600000, 0x00000007bf600000)
-  object space 32768K, 95% used [0x00000007bd600000,0x00000007bf471520,0x00000007bf600000)
- Metaspace       used 2781K, capacity 4486K, committed 4864K, reserved 1056768K
-  class space    used 297K, capacity 386K, committed 512K, reserved 1048576K
-```
+JVM 什么样的条件下选择进行 GC 操作，具体 Cause 的分类可以看一下 Hotspot 源码：`hotspot/src/share/vm/gc_interface/gcCause.hpp` 和 `hotspot/src/share/vm/gc_interface/gcCause.cpp` 中
+
+重点需要关注的几个GC Cause：
+- System.gc()： 手动触发GC操作。
+- CMS： CMS GC 在执行过程中的一些动作，重点关注 CMS Initial Mark 和 CMS Final Remark 两个 STW 阶段。
+- Promotion Failure： Old 区没有足够的空间分配给 Young 区晋升的对象（即使总可用内存足够大）。
+- Concurrent Mode Failure： CMS GC 运行期间，Old 区预留的空间不足以分配给新的对象，此时收集器会发生退化，严重影响 GC 性能，下面的一个案例即为这种场景。
+- GCLocker Initiated GC： 如果线程执行在 JNI 临界区时，刚好需要进行 GC，此时 GC Locker 将会阻止 GC 的发生，同时阻止其他线程进入 JNI 临界区，直到最后一个线程退出临界区时触发一次 GC
+
+### 7.1、CMS GC触发
+
+什么时机使用这些 Cause 触发回收，大家可以看一下 CMS 的代码，这里就不讨论了，具体在 `/src/hotspot/share/gc/cms/concurrentMarkSweepGeneration.cpp` 中
 
 # 六、详解 finalize()方法
 
@@ -1362,7 +1313,7 @@ G1|-XX:+UnlockExperimentalVMOptions<br>-XX:+UseG1GC|在JDK6中这两个参数必
 
 ### 2.6、GC可视化工具
 
-- [gceasy](http://gceasy.io/)
+- [gceasy](https://gceasy.io/)
 
 - [GCViewer](https://github.com/chewiebug/GCViewer)
 

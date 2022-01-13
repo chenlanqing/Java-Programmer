@@ -735,9 +735,9 @@ Java 应用线上问题排查思路、常用工具小结：https://ricstudio.top
 
 一次 Java 线程池误用引发的血案（OOM）和总结 - 文西（字节架构师）：https://zhuanlan.zhihu.com/p/32867181
 
-一次线程池引发的线上故障分析：https://mp.weixin.qq.com/s/wFePJPkGv5v34GpalGOkYw  
+一次线程池引发的线上故障分析：https://mp.weixin.qq.com/s/wFePJPkGv5v34GpalGOkYw
 
-线程池运用不当的一次线上事故：https://www.heapdump.cn/article/646639  
+线程池运用不当的一次线上事故：https://www.heapdump.cn/article/646639
 
 Java 中 9 种常见的 CMS GC 问题分析与解决: https://tech.meituan.com/2020/11/12/java-9-cms-gc.html
 

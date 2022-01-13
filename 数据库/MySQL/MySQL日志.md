@@ -373,9 +373,7 @@ docker run -it --rm zendesk/maxwell bin/maxwell --user='maxwell' --password='123
 ### 2.1、基本介绍
 
  Canal 一个非常常用的使用场景：数据异构，一种更高级别的数据读写分离架构设计方法
-
 - 定位：基于数据库增量日志解析，提供增量数据订阅&消费，目前主要支持了mysql。
-
 - 原理：
     - canal模拟mysql slave的交互协议，伪装自己为mysql slave，向mysql master发送dump协议
     - mysql master收到dump请求，开始推送binary log给slave(也就是canal)
@@ -389,6 +387,12 @@ docker run -it --rm zendesk/maxwell bin/maxwell --user='maxwell' --password='123
 - 支持数据源比较少；
 - 一个instance只能有一个消费端消费；
 - 单点压力大；
+
+### 2.2、数据如何传输
+
+Canal分为服务端和客户端：
+- 服务端 ：负责解析MySQL的binlog日志，传递增量数据给客户端或者消息中间件；
+- 客户端 ：负责解析服务端传过来的数据，然后定制自己的业务处理；
 
 ## 3、Databus
 

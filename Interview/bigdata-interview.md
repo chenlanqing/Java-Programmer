@@ -375,6 +375,8 @@ ETL主要考察点：
 - [Hive/HiveSQL常用优化方法全面总结](https://mp.weixin.qq.com/s/DfvN7S_00oYw1hqAQDr48g)
 - [Hive面试题](https://my.oschina.net/u/4101357/blog/3229802)
 
+https://mp.weixin.qq.com/s/9WdqQBfVmaXkHuZD3tLMWw
+
 ## 实时计算面试系列
 
 1. [剑谱总纲 | 大数据方向学习面试知识图谱](https://mp.weixin.qq.com/s/mi7ZhIpbgqGi9yu0_nuVTA)

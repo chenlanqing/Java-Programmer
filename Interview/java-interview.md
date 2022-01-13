@@ -1607,7 +1607,71 @@ JVM参数预估参考：
 - 每个请求大概需要多大的内存空间
 - 每秒发起的请求对内存的占用
 
+## 16、编写程序
 
+请写一段程序，让其运行时的表现为触发5次YGC，然后3次FGC，然后3次YGC，然后1次FGC，请给出代码以及启动参数
+```java
+/**
+ * VM设置：-Xms41m -Xmx41m -Xmn10m -XX:+UseParallelGC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps
+ * -Xms41m 				堆最小值
+ * -Xmx41m 				堆最大值
+ * -Xmn10m 				新生代大小大小(推荐 3/8)
+ * -XX:+UseParallelGC   使用并行收集器
+ *
+ * <p>
+ * 初始化时：835k(堆内存)
+ * 第一次add：3907k
+ * 第二次add：6979k
+ * 第三次add: eden + survivor1 = 9216k < 6979k + 3072k,区空间不够，开始 YGC
+ * YGC  6979k -> 416k(9216k) 表示年轻代 GC前为6979，GC后426k.年轻代总大小9216k
+ */
+public class ControlYgcAndFgc {
+    private static final int _1_MB = 1024 * 1024;
+    public static void main(String[] args) {
+        List caches = new ArrayList();
+        System.out.println("--初始化时已用堆值:" + ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() / 1024 + "k");
+        for (int i = 1; i <= 12; i++) {
+            caches.add(new byte[3 * _1_MB]);
+        }
+        // 释放空间，重新添加 ,如果不释放空间，会报错：java.lang.OutOfMemoryError: Java heap space 【这里这样做，主要为了防止数组对象实际大小超过堆大小】
+        caches.remove(0);
+        caches.add(new byte[3 * _1_MB]);
+        // 这里是为了下次FGC后，直接减少老年代的内存大小，从而正常YGC
+        for (int i = 0; i < 8; i++) {
+            caches.remove(0);
+        }
+        caches.add(new byte[3 * _1_MB]);
+        for (int i = 0; i < 6; i++) {
+            caches.add(new byte[3 * _1_MB]);
+        }
+    }
+}
+```
+运行，控制台打印请如下：
+```java
+--初始化时已用堆值:1319k
+0.175: [GC (Allocation Failure) [PSYoungGen: 7463K->586K(9216K)] 7463K->6738K(41984K), 0.0046075 secs] [Times: user=0.02 sys=0.00, real=0.01 secs] 
+0.180: [GC (Allocation Failure) [PSYoungGen: 6890K->634K(9216K)] 13042K->12938K(41984K), 0.0030904 secs] [Times: user=0.02 sys=0.01, real=0.00 secs] 
+0.184: [GC (Allocation Failure) [PSYoungGen: 7075K->570K(9216K)] 19379K->19018K(41984K), 0.0027370 secs] [Times: user=0.01 sys=0.00, real=0.01 secs] 
+0.187: [GC (Allocation Failure) [PSYoungGen: 6855K->618K(9216K)] 25303K->25210K(41984K), 0.0035804 secs] [Times: user=0.02 sys=0.00, real=0.00 secs] 
+0.191: [GC (Allocation Failure) [PSYoungGen: 6910K->554K(9216K)] 31502K->31290K(41984K), 0.0029389 secs] [Times: user=0.01 sys=0.01, real=0.00 secs] 
+0.194: [Full GC (Ergonomics) [PSYoungGen: 554K->0K(9216K)] [ParOldGen: 30736K->31173K(32768K)] 31290K->31173K(41984K), [Metaspace: 2772K->2772K(1056768K)], 0.0079522 secs] [Times: user=0.05 sys=0.00, real=0.01 secs] 
+0.203: [Full GC (Ergonomics) [PSYoungGen: 6296K->3072K(9216K)] [ParOldGen: 31173K->31173K(32768K)] 37469K->34245K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0064756 secs] [Times: user=0.03 sys=0.00, real=0.01 secs] 
+0.210: [Full GC (Ergonomics) [PSYoungGen: 6144K->0K(9216K)] [ParOldGen: 31173K->12741K(32768K)] 37317K->12741K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0043703 secs] [Times: user=0.02 sys=0.00, real=0.00 secs] 
+0.215: [GC (Allocation Failure) [PSYoungGen: 6298K->0K(9216K)] 19039K->18885K(41984K), 0.0011114 secs] [Times: user=0.01 sys=0.00, real=0.01 secs] 
+0.217: [GC (Allocation Failure) [PSYoungGen: 6272K->0K(9216K)] 25157K->25029K(41984K), 0.0010150 secs] [Times: user=0.00 sys=0.00, real=0.00 secs] 
+0.219: [GC (Allocation Failure) [PSYoungGen: 6283K->0K(9216K)] 31313K->31173K(41984K), 0.0008821 secs] [Times: user=0.01 sys=0.00, real=0.00 secs] 
+0.219: [Full GC (Ergonomics) [PSYoungGen: 0K->0K(9216K)] [ParOldGen: 31173K->31173K(32768K)] 31173K->31173K(41984K), [Metaspace: 2774K->2774K(1056768K)], 0.0024537 secs] [Times: user=0.01 sys=0.00, real=0.00 secs] 
+Heap
+ PSYoungGen      total 9216K, used 3236K [0x00000007bf600000, 0x00000007c0000000, 0x00000007c0000000)
+  eden space 8192K, 39% used [0x00000007bf600000,0x00000007bf9290e0,0x00000007bfe00000)
+  from space 1024K, 0% used [0x00000007bff00000,0x00000007bff00000,0x00000007c0000000)
+  to   space 1024K, 0% used [0x00000007bfe00000,0x00000007bfe00000,0x00000007bff00000)
+ ParOldGen       total 32768K, used 31173K [0x00000007bd600000, 0x00000007bf600000, 0x00000007bf600000)
+  object space 32768K, 95% used [0x00000007bd600000,0x00000007bf471520,0x00000007bf600000)
+ Metaspace       used 2781K, capacity 4486K, committed 4864K, reserved 1056768K
+  class space    used 297K, capacity 386K, committed 512K, reserved 1048576K
+```
 
 # 六、MySQL
 
@@ -3837,6 +3901,70 @@ COW（CopyOnWrite）
 
 ### 5.5、Client端的心跳流程
 
+## 6、分布式锁
+
+## 7、RPC
+
+### 7.1、超时设置
+
+对于整条 RPC 调用链路（从 App 到网关再到各个服务系统），怎么设置 RPC 的超时时间，要考虑哪些问题？
+- 即使考虑到整个调用链的平均响应时长会受到所有依赖服务的耗时和重传次数影响，那么依据什么来设置 RPC 超时时间和重试次数呢？
+- 如果发生超时重传，怎么区分哪些 RPC 服务可重传，哪些不可重传呢？
+- 如果请求超过了 PRC 的重传次数，一般会触发服务降级，这又会对商品详情页造成什么影响？
+
+### 7.2、两个角度分析RPC原理
+
+- 优化RPC的网络通信性能： 高并发下选择高性能的网络编程 I/O 模型
+- 选型合适的RPC序列化方式： 选择合适的序列化方式，进而提升封包和解包的性能
+
+### 7.3、一次完整的RPC流程
+
+分析几个点：
+- RPC 是远程调用，首先会涉及网络通信：RPC 用于业务系统之间的数据交互，要保证数据传输的可靠性，所以它一般默认采用 TCP 来实现网络数据传输
+- 网络传输的数据必须是二进制数据，可是在 RPC 框架中，调用方请求的出入参数都是对象，对象不能直接在网络中传输，所以需要提前把对象转成可传输的二进制数据，转换算法还要可逆，这个过程就叫“序列化”和“反序列化”
+- 在网络传输中，RPC 不会把请求参数的所有二进制数据一起发送到服务提供方机器上，而是拆分成好几个数据包（或者把好几个数据包封装成一个数据包），所以服务提供方可能一次获取多个或半个数据包，这也就是网络传输中的粘包和半包问题。为了解决这个问题，需要提前约定传输数据的格式，即“RPC 协议”
+    大多数的协议会分成数据头和消息体：
+    - 数据头一般用于身份识别，包括协议标识、数据大小、请求类型、序列化类型等信息；
+    - 消息体主要是请求的业务参数信息和扩展属性等
+
+在确定好“ RPC 协议”后，一次完整的 RPC 调用会经过这样几个步骤：
+- 调用方持续把请求参数对象序列化成二进制数据，经过 TCP 传输到服务提供方；
+- 服务提供方从 TCP 通道里面接收到二进制数据；
+- 根据 RPC 协议，服务提供方将二进制数据分割出不同的请求数据，经过反序列化将二进制数据逆向还原出请求对象，找到对应的实现类，完成真正的方法调用；
+- 然后服务提供方再把执行结果序列化后，回写到对应的 TCP 通道里面；
+- 调用方获取到应答的数据包后，再反序列化成应答对象。
+
+### 7.4、如何选择序列化
+
+常见的序列化方式有以下几种：
+- JSON：Key-Value 结构的文本序列化框架，易用且应用最广泛，基于 HTTP 协议的 RPC 框架都会选择 JSON 序列化方式，但它的空间开销很大，在通信时需要更多的内存。
+- Hessian：一种紧凑的二进制序列化框架，在性能和体积上表现比较好。
+- Protobuf：Google 公司的序列化标准，序列化后体积相比 JSON、Hessian 还要小，兼容性也做得不错
+
+考虑时间与空间开销，切勿忽略兼容性
+- 在大量并发请求下，如果序列化的速度慢，势必会增加请求和响应的时间（时间开销）；
+- 如果序列化后的传输数据体积较大，也会使网络吞吐量下降（空间开销）
+- 在 RPC 迭代中，常常会因为序列化协议的兼容性问题使 RPC 框架不稳定
+
+按照常用序列化协议的选型标准，比如首选 Hessian 与 Protobuf，因为它们在时间开销、空间开销、兼容性等关键指标上表现良好
+
+### 7.5、如何提升网络通信性能
+
+其实就是一个 RPC 框架如何选择高性能的网络编程 I/O 模型
+
+首先你需要知道5种网络IO模型
+- 同步阻塞 I/O（BIO）
+- 同步非阻塞 I/O
+- I/O 多路复用（NIO）
+- 信号驱动
+- 以及异步 I/O（AIO）
+
+最为常用的是 BIO 和 NIO
+
+在目前主流的 RPC 框架中，广泛使用的也是 I/O 多路复用模型，Linux 系统中的 select、poll、epoll等系统调用都是 I/O 多路复用的机制
+- Reactor 模型（即反应堆模式），以及 Reactor 的 3 种线程模型，分别是单线程 Reactor 线程模型、多线程 Reactor 线程模型，以及主从 Reactor 线程模型。
+- Java 中的高性能网络编程框架 Netty
+
 # 十一、微服务
 
 ## 1、什么是微服务
@@ -3973,7 +4101,9 @@ Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布
 
 # 十二、消息队列
 
-## 1、RocketMQ如何保证消息不被重复消费
+## 1、如何保证消息不被重复消费
+
+在消息消费的过程中，如果出现失败的情况，通过补偿的机制发送方会执行重试，重试的过程就有可能产生重复的消息，那么如何解决这个问题？
 
 ## 2、幂等性保证
 
@@ -4027,6 +4157,13 @@ Dubbo 会在 Spring 实例化完 bean 之后，在刷新容器最后一步发布
     - 在生产者端设置acks=all：表示要求每条每条数据，必须是写入所有replica副本之后，才能认为是写入成功了；
     - 在生产者端设置retries=MAX(很大的一个值，表示无限重试)：表示这个是要求一旦写入失败，就无限重试；
 - 生产者弄丢了数据：如果按照上面设置了ack=all，则一定不会丢失数据，要求是，你的leader接收到消息，所有的follower都同步到了消息之后，才认为本次写成功了。如果没满足这个条件，生产者会自动不断的重试，重试无限次；kafka发送消息是异步发送的，所以发送的时候不要使用producer.send(record)，而是使用 producer.send(record, callback)
+
+### 3.3、如何判断消息是否丢失
+
+- 在消息生产端，给每个发出的消息都指定一个全局唯一 ID，或者附加一个连续递增的版本号，然后在消费端做对应的版本校验；
+- 实现可以利用拦截器机制，在生产端发送消息之前，通过拦截器将消息版本号注入消息中（版本号可以采用连续递增的 ID 生成，也可以通过分布式全局唯一 ID生成）；
+- 在消费端收到消息后，再通过拦截器检测版本号的连续性或消费状态，这样实现的好处是消息检测的代码不会侵入到业务代码中，可以通过单独的任务来定位丢失的消息，做进一步的排查；
+- 如果同时存在多个消息生产端和消息消费端，通过版本号递增的方式就很难实现了，因为不能保证版本号的唯一性，此时只能通过全局唯一 ID 的方案来进行消息检测
 
 ## 4、rocketmq消息类型
 
@@ -4554,6 +4691,8 @@ Kafka有什么优缺点？
 聊一聊你对Kafka生态的理解
 
 ## 6、消息堆积处理
+
+如果出现积压，那一定是性能问题，想要解决消息从生产到消费上的性能问题，就首先要知道哪些环节可能出现消息积压，然后在考虑如何解决
 
 当我们的生产速率大于我们的消费速率的时候，就会表现出消息堆积，不同系统对消息堆积（处理延时）的容忍程度不同；
 
