@@ -624,60 +624,44 @@ private void quickSort3Way(int[] arr， int left， int right) {
 - 找出数组中的逆序对(归并排序的思路)
 - 数组中第 n 大的元素(可以排序后取，也可以使用 快速排序的思想)
 
-# 7、堆排序：堆就是完全二叉树，堆是优先队列
+# 7、堆排序
+
+堆就是完全二叉树，堆是优先队列
 
 ## 7.1、思路
 
-数组元素构建堆，根节点最大，删除根节点得到最大值，剩下的元素再次构建堆，接着再删除根节点，得到第二大元素，剩下的元素再次构建堆，依次类推，得到一组排好序的数据。为了更好地利用空间，我们把删除的元素不使用新的空间，而是使用堆的最后一位保存删除的数据；
+- 数组元素构建堆，根节点最大，删除根节点得到最大值；
+- 剩下的元素再次构建堆，接着再删除根节点，得到第二大元素；
+- 剩下的元素再次构建堆，依次类推，得到一组排好序的数据。为了更好地利用空间，我们把删除的元素不使用新的空间，而是使用堆的最后一位保存删除的数据；
 
 ## 7.2、实现
 
 ```java
 public class HeapSort {
-	public static void main(String[] args) {
-		int[] arr = Utils.generateArray(10， 50);
-		System.out.println(Arrays.toString(arr));
-		new HeapSort().heapSort(arr， arr.length);
-		System.out.println(Arrays.toString(arr));
-	}			
-	public int[] heapSort(int[] A， int n){
-		if(A == null || A.length < 2){
-			return A;
-		}
-		for(int i = A.length / 2; i>= 0; i--){
-			buildHeap(A， i， A.length);
-		}
-		for(int i = A.length - 1;i>0;i--){
-			swap(A， 0， i);
-			buildHeap(A， 0， i);
-		}
-		return A;
-	}
-	private void swap(int[] a， int i， int j) {
-		int temp = a[i];
-		a[i] = a[j];
-		a[j] = temp;
-	}
-	private void buildHeap(int[] a， int i， int len) {
-		int leftChild = leftChild(i);
-		int temp = a[i];
-		for(;leftChild < len;){
-			if(leftChild != len - 1 && a[leftChild] < a[leftChild+1]){
-				leftChild++;
-			}
-			if(temp < a[leftChild]){
-				a[i] = a[leftChild];
-			}else{
-				break;
-			}
-			i = leftChild;
-			leftChild = leftChild(i);
-		}
-		a[i] = temp;
-	}			
-	private int leftChild(int i){
-		return 2 * i + 1;
-	}
+	public void heapSort(int[] arr, int n) {
+        // 从第一个非叶子节点构建一个二叉堆
+        for (int i = (n - 1) / 2; i >= 0; i--) {
+            shiftDown(arr, n, i);
+        }
+        // 二叉堆第一个元素是最大的，跟最后一个元素互换位置，然后再将n-2前面的元素继续构建二叉堆
+        for (int i = n - 1; i > 0; i--) {
+            ArrayUtils.exchange(arr, 0, i);
+            shiftDown(arr, i, 0);
+        }
+    }
+    private void shiftDown(int[] arr, int n, int k) {
+        while (2 * k + 1 < n) {
+            int j = 2 * k + 1;
+            if (j + 1 < n && arr[j + 1] > arr[j]) {
+                j += 1;
+            }
+            if (arr[k] > arr[j]) {
+                break;
+            }
+            ArrayUtils.exchange(arr, j, k);
+            k = j;
+        }
+    }
 }
 ```
 
