@@ -424,6 +424,235 @@ repl_backlog_histlen:42
 
 ## 4、Redis哨兵
 
+### 4.1、机器
+
+Redis哨兵由一个一主两从，然后配置三个哨兵
+
+Redis哨兵节点规划如下：主要三台机器：192.168.89.135/136/137，单台机器
+
+| 机器IP         | 节点名称   | 端口号 | 主/从节点 | 复制节点 |
+| -------------- | ---------- | ------ | --------- | -------- |
+| 192.168.89.135 | master     | 6379   | 主节点    |          |
+| 192.168.89.136 | slave      | 6379   | 从节点    |          |
+| 192.168.89.137 | slave      | 6379   | 从节点    |          |
+| 192.168.89.135 | sentinel-1 | 26379  | 哨兵-1    |          |
+| 192.168.89.136 | sentinel-2 | 26379  | 哨兵-2    |          |
+| 192.168.89.137 | sentinel-3 | 26379  | 哨兵-3    |          |
+
+### 4.2、目录
+
+三台机器上redis目录`/data/redis-5.0.10`下有：data、log、db 三个目录，结构如下
+```
+├── data
+│   ├── master
+├── db
+├── log
+│   ├── master.log
+│   └── sentinel.log
+│   ├── slave.log
+├── master.conf
+├── sentinel.conf
+├── slave.conf
+```
+
+### 4.3、主从配置
+
+**master节点（192.168.89.135）** 修改 `master.conf`配置文件
+```conf
+# 后台启动
+daemonize yes
+pidfile /var/run/master.pid
+# 日志文件对应的位置
+logfile /data/redis-5.0.10/log/master.log
+# 端口号
+port 6379
+```
+**两个slave节点（192.168.89.136/137）** 修改 `slave.conf`配置文件
+```conf
+# 后台启动
+daemonize yes
+pidfile /var/run/master.pid
+# 日志文件对应的位置
+logfile /data/redis-5.0.10/log/slave.log
+# 端口号
+port 6379
+slaveof 192.168.89.135 6379
+```
+
+**启动主从：** 分别在三台机器上执行如下命令
+```
+[root@kafka1 redis-5.0.10]# src/redis-server master.conf
+[root@kafka1 redis-5.0.10]# src/redis-server slave.conf
+[root@kafka1 redis-5.0.10]# src/redis-server slave.conf
+```
+启动成功后，master上的日志：
+```
+1863:M 17 Jan 2022 18:41:18.032 * Ready to accept connections
+1863:M 17 Jan 2022 18:41:45.922 * Replica 192.168.89.136:6379 asks for synchronization
+1863:M 17 Jan 2022 18:41:45.922 * Full resync requested by replica 192.168.89.136:6379
+1863:M 17 Jan 2022 18:41:45.922 * Starting BGSAVE for SYNC with target: disk
+1863:M 17 Jan 2022 18:41:45.958 * Background saving started by pid 1893
+1893:C 17 Jan 2022 18:41:45.991 * DB saved on disk
+1893:C 17 Jan 2022 18:41:45.992 * RDB: 4 MB of memory used by copy-on-write
+1863:M 17 Jan 2022 18:41:46.006 * Background saving terminated with success
+1863:M 17 Jan 2022 18:41:46.006 * Synchronization with replica 192.168.89.136:6379 succeeded
+1863:M 17 Jan 2022 18:41:52.755 * Replica 192.168.89.137:6379 asks for synchronization
+1863:M 17 Jan 2022 18:41:52.755 * Full resync requested by replica 192.168.89.137:6379
+1863:M 17 Jan 2022 18:41:52.755 * Starting BGSAVE for SYNC with target: disk
+1863:M 17 Jan 2022 18:41:52.779 * Background saving started by pid 1900
+1900:C 17 Jan 2022 18:41:52.779 * DB saved on disk
+1900:C 17 Jan 2022 18:41:52.780 * RDB: 4 MB of memory used by copy-on-write
+1863:M 17 Jan 2022 18:41:52.796 * Background saving terminated with success
+1863:M 17 Jan 2022 18:41:52.797 * Synchronization with replica 192.168.89.137:6379 succeeded
+```
+
+### 4.4、配置启动
+
+主要是配置 sentinel.conf 配置文件
+```conf
+# 端口，也是默认端口
+port 26379
+# 后台启动
+daemonize yes
+# sentinel监控Redis主节点的配置
+# 对应的命令：sentinel monitor <master-name> <ip> <redis-port> <quorum>  
+# master-name 指的是主节点的名字，可以自己定义
+# ip 指的是主节点的ip地址
+# redis-port 指的是主节点的端口
+# quorum 这个值既用于主节点的客观下线，又用于sentinel的leader选举，具体可见上面的原理 
+sentinel monitor mymaster 192.168.89.135 6379 2
+
+# 主节点响应sentinel的最大时间间隔，超过这个时间，sentinel认为主节点下线，默认30秒  
+sentinel down-after-milliseconds mymaster 3000
+
+# 进行故障转移时，设置最多有多少个slave同时复制新的master
+# 由于slave在复制时，会处于不可用的状态(要先清空数据，然后再加载主节点的数据)
+# 所以设置一次允许一个slave去复制master
+sentinel parallel-syncs master 1
+# 故障转移的超时时间，默认3分钟。 
+# 当前sentinel对一个master节点进行故障转移后，需要等待这个时间后才能
+# 再次对这个master节点进行故障转移(此时其它sentinel依然可以对该master进行故障转移)
+# 进行故障转移时，配置所有slave复制master的最大时间，如果超时了，就不会按照parallel-syncs规则进行了
+# sentinel进行leader选举时，如果没有选出leader，需要等到2倍这个时间才能进行下一次选举
+sentinel failover-timeout master 180000
+# 主节点如果设置了密码，就在这里配置
+sentinel auth-pass mymaster 123456
+# log文件的位置
+logfile /data/redis-5.0.10/log/sentinel.log
+```
+启动sentinel，分别在三台机器上执行如下命令：
+```
+[root@kafka1 redis-5.0.10]# src/redis-server sentinel.conf --sentinel
+[root@kafka1 redis-5.0.10]# src/redis-server sentinel.conf --sentinel
+[root@kafka1 redis-5.0.10]# src/redis-server sentinel.conf --sentinel
+```
+sentinel启动日志：
+```
+2602:X 17 Jan 2022 18:55:37.739 # Sentinel ID is 07355d2b76e0e90955bf4e3447e590c6037c2baa
+2602:X 17 Jan 2022 18:55:37.739 # +monitor master mymaster 192.168.89.135 6379 quorum 2
+2602:X 17 Jan 2022 18:55:37.741 * +slave slave 192.168.89.136:6379 192.168.89.136 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:55:37.749 * +slave slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:55:49.234 * +sentinel sentinel 7769328e521738999693b4d4a22101ea42cf988c 192.168.89.136 26379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:55:53.964 * +sentinel sentinel 55f5b1ba4a030620c2547aea8edcf75bf466d129 192.168.89.137 26379 @ mymaster 192.168.89.135 6379
+```
+
+### 4.5、sentinel客户端使用
+
+连接sentinel客户端
+```
+src/redis-cli -p 26379
+```
+查看当前sentinel的信息：
+```
+127.0.0.1:26379> info sentinel
+# Sentinel
+sentinel_masters:1
+sentinel_tilt:0
+sentinel_running_scripts:0
+sentinel_scripts_queue_length:0
+sentinel_simulate_failure_flags:0
+master0:name=mymaster,status=ok,address=192.168.89.135:6379,slaves=2,sentinels=3
+```
+查看监控的所有master的信息
+```
+127.0.0.1:26379> sentinel masters
+1)  1) "name"
+    2) "mymaster"
+    3) "ip"
+    4) "192.168.89.135"
+    5) "port"
+    6) "6379"
+    7) "runid"
+    8) "35b88cb640543ffdddeec36cf163a5c377a1d2ce"
+...
+```
+查看指定master节点的信息，因为这里只监控了一个master节点，所以显示和上面一样
+```
+sentinel master <master_name>
+```
+查看指定的master的地址和端口
+```
+127.0.0.1:26379> sentinel get-master-addr-by-name mymaster
+1) "192.168.89.135"
+2) "6379"
+```
+
+**故障转移：**
+```
+127.0.0.1:26379> sentinel failover mymaster
+OK
+127.0.0.1:26379> info sentinel
+# Sentinel
+sentinel_masters:1
+sentinel_tilt:0
+sentinel_running_scripts:0
+sentinel_scripts_queue_length:0
+sentinel_simulate_failure_flags:0
+master0:name=mymaster,status=ok,address=192.168.89.136:6379,slaves=2,sentinels=3
+```
+对应的日志为：
+```
+2602:X 17 Jan 2022 18:58:38.534 # Executing user requested FAILOVER of 'mymaster'
+2602:X 17 Jan 2022 18:58:38.534 # +new-epoch 1
+2602:X 17 Jan 2022 18:58:38.534 # +try-failover master mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:38.625 # +vote-for-leader 07355d2b76e0e90955bf4e3447e590c6037c2baa 1
+2602:X 17 Jan 2022 18:58:38.625 # +elected-leader master mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:38.625 # +failover-state-select-slave master mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:38.702 # +selected-slave slave 192.168.89.136:6379 192.168.89.136 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:38.702 * +failover-state-send-slaveof-noone slave 192.168.89.136:6379 192.168.89.136 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:38.786 * +failover-state-wait-promotion slave 192.168.89.136:6379 192.168.89.136 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:39.658 # +promoted-slave slave 192.168.89.136:6379 192.168.89.136 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:39.658 # +failover-state-reconf-slaves master mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:39.748 * +slave-reconf-sent slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:40.663 * +slave-reconf-inprog slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:41.725 * +slave-reconf-done slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:41.800 # +failover-end master mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 18:58:41.800 # +switch-master mymaster 192.168.89.135 6379 192.168.89.136 6379
+2602:X 17 Jan 2022 18:58:41.801 * +slave slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 18:58:41.801 * +slave slave 192.168.89.135:6379 192.168.89.135 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:58.491 # +sdown master mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:58.550 # +odown master mymaster 192.168.89.136 6379 #quorum 2/2
+2602:X 17 Jan 2022 19:00:58.550 # +new-epoch 2
+2602:X 17 Jan 2022 19:00:58.550 # +try-failover master mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:58.557 # +vote-for-leader 07355d2b76e0e90955bf4e3447e590c6037c2baa 2
+2602:X 17 Jan 2022 19:00:58.560 # 7769328e521738999693b4d4a22101ea42cf988c voted for 07355d2b76e0e90955bf4e3447e590c6037c2baa 2
+2602:X 17 Jan 2022 19:00:58.560 # 55f5b1ba4a030620c2547aea8edcf75bf466d129 voted for 07355d2b76e0e90955bf4e3447e590c6037c2baa 2
+2602:X 17 Jan 2022 19:00:58.624 # +elected-leader master mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:58.624 # +failover-state-select-slave master mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:58.687 # +selected-slave slave 192.168.89.135:6379 192.168.89.135 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:58.687 * +failover-state-send-slaveof-noone slave 192.168.89.135:6379 192.168.89.135 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:58.751 * +failover-state-wait-promotion slave 192.168.89.135:6379 192.168.89.135 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:59.302 # +promoted-slave slave 192.168.89.135:6379 192.168.89.135 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:59.302 # +failover-state-reconf-slaves master mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:59.400 * +slave-reconf-sent slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:59.403 * +slave-reconf-inprog slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:00:59.690 # -odown master mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:01:00.425 * +slave-reconf-done slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:01:00.502 # +failover-end master mymaster 192.168.89.136 6379
+2602:X 17 Jan 2022 19:01:00.503 # +switch-master mymaster 192.168.89.136 6379 192.168.89.135 6379
+2602:X 17 Jan 2022 19:01:00.504 * +slave slave 192.168.89.137:6379 192.168.89.137 6379 @ mymaster 192.168.89.135 6379
+2602:X 17 Jan 2022 19:01:00.504 * +slave slave 192.168.89.136:6379 192.168.89.136 6379 @ mymaster 192.168.89.135 6379
+```
 
 ## 5、Redis集群
 
