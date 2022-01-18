@@ -717,6 +717,28 @@ cluster-node-timeout 10000
 src/redis-server redis-6379.conf
 src/redis-server redis-6378.conf
 ```
+使用脚本
+```bash
+#! /bin/bash
+
+case $1 in
+"start"){
+        for i in kafka1 kafka2 kafka3
+        do
+                echo " --------启动 $i Redis 6379 & 6378-------"
+
+                ssh $i " mkdir /data/redis-5.0.10/data/redis-6378 /data/redis-5.0.10/data/redis-6379 ; /data/redis-5.0.10/src/redis-server /data/redis-5.0.10/redis-6379.conf ; /data/redis-5.0.10/src/redis-server /data/redis-5.0.10/redis-6378.conf"
+        done
+};;
+"stop"){
+        for i in kafka1 kafka2 kafka3
+        do
+                echo " --------停止 $i Redis 6379 & 6378-------"
+                ssh $i " /data/redis-5.0.10/src/redis-cli -p 6379 shutdown ; /data/redis-5.0.10/src/redis-cli -p 6378 shutdown ; rm -rf /data/redis-5.0.10/data/redis-6378 /data/redis-5.0.10/data/redis-6379 ;  "
+        done
+};;
+esac
+```
 
 ### 5.5、手动配置集群
 
@@ -880,6 +902,28 @@ S: 9883ca2356ab953a7397aa17341913949036e286 192.168.89.135:6379
 >>> Check slots coverage...
 [OK] All 16384 slots covered.
 ```
+
+### 5.7、Redis Cluster 请求路由方式
+
+客户端直连 Redis 服务，进行读写操作时，Key 对应的 Slot 可能并不在当前直连的节点上，经过“重定向”才能转发到正确的节点；
+
+如下所示，直接连接`192.168.89.135:6379`进行 Set 操作，当 Key 对应的 Slot 不在当前节点时（如 key-test)，客户端会报错并返回正确节点的 IP 和端口。Set 成功则返回 OK
+```
+[root@kafka1 redis-5.0.10]# src/redis-cli -h 192.168.89.135 -p 6379
+192.168.89.135:6379> set key-test value-test
+(error) MOVED 11804 192.168.89.137:6378
+192.168.89.135:6379> 
+```
+以集群模式登录`192.168.89.135:6379`客户端（注意命令的差别：-c 表示集群模式)，则可以清楚的看到“重定向”的信息，并且客户端也发生了切换：“6379” -> “6378”
+```
+[root@kafka1 redis-5.0.10]# src/redis-cli -c -h 192.168.89.135 -p 6379
+192.168.89.135:6379> set key-test value-test
+-> Redirected to slot [11804] located at 192.168.89.137:6378
+OK
+```
+和普通的查询路由相比，Redis Cluster 借助客户端实现的请求路由是一种混合形式的查询路由，它并非从一个 Redis 节点到另外一个 Redis，而是借助客户端转发到正确的节点；
+
+实际应用中，可以在客户端缓存 Slot 与 Redis 节点的映射关系，当接收到 MOVED 响应时修改缓存中的映射关系。如此，基于保存的映射关系，请求时会直接发送到正确的节点上，从而减少一次交互，提升效率；
 
 # 四、RabbitMQ
 
