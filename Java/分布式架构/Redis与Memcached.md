@@ -1927,7 +1927,7 @@ min-slaves-to-write 和 min-slaves-max-lag的设置，是为了避免主从数�
 - replication，一个mater，多个slave，要几个slave跟你的要求的读吞吐量有关系，然后自己搭建一个sentinal集群，去保证redis主从架构的高可用性，就可以了；
 - redis cluster，主要是针对海量数据+高并发+高可用的场景，海量数据，如果你的数据量很大，那么建议就用redis cluster；
 
-# 六、Redis内存模型
+# 六、Redis内存
 
 ## 1、Redis内存统计
 
@@ -2149,6 +2149,14 @@ typedef struct redisDb {
 - [Redis变慢](http://kaito-kidd.com/2021/01/23/redis-slow-latency-analysis/)
 
 ![](image/Redis性能排查与调优.png)
+
+## 5、Lazy-Free
+
+redis 4.0新加了4个参数，用来控制这种lazy free的行为
+- `lazyfree-lazy-eviction`：是否异步驱逐key，当内存达到上限，分配失败后；
+- `lazyfree-lazy-expire`：是否异步进行key过期事件的处理；
+- `lazyfree-lazy-server-del`：del命令是否异步执行删除操作，类似unlink；
+- `replica-lazy-flush`：replica client做全同步的时候，是否异步flush本地db；
 
 # 八、Redis安全
 
@@ -2414,7 +2422,15 @@ Redis6.0主要特性如下：
 
 RedisJSON是一个Redis模块，实现了ECMA-404 JSON数据交换标准作为本地数据类型。它允许存储，更新和获取JSON值从Redis键(文档)
 
-# 十四、Memcached
+# 十四、Redis踩坑
+
+## 1、命令的坑
+
+
+## 2、
+
+
+# 十五、Memcached
 
 ## 1、原理
 
@@ -2426,7 +2442,7 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 
 ## 2、
 
-# 十五、Lua
+# 十六、Lua
 
 ## 1、Lua介绍
 
@@ -2435,6 +2451,7 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 ## 2、Lua基本语法
 
 ## 3、Redis中使用Lua
+
 
 
 
