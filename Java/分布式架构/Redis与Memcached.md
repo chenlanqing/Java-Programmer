@@ -2518,11 +2518,82 @@ RedisJSON是一个Redis模块，实现了ECMA-404 JSON数据交换标准作为�
 
 # 十四、Redis踩坑
 
+- [使用Redis的坑](http://kaito-kidd.com/2021/03/14/redis-trap/)
+
+![](image/Redis-使用存在的坑.png)
+
 ## 1、命令的坑
 
+### 1.1、过期时间意外丢失
 
-## 2、
+SET 除了可以设置 key-value 之外，还可以设置 key 的过期时间，就像下面这样：
+```
+127.0.0.1:6379> SET testkey val1 EX 60
+OK
+127.0.0.1:6379> TTL testkey
+(integer) 59
+```
+此时如果你想修改 key 的值，但只是单纯地使用 SET 命令，而没有加上「过期时间」的参数，那这个 key 的过期时间将会被「擦除」
+```
+127.0.0.1:6379> SET testkey val2
+OK
+127.0.0.1:6379> TTL testkey  // key永远不过期了！
+(integer) -1
+```
+导致这个问题的原因在于：SET 命令如果不设置过期时间，那么 Redis 会自动「擦除」这个 key 的过期时间；
 
+所以，你在使用 SET 命令时，如果刚开始就设置了过期时间，那么之后修改这个 key，也务必要加上过期时间的参数，避免过期时间丢失问题
+
+### 1.2、DEL会阻塞 Redis
+
+删除一个 key 的耗时（时间复杂度），与这个 key 的类型有关：
+- key 是 String 类型，DEL 时间复杂度是 O(1)；
+- key 是 List/Hash/Set/ZSet 类型，DEL 时间复杂度是 O(M)，M 为元素数量
+
+也就是说，如果你要删除的是一个非 String 类型的 key，这个 key 的元素越多，那么在执行 DEL 时耗时就越久。因为删除这种 key 时，Redis 需要依次释放每个元素的内存，元素越多，这个过程就会越耗时，而这么长的操作耗时，势必会阻塞整个 Redis 实例，影响 Redis 的性能；
+
+当你在删除 List/Hash/Set/ZSet 类型的 key 时，一定要格外注意，不能无脑执行 DEL，而是应该用以下方式删除：
+- 查询元素数量：执行 LLEN/HLEN/SCARD/ZCARD 命令；
+- 判断元素数量：如果元素数量较少，可直接执行 DEL 删除，否则分批删除；
+- 分批删除：执行 LRANGE/HSCAN/SSCAN/ZSCAN + LPOP/RPOP/HDEL/SREM/ZREM 删除
+
+另外对于 String 类型来说，最好也不要存储过大的数据，否则在删除它时，也会有性能问题，因为 Redis 释放这么大的内存给操作系统，也是需要时间的，所以操作耗时也会变长
+
+### 1.3、RANDOMKEY 阻塞 Redis
+
+如果你想随机查看 Redis 中的一个 key，通常会使用 RANDOMKEY 这个命令，这个命令会从 Redis 中「随机」取出一个 key，基本国策：
+- master上 RANDOMKEY 在随机拿出一个 key 后，首先会先检查这个 key 是否已过期；
+- 如果该 key 已经过期，那么 Redis 会删除它，这个过程就是懒惰清理，但清理完了还不能结束，Redis 还要找出一个「不过期」的 key，返回给客户端；
+- Redis 则会继续随机拿出一个 key，然后再判断是它否过期，直到找出一个未过期的 key 返回给客户端
+
+但这里就有一个问题了：如果此时 Redis 中，有大量 key 已经过期，但还未来得及被清理掉，那这个循环就会持续很久才能结束，而且，这个耗时都花费在了清理过期 key + 寻找不过期 key 上。导致的结果就是，RANDOMKEY 执行耗时变长，影响 Redis 性能；
+
+上述是在master上执行 RANDOMKEY，如果在 slave 上执行 RANDOMEKY，那么问题会更严重，主要原因就在于，slave 自己是不会清理过期 key
+还是同样的场景：Redis 中存在大量已过期，但还未被清理的 key，那在 slave 上执行 RANDOMKEY 时，就会发生以下问题：
+- slave 随机取出一个 key，判断是否已过期
+- key 已过期，但 slave 不会删除它，而是继续随机寻找不过期的 key
+- 由于大量 key 都已过期，那 slave 就会寻找不到符合条件的 key，此时就会陷入「死循环」！
+
+这其实是 Redis 的一个 Bug，这个 Bug 一直持续到 5.0 才被修复；修复的解决方案是，在 slave 上执行 RANDOMKEY 时，会先判断整个实例所有 key 是否都设置了过期时间，如果是，为了避免长时间找不到符合条件的 key，slave 最多只会在哈希表中寻找 100 次，无论是否能找到，都会退出循环；
+
+### 1.4、SETBIT导致Redis OOM
+
+在使用 Redis 的 String 类型时，可以把它当做 bitmap 来用，可以把一个 String 类型的 key，拆分成一个个 bit 来操作，就像下面这样：
+```
+127.0.0.1:6379> SETBIT testkey 10 1
+(integer) 1
+127.0.0.1:6379> GETBIT testkey 10
+(integer) 1
+```
+操作的每一个 bit 位叫做 offset，但是，这里需要注意的一个点是：如果这个 key 不存在，或者 key 的内存使用很小，此时你要操作的 offset 非常大，那么 Redis 就需要分配「更大的内存空间」，这个操作耗时就会变长，影响性能；所以，当你在使用 SETBIT 时，也一定要注意 offset 的大小，操作过大的 offset 也会引发 Redis 卡顿。
+
+这种类型的 key，也是典型的 bigkey，除了分配内存影响性能之外，在删除它时，耗时同样也会变长
+
+### 1.5、monitor 命令导致OOM
+
+当你在执行 MONITOR 命令时，Redis 会把每一条命令写到客户端的「输出缓冲区」中，然后客户端从这个缓冲区读取服务端返回的结果；但是，如果你的 Redis QPS 很高，这将会导致这个输出缓冲区内存持续增长，占用 Redis 大量的内存资源，如果恰好你的机器的内存资源不足，那 Redis 实例就会面临被 OOM 的风险
+
+## 2、数据持久化的坑
 
 # 十五、Memcached
 
