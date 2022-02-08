@@ -91,6 +91,8 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - SonarLint
 - Statistic
 - VisualVM Launcher
+- ASM
+- IDE Eval Reset
 
 # 4、idea插件开发
 

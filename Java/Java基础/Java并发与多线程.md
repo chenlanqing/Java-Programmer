@@ -1266,6 +1266,9 @@ synchronized 代码块的语义底层是通过一个monitor的对象来完成，
             void wait_reenter_end(ObjectMonitor *mon);
     };
     ```
+    ObjectMonitor 中有两个队列，`_WaitSet` 和 `_EntryList`，用来保存 ObjectWaiter 对象列表( 每个等待锁的线程都会被封装成 ObjectWaiter 对象)，_owner 指向持有 ObjectMonitor 对象的线程，当多个线程同时访问一段同步代码时，首先会进入 _EntryList 集合，当线程获取到对象的 monitor 后进入 _Owner 区域并把 monitor 中的 owner 变量设置为当前线程同时 monitor 中的计数器 count 加 1；
+
+    若线程调用 wait() 方法，将释放当前持有的 monitor，owner 变量恢复为 null，count 自减 1，同时该线程进入 WaitSet 集合中等待被唤醒。若当前线程执行完毕也将释放 monitor(锁)并复位变量的值，以便其他线程进入获取 monitor(锁)
 
 ### 7.3、重量级锁
 

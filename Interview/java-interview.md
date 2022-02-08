@@ -6,7 +6,7 @@ https://segmentfault.com/a/1190000018855112
 
 ## 1、final面试题 
 
-### 所有的final修饰的字段都是编译期常量吗？
+### 1.1、所有的final修饰的字段都是编译期常量吗？
 
 ```java
 public class Test {
@@ -24,7 +24,7 @@ public class Test {
 ```
 k的值由随机数对象决定，所以不是所有的final修饰的字段都是编译期常量，只是k的值在被初始化后无法被更改
 
-### 说说final类型的类如何拓展? 
+### 1.2、说说final类型的类如何拓展? 
 
 比如String是final类型，我们想写个MyString复用所有String中方法，同时增加一个新的toMyString()的方法，应该如何做?
 
@@ -1342,6 +1342,12 @@ park()/unpark()底层的原理是“二元信号量”，你可以把它相像�
 ### LockSupport.park()会释放锁资源吗?
 
 不会，它只负责阻塞当前线程，释放锁资源实际上是在Condition的await()方法中实现的。
+
+## 12、为什么任意一个 Java 对象都能成为锁对象呢
+
+Java 中的每个对象都派生自 Object 类，而每个 Java Object 在 JVM 内部都有一个 native 的 C++对象 oop/oopDesc 进行对应。其次，线程在获取锁的时候，实际上就是获得一个监视器对象(monitor) ,monitor 可以认为是一个同步对象，所有的 Java 对象是天生携带 monitor。
+
+多个线程访问同步代码块时，相当于去争抢对象监视器修改对象中的锁标识, ObjectMonitor 这个对象和线程争抢锁的逻辑有密切的关系
 
 ## 12、多线程面试题
 

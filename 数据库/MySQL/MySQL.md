@@ -27,7 +27,6 @@ mysql内存参数：https://www.cnblogs.com/kissdb/p/4009614.html
 ### 1.3、I/O相关配置参数
 
 - InnoDB I/O相关配置：
-
 	- innodb_log_file_size：单个事务日志文件的大小
 	- innodb_log_files_in_group：事务日志文件的数量
 	- innodb_log_buffer_size：事务日志缓冲区
@@ -36,7 +35,7 @@ mysql内存参数：https://www.cnblogs.com/kissdb/p/4009614.html
 	- innodb_file_per_table：设置表空间
 	- innodb_doublewrite：是否支持双写缓存
 
-- myisam I/O配置：delay_key_write：
+- MyISAM I/O配置：delay_key_write：
 
 ### 1.4、安全配置参数
 
@@ -59,7 +58,7 @@ mysql内存参数：https://www.cnblogs.com/kissdb/p/4009614.html
 ### 2.1、MySQL常见的发行版本
 
 - MySQL官方版本-Oracle官方维护，包含社区版本和企业版本
-- PerCona MySQL：同官方版本完全兼容，性能优于mysql官方版本
+- Percona MySQL：同官方版本完全兼容，性能优于mysql官方版本
 - MariaDB
 
 上述三个版本的主要区别：
@@ -152,11 +151,11 @@ mysql日志主要分为以下：
 # 二、MySQL操作
 
 ## 1、连接命令行
+
 ```
 mysql -hlocalhost -P3306 -uroot -p	--(-h：主机host， -P：端口，-u用户，-p：密码)； 
 --select user()；查看当前用户
 ```
-
 查看命令行帮助文档，进入到mysql控制台：`help create user;`，查看 create user 帮助
 
 ## 2、SQL操作
@@ -227,15 +226,14 @@ delete 命令其实只是把记录的位置，或者数据页标记为了"可复
 #### 6.3.3、Mysql高水位问题
 
 - 产生原因：数据库中有些表使用delete删除了一些行后，发现空间并未释放；高水位线影响最显著的就是全表扫描的效率，因为当进行全表扫描时，会扫描高水位线以下的所有数据块；
-	- `delete` 不会释放文件高水位 
-	- `truncate`会释放 ，实际是把`.ibd`文件删掉了，再建一个。
+	- `delete`：不会释放文件高水位 
+	- `truncate`会释放，实际是把`.ibd`文件删掉了，再建一个。
 	- `delete + alter engine=innodb`会释放，相当于重建表。
 
 - 解决方案：
 	- 执行 OPTIMIZE TABLE 表名：只对MyISAM, BDB和InnoDB表起作用，而且会锁表！
 	- 写一SQL，创建新表，删除旧表，新表重命名：生产环境中不停机情况下，数据比较难处理；
 	- 考虑用表分区，过期的表分区直接删除，不存在高水位问题；
-
 
 ## 7、校对规则
 
@@ -252,7 +250,7 @@ show variables like 'character_set_%';	查看当前数据库的校对规则
 | character_set_system     | utf8                                                    |
 | character_sets_dir       | C:\Program Files\MySQL\MySQL Server 5.6\share\charsets\ |
 
-设置变量：set 变量=值，变量可以是上述的变量
+设置变量：`set 变量=值`，变量可以是上述的变量
 
 设置字符集：set name gbk
 
@@ -284,21 +282,20 @@ MySQL 要给这个 InnoDB 表创建一个 frm 文件保存表结构定义，还�
 
 ### 1.1、整型
 
-- tinyint：1个字节，-128~127(有符号)，0~255(无符号)；
+- tinyint：1个字节，-128~ 127(有符号)，0~255(无符号)；
 - smallint：2个字节； -32468~32767
 - mediumint：3个字节；
 - int：4个字节；
 - bigint：8位；
 - bool型：0表示false，1表示true；tinyint(1)；MySQL保存boolean值时用1代表TRUE，0代表FALSE。boolean在MySQL里的类型为tinyint(1)。MySQL里有四个常量：true,false,TRUE,FALSE分别代表1,0,1,0。
 
-*注意：是否有符号，* 可在定义时，使用unsigned标识，没有符号；不写就默认有符号；
+*注意：是否有符号* 可在定义时，使用unsigned标识，没有符号；不写就默认有符号；
 
-*定义显示宽度：*规定数据的显示宽度：类型(M)--M表示最小显示宽度；需要使用前导0达到填充目的，称为zerofill；A：不影响数的范围；B：宽度大的不影响，不会截取；
+*定义显示宽度：* 规定数据的显示宽度：类型(M)--M表示最小显示宽度；需要使用前导0达到填充目的，称为zerofill；A：不影响数的范围；B：宽度大的不影响，不会截取；
 
 ### 1.2、小数类型：都支持控制数值的范围
 
-`type(M，D)`：M表示的所有位数(不包括小数点和符号)，D表示允许的小数位数；整数位数只能是`(M-D)`位
-
+`type(M, D)`：M表示的所有位数(不包括小数点和符号)，D表示允许的小数位数；整数位数只能是`(M-D)`位
 - float：单精度，4个字节，默认有效位数为6位左右；				
 - double：双精度，8个字节，默认有效数字16位左右；
 - decimal：定点数，decimal(M，D)，M表示总位数，D表示小数位数(范围存在)，M默认是10，D默认是0；	
@@ -325,7 +322,7 @@ MySQL 要给这个 InnoDB 表创建一个 frm 文件保存表结构定义，还�
 
 ### 2.3、timestamp
 
-时间戳，存储时是整型，表示时是日期时间，格式`YYYY-MM-DD HH:MM:S`S，4个字节
+时间戳，存储时是整型，表示时是日期时间，格式`YYYY-MM-DD HH:MM:SS`，4个字节
 - 存储范围：`1970.1.1 00:00:00~2038.1.19 03:14:07`
 - 检索列时，+0可以检索到时间戳
 - 支持0值：表示当前是没有规定的，如2013-04-0表示4月整个月；
@@ -620,7 +617,7 @@ MySQL 客户端与服务器建立连接：
 - 分析器拿到 sql 之后会尝试对 sql 语句进行词法分析和语法分析，校验语法的正确性，通过之后继续往下执行；
 - 优化器拿到分析器的 sql 之后，开始继续解析 sql，判断到需要走什么索引，根据实际情况重写 sql，最终生成执行计划；
 - 执行器根据执行计划执行 sql，执行之前会先进行操作权限校验；然后根据表存储引擎调用对饮接口进行查询数据，这里的扫描行数就是指的接口返回的记录数，执行器拿到返回记录之后进一步加工，如本例子：
-- 执行器拿到 `select * from t_user where user_id=10000` 的所有记录，在依次判断 user_name 是不是等于"arthinking"，获取到匹配的记录
+- 执行器拿到 `select * from t_user where user_id=10000` 的所有记录，在依次判断后获取到匹配的记录
 
 ### 查询优化器
 
