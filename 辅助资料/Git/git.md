@@ -470,8 +470,21 @@
 
 # 5、常见操作
 
-- 修改远程仓库地址：`git remote set-url origin [远程仓库地址]`
+## 5.1、修改远程仓库地址
 
+`git remote set-url origin [远程仓库地址]`
+
+## 5.2、版本回退
+
+### 5.2.1、已提交，没有push
+
+- `git reset --soft` 撤销commit
+- `git reset --mixed` 撤销commit 和 add 两个动作
+
+### 5.2.2、已提交，并且push
+
+- `git reset --hard` 撤销并舍弃版本号之后的提交记录，使用需谨慎
+- `git revert` 撤销，但是保留了提交记录
 
 # 参考资料
 

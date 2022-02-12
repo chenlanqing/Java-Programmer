@@ -5274,6 +5274,10 @@ Linux操作系统下默认文件存储：`/var/lib/mysql`
 └── undo_002
 ```
 
+# 二十二、数据库选型
+
+[数据存储选型](https://mp.weixin.qq.com/s/YpRQa9YguOqJygJbdRZ-nA)
+
 
 # 参考文章
 

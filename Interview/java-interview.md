@@ -1693,7 +1693,7 @@ Heap
 - `AUTO_INCREMENT` 列在 InnoDB 里如何工作:
 	- 如果为一个表指定 AUTO_INCREMENT 列，在数据词典里的InnoDB表句柄包含一个名为自动增长计数器的计数器，被用在为该列赋新值。自动增长计数器仅被存储在主内存中，而不是存在磁盘上.
 	- InnoDB使用下列算法来为包含一个名为`ai_col`的`AUTO_INCREMENT`列的表T初始化自动增长计数器：服务器启动之后，当一个用户对表T做插入之时，InnoDB执行等价如下语句的动作:`SELECT MAX(ai_col) FROM T FOR UPDATE;`
-- 如果 mysql 服务重启， 因为 自动增长计数器仅被存储在主内存中，所以每次重启mysql都会重置。解决方法:
+- 如果 mysql 服务重启，因为自动增长计数器仅被存储在主内存中，所以每次重启mysql都会重置。解决方法:
 	- 先不重启mysql，继续插入表一行记录，这行记录的id为 18，
 	- 重启mysql，插入表一行记录，这行记录的id为 19
 
@@ -4326,14 +4326,14 @@ topic的分区数不可以减少，因为先有的分区数据难以处理；
 
 比如topic-create-same，有3个分区
 ```sh
-/temp/kafka/logs  ls -l | grep topic-create-same
+/temp/kafka/logs $  ls -l | grep topic-create-same
 drwxr-xr-x   6 bluefish  staff   192  8  8 13:56 topic-create-same-1
 drwxr-xr-x   6 bluefish  staff   192  8  8 13:56 topic-create-same-2
 drwxr-xr-x   6 bluefish  staff   192  8  8 13:56 topic-create-same-3
 ```
 进入到文件夹：topic-create-same-1
 ```
-/temp/kafka/logs/topic-create-same-1  ls -l
+/temp/kafka/logs/topic-create-same-1 $  ls -l
 total 8
 -rw-r--r--  1 bluefish  staff  0  8  8 13:59 00000000000000000000.index
 -rw-r--r--  1 bluefish  staff  0  5 12 19:58 00000000000000000000.log
