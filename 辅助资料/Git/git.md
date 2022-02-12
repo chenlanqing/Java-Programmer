@@ -478,8 +478,8 @@
 
 ### 5.2.1、已提交，没有push
 
-- `git reset --soft` 撤销commit
-- `git reset --mixed` 撤销commit 和 add 两个动作
+- `git reset --soft <版本号>` 撤销commit
+- `git reset --mixed <版本号>g` 撤销commit 和 add 两个动作
 
 ### 5.2.2、已提交，并且push
 
