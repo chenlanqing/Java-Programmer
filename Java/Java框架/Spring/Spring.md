@@ -1282,7 +1282,6 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 
 ```java
 protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
-protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
 	Assert.notNull(singletonFactory, "Singleton factory must not be null");
 	synchronized (this.singletonObjects) {
 		/**
