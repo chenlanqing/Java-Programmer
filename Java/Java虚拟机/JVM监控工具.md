@@ -1273,6 +1273,8 @@ BTrace 可以做什么：
 
 在jdk8之前是内置的，如果要使用，直接启动命令：`jvisualvm` 即可；对于JDK 9及更高版本，VisualVM默认不再内置，而是作为一个独立项目维护，因此需要手动下载。独立下载的VisualVM，最低支持JDK 8，[下载地址](https://visualvm.github.io/)
 
+如果启动报版本错误，可以修改visualvm目录下的etc目录下 visualvm.conf 的 `visualvm_jdkhome="/Library/Java/JavaVirtualMachines/jdk-11.0.5.jdk/Contents/Home"`配置；
+
 ##  添加jmx连接
 
 ###  监控tomcat
@@ -1408,3 +1410,4 @@ JFR 提供了深入到 JVM 内部去看运行时状态的能力，是一个非�
 * [jstat命令使用](http://blog.csdn.net/maosijunzi/article/details/46049117)
 * [visualvm](https://visualvm.github.io/documentation.html)
 * [线程堆栈分析](http://fastthread.io/)
+* [plumbr-JVM监测工具](https://plumbr.io/)

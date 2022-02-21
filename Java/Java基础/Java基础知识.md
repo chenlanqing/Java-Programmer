@@ -2161,6 +2161,33 @@ JVM有一条名为 instanceof 的指令，而Java源码编译到Class文件时�
 - indexbyte1和indexbyte2用于构造对当前类的常量池的索引，objectref为reference类型，可以是某个类，数组的实例或者是接口
 - 基本过程：对indexbyte1和indexbyte2构造的常量池索引进行解析，然后根据java规范判断解析的类是不是objectref的一个实例，最后在栈顶写入结果
 
+## 5、static
+
+static变量有两次赋初始值的过程，一次在准备阶段，赋予初始值（也可以是指定值）；另外一次在初始化阶段，赋予程序员定义的值；
+
+static 语句块，只能访问到定义在 static 语句块之前的变量
+```java
+static int a = 0 ;
+static {
+	a = 1;
+	b = 1;
+}
+static int b = 0;
+public static void main(String[] args) {
+	System.out.println(a);
+	System.out.println(b);
+}
+```
+上面代码是正常编译的，再看下面的代码：
+```java
+static {
+	b = b + 1; // 编译报错
+}
+static int b = 0;
+```
+- 父类中定义的 static 语句块要优先于子类先执行的
+- static 代码块只会执行一次
+
 # 八、泛型
 
 ## 1、JDK5 引入的新特性

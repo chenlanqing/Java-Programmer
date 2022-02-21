@@ -148,7 +148,8 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 - Java 堆可以处在物理上不连续的内存空间中，只要逻辑上是连续的即可;
 - 其大小可以通过`-Xmx`和`-Xms`来控制；如果堆的内存大小超过 -Xmx 设定的最大内存， 就会抛出 OutOfMemoryError 异常；通常会将 -Xmx 和 -Xms 两个参数配置为相同的值，其目的是为了能够在垃圾回收机制清理完堆区后不再需要重新分隔计算堆的大小，从而提高性能；
 - Java 堆分为新生代和老生代，新生代又被分为 Eden 和 Survivor 组成。对象主要分配在 Eden 区上新建的对象分配在新生代中。新生代大小可以由`-Xmn` 来控制，也可以用`-XX:SurvivorRatio` 来控制Eden和Survivor的比例；老生代存放新生代中经过多次垃圾回收(也即Minor GC)仍然存活的对象和较大内处对象，通常是从Survivor区域拷贝过来的对象，但并不绝对。
-- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做`TLAB(Thread Local Allocation Buffer)`。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度；大对象无法再TLAB分配；基于 CAS 的独享线程（Mutator Threads）可以优先将对象分配在 Eden 中的一块内存，因为是 Java 线程独享的内存区没有锁竞争，所以分配速度更快，每个 TLAB 都是一个线程独享的；可以通过 `-XX:UseTLAB` 设置是否开启 TLAB 空间；一旦对象在 TLAB 空间分配内存失败时，JVM 就会尝试着通过使用加锁机制确保数据操作的原子性，从而直接在 Eden 空间中分配内存；
+- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做`TLAB(Thread Local Allocation Buffer)`。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度；大对象无法再TLAB分配；基于 CAS 的独享线程（Mutator Threads）可以优先将对象分配在 Eden 中的一块内存，因为是 Java 线程独享的内存区没有锁竞争，所以分配速度更快，每个 TLAB 都是一个线程独享的；可以通过 `-XX:UseTLAB` 设置是否开启 TLAB 空间；一旦对象在 TLAB 空间分配内存失败时， JVM 就会尝试着通过使用加锁机制确保数据操作的原子性，从而直接在 Eden 空间中分配内存；
+- 由于Eden区是连续的，因此bump-the-pointer在对象创建时，只需要检查最后一个对象后面是否有足够的内存即可，从而加快内存分配速度
 - 元数据、编译后的代码、常量都都是在堆外的；
 
 **堆与栈的区别：**
@@ -736,6 +737,69 @@ Java HotSpot(TM) 64-Bit Server VM warning: CodeCache is full. Compiler has been 
 - Code Cache空间降了一半，方法编译工作仍然可能不会重启；
 - flushing可能导致高的cpu使用，从而影响性能下降；
 
+### 4.3.4、元空间溢出
+
+元空间溢出主要是由于加载的类太多，或者动态生成的类太多。下面是一段模拟代码。通过访问 http://localhost:8888 触发后，它将会发生元空间溢出
+```java
+public class MetaspaceOOMTest {
+    public interface Facade {
+        void m(String input);
+    }
+    public static class FacadeImpl implements Facade {
+        @Override
+        public void m(String name) {
+        }
+    }
+    public static class MetaspaceFacadeInvocationHandler implements InvocationHandler {
+        private Object impl;
+        public MetaspaceFacadeInvocationHandler(Object impl) {
+            this.impl = impl;
+        }
+        @Override
+        public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            return method.invoke(impl, args);
+        }
+    }
+    private static Map<String, Facade> classLeakingMap = new HashMap<String, Facade>();
+    private static void oom(HttpExchange exchange) {
+        try {
+            String response = "oom begin!";
+            exchange.sendResponseHeaders(200, response.getBytes().length);
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+        } catch (Exception ex) {
+        }
+        try {
+            for (int i = 0; ; i++) {
+                String jar = "file:" + i + ".jar";
+                URL[] urls = new URL[]{new URL(jar)};
+                URLClassLoader newClassLoader = new URLClassLoader(urls);
+                Facade t = (Facade) Proxy.newProxyInstance(newClassLoader,
+                        new Class<?>[]{Facade.class},
+                        new MetaspaceFacadeInvocationHandler(new FacadeImpl()));
+                classLeakingMap.put(jar, t);
+            }
+        } catch (Exception e) {
+        }
+    }
+    private static void srv() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(8888), 0);
+        HttpContext context = server.createContext("/");
+        context.setHandler(MetaspaceOOMTest::oom);
+        server.start();
+    }
+
+    public static void main(String[] args) throws Exception {
+        srv();
+    }
+}
+```
+这段代码将使用 Java 自带的动态代理类，不断的生成新的 class，对应的虚拟机参数：
+```
+java -Xmx20m  -Xmn4m   -XX:+UseG1GC  -verbose:gc -Xlog:gc,gc+ref=debug,gc+heap=debug,gc+age=trace:file=/tmp/logs/gc_%p.log:tags,uptime,time,level -Xlog:safepoint:file=/tmp/logs/safepoint_%p.log:tags,uptime,time,level -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/logs -XX:ErrorFile=/tmp/logs/hs_error_pid%p.log -XX:-OmitStackTraceInFastThrow -XX:MetaspaceSize=16M -XX:MaxMetaspaceSize=16M  MetaspaceOOMTest
+```
+
 ## 4.4、JVM参数
 
 通过参数优化虚拟机内存的参数如下所示
@@ -1025,7 +1089,7 @@ protected final Class<?> defineClass(String name, byte[] b, int off, int len, Pr
 	postDefineClass(c, protectionDomain);
 	return c;
 }
-/* Determine protection domain, and check that:
+/* Determine protection domain, and check that: 
 	- not define java.* class,
 	- signer of this class matches signers for the rest of the classes in package.
 */
@@ -1046,13 +1110,23 @@ private ProtectionDomain preDefineClass(String name, ProtectionDomain pd){
 }
 ```
 
-### 6.3.4、如何判断两个class是否相同
+### 6.3.4、如何替换jdk的类
+
+以HashMap为例，当 Java 的原生 API 不能满足需求时，比如我们要修改 HashMap 类，就必须要使用到 Java 的 endorsed 技术。我们需要将自己的 HashMap 类，打包成一个 jar 包，然后放到 -Djava.endorsed.dirs 指定的目录中。注意类名和包名，应该和 JDK 自带的是一样的。但是，java.lang 包下面的类除外，因为这些都是特殊保护的；
+
+endorse的技术特点：
+- 能够覆盖的类是有限制的，其中不包括`java.lang`包中的类,比如`java.lang.String`这种 就不行；
+- endorsed目录：`.[jdk安装目录]./jre/lib/endorsed`，不是`jdk/lib/endorsed`，目录中放的是Jar包，不是`.java`或`.class`文件，哪怕只重写了一个类也要打包成jar包；
+- 重写的类必须满足jdk中的规范，例如：自定义的HashMap类也必须实现Map等接口；
+- 查看属性：`System.getProperty("java.endorsed.dirs");`
+
+### 6.3.5、如何判断两个class是否相同
 
 JVM 在判定两个 class是否相同时：不仅要判断两个类名是否相同，而且要判断是否由同一个类加载器实例加载的；只有两者同时满足的情况下，JVM才认为这两个 class是相同的；如果两个类来源于同一个 Class 文件，被同一个虚拟机加载，只要加载它们的类加载器不同，那这两个类必定不相等；这里的"相等"包括代表类的Class 对象的equals()方法、isAssignaleFrom()方法、isInstance()方法的返回结果，也包括使用 instanceof关键字做对象所属关系判定等情况；
 
 **一个类的全限定名以及加载该类的加载器两者共同形成了这个类在JVM中的惟一标识**
 
-### 6.3.5、ClassLoader 的体系架构
+### 6.3.6、ClassLoader 的体系架构
 
 - 检查类是否已经加载顺序：自底向上，`Custom ClassLoader(自定义加载) --> App ClassLoader --> Extension ClassLoader --> Bootstrap ClassLoader`
 
@@ -1202,7 +1276,7 @@ JVM中的Class只有满足以下三个条件，才能被GC回收，也就是该C
 
 **SPI**
 
-Java 中有一个 SPI 机制，全称是 Service Provider Interface，是 Java 提供的一套用来被第三方实现或者扩展的 API，它可以用来启用框架扩展和替换组件
+Java 中有一个 SPI 机制，全称是 Service Provider Interface，是 Java 提供的一套用来被第三方实现或者扩展的 API，它可以用来启用框架扩展和替换组件；SPI 实际上是“基于接口的编程＋策略模式＋配置文件”组合实现的动态加载机制，主要使用 java.util.ServiceLoader 类进行动态装载
 
 ## 6.5、自定义类加载器
 

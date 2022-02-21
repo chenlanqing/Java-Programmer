@@ -44,6 +44,51 @@ class MyString{
 }
 ```
 
+## 2、Stream流中存在问题
+
+### 2.1、List转Map问题
+
+```java
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class Person {
+    private String id;
+    private String name;
+}
+public static void main(String[] args) {
+    List<Person> list = new ArrayList<>();
+    list.add(Person.builder().id("1").name("A").build());
+    list.add(Person.builder().id("2").name("B").build());
+    list.add(Person.builder().id("3").name("C").build());
+    list.add(Person.builder().id("4").name("D").build());
+    list.add(Person.builder().id("3").name("E").build());
+    final Map<String, String> map = list.stream().collect(Collectors.toMap(Person::getId, Person::getName);
+    System.out.println(map);
+}
+```
+上面main方法在执行时会报错：
+```
+Exception in thread "main" java.lang.IllegalStateException: Duplicate key 3 (attempted merging values C and E)
+	at java.base/java.util.stream.Collectors.duplicateKeyException(Collectors.java:133)
+	at java.base/java.util.stream.Collectors.lambda$uniqKeysMapAccumulator$1(Collectors.java:180)
+	at java.base/java.util.stream.ReduceOps$3ReducingSink.accept(ReduceOps.java:169)
+	at java.base/java.util.ArrayList$ArrayListSpliterator.forEachRemaining(ArrayList.java:1654)
+	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)
+	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
+	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:913)
+	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:578)
+	at com.blue.fish.example.base.stream.ListToMap.main(ListToMap.java:24)
+```
+为了解决上述key重复的问题，需要对Collectors.toMap方法增加第三个参数：
+```java
+final Map<String, String> map = list.stream()
+.collect(Collectors.toMap(Person::getId, Person::getName, (oldValue, newValue) -> newValue));
+```
+`(oldValue, newValue) -> oldValue` 表示：如果key是重复的，你选择oldKey or newKey?
+
 # 二、集合
 
 ## 1、HashMap、Hashtable、LinkedHashMap
@@ -5396,6 +5441,8 @@ elasticsearch的搜索会分两阶段进行：
 # 二十一、其他
 
 ## 1、lombok实现原理
+
+- [Lombok和Jackson组合使用存在问题](https://mp.weixin.qq.com/s/uUyN1gfho0LN74SEvWuj6w)
 
 Lombok，它属于 Java 的一个热门工具类，使用它可以有效的解决代码工程中那些繁琐又重复的代码，如 Setter、Getter、toString、equals 和 hashCode 等等，向这种方法都可以使用 Lombok 注解来完成
 

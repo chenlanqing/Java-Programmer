@@ -427,6 +427,7 @@ Text类型改造建议：
 - `NULL = NULL` 的返回结果是 NULL，而不是 true。 
 - `NULL <> 1` 的返回结果是 NULL，而不是 true。
 - 在MySQL8之前的版本，如果某个列是允许为null，那么 `is not null` 是不会使用索引的，而 `is null` 则会使用索引；在Mysql8之后的版本都会使用索引；
+- NULL对索引的影响：存储大量的NULL值，除了计算更复杂之外，数据扫描的代价也会更高一些；如果要查询的值正好介于两个page的临界位置，那么需要多读取一个page；因为辅助索引是非唯一的，即便是在等值查询时，也需要再读取下一条记录，以确认已获取所有符合条件的数据。还有，当利用辅助索引读取数据时，如果要读取整行数据，则需要回表。也就是说，除了扫描辅助索引数据页之外，还需要扫描聚集索引数据页
 
 ### 5.2、默认值属性：default value
 
@@ -1986,6 +1987,10 @@ MyISAM，InnoDB，Memonry 三个常用MySQL引擎类型比较：
 |Hash索引   	|不支持		 |不支持	  |支持        |
 |R-tree索引 	|支持		 |不支持	  |不支持      |
 |Full-text索引 	|不支持		 |暂不支持	  |不支持      |
+
+### 9.6、如何查看索引文件
+
+https://github.com/gaopengcarl/innblock
 
 ## 10、聚簇索引与二级索引
 
@@ -5301,3 +5306,4 @@ Linux操作系统下默认文件存储：`/var/lib/mysql`
 * [MySQL事务实现](https://juejin.im/post/5ede6436518825430c3acaf4)
 * [事务实现原理](https://www.cnblogs.com/kismetv/p/10331633.html)
 * [MySQL-GTID复制](https://dbaplus.cn/news-11-857-1.html)
+* [MySQL生成随机数据工具](https://github.com/Percona-Lab/mysql_random_data_load)

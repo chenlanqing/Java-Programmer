@@ -104,6 +104,11 @@ JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refere
     ```
     应用场景：软引用通常用来实现内存敏感的缓存。如果还有空闲内存，就可以暂时保留缓存，当内存不足时清理掉，这样就保证了使用缓存的同时，不会耗尽内存。
 
+    这里有一个相关的 JVM 参数。它的意思是：每 MB 堆空闲空间中 SoftReference 的存活时间。这个值的默认时间是1秒（1000）
+    ```
+    -XX:SoftRefLRUPolicyMSPerMB=<N>
+    ```
+
 - 弱引用(Weak Reference)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakReference 类来实现弱引用；
     ```java
     Object o = new Object();
@@ -120,6 +125,8 @@ JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refere
     PhantomReference<Object> phantomReference = new PhantomReference<>(o, referenceQueue);
     ```
     应用场景：可用来跟踪对象被垃圾回收器回收的活动，当一个虚引用关联的对象被垃圾收集器回收之前会收到一条系统通知
+
+    基于虚引用，有一个更加优雅的实现方式，那就是 Java 9 以后新加入的 Cleaner，用来替代 Object 类的 finalizer 方法
 
 关于引用队列：
 - 无实际存储结构，存储逻辑依赖于内部节点之间的关系来表达；
@@ -251,26 +258,28 @@ public class FinalizeEscapeGC {
 
 ## 4、分代收集算法（Generation Collection）
 
-### 4.1、新生代与老年代
-
 基于不同的对象的生命周期是不一样的；一般是把 Java 堆分为新生代与老年代
 
-**4.1.1、新生代（Young Generation）**
+### 4.1、新生代（Young Generation）
 
 - 所有新生成的对象首先都是放在年轻代的，新生代的 GC 也叫做 MinorGC，MinorGC 发生频率比较高（不一定等 Eden 区满了才触发）
-- 新生代中对象生存周期短，所以选用复制算法，只需付出少量存活对象的复制成本就可以完成收集
+- 新生代中对象生存周期短，所以选用复制算法，只需付出少量存活对象的复制成本就可以完成收集；新生代的对象朝生夕死，大约90%的新建对象可以被很快回收，复制算法成本低，同时还能保证空间没有碎片。虽然标记整理算法也可以保证没有碎片，但是由于新生代要清理的对象数量很大，将存活的对象整理到待清理对象之前，需要大量的移动操作，时间复杂度比复制算法高；
 
-**4.1.2、老年代（Old Generation）**
+新生代对象的内存分配看下详细过程：
+- 新对象会先尝试在栈上分配，如果不行则尝试在TLAB分配，否则再看是否满足大对象条件要在老年代分配，最后才考虑在Eden区申请空间；
+- 如果Eden区没有合适的空间，则触发YGC；
+- YGC时，对Eden区和From Survivor区的存活对象进行处理，如果满足动态年龄判断的条件或者To Survivor区空间不够则直接进入老年代，如果老年代空间也不够了，则会发生promotion failed，触发老年代的回收。否则将存活对象复制到To Survivor区；
+- 此时Eden区和From Survivor区的剩余对象均为垃圾对象，可直接抹掉回收
+
+### 4.2、老年代（Old Generation）
 
 - 在新生代中经历了N次垃圾回收后仍然存活的对象，就会被放到年老代中.可以认为年老代中存放的都是一些生命周期较长的对象；
 - 当老年代内存满时触发 Major GC 即 FullGC，FullGC 发生频率比较低，老年代对象存活时间比较长，存活率高；
 - 一般使用标记-清除和标记-整理算法来进行回收；
 
-**4.1.3、持久代（Permanent Generation）**
+### 4.3、为什么分代
 
-用于存放静态文件，如Java类、方法等。持久代对垃圾回收没有显著影响，但是有些应用可能动态生成或者调用一些class
-
-- ***JDK8之后完全移除了持久代，取而代之的是[元空间](JVM-Java虚拟机.md#38元空间)***
+如果不分代，所有对象全部在一个区域，每次GC都需要对全堆进行扫描，存在效率问题。分代后，可分别控制回收频率，并采用不同的回收算法，确保GC性能全局最优
 	
 ### 4.2、GC的分类
 
@@ -532,7 +541,7 @@ Serial收集器对于新生代采用复制算法实现，对于老年代采用�
 - 算法：堆内存年轻代采用“复制算法”；配合收集器：`ParallelOldGC`，堆内存老年代采用“标记-整理算法”；
 - 并行的多线程收集器；只适用于新生代；在Server模式下的默认的年轻代收集器
 - Parallel Scavenge 收集器目标是达到一个控制的吞吐量（Throughput，CPU 运行用户代码的时间与CPU总消耗的时间的比值）；提供了两个参数用于控制吞吐量，分别是控制最大垃圾收集停顿时间的：`-XX:MaxGCPauseMillis`，其值是一个大于0的毫秒数；以及直接设置吞吐量大小的：`-XX:GCTimeRatio`参数，其值时0~100之间的整数
-- GC 自适应调整策略；`-XX:+UseAdaptiveSizePolicy`，这个是一个开关参数，当参数被激活之后，不需要人工指定新生代的大小、Ende和Survivor的比例、晋升老年代对象的大小等细节参数；
+- GC 自适应调整策略；`-XX:+UseAdaptiveSizePolicy`，这个是一个开关参数，当参数被激活之后，不需要人工指定新生代的大小、Ende和Survivor的比例、晋升老年代对象的大小等细节参数；（HotSpot VM里，Parallel Scavenge系的GC（UseParallelGC / UseParallelOldGC）默认行为是SurvivorRatio如果不显式设置就没啥用。显式设置到跟默认值一样的值则会有效果）
 - 无法与 CMS 收集器配合工作：Parallel Scavenge没有使用原本HotSpot其它GC通用的那个GC框架，所以不能跟使用了那个框架的CMS搭配使用；有一个分代式GC框架，Serial/Serial Old/ParNew/CMS都在这个框架内；在该框架内的young collector和old collector可以任意搭配使用，所谓的“mix-and-match”。 
 而ParallelScavenge与G1则不在这个框架内，而是各自采用了自己特别的框架。这是因为新的GC实现时发现原本的分代式GC框架用起来不顺手。
 - 适用于吞吐量的
@@ -573,7 +582,7 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 ### 6.2、优缺点
 
-- 优点：并发收集，低停顿
+- 优点：低延迟，尤其对于大堆来说。大部分垃圾回收过程并发执行。
 - 缺点：
 	- CMS 收集器对CPU资源非常敏感，导致应用吞吐量的降低
 	- CMS 收集无法处理浮动垃圾(Floating Garbage)，可能出现 Concurrent Mode Failure 失败而导致一次 Full GC 的产生
@@ -588,8 +597,8 @@ Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseS
 
 - `-XX:+UseConcMarkSweepGC`
 - `-XX:ConcGCThreads`：并发的GC线程数；
-- `-XX:+UseCMSCompactAtFullCollection`：Full GC之后做压缩
-- `-XX:CMSFullGCsBeforeCompaction`：多少次Full GC之后压缩一次
+- `-XX:+UseCMSCompactAtFullCollection`：（默认开启），表示在要进行 Full GC 的时候，进行内存碎片整理。内存整理的过程是无法并发的，所以停顿时间会变长
+- `-XX:CMSFullGCsBeforeCompaction`：每隔多少次不压缩的 Full GC 后，执行一次带压缩的 Full GC。默认值为 0，表示每次进入 Full GC 时都进行碎片整理
 - `-XX:CMSInitiatingOccupancyFraction`：触发Full GC，老年代内存使用占比达到 `CMSInitiatingOccupancyFraction`，默认为 92%
 - `-XX:+UseCMSInitiatingOccupancyOnly`：是否动态调整
 - `-XX:+CMSScavengeBeforeRemark`：full gc之前先做YGC
@@ -642,6 +651,10 @@ G1是一种服务器端的垃圾收集器，应用在多处理器和大容量内
 
 G1 最主要的设计目标是：实现可预期及可配置的 STW 停顿时间
 
+**为什么需要G1？**
+
+CMS 垃圾回收器在发生 Young GC 时，由于 Survivor 区已经放不下了，多出的对象只能提升（promotion）到老年代。但是此时老年代因为空间碎片的缘故，会发生 concurrent mode failure 的错误。这个时候，就需要降级为 Serail Old 垃圾回收器进行收集。这就是比 concurrent mode failure 更加严重的 promotion failed 问题；一次简单的 Young GC，竟然能演化成耗时最长的 Full GC。最要命的是，这个停顿时间是不可预知的
+
 ### 7.1、特点
 
 - 并行与并发
@@ -686,6 +699,8 @@ G1 把堆内存划分成一个个 Region 的意义在于：
 - 每次 GC 不必都去处理整个堆空间，而是每次只处理一部分 Region，实现大容量内存的 GC；
 - 通过计算每个 Region 的回收价值，包括回收所需时间、可回收空间，在有限时间内尽可能回收更多的垃圾对象，把垃圾回收造成的停顿时间控制在预期配置的时间范围内；
 
+G1 也是有 Eden 区和 Survivor 区的概念的，只不过它们在内存上不是连续的，而是由一小份一小份组成的
+
 **region的设计有什么副作用：**
 
 region的大小和大对象很难保证一致，这会导致空间浪费；并且region太小不合适，会令你在分配大对象时更难找到连续空间；
@@ -719,6 +734,8 @@ G1根据这个模型统计计算出来的历史数据来预测本次收集需要
 
 ### 7.3、G1 GC过程
 
+G1 还有一个 CSet 的概念。这个就比较好理解了，它的全称是 Collection Set，即收集集合，保存一次 GC 中将执行垃圾回收的区间（Region）。GC 是在 CSet 中的所有存活数据（Live Data）都会被转移
+
 #### 7.3.1、GC模式
 
 G1提供了两种GC模式，Young GC和Mixed GC，两种都是完全Stop The World的
@@ -732,7 +749,20 @@ Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC
 - 更早的回收垃圾（减少 `-XX:InitiatingHeapOccupancyPercent`，老年代达到该值时就触发Mixed GC，默认是45%）
 - 增加并发阶段使用的线程数（增大 -`XX:ConcGCThreads`）;
 
-#### 7.3.2、global concurrent marking
+#### 7.3.2、年轻代回收
+
+年轻代回收是一个 STW 的过程，它的跨代引用使用 RSet 数据结构来追溯，会一次性回收掉年轻代的所有 Region；
+
+JVM 启动时，G1 会先准备好 Eden 区，程序在运行过程中不断创建对象到 Eden 区，当所有的 Eden 区都满了，G1 会启动一次年轻代垃圾回收过程
+年轻代的收集包括下面的回收阶段：
+- 扫描根：根，可以看作是 GC Roots，加上 RSet 记录的其他 Region 的外部引用；
+- 更新 RS：处理 dirty card queue 中的卡页，更新 RSet。此阶段完成后，RSet 可以准确的反映老年代对所在的内存分段中对象的引用。可以看作是第一步的补充；
+- 处理 RS：识别被老年代对象指向的 Eden 中的对象，这些被指向的 Eden 中的对象被认为是存活的对象
+- 复制对象：收集算法依然使用的是 Copy 算法；在这个阶段，对象树被遍历，Eden 区内存段中存活的对象会被复制到 Survivor 区中空的 Region。这个过程和其他垃圾回收算法一样，包括对象的年龄和晋升；
+- 处理引用：处理 Soft、Weak、Phantom、Final、JNI Weak 等引用。结束收集
+
+
+#### 7.3.3、global concurrent marking
 
 它的执行过程类似CMS，但是不同的是，在G1 GC中，它主要是为Mixed GC提供标记服务的，并不是一次GC过程的一个必须环节。
 
@@ -744,7 +774,8 @@ Mixed GC不是full GC，它只能回收部分老年代的Region，如果mixed GC
 
 第一阶段initial mark是共用了Young GC的暂停，这是因为他们可以复用root scan操作，所以可以说global concurrent marking是伴随Young GC而发生的。第四阶段Cleanup只是回收了没有存活对象的Region，所以它并不需要STW
 
-#### 7.3.3、G1 GC发生时机
+
+#### 7.3.4、G1 GC发生时机
 
 **1、YoungGC发生时机**
 
@@ -769,7 +800,7 @@ Young GC 主要是对 Eden 区进行 GC，它在 Eden 空间耗尽时触发，�
 - `-XX:ConcGCThreads=n`：并发标记阶段，并行执行的线程数
 - `-XX:InitiatingHeapOccupancyPercent`：设置触发标记周期的 Java 堆占用率阈值。默认值是45%
 
-#### 7.3.4、G1 GC存在问题
+#### 7.3.5、G1 GC存在问题
 
 **Full GC 问题**
 
@@ -896,6 +927,12 @@ ZGC也采用基于Region的堆内存布局，但与它们不同的是，ZGC的Re
 - 如果允许停顿时间超过1秒，选择并行或者JVM自己选择；
 - 如果响应时间最重要，并且不能超过1秒，使用并发收集器
 
+具体实践：
+- 如果你的堆大小不是很大（比如 100MB），选择串行收集器一般是效率最高的。参数：-XX:+UseSerialGC；
+- 如果你的应用运行在单核的机器上，或者你的虚拟机核数只有 1C，选择串行收集器依然是合适的，这时候启用一些并行收集器没有任何收益。参数：`-XX:+UseSerialGC`；
+- 如果你的应用是“吞吐量”优先的，并且对较长时间的停顿没有什么特别的要求。选择并行收集器是比较好的。参数：`-XX:+UseParallelGC`；
+- 如果你的应用对响应时间要求较高，想要较少的停顿。甚至 1 秒的停顿都会引起大量的请求失败，那么选择 G1、ZGC、CMS 都是合理的；
+
 ## 11、新版本JDK增加的垃圾收集器
 
 ### 11.1、Shenandoah
@@ -1004,32 +1041,31 @@ Minor GC和Full GC垃圾收集过程：
 
 通常把老年代的GC成为major gc，对整个堆进行的清理叫做Full GC
 
-## 1、Minor GC(YGC)
+## 1、YGC
 
 对新生代进行GC
 
-**1.1、什么是YGC**
+### 1.1、什么是YGC
 
 YGC是JVM GC当前最为频繁的一种GC，一个高并发的服务在运行期间，会进行大量的YGC，发生YGC时，会进行STW(Stop The World)，一般时间都很短，除非碰到YGC时，存在大量的存活对象需要进行拷贝，主要是针对新生代对 Eden 区域进行GC，清除非存活对象。并且把尚且存活的对象移动到 Survivor 区，然后整理 Survivor 的两个区.这种方式的 GC 是对年轻代的 Eden 进行，不会影响到年老代。因为大部分对象都是从 Eden 区开始的，同时 Eden 区不会分配的很大.所以 Eden 区的 GC 会频繁进行。因而，一般在这里需要使用速度快、效率高的算法，使Eden去能尽快空闲出来；
 
-**1.1、触发条件**
+### 1.2、触发条件
 
 一般情况下，当新对象生成，并且在 Eden 申请空间失败时，就会触发 Minor GC。即当Eden区满时，触发Minor GC
 
-**1.2、YGC过程，主要你分为两个步骤**
+### 1.3、YGC过程
 
+主要分为两个步骤
 - 查找GC Roots，拷贝所引用的对象到 to 区;
-- 递归遍历步骤1中对象，并拷贝其所引用的对象到 to 区，当然可能会存在自然晋升，或者因为to 区空间不足引起的提前晋升的情况；
-	
+- 递归遍历步骤1中对象，并拷贝其所引用的对象到 to 区，当然可能会存在自然晋升，或者因为 to 区空间不足引起的提前晋升的情况；
 
-**1.3、YGC细节**
+上述整个过程都是需要暂停业务线程的（STW），不过ParNew等新生代回收器可以多线程并行执行，提高处理效率
 
-- 如果触发的YGC顺利执行完，.期间没有发生任何问题，垃圾回收完成后，正常的分配内存；
+### 1.4、YGC细节
 
+- 如果触发的YGC顺利执行完，期间没有发生任何问题，垃圾回收完成后，正常的分配内存；
 - 如果YGC刚要开始执行，却不幸的发生了JNI的GC locker，本次的YGC会被放弃，如果是给对象分配内存，会在老年代中直接分配内存，如果是TLAB的话，就要等JNI结束了；
-
 - 如果没有JNI的干扰，在YGC过程中，对象年纪达到阈值，正常晋升，或to空间不足，对象提前晋升，但老年代又没这么多空间容纳晋升上来的对象，这时会发生“promotion failed”，而且eden和from区的空间没办法清空， 把from区和to区进行swap，所以当前eden和from的使用率都是接近100%的，如果当前是给对象（非TLAB）申请内存，会继续触发一次老年代的回收动作；
-
 ```java
 /**
  * -Xmx20m -Xms20m -Xmn14m -XX:+UseParNewGC  -XX:+UseConcMarkSweepGC
@@ -1048,6 +1084,13 @@ public class JVM {
     }
 }
 ```
+
+### 1.5、YGC耗时久原因
+
+- （1）对存活对象标注时间过长：比如重载了Object类的Finalize方法，导致标注Final Reference耗时过长；或者String.intern方法使用不当，导致YGC扫描StringTable时间过长；
+- （2）长周期对象积累过多：比如本地缓存使用不当，积累了太多存活对象；或者锁竞争严重导致线程阻塞，局部变量的生命周期变长；
+
+对于第一类问题可以通过参数显示GC处理Reference的耗时`-XX:+PrintReferenceGC`
 
 ## 2、Mixed GC/Old GC
 
