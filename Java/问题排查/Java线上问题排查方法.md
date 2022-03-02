@@ -780,7 +780,6 @@ Redis——由分布式锁造成的重大事故：https://juejin.cn/post/6854573
 
 万字长文让你掌握网络问题排查技巧！：https://mp.weixin.qq.com/s/nEMSqw7nPR_WaZ19gh810A
 
-#面试 #好文分享
 
 # 参考资料
 

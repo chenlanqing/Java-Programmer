@@ -1089,6 +1089,8 @@ public class JVM {
 
 - （1）对存活对象标注时间过长：比如重载了Object类的Finalize方法，导致标注Final Reference耗时过长；或者String.intern方法使用不当，导致YGC扫描StringTable时间过长；
 - （2）长周期对象积累过多：比如本地缓存使用不当，积累了太多存活对象；或者锁竞争严重导致线程阻塞，局部变量的生命周期变长；
+- （3）存活对象copy to S区，晋升到Old区；
+- （4）等待各线程到达安全点时间：GC发生时，程序是会STW的(Serial, ParNew, Parallel Scanvange, ParallelOld, Serial Old全程都会STW，CMS等在初始标记重新标记阶段也会STW), JVM这时候只运行GC线程，不运行用户线程
 
 对于第一类问题可以通过参数显示GC处理Reference的耗时`-XX:+PrintReferenceGC`
 

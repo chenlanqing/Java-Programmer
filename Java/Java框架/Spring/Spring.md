@@ -1102,10 +1102,10 @@ Spring对同一配置文件中相同id或者name的两个或以上的bean时，�
 可能引发的问题：
 当不同文件中配置了相同id或者name的同一类型的两个bean时，如果这两个bean的类型虽然相同，但配置时又有差别时，如：
 ```xml
-<bean name="a" class="com.zyr.A">
+<bean name="a" class="com.A">
  	<property name="age" value="20" />
 </bean>
-<bean name="a" class="com.zyr.A">
+<bean name="a" class="com.A">
  	<property name="age" value="20" />
 </bean>
 ```
@@ -1115,7 +1115,6 @@ Spring对同一配置文件中相同id或者name的两个或以上的bean时，�
 ```java
 /** Whether to allow re-registration of a different definition with the same name */
 private boolean allowBeanDefinitionOverriding = true;
-
 // 使用
 if (oldBeanDefinition != null) {
 	if (!isAllowBeanDefinitionOverriding()) {
@@ -1139,7 +1138,8 @@ public class SpringContextLoaderListener extends ContextLoaderListener {
         super.customizeContext(sc, wac);
 
         XmlWebApplicationContext context = (XmlWebApplicationContext) wac;
-        context.setAllowBeanDefinitionOverriding(false); //在这里将XmlWebApplicationContext属性allowBeanDefinitionOverriding设置为false,这个属性的值最终
+		//在这里将XmlWebApplicationContext属性allowBeanDefinitionOverriding设置为false,这个属性的值最终
+        context.setAllowBeanDefinitionOverriding(false); 
     }
 }
 ```
@@ -1149,7 +1149,7 @@ public class SpringContextLoaderListener extends ContextLoaderListener {
       <listener-class>com.spring.SpringContextLoaderListener</listener-class>
 </listener>
 ```
-在项目启动时，不同配置文件中如果有同名id或者name的bean,直接抛异常,容器停止启动
+在项目启动时，不同配置文件中如果有同名id或者name的bean，直接抛异常，容器停止启动
 
 ### 1.3、解决方案2：改变allowBeanDefinitionOverriding默认值
 
@@ -2972,11 +2972,7 @@ SpringBoot也可以从以下位置加载配置； 优先级从高到低；高优
 - Devtools全局配置
 - 测试环境`@TestPropertySource`注解
 - 测试环境`properties`属性
-- 命令行参数：所有的配置都可以在命令行上进行指定：
-
-	java -jar springboot-02-0.0.1-SNAPSHOT.jar --server.port=8087  --server.context-path=/abc
-
-	多个配置用空格分开； --配置项=值
+- 命令行参数：所有的配置都可以在命令行上进行指定：`java -jar springboot-02-0.0.1-SNAPSHOT.jar --server.port=8087  --server.context-path=/abc`；多个配置用空格分开； `--配置项=值`
 - `SPRING_APPLICATION_JSON`属性
 - `ServletConfig`初始化参数
 - `ServletContext`初始化参数
@@ -3022,7 +3018,7 @@ public @interface SpringBootConfiguration {
 可以把 `@SpringBootApplication`看作是 `@Configuration`、`@EnableAutoConfiguration`、`@ComponentScan` 注解的集合。这三个注解的作用分别是：
 - `@EnableAutoConfiguration`：启用 SpringBoot 的自动配置机制；
 - `@Configuration`：允许在上下文中注册额外的 bean 或导入其他配置类；
-- `@ComponentScan`： 扫描被`@Component (@Service,@Controller)`注解的 bean，注解默认会扫描启动类所在的包下所有的类 ，可以自定义不扫描某些 bean。如下图所示，容器中将排除`TypeExcludeFilter`和`AutoConfigurationExcludeFilter`；
+- `@ComponentScan`：扫描被`@Component (@Service,@Controller)`注解的 bean，注解默认会扫描启动类所在的包下所有的类 ，可以自定义不扫描某些 bean。如下图所示，容器中将排除`TypeExcludeFilter`和`AutoConfigurationExcludeFilter`；
 
 加载过程：
 - `@EnableAutoConfiguration`的主要操作类是：`AutoConfigurationImportSelector`，执行到 `AbstractApplicationContext#invokeBeanFactoryPostProcessors`方法时会调用到 AutoConfigurationImportSelector#getCandidateConfigurations 方法，该方法会通过 SpringFactories 从 jar的配置文件`META-INF/spring.factories`加载 key 为 `EnableAutoConfiguration`全类名的属性列表；

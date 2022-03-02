@@ -1458,12 +1458,12 @@ Java中用到的线程调度算法是什么
 
 ## 1、同一个类加载器对象是否可以加载同一个类文件多次并且得到多个Class对象而都可以被java层使用吗
 
-可以通过`Unsafe`的`defineAnonymousClass`来实现同一个类文件被同一个类加载器对象加载多遍的效果，因为并没有将其放到`SystemDictonary`里，因此我们可以无穷次加载同一个类；
-- 正常的类加载：在JVM里有一个数据结构叫做SystemDictonary，这个结构主要就是用来检索我们常说的类信息，这些类信息对应的结构是klass，对SystemDictonary的理解，可以认为就是一个Hashtable，key是类加载器对象+类的名字，value是指向klass的地址；这样当我们任意一个类加载器去正常加载类的时候，就会到这个SystemDictonary中去查找，看是否有这么一个klass可以返回，如果有就返回它，否则就会去创建一个新的并放到结构里；
+可以通过`Unsafe`的`defineAnonymousClass`来实现同一个类文件被同一个类加载器对象加载多遍的效果，因为并没有将其放到`SystemDictionary`里，因此我们可以无穷次加载同一个类；
+- 正常的类加载：在JVM里有一个数据结构叫做SystemDictionary，这个结构主要就是用来检索我们常说的类信息，这些类信息对应的结构是klass，对SystemDictionary的理解，可以认为就是一个Hashtable，key是类加载器对象+类的名字，value是指向klass的地址；这样当我们任意一个类加载器去正常加载类的时候，就会到这个SystemDictionary中去查找，看是否有这么一个klass可以返回，如果有就返回它，否则就会去创建一个新的并放到结构里；
 
 - defineAnonymousClass：
 
-	创建了一个匿名的类，不过这种匿名的概念和我们理解的匿名是不太一样的。这种类的创建通常会有一个宿主类，也就是第一个参数指定的类，这样一来，这个创建的类会使用这个宿主类的定义类加载器来加载这个类，最关键的一点是这个类被创建之后并不会丢到上述的SystemDictonary里，也就是说我们通过正常的类查找，比如Class.forName等api是无法去查到这个类是否被定义过的。因此过度使用这种api来创建这种类在一定程度上会带来一定的内存泄露；
+	创建了一个匿名的类，不过这种匿名的概念和我们理解的匿名是不太一样的。这种类的创建通常会有一个宿主类，也就是第一个参数指定的类，这样一来，这个创建的类会使用这个宿主类的定义类加载器来加载这个类，最关键的一点是这个类被创建之后并不会丢到上述的SystemDictionary里，也就是说我们通过正常的类查找，比如Class.forName等api是无法去查到这个类是否被定义过的。因此过度使用这种api来创建这种类在一定程度上会带来一定的内存泄露；
 
 	jvm通过invokeDynamic可以支持动态类型语言，这样一来其实我们可以提供一个类模板，在运行的时候加载一个类的时候先动态替换掉常量池中的某些内容，这样一来，同一个类文件，我们通过加载多次，并且传入不同的一些cpPatches，也就是defineAnonymousClass的第三个参数， 这样就能做到运行时产生不同的效果
 	
@@ -2773,11 +2773,12 @@ Text类型改造建议：
 - SpringApplication.run(主程序类)
 	- new SpringApplication(主程序类)
 		- 判断是否web应用
-		- 加载并保存所有 ApplicationContextInitializer (`META-INF/spring.factories`)；加载并保存所有 ApplicationListener
+		- 加载并保存所有 ApplicationContextInitializer (`META-INF/spring.factories`)；
+        - 加载并保存所有 ApplicationListener；
 		- 获取到主程序类
 	- run()
 		- 回调所有的 SpringApplicationRunListener(`META-INF/spring.factories`)的 starting
-		- 获取ApplicationArguments
+		- 获取 ApplicationArguments
 		- 准备环境&回调所有监听器( SpringApplicationRunListener )的environmentPrepared，打印banner信息
 		- 创建ioc容器对象
 	- AnnotationConfigEmbeddedWebApplicationContext(web环境容器) – AnnotationConfigApplicationContext(普通环境容器)
@@ -2788,7 +2789,7 @@ Text类型改造建议：
 	- 刷新启动IOC容器;
 - 扫描加载所有容器中的组件
 - 包括从`META-INF/spring.factories`中获取的所有EnableAutoConfiguration组件
-	- 回调容器中所有的ApplicationRunner、CommandLineRunner的run方法；
+	- 回调容器中所有的 ApplicationRunner、CommandLineRunner的run方法；
 	- 监听器SpringApplicationRunListener回调finished
 
 ## 2、SpringBoot常用注解
