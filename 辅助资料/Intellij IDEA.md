@@ -93,6 +93,7 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - VisualVM Launcher
 - ASM
 - IDE Eval Reset
+- mybatisX
 
 # 4、idea插件开发
 

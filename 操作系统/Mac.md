@@ -33,10 +33,9 @@ TIME_WAIT 1645
 https://xclient.info/
 
 - idea
-- navicat
 - mat
+- DBeaver   数据库连接工具
 - postman
-- wireshark
 - 百度网盘
 - 滴答清单
 - Alfred3

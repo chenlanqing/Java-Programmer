@@ -442,6 +442,10 @@ PageHelper
 
 # 七、Tkmapper
 
+# 八、mybatis-plus
+
+- [Mybatis-Plus](https://baomidou.com/)
+
 
 # 参考资料
 
