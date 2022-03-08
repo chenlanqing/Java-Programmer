@@ -6,7 +6,7 @@ public class LinkedList<E> extends AbstractSequentialList<E>
 }
 ```
 LinkedList同时实现了List接口和Deque接口，也就是说它既可以看作一个顺序容器，又可以看作一个队列(Queue)，同时又可以看作一个栈(Stack)
-- `AbstractSequenceList` 提供了 List 接口骨干性的实现以减少实现 List 接口的复杂度
+- `AbstractSequentialList` 提供了 List 接口骨干性的实现以减少实现 List 接口的复杂度
 - `Deque` 接口定义了双端队列的操作，是一个双向链表；
 
 LinkedList的相关概念

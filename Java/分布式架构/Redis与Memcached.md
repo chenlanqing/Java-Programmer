@@ -84,7 +84,7 @@ OK
 - Redis 的哈希是键值对的集合。Redis 的哈希值是字符串字段和字符串值之间的映射，因此它们被用来表示对象
 - 例子
 ```
-127.0.0.1：6379> hmset user：1000 username bluefish password 123 port 8080
+127.0.0.1：6379> hmset user:1000 username bluefish password 123 port 8080
 OK
 127.0.0.1：6379> hgetall user：1
 1) "username"

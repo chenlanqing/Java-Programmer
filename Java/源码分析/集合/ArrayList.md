@@ -155,6 +155,114 @@ public E set(int index, E element) {
 
 `get()`方法同样很简单，唯一要注意的是由于底层数组是Object[]，得到元素后需要进行类型转换
 
+### 5.4、indexOf和lastIndexOf
+
+这两个方法实现差不多，一个是从0开始遍历，一个是尾部开始遍历，
+```java
+public int indexOf(Object o) {
+	return indexOfRange(o, 0, size);
+}
+int indexOfRange(Object o, int start, int end) {
+	Object[] es = elementData;
+	if (o == null) {
+		for (int i = start; i < end; i++) {
+			if (es[i] == null) {
+				return i;
+			}
+		}
+	} else {
+		for (int i = start; i < end; i++) {
+			if (o.equals(es[i])) {
+				return i;
+			}
+		}
+	}
+	return -1;
+}
+```
+需要注意的一点是：如果参数为null，只要集合中有null的元素，匹配到直接返回；
+
+### 5.5、removeAll和retainAll
+
+```java
+public boolean removeAll(Collection<?> c) {
+	return batchRemove(c, false, 0, size);
+}
+public boolean retainAll(Collection<?> c) {
+	return batchRemove(c, true, 0, size);
+}
+boolean batchRemove(Collection<?> c, boolean complement, final int from, final int end) {
+	Objects.requireNonNull(c);
+	final Object[] es = elementData;
+	int r;
+	// Optimize for initial run of survivors
+	for (r = from;; r++) {
+		if (r == end)
+			return false;
+		if (c.contains(es[r]) != complement)
+			break;
+	}
+	int w = r++;
+	try {
+		for (Object e; r < end; r++)
+			if (c.contains(e = es[r]) == complement)
+				es[w++] = e;
+	} catch (Throwable ex) {
+		// Preserve behavioral compatibility with AbstractCollection,
+		// even if c.contains() throws.
+		System.arraycopy(es, r, es, w, end - r);
+		w += end - r;
+		throw ex;
+	} finally {
+		modCount += end - w;
+		shiftTailOverGap(es, w, end);
+	}
+	return true;
+}
+```
+- `A.removeAll(B)`：从集合A中删除A中包含给定集合B的所有元素，即保留集合A中不在集合B中的元素
+- `A.retainAll(B)`：从集合A中删除不包含集合B中的元素，即取交集
+
+示例：
+```java
+public static void testRemoveRetain() {
+	ArrayList<Integer> list = new ArrayList<>();
+	list.add(1);
+	list.add(4);
+	list.add(6);
+
+	ArrayList<Integer> list1 = new ArrayList<>();
+	for (int i = 0; i < 5; i++) {
+		list1.add(i);
+	}
+	ArrayList<Integer> list2 = new ArrayList<>(list1);
+	System.out.println("执行前-list1 = " + list1);
+	list1.removeAll(list);
+	System.out.println("执行后-list1 = " + list1);
+	System.out.println("执行前-list2 = " + list2);
+	list2.retainAll(list);
+	System.out.println("执行后-list2 = " + list2);
+}
+// 输出：
+执行前-list1 = [0, 1, 2, 3, 4]
+执行后-list1 = [0, 2, 3]
+执行前-list2 = [0, 1, 2, 3, 4]
+执行后-list2 = [1, 4]
+```
+
+### 5.6、removeIf
+
+该函数接收一个 Predicate 对象，即一个lambda表达式，表示过滤数据，即该表达式中为true的数据过滤掉
+```java
+public interface Predicate<T> {
+    boolean test(T t);
+}
+```
+
+### 5.7、toArray
+
+
+
 ## 6、ArrayList 安全隐患
 
 - **当传递 ArrayList 到某个方法中，或者某个方法返回 ArrayList，什么时候要考虑安全隐患？如何修复安全违规这个问题呢？**
