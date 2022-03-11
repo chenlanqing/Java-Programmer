@@ -1,5 +1,6 @@
 # 一、类的定义
 
+LinkedList是一个基于链表实现的双端队列
 ```java
 public class LinkedList<E> extends AbstractSequentialList<E> 
     implements List<E>, Deque<E>, Cloneable, java.io.Serializable {
@@ -7,7 +8,7 @@ public class LinkedList<E> extends AbstractSequentialList<E>
 ```
 LinkedList同时实现了List接口和Deque接口，也就是说它既可以看作一个顺序容器，又可以看作一个队列(Queue)，同时又可以看作一个栈(Stack)
 - `AbstractSequentialList` 提供了 List 接口骨干性的实现以减少实现 List 接口的复杂度
-- `Deque` 接口定义了双端队列的操作，是一个双向链表；
+- `Deque`：接口定义了双端队列的操作，是一个双向链表；
 
 LinkedList的相关概念
 - Node节点有prev（前驱节点）、next（后置节点）属性；
@@ -237,11 +238,35 @@ private class ListItr implements ListIterator<E> {
     private Node<E> next;// 下一个节点
     private int nextIndex;// 下一个节点的位置
     private int expectedModCount = modCount;
-
+    // 如果index = 0，只能从头到尾遍历，如果 0 < index <= size，即可以往头节点遍历，也可以往尾部遍历
     ListItr(int index) {
         // assert isPositionIndex(index);
         next = (index == size) ? null : node(index);
         nextIndex = index;
+    }
+}
+```
+另外如果需要从尾部往头部遍历，可以使用 DescendingIterator，调用方法：`list.descendingIterator()`，其实现就是调用上面的 ListItr 来实现的：
+```java
+/**
+* @since 1.6
+*/
+public Iterator<E> descendingIterator() {
+    return new DescendingIterator();
+}
+/**
+* Adapter to provide descending iterators via ListItr.previous
+*/
+private class DescendingIterator implements Iterator<E> {
+    private final ListItr itr = new ListItr(size());
+    public boolean hasNext() {
+        return itr.hasPrevious();
+    }
+    public E next() {
+        return itr.previous();
+    }
+    public void remove() {
+        itr.remove();
     }
 }
 ```
@@ -289,7 +314,7 @@ public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cl
 | ArrayDeque | 线程不同步 |
 | LinkedList | 线程不同步 |
 
-## 4、其他
+## 4、使用场景
 
 - 频繁的插入、删除操作：LinkedList
 - 频繁的随机访问操作：ArrayDeque
