@@ -273,18 +273,90 @@ private class DescendingIterator implements Iterator<E> {
 
 # 三、ArrayDeque
 
-ArrayDeque 是用数组实现的双端队列，初始化如果没有指定容量，默认容量是16；
+## 1、签名
+
 ```java
 public class ArrayDeque<E> extends AbstractCollection<E> implements Deque<E>, Cloneable, Serializable {
     // 数组存储的元素，数组是可以扩容的，一般是2的N次方，数组内元素不可以为NULL；
     transient Object[] elements; 
     // 头结点索引位置
     transient int head;
-    // 尾节点索引尾椎
+    // 尾节点索引位置
     transient int tail;
-    public ArrayDeque() {
-        elements = new Object[16];
+}
+```
+ArrayDeque 是用环形数组实现的双端队列，可以使用ArrayDeque来实现队列或者栈；内部维护头、尾两个指针，可以分别头、尾读取数据；
+
+## 2、构造方法
+
+ArrayDeque 有三个构造方法
+```java
+public ArrayDeque() {
+    elements = new Object[16];
+}
+public ArrayDeque(int numElements) {
+    allocateElements(numElements);
+}
+public ArrayDeque(Collection<? extends E> c) {
+    allocateElements(c.size());
+    addAll(c);
+}
+private void allocateElements(int numElements) {
+    elements = new Object[calculateSize(numElements)];
+}
+private static int calculateSize(int numElements) {
+    int initialCapacity = MIN_INITIAL_CAPACITY;
+    // Find the best power of two to hold elements.
+    // Tests "<=" because arrays aren't kept full.
+    if (numElements >= initialCapacity) {
+        initialCapacity = numElements;
+        initialCapacity |= (initialCapacity >>>  1);
+        initialCapacity |= (initialCapacity >>>  2);
+        initialCapacity |= (initialCapacity >>>  4);
+        initialCapacity |= (initialCapacity >>>  8);
+        initialCapacity |= (initialCapacity >>> 16);
+        initialCapacity++;
+
+        if (initialCapacity < 0)   // Too many elements, must back off
+            initialCapacity >>>= 1;// Good luck allocating 2 ^ 30 elements
     }
+    return initialCapacity;
+}
+```
+- 无参构造方法：默认会构造一个数组，数组容量是16；
+- 带容量参数构造方法：会根据传入的容量，计算得出大于等于传入容量的2的幂的最小值，比如传入13，那么最终构造的数组容量是16，因为16是大于13的最小2的幂；
+- 带集合参数构造方法：会根据传入的集合的容量，计算出对应新的ArrayDeque内的数组的容量；
+
+## 3、方法
+
+### 3.1、扩容
+
+ArrayDeque内的数组扩容是按照原有容量的两倍扩充的，保持数组的长度为2的幂；
+```java
+private void doubleCapacity() {
+    // 只有头尾指针相等才会进行扩容
+    assert head == tail;
+    int p = head;
+    int n = elements.length;
+    int r = n - p; // number of elements to the right of p
+    int newCapacity = n << 1;
+    if (newCapacity < 0)
+        throw new IllegalStateException("Sorry, deque too big");
+    Object[] a = new Object[newCapacity];
+    System.arraycopy(elements, p, a, 0, r);
+    System.arraycopy(elements, 0, a, r, p);
+    elements = a;
+    head = 0;
+    tail = n;
+}
+```
+
+### 3.2、size方法
+
+基于环形数组的实现，那么元素个数的计算不能使用简单的 element.length 来计算；
+```java
+public int size() {
+    return (tail - head) & (elements.length - 1);
 }
 ```
 
