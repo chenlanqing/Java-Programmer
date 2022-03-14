@@ -62,4 +62,20 @@ https://xclient.info/
 - atom
 - worktile
 
+## 5、homebrew
+
+使用homebrew下载软件缓慢，可以使用国内镜像：
+```
+-- 替换brew.git:
+cd "$(brew --repo)"
+git remote set-url origin https://mirrors.cloud.tencent.com/homebrew/brew.git
+
+-- 替换homebrew-core.git:
+cd "$(brew --repo)/Library/Taps/homebrew/homebrew-core"
+git remote set-url origin https://mirrors.cloud.tencent.com/homebrew/homebrew-core.git
+
+-- 刷新源
+brew update
+```
+
 

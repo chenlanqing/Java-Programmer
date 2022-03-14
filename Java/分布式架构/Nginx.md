@@ -4,7 +4,9 @@
 
 # 一、Nginx
 
-## 1、什么是 Nginx
+## 1、概述
+
+### 1.1、基本介绍
 
 一个开源且高性能，可靠的HTTP中间件、代理服务；
 
@@ -15,75 +17,13 @@
 - CPU亲和（affinity）：是一种把CPU核心和Nginx工作进程绑定方式，把每个worker进程固定在一个cpu上执行，减少切换CPU的cache miss，活动更好的性能；
 - sendfile
 
-## 2、Nginx安装
+总的来说，Nginx 有 5 大优点，即模块化、事件驱动、异步、非阻塞、多进程单线程。以下是 Nginx 的架构原理图：
 
-### 2.1、yum安装
+![](image/Nginx-架构图.png)
 
-- 安装一些依赖：
-	* yum -y install wget httpd-tools vim
-	* yum -y install gcc gcc-c++ autoconf pcre pcre-devel make automake
+## 2、原理
 
-- 初始化：
-	* cd /opt； mkdir app download log work backup
-
-Linux安装：（基于yum安装）
-
-- 在 /etc/yum.repos.d/ 目录下新建文件 nginx.repo，在文件中输入：
-```
-[nginx]
-name=nginx repo
-baseurl=http://nginx.org/packages/OS/OSRELEASE/$basearch/
-gpgcheck=0
-enabled=1
-==> OS - "rhel" or "centos"
-==> OSRELEASE - 对应的版本，如6，7
-```
-- 查看nginx相关安装包：
-
-	yum list | grep nginx
-
-- 安装：
-
-	yum install nginx
-
-- nginx -v：查看版本好
-
-	nginx -V：查看对应的编译参数
-
-### 2.2、tar包安装
-
-- 安装依赖环境：
-	- 安装gcc环境：`yum install gcc-c++`
-	- 安装PCRE库，用于解析正则表达式：`yum install -y pcre pcre-devel`
-	- zlib压缩和解压缩依赖：`yum install -y zlib zlib-devel`
-	- SSL 安全的加密的套接字协议层，用于HTTP安全传输，也就是https：`yum install -y openssl openssl-devel`
-
-- 下载tar包
-- 解压，需要注意，解压后得到的是源码，源码需要编译后才能安装：`tar -zxvf nginx-1.16.1.tar.gz` 
-- 编译之前，先创建nginx临时目录，如果不创建，在启动nginx的过程中会报错：`mkdir /var/temp/nginx -p`
-- 在nginx目录，输入如下命令进行配置，目的是为了创建makefile文件：
-	```
-	./configure --prefix=/usr/local/nginx --pid-path=/var/run/nginx/nginx.pid --lock-path=/var/lock/nginx.lock --error-log-path=/var/log/nginx/error.log --http-log-path=/var/log/nginx/access.log --with-http_gzip_static_module --http-client-body-temp-path=/var/temp/nginx/client --http-proxy-temp-path=/var/temp/nginx/proxy --http-fastcgi-temp-path=/var/temp/nginx/fastcgi --http-uwsgi-temp-path=/var/temp/nginx/uwsgi --http-scgi-temp-path=/var/temp/nginx/scgi
-	```
-	|命令	 |解释 |
-	| ------|------|
-	|–prefix	|指定nginx安装目录|
-	|–pid-path	|指向nginx的pid|
-	|–lock-path	|锁定安装文件，防止被恶意篡改或误操作|
-	|–error-log	|错误日志|
-	|–http-log-path	|http日志|
-	|–with-http_gzip_static_module	|启用gzip模块，在线实时压缩输出数据流|
-	|–http-client-body-temp-path	|设定客户端请求的临时目录|
-	|–http-proxy-temp-path	|设定http代理临时目录|
-	|–http-fastcgi-temp-path	|设定fastcgi临时目录|
-	|–http-uwsgi-temp-path	|设定uwsgi临时目录|
-	|–http-scgi-temp-path	|设定scgi临时目录|
-- make编译：`make`
-- 安装：`make install`
-- 进入`/usr/local/nginx/sbin`目录启动nginx：`./nginx`
-- 停止：`./nginx -s stop`
-- 重新加载：`./nginx -s reload`
-
+Nginx 是由一个 master 进程和多个 worker 进程（可配置）来配合完成工作的。其中 master 进程负责 Nginx 配置文件的加载和 worker 进程的管理工作，而 worker 进程负责请求的处理与转发，进程之间相互隔离，互不干扰。同时每个进程中只有一个线程，这就省去了并发情况下的加锁以及线程的切换带来的性能损耗
 
 ## 3、Nginx命令
 
@@ -1379,6 +1319,9 @@ Worker进程采用单线程、非阻塞的事件模型（Event Loop，事件循�
 	```
 
 # 五、Openresty 与 Lua脚本
+
+- [OpenResty是一款基于 NGINX 和 LuaJIT 的 Web 平台。](https://openresty.org/cn/)
+- [Openresty最佳实践](https://moonbingbing.gitbooks.io/openresty-best-practices/content/)
 
 ## 1、Openresty
 
