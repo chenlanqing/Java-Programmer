@@ -3232,6 +3232,10 @@ select * from t where c=N order by b limit 1;
 
 针对上述：结论是 ca 可以去掉，cb 需要保留
 
+### 7.6、虚拟列
+
+在Mysql5.7版本中，有个虚拟列的功能；
+
 ## 8、查询优化
 
 ### 8.1、如何进行优化
@@ -3659,7 +3663,7 @@ explain select max(payment_date) from payment；
 - 查找重复或冗余索引：
 
 	- 使用sql查询，切换到imformation_schema数据库：不包含主键等
-		```
+		```sql
 		SELECT
 			a.table_schema AS 'database'，
 			a.table_name AS 'tableName'，
