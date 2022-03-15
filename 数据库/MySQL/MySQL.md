@@ -276,6 +276,51 @@ MySQL 要给这个 InnoDB 表创建一个 frm 文件保存表结构定义，还�
 - union
 - group by
 
+## 9、虚拟列
+
+### 9.1、介绍
+
+mysql 5.7 提供了一个新特性：虚拟列 Generated columns；MySQL的表生成列通常又叫做虚拟列或计算列。这个生成列的值是在列定义时包含了一个计算表达式计算得到的，有两种类型的生成列：
+- Virtual（虚拟）：这个类型的列会在读取表记录时自动计算此列的结果并返回，并不会将这一列数据持久化到磁盘上
+- Stored（存储）：这个类型的列会在表中插入一条数据时自动计算对应的值，并插入到这个列中，那么这个列会作为一个常规列存在表中。虚拟生成列有时候比存储生成列更有用，因为它不会占用存储空间；
+
+MySQL 5.7中，不指定Generated Column的类型，默认是Virtual Column
+
+### 9.2、主要特点
+
+- 衍生列的定义可以修改，但virtual和stored之间不能相互转换，必要时需要删除重建
+- 虚拟列字段只读，不支持 INSRET 和 UPDATE。
+- 只能引用本表的非 generated column 字段，不可以引用其它表的字段。
+- 使用的表达式和操作符必须是 Immutable 属性。
+- 支持创建索引。
+- 可以将已存在的普通列转化为stored类型的衍生列，但virtual类型不行；同样的，可以将stored类型的衍生列转化为普通列，但virtual类型的不行。
+- MySQL可以在衍生列上面创建索引。对于stored类型的衍生列，跟普通列创建索引无区别。
+- 对于virtual类型的衍生列，创建索引时，会将衍生列值物化到索引键里，即把衍生列的值计算出来，然后存放在索引里。如果衍生列上的索引起到了覆盖索引的作用，那么衍生列的值将直接从覆盖索引里读取，而不再依据衍生定义去计算。
+- 针对virtual类型的衍生列索引，在insert和update操作时会消耗额外的写负载，因为更新衍生列索引时需要将衍生列值计算出来，并物化到索引里。但即使这样，virtual类型也比stored类型的衍生列好，有索引就避免了每次读取数据行时都需要进行一次衍生计算，同时stored类型衍生列实际存储数据，使得聚簇索引更大更占空间。
+- virtual类型的衍生列索引使用 MVCC日志，避免在事务rollback或者purge操作时重新进行不必要的衍生计算；
+
+### 9.3、语法
+
+```
+<type> [ GENERATED ALWAYS ] AS ( <expression> ) [ VIRTUAL|STORED ]  
+[ UNIQUE [KEY] ] [ [PRIMARY] KEY ] [ NOT NULL ] [ COMMENT <text> ]
+```
+比如：
+```sql
+-- 创建表时指定索引列
+CREATE TABLE `people` (
+  `id` int NOT NULL,
+  `name` varchar(20) DEFAULT NULL,
+  `age` int NOT NULL,
+  `info` varchar(255) DEFAULT NULL,
+  `name_first` varchar(2) GENERATED ALWAYS AS (left(`name`,1)) VIRTUAL,
+  KEY `idx_name_first` (`name_first`,`age`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8
+-- 添加虚拟列
+ALTER TABLE `test` 
+ADD COLUMN `update_time_format` date GENERATED ALWAYS AS (date_format(`updated_time`,'%Y-%m-%d')) Virtual NULL;
+```
+
 # 三、MySQL数据类型
 
 ## 1、数值型
@@ -3232,9 +3277,9 @@ select * from t where c=N order by b limit 1;
 
 针对上述：结论是 ca 可以去掉，cb 需要保留
 
-### 7.6、虚拟列
+### 7.6、使用虚拟列优化
 
-在Mysql5.7版本中，有个虚拟列的功能；
+在Mysql5.7版本中，有虚拟列 Generated columns相关功能，可以使用虚拟列来做相应的优化；
 
 ## 8、查询优化
 

@@ -2118,6 +2118,8 @@ Docker不适合部署数据库的7大原因
 
 ## 18、平常会把连接池设置成多大呢
 
+- [关于连接池的设置](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing)
+
 根据经验，数据库连接，只需要 20~50 个就够用了。具体的大小，要根据业务属性进行调整，但大得离谱肯定是不合适的；
 
 HikariCP 官方是不推荐设置 minimumIdle 这个值的，它将被默认设置成和 maximumPoolSize 一样的大小。如果你的数据库Server端连接资源空闲较大，不妨也可以去掉连接池的动态调整功能
