@@ -652,6 +652,12 @@ rm: cannot remove ‘authorized_keys’: Operation not permitted
 
 `pid=$(ps aux | grep elasticsearch | grep config | awk '{print $2}')`
 
+## 16、查看TCP连接
+
+在端口45678上的TCP连接总数：`lsof -nP -i4TCP:45678 | wc -l`
+
+在端口45678上的TCP连接状态：`lsof -nP -i4TCP:45678`
+
 # 四、Linux工具
 
 vmstat 可以获得有关进程、内存页面交换、虚拟内存、线程上下文切换、等待队列等信息。能够反映系统的负载情况。一般用来查看进程等待数量、内存换页情况、系统上下文切换是否频繁等
