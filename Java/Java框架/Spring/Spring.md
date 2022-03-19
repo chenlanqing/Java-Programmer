@@ -644,7 +644,9 @@ Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 
 	
 - 5.3、传播行为：REQUIRES_NEW
 	
-	如果 buy()方法中配置了：`@Transactional(propagation=Propagation.REQUIRES_NEW)`，则buyMany()调用buy()时，buyMany()方法的事务会挂起，buy()方法开启新事务，buy()的事务提交完毕后，buyMany()方法的事务继续.
+	如果 buy()方法中配置了：`@Transactional(propagation=Propagation.REQUIRES_NEW)`，则buyMany()调用buy()时，buyMany()方法的事务会挂起，buy()方法开启新事务，buy()的事务提交完毕后，buyMany()方法的事务继续；
+
+	只有代理对象proxy直接调用的那个方法才是真正的走代理的，嵌套的方法实际上就是 直接把嵌套的代码移动到代理的方法里面。 所以，嵌套的事务都不能生效
 
 - 5.4、配置事务的传播行为：使用propagation属性指定事务的传播行为
 
@@ -822,7 +824,7 @@ protected TransactionAttribute computeTransactionAttribute(Method method, @Nulla
 ```
 也就是说，如果我们自定义的事务方法（即目标方法），它的访问权限不是`public`，而是private、default或protected的话，spring则不会提供事务功能。
 
-因为Spring事务是通过代理实现的，而代理是无法代理非public方法的；如果非要在非public方法实现事务，可以使用[aspectJ](https://docs.spring.io/spring-framework/docs/5.2.6.RELEASE/spring-framework-reference/data-access.html#transaction-declarative-aspectj)的方式来实现
+因为Spring事务是通过代理实现的，而代理是无法代理非public方法的；如果非要在非public方法实现事务，可以使用[aspectJ](https://docs.spring.io/spring-framework/docs/5.2.6.RELEASE/spring-framework-reference/data-access.html#transaction-declarative-aspectj)的方式来实现，一般是添加一个注解：`@EnableTransactionManagement(mode = AdviceMode.ASPECTJ)`
 
 #### 10.1.2、方法用final修饰
 
@@ -974,6 +976,47 @@ public class UserService {
 
 如果想要spring事务能够正常回滚，必须抛出它能够处理的异常。如果没有抛异常，则spring认为程序是正常的
 
+两个事务方法调用异常情况：事务方法A调用事务方法B
+- （1）默认情况下，事务B方法抛出RuntimeException，事务A方法没有做任何处理，**事务回滚**；
+- （2）默认情况下，事务B方法抛出Exception，事务A方法没有做任何处理，直接抛出，**事务不回滚**；
+- （3）默认情况下，事务B方法抛出Exception，事务A方法捕获异常，包装为RuntimeException抛出，**事务回滚**；
+- （4）默认情况下，事务B方法抛出RuntimeException，事务A方法捕获异常，未做任何处理，也没有抛出，**事务回滚**；因为A和B事务是同一个事务，B事务抛出异常时事务被标记为需要回滚，那么对应的A所在的事务也就不能提交了；
+- （5）默认情况下，事务B正常执行，事务A抛出RuntimeException，**事务回滚**；
+- （6）事务B设置隔离级别为：REQUIRED_NEW，事务A为默认，A直接调用B，如果A事务发生异常，**事务都会回滚**；
+- （7）事务B设置隔离级别为：REQUIRED_NEW，事务A为默认，A通过注入自身的引用来调用B，如果A事务发生异常，**事务A回滚，事务B不回滚**；
+
+
+上面（6）和（7）只是调用方式不同，为何会产生不同的结果呢？
+因为只有代理对象proxy直接调用的那个方法才是真正的走代理的，嵌套的方法实际上就是直接把嵌套的代码移动到代理的方法里面。 所以：嵌套的事务都不能生效
+
+上面（6）执行的事务日志，，尽管B方法事务传播机制是 REQUIRED_NEW，但是嵌套调用只开启了一个事务
+```log
+2022-03-19 19:43:58.352 DEBUG 65410 --- [           main] o.s.j.d.DataSourceTransactionManager     : Creating new transaction with name [com.blue.fish.spring.example.service.UserService.createK]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+2022-03-19 19:43:58.664 DEBUG 65410 --- [           main] o.s.j.d.DataSourceTransactionManager     : Acquired Connection [HikariProxyConnection@334462881 wrapping com.mysql.cj.jdbc.ConnectionImpl@23b1aa9] for JDBC transaction
+2022-03-19 19:43:58.667 DEBUG 65410 --- [           main] o.s.j.d.DataSourceTransactionManager     : Switching JDBC Connection [HikariProxyConnection@334462881 wrapping com.mysql.cj.jdbc.ConnectionImpl@23b1aa9] to manual commit
+2022-03-19 19:43:58.778 DEBUG 65410 --- [           main] o.s.j.d.DataSourceTransactionManager     : Initiating transaction commit
+2022-03-19 19:43:58.779 DEBUG 65410 --- [           main] o.s.j.d.DataSourceTransactionManager     : Committing JDBC transaction on Connection [HikariProxyConnection@334462881 wrapping com.mysql.cj.jdbc.ConnectionImpl@23b1aa9]
+2022-03-19 19:43:58.811 DEBUG 65410 --- [           main] o.s.j.d.DataSourceTransactionManager     : Releasing JDBC Connection [HikariProxyConnection@334462881 wrapping com.mysql.cj.jdbc.ConnectionImpl@23b1aa9] after transaction
+```
+
+这个是上面（7）执行的事务日志，可以看到有两个Creating new transaction日志，还有一个 Suspending current transaction，也就是挂起原来事务，新开启一个事务
+```log
+2022-03-19 19:36:24.852 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Creating new transaction with name [com.blue.fish.spring.example.service.UserService.createK]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+2022-03-19 19:36:25.200 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Acquired Connection [HikariProxyConnection@37427881 wrapping com.mysql.cj.jdbc.ConnectionImpl@54489296] for JDBC transaction
+2022-03-19 19:36:25.203 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Switching JDBC Connection [HikariProxyConnection@37427881 wrapping com.mysql.cj.jdbc.ConnectionImpl@54489296] to manual commit
+2022-03-19 19:36:25.292 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Suspending current transaction, creating new transaction with name [com.blue.fish.spring.example.service.UserService.createL]
+2022-03-19 19:36:25.415 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Acquired Connection [HikariProxyConnection@139653005 wrapping com.mysql.cj.jdbc.ConnectionImpl@44dd0d38] for JDBC transaction
+2022-03-19 19:36:25.416 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Switching JDBC Connection [HikariProxyConnection@139653005 wrapping com.mysql.cj.jdbc.ConnectionImpl@44dd0d38] to manual commit
+2022-03-19 19:36:25.463 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Initiating transaction commit
+2022-03-19 19:36:25.463 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Committing JDBC transaction on Connection [HikariProxyConnection@139653005 wrapping com.mysql.cj.jdbc.ConnectionImpl@44dd0d38]
+2022-03-19 19:36:25.499 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Releasing JDBC Connection [HikariProxyConnection@139653005 wrapping com.mysql.cj.jdbc.ConnectionImpl@44dd0d38] after transaction
+2022-03-19 19:36:25.508 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Resuming suspended transaction after completion of inner transaction
+2022-03-19 19:36:25.509 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Initiating transaction commit
+2022-03-19 19:36:25.509 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Committing JDBC transaction on Connection [HikariProxyConnection@37427881 wrapping com.mysql.cj.jdbc.ConnectionImpl@54489296]
+2022-03-19 19:36:25.544 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Releasing JDBC Connection [HikariProxyConnection@37427881 wrapping com.mysql.cj.jdbc.ConnectionImpl@54489296] after transaction
+```
+
+
 #### 10.2.3、手动抛了别的异常
 
 即使开发者没有手动捕获异常，但如果抛的异常不正确，spring事务也不会回滚。
@@ -1016,7 +1059,7 @@ public class UserService {
 
 `rollbackFor`默认值为UncheckedException，包括了RuntimeException和Error，当我们直接使用`@Transactional`不指定`rollbackFor`时，Exception及其子类都不会触发回滚。所以，建议一般情况下，将该参数设置成：Exception或Throwable。
 
-#### 10.2.5.嵌套事务回滚多了
+#### 10.2.5、嵌套事务回滚多了
 
 ```java
 public class UserService {
