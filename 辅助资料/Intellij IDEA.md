@@ -94,6 +94,7 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - ASM
 - IDE Eval Reset
 - mybatisX
+- Rainbow Brackets ：括号插件
 
 # 4、idea插件开发
 
