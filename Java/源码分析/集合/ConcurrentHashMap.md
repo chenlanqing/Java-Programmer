@@ -6,6 +6,8 @@
 
 # 一、ConcurrentHashMap概述
 
+ConcurrentHashMap的线程安全体现在：ConcurrentHashMap 只能保证提供的原子性读写操作是线程安全的。
+
 ## 1、为什么会出现ConcurrentHashMap
 
 HashMap是用得非常频繁的一个集合，但是由于它是非线程安全的，在多线程环境下，put操作是有可能产生死循环的，导致CPU利用率接近100%。
@@ -547,6 +549,108 @@ if ((as = counterCells) != null ||
 ## 7、hash冲突解决
 
 在Java 8 之前，HashMap和其他基于map的类都是通过链地址法解决冲突，它们使用单向链表来存储相同索引值的元素。在最坏的情况下，这种方式会将HashMap的get方法的性能从O(1)降低到O(n)。为了解决在频繁冲突时hashmap性能降低的问题，Java 8中使用平衡树来替代链表存储冲突的元素。这意味着我们可以将最坏情况下的性能从O(n)提高到$O(\log(N))$
+
+## 8、computeIfAbsent
+
+computeIfAbsent 是做复合逻辑操作，判断 Key 是否存在 Value，如果不存在则把 Lambda 表达式运行后的结果放入 Map 作为 Value；即 Java 自带的 Unsafe 实现的 CAS。它在虚拟机层面确保了写入数据的原子性，比加锁的效率高得多：
+```java
+public V computeIfAbsent(K key, Function<? super K, ? extends V> mappingFunction) {
+    if (key == null || mappingFunction == null)
+        throw new NullPointerException();
+    int h = spread(key.hashCode());
+    V val = null;
+    int binCount = 0;
+    for (Node<K,V>[] tab = table;;) {
+        Node<K,V> f; int n, i, fh; K fk; V fv;
+        if (tab == null || (n = tab.length) == 0)
+            tab = initTable();
+        else if ((f = tabAt(tab, i = (n - 1) & h)) == null) {
+            Node<K,V> r = new ReservationNode<K,V>();
+            synchronized (r) {
+                if (casTabAt(tab, i, null, r)) {
+                    binCount = 1;
+                    Node<K,V> node = null;
+                    try {
+                        if ((val = mappingFunction.apply(key)) != null)
+                            node = new Node<K,V>(h, key, val);
+                    } finally {
+                        setTabAt(tab, i, node);
+                    }
+                }
+            }
+            if (binCount != 0)
+                break;
+        }
+        else if ((fh = f.hash) == MOVED)
+            tab = helpTransfer(tab, f);
+        else if (fh == h    // check first node without acquiring lock
+                    && ((fk = f.key) == key || (fk != null && key.equals(fk)))
+                    && (fv = f.val) != null)
+            return fv;
+        else {
+            boolean added = false;
+            synchronized (f) {
+                if (tabAt(tab, i) == f) {
+                    if (fh >= 0) {
+                        binCount = 1;
+                        for (Node<K,V> e = f;; ++binCount) {
+                            K ek;
+                            if (e.hash == h &&
+                                ((ek = e.key) == key ||
+                                    (ek != null && key.equals(ek)))) {
+                                val = e.val;
+                                break;
+                            }
+                            Node<K,V> pred = e;
+                            if ((e = e.next) == null) {
+                                if ((val = mappingFunction.apply(key)) != null) {
+                                    if (pred.next != null)
+                                        throw new IllegalStateException("Recursive update");
+                                    added = true;
+                                    pred.next = new Node<K,V>(h, key, val);
+                                }
+                                break;
+                            }
+                        }
+                    }
+                    else if (f instanceof TreeBin) {
+                        binCount = 2;
+                        TreeBin<K,V> t = (TreeBin<K,V>)f;
+                        TreeNode<K,V> r, p;
+                        if ((r = t.root) != null &&
+                            (p = r.findTreeNode(h, key, null)) != null)
+                            val = p.val;
+                        else if ((val = mappingFunction.apply(key)) != null) {
+                            added = true;
+                            t.putTreeVal(h, key, val);
+                        }
+                    }
+                    else if (f instanceof ReservationNode)
+                        throw new IllegalStateException("Recursive update");
+                }
+            }
+            if (binCount != 0) {
+                if (binCount >= TREEIFY_THRESHOLD)
+                    treeifyBin(tab, i);
+                if (!added)
+                    return val;
+                break;
+            }
+        }
+    }
+    if (val != null)
+        addCount(1L, binCount);
+    return val;
+}
+static final <K,V> boolean casTabAt(Node<K,V>[] tab, int i, Node<K,V> c, Node<K,V> v) {
+    return U.compareAndSetObject(tab, ((long)i << ASHIFT) + ABASE, c, v);
+}
+```
+`computeIfAbsent`和`putIfAbsent`区别是三点：
+- 当Key存在的时候，如果Value获取比较昂贵的话，putIfAbsent就白白浪费时间在获取这个昂贵的Value上（这个点特别注意）
+- 当Key不存在的时候，putIfAbsent返回null，小心空指针，而computeIfAbsent返回计算后的值
+- 当Key不存在的时候，putIfAbsent允许put null进去，而computeIfAbsent不能，之后进行containsKey查询是有区别的（当然了，此条针对HashMap，ConcurrentHashMap不允许put null value进去）
+
 
 
 # 参考资料

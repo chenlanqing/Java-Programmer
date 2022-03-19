@@ -349,6 +349,12 @@ PSI Probe
 - 异步化
 - 锁优化
 
+# 三、性能测试工具
+
+## 1、wrk
+
+- [wrk](https://github.com/wg/wrk)
+
 # switch 与 if 性能比较
 
 https://mp.weixin.qq.com/s/JkqKg4ZdHBLP_u2COZ4oPw

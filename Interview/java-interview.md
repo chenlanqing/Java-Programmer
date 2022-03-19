@@ -384,7 +384,14 @@ Segment继承了重入锁ReentrantLock，有了锁的功能，每个锁控制的
 
 使用 CAS + synchronized 方式时 加锁的对象是每个链条的头结点，也就是 锁定 的是冲突的链表，所以再次提高了并发度，并发度等于链表的条数或者说 桶的数量；
 
-它是Node链表里的每一个Node,也就是说,Synchronized是将每一个Node对象作为了一个锁,这样做的好处是什么呢?将锁细化了,也就是说,除非两个线程同时操作一个Node,注意,是一个Node而不是一个Node链表哦,那么才会争抢同一把锁.
+它是Node链表里的每一个Node,也就是说,Synchronized是将每一个Node对象作为了一个锁,这样做的好处是什么呢?将锁细化了,也就是说,除非两个线程同时操作一个Node,注意,是一个Node而不是一个Node链表哦,那么才会争抢同一把锁；
+
+### 2.9、ConcurrentHashMap一定是线程安全的吗？
+
+ConcurrentHashMap 只能保证提供的原子性读写操作是线程安全的。ConcurrentHashMap 对外提供的方法或能力的限制：
+- 使用了 ConcurrentHashMap，不代表对它的多个操作之间的状态是一致的，是没有其他线程在操作它的，如果需要确保需要手动加锁；
+- 诸如 size、isEmpty 和 containsValue 等聚合方法，在并发情况下可能会反映 ConcurrentHashMap 的中间状态。因此在并发情况下，这些方法的返回值只能用作参考，而不能用于流程控制。显然，利用 size 方法计算差异值，是一个流程控制；
+- 诸如 putAll 这样的聚合方法也不能确保原子性，在 putAll 的过程中去获取数据可能会获取到部分数据。
 
 ## 3、TreeMap
 
@@ -1120,6 +1127,16 @@ private void processWorkerExit(Worker w, boolean completedAbruptly) {
 ### 5.14、任务执行过程中发生异常怎么处理？
 
 如果某个任务执行出现异常，那么执行任务的线程会被关闭，而不是继续接收其他任务。然后会启动一个新的线程来代替它
+
+### 5.15、如何实现优先开启更多的线程，而把队列当成一个后备方案呢
+
+比如有这么一个例子，任务执行得很慢，需要 10 秒，如果线程池可以优先扩容到 5 个最大线程，那么这些任务最终都可以完成，而不会因为线程池扩容过晚导致慢任务来不及处理；
+
+大致的实现思路：
+- 由于线程池在工作队列满了无法入队的情况下会扩容线程池，那么我们是否可以重写队列的 offer 方法，造成这个队列已满的假象呢？
+- 由于我们 Hack 了队列，在达到了最大线程后势必会触发拒绝策略，那么能否实现一个自定义的拒绝策略处理程序，这个时候再把任务真正插入队列呢？
+
+Tomcat 线程池也实现了类似的效果：[ThreadPoolExecutor](https://github.com/apache/tomcat/blob/main/java/org/apache/tomcat/util/threads/ThreadPoolExecutor.java)
 
 ## 6、FutureTask
 
