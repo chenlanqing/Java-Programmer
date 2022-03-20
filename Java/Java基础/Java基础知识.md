@@ -3070,6 +3070,39 @@ public static void initCause() {
 - 包装异常时不要抛弃原始的异常：Exception 类提供了特殊的构造函数方法，它接受一个 Throwable 作为参数。否则，你将会丢失堆栈跟踪和原始异常的消息，这将会使分析导致异常的异常事件变得困难；
 - 不要使用异常控制程序的流程，会严重影响应用的性能；
 - 不要在finally块中使用return：try块中的return语句执行成功后，并不马上返回，而是继续执行finally块中的语句，如果此处存在return语句，则在此直接返回，无情丢弃掉try块中的返回点；
+- 不要在finally抛出异常，如果try中出现了异常，其会被finally 中的异常给覆盖掉，正常处理是finally自己处理异常，或者用 addSuppressed 方法把 finally 中的异常附加到主异常上：
+	```java
+	public void finallyException() throws Exception {
+		Exception e = null;
+		try {
+			throw new RuntimeException("try");
+		} catch (Exception ex) {
+			e = ex;
+		} finally {
+			try {
+				throw new RuntimeException("finally");
+			} catch (Exception ex) {
+				if (e!= null) {
+					e.addSuppressed(ex);
+				} else {
+					e = ex;
+				}
+			}
+		}
+		throw e;
+	}
+	```
+	运行方法可以得到如下异常信息，其中同时包含了主异常和被屏蔽的异常：
+	```
+	java.lang.RuntimeException: try
+	at com.qingfan.FinallyIssueController.right2(FinallyIssueController.java:69)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	...
+	Suppressed: java.lang.RuntimeException: finally
+		at com.qingfan.FinallyIssueController.right2(FinallyIssueController.java:75)
+		... 54 common frames omitted
+	```
+
 
 # 十二、关于try-catch-finally
 
@@ -3177,7 +3210,9 @@ finally代码块的编译：复制finally代码块的内容，分别放在`try-c
 
 ## 5、try-with-resource
 
-try-with-resource是Java 7中引入的，提供了更优雅的方式来实现资源的自动释放，自动释放的资源需要是实现了 AutoCloseable 接口的类
+try-with-resource是Java 7中引入的，提供了更优雅的方式来实现资源的自动释放，自动释放的资源需要是实现了 AutoCloseable 接口的类；
+
+对于实现了 AutoCloseable 接口的资源，建议使用 try-with-resources 来释放资源
 
 # 十三、Java 四舍五入
 

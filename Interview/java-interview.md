@@ -461,6 +461,14 @@ public static void main(String[] args) {
 
 还有一种错误就是覆盖：这种情况是因为size++并不是原子性的，所以可能线程A自增的时候，线程B也进行一次自增，但是两次自增的结果是一样的，所以先完成的线程更新的数据会被后完成的线程覆盖掉；
 
+## 5、哪些map的key可以为null
+
+ConcurrentMaps（ConcurrentHashMaps，ConcurrentSkipListMaps）不允许使用null的主要原因是，无法容纳在非并行映射中几乎无法容忍的歧义。最主要的是，如果map.get(key)return null，则无法检测到该键是否显式映射到null该键。在非并行映射中，您可以通过进行检查 map.contains(key)，但在并行映射中，两次调用之间的映射可能已更改；
+
+hashtable也是线程安全的，所以也是key和value也是不可以null的
+
+treeMap 线程不安全，但是因为需要排序，进行key的compareTo方法，所以key是不能null中，value是可以的
+
 # 三、IO与NIO
 
 ## 1、文件拷贝实现方式
