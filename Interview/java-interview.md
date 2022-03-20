@@ -1411,6 +1411,18 @@ Java 中的每个对象都派生自 Object 类，而每个 Java Object 在 JVM �
 
 多个线程访问同步代码块时，相当于去争抢对象监视器修改对象中的锁标识, ObjectMonitor 这个对象和线程争抢锁的逻辑有密切的关系
 
+## 13、ThreadLocalRandom可以把它的实例设置到静态变量中，在多线程情况下重用吗？
+
+是不能重用的，ThreadLocalRandom 文档里有这么一条：
+```
+Usages of this class should typically be of the form: ThreadLocalRandom.current().nextX(…) (where X is Int, Long, etc). When all usages are of this form, it is never possible to accidently share a ThreadLocalRandom across multiple threads.
+```
+current() 的时候初始化一个初始化种子到线程，每次 nextseed 再使用之前的种子生成新的种子：
+```java
+UNSAFE.putLong(t = Thread.currentThread(), SEED, r = UNSAFE.getLong(t, SEED) + GAMMA);
+```
+如果你通过主线程调用一次 current 生成一个 ThreadLocalRandom 的实例保存起来，那么其它线程来获取种子的时候必然取不到初始种子，必须是每一个线程自己用的时候初始化一个种子到线程;
+
 ## 12、多线程面试题
 
 https://segmentfault.com/a/1190000013813740
@@ -5522,7 +5534,9 @@ elasticsearch的搜索会分两阶段进行：
 
 # 二十一、其他
 
-## 1、lombok实现原理
+## 1、Lombok使用
+
+### 1.1、lombok实现原理
 
 - [Lombok和Jackson组合使用存在问题](https://mp.weixin.qq.com/s/uUyN1gfho0LN74SEvWuj6w)
 
@@ -5613,6 +5627,11 @@ public class Person {
 ![](image/Lombok-执行过程.png)
 
 从流程图中可以看出，在编译期阶段，当 Java 源码被抽象成语法树（AST）之后，Lombok 会根据自己的注解处理器动态修改 AST，增加新的代码（节点），在这一切执行之后就生成了最终的字节码（.class）文件，这就是 Lombok 的执行原理；
+
+### 1.2、Lombok存在的坑
+
+- Lombok 的 `@EqualsAndHashCode` 注解实现 equals 和 hashCode 的时候，默认使用类型所有非 static、非 transient 的字段，且不考虑父类；如果希望改变这种默认行为，可以使用 @EqualsAndHashCode.Exclude 排除一些字段，并设置 callSuper = true 来让子类的 equals 和 hashCode 调用父类的相应方法
+
 
 # 其他面试题
 

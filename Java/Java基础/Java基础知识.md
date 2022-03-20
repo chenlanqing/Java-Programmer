@@ -442,6 +442,49 @@ public class Test{
 
 比如：比17大的2的幂是32
 
+## 9、数值溢出
+
+数值计算有一个要小心的点是溢出，不管是 int 还是 long，所有的基本数值类型都有超出表达范围的可能性；
+
+对Long的最大值进行+1操作：
+```java
+// 输出结果是一个负数，因为 Long 的最大值 +1 变为了 Long 的最小值：
+long l = Long.MAX_VALUE;
+System.out.println(l + 1);
+System.out.println(l + 1 == Long.MIN_VALUE);
+```
+有人如下两种方式解决：
+- 考虑使用 Math 类的 addExact、subtractExact 等 xxExact 方法进行数值运算，这些方法可以在数值溢出时主动抛出异常:
+	```java
+	try {
+		long l = Long.MAX_VALUE;
+		System.out.println(Math.addExact(l, 1));
+	} catch (Exception ex) {
+		ex.printStackTrace();
+	}
+	// 执行后可以得到 ArithmeticException，这是一个 RuntimeException：
+	java.lang.ArithmeticException: long overflow
+	at java.base/java.lang.Math.addExact(Math.java:845)
+	at com.blue.fish.example.base.type.number.TestNumOverLimit.main(TestNumOverLimit.java:13)
+	```
+- 使用大数类 BigInteger。BigDecimal 是处理浮点数的专家，而 BigInteger 则是对大数进行科学计算的专家；使用 BigInteger 对 Long 最大值进行 +1 操作；如果希望把计算结果转换一个 Long 变量的话，可以使用 BigInteger 的 longValueExact 方法，在转换出现溢出时，同样会抛出 ArithmeticException：
+	```java
+	BigInteger i = new BigInteger(String.valueOf(Long.MAX_VALUE));
+	System.out.println(i.add(BigInteger.ONE).toString());
+
+	try {
+		long l = i.add(BigInteger.ONE).longValueExact();
+	} catch (Exception ex) {
+		ex.printStackTrace();
+	}
+	// 输出
+	java.lang.ArithmeticException: BigInteger out of long range
+	9223372036854775808
+		at java.base/java.math.BigInteger.longValueExact(BigInteger.java:4765)
+		at com.blue.fish.example.base.type.number.TestNumOverLimit.main(TestNumOverLimit.java:25)
+	```
+	注意：不要调用BigInteger的longValue()方法，该方法溢出不报错；
+
 # 三、进制基础
 
 - [位运算高级应用](https://graphics.stanford.edu/~seander/bithacks.html)
@@ -3300,6 +3343,7 @@ public static String format4(double value) {
 
 ## 5、使用 String.format来实现
 
+String.format 采用四舍五入的方式进行舍入
 ```java
 public static String format5(double value) {
 	return String.format("%.2f"， value).toString();
@@ -3329,6 +3373,11 @@ System.out.print(String.format("%g %n"， num)); // 123.457
 	- `a`，浮点数型(十六进制)。
 	- `e`，指数类型。如9.38e+5。
 	- `g`，浮点数型(比%f，%a长度短些，显示6位有效数字，且会进行四舍五入)
+
+## 6、最佳实践
+
+- 使用 BigDecimal 表示和计算浮点数，且务必使用字符串的构造方法来初始化 BigDecimal：
+- 通过 DecimalFormat 来精确控制舍入方式，double 和 float 的问题也可能产生意想不到的结果，所以浮点数避坑第二原则：**浮点数的字符串格式化也要通过 BigDecimal 进行**
 
 # 十五、数组
 

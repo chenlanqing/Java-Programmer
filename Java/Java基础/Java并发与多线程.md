@@ -2144,6 +2144,9 @@ private void resize() {
 - 扩容后数组大小是原来数组的两倍；
 - 扩容时是绝对没有线程安全问题的，因为 ThreadLocalMap 是线程的一个属性，一个线程同一时刻只能对 ThreadLocalMap 进行操作，因为同一个线程执行业务逻辑必然是串行的，那么操作 ThreadLocalMap 必然也是串行的
 
+**为什么不用HashMap？**
+- ThreadLocalMap使用了黄金分割数作为hash计算因子，可以大大减少hash冲突的概率；
+
 ### 12.5、碰撞解决与神奇的 0x61c88647
 
 既然ThreadLocal用map就避免不了冲突的产生

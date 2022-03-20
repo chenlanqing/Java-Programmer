@@ -54,7 +54,7 @@ System.out.println(bigDecimal4.equals(bigDecimal5)); // false
 ```
 在使用BigDecimal的equals方法对1和1.0进行比较的时候，有的时候是true（当使用int、double定义BigDecimal时），有的时候是false（当使用String定义BigDecimal时）
 
-首先看equals方法的描述：`Compares this  BigDecimal with the specified Object for equality.  Unlike compareTo, this method considers two BigDecimal objects equal only if they are equal in value and scale (thus 2.0 is not equal to 2.00 when compared by  this method)`
+首先看equals方法的描述：`Compares this BigDecimal with the specified Object for equality.  Unlike compareTo, this method considers two BigDecimal objects equal only if they are equal in value and scale (thus 2.0 is not equal to 2.00 when compared by  this method)`
 
 意思是：equals方法和compareTo并不一样，equals方法会比较两部分内容，分别是值（value）和精度（scale）
 ```java
@@ -127,4 +127,17 @@ public int compareTo(BigDecimal val) {
     return (xsign > 0) ? cmp : -cmp;
 }
 ```
+如果把值为 1.0 的 BigDecimal 加入 HashSet，然后判断其是否存在值为 1 的 BigDecimal，得到的结果是 false，解决这个问题的办法有两个：
+- 第一个方法是，使用 TreeSet 替换 HashSet。TreeSet 不使用 hashCode 方法，也不使用 equals 比较元素，而是使用 compareTo 方法，所以不会有问题；
+    ```java
+    Set<BigDecimal> treeSet = new TreeSet<>();
+    treeSet.add(new BigDecimal("1.0"));
+    System.out.println(treeSet.contains(new BigDecimal("1")));//返回true
+    ```
+- 第二个方法是，把 BigDecimal 存入 HashSet 或 HashMap 前，先使用 stripTrailingZeros 方法去掉尾部的零，比较的时候也去掉尾部的 0，确保 value 相同的 BigDecimal，scale 也是一致的：
+    ```java
+    Set<BigDecimal> hashSet2 = new HashSet<>();
+    hashSet2.add(new BigDecimal("1.0").stripTrailingZeros());
+    System.out.println(hashSet2.contains(new BigDecimal("1.000").stripTrailingZeros()));//返回true
+    ```
   

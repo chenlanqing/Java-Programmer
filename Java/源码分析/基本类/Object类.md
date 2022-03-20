@@ -285,7 +285,8 @@ class Employee {
 - 对于类中的关键属性，检查参数传入对象 的属性是否与之相匹配；
 - 编写完 equals 方法后，问自己它是否满足对称性、传递性、一致性；
 - 重写 equals 时 总是要重写 hashCode；
-- 不要将 equals 方法参数中的 Object 对象替换为其他的类型，在重写时不要忘掉 `@Override` 注解。
+- 不要将 equals 方法参数中的 Object 对象替换为其他的类型，在重写时不要忘掉 `@Override` 注解;
+- 对于自定义的类型，如果要实现 Comparable，请记得 equals、hashCode、compareTo 三者逻辑一致。
 
 # 3、hashCode()方法
 
