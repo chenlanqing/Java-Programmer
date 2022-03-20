@@ -1,4 +1,155 @@
-# 一、类定义
+# 一、Number
+
+# 二、BigDecimal
+
+
+## 1、源码分析
+
+### 1.1、签名
+
+```java
+public class BigDecimal extends Number implements Comparable<BigDecimal>
+```
+
+### 1.2、构造函数
+
+### 1.3、属性
+
+### 1.4、方法
+
+## 2、注意问题
+
+### 2.1、double和float转BigDecimal
+
+将`double`或者`float`数据转换为`BigDecimal`类型，最好使用`BigDecimal.valueOf()`，而不应该使用`new BigDecimal(double)`，因为：`new BigDecimal(0.1`)会把`0.1`当成: `0.1000000000000000055511151231257827021181583404541015625`，而`valueOf`其内部使用了`String`作为构造函数的入参，所以使用valueOf后`0.1`还是`0.1`
+
+### 2.2、关于除以0的问题
+
+`System.out.println(2 / 0)`  -> `ArithmeticException: / by zero`
+
+`System.out.println(2.0 / 0);` -> `Infinity`
+```
+double i = 1.0 / 0;                
+System.out.println(i);             //Infinity
+System.out.println(i + 1);         //Infinity
+System.out.println(i == i + 1);    //true
+ 
+i = 0.0 / 0;
+System.out.println(i);             //NaN
+System.out.println(i + 1);         //NaN
+System.out.println(i == i + 1);    //false
+```
+
+### 2.3、BigDecimal对象比较问题
+
+看如下代码，输出是什么？
+```java
+BigDecimal bigDecimal = new BigDecimal(1);
+BigDecimal bigDecimal1 = new BigDecimal(1);
+System.out.println(bigDecimal.equals(bigDecimal1)); // true
+
+BigDecimal bigDecimal2 = new BigDecimal(1);
+BigDecimal bigDecimal3 = new BigDecimal(1.0);
+System.out.println(bigDecimal2.equals(bigDecimal3)); // true
+
+BigDecimal bigDecimal4 = new BigDecimal("1");
+BigDecimal bigDecimal5 = new BigDecimal("1.0");
+System.out.println(bigDecimal4.equals(bigDecimal5)); // false
+```
+在使用BigDecimal的equals方法对1和1.0进行比较的时候，有的时候是true（当使用int、double定义BigDecimal时），有的时候是false（当使用String定义BigDecimal时）
+
+首先看equals方法的描述：`Compares this BigDecimal with the specified Object for equality.  Unlike compareTo, this method considers two BigDecimal objects equal only if they are equal in value and scale (thus 2.0 is not equal to 2.00 when compared by  this method)`
+
+意思是：equals方法和compareTo并不一样，equals方法会比较两部分内容，分别是值（value）和精度（scale）
+```java
+public boolean equals(Object x) {
+    if (!(x instanceof BigDecimal))
+        return false;
+    BigDecimal xDec = (BigDecimal) x;
+    if (x == this)
+        return true;
+    if (scale != xDec.scale) // 比较精度
+        return false;
+    long s = this.intCompact;
+    long xs = xDec.intCompact;
+    if (s != INFLATED) {
+        if (xs == INFLATED)
+            xs = compactValFor(xDec.intVal);
+        return xs == s;
+    } else if (xs != INFLATED)
+        return xs == compactValFor(this.intVal);
+
+    return this.inflated().equals(xDec.inflated());
+}
+```
+
+BigDecimal不同的构造函数，对应的精度是不同的
+
+**BigDecimal(long) 和BigDecimal(int)：**因为是整数，所以精度就是0；
+```java
+public BigDecimal(int val) {
+    this.intCompact = val;
+    this.scale = 0;
+    this.intVal = null;
+}
+public BigDecimal(long val) {
+    this.intCompact = val;
+    this.intVal = (val == INFLATED) ? INFLATED_BIGINT : null;
+    this.scale = 0;
+}
+```
+
+**BigDecimal(double)：**当我们使用`new BigDecimal(0.1)`创建一个BigDecimal 的时候，其实创建出来的值并不是整好等于0.1的，而是`0.1000000000000000055511151231257827021181583404541015625` 。这是因为doule自身表示的只是一个近似值，那么他的精度就是这个数字的位数，即55
+```java
+public BigDecimal(double val) {
+    this(val, MathContext.UNLIMITED);
+}
+public BigDecimal(double val, MathContext mc) {
+    ....
+}
+```
+
+**BigDecimal(string)：**当我们使用`new BigDecimal("0.1")`创建一个BigDecimal 的时候，其实创建出来的值正好就是等于`0.1`的。那么他的精度也就是1；如果使用`new BigDecimal("0.10000")`，那么创建出来的数就是0.10000，精度也就是5。
+
+BigDecimal中提供了compareTo方法，这个方法就可以只比较两个数字的值，如果两个数相等，则返回0
+```java
+public int compareTo(BigDecimal val) {
+    // Quick path for equal scale and non-inflated case.
+    if (scale == val.scale) {
+        long xs = intCompact;
+        long ys = val.intCompact;
+        if (xs != INFLATED && ys != INFLATED)
+            return xs != ys ? ((xs > ys) ? 1 : -1) : 0;
+    }
+    int xsign = this.signum();
+    int ysign = val.signum();
+    if (xsign != ysign)
+        return (xsign > ysign) ? 1 : -1;
+    if (xsign == 0)
+        return 0;
+    int cmp = compareMagnitude(val);
+    return (xsign > 0) ? cmp : -cmp;
+}
+```
+如果把值为 1.0 的 BigDecimal 加入 HashSet，然后判断其是否存在值为 1 的 BigDecimal，得到的结果是 false，解决这个问题的办法有两个：
+- 第一个方法是，使用 TreeSet 替换 HashSet。TreeSet 不使用 hashCode 方法，也不使用 equals 比较元素，而是使用 compareTo 方法，所以不会有问题；
+    ```java
+    Set<BigDecimal> treeSet = new TreeSet<>();
+    treeSet.add(new BigDecimal("1.0"));
+    System.out.println(treeSet.contains(new BigDecimal("1")));//返回true
+    ```
+- 第二个方法是，把 BigDecimal 存入 HashSet 或 HashMap 前，先使用 stripTrailingZeros 方法去掉尾部的零，比较的时候也去掉尾部的 0，确保 value 相同的 BigDecimal，scale 也是一致的：
+    ```java
+    Set<BigDecimal> hashSet2 = new HashSet<>();
+    hashSet2.add(new BigDecimal("1.0").stripTrailingZeros());
+    System.out.println(hashSet2.contains(new BigDecimal("1.000").stripTrailingZeros()));//返回true
+    ```
+
+# 三、BigInteger
+
+# 四、Integer
+
+## 1、类定义
 
 ```java
 public final class Integer extends Number implements Comparable<Integer>{
@@ -9,9 +160,9 @@ public final class Integer extends Number implements Comparable<Integer>{
 - Integer继承了Number 类，所以该类可以调用longValue、floatValue、doubleValue等系列方法返回对应的类型的值；
 - Integer 类在对象中包装了一个基本类型 int 的值。Integer 类型的对象包含一个 int 类型的字段
 
-# 二、属性
+## 2、属性
 
-## 1、私有属性
+### 2.1、私有属性
 
 `private final int value;`
 
@@ -30,7 +181,7 @@ i = Integer.valueOf(5);
 ```
 i=5操作并没有改变使用 Integer i = new Integer(10)；创建出来的i中的value属性的值.要么是直接返回一个已有对象，要么新建一个对象；这里跟 valueOf 的实现细节相关
 
-## 2、公共属性
+### 2.2、公共属性
 
 ```java
 //值为 -2^31 的常量，它表示 int 类型能够表示的最小值。
@@ -46,9 +197,9 @@ public static final int BYTES = SIZE / Byte.SIZE;
 ```
 以上属性可直接使用，因为他们已经定义成 publis static final 能用的时候尽量使用他们，这样不仅能使代码有很好的可读性，也能提高性能节省资源
 
-# 三、方法
+## 3、方法
 
-## 1、Integer构造方法
+### 2.1、Integer构造方法
 
 ```java
 //构造一个新分配的 Integer 对象，它表示指定的 int 值。
@@ -62,7 +213,7 @@ public Integer(String s) throws NumberFormatException {
 ```
 从构造方法中我们可以知道，初始化一个 Integer 对象的时候只能创建一个十进制的整数
 
-## 2、valueOf
+### 2.2、valueOf
 
 ```java
 public static Integer valueOf(int i)；
@@ -115,7 +266,7 @@ public static Integer valueOf(String s， int radix) throws NumberFormatExceptio
 ```
 - 返回一个 Integer 对象。如果指定第二个参数radix，将第一个参数解释为用第二个参数指定的基数表示的有符号整数。如果没指定则按照十进制进行处理
 
-## 3、String 转成 Integer（int）的方法
+### 2.3、String 转成 Integer（int）的方法
 
 ```java
 Integer getInteger(String nm)
@@ -131,7 +282,7 @@ int parseInt(String s, int radix)
 - 可以说，所有将 String 转成 Integer 的方法都是基于parseInt方法实现的。简单看一下以上部分方法的调用栈。<br>
 	getInteger(String nm) ---> getInteger(nm， null)；--->Integer.decode()--->Integer.valueOf()--->parseInt()
 	
-### 3.1、getInteger(String nm)：确定具有指定名称的系统属性的整数值
+#### 2.3.1、getInteger(String nm)：确定具有指定名称的系统属性的整数值
 
 - 第一个参数被视为系统属性的名称，通过 System.getProperty(java.lang.String) 方法可以访问系统属性然后，将该属性的字符串值解释为一个整数值，并返回表示该值的 Integer 对象：代码中可以用以下形式使用该方法：
 ```java
@@ -148,7 +299,7 @@ getInteger(String nm， Integer val)
 - 第二个参数是默认值.如果未具有指定名称的属性，或者属性的数字格式不正确，或者指定名称为空或 null，则返回默认值。
 - 具体实现细节：public static Integer getInteger(String nm， Integer val) 先按照nm作为key从系统配置中取出值，然后调用 Integer.decode方法将其转换成整数并返回
 
-### 3.2、decode
+#### 2.3.2、decode
 
 `public static Integer decode(String nm) throws NumberFormatException`
 
@@ -156,19 +307,19 @@ getInteger(String nm， Integer val)
 - 根据要解码的 String（mn)的形式转成不同进制的数字。 mn由三部分组成：符号、基数说明符和字符序列。—0X123中-是符号位，0X是基数说明符（0表示八进制，0x，0X，#表示十六进制，什么都不写则表示十进制），123是数字字符序列；
 - decode方法的具体实现也比较简单，首先就是判断 String 类型的参数mn是否以(+/—)符号开头。然后再依次判断是否以”0x”、“#”、“0”开头，确定基数说明符的值。然后将字符串mn进行截取，只保留其中纯数字部分。在用截取后的纯数字和基数调用valueOf(String s， int radix)方法并返回其值；
 
-### 3.3、parseInt
+#### 2.3.3、parseInt
 
 public static int parseInt(String s) throws NumberFormatException
 
 - 使用第二个参数指定的基数(如果没指定，则按照十进制处理），将字符串参数解析为有符号的整数
 - 如果发生以下任意一种情况，则抛出一个 NumberFormatException 类型的异常;第一个参数为 null 或一个长度为零的字符串。基数小于 Character.MIN_RADIX 或者大于 Character.MAX_RADIX。假如字符串的长度超过 1，那么除了第一个字符可以是减号 ‘-‘ (‘u002D’) 外，字符串中存在任意不是由指定基数的数字表示的字符。字符串表示的值不是 int 类型的值。
 
-### 3.4、将 String 转成 Integer 的方法之间有哪些区别
+#### 2.3.4、将 String 转成 Integer 的方法之间有哪些区别
 
 - parseInt方法返回的是基本类型 int，其他的方法返回的是 Integer，valueOf（String）方法会调用valueOf(int)方法。
 - 如果只需要返回一个基本类型，而不需要一个对象，可以直接使用Integert.parseInt("123")；如果需要一个对象，那么建议使用valueOf()，因为该方法可以借助缓存带来的好处。如果和进制有关，那么就是用decode方法。如果是从系统配置中取值，那么就是用getInteger
 
-## 4、int 转为 String 的方法：
+### 2.4、int 转为 String 的方法：
 
 ```java
 String  toString()
@@ -181,7 +332,7 @@ static String   toUnsignedString(int i)
 static String   toUnsignedString(int i， int radix)
 ```
 
-### 4.1、toString(int i)
+#### 2.4.1、toString(int i)
 
 - 4.1.1.实现代码：
 	```java
@@ -295,15 +446,16 @@ static String   toUnsignedString(int i， int radix)
 	System.out.println((new StringBuilder()).append(s).append("").toString());
 	```
 	
-## 5、public int compareTo(Integer anotherInteger)
+### 2.5、public int compareTo(Integer anotherInteger)
 
 Integer 类实现了 Comparable<Integer>接口，所以 Integer 对象可以和另外一个 Integer 对象进行比较代码实现比较简单，就是拿出其中的 int 类型的value进行比较。
 
-## 6、实现 Number 的方法
+### 2.6、实现 Number 的方法
 
-# 四、Integer 缓存机制
+## 4、Integer 缓存机制
 
-## 1、看代码
+### 4.1、看代码
+
 ```java
 public class JavaIntegerCache {
 	public static void main(String... strings) {
@@ -327,7 +479,7 @@ public class JavaIntegerCache {
 integer1 == integer2
 integer3 != integer4
 ```
-## 2、Java 中 Integer 的缓存实现
+### 4.2、Java 中 Integer 的缓存实现
 
 JDK5 之后，在Integer的操作上， 整型对象通过使用相同的对象引用实现了缓存和重用
 - 适用于整数值区间-128 至 +127。
@@ -335,7 +487,7 @@ JDK5 之后，在Integer的操作上， 整型对象通过使用相同的对象�
 
 但是在特别的应用场景下，比如明确知道应用会频繁的使用更大的值，缓存的上限是可以根据需要调整的，JVM提供了参数设置 “-XX：AutoBoxCacheMax=N”，在Integer的源码可以看到体现；
 
-## 3、valueOf的实现
+### 4.3、valueOf的实现
 
 ```java
 public static Integer valueOf(int i) {
@@ -346,7 +498,7 @@ public static Integer valueOf(int i) {
 ```
 在创建对象之前先从 IntegerCacheCcache 中寻找。如果没找到才使用 new {}新建对象
 
-## 4、IntegerCache
+### 4.4、IntegerCache
 
 是 Integer 类中定义的一个 private static 的内部类；缓存支持 -128 到 127 之间的自动装箱过程。最大值 127 可以通过 `-XX:AutoBoxCacheMax=size` 修改，缓存通过一个 for 循环实现。从低到高并创建尽可能多的整数并存储在一个整数数组中。这个缓存会在 Integer 类第一次被使用的时候被初始化出来。就可以使用缓存中包含的实例对象，而不是创建一个新的实例(在自动装箱的情况下)
 
@@ -385,7 +537,7 @@ private static class IntegerCache {
 }
 ```
 
-## 5、其他缓存的对象
+### 4.5、其他缓存的对象
 
 有 ByteCache 用于缓存 Byte 对象<br>
 有 ShortCache 用于缓存 Short 对象<br>
@@ -393,7 +545,241 @@ private static class IntegerCache {
 有 CharacterCache 用于缓存 Character 对象<br>
 Byte， Short， Long 有固定范围： -128 到 127。对于 Character， 范围是 0 到 127。除了 Integer 以外，这个范围都不能改变
 
-# 六、面试问题
+# 五、Long
+
+# 六、Math
+
+# 七、数值相关
+
+## 1、小数处理
+
+### 1.1、目前 Java 支持7中舍入法
+
+RoundingMode：
+- ROUND_UP：远离零方向舍入。向绝对值最大的方向舍入，只要舍弃位非0即进位
+- ROUND_DOWN：趋向零方向舍入。向绝对值最小的方向输入，所有的位都要舍弃，不存在进位情况
+- ROUND_CEILING：向正无穷方向舍入。向正最大方向靠拢。若是正数，舍入行为类似于 ROUND_UP，若为负数，舍入行为类似于 ROUND_DOWN。 Math.round() 方法就是使用的此模式。
+- ROUND_FLOOR：向负无穷方向舍入。向负无穷方向靠拢。若是正数，舍入行为类似于 ROUND_DOWN；若为负数，舍入行为类似于 ROUND_UP。
+- HALF_UP：最近数字舍入(5进)。这是我们最经典的四舍五入。
+- HALF_DOWN：最近数字舍入(5舍)。在这里5是要舍弃的。
+- HAIL_EVEN：银行家舍入法。
+
+详细：
+
+<table class="striped">
+  <caption><b>Summary of Rounding Operations Under Different Rounding Modes</b></caption>
+  <thead>
+  <tr><th scope="col" rowspan="2">Input Number</th><th scope="col"colspan=8>Result of rounding input to one digit with the given rounding mode</th>
+  <tr style="vertical-align:top">
+    <th>{@code UP}</th>
+    <th>{@code DOWN}</th>
+    <th>{@code CEILING}</th>
+    <th>{@code FLOOR}</th>
+    <th>{@code HALF_UP}</th>
+    <th>{@code HALF_DOWN}</th>
+    <th>{@code HALF_EVEN}</th>
+  </thead>
+  <tbody style="text-align:right">
+  <tr><th scope="row">5.5</th>  <td>6</td>  <td>5</td>    <td>6</td>    <td>5</td>  <td>6</td>      <td>5</td>       <td>6</td>       <td>throw {@code ArithmeticException}</td>
+  <tr><th scope="row">2.5</th>  <td>3</td>  <td>2</td>    <td>3</td>    <td>2</td>  <td>3</td>      <td>2</td>       <td>2</td>       <td>throw {@code ArithmeticException}</td>
+  <tr><th scope="row">1.6</th>  <td>2</td>  <td>1</td>    <td>2</td>    <td>1</td>  <td>2</td>      <td>2</td>       <td>2</td>       <td>throw {@code ArithmeticException}</td>
+  <tr><th scope="row">1.1</th>  <td>2</td>  <td>1</td>    <td>2</td>    <td>1</td>  <td>1</td>      <td>1</td>       <td>1</td>       <td>throw {@code ArithmeticException}</td>
+  <tr><th scope="row">1.0</th>  <td>1</td>  <td>1</td>    <td>1</td>    <td>1</td>  <td>1</td>      <td>1</td>       <td>1</td>       <td>1</td>
+  <tr><th scope="row">-1.0</th> <td>-1</td> <td>-1</td>   <td>-1</td>   <td>-1</td> <td>-1</td>     <td>-1</td>      <td>-1</td>      <td>-1</td>
+  <tr><th scope="row">-1.1</th> <td>-2</td> <td>-1</td>   <td>-1</td>   <td>-2</td> <td>-1</td>     <td>-1</td>      <td>-1</td>      <td>throw {@code ArithmeticException}</td>
+  <tr><th scope="row">-1.6</th> <td>-2</td> <td>-1</td>   <td>-1</td>   <td>-2</td> <td>-2</td>     <td>-2</td>      <td>-2</td>      <td>throw {@code ArithmeticException}</td>
+  <tr><th scope="row">-2.5</th> <td>-3</td> <td>-2</td>   <td>-2</td>   <td>-3</td> <td>-3</td>     <td>-2</td>      <td>-2</td>      <td>throw {@code ArithmeticException}</td>
+  <tr><th scope="row">-5.5</th> <td>-6</td> <td>-5</td>   <td>-5</td>   <td>-6</td> <td>-6</td>     <td>-5</td>      <td>-6</td>      <td>throw {@code ArithmeticException}</td>
+  </tbody>
+  </table>
+
+### 1.2、保留位
+
+- 四舍五入：
+
+```
+double   f   =   111231.5585;
+BigDecimal   b   =   new   BigDecimal(f);
+double   f1   =   b.setScale(2，   RoundingMode.HALF_UP).doubleValue();
+```
+
+- 格式化：
+
+```
+java.text.DecimalFormat   df   =new   java.text.DecimalFormat("#.00″);
+df.format(你要格式化的数字);
+```
+
+- 类C语言：
+
+```
+double d = 3.1415926;
+String result = String .format("%.2f");
+%.2f %. 表示 小数点前任意位数   2 表示两位小数 格式后的结果为f 表示浮点型
+```
+- 此外如果使用 struts 标签做输出的话， 有个 format 属性，设置为 format="0.00″就是保留两位小数
+	`<bean：write name="entity" property="dkhAFSumPl"  format="0.00" />`
+	或者
+	`<fmt：formatNumber type="number" value="${10000.22/100}" maxFractionDigits="0"/>`
+	maxFractionDigits表示保留的位数
+
+### 1.3、Math相关函数
+
+```java
+double d1 = -0.5;
+System.out.println("Ceil d1=" + Math.ceil(d1)); // -0.0
+System.out.println("floor d1=" + Math.floor(d1)); // -1.0
+System.out.println("floor d1=" + Math.round(d1)); // 0
+System.out.println(Math.ceil(-0)); // 0.0
+System.out.println(Math.ceil(-0.0)); // -0.0
+System.out.println(Math.floor(-0)); // 0.0
+System.out.println(Math.floor(-0.0)); // -0.0
+```
+- ceil()：该方法返回的是一个 double 类型数据；返回一个大于该参数的最小 double 值，等于某个整数，特殊情况：
+	- ①.如果参数小于0且大于-1.0，则结果为-0.0；
+	- ②.如果参数数学上等于某个整数，则结果与该参数相同；如：5.0；
+	- ③.如果参数为 NaN，无穷大，正0.0或负0.0，那么结果与参数相同；如果是-0，则结果是0.0
+
+	==> 特别注意：`Math.ceil(d1) == -Math.floor(-d1)；// true`
+
+- floor()：返回 double 类型数据，返回一个小于该参数的最大 double 值，等于某个整数
+	- ①.如果参数数学上等于某个整数，则结果与该参数相同；如：5.0；
+	- ②.如果参数为 NaN，无穷大，正0.0或负0.0，那么结果与参数相同；如果是-0，则结果是0.0
+
+- round()：返回一个整数，如果参数为 float，返回 int 类型；如果参数为 double，返回 long 类型
+	`(int)Math.floor(a + 0.5f);`、`(long)Math.floor(a + 0.5d);`
+
+	返回最接近参数的 int 或 long 类型数据，将参数加上 1/2， 对结果调用 floor 将所得结果强转为 int 或 long
+	- ①.如果参数为 NaN， 结果为 0
+	- ②.如果结果为负无穷大或任何小于等于 `Integer.MIN_VALUE` 或 `Long.MIN_VALUE` 的值，那么结果等于 `Integer.MIN_VALUE` 或 `Long.MIN_VALUE` 的值。
+	- ③.如果参数为正无穷大或任何大于等于 `Integer.MAX_VALUE` 或 `Long.MAX_VALUE` 的值，那么结果等于 `Integer.MAX_VALUE` 或 `Long.MAX_VALUE` 的值
+
+### 1.4、使用 BigDecimal，保留小数点后两位
+
+```java
+public static String format1(double value) {
+	BigDecimal bd = new BigDecimal(value);
+	bd = bd.setScale(2， RoundingMode.HALF_UP);
+	return bd.toString();
+}
+```
+
+### 1.5、使用 DecimalFormat，保留小数点后两位
+
+```java
+	public static String format2(double value) {
+	    DecimalFormat df = new DecimalFormat("0.00");
+	    df.setRoundingMode(RoundingMode.HALF_UP);
+	    return df.format(value);
+	}
+```
+
+### 1.6、使用 NumberFormat，保留小数点后两位
+
+```java
+public static String format3(double value) {
+	NumberFormat nf = NumberFormat.getNumberInstance();
+	nf.setMaximumFractionDigits(2);
+	// setMinimumFractionDigits设置成2，如果不这么做，那么当value的值是100.00的时候返回100，而不是100.00
+	nf.setMinimumFractionDigits(2);
+	nf.setRoundingMode(RoundingMode.HALF_UP);
+	// 如果想输出的格式用逗号隔开，可以设置成true
+	nf.setGroupingUsed(false);
+	return nf.format(value);
+}
+```
+
+### 1.7、使用 java.util.Formatter，保留小数点后两位
+
+```java
+public static String format4(double value) {
+	// %.2f % 表示 小数点前任意位数 2 表示两位小数 格式后的结果为 f 表示浮点型
+	return new Formatter().format("%.2f"， value).toString();
+}
+```
+
+### 1.8、使用 String.format来实现
+
+String.format 采用四舍五入的方式进行舍入
+```java
+public static String format5(double value) {
+	return String.format("%.2f"， value).toString();
+}
+```
+
+**5.1、对浮点数进行格式化：占位符格式为： `%[index$][标识] * [最小宽度][.精度]`转换符**
+
+```java
+double num = 123.4567899;
+System.out.print(String.format("%f %n"， num)); // 123.456790
+System.out.print(String.format("%a %n"， num)); // 0x1.edd3c0bb46929p6
+System.out.print(String.format("%g %n"， num)); // 123.457
+```
+- 可用标识符
+	- `-`，在最小宽度内左对齐，不可以与0标识一起使用。
+	- `0`，若内容长度不足最小宽度，则在左边用0来填充。
+	- `#`，对8进制和16进制，8进制前添加一个0，16进制前添加0x。
+	- `+`，结果总包含一个+或-号。
+	- `空格`，正数前加空格，负数前加-号。
+	- `,`，只用与十进制，每3位数字间用，分隔。
+	- `(`，若结果为负数，则用括号括住，且不显示符号。
+- 可用转换符：
+	- `b`，布尔类型，只要实参为非false的布尔类型，均格式化为字符串true，否则为字符串false。
+	- `n`，平台独立的换行符， 也可通过System.getProperty("line.separator")获取。
+	- `f`，浮点数型(十进制)。显示9位有效数字，且会进行四舍五入。如99.99。
+	- `a`，浮点数型(十六进制)。
+	- `e`，指数类型。如9.38e+5。
+	- `g`，浮点数型(比%f，%a长度短些，显示6位有效数字，且会进行四舍五入)
+
+### 1.9、最佳实践
+
+- 使用 BigDecimal 表示和计算浮点数，且务必使用字符串的构造方法来初始化 BigDecimal：
+- 通过 DecimalFormat 来精确控制舍入方式，double 和 float 的问题也可能产生意想不到的结果，所以浮点数避坑第二原则：**浮点数的字符串格式化也要通过 BigDecimal 进行**
+
+## 2、数值溢出
+
+数值计算有一个要小心的点是溢出，不管是 int 还是 long，所有的基本数值类型都有超出表达范围的可能性；
+
+对Long的最大值进行+1操作：
+```java
+// 输出结果是一个负数，因为 Long 的最大值 +1 变为了 Long 的最小值：
+long l = Long.MAX_VALUE;
+System.out.println(l + 1);
+System.out.println(l + 1 == Long.MIN_VALUE);
+```
+有人如下两种方式解决：
+- 考虑使用 Math 类的 addExact、subtractExact 等 xxExact 方法进行数值运算，这些方法可以在数值溢出时主动抛出异常:
+	```java
+	try {
+		long l = Long.MAX_VALUE;
+		System.out.println(Math.addExact(l, 1));
+	} catch (Exception ex) {
+		ex.printStackTrace();
+	}
+	// 执行后可以得到 ArithmeticException，这是一个 RuntimeException：
+	java.lang.ArithmeticException: long overflow
+	at java.base/java.lang.Math.addExact(Math.java:845)
+	at com.blue.fish.example.base.type.number.TestNumOverLimit.main(TestNumOverLimit.java:13)
+	```
+- 使用大数类 BigInteger。BigDecimal 是处理浮点数的专家，而 BigInteger 则是对大数进行科学计算的专家；使用 BigInteger 对 Long 最大值进行 +1 操作；如果希望把计算结果转换一个 Long 变量的话，可以使用 BigInteger 的 longValueExact 方法，在转换出现溢出时，同样会抛出 ArithmeticException：
+	```java
+	BigInteger i = new BigInteger(String.valueOf(Long.MAX_VALUE));
+	System.out.println(i.add(BigInteger.ONE).toString());
+
+	try {
+		long l = i.add(BigInteger.ONE).longValueExact();
+	} catch (Exception ex) {
+		ex.printStackTrace();
+	}
+	// 输出
+	java.lang.ArithmeticException: BigInteger out of long range
+	9223372036854775808
+		at java.base/java.math.BigInteger.longValueExact(BigInteger.java:4765)
+		at com.blue.fish.example.base.type.number.TestNumOverLimit.main(TestNumOverLimit.java:25)
+	```
+	注意：不要调用BigInteger的longValue()方法，该方法溢出不报错；
+
+# 八、面试
 
 ## 1、int范围问题
 
@@ -469,4 +855,3 @@ public class IntegerToFullBinary{
     }
 }
 ```
-
