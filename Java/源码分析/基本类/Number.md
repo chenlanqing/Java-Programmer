@@ -578,6 +578,7 @@ RoundingMode：
     <th>{@code HALF_UP}</th>
     <th>{@code HALF_DOWN}</th>
     <th>{@code HALF_EVEN}</th>
+    <th>{@code UNNECESSARY}</th>
   </thead>
   <tbody style="text-align:right">
   <tr><th scope="row">5.5</th>  <td>6</td>  <td>5</td>    <td>6</td>    <td>5</td>  <td>6</td>      <td>5</td>       <td>6</td>       <td>throw {@code ArithmeticException}</td>
