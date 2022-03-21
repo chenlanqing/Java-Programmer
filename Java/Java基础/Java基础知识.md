@@ -2925,8 +2925,37 @@ map2.put("c"， "3");
 object.putAll(map2);
 System.out.println(JSONObject.toJSON(object));// {"b"："2"，"a"："1"，"c"："3"}
 ```
-
 - Gson 保证了你插入的顺序，就是正常的Map迭代操作
+
+### 7.3、Jackson序列化-自定义ObjectMapper
+
+- [Jackson-github](https://github.com/FasterXML/jackson)
+
+很多框架都将 Jackson 作为 JDK 序列化工具，比如 Spring Web，也正是因为这个原因，我们使用时需要注意各种参数配置；比如在开发 Spring Web 应用程序时，如果自定义了 ObjectMapper，并把它注册成了 Bean，那很可能会导致 Spring Web 使用的 ObjectMapper 也被替换，导致 Bug；
+
+在使用jackson时需要注意：
+- 可以配置一些禁用自定义的 ObjectMapper 的属性值；
+- 不要自定义 ObjectMapper，而是直接在配置文件设置相关参数，来修改 Spring 默认的 ObjectMapper 的功能。比如，直接在配置文件启用把枚举序列化为索引号；
+- 或者可以直接定义 Jackson2ObjectMapperBuilderCustomizer Bean 来启用新特性；
+
+Jackson 针对序列化和反序列化有大量的细节功能特性，我们可以参考 Jackson 官方文档来了解这些特性，详见SerializationFeature、DeserializationFeature和MapperFeature；
+
+### 7.4、Jack序列化-构造函数
+
+默认情况下，在反序列化的时候，Jackson 框架只会调用无参构造方法创建对象，如果走自定义的构造方法创建对象，需要通过 @JsonCreator 来指定构造方法，并通过 @JsonProperty 设置构造方法中参数对应的 JSON 属性名：
+```java
+@Data
+public class Result {
+    ...
+
+    @JsonCreator
+    public Result(@JsonProperty("code") int code) {
+        this.code = code;
+        if (code == 2000) success = true;
+        else success = false;
+    }
+}
+```
 
 ## 8、序列化安全
 
