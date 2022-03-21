@@ -469,6 +469,8 @@ hashtable也是线程安全的，所以也是key和value也是不可以null的
 
 treeMap 线程不安全，但是因为需要排序，进行key的compareTo方法，所以key是不能null中，value是可以的
 
+## 6、Spring 的 ConcurrentReferenceHashMap，针对 Key 和 Value 支持软引用和弱引用两种方式。你觉得哪种方式更适合做缓存呢？
+
 # 三、IO与NIO
 
 ## 1、文件拷贝实现方式
@@ -1770,6 +1772,27 @@ Heap
 通过 Java 命令启动 JVM，JVM 的类加载器根据 Java 命令的参数到指定的路径加载.class 类文件，类文件被加载到内存后，存放在专门的方法区。然后 JVM 创建一个主线程执行这个类文件的 main 方法，main 方法的输入参数和方法内定义的变量被压入 Java 栈。如果在方法内创建了一个对象实例，这个对象实例信息将会被存放到堆里，而对象实例的引用，也就是对象实例在堆中的地址信息则会被记录在栈里。堆中记录的对象实例信息主要是成员变量信息，因为类方法内的可执行代码存放在方法区，而方法内的局部变量存放在线程的栈里。
 
 程序计数寄存器一开始存放的是 main 方法的第一行代码位置，JVM 的执行引擎根据这个位置去方法区的对应位置加载这行代码指令，将其解释为自身所在平台的 CPU 指令后交给 CPU 执行。如果在 main 方法里调用了其他方法，那么在进入其他方法的时候，会在 Java 栈中为这个方法创建一个新的栈帧，当线程在这个方法内执行的时候，方法内的局部变量都存放在这个栈帧里。当这个方法执行完毕退出的时候，就把这个栈帧从 Java 栈中出栈，这样当前栈帧，也就是堆栈的栈顶就又回到了 main 方法的栈帧，使用这个栈帧里的变量，继续执行 main 方法。这样，即使 main 方法和 f 方法都定义相同的变量，JVM 也不会弄错
+
+## 19、Groovy如何避免OOM
+
+当我们需要动态执行一些表达式时，可以使用 Groovy 动态语言实现：new 出一个 GroovyShell 类，然后调用 evaluate 方法动态执行脚本。这种方式的问题是，会重复产生大量的类，增加 Metaspace 区的 GC 负担，有可能会引起 OOM。如何避免这个问题呢？
+
+调用 evaluate 方法动态执行脚本会产生大量的类，要避免可能因此导致的 OOM 问题，我们可以把脚本包装为一个函数，先调用 parse 函数来得到 Script 对象，然后缓存起来，以后直接使用 invokeMethod 方法调用这个函数即可：
+```java
+public static final ConcurrentHashMap<String, Script> SCRIPT_CACHE = new ConcurrentHashMap<>();
+private Object rightGroovy(String script, String method, Object... args) {
+    Script scriptObject;
+    if (SCRIPT_CACHE.containsKey(script)) {
+        //如果脚本已经生成过Script则直接使用
+        scriptObject = SCRIPT_CACHE.get(script);
+    } else {
+        //否则把脚本解析为Script
+        scriptObject = shell.parse(script);
+        SCRIPT_CACHE.put(script, scriptObject);
+    }
+    return scriptObject.invokeMethod(method, args);
+}
+```
 
 # 六、MySQL
 

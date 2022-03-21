@@ -341,6 +341,8 @@ PS：十进制转换为16进制：`printf '%x\n' 6642`
 
 # 二、Heap Dump分析
 
+常见配置：`-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=. -XX:+PrintGCDateStamps -XX:+PrintGCDetails -Xloggc:gc.log -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M`
+
 ## 1、发生OOM之后
 
 如果OOM发生之后，想办法得到Heap dump
