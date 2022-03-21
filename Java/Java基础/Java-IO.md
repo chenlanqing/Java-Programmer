@@ -714,6 +714,44 @@ Writer writer = new OutputStreamWriter(outputStream);
 
 缓冲的本质是排队、流的本质是数据
 
+- 直接使用 BufferedInputStream 和 BufferedOutputStream；
+- 额外使用一个 8KB 缓冲，使用 BufferedInputStream 和 BufferedOutputStream；
+- 直接使用 FileInputStream 和 FileOutputStream，再使用一个 8KB 的缓冲
+```java
+//使用BufferedInputStream和BufferedOutputStream
+private static void bufferedStreamByteOperation() throws IOException {
+   try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream("src.txt"));
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream("dest.txt"))) {
+        int i;
+        while ((i = bufferedInputStream.read()) != -1) {
+            bufferedOutputStream.write(i);
+        }
+    }
+}
+//额外使用一个8KB缓冲，再使用BufferedInputStream和BufferedOutputStream
+private static void bufferedStreamBufferOperation() throws IOException {
+    try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream("src.txt"));
+         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream("dest.txt"))) {
+        byte[] buffer = new byte[8192];
+        int len = 0;
+        while ((len = bufferedInputStream.read(buffer)) != -1) {
+            bufferedOutputStream.write(buffer, 0, len);
+        }
+    }
+}
+//直接使用FileInputStream和FileOutputStream，再使用一个8KB的缓冲
+private static void largerBufferOperation() throws IOException {
+    try (FileInputStream fileInputStream = new FileInputStream("src.txt");
+        FileOutputStream fileOutputStream = new FileOutputStream("dest.txt")) {
+        byte[] buffer = new byte[8192];
+        int len = 0;
+        while ((len = fileInputStream.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, len);
+        }
+    }
+}
+```
+
 # 三、Java NIO
 
 ## 1、Java NIO 概述
@@ -1466,11 +1504,75 @@ RocketMQ 选择了 `mmap + write`这种零拷贝方式，适用于业务级消�
 | RocketMQ | mmap + write | 适用于小块文件传输，频繁调用时，效率很高 | 不能很好的利用 DMA 方式，会比 sendfile 多消耗 CPU，内存安全性控制复杂，需要避免 JVM Crash 问题 |
 | Kafka | sendfile | 可以利用 DMA 方式，消耗 CPU 较少，大块文件传输效率高，无内存安全性问题 | 小块文件效率低于 mmap 方式，只能是 BIO 方式传输，不能使用 NIO 方式 |
 
+## 9、非零拷贝
+
+```java
+//使用BufferedInputStream和BufferedOutputStream
+private static void bufferedStreamByteOperation() throws IOException {
+   try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream("src.txt"));
+        BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream("dest.txt"))) {
+        int i;
+        while ((i = bufferedInputStream.read()) != -1) {
+            bufferedOutputStream.write(i);
+        }
+    }
+}
+//额外使用一个8KB缓冲，再使用BufferedInputStream和BufferedOutputStream
+private static void bufferedStreamBufferOperation() throws IOException {
+    try (BufferedInputStream bufferedInputStream = new BufferedInputStream(new FileInputStream("src.txt"));
+         BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(new FileOutputStream("dest.txt"))) {
+        byte[] buffer = new byte[8192];
+        int len = 0;
+        while ((len = bufferedInputStream.read(buffer)) != -1) {
+            bufferedOutputStream.write(buffer, 0, len);
+        }
+    }
+}
+//直接使用FileInputStream和FileOutputStream，再使用一个8KB的缓冲
+private static void largerBufferOperation() throws IOException {
+    try (FileInputStream fileInputStream = new FileInputStream("src.txt");
+        FileOutputStream fileOutputStream = new FileOutputStream("dest.txt")) {
+        byte[] buffer = new byte[8192];
+        int len = 0;
+        while ((len = fileInputStream.read(buffer)) != -1) {
+            fileOutputStream.write(buffer, 0, len);
+        }
+    }
+}
+```
+
 # 五、IO相关问题
 
 ## 1、文件 IO 中如何保证掉电不丢失数据
 
+## 2、如何按行读取数据
 
+在读取大文件的时候可以使用 Files 类静态方法进行文件操作，其 lines 方法返回的是 `Stream<String>`，使得我们在需要时可以不断读取、使用文件中的内容，而不是一次性地把所有内容都读取到内存中，因此避免了 OOM：
+```java
+//输出文件大小
+log.info("file size:{}", Files.size(Paths.get("test.txt")));
+//使用Files.lines方法读取20万行数据
+log.info("lines {}", Files.lines(Paths.get("test.txt")).limit(200000).collect(Collectors.toList()).size());
+//使用Files.lines方法读取200万行数据
+log.info("lines {}", Files.lines(Paths.get("test.txt")).limit(2000000).collect(Collectors.toList()).size());
+AtomicLong atomicLong = new AtomicLong();
+//使用Files.lines方法统计文件总行数
+Files.lines(Paths.get("test.txt")).forEach(line->atomicLong.incrementAndGet());
+log.info("total lines {}", atomicLong.get());
+```
+但是使用该方法时需要注意，Files 类的一些返回 Stream 的方法会导致文件句柄没有释放，程序在运行一段时间后就会出现 too many files 的错误，所以在使用类似的方法时注意使用 try-with-resources 方式来配合，确保流的 close 方法可以调用释放资源：
+```java
+LongAdder longAdder = new LongAdder();
+IntStream.rangeClosed(1, 1000000).forEach(i -> {
+    try (Stream<String> lines = Files.lines(Paths.get("demo.txt"))) {
+        lines.forEach(line -> longAdder.increment());
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+});
+log.info("total : {}", longAdder.longValue());
+```
+File.lines方法其实实现是使用 BufferedReader 进行字符流读取时，用到了缓冲
 
 # 参考文章
 
