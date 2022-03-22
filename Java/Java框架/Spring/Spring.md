@@ -508,6 +508,29 @@ try{
 
 Spring AOP 属于运行时增强，而 AspectJ 是编译时增强。 Spring AOP 基于代理(Proxying)，而 AspectJ 基于字节码操作(Bytecode Manipulation)
       
+## 10、切面执行顺序
+
+切面本身是一个 Bean，Spring 对不同切面增强的执行顺序是由 Bean 优先级决定的，具体规则是：
+- 入操作（Around（连接点执行前）、Before），切面优先级越高，越先执行。一个切面的入操作执行完，才轮到下一切面，所有切面入操作执行完，才开始执行连接点（方法）；
+- 出操作（Around（连接点执行后）、After、AfterReturning、AfterThrowing），切面优先级越低，越先执行。一个切面的出操作执行完，才轮到下一切面，直到返回到调用点；
+- 同一切面的 Around 比 After、Before 先执行
+
+有A和B两个切面
+```java
+@Aspect
+@Component
+@Order(10)
+public class TestAspectWithOrderA {
+}
+@Aspect
+@Component
+@Order(20)
+@Slf4j
+public class TestAspectWithOrderB {
+}
+```
+A_Around-before -> A_Before -> B_Around-before -> B_Before -> B_Around-after -> B_After -> A_Around-after -> A_After
+
 # 四、IOC与AOP原理分析
 
 ## 1、IOC原理
@@ -1016,7 +1039,6 @@ public class UserService {
 2022-03-19 19:36:25.544 DEBUG 65243 [main] o.s.j.d.DataSourceTransactionManager : Releasing JDBC Connection [HikariProxyConnection@37427881 wrapping com.mysql.cj.jdbc.ConnectionImpl@54489296] after transaction
 ```
 
-
 #### 10.2.3、手动抛了别的异常
 
 即使开发者没有手动捕获异常，但如果抛的异常不正确，spring事务也不会回滚。
@@ -1106,6 +1128,61 @@ public class UserService {
 }
 ```
 可以将内部嵌套事务放在try/catch中，并且不继续往上抛异常。这样就能保证，如果内部嵌套事务中出现异常，只回滚内部事务，而不影响外部事务
+
+#### 10.2.6、AOP因顺序问题导致事务不回滚
+
+如果我们定义的切面中对于Service相关方法进行了捕获异常处理，会到时事务无法回滚，有如下切面：
+```java
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface Metrics {
+    boolean recordSuccessMetrics() default true;
+    boolean recordFailMetrics() default true;
+    boolean logParameters() default true;
+    boolean logReturn() default true;
+    boolean logException() default true;
+    boolean ignoreException() default false;
+}
+@Aspect
+@Component
+public class MetricsAspect {
+	@Around("controllerBean() || withMetricsAnnotation())")
+    public Object metrics(ProceedingJoinPoint pjp) throws Throwable {
+		......
+        try {
+        } catch (Exception ex) {
+            //如果忽略异常那么直接返回默认值
+            if (metrics.ignoreException())
+                returnValue = getDefaultValue(signature.getReturnType());
+            else
+                throw ex;
+        }
+        return returnValue;
+    }
+}
+```
+在使用的时候，在Service的方法表示如下：
+```java
+@Metrics(logParameters = false, logReturn = false)
+public class MetricsController {
+
+@Service
+@Slf4j
+public class UserService {
+    @Transactional
+    @Metrics(ignoreException = true)
+    public void createUser(UserEntity entity) {
+    ...
+```
+我们知道Spring 通过 TransactionAspectSupport 类实现事务。在 invokeWithinTransaction 方法中设置断点可以发现，在执行 Service 的 createUser 方法时，TransactionAspectSupport 并没有捕获到异常，所以自然无法回滚事务。原因就是，异常被 MetricsAspect 吃掉了；
+
+因为 Spring 的事务管理也是基于 AOP 的，默认情况下优先级最低也就是会先执行出操作，但是自定义切面 MetricsAspect 也同样是最低优先级，这个时候就可能出现问题：如果出操作先执行捕获了异常，那么 Spring 的事务处理就会因为无法捕获到异常导致无法回滚事务，解决方式是，明确 MetricsAspect 的优先级，可以设置为最高优先级，也就是最先执行入操作最后执行出操作：
+```java
+//将MetricsAspect这个Bean的优先级设置为最高
+@Order(Ordered.HIGHEST_PRECEDENCE)
+public class MetricsAspect {
+    ...
+}
+```
 
 # 六、Spring的三种配置方式
 
@@ -1415,7 +1492,7 @@ Servlet一般会延迟加载，当第一个请求达到时，Tomcat&Jetty发现D
 
 - `@Resource`和`@Autowired`都是做bean的注入时使用，其实`@Resource`并不是Spring的注解，它的包是`javax.annotation.Resource`，需要导入，但是Spring支持该注解的注入；`@Autowired和@Inject`基本是一样的，因为两者都是使用AutowiredAnnotationBeanPostProcessor来处理依赖注入。但是`@Resource`是个例外，它使用的是CommonAnnotationBeanPostProcessor来处理依赖注入
 
-- `@Autowired`注解是按照类型（byType）装配依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false；如果我们想使用按照名称（byName）来装配，可以结合`@Qualifier`注解一起使用；
+- `@Autowired`注解是优先按照类型（byType）装配依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false；如果我们想使用按照名称（byName）来装配，可以结合`@Qualifier`注解一起使用；当无法确定具体注入类型的时候，也可以通过 @Qualifier 注解指定 Bean 名称
 
 - `@Resource`默认按照ByName自动注入，由J2EE提供，需要导入包`javax.annotation.Resource`。`@Resource`有两个重要的属性：name和type，而Spring将`@Resource`注解的name属性解析为bean的名字，而type属性则解析为bean的类型。所以，如果使用name属性，则使用byName的自动注入策略，而使用type属性时则使用byType自动注入策略。如果既不制定name也不制定type属性，这时将通过反射机制使用byName自动注入策略
 
@@ -1424,7 +1501,7 @@ Servlet一般会延迟加载，当第一个请求达到时，Tomcat&Jetty发现D
 	- ②、如果指定了name，则从上下文中查找名称（id）匹配的bean进行装配，找不到则抛出异常。
 	- ③、如果指定了type，则从上下文中找到类似匹配的唯一bean进行装配，找不到或是找到多个，都会抛出异常。
 	- ④、 如果既没有指定name，又没有指定type，则自动按照byName方式进行装配；如果没有匹配，则回退为一个原始类型进行匹配，如果匹配则自动装配。
-- `@Inject`: 这是jsr330 的规范，通过AutowiredAnnotationBeanPostProcessor 类实现的依赖注入。位于javax.inject包内，是Java自带的注解；
+- `@Inject`: 这是jsr330 的规范，通过AutowiredAnnotationBeanPostProcessor 类实现的依赖注入。位于javax.inject包内，是Java自带的注解；也是根据类型进行自动装配的，这一点和 @Autowired 类似。如果需要按名称进行装配，则需要配合使用 @Named。@Autowired 和 @Inject 的区别在于，前者可以使用 required=false 允许注入 null，后者允许注入一个 Provider 实现延迟注入
 
 # 九、SpringMVC
 
