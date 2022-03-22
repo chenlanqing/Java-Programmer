@@ -89,6 +89,54 @@ final Map<String, String> map = list.stream()
 ```
 `(oldValue, newValue) -> oldValue` 表示：如果key是重复的，你选择oldKey or newKey?
 
+## 3、注解支持继承吗？
+
+`@Inherited` 只能实现类上的注解继承。要想实现方法上注解的继承，你可以通过反射在继承链上找到方法上的注解。但，这样实现起来很繁琐，而且需要考虑桥接方法。
+
+Spring 提供了 AnnotatedElementUtils 类，来方便我们处理注解的继承问题。这个类的 findMergedAnnotation 工具方法，可以帮助我们找出父类和接口、父类方法和接口方法上的注解，并可以处理桥接方法，实现一键找到继承链的注解：
+```java
+
+Child child = new Child();
+log.info("ChildClass:{}", getAnnotationValue(AnnotatedElementUtils.findMergedAnnotation(child.getClass(), MyAnnotation.class)));
+log.info("ChildMethod:{}", getAnnotationValue(AnnotatedElementUtils.findMergedAnnotation(child.getClass().getMethod("foo"), MyAnnotation.class)));
+```
+总结：自定义注解可以通过标记元注解 @Inherited 实现注解的继承，不过这只适用于类。如果要继承定义在接口或方法上的注解，可以使用 Spring 的工具类 AnnotatedElementUtils，并注意各种 getXXX 方法和 findXXX 方法的区别，详情查看
+
+**关于注解继承问题，你觉得 Spring 的常用注解 @Service、@Controller 是否支持继承呢？**
+
+Spring 的常用注解 @Service、@Controller，不支持继承。这些注解只支持放到具体的（非接口非抽象）顶层类上（来让它们成为 Bean），如果支持继承会非常不灵活而且容易出错。
+
+## 4、synthetic 方法
+
+泛型类型擦除后会生成一个 bridge 方法，这个方法同时又是 synthetic 方法。除了泛型类型擦除，你知道还有什么情况编译器会生成 synthetic 方法吗？
+
+Synthetic 方法是编译器自动生成的方法（在源码中不出现）。除了文中提到的泛型类型擦除外，Synthetic 方法还可能出现的一个比较常见的场景，是内部类和顶层类需要相互访问对方的 private 字段或方法的时候；
+
+编译后的内部类和普通类没有区别，遵循 private 字段或方法对外部类不可见的原则，但语法上内部类和顶层类的私有字段需要可以相互访问。为了解决这个矛盾，编译器就只能生成桥接方法，也就是 Synthetic 方法，来把 private 成员转换为 package 级别的访问限制
+
+比如如下代码，InnerClassApplication 类的 test 方法需要访问内部类 MyInnerClass 类的私有字段 name，而内部类 MyInnerClass 类的 test 方法需要访问外部类 InnerClassApplication 类的私有字段 gender：
+```java
+public class InnerClassApplication {
+    private String gender = "male";
+    public static void main(String[] args) throws Exception {
+        InnerClassApplication application = new InnerClassApplication();
+        application.test();
+    }
+    private void test(){
+        MyInnerClass myInnerClass = new MyInnerClass();
+        System.out.println(myInnerClass.name);
+        myInnerClass.test();
+    }
+    class MyInnerClass {
+        private String name = "zhuye";
+        void test(){
+            System.out.println(gender);
+        }
+    }
+}
+```
+编译器会为 InnerClassApplication 和 MyInnerClass 都生成桥接方法
+
 # 二、集合
 
 ## 1、HashMap、Hashtable、LinkedHashMap

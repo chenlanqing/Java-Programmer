@@ -2568,7 +2568,8 @@ class ClassTest<X extends Number， Y， Z> {
 
 - 在代码中避免泛型类和原始类型的混用;
 - 在使用带通配符的泛型类的时候，需要明确通配符所代表的一组类型的概念；
-- 定义泛型方法时，必须在返回值前边加一个<T>，来声明这是一个泛型方法，持有一个泛型T，然后才可以用泛型T作为方法的返回值
+- 定义泛型方法时，必须在返回值前边加一个`<T>`，来声明这是一个泛型方法，持有一个泛型T，然后才可以用泛型T作为方法的返回值
+- 泛型因为类型擦除会导致泛型方法 T 占位符被替换为 Object，子类如果使用具体类型覆盖父类实现，编译器会生成桥接方法。这样既满足子类方法重写父类方法的定义，又满足子类实现的方法有具体的类型。使用反射来获取方法清单时，你需要特别注意这一点
 
 ## 7、Java与C++泛型区别
 
@@ -4088,7 +4089,7 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 
 - `@Documented`：生成文档的时候会生成注解的注释
 
-- `@Inherited`：允许子类继承
+- `@Inherited`：允许子类继承，只能能实现类上的注解继承，方法上的继承无法实现，必须通过反射的方式来处理
 
 在JDK 1.8中提供了两个元注解 `@Repeatable和@Native`
 
@@ -4103,6 +4104,17 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 不能使用关键字extends来继承某个@interface，注解在编译后，编译器会自动继承`java.lang.annotation.Annotation`接口，虽然反编译后发现注解继承了Annotation接口，请记住，即使Java的接口可以实现多继承，但定义注解时依然无法使用extends关键字继承@interface。
 
 区别于注解的继承，被注解的子类继承父类注解可以用@Inherited： 如果某个类使用了被@Inherited修饰的Annotation，则其子类将自动具有该注解。
+
+`@Inherited` 只能实现类上的注解继承。要想实现方法上注解的继承，你可以通过反射在继承链上找到方法上的注解。但，这样实现起来很繁琐，而且需要考虑桥接方法。
+
+Spring 提供了 AnnotatedElementUtils 类，来方便我们处理注解的继承问题。这个类的 findMergedAnnotation 工具方法，可以帮助我们找出父类和接口、父类方法和接口方法上的注解，并可以处理桥接方法，实现一键找到继承链的注解：
+```java
+
+Child child = new Child();
+log.info("ChildClass:{}", getAnnotationValue(AnnotatedElementUtils.findMergedAnnotation(child.getClass(), MyAnnotation.class)));
+log.info("ChildMethod:{}", getAnnotationValue(AnnotatedElementUtils.findMergedAnnotation(child.getClass().getMethod("foo"), MyAnnotation.class)));
+```
+总结：自定义注解可以通过标记元注解 @Inherited 实现注解的继承，不过这只适用于类。如果要继承定义在接口或方法上的注解，可以使用 Spring 的工具类 AnnotatedElementUtils，并注意各种 getXXX 方法和 findXXX 方法的区别，详情查看
 
 ## 2、注解处理器
 
@@ -4530,6 +4542,119 @@ Java 动态加载与静态加载
 ## 8、元编程
 
 一个程序可以把另一个程序作为数据；
+
+## 9、反射注意的点
+
+### 9.1、反射调用方法不是以传参决定重载
+
+有两个叫 age 的方法，入参分别是基本类型 int 和包装类型 Integer。
+```java
+public class ReflectionIssueApplication {
+  private void age(int age) {
+      log.info("int age = {}", age);
+  }
+  private void age(Integer age) {
+      log.info("Integer age = {}", age);
+  }
+}
+```
+果不通过反射调用，走哪个重载方法很清晰，比如传入 36 走 int 参数的重载方法，传入 `Integer.valueOf("36")` 走 Integer 重载；
+
+但是使用反射的话，比如如下调用：
+```java
+getClass().getDeclaredMethod("age", Integer.TYPE).invoke(this, Integer.valueOf("36"));
+```
+通过输出的日志可以看到：
+```
+14:23:09.801 [main] INFO com.qing.fan.reflect.ReflectionIssueApp - int age = 36
+```
+getDeclaredMethod 传入的参数类型 `Integer.TYPE`代表的是 int，所以实际执行方法时无论传的是包装类型还是基本类型，都会调用 int 入参的 age 方法，把 `Integer.TYPE` 改为 `Integer.class`，执行的参数类型就是包装类型的 Integer。这时，无论传入的是 Integer.valueOf(“36”) 还是基本类型的 36：
+```java
+getClass().getDeclaredMethod("age", Integer.class).invoke(this, Integer.valueOf("36"));
+getClass().getDeclaredMethod("age", Integer.class).invoke(this, 36);
+```
+输出结果：
+```
+14:25:18.028 [main] INFO com.qing.fan.reflect.ReflectionIssueApp - Integer age = 36
+14:25:18.029 [main] INFO com.qing.fan.reflect.ReflectionIssueApp - Integer age = 36
+```
+> 反射调用方法，是以反射获取方法时传入的方法名称和参数类型来确定调用方法的；所以在有基本类型和包装类型重载的方法上，要特别注意，一般 Integer.TYPE 代表基本类型，Integer.class 代表包装类型参数；
+
+### 9.2、泛型经过类型擦除多出桥接方法的坑
+
+有如下代码
+```java
+class Parent<T> {
+    AtomicInteger updateCount = new AtomicInteger();
+    private T value;
+    @Override
+    public String toString() {
+        return String.format("value: %s updateCount: %d", value, updateCount.get());
+    }
+    public void setValue(T value) {
+        System.out.println("Parent.setValue called");
+        this.value = value;
+        updateCount.incrementAndGet();
+    }
+}
+class Child2 extends Parent<String> {
+    @Override
+    public void setValue(String value) {
+        System.out.println("Child2.setValue called");
+        super.setValue(value);
+    }
+}
+// 如下方式调用，发现Child2 和 Parent 的setValue方法被调用的两次
+Arrays.stream(child2.getClass().getDeclaredMethods())
+    .filter(method -> method.getName().equals("setValue"))
+    .forEach(method -> {
+        try {
+            method.invoke(child1, "test");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    });
+// 输出结果
+Child2.setValue called
+Parent.setValue called
+Child2.setValue called
+Parent.setValue called
+value: test updateCount: 2
+```
+导致调用两次的原因是泛型类型擦除导致的问题：Java 的泛型类型在编译后擦除为 Object。虽然子类指定了父类泛型 T 类型是 String，但编译后 T 会被擦除成为 Object，所以父类 setValue 方法的入参是 Object，value 也是 Object。如果子类 Child2 的 setValue 方法要覆盖父类的 setValue 方法，那入参也必须是 Object。所以，编译器会为我们生成一个所谓的 bridge 桥接方法：
+```java
+Compiled from "GenericAndInheritanceApplication.java"
+class com.blue.fish.example.base.reflect.Child2 extends com.blue.fish.example.base.reflect.Parent<java.lang.String> {
+  com.blue.fish.example.base.reflect.Child2();
+    Code:
+       0: aload_0
+       1: invokespecial #1                  // Method com/blue/fish/example/base/reflect/Parent."<init>":()V
+       4: return
+
+  public void setValue(java.lang.String);
+    Code:
+       0: getstatic     #2                  // Field java/lang/System.out:Ljava/io/PrintStream;
+       3: ldc           #3                  // String Child2.setValue called
+       5: invokevirtual #4                  // Method java/io/PrintStream.println:(Ljava/lang/String;)V
+       8: aload_0
+       9: aload_1
+      10: invokespecial #5                  // Method com/blue/fish/example/base/reflect/Parent.setValue:(Ljava/lang/Object;)V
+      13: return
+
+  public void setValue(java.lang.Object);
+    Code:
+       0: aload_0
+       1: aload_1
+       2: checkcast     #6                  // class java/lang/String
+       5: invokevirtual #7                  // Method setValue:(Ljava/lang/String;)V
+       8: return
+}
+```
+可以看到，入参为 Object 的 setValue 方法在内部调用了入参为 String 的 setValue 方法，也就是代码里实现的那个方法。如果编译器没有帮我们实现这个桥接方法，那么 Child2 子类重写的是父类经过泛型类型擦除后、入参是 Object 的 setValue 方法；
+
+使用反射查询类方法清单时，我们要注意两点：
+- getMethods 和 getDeclaredMethods 是有区别的，前者可以查询到父类方法，后者只能查询到当前类；
+- 反射进行方法调用要注意过滤桥接方法；
 
 # 二十、比较器：Comparale、Comparator
 
