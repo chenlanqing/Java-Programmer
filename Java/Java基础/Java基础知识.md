@@ -5729,6 +5729,17 @@ set CATALINA_OPTS=-Dcom.sun.management.jmxremote
 
 JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢出等问题引起的
 
+## 7、JMX通过http方式访问
+
+对于查看和操作 MBean，除了使用 jconsole 之外，你可以使用 jolokia 把 JMX 转换为 HTTP 协议，引入依赖：
+```xml
+<dependency>
+    <groupId>org.jolokia</groupId>
+    <artifactId>jolokia-core</artifactId>
+</dependency>
+```
+[Jolokia](https://jolokia.org/) 是一个用来访问远程 JMX MBeans 的崭新方法，与 JSR-160 连接器不同的是，它使用基于 HTTP 的 JSON 格式作为通讯协议，提供 JMX 批量操作等
+
 # 二十八、Java基准测试-JMH
 
 - [JMH教程](http://tutorials.jenkov.com/java-performance/jmh.html)

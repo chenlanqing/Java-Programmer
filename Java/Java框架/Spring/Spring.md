@@ -6402,13 +6402,293 @@ Spring5.0 WebClient
 
 # 十六、SpringBoot监控
 
-Actuator
+## 1、Actuator
 
-SpringBoot Admin
-- 集成client模式
-- 服务发现模式：注册到Eureka上，避免侵入业务代码
+- [actuator-api](https://docs.spring.io/spring-boot/docs/2.2.4.RELEASE/actuator-api//html/)
 
-Prmoetheus + Granfana
+### 1.1、使用
+
+引入对应的maven依赖
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+开启actuator
+```properties
+# 使用 management.server.port 设置独立的端口
+management.server.port=45679
+management.endpoints.web.exposure.include=*
+# 默认情况下，Actuator 的 Web 访问方式的根地址为 /actuator，可以通过 management.endpoints.web.base-path 参数进行修改
+management.endpoints.web.base-path=/admin
+```
+现在，可以访问 http://localhost:45679/admin ，来查看 Actuator 的所有功能 URL 了：
+```json
+"_links": {
+    "self": {
+      "href": "http://localhost:45679/admin",
+      "templated": false
+    },
+    "beans": {
+      "href": "http://localhost:45679/admin/beans",
+      "templated": false
+    },
+    "caches-cache": {
+      "href": "http://localhost:45679/admin/caches/{cache}",
+      "templated": true
+    },
+    "caches": {
+      "href": "http://localhost:45679/admin/caches",
+      "templated": false
+    },
+    "health": {
+      "href": "http://localhost:45679/admin/health",
+      "templated": false
+    }
+	...
+  }
+}
+```
+大部分端点提供的是只读信息，比如查询 Spring 的 Bean、ConfigurableEnvironment、定时任务、SpringBoot 自动配置、Spring MVC 映射等；少部分端点还提供了修改功能，比如优雅关闭程序、下载线程 Dump、下载堆 Dump、修改日志级别等；
+
+### 1.2、增强health
+
+比如三方服务有一个 user 接口，出现异常的概率是 50%：
+```java
+@Slf4j
+@RestController
+@RequestMapping("user")
+public class UserServiceController {
+    @GetMapping
+    public User getUser(@RequestParam("userId") long id) {
+        //一半概率返回正确响应，一半概率抛异常
+        if (ThreadLocalRandom.current().nextInt() % 2 == 0)
+            return new User(id, "name" + id);
+        else
+            throw new RuntimeException("error");
+    }
+}
+```
+要实现这个 user 接口是否正确响应和程序整体的健康状态挂钩的话，很简单，只需定义一个 UserServiceHealthIndicator 实现 HealthIndicator 接口即可，在 health 方法中，我们通过 RestTemplate 来访问这个 user 接口，如果结果正确则返回 Health.up()，并把调用执行耗时和结果作为补充信息加入 Health 对象中。如果调用接口出现异常，则返回 Health.down()，并把异常信息作为补充信息加入 Health 对象中：
+```java
+@Component
+@Slf4j
+public class UserServiceHealthIndicator implements HealthIndicator {
+    @Resource
+    private RestTemplate restTemplate;
+    @Override
+    public Health health() {
+        long begin = System.currentTimeMillis();
+        long userId = 1L;
+        User user = null;
+        try {
+            user = restTemplate.getForObject("http://localhost:45678/user?userId=" + userId, User.class);
+            if (user != null && user.getUserId() == userId) {
+                return Health.up()
+                        .withDetail("user", user)
+                        .withDetail("took", System.currentTimeMillis() - begin)
+                        .build();
+            } else {
+                return Health.down().withDetail("took", System.currentTimeMillis() - begin).build();
+            }
+        } catch (Exception ex) {
+            log.warn("health check failed!", ex);
+            return Health.down(ex).withDetail("took", System.currentTimeMillis() - begin).build();
+        }
+    }
+}
+public class ThreadPoolProvider {
+    private final static ThreadPoolExecutor demoThreadPool = new ThreadPoolExecutor(
+            1, 1,
+            2, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(10),
+            new ThreadFactoryBuilder().setNameFormat("demo-threadpool-%d").get());
+    private final static ThreadPoolExecutor ioThreadPool = new ThreadPoolExecutor(
+            10, 50,
+            2, TimeUnit.SECONDS,
+            new ArrayBlockingQueue<>(100),
+            new ThreadFactoryBuilder().setNameFormat("io-threadpool-%d").get());
+    public static ThreadPoolExecutor getDemoThreadPool() {
+        return demoThreadPool;
+    }
+    public static ThreadPoolExecutor getIOThreadPool() {
+        return ioThreadPool;
+    }
+}
+public class ThreadPoolHealthIndicator implements HealthIndicator {
+    private final ThreadPoolExecutor threadPool;
+    public ThreadPoolHealthIndicator(ThreadPoolExecutor threadPool) {
+        this.threadPool = threadPool;
+    }
+    @Override
+    public Health health() {
+        Map<String, Integer> detail = new HashMap<>();
+        detail.put("queue_size", threadPool.getQueue().size());
+        detail.put("queue_remaining", threadPool.getQueue().remainingCapacity());
+        if (threadPool.getQueue().remainingCapacity() > 0) {
+            return Health.up().withDetails(detail).build();
+        } else {
+            return Health.down().withDetails(detail).build();
+        }
+    }
+}
+@Component
+public class ThreadPoolsHealthContributor implements CompositeHealthContributor {
+    private final Map<String, HealthContributor> contributors = new HashMap<>();
+    ThreadPoolsHealthContributor() {
+        this.contributors.put("demoThreadPool", new ThreadPoolHealthIndicator(ThreadPoolProvider.getDemoThreadPool()));
+        this.contributors.put("ioThreadPool", new ThreadPoolHealthIndicator(ThreadPoolProvider.getIOThreadPool()));
+    }
+    @Override
+    public HealthContributor getContributor(String name) {
+        return contributors.get(name);
+    }
+    @Override
+    public Iterator<NamedContributor<HealthContributor>> iterator() {
+        return contributors.entrySet().stream()
+                .map((entry) -> NamedContributor.of(entry.getKey(), entry.getValue())).iterator();
+    }
+}
+```
+通过访问：http://localhost:45679/admin/health, 对应的信息：
+```json
+// http://localhost:45679/admin/health
+{
+  "status": "DOWN",
+  "components": {
+    "diskSpace": {
+      "status": "UP",
+      "details": {
+        "total": 250685575168,
+        "free": 15243739136,
+        "threshold": 10485760
+      }
+    },
+    "ping": {
+      "status": "UP"
+    },
+    "threadPools": {
+      "status": "UP",
+      "components": {
+        "demoThreadPool": {
+          "status": "UP",
+          "details": {
+            "queue_size": 0,
+            "queue_remaining": 10
+          }
+        },
+        "ioThreadPool": {
+          "status": "UP",
+          "details": {
+            "queue_size": 0,
+            "queue_remaining": 100
+          }
+        }
+      }
+    },
+    "userService": {
+      "status": "DOWN",
+      "details": {
+        "error": "org.springframework.web.client.HttpServerErrorException$InternalServerError: 500 : [{\"timestamp\":\"2022-03-23T08:00:25.398+0000\",\"status\":500,\"error\":\"Internal Server Error\",\"message\":\"error\",\"path\":\"/user\"}]",
+        "took": 12
+      }
+    }
+  }
+}
+```
+
+### 1.3、对外暴露应用内部重要组件的状态
+
+除了可以把线程池的状态作为整个应用程序是否健康的依据外，我们还可以通过 Actuator 的 InfoContributor 功能，对外暴露程序内部重要组件的状态数据；
+
+在上面的基础之上，展示线程池信息：
+```java
+@Component
+public class ThreadPoolInfoContributor implements InfoContributor {
+    private static Map<String, Object> threadPoolInfo(ThreadPoolExecutor threadPool) {
+        Map<String, Object> info = new HashMap<>();
+        info.put("poolSize", threadPool.getPoolSize());
+        info.put("corePoolSize", threadPool.getCorePoolSize());
+        info.put("largestPoolSize", threadPool.getLargestPoolSize());
+        info.put("maximumPoolSize", threadPool.getMaximumPoolSize());
+        info.put("completedTaskCount", threadPool.getCompletedTaskCount());
+        return info;
+    }
+    @Override
+    public void contribute(Info.Builder builder) {
+        builder.withDetail("demoThreadPool", threadPoolInfo(ThreadPoolProvider.getDemoThreadPool()));
+        builder.withDetail("ioThreadPool", threadPoolInfo(ThreadPoolProvider.getIOThreadPool()));
+    }
+}
+```
+访问 /admin/info 接口，可以看到这些数据：
+```json
+{
+  "demoThreadPool": {
+    "largestPoolSize": 0,
+    "poolSize": 0,
+    "corePoolSize": 1,
+    "completedTaskCount": 0,
+    "maximumPoolSize": 1
+  },
+  "ioThreadPool": {
+    "largestPoolSize": 0,
+    "poolSize": 0,
+    "corePoolSize": 10,
+    "completedTaskCount": 0,
+    "maximumPoolSize": 50
+  }
+}
+```
+此外，如果设置开启 JMX 的话：
+```properties
+spring.jmx.enabled=true
+```
+可以通过 jconsole 工具，在 org.springframework.boot.Endpoint 中找到 Info 这个 MBean，然后执行 info 操作可以看到，我们刚才自定义的 InfoContributor 输出的有关两个线程池的信息：
+
+![](image/SpringActuator-info-jconsole.png)
+
+对于查看和操作 MBean，除了使用 jconsole 之外，你可以使用 jolokia 把 JMX 转换为 HTTP 协议，引入依赖：
+```xml
+<dependency>
+    <groupId>org.jolokia</groupId>
+    <artifactId>jolokia-core</artifactId>
+    <version>1.7.1</version>
+</dependency>
+```
+然后，你就可以通过 jolokia，来执行 org.springframework.boot:type=Endpoint,name=Info 这个 MBean 的 info 操作：
+```json
+// 20220323162727
+// http://localhost:45679/admin/jolokia/exec/org.springframework.boot:type=Endpoint,name=Info/info
+{
+  "request": {
+    "mbean": "org.springframework.boot:name=Info,type=Endpoint",
+    "type": "exec",
+    "operation": "info"
+  },
+  "value": {
+    "demoThreadPool": {
+      "largestPoolSize": 0,
+      "poolSize": 0,
+      "corePoolSize": 1,
+      "completedTaskCount": 0,
+      "maximumPoolSize": 1
+    },
+    "ioThreadPool": {
+      "largestPoolSize": 0,
+      "poolSize": 0,
+      "corePoolSize": 10,
+      "completedTaskCount": 0,
+      "maximumPoolSize": 50
+    },
+  },
+  "timestamp": 1648024047,
+  "status": 200
+}
+```
+
+## 2、Prmoetheus + Granfana
 
 http://micrometer.io/docs
 
