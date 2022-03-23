@@ -6454,6 +6454,8 @@ management.endpoints.web.base-path=/admin
 
 ### 1.2、增强health
 
+- [Custom Health](https://gitee.com/chenlanqing/java-component/tree/master/monitor/springboot-actuator/src/main/java/com/blue/fish/actuator/health)
+
 比如三方服务有一个 user 接口，出现异常的概率是 50%：
 ```java
 @Slf4j
@@ -6685,6 +6687,35 @@ spring.jmx.enabled=true
   },
   "timestamp": 1648024047,
   "status": 200
+}
+```
+
+### 1.4、开发EndPoint
+
+Spring Boot Actuator 提供了大量内置端点，那么端点和RestController有什么区别呢？
+
+Endpoint 是 Spring Boot Actuator 抽象出来的一个概念，主要用于监控和配置。使用 @Endpoint 注解自定义端点，配合方法上的 @ReadOperation、@WriteOperation、@DeleteOperation 注解，分分钟就可以开发出自动通过 HTTP 或 JMX 进行暴露的监控点；
+
+如果只希望通过 HTTP 暴露的话，可以使用 @WebEndpoint 注解；如果只希望通过 JMX 暴露的话，可以使用 @JmxEndpoint 注解；
+
+而使用 @RestController 一般用于定义业务接口，如果数据需要暴露到 JMX 的话需要手动开发。
+
+示例：如何定义一个累加器端点，提供了读取操作和累加两个操作：
+```java
+@Endpoint(id = "adder")
+@Component
+public class TestEndpoint {
+    private static AtomicLong atomicLong = new AtomicLong();
+    //读取值
+    @ReadOperation
+    public String get() {
+        return String.valueOf(atomicLong.get());
+    }
+    //累加值
+    @WriteOperation
+    public String increment() {
+        return String.valueOf(atomicLong.incrementAndGet());
+    }
 }
 ```
 
