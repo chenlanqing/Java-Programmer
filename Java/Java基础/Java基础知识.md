@@ -1435,6 +1435,7 @@ Long milliSecond = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMil
 ## 8、Lambda表达式与函数式接口
 
 - [Java 8 Lambda 揭秘](https://colobu.com/2014/11/06/secrets-of-java-8-lambda/)
+- [使用idea调试Lambda](https://www.jetbrains.com/help/idea/analyze-java-stream-operations.html)
 
 Lambda表达式语法
 ```java

@@ -307,6 +307,8 @@ option选项含义：
 - `-permstat`：以ClassLoader 为统计口径显示永久代内存状态，只能在 Linux/Solaris 下使用；
 - `-F`： 当虚拟机进程对 -dump 选项没有响应时，可以使用该选项强制生成dump快照，只能在 Linux/Solaris 下使用；
 
+`jmap -dump` 命令是转储堆中的所有对象，而 `jmap -dump:live` 是转储堆中所有活着的对象。因为，`jmap -dump:live` 会触发一次 FullGC。
+
 ## 1、实例个数以及占用内存大小
 
 ```

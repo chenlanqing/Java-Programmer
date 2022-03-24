@@ -137,6 +137,47 @@ public class InnerClassApplication {
 ```
 编译器会为 InnerClassApplication 和 MyInnerClass 都生成桥接方法
 
+## 5、Collectors 类提供了很多现成的收集器，有没有办法实现自定义的收集器
+
+比如，实现一个 MostPopularCollector，来得到 List 中出现次数最多的元素，满足下面两个测试用例：
+```java
+assertThat(Stream.of(1, 1, 2, 2, 2, 3, 4, 5, 5).collect(new MostPopularCollector<>()).get(), is(2));
+assertThat(Stream.of('a', 'b', 'c', 'c', 'c', 'd').collect(new MostPopularCollector<>()).get(), is('c'));
+```
+实现思路：通过一个 HashMap 来保存元素的出现次数，最后在收集的时候找出 Map 中出现次数最多的元素：
+```java
+public class MostPopularCollector<T> implements Collector<T, Map<T, Integer>, Optional<T>> {
+    //使用HashMap保存中间数据
+    @Override
+    public Supplier<Map<T, Integer>> supplier() {
+        return HashMap::new;
+    }
+    //每次累积数据则累加Value
+    @Override
+    public BiConsumer<Map<T, Integer>, T> accumulator() {
+        return (acc, elem) -> acc.merge(elem, 1, (old, value) -> old + value);
+    }
+    //合并多个Map就是合并其Value
+    @Override
+    public BinaryOperator<Map<T, Integer>> combiner() {
+        return (a, b) -> Stream.concat(a.entrySet().stream(), b.entrySet().stream())
+                .collect(Collectors.groupingBy(Map.Entry::getKey, summingInt(Map.Entry::getValue)));
+    }
+    //找出Map中Value最大的Key
+    @Override
+    public Function<Map<T, Integer>, Optional<T>> finisher() {
+        return (acc) -> acc.entrySet().stream()
+                .reduce(BinaryOperator.maxBy(Map.Entry.comparingByValue()))
+                .map(Map.Entry::getKey);
+    }
+
+    @Override
+    public Set<Characteristics> characteristics() {
+        return Collections.emptySet();
+    }
+}
+```
+
 # 二、集合
 
 ## 1、HashMap、Hashtable、LinkedHashMap
