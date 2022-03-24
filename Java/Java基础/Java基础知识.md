@@ -1432,8 +1432,9 @@ Long second = LocalDateTime.now().toEpochSecond(ZoneOffset.of("+8"));
 Long milliSecond = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMilli();
 ```
 
-
 ## 8、Lambda表达式与函数式接口
+
+- [Java 8 Lambda 揭秘](https://colobu.com/2014/11/06/secrets-of-java-8-lambda/)
 
 Lambda表达式语法
 ```java
