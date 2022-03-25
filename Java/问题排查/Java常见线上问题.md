@@ -61,7 +61,7 @@
 
 ## 1、问题背景
     
-线上服务在某个时间点从注册中心断开，服务无法被调用，在运行定时任务时，抛出```Caused by: java.lang.OutOfMemoryError: PermGen space```
+线上服务在某个时间点从注册中心断开，服务无法被调用，在运行定时任务时，抛出`Caused by: java.lang.OutOfMemoryError: PermGen space`
 
 ## 2、问题定位
 
@@ -69,7 +69,7 @@
     ```
     jmap -heap <pid>
     ```
-- 通过```jmap -histo <pid>```查看后发现 ```org.codehaus.groovy.runtime.metaclass.MetaMethodIndex$Entry```数量非常多；
+- 通过`jmap -histo <pid>`查看后发现 `org.codehaus.groovy.runtime.metaclass.MetaMethodIndex$Entry`数量非常多；
 - 查看系统日志，发现很多sql操作的地方报如下异常:
     ```
     Caused by: java.lang.NullPointerException: null
