@@ -1235,6 +1235,16 @@ reducing | 归约操作产生的类型 | 从一个作为累加器的初始值开
 collectingAndThen | 转换函数返回的类型 | 包裹另一个收集器，对其结果应用转换函数
 groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项目作为组，并将属性值作为结果Map的键
 
+### 5.6、Stream如何优化遍历
+
+官方将 Stream 中的操作分为两大类：中间操作（Intermediate operations）和终结操作（Terminal operations）。中间操作只对操作进行了记录，即只会返回一个流，不会进行计算操作，而终结操作是实现了计算操作；
+- 中间操作又可以分为无状态（Stateless）与有状态（Stateful）操作，前者是指元素的处理不受之前元素的影响，后者是指该操作只有拿到所有元素之后才能继续下去；
+- 终结操作又可以分为短路（Short-circuiting）与非短路（Unshort-circuiting）操作，前者是指遇到某些符合条件的元素就可以得到最终结果，后者是指必须处理完所有元素才能得到最终结果；
+
+![](image/Stream-分类.png)
+
+### 5.7、Stream源码
+
 ## 6、Optional
 
 ### 6.1、解决问题
