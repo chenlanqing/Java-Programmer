@@ -438,30 +438,32 @@ final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict) {
     //如果数组为空，使用 resize 方法初始化
     if ((tab = table) == null || (n = tab.length) == 0)
         n = (tab = resize()).length;
-    // 如果当前索引位置是空的，直接生成新的节点在当前索引位置上
+    // 此处通过（n - 1） & hash 计算出的值作为tab的下标i，并另p表示tab[i]，也就是该链表第一个节点的位置。并判断p是否为null
+	// 当p为null时，表明tab[i]上没有任何元素，那么接下来就new第一个Node节点，调用newNode方法返回新节点赋值给tab[i]
     if ((p = tab[i = (n - 1) & hash]) == null)
         tab[i] = newNode(hash, key, value, null);
-    // 如果当前索引位置有值的处理方法，即我们常说的如何解决 hash 冲突
+    // 下面进入p不为null的情况，有三种情况：p为链表节点；p为红黑树节点；p是链表节点但长度为临界长度TREEIFY_THRESHOLD，再插入任何元素就要变成红黑树了。
     else {
         // e 当前节点的临时变量
         Node<K,V> e; K k;
         // 如果 key 的 hash 和值都相等，直接把当前下标位置的 Node 值赋值给临时变量
-        if (p.hash == hash &&
-            ((k = p.key) == key || (key != null && key.equals(k))))
+        if (p.hash == hash && ((k = p.key) == key || (key != null && key.equals(k))))
+			// HashMap中判断key相同的条件是key的hash相同，并且符合equals方法。这里判断了p.key是否和插入的key相等，如果相等，则将p的引用赋给e
             e = p;
-        // 如果是红黑树，使用红黑树的方式新增
+        // 现在开始了第一种情况，p是红黑树节点，那么肯定插入后仍然是红黑树节点，所以我们直接强制转型p后调用TreeNode.putTreeVal方法，返回的引用赋给e
         else if (p instanceof TreeNode)
             e = ((TreeNode<K,V>)p).putTreeVal(this, tab, hash, key, value);
         // 是个链表，把新节点放到链表的尾端
         else {
-            // 自旋
+			// 接下里就是p为链表节点的情形，也就是上述说的另外两类情况：插入后还是链表/插入后转红黑树。另外，上行转型代码也说明了TreeNode是Node的一个子类
+            // 我们需要一个计数器来计算当前链表的元素个数，并遍历链表，binCount就是这个计数器
             for (int binCount = 0; ; ++binCount) {
                 // e = p.next 表示从头开始，遍历链表
                 // p.next == null 表明 p 是链表的尾节点
                 if ((e = p.next) == null) {
                     // 把新节点放到链表的尾部 
                     p.next = newNode(hash, key, value, null);
-                    // 当链表的长度大于等于 8 时，链表转红黑树
+                    // 插入成功后，要判断是否需要转换为红黑树，因为插入后链表长度加1，而binCount并不包含新节点，所以判断时要将临界阈值减1
                     if (binCount >= TREEIFY_THRESHOLD - 1)
                         treeifyBin(tab, hash);
                     break;
@@ -776,7 +778,6 @@ void resize(int newCapacity) {
 ```java
 final Node<K,V>[] resize()
 ```
-
 - 当put时，如果发现目前的bucket占用程度已经超过了Load Factor所希望的比例，那么就会发生resize。在resize的过程，简单的说就是把bucket扩充为2倍，之后重新计算index，把节点再放到新的bucket中
 - 扩充HashMap的时候，不需要重新计算hash，只需要看看原来的hash值新增的那个bit是1还是0就好了，是0的话索引没变，是1的话索引变成`原索引+oldCap`
 
