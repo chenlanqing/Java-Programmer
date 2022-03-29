@@ -285,7 +285,7 @@ public class FinalizeEscapeGC {
 
 #### 4.2.1、MinorGC
 
-## 5、Hotspot虚拟机算法实现
+## 5、HotSpot虚拟机算法实现
 
 ### 5.1、枚举根节点
 
@@ -1176,7 +1176,7 @@ Heap
 
 **为什么是：`-XX:MaxTenuringThreshold` 默认值是15？**
 
-我们在JVM虚拟机对象内存结构中可以看到，Hotspot虚拟机中 MarkWord 中，用了4个bit去表示分代年龄，那么能表示的最大范围就是0-15
+我们在JVM虚拟机对象内存结构中可以看到，Hotspot虚拟机中 MarkWord 中，用了4个bit去表示分代年龄，那么能表示的最大范围就是`[0-16]`
 
 ### 4.4、动态对象年龄判定
 

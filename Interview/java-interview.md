@@ -91,7 +91,7 @@ final Map<String, String> map = list.stream()
 
 ## 3、注解支持继承吗？
 
-`@Inherited` 只能实现类上的注解继承。要想实现方法上注解的继承，你可以通过反射在继承链上找到方法上的注解。但，这样实现起来很繁琐，而且需要考虑桥接方法。
+`@Inherited` 只能实现类上的注解继承。要想实现方法上注解的继承，你可以通过反射在继承链上找到方法上的注解。但这样实现起来很繁琐，而且需要考虑桥接方法。
 
 Spring 提供了 AnnotatedElementUtils 类，来方便我们处理注解的继承问题。这个类的 findMergedAnnotation 工具方法，可以帮助我们找出父类和接口、父类方法和接口方法上的注解，并可以处理桥接方法，实现一键找到继承链的注解：
 ```java
@@ -166,11 +166,9 @@ public class MostPopularCollector<T> implements Collector<T, Map<T, Integer>, Op
     //找出Map中Value最大的Key
     @Override
     public Function<Map<T, Integer>, Optional<T>> finisher() {
-        return (acc) -> acc.entrySet().stream()
-                .reduce(BinaryOperator.maxBy(Map.Entry.comparingByValue()))
+        return (acc) -> acc.entrySet().stream().reduce(BinaryOperator.maxBy(Map.Entry.comparingByValue()))
                 .map(Map.Entry::getKey);
     }
-
     @Override
     public Set<Characteristics> characteristics() {
         return Collections.emptySet();
@@ -252,9 +250,8 @@ public class MostPopularCollector<T> implements Collector<T, Map<T, Integer>, Op
 ### 1.6、为什么HashMap的默认初始容量是16，且容量必须是 2的幂
 
 之所以是选择16是为了服务于从 key 映射到 index 的 hash 算法。从key映射到HashMap 数组对应的位置，会用到一个hash函数。实现高效的hash算法，HashMap 中使用位运算。`index = hashcode(key) & (length - 1)`。hash算法最终得到的index结果，完全取决于Key的Hashcode值的最后几位。长度是2的幂不仅提高了性能，因为`length - 1`的二进制值位全是1，这种情况下，index的结果等同于Hashcode后几位的值，只要输入hashcode均匀分布，hash算法的结果就是均匀的。
-
 - 计算索引时效率更高：如果是 2 的 n 次幂可以使用位与运算代替取模
-- 扩容时重新计算索引效率更高： hash & oldCap == 0 的元素留在原来位置 ，否则新位置 = 旧位置 + oldCap
+- 扩容时重新计算索引效率更高： `hash & oldCap == 0` 的元素留在原来位置 ，否则`新位置 = 旧位置 + oldCap`
 
 ### 1.7、泊松分布与指数分布
 
@@ -408,6 +405,12 @@ tryPresize
 
 transfer 
 
+将原来的 tab 数组的元素迁移到新的 nextTab 数组中
+
+并发操作的机制：原数组长度为 n，所以我们有 n 个迁移任务，让每个线程每次负责一个小任务是最简单的，每做完一个任务再检测是否有其他没做完的任务，帮助迁移就可以了，而 Doug Lea 使用了一个 stride，简单理解就是步长，每个线程每次负责迁移其中的一部分，如每次迁移 16 个小任务。所以，我们就需要一个全局的调度者来安排哪个线程执行哪几个任务，这个就是属性 transferIndex 的作用；
+
+第一个发起数据迁移的线程会将 transferIndex 指向原数组最后的位置，然后从后往前的 stride 个任务属于第一个线程，然后将 transferIndex 指向新的位置，再往前的 stride 个任务属于第二个线程，依此类推。当然，这里说的第二个线程不是真的一定指代了第二个线程，也可以是同一个线程。其实就是将一个大的迁移任务分为了一个个任务包；
+
 ### 2.5、ConcurrentHashMap在jdk8中的bug
 
 https://juejin.cn/post/6844904191077384200
@@ -489,7 +492,6 @@ ConcurrentHashMap 只能保证提供的原子性读写操作是线程安全的�
 - 这两者都是能够保证一定的顺序的，其中LinkedHashMap是保证key的插入顺序的，而TreeMap是按照key的自然排序的升序来实现的；
 - LinkedHashMap是通过双向链表实现，其还继承自HashMap；TreeMap是基于红黑树来实现的；
 
-
 ConcurrentSkipListMap   基于跳表实现的
 
 EnumMap 基于位运算实现的
@@ -505,7 +507,7 @@ EnumMap 基于位运算实现的
 - 头尾插入删除性能高，如果是往链表的中间插入，性能也不高；因为链表中间插入是需要遍历的过程；
 - 内存占用多，因为LinkedList内部对象是一个Node，包含值、前驱指针、后驱指针等；
 
-**ArrayList**
+ **ArrayList**
 - 基于数组，需要连续内存
 - 随机访问快（指根据下标访问），其实现了 RandomAccess 接口
 - 尾部插入、删除性能可以，其它部分插入、删除都会移动数据，因此性能会低
@@ -550,7 +552,7 @@ public static void main(String[] args) {
 
 还有一种错误就是覆盖：这种情况是因为size++并不是原子性的，所以可能线程A自增的时候，线程B也进行一次自增，但是两次自增的结果是一样的，所以先完成的线程更新的数据会被后完成的线程覆盖掉；
 
-## 5、哪些map的key可以为null
+## 5、哪些map的key可以为null、value可以为null？为什么
 
 ConcurrentMaps（ConcurrentHashMaps，ConcurrentSkipListMaps）不允许使用null的主要原因是，无法容纳在非并行映射中几乎无法容忍的歧义。最主要的是，如果map.get(key)return null，则无法检测到该键是否显式映射到null该键。在非并行映射中，您可以通过进行检查 map.contains(key)，但在并行映射中，两次调用之间的映射可能已更改；
 
@@ -805,10 +807,9 @@ BIO由于不是NIO那样的事件机制，在连接的IO读取上，无论是否
 
 NIO通过事件来触发，这样就可以实现在有需要读/写的时候才处理，不用阻塞当前线程，NIO在处理IO的读写时，当从网卡缓冲区读或写入缓冲区时，这个过程是串行的，所以用太多线程处理IO事件其实也没什么意义，连接事件由于通常处理比较快，用1个线程去处理就可以，IO事件呢，通常会采用cpu core数+1或cpu core数 * 2，这个的原因是IO线程通常除了从缓冲区读写外，还会做些比较轻量的例如解析协议头等，这些是可以并发的，为什么不只用1个线程处理，是因为当并发的IO事件非常多时，1个线程的效率不足以发挥出多core的CPU的能力，从而导致这个地方成为瓶颈，这种在分布式cache类型的场景里会比较明显，按照这个，也就更容易理解为什么在基于Netty等写程序时，不要在IO线程里直接做过多动作，而应该把这些动作转移到另外的线程池里去处理，就是为了能保持好IO事件能被高效处理
 
-## 6、Channel和Scoket区别
+## 6、Channel和Socket区别
 
 Socket、SocketChannel二者的实质都是一样的，都是为了实现客户端与服务器端的连接而存在的。
-
 - 所属包不同：Socket在java.net包中，而SocketChannel在java.nio包中；
 - 异步方式不同：Socket是阻塞连接（当然我们可以自己实现非阻塞），SocketChannel可以设置非阻塞连接；
 - 性能不同：一般来说使用SocketChannel会有更好的性能。其实，Socket实际应该比SocketChannel更高效，不过由于使用者设计等原因，效率反而比直接使用SocketChannel低；
@@ -822,7 +823,7 @@ Socket、SocketChannel二者的实质都是一样的，都是为了实现客户�
 
 ## 7、Java中怎么快速把InputStream转化为String
 
-### 7.1、使用 Apachecommons包的工具类 IOUtils
+### 7.1、使用 commons包的工具类 IOUtils
 
 ```java
 StringWriter writer = new StringWriter();
@@ -889,6 +890,7 @@ https://mp.weixin.qq.com/s/gYv2F-RFH5xrIbpXDwtgyA
 
 ## 1、为什么线程池的底层数据接口采用HashSet来实现
 
+HashSet:自动消除重复的数据，确保不会出现单个线程有多个 workers，并且保持高效率
 
 ## 2、使用模拟真正的并发请求
 
@@ -959,8 +961,7 @@ protected final boolean tryAcquire(int acquires) {
     // 获取状态
     int c = getState();
     if (c == 0) { // 状态为0
-        if (!hasQueuedPredecessors() &&
-            compareAndSetState(0, acquires)) { // 不存在已经等待更久的线程并且比较并且设置状态成功
+        if (!hasQueuedPredecessors() && compareAndSetState(0, acquires)) { // 不存在已经等待更久的线程并且比较并且设置状态成功
             // 设置当前线程独占
             setExclusiveOwnerThread(current);
             return true;
@@ -1005,6 +1006,8 @@ protected final boolean tryAcquire(int acquires) {
 ### 4.3、队列阻塞的实现原理
 
 队列本身并没有实现阻塞的功能，而是利用 Condition 的等待唤醒机制，阻塞底层实现就是更改线程的状态为睡眠；
+
+[各个队列实现原理](../Java/Java基础/Java并发与多线程.md#74阻塞队列-BlockingQueue)
 
 ### 4.4、往队列里面 put 数据是线程安全的么？为什么？
 
@@ -1075,14 +1078,14 @@ Worker是一个继承AQS并实现了Runnable接口的内部类，主要有 Threa
 - 队列满时需要创建非核心线程来执行任务，所有工作线程（核心线程+非核心线程）数量要小于等于maximumPoolSize
 - 如果工作线程数量已经达到maximumPoolSize，则拒绝任务，执行拒绝策略
 
-### 5.6、addworker是做什么事情
+### 5.6、addWorker是做什么事情
 
 主要是创建一个线程，并且线程开始运行；
 - 首先会判断线程池状态，如果正常，通过CAS增加运行的线程数（该方法有两个参数：需要运行的任务、是否为核心线程数）
 - 然后创建一个Worker对象，需要运行的任务作为构造方法的参数；
 - 如果需要运行的任务不为空，则通过Lock，是否启动该线程；
 
-### 5.7、runworker里面是如何执行处理的
+### 5.7、runWorker里面是如何执行处理的
 
 - 提交任务时如果**工作线程**数量小于核心线程数量，则`firstTask != null`，一路顺利执行然后阻塞在队列的poll上。
 - 提交任务时如果**工作线程**数量大于等于核心线程数量，则`firstTask == null`，需要从任务队列中poll一个任务执行，执行完毕之后继续阻塞在队列的poll上。
@@ -1095,7 +1098,7 @@ Worker是一个继承AQS并实现了Runnable接口的内部类，主要有 Threa
 
 **核心线程数会被回收吗？需要什么设置？**
 
-核心线程数默认是不会被回收的，如果需要回收核心线程数，需要调用下面的方法：allowCoreThreadTimeout，其对应的参数默认值时false；
+核心线程数默认是不会被回收的，如果需要回收核心线程数，需要调用方法：allowCoreThreadTimeout，其对应的参数默认值时false；
 
 **空闲线程如何回收**
 
@@ -1458,7 +1461,6 @@ LockSupport.park()会释放锁资源吗? 那么Condition.await()呢?
 ### Thread.sleep()和Object.wait()的区别
 
 首先，我们先来看看Thread.sleep()和Object.wait()的区别，这是一个烂大街的题目了，大家应该都能说上来两点。
-
 - Thread.sleep()不会释放占有的锁，Object.wait()会释放占有的锁；
 - Thread.sleep()必须传入时间，Object.wait()可传可不传，不传表示一直阻塞下去；
 - Thread.sleep()到时间了会自动唤醒，然后继续执行；
@@ -1504,13 +1506,13 @@ park()/unpark()底层的原理是“二元信号量”，你可以把它相像�
 
 不会，它只负责阻塞当前线程，释放锁资源实际上是在Condition的await()方法中实现的。
 
-## 12、为什么任意一个 Java 对象都能成为锁对象呢
+## 16、为什么任意一个 Java 对象都能成为锁对象呢
 
 Java 中的每个对象都派生自 Object 类，而每个 Java Object 在 JVM 内部都有一个 native 的 C++对象 oop/oopDesc 进行对应。其次，线程在获取锁的时候，实际上就是获得一个监视器对象(monitor) ,monitor 可以认为是一个同步对象，所有的 Java 对象是天生携带 monitor。
 
 多个线程访问同步代码块时，相当于去争抢对象监视器修改对象中的锁标识, ObjectMonitor 这个对象和线程争抢锁的逻辑有密切的关系
 
-## 13、ThreadLocalRandom可以把它的实例设置到静态变量中，在多线程情况下重用吗？
+## 17、ThreadLocalRandom可以把它的实例设置到静态变量中，在多线程情况下重用吗？
 
 是不能重用的，ThreadLocalRandom 文档里有这么一条：
 ```
@@ -1589,9 +1591,7 @@ Java中用到的线程调度算法是什么
 可以通过`Unsafe`的`defineAnonymousClass`来实现同一个类文件被同一个类加载器对象加载多遍的效果，因为并没有将其放到`SystemDictionary`里，因此我们可以无穷次加载同一个类；
 - 正常的类加载：在JVM里有一个数据结构叫做SystemDictionary，这个结构主要就是用来检索我们常说的类信息，这些类信息对应的结构是klass，对SystemDictionary的理解，可以认为就是一个Hashtable，key是类加载器对象+类的名字，value是指向klass的地址；这样当我们任意一个类加载器去正常加载类的时候，就会到这个SystemDictionary中去查找，看是否有这么一个klass可以返回，如果有就返回它，否则就会去创建一个新的并放到结构里；
 
-- defineAnonymousClass：
-
-	创建了一个匿名的类，不过这种匿名的概念和我们理解的匿名是不太一样的。这种类的创建通常会有一个宿主类，也就是第一个参数指定的类，这样一来，这个创建的类会使用这个宿主类的定义类加载器来加载这个类，最关键的一点是这个类被创建之后并不会丢到上述的SystemDictionary里，也就是说我们通过正常的类查找，比如Class.forName等api是无法去查到这个类是否被定义过的。因此过度使用这种api来创建这种类在一定程度上会带来一定的内存泄露；
+- defineAnonymousClass：创建了一个匿名的类，不过这种匿名的概念和我们理解的匿名是不太一样的。这种类的创建通常会有一个宿主类，也就是第一个参数指定的类，这样一来，这个创建的类会使用这个宿主类的定义类加载器来加载这个类，最关键的一点是这个类被创建之后并不会丢到上述的SystemDictionary里，也就是说我们通过正常的类查找，比如Class.forName等api是无法去查到这个类是否被定义过的。因此过度使用这种api来创建这种类在一定程度上会带来一定的内存泄露；
 
 	jvm通过invokeDynamic可以支持动态类型语言，这样一来其实我们可以提供一个类模板，在运行的时候加载一个类的时候先动态替换掉常量池中的某些内容，这样一来，同一个类文件，我们通过加载多次，并且传入不同的一些cpPatches，也就是defineAnonymousClass的第三个参数， 这样就能做到运行时产生不同的效果
 	
@@ -1722,7 +1722,7 @@ Sun Apr 11 20:53:48 CST 2021Thread[Thread-1,5,main]==
 
 上图是JVM对空间的边界，观察到在20:53:48~20:53:50之间曲线变化，发现使用堆的数量急剧下滑，这里可以表面一点：当一个线程抛出OOM异常后，它所占据的内存资源会全部被释放掉，从而不影响其他线程的运行；上面是对内存异常的情况，如果是栈溢出，结果也是一样的
 
-总结：发生OOM的线程一般情况下回死亡，也就是会被终结掉，该线程持有的对象占用的heap都会被gc，释放内存。因为发生OOM之前都要进行GC，就算其他线程能够正常工作，也会因为频繁GC产生较大的影响；
+总结：发生OOM的线程一般情况下会死亡，也就是会被终结掉，该线程持有的对象占用的heap都会被gc，释放内存。因为发生OOM之前都要进行GC，就算其他线程能够正常工作，也会因为频繁GC产生较大的影响；
 
 ## 6、JVM的内存布局
 
@@ -1734,6 +1734,7 @@ Sun Apr 11 20:53:48 CST 2021Thread[Thread-1,5,main]==
 
 ## 9、什么是STW
 
+进行垃圾回收的过程中，会涉及对象的移动。为了保证对象引用更新的正确性，必须暂停所有的用户线程，像这样的停顿，虚拟机设计者形象描述为Stop The World
 
 ## 10、如何提高throughput（吞吐量）
 
@@ -2949,9 +2950,9 @@ Text类型改造建议：
 		- 创建ioc容器对象
 	- AnnotationConfigEmbeddedWebApplicationContext(web环境容器) – AnnotationConfigApplicationContext(普通环境容器)
 - 准备环境
-- 执行ApplicationContextInitializer.initialize()
-- 监听器SpringApplicationRunListener回调contextPrepared – 加载主配置类定义信息
-- 监听器SpringApplicationRunListener回调contextLoaded
+- 执行 ApplicationContextInitializer.initialize()
+- 监听器 SpringApplicationRunListener回调contextPrepared – 加载主配置类定义信息
+- 监听器 SpringApplicationRunListener回调contextLoaded
 	- 刷新启动IOC容器;
 - 扫描加载所有容器中的组件
 - 包括从`META-INF/spring.factories`中获取的所有EnableAutoConfiguration组件
@@ -2960,10 +2961,10 @@ Text类型改造建议：
 
 ## 2、SpringBoot常用注解
 
-- @SpringBootApplication：包含@Configuration、@EnableAutoConfiguration、@ComponentScan通常用在主类上
-	- @Configuration 等同于spring的XML配置文件；使用Java代码可以检查类型安全。
-	- @EnableAutoConfiguration 自动配置。
-	- @ComponentScan 组件扫描，可自动发现和装配一些Bean
+- @SpringBootApplication：包含`@Configuration`、`@EnableAutoConfiguration`、`@ComponentScan`通常用在主类上
+	- `@Configuration` 等同于spring的XML配置文件；使用Java代码可以检查类型安全。
+	- `@EnableAutoConfiguration` 自动配置。
+	- `@ComponentScan` 组件扫描，可自动发现和装配一些Bean
 
 - @MapperScan：开启MyBatis的DAO扫描  
 - @Bean 注解

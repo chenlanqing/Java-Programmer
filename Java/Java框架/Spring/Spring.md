@@ -3141,7 +3141,7 @@ public @interface SpringBootConfiguration {
 - `@ComponentScan`：扫描被`@Component (@Service,@Controller)`注解的 bean，注解默认会扫描启动类所在的包下所有的类 ，可以自定义不扫描某些 bean。如下图所示，容器中将排除`TypeExcludeFilter`和`AutoConfigurationExcludeFilter`；
 
 加载过程：
-- `@EnableAutoConfiguration`的主要操作类是：`AutoConfigurationImportSelector`，执行到 `AbstractApplicationContext#invokeBeanFactoryPostProcessors`方法时会调用到 AutoConfigurationImportSelector#getCandidateConfigurations 方法，该方法会通过 SpringFactories 从 jar的配置文件`META-INF/spring.factories`加载 key 为 `EnableAutoConfiguration`全类名的属性列表；
+- `@EnableAutoConfiguration`的主要操作类是：`AutoConfigurationImportSelector`，执行到 `AbstractApplicationContext#invokeBeanFactoryPostProcessors`方法时会调用到 `AutoConfigurationImportSelector#getCandidateConfigurations` 方法，该方法会通过 SpringFactories 从 jar的配置文件`META-INF/spring.factories`加载 key 为 `EnableAutoConfiguration`全类名的属性列表；
 
 	![](image/SpringBoot-AutoConfigurationImportSelector.png)
 
@@ -5230,7 +5230,7 @@ org.springframework.boot.autoconfigure.aop.AopAutoConfiguration,\
 利用starter实现自动化配置只需要两个条件——maven依赖、配置文件。
 
 starter实现自动化配置的流程：
-引入maven实质上就是导入jar包，spring-boot启动的时候会通过`@SpringBootApplication` 上关联的`AutoConfigurationImportSelector` 获取所有的 `EnableAutoConfiguration` 注解的实现类，其会找到 `starter.jar`包中的`resources/META-INF/spring.factories`文件，根据`spring.factories`文件中的配置，找到需要自动配置的类，然后根据其 Conditional 注解进行过滤；
+引入maven实质上就是导入jar包，spring-boot启动的时候会通过`@SpringBootApplication` 上关联的`AutoConfigurationImportSelector` 获取所有的 `EnableAutoConfiguration` 注解的配置类，其会找到 `starter.jar`包中的`resources/META-INF/spring.factories`文件，根据`spring.factories`文件中的配置，找到需要自动配置的类，然后根据其 Conditional 注解进行过滤；
 
 # 十四、SpringBoot整合
 
