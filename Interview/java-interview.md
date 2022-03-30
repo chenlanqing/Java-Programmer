@@ -1586,6 +1586,8 @@ Java中用到的线程调度算法是什么
 
 # 五、JVM虚拟机
 
+- [Java虚拟机常问问题](http://www.reins.altervista.org/java/gc1.4.2_faq.html)
+
 ## 1、同一个类加载器对象是否可以加载同一个类文件多次并且得到多个Class对象而都可以被java层使用吗
 
 可以通过`Unsafe`的`defineAnonymousClass`来实现同一个类文件被同一个类加载器对象加载多遍的效果，因为并没有将其放到`SystemDictionary`里，因此我们可以无穷次加载同一个类；
