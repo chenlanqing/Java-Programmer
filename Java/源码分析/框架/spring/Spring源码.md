@@ -709,6 +709,10 @@ Spring事务管理器会捕捉任何未处理的异常，然后依据规则决�
 
 ## 3、Spring事务实现原理
 
+https://zhuanlan.zhihu.com/p/54067384
+
+Spring使用AOP（面向切面编程）来实现声明式事务，统一一致的事务抽象是Spring框架的一大优势，无论是全局事务还是本地事务，JTA、JDBC、Hibernate还是JPA，Spring都使用统一的编程模型，使得应用程序可以很容易地在全局事务与本地事务，或者不同的事务框架之间进行切换
+
 
 # 五、SpringFactoriesLoader
 
