@@ -3556,6 +3556,42 @@ public void test2() {
 ```
 > 如果需要注意顺序的话，可以再具体实现的类上通过`@Order(value = Ordered.LOWEST_PRECEDENCE)`来标示顺序，值越大优先级反而越低
 
+## 64、RestController 与 Controller 的区别
+
+RestController默认都只提供Rest风格接口返回值，针对不需要返回页面的Controller都采用RestController进行注解；
+
+RestController代码
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Controller
+@ResponseBody
+public @interface RestController {
+	@AliasFor(annotation = Controller.class)
+	String value() default "";
+}
+```
+`@RestController`的编写方式依赖注解组合，`@RestController`被`@Controller`和`@ResponseBody`标注，表示`@RestController`具有两者的注解语义，因此在注解处理时`@RestController`比`@Controller`多具有一个`@ResponseBody`语义，这就是`@RestController`和`@Controller`的区别，也是`@RestController`的返回值为何都是经过转换的json的原因。
+
+`@RestController = @Controller + @ResponseBody`；
+
+**@ResponseBody注解的处理过程**
+
+首先，可以知道，`@ResponseBody`是一个针对方法返回值进行处理的注解。如果熟悉Spring MVC处理过程的话，可以知道在根据requesturl映射获取到HandlerMethod之后，根据HandlerMethod调度请求方法的对象是HandlerAdapter，方法调用结束，返回值处理的调度对象也是HandlerAdapter。所以，@ResponseBody注解的处理应该也是在HandlerAdapter中完成
+
+在RequestMappingHandlerAdapter#invokeHandlerMethod方法里面，有下面几句比较重要的代码：
+```java
+//创建方法调用对象
+ServletInvocableHandlerMethod invocableMethod = createInvocableHandlerMethod(handlerMethod);
+//......
+//设置返回值处理器
+invocableMethod.setHandlerMethodReturnValueHandlers(this.returnValueHandlers);
+//......
+//调用方法
+invocableMethod.invokeAndHandle(webRequest, mavContainer);
+```
+
 # 八、Netty
 
 ## 1、服务端的Socket在哪里初始化？
