@@ -1524,6 +1524,10 @@ UNSAFE.putLong(t = Thread.currentThread(), SEED, r = UNSAFE.getLong(t, SEED) + G
 ```
 如果你通过主线程调用一次 current 生成一个 ThreadLocalRandom 的实例保存起来，那么其它线程来获取种子的时候必然取不到初始种子，必须是每一个线程自己用的时候初始化一个种子到线程;
 
+## 18、Synchronized 会发生进程间的上下文切换吗？具体又会发生在哪些环节呢？
+
+锁的竞争太激烈会导致锁升级为重量级锁，未抢到锁的线程会进入monitor，而monitor依赖于底层操作系统的mutex lock，获取锁时会发生用户态和内核态之间的切换，所以会发生进程间的上下文切换
+
 ## 12、多线程面试题
 
 https://segmentfault.com/a/1190000013813740
