@@ -3265,7 +3265,21 @@ private void createWebServer() {
 
 ## 35、Conditional注解原理
 
-## 36、Spring生命周期，流程梳理
+## 36、Spring的Bean生命周期，流程梳理
+
+对于Spring Bean的生命周期来说，可以分为四个阶段，其中初始化完成之后，就代表这个Bean可以使用了：
+- 实例化 Instantiation：实例化一个 Bean 对象
+- 属性赋值 Populate：为 Bean 设置相关属性和依赖
+- 初始化 Initialization：
+    - 检查Aware的相关接口并设置相关依赖；
+    - BeanPostProcessor前置处理；
+    - 是否实现InitializeBean接口；
+    - 是否配置自定义init-method；
+    - BeanPostProcessor后置处理；
+- 销毁 Destruction：
+    - 注册 Destruction相关回调接口；
+    - 是否实现DisposableBean接口；
+    - 是否配置自定义的 destroy-method
 
 ## 37、Spring扩展点作用
 
