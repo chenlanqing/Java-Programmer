@@ -3747,6 +3747,172 @@ Java 类加载与初始化是 JVM 保证线程安全，而Java enum枚举在编�
 - `Enumeration` 只有两个方法接口，我们只能读取集合的数据而不能对数据进行修改，而`Iterator`有三个方法接口，除了能读取集合的数据外也能对数据进行删除操作
 - `Enumeration` 不支持`fail-fast`机制，而`Iterator`支持`fail-fast`机制（一种错误检测机制，当多线程对集合进行结构上的改变的操作时就有可能会产生`fail-fast`机制，譬如`ConcurrentModificationException`异常）尽量使用`Iterator`迭代器而不是`Enumeration`枚举器；
 
+## 7、枚举最佳实践
+
+### 7.1、不使用Enum.values()遍历
+
+通常会使用 Enum.values() 进行枚举类遍历，但是这样每次调用都会分配枚举类值数量大小的数组用于操作，这里完全可以缓存起来，以减少每次内存分配的时间和空间消耗
+
+将枚举类反编译之后，通过jad查看字节码可以发现，每次调用values方法，都是调用其内部数组的clone方法
+```java
+public enum Status {
+    START(),
+    STOP(),
+    RUNNING();
+}
+// 反编译之后
+public final class Status extends Enum{
+    public static Status[] values(){
+        return (Status[])$VALUES.clone();
+    }
+    public static Status valueOf(String s){
+        return (Status)Enum.valueOf(com/blue/fish/example/base/enums/Status, s);
+    }
+    private Status(String s, int i){
+        super(s, i);
+    }
+    public static final Status START;
+    public static final Status STOP;
+    public static final Status RUNNING;
+    private static final Status $VALUES[];
+    static{
+        START = new Status("START", 0);
+        STOP = new Status("STOP", 1);
+        RUNNING = new Status("RUNNING", 2);
+        $VALUES = (new Status[] {
+            START, STOP, RUNNING
+        });
+    }
+}
+```
+比如按照如下写法：
+```java
+public enum Status {
+    START(),
+    STOP(),
+    RUNNING();
+    static final Status[] VALUES;
+    static {
+        VALUES = values();
+    }
+}
+```
+减少每次内存分配的时间和空间消耗，另外不要使用 EnumSet 遍历来编译，因为效率是最低的，这很好理解，数组的遍历效率是大于哈希表的；
+
+性能影响，可以参考[Spring的issue](https://github.com/spring-projects/spring-framework/issues/26842)
+
+关于性能影响，可以通过如下jmh代码测试：
+```java
+@State(Scope.Benchmark)
+@Warmup(iterations = 3, time = 3)
+@Measurement(iterations = 5, time = 3)
+@BenchmarkMode(Mode.AverageTime)
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+public class EnumIteration {
+    enum FourteenEnum {
+        a,b,c,d,e,f,g,h,i,j,k,l,m,n;
+        static final FourteenEnum[] VALUES;
+        static {
+            VALUES = values();
+        }
+    }
+    @Benchmark
+    public void valuesEnum(Blackhole bh) {
+        for (FourteenEnum value : FourteenEnum.values()) {
+            bh.consume(value.ordinal());
+        }
+    }
+    @Benchmark
+    public void enumSetEnum(Blackhole bh) {
+        for (FourteenEnum value : EnumSet.allOf(FourteenEnum.class)) {
+            bh.consume(value.ordinal());
+        }
+    }
+    @Benchmark
+    public void cacheEnums(Blackhole bh) {
+        for (FourteenEnum value : FourteenEnum.VALUES) {
+            bh.consume(value.ordinal());
+        }
+    }
+}
+```
+
+### 7.2、使用 Enum 代替 String 常量
+
+使用 Enum 枚举类代替 String 常量有明显的好处，枚举类强制验证，不会出错，同时使用枚举类的效率也更高。即使作为 Map 的 key 值来看，虽然 HashMap 的速度已经很快了，但是使用 EnumMap 的速度可以更快
+```java
+State(Scope.Benchmark)
+@Warmup(iterations = 3, time = 3)
+@Measurement(iterations = 5, time = 3)
+public class EnumMapBenchmark {
+
+    enum AnEnum {
+        a, b, c, d, e, f, g,
+        h, i, j, k, l, m, n,
+        o, p, q,    r, s, t,
+        u, v, w,    x, y, z;
+    }
+    /** 要查找的 key 的数量 */
+    private static int size = 10000;
+    /** 随机数种子 */
+    private static int seed = 99;
+    @State(Scope.Benchmark)
+    public static class EnumMapState {
+        private EnumMap<AnEnum, String> map;
+        private AnEnum[] values;
+
+        @Setup(Level.Trial)
+        public void setup() {
+            map = new EnumMap<>(AnEnum.class);
+            values = new AnEnum[size];
+            AnEnum[] enumValues = AnEnum.values();
+            SplittableRandom random = new SplittableRandom(seed);
+            for (int i = 0; i < size; i++) {
+                int nextInt = random.nextInt(0, Integer.MAX_VALUE);
+                values[i] = enumValues[nextInt % enumValues.length];
+            }
+            for (AnEnum value : enumValues) {
+                map.put(value, UUID.randomUUID().toString());
+            }
+        }
+    }
+
+    @State(Scope.Benchmark)
+    public static class HashMapState{
+        private HashMap<String, String> map;
+        private String[] values;
+
+        @Setup(Level.Trial)
+        public void setup() {
+            map = new HashMap<>();
+            values = new String[size];
+            AnEnum[] enumValues = AnEnum.values();
+            int pos = 0;
+            SplittableRandom random = new SplittableRandom(seed);
+            for (int i = 0; i < size; i++) {
+                int nextInt = random.nextInt(0, Integer.MAX_VALUE);
+                values[i] = enumValues[nextInt % enumValues.length].toString();
+            }
+            for (AnEnum value : enumValues) {
+                map.put(value.toString(), UUID.randomUUID().toString());
+            }
+        }
+    }
+    @Benchmark
+    public void enumMap(EnumMapState state, Blackhole bh) {
+        for (AnEnum value : state.values) {
+            bh.consume(state.map.get(value));
+        }
+    }
+    @Benchmark
+    public void hashMap(HashMapState state, Blackhole bh) {
+        for (String value : state.values) {
+            bh.consume(state.map.get(value));
+        }
+    }
+}
+```
+
 # 十七、switch
 
 ## 1、支持类型
@@ -4422,6 +4588,8 @@ Array 工具类可完成数组的反射操作;
 - 反射与工厂模式
 
 ### 3.9、反射原理
+
+- [JVM是如何实现反射的](https://heapdump.cn/article/3530561)
 
 ![](image/java-basic-reflection-1.png)
 

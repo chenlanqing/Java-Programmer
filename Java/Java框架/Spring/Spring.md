@@ -2707,6 +2707,8 @@ public class RootConfig {
 
 # 十、SpringBoot
 
+- [SpringBoot-JVM优化](https://heapdump.cn/article/3545423)
+
 ## 1、简介
 
 简化Spring应用开发的一个框架；
