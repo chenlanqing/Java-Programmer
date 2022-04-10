@@ -27,3 +27,34 @@ Spring 提供的 4 种 RedisSerializer（Redis 序列化器）：
     redisTemplate.setHashKeySerializer(RedisSerializer.string());
     redisTemplate.setHashValueSerializer(RedisSerializer.json());
     ```
+
+# 三、Spring-Retry
+
+- [Spring-Retry官方文档](https://docs.spring.io/spring-batch/docs/current/reference/html/retry.html)
+- [Spring-Retry原理](https://blog.51cto.com/u_15127644/2880409)
+
+Spring系列的spring-retry是另一个实用程序模块，它可以以标准方式处理任何特定操作的重试。在spring-retry中，所有配置都是基于简单注解的
+
+## 1、基本使用
+
+（1）pom依赖：
+```xml
+<dependency>
+    <groupId>org.springframework.retry</groupId>
+    <artifactId>spring-retry</artifactId>
+</dependency>
+```
+（2）启用`@EnableRetry`
+```java
+@EnableRetry
+@SpringBootApplication
+public class HelloApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(HelloApplication.class, args);
+    }
+}
+```
+（3）在方法上添加`@Retryable`
+```java
+
+```
