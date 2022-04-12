@@ -369,6 +369,14 @@ public final class Integer extends Number implements Comparable<Integer> {
 - 情况1：在扩容时如果拆分树时，树元素个数 <= 6 则会退化链表
 - 情况2：remove 树节点时，若 root、root.left、root.right、root.left.left 有一个为 null ，也会退化为链表
 
+### 1.12、HashMap 在使用时需要注意什么地方
+
+至少说出四点：
+- 在使用的时候指定对应的容量，避免后续大小调整带来的数据消耗；
+- 尽量使用Integer、Long等数字类型作为key，避免因为hash冲突形成链表带来性能的影响；
+- 避免在多线程环境下使用HashMap，否则会产生意料之外的情况；
+- 遍历HashMap时使用EntrySet；
+
 ## 2、ConcurrentHashMap
 
 ### 2.1、使用ConcurrentHashMap中，如何避免组合操作的线程安全问题

@@ -763,7 +763,6 @@ JVM 启动时，G1 会先准备好 Eden 区，程序在运行过程中不断创�
 - 复制对象：收集算法依然使用的是 Copy 算法；在这个阶段，对象树被遍历，Eden 区内存段中存活的对象会被复制到 Survivor 区中空的 Region。这个过程和其他垃圾回收算法一样，包括对象的年龄和晋升；
 - 处理引用：处理 Soft、Weak、Phantom、Final、JNI Weak 等引用。结束收集
 
-
 #### 7.3.3、global concurrent marking
 
 它的执行过程类似CMS，但是不同的是，在G1 GC中，它主要是为Mixed GC提供标记服务的，并不是一次GC过程的一个必须环节。

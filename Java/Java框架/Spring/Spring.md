@@ -5055,6 +5055,10 @@ public class ShutdownEndpoint implements ApplicationContextAware {
 }
 ```
 
+## 11、多实例
+
+可以在启动时候增加`-Dserver.port=8001`的形式在本机的不同端口上启动多个实例
+
 # 十三、自定义Starter
 
 ## 1、自动装配Bean
