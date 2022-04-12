@@ -375,7 +375,7 @@ public final class Integer extends Number implements Comparable<Integer> {
 - 在使用的时候指定对应的容量，避免后续大小调整带来的数据消耗；
 - 尽量使用Integer、Long等数字类型作为key，避免因为hash冲突形成链表带来性能的影响；
 - 避免在多线程环境下使用HashMap，否则会产生意料之外的情况；
-- 遍历HashMap时使用EntrySet；
+- 遍历HashMap时使用EntrySet
 
 ## 2、ConcurrentHashMap
 

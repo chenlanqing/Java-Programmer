@@ -132,6 +132,8 @@ web环境下`Spring\SpringMVC`容器启动过程
 
 ## 5、Bean加载过程
 
+Spring bean的生命周期主要方法：`org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory#doCreateBean`
+
 ![image](image/Spring-Bean加载过程.png)
 
 - `ResourceLoader`从存储介质中加载Spring配置信息，并使用Resource表示这个配置文件的资源。
