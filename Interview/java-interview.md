@@ -2966,6 +2966,34 @@ Text类型改造建议：
 IN 是子查询的关键字，JOIN 是连接的关键字；
 - 非相关（无索引）的多表查询中，使用IN与JOIN的查询都是先将外部表的查询结果加入到连接缓冲区，再从内部表拿取数据进入缓冲区进行比较（嵌套循环）。查询计划几乎没有区别。但是，IN存在优先级的关系，比JOIN多了一次subquery的查询，在这种情况下，JOIN更优；
 
+## 46、Mysql大数据量表如何添加索引
+
+**方案1：** 在线无锁加索引使用：`ALTER TABLE tbl_name ADD PRIMARY KEY (column), ALGORITHM=INPLACE, LOCK=NONE;`，这个特性是Mysql 5.6以后才支持；
+
+**方案2：**可在通过 “影子拷贝”来解决，先创建一张和源表无关的新表，然后通过重命名和删表操作交换两张表；
+```sql
+#操作步骤：
+#1、创建一张和原表结构一样的空表，只是表名不一样
+    create table tb_name_tmp like tb_name;
+ 
+#2、把新建的空表非主键索引都删掉，因为这样在往新表导数据的时候效率会很快（因为除了必要的主键以外，不用再去建立其它索引数据了）
+    alter tb_name_tmp drop index index_name;
+ 
+#3、从旧表往主表里导数据，如果数据太大，建议分批导入，只需确保无重复数据就行，因为导入数据太大，会很占用资源(内存，磁盘io, cpu等)，可能会影响旧表在线上的业务。建议每批次100万条数据导入，基本上每次都是在 20s左右
+    insert into tb_name_tmp select * from tb_name where id between start_id and end_id;
+ 
+#4、数据导完后，再对新表进行添加索引
+     create index index_name on tb_name_tmp(column_name);
+ 
+#5、当大部分数据导入后，索引也建立好了，但是旧表数据量还是会因业务的增长而增长，这时候为了确保新旧表的数据一至性和平滑切换，建议写一个脚本，判断当旧表的数据行数与新表一致时，就切换。我是以 max(id)来判断的。
+    rename table tb_name to tb_name_tmp1;
+    rename table tb_name_tmp to tb_name;
+```
+**方案3：**mysql在线改表工具pt-osc天然支持上述操作
+
+
+## 47、mysql在哪些情况下锁表
+
 # 七、Spring
 
 ## 1、SpringApplication.run都做了些什么？

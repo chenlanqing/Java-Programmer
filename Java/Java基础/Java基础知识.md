@@ -2446,6 +2446,8 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 - 如果是实现接口而来的泛型，就用 `getGenericInterfaces()` , 针对其中的元素转型为 ParameterizedType 来获得实际类型 getActualTypeArguments
 - 我们所说的 Java 泛型在字节码中会被擦除，并不总是擦除为 Object 类型，而是擦除到上限类型
 
+如果是自定义泛型类型，获取真正的类型：
+`Class<T> clazz = ((Class) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);`
 
 ## 3、通配符与上下界
 
@@ -4853,6 +4855,117 @@ class com.blue.fish.example.base.reflect.Child2 extends com.blue.fish.example.ba
 使用反射查询类方法清单时，我们要注意两点：
 - getMethods 和 getDeclaredMethods 是有区别的，前者可以查询到父类方法，后者只能查询到当前类；
 - 反射进行方法调用要注意过滤桥接方法；
+
+## 10、反射实例化方式
+
+通过反射实例化对象的方式有如下：
+- `java.lang.Class.newInstance()`：方法在JDK9之后过期了
+- `java.lang.reflect.Constructor.newInstance()`
+- `sun.reflect.ReflectionFactory.newConstructorForSerialization().newInstance()`
+
+（1）前两种初始化方式都会同时初始化类成员变量，但是最后一种通过 `ReflectionFactory.newConstructorForSerialization().newInstance()` 实例化类则不会初始化类成员变量；
+```java
+public class InitializeService {
+    private final Person person = new Person(1, "张三");
+}
+public class InitializeVariables {
+    public static void main(String[] args) {
+		// InitializeService{person=Person(id=1, name=张三)}
+        classNewInstance();
+		// InitializeService{person=Person(id=1, name=张三)}
+        constructorNewInstance();
+		// InitializeService{person=null}
+        reflectFactory();
+    }
+    private static void classNewInstance() {
+        try {
+            Class classType = Class.forName("com.blue.fish.example.base.reflect.instantiation.InitializeService");
+            InitializeService test = (InitializeService) classType.newInstance();
+            System.out.println(test);
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+    private static void constructorNewInstance() {
+        try {
+            Class<?> classType = Class
+                    .forName("com.blue.fish.example.base.reflect.instantiation.InitializeService");
+            final Constructor<?> constructor = classType.getDeclaredConstructor();
+            InitializeService test = (InitializeService) constructor.newInstance();
+            System.out.println(constructor.newInstance());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private static void reflectFactory() {
+        try {
+            ReflectionFactory reflectionFactory = ReflectionFactory.getReflectionFactory();
+            Constructor constructor = reflectionFactory.newConstructorForSerialization(InitializeService.class, Object.class.getDeclaredConstructor());
+            InitializeService test1 = (InitializeService) constructor.newInstance();
+            System.out.println(test1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}
+```
+
+（2）ReflectionFactory.newConstructorForSerialization 无需默认构造函数就可以反射生成对象，这个属性在很多的序列框架可以使用，比如 xml 转换成 bean，有了这个特性对 bean的 class 就没有特殊的要求，无需强制的构造函数就可以生成相应的bean的对象；
+```java
+public class ReflectInstantiation1 {
+    private String id;
+    private String name;
+    public ReflectInstantiation1(String id, String name) {
+        this.id = id;
+        this.name = name;
+    }
+    ...
+    private static void classNewInstance() {
+        try {
+            Class classType = Class.forName("com.reflect.instantiation.ReflectInstantiation1");
+			// 报错：java.lang.NoSuchMethodException: com.reflect.instantiation.ReflectInstantiation1.<init>()
+            ReflectInstantiation1 test = (ReflectInstantiation1) classType.newInstance();
+        } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+    private static void constructorNewInstance() {
+        try {
+            Class<?> classType = Class.forName("com.reflect.instantiation.ReflectInstantiation1");
+			// 报错：java.lang.NoSuchMethodException: com.reflect.instantiation.ReflectInstantiation1.<init>()
+            final Constructor<?> constructor = classType.getDeclaredConstructor();
+            ReflectInstantiation1 test = (ReflectInstantiation1) constructor.newInstance();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private static void constructorNewInstance1() {
+        try {
+            Class<?> classType = Class.forName("com.reflect.instantiation.ReflectInstantiation1");
+			// 正常执行
+            final Constructor<?> constructor = classType.getDeclaredConstructor(String.class, String.class);
+            ReflectInstantiation1 test = (ReflectInstantiation1) constructor.newInstance("StringId", "StringName");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    private static void reflectFactory() {
+        try {
+            ReflectionFactory reflectionFactory = ReflectionFactory.getReflectionFactory();
+			// 正常执行，也就是ReflectFactory无需无参构造函数也可以生成
+            Constructor constructor = reflectionFactory
+                    .newConstructorForSerialization(ReflectInstantiation1.class, Object.class.getDeclaredConstructor());
+            constructor.setAccessible(true);
+            ReflectInstantiation1 test1 = (ReflectInstantiation1) constructor.newInstance();
+        } catch (Exception e) {
+
+        }
+    }
+}
+```
+
+
+ReflectionFactory的实现里面有一个 constructorAccessor，其是通过字节码生成后进行加载的，并且每次加载的时候都是不同的`Classloader declaringClass.getClassLoader()).newInstance()`，如果一直大量的使用，不对Constructor 对象进行缓存，会不停的加载类 最终导致 Metaspace 空间不足，可能会频繁的触发 FullGC 的情况
 
 # 二十、比较器：Comparale、Comparator
 

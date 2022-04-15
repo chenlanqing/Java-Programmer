@@ -709,6 +709,7 @@ public class MainConfigOfAOP {
 ## 4.2、AOP原理
 
 ### 4.2.1、`@EnableAspectJAutoProxy`是什么
+
 ```java
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
@@ -891,6 +892,59 @@ AnnotationAwareAspectJAutoProxyCreator实现自`InstantiationAwareBeanPostProces
         - 效果：
             - 正常执行：`前置通知 -> 目标方法 -> 后置通知 -> 返回通知`
             - 出现异常：`前置通知 -> 目标方法 -> 后置通知 -> 异常通知`
+
+## 4.5、AOP使用问题
+
+### 4.5.1、this调用的当前类方法无法被拦截
+
+在类的内部，通过 this 方式调用的方法，是不会被 Spring AOP 增强的，只有引用的是被动态代理创建出来的对象，才会被 Spring 增强，具备 AOP 该有的功能；
+
+这种方式一般是通过注入自己或者使用`AopContext.currentProxy()`来获取代理类，它的核心就是通过一个 ThreadLocal 来将 Proxy 和线程绑定起来，这样就可以随时拿出当前线程绑定的 Proxy
+
+### 4.5.2、直接访问被拦截类的属性抛空指针异常
+
+有如下代码
+```java
+@Service
+public class AdminUserService {
+    public final User adminUser = new User("202101166");
+    public void login() {
+        System.out.println("admin user login...");
+    }
+}
+@Service
+public class ElectricService {
+    @Autowired
+    private AdminUserService adminUserService;
+    public void pay() throws Exception {
+        adminUserService.login();
+        // 这里会报空指针
+        String payNum = adminUserService.adminUser.getPayNum();
+        System.out.println("User pay num : " + payNum);
+        System.out.println("Pay with alipay ...");
+        Thread.sleep(1000);
+    }
+}
+@Aspect
+@Service
+@Slf4j
+public class AopConfig {
+    @Before("execution(* com.qing.fan.AdminUserService.login(..)) ")
+    public void logAdminLogin(JoinPoint pjp) throws Throwable {
+        System.out.println("! admin login ...");
+    }
+}
+```
+正常情况下，AdminUserService 只是一个普通的对象，而 AOP 增强过的则是一个 `AdminUserService$$EnhancerBySpringCGLIB$$xxxx`，这个类实际上是 AdminUserService 的一个子类。它会 overwrite 所有 public 和 protected 方法，并在内部将调用委托给原始的 AdminUserService 实例，代理类实例的默认构建方式很特别。总结和对比下通过反射来实例化对象的方式，包括：
+- `java.lang.Class.newInstance()`
+- `java.lang.reflect.Constructor.newInstance()`
+- `sun.reflect.ReflectionFactory.newConstructorForSerialization().newInstance()`
+
+前两种初始化方式都会同时初始化类成员变量，但是最后一种通过 `ReflectionFactory.newConstructorForSerialization().newInstance()` 实例化类则不会初始化类成员变量；
+
+解决方案：
+- 在 AdminUserService 里加了个 getUser() 方法；
+- 也可以让产生的代理对象的属性值不为 null，修改启动参数 `-Dspring.objenesis.ignore=true`，这样代理类的属性是会被 Spring 初始化的
 
 # 5、声明式事务
 

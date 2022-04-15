@@ -895,7 +895,7 @@ public class UserService {
 那么问题来了，如果有些场景，确实想在同一个类的某个方法中，调用它自己的另外一个方法，该怎么办呢？
 - 新加一个Service方法：只需要新加一个Service方法，把@Transactional注解加到新Service方法上，把需要事务执行的代码移到新方法中；
 - 在该Service类中注入自己：也不会出现Spring循环依赖问题；
-- 通过AopContent类：
+- 通过AopContent类（需要搭配：`@EnableAspectJAutoProxy(exposeProxy = true)`）
 	```java
 	@Service
 	public class ServiceA {
