@@ -329,12 +329,12 @@ BEGIN
 
 ## 8、binlog与redo log区别
 
-|          | redo log                                                     | binlog                                                       |
-| -------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+|          | redo log      | binlog    |
+| -------- | -------------------| --------------- |
 | 文件大小 | redo log 大小是固定的    | binlog可以通过 max_binlog_size 设置每个binlog 文件的大小     |
 | 实现方式 | redo log 是通过innoDB引擎层实现的，不是所有引擎都有的        | binlog是Server层实现的，所有引擎都可以使用binlog日志         |
 | 记录方式 | redo log 采用循环写的方式记录，当写到结尾时，会回到开头循环写日志 | binlog通过追加的方式，当文件大小大于给到的值后，后续的日志会记录到新的文件上 |
-| 适用场景 | redo log适用于崩溃恢复（crash-safe）                         | binlog适用于主从复制、数据恢复                               |
+| 适用场景 | redo log适用于崩溃恢复（crash-safe）| binlog适用于主从复制、数据恢复   |
 
 由 binlog 和 redo log 的区别可知：binlog 日志只用于归档，只依靠 binlog 是没有 crash-safe 能力的。
 
@@ -420,3 +420,4 @@ DTS提供了数据迁移、实时数据订阅及数据实时同步等多种数�
 - [MySQL BinaryLog](https://dev.mysql.com/doc/internals/en/binary-log-overview.html)
 - [MySQL 的 Binlog 日志处理工具对比](https://mp.weixin.qq.com/s/EJVUY4qCqKFqMudLZ2y09g)
 - [庖丁解牛分析RedoLog](https://mp.weixin.qq.com/s/2G_2ZYAbQIblVJY7pmrhKg)
+- [MySQL的binlog日志](https://www.cnblogs.com/martinzhang/p/3454358.html)

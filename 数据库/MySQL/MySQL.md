@@ -602,7 +602,7 @@ Text类型改造建议：
 	- 这个参数设置为 OFF 表示的是，表的数据放在系统共享表空间，也就是跟数据字典放在一起；
 	- 这个参数设置为 ON 表示的是，每个 InnoDB 表数据存储在一个以 .ibd 为后缀的文件中；
 
-# 五、SQL 执行顺序
+# 五、SQL 执行流程
 
 - [MySQL执行顺序](https://mp.weixin.qq.com/s/eFmqxhlgvYOtTPDOFHHbUg)
 
@@ -1575,8 +1575,8 @@ InnoDB实现的RR，通过锁机制、数据的隐藏列、undo log和类next-ke
 ### 1.6、一致性实现
 
 实现一致性的措施包括：
-- 保证原子性、持久性和隔离性，如果这些特性无法保证，事务的一致性也无法保证
-- 数据库本身提供保障，例如不允许向整形列插入字符串值、字符串长度不能超过列的限制等
+- 保证原子性、持久性和隔离性，如果这些特性无法保证，事务的一致性也无法保证；
+- 数据库本身提供保障，例如不允许向整形列插入字符串值、字符串长度不能超过列的限制等；
 - 应用层面进行保障，例如如果转账操作只扣除转账者的余额，而没有增加接收者的余额，无论数据库实现的多么完美，也无法保证状态的一致
 
 ## 2、数据库隔离级别
@@ -5391,8 +5391,6 @@ Linux操作系统下默认文件存储：`/var/lib/mysql`
 * [MySQL大表优化方案](https://segmentfault.com/a/1190000006158186)
 * [sakila文件地址](http://dev.mysql.com/doc/sakila/en/sakila-installation.html)
 * [SQL优化](https://mp.weixin.qq.com/s/hU2EkRW_PC3pRZ4vF4VvOw)
-* [MySQL常见面试题](https://mp.weixin.qq.com/s/ZtuUg79OFLh20-HWs2Qs4A)
-* [Mysql的binlog日志](https://www.cnblogs.com/martinzhang/p/3454358.html)
 * [Mysql主从同步延迟](https://www.cnblogs.com/cnmenglang/p/6393769.html)
 * [Mysql数据库主从](http://blog.51cto.com/wangwei007/965575)
 * [MySQL事务实现](https://juejin.im/post/5ede6436518825430c3acaf4)
