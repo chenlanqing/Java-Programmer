@@ -131,6 +131,8 @@ OK
 Time taken: 3.196 seconds, Fetched: 1 row(s)
 ```
 
+`hive -f <file_name>`：执行文件内内容
+
 ### 3.1.2、beeline
 
 这种方式需要先启动一个hiveserver2服务，因为beeline客户端需要通过这个服务连接到hive
