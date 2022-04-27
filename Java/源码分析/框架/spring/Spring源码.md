@@ -645,6 +645,8 @@ public void registerShutdownHook() {
 
 [SpringAOP实现原理](https://mp.weixin.qq.com/s/1sC2KNSWyHRuPZr6NrDRnQ)
 
+核心是采用动态代理的技术，通过字节码增强对方法进行拦截增强，以便于增加需要的额外处理逻辑
+
 ## 1、Spring Aop实现方式
 
 AOP的实现：jdkProxy和Cglib
