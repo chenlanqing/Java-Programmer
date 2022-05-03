@@ -78,4 +78,13 @@ git remote set-url origin https://mirrors.cloud.tencent.com/homebrew/homebrew-co
 brew update
 ```
 
+## 6、关于权限
+
+比如Mac安装了Mysql，但是其安装目录下data目录无法访问，
+```sh
+/usr/local/mysql#  cd data
+cd: permission denied: data
+## 可以执行如下命令
+sudo chmod -R a+rwx  /usr/local/mysql/data/
+```
 

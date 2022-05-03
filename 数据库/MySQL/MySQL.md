@@ -5398,3 +5398,4 @@ Linux操作系统下默认文件存储：`/var/lib/mysql`
 * [MySQL-GTID复制](https://dbaplus.cn/news-11-857-1.html)
 * [MySQL生成随机数据工具](https://github.com/Percona-Lab/mysql_random_data_load)
 * [数据库优化](https://mp.weixin.qq.com/s/4us0c3My6H7Yikgg6rPHnA)
+- [InnoDB结构分析工具](https://github.com/jeremycole/innodb_ruby)
