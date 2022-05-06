@@ -58,3 +58,28 @@ public class HelloApplication {
 ```java
 
 ```
+
+# 四、定时器
+
+- [动态定时任务](https://github.com/caotinging/simple-demo/tree/master/springboot-dynamic-task)
+
+## 配置定时器不执行
+
+在单元测试场景下，为了定时器不执行对应的任务，可以按照如下方式配置：
+- 配置定时器的地方如下配置：
+```java
+@ConditionalOnProperty(
+    value = "app.scheduling.enable", havingValue = "true", matchIfMissing = true
+)
+@Configuration
+@EnableScheduling
+public static class SchedulingConfiguration {
+    ....
+}
+```
+- 然后在单元测试基类中如下配置：
+```java
+@TestPropertySource(properties = "app.scheduling.enable=false")
+@SpringBootTest(XXX.class)
+```
+[详细参考配置](https://stackoverflow.com/questions/29014496/disable-enablescheduling-on-spring-tests)

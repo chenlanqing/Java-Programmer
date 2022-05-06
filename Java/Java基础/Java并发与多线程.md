@@ -2215,7 +2215,17 @@ private void resize() {
 
 ### 12.8、TransmittableThreadLocal
 
-[TransmittableThreadLocal](https://github.com/alibaba/transmittable-thread-local) 是阿里开源的，在使用线程池等会池化复用线程的执行组件情况下，提供ThreadLocal值的传递功能，解决异步执行时上下文传递的问题；
+- [TransmittableThreadLocal原理解析](https://juejin.cn/post/6998552093795549191)
+- [TransmittableThreadLocal](https://github.com/alibaba/transmittable-thread-local) 
+
+在线程池中使用InheritableThreadLocal，那么 InheritableThreadLocal 只会在线程初始化的时候将父线程的值拷贝到子线程（仅拷贝一次），后续在代码中修改，对于线程池来说local.get的值都不会修改，还是原始的值；
+
+那么如何使得在线程池中当中使用 InheritableThreadLocal 时，如果对应的值改变，对应线程池中线程也能获取到最新的值呢？`TransmittableThreadLocal`是阿里开源的，在使用线程池等会池化复用线程的执行组件情况下，提供ThreadLocal值的传递功能，解决异步执行时上下文传递的问题；
+
+继承自InheritableThreadLocal 主要用途：
+- 链路追踪，如日志链路追踪（比如traceId在线程池中传递）；
+- 用户会话信息；
+- 中间件线程池信息传递；
 
 在ThreadLocal的需求场景即是TTL的潜在需求场景，如果你的业务需要『在使用线程池等会池化复用线程的组件情况下传递ThreadLocal』则是TTL目标场景
 
