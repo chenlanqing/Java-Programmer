@@ -323,9 +323,49 @@ C语言不会判断数组是否越界
 
 数组作为参数传递到函数中，同时需要传递数组的长度，数组作为参数仅仅传递是首地址；
 
+```c
+int array[] = {0, 1, 2, 3, 4};
+int *p = array;
+PRINT_INT(*(p + 3));// recommend
+PRINT_INT(*(array + 3));
+PRINT_INT(*(3 + array));
+PRINT_INT(3[array]); // not recommend
+PRINT_INT(array[3]); //recommend
+PRINT_INT(p[3]);
+```
+
 ## 字符串
 
 c的字符串是已NULL结尾的
+
+# 二、指针
+
+## 特殊指针
+
+- 不要将硬编码复制给指针，比如：`int *p = (int *)3`
+- 空指针 NULL 的用法，比如：`int *p = NULL;`，后面 `*p = 3;`会报错；
+- 注意避免产生野指针
+  ```c
+  int *p;
+  void dp(){
+    int a = 2;
+    p = &a;
+  }
+  ```
+  上面指针p在函数dp执行完之后指向的内存已经被销毁了；
+
+## 指针运算
+
+```c
+int array[] = {0, 1, 2, 3, 4};
+int *p = array;
+PRINT_INT(*(p + 3));// recommend
+PRINT_INT(*(array + 3));
+PRINT_INT(*(3 + array));
+PRINT_INT(3[array]); // not recommend
+PRINT_INT(array[3]); //recommend
+PRINT_INT(p[3]);
+```
 
 # 参考资料
 
