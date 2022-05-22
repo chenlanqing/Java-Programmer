@@ -259,8 +259,29 @@ WantedBy=multi-user.target
 - 同理按照windows环境下配置本地Maven仓库和远程镜像仓库；
  
 
+# 七、Maven私服搭建
 
+- [Nexus下载](https://help.sonatype.com/repomanager2/download)
+- [使用Nexus搭建Maven私服](https://www.hangge.com/blog/cache/detail_2844.html)
+- [发布Jar到Maven中央仓库](http://blog.gopersist.com/2020/05/28/maven-center-repository/index.html)
 
+Maven settings.xml 使用私服：
+```xml
+<mirrors>
+	<mirror>
+		<!--该镜像的唯一标识符。id用来区分不同的mirror元素。 -->
+		<id>maven-public</id>
+		<!--镜像名称 -->
+		<name>maven-public</name>
+		<!--*指的是访问任何仓库都使用我们的私服-->
+		<mirrorOf>*</mirrorOf>
+		<!--该镜像的URL。构建系统会优先考虑使用该URL，而非使用默认的服务器URL。 -->
+		<url>http://47.98.230.117:8081/repository/maven-public/</url>
+	</mirror>
+</mirrors> 
+```
+
+# 八、搭建Jenkins
 
 
 

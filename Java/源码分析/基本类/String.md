@@ -782,9 +782,23 @@ String在运行期也是有限制的，也就是 `Integer.MAX_VALUE`，约为4G�
 # 八、String的使用技巧
 
 ## 1、数字前补0
+
 ```java
 String.format("%05d"， 1)
 ```
+
+## 2、首字母小写
+
+```java
+public static String captureName(String name) {
+	char[] cs = name.toCharArray();
+	if (cs[0] >= 'A' && cs[0] <= 'Z') {
+		cs[0] += 32;
+	}
+	return String.valueOf(cs);
+}
+```
+
 
 # 参考文章
 
