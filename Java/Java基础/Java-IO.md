@@ -79,6 +79,8 @@
 
 多个网络连接的 IO，复用就是指多个通道复用在一个复用器上
 
+- [深入揭秘 epoll 是如何实现 IO 多路复用的](https://mp.weixin.qq.com/s/OmRdUgO1guMX76EdZn11UQ)
+
 #### 5.3.1、IO多路复用
 
 多路复用IO模型是目前使用得比较多的模型；Java NIO 实际上就是多路复用IO

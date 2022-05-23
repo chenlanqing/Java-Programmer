@@ -786,6 +786,7 @@ String在运行期也是有限制的，也就是 `Integer.MAX_VALUE`，约为4G�
 ```java
 String.format("%05d"， 1)
 ```
+输出二进制前面补0：输出二进制需要前面补齐总共32位，可以借助 commons-lang3包下得 StringUtils 类： `StringUtils.leftPad(str, 32, '0');`
 
 ## 2、首字母小写
 
