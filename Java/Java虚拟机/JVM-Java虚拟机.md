@@ -507,11 +507,11 @@ public class EmptyObject {
 - 详细垃圾回收：通过启用详细垃圾收集，我们将跟踪GC的详细跟踪。要启用此功能，我们需要将以下内容添加到JVM配置中；通过添加此参数，我们可以看到GC内部发生的详细信息
 - 使用引用对象避免内存泄漏：可以使用java中的引用对象来构建`java.lang.ref`包来处理内存泄漏。使用`java.lang.ref`包，我们使用对象的特殊引用，而不是直接引用对象，这些对象可以很容易地进行垃圾回收
 
-## 4.3、内存溢出测试方法
+## 4.3、各区域内存溢出
 
 ### 4.3.1、Java堆
 
-无限循环的创建对象，在List中保存引用，以不被垃圾收集器回收：
+测试：无限循环的创建对象，在List中保存引用，以不被垃圾收集器回收：
 ```java
 // VM Args: -Xms20m -Xmx20m -XX：+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<指定dump目录>
 public class HeapOOM {
@@ -532,7 +532,7 @@ Heap dump file created [27980413 bytes in 0.370 secs]
 Exception in thread "main" java.lang.OutOfMemoryError： Java heap space
 ```
 - 解决异常，一般是通过内存映像分析工具对dump出来的堆转储快照进行分析，重点是确认内存中的对象是否是必要的，也就是先分清楚是内存泄漏还是内存溢出。
-- 如果是内存溢出，可以进一步通过工具查看泄漏对象到GC Roots 的引用链。
+- 如果是内存溢出，可以进一步通过工具查看泄漏对象到GC Roots 的引用链；
 - 如果不存在泄漏，换而言之，就是内存中的对象确实都还必须存活着，那就应当检查虚拟机的堆参数（Xmx 和 Xms），与机器物理内存对比是否还可以调大，代码上检查是否存在某些对象生命周期过长，持有状态时间过长的情况，尝试减少程序运行期的内存消耗；
 
 `-XX:HeapDumpPath=<指定dump目录>` 指定dump文件的目录
