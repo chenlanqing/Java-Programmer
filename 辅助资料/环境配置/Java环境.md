@@ -285,7 +285,9 @@ Maven settings.xml 使用私服：
 
 
 
+# 九、搭建Gitlab
 
+- [CentOS搭建Gitlab](https://chensir.ink/b0ef7b3e9c45/)
 
 
 
