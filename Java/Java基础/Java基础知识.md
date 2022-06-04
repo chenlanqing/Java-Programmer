@@ -816,140 +816,130 @@ else x= a;
 - 取出最小 0 位（Extract lowest unset bit）: `~s & (s + 1)`
 - 交换值: `x ^= y; y ^= x; x ^= y;`
 
-# 四、JDK8新特性
+# 四、JDK各版本特性
 
 * [JDK8概览](https://juejin.im/post/6861849472499417096)
 * [JDK8~17特性](https://advancedweb.hu/a-categorized-list-of-all-java-and-jvm-features-since-jdk-8-to-17/)
+* [JDK11-17新特性](https://mp.weixin.qq.com/s/SVleHYFQeePNT7q67UoL4Q)
 
-## 1、Java语言新特性
+## 1、JDK8
 
-### 1.1、Lambda表达式和函数式接口
+### 1.1、Java语言新特性
 
-函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口。java 8提供 @FunctionalInterface作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口）；
+- Lambda表达式和函数式接口：函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口。java 8提供 @FunctionalInterface作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口）；
+- 接口的默认方法和静态方法
+- 方法引用
+- 重复注解
+- 更好的类型推断
+- 拓宽注解的应用场景
+- 行为参数化：行为参数化是一个很有用的模式，它能够轻松地使用不断变化的需求，这种模式可以把一个行为封装起来，并通过传递和使用创建的行为将方法的行为参数化，其可以代替匿名类
 
-### 1.2、接口的默认方法和静态方法
+	**需求1**：筛选出红色的花
+	```java
+	public static List<Flower> filterFlower(List<Flower> flowers) {
+		List<Flower> resList = new ArrayList<>();
+		for (Flower flower : flowers) {
+			if (StringUtils.equals("red", flower.getColor())) {
+				resList.add(flower);
+			}
+		}
+	}
+	```
+	**需求2**：筛选出绿色的话，正常情况下一般是会用color作为参数传入：
+	```java
+	public static List<Flower> filterFlowerByColor(List<Flower> flowers, String color) {
+		List<Flower> resList = new ArrayList<>();
+		for (Flower flower : flowers) {
+			if (StringUtils.equals(color, flower.getColor())) {
+				resList.add(flower);
+			}
+		}
+	}
+	```
+	**需求3**：筛选出价格小于8块钱的花；我们只能再写一个方法来实现这个需求，为了防止后续价格的变化，聪明的我们提前将价格设置成可变参数
+	```java
+	public static List<Flower> filterFlowerByPrice(List<Flower> flowers, Integer price) {
+		List<Flower> resList = new ArrayList<>();
+		for (Flower flower : flowers) {
+			if (flower.getPrice() < price) {
+				resList.add(flower);
+			}
+		}
+	}
+	```
+	为了保证代码整洁，把上述代码合并为一个方法，通过flag来控制要筛选价格类型的花还是颜色类型的花
+	```java
+	public static List<Flower> filterFlower(List<Flower> flowers, String color, Integer price, Boolean flag) {
+		List<Flower> resList = new ArrayList<>();
+		for (Flower flower : flowers) {
+			if ((flag && flower.getPrice() < price) ||
+				(!flag && StringUtils.equals(color, flower.getColor()))) {
+				resList.add(flower);
+			}
+		}
+		return resList;
+	}
 
-### 1.3、方法引用
+	我们既然都能把花的属性作为参数进行传递，那么我们能不能我们能不能把过滤花的这种行为也作为一个参数进行传递，定义行为接口
+	```java
+	public interface FilterPredicate {
+		boolean test(Flower flower);
+	}
+	```
+	自定义两个过滤类来实现接口：
+	```java
+	public class RedColorFilterPredicate implements FilterPredicate {
+		@Override
+		public boolean test(Flower flower) {
+			return StringUtils.equals("red", flower.getColor());
+		}
+	}
+	public class LowPriceFilterPredicate implements FilterPredicate {
+		@Override
+		public boolean test(Flower flower) {
+			return flower.getPrice() < 8;
+		}
+	}
+	```
+	重写我们的过滤方法，通过将行为作为参数传递：
+	```java
+	public static List<Flower> filterFlower(List<Flower> flowers, FilterPredicate filter) {
+		List<Flower> resList = new ArrayList<>();
+		for (Flower flower : flowers) {
+			if (filter.test(flower)) {
+				resList.add(flower);
+			}
+		}
+		return resList;
+	}
+	/*****    使用    *****/
+	filterFlower(flowerList, new RedColorFilterPredicate());
+	filterFlower(flowerList, new LowPriceFilterPredicate());
+	```
+	如果有其他新增的过滤条件，为了避免增加新的类，可以使用lambda表达式：
+	```
+	filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);
+	​```java
+	甚至可以将多种行为作为作为一个参数传递：
+	​```java
+	filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8 && StringUtils.equals("red", flower.getColor()));
+	```
+	行为参数化是一个很有用的模式，它能够轻松地使用不断变化的需求，这种模式可以把一个行为封装起来，并通过传递和使用创建的行为将方法的行为参数化；
 
-### 1.4、重复注解
+	如果我们将一个鲜花的集合按照价格进行排序，我们会这样做：
+	```java
+	Collections.sort(flowerList, new Comparator<Flower>() {
+		@Override
+		public int compare(Flower o1, Flower o2) {
+			return o1.getPrice().compareTo(o2.getPrice());
+		}
+	});
+	```
 
-### 1.5、更好的类型推断
-
-### 1.6、拓宽注解的应用场景
-
-### 1.7、行为参数化
-
-行为参数化是一个很有用的模式，它能够轻松地使用不断变化的需求，这种模式可以把一个行为封装起来，并通过传递和使用创建的行为将方法的行为参数化，其可以代替匿名类
-
-**需求1**：筛选出红色的花
-```java
-public static List<Flower> filterFlower(List<Flower> flowers) {
-    List<Flower> resList = new ArrayList<>();
-    for (Flower flower : flowers) {
-        if (StringUtils.equals("red", flower.getColor())) {
-            resList.add(flower);
-        }
-    }
-}
-```
-**需求2**：筛选出绿色的话，正常情况下一般是会用color作为参数传入：
-```java
-public static List<Flower> filterFlowerByColor(List<Flower> flowers, String color) {
-    List<Flower> resList = new ArrayList<>();
-    for (Flower flower : flowers) {
-        if (StringUtils.equals(color, flower.getColor())) {
-            resList.add(flower);
-        }
-    }
-}
-```
-**需求3**：筛选出价格小于8块钱的花；我们只能再写一个方法来实现这个需求，为了防止后续价格的变化，聪明的我们提前将价格设置成可变参数
-```java
-public static List<Flower> filterFlowerByPrice(List<Flower> flowers, Integer price) {
-    List<Flower> resList = new ArrayList<>();
-    for (Flower flower : flowers) {
-        if (flower.getPrice() < price) {
-            resList.add(flower);
-        }
-    }
-}
-```
-为了保证代码整洁，把上述代码合并为一个方法，通过flag来控制要筛选价格类型的花还是颜色类型的花
-```java
-public static List<Flower> filterFlower(List<Flower> flowers, String color, Integer price, Boolean flag) {
-    List<Flower> resList = new ArrayList<>();
-    for (Flower flower : flowers) {
-        if ((flag && flower.getPrice() < price) ||
-            (!flag && StringUtils.equals(color, flower.getColor()))) {
-            resList.add(flower);
-        }
-    }
-    return resList;
-}
-```
-
-我们既然都能把花的属性作为参数进行传递，那么我们能不能我们能不能把过滤花的这种行为也作为一个参数进行传递，定义行为接口
-```java
-public interface FilterPrecidate {
-    boolean test(Flower flower);
-}
-```
-自定义两个过滤类来实现接口：
-```java
-public class RedColorFilterPredicate implements FilterPrecidate {
-    @Override
-    public boolean test(Flower flower) {
-        return StringUtils.equals("red", flower.getColor());
-    }
-}
-public class LowPriceFilterPredicate implements FilterPrecidate {
-    @Override
-    public boolean test(Flower flower) {
-        return flower.getPrice() < 8;
-    }
-}
-```
-重写我们的过滤方法，通过将行为作为参数传递：
-```java
-public static List<Flower> filterFlower(List<Flower> flowers, FilterPrecidate filter) {
-    List<Flower> resList = new ArrayList<>();
-    for (Flower flower : flowers) {
-        if (filter.test(flower)) {
-            resList.add(flower);
-        }
-    }
-    return resList;
-}
-/*****    使用    *****/
-filterFlower(flowerList, new RedColorFilterPredicate());
-filterFlower(flowerList, new LowPriceFilterPredicate());
-```
-如果有其他新增的过滤条件，为了避免增加新的类，可以使用lambda表达式：
-```
-filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);
-​```java
-甚至可以将多种行为作为作为一个参数传递：
-​```java
-filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8 && StringUtils.equals("red", flower.getColor()));
-```
-行为参数化是一个很有用的模式，它能够轻松地使用不断变化的需求，这种模式可以把一个行为封装起来，并通过传递和使用创建的行为将方法的行为参数化；
-
-如果我们将一个鲜花的集合按照价格进行排序，我们会这样做：
-```java
-Collections.sort(flowerList, new Comparator<Flower>() {
-    @Override
-    public int compare(Flower o1, Flower o2) {
-        return o1.getPrice().compareTo(o2.getPrice());
-    }
-});
-```
-
-## 2、编译器新特性
-
-### 2.1、参数名称
+### 1.2、编译器新特性
 
 
-## 3、Java官方库的新特性
+### 1.3、Java官方库的新特性
 
 - Optional
 - Stream
@@ -959,9 +949,9 @@ Collections.sort(flowerList, new Comparator<Flower>() {
 - 并行数组
 - 并发性
 
-## 4、各个版本特性
+### 1.4、各个版本特性
 
-### 4.1、JDK5
+#### 1.4.1、JDK5
 
 - 泛型
 - 枚举
@@ -983,7 +973,7 @@ Collections.sort(flowerList, new Comparator<Flower>() {
 - 线程框架/数据结构 JUC
 - Arrays工具类/StringBuilder/instrument
 
-### 4.2、JDK6
+#### 1.4.2、JDK6
 
 - 支持脚本语言
 - 引入JDBC 4.0 API
@@ -992,7 +982,7 @@ Collections.sort(flowerList, new Comparator<Flower>() {
 - 增加对Native PKI、Java GSS、Kerberos 和 LDAP 的支持
 - 继承Web Services
 
-### 4.3、JDK7
+#### 1.4.3、JDK7
 
 - switch语句块中允许以字符串作为分支条件；
 - 在创建泛型对象时应用类型推断；钻石语法:`Map<String， List<String>> data = new HashMap()；`
@@ -1010,7 +1000,7 @@ Collections.sort(flowerList, new Comparator<Flower>() {
 - JSR292与InvokeDynamic指令：JSR292 实现提供在 Java 语言层面上的 invokedynamic 调用
 - fork/join framework
 
-### 4.4、JDK8
+#### 1.4.4、JDK8
 
 [http://www.open-open.com/lib/view/open1403232177575.html]
 
@@ -1022,32 +1012,11 @@ Collections.sort(flowerList, new Comparator<Flower>() {
 - JVM 的PermGen空间被移除，取代它的是Metaspace(JEP 122)元空间
 - 数组并行(parallel)操作
 
-### 4.5、JDK9
-
-- Jigsaw 项目；模块化源码
-- 简化进程API
-- 轻量级 JSON API
-- 钱和货币的API
-- 改善锁争用机制
-- 代码分段缓存
-- 智能Java编译， 第二阶段
-- HTTP 2.0客户端
-- Kulla计划: Java的REPL实现
-
-### 4.6、JDK10
-
-- 本地变量类型推断
-- 统一JDK仓库
-- 垃圾回收器接口
-- G1的并行Full GC
-- 应用程序类数据共享
-- ThreadLocal握手机制
-
-## 5、Stream
+### 1.5、Stream
 
 `public interface Stream<T> extends BaseStream<T, Stream<T>>`
 
-### 5.1、特性
+#### 1.5.1、特性
 
 JAVA8中提出一个集合流的抽象工具（java.util.stream，简称Stream），用于集合内元素的计算，更确切的说是过滤和统计操作。
 
@@ -1061,7 +1030,7 @@ Stream 就如同一个迭代器（Iterator），单向，不可往复，数据�
 - 延迟执行：Stream的操作由零个或多个中间操作（intermediate operation）和一个结束操作（terminal operation）两部分组成。只有执行了结束操作，Stream定义的中间操作才会依次执行，这就是Stream的延迟特性。
 - 可消费性：Stream只能被“消费”一次，一旦遍历过就会失效。就像容器的迭代器那样，想要再次遍历必须重新生成一个新的Stream
 
-### 5.2、创建Stream
+#### 1.5.2、创建Stream
 
 最常用的创建Stream有两种途径：
 - 通过Stream接口的静态工厂方法：Stream.of、Stream.iterate、Stream.builder
@@ -1112,7 +1081,7 @@ findAny | Optional | -
 findFirst | Optional | - 
 reduce | Optional | BinaryOperator
 
-### 5.3、常见流的操作
+#### 1.5.3、常见流的操作
 
 - **foreach：迭代流中的每个数据**
 	```java
@@ -1159,7 +1128,7 @@ reduce | Optional | BinaryOperator
 	Optional<Integer> minOption = nums.stream().reduce(Integer::min);
 	```
 
-### 5.4、收集器的使用
+#### 1.5.4、收集器的使用
 
 Collectors：实现了很多归约操作，例如将流转换成集合和聚合元素。Collectors 可用于返回列表或字符串：
 ```java
@@ -1193,7 +1162,7 @@ Integer sum = flowerList.stream().collect(Collectors.summingInt(Flower::getPrice
 Double avg = flowerList.stream().collect(Collectors.averagingInt(Flower::getPrice));
 ```
 
-### 5.5、分组的使用
+#### 1.5.5、分组的使用
 
 **按照颜色分组**
 ```java
@@ -1235,7 +1204,7 @@ reducing | 归约操作产生的类型 | 从一个作为累加器的初始值开
 collectingAndThen | 转换函数返回的类型 | 包裹另一个收集器，对其结果应用转换函数
 groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项目作为组，并将属性值作为结果Map的键
 
-### 5.6、Stream如何优化遍历
+#### 1.5.6、Stream如何优化遍历
 
 官方将 Stream 中的操作分为两大类：中间操作（Intermediate operations）和终结操作（Terminal operations）。中间操作只对操作进行了记录，即只会返回一个流，不会进行计算操作，而终结操作是实现了计算操作；
 - 中间操作又可以分为无状态（Stateless）与有状态（Stateful）操作，前者是指元素的处理不受之前元素的影响，后者是指该操作只有拿到所有元素之后才能继续下去；
@@ -1243,11 +1212,11 @@ groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项�
 
 ![](image/Stream-分类.png)
 
-### 5.7、Stream源码
+#### 1.5.7、Stream源码
 
-## 6、Optional
+### 1.6、Optional
 
-### 6.1、解决问题
+#### 1.6.1、解决问题
 
 [Optional使用](https://www.cnblogs.com/rjzheng/p/9163246.html)
 
@@ -1283,7 +1252,7 @@ public String getCity(User user) throws Exception{
 
 Optional相当于是一个容器，里面可以装 T 类型的对象。当变量不存在的时候，缺失的值就会被建模成一个“空”的Optional对象，由方法Optional.empty()返回。这就是Optional.empty()和null的区别，如果引用一个 null，那结果肯定是会触发NullPointException异常，但是引用Optional.empty()则没事
 
-### 6.2、如何使用
+#### 1.6.2、如何使用
 
 **创建Optional对象**
 - 创建一个空的Optional：`Optional<Person> personOpt = Optional.empty()`
@@ -1307,15 +1276,15 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 - `orElseThrow(Supplier<? extend X> excetionSupplier)`：和get()方法类似，在Optional对象为空的时候会抛出一个异常，但是这个异常我们可以自定义；
 - `ifPresent(Consumer<? extend T>)`：如果值存在，就执行使用该值的方法调用，否则什么也不做
 
-### 6.3、注意实现
+#### 1.6.3、注意实现
 
 - Optional不能被序列化，因此不能使用于字段；
 - Optional不建议用于函数的入参。试想传入一个Optional.empty()有多奇怪，可以使用相同函数名来避免；
 - 不建议在使用isPresent后接着使用get，那将和用==判断无异，不能体现Optional的优越性，反而麻烦
 
-## 7、JDK8时间
+### 1.7、JDK8时间
 
-### 7.1、旧版API存在问题
+#### 1.7.1、旧版API存在问题
 
 - 非线程安全：`java.util.Date` 是非线程安全的，所有的日期类都是可变的，这是Java日期类最大的问题之一，包括 SimpleDateFormat 、Calendar等
 
@@ -1357,9 +1326,9 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 - 设计很差：Java的日期/时间类的定义并不一致，在`java.util`和`java.sql`的包中都有日期类，此外用于格式化和解析的类在`java.text`包中定义。`java.util.Date`同时包含日期和时间，而`java.sql.Date`仅包含日期，将其纳入`java.sql`包并不合理。另外这两个类都有相同的名字，这本身就是一个非常糟糕的设计。
 - 时区处理麻烦：日期类并不提供国际化，没有时区支持，因此Java引入了`java.util.Calendar`和`java.util.TimeZone`类，但他们同样存在上述所有的问题；
 
-### 7.2、JDK8新API
+#### 1.7.2、JDK8新API
 
-#### 1、包分类
+##### 1.1、包分类
 
 - `java.time` 包:这是新的 Java 日期/时间 API 的基础包，所有的主要基础类都是这个包的一部分，如:LocalDate, LocalTime, LocalDateTime, Instant, Period, Duration 等等。所有这些类都是不可变的和线程安全的，在绝大多 数情况下，这些类能够有效地处理一些公共的需求。
 - `java.time.chrono` 包:这个包为非 ISO 的日历系统定义了一些泛化的 API，我们可以扩展 AbstractChronology 类来创建自己的日历系统。
@@ -1367,7 +1336,7 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 - `java.time.temporal`包:这个包包含一些时态对象，我们可以用其找出关于日期/时间对象的某个特定日期或时间， 比如说，可以找到某月的第一天或最后一天。你可以非常容易地认出这些方法，因为它们都具有“withXXX”的格 式。
 - `java.time.zone` 包:这个包包含支持不同时区以及相关规则的类
 
-#### 2、常见API**
+##### 1.2、常见API**
 
 - `java.time.LocalDate`：用来表示日期(年、月、日)，它表示默认格式(`yyyy-MM-dd`)的日期，LocalDate是不可变对象, 如果想改变对象的状态, 最终得到都是一个新的LocalDate对象, 并不会对旧的LocalDate对象产生影；使用 now()方法得到当前时间，也可以提供输入年份、月份和日期的输入参数来创建一个 LocalDate 实例；也可以传入 ZoneId 来获得指定时区的日期
 
@@ -1380,9 +1349,9 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 - `java.time.Instant`：Instant 类是用在机器可读的时间格式上的，它以 Unix 时间戳的形式存储日期时间，用于表示一个时间戳，可以精确到纳秒
 - 日期 API 工具：TemporalAdjuster
 
-### 7.3、新API基本操作
+#### 1.7.3、新API基本操作
 
-#### 1、格式化时间：
+##### 1.1、格式化时间：
 	```java
 	public static void main(String[] a){
 		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
@@ -1433,7 +1402,7 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
     }
 	```
 
-#### 2、转换为秒/毫秒
+##### 1.2、转换为秒/毫秒
 
 ```java
 //获取秒数
@@ -1442,7 +1411,7 @@ Long second = LocalDateTime.now().toEpochSecond(ZoneOffset.of("+8"));
 Long milliSecond = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMilli();
 ```
 
-## 8、Lambda表达式与函数式接口
+### 1.8、Lambda表达式与函数式接口
 
 - [Java 8 Lambda 揭秘](https://colobu.com/2014/11/06/secrets-of-java-8-lambda/)
 - [使用idea调试Lambda](https://www.jetbrains.com/help/idea/analyze-java-stream-operations.html)
@@ -1460,7 +1429,7 @@ new Thread(new Runnable() {
 new Thread(() -> System.out.println("我是Lambda线程")).start();
 ```
 
-### 8.1、函数式接口与函数式编程
+#### 1.8.1、函数式接口与函数式编程
 
 函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
 
@@ -1513,7 +1482,7 @@ nums.forEach(integer -> System.out.println(integer));
 Callable<Integer> call = () -> 1 ;
 ```
 
-### 8.2、类型检查
+#### 1.8.2、类型检查
 
 ```java
 filter(flowerList, (Flower flower) -> flower.getPrice() > 8);
@@ -1522,13 +1491,13 @@ filter(flowerList, (Flower flower) -> flower.getPrice() > 8);
 - 要求第二个参数是 Predicate 类型的对象
 - Predicate 是一个函数式接口，定义了一个 test()的抽象方法，并返回一个boolean 类型的值
 
-### 8.3、类型推断
+#### 1.8.3、类型推断
 
 `filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);`
 
 我们可以继续将这个代码简化为：`filterFlower(flowerList, f -> f.getPrice() > 8);`
 
-### 8.4、使用局部变量
+#### 1.8.4、使用局部变量
 
 Lambda 表达式不仅能够使用主体里面的参数，也能够使用自由变量（在外层作用域中定义的变量）
 ```java
@@ -1539,7 +1508,7 @@ Runnable r = () -> System.out.println(tmpNum);
 
 因为实例变量是存储在堆中，而局部变量是存储在栈中，属于线程私有的。而 Lambda 是在一个线程中使用的，访问局部变量只是在访问这个变量的副本，而不是访问原始值
 
-### 8.5、方法引用
+#### 1.8.5、方法引用
 
 方法引用就是让你根据已有的方法实现来创建 Lambda表达式。可以看做是单一方法的 Lambda 的语法糖
 ```java
@@ -1553,9 +1522,9 @@ flowerList.stream().map(t -> t.getPrice()).collect(Collectors.toList());      ==
 - 指向任意类型示例方法的方法引用`（String的length方法 == String::length）`
 - 指向现有对象的示例方法的方法引用`（flower实例的getPrice方法 == flower::getPrice）`
 
-### 8.6、复合 Lambda 表达式
+#### 1.8.6、复合 Lambda 表达式
 
-#### 8.6.1、比较器复合
+##### 1.8.6.1、比较器复合
 
 按鲜花的价格进行排序：
 ```
@@ -1570,7 +1539,7 @@ flowerList.sort(Comparator.comparing(Flower::getPrice).reversed());
 flowerList.sort(Comparator.comparing(Flower::getPrice).thenComparing(Flower::getColor));
 ```
 
-#### 8.6.2、谓词复合
+##### 1.8.6.2、谓词复合
 
 用于`Predicate`接口
 
@@ -1594,7 +1563,7 @@ Predicate<Flower> lowPriceFlower = (t) -> t.getPrice() < 8;
 Predicate<Flower> redOrLowPriceFlower = redFlower.or(lowPriceFlower);
 ```
 
-#### 8.6.3、函数复合
+##### 1.8.6.3、函数复合
 
 用于`Function`接口
 
@@ -1614,7 +1583,7 @@ Function<Integer, Integer> composeResult = addRes.compose(mulRes);
 Integer apply = composeResult.apply(1);  // 结果为 3 ==> (1 * 2) + 1
 ```
 
-### 8.7、Lambda原理
+#### 1.8.7、Lambda原理
 
 如下代码：启动一个线程，包含lambda表达式和匿名内部类的方式
 ```java
@@ -1715,7 +1684,15 @@ metafactory 方法入参：
 
 ![](image/Lambda-debug信息.png)
 
-### 8.8、Lambda性能
+#### 1.8.8、Lambda性能
+
+## 2、JDK9
+
+## 3、JDK10
+
+## 4、JDK11
+
+## 5、JDK13
 
 # 五、正则表达式
 
