@@ -1214,6 +1214,10 @@ groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项�
 
 #### 1.5.7、Stream源码
 
+#### 1.5.8、forEach中断操作
+
+https://www.baeldung.com/java-break-stream-foreach
+
 ### 1.6、Optional
 
 #### 1.6.1、解决问题

@@ -1924,6 +1924,12 @@ private Object rightGroovy(String script, String method, Object... args) {
 
 - 调优参数务必加上`-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=`，发生OOM让JVM自动dump出内存，方便后续分析问题解决问题
 
+## 23、如果有一个数据结构需要在多个线程中访问，可以把它放在栈上吗？为什么
+
+不能，栈上的数据会随着当前线程的函数调用栈而回收，多个线程访问须在堆上开辟；
+
+在多线程场景下，每个线程的生命周期是不固定的，无法在编译期知道谁先结束谁后结束，所以你不能把属于某个线程 A 调用栈上的内存共享给线程 B，因为 A 可能先于 B 结束。这时候，只能使用堆内存。这里有个例外，如果结束的顺序是确定的，那么可以共享，比如 scoped thread；2. 而同一个调用栈下，main() 调用 hello()，再调用 world()，编译器很清楚，world() 会先结束，之后是 hello()，最后是 main()。所以在 world() 下用指针引用 hello() 或者 main() 内部的变量没有问题，这个指针必然先于它指向的值结束。这个两个问题的实质是我们要搞明白哪些东西在编译期可以确定它们的关系或者因果，哪些只能在运行期确定
+
 # 六、MySQL
 
 - [100道MySQL数据库经典面试题解析](https://juejin.im/post/5ec15ab9f265da7bc60e1910)
