@@ -2035,7 +2035,7 @@ private Object rightGroovy(String script, String method, Object... args) {
 
 ## 2、Mysql唯一键问题
 
-mysql唯一键可以为null
+被设置为唯一索引的列的值是允许有null值的，并且这个列中允许有多个重复的null值
 
 ## 3、分页查询优化
 
