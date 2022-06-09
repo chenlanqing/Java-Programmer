@@ -1197,11 +1197,9 @@ Linux安装：（基于yum安装）
 ```
 [nginx]
 name=nginx repo
-baseurl=http://nginx.org/packages/OS/OSRELEASE/$basearch/
+baseurl=http://nginx.org/packages/centos/66/$basearch/
 gpgcheck=0
 enabled=1
-==> OS - "rhel" or "centos"
-==> OSRELEASE - 对应的版本，如6，7
 ```
 - 查看nginx相关安装包：
 
@@ -1286,4 +1284,67 @@ make: *** [all] Error 2
 这是上面configure时没有指定openssl源码，需要从[OpenSSL](https://www.openssl.org/source/)下载对应的源码，我这里下载的是openssl3.0，那么configure如下：
 ```
 ./configure --with-openssl=/Users/user/Documents/develop/env/openssl-3.0.0 -j8
+```
+
+## 3、前后端分离项目部署
+
+```conf
+server
+    {
+        listen 80;
+        server_name 47.98.230.117;
+        index index.html;
+        root  /home/sonar/dist;  #dist上传的路径
+
+        # 避免访问出现 404 错误
+        location / {
+          try_files $uri $uri/ @router;
+          index  index.html;
+        }
+
+        location @router {
+          rewrite ^.*$ /index.html last;
+        }
+
+        # 接口
+        location /api {
+          proxy_pass http://172.17.0.1:8000;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+
+        # 授权接口
+        location /auth {
+          proxy_pass http://172.17.0.1:8000;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+
+        # WebSocket 服务
+        location /webSocket {
+          proxy_pass http://172.17.0.1:8000;
+          proxy_set_header X-Forwarded-Proto $scheme;
+          proxy_set_header X-Forwarded-Port $server_port;
+          proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+          proxy_set_header Upgrade $http_upgrade;
+          proxy_set_header Connection "upgrade";
+        }
+
+        # 头像
+        location /avatar {
+          proxy_pass http://172.17.0.1:8000;
+        }
+
+        # 文件
+        location /file {
+          proxy_pass http://172.17.0.1:8000;
+        }
+    }
+
 ```
