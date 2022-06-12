@@ -1184,34 +1184,43 @@ esac
 
 ### 1.1、yum安装
 
-- 安装一些依赖：
-	* yum -y install wget httpd-tools vim
-	* yum -y install gcc gcc-c++ autoconf pcre pcre-devel make automake
-
-- 初始化：
-	* cd /opt； mkdir app download log work backup
-
-Linux安装：（基于yum安装）
-
-- 在 /etc/yum.repos.d/ 目录下新建文件 nginx.repo，在文件中输入：
+> （1）配置 EPEL 源
 ```
-[nginx]
-name=nginx repo
-baseurl=http://nginx.org/packages/centos/66/$basearch/
-gpgcheck=0
-enabled=1
+sudo yum install -y epel-release
+sudo yum -y update
 ```
-- 查看nginx相关安装包：
+> （2）安装 Nginx
+```
+sudo yum install -y nginx
+```
+- 安装成功后，默认的网站目录为： `/usr/share/nginx/html`
+- 默认的配置文件为：`/etc/nginx/nginx.conf`
+- 自定义配置文件目录为: `/etc/nginx/conf.d/`
 
-	yum list | grep nginx
-
-- 安装：
-
-	yum install nginx
-
-- nginx -v：查看版本好
-
-	nginx -V：查看对应的编译参数
+启动 Nginx
+```
+systemctl start nginx
+```
+停止 Nginx
+```
+systemctl stop nginx
+```
+重启 Nginx
+```
+systemctl restart nginx
+```
+查看 Nginx 状态
+```
+systemctl status nginx
+```
+启用开机启动 Nginx
+```
+systemctl enable nginx
+```
+禁用开机启动 Nginx
+```
+systemctl disable nginx
+```
 
 ### 1.2、tar包安装
 
