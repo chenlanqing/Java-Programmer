@@ -13,10 +13,11 @@ leftNo = parentNo*2+1
 rightNo = parentNo*2+2
 parentNo = (nodeNo-1)/2
 ```
-
 通过上述三个公式，可以轻易计算出某个节点的父节点以及子节点的下标。这也就是为什么可以直接用数组来存储堆的原因。
 
 PriorityQueue 的`peek()`和`element`操作是常数时间，`add()`, `offer()`, 无参数的`remove()`以及`poll()`方法的时间复杂度都是 $log(N)$
+
+> 注意：PriorityQueue 不是线程安全的，如果在多线程环境下使用，推荐使用：PriorityBlockingQueue
 
 # 2、类
 
