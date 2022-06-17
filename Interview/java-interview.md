@@ -2037,6 +2037,29 @@ private Object rightGroovy(String script, String method, Object... args) {
 
 被设置为唯一索引的列的值是允许有null值的，并且这个列中允许有多个重复的null值
 
+**逻辑删除与唯一键：**
+
+如果数据库表中设置了某个字段为唯一键，然后将这条数据做逻辑删除了，那么再次添加相同内容会报唯一键冲突；因为逻辑删除并未真正的删除表中的数据，哪怕此时我们在业务层做了唯一性校验依然会出现这种问题。因为唯一性校验的SQL默认会拼接上逻辑索引字段，导致无法查出相应数据，最终引发了Duplicate entry。。。
+
+假设有表结构：
+```sql
+CREATE TABLE `test`.`user`  (
+  `id` bigint(20) NOT NULL COMMENT '主键',
+  `is_deleted` tinyint(4) NULL COMMENT '逻辑删除',
+  `username` varchar(255) NULL COMMENT '用户名（唯一）',
+  PRIMARY KEY (`id`),
+  UNIQUE INDEX `uk_username`(`username`) USING BTREE COMMENT '用户名唯一索引';
+);
+```
+现在一种方式是将 is_deleted 和 username 做联合唯一索引，但是这样如果多次删除相同的数据，还是会出现类似的问题
+
+实际解决方案：
+- 去除唯一索引，业务层做完善校验，但是并不推荐，因为即使在应用层做了非常完善的校验控制，只要没有唯一索引，根据墨菲定律，必然有脏数据产生；
+- 建立联合索引，is_deleted字段不要用单纯的0和1来表示，可以用0来表示正常数据，逻辑删除数据可以有以下几种方案来表示（推荐）：
+    - 将删除标识的正常设为固定值,删除值使用叠加值(-1,-2,-3)（该方案需保证字段值为全局递增或全局递减，分布式环境下实现复杂）；
+    - 将删除标识的删除状态设为id（推荐，使用主键确保不会发生索引冲突，并且实现简单）；若使用的是mybatis-plus框架可将logic-delete-value设置为如下：`logic-delete-value: id`
+    - 将删除标识设为当前时间戳（时间戳在极端情况下依旧有索引冲突的风险）；
+
 ## 3、分页查询优化
 
 ### 3.1、一般分页查询
