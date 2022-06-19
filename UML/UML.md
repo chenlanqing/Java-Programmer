@@ -85,6 +85,8 @@
 
 # 三、UML时序图
 
+- [如何画时序图](https://mp.weixin.qq.com/s/VVwN7IIQlYbZAaUG2ORiqg)
+
 Sequence Diagram：是显示对象之间交互的图，这些对象是按时间顺序排列的，时序图中包括的建模元素主要有：对象、生命线、控制焦点、消息等
 
 # 参考资料
