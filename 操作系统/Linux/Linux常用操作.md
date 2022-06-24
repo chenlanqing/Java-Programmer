@@ -658,6 +658,33 @@ rm: cannot remove ‘authorized_keys’: Operation not permitted
 
 在端口45678上的TCP连接状态：`lsof -nP -i4TCP:45678`
 
+## 17、注册系统服务
+
+比如需要将gateway注册为一个服务，可以在目录：`/etc/systemd/system` 新建一个文件：`gateway.service`，内容如下：
+```bash
+[Unit]
+Description=gateway
+Requires=network.target remote-fs.target
+#After=kafka.service zookeeper.service nginx.service emqttd.service mysqld.service redisd.service
+
+[Service]
+Type=simple
+User=root
+Environment=HOME=/home/gateway
+#Environment=JAVA_HOME=/data/tools/java
+WorkingDirectory=/home/gateway
+ExecStart=/bin/sh -c 'java -jar /home/gateway/gateway-1.0-SNAPSHOT.jar --spring.profiles.active=dev >/home/gateway/nohup.out 2>&1 '
+ExecStop=/usr/bin/kill -9 
+Restart=on-failure
+[Install]
+WantedBy=multi-user.target
+```
+那么针对这个服务，可以使用：
+```
+systemctl start gateway
+systemctl restart gateway
+```
+
 # 四、Linux工具
 
 vmstat 可以获得有关进程、内存页面交换、虚拟内存、线程上下文切换、等待队列等信息。能够反映系统的负载情况。一般用来查看进程等待数量、内存换页情况、系统上下文切换是否频繁等

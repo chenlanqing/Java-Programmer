@@ -2915,3 +2915,4 @@ Kafka 自定义了一组基于 TCP 的二进制协议，只要遵守这组协议
 * [Kafka进阶面试题2](https://mp.weixin.qq.com/s/2QA_UIE_ciTJDQ4kbUkl-A)
 * [Kafka与RocketMQ](https://mp.weixin.qq.com/s/WwHnyrOnw_io7G3uviim3Q)
 * [Kafka高性能原因](https://mp.weixin.qq.com/s/XhJl90DnprNsI8KxFfdyVw)
+* [Kafka架构调优最常见的5个问题](https://heapdump.cn/article/3802138)
