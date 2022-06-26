@@ -11,6 +11,9 @@ https://blog.hyperzsb.tech/git-ssl-error/
 
 https://blog.csdn.net/weixin_41010198/article/details/119698015
 
+# 4、修改默认分支
+
+https://cyfeng.science/2020/12/21/rename-github-branch-from-master-to-main/
 
 
 

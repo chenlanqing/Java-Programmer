@@ -1900,7 +1900,6 @@ finally代码块的编译：复制finally代码块的内容，分别放在try-ca
 
 # 10、Java编译
 
-[JIT编译](https://tech.meituan.com/2020/10/22/java-jit-practice-in-meituan.html)
 
 ## 10.1、编译步骤
 
@@ -2033,7 +2032,7 @@ public class FanxingTest{
 
 ## 10.4、JIT编译-后端编译
 
-- [详解JIT编译](https://tech.meituan.com/2020/10/22/java-jit-practice-in-meituan.html)
+- [Java即时编译器原理解析及实践](https://tech.meituan.com/2020/10/22/java-jit-practice-in-meituan.html)
 
 几个问题：
 - 为何HotSpot虚拟机要使用解释器和编译器并存的架构？

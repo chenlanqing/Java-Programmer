@@ -6121,6 +6121,8 @@ measurement与warmup的参数是一样的，不同于预热，其指的是真正
 
 # 二十九、本地方法(native)
 
+- [Linux下跨语言调用C++实践](https://mp.weixin.qq.com/s/vA69QGfZeKRlxZs_v_DQkw)
+
 ## 1、本地方法加载
 
 JDK 提供给了我们两个方法用于载入库文件，一个是`System.load(String filename)`方法，另一个是`System.loadLibrary(String libname)`方法，他们的区别主要如下：
