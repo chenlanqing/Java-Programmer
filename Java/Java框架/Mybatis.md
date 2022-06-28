@@ -440,6 +440,11 @@ public Object intercept(Invocation invocation) throws Throwable {
 
 PageHelper
 
+## 6、MyBatis Generator
+
+- [MyBatis Mapper](https://mapper.mybatis.io/)
+- [mybatis-generator-gui](https://github.com/zouzg/mybatis-generator-gui)
+
 # 七、Tkmapper
 
 # 八、mybatis-plus
