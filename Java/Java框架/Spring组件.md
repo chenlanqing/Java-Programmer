@@ -83,3 +83,22 @@ public static class SchedulingConfiguration {
 @SpringBootTest(XXX.class)
 ```
 [详细参考配置](https://stackoverflow.com/questions/29014496/disable-enablescheduling-on-spring-tests)
+
+
+# 五、单元测试
+
+## 1、junit5
+
+在SpringBoot2中，其将junit5作为其单元测试组件，junit5和junit4存在很多不同之处
+
+如果需要做些前置或者后置工作，需要增加`@TestInstance`注解
+```java
+@SpringBootTest(classes = Application.class)
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+public class TestController{
+    @BeforeAll
+    public void setup() {
+        // 做前置工作
+    }
+}
+```
