@@ -1420,7 +1420,8 @@ Long milliSecond = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMil
 - [Java 8 Lambda 揭秘](https://colobu.com/2014/11/06/secrets-of-java-8-lambda/)
 - [使用idea调试Lambda](https://www.jetbrains.com/help/idea/analyze-java-stream-operations.html)
 
-Lambda表达式语法
+#### 1.8.1、Lambda表达式语法
+
 ```java
 // 之前的语法
 new Thread(new Runnable() {
@@ -1433,58 +1434,9 @@ new Thread(new Runnable() {
 new Thread(() -> System.out.println("我是Lambda线程")).start();
 ```
 
-#### 1.8.1、函数式接口与函数式编程
+> Lambda表达式是延迟执行的
 
-函数式接口是只包含一个方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
-
-java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解@FunctionalInterface进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
-
-Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现；Lambda 表达式对于全局变量和静态变量可以没有限制的使用，但是对于局部变量必须显示声明为 final
-
-函数式编程更加强调程序执行的结果而非执行的过程，倡导利用若干简单的执行单元让计算结果不断渐进，逐层推导复杂的运算，而不是设计一个复杂的执行过程；
-- 函数的执行没有副作用；
-- 返回值仅依赖于输入参数；
-- 函数的参数可以是一个/多个函数；
-- 函数的返回值也可以是一个函数；
-
-**Predicate**
-
-这个接口中定义了一个test()的抽象方法，它接受泛型 T 对象，并返回一个 boolean。你如果需要 表示一个涉及类型 T 的布尔表达式时，就可以使用这个接口；
-```java
-public static List<Flower> filterFlower(List<Flower> flowers, Predicate<Flower> p) {
-    List<Flower> resList = new ArrayList<>();
-    for (Flower flower : flowers) {
-        if (p.test(flower)) {
-            resList.add(flower);
-        }
-    }
-    return resList;
-}
-/*****      使用方式        *****/
-filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);
-```
-
-**Consumer**
-
-这个接口定义了一个accept()的抽象方法，它接受泛型 T 对象，没有返回（void）。你如果需要访问类型 T 的对象，并对其执行某些操作，就可以使用这个接口
-```java
-List<Integer> nums = Arrays.asList(1,2,3,4);
-nums.forEach(integer -> System.out.println(integer));
-```
-
-**Function**
-
-这个接口定义了一个apply()的抽象方法，它接受泛型 T 对象，并返回一个泛型 R 的对象。你如果需要定义一个Lambda，将输入对象的信息映射输出，就可以使用这个接口
-```java
-(String s) -> s.length()
-```
-
-**Supplier**
-
-这个接口定义了一个get()的抽象方法，它没有传入参数，会返回一个泛型 T 的对象，如果你需要定义一个 Lambda，输出自定义的对象，就可以使用这个接口
-```java
-Callable<Integer> call = () -> 1 ;
-```
+[函数式接口与编程参考如下](#19函数式接口与函数式编程)
 
 #### 1.8.2、类型检查
 
@@ -1689,6 +1641,89 @@ metafactory 方法入参：
 ![](image/Lambda-debug信息.png)
 
 #### 1.8.8、Lambda性能
+
+### 1.9、函数式接口与函数式编程
+
+- [详解JAVA8函数式接口](https://www.cnblogs.com/dgwblog/p/11739500.html)
+
+#### 1.9.1、概览
+
+![](image/Java函数式编程.png)
+
+函数式接口：是有且仅有一个抽象方法的接口。比如Java标准库中的java.lang.Runnable和java.util.Comparator都是典型的函数式接口；
+
+> 注意：函数式接口指的是有且仅有一个抽象方法的接口，如果接口有其他默认方法也可以认为是函数式接口，比如：BiConsumer
+```java
+@FunctionalInterface
+public interface BiConsumer<T, U> {
+    void accept(T t, U u);
+    default BiConsumer<T, U> andThen(BiConsumer<? super T, ? super U> after) {
+        Objects.requireNonNull(after);
+        return (l, r) -> {
+            accept(l, r);
+            after.accept(l, r);
+        };
+    }
+}
+```
+java 8提供 `@FunctionalInterface` 作为注解，这个注解是非必须的，只要接口符合函数式接口的标准（即只包含一个方法的接口），虚拟机会自动判断，但 好在接口上使用注解`@FunctionalInterface`进行声明，以免团队的其他人员错误地往接口中添加新的抽象方法。 
+
+Java中的lambda无法单独出现，它需要一个函数式接口来盛放，lambda表达式方法体其实就是函数接口的实现；Lambda 表达式对于全局变量和静态变量可以没有限制的使用，但是对于局部变量必须显示声明为 final
+
+函数式编程更加强调程序执行的结果而非执行的过程，倡导利用若干简单的执行单元让计算结果不断渐进，逐层推导复杂的运算，而不是设计一个复杂的执行过程；
+- 函数的执行没有副作用；
+- 返回值仅依赖于输入参数；
+- 函数的参数可以是一个/多个函数；
+- 函数的返回值也可以是一个函数；
+
+常用函数式接口
+- Supplier 你要作为一个供应者,自己生产数据
+- Consumer 你要作为一个消费者,利用已经准备数据
+- Supplier 你要作为一个供应者,自己生产数据
+- Consumer 你要作为一个消费者,利用已经准备数据
+- Function  输入一个或者两个不同或者相同的值转为另一个值
+- Predicate 输入一个或者两个不同或者相同的值总是输出boolean
+- UnaryOperator 输入一个值转换为相同值输出
+- BinaryOperator 输入两个相同类型的值 转为相同类型的值输出 
+
+**Predicate**
+
+这个接口中定义了一个test()的抽象方法，它接受泛型 T 对象，并返回一个 boolean。你如果需要 表示一个涉及类型 T 的布尔表达式时，就可以使用这个接口；
+```java
+public static List<Flower> filterFlower(List<Flower> flowers, Predicate<Flower> p) {
+    List<Flower> resList = new ArrayList<>();
+    for (Flower flower : flowers) {
+        if (p.test(flower)) {
+            resList.add(flower);
+        }
+    }
+    return resList;
+}
+/*****      使用方式        *****/
+filterFlower(flowerList, (Flower flower) -> flower.getPrice() > 8);
+```
+
+**Consumer**
+
+这个接口定义了一个accept()的抽象方法，它接受泛型 T 对象，没有返回（void）。你如果需要访问类型 T 的对象，并对其执行某些操作，就可以使用这个接口
+```java
+List<Integer> nums = Arrays.asList(1,2,3,4);
+nums.forEach(integer -> System.out.println(integer));
+```
+
+**Function**
+
+这个接口定义了一个apply()的抽象方法，它接受泛型 T 对象，并返回一个泛型 R 的对象。你如果需要定义一个Lambda，将输入对象的信息映射输出，就可以使用这个接口
+```java
+(String s) -> s.length()
+```
+
+**Supplier**
+
+这个接口定义了一个get()的抽象方法，它没有传入参数，会返回一个泛型 T 的对象，如果你需要定义一个 Lambda，输出自定义的对象，就可以使用这个接口
+```java
+Callable<Integer> call = () -> 1 ;
+```
 
 ## 2、JDK9
 
