@@ -55,6 +55,17 @@ v-if 和 v-show 区别：
 
 v-for 加上 key 值是为了给 vue一个提示，以便其能跟踪每个节点的身份，从而重用和重新排序现有元素，key是唯一标识，快速找到节点
 
+## 表单
+
+v-model 在内部为不同的输入元素使用不同的 property 并抛出不同的事件：
+- text 和 textarea 元素使用 value property 和 input 事件；
+- checkbox 和 radio 使用 checked property 和 change 事件；
+- select 字段将 value 作为 prop 并将 change 作为事件。
+
+### 复选框
+
+- 单个复选框：v-model的值为布尔值
+- 多个复选框：v-model绑定的是数组
 
 
 阅读Vue3的源码最好是熟悉 TypeScript 和 ES6
