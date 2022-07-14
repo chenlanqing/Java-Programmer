@@ -803,11 +803,8 @@ public static String captureName(String name) {
 
 # 参考文章
 
-* [java内存分配和String类型的深度解析](http://www.importnew.com/15671.html)
-* [String类型相关问题](http://www.importnew.com/12845.html)
 * [字符串常量池](http://blog.csdn.net/gaopeng0071/article/details/11741027)
 * [JDK7-String源码](http://www.hollischuang.com/archives/99)
-* [Java 7、8中的String.intern](http://www.importnew.com/12681.html)
 * [深入解析String#intern](https://tech.meituan.com/in_depth_understanding_string_intern.html)
 * [String、StringBuilder、StringBuffer](http://www.cnblogs.com/dolphin0520/p/3778589.html)
 * [String对象创建问题](http://rednaxelafx.iteye.com/blog/774673/)
