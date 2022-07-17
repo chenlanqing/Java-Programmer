@@ -263,6 +263,79 @@ export default {
 
 默认情况下，provide/inject 绑定并不是响应式的
 
+## Vue生命周期
+
+- [生命周期图示](https://v3.cn.vuejs.org/guide/instance.html#%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E5%9B%BE%E7%A4%BA)
+
+![](lifecycle.svg)
+
+
+## 组合式API
+
+### 基本使用
+
+- 使用 ref 实现响应式数据：`const counter = ref(0)`
+- 使用 reactive 也可以实现响应式：
+```js
+const obj = reactive({
+    name: "张无忌",
+    age: 18
+});
+```
+- 通过ES6扩展运算符进行解构使得对象中的属性不是响应式的，可以使用 toRefs 使得解构后的数据重新获得响应式
+```js
+// 解构
+return{...obj}
+// toRefs: import { ref, reactive, toRefs } from 'vue'
+return{...toRefs(obj)}
+```
+
+### 监听
+
+- watch：监听响应式属性的变化，`watch('监听的响应式引用', 回调函数)`
+```js
+watch(counter, (newValue, oldValue) => {
+    console.log("oldValue", oldValue);
+    console.log("newValue", newValue);
+});
+```
+- watchEffect：不需要指定监听的属性，组件初始化的时候会执行一次回调函数，该函数会自动收集所有属性；需要对那个属性进行操作都可以
+```js
+watchEffect(() => {
+    console.log("user.name", user.name);
+});
+```
+这两种的区别：
+- watchEffect：不需要知道监听的属性，自动收集依赖，只要在回调中引用了响应式依赖的属性，只要这些属性发生改变，回调就会执行；
+- watch 只能监听指定的属性；
+
+### computed
+
+```js
+import { ref, computed } from 'vue'
+export default {
+    data() {
+        return {
+        }
+    },
+    setup() {
+        const msg = ref("hello world");
+
+        const reverseMsg = computed(() => {
+            return msg.value.split('').reverse().join('');
+        })
+        function changeMsg() {
+            msg.value = "welcome world"
+        }
+        return { msg, reverseMsg, changeMsg };
+    }
+}
+```
+
+
+
+
+
 
 阅读Vue3的源码最好是熟悉 TypeScript 和 ES6
 
