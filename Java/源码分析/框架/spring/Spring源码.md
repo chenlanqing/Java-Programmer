@@ -737,11 +737,6 @@ https://zhuanlan.zhihu.com/p/54067384
 
 Spring使用AOP（面向切面编程）来实现声明式事务，统一一致的事务抽象是Spring框架的一大优势，无论是全局事务还是本地事务，JTA、JDBC、Hibernate还是JPA，Spring都使用统一的编程模型，使得应用程序可以很容易地在全局事务与本地事务，或者不同的事务框架之间进行切换
 
-
-# 五、SpringFactoriesLoader
-
-[SpringFactoriesLoader](Springboot源码.md#2.2SpringFactoriesLoader)
-
 核心代码：
 - org.springframework.aop.framework.ReflectiveMethodInvocation#proceed
 - 上述方法代码中的 interceptorOrInterceptionAdvice 就是 TransactionInterceptor 的实例，入参是 this 对象，this 是 ReflectiveMethodInvocation 对象；
@@ -874,6 +869,10 @@ protected Object invokeWithinTransaction(Method method, @Nullable Class<?> targe
     }
 }
 ```
+
+# 五、SpringFactoriesLoader
+
+[SpringFactoriesLoader](Springboot源码.md#2.2SpringFactoriesLoader)
 
 # 六、Spring事件
 
