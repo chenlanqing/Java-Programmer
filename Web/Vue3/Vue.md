@@ -332,7 +332,18 @@ export default {
 }
 ```
 
+## SFC-单文件
 
+- [SFC语法](https://v3.cn.vuejs.org/api/sfc-spec.html)
+
+## 路由
+
+- [官方文档](https://router.vuejs.org/zh/introduction.html)
+
+改变URL，但是页面不进行整体刷新；路由可以理解为指向
+
+- `$route`：当前活跃的路由对象
+- `$router`：路由实例
 
 
 
