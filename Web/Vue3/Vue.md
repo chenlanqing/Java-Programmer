@@ -387,7 +387,14 @@ export default {
 
 `const Page = () => import('../views/Page.vue')`
 
+## 状态管理
 
+状态可以理解为数据，将共用的数据进行集中管理
+
+### 使用provide和inject进行状态管理
+
+
+### 使用Vuex
 
 阅读Vue3的源码最好是熟悉 TypeScript 和 ES6
 
