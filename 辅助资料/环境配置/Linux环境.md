@@ -1301,7 +1301,7 @@ make: *** [all] Error 2
 server
     {
         listen 80;
-        server_name 47.98.230.117;
+        server_name 127.0.0.1;
         index index.html;
         root  /home/sonar/dist;  #dist上传的路径
 
