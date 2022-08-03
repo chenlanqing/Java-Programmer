@@ -276,7 +276,7 @@ Maven settings.xml 使用私服：
 		<!--*指的是访问任何仓库都使用我们的私服-->
 		<mirrorOf>*</mirrorOf>
 		<!--该镜像的URL。构建系统会优先考虑使用该URL，而非使用默认的服务器URL。 -->
-		<url>http://47.98.230.117:8081/repository/maven-public/</url>
+		<url>http://localhost:8081/repository/maven-public/</url>
 	</mirror>
 </mirrors> 
 ```
