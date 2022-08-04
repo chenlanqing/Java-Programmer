@@ -2,55 +2,80 @@
 
 ## 1.1、基本思想
 
-在要排序的一组数中，对当前还未排好序的范围内的全部数，自上而下对相邻的两个数依次进行比较和调整，让较大的数往下沉，较小的往上冒。即：每当两相邻的数比较后发现它们的排序与排序要求相反时，就将它们互换；
+第 i (i = 1，2，… ) 趟排序时从序列中前 n - i + 1 个元素的第 1 个元素开始，相邻两个元素进行比较，若前者大于后者，两者交换位置，否则不交换；
 
-时间复杂度 $O(n^2)$
+冒泡排序法是通过相邻元素之间的比较与交换，使值较小的元素逐步从后面移到前面，值较大的元素从前面移到后面，就像水底的气泡一样向上冒，故称这种排序方法为冒泡排序法
 
-## 1.2、实现
+**排序步骤：**
+- 先将序列中第 1 个元素与第 2 个元素进行比较，若前者大于后者，则两者交换位置，否则不交换；
+- 然后将第 2 个元素与第 3 个元素比较，若前者大于后者，则两者交换位置，否则不交换；
+- 依次类推，直到第 n - 1 个元素与第 n 个元素比较（或交换）为止。经过如此一趟排序，使得 n 个元素中值最大元素被安置在序列的第 n 个位置上。
+- 此后，再对前 n - 1 个元素进行同样过程，使得该 n - 1 个元素中值最大元素被安置在第 n - 1 个位置上。
+- 然后再对前 n - 2 个元素重复上述过程，直到某一趟排序过程中不出现元素交换位置的动作，排序结束
+
+**时间复杂度分析：**
+
+- 最好的情况下，初始时序列已经是从小到大有序（升序），则只需经过一趟 n - 1 次元素之间的比较，并且不移动元素，算法就可结束排序。此时，算法的时间复杂度为 $O(N)$。
+- 最差的情况是当参加排序的初始序列为逆序，或者最小值元素处在序列的最后时，则需要进行 n - 1 趟排序，总共进行$n*(n-1)/2$次元素之间的比较，因此，冒泡排序算法的平均时间复杂度为 $O(N^2)$
+
+冒泡排序方法在排序过程中需要移动较多次数的元素。因此，冒泡排序方法比较适合于参加排序序列的数据量较小的情况，尤其是当序列的初始状态为基本有序的情况；而对于一般情况，这种方法是排序时间效率最低的一种方法
+
+## 1.2、基本实现
 
 ```java
-public void bubble(int[] A) {
-	for (int i = A.length - 1; i >= 0; i--) {
-		// 找到0-i间的最大元素放到A[i]
-		bubble(A, 0, i + 1);
-	}
-}
-private void bubble(int[] A, int i, int j) {
-	for (int k = 0; k < j - 1; k++) {
-		if (A[k] > A[k + 1]) {
-			ArrayUtils.exchange(A, k, k + 1);
-		}
-	}
-}
-// 优化
-public void sort(int[] arr， int n) {
-	for (int i = 0; i < n; i++) {
-		for (int j = 0; j < n - i - 1; j++) { // 每排序一趟，则必然后面有一个已经有序，可以缩小排序的范围
-			if (arr[j] > arr[j + 1]) {
-				ArrayUtils.exchange(arr， j， j + 1);
+public static void bubbleSort(int[] nums) {
+	int len = nums.length;
+	int temp;
+	for (int i = 0; i < len; i++) {
+		for (int j = 0; j < len - 1; j++) {
+			if (nums[j] > nums[j + 1]) {
+				temp = nums[j];
+				nums[j] = nums[j + 1];
+				nums[j + 1] = temp;
 			}
 		}
 	}
 }
 ```
 
-## 1.3、优化方案
-
-加一个标记来判断每一趟排序时是否交换过数据，如果哪一趟排序没有交换数据，则这时就已经有序了
+## 1.3、优化方案1
 
 ```java
-public void sort(int[] arr， int n) {
-	boolean flag;
-	for (int i = 0; i < n; i++) {
-		flag = true;
-		for (int j = 0; j < n - i - 1; j++) {
-			if (arr[j] > arr[j + 1]) {
-				ArrayUtils.exchange(arr, j, j + 1);// 交换数据
-				flag = false;
+public static void bubbleSort(int[] nums) {
+	int len = nums.length;
+	int temp;
+	for (int i = 0; i < len; i++) {
+		for (int j = 0; j < len - i - 1; j++) {// 每排序一趟，则必然后面有一个已经有序，可以缩小排序的范围
+			if (nums[j] > nums[j + 1]) {
+				temp = nums[j];
+				nums[j] = nums[j + 1];
+				nums[j + 1] = temp;
+			}
+		}
+	}
+}
+```
+
+## 1.4、优化方案2
+
+在排序中，如果某个数组可能是近似有序的，只需要经过少量几次循环就能排序，所以在前面1.3的基础上，还可以加一个标记来判断每一趟排序时是否交换过数据，如果哪一趟排序没有交换数据，则这时就已经有序了
+```java
+public static void bubbleSort(int[] nums) {
+	int len = nums.length;
+	int temp;
+	boolean sorted;
+	for (int i = 0; i < len; i++) {
+		sorted = true;
+		for (int j = 0; j < len - 1; j++) {
+			if (nums[j] > nums[j + 1]) {
+				temp = nums[j];
+				nums[j] = nums[j + 1];
+				nums[j + 1] = temp;
+				sorted = false; // 如果排序了，则将标记字段设置为false
 			}
 		}
 		// 如果在一次循环过程中没有发生数据交换，表示数组已经有序了
-		if (flag){
+		if (sorted) {
 			break;
 		}
 	}
@@ -61,7 +86,19 @@ public void sort(int[] arr， int n) {
 
 ## 2.1、基本思想
 
-在要排序的一组数中，选出最小的一个数与第一个位置的数交换；然后在剩下的数当中再找最小的与第二个位置的数交换，如此循环到倒数第二个数和最后一个数比较为止。选择排序算法的时间复杂度为 $O(n^2)$，空间复杂度为 $O(1)$
+第 i 趟排序从序列的后 n − i + 1 (i = 1, 2, …, n − 1) 个元素中选择一个值最小的元素与该 n - i + 1 个元素的最前面那个元素交换位置，即与整个序列的第 i 个位置上的元素交换位置。如此下去，直到 i == n − 1，排序结束
+
+可以简述为：每一趟排序中，从剩余未排序元素中选择一个最小的元素，与未排好序的元素最前面的那个元素交换位置
+
+**基本步骤：**
+- 在算法中设置整型变量 i，既可以作为排序趟数的计算，同时也作为执行第 i 趟排序时，参加排序的后 n − i + 1 个元素的第 1 个元素的位置。
+- 整型变量 min_i 记录这 n − i + 1 个元素中值最小元素的位置。
+- 每一趟排序开始，先另 min_i = i （即暂时假设序列的第 i 个元素为值最小者，以后经过比较后视实际情况再正式确定最小值元素的位置）。
+- 第 i 趟排序比较结束时，这 n − i + 1 个元素中真正的值最小元素为下标 min_i 对应的元素。此时，若有 min_i == i，说明值最小元素就是这 n − i + 1 个元素的第 1 个元素，意味着此趟排序不必进行元素交换
+
+选择排序法所进行的元素之间的比较次数与序列的原始状态无关，同时可以确定算法的时间复杂度为 $O(N^2)$
+
+由于值最小元素与未排好序的元素中第 1 个元素的交换动作是在不相邻的元素之间进行的，因此很有可能会改变值相同元素的前后位置，因此，选择排序法是一种不稳定的排序方法
 
 ## 2.2、实现
 
@@ -84,27 +121,6 @@ public void sort(int[] arr， int n) {
 	}
 }
 ```
-实现2：
-```java
-public void sort(int[] A) {
-    for(int i = A.length - 1; i >= 0; i--) {
-        // 0 - A[i]
-        int j = maxIndex(A, 0, i+1);
-        ArrayUtils.exchange(A, i, j);
-    }
-}
-static private int maxIndex(int[] A, int i, int j) {
-    int max = Integer.MIN_VALUE;
-    int maxIndex = j-1;
-    for(int k = j-1; k >= i; k--) {
-        if(max < A[k]) {
-            max = A[k];
-            maxIndex = k;
-        }
-    }
-    return maxIndex;
-}
-```
 
 # 3、插入排序
 
@@ -119,27 +135,29 @@ static private int maxIndex(int[] A, int i, int j) {
 ## 3.2、基本实现
 
 ```java
-public static int[] insertionSort(int[] A, int n) {
-	if(A == null || A.length < 2){
-		return A;
-	}				
-	int index = 0,
-		len = A.length;				
-	for(int i = 0; i < len; i++){
-		index = i;
-		while(index > 0){
-			if(A[index-1] > A[index]){
-				int temp = A[index - 1];
-				A[index - 1] = A[index];
-				A[index] = temp;
-				index --;
-			}else{
-				break;
-			}
-		}
-	}
-	return A;
+public static void insertSort(int[] nums) {
+    int len = nums.length;
+    int temp, j;
+    for (int i = 1; i < len; i++) {
+		// 将第一个元素作为一个有序序列，将第 2 ~ n - 1 个元素作为无序序列
+        temp = nums[i];
+        j = i;
+		// 从当前元素开始，找到 temp 元素的正确位置
+        while (j > 0 && nums[j - 1] > temp) {
+            nums[j] = nums[j - 1];
+            j--;
+        }
+        nums[j] = temp;
+    }
 }
+```
+过程：有数组`{1, 6, 9, 3, 7, 2, 8, 5, 4}` ，比如此时 i = 3，那么 `nums[3] = 3; j=3`，那么需要往前找到3元素的正确位置
+```
+while第一次-while (3 > 0 && nums[3 - 1](9) > temp(3))：1	6	9	9	7	2	8	5	4	
+while第二次-while (2 > 0 && nums[2 - 1](6) > temp(3))：1	6	6	9	7	2	8	5	4	
+while第三次-while (1 > 0 && nums[1 - 1](1) < temp(3))，那么此时退出 while 循环
+此时找到3元素的正确位置：j = 1，然后赋值，完成此轮排序
+1	3	6	9	7	2	8	5	4	
 ```
 
 ## 3.3、插入排序
@@ -176,8 +194,8 @@ public void sort(int[] arr， int n) {
 
 ## 3.5、插入排序性能
 
-- 对于无序的数组，其性能是O(N^2)；
-- 对于有序的数组，其性能是O(N)
+- 对于无序的数组，其性能是$O(N^2)$；
+- 对于有序的数组，其性能是$O(N)$
 
 ## 3.6、希尔排序
 
@@ -1121,31 +1139,4 @@ private static void radixSortForPositive(int[] arr) {
 
 * [快速排序算法实现原理](http://www.cnblogs.com/nullzx/p/5880191.html)
 * [计数排序](https://mp.weixin.qq.com/s/WGqndkwLlzyVOHOdGK7X4Q)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+* 
