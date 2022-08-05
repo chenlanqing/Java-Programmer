@@ -1241,3 +1241,202 @@ Async实现原理：其主要实现类是 ThreadPoolTaskExecutor，Spring自己�
 ## 7.2、远程异步调用
 
 Spring5.0 WebClient
+
+# 8、定制请求体和响应体
+
+## 8.1、请求体：RequestBodyAdvice
+
+### 8.1.1、基本含义
+
+```java
+public interface RequestBodyAdvice {
+	
+	boolean supports(MethodParameter methodParameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType);
+
+	HttpInputMessage beforeBodyRead(HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType) throws IOException;
+
+	Object afterBodyRead(Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType);
+
+	@Nullable
+	Object handleEmptyBody(@Nullable Object body, HttpInputMessage inputMessage, MethodParameter parameter, Type targetType, Class<? extends HttpMessageConverter<?>> converterType);
+}
+```
+该接口表示允许在请求体被读取并转换为一个对象之前定制请求，也允许在结果对象作为`@RequestBody`或`HttpEntity`方法参数传递到控制器方法之前处理它。
+
+这个接口的实现可以直接用`RequestMappingHandlerAdapter`注册，或者更可能的是用`@ControllerAdvice`注释，在这种情况下，都会被自动检测
+
+### 8.1.2、原理
+
+所有`ResponseBodyAdvice`接口的调用是发生在`AbstractMessageConverterMethodArgumentResolver`的`readWithMessageConverters()`中：
+```java
+protected <T> Object readWithMessageConverters(HttpInputMessage inputMessage, MethodParameter parameter, Type targetType) 
+        throws IOException, HttpMediaTypeNotSupportedException, HttpMessageNotReadableException {
+    ...
+        if (genericConverter != null ? genericConverter.canRead(targetType, contextClass, contentType) :
+                (targetClass != null && converter.canRead(targetClass, contentType))) {
+            if (message.hasBody()) {
+                // 执行的是 RequestBodyAdvice的beforeBodyRead
+                HttpInputMessage msgToUse = getAdvice().beforeBodyRead(message, parameter, targetType, converterType);
+                body = (genericConverter != null ? genericConverter.read(targetType, contextClass, msgToUse) :
+                        ((HttpMessageConverter<T>) converter).read(targetClass, msgToUse));
+                // 执行的是 RequestBodyAdvice的afterBodyRead
+                body = getAdvice().afterBodyRead(body, msgToUse, parameter, targetType, converterType);
+            } else {
+                // 如果没有请求参数，则执行的是 handleEmptyBody
+                body = getAdvice().handleEmptyBody(null, message, parameter, targetType, converterType);
+            }
+            break;
+        }       
+    ... 
+}
+```
+- 如果handler方法的请求参数是非`HttpEntity`对象且handler方法由`@RequestBody`注解修饰，那么`readWithMessageConverters()`的调用发生在`RequestResponseBodyMethodProcessor#readWithMessageConverters()`中；
+- 如果handler方法的请求参数是`HttpEntity`对象，那么`readWithMessageConverters()`的调用发生在`org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor#resolveArgument`中
+
+其加载过程类似 ResponseBodyAdvice
+
+## 8.2、响应体：ResponseBodyAdvice
+
+### 8.2.1、基本含义
+
+```java
+public interface ResponseBodyAdvice<T> {
+	boolean supports(MethodParameter returnType, Class<? extends HttpMessageConverter<?>> converterType);
+	@Nullable
+	T beforeBodyWrite(@Nullable T body, MethodParameter returnType, MediaType selectedContentType, Class<? extends HttpMessageConverter<?>> selectedConverterType,
+			ServerHttpRequest request, ServerHttpResponse response);
+}
+```
+该接口表示允许在执行`@ResponseBody`或`ResponseEntity`控制器方法之后，在`HttpMessageConverter`编写响应体之前定制响应。
+
+实现可以直接用`RequestMappingHandlerAdapter`和`ExceptionHandlerExceptionResolver`注册，或者使用用`@ControllerAdvice`注释，在这种情况下，都会被自动检测
+
+### 8.2.2、原理
+
+所有`ResponseBodyAdvice`接口的调用是发生在`AbstractMessageConverterMethodProcessor`的writeWithMessageConverters()中：
+```java
+/*
+ * @param value 需要写入响应体的值，同时也是ResponseBodyAdvice要处理的值
+ * @param returnType the type of the value
+ * @param inputMessage the input messages. Used to inspect the {@code Accept} header.
+ * @param outputMessage the output message to write to
+*/
+protected <T> void writeWithMessageConverters(@Nullable T value, MethodParameter returnType, ServletServerHttpRequest inputMessage, ServletServerHttpResponse outputMessage)
+        throws IOException, HttpMediaTypeNotAcceptableException, HttpMessageNotWritableException {
+```
+- 如果handler方法的返回值是非`ResponseEntity`对象且handler方法由`@ResponseBody`注解修饰，那么`writeWithMessageConverters()`的调用发生在`RequestResponseBodyMethodProcessor#handleReturnValue()`中；
+- 如果handler方法的返回值是`ResponseEntity`对象，那么`writeWithMessageConverters()`的调用发生在`HttpEntityMethodProcessor#handleReturnValue()`中
+
+> Spring是如何选择具体的 Handler的？
+
+所有ResponseBodyAdvice接口的调用是发生在AbstractMessageConverterMethodProcessor的writeWithMessageConverters()中，AbstractMessageConverterMethodProcessor的getAdvice()方法会返回其在构造函数中加载好的RequestResponseBodyAdviceChain对象
+```java
+// AbstractMessageConverterMethodProcessor#writeWithMessageConverters
+...
+body = getAdvice().beforeBodyWrite(body, returnType, selectedMediaType,(Class<? extends HttpMessageConverter<?>>) converter.getClass(), inputMessage, outputMessage);
+...
+// org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodArgumentResolver#getAdvice
+RequestResponseBodyAdviceChain getAdvice() {
+    return this.advice;
+}
+```
+RequestResponseBodyAdviceChain的beforeBodyWrite方法和processBody
+```java
+@Override
+@Nullable
+public Object beforeBodyWrite(@Nullable Object body, MethodParameter returnType, MediaType contentType,Class<? extends HttpMessageConverter<?>> converterType,
+        ServerHttpRequest request, ServerHttpResponse response) {
+    return processBody(body, returnType, contentType, converterType, request, response);
+}
+private <T> Object processBody(@Nullable Object body, MethodParameter returnType, MediaType contentType,Class<? extends HttpMessageConverter<?>> converterType,
+        ServerHttpRequest request, ServerHttpResponse response) {
+    // getMatchingAdvice：从加载好的ResponseBodyAdvice中获取适用于当前handler的ResponseBodyAdvice
+    for (ResponseBodyAdvice<?> advice : getMatchingAdvice(returnType, ResponseBodyAdvice.class)) {
+        if (advice.supports(returnType, converterType)) {
+            // 执行ResponseBodyAdvice的beforeBodyWrite()方法以处理handler方法返回值
+            body = ((ResponseBodyAdvice<T>) advice).beforeBodyWrite((T) body, returnType, contentType, converterType, request, response);
+        }
+    }
+    return body;
+}
+private <A> List<A> getMatchingAdvice(MethodParameter parameter, Class<? extends A> adviceType) {
+    // 获取ResponseBodyAdvice集合
+    List<Object> availableAdvice = getAdvice(adviceType);
+    if (CollectionUtils.isEmpty(availableAdvice)) {
+        return Collections.emptyList();
+    }
+    List<A> result = new ArrayList<>(availableAdvice.size());
+    for (Object advice : availableAdvice) {
+        // 判断ResponseBodyAdvice是否由@ControllerAdvice注解修饰
+        if (advice instanceof ControllerAdviceBean) {
+            ControllerAdviceBean adviceBean = (ControllerAdviceBean) advice;
+            // 判断ResponseBodyAdvice是否适用于当前handler
+            if (!adviceBean.isApplicableToBeanType(parameter.getContainingClass())) {
+                continue;
+            }
+            advice = adviceBean.resolveBean();
+        }
+        if (adviceType.isAssignableFrom(advice.getClass())) {
+            result.add((A) advice);
+        }
+    }
+    return result;
+}
+```
+在`RequestResponseBodyAdviceChain`中，`beforeBodyWrite()`方法调用了`processBody()`方法，`processBody()`方法会遍历所有加载好并且适用于当前handler的`ResponseBodyAdvice`并执行，至此，所有由`@ControllerAdvice`注解修饰的`ResponseBodyAdvice`接口会在这里执行
+
+> 由`@ControllerAdvice`注解修饰的`ResponseBodyAdvice`接口会被SpringMVC框架加载到`RequestResponseBodyMethodProcessor`和`HttpEntityMethodProcessor`这两个返回值处理器中，当这两个返回值处理器将返回值写入response前，适用于当前handler的`ResponseBodyAdvice`接口会被调用，从而可以完成对返回值的定制化改造
+
+### 8.2.3、ResponseBodyAdvice加载
+
+ResponseBodyAdvice的加载是发生在`RequestMappingHandlerAdapter`的`afterPropertiesSet()`方法中
+```java
+public class RequestMappingHandlerAdapter extends AbstractHandlerMethodAdapter implements BeanFactoryAware, InitializingBean {
+    @Override
+	public void afterPropertiesSet() {
+		// 加载ControllerAdviceBean相关内容（同时就会将由@ControllerAdvice注解修饰的ResponseBodyAdvice接口加载）
+		initControllerAdviceCache();
+		if (this.argumentResolvers == null) {
+			List<HandlerMethodArgumentResolver> resolvers = getDefaultArgumentResolvers();
+			this.argumentResolvers = new HandlerMethodArgumentResolverComposite().addResolvers(resolvers);
+		}
+		if (this.initBinderArgumentResolvers == null) {
+			List<HandlerMethodArgumentResolver> resolvers = getDefaultInitBinderArgumentResolvers();
+			this.initBinderArgumentResolvers = new HandlerMethodArgumentResolverComposite().addResolvers(resolvers);
+		}
+		if (this.returnValueHandlers == null) {
+            // 获取返回值处理器，在这里就会完成RequestResponseBodyMethodProcessor和HttpEntityMethodProcessor的初始化，初始化的同时就会完成ResponseBodyAdvice接口的加载
+			List<HandlerMethodReturnValueHandler> handlers = getDefaultReturnValueHandlers();
+			this.returnValueHandlers = new HandlerMethodReturnValueHandlerComposite().addHandlers(handlers);
+		}
+	}
+}
+```
+`initControllerAdviceCache()`会加载`ControllerAdviceBean`相关内容到`RequestMappingHandlerAdapter`中，这其中就包含由`@ControllerAdvice`注解修饰的`ResponseBodyAdvice`接口。然后在`getDefaultReturnValueHandlers()`方法中会创建返回值处理器，在创建`RequestResponseBodyMethodProcessor`和`HttpEntityMethodProcessor`时会使用加载好的ResponseBodyAdvice接口完成这两个返回值处理器的初始化；
+```java
+private List<HandlerMethodReturnValueHandler> getDefaultReturnValueHandlers() {
+    List<HandlerMethodReturnValueHandler> handlers = new ArrayList<>(20);
+    ...
+    //创建并加载HttpEntityMethodProcessor
+    handlers.add(new HttpEntityMethodProcessor(getMessageConverters(),this.contentNegotiationManager, this.requestResponseBodyAdvice));
+    ...
+    //创建并加载RequestResponseBodyMethodProcessor
+    handlers.add(new RequestResponseBodyMethodProcessor(getMessageConverters(), this.contentNegotiationManager, this.requestResponseBodyAdvice));
+    ...
+    return handlers;
+}
+```
+根据`getDefaultReturnValueHandlers()`方法可知，在创建HttpEntityMethodProcessor或者`RequestResponseBodyMethodProcessor`时，会将`RequestMappingHandlerAdapter`加载好的`ResponseBodyAdvice`传入构造函数，并且，无论是`HttpEntityMethodProcessor`还是`RequestResponseBodyMethodProcessor`，其构造函数最终都会调用到父类`AbstractMessageConverterMethodArgumentResolver`的构造函数，并在其中初始化一个`RequestResponseBodyAdviceChain`以完成`ResponseBodyAdvice`的加载
+```java
+public AbstractMessageConverterMethodArgumentResolver(List<HttpMessageConverter<?>> converters, @Nullable List<Object> requestResponseBodyAdvice) {
+    Assert.notEmpty(converters, "'messageConverters' must not be empty");
+    this.messageConverters = converters;
+    this.allSupportedMediaTypes = getAllSupportedMediaTypes(converters);
+    this.advice = new RequestResponseBodyAdviceChain(requestResponseBodyAdvice);
+}
+```
+
+## 8.3、使用场景
+
+- 通用加密和解密操作
+
