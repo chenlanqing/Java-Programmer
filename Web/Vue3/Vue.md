@@ -394,7 +394,10 @@ export default {
 ### 使用provide和inject进行状态管理
 
 
-### 使用Vuex
+## Vuex
+
+Vuex 是一个专为 Vue.js 应用程序开发的状态管理模式 + 库
+
 
 阅读Vue3的源码最好是熟悉 TypeScript 和 ES6
 
