@@ -26,3 +26,4 @@
 - [Rust程序设计语言](https://kaisery.github.io/trpl-zh-cn/title-page.html)
 - [Rust](https://docs.rs/)
 - [Rust国内镜像](https://rsproxy.cn/)
+- [Rust Course](https://github.com/sunface/rust-course)
