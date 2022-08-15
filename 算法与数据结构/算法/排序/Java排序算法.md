@@ -326,6 +326,8 @@ public static int[] shellSort2(int[] A, int n) {
 
 ![](image/归并排序-合并过程-1.png) ![](image/归并排序-合并过程-2.png) 
 
+> 在理解归并排序的时候，在归并阶段，可以将数据归并阶段看做合并两个有序数组的过程
+
 ## 4.2、实现
 
 ```java
