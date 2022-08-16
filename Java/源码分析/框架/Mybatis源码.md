@@ -253,7 +253,49 @@ private void settingsElement(Properties props) throws Exception {
 
 总结：解析文件的每一个信息保存在Configuration中，返回包含Configuration的DefaultSqlSessionFactory
 
-## 2.6、Spring中SqlSessionFactory初始化
+## 2.6、SpringBoot中SqlSessionFactory初始化
+
+自动装配类：`org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration`
+```java
+@org.springframework.context.annotation.Configuration
+@ConditionalOnClass({ SqlSessionFactory.class, SqlSessionFactoryBean.class })
+@ConditionalOnSingleCandidate(DataSource.class)
+@EnableConfigurationProperties(MybatisProperties.class)
+@AutoConfigureAfter({ DataSourceAutoConfiguration.class, MybatisLanguageDriverAutoConfiguration.class })
+public class MybatisAutoConfiguration implements InitializingBean {
+  // mybatis相关的配置解析
+    public MybatisAutoConfiguration(MybatisProperties properties, ObjectProvider<Interceptor[]> interceptorsProvider, ObjectProvider<TypeHandler[]> typeHandlersProvider, 
+        ObjectProvider<LanguageDriver[]> languageDriversProvider, ResourceLoader resourceLoader, ObjectProvider<DatabaseIdProvider> databaseIdProvider,
+        ObjectProvider<List<ConfigurationCustomizer>> configurationCustomizersProvider,ObjectProvider<List<SqlSessionFactoryBeanCustomizer>> sqlSessionFactoryBeanCustomizers) {
+        this.properties = properties;
+        this.interceptors = interceptorsProvider.getIfAvailable();
+        this.typeHandlers = typeHandlersProvider.getIfAvailable();
+        this.languageDrivers = languageDriversProvider.getIfAvailable();
+        this.resourceLoader = resourceLoader;
+        this.databaseIdProvider = databaseIdProvider.getIfAvailable();
+        this.configurationCustomizers = configurationCustomizersProvider.getIfAvailable();
+        this.sqlSessionFactoryBeanCustomizers = sqlSessionFactoryBeanCustomizers.getIfAvailable();
+    }
+    @Bean
+    @ConditionalOnMissingBean
+    public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+        SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
+        ...// 处理各种配置
+        return factory.getObject();
+    }
+}
+```
+SqlSessionFactoryBean：
+```java
+@Override
+public SqlSessionFactory getObject() throws Exception {
+  // 判断 sqlSessionFactory是否为空，如果为空，执行相应的处理逻辑
+  if (this.sqlSessionFactory == null) {
+    afterPropertiesSet();
+  }
+  return this.sqlSessionFactory;
+}
+```
 
 # 3、SqlSession
 
