@@ -1440,3 +1440,21 @@ public AbstractMessageConverterMethodArgumentResolver(List<HttpMessageConverter<
 
 - 通用加密和解密操作
 
+# 9、自定义序列化
+
+- [Jackson序列化-自定义ObjectMapper](../../Java基础/Java基础知识.md#73jackson序列化-自定义objectmapper)
+- [Customize the Jackson ObjectMapper](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.spring-mvc.customize-jackson-objectmapper)
+
+
+增加自定义类型：
+```java
+@Bean
+public Jackson2ObjectMapperBuilderCustomizer customizer(){
+    return new Jackson2ObjectMapperBuilderCustomizer() {
+        @Override
+        public void customize(Jackson2ObjectMapperBuilder builder) {
+             builder.serializerByType(Class<?> clazzType, new JsonSerializer());
+        }
+    };
+}
+```
