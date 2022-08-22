@@ -779,7 +779,7 @@ System.out.println(l + 1 == Long.MIN_VALUE);
 		at java.base/java.math.BigInteger.longValueExact(BigInteger.java:4765)
 		at com.blue.fish.example.base.type.number.TestNumOverLimit.main(TestNumOverLimit.java:25)
 	```
-	注意：不要调用BigInteger的longValue()方法，该方法溢出不报错；
+	注意：不要调用BigInteger的longValue()方法，该方法溢出不报错，它会变成负数，比如通过 BigInteger 调用 Long.MAX_VALUE + 1的操作，然后调用 longValue方法，其值会变成 Long.MIN_VALUE
 
 # 八、面试
 
