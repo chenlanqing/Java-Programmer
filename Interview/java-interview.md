@@ -6013,6 +6013,10 @@ public class Person {
 
 - Lombok 的 `@EqualsAndHashCode` 注解实现 equals 和 hashCode 的时候，默认使用类型所有非 static、非 transient 的字段，且不考虑父类；如果希望改变这种默认行为，可以使用 @EqualsAndHashCode.Exclude 排除一些字段，并设置 callSuper = true 来让子类的 equals 和 hashCode 调用父类的相应方法
 
+## 2、如何提升Java项目启动速度
+
+- [一些可以显著提高大型 Java 项目启动速度的尝试](https://juejin.cn/post/7117815437559070734)
+
 
 # 其他面试题
 
