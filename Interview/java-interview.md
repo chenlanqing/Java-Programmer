@@ -1,8 +1,7 @@
-# 一、Java基础面试题
+# 一、Java基础
 
-https://segmentfault.com/a/1190000017115722
-
-https://segmentfault.com/a/1190000018855112
+- [必备干货](https://segmentfault.com/a/1190000017115722)
+- [技术文章整理](https://segmentfault.com/a/1190000018855112)
 
 ## 1、final面试题 
 
@@ -6012,6 +6011,54 @@ public class Person {
 ### 1.2、Lombok存在的坑
 
 - Lombok 的 `@EqualsAndHashCode` 注解实现 equals 和 hashCode 的时候，默认使用类型所有非 static、非 transient 的字段，且不考虑父类；如果希望改变这种默认行为，可以使用 @EqualsAndHashCode.Exclude 排除一些字段，并设置 callSuper = true 来让子类的 equals 和 hashCode 调用父类的相应方法
+
+### 1.3、@Builder继承问题
+
+比如有两个实体类：User、Account，其中 Account 继承 User
+```java
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+    private Integer id;
+    private String name;
+    private String phone;
+}
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Account extends User{
+    private String accountNo;
+    private String bank;
+}
+```
+上述代码在编译的时候会报错：
+```
+java: com.entity.Account中的builder()无法覆盖com.entity.User中的builder()
+  返回类型com.entity.Account.AccountBuilder与com.entity.User.UserBuilder不兼容
+```
+为了解决上述问题，可以是哟`@SuperBuilder`来替换，使用的时候只需要在父类和子类上都添加该注解
+```java
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class User {
+    private Integer id;
+    private String name;
+    private String phone;
+}
+@Data
+@SuperBuilder
+@NoArgsConstructor
+@AllArgsConstructor
+public class Account extends User{
+    private String accountNo;
+    private String bank;
+}
+```
 
 ## 2、如何提升Java项目启动速度
 
