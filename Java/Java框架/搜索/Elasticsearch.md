@@ -5290,4 +5290,4 @@ https://zhuanlan.zhihu.com/p/102500311
 * [ElasticSearch父子文档](https://blog.csdn.net/laoyang360/article/details/82950393)
 * [ElasticSearch脑图](https://juejin.cn/post/6898505457485217806)
 * [Elasticsearch时间指南](https://juejin.cn/post/6898926871191224334)
-* [高性能elasticsearch ORM开发库](https://my.oschina.net/bboss/blog/1556866)
+* [高性能elasticsearch ORM开发库](https://www.bbossgroups.com/sources-demos.html)
