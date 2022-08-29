@@ -103,3 +103,5 @@ https://plugins.jetbrains.com/docs/intellij/getting-started.html
 https://github.com/judasn/IntelliJ-IDEA-Tutorial/blob/master/plugins-develop.md
 
 https://juejin.cn/post/6844904127990857742
+
+https://juejin.cn/post/7137092683125751815
