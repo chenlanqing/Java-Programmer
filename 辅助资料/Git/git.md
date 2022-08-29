@@ -486,6 +486,12 @@
 - `git reset --hard <指定需要回退版本的之前一个版本号>` 撤销并舍弃版本号之后的提交记录，使用需谨慎
 - `git revert <需要回退版本的当前版本号>` 撤销，但是保留了提交记录
 
+## 5.3、统计代码量
+
+```
+git log --author="username"  --since=2022-04-01 --until=2022-08-30 --format='%aN' | sort -u | while read name; do echo -en "$name\t"; git log --author="$name" --pretty=tformat: --numstat | grep "\(.html\|.java\|.xml\|.properties\)$" | awk '{ add += $1; subs += $2; loc += $1 - $2 } END { printf "added lines: %s, removed lines: %s, total lines: %s\n", add, subs, loc }' -; done
+```
+
 # 参考资料
 
 * [Git教程](https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
