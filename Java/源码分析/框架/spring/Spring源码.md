@@ -610,33 +610,33 @@ refresh方法主要做的事情：
 
 ## 7、注册钩子函数
 
-上面refresh函数式在refreshContext调用的，执行完refresh函数后回去注册shutdownhook，即钩子函数
+上面refresh函数式在refreshContext调用的，先注册钩子函数`SpringApplicationShutdownHook`，然后再调用 refresh
 ```java
 private void refreshContext(ConfigurableApplicationContext context) {
-    refresh(context);
     if (this.registerShutdownHook) {
-        try {
-            context.registerShutdownHook();
-        }
-        catch (AccessControlException ex) {
-            // Not allowed in some environments.
-        }
+        shutdownHook.registerApplicationContext(context);
+    }
+    refresh(context);
+}
+// SpringApplicationShutdownHook
+void registerApplicationContext(ConfigurableApplicationContext context) {
+    addRuntimeShutdownHookIfNecessary();
+    synchronized (SpringApplicationShutdownHook.class) {
+        assertNotInProgress();
+        context.addApplicationListener(this.contextCloseListener);
+        this.contexts.add(context);
     }
 }
-// AbstractApplicationContext
-@Override
-public void registerShutdownHook() {
-    if (this.shutdownHook == null) {
-        // No shutdown hook registered yet.
-        this.shutdownHook = new Thread(SHUTDOWN_HOOK_THREAD_NAME) {
-            @Override
-            public void run() {
-                synchronized (startupShutdownMonitor) {
-                    doClose();
-                }
-            }
-        };
-        Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+private void addRuntimeShutdownHookIfNecessary() {
+    if (this.shutdownHookAdded.compareAndSet(false, true)) {
+        addRuntimeShutdownHook();
+    }
+}
+void addRuntimeShutdownHook() {
+    try {
+        Runtime.getRuntime().addShutdownHook(new Thread(this, "SpringApplicationShutdownHook"));
+    } catch (AccessControlException ex) {
+        // Not allowed in some environments
     }
 }
 ```
