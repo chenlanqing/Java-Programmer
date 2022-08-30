@@ -1440,7 +1440,15 @@ public AbstractMessageConverterMethodArgumentResolver(List<HttpMessageConverter<
 
 - 通用加密和解密操作
 
-# 9、自定义序列化
+# 9、参数解析-HandlerMethodArgumentResolver
+
+通过该接口可以实现自定义参数类型解析，系统已经存在的参数解析器
+- `@RequestParam` 解析 `RequestParamMethodArgumentResolver` (基础类型的默认解析器)
+- `@PathVariable` 解析 `PathVariableMethodArgumentResolver`
+- `@RequestBody` 解析 `RequestResponseBodyMethodProcessor`
+- `@CookieValue` 解析 `ServletCookieValueMethodArgumentResolver`
+
+# 10、自定义序列化
 
 - [Jackson序列化-自定义ObjectMapper](../../Java基础/Java基础知识.md#73jackson序列化-自定义objectmapper)
 - [Customize the Jackson ObjectMapper](https://docs.spring.io/spring-boot/docs/current/reference/html/howto.html#howto.spring-mvc.customize-jackson-objectmapper)
