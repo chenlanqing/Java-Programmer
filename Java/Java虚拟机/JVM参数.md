@@ -656,4 +656,4 @@ java -Xmx3550m -Xms3550m -Xss128k -XX:NewRatio=4 -XX:SurvivorRatio=4 -XX:MaxPerm
 * [JVM参数优化](https://blog.csdn.net/liuxinghao/article/details/73963399)
 * [JVM命令参数大全](https://blog.csdn.net/zero__007/article/details/52848040)
 * [Java HotSpot VM Command-Line Options](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/clopts001.html)
-* [JDK8 Hotspot VM Options](https://chriswhocodes.com/hotspot_options_jdk8.html)
+* [JDK Hotspot VM Options](https://chriswhocodes.com/)
