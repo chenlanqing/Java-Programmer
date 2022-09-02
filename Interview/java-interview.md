@@ -4660,6 +4660,9 @@ dubbo协议采用单一长连接，假设网络为千兆网卡，根据经验每
 
 ## 21、设计一套业务埋点方案
 
+- [埋点代码](https://github.com/pengxurui/EasyTrack)
+- [西瓜视频埋点方案](https://mp.weixin.qq.com/s/iMn--4FNugtH26G90N1MaQ)
+
 由面到点
 - 后端埋点
 - 可视化埋点
