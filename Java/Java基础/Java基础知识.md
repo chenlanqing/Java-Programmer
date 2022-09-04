@@ -6159,6 +6159,7 @@ measurement与warmup的参数是一样的，不同于预热，其指的是真正
 # 二十九、本地方法(native)
 
 - [Linux下跨语言调用C++实践](https://mp.weixin.qq.com/s/vA69QGfZeKRlxZs_v_DQkw)
+- [Java-JNI-Demo](https://liuyehcf.github.io/2018/01/13/Java-JNI-Demo/)
 
 ## 1、本地方法加载
 

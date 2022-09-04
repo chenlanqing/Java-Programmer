@@ -657,3 +657,4 @@ java -Xmx3550m -Xms3550m -Xss128k -XX:NewRatio=4 -XX:SurvivorRatio=4 -XX:MaxPerm
 * [JVM命令参数大全](https://blog.csdn.net/zero__007/article/details/52848040)
 * [Java HotSpot VM Command-Line Options](https://docs.oracle.com/javase/8/docs/technotes/guides/troubleshoot/clopts001.html)
 * [JDK Hotspot VM Options](https://chriswhocodes.com/)
+* [JDK11-GC](https://github.com/ddean2009/www.flydean.com/blob/master/cheatSheet/JDK11GC-cheatsheet.pdf)
