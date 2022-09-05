@@ -1,7 +1,7 @@
 
 # 一、lucene
 
-Lucene 是一个基于 Java 的全文信息检索工具包。
+[Lucene](https://github.com/apache/lucene) 是一个基于 Java 的全文信息检索工具包。
 
 ## 1、全文检索
 
