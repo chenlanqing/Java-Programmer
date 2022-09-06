@@ -542,7 +542,7 @@ public EventPublishingRunListener(SpringApplication application, String[] args) 
 
 ### 4.2.5、Spring事件/监听器设计
 
-[Spring事件监听器](Spring源码.md#五Spring事件)
+[Spring事件监听器](Spring源码.md#六Spring事件)
 
 ## 4.3、监听器事件触发机制
 
@@ -697,7 +697,90 @@ public class FourthListener implements SmartApplicationListener {
 ```
 然后根据上述三种方式添加到框架中；
 
-### 4.4.5、总结
+### 4.4.5、使用@EventListener注解
+
+使用该种方式，无需实现`ApplicationListener`接口，使用`@EventListener`装饰具体方法
+```java
+public class MyEvent extends ApplicationEvent {
+}
+@Component
+public class MyListener {
+    @EventListener
+    public void onApplicationEventBatch(MyEvent event) {
+    }
+}
+```
+使用的时候可以直接注入`ApplicationEventPublisher`
+```java
+@Resource
+private ApplicationEventPublisher applicationEventPublisher;
+// 调用 publishEvent 方法
+applicationEventPublisher.publishEvent(new MyEvent());
+```
+
+### 4.4.6、事件发布顺序
+
+事件默认是同步执行的；
+- 如果两者是通过实现 ApplicationListener 来自定义实现的，则默认按照具体实现的自然顺序执行；
+- 如果一个是通过 ApplicationListener 来实现，另一个是通过 @EventListener 来实现的，则默认是 @EventListener 先执行；
+  
+如果要改变顺序，则可以通过 实现 SmartApplicationListener 接口，并实现方法：`public int getOrder()` 
+
+当然也可以通过注解形式：
+```java
+@Order(-5) // 值越小越先执行
+@EventListener
+public void onApplicationEvent(RechargeEvent rechargeEvent) {
+    System.out.println("~~~~发邮件监听器: " + rechargeEvent.getName());
+}
+```
+
+另外如果需要异步执行，只需要在上面新增一个注解`@Async`即可（注意：需要开启`@EnableAsync`）
+
+### 4.4.7、事件与事务
+
+如果希望事务执行成功后才提交事件，Spring 4.2 除了 EventListener 之外，额外提供了新的注解 TransactionalEventListener ，该注解允许事件绑定到事务一个阶段，主要可以绑定到下面几个阶段：
+- `AFTER_COMMIT`：默认值，用于在事务成功完成后触发事件
+- `AFTER_ROLLBACK`：事务回滚
+- `AFTER_COMPLETION` – 如果事务完成，可以完成 AFTER_COMMIT 和 AFTER_ROLLBACK 两者
+- `BEFORE_COMMIT`：在事务提交之前
+
+如果使用了注解 TransactionalEventListener ，如果在非事务 context 下，也想执行事件，启用参数:`fallbackExecution=true`
+
+```java
+@Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@EventListener
+public @interface TransactionalEventListener {
+	/**
+	 * Phase to bind the handling of an event to.
+	 * <p>The default phase is {@link TransactionPhase#AFTER_COMMIT}.
+	 * <p>If no transaction is in progress, the event is not processed at
+	 * all unless {@link #fallbackExecution} has been enabled explicitly.
+	 */
+	TransactionPhase phase() default TransactionPhase.AFTER_COMMIT;
+	/**
+	 * Whether the event should be handled if no transaction is running.
+	 */
+	boolean fallbackExecution() default false;
+
+	@AliasFor(annotation = EventListener.class, attribute = "classes")
+	Class<?>[] value() default {};
+
+	@AliasFor(annotation = EventListener.class, attribute = "classes")
+	Class<?>[] classes() default {};
+
+	@AliasFor(annotation = EventListener.class, attribute = "condition")
+	String condition() default "";
+
+	@AliasFor(annotation = EventListener.class, attribute = "id")
+	String id() default "";
+}
+```
+> 使用 @TransactionalEventListener 来说实现注解发布需要特别注意异常处理，可能异常会被吞掉不处理；
+
+### 4.4.8、总结
 
 - 实现ApplicationListener接口只针对单一事件监听；
 - 实现 SmartApplicationListener 接口可以针对多种事件监听；
