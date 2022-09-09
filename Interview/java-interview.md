@@ -5890,6 +5890,14 @@ https://mp.weixin.qq.com/s/aCWkUiE1-h5mtDrqEiPKHQ
 
 如果是代码优化细节，你可以挑个简单的来讲，比如复杂的if逻辑条件，可以调整顺序，让程序更高效，这样会让面试官眼前一亮哦。
 
+## 6、如果应用经常请求超时，如何解决这个问题？如何做代码预热
+
+主要是体现JVM层面上的能力，以Dubbo为例：
+
+Dubbo 服务预热功能的核心代码：`org.apache.dubbo.rpc.cluster.loadbalance.AbstractLoadBalance#calculateWarmupWeight`
+
+https://juejin.cn/post/7134547114725965838
+
 # 十八、elasticsearch
 
 ## 1、es查询过程
