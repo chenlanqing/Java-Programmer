@@ -23,24 +23,7 @@ public class BigDecimal extends Number implements Comparable<BigDecimal>
 
 将`double`或者`float`数据转换为`BigDecimal`类型，最好使用`BigDecimal.valueOf()`，而不应该使用`new BigDecimal(double)`，因为：`new BigDecimal(0.1`)会把`0.1`当成: `0.1000000000000000055511151231257827021181583404541015625`，而`valueOf`其内部使用了`String`作为构造函数的入参，所以使用valueOf后`0.1`还是`0.1`
 
-### 2.2、关于除以0的问题
-
-`System.out.println(2 / 0)`  -> `ArithmeticException: / by zero`
-
-`System.out.println(2.0 / 0);` -> `Infinity`
-```
-double i = 1.0 / 0;                
-System.out.println(i);             //Infinity
-System.out.println(i + 1);         //Infinity
-System.out.println(i == i + 1);    //true
- 
-i = 0.0 / 0;
-System.out.println(i);             //NaN
-System.out.println(i + 1);         //NaN
-System.out.println(i == i + 1);    //false
-```
-
-### 2.3、BigDecimal对象比较问题
+### 2.2、BigDecimal对象比较问题
 
 看如下代码，输出是什么？
 ```java
@@ -857,3 +840,58 @@ public class IntegerToFullBinary{
     }
 }
 ```
+
+## 3、关于除以0的问题
+
+`System.out.println(2 / 0)`  -> `ArithmeticException: / by zero`
+
+`System.out.println(2.0 / 0);` -> `Infinity`
+```
+double i = 1.0 / 0;                
+System.out.println(i);             //Infinity
+System.out.println(i + 1);         //Infinity
+System.out.println(i == i + 1);    //true
+ 
+i = 0.0 / 0;
+System.out.println(i);             //NaN
+System.out.println(i + 1);         //NaN
+System.out.println(i == i + 1);    //false
+```
+在Double和Float中都定义了`正无穷`和`负无穷`这两个概念：
+```java
+public final class Float extends Number implements Comparable<Float> {
+    /**
+     * A constant holding the positive infinity of type {@code float}. It is equal to the value returned by {@code Float.intBitsToFloat(0x7f800000)}.
+     */
+    public static final float POSITIVE_INFINITY = 1.0f / 0.0f;
+    /**
+     * A constant holding the negative infinity of type {@code float}. It is equal to the value returned by {@code Float.intBitsToFloat(0xff800000)}.
+     */
+    public static final float NEGATIVE_INFINITY = -1.0f / 0.0f;
+    /**
+     * A constant holding a Not-a-Number (NaN) value of type {@code float}.  It is equivalent to the value returned by {@code Float.intBitsToFloat(0x7fc00000)}.
+     */
+    public static final float NaN = 0.0f / 0.0f;
+}
+// Double
+public final class Double extends Number implements Comparable<Double> {
+    /**
+     * A constant holding the positive infinity of type {@code double}. It is equal to the value returned by {@code Double.longBitsToDouble(0x7ff0000000000000L)}.
+     */
+    public static final double POSITIVE_INFINITY = 1.0 / 0.0;
+    /**
+     * A constant holding the negative infinity of type {@code double}. It is equal to the value returned by {@code Double.longBitsToDouble(0xfff0000000000000L)}.
+     */
+    public static final double NEGATIVE_INFINITY = -1.0 / 0.0;
+    /**
+     * A constant holding a Not-a-Number (NaN) value of type  {@code double}. It is equivalent to the value returned by {@code Double.longBitsToDouble(0x7ff8000000000000L)}.
+     */
+    public static final double NaN = 0.0d / 0.0;
+}
+```
+
+总结：在 Java 里面，除数作为 0，不一定会抛出 ArithmeticException
+- 整数相除，除数为0，会直接编译报错；
+- 浮点数，会返回正负无穷大（小）
+
+> 你要问我为什么，我只能告诉你我遵守的是 IEEE 754 这个国际规范
