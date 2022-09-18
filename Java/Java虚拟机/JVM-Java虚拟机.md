@@ -2531,6 +2531,36 @@ public void addShutdownHook(Thread hook) {
 
 	如果我们使用Java Security Managers，则执行添加/删除shutdownHook的代码需要在运行时具有shutdownHooks权限。否则会导致SecurityException
 
+# 15、JVM预热
+
+- [JVM预热-JIT编译优化](https://juejin.cn/post/6922592506613858311)
+- [JVM预热-TLAB预热](https://juejin.cn/post/6925560351836602375)
+
+无论在测试中还是在线上，我们都会发现在java服务刚开始启动之后，第一个请求会比正常的请求响应时间慢很多，一般会到达几百ms乃至1秒。
+如果我们的调用方服务设置了超时时间，那么在被调用方服务刚启动时，会有极大概率达到超时时间限制，从而发生超时异常。
+
+极端情况：当流量非常大的时候，可能会发现，服务一启动，因为响应时间较慢，立刻被高流量打死，而且永远也启动不起来，甚至会造成整个系统的雪崩。
+
+原理：
+- 1、OpenJDK 使用了 JIT(Just-in-time) 即时编译技术，可以动态的把 Java 字节码编译成高度优化过机器码，提高执行效率，但在编译之前，Java 代码是以相对低效的解释器模式执行的。
+在应用启动完成后、业务流量刚进来的短时间内，容易出现的状况是大量 Java 方法开始被 JIT 编译，同时业务请求被较慢的解释器模式执行，最终的结果就是系统负载飙高，可能导致很多用户请求超时。
+- 2、应用使用的各种资源没有准备好，比如各种连接池等；
+
+预热方案：
+预热是指，在jvm启动后，先不提供给调用方正常的流量，而是利用技术手段，先用小流量将服务进行warmup，直到能够按照合理的响应时间提供服务为止。
+预热方案有目前以下手段：
+- 1、通过流量控制来进行预热：
+	- 1）利用网关的流量控制功能，按照新服务上线时间，给与不同的访问权重，使得服务能够逐渐达到正常访问的热度。
+	- 2）使用sentinel等组件进行warmup限流，在服务上线的时候，将过高的流量直接拦截掉。
+	- 3）spring的ribbon组件策略改造，与网关流量控制策略相同。
+- 2、在服务启动后，可以正常访问前，让服务自己预热
+	- 1）服务开发者进行编码，启动后，初始化模块自己遍历一遍重要的访问接口
+	- 2）利用测试工具组件（Java Microbenchmark Harness（JMH）），启动后遍历访问接口
+	- 3）使用阿里的开源项目龙井，替换jdk，在服务启动时自动加载该加载的类。[阿里龙井使用手册](https://github.com/alibaba/dragonwell8)
+- 3、发布系统中进行配置访问url列表，由发布系统预热
+每个服务的开发者自己进行评估，列出需要预热的url，将这个url列表存入发布系统，由发布系统调用health之前，由curl调用一遍
+
+
 
 # 参考文章
 
@@ -2548,3 +2578,4 @@ public void addShutdownHook(Thread hook) {
 * [Java虚拟机规范（JDK8）](https://docs.oracle.com/javase/specs/jvms/se8/html/index.html)
 * [钩子函数](https://segmentfault.com/a/1190000011496370)
 * [堆外内存](https://www.jianshu.com/p/35cf0f348275)
+* [阿里龙井JDK](https://github.com/alibaba/dragonwell8)

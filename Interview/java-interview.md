@@ -1931,6 +1931,10 @@ private Object rightGroovy(String script, String method, Object... args) {
 
 > 栈上存放的数据是静态的，固定大小，固定生命周期；堆上存放的数据是动态的，不固定大小，不固定生命周期
 
+## 24、为啥 Java 程序越执行越快呢？
+
+
+
 # 六、MySQL
 
 - [100道MySQL数据库经典面试题解析](https://juejin.im/post/5ec15ab9f265da7bc60e1910)
