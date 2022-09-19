@@ -2560,7 +2560,9 @@ public void addShutdownHook(Thread hook) {
 - 3、发布系统中进行配置访问url列表，由发布系统预热
 每个服务的开发者自己进行评估，列出需要预热的url，将这个url列表存入发布系统，由发布系统调用health之前，由curl调用一遍
 
+# 16、Graalvm
 
+- [Java-Graalvm](https://www.graalvm.org/java/)
 
 # 参考文章
 
