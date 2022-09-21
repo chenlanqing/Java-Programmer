@@ -3063,6 +3063,28 @@ IN 是子查询的关键字，JOIN 是连接的关键字；
 
 ## 47、mysql在哪些情况下锁表
 
+
+## 48、ON UPDATE CURRENT_TIMESTAMP使用注意事项
+
+日常工作当中，表中经常会有更新时间字段，如果我们不想手动去维护它，那么可以通过设置自动更新来实现：
+```sql
+`update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间';
+```
+若一个时间列设置了自动更新ON UPDATE，当数据行发生更新时，数据库自动设置该列的值为当前时间；
+
+从MySQL 5.6.5开始，TIMESTAMP和DATETIME列都支持自动更新，且一个表可设置多个自动更新列
+
+在MySQL 5.6.5之前:
+- 只有TIMESTAMP支持自动更新
+- 每个表只能有一个自动更新的时间列
+- 不允许同时存在两个列：其中一个设置了DEFAULT CURRENT_TIMESTAMP，另一个设置了ON UPDATE CURRENT_TIMESTAMP；
+
+**自动更新的触发时机：**
+- 插入时如未指定该列值时；
+- 当该行数据其他列有值变化时，如update：
+    - 如果有更新操作、但其他列值并未变化，不会触发。此时要更新时间戳，需在SQL中指定新值给它（例如CURRENT_TIMESTAMP）；
+    - 如果更新时不想触发，可显式设置时间戳列为当前值
+
 # 七、Spring
 
 ## 1、SpringApplication.run都做了些什么？
