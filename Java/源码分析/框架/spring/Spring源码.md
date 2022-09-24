@@ -953,6 +953,68 @@ private static final class ListenerCacheKey implements Comparable<ListenerCacheK
     }
 }
 ```
+
+# 七、SpringMVC
+
+## 1、DispatcherServlet 
+
+- [SpringMVC 初始化流程分析](http://www.javaboy.org/2021/0315/springmvc-init.html)
+
+DispatcherServlet 是 SpringMVC 的大脑，它负责整个 SpringMVC 的调度工作，是 SpringMVC 中最最核心的类，SpringMVC 整个顶层架构设计都体现在这里；DispatcherServlet 继承自 FrameworkServlet，FrameworkServlet 又继承自 HttpServletBean
+```java
+public class DispatcherServlet extends FrameworkServlet{};
+public abstract class FrameworkServlet extends HttpServletBean implements ApplicationContextAware {}
+public abstract class HttpServletBean extends HttpServlet implements EnvironmentCapable, EnvironmentAware {}
+```
+
+### 1.1、HttpServletBean
+
+HttpServletBean 继承自 HttpServlet，它负责将 init-param 中的参数注入到当前 Servlet 实例的属性中，同时也为子类提供了增加 requiredProperties 的能力，需要注意的是 HttpServletBean 并不依赖于 Spring 容器；HttpServlet 的初始化是从 init 方法开始的
+```java
+@Override
+public final void init() throws ServletException {
+    // Set bean properties from init parameters.
+    PropertyValues pvs = new ServletConfigPropertyValues(getServletConfig(), this.requiredProperties);
+    if (!pvs.isEmpty()) {
+        try {
+            // bw 实际上就代表当前 DispatcherServlet 对象,通过 BeanWrapper 修改目标 Servlet 的相关属性时，有一个 initBeanWrapper 方法是空方法，开发者如有需要可以在子类中实现该方法，并且完成一些初始化操作
+            BeanWrapper bw = PropertyAccessorFactory.forBeanPropertyAccess(this);
+            ResourceLoader resourceLoader = new ServletContextResourceLoader(getServletContext());
+            bw.registerCustomEditor(Resource.class, new ResourceEditor(resourceLoader, getEnvironment()));
+            initBeanWrapper(bw);
+            bw.setPropertyValues(pvs, true);
+        }
+        catch (BeansException ex) {
+            if (logger.isErrorEnabled()) {
+                logger.error("Failed to set bean properties on servlet '" + getServletName() + "'", ex);
+            }
+            throw ex;
+        }
+    }
+    // Let subclasses do whatever initialization they like.
+    initServletBean();
+}
+```
+HttpServletBean 所做的事情，比较简单，加载 Servlet 相关属性并设置给当前 Servlet 对象，然后调用 initServletBean 方法继续完成 Servlet 的初始化操作（initServletBean 方法进行 Servlet 初始化，然而该方法也是一个空方法，在子类中实现）；
+
+### 1.2、FrameworkServlet
+
+FrameworkServlet 初始化的入口方法就是 initServletBean，
+```java
+@Override
+protected final void initServletBean() throws ServletException {
+	//省略...
+	try {
+		this.webApplicationContext = initWebApplicationContext();
+		initFrameworkServlet();
+	}
+	catch (ServletException | RuntimeException ex) {
+		//省略...
+	}
+}
+```
+- `initWebApplicationContext` 方法用来初始化 WebApplicationContext；
+- `initFrameworkServlet` 方法用来初始化 FrameworkServlet，但是这个方法是一个空方法，没有具体的实现。本来子类可以重写该方法做一些初始化操作，但是实际上子类并没有重写该方法
  
 # 参考资料
 
