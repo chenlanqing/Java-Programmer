@@ -1,0 +1,73 @@
+
+# 一、JavaEE项目
+
+## 1、创建一个普通的Java项目
+
+![](image/JavaEE-01.png)
+
+![](image/JavaEE-02.png)
+
+## 2、目录结构
+
+![](image/JavaEE-03.png)
+
+## 3、添加web目录
+
+在项目上右键，点击 Add Framework Support
+
+![](image/JavaEE-04.png)
+
+勾选Web Application
+
+![](image/JavaEE-05.png)
+
+添加成功后的目录
+
+![](image/JavaEE-06.png)
+
+## 4、添加目录
+
+添加web目录成功后WEB-INF目录下还缺少：存放编译后class文件的目录classes以及存放第三方jar包的lib目录
+
+![](image/JavaEE-07.png)
+
+## 5、配置文件夹路径
+
+File -> Project Structure -> 选择Module：选择 Paths -> 选择"Use module compile output path" -> 将Output path和Test output path都选择刚刚创建的classes文件夹
+
+![](image/JavaEE-08.png)
+
+设置jar包保存到lib文件夹：Dependencies -> Module SDK选择为11 -> 点击左边的“+”号 -> 选择 “Jars or Directories”，弹出选择 前面创建的 lib 目录；
+
+![](image/JavaEE-09.png)
+
+## 6、配置Tomcat容器
+
+菜单栏->run->Edit Configurations->Tomcat Server->local,配置Deployment
+
+![](image/JavaEE-10.png)
+
+## 7、启动Tomcat项目
+
+启动成功，访问8080即可
+
+
+# 二、Maven-JavaEE项目
+
+
+
+
+
+# 三、SpringMVC-JavaEE项目
+
+
+
+
+# 四、SpringMVC-Maven-Maven-JavaEE项目
+
+
+
+
+# 五、SpringBoot内嵌项目
+
+
