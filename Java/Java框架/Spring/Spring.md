@@ -1953,6 +1953,61 @@ protected View createView(String viewName， Locale locale) throws Exception {
 }
 ```
 
+**重定向参数传递**
+
+如果是服务器端跳转，我们可以将参数放在 request 对象中，跳转完成后还能拿到参数，但是如果是客户端跳转我们就只能将参数放在地址栏中了，像上面这个方法的返回值我们可以写成：`return "redirect:/orderlist?xxx=xxx";`，这种传参方式有两个缺陷：
+- 地址栏的长度是有限的，也就意味着能够放在地址栏中的参数是有限的。
+- 不想将一些特殊的参数放在地址栏中。
+
+在重定向时，如果需要传递参数，但是又不想放在地址栏中，就可以通过 flashMap 来传递参数：
+```java
+@Controller
+public class OrderController {
+    @PostMapping("/order")
+    public String order(HttpServletRequest req) {
+        FlashMap flashMap = (FlashMap) req.getAttribute(DispatcherServlet.OUTPUT_FLASH_MAP_ATTRIBUTE);
+        flashMap.put("name", "aaaaa");
+        return "redirect:/orderlist";
+    }
+    @GetMapping("/orderlist")
+    @ResponseBody
+    public String orderList(Model model) {
+        return (String) model.getAttribute("name");
+    }
+}
+```
+首先在 order 接口中，获取到 flashMap 属性，然后存入需要传递的参数，这些参数最终会被 SpringMVC 自动放入重定向接口的 Model 中，这样我们在 orderlist 接口中，就可以获取到该属性了，当然还可以通过 RedirectAttributes 来简化这一步骤：
+```java
+@Controller
+public class OrderController {
+    @PostMapping("/order")
+    public String order(RedirectAttributes attr) {
+        attr.addFlashAttribute("site", "www.google.com");
+        attr.addAttribute("name", "aaaaa");
+        return "redirect:/orderlist";
+    }
+    @GetMapping("/orderlist")
+    @ResponseBody
+    public String orderList(Model model) {
+        return (String) model.getAttribute("site");
+    }
+}
+```
+RedirectAttributes 中有两种添加参数的方式：
+- addFlashAttribute：将参数放到 flashMap 中。
+- addAttribute：将参数放到 URL 地址中。
+
+原理分析：涉及到一个关键类叫做 FlashMapManager
+```java
+public interface FlashMapManager {
+	// 这个方法用来恢复参数，并将恢复过的的参数和超时的参数从保存介质中删除。
+ 	FlashMap retrieveAndUpdate(HttpServletRequest request, HttpServletResponse response);
+	// 将参数保存保存起来
+ 	void saveOutputFlashMap(FlashMap flashMap, HttpServletRequest request, HttpServletResponse response);
+}
+```
+基本上就能确定默认的保存介质时 session
+
 ## 6.RESTful SpringMVC CRUD
 
 - SpringMVC中配置HiddenHttpMethodFilter;（SpringBoot自动配置好的）
