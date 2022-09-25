@@ -51,6 +51,27 @@ File -> Project Structure -> 选择Module：选择 Paths -> 选择"Use module co
 
 启动成功，访问8080即可
 
+## 8、导入Servlet Jar包
+
+选择 File -> Project Structure 进入页面，然后选择 Libraries，点击 + 号，选择Java
+
+![](image/JavaEE-11.png)
+
+接着进行选择，需要选择的是你的tomcat安装目录下的lib文件夹中的servlet的jar包，选好之后OK：
+
+![](image/JavaEE-12.png)
+
+继续点击左侧的Artifacts,选择右侧的servlet-api，鼠标右击，选择`Put into /WEB-IF/lib`，点击apply，ok
+
+![](image/JavaEE-13.png)
+
+查看工程的依赖包
+
+![](image/JavaEE-14.png)
+
+## 9、Servlet案例
+
+在上述步骤都完成之后，就可以编写Servlet了
 
 # 二、Maven-JavaEE项目
 
