@@ -29,4 +29,18 @@ public class MD5Util {
 	public static void main(String[] args) throws Exception {
 		test1();
 	}
+	
+	    /**
+     * 将一个base64编码后的字符串解码
+     */
+    public static String base64Decode(String encode) {
+        return new String(Base64.getDecoder().decode(encode), StandardCharsets.UTF_8);
+    }
+
+    /**
+     * 对字符串进行Base64编码
+     */
+    public static String base64Encode(String code) {
+        return new String(Base64.getEncoder().encode(code.getBytes(StandardCharsets.UTF_8)), StandardCharsets.UTF_8);
+    }
 }
