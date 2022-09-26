@@ -73,6 +73,93 @@ File -> Project Structure -> 选择Module：选择 Paths -> 选择"Use module co
 
 在上述步骤都完成之后，就可以编写Servlet了
 
+### 9.1、Servlet
+
+继承 HttpServlet 即可；
+```java
+public class SyncServlet extends HttpServlet {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        doGet(request, response);
+    }
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        long start = System.currentTimeMillis();
+        try {
+            Thread.sleep(3000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        response.getWriter().write("ok");
+        System.out.println("总耗时：" + (System.currentTimeMillis() - start));
+    }
+}
+```
+
+### 9.2、xml配置
+
+在web.xml中增加如下配置：
+```xml
+<servlet>
+    <servlet-name>syncServlet</servlet-name>
+    <servlet-class>com.qing.fan.SyncServlet</servlet-class>
+</servlet>
+
+<servlet-mapping>
+    <servlet-name>syncServlet</servlet-name>
+    <url-pattern>/syncServlet</url-pattern>
+</servlet-mapping>
+```
+页面访问时：http://localhost:8080/syncServlet
+
+### 9.3、注解配置
+
+Servlet3.0之后，支持对应的注解来配置实现了，只需要在对应的 Servlet 上配置注解即可；
+```java
+@WebServlet(urlPatterns = "/syncServlet")
+public class SyncServlet extends HttpServlet {
+}
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface WebServlet {
+    /**
+     * The name of the servlet
+     */
+    String name() default "";
+    
+    /**
+     * The URL patterns of the servlet
+     */
+    String[] value() default {};
+    /**
+     * The URL patterns of the servlet
+     */
+    String[] urlPatterns() default {};
+    /**
+     * The load-on-startup order of the servlet 
+     */
+    int loadOnStartup() default -1;
+    /**
+     * The init parameters of the servlet
+     */
+    WebInitParam [] initParams() default {};
+    /**
+     * 当前servlet是否支持异步操作
+     *
+     * @return {@code true} if the servlet supports asynchronous operation mode
+     * @see javax.servlet.ServletRequest#startAsync
+     * @see javax.servlet.ServletRequest#startAsync(ServletRequest,
+     * ServletResponse)
+     */
+    boolean asyncSupported() default false;
+    String smallIcon() default "";
+    String largeIcon() default "";
+    String description() default "";
+    String displayName() default "";
+}
+```
+
 # 二、Maven-JavaEE项目
 
 
