@@ -966,6 +966,14 @@ vim /usr/lib/rabbitmq/lib/rabbitmq_server-3.6.5/ebin/rabbit.app
 
 https://juejin.im/post/6844903826332319757
 
+## 3、[Docker安装RabbitMQ](https://juejin.cn/post/6844903970545090574)
+
+- 获取镜像：使用 `docker search rabbitMq` 命令获取镜像列表；
+- 使用 `docker pull docker.io/rabbitmq:3.8-management` 拉取镜像；
+- 创建rabbitMq容器，使用docker images获取查看rabbitMQ镜像ID；
+- 执行`docker run --name rabbitmq -d -p 15672:15672 -p 5672:5672 4b23cfb64730`命令创建rabbitMq容器;
+- 执行docker ps可以查看正在运行的容器，我们能看到rabbitMq已经运行
+
 # 五、RocketMQ
 
 
