@@ -319,9 +319,11 @@ Maven的编译插件： https://maven.apache.org/plugins/maven-compiler-plugin/c
 </project>
 ```
 
-## 3、一行命令同时修改maven项目中多个mudule的版本号
+## 3、批量修改Maven版本号
 
-Maven工厂在版本升级的时候就会比较麻烦，因为要遍历的修改所有pom中的版本号。比如要把1.0.0升级到1.0.1，那么就需要把所有的pom中的version都改掉
+### 3.1、使用插件versions-maven-plugin
+
+Maven工厂在版本升级的时候就会比较麻烦，因为要遍历的修改所有pom中的版本号。比如要把1.0.0升级到1.0.1，那么就需要把所有的pom中的version都改掉，在主POM中配置如下插件
 ```xml
 </plugins>
     <plugin>
@@ -334,10 +336,73 @@ Maven工厂在版本升级的时候就会比较麻烦，因为要遍历的修改
     </plugin>
 </plugins>
 ```
-generateBackupPoms用于配置是否生成备份Pom，用于版本回滚。配置好插件后，执行命令：
+generateBackupPoms用于配置是否生成备份Pom，用于版本回滚。
+
+配置好插件后，如果需要修改版本号
 ```
 mvn versions:set -DnewVersion=1.0.1
 ```
+如果你后悔更新了且generateBackupPoms设置为true，还可以回退：
+```
+mvn versions:revert
+```
+如果你确定了，则输入提交命令，就完成了：`mvn versions:commit`
+
+### 3.2、使用占位符去统一管理
+
+在主POM中配置如下：
+```xml
+<modelVersion>4.0.0</modelVersion>
+<groupId>com.qing.fan</groupId>
+<artifactId>security</artifactId>
+<packaging>pom</packaging>
+<version>${revision}</version>
+```
+子模块引用其他子模块版本也是同样定义：
+```xml
+<dependencies>
+	<dependency>
+		<groupId>com.qing.fan</groupId>
+		<artifactId>common</artifactId>
+		<version>${revision}</version>
+	</dependency>
+</dependencies>
+```
+这个`${reversion}`参数在主pom里定义：
+```xml
+<properties>
+	<revision>2.8.5</revision>
+</properties>
+```
+再加上一个插件，这个插件的作用是在编译打包时，会自动替换`${reversion}`占位：
+```xml
+<plugin>
+  <groupId>org.codehaus.mojo</groupId>
+  <artifactId>flatten-maven-plugin</artifactId>
+  <version>1.2.7</version>
+  <configuration>
+    <updatePomFile>true</updatePomFile>
+    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+  </configuration>
+  <executions>
+    <execution>
+      <id>flatten</id>
+      <phase>process-resources</phase>
+      <goals>
+        <goal>flatten</goal>
+      </goals>
+    </execution>
+    <execution>
+      <id>flatten.clean</id>
+      <phase>clean</phase>
+      <goals>
+        <goal>clean</goal>
+      </goals>
+    </execution>
+  </executions>
+</plugin>
+```
+做好以上这几步，那么你要修改版本号的时候，只需要在主pom里把reversion修改一次就可以了，不管多少子模块，都可以生效
 
 ## 4、避免将依赖的jar包打到最大的jar
 
