@@ -1651,6 +1651,8 @@ ConfigurationClassParser#doProcessConfigurationClass
 
 # 13、自定义扩展点
 
+- [Spring/Boot 扩展点](https://mp.weixin.qq.com/s/oiVkngj5JYzK2CerB1JFqA)
+
 可扩展的接口启动调用顺序图：
 
 ![](image/Spring可扩展的接口启动调用顺序图.jpg)
@@ -1851,29 +1853,46 @@ public class TestInitializingBean implements InitializingBean {
 
 `org.springframework.beans.factory.FactoryBean`
 
-一般情况下，Spring通过反射机制利用bean的class属性指定支线类去实例化bean，在某些情况下，实例化Bean过程比较复杂，如果按照传统的方式，则需要在bean中提供大量的配置信息。配置方式的灵活性是受限的，这时采用编码的方式可能会得到一个简单的方案。Spring为此提供了一个`org.springframework.bean.factory.FactoryBean`的工厂类接口，用户可以通过实现该接口定制实例化Bean的逻辑。FactoryBean接口对于Spring框架来说占用重要的地位，Spring自身就提供了70多个FactoryBean的实现。它们隐藏了实例化一些复杂bean的细节，给上层应用带来了便利。从Spring3.0开始，FactoryBean开始支持泛型，即接口声明改为FactoryBean的形式
+一般情况下，Spring通过反射机制利用bean的class属性指定支线类去实例化bean，在某些情况下，实例化Bean过程比较复杂，如果按照传统的方式，则需要在bean中提供大量的配置信息。配置方式的灵活性是受限的，这时采用编码的方式可能会得到一个简单的方案。Spring为此提供了一个`org.springframework.bean.factory.FactoryBean`的工厂Bean接口，其本质上是一个Bean，用户可以通过实现该接口定制实例化Bean的逻辑。FactoryBean接口对于Spring框架来说占用重要的地位，Spring自身就提供了70多个FactoryBean的实现。它们隐藏了实例化一些复杂bean的细节，给上层应用带来了便利。从Spring3.0开始，FactoryBean开始支持泛型，即接口声明改为FactoryBean的形式；当往容器中注入class类型为FactoryBean的类型的时候，最终生成的Bean是用过FactoryBean的`getObject`获取的
 
 使用场景：用户可以扩展这个类，来为要实例化的bean作一个代理，比如为该对象的所有的方法作一个拦截，在调用前后输出一行log，模仿ProxyFactoryBean的功能
 
 ```java
-public class TestFactoryBean implements FactoryBean<TestFactoryBean.TestFactoryInnerBean> {
-    @Override
-    public TestFactoryBean.TestFactoryInnerBean getObject() throws Exception {
-        System.out.println("[FactoryBean] getObject");
-        return new TestFactoryBean.TestFactoryInnerBean();
-    }
+public class UserFactoryBean implements FactoryBean<User> {
     @Override
     public Class<?> getObjectType() {
-        return TestFactoryBean.TestFactoryInnerBean.class;
+        return User.class;
     }
     @Override
-    public boolean isSingleton() {
-        return true;
-    }
-    public static class TestFactoryInnerBean{
+    public User getObject() throws Exception {
+        User user = new User();
+        System.out.println("调用 UserFactoryBean 的 getObject 方法生成 Bean:" + user);
+        return user;
     }
 }
 ```
+
+FactoryBean在开源框架中的使用：在Mybatis中的使用
+
+Mybatis在整合Spring的时候，就是通过FactoryBean来实现的，这也就是为什么在Spring的Bean中可以注入Mybatis的Mapper接口的动态代理对象的原因
+```java
+public class MapperFactoryBean<T> extends SqlSessionDaoSupport implements FactoryBean<T> {
+    // mapper的接口类型
+    private Class<T> mapperInterface;
+    @Override
+    public T getObject() throws Exception {
+        // 通过SqlSession获取接口的动态搭理对象
+        return getSqlSession().getMapper(this.mapperInterface);
+    }
+    @Override
+    public Class<T> getObjectType() {
+        return this.mapperInterface;
+    }
+}
+```
+getObject方法的实现就是返回通过SqlSession获取到的Mapper接口的动态代理对象，而@MapperScan注解的作用就是将每个接口对应的MapperFactoryBean注册到Spring容器的；
+
+> 一般来说，FactoryBean 比较适合那种复杂Bean的构建，在其他框架整合Spring的时候用的比较多；
 
 ## 13.13、SmartInitializingSingleton
 
@@ -1939,6 +1958,74 @@ ContextClosedEvent
 RequestHandledEvent
 
 这是一个 web-specific 事件，告诉所有 bean HTTP 请求已经被服务。只能应用于使用DispatcherServlet的Web应用。在使用Spring作为前端的MVC控制器时，当Spring处理用户请求结束后，系统会自动触发该事件
+
+## 13.17、其他扩展点
+
+### 13.17.1、@Import注解
+
+@Import的核心作用就是导入配置类，并且还可以根据配合（比如@EnableXXX）使用的注解的属性来决定应该往Spring中注入什么样的Bean，比如我们常见的：
+```java
+@Import({SchedulingConfiguration.class})
+public @interface EnableScheduling {
+}
+@Import({AsyncConfigurationSelector.class})
+public @interface EnableAsync {
+}
+```
+@Import注解导入的配置类可以分为三种情况：
+
+**（1）配置类实现了 ImportSelector 接口**
+```java
+public interface ImportSelector {
+    // 方法返回的是对应的类的 全限定名，表示把这个类注册到容器中
+	String[] selectImports(AnnotationMetadata importingClassMetadata);
+	@Nullable
+	default Predicate<String> getExclusionFilter() {
+		return null;
+	}
+}
+```
+当配置类实现了 ImportSelector 接口的时候，就会调用 selectImports 方法的实现，获取一批类的全限定名，最终这些类就会被注册到Spring容器中
+
+**（2）配置类实现了 ImportBeanDefinitionRegistrar 接口**
+```java
+public interface ImportBeanDefinitionRegistrar {
+	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry, BeanNameGenerator importBeanNameGenerator) {
+		registerBeanDefinitions(importingClassMetadata, registry);
+	}
+	default void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
+	}
+}
+```
+当配置类实现了 `ImportBeanDefinitionRegistrar` 接口，你就可以自定义往容器中注册想注入的Bean。这个接口相比与 ImportSelector 接口的主要区别就是，ImportSelector接口是返回一个类，你不能对这个类进行任何操作，但是 `ImportBeanDefinitionRegistrar` 是可以自己注入 BeanDefinition，可以添加属性之类的；
+```java
+// 自定义 ImportBeanDefinitionRegistrar
+public class UserImportBeanDefinitionRegistrar implements ImportBeanDefinitionRegistrar {
+    @Override
+    public void registerBeanDefinitions(AnnotationMetadata metadata, BeanDefinitionRegistry registry, BeanNameGenerator generator) {
+        AbstractBeanDefinition beanDefinition = BeanDefinitionBuilder.rootBeanDefinition(User.class)
+                .addPropertyValue("name", "张无忌")
+                .getBeanDefinition();
+        System.out.println("往Spring中注入User");
+        registry.registerBeanDefinition("user", beanDefinition);
+    }
+}
+// 运行示例
+@Import(UserImportBeanDefinitionRegistrar.class)
+public class TestUserImport {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        context.register(TestUserImport.class);
+        context.refresh();
+        User user = context.getBean(User.class);
+        System.out.println("获取到的Bean为" + user + "，获取到名字 name: " + user.getName());
+    }
+}
+```
+
+> 其实不论是什么样的配置类，主要的作用就是往Spring容器中注册Bean，只不过注入的方式不同罢了；
+
+ImportSelector和ImportBeanDefinitionRegistrar的方法是有入参的，也就是注解的一些属性的封装，所以就可以根据注解的属性的配置，来决定应该返回样的配置类或者是应该往容器中注入什么样的类型的Bean，可以看一下 @EnableAsync 的实现，看看是如何根据@EnableAsync注解的属性来决定往容器中注入什么样的Bean
 
 # 14、如何控制加载顺序
 
