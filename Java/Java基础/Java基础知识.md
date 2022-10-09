@@ -308,7 +308,7 @@ System.out.println(a == b); // 这里比较的时候会调用 Integer 类的 int
   - 若在`编译期`就能判断出`Y`的取值范围在`X`的取值范围之内，则返回类型为`X`的类型，反之则为`Y`的类型。
   - 如果返回值`X`类型不为以上几种，则会触发隐藏类型转换；
 - （4）当基本数据类型和对象数据类型相遇时，三目运算默认返回结果为基本数据类型；
-
+- （5）注意因自动拆箱导致的NPE
 例子：
 ```java
 private static void test1(int a, int b) {
@@ -3999,6 +3999,25 @@ public class switchDemoString{
 - switch 中只能使用整型，hashCode()方法返回的是int，而不是long
 - 进行 switch 的实际是哈希值，然后通过使用equals方法比较进行安全检查，这个检查是必要的，因为哈希可能会发生碰撞
 - 其实 switch 只支持一种数据类型，那就是整型，其他数据类型都是转换成整型之后在使用 switch 的
+
+所以在 switch 内的遍历类型是 String 之后，需要注意判空，因为其实通过调用字符串的 hashCode 方法来实现的，否则会报空指针；
+```java
+public static void main(String[] args) {
+    method(null);
+}
+public static void method(String param) {
+    switch (param) {
+        case "sth":
+            System.out.println("it's sth");
+            break;
+        case "null":
+            System.out.println("it's null");
+            break;
+        default:
+            System.out.println("default");
+    }
+}				    
+```				    
 
 ## 5、枚举类
 
