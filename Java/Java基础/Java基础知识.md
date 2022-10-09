@@ -4000,6 +4000,25 @@ public class switchDemoString{
 - 进行 switch 的实际是哈希值，然后通过使用equals方法比较进行安全检查，这个检查是必要的，因为哈希可能会发生碰撞
 - 其实 switch 只支持一种数据类型，那就是整型，其他数据类型都是转换成整型之后在使用 switch 的
 
+所以在 switch 内的遍历类型是 String 之后，需要注意判空，因为其实通过调用字符串的 hashCode 方法来实现的，否则会报空指针；
+```java
+public static void main(String[] args) {
+    method(null);
+}
+public static void method(String param) {
+    switch (param) {
+        case "sth":
+            System.out.println("it's sth");
+            break;
+        case "null":
+            System.out.println("it's null");
+            break;
+        default:
+            System.out.println("default");
+    }
+}				    
+```				    
+
 ## 5、枚举类
 
 枚举类型之所以能够使用，因为编译器层面实现了，编译器会将枚举 switch 转换为类似 `switch(s.ordinal()) { case Status.START.ordinal() }` 形式，所以实质还是 int 参数类型。可以通过查看反编译字节码来查看
