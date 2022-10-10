@@ -162,8 +162,35 @@ public @interface WebServlet {
 
 # 二、Maven-JavaEE项目
 
+## 1、创建一个Maven项目
 
+首先，打开IDEA创建一个新Maven项目，勾选Create from archetype，并在列表中选中org.apache.maven.archetypes:maven-archetype-webapp
 
+![](image/Maven-JavaEE-01.png)
+
+![](image/Maven-JavaEE-02.png)
+
+## 2、创建的项目结构
+
+![](image/Maven-JavaEE-03.png)
+
+## 3、添加Tomcat
+
+右上角的add configurations，然后点左上角的加号，选择 Tomcat Server ->  Local
+
+![](image/Maven-JavaEE-04.png)
+
+![](image/Maven-JavaEE-05.png)
+
+![](image/Maven-JavaEE-06.png)
+
+![](image/Maven-JavaEE-07.png)
+
+## 4、运行
+
+![](image/Maven-JavaEE-08.png)
+
+即可访问
 
 
 # 三、SpringMVC-JavaEE项目
@@ -171,7 +198,7 @@ public @interface WebServlet {
 
 
 
-# 四、SpringMVC-Maven-Maven-JavaEE项目
+# 四、SpringMVC-Maven-JavaEE项目
 
 
 
