@@ -16,3 +16,7 @@ systemctl restart crond  重启crond服务
 配置文件
 
 /etc/crontab
+
+# 参考资料
+
+- [crontab-16个常用案例](https://www.linuxteck.com/basic-cron-command-in-linux-with-examples/)
