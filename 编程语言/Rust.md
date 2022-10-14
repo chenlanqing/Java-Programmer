@@ -27,3 +27,4 @@
 - [Rust](https://docs.rs/)
 - [Rust国内镜像](https://rsproxy.cn/)
 - [Rust Course](https://github.com/sunface/rust-course)
+- [Learn Rust](https://gist.github.com/chenlanqing/e86a450cde47227820f7579d0b0a285d)
