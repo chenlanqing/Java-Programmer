@@ -457,6 +457,8 @@ context.initializer.classes=com.blue.fish.source.initializer.ThirdInitializer
 
 # 4、监听器
 
+- [@EventListener原理](https://www.huangchaoyu.com/2020/08/08/SpringBoot-%E6%B6%88%E6%81%AF%E6%9C%BA%E5%88%B6,EventListener%E6%B3%A8%E8%A7%A3%E5%8E%9F%E7%90%86/)
+
 ## 4.1、监听器设计模式
 
 **监听器模式四要素：**
