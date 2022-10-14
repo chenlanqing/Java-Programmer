@@ -780,6 +780,11 @@ public @interface TransactionalEventListener {
 ```
 > 使用 @TransactionalEventListener 来说实现注解发布需要特别注意异常处理，可能异常会被吞掉不处理；
 
+需要注意的是如果使用：AFTER_COMMIT 和 AFTER_COMPLETION 时，在默认情况下监听者方法会被绑定到发布者所在的事务中，你不能在监听者方法中将任何数据保存到数据库中，因为事务已经被提交了，并且再也没有机会重新提交；要解决这个问题有三种方法：
+- 在方法上声明一个新事务；
+- 使用`@Async`让方法异步执行，新线程中会自动开启一个新事务；
+- `@TransactionalEventListener`的phase参数设置为BEFORE_COMMIT，但是这种方法会导致之前所说的业务不能解耦的问题
+
 ### 4.4.8、总结
 
 - 实现ApplicationListener接口只针对单一事件监听；
