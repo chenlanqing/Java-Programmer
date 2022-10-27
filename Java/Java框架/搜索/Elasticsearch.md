@@ -5291,3 +5291,4 @@ https://zhuanlan.zhihu.com/p/102500311
 * [ElasticSearch脑图](https://juejin.cn/post/6898505457485217806)
 * [Elasticsearch时间指南](https://juejin.cn/post/6898926871191224334)
 * [高性能elasticsearch ORM开发库](https://www.bbossgroups.com/sources-demos.html)
+* [ElasticSearch搜索引擎ORM框架](https://www.easy-es.cn/)
