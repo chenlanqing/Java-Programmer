@@ -6092,6 +6092,7 @@ JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢�
 
 - [JMH教程](http://tutorials.jenkov.com/java-performance/jmh.html)
 - [JMH使用](https://www.xncoding.com/2018/01/07/java/jmh.html)
+- [官方JMH案例](http://hg.openjdk.java.net/code-tools/jmh/file/tip/jmh-samples/src/main/java/org/openjdk/jmh/samples/)
 
 ## 1、介绍
 
