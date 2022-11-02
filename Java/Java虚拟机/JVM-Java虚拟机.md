@@ -2563,6 +2563,7 @@ public void addShutdownHook(Thread hook) {
 # 16、Graalvm
 
 - [Java-Graalvm](https://www.graalvm.org/java/)
+- [AOT调研实战](https://github.com/Lord-X/awesome-it-blog/blob/master/java/%E5%85%B3%E4%BA%8EAhead-of-Time%20Compilation%E7%9A%84%E8%B0%83%E7%A0%94%E4%B8%8E%E5%AE%9E%E8%B7%B5.md)
 	
 # 17、AOT
 
