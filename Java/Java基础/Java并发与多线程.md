@@ -4234,7 +4234,17 @@ CyclicBarrier中的参与者在初始构造指定后就不能变更，而Phaser�
 
 ## 15、CompletableFuture
 
-JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFuture来解决。支持异步编程
+JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFuture来解决。支持异步编程；
+
+CompletableFuture 可以解决 Future 获取异步线程执行结果阻塞主线程的问题；
+
+它实现了Future接口，也就是Future的功能特性CompletableFuture也有；除此之外，它也实现了CompletionStage接口，CompletionStage接口定义了任务编排的方法，执行某一阶段，可以向下执行后续阶段。
+```java
+public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
+    
+}
+```
+CompletableFuture相比于Future最大的改进就是提供了类似观察者模式的回调监听的功能，也就是当上一阶段任务执行结束之后，可以回调你指定的下一阶段任务，而不需要阻塞获取结果之后来处理结果
 
 ### 15.1、创建对象
 
