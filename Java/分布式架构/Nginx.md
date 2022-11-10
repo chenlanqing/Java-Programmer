@@ -1369,7 +1369,7 @@ rewrite_by_lua <br/> rewrite_by_lua_file | rewrite tail | http、server、locati
 * [Nginx极简教程](https://mp.weixin.qq.com/s/vHkxYfpuiAteMNSrpNWdsw)
 * [LVS官方文档](http://www.austintek.com/LVS/LVS-HOWTO/HOWTO/)
 * [深入理解LVS](https://blog.csdn.net/Ki8Qzvka6Gz4n450m/article/details/79119665)
-
+* [可视化配置 Nginx](https://github.com/digitalocean/nginxconfig.io)
 
 
 
