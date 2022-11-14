@@ -128,6 +128,25 @@ public int compareTo(BigDecimal val) {
     System.out.println(hashSet2.contains(new BigDecimal("1.000").stripTrailingZeros()));//返回true
     ```
 
+### 2.3、关于小数位数
+
+BigDecimal 中有一些函数有一个参数 MathContext，该参数表示设置精度和舍入方法：
+```java
+public MathContext(int setPrecision,  RoundingMode setRoundingMode) {
+    if (setPrecision < MIN_DIGITS)
+        throw new IllegalArgumentException("Digits < 0");
+    if (setRoundingMode == null)
+        throw new NullPointerException("null RoundingMode");
+
+    precision = setPrecision;
+    roundingMode = setRoundingMode;
+    return;
+}
+```
+比如：new MathContext(2, RoundingMode.HALF_UP)，表示保留两位有效数字，且使用四舍五入方式；
+
+如果要设置小数，一般调用 setScale 方法即可
+
 # 三、BigInteger
 
 # 四、Integer
