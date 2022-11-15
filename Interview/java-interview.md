@@ -5633,7 +5633,7 @@ Caused by: org.xml.sax.SAXParseException; lineNumber: 47; columnNumber: 17; 元�
 ## 20、Mybatis的设计模式
 
 - [Mybatis使用设计模式](http://www.crazyant.net/2022.html)
-- [设计模式](../Java/系统设计/设计模式.md)
+- [设计模式](../软件工程/软件设计/设计模式.md)
 
 ### 20.1、工厂模式
 
