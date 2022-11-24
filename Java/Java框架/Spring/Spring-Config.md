@@ -1433,3 +1433,37 @@ public Jackson2ObjectMapperBuilderCustomizer customizer(){
     };
 }
 ```
+比如需要将时间自定义输出为时间戳：
+```java
+@Configuration
+public class TimestampCustom {
+    @Bean
+    public Jackson2ObjectMapperBuilderCustomizer jsonCustomizer() {
+        return builder -> {
+            builder.serializerByType(LocalDateTime.class, new LocalDateTimeToTimestamp());
+            builder.serializerByType(Date.class, new DateToTimestamp());
+        };
+    }
+    public static class LocalDateTimeToTimestamp extends JsonSerializer<LocalDateTime> {
+        @Override
+        public void serialize(LocalDateTime localDateTime, JsonGenerator generator, SerializerProvider serializers) throws IOException {
+            if (localDateTime == null) {
+                return;
+            }
+            generator.writeNumber(localDateTime.toInstant(ZoneOffset.UTC).toEpochMilli());
+        }
+    }
+    public static class DateToTimestamp extends JsonSerializer<Date> {
+        @Override
+        public void serialize(Date date, JsonGenerator generator, SerializerProvider serializers) throws IOException {
+            if (date == null) {
+                return;
+            }
+            Calendar calendar = Calendar.getInstance();
+            int offsetMillis = calendar.get(Calendar.ZONE_OFFSET);
+            long result = date.getTime() + offsetMillis;
+            generator.writeNumber(result);
+        }
+    }
+}
+```
