@@ -663,17 +663,16 @@ java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+P
 
 # 参考资料
 
-* [字节码操作](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
 * [javassist教程](http://www.javassist.org/tutorial/tutorial.html)
+* [ASM](https://asm.ow2.io/index.html)
+* [byte-buddy](https://github.com/raphw/byte-buddy*)
+* [字节码开源库](https://java-source.net/open-source/bytecode-libraries)
+* [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)
 * [JVM Tool Interface](https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html)
 * [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
-* [ASM](https://asm.ow2.io/index.html)
-* [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)
 * [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
-* [字节码开源库](https://java-source.net/open-source/bytecode-libraries)
 * [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
 * [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
 * [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
 * [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
-* [byte-buddy](https://github.com/raphw/byte-buddy*)
 * [Java源文件生成框架](https://github.com/square/javapoet)
