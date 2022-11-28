@@ -95,6 +95,7 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - IDE Eval Reset
 - mybatisX
 - Rainbow Brackets ：括号插件
+- metricsreloaded
 
 # 4、idea插件开发
 
