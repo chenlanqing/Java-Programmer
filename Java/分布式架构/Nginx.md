@@ -1362,6 +1362,33 @@ rewrite_by_lua <br/> rewrite_by_lua_file | rewrite tail | http、server、locati
 
 具体做法是：利用一把进程间锁，每个进程中都尝试获得这把锁，如果获取成功将监听socket加入wait集合中，并设置超时等待连接到来，没有获得所的进程则将监听socket从wait集合去除。这里只是简单讨论nginx在处理惊群问题基本做法，实际其代码还处理了很多细节问题，例如简单的连接的负载均衡、定时事件处理等等
 
+# 七、常见配置
+
+## 1、获取真实IP
+
+```conf
+server {
+        listen  80;
+	    server_name www.baidu.com;
+        location / {
+            root   /data/dist;
+            index  index.html index.htm;
+        }
+        location /user/ {
+            proxy_set_header X-Forwarded-Host $host:$server_port;
+            proxy_set_header X-Forwarded-Server $host;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_pass   http://127.0.0.1:8080/;
+        }
+}
+```
+配置真实ip地址：
+```conf
+proxy_set_header X-Forwarded-Host $host:$server_port;
+proxy_set_header X-Forwarded-Server $host;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+```
+
 
 # 参考文档
 
