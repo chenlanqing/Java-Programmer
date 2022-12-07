@@ -492,6 +492,16 @@
 git log --author="username"  --since=2022-04-01 --until=2022-08-30 --format='%aN' | sort -u | while read name; do echo -en "$name\t"; git log --author="$name" --pretty=tformat: --numstat | grep "\(.html\|.java\|.xml\|.properties\)$" | awk '{ add += $1; subs += $2; loc += $1 - $2 } END { printf "added lines: %s, removed lines: %s, total lines: %s\n", add, subs, loc }' -; done
 ```
 
+## 5.3、代理问题
+
+解决：OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com:443
+```
+git config --global --unset http.proxy
+# 如果是https设置为
+git config --global --unset https.proxy
+```
+设置完以后重启一下编译器，成功解决！
+
 # 参考资料
 
 * [Git教程](https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
