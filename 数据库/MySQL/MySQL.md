@@ -5403,6 +5403,18 @@ Linux操作系统下默认文件存储：`/var/lib/mysql`
 
 [数据存储选型](https://mp.weixin.qq.com/s/YpRQa9YguOqJygJbdRZ-nA)
 
+# 二十三、其他
+
+## 1、关于时间
+
+数据库连接时的基本参数：
+```
+jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimeZone=UTC
+```
+serverTimeZone的作用就是指定web服务器和mysql服务器的会话期间的mysql服务器时区，一般配置 serverTimeZone 跟MySQL服务器时间保持一致即可；
+- 如果MySQL服务器的时间为：UTC，则这里也需要指定 `serverTimeZone=UTC`；
+- 如果MySQL服务器时间为：UTC+8，则这里可以指定为：`serverTimeZone=Asia/Shanghai`
+
 
 # 参考文章
 

@@ -4679,10 +4679,9 @@ public interface AnnotatedElement {
     Annotation[] getDeclaredAnnotations();
 }
 ```
-
 注解本质是一个继承了`java.lang.annotation.Annotation`的特殊接口，其具体实现类是Java运行时生成的动态代理类。而我们通过反射获取注解时，返回的是Java 运行时生成的动态代理对象`$Proxy1`。通过代理对象调用自定义注解（接口）的方法，会最终调用`AnnotationInvocationHandler`的invoke方法。该方法会从memberValues这个Map中索引出对应的值；
 
-期间，在创建代理对象之前，解析注解时候 从该注解类的常量池中取出注解的信息，包括之前写到注解中的参数，然后将这些信息在创建 AnnotationInvocationHandler时候 ，传入进去 作为构造函数的参数，当调用该代理实例的获取值的方法时，就会调用执行AnotationInvocationHandler里面的逻辑，将之前存入的注解信息 取出来；
+期间，在创建代理对象之前，解析注解时候 从该注解类的常量池中取出注解的信息，包括之前写到注解中的参数，然后将这些信息在创建 AnnotationInvocationHandler时候 ，传入进去作为构造函数的参数，当调用该代理实例的获取值的方法时，就会调用执行AnotationInvocationHandler里面的逻辑，将之前存入的注解信息 取出来；
 
 代理的方法调用：`sun.reflect.annotation.AnnotationParser#annotationForMap`
 ```java
@@ -4713,8 +4712,42 @@ Classfile se/basis/annotation/TestAnnotation.class
   MD5 checksum 11f8b11847f9f3a3813b91a80c97607d
   Compiled from "TestAnnotation.java"
 public interface com.blue.fish.se.basis.annotation.TestAnnotation extends java.lang.annotation.Annotation
-
 ```
+
+### 3.11、通过反射给注解设置值
+
+首先获取注解的值：
+```java
+// ExportExcel 为一个注解，User中的字段都有ExportExcel注解
+final Class<User> clazz = User.class;
+final Field[] fields = clazz.getDeclaredFields();
+for (Field field : fields) {
+	field.setAccessible(true);
+	final ExportExcel excel = field.getAnnotation(ExportExcel.class);
+	System.out.println(excel.timezone());
+}
+```
+给上面的timezone赋值：
+```java
+final Class<User> clazz = User.class;
+final Field[] fields = clazz.getDeclaredFields();
+for (Field field : fields) {
+	field.setAccessible(true);
+	final ExportExcel excel = field.getAnnotation(ExportExcel.class);
+	final InvocationHandler handler = Proxy.getInvocationHandler(excel);
+	final Field values = handler.getClass().getDeclaredField("memberValues");
+	values.setAccessible(true);
+	final Map<String, Object> map = (Map<String, Object>)values.get(handler);
+	map.put("timezone", "GMT+11");
+}
+```
+原理：通过上面一小节知道注解的实现原理，实际上是通过 Proxy创建的代理，其InvocationHandler类为 AnnotationInvocationHandler
+
+![](image/反射-给注解设置值.png)
+ 
+也就是说我们要设置值需要获取到 AnnotationInvocationHandler 属性 memberValues
+
+ 所以动态修改注解的值的方法为：通过反射得到excel的代理对象，然后得到代理对象的memberValues属性，修改访问权限，更新注解的value属性值；
 
 ## 4、动态编译：Java6.0引入动态编译
 
