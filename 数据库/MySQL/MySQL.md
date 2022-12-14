@@ -351,6 +351,8 @@ ADD COLUMN `update_time_format` date GENERATED ALWAYS AS (date_format(`updated_t
 
 ## 2、日期类型
 
+- [官方文档：日期](https://dev.mysql.com/doc/refman/8.0/en/datetime.html)
+
 ### 2.1、datetime
 
 年月日时分秒，显示格式：`YYYY-MM-DD HH:MM:SS`；8个字节，与时区无关
@@ -360,6 +362,7 @@ ADD COLUMN `update_time_format` date GENERATED ALWAYS AS (date_format(`updated_t
 	70~69		1970-2069<br>
 	70~99		19**<br>
 	0~69		20**<br>
+- 与时区无关：也就是说插入到数据库是什么时间，你查询的时候不会随MySQL服务器的时区而变化；比如你插入的时候按照UTC时间插入到某个字段，你改成北京时间，该字段依然是你插入时的时间；
 
 ### 2.2、date
 
@@ -371,7 +374,7 @@ ADD COLUMN `update_time_format` date GENERATED ALWAYS AS (date_format(`updated_t
 - 存储范围：`1970.1.1 00:00:00~2038.1.19 03:14:07`
 - 检索列时，+0可以检索到时间戳
 - 支持0值：表示当前是没有规定的，如2013-04-0表示4月整个月；
-- 依赖于所指定的时区；
+- 依赖于所指定的时区；MySQL将TIMESTAMP值从当前时区转换为UTC进行存储，并从UTC返回到当前时区进行检索；也就是说该值会根据你MySQL服务器的时区变化而变化；
 - 在行的数据修改时可以自动修改timestamp列的值
 
 ### 2.4、time
@@ -391,6 +394,74 @@ ADD COLUMN `update_time_format` date GENERATED ALWAYS AS (date_format(`updated_t
 	* 日期类型在进行查找过滤时可以利用日期来进行对比；
 	* 日期时间类型有着丰富的处理函数，可以方便对日期类型进行日期计算
 - 使用int存储日期时间，使用SQL函数`unix_timestamp()`和`from_unixtime()`来进行转换；
+
+### 2.7、datetime与timestamp
+
+这两种类型中，datetime 不依赖时区，timestamp 随时区的变化而变化；
+
+**查看时区**
+```bash
+mysql> show variables like '%time_zone%';
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| system_time_zone | CST    |
+| time_zone        | +00:00 |
++------------------+--------+
+# 设置时区的方式：下面这种方式重启会失效
+mysql> set global time_zone='+08:00';
+# 永久生效：修改 /etc/my.cnf.d/mysql-server.cnf，在[mysqld]下面添加如下配置：
+default-time_zone = '+08:00'
+```
+以下为演示两种数据类型与时区的关系：
+```sql
+-- （1）查看时区，为UTC时间
+mysql> show variables like '%time_zone%';
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| system_time_zone | CST    |
+| time_zone        | +00:00 |
++------------------+--------+
+2 rows in set (0.01 sec)
+-- （2）创建表，包含 datetime 和 timestamp 两种数据类型，设置是默认值是mysql服务器时间
+mysql> CREATE TABLE `sys_menu` (
+    -> `id` INT NOT NULL AUTO_INCREMENT,
+    -> `name` VARCHAR (255) NOT NULL,
+    -> `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '',
+    -> `update_time` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    -> PRIMARY KEY (`id`)
+    -> ) ENGINE = INNODB DEFAULT CHARSET = utf8mb4;
+Query OK, 0 rows affected (0.04 sec)
+-- （3）插入数据
+mysql> insert into sys_menu(name)value('admin');
+Query OK, 1 row affected (0.01 sec)
+-- （4）查询数据（当前北京时间为13:45）
+mysql> select * from sys_menu;
++----+-------+---------------------+---------------------+
+| id | name  | create_time         | update_time         |
++----+-------+---------------------+---------------------+
+|  1 | admin | 2022-12-14 05:44:45 | 2022-12-14 05:44:45 |
++----+-------+---------------------+---------------------+
+1 row in set (0.00 sec)
+-- （5）修改时区为北京时间，即UTC+8，重启控制台，关于 time_zone 参数：https://dev.mysql.com/doc/refman/8.0/en/time-zone-support.html#time-zone-variables
+mysql> set global time_zone='+8:00';
+-- （6）使用新的session
+mysql> show variables like '%time_zone%';
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| system_time_zone | CST    |
+| time_zone        | +08:00 |
++------------------+--------+
+mysql> select * from sys_menu;
++----+-------+---------------------+---------------------+
+| id | name  | create_time         | update_time         |
++----+-------+---------------------+---------------------+
+|  1 | admin | 2022-12-14 05:44:45 | 2022-12-14 13:44:45 |
++----+-------+---------------------+---------------------+
+-- 可以看到上面 update_time 变为了 UTC+8的时间
+```
 
 ## 3、字符串类型
 
