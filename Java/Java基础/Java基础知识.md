@@ -6425,6 +6425,61 @@ System.out.println(ClassGetResourcePath.class.getClassLoader().getResource("/"))
 
 https://mp.weixin.qq.com/s/01fj7l3xsxHVstlkrJ0epw
 
+# 三十五、时区问题
+
+- [抓包研究Java向MySQL发生数据时间问题](https://www.cnblogs.com/grey-wolf/p/15915807.html)
+- [数据库时间慢14个小时](https://heapdump.cn/article/2986372)
+- [MySQL Driver关于时区的处理](https://kaimingwan.com/2022/06/20/ns4y3a/)
+
+## 1、关于时区
+
+**UTC时间**
+
+UTC时间：世界协调时间（UTC）是世界上不同国家用来调节时钟和时间的主要时间标准，也就是零时区的时间。
+
+UTC, Coordinated Universal Time是一个标准，而不是一个时区。UTC 是一个全球通用的时间标准。全球各地都同意将各自的时间进行同步协调 (coordinated)，这也是UTC名字的来源：Universal Coordinated Time。
+
+**CST时间**
+
+CST时间：中央标准时间。CST可以代表如下4个不同的时区：
+- Central Standard Time (USA) UT-6:00，美国
+- Central Standard Time (Australia) UT+9:30，澳大利亚
+- China Standard Time UT+8:00，中国
+- Cuba Standard Time UT-4:00，古巴
+
+## 2、MySQL时间字段
+
+MySQL中时间相关字段类型参考：[](../../数据库/MySQL/MySQL.md#2日期类型)
+
+## 3、Java时间API
+
+## 4、Java连接MySQL
+
+在JDBC的连接参数上有一个参数：serverTimezone，这个参数主要是告诉jdbc，数据库处理timestamp是按照什么时区处理的。jdbc第一次从数据库读取到的原始的年、月、日、时分秒都是按照server timezone处理好的。知道了server timezone之后，jdbc可以根据用户配置的serverTimezone的值，逆将这个年月日转换成UTC时间的毫秒数，最终jdbc可以根据自己本地jvm的时区以及这个逆向得到的UTC时间，得到正确的本地时间
+
+数据库连接时的基本参数：
+```
+jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimeZone=UTC
+```
+- 如果MySQL服务器的时间为：UTC，则这里也需要指定 `serverTimeZone=UTC`；
+- 如果MySQL服务器时间为：UTC+8，则这里可以指定为：`serverTimeZone=Asia/Shanghai`
+
+```bash
+mysql> show variables like '%time_zone%';
++------------------+--------+
+| Variable_name    | Value  |
++------------------+--------+
+| system_time_zone | CST    |
+| time_zone        | SYSTEM |
++------------------+--------+
+```
+这里默认是CST，而CST可以代表4个不同的时区，所以无法确定MySQL是按照哪个时区来处理的
+
+## 5、最佳实践
+
+- 如果是类似国际站，可能在多个国家服务，那么数据库时区一般可以设置为：UTC，即`set global time_zone='+00:00'`，即标准时间，然后jdbc连接参数需要设置 `serverTimezone=UTC`，在代码中根据用户所在的时区来处理；
+- 如果是国内，那么设置时区为：UTC+8，即`set global time_zone='+08:00'`，东八区，然后jdbc连接参数需要设置 `serverTimezone=Asia/Shanghai`
+
 
 # 参考文章
 
