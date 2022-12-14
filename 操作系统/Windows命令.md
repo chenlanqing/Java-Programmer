@@ -8,5 +8,13 @@ sysdm.cpl 打开安全属性
 	tasklist|findstr "2720"  : 哪个进程或者程序占用了2720端口
 
 
+# 1、批量获取某个目录下的所有文件名称
+
+```
+dir /a-d /b *.jpg>src.txt
+echo attention, job has done
+pause
+```
+
 
 

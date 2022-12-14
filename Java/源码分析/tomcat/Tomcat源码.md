@@ -5,7 +5,7 @@
 
 ### 1.1、Tomcat整体架构
 
-![](Tomcat架构.png)
+![](image/Tomcat架构.png)
 
 tomcat由Server、Service、Engine、Connerctor、Host、Context组件组成，其中带有s的代表在一个tomcat实例上可以存在多个组件，比如Context(s)，tomcat允许我们部署多个应用，每个应用对应一个Context。这些组件在tomcat的conf/server.xml文件中可以找到，对tomcat的调优需要改动该文件；
 
@@ -15,7 +15,7 @@ Tomcat要实现主要两个核心功能：
 
 Tomcat设计了两个核心的核心组件：连接器（Connector）和容器（Container）来分别做上述两件事情，连接器负责对外服务，容器负责内部处理；
 
-![](Tomcat架构-1.png)
+![](image/Tomcat架构-1.png)
 
 最顶层是Server，即一个Tomcat实例，一个Server中有一个或多个Service，一个Service有一个或多个连接器和一个容器组成；连接器与容器之间通过ServletRequest和ServletResponse连通；
 
@@ -34,11 +34,11 @@ Tomcat设计了两个核心的核心组件：连接器（Connector）和容器�
 
 可以看下ProtocolHandler接口的继承关系：
 
-![](Tomcat-Protocol继承关系.png)
+![](image/Tomcat-Protocol继承关系.png)
 
 连接器的三个核心组件：EndPoint、Processor、Adapter分别用来做三件事情，其中EndPoint 和Processor放在一起抽象成了Protocol组件，关系如下：
 
-![](Tomcat-Connector关系.png)
+![](image/Tomcat-Connector关系.png)
 
 #### 1.2.1、ProtocolHandler组件
 
@@ -70,7 +70,7 @@ Processor是用来实现HTTP协议的，Processor接收Socket，读取字节解�
 
 容器设计了4种容器，分别是Engine、Host、Context和Wrapper，这四种容器父子关系，其关系如下图：
 
-![](Tomcat-Container容器关系.png)
+![](image/Tomcat-Container容器关系.png)
 
 Tomcat通过一种分层架构，使得Servlet容器具有很好的灵活性：Context表示一个web应用程序；Wrapper表示一个Servlet，一个Web应用可能有多个Servlet；Host代表的是一个虚拟主机或者说一个站点；Tomcat可以配置多个虚拟主机地址，而一个虚拟主机可以部署多个web应用程序；Engine表示引擎，用来虚拟管理多个虚拟站点，一个Service最多有一个Engine；
 
@@ -140,7 +140,7 @@ Valve和Filter区别：
 
 ### 3.1、Jetty
 
-![](Jetty整体架构.png)
+![](image/Jetty整体架构.png)
 
 - Jetty 也是 Http 服务器 + Servlet 容器， 更小巧， 更易于定制
 - Jetty 架构： 多个 Connector + 多个 Handler + 一个全局线程池(Connector 和 Handler 共享)
@@ -177,7 +177,7 @@ Valve和Filter区别：
 
 第一部分中各个组件的层次关系，图中红色虚线表示一个请求在Tomcat的流转过程
 
-![](Tomcat-组件关系图.png)
+![](image/Tomcat-组件关系图.png)
 
 上面描述了组件之间的静态关系，如果让一个系统能够对外提供服务，需要创建、组织并启动这些组件；在服务停止时需要释放资源。Tomcat需要动态的管理这些组件的生命周期；
 
@@ -195,7 +195,7 @@ Valve和Filter区别：
 
 具体来说是在LifeCycle接口加入两个方法：添加监听器和删除监听器，除此之外还定义了一个Enum表示组件有哪些状态，以及在什么状态下触发什么事件；因此LifeCycle接口和LifeCycleState就定义成了下面这样的：
 
-![](Tomcat-LifeCycle类图.png)
+![](image/Tomcat-LifeCycle类图.png)
 
 一旦组件达到相应的状态就会触发相应的事件；
 
@@ -207,7 +207,7 @@ Valve和Filter区别：
 
 Tomcat中定义了一个基类LifecycleBase来实现LifeCycle接口，把公共的逻辑放在该类中，如生命周期中状态的转变与维护、生命事件的触发以及监听器添加和删除等，而子类负责自己的初始化、启动和停止方法。避免与基类中方法同名，把具体子类的实现方法改名字，在后面加上internal等；
 
-![](Tomcat-LifeCycleBase类图.png)
+![](image/Tomcat-LifeCycleBase类图.png)
 
 LifecycleBase实现了LifeCycle接口中所有方法，还定义了相应的抽象方法交给具体的子类去实现，典型的模板设计模式
 
@@ -242,7 +242,7 @@ public final synchronized void init() throws LifecycleException {
 
 ## 4、生命周期管理总体类图
 
-![](Tomcat-生命周期整体概览.png)
+![](image/Tomcat-生命周期整体概览.png)
 
 StandardServer、StandardService 等都是Server和Service的具体实现类，都继承了LifecycleBase；
 
@@ -255,7 +255,7 @@ https://github.com/c-rainstorm/blog/blob/master/tomcat/%E8%B0%88%E8%B0%88%20Tomc
 
 启动Tomcat可以通过${CATALINA_HOME}/bin目录下的脚本startup.sh来启动Tomcat，执行该脚本之后，会发生如下流程：
 
-![](Tomcat-启动流程图.png)
+![](image/Tomcat-启动流程图.png)
 
 ## 1、Catalina
 
