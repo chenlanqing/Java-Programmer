@@ -96,6 +96,7 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - mybatisX
 - Rainbow Brackets ：括号插件
 - metricsreloaded
+- ANTLR
 
 # 4、idea插件开发
 
