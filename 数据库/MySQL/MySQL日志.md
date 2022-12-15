@@ -187,46 +187,48 @@ binlog 是通过追加的方式进行写入的，可以通过max_binlog_size 参
 
 ## 3、管理binlog
 
-- 查看binlog是否开启：`show variables like 'log_bin';`
-- 查看binlog日志格式：`show variables like 'binlog_format';`
+以下都是在MySQL CLI操作的
+- `show variables like 'datadir';`: 查询 BINLOG 位置
+- `show variables like 'log_bin';`：查看binlog是否开启
+- `show variables like 'binlog_format';`：查看binlog日志格式
 - `show master logs`：查看所有binlog的日志列表
 - `show master status`：查看最后一个binlog日志的编号名称，及最后一个事件结束的位置
 - `flush logs`：刷新binlog，此刻开始产生一个新编号的binlog日志文件
 - `reset master`：清空所有的binlog日志
 
-```properties
-# 事件查询命令
-# IN 'log_name' ：指定要查询的binlog文件名(不指定就是第一个binlog文件)
-# FROM pos ：指定从哪个pos起始点开始查起(不指定就是从整个文件首个pos点开始算)
-# LIMIT [offset,] ：偏移量(不指定就是0)
-# row_count ：查询总条数(不指定就是所有行)
-show binlog events [IN 'log_name'] [FROM pos] [LIMIT [offset,] row_count];
+## 4、binlog操作命令
 
-# 查看 binlog 内容
-show binlog events;
-# 查看具体一个binlog文件的内容 （in 后面为binlog的文件名）
-show binlog events in 'master.000003';
-# 设置binlog文件保存事件，过期删除，单位天
-set global expire_log_days=3; 
-# 删除当前的binlog文件
-reset master; 
-# 删除slave的中继日志
-reset slave;
-# 删除指定日期前的日志索引中binlog日志文件
-purge master logs before '2019-03-09 14:00:00';
+### 4.1、通过MySQL客户端查binlog
 
-# 删除指定日志文件
-purge master logs to 'master.000003';
-```
-
-## 4、查看binlog日志
-
-- `mysqlbinlog --no-defaults -vv --base64-output=DECODE-ROWS <binlog文件>`
+通过MySQL客户端查看binlog日志
 - `show binlog events;`：查看第一个 Binlog 日志
 - `show binlog events in ‘binlog.000030’;`：查看指定的 Binlog 日志
 - `show binlog events in ‘binlog.000030’ from 931;`：从指定的位置开始，查看指定的 Binlog 日志
 - `show binlog events in ‘binlog.000030’ from 931 limit 2;`：从指定的位置开始，查看指定的 Binlog 日志，限制查询的条数
 - `show binlog events in ‘binlog.000030’ from 931 limit 1, 2;`：从指定的位置开始，带有偏移，查看指定的 Binlog 日志，限制查询的条数
+```sql
+-- 事件查询命令
+-- IN 'log_name' ：指定要查询的binlog文件名(不指定就是第一个binlog文件)
+-- FROM pos ：指定从哪个pos起始点开始查起(不指定就是从整个文件首个pos点开始算)
+-- LIMIT [offset,] ：偏移量(不指定就是0)
+-- row_count ：查询总条数(不指定就是所有行)
+show binlog events [IN 'log_name'] [FROM pos] [LIMIT [offset,] row_count];
+
+-- 查看 binlog 内容
+show binlog events;
+-- 查看具体一个binlog文件的内容 （in 后面为binlog的文件名）
+show binlog events in 'master.000003';
+-- 设置binlog文件保存事件，过期删除，单位天
+set global expire_log_days=3; 
+-- 删除当前的binlog文件
+reset master; 
+-- 删除slave的中继日志
+reset slave;
+-- 删除指定日期前的日志索引中binlog日志文件
+purge master logs before '2019-03-09 14:00:00';
+-- 删除指定日志文件
+purge master logs to 'master.000003';
+```
 
 `show binlog events;`查看日志：
 ```
@@ -245,6 +247,82 @@ End_log_pos: 10446
 End_log_pos: 10506
        Info: table_id: 172 flags: STMT_END_F
 ```
+使用 show BINLOG events 的问题：使用该命令时，如果当前 binlog 文件很大，而且没有指定 limit，会引发对资源的过度消耗。因为 MySQL 客户端需要将 binlog 的全部内容处理，返回并显示出来。为了防止这种情况，mysqlbinlog 工具是一个很好的选择
+
+### 4.2、通过 mysqlbinlog 查询 BINLOG 信息
+
+- [mysqlbinlog — Utility for Processing Binary Log Files](https://dev.mysql.com/doc/refman/8.0/en/mysqlbinlog.html)
+
+```bash
+# 查询 BINLOG 的信息
+mysqlbinlog  --no-defaults mysql-bin.000034 | less
+```
+输出日志分析：
+```bash
+# at 21019
+#190308 10:10:09 server id 1  end_log_pos 21094 CRC32 0x7a405abc     Query   thread_id=113   exec_time=0 error_code=0
+SET TIMESTAMP=1552011009/*!*/;
+BEGIN
+/*!*/;
+```
+上面输出包括信息：
+- position: 位于文件中的位置，即第一行的（# at 21019）,说明该事件记录从文件第21019个字节开始
+- timestamp: 事件发生的时间戳，即第二行的（#190308 10:10:09）
+- server id: 服务器标识（1）（`#190308 10:10:09 server id 1` 表示 server 1 开始执行事件的日期）
+- end_log_pos 表示下一个事件开始的位置（即当前事件的结束位置+1）
+- thread_id: 执行该事件的线程id （thread_id=113）
+- exec_time: 事件执行的花费时间（表示在 master 上花费的时间，在 salve 上，记录的时间是从 Master 记录开始，一直到 Slave 结束完成所花费的时间）
+- error_code: 错误码，0意味着没有发生错误
+- type:事件类型Query
+
+mysqlbinlog 主要用途：
+- mysqlbinlog 可以作为代替 cli 读取 binlog 的工具。
+- mysqlbinlog 可以将执行过的 SQL 语句输出，用于数据的恢复或备份
+
+查询 BINLOG 日志：
+```bash
+# 查询规定时候后发生的 BINLOG 日志
+mysqlbinlog --no-defaults --base64-output=decode-rows -v \
+ --start-datetime  "2022-11-22 14:00:00" \
+ --database test  mysql-bin.000034 | less
+```
+导出 BINLOG 日志，用于分析和排查 sql 语句：
+```bash
+mysqlbinlog --no-defaults --base64-output=decode-rows -v \
+ --start-datetime  "2022-11-22 14:00:00" \
+ --database test \
+ mysql-bin.000034 > /home/test/binlog_raw.sql
+```
+导入 BINLOG 日志：
+```bash
+# 通过 BINLOG 进行恢复。
+mysqlbinlog --start-position=1038 --stop-position=1164 \
+ --database=db_name  mysql-bin.000034 | \
+ mysql  -u cisco -p db_name
+
+# 通过 BINLOG 导出的 sql 进行恢复。
+mysql -u cisco -p db_name < binlog_raw.sql
+```
+mysqlbinlog 的常用参数：
+- `--database` 仅仅列出配置的数据库信息
+- `--no-defaults` 读取没有选项的文件, 指定的原因是由于 mysqlbinlog 无法识别 BINLOG 中的 `default-character-set=utf8` 指令
+- `--offset` 跳过 log 中 N 个条目
+- `--verbose` 将日志信息重建为原始的 SQL 陈述。
+  - `-v` 仅仅解释行信息
+  - `-vv` 不但解释行信息，还将 SQL 列类型的注释信息也解析出来
+- `--start-datetime` 显示从指定的时间或之后的时间的事件。
+  - 接收 DATETIME 或者 TIMESTRAMP 格式。
+- `--base64-output=decode-rows` 将 BINLOG 语句中事件以 base-64 的编码显示，对一些二进制的内容进行屏蔽。
+  - `AUTO` 默认参数，自动显示 BINLOG 中的必要的语句
+  - `NEVER` 不会显示任何的 BINLOG 语句，如果遇到必须显示的 BINLOG 语言，则会报错退出。
+  - `DECODE-ROWS` 显示通过 -v 显示出来的 SQL 信息，过滤到一些 BINLOG 二进制数据;
+
+### 4.3、MySQL Cli 和 mysqlbinlog 工具之间的比较
+
+如果想知道当前 MySQL 中正在写入的 BINLOG 的名称，大小等基本信息时，可以通过 Cli 相关的命令来查询。
+
+但想查询，定位，恢复 BINLOG 中具体的数据时，要通过 mysqlbinlog 工具，因为相较于 Cli 来说，mysqlbinlog 提供了 `--start-datetime`、`--stop-position` 等这样更为丰富的参数供选择。这时 Cli 中 SHOW BINLOG EVENTS 的简要语法就变得相形见绌；
+
 ## 5、binlog写入机制
 
 binlog的写入时机也非常简单，事务执行过程中，先把日志写到binlog cache，事务提交的时候，再把binlog cache写到binlog文件中；因为一个事务的binlog不能被拆开，无论这个事务多大，也要确保一次性写入，所以系统会给每个线程分配一个块内存作为binlog cache。可以通过`binlog_cache_size`参数控制单个线程 binlog cache 大小，如果存储内容超过了这个参数，就要暂存到磁盘（Swap）；
@@ -292,42 +370,7 @@ DELETE_ROWS_EVENT|	删除数据，即 delete 操作|	非常重要
 
 每个 Event 包含 header 和 data 两个部分；header 提供了 Event 的创建时间，哪个服务器等信息，data 部分提供的是针对该 Event 的具体信息，如具体数据的修改。对 Binlog 的解析，即为对 Event 的解析
 
-## 7、mysqlbinlog 命令的使用
-
-```bash
-# mysqlbinlog 的执行格式
-mysqlbinlog [options] log_file ...
-
-# 查看bin-log二进制文件（shell方式）
-mysqlbinlog -v --base64-output=decode-rows /var/lib/mysql/master.000003
-
-# 查看bin-log二进制文件（带查询条件）
-mysqlbinlog -v --base64-output=decode-rows /var/lib/mysql/master.000003 \
-    --start-datetime="2019-03-01 00:00:00"  \
-    --stop-datetime="2019-03-10 00:00:00"   \
-    --start-position="5000"    \
-    --stop-position="20000"
-```
-
-输出日志分析：
-```bash
-# at 21019
-#190308 10:10:09 server id 1  end_log_pos 21094 CRC32 0x7a405abc     Query   thread_id=113   exec_time=0 error_code=0
-SET TIMESTAMP=1552011009/*!*/;
-BEGIN
-/*!*/;
-```
-上面输出包括信息：
-- position: 位于文件中的位置，即第一行的（# at 21019）,说明该事件记录从文件第21019个字节开始
-- timestamp: 事件发生的时间戳，即第二行的（#190308 10:10:09）
-- server id: 服务器标识（1）
-- end_log_pos 表示下一个事件开始的位置（即当前事件的结束位置+1）
-- thread_id: 执行该事件的线程id （thread_id=113）
-- exec_time: 事件执行的花费时间
-- error_code: 错误码，0意味着没有发生错误
-- type:事件类型Query
-
-## 8、binlog与redo log区别
+## 7、binlog与redo log区别
 
 |          | redo log      | binlog    |
 | -------- | -------------------| --------------- |
@@ -339,6 +382,60 @@ BEGIN
 由 binlog 和 redo log 的区别可知：binlog 日志只用于归档，只依靠 binlog 是没有 crash-safe 能力的。
 
 但只有 redo log 也不行，因为 redo log 是 InnoDB特有的，且日志上的记录落盘后会被覆盖掉。因此需要 binlog和 redo log二者同时记录，才能保证当数据库发生宕机重启时，数据不会丢失
+
+## 8、使用binlog恢复数据
+
+在执行数据恢复前，如果操作的是生产环境，建议如下操作：
+- 使用 flush logs 命令，替换当前主库中正在使用的 binlog 文件，好处如下：
+  - 可将误删操作，定位在一个 BINLOG 文件中，便于之后的数据分析和恢复。
+  - 避免操作正在被使用的 BINLOG 文件，防止发生意外情况。
+- 数据的恢复不要在生产库中执行，先在临时库恢复，确认无误后，再倒回生产库。防止对数据的二次伤害。
+
+通常来说，恢复主要有两个步骤：
+- 在临时库中，恢复定期执行的全量备份数据。
+- 然后基于全量备份的数据点，通过 BINLOG 来恢复误操作和正常的数据
+
+使用 BINLOG 做数据恢复前：
+```bash
+# 查看正在使用的 Binlog 文件
+show master status\G;
+# 显示结果是： binlog.000034
+
+# 执行 flush logs 操作，生成新的 BINLOG
+flush logs;
+
+# 查看正在使用的 Binlog 文件
+show master status\G;
+# 结果是：binlog.000035
+```
+如果有删除行和删除表的误操作，那么针对这种场景有两种方式恢复：
+- 方式一：首先恢复到删除表操作之前的位置，然后再单独恢复误删的数据行。
+- 方式二：首先恢复到误删数据行的之前的位置，然后跳过误删事件再恢复数据表操作之前的位置；
+
+可以根据时间来确定位置信息：
+```bash
+#  根据时间确定位置信息
+mysqlbinlog --no-defaults --base64-output=decode-rows -v \
+ --start-datetime  "2019-11-22 14:00:00" \
+ --database test_binlog  binlog.000012 | less
+```
+找到对应的位置后：
+```bash
+# 根据位置导出 SQL 文件
+mysqlbinlog --no-defaults --base64-output=decode-rows -v \
+ --start-position "2508132" --stop-position "2511004" \
+ --database test_binlog  mysql-bin.000034 \
+ > /root/test_binlog_step1.sql
+ 
+mysqlbinlog --no-defaults --base64-output=decode-rows -v \
+ --start-position "2508813" --stop-position "2509187" \
+ --database test_binlog  mysql-bin.000034 \
+ > /root/test_binlog_step2.sql
+ 
+# 使用 mysql 进行恢复
+mysql -u cisco -p < /home/mysql_backup/test_binlog_step1.sql
+mysql -u cisco -p < /home/mysql_backup/test_binlog_step2.sql
+```
 
 # 三、Binlog 解析工具
 
