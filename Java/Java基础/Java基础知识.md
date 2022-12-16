@@ -445,6 +445,7 @@ public class Test{
 # 三、进制基础
 
 - [位运算高级应用](https://graphics.stanford.edu/~seander/bithacks.html)
+- [位运算](https://bugstack.cn/md/algorithm/logic/math/2022-10-30-bits.html)
 
 ## 1、进制基础
 
