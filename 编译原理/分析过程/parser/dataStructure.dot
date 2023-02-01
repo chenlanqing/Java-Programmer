@@ -1,0 +1,15 @@
+digraph {
+    edge[arrowhead=empty]
+    Program -> Block
+    Block -> Stmt
+    Stmt ->ASTNode
+    IfStmt -> Stmt
+    AssignStmt -> Stmt
+    DeclareStmt -> Stmt
+    Factor -> ASTNode
+    ForStmt -> Stmt
+    FunctionDefineStmt -> Stmt
+    Variable -> Factor
+    Scalar -> Factor
+    Expr -> ASTNode
+}

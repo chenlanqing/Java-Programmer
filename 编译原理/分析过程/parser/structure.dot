@@ -1,0 +1,24 @@
+digraph {  
+  #splines=line;
+  ranksep=0.5
+  #node [shape=circle]
+
+  
+  "Program.parse" -> "Stmt.parse"
+  A[label="switch(lookahead)"]
+  "Stmt.parse" -> A
+  "A" -> "IfStmt.parse"
+  "A" -> "Function.parse"
+  "A" -> "Assign.parse"
+  "A" -> "Declare.parse"
+  "A" -> "WhileStmt.parse"
+  "A" -> "...Stmt.parse"
+  "A" -> "Block.parse"
+  "Block.parse" -> "Stmt.parse"[style=dashed]
+
+  
+
+
+
+
+}

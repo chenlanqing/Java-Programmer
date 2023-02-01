@@ -1,0 +1,14 @@
+digraph {
+
+    rankdir=LR;
+    #splines=line;
+    ranksep=1.5
+    "从字符流中取出一个字符c" -> a
+    a [label="switch(c)"]
+
+    a -> "删除注释程序" [label="/"]
+    a -> "字符串关键字提取" [label="_a-zA-Z"]
+    a -> "数字" [label="0-9."]
+    a -> "+-*/^&|=<>" [label="操作符"]
+    a -> "{}()" [label="提取括号"]
+}

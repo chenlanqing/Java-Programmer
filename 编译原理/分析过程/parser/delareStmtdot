@@ -1,0 +1,13 @@
+digraph {  
+  #splines=line;
+  ranksep=0.5
+  #node [shape=circle]
+
+  
+
+  "DeclareStmt.parse" -> "match(var)" -> "Factor.parse" -> "match(=)" -> "Expr.parse"
+
+
+
+
+}

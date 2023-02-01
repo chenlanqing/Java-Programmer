@@ -1,0 +1,27 @@
+digraph {  
+  #splines=line;
+  ranksep=0.5
+  node [shape=circle]
+  
+
+  p1[label="+"]
+  "+" -> p1
+  p1 -> "x"
+  o1[label="*"]
+  p1 -> o1
+  y1[label="y"]
+  o1 -> y1
+  m1[label="-"]
+  o1 -> m1
+  y2[label="y"]
+  m1 -> y2
+  n1[label="1"]
+  m1 -> n1 
+
+  "+" -> "*"
+  "*" -> "-"
+  "*" -> z
+  "-" ->y
+  "-" -> 1
+
+}

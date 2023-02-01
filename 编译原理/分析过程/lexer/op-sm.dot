@@ -1,0 +1,109 @@
+digraph G {
+
+  rankdir=LR;
+  #splines=line;
+  ranksep=1.5
+  node [shape=circle]
+  
+  #end1,end2, end3, end4[shape=doublecircle, label="int", color=green, fontcolor=green]
+  #error,error1,error2,error3[shape=doublecircle, label="Err", color=red, fontcolor=red]
+  
+
+  100, 101, 102, 200, 201, 300,
+  400,402,500,501,502,600,601,602,
+  700,701,800,801,900,901,902,1000,1001,1002,
+  1100,1101,1200,1201,13,14
+  [shape=doublecircle]
+
+  0 -> 1[label="+"]
+  100[label="+"]
+  101[label="++"]
+  102[label="+="]
+  1 -> 100[label="any"]
+  1 -> 101[label="+"]
+  1 -> 102[label="="]
+
+   
+  0 -> 2[label="-"]
+  200[label="-"]
+  201[label="--"]
+  202[label="-="]
+  2 -> 200[label="any"]
+  2 -> 201[label="-"]
+  2 -> 202[label="="]
+
+  0 -> 3[label="*"]
+  300[label="*"]
+  302[label="*="]
+  3 -> 300[label="any"]
+  3 -> 302[label="="]
+
+  0 -> 4[label="/"]
+  400[label="/"]
+  402[label="/="]
+  4 -> 400[label="any"]
+  4 -> 402[label="="]
+
+  0 -> 5[label=">"]
+  500[label=">"]
+  501[label=">>"]
+  502[label=">="]
+  5 -> 500[label="any"]
+  5 -> 501[label=">"]
+  5 -> 502[label="="]
+
+  0 -> 6[label="<"]
+  600[label="<"]
+  601[label="<<"]
+  602[label="<="]
+  6 -> 600[label="any"]
+  6 -> 601[label="<"]
+  6 -> 602[label="="]
+
+  0 -> 7[label="="]
+  700[label="="]
+  701[label="=="]
+  7 -> 700[label="any"]
+  7 -> 701[label="="]
+
+  0 -> 8[label="!"]
+  800[label="!"]
+  801[label="!="]
+  8 -> 800[label="any"]
+  8 -> 801[label="="]
+
+  0 -> 9[label="&"]
+  900[label="&"]
+  901[label="&="]
+  902[label="&&"]
+  9 -> 900[label="any"]
+  9 -> 901[label="="]
+  9 -> 902[label="&&"]
+
+  0 -> 10[label="|"]
+  1000[label="|"]
+  1001[label="|="]
+  1002[label="||"]
+  10 -> 1000[label="any"]
+  10 -> 1001[label="="]
+  10 -> 1002[label="|"]
+
+
+  0 -> 11[label="^"]
+  1100[label="^"]
+  1101[label="^="]
+  11 -> 1100[label="any"]
+  11 -> 1101[label="="]
+
+
+  0 -> 12[label="%"]
+  1200[label="%"]
+  1201[label="%="]
+  12 -> 1200[label="any"]
+  12 -> 1201[label="="]
+  
+  13[label=","]
+  0 -> 13[label=","]
+  14[label=";"]
+  0 -> 14[label=";"]
+}

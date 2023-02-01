@@ -1,0 +1,18 @@
+digraph {
+
+  rankdir=LR;
+  #splines=line;
+  ranksep=1.5
+  node [shape=circle]
+  
+  end, end1[shape=doublecircle]
+  end, end1 [label="token"]
+  0 -> 1[label="_a-zA-Z"];
+  1 -> 2[label="_a-zA-Z0-9"];
+  1->end1
+  2 -> 2[label="_a-zA-Z0-9"]
+
+  2->end[label="other"]
+  end -> "关键字"[label="在字典中"] 
+  end -> "变量"[label="不在字典中"]
+}

@@ -1,0 +1,11 @@
+digraph {
+
+  node[color="#c94451",fontcolor="#c94451"]
+  edge[dir=none,color="#c94451"];
+
+  "我" -> "看";
+  "看" -> "《万物生长》";
+
+
+
+}

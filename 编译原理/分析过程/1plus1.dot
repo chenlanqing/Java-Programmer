@@ -1,0 +1,14 @@
+digraph {
+
+  node[color="#c94451",fontcolor="#c94451"]
+  edge[dir=none,color="#c94451"];
+
+  a1[label="1"]
+  a2[label="1"]
+  "+(expr)" -> a1;  
+  "+(expr)" -> a2;
+
+  
+
+
+}

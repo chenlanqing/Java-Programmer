@@ -1,0 +1,26 @@
+digraph G {
+
+  rankdir=LR;
+  #splines=line;
+  ranksep=1.5
+  node [shape=circle]
+  
+  #end1,end2, end3, end4[shape=doublecircle, label="int", color=green, fontcolor=green]
+  #error,error1,error2,error3[shape=doublecircle, label="Err", color=red, fontcolor=red]
+  
+
+
+  10,20
+  [shape=doublecircle]
+
+  0 -> 1[label="\""]
+  0 -> 2[label="\'"]
+
+  10[label="str"]
+  1 -> 10[label="\""]
+  1 -> 1 [label="any not \""]
+
+  20[label="str"]
+  2 -> 20[label="'"]
+  2 -> 2[label="any not \'"]
+}
