@@ -1612,6 +1612,14 @@ log.info("total : {}", longAdder.longValue());
 ```
 File.lines方法其实实现是使用 BufferedReader 进行字符流读取时，用到了缓冲
 
+## 3、如何获取Jar包的文件
+
+通用做法：
+```java
+ClassPathResource resource = new ClassPathResource("filename");
+InputStream inputStream = resource.getInputStream();
+```
+
 # 参考文章
 
 * [Java-NIO系列](http://ifeve.com/java-nio-all/)
