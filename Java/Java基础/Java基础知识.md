@@ -5513,7 +5513,38 @@ mvn clean package -DskipTests
 debuging开始，在代码中打开JarLauncher MainMethodRunner并打上断点标记
 
 ![](image/Jar包-idea中debug-JarLaunch.png)
+	
+## 9、读取jar包资源
 
+### 9.1、读取jar包路径
+
+```java
+String folderName = "i18n";
+// jar:file:/D:/workspace/test-api/target/test-api-1.0-SNAPSHOT.jar!/BOOT-INF/classes!/i18n
+URL url = Thread.currentThread().getContextClassLoader().getResource(folderName);
+String jarPath = url.getFile().substring(url.getFile().indexOf(":") + 2, url.getFile().indexOf("!"));
+JarFile jarFile = new JarFile(new File(jarPath));
+```
+
+### 9.2、读取jar包文件
+
+一般jar包要导出的文件可以放到目录：`src/main/resources`
+```
+│  pom.xml
+└─src
+    ├─main
+    │  └─resources
+    │      │  application.properties
+    │      │  export.xls
+```
+读取resources目录下的文件
+```java
+// 方式1：通过 ClassPathResource
+ClassPathResource resource = new ClassPathResource("filename");
+InputStream inputStream = resource.getInputStream();
+// 方式2：通过研究 ClassPathResource源码发现可以使用如下方式：
+InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("filename");
+```
 
 # 二十、Java中的null
 
