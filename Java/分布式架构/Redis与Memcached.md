@@ -2271,7 +2271,14 @@ Redis安全防范
 
 ## 1、禁止一些高危命令
 
-修改 redis.conf 文件，禁用远程修改 DB 文件地址，禁止一些高危的命令，
+高危命令
+```bash
+KEYS        # 虽然该命令的模糊匹配功能很强大，但只适用于小数据量，当数据量很大时会导致Redis锁住及CPU飙升，建议禁用或重命名 
+FLUSHDB     # 删除Redis中当前所在数据库中的所有记录，并且此命令不会执行失败
+FLUSHALL    # 删除Redis中所有数据库的记录，并且此命令不会失败
+CONFIG      # 客户端可修改Redis配置
+```
+修改 redis.conf 文件，禁用远程修改 DB 文件地址，禁止一些高危的命令，在配置文件redis.conf中找到SECURITY区域，添加如下命令
 ```
 rename-command FLUSHALL ""
 rename-command CONFIG ""
