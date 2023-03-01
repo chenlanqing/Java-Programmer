@@ -710,12 +710,59 @@ public void test2() {
 }
 ```
 
+### 4.8、十进制转二进制算法
+
+#### 4.8.1、余数短除法除以二
+
+- 将给定的十进制数除以2，得到商和余数。（可以通过取模和除法来实现）
+- 将余数记录下来，然后将商作为新的十进制数重复步骤1，直到商为0为止。
+- 将所有记录下来的余数倒序排列起来，得到的就是十进制数的二进制表示
+```java
+public static String toBinaryString(int i) {
+	StringBuilder sb = new StringBuilder();
+	while ( i > 0) {
+		sb.append(i % 2);
+		i = i >> 1;
+	}
+	return sb.reverse().toString();
+}
+```
+
+#### 4.8.22、降二次幂及减法混合运算
+
+将十进制数 $1234_{10}$ 转换为二进制
+
+思路：
+- 找出小于且最接近需计算数字的幂函数值，小于 $1234_{10}$ 的2的幂的最大值是 1024
+
+
+```java
+ public static String toBinaryPower(int i) {
+	int len = (int) (Math.log(i) / Math.log(2));
+	StringBuilder sb = new StringBuilder();
+	do {
+		i = (int) (i - Math.pow(2, len));
+		int power = i <= 0 ? -1 : (int) (Math.log(i) / Math.log(2));
+		for (int j = len; j > power; j--) {
+			if (j == len) {
+				sb.append("1");
+			} else {
+				sb.append("0");
+			}
+		}
+		len = power;
+	} while (i > 0);
+	return sb.toString();
+}
+```
+
 ## 5、如何利用位运算
 
 ### 5.1、子网掩码
 
 ### 5.2、求平均值
-```
+
+```java
 int x = 32760; int y = 32762; 求 x，y 的平均值，要求空间复杂度 O(0)
 public static int ave(int x， int y){
 	return (x&y) + ((x^y)>>1)；
@@ -736,25 +783,25 @@ y(111111111111010) = 111111111111000 + 000000000000010
 - `a&1 = 0` 偶数
 - `a&1 = 1` 奇数
 
-### 5.4、取 int 型变量 a 的第 k 位 (k=0，1，2....)
+### 5.4、取整型变量的第K位
 
-即 `a>>k&1` (先右移k再与1)
+取 int 型变量 a 的第 k 位 (k=0，1，2....)， 即 `a>>k&1` (先右移k再与1)
 
 ### 5.5、幂问题
 
-- 判断是否为 2 的幂：`((x&(x-1))==0) && (x!=0);`
+**判断是否为 2 的幂：** `((x&(x-1))==0) && (x!=0);`
   
-- 如何判断一个无符号数是2的n次方-1:
+**如何判断一个无符号数是2的n次方-1:**
 ```java
 private static boolean isPowerOfTwoLoseOne(int val) {
-	return (val & (val+1)) == 0；
+	return (val & (val+1)) == 0;
 }
 ```
-- 非2的幂次方转换为2的幂次方
+**非2的幂次方转换为2的幂次方**
   
-- 求一个数离它最近的大于等于2的幂次方的数:
+**求一个数离它最近的大于等于2的幂次方的数:**
 ```java
-MAXIMUM_CAPACITY = Integer.MAX_VALUE；
+private static final int MAXIMUM_CAPACITY = Integer.MAX_VALUE；
 private static final int tableSizeFor(int c) {
 	int n = c - 1;
 	n |= n >>> 1;
@@ -766,7 +813,7 @@ private static final int tableSizeFor(int c) {
 }
 ```
 
-- 如果求小于等于2的幂次方的数:
+**求一个数离它最近的小于等于2的幂次方的数：**
 ```java
 private static final int tableSizeFor(int n) {
 	n |= n >>> 1;
@@ -777,14 +824,20 @@ private static final int tableSizeFor(int n) {
 	return  n-(n>>1);
 }
 ```
-- 使用位运算(&)来实现取模运算(%)：
-	```
-	X % 2^n = X & (2^n - 1)
-	2^n表示2的n次方，也就是说，一个数对2^n取模 == 一个数和(2^n - 1)做按位与运算 。
-	假设n为3，则2^3 = 8，表示成2进制就是1000。2^3 -1 = 7 ，即0111。
-	此时X & (2^3 - 1) 就相当于取X的2进制的最后三位数。
-	从2进制角度来看，X / 8相当于 X >> 3，即把X右移3位，此时得到了X / 8的商，而被移掉的部分(后三位)，则是X % 8，也就是余数
-	```
+
+**使用位运算(&)来实现取模运算(%)：**
+```
+X % 2^n = X & (2^n - 1)
+2^n表示2的n次方，也就是说，一个数对2^n取模 == 一个数和(2^n - 1)做按位与运算 。
+假设n为3，则2^3 = 8，表示成2进制就是1000。2^3 -1 = 7 ，即0111。
+此时X & (2^3 - 1) 就相当于取X的2进制的最后三位数。
+从2进制角度来看，X / 8相当于 X >> 3，即把X右移3位，此时得到了X / 8的商，而被移掉的部分(后三位)，则是X % 8，也就是余数
+```
+
+扩展： **如何求某个是2的多少次幂，** $n=2^?$ ，其中 `?` 需要我们求出来，解决方法：首先使用Math类中的log方法求出num的对数，再除以2的对数即可得到num是2的多少次方
+```java
+int ? = (int) (Math.log(num) / Math.log(2));
+```
 
 ### 5.6、计算绝对值
 
@@ -795,10 +848,10 @@ public static int abs(int x){
 }
 ```
 
-- 取模运算转化成位运算 (在不产生溢出的情况下)：`a % (2^n)` 等价于 `a & (2^n - 1)`
-- 乘法运算转化成位运算 (在不产生溢出的情况下)：`a * (2^n)` 等价于 `a<< n`
-- 除法运算转化成位运算 (在不产生溢出的情况下)：`a / (2^n)` 等价于 `a>> n`，例: 12/8 == 12>>3
-- a % 2 等价于 a & 1       
+- 取模运算转化成位运算 (在不产生溢出的情况下)：$a \% (2^n)$ 等价于 $a \& (2^n - 1)$
+- 乘法运算转化成位运算 (在不产生溢出的情况下)：$a\times (2^n)$ 等价于 $a<<n$
+- 除法运算转化成位运算 (在不产生溢出的情况下)：$a \div (2^n)$ 等价于 $a>>n$，例: $12\div8 == 12>>3$
+- $a \% 2$ 等价于 $a \& 1$       
 ```
 if (x == a) x= b;
 else x= a;
