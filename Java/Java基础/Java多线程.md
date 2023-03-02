@@ -2544,6 +2544,8 @@ Java 的线程调度是不分时的，同时启动多个线程后，不能保证
 
 互斥锁使用对同一个资源的互斥的方式达到线程同步的目的，信号量可以同步多个资源以达到线程同步
 
+## 22、Java协程
+
 # 三、JUC包
 
 所有AQS和重入锁不是通过继承实现的，而是通过组合实现的
@@ -5780,39 +5782,26 @@ JCStress（Java Concurrency Stress）它是OpenJDK中的一个高并发测试工
 
 # 参考文章
 
-* [死磕Java并发](http://blog.csdn.net/chenssy/article/category/6701493/2)
 * [Java并发专题](https://juejin.im/post/5aeed586f265da0b8262b019)
 * [非阻塞同步算法与CAS(Compare and Swap)无锁算法](http://www.cnblogs.com/Mainz/p/3546347.html)
 * [Java CAS 和ABA问题](http://www.cnblogs.com/549294286/p/3766717.html、http://www.importnew.com/20472.html)
 * [Unsafe与CAS](http://www.cnblogs.com/xrq730/p/4976007.html)
 * [并发相关源码](http://www.cnblogs.com/xrq730/category/1021774.html)
-* [CAS原理](https://blog.52itstyle.com/archives/948/)
-* [Java并发性和多线程介绍](http://ifeve.com/java-concurrency-thread-directory/)
 * [Java多线程系列](http://www.cnblogs.com/skywang12345/p/java_threads_category.html)
-* [线程中断机制](http://ifeve.com/java-interrupt-mechanism/)
-* [深入分析synchronized的实现原理](http://cmsblogs.com/?p=2071)
 * [Synchronized及其实现原理](http://www.cnblogs.com/paddix/p/5367116.html)
 * [synchronized关键字及实现细节](http://www.cnblogs.com/javaminer/p/3889023.html)
-* [synchronized源码分析](https://www.jianshu.com/p/c5058b6fe8e5)
 * [synchronized底层实现分析](https://github.com/farmerjohngit/myblog/issues/12)
 * [Moniter的实现原理](http://www.hollischuang.com/archives/2030)
 * [JMV源码分析synchronized原理](https://www.cnblogs.com/kundeg/p/8422557.html)
 * [Java锁优化](http://luojinping.com/2015/07/09/java锁优化/)
-* [使用ThreadLocal变量的时机和方法](http://www.importnew.com/14398.html)
-* [清理ThreadLocal](http://www.importnew.com/16112.html)
 * [深入剖析ThreadLocal](http://www.cnblogs.com/dolphin0520/p/3920407.html，)
 * [深入理解ThreadLocal](https://vence.github.io/2016/05/28/threadlocal-info/)
 * [ThreadLocal 内部实现和应用场景](https://segmentfault.com/a/1190000000537475)
-* [优雅地使用 ThreadLocal 传递参数](https://toutiao.io/posts/nic1qr/preview)
-* [ThreadLocal 导致Full GC 分析](http://blog.brucefeng.info/post/threadlocal-resultin-fullgc?utm_source=tuicool&utm_medium=referral)
 * [ThreadLocal源码解读](https://www.cnblogs.com/micrari/p/6790229.html)
-* [Exchanger](http://cmsblogs.com/?p=2269)
 * [类加载过程中死锁](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
-* [CPU Cache 与缓存行](https://mp.weixin.qq.com/s/4oU6YqxHso2ir0NXtBuaog)
 * [Java伪共享问题](https://www.cnblogs.com/cyfonly/p/5800758.html)
 * [Java-BlockingQueue](https://javadoop.com/post/java-concurrent-queue)
 * [The LMAX Architecture](https://martinfowler.com/articles/lmax.html)
-* [Disruptor框架英文翻译](http://ifeve.com/disruptor/)
 * [LMAX架构](https://www.jianshu.com/p/5e0c4481efb7)
 * [生产者消费者的Java实现](https://blog.csdn.net/monkey_d_meng/article/details/6251879)
 * [一文看清楚生产者消费者](https://juejin.im/post/5aeec675f265da0b7c072c56)
