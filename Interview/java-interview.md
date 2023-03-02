@@ -181,6 +181,15 @@ public class MostPopularCollector<T> implements Collector<T, Map<T, Integer>, Op
 }
 ```
 
+## 6、a=a+b和a+=b的区别
+
+- [复合运算符](https://docs.oracle.com/javase/specs/jls/se14/html/jls-15.html#jls-15.26.2)
+
+`a+=b` 等价于 `a = (type of a) (a + b)`; type of a 表示的是a的类型
+
+- `a+=b` 会自动转换为其进行类型转换；
+- `a=a+b` 需要显示的为其进行类型的转换；
+
 # 二、集合
 
 ## 1、HashMap、Hashtable、LinkedHashMap
@@ -497,6 +506,13 @@ ConcurrentHashMap 只能保证提供的原子性读写操作是线程安全的�
 - 使用了 ConcurrentHashMap，不代表对它的多个操作之间的状态是一致的，是没有其他线程在操作它的，如果需要确保需要手动加锁；
 - 诸如 size、isEmpty 和 containsValue 等聚合方法，在并发情况下可能会反映 ConcurrentHashMap 的中间状态。因此在并发情况下，这些方法的返回值只能用作参考，而不能用于流程控制。显然，利用 size 方法计算差异值，是一个流程控制；
 - 诸如 putAll 这样的聚合方法也不能确保原子性，在 putAll 的过程中去获取数据可能会获取到部分数据。
+
+### 2.10、扩容是怎么不阻塞读操作的
+
+扩容的时候，以链表为单位从后向前迁移链表，迁移完成的将旧数组头节点替换为 ForwardingNode
+* 根据是否为 ForwardingNode 来决定是在新数组查找还是在旧数组查找，不会阻塞
+* 如果链表长度超过 1，则需要对节点进行复制（创建新节点），怕的是节点迁移后 next 指针改变
+* 如果链表最后几个元素扩容后索引不变，则节点无需复制
 
 ## 3、TreeMap
 
