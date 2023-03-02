@@ -1419,7 +1419,7 @@ Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
 - （4）如果 CAS 获取偏向锁失败，则表示有竞争，当到达全局安全点(safepoint)时获得偏向锁的线程被挂起，偏向锁升级为轻量级锁，然后被阻塞在安全点的线程继续往下执行同步代码;
 - （5）执行同步代码；
 
-#### 7.4.4、偏向锁释放过程
+#### 7.4.6、偏向锁释放过程
 
 偏向锁只有遇到其他线程尝试竞争偏向锁时，持有偏向锁的线程才会释放锁，线程不会主动去释放偏向锁；
 
@@ -1432,6 +1432,19 @@ Space losses: 0 bytes internal + 4 bytes external = 4 bytes total
 当进入偏向状态的时候，mark word的大部分空间都存储持有锁的线程id了，这部分空间占用了原有存储哈希码的位置，那原对象的哈希码如何处理呢？
 
 当一个对象已经计算过一致性哈希后，它就再也无法进入偏向锁的状态了；而当一个对象当前正处于偏向锁状态时，又收到需要计算其一致性哈希码请求时（调用System::identityHashCode），它的偏向状态会立即被撤销，并且锁会膨胀为重量级锁；
+
+#### 7.4.7、JDK15之后取消偏向锁
+
+[JEP 374: Deprecate and Disable Biased Locking](https://openjdk.org/jeps/374)
+
+JDK15默认关闭偏向锁优化，如果要开启可以使用`XX:+UseBiasedLocking`，但使用偏向锁相关的参数都会触发deprecate警告
+
+为什么取消？
+- 偏向锁导致synchronization子系统的代码复杂度过高，并且影响到了其他子系统，导致难以维护、升级
+- 在现在的jdk中，偏向锁带来的加锁时性能提升从整体上看并没有带来过多收益(撤销锁的成本过高 需要等待全局安全点，再暂停线程做锁撤销)
+- 官方说明中有这么一段话: since the introduction of biased locking into HotSpot also change the amount of uncontended operations needed for that relation to remain true.，我个人理解是说原子指令成本变化(我理解是降低)，导致自旋锁需要的原子指令次数变少(或者cas操作变少)，所以自旋锁成本下降，故偏向锁的带来的优势就更小了；
+
+维持偏向锁的机会成本(opportunity cost)过高，所以不如废弃；
 
 ### 7.5、轻量级锁
 
