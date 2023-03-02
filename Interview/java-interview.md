@@ -1570,6 +1570,12 @@ UNSAFE.putLong(t = Thread.currentThread(), SEED, r = UNSAFE.getLong(t, SEED) + G
 
 锁的竞争太激烈会导致锁升级为重量级锁，未抢到锁的线程会进入monitor，而monitor依赖于底层操作系统的mutex lock，获取锁时会发生用户态和内核态之间的切换，所以会发生进程间的上下文切换
 
+## 19、Java线程创建调用的系统函数
+
+在Linux系统中
+- 创建进程的话，调用的系统调用是fork，在copy_process函数里面，会将五大结构files_struct、fs_struct、sighand_struct、signal_struct、mm_struct 都复制一遍，从此父进程和子进程各用个的数据结构；
+- 创建线程的话，调用的是系统调用clone，在copy_process函数里面，五大结构仅仅是引用计数加一，也就是线程共享进程的数据结构；
+
 ## 12、多线程面试题
 
 https://segmentfault.com/a/1190000013813740
