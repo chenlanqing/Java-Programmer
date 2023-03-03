@@ -145,6 +145,16 @@ InnodDB引擎的log文件，其是逻辑日志
 
 另外，MVCC 的实现依赖于：`隐藏字段`、`Read View`、`undo log`。在内部实现中，InnoDB 通过数据行的 `DB_TRX_ID` 和 `Read View` 来判断数据的可见性，如不可见，则通过数据行的 `DB_ROLL_PTR` 找到 `undo log` 中的历史版本。每个事务读到的数据版本可能是不一样的，在同一个事务中，用户只能看到该事务创建 `Read View` 之前已经提交的修改和该事务本身做的修改
 
+**purge**
+
+在 MySQL 中，purge 过程是指清理无用事务版本（undo log）的过程。MySQL 使用 undo log 机制来支持事务的回滚和 MVCC（多版本并发控制），因此在事务结束后，MySQL 需要对无用的 undo log 进行清理，以释放空间并维护数据库的性能；
+
+purge 过程主要分为以下两个步骤：
+- Find Purge Position（查找 purge 位置）：MySQL 首先需要确定从哪个事务版本开始可以进行 purge，这个版本称为“purge 位置”。在每个事务结束时，MySQL 会将该事务版本号写入一个“purge 窗口”（purge window），该窗口用于保存可以进行 purge 的最早版本号。查找 purge 位置的过程就是要确定该窗口中的最小版本号。
+- Purge Old Undo Records（清理旧的 undo 记录）：在找到 purge 位置之后，MySQL 就可以开始清理无用的 undo log 了。MySQL 会遍历 undo log，删除所有版本号小于等于 purge 位置的事务版本，因为这些版本已经不再需要支持事务的回滚或 MVCC。清理过程的具体实现方式是：MySQL 使用一个链表来保存所有的 undo log，每个节点表示一个事务版本，链表头为最新版本，链表尾为最早版本，当 purge 位置发生改变时，MySQL 会通过链表遍历的方式找到需要清理的版本，并将其从链表中删除；
+
+purge 过程是一个后台任务，MySQL 会周期性地检查是否需要进行 purge 操作。如果发现需要进行 purge，MySQL 就会分配一个线程进行处理。purge 过程可能会影响数据库的性能，因此在高并发场景下，需要仔细调整 purge 窗口的大小，以平衡空间占用和性能
+
 # 二、BinaryLog
 
 ## 1、binlog概述
