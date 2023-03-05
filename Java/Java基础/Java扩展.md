@@ -1007,3 +1007,186 @@ class AliInspectionAction : AnAction() {
 </dependency>
 ```
 其中 PMD 是一款采用 BSD 协议发布的Java 程序静态代码检查工具，当使用PMD规则分析Java源码时，PMD 首先利用JavaCC和 EBNF 文法产生了一个语法分析器，用来分析普通文本形式的Java代码，产生符合特定语法结构的语法，同时又在JavaCC的基础上添加了语义的概念即JJTree，通过JJTree的一次转换，这样就将Java代码转换成了一个AST，AST是Java符号流之上的语义层，PMD把AST处理成一个符号表。然后编写PMD规则，一个PMD规则可以看成是一个Visitor，通过遍历AST找出多个对象之间的一种特定模式，即代码所存在的问题。具体自定义规则的方式，通过自定义Java类和XPATH规则实现
+
+
+# 十六、优雅启停
+
+- [优雅停机方案](https://heapdump.cn/article/4154304)
+
+## 1、Java进程的优雅启停
+
+### 1.1、优雅上线
+
+优雅上线的核心思想就是让程序在刚启动的时候不要承担太大的流量，让程序在低负荷的状态下运行一段时间，使其提升到最佳的运行状态时，在逐步的让程序承担更大的流量处理；
+
+常用于优雅启动场景的两个技术方案：`启动预热`、`延迟暴露`
+
+#### 1.1.1、启动预热
+
+启动预热就是让刚刚上线的应用程序不要一下就承担之前的全部流量，而是在一个时间窗口内慢慢的将流量打到刚上线的应用程序上，目的是让 JVM 先缓慢的收集程序运行时的一些动态数据，将高频代码即时编译为机器码
+
+在RPC框架中服务调用方会从注册中心拿到所有服务提供方的地址，然后从这些地址中通过特定的负载均衡算法从中选取一个服务提供方的发送请求，为了能够使刚刚上线的服务提供方有时间去预热，所以我们就要从源头上控制服务调用方发送的流量，服务调用方在发起 RPC 调用时应该尽量少的去负载均衡到刚刚启动的服务提供方实例；
+
+服务提供方在启动成功后会向注册中心注册自己的服务信息，我们可以将服务提供方的真实启动时间包含在服务信息中一起向注册中心注册，这样注册中心就会通知服务调用方有新的服务提供方实例上线并告知其启动时间。
+
+服务调用方可以根据这个启动时间，慢慢的将负载权重增加到这个刚启动的服务提供方实例上。这样就可以解决服务提供方冷启动的问题，调用方通过在一个时间窗口内将请求慢慢的打到提供方实例上，这样就可以让刚刚启动的提供方实例有时间去预热，达到平滑上线的效果；
+
+#### 1.1.2、延迟暴露
+
+延迟暴露是从服务提供方的角度，延迟暴露服务时间，利用延迟的这段时间，服务提供方可以预先加载依赖的一些资源，比如：缓存数据，spring 容器中的 bean 。等到这些资源全部加载完毕就位之后，我们在将服务提供方实例暴露出去。这样可以有效降低启动前期请求处理出错的概率
+
+dubbo可以配置延迟服务暴露时间：
+```xml
+//延迟5秒暴露服务
+<dubbo:service delay="5000" /> 
+```
+
+### 1.2、优雅关闭
+
+可以从以下几个角度考虑优雅关闭：切走流量、保证业务无损
+
+#### 1.2.1、切走流量
+
+第一步肯定是将服务承载的流量切走，告诉服务调用方，我将要关闭，不要再给我发送调用请求了。
+
+在RPC场景中，服务调用方通过服务发现的方式从注册中心中动态感知服务提供者的上下线变化。在服务提供方关闭之前，首先就要将自己从注册中心中取消注册，随后注册中心会通知服务调用方，有服务提供者实例下线，请将其从本地缓存列表中剔除。这样就可以使得服务调用方之后的 RPC 调用不在请求到下线的服务提供方实例上。
+
+但是上述存在一个问题，因为注册中心通常都是AP的，它只会保证最终一致性，并不会保证实时一致性，基于这个原因，服务调用方感知到服务提供者下线的事件可能是延后的，那么在这个延迟时间内，服务调用方极有可能会向正在下线的服务发起 RPC 请求；
+
+一般情况下，服务提供方主动通知在加上注册中心被动通知的两个方案结合基本能保证；但是有一种极端场景，就是当服务提供方通知调用方自己下线的网络请求在到达服务调用方之前的很极限的一个时间内，服务调用者向正在下线的服务提供方发起了 RPC 请求；
+
+针对上述问题，解决思路：首先服务提供方在准备关闭的时候，就把自己设置为正在关闭状态，在这个状态下不会接受任何请求，如果这时遇到了上边这种极端情况下的请求，那么就抛出一个 CloseException （这个异常是提供方和调用方提前约定好的），调用方收到这个 CloseException ，则将该服务提供方的节点剔除，并从剩余节点中通过负载均衡选取一个节点进行重试，通过让这个请求快速失败从而保证业务无损；
+
+**2、尽量保证业务无损**
+
+当把流量全部切走后，可能此时将要关闭的服务程序中还有正在处理的部分业务请求，那么就必须得等到这些业务处理请求全部处理完毕，并将业务结果响应给客户端后，在对服务进行关闭。
+
+当然为了保证关闭流程的可控，我们需要引入关闭超时时间限制，当剩下的业务请求处理超时，那么就强制关闭。
+
+为了保证关闭流程的可控，我们只能做到尽可能的保证业务无损而不是百分之百保证。所以在程序上线之后，我们应该对业务异常数据进行监控并及时修复
+
+## 2、JVM的shutdownHook
+
+[ShutdownHook](../Java虚拟机/JVM-Java虚拟机.md#14ShutdownHook)
+
+## 3、Spring关闭机制
+
+在Spring上下文关闭时，给我们提供了一些关闭时的回调机制，从而可以让我们在这些回调中编写 Java 应用的优雅关闭逻辑；
+
+### 3.1、发布 ContextClosedEvent 事件
+
+在 Spring 上下文开始关闭的时候，首先会发布 ContextClosedEvent 事件，注意此时 Spring 容器的 Bean 还没有开始销毁，所以可以在该事件回调中执行优雅关闭的操作
+```java
+@Component
+public class ShutdownListener implements ApplicationListener<ContextClosedEvent> {
+    @Override
+    public void onApplicationEvent(ContextClosedEvent event) {
+        System.out.println("优雅关闭");
+    }
+}
+```
+
+### 3.2、Spring 容器中的 Bean 销毁前回调
+
+当 Spring 开始销毁容器中管理的 Bean 之前，会回调所有实现 `DestructionAwareBeanPostProcessor` 接口的 Bean 中的 postProcessBeforeDestruction 方法。
+```java
+@Component
+public class DestroyBeanPostProcessor implements DestructionAwareBeanPostProcessor {
+    @Override
+    public void postProcessBeforeDestruction(Object bean, String beanName) throws BeansException {
+        System.out.println("DestroyBeanPostProcessor....");
+    }
+}
+```
+
+### 3.3、其他回调方法
+
+- 回调标注 `@PreDestroy` 注解的方法
+- 回调 `DisposableBean` 接口中的 destroy 方法
+
+### 3.4、Spring优雅关闭机制的实现
+
+Spring 相关应用程序本质上也是一个 JVM 进程，所以 Spring 框架想要实现优雅关闭机制也必须依托于 JVM 的 ShutdownHook 机制；在 Spring 启动的时候，需要向 JVM 注册 ShutdownHook ，当我们执行 kill - 15 pid 命令时，随后 Spring 会在 ShutdownHook 中触发上述介绍的五种回调。
+
+#### 3.4.1、Spring 中 ShutdownHook 的注册
+
+在 Spring 启动的时候，我们需要调用 `AbstractApplicationContext#registerShutdownHook`  方法向 JVM 注册 Spring 的 ShutdownHook ，从这段源码中我们看出，Spring 将 doClose() 方法封装在 ShutdownHook 线程中，而 doClose() 方法里边就是 Spring 优雅关闭的逻辑
+```java
+public void registerShutdownHook() {
+    if (this.shutdownHook == null) {
+        // No shutdown hook registered yet.
+        this.shutdownHook = new Thread(SHUTDOWN_HOOK_THREAD_NAME) {
+            @Override
+            public void run() {
+                synchronized (startupShutdownMonitor) {
+                    doClose();
+                }
+            }
+        };
+        Runtime.getRuntime().addShutdownHook(this.shutdownHook);
+    }
+}
+```
+当我们在一个纯 Spring 环境下，Spring 框架是不会为我们主动调用 registerShutdownHook 方法去向 JVM 注册 ShutdownHook 的，我们需要手动调用 registerShutdownHook 方法去注册；
+
+而在 SpringBoot 环境下，SpringBoot 在启动的时候会为我们调用这个方法去主动注册 ShutdownHook 。我们不需要手动注册
+```java
+public class SpringApplication {
+    public ConfigurableApplicationContext run(String... args) {
+		ConfigurableApplicationContext context = null;
+        ...
+        context = createApplicationContext();
+        refreshContext(context);
+        ...
+        afterRefresh(context, applicationArguments);
+	}
+    private void refreshContext(ConfigurableApplicationContext context) {
+		refresh(context);
+		if (this.registerShutdownHook) {
+			try {
+				context.registerShutdownHook();
+			}
+			catch (AccessControlException ex) {
+			}
+		}
+	}
+}
+```
+
+#### 3.4.2、Spring 中的优雅关闭逻辑
+
+`AbstractApplicationContext#doClose`触发前面讲到的5种回调机制
+```java
+protected void doClose() {
+    // Check whether an actual close attempt is necessary...
+    if (this.active.get() && this.closed.compareAndSet(false, true)) {
+         // 取消 JMX 托管
+        LiveBeansView.unregisterApplicationContext(this);
+        try {
+            // 发布 ContextClosedEvent 事件
+            publishEvent(new ContextClosedEvent(this));
+        }
+        catch (Throwable ex) {
+            logger.warn("Exception thrown from ApplicationListener handling ContextClosedEvent", ex);
+        }
+
+        // 回调 Lifecycle beans,相关 stop 方法
+        if (this.lifecycleProcessor != null) {
+            try {
+                this.lifecycleProcessor.onClose();
+            }
+            catch (Throwable ex) {
+                logger.warn("Exception thrown from LifecycleProcessor on context close", ex);
+            }
+        }
+        // 销毁bean
+        destroyBeans();
+        // Close the state of this context itself.
+        closeBeanFactory();
+        // Let subclasses do some final clean-up if they wish...
+        onClose();
+        // Switch to inactive.
+        this.active.set(false);
+    }
+}
+```

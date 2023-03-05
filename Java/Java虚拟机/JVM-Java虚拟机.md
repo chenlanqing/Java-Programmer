@@ -2452,11 +2452,13 @@ CodeCache 满了的话，JIT会停止工作
 
 在JDK 8中，提供了一个启动参数 -XX:+PrintCodeCache 在JVM停止的时候打印出codeCache的使用情况。其中max_used就是在整个运行过程中codeCache的最大使用量。可以通过这个值来设置一个合理的codeCache大小，在保证应用正常运行的情况下减少内存使用
 
-# 14、钩子函数(ShutdownHook)
+# 14、ShutdownHook
 
 ## 1、概述
 
 shutdownHook是一种特殊的结构，它允许开发人员插入JVM关闭时执行的一段代码。这种情况在我们需要做特殊清理操作的情况下很有用；
+
+要想实现 Java 进程的优雅关闭功能，只需要在进程启动的时候将优雅关闭的操作封装在一个 Thread 中，随后将这个 Thread 注册到 JVM 的 ShutdownHook 中就好了，当 JVM 进程接收到 kill -15 信号时，就会执行我们注册的 ShutdownHook 关闭钩子，进而执行我们定义的优雅关闭步骤
 
 ## 2、用途
 
@@ -2464,7 +2466,23 @@ shutdownHook是一种特殊的结构，它允许开发人员插入JVM关闭时�
 - Application正常退出时，在退出时执行特定的业务逻辑，或者关闭资源等操作；
 - 虚拟机非正常退出时，比如用户按下ctrl+c、OOM宕机等、操作系统关闭（kill）等，在退出执行必要的挽救措施；
 
-## 3、示例
+## 3、原理
+
+在 JVM 中通过 `Runtime.getRuntime().addShutdownHook` 添加关闭钩子，当 JVM 接收到 `SIGTERM` 信号之后，就会调用我们注册的这些 ShutdownHooks
+```java
+public void addShutdownHook(Thread hook) {
+	SecurityManager sm = System.getSecurityManager();
+	if (sm != null) {
+		sm.checkPermission(new RuntimePermission("shutdownHooks"));
+	}
+	ApplicationShutdownHooks.add(hook);
+}
+```
+关键类：ApplicationShutdownHooks
+
+JDK是如何将要捕获的信号向内核注册的s
+
+## 4、示例
 
 ```java
 public class ShutdownHookDemo {
@@ -2489,43 +2507,31 @@ public class ShutdownHookDemo {
 }
 ```
 
-## 4、shutdownHook相关源码
-
-```java
-public void addShutdownHook(Thread hook) {
-	SecurityManager sm = System.getSecurityManager();
-	if (sm != null) {
-		sm.checkPermission(new RuntimePermission("shutdownHooks"));
-	}
-	ApplicationShutdownHooks.add(hook);
-}
-
-```
-关键类：ApplicationShutdownHooks
-
 ## 5、注意事项
 
 在编写shutdownHook时，需要注意一些陷阱
 
 - **应用程序无法保证shutdownHook总是运行的**
 
-	如JVM由于某些内部错误而崩溃，或（Unix / Linux中的kill -9）或TerminateProcess（Windows）），那么应用程序需要立即终止而不会甚至等待任何清理活动。除了上述之外，还可以通过调用Runime.halt（）方法来终止JVM，而阻止shutdownHook运行；
+	当 JVM 进程接收到 SIGKILL 信号和 SIGSTOP 信号时，是会强制关闭，并不会执行 ShutdownHook 。另外一种导致 JVM 强制关闭的情况就是 Native Method 执行过程中发生错误，比如试图访问一个不存在的内存，这样也会导致 JVM 强制关闭，ShutdownHook 也不会运行；
 
 - **shutdownHook可以在完成前强行停止**
 
-	建议谨慎地编写shutdownHook，确保它们快速完成，并且不会造成死锁等情况。另外特别注意的是，不应该执行长时间计算或等待用户I/O操作在钩子；
+	ShutdownHook 中的程序应该尽快的完成优雅关闭逻辑，因为当用户调用 System#exit 方法的时候是希望 JVM 在保证业务无损的情况下尽快完成关闭动作。这里并不适合做一些需要长时间运行的任务或者和用户交互的操作
 
 - **可以有多个shutdownHook，但其执行顺序无法保证**
 
-	通过源码发现，可以注册多个shutdownHook。但是因为它是存储在IdentityHashMap中的，JVM并不能保证其执行顺序。但是可以同时执行所有的shutdownHook；
+	ShutdownHook 其实本质上是一个已经被初始化但是未启动的 Thread ，这些通过 Runtime.getRuntime().addShutdownHook 方法注册的 ShutdownHooks ，在 JVM 进程关闭的时候会被启动 并发执行，但是并 不会保证执行顺序
 
-- **关闭顺序开始后，无法注册/取消注册shutdownHook**
+	通过源码发现，可以注册多个shutdownHook。但是因为它是存储在IdentityHashMap中的，JVM并不能保证其执行顺序。但是可以同时执行所有的shutdownHook；在编写 ShutdownHook 中的逻辑时，我们应该确保程序的线程安全性，并尽可能避免死锁。最好是一个 JVM 进程只注册一个 ShutdownHook 
 
-	一旦关闭顺序是由JVM发起的，将不在允许添加或删除任何现有的shutdownHook，否则抛出IllegalStateException异常；
+- **当JVM关闭流程开始后，无法注册/取消注册shutdownHook**
 
-- **关闭顺序开始后，只能由Runtime.halt()停止**
+	当 JVM 关闭流程开始的时候，就不能在向其注册 ShutdownHook 或者取消注册之前已经注册好的 ShutdownHook 了，否则将会抛出 IllegalStateException异常
 
-	关闭顺序开始后，只能通过Runtime.halt()（强制终止JVM），可以停止关闭顺序的执行（外部影响除外，如SIGKILL）；
+- **JVM进程开始关闭，只能由Runtime.halt()停止**
+
+	一旦 JVM 进程开始关闭，一般情况下这个过程是不可以被中断的，除非操作系统强制中断或者用户通过调用 `java.lang.Runtime#halt(int status)`来强制关闭；`java.lang.Runtime#halt(int status)` 方法是用来强制关闭正在运行的 JVM 进程的，它会导致我们注册的 ShutdownHook 不会被运行和执行，如果此时 JVM 正在执行 ShutdownHook ，当调用该方法后，JVM 进程将会被强制关闭，并不会等待 ShutdownHook 执行完毕
 
 - **使用shutdownHook需要安全权限**
 
