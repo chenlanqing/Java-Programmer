@@ -3072,7 +3072,13 @@ map2.put("a"， "1");
 map2.put("c"， "3");
 object.putAll(map2);
 System.out.println(JSONObject.toJSON(object));// {"b"："2"，"a"："1"，"c"："3"}
+	
+// 或者使用如下方式，按照字段定义顺序输出，但是性能会有影响
+JSON.DEFAULT_GENERATE_FEATURE &= ~SerializerFeature.SortField.getMask();
+SerializeConfig serializeConfig = new SerializeConfig(true);
+System.out.println(JSON.toJSONString(depTree, serializeConfig));
 ```
+	
 - Gson 保证了你插入的顺序，就是正常的Map迭代操作
 
 ### 7.3、Jackson序列化-自定义ObjectMapper
