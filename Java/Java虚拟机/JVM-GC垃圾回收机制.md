@@ -645,7 +645,9 @@ CMS GC 时出现`promotion failed`和`concurrent mode failure`
 
 ## 7、G1收集器（Garbage First）
 
-- [G1-GC](https://tech.meituan.com/2016/09/23/g1.html)
+* [G1-GC](https://tech.meituan.com/2016/09/23/g1.html)
+* [G1垃圾收集器](https://mp.weixin.qq.com/s/9-NFMt4I9Hw2nP0fjR8JCg)
+* [Hotspot-G1-GC的一些关键技术](https://zhuanlan.zhihu.com/p/22591838)
 
 通过`-XX:+UseG1GC`参数来启用，作为体验版随着JDK 6u14版本面世，在JDK 7u4版本发行时被正式推出，在JDK 9中，G1被提议设置为默认垃圾收集器；取代之前 Parallel Scavenge 加 Parallel Old的组合，成为服务端模式下的默认垃圾收集器；在JDK9之后的版本中，CMS垃圾收集器被声明为不推荐使用了，如果使用`-XX:+UseConcMarkSweepGC`来开启CMS收集器，会收到一个警告信息； 
 
@@ -770,11 +772,12 @@ JVM 启动时，G1 会先准备好 Eden 区，程序在运行过程中不断创�
 全局并发标记主要是为 Mixed GC 计算找出回收收益较高的 Region 区域，具体分为 5 个阶段：
 - 初始标记（Initial Marking）：仅仅只是标记一下 GC Roots 能直接关联到的对象，速度很快，需要“Stop TheWorld”，暂停所有应用线程（STW），并发地进行标记从 GC Root 开始直接可达的对象（原生栈对象、全局对象、JNI 对象）；
 - 并发标记（Concurrent Marking）：进行 GC Roots 追溯所有对象的过程，可与用户程序并发执行，并且收集各个Region的存活对象信息
-- 最终标记（Final Marking）：修正在并发标记期间因用户程序继续运作而导致标记产生变动的那一部分标记记录
-- 清除垃圾（Cleanup）：清除空Region（没有存活对象的），加入到free list
+- 最终标记（Final Marking）：修正在并发标记期间因用户程序继续运作而导致标记产生变动的那一部分标记记录；该阶段是 STW的
+- 清除垃圾（Cleanup）：清除空Region（没有存活对象的），加入到free list；该阶段不会清理垃圾对象，也不会执行存活对象的复制。该阶段是 STW的
+
+复制阶段停顿分析：复制算法中的转移阶段需要分配新内存和复制对象的成员变量。转移阶段是 STW的，其中内存分配通常耗时非常短，但对象成员变量的复制耗时有可能较长，这是因为复制耗时与存活对象数量与对象复杂度成正比。对象越复杂，复制耗时越长。
 
 第一阶段initial mark是共用了Young GC的暂停，这是因为他们可以复用root scan操作，所以可以说global concurrent marking是伴随Young GC而发生的。第四阶段Cleanup只是回收了没有存活对象的Region，所以它并不需要STW
-
 
 #### 7.3.4、G1 GC发生时机
 
@@ -856,6 +859,10 @@ G1 的正常处理流程中没有 Full GC，只有在垃圾回收处理不过来
 
 ## 8、ZGC
 
+* [ZGC垃圾收集器](https://www.jianshu.com/p/6f89fd5842bf)
+* [ZGC垃圾收集器](https://club.perfma.com/article/679812)
+* [ZGC调优](https://tech.meituan.com/2020/08/06/new-zgc-practice-in-meituan.html)
+
 ### 8.1、概述
 
 低延迟的GC，ZGC几乎在所有地方并发执行的，除了初始标记的是STW的。所以停顿时间几乎就耗费在初始标记上，这部分的实际是非常少的
@@ -865,6 +872,10 @@ ZGC主要新增了两项技术，一个是着色指针`Colored Pointer`，另一
 JDK11 中推出的一款低延迟垃圾回收器，适用于大内存低延迟服务的内存管理和回收，SPECjbb 2015 基准测试，在 128G 的大堆下，最大停顿时间才 1.68 ms，停顿时间远胜于 G1 和 CMS
 
 ZGC 是一个并发、基于区域（region）、增量式压缩的收集器。Stop-The-World 阶段只会在根对象扫描（root scanning）阶段发生，这样的话 GC 暂停时间并不会随着堆和存活对象的数量而增加。
+
+其设计目标：
+- 停顿时间不超过10ms（STW减少了）
+- 支持8MB~4TB的级别的堆
 
 **启用参数：** `-XX:+UnlockExperimentalVMOptions -XX:+UseZGC`；
 
@@ -907,7 +918,7 @@ ZGC有多种GC触发机制，总结如下：
 
 ### 8.5、内存布局
 
-ZGC也采用基于Region的堆内存布局，但与它们不同的是，ZGC的Region（在一些官方资料中将它称为Page或者ZPage，本章为行文一致继续称为Region）具有动态性，可以动态创建和销毁，以及动态的区域容量大小。region的容量：
+ZGC也采用基于Region的堆内存布局，但与它们不同的是，ZGC的Region（在一些官方资料中将它称为Page或者ZPage）具有动态性，可以动态创建和销毁，以及动态的区域容量大小。region的容量：
 - 小型Region（Small Region）：容量固定为2MB，用于放置小于256KB的小对象。
 - 中型Region（Medium Region）：容量固定为32MB，用于放置大于等于256KB但小于4MB的对象。
 - 大型Region（Large Region）：容量不固定，可以动态变化，但必须为2MB的整数倍，用于放置4MB或以上的大对象。每个大型Region中只会存放一个大对象，这也预示着虽然名字叫作“大型Region”，但它的实际容量完全有可能小于中型Region，最小容量可低至4MB。大型Region在ZGC的实现中是不会被重分配（重分配是ZGC的一种处理动作，用于复制对象的收集器阶段）的，因为复制一个大对象的代价非常高昂
@@ -2183,20 +2194,12 @@ Full GC日志含义：
 
 * [深入理解java垃圾回收机制](http://www.cnblogs.com/sunniest/p/4575144.html)
 * [Java GC 工作原理](http://www.hollischuang.com/archives/76)
-* [入浅出Java垃圾回收机制](http://www.importnew.com/1993.html)
-* [Minor GC、Major GC和Full GC之间的区别](http://www.importnew.com/15820.html)
 * [YGC过程](https://www.jianshu.com/p/04eff13f3707)
 * 《深入理解Java虚拟机-JVM高级特性与最佳实践[周志明]》
-* [如何优化垃圾回收](http://www.importnew.com/3146.html)
 * [String.intern()导致的YGC](http://lovestblog.cn/blog/2016/11/06/string-intern/)
 * [如何优化Java GC](https://crowhawk.github.io/2017/08/21/jvm_4/)
-* [Hotspot-G1-GC的一些关键技术](https://zhuanlan.zhihu.com/p/22591838)
 * [垃圾优先型垃圾回收器调优](http://www.oracle.com/technetwork/cn/articles/java/g1gc-1984535-zhs.html)
 * [由「Metaspace容量不足触发CMS GC」从而引发的思考](https://www.jianshu.com/p/468fb4c5b28d)
 * [频繁FullGC的案例](https://mp.weixin.qq.com/s/X-oOlXomjOyBe_8E4bWQLQ)
 * [CMS垃圾收集器](https://mp.weixin.qq.com/s/-yqJa4dOyzLaK_tJ1x9E7w)
-* [G1垃圾收集器](https://mp.weixin.qq.com/s/9-NFMt4I9Hw2nP0fjR8JCg)
-* [ZGC垃圾收集器](https://www.jianshu.com/p/6f89fd5842bf)
-* [ZGC垃圾收集器](https://club.perfma.com/article/679812)
-* [ZGC调优](https://tech.meituan.com/2020/08/06/new-zgc-practice-in-meituan.html)
-* [JVM垃圾回收](https://mp.weixin.qq.com/s/aA1eDYIUHuIfigTw2ffouw-)
+
