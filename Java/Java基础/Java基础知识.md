@@ -3080,6 +3080,10 @@ System.out.println(JSON.toJSONString(depTree, serializeConfig));
 ```
 	
 - Gson 保证了你插入的顺序，就是正常的Map迭代操作
+	
+注意：如果使用JSON序列号化时使用了多种序列化方式，比如fastjson和Gson混合用，可能对于 boolean 属性的字段会存在问题，比如某个类有个属性：`boolean isExist`，那么fastjson序列化时会将其序列化为`exist`，然后使用gson反序列化时发现没有exist属性，会将 isExist 设置为默认值，即false；为了避免上述问题，解决方法：
+- 避免混用json序列化方式；
+- 在定义类的属性时，不要使用 boolean基本类型，使用包装类型：Boolean，或者属性名称不要使用 is 开头；	
 
 ### 7.3、Jackson序列化-自定义ObjectMapper
 
