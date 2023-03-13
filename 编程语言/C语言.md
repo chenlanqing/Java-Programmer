@@ -367,6 +367,14 @@ PRINT_INT(array[3]); //recommend
 PRINT_INT(p[3]);
 ```
 
+# C语言与汇编和机器码
+
+将C的源代码打印出汇编代码和机器码，只需要执行如下两个命令：
+```
+$ gcc -g -c test.c
+$ objdump -d -M intel -S test.o // test.c 通过 gcc 生成的文件
+```
+
 # 参考资料
 
 - [C在线编译](https://godbolt.org/)
