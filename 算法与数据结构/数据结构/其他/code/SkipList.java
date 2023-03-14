@@ -1,86 +1,112 @@
-package com.algorithm.datastructure.skiplist;
-
-/**
- * 跳表中存储的是正整数，并且存储的是不重复的。
- * 代码来源：https://github.com/wangzheng0822/algo/blob/master/java/17_skiplist/SkipList.java
- */
-public class SkipList {
+@SuppressWarnings("unchecked")
+public class SkipList<E extends Comparable<E>> {
 
     private static final float SKIP_LIST_P = 0.5f;
-    private static final int MAX_LEVEL = 16;
+    private static final int MAX_LEVEL = 0x10;
 
     private int levelCount = 1;
 
-    private final Node head = new Node();  // 带头链表
+    private int size;
 
-    public Node find(int value) {
-        Node p = head;
-        for (int i = levelCount - 1; i >= 0; --i) {
-            while (p.forwards[i] != null && p.forwards[i].data < value) {
-                p = p.forwards[i];
-            }
-        }
+    private final Node<E> head = new Node<>(0, null);
 
-        if (p.forwards[0] != null && p.forwards[0].data == value) {
-            return p.forwards[0];
-        } else {
-            return null;
-        }
+    public int getSize() {
+        return size;
     }
 
-    public void insert(int value) {
-        int level = randomLevel();
-        Node newNode = new Node();
-        newNode.data = value;
-        newNode.maxLevel = level;
-        Node[] update = new Node[level];
-        for (int i = 0; i < level; ++i) {
-            update[i] = head;
-        }
+    public boolean contains(E e) {
+        return find(e) != null;
+    }
 
-        // record every level largest value which smaller than insert value in update[]
-        Node p = head;
-        for (int i = level - 1; i >= 0; --i) {
-            while (p.forwards[i] != null && p.forwards[i].data < value) {
+    public Node<E> find(E e) {
+        Node<E> p = head;
+        // 先按层级，从顶层到最底层：即上 ——> 下
+        for (int i = levelCount - 1; i >= 0; i--) {
+            // 每一层：从左到右找数据
+            while (p.forwards[i] != null && p.forwards[i].data.compareTo(e) < 0) {
                 p = p.forwards[i];
             }
-            update[i] = p;// use update save node in search path
         }
+        if (p.forwards[0] != null && p.forwards[0].data.compareTo(e) == 0) {
+            return p.forwards[0];
+        }
+        return null;
+    }
 
-        // in search path node next node become new node forwards(next)
-        for (int i = 0; i < level; ++i) {
+    public void insert(E e, int level) {
+        if (contains(e)) {
+            return;
+        }
+        if (level == 0) {
+            level = randomLevel();
+        }
+        Node<E> newNode = new Node<>(level, e);
+        // update 数组记录在每一层中新节点插入位置的前一个节点，初始值设置为头结点
+        Node<E>[] update = new Node[level];
+        for (int i = 0; i < level; i++) {
+            update[i] = head;
+        }
+        // 从跳表的顶层开始遍历，找到每一层中最后一个小于新节点值的节点，记录到 update 数组中
+        Node<E> p = head;
+        for (int i = level - 1; i >= 0; i--) {
+            while (p.forwards[i] != null && p.forwards[i].data.compareTo(e) < 0) {
+                p = p.forwards[i];
+            }
+            update[i] = p;// 这里update[i]表示当前层节点的前一节点，因为要找到前一节点，才好插入数据
+        }
+        // 将每一层节点和后面节点关联
+        for (int i = 0; i < level; i++) {
+            // 记录当前层节点后面节点指针
             newNode.forwards[i] = update[i].forwards[i];
+             // 前一个节点指向当前节点
             update[i].forwards[i] = newNode;
         }
-
-        // update node height
-        if (levelCount < level) {
+        size++;
+        if (level > levelCount) {
             levelCount = level;
         }
     }
 
-    public void delete(int value) {
-        Node[] update = new Node[levelCount];
-        Node p = head;
-        for (int i = levelCount - 1; i >= 0; --i) {
-            while (p.forwards[i] != null && p.forwards[i].data < value) {
+    public void insert(E e) {
+        int level = randomLevel();
+        insert(e, level);
+    }
+
+    public void delete(E e) {
+        size--;
+        Node<E> p = head;
+        Node<E>[] updates = new Node[levelCount];
+        // 先按层级，从顶层到最底层：即上 ——> 下
+        for (int i = levelCount - 1; i >= 0; i--) {
+            // 每一层：从左到右找数据
+            while (p.forwards[i] != null && p.forwards[i].data.compareTo(e) < 0) {
                 p = p.forwards[i];
             }
-            update[i] = p;
+            updates[i] = p;
         }
-
-        if (p.forwards[0] != null && p.forwards[0].data == value) {
-            for (int i = levelCount - 1; i >= 0; --i) {
-                if (update[i].forwards[i] != null && update[i].forwards[i].data == value) {
-                    update[i].forwards[i] = update[i].forwards[i].forwards[i];
+        // 找到待删除的节点
+        if (p.forwards[0] != null && p.forwards[0].data.compareTo(e) == 0) {
+            for (int i = levelCount - 1; i >= 0; i--) {
+                // 在查找到待删除节点之后，需要遍历每一层，从 update 数组中找到待删除节点的前一个节点，并更新前一个节点的 forwards 指针，将其指向待删除节点的后一个节点
+                if (updates[i].forwards[i] != null && updates[i].forwards[i].data.compareTo(e) == 0) {
+                    updates[i].forwards[i] = updates[i].forwards[i].forwards[i];
                 }
             }
         }
-
+        // 如果删除节点的层数大于跳表的最大层数，需要先将待删除节点的层数调整为跳表的最大层数
+        // 删除节点之后，如果存在一些节点在删除节点之后成为了“孤儿节点”（即没有任何节点指向它），我们需要将这些孤儿节点从跳表中删除，以保持跳表的空间效率
         while (levelCount > 1 && head.forwards[levelCount] == null) {
             levelCount--;
         }
+    }
 
+    public void printAll() {
+        Node<E> p = head;
+        while (p.forwards[0] != null) {
+            System.out.println(p.forwards[0]);
+            p = p.forwards[0];
+        }
+        System.out.println();
     }
 
     /**
@@ -99,26 +125,20 @@ public class SkipList {
         return level;
     }
 
-    public void printAll() {
-        Node p = head;
-        while (p.forwards[0] != null) {
-            System.out.print(p.forwards[0] + " ");
-            p = p.forwards[0];
-        }
-        System.out.println();
-    }
+    public static class Node<E> {
+        int maxLevel;
+        E data;
+        private final Node<E>[] forwards = new Node[MAX_LEVEL];
 
-    public static class Node {
-        private int data = -1;
-        private final Node[] forwards = new Node[MAX_LEVEL];
-        private int maxLevel = 0;
+        public Node(int maxLevel, E data) {
+            this.maxLevel = maxLevel;
+            this.data = data;
+        }
 
         @Override
         public String toString() {
-            return "{ data: " +
-                    data +
-                    "; levels: " +
-                    maxLevel +
+            return "{ data: " + data +
+                    "; maxLevel: " + maxLevel +
                     " }";
         }
     }
