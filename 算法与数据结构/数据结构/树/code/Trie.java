@@ -1,5 +1,3 @@
-package com.algorithm.tree.trie;
-
 import java.util.TreeMap;
 
 /**

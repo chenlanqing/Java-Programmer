@@ -1,5 +1,3 @@
-package com.algorithm.tree.segment;
-
 /**
  * 使用数组实现线段树
  */

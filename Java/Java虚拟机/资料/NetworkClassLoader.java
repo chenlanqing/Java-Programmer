@@ -1,4 +1,3 @@
-package com.bluefish.classloader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;

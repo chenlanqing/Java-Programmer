@@ -1,4 +1,3 @@
-package com.algorithm.datastructure.skiplist;
 
 import java.util.Random;
 

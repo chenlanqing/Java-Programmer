@@ -1,5 +1,3 @@
-package com.list;
-
 public class MiniList<T> {
 	private ListNode<T> head = new ListNode<T>(null, null);
 	public void arrayToList(T[] array){

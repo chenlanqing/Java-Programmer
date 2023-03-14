@@ -1,5 +1,3 @@
-package com.algorithm.tree.balance;
-
 import java.util.ArrayList;
 
 /**
