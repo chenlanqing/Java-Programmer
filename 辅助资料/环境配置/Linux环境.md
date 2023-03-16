@@ -1173,18 +1173,96 @@ esac
 ```
 
 
-## 3、安装kafka-manager
+## 3、Kafka管理工台
+
+- [8中kafka管理后台工具](https://juejin.cn/post/7055572207891644429)
+
+### 3.1、CMAk
 
 - 下载 kafka-manager-2.0.0.2.zip 包，解压：`unzip kafka-manager-2.0.0.2.zip -d /usr/local/`
-
 - 修改配置内容：`vim /usr/local/kafka-manager-2.0.0.2/conf/application.conf`
     ```
     kafka-manager.zkhosts="localhost:2181"
     ```
-
 - 启动kafka-manager: `/usr/local/kafka-manager-2.0.0.2/bin/kafka-manager &`
-
 - 其默认访问端口是: 9200
+
+[cmak](https://github.com/yahoo/CMAK)默认端口是9000，也可以指定端口：`bin/cmak -java-home /usr/jdk-17.0.6 -Dconfig.file=conf/application.conf -Dhttp.port=8080`
+
+## 4、docker安装kafka集群
+
+可以通过docker-compose来进行安装，对应配置文件（docker-compose.yml）：
+```yml
+version: '2'
+services:
+  zookeeper-22181:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+  zookeeper-32181:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 32181:2181
+  zookeeper-42181:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 42181:2181
+  
+  kafka-1:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper-22181
+      - zookeeper-32181
+      - zookeeper-42181
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-22181:2181,zookeeper-32181:2181,zookeeper-42181:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  kafka-2:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper-22181
+      - zookeeper-32181
+      - zookeeper-42181
+    ports:
+      - 39092:39092
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-22181:2181,zookeeper-32181:2181,zookeeper-42181:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://localhost:39092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+  kafka-3:
+    image: confluentinc/cp-kafka:latest
+    depends_on:
+      - zookeeper-22181
+      - zookeeper-32181
+      - zookeeper-42181
+    ports:
+      - 49092:49092
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-22181:2181,zookeeper-32181:2181,zookeeper-42181:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://localhost:49092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+```
 
 # 九、Nginx
 
