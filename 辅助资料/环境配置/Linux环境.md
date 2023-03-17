@@ -983,6 +983,8 @@ https://juejin.im/post/6844903826332319757
 
 ## 1、zookeeper单机安装
 
+### 1.1、tar包安装
+
 第一步：从官网获取到安装包，将其解压：
 ```bash
 [root@node1 opt]# tar zxvf zookeeper-3.4.12.tar.gz 
@@ -1033,6 +1035,12 @@ Starting zookeeper ... STARTED
 JMX enabled by default
 Using config: /opt/zookeeper-3.4.12/bin/../conf/zoo.cfg
 Mode: Standalone
+```
+
+### 1.2、docker安装
+
+```
+docker run -d --name zookeeper -p 2181:2181 -t wurstmeister/zookeeper
 ```
 
 ## 2、zookeeper集群安装
@@ -1100,6 +1108,48 @@ case $1 in
 esac
 ```
 
+## 3、docker-compose安装zk集群
+
+```yml
+version: "3.9"
+services:
+  zk1:
+    container_name: zk1
+    hostname: zk1
+    image: bitnami/zookeeper:3.6.2
+    ports:
+      - 2181:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVER_ID=1
+      - ZOO_SERVERS=0.0.0.0:2888:3888,zk2:2888:3888,zk3:2888:3888
+  zk2:
+    container_name: zk2
+    hostname: zk2
+    image: bitnami/zookeeper:3.6.2
+    ports:
+      - 2182:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVER_ID=2
+      - ZOO_SERVERS=zk1:2888:3888,0.0.0.0:2888:3888,zk3:2888:3888
+  zk3:
+    container_name: zk3
+    hostname: zk3
+    image: bitnami/zookeeper:3.6.2
+    ports:
+      - 2183:2181
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+      - ZOO_SERVER_ID=3
+      - ZOO_SERVERS=zk1:2888:3888,zk2:2888:3888,0.0.0.0:2888:3888
+  zoonavigator:
+    container_name: zoonavigator
+    image: elkozmon/zoonavigator
+    ports:
+      - 8081:9000
+```
+
 # 八、Kafka
 
 依赖：
@@ -1108,6 +1158,8 @@ esac
 - 下载安装包
 
 ## 1、Kafka单机安装
+
+### 1.1、tar包安装
 
 下载安装包，并解压：
 ```bash
@@ -1143,6 +1195,39 @@ bin/kafka-server-start.sh -daemon config/server.properties
 # 2. 修改config/server.properties文件，添加如下
 listeners=PLAINTEXT://<内网IP>:9092
 advertised.listeners=PLAINTEXT://<公网IP>:9092
+```
+
+### 1.2、容器安装
+
+- [Kafka镜像](https://hub.docker.com/r/bitnami/kafka)
+
+创建docker-compose.yml文件：
+```yml
+version: "3"
+services:
+   kafka:
+     image: 'bitnami/kafka:latest'
+     ports:
+       - '9092:9092'
+     environment:
+       - KAFKA_ENABLE_KRAFT=yes
+       - KAFKA_CFG_PROCESS_ROLES=broker,controller
+       - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+       - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+       - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+       - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+       - KAFKA_BROKER_ID=1
+       - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+       - ALLOW_PLAINTEXT_LISTENER=yes
+```
+或者直接通过docker安装：
+```
+docker run -d --name kafka \
+-p 9092:9092 \
+-e KAFKA_BROKER_ID=1 \
+-e KAFKA_ZOOKEEPER_CONNECT=ip:2181 \
+-e KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://ip:9092 \
+-e KAFKA_LISTENERS=PLAINTEXT://0.0.0.0:9092 wurstmeister/kafka
 ```
 
 ## 2、kafka集群安装
