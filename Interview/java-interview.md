@@ -193,6 +193,10 @@ public class MostPopularCollector<T> implements Collector<T, Map<T, Integer>, Op
 如何用最快的方式找出唯一的一个5
 答：亦或算法
 
+## 8、如何进行深拷贝，除了clone
+
+
+
 
 # 二、集合
 
@@ -4105,6 +4109,10 @@ Redis 通过链式哈希解决冲突：也就是同一个桶里面的元素使�
 
 ### 1.14、Raft协议
 
+### 1.15、redis如果list较大，怎么优化
+
+
+
 ## 2、持久化
 
 ### 2.1、Redis是如何实现数据不丢失的
@@ -6086,6 +6094,8 @@ elasticsearch的搜索会分两阶段进行：
 # 十九、设计模式
 
 ## 1、动态代理与静态代理区别以及使用场景
+
+## 2、单例对象会被jvm的gc时回收吗
 
 # 二十、安全
 
