@@ -1190,3 +1190,38 @@ protected void doClose() {
     }
 }
 ```
+
+# 十七、热部署
+
+- [美团实现热部署](https://mp.weixin.qq.com/s/dE-lneZE85SAfhZLyUeLZw)
+
+## 1、什么是热部署
+
+
+## 2、spring-boot-devtools
+
+spring-boot-devtools 是 Spring Boot 提供的开发者工具，它会监控当前应用所在的 classpath 下的文件发生变化，进行自动重启；
+
+注意，spring-boot-devtools 并没有采用热部署的方式，而是一种较快的重启方式，Spring Boot 通过使用两个类加载器来提供了重启技术：
+- 不改变的类（例如，第三方 jar）被加载到 base 类加载器中。
+- 经常处于开发状态的类被加载到 restart 类加载器中；
+
+当应用重启时，restart 类加载器将被丢弃，并重新创建一个新的。这种方式意味着应用重启比冷启动要快得多，因为省去 base 类加载器的处理步骤，并且可以直接使用；
+
+引入对应的pom
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <optional>true</optional> <!-- 可选 -->
+</dependency>
+```
+
+## 3、IDEA热部署
+
+IDEA 提供了 HotSwap 插件，可以实现真正的热部署：按照路径：`Settings -> Build, Execution, Deployment -> Debugger -> HotSwap`，找到配置`Reloaded class after copilation: `，将`Always` 勾选上即可；
+
+如果我们修改了代码，只需要编译下代码即可：点击 IDEA 的菜单 `Build -> Build Project`，手动进行编译
+
+## 4、Jrebel插件
+
