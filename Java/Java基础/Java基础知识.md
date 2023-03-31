@@ -5653,6 +5653,13 @@ InputStream inputStream = resource.getInputStream();
 // 方式2：通过研究 ClassPathResource源码发现可以使用如下方式：
 InputStream inputStream = Thread.currentThread().getContextClassLoader().getResourceAsStream("filename");
 ```
+	
+## 10、Jar包混淆
+
+- [spring-boot混淆代码](https://github.com/chenlanqing/spring-boot-2-api)
+- [springboot如何进行混淆加密（proguard+xjar）](https://juejin.cn/post/7120188938047717406)
+- [混淆插件：guardsquare](https://www.guardsquare.com/manual/home)
+
 
 # 二十、Java中的null
 
