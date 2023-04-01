@@ -2130,6 +2130,8 @@ mysql -uroot -p -h <remove_ip> -e "select * from table_name" >> /data/soft/table
 
 ## 1、关于时间
 
+### 1.1、数据库连接中时间问题
+
 数据库连接时的基本参数：
 ```
 jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimeZone=UTC
@@ -2137,6 +2139,21 @@ jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF-8&autoRec
 serverTimeZone的作用就是指定web服务器和mysql服务器的会话期间的mysql服务器时区，一般配置 serverTimeZone 跟MySQL服务器时间保持一致即可；
 - 如果MySQL服务器的时间为：UTC，则这里也需要指定 `serverTimeZone=UTC`；
 - 如果MySQL服务器时间为：UTC+8，则这里可以指定为：`serverTimeZone=Asia/Shanghai`
+
+### 1.2、时间零值异常
+
+如果发现如下异常：`com.mysql.cj.exceptions.DataReadException: Zero date value prohibited`，使用MyBatis从MySQL表中查询DATETIME类型的列数据，如果列值是0000-00-00 00:00:00，程序将抛出异常Java.sql.SQLException。
+
+异常 "com.mysql.cj.exceptions.DataReadException：当试图从MySQL数据库中读取一个已经被设置为 "零 "值的日期值时，会抛出 "零日期值被禁止 "的异常，这个日期值是'0000-00-00'。
+
+在MySQL中，日期的 "零 "值不是一个有效的日期，因此，不能用于日期计算或操作。当试图从数据库中读取日期值时，MySQL会抛出这个异常，以表明日期值是无效的，不能被使用。
+
+如何解决：
+- 确保存储在数据库中的所有日期值都是有效的日期，并且没有'零'值；
+- 将现有的'零'日期值更新为有效日期值；
+- 修改你的应用程序代码来处理这个异常，并向用户显示一个有意义的错误信息
+- 将零值日期设置为null：`jdbc:mysql://127.0.0.1/test?zeroDateTimeBehavior=convertToNull`
+- 将零日期将被转换为0001-01-01 00:00:00.0，相当于一年：`jdbc:mysql://127.0.0.1/test?zeroDateTimeBehavior=round`
 
 
 # 参考文章
