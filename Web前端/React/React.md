@@ -108,6 +108,38 @@ ReactDOM.render(
 )
 ```
 
+## 组件嵌套
+
+组件之间是可以嵌套的，比如有一个根组件，这个组件中有多个子组件，比如如下代码
+```js
+import React, { Component } from 'react'
+class Navbar extends Component {
+    render() {
+        return (<div>Navbar</div>)
+    }
+}
+function Swiper() {
+    return (<div>Swiper</div>)
+}
+const Tabbar = () => <div>Tabbar</div>
+// Navbar、Swiper、Tabbar 是组件App内部的三个子组件
+export default class App extends Component {
+    render() {
+        return (
+            <div>
+                <Navbar></Navbar> 
+                <Swiper></Swiper>
+                <Tabbar></Tabbar>
+            </div>
+        )
+    }
+}
+
+```
+
+## 组件样式
+
+
 
 
 # 参考资料
