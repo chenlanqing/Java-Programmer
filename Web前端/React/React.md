@@ -1,5 +1,5 @@
 
-# 脚手架
+# 1、脚手架
 
 前提需要安装 node
 ```
@@ -11,9 +11,9 @@ npm i -g nrm
 ```
 快速切换源`nrm use <registry name>`
 
-# JSX语法与组件
+# 2、JSX语法与组件
 
-## Jsx语法
+## 2.1、Jsx语法
 
 `jsx = javascript + xml`；所谓的 JSX 其实就是 JavaScript 对象，所以使用 React 和 JSX 的时候一定要经过编译的过程；
 
@@ -31,7 +31,7 @@ ReactDOM.render(
 )
 ```
 
-## class组件
+## 2.2、class组件
 
 react创建组件的方式就是使用的类的继承，ES6 class 是目前官方推荐的使用方式，它使用了ES6标准语法来构建
 ```js
@@ -83,7 +83,7 @@ ReactDOM.render(
         )
     ```
 
-## 函数式组件
+## 2.3、函数式组件
 
 组件名必须大写
 ```js
@@ -108,7 +108,7 @@ ReactDOM.render(
 )
 ```
 
-## 组件嵌套
+## 2.4、组件嵌套
 
 组件之间是可以嵌套的，比如有一个根组件，这个组件中有多个子组件，比如如下代码
 ```js
@@ -134,12 +134,39 @@ export default class App extends Component {
         )
     }
 }
-
 ```
 
-## 组件样式
+## 2.5、组件样式
 
+React推荐我们使用行内样式，因为React觉得每一个组件都是一个独立的整体
 
+```js
+// index.css
+.active{
+    background-color: red;
+}
+// app.js
+import "index.css" /*需要导入css文件*/
+export default class App extends Component {
+    render() {
+        var myname = "kerwin"
+        var obj = {
+            backgroundColor:"yellow",
+            fontSize:"30px"
+        }
+        return (
+            <div>
+                {10+20}-{myname}
+                {10>20?'aaa':'bbb'}
+                <div style={obj}>11111111111</div>
+                <div style={{background:"red"}}>2222222222</div>
+                {/*如果样式是class，需要通过 className来指定格式*/}
+                <div className="active">3333333333333333333333</div> 
+            </div>
+        )
+    }
+}
+```
 
 
 # 参考资料
