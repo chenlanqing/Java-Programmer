@@ -4,41 +4,93 @@
 
 # 一、计算机基础
 
-## 1、计算机网络
+- [计算机组成](计算机组成/计算机组成.md)
+- [操作系统](计算机组成/操作系统)
+- [计算机网络](计算机网络/网络基础.md)
+- [编译原理](编译原理/编译原理.md)
+- [数据结构](算法与数据结构/数据结构)
+- [算法](算法与数据结构/算法)
 
-## 2、数据结构
+# 二、软件工程
 
-## 3、算法
+- [系统设计](软件工程/软件设计/系统设计.md)
+- [设计模式](软件工程/软件设计/设计模式.md)
+- [持续集成](软件工程/持续集成.md)
 
-[LeetCode解题的常见模式套路](https://mp.weixin.qq.com/s/BPZLCZoTxlFJOjE0jquoHw)
+# 三、Java体系技术
 
-# 二 、J2EE体系
+- [Java基础](Java/Java基础)
+- [Spring](Java/Java框架/Spring/Spring.md)
+- [Mybatis](Java/Java框架/Mybatis.md)
+- [Maven](Java/Java框架/Maven.md)
+- [Netty](Java/Java框架/NIO-Netty.md)
+- [Elasticsearch](Java/Java框架/搜索/Elasticsearch.md)
+- [性能优化](性能优化/性能优化.md)
 
-## Java基础
+**虚拟机系列**
+- [Java内存模型](Java/Java虚拟机/JMM-Java内存模型.md)
+- [Java虚拟机](Java/Java虚拟机/JVM-Java虚拟机.md)
+- [垃圾回收](Java/Java虚拟机/JVM-GC垃圾回收机制.md)
 
-## Java集合
+# 四、分布式
 
-## Java多线程
+- [分布式协议](Java/分布式架构/分布式协议)
+- [分布式-理论](Java/分布式架构/分布式.md#二分布式理论基础)
+- [分布式-事务](Java/分布式架构/分布式.md#三分布式事务)
+- [分布式-锁](Java/分布式架构/分布式.md#五分布式锁)
+- [分布式-缓存](Java/分布式架构/分布式.md#六分布式缓存)
+- [限流](Java/分布式架构/分布式.md#八限流)
+- [负载均衡](Java/分布式架构/分布式.md#九负载均衡)
+- [RPC](Java/分布式架构/分布式.md#十一RPC)
+- [分布式链路追踪](Java/分布式架构/分布式.md#十分布式链路追踪)
+- [微服务](Java/分布式架构/微服务.md)
+  
+**[消息队列](Java/分布式架构/消息队列/消息中间件.md)：**
+- [Kafka](Java/分布式架构/消息队列/Kafka.md)
+- [Pulsar](Java/分布式架构/消息队列/Pulsar.md)
+- [RocketMQ](Java/分布式架构/消息队列/RocketMQ.md)
 
-## JDK源代码
+# 五、数据库
 
-## Spring全家桶
+**关系型数据库**：
+- [MySQL](数据库/MySQL/MySQL.md)
+- [MySQL索引](数据库/MySQL/MySQL索引.md)
 
-## Netty
+- [Redis](Java/分布式架构/Redis与Memcached.md)
 
-## Dubbo
+# 六、大数据
 
-## Mybatis
+- [Hadoop](大数据/Hadoop.md)
+- [Scala](大数据/Scala.md)
+- [Spark](大数据/Spark.md)
+- [Hive](大数据/Hive.md)
+- [HBase](大数据/HBase.md)
+- [数仓开发](大数据/数仓开发.md)
 
-## MySQL
+# 七、业务相关
 
-## Redis
+- [注册登录](实际业务/注册登录.md)
+- [秒杀业务](实际业务/业务系统.md#一秒杀系统)
+- [延迟队列](实际业务/业务系统.md#二延迟队列)
+- [其他各类业务](实际业务/业务系统.md)
 
-## 消息队列
+# 八、环境配置
 
-# 三、大数据体系
+- [Java环境](辅助资料/环境配置/Java环境.md)
+- [集成环境](辅助资料/环境配置/Linux环境.md)
 
-# 四、技术选型
+# 九、工具
+
+- [Markdown](辅助资料/Markdown.md)
+- [Git](辅助资料/Git)
+- [各类插件开发](辅助资料/插件开发.md)
+
+# 十、运维
+
+- [Docker](运维/容器化技术.md)
+- [Kubernetes](运维/Kubernetes.md)
+
+# 十一、[技术选型](技术选型.md)
 
 ## 1、活跃度
 
@@ -51,4 +103,25 @@
 - [DB Ranking](https://db-engines.com/en/ranking)
 - [TIOBE](https://www.tiobe.com/tiobe-index/)
 
-# 五、其他
+# 十二、Web
+
+## 1、前端
+
+- [Vue3](Web前端/Vue3)
+- [React](Web前端/React)
+
+## 2、[小程序](小程序/微信小程序.md)
+
+# 十三、扩展学习
+
+## 1、数学
+
+- [离散数学](数学/离散数学.md)
+
+## 2、其他编程语言
+
+- [C语言](编程语言/C语言.md)
+- [Python](编程语言/Python/Python3/)
+- [C++](编程语言/C++.md)
+- [golang](编程语言/go.md)
+- [Rust](编程语言/Rust.md)
