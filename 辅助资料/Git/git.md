@@ -41,39 +41,41 @@
 
 ## 2.5、CentOS 下安装 Git
 
-	(1).安装依赖文件:yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel
-	(2).从下面的 Git 官方站点下载最新版本源代码
-	(3).编译源码:
-		make prefix=/usr/local all
-		sudo make prefix=/usr/local install
-	直接安装:yum install git-core
+- 安装依赖文件：yum install curl-devel expat-devel gettext-devel openssl-devel zlib-devel
+- 从下面的 Git 官方站点下载最新版本源代码
+- 编译源码：
+	```
+	make prefix=/usr/local all
+	sudo make prefix=/usr/local install
+	```
+- 直接安装：`yum install git-core`
 
 ## 2.6、配置
 
-	(1).用户信息:
-		git config --global user.name chenqing323@hotmail.com
-		git config --global user.email chenqing323@hotmail.com
-	(2).文本编辑器
-		git config --global core.editor vim
-	(3).差异分析工具:
-		git config --global merge.tool vimdiff
-	(4).查看配置信息:
-		git config --list
-	(5).获取帮助:
-		git help <verb>
-		git <verb> --help
-		man git-<verb>
+- 用户信息
+```
+git config --global user.name chenqing323@hotmail.com
+git config --global user.email chenqing323@hotmail.com
+```
+- 文本编辑器: `git config --global core.editor vim`
+- 差异分析工具: `git config --global merge.tool vimdiff`
+- 查看配置信息: `git config --list`
+- 获取帮助:
+	```
+	git help <verb>
+	git <verb> --help
+	man git-<verb>
+	```
 
 ## 2.7、工作区和暂存区
 
-	2.7.1.工作区:当前工程的工作目录
-	2.7.2.版本库:工作区内有一个隐藏目录 .git, 这个是 Git 的版本库.
-		版本库中最重要的是 stage 的暂存区,还有Git为我们自动创建的第一个分支master,以及指向master的一个指针叫 HEAD
-		(1).往 git 版本库中添加的时候,分两步执行的:
-			第一步是用git add把文件添加进去,实际上就是把文件修改添加到暂存区;
-			第二步是用git commit提交更改,实际上就是把暂存区的所有内容提交到当前分支;
-			因为我们创建Git版本库时,Git 自动为我们创建了唯一一个master分支,所以,现在,git commit就是往master分支上提交更改
-	2.7.3.暂存区:Git 和其他版本控制系统如SVN的一个不同之处
+- 工作区：当前工程的工作目录
+- 版本库：工作区内有一个隐藏目录 .git, 这个是 Git 的版本库；版本库中最重要的是 stage 的暂存区,还有Git为我们自动创建的第一个分支master,以及指向master的一个指针叫 HEAD；
+	往 git 版本库中添加的时候,分两步执行的:
+	- 第一步是用git add把文件添加进去,实际上就是把文件修改添加到暂存区;
+	- 第二步是用git commit提交更改,实际上就是把暂存区的所有内容提交到当前分支;
+	- 因为我们创建Git版本库时,Git 自动为我们创建了唯一一个master分支,所以,现在,git commit就是往master分支上提交更改
+- 暂存区：Git 和其他版本控制系统如SVN的一个不同之处
 
 ## 2.8、git与svn
 
@@ -86,76 +88,93 @@
 
 ## 3.1、获取项目的 Git 仓库
 
-	3.1.1.在工作目录中初始化新仓库
-		(1).要对现有的某个项目开始用 Git 管理，只需到此项目所在的目录，执行：
-			$ git init
-		(2).如果当前目录下有几个文件想要纳入版本控制，需要先用 git add 命令告诉 Git 开始对这些文件进行跟踪，然后提交：
-			$ git add *.c
-			$ git add README
-			$ git commit -m 'initial project version'
-	3.1.2.从现有仓库克隆,克隆仓库的命令格式为 git clone [url]
-		$ git clone git://github.com/schacon/grit.git
-		如果希望在克隆的时候，自己定义要新建的项目目录名称，可以在上面的命令末尾指定新的名字：
-		$ git clone git://github.com/schacon/grit.git mygit
-		注意:Git 支持许多数据传输协议
+- 在工作目录中初始化新仓库
+	- 要对现有的某个项目开始用 Git 管理，只需到此项目所在的目录，执行：`$ git init`
+	- 如果当前目录下有几个文件想要纳入版本控制，需要先用 git add 命令告诉 Git 开始对这些文件进行跟踪，然后提交：
+		```
+		$ git add *.c
+		$ git add README
+		$ git commit -m 'initial project version'
+		```
+- 从现有仓库克隆，克隆仓库的命令格式为 `git clone [url]`
+```
+$ git clone git://github.com/schacon/grit.git
+如果希望在克隆的时候，自己定义要新建的项目目录名称，可以在上面的命令末尾指定新的名字：
+$ git clone git://github.com/schacon/grit.git mygit
+注意：Git 支持许多数据传输协议
+```
 
 ## 3.2、记录每次更新到仓库
 
-	作目录下面的所有文件都不外乎这两种状态：已跟踪或未跟踪
-	已跟踪的文件是指本来就被纳入版本控制管理的文件，在上次快照中有它们的记录，工作一段时间后，它们的状态可能是未更新.
-	已修改或者已放入暂存区。而所有其他文件都属于未跟踪文件
-	(1).检查当前文件状态:git status
-	(2).跟踪新文件:git add
-		只要在 "Changes to be committed" 这行下面的，就说明是已暂存状态
-	(3).暂存已修改文件
-	3.2.1.忽略某些文件:创建一个名为 .gitignore 的文件，列出要忽略的文件模式,如:
-		$ cat .gitignore
-			*.[oa] // 告诉 Git 忽略所有以 .o 或 .a 结尾的文件
-			*~ // 第二行告诉 Git 忽略所有以波浪符（~）结尾的文件
-		(1).文件 .gitignore 的格式规范如下：
-			所有空行或者以注释符号 # 开头的行都会被 Git 忽略.
-			可以使用标准的 glob 模式匹配.
-			匹配模式最后跟反斜杠（/）说明要忽略的是目录.
-			要忽略指定模式以外的文件或目录，可以在模式前加上惊叹号（!）取反.
-		# 此为注释 – 将被 Git 忽略
-		# 忽略所有 .a 结尾的文件
-		*.a
-		# 但 lib.a 除外
-		!lib.a
-		# 仅仅忽略项目根目录下的 TODO 文件, 不包括 subdir/TODO
-		/TODO
-		# 忽略 build/ 目录下的所有文件
-		build/
-		# 会忽略 doc/notes.txt 但不包括 doc/server/arch.txt
-		doc/*.txt    																		*/
-	3.2.2.查看已暂存和未暂存的更新,要查看具体修改了什么地方,可以用 git diff 命令
-		(1).要查看尚未暂存的文件更新了哪些部分,不加参数直接输入 git diff
-			$ git diff // 不是这次工作和上次提交之间的差异
-		(2).若要看已经暂存起来的文件和上次提交时的快照之间的差异
-			(Git 1.6.1 及更高版本还允许使用 git diff --staged，效果是相同的，但更好记些)
-			$ git diff --cached
-	3.2.3.提交更新:
-		(1).每次准备提交前,先用 git status 看下,是不是都已暂存起来了,然后再运行提交命令 git commit
-			可以用 -m 参数后跟提交说明的方式，在一行命令中提交更新
-			$ git commit -m "Story 182: Fix benchmarks for speed"
-		(2).提交时记录的是放在暂存区域的快照,任何还未暂存的仍然保持已修改状态,可以在下次提交时纳入版本管理
-		(3).Git 提供了一个跳过使用暂存区域的方式，只要在提交的时候，给 git commit 加上 -a 选项，
-			Git 就会自动把所有已经跟踪过的文件暂存起来一并提交
-	3.2.4.移除文件:
-		(1).要从 Git 中移除某个文件,就必须要从已跟踪文件清单中移除(确切地说，是从暂存区域移除)然后提交:
-			使用 git rm 命令完成此项工作，并连带从工作目录中删除指定的文件
-		(2).如果只是简单地从工作目录中手工删除文件,运行 git status 时就会在 “Changes not staged for commit” 部分
-			然后再运行 git rm 记录此次移除文件的操作;
-			$ rm test.txt
-			$ git rm test.txt
-		(3).最后提交的时候，该文件就不再纳入版本管理了。如果删除之前修改过并且已经放到暂存区域的话，
-			则必须要用强制删除选项 -f,以防误删除文件后丢失修改的内容;
-		(4).想把文件从 Git 仓库中删除(亦即从暂存区域移除)，但仍然希望保留在当前工作目录中,仅是从跟踪清单中删除:
-			$ git rm --cached readme.txt
-			后面可以列出文件或者目录的名字，也可以使用 glob 模式
-	3.2.5.移动文件:
-		(1).要在 Git 中对文件改名，可以这么做:
-			$ git mv file_from file_to
+作目录下面的所有文件都不外乎这两种状态：已跟踪或未跟踪
+- 已跟踪的文件是指本来就被纳入版本控制管理的文件，在上次快照中有它们的记录，工作一段时间后，它们的状态可能是未更新.
+- 已修改或者已放入暂存区。而所有其他文件都属于未跟踪文件
+
+一些状态操作的命令：
+- 检查当前文件状态：`git status`
+- 跟踪新文件：`git add`，只要在 "Changes to be committed" 这行下面的，就说明是已暂存状态
+- 暂存已修改文件
+
+### 3.2.1、忽略某些文件
+
+创建一个名为 .gitignore 的文件，列出要忽略的文件模式，如
+```
+$ cat .gitignore
+*.[oa] // 告诉 Git 忽略所有以 .o 或 .a 结尾的文件
+*~ // 第二行告诉 Git 忽略所有以波浪符（~）结尾的文件
+```
+文件 `.gitignore` 的格式规范如下：
+- 所有空行或者以注释符号 # 开头的行都会被 Git 忽略.
+- 可以使用标准的 glob 模式匹配.
+- 匹配模式最后跟反斜杠（/）说明要忽略的是目录.
+- 要忽略指定模式以外的文件或目录，可以在模式前加上惊叹号（!）取反.
+```
+# 此为注释 – 将被 Git 忽略
+# 忽略所有 .a 结尾的文件
+*.a
+# 但 lib.a 除外
+!lib.a
+# 仅仅忽略项目根目录下的 TODO 文件, 不包括 subdir/TODO
+/TODO
+# 忽略 build/ 目录下的所有文件
+build/
+# 会忽略 doc/notes.txt 但不包括 doc/server/arch.txt
+doc/*.txt    																		*/
+```
+
+### 3.2.2、查看已暂存和未暂存的更新
+
+要查看具体修改了什么地方，可以用 git diff 命令
+- 要查看尚未暂存的文件更新了哪些部分,不加参数直接输入 git diff
+	
+	$ git diff // 不是这次工作和上次提交之间的差异
+
+- 若要看已经暂存起来的文件和上次提交时的快照之间的差异：(Git 1.6.1 及更高版本还允许使用 git diff --staged，效果是相同的，但更好记些)
+	
+	$ git diff --cached
+	
+### 3.2.3、提交更新
+
+- 每次准备提交前,先用 git status 看下,是不是都已暂存起来了,然后再运行提交命令 git commit，可以用 -m 参数后跟提交说明的方式，在一行命令中提交更新：`$ git commit -m "Story 182: Fix benchmarks for speed"`
+- 提交时记录的是放在暂存区域的快照,任何还未暂存的仍然保持已修改状态,可以在下次提交时纳入版本管理
+- Git 提供了一个跳过使用暂存区域的方式，只要在提交的时候，给 git commit 加上 -a 选项，Git 就会自动把所有已经跟踪过的文件暂存起来一并提交
+
+### 3.2.4、移除文件
+
+要从 Git 中移除某个文件,就必须要从已跟踪文件清单中移除(确切地说，是从暂存区域移除)然后提交，使用 git rm 命令完成此项工作，并连带从工作目录中删除指定的文件
+
+如果只是简单地从工作目录中手工删除文件,运行 git status 时就会在 “Changes not staged for commit” 部分，然后再运行 git rm 记录此次移除文件的操作
+```
+$ rm test.txt
+$ git rm test.txt
+```
+最后提交的时候，该文件就不再纳入版本管理了。如果删除之前修改过并且已经放到暂存区域的话，则必须要用强制删除选项 -f,以防误删除文件后丢失修改的内容;
+
+想把文件从 Git 仓库中删除(亦即从暂存区域移除)，但仍然希望保留在当前工作目录中,仅是从跟踪清单中删除：`$ git rm --cached readme.txt`，后面可以列出文件或者目录的名字，也可以使用 glob 模式
+
+### 3.2.5、移动文件
+
+要在 Git 中对文件改名，可以这么做：`$ git mv file_from file_to`
 
 ## 3.3、查看提交历史:git log
 
@@ -454,15 +473,19 @@
 		[root@localhost learngit]# git check-ignore -v test.iml 
 		.gitignore:3:*.iml	test.iml
 		==> .gitignore 第3行规则忽略了该文件,可以知道需要修改哪个规则
+		
 ## 4.2、配置别名
-	$ git config --global alias.st status
-	可以用 git.st  替代  git status
-	$ git config --global alias.co checkout
-	$ git config --global alias.ci commit
-	$ git config --global alias.br branch
-	-- 配置 git log 为 git lg,并设置相应的颜色显示
-	$ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
-	[root@localhost learngit]# git lg
+
+```
+$ git config --global alias.st status
+可以用 git.st  替代  git status
+$ git config --global alias.co checkout
+$ git config --global alias.ci commit
+$ git config --global alias.br branch
+-- 配置 git log 为 git lg,并设置相应的颜色显示
+$ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"
+[root@localhost learngit]# git lg
+```
 
 ## 4.3、配置文件
 
