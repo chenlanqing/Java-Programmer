@@ -204,6 +204,57 @@ React推荐我们使用行内样式，因为React觉得每一个组件都是一�
 }
 ```
 
+## 2.6、事件处理
+
+采用on+事件名的方式来绑定一个事件，注意，这里和原生的事件是有区别的，原生的事件全是小写onclick , React里的事件是驼峰 onClick
+
+React并不会真正的绑定事件到每一个具体的元素上，而是采用事件代理的模式
+
+事件handler写法有四种：
+- 直接在render里写行内的箭头函数(不推荐)
+- 在组件内使用箭头函数定义一个方法(推荐)
+- 直接在组件内定义一个非箭头函数的方法，然后在render里直接使用 `onClick= {this.handleClick.bind(this)} (不推荐)`
+- 直接在组件内定义一个非箭头函数的方法，然后在constructor里bind(this)(推荐)
+
+注意，onClick={handleClick} 的结尾没有小括号！不要 调用 事件处理函数：你只需 传递给事件 即可。当用户点击按钮时，React 会调用你的事件处理函数
+```js
+export default class App extends Component {
+    a = 100;
+    render() {
+        return (
+            <div>
+                <input />
+                <button onClick={() => {console.log("click1", "处理逻辑过多时不推荐", this.a);}}>add1</button>
+                {/* 下面这种方法不推荐，因为其会涉及到 this 作用域问题，函数不需要后面加括号，加了就是加载之后立马执行了，在 handlerClick2 无法使用 this关键字*/}
+                <button onClick={this.handlerClick2}>add2</button> 
+                {/* 如果要在handlerClick2使用this关键字访问a，需要按照如下方式实现 */}
+                <button onClick={this.handlerClick2.bind(this)}>add2</button> 
+                {/* 如果不传参可以使用该方式来处理 */}
+                <button onClick={this.handlerClick3}>add3</button>
+                <button onClick={() => {
+                    this.handlerClick4();// 推荐使用，可以传参数
+                }}>add4</button>
+            </div>
+        )
+    }
+    handlerClick2() {
+        // 这里的this作用域是调用者本身，而调用者在这里的是 App里的 render 方法
+        console.log("handlerClick2", this.a);
+    }
+    handlerClick3 = (evt) => {
+        console.log("handlerClick3", this.a, evt.target);
+    }
+    handlerClick4 = () => {
+        console.log("handlerClick4", this.a);
+    }
+}
+```
+和普通浏览器一样，事件handler会被自动传入一个 event 对象，这个对象和普通的浏览器 event 对象所包含的方法和属性都基本一致。不同的是 React中的 event 对象并不是浏览器提供的，而是它自己内部所构建的。它同样具有 event.stopPropagation 、 event.preventDefault 这种常用的方法
+```js
+handlerClick3 = (evt) => {
+    console.log("handlerClick3", this.a, evt.target);
+}
+```
 
 # 参考资料
 
