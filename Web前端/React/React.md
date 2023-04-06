@@ -256,6 +256,167 @@ handlerClick3 = (evt) => {
 }
 ```
 
+## 2.7、Ref应用
+
+Ref 允许我们访问 DOM 节点或在 render 方法中创建的 React 元素
+
+一般写法：在input上定义一个 ref属性，然后在事件处理中调用:`this.refs,myName` 可以获取到当前节点；
+```js
+import React, { Component } from 'react'
+export default class App extends Component {
+    render() {
+        return (
+            <div>
+                <input ref="myName"/>
+                <button onClick={() => {
+                    console.log("click", this.refs.myName.value);
+                }}>add1</button>
+            </div>
+        )
+    }
+}
+```
+但是上述在严格模式下，在控制台会报错，但是还是可以用的
+```js
+root.render(
+    <React.StrictMode>
+        <App />
+    </React.StrictMode>
+);
+```
+另外一种写法就是定义一个变量，然后在里面引用：
+```js
+myRef = React.createRef()
+<input ref={this.myRef}/>
+<button onClick={() => {
+    console.log("click", this.myRef.current.value);
+}}>add1</button>
+```
+要获得ref配置的节点的固定写法：`this.<ref-variable-name>.current`，比如这里的 this.myRef.current ；
+
+# 3、组件数据挂载
+
+## 3.1、状态（state）
+
+状态就是组件描述某种显示情况的数据，由组件自己设置和更改，也就是说由组件自己维护，使用状态的目的就是为了在不同的状态下使组件的显示不同(自己管理)
+
+**定义状态：**
+- 方式1：
+    ```js
+    export default class App extends Component {
+        state = {
+            condition: true
+        }
+        render() {
+            return (
+                <div>
+                    <h1>欢迎来到React开发</h1>
+                    <button onClick={() => {
+                        this.setState({
+                            condition: !this.state.condition
+                        })
+                    }}>{this.state.condition ? '收藏' : '取消收藏'}</button>
+                </div>
+            )
+        }
+    }
+    ```
+- 方式2：
+    ```js
+    export default class App extends Component {
+        constructor() {
+            super() // 注意这里因为App继承了Component，这里需要调用super()
+            this.state = {
+                text: "收藏",
+                condition: true
+            }
+        }
+        render() {
+            return (
+                <div>
+                    <h1>欢迎来到React开发</h1>
+                    <button onClick={() => {
+                        this.setState({
+                            condition: !this.state.condition
+                        })
+                    }}>{this.state.condition ? '收藏' : '取消收藏'}</button>
+                </div>
+            )
+        }
+    }
+    ```
+
+**设置状态：setState**
+
+对于状态的更改必须要调用 setState 方式来实现：
+```js
+this.setState({
+    ...
+})
+```
+setState有两个参数：第一个参数可以是对象，也可以是方法return一个对象，我们把这个参数叫做 updater
+- 参数是对象：
+    ```js
+    this.setState({
+        condition: !this.state.condition
+    })
+    ```
+- 参数是方法：
+    ```js
+    this.setState((prevState, props) => {
+        return {
+            // 注意的是这个方法接收两个参数，第一个是上一次的state, 第二个是props
+            condition: !prevState.condition
+        }
+    })
+    ```
+setState 是异步的，所以想要获取到最新的state，没有办法获取，就有了第二个参数，这是一个可选的回调函数
+```js
+this.setState((prevState, props) => {
+    return {
+        // 注意的是这个方法接收两个参数，第一个是上一次的state, 第二个是props
+        condition: !prevState.condition
+    }
+}, () => {
+    console.log('回调里的',this.state.condition)
+})
+console.log('setState外部的',this.state.condition)
+```
+
+
+## 3.3、数据渲染
+
+列表渲染，一般可以使用数组的map函数，比如说数据是
+```js
+export default class App extends Component {
+    state = {
+        list: ["1111", "2222", "3333"]
+    }
+    render() {
+        // 也可以定义变量的方式
+        // var newList = this.state.list.map(item => <li>{item}</li>)
+        return (
+            <div>
+                <ul>
+                    {/* {
+                        newList
+                    } */}
+                    {
+                        this.state.list.map(
+                            (item, index) => <li key={index}>{item}</li>
+                        )
+                    }
+                </ul>
+            </div>
+        )
+    }
+}
+```
+React的高效依赖于所谓的 Virtual-DOM，尽量不碰 DOM。对于列表元素来说会有一个问题：元素可能会在一个列表中改变位置。要实现这个操作，只需要交换一下 DOM 位置就行了，但是React并不知道其实我们只是改变了元素的位置，所以它会重新渲染后面两个元素（再执行 Virtual-DOM ），这样会大大增加 DOM 操作。但如果给每个元素加上唯一的标识，React 就可以知道这两个元素只是交换了位置，这个标识就是 key ，这个 key 必须是每个元素唯一的标识
+
+
+# 4、表单组件
+
 # 参考资料
 
 - [React英文文档](https://reactjs.org/)
