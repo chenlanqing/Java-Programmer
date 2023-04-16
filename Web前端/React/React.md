@@ -443,6 +443,168 @@ React的高效依赖于所谓的 Virtual-DOM，尽量不碰 DOM。对于列表�
 
 > 注意这里处理的文本必须是足够信任的数据，否则容易被人攻击；
 
+## 3.5、条件渲染
+
+条件渲染，可以通过三目运算符来渲染：
+- `{ {this.state.list.length === 0 ? <div>暂无内容</div> : null} }`
+- `{this.state.list.length === 0 && <div>暂无内容</div>}`
+
+可以通过样式来控制条件渲染，这种就是本身节点已经存在了，前面两种呢不显示就是节点不存在的
+`{<div className={this.state.list.length === 0 ? '' : 'hidden'}>暂无内容</div> }`
+
+## 3.6、属性
+
+props 是正常是外部传入的，组件内部也可以通过一些方式来初始化的设置，属性不能被组件自己更改，但是可以通过父组件主动重新渲染的方式来传入新的 props；
+
+属性是描述性质、特点的，组件自己不能随意更改。
+
+### 3.6.1、基本使用
+
+总的来说，在使用一个组件的时候，可以把参数放在标签的属性当中，所有的属性都会作为组件 props 对象的键值。通过箭头函数创建的组件，需要通过函数的参数来接收 props
+
+比如有一个Navbar组件
+```jsx
+// Navbar.js
+export default class Navbar extends Component {
+    render() {
+        // 展开赋值，对象解构，title 对应属性名称
+        let { title, leftShow } = this.props
+        return (
+            <div>
+                {leftShow && <button>返回</button> }
+                Navbar-{title}
+                <button>Home</button>
+            </div>
+        )
+    }
+}
+// App.js
+export default class App extends Component {
+    render() {
+        return (
+            <div>
+                <div>
+                    <h2>首页</h2>
+                    <Navbar title="首页" leftShow={false}/>
+                </div>
+                    <h2>列表</h2>
+                    <Navbar title="列表" leftShow={true} />
+                </div>
+            </div>
+        )
+    }
+}
+```
+- 在组件上通过`key=value`写属性,通过`this.props`获取属性,这样组件的可复用性提高了；
+- 注意，在传参数时，对于布尔类型，不能写成：`leftShow="false"`，可以写成如下：`leftShow={false}`；
+- 属性赋值，可以通过如下方式：`let { title, leftShow } = this.props`
+
+类组件一般是通过上面写法：`this.props` 来实现的
+
+但是，对于函数式组件，就不能按照上面的写法，因为函数没有 this，需要通过形参传入的方式：
+```jsx
+import React from 'react'
+
+export default function Sidebar(props) {
+    console.log(props) // 这里接收的就是传入的属性
+    var {title} = props
+    return (
+        <div>
+            <ul>
+                <li>1111111</li>
+                <li>1111111</li>
+            </ul>
+        </div>
+    )
+}
+
+```
+
+### 3.6.2、属性验证
+
+前面讲到，对于布尔类型的赋值，如果写成：`leftShow="false"`，那么在使用的时候直接作为判断条件是无法生效的，因为其是一个字符串；
+
+为了对属性的类型作验证，可以使用如下方式：
+```jsx
+// 类组件和函数式组件都可以按照如下方式写
+import propTypes from 'prop-types'
+Navbar.propTypes = {
+    title: propTypes.string,
+    leftShow: propTypes.bool // 定义该属性为 bool，如果传字符串，控制台会报错；
+}
+```
+或者直接使用类属性的定义方式：（只支持类属性的写法）
+```jsx
+import propTypes from 'prop-types'
+export default class Navbar extends Component {
+    static propTypes = {
+        title: propTypes.string,
+        leftShow: propTypes.bool
+    }
+    render() {
+        ...
+    }
+}
+```
+
+### 3.6.3、默认属性值
+
+```jsx
+// 类组件和函数式组件都支持该写法：defaultProps 是固定写法
+Navbar.defaultProps = {
+    leftShow: true
+}
+// 或者写成如下写法：
+static defaultProps = {
+    leftShow: true
+}
+```
+
+### 3.6.4、注意点
+
+如果定义的对象内部的属性跟引用组件用到的属性是一致的，那么可以直接用简写的写法：`{...obj}`，即对象解构
+```jsx
+export default class App extends Component {
+    render() {
+        var obj = {
+            title: "测试",
+            leftShow : false,
+        }
+        return (
+            <div>
+                <div>
+                    <h2>首页</h2>
+                    <Navbar title="首页" leftShow={false} />
+                </div>
+                <div>
+                    <h2>测试属性相同</h2>
+                    {/* 属性相同 */}
+                    <Navbar {...obj}/>
+                </div>
+            </div>
+        )
+    }
+}
+```
+
+### 3.6.5、属性与状态
+
+- 相似点：都是纯js对象，都会触发render更新，都具有确定性（状态/属性相同，结果相同）
+- 不同点：
+    - 属性能从父组件获取，状态不能
+    - 属性可以由父组件修改，状态不能
+    - 属性能在内部设置默认值，状态也可以，设置方式不一样
+    - 属性不在组件内部修改，状态要在组件内部修改
+    - 属性能设置子组件初始值，状态不可以
+    - 属性可以修改子组件的值，状态不可以
+
+`state` 的主要作用是用于组件保存、控制、修改自己的可变状态。 state 在组件内部初始化，可以被组件自身修改，而外部不能访问也不能修改。你可以认为 `state` 是一个局部的、只能被组件自身控制的数据源。 state 中状态可以通过 `this.setState` 方法进行更新， setState 会导致组件的重新渲
+染。
+
+`props` 的主要作用是让使用该组件的父组件可以传入参数来配置该组件。它是外部传进来的配置参数，组件内部无法控制也无法修改。除非外部组件主动传入新的 props ，否则组件的 props 永远保持不变。
+
+没有 state 的组件叫无状态组件（stateless component），设置了 state 的叫做有状态组件（stateful component）。因为状态会带来管理的复杂性，我们尽量多地写无状态组件，尽量少地写有状态的组件。这样会降低代码维护的难度，也会在一定程度上增强组件的可复用性
+
 # 4、表单组件
 
 # 开源组件
