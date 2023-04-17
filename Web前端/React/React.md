@@ -605,7 +605,69 @@ export default class App extends Component {
 
 没有 state 的组件叫无状态组件（stateless component），设置了 state 的叫做有状态组件（stateful component）。因为状态会带来管理的复杂性，我们尽量多地写无状态组件，尽量少地写有状态的组件。这样会降低代码维护的难度，也会在一定程度上增强组件的可复用性
 
-# 4、表单组件
+# 4、表单中的受控组件与非受控
+
+## 4.1、非受控组件
+
+React要编写一个非受控组件，可以 使用 ref 来从 DOM 节点中获取表单数据，就是非受控组件；因为非受控组件将真实数据储存在 DOM 节点中，所以在使用非受控组件时，有时候反而更容易同时集成 React 和非 React 代码。如果你不介意代码美观性，并且希望快速编写代码，使用非受控组件往往可以减少你的代码量。否则，你应该使用受控组件
+```jsx
+import React, { Component } from 'react'
+export default class App extends Component {
+    textRef = React.createRef();
+    render() {
+        return (
+            <div>
+                <h1>登录页</h1>
+                <input ref={this.textRef} value="Jayden"/>
+                <button onClick={() => {
+                    console.log(this.textRef.current.value);
+                }}>登录</button>
+                <button onClick={() => {
+                    this.textRef.current.value = ""
+                }}>重置</button>
+            </div>
+        )
+    }
+}
+```
+**默认值：**
+在 React 渲染生命周期时，表单元素上的 value 将会覆盖 DOM 节点中的值，在非受控组件中，你经常希望 React 能赋予组件一个初始值，但是不去控制后续的更新。 在这种情况下, 你可以指定一个 `defaultValue` 属性，而不是 value
+```jsx
+<input ref={this.textRef} defaultValue="Jayden"/>
+```
+同样，`<input type="checkbox">` 和 `<input type="radio">` 支持 defaultChecked ， `<select>` 和 `<textarea>` 支持 defaultValue
+
+## 4.2、受控组件
+
+由于在表单元素上设置了 value 属性，因此显示的值将始终为 this.state.value ，这使得 React 的 state 成为唯一数据源。由于 handlechange 在每次按键时都会执行并更新 React 的 state，因此显示的值将随着用户输入而更新。
+```jsx
+import React, { Component } from 'react'
+export default class App extends Component {
+    state = {
+        username: "Jayden"
+    }
+    render() {
+        return (
+            <div>
+                {/* 如果使用value属性赋值， 必须要有一个 onChange 事件处理 */}
+                <input value={this.state.username} onChange={(evt) => {
+                    this.setState({ username: evt.target.value })
+                }} />
+                <button onClick={() => {
+                    console.log(this.state.username);
+                }}>登录</button>
+                <button onClick={() => {
+                    this.setState({
+                        username : ""
+                    })
+                }}>重置</button>
+            </div>
+        )
+    }
+}
+```
+对于受控组件来说，输入的值始终由 React 的 state 驱动。你也可以将 value 传递给其他 UI 元素，或者通过其他事件处理函数重置，但这意味着你需要编写更多的代码；也就是说会重新调用render函数
+
 
 # 开源组件
 
