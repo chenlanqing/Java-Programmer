@@ -107,3 +107,10 @@ https://github.com/judasn/IntelliJ-IDEA-Tutorial/blob/master/plugins-develop.md
 https://juejin.cn/post/6844904127990857742
 
 https://juejin.cn/post/7137092683125751815
+
+
+# 5、idea设置技巧
+
+## 5.1、pom文件依赖漏洞检查警告线去除方式
+
+- [pom文件依赖漏洞检查警告线去除方式](https://blog.csdn.net/julv7759/article/details/126050095)
