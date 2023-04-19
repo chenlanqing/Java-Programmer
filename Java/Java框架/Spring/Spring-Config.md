@@ -915,6 +915,12 @@ public class AopConfig {
 - 在 AdminUserService 里加了个 getUser() 方法；
 - 也可以让产生的代理对象的属性值不为 null，修改启动参数 `-Dspring.objenesis.ignore=true`，这样代理类的属性是会被 Spring 初始化的
 
+## 4.6、使用场景
+
+- 用户登录权限的校验实现接口 `HandlerInterceptor` + `WebMvcConfigurer`
+- 异常处理使用注解 `@RestControllerAdvice` + `@ExceptionHandler`
+- 数据格式返回使用注解 `@ControllerAdvice` 并且实现接口 `ResponseBodyAdvice`	
+	
 # 5、声明式事务
 
 ## 5.1、配置数据源
