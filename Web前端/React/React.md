@@ -517,7 +517,6 @@ export default function Sidebar(props) {
         </div>
     )
 }
-
 ```
 
 ### 3.6.2、属性验证
@@ -667,6 +666,63 @@ export default class App extends Component {
 }
 ```
 对于受控组件来说，输入的值始终由 React 的 state 驱动。你也可以将 value 传递给其他 UI 元素，或者通过其他事件处理函数重置，但这意味着你需要编写更多的代码；也就是说会重新调用render函数
+
+> React组件的数据渲染是否被调用者传递的 props 完全控制，控制则为受控组件，否则非受控组件
+
+# 5、组件通信方式
+
+## 5.1、父子组件通信方式
+
+父传子：属性方式；子传父：回调函数
+```jsx
+class Navbar extends Component {
+    render() {
+        return (
+            <div style={{ background: "red", width: "200px" }}>
+                <button onClick={() => {
+                    // 调用父类传递的属性，其实这个属性是一个回调函数，可以直接执行
+                    this.props.callback()
+                }}>click</button>
+                <span>Navbar</span>
+            </div>
+        )
+    }
+}
+class Sidebar extends Component {
+    render() {
+        return (
+            <div style={{ background: "yellow" }}>
+                <ul>
+                    <li>1111111</li>
+                </ul>
+            </div>
+        )
+    }
+}
+// App 组件包含两个子组件，现在需要通过Navbar组件控制Sidebar组件的显示与否
+export default class App extends Component {
+    state = {
+        isSidebarShow: true,
+    }
+    render() {
+        return (
+            <div>
+                <Navbar callback={this.handlerChildEvent} />
+                {this.state.isSidebarShow && <Sidebar />}
+            </div>
+        )
+    }
+    // 该函数被子类通知调用
+    handlerChildEvent = () => {
+        this.setState({
+            isSidebarShow : !this.state.isSidebarShow
+        })
+    }
+}
+```
+
+- 传递数据（父传子）与传递方法（子传父）
+- ref标记 (父组件拿到子组件的引用，从而调用子组件的方法)；在父组件中清除子组件的input输入框的value值。`this.refs.form.reset()`
 
 
 # 开源组件
