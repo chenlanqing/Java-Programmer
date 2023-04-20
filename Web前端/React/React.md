@@ -673,7 +673,7 @@ export default class App extends Component {
 
 ## 5.1、父子组件通信方式
 
-父传子：属性方式；子传父：回调函数
+**受控组件中父子组件通信**：父传子：属性方式；子传父：回调函数
 ```jsx
 class Navbar extends Component {
     render() {
@@ -721,8 +721,51 @@ export default class App extends Component {
 }
 ```
 
-- 传递数据（父传子）与传递方法（子传父）
-- ref标记 (父组件拿到子组件的引用，从而调用子组件的方法)；在父组件中清除子组件的input输入框的value值。`this.refs.form.reset()`
+**表单域组件中父子通信方式：**ref标记 (父组件拿到子组件的引用，从而调用子组件的方法)；在父组件中清除子组件的input输入框的value值。`this.refs.form.reset()`
+```jsx
+class Field extends Component {
+    state = {
+        value: ""
+    }
+    clear(){
+        this.setState({ value: "" })
+    }
+    render() {
+        return (
+            <div style={{ background: "yellow" }}>
+                <label>{this.props.label}</label>
+                <input type={this.props.type} onChange={(evt) => {
+                    this.setState({
+                        value: evt.target.value
+                    })
+                }} value={this.state.value}/>
+            </div>
+        )
+    }
+}
+export default class App extends Component {
+    username = React.createRef();
+    password = React.createRef();
+    render() {
+        return (
+            <div>
+                <h2>登录页面</h2>
+                <Field label="用户名:" type="text" ref={this.username} />
+                <Field label="密码:" type="password" ref={this.password} />
+                <button onClick={() => {
+                    console.log("username:", this.username.current.state.value)
+                    console.log("password:", this.password.current.state.value)
+                }}>登录</button>
+                <button onClick={() => {
+                    this.username.current.clear();
+                    this.password.current.clear();
+                }}>取消</button>
+            </div>
+        )
+    }
+}
+
+```
 
 
 # 开源组件
