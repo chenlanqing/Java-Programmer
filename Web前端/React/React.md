@@ -764,8 +764,68 @@ export default class App extends Component {
         )
     }
 }
-
 ```
+
+## 5.2、非父子组件通信方式
+
+- 状态提升（中间人模式）：React的状态提升，就是将多个组件需要共享的状态提升到它们最近的父组件上。在父组件上改变这个状态然后通过props分发给子组件；大致思路：先在父组件A上定义一个状态，然后在A1组件上调用A传递过来的属性回调函数，通过回调函数设置到状态值，再通过属性分发到A2组件上；
+
+    详细代码参考：[state_enhance](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/05_state_enhance.js)
+
+- 发布订阅模式实现：
+
+    详细代码参考：[pub_sub](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/06_pub_sub.js)
+
+- context状态树参考，主要步骤：
+    - 先定义全局对象：`const GlobalContext = React.createContext();`
+    - 并使用`GlobalContext.Provider（生产者）`
+        ```jsx
+        render() {
+            return (
+                <GlobalContext.Provider value={{
+                    info: this.state.info,
+                    changeInfo: (value) => {
+                        this.setState({
+                            info: value
+                        })
+                    }
+                }}>
+                    <div>
+                        {
+                            this.state.filmList.map(item =>
+                                <FilmItem key={item.filmId} {...item}></FilmItem>
+                            )
+                        }
+                        <FilmDetail></FilmDetail>
+                    </div>
+                </GlobalContext.Provider>
+            )
+        }
+        ```
+    - 任意组件引入GlobalContext并调用context，使用GlobalContext.Consumer（消费者）
+        ```jsx
+        render() {
+            return (
+                <GlobalContext.Consumer>
+                    {
+                        (value) => {
+                            return (
+                                <div className="filmDetail">
+                                    {value.info}
+                                </div>
+                            )
+                        }
+                    }
+                </GlobalContext.Consumer>
+            )
+        }
+        ```
+
+    注意：GlobalContext.Consumer内必须是回调函数，通过context方法改变根组件状态
+
+    详细代码参考：[context](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/07_context.js)
+
+
 
 
 # 开源组件
