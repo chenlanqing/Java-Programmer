@@ -1,19 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-**目录**
-
-- [1、脚手架](#1%E8%84%9A%E6%89%8B%E6%9E%B6)
-- [2、JSX语法与组件](#2jsx%E8%AF%AD%E6%B3%95%E4%B8%8E%E7%BB%84%E4%BB%B6)
-  - [2.1、Jsx语法](#21jsx%E8%AF%AD%E6%B3%95)
-  - [2.2、class组件](#22class%E7%BB%84%E4%BB%B6)
-  - [2.3、函数式组件](#23%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BB%84%E4%BB%B6)
-  - [2.4、组件嵌套](#24%E7%BB%84%E4%BB%B6%E5%B5%8C%E5%A5%97)
-  - [2.5、组件样式](#25%E7%BB%84%E4%BB%B6%E6%A0%B7%E5%BC%8F)
-- [参考资料](#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-
 # 1、脚手架
 
 前提需要安装 node
@@ -776,7 +760,9 @@ export default class App extends Component {
 
     详细代码参考：[pub_sub](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/06_pub_sub.js)
 
-- context状态树参考，主要步骤：
+- [Context](https://react.dev/reference/react/createContext)状态树参考：Context 提供了一个无需为每层组件手动添加 props，就能在组件树间进行数据传递的方法
+  
+    主要步骤：
     - 先定义全局对象：`const GlobalContext = React.createContext();`
     - 并使用`GlobalContext.Provider（生产者）`
         ```jsx
@@ -820,8 +806,7 @@ export default class App extends Component {
             )
         }
         ```
-
-    注意：GlobalContext.Consumer内必须是回调函数，通过context方法改变根组件状态
+    注意：`GlobalContext.Consumer`内必须是回调函数，通过context方法改变根组件状态
 
     详细代码参考：[context](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/07_context.js)
 
