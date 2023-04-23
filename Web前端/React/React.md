@@ -588,6 +588,44 @@ export default class App extends Component {
 
 没有 state 的组件叫无状态组件（stateless component），设置了 state 的叫做有状态组件（stateful component）。因为状态会带来管理的复杂性，我们尽量多地写无状态组件，尽量少地写有状态的组件。这样会降低代码维护的难度，也会在一定程度上增强组件的可复用性
 
+### 3.6.6、特殊属性
+
+什么是插槽，其实是一个特殊的props（children）来将这些无法提前预知内容的子组件传递到渲染到结果中；jsx中的所有内容都会通过children prop传递到父组件中，使用react组合的方式可以实现类似于Vue插槽的功能；
+
+基本使用：
+```jsx
+export default class App extends Component {
+    render() {
+        return (
+            <div>
+                <Child>
+                    <div>111111111</div>
+                    <div>222222222</div>
+                    <div>333333333</div>
+                </Child>
+            </div>
+        )
+    }
+}
+class Child extends Component {
+    render() {
+        return (
+            <div>
+                App
+                {this.props.children[0]}
+                {this.props.children[2]}
+                {this.props.children[1]}
+            </div>
+        )
+    }
+}
+```
+`this.prop.children` 如果有多个可以是数字，读取的是 Child 组件的子标签
+
+插槽用处：
+- 为了复用，比如你实现了一个轮播组件，就可以使用插槽的方式实现，因为你不确定使用方想用标签来操作
+- 一定程度上减少父子通信
+
 # 4、表单中的受控组件与非受控
 
 ## 4.1、非受控组件
@@ -810,8 +848,7 @@ export default class App extends Component {
 
     详细代码参考：[context](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/07_context.js)
 
-
-
+# 6、插槽
 
 # 开源组件
 
