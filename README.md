@@ -129,3 +129,7 @@
 - [C++](编程语言/C++.md)
 - [golang](编程语言/go.md)
 - [Rust](编程语言/Rust.md)
+
+## 3、学习路线
+
+[各种技术学习路线汇总](https://www.yuque.com/snailclimb/dr6cvl/et904p)
