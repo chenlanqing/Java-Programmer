@@ -848,7 +848,114 @@ export default class App extends Component {
 
     详细代码参考：[context](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/07_context.js)
 
-# 6、插槽
+# 6、生命周期
+
+- [React Guidebook-生命周期](https://tsejx.github.io/react-guidebook/foundation/main-concepts/lifecycle)
+
+指的是类的生命周期，生命周期指 React 组件从装载至卸载的全过程，这个过程内置多个函数供开发者在组件的不同阶段执行需要的逻辑
+
+详细生命周期，参考：[main-concepts/lifecycle.md](https://github.com/chenlanqing/react-guidebook/blob/master/docs/foundation/main-concepts/lifecycle.md)
+
+## 6.1、装载阶段
+
+组件的渲染并且构造 DOM 元素插入到页面的过程称为组件的初始化，
+
+装载阶段执行的函数会在组件实例被创建和插入 DOM 中时被触发，这个过程主要实现组件状态的初始化
+
+### constructor
+
+构造函数，语法：`constructor(props, context, updater)`
+- `props`：继承 React.Component 的属性方法，它是不可变的 read-only
+- `context`：全局上下文。
+- `updater`：包含一些更新方法的对象
+    - `this.setState` 最终调用的是 `this.updater.enqueueSetState`
+    - `this.forceUpdate` 最终调用的是 `this.updater.enqueueForceUpdate` 方法，所以这些 API 更多是 React 调用使用，暴露出来以备开发者不时之需；
+
+**触发时机**：在组件初始化的时候触发一次；
+
+**使用建议**：
+- 设置初始化状态：因为组件的生命周期中任何函数都可能要访问 State，那么整个周期中第一个被调用的构造函数便是初始化 state 最理想的地方；
+- 绑定成员函数上下文引用：建议定义函数方法时直接使用箭头函数，就无须在构造函数中进行函数的 bind 操作。
+
+在 ES6 中，在构造函数中通过 this.state 赋值完成状态初始化；通过给类属性（注意是类属性，而不是类实例对象的属性）defaultProps 赋值指定的 props 初始值。
+```jsx
+class Sample extends React.Component {
+  constructor(props, context, updater) {
+    super(props);
+    this.state = {
+      foo: 'InitailValue',
+    };
+  }
+}
+Sample.defaultProps = {
+  bar: 'InitialValue',
+};
+```
+
+### static getDerivedStateFromProps
+
+**语法**：`static getDerivedStateFromProps(nextProps, prevState)`
+
+**触发时机**：该函数会在组件化实例化后和重新渲染前调用（生成 VirtualDOM 之后，实际 DOM 挂载之前），意味着无论是父组件的更新、props 的变化或通过 setState 更新组件内部的 State，它都会被调用；
+
+**返回值**：该生命周期函数必须有返回值，它需要返回一个对象来更新 State，或者返回 null 来表明新 props 不需要更新任何 state；
+
+**新特性**：当组件实例化时，该方法替代了 componentWillMount，而当接收新的 props 时，该方法替代了 componentWillReceiveProps 和 componentWillUpdate
+
+**注意事项：**
+- 在组件装载和更新阶段都会触发。
+- 如果父组件导致了组件的重新渲染，即使属性没有更新，这一方法也会被触发；
+- 如果你只想处理 props 的前后变化，你需要将上一个 props 值存到 state 里作为镜像；
+- 该生命周期函数是一个静态函数，所以函数体内无法访问指向当前组件实例的指针 this；
+- 当需要更新 state 时，需要返回一个对象，否则，返回一个 null
+
+**适用场景**：表单获取默认值
+
+> 为什么该生命周期函数要设计成静态方法呢？
+
+该生命周期函数被设计成静态方法的目的是为了**保持该方法的纯粹**。通过更具父组件输入的 `props` 按需更新 `state`，这种 `state` 叫做衍生 `state`，返回的对象就是要增量更新的 `state`，除此之外不应该在里面执行任何操作。
+
+通过设计成静态方法，能够起到限制开发者无法访问 `this` 也就是实例的作用，这样就不能在里面调用实例方法或者 `setState` 以破坏该生命周期函数的功能。
+
+这个生命周期函数也经历了一些波折，原本它是被设计成 `初始化`、`父组件更新` 和 `接收到 Props` 才会触发，现在只要渲染就会触发，也就是 `初始化` 和 `更新阶段` 都会触发。
+
+**示例：**
+```jsx
+static getDerivedStateFromProps(nextProps, prevState) {
+  if (nextProps.translateX !== prevState.translateX) {
+    return {
+      translateX: nextProps.translateX
+    }
+  }
+  if (nextProps.data !== prevState.data){
+      return {
+          data: nextProps.data
+      }
+  }
+  return null;
+}
+```
+
+### componentWillMount
+
+> 使用该函数会告警：aRct-dom.development.js:86 Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
+
+* Move code with side effects to componentDidMount, and set initial state in the constructor.
+* Rename componentWillMount to UNSAFE_componentWillMount to suppress this warning in non-strict mode. In React 18.x, only the UNSAFE_ name will work. To rename all deprecated lifecycles to their new names, you can run `npx react-codemod rename-unsafe-lifecycles` in your project source folder.
+
+> 此生命周期函数将在 React v17 正式废弃。
+
+**预装载函数**。
+
+**触发时机**：在构造函数和装载组件（将 DOM 树渲染到浏览器中）之间触发。装载组件后将执行 `render` 渲染函数。因此在此生命周期函数里使用 `setState` 同步设置组件内部状态 `state` 将不会触发重新渲染。
+
+**注意事项**：避免在该方法中引入任何的副作用（Effects）或订阅（Subscription）。对于这些使用场景，建议提前到构造函数中。
+
+## 6.2、运行中阶段
+
+
+## 6.3、销毁
+
 
 # 开源组件
 
