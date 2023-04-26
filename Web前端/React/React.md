@@ -951,8 +951,29 @@ static getDerivedStateFromProps(nextProps, prevState) {
 
 **注意事项**：避免在该方法中引入任何的副作用（Effects）或订阅（Subscription）。对于这些使用场景，建议提前到构造函数中。
 
-## 6.2、运行中阶段
+### render
 
+渲染函数，保持 render() 纯粹，可以使服务器端渲染更加切实可行，也使组件更容易被理解
+
+### componentDidMount
+
+装载成功函数，组件完全挂载到网页上后触发。
+
+适用场景：发送网络请求；任何依赖于 DOM 的初始化操作；添加事件监听；如果使用了 Redux 之类的数据管理工具，也能触发 action 处理数据变化逻辑
+
+## 6.2、更新阶段
+
+属性（Props）或状态（State）的改变会触发一次更新阶段，但是组件未必会重新渲染，这取决于 shouldComponentUpdate
+
+- `UNSAFE_componentWillReceiveProps`
+- `static getDerivedStateFromProps`
+- `shouldComponentUpdate` : 返回false 会阻止组件渲染，请勿在此函数中使用 setState 方法，会导致循环调用
+- `UNSAFE_componentWillUpdate`
+- `render`
+- `getSnapshotBeforeUpdate`
+- `componentDidUpdate`
+
+相比装载阶段的生命周期函数，更新阶段的生命周期函数使用的相对来说要少一些。常用的是 getDerivedStateFromProps、shouldComponentUpdate，前者经常用于根据新 props 的数据去设置组件的 State，而后者则是常用于优化，避免不必要的渲染
 
 ## 6.3、销毁
 
