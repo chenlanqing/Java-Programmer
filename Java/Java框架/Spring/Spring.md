@@ -1211,301 +1211,7 @@ public class MetricsAspect {
 - 装饰器模式：Spring中用到的包装器模式在类名上有两种表现：一种是类名中含有Wrapper，另一种是类名中含有Decorator。基本上都是动态地给一个对象添加一些额外的职责；
 - 适配器模式：由于 Advisor 链需要的是 MethodInterceptor（拦截器）对象，所以每一个Advisor中的Advice都要适配成对应的MethodInterceptor对象。AdvisorAdapter
 
-# 八、Spring常见问题
-
-## 1、Bean覆盖问题
-
-### 1.1、问题原因
-
-Spring对同一配置文件中相同id或者name的两个或以上的bean时，做直接抛异常的处理；而对不同配置文件中相同id或者名称的bean，只会在打印日志级别为info的信息，信息内容大概为：
-```
-信息: Overriding bean definition for bean 'messageService' with a different definition: replacing [Generic bean: class [com.blue.fish.ioc.xml.service.MessageServiceImpl]; scope=; abstract=false; lazyInit=false; autowireMode=1; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodName=null; destroyMethodName=null; defined in class path resource [application.xml]] with [Generic bean: class [com.blue.fish.ioc.xml.service.HelloService]; scope=; abstract=false; lazyInit=false; autowireMode=1; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodName=null; destroyMethodName=null; defined in class path resource [config.xml]]
-```
-可能引发的问题：
-当不同文件中配置了相同id或者name的同一类型的两个bean时，如果这两个bean的类型虽然相同，但配置时又有差别时，如：
-```xml
-<bean name="a" class="com.A">
- 	<property name="age" value="20" />
-</bean>
-<bean name="a" class="com.A">
- 	<property name="age" value="20" />
-</bean>
-```
-那么最终spring容器只会实例化后面的这个bean，后者将前者覆盖了；
-
-思路：在DefaultListableBeanFactory有一个 allowBeanDefinitionOverriding，默认为 true
-```java
-/** Whether to allow re-registration of a different definition with the same name */
-private boolean allowBeanDefinitionOverriding = true;
-// 使用
-if (oldBeanDefinition != null) {
-	if (!isAllowBeanDefinitionOverriding()) {
-		throw new BeanDefinitionStoreException(beanDefinition.getResourceDescription(), beanName,
-				"Cannot register bean definition [" + beanDefinition + "] for bean '" + beanName +
-				"': There is already [" + oldBeanDefinition + "] bound.");
-	}
-	// 代码省略......
-	this.beanDefinitionMap.put(beanName, beanDefinition);
-}
-```
-想到只要将其值更改为false时就可能可以解决上面的问题，即存在id或者name相同的bean时，不是打印出相关信息，而是直接抛异常
-
-### 1.2、解决方案1：重写方法customizeContext
-
-自己写一个继承 ContextLoaderListener 的listener,比如 SpringContextLoaderListener，然后重写方法customizeContext,如：
-```java
-public class SpringContextLoaderListener extends ContextLoaderListener {
-    @Override
-    protected void customizeContext(ServletContext sc, ConfigurableWebApplicationContext wac) {
-        super.customizeContext(sc, wac);
-
-        XmlWebApplicationContext context = (XmlWebApplicationContext) wac;
-		//在这里将XmlWebApplicationContext属性allowBeanDefinitionOverriding设置为false,这个属性的值最终
-        context.setAllowBeanDefinitionOverriding(false); 
-    }
-}
-```
-在web.xml使用自定义的listener,配置如下：
-```xml
-<listener>
-      <listener-class>com.spring.SpringContextLoaderListener</listener-class>
-</listener>
-```
-在项目启动时，不同配置文件中如果有同名id或者name的bean，直接抛异常，容器停止启动
-
-### 1.3、解决方案2：改变allowBeanDefinitionOverriding默认值
-
-在`org.springframework.web.context.ContextLoader`类中找到了`CONTEXT_INITIALIZER_CLASSES_PARAM`常量,该常量可用于配置spring上下文相关全局特性,该常量在如下代码中起作用：
-```java
-protected List<Class<ApplicationContextInitializer<ConfigurableApplicationContext>>>
-	determineContextInitializerClasses(ServletContext servletContext) {
-	List<Class<ApplicationContextInitializer<ConfigurableApplicationContext>>> classes =
-	new ArrayList<Class<ApplicationContextInitializer<ConfigurableApplicationContext>>>();
-	.........
-	String localClassNames = servletContext.getInitParameter(CONTEXT_INITIALIZER_CLASSES_PARAM);
-	if (localClassNames != null) {
-		for (String className : StringUtils.tokenizeToStringArray(localClassNames, INIT_PARAM_DELIMITERS)) {
-			classes.add(loadInitializerClass(className));
-		}
-	}
- 	return classes;
-}
-```
-创建一个实现接口ApplicationContextInitializer的类，如SpringApplicationContextInitializer,代码如下
-```java
-public class SpringApplicationContextInitializer implements ApplicationContextInitializer<XmlWebApplicationContext> {
-    @Override
-    public void initialize(XmlWebApplicationContext applicationContext) {
-		// 在这里将XmlWebApplicationContext属性allowBeanDefinitionOverriding设置为false,这个属
-  		// 性的值最终会传递给DefaultListableBeanFactory类的allowBeanDefinitionOverriding属性
-        applicationContext.setAllowBeanDefinitionOverriding(false);
-    }
-}
-```
-在web.xml增加配置
-```xml
-<context-param>
-	<param-name>contextInitializerClasses</param-name>
-	<param-value>com.spring.SpringApplicationContextInitializer</param-value>
- </context-param>
-```
-
-## 2、循环依赖问题
-
-- [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
-- [Spring循环依赖处理](http://cmsblogs.com/?p=2887)
-
-### 2.1、什么是循环依赖
-
-循环依赖，其实就是循环引用，就是两个或者两个以上的 bean 互相引用对方，最终形成一个闭环，如 A 依赖 B，B 依赖 C，C 依赖 A；
-
-循环依赖，其实就是一个死循环的过程，在初始化 A 的时候发现引用了 B，这时就会去初始化 B，然后又发现 B 引用 C，跑去初始化 C，初始化 C 的时候发现引用了 A，则又会去初始化 A，依次循环永不退出，除非有终结条件
-
-### 2.2、循环依赖的场景
-
-- 构造器的循环依赖：Spring是无法解决的，只能抛出`BeanCurrentlyInCreationException`异常表示循环依赖；
-
-	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。形成环状依赖，从而被Spring抛出；类似先有蛋还是先有鸡
-
-- setter的循环依赖：包含两种循环依赖问题，`多例（原型）模式下产生的循环依赖问题`和`单例模式下产生的循环依赖问题`
-
-	Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean，因为每一次getBean()时，都会产生一个新的Bean，如此反复下去就会有无穷无尽的Bean产生了，最终就会导致OOM问题的出现；
-
-### 2.3、Spring三大缓存
-
-Spring中有三个缓存，用于存储单例的Bean实例，这三个缓存是彼此互斥的，不会针对同一个Bean的实例同时存储；
-
-如果调用getBean，则需要从三个缓存中依次获取指定的Bean实例。 读取顺序依次是`一级缓存-->二级缓存-->三级缓存`
-```java
-protected Object getSingleton(String beanName, boolean allowEarlyReference) {
-	// 从一级缓存中获取单例对象
-	Object singletonObject = this.singletonObjects.get(beanName);
-	// isSingletonCurrentlyInCreation:
-	// 判断当前单例bean是否正在创建中，也就是没有初始化完成；
-	// 比如A的构造器依赖了B对象，所以得先去创建B对象，或者在A的populateBean过程中依赖了B对象，得先去创建B对象，这时的A就是出于创建中状态；
-	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
-		singletonObject = this.earlySingletonObjects.get(beanName);
-		if (singletonObject == null && allowEarlyReference) {
-			synchronized (this.singletonObjects) {
-				// 从二级缓存中获取单例bean
-				singletonObject = this.singletonObjects.get(beanName);
-				if (singletonObject == null) {
-					// 是否允许从 singletonFactories 中通过 getObject拿到对象
-					singletonObject = this.earlySingletonObjects.get(beanName);
-					if (singletonObject == null) {
-						// 从三级缓存中获取单例bean
-						ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
-						if (singletonFactory != null) {
-							// 通过单例工厂获取单例bean
-							singletonObject = singletonFactory.getObject();
-							// 从三级缓存移到了二级缓存
-							this.earlySingletonObjects.put(beanName, singletonObject);
-							this.singletonFactories.remove(beanName);
-						}
-					}
-				}
-			}
-		}
-	}
-	return singletonObject;
-}
-```
-
-**一级缓存：Map<String, Object> singletonObjects**
-
-第一级缓存的作用：
-- 用于存储单例模式下创建的Bean实例（已经创建完毕）；
-- 该缓存是对外使用的，指的就是使用Spring框架的程序员
-
-存储的数据：
-- key:   bean的名称
-- value: bean的实例对象（有代理对象则指的是代理对象，已经创建完毕）
-
-**二级缓存：Map<String, Object> earlySingletonObjects**
-
-第二级缓存的作用：
-- 用于存储单例模式下创建的Bean实例（该Bean被提前暴露的引用,该Bean还在创建中）。
-- 该缓存是对内使用的，指的就是Spring框架内部逻辑使用该缓存。
-
-存储的数据：
-- key: bean的名称
-- value: bean的实例对象（有代理对象则指的是代理对象，该Bean还在创建中）
-
-**三级缓存：Map<String, ObjectFactory<?>> singletonFactories**
-
-第三级缓存的作用：
-- 通过ObjectFactory对象来存储单例模式下提前暴露的Bean实例的引用（正在创建中）。
-- 该缓存是对内使用的，指的就是Spring框架内部逻辑使用该缓存。
-- 主要使用此缓存来解决循环依赖
-
-存储的数据：
-- key: bean的名称
-- values: ObjectFactory，该对象持有提前暴露的bean的引用，ObjectFactory<?> 类型的 lambda 表达式，就是这用于处理 AOP 循环依赖的
-
-```java
-protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
-	Assert.notNull(singletonFactory, "Singleton factory must not be null");
-	synchronized (this.singletonObjects) {
-		/**
-		 * 如果单例池中不存在才会add，因为这里主要是为了解决循环依赖的代码
-		 * 如果bean存在单例池的话，已经是一个完整的bean了，一个完整的bean是已经完成属性注入的，循环依赖已经依赖上了，
-		 * 所以如果这个对象已经是一个完整的bean，就不需要关心了
-		 */
-		if (!this.singletonObjects.containsKey(beanName)) {
-			// 放入三级缓存
-			this.singletonFactories.put(beanName, singletonFactory);
-			this.earlySingletonObjects.remove(beanName);
-			this.registeredSingletons.add(beanName);
-		}
-	}
-}
-```
-为什么第三级缓存使用 ObjectFactory：需要提前产生代理对象
-
-### 2.4、解决循环依赖
-
-Spring 在创建 bean 的时候并不是等它完全完成，而是在创建过程中将创建中的 bean 的 ObjectFactory 提前曝光（即加入到 singletonFactories 缓存中）。
-这样，一旦下一个 bean 创建的时候需要依赖 bean，则直接使用 ObjectFactory 的 `#getObject()` 方法来获取了；
-
-- 首先 A 完成初始化第一步并将自己提前曝光出来（通过 ObjectFactory 将自己提前曝光），在初始化的时候，发现自己依赖对象 B，此时就会去尝试 get(B)，这个时候发现 B 还没有被创建出来
-- 然后 B 就走创建流程，在 B 初始化的时候，同样发现自己依赖 C，C 也没有被创建出来
-- 这个时候 C 又开始初始化进程，但是在初始化的过程中发现自己依赖 A，于是尝试 get(A)，这个时候由于 A 已经添加至缓存中（一般都是添加至三级缓存 singletonFactories ），通过 ObjectFactory 提前曝光，所以可以通过 ObjectFactory#getObject() 方法来拿到 A 对象，C 拿到 A 对象后顺利完成初始化，然后将自己添加到一级缓存中
-- 回到 B ，B 也可以拿到 C 对象，完成初始化，A 可以顺利拿到 B 完成初始化。到这里整个链路就已经完成了初始化过程了；
-
-```java
-/** Cache of singleton factories: bean name --> ObjectFactory */
-private final Map<String, ObjectFactory> singletonFactories = new HashMap<String, ObjectFactory>();
-/** Cache of early singleton objects: bean name --> bean instance */
-private final Map<String, Object> earlySingletonObjects = new HashMap<String, Object>();
-```
-- singletonFactories，用于存储在spring内部所使用的beanName->对象工厂的引用，一旦最终对象被创建(通过objectFactory.getObject())，此引用信息将删除
-- earlySingletonObjects，用于存储在创建Bean早期对创建的原始bean的一个引用，注意这里是原始bean，即使用工厂方法或构造方法创建出来的对象，一旦对象最终创建好，此引用信息将删除
-
-SpringBoot解决循环依赖：加`@Lazy`注解
-```java
-@Autowired
-@Lazy
-private CService cService;
-```
-
-**答案：**
-
-Spring通过三级缓存解决了循环依赖，其中一级缓存为单例池（singletonObjects），二级缓存为早期曝光对象earlySingletonObjects，三级缓存为早期曝光对象工厂（singletonFactories）。当A、B两个类发生循环引用时，在A完成实例化后，就使用实例化后的对象去创建一个对象工厂，并添加到三级缓存中，如果A被AOP代理，那么通过这个工厂获取到的就是A代理后的对象，如果A没有被AOP代理，那么这个工厂获取到的就是A实例化的对象。当A进行属性注入时，会去创建B，同时B又依赖了A，所以创建B的同时又会去调用getBean(a)来获取需要的依赖，此时的getBean(a)会从缓存中获取，第一步，先获取到三级缓存中的工厂；第二步，调用对象工工厂的getObject方法来获取到对应的对象，得到这个对象后将其注入到B中。紧接着B会走完它的生命周期流程，包括初始化、后置处理器等。当B创建完后，会将B再注入到A中，此时A再完成它的整个生命周期。至此，循环依赖结束！
-
-**为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？**
-
-如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理；
-
-## 3、Spring与SpringMVC容器
-
-- [父子容器的关系](https://mp.weixin.qq.com/s/EOwnfUQUhjwCtMWzdkUZRw)
-
-### 3.1、Spring父子容器的关系
-
-- `Spring`和`SpringMVC`共存时，会有两个容器：一个`SpringMVC`的`ServletWebApplicationContext`为子容器，一个Spring的`RootWebApplicationContext`为父容器。当子容器中找不到对应的Bean会委托于父容器中的Bean。
-	* `RootWebApplicationContext`中的`Bean`对`ServletWebApplicationContext`可见，而`ServletWebApplicationContext`中的`Bean`对`RootWebApplicationContext`不可见。
-
-- 如果在父容器中开启了 `@AspectJ` 注解与事务配置，子容器和父容器均加载了所有Bean。造成子容器中的services覆盖了父容器的Services，导致父容器中的动态代理的services不生效，事务也不生效。
-
-    ![](image/Spring父子容器.png)
-
-### 3.2、如何解决Spring父子容器关系
-
-可以参考[Spring官方文档](https://docs.spring.io/spring/docs/4.3.16.RELEASE/spring-framework-reference/htmlsingle/#mvc-servlet) 中的`Figure 22.2. Typical context hierarchy in Spring Web MVC`
-
-- 子容器包含`Controllers、HandlerMapping、viewResolver`，其他bean都在父容器中；
-- 子容器不加载任何bean，均由父容器加载
-
-### 3.3、Spring容器与Servlet容器
-
-Tomcat&Jetty在启动时给每个Web应用创建一个全局的上下文环境，这个上下文就是ServletContext，其为后面的Spring容器提供宿主环境；
-
-Tomcat&Jetty在启动过程中触发容器初始化事件，Spring的ContextLoaderListener会监听到这个事件，它的contextInitialized方法会被调用，在这个方法中，Spring会初始化全局的Spring根容器，这个就是Spring的IoC容器，IoC容器初始化完毕后，Spring将其存储到ServletContext中；
-
-Tomcat&Jetty在启动过程中还会扫描Servlet，一个Web应用中的Servlet可以有多个，以SpringMVC中的DispatcherServlet为例，这个Servlet实际上是一个标准的前端控制器，用以转发、匹配、处理每个Servlet请求；
-
-Servlet一般会延迟加载，当第一个请求达到时，Tomcat&Jetty发现DispatcherServlet还没有被实例化，就调用DispatcherServlet的init方法，DispatcherServlet在初始化的时候会建立自己的容器，叫做SpringMVC 容器，用来持有Spring MVC相关的Bean。同时，Spring MVC还会通过ServletContext拿到Spring根容器，并将Spring根容器设为SpringMVC容器的父容器，请注意，Spring MVC容器可以访问父容器中的Bean，但是父容器不能访问子容器的Bean， 也就是说Spring根容器不能访问SpringMVC容器里的Bean。说的通俗点就是，在Controller里可以访问Service对象，但是在Service里不可以访问Controller对象；
-
-**Servlet默认是单例模式的，Spring的Bean默认是单例模式的，那Spring MVC是如何处理并发请求的呢？**
-
-这是由Web容器比如Tomcat来做到的，Tomcat在调用Servlet的init方法时，用了synchronized
-
-## 4、Spring注解@Resource和@Autowired以及@Inject区别对比
-
-- `@Resource`和`@Autowired`都是做bean的注入时使用，其实`@Resource`并不是Spring的注解，它的包是`javax.annotation.Resource`，需要导入，但是Spring支持该注解的注入；`@Autowired和@Inject`基本是一样的，因为两者都是使用AutowiredAnnotationBeanPostProcessor来处理依赖注入。但是`@Resource`是个例外，它使用的是CommonAnnotationBeanPostProcessor来处理依赖注入
-
-- `@Autowired`注解是优先按照类型（byType）装配依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false；如果我们想使用按照名称（byName）来装配，可以结合`@Qualifier`注解一起使用；当无法确定具体注入类型的时候，也可以通过 @Qualifier 注解指定 Bean 名称
-
-- `@Resource`默认按照ByName自动注入，由J2EE提供，需要导入包`javax.annotation.Resource`。`@Resource`有两个重要的属性：name和type，而Spring将`@Resource`注解的name属性解析为bean的名字，而type属性则解析为bean的类型。所以，如果使用name属性，则使用byName的自动注入策略，而使用type属性时则使用byType自动注入策略。如果既不制定name也不制定type属性，这时将通过反射机制使用byName自动注入策略
-
-	@Resource装配顺序：
-	- ①、如果同时指定了name和type，则从Spring上下文中找到唯一匹配的bean进行装配，找不到则抛出异常。
-	- ②、如果指定了name，则从上下文中查找名称（id）匹配的bean进行装配，找不到则抛出异常。
-	- ③、如果指定了type，则从上下文中找到类似匹配的唯一bean进行装配，找不到或是找到多个，都会抛出异常。
-	- ④、 如果既没有指定name，又没有指定type，则自动按照byName方式进行装配；如果没有匹配，则回退为一个原始类型进行匹配，如果匹配则自动装配。
-- `@Inject`: 这是jsr330 的规范，通过AutowiredAnnotationBeanPostProcessor 类实现的依赖注入。位于javax.inject包内，是Java自带的注解；也是根据类型进行自动装配的，这一点和 @Autowired 类似。如果需要按名称进行装配，则需要配合使用 @Named。@Autowired 和 @Inject 的区别在于，前者可以使用 required=false 允许注入 null，后者允许注入一个 Provider 实现延迟注入
-
-# 九、SpringMVC
+# 八、SpringMVC
 
 ## 1、Spring MVC概述
 
@@ -2761,6 +2467,300 @@ public class RootConfig {
 - Spring MVC 会稍微比 Struts2 快些. Spring MVC 是基于方法设计， 而 Sturts2 是基于类， 每次发一次请求都会实	例一个 Action.
 - Spring MVC 使用更加简洁， 开发效率 Spring MVC 确实比 struts2 高： 支持 JSR303， 处理 ajax 的请求更方便
 - Struts2 的 OGNL 表达式使页面的开发效率相比Spring MVC 更高些。
+
+# 九、Spring常见问题
+
+## 1、Bean覆盖问题
+
+### 1.1、问题原因
+
+Spring对同一配置文件中相同id或者name的两个或以上的bean时，做直接抛异常的处理；而对不同配置文件中相同id或者名称的bean，只会在打印日志级别为info的信息，信息内容大概为：
+```
+信息: Overriding bean definition for bean 'messageService' with a different definition: replacing [Generic bean: class [com.blue.fish.ioc.xml.service.MessageServiceImpl]; scope=; abstract=false; lazyInit=false; autowireMode=1; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodName=null; destroyMethodName=null; defined in class path resource [application.xml]] with [Generic bean: class [com.blue.fish.ioc.xml.service.HelloService]; scope=; abstract=false; lazyInit=false; autowireMode=1; dependencyCheck=0; autowireCandidate=true; primary=false; factoryBeanName=null; factoryMethodName=null; initMethodName=null; destroyMethodName=null; defined in class path resource [config.xml]]
+```
+可能引发的问题：
+当不同文件中配置了相同id或者name的同一类型的两个bean时，如果这两个bean的类型虽然相同，但配置时又有差别时，如：
+```xml
+<bean name="a" class="com.A">
+ 	<property name="age" value="20" />
+</bean>
+<bean name="a" class="com.A">
+ 	<property name="age" value="20" />
+</bean>
+```
+那么最终spring容器只会实例化后面的这个bean，后者将前者覆盖了；
+
+思路：在DefaultListableBeanFactory有一个 allowBeanDefinitionOverriding，默认为 true
+```java
+/** Whether to allow re-registration of a different definition with the same name */
+private boolean allowBeanDefinitionOverriding = true;
+// 使用
+if (oldBeanDefinition != null) {
+	if (!isAllowBeanDefinitionOverriding()) {
+		throw new BeanDefinitionStoreException(beanDefinition.getResourceDescription(), beanName,
+				"Cannot register bean definition [" + beanDefinition + "] for bean '" + beanName +
+				"': There is already [" + oldBeanDefinition + "] bound.");
+	}
+	// 代码省略......
+	this.beanDefinitionMap.put(beanName, beanDefinition);
+}
+```
+想到只要将其值更改为false时就可能可以解决上面的问题，即存在id或者name相同的bean时，不是打印出相关信息，而是直接抛异常
+
+### 1.2、解决方案1：重写方法customizeContext
+
+自己写一个继承 ContextLoaderListener 的listener,比如 SpringContextLoaderListener，然后重写方法customizeContext,如：
+```java
+public class SpringContextLoaderListener extends ContextLoaderListener {
+    @Override
+    protected void customizeContext(ServletContext sc, ConfigurableWebApplicationContext wac) {
+        super.customizeContext(sc, wac);
+
+        XmlWebApplicationContext context = (XmlWebApplicationContext) wac;
+		//在这里将XmlWebApplicationContext属性allowBeanDefinitionOverriding设置为false,这个属性的值最终
+        context.setAllowBeanDefinitionOverriding(false); 
+    }
+}
+```
+在web.xml使用自定义的listener,配置如下：
+```xml
+<listener>
+      <listener-class>com.spring.SpringContextLoaderListener</listener-class>
+</listener>
+```
+在项目启动时，不同配置文件中如果有同名id或者name的bean，直接抛异常，容器停止启动
+
+### 1.3、解决方案2：改变allowBeanDefinitionOverriding默认值
+
+在`org.springframework.web.context.ContextLoader`类中找到了`CONTEXT_INITIALIZER_CLASSES_PARAM`常量,该常量可用于配置spring上下文相关全局特性,该常量在如下代码中起作用：
+```java
+protected List<Class<ApplicationContextInitializer<ConfigurableApplicationContext>>>
+	determineContextInitializerClasses(ServletContext servletContext) {
+	List<Class<ApplicationContextInitializer<ConfigurableApplicationContext>>> classes =
+	new ArrayList<Class<ApplicationContextInitializer<ConfigurableApplicationContext>>>();
+	.........
+	String localClassNames = servletContext.getInitParameter(CONTEXT_INITIALIZER_CLASSES_PARAM);
+	if (localClassNames != null) {
+		for (String className : StringUtils.tokenizeToStringArray(localClassNames, INIT_PARAM_DELIMITERS)) {
+			classes.add(loadInitializerClass(className));
+		}
+	}
+ 	return classes;
+}
+```
+创建一个实现接口ApplicationContextInitializer的类，如SpringApplicationContextInitializer,代码如下
+```java
+public class SpringApplicationContextInitializer implements ApplicationContextInitializer<XmlWebApplicationContext> {
+    @Override
+    public void initialize(XmlWebApplicationContext applicationContext) {
+		// 在这里将XmlWebApplicationContext属性allowBeanDefinitionOverriding设置为false,这个属
+  		// 性的值最终会传递给DefaultListableBeanFactory类的allowBeanDefinitionOverriding属性
+        applicationContext.setAllowBeanDefinitionOverriding(false);
+    }
+}
+```
+在web.xml增加配置
+```xml
+<context-param>
+	<param-name>contextInitializerClasses</param-name>
+	<param-value>com.spring.SpringApplicationContextInitializer</param-value>
+ </context-param>
+```
+
+## 2、循环依赖问题
+
+- [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
+- [Spring循环依赖处理](http://cmsblogs.com/?p=2887)
+
+### 2.1、什么是循环依赖
+
+循环依赖，其实就是循环引用，就是两个或者两个以上的 bean 互相引用对方，最终形成一个闭环，如 A 依赖 B，B 依赖 C，C 依赖 A；
+
+循环依赖，其实就是一个死循环的过程，在初始化 A 的时候发现引用了 B，这时就会去初始化 B，然后又发现 B 引用 C，跑去初始化 C，初始化 C 的时候发现引用了 A，则又会去初始化 A，依次循环永不退出，除非有终结条件
+
+### 2.2、循环依赖的场景
+
+- 构造器的循环依赖：Spring是无法解决的，只能抛出`BeanCurrentlyInCreationException`异常表示循环依赖；
+
+	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。形成环状依赖，从而被Spring抛出；类似先有蛋还是先有鸡
+
+- setter的循环依赖：包含两种循环依赖问题，`多例（原型）模式下产生的循环依赖问题`和`单例模式下产生的循环依赖问题`
+
+	Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean，因为每一次getBean()时，都会产生一个新的Bean，如此反复下去就会有无穷无尽的Bean产生了，最终就会导致OOM问题的出现；
+
+### 2.3、Spring三大缓存
+
+Spring中有三个缓存，用于存储单例的Bean实例，这三个缓存是彼此互斥的，不会针对同一个Bean的实例同时存储；
+
+如果调用getBean，则需要从三个缓存中依次获取指定的Bean实例。 读取顺序依次是`一级缓存-->二级缓存-->三级缓存`
+```java
+protected Object getSingleton(String beanName, boolean allowEarlyReference) {
+	// 从一级缓存中获取单例对象
+	Object singletonObject = this.singletonObjects.get(beanName);
+	// isSingletonCurrentlyInCreation:
+	// 判断当前单例bean是否正在创建中，也就是没有初始化完成；
+	// 比如A的构造器依赖了B对象，所以得先去创建B对象，或者在A的populateBean过程中依赖了B对象，得先去创建B对象，这时的A就是出于创建中状态；
+	if (singletonObject == null && isSingletonCurrentlyInCreation(beanName)) {
+		singletonObject = this.earlySingletonObjects.get(beanName);
+		if (singletonObject == null && allowEarlyReference) {
+			synchronized (this.singletonObjects) {
+				// 从二级缓存中获取单例bean
+				singletonObject = this.singletonObjects.get(beanName);
+				if (singletonObject == null) {
+					// 是否允许从 singletonFactories 中通过 getObject拿到对象
+					singletonObject = this.earlySingletonObjects.get(beanName);
+					if (singletonObject == null) {
+						// 从三级缓存中获取单例bean
+						ObjectFactory<?> singletonFactory = this.singletonFactories.get(beanName);
+						if (singletonFactory != null) {
+							// 通过单例工厂获取单例bean
+							singletonObject = singletonFactory.getObject();
+							// 从三级缓存移到了二级缓存
+							this.earlySingletonObjects.put(beanName, singletonObject);
+							this.singletonFactories.remove(beanName);
+						}
+					}
+				}
+			}
+		}
+	}
+	return singletonObject;
+}
+```
+
+**一级缓存：Map<String, Object> singletonObjects**
+
+第一级缓存的作用：
+- 用于存储单例模式下创建的Bean实例（已经创建完毕）；
+- 该缓存是对外使用的，指的就是使用Spring框架的程序员
+
+存储的数据：
+- key:   bean的名称
+- value: bean的实例对象（有代理对象则指的是代理对象，已经创建完毕）
+
+**二级缓存：Map<String, Object> earlySingletonObjects**
+
+第二级缓存的作用：
+- 用于存储单例模式下创建的Bean实例（该Bean被提前暴露的引用,该Bean还在创建中）。
+- 该缓存是对内使用的，指的就是Spring框架内部逻辑使用该缓存。
+
+存储的数据：
+- key: bean的名称
+- value: bean的实例对象（有代理对象则指的是代理对象，该Bean还在创建中）
+
+**三级缓存：Map<String, ObjectFactory<?>> singletonFactories**
+
+第三级缓存的作用：
+- 通过ObjectFactory对象来存储单例模式下提前暴露的Bean实例的引用（正在创建中）。
+- 该缓存是对内使用的，指的就是Spring框架内部逻辑使用该缓存。
+- 主要使用此缓存来解决循环依赖
+
+存储的数据：
+- key: bean的名称
+- values: ObjectFactory，该对象持有提前暴露的bean的引用，ObjectFactory<?> 类型的 lambda 表达式，就是这用于处理 AOP 循环依赖的
+
+```java
+protected void addSingletonFactory(String beanName, ObjectFactory<?> singletonFactory) {
+	Assert.notNull(singletonFactory, "Singleton factory must not be null");
+	synchronized (this.singletonObjects) {
+		/**
+		 * 如果单例池中不存在才会add，因为这里主要是为了解决循环依赖的代码
+		 * 如果bean存在单例池的话，已经是一个完整的bean了，一个完整的bean是已经完成属性注入的，循环依赖已经依赖上了，
+		 * 所以如果这个对象已经是一个完整的bean，就不需要关心了
+		 */
+		if (!this.singletonObjects.containsKey(beanName)) {
+			// 放入三级缓存
+			this.singletonFactories.put(beanName, singletonFactory);
+			this.earlySingletonObjects.remove(beanName);
+			this.registeredSingletons.add(beanName);
+		}
+	}
+}
+```
+为什么第三级缓存使用 ObjectFactory：需要提前产生代理对象
+
+### 2.4、解决循环依赖
+
+Spring 在创建 bean 的时候并不是等它完全完成，而是在创建过程中将创建中的 bean 的 ObjectFactory 提前曝光（即加入到 singletonFactories 缓存中）。
+这样，一旦下一个 bean 创建的时候需要依赖 bean，则直接使用 ObjectFactory 的 `#getObject()` 方法来获取了；
+
+- 首先 A 完成初始化第一步并将自己提前曝光出来（通过 ObjectFactory 将自己提前曝光），在初始化的时候，发现自己依赖对象 B，此时就会去尝试 get(B)，这个时候发现 B 还没有被创建出来
+- 然后 B 就走创建流程，在 B 初始化的时候，同样发现自己依赖 C，C 也没有被创建出来
+- 这个时候 C 又开始初始化进程，但是在初始化的过程中发现自己依赖 A，于是尝试 get(A)，这个时候由于 A 已经添加至缓存中（一般都是添加至三级缓存 singletonFactories ），通过 ObjectFactory 提前曝光，所以可以通过 ObjectFactory#getObject() 方法来拿到 A 对象，C 拿到 A 对象后顺利完成初始化，然后将自己添加到一级缓存中
+- 回到 B ，B 也可以拿到 C 对象，完成初始化，A 可以顺利拿到 B 完成初始化。到这里整个链路就已经完成了初始化过程了；
+
+```java
+/** Cache of singleton factories: bean name --> ObjectFactory */
+private final Map<String, ObjectFactory> singletonFactories = new HashMap<String, ObjectFactory>();
+/** Cache of early singleton objects: bean name --> bean instance */
+private final Map<String, Object> earlySingletonObjects = new HashMap<String, Object>();
+```
+- singletonFactories，用于存储在spring内部所使用的beanName->对象工厂的引用，一旦最终对象被创建(通过objectFactory.getObject())，此引用信息将删除
+- earlySingletonObjects，用于存储在创建Bean早期对创建的原始bean的一个引用，注意这里是原始bean，即使用工厂方法或构造方法创建出来的对象，一旦对象最终创建好，此引用信息将删除
+
+SpringBoot解决循环依赖：加`@Lazy`注解
+```java
+@Autowired
+@Lazy
+private CService cService;
+```
+
+**答案：**
+
+Spring通过三级缓存解决了循环依赖，其中一级缓存为单例池（singletonObjects），二级缓存为早期曝光对象earlySingletonObjects，三级缓存为早期曝光对象工厂（singletonFactories）。当A、B两个类发生循环引用时，在A完成实例化后，就使用实例化后的对象去创建一个对象工厂，并添加到三级缓存中，如果A被AOP代理，那么通过这个工厂获取到的就是A代理后的对象，如果A没有被AOP代理，那么这个工厂获取到的就是A实例化的对象。当A进行属性注入时，会去创建B，同时B又依赖了A，所以创建B的同时又会去调用getBean(a)来获取需要的依赖，此时的getBean(a)会从缓存中获取，第一步，先获取到三级缓存中的工厂；第二步，调用对象工工厂的getObject方法来获取到对应的对象，得到这个对象后将其注入到B中。紧接着B会走完它的生命周期流程，包括初始化、后置处理器等。当B创建完后，会将B再注入到A中，此时A再完成它的整个生命周期。至此，循环依赖结束！
+
+**为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？**
+
+如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理；
+
+## 3、Spring与SpringMVC容器
+
+- [父子容器的关系](https://mp.weixin.qq.com/s/EOwnfUQUhjwCtMWzdkUZRw)
+
+### 3.1、Spring父子容器的关系
+
+- `Spring`和`SpringMVC`共存时，会有两个容器：一个`SpringMVC`的`ServletWebApplicationContext`为子容器，一个Spring的`RootWebApplicationContext`为父容器。当子容器中找不到对应的Bean会委托于父容器中的Bean。
+	* `RootWebApplicationContext`中的`Bean`对`ServletWebApplicationContext`可见，而`ServletWebApplicationContext`中的`Bean`对`RootWebApplicationContext`不可见。
+
+- 如果在父容器中开启了 `@AspectJ` 注解与事务配置，子容器和父容器均加载了所有Bean。造成子容器中的services覆盖了父容器的Services，导致父容器中的动态代理的services不生效，事务也不生效。
+
+    ![](image/Spring父子容器.png)
+
+### 3.2、如何解决Spring父子容器关系
+
+可以参考[Spring官方文档](https://docs.spring.io/spring/docs/4.3.16.RELEASE/spring-framework-reference/htmlsingle/#mvc-servlet) 中的`Figure 22.2. Typical context hierarchy in Spring Web MVC`
+
+- 子容器包含`Controllers、HandlerMapping、viewResolver`，其他bean都在父容器中；
+- 子容器不加载任何bean，均由父容器加载
+
+### 3.3、Spring容器与Servlet容器
+
+Tomcat&Jetty在启动时给每个Web应用创建一个全局的上下文环境，这个上下文就是ServletContext，其为后面的Spring容器提供宿主环境；
+
+Tomcat&Jetty在启动过程中触发容器初始化事件，Spring的ContextLoaderListener会监听到这个事件，它的contextInitialized方法会被调用，在这个方法中，Spring会初始化全局的Spring根容器，这个就是Spring的IoC容器，IoC容器初始化完毕后，Spring将其存储到ServletContext中；
+
+Tomcat&Jetty在启动过程中还会扫描Servlet，一个Web应用中的Servlet可以有多个，以SpringMVC中的DispatcherServlet为例，这个Servlet实际上是一个标准的前端控制器，用以转发、匹配、处理每个Servlet请求；
+
+Servlet一般会延迟加载，当第一个请求达到时，Tomcat&Jetty发现DispatcherServlet还没有被实例化，就调用DispatcherServlet的init方法，DispatcherServlet在初始化的时候会建立自己的容器，叫做SpringMVC 容器，用来持有Spring MVC相关的Bean。同时，Spring MVC还会通过ServletContext拿到Spring根容器，并将Spring根容器设为SpringMVC容器的父容器，请注意，Spring MVC容器可以访问父容器中的Bean，但是父容器不能访问子容器的Bean， 也就是说Spring根容器不能访问SpringMVC容器里的Bean。说的通俗点就是，在Controller里可以访问Service对象，但是在Service里不可以访问Controller对象；
+
+**Servlet默认是单例模式的，Spring的Bean默认是单例模式的，那Spring MVC是如何处理并发请求的呢？**
+
+这是由Web容器比如Tomcat来做到的，Tomcat在调用Servlet的init方法时，用了synchronized
+
+## 4、Spring注解@Resource和@Autowired以及@Inject区别对比
+
+- `@Resource`和`@Autowired`都是做bean的注入时使用，其实`@Resource`并不是Spring的注解，它的包是`javax.annotation.Resource`，需要导入，但是Spring支持该注解的注入；`@Autowired和@Inject`基本是一样的，因为两者都是使用AutowiredAnnotationBeanPostProcessor来处理依赖注入。但是`@Resource`是个例外，它使用的是CommonAnnotationBeanPostProcessor来处理依赖注入
+
+- `@Autowired`注解是优先按照类型（byType）装配依赖对象，默认情况下它要求依赖对象必须存在，如果允许null值，可以设置它的required属性为false；如果我们想使用按照名称（byName）来装配，可以结合`@Qualifier`注解一起使用；当无法确定具体注入类型的时候，也可以通过 @Qualifier 注解指定 Bean 名称
+
+- `@Resource`默认按照ByName自动注入，由J2EE提供，需要导入包`javax.annotation.Resource`。`@Resource`有两个重要的属性：name和type，而Spring将`@Resource`注解的name属性解析为bean的名字，而type属性则解析为bean的类型。所以，如果使用name属性，则使用byName的自动注入策略，而使用type属性时则使用byType自动注入策略。如果既不制定name也不制定type属性，这时将通过反射机制使用byName自动注入策略
+
+	@Resource装配顺序：
+	- ①、如果同时指定了name和type，则从Spring上下文中找到唯一匹配的bean进行装配，找不到则抛出异常。
+	- ②、如果指定了name，则从上下文中查找名称（id）匹配的bean进行装配，找不到则抛出异常。
+	- ③、如果指定了type，则从上下文中找到类似匹配的唯一bean进行装配，找不到或是找到多个，都会抛出异常。
+	- ④、 如果既没有指定name，又没有指定type，则自动按照byName方式进行装配；如果没有匹配，则回退为一个原始类型进行匹配，如果匹配则自动装配。
+- `@Inject`: 这是jsr330 的规范，通过AutowiredAnnotationBeanPostProcessor 类实现的依赖注入。位于javax.inject包内，是Java自带的注解；也是根据类型进行自动装配的，这一点和 @Autowired 类似。如果需要按名称进行装配，则需要配合使用 @Named。@Autowired 和 @Inject 的区别在于，前者可以使用 required=false 允许注入 null，后者允许注入一个 Provider 实现延迟注入
 
 
 # 参考资料
