@@ -1512,7 +1512,12 @@ protected void doClose() {
 
 # 10、配置类解析
 
-入库方法：`ConfigurationClassPostProcessor#postProcessBeanDefinitionRegistry`
+- [ConfigurationClassPostProcessor类的作用](https://juejin.cn/post/6844903944146124808)
+
+入口方法：`ConfigurationClassPostProcessor#postProcessBeanDefinitionRegistry`
+- `ConfigurationClassPostProcessor`是一个BeanFactory的后置处理器，因此它的主要功能是参与BeanFactory的建造，在这个类中，会解析加了`@Configuration`的配置类，还会解析`@ComponentScan`、`@ComponentScans`注解扫描的包，以及解析`@Import`等注解；
+- `ConfigurationClassPostProcessor` 实现了 `BeanDefinitionRegistryPostProcessor` 接口，而` BeanDefinitionRegistryPostProcessor` 接口继承了 `BeanFactoryPostProcessor` 接口，所以 `ConfigurationClassPostProcessor` 中需要重写 `postProcessBeanDefinitionRegistry()` 方法和 `postProcessBeanFactory()`方法。而`ConfigurationClassPostProcessor`类的作用就是通过这两个方法去实现的
+
 
 ConfigurationClassParser#doProcessConfigurationClass
 
@@ -1686,13 +1691,42 @@ public class TestApplicationContextInitializer implements ApplicationContextInit
 - 配置文件配置:`context.initializer.classes=com.example.demo.TestApplicationContextInitializer`
 - Spring SPI扩展，在spring.factories中加入`org.springframework.context.ApplicationContextInitializer=com.example.TestApplicationContextInitializer`
 
-## 13.2、BeanDefinitionRegistryPostProcessor
+## 13.2、BeanFactoryPostProcessor
+
+`org.springframework.beans.factory.config.BeanFactoryPostProcessor`
+主要作用：
+- 在 BeanFactory 初始化之后调用，来定制和修改 BeanFactory 的内容
+- 所有的 Bean 定义（BeanDefinition）已经保存加载到 beanFactory，但是 Bean 的实例还未创建
+- 方法的入参是 ConfigurrableListableBeanFactory，意思是你可以调整 ConfigurrableListableBeanFactory 的配置
+
+这个接口是beanFactory的扩展接口，调用时机在spring在读取beanDefinition信息之后，实例化bean之前。
+
+在这个时机，用户可以通过实现这个扩展接口来自行处理一些东西，比如修改已经注册的beanDefinition的元信息
+```java
+public class TestBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
+    @Override
+    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
+        System.out.println("[BeanFactoryPostProcessor]");
+    }
+}
+```
+
+## 13.3、BeanDefinitionRegistryPostProcessor
 
 `org.springframework.beans.factory.support.BeanDefinitionRegistryPostProcessor`
 
-这个接口在读取项目中的beanDefinition之后执行，提供一个补充的扩展点
+主要作用：
+- 是 BeanFactoryPostProcessor 的子接口
+- 在所有 Bean 定义（BeanDefinition）信息将要被加载，Bean 实例还未创建的时候加载
+- 优先于 BeanFactoryPostProcessor 执行，利用 BeanDefinitionRegistryPostProcessor 可以给 Spring 容器中自定义添加 Bean 
+- 方法入参是 BeanDefinitionRegistry，意思是你可以调整 BeanDefinitionRegistry 的配置
 
-使用场景：你可以在这里动态注册自己的beanDefinition，可以加载classpath之外的bean
+还有一个类似的 BeanPostProcessor 它的作用：
+- 在 Bean 实例化之后执行的
+- 执行顺序在 BeanFactoryPostProcessor 之后
+- 方法入参是 Object bean，意思是你可以调整 bean 的配置
+
+这个接口在读取项目中的beanDefinition之后执行，提供一个补充的扩展点，使用场景：你可以在这里动态注册自己的beanDefinition，可以加载classpath之外的bean
 ```java
 @Component
 public class TestBeanDefinitionRegistryPostProcessor implements BeanDefinitionRegistryPostProcessor {
@@ -1703,22 +1737,6 @@ public class TestBeanDefinitionRegistryPostProcessor implements BeanDefinitionRe
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         System.out.println("---BeanDefinitionRegistryPostProcessor--自定义--postProcessBeanFactory");
-    }
-}
-```
-
-## 13.3、BeanFactoryPostProcessor
-
-`org.springframework.beans.factory.config.BeanFactoryPostProcessor`
-
-这个接口是beanFactory的扩展接口，调用时机在spring在读取beanDefinition信息之后，实例化bean之前。
-
-在这个时机，用户可以通过实现这个扩展接口来自行处理一些东西，比如修改已经注册的beanDefinition的元信息
-```java
-public class TestBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
-    @Override
-    public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        System.out.println("[BeanFactoryPostProcessor]");
     }
 }
 ```
@@ -2051,6 +2069,54 @@ springboot遵从约定大于配置的原则，在此基础上，又提供了spi�
     - 控制ApplicationListener实现类的加载顺序；
     - 控制CommandLineRunner实现类的加载顺序；
 
+我们知道 Bean 创建大部分逻辑是在 AbstractApplicationContext，其里面有个 refresh 方法， Bean 创建的大部分逻辑都在 refresh 方法里面，在 refresh 末尾的 finishBeanFactoryInitialization(beanFactory) 方法调用中，会调用 beanFactory.preInstantiateSingletons()，在这里对所有的 beanDefinitionNames 一一遍历，进行 bean 实例化和组装；
+```java
+// AbstractApplicationContext#finishBeanFactoryInitialization
+protected void finishBeanFactoryInitialization(ConfigurableListableBeanFactory beanFactory) {
+	...
+	// Instantiate all remaining (non-lazy-init) singletons.
+	beanFactory.preInstantiateSingletons();
+}
+// org.springframework.beans.factory.support.DefaultListableBeanFactory#preInstantiateSingletons
+public void preInstantiateSingletons() throws BeansException {
+	// Iterate over a copy to allow for init methods which in turn register new bean definitions.
+	// While this may not be part of the regular factory bootstrap, it does otherwise work fine.
+	List<String> beanNames = new ArrayList<>(this.beanDefinitionNames);
+	// Trigger initialization of all non-lazy singleton beans...
+	for (String beanName : beanNames) {
+		RootBeanDefinition bd = getMergedLocalBeanDefinition(beanName);
+		if (!bd.isAbstract() && bd.isSingleton() && !bd.isLazyInit()) {
+			if (isFactoryBean(beanName)) {
+				Object bean = getBean(FACTORY_BEAN_PREFIX + beanName);
+				if (bean instanceof FactoryBean) {
+					FactoryBean<?> factory = (FactoryBean<?>) bean;
+					boolean isEagerInit;
+					if (System.getSecurityManager() != null && factory instanceof SmartFactoryBean) {
+						isEagerInit = AccessController.doPrivileged(
+								(PrivilegedAction<Boolean>) ((SmartFactoryBean<?>) factory)::isEagerInit,
+								getAccessControlContext());
+					}
+					else {
+						isEagerInit = (factory instanceof SmartFactoryBean &&
+								((SmartFactoryBean<?>) factory).isEagerInit());
+					}
+					if (isEagerInit) {
+						getBean(beanName);
+					}
+				}
+			}
+			else {
+				getBean(beanName);
+			}
+		}
+	}
+	...
+}
+```
+这个 beanDefinitionNames 列表的顺序就决定了 Bean 的创建顺序，那么这个 beanDefinitionNames 列表又是怎么来的？答案是 ConfigurationClassPostProcessor 通过扫描你的代码和注解生成的，将 Bean 扫描解析成 Bean 定义（BeanDefinition），同时将 Bean 定义（BeanDefinition）注册到 BeanDefinitionRegistry 中，才有了 beanDefinitionNames 列表。
+
+**ConfigurationClassPostProcessor**：实现了 BeanDefinitionRegistryPostProcessor 接口。它是一个非常非常重要的类，甚至可以说它是 Spring boot 提供的扫描你的注解并解析成 BeanDefinition 最重要的组件。我们在使用 SpringBoot 过程中用到的 @Configuration、@ComponentScan、@Import、@Bean 这些注解的功能都是通过 ConfigurationClassPostProcessor 注解实现的
+
 ## 14.2、如何控制加载顺序
 
 ### 14.2.1、@DependsOn
@@ -2103,3 +2169,22 @@ public BeanB beanB(){
 这些可扩展点的加载顺序由spring自己控制，大多数是无法进行干预的。我们可以利用这一点，扩展spring的扩展点。在相应的扩展点加入自己的业务初始化代码。从来达到顺序的控制
 
 ### 14.2.4、@AutoConfigureOrder
+
+
+### 14.2.5、在bean的创建过程中处理
+
+- [如何让你的bean在其他bean之前完成加载](https://mp.weixin.qq.com/s/gwX9KuVRCvdoKrOIwHRZ-Q)
+
+**第一步：通过 spring.factories 扩展来注册一个 ApplicationContextInitializer：**
+```
+org.springframework.context.ApplicationContextInitializer=aop.config.MyApplicationContextInitializer
+```
+实现接口： ApplicationContextInitializer
+```java
+public class MyApplicationContextInitializer implements ApplicationContextInitializer {
+    @Override
+    public void initialize(ConfigurableApplicationContext applicationContext) {
+        applicationContext.addBeanFactoryPostProcessor(new MyBeanDefinitionRegistryPostProcessor());
+    }
+}
+```
