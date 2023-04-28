@@ -999,6 +999,10 @@ public String getPageSql(String sql, RowBounds rowBounds, CacheKey pageKey) {
 
 mysql的物理分页关键字是Limit，提供offset和limit即可实现分页；
 
+# 6、xml或注解？
+
+详细可以看这边文章分析：[mybatis开发是xml还是注解](https://juejin.cn/post/6844904161843085319)
+
 # 参考资料
 
 - [MyBatis实现原理](https://www.cnblogs.com/luoxn28/p/6417892.html)
