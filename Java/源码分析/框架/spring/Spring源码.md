@@ -876,6 +876,8 @@ protected Object invokeWithinTransaction(Method method, @Nullable Class<?> targe
 
 # 六、Spring事件
 
+- [Spring自定义事件监听](https://juejin.cn/post/6955783021224001567)
+
 ## 1、理解Spring事件、监听机制
 
 Spring事件监听机制属于事件/监听模式，可以视为观察者模式的扩展。
