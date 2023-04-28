@@ -105,6 +105,8 @@ public class TestController{
 
 # 六、Spring插件
 
+- [Spring插件式开发框架](https://gitee.com/chenlanqing/springboot-plugin-framework-parent)
+
 ## 1、spring-boot-maven-plugin
 
 - [插件源码](https://github.com/spring-projects/spring-boot/tree/main/spring-boot-project/spring-boot-tools/spring-boot-maven-plugin)
