@@ -965,12 +965,12 @@ static getDerivedStateFromProps(nextProps, prevState) {
 
 属性（Props）或状态（State）的改变会触发一次更新阶段，但是组件未必会重新渲染，这取决于 shouldComponentUpdate
 
-- `UNSAFE_componentWillReceiveProps`
+- `UNSAFE_componentWillReceiveProps(nextProps)`：当父组件的渲染函数被调用，在渲染函数中被渲染的子组件就会经历更新阶段，不管父组件传给子组件的 props 有没有改变，都会触发该生命周期函数。当组件内部调用 setState 更新内部状态 state 时触发更新阶段不会触发该函数；适合用于父子组件之间的联动，适合父组件根据某个状态控制子组件的渲染或者销毁。通过对比 this.props 和 nextProps 来对本组件内的 state 进行变更，或执行某些方法来进行组件的重新渲染
 - `static getDerivedStateFromProps`
-- `shouldComponentUpdate` : 返回false 会阻止组件渲染，请勿在此函数中使用 setState 方法，会导致循环调用
+- `shouldComponentUpdate` : 返回false 会阻止组件渲染，请勿在此函数中使用 setState 方法，会导致循环调用；如果性能是个瓶颈，尤其是有几十个甚至上百个组件的时候，使用 shouldComponentUpdate 可以优化渲染效率，提升应用的性能；
 - `UNSAFE_componentWillUpdate`
 - `render`
-- `getSnapshotBeforeUpdate`
+- `getSnapshotBeforeUpdate`：该生命周期函数会在组件即将挂载时触发，它的触发在 render 渲染函数之后。由此可见，render 函数并没有完成挂载操作，而是进行构建抽象 UI（也就是 Virtual DOM）的工作。该生命周期函数执行完毕后就会立即触发 componentDidUpdate 生命周期钩子
 - `componentDidUpdate`
 
 相比装载阶段的生命周期函数，更新阶段的生命周期函数使用的相对来说要少一些。常用的是 getDerivedStateFromProps、shouldComponentUpdate，前者经常用于根据新 props 的数据去设置组件的 State，而后者则是常用于优化，避免不必要的渲染
