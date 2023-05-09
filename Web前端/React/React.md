@@ -975,7 +975,14 @@ static getDerivedStateFromProps(nextProps, prevState) {
 
 相比装载阶段的生命周期函数，更新阶段的生命周期函数使用的相对来说要少一些。常用的是 getDerivedStateFromProps、shouldComponentUpdate，前者经常用于根据新 props 的数据去设置组件的 State，而后者则是常用于优化，避免不必要的渲染
 
-## 6.3、销毁
+## 6.3、卸载阶段
+
+- componentWillUnmount：在组件卸载和销毁之前触发。可以利用这个生命周期方法去执行任何清理任务。用于注销事件监听器；取消网络请求；取消定时器；解绑 DOM 事件。
+
+## 6.4、捕捉错误
+
+- static getDerivedStateFromError
+- componentDidCatch
 
 
 # 开源组件

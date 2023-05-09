@@ -88,3 +88,6 @@ cd: permission denied: data
 sudo chmod -R a+rwx  /usr/local/mysql/data/
 ```
 
+## 7、端口占用
+
+sudo lsof -i tcp:port
