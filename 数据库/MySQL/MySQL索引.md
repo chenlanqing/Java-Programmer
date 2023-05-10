@@ -28,12 +28,31 @@
 
 ## 3、索引操作
 
-- `create [unique] index` 索引名称 on 表名(列名，列名) unique 表示唯一索引
-- `alter table <tablename> add [unique] index <indexName>(<column name>)`
-- `drop index [indexName] on 表名`
-- `show index from` 表名
+### 3.1、创建索引
 
-关于索引重建，有表T
+alter table:`alter table table_name add {INDEX | KEY} [index_name] USING {BTREE | HASH} (column_list)`
+- `ALTER TABLE table_name ADD INDEX index_name (column_list)`
+- `ALTER TABLE table_name ADD UNIQUE index_name(column_list)`
+- `ALTER TABLE table_name ADD PRIMARY KEY (column_list)`
+
+create index:`CREATE [UNIQUE | FULLTEXT | SPATIAL] INDEX index_name [USING {BTREE | HASH}] on table_name(column_list)`
+- `CREATE INDEX index_name ON table_name (column_list)`
+- `CREATE UNIQUE INDEX index_name ON table_name (column_list)`
+
+### 3.2、删除索引
+
+- `DROP INDEX index_name ON talbe_name`
+- `ALTER TABLE table_name DROP INDEX index_name`
+- `ALTER TABLE table_name DROP PRIMARY KEY`
+
+### 3.3、查看索引
+
+- `show index from table_name`
+- `show keys from table_name`
+
+### 3.4、关于索引重建
+
+有表T
 ```sql
 create table T(
 	id int primary key, 
