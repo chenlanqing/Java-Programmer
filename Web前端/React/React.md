@@ -970,7 +970,7 @@ static getDerivedStateFromProps(nextProps, prevState) {
 - `shouldComponentUpdate` : 返回false 会阻止组件渲染，请勿在此函数中使用 setState 方法，会导致循环调用；如果性能是个瓶颈，尤其是有几十个甚至上百个组件的时候，使用 shouldComponentUpdate 可以优化渲染效率，提升应用的性能；
 - `UNSAFE_componentWillUpdate`
 - `render`
-- `getSnapshotBeforeUpdate`：该生命周期函数会在组件即将挂载时触发，它的触发在 render 渲染函数之后。由此可见，render 函数并没有完成挂载操作，而是进行构建抽象 UI（也就是 Virtual DOM）的工作。该生命周期函数执行完毕后就会立即触发 componentDidUpdate 生命周期钩子
+- `getSnapshotBeforeUpdate`：该生命周期函数会在组件即将挂载时触发，它的触发在 render 渲染函数之后。由此可见，render 函数并没有完成挂载操作，而是进行构建抽象 UI（也就是 Virtual DOM）的工作。该生命周期函数执行完毕后就会立即触发 componentDidUpdate 生命周期钩子；作用：比如网页滚动位置，不需要它持久化，只需要在组件更新以后能够恢复原来的位置即可。
 - `componentDidUpdate`
 
 相比装载阶段的生命周期函数，更新阶段的生命周期函数使用的相对来说要少一些。常用的是 getDerivedStateFromProps、shouldComponentUpdate，前者经常用于根据新 props 的数据去设置组件的 State，而后者则是常用于优化，避免不必要的渲染
