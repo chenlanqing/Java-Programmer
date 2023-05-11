@@ -2711,7 +2711,7 @@ Spring通过三级缓存解决了循环依赖，其中一级缓存为单例池�
 
 **为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？**
 
-如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理；
+如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理；直接使用二级缓存能解决循环依赖，但是三级缓存的作用是创建代理对象
 
 ## 3、Spring与SpringMVC容器
 
