@@ -2570,13 +2570,24 @@ public class SpringApplicationContextInitializer implements ApplicationContextIn
 ## 2、循环依赖问题
 
 - [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
-- [Spring循环依赖处理](http://cmsblogs.com/?p=2887)
+- [Spring循环依赖那些事儿（含Spring详细流程图）](https://mp.weixin.qq.com/s/cqkZEvmmh7jnNt2K5r_lXg)
+
+涉及到循环依赖问题：
+- 1、什么是循环依赖？
+- 2、为什么会产生循环依赖？
+- 3、循环依赖有哪些场景？
+- 4、Spring如何解决循环依赖的？
+- 5、Spring为什么使用三级缓存？
+- 6、Spring支持AOP循环依赖，为何还存在循环依赖异常？
+- 7、Spring不支持的循环依赖场景及如何解决？
 
 ### 2.1、什么是循环依赖
 
 循环依赖，其实就是循环引用，就是两个或者两个以上的 bean 互相引用对方，最终形成一个闭环，如 A 依赖 B，B 依赖 C，C 依赖 A；
 
-循环依赖，其实就是一个死循环的过程，在初始化 A 的时候发现引用了 B，这时就会去初始化 B，然后又发现 B 引用 C，跑去初始化 C，初始化 C 的时候发现引用了 A，则又会去初始化 A，依次循环永不退出，除非有终结条件
+循环依赖，其实就是一个死循环的过程，在初始化 A 的时候发现引用了 B，这时就会去初始化 B，然后又发现 B 引用 C，跑去初始化 C，初始化 C 的时候发现引用了 A，则又会去初始化 A，依次循环永不退出，除非有终结条件；
+
+一般是框架启动时加载Bean时发生的
 
 ### 2.2、循环依赖的场景
 
@@ -2584,11 +2595,15 @@ public class SpringApplicationContextInitializer implements ApplicationContextIn
 
 	如在创建A类时，构造器须要B类。那将去创建B，在创建B类时又发现须要C类，则又去创建C，终于在创建C时发现又须要A。形成环状依赖，从而被Spring抛出；类似先有蛋还是先有鸡
 
+	强依赖：除非自身实现代理加延迟注入，这种方式很难解决，除非实现类似于lazy生成代理方式进行解耦来实现注入，Spring没有支持可能因为此种注入场景都可以用其他方式代替且场景极少；
+
+	弱依赖，spring 4.3之后增加 ObjectProvider 来处理
+
 - setter的循环依赖：包含两种循环依赖问题，`多例（原型）模式下产生的循环依赖问题`和`单例模式下产生的循环依赖问题`
 
 	Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean，因为每一次getBean()时，都会产生一个新的Bean，如此反复下去就会有无穷无尽的Bean产生了，最终就会导致OOM问题的出现；
 
-### 2.3、Spring三大缓存
+### 2.3、三级缓存解决循环依赖
 
 Spring中有三个缓存，用于存储单例的Bean实例，这三个缓存是彼此互斥的，不会针对同一个Bean的实例同时存储；
 
@@ -2712,6 +2727,8 @@ Spring通过三级缓存解决了循环依赖，其中一级缓存为单例池�
 **为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？**
 
 如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理；
+
+
 
 ## 3、Spring与SpringMVC容器
 

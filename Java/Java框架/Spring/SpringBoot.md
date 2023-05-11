@@ -2899,7 +2899,47 @@ HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.ge
 
 ## 2、SpringBoot打包
 
-https://mp.weixin.qq.com/s/JD2wfLGXdujoc9DOJEZFpA
+- [江南一点雨：SpringBoot小细节](https://mp.weixin.qq.com/s/JD2wfLGXdujoc9DOJEZFpA)
+
+创建 Spring Boot 项目的时候，默认都会有一个 parent，这个 parent 中帮我们定了项目的 JDK 版本、编码格式、依赖版本、插件版本等各种常见内容，有的小伙伴可能看过 parent 的源码，这个源码里边有这么一个配置：
+```xml
+<resources>
+  <resource>
+    <directory>${basedir}/src/main/resources</directory>
+    <filtering>true</filtering>
+    <includes>
+      <include>**/application*.yml</include>
+      <include>**/application*.yaml</include>
+      <include>**/application*.properties</include>
+    </includes>
+  </resource>
+  <resource>
+    <directory>${basedir}/src/main/resources</directory>
+    <excludes>
+      <exclude>**/application*.yml</exclude>
+      <exclude>**/application*.yaml</exclude>
+      <exclude>**/application*.properties</exclude>
+    </excludes>
+  </resource>
+</resources>
+```
+这个配置文件的目的主要是为了描述在 maven 打包的时候要不要带上这几个配置文件，但是咋一看，又感觉上面这段配置似乎有点矛盾，松哥来和大家捋一捋就不觉得矛盾了：
+- 先来看第一个 resource，directory 就是项目的 resources 目录，includes 中就是我们三种格式的配置文件，另外还有一个 filtering 属性为 true，这是啥意思呢？这其实是说我们在 maven 的 pom.xml 文件中定义的一些变量，可以在 includes 所列出的配置文件中进行引用，也就是说 includes 中列出来的文件，可以参与到项目的编译中；
+- 第二个 resource，没有 filter，并且将这三个文件排除了，意思是项目在打包的过程中，除了这三类文件之外，其余文件直接拷贝到项目中，不会参与项目编译；
+
+> 就是 resources 下的所有文件都会被打包到项目中，但是列出来的那三类，不仅会被打包进来，还会参与编译
+
+# 十、SpringBoot最佳实践
+
+- [最佳实践](https://mp.weixin.qq.com/s/3SpUq4t9ord8duWlrm_eoA)
+
+## 1、使用自定义BOM来维护第三方依赖
+
+## 2、使用自动配置
+
+Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一部分，它可以简化你的代码并使之工作。当在类路径上检测到特定的jar文件时，自动配置就会被激活。
+
+使用它的最简单方法是依赖Spring Boot Starters，借助于这些starters，这些繁琐的配置就可以很好地集成起来并协同工作，而且它们都是经过测试和验证的。这非常有助于避免可怕的[Jar地狱](https://dzone.com/articles/what-is-jar-hell)
 
 # 参考资料
 
