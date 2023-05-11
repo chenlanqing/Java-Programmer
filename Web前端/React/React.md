@@ -984,10 +984,22 @@ static getDerivedStateFromProps(nextProps, prevState) {
 - static getDerivedStateFromError
 - componentDidCatch
 
+## 6.5、性能优化方案：
+
+- shouldComponentUpdate : 控制组件自身或者子组件是否需要更新，尤其在子组件非常多的情况下， 需要进行优化；
+- PureComponent：PureComponent会帮你 比较新props 跟 旧的props， 新的state和老的state（值相等,或者对象含有相同的属性、且属性值相等 ），决定 shouldComponentUpdate 返回true 或者false， 从而决定要不要呼叫 render function。
+
+    注意：如果你的 state 或 props 『永远都会变』，那 PureComponent 并不会比较快，因为shallowEqual 也需要花时间。
+
+
+
+# 7、React Hooks
+
 
 # 开源组件
 
 - [移动端-平滑滚动组件](https://github.com/ustbhuangyi/better-scroll)
+- [swiper-轮播图](https://swiper.com.cn/)
 
 # 参考资料
 
