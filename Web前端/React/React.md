@@ -29,6 +29,17 @@ ReactDOM.render(
     document.getElementById("root")
 )
 ```
+React18按照如下写法：
+```jsx
+const container = document.getElementById('root'); // 获取到dom根节点
+const root = ReactDOM.createRoot(container); // 将根节点传入到 ReactDOM中创建一个根，并接手管理它里面的DOM
+root.render(
+    // <React.StrictMode>
+        <App />
+    // </React.StrictMode>
+);
+// React.StrictMode 标记是严格模式
+```
 
 ## 2.2、class组件
 
