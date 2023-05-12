@@ -2632,7 +2632,6 @@ Memcached 是一个开源的、高性能的分布式 key/value 内存缓存系�
 
 Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布和协同。Mc 采用多线程处理请求，由一个主线程和任意多个工作线程协作，从而充分利用多核，提升 IO 效率
 
-## 2、
 
 # 十六、Lua
 
@@ -2645,7 +2644,37 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 ## 3、Redis中使用Lua
 
 
+# 十七、Redis性能优化
 
+- [Redis真的变慢了吗？](https://mp.weixin.qq.com/s/nNEuYw0NlYGhuKKKKoWfcQ)
+
+## 1、Redis为什么变慢
+
+需要对 Redis 进行基准性能测试
+
+为了避免业务服务器到 Redis 服务器之间的网络延迟，你需要直接在 Redis 服务器上测试实例的响应延迟情况。执行以下命令，就可以测试出这个实例 60 秒内的最大响应延迟：
+```
+./redis-cli --intrinsic-latency 120
+Max latency so far: 17 microseconds.
+Max latency so far: 44 microseconds.
+Max latency so far: 94 microseconds.
+Max latency so far: 110 microseconds.
+Max latency so far: 119 microseconds.
+
+36481658 total runs (avg latency: 3.2893 microseconds / 3289.32 nanoseconds per run).
+Worst run took 36x longer than the average latency.
+```
+从输出结果可以看到，这 60 秒内的最大响应延迟为 119 微秒（0.119毫秒）。你还可以使用以下命令，查看一段时间内 Redis 的最小、最大、平均访问延迟
+```
+$ redis-cli -h 127.0.0.1 -p 6379 --latency-history -i 1
+min: 0, max: 1, avg: 0.13 (100 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.12 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.13 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.10 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.13 (98 samples) -- 1.00 seconds range
+min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
+```
+如果你观察到的 Redis 运行时延迟是其基线性能的 2 倍及以上，就可以认定 Redis 变慢了。
 
 # 参考资料
 
