@@ -118,6 +118,12 @@ ReactDOM.render(
 )
 ```
 
+函数式组件与class组件区别：
+- 类（class）是数据和逻辑的封装。 也就是说，组件的状态和操作方法是封装在一起的。如果选择了类的写法，就应该把相关的数据和操作，都写在同一个 class 里面；
+- 函数一般来说，只应该做一件事，就是返回一个值。 如果你有多个操作，每个操作应该写成一个单独的函数。而且，数据的状态应该与操作方法分离。根据这种理念，React 的函数组件只应该做一件事情：返回组件的 HTML 代码，而没有其他的功能；
+
+> 这种只进行单纯的数据计算（换算）的函数，在函数式编程里面称为 "纯函数"（pure function）
+
 ## 2.4、组件嵌套
 
 组件之间是可以嵌套的，比如有一个根组件，这个组件中有多个子组件，比如如下代码
@@ -1006,6 +1012,171 @@ static getDerivedStateFromProps(nextProps, prevState) {
 
 # 7、React Hooks
 
+## 7.1、使用hooks理由
+
+- 高阶组件为了复用，导致代码层级复杂；
+- 生命周期的复杂；
+- 写成  function组件，无状态组件，因为需要状态，又改成了class，成本偏高；
+
+## 7.2、useState(保存组件状态)
+
+在函数式组件中使用组件状态
+```js
+const [state, setState] = useState(initialState)
+// state --- 变量
+// initialState --- 变量的初始值
+// setState 是一个方法，表示修改该值的方法
+```
+案例：
+```jsx
+import React, { useState } from 'react'
+export default function App() {
+    const [name, setName] = useState("张无忌")
+    return (
+        <div>
+            <button onClick={() => {
+                setName("周芷若")
+            }}>修改</button>
+            function-{name}
+        </div>
+    )
+}
+```
+
+## 7.3、useEffect和useLayoutEffect
+
+- [useEffect使用API](https://tsejx.github.io/react-guidebook/api-reference/hooks/use-effect)
+
+
+函数式组件是不存在生命周期的，所以不要把 类组件 的生命周期概念搬过来试图对号入座
+```js
+useEffect(() => { 
+    //effect 
+    return () => { 
+        //cleanup 
+    }; 
+}, [依赖的状态;空数组,表示不依赖])
+```
+举例来说，我们希望组件加载以后，网页标题（document.title）会随之改变。那么，改变网页标题这个操作，就是组件的副效应，必须通过`useEffect()` 来实现；`useEffect()`的作用就是指定一个副效应函数，组件每渲染一次，该函数就自动执行一次。组件首次在网页 DOM 加载后，副效应函数也会执行
+
+其有两个参数：
+- 第一个参数：是一个函数，它就是所要完成的副效应（改变网页标题）。组件加载以后，React 就会执行这个函数
+- 第二个参数：有时候，我们不希望useEffect()每次渲染都执行，这时可以使用它的第二个参数，使用一个数组指定副效应函数的依赖项，只有依赖项发生变化，才会重新渲染；如果第二个参数是一个空数组，就表明副效应参数没有任何依赖项。因此，副效应函数这时只会在组件加载进入 DOM 后执行一次，后面组件重新渲染，就不会再次执行
+
+比如想在函数式组件实现请求数据，可以使用useEffect示例：
+```js
+import React, { useEffect, useState } from 'react'
+export default function App() {
+    const [list, setList] = useState([])
+    useEffect(() => {
+        axios.get("/test.json").then(res => {
+            console.log(res.data)
+            setList(res.data.data.films)
+        })
+    }, []) // 传空数组
+    return (
+        <div>
+            <ul>
+                {
+                    list.map(item => 
+                        <li key={item.filmId}>{item.name}</li>    
+                    )
+                }
+            </ul>
+        </div>
+    )
+}
+```
+默认情况下，effect 将在每轮渲染结束后执行，这样的话，一旦 effect 的依赖发生变化，它就会被重新创建；要实现这一点，可以给 useEffect 传递第二个参数，它是 effect 所依赖的值数组。更新后的示例如下：
+```js
+import React, { useEffect, useState } from 'react'
+export default function App() {
+    const [name, setName] = useState("sam")
+    useEffect(
+        () => {
+            setName(name.substring(0, 1).toUpperCase() + name.substring(1))
+        },
+        [name] // 第一次执行一次，之后 name（依赖）更新之后也会执行，如果这里是个空数组，那么上面的 setName函数不会执行
+    )
+    return (
+        <div>
+            App-{name} <br/>
+            <input type="text" onChange={(evt) => {
+                setName(evt.target.value);
+            }}/>
+        </div>
+    )
+}
+```
+**useEffect() 的返回值**：副效应是随着组件加载而发生的，那么组件卸载时，可能需要清理这些副效应，useEffect()允许返回一个函数，在组件卸载时，执行该函数，清理副效应。如果不需要清理副效应，useEffect()就不用返回任何值。实际使用中，由于副效应函数默认是每次渲染都会执行，所以清理函数不仅会在组件卸载时执行一次，每次副效应函数重新执行之前，也会执行一次，用来清理上一次渲染的副效应
+```js
+function Child() {
+    useEffect(() => {
+        window.onresize = () => {
+            console.log("resize")
+        }
+        var timer = setInterval(() => {
+            console.log("111")
+        }, 1000)
+        // 返回一个清除函数，比如这里清除定时器等等
+        return () => {
+            console.log("组件销毁")
+            window.onresize = null
+            clearInterval(timer)
+        }
+    }, [])
+    return <div>
+        child
+    </div>
+}
+```
+**useEffect() 的用途**
+- 获取数据（data fetching）
+- 事件监听或订阅（setting up a subscription）
+- 改变 DOM（changing the DOM）
+- 输出日志（logging）
+
+> 使用useEffect()时，有一点需要注意。如果有多个副效应，应该调用多个useEffect()，而不应该合并写在一起
+> 与 componentDidMount、componentDidUpdate 不同的是，在浏览器完成布局与绘制之后，传给 useEffect 的函数会 延迟调用。这使得它适用于许多常见的副作用场景，比如设置订阅和事件处理等情况，因此 不应在函数中执行阻塞浏览器更新屏幕 的操作
+
+## 7.4、useLayoutEffect
+
+useLayoutEffect 相比 useEffect，通过同步执行状态更新可解决一些特性场景下的页面闪烁问题；
+
+useLayoutEffect与useEffect区别：简单来说就是调用时机不同， useLayoutEffect 和原来 componentDidMount & componentDidUpdate 一致，在react完成DOM更新后马上同步调用的代码，会阻塞页面渲染。而 useEffect 是会在整个页面渲染完才会调用的
+代码；
+
+官方建议优先使用 useEffect；
+
+在实际使用时如果想避免页面抖动（在 useEffect 里修改DOM很有可能出现）的话，可以把需要操作DOM的代码放在 useLayoutEffect 里。在这里做点dom操作，这些dom修改会和 react 做出的更改一起被一次性渲染到屏幕上，只有一次回流、重绘的代价
+
+```js
+export default function App() {
+    const [count1, setCount1] = useState(0);
+    const [count2, setCount2] = useState(0);
+
+    const random = () => {
+        return 10 + Math.random() * 200
+    }
+    useEffect(() => {
+        if (count1 === 0) {
+            setCount1(random());
+        }
+    }, [count1]);
+    useLayoutEffect(() => {
+        if (count2 === 0) {
+            setCount2(random());
+        }
+    }, [count2]);
+    return (
+        <div className="useLayoutEffect">
+             {/* 点击useEffect上面的数字会有闪烁 */}
+            <div onClick={() => setCount1(0)}>useEffect：{count1}</div>
+            <div onClick={() => setCount2(0)}>useLayoutEffect：{count2}</div>
+        </div>
+    );
+}
+```
 
 # 开源组件
 
