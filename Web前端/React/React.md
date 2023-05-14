@@ -1178,6 +1178,45 @@ export default function App() {
 }
 ```
 
+## 7.5、useCallback
+
+记忆函数，防止因为组件重新渲染，导致方法被重新创建，起到缓存作用；只有第二个参数 变化了，才重新声明一次
+```jsx
+var handlerChange = useCallback(
+    (evt) => {
+        console.log(evt.target.value)
+    }, []
+)
+var handlerClick = useCallback(() => {
+        console.log(name)
+    },
+    [name]
+)
+```
+上面示例中：
+- handlerClick 只有name改变后，这个函数才会重新声明一次；如果传入空数组，那么就是第一次创建后就被缓存， 如果name后期改变了,拿到的还是老的name；如果传第二个参数，且不是空数组，每次都会重新声明一次，拿到的就是最新的name.
+- handlerChange 因为第二个参数是空数组，那么创建后就会被缓存，因为其不依赖任何变量；
+
+## 7.6、useMemo
+
+记忆组件，示例：
+```jsx
+const memoizedResult = useMemo(() => {
+  return expensiveFunction(propA, propB);
+}, [propA, propB]);
+```
+把 `创建 函数`和`依赖项数组`作为参数传入 useMemo，它仅会在某个依赖项改变时才重新计算 memoized 值。这种优化有助于避免在每次渲染时都进行高开销的计算；
+
+记住，传入 useMemo 的函数会在渲染期间执行。请不要在这个函数内部执行与渲染无关的操作，诸如副作用这类的操作属于 useEffect 的适用范畴，而不是 useMemo
+
+useCallback 的功能完全可以由 useMemo 所取代，如果你想通过使用 useMemo 返回一个记忆函数也是完全可以的
+```jsx
+useCallback(fn, inputs) <===> useMemo(() => fn, inputs)
+```
+唯一的区别是：useCallback 不会执行第一个参数函数，而是将它返回给你，而 useMemo 会执行第一个函数并且将函数执行结果返回给你。所以在前面的例子中，可以返回 handleClick 来达到存储函数的目的。
+
+所以 useCallback 常用记忆事件函数，生成记忆后的事件函数并传递给子组件使用。而 useMemo 更适合经过函数计算得到一个确定的值，比如记忆组件
+
 # 开源组件
 
 - [移动端-平滑滚动组件](https://github.com/ustbhuangyi/better-scroll)
