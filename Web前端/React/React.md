@@ -807,63 +807,69 @@ export default class App extends Component {
 
 ## 5.2、非父子组件通信方式
 
-- 状态提升（中间人模式）：React的状态提升，就是将多个组件需要共享的状态提升到它们最近的父组件上。在父组件上改变这个状态然后通过props分发给子组件；大致思路：先在父组件A上定义一个状态，然后在A1组件上调用A传递过来的属性回调函数，通过回调函数设置到状态值，再通过属性分发到A2组件上；
+### 5.2.1、状态提升
 
-    详细代码参考：[state_enhance](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/05_state_enhance.js)
+状态提升（中间人模式）：React的状态提升，就是将多个组件需要共享的状态提升到它们最近的父组件上。在父组件上改变这个状态然后通过props分发给子组件；大致思路：先在父组件A上定义一个状态，然后在A1组件上调用A传递过来的属性回调函数，通过回调函数设置到状态值，再通过属性分发到A2组件上；
 
-- 发布订阅模式实现：
+详细代码参考：[state_enhance](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/05_state_enhance.js)
 
-    详细代码参考：[pub_sub](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/06_pub_sub.js)
+### 5.2.2、发布订阅模式
 
-- [Context](https://react.dev/reference/react/createContext)状态树参考：Context 提供了一个无需为每层组件手动添加 props，就能在组件树间进行数据传递的方法
+发布订阅模式实现
+
+详细代码参考：[pub_sub](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/06_pub_sub.js)
+
+### 5.2.3、context状态树
+
+[Context](https://react.dev/reference/react/createContext)状态树参考：Context 提供了一个无需为每层组件手动添加 props，就能在组件树间进行数据传递的方法
   
-    主要步骤：
-    - 先定义全局对象：`const GlobalContext = React.createContext();`
-    - 并使用`GlobalContext.Provider（生产者）`
-        ```jsx
-        render() {
-            return (
-                <GlobalContext.Provider value={{
-                    info: this.state.info,
-                    changeInfo: (value) => {
-                        this.setState({
-                            info: value
-                        })
-                    }
-                }}>
-                    <div>
-                        {
-                            this.state.filmList.map(item =>
-                                <FilmItem key={item.filmId} {...item}></FilmItem>
-                            )
-                        }
-                        <FilmDetail></FilmDetail>
-                    </div>
-                </GlobalContext.Provider>
-            )
-        }
-        ```
-    - 任意组件引入GlobalContext并调用context，使用GlobalContext.Consumer（消费者）
-        ```jsx
-        render() {
-            return (
-                <GlobalContext.Consumer>
+主要步骤：
+- 先定义全局对象：`const GlobalContext = React.createContext();`
+- 并使用`GlobalContext.Provider（生产者）`
+    ```jsx
+    render() {
+        return (
+            <GlobalContext.Provider value={{
+                info: this.state.info,
+                changeInfo: (value) => {
+                    this.setState({
+                        info: value
+                    })
+                }
+            }}>
+                <div>
                     {
-                        (value) => {
-                            return (
-                                <div className="filmDetail">
-                                    {value.info}
-                                </div>
-                            )
-                        }
+                        this.state.filmList.map(item =>
+                            <FilmItem key={item.filmId} {...item}></FilmItem>
+                        )
                     }
-                </GlobalContext.Consumer>
-            )
-        }
-        ```
-    注意：`GlobalContext.Consumer`内必须是回调函数，通过context方法改变根组件状态
+                    <FilmDetail></FilmDetail>
+                </div>
+            </GlobalContext.Provider>
+        )
+    }
+    ```
+- 任意组件引入GlobalContext并调用context，使用GlobalContext.Consumer（消费者）
+    ```jsx
+    render() {
+        return (
+            <GlobalContext.Consumer>
+                {
+                    (value) => {
+                        return (
+                            <div className="filmDetail">
+                                {value.info}
+                            </div>
+                        )
+                    }
+                }
+            </GlobalContext.Consumer>
+        )
+    }
+    ```
+注意：`GlobalContext.Consumer`内必须是回调函数，通过context方法改变根组件状态
 
-    详细代码参考：[context](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/07_context.js)
+详细代码参考：[context](https://gitee.com/chenlanqing/react-basic/blob/master/src/02-advanced/07_context.js)
 
 # 6、生命周期
 
@@ -1008,9 +1014,12 @@ static getDerivedStateFromProps(nextProps, prevState) {
 
     注意：如果你的 state 或 props 『永远都会变』，那 PureComponent 并不会比较快，因为shallowEqual 也需要花时间。
 
-
-
 # 7、React Hooks
+
+- [ReactHooks最佳实践](https://github.com/ascoders/weekly/blob/master/%E5%89%8D%E6%B2%BF%E6%8A%80%E6%9C%AF/120.%E7%B2%BE%E8%AF%BB%E3%80%8AReact%20Hooks%20%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%E3%80%8B.md)
+- [react-hooks-principles-and-best-practices](https://learnku.com/docs/antd-pro/5/react-hooks-principles-and-best-practices/11083)
+
+React Hooks 是 React 16.8 引入的新特性，允许我们在不使用 Class 的前提下使用 state 和其他特性。React Hooks 要解决的问题是状态共享，是继 render-props 和 higher-order components 之后的第三种状态逻辑复用方案，不会产生 JSX 嵌套地狱问题
 
 ## 7.1、使用hooks理由
 
@@ -1216,6 +1225,132 @@ useCallback(fn, inputs) <===> useMemo(() => fn, inputs)
 唯一的区别是：useCallback 不会执行第一个参数函数，而是将它返回给你，而 useMemo 会执行第一个函数并且将函数执行结果返回给你。所以在前面的例子中，可以返回 handleClick 来达到存储函数的目的。
 
 所以 useCallback 常用记忆事件函数，生成记忆后的事件函数并传递给子组件使用。而 useMemo 更适合经过函数计算得到一个确定的值，比如记忆组件
+
+## 7.7、useRef
+
+保存引用值，useRef 返回一个可变的 ref 对象，其 `<ref>.current` 属性被初始化为传入的参数（initialValue）。返回的 ref 对象在组件的整个生命周期内保持不变；
+
+本质上，useRef 就像是可以在其 `.current` 属性中保存一个可变值的“盒子”；
+
+如果你将 ref 对象以 `<div ref={myRef} />` 形式传入组件，则无论该节点如何改变，React 都会将 ref 对象的 `.current` 属性设置为相应的 DOM 节点
+```jsx
+const refContainer = useRef(initialValue);
+```
+示例：
+```jsx
+import React, { useRef, useState } from 'react'
+export default function App() {
+    const [count, setCount] = useState(0)
+    const countRef = useRef(0) // 保存value，括号内 0 为初始值；
+    return (
+        <div>
+            <button onClick={() => {
+                setCount(count + 1)
+                countRef.current ++
+            }}>增加</button>
+            {count} - {countRef.current}
+        </div>
+    )
+}
+```
+
+## 7.8、useContext
+
+`const value = useContext(MyContext);` 主要是减少组件层级，为跨级通信提供便利
+- 接收一个 context 对象（React.createContext 的返回值）并返回该 context 的当前值。
+- 当前的 context 值由上层组件中距离当前组件最近的 `<ContextInstance.Provider>` 的 value 决定。
+- 当组件上层最近的 `<ContextInstance.Provider>` 更新时，该 Hook 会触发重渲染，并使用最新传递给 `ContextInstance.<Provider> `的 value 值。即使祖先使用 React.memo 或 shouldComponentUpdate，也会在组件本身使用 useContext 时重新渲染
+
+**别忘记 useContext 的参数必须是 context 对象本身：**
+```jsx
+const ContextInstance = React.createContext(/* values */);
+// 正确
+useContext(ContextInstance);
+// 错误
+useContext(ContextInstance.Consumer);
+useContext(ContextInstance.Provider);
+```
+调用了 useContext 的组件总会在 context 值变化时重新渲染。如果重渲染组件的开销较大，你可以通过使用 memoization 来优化；
+
+useContext(ContextInstance) 相当于 Class 组件中的 `static contextType = ContextInstance` 或者 [<ContextInstance.Consumer>](#523context状态树) ，具体写法如下参考：[useContext Demo](https://gitee.com/chenlanqing/react-basic/blob/master/src/03-hooks/12_useContext.js)
+
+## 7.9、useReducer
+
+- [useReducer高级用法](https://github.com/puxiao/react-hook-tutorial/blob/master/09%20useReducer高级用法.md)
+
+语法：
+```jsx
+const [state, dispatch] = useReducer(reducer, initialArg, init);
+```
+useReducer参数分析：
+- 第一个参数为处理 state 改变规则的函数 reducer，该参数的含义：
+    - 第一个参数为要处理的 state；
+    - 第二个参数为 dispatch 绑定的 action（即 dispatch 函数的入参）  
+    - 返回更新后的 state  
+- 第二个参数是初始 state
+- 第三个参数是可选的处理初始 state 的函数 init
+
+以下是使用 useReducer 实现的一个简单计数器：
+```jsx
+import React, { useReducer } from 'react'
+import { Button } from 'antd';
+// 处理 state 更新规则的函数，并返回新的 state
+const reducer = (prevState, action) => {
+    let newState = {...prevState}
+    switch (action.type) {
+        case "add":
+            newState.count++
+            return newState;
+        case "minus":
+            newState.count--
+            return newState;
+        default:
+            return prevState;
+    }
+}
+// 初始化
+const initialState = {
+    count: 0
+}
+export default function App() {
+    const [state, dispatch] = useReducer(reducer, initialState)
+    return (
+        <div>
+            <Button type="primary" onClick={() => {
+                dispatch({
+                    type: "add"
+                })
+            }}>+</Button>
+            <div>
+                {state.count}
+            </div>
+            <Button type="primary" onClick={() => {
+                dispatch({
+                    type: "minus"
+                })
+            }}>-</Button>
+        </div>
+    )
+}
+```
+
+**与useContext配合实现跨级通信**
+
+具体代码查看：[useReducer+useContext实现跨级通信](https://gitee.com/chenlanqing/react-basic/blob/master/src/03-hooks/15_useReducer_film.js)
+
+
+## 7.10、自定义hook
+
+当想在两个函数之间共享逻辑时，会把它提取到第三个函数中。而组件和 Hook 都是函数，所以也同样适用这种方式；
+
+自定义 Hook 是一个函数，其名称以 “use” 开头，函数内部可以调用其他的 Hook；与 React 组件不同的是，自定义 Hook 不需要具有特殊的标识。可以自由的决定它的参数是什么，以及它应该返回什么（如果需要的话）。换句话说，它就像一个正常的函数。但是它的名字应该始终以 use 开头，这样可以一眼看出其符合 [Hook 的规则](https://legacy.reactjs.org/docs/hooks-rules.html)
+
+**在两个组件中使用相同的 Hook 会共享 state 吗？**不会。自定义 Hook 是一种重用状态逻辑的机制(例如设置为订阅并存储当前值)，所以每次使用自定义 Hook 时，其中的所有 state 和副作用都是完全隔离的
+
+**自定义 Hook 如何获取独立的 state？**每次调用 Hook，它都会获取独立的 state
+
+可以在多个hook之间传递信息
+
 
 # 开源组件
 
