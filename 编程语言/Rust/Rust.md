@@ -18,7 +18,7 @@
 
 
 
-![](rust/Rust-RustContainerCheatSheet.png)
+![](image/Rust-RustContainerCheatSheet.png)
 
 # 参考资料
 
