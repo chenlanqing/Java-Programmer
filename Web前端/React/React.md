@@ -1277,6 +1277,7 @@ useContext(ContextInstance) 相当于 Class 组件中的 `static contextType = C
 ## 7.9、useReducer
 
 - [useReducer高级用法](https://github.com/puxiao/react-hook-tutorial/blob/master/09%20useReducer高级用法.md)
+- [Recoil-状态管理库](https://github.com/facebookexperimental/Recoil)
 
 语法：
 ```jsx
