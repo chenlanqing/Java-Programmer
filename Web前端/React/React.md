@@ -81,8 +81,8 @@ ReactDOM.render(
 ```
 
 **注意：**
-- 导入组件默认字母是大写的，如果是小写的会报错：`The tag <app> is unrecognized in this browser. If you meant to render a React component, start its name with an uppercase letter.`s
-- 定义组件时不能有多个并列的标签，比如下面的，不能存在两个并列的div标签s
+- 导入组件默认字母是大写的，如果是小写的会报错：`The tag <app> is unrecognized in this browser. If you meant to render a React component, start its name with an uppercase letters.`
+- 定义组件时不能有多个并列的标签，比如下面的，不能存在两个并列的div标签
     ```js
     return (
         <div className='app' id='appRoot'>
@@ -122,7 +122,10 @@ ReactDOM.render(
 - 类（class）是数据和逻辑的封装。 也就是说，组件的状态和操作方法是封装在一起的。如果选择了类的写法，就应该把相关的数据和操作，都写在同一个 class 里面；
 - 函数一般来说，只应该做一件事，就是返回一个值。 如果你有多个操作，每个操作应该写成一个单独的函数。而且，数据的状态应该与操作方法分离。根据这种理念，React 的函数组件只应该做一件事情：返回组件的 HTML 代码，而没有其他的功能；
 
-> 这种只进行单纯的数据计算（换算）的函数，在函数式编程里面称为 "纯函数"（pure function）
+纯函数：
+- 只进行单纯的数据计算（换算）的函数，在函数式编程里面称为 "纯函数"（pure function）
+- 在 React 中，纯函数是指一个函数的返回值只依赖于其输入参数，并且在执行过程中不会产生副作用的函数。React 建议尽量使用纯函数来编写组件，因为这样可以提高代码的可读性、可维护性和可重用性。
+- React 组件应该像数学函数一样，根据输入参数（props 和 state）返回一个确定的输出结果（渲染出的 DOM），而不是修改外部状态或产生副作用。这样做的好处是可以避免组件之间的相互影响，提高代码的可预测性和可测试性
 
 ## 2.4、组件嵌套
 
