@@ -5784,7 +5784,7 @@ JCStress（Java Concurrency Stress）它是OpenJDK中的一个高并发测试工
 
 * [Java并发专题](https://juejin.im/post/5aeed586f265da0b8262b019)
 * [非阻塞同步算法与CAS(Compare and Swap)无锁算法](http://www.cnblogs.com/Mainz/p/3546347.html)
-* [Java CAS 和ABA问题](http://www.cnblogs.com/549294286/p/3766717.html、http://www.importnew.com/20472.html)
+* [Java CAS 和ABA问题](http://www.cnblogs.com/549294286/p/3766717.html)
 * [Unsafe与CAS](http://www.cnblogs.com/xrq730/p/4976007.html)
 * [并发相关源码](http://www.cnblogs.com/xrq730/category/1021774.html)
 * [Java多线程系列](http://www.cnblogs.com/skywang12345/p/java_threads_category.html)
@@ -5806,3 +5806,4 @@ JCStress（Java Concurrency Stress）它是OpenJDK中的一个高并发测试工
 * [生产者消费者的Java实现](https://blog.csdn.net/monkey_d_meng/article/details/6251879)
 * [一文看清楚生产者消费者](https://juejin.im/post/5aeec675f265da0b7c072c56)
 * [透彻理解Java并发编程](https://segmentfault.com/blog/ressmix_multithread)
+* [一个专门研究并发算法的网站](http://concurrencyfreaks.blogspot.com/2016/10/self-linking-and-latency-life-of.html)
