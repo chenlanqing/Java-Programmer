@@ -1397,6 +1397,59 @@ export default function App() {
 
 可以在多个hook之间传递信息
 
+# 8、React路由
+
+- [React-Router](https://reactrouter.com/en/main)
+- [React路由](https://tsejx.github.io/react-guidebook/ecosystem/routing/react-router)
+
+路由是根据不同的 url 地址展示不同的内容或页面，
+
+## 8.1、React-Router
+
+React Router 是一个构建在 React 之上的强大的路由库，它有助于向应用程序添加新的 Screen 和 Stream。这使 URL 与网页显示的数据保持同步。它负责维护标准化的结构和行为，并用于开发单页 Web 应用
+
+路由安装：
+```
+npm install react-router-dom@5
+```
+
+以下基于 react-router 的v5.0版本
+
+## 8.2、路由基础使用
+
+### 1、导入路由
+
+```js
+import React from "react"; 
+import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
+```
+
+### 2、定义路由以及重定向
+
+```js
+<HashRouter>
+    <Switch>
+        <Route path="/films" component={Films} />
+        <Route path="/cinemas" component={Cinemas} />
+        <Route path="/center" component={Center} />
+        {/* exact 精确匹配 (Redirect 即使使用了exact, 外面还要嵌套Switch 来用)*/}
+        <Redirect from="/" to="/films" exact/>
+        <Route path="*" component={NotFound} />
+    </Switch>
+</HashRouter>
+```
+
+### 3、嵌套路由
+
+在上面2的基础上实现嵌套路由：
+```js
+// 在films组件内部有如下路由：
+<Switch>
+    <Route path="/films/nowPlaying" component={NowPlaying} />
+    <Route path="/films/comingSoon" component={ComingSoon} />
+    <Redirect from="/films" to="/films/nowPlaying" />
+</Switch>
+```
 
 # 开源组件
 
