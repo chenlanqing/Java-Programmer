@@ -1432,8 +1432,8 @@ import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
         <Route path="/films" component={Films} />
         <Route path="/cinemas" component={Cinemas} />
         <Route path="/center" component={Center} />
-        {/* exact 精确匹配 (Redirect 即使使用了exact, 外面还要嵌套Switch 来用)*/}
-        <Redirect from="/" to="/films" exact/>
+        {/* exact 精确匹配 (Redirect 即使使用了exact, 外面还要嵌套Switch 来用)：路由重定向*/}
+        <Redirect from="/" to="/films" exact/> 
         <Route path="*" component={NotFound} />
     </Switch>
 </HashRouter>
@@ -1449,6 +1449,35 @@ import { BrowserRouter as Router, Switch, Route, Link } from "react-router-dom";
     <Route path="/films/comingSoon" component={ComingSoon} />
     <Redirect from="/films" to="/films/nowPlaying" />
 </Switch>
+```
+
+### 4、导航
+
+**声明式导航**
+
+即使用a标签的形式，但是在react-router中使用：
+```jsx
+{/*其中，to是要跳转的链接，activeClassName表示链接激活的样式*/}
+<NavLink to="/films" activeClassName="active">films</NavLink>
+<NavLink to="/cinemas" activeClassName="active">cinemas</NavLink>
+<NavLink to="/center" activeClassName="active">center</NavLink>
+```
+上述代码会被翻译成如下：
+```html
+<a aria-current="page" class="customActive" href="#/center">我的</a>
+```
+$\color{red}{注意：这里的NavLink必须要放到 Router 节点内部}$
+
+**编程式导航**
+
+即使使用 windows.location.href 来实现跳转的，在React-Router中实现是:
+```js
+// 方式1：props
+props.history.push(url); // this.props.history.push(url)
+// 方式2：如果是用函数组件，可以使用 hooks 方式：
+import { useHistory } from 'react-router-dom'
+const history = useHistory();
+history.push(url)
 ```
 
 # 开源组件
