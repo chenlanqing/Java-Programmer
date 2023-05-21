@@ -1397,7 +1397,7 @@ export default function App() {
 
 可以在多个hook之间传递信息
 
-# 8、React路由
+# 8、React路由-V5
 
 - [React-Router](https://reactrouter.com/en/main)
 - [React路由](https://tsejx.github.io/react-guidebook/ecosystem/routing/react-router)
@@ -1479,6 +1479,119 @@ import { useHistory } from 'react-router-dom'
 const history = useHistory();
 history.push(url)
 ```
+
+### 5、路由传参
+
+主要有三种方式：
+- 动态路由：
+    - 配置路由：`<Route path="/detail/:filmId" component={Detail} />`，后面的 `:filmId` 表示需要传的参数，注意 `:` 不可缺；
+    - 获取参数：`props.match.params.<filmId>`，这里的filmId 就是在动态路由里指定的参数名称；
+    - 缺点：只能传字符串，传值过多url会变得很长；参数必须在路由上配置
+- query参数的形式
+    - 配置路由：`<Route path="/detail" component={Detail} />`
+    - 路由跳转时需要做的动作：`history.push({ pathname: '/detail', query: { filmId: id } })`;
+    - 获取参数：`props.location.query.filmId`； （ $\color{red}{页面刷新之后，query就没有了，所以刷新时这里会报错}$ ）
+- state参数形式
+    - 配置路由：`<Route path="/detail" component={Detail} />`
+    - 路由跳转时需要做的动作：`history.push({ pathname: '/detail', state: { filmId: id } })`;
+    - 获取参数：`props.location.state.filmId`； （ $\color{red}{页面刷新之后，state就没有了，所以刷新时这里会报错}$ ）
+
+注意：上面 query 和 state 的形式 $\color{red}{这种方式刷新之后参数就没有了}$ 
+
+### 6、路由守卫
+
+路由守卫，即路由拦截，当某个页面需要一些权限才能访问时，可以按照如下方式处理：
+```jsx
+<Route path="/center" render={() => {
+    return isAuth() ? <Center /> : <Redirect to="/login" />
+}} />
+```
+上面的意思是要访问center页面，需要判断是否有授权，没有授权，直接重定向到login页面；
+
+注意，这种方式在 Center 组件中是无法获取到 props 的，需要通过如下方式传递：
+```jsx
+<Route path="/center" render={(props) => {
+    return isAuth() ? <Center {...props}/> : <Redirect to="/login" />
+}} />
+```
+
+### 7、路由模式
+
+HashRouter、BrowserRouter（没有#的路径）朝后端发请求的页面
+
+### 8、withRouter
+
+官方描述：You can get access to the history object’s properties and the closest <Route>'s match via the withRouter higher-order component. withRouter will pass updated match, location, and history props to the wrapped component whenever it renders
+
+主要作用是将一个组件包裹进Route里面, 然后react-router的三个对象history, location, match就会被放进这个组件的props属性中
+
+示例：
+```jsx
+export default function NowPlaying(props) {
+    ...
+    return (
+        <div style={{ width: '400px', background: 'gray' }}>
+            NowPlaying
+            <ul>
+                {
+                    list.map(item =>
+                        <WithFilmItem key={item.filmId} {...item}/>
+                    )
+                }
+            </ul>
+        </div>
+    )
+}
+function FilmItem(props) {
+    let { name, filmId } = props
+    return <li onClick={() => {
+        props.history.push(`/detail/${filmId}`)
+    }}>
+        {filmId} - {name}
+    </li>
+
+// 使用 withRouter 包装一下，那么在 FilmItem 组件中就可以直接使用props的 history, location, match 属性；
+const WithFilmItem = withRouter(FilmItem)
+```
+主要是解决父子通信的问题，当然这里可以直接使用 useHistory 来实现；
+
+# 9、项目注意
+
+## 9.1、反向代理
+
+开发时，存在跨域问题了，为了解决该问题，可以使用反向代理来解决，反向代理依赖：`https://create-react-app.dev/docs/proxying-api-requests-in-development/`
+```bash
+# 安装依赖
+npm install http-proxy-middleware --save
+```
+使用：在src目录下新建：`setupProxy.js`，注意文件名和位置都不能错
+```js
+const { createProxyMiddleware } = require('http-proxy-middleware');
+module.exports = function (app) {
+    app.use(
+        '/api', // 以api开头的接口匹配到了，会使用下面的地址访问服务器
+        createProxyMiddleware({
+            target: 'http://localhost:8080',
+            changeOrigin: true,
+        })
+    );
+};
+```
+
+## 9.2、CSS Module
+
+- [Adding a CSS Modules Stylesheet](https://create-react-app.dev/docs/adding-a-css-modules-stylesheet/)
+
+- 创建一个名为 index.module.css 的样式文件
+- 在 index.module.css 样式文件中编写 CSS 选择器和普通的 CSS 文件一样（CSS Modules 只是在编译的时候会自动转化为唯一的类名）;
+- 在组件中导入样式文件：`import styles from './index.module.css'`
+- 通过 styles 对象访问对象中的样式名来设置样式
+- 如果想要改变全局样式，也就是使用原始的类名，则需要通过 `:global()` 来进行设置
+    ```css
+    // index.module.css
+    :global(.类名) {
+    }
+    ```
 
 # 开源组件
 
