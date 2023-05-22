@@ -1,3 +1,5 @@
+React是一个UI框架，
+
 # 1、脚手架
 
 前提需要安装 node
@@ -1592,6 +1594,129 @@ module.exports = function (app) {
     :global(.类名) {
     }
     ```
+
+# 10、Flux与Redux
+
+## 10.1、Flux
+
+- [Flux-Comparison](https://github.com/voronianski/flux-comparison)
+
+Flux 是一种架构思想，专门解决软件的结构问题。它跟MVC架构是同一类东西，但是更加简单和清晰。Flux存在多种实现(至少15种)
+
+Flux将一个应用分成四个部分：
+- View： 视图层
+- Action（动作）：视图层发出的消息（比如mouseClick）
+- Dispatcher（派发器）：用来接收Actions、执行回调函数
+- Store（数据层）：用来存放应用的状态，一旦发生变动，就提醒Views要更新页面
+
+![](image/Flux-流程.png)
+
+Flux 的最大特点，就是数据的"单向流动"：
+- 用户访问 View
+- View 发出用户的 Action
+- Dispatcher 收到 Action，要求 Store 进行相应的更新
+- Store 更新后，发出一个"change"事件
+- View 收到"change"事件后，更新页面
+
+上面过程中，数据总是"单向流动"，任何相邻的部分都不会发生数据的"双向流动"。这保证了流程的清晰
+
+## 10.2、什么是Redux
+
+Redux最主要是用作应用状态的管理。简言之，Redux用一个单独的常量状态树（state对象）保存这一整个应用的状态，这个对象不能直接被改变。当一些数据变化了，一个新的对象就会被创建（使用actions和reducers），这样就可以进行数据追踪，实现时光旅行；
+
+ redux介绍及设计和使用的三大原则：
+ - state以单一对象存储在 store 对象中；
+ - state 只读，每次返回一个新对象；
+ - 使用纯函数 reducer 执行 state 更新
+
+## 10.3、Redux工作流
+
+
+
+## 10.4、Redux基本使用
+
+创建store
+```js
+import { createStore } from 'redux'
+const reducer = (prevState = { show: true }, action) => {
+    let newState = { ...prevState }
+    switch (action.type) {
+        case 'hide-tabbar':
+            newState.show = false;
+            return newState;
+        case 'show-tabbar':
+            newState.show = true;
+            return newState;
+        default:
+            return prevState
+    }
+}
+const store = createStore(reducer);
+export default store;
+```
+subscribe订阅事件
+```js
+export default class App extends Component{
+    componentDidMount() {
+        store.subscribe(
+            () => {
+                console.log("app", store.getState())
+                this.setState({ isShow: store.getState().show })
+            }
+        )
+    }
+    ...
+}
+```
+dispatch发布事件：
+```js
+export default function Detail(props) {
+    useEffect(() => {
+        store.dispatch({
+            type: 'hide-tabbar'
+        })
+        return () => {
+            store.dispatch({
+                type: 'show-tabbar'
+            })
+        }
+    }, [])
+    ...
+}
+```
+
+## 10.5、Redux原理
+
+store 是通过 createStore创建出来的， 所以他的结构
+```jsx
+export const createStore = function(reducer, initialState) { 
+    ... return { 
+        dispatch, 用于action的分发， 改变store里面的state（currentState = reducer(currentState,action)），并在内部遍历subcribe注册的监听器 
+        subscribe, 注册listener， store里面state发生改变后，执行该 listener 
+        getState, 取store里面的 state ... 
+    } 
+}
+```
+简易实现：
+```jsx
+function createStore(reducer){ 
+    var list = []; 
+    var state = reducer(); 
+    function subscribe(callback){ 
+        list.push(callback); 
+    }
+    function dispatch(data){ 
+        state = reducer(state,data); 
+        for(var i in list){ list[i](); 
+        } 
+    }
+    function getState(){ 
+        return state; 
+    }
+    return { subscribe, dispatch, getState } 
+}
+```
+
 
 # 开源组件
 
