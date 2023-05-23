@@ -1631,7 +1631,7 @@ Redux最主要是用作应用状态的管理。简言之，Redux用一个单独�
 
 ## 10.3、Redux工作流
 
-
+https://redux.js.org/tutorials/fundamentals/part-2-concepts-data-flow
 
 ## 10.4、Redux基本使用
 
@@ -1717,6 +1717,49 @@ function createStore(reducer){
 }
 ```
 
+## 10.6、reducer合并
+
+如果不同的action所处理的属性之间没有联系，可以把 Reducer 函数拆分，不同的函数负责处理不同属性，最终把它们合并成一个大的 Reducer 即可。避免在一个reducer中维护过多的状态，造成代码臃肿；
+
+```js
+// 定义CityReducer
+const CityReducer = (prevState = {
+    cityName: '北京'
+}, action) => {
+    let newState = { ...prevState }
+    switch (action.type) {
+        case 'change-city':
+            newState.cityName = action.cityName;
+            return newState;
+        default:
+            return prevState
+    }
+}
+// 定义TabbarReducer
+const TabbarReducer = (prevState = {
+    show: true
+}, action) => {
+    let newState = { ...prevState }
+    switch (action.type) {
+        case 'hide-tabbar':
+            newState.show = false;
+            return newState;
+        case 'show-tabbar':
+            newState.show = true;
+            return newState;
+        default:
+            return prevState
+    }
+}
+// 合并Reducer
+const reducer = combineReducers({
+    CityReducer,
+    TabbarReducer
+})
+// 那么访问属性的时候需要按照如下访问：
+let cityName = store.getState().CityReducer.cityName
+let show = store.getState().CityReducer.show
+```
 
 # 开源组件
 
