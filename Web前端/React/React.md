@@ -1665,6 +1665,7 @@ export default class App extends Component{
             }
         )
     }
+    // 注意这里如果订阅了，在组件销毁的时候不要忘了取消订阅，直接执行 store.subscribe 返回值
     ...
 }
 ```
@@ -1717,7 +1718,7 @@ function createStore(reducer){
 }
 ```
 
-## 10.6、reducer合并
+## 10.6、Reducer合并
 
 如果不同的action所处理的属性之间没有联系，可以把 Reducer 函数拆分，不同的函数负责处理不同属性，最终把它们合并成一个大的 Reducer 即可。避免在一个reducer中维护过多的状态，造成代码臃肿；
 
@@ -1759,6 +1760,71 @@ const reducer = combineReducers({
 // 那么访问属性的时候需要按照如下访问：
 let cityName = store.getState().CityReducer.cityName
 let show = store.getState().CityReducer.show
+```
+
+## 10.7、Redux中间件
+
+在redux里，action仅仅是携带了数据的普通js对象。action creator返回的值是这个action类型的对象。然后通过store.dispatch()进行分发。同步的情况下一切都很完美，但是reducer无法处理异步的情况；
+
+那么我们就需要在action和reducer中间架起一座桥梁来处理异步。这就是middleware
+
+**中间件的由来与原理、机制：**
+```js
+export default function thunkMiddleware({ dispatch, getState }) { 
+    return next => action => 
+        typeof action === 'function' ? action(dispatch, getState) : next(action); 
+}
+```
+这段代码的意思是，中间件这个桥梁接受到的参数action，如果不是function则和过去一样直接执行next方法(下一步处理)，相当于中间件没有做任何事。如果action是function，则先执行action，action的处理结束之后，再在action的内部调用dispatch。
+
+**常用异步中间件：** 详细代码参考:[Action.js](https://gitee.com/chenlanqing/react-basic/blob/master/src/05-redux/redux/action/getCinemaListAction.js)
+- **redux-thunk** (store.dispatch参数可以是一个function)
+```js
+// store.js 引入 redux-thunk
+import { applyMiddleware} from 'redux'
+import reduxThunk from 'redux-thunk'
+const reducer = combineReducers({
+    CinemaReducer
+})
+const store = createStore(reducer, applyMiddleware(reduxThunk));
+export default store;
+
+// action.js
+import axios from 'axios'
+function getCinemaListAction() {
+    return (dispatch) => {
+            dispatch({
+                type: "change-cinema-list",
+                list: res.data.data.cinemas
+            })
+        })
+    }
+}
+export default getCinemaListAction
+```
+
+- **redux-promise** (store.dispatch参数可以是一个promise对象)
+```js
+// store.js 引入 redux-promise
+import { applyMiddleware, createStore } from 'redux'
+import CinemaReducer from './reducer/CinemaReducer';
+import reduxPromise from 'redux-promise'
+const reducer = combineReducers({
+    CinemaReducer
+})
+const store = createStore(reducer, applyMiddleware(reduxPromise));
+export default store;
+
+// action.js
+function getCinemaListAction() {
+    return axios({}).then(res => {
+        return {
+            type: "change",
+            list: res.data
+        }
+    })
+}
+export default getCinemaListAction
 ```
 
 # 开源组件
