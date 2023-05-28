@@ -1656,17 +1656,21 @@ export default store;
 ```
 subscribe订阅事件
 ```js
-export default class App extends Component{
-    componentDidMount() {
-        store.subscribe(
+export default function App(){
+    useEffect(() => {
+        var unsubscribe = store.subscribe(
             () => {
                 console.log("app", store.getState())
                 this.setState({ isShow: store.getState().show })
             }
         )
-    }
-    // 注意这里如果订阅了，在组件销毁的时候不要忘了取消订阅，直接执行 store.subscribe 返回值
+        return () => {
+            // 直接执行 subscribe 返回值，就是取消订阅
+            unsubscribe()
+        }
+        // 注意这里如果订阅了，在组件销毁的时候不要忘了取消订阅，直接执行 store.subscribe 返回值
     ...
+    }, [])
 }
 ```
 dispatch发布事件：
@@ -1827,6 +1831,83 @@ function getCinemaListAction() {
 export default getCinemaListAction
 ```
 
+## 10.8、Redux开发组件
+
+为了观察状态，Chrome有个插件：[redux-devtools-extension](https://github.com/zalmoxisus/redux-devtools-extension)
+```js
+import { createStore, compose} from 'redux'
+import reducer from './reducer'
+const composeEnhancers = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose; 
+const store = createStore(reducer, /* preloadedState, */ composeEnhancers()) 
+export default store
+```
+注意：上述引入redux-devtools-extension在发布生产前需要处理下
+
+在Chrome浏览器上显示如下：
+
+![](image/Redux-devTool-extension-界面.png)
+
+# 11、react-redux
+
+- [react-redux代码](https://github.com/reduxjs/react-redux)
+
+## 11.1、概述
+
+React Redux 是 Redux 的官方 React UI 绑定库。它使得你的 React 组件能够从 Redux store 中读取到数据，并且你可以通过dispatch actions去更新 store 中的 state；
+
+旨在与 React 的组件模型一起使用。你来定义如何从 Redux 中提取组件所需的数据，然后组件即可根据需要自动更新；
+
+提供开箱即用的 API 实现组件与 Redux Store 交互，避免手动编写代码实现逻辑
+
+## 11.2、使用
+
+index.js：根组件引入Provider
+```jsx
+import ReactDOM from 'react-dom/client';
+import { Provider } from 'react-redux'
+import store from './06-react-redux/redux/store';
+const container = document.getElementById('root');
+const root = ReactDOM.createRoot(container);
+root.render(
+    <Provider store={store}>
+        <App />
+    </Provider>
+);
+```
+[App.js](https://gitee.com/chenlanqing/react-basic/blob/master/src/06-react-redux/App.js)中使用：
+```jsx
+import React, { Component } from 'react'
+import IndexRouter from './router/IndexRouter'
+import Tabbar from './components/Tabbar'
+import { connect } from 'react-redux'
+class App extends Component {
+    render() {
+        return (
+            <div>
+                <IndexRouter>
+                    {this.props.isShow && <Tabbar />}
+                </IndexRouter>
+            </div>
+        )
+    }
+}
+const mapStateToProps = (state) => (
+    {
+        isShow: state.TabbarReducer.show
+    }
+)
+export default connect(mapStateToProps)(App)
+```
+React-Redux 提供[connect](https://cn.react-redux.js.org/api/connect)方法，用于从 UI 组件生成容器组件。connect的意思，就是将这两种组件连起来
+
+connect是HOC（High order Component）
+
+## 11.3、redux持久化
+
+[redux-persist](https://github.com/rt2zz/redux-persist) 会将redux的store中的数据缓存到浏览器的localStorage中
+
+# 12、immutable不可变对手
+
 # 开源组件
 
 - [移动端-平滑滚动组件](https://github.com/ustbhuangyi/better-scroll)
@@ -1837,4 +1918,6 @@ export default getCinemaListAction
 - [React英文文档](https://reactjs.org/)
 - [React中文文档](https://zh-hans.reactjs.org/)
 - [React学习路线](https://github.com/adam-golab/react-developer-roadmap)
+- [React-HOC（高阶组件）](https://zh-hans.legacy.reactjs.org/docs/higher-order-components.html)
+- [高阶组件（HOC）开发](https://juejin.cn/post/6940422320427106335)
 
