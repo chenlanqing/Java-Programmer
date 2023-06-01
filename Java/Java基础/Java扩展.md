@@ -860,6 +860,19 @@ MySQL中时间相关字段类型参考：[](../../数据库/MySQL/MySQL.md#2日�
 
 ## 3、Java时间API
 
+### 3.1、时间转换为UTC时间
+
+```java
+public static String convertCurrentTimezoneToUTC(String dateStr) {
+    LocalDateTime dateTime = LocalDateTime.parse(dateStr, DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    // 这里是取的系统默认时区，或者可以指定时区：ZoneId.of(timezone)，比如香港时间：ZoneId.of("UTC+8") 或者 ZoneId.of("Asia/Hong_Kong)
+    ZoneId currentTimezone = ZoneId.systemDefault();
+    ZonedDateTime currentTime = ZonedDateTime.of(dateTime, currentTimezone);
+    ZonedDateTime utcZonedDateTime = currentTime.withZoneSameInstant(ZoneOffset.UTC);
+    return utcZonedDateTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+}
+```
+
 ## 4、Java连接MySQL
 
 在JDBC的连接参数上有一个参数：serverTimezone，这个参数主要是告诉jdbc，数据库处理timestamp是按照什么时区处理的。jdbc第一次从数据库读取到的原始的年、月、日、时分秒都是按照server timezone处理好的。知道了server timezone之后，jdbc可以根据用户配置的serverTimezone的值，逆将这个年月日转换成UTC时间的毫秒数，最终jdbc可以根据自己本地jvm的时区以及这个逆向得到的UTC时间，得到正确的本地时间
