@@ -685,6 +685,11 @@ systemctl start gateway
 systemctl restart gateway
 ```
 
+## 18、时区
+
+- 设置UTC时区：`sudo timedatectl set-timezone UTC`
+- 查看所有时区： `timedatectl list-timezones`
+
 # 四、Linux工具
 
 vmstat 可以获得有关进程、内存页面交换、虚拟内存、线程上下文切换、等待队列等信息。能够反映系统的负载情况。一般用来查看进程等待数量、内存换页情况、系统上下文切换是否频繁等

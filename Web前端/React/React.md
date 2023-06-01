@@ -4,7 +4,10 @@ React是一个UI框架，
 
 前提需要安装 node
 ```
+# js版本
 npx create-react-app <your-app-name>
+# ts版本
+npx create-react-app <your-app-name> --template typescript
 ```
 npm包的仓库管理软件
 ```
