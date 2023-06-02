@@ -899,6 +899,7 @@ mysql> show variables like '%time_zone%';
 
 - 如果是类似国际站，可能在多个国家服务，那么数据库时区一般可以设置为：UTC，即`set global time_zone='+00:00'`，即标准时间，然后jdbc连接参数需要设置 `serverTimezone=UTC`，在代码中根据用户所在的时区来处理；
 - 如果是国内，那么设置时区为：UTC+8，即`set global time_zone='+08:00'`，东八区，然后jdbc连接参数需要设置 `serverTimezone=Asia/Shanghai`
+- 关于根据时间查询的问题，如果用户遍布全球，那么一般会在用户请求头中增加两个字段：时区（timezone）和语言（language），然后服务所在服务器时区、数据库时区统一设置为：UTC，jdbc连接参数需要设置 `serverTimezone=UTC`，后端代码在处理时统一按照UTC时间来处理，相关时间字段返回给到前端时统一给时间戳；
 
 ## 6、RFC3339 时间
 
