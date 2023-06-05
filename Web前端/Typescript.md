@@ -2,6 +2,9 @@
 
 TypeScript是带有类型语法的JavaScript
 
+# 2、基本语法
+
+
 
 # 参考资料
 
