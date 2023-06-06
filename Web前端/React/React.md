@@ -1923,4 +1923,5 @@ connect是HOC（High order Component）
 - [React学习路线](https://github.com/adam-golab/react-developer-roadmap)
 - [React-HOC（高阶组件）](https://zh-hans.legacy.reactjs.org/docs/higher-order-components.html)
 - [高阶组件（HOC）开发](https://juejin.cn/post/6940422320427106335)
+- [一本自顶向下的React源码分析书](https://github.com/BetaSu/just-react)
 
