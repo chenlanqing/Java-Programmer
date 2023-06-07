@@ -4292,7 +4292,7 @@ public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
 
 任务是有时序关系的，比如有串行关系、并行关系、汇聚关系等。
 
-**1、描述串行关系：**
+#### 15.2.1、描述串行关系
 
 CompletionStage 接口里面描述串行关系，主要是 thenApply、thenAccept、thenRun 和 thenCompose 这四个系列的接口
 - `thenApply` 系列函数里参数 fn 的类型是接口 Function，这个接口里与 CompletionStage 相关的方法是 `R apply(T t)`，这个方法既能接收参数也支持返回值，所以 thenApply 系列方法返回的是CompletionStage。
@@ -4311,7 +4311,7 @@ CompletionStage<R> thenCompose(fn);
 CompletionStage<R> thenComposeAsync(fn);
 ```
 
-**2、描述 AND 汇聚关系：**
+#### 15.2.2、描述 AND 汇聚关系
 
 CompletionStage 接口里面描述 AND 汇聚关系，主要是 thenCombine、thenAcceptBoth 和 runAfterBoth 系列的接口，这些接口的区别也是源自 fn、consumer、action 这三个核心参数不同
 ```java
@@ -4323,7 +4323,7 @@ CompletionStage<Void> runAfterBoth(other, action);
 CompletionStage<Void> runAfterBothAsync(other, action);
 ```
 
-**3、描述 OR 汇聚关系：**
+#### 15.2.3、描述 OR 汇聚关系
 
 CompletionStage 接口里面描述 OR 汇聚关系，主要是 applyToEither、acceptEither 和 runAfterEither 系列的接口，这些接口的区别也是源自 fn、consumer、action 这三个核心参数不同
 ```java
@@ -4335,7 +4335,7 @@ CompletionStage runAfterEither(other, action);
 CompletionStage runAfterEitherAsync(other, action);
 ```
 
-**4、异常处理**
+#### 15.2.4、异常处理
 
 上面提到的 fn、consumer、action 它们的核心方法都不允许抛出可检查异常，但是却无法限制它们抛出运行时异常，如下面的代码，执行 7/0 就会出现除零错误这个运行时异常。非异步编程里面，我们可以使用 try{}catch{}来捕获并处理异常，那在异步编程里面，异常该如何处理呢？
 ```java
@@ -4364,6 +4364,19 @@ CompletableFuture<Integer> f0 = CompletableFuture.supplyAsync(() -> (7 / 0))
         });
 System.out.println(f0.join());
 ```
+
+### 15.3、注意点
+
+CompletableFuture 在使用异步处理过程中，需要注意异常的处理，因为 CompletableFuture 很多方法都不能抛出异常，如果在异步执行过程中出现了异常，那么异常将被吞掉了，没有办法显示，为了处理异常，可以按照上述的方式来处理：
+```java
+CompletableFuture.supplyAsync(() -> (7 / 0))
+        .thenApply(r -> r * 10)
+        .exceptionally(throwable -> {
+            throwable.printStackTrace();
+            return 0;
+        });
+```
+使用 exceptionally 或者 whenComplete 来实现来处理异常
 
 ## 16、CompletionService
 

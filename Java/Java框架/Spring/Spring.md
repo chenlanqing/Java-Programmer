@@ -2779,6 +2779,9 @@ Servlet一般会延迟加载，当第一个请求达到时，Tomcat&Jetty发现D
 	- ④、 如果既没有指定name，又没有指定type，则自动按照byName方式进行装配；如果没有匹配，则回退为一个原始类型进行匹配，如果匹配则自动装配。
 - `@Inject`: 这是jsr330 的规范，通过AutowiredAnnotationBeanPostProcessor 类实现的依赖注入。位于javax.inject包内，是Java自带的注解；也是根据类型进行自动装配的，这一点和 @Autowired 类似。如果需要按名称进行装配，则需要配合使用 @Named。@Autowired 和 @Inject 的区别在于，前者可以使用 required=false 允许注入 null，后者允许注入一个 Provider 实现延迟注入
 
+## 5、如何异步初始Bean
+
+https://mp.weixin.qq.com/s/zXAncSrthmbaxQNkfJdNKg
 
 # 参考资料
 

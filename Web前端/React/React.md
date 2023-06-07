@@ -1909,7 +1909,8 @@ connect是HOC（High order Component）
 
 [redux-persist](https://github.com/rt2zz/redux-persist) 会将redux的store中的数据缓存到浏览器的localStorage中
 
-# 12、immutable不可变对手
+## 11.4、redux-saga
+
 
 # 开源组件
 
