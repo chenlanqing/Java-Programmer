@@ -837,6 +837,7 @@ https://mp.weixin.qq.com/s/01fj7l3xsxHVstlkrJ0epw
 - [抓包研究Java向MySQL发生数据时间问题](https://www.cnblogs.com/grey-wolf/p/15915807.html)
 - [数据库时间慢14个小时](https://heapdump.cn/article/2986372)
 - [MySQL Driver关于时区的处理](https://kaimingwan.com/2022/06/20/ns4y3a/)
+- [时区信息数据库-TimeZoneDatabase](https://en.wikipedia.org/wiki/Tz_database)
 
 ## 1、关于时区
 
