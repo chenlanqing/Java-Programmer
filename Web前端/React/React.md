@@ -1911,6 +1911,38 @@ connect是HOC（High order Component）
 
 ## 11.4、redux-saga
 
+[redux-saga](https://redux-saga.js.org/) 是一个用于管理应用程序 Side Effect（副作用，例如异步获取数据，访问浏览器缓存等）的 library，它的目标是让副作用管理更容易，执行更高效，测试更简单，在处理故障时更容易
+
+# 12、React其他
+
+## 12.1、Portal
+
+- [React-Portal](https://legacy.reactjs.org/docs/portals.html)
+
+Portal 提供了一种将子节点渲染到存在于父组件以外 DOM 节点的方案；在 React 中，Portal 直接改变了组件的挂载方式，不再是挂载到上层父节点上，而是可以让用户指定一个挂载节点
+```js
+ReactDOM.createPortal(child,container);
+```
+比如弹窗：
+```js
+import React from 'react'
+import { createPortal } from 'react-dom'
+export default function PortalDialog(props) {
+    return createPortal(
+        (
+            <div style={{
+                width: '100%', height: '100%', position: 'fixed', left: 0,
+                top: 0, background: 'rgba(0,0,0,0.7)', zIndex: "9999999"
+            }}>
+                数据正在加载中<br/>
+                <button onClick={props.close}>close</button>
+            </div>
+        ), document.body
+    )
+}
+```
+
+## 12.2、懒加载
 
 # 开源组件
 
