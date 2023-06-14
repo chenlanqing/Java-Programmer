@@ -1941,8 +1941,135 @@ export default function PortalDialog(props) {
     )
 }
 ```
+一个典型的用法就是当父组件的dom元素有 overflow:hidden 或者 z-index 样式，而你又需要显示的子元素超出父元素的盒子。举例来说，如对话框，悬浮框，和小提示；
+
+在portal中的事件冒泡：虽然通过portal渲染的元素在父组件的盒子之外，但是渲染的dom节点仍在React的元素树上，在那个dom元素上的点击事件仍然能在dom树中监听到。
 
 ## 12.2、懒加载
+
+React懒加载，即 Lazy 和 Suspense，React.lazy 函数能让你像渲染常规组件一样处理动态引入（的组件）。
+
+当你的程序越来越大，代码量越来越多。一个页面上堆积了很多功能，也许有些功能很可能都用不到，但是一样下载加载到页面上，所以这里面肯定有优化空间。就如图片懒加载的理论；
+
+**实现原理：**当 Webpack 解析到该语法时，它会自动地开始进行代码分割(Code Splitting)，分割成一个文件，当使用到这个文件的时候会这段代码才会被异步加载
+
+**解决方案：**在 React.lazy 和常用的三方包 react-loadable ，都是使用了这个原理，然后配合webpack进行代码打包拆分达到异步加载，这样首屏渲染的速度将大大的提高；由于 `React.lazy` 不支持服务端渲染，所以这时候 `react-loadable` 就是不错的选择
+
+**如何使用：**
+```js
+// App.js
+import React, { useState } from 'react'
+const Nowplaying = React.lazy(() => import('./components/Nowplaying'))
+const Commingsoon = React.lazy(() => import('./components/Commingsoon'))
+export default function App() {
+    const [type, setType] = useState(1)
+    return (
+        <div>
+            <button onClick={() => setType(1)}>正在热映</button>
+            <button onClick={() => setType(2)}>即将上映</button>
+            {
+                type === 1 ?
+                    <Nowplaying></Nowplaying>
+                    :
+                    <Commingsoon></Commingsoon>
+            }
+        </div>
+    )
+}
+// Nowplaying.js
+export default function Nowplaying() {
+    return <div>Nowplaying</div>
+}
+
+// Commingsoon.js
+export default function Commingsoon() {
+    return <div>Commingsoon</div>
+}
+```
+这是最简单的 React.lazy ，但是这样页面会报错。这个报错提示我们，在React使用了 lazy 之后，会存在一个加载中的空档期，React不知道在这个空档期中该显示什么内容，所以需要我们指定。接下来就要使用到Suspense；
+
+**Suspense**
+
+如果在 App 渲染完成后，包含 Nowplaying  和 Commingsoon的模块还没有被加载完成，我们可以使用加载指示器为此组件做优雅降级。这里我们使用 Suspense 组件来解决:
+```js
+<Suspense fallback={<div>正在加载中......</div>}>
+    {
+        type === 1 ?
+            <Nowplaying></Nowplaying>
+            :
+            <Commingsoon></Commingsoon>
+    }
+</Suspense>
+```
+> 注意：Suspense 使用的时候，fallback 一定是存在且有内容的， 否则会报错
+
+## 12.3、forwardRef
+
+引用传递（Ref forward）是一种通过组件向子组件自动传递 引用ref 的技术。对于应用者的大多数组件来说没什么作用。但是对于有些重复使用的组件，可能有用。例如某些input组件，需要控制其focus，本来是可以使用ref来 控制，但是因为该input已被包裹在组件中，这时就需要使用Ref forward来透过组件获得该input的引用。可以透传多层
+
+*没有使用forwardRef*
+```js
+// 子组件
+class Child extends Component{ 
+    componentDidMount() { 
+        this.props.callback(this.refs.myinput) 
+    }
+    render(){ 
+        return <div> <input type="text" ref="myinput"/> </div> 
+    } 
+}
+//父组件 
+class App extends Component { 
+    render() { 
+        return ( 
+            <div><Child callback={(el)=>{ el.focus() }}/> </div> 
+        ) 
+    } 
+}
+```
+*使用forwardRef*
+```js
+import React, { forwardRef, useRef } from 'react'
+
+export default function App() {
+    const text = useRef(1111)
+    return (
+        <div>
+            <button onClick={() => { 
+                text.current.value = ""
+                text.current.focus()
+            }}>失去焦点</button>
+            <Child ref={text} />
+        </div>
+    )
+}
+const Child = forwardRef((props, ref) => {
+    return <div style={{background: 'red'}}>
+        <input type="text" ref={ref} defaultValue={ref.current}/>
+    </div>
+})
+```
+
+## 12.4、函数式组件缓存
+
+在计算机领域，记忆化是一种主要用来提升计算机程序速度的优化技术方案。它将开销较大的函数调用的返回结果 存储起来，当同样的输入再次发生时，则返回缓存好的数据，以此提升运算效率。
+
+组件仅在它的 props 发生改变的时候进行重新渲染。通常来说，在组件树中 React 组件，只要有变化就会走一遍渲 染流程。但是React.memo()，我们可以仅仅让某些组件进行渲染；
+
+PureComponent 只能用于class 组件，memo 用于functional 组件
+
+基本用法：
+```js
+import {memo} from 'react' 
+const Child = memo(()=>{ 
+    return <div> <input type="text" /> </div> }
+    )
+// 或者
+const Child = ()=>{ 
+    return <div> <input type="text" /> </div> 
+})
+const MemoChild = memo(Child)
+```
 
 # 开源组件
 
