@@ -463,6 +463,10 @@ mysql> select * from sys_menu;
 -- 可以看到上面 update_time 变为了 UTC+8的时间
 ```
 
+### 2.8、字段类型改为时间
+
+如果需要将表的某个字段：a varchar(30) 改为 timestamp 类型，需要注意，不要设置改字段为 null，否则其会将默认值设置为当前时间，且设置为根据时间戳更新：`ALTER TABLE tb_a modify column a timestamp(3) null default null COMMENT '时间';`
+
 ## 3、字符串类型
 
 ### 3.1、基本介绍
