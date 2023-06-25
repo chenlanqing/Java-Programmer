@@ -1402,25 +1402,25 @@ export default function App() {
 
 可以在多个hook之间传递信息
 
-# 8、React路由-V5
+# 8、React路由
 
 - [React-Router](https://reactrouter.com/en/main)
 - [React路由](https://tsejx.github.io/react-guidebook/ecosystem/routing/react-router)
 
 路由是根据不同的 url 地址展示不同的内容或页面，
 
-## 8.1、React-Router
+## 8.1、路由安装
 
 React Router 是一个构建在 React 之上的强大的路由库，它有助于向应用程序添加新的 Screen 和 Stream。这使 URL 与网页显示的数据保持同步。它负责维护标准化的结构和行为，并用于开发单页 Web 应用
 
-路由安装：
+路由安装：（指定版本安装，不指定就是安装最新版本）
 ```
 npm install react-router-dom@5
 ```
 
-以下基于 react-router 的v5.0版本
+## 8.2、V5-基本使用
 
-## 8.2、路由基础使用
+以下是基于react-router-5.0的使用
 
 ### 1、导入路由
 
@@ -1559,6 +1559,10 @@ function FilmItem(props) {
 const WithFilmItem = withRouter(FilmItem)
 ```
 主要是解决父子通信的问题，当然这里可以直接使用 useHistory 来实现；
+
+## 8.3、V6-基本使用
+
+以下是基于react-router-6.0的使用
 
 # 9、项目注意
 
