@@ -70,6 +70,63 @@ let items = [0, 1, null, 'Hi'];
 ```
 上下文语境推断，其会根据语义的上下文来推断出对应的类型
 
+## 2.5、Enum
+
+定义Enum
+```ts
+enum name {constant1, constant2, ...};
+// 比如：
+enum Month {
+    Jan,
+    Feb,
+    Mar,
+    Apr,
+    May,
+    Jun,
+    Jul,
+    Aug,
+    Sep,
+    Oct,
+    Nov,
+    Dec
+};
+```
+上面Month生成的JavaScript代码：
+```js
+var Month;
+(function (Month) {
+    Month[Month["Jan"] = 0] = "Jan";
+    Month[Month["Feb"] = 1] = "Feb";
+    Month[Month["Mar"] = 2] = "Mar";
+    Month[Month["Apr"] = 3] = "Apr";
+    Month[Month["May"] = 4] = "May";
+    Month[Month["Jun"] = 5] = "Jun";
+    Month[Month["Jul"] = 6] = "Jul";
+    Month[Month["Aug"] = 7] = "Aug";
+    Month[Month["Sep"] = 8] = "Sep";
+    Month[Month["Oct"] = 9] = "Oct";
+    Month[Month["Nov"] = 10] = "Nov";
+    Month[Month["Dec"] = 11] = "Dec";
+})(Month || (Month = {}));
+```
+上面0表示一月，我们可以指定枚举成员的数字：
+```ts
+enum Month {
+    Jan = 1,
+    Feb,
+    Mar,
+    Apr,
+    May,
+    Jun,
+    Jul,
+    Aug,
+    Sep,
+    Oct,
+    Nov,
+    Dec
+};
+```
+
 # 扩展
 
 ## Optional实现
