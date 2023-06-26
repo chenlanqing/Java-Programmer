@@ -126,6 +126,40 @@ enum Month {
     Dec
 };
 ```
+编译ts为JavaScript代码后：
+```js
+var Month;
+(function (Month) {
+    Month[Month["Jan"] = 1] = "Jan";
+    Month[Month["Feb"] = 2] = "Feb";
+    Month[Month["Mar"] = 3] = "Mar";
+    Month[Month["Apr"] = 4] = "Apr";
+    Month[Month["May"] = 5] = "May";
+    Month[Month["Jun"] = 6] = "Jun";
+    Month[Month["Jul"] = 7] = "Jul";
+    Month[Month["Aug"] = 8] = "Aug";
+    Month[Month["Sep"] = 9] = "Sep";
+    Month[Month["Oct"] = 10] = "Oct";
+    Month[Month["Nov"] = 11] = "Nov";
+    Month[Month["Dec"] = 12] = "Dec";
+})(Month || (Month = {}));
+;
+```
+
+## 2.6、Union Type
+
+TypeScript联合类型允许你在一个变量中存储一个或多个类型的值，比如：
+```ts
+function add(a: number | string, b: number | string) {
+    if (typeof a === 'number' && typeof b === 'number') {
+        return a + b;
+    }
+    if (typeof a === 'string' && typeof b === 'string') {
+        return a.concat(b);
+    }
+    throw new Error('Parameters must be numbers or strings');
+}
+```
 
 # 扩展
 
