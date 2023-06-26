@@ -2919,3 +2919,4 @@ https://nsq.io/
 * [Kafka与RocketMQ](https://mp.weixin.qq.com/s/WwHnyrOnw_io7G3uviim3Q)
 * [Kafka高性能原因](https://mp.weixin.qq.com/s/XhJl90DnprNsI8KxFfdyVw)
 * [Kafka架构调优最常见的5个问题](https://heapdump.cn/article/3802138)
+* [Kafka 架构、核心机制和场景解读](https://juejin.cn/post/7176576097205616700)
