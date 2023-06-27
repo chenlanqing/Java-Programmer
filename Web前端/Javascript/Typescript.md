@@ -1,5 +1,7 @@
 # 1、概述
 
+## 1.3、基本概述
+
 TypeScript是带有类型语法的JavaScript
 
 如何安装typescript 编译器：
@@ -11,6 +13,11 @@ npm install -g ts-node
 为什么是Typescript:
 - typescript 增加了类型系统以避免JavaScript动态类型的许多问题；
 - TypeScript实现了JavaScript的未来功能
+
+## 1.2、typescript环境配置
+
+- [how to setup typescript](https://www.typescripttutorial.net/typescript-tutorial/setup-typescript/)
+- [tsc CLI Options](https://www.typescriptlang.org/docs/handbook/compiler-options.html)
 
 # 2、类型
 
@@ -161,6 +168,17 @@ function add(a: number | string, b: number | string) {
 }
 ```
 
+## 2.7、类型别名
+
+类型别名允许你为一个现有的类型创建一个新的名称，比如：
+```ts
+type alphanumeric = string | number;
+let input: alphanumeric;
+input = 100; // valid
+input = 'Hi'; // valid
+input = false; // Compiler error
+```
+
 # 扩展
 
 ## Optional实现
@@ -188,3 +206,4 @@ function createArticle(article: CreateArticle) {}
 
 - [TypeScript is JavaScript with syntax for types](https://www.typescriptlang.org/)
 - [typescript tutorial](https://www.typescripttutorial.net/)
+- [typescript road map](https://roadmap.sh/typescript)
