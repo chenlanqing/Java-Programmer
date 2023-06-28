@@ -179,6 +179,27 @@ input = 'Hi'; // valid
 input = false; // Compiler error
 ```
 
+## 2.8、字符串字面量
+
+```ts
+// mouseEvent 的值只能是下面4个之一
+let mouseEvent: 'click' | 'dblclick' | 'mouseup' | 'mousedown';
+mouseEvent = 'click'; // valid
+mouseEvent = 'dblclick'; // valid
+mouseEvent = 'mouseup'; // valid
+mouseEvent = 'mousedown'; // valid
+mouseEvent = 'mouseover'; // compiler error
+// 或者下面用法
+type MouseEvent: 'click' | 'dblclick' | 'mouseup' | 'mousedown';
+let mouseEvent: MouseEvent;
+mouseEvent = 'click'; // valid
+mouseEvent = 'dblclick'; // valid
+mouseEvent = 'mouseup'; // valid
+mouseEvent = 'mousedown'; // valid
+mouseEvent = 'mouseover'; // compiler error
+let anotherEvent: MouseEvent;
+```
+
 # 扩展
 
 ## Optional实现
