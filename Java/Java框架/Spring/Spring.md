@@ -242,6 +242,8 @@ IOC 的另一种表述方式：即组件以一些预先定义好的方式(例如
 
 # 三、Spring AOP
 
+- [Spring-AOP应用场景](https://www.javaboy.org/2022/1208/spring-aop.html)
+
 AOP（Aspect-Oriented Programming），面向切面编程	
 
 Spring AOP 利用 CGlib 和 JDK 动态代理等方式来实现运行期动态方法增强，其目的是将与业务无关的代码单独抽离出来，使其逻辑不再与业务代码耦合，从而降低系统的耦合性，提高程序的可重用性和开发效率

@@ -6327,3 +6327,4 @@ public class Account extends User{
 - [必备干货](https://segmentfault.com/a/1190000017115722)
 - [技术文章整理](https://segmentfault.com/a/1190000018855112)
 - [面试八股文](https://mp.weixin.qq.com/s/2IUaDr5XRgWoVaGgPGsAxA)
+- [面试offer](https://mp.weixin.qq.com/s/C5QMjwEb6pzXACqZsyqC4A)
