@@ -179,25 +179,132 @@ input = 'Hi'; // valid
 input = false; // Compiler error
 ```
 
-## 2.8、字符串字面量
+# 3、函数
+
+基本写法：
+```ts
+function name(parameter: type, parameter:type,...): returnType {
+   // do something
+}
+```
+
+## 3.1、函数类型
+
+一个函数类型有两个部分：参数和返回类型。在声明一个函数类型时，你需要用下面的语法指定这两个部分：
+```ts
+(parameter: type, parameter:type,...) => type
+```
+多种写法如下：
+```ts
+add = function (x: number, y: number) {
+    return x + y;
+};
+
+let add: (a: number, b: number) => number =
+    function (x: number, y: number) {
+        return x + y;
+    };
+```
+
+## 3.2、函数可选参数
 
 ```ts
-// mouseEvent 的值只能是下面4个之一
-let mouseEvent: 'click' | 'dblclick' | 'mouseup' | 'mousedown';
-mouseEvent = 'click'; // valid
-mouseEvent = 'dblclick'; // valid
-mouseEvent = 'mouseup'; // valid
-mouseEvent = 'mousedown'; // valid
-mouseEvent = 'mouseover'; // compiler error
-// 或者下面用法
-type MouseEvent: 'click' | 'dblclick' | 'mouseup' | 'mousedown';
-let mouseEvent: MouseEvent;
-mouseEvent = 'click'; // valid
-mouseEvent = 'dblclick'; // valid
-mouseEvent = 'mouseup'; // valid
-mouseEvent = 'mousedown'; // valid
-mouseEvent = 'mouseover'; // compiler error
-let anotherEvent: MouseEvent;
+// ? 表示参数可选
+function multiply(a: number, b: number, c?: number): number {
+    // 请注意，如果你使用表达式if(c)来检查一个参数是否没有被初始化，你会发现空字符串或零会被当作未定义
+    if (typeof c !== 'undefined') {
+        return a * b * c;
+    }
+    return a * b;
+}
+```
+可选参数必须出现在参数列表中的必要参数之后，否则会报错：`error TS1016: A required parameter cannot follow an optional parameter.`
+
+## 3.3、函数参数默认值
+
+如果参数没有传值，可以指定默认值
+```ts
+// 语法
+function name(parameter1:type=defaultvalue1, parameter2:type=defaultvalue2,...) {
+}
+// 示例
+function applyDiscount(price: number, discount: number = 0.05): number {
+    return price * (1 - discount);
+}
+```
+**请注意，你不能在函数类型定义中包含默认参数**
+```ts
+let promotion: (price: number, discount: number = 0.05) => number;
+// 报错信息
+error TS2371: A parameter initializer is only allowed in a function or constructor implementation.
+```
+
+可选参数与默认参数
+- 默认参数也是可选的。意味着，你可以在调用函数时省略默认参数
+- 可选参数必须出现在必要参数之后。然而，默认参数不需要出现在必要参数之后；
+- 当默认参数出现在一个必需参数之前时，你需要明确地传递undefined来获得默认的初始化值
+    ```ts
+    function add(a: number = 10, b: number): void {
+        console.log(a, b);
+    }
+    // 调用上面的函数时必须显示传递 undefined，否则报错：Expected 2 arguments, but got 1
+    add(undefined, 5);
+    ```
+
+## 3.4、rest parameters
+
+rest parameters 允许你一个函数接受零个或多个指定类型的参数；类似Java的可选参数
+- 函数只能有一个 rest parameters；
+- rest parameters 一个函数只能有一个；
+- rest parameters 类型是一个数组类型；
+
+```ts
+// 语法
+function fn(...rest: type[]) {
+   //...
+}
+```
+
+## 3.5、函数重载
+
+请注意，TypeScript的函数重载与其他静态类型语言（如C#和Java）所支持的函数重载不同。
+```ts
+function add(a: number, b: number): number;
+function add(a: string, b: string): string;
+function add(a: any, b: any): any {
+   return a + b;
+}
+```
+在这个例子中，我们给add()函数添加了两个重载：第一个重载告诉编译器，当参数是数字时，add()函数应该返回一个数字。第二个重载做了同样的事情，但是是针对字符串；
+
+当你重载一个函数时，所需参数的数量必须是相同的。如果一个重载的参数比另一个多，你必须把额外的参数变成可选的，否则会报错
+```ts
+function sum(a: number, b: number): number;
+function sum(a: number, b: number, c: number): number;
+function sum(a: number, b: number, c?: number): number {
+    if (c) return a + b + c;
+    return a + b;
+}
+```
+
+**方法重载**：当一个函数是一个类的属性时，它被称为一个方法。TypeScript也支持方法重载
+```ts
+class Counter {
+    private current: number = 0;
+    count(): number;
+    count(target: number): number[];
+    count(target?: number): number | number[] {
+        if (target) {
+            let values = [];
+            for (let start = this.current; start <= target; start++) {
+                values.push(start);
+            }
+            this.current = target;
+            return values;
+        }
+        return ++this.current;
+    }
+}
 ```
 
 # 扩展
