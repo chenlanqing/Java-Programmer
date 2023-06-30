@@ -155,7 +155,7 @@ var Month;
 
 ## 2.6、Union Type
 
-TypeScript联合类型允许你在一个变量中存储一个或多个类型的值，比如：
+联合类型描述了一个值可以是几种类型中的一种，TypeScript联合类型允许你在一个变量中存储一个或多个类型的值，比如：
 ```ts
 function add(a: number | string, b: number | string) {
     if (typeof a === 'number' && typeof b === 'number') {
@@ -306,6 +306,152 @@ class Counter {
     }
 }
 ```
+
+# 4、类
+
+Typescript的类中类是的属性和方法都包含了类型注解；
+
+## 4.1、访问修饰符
+
+class包含了3个访问修饰符：
+- private：只能在同一个类中访问
+    ```ts
+    class Person {
+        private ssn: string;
+        private firstName: string;
+        private lastName: string;
+        // ...
+    }
+    ```
+- protected：同一个类或子类中可以使用
+- public：默认修饰符，如果没有指定修饰符，默认就是 public
+
+类可以按照如下方式定义：
+```ts
+class Person {
+  // ssn: string;
+  // private firstName: string;
+  // private lastName: string;
+  constructor(protected ssn: string, private firstName: string, private lastName: string) {
+    this.ssn = ssn;
+    this.firstName = firstName;
+    this.lastName = lastName;
+  }
+  getFullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
+}
+```
+
+## 4.2、只读属性
+
+定义只读属性（同Java final字段含义）
+```ts
+class Person {
+    readonly birthDate: Date;
+    constructor(birthDate: Date) {
+        this.birthDate = birthDate;
+    }
+}
+// 或者
+class Person {
+    constructor(readonly birthDate: Date) {
+        this.birthDate = birthDate;
+    }
+}
+```
+只读属性必须初始化，一般使用构造函数来进行初始化；
+
+## 4.3、getter和setter
+
+```ts
+class Person {
+    private _age: number;
+    private _firstName: string;
+    private _lastName: string;
+    public get age() {
+        return this._age;
+    }
+    public set age(theAge: number) {
+        if (theAge <= 0 || theAge >= 200) {
+            throw new Error('The age is invalid');
+        }
+        this._age = theAge;
+    }
+    public getFullName(): string {
+        return `${this._firstName} ${this._lastName}`;
+    }
+}
+```
+调用时可以直接使用：
+```ts
+const person = new Person(18, "John", "Doe");
+console.log(person.age)
+person.age = 100;
+```
+
+## 4.4、接口
+
+大致用法同Java，但是在TypeScript允许一个接口扩展一个类。在这种情况下，接口继承了类的属性和方法。另外，接口可以继承类的私有和受保护的成员，而不仅仅是公共成员。
+意味着当一个接口扩展了一个具有私有或保护成员的类时，该接口只能由该类或该类的子类实现，而该接口是从该类中扩展出来的；通过这样做，你将该接口的使用限制在该接口所继承的类或子类中。如果你试图从一个不是该接口所继承的类的子类中实现该接口，compile error
+```ts
+class Control {
+    private state: boolean;
+}
+interface StatefulControl extends Control {
+    enable(): void
+}
+class Button extends Control implements StatefulControl {
+    enable() { }
+}
+class TextBox extends Control implements StatefulControl {
+    enable() { }
+}
+class Label extends Control { }
+// Error: cannot implement
+class Chart implements StatefulControl {
+    enable() { }
+}
+```
+
+## 4.5、交叉类型
+
+交叉类型通过结合多个现有类型创建一个新的类型。新类型具有现有类型的所有特征。使用 `&` 来实现交叉类型
+```ts
+// 语法如下：typeAB 有包含typeA 和 typeB 的所有属性
+type typeAB = typeA & typeB;
+```
+注意：如果 typeA 和 typeB 有相同属性名称，他们的类型必须一直，否则会报错
+
+**与 Union Type的区别：** 注意，联合类型使用了 `|` 操作符，该操作符定义了一个变量，该变量可以持有类型A或类型B的值。
+- 在使用交叉类型时，一个值必须同时具备所有交叉类型中的特性，即满足所有类型的要求；
+- 在使用联合类型时，一个值只需要满足其中一个类型的要求即可；
+```ts
+interface BusinessPartner {
+    name: string;
+    credit: number;
+}
+interface Identity {
+    id: number;
+    name: string;
+}
+// 交叉类型
+type interactionType = BusinessPartner & Identity; 
+// interactionTypeInstance 必须要包含 BusinessPartner 和 Identity 所有属性
+const interactionTypeInstance: interactionType = {
+  name: "",
+  credit: 123,
+  id: 456
+};
+// 联合类型
+type unionType = BusinessPartner | Identity;
+// unionTypeInstance 只需要包含 BusinessPartner 或者 Identity 的其中一个的所有属性 
+const unionTypeInstance: unionType = {
+  name: "1234",
+  id: 456
+};
+```
+
 
 # 扩展
 
