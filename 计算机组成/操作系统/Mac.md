@@ -61,6 +61,7 @@ https://xclient.info/
 - Xmin      脑图工具
 - atom
 - worktile
+- sizeup
 
 ## 5、homebrew
 
