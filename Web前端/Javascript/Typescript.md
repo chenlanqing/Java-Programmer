@@ -414,7 +414,9 @@ class Chart implements StatefulControl {
 }
 ```
 
-## 4.5、交叉类型
+# 5、高级类型
+
+## 5.1、交叉类型
 
 交叉类型通过结合多个现有类型创建一个新的类型。新类型具有现有类型的所有特征。使用 `&` 来实现交叉类型
 ```ts
@@ -450,6 +452,87 @@ const unionTypeInstance: unionType = {
   name: "1234",
   id: 456
 };
+```
+
+## 5.2、类型守卫（Type Guard）
+
+### 5.2.1、typeof
+
+typeof操作符用于获取变量的类型，因此操作符后面接的始终是一个变量，`typeof variable === 'type'`是用来确定基本类型的惯用手法比如：
+```ts
+type alphanumeric = string | number;
+function add(a: alphanumeric, b: alphanumeric) {
+    if (typeof a === 'number' && typeof b === 'number') {
+        return a + b;
+    }
+    if (typeof a === 'string' && typeof b === 'string') {
+        return a.concat(b);
+    }
+    throw new Error('Invalid arguments. Both arguments must be either numbers or strings.');
+}
+```
+并且typename只能是number、string、boolean或symbol，因为其余的typeof检测结果不那么可靠，typeof 任何对象返回都是 object
+
+
+### 5.2.2、instanceof
+
+判断一个变量的类型，常常会用到 typeof 运算符，但当用 typeof 来判断引用类型变量时，无论是什么类型的变量，它都会返回 Object；
+
+instanceof 操作符用于检测对象是否属于某个 class，同时，检测过程中也会将继承关系考虑在内；
+
+instanceof 与 typeof 相比，instanceof 方法要求开发者明确的确认对象为某特定类型。即 instanceof 用于判断引用类型属于哪个构造函数的方法；
+
+- 类的类型：typeof className
+- 类实例的类型：typeof className.prototype或者className
+
+```ts
+class Customer {
+    isCreditAllowed(): boolean {
+        return true;
+    }
+}
+class Supplier {
+    isInShortList(): boolean {
+        return true;
+    }
+}
+type BusinessPartner = Customer | Supplier;
+
+function signContract(partner: BusinessPartner) : string {
+    let message: string;
+    if (partner instanceof Customer) {
+        message = partner.isCreditAllowed() ? 'Sign a new contract with the customer' : 'Credit issue';
+    }
+    if (partner instanceof Supplier) {
+        message = partner.isInShortList() ? 'Sign a new contract the supplier' : 'Need to evaluate further';
+    }
+    return message;
+}
+```
+
+### 5.2.3、in
+
+in操作符对对象上的一个属性的存在进行安全检查
+```ts
+function signContract(partner: BusinessPartner) : string {
+    let message: string;
+    if ('isCreditAllowed' in partner) {
+        message = partner.isCreditAllowed() ? 'Sign a new contract with the customer' : 'Credit issue';
+    } else {
+        // must be Supplier
+        message = partner.isInShortList() ? 'Sign a new contract the supplier ' : 'Need to evaluate further';
+    }
+    return message;
+}
+```
+
+### 5.2.4、自定义type guard
+
+一个用户定义的类型保护函数是一个简单返回arg是aType的函数：
+```ts
+function isCustomer(partner: any): partner is Customer {
+    return partner instanceof Customer;
+}
 ```
 
 
