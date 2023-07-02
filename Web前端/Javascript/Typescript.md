@@ -450,8 +450,25 @@ type unionType = BusinessPartner | Identity;
 // unionTypeInstance 只需要包含 BusinessPartner 或者 Identity 的其中一个的所有属性 
 const unionTypeInstance: unionType = {
   name: "1234",
-  id: 456
+  credit: 456,
+  id : 10
 };
+// 如下代码会报错: Property 'id' does not exist on type 'BusinessPartner'
+// unionType 是要么满足 BusinessPartner，要么满足 Identity
+console.log(unionTypeInstance.id);
+```
+特殊情况：
+```ts
+// a 是字符串一个特殊情况，那么test1就是一个 a
+type test1 = 'a' & string;
+// 字符串不可能同时是 a 又是 b，test2是个 never
+type test2 = 'a' & 'b';
+// 有效的
+type test3 = 'a' | 'b';
+// 
+type test4 = 'a' | 'b' | 1 & string; 
+// 等价于于
+type test5 = ('a' & string) | ('b' & string) | (1 & string)
 ```
 
 ## 5.2、类型守卫（Type Guard）
@@ -537,6 +554,12 @@ function isCustomer(partner: any): partner is Customer {
 
 
 # 扩展
+
+## 去除符号字段
+
+```
+string & keyof T
+```
 
 ## Optional实现
 

@@ -1,11 +1,41 @@
-# npm
+# 1、npm
+
+## 1.1、全局安装
 
 查看全局的安装包：
 ```
 npm ls -g
 ```
 
-# Node-dev
+## 1.2、npm包管理
+
+在node项目中有一个 package.json 依赖管理
+```json
+"dependencies": {
+    "lodash": "^4.17.21",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.6.1"
+}
+```
+上面版本前面的 `^` 走npm install的时候会自动升级
+
+Semver规范：
+- major：新增不可向后兼容的新功能；
+- Minor：新增可向后兼容的新功能；
+- Patch：修复bug
+
+版本前的符号：（npm install操作时）
+- 符号 `^`：主板号固定，其他版本号更新到最新版；
+- 符号 `~`：主次版本号固定，更新到最新版；
+- 无符号：固定版本号；
+
+锁版本，即无符号，固定版本号；
+- 稳定大于一切；
+- 代码需要可控；
+- 环境需要一致；
+
+# 2、Node-dev
 
 [(Node-dev)-automatically restarts](https://github.com/fgnass/node-dev)
 
@@ -15,7 +45,7 @@ npm ls -g
 - 或者直接使用命令行参数：`--no-notify`
 
 
-# Mac升级NodeJS版本
+# 3、Mac升级NodeJS版本
 
 > 第一步，先查看本机node.js版本：
 

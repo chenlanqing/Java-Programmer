@@ -62,6 +62,7 @@ https://xclient.info/
 - atom
 - worktile
 - sizeup
+- https://arctype.com/
 
 ## 5、homebrew
 
