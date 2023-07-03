@@ -179,6 +179,17 @@ input = 'Hi'; // valid
 input = false; // Compiler error
 ```
 
+## 2.8、never
+
+never类型是一种不包含任何值的类型。正因为如此，你不能给一个never类型的变量分配任何值
+
+通常情况下，你用never类型来表示一个总是抛出错误的函数的返回类型。比如说：
+```ts
+function raiseError(message: string): never {
+    throw new Error(message);
+}
+```
+
 # 3、函数
 
 基本写法：
@@ -552,6 +563,231 @@ function isCustomer(partner: any): partner is Customer {
 }
 ```
 
+## 5.3、类型强转
+
+type casting：将一个变量从一个类型转换为另一个类型，主要有两种方式：
+
+**as**：
+```ts
+let input = document.querySelector('input[type="text"]') as HTMLInputElement;
+let el: HTMLElement;
+el = new HTMLInputElement(); // HTMLInputElement 是 HTMLElement子类
+
+let a: typeA;
+let b = a as typeB;
+```
+
+**<>**：
+```ts
+let input = <HTMLInputElement>document.querySelector('input[type="text"]');
+let a: typeA;
+let b = <typeB>a;
+```
+
+## 5.4、类型断言
+
+type Assertions 指示TypeScript编译器将一个值作为一个指定的类型。它使用as关键字来做到这一点：
+```ts
+expression as targetType
+```
+比如如下例子：
+```ts
+function getNetPrice(price: number, discount: number, format: boolean): number | string {
+    let netPrice = price * (1 - discount);
+    return format ? `$${netPrice}` : netPrice;
+}
+let netPrice = getNetPrice(100, 0.05, true) as string;
+console.log(netPrice);
+let netPrice = getNetPrice(100, 0.05, false) as number;
+console.log(netPrice);
+```
+请注意：一个类型断言并不带有任何类型转换。它只是告诉编译器，为了类型检查的目的，它应该把哪种类型应用于一个值
+
+也可以使用如下方式：
+```ts
+<targetType> value
+// 比如
+let netPrice = <number>getNetPrice(100, 0.05, false);
+```
+注意在react等类库中不要使用`<>`，可能报错信息：
+```
+Cannot assign to read only property 'message' of object 'SyntaxError: /src/01_base_type/05_advanced_type.tsx: Unterminated JSX contents. (25:24)
+```
+
+# 6、泛型
+
+## 6.1、基本介绍
+
+```ts
+function getRandomElement<T>(items: T[]): T {
+    let randomIndex = Math.floor(Math.random() * items.length);
+    return items[randomIndex];
+}
+```
+调用泛型函数：
+```ts
+let numbers = [1, 5, 7, 4, 2, 9];
+let randomEle = getRandomElement<number>(numbers); 
+// 或者直接使用
+let randomEle = getRandomElement(numbers); 
+```
+泛型包含多个类型的：
+```ts
+function merge<U, V>(obj1: U, obj2: V) {
+    return {
+        ...obj1,
+        ...obj2
+    };
+}
+```
+好处：
+- 在编译时利用类型检查；
+- 消除了类型转换；
+- 允许你实现通用算法；
+
+## 6.2、泛型约束
+
+上面的merge例子，比如传如下参数：
+```ts
+let person = merge(
+    { name: 'John' },
+    25
+);
+console.log(person); // { name: 'John' }
+```
+typescript没有报错，为了限定类型，可以使用泛型约束的方式：
+```ts
+function merge<U extends object, V extends object>(obj1: U, obj2: V) {
+    return {
+        ...obj1,
+        ...obj2
+    };
+}
+// 按如下方式调用会报错，提示：Argument of type 'number' is not assignable to parameter of type 'object'.ts(2345)
+let person = merge(
+    { name: 'John' },
+    25
+);
+```
+因为现在merge这个函数只针对 object 类型有效了；
+
+**参数泛型约束**：TypeScript允许你声明一个类型参数受到另一个类型参数的约束
+```ts
+// K 是 T  的属性
+function prop<T, K extends keyof T>(obj: T, key: K) {
+    return obj[key];
+}
+let str = prop({ name: 'John' }, 'name');
+console.log(str); // Jhon
+let str = prop({ name: 'John' }, 'age'); //报错：Argument of type '"age"' is not assignable to parameter of type '"name"'.
+```
+
+## 6.3、泛型类
+
+```ts
+class className<T>{
+    //... 
+}
+class className<K,T>{
+    //...
+}
+class className<T extends TypeA>{
+    //...
+}
+```
+
+## 6.4、泛型接口
+
+描述索引类型的通用接口
+```ts
+interface Options<T> {
+    [name: string]: T
+}
+let inputOptions: Options<boolean> = {
+    'disabled': false,
+    'visible': true
+};
+```
+
+# 7、模块
+
+## 7.1、导出模块
+
+声明一个interface：
+```ts
+// Validator.ts
+interface Validator {
+    isValid(s: string): boolean
+}
+```
+那么上面的 Validator 只能在 Validator.ts 内部使用，对外面来说其实一个private的，如果希望能被外部使用，需要使用 export：
+```ts
+export interface Validator {
+    isValid(s: string): boolean
+}
+// 或者
+interface Validator {
+    isValid(s: string): boolean
+}
+export { Validator }; 
+// 当然也可以重命名：
+export { Validator as StringValidator };
+```
+
+## 7.2、导入模块
+
+```ts
+import { Validator } from './Validator';
+class EmailValidator implements Validator {
+    isValid(s: string): boolean {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(s);
+    }
+}
+export { EmailValidator };
+
+// 或者如下：
+import { Validator as StringValidator } from './Validator';
+class EmailValidator implements StringValidator {
+    isValid(s: string): boolean {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(s);
+    }
+}
+export { EmailValidator };
+```
+
+## 7.3、导入类型
+
+```ts
+// Types.ts
+export type alphanumeric = string | number;
+// import from Types.ts
+import type {alphanumeric} from './Types';
+```
+注意，TypeScript从3.8版本开始支持导入类型语句。在TypeScript 3.8之前，你需要使用导入语句来代替
+```ts
+import {alphanumeric} from './Types';
+```
+
+## 7.4、导入一切
+
+```ts
+import * from 'module_name';
+```
+
+## 7.5、默认导出
+
+TypeScript允许每个模块有一个 default export。要将一个 export 标记为 default export，你可以使用default关键字
+```ts
+import { Validator } from './Validator';
+export default class ZipCodeValidator implements Validator {
+    isValid(s: string): boolean {
+        const numberRegexp = /^[0-9]+$/;
+        return s.length === 5 && numberRegexp.test(s);
+    }
+}
+```
 
 # 扩展
 
