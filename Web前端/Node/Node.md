@@ -288,6 +288,39 @@ Node.js有两种类型的模块：ES模块和CommonJS模块；默认情况下，
 - 当最近的父级`package.json`文件包含一个顶层字段 "type"，其值为 "module "时，以.js结尾的文件。
 - 传入参数：`--eval` 或者 通过STDIN与标志`-input-type=module`连接到节点命令
 
+# 4、express
+
+- [expressjs](https://expressjs.com/)
+
+express 是一个用于node.js的网络框架，使用前需要安装express：`npm install express`
+```js
+const express = require("express"); // 加载 express模块
+const app = express(); // 创建 express实例
+// 定义一个路由处理器，，路径是：/，后面是一个回调函数
+app.get("/", (request, response) => {
+    response.send("Hi there");
+});
+// 监听3000端口
+app.listen(3000, () => {
+    console.log("Listen on the port 3000...");
+});
+```
+
+# 5、process模块
+
+process模块也是node.js的一个核心模块，该模块有 env 属性，包含所有环境变量；
+```sh
+# windows设置环境变量
+SET NODE_ENV=development
+# mac linux设置环境变量
+EXPORT NODE_ENV=development
+```
+读取环境变量：
+```js
+const nodeEnv = process.env.NODE_ENV || 'dev' // 这里设置了，没有设置的话，读取到的环境变量是 undefined
+```
+可以通过环境变量来控制加载的配置或代码，亦或可以控制代码的运行；
+
 
 
 # Node框架
