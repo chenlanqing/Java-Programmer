@@ -1390,7 +1390,9 @@ export default function App() {
 具体代码查看：[useReducer+useContext实现跨级通信](https://gitee.com/chenlanqing/react-basic/blob/master/src/03-hooks/15_useReducer_film.js)
 
 
-## 7.10、自定义hook
+## 7.10、自定义hooks
+
+- [自定义hooks库](https://ahooks.js.org/hooks/use-request/index)
 
 当想在两个函数之间共享逻辑时，会把它提取到第三个函数中。而组件和 Hook 都是函数，所以也同样适用这种方式；
 
@@ -1401,6 +1403,17 @@ export default function App() {
 **自定义 Hook 如何获取独立的 state？**每次调用 Hook，它都会获取独立的 state
 
 可以在多个hook之间传递信息
+
+## 7.11、React-Hooks最佳实践
+
+一个典型的组件都包含：
+- useState 为主的状态管理；
+- useEffect 为主的副作用管理；
+- useCallback 为主的的事件handler；
+- UI不分；
+- 转换函数：用于请求返回数据的转换，或者一些不具有通用性的工具函数；
+
+通过增加文件数来拆分功能模块
 
 # 8、React路由
 

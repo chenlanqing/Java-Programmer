@@ -1,4 +1,12 @@
-# 1、npm
+# 一、Express框架
+
+# 二、NestJS框架
+
+- [NestJS-Introduction](https://docs.nestjs.com/)
+
+# 三、Node工具
+
+## 1、npm
 
 - [npm仓库](https://www.npmjs.com/)
 - [npm包版本语义规范](https://www.javascripttutorial.net/nodejs-tutorial/npm-semantic-versioning/)
@@ -34,11 +42,11 @@ About to write to D:\node-learning\package.json:
 ```
 如果都使用默认值，可以使用：`npm init --yes`
 
-## 1.1、安装新包
+### 1.1、安装新包
 
 ```bash
 npm install <package_name>
-npm i <package_name> # 上面的简写
+npm i <package_name> ## 上面的简写
 ```
 安装完新包之后，会在 `package.json` 中列出来，比如：`npm install express`
 ```json
@@ -55,7 +63,7 @@ npm install <package_name>@version
 比如你安装：`npm install express@4.x`，其会安装4.x的最高版本，比如：`4.18.2（当前express的最高版本号）`
 
 
-## 1.2、开发依赖
+### 1.2、开发依赖
 
 有时，可能想安装一个只在开发环境中运行的软件包，可以在npm安装命令中使用`-save-dev`选项，语法如下：
 ```bash
@@ -71,21 +79,21 @@ npm install <package_name> --save-dev
 }
 ```
 
-## 1.3、全局安装
+### 1.3、全局安装
 
 ```bash
-# 全局安装
+## 全局安装
 npm install <package_name> --global
-npm i <package_name> -g   # 上述方式的简写
+npm i <package_name> -g   ## 上述方式的简写
 
-# 查看全局安装的包
+## 查看全局安装的包
 npm ls -g
-# 查看全局安装目录
+## 查看全局安装目录
 npm config get prefix
 ```
 Mac默认全局安装目录：`/usr/local/lib/node_modules`
 
-## 1.4、npm版本
+### 1.4、npm版本
 
 在node项目中有一个 package.json 依赖管理
 ```json
@@ -118,18 +126,18 @@ npm包的版本要符合Semver规范：`major.minor.patch`
 
 一般开始的版本号是：1.0.0
 
-## 1.5、查看本地安装的包
+### 1.5、查看本地安装的包
 
 ```sh
 npm list
-npm list --depth=0 # 指定深度
-npm list --prod # npm list --production  只显示 dependencies 内的包
-npm list --omit=dev # 替代上面的 npm list --prod
-npm list --dev # 显示 dev-dependencies 内的包
-npm list --include=dev # 替代 npm list --dev
+npm list --depth=0 ## 指定深度
+npm list --prod ## npm list --production  只显示 dependencies 内的包
+npm list --omit=dev ## 替代上面的 npm list --prod
+npm list --dev ## 显示 dev-dependencies 内的包
+npm list --include=dev ## 替代 npm list --dev
 ```
 
-## 1.6、查看包信息
+### 1.6、查看包信息
 
 要查看一个包的信息，通常要到 http://npmjs.com  网站，找到包的名称，并显示其信息，另外在命令行，可以使用：`npm view`，语法：
 ```sh
@@ -137,7 +145,7 @@ npm view <package_name>[@<version>] [<field>?][<.subfield>]
 ```
 `npm view`命令有以下别名`npm info`、`npm show`和`npm v`，不指定版本默认是最新的稳定版本
 
-## 1.7、卸载
+### 1.7、卸载
 
 从当前node项目中移除包
 ```sh
@@ -150,11 +158,11 @@ npm uninstall <package_name>
 - `--save-dev` or `-D` : 移除 devDependencies 下的包.
 - `--save-optional` or `-O`: 移除 optionalDependencies 下的包.
 ```sh
-# 全局卸载
+## 全局卸载
 npm uninstall express --global
 ```
 
-## 1.8、publish
+### 1.8、publish
 
 如何发布软件包到 npm，需要在npm[上创建账号](https://www.npmjs.com/signup)，在创建完工程和代码之后，接下来：
 - 使用`npm login`登录，会提示你输入账号、密码和邮箱；
@@ -162,7 +170,7 @@ npm uninstall express --global
 
 在你将一个包发布到npm注册表之后，其他人可能已经在使用它了。因此，从npm注册表中取消发布软件包通常被认为是不良行为。
 ```sh
-# 取消你发布的包
+## 取消你发布的包
 npm unpublish [<@scope>/]<package_name>[@<version>]
 ```
 将你发布的包或包的版本过期：
@@ -170,7 +178,7 @@ npm unpublish [<@scope>/]<package_name>[@<version>]
 npm deprecate <package_name>[@<version>] <deprecation_message>
 ```
 
-# 2、Node-dev
+## 2、Node-dev
 
 [(Node-dev)-automatically restarts](https://github.com/fgnass/node-dev)
 
@@ -180,7 +188,7 @@ npm deprecate <package_name>[@<version>] <deprecation_message>
 - 或者直接使用命令行参数：`--no-notify`
 
 
-# 3、Mac升级NodeJS版本
+## 3、Mac升级NodeJS版本
 
 > 第一步，先查看本机node.js版本：
 
