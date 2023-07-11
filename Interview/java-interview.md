@@ -5958,6 +5958,16 @@ public class SimpleExecutor extends BaseExecutor {
 
 Cache对象之间的引用顺序为：`SynchronizedCache –> LoggingCache –> SerializedCache –> ScheduledCache –> LruCache –> PerpetualCache`
 
+## 21、N+1查询问题
+
+- [N+1问题](https://medium.com/doctolib/understanding-and-fixing-n-1-query-30623109fe89)
+
+什么是N+1查询问题：当代码执行N个额外的查询语句来获取执行主查询时可以检索到的相同数据时，就会出现N+1查询问题
+
+MyBatis中的N+1问题通常指在执行数据库查询时，由于使用了延迟加载或嵌套查询等方式，导致多次向数据库发送查询请求，造成性能问题的情况；、
+
+解决方案：一般都是批量获取数据
+
 # 十四、数据结构与算法
 
 ## 1、如何判断两个链表是否相交
