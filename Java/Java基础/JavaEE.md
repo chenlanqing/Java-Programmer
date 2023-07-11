@@ -211,7 +211,7 @@ session机制采用的是一种在服务器端保持状态的解决方案.由于
 
 ### 9.4、分布式Session
 
-[分布式Session](../分布式架构/分布式.md#四分布式session)
+[分布式Session](../分布式/分布式.md#四分布式session)
 
 ## 10、Servlet 与 Servlet 容器
 
