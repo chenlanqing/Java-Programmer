@@ -3399,7 +3399,127 @@ finally代码块的编译：复制finally代码块的内容，分别放在`try-c
 
 try-with-resource是Java 7中引入的，提供了更优雅的方式来实现资源的自动释放，自动释放的资源需要是实现了 AutoCloseable 接口的类；
 
-对于实现了 AutoCloseable 接口的资源，建议使用 try-with-resources 来释放资源
+对于实现了 AutoCloseable 接口的资源，建议使用 try-with-resources 来释放资源，try-with-resource 是一个语法糖：比如如下代码：
+```java
+// try...catch 配合 with resource
+public void withResource() throws Exception{
+	try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306")) {
+		System.out.println(connection);
+	} catch (Exception e){
+		e.printStackTrace();
+	}
+}
+// 反编译后如下：
+public void withResource() throws Exception {
+	try {
+		Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306");
+		try {
+			System.out.println(connection);
+		} catch (Throwable var5) {
+			if (connection != null) {
+				try {
+					connection.close();
+				} catch (Throwable var4) {
+					var5.addSuppressed(var4);
+				}
+			}
+			throw var5;
+		}
+		if (connection != null) {
+			connection.close();
+		}
+	} catch (Exception var6) {
+		var6.printStackTrace();
+	}
+}
+```
+再有如下：
+```java
+// try 没有catch
+public void queryData() throws Exception{
+	try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306")) {
+		System.out.println(connection);
+	}
+}
+// 反编译后如下：
+public void queryData() throws Exception {
+	Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306");
+	try {
+		System.out.println(connection);
+	} catch (Throwable var5) {
+		if (connection != null) {
+			try {
+				connection.close();
+			} catch (Throwable var4) {
+				var5.addSuppressed(var4);
+			}
+		}
+		throw var5;
+	}
+	if (connection != null) {
+		connection.close();
+	}
+}
+```
+**如果有多个资源关闭，放在一起，比如下面的代码，其最终效果是多个 try...catch嵌套**
+```java
+public void queryData() throws Exception {
+    try (Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306");
+         PreparedStatement statement = connection.prepareStatement("select * from test");
+         ResultSet rs = statement.executeQuery()) {
+        Array array = rs.getArray(0);
+    }
+}
+// 对应反编译后：
+public void queryData() throws Exception {
+	Connection connection = DriverManager.getConnection("jdbc:mysql://localhost:3306");
+	try {
+		PreparedStatement statement = connection.prepareStatement("select * from test");
+		try {
+			ResultSet rs = statement.executeQuery();
+			try {
+				Array var4 = rs.getArray(0);
+			} catch (Throwable var9) {
+				if (rs != null) {
+					try {
+						rs.close();
+					} catch (Throwable var8) {
+						var9.addSuppressed(var8);
+					}
+				}
+				throw var9;
+			}
+			if (rs != null) {
+				rs.close();
+			}
+		} catch (Throwable var10) {
+			if (statement != null) {
+				try {
+					statement.close();
+				} catch (Throwable var7) {
+					var10.addSuppressed(var7);
+				}
+			}
+			throw var10;
+		}
+		if (statement != null) {
+			statement.close();
+		}
+	} catch (Throwable var11) {
+		if (connection != null) {
+			try {
+				connection.close();
+			} catch (Throwable var6) {
+				var11.addSuppressed(var6);
+			}
+		}
+		throw var11;
+	}
+	if (connection != null) {
+		connection.close();
+	}
+}
+```
 
 # 十三、数组
 
