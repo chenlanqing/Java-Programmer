@@ -283,6 +283,8 @@ Maven settings.xml 使用私服：
 
 # 八、搭建Jenkins
 
+- [jenkins-maven-java-sonar-integration](https://ken.io/note/jenkins-maven-java-sonar-integration)
+
 
 
 # 九、搭建Gitlab
