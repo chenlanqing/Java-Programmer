@@ -190,6 +190,12 @@ function raiseError(message: string): never {
 }
 ```
 
+## 2.9、keyof
+
+TypeScript允许我们遍历某种类型的属性，并通过keyof操作符提取其属性的名称。
+
+keyof操作符可以用于获取某种类型的所有键，其返回类型是联合类型
+
 # 3、函数
 
 基本写法：
@@ -787,6 +793,122 @@ export default class ZipCodeValidator implements Validator {
         return s.length === 5 && numberRegexp.test(s);
     }
 }
+```
+
+# 8、Utility Types
+
+- [Utility Types](https://www.typescriptlang.org/docs/handbook/utility-types.html)
+
+TS 内置的 实用类型，用于类型转换
+
+## 8.1、Awaited<Type>
+
+该类型用于模拟async函数中的await操作，或者promise上的`.then()`方法——具体来说，就是递归展开promise的方式：
+```ts
+type A = Awaited<Promise<string>>;
+//   ^? type A = string
+type B = Awaited<Promise<Promise<number>>>;
+//   ^? type b = nunber
+type C = Awaited<boolean | Promise<number>>;
+//   ^? type c = number | boolean
+```
+
+## 8.2、Partial<Type>
+
+构造一个将type的所有属性设置为可选的类型。此实用程序将返回表示给定类型的所有子集的类型
+```ts
+interface Todo {
+  title: string;
+  description: string;
+}
+type TodoUpdate = Partial<Todo>;
+// TodoUpdate 中 title 和 description 都是可选字段了
+```
+
+## 8.3、Required<Type>
+
+构造由type set为required的所有属性组成的类型。Partial 的反义词。
+```ts
+interface Props {
+  a?: number;
+  b?: string;
+}
+const obj: Props = { a: 5 };
+const obj2: Required<Props> = { a: 5 }; // Property 'b' is missing in type '{ a: number; }' but required in type 'Required<Props>'
+```
+
+## 8.4、Readonly<Type>
+
+构造一个将type的所有属性设置为只读的类型，这意味着不能重新分配构造类型的属性
+```ts
+interface Todo {
+  title: string;
+}
+const todo: Readonly<Todo> = {
+  title: "Delete inactive users",
+};
+todo.title = "Hello"; // Cannot assign to 'title' because it is a read-only property.
+```
+
+## 8.5、Record<Keys, Type>
+
+构造一个对象类型，其属性键为keys，属性值为type。此实用程序可用于将一个类型的属性映射到另一个类型
+```ts
+interface CatInfo {
+  age: number;
+  breed: string;
+}
+type CatName = "miffy" | "boris" | "mordred";
+const cats: Record<CatName, CatInfo> = {
+  miffy: { age: 10, breed: "Persian" },
+  boris: { age: 5, breed: "Maine Coon" },
+  mordred: { age: 16, breed: "British Shorthair" },
+};
+```
+
+## 8.6、Pick<Type, Keys>
+
+通过从type中选取一组属性Keys(字符串字面值或字符串字面值的并集)来构造一个类型
+```ts
+interface Todo {
+  title: string;
+  description: string;
+  completed: boolean;
+}
+type TodoPreview = Pick<Todo, "title" | "completed">;
+const todo: TodoPreview = {
+  title: "Clean room",
+  completed: false,
+};
+```
+
+## 8.7、Omit<Type, Keys>
+
+通过从type中选取所有属性然后移除Keys(字符串字面值或字符串字面值的并集)来构造类型。Pick的反义词。
+```ts
+interface Todo {
+  title: string;
+  description: string;
+  completed: boolean;
+  createdAt: number;
+}
+type TodoInfo = Omit<Todo, "completed" | "createdAt">;
+const todoInfo: TodoInfo = {
+  title: "Pick up kids",
+  description: "Kindergarten closes at 5pm",
+};
+```
+
+## 8.8、Exclude<UnionType, ExcludedMembers>
+
+通过从UnionType中排除可分配给ExcludedMembers的所有联合成员来构造类型：
+```ts
+type T0 = Exclude<"a" | "b" | "c", "a">;
+// type T0 = "b" | "c"
+type T1 = Exclude<"a" | "b" | "c", "a" | "b">;
+// type T1 = "c"
+type T2 = Exclude<string | number | (() => void), Function>;
+// type T2 = string | number
 ```
 
 # 扩展
