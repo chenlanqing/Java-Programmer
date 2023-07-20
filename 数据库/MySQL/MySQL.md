@@ -2159,6 +2159,14 @@ serverTimeZone的作用就是指定web服务器和mysql服务器的会话期间�
 - 将零值日期设置为null：`jdbc:mysql://127.0.0.1/test?zeroDateTimeBehavior=convertToNull`
 - 将零日期将被转换为0001-01-01 00:00:00.0，相当于一年：`jdbc:mysql://127.0.0.1/test?zeroDateTimeBehavior=round`
 
+## 2、关于字符集
+
+- [Case Sensitivity in String Searches](https://dev.mysql.com/doc/refman/8.0/en/case-sensitivity.html)
+- [Character Sets, Collations, Unicode](https://dev.mysql.com/doc/refman/8.0/en/charset.html)
+
+常用的是utf8字符集：
+- utf8_bin：utf8_bin将字符串中的每一个字符用二进制数据存储，区分大小写。
+- utf8_general_ci：utf8_genera_ci不区分大小写，ci为case insensitive的缩写，即大小写不敏感。
 
 # 参考文章
 
