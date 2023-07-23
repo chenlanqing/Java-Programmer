@@ -1311,6 +1311,49 @@ export default function App() {
 - 当前的 context 值由上层组件中距离当前组件最近的 `<ContextInstance.Provider>` 的 value 决定。
 - 当组件上层最近的 `<ContextInstance.Provider>` 更新时，该 Hook 会触发重渲染，并使用最新传递给 `ContextInstance.<Provider> `的 value 值。即使祖先使用 React.memo 或 shouldComponentUpdate，也会在组件本身使用 useContext 时重新渲染
 
+基本用法：
+```jsx
+var GlobalContext = React.createContext();
+function FilmItem(props) {
+  let { name, poster, grade, synopsis } = props;
+  const value = useContext(GlobalContext)
+  return (
+          <div className="filmItem" onClick={() => {
+            value.changeInfo(synopsis)
+          }}>
+            <img src={poster} alt={name} />
+            <h4>{name}</h4>
+            <div>观众评分： {grade}</div>
+          </div>
+  )
+}
+export default function App() {
+  const [filmList, setFilmList] = useState([])
+  const [info, setInfo] = useState("")
+  useEffect(
+          () => {
+            axios.get("/test.json").then(res => {
+              setFilmList(res.data.data.films);
+            })
+          }, []
+  )
+  return (
+          <GlobalContext.Provider value={{
+            info: info,
+            changeInfo: (value) => {
+              setInfo(value)
+            }
+          }}>
+            <div>
+              {
+                filmList.map(item => <FilmItem key={item.filmId} {...item}></FilmItem>)
+              }
+            </div>
+          </GlobalContext.Provider>
+  )
+}
+```
+
 **别忘记 useContext 的参数必须是 context 对象本身：**
 ```jsx
 const ContextInstance = React.createContext(/* values */);
