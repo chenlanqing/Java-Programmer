@@ -1691,7 +1691,55 @@ public class TestApplicationContextInitializer implements ApplicationContextInit
 - 配置文件配置:`context.initializer.classes=com.example.demo.TestApplicationContextInitializer`
 - Spring SPI扩展，在spring.factories中加入`org.springframework.context.ApplicationContextInitializer=com.example.TestApplicationContextInitializer`
 
-## 13.2、BeanFactoryPostProcessor
+## 13.2、BeanFactoryPostProcessor 与 BeanPostProcessor
+
+- [BeanFactoryPostProcessor 和 BeanPostProcessor 有什么区别](https://juejin.cn/post/7252171811566780477)
+
+Spring提供了两种处理bean的扩展接口，分别为BeanPostProcessor和BeanFactoryPostProcessor，这两者在使用上是有区别的；
+
+- BeanPostProcessor：主要针对所有Bean的，允许自定义修改新bean实例的工厂钩子——例如，检查标记接口或用代理包装bean；ApplicationContext可以自动检测其bean定义中的BeanPostProcessor bean，并将这些后处理器应用于随后创建的任何bean
+
+	该接口内部有两个方法：
+	```java
+	public interface BeanPostProcessor {
+		// Bean初始化之前调用的方法，第一个参数是每个bean的实例，第二个参数是每个bean的name或者id属性的值
+		default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
+            // 这个方法在 InitializingBean#afterPropertiesSet 和 init-method 方法之前被触发
+			return bean;
+		}
+		// Bean初始化之后调用后的方法
+		default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+            // 这个方法在 InitializingBean#afterPropertiesSet 和 init-method 方法之后被触发
+			return bean;
+		}
+	}
+	```
+    这两个方法都有一个 bean 对象，说明这里被触发的时候，Spring 已经将 Bean 初始化了，然后才会触发这里的两个方法，我们可以在这里对已经到手的 Bean 进行额外的处理
+	- 如果一个Bean实现了接口 InitializingBean ，那么其方法 afterPropertiesSet 会在 BeanPostProcessor 两个方法之间执行；
+	- 如果一个Bean有自定义的init方法，那么其自定义方法会在BeanPostProcessor两个方法之间执行；
+	- afterPropertiesSet 优先于 init 方法的执行；
+
+	其执行时在Spring容器实例化和依赖注入之后
+
+- BeanFactoryPostProcessor：BeanFactory的处理，管理我们的bean工厂内所有的beandefinition（未实例化）数据；该接口只有一个方法，方法的参数是 ConfigurableListableBeanFactory
+
+	```java
+	@FunctionalInterface
+	public interface BeanFactoryPostProcessor {
+		void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;
+	}
+	```
+	比如我们需要修改某个Bean的定义（Bean 的作用域、属性值等），可以通过 ConfigurableListableBeanFactory.getBeanDefinition进行相关属性的修改，其执行逻辑如下：
+
+	![](image/BeanFactoryPostProcessor-执行过程.png)
+
+**总结：**在 Spring 中，BeanFactoryPostProcessor 和 BeanPostProcessor 是两个不同的接口，它们在 Bean 的生命周期中扮演不同的角色。
+- BeanFactoryPostProcessor 接口用于在 Bean 工厂实例化 Bean 之前对 Bean 的定义进行修改。它可以读取和修改 Bean 的定义元数据，例如修改 Bean 的属性值、添加额外的配置信息等。BeanFactoryPostProcessor 在 Bean 实例化之前执行，用于对 Bean 的定义进行预处理。
+- BeanPostProcessor 接口用于在 Bean 实例化后对 Bean 进行增强或修改。它可以在 Bean 的初始化过程中对 Bean 进行后处理，例如对 Bean 进行代理、添加额外的功能等。BeanPostProcessor 在 Bean 实例化完成后执行，用于对 Bean 实例进行后处理
+
+一句话：BeanFactoryPostProcessor 主要用于修改 Bean 的定义，而 BeanPostProcessor 主要用于增强或修改 Bean 的实例；
+
+### 13.2.1、BeanFactoryPostProcessor
 
 `org.springframework.beans.factory.config.BeanFactoryPostProcessor`
 主要作用：
@@ -1710,6 +1758,8 @@ public class TestBeanFactoryPostProcessor implements BeanFactoryPostProcessor {
     }
 }
 ```
+
+### 13.2.2、BeanPostProcessor
 
 ## 13.3、BeanDefinitionRegistryPostProcessor
 
@@ -1874,7 +1924,19 @@ public class TestInitializingBean implements InitializingBean {
 }
 ```
 
-## 13.12、FactoryBean
+## 13.12、BeanFactory 与 FactoryBean 
+
+- [BeanFactory 和 FactoryBean 有何区别](https://juejin.cn/post/7252552178736054309)
+
+- BeanFactory 是 Spring 框架的核心接口之一，用于管理和获取应用程序中的 Bean 实例。它是一个工厂模式的实现，负责创建、配置和管理 Bean 对象。BeanFactory 是 Spring IoC 容器的基础，它可以从配置元数据（如 XML 文件）中读取 Bean 的定义，并在需要时实例化和提供这些 Bean
+- FactoryBean 是一个特殊的 Bean，它是一个工厂对象，用于创建和管理其他 Bean 的实例。FactoryBean 接口定义了一种创建 Bean 的方式，它允许开发人员在 Bean 的创建过程中进行更多的自定义操作。通过实现 FactoryBean 接口，开发人员可以创建复杂的 Bean 实例，或者在 Bean 实例化之前进行一些额外的逻辑处理
+
+区别在于，BeanFactory 是 Spring 框架的核心接口，用于管理和提供 Bean 实例，而 FactoryBean 是一个特殊的 Bean，用于创建和管理其他 Bean 的实例。FactoryBean 在 Bean 的创建过程中提供更多的自定义能力，允许进行额外的逻辑处理
+
+### 13.12.1、BeanFactory
+
+
+### 13.12.2、FactoryBean
 
 `org.springframework.beans.factory.FactoryBean`
 
