@@ -41,7 +41,87 @@ AbstractAutowireCapableBeanFactory.createBean()
 ├─────────ConversionService.convert()
 ```
 
-# 二、@Async原理
+# 二、@Autowired原理
+
+- [@Autowired如何注入变量](https://juejin.cn/post/7255305597305733177)
+
+## 1、创建bean
+
+```java
+protected Object doCreateBean(String beanName, RootBeanDefinition mbd, @Nullable Object[] args)
+		throws BeanCreationException {
+    //....
+	Object exposedObject = bean;
+	try {
+		populateBean(beanName, mbd, instanceWrapper);
+		exposedObject = initializeBean(beanName, exposedObject, mbd);
+	}
+	//...
+	return exposedObject;
+}
+```
+在这个方法中，首先会创建原始的 Bean 对象，创建出来之后，会调用一个 populateBean 方法，这个方法就是给 Bean 的各个属性赋值的方法，标注了 @Autowired 注解的属性被自动赋值也是在这个方法中完成的。
+
+## 2、populateBean方法
+
+```java
+protected void populateBean(String beanName, RootBeanDefinition mbd, @Nullable BeanWrapper bw) {
+	// Give any InstantiationAwareBeanPostProcessors the opportunity to modify the
+	// state of the bean before properties are set. This can be used, for example,
+	// to support styles of field injection.
+	if (!mbd.isSynthetic() && hasInstantiationAwareBeanPostProcessors()) {
+		for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
+			if (!bp.postProcessAfterInstantiation(bw.getWrappedInstance(), beanName)) {
+				return;
+			}
+		}
+	}
+	//...
+	if (hasInstantiationAwareBeanPostProcessors()) {
+		if (pvs == null) {
+			pvs = mbd.getPropertyValues();
+		}
+        // 会遍历所有相关的后置处理器，尝试通过这些处理器去获取到需要的 value
+		for (InstantiationAwareBeanPostProcessor bp : getBeanPostProcessorCache().instantiationAware) {
+			PropertyValues pvsToUse = bp.postProcessProperties(pvs, bw.getWrappedInstance(), beanName);
+			if (pvsToUse == null) {
+				return;
+			}
+			pvs = pvsToUse;
+		}
+	}
+	boolean needsDepCheck = (mbd.getDependencyCheck() != AbstractBeanDefinition.DEPENDENCY_CHECK_NONE);
+	if (needsDepCheck) {
+		PropertyDescriptor[] filteredPds = filterPropertyDescriptorsForDependencyCheck(bw, mbd.allowCaching);
+		checkDependencies(beanName, mbd, filteredPds, pvs);
+	}
+	if (pvs != null) {
+		applyPropertyValues(beanName, mbd, bw, pvs);
+	}
+}
+```
+AutowiredAnnotationBeanPostProcessor(处理被@Autowired注解修饰的bean并注入)；
+
+## 3、postProcessProperties
+
+```java
+@Override
+public PropertyValues postProcessProperties(PropertyValues pvs, Object bean, String beanName) {
+	InjectionMetadata metadata = findAutowiringMetadata(beanName, bean.getClass(), pvs);
+	try {
+		metadata.inject(bean, beanName, pvs);
+	}
+	catch (BeanCreationException ex) {
+		throw ex;
+	}
+	catch (Throwable ex) {
+		throw new BeanCreationException(beanName, "Injection of autowired dependencies failed", ex);
+	}
+	return pvs;
+}
+```
+
+# 三、@Async原理
 
 - [@Async注解原理剖析](https://www.cnblogs.com/thisiswhy/p/15233243.html)
 
