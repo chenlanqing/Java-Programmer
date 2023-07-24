@@ -3538,41 +3538,7 @@ private void createWebServer() {
 
 ## 40、BeanPostProcessor 与 BeanFactoryPostProcessor
 
-Spring提供了两种处理bean的扩展接口，分别为BeanPostProcessor和BeanFactoryPostProcessor，这两者在使用上是有区别的；
-
-- BeanPostProcessor：主要针对所有Bean的，允许自定义修改新bean实例的工厂钩子——例如，检查标记接口或用代理包装bean；ApplicationContext可以自动检测其bean定义中的BeanPostProcessor bean，并将这些后处理器应用于随后创建的任何bean
-
-	该接口内部有两个方法：
-	```java
-	public interface BeanPostProcessor {
-		// Bean初始化之前调用的方法，第一个参数是每个bean的实例，第二个参数是每个bean的name或者id属性的值
-		default Object postProcessBeforeInitialization(Object bean, String beanName) throws BeansException {
-			return bean;
-		}
-		// Bean初始化之后调用后的方法
-		default Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
-			return bean;
-		}
-	}
-	```
-	- 如果一个Bean实现了接口 InitializingBean ，那么其方法 afterPropertiesSet 会在 BeanPostProcessor 两个方法之间执行；
-	- 如果一个Bean有自定义的init方法，那么其自定义方法会在BeanPostProcessor两个方法之间执行；
-	- afterPropertiesSet 优先于 init 方法的执行；
-
-	其执行时在Spring容器实例化和依赖注入之后
-
-- BeanFactoryPostProcessor：BeanFactory的处理，管理我们的bean工厂内所有的beandefinition（未实例化）数据；该接口只有一个方法，方法的参数是 ConfigurableListableBeanFactory
-
-	```java
-	@FunctionalInterface
-	public interface BeanFactoryPostProcessor {
-		void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException;
-	}
-	```
-	比如我们需要修改某个Bean的定义，可以通过 ConfigurableListableBeanFactory.getBeanDefinition进行相关属性的修改，其执行逻辑如下：
-
-	![](image/BeanFactoryPostProcessor-执行过程.png)
-
+![BeanFactoryPostProcessor 与 BeanPostProcessor区别](../Java/源码分析/框架/spring/SpringBoot源码.md#132BeanFactoryPostProcessor与BeanPostProcessor)
 
 ## 41、ApplicationContextAware 的作用和使用
 
