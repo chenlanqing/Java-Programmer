@@ -2573,6 +2573,7 @@ public class SpringApplicationContextInitializer implements ApplicationContextIn
 
 - [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
 - [Spring循环依赖那些事儿（含Spring详细流程图）](https://mp.weixin.qq.com/s/cqkZEvmmh7jnNt2K5r_lXg)
+- [Spring缓存能解决所有循环依赖吗？](https://juejin.cn/post/7256985832312455228)
 
 涉及到循环依赖问题：
 - 1、什么是循环依赖？
@@ -2602,8 +2603,24 @@ public class SpringApplicationContextInitializer implements ApplicationContextIn
 	弱依赖，spring 4.3之后增加 ObjectProvider 来处理
 
 - setter的循环依赖：包含两种循环依赖问题，`多例（原型）模式下产生的循环依赖问题`和`单例模式下产生的循环依赖问题`
-
-	Spring只解决`scope=singleton`的循环依赖。对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean，因为每一次getBean()时，都会产生一个新的Bean，如此反复下去就会有无穷无尽的Bean产生了，最终就会导致OOM问题的出现；
+	- Spring只解决`scope=singleton`的循环依赖。
+	- 对于`scope=prototype`的bean，Spring 无法解决，直接抛出 BeanCurrentlyInCreationException 异常；因为“prototype”作用域的Bean，Spring容器不进行缓存，因此无法提前暴露一个创建中的Bean，因为每一次getBean()时，都会产生一个新的Bean，如此反复下去就会有无穷无尽的Bean产生了，最终就会导致OOM问题的出现；
+- @Async：带有 @Async 注解的 Bean 产生循环依赖，代码如下，也会报错
+	```java
+	@Service
+	public class AService {
+		@Autowired
+		BService bService;
+		@Async
+		public void hello() {
+		}
+	}
+	@Service
+	public class BService {
+		@Autowired
+		AService aService;
+	}
+	```
 
 ### 2.3、三级缓存解决循环依赖
 
@@ -2653,7 +2670,7 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 
 存储的数据：
 - key:   bean的名称
-- value: bean的实例对象（有代理对象则指的是代理对象，已经创建完毕）
+- value: bean的实例对象（有代理对象则指的是代理对象，已经创建完毕），一级缓存中保存的是所有经历了完整生命周期的 Bean，即一个 Bean 从创建、到属性赋值、到各种处理器的执行等等
 
 **二级缓存：Map<String, Object> earlySingletonObjects**
 
@@ -2663,7 +2680,7 @@ protected Object getSingleton(String beanName, boolean allowEarlyReference) {
 
 存储的数据：
 - key: bean的名称
-- value: bean的实例对象（有代理对象则指的是代理对象，该Bean还在创建中）
+- value: bean的实例对象（有代理对象则指的是代理对象，该Bean还在创建中）,这些 Bean 还没有经历过完整生命周期，Bean 的属性可能都还没有设置，Bean 需要的依赖都还没有注入进来
 
 **三级缓存：Map<String, ObjectFactory<?>> singletonFactories**
 
@@ -2724,35 +2741,78 @@ private CService cService;
 
 **答案：**
 
-Spring通过三级缓存解决了循环依赖，其中一级缓存为单例池（singletonObjects），二级缓存为早期曝光对象earlySingletonObjects，三级缓存为早期曝光对象工厂（singletonFactories）。当A、B两个类发生循环引用时，在A完成实例化后，就使用实例化后的对象去创建一个对象工厂，并添加到三级缓存中，如果A被AOP代理，那么通过这个工厂获取到的就是A代理后的对象，如果A没有被AOP代理，那么这个工厂获取到的就是A实例化的对象。当A进行属性注入时，会去创建B，同时B又依赖了A，所以创建B的同时又会去调用getBean(a)来获取需要的依赖，此时的getBean(a)会从缓存中获取，第一步，先获取到三级缓存中的工厂；第二步，调用对象工工厂的getObject方法来获取到对应的对象，得到这个对象后将其注入到B中。紧接着B会走完它的生命周期流程，包括初始化、后置处理器等。当B创建完后，会将B再注入到A中，此时A再完成它的整个生命周期。至此，循环依赖结束！
+- Spring通过三级缓存解决了循环依赖：其中一级缓存为单例池（singletonObjects），二级缓存为早期曝光对象earlySingletonObjects，三级缓存为早期曝光对象工厂（singletonFactories）。
+- 当A、B两个类发生循环引用时，在A完成实例化后，就使用实例化后的对象去创建一个对象工厂，并添加到三级缓存中，如果A被AOP代理，那么通过这个工厂获取到的就是A代理后的对象，如果A没有被AOP代理，那么这个工厂获取到的就是A实例化的对象。
+- 当A进行属性注入时，会去创建B，同时B又依赖了A，所以创建B的同时又会去调用getBean(a)来获取需要的依赖，此时的getBean(a)会从缓存中获取：
+	- 第一步，先获取到三级缓存中的工厂；
+	- 第二步，调用对象工工厂的getObject方法来获取到对应的对象，得到这个对象后将其注入到B中。
+	- 紧接着B会走完它的生命周期流程，包括初始化、后置处理器等。
+	- 当B创建完后，会将B再注入到A中，此时A再完成它的整个生命周期；至此，循环依赖结束！
 
 **为什么要使用三级缓存呢？二级缓存能解决循环依赖吗？**
 
 如果要使用二级缓存解决循环依赖，意味着所有Bean在实例化后就要完成AOP代理，这样违背了Spring设计的原则，Spring在设计之初就是通过AnnotationAwareAspectJAutoProxyCreator 这个后置处理器来在Bean生命周期的最后一步来完成AOP代理，而不是在实例化后就立马进行AOP代理；
 
+### 2.5、@Lazy注解
 
+- [@Lazy注解如何解决循环依赖问题](https://juejin.cn/post/7257516901844549689)
+- [@Autowired原理](../../源码分析/框架/spring/Spring-Annotation.md#二@Autowired原理)
+
+@Lazy 注解是通过建立一个中间代理层，来破解循环依赖的；加了该注解的对象会被延迟加载，实际上被该注解标记的对象，会自动生成一个代理对象
 
 ## 3、Spring与SpringMVC容器
 
 - [父子容器的关系](https://mp.weixin.qq.com/s/EOwnfUQUhjwCtMWzdkUZRw)
+- [Spring中的父子容器](https://juejin.cn/post/7254498824357773367)
 
 ### 3.1、Spring父子容器的关系
 
-- `Spring`和`SpringMVC`共存时，会有两个容器：一个`SpringMVC`的`ServletWebApplicationContext`为子容器，一个Spring的`RootWebApplicationContext`为父容器。当子容器中找不到对应的Bean会委托于父容器中的Bean。
+- `Spring`和`SpringMVC`共存时，会有两个容器：一个`SpringMVC`的`ServletWebApplicationContext`为子容器，一个Spring的`RootWebApplicationContext`为父容器。当子容器中找不到对应的Bean会委托于父容器中的Bean；子容器可以访问父容器的 Bean，但是父容器不能访问子容器的 Bean
 	* `RootWebApplicationContext`中的`Bean`对`ServletWebApplicationContext`可见，而`ServletWebApplicationContext`中的`Bean`对`RootWebApplicationContext`不可见。
 
 - 如果在父容器中开启了 `@AspectJ` 注解与事务配置，子容器和父容器均加载了所有Bean。造成子容器中的services覆盖了父容器的Services，导致父容器中的动态代理的services不生效，事务也不生效。
 
-    ![](image/Spring父子容器.png)
+    ![](../../源码分析/框架/spring/image/Spring父子容器.png)
 
-### 3.2、如何解决Spring父子容器关系
+### 3.2、本质
+
+父容器和子容器本质上是相互隔离的两个不同的容器，所以允许同名的 Bean 存在。当子容器调用 getBean 方法去获取一个 Bean 的时候，如果当前容器没找到，就会去父容器查找，一直往上找，找到为止。
+
+核心就是 BeanFactory，BeanFactory 有一个子类 HierarchicalBeanFactory，看名字就是带有层级关系的 BeanFactory，只要是 HierarchicalBeanFactory 的子类就能配置父子关系
+
+特殊情况：
+```java
+ClassPathXmlApplicationContext parent = new ClassPathXmlApplicationContext("consumer_beans.xml");
+ClassPathXmlApplicationContext child = new ClassPathXmlApplicationContext("merchant_beans.xml");
+child.setParent(parent);
+child.refresh();
+String[] names1 = child.getBeanNamesForType(org.javaboy.merchant.RoleService.class);
+String[] names2 = child.getBeanNamesForType(org.javaboy.consumer.RoleService.class);
+System.out.println("names1 = " + Arrays.toString(names1));
+System.out.println("names2 = " + Arrays.toString(names2));
+```
+如上，根据类型去查找 Bean 名称的时候，我们所用的是 getBeanNamesForType 方法，这个方法是由 ListableBeanFactory 接口提供的，而该接口和 HierarchicalBeanFactory 接口并无继承关系，所以 getBeanNamesForType 方法并不支持去父容器中查找 Bean，它只在当前容器中查找 Bean
+```java
+ClassPathXmlApplicationContext parent = new ClassPathXmlApplicationContext("consumer_beans.xml");
+ClassPathXmlApplicationContext child = new ClassPathXmlApplicationContext();
+child.setParent(parent);
+child.refresh();
+String[] names = BeanFactoryUtils.beanNamesForTypeIncludingAncestors(child, org.javaboy.consumer.RoleService.class);
+for (String name : names) {
+    System.out.println("name = " + name);
+}
+```
+
+### 3.3、如何解决Spring父子容器关系
 
 可以参考[Spring官方文档](https://docs.spring.io/spring/docs/4.3.16.RELEASE/spring-framework-reference/htmlsingle/#mvc-servlet) 中的`Figure 22.2. Typical context hierarchy in Spring Web MVC`
+
+在 SpringMVC 中，初始化 DispatcherServlet 的时候，会创建出 SpringMVC 容器，并且为 SpringMVC 容器设置 parent
 
 - 子容器包含`Controllers、HandlerMapping、viewResolver`，其他bean都在父容器中；
 - 子容器不加载任何bean，均由父容器加载
 
-### 3.3、Spring容器与Servlet容器
+### 3.4、Spring容器与Servlet容器
 
 Tomcat&Jetty在启动时给每个Web应用创建一个全局的上下文环境，这个上下文就是ServletContext，其为后面的Spring容器提供宿主环境；
 
