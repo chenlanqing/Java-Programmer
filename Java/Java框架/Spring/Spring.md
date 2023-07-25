@@ -2571,9 +2571,9 @@ public class SpringApplicationContextInitializer implements ApplicationContextIn
 
 ## 2、循环依赖问题
 
-- [Spring循环依赖](https://mp.weixin.qq.com/s/ziSZeWlU5me1WMKvoKobbQ)
 - [Spring循环依赖那些事儿（含Spring详细流程图）](https://mp.weixin.qq.com/s/cqkZEvmmh7jnNt2K5r_lXg)
 - [Spring缓存能解决所有循环依赖吗？](https://juejin.cn/post/7256985832312455228)
+- [Spring循环依赖源码分析](https://mp.weixin.qq.com/s/dSRQBSG42MYNa992PvtnJA)
 
 涉及到循环依赖问题：
 - 1、什么是循环依赖？
