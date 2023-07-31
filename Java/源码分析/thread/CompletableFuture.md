@@ -1,8 +1,10 @@
+# 一、使用
+
 JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFuture来解决。支持异步编程；
 
 CompletableFuture 可以解决 Future 获取异步线程执行结果阻塞主线程的问题；
 
-它实现了Future接口，也就是Future的功能特性CompletableFuture也有；除此之外，它也实现了CompletionStage接口，CompletionStage接口定义了任务编排的方法，执行某一阶段，可以向下执行后续阶段。
+它实现了Future接口，也就是Future的功能特性CompletableFuture也有；除此之外，它也实现了 CompletionStage 接口，CompletionStage 接口定义了任务编排的方法，执行某一阶段，可以向下执行后续阶段。
 ```java
 public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
     
@@ -10,14 +12,14 @@ public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
 ```
 CompletableFuture相比于Future最大的改进就是提供了类似观察者模式的回调监听的功能，也就是当上一阶段任务执行结束之后，可以回调你指定的下一阶段任务，而不需要阻塞获取结果之后来处理结果
 
-### 15.1、创建对象
+## 1、创建对象
 
-创建 CompletableFuture 对象主要靠下面代码中的 4 个静态方法，
+常见创建 CompletableFuture 对象：
 ```java
-//使用默认线程池
+// 使用默认线程池
 static CompletableFuture<Void> runAsync(Runnable runnable)
 static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier)
-//可以指定线程池  
+// 可以指定线程池  
 static CompletableFuture<Void> runAsync(Runnable runnable, Executor executor)
 static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier, Executor executor)  
 ```
@@ -37,11 +39,11 @@ public static <U> CompletableFuture<U> supplyAsync(Supplier<U> supplier) {
 
 创建完 CompletableFuture 对象之后，会自动地异步执行 `runnable.run()` 方法或者 `supplier.get()` 方法，对于一个异步操作，你需要关注两个问题：一个是异步操作什么时候结束，另一个是如何获取异步操作的执行结果。因为 CompletableFuture 类实现了 Future 接口，所以这两个问题你都可以通过 Future 接口来解决；
 
-### 15.2、CompletionStage 接口
+## 2、CompletionStage 接口
 
 任务是有时序关系的，比如有串行关系、并行关系、汇聚关系等。
 
-#### 15.2.1、描述串行关系
+### 2.1、描述串行关系
 
 CompletionStage 接口里面描述串行关系，主要是 thenApply、thenAccept、thenRun 和 thenCompose 这四个系列的接口
 - `thenApply` 系列函数里参数 fn 的类型是接口 Function，这个接口里与 CompletionStage 相关的方法是 `R apply(T t)`，这个方法既能接收参数也支持返回值，所以 thenApply 系列方法返回的是CompletionStage。
@@ -60,7 +62,7 @@ CompletionStage<R> thenCompose(fn);
 CompletionStage<R> thenComposeAsync(fn);
 ```
 
-#### 15.2.2、描述 AND 汇聚关系
+### 2.2、描述 AND 汇聚关系
 
 CompletionStage 接口里面描述 AND 汇聚关系，主要是 thenCombine、thenAcceptBoth 和 runAfterBoth 系列的接口，这些接口的区别也是源自 fn、consumer、action 这三个核心参数不同
 ```java
@@ -72,7 +74,7 @@ CompletionStage<Void> runAfterBoth(other, action);
 CompletionStage<Void> runAfterBothAsync(other, action);
 ```
 
-#### 15.2.3、描述 OR 汇聚关系
+### 2.3、描述 OR 汇聚关系
 
 CompletionStage 接口里面描述 OR 汇聚关系，主要是 applyToEither、acceptEither 和 runAfterEither 系列的接口，这些接口的区别也是源自 fn、consumer、action 这三个核心参数不同
 ```java
@@ -84,7 +86,7 @@ CompletionStage runAfterEither(other, action);
 CompletionStage runAfterEitherAsync(other, action);
 ```
 
-#### 15.2.4、异常处理
+### 2.4、异常处理
 
 上面提到的 fn、consumer、action 它们的核心方法都不允许抛出可检查异常，但是却无法限制它们抛出运行时异常，如下面的代码，执行 7/0 就会出现除零错误这个运行时异常。非异步编程里面，我们可以使用 try{}catch{}来捕获并处理异常，那在异步编程里面，异常该如何处理呢？
 ```java
@@ -114,7 +116,9 @@ CompletableFuture<Integer> f0 = CompletableFuture.supplyAsync(() -> (7 / 0))
 System.out.println(f0.join());
 ```
 
-### 15.3、注意点
+## 3、
+
+## 4、注意点
 
 CompletableFuture 在使用异步处理过程中，需要注意异常的处理，因为 CompletableFuture 很多方法都不能抛出异常，如果在异步执行过程中出现了异常，那么异常将被吞掉了，没有办法显示，为了处理异常，可以按照上述的方式来处理：
 ```java
@@ -126,3 +130,15 @@ CompletableFuture.supplyAsync(() -> (7 / 0))
         });
 ```
 使用 exceptionally 或者 whenComplete 来实现来处理异常
+
+# 二、源码分析
+
+## 1、解决问题
+
+CompletableFuture是由Java 8引入的，在Java8之前我们一般通过Future实现异步。
+- Future用于表示异步计算的结果，只能通过阻塞或者轮询的方式获取结果，而且不支持设置回调方法，Java 8之前若要设置回调一般会使用guava的ListenableFuture，回调的引入又会导致臭名昭著的回调地狱（下面的例子会通过ListenableFuture的使用来具体进行展示）。
+- CompletableFuture对Future进行了扩展，可以通过设置回调的方式处理计算结果，同时也支持组合操作，支持进一步的编排，同时一定程度解决了回调地狱的问题
+
+# 参考资料
+
+- [CompletableFuture原理与实践-外卖商家端API的异步化](https://tech.meituan.com/2022/05/12/principles-and-practices-of-completablefuture.html)
