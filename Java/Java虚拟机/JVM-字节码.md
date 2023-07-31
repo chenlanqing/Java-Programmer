@@ -54,6 +54,27 @@ public class Hello {
 
 ## 2.2、Class 文件格式
 
+```class
+ClassFile {
+    u4             magic;
+    u2             minor_version;
+    u2             major_version;
+    u2             constant_pool_count;
+    cp_info        constant_pool[constant_pool_count-1];
+    u2             access_flags;
+    u2             this_class;
+    u2             super_class;
+    u2             interfaces_count;
+    u2             interfaces[interfaces_count];
+    u2             fields_count;
+    field_info     fields[fields_count];
+    u2             methods_count;
+    method_info    methods[methods_count];
+    u2             attributes_count;
+    attribute_info attributes[attributes_count];
+}
+```
+
 ![image](image/class字节码结构.png)
 
 magic、minor_version、major_version、constant_pool_count、constant_pool、access_flag、this_class、super_clas、interfaces_count、interfaces、fields_count、fields、methods_count、methods、attributes_count、attributes；从图中可以看出当需要描述同一类型但数量不定的多个数据时，经常会在其前面使用一个前置的容量计数器来记录其数量，而便跟着若干个连续的数据项，称这一系列连续的某一类型的数据为某一类型的集合；Class 文件中各数据项是按照上表的顺序和数量被严格限定的，每个字节代表的含义、长度、先后顺序都不允许改变；
@@ -66,7 +87,37 @@ magic、minor_version、major_version、constant_pool_count、constant_pool、ac
 ### 2.2.2、constant_pool
 
 major_version(主版本号)之后是常量池的入口，它是 Class 文件中与其他项目关联最多的数据类型，也是占用Class文件空间最大的数据项目之一
-- ①、常量池中主要存放两大类常量：字面量和符号引用
+
+对于 JVM 字节码来说，如果操作数非常小或者很常用的数字 0 之类的，这些操作数是内嵌到字节码中的。如果是字符串常量和较大的整数等，class 文件是把这些操作数存储在一个叫常量池（Constant Pool）的地方，当使用这些操作数时，使用的是常量池数据中的索引位置
+
+Java 虚拟机目前一共定义了 14 种常量类型，这些常量名都以 "CONSTANT" 开头，以 "info" 结尾，如下表所示：
+
+|类型								|标志		|描述					|
+| --------------------------------- | ----------|---------------------- |
+|CONSTANT_Utf8_info					|1			|UTF-8编码的字符串		|
+|CONSTANT_Integer_info				|3			|整型字面量				|
+|CONSTANT_Float_info				|4			|浮点型字面量			|
+|CONSTANT_Long_info					|5			|长整型字面量			|
+|CONSTANT_Double_info				|6			|双精度浮点型字面量		|
+|CONSTANT_Class_info				|7			|类或接口的符号引用		|
+|CONSTANT_String_info				|8			|字符串类型字面量		|
+|CONSTANT_Fieldref_info				|9			|字段的符号引用 		|
+|CONSTANT_Methodref_info			|10			|类中方法的符号引用		|
+|CONSTANT_InterfaceMethodref_info	|11			|接口中方法的符号引用	|
+|CONSTANT_NameAndType_info			|12			|字段，方法的部分符号引用|
+|CONSTANT_Methodhandle_info			|15			|表示方法句柄			|
+|CONSTANT_MethodType_info			|16			|标识方法类型			|
+|CONSTANT_InvokeDynamic_info		|18			|表示一个动态方法调用点	|
+
+每个常量项都由两部分构成：表示类型的 tag 和表示内容的字节数组，如下所示：
+```
+cp_info {
+    u1 tag;
+    u1 info[];
+}
+```
+
+- 常量池中主要存放两大类常量：字面量和符号引用
 	- 字面量比较接近于Java层面的常量概念，如文本字符串、被声明为final的常量值等；
 	- 符号引用总结起来则包括了下面三类常量：
 		- 类和接口的全限定名（即带有包名的 Class 名，如：java.lang.String）
@@ -75,27 +126,10 @@ major_version(主版本号)之后是常量池的入口，它是 Class 文件中�
 
 	JVM是在加载Class文件的时候才进行的动态链接，也就是说这些字段和方法符号引用只有在运行期转换后才能获得真正的内存入口地址；当虚拟机运行时，需要从常量池中获得对应的符号引用，再在类加载过程中的解析阶段将其替换为直接引用，并翻译到具体的内存地址中
 
-- ②、符号引用与直接引用的区别与关联：
+- 符号引用与直接引用的区别与关联：
 	- 符号引用：符号引用是以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义的定位到目标即可，符号引用与虚拟机实现的内存布局无关，引用的目标并不一定已经加载到内存中;
 	- 直接引用：直接引用可以是直接指向目标的指针，相对偏移量或者是一个能间接定位到目标的句柄；直接引用是与虚拟机实现的内存布局相关的，同一个符号引用在不同的虚拟机实例上翻译出来的直接引用一般不会相同;如果有了直接引用，那说明引用的目标必定已经存在于内存中了；
-- ③、常量池中的每一项常量都是一个表，共有11种(JDK1.7之前)结构各不相同的表结构数据，每种表开始的第一位是一个u1类型的标志位（1-12，缺少2），代表当前这个常量属于的常量类型，在JDK1.7之后，为了更好的支持动态语言调用，又额外的增加了3中
 
-	|类型								|标志		|描述					|
-	| --------------------------------- | ----------|---------------------- |
-	|CONSTANT_Utf8_info					|1			|UTF-8编码的字符串		|
-	|CONSTANT_Integer_info				|3			|整型字面量				|
-	|CONSTANT_Float_info				|4			|浮点型字面量			|
-	|CONSTANT_Long_info					|5			|长整型字面量			|
-	|CONSTANT_Double_info				|6			|双精度浮点型字面量		|
-	|CONSTANT_Class_info				|7			|类或接口的符号引用		|
-	|CONSTANT_String_info				|8			|字符串类型字面量		|
-	|CONSTANT_Fieldref_info				|9			|字段的符号引用 		|
-	|CONSTANT_Methodref_info			|10			|类中方法的符号引用		|
-	|CONSTANT_InterfaceMethodref_info	|11			|接口中方法的符号引用	|
-	|CONSTANT_NameAndType_info			|12			|字段，方法的部分符号引用|
-	|CONSTANT_Methodhandle_info			|15			|表示方法句柄			|
-	|CONSTANT_MethodType_info			|16			|标识方法类型			|
-	|CONSTANT_InvokeDynamic_info		|18			|表示一个动态方法调用点	|
 
 ### 2.2.3、access_flag
 
@@ -103,7 +137,7 @@ major_version(主版本号)之后是常量池的入口，它是 Class 文件中�
 
 |标志名称				|标志值			 | 含义|
 |----------------------|---------------|---------------------------------------|
-|ACC_PIBLIC			   	|0x0001			|是否为public|
+|ACC_PUBLIC			   	|0x0001			|是否为public|
 |ACC_FINAL				|0x0010			|是否被声明为final，只有类可以设置|
 |ACC_SUPER				|0x0020			|是否允许使用invokespecial字节码指令的新语义|
 |ACC_INTERFACE			|0x0200			|标识是一个接口|
@@ -130,9 +164,17 @@ major_version(主版本号)之后是常量池的入口，它是 Class 文件中�
 |u2		|		descriptor_index|	1   |
 |u2		|		attributes_count|	1   |
 |Attribute_info	|attributes_count|	attributes_count|
-
+```
+field_info {
+    u2             access_flags; 
+    u2             name_index;
+    u2             descriptor_index;
+    u2             attributes_count;
+    attribute_info attributes[attributes_count];
+}
+```
 - access_flags：与类中的 access_flag非常类似
-- name_index和descriptor_index都是对常量池的引用，分别代表字段的简单名称及字段和方法的描述符；注意：简单名称，描述符，全限定名：
+- name_index和descriptor_index都是对常量池的引用，分别代表（字段名的索引值，指向常量池的的字符串常量）和 （字段描述符的索引，指向常量池的字符串常量）；注意：简单名称，描述符，全限定名：
 	```
 	==> 简单名称：指没有类型或参数修饰的方法或字段名称
 		private final static int m 	==> m
@@ -154,6 +196,7 @@ major_version(主版本号)之后是常量池的入口，它是 Class 文件中�
 	```
 	用方法描述符描述方法时，按照先参数后返回值的顺序描述，参数要按照严格的顺序放在一组小括号内。字段表包含的固定数据项目到descriptor_index为止就结束了，但它之后还紧跟着一个属性表集合用于存储一些额外的信息<br>
 	★ 注意：字段表集合中不会列出从父类或接口中继承而来的字段，但有可能列出原本Java代码中不存在的字段；比如：比如在内部类中为了保持对外部类的访问性，会自动添加指向外部类实例的字段；
+- attributes_count、attribute_info：表示属性的个数和属性集合。
 
 ### 2.2.6、methods
 
