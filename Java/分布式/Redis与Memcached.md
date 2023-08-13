@@ -2685,4 +2685,5 @@ min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
 - [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 - [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
 - [Redis容量估算](http://www.redis.cn/redis_memory/)
+- [Redis工具-AnotherRedisDesktopManager](https://github.com/qishibo/AnotherRedisDesktopManager)
 
