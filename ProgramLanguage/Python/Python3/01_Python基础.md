@@ -38,7 +38,15 @@
 
 在Mac和Linux上是可以的，方法是在.py文件的第一行加上：`#!/usr/bin/env python3`
 
-# 二、Python数据类型
+## 5、Mac中Python安装目录
+
+- Mac系统自带python路径为`/System/Library/Frameworks/Python.framework/Version` 这里可能会有多个python版本，里面Current存放系统当前python版本，进入`Current/bin`，在终端输入`./python --version`即可查看系统当前python版本（注：若使用python --version命令是查看用户当前python版本而不是系统python版本）
+
+- HomeBrew安装python路径为`/usr/local/Cellar/python` 里面存放HomeBrew所安装版本，进入`2.7.13/bin`，在终端输入`./python --version` 即可查看用户当前使用的python版本。如果使用brew工具正确安装python的情况下，用户当前python版本会是新安装的python
+
+- 系统命令默认路径在`/usr/bin`，用户命令默认路径在`/usr/local/bin`（brew安装的命令默认在这个路径下）。如果存在相同的命令，则会依据`/etc/paths` 文件中的环境变量顺序（前面优先于后面）依次查找，查看环境变量也可以在终端输入`echo $PATH` 查看，遵循左面路径优先于右面路径
+
+# 二、数据类型
 
 ## 1、整数
 
@@ -169,6 +177,18 @@ print(str[:4]) # Pyth
 - `or`：运算是或运算，只要其中有一个为 True，or 运算结果就是 True。
 - `no`t：运算是非运算，它是一个单目运算符，把 True 变成 False，False 变成 True。
 
+可以通过 bool() 函数确认表达式是 True 还是 False
+```py
+>>> bool('Hi')
+True
+>>> bool('')
+False
+>>> bool(100)
+True
+>>> bool(0)
+False
+```
+
 在Python中，以下表示`False`：
 - 0
 - 空字符串：`''`
@@ -177,10 +197,36 @@ print(str[:4]) # Pyth
 - empty list `[]`
 - empty tuple `()`
 - empty dictionary `{}`
-	
+
 ## 5、空值
 
 空值是Python里一个特殊的值，用None表示。None不能理解为0，因为0是有意义的，而None是一个特殊的空值。此外，Python还提供了列表、字典等多种数据类型，还允许创建自定义数据类型；
+
+## 6、类型转换
+
+比如在Python交互环境，通过 input() 获取到的数据都是字符串，如果要将字符串转换为数字，需要使用 int() 函数。更确切地说，int() 函数将字符串转换为整数。
+```py
+price = input('Enter the price ($):')
+tax = input('Enter the tax rate (%):')
+net_price = int(price) * int(tax) / 100
+print(f'The net price is ${net_price}')
+```
+其他的类型转换函数：
+- float(str)：将一个字符串转换为浮点数.
+- bool(val) ：将一个值转换为 True 或 False.
+- str(val)：返回字符串的表示
+
+**获取数据类型：**
+```py
+>>> type(100)
+<class 'int'>
+>>> type(2.0)
+<class 'float'>
+>>> type('Hello')
+<class 'str'>
+>>> type(True)
+<class 'bool'>
+```
 
 # 三、输出与输入语句
 
@@ -217,6 +263,15 @@ Michael
 # 四、注释
 
 `#`为注释，如果多行注释，可以使用多行字符串表示
+```py
+def increase(salary, percentage, rating):
+    """ increase salary base on rating and percentage
+    rating 1 - 2 no increase
+    rating 3 - 4 increase 5%
+    rating 4 - 6 increase 10%
+    """
+```
+使用多行字符串表示注释
 
 # 五、变量与常量
 
@@ -230,7 +285,7 @@ Michael
 		
 ## 2、常量
 
-常用全部大写的变量名表示常量
+Python 不支持常量，要解决这个问题，可以使用大写字母来命名变量，以表示该变量应被视为常量
 
 # 六、运算
 
