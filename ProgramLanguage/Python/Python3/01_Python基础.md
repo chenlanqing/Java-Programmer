@@ -287,83 +287,31 @@ def increase(salary, percentage, rating):
 
 Python 不支持常量，要解决这个问题，可以使用大写字母来命名变量，以表示该变量应被视为常量
 
-# 六、运算
+# 六、运算符
 
-- 和数学运算不同的地方是：Python的整数运算结果仍然是整数，浮点数运算结果仍然是浮点数，整数和浮点数混合运算的结果就变成浮点数了；
+和数学运算不同的地方是：Python的整数运算结果仍然是整数，浮点数运算结果仍然是浮点数，整数和浮点数混合运算的结果就变成浮点数了；
 
-- `n ** x`：表示n的x次方，如:`5**2表示5的平方，5**5:表示5的5次方`；
+`n ** x`：表示n的x次方，如:`5**2表示5的平方，5**5:表示5的5次方`；
 
-- python中除法两种形式：`10 / 3`，`10 // 3 取结果的整数部分`；
+python中除法两种形式：`10 / 3`，`10 // 3 取结果的整数部分`；
 
-# 九、列表
+## 1、比较运算符
 
-list，Python内置的一种数据类型是列表
-```python
-classmates = ['Michael'， 'Bob'， 'Tracy']
-list(['Apple'，'Orange'])
+6个比较运算符： `< 、 <= 、 > 、 >= 、 == 、 !=`
+
+## 2、逻辑运算符
+
+- and: 两个都为 True 结果为 True
+- or: 两个都为 False 结果为 False
+- not: not 运算符只适用于一个条件。它将该条件的结果反转，True 变为 False，False 变为 True。
+```py
+>>> price = 9.99
+>>> not price > 10
+True
 ```
-- list是一种有序的集合，可以随时添加和删除其中的元素，list是可变的
-- 由于Python是动态语言，所以list中包含的元素并不要求都必须是同一种数据类型；使用len()可以获取list元素的个数
-- 按照索引访问list，当索引超出了范围时，Python会报一个IndexError错误；可以以负数作为索引，倒序获取集合的值；`"-1"`表示获取最后一个元素
-	`·`classmates[-1] => Tracy`
-- list中添加新元素
-	```python
-	# list.append():把新的元素添加到 list 的尾部
-	>>>classmates = ['Michael'， 'Bob'， 'Tracy']
-	>>>classmates.append('Adam')
-	===>['Michael'， 'Bob'， 'Tracy'， 'Adam']
-	# list.insert():接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
-	>>> classmates.insert(1， 'Jack')
-	['Michael'， 'Jack'， 'Bob'， 'Tracy'， 'Adam']
-	```
-- list中删除元素
-	- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`
-	- list.pop(index)：删除某个位置上的元素，并返回该元素；`classmates.pop(1) ===> 'Jack'`
-- list中替换元素：对list中的某一个索引赋值，就可以直接用新的元素替换掉原来的元素，list包含的元素个数保持不变；
-- 对list进行切片:即取一个list部分数据(tuple也可以进行切片操作)
-	```python
-	# Slice
-	L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-	# L[0:3]:从索引0开始取，直到(不包括)索引3为止，即索引0，1，2，正好是3个元素
-	L[0:3] ===> ['Adam'， 'Lisa'， 'Bart']
-	# 如果第一个索引是0，还可以省略：
-	L[:3]  ===> ['Adam'， 'Lisa'， 'Bart']
-	# 只用一个 : ，表示从头到尾：
-	L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-	```
-	注意：切片操作还可以指定第三个参数：第三个参数表示每N个取一个
-	`L[::2] ===> ['Adam'， 'Bart']`
-	- 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
-	- 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
-		
-# 十、tuple类型
-tuple类型一旦初始化就不能修改
+优先级： not > and > or
 
-`classmates = ('Michael'， 'Bob'， 'Tracy')`
-
-- `tuple`是另一种有序的列表，中文翻译为`元组`。`tuple` 和 `list` 非常类似，但是，`tuple`一旦创建完毕，就不能修改了：`t = ('Adam'，'Lisa'，'Bart')`；tuple一旦创建完毕，就不能修改了
-- 获取 tuple 元素的方式和 list 是一模一样的，我们可以正常使用 t[0]，t[-1]等索引方式访问元素，但是不能赋值成别的元素
-- 创建单元素tuple:
-
-	`t = (1) # ==> 1`：t 不是 tuple ，而是整数1。为什么呢？
-
-	`()`既可以表示tuple，也可以作为括号表示运算的优先级，`(1)`被Python解释器计算出结果 1，导致我们得到的不是tuple，而是整数 1
-	Python 规定，单元素 tuple 要多加一个逗号`“,”`，t = (1,) # ==>(1,)`
-
-- `可变`的tuple：
-
-	tuple所谓的“不变”是说：tuple的每个元素，指向永远不变。即指向'a'，就不能改成指向'b'，指向一个list，就不能改成指向其他对象，但指向的这个list本身是可变的！
-
-	理解了“指向不变”后，要创建一个内容也不变的tuple怎么做？那就必须保证tuple的每一个元素本身也不能变，如:
-	```python
-	t = ('a',， 'b', ['A', 'B'])
-	L = t(2)
-	L[0] = 'X'
-	L[1] = 'Y'
-	('a', 'b', ['X', 'Y'])
-	```
-			
-# 十一、条件判断和循环
+# 七、条件判断和循环
 
 ## 1、if语句
 
@@ -381,9 +329,9 @@ tuple类型一旦初始化就不能修改
 
 - `if...else....`
 	```python
-	if :
+	if condition:
 		....
-	else :
+	else:
 		....
 	```
 - `if-elif-else`
@@ -403,8 +351,32 @@ tuple类型一旦初始化就不能修改
 		print('True')
 	```
 	只要x是非零数值、非空字符串、非空list等，就判断为True，否则为False
-		
-## 2、for语句
+
+## 2、三目运算符（Ternary operator）
+
+`value_if_true if condition else value_if_false`
+
+三元运算符对条件进行评估。如果结果为 True，则返回 value_if_true。否则，返回 value_if_false，等价于：
+```py
+if condition:
+	value_if_true
+else:
+	value_if_false
+```
+比如：
+```py
+ticket_price = 20 if int(age) >= 18 else 5 # 意思是如果 age >=18 ticket_price = 20，否则 ticket_price = 5
+```
+
+## 3、for语句
+
+基本语法：
+```py
+# range(n) 从 0 开始生成一个包含 n 个整数的序列。它将数值递增一个，直到达到 n； range(start, stop) 可以指定起始和结束
+# range(start, stop, step) 指定步长（step）
+for index in range(n):
+    statement
+```
 
 遍历一个集合
 ```python
@@ -416,7 +388,13 @@ name 这个变量是在 for 循环中定义的，意思是，依次取出list中
 
 `range()`函数，可以生成一个整数序列，再通过list()函数可以转换为list；`range(5)`生成的序列是从0开始小于5的整数：`list(range(5)) ==> [0，1，2，3，4]`
 	
-## 3、while循环
+## 4、while循环
+
+语法
+```py
+while condition:  
+   body
+```
 
 要从 0 开始打印不大于 N 的整数：
 ```python
@@ -426,116 +404,53 @@ while x < N:
 	print x
 	x = x + 1
 ```
-
 break 退出循环：用 for 循环或者 while 循环时，如果要在循环体内直接退出循环，可以使用 break 语句
 
 continue 继续循环：跳过后续循环代码，继续下一次循环
 
-# 十二、Dict 与 Set 类型
+## 5、pass
 
-## 1、dict类型
-`dict([('sape'， 4139)， ('guido'， 4127)， ('jack'， 4098)])`
+举个例子：
+```py
+counter = 1
+max = 10
+if counter <= max:
+    counter += 1
+else:
+    # implement later
+```
+在上面的 else 块中，还没有任何代码，可能后续会补充；如果你运行当前代码，会报错：
+```
+SyntaxError: unexpected EOF while parsing
+```
+为了解决上述问题，你可以使用 pass：
+```py
+counter = 1
+max = 10
+if counter <= max:
+    counter += 1
+else:
+    pass
+```
+当运行包含 pass 语句的代码时，Python 解释器会将 pass 语句视为一条语句。因此，它不会发出语法错误。
 
-- 花括号`{}` 表示这是一个dict，然后按照 key: value， 写出来即，最后一个 key: value 的逗号可以省略
-	`len()`----计算集合的大小
-	```python
-	d = {
-		'Adam': 95，
-		'Lisa': 85，
-		'Bart': 59
-	}
-	```
+pass 可以用在 if、while、for、function、class 中；
 
-- 可以使用`d[key]`形式来查找对应的 value；
-
-	***注意: 通过 key 访问 dict 的value，只要 key 存在，dict就返回对应的value.如果key不存在.会直接报错:`KeyError`***
-
-	避免 `KeyError`:
-	- 先判断一下 key 是否存在，用 in 操作符：
-		```python
-		if 'Paul' in d:
-			print d['Paul']
-		```
-	- 使用dict本身提供的一个 get 方法，在Key不存在的时候，返回None，也可以自己指定返回的值：`d.get('Thomas', -1)`
-	- 要删除一个key，用pop(key)方法，对应的value也会从dict中删除：
-
-- dict特点
-	- dict查找速度快，无论dict有10个元素还是10万个元素，查找速度都一样.而list的查找速度随着元素增加而逐渐下降。
-		- dict的缺点是占用内存大，还会浪费很多内容；list正好相反，占用内存小，但是查找速度慢；
-		- 由于dict是按 key 查找，所以:在一个dict中，key不能重复
-	- dict存储的key-value序对是没有顺序的；不能用dict存储有序的集合，dict内存数据的顺序和key的放入顺序无关.
-	- 作为 key 的元素必须不可变，Python的基本类型如字符串、整数、浮点数都是不可变的，都可以作为 key；但是list是可变的，就不能作为 key；dict的作用是建立一组 key 和一组 value 的映射关系，dict的key是不能重复的
-		- 对于不变对象来说，调用对象自身的任意方法，也不会改变该对象自身的内容。
-		- 相反，这些方法会创建新的对象并返回，这样，就保证了不可变对象本身永远是不可变的
-
-- 更新dict：直接赋值，如果存在相同的key，则替换以前的值；
-	
-- 迭代dict的value：用 for 循环直接迭代 dict，可以每次拿到dict的一个key，如果希望迭代 dict 的values的
-
-	`values()方法`：把dict转换成一个包含所有value的list
-	```python
-	d = { 'Adam': 95， 'Lisa': 85， 'Bart': 59 }
-	print d.values()
-	# dict_values([59， 70， 61， 91， 81])
-	for v in d.values():
-		print v
-	# 85
-	# 95
-	# 59
-	```		
-- 迭代dict的 key 和 value
-
-	`items()`：把dict对象转换成了包含tuple的list，我们对这个list进行迭代，可以同时获得key和value
-	```python
-	d = { 'Adam': 95， 'Lisa': 85， 'Bart': 59 }
-	print d.items()
-	# dict_items([('E'， 59)， ('C'， 70)， ('D'， 61)， ('A'， 91)， ('B'， 81)])
-	for key， value in d.items():
-		print key， ':'， value				
-	#Lisa : 85
-	#Adam : 95
-	#Bart : 59
-	```
-
-## 2、Set类型
-
-- set 持有一系列元素，元素没有重复，而且是无序的，这点和 dict 的 key很像；set会自动去掉重复的元素；
-- 创建 set 的方式是调用 set() 并传入一个 list，list的元素将作为set的元素；
-	```
-	set(['A'，'B'，'C'])；
-	或者：
-	basket = {'Apple'，'Banana'，'Orange'，'Apple'}
-	```
-- 获取set元素: 访问 set中的某个元素实际上就是判断一个元素是否在set中：`'A' in set`；元素区分大小写；
-- set的特点
-	- set的内部结构和dict很像，唯一区别是不存储value；
-	- set存储的元素和dict的key类似，必须是不变对象；
-	- set存储的元素也是没有顺序的
-- 遍历set：直接使用 for 循环可以遍历 set 的元素
-	```
-	s = set(['Adam'， 'Lisa'， 'Bart'])
-	for name in s:
-	```
-- 更新set集合：
-	- 添加元素时，用set的add()方法：如果添加的元素已经存在于set中，add()不会报错，但是不会加进去了
-	- 删除set中的元素时，用set的remove()方法：如果删除的元素不存在set中，remove()会报错；因此使用remove()前需要判断；
-		
-# 十三、函数
+# 八、函数
 
 引用 python 内置函数，需要导入:[import](http://docs.python.org/3/library/functions.html)
 
 ## 1、定义函数
 
-函数名其实就是指向一个函数对象的引用，完全可以把函数名赋给一个变量，相当于给这个函数起了一个“别名”，定义一个函数要使用 def 语句，依次写出函数名、括号、括号中的参数和冒号:，然后，在缩进块中编写函数体，函数的返回值用 return 语句返回
+函数名其实就是指向一个函数对象的引用，完全可以把函数名赋给一个变量，相当于给这个函数起了一个“别名”，定义一个函数要使用 def 语句，依次写出函数名、括号、括号中的参数和`冒号:`，然后，在缩进块中编写函数体，函数的返回值用 return 语句返回
 
-注意：如果没有return语句，函数执行完毕后也会返回结果，只是结果为 None；函数执行完毕也没有return语句时，自动return None。
-
-```python
-def my_abs(x):
-	return
+注意：如果没有return语句，函数执行完毕后也会返回结果，只是结果为 None；函数执行完毕也没有return语句时，自动 return None。
+```py
+def greet(name):
+    """ Display a greeting to users """
+    print(f"Hi {name}")
 ```
-
-- 参数检查：数据类型检查可以用内置函数`isinstance()`实现，如：`isinstance(x， (int， float))`
+- 参数检查：数据类型检查可以用内置函数`isinstance()`实现，如：`isinstance(x, (int, float))`
 
 ## 2、内置的转换函数
 
@@ -758,6 +673,165 @@ if not isinstance(x， (int， float)):
 - 命名的关键字参数是为了限制调用者可以传入的参数名，同时可以提供默认值。定义命名的关键字参数不要忘了写分隔符`*`，否则定义的将是位置参数
 			
 
+
+# 九、列表
+
+list，Python内置的一种数据类型是列表
+```python
+classmates = ['Michael'， 'Bob'， 'Tracy']
+list(['Apple'，'Orange'])
+```
+- list是一种有序的集合，可以随时添加和删除其中的元素，list是可变的
+- 由于Python是动态语言，所以list中包含的元素并不要求都必须是同一种数据类型；使用len()可以获取list元素的个数
+- 按照索引访问list，当索引超出了范围时，Python会报一个IndexError错误；可以以负数作为索引，倒序获取集合的值；`"-1"`表示获取最后一个元素
+	`·`classmates[-1] => Tracy`
+- list中添加新元素
+	```python
+	# list.append():把新的元素添加到 list 的尾部
+	>>>classmates = ['Michael'， 'Bob'， 'Tracy']
+	>>>classmates.append('Adam')
+	===>['Michael'， 'Bob'， 'Tracy'， 'Adam']
+	# list.insert():接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
+	>>> classmates.insert(1， 'Jack')
+	['Michael'， 'Jack'， 'Bob'， 'Tracy'， 'Adam']
+	```
+- list中删除元素
+	- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`
+	- list.pop(index)：删除某个位置上的元素，并返回该元素；`classmates.pop(1) ===> 'Jack'`
+- list中替换元素：对list中的某一个索引赋值，就可以直接用新的元素替换掉原来的元素，list包含的元素个数保持不变；
+- 对list进行切片:即取一个list部分数据(tuple也可以进行切片操作)
+	```python
+	# Slice
+	L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
+	# L[0:3]:从索引0开始取，直到(不包括)索引3为止，即索引0，1，2，正好是3个元素
+	L[0:3] ===> ['Adam'， 'Lisa'， 'Bart']
+	# 如果第一个索引是0，还可以省略：
+	L[:3]  ===> ['Adam'， 'Lisa'， 'Bart']
+	# 只用一个 : ，表示从头到尾：
+	L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
+	```
+	注意：切片操作还可以指定第三个参数：第三个参数表示每N个取一个
+	`L[::2] ===> ['Adam'， 'Bart']`
+	- 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
+	- 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
+		
+# 十、tuple类型
+tuple类型一旦初始化就不能修改
+
+`classmates = ('Michael'， 'Bob'， 'Tracy')`
+
+- `tuple`是另一种有序的列表，中文翻译为`元组`。`tuple` 和 `list` 非常类似，但是，`tuple`一旦创建完毕，就不能修改了：`t = ('Adam'，'Lisa'，'Bart')`；tuple一旦创建完毕，就不能修改了
+- 获取 tuple 元素的方式和 list 是一模一样的，我们可以正常使用 t[0]，t[-1]等索引方式访问元素，但是不能赋值成别的元素
+- 创建单元素tuple:
+
+	`t = (1) # ==> 1`：t 不是 tuple ，而是整数1。为什么呢？
+
+	`()`既可以表示tuple，也可以作为括号表示运算的优先级，`(1)`被Python解释器计算出结果 1，导致我们得到的不是tuple，而是整数 1
+	Python 规定，单元素 tuple 要多加一个逗号`“,”`，t = (1,) # ==>(1,)`
+
+- `可变`的tuple：
+
+	tuple所谓的“不变”是说：tuple的每个元素，指向永远不变。即指向'a'，就不能改成指向'b'，指向一个list，就不能改成指向其他对象，但指向的这个list本身是可变的！
+
+	理解了“指向不变”后，要创建一个内容也不变的tuple怎么做？那就必须保证tuple的每一个元素本身也不能变，如:
+	```python
+	t = ('a',， 'b', ['A', 'B'])
+	L = t(2)
+	L[0] = 'X'
+	L[1] = 'Y'
+	('a', 'b', ['X', 'Y'])
+	```
+			
+
+# 十二、Dict 与 Set 类型
+
+## 1、dict类型
+`dict([('sape'， 4139)， ('guido'， 4127)， ('jack'， 4098)])`
+
+- 花括号`{}` 表示这是一个dict，然后按照 key: value， 写出来即，最后一个 key: value 的逗号可以省略
+	`len()`----计算集合的大小
+	```python
+	d = {
+		'Adam': 95，
+		'Lisa': 85，
+		'Bart': 59
+	}
+	```
+
+- 可以使用`d[key]`形式来查找对应的 value；
+
+	***注意: 通过 key 访问 dict 的value，只要 key 存在，dict就返回对应的value.如果key不存在.会直接报错:`KeyError`***
+
+	避免 `KeyError`:
+	- 先判断一下 key 是否存在，用 in 操作符：
+		```python
+		if 'Paul' in d:
+			print d['Paul']
+		```
+	- 使用dict本身提供的一个 get 方法，在Key不存在的时候，返回None，也可以自己指定返回的值：`d.get('Thomas', -1)`
+	- 要删除一个key，用pop(key)方法，对应的value也会从dict中删除：
+
+- dict特点
+	- dict查找速度快，无论dict有10个元素还是10万个元素，查找速度都一样.而list的查找速度随着元素增加而逐渐下降。
+		- dict的缺点是占用内存大，还会浪费很多内容；list正好相反，占用内存小，但是查找速度慢；
+		- 由于dict是按 key 查找，所以:在一个dict中，key不能重复
+	- dict存储的key-value序对是没有顺序的；不能用dict存储有序的集合，dict内存数据的顺序和key的放入顺序无关.
+	- 作为 key 的元素必须不可变，Python的基本类型如字符串、整数、浮点数都是不可变的，都可以作为 key；但是list是可变的，就不能作为 key；dict的作用是建立一组 key 和一组 value 的映射关系，dict的key是不能重复的
+		- 对于不变对象来说，调用对象自身的任意方法，也不会改变该对象自身的内容。
+		- 相反，这些方法会创建新的对象并返回，这样，就保证了不可变对象本身永远是不可变的
+
+- 更新dict：直接赋值，如果存在相同的key，则替换以前的值；
+	
+- 迭代dict的value：用 for 循环直接迭代 dict，可以每次拿到dict的一个key，如果希望迭代 dict 的values的
+
+	`values()方法`：把dict转换成一个包含所有value的list
+	```python
+	d = { 'Adam': 95， 'Lisa': 85， 'Bart': 59 }
+	print d.values()
+	# dict_values([59， 70， 61， 91， 81])
+	for v in d.values():
+		print v
+	# 85
+	# 95
+	# 59
+	```		
+- 迭代dict的 key 和 value
+
+	`items()`：把dict对象转换成了包含tuple的list，我们对这个list进行迭代，可以同时获得key和value
+	```python
+	d = { 'Adam': 95， 'Lisa': 85， 'Bart': 59 }
+	print d.items()
+	# dict_items([('E'， 59)， ('C'， 70)， ('D'， 61)， ('A'， 91)， ('B'， 81)])
+	for key， value in d.items():
+		print key， ':'， value				
+	#Lisa : 85
+	#Adam : 95
+	#Bart : 59
+	```
+
+## 2、Set类型
+
+- set 持有一系列元素，元素没有重复，而且是无序的，这点和 dict 的 key很像；set会自动去掉重复的元素；
+- 创建 set 的方式是调用 set() 并传入一个 list，list的元素将作为set的元素；
+	```
+	set(['A'，'B'，'C'])；
+	或者：
+	basket = {'Apple'，'Banana'，'Orange'，'Apple'}
+	```
+- 获取set元素: 访问 set中的某个元素实际上就是判断一个元素是否在set中：`'A' in set`；元素区分大小写；
+- set的特点
+	- set的内部结构和dict很像，唯一区别是不存储value；
+	- set存储的元素和dict的key类似，必须是不变对象；
+	- set存储的元素也是没有顺序的
+- 遍历set：直接使用 for 循环可以遍历 set 的元素
+	```
+	s = set(['Adam'， 'Lisa'， 'Bart'])
+	for name in s:
+	```
+- 更新set集合：
+	- 添加元素时，用set的add()方法：如果添加的元素已经存在于set中，add()不会报错，但是不会加进去了
+	- 删除set中的元素时，用set的remove()方法：如果删除的元素不存在set中，remove()会报错；因此使用remove()前需要判断；
+		
 # 十四、切片
 
 ## 1、list 或 tuple 切片
