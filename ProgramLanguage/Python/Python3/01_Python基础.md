@@ -482,7 +482,7 @@ False
 使用时需注意防止栈溢出
 ```python
 def fact(n):
-	if n==1:
+	if n== 1:
 		return 1
 	return n * fact(n - 1)
 ```
@@ -500,46 +500,57 @@ def fact(n):
 	
 ## 4、定义默认参数
 
-函数的默认参数的作用是简化调用
-
+函数的默认参数的作用是简化调用，语法如下：
+```py
+def function_name(param1, param2=value2, param3=value3, ...):
+```
+示例：
 ```python
-def power(x， n=2):
+def power(x, n=2):
 	s = 1
 	while n > 0:
 		n = n - 1
 		s = s * x
 	return s
 ```
-由于函数的参数按从左到右的顺序匹配：必选参数在前，默认参数在后，否则Python的解释器会报错
-- 如何设置默认参数：当函数有多个参数时，把变化大的参数放前面，变化小的参数放后面。变化小的参数就可以作为默认参数:
-- 有多个默认参数时，调用的时候，既可以按顺序提供默认参数，也可以不按顺序提供部分默认参数。当不按顺序提供部分默认参数时，需要把参数名写上
+由于函数的参数按从左到右的顺序匹配：必选参数在前，默认参数在后，否则Python的解释器会报错，比如下面的：
+```py
+def function_name(param1=value1, param2, param3):
+```
 
-	默认参数很有用，但使用不当，也会掉坑里。默认参数有个最大的坑
-	如下:
-	```python
-	def add_end(L=[]):
-		L.append('END')
-		return L
-	>>> add_end()  ===> ['END']
-	```
-	再次调用`>>> add_end()  ===> ['END'，'END'] `
-	- Python函数在定义的时候，默认参数L的值就被计算出来了，即[]，因为默认参数L也是一个变量，它指向对象[]，
-	- 每次调用该函数，如果改变了L的内容，则下次调用时，默认参数的内容就变了，不再是函数定义时的[]了。
-	
-	***所以，定义默认参数要牢记一点：默认参数必须指向不变对象！***
-	
-	要修改上面的例子，我们可以用None这个不变对象来实现：
-	```python
-	def add_end(L=None):
-		if L is None:
-			L = []
-		L.append('END')
-		return L
-	```	
+如何设置默认参数：当函数有多个参数时，把变化大的参数放前面，变化小的参数放后面。变化小的参数就可以作为默认参数:
 
-- 关于不变对象？为什么要设计str、None？
+有多个默认参数时，调用的时候，既可以按顺序提供默认参数，也可以不按顺序提供部分默认参数。当不按顺序提供部分默认参数时，需要把参数名写上：
+```py
+def greet(name='there', message='Hi'):
+    return f"{message} {name}"
+greeting = greet(message='Hello')
+print(greeting)
+```
 
-	这样的不变对象呢？因为不变对象一旦创建，对象内部的数据就不能修改，这样就减少了由于修改数据导致的错误。此外，由于对象不变，多任务环境下同时读取对象不需要加锁，同时读一点问题都没有。我们在编写程序时，如果可以设计一个不变对象，那就尽量设计成不变对象；
+默认参数很有用，但使用不当，也会掉坑里。默认参数有个最大的坑，如下:
+```python
+def add_end(L=[]):
+	L.append('END')
+	return L
+>>> add_end()  ===> ['END']
+```
+再次调用`>>> add_end()  ===> ['END'，'END'] `
+- Python函数在定义的时候，默认参数L的值就被计算出来了，即`[]`，因为默认参数L也是一个变量，它指向对象`[]`，
+- 每次调用该函数，如果改变了L的内容，则下次调用时，默认参数的内容就变了，不再是函数定义时的`[]`了。
+
+***所以，定义默认参数要牢记一点：默认参数必须指向不变对象！***
+
+要修改上面的例子，我们可以用None这个不变对象来实现：
+```python
+def add_end(L=None):
+	if L is None:
+		L = []
+	L.append('END')
+	return L
+```	
+
+**关于不变对象：** 为什么要设计str、None 这样的不变对象呢？因为不变对象一旦创建，对象内部的数据就不能修改，这样就减少了由于修改数据导致的错误。此外，由于对象不变，多任务环境下同时读取对象不需要加锁，同时读一点问题都没有。我们在编写程序时，如果可以设计一个不变对象，那就尽量设计成不变对象；
 	
 ## 5、定义可变参数
 
@@ -575,10 +586,16 @@ if age >= 18:
 	
 ## 7、关键字参数
 
+使用关键字参数时，重要的是它们的名称，而不是它们的位置：
+```py
+fn(parameter2=value2,parameter1=value1)
+```
+使用关键字参数后，其余参数也需要使用关键字参数;
+
 关键字参数允许你传入0个或任意个含参数名的参数，这些关键字参数在函数内部自动组装为一个dict
 ```python
-def person(name， age， **kw):
-	print('name:'， name， 'age:'， age， 'other:'， kw)
+def person(name, age, **kw):
+	print('name:', name, 'age:', age, 'other:', kw)
 ```
 
 函数person除了必选参数name和age外，还接受关键字参数kw。在调用该函数时，可以只传入必选参数
@@ -587,7 +604,7 @@ def person(name， age， **kw):
 - 和可变参数类似，也可以先组装出一个dict，然后，把该dict转换为关键字参数传进去；
 	```python
 	>>> kw = {'city': 'Beijing'， 'job': 'Engineer'}
-	>>> person('Jack'， 24， city=kw['city']， job=kw['job'])
+	>>> person('Jack', 24, city=kw['city'], job=kw['job'])
 	name: Jack age: 24 other: {'city': 'Beijing'， 'job': 'Engineer'}
 	```
 	简化版:
@@ -604,8 +621,8 @@ def person(name， age， **kw):
 
 - 如果要限制关键字参数的名字，就可以用命名关键字参数，例如:
 	```python
-	def person(name， age， *， city， job):
-		print(name， age， city， job)
+	def person(name, age, *, city, job):
+		print(name, age, city, job)
 	```
 - 和关键字参数`**kw`不同，命名关键字参数需要一个特殊分隔符`*`，`*`后面的参数被视为命名关键字参数；
 - 调用方式如下：`person('Jack'， 24， city='Beijing'， job='Engineer')`
@@ -671,8 +688,6 @@ if not isinstance(x， (int， float)):
 	- 关键字参数既可以直接传入：`func(a=1， b=2)`，又可以先组装dict，再通过`**kw`传入：`func(**{'a': 1， 'b': 2})`。
 	- 使用`*args`和`**kw`是Python的习惯写法，当然也可以用其他参数名，但最好使用习惯用法
 - 命名的关键字参数是为了限制调用者可以传入的参数名，同时可以提供默认值。定义命名的关键字参数不要忘了写分隔符`*`，否则定义的将是位置参数
-			
-
 
 # 九、列表
 
