@@ -676,7 +676,113 @@ if not isinstance(x， (int， float)):
 	raise TypeError('bad operand type')
 ```
 
-## 11、函数小结
+## 11、lambda函数
+
+lambda函数，即匿名函数，一个 lambda 表达式通常包含一个或多个参数，但只能有一个表达式，语法如下：
+```py
+lambda parameters: expression
+# 等价于
+def anonymous(parameters):
+    return expression
+```
+在python中，可以将一个函数传递给另一个函数，或从另一个函数返回一个函数。
+
+将一个函数传递到另一个函数中：
+```py
+def get_full_name(first_name, last_name, formatter):
+    return formatter(first_name, last_name)
+
+full_name = get_full_name(
+    'John',
+    'Doe',
+    lambda first_name, last_name: f"{first_name} {last_name}"
+)
+print(full_name)
+
+full_name = get_full_name(
+    'John',
+    'Doe',
+    lambda first_name, last_name: f"{last_name} {first_name}"
+)
+print(full_name)
+```
+返回一个函数：
+```py
+def times(n):
+    return lambda x: x * n
+double = times(2)
+result = double(2)
+print(result)
+result = double(3)
+print(result)
+```
+**lambda在循环中的处理：**
+```py
+callables = []
+for i in (1, 2, 3):
+    callables.append(lambda: i)
+for f in callables:
+    print(f())
+# 输出结果如下：
+3
+3
+3
+```
+上面的问题在于：所有 lambda 表达式都引用了 i 变量，而不是 i 的当前值。要解决这个问题，需要在创建 lambda 表达式时将 i 变量与每个 lambda 表达式绑定
+```py
+callables = []
+for i in (1, 2, 3):
+    callables.append(lambda a=i: a)
+
+for f in callables:
+    print(f())
+
+```
+
+## 12、函数说明
+
+通过help可以查看文档描述，比如：
+```py
+help(print)
+# 输出内容：
+print(...)
+    print(value, ..., sep=' ', end='\n', file=sys.stdout, flush=False)
+
+    Prints the values to a stream, or to sys.stdout by default.
+    Optional keyword arguments:
+    file:  a file-like object (stream); defaults to the current sys.stdout.
+    sep:   string inserted between values, default a space.
+    end:   string appended after the last value, default a newline.
+    flush: whether to forcibly flush the stream.
+```
+自己定义一个，将字符串（单行或多行字符串）作为函数的第一行，为函数添加文档。
+```py
+def add(a, b):
+    """ Add two arguments
+    Arguments:
+        a: an integer
+        b: an integer
+    Returns:
+        The sum of the two arguments
+    """
+    return a + b
+```
+查看后输出：
+```
+add(a, b)
+    Add the two arguments
+    Arguments:
+            a: an integer
+            b: an integer
+        Returns:
+            The sum of the two arguments        
+```
+Python 将 docstrings 保存在函数的 `__doc__` 属性中:
+```py
+add.__doc__
+```
+
+## 13、函数小结
 
 - Python的函数具有非常灵活的参数形态，既可以实现简单的调用，又可以传入非常复杂的参数
 - 默认参数一定要用不可变对象，如果是可变对象，运行会有逻辑错误！
@@ -689,74 +795,92 @@ if not isinstance(x， (int， float)):
 	- 使用`*args`和`**kw`是Python的习惯写法，当然也可以用其他参数名，但最好使用习惯用法
 - 命名的关键字参数是为了限制调用者可以传入的参数名，同时可以提供默认值。定义命名的关键字参数不要忘了写分隔符`*`，否则定义的将是位置参数
 
-# 九、列表
+# 九、集合
 
-list，Python内置的一种数据类型是列表
-```python
-classmates = ['Michael'， 'Bob'， 'Tracy']
-list(['Apple'，'Orange'])
+## 1、List
+
+list，Python内置的一种数据类型是列表，使用方括号 (`[]`) 表示列表。下面显示的是一个空 list
+```py
+empty_list = []
 ```
 - list是一种有序的集合，可以随时添加和删除其中的元素，list是可变的
 - 由于Python是动态语言，所以list中包含的元素并不要求都必须是同一种数据类型；使用len()可以获取list元素的个数
 - 按照索引访问list，当索引超出了范围时，Python会报一个IndexError错误；可以以负数作为索引，倒序获取集合的值；`"-1"`表示获取最后一个元素
 	`·`classmates[-1] => Tracy`
-- list中添加新元素
-	```python
-	# list.append():把新的元素添加到 list 的尾部
-	>>>classmates = ['Michael'， 'Bob'， 'Tracy']
-	>>>classmates.append('Adam')
-	===>['Michael'， 'Bob'， 'Tracy'， 'Adam']
-	# list.insert():接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
-	>>> classmates.insert(1， 'Jack')
-	['Michael'， 'Jack'， 'Bob'， 'Tracy'， 'Adam']
-	```
-- list中删除元素
-	- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`
-	- list.pop(index)：删除某个位置上的元素，并返回该元素；`classmates.pop(1) ===> 'Jack'`
-- list中替换元素：对list中的某一个索引赋值，就可以直接用新的元素替换掉原来的元素，list包含的元素个数保持不变；
-- 对list进行切片:即取一个list部分数据(tuple也可以进行切片操作)
-	```python
-	# Slice
-	L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-	# L[0:3]:从索引0开始取，直到(不包括)索引3为止，即索引0，1，2，正好是3个元素
-	L[0:3] ===> ['Adam'， 'Lisa'， 'Bart']
-	# 如果第一个索引是0，还可以省略：
-	L[:3]  ===> ['Adam'， 'Lisa'， 'Bart']
-	# 只用一个 : ，表示从头到尾：
-	L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-	```
-	注意：切片操作还可以指定第三个参数：第三个参数表示每N个取一个
-	`L[::2] ===> ['Adam'， 'Bart']`
-	- 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
-	- 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
+
+### 1.1、操作List
+
+**添加新元素**
+- `append()`：把新的元素添加到 list 的尾部
+- `insert()`：接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
+```python
+# list.append():把新的元素添加到 list 的尾部
+>>>classmates = ['Michael'， 'Bob'， 'Tracy']
+>>>classmates.append('Adam')
+===>['Michael'， 'Bob'， 'Tracy'， 'Adam']
+# list.insert():接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
+>>> classmates.insert(1， 'Jack')
+['Michael'， 'Jack'， 'Bob'， 'Tracy'， 'Adam']
+```
+
+**删除元素**
+- del：删除指定位置的元素：`del numbers[0]`
+- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`
+- list.pop(index)：删除某个位置上的元素，并返回该元素；`classmates.pop(1) ===> 'Jack'`
+- list.remove(value)：删除列表list中第一个等于value的值，无返回值；
+
+**替换元素**：
+
+对list中的某一个索引赋值，就可以直接用新的元素替换掉原来的元素，list包含的元素个数保持不变；
+```py
+list[index] = new_value
+```
+
+**切片**：即取一个list部分数据(tuple也可以进行切片操作)
+```python
+# Slice
+L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
+# L[0:3]:从索引0开始取，直到(不包括)索引3为止，即索引0，1，2，正好是3个元素
+L[0:3] ===> ['Adam'， 'Lisa'， 'Bart']
+# 如果第一个索引是0，还可以省略：
+L[:3]  ===> ['Adam'， 'Lisa'， 'Bart']
+# 只用一个 : ，表示从头到尾：
+L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
+```
+注意：切片操作还可以指定第三个参数：第三个参数表示每N个取一个
+`L[::2] ===> ['Adam'， 'Bart']`
+- 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
+- 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
 		
-# 十、tuple类型
-tuple类型一旦初始化就不能修改
+## 2、tuple
 
-`classmates = ('Michael'， 'Bob'， 'Tracy')`
+Tuple 是一个不能改变的列表。Python 将不能改变的值称为不可变值。因此，根据定义，Tuple 是不可变的列表。
 
-- `tuple`是另一种有序的列表，中文翻译为`元组`。`tuple` 和 `list` 非常类似，但是，`tuple`一旦创建完毕，就不能修改了：`t = ('Adam'，'Lisa'，'Bart')`；tuple一旦创建完毕，就不能修改了
-- 获取 tuple 元素的方式和 list 是一模一样的，我们可以正常使用 t[0]，t[-1]等索引方式访问元素，但是不能赋值成别的元素
-- 创建单元素tuple:
+Tuple与List相似，只是使用的是括号`()`而不是方括号`[]`：`
+```py
+classmates = ('Michael', 'Bob', 'Tracy')
+```
+获取 tuple 元素的方式和 list 是一模一样的，我们可以正常使用 `t[0]`，`t[-1]`等索引方式访问元素，但是不能赋值成别的元素；
 
-	`t = (1) # ==> 1`：t 不是 tuple ，而是整数1。为什么呢？
+**创建单元素tuple:**<br/>
+`t = (1) # ==> 1`：t 不是 tuple ，而是整数1。为什么呢？ `()`既可以表示tuple，也可以作为括号表示运算的优先级，`(1)`被Python解释器计算出结果 1，导致我们得到的不是tuple，而是整数 1
+Python 规定，单元素 tuple 要多加一个逗号`,`，即 `t = (1,) # ==>(1,)`
+```py
+numbers = (3,)
+print(type(numbers))
+# <class 'tuple'>
+```
 
-	`()`既可以表示tuple，也可以作为括号表示运算的优先级，`(1)`被Python解释器计算出结果 1，导致我们得到的不是tuple，而是整数 1
-	Python 规定，单元素 tuple 要多加一个逗号`“,”`，t = (1,) # ==>(1,)`
+**`可变`的tuple**：Tuple所谓的“不变”是说：tuple的每个元素，指向永远不变。即指向'a'，就不能改成指向'b'，指向一个list，就不能改成指向其他对象，但指向的这个list本身是可变的！
 
-- `可变`的tuple：
-
-	tuple所谓的“不变”是说：tuple的每个元素，指向永远不变。即指向'a'，就不能改成指向'b'，指向一个list，就不能改成指向其他对象，但指向的这个list本身是可变的！
-
-	理解了“指向不变”后，要创建一个内容也不变的tuple怎么做？那就必须保证tuple的每一个元素本身也不能变，如:
-	```python
-	t = ('a',， 'b', ['A', 'B'])
-	L = t(2)
-	L[0] = 'X'
-	L[1] = 'Y'
-	('a', 'b', ['X', 'Y'])
-	```
-			
+理解了“指向不变”后，要创建一个内容也不变的tuple怎么做？那就必须保证tuple的每一个元素本身也不能变，如:
+```python
+t = ('a',， 'b', ['A', 'B'])
+L = t(2)
+L[0] = 'X'
+L[1] = 'Y'
+('a', 'b', ['X', 'Y'])
+```
 
 # 十二、Dict 与 Set 类型
 
