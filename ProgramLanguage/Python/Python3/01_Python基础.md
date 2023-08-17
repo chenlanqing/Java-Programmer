@@ -937,53 +937,183 @@ sorted(list) 不会改变原有List；默认情况下，sorted() 函数使用小
 sorted(list,reverse=True)
 ```
 
-## 5、list 或 tuple 切片
+## 5、切片操作符
 
 ```py
-L = ['Michael'， 'Sarah'， 'Tracy'， 'Bob'， 'Jack']
-L[0:3] ==>  ['Michael'， 'Sarah'， 'Tracy'] # 从索引0开始取，直到索引3为止
-切片操作十分有用。我们先创建一个`0-99`的数列：
-	>>> L = range(100)
-	>>> L
-	[0， 1， 2， 3， ...， 99]
-# 可以通过切片轻松取出某一段数列。比如前10个数：
-	>>> L[:10]
-	[0， 1， 2， 3， 4， 5， 6， 7， 8， 9]
-# 后10个数：
-	>>> L[-10:]
-	[90， 91， 92， 93， 94， 95， 96， 97， 98， 99]
-# 前11-20个数：
-	>>> L[10:20]
-	[10， 11， 12， 13， 14， 15， 16， 17， 18， 19]
-# 前10个数，每两个取一个：
-	>>> L[:10:2]
-	[0， 2， 4， 6， 8]
-#所有数，每5个取一个：
-	>>> L[::5]
-	[0， 5， 10， 15， 20， 25， 30， 35， 40， 45， 50， 55， 60， 65， 70， 75， 80， 85， 90， 95]
-#甚至什么都不写，只写[:]就可以原样复制一个list：
-	>>> L[:]
-	[0， 1， 2， 3， ...， 99]
-	>>> L[:-1]
-	[1， 2， 3， 4， 5， 6， 7， 8， 9]
-# 倒序切片
-	>>> L[::-1]
-	[10， 9， 8， 7， 6， 5， 4， 3， 2， 1]
+sub_list = list[begin: end: step]
 ```
-
-## 6、切片操作符
-
-切片操作符中的第一个数（冒号之前）表示切片开始的位置，第二个数（冒号之后）表示切片到哪里结束，第三个数（冒号之后）表示切片间隔数。	
-
-如果不指定第一个数，Python就从序列首开始。
-
-如果没有指定第二个数，则Python会停止在序列尾。
+- begin索引默认为零，end索引默认为列表的长度，step索引默认为 1。
+- 切片操作符中的第一个数（冒号之前）表示切片开始的位置，第二个数（冒号之后）表示切片到哪里结束，第三个数（冒号之后）表示切片间隔数。	
+- 如果不指定第一个数，Python就从序列首开始。
+- 如果没有指定第二个数，则Python会停止在序列尾。
+- begin、end和step可以是正值或负值。正值将列表从第一个元素切到最后一个元素，而负值则将列表从最后一个元素切到第一个元素
 
 注意，返回的序列从开始位置开始，刚好在结束位置之前结束.即开始位置是包含在序列切片中的，而结束位置被排斥在切片外。
 
+### 5.1、要从列表中获取 n 个首元素，可以省略第一个参数
+
+```py
+list[:n] # 等价于 list[0:n]
+# 示例
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+sub_colors = colors[:3] # 等价于： colors[0:3]
+print(sub_colors)
+# ['red', 'orange', 'yellow']
+```
+
+### 5.2、要获取列表中倒数第 n 个元素，可以使用负索引
+
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+sub_colors = colors[-3:]
+print(sub_colors)
+# ['blue', 'indigo', 'violet']
+```
+
+### 5.3、使用 Python List slice 从列表中获取第 n 个元素
+
+下面的示例使用该步骤返回一个子列表，其中包括颜色列表中的每第二个元素：
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+sub_colors = colors[::2]
+print(sub_colors)
+# ['red', 'yellow', 'blue', 'violet']
+```
+
+### 5.4、使用slice反转列表
+
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+reversed_colors = colors[::-1]
+print(reversed_colors)
+# ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red']
+```
+
+### 5.5、使用 Python List slice 代替列表的一部分
+
+除了提取列表的一部分外，列表切片还可以更改列表元素。
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+colors[0:2] = ['black', 'white']
+print(colors)
+# ['black', 'white', 'yellow', 'green', 'blue', 'indigo', 'violet']
+```
+
+### 5.6、使用 Python List slice 部分替换和调整列表大小
+
+```py
+# 下面的示例使用 list slice 将第一个和第二个元素替换为新元素，并在列表中添加了一个新元素：
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+print(f"The list has {len(colors)} elements")
+
+colors[0:2] = ['black', 'white', 'gray']
+print(colors)
+print(f"The list now has {len(colors)} elements")
+```
+
+### 5.7、使用 Python List slice 删除元素
+
+```py
+# 删除 第3个、第4个、第5个元素
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+del colors[2:5]
+print(colors)
+```
+
 `shoplist[1:3]`返回从位置1开始，包括位置2，但是停止在位置3的一个序列切片，因此返回一个含有两个项目的切片。类似地，`shoplist[:]`返回整个序列的拷贝。`shoplist[::3]`返回位置3，位置6，位置9…的序列切片。
 
-你可以用负数做切片。负数用在从序列尾开始计算的位置。例如，`shoplist[:-1]`会返回除了最后一个项目外包含所有项目的序列切片，`shoplist[::-1]`会返回倒序序列切片	
+你可以用负数做切片。负数用在从序列尾开始计算的位置。例如，`shoplist[:-1]`会返回除了最后一个项目外包含所有项目的序列切片，`shoplist[::-1]`会返回倒序序列切片
+
+
+```py
+L = ['Michael','Sarah','Tracy','Bob','Jack']
+L[0:3] ==>  ['Michael'， 'Sarah'， 'Tracy'] # 从索引0开始取，直到索引3为止
+切片操作十分有用。我们先创建一个`0-99`的数列：
+>>> L = range(100)
+>>> L
+[0， 1， 2， 3， ...， 99]
+# 可以通过切片轻松取出某一段数列。比如前10个数：
+>>> L[:10]
+[0， 1， 2， 3， 4， 5， 6， 7， 8， 9]
+# 后10个数：
+>>> L[-10:]
+[90， 91， 92， 93， 94， 95， 96， 97， 98， 99]
+# 前11-20个数：
+>>> L[10:20]
+[10， 11， 12， 13， 14， 15， 16， 17， 18， 19]
+# 前10个数，每两个取一个：
+>>> L[:10:2]
+[0， 2， 4， 6， 8]
+#所有数，每5个取一个：
+>>> L[::5]
+[0， 5， 10， 15， 20， 25， 30， 35， 40， 45， 50， 55， 60， 65， 70， 75， 80， 85， 90， 95]
+#甚至什么都不写，只写[:]就可以原样复制一个list：
+>>> L[:]
+[0， 1， 2， 3， ...， 99]
+>>> L[:-1]
+[1， 2， 3， 4， 5， 6， 7， 8， 9]
+# 倒序切片
+>>> L[::-1]
+[10， 9， 8， 7， 6， 5， 4， 3， 2， 1]
+```
+
+## 6、List解包
+
+为了将List中每个元素赋值给变量，常规做法是：
+```py
+colors = ['red', 'blue', 'green']
+red = colors[0]
+blue = colors[1]
+green = colors[2]
+```
+
+python提供了更好做法，可以通过List unpacking的方式，可以将列表（以及元组）中的元素赋值给多个变量。例如
+```py
+red, blue, green = colors
+```
+该语句将颜色列表的第一、第二和第三个元素分别赋值给红、蓝和绿变量，在本例中，左侧变量的个数与右侧列表中元素的个数相同。如果在左侧使用的变量数量较少，就会出错。例如
+```py
+colors = ['red', 'blue', 'green']
+red, blue = colors
+# ValueError: too many values to unpack (expected 2)
+```
+
+如果您想解压缩列表的前几个元素，而不关心其他元素，可以：
+- 将所需元素解包为变量；
+- 将剩余的元素打包到一个新的列表中，并将其赋值给另一个变量
+
+在变量名前加上星号 (*)，就可以将剩余的元素打包成一个列表，并将它们赋值给一个变量，比如：
+```py
+colors = ['red', 'blue', 'green']
+red, blue, *other = colors
+
+print(red)
+print(blue)
+print(other)
+```
+
+## 7、List迭代
+
+就是对于一个集合，无论该集合是有序还是无序，我们用 for 循环总是可以依次取出集合的每一个元素
+
+- 迭代取出有序集合的索引：使用 `enumerate()` 函数
+	```python
+	L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
+	for index， name in enumerate(L):
+		print index， '-'， name
+
+	#  注意:
+		实际上，enumerate() 函数把：
+		['Adam'， 'Lisa'， 'Bart'， 'Paul']
+		变成了类似：
+		[(0， 'Adam')， (1， 'Lisa')， (2， 'Bart')， (3， 'Paul')]
+	```
+	迭代的每一个元素实际上是一个tuple
+
+	索引迭代也不是真的按索引访问，而是由 enumerate() 函数自动把每个元素变成 (index， element) 这样的tuple，再迭代，就同时获得了索引和元素本身
+
+- 如果一个对象说自己可迭代，那我们就直接用 for 循环去迭代它，可见，迭代是一种抽象的数据操作，它不对迭代对象内部的数据有任何要求。
+- 默认情况下，dict迭代的是key。如果要迭代value，可以用`for value in d.values()`，如果要同时迭代key和value，可以用`for k， v in d.items()`；由于字符串也是可迭代对象，因此，也可以作用于for循环
 
 # 十二、Dict 与 Set 类型
 
@@ -1075,28 +1205,6 @@ L[0:3] ==>  ['Michael'， 'Sarah'， 'Tracy'] # 从索引0开始取，直到索�
 	- 删除set中的元素时，用set的remove()方法：如果删除的元素不存在set中，remove()会报错；因此使用remove()前需要判断；
 		
 
-# 十五、迭代
-
-就是对于一个集合，无论该集合是有序还是无序，我们用 for 循环总是可以依次取出集合的每一个元素
-
-- 迭代取出有序集合的索引：使用 `enumerate()` 函数
-	```python
-	L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-	for index， name in enumerate(L):
-		print index， '-'， name
-
-	#  注意:
-		实际上，enumerate() 函数把：
-		['Adam'， 'Lisa'， 'Bart'， 'Paul']
-		变成了类似：
-		[(0， 'Adam')， (1， 'Lisa')， (2， 'Bart')， (3， 'Paul')]
-	```
-	迭代的每一个元素实际上是一个tuple
-
-	索引迭代也不是真的按索引访问，而是由 enumerate() 函数自动把每个元素变成 (index， element) 这样的tuple，再迭代，就同时获得了索引和元素本身
-
-- 如果一个对象说自己可迭代，那我们就直接用 for 循环去迭代它，可见，迭代是一种抽象的数据操作，它不对迭代对象内部的数据有任何要求。
-- 默认情况下，dict迭代的是key。如果要迭代value，可以用`for value in d.values()`，如果要同时迭代key和value，可以用`for k， v in d.items()`；由于字符串也是可迭代对象，因此，也可以作用于for循环
 
 # 十六、列表生成式
 
