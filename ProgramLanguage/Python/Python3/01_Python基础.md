@@ -1095,25 +1095,141 @@ print(other)
 ## 7、List迭代
 
 就是对于一个集合，无论该集合是有序还是无序，我们用 for 循环总是可以依次取出集合的每一个元素
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+for city in cities:
+    print(city)
+```
 
-- 迭代取出有序集合的索引：使用 `enumerate()` 函数
-	```python
-	L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-	for index， name in enumerate(L):
-		print index， '-'， name
+如果在迭代过程中需要访问元素的索引：使用 `enumerate()` 函数，enumerate() 函数返回一个元组，其中包含当前索引和列表中的元素，迭代的每一个元素实际上是一个tuple
+```python
+L = ['Adam', 'Lisa', 'Bart', 'Paul']
+for index, name in enumerate(L):
+	print(index, '-',  name)
 
-	#  注意:
-		实际上，enumerate() 函数把：
-		['Adam'， 'Lisa'， 'Bart'， 'Paul']
-		变成了类似：
-		[(0， 'Adam')， (1， 'Lisa')， (2， 'Bart')， (3， 'Paul')]
-	```
-	迭代的每一个元素实际上是一个tuple
+#  注意:
+实际上，enumerate() 函数把：
+['Adam', 'Lisa', 'Bart', 'Paul']
+变成了类似：
+[(0, 'Adam'), (1, 'Lisa'), (2, 'Bart'), (3, 'Paul')]
+```
+索引迭代也不是真的按索引访问，而是由 enumerate() 函数自动把每个元素变成 (index,element) 这样的tuple，再迭代，就同时获得了索引和元素本身
 
-	索引迭代也不是真的按索引访问，而是由 enumerate() 函数自动把每个元素变成 (index， element) 这样的tuple，再迭代，就同时获得了索引和元素本身
+当使用 enumerate() 函数时也可以指定起始索引，默认为零。
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+for index, city in enumerate(cities,1):
+    print(f"{index}: {city}")
+```
 
-- 如果一个对象说自己可迭代，那我们就直接用 for 循环去迭代它，可见，迭代是一种抽象的数据操作，它不对迭代对象内部的数据有任何要求。
-- 默认情况下，dict迭代的是key。如果要迭代value，可以用`for value in d.values()`，如果要同时迭代key和value，可以用`for k， v in d.items()`；由于字符串也是可迭代对象，因此，也可以作用于for循环
+如果一个对象说自己可迭代，那我们就直接用 for 循环去迭代它，可见，迭代是一种抽象的数据操作，它不对迭代对象内部的数据有任何要求。
+
+默认情况下，dict迭代的是key。如果要迭代value，可以用`for value in d.values()`，如果要同时迭代key和value，可以用`for k， v in d.items()`；由于字符串也是可迭代对象，因此，也可以作用于for循环
+
+## 8、查找元素的索引
+
+要查找列表中某个元素的索引，可以使用 index() 函数
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+result = cities.index('Mumbai')
+print(result)
+```
+但是，如果尝试使用 index() 函数查找列表中不存在的元素，就会出现错误；
+
+要解决这个问题，需要使用 in 运算符。如果某个值在列表中，in 操作符将返回 True。否则，返回 False
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+city = 'Osaka'
+if city in cities:
+    result = cities.index(city)
+    print(f"The {city} has an index of {result}.")
+else:
+    print(f"{city} doesn't exist in the list.")
+
+```
+
+# 十、可迭代与迭代器
+
+## 1、可以使用for循环的数据类型
+
+- 集合数据类型，如list、tuple、dict、set、str等；
+- generator，包括生成器和带yield的generator function。
+
+这些可以直接使用for循环的对象统称为可迭代对象: Iterable
+
+## 2、获取迭代器
+
+要从可迭代器中获取迭代器，可以使用 iter() 函数
+```py
+colors = ['red', 'green', 'blue']
+colors_iter = iter(colors)
+```
+有了迭代器之后，就可以使用 next() 从可迭代器中获取下一个元素
+```py
+colors = ['red', 'green', 'blue']
+colors_iter = iter(colors)
+color = next(colors_iter)
+print(color)
+```
+如果没有更多元素，而又调用 next() 函数，就会出现异常。
+```py
+colors = ['red', 'green', 'blue']
+colors_iter = iter(colors)
+color = next(colors_iter)
+color = next(colors_iter)
+color = next(colors_iter)
+# cause an exception
+color = next(colors_iter)
+print(color)
+
+```
+
+## 2、使用isinstance()
+
+判断一个对象是否是Iterable对象；
+```python
+>>> from collections import Iterable
+>>> isinstance([]， Iterable)
+True
+>>> isinstance({}， Iterable)
+True
+>>> isinstance('abc'， Iterable)
+True
+>>> isinstance((x for x in range(10))， Iterable)
+True
+>>> isinstance(100， Iterable)
+False
+```
+
+- 可以被next()函数调用并不断返回下一个值的对象称为迭代器：`Iterator [是惰性序列]`：可以使用isinstance()判断一个对象是否是Iterator对象
+
+- 生成器都是 Iterator 对象，但 list、dict、str 虽然是 Iterable，却不是 Iterator，但是可以使用 iter() 函数把 list、dict、str 等 Iterable 变成 Iterator：如果函数返回一个:Iterator，可以使用 函数:list()，tuple()等列出其数据
+
+- 为什么 list、dict、str 等数据类型不是Iterator
+
+	因为 Python 的 Iterator 对象表示的是一个数据流，Iterator对象可以被 next()函数调用并不断返回下一个数据，直到没有数据时抛出 StopIteration 错误。可以把这个数据流看做是一个有序序列，但我们却不能提前知道序列的长度，只能不断通过next()函数实现按需计算下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算
+
+## 3、Python的for循环本质
+
+Python的for循环本质上就是通过不断调用next()函数实现的
+
+```python
+for x in [1， 2， 3， 4， 5]:
+	pass
+	
+# 实际上等价于
+# 首先获得Iterator对象:
+it = iter([1， 2， 3， 4， 5])
+# 循环:
+while True:
+	try:
+		# 获得下一个值:
+		x = next(it)
+	except StopIteration:
+		# 遇到StopIteration就退出循环
+		break
+```		
+
 
 # 十二、Dict 与 Set 类型
 
@@ -1284,59 +1400,7 @@ print(other)
 	...         break
 	```
 
-# 十七、迭代器
-
-## 1、可以使用for循环的数据类型
-
-- 集合数据类型，如list、tuple、dict、set、str等；
-- generator，包括生成器和带yield的generator function。
-
-这些可以直接使用for循环的对象统称为可迭代对象: Iterable
-
-## 2、使用isinstance()
-判断一个对象是否是Iterable对象；
-```python
->>> from collections import Iterable
->>> isinstance([]， Iterable)
-True
->>> isinstance({}， Iterable)
-True
->>> isinstance('abc'， Iterable)
-True
->>> isinstance((x for x in range(10))， Iterable)
-True
->>> isinstance(100， Iterable)
-False
-```
-
-- 可以被next()函数调用并不断返回下一个值的对象称为迭代器：`Iterator [是惰性序列]`：可以使用isinstance()判断一个对象是否是Iterator对象
-
-- 生成器都是 Iterator 对象，但 list、dict、str 虽然是 Iterable，却不是 Iterator，但是可以使用 iter() 函数把 list、dict、str 等 Iterable 变成 Iterator：如果函数返回一个:Iterator，可以使用 函数:list()，tuple()等列出其数据
-
-- 为什么 list、dict、str 等数据类型不是Iterator
-
-	因为 Python 的 Iterator 对象表示的是一个数据流，Iterator对象可以被 next()函数调用并不断返回下一个数据，直到没有数据时抛出 StopIteration 错误。可以把这个数据流看做是一个有序序列，但我们却不能提前知道序列的长度，只能不断通过next()函数实现按需计算下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算
-
-## 3、Python的for循环本质
-
-Python的for循环本质上就是通过不断调用next()函数实现的
-
-```python
-for x in [1， 2， 3， 4， 5]:
-	pass
-	
-# 实际上等价于
-# 首先获得Iterator对象:
-it = iter([1， 2， 3， 4， 5])
-# 循环:
-while True:
-	try:
-		# 获得下一个值:
-		x = next(it)
-	except StopIteration:
-		# 遇到StopIteration就退出循环
-		break
-```				
+		
 				
 				
 				
