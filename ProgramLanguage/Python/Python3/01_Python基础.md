@@ -1145,7 +1145,40 @@ if city in cities:
     print(f"The {city} has an index of {result}.")
 else:
     print(f"{city} doesn't exist in the list.")
+```
 
+## 9、map()函数
+
+在处理列表（或元组）时，您经常需要转换列表中的元素，并返回一个包含转换元素的新列表，为此，您可以使用 for 循环遍历元素，将每个元素处理之后，然后将其添加到新列表中；
+
+Python提供了一个map函数，map() 函数遍历列表（或元组）中的所有元素，对每个元素应用一个函数，然后返回一个包含新元素的新迭代器
+
+基本语法如下：
+```py
+iterator = map(fn, list)
+```
+比如：
+```py
+bonuses = [100, 200, 300]
+iterator = map(lambda bonus: bonus*2, bonuses)
+print(list(iterator)) # 将迭代器转换为list
+```
+
+## 10、filter()函数
+
+有时候需要在迭代一个列表的时候过滤符合条件的数据，通常做法是通过 for循环，然后通过if判断来过滤数据；
+
+Python 有一个内置函数 filter()，以一种更好的方式过滤列表（或元组）。
+```py
+filter(fn, list)
+```
+filter() 函数遍历列表中的元素，并对每个元素应用 fn() 函数。它会返回一个迭代器，用于迭代 fn() 返回 True 的元素。
+
+示例：
+```py
+scores = [70, 60, 80, 90, 50]
+filtered = filter(lambda score: score >= 70, scores)
+print(list(filtered))
 ```
 
 # 十、可迭代与迭代器
@@ -1184,7 +1217,7 @@ print(color)
 
 ```
 
-## 2、使用isinstance()
+## 3、使用isinstance()
 
 判断一个对象是否是Iterable对象；
 ```python
@@ -1209,7 +1242,7 @@ False
 
 	因为 Python 的 Iterator 对象表示的是一个数据流，Iterator对象可以被 next()函数调用并不断返回下一个数据，直到没有数据时抛出 StopIteration 错误。可以把这个数据流看做是一个有序序列，但我们却不能提前知道序列的长度，只能不断通过next()函数实现按需计算下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算
 
-## 3、Python的for循环本质
+## 4、Python的for循环本质
 
 Python的for循环本质上就是通过不断调用next()函数实现的
 
