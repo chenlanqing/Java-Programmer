@@ -1245,6 +1245,10 @@ highest_mountains = [m for m in mountains if m[1] > 8600]
 print(highest_mountains)
 ```
 
+## 13、Tuple解包
+
+
+
 # 十、可迭代与迭代器
 
 ## 1、可以使用for循环的数据类型
@@ -1866,6 +1870,108 @@ set_a.isdisjoint(set_b)
 如果 set_a 和 set_b 不相交，则 isdisjoint() 方法返回 True。否则，返回 False。
 
 isdisjoint() 方法也接受任何可迭代对象，而不仅仅是集合。如果传递的是列表、元组或字典，isdisjoint() 方法会在检查前将其转换为集合。
+
+# 十三、Loop With Else
+
+## 1、for...else
+
+在 Python 中，for 语句可以有一个可选的 else 子句，下面显示了带有 else 子句的 for 语句的语法：
+```py
+for item in iterables:
+    # process item 
+else:
+    # statement
+```
+在这种语法中，只有当循环正常运行时，else 子句才会执行。换句话说，如果循环遇到 break 语句，else 子句不会执行；此外，当 iterables 对象没有项目时，else 子句也会执行。
+
+示例：
+```py
+people = [{'name': 'John', 'age': 25},
+        {'name': 'Jane', 'age': 22},
+        {'name': 'Peter', 'age': 30},
+        {'name': 'Jenifer', 'age': 28}]
+name = input('Enter a name:')
+
+for person in people:
+    if person['name'] == name:
+        print(person)
+        break # 当循环遇到 break 语句时，else 子句不会执行
+else:
+    print(f'{name} not found!')
+```
+通过使用 for else 语句，程序无需在循环后使用标志和 if 语句。
+
+## 2、while...else
+
+在 Python 中，while 语句可以有一个可选的 else 子句，下面显示了带有 else 子句的 while 语句的语法：
+```py
+while condition:
+    # code block to run
+else:
+    # else clause code block
+```
+当条件变为 False 且循环正常运行时，else 子句将执行。但是，如果循环被 break 或 return 语句提前终止，则 else 子句根本不会执行；
+
+示例：
+```py
+basket = [
+    {'fruit': 'apple', 'qty': 20},
+    {'fruit': 'banana', 'qty': 30},
+    {'fruit': 'orange', 'qty': 10}
+]
+fruit = input('Enter a fruit:')
+index = 0
+while index < len(basket):
+    item = basket[index]
+    # check the fruit name
+    if item['fruit'] == fruit:
+        print(f"The basket has {item['qty']} {item['fruit']}(s)")
+        found_it = True
+        break
+    index += 1
+else:
+    qty = int(input(f'Enter the qty for {fruit}:'))
+    basket.append({'fruit': fruit, 'qty': qty})
+    print(basket)
+```
+
+## 3、模拟do…while
+
+Python 是不支持 do...while 语句的，所以可以使用如下方式来模式：
+```py
+while True:
+    # code block
+
+    # break out of the loop
+    if condition
+        break
+```
+
+示例：
+```py
+from random import randint
+# determine the range
+MIN = 0
+MAX = 10
+# generate a secret number
+secret_number = randint(MIN, MAX)
+# initialize the attempt
+attempt = 0
+
+while True:
+    attempt += 1
+
+    input_number = int(input(f'Enter a number between {MIN} and {MAX}:'))
+
+    if input_number > secret_number:
+        print('It should be smaller.')
+    elif input_number < secret_number:
+        print('It should be bigger.')
+    else:
+        print(f'Bingo! {attempt} attempt(s)')
+        break
+
+```
 
 
 # 十三、列表生成式
