@@ -1787,6 +1787,86 @@ new_set = set1 ^ set2 ^...
 
 ## 12、issubset
 
+假设有两个集合 A 和 B。如果集合 A 的所有元素都是集合 B 的元素，那么集合 A 就是集合 B 的子集。集合 A 和集合 B 可以相等。如果集合 A 和集合 B 不相等，则 A 是 B 的真子集；
+
+在 Python 中，您可以使用集合 issubset() 方法来检查一个集合是否是另一个集合的子集：
+```py
+set_a.issubset(set_b)
+```
+如果 set_a 是 set_b 的子集，则 issubset() 方法返回 True。否则，返回 False。
+
+根据定义，集合也是自身的子集。下面的示例返回 True：
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+print(numbers.issubset(scores))
+```
+
+除了使用 issubset() 方法，还可以使用子集操作符 (`<=`) 来检查一个集合是否是另一个集合的子集：
+```py
+set_a <= set_b
+```
+如果 set_a 是 set_b 的子集，子集运算符 (`<=`) 返回 True。否则，返回 False
+
+**真子集：**`set_a < set_b`：
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+
+result = scores < numbers
+print(result)  # True
+
+result = numbers < numbers
+print(result)  # False
+```
+
+## 13、issuperset
+
+假设有两个集合：A 和 B：如果集合 B 的所有元素都是集合 A 的元素，那么集合 A 就是集合 B 的超集。如果集合 A 和集合 B 不相等，则集合 A 是集合 B 的真超集。
+
+在 Python 中，您可以使用集合 issuperset() 方法来检查一个集合是否是另一个集合的超集
+```py
+set_a.issuperset(set_b)
+```
+如果 set_a 是 set_b 的超集，则 issuperset() 返回 True。否则返回 False
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+result = numbers.issuperset(scores)
+print(result)
+```
+> 由于分数集的所有元素都存在于数字集中，因此数字集是分数集的超集。
+
+**超集操作符：**`>=` 运算符确定一个集合是否是另一个集合的超集：
+```py
+set_a >= set_b
+```
+如果 set_a 是 set_b 的超集，则 `>=` 运算符返回 True。否则，返回 False;
+
+**检查是否是真超集**：要检查一个集合是否是另一个集合的真超集，可以使用 `>` 运算符：`set_a > set_b`
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+
+result = numbers > scores
+print(result)  # True
+
+result = numbers > numbers
+print(result)  # False
+```
+
+## 14、Disjoint Sets
+
+当两个集合没有共同元素时，它们就是不相交的。换句话说，两个不相交集合的交集是空集。
+
+Python isdisjoint() 方法用于检查两个集合是否相交：
+```py
+set_a.isdisjoint(set_b)
+```
+如果 set_a 和 set_b 不相交，则 isdisjoint() 方法返回 True。否则，返回 False。
+
+isdisjoint() 方法也接受任何可迭代对象，而不仅仅是集合。如果传递的是列表、元组或字典，isdisjoint() 方法会在检查前将其转换为集合。
+
 
 # 十三、列表生成式
 
