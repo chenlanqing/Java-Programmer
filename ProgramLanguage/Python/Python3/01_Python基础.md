@@ -808,7 +808,6 @@ empty_list = []
 - 按照索引访问list，当索引超出了范围时，Python会报一个IndexError错误；可以以负数作为索引，倒序获取集合的值；`"-1"`表示获取最后一个元素
 	`·`classmates[-1] => Tracy`
 
-
 **添加新元素**
 - `append()`：把新的元素添加到 list 的尾部
 - `insert()`：接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
@@ -1181,6 +1180,71 @@ filtered = filter(lambda score: score >= 70, scores)
 print(list(filtered))
 ```
 
+## 11、reduce函数
+
+有时候，希望将一个list通过函数输出为一个值，通常做法都是通过循环来处理的；
+
+Python 提供了一个名为 reduce() 的函数，可以让您以更简洁的方式来reduce一个列表，语法：
+```py
+reduce(fn,list)
+```
+reduce() 函数将两个参数的 fn 函数从左到右累加应用于列表项，从而将列表还原为单一值；
+
+reduce() 并不是 Python 的内置函数。事实上，reduce() 函数属于 functools 模块，如果需要使用的话，需要导入functools模块
+```py
+from functools import reduce
+```
+示例：
+```py
+from functools import reduce
+def sum(a, b):
+    print(f"a={a}, b={b}, {a} + {b} ={a+b}")
+    return a + b
+scores = [75, 65, 80, 95, 50]
+total = reduce(sum, scores)
+# 或者使用 lambda expression
+total = reduce(lambda a, b: a + b, scores)
+print(total)
+```
+
+## 12、list comprehension
+
+list comprehension，列表推导式（或列表解析），为了帮助您根据现有 list 元素的变换创建一个 list，Python 提供了一个称为 list 解析的功能。
+
+下面代码演示了如何使用列表理解从数字列表中生成平方：
+```py
+numbers = [1, 2, 3, 4, 5]
+squares = [number**2 for number in numbers]
+print(squares)
+```
+列表解析基础语法如下：
+```py
+[output_expression for element in list]
+# 其等价于：
+output_list = []
+for element in list:
+    output_list.append(output_expression)
+```
+
+**带条件列表解析：**
+
+Python 列表理解提供了一个可选的predicate，允许您为列表元素包含在新列表中指定一个条件：
+```py
+[output_expression for element in list if condition]
+```
+示例：
+```py
+mountains = [
+    ['Makalu', 8485],
+    ['Lhotse', 8516],
+    ['Kanchendzonga', 8586],
+    ['K2', 8611],
+    ['Everest', 8848]
+]
+highest_mountains = [m for m in mountains if m[1] > 8600]
+print(highest_mountains)
+```
+
 # 十、可迭代与迭代器
 
 ## 1、可以使用for循环的数据类型
@@ -1263,99 +1327,468 @@ while True:
 		break
 ```		
 
+# 十一、Dictionary
 
-# 十二、Dict 与 Set 类型
+## 1、基本概念
 
-## 1、dict类型
-`dict([('sape'， 4139)， ('guido'， 4127)， ('jack'， 4098)])`
+- Python 字典是键值对的集合，其中每个键都与一个值相关联。
+- 键值对中的值可以是数字、字符串、列表、元组，甚至是另一个字典。事实上，您可以使用 Python 中任何有效类型的值作为键值对中的值。
+- 键值对中的键必须是不可变的。换句话说，键不能被更改，例如数字、字符串、元组等。
 
-- 花括号`{}` 表示这是一个dict，然后按照 key: value， 写出来即，最后一个 key: value 的逗号可以省略
-	`len()`----计算集合的大小
+特点：
+- dict查找速度快，无论dict有10个元素还是10万个元素，查找速度都一样.而list的查找速度随着元素增加而逐渐下降。
+	- dict的缺点是占用内存大，还会浪费很多内容；list正好相反，占用内存小，但是查找速度慢；
+	- 由于dict是按 key 查找，所以:在一个dict中，key不能重复
+- dict存储的key-value序对是没有顺序的；不能用dict存储有序的集合，dict内存数据的顺序和key的放入顺序无关.
+- 作为 key 的元素必须不可变，Python的基本类型如字符串、整数、浮点数都是不可变的，都可以作为 key；但是list是可变的，就不能作为 key；dict的作用是建立一组 key 和一组 value 的映射关系，dict的key是不能重复的
+	- 对于不变对象来说，调用对象自身的任意方法，也不会改变该对象自身的内容。
+	- 相反，这些方法会创建新的对象并返回，这样，就保证了不可变对象本身永远是不可变的
+
+基本定义：
+```py
+empty_dict = {}
+print(type(empty_dict))
+# output
+<class 'dict'>
+```
+花括号`{}` 表示这是一个dict，然后按照 key: value， 写出来即，最后一个 key: value 的逗号可以省略
+`len()`----计算集合的大小
+```python
+d = {
+	'Adam': 95，
+	'Lisa': 85，
+	'Bart': 59
+}
+```
+
+## 2、访问字典值
+
+### 2.1、使用`d[key]`
+
+可以使用`d[key]`形式来查找对应的 value；
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+print(person['first_name'])
+print(person['last_name'])
+```
+
+***注意: 通过 key 访问 dict 的value，只要 key 存在，dict就返回对应的value，如果key不存在.会直接报错:`KeyError`***
+
+**如何避免避免 `KeyError`**
+- 先判断一下 key 是否存在，用 in 操作符：
 	```python
-	d = {
-		'Adam': 95，
-		'Lisa': 85，
-		'Bart': 59
-	}
+	if 'Paul' in d:
+		print d['Paul']
 	```
 
-- 可以使用`d[key]`形式来查找对应的 value；
+### 2.2、使用get
 
-	***注意: 通过 key 访问 dict 的value，只要 key 存在，dict就返回对应的value.如果key不存在.会直接报错:`KeyError`***
+dict提供了一个 get 方法，在Key不存在的时候，返回None；如果键不存在，get() 方法也会返回默认值，方法是将默认值传递给第二个参数：`d.get('Thomas', -1)`
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+ssn = person.get('ssn', '000-00-0000')
+print(ssn)
+```
 
-	避免 `KeyError`:
-	- 先判断一下 key 是否存在，用 in 操作符：
-		```python
-		if 'Paul' in d:
-			print d['Paul']
-		```
-	- 使用dict本身提供的一个 get 方法，在Key不存在的时候，返回None，也可以自己指定返回的值：`d.get('Thomas', -1)`
-	- 要删除一个key，用pop(key)方法，对应的value也会从dict中删除：
+## 3、添加key-value
 
-- dict特点
-	- dict查找速度快，无论dict有10个元素还是10万个元素，查找速度都一样.而list的查找速度随着元素增加而逐渐下降。
-		- dict的缺点是占用内存大，还会浪费很多内容；list正好相反，占用内存小，但是查找速度慢；
-		- 由于dict是按 key 查找，所以:在一个dict中，key不能重复
-	- dict存储的key-value序对是没有顺序的；不能用dict存储有序的集合，dict内存数据的顺序和key的放入顺序无关.
-	- 作为 key 的元素必须不可变，Python的基本类型如字符串、整数、浮点数都是不可变的，都可以作为 key；但是list是可变的，就不能作为 key；dict的作用是建立一组 key 和一组 value 的映射关系，dict的key是不能重复的
-		- 对于不变对象来说，调用对象自身的任意方法，也不会改变该对象自身的内容。
-		- 相反，这些方法会创建新的对象并返回，这样，就保证了不可变对象本身永远是不可变的
+由于字典具有动态结构，因此可以随时添加新的键值对，添加方式也很简单：
+```py
+person['gender'] = 'Famale'
+```
 
-- 更新dict：直接赋值，如果存在相同的key，则替换以前的值；
+## 4、修改value
+
+更新dict：直接赋值，如果存在相同的key，则替换以前的值；
+```py
+dict[key] = new_value
+```
+
+## 5、移除key
+
+删除一个key可以使用如下方式：
+```py
+del dict[key]
+```
+也可以调用dict.pop(key)方法，对应的value也会从dict中删除：
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+del person['active']
+# 或者如下方式：
+person.pop('active')
+print(person)
+```
+
+## 6、迭代
+
+当然可以使用 for循环来处理
+
+### 6.1、迭代key-value
+
+`items()`：把dict对象转换成了包含`tuple`的list，我们对这个list进行迭代，可以同时获得key和value
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+print(person.items())
+# dict_items([('first_name', 'John'), ('last_name', 'Doe'), ('age', 25), ('favorite_colors', ['blue', 'green']), ('active', True)])
+for key, value in person.items():
+    print(f'{key} -> {value}')
+```
+
+### 6.2、迭代key
+
+keys() 方法返回一个对象，其中包含字典中的键列表
+```py
+print(person.keys())
+# 输出：dict_keys(['first_name', 'last_name', 'age', 'favorite_colors', 'active'])
+```
+实际上，在循环字典时，默认行为是循环所有键。因此，你不需要使用 keys() 方法。
+```py
+for key in person:
+    print(key)
+```
+
+### 6.3、迭代value
 	
-- 迭代dict的value：用 for 循环直接迭代 dict，可以每次拿到dict的一个key，如果希望迭代 dict 的values的
+用 for 循环直接迭代 dict，可以每次拿到dict的一个key，如果希望迭代 dict 的values的，使用`values()方法`：把dict转换成一个包含所有value的list
+```python
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+for value in person.values():
+    print(value)
+```
 
-	`values()方法`：把dict转换成一个包含所有value的list
-	```python
-	d = { 'Adam': 95， 'Lisa': 85， 'Bart': 59 }
-	print d.values()
-	# dict_values([59， 70， 61， 91， 81])
-	for v in d.values():
-		print v
-	# 85
-	# 95
-	# 59
-	```		
-- 迭代dict的 key 和 value
+## 7、Dictionary Comprehension
 
-	`items()`：把dict对象转换成了包含tuple的list，我们对这个list进行迭代，可以同时获得key和value
-	```python
-	d = { 'Adam': 95， 'Lisa': 85， 'Bart': 59 }
-	print d.items()
-	# dict_items([('E'， 59)， ('C'， 70)， ('D'， 61)， ('A'， 91)， ('B'， 81)])
-	for key， value in d.items():
-		print key， ':'， value				
-	#Lisa : 85
-	#Adam : 95
-	#Bart : 59
-	```
+Dictionary Comprehension，即字典解析。通过字典解析，可以在字典上运行 for 循环，对每个项目进行转换或过滤等操作，然后返回一个新的字典。
 
-## 2、Set类型
+基础语法如下：
+```py
+{key:value for (key,value) in dict.items() if condition}
+```
+该字典理解表达式返回一个新字典，其项由表达式 key: value 指定：
+```py
+stocks = {
+    'AAPL': 121,
+    'AMZN': 3380,
+    'MSFT': 219,
+    'BIIB': 280,
+    'QDEL': 266,
+    'LVGO': 144
+}
+new_stocks = {symbol: price * 1.02 for (symbol, price) in stocks.items()}
+print(new_stocks)
+```
+包含表达式：
+```py
+stocks = {
+    'AAPL': 121,
+    'AMZN': 3380,
+    'MSFT': 219,
+    'BIIB': 280,
+    'QDEL': 266,
+    'LVGO': 144
+}
+selected_stocks = {s: p for (s, p) in stocks.items() if p > 200}
+print(selected_stocks)
+```
+
+# 十二、Python Set
+
+## 1、Set类型
 
 - set 持有一系列元素，元素没有重复，而且是无序的，这点和 dict 的 key很像；set会自动去掉重复的元素；
-- 创建 set 的方式是调用 set() 并传入一个 list，list的元素将作为set的元素；
-	```
-	set(['A'，'B'，'C'])；
-	或者：
-	basket = {'Apple'，'Banana'，'Orange'，'Apple'}
-	```
-- 获取set元素: 访问 set中的某个元素实际上就是判断一个元素是否在set中：`'A' in set`；元素区分大小写；
-- set的特点
-	- set的内部结构和dict很像，唯一区别是不存储value；
-	- set存储的元素和dict的key类似，必须是不变对象；
-	- set存储的元素也是没有顺序的
-- 遍历set：直接使用 for 循环可以遍历 set 的元素
-	```
-	s = set(['Adam'， 'Lisa'， 'Bart'])
-	for name in s:
-	```
-- 更新set集合：
-	- 添加元素时，用set的add()方法：如果添加的元素已经存在于set中，add()不会报错，但是不会加进去了
-	- 删除set中的元素时，用set的remove()方法：如果删除的元素不存在set中，remove()会报错；因此使用remove()前需要判断；
-		
+- set中的元素不能更改。例如，它们可以是number、string和tuple，但不能是list或dictionary。
+```py
+empty_set  = set()
+```
+创建 set 的方式是调用 set() 并传入一个 list，list的元素将作为set的元素；
+```py
+set(['A'，'B'，'C'])；
+# 或者：
+basket = {'Apple'，'Banana'，'Orange'，'Apple'}
+```
+一个空的set返回 False：
+```py
+skills = set()
+if not skills:
+    print('Empty sets are falsy')
+```
+
+使用len()获取set中元素的个数：
+```py
+len(set)
+```
+
+## 2、in运算符
+
+要检查set是否包含某个元素，可以使用 in 运算符：
+```py
+element in set
+```
+示例：
+```py
+ratings = {1, 2, 3, 4, 5}
+rating = 1
+if rating in ratings:
+    print(f'The set contains {rating}')
+```
+元素区分大小写；
+
+## 3、添加元素
+
+添加元素时，用set的add()方法：如果添加的元素已经存在于set中，add()不会报错，但是不会加进去了
+```py
+set.add(element)
+# 示例
+skills = {'Python programming', 'Software design'}
+skills.add('Problem solving')
+print(skills)
+```
+
+## 4、删除元素
+
+删除set中的元素时，用set的remove()方法：如果删除的元素不存在set中，remove()会报错；
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+skills.remove('Java')
+# Error
+# KeyError: 'Java'
+```
+因此使用remove()前需要判断；
+
+为了更方便，集合有 `discard()` 方法，可以删除元素。如果元素不在列表中，它也不会引发错误
+```py
+set.discard(element)
+```
+
+要从集合中删除并返回一个元素，需要使用 `pop()` 方法
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+skill = skills.pop()
+print(skill)
+```
+由于集合中的元素没有特定的顺序，因此 pop() 方法会从集合中删除一个未指定的元素；
+
+删除所有元素：
+```py
+set.clear()
+```
+
+## 5、冻结set
+
+要使集合不可变，可以使用名为 `frozenset()` 的内置函数。`frozenset()`会从现有的集合返回一个新的不可变集合
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+skills = frozenset(skills)
+skills.add('Django')
+# Error: AttributeError: 'frozenset' object has no attribute 'add'
+```
+
+## 6、迭代
+
+遍历set：直接使用 for 循环可以遍历 set 的元素
+```py
+s = set(['Adam'， 'Lisa'， 'Bart'])
+for name in s:
+	print(skill)
+```
+要访问循环内当前元素的索引，可以使用内置的 enumerate() 函数：
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+for index, skill in enumerate(skills):
+    print(f"{index}.{skill}")
+```
+默认情况下，索引从 0 开始。要改变这种情况，可以将起始值传递给 enumerate() 函数的第二个参数：
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+for index, skill in enumerate(skills, 1):
+    print(f"{index}.{skill}")
+```
+**请注意**：每次运行代码时，都会以不同的顺序获得集合元素。
+
+## 7、Set Comprehension
+
+Set Comprehension，即集合解析，为了使代码更加简洁，Python 提供了如下的集合理解语法：
+```py
+{expression for element in set if condition}
+```
+此外，集合解析功能允许您通过 if 子句中的条件选择应用表达式的元素:
+
+**请注意**：集合解析会返回一个新的集合，而不会修改原始集合；
+
+示例：
+```py
+tags = {'Django', 'Pandas', 'Numpy'}
+lowercase_tags = {tag.lower() for tag in tags}
+print(lowercase_tags)
+```
+带条件：
+```py
+tags = {'Django', 'Pandas', 'Numpy'}
+new_tags = {tag.lower() for tag in tags if tag != 'Numpy'}
+print(new_tags)
+```
+
+## 8、Set Union
+
+**union()方法：**
+
+两个集合的 union 返回一个新集合，其中包含两个集合中的不同元素，基本语法：
+```py
+new_set = set.union(another_set, ...)
+```
+
+**`|`运算符**
+
+Python 为您提供了集合联合运算符 |，它允许您联合两个集合：
+```py
+new_set = set1 | set2
+```
+集合联合运算符 (|) 返回一个由集合 1 和集合 2 中不同元素组成的新集合。
+```py
+s1 = {'Python', 'Java'}
+s2 = {'C#', 'Java'}
+s = s1 | s2
+print(s)
+```
+
+**这两者区别：**
+- union() 方法接受一个或多个iterables，将iterables转换为集合，然后执行联合；
+```py
+rates = {1, 2, 3}
+ranks = [2, 3, 4]
+ratings = rates.union(ranks)
+print(ratings)
+```
+- union 运算符 (`|`) 只允许使用集合，而不能像 union() 方法那样使用迭代；
+```py
+ratings = rates | ranks
+# TypeError: unsupported operand type(s) for |: 'set' and 'list'
+```
+
+> 总之，union() 方法接受迭代表，而 union 运算符只允许集合
+
+## 9、Set Intersection
+
+Set Intersection，即集合交集，在 Python 中，您可以使用集合 intersection() 方法或集合相交操作符 (`&`) 来相交两个或多个集合：
+```py
+new_set = set1.intersection(set2, set3, ...)
+new_set = set1 & set2 & set3 & ...
+# intersection() 方法和 & 运算符具有相同的性能。
+```
+两个操作都是返回新的集合；
+
+Set intersection() 方法与 Set 交集运算符 (`&`) 区别：
+- Set 交集运算符 (`&`) 只能是 Set；
+- intersection() 方法可以是任何 iterables，如字符串、列表和字典。
+
+如果向 intersection() 方法传递 iterables ，它会在交集之前将迭代表转换为集合；不过，如果将集合交集运算符 (&) 用于可迭代表，则会引发错误：
+```py
+numbers = {1, 2, 3}
+scores = [2, 3, 4]
+numbers = numbers & scores
+print(numbers)
+# Output
+# TypeError: unsupported operand type(s) for &: 'set' and 'list'
+```
+
+## 10、Set Difference
+
+两个集合之间的 difference 会产生一个新的集合，其中包含第一个集合中的元素，而第二个集合中没有这些元素；集合差不是交换式，即反过来结果是不一样的；
+
+在 Python 中，您可以使用集合 difference() 方法或集合差运算符 (`-`) 来查找集合之间的差值：
+```py
+set1.difference(s2, s3, ...)
+```
+示例：
+```py
+s1 = {'Python', 'Java', 'C++'}
+s2 = {'C#', 'Java', 'C++'}
+s = s1.difference(s2)
+print(s) # {'Python'}
+
+s = s2.difference(s1)
+print(s) # {'C#'}
+```
+
+除了上面的方法之外，Python也提供了差集运算符（`-`）：
+```py
+s = s1 - s2
+```
+示例：
+```py
+s1 = {'Python', 'Java', 'C++'}
+s2 = {'C#', 'Java', 'C++'}
+s = s1 - s2
+print(s)
+```
+
+同样的：
+- difference() 可以是任何可迭代的对象；
+- 差集运算符（`-`）只能应用于 Set
+
+## 11、Symmetric Difference
+
+Symmetric Difference，即对称差集，两个集合之间的对称差是指两个集合中任何一个集合都有的元素集合，但不在它们的交集中
+
+假设有两个集合：
+```py
+s1 = {'Python', 'Java', 'C++'}
+s2 = {'C#', 'Java', 'C++'}
+# s1 和 s2 的对称差返回下面的集合：
+{'C#', 'Python'}
+```
+从输出结果中可以清楚地看到，返回集合中的元素要么在 s1 中，要么在 s2 中，但不在它们的交集中
+
+在 Python 中，可以使用集合 symmetric_difference() 方法或对称差运算符 (^) 找出两个或多个集合的对称差。
+
+**symmetric_difference()**，基本语法如下：
+```py
+new_set = set1.symmetric_difference(set2, set3,...)
+```
+
+**对称差运算符 (^)**
+```py
+new_set = set1 ^ set2 ^...
+```
+
+两者的区别：
+- symmetric_difference() 方法接受一个或多个可迭代的字符串、列表或字典。如果迭代表不是集合，该方法将把它们转换为集合，然后返回它们的对称差值
+- 对称差运算符 (^) 只适用于集合，如果使用到其他不是集合的可迭代对象上，会报错；
+
+## 12、issubset
 
 
-# 十六、列表生成式
+# 十三、列表生成式
 
 ## 1、生成列表
 
