@@ -2064,8 +2064,134 @@ while True:
 
 ```
 
+# 十四、类型提示
 
-# 十三、列表生成式
+## 1、什么是类型提示
+
+类似于C/C++，Python 的类型提示为您提供了可选的静态类型，以充分利用静态和动态类型的优点；
+
+比如如下有如下函数定义：
+```py
+def say_hi(name):
+    return f'Hi {name}'
+greeting = say_hi('John')
+print(greeting)
+```
+如果加上类型提示：
+```py
+def say_hi(name: str) -> str:
+    return f'Hi {name}'
+greeting = say_hi('John')
+print(greeting)
+```
+`name: str` 这个表示：name是str类型，并且函数的返回值也是：str；除 str 类型外，您还可以使用其他内置类型（如 int、float、bool 和字节）进行类型提示；
+
+> 需要注意的是，Python 解释器会完全忽略类型提示。如果向 say_hi() 函数传递一个数字，程序运行时不会出现任何警告或错误
+```py
+def say_hi(name: str) -> str:
+    return f'Hi {name}'
+greeting = say_hi(123)
+print(greeting) # 这里也不会报错
+```
+如果为了需要检查语法，需要安装静态类型检查工具；
+
+## 2、静态类型检查工具：mypy
+
+Python 没有官方的静态类型检查工具。目前，最流行的第三方工具是 Mypy。由于 Mypy 是一个第三方软件包，因此需要使用以下 pip 命令来安装它：
+```py
+pip instal mypy
+```
+直接运行命令：
+```bash
+mypy app.py
+```
+检查上面代码运行结果：
+```py
+app.py:5: error: Argument 1 to "say_hi" has incompatible type "int"; expected "str"
+Found 1 error in 1 file (checked 1 source file)
+```
+错误说明 say_hi 的参数是 int，而预期类型是 str
+
+## 3、类型提示与类型推断
+
+当定义变量一个时可以指定：
+```py
+name: str = 'John'
+```
+name 变量的类型是字符串。如果为 name 变量赋值的值不是字符串，静态类型检查程序会出错。
+
+没有必要为变量添加类型，因为静态类型检查程序通常可以根据分配给变量的值推断类型；在本例中，name 的值是一个字面字符串，因此静态类型检查程序会将 name 变量的类型推断为 str。
+
+## 4、为多个类型添加类型提示
+
+比如，如下的例子：
+```py
+def add(x, y):
+    return x + y
+```
+数字可以是整数或浮点数。使用该模块为多种类型设置类型提示:
+```py
+# 首先导入Union from typing 模块
+from typing import Union
+# 使用联合类型创建包括 int 和 float 的联合类型
+def add(x: Union[int, float], y: Union[int, float]) -> Union[int, float]:
+    return x + y
+```
+从 Python 3.10 开始，您可以使用 X | Y 语法创建联合类型：
+```py
+def add(x: int | float, y: int | float) -> int | float:
+    return x + y
+```
+
+## 5、类型别名
+
+Python 允许为类型指定别名，并使用别名进行类型提示：
+```py
+from typing import Union
+number = Union[int, float]
+def add(x: number, y: number) -> number:
+    return x + y
+```
+
+## 6、lists/dictionaries/sets类型替身
+
+```py
+ratings: list = [1, 2, 3]
+ratings = {1: 'Bad', 2: 'average', 3: 'Good'}
+```
+报错信息：
+```py
+app.py:3: error: Incompatible types in assignment (expression has type "Dict[int, str]", variable has type "List[Any]")
+Found 1 error in 1 file (checked 1 source file)
+```
+
+要指定列表、字典和集合中值的类型，可以使用类型模块中的类型别名：
+Type Alias	| Built-in Type
+-----------|------------
+List	|list
+Tuple	|tuple
+Dict	|dict
+Set	|set
+Frozenset	|frozenset
+Sequence	|For list, tuple, and any other sequence data type.
+Mapping	|For dictionary (dict), set, frozenset, and any other mapping data type
+ByteString	|bytes, bytearray, and memoryview types.
+
+比如，定义一个list，元素都是integer
+```py
+from typing import List
+ratings: List[int] = [1, 2, 3]
+```
+
+## 7、None Type
+
+如果函数没有明确返回值，可以使用 None 来键入返回值。例如
+```py
+def log(message: str) -> None:
+    print(message)
+```
+
+# 十五、列表生成式
 
 ## 1、生成列表
 

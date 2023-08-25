@@ -349,37 +349,60 @@ def now():
 		print('end call')
 	```
 
-## 9、偏函数(Partial functio)
-functools模块提供的功能
+## 9、偏函数(Partial function)
 
-- 简单总结functools.partial的作用就是：把一个函数的某些参数给固定住（也就是设置默认值），返回一个新的函数，调用这个新函数会更简单
+在实践中，如果想减少函数的参数数以简化函数的签名，就会使用偏函数。
 
-	比如:int()函数提供额外的base参数，默认值为10，如果需要大量转换二进制，可以再定义一个函数:
-	```python
-	def int2(x， base = 2):
-		return int(x，base)
-	# functools.partial就是帮助我们创建一个偏函数的，不需要我们自己定义int2()，可以直接使用下面的代码创建一个新的函数int2
-	import functools
-	int2 = functools.partial(int， base=2)
-	# 注意到上面的新的int2函数，仅仅是把base参数重新设定默认值为2，但也可以在函数调用时传入其他值：
-	```
+如果需要创建偏函数，Python 提供了 functools 标准模块中的偏函数，可以更轻松地定义偏函数。
 
-- 最后，创建偏函数时，实际上可以接收函数对象、`*args`和`**kw`这3个参数，当传入：
-	```
-	int2 = functools.partial(int， base=2)
-	实际上固定了int()函数的关键字参数base，也就是：
-		int2('10010') 
-	等价于:
-		kw = { 'base': 2 }
-		int('10010'， **kw)
-	当传入：
-		max2 = functools.partial(max， 10)
-	实际上会把10作为*args的一部分自动加到左边，也就是：
-		max2(5， 6， 7)
-	相当于：	
-		args = (10， 5， 6， 7)
-		max(*args)   ===>	10
-	```
+简单总结`functools.partial`的作用就是：把一个函数的某些参数给固定住（也就是设置默认值），返回一个新的函数，调用这个新函数会更简单。基础语法：
+```py
+functools.partial(fn, /, *args, **kwargs)
+```
+该偏函数返回的是可以调用的partial对象，调用partial对象时，Python 会使用位置参数 args 和关键字参数 kwargs 调用 fn 函数。
+
+比如:int()函数提供额外的base参数，默认值为10，如果需要大量转换二进制，可以再定义一个函数:
+```py
+from functools import partial
+def multiply(a, b):
+    return a*b
+
+double = partial(multiply, b=2)
+result = double(10)
+print(result)
+```
+
+偏函数与变量：
+```py
+from functools import partial
+def multiply(a, b):
+    return a*b
+x = 2
+f = partial(multiply, x)
+result = f(10)  # 20
+print(result)
+x = 3
+result = f(10)  # 20
+print(result)
+```
+因为此时偏函数没有改变过，所以里面x仍然是2；也就说`f = partial(multiply, x)`，在这里已经计算过x了，在后面改成x=3，但是偏函数没有改变；
+
+最后，创建偏函数时，实际上可以接收函数对象、`*args`和`**kw`这3个参数，当传入：
+```
+int2 = functools.partial(int， base=2)
+实际上固定了int()函数的关键字参数base，也就是：
+	int2('10010') 
+等价于:
+	kw = { 'base': 2 }
+	int('10010'， **kw)
+当传入：
+	max2 = functools.partial(max， 10)
+实际上会把10作为*args的一部分自动加到左边，也就是：
+	max2(5， 6， 7)
+相当于：	
+	args = (10， 5， 6， 7)
+	max(*args)   ===>	10
+```
 
 # 二、模块
 
