@@ -2571,6 +2571,12 @@ static <T> T newClass(Class<T> clazz)throws InstantiationException，IllegalAcce
 如果是自定义泛型类型，获取真正的类型：
 `Class<T> clazz = ((Class) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0]);`
 
+如果通过JSON反序列化时，需要带上对应的泛型，可以使用commons-lang3的一个工具类：
+```java
+// 表示该类型为List<String>，通过 Gson反序列化时可以传入该Type
+Type parameterize = TypeUtils.parameterize(List.class, String.class);
+```
+
 ## 3、通配符与上下界
 
 - 3.1、在使用泛型类的时候，既可以指定一个具体的类型，也可以用通配符"?"来表示未知类型，如`List<?>`
