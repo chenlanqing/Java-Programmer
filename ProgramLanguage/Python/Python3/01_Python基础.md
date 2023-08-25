@@ -563,11 +563,24 @@ def calc(*numbers):
 	return sum
 ```			
 - Python解释器会把传入的一组参数组装成一个tuple传递给可变参数，因此，在函数内部，直接把变量 args 看成一个 tuple 就好了。
-- 如果已经有一个list或tuple，要调用可变参数，python允许在list或tuple前面加上 `*` 号，把list或tuple变成可变参数；
+- 如果已经有一个list或tuple，要调用可变参数，python允许在list或tuple前面加上 `*` 号，把list或tuple变成可变参数；即解包操作
 	```python
-	num = [5，7，9，52]
+	num = [5,7,9,52]
 	print(calc(*num))
 	```
+如果使用了可变参数，就不能添加其他位置的参数：
+```py
+def add(x, y, *args, z):
+    return x + y + sum(args) + z
+add(10, 20, 30, 40, 50)
+# TypeError: add() missing 1 required keyword-only argument: 'z'
+```
+要解决这个问题，需要在 *args 参数后使用关键字参数，如下所示：
+```py
+def add(x, y, *args, z):
+    return x + y + sum(args) + z
+add(10, 20, 30, 40, z=50)
+```
 
 ## 6、空函数
 
@@ -594,26 +607,41 @@ fn(parameter2=value2,parameter1=value1)
 
 关键字参数允许你传入0个或任意个含参数名的参数，这些关键字参数在函数内部自动组装为一个dict
 ```python
-def person(name, age, **kw):
-	print('name:', name, 'age:', age, 'other:', kw)
+def connect(**kwargs):
+    print(type(kwargs))
+    print(kwargs)
+# <class 'dict'>
+# {}
 ```
+在调用该函数时，可以只传入必选参数；如果函数有 `**kwargs` 参数和其他参数，则需要将 **kwargs 放在其他参数之后。否则会出现错误
 
-函数person除了必选参数name和age外，还接受关键字参数kw。在调用该函数时，可以只传入必选参数
+关键字参数有什么用：它可以扩展函数的功能，利用关键字参数来定义这个函数就能满足注册的需求
 
-- 关键字参数有什么用：它可以扩展函数的功能，利用关键字参数来定义这个函数就能满足注册的需求
-- 和可变参数类似，也可以先组装出一个dict，然后，把该dict转换为关键字参数传进去；
-	```python
-	>>> kw = {'city': 'Beijing'， 'job': 'Engineer'}
-	>>> person('Jack', 24, city=kw['city'], job=kw['job'])
-	name: Jack age: 24 other: {'city': 'Beijing'， 'job': 'Engineer'}
-	```
-	简化版:
-	```python
-	>>> extra  = {'city': 'Beijing'， 'job': 'Engineer'}
-	>>> person('Jack'， 24， **extra )
-	name: Jack age: 24 other: {'city': 'Beijing'， 'job': 'Engineer'}
-	```
-	`**extra` 表示把extra这个dict的所有key-value用关键字参数传入到函数的`**kw`参数，`kw`将获得一个dict，注意kw获得的dict是extra的一份拷贝，对kw的改动不会影响到函数外的extra；
+和可变参数类似，也可以先组装出一个dict，然后，把该dict转换为关键字参数传进去；
+```python
+>>> kw = {'city': 'Beijing'， 'job': 'Engineer'}
+>>> person('Jack', 24, city=kw['city'], job=kw['job'])
+name: Jack age: 24 other: {'city': 'Beijing'， 'job': 'Engineer'}
+```
+简化版:
+```python
+>>> extra  = {'city': 'Beijing'， 'job': 'Engineer'}
+>>> person('Jack'， 24， **extra )
+name: Jack age: 24 other: {'city': 'Beijing'， 'job': 'Engineer'}
+```
+`**extra` 表示把extra这个dict的所有key-value用关键字参数传入到函数的`**kw`参数，`kw`将获得一个dict，注意kw获得的dict是extra的一份拷贝，对kw的改动不会影响到函数外的extra；
+
+同时使用可变参数和关键字参数：
+```py
+def fn(*args, **kwargs):
+    print(args)
+    print(kwargs)
+fn(1, 2, x=10, y=20)
+# (1, 2)
+# {'x': 10, 'y': 20}
+```
+- fn 函数可以接受数量可变的位置参数。Python 会将它们打包成一个元组，并将元组赋值给 args 参数。
+- fn 函数也接受数量可变的关键字参数。Python 将把它们打包成字典，并将字典赋值给 kwargs 参数
 
 ## 8、命名关键字参数
 
@@ -1247,7 +1275,70 @@ print(highest_mountains)
 
 ## 13、Tuple解包
 
+回顾一下，可以使用 tuple() 或者 (1,)、`1,`等来表示空或者单元素的tuple；
 
+tuple 解包意味着将元组元素拆分成单个变量。例如
+```py
+x, y = (1, 2)
+# 左边 x,y 表示一个由 x 和 y 两个变量组成的元组；右边也是由两个整数 1 和 2 组成的元组
+```
+该表达式根据每个元素的相对位置，将右侧的元组元素（1，2）分配给左侧的每个变量（x，y）。
+```py
+numbers = 10, 20, 30
+print(type(numbers))
+# <class 'tuple'>
+```
+
+**使用解包元组交换两个变量的值**
+
+传统交换两个变量的值一般通过中间变量来处理，在python中可用使用解包元祖方式来处理：
+```py
+x = 10
+y = 20
+print(f'x={x}, y={y}')
+x, y = y, x
+print(f'x={x}, y={y}')
+```
+交换的关键在于：`x, y = y, x`
+
+**解包错误**
+```py
+x, y = 10, 20, 30
+# ValueError: too many values to unpack (expected 2)
+```
+出现这个错误的原因是，右侧返回三个值，而左侧只有两个变量。要解决可用按照如下方式：
+```py
+x, y, _ = 10, 20, 30
+```
+`_` 变量是 Python 中的一个常规变量。按照惯例，它被称为哑变量，如果有多个，默认是最后一个，比如：
+```py
+x, y,_ , _= 10, 20, 30, 40
+print(x, y, _, _) # 10 20 40 40
+```
+
+**使用 `*` 操作符扩展解包**
+
+有时候并不想解包元组中的每一个项目。例如，可能想解包第一个和第二个元素。在这种情况下，可以使用 * 操作符
+```py
+r, g, *other = (192, 210, 100, 0.5)
+192
+210
+[100, 0.5]
+```
+请注意，在解包赋值的左侧只能使用一次 `*` 操作符
+
+**右侧使用`*`操作符**
+
+Python 允许在右侧使用 * 操作符，假设有如下两个元祖：
+```py
+odd_numbers = (1, 3, 5)
+even_numbers = (2, 4, 6)
+```
+下面的示例使用 * 操作符解包这些元组，并将它们合并为一个元组：
+```py
+numbers = (*odd_numbers, *even_numbers)
+print(numbers)
+```
 
 # 十、可迭代与迭代器
 
