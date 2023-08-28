@@ -406,22 +406,263 @@ int2 = functools.partial(int， base=2)
 
 # 二、模块
 
-在Python中，一个`.py`文件就称之为一个模块(Module)
+在Python中，一个`.py`文件就称之为一个模块(Module)，每个模块都是一个独立的 Python 源代码文件。模块名称由文件名指定，不含 .py 扩展名
 
 ## 1、关于模块
 
 - 使用模块最大的好处是大大提高了代码的可维护性。其次，编写代码不必从零开始。当一个模块编写完毕，就可以被其他地方引用。我们在编写程序的时候，也经常引用其他模块，包括Python内置的模块和来自第三方的模块；使用模块还可以避免函数名和变量名冲突。相同名字的函数和变量完全可以分别存在不同的模块中	
 
 - 为了避免模块名冲突，Python又引入了按目录来组织模块的方法，称为包（Package）：请注意，每一个包目录下面都会有一个`__init__.py`的文件，这个文件是必须存在的，否则，Python就把这个目录当成普通目录，而不是一个包。`__init__.py`可以是空文件，也可以有Python代码，因为`__init__.py`本身就是一个模块，而它的模块名就是mycompany；可以有多级目录，组成多级层次的包结构，引入了包以后，只要顶层的包名不与别人冲突，那所有模块都不会与别人冲突。现在，abc.py模块的名字就变成了mycompany.abc，类似的，xyz.py的模块名变成了mycompany.xyz
-		
-## 2、使用模块
+
+
+## 2、定义模块
+
+定义一个模块：创建一个文件：`pricing.py`
+```py
+# pricing.py
+def get_net_price(price, tax_rate, discount=0):
+    return price * (1 + tax_rate) * (1-discount)
+
+def get_tax(price, tax_rate=0):
+    return price * tax_rate
+```
+
+## 3、导入模块
+
+要使用模块中定义的来自其他文件的对象，可以使用 import 语句
+
+**（1） `import <module_name>`**
+```py
+import module_name
+# 比如 
+import pricing
+```
+导入模块时，Python 会执行相应文件中的所有代码。有了这个模块名，就可以在当前模块中访问导入模块中的函数、变量等。例如，可以使用以下语法调用导入模块中定义的函数：
+```py
+module_name.function_name()
+```
+比如：
+```py
+# main.py
+import pricing
+net_price = pricing.get_net_price(
+    price=100,
+    tax_rate=0.01
+)
+print(net_price)
+```
+
+**（2）`import <module_name> as new_name`**
+
+如果不想在 main.py 中使用 pricing 作为标识符，可以将模块名称重命名为另一个名称，如下所示：
+```py
+import pricing as selling_price
+net_price = selling_price.get_net_price(
+    price=100,
+    tax_rate=0.01
+)
+```
+
+**（3）`from <module_name> import <name>`**
+
+如果要引用模块中的对象而不使用模块名前缀，可以使用以下语法显式导入这些对象：
+```py
+from module_name import fn1, fn2
+fn1()
+fn2()
+```
+
+**（4）`from <module_name> import <name> as <new_name>`: 重命名导入的对象**
+
+使用以下导入语句，可以将导入的名称重命名为另一个名称：
+```py
+from <module_name> import <name> as <new_name>
+```
+比如：
+```py
+from pricing import get_net_price as calculate_net_price
+net_price = calculate_net_price(
+    price=100,
+    tax_rate=0.1,
+    discount=0.05
+)
+```
+
+**（5）`from <module_name> import` * : 导入模块中的所有对象**
+```py
+from module_name import *
+```
+该 import 语句将导入所有公共标识符，包括变量、常量、函数、类等。**但是**，这种做法并不好，因为如果导入的模块有相同的对象，第二个模块的对象就会覆盖第一个模块的对象。程序可能无法按预期运行
+
+## 4、模块搜索路径
+
+当在代码中写入如下代码：`import module`，Python 将从以下来源搜索 module.py 文件：
+- 执行程序的当前文件夹；
+- 环境变量 [PYTHONPATH](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH) 中指定的文件夹列表（如果之前设置过）
+- 在安装 Python 时进行了配置文件夹列表
+
+下面的代码显示了当前模块搜索路径：
+```py
+import sys
+
+for path in sys.path:
+    print(path)
+```
+在Windows上输出如下：
+```py
+d:\notes\Python\module
+D:\software\Python\python311.zip
+D:\software\Python\DLLs
+D:\software\Python\Lib
+D:\software\Python
+D:\software\Python\Lib\site-packages
+```
+为确保 Python 始终能找到 module.py，您需要
+- 将 module.py 放在执行程序的文件夹中；
+- 在PYTHONPATH 环境变量中加入包含 module.py 的文件夹。或者，也可以将 module.py 放在PYTHONPATH 变量中包含的某个文件夹中；
+- 将 module.py 放在某个依赖安装的文件夹中；
+
+**运行时修改 Python 模块搜索路径：**
+
+Python 允许通过修改 `sys.path` 变量在运行时修改模块搜索路径。这使您可以将模块文件存储在您选择的任何文件夹中；由于 sys.path 是一个列表，因此可以在其中添加搜索路径
+
+## 5、`__name__`
+
+由于 `__name__` 变量两边都有双下划线，所以称为 dunder name。dunder 代表双下划线；
+
+在 Python 中，`__name__` 是一个特殊的变量。说它特殊，是因为 Python 会根据包含它的脚本的执行方式给它分配不同的值
+- 直接运行脚本时，Python 会将 `__name__` 变量设置为`__main__`；
+- 但是，如果将文件作为模块导入，Python 会将模块名设置为变量 `__name__`
+
+示例：
+```py
+# billing.py
+def calculate_tax(price, tax):
+    return price * tax
+def print_billing_doc():
+    tax_rate = 0.1
+    products = [{'name': 'Book',  'price': 30},
+                {'name': 'Pen', 'price': 5}]
+    # print billing header
+    print(f'Name\tPrice\tTax')
+    # print the billing item
+    for product in products:
+        tax = calculate_tax(product['price'], tax_rate)
+        print(f"{product['name']}\t{product['price']}\t{tax}")
+print(__name__)
+```
+另外一个文件：app.py
+```py
+import billing
+```
+执行app.py
+```bash
+> python app.py
+billing
+```
+但是，如果执行：
+```bash
+> python billing.py
+__main__
+```
+因此，使用 `__name__` 变量可以检查文件是直接执行的，还是作为模块导入的
+
+但是，当您执行 app.py 时，您不会看到 if 块被执行，因为 `__name__` 变量没有设置为`__main__`，而是设置为 "billing"。
+
+## 6、包
+
+通过package，可以在分层结构中组织模块。Python 组织软件包和模块的方式就像操作系统组织文件夹和文件一样。
+- 要创建软件包，需要创建一个新文件夹，并将相关模块放入该文件夹中；
+- 要指示 Python 将包含文件的文件夹视为软件包，需要在文件夹中创建一个 `__init__.py` 文件。
+> 请注意，从 Python 3.3 开始，Python 引入了隐式命名空间包特性。这使得 Python 可以将文件夹视为一个包，而无需使用 `__init__.py`
+
+**导入包：**
+```py
+import package.module
+```
+要访问属于软件包的模块中的对象，可以使用dot：
+```py
+package.module.function
+```
+为了简化，也可以按照如下方式导入：
+```py
+from <module> import <function>
+```
+比如：
+```py
+# main.py
+from sales.order import create_sales_order
+from sales.delivery import create_delivery
+from sales.billing import create_billing
+
+# 或者重命名
+from sales.order import create_sales_order as create_order
+from sales.delivery import create_delivery as start_delivery
+from sales.billing import create_billing as issue_billing
+```
+
+**初始化包：**
+
+当您导入一个软件包时，Python 将执行该软件包中的 `__init__.py`，因此，可以将代码放在 `__init__.py` 文件中，以初始化包级数据，比如：
+```py
+# __init__.py
+# default sales tax rate
+TAX_RATE = 0.07
+```
+在 main.py 文件中，可以这样访问该包 `__init__.py`中的 TAX_RATE：
+```py
+# main.py
+from sales import TAX_RATE
+print(TAX_RATE)
+```
+除了初始化package级数据外，`__init__.py` 还允许你自动从软件包中导入模块:
+```py
+# __init__.py
+# import the order module automatically
+from sales.order import create_sales_order
+# default sales tax rate
+TAX_RATE = 0.07
+```
+然后从 main.py 文件中导入销售软件包，创建 create_sales_order  函数就会自动可用，如下所示
+```py
+# main.py
+import sales
+sales.order.create_sales_order()
+```
+
+**`from <package> import *`**
+```py
+from <package> import *
+```
+当使用上面语句从package导入所有对象时，Python 将查找 `__init__.py` 文件。如果 `__init__.py` 文件存在，它将加载文件中名为 `__all__` 的特殊列表中指定的所有模块。
+```py
+# __init__.py
+__all__ = [
+    'order',
+    'delivery'
+]
+```
+并在 main.py 中使用以下导入语句：
+```py
+# main.py
+from sales import *
+order.create_sales_order()
+delivery.create_delivery()
+# cannot access the billing module
+```
+
+**子包：**
+
+软件包可以包含子软件包。通过子软件包，可以进一步组织模块
+
+## 7、使用示例
 
 ```python
 #!/usr/bin/env python3 ==> 标准注释，表示该文件可以之unix环境直接运行
 # -*- coding: utf-8 -*- ==>文件的编码格式
-'a test module' ==> 一个字符串，表示模块的文档注释，任何模块代码的第一个字符串都被视为模块的文档注释；
-__author__ = 'BlueFish' ==> 变量把作者写进去
-import sys  ==> 导入sys模块后，我们就有了变量sys指向该模块，利用sys这个变量，就可以访问sys模块的所有功能
+'a test module' # 一个字符串，表示模块的文档注释，任何模块代码的第一个字符串都被视为模块的文档注释；
+__author__ = 'BlueFish' # 变量把作者写进去
+import sys  # 导入sys模块后，我们就有了变量sys指向该模块，利用sys这个变量，就可以访问sys模块的所有功能
 def test():
 	args = sys.argv
 	if len(args)==1:
@@ -445,7 +686,7 @@ if __name__=='__main__':
 		- 注意:private函数和变量“不应该”被直接引用，而不是“不能”被直接引用，是因为Python并没有一种方法可以完全限制访问private函数或变量
 	- 外部不需要引用的函数全部定义成private，只有外部需要引用的函数才定义为public
 
-## 3、安装第三方模块
+## 8、安装第三方模块
 
 在Python中，安装第三方模块，是通过包管理工具pip完成的
 
