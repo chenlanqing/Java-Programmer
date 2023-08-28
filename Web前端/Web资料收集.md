@@ -10,3 +10,12 @@
 - [无界前端框架](https://github.com/Tencent/wujie)
 - [Web3D可视化](http://www.webgl3d.cn/)
 
+如果需要一键变黑白，只需要在在body上增加一个style：`filter:grayscale(100%)`
+```html
+...
+<body style='filter:grayscale(100%)'>
+
+</body
+...
+```
+
