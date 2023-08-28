@@ -19,7 +19,7 @@ public @interface SpringBootApplication {
 }
 ```
 - `@SpringBootApplication` = `(默认属性)@Configuration + @EnableAutoConfiguration + @ComponentScan`。如果在启动类不配置`@SpringBootApplication`，也可以配置这三个注解，通用能够启动；
-- `@Configuration`：JavaConfig形式的Spring Ioc容器的配置类；SpringBootApplication 作为Configuration 的派生注解，继承其注解特性，最明显的是CGLIB提升
+- `@Configuration`：JavaConfig形式的Spring Ioc容器的配置类；SpringBootApplication 作为Configuration 的派生注解，继承其注解特性，最明显的是CGLIB提升；[@Configuration的Full模式和Lite模式](https://juejin.cn/post/7271991667246153765)
 - `@ComponentScan`：@ComponentScan的功能其实就是自动扫描并加载符合条件的组件（比如@Component和@Repository等）或者bean定义，最终将这些bean定义加载到IOC容器中
 - `@EnableAutoConfiguration`：@EnableAutoConfiguration也是借助`@Import`的帮助，将所有符合自动配置条件的bean定义加载到IOC容器，仅此而已！
 
