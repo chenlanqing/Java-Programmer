@@ -1033,6 +1033,7 @@ public LocaleResolver localeResolver(){
 <a class="btn btn-sm" th:href="@{/index.html(l='zh_CN')}">中文</a>
 <a class="btn btn-sm" th:href="@{/index.html(l='en_US')}">English</a>
 ```
+> 如果国际化内容中既包含占位符也包含一些特殊字符，比如：`can't`，为了返回到包含正确的内容，需要配置为：`can''t`
 
 ## 5、拦截器
 
