@@ -1,23 +1,57 @@
-# 一、异常
+# 一、错误与异常
 
-在程序运行的过程中，如果发生了错误，可以事先约定返回一个错误代码，这样，就可以知道是否有错，以及出错的原因
+在 Python 中，主要有两种错误：语法错误和异常。
+- 语法错误：比如无效Python代码，Python 解释器会显示发生错误的文件名和行号，以便您修复错误。
+- 异常：在 Python 中，执行过程中出现的错误，产生异常的原因主要来自代码执行的环境；
+
+出现异常时，程序不会自动处理，结果就是错误信息；
 
 ## 1、错误与异常处理
 
-### 1.1、`try...except...finally...`的错误处理机制
+### 1.1、异常处理机制
+
+语法：
+```py
+try:
+    # code that may cause error
+except:
+    # handle errors
+finally:
+	# 
+```
+示例：
 ```python
 try:
 	print('try...')
 	r = 10 / 0
 	print('result'， r)
-except ZeroDivisionError as e:
+except ZeroDivisionError as e: # 处理特定异常信息
 	print('Except:'， e)
 finally:
 	print('finally...')
 print('End')
 ```
-- 当我们认为某些代码可能会出错时，就可以用try来运行这段代码，如果执行出错，则后续代码不会继续执行，而是直接跳转至错误处理代码，即except语句块，执行完except后，如果有finally语句块，则执行finally语句块，至此，执行完毕；
-- 此外，如果没有错误发生，可以在except语句块后面加一个else，当没有错误发生时，会自动执行else语句
+当我们认为某些代码可能会出错时，就可以用try来运行这段代码，如果执行出错，则后续代码不会继续执行，而是直接跳转至错误处理代码，即except语句块，执行完except后，如果有finally语句块，则执行finally语句块，至此，执行完毕；
+
+可以处理多个异常：
+```py
+try:
+    # code that may cause an exception
+except Exception1 as e1:
+    # handle exception
+except Exception2 as e2:
+    # handle exception
+except Exception3 as e3:
+    # handle exception 
+```
+如果希望对某些类型的异常做出相同的响应，可以将它们归类到一个 except 子句中：
+```py
+try:
+    # code that may cause an exception
+except (Exception1, Exception2):
+    # handle exception
+```
+此外，如果没有错误发生，可以在except语句块后面加一个else，当没有错误发生时，会自动执行else语句；如果包含 finally 子句，else 子句会在 try 子句之后、finally 子句之前执行
 ```python
 try:
 	print('try...')
@@ -33,46 +67,95 @@ finally:
 	print('finally...')
 print('END')
 ```
-- python其实也是class，所有的错误类型都继承自BaseException，不需要在每个可能出错的地方去捕获错误，只要在合适的层次去捕获错误就可以了
+python其实也是class，所有的错误类型都继承自BaseException，不需要在每个可能出错的地方去捕获错误，只要在合适的层次去捕获错误就可以了；
+
+将 catch Exception 代码块放在列表末尾，以捕获其他一般错误，也是一种很好的做法：
+```py
+try:
+	# handler code
+    print(result)
+except ValueError:
+    print('Error! Please enter a number for net sales.')
+except ZeroDivisionError:
+    print('Error! The prior net sales cannot be zero.')
+except Exception as error:
+    print(error)
+```
+
+try...catch...finally可以有三种写法：
+```py
+# 写法1：
+try:
+    # code that may cause an exception
+except Exception1 as e1:
+    # handle exception
+except Exception2 as e2:
+    # handle exception
+except Exception3 as e3:
+    # handle exception 
+
+# 写法2：
+try:
+    # code that may cause an exception
+except (Exception1, Exception2):
+    # handle exception
+finally:
+	# final code
+
+# 写法3：通常情况下，在无法处理异常但又想清理资源时会使用该语句。例如，您想关闭已打开的文件
+try:
+    # the code that may cause an exception
+finally:
+    # the code that always executes
+
+# 写法4：
+try:
+    # code that may cause errors
+except:
+    # code that handle exceptions
+else:
+    # code that executes when no exception occurs
+```
 
 ### 1.2、调用堆栈
 
 如果错误没有被捕获，它就会一直往上抛，最后被Python解释器捕获，打印一个错误信息，然后程序退出；
 
 ### 1.3、记录错误
+
 如果不捕获错误，自然可以让Python解释器来打印出错误堆栈，但程序也被结束了。既然我们能捕获错误，就可以把错误堆栈打印出来，然后分析错误原因，同时，让程序继续执行下去
 
-- Python内置的logging模块可以非常容易地记录错误信息，通过配置，logging还可以把错误记录到日志文件里
-	```python
-	# 同样是出错，但程序打印完错误信息后会继续执行，并正常退出：
-	import logging
-	def foo(s):
-		return 10 / int(s)
-	def bar(s):
-		return foo(s) * 2
-	def main():
-		try:
-			bar('0')
-		except Exception as e:
-			logging.exception(e)
-	main()
-	print('END')
-	```
+Python内置的logging模块可以非常容易地记录错误信息，通过配置，logging还可以把错误记录到日志文件里
+```python
+# 同样是出错，但程序打印完错误信息后会继续执行，并正常退出：
+import logging
+def foo(s):
+	return 10 / int(s)
+def bar(s):
+	return foo(s) * 2
+def main():
+	try:
+		bar('0')
+	except Exception as e:
+		logging.exception(e)
+main()
+print('END')
+```
+
 ### 1.4、抛出错误
 
-- 要抛出错误，首先根据需要，可以定义一个错误的class，选择好继承关系，然后用raise语句抛出一个错误的实例:
-	```python
-	class FooError(ValueError):
-		pass
-	def foo(s):
-		n = int(s)
-		if n == 0:
-			raise FooError('invalid value %s' % s)
-		return 10 / n
-	foo('0')
-	```
-
-- 只有在必要的时候才定义我们自己的错误类型。如果可以选择Python已有的内置的错误类型(比如ValueError，TypeError)，尽量使用Python内置的错误类型
+要抛出错误，首先根据需要，可以定义一个错误的class，选择好继承关系，然后用raise语句抛出一个错误的实例:
+```python
+class FooError(ValueError):
+	pass
+def foo(s):
+	n = int(s)
+	if n == 0:
+		raise FooError('invalid value %s' % s)
+	return 10 / n
+foo('0')
+```
+只有在必要的时候才定义我们自己的错误类型。如果可以选择Python已有的内置的错误类型(比如ValueError，TypeError)，尽量使用Python内置的错误类型
 
 ### 1.5、其他处理方式
 
@@ -93,7 +176,12 @@ bar()
 - 由于当前函数不知道应该怎么处理该错误，所以，最恰当的方式是继续往上抛，让顶层调用者去处理
 - raise语句如果不带参数，就会把当前错误原样抛出.此外，在except中raise一个Error，还可以把一种类型的错误转化成另一种类型
 
-## 3、python调试
+# 二、文件处理
+
+
+
+
+# python调试
 
 ### 3.1、print()语句
 
