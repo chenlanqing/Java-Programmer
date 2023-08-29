@@ -699,7 +699,71 @@ if __name__=='__main__':
 		- 直接修改sys.path，添加要搜索的目录：`sys.path.append('/Users/michael/my_py_scripts')` # 这种方法是在运行时修改，运行结束后失效
 		- 第二种方法是设置环境变量PYTHONPATH，该环境变量的内容会被自动添加到模块搜索路径中
 	
-		
+
+## 9、private函数	
+
+假设某个模块 mail.py 中有如下两个方式：
+```py
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+
+def attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+只想暴露 send 方法给到外部，如何实现呢？
+
+**函数前加 `_`**
+```py
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+
+def _attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+使用时：
+```py
+from mail import *
+# 只能看到 send 方法
+send('test@example.com','Hello')
+```
+如果尝试调用 `_attach_file` 方法，会报相应的错误：
+```py
+NameError: name '_attach_file' is not defined
+```
+
+**使用`__all__`变量**
+
+`__all__` 指定了其他模块可以使用的函数（以及变量和其他对象）列表。换句话说，只要不在 `__all__` 变量中列出某个函数，它就可以被私有化：
+```py
+# mail.py
+__all__ = ['send']
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+def attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+使用包结构，有如下包结构：
+```
+├── mail
+|  ├── email.py
+|  └── __init__.py
+└── main.py
+```
+emial.py代码：
+```py
+# email.py
+__all__ = ['send']
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+def attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+`__init__.py`增加如下diamante：
+```py
+from .email import * 
+__all__ = email.__all__
+```
+这样，mail 包只公开 `email.__all__` 变量中指定的 send() 函数。它从外部隐藏了 `attach_file()` 函数
 		
 		
 		
