@@ -3827,6 +3827,10 @@ invocableMethod.invokeAndHandle(webRequest, mavContainer);
 
 ## 65、setter注入和构造函数注入区别
 
+## 66、@Configuration 和 @Component 有什么区别
+
+@Configuration 注解注册到 Spring 中的 Bean 是一个 CGLIB 代理的 Bean，而不是原始 Bean，这一点和 @Component 不一样，@Component 注册到 Spring 容器中的还是原始 Bean
+
 # 八、Netty
 
 ## 1、服务端的Socket在哪里初始化？
