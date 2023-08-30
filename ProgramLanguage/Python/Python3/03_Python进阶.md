@@ -178,8 +178,74 @@ bar()
 
 # 二、文件处理
 
+## 1、读文件
 
+下列代码是读取一个文件到string中：
+```py
+with open('readme.txt') as f:
+    lines = f.readlines()
+```
+读取一个文件的步骤：
+- 首先，使用 `open()` 函数打开一个文本文件供读取；
+- 其次，使用文件对象的 `file` `read()`、`readline()` 或 `readlines()` 方法从文本文件中读取文本
+- 第三步，使用文件 `close()` 方法关闭文件；
 
+### 1.1、open()函数
+
+open() 函数有多个参数，但是一般只需要关注第一个：
+```py
+# path_to_file 指定要读取文件的路径
+open(path_to_file, mode)
+```
+当然如果你的程序和需要读取的文件是在同一个文件夹中，只需要填写文件名称；要指定文件路径，即使是在 Windows 系统中，也要使用正斜线（'/'）。
+
+`mode`是一个可选参数。它是一个字符串，用于指定打开文件的模式。下表列出了打开文本文件的可用模式：
+- `r`：打开文本文件以读取文本；
+- `w`：打开文本文件以写文本；
+- `a`：打开文本文件以追加文本
+
+比如你要读取一个文件：`f = open('the-zen-of-python.txt','r')`；
+
+open() 函数返回一个文件对象，你可以用它从文本文件中读取文本。
+
+### 1.2、读取文本的方法
+
+文件对象为您提供了三种从文本文件读取文本的方法：
+- `read(size)`：根据可选的大小读取文件的部分内容，并以字符串形式返回。如果省略 size，read() 方法会从上次读取的位置读取，直到文件结束。如果文件已结束，read() 方法将返回空字符串
+- `readline()`：从文本文件中读取一行，并以字符串形式返回。如果已到达文件末尾，readline() 将返回空字符串
+- `readlines()`：将文本文件的所有行添加到字符串列表中。如果您有一个小文件，但想操作该文件的全部文本，这种方法非常有用
+
+### 1.3、close()方法
+
+在使用 close() 方法关闭文件之前，您打开的文件将一直保持打开状态。一般直接使用：`f.close()`
+
+要在不调用 close() 方法的情况下自动关闭文件，可以使用 with 语句，如下所示：
+```py
+with open(path_to_file) as f:
+    contents = f.readlines()
+```
+
+### 1.4、读文件示例
+
+```py
+with open('the-zen-of-python.txt') as f:
+    [print(line.strip()) for line in f.readlines()]
+```
+open() 函数返回的文件对象是一个可迭代对象。因此，可以使用 for 循环遍历文本文件的行，如下所示
+```py
+with open('the-zen-of-python.txt') as f:
+    for line in f:
+        print(line.strip())
+```
+
+### 1.5、读UTF-8文件
+
+要打开 UTF-8 文本文件，需要将 `encoding='utf-8'` 传递给 open() 函数，以指示它期望从文件中获取 UTF-8 字符
+```py
+with open('quotes.txt', encoding='utf8') as f:
+    for line in f:
+        print(line.strip())
+```
 
 # python调试
 
