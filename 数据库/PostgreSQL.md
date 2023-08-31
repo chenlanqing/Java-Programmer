@@ -17,5 +17,6 @@ $ docker run --name pgadmin -p 5051:80 -e "PGADMIN_DEFAULT_EMAIL=743633145@qq.co
 
 # 参考资料
 
-- [PostgreSQL](https://www.postgresql.org/)
+- [PostgreSQL官方文档](https://www.postgresql.org/docs/current/tutorial.html)
+- [Postgresql Tutorial](https://www.postgresqltutorial.com/)
 - [PostgreSQL作为搜索引擎](https://xata.io/blog/postgres-full-text-search-engine)
