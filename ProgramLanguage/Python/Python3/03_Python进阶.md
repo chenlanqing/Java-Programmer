@@ -247,6 +247,209 @@ with open('quotes.txt', encoding='utf8') as f:
         print(line.strip())
 ```
 
+## 2、写文件
+
+写文件一般格式：
+```py
+with open('readme.txt', 'w') as f:
+    f.write('readme')
+```
+写文件的步骤：
+- 首先，使用 `open()` 函数打开文本文件以进行写入（或添加）操作
+- 其次，使用 `write()` 或 `writelines()` 方法写入文本文件；
+- 最后，使用 `close()` 方法关闭文件
+
+**open()函数**
+
+`f = open(file, mode)`
+- `file`参数指定了要打开用于写入的文本文件的路径；
+- `mode`参数用于指定打开文本文件的模式；
+
+写文件时，mode参数：
+- `w`：打开一个文本文件以供书写。如果文件存在，函数会在打开文件后立即截断所有内容。如果文件不存在，函数将创建一个新文件；
+- `a`：打开用于添加文本的文本文件。如果文件存在，函数会在文件末尾添加内容；
+- `+`：打开文本文件进行更新（读取和写入）。
+
+**写函数：**
+- `write()` 方法将字符串写入文本文件。
+- `writelines()` 方法会将一系列字符串一次性写入文件。
+
+`writelines()` 方法接受一个可迭代对象，而不仅仅是一个列表，所以可以向 `writelines()` 方法传递一个字符串元组、一个字符串集合等：
+```py
+f.write('\n')
+f.writelines('\n')
+```
+
+示例：
+```py
+lines = ['Readme', 'How to write text files in Python']
+with open('readme.txt', 'w') as f:
+    for line in lines:
+        f.write(line)
+        f.write('\n')
+# 或者如下方式：
+lines = ['Readme', 'How to write text files in Python']
+with open('readme.txt', 'w') as f:
+    f.writelines(lines)
+```
+
+**写UTF-8数据**
+```py
+quote = '中华人民共和国'
+with open('quotes.txt', 'w', encoding='utf-8') as f:
+    f.write(quote)
+```
+
+## 3、创建文件
+
+要创建一个新文本文件，需要使用 open() 函数。open() 函数有很多参数。不过，只需要关注前两个参数：
+```py
+f = open(path_to_file, mode)
+```
+mode参数可以是：
+- `w`：打开一个文件供写入。如果文件不存在，open() 函数会创建一个新文件。否则，它会覆盖现有文件的内容；
+- `x`：打开一个文件以创建独占文件。如果文件存在，open() 函数会引发错误 (FileExistsError)。否则，它将创建文本文件
+
+如果要在指定目录下创建文件，例如 docs/readme.text，则需要在创建文件前确保 docs 目录存在。否则会出现异常
+```py
+with open('docs/readme.txt', 'w') as f:
+    f.write('Create a new text file!')
+# IOError: [Errno 2] No such file or directory: 'docs/readme.txt'
+```
+要解决这个问题，你需要先创建 docs 目录，然后在该文件夹中创建 readme.txt 文件。
+
+如果不想在文本文件已经存在的情况下创建新文件，可以在调用 open() 函数时使用 "x "模式：
+```py
+with open('readme.txt', 'x') as f:
+    f.write('Create a new text file!')
+```
+
+## 4、判断文件是否存在
+
+处理文件时，在对文件进行读取或写入等其他操作之前，您通常需要检查文件是否存在。为此，可以使用 `os.path` 模块中的 `exists()` 函数或 `pathlib` 模块中的 Path 类中的 `is_file()` 方法
+
+- `os.path.exists()`
+```py
+from os.path import exists
+file_exists = exists(path_to_file)
+```
+- `Path.is_file()`
+```py
+from pathlib import Path
+path = Path(path_to_file)
+path.is_file()
+```
+
+示例1：
+```py
+import os.path
+os.path.exists(path_to_file)
+```
+如果文件存在，`exists()` 函数返回 True。否则，返回 False。
+
+示例2：
+```py
+from pathlib import Path
+path = Path(path_to_file)
+path.is_file()
+```
+```py
+from pathlib import Path
+path_to_file = 'readme.txt'
+path = Path(path_to_file)
+if path.is_file():
+    print(f'The file {path_to_file} exists')
+else:
+    print(f'The file {path_to_file} does not exist')
+```
+
+## 5、CSV文件处理
+
+CSV 是逗号分隔值的缩写。CSV 文件是一种使用逗号分隔数值的分隔文本文件。CSV 文件由一行或多行组成。每一行是一条数据记录。每条数据记录由一个或多个数值组成，以逗号分隔。此外，CSV 文件的所有行都有相同数量的值。
+
+### 5.1、读取CSV文件
+
+```py
+# 导入CSV模块
+import csv
+# 打开文件，或者使用UTF8编码
+f = open('path/to/csv_file') # f = open('path/to/csv_file', encoding='UTF8')
+# 读取文件
+csv_reader = csv.reader(f)
+f.close()
+```
+`csv_reader` 是 CSV 文件行数的可迭代对象。因此，可以使用 for 循环遍历 CSV 文件的行：
+```py
+for line in csv_reader:
+    print(line)
+```
+每一行都是一个值列表。要访问每个值，需要使用方括号符号 [] 。第一个值的索引为 0，第二个值的索引为 1，以此类推。
+```py
+import csv
+with open('path/to/csv_file', 'r') as f:
+    csv_reader = csv.reader(f)
+    for line in csv_reader:
+        # process each line
+        print(line)
+```
+
+一般csv文件包含一个头的行，要分离标题和数据，可以使用 enumerate() 函数获取每一行的索引：
+```py
+import csv
+with open('country.csv', 'r') as f:
+    csv_reader = csv.reader(f)
+    for line_no, line in enumerate(csv_reader, 1):
+        if line_no == 1:
+            print('Header:')
+            print(line)  # header
+            print('Data:')
+        else:
+            print(line)  # data
+```
+跳过header另一种方法是使用 `next()` 函数。next() 函数将读者转到下一行。例如
+```py
+import csv
+with open('country.csv', 'r') as f:
+    csv_reader = csv.reader(f)
+
+    # skip the first row
+    next(csv_reader)
+
+    # show the data
+    for line in csv_reader:
+        print(line)
+```
+
+### 5.2、DictReader
+
+使用 csv.reader() 函数时，可以使用括号符号（如 line[0]、line[1]等）访问 CSV 文件的值。不过，使用 csv.reader() 函数有两个主要限制：
+- 从 CSV 文件中访问值的方法并不明显。例如，`line[0]` 隐含地表示国家名称。如果能像 `line['country_name']` 这样访问国家名，会更方便；
+- 当 CSV 文件中列的顺序发生变化或添加了新列时，需要修改代码以获取正确的数据；
+
+DictReader 类允许你创建一个类似于普通 CSV 阅读器的对象。但它会将每一行的信息映射到一个字典（dict）中，该字典的键由第一行的值指定。通过使用 DictReader 类，可以访问 `country.csv` 文件中的值，如行['name']、行['area']、行['country_code2']和行['country_code3']。
+```py
+import csv
+with open('country.csv', 'r') as f:
+    csv_reader = csv.DictReader(f)
+    # skip the header
+    next(csv_reader)
+    # show the data
+    for line in csv_reader:
+        print(f"The area of {line['name']} is {line['area']} km2")
+```
+如果想使用第一行中指定的字段名以外的其他字段名，可以像这样通过向 DictReader() 构造函数传递字段名列表来明确指定字段名：
+```py
+import csv
+fieldnames = ['country_name', 'area', 'code2', 'code3']
+with open('country.csv', encoding="utf8") as f:
+    csv_reader = csv.DictReader(f, fieldnames)
+    next(csv_reader)
+    for line in csv_reader:
+        print(f"The area of {line['country_name']} is {line['area']} km2")
+```
+
+### 5.3、写CSV文件
+
 # python调试
 
 ### 3.1、print()语句
