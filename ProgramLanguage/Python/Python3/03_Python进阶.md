@@ -176,7 +176,7 @@ bar()
 - 由于当前函数不知道应该怎么处理该错误，所以，最恰当的方式是继续往上抛，让顶层调用者去处理
 - raise语句如果不带参数，就会把当前错误原样抛出.此外，在except中raise一个Error，还可以把一种类型的错误转化成另一种类型
 
-# 二、文件处理
+# 二、文件与文件夹处理
 
 ## 1、读文件
 
@@ -449,6 +449,323 @@ with open('country.csv', encoding="utf8") as f:
 ```
 
 ### 5.3、写CSV文件
+
+写CSV文件的一般步骤：
+- 使用 open() 函数打开 CSV 文件进行写入（w 模式）。
+- 调用 csv 模块的 `writer()` 函数，创建 CSV 写入器对象。
+- 通过调用 CSV 写入器对象的 `writerow()` 或 `writerows()（写入多行）` 方法，将数据写入 CSV 文件；
+- 一旦完成数据写入，关闭文件。
+
+基本代码：
+```py
+import csv
+# open the file in the write mode
+f = open('path/to/csv_file', 'w')
+# create the csv writer
+writer = csv.writer(f)
+# write a row to the csv file
+writer.writerow(row)
+# close the file
+f.close()
+```
+如果使用 with 语句，就不需要调用 close() 方法来明确关闭文件，这样会更简短：
+```py
+import csv
+# open the file in the write mode
+with open('path/to/csv_file', 'w') as f:
+    # create the csv writer
+    writer = csv.writer(f)
+
+    # write a row to the csv file
+    writer.writerow(row)
+```
+写UTF-8文件：
+```py
+import csv
+# open the file in the write mode
+with open('path/to/csv_file', 'w', encoding='UTF8') as f:
+    # create the csv writer
+    writer = csv.writer(f)
+    # write a row to the csv file
+    writer.writerow(row)
+```
+
+示例：
+```py
+import csv  
+header = ['name', 'area', 'country_code2', 'country_code3']
+data = ['Afghanistan', 652090, 'AF', 'AFG']
+with open('countries.csv', 'w', encoding='UTF8') as f:
+    writer = csv.writer(f)
+
+    # write the header
+    writer.writerow(header)
+    # write the data
+    writer.writerow(data)
+```
+
+如果要删除空行，可向 open() 函数传递关键字参数 newline=''，如下所示：
+```py
+import csv
+header = ['name', 'area', 'country_code2', 'country_code3']
+data = ['Afghanistan', 652090, 'AF', 'AFG']
+with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+    writer = csv.writer(f)
+    # write the header
+    writer.writerow(header)
+    # write the data
+    writer.writerow(data)
+```
+
+**使用DictWriter**
+
+如果 CSV 文件的每一行都是字典，则可以使用 csv 模块的 DictWriter 类将字典写入 CSV 文件：
+```py
+import csv
+# csv header
+fieldnames = ['name', 'area', 'country_code2', 'country_code3']
+# csv data
+rows = [
+    {'name': 'Albania', 'area': 28748, 'country_code2': 'AL', 'country_code3': 'ALB'},
+    {'name': 'Algeria', 'area': 2381741, 'country_code2': 'DZ', 'country_code3': 'DZA'},
+    {'name': 'American Samoa', 'area': 199, 'country_code2': 'AS', 'country_code3': 'ASM'}
+]
+with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+```
+
+## 6、删除文件
+
+要删除文件，需要使用 os 内置模块的 remove() 函数。例如，下面的代码使用 os.remove() 函数删除 readme.txt 文件
+```py
+import os
+os.remove('readme.txt')
+```
+如果 readme.txt 文件不存在，os.remove() 函数就会出错：
+```py
+FileNotFoundError: [Errno 2] No such file or directory: 'readme.txt'
+```
+为避免出现该错误，可以在删除文件前检查该文件是否存在，就像这样：
+```py
+import os
+filename = 'readme.txt'
+if os.path.exists(filename):
+    os.remove(filename)
+```
+或者使用异常处理的方式：
+```py
+import os
+try:
+    os.remove('readme.txt')
+except FileNotFoundError as e:
+    print(e)
+```
+
+## 7、文件重命名
+
+要重命名文件，需要使用 `os.rename()` 函数：
+```py
+os.rename(src,dst)
+```
+如果 src 文件不存在，`os.rename()` 函数会引发 `FileNotFound` 错误。同样，如果 dst 文件已经存在，`os.rename()` 函数会引发 FileExistsError 错误：
+```py
+import os
+os.rename('readme.txt', 'notes.txt')
+```
+示例：
+```py
+import os
+
+try:
+    os.rename('readme.txt', 'notes.txt')
+except FileNotFoundError as e:
+    print(e)
+except FileExistsError as e:
+    print(e)
+```
+
+## 8、目录
+
+### 8.1、获取当前工作目录
+
+当前工作目录是运行 Python 脚本的目录。要获取当前工作目录，可以使用 `os.getcwd()`，如下所示：
+```py
+import os
+cwd = os.getcwd()
+print(cwd)
+```
+要更改当前工作目录，可以使用函数 `os.chdir()`：
+```py
+import os
+os.chdir('/script')
+cwd = os.getcwd()
+print(cwd)
+```
+
+### 8.2、连接和分割路径
+
+要让程序在 Windows、Linux 和 macOS 等平台上运行，需要使用与平台无关的文件和目录路径；Python 提供了一个子模块 `os.path`，其中包含几个有用的函数和常量，用于连接和分割路径；
+- `join()` 函数将路径组件连接在一起，并返回带有相应路径分隔符的路径。例如，在 Windows 中使用反斜线 (\)，在 macOS 或 Linux 中使用正斜线 (/)
+- `split()` 函数将路径分割为不带路径分隔符的多个部分。
+
+示例：
+```py
+import os
+
+fp = os.path.join('temp', 'python')
+print(fp)  # temp\python (on Windows)
+
+pc = os.path.split(fp)
+print(pc)  # ('temp', 'python')
+```
+
+### 8.3、判断路径是否为目录
+
+要检查路径是否存在和是否是目录，可以使用函数 `os.path.exists()` 和 `os.path.isdir()` 函数。
+```py
+import os
+dir = os.path.join("C:\\", "temp")
+print(dir)
+if os.path.exists(dir) or os.path.isdir(dir):
+    print(f'The {dir} is a directory')
+```
+
+### 8.4、创建目录
+
+要创建新目录，需要使用 `os.mkdir()` 函数。在创建新目录之前，应首先检查目录是否存在:
+```py
+import os
+
+dir = os.path.join("C:\\", "temp", "python")
+if not os.path.exists(dir):
+    os.mkdir(dir)
+```
+
+### 8.5、重命名目录
+
+要重命名目录，需要使用 os.rename() 函数：
+```py
+import os
+oldpath = os.path.join("C:\\", "temp", "python")
+newpath = os.path.join("C:\\", "temp", "python3")
+if os.path.exists(oldpath) and not os.path.exists(newpath):
+    os.rename(oldpath, newpath)
+    print("'{0}' was renamed to '{1}'".format(oldpath, newpath))
+```
+
+### 8.6、删除目录
+
+要删除一个目录，可以使用 os.rmdir() 函数，删除目录前也需要判断目录是否存在，如下所示
+```py
+import os
+dir = os.path.join("C:\\","temp","python")
+if os.path.exists(dir):
+    os.rmdir(dir)
+    print(dir + ' is removed.')
+```
+
+### 8.7、递归遍历目录
+
+`os.walk()` 函数允许你递归遍历一个目录。`os.walk()` 函数返回根目录、子目录和文件
+```py
+import os
+
+path = "c:\\temp"
+for root, dirs, files in os.walk(path):
+    print("{0} has {1} files".format(root, len(files)))
+```
+
+## 9、文件列表
+
+如果要列出一个目录中的所有文件进行处理。
+
+os.walk() 函数通过自上而下或自下而上地行走目录树来生成目录中的文件名。os.walk() 函数为目录树中的每个目录生成一个包含三个字段（dirpath、dirnames 和文件名）的元组；
+
+请注意，os.walk() 函数会检查整个目录树。因此，可以用它从根目录的所有目录及其子目录中获取所有文件
+
+假设有一个目录，目录内结构如下：
+```
+D:\web
+├── assets
+|  ├── css
+|  |  └── style.css
+|  └── js
+|     └── app.js
+├── blog
+|  ├── read-file.html
+|  └── write-file.html
+├── about.html
+├── contact.html
+└── index.html
+```
+找出文件中的html文件
+```py
+import os
+path = 'D:\\web'
+html_files = []
+for dirpath, dirnames, filenames in os.walk(path):
+    for filename in filenames:
+        if filename.endswith('.html'):
+            html_files.append(os.path.join(dirpath, filename))
+for html_file in html_files:
+    print(html_file)
+```
+
+定义可重复使用的列表文件功能：
+```py
+import os
+def list_files(path, extentions=None):
+    """ List all files in a directory specified by path
+    Args:
+        path - the root directory path
+        extensions - a iterator of file extensions to include, pass None to get all files.
+    Returns:
+        A list of files specified by extensions
+    """
+    filepaths = []
+    for root, _, files in os.walk(path):
+        for file in files:
+            if extentions is None:
+                filepaths.append(os.path.join(root, file))
+            else:
+                for ext in extentions:
+                    if file.endswith(ext):
+                        filepaths.append(os.path.join(root, file))
+    return filepaths
+
+if __name__ == '__main__':
+    filepaths = list_files(r'D:\web', ('.html', '.css'))
+    for filepath in filepaths:
+        print(filepath)
+```
+上述方法针对文件比较小是相对方便的，但是，当文件数量较多时，返回大量文件列表的内存效率不高。
+
+要解决这个问题，可以使用生成器一次生成每个文件，而不是返回一个列表：
+```py
+import os
+def list_files(path, extentions=None):
+    """ List all files in a directory specified by path
+    Args:
+        path - the root directory path
+        extensions - a iterator of file extensions to include, pass None to get all files.
+    Returns:
+        A list of files specified by extensions
+    """
+    for root, _, files in os.walk(path):
+        for file in files:
+            if extentions is None:
+                yield os.path.join(root, file)
+            else:
+                for ext in extentions:
+                    if file.endswith(ext):
+                        yield os.path.join(root, file)
+if __name__ == '__main__':
+    filepaths = list_files(r'D:\web', ('.html', '.css'))
+    for filepath in filepaths:
+        print(filepath)
+```
 
 # python调试
 
