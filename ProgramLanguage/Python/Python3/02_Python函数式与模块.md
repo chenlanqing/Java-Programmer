@@ -686,21 +686,7 @@ if __name__=='__main__':
 		- 注意:private函数和变量“不应该”被直接引用，而不是“不能”被直接引用，是因为Python并没有一种方法可以完全限制访问private函数或变量
 	- 外部不需要引用的函数全部定义成private，只有外部需要引用的函数才定义为public
 
-## 8、安装第三方模块
-
-在Python中，安装第三方模块，是通过包管理工具pip完成的
-
-- 一般来说，第三方库都会在Python官方的pypi.python.org网站注册，要安装一个第三方库，必须先知道该库的名称，可以在官网或者pypi上搜索
-- 如安装Pillow库:pip install Pillow	
-- 模块搜索路径:
-	- 当我们试图加载一个模块时，Python会在指定的路径下搜索对应的.py文件，如果找不到，就会报错
-	- 默认情况下，Python解释器会搜索当前目录、所有已安装的内置模块和第三方模块，搜索路径存放在sys模块的path变量中：sys.path
-	- 如果要添加自己的搜索目录:
-		- 直接修改sys.path，添加要搜索的目录：`sys.path.append('/Users/michael/my_py_scripts')` # 这种方法是在运行时修改，运行结束后失效
-		- 第二种方法是设置环境变量PYTHONPATH，该环境变量的内容会被自动添加到模块搜索路径中
-	
-
-## 9、private函数	
+## 8、private函数	
 
 假设某个模块 mail.py 中有如下两个方式：
 ```py
@@ -765,75 +751,126 @@ __all__ = email.__all__
 ```
 这样，mail 包只公开 `email.__all__` 变量中指定的 send() 函数。它从外部隐藏了 `attach_file()` 函数
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-	
+# 三、第三方模块
+
+## 1、pip
+
+- [Python Package Index.](https://pypi.org/)
+
+在Python中，安装第三方模块，是通过包管理工具pip完成的；
+
+Python 软件包使用由三部分组成的版本号：主版本、次版本和补丁：
+```
+major.minor.patch
+```
+
+为了安装第三方模块，可以使用如下：
+```bash
+pip install requests
+```
+pip 是 Python 的软件包安装程序。Pip 允许你从 PyPI 和其他软件源安装软件包。python自带Pip：
+```py
+pip -V
+```
+安装包：
+```py
+pip install <package_name>
+```
+要安装特定版本的软件包，可使用以下命令：
+```py
+pip install <package_name>==<version>
+pip install requests==2.20.1
+```
+
+**列出安装的包**
+```bash
+pip list
+```
+要检查哪些软件包已过期，可使用以下命令:
+```bash
+pip list --outdated
+```
+卸载包：
+```bash
+pip uninstall <package_name>
+```
+
+**列出软件包的依赖项**
+
+安装软件包时，如果该软件包使用了其他软件包，pip 会安装该软件包及其依赖包，以及依赖包的依赖包，依此类推:
+```bash
+pip show <package_name>
+```
+
+## 2、虚拟环境
+
+### 2.1、为什么需要虚拟环境
+
+安装 Python 时，Python 会将所有系统包存储在指定的文件夹中。通常，大多数系统包都位于 sys.prefix 中指定路径的子文件夹中。要找到这个路径，可以导入 sys 模块并显示如下：
+```py
+import sys
+print(sys.prefix)
+```
+当使用 pip 安装第三方软件包时，Python 会将这些软件包存储在由 site.getsitepackges() 函数指定的不同文件夹中：
+```py
+import site
+print(site.getsitepackages())
+```
+假设有两个项目使用不同版本的库。由于只有一个位置可以存储第三方软件包，因此无法同时保存不同的版本；一种变通办法是使用 pip 命令，通过安装/卸载软件包来切换版本。不过，这将耗费大量时间，而且不能很好地扩展；
+
+这就是虚拟环境发挥作用的地方
+
+### 2.2、什么是虚拟环境
+
+Python 使用虚拟环境为每个项目创建一个孤立的环境。换句话说，每个项目都有自己的目录来存储第三方软件包；如果有多个项目使用不同版本的软件包，可以将它们分别存储在不同的虚拟环境中。
+
+> 自 3.3 版起，Python 将虚拟环境模块 (venv) 作为标准库。因此，要使用 venv 模块，您必须安装 Python 3.3 或更高版本
+
+### 2.3、如何使用
+
+在一个Python目录下，执行如下命令，创建一个名为 project_env 的虚拟环境
+```bash
+python -m venv project_env
+```
+运行 project_env/Scripts 目录中的 `activate.bat` 文件，激活虚拟环境：
+```bash
+project_env\Scripts\activate
+```
+在终端中，可以看到如下信息：
+```bash
+(project_env) D:\test_env\project_env\Scripts>
+```
+前缀（project_env）表示您正处于 project_env 虚拟环境中，执行`where python`：
+```bash
+D:\test_env\project_env\Scripts\python.exe
+C:\Python\python.exe
+```
+第一行显示 python.exe 位于 `project_env/Scripts` 文件夹中。这意味着如果在 project_env 中运行 python 命令，执行的将是 `D:\test_env\project_env\Scripts\python.exe` 而不是 `C:\Python\python.exe`
+
+创建 project_env 虚拟环境时，venv 模块已经安装了两个软件包：pip 和 setuptools：
+```bash
+(project_env) D:\test_env\web_crawler>pip list
+Package    Version
+---------- -------
+pip        23.1.2
+setuptools 65.5.0
+```
+安装依赖之后，执行如下命令创建 `requirements.txt` file
+```bash
+pip freeze > requirements.txt
+```
+`requirements.txt` 文件包含项目使用的 project_env 虚拟环境中安装的所有软件包版本，将项目复制到另一台机器时，可以运行 `pip install` 命令来安装 `requirements.txt` 文件中列出的所有软件包
+
+比如在当前工程下安装`pip install requests`，那么 `requirements.txt` 内容如下：
+```
+certifi==2023.7.22
+charset-normalizer==3.2.0
+idna==3.4
+requests==2.31.0
+urllib3==2.0.4
+```
+要停用虚拟环境，可以运行 deactivate 命令：
+```bash
+(project_env) D:\test_env\web_crawler>deactivate
+D:\test_env\web_crawler>
+```
