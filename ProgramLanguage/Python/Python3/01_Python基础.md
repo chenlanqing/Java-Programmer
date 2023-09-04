@@ -80,6 +80,8 @@ print(count)
 
 ## 3、字符串
 
+- [String Methods](https://www.pythontutorial.net/python-string-methods/)
+
 字符串表示方式：
 - 字符串可以使用：`''`、`""`；
 - 多行字符串：`'''  '''`、`""" """`
