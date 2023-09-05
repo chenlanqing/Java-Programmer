@@ -1190,13 +1190,6 @@ zookeeper.connect=localhost:2181/kafka
 bin/kafka-server-start.sh -daemon config/server.properties
 ```
 
-如果是在ECS服务器上配置外网访问：
-```
-# 2. 修改config/server.properties文件，添加如下
-listeners=PLAINTEXT://<内网IP>:9092
-advertised.listeners=PLAINTEXT://<公网IP>:9092
-```
-
 ### 1.2、容器安装
 
 - [Kafka镜像](https://hub.docker.com/r/bitnami/kafka)
@@ -1348,6 +1341,20 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 ```
+
+## 5、kafka外网访问配置
+
+在Kafka服务器上修改Kafka配置文件`server.properties`，设置`advertised.listeners`参数。这个参数指定了Broker向外部客户端公开的连接地址。
+
+例如，如果您想通过公网IP地址访问Kafka服务器，那么可以将该参数设置为：
+```
+advertised.listeners=PLAINTEXT://your_public_ip:9092
+```
+如果您的Kafka服务器在内网中，可以将该参数设置为：
+```
+advertised.listeners=PLAINTEXT://your_internal_ip:9092
+```
+> 注意：如果Kafka服务器使用了SSL/TLS协议进行安全连接，那么上述参数需要设置为SSL/TLS的连接方式和端口
 
 # 九、Nginx
 
