@@ -97,12 +97,115 @@ print(count)
 
 ### 3.1、f-strings
 
+- [sophisticated format rules](https://docs.python.org/3/library/string.html#format-specification-mini-language)
+
+> Python 在 3.6 版本中引入了 f-string
+
+f-strings 提供了一种将变量和表达式嵌入字符串字面的方法，其语法比 format() 方法更清晰
 ```py
 name = 'John'
 message = f'Hi {name}'
 print(message)
 ```
-> Python 在 3.6 版本中引入了 f-string
+需要注意的是，Python 在运行时会对 `f-string` 中的表达式进行求值。它会用表达式的值替换 f-string 中的表达式。
+```py
+name = 'John'
+s = F'Hello, {name.upper()}!'
+print(s)
+# Hello, JOHN!
+```
+`f-string`中也可以有多个大括号：
+```py
+first_name = 'John'
+last_name = 'Doe'
+s = F'Hello, {first_name} {last_name}!'
+print(s)
+```
+上面结果等同于：
+```py
+first_name = 'John'
+last_name = 'Doe'
+s = F'Hello, {" ".join((first_name, last_name))}!'
+print(s)
+```
+
+多个`f-string`：
+```py
+name = 'John'
+website = 'PythonTutorial.net'
+# 方式1：
+message = (
+    f'Hello {name}. '
+    f"You're learning Python at {website}." 
+)
+# 方式2：
+message = f'Hello {name}. ' \
+          f"You're learning Python at {website}." 
+# 方式3：
+message = f"""Hello {name}.
+You're learning Python at {website}."""
+print(message)
+```
+
+当求值 f-string 时，Python 会用单个大括号替换双大括号。但是，双大括号并不表示表达式的开始：
+```py
+s = f'{{1+2}}'
+print(s)
+# {1+2}
+```
+带3个大括号的f-string：
+```py
+s = f'{{{1+2}}}'
+print(s)
+# {3}
+```
+在这个示例中，Python 将 {1+2} 作为表达式进行求值，返回 3。此外，它还用单个大括号替换了剩余的双大括号。
+
+**Python f-string 中表达式的求值顺序：** Python 按从左到右的顺序计算 f-string 中的表达式。如果表达式有副作用，这一点就很明显了，比如下面的例子：
+```py
+def inc(numbers, value):
+    numbers[0] += value
+    return numbers[0]
+numbers = [0]
+s = f'{inc(numbers,1)},{inc(numbers,2)}'
+print(s)
+# 1,3
+```
+
+**使用f-string格式化数字**
+```py
+# 使用 f-string 将整数格式化为十六进制
+number = 16
+s = f'{number:x}'
+print(s)  # 10
+
+# 使用 f-string 将数字格式化为科学记数法
+number = 0.01
+s = f'{number:e}'
+print(s)  # 1.000000e-02
+
+# 如果要在数字开头填充零，可以使用 f-string 格式，如下所示
+number = 200
+s = f'{number: 06}' # 06 是结果数字字符串的总数，包括前导零
+print(s)  # 00200
+
+# 要指定小数位数，也可以使用 f-string
+number = 9.98567
+s = f'{number: .2f}'
+print(s)  # 9.99
+
+# 如果数字过大，可以使用数字分隔符使其更容易读取
+number = 400000000000
+s = f'{number: ,}'  # also can use _
+print(s)  # 400,000,000,000
+
+# 要将数字格式化为百分比，可使用以下 f 字符串格式
+number = 0.1259
+s = f'{number: .2%}'
+print(s)  # 12.59%
+s = f'{number: .1%}'
+print(s)  # 12.5%
+```
 
 ### 3.2、字符串拼接
 
@@ -170,6 +273,41 @@ print(str[:4]) # Pyth
 - Python对bytes类型的数据用带b前缀的单引号或双引号表示：`x = b"ABC"`
 - 以Unicode表示的str通过encode()方法可以编码为指定的bytes：`print('中文'.encode('utf-8'))`；中文无法使用ascii编码，因为中文超出了ascii编码的范围
 - 如果我们从网络或磁盘上读取了字节流，那么读到的数据就是bytes。要把bytes变为str，就需要用decode()方法：`b'ABC'.decode('ascii')`
+
+### 3.5、Raw String
+
+在 Python 中，如果在字符串前加上字母 r 或 R，如 r'...' 和 R'...'，该字符串就会变成原始字符串。与普通字符串不同，原始字符串将反斜线 (\)视为字面字符，为了表示制表符和换行符等特殊字符，Python 使用反斜杠 (\) 来表示转义序列的开始。例如
+```py
+s = 'lang\tver\nPython\t3'
+print(s)
+```
+但是，raw string 会将反斜杠 (\) 作为字面字符处理。例如:
+```py
+s = r'lang\tver\nPython\t3'
+print(s)
+```
+raw string和普通字符串一样，反斜线 (\) 表示为双反斜线 (\)：
+```py
+s1 = r'lang\tver\nPython\t3'
+s2 = 'lang\\tver\\nPython\\t3'
+print(s1 == s2) # True
+```
+在正则字符串中，Python 将转义序列视为一个字符：
+```py
+s = '\n'
+print(len(s)) # 1
+```
+但是，在raw string中，Python 将反斜杠 (\) 计算为一个字符：
+```py
+s = r'\n'
+print(len(s)) # 2
+```
+由于反斜线 (\) 可以转义单引号 (')或双引号 (")，因此raw string不能以奇数个反斜线结束：
+```py
+s = r'\'
+s = r'\\\'
+# 上面都会报错，SyntaxError: EOL while scanning string literal
+```
 			
 ## 4、布尔值
 
