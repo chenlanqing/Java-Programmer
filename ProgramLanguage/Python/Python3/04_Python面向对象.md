@@ -1,42 +1,244 @@
 
 在Python中，所有数据类型都可以视为对象，当然也可以自定义对象。自定义的对象数据类型就是面向对象中的类（Class）的概念
+# 一、类和对象
 
-# 1、面向对象：类和实例
+## 1、Python面向对象编程
 
 - 类：是抽象的模板；
 - 实例：根据类创建的一个个具体的对象，每个对象都永远相同的方法，但各自的数据可能不同；
 
-## 1.1、定义类
+### 1.1、定义类
 
 ```python
-class Student(object):
-	pass
+class Person:
+    pass
 ```
 `class` 后面紧接着是类名，即Student，类名通常是大写开头的单词，紧接着是(object)，表示该类是从哪个类继承下来的；通常，如果没有合适的继承类，就使用object类，这是所有类最终都会继承的类
 
-## 1.2、创建实例
+### 1.2、创建实例
 
-`bart = Student()`
+`person = Person()`
 
-可以自由的给一个实例变量绑定属性
-
-在创建实例时，可以将认为是必需绑定的属性强制填写进去，通过定义一个特殊的`__init__`方法，绑定属性:
-```python
-class Student(object):
-	def __init__(self， name， score):
-		self.name = name
-		self.score = score
+Python 是动态的。这意味着可以在运行时动态地为类的实例添加属性。
+```py
+person.name = 'John'
 ```
+> 但是，如果创建另一个 Person 对象，新对象将不具有 name 属性
+
+
+要为类的所有实例定义和初始化属性，需要使用 `__init__` 方法。下面的代码定义了 Person 类的两个实例属性 name 和 age：
+```python
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+```
+创建 Person 对象时，Python 会自动调用 `__init__` 方法来初始化实例属性。在 `__init__` 方法中，self 是 Person 类的实例。
 - 注意：`__init__`方法的第一个参数永远是`self`，表示创建的实例本身，在`__init__`方法内部，可以把各种属性绑定到self上
 - 如果有`__init__`方法，在创建实例的时候，就不能传入空参数，必需传入与`__init__`方法匹配的参数(self参数除外，Python解释器自己会把实例变量传入)
 - 在类中定义的函数只有一点不同，就是第一个参数永远是实例变量self，并且，调用时，不用传递该参数
 
-# 2、数据封装
-封装数据的函数和类本身关联起来，这些函数称之为类的方法
+定义一个实例：
+```py
+person = Person('John', 25)
+person.name
+```
 
-- 定义一个方法，除了第一个参数是 self 之外，其他和普通函数一样；要调用一个方法，只需要在实例变了上直接调用，除了 self 不必传入外，其他参数正常传入
-		
-- 静态语言不同，Python允许对实例变量绑定任何数据，也就是说，对于两个实例变量，虽然它们都是同一个类的不同实例，但拥有的变量名称都可能不同
+### 1.3、实例方法
+
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def greet(self):
+        return f"Hi, it's {self.name}."
+
+# 调用方法：
+person = Person('John', 25)
+print(person.greet())
+```
+
+### 1.4、类属性
+
+与实例属性不同，类属性由类的所有实例共享：
+```py
+class Person:
+    counter = 0
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def greet(self):
+        return f"Hi, it's {self.name}."
+```
+上述 counter 是 Person 类中的类属性，访问类属性：
+```py
+Person.counter
+# 当然也可以如下方式访问：
+person = Person('John',25)
+person.counter
+```
+
+### 1.5、类方法
+
+与类属性一样，类方法也为类的所有实例所共享。类方法的第一个参数就是类本身。按照惯例，它的名字是 cls。Python 会自动将这个参数传递给类方法。此外，您还可以使用 `@classmethod` 装饰器来装饰一个类方法。
+
+```py
+class Person:
+    counter = 0
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+        Person.counter += 1
+    def greet(self):
+        return f"Hi, it's {self.name}."
+    @classmethod
+    def create_anonymous(cls):
+        return Person('Anonymous', 22)
+# 调用
+anonymous = Person.create_anonymous()
+print(anonymous.name)  # Anonymous
+```
+
+### 1.6、静态方法
+
+静态方法不与类或类的任何实例绑定。在 Python 中，我们使用静态方法将逻辑上相关的函数组合到一个类中。要定义静态方法，需要使用 `@staticmethod` 装饰器。
+```py
+class TemperatureConverter:
+    @staticmethod
+    def celsius_to_fahrenheit(c):
+        return 9 * c / 5 + 32
+
+    @staticmethod
+    def fahrenheit_to_celsius(f):
+        return 5 * (f - 32) / 9
+# 调用
+f = TemperatureConverter.celsius_to_fahrenheit(30)
+print(f)  # 86
+```
+> 请注意，Python 不会隐式地传递实例 (self) 和类 (cls) 作为静态方法的第一个参数。
+
+
+### 1.7、单继承
+
+一个类可以通过继承重用另一个类。子类继承父类时，可以访问父类的属性和方法：
+```py
+class Employee(Person):
+    def __init__(self, name, age, job_title):
+        super().__init__(name, age)
+        self.job_title = job_title
+```
+Person 是父类，而 Employee 是子类。要覆盖 Person 类中的 greet() 方法，可以在 Employee 类中定义 greet() 方法，如下所示
+```py
+class Employee(Person):
+    def __init__(self, name, age, job_title):
+        super().__init__(name, age)
+        self.job_title = job_title
+
+    def greet(self):
+        return super().greet() + f" I'm a {self.job_title}."
+```
+
+## 2、类和对象
+
+```py
+class Person:
+    pass
+
+print(person) # <__main__.Person object at 0x000001C46D1C47F0>
+print(id(person)) # 1943155787760
+print(hex(id(person))) # 0x1c46d1c47f0
+print(isinstance(person, Person))  # True
+print(Person.__name__) # Person
+print(type(Person)) # <class 'type'>
+```
+
+## 3、类属性
+
+Python 中的一切都是对象，包括类。换句话说，类就是 Python 中的对象
+```py
+class HtmlDocument:
+   pass
+```
+HtmlDocument 有`__name__` 属性，并且也有type：
+```PY
+print(HtmlDocument.__name__) # HtmlDocument
+print(type(HtmlDocument))  # <class 'type'>
+print(isinstance(HtmlDocument, type)) # True
+```
+另一种获取类变量值的方法是使用 getattr() 函数。getattr() 函数接受一个对象和一个变量名。它会返回类变量的值
+```py
+class HtmlDocument:
+    extension = 'html'
+    version = '5'
+
+extension = getattr(HtmlDocument, 'extension')
+version = getattr(HtmlDocument, 'version')
+print(extension)  # html
+print(version)  # 5
+```
+设置变量值：
+```py
+HtmlDocument.version = 10
+#
+setattr(HtmlDocument, 'version', 10)
+```
+删除类的属性，有两种方式：
+```py
+delattr(HtmlDocument, 'version')
+del HtmlDocument.version
+```
+Python 将类变量存储在 `__dict__` 属性中。`__dict__` 是一个映射代理，它是一个字典:
+```py
+from pprint import pprint
+class HtmlDocument:
+    extension = 'html'
+    version = '5'
+HtmlDocument.media_type = 'text/html'
+pprint(HtmlDocument.__dict__)
+```
+输出结果：
+```py
+mappingproxy({'__dict__': <attribute '__dict__' of 'HtmlDocument' objects>,
+              '__doc__': None,
+              '__module__': '__main__',
+              '__weakref__': <attribute '__weakref__' of 'HtmlDocument' objects>,
+              'extension': 'html',
+              'media_type': 'text/html',
+              'version': '5'})
+```
+Python 不允许直接修改 __dict__。例如，下面的代码会导致错误：
+```py
+HtmlDocument.__dict__['released'] = 2008
+# TypeError: 'mappingproxy' object does not support item assignment
+```
+类属性可以是任何对象，如函数：
+```py
+from pprint import pprint
+class HtmlDocument:
+    extension = 'html'
+    version = '5'
+
+    def render():
+        print('Rendering the Html doc...')
+pprint(HtmlDocument.__dict__)
+```
+```py
+mappingproxy({'__dict__': <attribute '__dict__' of 'HtmlDocument' objects>,
+              '__doc__': None,
+              '__module__': '__main__',
+              '__weakref__': <attribute '__weakref__' of 'HtmlDocument' objects>,
+              'extension': 'html',
+              'render': <function HtmlDocument.render at 0x0000010710030310>,
+              'version': '5'})
+Rendering the Html doc...
+```
+
+
+
+
 	
 # 3.访问控制
 
@@ -66,29 +268,6 @@ class Student(object):
 
 建议不要这么干，因为不同版本的Python解释器可能会把__name改成不同的变量名。
 
-# 4、继承和多态
-
-在继承关系中，如果一个实例的数据类型是某个子类，那它的数据类型也可以被看做是父类
-
-## 4.1、继承
-
-子类获得了父类的全部功能
-```python
-class Animal(object):
-	def run(self):
-		print('Animal is running...')
-# 当我们需要编写Dog和Cat类时，就可以直接从Animal类继承：
-class Dog(Animal):
-	pass
-
-class Cat(Animal):
-	pass
-```
-
-- 静态语言与动态语言
-
-	- 对于静态语言（例如Java）来说，如果需要传入Animal类型，则传入的对象必须是Animal类型或者它的子类，否则，将无法调用run()方法。
-	- 对于Python这样的动态语言来说，则不一定需要传入Animal类型。我们只需要保证传入的对象有一个run()方法就可以了：就是动态语言的“鸭子类型”，它并不要求严格的继承体系，一个对象只要“看起来像鸭子，走起路来像鸭子”，那它就可以被看做是鸭子
 
 # 6、获取对象信息
 
