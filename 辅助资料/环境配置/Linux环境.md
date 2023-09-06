@@ -252,10 +252,18 @@ flush privileges;
 
 直接通过docker运行mysql镜像：`docker run -d -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=123456 mysql`，如果没有指定版本，默认是最新的版本
 
-mysql目前最新版是8.0，启动mysql后，通过IDE工具无法连接mysql，因为mysql8用的加密方式是不一样的，可以通过如下操作解决：
+mysql目前最新版是8.0，启动mysql后，在容器内通过：`mysql -uroot -p123456` 进入到mysql命令行界面，可以通过如下操作解决通过IDE工具无法连接mysql（因为mysql8用的加密方式是不一样的）
 - 修改加密规则：`ALTER USER 'root'@'%' IDENTIFIED BY '123456' PASSWORD EXPIRE NEVER;`
 - 更新一下用户的密码：`ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';`
 - 刷新权限：`flush privileges;`
+
+在同一台机器上启动多个mysql实例：
+```bash
+# --name 指定的是容器名称 3307:3306 是映射端口
+# 最后 mysql:8.0.32指定的是mysql镜像
+docker run -id --name=mysql3306 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0.32
+docker run -id --name=mysql3307 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0.32
+```
 
 # 二、MySQL主从复制
 
