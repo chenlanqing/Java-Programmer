@@ -111,3 +111,55 @@ public class TestController{
 ## 1、spring-boot-maven-plugin
 
 - [插件源码](https://github.com/spring-projects/spring-boot/tree/main/spring-boot-project/spring-boot-tools/spring-boot-maven-plugin)
+
+# 七、Spring-Retry
+
+- [spring-retry source code](https://github.com/spring-projects/spring-retry)
+- [guide to spring retry](https://www.baeldung.com/spring-retry)
+
+spring-retry 是从 spring-batch 中剥离出来的一个重试模块
+
+## 1、引入依赖
+
+```xml
+<dependency>
+    <groupId>org.springframework.retry</groupId>
+    <artifactId>spring-retry</artifactId>
+    <version>1.3.4</version>
+</dependency>
+```
+
+## 2、开启重试
+
+在启动类开启重试机制
+```java
+@EnableRetry
+@SpringBootApplication
+public class RetryApp {
+    public static void main(String[] args) {
+        SpringApplication.run(RetryApp.class, args);
+    }
+}
+```
+
+## 3、使用
+
+### 3.1、通过注解@Retryable实现重试
+
+在需要重试的方法上添加`@Retryable`注解
+```java
+@Retryable(
+        maxAttempts = 4,
+        backoff = @Backoff(delay = 500L),
+        value = {
+                RuntimeException.class
+        },
+        exclude = {
+                Throwable.class
+        }
+)
+public void retryMethod() {
+    System.out.println(UUID.randomUUID().toString());
+    throw new RuntimeException("Failed Request");
+}
+```
