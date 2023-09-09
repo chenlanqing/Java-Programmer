@@ -236,37 +236,803 @@ mappingproxy({'__dict__': <attribute '__dict__' of 'HtmlDocument' objects>,
 Rendering the Html doc...
 ```
 
+## 4、实例方法
 
+根据定义，方法是与类的实例绑定的函数：
+```py
+class Request:
+    def send():
+        print('Sent')
+```
+send() 是一个函数对象，它是函数类的一个实例，如以下输出所示：
+```py
+print(Request.send)
+# <function Request.send at 0x000001454F11CAE0>
+print(type(Request.send))
+# <class 'function'>
+```
+创建一个Request实例：
+```py
+http_request = Request()
+print(http_request.send)
+# <bound method Request.send of <__main__.Request object at 0x0000028BD81A7F50>>
+print(type(http_request.send))
+# <class 'method'>
+```
+因此，http_request.send 与 Request.send 并不是一个函数。下面的代码会检查 Request.send 是否与 http_request.send 是同一个对象。它将返回 "false"（假）：
+```py
+print(type(Request.send) is type(http_request.send)) # False
+```
+原因是 Request.send 的类型是函数，而 http_request.send 的类型是方法；
 
+> 因此，当你在类中定义一个函数时，它纯粹是一个函数。然而，当您通过对象访问该函数时，函数就变成了方法；因此，方法是与类的实例绑定的函数
 
-	
-# 3.访问控制
+如果通过 http_request 对象调用 send() 函数，会出现如下 TypeError 错误：
+```py
+http_request.send()
+# TypeError: Request.send() takes 0 positional arguments but 1 was given
+```
+因为 http_request.send 是一个绑定到 http_request 对象的方法，所以 Python 总是隐式地将对象作为第一个参数传递给该方法。
 
-- 要控制内部属性不被外部访问，可以在每个属性名称前加上:`__`，在python中，实例变量名如果以__开头，就变成了一个私有变量，只能在类内部访问，外部不能访问
+重新定义 Request 类：
+```py
+class Request:
+    def send(*args):
+        print('Sent', args)
+Request.send() # Sent ()
+http_request = Request()
+http_request.send() # Sent (<__main__.Request object at 0x000001F7C69E7FD0>,)
+```
+在这种情况下，send() 方法接收的对象是 http_request，也就是它绑定的对象。
 
-- 如果外部需要获取类内部的私有实例变量，可以给类增加get_name和get_score这样的方法:
-	```python
-	class Student(object):
-		...
-		def get_name(self):
-			return self.__name
-	```
-- 如果要重新修改内部私有变量，可以给类增加类似set_name的方法
-	```python
-	class Student(object):
-		...
-		def set_name(self， name):
-			self.__name = name
-	```
+http_request 对象与 Python 传递给 send() 方法的作为第一个参数的对象是相同的，因为它们具有相同的内存地址。换句话说，您可以在 send() 方法中访问作为第一个参数的类实例：
+```py
+http_request.send()
+# 等价于
+Request.send(http_request)
+```
 
-	因为在方法中，可以对参数做检查，避免传入无效的参数：
+因此，对象的方法总是以对象为第一个参数。按照惯例，它被称为 self：
+```py
+class Request:
+    def send(self):
+        print('Sent', self)
+```
+
+## 5、`__init__`
+
+当您创建一个类的新对象时，Python 会自动调用 `__init__()` 方法来初始化对象的属性。
+
+与普通方法不同，`__init__()` 方法两边各有两个下划线 (__)。因此，`__init__()` 通常被称为 dunder init。这个名字是双下划线 init 的缩写。方法 `__init__()` 两边的双下划线表示 Python 将在内部使用该方法。换句话说，不应该显示调用该方法
+
+因为Python创建对象是自动调用该方法，所以一般用来初始化一些数据：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+if __name__ == '__main__':
+    person = Person('John', 25)
+    print(f"I'm {person.name}. I'm {person.age} years old.")
+```
+创建一个对象时，Python会做如下事情：
+- 首先，通过设置对象的命名空间（如 `__dict__` 属性为空 (`{}`)）来创建 Person 类的新实例。
+- 其次，调用 `__init__` 方法初始化新创建对象的属性；
+
+> 请注意，`__init__` 方法并不创建对象，而只是初始化对象的属性。因此，`__init__()` 不是构造函数。
+
+如果 `__init__` 有 self 以外的参数，那么在创建新对象时，就需要像上面的例子一样传递相应的参数。否则会出现错误
+
+**带默认参数的`__init__`**
+```py
+class Person:
+    def __init__(self, name, age=22):
+        self.name = name
+        self.age = age
+if __name__ == '__main__':
+    person = Person('John')
+    print(f"I'm {person.name}. I'm {person.age} years old.")
+```
+如果没有传age，那么age是有默认值的
+
+## 6、实例变量
+
+在 Python 中，类变量绑定到一个类，而实例变量绑定到类的一个特定实例。实例变量也称为实例属性：
+```py
+from pprint import pprint
+class HtmlDocument:
+    version = 5
+    extension = 'html'
+pprint(HtmlDocument.__dict__)
+print(HtmlDocument.extension)
+print(HtmlDocument.version)
+```
+上述 HtmlDocument 有两个类变量：version 和 extension，Python 将这两个变量存储在 `__dict__` 属性中。
+
+创建HtmlDocument的实例：
+```py
+home = HtmlDocument()
+# home是 HtmlDocument 类的一个实例。它有自己的 __dict__ 属性
+pprint(home.__dict__)
+# {}
+```
+`home.__dict__` 保存 home 对象的实例变量，就像 `HtmlDocument.__dict__` 保存 HtmlDocument 类的类变量一样。与类的 `__dict__` 属性不同，实例的 `__dict__` 属性的类型是一个dict：
+```py
+print(type(home.__dict__))
+# <class 'dict'>
+```
+由于字典是可变的，你可以往字典中添加新的数据；
+
+> 另外Python 允许从类的实例访问类变量，在这种情况下，Python 会首先在 `home.__dict__` 中查找 extension 和 version 变量。如果在那里找不到，它就会进入类，在 `HtmlDocument.__dict__` 中查找；但是，如果 Python 可以在实例的 `__dict__` 中找到变量，它就不会在类的 `__dict__` 中进一步查找了
+
+**初始化实例变量**
+
+一般，初始化变量都是在 `__init__` 方法上：
+```py
+class HtmlDocument:
+    version = 5
+    extension = 'html'
+    def __init__(self, name, contents):
+        self.name = name
+        self.contents = contents
+```
+
+## 7、类方法
+
+实例方法可以访问同一类中的实例变量。要调用实例方法，首先需要创建一个类的实例。
+```py
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+    def get_full_name(self):
+        return f"{self.first_name} {self.last_name}"
+    def introduce(self):
+        return f"Hi. I'm {self.first_name} {self.last_name}. I'm {self.age} years old."
+```
+Person 类有三个实例方法，包括 `__init__()` 、`get_full_name()` 和 `introduce()`。
+
+而类方法不与任何特定实例绑定。它只与类绑定；
+
+定义一个类方法：
+- 首先将 `@classmethod` 装饰器放在方法定义的上方。现在， @classmethod 装饰器会将实例方法更改为类方法。
+- 其次，将 `self` 参数重命名为 `cls`。`cls` 的意思是类，其指代的就是当前类本身。不过，class 是一个关键字，因此不能用作参数。
+```py
+class Person:
+	...
+    @classmethod
+    def create_anonymous(cls):
+        return Person('John', 'Doe', 25)
+```
+create_anonymous() 方法不能访问实例属性。但它可以通过 cls 变量访问类属性。
+
+什么时候使用类方法：当一个方法创建了一个类的实例并返回该实例时，该方法被称为工厂方法，一般用于创建实例
+
+## 8、私有属性
+
+封装是面向对象程序设计的四个基本概念之一，包括抽象、封装、继承和多态性；封装是将数据和处理这些数据的函数封装在一个对象中。通过这种方式，可以向外部隐藏对象的内部状态。这就是所谓的信息隐藏；
+
+类就是封装的一个例子。类将数据和方法捆绑成一个整体。类可以通过方法访问其属性；如果你有一个对外不可见的属性，你可以控制对其值的访问，以确保你的对象始终处于有效状态；
+```py
+class Counter:
+    def __init__(self):
+        self.current = 0
+
+    def increment(self):
+        self.current += 1
+
+    def value(self):
+        return self.current
+
+    def reset(self):
+        self.current = 0
+```
+正常封装一个计数器，但是其实还有一个问题，就是仍然可以通过类实例来访问到current：
+```py
+counter = Counter()
+counter.increment()
+counter.increment()
+counter.current = -999
+print(counter.value()) # -999
+```
+如何避免上述问题，就有了Python的 **私有属性**；
+
+**私有属性**只能通过类的方法访问。换句话说，它们不能从类的外部访问；Python 没有私有属性的概念。换句话说，所有属性都可以从类的外部访问。按照惯例，您可以在定义私有属性时，在其前缀加上一个下划线 (_)：`_attribute`
+```py
+class Counter:
+    def __init__(self):
+        self._current = 0
+    def increment(self):
+        self._current += 1
+    def value(self):
+        return self._current
+    def reset(self):
+        self._current = 0
+```
+
+**用双下划线混淆名称**：
+```py
+__attribute
+```
+Python 将自动把 `__attribute`的名称改为：`_class__attribute`，这在 Python 中称为名称混淆；这样，就不能从类的外部直接访问 `__attribute` 属性，例如：`instance.__attribute`，然而仍然可以使用 `_class__attribute` 名称来访问它：
+```py
+class Counter:
+    def __init__(self):
+        self.__current = 0
+    def increment(self):
+        self.__current += 1
+    def value(self):
+        return self.__current
+    def reset(self):
+        self.__current = 0
+counter = Counter()
+print(counter.__current)
+# AttributeError: 'Counter' object has no attribute '__current'
+```
+但是可以通过如下方式访问：
+```py
+counter = Counter()
+print(counter.__dict__) # {'_Counter__current': 0}
+print(counter._Counter__current) # 0
+```
 
 - 有些时候，你会看到以一个下划线开头的实例变量名，比如_name，这样的实例变量外部是可以访问的，但是，按照约定俗成的规定，当你看到这样的变量时，意思就是，“虽然我可以被访问，但是，请把我视为私有变量，不要随意访问”
-
 - 双下划线开头的实例变量是不是一定不能从外部访问呢？其实也不是。不能直接访问`__name`是因为Python解释器对外把`__name`变量改成了`_Student__name`，
 所以，仍然可以通过`_Student__name`来访问`__name`变量：
 
-建议不要这么干，因为不同版本的Python解释器可能会把__name改成不同的变量名。
+## 9、类属性
+
+类属性是定义在类的属性中，是所有类都共享的，类属性可以通过 类 或者 类实例 来访问：
+```py
+class Circle:
+    pi = 3.14159
+    def __init__(self, radius):
+        self.radius = radius
+    def area(self):
+        return self.pi * self.radius**2
+    def circumference(self):
+        return 2 * self.pi * self.radius
+c = Circle(10)
+print(c.pi)
+print(Circle.pi)
+```
+
+**类属性是如何工作的**
+
+通过类的实例访问属性时，Python 会在实例属性列表中查找该属性。如果实例属性列表中没有该属性，Python 将继续在类属性列表中查找该属性。只要 Python 在实例属性列表或类属性列表中找到该属性，就会返回该属性的值；
+
+但是，如果访问一个属性，Python 会直接在类属性列表中搜索该属性：
+```py
+class Test:
+    x = 10
+    def __init__(self):
+        self.x = 20
+test = Test()
+print(test.x)  # 20
+print(Test.x)  # 10
+```
+
+**主要用途**
+- 存储类常量；
+- 数据跟踪；
+- 定义默认值
+
+## 10、静态方法
+
+与实例方法不同，静态方法不与对象绑定。换句话说，静态方法不能访问和修改对象状态。此外，Python 不会将 cls 参数（或 self 参数）隐式传递给静态方法。因此，静态方法不能访问和修改类的状态；
+
+在实践中，使用静态方法来定义实用方法或在类中具有某些逻辑关系的分组函数。
+
+要定义静态方法，需要使用 `@staticmethod` 装饰器：
+```py
+class className:
+    @staticmethod
+    def static_method_name(param_list):
+        pass
+# 调用
+className.static_method_name()
+```
+
+Python 静态方法与类方法对比：
+- 类方法默认传递 cls参数；静态方法不会默认传递 cls；
+- 类方法可以访问和修改类的状态；静态方法不能访问或修改类的状态。
+- 使用 `@classmethod` 装饰器定义类方法；使用 `@staticmethod` 装饰器定义静态方法。
+
+# 二、特殊方法
+
+形如`__xxx__`的变量或者函数名就要注意，这些在Python中是有特殊用途的，python的class中有很多类似`__slots__`、`__len__()`特殊用途的函数，可以实现定制类；
+	
+## 1、`__str__`
+
+```python
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+person = Person('John', 'Doe', 25)
+print(person)
+# <__main__.Person object at 0x00000000006AC2E8>
+```
+在内部，当实例调用 str() 方法时，Python 将自动调用` __str__` 方法。只需要定义好`__str__()`方法，就可以按照我们想要输出的内容
+```python
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+    def __str__(self):
+        return f'Person({self.first_name},{self.last_name},{self.age})'
+person = Person('John', 'Doe', 25)
+print(person)
+# Person(John,Doe,25)
+```
+
+## 2、`__repr__`
+
+`__repr__` 方法定义了将类的实例传递给 repr() 时的行为。
+```py
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+person = Person('John', 'Doe', 25)
+print(repr(person))
+# <__main__.Person object at 0x000001F51B3313A0>
+```
+输出结果包含人对象的内存地址。要自定义对象的字符串表示，可以像下面这样实现 `__repr__` 方法：
+```py
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+    def __repr__(self):
+        return f'Person("{self.first_name}","{self.last_name}",{self.age})'
+person = Person("John", "Doe", 25)
+print(repr(person))
+#Person("John","Doe",25)
+```
+当一个类没有实现 `__str__` 方法时，如果将该类的实例传递给 str()，Python 将返回 `__repr__` 方法的结果，因为 `__str__` 方法内部调用了 `__repr__` 方法：
+
+如果一个类实现了 `__str__` 方法，当您将该类的实例传递给 str() 时，Python 将调用 `__str__` 方法。例如：
+```py
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+    def __repr__(self):
+        return f'Person("{self.first_name}","{self.last_name}",{self.age})'
+    def __str__(self):
+        return f'({self.first_name},{self.last_name},{self.age})'
+
+person = Person('John', 'Doe', 25)
+# use str()
+print(person) # (John,Doe,25)
+# use repr()
+print(repr(person)) # Person("John","Doe",25)
+```
+
+**`__str__` vs `__repr__`** 区别： `__str__` 方法返回一个对象的字符串表示，它是人可读的，而 `__repr__` 方法返回一个对象的字符串表示，它是机器可读的。
+
+## 3、`__eq__`
+
+主要是用来比较两个对象的，如果要比较两个对象，需要重写 `__eq__` 方法：
+```py
+class Person:
+    def __init__(self, first_name, last_name, age):
+        self.first_name = first_name
+        self.last_name = last_name
+        self.age = age
+	# 比较两个Person 对象是否一致时，直接比较年龄
+    def __eq__(self, other):
+        return self.age == other.age
+```
+当您使用 == 操作符比较类的实例时，Python 会自动调用类的 `__eq__` 方法。如果没有为 `__eq__` 方法提供特定的实现，Python 默认使用 is 操作符。
+```py
+john = Person('John', 'Doe', 25)
+jane = Person('Jane', 'Doe', 25)
+print(john == jane)  # True
+```
+但是如下代码会报错：
+```py
+john = Person('John', 'Doe', 25)
+print(john == 20) # AttributeError: 'int' object has no attribute 'age'
+```
+要解决这个问题，可以修改 `__eq__` 方法，在访问年龄属性之前检查对象是否是 Person 类的实例：
+```py
+class Person:
+	...
+    def __eq__(self, other):
+        if isinstance(other, Person):
+            return self.age == other.age
+        return False
+```
+
+## 4、`__hash__`
+
+hash() 函数接受一个对象，并以整数形式返回哈希值。向 hash() 函数传递对象时，Python 将执行对象的 `__hash__` 特殊方法;
+
+这意味着，当您将 p1 对象传递给 hash() 函数时：`hash(p1)`，那么python会调用：`p1.__hash__()`；
+
+默认情况下， `__hash__` 使用对象的标识，如果两个对象相同， `__eq__` 返回 True。要覆盖这一默认行为，可以实现 `__eq__` 和 `__hash__`；如果类重载了 `__eq__` 方法，类中的对象就会变得不可散列。这意味着无法在映射类型中使用这些对象。例如，不能将它们用作字典中的键或集合中的元素。
+
+比如：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    def __eq__(self, other):
+        return isinstance(other, Person) and self.age == other.age
+members = {
+    Person('John', 22),
+    Person('Jane', 22)
+}
+# TypeError: unhashable type: 'Person'
+```
+此外，Person 对象会失去散列，因为如果实现了 `__eq__`  ， `__hash__` 就会被设置为 None。例如：
+```py
+hash(Person('John', 22))
+```
+要使 Person 类可散列，还需要实现 `__hash__` 方法：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    def __eq__(self, other):
+        return isinstance(other, Person) and self.age == other.age
+    def __hash__(self):
+        return hash(self.age)
+```
+现在 Person 类，它支持基于年龄的平等，并且是可散列式的
+
+为使 Person 在字典等数据结构中运行良好，类的哈希值应保持不可变。为此，可以将 Person 类的 age 属性设置为只读属性：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self._age = age
+    @property
+    def age(self):
+        return self._age
+    def __eq__(self, other):
+        return isinstance(other, Person) and self.age == other.age
+    def __hash__(self):
+        return hash(self.age)
+```
+
+## 5、`__bool__`
+
+自定义类的对象与布尔值相关联。默认情况下，布尔值为 True。例如：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+if __name__ == '__main__':
+    person = Person('John', 25)
+```
+要覆盖这一默认行为，需要实现 `__bool__` 特殊方法。 `__bool__` 方法必须返回一个布尔值，即 True 或 False：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    def __bool__(self):
+        if self.age < 18 or self.age > 65:
+            return False
+        return True
+if __name__ == '__main__':
+    person = Person('Jane', 16)
+    print(bool(person))  # False
+```
+
+## 6、`__len__`
+
+如果自定义类没有 `__bool__` 方法，Python 将查找 `__len__`() 方法。如果 `__len__` 为零，对象为 False。否则，对象为 True。如果一个类没有实现 `__bool__` 和 `__len__` 方法，该类的对象将返回 True。
+```py
+class Payroll:
+    def __init__(self, length):
+        self.length = length
+
+    def __len__(self):
+        print('len was called...')
+        return self.length
+if __name__ == '__main__':
+    payroll = Payroll(0)
+    print(bool(payroll))  # False
+    payroll.length = 10
+    print(bool(payroll))  # True
+```
+由于 Payroll 类没有重载 `__bool__` 方法，所以 Python 在将 Payroll 的对象求值为布尔值时，会查找 `__len__` 方法;
+
+## 7、`__del__`
+
+在 Python 中，垃圾回收器会自动管理内存。垃圾回收器会销毁未被引用的对象。如果对象实现了 `__del__` 方法，Python 就会在垃圾回收器销毁对象之前调用 `__del__` 方法。但是，垃圾回收器会决定何时销毁对象。因此，它决定何时调用 `__del__` 方法。
+
+`__del__` 有时也被称为类的终结器。请注意， `__del__` 不是析构函数，因为垃圾回收器销毁的是对象，而不是 `__del__` 方法;
+
+**Python的 __del__ 陷阱**
+
+当所有对象引用都消失时，Python 会调用 `__del__` 方法。在大多数情况下，您无法控制它。因此，不应使用 `__del__` 方法来清理资源。建议使用上下文管理器。
+
+如果 `__del__` 包含对对象的引用，垃圾回收器也会在调用 `__del__` 时销毁这些对象。如果 `__del__` 引用了全局对象，可能会产生意想不到的行为。
+
+如果在 `__del__` 方法中出现异常，Python 不会引发异常，而是保持沉默。此外，Python 会将异常信息发送到 stderr。因此，主程序可以在最终处理过程中发现异常。
+
+在实践上，应该避免使用 `__del__`
+
+**示例**
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    def __del__(self):
+        print('__del__ was called')
+if __name__ == '__main__':
+    person = Person('John Doe', 23)
+    person = None # 会调用 __del__
+	del person # 也会调用 __del__
+```
+
+## 8、运算符重载
+
+如果有两个对象，其中某个属性相加生成新的对象，常规做法是定义add 方法：
+```py
+class Point2D:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __str__(self):
+        return f'({self.x},{self.y})'
+    def add(self, point):
+        if not isinstance(point, Point2D):
+            raise ValueError('The other must be an instance of the Point2D')
+        return Point2D(self.x + point.x, self.y + point.y)
+```
+但是Python 有更好的实现方法。您可以使用内置运算符 (+) 代替 add() 方法，如下所示：`c = a + b`
+
+在 Point2D 对象上使用 + 运算符时，Python 将调用对象上的特殊方法 `__add__`() 。以下调用是等价的：
+```py
+c = a + b
+c = a.__add__(b)
+```
+`__add__`() 方法必须返回一个新的 Point2D 对象实例
+```py
+class Point2D:
+    ...
+    def __add__(self, point):
+        if not isinstance(point, Point2D):
+            raise ValueError('The other must be an instance of the Point2D')
+        return Point2D(self.x + point.x, self.y + point.y)
+if __name__ == '__main__':
+    a = Point2D(10, 20)
+    b = Point2D(15, 25)
+    c = a + b
+    print(c)
+```
+**操作符重载的特殊方法：**
+
+Operator|	Special Methods
+------|--------
+`+`	| `__add__(self, other)`
+`–`	| `__sub__(self, other)`
+`*`	| `__mul__(self, other)`
+`/`	| `__truediv__(self, other)`
+`//`	| `__floordiv__(self, other)`
+`%`	| `__mod__(self, other)`
+`**`	| `__pow__(self, other)`
+`>>`	| `__rshift__(self, other)`
+`<<`	| `__lshift__(self, other)`
+`&`	| `__and__(self, other)`
+`\|`	| `__or__(self, other)`
+`^`	| `__xor__(self, other)`
+
+复合运算符重载：
+
+Operator |	Special Method
+------|--------
+`+=`	|`__iadd__(self, other)`
+`-=`	|`__isub__(self, other)`
+`*=`	|`__imul__(self, other)`
+`/=`	|`__itruediv__(self, other)`
+`//=`	|`__ifloordiv__(self, other)`
+`%=`	|`__imod__(self, other)`
+`**=`	|`__ipow__(self, other)`
+`>>=`	|`__irshift__(self, other)`
+`<<=`	|`__ilshift__(self, other)`
+`&=`	|`__iand__(self, other)`
+`\|=`	|`__ior__(self, other)`
+`^=`	| `__ixor__(self, other)`
+
+示例：
+```py
+class Cart:
+    def __init__(self):
+        self.items = []
+    def __iadd__(self, item):
+        if not isinstance(item, Item):
+            raise ValueError('The item must be an instance of Item')
+        self.items.append(item)
+        return self
+    @property
+    def total(self):
+        return sum([item.amount for item in self.items])
+    def __str__(self):
+        if not self.items:
+            return 'The cart is empty'
+        return '\n'.join([str(item) for item in self.items])
+```
+
+## 9、`__iter__`
+
+如果一个类要被`for...in`循环，必须实现一个`__iter__()`方法，该方法返回一个迭代对象，Python的for循环就会不断调用该迭代对象的`__next__()`方法拿到循环的下一个值，直到遇到StopIteration错误时退出循环
+```python
+class Fib(object):
+	def __init__(self):
+		self.a， self.b = 0， 1
+	def __iter__(self): #实例本身就是迭代对象，故返回自己
+		return self
+	def __next__(self):
+		self.a， self.b = self.b， self.a + self.b
+		if self.a > 10000:
+			raise StopIteration()
+		return self.a
+for n in Fib():
+	print(n)	
+```
+
+## 10、`__getitem__`
+
+- 上述的迭代对象无法像list那样可以按照索引取出数据，如果需要实现该功能，就需要实现`__getitem__()` 方法
+	```python
+	class Fib(object):
+		def __getitem__(self， n):
+			a，b = 1，1
+			for x in range(n):
+				a，b = b， a+b
+			return a
+	f = Fib()
+	f[1] ==> 1
+	```
+- list有个切片方法，但对于上述Fib进行切片却报错?
+	原因:` __getitem__()` 传入的参数可能是个int也可能是个切片对象，因此可以加上判断
+	```python
+	class Fib(object):
+		def __getitem__(self， n):
+			if isinstance(n， int): # n是索引
+				a， b = 1， 1
+				for x in range(n):
+					a， b = b， a + b
+				return a
+			if isinstance(n， slice): # n是切片
+				start = n.start
+				stop = n.stop
+				if start is None:
+					start = 0
+				a， b = 1， 1
+				L = []
+				for x in range(stop):
+					if x >= start:
+						L.append(a)
+					a， b = b， a + b
+				return L
+	```
+- 要正确实现一个`__getitem__()`还是有很多工作要做的
+- 与之对应的是`__setitem__()`方法，把对象视作 list 或 dict 来对集合赋值.最后，还有一个`__delitem__()`方法，用于删除某个元素；
+
+## 11、`__getattr__`
+
+当我们调用类的方法或属性时，如果不存在，就会报错
+
+- 要避免这种错误，可以给类写一个`__getattr__()`方法，动态返回一个属性:
+	```python
+	class Student(object):
+		def __getattr__(self， attr):
+			if attr=='age':
+				return lambda: 25
+	```
+- 只有在没有找到属性的情况下，才调用`__getattr__`，已有的属性
+- 注意到任意调用如s.abc都会返回None，这是因为我们定义的`__getattr__`默认返回就是None。
+	要让class只响应特定的几个属性，我们就要按照约定，抛出AttributeError的错误
+	```python
+	class Student(object):
+		def __getattr__(self， attr):
+			if attr=='age':
+				return lambda: 25
+			raise AttributeError('\'Student\' object has no attribute \'%s\'' % attr)
+	```
+- 可以把一个类的所有属性和方法调用全部动态化处理了，不需要任何特殊手段。这种完全动态调用的特性有什么实际作用呢？作用就是，可以针对完全动态的情况作调用
+
+## 12、`__call__`
+
+- 一个对象实例可以有自己的属性和方法，当我们调用实例方法时，我们用instance.method()来调用任何类，只需要定义一个`__call__()`方法，就可以直接对实例进行调用
+	```python
+	class Student(object):
+		def __init__(self， name):
+			self.name = name
+		def __call__(self):
+			print('My name is %s.' % self.name)
+	s = Student('Coco')
+	s()	# self 参数不需要传入，输出结果为:My name is Coco.	
+	```
+- 对实例进行直接调用，好比对一个函数进行调用，完全可以把对象当成函数，把函数当成对象，这两张没有啥本质区别；如果你把对象看成函数，那么函数本身其实也可以在运行期动态创建出来，因为类的实例都是运行期创建出来的，这么一来，我们就模糊了对象和函数的界限；怎么判断一个变量是函数还是对象？更多时候，判断一个对象是否被调用，能被调用的对象是一个 Callable 对象，即类实现的了`__call__()`方法
+	```python
+	# 通过callable()函数，我们就可以判断一个对象是否是“可调用”对象
+	>>> callable(Student())
+	True
+	>>> callable(max)
+	True
+	>>> callable([1， 2， 3])
+	False
+	>>> callable(None)
+	False
+	>>> callable('str')
+	False
+	```
+
+# 三、Property
+
+# 9、使用`@property`:
+
+- 在绑定属性时，如果直接把属性暴露出去，没办法检查参数，导致属性的值可以随意更改，可以通过set_score方法来设置值，可以在set_score里检查参数；比较麻烦
+		
+- Python内置的@property装饰器就是负责把一个方法变成属性调用的：
+	```python
+	class Student(object):
+		@property
+		def score(self):
+			return self._score
+
+		@score.setter
+		def score(self， value):
+			if not isinstance(value， int):
+				raise ValueError('score must be an integer!')
+			if value < 0 or value > 100:
+				raise ValueError('score must between 0 ~ 100!')
+			self._score = value
+	```
+- 把一个getter方法变成属性，只需要加上`@property`就可以了，此时，`@property`本身又创建了另一个装饰器`@score.setter`，负责把一个`setter`方法变成属性赋值，于是，我们就拥有一个可控的属性操作
+
+- 还可以定义只读属性，只定义getter方法，不定义setter方法就是一个只读属性：
+	```python
+	class Student(object):
+		@property
+		def birth(self):
+			return self._birth
+		@birth.setter
+		def birth(self， value):
+			self._birth = value
+		@property
+		def age(self):
+			return 2015 - self._birth
+	```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # 6、获取对象信息
@@ -363,40 +1129,6 @@ Rendering the Html doc...
 
 需要注意的是：`__slots__`定义的属性仅对当前类实例起作用，对继承的子类是不起作用的：
 
-# 9、使用`@property`:
-
-- 在绑定属性时，如果直接把属性暴露出去，没办法检查参数，导致属性的值可以随意更改，可以通过set_score方法来设置值，可以在set_score里检查参数；比较麻烦
-		
-- Python内置的@property装饰器就是负责把一个方法变成属性调用的：
-	```python
-	class Student(object):
-		@property
-		def score(self):
-			return self._score
-
-		@score.setter
-		def score(self， value):
-			if not isinstance(value， int):
-				raise ValueError('score must be an integer!')
-			if value < 0 or value > 100:
-				raise ValueError('score must between 0 ~ 100!')
-			self._score = value
-	```
-- 把一个getter方法变成属性，只需要加上`@property`就可以了，此时，`@property`本身又创建了另一个装饰器`@score.setter`，负责把一个`setter`方法变成属性赋值，于是，我们就拥有一个可控的属性操作
-
-- 还可以定义只读属性，只定义getter方法，不定义setter方法就是一个只读属性：
-	```python
-	class Student(object):
-		@property
-		def birth(self):
-			return self._birth
-		@birth.setter
-		def birth(self， value):
-			self._birth = value
-		@property
-		def age(self):
-			return 2015 - self._birth
-	```
 
 # 10、多重继承
 通过多重继承，一个子类就可以同时获得多个父类的所有功能
@@ -411,140 +1143,7 @@ class MyTCPServer(TCPServer， ForkingMixIn):
 	pass
 ```	
 
-# 11、定制类
 
-形如`__xxx__`的变量或者函数名就要注意，这些在Python中是有特殊用途的，python的class中有很多类似`__slots__`、`__len__()`特殊用途的函数，可以实现定制类；
-	
-## 11.1、`__str__`
-
-```python
-class Student(object):
-	def __init__(self， name):
-		self.name = name
-
-print(Student('Coco'))  ===>  <__main__.Student object at 0x00000000006AC2E8>
-```
-
-- 只需要定义好`__str__()`方法，就可以按照我们想要输出的内容
-```python
-class Student(object):
-	def __init__(self， name):
-		self.name = name
-	def __str__(self):
-		return 'Student object(name: %s)' % self.name
-print(Student('Coco'))  ===> Student object(name: Coco)
-```
-- `s = Student('Coco')`
-
-	直接输出变量s，是调用的`__repr__()`两者的区别是`__str__()`返回用户看到的字符串，而`__repr__()`返回程序开发者看到的字符串，也就是说:`__repr__()`是为调试服务的；
-	
-	解决办法:通常情况下`__str__()`和`__repr__()`代码都是一样的：`__repr__ = __str__`
-
-## 11.2、`__iter__`
-
-如果一个类要被`for...in`循环，必须实现一个`__iter__()`方法，该方法返回一个迭代对象，Python的for循环就会不断调用该迭代对象的`__next__()`方法拿到循环的下一个值，直到遇到StopIteration错误时退出循环
-```python
-class Fib(object):
-	def __init__(self):
-		self.a， self.b = 0， 1
-	def __iter__(self): #实例本身就是迭代对象，故返回自己
-		return self
-	def __next__(self):
-		self.a， self.b = self.b， self.a + self.b
-		if self.a > 10000:
-			raise StopIteration()
-		return self.a
-for n in Fib():
-	print(n)	
-```
-
-## 11.3、`__getitem__`
-
-- 上述的迭代对象无法像list那样可以按照索引取出数据，如果需要实现该功能，就需要实现`__getitem__()` 方法
-	```python
-	class Fib(object):
-		def __getitem__(self， n):
-			a，b = 1，1
-			for x in range(n):
-				a，b = b， a+b
-			return a
-	f = Fib()
-	f[1] ==> 1
-	```
-- list有个切片方法，但对于上述Fib进行切片却报错?
-	原因:` __getitem__()` 传入的参数可能是个int也可能是个切片对象，因此可以加上判断
-	```python
-	class Fib(object):
-		def __getitem__(self， n):
-			if isinstance(n， int): # n是索引
-				a， b = 1， 1
-				for x in range(n):
-					a， b = b， a + b
-				return a
-			if isinstance(n， slice): # n是切片
-				start = n.start
-				stop = n.stop
-				if start is None:
-					start = 0
-				a， b = 1， 1
-				L = []
-				for x in range(stop):
-					if x >= start:
-						L.append(a)
-					a， b = b， a + b
-				return L
-	```
-- 要正确实现一个`__getitem__()`还是有很多工作要做的
-- 与之对应的是`__setitem__()`方法，把对象视作 list 或 dict 来对集合赋值.最后，还有一个`__delitem__()`方法，用于删除某个元素；
-
-## 11.4、`__getattr__`
-当我们调用类的方法或属性时，如果不存在，就会报错
-
-- 要避免这种错误，可以给类写一个`__getattr__()`方法，动态返回一个属性:
-	```python
-	class Student(object):
-		def __getattr__(self， attr):
-			if attr=='age':
-				return lambda: 25
-	```
-- 只有在没有找到属性的情况下，才调用`__getattr__`，已有的属性
-- 注意到任意调用如s.abc都会返回None，这是因为我们定义的`__getattr__`默认返回就是None。
-	要让class只响应特定的几个属性，我们就要按照约定，抛出AttributeError的错误
-	```python
-	class Student(object):
-		def __getattr__(self， attr):
-			if attr=='age':
-				return lambda: 25
-			raise AttributeError('\'Student\' object has no attribute \'%s\'' % attr)
-	```
-- 可以把一个类的所有属性和方法调用全部动态化处理了，不需要任何特殊手段。这种完全动态调用的特性有什么实际作用呢？作用就是，可以针对完全动态的情况作调用
-
-## 11.5、`__call__`
-
-- 一个对象实例可以有自己的属性和方法，当我们调用实例方法时，我们用instance.method()来调用任何类，只需要定义一个`__call__()`方法，就可以直接对实例进行调用
-	```python
-	class Student(object):
-		def __init__(self， name):
-			self.name = name
-		def __call__(self):
-			print('My name is %s.' % self.name)
-	s = Student('Coco')
-	s()	# self 参数不需要传入，输出结果为:My name is Coco.	
-	```
-- 对实例进行直接调用，好比对一个函数进行调用，完全可以把对象当成函数，把函数当成对象，这两张没有啥本质区别；如果你把对象看成函数，那么函数本身其实也可以在运行期动态创建出来，因为类的实例都是运行期创建出来的，这么一来，我们就模糊了对象和函数的界限；怎么判断一个变量是函数还是对象？更多时候，判断一个对象是否被调用，能被调用的对象是一个 Callable 对象，即类实现的了`__call__()`方法
-	```python
-	# 通过callable()函数，我们就可以判断一个对象是否是“可调用”对象
-	>>> callable(Student())
-	True
-	>>> callable(max)
-	True
-	>>> callable([1， 2， 3])
-	False
-	>>> callable(None)
-	False
-	>>> callable('str')
-	False
-	```
 
 ## 12、使用枚举类
 Python提供了Enum类来实现这个功能`from enum import Enum`
