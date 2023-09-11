@@ -980,48 +980,140 @@ for n in Fib():
 
 # 三、Property
 
-# 9、使用`@property`:
+## 1、property()
 
-- 在绑定属性时，如果直接把属性暴露出去，没办法检查参数，导致属性的值可以随意更改，可以通过set_score方法来设置值，可以在set_score里检查参数；比较麻烦
-		
-- Python内置的@property装饰器就是负责把一个方法变成属性调用的：
-	```python
-	class Student(object):
-		@property
-		def score(self):
-			return self._score
+在绑定属性时，如果直接把属性暴露出去，没办法检查参数，导致属性的值可以随意更改，可以通过`set_age`方法来设置值，可以在set_score里检查参数；比较麻烦，但是其存在兼容性问题：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.set_age(age)
+    def set_age(self, age):
+        if age <= 0:
+            raise ValueError('The age must be positive')
+        self._age = age
+    def get_age(self):
+        return self._age
+```
+property 类返回一个属性对象。property() 类的语法如下
+```py
+property(fget=None, fset=None, fdel=None, doc=None)
+```
+property() 有以下参数：
+- `fget` 是获取属性值的函数，或 getter 方法。
+- `fset` 是设置属性值的函数，或 setter 方法。
+- `fdel` 是删除属性的函数。
+- `doc` 是 docstring，即注释。
 
-		@score.setter
-		def score(self， value):
-			if not isinstance(value， int):
-				raise ValueError('score must be an integer!')
-			if value < 0 or value > 100:
-				raise ValueError('score must between 0 ~ 100!')
-			self._score = value
-	```
-- 把一个getter方法变成属性，只需要加上`@property`就可以了，此时，`@property`本身又创建了另一个装饰器`@score.setter`，负责把一个`setter`方法变成属性赋值，于是，我们就拥有一个可控的属性操作
+示例：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+    def set_age(self, age):
+        if age <= 0:
+            raise ValueError('The age must be positive')
+        self._age = age
+    def get_age(self):
+        return self._age
+    age = property(fget=get_age, fset=set_age)
+```
+在 Person 类中，我们通过调用 `property()` 创建一个新的属性对象，并将该属性对象赋值给 age 属性。请注意，age 是类属性，而不是实例属性
+```py
+print(Person.age)
+<property object at 0x000001F5F5149180>
+```
+创建一个Person实例：
+```py
+john = Person('John', 18)
+print(john.__dict__)
+# {'_age': 18, 'name': 'John'}
+```
+从输出结果中可以清楚地看到，`john.__dict__` 没有 age 属性；执行如下赋值命令：
+```py
+john.age = 19
+```
+在本例中，Python 首先查找 `john.__dict__` 中的 age 属性。因为 Python 没有在 `john.__dict__` 中找到 age 属性，所以它会在 `Person.__dict__` 中找到 age 属性。
 
-- 还可以定义只读属性，只定义getter方法，不定义setter方法就是一个只读属性：
-	```python
-	class Student(object):
-		@property
-		def birth(self):
-			return self._birth
-		@birth.setter
-		def birth(self， value):
-			self._birth = value
-		@property
-		def age(self):
-			return 2015 - self._birth
-	```
+因为 Python 在 `Person.__dict__` 中找到了 age 属性，所以它会调用 age 属性对象，当执行上面的赋值命令时，Python 将调用分配给 fset 参数的函数，即 `set_age()`，同样，当您读取 age 属性对象时，Python 将执行分配给 fget 参数的函数，即 `get_age()` 方法。
 
+通过使用 `property()` 类，我们可以为类添加属性，同时保持向后兼容性。在实际操作中，首先要定义属性。之后，如果需要，可以将属性添加到类中。
 
+## 2、property装饰器
 
+使用 property() 类处理如下：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self._age = age
+    def get_age(self):
+        return self._age
+    age = property(fget=get_age)
+```
+因此，要获取 Person 对象的age，可以使用 age 属性或 get_age() 方法。这就造成了不必要的冗余；
 
+使用 @property 装饰器，可以简化类的属性定义:
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self._age = age
 
+    @property
+    def age(self):
+        return self._age
+```
 
+**setter装饰器**
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self._age = age
+    @property
+    def age(self):
+        return self._age
+    def set_age(self, value):
+        if value <= 0:
+            raise ValueError('The age must be positive')
+        self._age = value
+    age = age.setter(set_age)
+```
+setter() 方法接受一个可调用对象，并返回另一个可调用对象（属性对象）。因此，可以在 set_age() 方法中使用装饰器 @age.setter，如下所示：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self._age = age
+    @property
+    def age(self):
+        return self._age
+    @age.setter
+    def set_age(self, value):
+        if value <= 0:
+            raise ValueError('The age must be positive')
+        self._age = value
+```
 
+**概括地说，你可以使用以下模式使用装饰器创建属性**
+```py
+class MyClass:
+    def __init__(self, attr):
+        self.prop = attr
 
+    @property
+    def prop(self):
+        return self.__attr
+
+    @prop.setter
+    def prop(self, value):
+        self.__attr = value
+```
+在这种模式中，`__attr` 是私有属性，prop 是属性名。
+
+## 3、只读属性
 
 
 
