@@ -1115,14 +1115,184 @@ class MyClass:
 
 ## 3、只读属性
 
+要定义只读属性，需要创建一个只有 getter 的属性。然而，这并不是真正的只读属性，因为你可以随时访问底层属性并对其进行更改。
+
+只读属性在某些情况下非常有用，例如计算属性
+
+## 4、删除属性
+
+要创建一个类的属性，可以使用 `@property` 装饰器。`@property` 装饰器使用的属性类有三个方法：setter、getter 和 deleter。通过使用 deleter，可以删除对象的一个属性。请注意，deleter() 方法删除的是对象的属性，而不是类的属性
+```py
+from pprint import pprint
+class Person:
+    def __init__(self, name):
+        self._name = name
+    @property
+    def name(self):
+        return self._name
+    @name.setter
+    def name(self, value):
+        if value.strip() == '':
+            raise ValueError('name cannot be empty')
+        self._name = value
+    @name.deleter
+    def name(self):
+        del self._name
+```
+调用如下方法可以删除属性：
+```py
+person = Person('John')
+pprint(person.__dict__) # {'_name': 'John'}
+del person.name
+print(person.name) # AttributeError: 'Person' object has no attribute '_name'
+```
+
+# 四、继承
+
+## 1、单继承
+
+```py
+class Person:
+    def __init__(self, name):
+        self.name = name
+
+    def greet(self):
+        return f"Hi, it's {self.name}"
+
+class Employee(Person):
+    def __init__(self, name, job_title):
+        self.name = name
+        self.job_title = job_title
+```
+这是一个单继承，因为 Employee 继承自一个类 (Person)。请注意，Python 也支持多重继承，即一个类继承自多个类;
+
+Employee和Person之间的关系是 IS-A 关系。换句话说，Employee就是一个人。
+
+**type 与 isinstance**
+```py
+person = Person('Jane')
+print(type(person)) # <class '__main__.Person'>
+
+employee = Employee('John', 'Python Developer')
+print(type(employee)) # <class '__main__.Employee'>
+```
+要检查对象是否是类的实例，可以使用 isinstance() 方法：
+```py
+person = Person('Jane')
+print(isinstance(person, Person))  # True
+employee = Employee('John', 'Python Developer')
+print(isinstance(employee, Person))  # True
+print(isinstance(employee, Employee))  # True
+print(isinstance(person, Employee))  # False
+```
+
+**issubclass**
+```py
+# 要检查一个类是否是另一个类的子类，可以使用 issubclass() 函数
+print(issubclass(Employee, Person)) # True
+```
+请注意，当定义一个不继承自任何类的类时，它会隐式继承自内置object类。
+```py
+print(issubclass(Person, object)) # True
+```
+换句话说，所有类都是object的子类
+
+## 2、重写
+
+重写方法允许子类提供其父类已提供的方法的特定实现方式：
+```py
+import re
+class Parser:
+    def __init__(self, text):
+        self.text = text
+
+    def email(self):
+        match = re.search(r'[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+', self.text)
+        if match:
+            return match.group(0)
+        return None
+
+    def phone(self):
+        match = re.search(r'\d{3}-\d{3}-\d{4}', self.text)
+        if match:
+            return match.group(0)
+        return None
+
+    def parse(self):
+        return {
+            'email': self.email(),
+            'phone': self.phone()
+        }
+class UkParser(Parser):
+    def phone(self):
+        match = re.search(r'(\+\d{1}-\d{3}-\d{3}-\d{4})', self.text)
+        if match:
+            return match.group(0)
+        return None
+
+if __name__ == '__main__':
+    s = 'Contact us via 408-205-5663 or email@test.com'
+    parser = Parser(s)
+    print(parser.parse())
+
+    s2 = 'Contact me via +1-650-453-3456 or email@test.co.uk'
+    parser = UkParser(s2)
+    print(parser.parse())
+```
+UKParser 继承子 Parser，并重写了 phone 方法
+
+除了重写方法还可以重写属性：
+```py
+import re
+class Parser:
+    phone_pattern = r'\d{3}-\d{3}-\d{4}'
+
+    def __init__(self, text):
+        self.text = text
+
+    def email(self):
+        match = re.search(r'[a-z0-9\.\-+_]+@[a-z0-9\.\-+_]+\.[a-z]+', self.text)
+        if match:
+            return match.group(0)
+        return None
+
+    def phone(self):
+        match = re.search(self.phone_pattern, self.text)
+        if match:
+            return match.group(0)
+        return None
+
+    def parse(self):
+        return {
+            'email': self.email(),
+            'phone': self.phone()
+        }
+
+class UkParser(Parser):
+    phone_pattern = r'(\+\d{1}-\d{3}-\d{3}-\d{4})'
+
+if __name__ == '__main__':
+    s = 'Contact us via 408-205-5663 or email@test.com'
+    parser = Parser(s)
+    print(parser.parse())
+
+    s2 = 'Contact me via +1-650-453-3456 or email@test.co.uk'
+    parser = UkParser(s2)
+    print(parser.parse())
+```
 
 
+通过多重继承，一个子类就可以同时获得多个父类的所有功能
 
+Mixln
+- 在设计类的继承关系时，通常，主线都是单一继承下来的，例如，Ostrich继承自Bird。但是，如果需要“混入”额外的功能，通过多重继承就可以实现，比如，让Ostrich除了继承自Bird外，再同时继承Runnable。这种设计通常称之为MixIn
+- MixIn的目的就是给一个类增加多个功能，这样，在设计类的时候，我们优先考虑通过多重继承来组合多个MixIn的功能，而不是设计多层次的复杂的继承关系
 
-
-
-
-
+编写一个多进程模式的TCP服务，定义如下:
+```python
+class MyTCPServer(TCPServer， ForkingMixIn):
+	pass
+```	
 
 
 
@@ -1220,20 +1390,6 @@ class MyClass:
 	当Student的实例绑定的属性非name和age时，就会报AttributeError
 
 需要注意的是：`__slots__`定义的属性仅对当前类实例起作用，对继承的子类是不起作用的：
-
-
-# 10、多重继承
-通过多重继承，一个子类就可以同时获得多个父类的所有功能
-
-Mixln
-- 在设计类的继承关系时，通常，主线都是单一继承下来的，例如，Ostrich继承自Bird。但是，如果需要“混入”额外的功能，通过多重继承就可以实现，比如，让Ostrich除了继承自Bird外，再同时继承Runnable。这种设计通常称之为MixIn
-- MixIn的目的就是给一个类增加多个功能，这样，在设计类的时候，我们优先考虑通过多重继承来组合多个MixIn的功能，而不是设计多层次的复杂的继承关系
-
-编写一个多进程模式的TCP服务，定义如下:
-```python
-class MyTCPServer(TCPServer， ForkingMixIn):
-	pass
-```	
 
 
 
