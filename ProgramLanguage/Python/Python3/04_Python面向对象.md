@@ -1281,184 +1281,437 @@ if __name__ == '__main__':
     print(parser.parse())
 ```
 
+## 3、super
 
-通过多重继承，一个子类就可以同时获得多个父类的所有功能
+如下例子：
+```py
+class Employee:
+    def __init__(self, name, base_pay, bonus):
+        self.name = name
+        self.base_pay = base_pay
+        self.bonus = bonus
 
-Mixln
-- 在设计类的继承关系时，通常，主线都是单一继承下来的，例如，Ostrich继承自Bird。但是，如果需要“混入”额外的功能，通过多重继承就可以实现，比如，让Ostrich除了继承自Bird外，再同时继承Runnable。这种设计通常称之为MixIn
-- MixIn的目的就是给一个类增加多个功能，这样，在设计类的时候，我们优先考虑通过多重继承来组合多个MixIn的功能，而不是设计多层次的复杂的继承关系
+    def get_pay(self):
+        return self.base_pay + self.bonus
 
-编写一个多进程模式的TCP服务，定义如下:
-```python
-class MyTCPServer(TCPServer， ForkingMixIn):
-	pass
-```	
+class SalesEmployee(Employee):
+    def __init__(self, name, base_pay, bonus, sales_incentive):
+        super().__init__(name, base_pay, bonus)
+        self.sales_incentive = sales_incentive
 
+    def get_pay(self):
+        return self.base_pay + self.bonus + self.sales_incentive
+```
+super() 会从子类返回父类的引用。
 
+调用父类方法：
+```py
+class SalesEmployee(Employee):
+    def __init__(self, name, base_pay, bonus, sales_incentive):
+        super().__init__(name, base_pay, bonus)
+        self.sales_incentive = sales_incentive
 
+    def get_pay(self):
+        return super().get_pay() + self.sales_incentive
+```
+使用 super() 可以从子类中调用父类的方法。
 
-# 6、获取对象信息
+## 4、`__slots__`
 
-## 6.1、type()
+默认情况下，Python 使用字典来管理实例属性。字典允许您在运行时动态地为实例添加更多属性。然而，它也有一定的内存开销。如果类有许多对象，就会有大量内存开销
 
-判断对象类型，返回对应的Class类
-- 基本类型判断:
-- 如果一个变量指向函数或者类
-- 判断一个对象是否为函数：使用types模块中定义的常量`[需要熟悉常用的常量]`‘
+为了避免内存开销，Python 引入了插槽。如果一个类只包含固定（或预定）的实例属性，您可以使用槽来指示 Python 使用更紧凑的数据结构，而不是字典
 
-## 6.2、isinstance()
+比如一个类只有两个属性，可以使用如下方式：
+```py
+class Point2D:
+    __slots__ = ('x', 'y')
 
-可以判断class类型
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __repr__(self):
+        return f'Point2D({self.x},{self.y})'
+```
+使用上述方式之后，下列代码会报错：
+```py
+point = Point2D(0, 0)
+print(point.__dict__) # AttributeError: 'Point2D' object has no attribute __dict__
+print(point.__slots__)
+```
+此外，不能在运行时为实例动态添加更多属性。以下情况将导致错误：
+```py
+point.z = 0# AttributeError: 'Point2D' object has no attribute 'z'
+```
+在类实例上添加一个属性：
+```py
+Point2D.color = 'black'
+pprint(Point2D.__dict__)
+```
+这段代码之所以能运行，是因为 Python 将 `__slots__` 应用于类的实例，而不是类
 
-- 判断class的类型：`isinstance('a'， str) ==? True`
-- 判断一个变量是否是某些类型中的一种：`isinstance([1， 2， 3]， (list， tuple)) ==> True`
+**`__slots__`和单一继承**
+- 基类使用插槽，但子类不使用插槽
+```py
+class Point2D:
+    __slots__ = ('x', 'y')
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+    def __repr__(self):
+        return f'Point2D({self.x},{self.y})'
+class Point3D(Point2D):
+    def __init__(self, x, y, z):
+        super().__init__(x, y)
+        self.z = z
+if __name__ == '__main__':
+    point = Point3D(10, 20, 30)
+    print(point.__dict__) # {'z': 30}
+```
+Point3D 类没有插槽，因此其实例具有 `__dict__` 属性。在这种情况下，子类 Point3D 会使用其基类的插槽（如果可用），并使用实例字典，如果希望 Point3D 类使用插槽，可以像这样定义附加属性：
+```py
+class Point3D(Point2D):
+    __slots__ = ('z',)
+    def __init__(self, x, y, z):
+        super().__init__(x, y)
+        self.z = z
+```
+> 请注意，不要指定基类的 `__slots__` 中已经指定的属性。
 
-## 6.3、dir()
+- 基类不使用 `__slots__` ，子类使用使用
+    子类的实例同时使用 `__slots__` 和 dictionary 来存储实例属性
 
-获取一个对象的所有属性和方法，返回一个字符串的list
+## 5、抽象类
 
-- dir('ABC') ==> 获取一个字符串的所有方法和属性，类似`__xxx__`的属性和方法在Python中都是有特殊用途的，比如`__len__`方法返回长度
-- 仅仅把属性和方法列出来是不够的，配合`getattr()、setattr()以及 hasattr()`，我们可以直接操作一个对象的状态：
-
-	- getattr(对象， 属性名称， [default]):获取对象中的属性；如果获取不存在的属性报AttributeError错误，可以添加一个默认之，如果未找到相关属性，则返回默认值；获取对象的方法可以直接赋值给一个变量；
-	- setattr(对象， 属性名称，属性值):给对象设置对应的属性及对应的属性值
-	- hasattr(对象， 属性名称):判断对象中是否存在对应的属性
-- 能不用 getattr()、setattr() 就不使用这两种方法
-
-## 7、实例属性和类属性
-
-- 给实例绑定属性的方法是通过实例变量，或者通过self变量
-	```python
-	class Student(object):
-		def __init__(self， name):
-			self.name = name
-	s = Student('Bob')
-	s.score = 90
-	```
-	删除实例属性：del s.score
-
-- 在class中定义属性，这种属性是类属性，属性虽然是归类所有，但是类的所有实例都可以访问
-
-- 如果给实例绑定了与类同名的属性，则实例的属性优先级要高于类属性，但是类属性不会消失且不变
-	```python
-	>>> class Student(object):
-	...     name = 'Student'
-	...
-	>>> s = Student() # 创建实例s
-	>>> print(s.name) # 打印name属性，因为实例并没有name属性，所以会继续查找class的name属性
-	Student
-	>>> print(Student.name) # 打印类的name属性
-	Student
-	>>> s.name = 'Michael' # 给实例绑定name属性
-	>>> print(s.name) # 由于实例属性优先级比类属性高，因此，它会屏蔽掉类的name属性
-	Michael
-	>>> print(Student.name) # 但是类属性并未消失，用Student.name仍然可以访问
-	Student
-	>>> del s.name # 如果删除实例的name属性
-	>>> print(s.name) # 再次调用s.name，由于实例的name属性没有找到，类的name属性就显示出来了
-	Student
-	```
-
-# 8、使用`__slots__`
-
-限制实例可以绑定的属性
-
-- 在动态语言中，正常情况下，创建了一个class的实例后，可以给该实例绑定任何属性和方法:
-	- 给一个实例绑定方法:
-		```python
-		>>> def set_age(self， age): # 定义一个函数作为实例方法
-		...     self.age = age
-		...
-		>>> from types import MethodType
-		>>> s.set_age = MethodType(set_age， s) # 给实例绑定一个方法
-		>>> s.set_age(25) # 调用实例方法
-		>>> s.age # 测试结果
-		25
-		```
-	- 但是该方法对其他的实例不起作用，可以给类绑定方法：
-		```python
-		>>> def set_score(self， score):
-		...     self.score = score
-		...
-		>>> Student.set_score = MethodType(set_score， Student) # 类绑定方法
-		```
-- 如果需要限制实例的属性，可以在定义class的时候定义一个特殊的`__slots__`变量，来限制该class实例能添加的属性:
-	```python
-	class Student(object):
-		__slots__ = ('name'， 'age')
-	```
-	当Student的实例绑定的属性非name和age时，就会报AttributeError
-
-需要注意的是：`__slots__`定义的属性仅对当前类实例起作用，对继承的子类是不起作用的：
-
-
-
-## 12、使用枚举类
-Python提供了Enum类来实现这个功能`from enum import Enum`
-
-```python
-from enum import Enum
-Month = Enum('Month'， ('Jan'， 'Feb'， 'Mar'， 'Apr'， 'May'， 'Jun'， 'Jul'， 'Aug'， 'Sep'， 'Oct'， 'Nov'， 'Dec'))
-获取可以直接Month.Jan，也可以枚举其所有成员
-for name， member in Month.__members__.items():
-	print(name， '=>'， member，'，'，member.value)
-# value属性则是自动赋给成员的int常量，默认从1开始计数
+Python 并不直接支持抽象类。但它提供了一个模块，允许您定义抽象类；要定义抽象类，需要使用 abc（抽象基类）模块。abc 模块为您提供了定义抽象基类的基础架构：
+```py
+from abc import ABC
+class AbstractClassName(ABC):
+    pass
+```
+要定义抽象方法，可使用 `@abstractmethod` 装饰器：
+```py
+from abc import ABC, abstractmethod
+class AbstractClassName(ABC):
+    @abstractmethod
+    def abstract_method_name(self):
+        pass
 ```
 
-- 为了更精确的控制枚举类型，可以从Enum派生出自定义类
-	```python
-	from enum import Enum， unique
-	@unique
-	class Weekday(Enum):
-		Sun = 0 # Sun的value被设定为0
-		Mon = 1
-		Tue = 2
-		Wed = 3
-		Thu = 4
-		Fri = 5
-		Sat = 6
-	# @unique装饰器可以帮助我们检查保证没有重复值。
-		访问这些枚举类型可以有若干种方法：
-		>>> day1 = Weekday.Mon
-		>>> print(day1)
-		Weekday.Mon
-		>>> print(Weekday.Tue)
-		Weekday.Tue
-		>>> print(Weekday['Tue'])
-		Weekday.Tue
-		>>> print(Weekday.Tue.value)
-		2
-		>>> print(day1 == Weekday.Mon)
-		True
-		>>> print(day1 == Weekday.Tue)
-		False
-		>>> print(Weekday(1))
-		Weekday.Mon
-		>>> print(day1 == Weekday(1))
-		True
-		>>> Weekday(7)
-		Traceback (most recent call last):
-			...
-		ValueError: 7 is not a valid Weekday
-		>>> for name， member in Weekday.__members__.items():
-		...     print(name， '=>'， member)
-		...
-		Sun => Weekday.Sun
-		Mon => Weekday.Mon
-		Tue => Weekday.Tue
-		Wed => Weekday.Wed
-		Thu => Weekday.Thu
-		Fri => Weekday.Fri
-		Sat => Weekday.Sat
-	```
-	可见，既可以用成员名称引用枚举常量，又可以直接根据value的值获得枚举常量
- 
- - Enum可以把一组相关常量定义在一个class中，且class不可变，而且成员可以直接比较
-	```
-		isinstance(Month， Enum) ==> False
-		issubclass(Month， Enum) ==> True
-		==> Month 不是 Enum 的实例， 而是其子类
-	```
+## 6、协议类
+
+> Python3.8之后具有的
+
+定义一个协议类：
+```py
+from typing import List, Protocol
+class Item(Protocol):
+    quantity: float
+    price: float
+# 定义一个计算总数的方法
+def calculate_total(items: List[Item]) -> float:
+    return sum([item.quantity * item.price for item in items])
+```
+这样，可以向 calculate_total() 函数传递任意 Item 对象列表，条件是每个 Item 都有数量和价格两个属性：
+```py
+class Product:
+    def __init__(self, name: str, quantity: float, price: float):
+        self.name = name
+        self.quantity = quantity
+        self.price = price
+class Stock:
+    def __init__(self, product_name, quantity, price):
+        self.product_name = product_name
+        self.quantity = quantity
+        self.price = price
+
+total = calculate_total([
+    Product('A', 10, 150),
+    Product('B', 5, 250)
+])
+total = calculate_total([
+    Stock('Tablet', 5, 950),
+    Stock('Laptop', 10, 850)
+])
+```
+上面两个类 Product、Stock 都还有属性 quantity、price，符合 Item 协议，都可以作为参数传递到 calculate_total 方法中；
+
+这在 Python 中被称为 duck typing。在duck typing中，对象的行为和属性决定了对象的类型，而不是对象的显式类型。
+
+## 7、多继承
+
+当一个类继承自一个类时，就是单继承。Python 允许一个类从多个类继承。如果一个类继承自两个或更多类，就会有多重继承；要扩展多个类，可以在子类的类名后面的括号（）内指定父类，就像这样：
+```py
+class ChildClass(ParentClass1, ParentClass2, ParentClass3):
+   pass
+```
+当父类有同名的方法，而子类调用该方法时，Python 会使用方法解析顺序 (MRO) 搜索要调用的正确方法。示例：
+```py
+class Car:
+    def start(self):
+        print('Start the Car')
+    def go(self):
+        print('Going')
+class Flyable:
+    def start(self):
+        print('Start the Flyable object')
+    def fly(self):
+        print('Flying')
+class FlyingCar(Flyable, Car):
+    def start(self):
+        super().start()
+if __name__ == '__main__':
+    car = FlyingCar()
+    car.start() # Start the Flyable object
+```
+Python使用`__mro__` 搜索方法：
+```py
+print(FlyingCar.__mro__)
+(<class '__main__.FlyingCar'>, <class '__main__.Flyable'>, <class '__main__.Car'>, <class 'object'>)
+```
+应该是跟继承的父类类别有关，根据列表的顺序来搜索
+
+多继承中，super() 调用也是跟搜索顺序来的
+
+## 8、mixin
+
+https://www.pythontutorial.net/python-oop/python-mixin/
+
+mixin 是一种提供方法实现的类，可被多个相关的子类重复使用。但是，这种继承并不意味着 "是-a "关系。一个 mixin 并不定义新的类型；
+
+一个 mixin 可以捆绑一组方法供重复使用。每个 mixin 都应具有单一的特定行为，实现密切相关的方法，通常，子类使用多重继承将混合类与父类结合起来，由于 Python 没有定义定义 mixin 类的正式方法，所以用后缀 Mixin 来命名 mixin 类是一个很好的做法。mixin 类就像 Java 和 C# 中的接口一样，具有实现功能。
+
+示例：
+```py
+class Person:
+    def __init__(self, name):
+        self.name = name
+
+class Employee(Person):
+    def __init__(self, name, skills, dependents):
+        super().__init__(name)
+        self.skills = skills
+        self.dependents = dependents
+```
+
+# 五、枚举
+
+## 1、使用枚举
+
+Python 提供了包含 Enum 类型的 enum 模块，用于定义新的枚举。通过子类化 Enum 类来定义新的枚举类型：
+```py
+from enum import Enum
+class Color(Enum):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+```
+请注意，枚举的成员是常量。因此，按照惯例，它们的名称都是大写字母。
+```py
+print(type(Color.RED))  # <enum 'Color'>
+print(isinstance(Color.RED, Color)) # True
+```
+
+**要检查某个成员是否在枚举中**，可以使用 in 操作符：`if Color.RED in Color`
+
+**要比较两个成员**，可以使用 is 或 == 操作符：`if Color.RED is Color.BLUE`
+
+请注意，成员和其相关值不相等。以下示例返回 False：
+```py
+if Color.RED == 1:
+    print('Color.RED == 1')
+else:
+    print('Color.RED != 1')
+```
+
+**枚举成员总是可以散列的**。这意味着您可以将枚举成员用作字典中的键或集合中的元素：
+```py
+rgb = {
+    Color.RED: '#ff0000',
+    Color.GREEN: '#00ff00',
+    Color.BLUE: '#0000ff'
+}
+```
+
+**访问枚举名称和值**，访问枚举成员的典型方法是使用点符号（.），由于 Enum 实现了` __getitem__` 方法，因此也可以使用方括号 `[]` 语法通过成员的名称来获取成员：
+```py
+print(Color['RED'])
+```
+
+**由于枚举是可调用的**，因此可以通过值来获取成员。例如，下面的代码通过值返回颜色枚举中的 RED 成员：
+```py
+print(Color(1))
+```
+比如从外面获取到值，调用枚举，如果枚举存在，则可以获取到具体的枚举值，如果不存在，则会报错：
+```py
+print(Color(4)) # ValueError: 4 is not a valid Color
+```
+
+**枚举是可迭代的**，因此可以使用 for 循环对其进行迭代：
+```py
+for color in Color:
+    print(color)
+```
+请注意，成员的顺序与枚举定义中的相同；
+
+您可以使用 list() 函数从枚举中返回成员列表：`print(list(Color))`
+
+**枚举是不可变的**。这意味着一旦定义了枚举，就不能添加或删除成员。也不能更改成员值
+
+**枚举不能被继承**，除非它不包含任何成员。下面的示例运行正常，因为Color枚举不包含任何成员：
+```py
+class Color(Enum):
+    pass
+class RGB(Color):
+    RED = 1
+    GREEN = 2
+    BLUE = 3
+```
+
+## 2、枚举别名
+
+根据定义，枚举成员值是唯一的。但是，可以创建具有相同值的不同成员名
+```py
+from enum import Enum
+class Color(Enum):
+    RED = 1
+    CRIMSON = 1
+    SALMON = 1
+    GREEN = 2
+    BLUE = 3
+```
+当在一个枚举中定义多个具有相同值的成员时，Python 不会创建不同的成员，而是创建别名。在这个例子中，RED 是主成员，CRIMSON 和 SALMON 是 RED 成员的别名：
+```py
+print(Color.RED is Color.CRIMSON)
+print(Color.RED is Color.SALMON)
+```
+按值查找成员时，始终会得到主成员，而不是别名。例如，以下语句返回 RED 成员：
+```py
+print(Color(1)) # Color.RED
+```
+当遍历带有别名的枚举成员时，只能得到主要成员，而不能得到别名。要获取包括别名在内的所有成员，需要使用枚举类的 `__member__` 属性：
+```py
+pprint(Color.__members__)
+```
+输出结果清楚地表明，CRIMSON 和 SALMON 引用了同一个对象，而 RED 成员引用了同一个对象：
+```py
+mappingproxy({'BLUE': <Color.BLUE: 3>,
+              'CRIMSON': <Color.RED: 1>,
+              'GREEN': <Color.GREEN: 2>,
+              'RED': <Color.RED: 1>,
+              'SALMON': <Color.RED: 1>})
+```
+枚举别名在某些情况下很有用。假设必须处理来自两个不同系统的 API。每个系统都有不同的响应状态，其含义相同
+
+## 3、@enum.unique 装饰器
+
+要定义一个没有别名的枚举，可以谨慎地为成员使用唯一值。要确保枚举没有别名，可以使用枚举模块中的 `@enum.unique` 修饰符：
+```py
+import enum
+from enum import Enum
+@enum.unique
+class Day(Enum):
+    MON = 'Monday'
+    TUE = 'Tuesday'
+    WED = 'Wednesday'
+    THU = 'Thursday'
+    FRI = 'Friday'
+    SAT = 'Saturday'
+    SUN = 'Sunday'
+```
+使用 @enum.unique 装饰器装饰枚举时，如果枚举有别名，Python 将抛出异常。
+
+## 4、自定义枚举类
+
+Python 枚举是类。这意味着可以为它们添加方法，或实现 双下线 方法来定制它们的行为：
+```py
+from enum import Enum
+from functools import total_ordering
+
+
+@total_ordering
+class PaymentStatus(Enum):
+    PENDING = 1
+    COMPLETED = 2
+    REFUNDED = 3
+    def __str__(self):
+        return f'{self.name.lower()}({self.value})'
+    def __eq__(self, other):
+        if isinstance(other, int):
+            return self.value == other
+        if isinstance(other, PaymentStatus):
+            return self is other
+        return False
+    def __lt__(self, other):
+        if isinstance(other, int):
+            return self.value < other
+        if isinstance(other, PaymentStatus):
+            return self.value < other.value
+        return False
+    def __bool__(self):
+        if self is self.COMPLETED:
+            return True
+        return False
+for member in PaymentStatus:
+    print(member, bool(member))
+```
+
+**继承枚举：**
+
+Python 不允许扩展枚举类，除非它没有成员。然而，这并不是限制。因为可以定义一个有方法但没有成员的基类，然后扩展这个基类：
+```py
+from enum import Enum
+from functools import total_ordering
+@total_ordering
+class OrderedEnum(Enum):
+    def __lt__(self, other):
+        if isinstance(other, OrderedEnum):
+            return self.value < other.value
+        return NotImplemented
+class ApprovalStatus(OrderedEnum):
+    PENDING = 1
+    IN_PROGRESS = 2
+    APPROVED = 3
+status = ApprovalStatus(2)
+if status < ApprovalStatus.APPROVED:
+    print('The request has not been approved.')
+```
+
+## 5、auto()函数
+
+为了更加方便，Python 3.6 在枚举模块中引入了 auto() 辅助类，它可以自动为枚举成员生成唯一值。例如：
+```py
+from enum import Enum, auto
+class State(Enum):
+    PENDING = auto()
+    FULFILLED = auto()
+    REJECTED = auto()
+    def __str__(self):
+        return f'{self.name(self.value)}'
+```
+**实现原理**：auto() 会调用 `_generate_next_value_()` 方法为成员生成值。下面是 `_generate_next_value_()` 方法的语法：
+```py
+_generate_next_value_(name, start, count, last_values)
+```
+默认情况下，`_generate_next_value_()` 会生成从 1 开始的整数序列中的下一个数字。但是，Python 可能会在将来改变这一逻辑。
+
+可以重写 `_generate_next_value_()` 方法，添加生成唯一值的自定义逻辑。如果是这样，则需要将 `_generate_next_value_()` 方法放在定义所有成员之前：
+```py
+from enum import Enum, auto
+class State(Enum):
+    def _generate_next_value_(name, start, count, last_values):
+        return name.lower()
+    PENDING = auto()
+    FULFILLED = auto()
+    REJECTED = auto()
+for state in State:
+    print(state.name, state.value)
+```
+
+# 六、描述符
+
+
+
 # 13、使用元类
 
 ## 13.1、type()
