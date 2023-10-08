@@ -1710,106 +1710,180 @@ for state in State:
 
 # 六、描述符
 
+- [描述符指南](https://docs.python.org/3/howto/descriptor.html#complete-practical-example)
 
+描述符是可重用的属性，它把函数调用伪装成对属性的访问
 
-# 13、使用元类
+## 1、定义
 
-## 13.1、type()
+实现了下列任意一个方法的 Python 对象就是一个描述符（descriptor）:
+- `__get__(self, obj, type=None)`
+- `__set__(self, obj, value)`
+- `__delete__(self, obj)`
+- `__set_name__(self, owner, name)`：设置属性名称
 
-- 动态语言和静态语言最大的不同，就是函数和类的定义，不是编译时定义的，而是运行时动态创建的，如:
-	```python
-	class Hello(object):
-		def hello(self， name='world'):
-			print('Hello， %s.' % name)
-	```
-	当Python解释器载入hello模块时，就会依次执行该模块的所有语句，执行结果就是动态创建出一个Hello的class对象，测试如下：
-	```python
-	>>> from hello import Hello
-	>>> h = Hello()
-	>>> h.hello()
-	Hello， world.
-	>>> print(type(Hello))
-	<class 'type'>
-	>>> print(type(h))
-	<class 'hello.Hello'>
-	```
-- `type()`函数可以查看一个类型或变量的类型，Hello是一个class，它的类型就是type，而h是一个实例，它的类型就是class Hello；class的定义是运行时动态创建的，而创建class的方法就是使用`type()`函数
-- `type()`函数既可以返回一个对象的类型，又可以创建出新的类型，可以通过type()函数创建出Hello类，而无需通过class Hello(object)...的定义:
-	```python
-	>>> def fn(self， name='world'): # 先定义函数
-	...     print('Hello， %s.' % name)
-	...
-	>>> Hello = type('Hello'， (object，)， dict(hello=fn)) # 创建Hello class
-	>>> h = Hello()
-	>>> h.hello()
-	Hello， world.
-	>>> print(type(Hello))
-	<class 'type'>
-	>>> print(type(h))
-	<class '__main__.Hello'>
-	```
-	要创建一个class对象，type()函数依次传入3个参数：
-	- class的名称；
-	- 继承的父类集合，注意Python支持多重继承，如果只有一个父类，别忘了tuple的单元素写法；
-	- class的方法名称与函数绑定，这里我们把函数fn绑定到方法名hello上，type()函数也允许我们动态创建出类来，也就是说，动态语言本身支持运行期动态创建类
+这些方法的参数含义如下：
+- `self`：是当前定义的描述符对象实例。
+- `obj`：是该描述符将作用的对象实例。
+- `type`：是该描述符作用的对象的类型（即所属的类）。
 
-## 13.2、metaclass:控制类的创建行为
+上述方法也被称为描述符协议，Python 会在特定的时机按协议传入参数调用某一方法，如果我们未按协议约定的参数定义方法，调用可能会出错
 
-- 元类(metaclass):当我们定义了类以后，就可以根据这个类创建出实例，所以:先定义类，然后创建实例；要创建出类，那就必须根据metaclass创建出类，所以:先定义metaclass，然后创建类；先定义metaclass，就可以创建类，最后创建实例；
-- 创建metaclass:默认习惯，metaclass的类名总是以Metaclass结尾，以便清楚地表示这是一个metaclass，且metaclass是类的模板，所以必须从"type"类型派生：
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
+## 2、作用
 
+描述符可以用来控制对属性的访问行为，实现计算属性、懒加载属性、属性访问控制等功能
 
+## 3、描述符类型
 
+根据所实现的协议方法不同，描述符又可分为两类：
+- 若实现了 `__set__()` 或 `__delete__()` 任一方法，该描述符是一个数据描述符（data descriptor）。
+- 若仅实现 `__get__()` 方法，该描述符是一个非数据描述符（non-data descriptor）
 
+两者的在表现行为上存在差异：
+- 数据描述符总是会覆盖实例字典 `__dict__` 中的属性：当一个类有数据描述符时，Python 将首先在数据描述符中查找实例的属性。如果 Python 没有找到属性，它将在实例字典 (`__dict__`) 中查找属性
+- 而非数据描述可能会被实例字典 `__dict__` 中定义的属性所覆盖：如果一个类使用了非数据描述符，Python 将首先在实例属性中搜索该属性 `(instance.__dict__)`。如果 Python 在实例属性中找不到属性，它将使用数据描述符；
 
+其实主要是查找链上的不一样，当访问对象的某个属性时，其查找链简单来说就是
+- 首先在对应的`数据描述符`中查找此属性；
+- 如果失败，则在对象的 `__dict__` 中查找此属性；
+- 如果失败，则在`非数据描述符`中查找此属性；
+- 如果失败，再去别的地方查找
+
+描述符示例：
+```py
+class Coordinate:
+    def __get__(self, instance, owner):
+        print('The __get__ was called')
+    def __set__(self, instance, value):
+        print('The __set__ was called')
+class Point:
+    x = Coordinate()
+    y = Coordinate()
+p = Point()
+p.x = 10 # The __set__ was called  Python 调用了 x 描述符的 __set__ 方法
+p.x  # The __get__ was called
+```
+
+非描述符示例：
+```py
+class FileCount:
+    def __get__(self, instance, owner):
+        print('The __get__ was called')
+        return len(os.listdir(instance.path))
+class Folder:
+    count = FileCount()
+    def __init__(self, path):
+        self.path = path
+
+folder = Folder('/')
+print('file count: ', folder.count)
+# The __get__ was called
+# file count:  32
+folder.__dict__['count'] = 100 # 给 count 属性赋值
+print('file count: ', folder.count)
+# file count:  100   Python 可以在实例字典 __dict__ 中找到 count 属性。因此，它不使用数据描述符
+```
+
+# 七、元编程
+
+## 1、`__new__`	
+
+创建类的实例时，Python 首先调用 `__new__()` 方法创建对象，然后调用 `__init__()` 方法初始化对象的属性。`__new__()` 是对象类的静态方法。它的签名如下
+```py
+object.__new__(class, *args, **kwargs)
+```
+`__new__`方法的第一个参数是要创建的新对象的类，`*args` 和 `**kwargs` 参数必须与类的 `__init__()` 参数一致。`__new__()`方法应该返回一个新的类对象。但也不是必须的；
+
+当你定义一个新类时，该类隐式继承于对象类。这意味着你可以覆盖 `__new__` 静态方法，并在创建类的新实例之前和之后做一些事情；要创建一个类的对象，需要调用 `super().__new__()` 方法;
+
+一般来讲，您可以调用 `object.__new__()` 方法手动创建对象。但是，在此之后您需要自己手动调用 `__init__()` 方法。如果您显式地使用 `object.__new__()` 方法创建了一个新对象，Python 将不会自动调用 `__init__()` 方法。
+
+示例：
+```py
+class Person:
+    def __init__(self, name):
+        self.name = name
+person = Person('John')
+# 上面等价于：
+person = object.__new__(Person, 'John')
+person.__init__('John')
+```
+`__dict__`在调用 `__new__`之后和调用`__init__`之后的区别：
+```py
+person = object.__new__(Person, 'John')
+print(person.__dict__) # {}
+person.__init__('John')
+print(person.__dict__) # {'name': 'John'}
+```
+从输出结果中可以清楚地看到，在调用 `__new__()` 方法后，`person.__dict__` 是空的。而在调用`__init__()`方法后，`person.__dict__`包含了值为'John'的 name 属性
+
+下面说明了 Python 在调用类创建新对象时调用 `__new__` 和 `__init__` 方法的顺序：
+```py
+class Person:
+    def __new__(cls, name):
+        print(f'Creating a new {cls.__name__} object...')
+        obj = object.__new__(cls)
+        return obj
+    def __init__(self, name):
+        print(f'Initializing the person object...')
+        self.name = name
+person = Person('John')
+```
+
+**什么时候使用`__new__()`**
+	
+实践过程中，当想在实例化时调整对象时，就会使用 `__new__()` 方法。比如：
+```py
+class SquareNumber(int):
+    def __new__(cls, value):
+        return super().__new__(cls, value ** 2)
+x = SquareNumber(3)
+print(x)  # 9
+```
+> 请注意，您不能使用 `__init__()` 方法来这样做，因为内置 int 的 `__init__()` 方法不需要参数。以下代码将导致错误
+	
+总结：通常情况下，重载 `__new__()` 方法时，不需要定义 `__init__()` 方法，因为在` __init__()` 方法中可以做的事情，在 `__new__()` 方法中也可以做
+	
+## 2、type class
+
+Python 使用 type class 来创建其他类。类型类本身是可调用的。下面显示了类型类的一个构造函数：
+```py
+type(name, bases, dict) -> a new type
+```
+构造函数有三个参数，用于创建一个新类：
+- `name`：是类的名称，例如 Person
+- `bases`：是一个元组，包含新类的基类。例如，Person 继承自 object 类，因此 bases 包含一个类（object,)
+- `dict`： 是类的命名空间
+
+从技术上讲，您可以使用类型类动态创建一个类。
+
+当 Python 解释器在代码中遇到类定义时，它会：
+- 首先，以字符串形式提取类主体。
+- 第二，为类命名空间创建类字典。
+- 第三，执行类主体以填充类字典。
+- 最后，使用上述 type() 构造函数创建一个新的 type 实例
+
+（1）定义一个类主体：
+```py
+class_body = """
+def __init__(self, name, age):
+    self.name = name
+    self.age = age
+
+def greeting(self):
+    return f'Hi, I am {self.name}. I am {self.age} year old.'
+"""
+```
+（2）创建类字典：
+```py
+class_dict = {}
+```
+（3）执行类主体并填充类字典：
+```py
+exec(class_body, globals(), class_dict)
+```
+（4）使用类型构造函数创建一个新的 Person 类：
+```py
+Person = type('Person', (object,), class_dict)
+```
+请注意，Person 是一个类，也是一个对象。Person 类继承于对象类，其命名空间为 class_dict
