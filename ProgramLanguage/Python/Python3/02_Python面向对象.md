@@ -2242,3 +2242,370 @@ sorted_members = sorted(members)
 for member in sorted_members:
     print(f'{member.name}(age={member.age})')
 ```
+
+# 八、Exceptions
+
+- [Python异常处理](01_Python基础.md#十八异常处理)
+
+## 1、异常
+
+在 Python 中，异常是异常类的对象。所有异常类都是 BaseException 类的子类；不过，几乎所有内置异常类都继承自 Exception 类，而 Exception 类是 BaseException 类的子类；完整的[内置异常类的关系](https://docs.python.org/3/library/exceptions.html#exception-hierarchy)
+
+当处理异常时，异常处理程序将捕获您指定的异常类型及其任何子类:
+```py
+colors = ['red', 'green', 'blue']
+try:
+    print(colors[3])
+except LookupError as e:
+    print(e.__class__, '-', e)
+
+print('Continue to run')
+
+# <class 'IndexError'> - list index out of range
+# Continue to run
+# IndexError extends LookupError
+```
+在实际操作中，应该尽可能具体地捕获异常，这样才能知道如何以特定的方式处理每个异常：
+```py
+def division(a, b):
+    try:
+        return {
+            'success': True,
+            'message': 'OK',
+            'result': a / b
+        }
+    except TypeError as e:
+        return {
+            'success': False,
+            'message': 'Both a & b must be numbers',
+            'result': None
+        }
+    except ZeroDivisionError as e:
+        return {
+            'success': False,
+            'message': 'b cannot be zero',
+            'result': None
+        }
+    except Exception as e:
+        return {
+            'success': False,
+            'message': str(e),
+            'result': None
+        }
+result = division('10', '2')
+print(result)
+```
+可以简化为：
+```py
+def division(a, b):
+    try:
+        return {
+            'success': True,
+            'message': 'OK',
+            'result': a / b
+        }
+    except (TypeError, ZeroDivisionError, Exception) as e:
+        return {
+            'success': False,
+            'message': str(e),
+            'result': None
+        }
+result = division(10, 0)
+print(result)
+```
+
+## 2、异常处理
+
+```py
+try:
+    # code that you want to protect from exceptions
+except <ExceptionType> as ex:
+    # code that handle the exception
+finally:
+    # code that always execute whether the exception occurred or not
+else:
+    # code that excutes if try execute normally (an except clause must be present)通常情况下，如果 try 子句正常终止，就会执行代码。
+```
+
+在 except 子句中，`as ex` 是可选的。`<ExceptionType>` 也是可选的。但是，如果省略 `<ExceptionType> as ex`，就会产生一个裸异常处理程序；在 except 子句中指定异常类型时，应从上至下排列最特殊到最不特殊的异常。需要注意的是，异常的顺序很重要，因为 Python 会运行第一个异常类型与发生的异常相匹配的异常子句
+
+## 3、裸异常处理（Bare exception）
+
+如果想捕获任何异常，可以使用裸异常处理程序。裸异常处理程序不指定异常类型：
+```py
+try:
+    ...
+except:
+    ...
+
+# 上面代码等价于：
+try:
+    ...
+except BaseException:
+    ...
+```
+裸异常处理程序将捕获任何异常，包括 SystemExit 和 KeyboardInterupt 异常。裸异常将使使用 `Control-C` 中断程序和伪装其他程序变得更加困难；
+
+如果想捕获所有提示程序错误的异常，可以使用 Exception 代替：
+```py
+try:
+    ...
+except Exception:
+    ...
+```
+在实践中，应避免使用裸异常处理程序。如果不知道该捕获什么异常，那就让异常发生，然后修改代码来处理这些异常，要从裸异常处理程序中获取异常信息，可使用 sys 模块中的 `exc_info()`函数，`sys.exc_info()` 函数返回一个由三个值组成的元组：
+- `type` 是发生异常的类型。它是 BaseException 的子类。
+- `value` 是异常类型的实例。
+- `traceback` 是一个对象，封装了异常最初发生时的调用堆栈。
+```py
+import sys
+try:
+    '20' / 2
+except:
+    exc_info = sys.exc_info()
+    print(exc_info)
+
+# 输出结果：
+# (<class 'TypeError'>, TypeError("unsupported operand type(s) for /: 'str' and 'int'"), <traceback object at 0x000001F19F42E700>)
+```
+
+## 4、raise语句
+
+要 raise 异常，使用 raise 语句：
+```py
+raise ExceptionType()
+```
+ExceptionType() 必须是 BaseException 类的子类。通常，它是 Exception 类的子类。请注意，ExceptionType 不需要直接从 Exception 类继承。它可以间接继承自 Exception 类的子类；
+
+BaseException 类的 `__init__` 方法接受一个 `*args` 参数。这意味着在raise异常时，可以向异常对象传递任意数量的参数：
+```py
+try:
+    raise ValueError('The value error exception', 'x', 'y')
+except ValueError as ex:
+    print(ex.args)
+```
+
+有的时候只是记录下异常，需要再次抛出当前异常，可以按照如下方式：
+```py
+def division(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError as ex:
+        print('Logging exception:', str(ex))
+        raise
+```
+抛出另外一个异常：
+```py
+def division(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError as ex:
+        raise ValueError('b must not zero')
+```
+
+## 5、raise from
+
+基础语法：
+```py
+raise <ExceptionType> from <cause>
+# 等价于：
+ex = ExceptionType
+ex.__cause__ = cause
+raise ex
+```
+默认情况下，异常对象上的 __cause__ 属性总是初始化为 None。
+
+示例：
+```py
+def divide(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError as ex:
+        raise ValueError('b must not be zero')
+```
+
+如果异常原因不重要，可以使用从 None 引发异常语句省略异常原因：
+```py
+raise <ExceptionType> from None
+```
+示例：
+```py
+def divide(a, b):
+    try:
+        return a / b
+    except ZeroDivisionError:
+        raise ValueError('b must not be zero') from None
+try:
+    divide(10, 0)
+except ValueError as ex:
+    print('cause:', ex.__cause__)
+    print('exception:', ex)
+```
+
+## 6、自定义异常
+
+要创建自定义异常类，需要定义一个继承自内置异常类或其子类的类，如 ValueError 类：
+```py
+class CustomException(Exception):
+    """ my custom exception class """
+```
+请注意，CustomException 类的 docstring 与语句的行为类似。因此，您不需要添加传递语句来使语法有效:
+```py
+try:
+    raise CustomException('This is my custom exception')
+except CustomException as ex:
+    print(ex)
+```
+与标准异常类一样，自定义异常也是类。因此，你可以为自定义异常类添加以下功能
+- 添加属性
+- 添加方法，如记录异常、格式化输出等。
+- 重写 `__str__` 和 `__repr__` 方法
+- 以及做其他任何普通类能做的事
+
+完整示例：
+```py
+class FahrenheitError(Exception):
+    min_f = 32
+    max_f = 212
+    def __init__(self, f, *args):
+        super().__init__(args)
+        self.f = f
+    def __str__(self):
+        return f'The {self.f} is not in a valid range {self.min_f, self.max_f}'
+
+def fahrenheit_to_celsius(f: float) -> float:
+    if f < FahrenheitError.min_f or f > FahrenheitError.max_f:
+        raise FahrenheitError(f)
+
+    return (f - 32) * 5 / 9
+
+if __name__ == '__main__':
+    f = input('Enter a temperature in Fahrenheit:')
+    try:
+        f = float(f)
+    except ValueError as ex:
+        print(ex)
+    else:
+        try:
+            c = fahrenheit_to_celsius(float(f))
+        except FahrenheitError as ex:
+            print(ex)
+        else:
+            print(f'{f} Fahrenheit = {c:.4f} Celsius')
+```
+
+# 九、关于模块
+
+- [模块基础](01_Python基础.md#十六模块)
+
+## 1、模块对象
+
+使用 import 语句导入模块时，Python 会创建一个新的模块对象。例如，下面的代码导入了数math内置模块：
+```py
+import math
+print(math) 
+#<module 'math' (built-in)>
+```
+全局命名空间：
+```py
+import math
+from pprint import pprint
+
+pprint(globals())
+# 输出
+{'__annotations__': {},
+ '__builtins__': <module 'builtins' (built-in)>,
+ '__doc__': None,
+ '__loader__': <class '_frozen_importlib.BuiltinImporter'>,
+ '__name__': '__main__',
+ '__package__': None,
+ '__spec__': None,
+ 'math': <module 'math' (built-in)>,
+ 'pprint': <function pprint at 0x0000023FE66491F0>}
+```
+由于math是一个对象，因此可以访问它的属性。例如，可以使用 `__name__` 属性获取数学对象的名称，通过 `__dict__` 可以访问math对象的所有属性。
+
+如果执行：`math = None`，Python 会销毁 match变量引用的模块对象
+```py
+import math
+from types import ModuleType
+
+pprint(isinstance(math,ModuleType)) # True
+```
+
+## 2、import原理
+
+### 2.1、import module
+
+导入模块时，Python 会做两件事：
+- 首先，检查模块是否已加载并缓存在 sys.modules 中。如果没有，将执行模块并创建模块对象的引用。
+- 其次，将模块名称添加到引用同一模块对象的全局命名空间中
+
+```py
+import sys
+import math
+
+print('sys.modules:', hex(id(sys.modules['math']))) # sys.modules: 0x20456766590
+if 'math' in globals():
+    print('globals: ', hex(id(globals()['math']))) # globals:  0x20456766590
+```
+通过上面输出结果可以看到，math变量引用同一个模块对象。如果您第二次导入模块，Python 不会再次执行数学模块，而是从 sys.modules 缓存中获取该模块。
+
+### 2.2、from module import object
+
+从模块导入对象（函数、类等）时，Python 会执行以下操作：
+- 首先，检查模块是否已加载并缓存在 sys.modules 中。如果没有，它将执行模块并创建模块对象的引用。
+- 其次，将导入对象添加到全局命名空间
+
+```py
+import sys
+from pprint import pprint
+from math import ceil
+
+print('sys.modules:', hex(id(sys.modules['math'])))
+
+pprint(globals())
+# 输出结果
+sys.modules: 0x11d659c2130
+{'__annotations__': {},
+ '__builtins__': <module 'builtins' (built-in)>,
+ '__cached__': None,
+ '__doc__': None,
+ '__file__': 'C:/oop/app.py',
+ '__loader__': <_frozen_importlib_external.SourceFileLoader object at 0x0000011D65A008E0>,
+ '__name__': '__main__',
+ '__package__': None,
+ '__spec__': None,
+ 'ceil': <built-in function ceil>,
+ 'pprint': <function pprint at 0x0000011D661C4040>,
+ 'sys': <module 'sys' (built-in)>}
+```
+Python 将 math 模块加载到 sys.modules 中。但是，它只创建了对 ceil 函数的引用，而没有在全局命名空间中创建 math 模块对象
+
+### 2.3、from module import object as object_alias
+
+从模块加载对象并使用别名时，Python 将执行以下操作：
+- 首先，检查模块是否已加载并缓存在 sys.modules 中。如果没有，它将执行模块并创建模块对象的引用。
+- 其次，创建一个引用导入对象的别名，并将其添加到全局命名空间。
+```py
+import sys
+from math import ceil as ceiling
+
+print('sys.modules:', hex(id(sys.modules['math'])))
+print('globals:', hex(id(globals()['ceiling'])))
+```
+
+### 2.4、`from module import *`
+
+当您从一个模块导入所有内容时，Python 将执行以下操作：
+- 首先，检查模块是否已加载并缓存在 sys.modules 中。如果没有，将执行模块并创建模块对象的引用。
+- 其次，将模块中的所有符号添加到全局命名空间中
+```py
+import sys
+from pprint import pprint
+from math import *
+
+print('sys.modules:', hex(id(sys.modules['math'])))
+pprint(globals())
+```
+这往往会导致难以跟踪的错误。因此，应避免使用 from 模块导入 *。

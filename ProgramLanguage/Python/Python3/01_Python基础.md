@@ -2409,9 +2409,1308 @@ def log(message: str) -> None:
 	...         break
 	```
 
+# 十六、模块
+
+在Python中，一个`.py`文件就称之为一个模块(Module)，每个模块都是一个独立的 Python 源代码文件。模块名称由文件名指定，不含 .py 扩展名
+
+## 1、关于模块
+
+- 使用模块最大的好处是大大提高了代码的可维护性。其次，编写代码不必从零开始。当一个模块编写完毕，就可以被其他地方引用。我们在编写程序的时候，也经常引用其他模块，包括Python内置的模块和来自第三方的模块；使用模块还可以避免函数名和变量名冲突。相同名字的函数和变量完全可以分别存在不同的模块中	
+
+- 为了避免模块名冲突，Python又引入了按目录来组织模块的方法，称为包（Package）：请注意，每一个包目录下面都会有一个`__init__.py`的文件，这个文件是必须存在的，否则，Python就把这个目录当成普通目录，而不是一个包。`__init__.py`可以是空文件，也可以有Python代码，因为`__init__.py`本身就是一个模块，而它的模块名就是mycompany；可以有多级目录，组成多级层次的包结构，引入了包以后，只要顶层的包名不与别人冲突，那所有模块都不会与别人冲突。现在，abc.py模块的名字就变成了mycompany.abc，类似的，xyz.py的模块名变成了mycompany.xyz
+
+
+## 2、定义模块
+
+定义一个模块：创建一个文件：`pricing.py`
+```py
+# pricing.py
+def get_net_price(price, tax_rate, discount=0):
+    return price * (1 + tax_rate) * (1-discount)
+
+def get_tax(price, tax_rate=0):
+    return price * tax_rate
+```
+
+## 3、导入模块
+
+要使用模块中定义的来自其他文件的对象，可以使用 import 语句
+
+**（1） `import <module_name>`**
+```py
+import module_name
+# 比如 
+import pricing
+```
+导入模块时，Python 会执行相应文件中的所有代码。有了这个模块名，就可以在当前模块中访问导入模块中的函数、变量等。例如，可以使用以下语法调用导入模块中定义的函数：
+```py
+module_name.function_name()
+```
+比如：
+```py
+# main.py
+import pricing
+net_price = pricing.get_net_price(
+    price=100,
+    tax_rate=0.01
+)
+print(net_price)
+```
+
+**（2）`import <module_name> as new_name`**
+
+如果不想在 main.py 中使用 pricing 作为标识符，可以将模块名称重命名为另一个名称，如下所示：
+```py
+import pricing as selling_price
+net_price = selling_price.get_net_price(
+    price=100,
+    tax_rate=0.01
+)
+```
+
+**（3）`from <module_name> import <name>`**
+
+如果要引用模块中的对象而不使用模块名前缀，可以使用以下语法显式导入这些对象：
+```py
+from module_name import fn1, fn2
+fn1()
+fn2()
+```
+
+**（4）`from <module_name> import <name> as <new_name>`: 重命名导入的对象**
+
+使用以下导入语句，可以将导入的名称重命名为另一个名称：
+```py
+from <module_name> import <name> as <new_name>
+```
+比如：
+```py
+from pricing import get_net_price as calculate_net_price
+net_price = calculate_net_price(
+    price=100,
+    tax_rate=0.1,
+    discount=0.05
+)
+```
+
+**（5）`from <module_name> import` * : 导入模块中的所有对象**
+```py
+from module_name import *
+```
+该 import 语句将导入所有公共标识符，包括变量、常量、函数、类等。**但是**，这种做法并不好，因为如果导入的模块有相同的对象，第二个模块的对象就会覆盖第一个模块的对象。程序可能无法按预期运行
+
+## 4、模块搜索路径
+
+当在代码中写入如下代码：`import module`，Python 将从以下来源搜索 module.py 文件：
+- 执行程序的当前文件夹；
+- 环境变量 [PYTHONPATH](https://docs.python.org/3/using/cmdline.html#envvar-PYTHONPATH) 中指定的文件夹列表（如果之前设置过）
+- 在安装 Python 时进行了配置文件夹列表
+
+下面的代码显示了当前模块搜索路径：
+```py
+import sys
+
+for path in sys.path:
+    print(path)
+```
+在Windows上输出如下：
+```py
+d:\notes\Python\module
+D:\software\Python\python311.zip
+D:\software\Python\DLLs
+D:\software\Python\Lib
+D:\software\Python
+D:\software\Python\Lib\site-packages
+```
+为确保 Python 始终能找到 module.py，您需要
+- 将 module.py 放在执行程序的文件夹中；
+- 在PYTHONPATH 环境变量中加入包含 module.py 的文件夹。或者，也可以将 module.py 放在PYTHONPATH 变量中包含的某个文件夹中；
+- 将 module.py 放在某个依赖安装的文件夹中；
+
+**运行时修改 Python 模块搜索路径：**
+
+Python 允许通过修改 `sys.path` 变量在运行时修改模块搜索路径。这使您可以将模块文件存储在您选择的任何文件夹中；由于 sys.path 是一个列表，因此可以在其中添加搜索路径
+
+## 5、`__name__`
+
+由于 `__name__` 变量两边都有双下划线，所以称为 dunder name。dunder 代表双下划线；
+
+在 Python 中，`__name__` 是一个特殊的变量。说它特殊，是因为 Python 会根据包含它的脚本的执行方式给它分配不同的值
+- 直接运行脚本时，Python 会将 `__name__` 变量设置为`__main__`；
+- 但是，如果将文件作为模块导入，Python 会将模块名设置为变量 `__name__`
+
+示例：
+```py
+# billing.py
+def calculate_tax(price, tax):
+    return price * tax
+def print_billing_doc():
+    tax_rate = 0.1
+    products = [{'name': 'Book',  'price': 30},
+                {'name': 'Pen', 'price': 5}]
+    # print billing header
+    print(f'Name\tPrice\tTax')
+    # print the billing item
+    for product in products:
+        tax = calculate_tax(product['price'], tax_rate)
+        print(f"{product['name']}\t{product['price']}\t{tax}")
+print(__name__)
+```
+另外一个文件：app.py
+```py
+import billing
+```
+执行app.py
+```bash
+> python app.py
+billing
+```
+但是，如果执行：
+```bash
+> python billing.py
+__main__
+```
+因此，使用 `__name__` 变量可以检查文件是直接执行的，还是作为模块导入的
+
+但是，当您执行 app.py 时，您不会看到 if 块被执行，因为 `__name__` 变量没有设置为`__main__`，而是设置为 "billing"。
+
+## 6、包
+
+通过package，可以在分层结构中组织模块。Python 组织软件包和模块的方式就像操作系统组织文件夹和文件一样。
+- 要创建软件包，需要创建一个新文件夹，并将相关模块放入该文件夹中；
+- 要指示 Python 将包含文件的文件夹视为软件包，需要在文件夹中创建一个 `__init__.py` 文件。
+> 请注意，从 Python 3.3 开始，Python 引入了隐式命名空间包特性。这使得 Python 可以将文件夹视为一个包，而无需使用 `__init__.py`
+
+**导入包：**
+```py
+import package.module
+```
+要访问属于软件包的模块中的对象，可以使用dot：
+```py
+package.module.function
+```
+为了简化，也可以按照如下方式导入：
+```py
+from <module> import <function>
+```
+比如：
+```py
+# main.py
+from sales.order import create_sales_order
+from sales.delivery import create_delivery
+from sales.billing import create_billing
+
+# 或者重命名
+from sales.order import create_sales_order as create_order
+from sales.delivery import create_delivery as start_delivery
+from sales.billing import create_billing as issue_billing
+```
+
+**初始化包：**
+
+当您导入一个软件包时，Python 将执行该软件包中的 `__init__.py`，因此，可以将代码放在 `__init__.py` 文件中，以初始化包级数据，比如：
+```py
+# __init__.py
+# default sales tax rate
+TAX_RATE = 0.07
+```
+在 main.py 文件中，可以这样访问该包 `__init__.py`中的 TAX_RATE：
+```py
+# main.py
+from sales import TAX_RATE
+print(TAX_RATE)
+```
+除了初始化package级数据外，`__init__.py` 还允许你自动从软件包中导入模块:
+```py
+# __init__.py
+# import the order module automatically
+from sales.order import create_sales_order
+# default sales tax rate
+TAX_RATE = 0.07
+```
+然后从 main.py 文件中导入销售软件包，创建 create_sales_order  函数就会自动可用，如下所示
+```py
+# main.py
+import sales
+sales.order.create_sales_order()
+```
+
+**`from <package> import *`**
+```py
+from <package> import *
+```
+当使用上面语句从package导入所有对象时，Python 将查找 `__init__.py` 文件。如果 `__init__.py` 文件存在，它将加载文件中名为 `__all__` 的特殊列表中指定的所有模块。
+```py
+# __init__.py
+__all__ = [
+    'order',
+    'delivery'
+]
+```
+并在 main.py 中使用以下导入语句：
+```py
+# main.py
+from sales import *
+order.create_sales_order()
+delivery.create_delivery()
+# cannot access the billing module
+```
+
+**子包：**
+
+软件包可以包含子软件包。通过子软件包，可以进一步组织模块
+
+## 7、使用示例
+
+```python
+#!/usr/bin/env python3 ==> 标准注释，表示该文件可以之unix环境直接运行
+# -*- coding: utf-8 -*- ==>文件的编码格式
+'a test module' # 一个字符串，表示模块的文档注释，任何模块代码的第一个字符串都被视为模块的文档注释；
+__author__ = 'BlueFish' # 变量把作者写进去
+import sys  # 导入sys模块后，我们就有了变量sys指向该模块，利用sys这个变量，就可以访问sys模块的所有功能
+def test():
+	args = sys.argv
+	if len(args)==1:
+			print('Hello， world!')
+	elif len(args)==2:
+		print('Hello， %s!' % args[1])
+	else:
+		print('Too many arguments!')
+if __name__=='__main__':
+	test()
+```
+- sys模块有一个argv变量，用list存储了命令行的所有参数`.argv`至少有一个元素.因为第一个参数永远是该`.py`文件的名称：运行python3 hello.py获得的sys.argv就是`['hello.py']`；
+	运行`python3 hello.py Michael`获得的sys.argv就是['hello.py'， 'Michael']。
+
+- 上述最后两行代码:
+	当我们在命令行运行hello模块文件时，Python解释器把一个特殊变量`__name__`置为`__main__`，而如果在其他地方导入该hello模块时，if判断将失败，因此，这种if测试可以让一个模块通过命令行运行时执行一些额外的代码，最常见的就是运行测试
+	
+- 作用域：在python中通过`"_"_`前缀来实现对作用域的控制:
+	- `__xxx__`这样的变量是特殊变量，可以被直接引用，但是有特殊用途，比如上面的__author__，__name__就是特殊变量；
+	- `_xxx`和__xxx`这样的函数或变量就是非公开的（private），不应该被直接引用，比如_abc，__abc等
+		- 注意:private函数和变量“不应该”被直接引用，而不是“不能”被直接引用，是因为Python并没有一种方法可以完全限制访问private函数或变量
+	- 外部不需要引用的函数全部定义成private，只有外部需要引用的函数才定义为public
+
+## 8、private函数	
+
+假设某个模块 mail.py 中有如下两个方式：
+```py
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+
+def attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+只想暴露 send 方法给到外部，如何实现呢？
+
+**函数前加 `_`**
+```py
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+
+def _attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+使用时：
+```py
+from mail import *
+# 只能看到 send 方法
+send('test@example.com','Hello')
+```
+如果尝试调用 `_attach_file` 方法，会报相应的错误：
+```py
+NameError: name '_attach_file' is not defined
+```
+
+**使用`__all__`变量**
+
+`__all__` 指定了其他模块可以使用的函数（以及变量和其他对象）列表。换句话说，只要不在 `__all__` 变量中列出某个函数，它就可以被私有化：
+```py
+# mail.py
+__all__ = ['send']
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+def attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+使用包结构，有如下包结构：
+```
+├── mail
+|  ├── email.py
+|  └── __init__.py
+└── main.py
+```
+emial.py代码：
+```py
+# email.py
+__all__ = ['send']
+def send(email, message):
+    print(f'Sending "{message}" to {email}')
+def attach_file(filename):
+    print(f'Attach {filename} to the message')
+```
+`__init__.py`增加如下diamante：
+```py
+from .email import * 
+__all__ = email.__all__
+```
+这样，mail 包只公开 `email.__all__` 变量中指定的 send() 函数。它从外部隐藏了 `attach_file()` 函数
 		
-				
-				
+# 十七、第三方模块
+
+## 1、pip
+
+- [Python Package Index.](https://pypi.org/)
+
+在Python中，安装第三方模块，是通过包管理工具pip完成的；
+
+Python 软件包使用由三部分组成的版本号：主版本、次版本和补丁：
+```
+major.minor.patch
+```
+
+为了安装第三方模块，可以使用如下：
+```bash
+pip install requests
+```
+pip 是 Python 的软件包安装程序。Pip 允许你从 PyPI 和其他软件源安装软件包。python自带Pip：
+```py
+pip -V
+```
+安装包：
+```py
+pip install <package_name>
+```
+要安装特定版本的软件包，可使用以下命令：
+```py
+pip install <package_name>==<version>
+pip install requests==2.20.1
+```
+
+**列出安装的包**
+```bash
+pip list
+```
+要检查哪些软件包已过期，可使用以下命令:
+```bash
+pip list --outdated
+```
+卸载包：
+```bash
+pip uninstall <package_name>
+```
+
+**列出软件包的依赖项**
+
+安装软件包时，如果该软件包使用了其他软件包，pip 会安装该软件包及其依赖包，以及依赖包的依赖包，依此类推:
+```bash
+pip show <package_name>
+```
+
+## 2、虚拟环境
+
+### 2.1、为什么需要虚拟环境
+
+安装 Python 时，Python 会将所有系统包存储在指定的文件夹中。通常，大多数系统包都位于 sys.prefix 中指定路径的子文件夹中。要找到这个路径，可以导入 sys 模块并显示如下：
+```py
+import sys
+print(sys.prefix)
+```
+当使用 pip 安装第三方软件包时，Python 会将这些软件包存储在由 site.getsitepackges() 函数指定的不同文件夹中：
+```py
+import site
+print(site.getsitepackages())
+```
+假设有两个项目使用不同版本的库。由于只有一个位置可以存储第三方软件包，因此无法同时保存不同的版本；一种变通办法是使用 pip 命令，通过安装/卸载软件包来切换版本。不过，这将耗费大量时间，而且不能很好地扩展；
+
+这就是虚拟环境发挥作用的地方
+
+### 2.2、什么是虚拟环境
+
+Python 使用虚拟环境为每个项目创建一个孤立的环境。换句话说，每个项目都有自己的目录来存储第三方软件包；如果有多个项目使用不同版本的软件包，可以将它们分别存储在不同的虚拟环境中。
+
+> 自 3.3 版起，Python 将虚拟环境模块 (venv) 作为标准库。因此，要使用 venv 模块，您必须安装 Python 3.3 或更高版本
+
+### 2.3、如何使用
+
+在一个Python目录下，执行如下命令，创建一个名为 project_env 的虚拟环境
+```bash
+python -m venv project_env
+```
+运行 project_env/Scripts 目录中的 `activate.bat` 文件，激活虚拟环境：
+```bash
+project_env\Scripts\activate
+```
+在终端中，可以看到如下信息：
+```bash
+(project_env) D:\test_env\project_env\Scripts>
+```
+前缀（project_env）表示您正处于 project_env 虚拟环境中，执行`where python`：
+```bash
+D:\test_env\project_env\Scripts\python.exe
+C:\Python\python.exe
+```
+第一行显示 python.exe 位于 `project_env/Scripts` 文件夹中。这意味着如果在 project_env 中运行 python 命令，执行的将是 `D:\test_env\project_env\Scripts\python.exe` 而不是 `C:\Python\python.exe`
+
+创建 project_env 虚拟环境时，venv 模块已经安装了两个软件包：pip 和 setuptools：
+```bash
+(project_env) D:\test_env\web_crawler>pip list
+Package    Version
+---------- -------
+pip        23.1.2
+setuptools 65.5.0
+```
+安装依赖之后，执行如下命令创建 `requirements.txt` file
+```bash
+pip freeze > requirements.txt
+```
+`requirements.txt` 文件包含项目使用的 project_env 虚拟环境中安装的所有软件包版本，将项目复制到另一台机器时，可以运行 `pip install` 命令来安装 `requirements.txt` 文件中列出的所有软件包
+
+比如在当前工程下安装`pip install requests`，那么 `requirements.txt` 内容如下：
+```
+certifi==2023.7.22
+charset-normalizer==3.2.0
+idna==3.4
+requests==2.31.0
+urllib3==2.0.4
+```
+要停用虚拟环境，可以运行 deactivate 命令：
+```bash
+(project_env) D:\test_env\web_crawler>deactivate
+D:\test_env\web_crawler>
+```			
+
+# 十八、异常处理
+
+在 Python 中，主要有两种错误：语法错误和异常。
+- 语法错误：比如无效Python代码，Python 解释器会显示发生错误的文件名和行号，以便您修复错误。
+- 异常：在 Python 中，执行过程中出现的错误，产生异常的原因主要来自代码执行的环境；
+
+出现异常时，程序不会自动处理，结果就是错误信息；
+
+## 1、错误与异常处理
+
+### 1.1、异常处理机制
+
+语法：
+```py
+try:
+    # code that may cause error
+except:
+    # handle errors
+finally:
+	# 
+```
+示例：
+```python
+try:
+	print('try...')
+	r = 10 / 0
+	print('result'， r)
+except ZeroDivisionError as e: # 处理特定异常信息
+	print('Except:'， e)
+finally:
+	print('finally...')
+print('End')
+```
+当我们认为某些代码可能会出错时，就可以用try来运行这段代码，如果执行出错，则后续代码不会继续执行，而是直接跳转至错误处理代码，即except语句块，执行完except后，如果有finally语句块，则执行finally语句块，至此，执行完毕；
+
+可以处理多个异常：
+```py
+try:
+    # code that may cause an exception
+except Exception1 as e1:
+    # handle exception
+except Exception2 as e2:
+    # handle exception
+except Exception3 as e3:
+    # handle exception 
+```
+如果希望对某些类型的异常做出相同的响应，可以将它们归类到一个 except 子句中：
+```py
+try:
+    # code that may cause an exception
+except (Exception1, Exception2):
+    # handle exception
+```
+此外，如果没有错误发生，可以在except语句块后面加一个else，当没有错误发生时，会自动执行else语句；如果包含 finally 子句，else 子句会在 try 子句之后、finally 子句之前执行
+```python
+try:
+	print('try...')
+	r = 10 / int('2')
+	print('result:'， r)
+except ValueError as e:
+	print('ValueError:'， e)
+except ZeroDivisionError as e:
+	print('ZeroDivisionError:'， e)
+else:
+	print('no error!')
+finally:
+	print('finally...')
+print('END')
+```
+python其实也是class，所有的错误类型都继承自BaseException，不需要在每个可能出错的地方去捕获错误，只要在合适的层次去捕获错误就可以了；
+
+将 catch Exception 代码块放在列表末尾，以捕获其他一般错误，也是一种很好的做法：
+```py
+try:
+	# handler code
+    print(result)
+except ValueError:
+    print('Error! Please enter a number for net sales.')
+except ZeroDivisionError:
+    print('Error! The prior net sales cannot be zero.')
+except Exception as error:
+    print(error)
+```
+
+try...catch...finally可以有三种写法：
+```py
+# 写法1：
+try:
+    # code that may cause an exception
+except Exception1 as e1:
+    # handle exception
+except Exception2 as e2:
+    # handle exception
+except Exception3 as e3:
+    # handle exception 
+
+# 写法2：
+try:
+    # code that may cause an exception
+except (Exception1, Exception2):
+    # handle exception
+finally:
+	# final code
+
+# 写法3：通常情况下，在无法处理异常但又想清理资源时会使用该语句。例如，您想关闭已打开的文件
+try:
+    # the code that may cause an exception
+finally:
+    # the code that always executes
+
+# 写法4：
+try:
+    # code that may cause errors
+except:
+    # code that handle exceptions
+else:
+    # code that executes when no exception occurs
+```
+
+### 1.2、调用堆栈
+
+如果错误没有被捕获，它就会一直往上抛，最后被Python解释器捕获，打印一个错误信息，然后程序退出；
+
+### 1.3、记录错误
+
+如果不捕获错误，自然可以让Python解释器来打印出错误堆栈，但程序也被结束了。既然我们能捕获错误，就可以把错误堆栈打印出来，然后分析错误原因，同时，让程序继续执行下去
+
+Python内置的logging模块可以非常容易地记录错误信息，通过配置，logging还可以把错误记录到日志文件里
+```python
+# 同样是出错，但程序打印完错误信息后会继续执行，并正常退出：
+import logging
+def foo(s):
+	return 10 / int(s)
+def bar(s):
+	return foo(s) * 2
+def main():
+	try:
+		bar('0')
+	except Exception as e:
+		logging.exception(e)
+main()
+print('END')
+```
+
+### 1.4、抛出错误
+
+要抛出错误，首先根据需要，可以定义一个错误的class，选择好继承关系，然后用raise语句抛出一个错误的实例:
+```python
+class FooError(ValueError):
+	pass
+def foo(s):
+	n = int(s)
+	if n == 0:
+		raise FooError('invalid value %s' % s)
+	return 10 / n
+foo('0')
+```
+只有在必要的时候才定义我们自己的错误类型。如果可以选择Python已有的内置的错误类型(比如ValueError，TypeError)，尽量使用Python内置的错误类型
+
+### 1.5、其他处理方式
+
+```python
+def foo(s):
+	n = int(s)
+	if n==0:
+		raise ValueError('invalid value: %s' % s)
+	return 10 / n
+def bar():
+	try:
+		foo('0')
+	except ValueError as e:
+		print('ValueError!')
+		raise
+bar()
+```
+- 由于当前函数不知道应该怎么处理该错误，所以，最恰当的方式是继续往上抛，让顶层调用者去处理
+- raise语句如果不带参数，就会把当前错误原样抛出.此外，在except中raise一个Error，还可以把一种类型的错误转化成另一种类型
+
+## 2、更多
+
+- [Exceptions](02_Python面向对象.md#八Exceptions)
+
+# 十九、文件与文件夹处理
+
+## 1、读文件
+
+下列代码是读取一个文件到string中：
+```py
+with open('readme.txt') as f:
+    lines = f.readlines()
+```
+读取一个文件的步骤：
+- 首先，使用 `open()` 函数打开一个文本文件供读取；
+- 其次，使用文件对象的 `file` `read()`、`readline()` 或 `readlines()` 方法从文本文件中读取文本
+- 第三步，使用文件 `close()` 方法关闭文件；
+
+### 1.1、open()函数
+
+open() 函数有多个参数，但是一般只需要关注第一个：
+```py
+# path_to_file 指定要读取文件的路径
+open(path_to_file, mode)
+```
+当然如果你的程序和需要读取的文件是在同一个文件夹中，只需要填写文件名称；要指定文件路径，即使是在 Windows 系统中，也要使用正斜线（'/'）。
+
+`mode`是一个可选参数。它是一个字符串，用于指定打开文件的模式。下表列出了打开文本文件的可用模式：
+- `r`：打开文本文件以读取文本；
+- `w`：打开文本文件以写文本；
+- `a`：打开文本文件以追加文本
+
+比如你要读取一个文件：`f = open('the-zen-of-python.txt','r')`；
+
+open() 函数返回一个文件对象，你可以用它从文本文件中读取文本。
+
+### 1.2、读取文本的方法
+
+文件对象为您提供了三种从文本文件读取文本的方法：
+- `read(size)`：根据可选的大小读取文件的部分内容，并以字符串形式返回。如果省略 size，read() 方法会从上次读取的位置读取，直到文件结束。如果文件已结束，read() 方法将返回空字符串
+- `readline()`：从文本文件中读取一行，并以字符串形式返回。如果已到达文件末尾，readline() 将返回空字符串
+- `readlines()`：将文本文件的所有行添加到字符串列表中。如果您有一个小文件，但想操作该文件的全部文本，这种方法非常有用
+
+### 1.3、close()方法
+
+在使用 close() 方法关闭文件之前，您打开的文件将一直保持打开状态。一般直接使用：`f.close()`
+
+要在不调用 close() 方法的情况下自动关闭文件，可以使用 with 语句，如下所示：
+```py
+with open(path_to_file) as f:
+    contents = f.readlines()
+```
+
+### 1.4、读文件示例
+
+```py
+with open('the-zen-of-python.txt') as f:
+    [print(line.strip()) for line in f.readlines()]
+```
+open() 函数返回的文件对象是一个可迭代对象。因此，可以使用 for 循环遍历文本文件的行，如下所示
+```py
+with open('the-zen-of-python.txt') as f:
+    for line in f:
+        print(line.strip())
+```
+
+### 1.5、读UTF-8文件
+
+要打开 UTF-8 文本文件，需要将 `encoding='utf-8'` 传递给 open() 函数，以指示它期望从文件中获取 UTF-8 字符
+```py
+with open('quotes.txt', encoding='utf8') as f:
+    for line in f:
+        print(line.strip())
+```
+到有些编码不规范的文件，你可能会遇到UnicodeDecodeError，因为在文本文件中可能夹杂了一些非法编码的字符。遇到这种情况，open()函数还接收一个errors参数，表示如果遇到编码错误后如何处理。最简单的方式是直接忽略：
+```py
+f = open('/Users/michael/gbk.txt'， 'r'， encoding='gbk'， errors='ignore')
+```
+
+### 1.6、二进制文件读取
+
+要读取二进制文件，比如图片、视频等等，用'rb'模式打开文件即可
+```py
+f = open('/Users/michael/test.jpg'， 'rb')
+```
+
+## 2、写文件
+
+写文件一般格式：
+```py
+with open('readme.txt', 'w') as f:
+    f.write('readme')
+```
+写文件的步骤：
+- 首先，使用 `open()` 函数打开文本文件以进行写入（或添加）操作
+- 其次，使用 `write()` 或 `writelines()` 方法写入文本文件；
+- 最后，使用 `close()` 方法关闭文件
+
+**open()函数**
+
+`f = open(file, mode)`
+- `file`参数指定了要打开用于写入的文本文件的路径；
+- `mode`参数用于指定打开文本文件的模式；
+
+写文件时，mode参数：
+- `w`：打开一个文本文件以供书写。如果文件存在，函数会在打开文件后立即截断所有内容。如果文件不存在，函数将创建一个新文件；
+- `a`：打开用于添加文本的文本文件。如果文件存在，函数会在文件末尾添加内容；
+- `+`：打开文本文件进行更新（读取和写入）。
+
+**写函数：**
+- `write()` 方法将字符串写入文本文件。
+- `writelines()` 方法会将一系列字符串一次性写入文件。
+
+`writelines()` 方法接受一个可迭代对象，而不仅仅是一个列表，所以可以向 `writelines()` 方法传递一个字符串元组、一个字符串集合等：
+```py
+f.write('\n')
+f.writelines('\n')
+```
+
+示例：
+```py
+lines = ['Readme', 'How to write text files in Python']
+with open('readme.txt', 'w') as f:
+    for line in lines:
+        f.write(line)
+        f.write('\n')
+# 或者如下方式：
+lines = ['Readme', 'How to write text files in Python']
+with open('readme.txt', 'w') as f:
+    f.writelines(lines)
+```
+
+**写UTF-8数据**
+```py
+quote = '中华人民共和国'
+with open('quotes.txt', 'w', encoding='utf-8') as f:
+    f.write(quote)
+```
+
+## 3、io
+
+### 3.1、StringIO
+
+在内存中读写str，也就是数据读写不一定是文件，也可以在内存中读写；
+
+要把str写入StringIO，我们需要先创建一个StringIO，然后，像文件一样写入即可：
+```py
+from io import StringIO
+f = StringIO()
+f.write('hello')
+print(f.getvalue())
+```
+`getvalue()`方法用于获得写入后的str
+
+读取StringIO可以用一个str初始化StringIO，然后像文件一样读取：
+```py
+from io import StringIO
+f = StringIO('Hello!\nHi!\nGoodbye!')
+while True:
+	s = f.readline()
+	if s == '':
+		break
+	print(s.strip())
+```
+
+### 3.2、BytesIO
+
+操作二进制数据，BytesIO实现了在内存中读写bytes，写入的不是str，而是经过UTF-8编码的bytes
+```py
+from io import BytesIO, StringIO
+f = BytesIO()
+f.write('中文'.encode('utf-8'))
+print(f.getvalue())
+b'\xe4\xb8\xad\xe6\x96\x87'
+
+f = BytesIO(b'\xe4\xb8\xad\xe6\x96\x87')
+f.read()
+b'\xe4\xb8\xad\xe6\x96\x87'
+```
+
+## 4、创建文件与判断文件是否存在
+
+### 4.1、创建文件
+
+要创建一个新文本文件，需要使用 open() 函数。open() 函数有很多参数。不过，只需要关注前两个参数：
+```py
+f = open(path_to_file, mode)
+```
+mode参数可以是：
+- `w`：打开一个文件供写入。如果文件不存在，open() 函数会创建一个新文件。否则，它会覆盖现有文件的内容；
+- `x`：打开一个文件以创建独占文件。如果文件存在，open() 函数会引发错误 (FileExistsError)。否则，它将创建文本文件
+
+如果要在指定目录下创建文件，例如 docs/readme.text，则需要在创建文件前确保 docs 目录存在。否则会出现异常
+```py
+with open('docs/readme.txt', 'w') as f:
+    f.write('Create a new text file!')
+# IOError: [Errno 2] No such file or directory: 'docs/readme.txt'
+```
+要解决这个问题，你需要先创建 docs 目录，然后在该文件夹中创建 readme.txt 文件。
+
+如果不想在文本文件已经存在的情况下创建新文件，可以在调用 open() 函数时使用 "x "模式：
+```py
+with open('readme.txt', 'x') as f:
+    f.write('Create a new text file!')
+```
+
+### 4.2、判断文件是否存在
+
+处理文件时，在对文件进行读取或写入等其他操作之前，您通常需要检查文件是否存在。为此，可以使用 `os.path` 模块中的 `exists()` 函数或 `pathlib` 模块中的 Path 类中的 `is_file()` 方法
+
+- `os.path.exists()`
+```py
+from os.path import exists
+file_exists = exists(path_to_file)
+```
+- `Path.is_file()`
+```py
+from pathlib import Path
+path = Path(path_to_file)
+path.is_file()
+```
+
+示例1：
+```py
+import os.path
+os.path.exists(path_to_file)
+```
+如果文件存在，`exists()` 函数返回 True。否则，返回 False。
+
+示例2：
+```py
+from pathlib import Path
+path = Path(path_to_file)
+path.is_file()
+```
+```py
+from pathlib import Path
+path_to_file = 'readme.txt'
+path = Path(path_to_file)
+if path.is_file():
+    print(f'The file {path_to_file} exists')
+else:
+    print(f'The file {path_to_file} does not exist')
+```
+
+## 5、CSV文件处理
+
+CSV 是逗号分隔值的缩写。CSV 文件是一种使用逗号分隔数值的分隔文本文件。CSV 文件由一行或多行组成。每一行是一条数据记录。每条数据记录由一个或多个数值组成，以逗号分隔。此外，CSV 文件的所有行都有相同数量的值。
+
+### 5.1、读取CSV文件
+
+```py
+# 导入CSV模块
+import csv
+# 打开文件，或者使用UTF8编码
+f = open('path/to/csv_file') # f = open('path/to/csv_file', encoding='UTF8')
+# 读取文件
+csv_reader = csv.reader(f)
+f.close()
+```
+`csv_reader` 是 CSV 文件行数的可迭代对象。因此，可以使用 for 循环遍历 CSV 文件的行：
+```py
+for line in csv_reader:
+    print(line)
+```
+每一行都是一个值列表。要访问每个值，需要使用方括号符号 [] 。第一个值的索引为 0，第二个值的索引为 1，以此类推。
+```py
+import csv
+with open('path/to/csv_file', 'r') as f:
+    csv_reader = csv.reader(f)
+    for line in csv_reader:
+        # process each line
+        print(line)
+```
+
+一般csv文件包含一个头的行，要分离标题和数据，可以使用 enumerate() 函数获取每一行的索引：
+```py
+import csv
+with open('country.csv', 'r') as f:
+    csv_reader = csv.reader(f)
+    for line_no, line in enumerate(csv_reader, 1):
+        if line_no == 1:
+            print('Header:')
+            print(line)  # header
+            print('Data:')
+        else:
+            print(line)  # data
+```
+跳过header另一种方法是使用 `next()` 函数。next() 函数将读者转到下一行。例如
+```py
+import csv
+with open('country.csv', 'r') as f:
+    csv_reader = csv.reader(f)
+
+    # skip the first row
+    next(csv_reader)
+
+    # show the data
+    for line in csv_reader:
+        print(line)
+```
+
+### 5.2、DictReader
+
+使用 csv.reader() 函数时，可以使用括号符号（如 line[0]、line[1]等）访问 CSV 文件的值。不过，使用 csv.reader() 函数有两个主要限制：
+- 从 CSV 文件中访问值的方法并不明显。例如，`line[0]` 隐含地表示国家名称。如果能像 `line['country_name']` 这样访问国家名，会更方便；
+- 当 CSV 文件中列的顺序发生变化或添加了新列时，需要修改代码以获取正确的数据；
+
+DictReader 类允许你创建一个类似于普通 CSV 阅读器的对象。但它会将每一行的信息映射到一个字典（dict）中，该字典的键由第一行的值指定。通过使用 DictReader 类，可以访问 `country.csv` 文件中的值，如行['name']、行['area']、行['country_code2']和行['country_code3']。
+```py
+import csv
+with open('country.csv', 'r') as f:
+    csv_reader = csv.DictReader(f)
+    # skip the header
+    next(csv_reader)
+    # show the data
+    for line in csv_reader:
+        print(f"The area of {line['name']} is {line['area']} km2")
+```
+如果想使用第一行中指定的字段名以外的其他字段名，可以像这样通过向 DictReader() 构造函数传递字段名列表来明确指定字段名：
+```py
+import csv
+fieldnames = ['country_name', 'area', 'code2', 'code3']
+with open('country.csv', encoding="utf8") as f:
+    csv_reader = csv.DictReader(f, fieldnames)
+    next(csv_reader)
+    for line in csv_reader:
+        print(f"The area of {line['country_name']} is {line['area']} km2")
+```
+
+### 5.3、写CSV文件
+
+写CSV文件的一般步骤：
+- 使用 open() 函数打开 CSV 文件进行写入（w 模式）。
+- 调用 csv 模块的 `writer()` 函数，创建 CSV 写入器对象。
+- 通过调用 CSV 写入器对象的 `writerow()` 或 `writerows()（写入多行）` 方法，将数据写入 CSV 文件；
+- 一旦完成数据写入，关闭文件。
+
+基本代码：
+```py
+import csv
+# open the file in the write mode
+f = open('path/to/csv_file', 'w')
+# create the csv writer
+writer = csv.writer(f)
+# write a row to the csv file
+writer.writerow(row)
+# close the file
+f.close()
+```
+如果使用 with 语句，就不需要调用 close() 方法来明确关闭文件，这样会更简短：
+```py
+import csv
+# open the file in the write mode
+with open('path/to/csv_file', 'w') as f:
+    # create the csv writer
+    writer = csv.writer(f)
+
+    # write a row to the csv file
+    writer.writerow(row)
+```
+写UTF-8文件：
+```py
+import csv
+# open the file in the write mode
+with open('path/to/csv_file', 'w', encoding='UTF8') as f:
+    # create the csv writer
+    writer = csv.writer(f)
+    # write a row to the csv file
+    writer.writerow(row)
+```
+
+示例：
+```py
+import csv  
+header = ['name', 'area', 'country_code2', 'country_code3']
+data = ['Afghanistan', 652090, 'AF', 'AFG']
+with open('countries.csv', 'w', encoding='UTF8') as f:
+    writer = csv.writer(f)
+
+    # write the header
+    writer.writerow(header)
+    # write the data
+    writer.writerow(data)
+```
+
+如果要删除空行，可向 open() 函数传递关键字参数 newline=''，如下所示：
+```py
+import csv
+header = ['name', 'area', 'country_code2', 'country_code3']
+data = ['Afghanistan', 652090, 'AF', 'AFG']
+with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+    writer = csv.writer(f)
+    # write the header
+    writer.writerow(header)
+    # write the data
+    writer.writerow(data)
+```
+
+**使用DictWriter**
+
+如果 CSV 文件的每一行都是字典，则可以使用 csv 模块的 DictWriter 类将字典写入 CSV 文件：
+```py
+import csv
+# csv header
+fieldnames = ['name', 'area', 'country_code2', 'country_code3']
+# csv data
+rows = [
+    {'name': 'Albania', 'area': 28748, 'country_code2': 'AL', 'country_code3': 'ALB'},
+    {'name': 'Algeria', 'area': 2381741, 'country_code2': 'DZ', 'country_code3': 'DZA'},
+    {'name': 'American Samoa', 'area': 199, 'country_code2': 'AS', 'country_code3': 'ASM'}
+]
+with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
+    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer.writeheader()
+    writer.writerows(rows)
+```
+
+## 6、删除文件
+
+要删除文件，需要使用 os 内置模块的 remove() 函数。例如，下面的代码使用 os.remove() 函数删除 readme.txt 文件
+```py
+import os
+os.remove('readme.txt')
+```
+如果 readme.txt 文件不存在，os.remove() 函数就会出错：
+```py
+FileNotFoundError: [Errno 2] No such file or directory: 'readme.txt'
+```
+为避免出现该错误，可以在删除文件前检查该文件是否存在，就像这样：
+```py
+import os
+filename = 'readme.txt'
+if os.path.exists(filename):
+    os.remove(filename)
+```
+或者使用异常处理的方式：
+```py
+import os
+try:
+    os.remove('readme.txt')
+except FileNotFoundError as e:
+    print(e)
+```
+
+## 7、文件重命名
+
+要重命名文件，需要使用 `os.rename()` 函数：
+```py
+os.rename(src,dst)
+```
+如果 src 文件不存在，`os.rename()` 函数会引发 `FileNotFound` 错误。同样，如果 dst 文件已经存在，`os.rename()` 函数会引发 FileExistsError 错误：
+```py
+import os
+os.rename('readme.txt', 'notes.txt')
+```
+示例：
+```py
+import os
+
+try:
+    os.rename('readme.txt', 'notes.txt')
+except FileNotFoundError as e:
+    print(e)
+except FileExistsError as e:
+    print(e)
+```
+
+## 8、目录
+
+### 8.1、获取当前工作目录
+
+当前工作目录是运行 Python 脚本的目录。要获取当前工作目录，可以使用 `os.getcwd()`，如下所示：
+```py
+import os
+cwd = os.getcwd()
+print(cwd)
+```
+要更改当前工作目录，可以使用函数 `os.chdir()`：
+```py
+import os
+os.chdir('/script')
+cwd = os.getcwd()
+print(cwd)
+```
+
+### 8.2、连接和分割路径
+
+要让程序在 Windows、Linux 和 macOS 等平台上运行，需要使用与平台无关的文件和目录路径；Python 提供了一个子模块 `os.path`，其中包含几个有用的函数和常量，用于连接和分割路径；
+- `join()` 函数将路径组件连接在一起，并返回带有相应路径分隔符的路径。例如，在 Windows 中使用反斜线 (\)，在 macOS 或 Linux 中使用正斜线 (/)
+- `split()` 函数将路径分割为不带路径分隔符的多个部分。
+
+示例：
+```py
+import os
+
+fp = os.path.join('temp', 'python')
+print(fp)  # temp\python (on Windows)
+
+pc = os.path.split(fp)
+print(pc)  # ('temp', 'python')
+```
+
+### 8.3、判断路径是否为目录
+
+要检查路径是否存在和是否是目录，可以使用函数 `os.path.exists()` 和 `os.path.isdir()` 函数。
+```py
+import os
+dir = os.path.join("C:\\", "temp")
+print(dir)
+if os.path.exists(dir) or os.path.isdir(dir):
+    print(f'The {dir} is a directory')
+```
+
+### 8.4、创建目录
+
+要创建新目录，需要使用 `os.mkdir()` 函数。在创建新目录之前，应首先检查目录是否存在:
+```py
+import os
+
+dir = os.path.join("C:\\", "temp", "python")
+if not os.path.exists(dir):
+    os.mkdir(dir)
+```
+
+### 8.5、重命名目录
+
+要重命名目录，需要使用 os.rename() 函数：
+```py
+import os
+oldpath = os.path.join("C:\\", "temp", "python")
+newpath = os.path.join("C:\\", "temp", "python3")
+if os.path.exists(oldpath) and not os.path.exists(newpath):
+    os.rename(oldpath, newpath)
+    print("'{0}' was renamed to '{1}'".format(oldpath, newpath))
+```
+
+### 8.6、删除目录
+
+要删除一个目录，可以使用 os.rmdir() 函数，删除目录前也需要判断目录是否存在，如下所示
+```py
+import os
+dir = os.path.join("C:\\","temp","python")
+if os.path.exists(dir):
+    os.rmdir(dir)
+    print(dir + ' is removed.')
+```
+
+### 8.7、递归遍历目录
+
+`os.walk()` 函数允许你递归遍历一个目录。`os.walk()` 函数返回根目录、子目录和文件
+```py
+import os
+
+path = "c:\\temp"
+for root, dirs, files in os.walk(path):
+    print("{0} has {1} files".format(root, len(files)))
+```
+
+## 9、文件列表
+
+如果要列出一个目录中的所有文件进行处理。
+
+os.walk() 函数通过自上而下或自下而上地行走目录树来生成目录中的文件名。os.walk() 函数为目录树中的每个目录生成一个包含三个字段（dirpath、dirnames 和文件名）的元组；
+
+请注意，os.walk() 函数会检查整个目录树。因此，可以用它从根目录的所有目录及其子目录中获取所有文件
+
+假设有一个目录，目录内结构如下：
+```
+D:\web
+├── assets
+|  ├── css
+|  |  └── style.css
+|  └── js
+|     └── app.js
+├── blog
+|  ├── read-file.html
+|  └── write-file.html
+├── about.html
+├── contact.html
+└── index.html
+```
+找出文件中的html文件
+```py
+import os
+path = 'D:\\web'
+html_files = []
+for dirpath, dirnames, filenames in os.walk(path):
+    for filename in filenames:
+        if filename.endswith('.html'):
+            html_files.append(os.path.join(dirpath, filename))
+for html_file in html_files:
+    print(html_file)
+```
+
+定义可重复使用的列表文件功能：
+```py
+import os
+def list_files(path, extentions=None):
+    """ List all files in a directory specified by path
+    Args:
+        path - the root directory path
+        extensions - a iterator of file extensions to include, pass None to get all files.
+    Returns:
+        A list of files specified by extensions
+    """
+    filepaths = []
+    for root, _, files in os.walk(path):
+        for file in files:
+            if extentions is None:
+                filepaths.append(os.path.join(root, file))
+            else:
+                for ext in extentions:
+                    if file.endswith(ext):
+                        filepaths.append(os.path.join(root, file))
+    return filepaths
+
+if __name__ == '__main__':
+    filepaths = list_files(r'D:\web', ('.html', '.css'))
+    for filepath in filepaths:
+        print(filepath)
+```
+上述方法针对文件比较小是相对方便的，但是，当文件数量较多时，返回大量文件列表的内存效率不高。
+
+要解决这个问题，可以使用生成器一次生成每个文件，而不是返回一个列表：
+```py
+import os
+def list_files(path, extentions=None):
+    """ List all files in a directory specified by path
+    Args:
+        path - the root directory path
+        extensions - a iterator of file extensions to include, pass None to get all files.
+    Returns:
+        A list of files specified by extensions
+    """
+    for root, _, files in os.walk(path):
+        for file in files:
+            if extentions is None:
+                yield os.path.join(root, file)
+            else:
+                for ext in extentions:
+                    if file.endswith(ext):
+                        yield os.path.join(root, file)
+if __name__ == '__main__':
+    filepaths = list_files(r'D:\web', ('.html', '.css'))
+    for filepath in filepaths:
+        print(filepath)
+```
+
+## 10、环境变量
+
+在操作系统中定义的环境变量，全部保存在 `os.environ` 这个变量中，可以直接查看；要获取某个环境变量的值，可以调用os.environ.get('key')；
+	
 				
 				
 				
