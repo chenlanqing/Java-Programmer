@@ -1788,7 +1788,7 @@ print('file count: ', folder.count)
 
 ## 1、`__new__`	
 
-创建类的实例时，Python 首先调用 `__new__()` 方法创建对象，然后调用 `__init__()` 方法初始化对象的属性。`__new__()` 是对象类的静态方法。它的签名如下
+创建类的实例时，Python 首先调用 `__new__()` 方法创建对象，然后调用 `__init__()` 方法初始化对象的属性。`__new__()` 是对象类的静态方法（不需要使用 `@staticmethod` 装饰器，因为 Python 对它进行了特殊处理）。它的签名如下：
 ```py
 object.__new__(class, *args, **kwargs)
 ```
@@ -1887,3 +1887,358 @@ exec(class_body, globals(), class_dict)
 Person = type('Person', (object,), class_dict)
 ```
 请注意，Person 是一个类，也是一个对象。Person 类继承于对象类，其命名空间为 class_dict
+
+```py
+print(type(Person)) # <class 'type'>
+```
+它是类型类:
+```py
+print(isinstance(Person, type)) # True
+```
+其中 class_dict 包括如下属性：
+```py
+{'__init__': <function __init__ at 0x000001B581070900>,
+ 'greeting': <function greeting at 0x000001B5813376A0>}
+```
+`Person.__dict__` 包括如下属性：
+```py
+mappingproxy({'__dict__': <attribute '__dict__' of 'Person' objects>,
+              '__doc__': None,
+              '__init__': <function __init__ at 0x000001B581070900>,
+              '__module__': '__main__',
+              '__weakref__': <attribute '__weakref__' of 'Person' objects>,
+              'greeting': <function greeting at 0x000001B5813376A0>})
+```
+
+因为`type`类可以创建其他类，所以我们通常称它为`元类(metaclass)`。`元类(metaclass)`是用来创建其他类的类。
+
+在 Python 中，类是类`type`的实例
+
+## 3、Metaclass
+
+元类是一个可以创建其它类的类。默认情况下，Python 使用 type 元类来创建其他类。
+
+如下定义了一个 Person 类：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+```
+当 Python 执行代码时，它会使用 type 元类来创建 Person 类。原因是 Person 类默认使用类型元类；
+
+显式的 Person 类定义如下：
+```py
+class Person(object, metaclass=type):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+```
+元类参数允许你指定使用哪个元类来定义类。因此，你可以创建一个自定义元类，用它自己的逻辑来创建其他类。通过使用自定义元类，可以在类创建过程中注入以下功能；
+
+**元类示例：**
+- 首先，定义一个名为 Human 的自定义元类，该元类的 freedom 属性默认设置为 True：
+```py
+class Human(type):
+    def __new__(mcs, name, bases, class_dict):
+        class_ = super().__new__(mcs, name, bases, class_dict)
+        class_.freedom = True
+        return class_
+```
+请注意，`__new__` 方法返回一个新类或一个类对象
+- 其次，定义使用 Human 元类的 Person 类：
+```py
+class Person(object, metaclass=Human):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+```
+Personclass 将具有类变量中显示的 freedom 属性：
+```py
+pprint(Person.__dict__)
+# 输出结果如下
+mappingproxy({'__dict__': <attribute '__dict__' of 'Person' objects>,
+              '__doc__': None,
+              '__init__': <function Person.__init__ at 0x000001E716C71670>,
+              '__module__': '__main__',
+              '__weakref__': <attribute '__weakref__' of 'Person' objects>,
+              'freedom': True})
+```
+
+**元类参数：**
+
+要向元类传递参数，可以使用 keyword arguments。例如，下面的代码重新定义了 Human 元类，该元类接受关键字参数，每个参数都成为一个类变量：
+```py
+class Human(type):
+    def __new__(mcs, name, bases, class_dict, **kwargs):
+        class_ = super().__new__(mcs, name, bases, class_dict)
+        if kwargs:
+            for name, value in kwargs.items():
+                setattr(class_, name, value)
+        return class_
+
+class Person(object, metaclass=Human, country='USA', freedom=True):
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+pprint(Person.__dict__)
+# 输出结果
+mappingproxy({'__dict__': <attribute '__dict__' of 'Person' objects>,
+              '__doc__': None,
+              '__init__': <function Person.__init__ at 0x0000018A334235E0>,
+              '__module__': '__main__',
+              '__weakref__': <attribute '__weakref__' of 'Person' objects>,
+              'country': 'USA',
+              'freedom': True})
+```
+
+**什么时候使用元类：** 在实践中，您通常不需要使用元类，除非您维护或开发了大型框架的核心，如 Django
+
+元类是一种更深层次的魔法，99% 的用户都不需要担心这个问题。如果你想知道自己是否需要它们，那你就不需要了（真正需要它们的人肯定知道自己需要它们，不需要解释为什么）。
+
+## 4、完整实例
+
+https://www.pythontutorial.net/python-oop/python-metaclass-example/
+
+```py
+class Prop:
+    def __init__(self, attr):
+        self._attr = attr
+
+    def get(self, obj):
+        return getattr(obj, self._attr)
+
+    def set(self, obj, value):
+        return setattr(obj, self._attr, value)
+
+    def delete(self, obj):
+        return delattr(obj, self._attr)
+
+
+class Data(type):
+    def __new__(mcs, name, bases, class_dict):
+        class_obj = super().__new__(mcs, name, bases, class_dict)
+
+        # create property
+        Data.define_property(class_obj)
+
+        # define __init__
+        setattr(class_obj, '__init__', Data.init(class_obj))
+
+        # define __repr__
+        setattr(class_obj, '__repr__', Data.repr(class_obj))
+
+        # define __eq__ & __hash__
+        setattr(class_obj, '__eq__', Data.eq(class_obj))
+        setattr(class_obj, '__hash__', Data.hash(class_obj))
+
+        return class_obj
+
+    @staticmethod
+    def eq(class_obj):
+        def _eq(self, other):
+            if not isinstance(other, class_obj):
+                return False
+
+            self_values = [getattr(self, prop) for prop in class_obj.props]
+            other_values = [getattr(other, prop) for prop in other.props]
+
+            return self_values == other_values
+
+        return _eq
+
+    @staticmethod
+    def hash(class_obj):
+        def _hash(self):
+            values = (getattr(self, prop) for prop in class_obj.props)
+            return hash(tuple(values))
+
+        return _hash
+
+    @staticmethod
+    def repr(class_obj):
+        def _repr(self):
+            prop_values = (getattr(self, prop) for prop in class_obj.props)
+            prop_key_values = (f'{key}={value}' for key, value in zip(class_obj.props, prop_values))
+            prop_key_values_str = ', '.join(prop_key_values)
+            return f'{class_obj.__name__}({prop_key_values_str})'
+
+        return _repr
+
+    @staticmethod
+    def init(class_obj):
+        def _init(self, *obj_args, **obj_kwargs):
+            if obj_kwargs:
+                for prop in class_obj.props:
+                    if prop in obj_kwargs.keys():
+                        setattr(self, prop, obj_kwargs[prop])
+
+            if obj_args:
+                for kv in zip(class_obj.props, obj_args):
+                    setattr(self, kv[0], kv[1])
+
+        return _init
+
+    @staticmethod
+    def define_property(class_obj):
+        for prop in class_obj.props:
+            attr = f'_{prop}'
+            prop_obj = property(
+                fget=Prop(attr).get,
+                fset=Prop(attr).set,
+                fdel=Prop(attr).delete
+            )
+            setattr(class_obj, prop, prop_obj)
+
+        return class_obj
+
+
+class Person(metaclass=Data):
+    props = ['name', 'age']
+
+
+def data(cls):
+    return Data(cls.__name__, cls.__bases__, dict(cls.__dict__))
+
+
+@data
+class Employee:
+    props = ['name', 'job_title']
+```
+
+## 5、dataclass
+
+Python 在 3.7 版 (PEP 557) 中引入了数据类。数据类允许您定义代码更少、功能更多的类。
+
+比如有如下类 Person，包含两个属性：
+```py
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+```
+如果想用字符串表示 Person 对象，需要实现 `__str__` 或 `__repr__` 方法。另外，如果要通过属性比较 Person 类的两个实例，需要实现 `__eq__` 方法。
+
+但是，如果使用数据类，就可以拥有所有这些功能（甚至更多），而不需要实现这些 下划线 方法：
+```py
+from dataclasses import dataclass
+@dataclass
+class Person:
+    name: str
+    age: int
+```
+在本例中，Person 类有两个属性，分别是 str 类型的 name 和 int 类型的 age。这样，`@dataclass` 装饰器就隐式地创建了 `__init__` 方法，如下所示：
+```py
+def __init__(name: str, age: int)
+```
+> 请注意，类中声明的属性顺序将决定 `__init__` 方法中参数的顺序
+
+### 5.1、默认值
+
+要为数据类中的属性定义默认值，可将其分配给该属性，如下所示：
+```py
+from dataclasses import dataclass
+@dataclass
+class Person:
+    name: str
+    age: int
+    iq: int = 100
+print(Person('John Doe', 25))
+```
+与参数规则一样，有默认值的属性必须出现在无默认值的属性之后。因此，以下代码将不起作用：
+```py
+from dataclasses import dataclass
+@dataclass
+class Person:
+    iq: int = 100
+    name: str
+    age: int
+```
+
+### 5.2、转换为元组或字典
+
+数据类模块有 `astuple()` 和 `asdict()` 函数，可将数据类实例转换为元组和字典：
+```py
+from dataclasses import dataclass, astuple, asdict
+@dataclass
+class Person:
+    name: str
+    age: int
+    iq: int = 100
+p = Person('John Doe', 25)
+print(astuple(p))
+print(asdict(p))
+```
+
+### 5.3、创建不可变对象
+
+要从数据类创建只读对象，可以将数据类装饰器的冻结参数设置为 True：
+```py
+from dataclasses import dataclass, astuple, asdict
+@dataclass(frozen=True)
+class Person:
+    name: str
+    age: int
+    iq: int = 100
+```
+
+### 5.4、自定义属性行为
+
+如果不想在 `__init__` 方法中初始化属性，可以使用数据类型模块中的 `field()` 函数：
+```py
+from dataclasses import dataclass, field
+class Person:
+    name: str
+    age: int
+    iq: int = 100
+    can_vote: bool = field(init=False)
+```
+field() 函数有多个有趣的参数，如 repr、hash、compare 和 metadata
+
+如果要初始化一个依赖于另一个属性值的属性，可以使用 `__post_init__` 方法。顾名思义，Python 在 `__init__` 方法之后调用 `__post_init__` 方法：
+```py
+from dataclasses import dataclass, field
+@dataclass
+class Person:
+    name: str
+    age: int
+    iq: int = 100
+    can_vote: bool = field(init=False)
+    def __post_init__(self):
+        print('called __post_init__ method')
+        self.can_vote = 18 <= self.age <= 70
+p = Person('Jane Doe', 25)
+print(p)
+```
+
+### 5.5、排序对象
+
+默认情况下，数据类会实现 `__eq__` 方法，要允许 `__lt__、__lte__、__gt__、__gte__`等不同类型的比较，可以将 `@dataclass` 装饰器的顺序参数设置为 True：
+```py
+@dataclass(order=True)
+```
+这样，数据类就会按照每个字段对对象进行排序，直到找到一个不相等的值。在实际操作中，如果希望通过某个属性而不是所有属性来比较对象。为此，需要定义一个名为 `sort_index` 的字段，并将其值设为要排序的属性
+```py
+from dataclasses import dataclass, field
+@dataclass(order=True)
+class Person:
+    sort_index: int = field(init=False, repr=False)
+    name: str
+    age: int
+    iq: int = 100
+    can_vote: bool = field(init=False)
+
+    def __post_init__(self):
+        self.can_vote = 18 <= self.age <= 70
+        # sort by age
+        self.sort_index = self.age
+members = [
+    Person(name='John', age=25),
+    Person(name='Bob', age=35),
+    Person(name='Alice', age=30)
+]
+sorted_members = sorted(members)
+for member in sorted_members:
+    print(f'{member.name}(age={member.age})')
+```
