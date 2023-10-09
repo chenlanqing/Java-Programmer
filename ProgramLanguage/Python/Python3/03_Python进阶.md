@@ -246,6 +246,17 @@ with open('quotes.txt', encoding='utf8') as f:
     for line in f:
         print(line.strip())
 ```
+到有些编码不规范的文件，你可能会遇到UnicodeDecodeError，因为在文本文件中可能夹杂了一些非法编码的字符。遇到这种情况，open()函数还接收一个errors参数，表示如果遇到编码错误后如何处理。最简单的方式是直接忽略：
+```py
+f = open('/Users/michael/gbk.txt'， 'r'， encoding='gbk'， errors='ignore')
+```
+
+### 1.6、二进制文件读取
+
+要读取二进制文件，比如图片、视频等等，用'rb'模式打开文件即可
+```py
+f = open('/Users/michael/test.jpg'， 'rb')
+```
 
 ## 2、写文件
 
@@ -300,7 +311,50 @@ with open('quotes.txt', 'w', encoding='utf-8') as f:
     f.write(quote)
 ```
 
-## 3、创建文件
+## 3、io
+
+### 3.1、StringIO
+
+在内存中读写str，也就是数据读写不一定是文件，也可以在内存中读写；
+
+要把str写入StringIO，我们需要先创建一个StringIO，然后，像文件一样写入即可：
+```py
+from io import StringIO
+f = StringIO()
+f.write('hello')
+print(f.getvalue())
+```
+`getvalue()`方法用于获得写入后的str
+
+读取StringIO可以用一个str初始化StringIO，然后像文件一样读取：
+```py
+from io import StringIO
+f = StringIO('Hello!\nHi!\nGoodbye!')
+while True:
+	s = f.readline()
+	if s == '':
+		break
+	print(s.strip())
+```
+
+### 3.2、BytesIO
+
+操作二进制数据，BytesIO实现了在内存中读写bytes，写入的不是str，而是经过UTF-8编码的bytes
+```py
+from io import BytesIO, StringIO
+f = BytesIO()
+f.write('中文'.encode('utf-8'))
+print(f.getvalue())
+b'\xe4\xb8\xad\xe6\x96\x87'
+
+f = BytesIO(b'\xe4\xb8\xad\xe6\x96\x87')
+f.read()
+b'\xe4\xb8\xad\xe6\x96\x87'
+```
+
+## 4、创建文件与判断文件是否存在
+
+### 4.1、创建文件
 
 要创建一个新文本文件，需要使用 open() 函数。open() 函数有很多参数。不过，只需要关注前两个参数：
 ```py
@@ -324,7 +378,7 @@ with open('readme.txt', 'x') as f:
     f.write('Create a new text file!')
 ```
 
-## 4、判断文件是否存在
+### 4.2、判断文件是否存在
 
 处理文件时，在对文件进行读取或写入等其他操作之前，您通常需要检查文件是否存在。为此，可以使用 `os.path` 模块中的 `exists()` 函数或 `pathlib` 模块中的 Path 类中的 `is_file()` 方法
 
@@ -766,6 +820,11 @@ if __name__ == '__main__':
     for filepath in filepaths:
         print(filepath)
 ```
+
+## 10、环境变量
+
+在操作系统中定义的环境变量，全部保存在 `os.environ` 这个变量中，可以直接查看；要获取某个环境变量的值，可以调用os.environ.get('key')；
+
 
 # python调试
 
