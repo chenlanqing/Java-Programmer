@@ -987,6 +987,149 @@ https://juejin.im/post/6844903826332319757
 
 # 六、ElasticSearch
 
+## 1、基础安装
+
+- 从官方网站下载对应的版本的文件，比如：elasticsearch-7.4.2
+
+- 解压到文件，并将其移动的`/usr/local/`目录下，目录下文件：
+    - bin：可执行文件在里面，运行es的命令就在这个里面，包含了一些脚本文件等
+    - config：配置文件目录
+    - JDK：java环境
+    - lib：依赖的jar，类库
+    - logs：日志文件
+    - modules：es相关的模块
+    - plugins：可以自己开发的插件
+
+- 新建目录`/usr/local/elasticsearch-7.4.2/data`，这个作为索引目录；
+
+- 修改配置文件：`elasticearch.yml`
+    - 修改集群名称，默认是elasticsearch：`cluster.name: test-elasticsearch`
+    - 为当前的es节点取个名称，名称随意，如果在集群环境中，都要有相应的名字：`node.name: es-node0`
+    - 修改data数据保存地址：`path.data: /usr/local/elasticsearch-7.4.2/data`
+    - 修改日志数据保存地址：`path.logs: /usr/local/elasticsearch-7.4.2/logs`
+    - 绑定es网络ip：`network.host: 0.0.0.0`，所有都可以访问
+    - 默认端口号，可以自定义修改：`http.port: 9200`
+    - 集群节点名字：`cluster.initial_master_nodes: ["es-node0"]`；
+
+- 如果需要修改jvm参数，修改`config/jvm.options`文件
+
+- elasticsearch不允许root用户启动，需要添加一个用户来进行操作：
+    - 添加用户：`useradd esuser`
+    - 授权用户：`chown -R esuser:esuser /usr/local/elasticsearch-7.4.2`
+    - 切换到新建的用户：`su esuser`
+    - 查看当前用户：`whoami`
+
+    使用root用户启动报错如下：
+    ```
+    [2020-01-04T10:37:56,991][WARN ][o.e.b.ElasticsearchUncaughtExceptionHandler] [es-node0] uncaught exception in thread [main]
+    org.elasticsearch.bootstrap.Startu
+    pException: java.lang.RuntimeException: can not run elasticsearch as root
+            at org.elasticsearch.bootstrap.Elasticsearch.init(Elasticsearch.java:163) ~[elasticsearch-7.4.2.jar:7.4.2]
+            at org.elasticsearch.bootstrap.Elasticsearch.execute(Elasticsearch.java:150) ~[elasticsearch-7.4.2.jar:7.4.2]
+            at org.elasticsearch.cli.EnvironmentAwareCommand.execute(EnvironmentAwareCommand.java:86) ~[elasticsearch-7.4.2.jar:7.4.2]
+            at org.elasticsearch.cli.Command.mainWithoutErrorHandling(Command.java:125) ~[elasticsearch-cli-7.4.2.jar:7.4.2]
+            at org.elasticsearch.cli.Command.main(Command.java:90) ~[elasticsearch-cli-7.4.2.jar:7.4.2]
+            at org.elasticsearch.bootstrap.Elasticsearch.main(Elasticsearch.java:115) ~[elasticsearch-7.4.2.jar:7.4.2]
+            at org.elasticsearch.bootstrap.Elasticsearch.main(Elasticsearch.java:92) ~[elasticsearch-7.4.2.jar:7.4.2]
+    Caused by: java.lang.RuntimeException: can not run elasticsearch as root
+            at org.elasticsearch.bootstrap.Bootstrap.initializeNatives(Bootstrap.java:105) ~[elasticsearch-7.4.2.jar:7.4.2]
+            at org.elasticsearch.bootstrap.Bootstrap.setup(Bootstrap.java:172) ~[elasticsearch-7.4.2.jar:7.4.2]
+            at org.elasticsearch.bootstrap.Bootstrap.init(Bootstrap.java:349) ~[elasticsearch-7.4.2.jar:7.4.2]
+            at org.elasticsearch.bootstrap.Elasticsearch.init(Elasticsearch.java:159) ~[elasticsearch-7.4.2.jar:7.4.2]
+    ```
+
+- 执行启动命令`./elasticsearch`，发现如下报错信息：
+    ```
+    ERROR: [3] bootstrap checks failed
+    [1]: max file descriptors [4096] for elasticsearch process is too low, increase to at least [65535]
+    [2]: max number of threads [3795] for user [esuser] is too low, increase to at least [4096]
+    [3]: max virtual memory areas vm.max_map_count [65530] is too low, increase to at least [262144]
+    ```
+    需要切换到root用户修改配置文件：`vim /etc/security/limits.conf`，新增如下信息：
+    ```
+    * soft nofile 65536
+    * hard nofile 131072
+    * soft nproc 2048
+    * hard nproc 4096
+    ```
+    然后在修改文件：`vim /etc/sysctl.conf`，增加配置：`vm.max_map_count=262145`，然后刷新sysctl：`sysctl -p`
+
+- 执行命令：`./bin/elasticsearch`，可以看到启动日志，通过访问：127.0.0.1:9200可以看到响应的数据；如果需要后台启动执行命令：`./bin/elasticsearch -d`
+
+## 2、控制台
+
+### 2.2.1、head插件
+
+从 [github](https://github.com/mobz/elasticsearch-head)下载，使用node安装以及运行，npm run start 运行；
+
+如果head插件和elasticsearch运行不在一台服务器上，那么会存在跨域问题，只需要在配置文件：`elasticearch.yml` 增加如下配置
+```yml
+# ------------- NetWork -----------
+http.cors.enabled: true
+http.cors.allow-origin: "*"
+```
+
+### 2.2.2、cerebro
+
+从[Cerebro](https://github.com/lmenezes/cerebro) 下载zip包，解压缩安装即可
+
+## 3、通过docker安装
+
+### 3.1、安装elasticsearch
+
+```bash
+docker run --name elasticsearch -d -e ES_JAVA_OPTS="-Xms512m -Xmx512m" -e "discovery.type=single-node" -p 9200:9200 -p 9300:9300 elasticsearch:7.7.0
+```
+- `--name` 表示容器名称  
+- `-d`: 后台运行容器，并返回容器ID；
+- `-e`: 指定容器内的环境变量
+- `-p`: 指定端口映射，格式为：主机(宿主)端口:容器端口，es默认端口为9200
+- `elasticsearch:7.7.0` 指定镜像，如果本地没有镜像，会从远程拉取对应的镜像
+
+### 3.2、安装Head插件
+
+```bash
+docker run --name elasticsearch-head -p 9100:9100 mobz/elasticsearch-head:5
+```
+完成安装后，直接使用域名加端口9100即可访问
+
+跨域问题：执行命令`docker exec -it elasticsearch /bin/bash` 进入到第一步创建的ElasticSearch容器中，修改配置文件`vi config/elasticsearch.yml`即可。
+- `http.cors.enabled: true`
+- `http.cors.allow-origin: "*"`
+
+### 3.3、通过docker-compose安装es和head插件
+
+（1）创建docker-compose.yml文件
+```yml
+version: '2'
+services:
+  elasticsearch:
+    image: elasticsearch:6.8.5
+    environment:
+      - discovery.type=single-node
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    networks:
+      - es_network
+  elasticsearch-head:
+    image: mobz/elasticsearch-head:5-alpine
+    container_name: elasticsearch-head
+    restart: always
+    ports:
+      - 9100:9100
+
+networks:
+  es_network:
+    external: true
+```
+（2）启动：
+```
+docker-compose -f docker-compose.yml up -d elasticsearch
+docker-compose -f docker-compose.yml up -d elasticsearch-head
+```
+（3）关于跨域问题同上面的配置方式
+
 # 七、Zookeeper安装
 
 ## 1、zookeeper单机安装
