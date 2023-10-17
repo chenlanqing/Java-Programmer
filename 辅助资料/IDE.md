@@ -114,3 +114,7 @@ https://juejin.cn/post/7137092683125751815
 ## 5.1、pom文件依赖漏洞检查警告线去除方式
 
 - [pom文件依赖漏洞检查警告线去除方式](https://blog.csdn.net/julv7759/article/details/126050095)
+
+## 5.2、设置工程图标
+
+如果需要展示个性化logo，可以在目录中`.idea` 增加一个图片文件，命名：`icon.png` ，该工程会自动识别该文件
