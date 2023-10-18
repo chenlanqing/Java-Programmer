@@ -522,6 +522,11 @@ DTS提供了数据迁移、实时数据订阅及数据实时同步等多种数�
 
 就是一个消息队列，会给你推送它包装过的sql对象，可以自己做个服务去解析这些sql对象
 
+## 6、其他参考资料
+
+- [MySQL-Binlog](https://gitee.com/qiangzigege/MySQL-Binlog.git)
+- [kkbinlog](https://gitee.com/kekingcn/kkbinlog.git)
+
 # 参考资料
 
 - [MySQL BinaryLog](https://dev.mysql.com/doc/internals/en/binary-log-overview.html)
