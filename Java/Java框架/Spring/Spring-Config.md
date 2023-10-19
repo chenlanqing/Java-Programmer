@@ -1475,3 +1475,140 @@ public class TimestampCustom {
     }
 }
 ```
+
+# 11、自定义starter
+
+- [starter-原理](SpringBoot.md#四自定义starter)
+- [SpringBoot Configuration Metadata](https://docs.spring.io/spring-boot/docs/current/reference/html/configuration-metadata.html)
+
+## 11.1、基本配置
+
+（1）引入依赖：
+```xml
+<dependencies>
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+        <version>2.7.3</version>
+        <scope>provided</scope>
+    </dependency>
+    <!-- 这里是处理配置的 -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-configuration-processor</artifactId>
+        <version>2.7.3</version>
+        <optional>true</optional>
+    </dependency>
+</dependencies>
+```
+（2）如果有相应的配置，定义配置类：
+```java
+@Data
+@ConfigurationProperties(prefix = "swagger2.data")
+public class Swagger2Properties {
+    private boolean enableSwagger;
+    private String author;
+    private String doc;
+}
+```
+（3）新增自动配置类：
+```java
+@Configuration
+@ComponentScan // 扫描当前包
+@EnableConfigurationProperties(Swagger2Properties.class)
+public class Swagger2AutoConfiguration {
+}
+```
+（4）在`resources`目录下新增`META-INF/spring.factories`文件：Swagger2AutoConfiguration的全路径
+```java
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=com.data.swagger2.Swagger2AutoConfiguration
+```
+
+## 11.2、starter配置自动提示
+
+如果需要定义的配置类中的配置自动提示，必须引入如下依赖：
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-configuration-processor</artifactId>
+    <version>2.7.3</version>
+    <optional>true</optional>
+</dependency>
+```
+有如下方式实现
+
+### 11.2.1、通过json配置实现
+
+Springboot配置自动提示，IDE是通过读取配置信息的元数据而实现自动提示的。Springboot的元数据就在目录META-INF下。通过starter部分结构：
+
+![](image/Spring-Configuration-Metadata.png)
+
+springboot自动提示元数据就在META-INF中的`spring-configuration-metadata.json`或`additional-spring-configuration-metadata.json`；
+
+那么可以根据springboot自动配置，在上面的基础上在 META-INF 增加文件：`additional-spring-configuration-metadata.json`，配置如下：
+```json
+{
+  "properties": [
+    {
+      "name": "swagger2.data.enableSwagger",
+      "type": "java.lang.Boolean",
+      "defaultValue": false,
+      "description": "swagger是否生效."
+    },
+    {
+      "name": "swagger2.data.author",
+      "type": "java.lang.String",
+      "defaultValue": "",
+      "description": "作者."
+    },
+    {
+      "name": "swagger2.data.doc",
+      "type": "java.lang.String",
+      "defaultValue": "",
+      "description": "文档简介."
+    }
+  ]
+}
+```
+
+最终目录结构如下：
+```
+│  .gitignore               
+│  pom.xml                  
+│  swagger2-starter.iml     
+└─src
+    └─main
+        │  └─swagger2
+        │      │  Swagger2AutoConfiguration.java
+        │      └─config
+        │          Swagger2Properties.java
+        └─resources
+            └─META-INF
+                    additional-spring-configuration-metadata.json
+                    spring.factories
+```
+
+### 11.2.2、通过imports方式
+
+新建一个配置类：
+```java
+@Data
+public class Swagger2Properties {
+    private boolean enableSwagger;
+    private String author;
+    private String doc;
+}
+public class BeanConfigRegister {
+    @Bean
+    @ConfigurationProperties(prefix = "swagger2.data")
+    public Swagger2Properties getSwagger2() {
+        return new Swagger2Properties();
+    }
+}
+```
+在META-INF目录下新增文件：`spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`，文件内容为：
+```
+com.swagger2.config.BeanConfigRegister
+```
+
+### 11.2.3、原理分析
