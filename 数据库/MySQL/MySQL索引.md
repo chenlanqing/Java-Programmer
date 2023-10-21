@@ -632,6 +632,8 @@ explain select * from salaries where from_date = '1986-06-26' order by emp_no;
 
 - [优化用数据库](https://github.com/datacharmer/test_db)
 - [MySQL查询优化](https://tech.meituan.com/2014/06/30/mysql-index.html)
+- [一个SQL的分析](https://mp.weixin.qq.com/s/ZVY-oDl8A9Be6ixT1c16Ng)
+- [SQL优化官方文档](https://dev.mysql.com/doc/refman/8.0/en/statement-optimization.html)
 
 ## 1、数据库优化的目的
 

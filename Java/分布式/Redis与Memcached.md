@@ -2676,6 +2676,10 @@ min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
 ```
 如果你观察到的 Redis 运行时延迟是其基线性能的 2 倍及以上，就可以认定 Redis 变慢了。
 
+# 十八、Redis工具
+
+https://www.npmjs.com/package/redis-dump
+
 # 参考资料
 
 - [Redis官方资料-命令](https://redis.io/commands)
