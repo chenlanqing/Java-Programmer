@@ -485,6 +485,11 @@ Python 并没有提供从 0 开始四舍五入的直接方法。
 将一个数字从零四舍五入的常用方法是使用下面的表达式
 
 函数 copysign() 返回 x 的绝对值，但不返回 y 的符号：
+```py
+from math import copysign
+def round_up(x):
+    return int(x + copysign(0.5, x))
+```
 
 
 ## 8、Decimal
