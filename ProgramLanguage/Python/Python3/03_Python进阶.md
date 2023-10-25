@@ -485,3 +485,130 @@ Python 并没有提供从 0 开始四舍五入的直接方法。
 将一个数字从零四舍五入的常用方法是使用下面的表达式
 
 函数 copysign() 返回 x 的绝对值，但不返回 y 的符号：
+
+
+## 8、Decimal
+
+### 8.1、基本使用
+
+许多十进制数在二进制浮点数中没有精确的表示，如 0.1。在算术运算中使用这些数时，会得到意想不到的结果：
+```py
+x = 0.1
+y = 0.1
+z = 0.1
+s = x + y + z
+print(s) # 0.30000000000000004
+```
+要解决这个问题，可以使用 `decimal` 模块中的 Decimal 类，如下所示：
+```py
+import decimal
+from decimal import Decimal
+x = Decimal('0.1')
+y = Decimal('0.1')
+z = Decimal('0.1')
+s = x + y + z
+print(s) # 0.3
+```
+Decimal 总是与控制以下方面的 [context](https://www.pythontutorial.net/advanced-python/python-context-managers/) 相关联:
+- 算术运算中的精度
+- 四舍五入算法
+
+默认情况下，context 为全局上下文。全局上下文是默认上下文。此外，您还可以设置临时上下文，它将在本地生效，而不会影响全局上下文。要获取默认上下文，可调用 Decimal 模块中的 getcontext() 函数：
+```py
+decimal.getcontext()
+```
+`getcontext()` 函数返回默认上下文，可以是全局或本地上下文
+
+要创建从另一个上下文复制过来的新上下文，可以使用 localcontext() 函数：
+```py
+decimal.localcontext(ctx=None)
+```
+localcontext() 返回从指定的上下文 ctx 复制的新上下文；
+
+获取上下文对象后，可以分别通过 prec 和 rounding 属性访问精度和舍入值：
+- `ctx.pre`：获取或设置精度。ctx.pre是一个整数，默认为28
+- `ctx.rounding`：获取或设置四舍五入机制。dounding 是一个字符串。默认为 `ROUND_HALF_EVEN`。注意浮点数也使用这种舍入机制
+
+Python 提供了以下 rounding 机制
+
+Rounding | 说明
+--------|------
+ROUND_UP | 从零开始四舍五入
+ROUND_DOWN | 向零舍入
+ROUND_CEILING | 向天花板取整（向正无穷大取整）
+ROUND_FLOOR | 向地板取整（向负无穷大取整）
+ROUND_HALF_UP | 舍入到最近的零点，与零点平齐
+ROUND_HALF_DOWN | 舍入到最近的整数，与零相等
+ROUND_HALF_EVEN | 四舍五入到最近，与偶数（最小有效数字）相等
+
+示例：
+```py
+import decimal
+ctx = decimal.getcontext()
+print(ctx.prec) # 28
+print(ctx.rounding) # ROUND_HALF_EVEN
+```
+使用 rounding：
+```py
+import decimal
+from decimal import Decimal
+
+x = Decimal('2.25')
+y = Decimal('3.35')
+with decimal.localcontext() as ctx:
+    print('Local context:')
+    ctx.rounding = decimal.ROUND_HALF_UP
+    print(round(x, 1))
+    print(round(y, 1))
+
+print('Global context:') # 不会受到上面的影响
+print(round(x, 1))
+print(round(y, 1))
+```
+
+### 8.2、Decimal构造函数
+
+Deciaml 构造函数允许您根据一个值创建一个新的 Decimal 对象：
+```py
+Decimal(value='0', context=None)
+```
+值参数可以是整数、字符串、元组、浮点数或其他 Decimal 对象。如果不提供值参数，默认值为 "0"。
+
+如果value是一个 tuple，则应包含三个部分：符号（0 表示正数，1 表示负数）、数字元组和整数指数：`(sign, (digit1,digit2, digit3,...), exponent)`
+
+比如：`3.14 = 314 x 10^-2`，tuple有以下三个元素：
+- 符号为 0
+- 数位为 (3,1,4)
+- 指数为 -2
+
+因此，您需要将以下 tuple 传递给 Decimal 构造函数：
+```py
+import decimal
+from decimal import Decimal
+x = Decimal((0, (3, 1, 4), -2))
+print(x) # 3.14
+```
+请注意，Decimal context 精度只影响算术运算，而不影响 Decimal 构造函数：
+```py
+import decimal
+from decimal import Decimal
+decimal.getcontext().prec = 2
+pi = Decimal('3.14159')
+radius = 1
+print(pi)
+area = pi * radius * radius
+print(area)
+```
+当您使用的浮点数没有精确的二进制浮点表示时，Decimal构造函数无法创建精确的十进制表示：
+```py
+import decimal
+from decimal import Decimal
+x = Decimal(0.1)
+print(x) # 0.1000000000000000055511151231257827021181583404541015625
+```
+
+### 8.3、数学运算
+
+有些算术运算符的作用与浮点数或整数不同，如 div (`//`) 和 mod (%)。对于 Decimal，`//` 运算符执行截断除法：`x // y = trunc( x / y)`；
+
+Decimal类提供了一些数学运算，如 sqrt 和 log。但是，它并不具备数学模块中定义的所有函数；当使用数学模块中的函数处理Decimal时，Python 会在进行算术运算之前将Decimal对象转换为浮点数。这会导致Decimal对象中内置的精度丢失
