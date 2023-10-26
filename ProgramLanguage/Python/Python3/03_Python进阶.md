@@ -616,4 +616,335 @@ print(x) # 0.1000000000000000055511151231257827021181583404541015625
 
 有些算术运算符的作用与浮点数或整数不同，如 div (`//`) 和 mod (%)。对于 Decimal，`//` 运算符执行截断除法：`x // y = trunc( x / y)`；
 
-Decimal类提供了一些数学运算，如 sqrt 和 log。但是，它并不具备数学模块中定义的所有函数；当使用数学模块中的函数处理Decimal时，Python 会在进行算术运算之前将Decimal对象转换为浮点数。这会导致Decimal对象中内置的精度丢失
+Decimal类提供了一些数学运算，如 sqrt 和 log。但是，它并不具备数学模块中定义的所有函数；当使用数学模块中的函数处理Decimal时，Python 会在进行算术运算之前将Decimal对象转换为浮点数。这会导致Decimal对象中内置的精度丢失；
+
+
+# 三、变量作用域
+
+变量名及其绑定（名称和对象）只存在于代码的特定部分中，定义名称/绑定的代码部分称为变量的词法作用域；Python 将这些绑定存储在称为命名空间。每个作用域都有自己的命名空间。
+
+## 1、全局作用域
+
+全局作用域基本上就是模块作用域。全局作用域只跨越一个 Python 源代码文件；除了内置的作用域之外，Python 没有真正的全局作用域，它跨越所有模块；
+
+内置作用域是一种特殊的作用域，提供全局可用的对象，如 print、len、None、True 和 False。
+
+基本上，内置变量和全局变量存在于模块的任何地方。
+
+在内部，全局作用域嵌套在内置作用域中
+
+![](image/Global-scope.png)
+
+如果从一个作用域访问一个变量，而 Python 在该作用域的命名空间中找不到它，它就会在外层作用域的命名空间中搜索。
+
+## 2、Local Scope
+
+本地作用域
+
+## 3、变量查询
+
+在 Python 中，作用域是嵌套的。例如，本地作用域嵌套在模块作用域中。模块作用域嵌套在内置作用域中
+
+访问绑定到变量的对象时，Python 会尝试查找对象：
+- 首先在当前本地作用域中找到对象。
+- 如果 Python 在当前作用域中找不到对象，就会向上传递外层作用域链。
+
+当您从函数内部获取全局变量的值时，Python 会自动搜索本地作用域的命名空间，并向上搜索所有外层作用域的命名空间链。
+
+但是，如果在函数内部给全局变量赋值，Python 将把该变量放到本地命名空间中：
+```py
+counter = 10
+def reset():
+    counter = 0
+    print(counter) # 0
+reset()
+print(counter) # 10
+```
+当 reset() 函数运行时，Python 会在本地作用域中找到counter。reset() 函数内部的 print(counter) 语句显示了counter的值，即 0;
+
+本地变量 counter 变量掩盖了全局 counter 变量。
+
+如果要从函数内部访问全局变量，可以使用 global 关键字：
+```py
+counter = 10
+def reset():
+    global counter
+    counter = 0
+    print(counter) # 0
+reset()
+print(counter) # 0
+```
+> 请注意，在函数内部访问全局变量不是一种好的做法。
+
+## 4、非局部作用域
+
+```py
+def outer():
+    print('outer function')
+    def inner():
+        print('inner function')
+    inner()
+outer()
+```
+通常，我们说内部函数嵌套在外部函数中。实际上，如果不想让这些函数成为全局函数，就会定义嵌套函数。Outer和Inner都可以访问全局作用域、内置作用域和本地作用域；
+
+```py
+def outer():
+    message = 'outer function'
+    print(message) # outer function
+    def inner():
+        print(message) # outer function
+    inner()
+outer()
+```
+
+**nonlocal keyword**
+
+要在本地作用域中修改非本地作用域的变量，需要使用 nonlocal
+```py
+def outer():
+    message = 'outer scope'
+    print(message) # outer scope
+    def inner():
+        nonlocal message
+        message = 'inner scope'
+        print(message) # inner scope
+    inner()
+    print(message) # inner scope    
+outer()
+```
+当您对一个变量使用非局部关键字时，Python 将在外层局部作用域链中查找该变量，直到它第一次遇到该变量名为止。
+
+更重要的是，Python 不会在全局作用域中查找变量:
+```py
+message = 'outer scope'
+def outer():
+    print(message)
+    def inner():
+        nonlocal message
+        message = 'inner scope'
+        print(message)
+    inner()
+    print(message)
+outer()
+```
+输出结果：`SyntaxError: no binding for nonlocal 'message' found`
+
+在Inner函数中，为 message 变量使用了非本地关键字。因此，Python 会在outer函数的作用域中搜索 message 变量。
+
+由于Outer函数的作用域中没有 message 变量，Python 也不会在全局作用域中进一步查找，因此会出错；
+
+# 四、闭包
+
+在 Python 中，您可以从另一个函数的内部定义一个函数。这个函数被称为嵌套函数：
+```py
+def say():
+    greeting = 'Hello'
+    def display():
+        print(greeting)
+    display()
+```
+因此，display 函数和 greeting 变量的组合称为闭包；顾名思义，闭包是一个嵌套函数，它引用其外层作用域中的一个或多个变量
+
+## 1、返回内部函数
+
+在 Python 中，一个函数可以返回另一个函数的值：
+```py
+def say():
+    greeting = 'Hello'
+    def display():
+        print(greeting)
+    return display    
+```
+在本例中，say 函数返回display函数，而不是执行 display 函数。
+
+此外，当 say 函数返回display 函数时，它实际上返回了一个闭包；下面的代码将 say 函数的返回值赋值给变量 fn。 由于 fn 是一个函数，因此可以执行它：
+```py
+fn = say()
+fn()
+```
+换句话说，在执行 fn 函数时，say 函数的作用域已经消失了；由于 greeting 变量属于 say 函数的作用域，因此它也应随函数的作用域一起被销毁，但是，您仍然可以看到 fn 显示 message 变量的值
+
+## 2、Python 单元和多作用域变量
+
+有两个作用域共享greeting 变量的值：
+- say 函数
+- 闭包
+
+标签 greeting 位于两个不同的作用域中。但是，它们始终引用同一个字符串对象，其值为 "Hello"。为此，Python 创建了一个称为 cell 的中间对象
+
+![](image/闭包中变量引用.png)
+
+要查找cell对象的内存地址，可以使用 `__closure__` 属性，如下所示：
+```py
+print(fn.__closure__)
+# (<cell at 0x0000017184915C40: str object at 0x0000017186A829B0>,)
+```
+`__closure__` 返回一个cell 元组，在本例中，cell的内存地址是 0x0000017184915C40。它引用的字符串对象地址为 0x0000017186A829B0:
+```py
+def say():
+    greeting = 'Hello'
+    print(hex(id(greeting))) # 0x17186a829b0
+    def display():
+        print(hex(id(greeting))) # 0x17186a829b0
+        print(greeting)
+    return display
+fn = say()
+fn()
+```
+访问 greeting 变量的值时，Python 会通过技术上的 "double-hop"来获取字符串值，这就解释了为什么当 say() 函数超出作用域时，仍然可以访问由greeting变量引用的字符串对象；
+
+基于这种机制，可以将闭包视为一个函数和一个包含自由变量的扩展作用域。
+
+要查找闭包包含的自由变量，可以使用 `__code__.co_freevars`，例如：
+```py
+def say():
+    greeting = 'Hello'
+    def display():
+        print(greeting)
+    return display
+fn = say()
+print(fn.__code__.co_freevars) # ('greeting',)
+```
+
+## 3、什么时候创建闭包
+
+当函数执行时，Python 会创建一个新的作用域。如果该函数创建了一个闭包，Python 也会创建一个新的闭包。请看下面的例子：
+```py
+def multiplier(x):
+    def multiply(y):
+        return x * y
+    return multiply
+```
+multiplier 函数返回两个参数的乘法运算结果。不过，它使用的是闭包
+```py
+m1 = multiplier(1)
+m2 = multiplier(2)
+m3 = multiplier(3)
+
+print(m1(10)) # 10
+print(m2(10)) # 20
+print(m3(10)) # 30
+```
+m1、m2 和 m3 有不同的闭合实例
+
+## 4、闭包和 for 循环
+
+假设你有如下代码：
+```py
+multipliers = []
+for x in range(1, 4):
+    multipliers.append(lambda y: x * y)
+
+m1, m2, m3 = multipliers
+
+print(m1(10))
+print(m2(10))
+print(m3(10))
+```
+上面是如何工作的：
+- 首先，声明一个用于存储闭包的列表；
+- 其次，使用 lambda 表达式创建闭包，并在每次迭代时将闭包附加到列表中
+- 第三，将闭包从列表中解压缩到 m1、m2 和 m3 变量中
+- 最后，将数值 10、20 和 30 传递给每个闭包并执行。
+
+但是实际上并不是这样的，在循环过程中，x 从 1 开始到 3。循环结束后，其值为 3。列表中的每个元素都是以下闭包，Python 在调用 m1(10)、m2(10) 和 m3(10) 时会对 x 进行求值。在闭包执行时，x 是 3。这就是为什么当你调用 m1(10)、m2(10) 和 m3(10) 时会看到相同的结果。
+
+为了解决上面的问题，您需要 Python 在循环中对 x 进行求值：
+```py
+def multiplier(x):
+    def multiply(y):
+        return x * y
+    return multiply
+
+multipliers = []
+for x in range(1, 4):
+    multipliers.append(multiplier(x))
+
+m1, m2, m3 = multipliers
+print(m1(10))
+print(m2(10))
+print(m3(10))
+```
+闭包的特点：返回的函数还引用了外层函数的局部变量，所以：要正确使用闭包，就要确保引用的局部变量在函数返回后不能变；返回闭包时牢记的一点就是：返回函数不要引用任何循环变量，或者后续会发生变化的变量
+
+# 五、decorator(装饰器)
+
+在代码运行期间动态增加功能的方式，称之为装饰器如:
+```python
+def now():
+	print('2015-05-04')
+# 函数对象有一个__name__属性，可以拿到函数的名字：
+```
+- 如果要增强now()函数的功能，比如，在函数调用前后自动打印日志，但又不希望修改now()函数的定义，这种在代码运行期间动态增加功能的方式，称之为“装饰器”（Decorator）	
+- 本质上，decorator就是一个返回函数的高阶函数:
+	```python
+	# 所以，我们要定义一个能打印日志的decorator，可以定义如下：
+	def log(func):
+		def wrapper(*args， **kw):
+			print('call %s():' % func.__name__)
+			return func(*args， **kw)
+		return wrapper
+	# 观察上面的log，因为它是一个decorator，所以接受一个函数作为参数，并返回一个函数。
+	# 我们要借助Python的@语法，把decorator置于函数的定义处：	
+		@log
+		def now():
+			print '2013-12-25'
+	# 调用now()函数，不仅会运行now()函数本身，还会在运行now()函数前打印一行日志：
+	# 把@log放到now()函数的定义处，相当于执行了语句：
+		now = log(now)
+	```
+- 如果decorator本身需要传入参数，那就需要编写一个返回decorator的高阶函数，写出来会更复杂:
+	```python
+	def log(text):
+		def decorator(func):
+			def wrapper(*args， **kw):
+				print('%s %s():' % (text， func.__name__))
+				return func(*args， **kw)
+			return wrapper
+		return decorator
+	# 调用:
+	@log('execute')
+	def now():
+		print('2013-12-25')
+	#和两层嵌套的decorator相比，3层嵌套的效果是这样的：
+		>>> now = log('execute')(now)
+	```
+- 调用之后调用 `now.__name__ ===> wrapper`；需要把原始函数的`__name__`等属性复制到`wrapper()`函数中，否则，有些依赖函数签名的代码执行就会出错。
+	```python
+	import functools
+	def log(func):
+		@functools.wraps(func)
+		def wrapper(*args， **kw):
+			print('call %s():' % func.__name__)
+			return func(*args， **kw)
+		return wrapper
+	# 或者针对带参数的decorator：
+	import functools
+	def log(text):
+		def decorator(func):
+			@functools.wraps(func)
+			def wrapper(*args， **kw):
+				print('%s %s():' % (text， func.__name__))
+				return func(*args， **kw)
+			return wrapper
+		return decorator
+	```
+
+- 请编写一个decorator，能在函数调用的前后打印出'begin call'和'end call'的日志
+	```python
+	# 大致思路是A装饰B，B装饰C，B是指定函数，A是执行前打印日志，B是执行后打印日志
+	def forwardcall(func):
+		def wrapper(*args， **kw):
+			print('begin call')；
+			return func(*args， **kw)；
+		return wrapper
+	@forwardcall
+	def now(func):
+		print('业务逻辑处理')
+		def wrapper(*args， **kw):
+			return func(*args， **kw)
+	@now
+	def endcall():
+		print('end call')
+	```
