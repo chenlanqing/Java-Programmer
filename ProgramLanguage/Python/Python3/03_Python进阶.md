@@ -870,81 +870,333 @@ print(m3(10))
 
 # 五、decorator(装饰器)
 
-在代码运行期间动态增加功能的方式，称之为装饰器如:
-```python
-def now():
-	print('2015-05-04')
-# 函数对象有一个__name__属性，可以拿到函数的名字：
-```
-- 如果要增强now()函数的功能，比如，在函数调用前后自动打印日志，但又不希望修改now()函数的定义，这种在代码运行期间动态增加功能的方式，称之为“装饰器”（Decorator）	
-- 本质上，decorator就是一个返回函数的高阶函数:
-	```python
-	# 所以，我们要定义一个能打印日志的decorator，可以定义如下：
-	def log(func):
-		def wrapper(*args， **kw):
-			print('call %s():' % func.__name__)
-			return func(*args， **kw)
-		return wrapper
-	# 观察上面的log，因为它是一个decorator，所以接受一个函数作为参数，并返回一个函数。
-	# 我们要借助Python的@语法，把decorator置于函数的定义处：	
-		@log
-		def now():
-			print '2013-12-25'
-	# 调用now()函数，不仅会运行now()函数本身，还会在运行now()函数前打印一行日志：
-	# 把@log放到now()函数的定义处，相当于执行了语句：
-		now = log(now)
-	```
-- 如果decorator本身需要传入参数，那就需要编写一个返回decorator的高阶函数，写出来会更复杂:
-	```python
-	def log(text):
-		def decorator(func):
-			def wrapper(*args， **kw):
-				print('%s %s():' % (text， func.__name__))
-				return func(*args， **kw)
-			return wrapper
-		return decorator
-	# 调用:
-	@log('execute')
-	def now():
-		print('2013-12-25')
-	#和两层嵌套的decorator相比，3层嵌套的效果是这样的：
-		>>> now = log('execute')(now)
-	```
-- 调用之后调用 `now.__name__ ===> wrapper`；需要把原始函数的`__name__`等属性复制到`wrapper()`函数中，否则，有些依赖函数签名的代码执行就会出错。
-	```python
-	import functools
-	def log(func):
-		@functools.wraps(func)
-		def wrapper(*args， **kw):
-			print('call %s():' % func.__name__)
-			return func(*args， **kw)
-		return wrapper
-	# 或者针对带参数的decorator：
-	import functools
-	def log(text):
-		def decorator(func):
-			@functools.wraps(func)
-			def wrapper(*args， **kw):
-				print('%s %s():' % (text， func.__name__))
-				return func(*args， **kw)
-			return wrapper
-		return decorator
-	```
+## 1、基本使用
 
-- 请编写一个decorator，能在函数调用的前后打印出'begin call'和'end call'的日志
-	```python
-	# 大致思路是A装饰B，B装饰C，B是指定函数，A是执行前打印日志，B是执行后打印日志
-	def forwardcall(func):
-		def wrapper(*args， **kw):
-			print('begin call')；
-			return func(*args， **kw)；
-		return wrapper
-	@forwardcall
-	def now(func):
-		print('业务逻辑处理')
-		def wrapper(*args， **kw):
-			return func(*args， **kw)
-	@now
-	def endcall():
-		print('end call')
-	```
+装饰器是一种函数，它将另一个函数作为参数，在不明确更改原始函数的情况下扩展其行为；
+
+如下是一个 net_price 函数：
+```py
+def net_price(price, tax):
+    """ calculate the net price from price and tax
+    Arguments:
+        price: the selling price
+        tax: value added tax or sale tax
+    Return
+        the net price
+    """
+    return price * (1 + tax)
+```
+假设您需要使用美元货币来格式化净价。例如，100 美元变为 `$100` 美元。为此，您可以使用装饰器:
+```py
+def currency(fn):
+    def wrapper(*args, **kwargs):
+        fn(*args, **kwargs)
+    return wrapper
+```
+currency函数返回 wrapper函数。wrapper函数有 `*args` 和 `**kwargs` 参数。通过这些参数，可以使用`*args` 和 `**kwargs`的任意组合调用任何 fn 函数。
+在wrapper函数中，您可以调用 fn 函数，获取其结果，并将结果格式化为货币字符串：
+```py
+def currency(fn):
+    def wrapper(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        return f'${result}'
+    return wrapper
+```
+currency函数是一个装饰器，它接受任何返回数字并将该数字格式化为货币字符串的函数
+```py
+# 使用方式如下：
+net_price = currency(net_price)
+print(net_price(100, 0.05))
+```
+
+## 2、装饰器定义
+
+一般来说，装饰器是：
+- 将另一个函数（原始函数）作为参数并返回另一个函数（或闭包）的函数
+- 闭包通常接受 `*args` 和 `**kwargs` 参数的任意组合。
+- 闭包函数使用传递给闭包的参数调用原始函数，并返回函数的结果。
+
+内部函数是一个闭包，因为它引用了其外层作用域或装饰器函数中的 fn 参数。
+
+一般来说，如果 decorate 是一个装饰器函数，而您想装饰另一个函数 fn，可以使用这种语法：`fn = decorate(fn)`；为了更方便，Python 提供了这样一种更简短的方法：
+```py
+@decorate
+def fn():
+    pass
+```
+上面的示例：
+```py
+def currency(fn):
+    def wrapper(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        return f'${result}'
+    return wrapper
+@currency
+def net_price(price, tax):
+    return price * (1 + tax)
+print(net_price(100, 0.05))
+```
+
+## 3、自省装饰函数
+
+当装饰一个函数时，其等于：
+```py
+@decorate
+def fn(*args,**kwargs):
+    pass
+# 等价
+fn = decorate(fn)
+```
+如果使用内置 help 功能显示新函数的文档，则不会看到原始函数的文档。例如:
+```py
+help(net_price)
+# wrapper(*args, **kwargs)
+# None
+```
+另外，如果检查新函数的名称，Python 将返回装饰器返回的内部函数的名称:
+```py
+print(net_price.__name__) # wrapper
+```
+因此，当装饰一个函数时，就会丢失原来的函数签名和文档；
+
+要解决这个问题，可以使用 functools 标准模块中的 wraps 函数。事实上，wraps 函数也是一个装饰器
+```py
+from functools import wraps
+def currency(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        result = fn(*args, **kwargs)
+        return f'${result}'
+    return wrapper
+@currency
+def net_price(price, tax):
+    return price * (1 + tax)
+
+help(net_price)
+print(net_price.__name__)
+```
+
+## 4、带参数的装饰器
+
+比如，有如下带参数的函数：
+```py
+def say(message):
+    print(message)
+```
+如果，那么如果需要装饰的话，如下写法：
+```py
+from functools import wraps
+def repeat(fn):
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        for _ in range(5):
+            result = fn(*args, **kwargs)
+        return result
+    return wrapper
+@repeat
+def say(message):
+    print(message)
+say('Hello')
+```
+如果要重复执行 say() 函数十次，该怎么办？在这种情况下，您需要更改 repeat 装饰器中的硬编码值 5。但是，这种解决方案并不灵活。例如，您想使用 repeat 装饰器执行一个函数 5 次，另一个执行 10 次。重复装饰器将无法满足要求。
+
+要解决这个问题，需要更改 repeat 装饰器，使其接受一个参数，指定函数的执行次数，如下所示：
+```py
+@repeat(5)
+def say(message):
+    ...
+def repeat(times):
+    # return the original "repeat" decorator
+```
+new repeat 函数返回一个装饰器。它通常被称为装饰器工厂。
+```py
+def repeat(times):
+    def decorate(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            for _ in range(times):
+                result = fn(*args, **kwargs)
+            return result
+        return wrapper
+    return decorate
+```
+在这段代码中，decorate 函数是一个装饰器。它相当于原来的 repeat 装饰器。
+> 请注意，新的重复函数并不是一个装饰器。它是一个返回装饰器的装饰器工厂。
+
+## 5、类装饰器
+
+当类实例实现了 `__call__` 方法时，它就可以成为可调用类。因此，可以把 `__call__` 方法作为一个装饰器，比如：
+```py
+class Star:
+    def __init__(self, n):
+        self.n = n
+    def __call__(self, fn):
+        def wrapper(*args, **kwargs):
+            print(self.n*'*')
+            result = fn(*args, **kwargs)
+            print(result)
+            print(self.n*'*')
+            return result
+        return wrapper
+```
+可以使用 Star 作为装饰器：
+```py
+@Star(5)
+def add(a, b):
+    return a + b
+```
+`@Star(5)` 返回 Star 类的一个实例。该实例是可调用的，因此您可以执行以下操作：
+```py
+add = Star(5)(add)
+```
+- 通过实现 `__call__` 方法，将可调用类用作装饰器。
+- 将装饰器参数传递给 `__init__` 方法
+
+## 6、monkey patching
+
+Monkey patching 是一种技术，允许您在运行时修改或扩展现有模块、类或函数的行为，而无需更改原始源代码。
+
+应用Monkey patching技术的步骤如下：
+- 首先，确定要修补的目标，可以是模块、类、方法或函数。
+- 其次，编写代码来添加、修改或替换现有逻辑，从而创建补丁。
+- 第三，使用赋值将补丁应用于目标。补丁将覆盖或扩展现有行为。
+
+虽然 "Monkey patching"是一种强大的工具，但应谨慎使用，以避免意外行为的发生
+
+示例：
+```py
+class Robot:
+    def __init__(self, name):
+        self.name = name
+```
+要在运行时扩展机器人类的行为而不改变机器人类，可以使用Monkey patching技术；假如：需要扩展一个行为，让机器人的实例能够说话。下面是具体步骤：
+- 定义一个名为 add_speech 的函数，该函数接受一个类作为参数：
+    ```py
+    def add_speech(cls):
+        cls.speak = lambda self, message: print(message)
+        return cls
+    ```
+- 其次，通过将 Robot 类传递给 add_speech()方法来修补Robot类
+    ```py
+    Robot = add_speech(Robot)
+    ```
+    请注意，可以使用 add_speech() 函数修补任何类，而不仅仅是Robot类
+- 第三，创建一个新的Robot类实例，并调用 speak() 方法：
+    ```py
+    robot = Robot('Optimus Prime')
+    robot.speak('Hi')
+    ```
+
+`Robot = add_speech(Robot)`由于这行代码是一个装饰器，可以使用如下方式：
+```py
+@add_speech
+class Robot:
+    def __init__(self, name):
+        self.name = name
+```
+
+**何时使用 Monkey patching**
+
+实际上，只有在必要时才应使用 "Monkey patching"，因为它会使代码更难理解和调试。
+
+例如，如果您使用的是第三方库，而它有一个紧急错误，您无法等待官方发布。在这种情况下，您可以使用 "Monkey patching"来进行快速修复，同时等待适当的解决方案。
+
+另一种情况是，想为自己无法控制的类添加功能，但又无法使用继承或组合等其他技术，这时就可以使用打补丁。
+
+在实践中，会在模拟库（如标准 unittest.mock 模块）中发现Monkey patching。unittest.mock 模块有 patch() 方法，可以用一个 mock 对象临时替换目标。
+
+# 六、序列
+
+## 1、命名元组
+
+命名元组允许你创建元组，并为元组元素的位置指定有意义的名称。从技术上讲，命名元组是tuple的子类。此外，它还为位置元素添加了属性名称。
+
+要创建命名元组类，需要使用collection标准库中的 namedtuple 函数；namedtuple 是一个返回新命名元组类的函数。换句话说，namedtuple() 是一个类工厂：
+```py
+from collections import namedtuple
+```
+命名元组函数接受以下参数来生成一个类:
+- 类名，指定命名元组类的名称。
+- 与元组元素相对应的字段名序列。字段名必须是有效的变量名，但不能以下划线 (_) 开头。
+
+比如：
+```py
+Point2D = namedtuple('Point2D',['x','y'])
+```
+命名元组还可以接受字段名称为：
+- tuple of string：`Point2D = namedtuple('Point2D',('x','y'))`
+- 字段名用逗号分隔的单字符串：`Point2D = namedtuple('Point2D',('x, y'))`
+- 一个字段名用空格分隔的字符串：`Point2D = namedtuple('Point2D','x y')`
+
+**初始化命名元组**
+
+Point2D 是一个类，是元组的子类。您可以像创建普通类一样创建 Point2D 类的新实例。例如：
+```py
+point = Point2D(100, 200)
+# or
+point = Point2D(x=100, y=200)
+```
+point对象是 Point2D 类的一个实例。因此，它也是元组类的一个实例
+
+**访问元组**
+
+命名元组是一个常规元组。因此，可以对已命名元组进行所有元组操作。要访问已命名元组中的数据，可以使用：
+- 切片
+- 拆包
+- 索引
+- 迭代
+
+```py
+# unpacking
+x, y = point
+print(f'({x}, {y})')  # (100, 200)
+# indexing
+x = point[0]
+y = point[1]
+print(f'({x}, {y})')  # (100, 200)
+# iterating
+for coordinate in point:
+    print(coordinate)
+```
+
+**命名元组函数的重命名参数**
+
+namedtuple 函数接受只包含关键字的参数 rename，该参数允许重命名无效字段名称:
+
+由于字段名 `_radius` 以下划线 (`_`) 开头，因此会出现以下错误
+```py
+from collections import namedtuple
+Circle = namedtuple(
+    'Circle',
+    'center_x, center_y, _radius'
+)
+```
+但是，当使用重命名参数时，namedtuple 函数会自动将 _radius 重命名为有效的字段名。例如：
+```py
+from collections import namedtuple
+Circle = namedtuple(
+    'Circle',
+    'center_x, center_y, _radius',
+    rename=True
+)
+```
+要查找已命名元组的字段名，可以使用 `_fields` 类属性。例如：
+```py
+print(Circle._fields)
+# ('center_x', 'center_y', '_2')
+```
+在本例中，namedtuple 函数自动将 `_radius` 字段更改为 `_2`
+
+**命名元组其他函数**
+
+命名元组提供了一些有用的功能。例如，您以使用相等运算符 (==) 来比较两个命名元组实例：
+```py
+a = Point2D(100, 200)
+b = Point2D(100, 200)
+print(a == b)  # True
+```
+由于命名的元组就是一个元组，因此可以将任何与普通元组相关的函数应用到命名的元组上:
+```py
+print(max(a))  # 200
+print(min(a))  # 100
+```
