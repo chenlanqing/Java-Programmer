@@ -1105,6 +1105,21 @@ class Robot:
 
 在实践中，会在模拟库（如标准 unittest.mock 模块）中发现Monkey patching。unittest.mock 模块有 patch() 方法，可以用一个 mock 对象临时替换目标。
 
+## 7、常见装饰器
+
+### 7.1、lru_cache
+
+```py
+from functools import lru_cache
+@lru_cache
+def fib(n):
+    print(f'Calculate the Fibonacci of {n}')
+    if n < 2:
+        return 1
+    return fib(n-2) + fib(n-1)
+fib(6)
+```
+
 # 六、序列
 
 ## 1、命名元组
@@ -1200,3 +1215,162 @@ print(a == b)  # True
 print(max(a))  # 200
 print(min(a))  # 100
 ```
+
+## 2、序列
+
+序列是按位置排序的项目集合。您可以使用索引号（如 s[0] 和 s[1]）来引用序列中的任何项目。
+
+Python 有以下内置序列类型：lists, bytearrays, strings, tuples, range, bytes。Python 将序列类型分为可变和不可变两种；其中可变序列类型是lists 和 bytearrays，不可变序列类型是strings, tuples, range, 和 bytes；
+
+序列可以是同质的，也可以是异质的。在同质序列中，所有元素都具有相同的类型。例如，字符串是同质序列，其中每个元素的类型都相同；而list是一种异构序列，可以存储不同类型的元素，包括整数、字符串、对象等。
+
+### 2.1、序列类型与可迭代类型
+
+- 可迭代对象是一个对象集合，可以逐个获取每个元素。因此，任何序列都是可迭代的。例如，列表是可迭代的；
+- 但是，可迭代类型可能不是序列类型。例如，集合是可迭代的，但它不是序列
+
+### 2.2、序列方法
+
+- len-序列中元素个数：`len(seq)`
+- element in seq: 元素是否存在于序列中，返回 True 或 False
+- seq.index(e): 元素在序列中索引位置，如果序列中不存在该元素，则会报错：`ValueError: 10 is not in list`；
+    - 要查找在特定索引处或之后首次出现的项目的索引，可以使用以下形式的索引方法：`seq.index(e, i)`
+    - 通过索引方法的以下形式，可以查找索引 i 之后、索引 j 之前首次出现的项目索引：`seq.index(e, i, j)`
+- 序列切片：要获取从索引 i 到（但不包括）j 的片段，请使用以下语法：`seq[i:j]`；
+    ```py
+    numbers = [1, 4, 5, 3, 5, 7, 8, 5]
+    print(numbers[2:6]) # [5, 3, 5, 7]
+    ```
+    通过扩展切片，可以以 k 为单位获得从 i 到（但不包括 j）的切片。`seq[i:j:k]`
+    ```py
+    print(numbers[2:6:2]) # [5, 5]
+    ```
+- 序列中的最大值（`max()`）和最小值（`min()`）；
+- 连接两个序列，可以使用 + 操作符：`s3 = s1 + s2`；连接不可变序列非常安全；不过，您应该注意可变序列的连接。下面的示例展示了如何将列表连接到列表本身：
+    ```py
+    city = [['San Francisco', 900_000]]
+    cities = city + city
+    print(cities)
+    print(id(cities[0]) == id(cities[1]))  # True
+    ```
+    由于列表是可变的，因此城市列表中第一个和第二个元素的内存地址是相同的；此外，当您更改原始列表中的值时，合并列表也会随之更改；
+- 重复 Python 序列：要多次重复一个序列，可以使用乘法运算符 (*)：
+    ```py
+    s = 'ha'
+    print(s*3)
+    ```
+
+## 3、tuple和list
+
+**tuple是不可变的，list是可变的**
+
+**tuple的存储效率高于list**
+
+- 列表是可变的。这意味着您可以向其中添加更多元素。因此，Python 需要为 list 分配多于需要的内存。这就是所谓的超量分配。当列表展开时，超量分配可以提高性能；
+- 同时，元组是不可变的，因此它的元素数是固定的。因此，Python 只需分配足够的内存来存储初始元素；
+
+要获取对象的大小，可以使用 sys 模块中的 `getsizeof` 函数。
+
+**复制tuple比复制list更快**
+- 当复制一个 list时，会创建一个新的list；
+- 当复制一个 tuple时，会复用存在的 tuple
+```py
+from timeit import timeit
+times = 1_000_000
+t1 = timeit("list(['apple', 'orange', 'banana'])", number=times)
+print(f'Time to copy a list {times} times: {t1}')
+t2 = timeit("tuple(('apple', 'orange', 'banana'))", number=times)
+print(f'Time to copy a tuple {times} times: {t2}')
+diff = "{:.0%}".format((t2 - t1)/t1)
+print(f'difference: {diff}')
+```
+
+## 4、深度切片
+
+对于list等可变序列类型，可以使用切片来提取和分配数据：
+```py
+colors = ['red', 'green', 'blue', 'orange']
+# extract data
+print(colors[1:3])
+# assign data
+colors[1:3] = ['pink', 'black']
+print(colors)
+```
+切片 `seq[start:stop] `会返回从索引 `start` 开始到索引 `stop - 1` 的元素。因此，在对序列进行切片时，更容易直观地看到索引在元素之间：
+
+### 4.1、切片类型
+
+Python 中的一切都是对象，包括切片。切片实际上是一个切片类型的对象。当使用切片符号`seq[start:stop]`，`start:stop` 是一个 slice 对象：`slice(start, stop)`
+```py
+s = slice(1, 3)
+print(type(s)) # <class 'slice'>
+print(s.start, s.stop) # 1 3
+```
+可以尝试下下面的用法：
+```py
+colors = ['red', 'green', 'blue', 'orange']
+s = slice(1, 3)
+print(colors[s]) # ['green', 'blue']
+```
+
+### 4.2、start和stop边界
+
+切片 `seq[start:stop]` 选择从索引起始点到索引终止点为止的元素（不包括索引终止点的元素）。换句话说，它会返回索引 n 处序列的所有元素，其中 n 满足以下表达式：`start <= n < stop`；
+
+`start` 和 `stop` 都是可选项。如果不指定，`start` 默认为 0，`stop` 默认为 `len(seq)`。如果 start 和 stop 超过边界，默认使用`len(seq)`：
+```py
+colors = ['red', 'green', 'blue', 'orange']
+print(colors[0:100]) # ['red', 'green', 'blue', 'orange']
+print(colors[10:]) # []，因为10超过了
+``` 
+**start 和 stop 为负数**
+
+切分对象还接受 start 和 stop 为负数：
+```py
+colors = ['red', 'green', 'blue', 'orange']
+print(colors[-4:-2]) # ['red', 'green']
+```
+
+### 4.3、步长
+
+切片支持第三个参数，即步长值。如果不指定，步长值默认为 1：
+```py
+seq[star:stop:step]
+# 等价于
+s = slice(start, stop, step) 
+seq[s]
+```
+
+### 4.4、索引方法
+
+切片对象本质上定义了一个索引序列，用于选择序列中的元素；为方便起见，slice 类型提供了索引方法，可返回序列中任意片段的等效范围（start,stop,step），并具有指定的长度
+```py
+slice(start, stop, step).indices(length) # (i, j, k)
+```
+示例：
+```py
+colors = ['red', 'green', 'blue', 'orange']
+s = slice(0, 4, 2)
+t = s.indices(len(colors))
+for index in range(*t):
+    print(colors[index])
+```
+
+## 5、自定义序列类型
+
+如何实现一个自定义不可变序列类型，基本上，不可变序列类型应支持两个主要功能：
+- 返回序列中元素的数量。从技术上讲，这一要求并非必要。
+- 返回给定索引处的元素，如果索引超出范围，则引发 IndexError。
+
+如果一个对象可以满足上述要求，那么你就可以使用它：
+- 使用方括号 `[]` 语法按索引检索元素。
+- 使用 for 循环、理解等方法遍历序列中的元素。
+
+一般自定义序列类型需要实现以下方法：
+- `__getitem__` ：返回给定索引处的元素。
+- `__len__` ：返回序列的长度
+
+**`__getitem__`方法**
+- `__getitem__` 方法的索引参数是一个整数。`__getitem__`应根据指定的索引从序列中返回一个元素。
+- 如果索引超出范围，`__getitem__` 方法将引发 IndexError 异常。
+- 此外，`__getitem__` 方法还可以接受一个切片对象，以支持切片处理
