@@ -2333,6 +2333,7 @@ def log(message: str) -> None:
 
 # 十五、列表生成式
 
+
 ## 1、生成列表
 
 - 要生成`list [1， 2， 3， 4， 5， 6， 7， 8， 9， 10]`，我们可以用`range(1， 11)`：
@@ -2353,61 +2354,9 @@ def log(message: str) -> None:
 ['AX'， 'AY'， 'AZ'， 'BX'， 'BY'， 'BZ'， 'CX'， 'CY'， 'CZ']
 ```
 
-## 4、生成器
+## 4、generator
 
-如果列表元素可以按照某种算法推算出来，那我们是否可以在循环的过程中不断推算出后续的元素呢？这样就不必创建完整的list，从而节省大量的空间.在Python中，这种一边循环一边计算的机制，称为生成器(Generator)
-
-如何创建一个生成器(Generator)
-
-- 方法1:只要把一个列表生成式的[]改成()，就创建了一个generator
-	```python
-	>>> L = [x * x for x in range(10)]
-	>>> L
-	[0， 1， 4， 9， 16， 25， 36， 49， 64， 81]
-	>>> g = (x * x for x in range(10))
-	>>> g
-	<generator object <genexpr> at 0x104feab40>
-	# 创建L和g的区别仅在于最外层的[]和()，L是一个list，而g是一个generator。
-	# 笨方法:如果要一个一个打印出来，可以通过generator的next()方法：
-	```
-	正确的方法是使用for循环，因为generator也是可迭代对象
-
-	如果推算的算法比较复杂，用类似列表生成式的for循环无法实现的时候，还可以用函数来实现
-
-	如:名的斐波拉契数列（Fibonacci）定义函数如下:
-	```python
-	def fib(max):
-		n， a， b = 0， 0， 1
-		while n < max:
-			print b
-			a， b = b， a + b # 先计算右边，然后将 b 的值赋给 a， 再将 a+b 的值赋给 b
-			n = n + 1
-	```
-	如何将上述函数转变为生成器：只需要把print b改为yield b就可以了
-	```python
-	def fib(max):
-		n， a， b = 0， 0， 1
-		while n < max:
-			yield b
-			# a， b = b， a + b 等价于：
-			temp = a
-			a = b
-			b = temp + b
-			#a， b = b， a + b
-			n = n + 1
-	```
-	如果一个函数定义中包含yield关键字，那么这个函数就不再是一个普通函数，而是一个generator：最难理解的就是generator和函数的执行流程不一样.函数是顺序执行，遇到return语句或者最后一行函数语句就返回。而变成generator的函数，在每次调用next()的时候执行，遇到yield语句返回，再次执行时从上次返回的yield语句处继续执行；
-
-	但是用for循环调用generator时，发现拿不到generator的return语句的返回值。如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在StopIteration的value中
-	```python
-		while True:
-	...     try:
-	...         x = next(g)
-	...         print('g:'， x)
-	...     except StopIteration as e:
-	...         print('Generator return value:'， e.value)
-	...         break
-	```
+- [Generator](03_Python进阶.md#八generator)
 
 # 十六、模块
 

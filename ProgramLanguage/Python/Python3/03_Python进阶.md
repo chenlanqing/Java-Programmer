@@ -1516,3 +1516,180 @@ print(is_iterable([1, 2, 3])) # True
 print(is_iterable('Python iter')) # True
 print(is_iterable(100)) # False
 ```
+
+# 八、Generator
+
+要中途暂停函数并从暂停的位置继续运行，需要使用 yield 语句。
+
+当一个函数至少包含一条 yield 语句时，它就是一个Generator函数；根据定义，Generator是一个至少包含一个 yield 语句的函数，调用Generator函数时，它会返回一个新的Generator对象。但是，它不会启动函数；
+
+Generator 对象（或Generator）实现了迭代器协议。事实上，Generator是一种懒惰的迭代器。因此，要执行一个Generator函数，需要调用它的 next() 内置函数；
+
+示例：
+```py
+def greeting():
+    print('Hi!')
+    yield 1
+    print('How are you?')
+    yield 2
+    print('Are you there?')
+    yield 3
+```
+当 Python 遇到 yield 语句时，它会返回 yield 中指定的值。此外，它会暂停执行函数；如果再次 "call"同一个函数，Python 将从上次遇到 yield 语句的地方继续前进；：
+```py
+messenger = greeting() # messenger 是个迭代器
+result = next(messenger)
+print(result) # Hi
+result = next(messenger)
+print(result) # How are you
+```
+如果一个函数定义中包含yield关键字，那么这个函数就不再是一个普通函数，而是一个generator：最难理解的就是generator和函数的执行流程不一样.函数是顺序执行，遇到return语句或者最后一行函数语句就返回。而变成generator的函数，在每次调用next()的时候执行，遇到yield语句返回，再次执行时从上次返回的yield语句处继续执行；
+
+但是用for循环调用generator时，发现拿不到generator的return语句的返回值。如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在StopIteration的value中
+```python
+    while True:
+...     try:
+...         x = next(g)
+...         print('g:'， x)
+...     except StopIteration as e:
+...         print('Generator return value:'， e.value)
+...         break
+```
+
+创建一个生成器(Generator)，只要把一个列表生成式的[]改成()，就创建了一个generator
+```python
+>>> L = [x * x for x in range(10)]
+>>> L
+[0， 1， 4， 9， 16， 25， 36， 49， 64， 81]
+>>> g = (x * x for x in range(10))
+>>> g
+<generator object <genexpr> at 0x104feab40>
+# 创建L和g的区别仅在于最外层的[]和()，L是一个list，而g是一个generator。
+# 笨方法:如果要一个一个打印出来，可以通过generator的next()方法：
+```
+正确的方法是使用for循环，因为generator也是可迭代对象
+
+如果推算的算法比较复杂，用类似列表生成式的for循环无法实现的时候，还可以用函数来实现
+
+如:名的斐波拉契数列（Fibonacci）定义函数如下:
+```python
+def fib(max):
+    n， a， b = 0， 0， 1
+    while n < max:
+        print b
+        a， b = b， a + b # 先计算右边，然后将 b 的值赋给 a， 再将 a+b 的值赋给 b
+        n = n + 1
+```
+如何将上述函数转变为生成器：只需要把print b改为yield b就可以了
+```python
+def fib(max):
+    n， a， b = 0， 0， 1
+    while n < max:
+        yield b
+        # a， b = b， a + b 等价于：
+        temp = a
+        a = b
+        b = temp + b
+        #a， b = b， a + b
+        n = n + 1
+```
+
+# 九、Context Managers
+
+Context Managers 是一个对象，它定义了在 with 语句中执行的运行时上下文
+```py
+with open('data.txt') as f:
+    data = f.readlines()
+    print(int(data[0])    
+```
+
+## 1、with语句
+
+以下是 with 语句的典型语法：
+```py
+with context as ctx:
+    # use the the object 
+
+# context is cleaned up
+```
+如何使用
+- Python 遇到 with 语句时，会创建一个新的上下文。上下文可以选择返回一个对象。
+- 在 with 代码块之后，Python 会自动清理上下文。
+- ctx 的作用域与 with 语句的作用域相同。这意味着您可以在 with 语句内部或之后访问 ctx。
+```py
+with open('data.txt') as f:
+    data = f.readlines()
+    print(int(data[0]))
+print(f.closed)  # True
+```
+
+## 2、context manager protocol
+
+Python 上下文管理器基于上下文管理器协议工作。
+
+上下文管理器协议有以下方法：
+- `__enter__`()：设置上下文，并可选择返回某个对象
+- `__exit__`()：清理对象。
+
+如果想让一个类支持上下文管理器协议，就需要实现这两个方法：
+```py
+with ContextManager() as ctx:
+    # do something
+# done with the context
+```
+当用 with 语句使用 ContextManager 类时，Python 会隐式地创建 ContextManager 类的实例 (instance)，并自动在该实例上调用 `__enter__`() 方法。
+
+`__enter__`() 方法可以选择返回一个对象。如果是这样，Python 将返回的对象赋值给 ctx。
+
+请注意，ctx 引用的是 `__enter__`() 方法返回的对象。它并不引用 ContextManager 类的实例。
+
+如果在 with 代码块内或 with 代码块后出现异常，Python 将调用实例对象上的 `__exit__`() 方法
+
+在功能上，with 语句等同于以下 try...finally 语句：
+```py
+instance = ContextManager()
+ctx = instance.__enter__()
+try:
+    # do something with the txt
+finally:
+    # done with the context
+    instance.__exit__()
+```
+- 在 `__enter__`() 方法中，可以执行必要的步骤来设置上下文；
+- 总是执行 `__exit__`() 方法，即使在 with 代码块中出现了异常；
+
+`__exit__`() 方法接受三个参数：异常类型、异常值和回溯对象。如果没有异常发生，所有这些参数都将是 None，`__exit__`() 方法返回一个布尔值，即 True 或 False
+```py
+def __exit__(self, ex_type, ex_value, ex_traceback):
+    ...
+```
+如果返回值为 True，Python 将使任何异常静默。否则，它不会使异常静默；
+
+## 3、context manager应用
+
+- 如果要自动打开和关闭资源，可以使用上下文管理器，比如Socket；
+- 上下文管理器可以帮助你更有效地管理对象的锁。它们允许你获取锁定并自动释放。
+- context管理器还能帮助您处理需要启动和停止阶段的场景；
+- 需要改变或重置资源的时候；
+
+## 4、如何实现上下文管理器协议
+
+
+```py
+class File:
+    def __init__(self, filename, mode):
+        self.filename = filename
+        self.mode = mode
+    def __enter__(self):
+        print(f'Opening the file {self.filename}.')
+        self.__file = open(self.filename, self.mode)
+        return self.__file
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        print(f'Closing the file {self.filename}.')
+        if not self.__file.closed:
+            self.__file.close()
+        return False
+with File('data.txt', 'r') as f:
+    print(int(next(f)))
+
+```
