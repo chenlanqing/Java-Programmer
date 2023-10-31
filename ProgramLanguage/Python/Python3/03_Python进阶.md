@@ -1374,3 +1374,145 @@ for index in range(*t):
 - `__getitem__` 方法的索引参数是一个整数。`__getitem__`应根据指定的索引从序列中返回一个元素。
 - 如果索引超出范围，`__getitem__` 方法将引发 IndexError 异常。
 - 此外，`__getitem__` 方法还可以接受一个切片对象，以支持切片处理
+
+# 七、Iterator
+
+## 1、iterator
+
+迭代器是实现了如下方法的：
+- `__iter__`：返回对象本身的 方法。
+- `__next__` 方法返回下一个项目。如果所有项目都已返回，该方法将引发 StopIteration 异常
+
+请注意，这两种方法也被称为迭代器协议。
+
+Python 允许在 for 循环、解包和其他内置函数（包括 map、filter、reduce 和 zip）中使用迭代器。
+
+下面的示例定义了返回平方数的平方迭代器类
+```py
+class Square:
+    def __init__(self, length):
+        self.length = length
+        self.current = 0
+    def __iter__(self):
+        return self
+    def __next__(self):
+        if self.current >= self.length:
+            raise StopIteration
+        self.current += 1
+        return self.current ** 2
+```
+如何使用：
+```py
+square = Square(5)
+for sq in square:
+    print(sq)
+```
+如果尝试使用已经迭代完的迭代器，就会出现 StopIteration 异常。
+
+迭代器不能重启，因为它只有返回集合中下一个项目的 `__next__` 方法
+
+## 2、迭代器与可迭代器
+
+迭代器是实现迭代器协议的对象。换句话说，迭代器是一个实现以下方法的对象
+- `__iter__` 返回迭代器对象本身
+- `__next__` 返回下一个元素
+
+可迭代对象是可以迭代的对象：当一个对象实现了 `__iter__` 方法时，它就是可迭代的。它的 `__iter__` 方法会返回一个新的迭代器。
+```py
+numbers = [1, 2, 3]
+number_iterator = numbers.__iter__()
+print(type(number_iterator)) # <class 'list_iterator'>
+
+numbers = [1, 2, 3]
+number_iterator = iter(numbers)
+next(number_iterator)
+next(number_iterator)
+next(number_iterator)
+```
+列表与其迭代器的分离。列表只创建一次，而迭代器则在每次需要遍历列表时创建。
+
+像前面的 Square 既是迭代器，又是可迭代对象：
+- Square类是一个迭代器，因为它实现了 `__iter__` 和 `__next__` 方法。`__iter__` 方法返回对象本身。而 `__next__` 方法返回列表中的下一项；
+- Square类也是一个可迭代器，因为它实现了返回对象本身的 `__iter__` 方法，而对象本身就是一个迭代器
+
+分离迭代器和可迭代对象：
+```py
+class Colors:
+    def __init__(self):
+        self.rgb = ['red', 'green', 'blue']
+    def __len__(self):
+        return len(self.rgb)
+class ColorIterator:
+    def __init__(self, colors):
+        self.__colors = colors
+        self.__index = 0
+    def __iter__(self):
+        return self
+    def __next__(self):
+        if self.__index >= len(self.__colors):
+            raise StopIteration
+        # return the next color
+        color = self.__colors.rgb[self.__index]
+        self.__index += 1
+        return color
+
+colors = Colors()
+color_iterator = ColorIterator(colors)
+for color in color_iterator:
+    print(color)
+```
+
+## 3、iter()方法
+
+`iter()` 函数返回给定对象的迭代器：`iter(object)`，`iter()` 函数需要一个参数，该参数可以是一个可迭代对象，也可以是一个序列。一般来说，对象参数可以是任何支持迭代或序列协议的对象；
+
+当你在一个对象上调用 `iter()` 函数时，该函数首先会查找该对象的 `__iter__`() 方法
+
+如果存在 `__iter__`() 方法，则 `iter()` 函数会调用它来获取一个迭代器。否则，`iter()` 函数将查找 `__getitem__`() 方法。
+
+如果 `__getitem__`() 可用，`iter()` 函数将创建一个迭代器对象并返回该对象。否则，它会引发 TypeError 异常
+
+
+**iter()的另一种形式：**
+`iter(callable, sentinel)`：将在调用 next() 方法时调用一个call callable。如果结果等于哨兵值，它将返回callable程序返回的值或引发 StopIteration 异常。
+
+示例：
+```py
+def counter():
+    count = 0
+    def increase():
+        nonlocal count
+        count += 1
+        return count
+    return increase
+class CounterIterator:
+    def __init__(self, fn, sentinel):
+        self.fn = fn
+        self.sentinel = sentinel
+    def __iter__(self):
+        return self
+    def __next__(self):
+        current = self.fn()
+        if current == self.sentinel:
+            raise StopIteration
+        return current
+
+cnt = counter()
+iterator = CounterIterator(cnt, 4)
+for count in iterator:
+    print(count)
+```
+
+**使用iter()判断一个对象是否可迭代**
+```py
+def is_iterable(object):
+    try:
+        iter(object)
+    except TypeError:
+        return False
+    else:
+        return True
+print(is_iterable([1, 2, 3])) # True
+print(is_iterable('Python iter')) # True
+print(is_iterable(100)) # False
+```
