@@ -2890,6 +2890,8 @@ docker run -d -p 9090:9090 prom/prometheus
 
 # 八、Spring-EL表达式
 
+- [Spring Expression Language](https://docs.spring.io/spring-framework/docs/5.3.9/reference/html/core.html#expressions)
+
 # 九、Spring其他
 
 ## 1、Spring中获取HttpServletRequest
@@ -2941,6 +2943,12 @@ HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.ge
 Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一部分，它可以简化你的代码并使之工作。当在类路径上检测到特定的jar文件时，自动配置就会被激活。
 
 使用它的最简单方法是依赖Spring Boot Starters，借助于这些starters，这些繁琐的配置就可以很好地集成起来并协同工作，而且它们都是经过测试和验证的。这非常有助于避免可怕的[Jar地狱](https://dzone.com/articles/what-is-jar-hell)
+
+# 十一、其他
+
+## 1、SpringBoot 与 Spring Cloud版本关系
+
+- [SpringBoot-SpringCloud关系](https://spring.io/projects/spring-cloud)
 
 # 参考资料
 
