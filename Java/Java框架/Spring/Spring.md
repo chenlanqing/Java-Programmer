@@ -2845,6 +2845,12 @@ Servlet一般会延迟加载，当第一个请求达到时，Tomcat&Jetty发现D
 
 https://mp.weixin.qq.com/s/zXAncSrthmbaxQNkfJdNKg
 
+## 6、Spring中参数名称处理
+
+可以通过 ParameterNameDiscoverer 获取到真正的参数名称，而不是反射之后的 arg0、arg1、...
+
+ParameterNameDiscoverer  LocalVariableTableParameterNameDiscoverer 
+
 # 参考资料
 
 * [Spring整合其他组件文档](https://docs.spring.io/spring-data/)
