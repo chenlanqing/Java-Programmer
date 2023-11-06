@@ -1612,3 +1612,154 @@ com.swagger2.config.BeanConfigRegister
 ```
 
 ### 11.2.3、原理分析
+
+# 12、重包装ServletHttpRequest
+
+在拦截器中获取参数主要分两种：
+- 接口使用 `@RequestParam` 接收参数；只需要在拦截器中通过request.getParameterMap() 来获得全部 Parameter 参数就可以了；
+- 接口使用 `@RequestBody` 接收参数
+
+当接口使用 `@RequestBody` 接收参数时，在拦截器中使用同样的方法获取参数，就会出现流已关闭的异常，也就导致参数读取失败了，这是因为 Spring 已经对 `@RequestBody` 提前进行处理，而 `HttpServletRequest` 获取输入流时仅允许读取一次，所以会报`java.io.IOException: Stream closed`
+
+可以重新构建一个 ServletHttpRequest
+
+（1）定义一个 HttpContextUtils
+```java
+// 主要读取 body 和 参数的
+@Slf4j
+public class HttpContextUtils {
+    /**
+     * 获取 query 参数
+     */
+    public static Map<String, String> getParameterMapAll(HttpServletRequest request) {
+        Enumeration<String> parameters = request.getParameterNames();
+        Map<String, String> params = new HashMap<>();
+        while (parameters.hasMoreElements()) {
+            String parameter = parameters.nextElement();
+            String value = request.getParameter(parameter);
+            params.put(parameter, value);
+        }
+        return params;
+    }
+
+    /**
+     * 获取 body
+     */
+    public static String getBodyString(ServletRequest request) {
+        StringBuilder sb = new StringBuilder();
+        InputStream inputStream = null;
+        BufferedReader reader = null;
+        try {
+            inputStream = request.getInputStream();
+            reader = new BufferedReader(new InputStreamReader(inputStream, StandardCharsets.UTF_8));
+            String line = "";
+            while ((line = reader.readLine()) != null) {
+                sb.append(line);
+            }
+        } catch (IOException e) {
+            log.error("get body str error:", e);
+        } finally {
+            if (inputStream != null) {
+                try {
+                    inputStream.close();
+                } catch (IOException e) {
+                    log.error("close stream error: {}", e.toString());
+                }
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    log.error("close stream error: {}", e.toString());
+                }
+            }
+        }
+        return sb.toString();
+    }
+}
+```
+（2）定义一个 RequestWrapper，包装 HttpServletRequestWrapper
+```java
+public class RequestWrapper extends HttpServletRequestWrapper {
+    private String body;
+    public RequestWrapper(HttpServletRequest request) {
+        super(request);
+        body = getBody(request);
+    }
+    /**
+     * 获取请求体
+     */
+    private String getBody(HttpServletRequest request) {
+        return HttpContextUtils.getBodyString(request);
+    }
+    public String getBody() {
+        return body;
+    }
+    @Override
+    public BufferedReader getReader() throws IOException {
+        return new BufferedReader(new InputStreamReader(getInputStream()));
+    }
+    @Override
+    public ServletInputStream getInputStream() throws IOException {
+        // 创建字节数组输入流
+        final ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(body.getBytes(StandardCharsets.UTF_8));
+        return new ServletInputStream() {
+            @Override
+            public boolean isFinished() {
+                return false;
+            }
+            @Override
+            public boolean isReady() {
+                return false;
+            }
+            @Override
+            public void setReadListener(ReadListener readListener) {
+            }
+            @Override
+            public int read() throws IOException {
+                return arrayInputStream.read();
+            }
+        };
+    }
+}
+```
+（3）定义Filter，重新包装一个ServletHttpRequest
+```java
+@Component
+@WebFilter(filterName = "HttpServletRequestFilter", urlPatterns = "/")
+@Order(99)
+public class RequestFilter implements Filter {
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        ServletRequest requestWrapper = null;
+        if(request instanceof HttpServletRequest) {
+            requestWrapper = new RequestWrapper((HttpServletRequest) request);
+        }
+        // 获取请求中的流，将取出来的字符串，再次转换成流，然后把它放入到新 request对象中
+        // 在chain.doFiler方法中传递新的request对象
+        if(null == requestWrapper) {
+            chain.doFilter(request, response);
+        } else {
+            chain.doFilter(requestWrapper, response);
+        }
+    }
+}
+```
+**如何使用：**
+```java
+@Component
+public class AuthInterceptor implements HandlerInterceptor {
+    @Override
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+        if (request instanceof RequestWrapper) {
+            RequestWrapper wrapper = (RequestWrapper) request;
+            String body = wrapper.getBody();
+            System.out.println(body);
+        }
+        return true;
+    }
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    }
+}
+```
