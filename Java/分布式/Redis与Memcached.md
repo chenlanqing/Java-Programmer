@@ -2635,6 +2635,8 @@ Mc 组件之间相互不通信，完全由 client 对 key 进行 Hash 后分布�
 
 # 十六、Lua
 
+- [Lua 脚本的黑科技](https://mp.weixin.qq.com/s/u8do7hVdgXciVKNlyceYyg)
+
 ## 1、Lua介绍
 
 嵌入式开发、插件开发、Redis集成了lua编译器
