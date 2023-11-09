@@ -921,6 +921,8 @@ Spring中有两种启动类加载器：`ApplicationRunner`、`CommandLineRunner`
 
 ## 7.3、启动加载器原理分析
 
+- [SpringBoot-ApplicationRunner、CommandLineRuner分析](https://heapdump.cn/article/5361308)
+
 调用是从SpringApplication.run方法开始调用的：
 ```java
 public ConfigurableApplicationContext run(String... args) {
@@ -950,6 +952,10 @@ private void callRunners(ApplicationContext context, ApplicationArguments args) 
     }
 }
 ```
+
+## 7.4、注意事项
+
+`ApplicationRunner`、`CommandLineRunner` 这两个启动加载器启动时是单线程执行的，也就是 SpringApplication.run 方法执行过来的，不建议在里面处理复杂业务，或者死循环卡在里面，可能会对Spring加载造成一定影响；
 
 # 8、属性配置
 
