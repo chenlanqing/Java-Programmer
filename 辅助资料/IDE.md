@@ -118,3 +118,21 @@ https://juejin.cn/post/7137092683125751815
 ## 5.2、设置工程图标
 
 如果需要展示个性化logo，可以在目录中`.idea` 增加一个图片文件，命名：`icon.png` ，该工程会自动识别该文件
+
+# 6、idea运行报Java版本错误
+
+比如报如下错：`java: 警告: 源发行版 17 需要目标发行版 17`
+
+主要检查如下几个地方：
+
+（1）File -> Project Structure
+
+![](image/IDEA-Project-Version.png)
+
+![](image/IDEA-Project-Module-1.png)
+
+![](image/IDEA-Project-Module-2.png)
+
+（2）Fils -> Settings
+
+![](image/IDEA-Settings-Compile.png)
