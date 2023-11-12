@@ -207,6 +207,200 @@ Maven的最近依赖策略：如果一个项目依赖相同的groupId、artifact
 
 maven-shade-plugin 插件
 
+## 4、Maven依赖加载顺序
+
+- [maven冲突Jar包的加载规则](https://developer.jdcloud.com/article/3117)
+
+### 4.1、jar包加载原则
+
+- 最短路径原则：面对多级（两级及以上）的不同依赖，会优先选择路径最短的依赖；
+- 声明优先原则：面对多级（两级及以上）的同级依赖，先声明的依赖会覆盖后声明的依赖；
+- 同级依赖中，后声明的依赖会覆盖先声明的依赖；
+
+更简单的描述：
+- 本级优先于上级，上级优先于下级；
+- 本级依赖版本优先于管理版本；
+- 同一个包中后加载的版本覆盖先加载的版本；
+- 上级管理版本和本级管理版本会覆盖下级依赖版本；
+- 不同下级jar中依赖了不同版本，优先使用先加载下级jar中的版本；
+- 与版本号大小没有关系
+- 本级无法使用下级管理版本；
+
+
+### 4.2、最短路径原则
+
+最短路径原则：使用最短路径加载的前提是，项目中存在两级以上的不同依赖jar包，此时项目会优先加载路径最短的jar包；
+
+![](image/Maven-依赖最短路径.png)
+
+分别在模块B 和 模块C 中直接或者间接引入 commons-pool，其中：
+- 模块B 引入：`commons-pool2:2.7`
+	```xml
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.7.0</version>
+	</dependency>
+	```
+- 模块C中引入：`jedis:5.0.0-alpha2`，该依赖包依赖了 `commons-pool2:2.11.1`
+	```xml
+	<dependency>
+		<groupId>redis.clients</groupId>
+		<artifactId>jedis</artifactId>
+		<version>5.0.0-alpha2</version>
+	</dependency>
+	```
+
+在IDE中pom可以看到依赖加载的情况：
+
+![](image/Maven-路径冲突-1.png)
+
+可以通过：`mvn dependency:tree` 命令来查看该项目的依赖树，观察发现实际加载的版本是`commons-pool2:2.7.0`，符合maven中的最短路径优先原则
+```xml
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ test-a ---
+[INFO] io.ebonex:test-a:jar:0.0.1-SNAPSHOT
+[INFO] +- io.ebonex:test-b:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  \- org.apache.commons:commons-pool2:jar:2.7.0:compile
+[INFO] \- io.ebonex:test-c:jar:0.0.1-SNAPSHOT:compile
+[INFO]    \- redis.clients:jedis:jar:5.0.0-alpha2:compile
+[INFO]       +- org.slf4j:slf4j-api:jar:1.7.36:compile
+[INFO]       +- org.json:json:jar:20230227:compile
+[INFO]       \- com.google.code.gson:gson:jar:2.10.1:compile
+```
+
+### 4.3、声明优先原则
+
+声明优先原则的前提是对于两级以上的同级依赖，先声明的依赖会覆盖后声明的依赖包；
+
+![](image/Maven-声明优先.png)
+
+分别在模块B 和 模块C 中直接引入不同版本的 commons-pool，然后通过改变两个模块在pom文件中声明的先后顺序来观察项目启动后实际加载的jar包；
+
+- 模块B 引入：`commons-pool2:2.7`
+	```xml
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.7.0</version>
+	</dependency>
+	```
+- 模块C中引入：引入`commons-pool2:2.11.1`
+	```xml
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.11.1</version>
+	</dependency>
+	```
+
+**场景1：先引入模块B、再引入模块C**
+
+模块A中引入的顺序：
+```xml
+<dependencies>
+	<dependency>
+		<groupId>io.ebonex</groupId>
+		<artifactId>test-b</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+		<groupId>io.ebonex</groupId>
+		<artifactId>test-c</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+</dependencies>
+```
+观察下面输出结果，可以发现加载的是：`commons-pool2:2.7.0`
+```xml
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ test-a ---
+[INFO] io.ebonex:test-a:jar:0.0.1-SNAPSHOT
+[INFO] +- io.ebonex:test-b:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  \- org.apache.commons:commons-pool2:jar:2.7.0:compile
+[INFO] \- io.ebonex:test-c:jar:0.0.1-SNAPSHOT:compile
+```
+
+**场景2：先引入模块C、再引入模块B**
+```xml
+<dependencies>
+	<dependency>
+		<groupId>io.ebonex</groupId>
+		<artifactId>test-c</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+	<dependency>
+		<groupId>io.ebonex</groupId>
+		<artifactId>test-b</artifactId>
+		<version>0.0.1-SNAPSHOT</version>
+	</dependency>
+</dependencies>
+```
+观察下面输出结果，可以发现加载的是：`commons-pool2:2.11.1`
+```xml
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ test-a ---
+[INFO] io.ebonex:test-a:jar:0.0.1-SNAPSHOT
+[INFO] +- io.ebonex:test-c:jar:0.0.1-SNAPSHOT:compile
+[INFO] |  \- org.apache.commons:commons-pool2:jar:2.11.1:compile
+[INFO] \- io.ebonex:test-b:jar:0.0.1-SNAPSHOT:compile
+```
+
+### 4.4、同级依赖：覆盖
+
+![](images/Maven-同级依赖.png)
+
+直接在模块A 中引入`commons-pool2:2.7` 和 `commons-pool2:2.11.1`，分别看下引入顺序引起加载版本的问题：
+
+**场景1：`commons-pool2:2.7` 在 `commons-pool2:2.11.1` 之前**
+```xml
+<dependencies>
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.7.0</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.11.1</version>
+	</dependency>
+</dependencies>
+```
+观察jar包加载顺序，可以发现加载的是：`commons-pool2:2.11.1`
+```xml
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ test-a ---
+[INFO] io.ebonex:test-a:jar:0.0.1-SNAPSHOT
+[INFO] \- org.apache.commons:commons-pool2:jar:2.11.1:compile
+```
+
+**场景2：`commons-pool2:2.11.1` 在 `commons-pool2:2.7` 之前**
+```xml
+<dependencies>
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.11.1</version>
+	</dependency>
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-pool2</artifactId>
+		<version>2.7.0</version>
+	</dependency>
+</dependencies>
+```
+观察jar包加载顺序，可以发现加载的是：`commons-pool2:2.7`
+```xml
+[INFO] --- maven-dependency-plugin:2.8:tree (default-cli) @ test-a ---
+[INFO] io.ebonex:test-a:jar:0.0.1-SNAPSHOT
+[INFO] \- org.apache.commons:commons-pool2:jar:2.7.0:compile
+```
+
+### 4.5、常见异常信息
+
+Jar发生冲突后在程序启动时常见异常报错，下面四种异常是能够直观表征Jar包加载冲突：
+- 程序抛出：`java.lang.ClassNotFoundException`异常；
+- 程序抛出：`java.lang.NoSuchMethodError`异常；
+- 程序抛出：`java.lang.NoClassDefFoundError`异常；
+- 程序抛出：`java.lang.LinkageError`异常等；
+
 # 八、编写Maven插件
 
 * [Maven插件开发指南](https://maven.apache.org/plugin-developers/index.html)
