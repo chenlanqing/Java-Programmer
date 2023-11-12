@@ -345,7 +345,7 @@ maven-shade-plugin 插件
 
 ### 4.4、同级依赖：覆盖
 
-![](images/Maven-同级依赖.png)
+![](image/Maven-同级依赖.png)
 
 直接在模块A 中引入`commons-pool2:2.7` 和 `commons-pool2:2.11.1`，分别看下引入顺序引起加载版本的问题：
 
