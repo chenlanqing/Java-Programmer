@@ -98,6 +98,7 @@ print(count)
 ### 3.1、f-strings
 
 - [sophisticated format rules](https://docs.python.org/3/library/string.html#format-specification-mini-language)
+- [格式化字符串](https://rgb-24bit.github.io/blog/2018/python-format-string.html)
 
 > Python 在 3.6 版本中引入了 f-string
 
