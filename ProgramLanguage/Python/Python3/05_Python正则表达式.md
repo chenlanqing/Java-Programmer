@@ -210,15 +210,162 @@ for match in matches:
 
 在正则表达式中，量词会多次匹配前面的字符或字符集。下表列出了所有量词及其含义
 - `*`：与前一个元素匹配 0 次或更多次。
-- `+` 正号 与前一个元素匹配一次或多次。
-- `?` 与前一个元素匹配 0 次或 1 次。
+- `+`：与前一个元素匹配一次或多次。
+- `?`：与前一个元素匹配 0 次或 1 次。
 - `{ n }`：与前一个元素精确匹配 n 次。
 - `{ n ,}`：与前一个元素至少匹配 n 次。
 - `{ n , m }`：匹配其前一个元素 n 到 m 次。
 
+### 5.1、匹配 0 次或更多次 (`*`)
 
+```py
+import re
+s = """CPython, IronPython, and JPython 
+       are major Python's implementation"""
+matches = re.finditer('\w*Python', s)
 
+for match in matches:
+    print(match)
+```
+因此，`\w*Python` 模式会匹配 `CPython`、`IronPython`、`JPython` 和 `Python` 字符串中的
 
+### 5.2、匹配一次或多次 (`+`)
 
+`+` 量词匹配其前一个或多个元素。例如，`\d+` 会匹配一个或多个数字。
+```py
+import re
+s = "Python 3.10 was released in 2021"
+matches = re.finditer('\d+', s)
+for match in matches:
+    print(match)
+```
 
+### 5.3、零次或一次匹配（`?`）
 
+`?`量词与前一个元素匹配 0 次或 1 次。
+```py
+import re
+s = "What color / colour do you like?"
+matches = re.finditer('colou?r', s)
+for match in matches:
+    print(match)
+```
+
+### 5.4、精确匹配 n 次：`{n}`
+
+`{n}` 量词与其前一个元素精确匹配 n 次，其中 n 为零或正整数。
+```py
+import re
+s = "It was 11:05 AM"
+matches = re.finditer('\d{2}:\d{2}', s)
+for match in matches:
+    print(match)
+```
+
+### 5.5、至少匹配 n 次：`{n,}`
+
+量词 `{n,}` 与前一个元素至少匹配 n 次，其中 n 为零或正整数
+```py
+import re
+s = "5-5-2021 or 05-05-2021 or 5/5/2021"
+matches = re.finditer('\d{1,}-\d{1,}-\d{4}', s)
+for match in matches:
+    print(match)
+```
+### 5.6、从 n 次匹配到 m 次：`{n,m}`
+
+`{n,m}`量词与其前一个元素至少匹配 n 次，但不超过 m 次，其中 n 和 m 均为零或正整数。例如：
+```py
+import re
+s = "5-5-2021 or 05-05-2021 or 5/5/2021"
+matches = re.finditer('\d{1,2}-\d{1,2}-\d{4}', s)
+for match in matches:
+    print(match)
+```
+
+## 6、正则贪婪模式
+
+默认情况下，所有量词都以贪婪模式工作。这意味着量词将尽可能匹配其前面的元素；
+
+**贪婪模式下意外结果**
+
+假设有如下文本：
+```py
+s = '<button type="submit" class="btn">Send</button>'
+```
+需要匹配引号 ("") 内的文本，如 submit 和 btn。为此，您可以使用以下模式，其中包括引号（"）、点（.）字符集和 (+) 数量符：`".+"`
+```py
+import re
+s = '<button type="submit" class="btn">Send</button>'
+pattern = '".+"'
+matches = re.finditer(pattern, s)
+for match in matches:
+    print(match.group()) # "submit" class="btn"
+```
+默认情况下，量词 (`+`) 以贪婪模式运行，在这种模式下，它会尽量匹配前面的元素（"."）。
+
+要解决这个问题，需要指示量词 (`+`) 使用非贪婪（或懒惰）模式，而不是贪婪模式，在上面的正则表达式基础加个`?`变成：`".+?"`
+```py
+import re
+s = '<button type="submit" class="btn">Send</button>'
+pattern = '".+?"'
+matches = re.finditer(pattern, s)
+for match in matches:
+    print(match.group())
+```
+
+## 7、正则非贪婪模式
+
+数量词允许您多次匹配其前面的元素。量词有两种工作模式：贪婪和非贪婪（懒惰）。
+- 当量词以贪婪模式工作时，它们被称为贪婪量词。同样，当量词以非贪婪模式工作时，它们被称为非贪婪量词或懒惰量词。
+- 默认情况下，量词以贪婪模式工作。这意味着贪婪量词将尽可能匹配其前面的元素，以返回最大的匹配值。
+- 另一方面，非贪婪量词会尽可能少地匹配，以返回最小的匹配结果。非贪婪量词与贪婪量词正好相反。
+- 要将贪婪量词转换为非贪婪量词，需要在量词上添加一个额外的问号（`?`）
+
+下表列出了贪心和相应的非贪心量词：
+贪婪量词 | 懒惰量词 | 含义
+--------|----------|-----
+`*` | `*?` | 与前一个元素匹配 0 次或更多次。
+`+` | `+?` | 与前一个元素匹配一次或多次。
+`?` | `??` | 匹配前一个元素零次或一次。
+`{ n }` |  `{ n }?` | 与前一个元素精确匹配 n 次。
+`{ n,}` | `{ n, }?` | 与前一个元素至少匹配 n 次。
+`{ n , m }` | `{ n , m }?` | 与前一个元素匹配 n 到 m 次。
+
+## 8、集合与范围
+
+### 8.1、集合
+
+例如，`[abc]` 表示三个字符中的任何一个："a"、"b "或 "c"。`[abc]`被称为一个集合。可以使用该集合和正则字符来构建搜索模式
+```py
+import re
+s = 'A licence or license'
+pattern = 'licen[cs]e'
+matches = re.finditer(pattern, s)
+for match in matches:
+    print(match.group())
+```
+
+### 8.2、范围
+
+当一个字符集由许多字符组成时，例如从 a 到 z 或从 1 到 9，在字符集中列出这些字符会很麻烦。相反，可以使用方括号中的字符范围。例如，`[a-z]` 表示 a 至 z 范围内的字符，`[0-9]` 表示 0 至 9 的数字。
+
+此外，还可以在同一个方括号内使用多个范围。例如，`[a-z0-9]` 有两个范围，可以匹配从 a 到 z 的字符或从 0 到 9 的数字。
+
+同样，也可以在方括号内使用一个或多个字符集，如 `[\d\s]` 表示数字或空格字符。
+
+同样，也可以将字符与字符集混合使用。例如，`[\d_]` 表示数字或下划线。
+
+### 8.3、排除集合和范围
+
+要对一个字符集或范围取反，可以在字符集和范围的开头使用字符：`^`。例如，范围 `[^0-9]`匹配除数字外的任何字符。这与字符集 `\D` 相同。
+
+请注意，regex 还将 (`^`) 用作匹配字符串开头的锚点。但是，如果在方括号内使用圆括号 (`^`)，regex 将把它视为否定运算符，而不是锚点。
+```py
+import re
+s = 'Python'
+pattern = '[^aeoiu]'
+matches = re.finditer(pattern, s)
+for match in matches:
+    print(match.group())
+```
