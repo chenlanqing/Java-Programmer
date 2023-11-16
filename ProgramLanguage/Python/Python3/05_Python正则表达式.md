@@ -369,3 +369,97 @@ matches = re.finditer(pattern, s)
 for match in matches:
     print(match.group())
 ```
+
+# 二、正则分组
+
+## 1、匹配组
+
+示例：
+```py
+import re
+s = 'news/100'
+pattern = '\w+/(\d+)'
+matches = re.finditer(pattern, s)
+for match in matches:
+    for index in range(0, match.lastindex + 1):
+        print(match.group(index))
+```
+
+默认情况下，可以使用索引访问匹配中的子组，例如 match.group(1)。有时，使用有意义的名称访问子组更为方便。
+
+可以使用命名捕获组为组指定名称。下面显示了为捕获组指定名称的语法：
+```py
+(?P<name>rule)
+```
+在此语法中
+- `()`：表示捕获组。
+- `P<name>`：指定捕获组的名称。
+- `rule`：是模式中的一条规则。
+
+比如如下表达式：`'(?P<resource>\w+)/(?P<id>\d+)'`，在此语法中，resource是第一个捕获组的名称，id 是第二个捕获组的名称
+```py
+import re
+s = 'news/100'
+pattern = '(?P<resource>\w+)/(?P<id>\d+)'
+matches = re.finditer(pattern, s)
+for match in matches:
+    print(match.groupdict())
+```
+输出结果：`{'resource': 'news', 'id': '100'}`
+
+在此示例中，`groupdict()` 方法返回一个键为组名、值为子组的字典
+
+再看一个例子：
+```py
+import re
+s = 'news/2021/12/31'
+pattern = '(?P<resource>\w+)/(?P<year>\d{4})/(?P<month>\d{1,2})/(?P<day>\d{1,2})'
+matches = re.finditer(pattern, s)
+for match in matches:
+    print(match.groupdict())
+```
+
+## 2、非匹配组
+
+有时可能想创建一个组，但不想在匹配的组中捕获它。为此，可以使用非匹配组，语法如下：`(?:X)`
+
+先看一个示例，匹配 `Python 3.10` 的版本号，和主版本、次版本
+```py
+import re
+s = 'Python 3.10'
+pattern = '(\d+)\.(\d+)'
+match = re.search(pattern, s)
+# show the whole match
+print(match.group())
+# show the groups
+for group in match.groups():
+    print(group)
+```
+输出结果：
+```py
+3.10
+3
+10
+```
+假设不想捕捉字面字符 (`.`) 前面的数字，可以使用这样的非匹配组：
+```py
+import re
+s = 'Python 3.10'
+pattern = '(?:\d+)\.(\d+)'
+match = re.search(pattern, s)
+# show the whole match
+print(match.group())
+# show the groups
+for group in match.groups():
+    print(group)
+```
+其中`(?:\d+)` 就是非匹配组
+
+使用非匹配组的原因是为了节省内存，因为 regex 引擎不需要在缓冲区中存储分组。
+
+## 3、回溯引用
+
+
+# 参考资料
+
+- [Regex Cheat Sheet](https://www.pythontutorial.net/python-regex/python-regex-cheat-sheet/)
