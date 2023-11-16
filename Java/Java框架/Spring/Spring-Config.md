@@ -1217,7 +1217,7 @@ Async实现原理：其主要实现类是 ThreadPoolTaskExecutor，Spring自己�
 
 Spring5.0 WebClient
 
-# 8、定制请求体和响应体
+# 8、自定义请求体和响应体
 
 ## 8.1、请求体：RequestBodyAdvice
 
@@ -1304,7 +1304,7 @@ protected <T> void writeWithMessageConverters(@Nullable T value, MethodParameter
 
 > Spring是如何选择具体的 Handler的？
 
-所有ResponseBodyAdvice接口的调用是发生在AbstractMessageConverterMethodProcessor的writeWithMessageConverters()中，AbstractMessageConverterMethodProcessor的getAdvice()方法会返回其在构造函数中加载好的RequestResponseBodyAdviceChain对象
+所有`ResponseBodyAdvice`接口的调用是发生在`AbstractMessageConverterMethodProcessor`的`writeWithMessageConverters()`中，`AbstractMessageConverterMethodProcessor`的`getAdvice()`方法会返回其在构造函数中加载好的`RequestResponseBodyAdviceChain`对象
 ```java
 // AbstractMessageConverterMethodProcessor#writeWithMessageConverters
 ...
@@ -1315,7 +1315,7 @@ RequestResponseBodyAdviceChain getAdvice() {
     return this.advice;
 }
 ```
-RequestResponseBodyAdviceChain的beforeBodyWrite方法和processBody
+`RequestResponseBodyAdviceChain`的`beforeBodyWrite`方法和`processBody`
 ```java
 @Override
 @Nullable
@@ -1401,7 +1401,7 @@ private List<HandlerMethodReturnValueHandler> getDefaultReturnValueHandlers() {
     return handlers;
 }
 ```
-根据`getDefaultReturnValueHandlers()`方法可知，在创建HttpEntityMethodProcessor或者`RequestResponseBodyMethodProcessor`时，会将`RequestMappingHandlerAdapter`加载好的`ResponseBodyAdvice`传入构造函数，并且，无论是`HttpEntityMethodProcessor`还是`RequestResponseBodyMethodProcessor`，其构造函数最终都会调用到父类`AbstractMessageConverterMethodArgumentResolver`的构造函数，并在其中初始化一个`RequestResponseBodyAdviceChain`以完成`ResponseBodyAdvice`的加载
+根据`getDefaultReturnValueHandlers()`方法可知，在创建`HttpEntityMethodProcessor`或者`RequestResponseBodyMethodProcessor`时，会将`RequestMappingHandlerAdapter`加载好的`ResponseBodyAdvice`传入构造函数，并且，无论是`HttpEntityMethodProcessor`还是`RequestResponseBodyMethodProcessor`，其构造函数最终都会调用到父类`AbstractMessageConverterMethodArgumentResolver`的构造函数，并在其中初始化一个`RequestResponseBodyAdviceChain`以完成`ResponseBodyAdvice`的加载
 ```java
 public AbstractMessageConverterMethodArgumentResolver(List<HttpMessageConverter<?>> converters, @Nullable List<Object> requestResponseBodyAdvice) {
     Assert.notEmpty(converters, "'messageConverters' must not be empty");
@@ -1760,6 +1760,162 @@ public class AuthInterceptor implements HandlerInterceptor {
     }
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    }
+}
+```
+
+# 13、Spring异常处理
+
+## 13.1、业务中发生的异常
+
+针对业务中可能发生的异常，可以按照如下方式进行处理：
+```java
+@Slf4j
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+    /**
+     * 参数类型不匹配是发生的异常
+     */
+    @ExceptionHandler(value = MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> methodArgumentTypeMismatchException(HttpServletRequest request, MethodArgumentTypeMismatchException e) {
+        log.error("参数类型异常", e);
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("message", "参数类型出错了");
+        responseMap.put("code", HttpStatus.BAD_REQUEST.toString());
+        return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * 参数转换时发生的异常
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> httpMessageNotReadableException(HttpServletRequest request, HttpMessageNotReadableException e) {
+        log.error("参数异常", e);
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("message", "请求出错了");
+        responseMap.put("code", HttpStatus.BAD_REQUEST.toString());
+        return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * 参数异常处理
+     */
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> constraintException(HttpServletRequest request, ConstraintViolationException e) {
+        log.error("参数校验异常", e);
+        Map<String, Object> responseMap = new HashMap<>();
+        Set<ConstraintViolation<?>> violations = e.getConstraintViolations();
+        String message = "";
+        for (ConstraintViolation<?> violation : violations) {
+            message = violation.getMessage();
+        }
+        responseMap.put("message", message);
+        responseMap.put("code", HttpStatus.BAD_REQUEST.toString());
+        return new ResponseEntity<>(responseMap, HttpStatus.BAD_REQUEST);
+    }
+
+    /**
+     * 所有异常处理
+     */
+    @ExceptionHandler(value = Throwable.class)
+    public ResponseEntity<Map<String, Object>> throwableHandler(HttpServletRequest request, Throwable e) {
+        log.error("未知服务异常", e);
+        Map<String, Object> responseMap = new HashMap<>();
+        responseMap.put("message", "未知异常");
+        responseMap.put("code", HttpStatus.INTERNAL_SERVER_ERROR.toString());
+        return new ResponseEntity<>(responseMap, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+}
+```
+
+## 13.2、自定义请求体和响应体
+
+可以参考上面的：[8、自定义请求体和响应体](#8自定义请求体和响应体)
+
+## 13.3、其他异常
+
+- [Spring优雅的处理404](https://www.cnblogs.com/54chensongxia/p/14007696.html)
+
+### 13.3.1、重写BasicErrorController实现异常处理
+
+比如`404`等异常信息，需要针对这类异常，从上面链接中的文章我们知道，如果是异常处理，其会调用连接：`/error`，该接口对应Controller：`BasicErrorController`，那么可以定制自己的错误跳转连接：
+```yaml
+server:
+  error:
+    path: /customError
+```
+定义自己的Controller来处理数据：
+```java
+@Controller
+@RequestMapping("${server.error.path:${error.path:/error}}")
+public class CustomErrorController extends BasicErrorController {
+
+    public CustomErrorController(ServerProperties serverProperties) {
+        super(new DefaultErrorAttributes(), serverProperties.getError());
+    }
+
+    /**
+     * 覆盖默认的JSON响应
+     */
+    @Override
+    public ResponseEntity<Map<String, Object>> error(HttpServletRequest request) {
+        HttpStatus status = getStatus(request);
+        Map<String, Object> responseMap = new HashMap<>(16);
+        Map<String, Object> sourceDataMap = getErrorAttributes(request, ErrorAttributeOptions.defaults());
+        responseMap.put("code", sourceDataMap.get("status"));
+        responseMap.put("msg", sourceDataMap.get("error"));
+        return new ResponseEntity<>(responseMap, status);
+    }
+
+    /**
+     * 覆盖默认的HTML响应
+     */
+    @Override
+    public ModelAndView errorHtml(HttpServletRequest request, HttpServletResponse response) {
+        //请求的状态
+        HttpStatus status = getStatus(request);
+        response.setStatus(getStatus(request).value());
+        Map<String, Object> model = getErrorAttributes(request, ErrorAttributeOptions.defaults());
+        ModelAndView modelAndView = resolveErrorView(request, response, status, model);
+        // 指定自定义的视图
+        return (modelAndView == null ? new ModelAndView("error", model) : modelAndView);
+    }
+}
+```
+
+### 13.3.2、404异常处理
+
+处理使用上面的处理方式外，也可以使用 ExceptionHandler 来处理404相关异常，但是需要做相应的配置：
+
+（1）定义ExceptionHandler
+```java
+/**
+ * 404异常处理
+ */
+@ExceptionHandler(value = NoHandlerFoundException.class)
+public ResponseEntity<Map<String, Object>> exception404(HttpServletRequest request, NoHandlerFoundException e) {
+    log.error("{} 未知路径", request.getRequestURI());
+    log.error("404异常了", e);
+    Map<String, Object> responseMap = new HashMap<>();
+    responseMap.put("message", "找不到路径");
+    responseMap.put("code", HttpStatus.NOT_FOUND.toString());
+    return new ResponseEntity<>(responseMap, HttpStatus.NOT_FOUND);
+}
+```
+（2）增加如下配置：
+```yaml
+spring:
+  mvc:
+    throw-exception-if-no-handler-found: true
+```
+（3）启动类增加注解：`@EnableWebMvc`
+```java
+@SpringBootApplication
+@EnableWebMvc
+public class App {
+    public static void main(String[] args) {
+        SpringApplication.run(App.class, args);
     }
 }
 ```
