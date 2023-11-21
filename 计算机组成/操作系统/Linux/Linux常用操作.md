@@ -690,6 +690,41 @@ systemctl restart gateway
 - 设置UTC时区：`sudo timedatectl set-timezone UTC`
 - 查看所有时区： `timedatectl list-timezones`
 
+## 19、Ubuntu启用root登录
+
+（1）使用Ubuntu用户账号登录；
+
+（2）编辑`/etc/ssh/sshd_config`文件：`sudo vim /etc/ssh/sshd_config`，找到配置参数：`PermitRootLogin`，将该参数后面的值修改为`yes`即可，保存退出；
+```config
+#Port 22
+#AddressFamily any
+#ListenAddress 0.0.0.0
+#ListenAddress ::
+
+#HostKey /etc/ssh/ssh_host_rsa_key
+#HostKey /etc/ssh/ssh_host_ecdsa_key
+#HostKey /etc/ssh/ssh_host_ed25519_key
+
+# Ciphers and keying
+#RekeyLimit default none
+
+# Logging
+#SyslogFacility AUTH
+#LogLevel INFO
+
+# Authentication:
+
+#LoginGraceTime 2m
+#PermitRootLogin prohibit-password
+PermitRootLogin yes
+#StrictModes yes
+#MaxAuthTries 6
+#MaxSessions 10
+```
+（3）给root用户设置密码；`sudo passwd root`，输入两遍密码；
+
+（4）重启ssh服务：`sudo systemctl restart ssh`
+
 # 四、Linux工具
 
 vmstat 可以获得有关进程、内存页面交换、虚拟内存、线程上下文切换、等待队列等信息。能够反映系统的负载情况。一般用来查看进程等待数量、内存换页情况、系统上下文切换是否频繁等
