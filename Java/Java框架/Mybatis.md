@@ -308,6 +308,8 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 
 # 六、Mybatis插件
 
+- [IDEA Mybatis 插件](https://mp.weixin.qq.com/s/4R4-GjVfZsQlnMJ59FvPwQ)
+
 ## 1、插件原理
 
 在`ParameterHandler`、`ResultSetHandler`、`StatementHandler`、`Executor`四个对象创建的时候：
