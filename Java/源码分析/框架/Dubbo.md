@@ -29,7 +29,7 @@ Dubbo 采用 微内核（Microkernel） + 插件（Plugin） 模式，简单来�
 ## 1.3、URL
 
 Dubbo 中任意的一个实现都可以抽象为一个 URL，Dubbo 使用 URL 来统一描述了所有对象和配置信息，并贯穿在整个 Dubbo 框架之中
-```
+```w
 dubbo://172.17.32.91:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=32508&release=&side=provider&timestamp=1593253404714dubbo://172.17.32.91:20880/org.apache.dubbo.demo.DemoService?anyhost=true&application=dubbo-demo-api-provider&dubbo=2.0.2&interface=org.apache.dubbo.demo.DemoService&methods=sayHello,sayHelloAsync&pid=32508&release=&side=provider&timestamp=1593253404714
 ```
 - protocol：dubbo 协议。
@@ -39,7 +39,7 @@ dubbo://172.17.32.91:20880/org.apache.dubbo.demo.DemoService?anyhost=true&applic
 - parameters：参数键值对，这里是问号后面的参数。
 
 
-# 2、Dubbo扩展点加载机制
+w# 2、Dubbo扩展点加载机制
 
 ## 2.1、加载机制概述
 
