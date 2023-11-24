@@ -555,8 +555,11 @@ JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢�
 # 五、Java基准测试-JMH
 
 - [JMH教程](http://tutorials.jenkov.com/java-performance/jmh.html)
-- [JMH使用](https://www.xncoding.com/2018/01/07/java/jmh.html)
 - [官方JMH案例](http://hg.openjdk.java.net/code-tools/jmh/file/tip/jmh-samples/src/main/java/org/openjdk/jmh/samples/)
+- [jmh-gradle-example](https://github.com/melix/jmh-gradle-example)
+- [JMH-OpenJDK代码](https://github.com/openjdk/jmh)
+- [IDEA-JMH-Plugin](https://github.com/artyushov/idea-jmh-plugin)
+- [jmh-java-microbenchmark-harness](https://howtodoinjava.com/java/library/jmh-java-microbenchmark-harness/)
 
 ## 1、介绍
 
@@ -565,6 +568,20 @@ JVM 在执行时，会对一些代码块，或者一些频繁执行的逻辑，�
 JMH 是一个 jar 包，它和单元测试框架 JUnit 非常像，可以通过注解进行一些基础配置。这部分配置有很多是可以通过 main 方法的 OptionsBuilder 进行设置的；
 
 通过开启多个进程，多个线程，先执行预热，然后执行迭代，最后汇总所有的测试数据进行分析。在执行前后，还可以根据粒度处理一些前置和后置操作
+
+maven依赖：
+```xml
+<dependency>
+    <groupId>org.openjdk.jmh</groupId>
+    <artifactId>jmh-core</artifactId>
+    <version>1.36</version>
+</dependency>
+<dependency>
+    <groupId>org.openjdk.jmh</groupId>
+    <artifactId>jmh-generator-annprocess</artifactId>
+    <version>1.36</version>
+</dependency>
+```
 
 ## 2、示例
 
@@ -605,7 +622,7 @@ public class BenchmarkDemo {
 }
 ```
 
-## 3、关键主键
+## 3、关键注解
 
 ### 3.1、@Warmup
 
