@@ -2625,15 +2625,6 @@ OK
 
 # 十六、Lua
 
-- [Lua 脚本的黑科技](https://mp.weixin.qq.com/s/u8do7hVdgXciVKNlyceYyg)
-
-## 1、Lua介绍
-
-嵌入式开发、插件开发、Redis集成了lua编译器
-
-## 2、Lua基本语法
-
-## 3、Redis中使用Lua
 
 
 # 十七、Redis性能优化
