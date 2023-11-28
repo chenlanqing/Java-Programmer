@@ -400,9 +400,286 @@ SELECT select_list FROM B;
 - 在两个查询中，列的数量及其顺序必须相同。
 - 各列的数据类型必须兼容。
 
+## 20、group sets
+
+分组集是使用 GROUP BY 子句进行分组的列集，分组集由放在括号内的逗号分隔列列表表示：`(column1, column2, ...)`
+
+假设想通过单个查询获得所有分组集。为此，可以使用 UNION ALL 将上述所有查询组合起来：
+```sql
+SELECT  brand, segment,  SUM (quantity) FROM sales GROUP BY brand,segment
+UNION ALL
+SELECT brand, NULL, SUM (quantity) FROM sales GROUP BY brand
+UNION ALL
+SELECT NULL, segment, SUM (quantity) FROM sales GROUP BY segment
+UNION ALL
+SELECT  NULL, NULL, SUM (quantity) FROM sales;
+```
+上面的写法比较麻烦，且它存在性能问题，因为 PostgreSQL 必须为每次查询分别扫描销售表。
+
+可以使用分组集，分组集允许您在同一查询中定义多个分组集，基本语法如下：
+```sql
+SELECT c1,  c2,  aggregate_function(c3)
+FROM table_name
+GROUP BY GROUPING SETS (
+        (c1, c2),
+        (c1),
+        (c2),
+        ()
+);
+```
+要将此语法应用到上述示例中，可以使用 GROUPING SETS 子句代替 UNION ALL 子句，如下所示：
+```sql
+SELECT  brand,  segment, SUM (quantity)
+FROM  sales
+GROUP BY GROUPING SETS (
+        (brand, segment),
+        (brand),
+        (segment),
+        ()
+    );
+```
+这种查询更简短、更易读。此外，PostgreSQL 会优化扫描销售表的次数，不会多次扫描。
+
+**GROUPING函数**
+
+GROUPING() 函数接受一个参数，该参数可以是列名或表达式；列名或表达式必须与 GROUP BY 子句中指定的列名或表达式匹配。如果参数是当前分组集的成员，GROUPING() 函数返回位 0，否则返回位 1
+```sql
+SELECT
+	GROUPING(brand) grouping_brand,
+	GROUPING(segment) grouping_segment,
+	brand, segment, SUM (quantity)
+FROM sales
+GROUP BY
+	GROUPING SETS (
+		(brand),
+		(segment),
+		()
+	)
+ORDER BY brand, segment;
+```
+![](image/PostgreSQL-grouping函数.png)
+
+如截图所示，
+- 当 grouping_brand 中的值为 0 时，sum 栏会显示该品牌的小计。
+- 当 grouping_segment 中的值为 0 时，求和列会显示细分市场的小计。
+
+可以在 HAVING 子句中使用 GROUPING() 函数查找每个品牌的小计，如下所示：
+```sql
+SELECT
+	GROUPING(brand) grouping_brand,
+	GROUPING(segment) grouping_segment,
+	brand, segment, SUM (quantity)
+FROM sales
+GROUP BY
+	GROUPING SETS (
+		(brand),
+		(segment),
+		()
+	)
+HAVING GROUPING(brand) = 0	
+ORDER BY brand, segment;
+```
+
+## 21、CUBE
+
+CUBE 是 GROUP BY 子句的一个子句。使用 CUBE 可以生成多个分组集。
+```sql
+SELECT  c1, c2, c3, aggregate (c4)
+FROM table_name
+GROUP BY CUBE (c1, c2, c3);
+```
+- 首先，在 SELECT 语句的 GROUP BY 子句中指定 CUBE 子句。
+- 其次，在选择列表中指定要分析的列（维度或维度列）和聚合函数表达式。
+- 第三，在 GROUP BY 子句中，在 CUBE 子句的括号内指定维度列。
+
+查询根据 CUBE 中指定的维度列生成所有可能的分组集。CUBE 子条款是定义多个分组集的简便方法，因此以下方法与之等效：
+```sql
+CUBE(c1,c2,c3) 
+
+GROUPING SETS (
+    (c1,c2,c3), 
+    (c1,c2),
+    (c1,c3),
+    (c2,c3),
+    (c1),
+    (c2),
+    (c3), 
+    ()
+ ) 
+```
+一般来说，如果 CUBE 中指定的列数为 n，那么就会有 $2^n$ 种组合。
+
+PostgreSQL 允许您执行部分 CUBE，以减少计算的聚合数。语法如下:
+```sql
+SELECT c1, c2, c3, aggregate (c4)
+FROM table_name
+GROUP BY c1, CUBE (c1, c2);
+```
+
+## 22、roll up
+
+PostgreSQL ROLLUP 是 GROUP BY 子句的一个子句，它为定义多个分组集提供了一种速记方法。分组集是一组用于分组的列。
+
+与 CUBE 子句不同的是，ROLLUP 不会根据指定列生成所有可能的分组集。它只是生成这些的子集；
+
+ROLLUP 假定输入列之间存在层次结构，并根据层次结构生成所有合理的分组集。这就是 ROLLUP 经常用于生成报表小计和总计的原因。
+
+`ROLLUP(c1,c2,c3)` 只生成四个分组集，假设层次结构为 `c1 > c2 > c3`，如下所示：
+```sql
+(c1, c2, c3)
+(c1, c2)
+(c1)
+()
+```
+ROLLUP 的一个常用用法是按年、月和日期计算数据汇总，考虑到`年 > 月 > 日期`的层次结构
+
+基本语法：
+```sql
+SELECT c1, c2,  c3,  aggregate(c4)
+FROM table_name
+GROUP BY ROLLUP (c1, c2, c3);
+```
+也可以进行部分滚动，以减少生成小计的数量：
+```sql
+SELECT c1,  c2,  c3, aggregate(c4)
+FROM able_name
+GROUP BY c1,  ROLLUP (c2, c3);
+```
+
+比如如下例子：
+```sql
+SELECT
+    EXTRACT (YEAR FROM rental_date) y,
+    EXTRACT (MONTH FROM rental_date) M,
+    EXTRACT (DAY FROM rental_date) d,
+    COUNT (rental_id)
+FROM rental
+GROUP BY ROLLUP (
+        EXTRACT (YEAR FROM rental_date),
+        EXTRACT (MONTH FROM rental_date),
+        EXTRACT (DAY FROM rental_date)
+    );
+```
+
+## 23、any操作符
+
+PostgreSQL ANY 运算符比较一个值和子查询返回的一组值。ANY 操作符的语法：
+```sql
+expresion operator ANY(subquery)
+```
+- 子查询必须准确返回一列。
+- `ANY` 操作符前面必须有以下比较操作符之一 `=、<=、>、<、> 和 <>`
+- 如果子查询的任何值符合条件，ANY 运算符返回 true，否则返回 false
+
+> 请注意，SOME 是 ANY 的同义词，这意味着可以在任何 SQL 语句中用 SOME 代替 ANY。
+
+请注意，如果子查询不返回任何记录，则整个查询将返回空结果集。
+
+**ANY 和 IN**
+- `= ANY` 相当于 `IN` 运算符。
+- `<> ANY` 相当于  `NOT IN`
+
+一般用法：有时候需要检查一个列表中是否至少有一个满足指定条件的值，比如：
+- 检查一个列表中是否包含了一个指定的值的元素。
+- 检查一个列表中是否有一个大于或者小于一个指定值的元素。
+- 检查一个班级的考试成绩是否有满分。
+
+比如：
+- `value = ANY (array)`：只要数组中有一个等于 value 的值，该表达式返回 true, 否则返回 false。
+- `value > ANY (array)`：只要数组中有一个小于 value 的值，该表达式返回 true, 否则返回 false。
+- `value < ANY (array)`：只要数组中有一个大于 value 的值，该表达式返回 true, 否则返回 false。
+- `value <> ANY (array)`：只要数组中有一个不等于 value 的值，该表达式返回 true, 否则返回 false
+
+## 24、all 操作符
+
+PostgreSQL ALL 操作符允许您通过比较一个值和子查询返回的值列表来查询数据，跟子查询的所有值进行比较
+```sql
+comparison_operator ALL (subquery)
+```
+- ALL 运算符前必须有比较运算符，如等于 (=)、不等于 (!=) 、大于 (>)、大于或等于 (>=)、小于 (<) 和小于或等于 (<=)。
+- ALL 操作符后必须有一个子查询，该子查询也必须用括号括起来。
+
+假设子查询会返回一些记录，那么 ALL 操作符的工作原理如下：
+- `column_name > ALL（子查询）`：如果值大于子查询返回的最大值，则表达式的值为 true。
+- `column_name >= ALL（子查询）`：如果值大于或等于子查询返回的最大值，则表达式的值为 true。
+- `column_name < ALL (子查询) `：如果值小于子查询返回的最小值，则表达式的值为 true。
+- `column_name <= ALL (子查询) `：如果值小于或等于子查询返回的最小值，则表达式的值为 true。
+- `column_name = ALL (子查询) `：如果值等于子查询返回的任何值，表达式的值为 true。
+- `column_name != ALL (子查询)` ：如果值不等于子查询返回的任何值，则表达式的值为 true。
+
+如果子查询不返回任何行，则 ALL 运算符的计算结果始终为真；
+
+## 25、exists
+
+EXISTS 操作符是一个布尔操作符，用于测试子查询中是否存在记录：
+```sql
+EXISTS (subquery)
+```
+- 如果子查询至少返回一条记录，则 EXISTS 的结果为 true。如果子查询没有返回记录，则 EXISTS 的结果为假。
+- EXISTS 操作符的结果取决于是否有子查询返回的记录，而不是记录内容。因此，出现在子查询 SELECT 子句中的列并不重要。
+- 如果子查询返回 NULL，则 EXISTS 的结果为真。  
+- NOT EXISTS 则是 EXISTS 的否定操作
+
+## 26、CTE-常用表表达式
+
+常用表表达式（Common Table Expression）是一个临时结果集，可以在另一条 SQL 语句（包括 SELECT、INSERT、UPDATE 或 DELETE）中引用它。
+
+通用表表达式是临时的，因为它们只在查询执行期间存在，如下语法：
+```sql
+WITH cte_name (column_list) AS (
+    CTE_query_definition 
+)
+statement;
+```
+- 首先，指定 CTE 的名称，然后是一个可选的列列表。
+- 其次，在 WITH 子句的正文中指定一个返回结果集的查询。如果未在 CTE 名称后明确指定列列表，`CTE_query_definition` 的选择列表将成为 CTE 的列列表。
+- 第三，在语句中像使用表或视图一样使用 CTE，语句可以是 SELECT、INSERT、UPDATE 或 DELETE；
+
+示例：
+```sql
+WITH cte_film AS (
+    SELECT film_id,  title,
+        (CASE 
+            WHEN length < 30 THEN 'Short'
+            WHEN length < 90 THEN 'Medium'
+            ELSE 'Long'
+        END) length FROM film
+)
+SELECT  film_id, title, length FROM  cte_film WHERE length = 'Long' ORDER BY title; 
+```
+CTE 的优势：
+- 提高复杂查询的可读性。使用 CTE 可以更有条理、更易读地组织复杂查询。
+- 创建递归查询的能力。递归查询是可以引用自身的查询。当你想查询组织结构图或物料清单等分层数据时，递归查询就派上用场了。
+- 与窗口函数结合使用。可以将 CTE 与窗口函数结合使用，创建初始结果集，然后使用另一条选择语句进一步处理该结果集。
+
+## 27、递归查询
+
+PostgreSQL 提供了 WITH 语句，允许您构建用于查询的辅助语句。
+
+递归查询是指引用递归 CTE 的查询。递归查询在很多情况下都很有用，如查询组织结构、物料清单等分层数据。
+```sql
+WITH RECURSIVE cte_name AS(
+    CTE_query_definition -- non-recursive term
+    UNION [ALL]
+    CTE_query definion  -- recursive term
+) SELECT * FROM cte_name;
+```
+递归 CTE 包含三个元素：
+- 非递归项：非递归项是 CTE 查询定义，构成 CTE 结构的基本结果集。
+- 递归项：递归项是使用 UNION 或 UNION ALL 操作符与非递归项连接的一个或多个 CTE 查询定义。递归项引用 CTE 名称本身。
+- 终止检查：当上一次迭代没有返回记录时，递归停止。
+
+PostgreSQL 按以下顺序执行递归 CTE：
+- （1）执行非递归项，创建基本结果集 (R0)；
+- （2）以 Ri 作为输入执行递归项，返回结果集 Ri+1 作为输出；
+- （3）重复步骤 2，直到返回空集。(终止检查）；
+- （4）返回结果集 R0、R1、...... Rn 的 UNION 或 UNION ALL 的最终结果集；
+
+# 三、DML
 
 # 参考资料
 
 - [PostgreSQL官方文档](https://www.postgresql.org/docs/current/tutorial.html)
 - [Postgresql Tutorial](https://www.postgresqltutorial.com/)
 - [PostgreSQL作为搜索引擎](https://xata.io/blog/postgres-full-text-search-engine)
+- [Postgresql资料](https://www.sjkjc.com/postgresql/any/)
