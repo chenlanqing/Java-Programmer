@@ -677,6 +677,106 @@ PostgreSQL 按以下顺序执行递归 CTE：
 
 # 三、DML
 
+## 1、INSERT
+
+基础语法：
+```sql
+INSERT INTO table_name(column1, column2, …)
+VALUES (value1, value2, …);
+```
+列和值列表中的列和值的顺序必须相同；
+```sql
+INSERT oid count
+```
+OID 是对象标识符。PostgreSQL 内部使用 OID 作为系统表的主键。通常，INSERT 语句返回的 OID 值为 0。count 是 INSERT 语句成功插入的记录数。
+
+INSERT 语句还有一个可选的 RETURNING 子句，用于返回插入行的信息；如果要返回插入的整行，可以在 RETURNING 关键字后使用星号 `(*)`
+```sql
+INSERT INTO table_name(column1, column2, …)
+VALUES (value1, value2, …)
+RETURNING *;
+```
+如果只想返回插入行的部分信息，可以在 RETURNING 子句后指定一列或多列。比如返回id
+```sql
+INSERT INTO table_name(column1, column2, …)
+VALUES (value1, value2, …)
+RETURNING id;
+```
+要重命名返回值，可使用 AS 关键字，后面跟输出名称。例如：
+```sql
+INSERT INTO table_name(column1, column2, …)
+VALUES (value1, value2, …)
+RETURNING output_expression AS output_name;
+```
+如果在 INSERT 语句中省略了必填列，PostgreSQL 会出错。如果省略了可选列，PostgreSQL 将使用该列的默认值插入
+
+如果要插入包含单引号（'）的字符串，如 O'Reilly Media，则必须使用额外的单引号（'）来转义。例如：
+```sql
+INSERT INTO links (url, name) VALUES('http://www.oreilly.com','O''Reilly Media');
+```
+
+**插入日期数据**
+
+要在 DATE 类型的列中插入日期值，需要使用格式为 "YYYY-MM-DD "的日期。
+```sql
+INSERT INTO links (url, name, last_update) VALUES('https://www.google.com','Google','2013-06-01');
+```
+
+**插入多行**
+```sql
+INSERT INTO table_name (column_list)
+VALUES
+    (value_list_1),
+    (value_list_2),
+    ...
+    (value_list_n);
+```
+要插入多条记录并返回已插入的记录，需要添加 RETURNING 子句，如下所示：
+```sql
+INSERT INTO table_name (column_list)
+VALUES
+    (value_list_1),
+    (value_list_2),
+    ...
+    (value_list_n)
+RETURNING * | output_expression;
+```
+
+## 2、UPDATE
+
+```sql
+UPDATE table_name
+SET column1 = value1,  column2 = value2, ...
+WHERE condition;
+```
+WHERE 子句是可选的。如果省略 WHERE 子句，UPDATE 语句将更新表中的所有记录，返回：
+```sql
+UPDATE count
+```
+count 是更新的行数，包括值未发生变化的行数。
+
+UPDATE 语句有一个可选的 RETURNING 子句，用于返回更新的记录：
+```sql
+UPDATE table_name
+SET column1 = value1,
+    column2 = value2,
+    ...
+WHERE condition
+RETURNING * | output_expression AS output_name;
+```
+
+**UPDATE JOIN 语法**
+
+有时，需要根据另一个表中的值更新一个表中的数据。在这种情况下，可以使用 PostgreSQL UPDATE 连接语法，如下所示：
+```sql
+UPDATE t1 SET t1.c1 = new_value
+FROM t2 WHERE t1.c2 = t2.c2;
+```
+上述语句的含义：对于表 t1 的每一条记录，UPDATE 语句都会检查表 t2 的每一条记录。如果表 t1 的 c2 列中的值等于表 t2 的 c2 列中的值，则 UPDATE 语句将表 t1 的 c1 列中的值更新为新值 (new_value)
+
+要在 UPDATE 语句中连接到另一个表，需要在 FROM 子句中指定连接的表，并在 WHERE 子句中提供连接条件。FROM 子句必须紧跟在 SET 子句之后。
+
+
 # 参考资料
 
 - [PostgreSQL官方文档](https://www.postgresql.org/docs/current/tutorial.html)
