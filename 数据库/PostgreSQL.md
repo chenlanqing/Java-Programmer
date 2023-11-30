@@ -677,7 +677,7 @@ PostgreSQL 按以下顺序执行递归 CTE：
 
 # 三、DML
 
-## 1、INSERT
+## 1、insert
 
 基础语法：
 ```sql
@@ -742,7 +742,7 @@ VALUES
 RETURNING * | output_expression;
 ```
 
-## 2、UPDATE
+## 2、update
 
 ```sql
 UPDATE table_name
@@ -776,6 +776,189 @@ FROM t2 WHERE t1.c2 = t2.c2;
 
 要在 UPDATE 语句中连接到另一个表，需要在 FROM 子句中指定连接的表，并在 WHERE 子句中提供连接条件。FROM 子句必须紧跟在 SET 子句之后。
 
+## 3、delete
+
+```sql
+DELETE FROM table_name WHERE condition;
+```
+DELETE 语句返回删除的记录数。如果 DELETE 语句没有删除任何记录，则返回 0。
+
+要将删除的记录返回给客户端，可以使用 RETURNING 子句，具体如下：
+```sql
+DELETE FROM table_name WHERE condition RETURNING (select_list | *)
+```
+使用星号 (`*`) 可以返回表_名称中已删除记录的所有列。要返回特定列，可在 RETURNING 关键字后指定它们
+
+**delete join**
+
+PostgreSQL 不支持 `DELETE JOIN` 语句。不过，它支持 DELETE 语句中的 USING 子句，提供与 DELETE JOIN 类似的功能：
+```sql
+DELETE FROM table_name1 USING table_expression WHERE condition RETURNING returning_columns;
+```
+- 首先，在 USING 关键字后指定表表达式。它可以是一个或多个表。
+- 然后，使用出现在 WHERE 子句 USING 子句中的表中列进行连接。
+
+例如，下面的语句使用带有 USING 子句的 DELETE 语句从 t1 中删除与 t2 具有相同 id 的数据：
+```sql
+DELETE FROM t1 USING t2 WHERE t1.id = t2.id
+```
+当然也可以使用 子查询来处理；
+
+## 4、upsert
+
+在关系数据库中，术语 upsert 被称为合并。其原理是，当你在表中插入一条新记录时，如果该记录已经存在，PostgreSQL 就会更新它，否则就会插入新记录。称这种操作为 upsert（更新或插入的组合）。、
+```sql
+INSERT INTO table_name(column_list) 
+VALUES(value_list)
+ON CONFLICT target action;
+```
+`target`可以是如下的任何一种：
+- (column_name) - 列名。
+- ON CONSTRAINT constraint_name - 约束名称可以是 UNIQUE 约束的名称。
+- WHERE predicate - 带有谓词的 WHERE 子句。
+
+`action`可以是以下操作之一：
+- DO NOTHING - 表示如果表中已经存在记录，则什么也不做。
+- DO UPDATE SET column_1 = value_1, ... WHERE condition - 更新表中的某些字段。
+
+> 请注意，ON CONFLICT 子句只有 PostgreSQL 9.5 版本才可用。如果您使用的是较早的版本，则需要使用变通方法来获得 upsert 功能；
+
+# 四、事务操作
+
+开始事务：
+- BEGIN TRANSACTION;
+- BEGIN WORK;
+- BEGIN;
+
+提交事务：
+- COMMIT WORK;
+- COMMIT TRANSACTION;
+- COMMIT;
+
+回滚事务：
+- ROLLBACK WORK;
+- ROLLBACK TRANSACTION;
+- ROLLBACK;
+
+# 五、数据类型
+
+主要数据类型：布尔、字符、数字、时间、数组、json、uuid 和特殊类型。
+
+## 1、布尔
+
+布尔数据类型可保存三种可能值之一：true、false 或 null。使用布尔或 bool 关键字可声明布尔数据类型的列。
+
+在布尔列中插入数据时，PostgreSQL 会将其转换为布尔值
+- 1、yes、y、t、true 值被转换为 true
+- 0、no、false、f 值转换为 false。
+
+当从布尔列中选择数据时，PostgreSQL 会将值转换回来，例如将 t 转换为 true，将 f 转换为 false，将空格转换为 null。
+
+## 2、字符类型
+
+三种字符类型：`CHAR(n)`、`VARCHAR(n)` 和 `TEXT`
+- `CHAR(n)`：是填充了空格的固定长度字符。如果插入的字符串短于列的长度，PostgreSQL 将填充空格。如果插入的字符串长于列的长度，PostgreSQL 会出错。
+- `VARCHAR(n)`：是长度可变的字符串。使用 `VARCHAR(n)`，您最多可以存储 n 个字符。当存储的字符串短于列的长度时，PostgreSQL 不会填充空格。
+- `TEXT` 是长度可变的字符串。理论上，文本数据是长度不受限制的字符串。
+
+## 3、数字
+
+两种数据类型：整数和浮点数
+
+### 3.1、整型
+
+三种类型的整型：
+- `小整数 ( SMALLINT)` 是 2 字节有符号整数，范围为 -32,768 至 32,767。
+- `整数（INT）`是一个 4 字节整数，范围为-2,147,483,648 到 2,147,483,647。
+- 除了 PostgreSQL 会自动生成并向 SERIAL 列填充值之外，Serial 与 integer 相同。这类似于 MySQL 中的 AUTO_INCREMENT 列或 SQLite 中的 AUTOINCREMENT 列。
+
+### 3.2、浮点数
+
+浮点数主要有三种类型：
+- `float(n)` 是精度至少为 n，最大为 8 字节的浮点数。
+- `real` 或 `float8` 是 4 字节的浮点数。
+- `numeric` 或 `numeric(p,s)`是小数点后有 p 位数和 s 位数的实数。`numeric(p,s)` 是精确数字。
+
+## 4、时间类型
+
+时间数据类型允许您存储日期和/或时间数据。PostgreSQL 有五种主要的时间数据类型：
+- `DATE` 仅存储日期。
+- `TIME` 存储一天中的时间值。
+- `TIMESTAMP` 同时存储日期和时间值。
+- `TIMESTAMPTZ` 是一种可感知时区的时间戳数据类型。它是带有时区的时间戳的缩写。
+- `INTERVAL` 存储时间段。
+
+`TIMESTAMPTZ` 是 PostgreSQL 对 SQL 标准时间数据类型的扩展。
+
+## 5、数组
+
+在 PostgreSQL 中，可以在数组列中存储字符串数组、整数数组等。数组在某些情况下非常有用，例如存储一周的天数和一年的月份。
+
+## 6、JSON
+
+PostgreSQL 提供两种 JSON 数据类型：JSON 和 JSONB 用于存储 JSON 数据。
+
+JSON 数据类型存储的是纯 JSON 数据，每次处理都需要重新解析；而 JSONB 数据类型存储的是二进制格式的 JSON 数据，处理速度更快，但插入较慢。此外，JSONB 支持索引，这也是一个优势。
+
+## 7、UUID
+
+UUID 数据类型允许存储 RFC 4122 定义的通用唯一标识符。UUID 值比 SERIAL 值具有更好的唯一性，可用于隐藏暴露给公众的敏感数据，如 URL 中的 id 值。
+
+## 8、特殊数据类型
+
+除了原始数据类型，PostgreSQL 还提供了几种与几何和网络相关的特殊数据类型。
+- box - 一个矩形框。
+- line - 一组点。
+- point- 一对几何数。
+- lseg- 线段。
+- polygon- 一个封闭的几何体。
+- inet- 一个 IP4 地址。
+- macaddr- 一个 MAC 地址。
+
+# 六、DDL
+
+## 1、create
+
+```sql
+CREATE TABLE [IF NOT EXISTS] table_name (
+   column1 datatype(length) column_contraint,
+   column2 datatype(length) column_contraint,
+   column3 datatype(length) column_contraint,
+   table_constraints
+);
+```
+
+**PostgreSQL 包含以下列约束：**
+- `NOT NULL` ： 确保列中的值不能为 NULL。
+- `UNIQUE` ： 确保列中的值在同一表中的行中唯一。
+- `PRIMARY KEY` ： 主键列唯一标识表中的行。一个表只能有一个主键。主键约束允许你定义表的主键。
+- `CHECK` ： CHECK 约束确保数据必须满足布尔表达式。
+- `FOREIGN KEY（异或键）` ： 确保表中的一列或一组列的值存在于另一个表的一列或一组列中。与主键不同，一个表可以有多个外键。
+
+示例：
+```sql
+CREATE TABLE accounts (
+	user_id serial PRIMARY KEY,
+	username VARCHAR ( 50 ) UNIQUE NOT NULL,
+	password VARCHAR ( 50 ) NOT NULL,
+	email VARCHAR ( 255 ) UNIQUE NOT NULL,
+	created_on TIMESTAMP NOT NULL,
+        last_login TIMESTAMP 
+);
+```
+增加外键约束：
+```sql
+CREATE TABLE account_roles (
+  user_id INT NOT NULL,
+  role_id INT NOT NULL,
+  grant_date TIMESTAMP,
+  PRIMARY KEY (user_id, role_id),
+  FOREIGN KEY (role_id)
+      REFERENCES roles (role_id),
+  FOREIGN KEY (user_id)
+      REFERENCES accounts (user_id)
+);
+```
 
 # 参考资料
 
