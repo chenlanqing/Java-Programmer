@@ -917,7 +917,9 @@ UUID 数据类型允许存储 RFC 4122 定义的通用唯一标识符。UUID 值
 
 # 六、DDL
 
-## 1、create
+## 1、如何创建表
+
+### 1.1、create
 
 ```sql
 CREATE TABLE [IF NOT EXISTS] table_name (
@@ -959,6 +961,163 @@ CREATE TABLE account_roles (
       REFERENCES accounts (user_id)
 );
 ```
+
+### 1.2、SELECT INTO
+
+PostgreSQL `SELECT INTO` 语句创建一个新表，并将查询返回的数据插入该表。新表的列名与查询结果集的列名相同。与普通 SELECT 语句不同，SELECT INTO 语句不会向客户端返回结果。
+```sql
+SELECT
+    select_list
+INTO [ TEMPORARY | TEMP | UNLOGGED ] [ TABLE ] new_table_name
+FROM table_name
+WHERE search_condition;
+```
+- 要使用从结果集导出的结构和数据创建一个新表，需要在 INTO 关键字后指定新表的名称。
+- TEMP 或 TEMPORARY 关键字是可选的，它允许你创建一个临时表。
+- UNLOGGED 关键字（如果可用）将使新表成为未记录表。
+- 通过 WHERE 子句，可以指定要插入到新表中的原始表记录。除了 WHERE 子句，还可以在 SELECT INTO 语句的 SELECT 语句中使用其他子句，如 INNER JOIN、LEFT JOIN、GROUP BY 和 HAVING。
+
+请注意，在 PL/pgSQL 中不能使用 SELECT INTO 语句，因为它对 INTO 子句的解释不同。在这种情况下，可以使用 `CREATE TABLE AS` 语句，它比 SELECT INTO 语句提供了更多的功能。
+
+示例：
+```sql
+SELECT film_id, title,  length 
+INTO TEMP TABLE short_film
+FROM  film
+WHERE length < 60
+ORDER BY  title;
+```
+
+### 1.3、CREATE TABLE AS
+
+CREATE TABLE AS 语句创建一个新表，并将查询返回的数据填入其中。下面显示了 CREATE TABLE AS 语句的语法：
+```sql
+CREATE [TEMPORARY  | TEMP | UNLOGGED ] TABLE new_table_name
+AS query;
+```
+- 首先，在 CREATE TABLE 子句后指定新表的名称；
+- 其次，在 AS 关键字后提供一个查询，其结果集将添加到新表中；
+
+新表的列将具有与 SELECT 子句输出列相关联的名称和数据类型。
+
+如果希望表列具有不同的名称，可以在新表名称后指定新表列：
+```sql
+CREATE TABLE new_table_name ( column_name_list) AS query;
+```
+如果要避免报错：
+```sql
+CREATE TABLE IF NOT EXISTS new_table_name AS query;
+```
+
+示例：
+```sql
+CREATE TABLE IF NOT EXISTS film_rating (rating, film_count) 
+AS 
+SELECT rating, COUNT (film_id)
+FROM film
+GROUP BY rating;
+```
+
+## 2、自增列
+
+在 PostgreSQL 中，序列是一种特殊的数据库对象，可生成整数序列。序列通常用作表中的主键列。
+```sql
+CREATE TABLE table_name(
+    id SERIAL
+);
+```
+通过为 id 列分配 SERIAL 伪类型，PostgreSQL 执行了以下操作：
+- 首先，创建一个序列对象，并将序列生成的下一个值设置为列的默认值。
+- 第二，为 id 列添加 NOT NULL 约束，因为序列总是生成整数，而整数是非空值。
+- 第三，将序列的所有者分配给 id 列；这样，当 id 列或表被删除时，序列对象也会被删除
+
+PostgreSQL 提供了三种串行伪类型 SMALLSERIAL、SERIAL 和 BIGSERIAL，它们具有以下特点：
+- `SMALLSERIAL`：2字节，范围：`1 ~ 32,767`
+- `SERIAL`：4字节，范围：`1 ~ 2,147,483,647`
+- `BIGSERIAL`：8字节，范围：`1 ~ 9,223,372,036,854,775,807`
+
+示例：
+```sql
+CREATE TABLE fruits(
+   id SERIAL PRIMARY KEY,
+   name VARCHAR NOT NULL
+);
+-- 插入数据
+INSERT INTO fruits(name)  VALUES('Orange');
+INSERT INTO fruits(id,name) VALUES(DEFAULT,'Apple');
+```
+序列生成器操作不是事务安全的。这意味着，如果两个并发数据库连接试图从序列中获取下一个值，每个客户端将获得不同的值。如果其中一个客户回滚事务，该客户的序列号将不会被使用，从而在序列中产生一个丢失的值
+
+## 3、Sequence
+
+根据定义，序列是整数的有序列表。序列中数字的顺序很重要。例如，{1,2,3,4,5} 和 {5,4,3,2,1} 是完全不同的序列。
+
+PostgreSQL 中的序列是一个用户定义的模式绑定对象，可根据指定规格生成整数序列。
+
+要在 PostgreSQL 中创建序列，需要使用 CREATE SEQUENCE 语句：
+```sql
+CREATE SEQUENCE [ IF NOT EXISTS ] sequence_name
+    [ AS { SMALLINT | INT | BIGINT } ]
+    [ INCREMENT [ BY ] increment ]
+    [ MINVALUE minvalue | NO MINVALUE ] 
+    [ MAXVALUE maxvalue | NO MAXVALUE ]
+    [ START [ WITH ] start ] 
+    [ CACHE cache ] 
+    [ [ NO ] CYCLE ]
+    [ OWNED BY { table_name.column_name | NONE } ]
+```
+- 在 CREATE SEQUENCE 子句后指定序列的名称。只有当序列不存在时，IF NOT EXISTS 才会有条件地创建新序列。序列名称必须有别于同一模式中的任何其他序列、表、索引、视图或外来表。
+- `AS { SMALLINT | INT | BIGINT }`：指定序列的数据类型。有效数据类型为 SMALLINT、INT 和 BIGINT。如果跳过，默认数据类型为 BIGINT。序列的数据类型决定序列的最小值和最大值。
+- `INCREMENT [ BY ] increment`：增量指定将哪个值添加到当前序列值中以创建新值。正数将形成一个升序，而负数将形成一个降序。
+- `MINVALUE minvalue | NO MINVALUE`、`MAXVALUE maxvalue | NO MAXVALUE`：定义序列的最小值和最大值。如果使用 NO MINVALUE 和 NO MAXVALUE，序列将使用默认值。
+    - 对于递增序列，默认最大值为序列数据类型的最大值，默认最小值为 1。
+    - 对于降序序列，默认最大值为-1，默认最小值为序列数据类型的最小值。
+- `START [ WITH ] start`：START 子句指定序列的起始值。升序的默认起始值为 minvalue，降序的默认起始值为 maxvalue。
+- `CACHE cache`：CACHE 决定了有多少序列号被预先分配并存储在内存中，以加快访问速度。每次只能生成一个值。默认情况下，序列每次生成一个值，即没有缓存。
+- `[ NO ] CYCLE`：CYCLE 允许您在达到限值时重新开始计算。下一个数字将是升序的最小值和降序的最大值。如果使用 "无循环"，当达到限值时，尝试获取下一数值将导致错误。如果没有明确指定 CYCLE 或 NO CYCLE，则 `NO CYCLE` 为默认值。
+- `OWNED BY { table_name.column_name | NONE }`：OWNED BY 子句允许您将表列与序列关联起来，这样当您删除列或表时，PostgreSQL 就会自动删除相关的序列。
+    请注意，当您为表的列使用 SERIAL 伪类型时，PostgreSQL 会在幕后自动创建与列相关联的序列。
+
+示例：
+```sql
+CREATE SEQUENCE mysequence INCREMENT 5 START 100;
+SELECT nextval('mysequence'); -- 100
+SELECT nextval('mysequence'); -- 105
+```
+关联到表字段：
+```sql
+CREATE TABLE order_details(
+    order_id SERIAL,
+    item_id INT NOT NULL,
+    item_text VARCHAR NOT NULL,
+    price DEC(10,2) NOT NULL,
+    PRIMARY KEY(order_id, item_id)
+);
+
+CREATE SEQUENCE order_item_id
+START 10
+INCREMENT 10
+MINVALUE 10
+OWNED BY order_details.item_id;
+```
+
+**列出数据库中包含的Sequence**
+```sql
+SELECT
+    relname sequence_name
+FROM 
+    pg_class 
+WHERE 
+    relkind = 'S';
+```
+
+**删除序列**
+- 如果序列与表列相关联，一旦表列被移除或表被删除，序列就会自动删除。
+- 可以使用 DROP SEQUENCE 语句手动删除序列：
+    ```sql
+    DROP SEQUENCE [ IF EXISTS ] sequence_name [, ...]  [ CASCADE | RESTRICT ];
+    ```
+    如果要递归删除依赖于序列的对象和依赖于依赖对象的对象，则使用 CASCADE 选项。
 
 # 参考资料
 
