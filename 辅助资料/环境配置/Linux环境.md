@@ -1350,7 +1350,7 @@ bin/kafka-server-start.sh -daemon config/server.properties
 version: "3"
 services:
    kafka:
-     image: 'bitnami/kafka:latest'
+     image: 'bitnami/kafka:3.2'
      ports:
        - '9092:9092'
      environment:
@@ -1376,7 +1376,7 @@ docker run -d --name kafka \
 
 ## 2、kafka集群安装
 
-- 解压缩kafka包
+### 2.1、解压缩kafka包
 
 Kafka集群启动：
 ```bash
@@ -1401,10 +1401,10 @@ case $1 in
 esac
 ```
 
-
 ## 3、Kafka管理工台
 
 - [8中kafka管理后台工具](https://juejin.cn/post/7055572207891644429)
+- [插件化构建企业级Kafka服务](https://github.com/didi/KnowStreaming)
 
 ### 3.1、CMAk
 
@@ -1420,77 +1420,122 @@ esac
 
 ## 4、docker安装kafka集群
 
-可以通过docker-compose来进行安装，对应配置文件（docker-compose.yml）：
+可以通过docker-compose来进行安装，对应配置文件（docker-compose.yml），其中：
+- 创建-kafka-net：`docker network create --subnet=172.31.0.0/24 kafka-net`
+- `xx.xx.xx.xx`：表示虚拟机IP
 ```yml
 version: '2'
 services:
-  zookeeper-22181:
-    image: confluentinc/cp-zookeeper:latest
+  zoo-22181:
+    image: bitnami/zookeeper:3.6.0
+    hostname: zoo-22181
+    container_name: zoo-22181
     environment:
+      ALLOW_ANONYMOUS_LOGIN: yes
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: 0.0.0.0:2888:3888,zoo-32181:2888:3888,zoo-42181:2888:3888
     ports:
       - 22181:2181
-  zookeeper-32181:
-    image: confluentinc/cp-zookeeper:latest
+    networks:
+      kafka-net:
+        ipv4_address: 172.31.0.11
+  zoo-32181:
+    image: bitnami/zookeeper:3.6.0
+    hostname: zoo-32181
+    container_name: zoo-32181
     environment:
+      ALLOW_ANONYMOUS_LOGIN: yes
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOO_MY_ID: 2
+      ZOO_SERVERS: 0.0.0.0:2888:3888,zoo-22181:2888:3888,zoo-42181:2888:3888
     ports:
       - 32181:2181
-  zookeeper-42181:
-    image: confluentinc/cp-zookeeper:latest
+    networks:
+      kafka-net:
+        ipv4_address: 172.31.0.12
+  zoo-42181:
+    image: bitnami/zookeeper:3.6.0
+    hostname: zoo-42181
+    container_name: zoo-42181
     environment:
+      ALLOW_ANONYMOUS_LOGIN: yes
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOO_MY_ID: 3
+      ZOO_SERVERS: 0.0.0.0:2888:3888,zoo-22181:2888:3888,zoo-32181:2888:3888
     ports:
       - 42181:2181
+    networks:
+      kafka-net:
+        ipv4_address: 172.31.0.13
   
   kafka-1:
-    image: confluentinc/cp-kafka:latest
+    image: bitnami/kafka:3.2
+    hostname: kafka-1
+    container_name: kafka-1
     depends_on:
-      - zookeeper-22181
-      - zookeeper-32181
-      - zookeeper-42181
+      - zoo-22181
+      - zoo-32181
+      - zoo-42181
     ports:
       - 29092:29092
     environment:
       KAFKA_BROKER_ID: 1
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-22181:2181,zookeeper-32181:2181,zookeeper-42181:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_ZOOKEEPER_CONNECT: zoo-22181:2181,zoo-32181:2181,zoo-42181:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-1:9092,PLAINTEXT_HOST://xx.xx.xx.xx:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      kafka-net:
+        ipv4_address: 172.31.0.14
   kafka-2:
-    image: confluentinc/cp-kafka:latest
+    image: bitnami/kafka:3.2
+    hostname: kafka-2
+    container_name: kafka-2
     depends_on:
-      - zookeeper-22181
-      - zookeeper-32181
-      - zookeeper-42181
+      - zoo-22181
+      - zoo-32181
+      - zoo-42181
     ports:
       - 39092:39092
     environment:
       KAFKA_BROKER_ID: 2
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-22181:2181,zookeeper-32181:2181,zookeeper-42181:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://localhost:39092
+      KAFKA_ZOOKEEPER_CONNECT: zoo-22181:2181,zoo-32181:2181,zoo-42181:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092,PLAINTEXT_HOST://xx.xx.xx.xx:39092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      kafka-net:
+        ipv4_address: 172.31.0.15
   kafka-3:
-    image: confluentinc/cp-kafka:latest
+    image: bitnami/kafka:3.2
+    hostname: kafka-3
+    container_name: kafka-3
     depends_on:
-      - zookeeper-22181
-      - zookeeper-32181
-      - zookeeper-42181
+      - zoo-22181
+      - zoo-32181
+      - zoo-42181
     ports:
       - 49092:49092
     environment:
       KAFKA_BROKER_ID: 3
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper-22181:2181,zookeeper-32181:2181,zookeeper-42181:2181
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://localhost:49092
+      KAFKA_ZOOKEEPER_CONNECT: zoo-22181:2181,zoo-32181:2181,zoo-42181:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092,PLAINTEXT_HOST://xx.xx.xx.xx:49092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      kafka-net:
+        ipv4_address: 172.31.0.16
+
+networks:
+  kafka-net:
+    external: true
 ```
 
 ## 5、kafka外网访问配置
