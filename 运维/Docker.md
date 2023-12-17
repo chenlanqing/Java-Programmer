@@ -651,14 +651,3 @@ Status: Downloaded newer image for portainer/helper-reset-password:latest
 `:}RP1ABjl02!caDn)Tw>(~C8/Q34Jv65` 即为重置的密码
 
 
-# 三、Kubernetes
-
-* [Kubernetes技术体系](https://developer.aliyun.com/article/716237?spm=a2c6h.12873639.0.0.75482c6dlmkDa6)
-* [K8S](https://k8slens.dev/)
-
-# 四、DevOps
-
-- [瓦力 Devops开源项目代码部署平台](https://github.com/meolu/walle-web)
-- [一站式自动化运维及自动化部署平台](https://gitee.com/lijiahangmax/orion-ops)
-- [开源运维平台](https://github.com/openspug/spug)
-- [建木-运维](https://gitee.com/jianmu-dev/jianmu)
