@@ -566,12 +566,48 @@ CMD /bin/bash
 
 ## 7、docker网络通信
 
-docker network
+### 7.1、外部访问docker
 
-创建网络：命令行创建网络时，为网络指定网段。
+通过 `-P` 或 `-p` 参数来指定端口映射，当使用 `-P` 标记时，Docker 会随机映射一个端口到内部容器开放的网络端口；
 ```bash
-docker network create --subnet=172.31.0.0/24 kafka-net
+$ docker run -d -P nginx:alpine
+$ docker container ls -l
+CONTAINER ID        IMAGE               COMMAND                  CREATED             STATUS              PORTS                   NAMES
+fae320d08268        nginx:alpine        "/docker-entrypoint.…"   24 seconds ago      Up 20 seconds       0.0.0.0:32768->80/tcp   bold_mcnulty
 ```
+使用 `docker container ls` 可以看到，本地主机的 32768 被映射到了容器的 80 端口。此时访问本机的 32768 端口即可访问容器内 NGINX 默认页面
+
+`-p` 则可以指定要映射的端口，并且，在一个指定端口上只可以绑定一个容器。支持的格式有：
+```bash
+ip:hostPort:containerPort | ip::containerPort | hostPort:containerPort
+```
+- 映射所有接口地址：`hostPort:containerPort`，比如：`$ docker run -d -p 80:80 nginx:alpine`，此时默认会绑定本地所有接口上的所有地址；
+- 映射到指定地址的指定端口：使用`ip:hostPort:containerPort`格式指定映射使用一个特定地址，比如 localhost 地址 127.0.0.1，`$ docker run -d -p 127.0.0.1:80:80 nginx:alpine`
+- 映射到指定地址的任意端口：使用 `ip::containerPort` 绑定 localhost 的任意端口到容器的 80 端口，本地主机会自动分配一个端口。`$ docker run -d -p 127.0.0.1::80 nginx:alpine`，也可以使用UDP：`docker run -d -p 127.0.0.1:80:80/udp nginx:alpine`
+
+查看端口映射：
+```bash
+$ docker port fa 80
+0.0.0.0:32768
+```
+其中`fa`表示容器的名称
+
+### 7.2、容器互联
+
+使用 `--link` 参数来使容器互联，但是推荐做法是：将容器加入自定义的 Docker 网络来连接多个容器
+
+**新建网络：**
+```bash
+docker network create -d bridge --subnet=172.19.0.0/24 my-net
+```
+`-d` 参数指定 Docker 网络类型，有 `bridge`、`overlay`
+
+**连接容器**
+```bash
+$ docker run -it --rm --name busybox1 --network my-net busybox sh
+$ docker run -it --rm --name busybox2 --network my-net busybox sh
+```
+更建议使用 docker-compose 来完成多个容器互联；
 
 ## 8、docker安装软件
 
