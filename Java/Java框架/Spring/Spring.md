@@ -97,6 +97,8 @@ Spring容器初始化时：首先会初始化 bean，即构造相关类
 
 ## 2、Spring容器
 
+- [Google-Guice依赖查找和依赖注入](https://github.com/google/guice)
+
 在 Spring IOC 容器读取 Bean 配置创建 Bean 实例之前，必须对它进行实例化。只有在容器实例化后，才可以从 IOC 容器里获取 Bean 实例并使用
 
 Spring 提供了两种类型的 IOC 容器实现：（1）BeanFactory：IOC 容器的基本实现；（2）ApplicationContext：提供了更多的高级特性。是BeanFactory的子接口
