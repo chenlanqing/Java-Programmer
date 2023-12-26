@@ -236,6 +236,8 @@ print(str[-2])  # n
 -13  -12 -11 -10 -9  -8  -7  -6  -5  -4  -3  -2  -1 
 ```
 
+逆序输出：`str[::-1]`
+
 ### 3.4、字符串切割
 
 ```py
@@ -251,6 +253,12 @@ print(str[0:2])
 str = "Python String"
 print(str[2:]) # thon String
 print(str[:4]) # Pyth
+```
+通过 split 切割:
+```
+In [1]:  a = '123456'
+In [4]: a.split('4')
+Out[4]: ['123', '56']
 ```
 
 **unicode字符串**
@@ -308,6 +316,24 @@ print(len(s)) # 2
 s = r'\'
 s = r'\\\'
 # 上面都会报错，SyntaxError: EOL while scanning string literal
+```
+
+### 3.6、字符串其他操作
+
+str.count 统计：
+```py
+In [6]: a = '123abcd345234'
+In [7]: a.count('a')
+Out[7]: 1
+In [8]: a.count('3')
+Out[8]: 3
+```
+
+str.zfill() 左边填充0：
+```py
+In [9]: b = '4'
+In [11]: b.zfill(5)  # 5位，补位
+Out[11]: '00004'
 ```
 			
 ## 4、布尔值
