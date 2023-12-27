@@ -1616,8 +1616,15 @@ File.lines方法其实实现是使用 BufferedReader 进行字符流读取时，
 
 通用做法：
 ```java
+// 默认使用 Thread.currentThread ().getContextClassLoader () 的类加载器。可以手动指定
+// 需要注意 new ClassPathResource ().getFile () 方法。因为方法内进行了路径校验，在 Jar 包下使用依旧会报 FileNotFoundException 错误
 ClassPathResource resource = new ClassPathResource("filename");
 InputStream inputStream = resource.getInputStream();
+```
+或者使用：
+```java
+// ResourceReader 是当前类，可以替换成其他的类
+InputStream inputStream = ResourceReader.class.getClassLoader().getResourceAsStream("file");
 ```
 
 # 参考文章
