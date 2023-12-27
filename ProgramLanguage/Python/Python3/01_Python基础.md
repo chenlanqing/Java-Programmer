@@ -1006,6 +1006,7 @@ empty_list = []
 **添加新元素**
 - `append()`：把新的元素添加到 list 的尾部
 - `insert()`：接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
+- `extend()`：把别的元素添加到 list 的尾部；
 ```python
 # list.append():把新的元素添加到 list 的尾部
 >>>classmates = ['Michael'， 'Bob'， 'Tracy']
@@ -1014,6 +1015,22 @@ empty_list = []
 # list.insert():接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
 >>> classmates.insert(1， 'Jack')
 ['Michael'， 'Jack'， 'Bob'， 'Tracy'， 'Adam']
+```
+extend 与 append：
+- extend 参数是一个集合时，会将集合的元素拆开放到集合中；
+- append 参数是一个集合时，会将该集合作为一个整体放到集合中；
+```python
+In [1]: a = [4 , 5, 6]
+In [2]: b = [7, 8, 9]
+In [3]: c = ['a', 'b']
+In [4]: a.append(b)
+In [5]: a
+Out[5]: [4, 5, 6, [7, 8, 9]]
+In [6]: c.extend(b)
+In [7]: c
+Out[7]: ['a', 'b', 7, 8, 9]
+In [8]: b
+Out[8]: [7, 8, 9]
 ```
 
 **删除元素**
@@ -1044,6 +1061,7 @@ L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
 `L[::2] ===> ['Adam'， 'Bart']`
 - 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
 - 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
+- 列表起始索引为：`0`，结束为`n-1`；起始为：`-n`，结束为 `-1`
 		
 ## 2、Tuple
 
@@ -1671,6 +1689,11 @@ print(ssn)
 person['gender'] = 'Famale'
 ```
 
+```py
+a.setdefault('a', [])
+```
+存在则取值，不存在则插入值，并返回值；
+
 ## 4、修改value
 
 更新dict：直接赋值，如果存在相同的key，则替换以前的值；
@@ -1755,6 +1778,7 @@ Dictionary Comprehension，即字典解析。通过字典解析，可以在字�
 基础语法如下：
 ```py
 {key:value for (key,value) in dict.items() if condition}
+{key:expression(key) for (key) in iterator if condition}
 ```
 该字典理解表达式返回一个新字典，其项由表达式 key: value 指定：
 ```py
@@ -1783,7 +1807,7 @@ selected_stocks = {s: p for (s, p) in stocks.items() if p > 200}
 print(selected_stocks)
 ```
 
-# 十二、Python Set
+# 十二、Set
 
 ## 1、Set类型
 
@@ -1809,6 +1833,7 @@ if not skills:
 ```py
 len(set)
 ```
+copy()函数：是深度拷贝的
 
 ## 2、in运算符
 
@@ -2363,27 +2388,60 @@ def log(message: str) -> None:
 
 ## 1、生成列表
 
-- 要生成`list [1， 2， 3， 4， 5， 6， 7， 8， 9， 10]`，我们可以用`range(1， 11)`：
+- 要生成`list [1, 2, 3, 4, 5,6, 7, 8, 9, 10]`，我们可以用`range(1, 11)`：
 - 要生成`[1x1， 2x2， 3x3， ...， 10x10]` ==> `[x * x for x in range(1， 11)]`
-- 列表生成式:`[x * x for x in range(1， 11)]` 写列表生成式时，把要生成的元素x * x放到前面，后面跟for循环，for循环后面还可以加上if判断可以要生成的数据进行筛选
+- 列表生成式:`[x * x for x in range(1, 11)]` 写列表生成式时，把要生成的元素`x * x`放到前面，后面跟for循环，for循环后面还可以加上if判断可以要生成的数据进行筛选
 
 ## 2、复杂表达式
 
 字符串可以通过 `%` 进行格式化，用指定的参数替代 `%s`。字符串的`join()`方法可以把一个 list 拼接成一个字符串
 
 ## 3、条件过滤
+
 列表生成式的 for 循环后面还可以加上 if 判断
 
-只想要偶数的平方：`[x * x for x in range(1， 11) if x % 2 == 0]`
+只想要偶数的平方：`[x * x for x in range(1, 11) if x % 2 == 0]`
 还可以使用两层循环，可以生成全排列
 ```python
 >>> [m+n for m in 'ABC' for n in 'XYZ']
 ['AX'， 'AY'， 'AZ'， 'BX'， 'BY'， 'BZ'， 'CX'， 'CY'， 'CZ']
 ```
+如果是 if...else 的话，需要将其放在 for 循环前面，如下：
+```py
+In [17]: [i if i != 3 else '3' for i in range(1,10)]
+Out[17]: [1, 2, '3', 4, 5, 6, 7, 8, 9]
+```
 
 ## 4、generator
 
 - [Generator](03_Python进阶.md#八generator)
+
+## 5、zip函数
+
+基本语法：
+```py
+zip(*iterables)
+```
+zip() 函数接收迭代表（可以是 0 个或多个），将它们聚合成一个元组并返回：
+```py
+languages = ['Java', 'Python', 'JavaScript']
+versions = [14, 3, 6]
+result = zip(languages, versions)
+print(list(result))
+# Output: [('Java', 14), ('Python', 3), ('JavaScript', 6)]
+```
+zip() 函数根据可迭代对象返回一个元组迭代器。
+- 如果不传递任何参数，zip() 返回一个空迭代器
+- 如果只传递一个可迭代对象，zip() 会返回一个元组迭代器，每个元组只有一个元素。
+- 如果传递了多个可迭代对象，zip() 将返回一个元组迭代器，每个元组都包含来自所有可迭代对象的元素。
+
+如果要获取数据的话，可以通过类似：
+```py
+print(list(result))
+print(dict(result))
+```
+
+假设向 zip() 传递了两个迭代表，其中一个包含三个元素，另一个包含五个元素。那么，返回的迭代器将包含三个元组。这是因为迭代器会在最短迭代器用完时停止。所以需要注意数据丢失问题；
 
 # 十六、模块
 
