@@ -361,9 +361,9 @@ False
 - 空字符串：`''`
 - False
 - None
-- empty list `[]`
-- empty tuple `()`
-- empty dictionary `{}`
+- 空list `[]`
+- 空元祖 `()`
+- 空字典 `{}`
 
 ## 5、空值
 
@@ -412,8 +412,8 @@ print(f'The net price is ${net_price}')
 	%x	十六进制整数
 	```
 - 格式化整数和浮点数还可以指定是否补0和整数与小数的位数：`'%2d-%02d' % (3， 1) ==>  ' 3-01'`，`'%.2f' % 3.1415926 ===>  '3.14'`
-
 - 字符串里面的`%`是一个普通字符怎么办？这个时候就需要转义，用`%%`来表示一个`%`
+- print() 函数默认是换行的，但是也可以自定义：`print(end='\t')`
 
 ## 2、输入
 
@@ -554,6 +554,12 @@ for name in L:
 name 这个变量是在 for 循环中定义的，意思是，依次取出list中的每一个元素，并把元素赋值给 name，然后执行for循环体
 
 `range()`函数，可以生成一个整数序列，再通过list()函数可以转换为list；`range(5)`生成的序列是从0开始小于5的整数：`list(range(5)) ==> [0，1，2，3，4]`
+```py
+for index in range(n):
+    statement
+else:
+    # for 循环正常执行之后，会执行该代码；
+```
 	
 ## 4、while循环
 
@@ -2442,6 +2448,21 @@ print(dict(result))
 ```
 
 假设向 zip() 传递了两个迭代表，其中一个包含三个元素，另一个包含五个元素。那么，返回的迭代器将包含三个元组。这是因为迭代器会在最短迭代器用完时停止。所以需要注意数据丢失问题；
+
+## 6、代码示例
+
+生成九九剩法表：
+```py
+loop = 9
+# for循环
+for m in range(1, loop +1):
+    for n in range(1, m +1):
+        print(f"{n} * {m} = {n*m}", end='\t')
+    print(end='\n')
+
+# 列表生成式
+print("".join([f"{n} * {m} = {n * m}\n" if n == m else f"{n} * {m} = {n * m}\t" for m in range(1, loop + 1) for n in range(1, m + 1)]))
+```
 
 # 十六、模块
 
