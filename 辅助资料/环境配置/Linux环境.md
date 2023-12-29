@@ -265,6 +265,39 @@ docker run -id --name=mysql3306 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql
 docker run -id --name=mysql3307 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0.32
 ```
 
+## 4、问题
+
+比如说如果出现这个问题：`INSERT command denied to user 'root'@'172.17.0.1' for table '<table_name>'`
+
+应该是没有给`'root'@'172.17.0.1'` 赋予权限：
+
+**检查用户名的权限**
+```sql
+mysql> select * from mysql.user where user='root'\G
+*************************** 1. row ***************************
+                    Host: %
+                    User: root
+             Select_priv: Y
+             Insert_priv: N
+             Update_priv: Y
+             Delete_priv: N
+             Create_priv: N
+               Drop_priv: N
+             Reload_priv: Y
+            .....
+```
+可以看到 `%`（表示通配符）其  `Insert_priv: N` 
+
+**授权**
+```sql
+grant all privileges on *.* to 'root'@'%' identified by 'root密码';
+flush privileges;
+```
+上面如果报错的话，可以登录控制台直接执行：
+```sql
+UPDATE mysql.user set Insert_priv='Y', Delete_priv='Y',Create_priv='Y',Drop_priv='Y' where user='root';
+```
+
 # 二、MySQL主从复制
 
 主要步骤：
