@@ -382,28 +382,28 @@ private static int[] copy(int[] A, int l, int r) {
 ```java
 public class MergeSort {
 	public static void main(String[] args) {
-		int[] A = new int[]{1，5，9，0，3，10，8};
+		int[] A = new int[]{1,5,9,0,3,10,8};
 		System.out.println(Arrays.toString(A));
-		int[] sorted = mergeSort(A， A.length);
+		int[] sorted = mergeSort(A, A.length);
 		System.out.println(Arrays.toString(sorted));
 	}			
-	public static int[] mergeSort(int[] A， int n){
+	public static int[] mergeSort(int[] A, int n){
 		if(A == null || A.length < 2){
 			return A;
 		}
-		mergeSort(A， 0， A.length - 1);
+		mergeSort(A, 0, A.length - 1);
 		return A;
 	}
-	private static void mergeSort(int[] a， int left， int right) {
+	private static void mergeSort(int[] a, int left, int right) {
 		if(left == right){
 			return;
 		}
 		int mid = (left + right) / 2;
-		mergeSort(a， left， mid);
-		mergeSort(a， mid+1， right);
-		mergeSort(a， left， mid， right);
+		mergeSort(a, left, mid);
+		mergeSort(a, mid+1, right);
+		mergeSort(a, left, mid, right);
 	}
-	private static void mergeSort(int[] a， int left， int mid， int right) {
+	private static void mergeSort(int[] a, int left, int mid, int right) {
 		int[] help = new int[right - left + 1];
 		int l = left;
 		int r = mid + 1;
@@ -431,30 +431,30 @@ public class MergeSort {
 ## 4.3、归并排序的优化
 
 ```java
-public void sort(int[] arr， int n) {
-	mergeSort(arr， 0， n - 1);
+public void sort(int[] arr, int n) {
+	mergeSort(arr, 0, n - 1);
 }
-private void mergeSort(int[] arr， int left， int right) {
-	// 如果数组的元素个数小于某个值时，那么其尽可能在有序的范围内的话，可以使用插入排序来实现
+private void mergeSort(int[] arr, int left, int right) {
+	// 如果数组的元素个数小于某个值时,那么其尽可能在有序的范围内的话,可以使用插入排序来实现
 	if (right - left <= 15) {
-		sort(arr， left， right);
+		sort(arr, left, right);
 		return;
 	}
 	int mid = (right + left) / 2;
-	mergeSort(arr， left， mid);
-	mergeSort(arr， mid + 1， right);
+	mergeSort(arr, left, mid);
+	mergeSort(arr, mid + 1, right);
 	// 优化思路：如果mid的值小于mid+1的值说明已经有序了
 	if (arr[mid] > arr[mid + 1]) {
-		mergeSort(arr， left， mid， right);
+		mergeSort(arr, left, mid, right);
 	}
 }
-private void mergeSort(int[] arr， int left， int mid， int right) {
+private void mergeSort(int[] arr, int left, int mid, int right) {
 	int[] help = new int[right - left + 1];
 
 	for (int i = left; i <= right; i++) {
 		help[i - left] = arr[i];
 	}
-	int i = left， j = mid + 1;
+	int i = left, j = mid + 1;
 	for (int k = left; k <= right; k++) {
 		if (i > mid) {
 			arr[k] = help[j - left];
@@ -471,7 +471,7 @@ private void mergeSort(int[] arr， int left， int mid， int right) {
 		}
 	}
 }
-public static void sort(int[] arr， int left， int right) {
+public static void sort(int[] arr, int left, int right) {
 	if (arr == null || left > right || left > arr.length || right > arr.length) {
 		return;
 	}
@@ -540,23 +540,23 @@ private int partition(int[] arr, int left, int right) {
 ```java
 /*
 	* 对arr[l...r]部分进行partition操作
-	* 返回p，使得arr[l...p-1] < arr[p] ; arr[p+1...r] > arr[p]
+	* 返回p,使得arr[l...p-1] < arr[p] ; arr[p+1...r] > arr[p]
 	* @return
 	*/
-private int partition(int[] arr， int left， int right) {
-	// 随机获取标的，
+private int partition(int[] arr, int left, int right) {
+	// 随机获取标的,
 	int random = left + (int) (Math.random()*(right - left + 1 ));
-	ArrayUtils.exchange(arr， left， random);
+	ArrayUtils.exchange(arr, left, random);
 	int temp = arr[left];
-	// 使得 arr[left+1...j] < temp， arr[j+1...right] > temp
+	// 使得 arr[left+1...j] < temp, arr[j+1...right] > temp
 	int j = left;
 	for (int i = left + 1; i <= right; i++) {
 		if (arr[i] < temp) {
-			ArrayUtils.exchange(arr， j+1， i);
+			ArrayUtils.exchange(arr, j+1, i);
 			j++;
 		}
 	}
-	ArrayUtils.exchange(arr， j， left);
+	ArrayUtils.exchange(arr, j, left);
 	return j;
 }
 ```
@@ -566,13 +566,13 @@ private int partition(int[] arr， int left， int right) {
 一个数组中如果有大量的重复元素存在的化，快速排序的算法时间复杂度会退化成 O(n^2)。可以有通过两个双索引，一个从前往后遍历处理大于于中间值的数据，一个从后往前遍历处理小于中间值的数据。
 
 ```java
-private int partition2(int[] arr， int left， int right) {
+private int partition2(int[] arr, int left, int right) {
 	// 随机化取几个索引值
 	int random = left + (int) (Math.random() * (right - left + 1));
-	ArrayUtils.exchange(arr， left， random);
+	ArrayUtils.exchange(arr, left, random);
 	int temp = arr[left];
-	// 使得 arr[left+1...i) < temp， arr(j...right] > temp
-	int i = left + 1， j = right;
+	// 使得 arr[left+1...i) < temp, arr(j...right] > temp
+	int i = left + 1, j = right;
 	while (true) {
 		// 右边遍历
 		while (i <= right && arr[i] < temp) {
@@ -585,11 +585,11 @@ private int partition2(int[] arr， int left， int right) {
 		if (i > j) {
 			break;
 		}
-		ArrayUtils.exchange(arr， i， j);
+		ArrayUtils.exchange(arr, i, j);
 		i++;
 		j--;
 	}
-	ArrayUtils.exchange(arr， j， left);
+	ArrayUtils.exchange(arr, j, left);
 	return j;
 }
 ```
@@ -599,43 +599,43 @@ private int partition2(int[] arr， int left， int right) {
 即小于中间值，大于中间值，等于中间值，分三部分来排序
 
 ```java
-public void sort(int[] arr， int n) {
-		quickSort3Way(arr， 0， n - 1);
-	}
-private void quickSort3Way(int[] arr， int left， int right) {
+public void sort(int[] arr, int n) {
+	quickSort3Way(arr, 0, n - 1);
+}
+private void quickSort3Way(int[] arr, int left, int right) {
 	if (left > right) {
 		return;
 	}
 	if (right - left <= 15) {
-		InsertSelectIntOpt.sort(arr， left， right);
+		InsertSelectIntOpt.sort(arr, left, right);
 		return;
 	}
 
 	// 三路快速排序
 	int random = left + (int) (Math.random() * (right - left + 1));
-	ArrayUtils.exchange(arr， random， left);
+	ArrayUtils.exchange(arr, random, left);
 	int temp = arr[left];
 
-	int lt = left， // arr[left+1，lt] < temp
-			gt = right + 1，// arr[gt，r] > temp
+	int lt = left, // arr[left+1,lt] < temp
+			gt = right + 1,// arr[gt,r] > temp
 			i = left + 1;
 	while (i < gt) {
 		if (arr[i] < temp) {
-			ArrayUtils.exchange(arr， i， lt + 1);
+			ArrayUtils.exchange(arr, i, lt + 1);
 			lt++;
 			i++;
 		} else if (arr[i] > temp){
-			// gt 和 i 交换完数据之后，i 位置的元素还没有处理过，所以 i不需要 ++
-			ArrayUtils.exchange(arr， gt-1， i);
+			// gt 和 i 交换完数据之后,i 位置的元素还没有处理过,所以 i不需要 ++
+			ArrayUtils.exchange(arr, gt-1, i);
 			gt--;
 		} else {
 			// arr[i] == temp
 			i++;
 		}
 	}
-	ArrayUtils.exchange(arr， left， lt);
-	quickSort3Way(arr， left， lt-1);
-	quickSort3Way(arr， gt， right);
+	ArrayUtils.exchange(arr, left, lt);
+	quickSort3Way(arr, left, lt-1);
+	quickSort3Way(arr, gt, right);
 }
 ```
 
@@ -1141,4 +1141,4 @@ private static void radixSortForPositive(int[] arr) {
 
 * [快速排序算法实现原理](http://www.cnblogs.com/nullzx/p/5880191.html)
 * [计数排序](https://mp.weixin.qq.com/s/WGqndkwLlzyVOHOdGK7X4Q)
-* 
+  
