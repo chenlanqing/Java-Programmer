@@ -1049,6 +1049,8 @@ arguments：参数，可用的参数如下：<br>
 
 # 十二、Btrace
 
+- [BTRACE-适用于 Java 平台的安全动态跟踪工具](https://github.com/btraceio/btrace)
+
 ## 1、概述
 
 BTrace 基于动态字节码修改技术来实现对运行时的 Java 程序进行跟踪和替换。也就是说可以在不重启 JVM 的情况下监控系统运行情况，获取 JVM 运行时的数据信息，比如方法参数、返回值、全局变量、堆栈信息等
