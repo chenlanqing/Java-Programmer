@@ -3307,7 +3307,15 @@ SpringApplicationRunListener 触发
 - 实现 ApplicationListener 接口只针对单一事件监听；
 - 实现 SmartApplicationListener 接口可以针对多种事件监听；
 
-## 12、介绍下IOC思想
+## 12、什么是IOC
+
+简单将，IOC就是反转控制，类似好莱坞原则，主要有依赖查找和依赖注入实现；
+
+- 依赖查找：是主动或被动的依赖查找方式，通过需要依赖容器或标准API实现；比如Servlet、EJB等
+- 依赖注入：是手动或自动的依赖绑定的方式，无需依赖特定的容器或API；比如Spring容器等；
+- 依赖注入会比依赖查找更便利；
+
+Spring的IOC容器的优势：AOP抽象、事务抽象、事件机制、SPI扩展；
 
 ## 13、SpringBoot中bean的配置方式
 
