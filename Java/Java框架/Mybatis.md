@@ -312,19 +312,102 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 
 ## 1、插件原理
 
-在`ParameterHandler`、`ResultSetHandler`、`StatementHandler`、`Executor`四个对象创建的时候：
-- 上述四个对象创建时不是直接返回，而是调用：`interceptorChain.pluginAll(parameterHandler);`进行包装；
-- 获取到所有的Interceptor实现类，调用  interceptor.plugin 进行包装：
-    ```java
-    public Object pluginAll(Object target) {
-        for (Interceptor interceptor : interceptors) {
-            target = interceptor.plugin(target);
+MyBatis Plugin 主要拦截的是 MyBatis 在执行 SQL 的过程中涉及的一些方法
+
+MyBatis 底层是通过 Executor 类来执行 SQL 的。Executor 类会创建 StatementHandler、ParameterHandler、ResultSetHandler 三个对象，并且，首先使用 ParameterHandler 设置 SQL 中的占位符参数，然后使用 StatementHandler 执行 SQL 语句，最后使用 ResultSetHandler 封装执行结果。所以，我们只需要拦截 Executor、ParameterHandler、ResultSetHandler、StatementHandler 这几个类的方法，基本上就能满足我们对整个 SQL 执行流程的拦截了；
+
+Mybatis插件通过代理模式来实现职责链的
+
+（1）集成了 MyBatis 的应用在启动的时候，MyBatis 框架会读取全局配置文件，解析出 Interceptor实现类，并且将它注入到 Configuration 类的 InterceptorChain 对象中；解析完配置文件之后，所有的 Interceptor 都加载到了 InterceptorChain 中
+```java
+// org.apache.ibatis.builder.xml.XMLConfigBuilder
+public class XMLConfigBuilder extends BaseBuilder {
+    // 解析配置
+    private void parseConfiguration(XNode root) {
+        try {
+            // ...
+            pluginElement(root.evalNode("plugins")); // 解析插件
+            // ...
+        } catch (Exception e) {
+            throw new BuilderException("Error parsing SQL Mapper Configuration. Cause: " + e, e);
         }
-        return target;
     }
-    ```
-- plugin 方法会为目标对象创建一个代理对象；
-- 等到真正执行具体方法的时候，其实是执行创建代理类时指定的InvocationHandler的invoke方法，可以发现在指定的InvocationHandler是Plugin对象，Plugin本身也是继承于InvocationHandler；首先从signatureMap中获取拦截类对应的方法列表，然后检查当前执行的方法是否在要拦截的方法列表中，如果在则调用自定义的插件interceptor，否则执行默认的invoke操作；interceptor调用intercept方法的时候是传入的Invocation对象
+    // 解析插件
+    private void pluginElement(XNode parent) throws Exception {
+        if (parent != null) {
+            for (XNode child : parent.getChildren()) {
+                String interceptor = child.getStringAttribute("interceptor");
+                Properties properties = child.getChildrenAsProperties();
+                // 创建Interceptor类对象
+                Interceptor interceptorInstance = (Interceptor) resolveClass(interceptor).getDeclaredConstructor().newInstance();
+                // 调用Interceptor上的setProperties()方法设置properties，单纯的属性设置，主要是为了方便通过配置文件配置 Interceptor 的一些属性值，没有其他作用
+                interceptorInstance.setProperties(properties);
+                // //下面这行代码会调用InterceptorChain.addInterceptor()方法
+                configuration.addInterceptor(interceptorInstance);
+            }
+        }
+    }
+}
+// org.apache.ibatis.session.Configuration#addInterceptor
+public void addInterceptor(Interceptor interceptor) {
+    interceptorChain.addInterceptor(interceptor);
+}
+```
+（2）在执行 SQL 的过程中，MyBatis 会创建 Executor、StatementHandler、ParameterHandler、ResultSetHandler 这几个类的对象，对应的创建代码在 Configuration 类中：
+```java
+public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
+    executorType = executorType == null ? defaultExecutorType : executorType;
+    executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
+    Executor executor;
+    if (ExecutorType.BATCH == executorType) {
+        executor = new BatchExecutor(this, transaction);
+    } else if (ExecutorType.REUSE == executorType) {
+        executor = new ReuseExecutor(this, transaction);
+    } else {
+        executor = new SimpleExecutor(this, transaction);
+    }
+    if (cacheEnabled) {
+        executor = new CachingExecutor(executor);
+    }
+    executor = (Executor) interceptorChain.pluginAll(executor);
+    return executor;
+}
+
+public ParameterHandler newParameterHandler(MappedStatement mappedStatement, Object parameterObject, BoundSql boundSql) {
+    ParameterHandler parameterHandler = mappedStatement.getLang().createParameterHandler(mappedStatement, parameterObject, boundSql);
+    parameterHandler = (ParameterHandler) interceptorChain.pluginAll(parameterHandler);
+    return parameterHandler;
+}
+public ResultSetHandler newResultSetHandler(Executor executor, MappedStatement mappedStatement, RowBounds rowBounds, ParameterHandler parameterHandler, ResultHandler resultHandler, BoundSql boundSql) {
+    ResultSetHandler resultSetHandler = new DefaultResultSetHandler(executor, mappedStatement, parameterHandler, resultHandler, boundSql, rowBounds);
+    resultSetHandler = (ResultSetHandler) interceptorChain.pluginAll(resultSetHandler);
+    return resultSetHandler;
+}
+public StatementHandler newStatementHandler(Executor executor, MappedStatement mappedStatement, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler, BoundSql boundSql) {
+    StatementHandler statementHandler = new RoutingStatementHandler(executor, mappedStatement, parameterObject, rowBounds, resultHandler, boundSql);
+    statementHandler = (StatementHandler) interceptorChain.pluginAll(statementHandler);
+    return statementHandler;
+}
+```
+这几个类对象的创建过程都调用了 InteceptorChain 的 pluginAll() 方法
+```java
+// org.apache.ibatis.plugin.InterceptorChain
+public Object pluginAll(Object target) {
+    for (Interceptor interceptor : interceptors) {
+        // plugin() 是一个接口方法（不包含实现代码），需要由用户给出具体的实现代码，该方法会为目标对象创建一个代理对象；
+        target = interceptor.plugin(target);
+    }
+    return target;
+}
+```
+Plugin 是借助 Java InvocationHandler 实现的动态代理类。用来代理给 target 对象添加 Interceptor 功能。其中，要代理的 target 对象就是 Executor、StatementHandler、ParameterHandler、ResultSetHandler 这四个类的对象。wrap() 静态方法是一个工具函数，用来生成 target 对象的动态代理对象
+
+等到真正执行具体方法的时候，其实是执行创建代理类时指定的InvocationHandler的invoke方法，可以发现在指定的InvocationHandler是Plugin对象，Plugin本身也是继承于InvocationHandler；首先从signatureMap中获取拦截类对应的方法列表，然后检查当前执行的方法是否在要拦截的方法列表中，如果在则调用自定义的插件interceptor，否则执行默认的invoke操作；interceptor调用intercept方法的时候是传入的Invocation对象；
+
+只有 interceptor 与 target 互相匹配的时候，wrap() 方法才会返回代理对象，否则就返回 target 对象本身。怎么才算是匹配呢？那就是 interceptor 通过 `@Signature` 注解要拦截的类包含 target 对象，具体可以参看 wrap() 函数的代码实现；
+
+它对同一个目标对象嵌套多次代理（也就是 InteceptorChain 中的 pluginAll() 函数要执行的任务）。每个代理对象（Plugin 对象）代理一个拦截器（Interceptor 对象）功能
+
 
 ## 2、编写插件
 
@@ -395,7 +478,6 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
         <mappers>...</mappers>
     </configuration>
     ```
-
 上面插件的输出结果：
 ```
 插件属性：{password=root, username=root}
@@ -404,6 +486,41 @@ FirstMyBatisPlugin....plugin...需要包装的对象org.apache.ibatis.scripting.
 FirstMyBatisPlugin....plugin...需要包装的对象org.apache.ibatis.executor.resultset.DefaultResultSetHandler@4566e5bd
 FirstMyBatisPlugin....plugin...需要包装的对象org.apache.ibatis.executor.statement.RoutingStatementHandler@ff5b51f
 FirstMyBatisPlugin....intercept：public abstract void org.apache.ibatis.executor.statement.StatementHandler.parameterize(java.sql.Statement) throws java.sql.SQLException
+```
+
+### 2.3、SpringBoot配置插件
+
+比如上面的配置：
+```java
+@Bean
+public Interceptor firstMyBatisPlugin() {
+    FirstMyBatisPlugin firstMyBatisPlugin = new FirstMyBatisPlugin();
+    Properties properties = new Properties();
+    properties.put("abc", "abc");
+    firstMyBatisPlugin.setProperties(properties);
+    return firstMyBatisPlugin;
+}
+```
+`org.mybatis.spring.boot.autoconfigure.MybatisAutoConfiguration`
+```java
+public MybatisAutoConfiguration(MybatisProperties properties, ObjectProvider<Interceptor[]> interceptorsProvider,
+      ObjectProvider<TypeHandler[]> typeHandlersProvider, ObjectProvider<LanguageDriver[]> languageDriversProvider,
+      ResourceLoader resourceLoader, ObjectProvider<DatabaseIdProvider> databaseIdProvider,
+      ObjectProvider<List<ConfigurationCustomizer>> configurationCustomizersProvider) {
+    ...
+    this.interceptors = interceptorsProvider.getIfAvailable(); // 自动识别 org.apache.ibatis.plugin.Interceptor 的实现类
+    ...
+}
+@Bean
+@ConditionalOnMissingBean
+public SqlSessionFactory sqlSessionFactory(DataSource dataSource) throws Exception {
+    SqlSessionFactoryBean factory = new SqlSessionFactoryBean();
+    ...
+    if (!ObjectUtils.isEmpty(this.interceptors)) { // 添加拦截器
+        factory.setPlugins(this.interceptors);
+    }
+    ...
+}
 ```
 
 ## 3、多个插件
@@ -447,9 +564,217 @@ PageHelper
 - [MyBatis Mapper](https://mapper.mybatis.io/)
 - [mybatis-generator-gui](https://github.com/zouzg/mybatis-generator-gui)
 
-# 七、Tkmapper
+# 七、Mybatis的设计模式
 
-# 八、mybatis-plus
+- [Mybatis使用设计模式](http://www.crazyant.net/2022.html)
+- [设计模式](../../软件工程/软件设计/设计模式.md)
+
+## 1、工厂模式
+
+工厂模式在 MyBatis 中的典型代表是 SqlSessionFactory；SqlSession 是 MyBatis 中的重要 Java 接口，可以通过该接口来执行 SQL 命令、获取映射器示例和管理事务，而 SqlSessionFactory 正是用来产生 SqlSession 对象的，所以它在 MyBatis 中是比较核心的接口之一；
+
+工厂模式应用解析：SqlSessionFactory 是一个接口类，它的子类 DefaultSqlSessionFactory 有一个 openSession(ExecutorType execType) 的方法，其中使用了工厂模式，源码如下：
+```java
+private SqlSession openSessionFromDataSource(ExecutorType execType, TransactionIsolationLevel level, boolean autoCommit) {
+    Transaction tx = null;
+    try {
+        final Environment environment = configuration.getEnvironment();
+        final TransactionFactory transactionFactory = getTransactionFactoryFromEnvironment(environment);
+        tx = transactionFactory.newTransaction(environment.getDataSource(), level, autoCommit);
+        // configuration.newExecutor(tx, execType) 读取对应的环境配置
+        final Executor executor = configuration.newExecutor(tx, execType);
+        return new DefaultSqlSession(configuration, executor, autoCommit);
+    } catch (Exception e) {
+        closeTransaction(tx); // may have fetched a connection so lets call close()
+        throw ExceptionFactory.wrapException("Error opening session.  Cause: " + e, e);
+    } finally {
+        ErrorContext.instance().reset();
+    }
+}
+```
+newExecutor() 方法为标准的工厂模式，它会根据传递 ExecutorType 值生成相应的对象然后进行返回
+```java
+public Executor newExecutor(Transaction transaction, ExecutorType executorType) {
+    executorType = executorType == null ? defaultExecutorType : executorType;
+    executorType = executorType == null ? ExecutorType.SIMPLE : executorType;
+    Executor executor;
+    if (ExecutorType.BATCH == executorType) {
+        executor = new BatchExecutor(this, transaction);
+    } else if (ExecutorType.REUSE == executorType) {
+        executor = new ReuseExecutor(this, transaction);
+    } else {
+        executor = new SimpleExecutor(this, transaction);
+    }
+    if (cacheEnabled) {
+        executor = new CachingExecutor(executor);
+    }
+    executor = (Executor) interceptorChain.pluginAll(executor);
+    return executor;
+  }
+```
+
+## 2、建造者模式
+
+建造者模式在 MyBatis 中的典型代表是 SqlSessionFactoryBuilder
+
+普通的对象都是通过 new 关键字直接创建的，但是如果创建对象需要的构造参数很多，且不能保证每个参数都是正确的或者不能一次性得到构建所需的所有参数，那么就需要将构建逻辑从对象本身抽离出来，让对象只关注功能，把构建交给构建类，这样可以简化对象的构建，也可以达到分步构建对象的目的，而 SqlSessionFactoryBuilder 的构建过程正是如此。
+
+在 SqlSessionFactoryBuilder 中构建 SqlSessionFactory 对象的过程是这样的，首先需要通过 XMLConfigBuilder 对象读取并解析 XML 的配置文件，然后再将读取到的配置信息存入到 Configuration 类中，然后再通过 build 方法生成我们需要的 DefaultSqlSessionFactory 对象，实现源码如下（在 SqlSessionFactoryBuilder 类中）：
+```java
+public SqlSessionFactory build(InputStream inputStream, String environment, Properties properties) {
+    try {
+        XMLConfigBuilder parser = new XMLConfigBuilder(inputStream, environment, properties);
+        return build(parser.parse());
+    } catch (Exception e) {
+        throw ExceptionFactory.wrapException("Error building SqlSession.", e);
+    } finally {
+        ErrorContext.instance().reset();
+        try {
+            inputStream.close();
+        } catch (IOException e) {
+            // Intentionally ignore. Prefer previous error.
+        }
+    }
+}
+```
+SqlSessionFactoryBuilder 类相当于一个建造工厂，先读取文件或者配置信息、再解析配置、然后通过反射生成对象，最后再把结果存入缓存，这样就一步步构建造出一个 SqlSessionFactory 对象
+
+## 3、单例模式
+
+在Mybatis中有两个地方用到单例模式， ErrorContext 和 LogFactory，其中ErrorContext是用在每个线程范围内的单例，用于记录该线程的执行环境错误信息，而LogFactory则是提供给整个Mybatis使用的日志工厂，用于获得针对项目配置好的日志对象
+```java
+public class ErrorContext {
+	private static final ThreadLocal<ErrorContext> LOCAL = ThreadLocal.withInitial(ErrorContext::new);
+	private ErrorContext() {
+	}
+	public static ErrorContext instance() {
+		ErrorContext context = LOCAL.get();
+		if (context == null) {
+			context = new ErrorContext();
+			LOCAL.set(context);
+		}
+		return context;
+	}
+}
+```
+
+## 4、适配器模式
+
+而这个转换头就相当于程序中的适配器模式，适配器模式在 MyBatis 中的典型代表是 Log。
+
+MyBatis 中的日志模块适配了以下多种日志类型：
+- SLF4J
+- Apache Commons Logging
+- Log4j 2
+- Log4j
+- JDK logging
+
+## 5、代理模式
+
+代理模式在 MyBatis 中的典型代表是 MapperProxyFactory， MapperProxyFactory 的 newInstance() 方法就是生成一个具体的代理来实现功能的，源码如下：
+```java
+// 在这里，先通过T newInstance(SqlSession sqlSession)方法会得到一个MapperProxy对象，然后调用T newInstance(MapperProxy<T> mapperProxy)生成代理对象然后返回。
+public class MapperProxyFactory<T> {
+    private final Class<T> mapperInterface;
+    private final Map<Method, MapperMethodInvoker> methodCache = new ConcurrentHashMap<>();
+    public MapperProxyFactory(Class<T> mapperInterface) {
+        this.mapperInterface = mapperInterface;
+    }
+    public Class<T> getMapperInterface() {
+        return mapperInterface;
+    }
+    public Map<Method, MapperMethodInvoker> getMethodCache() {
+        return methodCache;
+    }
+    @SuppressWarnings("unchecked")
+    protected T newInstance(MapperProxy<T> mapperProxy) {
+        return (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), new Class[] { mapperInterface }, mapperProxy);
+    }
+    public T newInstance(SqlSession sqlSession) {
+        final MapperProxy<T> mapperProxy = new MapperProxy<>(sqlSession, mapperInterface, methodCache);
+        return newInstance(mapperProxy);
+    }
+}
+// 而查看MapperProxy的代码，可以看到如下内容：
+public class MapperProxy<T> implements InvocationHandler, Serializable {
+	@Override
+	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+		try {
+			if (Object.class.equals(method.getDeclaringClass())) {
+				return method.invoke(this, args);
+			} else if (isDefaultMethod(method)) {
+				return invokeDefaultMethod(proxy, method, args);
+			}
+		} catch (Throwable t) {
+			throw ExceptionUtil.unwrapThrowable(t);
+		}
+		final MapperMethod mapperMethod = cachedMapperMethod(method);
+		return mapperMethod.execute(sqlSession, args);
+	}
+}
+```
+通过这种方式，我们只需要编写`Mapper.java`接口类，当真正执行一个Mapper接口的时候，就会转发给`MapperProxy.invoke`方法，而该方法则会调用后续的`sqlSession.cud>executor.execute>prepareStatement`等一系列方法，完成SQL的执行和返回；
+
+## 6、模板方法模式
+
+模板方法在 MyBatis 中的典型代表是 BaseExecutor。在 MyBatis 中 BaseExecutor 实现了大部分 SQL 执行的逻辑，然后再把几个方法交给子类来实现，它的继承关系如下图所示：
+
+![](image/Mybatis-BaseExecutor-UML图.png)
+
+- `简单 SimpleExecutor`：每执行一次update或select，就开启一个Statement对象，用完立刻关闭Statement对象。（可以是Statement或PrepareStatement对象）
+- `重用 ReuseExecutor`：执行update或select，以sql作为key查找Statement对象，存在就使用，不存在就创建，用完后，不关闭Statement对象，而是放置于`Map<String, Statement>`内，供下一次使用。（可以是Statement或PrepareStatement对象）
+- `批量 BatchExecutor`：执行update（没有select，JDBC批处理不支持select），将所有sql都添加到批处理中（addBatch()），等待统一执行（executeBatch()），它缓存了多个Statement对象，每个Statement对象都是addBatch()完毕后，等待逐一执行executeBatch()批处理的；BatchExecutor相当于维护了多个桶，每个桶里都装了很多属于自己的SQL，就像苹果蓝里装了很多苹果，番茄蓝里装了很多番茄，最后，再统一倒进仓库。（可以是Statement或PrepareStatement对象）
+
+```java
+// 比如 doUpdate() 就是交给子类自己去实现的，它在 BaseExecutor 中的定义如下：
+protected abstract int doUpdate(MappedStatement ms, Object parameter) throws SQLException;
+// SimpleExecutor 实现的 doUpdate 方法
+public class SimpleExecutor extends BaseExecutor {
+    @Override
+    public int doUpdate(MappedStatement ms, Object parameter) throws SQLException {
+        Statement stmt = null;
+        try {
+        Configuration configuration = ms.getConfiguration();
+        StatementHandler handler = configuration.newStatementHandler(this, ms, parameter, RowBounds.DEFAULT, null, null);
+        stmt = prepareStatement(handler, ms.getStatementLog());
+        return handler.update(stmt);
+        } finally {
+        closeStatement(stmt);
+        }
+    }
+    ...
+}
+```
+
+## 7、装饰器模式
+
+装饰器模式在 MyBatis 中的典型代表是 Cache，Cache 除了有数据存储和缓存的基本功能外（由 PerpetualCache 永久缓存实现），还有其他附加的 Cache 类，比如先进先出的 FifoCache、最近最少使用的 LruCache、防止多线程并发访问的 SynchronizedCache 等众多附加功能的缓存类，用于装饰PerpetualCache的标准装饰器共有8个（全部在org.apache.ibatis.cache.decorators包中）：
+- FifoCache：先进先出算法，缓存回收策略
+- LoggingCache：输出缓存命中的日志信息
+- LruCache：最近最少使用算法，缓存回收策略
+- ScheduledCache：调度缓存，负责定时清空缓存
+- SerializedCache：缓存序列化和反序列化存储
+- SoftCache：基于软引用实现的缓存管理策略
+- SynchronizedCache：同步的缓存装饰器，用于防止多线程并发访问
+- WeakCache：基于弱引用实现的缓存管理策略
+
+Cache对象之间的引用顺序为：`SynchronizedCache –> LoggingCache –> SerializedCache –> ScheduledCache –> LruCache –> PerpetualCache`
+
+## 8、解释器模式
+
+SqlNode：利用解释器模式来解析动态 SQL；
+
+动态 SQL 的语法规则是 MyBatis 自定义的。如果想要根据语法规则，替换掉动态 SQL 中的动态元素，生成真正可以执行的 SQL 语句，MyBatis 还需要实现对应的解释器。这一部分功能就可以看做是解释器模式的应用
+
+## 9、迭代器模式
+
+PropertyTokenizer：利用迭代器模式实现一个属性解析器；Mybatis 的 PropertyTokenizer 类实现了 Java Iterator 接口，是一个迭代器，用来对配置属性进行解析
+
+# 八、Mybatis扩展
+
+## 1、Tkmapper
+
+## 2、mybatis-plus
 
 - [Mybatis-Plus](https://baomidou.com/)
 
