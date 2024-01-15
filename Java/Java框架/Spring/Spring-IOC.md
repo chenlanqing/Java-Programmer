@@ -268,6 +268,13 @@ BeanFactory是Spring框架的基础设施，面向Spring本身；ApplicationCont
 		</property>	
 		```	
 
+## 6、启动IOC容器
+
+```java
+AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+applicationContext.refresh();
+```
+
 # 二、Bean基础
 
 ## 1、什么是BeanDefinition
@@ -292,21 +299,111 @@ Lazy initialization mode | Bean延迟初始化模式：延迟或非延迟
 Initialization method | Bean初始化回调方法名称
 Destruction method | Bean销毁回调方法
 
-### 2.1、构建BeanDefinition
+**构建BeanDefinition**
+- 通过 BeanDefinitionBuilder
+    ```java
+    // 使用 BeanDefinitionBuilder
+    BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(User.class);
+    beanDefinitionBuilder.addPropertyValue("id", 1)
+            .addPropertyValue("name", "Jayden");
+    BeanDefinition beanDefinition = beanDefinitionBuilder.getBeanDefinition();
+    ```
+- 通过 AbstractionBeanDefinition 以及子类
+    ```java
+    GenericBeanDefinition genericBeanDefinition = new GenericBeanDefinition();
+    genericBeanDefinition.setBeanClass(User.class);
+    MutablePropertyValues propertyValues = new MutablePropertyValues();
+    propertyValues.add("id", 1).add("name", "Jayden");
+    genericBeanDefinition.setPropertyValues(propertyValues);
+    ```
 
-通过 BeanDefinitionBuilder
+## 3、命名SpringBean
+
+Bean的名称：
+- 每个Bean拥有一个或多个标识符，这些标识符在容器内必须是唯一的；
+- 在基于xml的配置元信息中，可以使用id或name属性来规定Bean的标识符；如果想引入Bean的别名，可以在name属性使用`,`或者`;`来分割；
+- 如果id或name属性没有填写，容器会自动生成Bean的唯一名称；
+
+Bean名称生成器：BeanNameGenerator，框架内建两种实现：
+- `DefaultBeanNameGenerator`，默认的通用实现；
+- `AnnotationBeanNameGenerator`：基于注解扫描的；
+
+可以通过别名的形式从IOC容器中获取到Bean
+
+## 4、注册SpringBean
+
+注册方式有：
+- XML配置元信息：`<bean name='...' />`；
+- Java注解配置元信息：
+  - `@Bean`
+  - `@Component`
+  - `@Import`
+- Java API配置元信息
+  - 命名方式：`BeanDefinitionRegistry#registerBeanDefinition`
+  - 非命名方式：`BeanDefinitionReaderUtils#registerWithGeneratedName`；
+  - 配置类方式：`AnnotatedBeanDefinitionReader#register`
+
+### 4.1、Java注解
+
 ```java
-// 使用 BeanDefinitionBuilder
-BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(User.class);
-beanDefinitionBuilder.addPropertyValue("id", 1)
-        .addPropertyValue("name", "Jayden");
-BeanDefinition beanDefinition = beanDefinitionBuilder.getBeanDefinition();
+@Import(JavaConfigBeanDemo.Config.class)
+public class JavaConfigBeanDemo {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+        applicationContext.register(JavaConfigBeanDemo.class);
+        applicationContext.refresh();
+        System.out.println("Config class： " + applicationContext.getBeansOfType(Config.class));
+        System.out.println("User: " + applicationContext.getBeansOfType(User.class));
+        applicationContext.stop();
+    }
+    @Component
+    public static class Config {
+        @Bean
+        public User user() {
+            User user = new User();
+            user.setId(1);
+            user.setName("Jayden");
+            return user;
+        }
+    }
+}
 ```
-通过 AbstractionBeanDefinition 以及子类
+
+### 4.2、Java API
+
 ```java
-GenericBeanDefinition genericBeanDefinition = new GenericBeanDefinition();
-genericBeanDefinition.setBeanClass(User.class);
-MutablePropertyValues propertyValues = new MutablePropertyValues();
-propertyValues.add("id", 1).add("name", "Jayden");
-genericBeanDefinition.setPropertyValues(propertyValues);
+public class JavaApiBeanDefinitionDemo {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext applicationContext = new AnnotationConfigApplicationContext();
+        applicationContext.refresh();
+        Map<String, Object> maps = Map.of("id", 1, "name", "Jayden");
+        registryBean(applicationContext, "user", User.class, maps);
+        registryBean(applicationContext, User.class, maps);
+        // {user=com.blue.fish.bean.entity.User@73a1e9a9, com.blue.fish.bean.entity.User#0=com.blue.fish.bean.entity.User@71d44a3}
+        Map<String, User> beansOfType = applicationContext.getBeansOfType(User.class);
+        applicationContext.stop();
+    }
+    /**
+     * 命名bean注册
+     */
+    public static <T> void registryBean(BeanDefinitionRegistry registry, String beanName, Class<T> clazz, Map<String, Object> properties) {
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            beanDefinitionBuilder.addPropertyValue(entry.getKey(), entry.getValue());
+        }
+        // 命名Bean注册
+        registry.registerBeanDefinition(beanName, beanDefinitionBuilder.getBeanDefinition());
+    }
+    /**
+     * 非命名bean注册
+     */
+    public static <T> void registryBean(BeanDefinitionRegistry registry, Class<T> clazz, Map<String, Object> properties) {
+        BeanDefinitionBuilder beanDefinitionBuilder = BeanDefinitionBuilder.genericBeanDefinition(clazz);
+        for (Map.Entry<String, Object> entry : properties.entrySet()) {
+            beanDefinitionBuilder.addPropertyValue(entry.getKey(), entry.getValue());
+        }
+        // 非命名Bean的注册
+        BeanDefinitionReaderUtils.registerWithGeneratedName(beanDefinitionBuilder.getBeanDefinition(), registry);
+    }
+}
 ```
