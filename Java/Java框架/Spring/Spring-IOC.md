@@ -407,3 +407,184 @@ public class JavaApiBeanDefinitionDemo {
     }
 }
 ```
+
+### 4.3、注册外部Bean
+
+```java
+public static void main(String[] args) {
+    AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+    User user = User.createUser();
+    ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+    beanFactory.registerSingleton("user", user);
+    context.refresh();
+    User look = beanFactory.getBean("user", User.class);
+    System.out.println("look == user is " + (look == user)); // true
+    context.close();
+}
+```
+
+## 5、实例化Bean
+
+常规方式：
+- 通过构造器：配置元信息-XML、Java注解和Java API；
+- 通过静态工厂方法：配置元信息-XML和Java API
+- 通过Bean工厂方法：配置元信息-XML和Java API；
+- 通过FactoryBean：配置元信息-XML、Java注解和Java API；
+
+特殊方式：
+- 通过 ServiceLoaderFactoryBean：配置元信息-XML、Java注解和Java API；
+- 通过 AutowireCapableBeanFactory#createBean
+- 通过 BeanDefinitionRegistry#registerBeanDefinition
+
+### 5.1、静态方法
+
+```xml
+<!-- 静态方法实例化 Bean  User 类中有静态方法 -->
+<bean id="user-by-static-method" class="com.blue.fish.bean.entity.User" factory-method="createUser"/>
+```
+```java
+public class User {
+    ... 
+    public static User createUser() {
+        User user = new User();
+        user.setId(1);
+        user.setName("Jayden");
+        return user;
+    }
+}
+public static void createBeanByStaticMethod() {
+    BeanFactory beanFactory = new ClassPathXmlApplicationContext("classpath:/META-INF/bean-instantiation-context.xml");
+    User user = beanFactory.getBean("user-by-static-method", User.class);
+    System.out.println(user);
+}
+```
+
+### 5.2、Bean工厂
+
+定义工厂：
+```java
+public class UserBeanFactory {
+    public User createUser() {
+        User user = new User();
+        user.setId(2);
+        user.setName("Sum");
+        return user;
+    }
+}
+```
+配置Bean
+```xml
+<!--  Bean工厂  -->
+<bean id="user-by-bean-factory" factory-method="createUser" factory-bean="userBeanFactory"/>
+<bean id="userBeanFactory" class="com.blue.fish.bean.factory.UserBeanFactory"/>
+```
+
+### 5.3、FactoryBean
+
+实现接口：FactoryBean
+```java
+public class UserFactoryBean implements FactoryBean<User> {
+    @Override
+    public User getObject() throws Exception {
+        User user = new User();
+        user.setId(3);
+        user.setName("Heart");
+        return user;
+    }
+    @Override
+    public Class<?> getObjectType() {
+        return User.class;
+    }
+}
+public static void createBeanByFactoryBean() {
+    BeanFactory beanFactory = new ClassPathXmlApplicationContext("classpath:/META-INF/bean-instantiation-context.xml");
+    User user = beanFactory.getBean("user-by-factory-bean", User.class);
+    System.out.println(user);
+}
+```
+配置FactoryBean
+```xml
+<!--  FactoryBean  -->
+<bean id="user-by-factory-bean" class="com.blue.fish.bean.factory.UserFactoryBean" />
+```
+
+### 5.4、ServiceLoader
+
+其是通过 Java ServiceLoader的机制来实现的，详情查看：[Java SPI机制](../../Java基础/Java扩展.md#二JavaSPI机制)
+
+配置接口：
+```java
+// 路径：MTEA-INF/services/com.blue.fish.bean.factory.UserFactory
+com.blue.fish.bean.factory.UserBeanFactory
+```
+配置Bean
+```xml
+<!-- 需要配置 serviceType -->
+<bean id="userServiceLoader" class="org.springframework.beans.factory.serviceloader.ServiceLoaderFactoryBean">
+    <property name="serviceType" value="com.blue.fish.bean.factory.UserFactory" />
+</bean>
+```
+使用：
+```java
+public static void createBeanByServiceLoader() {
+    BeanFactory beanFactory = new ClassPathXmlApplicationContext("classpath:/META-INF/bean-instantiation-context.xml");
+    ServiceLoader<UserFactory> serviceLoader = beanFactory.getBean("userServiceLoader", ServiceLoader.class);
+    Iterator<UserFactory> iterator = serviceLoader.iterator();
+    while (iterator.hasNext()){
+        UserFactory next = iterator.next();
+        System.out.println("Service: " + next.createUser());
+    }
+}
+```
+原理：
+```java
+// org.springframework.beans.factory.serviceloader.AbstractServiceLoaderBasedFactoryBean
+@Override
+protected Object createInstance() {
+    Assert.notNull(getServiceType(), "Property 'serviceType' is required");
+    return getObjectToExpose(ServiceLoader.load(getServiceType(), this.beanClassLoader));
+}
+```
+
+### 5.5、AutowireCapableBeanFactory 实例化
+
+```java
+public static void createBeanByAutowiredCapable() {
+    ApplicationContext applicationContext = new ClassPathXmlApplicationContext("classpath:/META-INF/bean-instantiation-context.xml");
+    // 通过 ApplicationContext 获取 AutowireCapableBeanFactory
+    AutowireCapableBeanFactory autowireCapableBeanFactory = applicationContext.getAutowireCapableBeanFactory();
+    UserBeanFactory userBeanFactory = autowireCapableBeanFactory.createBean(UserBeanFactory.class);
+    System.out.println(userBeanFactory.createUser());
+}
+```
+
+## 6、Bean初始化
+
+- （1）@PostContruct 标注方法
+- （2）实现 InitializingBean#afterPropertiesSet 方法
+- （3）自定义初始化方法：
+  - xml配置：`<bean init-method="" />`
+  - Java 注解：`@Bean(initMethod = "")`
+  - Java API：`AbstractBeanDefinition#setInitMethodName`
+ 
+问题：如果上述三种方式都在同一个Bean中配置了，那么这些方法的执行顺序是啥？`@PostContruct > afterPropertiesSet > 自定义初始化方法`
+
+**延迟初始化：**
+- xml配置：`<bean lazy-init="true" />`
+- ava 注解：`@Lazy(true)`
+
+问题：当某个Bean定义为延迟初始化时，那么Spring容器返回的对象与非延迟的对象存在怎么样的差异？
+- @Lazy注解默认值true，即Bean会被延迟初始化，因为被注解只有返回的是一个代理对象，真实的对象才被调用的时候才会被初始化。。
+- 非延迟初始化在spring应用上下文启动完成之前被初始化。
+- 延迟初始化在spring应用上下文启动完成之后，在显示调用getBean时候才被初始化。
+
+## 7、Bean的销毁
+
+- @PreDestroy 标注方法
+- 实现 DisposableBean#destroy方法；
+- 自定义销毁方法：
+  - xml配置：`<bean destroy="" />`
+  - Java 注解：`@Bean(destroy = "")`
+  - Java API：`AbstractBeanDefinition#setDestroyMethodName`
+
+问题：如果上述三种方式都在同一个Bean中配置了，那么这些方法的执行顺序是啥？`@PreDestroy > destroy方法 > 自定义销毁方法`
