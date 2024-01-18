@@ -588,3 +588,73 @@ public static void createBeanByAutowiredCapable() {
   - Java API：`AbstractBeanDefinition#setDestroyMethodName`
 
 问题：如果上述三种方式都在同一个Bean中配置了，那么这些方法的执行顺序是啥？`@PreDestroy > destroy方法 > 自定义销毁方法`
+
+# 三、SpringIOC依赖查找
+
+## 1、Java中依赖查找
+
+单一类型的依赖查找：
+- JNDI：javax.naming.Context#lookup(java.lang.String)
+- JavaBeans：java.beans.beancontext.BeanContext
+
+集合类型依赖查找
+- java.beans.beancontext.BeanContextServices#getCurrentServiceSelectors
+
+层次性依赖查找（根据JavaBeans规范）
+- java.beans.beancontext.BeanContext
+
+## 2、单一类型查找
+
+单一类型依赖查找接口：BeanFactory
+- 根据 Bean 名称查找
+    - getBean(String)
+    - Spring 2.5 覆盖默认参数：getBean(String,Object...)
+- 根据 Bean 类型查找
+    - Bean 实时查找
+        - Spring 3.0 getBean(Class)
+        - Spring 4.1 覆盖默认参数：getBean(Class,Object...) （不建议使用，危险！！）
+    - Spring 5.1 Bean 延迟查找
+        - getBeanProvider(Class)
+        - getBeanProvider(ResolvableType)
+- 根据 Bean 名称 + 类型查找：getBean(String,Class)
+
+getBeanProvider 示例：
+```java
+public class ObjectProviderDemo {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        context.register(ObjectProviderDemo.class);
+        context.refresh();
+        ObjectProvider<User> objectProvider = context.getBeanProvider(User.class);
+        // User 存在一个时
+        System.out.println(objectProvider.getObject());
+        // User 存在多个定义的Bean时
+        objectProvider.stream().forEach(System.out::println);
+        context.close();
+    }
+}
+```
+
+## 3、集合类型依赖查找
+
+集合类型依赖查找接口：ListableBeanFactory
+- 根据 Bean 类型查找
+  - 获取同类型 Bean 名称列表
+    - getBeanNamesForType(Class)-包含子类的，不会强制bean的初始化，而是通过BeanDefinition和FactoryBean的getClassType进行判断
+    - Spring 4.2 getBeanNamesForType(ResolvableType)
+  - 获取同类型 Bean 实例列表
+    - getBeansOfType(Class) 以及重载方法，强制Bean的初始化
+- 通过注解类型查找
+  - Spring 3.0 获取标注类型 Bean 名称列表
+    - getBeanNamesForAnnotation(Class<? extends Annotation>)
+  - Spring 3.0 获取标注类型 Bean 实例列表
+    - getBeansWithAnnotation(Class<? extends Annotation>)
+  - Spring 3.0 获取指定名称 + 标注类型 Bean 实例
+    - findAnnotationOnBean(String,Class<? extends Annotation>)
+
+
+ListableBeanFactory 可以获取到一个Bean的集合列表
+- 查询Bean的名称；
+- 查询Bean的实例；
+
+如果要判断一个Bean是否存在，推荐使用Bean的名称去判断Bean是否存在，更重要是判断BeanDefinition是否存在，避免提早初始化Bean导致的一些问题；
