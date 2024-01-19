@@ -2661,6 +2661,11 @@ min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
 
 # 十八、Redis工具
 
+## 1、连接工具
+
+- [Redis GUI Client](https://github.com/tiny-craft/tiny-rdm)
+- [Redis工具-AnotherRedisDesktopManager](https://github.com/qishibo/AnotherRedisDesktopManager)
+
 https://www.npmjs.com/package/redis-dump
 
 # 参考资料
@@ -2672,5 +2677,5 @@ https://www.npmjs.com/package/redis-dump
 - [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 - [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
 - [Redis容量估算](http://www.redis.cn/redis_memory/)
-- [Redis工具-AnotherRedisDesktopManager](https://github.com/qishibo/AnotherRedisDesktopManager)
+
 
