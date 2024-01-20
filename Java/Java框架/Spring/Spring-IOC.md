@@ -674,6 +674,8 @@ ListableBeanFactory 可以获取到一个Bean的集合列表
 
 HierarchicalBeanFactory 依赖关系
 
+![](image/DefaultListableBeanFactory-依赖关系.png)
+
 示例代码：
 ```xml
 <bean id="user" class="com.blue.fish.ioc.overview.domain.User">
