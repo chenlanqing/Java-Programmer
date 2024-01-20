@@ -658,3 +658,121 @@ ListableBeanFactory 可以获取到一个Bean的集合列表
 - 查询Bean的实例；
 
 如果要判断一个Bean是否存在，推荐使用Bean的名称去判断Bean是否存在，更重要是判断BeanDefinition是否存在，避免提早初始化Bean导致的一些问题；
+
+## 4、层次性依赖查找
+
+层次性依赖查找接口 - HierarchicalBeanFactory
+- 双亲 BeanFactory：getParentBeanFactory()
+- 层次性查找
+  - 根据 Bean 名称查找
+    - 基于 containsLocalBean 方法实现
+  - 根据 Bean 类型查找实例列表
+    - 单一类型：BeanFactoryUtils#beanOfType
+    - 集合类型：BeanFactoryUtils#beansOfTypeIncludingAncestors
+  - 根据 Java 注解查找名称列表
+    - BeanFactoryUtils#beanNamesForTypeIncludingAncestors
+
+HierarchicalBeanFactory 依赖关系
+
+示例代码：
+```xml
+<bean id="user" class="com.blue.fish.ioc.overview.domain.User">
+    <property name="id" value="1" />
+    <property name="name" value="ZhangSan"/>
+</bean>
+<bean id="superUser" class="com.blue.fish.ioc.overview.domain.SuperUser" parent="user" primary="true">
+    <property name="address" value="杭州"/>
+</bean>
+<bean id="objectFactory" class="org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean">
+    <property name="targetBeanName" value="user"/>
+</bean>
+```
+```java
+public class HierarchicalDependencyDemo {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        context.register(HierarchicalDependencyDemo.class);
+        // 1. 获取 HierarchicalBeanFactory <- ConfigurableBeanFactory <- ConfigurableListableBeanFactory
+        ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+        // 为空的
+        System.out.println("当前 BeanFactory 的 Parent BeanFactory ： " + beanFactory.getParentBeanFactory());
+        // 2. 设置 Parent BeanFactory
+        //  classpath:/META-INF/dependency-lookup-context.xml ： defining beans [user,superUser,objectFactory];
+        HierarchicalBeanFactory parentBeanFactory = createParentBeanFactory();
+        beanFactory.setParentBeanFactory(parentBeanFactory);
+        // 有值
+        System.out.println("当前 BeanFactory 的 Parent BeanFactory ： " + beanFactory.getParentBeanFactory());
+        System.out.println("***************************************************");
+        // 查询存在 Local Bean
+        displayContainsLocalBean(beanFactory, "user"); // 不包含：false
+        displayContainsLocalBean(parentBeanFactory, "user"); // 父级 BeanFactory：true
+        System.out.println("**************************************************");
+        // 递归查找Bean
+        displayContainsBean(beanFactory, "user"); // 包含：true
+        displayContainsBean(parentBeanFactory, "user"); // 父级 BeanFactory：true
+        context.refresh();
+        context.stop();
+    }
+    private static void displayContainsBean(HierarchicalBeanFactory beanFactory, String beanName) {
+        System.out.printf("当前 BeanFactory[%s] 是否包含 Bean[name : %s] : %s\n", beanFactory, beanName,
+                containsBean(beanFactory, beanName));
+    }
+    // 递归查找是否包含Bean
+    private static boolean containsBean(HierarchicalBeanFactory beanFactory, String beanName) {
+        // 找到父级BeanFactory
+        BeanFactory parentBeanFactory = beanFactory.getParentBeanFactory();
+        if (parentBeanFactory instanceof HierarchicalBeanFactory) {
+            HierarchicalBeanFactory parentHierarchicalBeanFactory = HierarchicalBeanFactory.class.cast(parentBeanFactory);
+            // 递归查找
+            if (containsBean(parentHierarchicalBeanFactory, beanName)) {
+                return true;
+            }
+        }
+        // 本身BeanFactory判断是否包含
+        return beanFactory.containsLocalBean(beanName);
+    }
+    // 直接通过 BeanFactory 判断是否包含Bean
+    private static void displayContainsLocalBean(HierarchicalBeanFactory beanFactory, String beanName) {
+        System.out.printf("当前 BeanFactory[%s] 是否包含 Local Bean[name : %s] : %s\n",
+                beanFactory, beanName, beanFactory.containsLocalBean(beanName));
+    }
+    public static ConfigurableListableBeanFactory createParentBeanFactory() {
+        // 创建 BeanFactory 容器
+        DefaultListableBeanFactory beanFactory = new DefaultListableBeanFactory();
+        XmlBeanDefinitionReader reader = new XmlBeanDefinitionReader(beanFactory);
+        // XML 配置文件 ClassPath 路径
+        String location = "classpath:/META-INF/dependency-lookup-context.xml";
+        // 加载配置
+        reader.loadBeanDefinitions(location);
+        return beanFactory;
+    }
+}
+```
+
+## 5、Bean延迟查找
+
+Bean 延迟依赖查找接口
+- org.springframework.beans.factory.ObjectFactory
+- org.springframework.beans.factory.ObjectProvider
+    - Spring 5 对 Java 8 特性扩展
+    - 函数式接口
+        - getIfAvailable(Supplier)
+        - ifAvailable(Consumer)
+    - Stream 扩展 - stream()
+
+```java
+public class ObjectProviderDemo {
+    public static void main(String[] args) {
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext();
+        context.register(ObjectProviderDemo.class);
+        context.refresh();
+        ObjectProvider<User> objectProvider = context.getBeanProvider(User.class);
+        // User 存在多个定义的Bean时
+        objectProvider.stream().forEach(System.out::println);
+        // Person 在容器中并不存在
+        ObjectProvider<Person> beanProvider = context.getBeanProvider(Person.class);
+        Person person = beanProvider.getIfAvailable(Person::createPerson);
+        context.close();
+    }
+}
+```
