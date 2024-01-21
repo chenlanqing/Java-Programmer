@@ -877,6 +877,7 @@ protected Object invokeWithinTransaction(Method method, @Nullable Class<?> targe
 # 六、Spring事件
 
 - [Spring自定义事件监听](https://juejin.cn/post/6955783021224001567)
+- [Spring事件-泛型类型事件](https://mp.weixin.qq.com/s/le4rbXG--JSpixro-sroMg)
 
 ## 1、理解Spring事件、监听机制
 
