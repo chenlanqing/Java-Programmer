@@ -2052,9 +2052,6 @@ public class OutClass{
 
 ## 3、final
 
-* [final关键字](http://www.importnew.com/18586.html)
-* [深入理解Java中的final关键字](http://www.importnew.com/7553.html)
-
 ### 3.1、含义
 
 `final` 在Java中是一个保留的关键字，可以声明成员变量、方法、类以及本地变量。一旦你将引用声明作 final，你将不能改变这个引用了，编译器会检查代码，如果你试图将变量再次初始化的话，编译器会报编译错误；

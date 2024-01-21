@@ -817,7 +817,6 @@ public Set<K> keySet() {
 * [Java8 HashMap实现原理](http://www.codeceo.com/article/java8-hashmap-learn.html)
 * [JDK8重新认识HashMap](https://tech.meituan.com/java-hashmap.html)
 * [HashMap完全解读](http://www.hollischuang.com/archives/82)
-* [Java HashMap工作原理](http://www.importnew.com/16599.html)
 * [Java HashMap工作原理及实现:(JDK8)](http://yikun.github.io/2015/04/01/Java-HashMap%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E5%AE%9E%E7%8E%B0/)
 * [hash()分析](http://www.hollischuang.com/archives/2091)
 * [HashMap 和 ConcurrentHashMap 全解析](https://javadoop.com/post/hashmap)

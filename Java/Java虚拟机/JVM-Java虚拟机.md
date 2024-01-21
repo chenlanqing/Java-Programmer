@@ -1581,7 +1581,6 @@ Java虚拟机将结束生命周期的几种情况
 ## 6.10、类加载案例分析
 
 ```java
-//  http://www.importnew.com/18566.html
 public class StaticTest{
 	public static void main(String[] args){
 		staticFunction();
@@ -2658,9 +2657,7 @@ public class ShutdownHookDemo {
 
 # 参考文章
 
-* [Java内存区域与内存溢出](http://www.importnew.com/19946.html)
 * [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
-* [深入理解JVM内幕：从基本结构到Java 7新特性](http://www.importnew.com/1486.html)
 * [ClassLoader机制](http://www.hollischuang.com/archives/199)
 * [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
 * [JVM逃逸分析](https://my.oschina.net/hosee/blog/638573)
