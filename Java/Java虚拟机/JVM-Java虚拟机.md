@@ -1367,7 +1367,11 @@ public class NetworkClassLoader extends ClassLoader {
 
 ---
 
-### 6.8.2、验证：确保被加载的类的正确性
+### 6.8.2、Java 类的链接
+
+将 Java 类的二进制代码合并到 JVM 的运行状态之中的过程。在链接之前，这个类必须被成功加载，分为三部分：verification检测、preparation准备、resolution解析
+
+#### 6.8.2.1、验证：确保被加载的类的正确性
 
 连接阶段的第一步，这一阶段的目的是为了确保 Class 文件的字节流中包含的信息符合当前虚拟机的要求，并且不会危害虚拟机自身的安全；验证阶段大致会完成 4 个阶段的检验动作
 - （1）文件格式验证：验证字节流是否符合Class文件格式的规范，并且能被当前版本的虚拟机处理，主要验证点：
@@ -1405,7 +1409,7 @@ public class NetworkClassLoader extends ClassLoader {
 	
 验证阶段是非常重要的，但不是必须的，它对程序运行期没有影响。如果所运行的的全部代码都已经被反复使用和验证，那么在实施阶段可以考虑采用 `-Xverifynone`参数来关闭大部分的类验证措施，缩短虚拟机加载的时间
 
-### 6.8.3、准备：为类的静态变量分配内存，并将其初始化为默认值
+#### 6.8.2.2、准备：为类的静态变量分配内存，并将其初始化为默认值
 
 - 是正式为类变量分配内存并设置类变量初始值的阶段，变量所使用的内存都将在方法区中进行分配：这时候进行内存分配的仅包括类变量（static 修饰的变量），而不包括实例变量，实例变量会在对象实例化时随着对象一块分配在Java堆中；
 
@@ -1421,7 +1425,7 @@ public class NetworkClassLoader extends ClassLoader {
 
 - 特殊情况是指：`public static final int value=123`，即当类字段的字段属性是 ConstantValue时，会在准备阶段初始化为指定的值，所以标注为 final 之后，value的值在准备阶段初始化为`123`而`非0`
 	
-### 6.8.4、解析：把类中的符号引用转换为直接引用
+#### 6.8.2.3、解析：把类中的符号引用转换为直接引用
 
 解析阶段是虚拟机将常量池内的符号引用替换为直接引用的过程
 - 虚拟机要求在执行`anewarray、checkcast、getfield、getstatic、instanceof、invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual、ldc、ldc_w、multianewarray、new、putstatic、putfield`这16个用于操作符合引用的字节码指令之前，先对它们所使用的符号进行解析。虚拟机可以根据需要来判断是在类加载器加载时就对常量池中的符号引用进行解析，还是等到一个符号引用将要被使用前才去解析他；
@@ -1430,7 +1434,7 @@ public class NetworkClassLoader extends ClassLoader {
 
 - 解析动作主要针对类或接口、字段、类方法、接口方法、方法类型、方法句柄和调用点限定符7类符号引用进行；分别对应常量池的：`CONSTANT_Class_info、CONSTANT_Fieldref_info、CONSTANT_Methodref_info、CONSTANT_InterfaceMethodref_info、CONSTANT_MethodType_info、CONSTANT_MethodHandle_info、CONSTANT_InvokeDynamic_info`；
 
-### 6.8.5、初始化
+### 6.8.3、初始化
 
 类初始化阶段是类加载过程的最后一步，真正开始执行类中定义的java程序代码
 
@@ -1462,41 +1466,23 @@ public class NetworkClassLoader extends ClassLoader {
 	- ⑤、当使用jdk1.7动态语言支持时，如果一个`java.lang.invoke.MethodHandle` 实例最后的解析结果`REF_getstatic`、`REF_putstatic`、`REF_invokeStatic`、
 		的方法句柄，并且这个方法句柄所对应的类没有进行初始化，则需要先出触发其初始化。抛开虚拟机层面，可以理解为：
 		- ①、当创建某个类的新实例时（如通过new或者反射，克隆，反序列化等）
-		- ②、当调用某个类的静态方法时
-		- ③、当使用某个类或接口的静态字段时
+		- ②、当遇到调用静态方法的指令时，初始化该静态方法所在的类；
+		- ③、当遇到访问静态字段的指令时，初始化该静态字段所在的类；
 		- ④、当调用Java API 中的某些反射方法时，比如类Class中的方法，或者java.lang.reflect中的类的方法时
-		- ⑤、当初始化某个子类时
+		- ⑤、子类的初始化会触发父类的初始化；
 		- ⑥、当虚拟机启动某个被标明为启动类的类（即包含main方法的那个类）
+		- ⑦、如果一个接口定义了 default 方法，那么直接实现或者间接实现该接口的类的初始化，会触发该接口的初始化；
+		- ⑧、当初次调用 MethodHandle 实例时，初始化该 MethodHandle 指向的方法所在的类。
 
 - 不触发类的初始化：所有引用类的方式不会触发初始化，称为被动引用
-	- ①、通过子类引用父类的静态字段，不会导致子类初始化；对于 HotSpot 虚拟机，可以通过 `-XX:+TraceClassLoading` 参数观察到此操作会导致子类的加载
-	- ②、通过数组定义来引用类，不会触发此类的初始化
-	- ③、常量在编译阶段会存入调用类的常量池中，本质上并没有直接引用到定义常量的类，因此不会触发定义常量的类的初始化
+	- ①、通过子类引用父类的静态字段，不会导致子类初始化；对于 HotSpot 虚拟机，可以通过 `-XX:+TraceClassLoading` 参数观察到此操作会导致子类的加载；
+	- ②、通过数组定义来引用类，不会触发此类的初始化；
+	- ③、常量在编译阶段会存入调用类的常量池中，本质上并没有直接引用到定义常量的类，因此不会触发定义常量的类的初始化；
 
 - `<init>()`: 在实例创建出来的时候调用，包括调用new操作符；调用 Class 或 Java.lang.reflect.Constructor 对象的newInstance()方法；调用任何现有对象的clone()方法；通过 java.io.ObjectInputStream 类的getObject() 方法反序列化
 
-### 6.8.6、Java 类的链接
 
-将 Java 类的二进制代码合并到 JVM 的运行状态之中的过程。在链接之前，这个类必须被成功加载，分为三部分：verification检测、preparation准备、resolution解析
-	
-- **verification 检测：**
-
-	验证是用来确保Java类的二进制表示在结构上是完全正确的。如果验证过程出现错误的话，会抛出java.lang.VerifyError错误；linking的resolve会把类中成员方法、成员变量、类和接口的符号引用替换为直接引用，而在这之前，需要检测被引用的类型正确性和接入属性是否正确（就是 public、private的的问题）诸如：检查 final class没有被继承，检查静态变量的正确性等等；
-
-- **preparation准备：**
-
-	- ①、准备过程则是创建Java类中的静态域，并将这些域的值设为默认值。准备过程并不会执行代码。在一个Java类中	会包含对其它类或接口的形式引用，
-		包括它的父类、所实现的接口、方法的形式参数和返回值的Java类等；
-
-	- ②、对类的成员变量分配空间。虽然有初始值，但这个时候不会对他们进行初始化（因为这里不会执行任何 Java 代码）。具体如下：所有原始类型的值都为 0；如float：0f、int：0、boolean：0（注意 boolean 底层实现大多使用 int），引用类型则为null。值得注意的是，JVM 可能会在这个时期给一些有助于程序运行效率提高的数据结构分配空间;；
-
-- **resolution解析：**
-
-	解析的过程就是确保这些被引用的类能被正确的找到。解析的过程可能会导致其它的Java类被加载。可以在符号引用第一次被使用时完成，即所谓的
-	延迟解析（late resolution）但对用户而言，这一步永远是延迟解析的，即使运行时会执行 early resolution，但程序不会显示的在第一次判断
-	出错误时抛出错误，而会在对应的类第一次主动使用的时候抛出错误！
-
-### 6.8.7、卸载
+### 6.8.4、卸载
 
 Java虚拟机将结束生命周期的几种情况
 - 执行了`System.exit()`方法；
@@ -1727,28 +1713,37 @@ http://osgi.com.cn/article/7289378
 
 # 8、方法调用
 
-[多态性实现机制-静态分派与动态分派](http://www.importnew.com/20071.html)
-
 方法调用阶段的唯一任务就是确定被调用方法的版本，即调用哪一个方法
+
+Java 虚拟机识别方法的关键在于`类名`、`方法名`以及`方法描述符`（method descriptor），其中`方法描述符`，它是由`方法的参数类型`以及`返回类型`所构成。在同一个类中，如果同时出现多个名字相同且描述符也相同的方法，那么 Java 虚拟机会在类的验证阶段报错；
+
+Java 虚拟机中关于方法重写的判定同样基于方法描述符。也就是说，如果子类定义了与父类中非私有、非静态方法同名的方法，那么只有当这两个方法的参数类型以及返回类型一致，Java 虚拟机才会判定为重写。
+
+对于 Java 语言中重写而 Java 虚拟机中非重写的情况，编译器会通过生成桥接方法来实现 Java 中的重写语义。
+
+调用方法的字节指令：
+- ①、invokestatic：调用静态方法
+- ②、invokespecial：用于调用私有实例方法、构造器，以及使用 super 关键字调用父类的实例方法或构造器，和所实现接口的默认方法。
+- ③、invokevirtual：调用所有的非私有实例方法
+- ④、invokeinterface：调用接口方法，会在运行时再确定一个实现此接口的对象
+- ⑤、invokedynamic：只要能被invokestatic和invokespecial指令调用的方法，都可以在解析阶段确定唯一的调用版本，符合这个条件的有：静态方法、私有方法、实例构造器和父类方法四类，它们在类加载时就会把符号引用解析为该方法的直接引用.这类方法称为非虚方法(包括 final 方法)，与之相反，其他方法称为虚方法（final 方法除外），JDK8后新增的lambda表达式是基于该指令执行的；
+
+对于 invokevirtual 以及 invokeinterface 而言，在绝大部分情况下，虚拟机需要在执行过程中，根据调用者的动态类型，来确定具体的目标方法。均属于 Java 虚拟机中的虚方法调用。
+
+***注意：*** 虽然调用final方法使用的是invokevirtual指令，但由于它无法覆盖，没有其他版本，所以也无需对方发接收者进行多态选择.在Java语言规范中明确说明了final方法是一种非虚方法
 
 ## 8.1、方法解析
 
-- Class 文件的编译过程不包含传统编译中的连接步骤，一切方法调用在Class文件里面存储的都只是符号引用，而不是方法在实际运行时内存布局中入口地址，在类加载的解析阶段，会将其中一部分符号引用转化为直接引用。这个特性使得Java可以在类运行期间才能确定某些目标方法的直接引用，称为动态连接，部分方法的符号引用在类加载阶段或第一次使用时转为直接引用，这种转化称为静态解析；
+在编译过程中，并不知道目标方法的具体内存地址。因此，Java 编译器会暂时用符号引用来表示该目标方法。这一符号引用包括目标方法所在的类或接口的名字，以及目标方法的方法名和方法描述符
 
-- 静态解析成立的前提：方法在程序真正执行前就有一个可确定的调用版本，并且这个方法的调用版本在运行期是不可改变的换句话说：调用目标在编译器进行编译时就必须确定下来，这类方法的调用称为"解析"；
+一切方法调用在Class文件里面存储的都只是符号引用，而不是方法在实际运行时内存布局中入口地址，在类加载的解析阶段，会将其中一部分符号引用转化为直接引用。这个特性使得Java可以在类运行期间才能确定某些目标方法的直接引用，称为动态连接，部分方法的符号引用在类加载阶段或第一次使用时转为直接引用，这种转化称为静态解析；
 
-- Java 中符合“编译器可知，运行期不可变”这个要求的方法主要有静态方法和私有方法两大类，这两种方法都不可能通过继承或别的方式重写出其他的版本，因此它们都适合在类加载阶段进行解析。
+静态解析成立的前提：方法在程序真正执行前就有一个可确定的调用版本，并且这个方法的调用版本在运行期是不可改变的换句话说：调用目标在编译器进行编译时就必须确定下来，这类方法的调用称为"解析"；
 
-- 调用方法的字节指令：
-	- ①、invokestatic：调用静态方法
-	- ②、invokespecial：调用实例构造器`<init>`方法、私有方法和父类方法，jdk8中还包括所实现接口的默认方法
-	- ③、invokevirtual：调用所有的非私有实例方法
-	- ④、invokeinterface：调用接口方法，会在运行时再确定一个实现此接口的对象
-	- ⑤、invokedynamic：只要能被invokestatic和invokespecial指令调用的方法，都可以在解析阶段确定唯一的调用版本，符合这个条件的有：静态方法、私有方法、实例构造器和父类方法四类，它们在类加载时就会把符号引用解析为该方法的直接引用.这类方法称为非虚方法(包括 final 方法)，与之相反，其他方法称为虚方法（final 方法除外），JDK8后新增的lambda表达式是基于该指令执行的
+Java 中符合“编译器可知，运行期不可变”这个要求的方法主要有静态方法和私有方法两大类，这两种方法都不可能通过继承或别的方式重写出其他的版本，因此它们都适合在类加载阶段进行解析。
 
-	***注意：***虽然调用final方法使用的是invokevirtual指令，但由于它无法覆盖，没有其他版本，所以也无需对方发接收者进行多态选择.在Java语言规范中明确说明了final方法是一种非虚方法
-
-- 解析调用：一定是个静态过程，在编译期间就完全确定，在类加载的解析阶段就会把涉及的符号引用转化为可确定的直接引用不会延迟到运行期再去完成；分派调用：可能是静态的也可能是动态，根据分派依据的宗量数（方法的调用者和方法的参数统称为方法的宗量），又可分为单分派和多分派，两类分派方式两两组合便构成了静态单分派、静态多分派、动态单分派、动态多分派四种分派情况；分派调用过程将会揭示多态特征的最基本体现：重载和重写；
+- 解析调用：一定是个静态过程，在编译期间就完全确定，在类加载的解析阶段就会把涉及的符号引用转化为可确定的直接引用不会延迟到运行期再去完成；
+- 分派调用：可能是静态的也可能是动态，根据分派依据的宗量数（方法的调用者和方法的参数统称为方法的宗量），又可分为单分派和多分派，两类分派方式两两组合便构成了静态单分派、静态多分派、动态单分派、动态多分派四种分派情况；分派调用过程将会揭示多态特征的最基本体现：重载和重写；
 
 ## 8.2、静态分派
 
@@ -1756,7 +1751,6 @@ http://osgi.com.cn/article/7289378
 - 静态分派的最典型应用就是“多态性中的方法重载”
 - 静态分派发生在编译阶段，因此确定静态分配的动作实际上不是由虚拟机来执行的。编译器虽然能确定出方法的重载版本，但在很多情况下这个重载版本并不是"唯一的"，往往只是确定一个"更加合适"的版本；
 
-- 代码：
 ```java
 class Human{}  
 class Man extends Human{}
@@ -1780,73 +1774,68 @@ public class StaticPai{
 	}
 }
 ```
-- **分析**
+**分析**
+- ①、Human man = new Man();把"Human"称为变量的静态类型，后面的"Man"称为变量的实际类型，静态类型和实际类型在程序中都可以发生一些变化，区别是：静态类型的变化仅仅在使用时发生变化，变量本身的静态类型不会改变，并且最终的静态类型是在编译器可知的，而实际类型变化的结果在运行期才可以确定；
 
-	- ①、Human man = new Man();把"Human"称为变量的静态类型，后面的"Man"称为变量的实际类型，静态类型和实际类型在程序中都可以发生一些变化，区别是：静态类型的变化仅仅在使用时发生变化，变量本身的静态类型不会改变，并且最终的静态类型是在编译器可知的，而实际类型变化的结果在运行期才可以确定；
+- ②.在上面的代码中，调用 say() 方法时，方法的调用者都为 sp的前提下，调用哪个重载版本完全取决于传入参数的数量和数据类型；代码中刻意定义了两个静态类型相同、实际类型不同的变量，“可见编译器在重载时是通过参数的静态类型而不是实际类型来作为判定的依据”并且静态类型是编译期可知的，所以在编译阶段，Javac 编译器就根据参数的静态类型决定使用哪个重载版本
 
-	- ②.在上面的代码中，调用 say() 方法时，方法的调用者都为 sp的前提下，调用哪个重载版本完全取决于传入参数的数量和数据类型；代码中刻意定义了两个静态类型相同、实际类型不同的变量，“可见编译器在重载时是通过参数的静态类型而不是实际类型来作为判定的依据”并且静态类型是编译期可知的，所以在编译阶段，Javac 编译器就根据参数的静态类型决定使用哪个重载版本
-
-- **重载方法匹配优先级**
-	```java
-	public class Overload {
-		public static void main(String[] args) {
-			sayHello('a');
-		}
-		// 方法-1
-		public static void sayHello(Object arg) {
-			System.out.println("Hello object");
-		}
-		// 方法-2
-		public static void sayHello(int arg) {
-			System.out.println("Hello int");
-		}
-		// 方法-3
-		public static void sayHello(long arg) {
-			System.out.println("Hello long");
-		}
-		// 方法-4
-		public static void sayHello(Character arg) {
-			System.out.println("Hello Character");
-		}
-		// 方法-5
-		public static void sayHello(char arg) {
-			System.out.println("Hello char");
-		}
-		// 方法-6
-		public static void sayHello(char... arg) {
-			System.out.println("Hello char...");
-		}
-		// 方法-7
-		public static void sayHello(Serializable arg) {
-			System.out.println("Hello Serializable");
-		}
-		// 方法-8
-		public static void sayHello(Comparable arg) {
-			System.out.println("Hello Comparable");
-		}
+**重载方法匹配优先级**
+```java
+public class Overload {
+	public static void main(String[] args) {
+		sayHello('a');
 	}
-	```
-	分析上述代码
-	- 8个方法都在存在的情况，默认匹配的是`方法-5`，因为`'a'`是一个char类型的数据；
-	- 如果把`方法-5`注释掉，那么就会调用到`方法-2`，这里发生了自动类型转换，‘a’ 除了可以代表是一个字符外，还可以代表数字97；
-	- 把`方法-2`注释掉，就会调用到`方法-3`，此时发生了两次自动类型转换，会将其进一步转换为long类型的97L。自动类型转换顺序：`char -> int -> long -> float -> double`。不会匹配搭配byte和short类型的重载；
-	- 把`方法-3`注释掉，此时调用的是`方法-4`，此时发生了一次自动装箱，将‘a’包装为Character；
-	- 把`方法-4`注释掉，此时代码会编译报错，因为`方法-7`和`方法-8`同时存在的话，无法确定需要自动转型到哪一种类型，拒绝编译。假设`方法-8`不存在，那么此时会调用`方法-7`，因为 java.lang.Serializable 是 java.lang.Character 类实现的一个接口，在自动装箱后找不到装箱类，但是找到了装箱类实现了的接口类型，所以会转换为该接口类型。
-	- java.lang.Comparable 也是 java.lang.Character 类实现的一个接口；
-	- 最后如果只剩下`方法-6`，变长参数的重载优先级是最低的。
+	// 方法-1
+	public static void sayHello(Object arg) {
+		System.out.println("Hello object");
+	}
+	// 方法-2
+	public static void sayHello(int arg) {
+		System.out.println("Hello int");
+	}
+	// 方法-3
+	public static void sayHello(long arg) {
+		System.out.println("Hello long");
+	}
+	// 方法-4
+	public static void sayHello(Character arg) {
+		System.out.println("Hello Character");
+	}
+	// 方法-5
+	public static void sayHello(char arg) {
+		System.out.println("Hello char");
+	}
+	// 方法-6
+	public static void sayHello(char... arg) {
+		System.out.println("Hello char...");
+	}
+	// 方法-7
+	public static void sayHello(Serializable arg) {
+		System.out.println("Hello Serializable");
+	}
+	// 方法-8
+	public static void sayHello(Comparable arg) {
+		System.out.println("Hello Comparable");
+	}
+}
+```
+分析上述代码
+- 8个方法都在存在的情况，默认匹配的是`方法-5`，因为`'a'`是一个char类型的数据；
+- 如果把`方法-5`注释掉，那么就会调用到`方法-2`，这里发生了自动类型转换，‘a’ 除了可以代表是一个字符外，还可以代表数字97；
+- 把`方法-2`注释掉，就会调用到`方法-3`，此时发生了两次自动类型转换，会将其进一步转换为long类型的97L。自动类型转换顺序：`char -> int -> long -> float -> double`。不会匹配搭配byte和short类型的重载；
+- 把`方法-3`注释掉，此时调用的是`方法-4`，此时发生了一次自动装箱，将‘a’包装为Character；
+- 把`方法-4`注释掉，此时代码会编译报错，因为`方法-7`和`方法-8`同时存在的话，无法确定需要自动转型到哪一种类型，拒绝编译。假设`方法-8`不存在，那么此时会调用`方法-7`，因为 java.lang.Serializable 是 java.lang.Character 类实现的一个接口，在自动装箱后找不到装箱类，但是找到了装箱类实现了的接口类型，所以会转换为该接口类型。
+- java.lang.Comparable 也是 java.lang.Character 类实现的一个接口；
+- 最后如果只剩下`方法-6`，变长参数的重载优先级是最低的。
 
 ## 8.3、动态分派：与方法重写紧密联系
 
-**8.3.1、根据变量的实际类型来分派方法的执行版本的，而实际类型的确定需要在程序运行时才能确定下来，这种在运行期根据实际类型确定方法执行版本的分派过程称为动态分派**
+**根据变量的实际类型来分派方法的执行版本的，而实际类型的确定需要在程序运行时才能确定下来，这种在运行期根据实际类型确定方法执行版本的分派过程称为动态分派**
 
-**8.3.2、invokevirtual 指令的多态查找过程，其运行时解析过程大致分为：**
-
+**invokevirtual 指令的多态查找过程，其运行时解析过程大致分为：**
 - 找到操作数栈顶的第一个元素所指向的对象的实际类型，记作C；
-
 - 如果在类型C中找到与常量中描述符和简单名称都相符的方法，则间进行访问权限校验，如果通过则返回这个方法的直接引用，查找过程结束;如果不通过，则返回 java.lang.IllegalAccessError 异常；
-
 - 否则，按照继承关系从下往上依次对C的各个父类进行第二步的搜索和验证过程；
-
 - 如果始终没有找到合适的方法，则抛出 java.lang.AbstractMethodError 异常；由于 invokevirtual 指令执行的第一步就是在运行期确定接收者的实际类型，所以两次调用中的 invokevirtual 指令把常量池中的类方法符号引用解析到了不同的直接引用上，这个过程就是 Java 语言中方法重写的本质；
 
 ## 8.4、单分派和多分派
@@ -1885,21 +1874,114 @@ public static void main(java.lang.String[]);
    11: return
   Exception table:
     from  to target type
-      0   3   6  Class java/lang/Exception  // 异常表条目
+      0   3   6  Class java/lang/Exception  // 异常表条目，声明会被捕获的异常
 ```
+编译过后，该方法的异常表拥有一个条目。其 from 指针和 to 指针分别为 0 和 3，代表它的监控范围从索引为 0 的字节码开始，到索引为 3 的字节码结束（不包括 3）。该条目的 target 指针是 6，代表这个异常处理器从索引为 6 的字节码开始。条目的最后一列，代表该异常处理器所捕获的异常类型正是 Exception；
 
-当程序触发异常时，Java虚拟机会自上至下遍历异常表中的所有条目。当触发异常的字节码索引值在某个异常表条目的监控范围内，Java虚拟机会判断所抛出的异常和该条目想要捕获的异常是否匹配。如果匹配，Java虚拟机会将控制流转移至该条目target指针指向的字节码；
-
-如果遍历完所有异常表条目后，Java虚拟机仍未匹配到异常处理器，那么它会弹出当前方法对应的Java栈帧，并且在调用者中重复上述操作。在最坏的情况下，Java虚拟机需要遍历当前线程Java栈上的所有方法的异常表；
+当程序触发异常时，Java虚拟机会自上至下遍历异常表中的所有条目。当触发异常的字节码索引值在某个异常表条目的监控范围内，Java虚拟机会判断所抛出的异常和该条目想要捕获的异常是否匹配。
+- 如果匹配，Java虚拟机会将控制流转移至该条目target指针指向的字节码；
+- 如果遍历完所有异常表条目后，Java虚拟机仍未匹配到异常处理器，那么它会弹出当前方法对应的Java栈帧，并且在调用者中重复上述操作。在最坏的情况下，Java虚拟机需要遍历当前线程Java栈上的所有方法的异常表；
 
 finally代码块的编译：复制finally代码块的内容，分别放在try-catch代码块所有正常执行路径以及异常执行路径的出口中。针对异常执行路径，Java编译器会生成一个或多个异常条目，监控整个try-catch代码块，并且捕获所有种类的异常。这些异常表条目的target指针将指向另一份复制的finally代码块。并且，在这个finally代码块的最后，Java编译器会重新抛出所捕获的异常。
 
-## 9.2、JVM处理反射
+## 9.2、JVM如何实现反射
 
-[极客时间：JVM反射原理](https://time.geekbang.org/column/article/12192)
+### 9.2.1、反射调用原理
+
+- [JVM是如何实现反射的](https://heapdump.cn/article/3530561)
+
+以方法的反射调用为例，即Method.invoke
+```java
+public final class Method extends Executable {
+  ...
+  	public Object invoke(Object obj, Object... args) throws ... {
+		... // 权限检查
+		MethodAccessor ma = methodAccessor;
+		if (ma == null) {
+		ma = acquireMethodAccessor();
+		}
+		return ma.invoke(obj, args);
+ 	}
+}
+```
+通过 Method.invoke 的源代码，可以发现，它实际上委派给 MethodAccessor 来处理。MethodAccessor 是一个接口，它有两个已有的具体实现：一个通过本地方法来实现反射调用（本地实现），另一个则使用了委派模式（委派实现）；每个 Method 实例的第一次反射调用都会生成一个委派实现，它所委派的具体实现便是一个本地实现
+```java
+public class ReflectionDemo {
+    public static void target(int i) {
+        new Exception("#" + i).printStackTrace();
+    }
+    public static void main(String[] args) throws Exception{
+        Class<?> clazz = Class.forName("ReflectionDemo");
+        Method method = clazz.getMethod("target", int.class);
+        method.invoke(null, 0);
+    }
+}
+// 输出结果：
+java.lang.Exception: #0
+	at ReflectionDemo.target(ReflectionDemo.java:11)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+	at ReflectionDemo.main(ReflectionDemo.java:17)
+```
+可以看到，反射调用先是调用了 Method.invoke，然后进入委派实现（DelegatingMethodAccessorImpl），再然后进入本地实现（NativeMethodAccessorImpl），最后到达目标方法；
+
+Java 的反射调用机制还设立了另一种动态生成字节码的实现（下称动态实现），直接使用 invoke 指令来调用目标方法，之所以采用`委派实现`，便是为了能够在`本地实现`以及`动态实现`中切换。
+```java
+// 动态实现的伪代码，
+package jdk.internal.reflect;
+public class GeneratedMethodAccessor1 extends ... {
+  @Overrides    
+  public Object invoke(Object obj, Object[] args) throws ... {
+    Test.target((int) args[0]);
+    return null;
+  }
+}
+```
+动态实现和本地实现相比，其运行效率要快上 20 倍。这是因为动态实现无需经过 Java 到 C++ 再到 Java 的切换，但由于生成字节码十分耗时，仅调用一次的话，反而是本地实现要快上 3 到 4 倍 [3]。
+
+考虑到许多反射调用仅会执行一次，Java 虚拟机设置了一个阈值 15（可以通过 `-Dsun.reflect.inflationThreshold=` 来调整），当某个反射调用的调用次数在 15 之下时，采用本地实现；当达到 15 时，便开始动态生成字节码，并将委派实现的委派对象切换至动态实现，这个过程我们称之为 Inflation；
+```java
+// 在上面代码基础之上新增 20次循环调用
+for (int i = 0; i < 20; i++) {
+	method.invoke(null, i);
+}
+// 输出如下： java -verbose:class ReflectionDemo
+java.lang.Exception: #0
+        at ReflectionDemo.target(ReflectionDemo.java:5)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+        at ReflectionDemo.main(ReflectionDemo.java:11)
+        ...
+[0.168s][info][class,load] jdk.internal.reflect.GeneratedMethodAccessor1 source: __JVM_DefineClass__		
+java.lang.Exception: #15
+        at ReflectionDemo.target(ReflectionDemo.java:5)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+        at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:62)
+        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+        at ReflectionDemo.main(ReflectionDemo.java:11)
+java.lang.Exception: #16
+        at ReflectionDemo.target(ReflectionDemo.java:5)
+        at jdk.internal.reflect.GeneratedMethodAccessor1.invoke(Unknown Source)
+        at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+        at java.base/java.lang.reflect.Method.invoke(Method.java:566)
+        at ReflectionDemo.main(ReflectionDemo.java:11)
+...
+```
+在第 15 次（从 0 开始数）反射调用时，我们便触发了动态实现的生成。这时候，Java 虚拟机额外加载了不少类。其中，最重要的当属 GeneratedMethodAccessor1。并且，从第 16 次反射调用开始，我们便切换至这个刚刚生成的动态实现。反射调用的 Inflation 机制是可以通过参数（`-Dsun.reflect.noInflation=true`）来关闭的。这样一来，在反射调用一开始便会直接生成动态实现，而不会使用委派实现或者本地实现；
+
+### 9.2.2、反射调用开销
+
+方法的反射调用会带来不少性能开销，原因主要有三个：
+- 变长参数方法导致的 Object 数组；
+- 基本类型的自动装箱、拆箱；
+- 最重要的方法内联；
 
 # 10、Java编译
-
 
 ## 10.1、编译步骤
 
@@ -2402,6 +2484,7 @@ static class User {}
 	- 调用频率预测；
 	- 分支频率预测；
 	- 裁剪未被选择的；
+- 即时编译后的 Java 程序的执行效率，是可能超过 C++ 程序的。这是因为与静态编译相比，即时编译拥有程序的运行时信息，并且能够根据这个信息做出相应的优化；比如：虚方法是用来实现面向对象语言多态性的。对于一个虚方法调用，尽管它有很多个目标方法，但在实际运行过程中它可能只调用其中的一个。这个信息便可以被即时编译器所利用，来规避虚方法调用的开销，从而达到比静态编译的 C++ 程序更高的性能
 
 # 11、Java 垃圾收集机制
 
