@@ -779,6 +779,59 @@ String在运行期也是有限制的，也就是 `Integer.MAX_VALUE`，约为4G�
 
 如果字符串中包含的汉字超过 Latin-1 可表示范围内的字符，byte 和 char 所占用的空间是一样的；
 
+## 27、关于String +和StringBuffer的比较
+
+在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)效率其实比 Stringbuffer更快
+
+```java
+public class Main{	    
+	public static void main(String[] args){		
+		String string = "a" + "b" + "c";
+
+		StringBuffer stringBuffer = new StringBuffer();
+		stringBuffer.append("a").append("b").append("c");
+		string = stringBuffer.toString();
+	}	    
+}
+```
+**7.1、String+的写法要比 Stringbuffer 快，是因为在编译这段程序的时候，编译器会进行常量优化。**
+
+它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中，看如下反编译的代码：
+```java
+public class Main{}
+	public static void main(String[] args){
+		String string = "abc";
+		StringBuffer stringBuffer = new StringBuffer();
+		stringBuffer.append("a").append("b").append("c");
+		string = stringBuffer.toString();
+	}
+}
+```
+原因是因为 String+其实是由 StringBuilder 完成的，而一般情况下 StringBuilder 要快于 StringBuffer，这是因为 StringBuilder 线程不安全，少了很多线程锁的时间开销，因此这里依然是 string+的写法速度更快;
+
+```java
+/*   1   */
+String a = "a";
+String b = "b";
+String c = "c";
+String string = a + b + c;
+/*   2   */
+StringBuffer stringBuffer = new StringBuffer();
+stringBuffer.append(a);
+stringBuffer.append(b);
+stringBuffer.append(c);
+string = stringBuffer.toString();
+```
+**7.2、字符串拼接方式：+、concat() 以及 append() 方法，append()速度最快，concat()次之，+最慢**
+
+- 编译器对+进行了优化，它是使用 StringBuilder 的 append() 方法来进行处理的，编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串，变慢的关键原因就在于 new StringBuilder()和toString()，这里可是创建了 10 W 个 StringBuilder 对象，而且每次还需要将其转换成 String
+
+- concat：
+	concat() 的源码，它看上去就是一个数字拷贝形式，我们知道数组的处理速度是非常快的，但是由于该方法最后是这样的：
+	`return new String(0， count + otherLen， buf);`这同样也创建了 10 W 个字符串对象，这是它变慢的根本原因
+
+- append() 方法拼接字符串：并没有产生新的字符串对象；
+
 # 八、String的使用技巧
 
 ## 1、数字前补0
