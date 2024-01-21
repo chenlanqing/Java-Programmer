@@ -51,7 +51,7 @@ Write once， run anywhere
 - 依赖倒置原则
 - 接口隔离原则
 
-# 二、Java隐蔽问题
+# 二、Java数据类型
 
 ## 1、基本类型与引用类型
 
@@ -91,173 +91,102 @@ Integer i04 = new Integer(59);
 
 	所以可以说，实际上尾数确定了浮点数的精度，而数的大小主要是靠指数位，尾数只有23位，加上隐含的一位整数位便是24位。也就是说int类型的值在2^24以内，float是可以精确表示的，但是当超过这个数的时候就不一定能精确表示了。
 
-## 2、关于String +和StringBuffer的比较
+## 2、Java基本类型大小
 
-在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)效率其实比 Stringbuffer更快
+### 2.1、基本类型的存储
+
+在 Java 虚拟机规范中，局部变量区等价于一个数组，并且可以用正整数来索引。除了 long、double 值需要用两个数组单元来存储之外，其他基本类型以及引用类型的值均占用一个数组单元；
+
+- boolean、byte、char、short 这四种类型，在`栈`上占用的空间和 int 是一样的，和引用类型也是一样的。因此，在 32 位的 HotSpot 中，这些类型在栈上将占用 4 个字节；而在 64 位的 HotSpot 中，他们将占 8 个字节；
+- 对于 byte、char 以及 short 这三种类型的字段或者数组单元，它们在堆上占用的空间分别为一字节、两字节，以及两字节，也就是说，跟这些类型的值域相吻合；
+
+因此，当我们将一个 int 类型的值，存储到这些类型的字段或数组时，相当于做了一次隐式的掩码操作。举例来说，当我们把 0xFFFFFFFF（-1）存储到一个声明为 char 类型的字段里时，由于该字段仅占两字节，所以高两位的字节便会被截取掉，最终存入“\uFFFF“
+
+boolean 字段和 boolean 数组则比较特殊。在 HotSpot 中，boolean 字段占用一字节，而 boolean 数组则直接用 byte 数组来实现。为了保证堆中的 boolean 值是合法的，HotSpot 在存储时显式地进行掩码操作，也就是说，只取最后一位的值存入 boolean 字段或数组中；
+
+### 2.2、基本类型的加载
+
+Java 虚拟机的算数运算几乎全部依赖于操作数栈。也就是说，需要将堆中的 boolean、byte、char 以及 short 加载到操作数栈上，而后将栈上的值当成 int 类型来运算。
+
+对于 boolean、char 这两个无符号类型来说，加载伴随着零扩展。举个例子，char 的大小为两个字节。在加载时 char 的值会被复制到 int 类型的低二字节，而高二字节则会用 0 来填充；boolean的掩码处理是取低位的最后一位；
+
+对于 byte、short 这两个类型来说，加载伴随着符号扩展。举个例子，short 的大小为两个字节。在加载时 short 的值同样会被复制到 int 类型的低二字节。如果该 short 值为非负数，即最高位为 0，那么该 int 类型的值的高二字节会用 0 来填充，否则用 1 来填充；
+
+## 3、boolean占用字节数
+
+- [asmtools-分析boolean](https://wenjie.store/archives/ant-asmtools-awk)
+
+在 Java 虚拟机规范中，`boolean` 类型则被映射成 int 类型。具体来说，`“true”`被映射为整数 `1`，而`“false”`被映射为整数 `0`。这个编码规则约束了 Java 字节码的具体实现。当然，这个约束很容易绕开。可以使用的工具：除汇编工具 AsmTools 外，还有许多可以修改字节码的 Java 库，比如说 ASM；
+
+对于 Java 虚拟机来说，它看到的 boolean 类型，早已被映射为整数类型。因此，将原本声明为 boolean 类型的局部变量，赋值为除了 0、1 之外的整数值，在 Java 虚拟机看来是“合法”的
+
+- 在Java虚拟机中没有任何供 `boolean`值专用的字节码指令，Java语言表达式所操作的 `boolean`值，在编译之后都使用Java虚拟机中的`int`数据类型来代替。
+- Java虚拟机直接支持 `boolean`类型的数组，虚拟机的 `navarra`指令参见第6章的`newarray`小节可以创建这种数组。`boolean`类型数组的访问与修改共用`byte`类型数组的`baload`和 `bastore`指令；
+- 因为在虚拟机规范中说了，`boolean`值在编译之后都使用Java虚拟机中的`int`数据类型来代替，而int是4个字节，那么`boolean`值就是4个字节。
+- `boolean`类型数组的访问与修改共用byte类型数组的`baload`和 `bastore`指令，因为两者共用，只有两者字节一样才能通用呀，所以`byte`数组中一个`byte`是1个字节，那么boolean数组中`boolean`是1个字节。
+
+Java规范中，没有明确指出boolean的大小。在《Java虚拟机规范》给出了单个boolean占4个字节，和boolean数组1个字节的定义，具体 还要看虚拟机实现是否按照规范来，所以1个字节、4个字节都是有可能的。在 HotSpot 中，boolean 字段占用一字节，而 boolean 数组则直接用 byte 数组来实现
 
 ```java
-public class Main{	    
-	public static void main(String[] args){		
-		String string = "a" + "b" + "c";
-
-		StringBuffer stringBuffer = new StringBuffer();
-		stringBuffer.append("a").append("b").append("c");
-		string = stringBuffer.toString();
-	}	    
+class LotsOfBooleans{
+    boolean a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, aa, ab, ac, ad, ae, af;
+    boolean b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, ba, bb, bc, bd, be, bf;
+    boolean c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, ca, cb, cc, cd, ce, cf;
+    boolean d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, da, db, dc, dd, de, df;
+    boolean e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, ea, eb, ec, ed, ee, ef;
 }
-```
-**2.1、String+的写法要比 Stringbuffer 快，是因为在编译这段程序的时候，编译器会进行常量优化。**
-
-它会将a、b、c直接合成一个常量abc保存在对应的 class 文件当中，看如下反编译的代码：
-```java
-public class Main{}
-	public static void main(String[] args){
-		String string = "abc";
-		StringBuffer stringBuffer = new StringBuffer();
-		stringBuffer.append("a").append("b").append("c");
-		string = stringBuffer.toString();
-	}
+class LotsOfInts{
+    int a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, aa, ab, ac, ad, ae, af;
+    int b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, ba, bb, bc, bd, be, bf;
+    int c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, ca, cb, cc, cd, ce, cf;
+    int d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, da, db, dc, dd, de, df;
+    int e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, ea, eb, ec, ed, ee, ef;
 }
-```
-原因是因为 String+其实是由 StringBuilder 完成的，而一般情况下 StringBuilder 要快于 StringBuffer，这是因为 StringBuilder 线程不安全，少了很多线程锁的时间开销，因此这里依然是 string+的写法速度更快;
+public class Test{
+    private static final int SIZE = 100000;
+    public static void main(String[] args) throws Exception{
+        LotsOfBooleans[] first = new LotsOfBooleans[SIZE];
+        LotsOfInts[] second = new LotsOfInts[SIZE];
 
-```java
-/*   1   */
-String a = "a";
-String b = "b";
-String c = "c";
-String string = a + b + c;
-/*   2   */
-StringBuffer stringBuffer = new StringBuffer();
-stringBuffer.append(a);
-stringBuffer.append(b);
-stringBuffer.append(c);
-string = stringBuffer.toString();
-```
-**2.2、字符串拼接方式：+、concat() 以及 append() 方法，append()速度最快，concat()次之，+最慢**
+        System.gc();
+        long startMem = getMemory();
 
-- 编译器对+进行了优化，它是使用 StringBuilder 的 append() 方法来进行处理的，编译器使用 append() 方法追加后要同 toString() 转换成 String 字符串，变慢的关键原因就在于 new StringBuilder()和toString()，这里可是创建了 10 W 个 StringBuilder 对象，而且每次还需要将其转换成 String
+        for (int i=0; i < SIZE; i++) {
+            first[i] = new LotsOfBooleans();
+        }
 
-- concat：
-	concat() 的源码，它看上去就是一个数字拷贝形式，我们知道数组的处理速度是非常快的，但是由于该方法最后是这样的：
-	`return new String(0， count + otherLen， buf);`这同样也创建了 10 W 个字符串对象，这是它变慢的根本原因
+        System.gc();
+        long endMem = getMemory();
 
-- append() 方法拼接字符串：并没有产生新的字符串对象；
+        System.out.println ("Size for LotsOfBooleans: " + (endMem-startMem));
+        System.out.println ("Average size: " + ((endMem-startMem) / ((double)SIZE)));
 
-## 3、静态代码块、静态变量
+        System.gc();
+        startMem = getMemory();
+        for (int i=0; i < SIZE; i++) {
+            second[i] = new LotsOfInts();
+        }
+        System.gc();
+        endMem = getMemory();
 
-其作用级别为类；构造代码块、构造函数、构造，其作用级别为对象
+        System.out.println ("Size for LotsOfInts: " + (endMem-startMem));
+        System.out.println ("Average size: " + ((endMem-startMem) / ((double)SIZE)));
 
-- （1）静态代码块，它是随着类的加载而被执行，只要类被加载了就会执行，而且只会加载一次，主要用于给类进行初始化。
-- （2）构造代码块，每创建一个对象时就会执行一次，且优先于构造函数，主要用于初始化不同对象共性的初始化内容和初始化实例环境。
-- （3）构造函数，每创建一个对象时就会执行一次；同时构造函数是给特定对象进行初始化，而构造代码是给所有对象进行初始化，作用区域不同；
-
-==> 通过上面的分析，他们三者的执行顺序应该为：静态代码块 > 构造代码块 > 构造函数。
-
-### 3.1、Java 类初始化过程
-
-- 首先，初始化父类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
-- 然后，初始化子类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
-- 其次，初始化父类的普通成员变量和代码块，在执行父类的构造方法；
-- 最后，初始化子类的普通成员变量和代码块，在执行子类的构造方法；
-
-### 3.2、不要在构造器里调用可能被重载的虚方法
-
-父类构造器执行的时候，调用了子类的重载方法，然而子类的类字段还在刚初始化的阶段，刚完成内存布局：
-
-```java
-public class Base{
-	private String baseName = "base";
-	public Base(){
-		callName();
-	}
-	public void callName(){
-		System. out. println(baseName);
-	}
-	static class Sub extends Base{
-		private String baseName = "sub";
-		public void callName(){
-			System. out. println (baseName) ;
-		}
-	}
-	public static void main(String[] args){
-		Base b = new Sub();
-	}
-}
-```
-
-### 3.3、Java 中赋值顺序
-
-- （1）父类的静态变量赋值
-- （2）自身的静态变量赋值
-- （3）父类成员变量赋值
-- （4）父类块赋值
-- （5）父类构造函数赋值
-- （6）自身成员变量赋值
-- （7）自身块赋值
-- （8）自身构造函数赋值
-
-### 3.4、Java 代码执行顺序
-
-```java
-public class TestExecuteCode {
-	public static void main(String[] args) {
-		System.out.println(new B().getValue());
-	}
-	static class A {
-		protected int value;
-		public A(int v){
-			setValue(v);
-		}
-		public void setValue(int value) { this.value = value;}
-		public int getValue() {
-			try {
-				value++;
-				return value;
-			} finally {
-				this.setValue(value);
-				System.out.println(value);
-			}
-		}
-	}
-	static class B extends A {
-		public B(){
-			super(5);
-			setValue(getValue() - 3);
-		}
-		public void setValue(int value) {super.setValue(2 * value);}
-	}
+        // Make sure nothing gets collected
+        long total = 0;
+        for (int i=0; i < SIZE; i++) {
+            total += (first[i].a0 ? 1 : 0) + second[i].a0;
+        }
+        System.out.println(total);
+    }
+    private static long getMemory(){
+        Runtime runtime = Runtime.getRuntime();
+        return runtime.totalMemory() - runtime.freeMemory();
+    }
 }
 ```
 
-- 执行结果：22，34，17
-	（1）子类 B 中重写了父类 A 中的setValue方法：
-	
-	`super(5)` // 调用了父类构造器，其中构造函数里面的`setValue(value)`，调用的是子类的setValue方法
-
-	`finally`块中的：`this.setValue(value)` //调用的也是子类的setValue方法
-
-	而子类`setValue`方法中的：`super.setValue(2*value);` //调用的是父类A的setValue方法
-
-	（2）`try...catch...finally`块中有`return`返回值的情况：`finally` 块中虽然改变了value的值，但`try`块中返回的应该是 return 之前存储的值
-
-- 父类执行时如果有子类的方法重写了父类的方法，调用的子类的重写方法
-
-## 4、给出一个表达式计算其可以按多少进制计算
-
-- 式子`7*15=133`成立，则用的是几进制？可以通过解方程来解决，上述式子可以转换为方程：
-	```
-	7 * (1 * x + 5) = 1 * x^2 + 3 * x + 3
-	x^2 -4x - 32 = 0
-	x = -4 或 x = 8
-	```
-
-- 如果下列的公式成立：`78+78=123`，则采用的是_______进制表示的：
-	```
-	7 * x + 8 + 7 * x + 8 = 1 * x^2 + 2 * x + 3
-	x^2 - 12 * x - 13 = 0
-	x = -1， x = 13
-	```
+另外，大部分指令都没有支持整数类型byte、char、short。编译器在编译期或运行期将byte和short类型的数据带符号扩展为相应的int类型数据，将boolean和char类型数据零位扩展为相应的int类型数据；
 
 ## 5、表达式的数据类型
 
@@ -330,111 +259,6 @@ private static void test1(int a, int b) {
 
 }
 ```
-
-## 6、按照目录结构打印当前目录及子目录
-
-```java
-public class PrintDirectory {
-	public static void main(String[] args) {
-		File file = new File("E：\\下载");
-		PrintDirectory pd = new PrintDirectory();
-		pd.listDirectory(file，0);
-	}
-	//列出该目录的子目录
-	private void listDirectory(File dir，int level){
-		System.out.println(getSpace(level) + dir.getName());
-		level++;
-		File[] files = dir.listFiles();		
-		for(int i=0;i<files.length;i++){
-			if(files[i].isDirectory()){
-				listDirectory(files[i]，level);
-			}else{
-				System.out.println(getSpace(level)+files[i].getName());
-			}
-		}
-	}
-	//按照目录结构打印目录
-	private String getSpace(int level){
-		StringBuilder sb = new StringBuilder();
-		for(int i=0;i<level;i++){
-			sb.append("|--");
-		}
-		return sb.toString();
-	}
-}
-```
-
-## 7、boolean占用字节数
-
-- 在Java虚拟机中没有任何供 `boolean`值专用的字节码指令，Java语言表达式所操作的 `boolean`值，在编译之后都使用Java虚拟机中的`int`数据类型来代替。
-- Java虚拟机直接支持 boolean类型的数组，虚拟机的 navarra指令参见第6章的newarray小节可以创建这种数组。boolean类型数组的访问与修改共用byte类型数组的baload和 bastore指令；
-- 因为在虚拟机规范中说了，boolean值在编译之后都使用Java虚拟机中的int数据类型来代替，而int是4个字节，那么boolean值就是4个字节。
-- boolean类型数组的访问与修改共用byte类型数组的baload和 bastore指令，因为两者共用，只有两者字节一样才能通用呀，所以byte数组中一个byte是1个字节，那么boolean数组中boolean是1个字节。
-
-**总结：boolean在数组情况下为1个字节，单个boolean为4个字节**
-
-Java规范中，没有明确指出boolean的大小。在《Java虚拟机规范》给出了单个boolean占4个字节，和boolean数组1个字节的定义，具体 还要看虚拟机实现是否按照规范来，所以1个字节、4个字节都是有可能的。
-
-```java
-class LotsOfBooleans{
-    boolean a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, aa, ab, ac, ad, ae, af;
-    boolean b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, ba, bb, bc, bd, be, bf;
-    boolean c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, ca, cb, cc, cd, ce, cf;
-    boolean d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, da, db, dc, dd, de, df;
-    boolean e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, ea, eb, ec, ed, ee, ef;
-}
-class LotsOfInts{
-    int a0, a1, a2, a3, a4, a5, a6, a7, a8, a9, aa, ab, ac, ad, ae, af;
-    int b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, ba, bb, bc, bd, be, bf;
-    int c0, c1, c2, c3, c4, c5, c6, c7, c8, c9, ca, cb, cc, cd, ce, cf;
-    int d0, d1, d2, d3, d4, d5, d6, d7, d8, d9, da, db, dc, dd, de, df;
-    int e0, e1, e2, e3, e4, e5, e6, e7, e8, e9, ea, eb, ec, ed, ee, ef;
-}
-public class Test{
-    private static final int SIZE = 100000;
-    public static void main(String[] args) throws Exception{
-        LotsOfBooleans[] first = new LotsOfBooleans[SIZE];
-        LotsOfInts[] second = new LotsOfInts[SIZE];
-
-        System.gc();
-        long startMem = getMemory();
-
-        for (int i=0; i < SIZE; i++) {
-            first[i] = new LotsOfBooleans();
-        }
-
-        System.gc();
-        long endMem = getMemory();
-
-        System.out.println ("Size for LotsOfBooleans: " + (endMem-startMem));
-        System.out.println ("Average size: " + ((endMem-startMem) / ((double)SIZE)));
-
-        System.gc();
-        startMem = getMemory();
-        for (int i=0; i < SIZE; i++) {
-            second[i] = new LotsOfInts();
-        }
-        System.gc();
-        endMem = getMemory();
-
-        System.out.println ("Size for LotsOfInts: " + (endMem-startMem));
-        System.out.println ("Average size: " + ((endMem-startMem) / ((double)SIZE)));
-
-        // Make sure nothing gets collected
-        long total = 0;
-        for (int i=0; i < SIZE; i++) {
-            total += (first[i].a0 ? 1 : 0) + second[i].a0;
-        }
-        System.out.println(total);
-    }
-    private static long getMemory(){
-        Runtime runtime = Runtime.getRuntime();
-        return runtime.totalMemory() - runtime.freeMemory();
-    }
-}
-```
-
-另外，大部分指令都没有支持整数类型byte、char、short。编译器在编译期或运行期将byte和short类型的数据带符号扩展为相应的int类型数据，将boolean和char类型数据零位扩展为相应的int类型数据；
 
 ## 8、如何计算比一个数大的2的幂
 
@@ -805,7 +629,38 @@ public static String toBinaryString(int i) {
 
 ## 5、如何利用位运算
 
-### 5.1、子网掩码
+### 5.1、掩码操作
+
+- [位掩码操作](https://visualgo.net/zh/bitmask)
+- [掩码](https://zhuanlan.zhihu.com/p/30934719)
+- [子网掩码](https://blog.nnwk.net/article/152)
+- [子网掩码计算](https://www.epoos.com/blog/net1/)
+
+用“按位与运算”，将不关注的位遮掩掉，只判断关心的`2的0次方`那个二进制位，这种操作，被习惯性称为掩码操作；
+
+比如如下：
+```java
+public static final int PROGRAMMER = 1; // 程序员（2的0次方，0001）
+public static final int GAMER = 2;      // 玩游戏（2的1次方，0010）
+public static final int OTAKU = 4;      // 宅（2的2次方，0100）
+public static final int MAN = 8;        // 男性（2的3次方，1000）
+```
+可以看到，换算成二进制后，每个数字都只有一位是1，其余位都是0。这样，只用四位二进制数就可以表示一个人是否具有四种不相关的特质；定义一个整形变量，将对应的二进制位“置1”，即可用于表示某人的所有特质；
+- 例1：小张是个程序员，还是个经常玩游戏的宅男。  ⇒   四样齐全，即二进制是1111，换算成十进制15。
+- 例2：小刘不是程序员，她是个玩游戏的宅女。  ⇒  “2的1次方位”以及“2的2次方位”“置1”，即二进制是0110，换算成十进制6。
+```java
+int zhang = 15; // 小张的特质
+int liu = 6; // 小刘的特质
+// 上面写法不明显
+int zhang = PROGRAMMER | GAMER | OTAKU | MAN; // 小张的特质
+int liu = GAMER | OTAKU; // 小刘的特质
+```
+
+**子网掩码**
+
+子网掩码不能单独存在，它必须结合IP地址一起使用。子网掩码只有一个作用，**就是将某个IP地址划分成网络地址和主机地址两部分**。子网掩码的设定必须遵循一定的规则。与IP地址相同，子网掩码的长度也是32位，左边是网络位，用二进制数字“1”表示；右边是主机位，用二进制数字“0”表示
+
+子网掩码的规则：长度 为 4 * 8bit（1字节），由 连续的1 以及 连续的0 两部分组成，例如：`11111111.11111111.11111111.00000000`，对应十进制：`255.255.255.0`
 
 ### 5.2、求平均值
 
@@ -905,6 +760,22 @@ if (x == a) x= b;
 else x= a;
 等价于 x= a ^ b ^ x;
 ```
+
+### 5.7、给出一个表达式计算其可以按多少进制计算
+
+- 式子`7*15=133`成立，则用的是几进制？可以通过解方程来解决，上述式子可以转换为方程：
+	```
+	7 * (1 * x + 5) = 1 * x^2 + 3 * x + 3
+	x^2 -4x - 32 = 0
+	x = -4 或 x = 8
+	```
+
+- 如果下列的公式成立：`78+78=123`，则采用的是_______进制表示的：
+	```
+	7 * x + 8 + 7 * x + 8 = 1 * x^2 + 2 * x + 3
+	x^2 - 12 * x - 13 = 0
+	x = -1， x = 13
+	```
 
 ## 6、其他位运算
 
@@ -2816,7 +2687,6 @@ class Overloaded {
 能够用一个统一的接口名称来调用一系列方法
 - 重载本身并不是多态，同时运行时绑定重载方法也不是多态的表现；
 - 如下例子：重载方法"3"注释与不注释，结果有和不一样
-
 ```java			 
 public class NullArguementOverloading {
 	// 方法2和方法3两个方法并存，会报错，因为其不知道到底该调用哪个方法；
@@ -2835,18 +2705,23 @@ public class NullArguementOverloading {
 	}
 }
 ```
-①、注释掉"3"，运行结果：`Double array argument method`
+- ①、注释掉"3"，运行结果：`Double array argument method`
+- ②、不注释掉：`obj.overLoad(null);`编译错误
 
-②、不注释掉：`obj.overLoad(null);`编译错误
+Java对重载的处理有最精确匹配原则，Java 的重载解析过程是以三阶段运行的：
+- 第一阶段：在不考虑对基本类型自动装拆箱（auto-boxing，auto-unboxing），以及可变长参数的情况下选取重载方法；
+- 第二阶段：如果在第 1 个阶段中没有找到适配的方法，那么在允许自动装拆箱，但不允许可变长参数的情况下选取重载方法；
+- 第三阶段：如果在第 2 个阶段中没有找到适配的方法，那么在允许自动装拆箱以及可变长参数的情况下选取重载方法。
 
-- Java对重载的处理有最精确匹配原则：
-	- ①、Java 的重载解析过程是以两阶段运行的：
-		- 第一阶段 选取所有可获得并且可应用的方法或构造器；
-		- 第二阶段在第一阶段选取的方法或构造器中选取最精确的一个；
-	- ②、上面代码：String 也是继承自 Object， 数组也是可认为继承自 Object， 两个为平行等级，null 不确定到底是哪个；
-	- ③、另外，重载是在编译期就已经确定了的，并不需要等到运行时才能确定，因此重载不是多态的一个原因。
-	- ④、重载对于传入的参数类型只认了引用的类型，并没有去解析实际对象的类型。如果重载是一种多态的话，它这里应该去解析实际对象的类型并调用ArrayList的方法
+如果 Java 编译器在同一个阶段中找到了多个适配的方法，那么它会在其中选择一个最为贴切的，而决定贴切程度的一个关键就是形式参数类型的继承关系。
+	
+根据上面的原则：上面代码：String 也是继承自 Object， 数组也是可认为继承自 Object， 两个为平行等级，null 不确定到底是哪个；
 
+另外，重载是在编译期就已经确定了的，并不需要等到运行时才能确定，因此重载不是多态的一个原因。
+
+重载对于传入的参数类型只认了引用的类型，并没有去解析实际对象的类型。如果重载是一种多态的话，它这里应该去解析实际对象的类型并调用ArrayList的方法
+
+> P.S. 在 Java 程序里，如果同一个类中出现多个名字相同，并且参数类型相同的方法，那么它无法通过编译，这个限制可以通过字节码工具绕开。也就是说，在编译完成之后，可以再向class文件中添加方法名和参数类型相同，而返回类型不同的方法。当这种包括多个方法名相同、参数类型相同，而返回类型不同的方法的类，出现在Java编译器的用户类路径上时，它是怎么确定需要调用哪个方法的呢？当前版本的Java编译器会直接选取第一个方法名以及参数类型匹配的方法。并且，它会根据所选取方法的返回类型来决定可不可以通过编译，以及需不需要进行值转换等。
 ```java
 public class OverridePuzzle {			 
 	private void overloadList(List list){
@@ -2863,9 +2738,15 @@ public class OverridePuzzle {
 }
 ```
 
+$\color{red}{请注意：不要重载可变参数的方法，因为 Java 编译器可能无法决定应该调用哪个目标方法}$
+
 ## 5、重写
 
 涉及到继承这个概念中的问题，子类继承了父类的方法，但是它可能需要有不同的操作行为，就需要在子类中重写这个父类方法；父类如果将方法声明为 `final` 的就可保证所有子类的调用此方法时调用的都是父类的方法；
+
+如果子类定义了与父类中非私有方法同名的方法，而且这两个方法的参数类型相同，那么这两个方法之间又是什么关系呢？
+- 如果这两个方法都是静态的，那么子类中的方法隐藏了父类中的方法。
+- 如果这两个方法都不是静态的，且都不是私有的，那么子类的方法重写了父类中的方法
 
 # 十、Java 序列化
 
@@ -3303,8 +3184,7 @@ public static void initCause() {
 		... 54 common frames omitted
 	```
 
-
-# 十二、关于try-catch-finally
+## 9、关于try-catch-finally
 
 * [try、catch、finally中的细节分析](http://www.cnblogs.com/aigongsi/archive/2012/04/19/2457735.html)
 
@@ -3322,18 +3202,18 @@ public boolean returnTest(){
 }
 ```
 
-## 1、关于try-catch-finally使用
+### 9.1、关于try-catch-finally使用
 
 - `try、catch、finally`语句中，在如果`try`语句有`return`语句，则返回的之后当前 try 中变量此时对应的值，此后对变量做任何的修改，都不影响 try 中 return 的返回值；
 - 如果 finally 块中有 return 语句，则 try 或 catch 中的返回语句忽略；
 - 如果 finally 块中抛出异常，则整个 try、catch、finally 块中抛出异常；
 - 如果 catch 异常中写了多个需要 catch 的异常，可以如果匹配到了捕获的异常，则后面其他的异常都将被忽略
 
-## 2、使用try-catch-finally需要注意
+### 9.2、使用try-catch-finally需要注意
 
 - 尽量在 try 或者 catch 中使用 return 语句。通过 finally 块中达到对 try 或者 catch 返回值修改是不可行的；
-- finally 块中避免使用 return 语句，因为 finally 块中如果使用 return 语句，会显示的消化掉 try、catch 块中的异常信息，屏蔽了错误的发生；
-- finally 块中避免再次抛出异常，如果 try 或者 catch 中抛出的异常信息会被覆盖掉。
+- finally 块中避免使用 return 语句，因为 finally 块中如果使用 return 语句，会显示的消化掉 try、catch 块中的异常信息，屏蔽了错误的发生；由于finally代码块有个return语句，在重新抛出前就返回了
+- finally 块中避免再次抛出异常，因为 try 或者 catch 中抛出的异常信息会被覆盖掉。
 ```java
 public static void main(String[] args) throws Exception {
 	test1();
@@ -3352,7 +3232,7 @@ Exception in thread "main" java.lang.ArithmeticException： / by zero
 	at com.exe1.TestSort.main(TestSort.java：6)
 ```
 
-## 3、如何退出
+### 9.3、如何退出
 
 finally遇见如下情况不会执行：
 - 在前面的代码中用了System.exit()退出程序。
@@ -3375,40 +3255,11 @@ public static void main(String[] args) {
 }
 ```
 
-## 4、JVM中实现
+### 9.4、JVM中实现
 
-在编译生成的字节码中，每个方法都附带一个异常表。异常表中的每一个条目代表一个异常处理器，并且由`from指针、to指针、target指针以及所捕获的异常类型`构成。这些指针的值是字节码索引，用以定位字节码。
+- [JVM是如何处理异常的](../Java虚拟机/JVM-Java虚拟机.md#91JVM如何捕获异常)
 
-其中`from指针、to指针`标示了该异常处理器锁监控的范围，例如try代码块所覆盖的范围。target指针则指向异常处理器的其实位置，例如catch代码块的起始位置；
-```java
-public static void main(String[] args) {
-  try {
-    mayThrowException();
-  } catch (Exception e) {
-    e.printStackTrace();
-  }
-}
-// 对应的 Java 字节码
-public static void main(java.lang.String[]);
-  Code:
-    0: invokestatic mayThrowException:()V
-    3: goto 11
-    6: astore_1
-    7: aload_1
-    8: invokevirtual java.lang.Exception.printStackTrace
-   11: return
-  Exception table:
-    from  to target type
-      0   3   6  Class java/lang/Exception  // 异常表条目
-```
-
-当程序触发异常时，Java虚拟机会自上至下遍历异常表中的所有条目。当触发异常的字节码索引值在某个异常表条目的监控范围内，Java虚拟机会判断所抛出的异常和该条目想要捕获的异常是否匹配。如果匹配，Java虚拟机会将控制流转移至该条目target指针指向的字节码；
-
-如果遍历完所有异常表条目后，Java虚拟机仍未匹配到异常处理器，那么它会弹出当前方法对应的Java栈帧，并且在调用者中重复上述操作。在最坏的情况下，Java虚拟机需要遍历当前线程Java栈上的所有方法的异常表；
-
-finally代码块的编译：复制finally代码块的内容，分别放在`try-catch`代码块所有正常执行路径以及异常执行路径的出口中。针对异常执行路径，Java编译器会生成一个或多个异常条目，监控整个`try-catch`代码块，并且捕获所有种类的异常。这些异常表条目的target指针将指向另一份复制的finally代码块。并且，在这个finally代码块的最后，Java编译器会重新抛出所捕获的异常；
-
-## 5、try-with-resource
+### 9.5、try-with-resource
 
 try-with-resource是Java 7中引入的，提供了更优雅的方式来实现资源的自动释放，自动释放的资源需要是实现了 AutoCloseable 接口的类；
 
@@ -3533,6 +3384,106 @@ public void queryData() throws Exception {
 	}
 }
 ```
+
+# 十二、初始化
+
+## 1、静态代码块、静态变量
+
+其作用级别为类；构造代码块、构造函数、构造，其作用级别为对象
+
+- （1）静态代码块，它是随着类的加载而被执行，只要类被加载了就会执行，而且只会加载一次，主要用于给类进行初始化。
+- （2）构造代码块，每创建一个对象时就会执行一次，且优先于构造函数，主要用于初始化不同对象共性的初始化内容和初始化实例环境。
+- （3）构造函数，每创建一个对象时就会执行一次；同时构造函数是给特定对象进行初始化，而构造代码是给所有对象进行初始化，作用区域不同；
+
+==> 通过上面的分析，他们三者的执行顺序应该为：静态代码块 > 构造代码块 > 构造函数。
+
+### 1.1、Java 类初始化过程
+
+- 首先，初始化父类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
+- 然后，初始化子类中的静态成员变量和静态代码块，按照在程序中出现的顺序初始化；
+- 其次，初始化父类的普通成员变量和代码块，在执行父类的构造方法；
+- 最后，初始化子类的普通成员变量和代码块，在执行子类的构造方法；
+
+### 1.2、不要在构造器里调用可能被重载的虚方法
+
+父类构造器执行的时候，调用了子类的重载方法，然而子类的类字段还在刚初始化的阶段，刚完成内存布局：
+
+```java
+public class Base{
+	private String baseName = "base";
+	public Base(){
+		callName();
+	}
+	public void callName(){
+		System. out. println(baseName);
+	}
+	static class Sub extends Base{
+		private String baseName = "sub";
+		public void callName(){
+			System. out. println (baseName) ;
+		}
+	}
+	public static void main(String[] args){
+		Base b = new Sub();
+	}
+}
+```
+
+### 1.3、Java 中赋值顺序
+
+- （1）父类的静态变量赋值
+- （2）自身的静态变量赋值
+- （3）父类成员变量赋值
+- （4）父类块赋值
+- （5）父类构造函数赋值
+- （6）自身成员变量赋值
+- （7）自身块赋值
+- （8）自身构造函数赋值
+
+### 1.4、Java 代码执行顺序
+
+```java
+public class TestExecuteCode {
+	public static void main(String[] args) {
+		System.out.println(new B().getValue());
+	}
+	static class A {
+		protected int value;
+		public A(int v){
+			setValue(v);
+		}
+		public void setValue(int value) { this.value = value;}
+		public int getValue() {
+			try {
+				value++;
+				return value;
+			} finally {
+				this.setValue(value);
+				System.out.println(value);
+			}
+		}
+	}
+	static class B extends A {
+		public B(){
+			super(5);
+			setValue(getValue() - 3);
+		}
+		public void setValue(int value) {super.setValue(2 * value);}
+	}
+}
+```
+- 执行结果：22，34，17
+	（1）子类 B 中重写了父类 A 中的setValue方法：
+	
+	`super(5)` // 调用了父类构造器，其中构造函数里面的`setValue(value)`，调用的是子类的setValue方法
+
+	`finally`块中的：`this.setValue(value)` //调用的也是子类的setValue方法
+
+	而子类`setValue`方法中的：`super.setValue(2*value);` //调用的是父类A的setValue方法
+
+	（2）`try...catch...finally`块中有`return`返回值的情况：`finally` 块中虽然改变了value的值，但`try`块中返回的应该是 return 之前存储的值
+
+- 父类执行时如果有子类的方法重写了父类的方法，调用的子类的重写方法
 
 # 十三、数组
 
@@ -4882,7 +4833,7 @@ Array 工具类可完成数组的反射操作;
 
 ### 3.9、反射原理
 
-- [JVM是如何实现反射的](https://heapdump.cn/article/3530561)
+- [JVM是如何实现反射](../Java虚拟机/JVM-Java虚拟机.md#92JVM如何实现反射)
 
 ![](image/java-basic-reflection-1.png)
 
