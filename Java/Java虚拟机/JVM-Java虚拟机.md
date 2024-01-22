@@ -1725,7 +1725,7 @@ Java 虚拟机中关于方法重写的判定同样基于方法描述符。也就
 - ②、invokespecial：用于调用私有实例方法、构造器，以及使用 super 关键字调用父类的实例方法或构造器，和所实现接口的默认方法。
 - ③、invokevirtual：调用所有的非私有实例方法
 - ④、invokeinterface：调用接口方法，会在运行时再确定一个实现此接口的对象
-- ⑤、invokedynamic：只要能被invokestatic和invokespecial指令调用的方法，都可以在解析阶段确定唯一的调用版本，符合这个条件的有：静态方法、私有方法、实例构造器和父类方法四类，它们在类加载时就会把符号引用解析为该方法的直接引用.这类方法称为非虚方法(包括 final 方法)，与之相反，其他方法称为虚方法（final 方法除外），JDK8后新增的lambda表达式是基于该指令执行的；
+- ⑤、invokedynamic：用于在运行时动态解析出调用点限定符所引用的方法，并执行该方法，前4条调指令的分派逻辑都固化在Java虚拟机内部，而invokedynamic指令的分派逻辑是由用户所设定的引导方法决定的。JDK8后新增的lambda表达式是基于该指令执行的；
 
 对于 invokevirtual 以及 invokeinterface 而言，在绝大部分情况下，虚拟机需要在执行过程中，根据调用者的动态类型，来确定具体的目标方法。均属于 Java 虚拟机中的虚方法调用。
 
@@ -1846,7 +1846,7 @@ public class Overload {
 - 静态分派的过程：编译阶段编译器的选择过程.选择目标方法的依据：静态类型、方法参数；选择结果的最终产物是产生了两条 invokevirtual 指令，两条指令分别为常量池中指向方法的符号引用，即：静态分派属于多分派类型；
 - 运行阶段虚拟机的选择即动态分派的过程：由于编译器已经决定了目标方法的签名，虚拟机此时不会关系传递过来的参数，因为此时参数的静态类型、实际类型都对方法的选择不会构成任何影响，唯一可以影响虚拟机选择的因素是此方法的接受者的实际类型.所以动态分派为单分派类型
 
-# 9、JVM处理常见Java代码
+# 9、JVM层实现原理
 
 ## 9.1、JVM如何捕获异常
 
@@ -1979,6 +1979,177 @@ java.lang.Exception: #16
 - 变长参数方法导致的 Object 数组；
 - 基本类型的自动装箱、拆箱；
 - 最重要的方法内联；
+
+```java
+// 在运行指令中添加如下两个虚拟机参数：
+// -Djava.lang.Integer.IntegerCache.high=128
+// -Dsun.reflect.noInflation=true
+public class Test {
+    public static void target(int i) {
+        // 空方法
+    }
+    public static void main(String[] args) throws Exception {
+        Class<?> klass = Class.forName("Test");
+        Method method = klass.getMethod("target", int.class);
+        method.setAccessible(true);  // 关闭权限检查
+        long current = System.currentTimeMillis();
+        for (int i = 1; i <= 2_000_000_000; i++) {
+            if (i % 100_000_000 == 0) {
+                long temp = System.currentTimeMillis();
+                System.out.println(temp - current);
+                current = temp;
+            }
+            method.invoke(null, 128);
+        }
+    }
+}
+```
+
+## 9.3、JVM实现 invokedynamic
+
+Java 7 引入了一条新的指令 invokedynamic。该指令的调用机制抽象出调用点这一个概念，并允许应用程序将调用点链接至任意符合条件的方法上。
+
+- [JVM如何实现-invokedynamic](https://time.geekbang.com/column/article/12574)
+
+### 9.3.1、方法句柄
+
+- [Java的方法句柄](https://www.cnblogs.com/tangliMeiMei/p/12983627.html)
+
+方法句柄（MethodHandle）是一个强类型的，能够被直接执行的引用。该引用可以指向常规的静态方法或者实例方法，也可以指向构造器或者字段。当指向字段时，方法句柄实则指向包含字段访问字节码的虚构方法，语义上等价于目标字段的 getter 或者 setter 方法；
+
+方法句柄的类型（MethodType）是由所指向方法的参数类型以及返回类型组成的。它是用来确认方法句柄是否适配的唯一关键。当使用方法句柄时，其实并不关心方法句柄所指向方法的类名或者方法名。
+
+方法句柄的创建是通过 MethodHandles.Lookup 类来完成的。它提供了多个 API，既可以使用反射 API 中的 Method 来查找，也可以根据类、方法名以及方法句柄类型来查找；
+
+当使用后者（根据类、方法名以及方法句柄类型来查找）这种查找方式时，用户需要区分具体的调用类型，比如说：
+- 对于用 `invokestatic` 调用的静态方法，需要使用 `Lookup.findStatic` 方法；
+- 对于用 `invokevirtual` 调用的实例方法，以及用 `invokeinterface` 调用的接口方法，需要使用 `findVirtual` 方法；
+- 对于用 `invokespecial` 调用的实例方法，我们则需要使用 `findSpecial` 方法
+
+调用方法句柄，和原本对应的调用指令是一致的。也就是说，对于原本用 invokevirtual 调用的方法句柄，它也会采用动态绑定；而对于原本用 invokespecial 调用的方法句柄，它会采用静态绑定：
+```java
+public static void main(String[] args) throws Exception{
+    // 获取方法句柄
+    MethodHandles.Lookup l = Foo.lookup();
+    Method bar = Foo.class.getDeclaredMethod("bar", Object.class);
+    MethodHandle unreflect = l.unreflect(bar);
+    // 获取方法句柄
+    MethodType methodType = MethodType.methodType(void.class, Object.class);
+    MethodHandle lStatic = l.findStatic(Foo.class, "bar", methodType);
+}
+public static class Foo {
+    private static void bar(Object obj) {}
+
+    public static MethodHandles.Lookup lookup(){
+        return MethodHandles.lookup();
+    }
+}
+```
+方法句柄同样也有权限问题。但它与反射 API 不同，其权限检查是在句柄的创建阶段完成的。在实际调用过程中，Java 虚拟机并不会检查方法句柄的权限。如果该句柄被多次调用的话，那么与反射调用相比，它将省下重复权限检查的开销；**方法句柄的访问权限不取决于方法句柄的创建位置，而是取决于 Lookup 对象的创建位置**
+
+由于方法句柄没有运行时权限检查，因此，应用程序需要负责方法句柄的管理。一旦它发布了某些指向私有方法的方法句柄，那么这些私有方法便被暴露出去了。
+
+### 9.3.2、方法句柄的操作
+
+方法句柄的调用可分为两种：
+
+**（1）需要严格匹配参数类型的 invokeExact**。
+
+它有多严格呢？假设一个方法句柄将接收一个 Object 类型的参数，如果直接传入 String 作为实际参数，那么方法句柄的调用会在运行时抛出方法类型不匹配的异常。正确的调用方式是将该 String 显式转化为 Object 类型。
+
+在普通 Java 方法调用中，我们只有在选择重载方法时，才会用到这种显式转化。这是因为经过显式转化后，参数的声明类型发生了改变，因此有可能匹配到不同的方法描述符，从而选取不同的目标方法。
+方法句柄 API 有一个特殊的注解类 `@PolymorphicSignature`。在碰到被它注解的方法调用时，Java 编译器会根据所传入参数的声明类型来生成方法描述符，而不是采用目标方法所声明的描述符。
+
+**（2）需要自动适配参数类型 invoke**
+
+invoke 会调用 MethodHandle.asType 方法，生成一个适配器方法句柄，对传入的参数进行适配，再调用原方法句柄。调用原方法句柄的返回值同样也会先进行适配，然后再返回给调用者
+
+方法句柄还支持增删改参数的操作，这些操作都是通过生成另一个方法句柄来实现的：
+- 改操作就是 MethodHandle.asType 方法。
+- 删操作指的是将传入的部分参数就地抛弃，再调用另一个方法句柄。它对应的 API 是 `MethodHandles.dropArguments` 方法；
+- 增操作则就是往传入的参数中插入额外的参数，再调用另一个方法句柄，它对应的 API 是 `MethodHandle.bindTo` 方法。Java 8 中捕获类型的 Lambda 表达式便是用这种操作来实现的；增操作还可以用来实现方法的柯里化；
+
+### 9.3.3、方法句柄的实现
+
+调用方法句柄所使用的 invokeExact 或者 invoke 方法具备签名多态性的特性。它们会根据具体的传入参数来生成方法描述符；看如下实际调用：
+```java
+public class Foo {
+    public static void bar(Object o) {
+        new Exception().printStackTrace();
+    }
+    public static void main(String[] args) throws Throwable {
+        MethodHandles.Lookup l = MethodHandles.lookup();
+        MethodType t = MethodType.methodType(void.class, Object.class);
+        MethodHandle mh = l.findStatic(Foo.class, "bar", t);
+        mh.invokeExact(new Object());
+    }
+}
+```
+查看调用栈信息
+```java
+java.lang.Exception
+	at com.qing.fan.demo.method.Foo.bar(Foo.java:13)
+	at com.qing.fan.demo.method.Foo.main(Foo.java:20)
+```
+invokeExact 的目标方法就是方法句柄指向的方法，前面提到 invokeExact 会对参数的类型进行校验，并在不匹配的情况下抛出异常。如果它直接调用了方法句柄所指向的方法，那么这部分参数类型校验的逻辑将无处安放。因此，唯一的可能便是 Java 虚拟机隐藏了部分栈信息
+```java
+// 启用了 -XX:+ShowHiddenFrames 这个参数来打印被 Java 虚拟机隐藏了的栈信息
+$ java -XX:+UnlockDiagnosticVMOptions -XX:+ShowHiddenFrames Foo
+java.lang.Exception
+	at com.qing.fan.demo.method.Foo.bar(Foo.java:14)
+	at java.base/java.lang.invoke.DirectMethodHandle$Holder.invokeStatic(DirectMethodHandle$Holder)
+	at java.base/java.lang.invoke.LambdaForm$MH/0x0000000800066840.invokeExact_MT(LambdaForm$MH)
+	at com.qing.fan.demo.method.Foo.main(Foo.java:21)
+```
+Java 虚拟机会对 invokeExact 调用做特殊处理，调用至一个共享的、与方法句柄类型相关的特殊适配器中。这个适配器是一个 LambdaForm，我们可以通过添加虚拟机参数将之导出成 class 文件（`-Djava.lang.invoke.MethodHandle.DUMP_CLASS_FILES=true`）
+```java
+final class LambdaForm$MH001 {
+    @Hidden
+    @Compiled
+    @ForceInline
+    static void invokeExact_MT000_LLL_V(Object var0, Object var1, Object var2) {
+        MethodHandle var3;
+        Invokers.checkExactType(var3 = (MethodHandle)var0, (MethodType)var2);
+        Invokers.checkCustomized(var3);
+        var3.invokeBasic(var1);
+    }
+    static void dummy() {
+        String var10000 = "MH.invokeExact_MT000_LLL_V=Lambda(a0:L,a1:L,a2:L)=>{\n    t3:V=Invokers.checkExactType(a0:L,a2:L);\n    t4:V=Invokers.checkCustomized(a0:L);\n    t5:V=MethodHandle.invokeBasic(a0:L,a1:L);void}";
+    }
+}
+```
+可以看到，在这个适配器中，它会调用` Invokers.checkExactType` 方法来检查参数类型，然后调用 `Invokers.checkCustomized` 方法。后者会在方法句柄的执行次数超过一个阈值时进行优化（对应参数 `-Djava.lang.invoke.MethodHandle.CUSTOMIZE_THRESHOLD`，默认值为 127）。最后，它会调用方法句柄的 `invokeBasic` 方法
+
+Java 虚拟机同样会对 invokeBasic 调用做特殊处理，这会将它调用到方法句柄本身所持有的适配器中。这个适配器同样是一个 LambdaForm
+
+### 9.3.4、invokedynamic指令
+
+invokedynamic 是 Java 7 引入的一条新指令，用以支持动态语言的方法调用。具体来说，它将调用点（CallSite）抽象成一个 Java 类，并且将原本由 Java 虚拟机控制的方法调用以及方法链接暴露给了应用程序。在运行过程中，每一条 invokedynamic 指令将捆绑一个调用点，并且会调用该调用点所链接的方法句柄；
+
+在第一次执行 invokedynamic 指令时，Java 虚拟机会调用该指令所对应的启动方法（BootStrap Method），来生成调用点，并且将之绑定至该 invokedynamic 指令中。在之后的运行过程中，Java 虚拟机则会直接调用绑定的调用点所链接的方法句柄。
+
+在字节码中，启动方法是用方法句柄来指定的。这个方法句柄指向一个返回类型为调用点的静态方法。该方法必须接收三个固定的参数，分别为：
+- 一个 Lookup 类实例；
+- 一个用来指代目标方法名字的字符串
+- 该调用点能够链接的方法句柄的类型
+
+### 9.3.5、Lambda表达式
+
+Java 编译器利用 invokedynamic 指令来生成实现了函数式接口的适配器。这里的函数式接口指的是仅包括一个非 default 接口方法的接口，一般通过 `@FunctionalInterface` 注解。不过就算是没有使用该注解，Java 编译器也会将符合条件的接口辨认为函数式接口；
+
+在编译过程中，Java 编译器会对 Lambda 表达式进行解语法糖（desugar），生成一个方法来保存 Lambda 表达式的内容。该方法的参数列表不仅包含原本 Lambda 表达式的参数，还包含它所捕获的变量；
+
+根据 Lambda 表达式是否捕获其他变量，启动方法生成的适配器类以及所链接的方法句柄皆不同：
+- 如果该 Lambda 表达式没有捕获其他变量，那么可以认为它是上下文无关的。因此，启动方法将新建一个适配器类的实例，并且生成一个特殊的方法句柄，始终返回该实例；
+- 如果该 Lambda 表达式捕获了其他变量，那么每次执行该 invokedynamic 指令，都要更新这些捕获了的变量，以防止它们发生了变化；为了保证 Lambda 表达式的线程安全，无法共享同一个适配器类的实例。因此，在每次执行 invokedynamic 指令时，所调用的方法句柄都需要新建一个适配器类实例；在这种情况下，启动方法生成的适配器类将包含一个额外的静态方法，来构造适配器类的实例。该方法将接收这些捕获的参数，并且将它们保存为适配器类实例的实例字段
+
+**Lambda性能问题：**
+
+Lambda 表达式到函数式接口的转换是通过 invokedynamic 指令来实现的。该 invokedynamic 指令对应的启动方法将通过 ASM 生成一个适配器类。
+
+对于没有捕获其他变量的 Lambda 表达式，该 invokedynamic 指令始终返回同一个适配器类的实例。对于捕获了其他变量的 Lambda 表达式，每次执行 invokedynamic 指令将新建一个适配器类实例。
+
+不管是捕获型的还是未捕获型的 Lambda 表达式，它们的性能上限皆可以达到直接调用的性能。其中，捕获型 Lambda 表达式借助了即时编译器中的逃逸分析，来避免实际的新建适配器类实例的操作。
 
 # 10、Java编译
 
