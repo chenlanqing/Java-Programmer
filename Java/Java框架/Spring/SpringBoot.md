@@ -2944,6 +2944,11 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 
 - [SpringBoot-SpringCloud关系](https://spring.io/projects/spring-cloud)
 
+## 2、SpringBoot升级指南
+
+- [Spring Boot 2.0 Migration Guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.0-Migration-Guide)
+- [Spring Boot 3.0 Migration Guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide)
+
 # 参考资料
 
 * [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
