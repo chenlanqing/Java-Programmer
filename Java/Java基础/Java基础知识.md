@@ -5829,6 +5829,27 @@ JDK 提供给了我们两个方法用于载入库文件，一个是`System.load(
 https://www.kancloud.cn/xyang0917/blogjnindk/117014
 
 
+# 二十二、小技巧
+
+## 1、调用栈
+
+如果有时候需要查看方法调用栈，可以通过新建异常来实现，比如：
+```java
+public class Foo {
+	public static void bar(Object o) {
+		new Exception().printStackTrace();
+	}
+	public static void main(String[] args) throws Throwable {
+		MethodHandles.Lookup l = MethodHandles.lookup();
+		MethodType t = MethodType.methodType(void.class, Object.class);
+		MethodHandle mh = l.findStatic(Foo.class, "bar", t);
+		mh.invokeExact(new Object());
+	}
+}
+```
+如果被虚拟机隐藏了调用栈，可以通过添加虚拟机参数来处理：`-XX:+ShowHiddenFrames`
+
+
 # 参考文章
 
 * [枚举的线程安全性及序列化问题](http://www.hollischuang.com/archives/197)
