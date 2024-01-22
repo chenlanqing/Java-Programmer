@@ -1334,65 +1334,74 @@ protected ModelAndView resolveErrorView(HttpServletRequest request,
 
 ## 7、嵌入式Servlet
 
+- [tomcat与servlet的版本对应关系](https://tomcat.apache.org/whichversion.html)
+
+Spring Boot 与内嵌 Tomcat 版本的对应关系大致如下（请注意，这些信息可能会随着新版本的发布而发生变化）：
+- Spring Boot 2.0.x: 内嵌 Tomcat 8.5.x（支持 Servlet 3.1）
+- Spring Boot 2.1.x - 2.3.x: 内嵌 Tomcat 9.0.x（支持 Servlet 4.0）
+- Spring Boot 2.4.x - 2.6.x: 内嵌 Tomcat 9.0.x（支持 Servlet 4.0）
+
+Servlet API 与 Tomcat 版本的对应关系大致如下：
+- Servlet 3.0: 需要 Tomcat 7.0 或更高版本
+- Servlet 3.1: 需要 Tomcat 8.0 或更高版本
+- Servlet 4.0: 需要 Tomcat 9.0 或更高版本
+
 SpringBoot默认使用Tomcat作为嵌入式的Servlet容器
 
 ![](image/SpringBoot-Tomcat依赖.png)
 
-### 7.1、定制和修改Servlet容器的相关配置
+### 7.1、修改Servlet容器的相关配置
 
-- 修改和server有关的配置（ServerProperties）
-	```properties
-	server.port=8081
-	server.context-path=/crud
+修改和server有关的配置（ServerProperties）
+```properties
+server.port=8081
+server.context-path=/crud
 
-	server.tomcat.uri-encoding=UTF-8
+server.tomcat.uri-encoding=UTF-8
 
-	//通用的Servlet容器设置
-	server.xxx
-	//Tomcat的设置
-	server.tomcat.xxx
-	```
-- 编写一个`EmbeddedServletContainerCustomizer`：嵌入式的Servlet容器的定制器；来修改Servlet容器的配置
-	```java
-	@Bean  //一定要将这个定制器加入到容器中
-	public EmbeddedServletContainerCustomizer embeddedServletContainerCustomizer(){
-		return new EmbeddedServletContainerCustomizer() {
+//通用的Servlet容器设置
+server.xxx
+//Tomcat的设置
+server.tomcat.xxx
+```
+编写一个`EmbeddedServletContainerCustomizer`：嵌入式的Servlet容器的定制器；来修改Servlet容器的配置
+```java
+@Bean  //一定要将这个定制器加入到容器中
+public EmbeddedServletContainerCustomizer embeddedServletContainerCustomizer(){
+	return new EmbeddedServletContainerCustomizer() {
 
-			//定制嵌入式的Servlet容器相关的规则
-			@Override
-			public void customize(ConfigurableEmbeddedServletContainer container) {
-				container.setPort(8083);
-			}
-		};
-	}
-	```
-	***注意：***
+		//定制嵌入式的Servlet容器相关的规则
+		@Override
+		public void customize(ConfigurableEmbeddedServletContainer container) {
+			container.setPort(8083);
+		}
+	};
+}
+```
+***注意：***
+`EmbeddedServletContainerCustomizer`在SpringBoot2.x之后的版本废弃了，可以使用如下来实现：
+具体可参考文章：https://segmentfault.com/a/1190000014610478
+```java
+@Bean
+public WebServerFactoryCustomizer<ConfigurableWebServerFactory> webServerFactoryCustomizer(){
+	return new WebServerFactoryCustomizer<ConfigurableWebServerFactory>() {
+		@Override
+		public void customize(ConfigurableWebServerFactory factory) {
+			factory.setPort(8088);
+		}
+	};
+}
+```
+内嵌Tomcat的所有配置都可以在`spring-boot-autoconfigure-2.0.5.RELEASE.jar!/META-INF/spring-configuration-metadata.json`找到
 
-	EmbeddedServletContainerCustomizer在SpringBoot2.x之后的版本废弃了，可以使用如下来实现：
-	具体可参考文章：https://segmentfault.com/a/1190000014610478
-	```java
-	@Bean
-    public WebServerFactoryCustomizer<ConfigurableWebServerFactory> webServerFactoryCustomizer(){
-        return new WebServerFactoryCustomizer<ConfigurableWebServerFactory>() {
-            @Override
-            public void customize(ConfigurableWebServerFactory factory) {
-                factory.setPort(8088);
-            }
-        };
-    }
-	```
-
-	内嵌Tomcat的所有配置都可以在`spring-boot-autoconfigure-2.0.5.RELEASE.jar!/META-INF/spring-configuration-metadata.json`找到
-	
-	比如如下配置：
-	```
-	server.tomcat.accept-count：等待队列长度，默认100
-	server.tomcat.max-connections：最大可被连接数，默认10000
-	server.tomcat.max-threads：最大工作线程数，默认200
-	server.tomcat.min-spare-threads：最小工作线程数，默认10
-	```
-
-	一般情况下，4核CPU 8G内存单进程调度线程数在800-1000以上；
+比如如下配置：
+```
+server.tomcat.accept-count：等待队列长度，默认100
+server.tomcat.max-connections：最大可被连接数，默认10000
+server.tomcat.max-threads：最大工作线程数，默认200
+server.tomcat.min-spare-threads：最小工作线程数，默认10
+```
+一般情况下，4核CPU 8G内存单进程调度线程数在800-1000以上；
 
 ### 7.2、注册Servlet三大组件：Servlet、Filter、Listener
 
@@ -1634,7 +1643,6 @@ public class EmbeddedServletContainerAutoConfiguration {
 	}
 	```
 - （4）对嵌入式容器的配置修改是怎么生效：ServerProperties、EmbeddedServletContainerCustomizer，定制器帮我们修改了Servlet容器的配置
-
 - （5）配置修改如何生效？容器中导入了`EmbeddedServletContainerCustomizerBeanPostProcessor`
 
 	在`EmbeddedServletContainerAutoConfiguration`声明中有个注解：`@Import(BeanPostProcessorsRegistrar.class)`
@@ -1678,7 +1686,7 @@ public class EmbeddedServletContainerAutoConfiguration {
 
 #### 7.4.2、SpringBoot-2.x版本
 
-- （1）ServletWebServerFactoryAutoConfiguration
+（1）ServletWebServerFactoryAutoConfiguration
 ```java
 // 自动配置类
 @Configuration
@@ -1693,8 +1701,7 @@ public class EmbeddedServletContainerAutoConfiguration {
 		ServletWebServerFactoryConfiguration.EmbeddedUndertow.class })
 public class ServletWebServerFactoryAutoConfiguration {
 	@Bean
-	public ServletWebServerFactoryCustomizer servletWebServerFactoryCustomizer(
-			ServerProperties serverProperties) {
+	public ServletWebServerFactoryCustomizer servletWebServerFactoryCustomizer(ServerProperties serverProperties) {
 		return new ServletWebServerFactoryCustomizer(serverProperties);
 	}
 	@Bean
@@ -1706,8 +1713,7 @@ public class ServletWebServerFactoryAutoConfiguration {
 	 * Registers a {@link WebServerFactoryCustomizerBeanPostProcessor}. Registered via
 	 * {@link ImportBeanDefinitionRegistrar} for early registration.
 	 */
-	public static class BeanPostProcessorsRegistrar
-			implements ImportBeanDefinitionRegistrar, BeanFactoryAware {
+	public static class BeanPostProcessorsRegistrar implements ImportBeanDefinitionRegistrar, BeanFactoryAware {
 		private ConfigurableListableBeanFactory beanFactory;
 		@Override
 		public void setBeanFactory(BeanFactory beanFactory) throws BeansException {
@@ -1715,32 +1721,25 @@ public class ServletWebServerFactoryAutoConfiguration {
 				this.beanFactory = (ConfigurableListableBeanFactory) beanFactory;
 			}
 		}
-
 		@Override
-		public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata,
-				BeanDefinitionRegistry registry) {
+		public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry) {
 			if (this.beanFactory == null) {
 				return;
 			}
 			registerSyntheticBeanIfMissing(registry,"webServerFactoryCustomizerBeanPostProcessor",WebServerFactoryCustomizerBeanPostProcessor.class);
 			registerSyntheticBeanIfMissing(registry,"errorPageRegistrarBeanPostProcessor",ErrorPageRegistrarBeanPostProcessor.class);
 		}
-
-		private void registerSyntheticBeanIfMissing(BeanDefinitionRegistry registry,
-				String name, Class<?> beanClass) {
+		private void registerSyntheticBeanIfMissing(BeanDefinitionRegistry registry, String name, Class<?> beanClass) {
 			if (ObjectUtils.isEmpty(this.beanFactory.getBeanNamesForType(beanClass, true, false))) {
 				RootBeanDefinition beanDefinition = new RootBeanDefinition(beanClass);
 				beanDefinition.setSynthetic(true);
 				registry.registerBeanDefinition(name, beanDefinition);
 			}
 		}
-
 	}
-
 }
 ```
-
-- （2）ServletWebServerFactoryConfiguration-工厂配置类
+（2）ServletWebServerFactoryConfiguration-工厂配置类
 ```java
 @Configuration
 class ServletWebServerFactoryConfiguration {
@@ -1754,20 +1753,16 @@ class ServletWebServerFactoryConfiguration {
 			return new TomcatServletWebServerFactory();
 		}
 	}
-
 	// jetty
 	@Configuration
 	@ConditionalOnClass({ Servlet.class, Server.class, Loader.class,WebAppContext.class })
 	@ConditionalOnMissingBean(value = ServletWebServerFactory.class, search = SearchStrategy.CURRENT)
 	public static class EmbeddedJetty {
-
 		@Bean
 		public JettyServletWebServerFactory JettyServletWebServerFactory() {
 			return new JettyServletWebServerFactory();
 		}
-
 	}
-
 	// Undertow
 	@Configuration
 	@ConditionalOnClass({ Servlet.class, Undertow.class, SslClientAuthMode.class })
@@ -1780,26 +1775,26 @@ class ServletWebServerFactoryConfiguration {
 	}
 }
 ```
-- （3）ServletWebServerFactory：servelet工厂
-	```java
-		@FunctionalInterface
-		public interface ServletWebServerFactory {
-			WebServer getWebServer(ServletContextInitializer... initializers);
-		}
-	```
-	![](image/ServletWebServerFactory实现类.png)
+ （3）ServletWebServerFactory：servelet工厂
+```java
+@FunctionalInterface
+public interface ServletWebServerFactory {
+	WebServer getWebServer(ServletContextInitializer... initializers);
+}
+```
+![](image/ServletWebServerFactory实现类.png)
 
-- （4）WebServer
-	```java
-	public interface WebServer {
-		void start() throws WebServerException;
-		void stop() throws WebServerException;
-		int getPort();
-	}
-	```
-	![](image/WebServer实现类.png)
+（4）WebServer
+```java
+public interface WebServer {
+	void start() throws WebServerException;
+	void stop() throws WebServerException;
+	int getPort();
+}
+```
+![](image/WebServer实现类.png)
 
-- （5）配置修改默认是通过`TomcatServletWebServerFactoryCustomizer`来实现定制的
+（5）配置修改默认是通过`TomcatServletWebServerFactoryCustomizer`来实现定制的
 
 ### 7.5、嵌入式Servlet容器启动原理
 
@@ -1888,20 +1883,19 @@ class ServletWebServerFactoryConfiguration {
 		initialize();
 	}
 	```
-
 	**先启动嵌入式的Servlet容器，再将ioc容器中剩下没有创建出的对象获取出来**
 
 ### 7.6、自定义配置
 
-- 开启Tomcat的access_log日志
-	```
-	# 日志开关
-	server.tomcat.accesslog.enabled=true
-	# 日志格式
-	server.tomcat.accesslog.pattern=%h %l %u %t "%r" %s %b %D
-	# 日志目录
-	server.tomcat.accesslog.directory=/var/www/springboot/tomcat
-	```
+开启Tomcat的access_log日志
+```
+# 日志开关
+server.tomcat.accesslog.enabled=true
+# 日志格式
+server.tomcat.accesslog.pattern=%h %l %u %t "%r" %s %b %D
+# 日志目录
+server.tomcat.accesslog.directory=/var/www/springboot/tomcat
+```
 
 ## 8、使用外置的Servlet容器
 
