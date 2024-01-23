@@ -48,3 +48,4 @@ hive --service metastore &
 # 二、ClickHouse
 
 - [ClickHouse实现原理](https://mp.weixin.qq.com/s/aJ7vdaG8LpBpBB5fCN0ncQ)
+- [ClickHouse对比Elasticsearch](https://segmentfault.com/a/1190000039919389)
