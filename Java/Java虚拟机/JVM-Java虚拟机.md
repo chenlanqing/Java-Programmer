@@ -142,15 +142,15 @@ Java 虚拟机规范将 JVM 所管理的内存分为以下几个运行时数据�
 
 ### 2.2.4、Java 堆
 
-- Java 虚拟机所管理的内存中最大的一块，它是所有线程共享的一块内存区域。几乎所有的对象实例和数组都在这里分配内存.
-- Java Heap 是垃圾收集器管理的主要区域，因此很多时候也被称为"GC堆"
-- 如果在堆中没有内存可分配时，并且堆也无法扩展时，将会抛出 OutOfMemoryError 异常
-- Java 堆可以处在物理上不连续的内存空间中，只要逻辑上是连续的即可;
-- 其大小可以通过`-Xmx`和`-Xms`来控制；如果堆的内存大小超过 -Xmx 设定的最大内存， 就会抛出 OutOfMemoryError 异常；通常会将 -Xmx 和 -Xms 两个参数配置为相同的值，其目的是为了能够在垃圾回收机制清理完堆区后不再需要重新分隔计算堆的大小，从而提高性能；
-- Java 堆分为新生代和老生代，新生代又被分为 Eden 和 Survivor 组成。对象主要分配在 Eden 区上新建的对象分配在新生代中。新生代大小可以由`-Xmn` 来控制，也可以用`-XX:SurvivorRatio` 来控制Eden和Survivor的比例；老生代存放新生代中经过多次垃圾回收(也即Minor GC)仍然存活的对象和较大内处对象，通常是从Survivor区域拷贝过来的对象，但并不绝对。
-- 从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做`TLAB(Thread Local Allocation Buffer)`。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度；大对象无法再TLAB分配；基于 CAS 的独享线程（Mutator Threads）可以优先将对象分配在 Eden 中的一块内存，因为是 Java 线程独享的内存区没有锁竞争，所以分配速度更快，每个 TLAB 都是一个线程独享的；可以通过 `-XX:UseTLAB` 设置是否开启 TLAB 空间；一旦对象在 TLAB 空间分配内存失败时， JVM 就会尝试着通过使用加锁机制确保数据操作的原子性，从而直接在 Eden 空间中分配内存；
-- 由于Eden区是连续的，因此bump-the-pointer在对象创建时，只需要检查最后一个对象后面是否有足够的内存即可，从而加快内存分配速度
-- 元数据、编译后的代码、常量都都是在堆外的；
+Java 虚拟机所管理的内存中最大的一块，它是所有线程共享的一块内存区域。几乎所有的对象实例和数组都在这里分配内存；Java Heap 是垃圾收集器管理的主要区域，因此很多时候也被称为"GC堆"；如果在堆中没有内存可分配时，并且堆也无法扩展时，将会抛出 OutOfMemoryError 异常；
+
+Java 堆可以处在物理上不连续的内存空间中，只要逻辑上是连续的即可；其大小可以通过`-Xmx`和`-Xms`来控制；如果堆的内存大小超过 -Xmx 设定的最大内存， 就会抛出 OutOfMemoryError 异常；通常会将 -Xmx 和 -Xms 两个参数配置为相同的值，其目的是为了能够在垃圾回收机制清理完堆区后不再需要重新分隔计算堆的大小，从而提高性能；
+
+Java 堆分为新生代和老生代，新生代又被分为 Eden 和 Survivor 组成。对象主要分配在 Eden 区上新建的对象分配在新生代中。新生代大小可以由`-Xmn` 来控制，老生代存放新生代中经过多次垃圾回收(也即Minor GC)仍然存活的对象和较大内处对象，通常是从Survivor区域拷贝过来的对象，但并不绝对。默认情况下，Java 虚拟机采取的是一种动态分配的策略（对应 Java 虚拟机参数 `-XX:+UsePSAdaptiveSurvivorSizePolicy`），根据生成对象的速率，以及 Survivor 区的使用情况动态调整 Eden 区和 Survivor 区的比例；可以通过参数 `-XX:SurvivorRatio` 来固定这个比例
+
+从内存模型的角度来看，对Eden区域继续进行划分，HotSpotJVM还有一个概念叫做`TLAB(Thread Local Allocation Buffer)`。这是JVM为每个线程分配的一个私有缓存区域，否则，多线程同时分配内存时，为避免操作同一地址，可能需要使用加锁等机制，进而影响分配速度；大对象无法再TLAB分配；基于 CAS 的独享线程（Mutator Threads）可以优先将对象分配在 Eden 中的一块内存，因为是 Java 线程独享的内存区没有锁竞争，所以分配速度更快，每个 TLAB 都是一个线程独享的；可以通过 `-XX:UseTLAB` 设置是否开启 TLAB 空间；一旦对象在 TLAB 空间分配内存失败时， JVM 就会尝试着通过使用加锁机制确保数据操作的原子性，从而直接在 Eden 空间中分配内存；由于Eden区是连续的，通过`bump-the-pointer`（指针加法）在对象创建时，只需要检查最后一个对象后面是否有足够的内存即可，从而加快内存分配速度；
+
+元数据、编译后的代码、常量都都是在堆外的；
 
 **堆与栈的区别：**
 - 栈：存储程序执行时的临时数据，配合程序执行时的必须内存；
@@ -291,19 +291,22 @@ ByteBuffer bb = ByteBuffer.allocateDirect(1024*1024*10);
 
 	![](image/Java对象布局-Markdown结构.png)
 
-	- 类型指针：指向它的类元数据的指针，用于判断对象属于哪个类的实例；虚拟机（默认）通过指针压缩将长度压缩到 4 个字节，通过以下虚拟机参数控制`-XX:+UseCompressedClassPointers -XX:+UseCompressedOops`
-		注意：并不是所有虚拟机实现都将类型指针存在对象数据上。具体取决于虚拟机使用的对象的访问定位方式，如果是使用直接指针的方式，对象的内存布局就必须放置访问类型数据的指针
+	- 类型指针：指向该对象的类，用于判断对象属于哪个类的实例；虚拟机（默认）通过指针压缩将长度压缩到 4 个字节，通过以下虚拟机参数控制`-XX:+UseCompressedClassPointers -XX:+UseCompressedOops`
+		注意：并不是所有虚拟机实现都将类型指针存在对象数据上。具体取决于虚拟机使用的对象的访问定位方式，如果是使用直接指针的方式，对象的内存布局就必须放置访问类型数据的指针；
+
 	- 数组长度：
+
+	在 64 位的 Java 虚拟机中，对象头的标记字段占 64 位，而类型指针又占了 64 位。也就是说，每一个 Java 对象在内存中的额外开销就是 16 个字节；以 Integer 类为例，它仅有一个 int 类型的私有字段，占 4 个字节。因此，每一个 Integer 对象的额外内存开销至少是 400%。这也是为什么 Java 要引入基本类型的原因之一。
 
 - 实例数据：对象真正存储的有效数据。如各种字段内容，各字段的分配策略为`longs/doubles、ints、shorts/chars、bytes/boolean、oops(ordinary object pointers)`，相同宽度的字段总是被分配到一起，便于之后取数据。父类定义的变量会出现在子类定义的变量的前面；使用`-XX:FieldsAllocationStyle、+XX:CompactFields`可以影响分配策略；
 
-- 对齐填充：对于64位虚拟机来说，对象大小必须是8字节的整数倍，不够的话需要占位填充
+- 对齐填充：对于64位虚拟机来说，对象大小必须是8字节的整数倍（`-XX:ObjectAlignmentInBytes`，默认值是8），不够的话需要占位填充；在默认情况下，Java 虚拟机中的 32 位压缩指针可以寻址到 2 的 35 次方个字节，也就是 32GB 的地址空间（超过 32GB 则会关闭压缩指针）；字段内存对齐的其中一个原因，是让字段只出现在同一 CPU 的缓存行中。如果字段不是对齐的，那么就有可能出现跨缓存行的字段
 
 ![](image/Java对象的存储布局.png)
 
 ### 3.2.1、查看对象内存布局
 
-通过[JOL](http://openjdk.java.net/projects/code-tools/jol/)分析Java对象的内存布局，使用参考：[JOL使用方式](http://zhongmingmao.me/2016/07/03/jvm-jol-tutorial-3/)
+通过[JOL](http://openjdk.java.net/projects/code-tools/jol/)分析Java对象的内存布局
 
 查看对象布局
 **步骤一：添加依赖**
@@ -2146,8 +2149,8 @@ Java 编译器利用 invokedynamic 指令来生成实现了函数式接口的适
 **Lambda性能问题：**
 
 Lambda 表达式到函数式接口的转换是通过 invokedynamic 指令来实现的。该 invokedynamic 指令对应的启动方法将通过 ASM 生成一个适配器类。
-
-对于没有捕获其他变量的 Lambda 表达式，该 invokedynamic 指令始终返回同一个适配器类的实例。对于捕获了其他变量的 Lambda 表达式，每次执行 invokedynamic 指令将新建一个适配器类实例。
+- 对于没有捕获其他变量的 Lambda 表达式，该 invokedynamic 指令始终返回同一个适配器类的实例。
+- 对于捕获了其他变量的 Lambda 表达式，每次执行 invokedynamic 指令将新建一个适配器类实例。
 
 不管是捕获型的还是未捕获型的 Lambda 表达式，它们的性能上限皆可以达到直接调用的性能。其中，捕获型 Lambda 表达式借助了即时编译器中的逃逸分析，来避免实际的新建适配器类实例的操作。
 
@@ -2828,6 +2831,7 @@ public class ShutdownHookDemo {
 
 # 参考文章
 
+* [OpenJDK 项目 Code Tools：实用小工具集](https://openjdk.org/projects/code-tools/)
 * [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
 * [ClassLoader机制](http://www.hollischuang.com/archives/199)
 * [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
