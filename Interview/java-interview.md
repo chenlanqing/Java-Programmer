@@ -195,8 +195,54 @@ public class MostPopularCollector<T> implements Collector<T, Map<T, Integer>, Op
 
 ## 8、如何进行深拷贝，除了clone
 
+## 9、创建对象的方式
 
+在 Java 程序中，拥有多种新建对象的方式。除了最为常见的 new 语句之外，还可以通过
+- 反射机制：使用Class类的newInstance()方法创建一个对象（Java9以后是过期的方法）、使用 java.lang.reflect.Constructor#newInstance 方法
+- Object.clone 方法
+- 反序列化
+- Unsafe.allocateInstance 方法来新建对象。
 
+其中，Object.clone 方法和反序列化通过直接复制已有的数据，来初始化新建对象的实例字段。Unsafe.allocateInstance 方法则没有初始化实例字段，而 new 语句和反射机制，则是通过调用构造器来初始化实例字段。
+```java
+/**
+ * 通过序列化与反序列化创建对象
+ */
+public static void createBySerializable() throws Exception{
+    // 构建对象
+    Person person = new Person(UUID.randomUUID().toString(), "Serializable");
+    // 将对象写入到字节数组
+    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+    ObjectOutputStream objectOutputStream = new ObjectOutputStream(outputStream);
+    objectOutputStream.writeObject(person);
+    objectOutputStream.close();
+    // 读取数据
+    ByteArrayInputStream in = new ByteArrayInputStream(outputStream.toByteArray());
+    ObjectInputStream inputStream = new ObjectInputStream(in);
+    Person object = (Person) inputStream.readObject();
+}
+/**
+ * Unsafe.allocateInstance 创建镀锡
+ */
+public static void createByUnsafe() throws Exception{
+    Field f = Unsafe.class.getDeclaredField("theUnsafe");
+    f.setAccessible(true);
+    Unsafe unsafe = (Unsafe) f.get(null);
+    Object person = unsafe.allocateInstance(Person.class);
+    System.out.println(person);
+}
+/**
+ * 反射创建对象
+ */
+public static void createInstanceByReflect() throws Exception {
+    // 有参构造函数
+    Constructor<Person> constructor = Person.class.getConstructor(String.class, String.class);
+    Person person = constructor.newInstance(UUID.randomUUID().toString(), "Reflect");
+    // 无参构造函数
+    constructor = Person.class.getConstructor();
+    person = constructor.newInstance();
+}
+```
 
 # 二、集合
 
