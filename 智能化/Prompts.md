@@ -1,6 +1,6 @@
 # 1、awesome-chatgpt-prompts
 
-参考来源：https://github.com/f/awesome-chatgpt-prompts
+参考来源：[awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)，对应中文版：[awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh)
 
 摘录部分开发者常用 prompts
 
