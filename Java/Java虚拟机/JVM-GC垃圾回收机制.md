@@ -1332,6 +1332,9 @@ finalize是位于 Object 类的一个方法，该方法的访问修饰符为 pro
 
 # 八、GC调优
 
+* [垃圾优先型垃圾回收器调优](http://www.oracle.com/technetwork/cn/articles/java/g1gc-1984535-zhs.html)
+* [Java11-GC调优](https://docs.oracle.com/en/java/javase/11/gctuning/introduction-garbage-collection-tuning.html)
+
 ## 1、监控GC
 
 **1.1、垃圾回收收集监控指的是搞清楚 JVM 如何执行 GC 的过程，如可以查明**
@@ -2213,7 +2216,6 @@ Full GC日志含义：
 * 《深入理解Java虚拟机-JVM高级特性与最佳实践[周志明]》
 * [String.intern()导致的YGC](http://lovestblog.cn/blog/2016/11/06/string-intern/)
 * [如何优化Java GC](https://crowhawk.github.io/2017/08/21/jvm_4/)
-* [垃圾优先型垃圾回收器调优](http://www.oracle.com/technetwork/cn/articles/java/g1gc-1984535-zhs.html)
 * [由「Metaspace容量不足触发CMS GC」从而引发的思考](https://www.jianshu.com/p/468fb4c5b28d)
 * [频繁FullGC的案例](https://mp.weixin.qq.com/s/X-oOlXomjOyBe_8E4bWQLQ)
 * [CMS垃圾收集器](https://mp.weixin.qq.com/s/-yqJa4dOyzLaK_tJ1x9E7w)
