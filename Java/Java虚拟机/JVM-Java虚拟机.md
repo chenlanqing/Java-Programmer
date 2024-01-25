@@ -2313,69 +2313,129 @@ public class FanxingTest{
 
 ![image](image/解释器与编译器交互.png)
 
-- （1）两者并存的优势：
-	- 程序需要迅速启动和执行时，解释器优先发挥作用，省去编译时间，且随着时间推移，编译器将热点代码编译本地代码，提高执行效率；
-	- 当运行环境中内存资源限制较大（如部分嵌入式系统），使用解释器执行节约内存，反之可以使用编译执行来提升效率；
-	- 解释器还可以作为编译器激进优化的逃生门，如编译优化出现问题，能退化为解释器状态执行；
+（1）两者并存的优势：
+- 程序需要迅速启动和执行时，解释器优先发挥作用，省去编译时间，且随着时间推移，编译器将热点代码编译本地代码，提高执行效率；
+- 当运行环境中内存资源限制较大（如部分嵌入式系统），使用解释器执行节约内存，反之可以使用编译执行来提升效率；
+- 解释器还可以作为编译器激进优化的逃生门，如编译优化出现问题，能退化为解释器状态执行；
 
-- （2）HotSpot虚拟机内置两个JIT编译器：
-	- Client Compiler：C1编译器，更高的编译速度
-	- Server Compiler：C2编译器，更好的编译质量
+（2）HotSpot虚拟机内置两个JIT编译器：
+- Client Compiler：C1编译器，更高的编译速度
+- Server Compiler：C2编译器，更好的编译质量
 
-- （3）JVM中JIT运行模式：
-	在HotSpot虚拟机（JDK7之前版本的）默认采用的是解释器与其中一个编译器直接配合的方式。
-	- 混合模式（Mixed Mode）：默认模式，使用解释器+其中一个JIT编译器，可以使用 -client 或者 -server 指定使用哪个；
-	- 解释模式（Interpreted Mode）：只使用解释器，使用 -Xint 强制指定JVM使用解释模式；
-	- 编译模式（Compiled Mode）：只使用编译器，使用 -Xcomp 强制指定JVM优先使用编译模式，解释模式在编译模式无法进行的情况下介入；
-- （4）编译层次：为了在程序启动响应速度和运行效率之间达到最佳平衡，HotSpot虚拟机采用分层编译（Tiered Compilation）策略，该策略在JDK1.6时期出现，在JDK7之前需要使用参数：`-XX:+TieredCompilation`来手动开启，在JDK7的Server模式虚拟机中作为默认编译策略开启，其包含如下层次：
-	- 第0层：程序解释执行，解释器不开启性能监控功能，可触发第1层编译；
-	- 第1层：C1编译，将字节码编译为本地代码，进行简单、可靠的优化，必要时将加入性能监控逻辑；
-	- 第2层：C2编译，同1层优化，但启动了一些编译耗时较长的优化，甚至根据性能监控信息进行不可靠激进优化；
+（3）JVM中JIT运行模式：
+在HotSpot虚拟机（JDK7之前版本的）默认采用的是解释器与其中一个编译器直接配合的方式。
+- 混合模式（Mixed Mode）：默认模式，使用解释器+其中一个JIT编译器，可以使用 -client 或者 -server 指定使用哪个；
+- 解释模式（Interpreted Mode）：只使用解释器，使用 -Xint 强制指定JVM使用解释模式；
+- 编译模式（Compiled Mode）：只使用编译器，使用 -Xcomp 强制指定JVM优先使用编译模式，解释模式在编译模式无法进行的情况下介入；
+
+（4）编译层次：为了在程序启动响应速度和运行效率之间达到最佳平衡，HotSpot虚拟机采用分层编译（Tiered Compilation）策略，该策略在JDK1.6时期出现，在JDK7之前需要使用参数：`-XX:+TieredCompilation`来手动开启，在JDK7的Server模式虚拟机中作为默认编译策略开启，其包含如下层次：
+- 第1层：程序解释执行，解释器不开启性能监控功能，可触发第1层编译；
+- 第2层：执行不带 profiling 的 C1 代码；（profiling 是指在程序执行过程中，收集能够反映程序执行状态的数据。这里所收集的数据我们称之为程序的 profile）
+- 第3层：执行仅带方法调用次数以及循环回边执行次数 profiling 的 C1 代码；
+- 第4层：执行带所有 profiling 的 C1 代码；
+- 第2层：C2编译，同1层优化，但启动了一些编译耗时较长的优化，甚至根据性能监控信息进行不可靠激进优化；
+
+通常情况下，C2 代码的执行效率要比 C1 代码的高出 30% 以上。然而，对于 C1 代码的三种状态，按执行效率从高至低则是 1 层 > 2 层 > 3 层；
+
+Java 8 默认开启了分层编译。不管是开启还是关闭分层编译，原本用来选择即时编译器的参数 -client 和 -server 都是无效的。当关闭分层编译的情况下，Java 虚拟机将直接采用 C2；如果希望只是用 C1，那么你可以在打开分层编译的情况下使用参数 `-XX:TieredStopAtLevel=1`。在这种情况下，Java 虚拟机会在解释执行之后直接由 1 层的 C1 进行编译
 
 ### 10.4.3、编译对象与触发条件
 
-- （1）编译对象（热点代码）：
-	- 被多次调用的方法：整个方法为编译对象；
-	- 被多次执行的循环体：依然以整个方法（不是单独的循环体）作为编译对象； 循环体编译优化是发生在方法执行过程中，因此称之为“栈上替换（on stack replacement），简称OSR编译，即方法栈帧还在栈上，方法就被替换了”
+**编译对象（热点代码）**
+- 被多次调用的方法：整个方法为编译对象；
+- 被多次执行的循环体：依然以整个方法（不是单独的循环体）作为编译对象； 循环体编译优化是发生在方法执行过程中，因此称之为“栈上替换（on stack replacement），简称OSR编译（OSR 实际上是一种技术，它指的是在程序执行过程中，动态地替换掉 Java 方法栈桢，从而使得程序能够在非方法入口处进行解释执行和编译后的代码之间的切换），即方法栈帧还在栈上，方法就被替换了”
 
-- （2）热点代码探测
-	- 基于采样的热点探测：其会周期性的检查各个线程的栈顶，如果发现某个或某些方法经常出现在栈顶，即热点方法
-		- 优点：实现简单、高效，可以很容易获取方法调用关系（将调用堆栈展开）
-		- 缺点：很难搞精准确定一个方法的热度，容易因为受到线程阻塞或别的外界因素的影响而扰乱热点探测；
-	- 基于计数器的热点探测：会为每个方法（代码块）建立计数器，统计方法的执行次数，如果执行次数超过一定阈值，就认定为热点方法；
-		- 优点：统计结果相对来说更加精确和严谨；
-		- 缺点：实现复杂，需要为每个方法都建立并维护计数器；且不能直接获取到方法的调用关系；
+Java 虚拟机是根据方法的调用次数以及循环回边的执行次数来触发即时编译的；比如如下代码：
+```java
+public static void foo(Object obj) {
+	int sum = 0;
+	for (int i = 0; i < 200; i++) {
+		sum += i;
+	}
+}
+// 编译的字节码如下
+public static void foo(java.lang.Object);
+  Code:
+     0: iconst_0
+     1: istore_1
+     2: iconst_0
+     3: istore_2
+     4: goto 14
+     7: iload_1
+     8: iload_2
+     9: iadd
+    10: istore_1
+    11: iinc 2, 1
+    14: iload_2
+    15: sipush 200
+    18: if_icmplt 7
+    21: return
+```
+上面`偏移量为 18` 的字节码将往回跳至`偏移量为 7` 的字节码中。在解释执行时，每当运行一次该指令（if_icmplt），Java 虚拟机便会将该方法的循环回边计数器加 1
 
-- （3）基于计数器的热点探测：HotSpot虚拟机采用的探测方法；可以分为两类：
-	- 方法调用计数器：用于统计方法被调用的次数，默认阈值在Client模式下是1500次，在Server下是10000次
-		- 阈值修改：`-XX:CompiledThreshold`；
-		- 半衰周期：当超过一定时间限度，如果方法的调用次数仍然不足以让它提交JIT编译器编译，那么这个方法的调用计数器就被减少一半，该过程称为方法调用计数器热度的衰减，这段时间称为方法统计的半衰周期，使用 -XX:CounterHalfLifeTime 来设置半衰周期时间，单位是s
-		- 关闭热锻衰减：`-XX:-UseCounterDecay`
+在 64 位 Java 虚拟机中，默认情况下编译线程的总数目是根据处理器数量来调整的（对应参数 `-XX:+CICompilerCountPerCPU`，默认为 true；当通过参数 `-XX:+CICompilerCount=N` 强制设定总编译线程数目时，`CICompilerCountPerCPU` 将被设置为 false）;
 
-		![image](image/方法调用计数器触发即时编译.png)
+Java 虚拟机会将这些编译线程按照 1:2 的比例分配给 C1 和 C2（至少各为 1 个）。举个例子，对于一个四核机器来说，总的编译线程数目为 3，其中包含一个 C1 编译线程和两个 C2 编译线程
+```java
+// 对于四核及以上的机器，总的编译线程的数目为：
+n = log2(N) * log2(log2(N)) * 3 / 2
+// 其中N为CPU核心数目。
+```
 
-	- 回边计数器：统计一份方法中循环体代码执行的次数，在字节码中遇到控制流向后跳转的指令成为“回边”，建立回边的计数器统计的目的是为了触发OSR编译
-		- 阈值修改：-XX:BackEdgeThreshold，但当前虚拟机实际并未使用该参数；
-		- 间接修改阈值：-XX:OnStackReplacePercentage，其计算公式如下：
-			- Client模式下：阈值 = 方法调用计数器阈值（CompiledThreshold） * OSR 比率（OnStackReplacePercentage）/ 100； 其中OnStackReplacePercentage默认值为933，如果都取默认值的话，Client模式下虚拟机回边计数器的阈值我13955；
-			- Server模式：阈值 = 方法调用计数器阈值 * （OSR 比率 - 解释器监控比率（InterperterProfilePercentage）） / 100；其中OnStackReplacePercentage默认值为140，InterperterProfilePercentage 默认值为33，如果都取默认值，那么Server模式虚拟机回边计数器的阈值为10700；
+**热点代码探测**
+- 基于采样的热点探测：其会周期性的检查各个线程的栈顶，如果发现某个或某些方法经常出现在栈顶，即热点方法
+	- 优点：实现简单、高效，可以很容易获取方法调用关系（将调用堆栈展开）
+	- 缺点：很难搞精准确定一个方法的热度，容易因为受到线程阻塞或别的外界因素的影响而扰乱热点探测；
+- 基于计数器的热点探测：会为每个方法（代码块）建立计数器，统计方法的执行次数，如果执行次数超过一定阈值，就认定为热点方法；
+	- 优点：统计结果相对来说更加精确和严谨；
+	- 缺点：实现复杂，需要为每个方法都建立并维护计数器；且不能直接获取到方法的调用关系；
 
-		![image](image/方法调用计数器触发即时编译.png)
+**基于计数器的热点探测**：HotSpot虚拟机采用的探测方法；可以分为两类：
+- 方法调用计数器：用于统计方法被调用的次数，默认阈值在Client模式下是1500次，在Server下是10000次
+	- 阈值修改：`-XX:CompiledThreshold`；
+	- 半衰周期：当超过一定时间限度，如果方法的调用次数仍然不足以让它提交JIT编译器编译，那么这个方法的调用计数器就被减少一半，该过程称为方法调用计数器热度的衰减，这段时间称为方法统计的半衰周期，使用 -XX:CounterHalfLifeTime 来设置半衰周期时间，单位是s
+	- 关闭热锻衰减：`-XX:-UseCounterDecay`
 
-	*注意：* 上述图片中仅仅描述了Client VM的即时编译方式，对于Server VM 来说，情况比上述更复杂。可以通过源码文件 MethodOop.hpp中，定义了Java方法在虚拟机中的内存布局
+	![image](image/方法调用计数器触发即时编译.png)
+
+- 回边计数器：统计一份方法中循环体代码执行的次数，在字节码中遇到控制流向后跳转的指令成为“回边”，建立回边的计数器统计的目的是为了触发OSR编译
+	- 阈值修改：`-XX:BackEdgeThreshold`，但当前虚拟机实际并未使用该参数；
+	- 间接修改阈值：`-XX:OnStackReplacePercentage`，其计算公式如下：
+		- Client模式下：`阈值 = 方法调用计数器阈值（CompiledThreshold） * OSR 比率（OnStackReplacePercentage）/ 100`； 其中OnStackReplacePercentage默认值为933，如果都取默认值的话，Client模式下虚拟机回边计数器的阈值我13955；
+		- Server模式：`阈值 = 方法调用计数器阈值 * （OSR 比率 - 解释器监控比率（InterperterProfilePercentage）） / 100`；其中OnStackReplacePercentage默认值为140，InterperterProfilePercentage 默认值为33，如果都取默认值，那么Server模式虚拟机回边计数器的阈值为10700；
+
+	![image](image/方法调用计数器触发即时编译.png)
+
+*注意：* 上述图片中仅仅描述了Client VM的即时编译方式，对于Server VM 来说，情况比上述更复杂。可以通过源码文件 MethodOop.hpp中，定义了Java方法在虚拟机中的内存布局
 
 ### 10.4.4、编译过程
 
-通过-XX:BackgroundCompilation禁止后台编译。Server Compiler和Client Compiler两个编译器的编译过程是不一样的
+通过`-XX:BackgroundCompilation`禁止后台编译。Server Compiler和Client Compiler两个编译器的编译过程是不一样的
 
-- （1）对于Client Compiler来说，其实一个简单的三段式编译器：
-	- 第一阶段：一个平台独立的前端将字节码构成一种高级中间代码表示（High-Level Intermediate Representation，HIR）。HIR使用静态分配（Static Single Assignment，SSA）的形式来代表代码值，使得HIR的构造过程之中和之后都进行的优化动作更容易实现，在此之前会继续基础优化，如：方法内联、常量传播等；
-	- 第二阶段：一个平台相关的后端从HIR中产生低级中间代码（LIR）表示，而在此之前会在HIR上完成另外一部分的优化，如：控制检查、范围检查消除等；
-	- 第三阶段：是在凭条相关的后端使用线性扫描算法在LIR上分配寄存器，并在LIR上做窥孔优化，产生机器代码；Client Compiler 的大致执行过程：
+（1）对于Client Compiler来说，其实一个简单的三段式编译器：
+- 第一阶段：一个平台独立的前端将字节码构成一种高级中间代码表示（High-Level Intermediate Representation，HIR）。HIR使用静态分配（Static Single Assignment，SSA）的形式来代表代码值，使得HIR的构造过程之中和之后都进行的优化动作更容易实现，在此之前会继续基础优化，如：方法内联、常量传播等；
+- 第二阶段：一个平台相关的后端从HIR中产生低级中间代码（LIR）表示，而在此之前会在HIR上完成另外一部分的优化，如：控制检查、范围检查消除等；
+- 第三阶段：是在凭条相关的后端使用线性扫描算法在LIR上分配寄存器，并在LIR上做窥孔优化，产生机器代码；Client Compiler 的大致执行过程：
 
-	![image](image/Client-Compiler架构.png)
+![image](image/Client-Compiler架构.png)
 
-- （2）Server Compiler，其会执行所有经典的优化动作，如无用代码消除、循环展开、循环表达式外提、消除公共子表达式、常量传播、基本块重排序等
+（2）Server Compiler，其会执行所有经典的优化动作，如无用代码消除、循环展开、循环表达式外提、消除公共子表达式、常量传播、基本块重排序等
+
+> 可以使用参数 `-XX:+PrintCompilation` 来打印你项目中的即时编译情况
+```java
+88   15       3       CompilationTest::foo (16 bytes)
+88   16       3       java.lang.Integer::valueOf (32 bytes)
+88   17       4       CompilationTest::foo (16 bytes)
+88   18       4       java.lang.Integer::valueOf (32 bytes)
+89   15       3       CompilationTest::foo (16 bytes)   made not entrant
+89   16       3       java.lang.Integer::valueOf (32 bytes)   made not entrant
+90   19 %     3       CompilationTest::main @ 5 (33 bytes)
+```
+- 第一列是时间；
+- 第二列是 Java 虚拟机维护的编译 ID；
+- 接下来一系列标识，包括 %（是否 OSR 编译），s（是否 synchronized 方法），！（是否包含异常处理器），b（是否阻塞了应用线程，可了解一下参数 -Xbatch），n（是否为 native 方法）。
+- 接下里再接下来则是编译层次，以及方法名。如果是 OSR 编译，那么方法名后面还会跟着 `@以及循环所在的字节码`；当发生去优化时，你将看到之前出现过的编译，不过被标记了“made not entrant"。它表示该方法不能再被进入；当 Java 虚拟机检测到所有的线程都退出该编译后的“made not entrant”时，会将该方法标记为“made zombie”，此时可以回收这块代码所占据的空间了；
+
 
 ### 10.4.5、编译优化技术
 
@@ -2395,7 +2455,6 @@ public void foo(){
 	z = b.get();
 	sum = y + z; 
 }
- 
 ```
 - 内联优化：
 ```java
@@ -2406,7 +2465,6 @@ public void foo(){
 	sum = y + z;
 }
 ```
-
 - 冗余访问消除或公共子表达式消除后
 ```java
 public void foo(){
@@ -2416,7 +2474,6 @@ public void foo(){
 	sum = y + z;
 }
 ```
-
 - 复写传播后：
 ```java
 public void foo(){
@@ -2426,7 +2483,6 @@ public void foo(){
 	sum = y + y;
 }
 ```
-
 - 无用代码消除后
 ```java
 public void foo(){
@@ -2836,6 +2892,9 @@ public class ShutdownHookDemo {
 
 # 参考文章
 
+* [The Java® Virtual Machine Specification（Java SE 11 Edition）](https://docs.oracle.com/javase/specs/jvms/se11/html/index.html)
+* [《Java 虚拟机规范（第11版）》中文翻译及示例](https://github.com/waylau/java-virtual-machine-specification)
+* [JVM解剖公园](https://shipilev.net/jvm/anatomy-quarks/)
 * [OpenJDK 项目 Code Tools：实用小工具集](https://openjdk.org/projects/code-tools/)
 * [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
 * [ClassLoader机制](http://www.hollischuang.com/archives/199)
@@ -2846,7 +2905,6 @@ public class ShutdownHookDemo {
 * [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
 * [JVM源码分析之Metaspace解密](http://lovestblog.cn/blog/2016/10/29/metaspace/)
 * [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)
-* [Java虚拟机规范（JDK8）](https://docs.oracle.com/javase/specs/jvms/se8/html/index.html)
 * [钩子函数](https://segmentfault.com/a/1190000011496370)
 * [堆外内存](https://www.jianshu.com/p/35cf0f348275)
 * [阿里龙井JDK](https://github.com/alibaba/dragonwell8)
