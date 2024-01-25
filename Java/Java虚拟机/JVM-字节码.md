@@ -566,9 +566,15 @@ Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了
 - Mock：测试时候对某些服务做Mock。
 - 性能诊断工具：比如bTrace就是利用Instrument，实现无侵入地跟踪一个正在运行的JVM，监控到类和方法级别的状态信息。
 
-# 5、字节码运用-JavaAgent
+# 5、JavaAgent
 
-## 1、Java agent
+- [高性能Java性能监控和统计工具-MyPerf4J](https://github.com/LinShunKang/MyPerf4J)
+- [Java 服务器应用程序性能监控的开源解决方案](https://www.stagemonitor.org/)
+- [How to write java agents](https://www.javacodegeeks.com/2015/09/java-agents.html)
+- [jvm-monitoring-agent](https://github.com/toptal/jvm-monitoring-agent)
+- [通过 byteBuddy创建Java agents](https://www.infoq.cn/article/Easily-Create-Java-Agents-with-ByteBuddy/)
+
+## 5.1、定义
 
 JDK1.5之后引进的，也可以叫做Java代理，JavaAgent 是运行在 main方法之前的拦截器，它内定的方法名叫 premain ，也就是说先执行 premain 方法然后再执行 main 方法
 - 支持方法执行耗时范围抓取设置，根据耗时范围抓取系统运行时出现在设置耗时范围的代码运行轨迹。
@@ -582,7 +588,7 @@ Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同�
 **其原理：**
 我们利用Java代理和ASM字节码技术，在JVM加载class二进制文件的时候，利用ASM动态的修改加载的class文件，在监控的方法前后添加计时器功能，用于计算监控方法耗时，同时将方法耗时及内部调用情况放入处理器，处理器利用栈先进后出的特点对方法调用先后顺序做处理，当一个请求处理结束后，将耗时方法轨迹和入参map输出到文件中，然后根据map中相应参数或耗时方法轨迹中的关键代码区分出我们要抓取的耗时业务。最后将相应耗时轨迹文件取下来，转化为xml格式并进行解析，通过浏览器将代码分层结构展示出来，方便耗时分析
 
-## 2、手动编写java agent
+## 5.2、手动编写java agent
 
 - 在`META-INF`目录下创建`MANIFEST`文件
     ```
@@ -622,11 +628,11 @@ Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同�
     public static void agentmain(String agentArgs, Instrumentation inst);
     ```
 
-## 3、启动时加载Agent
+## 5.3、启动时加载Agent
 
 将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 “-javaagent:[=]“，具体的使用方法可以使用“Java -Help”来查看
 
-## 4、运行时加载Agent
+## 5.4、运行时加载Agent
 
 运行时挂载Agent到目标JVM，就需要做一些额外的开发；
 
@@ -655,7 +661,6 @@ private void attachAgentToTargetJVM() throws Exception {
 	}
 }
 ```
-
 首先通过指定的进程ID找到目标JVM，然后通过Attach挂载到目标JVM上，执行加载Agent操作。VirtualMachine的Attach方法就是用来将Agent挂载到目标JVM上去的，而Detach则是将Agent从目标JVM卸载；
 
 # 6、防止反编译
@@ -746,16 +751,17 @@ java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+P
 
 # 参考资料
 
+* [字节码入门](https://dzone.com/articles/introduction-to-java-bytecode)
 * [javassist教程](http://www.javassist.org/tutorial/tutorial.html)
 * [ASM](https://asm.ow2.io/index.html)
-* [byte-buddy](https://github.com/raphw/byte-buddy*)
+* [代码生成库-byte-buddy](https://github.com/raphw/byte-buddy)
 * [字节码开源库](https://java-source.net/open-source/bytecode-libraries)
 * [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)
 * [JVM Tool Interface](https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html)
-* [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
+* [JVM Tool Interface Examples](https://github.com/jon-bell/bytecode-examples)
+* [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-6.html)
 * [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
 * [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
-* [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
 * [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
 * [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
 * [Java源文件生成框架](https://github.com/square/javapoet)
