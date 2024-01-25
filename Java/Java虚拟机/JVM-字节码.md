@@ -116,20 +116,18 @@ cp_info {
     u1 info[];
 }
 ```
+常量池中主要存放两大类常量：字面量和符号引用
+- 字面量比较接近于Java层面的常量概念，如文本字符串、被声明为final的常量值等；
+- 符号引用总结起来则包括了下面三类常量：
+    - 类和接口的全限定名（即带有包名的 Class 名，如：java.lang.String）
+    - 字段的名称和描述符（private，static 等描述符）；
+    - 方法的名称和描述符（private，static 等描述符）；
 
-- 常量池中主要存放两大类常量：字面量和符号引用
-	- 字面量比较接近于Java层面的常量概念，如文本字符串、被声明为final的常量值等；
-	- 符号引用总结起来则包括了下面三类常量：
-		- 类和接口的全限定名（即带有包名的 Class 名，如：java.lang.String）
-		- 字段的名称和描述符（private，static 等描述符）；
-		- 方法的名称和描述符（private，static 等描述符）；
+JVM是在加载Class文件的时候才进行的动态链接，也就是说这些字段和方法符号引用只有在运行期转换后才能获得真正的内存入口地址；当虚拟机运行时，需要从常量池中获得对应的符号引用，再在类加载过程中的解析阶段将其替换为直接引用，并翻译到具体的内存地址中
 
-	JVM是在加载Class文件的时候才进行的动态链接，也就是说这些字段和方法符号引用只有在运行期转换后才能获得真正的内存入口地址；当虚拟机运行时，需要从常量池中获得对应的符号引用，再在类加载过程中的解析阶段将其替换为直接引用，并翻译到具体的内存地址中
-
-- 符号引用与直接引用的区别与关联：
-	- 符号引用：符号引用是以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义的定位到目标即可，符号引用与虚拟机实现的内存布局无关，引用的目标并不一定已经加载到内存中;
-	- 直接引用：直接引用可以是直接指向目标的指针，相对偏移量或者是一个能间接定位到目标的句柄；直接引用是与虚拟机实现的内存布局相关的，同一个符号引用在不同的虚拟机实例上翻译出来的直接引用一般不会相同;如果有了直接引用，那说明引用的目标必定已经存在于内存中了；
-
+符号引用与直接引用的区别与关联：
+- 符号引用：符号引用是以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义的定位到目标即可，符号引用与虚拟机实现的内存布局无关，引用的目标并不一定已经加载到内存中;
+- 直接引用：直接引用可以是直接指向目标的指针，相对偏移量或者是一个能间接定位到目标的句柄；直接引用是与虚拟机实现的内存布局相关的，同一个符号引用在不同的虚拟机实例上翻译出来的直接引用一般不会相同;如果有了直接引用，那说明引用的目标必定已经存在于内存中了；
 
 ### 2.2.3、access_flag
 
@@ -256,9 +254,32 @@ code内的主要属性：
 
 在方法列表图中中，Code区的红色编号0～17，就是`.java`中的方法源代码编译后让JVM真正执行的操作码。为了帮助人们理解，反编译后看到的是十六进制操作码所对应的助记符，十六进制值操作码与助记符的对应关系，以及每一个操作码的用处可以查看Oracle官方文档进行了解，在需要用到时进行查阅即可。比如上图中第一个助记符为iconst_2，对应到图2中的字节码为0x05，用处是将int值2压入操作数栈中。以此类推，对0~17的助记符理解后，就是完整的add()方法的实现；
 
-## 2.4、操作数栈和字节码
+## 2.4、操作数栈
 
 JVM的指令集是基于栈而不是寄存器，基于栈可以具备很好的跨平台性（因为寄存器指令集往往和硬件挂钩），但缺点在于，要完成同样的操作，基于栈的实现需要更多指令才能完成（因为栈只是一个FILO结构，需要频繁压栈出栈）。另外，由于栈是在内存实现的，而寄存器是在CPU的高速缓存区，相较而言，基于栈的速度要慢很多，这也是为了跨平台性而做出的牺牲
+
+执行每一条指令之前，Java 虚拟机要求该指令的操作数已被压入操作数栈中。在执行指令时，Java 虚拟机会将该指令所需的操作数弹出，并且将指令的结果重新压入栈中；
+
+以加法指令 iadd 为例。假设在执行该指令前，栈顶的两个元素分别为 int 值 1 和 int 值 2，那么 iadd 指令将弹出这两个 int，并将求得的和 int 值 3 压入栈中；
+
+Java 字节码中有好几条指令是直接作用在操作数栈上的。
+- 最为常见的便是 dup： 复制栈顶元素；
+- 以及 pop：舍弃栈顶元素。pop 指令则常用于舍弃调用指令的返回结果
+
+dup 指令常用于复制 new 指令所生成的未经初始化的引用，例如在下面这段代码的 foo 方法中，当执行 new 指令时，Java 虚拟机将指向一块已分配的、未初始化的内存的引用压入操作数栈中：
+```java
+public void foo() {
+Object o = new Object();
+}
+// 对应的字节码如下：
+public void foo();
+    0  new java.lang.Object [3]
+    3  dup
+    4  invokespecial java.lang.Object() [8]
+    7  astore_1 [o]
+    8  return
+```
+需要注意的是，上述两条指令只能处理非 long 或者非 double 类型的值，这是因为 long 类型或者 double 类型的值，需要占据两个栈单元。当遇到这些值时，我们需要同时复制栈顶两个单元的 dup2 指令，以及弹出栈顶两个单元的 pop2 指令
 
 ## 2.5、字节码指令
 
@@ -566,15 +587,9 @@ Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了
 - Mock：测试时候对某些服务做Mock。
 - 性能诊断工具：比如bTrace就是利用Instrument，实现无侵入地跟踪一个正在运行的JVM，监控到类和方法级别的状态信息。
 
-# 5、JavaAgent
+# 5、字节码运用-JavaAgent
 
-- [高性能Java性能监控和统计工具-MyPerf4J](https://github.com/LinShunKang/MyPerf4J)
-- [Java 服务器应用程序性能监控的开源解决方案](https://www.stagemonitor.org/)
-- [How to write java agents](https://www.javacodegeeks.com/2015/09/java-agents.html)
-- [jvm-monitoring-agent](https://github.com/toptal/jvm-monitoring-agent)
-- [通过 byteBuddy创建Java agents](https://www.infoq.cn/article/Easily-Create-Java-Agents-with-ByteBuddy/)
-
-## 5.1、定义
+## 1、Java agent
 
 JDK1.5之后引进的，也可以叫做Java代理，JavaAgent 是运行在 main方法之前的拦截器，它内定的方法名叫 premain ，也就是说先执行 premain 方法然后再执行 main 方法
 - 支持方法执行耗时范围抓取设置，根据耗时范围抓取系统运行时出现在设置耗时范围的代码运行轨迹。
@@ -588,7 +603,7 @@ Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同�
 **其原理：**
 我们利用Java代理和ASM字节码技术，在JVM加载class二进制文件的时候，利用ASM动态的修改加载的class文件，在监控的方法前后添加计时器功能，用于计算监控方法耗时，同时将方法耗时及内部调用情况放入处理器，处理器利用栈先进后出的特点对方法调用先后顺序做处理，当一个请求处理结束后，将耗时方法轨迹和入参map输出到文件中，然后根据map中相应参数或耗时方法轨迹中的关键代码区分出我们要抓取的耗时业务。最后将相应耗时轨迹文件取下来，转化为xml格式并进行解析，通过浏览器将代码分层结构展示出来，方便耗时分析
 
-## 5.2、手动编写java agent
+## 2、手动编写java agent
 
 - 在`META-INF`目录下创建`MANIFEST`文件
     ```
@@ -628,11 +643,11 @@ Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同�
     public static void agentmain(String agentArgs, Instrumentation inst);
     ```
 
-## 5.3、启动时加载Agent
+## 3、启动时加载Agent
 
 将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 “-javaagent:[=]“，具体的使用方法可以使用“Java -Help”来查看
 
-## 5.4、运行时加载Agent
+## 4、运行时加载Agent
 
 运行时挂载Agent到目标JVM，就需要做一些额外的开发；
 
@@ -661,6 +676,7 @@ private void attachAgentToTargetJVM() throws Exception {
 	}
 }
 ```
+
 首先通过指定的进程ID找到目标JVM，然后通过Attach挂载到目标JVM上，执行加载Agent操作。VirtualMachine的Attach方法就是用来将Agent挂载到目标JVM上去的，而Detach则是将Agent从目标JVM卸载；
 
 # 6、防止反编译
@@ -751,17 +767,16 @@ java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+P
 
 # 参考资料
 
-* [字节码入门](https://dzone.com/articles/introduction-to-java-bytecode)
 * [javassist教程](http://www.javassist.org/tutorial/tutorial.html)
 * [ASM](https://asm.ow2.io/index.html)
-* [代码生成库-byte-buddy](https://github.com/raphw/byte-buddy)
+* [byte-buddy](https://github.com/raphw/byte-buddy*)
 * [字节码开源库](https://java-source.net/open-source/bytecode-libraries)
 * [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)
 * [JVM Tool Interface](https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html)
-* [JVM Tool Interface Examples](https://github.com/jon-bell/bytecode-examples)
-* [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-6.html)
+* [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
 * [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
 * [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
+* [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
 * [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
 * [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
 * [Java源文件生成框架](https://github.com/square/javapoet)
