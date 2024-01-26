@@ -2560,7 +2560,15 @@ public static void testInline(String[] args){
 
 ##### 1、基本概念
 
-逃逸分析的基本行为就是分析对象动态作用域：当一个对象在方法中被定义之后，它可能被外部所引用。例如作为调用参数传递到其他地方中，称为方法逃逸，主要包括：全局变量赋值逃逸、方法返回值逃逸、实例引用逃逸、线程逃逸
+一种确定指针动态范围的静态分析，它可以分析在程序的哪些地方可以访问到指针
+
+逃逸分析的基本行为就是分析对象动态作用域：当一个对象在方法中被定义之后，它可能被外部所引用。即时编译器里的逃逸分析是放在方法内联之后的，以便消除这些“未知代码”入口
+
+即时编译器判断对象是否逃逸的依据：
+- 一是对象是否被存入堆中（静态字段或者堆中对象的实例字段）
+- 二是对象是否被传入未知代码中。
+
+例如作为调用参数传递到其他地方中，称为方法逃逸，主要包括：全局变量赋值逃逸、方法返回值逃逸、实例引用逃逸、线程逃逸
 ```java
 public static StringBuffer craeteStringBuffer(String s1， String s2) {
 	StringBuffer sb = new StringBuffer();
@@ -2583,7 +2591,7 @@ public static StringBuffer craeteStringBuffer(String s1， String s2) {
 - `-XX:+DoEscapeAnalysis` ： 表示开启逃逸分析
 - `-XX:-DoEscapeAnalysis` ： 表示关闭逃逸分析 从jdk 1.7开始已经默认开始逃逸分析，如需关闭，需要指定`-XX:-DoEscapeAnalysis`
 
-##### 2、同步省略
+##### 2、锁消除
 
 在动态编译同步块的时候，JIT编译器可以借助逃逸分析来判断同步块所使用的锁对象是否只能够被一个线程访问而没有被发布到其他线程；
 
@@ -2699,11 +2707,61 @@ static class User {}
 	
 	```
 
-##### 5、总结
+##### 5、部分逃逸分析
+
+C2 的逃逸分析与控制流无关，相对来说比较简单。Graal 则引入了一个与控制流有关的逃逸分析，名为[部分逃逸分析（partial escape analysis）](https://www.ssw.uni-linz.ac.at/Research/Papers/Stadler14/Stadler2014-CGO-PEA.pdf)。它解决了所新建的实例仅在部分程序路径中逃逸的情况。
+```java
+public static void bar(boolean cond) {
+	Object foo = new Object();
+	if (cond) {
+		foo.hashCode();
+	}
+}
+// 可以手工优化为：
+public static void bar(boolean cond) {
+	if (cond) {
+		Object foo = new Object();
+		foo.hashCode();
+	}
+}
+```
+与 C2 所使用的逃逸分析相比，Graal 所使用的部分逃逸分析能够优化更多的情况，不过它编译时间也更长一些
+
+##### 6、总结
 
 逃逸分析技术并不成熟，其根本原因就是无法保证逃逸分析的性能消耗一定能高于他的消耗，虽然经过逃逸分析可以做标量替换、栈上分配、和锁消除。但是逃逸分析自身也是需要进行一系列复杂的分析的，这其实也是一个相对耗时的过程
 
-## 10.5、Java与C/C++编译器对比
+## 10.5、HotSpot的intrinsic
+
+- [JDK12-intrinsic指令](https://hg.openjdk.org/jdk/hs/file/46dc568d6804/src/hotspot/share/classfile/vmSymbols.hpp#l727)
+
+在 HotSpot 虚拟机中，所有被 `@HotSpotIntrinsicCandidate` 注解标注的方法都是 `HotSpot intrinsic`。对这些方法的调用，会被 HotSpot 虚拟机替换成高效的指令序列。而原本的方法实现则会被忽略掉
+
+比如String.indexOf方法：
+```java
+@HotSpotIntrinsicCandidate
+public static int indexOf(byte[] value, byte[] str) {
+	...
+	return indexOf(value, value.length, str, str.length, 0);
+}
+@HotSpotIntrinsicCandidate
+public static int indexOf(byte[] value, int valueCount, byte[] str, int strCount, int fromIndex) {
+	...
+}
+```
+HotSpot 虚拟机将为标注了`@HotSpotIntrinsicCandidate`注解的方法额外维护一套高效实现。如果 Java 核心类库的开发者更改了原本的实现，那么虚拟机中的高效实现也需要进行相应的修改，以保证程序语义一致。
+
+> 说明：@HotSpotIntrinsicCandidate 注解从JDK1.9之后引入
+
+需要注意的是，其他虚拟机未必维护了这些 intrinsic 的高效实现，它们可以直接使用原本的较为低效的 JDK 代码。同样，不同版本的 HotSpot 虚拟机所实现的 intrinsic 数量也大不相同。通常越新版本的 Java，其 intrinsic 数量越多；
+
+这些高效实现依赖具体的CPU指令；这些 CPU 指令不好在 Java 源程序中表达；另外换了一个体系架构，说不定就没有对应的 CPU 指令，也就无法进行 intrinsic 优化了；
+
+不少被标记为 intrinsic 的方法都是 native 方法。原本对这些 native 方法的调用需要经过 JNI（Java Native Interface），其性能开销十分巨大。但是，经过即时编译器的 intrinsic 优化之后，这部分 JNI 开销便直接消失不见，并且最终的结果也十分高效；
+
+HotSpot 虚拟机定义了三百多个 intrinsic。其中比较特殊的有Unsafe类的方法，基本上使用 java.util.concurrent 包便会间接使用到Unsafe类的 intrinsic。除此之外，String类和Arrays类中的 intrinsic 也比较特殊。即时编译器将为之生成非常高效的 SIMD 指令；基本类型的包装类、Object类、Math类、System类中各个功能性方法，反射 API、MethodHandle类中与调用机制相关的方法，压缩、加密相关方法
+
+## 10.6、Java与C/C++编译器对比
 
 **Java的劣势**
 - JIT及时编译器运行占用用户运行时间；
@@ -2720,7 +2778,7 @@ static class User {}
 	- 裁剪未被选择的；
 - 即时编译后的 Java 程序的执行效率，是可能超过 C++ 程序的。这是因为与静态编译相比，即时编译拥有程序的运行时信息，并且能够根据这个信息做出相应的优化；比如：虚方法是用来实现面向对象语言多态性的。对于一个虚方法调用，尽管它有很多个目标方法，但在实际运行过程中它可能只调用其中的一个。这个信息便可以被即时编译器所利用，来规避虚方法调用的开销，从而达到比静态编译的 C++ 程序更高的性能
 
-# 11、Java 垃圾收集机制
+# 11、垃圾回收
 
 [GC垃圾回收](JVM-GC垃圾回收机制.md)
 
@@ -2769,7 +2827,87 @@ CodeCache 满了的话，JIT会停止工作
 
 在JDK 8中，提供了一个启动参数 -XX:+PrintCodeCache 在JVM停止的时候打印出codeCache的使用情况。其中max_used就是在整个运行过程中codeCache的最大使用量。可以通过这个值来设置一个合理的codeCache大小，在保证应用正常运行的情况下减少内存使用
 
-# 14、ShutdownHook
+# 14、代码优化
+
+## 14.1、字段访问相关优化
+
+**字段读取优化**
+- 即时编译器会优化实例字段以及静态字段访问，以减少总的内存访问数目。具体来说，它将沿着控制流，缓存各个字段存储节点将要存储的值，或者字段读取节点所得到的值；
+- 当即时编译器遇到对同一字段的读取节点时，如果缓存值还没有失效，那么它会将读取节点替换为该缓存值。当即时编译器遇到对同一字段的存储节点时，它会更新所缓存的值。
+- 当即时编译器遇到可能更新字段的节点时，如方法调用节点（在即时编译器看来，方法调用会执行未知代码），或者内存屏障节点（其他线程可能异步更新了字段），那么它会采取保守的策略，舍弃所有缓存值
+
+比如下面的代码：
+```java
+static int bar(Foo o, int x) {
+	int y = o.a + x;
+	return o.a + y;
+}
+```
+实例字段Foo.a将被读取两次，即时编译器会将第一次读取的值缓存起来，并且替换第二次字段读取操作，以节省一次内存访问
+```java
+static int bar(Foo o, int x) {
+	int t = o.a;
+	int y = t + x;
+	return t + y;
+}
+```
+如果字段读取节点被替换成一个常量，那么它将进一步触发更多优化：
+```java
+static int bar(Foo o, int x) {
+	o.a = 1;
+	if (o.a >= 0)
+		return x;
+	else
+		return -x;
+}
+// else 分支会变成不可达代码，可以直接删除，其优化结果如下所示
+static int bar(Foo o, int x) {
+	o.a = 1;
+	return x;
+}
+```
+即时编译器在 volatile 字段访问前后插入内存屏障节点。这些内存屏障节点会阻止即时编译器将屏障之前所缓存的值用于屏障之后的读取节点之上，加锁、解锁操作也同样会阻止即时编译器的字段读取优化
+
+**字段存储优化**
+
+即时编译器会消除冗余的存储节点。如果一个字段先后被存储了两次，而且这两次存储之间没有对第一次存储内容的读取，那么即时编译器可以将第一个字段存储给消除掉
+```java
+class Foo {
+	int a = 0;
+	void bar() {
+		a = 1;
+		a = 2;
+	}
+}
+// 优化结果
+void bar() {
+	a = 2;
+}
+```
+如果所存储的字段被标记为 volatile，那么即时编译器也不能将冗余的存储操作消除掉
+
+**死代码消除**
+
+局部变量的死存储（dead store）同样也涉及了冗余存储。这是死代码消除（dead code eliminiation）的一种。不过，由于 Sea-of-Nodes IR 的特性，死存储的优化无须额外代价：
+```java
+int bar(int x, int y) {
+	int t = x*y;
+	t = x+y;
+	return t;
+}
+```
+上面这段代码涉及两个存储局部变量操作。当即时编译器将其转换为 Sea-of-Nodes IR 之后，没有节点依赖于 t 的第一个值x*y。因此，该乘法运算将被消除，其结果如下所示：
+```java
+int bar(int x, int y) {
+	return x+y;
+}
+```
+
+## 14.2、循环优化
+
+
+
+# 15、ShutdownHook
 
 ## 1、概述
 
@@ -2854,10 +2992,11 @@ public class ShutdownHookDemo {
 
 	如果我们使用Java Security Managers，则执行添加/删除shutdownHook的代码需要在运行时具有shutdownHooks权限。否则会导致SecurityException
 
-# 15、JVM预热
+# 16、JVM预热
 
 - [JVM预热-JIT编译优化](https://juejin.cn/post/6922592506613858311)
 - [JVM预热-TLAB预热](https://juejin.cn/post/6925560351836602375)
+- [通过 GraalVM 将 Java 程序编译成本地机器码](https://www.cnblogs.com/510602159-Yano/p/14074696.html)
 
 无论在测试中还是在线上，我们都会发现在java服务刚开始启动之后，第一个请求会比正常的请求响应时间慢很多，一般会到达几百ms乃至1秒。
 如果我们的调用方服务设置了超时时间，那么在被调用方服务刚启动时，会有极大概率达到超时时间限制，从而发生超时异常。
@@ -2883,12 +3022,12 @@ public class ShutdownHookDemo {
 - 3、发布系统中进行配置访问url列表，由发布系统预热
 每个服务的开发者自己进行评估，列出需要预热的url，将这个url列表存入发布系统，由发布系统调用health之前，由curl调用一遍
 
-# 16、Graalvm
+# 17、Graalvm
 
 - [Java-Graalvm](https://www.graalvm.org/java/)
 - [AOT调研实战](https://github.com/Lord-X/awesome-it-blog/blob/master/java/%E5%85%B3%E4%BA%8EAhead-of-Time%20Compilation%E7%9A%84%E8%B0%83%E7%A0%94%E4%B8%8E%E5%AE%9E%E8%B7%B5.md)
 	
-# 17、AOT
+# 18、AOT
 
 # 参考文章
 
