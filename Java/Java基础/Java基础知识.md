@@ -4553,13 +4553,47 @@ log.info("ChildMethod:{}", getAnnotationValue(AnnotatedElementUtils.findMergedAn
 				    
 - [Java-JSR-269-插入式注解处理器](https://liuyehcf.github.io/2018/02/02/Java-JSR-269-%E6%8F%92%E5%85%A5%E5%BC%8F%E6%B3%A8%E8%A7%A3%E5%A4%84%E7%90%86%E5%99%A8/)				    
 
-注解处理器是一个在javac中的，用来编译时扫描和处理的注解的工具；一个注解的注解处理器，以Java代码(或者编译过的字节码)作为输入，生成文件(通常是`.java`文件)作为输出。这具体的含义什么呢？你可以生成Java代码！这些生成的Java代码是在生成的`.java`文件中，所以你不能修改已经存在的Java类，例如向已有的类中添加方法。这些生成的Java文件，会同其他普通的手动编写的Java源代码一样被`javac`编译；
+Java 的注解机制允许开发人员自定义注解。这些自定义注解同样可以为 Java 编译器添加编译规则。不过，这种功能需要由开发人员提供，并且以插件的形式接入 Java 编译器中，这些插件称之为注解处理器（annotation processor）
 
-### 2.1、虚处理器 AbstractProcessor
+注解处理器是一个在javac中的，用来编译时扫描和处理的注解的工具；一个注解的注解处理器，以Java代码(或者编译过的字节码)作为输入，生成文件(通常是`.java`文件)作为输出。这具体的含义什么呢？可以生成Java代码！这些生成的Java代码是在生成的`.java`文件中，所以你不能修改已经存在的Java类，例如向已有的类中添加方法。这些生成的Java文件，会同其他普通的手动编写的Java源代码一样被`javac`编译；
 
+主要用途：
+- 一是定义编译规则，并检查被编译的源文件。
+- 二是修改已有源代码。
+- 三是生成新的源代码
+
+### 2.1、注解处理器原理
+
+- [Java 编译器的工作流程](../Java虚拟机/JVM-Java虚拟机.md#1021Javac编译过程)
 - [Annotationprocessing](http://hannesdorfmann.com/annotation-processing/annotationprocessing101/)
 - [Annotationprocessing](https://www.race604.com/annotation-processing/)
 - [示例源代码](https://github.com/chenlanqing/annotationprocessing101)
+
+Java 源代码的编译过程可分为三个步骤：
+- （1）将源文件解析为抽象语法树；
+- （2）调用已注册的注解处理器；
+- （3）生成字节码。
+
+如果在第 2 步调用注解处理器过程中生成了新的源文件，那么编译器将重复第 1、2 步，解析并且处理新生成的源文件。每次重复我们称之为一轮（Round）
+
+```java
+public interface Processor {
+    Set<String> getSupportedAnnotationTypes();
+    SourceVersion getSupportedSourceVersion();
+    void init(ProcessingEnvironment processingEnv);
+    boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv);
+    Iterable<? extends Completion> getCompletions(Element element, AnnotationMirror annotation, ExecutableElement member, String userText);
+}
+```
+所有的注解处理器类都需要实现接口Processor。该接口主要有四个重要方法。其中，init方法用来存放注解处理器的初始化代码。之所以不用构造器，是因为在 Java 编译器中，注解处理器的实例是通过反射 API 生成的；
+- `init(ProcessingEnvironment env)`: 每一个注解处理器类都**必须有一个空的构造函数**。然而，这里有一个特殊的`init()`方法，它会被注解处理工具调用，并输入`ProcessingEnviroment`参数。`ProcessingEnviroment`提供很多有用的工具类`Elements`, `Types`和`Filer`；
+- `process(Set<? extends TypeElement> annotations, RoundEnvironment env)`: 这相当于每个处理器的主函数`main()`。在这里扫描、评估和处理注解的代码，以及生成Java文件。输入参数`RoundEnviroment`，可以查询出包含特定注解的被注解元素；
+- `getSupportedAnnotationTypes()`: 这里必须指定，这个注解处理器是注册给哪个注解的。注意，它的返回值是一个字符串的集合，包含本处理器想要处理的注解类型的合法全称。换句话说，在这里定义的注解处理器注册到哪些注解上。
+- `getSupportedSourceVersion()`: 用来指定使用的Java版本。通常这里返回`SourceVersion.latestSupported()`。然而，如果有足够的理由只支持Java 6的话，你也可以返回`SourceVersion.RELEASE_6`；推荐使用前者
+
+JDK 提供了一个实现Processor接口的抽象类`AbstractProcessor`。该抽象类实现了`init、getSupportedAnnotationTypes`和`getSupportedSourceVersion`方法
+
+### 2.2、AbstractProcessor
 
 每个处理器继承 AbstractProcessor
 ```java
@@ -4577,36 +4611,43 @@ public class MyProcessor extends AbstractProcessor {
     public SourceVersion getSupportedSourceVersion() { }
 }
 ```
-- `init(ProcessingEnvironment env)`: 每一个注解处理器类都**必须有一个空的构造函数**。然而，这里有一个特殊的`init()`方法，它会被注解处理工具调用，并输入`ProcessingEnviroment`参数。`ProcessingEnviroment`提供很多有用的工具类`Elements`, `Types`和`Filer`；
-- `process(Set<? extends TypeElement> annotations, RoundEnvironment env)`: 这相当于每个处理器的主函数`main()`。在这里扫描、评估和处理注解的代码，以及生成Java文件。输入参数`RoundEnviroment`，可以查询出包含特定注解的被注解元素；
-- `getSupportedAnnotationTypes()`: 这里必须指定，这个注解处理器是注册给哪个注解的。注意，它的返回值是一个字符串的集合，包含本处理器想要处理的注解类型的合法全称。换句话说，在这里定义你的注解处理器注册到哪些注解上。
-- `getSupportedSourceVersion()`: 用来指定你使用的Java版本。通常这里返回`SourceVersion.latestSupported()`。然而，如果你有足够的理由只支持Java 6的话，你也可以返回`SourceVersion.RELEASE_6`；推荐使用前者
-
-> 在Java 7中，你也可以使用注解来代替getSupportedAnnotationTypes()和getSupportedSourceVersion()，像这样：
+> 在Java 7之后中，子类可以通过`@SupportedAnnotationTypes`和`@SupportedSourceVersion`注解来声明代替getSupportedAnnotationTypes()和getSupportedSourceVersion()，像这样：
 ```java
 @SupportedSourceVersion(SourceVersion.latestSupported())
 @SupportedAnnotationTypes({
-   // 合法注解全名的集合
+   // 合法注解全路径的集合
  })
 public class MyProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment env){ }
-
     @Override
     public boolean process(Set<? extends TypeElement> annoations, RoundEnvironment env) { }
 }
 ```
 > 注解处理器是运行它自己的虚拟机JVM中。是的，javac启动一个完整Java虚拟机来运行注解处理器；
 
-### 2.2、注册处理器
+process方法涉及各种不同类型的Element，分别指代 Java 程序中的各个结构。
+- TypeElement指代类或者接口
+- VariableElement指代字段、局部变量、enum 常量等；
+- ExecutableElement指代方法或者构造器
 
-怎样将处理器MyProcessor注册到javac中
-- 必须提供一个.jar文件，就像其他.jar文件一样，你打包你的注解处理器到此文件中；
-- 并且，在你的jar中，你需要打包一个特定的文件`javax.annotation.processing.Processor`到`META-INF/services`路径下
+### 2.3、注册注解处理器
+
+怎样将处理器MyProcessor注册到javac中，有两种方式：
+- （1）直接使用 javac 命令的`-processor`参数：`javac -cp /CLASSPATH/TO/CheckGetterProcessor -processor bar.CheckGetterProcessor`
+- （2）打包成Jar包：
+	- 必须提供一个`.jar`文件，就像其他`.jar`文件一样，打包注解处理器到此文件中；
+	- 并且，在你的jar中，你需要打包一个特定的文件`javax.annotation.processing.Processor`到`META-INF/services`路径下
 
 所以，`.jar文件`看起来就像下面这样，参考 lombok：
 
 ![](image/Java-AbstractProcessor.png)
+
+### 2.4、注解处理器修改源码
+
+- [Lombok 技巧详解](http://notatube.blogspot.com/2010/11/project-lombok-trick-explained.html)
+
+比如Lombok
 
 ## 3、反射机制：(Reflection)
 
