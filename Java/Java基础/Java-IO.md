@@ -319,6 +319,8 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 
 ### 7.4、AIO-异步IO
 
+- [Java AIO本质](https://tech.dewu.com/article?id=28)
+
 异步的套接字通道时真正的异步非阻塞I/O，对应于UNIX网络编程中的事件驱动I/O（AIO）
 - JDK7中新增了一些与文件(网络)I/O相关的一些api。这些API被称为NIO.2，或称为AIO(Asynchronous I/O)；
 - 服务器实现模式为一个有效请求一个线程，客户端的I/O请求都是由OS先完成了再通知服务器应用去启动线程进行处理；
