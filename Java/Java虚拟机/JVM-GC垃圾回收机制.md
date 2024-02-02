@@ -318,6 +318,11 @@ public class FinalizeEscapeGC {
 
 ### 5.2、安全点
 
+- [理解安全点](https://tech.dewu.com/article?id=47)
+- [Safepoints: Meaning, Side Effects and Overheads](http://psy-lob-saw.blogspot.com/2015/12/safepoints.html)
+- [安全点引起的代码问题](https://mp.weixin.qq.com/s/KDUccdLALWdjNBrFjVR74Q)
+- [Stop the word 和 安全点](https://zhuanlan.zhihu.com/p/161710652)
+
 安全点（SafePoint），即程序执行时并非在所有地方都能停顿下来开始GC，只有在到达安全点时才能暂停。SafePoint的选定既不能太少以至于让GC等待时间太长，也不能过于频繁以致于过分增大运行时的负荷。
 
 安全点的初始目的并不是让其他线程停下，而是找到一个稳定的执行状态。在这个执行状态下，Java虚拟机的堆栈不会发生变化。这么一来，垃圾回收器便能够“安全”地执行可达性分析。只要不离开这个安全点，Java虚拟机便能够在垃圾回收的同时，继续运行这段本地代码。
