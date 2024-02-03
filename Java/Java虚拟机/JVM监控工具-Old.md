@@ -1119,6 +1119,15 @@ JAVA_OPTS="$JAVA_OPTS -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxrem
 	
 Java Mission Control，不仅仅可以使用JMX进行普通的管理、监控任务，还可以配合[Java Flight Recorder](https://docs.oracle.com/javacomponents/jmc-5-4/jfr-runtime-guide/about.htm#JFRUH171)技术，以非常低的开销收集和分析JVM底层的Profiling和事件等信息；
 
+JFR 的性能开销很小，在默认配置下平均低于 1%。与其他工具相比，JFR 能够直接访问虚拟机内的数据，并且不会影响虚拟机的优化。因此，它非常适用于生产环境下满负荷运行的 Java 程序。
+
+当启用时，JFR 将记录运行过程中发生的一系列事件。其中包括 Java 层面的事件，如线程事件、锁事件，以及 Java 虚拟机内部的事件，如新建对象、垃圾回收和即时编译事件；
+
+按照发生时机以及持续时间来划分，JFR 的事件共有四种类型，它们分别为以下四种。
+- 瞬时事件（Instant Event），用户关心的是它们发生与否，例如异常、线程启动事件。
+- 持续事件（Duration Event），用户关心的是它们的持续时间，例如垃圾回收事件。
+- 计时事件（Timed Event），是时长超出指定阈值的持续事件。
+- 取样事件（Sample Event），是周期性取样的事件。取样事件的其中一个常见例子便是方法抽样（Method Sampling），即每隔一段时间统计各个线程的栈轨迹。如果在这些抽样取得的栈轨迹中存在一个反复出现的方法，那么我们可以推测该方法是热点方法。
 
 # 十五、Native Memory Tracking
 
