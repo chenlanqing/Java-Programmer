@@ -1160,6 +1160,7 @@ IN 是子查询的关键字，JOIN 是连接的关键字；
 
 - [Redis常见面试题](https://mp.weixin.qq.com/s/LAWkUOn2iQaDC_bxm_NwbQ)
 - [Redis面试题](https://xie.infoq.cn/article/0a1848dd6e6ae390d14017f9f)
+- [那些年背过的Redis面试题](https://mp.weixin.qq.com/s/8-Lf5KiyclW77uQwrYDTCw)
 
 ## 1、Redis基本
 
