@@ -589,6 +589,11 @@ Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了
 
 # 5、字节码运用-JavaAgent
 
+* [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
+* [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
+* [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
+* [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
+
 ## 1、Java agent
 
 JDK1.5之后引进的，也可以叫做Java代理，JavaAgent 是运行在 main方法之前的拦截器，它内定的方法名叫 premain ，也就是说先执行 premain 方法然后再执行 main 方法
@@ -645,7 +650,7 @@ Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同�
 
 ## 3、启动时加载Agent
 
-将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 “-javaagent:[=]“，具体的使用方法可以使用“Java -Help”来查看
+将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 `-javaagent:`，具体的使用方法可以使用“Java -Help”来查看
 
 ## 4、运行时加载Agent
 
@@ -774,9 +779,5 @@ java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+P
 * [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)
 * [JVM Tool Interface](https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html)
 * [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
-* [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
-* [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
-* [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
-* [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
 * [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
 * [Java源文件生成框架](https://github.com/square/javapoet)
