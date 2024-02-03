@@ -868,6 +868,10 @@ java.lang.OutOfMemoryError：PermGen Space
 
 ## 4.8、元空间
 
+* [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
+* [JVM源码分析之Metaspace解密](http://lovestblog.cn/blog/2016/10/29/metaspace/)
+* [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)
+
 ### 4.8.1、基本概念
 
 Metaspace VM 利用内存管理技术来管理Metaspace。元空间使用的本地内存，而永久代使用的是JVM内存的；元空间并不是在堆上分配的，而是在堆外空间进行分配的，它的大小默认没有上限；
@@ -2558,6 +2562,9 @@ public static void testInline(String[] args){
 
 #### 10.4.5.5、逃逸分析
 
+* [JVM逃逸分析](https://my.oschina.net/hosee/blog/638573)
+* [深入理解Java逃逸分析](http://www.hollischuang.com/archives/2583)
+
 ##### 1、基本概念
 
 一种确定指针动态范围的静态分析，它可以分析在程序的哪些地方可以访问到指针
@@ -2906,8 +2913,9 @@ int bar(int x, int y) {
 ## 14.2、循环优化
 
 
-
 # 15、ShutdownHook
+
+* [钩子函数](https://segmentfault.com/a/1190000011496370)
 
 ## 1、概述
 
@@ -3025,12 +3033,28 @@ public class ShutdownHookDemo {
 # 17、Graalvm
 
 - [Java-Graalvm](https://www.graalvm.org/java/)
+- [graalvm blog](https://medium.com/graalvm)
 - [AOT调研实战](https://github.com/Lord-X/awesome-it-blog/blob/master/java/%E5%85%B3%E4%BA%8EAhead-of-Time%20Compilation%E7%9A%84%E8%B0%83%E7%A0%94%E4%B8%8E%E5%AE%9E%E8%B7%B5.md)
+
+GraalVM 是一个高性能的、支持多种编程语言的执行环境。它既可以在传统的 OpenJDK 上运行，也可以通过 AOT（Ahead-Of-Time）编译成可执行文件单独运行，甚至可以集成至数据库中运行
+
+## 17.1、Graal 编译器
+
+这是一个用 Java 写就的即时编译器，它从 Java 9u 开始便被集成自 JDK 中，作为实验性质的即时编译器；Graal 编译器可以通过 Java 虚拟机参数`-XX:+UnlockExperimentalVMOptions -XX:+UseJVMCICompiler`启用。当启用时，它将替换掉 HotSpot 中的 C2 编译器，并响应原本由 C2 负责的编译请求；
+
+## 17.2、Truffle
+
+Truffle 是一个用 Java 写就的语言实现框架。基于 Truffle 的语言实现仅需用 Java 实现词法分析、语法分析以及针对语法分析所生成的抽象语法树（Abstract Syntax Tree，AST）的解释执行器，便可以享用由 Truffle 提供的各项运行时优化
+
+## 17.3、SubstrateVM
+
+SubstrateVM：AOT编译框架
 	
 # 18、AOT
 
 # 参考文章
 
+* [JVM 书单](https://github.com/deephacks/awesome-jvm)
 * [The Java® Virtual Machine Specification（Java SE 11 Edition）](https://docs.oracle.com/javase/specs/jvms/se11/html/index.html)
 * [《Java 虚拟机规范（第11版）》中文翻译及示例](https://github.com/waylau/java-virtual-machine-specification)
 * [JVM解剖公园](https://shipilev.net/jvm/anatomy-quarks/)
@@ -3038,12 +3062,7 @@ public class ShutdownHookDemo {
 * [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
 * [ClassLoader机制](http://www.hollischuang.com/archives/199)
 * [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
-* [JVM逃逸分析](https://my.oschina.net/hosee/blog/638573)
-* [深入理解Java逃逸分析](http://www.hollischuang.com/archives/2583)
 * [内存管理工具Memory Analyzer的使用](https://www.zybuluo.com/frank-shaw/note/206287)
-* [Java8：从永久代到元空间](https://blog.csdn.net/zhushuai1221/article/details/52122880)
-* [JVM源码分析之Metaspace解密](http://lovestblog.cn/blog/2016/10/29/metaspace/)
-* [JVM参数MetaspaceSize的误解](https://mp.weixin.qq.com/s/jqfppqqd98DfAJHZhFbmxA)
-* [钩子函数](https://segmentfault.com/a/1190000011496370)
 * [堆外内存](https://www.jianshu.com/p/35cf0f348275)
 * [阿里龙井JDK](https://github.com/alibaba/dragonwell8)
+* [R大知乎](https://www.zhihu.com/people/rednaxelafx/columns)
