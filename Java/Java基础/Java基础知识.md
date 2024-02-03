@@ -5847,10 +5847,12 @@ public class Null {
 - `null`和`""`并不相等，因为下面的s并没有指向某一块内存，而s1指向了一块空字符串的内存；
 
 
-# 二十一、本地方法(native)
+# 二十一、JNI-本地方法(native)
 
 - [Linux下跨语言调用C++实践](https://mp.weixin.qq.com/s/vA69QGfZeKRlxZs_v_DQkw)
 - [Java-JNI-Demo](https://liuyehcf.github.io/2018/01/13/Java-JNI-Demo/)
+- [JNI Functions](https://docs.oracle.com/en/java/javase/11/docs/specs/jni/functions.html)
+- [JNI运行机制](https://time.geekbang.com/column/article/40839)
 
 ## 1、本地方法加载
 
@@ -5859,9 +5861,8 @@ JDK 提供给了我们两个方法用于载入库文件，一个是`System.load(
 - 加载的路径不同：
     - `System.load(String filename)` 是从作为动态库的本地文件系统中以指定的文件名加载代码文件，文件名参数必须是完整的路径名且带文件后缀
     - `System.loadLibrary(String libname)` 是加载由`libname`参数指定的系统库（系统库指的是`java.library.path`，可以通过` System.getProperty(String key)` 方法查看 java.library.path 指向的目录内容），将库名映射到实际系统库的方法取决于系统实现，譬如在 Android 平台系统会自动去系统目录、应用 lib 目录下去找 libname 参数拼接了 lib 前缀的库文件;
-- 是否自动加载库的依赖库:
 
-    譬如libA.so 和 libB.so 有依赖关系
+- 是否自动加载库的依赖库：譬如libA.so 和 libB.so 有依赖关系
     - 如果选择 `System.load("/sdcard/path/libA.so")`，即使 libB.so 也放在 `/sdcard/path/` 路径下，load 方法还是会因为找不到依赖的 libB.so 文件而失败，因为虚拟机在载入 libA.so 的时候发现它依赖于 libB.so，那么会先去 java.library.path 下载入 libB.so，而 libB.so 并不位于 `java.library.path` 下，所以会报错；
     - 使用 `System.loadLibrary("A")`，然后把 libA.so 和 libB.so 都放在 `java.library.path` 下即可
 
