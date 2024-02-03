@@ -560,14 +560,242 @@ JMX不可用，往往是由于垃圾回收时间停顿时间过长、内存溢�
 - [JMH-OpenJDK代码](https://github.com/openjdk/jmh)
 - [IDEA-JMH-Plugin](https://github.com/artyushov/idea-jmh-plugin)
 - [jmh-java-microbenchmark-harness](https://howtodoinjava.com/java/library/jmh-java-microbenchmark-harness/)
+- [Aleksey Shipilev 的 devoxx 2013 演讲](https://shipilev.net/talks/devoxx-Nov2013-benchmarking.pdf)
+- [Aleksey Shipilev 的 devoxx 2013 演讲](https://www.youtube.com/watch?v=VaWgOCDBxYw)
 
 ## 1、介绍
 
 JVM 在执行时，会对一些代码块，或者一些频繁执行的逻辑，进行 JIT 编译和内联优化，在得到一个稳定的测试结果之前，需要先循环上万次进行预热。预热前和预热后的性能差别非常大
 
-JMH 是一个 jar 包，它和单元测试框架 JUnit 非常像，可以通过注解进行一些基础配置。这部分配置有很多是可以通过 main 方法的 OptionsBuilder 进行设置的；
+JMH 是一个面向 Java 语言或者其他 Java 虚拟机语言的性能基准测试框架。它针对的是纳秒级别、微秒级别、毫秒级别，以及秒级别的性能测试
 
 通过开启多个进程，多个线程，先执行预热，然后执行迭代，最后汇总所有的测试数据进行分析。在执行前后，还可以根据粒度处理一些前置和后置操作
+
+## 2、JMH项目
+
+### 2.1、生成JMH项目
+
+```bash
+$ mvn archetype:generate \
+    -DinteractiveMode=false \
+    -DarchetypeGroupId=org.openjdk.jmh \
+    -DarchetypeArtifactId=jmh-java-benchmark-archetype \
+    -DgroupId=org.sample \
+    -DartifactId=test \
+    -Dversion=1.21
+```
+该命令将在当前目录下生成一个test文件夹（对应参数`-DartifactId=test`，可更改），其中便包含了定义该 maven 项目依赖的pom.xml文件，以及自动生成的测试文件`src/main/org/sample/MyBenchmark.java`（这里`org/sample`对应参数`-DgroupId=org.sample`，可更改）；
+```java
+package org.sample;
+import org.openjdk.jmh.annotations.Benchmark;
+public class MyBenchmark {
+    @Benchmark
+    public void testMethod() {
+        // This is a demo/sample template for building your JMH benchmarks. Edit as needed.
+        // Put your benchmark code here.
+    }
+}
+```
+
+### 2.2、编译和运行JMH项目
+
+JMH 是利用注解处理器来自动生成性能测试的代码。实际上，除了`@Benchmark`之外，JMH 的注解处理器还将处理所有位于`org.openjdk.jmh.annotations`包下的注解
+```bash
+$ mvn compile
+ls target/generated-sources/annotations/org/sample/jmh_generated/
+MyBenchmark_jmhType_B1.java  MyBenchmark_jmhType_B2.java  MyBenchmark_jmhType_B3.java  MyBenchmark_jmhType.java  MyBenchmark_testMethod_jmhTest.java
+```
+所有以MyBenchmark_jmhType为前缀的 Java 类都继承自MyBenchmark。这是注解处理器的常见用法，即通过生成子类来将注解所带来的额外语义扩张成方法；
+
+具体来说，它们之间的继承关系是`MyBenchmark_jmhType -> B3 -> B2 -> B1 -> MyBenchmark`（这里A -> B代表 A 继承 B）。其中，B2 存放着 JMH 用来控制基准测试的各项字段。
+
+为了避免这些控制字段对MyBenchmark类中的字段造成 `false sharing（伪共享）` 的影响，JMH 生成了 B1 和 B3，分别存放了 256 个 boolean 字段，从而避免 B2 中的字段与MyBenchmark类、MyBenchmark_jmhType类中的字段（或内存里下一个对象中的字段）会出现在同一缓存行中；
+
+真正的性能测试代码MyBenchmark_testMethod_jmhTest.java
+
+运行mvn package命令，将编译好的 class 文件打包成 jar 包。生成的 jar 包同样位于target目录下，其名字为benchmarks.jar。jar 包里附带了一系列配置文件，如下所示：
+```bash
+$ mvn package
+
+$ jar tf target/benchmarks.jar META-INF
+
+$ unzip -c target/benchmarks.jar META-INF/MANIFEST.MF
+
+$ unzip -c target/benchmarks.jar META-INF/BenchmarkList
+Archive:  target/benchmarks.jar
+  inflating: META-INF/BenchmarkList  
+JMH S 22 org.sample.MyBenchmark S 55 org.sample.jmh_generated.MyBenchmark_testMethod_jmhTest S 10 testMethod S 10 Throughput E A 1 1 1 E E E E E E E E E E E E E E E E E
+
+$ unzip -c target/benchmarks.jar META-INF/CompilerHints
+```
+其中三个比较重要的配置文件。：
+- `MANIFEST.MF`中指定了该 jar 包的默认入口，即[org.openjdk.jmh.Main](http://hg.openjdk.java.net/code-tools/jmh/file/3769055ad883/jmh-core/src/main/java/org/openjdk/jmh/Main.java)。
+- `BenchmarkList`中存放了测试配置。该配置是根据`MyBenchmark.java`里的注解自动生成的。
+- `CompilerHints中`存放了传递给 Java 虚拟机的`-XX:CompileCommandFile`参数的内容。它规定了无法内联以及必须内联的几个方法，其中便有存放业务逻辑的测试方法testMethod
+
+编译运行输出结果：
+```java
+$ java -jar target/benchmarks.jar
+...
+# VM invoker: D:\env\jdk-11.0.12\bin\java.exe
+# VM options: <none>
+# Warmup: 5 iterations, 10 s each
+# Measurement: 5 iterations, 10 s each
+# Timeout: 10 min per iteration
+# Threads: 1 thread, will synchronize iterations
+# Benchmark mode: Throughput, ops/time
+# Benchmark: org.sample.MyBenchmark.testMethod
+
+# Run progress: 0,00% complete, ETA 00:08:20
+# Fork: 1 of 5
+# Warmup Iteration   1: 1023500,647 ops/s
+# Warmup Iteration   2: 1030767,909 ops/s
+# Warmup Iteration   3: 1018212,559 ops/s
+# Warmup Iteration   4: 1002045,519 ops/s
+# Warmup Iteration   5: 1004210,056 ops/s
+Iteration   1: 1010251,342 ops/s
+Iteration   2: 1005717,344 ops/s
+Iteration   3: 1004751,523 ops/s
+Iteration   4: 1003034,640 ops/s
+Iteration   5: 997003,830 ops/s
+
+# Run progress: 20,00% complete, ETA 00:06:41
+# Fork: 2 of 5
+...
+
+# Run progress: 80,00% complete, ETA 00:01:40
+# Fork: 5 of 5
+# Warmup Iteration   1: 988321,959 ops/s
+# Warmup Iteration   2: 999486,531 ops/s
+# Warmup Iteration   3: 1004856,886 ops/s
+# Warmup Iteration   4: 1004810,860 ops/s
+# Warmup Iteration   5: 1002332,077 ops/s
+Iteration   1: 1011871,670 ops/s
+Iteration   2: 1002653,844 ops/s
+Iteration   3: 1003568,030 ops/s
+Iteration   4: 1002724,752 ops/s
+Iteration   5: 1001507,408 ops/s
+
+Result "org.sample.MyBenchmark.testMethod":
+  1004801,393 ±(99.9%) 4055,462 ops/s [Average]
+  (min, avg, max) = (992193,459, 1004801,393, 1014504,226), stdev = 5413,926
+  CI (99.9%): [1000745,931, 1008856,856] (assumes normal distribution)
+
+# Run complete. Total time: 00:08:22
+...
+
+Benchmark                Mode  Cnt        Score      Error  Units
+MyBenchmark.testMethod  thrpt   25  1004801,393 ± 4055,462  ops/s
+```
+
+> 请注意：如果编译时报错：
+```xml
+[ERROR] Annotation generator had thrown the exception. java.lang.NoClassDefFoundError: javax/annotation/Generated
+<!-- 在 pom.xml 中添加如下配置： -->
+<dependency>
+    <groupId>javax.annotation</groupId>
+    <artifactId>javax.annotation-api</artifactId>
+    <version>1.3.2</version>
+</dependency>
+```
+
+## 3、注解
+
+### 3.1、@Fork 和 @BenchmarkMode
+
+- [JMHSample_12_Forking](http://hg.openjdk.java.net/code-tools/jmh/file/3769055ad883/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_12_Forking.java)
+
+```bash
+# Run progress: 0,00% complete, ETA 00:08:20
+# Fork: 1 of 5
+# Warmup Iteration   1: 1023500,647 ops/s
+# Warmup Iteration   2: 1030767,909 ops/s
+# Warmup Iteration   3: 1018212,559 ops/s
+# Warmup Iteration   4: 1002045,519 ops/s
+# Warmup Iteration   5: 1004210,056 ops/s
+Iteration   1: 1010251,342 ops/s
+Iteration   2: 1005717,344 ops/s
+Iteration   3: 1004751,523 ops/s
+Iteration   4: 1003034,640 ops/s
+Iteration   5: 997003,830 ops/s
+```
+上面的`Fork: 1 of 5`：指的是 JMH 会 Fork 出一个新的 Java 虚拟机，来运行性能基准测试，之所以另外启动一个 Java 虚拟机进行性能基准测试，是为了获得一个相对干净的虚拟机环境；
+
+不少 Java 虚拟机的优化会带来不确定性，例如 TLAB 内存分配（TLAB 的大小会变化），偏向锁、轻量锁算法，并发数据结构等。这些不确定性都可能导致不同 Java 虚拟机中运行的性能测试的结果不同，例如 JMH 这一性能的[测试案例](http://hg.openjdk.java.net/code-tools/jmh/file/3769055ad883/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_13_RunToRun.java)
+
+在 JMH 中，你可以通过@Fork注解来配置，具体如下述代码所示：
+```java
+@Fork(10)
+public class MyBenchmark {
+  ...
+}
+```
+每个 Fork 包含了 5 个预热迭代（warmup iteration，如`# Warmup Iteration 1: 1023500,647 ops/s）`以及 5 个测试迭代`（measurement iteration，如Iteration 1: 1010251,342 ops/s）`
+
+每个迭代后都跟着一个数据，代表本次迭代的吞吐量，也就是每秒运行了多少次操作（`operations/s`，或 `ops/s`）。默认情况下，一次操作指的是调用一次测试方法testMethod：
+```java
+@BenchmarkMode(Mode.AverageTime) // 运行一次操作的平均时间
+public class MyBenchmark {
+  ...
+}
+```
+默认使用的吞吐量已足够满足大多数测试需求了
+
+### 3.2、@Warmup 和 @Measurement
+
+区分预热迭代和测试迭代，是为了在记录性能数据之前，将 Java 虚拟机带至一个稳定状态；稳定状态，不仅包括测试方法被即时编译成机器码，还包括 Java 虚拟机中各种自适配优化算法能够稳定下来，如前面提到的 TLAB 大小，亦或者是使用传统垃圾回收器时的 Eden 区、Survivor 区和老年代的大小；
+
+一般保持 5-10 个预热迭代的前提下（这样可以看出是否达到稳定状况），将总的预热时间优化至最少，以便节省性能测试的机器时间。（这在持续集成 / 回归测试的硬件资源跟不上代码提交速度的团队中非常重要。
+
+当确定了预热迭代的次数以及每次迭代的持续时间之后，我们便可以通过@Warmup注解来进行配置，如下述代码所示：
+```java
+// （迭代 100 次，每次100毫秒）。
+@Warmup(iterations=10, time=100, timeUnit=TimeUnit.MILLISECONDS, batchSize=10)
+public class MyBenchmark {
+  ...
+}
+```
+各个参数的意思：
+- timeUnit：时间的单位，默认的单位是秒；
+- iterations：预热阶段的迭代数；
+- time：每次预热的时间；
+- batchSize：批处理大小，指定了每次操作调用几次方法
+
+执行效果
+```
+# Warmup: 3 iterations, 1 s each 
+# Warmup Iteration   1: 0.281 ops/ns 
+# Warmup Iteration   2: 0.376 ops/ns 
+# Warmup Iteration   3: 0.483 ops/ns
+```
+
+measurement与warmup的参数是一样的，不同于预热，其指的是真正的迭代次数
+```java
+@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
+```
+
+### 3.3、@State、@Setup 和 @TearDown
+
+JMH 提供了`@State`注解，被它标注的类便是程序的状态。由于 JMH 将负责生成这些状态类的实例，因此，它要求状态类必须拥有无参数构造器，以及当状态类为内部类时，该状态类必须是静态的。JMH 还将程序状态细分为整个虚拟机的程序状态，线程私有的程序状态，以及线程组私有的程序状态，分别对应`@State`注解的参数`Scope.Benchmark`，`Scope.Thread`和`Scope.Group`
+
+> 这里的线程组并非 JDK 中的那个概念，而是 JMH 自己定义的概念。具体可以参考[@GroupThreads](http://hg.openjdk.java.net/code-tools/jmh/file/3769055ad883/jmh-core/src/main/java/org/openjdk/jmh/annotations/GroupThreads.java)，[具体案例参考](http://hg.openjdk.java.net/code-tools/jmh/file/3769055ad883/jmh-samples/src/main/java/org/openjdk/jmh/samples/JMHSample_15_Asymmetric.java)
+```java
+public class MyBenchmark {
+    @State(Scope.Benchmark)
+    public static class MyBenchmarkState {
+        String message = "exception";
+    }
+    @Benchmark
+    public void testMethod(MyBenchmarkState state) {
+        new Exception(state.message);
+    }
+}
+```
+和 JUnit 测试一样，我们可以在测试前初始化程序状态，在测试后校验程序状态。这两种操作分别对应`@Setup`和`@TearDown`注解，被它们标注的方法必须是状态类中的方法，JMH 并不限定状态类中`@Setup`方法以及`@TearDown`方法的数目。当存在多个`@Setup`方法或者`@TearDown`方法时，JMH 将按照定义的先后顺序执行；
+
+JMH 对@Setup方法以及@TearDown方法的调用时机是可配置的。可供选择的粒度有在整个性能测试前后调用，在每个迭代前后调用，以及在每次调用测试方法前后调用。其中，最后一个粒度将影响测试数据的精度
+
+## 4、Maven依赖
 
 maven依赖：
 ```xml
@@ -582,9 +810,6 @@ maven依赖：
     <version>1.36</version>
 </dependency>
 ```
-
-## 2、示例
-
 ```java
 @BenchmarkMode(Mode.Throughput)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -620,41 +845,6 @@ public class BenchmarkDemo {
         new Runner(options).run();
     }
 }
-```
-
-## 3、关键注解
-
-### 3.1、@Warmup
-
-可以用在类或者方法上，进行预热配置
-```java
-// 对代码预热总计 5 秒（迭代 5 次，每次一秒）。预热过程的测试数据，是不记录测量结果的
-@Warmup(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-```
-各个参数的意思：
-- timeUnit：时间的单位，默认的单位是秒；
-- iterations：预热阶段的迭代数；
-- time：每次预热的时间；
-- batchSize：批处理大小，指定了每次操作调用几次方法
-
-执行效果
-```
-# Warmup: 3 iterations, 1 s each 
-# Warmup Iteration   1: 0.281 ops/ns 
-# Warmup Iteration   2: 0.376 ops/ns 
-# Warmup Iteration   3: 0.483 ops/ns
-```
-
-### 3.2、@Measurement
-
-```java
-@Measurement(iterations = 5, time = 1, timeUnit = TimeUnit.SECONDS)
-```
-measurement与warmup的参数是一样的，不同于预热，其指的是真正的迭代次数
-
-其执行效果：
-```
-
 ```
 
 # 六、加密与解密
