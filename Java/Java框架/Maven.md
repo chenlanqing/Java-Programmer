@@ -1,85 +1,153 @@
 # 一、Maven
 
+Maven是Java的一个构建工具，简化Java工程的构建和依赖管理
 
+## 1、Maven常用命令
 
-# 二、Maven常用命令
+- `mvn -v`：查看maven版本
+- `mvn compile` 编译命令
+- `mvn test` 测试命令
+- `mvn packag`e 打包命令
+- `mvn clean` 删除target
+- `mvn install` 安装jar包到本地仓库， 在本地Repository中安装ja
 
-- mvn -v：查看maven版本
-- mvn compile 编译命令
-- mvn test 测试命令
-- mvn package 打包命令
-- mvn clean 删除target
-- mvn install 安装jar包到本地仓库， 在本地Repository中安装ja
+## 2、创建目录骨架
 
-# 三、自动创建目录骨架
+- `mvn archetype`：generate 按照相关提示进行操作
+- `mvn archetype`：generate -DgroupId=组织名，一般为公司网址的反写+项目名称 -DartifactId=项目名次-模块名称 -Dversion=版本号 -Dpackage=代码所存在的包
 
-- mvn archetype：generate 按照相关提示进行操作
-- mvn archetype：generate -DgroupId=组织名，一般为公司网址的反写+项目名称 -DartifactId=项目名次-模块名称 -Dversion=版本号 -Dpackage=代码所存在的包
+使用命令行创建工程：
+```
+mvn archetype:generate -DgroupId=com.demo -DartifactId=simple -DpackageName=com.demo.simple -DarchetypeArtifactId=maven-archetype-webapp
+```
+参数说明：
+- `-DgroupId`：groupId（项目或者组织的唯一标志）。
+- `-DartifactId`：artifactId（项目的通用名称）。
+- `-DpackageName`：项目的包名。
+- `-DarchetypeArtifactId`：模板名称，如：maven-archetype-webapp表示创建一个标准的maven web项目。如果要创建一个普通java项目可不填写此参数。
+- `-DinteractiveMode`：是否已交互模式进行，如果是false的话就会采用默认设置建立项目，交互模式下：
+	```bash
+	[INFO] Using property: groupId = com.demo
+	[INFO] Using property: artifactId = simple
+	Define value for property 'version' 1.0-SNAPSHOT: : 
+	[INFO] Using property: package = com.demo
+	Confirm properties configuration:
+	groupId: com.demo
+	artifactId: simple
+	version: 1.0-SNAPSHOT
+	package: com.demo
+	Y: : 
+	```
+
+常用`archetypeArtifactId`：
+```
+appfuse-basic-jsf (创建一个基于Hibernate，Spring和JSF的Web应用程序的原型) 
+appfuse-basic-spring (创建一个基于Hibernate，Spring和Spring MVC的Web应用程序的原型) 
+appfuse-basic-struts (创建一个基于Hibernate，Spring和Struts 2的Web应用程序的原型) 
+appfuse-basic-tapestry (创建一个基于Hibernate, Spring 和 Tapestry 4的Web应用程序的原型) 
+appfuse-core (创建一个基于 Hibernate and Spring 和 XFire的jar应用程序的原型) 
+appfuse-modular-jsf (创建一个基于 Hibernate，Spring和JSF的模块化应用原型) 
+appfuse-modular-spring (创建一个基于 Hibernate, Spring 和 Spring MVC 的模块化应用原型) 
+appfuse-modular-struts (创建一个基于 Hibernate, Spring 和 Struts 2 的模块化应用原型) 
+appfuse-modular-tapestry (创建一个基于 Hibernate, Spring 和 Tapestry 4 的模块化应用原型) 
+maven-archetype-j2ee-simple (一个简单的J2EE的Java应用程序) 
+maven-archetype-marmalade-mojo (一个Maven的 插件开发项目 using marmalade) 
+maven-archetype-mojo (一个Maven的Java插件开发项目) 
+maven-archetype-portlet (一个简单的portlet应用程序) 
+maven-archetype-profiles () 
+maven-archetype-quickstart () 
+maven-archetype-site-simple (简单的网站生成项目) 
+maven-archetype-site (更复杂的网站项目) 
+maven-archetype-webapp (一个简单的Java Web应用程序) 
+jini-service-archetype (Archetype for Jini service project creation) 
+softeu-archetype-seam (JSF+Facelets+Seam Archetype) 
+softeu-archetype-seam-simple (JSF+Facelets+Seam (无残留) 原型) 
+softeu-archetype-jsf (JSF+Facelets 原型) 
+jpa-maven-archetype (JPA 应用程序) 
+spring-osgi-bundle-archetype (Spring-OSGi 原型) 
+confluence-plugin-archetype (Atlassian 聚合插件原型) 
+jira-plugin-archetype (Atlassian JIRA 插件原型) 
+maven-archetype-har (Hibernate 存档) 
+maven-archetype-sar (JBoss 服务存档) 
+wicket-archetype-quickstart (一个简单的Apache Wicket的项目) 
+scala-archetype-simple (一个简单的scala的项目) 
+lift-archetype-blank (一个 blank/empty liftweb 项目) 
+lift-archetype-basic (基本（liftweb）项目) 
+cocoon-22-archetype-block-plain ([http://cocoapacorg2/maven-plugins/]) 
+cocoon-22-archetype-block ([http://cocoapacorg2/maven-plugins/]) 
+cocoon-22-archetype-webapp ([http://cocoapacorg2/maven-plugins/]) 
+myfaces-archetype-helloworld (使用MyFaces的一个简单的原型) 
+myfaces-archetype-helloworld-facelets (一个使用MyFaces和Facelets的简单原型) 
+myfaces-archetype-trinidad (一个使用MyFaces和Trinidad的简单原型) 
+myfaces-archetype-jsfcomponents (一种使用MyFaces创建定制JSF组件的简单的原型) 
+gmaven-archetype-basic (Groovy的基本原型) 
+gmaven-archetype-mojo (Groovy mojo 原型)
+```
 						 
-# 四、maven中坐标和仓库
+## 3、maven中坐标和仓库
 
-- 坐标：即构件，下面三者构成了构件的唯一标识
-	```xml
-	<groupId>junit</groupId>
-	<artifactId>junit</artifactId>
-	<version>4.10</version>
-	```
+**坐标**：即构件，下面三者构成了构件的唯一标识
+```xml
+<groupId>junit</groupId>
+<artifactId>junit</artifactId>
+<version>4.10</version>
+```
 
-- 仓库：本地仓库和远程仓库；一般先从本地仓库获取，如果没有再到远程仓库获取，在没有，则报错
+**仓库**：本地仓库和远程仓库；一般先从本地仓库获取，如果没有再到远程仓库获取，在没有，则报错
 	
-- 镜像仓库：一般是针对无法访问国外网站，配置镜像仓库：修改settings.xml文件的`<mirrors>`
-	```xml
-	<mirror>
-      <id>maven.net.cn</id>
-      <mirrorOf>central</mirrorOf>
-      <name>Central mirror in China</name>
-      <url>http：//maven.net.cn/content/groups/public</url>
-    </mirror>
-	```
+**镜像仓库**：一般是针对无法访问国外网站，配置镜像仓库：修改settings.xml文件的`<mirrors>`
+```xml
+<mirror>
+	<id>maven.net.cn</id>
+	<mirrorOf>central</mirrorOf>
+	<name>Central mirror in China</name>
+	<url>http：//maven.net.cn/content/groups/public</url>
+</mirror>
+```
 
-本地仓库、私服、中央仓库：
+**本地仓库、私服、中央仓库：**
 - 本地仓库就是相当于加了一层jar包缓存，先到这里来查。如果这里查不到，那么就去私服上找，如果私服也找不到，那么去中央仓库去找，找到jar后，会把jar的信息同步到私服和本地仓库中；
 - 私服，就是公司内部局域网的一台服务器而已，因此私服中存储了本公司的内部专用的jar！不仅如此，私服还充当了中央仓库的镜像，说白了就是一个代理！；
-- 中央仓库：该仓库存储了互联网上的jar，由Maven团队来维护，地址是：http://repo1.maven.org/maven2/
+- 中央仓库：该仓库存储了互联网上的jar，由Maven团队来维护，地址是：`http://repo1.maven.org/maven2/`，依赖搜索：`https://mvnrepository.com/`
 
-# 五、maven的生命周期和插件
+## 4、maven的生命周期和插件
 
-- 完整的项目构建过程：清理、编译、测试、打包、集成测试、验证、部署	
+完整的项目构建过程：清理、编译、测试、打包、集成测试、验证、部署	
 
-- maven的生命周期：分为三个周期，周期之间相互不影响
-	```
-	clean：清理项目，分为三个阶段：
-		(1).pre-clean：执行清理前的工作
-		(2).clean：清理上一次构建生成的项目
-		(3).post-clean：执行清理后的文件
-	
-	default：构建项目(最核心)
-		compile，test，package，install
-			
-	site：生成项目站点
-		(1).pre-site：在生成项目站点前要完成的工作
-		(2).site：生成项目的站点文档
-		(3).post-site：在生成项目站点后要完成的工作
-		(4).site-deploy：发布生成的站点到服务器上
-	```
+maven的生命周期：分为三个周期，周期之间相互不影响
+```
+clean：清理项目，分为三个阶段：
+	(1).pre-clean：执行清理前的工作
+	(2).clean：清理上一次构建生成的项目
+	(3).post-clean：执行清理后的文件
 
-- DenpendencyManagement和dependencies区别
-	- dependencies即使在子项目中不写该依赖项，那么子项目仍然会从父项目中继承该依赖项（全部继承）
-	- dependencyManagement里只是声明依赖，并不实现引入，因此子项目需要显示的声明需要用的依赖。如果不在子项目中声明依赖，是不会从父项目中继承下来的；只有在子项目中写了该依赖项，并且没有指定具体版本，才会从父项目中继承该项，并且version和scope都读取自父pom；另外如果子项目中指定了版本号，那么会使用子项目中指定的jar版本；
-	- dependencyManagement 中的 dependencies 元素只表明依赖项版本的优先选择，并不影响项目的依赖项；而 dependencies 元素则影响项目的依赖项；
-	- 只有当外层的dependencies 元素中没有指明版本信息时， dependencyManagement中的 dependencies 元素才起作用
+default：构建项目(最核心)
+	compile，test，package，install
+		
+site：生成项目站点
+	(1).pre-site：在生成项目站点前要完成的工作
+	(2).site：生成项目的站点文档
+	(3).post-site：在生成项目站点后要完成的工作
+	(4).site-deploy：发布生成的站点到服务器上
+```
 
-# 六、pom.xml介绍
+**denpendencyManagement和dependencies区别**
+- dependencies即使在子项目中不写该依赖项，那么子项目仍然会从父项目中继承该依赖项（全部继承）
+- dependencyManagement里只是声明依赖，并不实现引入，因此子项目需要显示的声明需要用的依赖。如果不在子项目中声明依赖，是不会从父项目中继承下来的；只有在子项目中写了该依赖项，并且没有指定具体版本，才会从父项目中继承该项，并且version和scope都读取自父pom；另外如果子项目中指定了版本号，那么会使用子项目中指定的jar版本；
+- dependencyManagement 中的 dependencies 元素只表明依赖项版本的优先选择，并不影响项目的依赖项；而 dependencies 元素则影响项目的依赖项；
+- 只有当外层的dependencies 元素中没有指明版本信息时， dependencyManagement中的 dependencies 元素才起作用
+
+## 5、pom.xml介绍
 
 ```xml
 <project xmlns="http：//maven.apache.org/POM/4.0.0" xmlns：xsi="http：//www.w3.org/2001/XMLSchema-instance"
   xsi：schemaLocation="http：//maven.apache.org/POM/4.0.0 http：//maven.apache.org/xsd/maven-4.0.0.xsd">
-  //<!-- 指定当前pom的版本 -->
+  <!-- 指定当前pom的版本 -->
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>反写公司的网址+项目名</groupId>
   <artifactId>项目名+模块名</artifactId>
-  /*
+  
   <!--
 	第一个0表示大版本号，第二个0表示分支版本号，第三个0表示小版本号
 	snapshot：快照
@@ -88,56 +156,61 @@
 	release：稳定版本
 	GA：正式发布
   -->
-  */
   <version>0.0.1-SNAPSHOT</version>
-  // maven打包格式，默认是jar，war，zip
+  <!-- maven打包格式，默认是jar，war，zip -->
   <packaging>jar</packaging>
-  // 项目描述名
+  <!-- 项目描述名 -->
   <name>demo</name>
-  // 项目的地址
+  <!-- 项目的地址 -->
   <url>http：//maven.apache.org</url>
-  // 项目描述信息
+  <!-- 项目描述信息 -->
   <description></description>
+  <!-- 属性 -->
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>3.8.1</version>
-	  	<type></type>
-      <scope>test</scope> // 依赖范围
-	  <optional></optional> //设置依赖是否可选，true or false
-	  <exclusions> // 排除依赖传递列表
-      	<exclusion></exclusion>
-      </exclusions>
-    </dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+				<type></type>
+			<!-- 依赖范围 -->
+			<scope>test</scope> 
+			<!-- 设置依赖是否可选，true or false -->
+			<optional></optional> 
+			<exclusions>
+				<!-- 排除依赖传递列表 -->
+				<exclusion></exclusion>
+			</exclusions>
+		</dependency>
   </dependencies>
   
-  <dependencyManagement> // 依赖管理
-  	<dependencies>
-  		<dependency></dependency>
-  	</dependencies>
-	
-  <build> // 构建项目
-  	<plugins>
-  		<plugin>
-  			<groupId>org.apache.maven.plugins</groupId>
-  			<artifactId>maven-source-plugin</artifactId>
-  			<version>2.4</version>
-  			<executions>
-  				<execution>
-  					<phase>package</phase>
-  					<goals>
-  						<goal>jar-no-fork</goal>
-  					</goals>
-  				</execution>
-  			</executions>
-  		</plugin>
-  	</plugins>
-  </build>
+  <!-- 依赖管理 -->
+  	<dependencyManagement>
+  		<dependencies>
+  			<dependency></dependency>
+  		</dependencies>
+	</dependencyManagement>
+	<!-- 构建项目 -->
+	<build> 
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>2.4</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 
 	<profiles>
 		<profile>
@@ -150,7 +223,7 @@
 </project>
 ```
 
-## 1、依赖范围
+### 5.1、依赖范围
 
 `<scope>`，6个值
 - compile(默认值)
@@ -160,7 +233,7 @@
 - system：与本机系统相关联，可移植性差
 - import：导入的范围，只使用在dependencyManagement中，表示从其他的pom中导入dependency配置
 
-## 2、多环境
+### 5.2、多环境
 
 实际场景下，存在多套开发环境：测试环境、开发环境、线上环境等。对于多套环境而言，我们可以抽取出相同的部分，放入到公共的文件当中，把那些跟着环境变化而变化的配置信息，分环境存放，最后根据选择的环境而将那部分配置信息动态注入到公共的文件当中
 
@@ -168,11 +241,11 @@
 
 选择Profile进行打包？实质上就是在执行`mvn package -Pxxx`而已
 
-## 3、bom与pom
+### 5.3、bom与pom
 
 https://blog.csdn.net/LoveJavaYDJ/article/details/86594226
 
-# 七、依赖：冲突、聚合、继承
+# 二、依赖
 
 ## 1、查找依赖树
 
@@ -401,7 +474,7 @@ Jar发生冲突后在程序启动时常见异常报错，下面四种异常是�
 - 程序抛出：`java.lang.NoClassDefFoundError`异常；
 - 程序抛出：`java.lang.LinkageError`异常等；
 
-# 八、编写Maven插件
+# 三、编写Maven插件
 
 * [Maven插件开发指南](https://maven.apache.org/plugin-developers/index.html)
 * [Maven插件官方文档](https://maven.apache.org/plugins/index.html)
@@ -460,8 +533,7 @@ Maven的编译插件： https://maven.apache.org/plugins/maven-compiler-plugin/c
 ## 2、编写插件步骤
 
 
-
-# 九、Maven常见技巧
+# 四、Maven常见技巧
 
 ## 1、Maven自动更新jar
 
@@ -571,36 +643,36 @@ mvn versions:revert
 再加上一个插件，这个插件的作用是在编译打包时，会自动替换`${reversion}`占位：
 ```xml
 <plugin>
-  <groupId>org.codehaus.mojo</groupId>
-  <artifactId>flatten-maven-plugin</artifactId>
-  <version>1.2.7</version>
-  <configuration>
-    <updatePomFile>true</updatePomFile>
-    <flattenMode>resolveCiFriendliesOnly</flattenMode>
-  </configuration>
-  <executions>
-    <execution>
-      <id>flatten</id>
-      <phase>process-resources</phase>
-      <goals>
-        <goal>flatten</goal>
-      </goals>
-    </execution>
-    <execution>
-      <id>flatten.clean</id>
-      <phase>clean</phase>
-      <goals>
-        <goal>clean</goal>
-      </goals>
-    </execution>
-  </executions>
+	<groupId>org.codehaus.mojo</groupId>
+	<artifactId>flatten-maven-plugin</artifactId>
+	<version>1.2.7</version>
+	<configuration>
+		<updatePomFile>true</updatePomFile>
+		<flattenMode>resolveCiFriendliesOnly</flattenMode>
+	</configuration>
+	<executions>
+		<execution>
+			<id>flatten</id>
+			<phase>process-resources</phase>
+			<goals>
+				<goal>flatten</goal>
+			</goals>
+		</execution>
+		<execution>
+			<id>flatten.clean</id>
+			<phase>clean</phase>
+			<goals>
+				<goal>clean</goal>
+			</goals>
+		</execution>
+	</executions>
 </plugin>
 ```
 做好以上这几步，那么你要修改版本号的时候，只需要在主pom里把reversion修改一次就可以了，不管多少子模块，都可以生效
 
 ## 4、避免将依赖的jar包打到最大的jar
 
-定 maven dependency 的 scope 为 provided ，这意味着:依赖关系将在运行时由其容器或 JDK 提供。 具有此范围的依赖关系不会传递，也不会捆绑在诸如 WAR 之类的包中，也不会包含在运行时类路径中
+定 maven dependency 的 scope 为 provided ，这意味着：依赖关系将在运行时由其容器或 JDK 提供。 具有此范围的依赖关系不会传递，也不会捆绑在诸如 WAR 之类的包中，也不会包含在运行时类路径中
 
 ## 5、跳过单元测试
 
@@ -631,9 +703,9 @@ mvn versions:revert
 
 当使用Maven下载源码时报错，Can not download sources，可以尝试使用：`mvn dependency:sources`
 
-# 十、Maven私服仓库搭建
+# 五、Maven私服仓库搭建
 
-# 十一、Maven运行web项目
+# 六、Maven运行web项目
 
 ## 1、idea运行maven项目
 
@@ -750,21 +822,8 @@ mvn versions:revert
 
 	![](image/maven-运行web项目.png)
 
-# 十二、常用Maven依赖
 
-## 1、Hutool
-
-Hutool是一个Java基础工具类，对文件、流、加密解密、转码、正则、线程、XML等JDK方法进行封装，组成各种Util工具类
-
-## 2、bouncycastle
-
-加密、摘要算法工具类
-
-## 3、antisamy
-
-XSS防御工具类
-
-# 十三、其他
+# 七、其他
 
 ## 1、发布包
 
@@ -772,7 +831,6 @@ https://www.jitpack.io/
 
 # 参考资料
 
-* [Maven工程](https://www.jianshu.com/p/34740cd1fb58)
 
 
 
