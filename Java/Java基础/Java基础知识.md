@@ -5800,6 +5800,10 @@ InputStream inputStream = Thread.currentThread().getContextClassLoader().getReso
 - [springboot如何进行混淆加密（proguard+xjar）](https://juejin.cn/post/7120188938047717406)
 - [混淆插件：guardsquare](https://www.guardsquare.com/manual/home)
 
+## 11、jar 命令
+
+- [The jar Command](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jar.html)
+- [jar 命令详解](https://blueblue233.github.io/blog/e7de86f3/)
 
 # 二十、Java中的null
 
