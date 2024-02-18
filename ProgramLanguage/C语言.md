@@ -378,3 +378,5 @@ $ objdump -d -M intel -S test.o // test.c 通过 gcc 生成的文件
 # 参考资料
 
 - [C在线编译](https://godbolt.org/)
+- [Learn C language](https://www.learn-c.org/)
+- [C program](https://www.programiz.com/c-programming/c-variables-constants)

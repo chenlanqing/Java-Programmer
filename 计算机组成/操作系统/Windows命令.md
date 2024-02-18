@@ -23,4 +23,7 @@ pause
 在凭据管理器中，您可以查看、编辑和删除存储的凭据。如果您想删除 Git 存储的凭据，可以在凭据管理器中找到 Git 的凭据并将其删除
 
 
+# 参考资料
+
+- [PowerToys](https://github.com/microsoft/PowerToys)
 

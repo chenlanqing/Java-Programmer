@@ -15,3 +15,4 @@ Reference: [https://www.engraved.blog/building-a-virtual-machine-inside/](https:
 # 参考资料
 
 - [215+ ChatGPT Prompts & How to Write your Own](https://writesonic.com/blog/chatgpt-prompts)
+- [ChatGPT账号](https://chatgpt123.com/)

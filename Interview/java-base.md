@@ -2196,3 +2196,4 @@ public static void main(String[] args) {
 - [技术文章整理](https://segmentfault.com/a/1190000018855112)
 - [面试八股文](https://mp.weixin.qq.com/s/2IUaDr5XRgWoVaGgPGsAxA)
 - [面试offer](https://mp.weixin.qq.com/s/C5QMjwEb6pzXACqZsyqC4A)
+- [腾讯一面面试题](https://mp.weixin.qq.com/s/IfLCzKsqTx_xUQkC4DB9KA)

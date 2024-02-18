@@ -4568,6 +4568,7 @@ Java 的注解机制允许开发人员自定义注解。这些自定义注解同
 - [Annotationprocessing](http://hannesdorfmann.com/annotation-processing/annotationprocessing101/)
 - [Annotationprocessing](https://www.race604.com/annotation-processing/)
 - [示例源代码](https://github.com/chenlanqing/annotationprocessing101)
+- [自定义Java注解处理器](https://yuweiguocn.github.io/java-annotation-processor/)
 
 Java 源代码的编译过程可分为三个步骤：
 - （1）将源文件解析为抽象语法树；

@@ -781,3 +781,4 @@ java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+P
 * [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
 * [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
 * [Java源文件生成框架](https://github.com/square/javapoet)
+* [深入浅出JVM字节码](https://github.com/wujiuye/JVMByteCodeGitBook)
