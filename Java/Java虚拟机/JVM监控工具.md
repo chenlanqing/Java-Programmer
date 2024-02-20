@@ -192,6 +192,7 @@ Gen 1:   old  [0x0000000178f50000,0x0000000178f50000,0x0000000183a00000) space c
 - [Arthas原理](https://juejin.cn/post/6904280021632974856)
 - [Arthas用户案例](https://github.com/alibaba/arthas/issues?q=label%3Auser-case)
 - [Arthas命令使用场景](https://juejin.cn/post/7291931708920512527)
+- [Athas Idea Plugin](https://www.yuque.com/arthas-idea-plugin/help/pe6i45)
 
 
 ## 1、Arthas介绍
