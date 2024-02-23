@@ -2132,7 +2132,9 @@ mysql -uroot -p -h <remove_ip> -e "select * from table_name" >> /data/soft/table
 
 # 十三、其他
 
-## 1、关于时间
+## 1、关于时区
+
+- [Timezone引起的MySQL服务器高负载](https://plantegg.github.io/2023/10/03/time_zone是怎么打爆你的MySQL的/)
 
 ### 1.1、数据库连接中时间问题
 
