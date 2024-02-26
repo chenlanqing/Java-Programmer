@@ -338,6 +338,8 @@ F S   UID   PID  PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
 
 ## 3、netstat 命令
 
+- [how to use netstat command](https://www.redhat.com/sysadmin/netstat)
+
 用来打印Linux中网络系统的状态信息，可让你得知整个Linux系统的网络情况，选项：
 ```
 -a或--all：显示所有连线中的Socket；
