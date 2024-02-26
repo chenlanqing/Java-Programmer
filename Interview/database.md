@@ -284,7 +284,9 @@ pt-onlinbe-schema-change [options] DSN
 
 假如事务1和事务2都要执行update操作，事务1先update数据行的时候，先回获取行锁，锁定数据，当事务2要进行update操作的时候，也会取获取该数据行的行锁，但是已经被事务1占有，事务2只能wait；若是事务1长时间没有释放锁，事务2就会出现超时异常；若是没有索引的条件下，就获取所有行，都加上行锁，然后Mysql会再次过滤符合条件的的行并释放锁，只有符合条件的行才会继续持有锁
 
-## 9、mysql单表最优数量
+## 9、mysql单表最大数量
+
+- [MySQL单标最大数量](https://mp.weixin.qq.com/s/QHyCRnuAqUGFXlPCNvevHg)
 
 MySQL单表可以存储10亿级数据，只是这时候性能比较差，业界公认MySQL单表容量在1KW量级是最佳状态，因为这时它的BTREE索引树高在3~5之间
 
