@@ -476,6 +476,10 @@ f ==> 1111
 
 ### 4.3、大小端
 
+- [大端和小端](https://en.wikipedia.org/wiki/Endianness)
+- [理解字节序](https://www.ruanyifeng.com/blog/2016/11/byte-order.html)
+- [字节序探析：大端与小端的比较](https://www.ruanyifeng.com/blog/2022/06/endianness-analysis.html)
+
 - 小端（little-endian）：低位字节排放在内存的低地址端即该值的起始地址，高位字节排放在内存的高地址端
 - 大端（big-endian）：高位字节排放在内存的低地址端即该值的起始地址，低位字节排放在内存的高地址端
 - 例子: 32bit宽的数 `0x12345678`
@@ -487,9 +491,17 @@ f ==> 1111
 		- 存放内容:	`0x12 	0x34	0x56	0x78`
 - 大端的优势就是易于阅读，小端便于cpu内部数据计算
 
+在Java中，所有的二进制文件都是按大端存储，基于ByteBuffer（可通过Order来设置大端或者小端，默认为大端 — Big-Endian）实现，如果需要设置为小端：
+```java
+ByteBuffer byteBuffer = ByteBuffer.allocate(4);
+byteBuffer.order(ByteOrder.LITTLE_ENDIAN); // 设置为小端
+byte[] b = byteBuffer.putInt(i).array();
+```
+在 Java 中，可以使用 `ByteOrder.nativeOrder()` 方法来获取 CPU 使用的字节顺序。
+
 ### 4.4、数据类型转换为 字节
 
-`8143 (00000000 00000000 00011111 11001111)` ==> `byte[] b = [-49,31,0,0]`;
+`8143 (00000000 00000000 00011111 11001111)` 转换为字节数组（小端）：`byte[] b = [-49,31,0,0]`;
 - 第一个（低端）字节：`8143 >> 0 * 8 & 0xff = 11001111(207)`，有符号为 -49 
 - 第二个（低端）字节：`8143 >> 1 * 8 & 0xff = 00011111(31)`
 - 第三个（低端）字节：`8143 >> 2 * 8 & 0xff = 00000000(0)`
@@ -497,8 +509,8 @@ f ==> 1111
 
 ### 4.5、字符串与字节的相互转换
 
-字符串 --> 字节：`byte[] b = s.getBytes();`<br>
-字节 --> 字符串：`byte[] b = new byte[int]; new String(b)` 或者 `new String(b, encode)`// encode 编码格式:
+- 字符串 --> 字节：`byte[] b = s.getBytes();`
+- 字节 --> 字符串：`byte[] b = new byte[int]; new String(b)` 或者 `new String(b, encode)`// encode 编码格式:
 
 ### 4.6、转换实例
 
