@@ -529,6 +529,7 @@ git config --global --unset https.proxy
 
 * [Git教程](https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
 * [Git与SVN](https://www.cnblogs.com/kevingrace/p/5904595.html)
+* [rebase 和 merge 区别](https://waynerv.com/posts/git-rebase-intro/#rebase-%E5%92%8C-merge-%E7%9A%84%E5%8C%BA%E5%88%AB)
 
 
 
