@@ -453,6 +453,8 @@ private static void test1(int a, int b) {
 
 ## 4、Java 二进制
 
+- [Java中字节数组与short、int、long类型数据之间转化](../通用代码片段/ByteArrayDigitType.java)
+
 Java7以及以后版本支持直接书写除十进制以外的其它进制字面量
 ```
 二进制：前置0b/0B
