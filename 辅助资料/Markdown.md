@@ -8,6 +8,11 @@
 四声|	`&egrave;`| &egrave;
 u音|	`&euml;`	| &euml;
 
+# 2、文本居中
+
+- `<p align="center"></p>`，github会生效
+- `<center></center>`
+
 # 参考资料
 
 - [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)
