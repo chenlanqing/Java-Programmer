@@ -396,6 +396,10 @@ netstat -su   显示UDP端口的统计信息
 - Linux：`netstat -nltp | grep PID`
 - Mac下查看进程占用端口：`lsof -nP -iTCP -sTCP:LISTEN | grep PID`
 
+**列出监控中的TCP和UDP端口：**
+
+`netstat -tlun`
+
 **找出程序运行的端口：** `netstat -ap | grep ssh`
 
 **通过端口找进程ID：** `netstat -anp|grep 3306 | grep LISTEN|awk '{printf $7}'|cut -d/ -f1`
