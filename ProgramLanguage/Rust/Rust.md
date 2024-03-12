@@ -29,3 +29,4 @@
 - [Rust Course](https://github.com/sunface/rust-course)
 - [Learn Rust](https://gist.github.com/chenlanqing/e86a450cde47227820f7579d0b0a285d)
 - [Rust Learning Resources](https://serokell.io/blog/learn-rust)
+- [Rust practice](https://github.com/sunface/rust-by-practice)
