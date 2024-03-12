@@ -2959,4 +2959,5 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 * [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)
 * [SofaBoot](https://www.sofastack.tech/sofa-boot/docs/Home)
 * [SpringBoot启动过程优化](https://mp.weixin.qq.com/s/sm_9epIMi4nne84gGuyg3Q)
+* [SpringBoot 启动过程分析并生成报告](https://github.com/linyimin0812/spring-startup-analyzer)
 
