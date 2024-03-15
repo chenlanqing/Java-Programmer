@@ -649,6 +649,10 @@ invocableMethod.invokeAndHandle(webRequest, mavContainer);
 
 @Configuration 注解注册到 Spring 中的 Bean 是一个 CGLIB 代理的 Bean，而不是原始 Bean，这一点和 @Component 不一样，@Component 注册到 Spring 容器中的还是原始 Bean
 
+## 67、一个springboot项目能处理多少个请求
+
+https://juejin.cn/post/7256590619413004343
+
 # 二、Netty
 
 ## 1、服务端的Socket在哪里初始化？
