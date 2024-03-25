@@ -1,8 +1,6 @@
-
-
 **Java世界里的一切东西都只是在拼Java命令行参数而已**
 
-# 一、Java平台理解
+# 一、关于Java
 
 ## 1、从宏观角度看
 
@@ -50,6 +48,25 @@ Write once， run anywhere
 - 里氏替换原则
 - 依赖倒置原则
 - 接口隔离原则
+
+## 7、基本使用
+
+编译源文件：
+```bash
+javac Demo.java
+```
+带外部依赖编译源文件：
+```bash
+# Linux
+javac -cp "./libs/lib1.jar:./libs/lib2.jar:." Demo.java  
+# Linux 通配符
+javac -cp "./libs/*:." Demo.java
+# Windows
+javac -cp ".\libs\lib1.jar;.\libs\lib2.jar;." Demo.java  
+# Windows 通配符
+javac -cp ".\libs\*;." Demo.java  
+```
+执行使用：java命令，其他类似
 
 # 二、Java数据类型
 
