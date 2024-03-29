@@ -142,3 +142,4 @@ CompletableFuture是由Java 8引入的，在Java8之前我们一般通过Future�
 # 参考资料
 
 - [CompletableFuture原理与实践-外卖商家端API的异步化](https://tech.meituan.com/2022/05/12/principles-and-practices-of-completablefuture.html)
+- [asyncTool-并行框架](https://gitee.com/jd-platform-opensource/asyncTool)
