@@ -60,7 +60,7 @@ M-E-S-I协议将cache line的状态分成 modify、exclusive、shared、invalid�
 
 ### 2.4、cache操作
 
-![image](image/M-E-S-I.jpg)
+![](image/MESI.jpg)
 
 在M-E-S-I中，每个cache的控制器不仅自己的操作(local read和local write)，通过监听也能其他CPU的cahce操作(remote read和remote write)。对于自己本地缓存有的数据，CPU仅需要发起local操作，否则发起remote操作，从主存中读取数据，cache通过总线监听，仅能够知道其他CPU发起的remote操作，但是如果local操作会导致数据不一致，cache控制器会通知其他CPU的cache控制修改状态
 
