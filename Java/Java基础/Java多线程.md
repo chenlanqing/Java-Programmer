@@ -4459,6 +4459,28 @@ ConcurrentSkipListMap是通过`HeadIndex`维护索引层次，通过`Index`从�
 
 * [队列概览](https://juejin.im/post/6870298844425371655)
 
+名称 | 类型 | 有界 | 线程安全 | 描述
+-----|-----|------|---------|----
+Queue<E> | 接口 | - | - | 最上层队列接口
+BlockingQueue<E> | 接口 | - | - | 阻塞队列接口
+BlockingDeque<E> | 接口 | - | - | 双向阻塞队列接口
+Deque<E> | 接口 | - | - | 双向队列接口
+TransferQueue<E> | 接口 | - | - | 传输队列接口
+AbstractQueue | 抽象类 | - | - | 队列抽象类
+PriorityQueue | 普通类 | N | N | 优先级队列
+ArrayDeque | 普通类 | N | N | 数组双向队列
+LinkedList | 普通类 | N | N | 链表队列类
+ConcurrentLinkedQueue  | 普通类 | N | Y | 链表结构的线程安全的队列
+ConcurrentLinkedDeque  | 普通类 | N | Y | 链表结构的线程安全的双向队列
+ArrayBlockingQueue  | 普通类 | Y | Y | 数组结构的有界阻塞队列
+LinkedBlockingQueue  | 普通类 | Y | Y | 链表结构的有界阻塞队列
+LinkedBlockingDeque  | 普通类 | Y | Y | 链表结构的双向有界阻塞队列
+LinkedTransferQueue  | 普通类 | N | Y | 链表结构的无界阻塞传输队列
+SynchronousQueue   | 普通类 | Y | Y | 不存储元素的阻塞队列
+PriorityBlockingQueue   | 普通类 | N | Y |  支持优先级的无界阻塞队列
+DelayQueue   | 普通类 | N | Y | 支持优先级排序、延时存储的无界阻塞队列
+
+
 ### 7.1、什么是阻塞队列
 
 是一个在队列基础上又支持了两个附加操作的队列。2个附加操作：
