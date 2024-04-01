@@ -1033,3 +1033,4 @@ protected final void initServletBean() throws ServletException {
 * [死磕Spring源码系列](http://cmsblogs.com/?p=4047)
 * [Spring的Bean生命周期](https://mp.weixin.qq.com/s/UBVgYuFA5PUP52MxTTXk2w)
 * [Spring源码解析系列汇总](http://www.spring4all.com/article/16302)
+* [Spring源码学习](https://github.com/xuchengsheng/spring-reading)
