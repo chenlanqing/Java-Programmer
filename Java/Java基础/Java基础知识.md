@@ -3051,7 +3051,18 @@ System.out.println(JSON.toJSONString(depTree, serializeConfig));
 - 避免混用json序列化方式；
 - 在定义类的属性时，不要使用 boolean基本类型，使用包装类型：Boolean，或者属性名称不要使用 is 开头；	
 
-### 7.3、Jackson序列化-自定义ObjectMapper
+**FastJSON 和 Gson关于json数据转化为Map带泛型示例**
+```java
+// fastJSON
+Map<String, Person> flowEventDataMap = JSON.parseObject(data, new TypeReference<Map<String, Person>>() {});
+
+ // Gson
+Gson gson = new Gson();
+Type mapType = new TypeToken<Map<String, Person>>(){}.getType();
+Map<String, Person> map = gson.fromJson(data, mapType);
+```
+
+### 7.2、Jackson序列化-自定义ObjectMapper
 
 - [Jackson-github](https://github.com/FasterXML/jackson)
 
@@ -3064,7 +3075,7 @@ System.out.println(JSON.toJSONString(depTree, serializeConfig));
 
 Jackson 针对序列化和反序列化有大量的细节功能特性，我们可以参考 Jackson 官方文档来了解这些特性，详见SerializationFeature、DeserializationFeature和MapperFeature；
 
-### 7.4、Jack序列化-构造函数
+### 7.3、Jack序列化-构造函数
 
 默认情况下，在反序列化的时候，Jackson 框架只会调用无参构造方法创建对象，如果走自定义的构造方法创建对象，需要通过 @JsonCreator 来指定构造方法，并通过 @JsonProperty 设置构造方法中参数对应的 JSON 属性名：
 ```java
