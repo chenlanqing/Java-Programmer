@@ -160,7 +160,8 @@ Kafka 中大量使用了页缓存，这是 Kafka 实现高吞吐的重要因素�
 
 ### 1.4.4、零拷贝技术
 
-[零拷贝](../../Java基础/Java-IO.md#四零拷贝)
+- [零拷贝](../../Java基础/Java-IO.md#四零拷贝)
+- [DMA](../../../计算机基础/计算机组成.md#510DMA)
 
 Kafka 的数据并不是实时的写入硬盘，它充分利用了现代操作系统分页存储来利用内存提高 I/O 效率；对于 kafka 来说，Producer 生产的数据存到 broker，这个过程读取到 socket buffer 的网络数据，其实可以直接在内核空间完成落盘。并没有必要将 socket buffer 的网络数据，读取到应用进程缓冲区；在这里应用进程缓冲区其实就是 broker，broker 收到生产者的数据，就是为了持久化。
 
@@ -2919,4 +2920,5 @@ https://nsq.io/
 * [Kafka与RocketMQ](https://mp.weixin.qq.com/s/WwHnyrOnw_io7G3uviim3Q)
 * [Kafka高性能原因](https://mp.weixin.qq.com/s/XhJl90DnprNsI8KxFfdyVw)
 * [Kafka架构调优最常见的5个问题](https://heapdump.cn/article/3802138)
+* [Kafka: a Distributed Messaging System for Log Processing](https://notes.stephenholiday.com/Kafka.pdf)
 * [Kafka 架构、核心机制和场景解读](https://juejin.cn/post/7176576097205616700)

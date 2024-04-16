@@ -1253,6 +1253,7 @@ public class NioClient {
 * [零拷贝技术](https://mp.weixin.qq.com/s/LbgTjnX0u2DQ1fA13FzD1g)
 * [全面介绍零拷贝](https://juejin.im/post/6844903949359644680)
 * [Java NIO - 零拷贝实现](https://pdai.tech/md/java/io/java-io-nio-zerocopy.html)
+* [Efficient data transfer through zero copy](https://developer.ibm.com/articles/j-zerocopy/)
 
 传统系统数据处理流程：
 - 应用进程的每一次写操作，都会把数据写到用户空间的缓冲区中，再由 CPU 将数据拷贝到系统内核的缓冲区中，之后再由 DMA 将这份数据拷贝到网卡中，最后由网卡发送出去。这里可以看到，一次写操作数据要拷贝两次才能通过网卡发送出去；
