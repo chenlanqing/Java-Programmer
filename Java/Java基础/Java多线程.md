@@ -5410,6 +5410,7 @@ public class ExchangerDemo {
 
 - [高性能队列——Disruptor](https://tech.meituan.com/2016/11/18/disruptor.html)
 - [LMAX-架构](https://martinfowler.com/articles/lmax.html)
+- [Disruptor-使用指南](https://lmax-exchange.github.io/disruptor/user-guide/index.html)
 
 ## 1、LMAX架构
 
