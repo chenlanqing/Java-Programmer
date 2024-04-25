@@ -168,3 +168,9 @@ public void retryMethod() {
 
 - [使用Spring-Validation校验后端数据](https://lexburner.github.io/spring-validation/)
 - [Spring-Validation使用原理](https://www.redoc.top/article/803-Spring%20Validation%E5%8F%82%E6%95%B0%E6%A0%A1%E9%AA%8C%E7%9A%84%E4%BD%BF%E7%94%A8%E4%B8%8E%E5%8E%9F%E7%90%86)
+- [多字段联合校验](https://juejin.cn/post/6844903920699965447)
+
+
+# 参考资料
+
+- [Spring模块化](https://github.com/spring-projects/spring-modulith)

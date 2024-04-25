@@ -833,3 +833,4 @@ JMM对这两种不同性质的重排序，采取了不同的策略：
 * [Java内存模型之happens-before](http://cmsblogs.com/?p=2102)
 * [深入理解Java内存模型](http://www.jiangxinlingdu.com/concurrent/2019/02/16/java-memory-model.html)
 * [The Java Memory Model](https://www.cs.umd.edu/~pugh/java/memoryModel/)
+* [The Fix Java Memory Model](https://dl.acm.org/doi/pdf/10.1145/304065.304106)
