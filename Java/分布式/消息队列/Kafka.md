@@ -206,6 +206,8 @@ Kafka 将 Broker、Topic 和 Partition 的元数据信息存储在 Zookeeper 上
 
 # 2、kafka安装与配置
 
+- [Kafka UI](https://github.com/obsidiandynamics/kafdrop)
+
 ## 2.1、Kafka版本
 
 - Apache Kafka，也称社区版 Kafka。优势在于迭代速度快，社区响应度高，使用它可以让你有更高的把控度；缺陷在于仅提供基础核心组件，缺失一些高级的特性。
