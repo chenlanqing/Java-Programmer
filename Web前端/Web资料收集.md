@@ -11,6 +11,7 @@
 - [Web3D可视化](http://www.webgl3d.cn/)
 - [设计稿一键生成代码：imgcook](https://www.imgcook.com/)
 - [Swift开发](https://developer.apple.com/tutorials/develop-in-swift)
+- [模仿 抖音|TikTok 的移动端短视频项目](https://github.com/zyronon/douyin)
 
 如果需要一键变黑白，只需要在在body上增加一个style：`filter:grayscale(100%)`
 ```html
