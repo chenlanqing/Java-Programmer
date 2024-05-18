@@ -152,3 +152,4 @@ MMU：内存管理单元
 * [线程的调度](https://wizardforcel.gitbooks.io/wangdaokaoyan-os/content/8.html)
 * [Linux内核碎片](https://pingcap.com/zh/blog/linux-kernel-vs-memory-fragmentation-2)
 * [Linux 0.11-内核源码分析](https://github.com/dibingfa/flash-linux0.11-talk)
+* [Linux启动流程](https://mp.weixin.qq.com/s/s1YpeLc9K-tX59REh9Wz0A)

@@ -48,6 +48,8 @@ currentTimeMillis其实是通过gettimeofday来实现的。System.currentTimeMil
 
 ## 2、System.gc方法
 
+- [System.gc八股文](https://mp.weixin.qq.com/s/KMbyj-OZT3UQxUt749iSOg)
+
 ### 2.1、方法实现
 
 ```java
