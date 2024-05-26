@@ -1156,7 +1156,7 @@ public interface ApplicationListener<E extends ApplicationEvent> extends EventLi
         - 获取所有创建好的单实例bean，判断是否是SmartInitializingSingleton类型的；如果是就调用afterSingletonsInstantiated();
 
 
-### 6.3.2、Spring中的事件
+### 6.3.3、Spring中的事件
 
 Spring 提供了以下五种标准的事件：
 - 上下文更新事件（ContextRefreshedEvent）：该事件会在ApplicationContext 被初始化或者更新时发布。也可以在调用ConfigurableApplicationContext 接口中的 #refresh() 方法时被触发。
@@ -1190,6 +1190,16 @@ Spring 提供了以下五种标准的事件：
     // 发布事件
     applicationContext.publishEvent(customEvent);
     ```
+
+### 6.3.4、Event最佳实践
+
+- [Spring Event最佳实践](https://juejin.cn/post/7313387525819973671)
+
+（1）业务系统一定要先实现优雅关闭服务，才能使用 Spring Event
+
+Spring 广播消息时，Spring会在 ApplicationContext 中查找所有的监听者，即需要 getBean 获取 bean 实例。然而 Spring 有个限制————ApplicationContext 关闭期间，不得GetBean 否则会报错
+
+（2）改造系统开启入口流量（Http、MQ、RPC）的时机，确保在Spring 启动完成后开启入口流量
 
 # 7、Spring异步化
 
