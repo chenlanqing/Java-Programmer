@@ -2082,6 +2082,16 @@ private Object rightGroovy(String script, String method, Object... args) {
 严格说Intel cpu提供Ring0-Ring3 四种级别的运行模式，Ring0级别最高，Ring3最低；Linux使用了Ring3级别运行用户态，Ring0作为内核态。Ring3状态不能访问Ring0的地址空间，包括代码和数据；因此用户态是没有权限去操作内核态的资源的，它只能通过系统调用外完成用户态到内核态的切换，然后在完成相关操作后再有内核态切换回用户态
 因为如果操作系统（JNI  java native interface）直接访问 堆内内存，java 在这个时候自己做了GC 就会导致出现问题 比如内存数据乱套了这种。。
 
+## 27、SpringBoot ApplicationContext 会被 JVM 当成垃圾对象，然后回收掉吗？
+
+Spring Boot 在启动时会将关闭流程注册到 Java 关闭钩子中，并通过关闭钩子线程引用到 Spring 上下文。
+
+关闭钩子会被保存在一个 static 静态类型的 Map 中，这个 Map 在 GC Root 上。
+
+因此，Spring Boot 不被垃圾回收的关键是在启动时注册了关闭钩子。
+
+Spring永远不会被垃圾回收
+
 # 六、设计模式
 
 ## 1、动态代理与静态代理区别以及使用场景
