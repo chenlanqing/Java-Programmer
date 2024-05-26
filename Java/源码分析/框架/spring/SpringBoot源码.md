@@ -142,6 +142,8 @@ protected List<AutoConfigurationImportFilter> getAutoConfigurationImportFilters(
 
 # 2、启动流程
 
+- [SpringBoot 启动原理](https://juejin.cn/post/7308610896803659812)
+
 ## 2.1、启动流程分析
 
 ![](image/SpringBoot启动过程.png)
