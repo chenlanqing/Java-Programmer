@@ -617,12 +617,16 @@ $ docker run -it --rm --name busybox2 --network my-net busybox sh
 
 ## 9、docker-compose
 
-https://docs.docker.com/compose/install/
+- [Install Compose standalone](https://docs.docker.com/compose/install/standalone/)
 
-mv docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
+下载并安装：`curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose`
 
-sudo chmod +x /usr/local/bin/docker-compose
-
+如果下载安装比较慢，可以先下载 [docker-compose](https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64)，然后执行如下命令：
+```bash
+root# mv docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
+root# chmod +x /usr/local/bin/docker-compose
+```
+docker-compose相关命令：
 ```
 docker-compose up  启动，加上 -d 是后台启动
 docker-compose stop  停止，但不会删除
