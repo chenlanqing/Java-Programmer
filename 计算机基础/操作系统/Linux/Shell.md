@@ -1056,3 +1056,4 @@ until [ i -gt 100 ]
 ## 参考资料
 
 - [Shell分析服务器日志](https://segmentfault.com/a/1190000009745139)
+- [Advanced Bash-Scripting Guide](https://tldp.org/LDP/abs/html/index.html)

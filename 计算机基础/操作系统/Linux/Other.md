@@ -1,11 +1,5 @@
+# 一、Linux常用命令
 
-* http://www.92csz.com/study/linux/12.htm
-* http://see.xidian.edu.cn/cpp/view/6994.html
-* http://man.ddvip.com/linux/Mandrakelinuxref/index.html
-* http://www.tldp.org/LDP/abs/html/index.html
-* http://see.xidian.edu.cn/cpp/
-
-#一、Linux常用命令
 ## 1、echo，显示文字，用于向窗口输出文本
 		语 法：echo [-ne][字符串]或 echo [--help][--version]
 		补充说明：echo会将输入的字符串送往标准输出。输出的字符串间以空白字符隔开，并在最后加上换行号
