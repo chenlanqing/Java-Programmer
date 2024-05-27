@@ -63,7 +63,7 @@ Docker 本身是一个容器运行载体或称之为管理引擎。我们把应�
 	- 国外镜像仓库，比较慢：`yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo`
 	- 阿里云镜像仓库：`yum-config-manager --add-repo http://mirrors.aliyun.com/docker-ce/linux/centos/docker-ce.repo`
 - 更新yum软件包索引：`yum makecache fast`
-- 安装DOCKER CE：`s`
+- 安装DOCKER CE：`yum -y install docker-ce`
 - 启动docker：`systemctl start docker`；
 - 测试
 	- `docker version`
