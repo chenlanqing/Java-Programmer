@@ -151,3 +151,7 @@ MMU：内存管理单元
 * [Linux内核碎片](https://pingcap.com/zh/blog/linux-kernel-vs-memory-fragmentation-2)
 * [Linux 0.11-内核源码分析](https://github.com/dibingfa/flash-linux0.11-talk)
 * [Linux启动流程](https://mp.weixin.qq.com/s/s1YpeLc9K-tX59REh9Wz0A)
+* [Linux启动](https://opensource.com/article/17/2/linux-boot-and-startup)
+* [Grub2 配置](https://opensource.com/article/17/3/introduction-grub2-configuration-linux)
+* [一个64位操作系统的实现](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
+* [操作系统-3个部分](https://pages.cs.wisc.edu/~remzi/OSTEP/)
