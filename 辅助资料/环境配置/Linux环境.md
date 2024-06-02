@@ -966,6 +966,12 @@ OK
 
 实际应用中，可以在客户端缓存 Slot 与 Redis 节点的映射关系，当接收到 MOVED 响应时修改缓存中的映射关系。如此，基于保存的映射关系，请求时会直接发送到正确的节点上，从而减少一次交互，提升效率；
 
+## 6、Docker安装Redis
+
+https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/
+
+`docker exec -it redis-stack redis-cli`
+
 # 四、RabbitMQ
 
 ## 1、单机安装
