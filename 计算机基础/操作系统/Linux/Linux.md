@@ -155,3 +155,4 @@ MMU：内存管理单元
 * [Grub2 配置](https://opensource.com/article/17/3/introduction-grub2-configuration-linux)
 * [一个64位操作系统的实现](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
 * [操作系统-3个部分](https://pages.cs.wisc.edu/~remzi/OSTEP/)
+* [Linux硬件-内核-网络](https://github.com/yanfeizhang/coder-kung-fu)
