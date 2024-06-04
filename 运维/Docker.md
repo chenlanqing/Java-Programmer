@@ -47,10 +47,12 @@ Docker的主要目标是“Build，Ship and Run Any App,Anywhere”，也就是�
 
     仓库分为公开仓库（Public）和私有仓库（Private）两种形式。最大的公开仓库是[Docker Hub](https://hub.docker.com/)，存放了数量庞大的镜像供用户下载
 
-Docker 本身是一个容器运行载体或称之为管理引擎。我们把应用程序和配置依赖打包好形成一个可交付的运行环境，这个打包好的运行环境就似乎 image镜像文件。只有通过这个镜像文件才能生成 Docker 容器。image 文件可以看作是容器的模板。Docker 根据 image 文件生成容器的实例。同一个 image 文件，可以生成多个同时运行的容器实例。
+Docker 本身是一个容器运行载体或称之为管理引擎。把应用程序和配置依赖打包好形成一个可交付的运行环境，这个打包好的运行环境就似乎 image镜像文件。只有通过这个镜像文件才能生成 Docker 容器。image 文件可以看作是容器的模板。Docker 根据 image 文件生成容器的实例。同一个 image 文件，可以生成多个同时运行的容器实例。
 * image 文件生成的容器实例，本身也是一个文件，称为镜像文件。
 * 一个容器运行一种服务，当我们需要的时候，就可以通过docker客户端创建一个对应的运行实例，也就是我们的容器
 * 至于仓储，就是放了一堆镜像的地方，我们可以把镜像发布到仓储中，需要的时候从仓储中拉下来就可以了
+
+![](image/Docker结构.png)
 
 ## 2、docker安装
 
@@ -129,11 +131,22 @@ docker --help
   - 删除多个：`docker rmi -f 镜像名1:TAG 镜像名2:TAG `
   - 删除全部：`docker rmi -f $(docker images -qa)`
 
-- commit操作：docker commit提交容器副本使之成为一个新的镜像
+- `commit操作`：docker commit提交容器副本使之成为一个新的镜像
 
   `docker commit -m=“提交的描述信息” -a=“作者” 容器ID 要创建的目标镜像名:[标签名]`
   
   案例演示：从Hub上下载tomcat镜像到本地并成功运行，`docker run -it -p 8080:8080 tomcat`，故意删除上一步镜像生产tomcat容器的文档，也即当前的tomcat运行实例是一个没有文档内容的容器，以它为模板commit一个没有doc的tomcat新镜像`test/tomcat02`启动我们的新镜像并和原来的对比，启动`test/tomcat02`，它没有docs，新启动原来的tomcat，它有docs
+
+  `docker commit -m "update index.html" mynginx mynginx:v1.0`
+  
+- `save操作`：保存镜像为指定的文件：`docker save -o mynginx.tar mynginx:v1.0`
+
+- `load操作`：加载镜像：`docker load -i mynginx.tar`
+
+**推送镜像到社区：**
+- 登录：`docker login`，需要注册docker hub账号
+- 命名：`docker tag`，示例：`docker tag mynginx:v1.0 test/mynginx:v1.0`
+- 推送：`docker push`，示例：`docker push test/mynginx:v1.0`
 
 ### 3.3、容器命令
 
@@ -149,11 +162,11 @@ OPTIONS说明
 - `-i`：以交互模式运行容器，通常与 `-t` 同时使用； 
 - `-t`：为容器重新分配一个伪输入终端，通常与 `-i` 同时使用； 
 - `-P`: 随机端口映射； 
-- `-p`: 指定端口映射，有以下四种格式 
+- `-p`: 指定端口映射，有以下四种格式，容器内的端口可以重复，但是docker主机上映射的端口不能重复
     - ip:hostPort:containerPort 
     - ip:containerPort 
     - hostPort:containerPort 主机端口映射与容器端口
-    - containerPort 
+    - containerPort
 
 比如启动rabbitmq容器：`docker run -d --name rabbitmq3.7.7 -p 5672:5672 -p 15672:15672 rabbitmq:3.7.7-management`
 
@@ -176,9 +189,9 @@ OPTIONS说明
 
 OPTIONS说明：
 - `-a` : 列出当前所有 正在运行 的容器 + 历史上运行过 的 
-- `-l` :显示最近创建的容器。 
-- `-n`：显示最近n个创建的容器。 
-- `-q` :静默模式，只显示容器编号。 
+- `-l` : 显示最近创建的容器。 
+- `-n` : 显示最近n个创建的容器。 
+- `-q` : 静默模式，只显示容器编号。 
 - `--no-trunc` :不截断输出。 
 
 #### 3.3.3、退出容器
@@ -233,7 +246,15 @@ OPTIONS说明：
 - 从容器内拷贝文件到宿主机：`docker cp 容器ID:容器内路径 宿主机路径`；
 - 从宿主机拷贝文件到容器内：`docker cp 宿主机文件 容器ID:容器内路径`；
 
-#### 3.3.9、命令总结
+#### 3.3.9、查看容器状态
+
+`docker stats <容器>`
+```
+CONTAINER ID   NAME          CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O        PIDS
+7706de4ef754   redis-stack   0.17%     117.7MiB / 1.715GiB   6.70%     116kB / 54.8kB   188kB / 57.3kB   22
+```
+
+#### 3.3.10、命令总结
 
 命令 | 描述 | 中文描述
 -----|-----|-------
@@ -689,5 +710,8 @@ Status: Downloaded newer image for portainer/helper-reset-password:latest
 2023/10/13 02:09:35 Use the following password to login: :}RP1ABjl02!caDn)Tw>(~C8/Q34Jv65
 ```
 `:}RP1ABjl02!caDn)Tw>(~C8/Q34Jv65` 即为重置的密码
+
+## 11、构建Docker私服
+
 
 
