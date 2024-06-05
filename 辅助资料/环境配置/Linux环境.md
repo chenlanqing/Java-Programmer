@@ -972,6 +972,32 @@ https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/
 
 `docker exec -it redis-stack redis-cli`
 
+### 6.1、redis主从同步集群
+
+使用 [bitnami/redis](https://hub.docker.com/r/bitnami/redis) 镜像
+```bash
+#自定义网络
+docker network create redis-net
+#主节点
+docker run -d -p 6379:6379 \
+-v /app/rd1:/bitnami/redis/data \
+-e REDIS_REPLICATION_MODE=master \
+-e REDIS_PASSWORD=123456 \
+--network redis-net --name redis01 \
+bitnami/redis
+
+#从节点
+docker run -d -p 6380:6379 \
+-v /app/rd2:/bitnami/redis/data \
+-e REDIS_REPLICATION_MODE=slave \
+-e REDIS_MASTER_HOST=redis01 \
+-e REDIS_MASTER_PORT_NUMBER=6379 \
+-e REDIS_MASTER_PASSWORD=123456 \
+-e REDIS_PASSWORD=123456 \
+--network redis-net --name redis02 \
+bitnami/redis
+```
+
 # 四、RabbitMQ
 
 ## 1、单机安装

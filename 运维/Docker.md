@@ -335,11 +335,11 @@ Docker镜像都是只读的当容器启动时，一个新的可写层被加载�
 - 数据卷中的更改不会包含在镜像的更新中 
 - 数据卷的生命周期一直持续到没有容器使用它为止 
 
-### 5.2、操作数据卷
+### 5.2、挂载目录
 
-#### 5.2.1、直接命令添加
+#### 5.2.1、目录挂载
 
-- 添加：`docker run -it -v /宿主机绝对路径目录:/容器内目录 镜像名`
+- 挂在目录：使用`-v /宿主机绝对路径目录:/容器内目录`，比如：`docker run -it -v /宿主机绝对路径目录:/容器内目录 镜像名`
 - 查看数据卷是否挂载成功：`docker inspect 容器ID `：
     ```jsonc
     "Mounts": [
@@ -404,7 +404,21 @@ Docker镜像都是只读的当容器启动时，一个新的可写层被加载�
 
 **注意：**Docker挂载主机目录Docker访问出现`cannot open directory .: Permission denied`，解决办法：在挂载目录后多加一个`--privileged=true`参数即可 
 
-### 5.3、数据卷容器
+### 5.3、卷映射
+
+`-v ngconf:/etc/nginx`，不以`/`开头：
+```bash
+docker run -d -p 99:80 \
+-v /app/nghtml:/usr/share/nginx/html \
+-v ngconf:/etc/nginx \
+--name app03 nginx
+```
+数据卷的地址：`/var/lib/docker/volumes/<volume-name>`
+
+### 5.4、数据卷容器
+
+- 查看容器卷：`docker volume ls`
+- 查看容器卷：`docker volume inspect <volume-name>`
 
 命名的容器挂载数据卷，其它容器通过挂载这个(父容器)实现数据共享，挂载数据卷的容器，称之为数据卷容器
 
@@ -615,7 +629,7 @@ $ docker port fa 80
 
 ### 7.2、容器互联
 
-使用 `--link` 参数来使容器互联，但是推荐做法是：将容器加入自定义的 Docker 网络来连接多个容器
+使用 `--link` 参数来使容器互联，但是推荐做法是：将容器加入自定义的 Docker 网络来连接多个容器，创建自定义网络，实现主机名作为稳定域名访问（因为默认的 docker0 网络不支持主机名访问）
 
 **新建网络：**
 ```bash
@@ -630,6 +644,13 @@ $ docker run -it --rm --name busybox2 --network my-net busybox sh
 ```
 更建议使用 docker-compose 来完成多个容器互联；
 
+容器之间访问，使用的不是映射出去的端口，而是使用被映射的端口，比如下面：
+```bash
+docker run -d -p 88:80 --name app01 nginx
+```
+`-p 88:80`，其中`88`端口为docker主机暴露的端口，`80`是容器内部端口，也就是容器之间访问应该使用 80 端口
+
+
 ## 8、docker安装软件
 
 - rabbitmq：`docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:mamagement`
@@ -639,6 +660,9 @@ $ docker run -it --rm --name busybox2 --network my-net busybox sh
 ## 9、docker-compose
 
 - [Install Compose standalone](https://docs.docker.com/compose/install/standalone/)
+- [Docker-compose 文件](https://docs.docker.com/compose/compose-file/)
+
+### 9.1、安装
 
 下载并安装：`curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose`
 
@@ -647,12 +671,64 @@ $ docker run -it --rm --name busybox2 --network my-net busybox sh
 root# mv docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
 root# chmod +x /usr/local/bin/docker-compose
 ```
-docker-compose相关命令：
+### 9.2、相关命令
+
 ```
 docker-compose up  启动，加上 -d 是后台启动
 docker-compose stop  停止，但不会删除
 docker-compose down  停止并删除
 docker-compose logs -f  查看日志
+docker-compose scale x2=3  扩容
+```
+
+### 9.3、yaml语法
+
+顶级元素：
+- name：名字
+- services：服务
+- networks：网络
+- volumes：卷
+- configs：配置
+- secrets：密钥
+```yaml
+name: myblog
+services:
+  mysql:
+    container_name: mysql
+    image: mysql:8.0
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=123456
+      - MYSQL_DATABASE=wordpress
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - /app/myconf:/etc/mysql/conf.d
+    restart: always
+    networks:
+      - blog
+  wordpress:
+    image: wordpress
+    ports:
+      - "8080:80"
+    environment:
+      WORDPRESS_DB_HOST: mysql
+      WORDPRESS_DB_USER: root
+      WORDPRESS_DB_PASSWORD: 123456
+      WORDPRESS_DB_NAME: wordpress
+    volumes:
+      - wordpress:/var/www/html
+    restart: always
+    networks:
+      - blog
+    depends_on:
+      - mysql
+volumes:
+  mysql-data:
+  wordpress:
+
+networks:
+  blog:
 ```
 
 ## 10、Portainer
