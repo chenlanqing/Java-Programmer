@@ -2954,11 +2954,11 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 * [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
 * [Spring Boot知识清单](https://www.jianshu.com/p/83693d3d0a65)
 * [Spring Boot 官方文档](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
-* [SpringBoot1.x升级到2.x指南](http://www.leftso.com/blog/484.html)
 * [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
 * [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)
 * [SofaBoot](https://www.sofastack.tech/sofa-boot/docs/Home)
 * [SpringBoot启动过程优化](https://mp.weixin.qq.com/s/sm_9epIMi4nne84gGuyg3Q)
 * [SpringBoot 启动过程分析并生成报告](https://github.com/linyimin0812/spring-startup-analyzer)
 * [SpringBoot 动态加载jar包，动态配置方案](https://mp.weixin.qq.com/s/ccsOrfI1tenYbnmq34lgDw)
+* [a simple springboot demo with some components for example: redis,solr,rockmq and so on.](https://github.com/Harries/springboot-demo)
 

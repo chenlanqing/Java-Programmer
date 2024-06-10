@@ -772,3 +772,5 @@ Grafana
 - [Linux调优指令](https://mp.weixin.qq.com/s/ZKVpfO6VaqwmNs5Yed7Ang)
 - [Linux常用命令](https://mp.weixin.qq.com/s/gDTe5dF5VoZ7xhGP8aIpCA)
 - [AWK操作技巧](https://mp.weixin.qq.com/s/aRy3QlMUpSNOKf2pyN6Uuw)
+- [tldr-pages-简化man命令说明](https://github.com/tldr-pages/tldr)
+- [Linux沙箱纯净版](https://github.com/chenlanqing/instantbox)
