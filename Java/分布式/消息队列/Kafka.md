@@ -2924,4 +2924,3 @@ https://nsq.io/
 * [Kafka架构调优最常见的5个问题](https://heapdump.cn/article/3802138)
 * [Kafka: a Distributed Messaging System for Log Processing](https://notes.stephenholiday.com/Kafka.pdf)
 * [Kafka 架构、核心机制和场景解读](https://juejin.cn/post/7176576097205616700)
-* [Kafka-架构系列](https://mp.weixin.qq.com/s/y813yAPs-7vuDfsOp_qpgw)
