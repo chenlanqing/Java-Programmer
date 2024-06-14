@@ -1,8 +1,11 @@
-# 一、基本语法
+# 一、环境搭建
+
+## 1、Windows环境
+
+
+# 二、基本语法
 
 预编译：`gcc -E constant.c -o output.c`
-
-## clion
 
 clion可以写多个可执行c文件：
 ```
