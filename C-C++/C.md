@@ -3291,7 +3291,232 @@ register变量 | 一对`{}`内 | 当前函数 | 运行时存储在CPU寄存器
 
 # 八、结构体与共用体
 
+## 1、结构体(struct)类型的基本使用
 
+**为什么需要结构体？**
+
+C 语言内置的数据类型，除了几种原始的基本数据类型，只有数组属于复合类型，可以同时包含多个值，但是只能包含`相同类型`的数据，实际使用场景受限。
+
+**结构体的理解**
+
+C 语言提供了 `struct`关键字，允许自定义复合数据类型，将不同类型的值组合在一起，这种类型称为结构体（structure）类型。C 语言没有其他语言的对象(object)和类(class)的概念，struct 结构很大程度上提供了对象和类的功能。
+
+**生命结构体**
+
+构建一个结构体类型的一般格式：
+
+```c
+struct 结构体名{ 
+    数据类型1 成员名1;   //分号结尾
+    数据类型2 成员名2; 
+    ……
+    数据类型n 成员名n;
+}; // 注意最后有一个分号
+```
+举例：学生
+```c
+struct Student{       // 定义结构体：学生
+    int id;           //学号
+    char name[20];    //姓名
+    char gender;      //性别
+    char address[50]; //家庭住址
+};  
+```
+
+### 1.1、声明结构体
+
+**声明结构体变量并调用成员**
+
+定义了新的数据类型以后，就可以声明该类型的变量，这与声明其他类型变量的写法是一样的。
+
+**声明结构体变量格式1**
+```c
+struct 结构体类型名称 结构体变量名;
+```
+> 注意，声明自定义类型的变量时，类型名前面，不要忘记加上 struct 关键字。
+```c
+struct Student stu1;
+```
+**调用结构体变量的成员：**
+```c
+结构体变量名.成员名 [= 常量或变量值]
+```
+
+**声明结构体变量格式2**
+
+```c
+struct 结构体名 结构体变量={初始化数据};
+```
+除了逐一对属性赋值，也可以使用大括号，一次性对 struct 结构的所有属性赋值。此时，初始化的属性个数最好与结构体中成员个数相同，且成员的先后顺序一一对应。比如：
+```c
+//声明结构体
+struct Car {
+ char* name;
+ double price;
+ int speed;
+};
+//声明结构体变量
+struct Car audi = {"audi A6L", 460000.99, 175};
+```
+> 注意：如果大括号里面的值的数量少于属性的数量，那么缺失的属性自动初始化为 0 。
+
+**声明结构体变量格式3：**
+
+方式2中大括号里面的值的顺序，必须与 struct 类型声明时属性的顺序一致。此时，可以为每个值指定属性名。
+```c
+struct 结构体名 结构体变量={.成员1=xxx,.成员2=yyy,...};
+```
+举例：
+```c
+struct Car audi = {.speed=175, .name="audi A6L"};
+```
+同样，初始化的属性少于声明时的属性，剩下的那些属性都会初始化为 0 。声明变量以后，可以修改某个属性的值。
+```c
+struct Car audi = {.speed=175, .name="audi A6L"};
+audi.speed = 185;  //将 speed 属性的值改成 185
+```
+
+**声明结构体变量格式4：** 声明类型的同时定义变量
+
+struct 的数据类型声明语句与变量的声明语句，可以合并为一个语句。格式：
+```c
+struct 结构体名 {
+    成员列表
+} 变量名列表;
+```
+举例：同时声明了数据类型 Circle 和该类型的变量 c1
+```c
+struct Circle {
+	int id;
+  double radius;
+} c1;
+```
+举例：
+```c
+struct Employee {
+    char name[20];
+    int age;
+    char gender;
+    char phone[11];
+} emp1, emp2;
+```
+
+**声明结构体变量格式5：** 不指定类型名而直接定义结构体类型变量，如果类型标识符（比如Student、Circle、Employee等）只用在声明时这一个地方，后面不再用到，那就可以将类型名省略。 该结构体称为`匿名结构体`。
+
+```c
+struct {
+    成员列表;
+} 变量名列表;
+```
+举例：
+```c
+struct {
+    char name[20];
+    int age;
+    char gender;
+    char phone[11];
+} emp1, emp2;
+```
+struct 声明了一个匿名数据类型，然后又声明了这个类型的两个变量emp1、emp2 。与其他变量声明语句一样，可以在声明变量的同时，对变量赋值。
+```c
+struct {
+    char name[20];
+    int age;
+    char gender;
+    char phone[11];
+} emp1 = {"Lucy", 23, 'F', "13012341234"},
+  emp2 = {"Tony", 25, 'M', "13367896789"};
+```
+
+**声明结构体变量格式6：**使用 typedef 命令，使用 typedef 可以为 struct 结构指定一个别名，这样使用起来更简洁。
+```c
+//声明结构体
+typedef struct cell_phone {
+    int phone_no;              //电话号码
+    double minutes_of_charge;  //每分钟费用
+} Phone; // Phone 就是 struct cell_phone 的别名。声明结构体变量时，可以省略struct关键字。
+//声明结构体变量
+Phone p = {13012341234, 5}; 
+```
+这种情况下，C 语言允许省略 struct 命令后面的类型名。进一步改为：
+```c
+//声明匿名结构体
+typedef struct {
+    int phone_no;
+    double minutes_of_charge;
+} Phone;
+
+//声明结构体变量
+Phone p = {13012341234, 5};
+```
+还会出现如下的声明方式：
+
+```c
+typedef struct {
+    int phone_no;
+    double minutes_of_charge;
+} Phone,*pPhone;
+```
+这里多了个*pPhone，其实在定义一个结点指针p时，`Phone *p;` 等价于 `pPhone p; `，``
+
+### 1.2、区分三个概念：结构体、结构体变量、结构体变量的成员。
+
+- 结构体是**自定义的数据类型**，表示的是一种数据类型。
+- 结构体变量代表一个具体变量。类比：
+  ```c
+  int num1 ; // int 是数据类型, 而num1是一个具体的int变量
+  
+  struct Car car1; // Car 是结构体数据类型，而car1是一个Car变量
+  ```
+- Car 就像一个“汽车图纸”，生成出来的具体的一辆辆汽车，就类似于一个个的结构体变量。这些结构体变量都含有相同的成员，将结构体变量的成员比作“零件”，同一张图纸生产出来的零件的作用都是一样的。
+
+## 2、深入理解结构体
+
+### 2.1、结构体嵌套
+
+结构体的成员也是变量，那么成员可以是`基本数据类型`，也可以是`数组`、`指针`、`结构体`等类型 。如果结构体的成员是另一个结构体，这就构成了结构体嵌套。
+```c
+#include <stdio.h>
+#include <string.h>
+struct Name {
+    char firstName[50];
+    char lastName[50];
+};
+struct Student {
+    int age;
+    struct Name name;
+    char gender;
+} stu1;
+int main(){
+    strcpy(stu1.name.firstName, "美美");
+    strcpy(stu1.name.lastName, "韩");
+    //stu1.age = 18;
+    //stu1.gender = 'F';
+
+    //或者
+    struct Name myname = {"美美","韩"};
+    stu1.name = myname;
+    //stu1.age = 18;
+    //stu1.gender = 'F';
+    return 0;
+}
+```
+
+### 2.2、结构体占用空间
+
+结构体占用的存储空间，不是各个属性存储空间的总和。为了计算效率，C 语言的内存占用空间一般来说，都必须是 int 类型存储空间的整数倍。如果 int 类型的存储是4字节，那么 struct 类型的存储空间就总是4的倍数。
+```c
+struct A{
+    char a;
+    int b;
+} s;
+int main() {
+    printf("%d\n", sizeof(s)); // 8
+    return 0;
+}
+```
+
+变量 s 的存储空间不是5个字节，而是占据8个字节。a 属性与 b 属性之间有3个字节的“空洞”。
 
 # 二、基本语法
 
