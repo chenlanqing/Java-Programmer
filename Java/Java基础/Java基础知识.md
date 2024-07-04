@@ -4730,6 +4730,9 @@ process方法涉及各种不同类型的Element，分别指代 Java 程序中的
 
 ![](image/Java-AbstractProcessor.png)
 
+
+可以通过：com.google.auto.service:auto-service 来注册注解处理器：@AutoService
+
 ### 2.4、注解处理器修改源码
 
 - [Lombok 技巧详解](http://notatube.blogspot.com/2010/11/project-lombok-trick-explained.html)
