@@ -3575,8 +3575,200 @@ int main() {
 
 ### 3.1、对比结构体与数组
 
+```c
+//定义一个结构体A
+typedef struct{
+    int a ;
+    char b;
+    float c;
+} A;
+//定义一个结构体变量
+A a;
 
+//定义一个数组类型的变量
+int b[3];
 
+```
+语句int b[3]; 定义了一个数组，名字为b，由3个整型分量组成。而语句A a；可以类似认为定义了一个数组，名字为a，只不过组成a数组的3个分量是不同类型的。对于数组b，b[0]、b[1]、b[2]分别代表数组中第1、第2、第3个同为int类型的元素的值。而结构体a中，a. a、a. b、a. c分别对应于结构体变量a 中第1、第2、第3个元素的值，两者十分相似。
+
+### 3.2、结构体数组的声明
+
+**结构体数组：数组元素是结构体变量而构成的数组。** 先定义结构体类型，然后用结构体类型定义数组变量。
+
+**方式1：** 先声明一个结构体类型，再用此类型定义结构体数组
+```c
+结构体类型 数组名[数组长度];
+```
+示例：
+```c
+struct Person{ 
+	char name[20];
+	int age;
+};
+struct Person pers[3]; //pers是结构体数组名
+// 如果需要初始化
+struct Person pers[3] = {     {"Tom",14},    {"Jerry", 13},    {"Lily",12}   };
+```
+
+**方式2：** 定义结构体类型的同时，定义数组变量。
+```c
+struct 结构体名{
+	成员列表;
+} 数组名[数组长度];
+```
+示例：
+```c
+struct Person{ 
+	char name[20];
+	int age;
+} pers[3];
+// 如果直接初始化：
+struct Person {
+    char name[20];
+    int age;
+} pers[3] = {   {"Tom",   12},   {"Jerry", 11},    {"Lily",  10}    };
+```
+> 说明：初始化结构体数组元素时，也可以不指定结构体数组的长度。系统在编译时，会自动根据初始化的值决定结构体数组的长度。
+
+### 3.3、结构体数组元素的成员的调用
+
+**方式1：使用数组角标方式**
+```c
+结构体数组名[下标].成员名
+// 比如：
+stus[1].age = 23;
+```
+**方式2：使用指向数组或数组元素的指针**
+```c
+指针->成员名
+// 比如：
+p->age=24;  //p为指向某个数组元素的指针
+```
+
+## 4、结构体指针
+
+### 4.1 结构体指针格式
+
+结构体指针：**指向结构体变量的指针** （将结构体变量的起始地址存放在指针变量中）
+
+具体应用场景：
+- ①可以指向单一的结构体变量  
+- ②可以用作函数的参数 
+- ③可以指向结构体数组
+
+定义结构体指针变量格式：
+```c
+struct 结构体名 *结构体指针变量名;
+```
+比如：
+```c
+struct Book {
+    char title[50];
+    char author[10];
+    double price;
+};
+struct Book *b1;
+// 等价于：
+struct Book {
+    char title[50];
+    char author[10];
+    double price;
+} *b1;
+```
+> 说明：变量 b1 是一个指针，指向的数据是 struct Book 类型的实例。
+
+### 4.2、结构体传参
+
+如果将 struct 变量传入函数，函数内部得到的是一个原始值的副本。
+```c
+struct Person {
+    char *name;
+    int age;
+    char *address;
+};
+void addAge(struct Person per) {
+    per.age = per.age + 1;
+}
+int main() {
+    struct Person p1 = {"Tom", 20, "北京市海淀区"};
+    addAge(p1);
+    printf("age = %d\n", p1.age); // 输出 20
+    return 0;
+}
+```
+函数 addAge() 要求传入一个 struct 变量 per，但实际上传递的是 struct 变量p1的`副本`，改变副本影响不到函数外部的原始数据。
+
+通常情况下，开发者希望传入函数的是同一份数据，函数内部修改数据以后，会反映在函数外部。而且，传入的是同一份数据，也有利于提高程序性能。这时就需要将 struct 变量的指针传入函数，通过指针来修改 struct 属性。如下
+```c
+struct Person {
+    char *name;
+    int age;
+    char *address;
+};
+void addAge(struct Person *per) {   // per 是 struct 结构的指针，调用函数时传入的是指针。
+    (*per).age = (*per).age + 1; // 函数内部必须使用 `(*per).age` 的写法，从指针拿到 struct 结构本身。因为运算符优先级问题，不能写成`*per.age`，会将per.age看成是一个指针，然后取其值
+}
+int main() {
+    struct Person p1 = {"Tom", 20, "北京市海淀区"};
+    addAge(&p1);                    // 结构体类型跟数组不一样，类型标识符本身并不是指针，所以传入时，指针必须写成 &p1
+    printf("age = %d\n", p1.age);   // 说明4：输出 21
+    return 0;
+}
+```
+> 函数传参的时候，参数是需要压栈的。如果传递一个结构体对象的时候，结构体过大，参数压栈的的系统开销比较大，所以会导致性能的下降
+
+### 4.3、`->`操作符
+
+前面例子中，`(*per).age` 的写法很麻烦，C 语言就引入了一个新的箭头运算符（ `->` ），可以从结构体指针上直接获取属性，大大增强了代码的可读性。
+```c
+void addAge(struct Person * per) {
+    per->age = per->age + 1;  //使用结构体指针访问指向对象的成员
+}
+```
+```c
+struct Student {
+    char name[20];
+    int age;
+    char gender;
+};
+int main() {
+    //打印结构体信息
+    struct Student s = {"张三", 20, 'M'};
+    //方式1：.为结构成员访问操作符
+    printf("name = %s,age = %d,gender = %c\n", s.name, s.age, s.gender);
+    struct Student *ps = &s;
+    //方式2：.为结构成员访问操作符
+    printf("name = %s,age = %d,gender = %c\n", (*ps).name, (*ps).age, (*ps).gender);
+    //方式3：->操作符
+    printf("name = %s,age = %d,gender = %c\n", ps->name, ps->age, ps->gender);
+    return 0;
+}
+```
+总结：如果指针变量p指向一个结构体变量stu，以下3种用法等价：
+```
+① stu.成员名    stu.num
+② (*p).成员名   (*p).num
+③ p->成员名     p->num
+```
+
+### 4.4、指向结构体数组的指针
+
+```c
+struct Person {
+    int id;
+    char name[20];
+};
+int main() {
+    struct Person per;
+    struct Person arr[5];
+    struct Person *p,*q;
+    p = &per;  //指向单个结构体变量
+    q = arr;   //指向结构体数组
+    return 0;
+}
+```
+
+## 5、结构体应用
 
 # 二、基本语法
 
