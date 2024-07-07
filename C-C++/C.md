@@ -3770,6 +3770,303 @@ int main() {
 
 ## 5、结构体应用
 
+**malloc()模板**
+
+模板：（当需要制作一个新结点时，只要把结点结构型的名称填入括号中的“类型”处即可）
+
+```c
+类型 *p;
+p = (类型 *)malloc(sizeof(类型));  //将=右边创建的结点的地址赋给p
+```
+
+## 6、共用体
+
+### 6.1、概述
+
+有时需要一种数据结构，不同的场合表示不同的数据类型。比如，如果只用一种数据结构表示学生的“成绩”，这种结构就需要有时是整数（80、90），有时是字符（'A'、'B'），又有时是浮点数（80.5、60.5）。
+
+**C 语言提供了共用体类型(Union 结构)，用来自定义可以灵活变更的数据结构。** 它内部可以包含各种属性，但同一时间只能有一个属性，因为所有属性都保存在同一个内存地址，后面写入的属性会覆盖前面的属性。这样做的最大好处是`节省内存空间`。“共用体”与“结构体”的定义形式相似，但它们的含义是不同的：
+- 结构体变量所占内存长度是各成员占的内存长度之和；每个成员分别占有其自己的内存单元。
+- 共用体变量所占的内存长度等于最长的成员的长度；几个成员共用一个内存区。
+
+### 6.2、声明
+
+格式：
+
+```c
+union 共用体类型名称{
+    数据类型 成员名1;
+    数据类型 成员名2;
+    …
+    数据类型 成员名n;
+};
+```
+举例：
+```c
+union Data {
+    short m;
+    float x;
+    char c;
+};
+```
+上例中， union 命令定义了一个包含三个属性的数据类型 Data。虽然包含三个属性，但是同一时间只能取到一个属性。最后赋值的属性，就是可以取到值的那个属性。
+
+### 6.3、声明共用体变量
+
+**（1）先定义共用体类型，再定义共用体变量**
+```c
+union Data {
+    short m;
+    float x;
+    char c;
+};
+//声明共用体变量
+union Data a, b;
+```
+**（2）定义共用体类型的同时定义共用体变量**
+
+```c
+union Data {
+    short m;
+    float x;
+    char c;
+} a, b;
+```
+**（3）直接定义共用体类型变量**
+```c
+union {
+    short m;
+    float x;
+    char c;
+} a, b;
+```
+以共用体变量a为例，它由3个成员组成，分别是m、x和c，编译时，系统会按照最长的成员为它分配内存，由于成员x的长度最长，它占4个字节，所以共用体变量a的内存空间也为4个字节。
+
+### 6.4、调用共同体变量的成员
+
+**正确的方式**
+```c
+// 方式1：
+union Data a;
+a.c = 4;
+
+// 方式2：声明共同体变量的同时，给任一成员赋值
+union Data a = {.c = 4};
+
+// 方式3：声明共同体变量的同时，给首成员赋值
+union Data a = {8};
+```
+> 注意，方式3不指定成员名，所以只能为第一个成员进行赋值。
+
+请注意，下面这种方式是错误的：
+```c
+union Data a = {1,1.5,'a'};  //错误的
+```
+
+执行完上面的代码以后， 另外取其它属性取不到值。
+```c
+int main() {
+    union Data a = {.c = 4};
+
+    printf("c is %i\n", a.c); // c is 4
+    printf("x is %f\n", a.x); // 未定义，x is 0.000000
+
+    a.x = 0.5;
+    printf("x is %f\n", a.x); // x is 0.500000
+    printf("c is %i\n", a.c); // c is 0
+}
+```
+一旦为其他属性赋值，原先可以取到值的 a.c 属性就不再有效了。除了这一点，Union 结构的其他用法与 Struct 结构，基本上是一致的。
+
+### 6.5、`->`操作符
+
+Union 结构也支持指针运算符 -> 。
+
+```c
+union evaluation { //评价
+    int score;
+    float grade;
+    char level;
+};
+int main() {
+    union evaluation e;
+    e.score = 85;
+
+    union evaluation *p;
+    p = &e; // p 是 e 的指针，那么 p->score等同于 e.score。
+    printf("%d\n", p->score); // 85
+    return 0;
+}
+```
+Union指针与它的属性有关，当前哪个属性能够取到值，它的指针就是对应的数据类型。
+
+### 6.6、补充说明
+
+- 不能对共用体变量名赋值，也不能企图引用变量名来得到一个值。只能引用共用体变量中的成员。
+- C99允许同类型的共用体变量互相赋值。
+```c
+a.i //引用共用体变量中的整型变量i
+a.ch //引用共用体变量中的字符变量ch
+a.f //引用共用体变量中的实型变量f
+```
+```c
+printf("%d",a);   //错误的
+printf("%d",a.i); //正确的
+```
+- C99允许用共用体变量作为函数参数。
+```c
+b = a; //a和b是同类型的共用体变量，合法
+```
+- 共用体类型可以出现在结构体类型定义中，也可以定义共用体数组。反之，结构体也可以出现在共用体类型定义中，数组也可以作为共用体的成员。
+
+## 7、typedef 的使用
+
+### 7.1、概述
+
+语言允许为一个数据类型起一个新的别名，就像给人起“绰号”一样。起别名的目的不是为了提高程序运行效率，而是为了`编码方便`。例如，有一个结构体的名字是 student，定义一个结构体变量stu1，代码如下：
+```c
+struct student stu1;
+```
+struct 看起来就是多余的，但不写又会报错。如果为 struct student起了一个别名 Student，书写起来就简单了：
+```c
+Student stu1;
+```
+
+### 7.2、使用格式
+
+用**typedef**声明数组类型、指针类型，结构体类型、共用体类型等，使得编程更加方便。
+
+**1、为某个基本类型起别名**
+
+typedef 命令用来为某个类型起别名
+```c
+typedef 类型名 别名;
+```
+> 习惯上，常把用typedef声明的类型名的第1个字母用大写表示，以便与系统提供的标准类型标识符相区别。
+```c
+typedef int Integer;  //用Integer作为int类型别名，作用与int相同
+Integer a, b;
+a = 1;
+b = 2;
+```
+`Integer a, b;`等同于`int a, b;`。
+```c
+typedef unsigned char Byte;  //为类型 unsign char 起别名 Byte
+Byte c = 'z';
+```
+注意：使用 typedef 可以为基本类型一次起多个别名。
+```c
+typedef int chocolate, doughnut, mushroom; //一次性为 int 类型起了三个别名
+```
+
+**2、为结构体、共用体起别名**
+
+为 struct、union等命令定义的复杂数据结构创建别名，从而便于引用。
+```c
+struct treenode {
+  // ...
+};
+typedef struct treenode* Tree;  //Tree 为 struct treenode* 的别名
+```
+typedef 也可以与 struct 定义数据类型的命令写在一起。
+```c
+typedef struct animal {
+  char* name;
+  int legs;
+  int speed;
+} Animal;
+```
+上例中，自定义数据类型时，同时使用 typedef 命令，为 struct animal 起了一个别名 Animal 。这种情况下，C 语言允许省略 struct 命令后面的类型名。
+```c
+typedef struct {
+  char* name;
+  int legs;
+  int speed;
+} Animal;
+```
+上例相当于为一个匿名的数据类型起了别名 Animal 。进而：
+
+```c
+//使用typedef之前
+struct animal dog;
+//使用typedef之后
+Animal dog;
+```
+typedef 命令可以为 union 数据类型起别名。
+```c
+typedef union {
+  short count;
+  float weight;
+  float volume;
+} quantity;
+```
+上例中， union 命令定义了一个包含三个属性的数据类型， typedef 命令为它起别名为quantity 。
+
+**3、为指针起别名**
+
+typedef 可以为指针起别名。
+```c
+typedef int* intptr;
+int a = 10;
+intptr x = &a;
+```
+上例中， intptr 是 int* 的别名。不过，使用的时候要小心，这样不容易看出来，变量 x 是一个指针类型。
+```c
+typedef char* String;
+
+char * str1 = "hello"; //之前的写法
+String str2 = "hello"; //现在的写法
+```
+为字符指针起别名为 String，以后使用 String声明变量时，就可以轻易辨别该变量是字符串。
+
+**4、为数组类型起别名**
+
+typedef 也可以用来为数组类型起别名。
+```c
+//举例1
+typedef int five_ints[5];
+five_ints x = {11, 22, 33, 44, 55};  
+
+//举例2
+typedef int Num[100]; //声明Num为整型数组类型名
+Num a; //定义a为整型数组名，它有100个元素
+```
+上例中， five_ints 是一个数组类型。我们把原有的`int [5]`看做是数组的类型。
+
+指针数组
+```c
+typedef int (*PTR_TO_ARR)[4];
+```
+表示 PTR_TO_ARR 是类型`int * [4]`的别名，它是一个二维数组指针类型。接着可以使用 PTR_TO_ARR 定义二维数组指针：
+```c
+PTR_TO_ARR p1, p2;
+```
+
+**5、为函数起别名**
+
+typedef 为函数起别名的写法如下
+```c
+typedef signed char (*fp)(void);
+```
+类型别名 fp 是一个指针，代表函数 signed char (*)(void) 。
+```c
+typedef int (*PTR_TO_FUNC)(int, int);
+PTR_TO_FUNC pfunc;
+```
+
+### 7.3、总结
+
+- (1) typedef的方法实际上是为特定的类型指定了一个同义字(synonyms)。
+- (2) 用typedef只是对已经存在的类型指定一个新的类型名，而没有创造新的类型。
+- (3) typedef与#define是不同的。#define是在`预编译时处理`的，它只能作简单的字符串替换，而typedef是在`编译阶段处理`的，且并非简单的字符串替换。
+- (4) 当不同源文件中用到同一类型数据（尤其是像数组、指针、结构体、共用体等类型数据）时，常用typedef 声明这些同一的数据类型。
+技巧：可以把所有的typedef名称声明单独`放在一个头文件`中，然后在需要用到它们的文件中用#include指令把它们包含到文件中。这样编程者就不需要在各文件中自己定义typedef名称了。
+- (5) 使用typedef名称有利于`程序的通用与移植`。有时程序会依赖于硬件特性，用typedef类型就便于移植。
+
+# 九、常用函数
+
+
+
 # 二、基本语法
 
 预编译：`gcc -E constant.c -o output.c`
