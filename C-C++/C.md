@@ -4219,6 +4219,173 @@ int main() {
 }
 ```
 
+### 1.7、字符串比较：strcmp()
+
+函数原型：
+```c
+int strcmp(const char* s1, const char* s2);
+```
+**strcmp(字符串1, 字符串2)**：比较字符串1和字符串2。
+
+字符串比较的规则是：将两个字符串自左至右逐个字符相比(按ASCII码值大小比较)，直到出现不同的字符或遇到′\0′为止。
+- 如全部字符相同，则认为两个字符串相等。返回值为0
+- 若出现不相同的字符，如果返回值为正数，则字符串1大；反之，返回值为负数，则字符串2大。
+
+### 1.8、大小写转换：strlwr()/strupr()
+
+**strlwr(字符串)**：将字符串中大写字母换成小写字母。
+
+**strupr(字符串)**：将字符串中小写字母换成大写字母。
+```c
+#include <stdio.h>
+#include <string.h>
+
+int main() {
+
+    char str[] = "HelloWorld";
+    strlwr(str);
+    puts(str); //helloworld
+
+    strupr(str);
+    puts(str); //HELLOWORLD
+}
+```
+
+### 1.9、基本数据类型和字符串的转换
+
+在程序开发中，经常需要将基本数据类型转成字符串类型(即 char数组 )。或者将字符串类型转成基本数据类型。
+
+**基本数据类型 -> 字符串**
+
+sprintf()函数可以将其他数据类型转换成字符串类型。此函数声明在`stdio.h`头文件中。sprintf()和平时我们常用的printf()函数的功能相似，只是sprintf()函数输出到字符串中，而printf()函数输出到屏幕上。
+```c
+#include <stdio.h>
+
+int main() {
+    char str1[20]; //字符数组，即字符串
+    char str2[20];
+    char str3[20];
+    int a = 111, b = 222;
+    char c = 'a';
+    double d = 333.444;
+
+
+    sprintf(str1, "%d %d", a, b);
+    sprintf(str2, "%d%c", a, c);
+    sprintf(str3, "%.5f", d);
+    printf("str1=%s\n", str1); //111 222
+    printf("str2=%s\n", str2); //111a
+    printf("str3=%s\n", str3); //333.44400
+    return 0;
+}
+```
+**字符串 -> 基本数据类型**
+
+调用头文件` <stdlib.h>` 的函数`atoi()` 或 `atof()` 即可。
+```c
+#include <stdio.h>
+#include <stdlib.h>
+
+int main() {
+    char str1[10] = "123456";
+    char str2[4] = "111";
+    char str3[10] = "12.67423";
+    char str4[2] = "a";
+
+    int i = atoi(str1);
+    int j = atof(str1);
+    short s = atoi(str2);
+    double d = atof(str3);
+    char c = str4[0];
+    printf("i=%d,j=%d,s=%d,d=%lf,c=%c", i, j, s, d, c);
+    return 0;
+}
+```
+
+## 2、日期和时间相关函数
+
+在编程中，程序员会经常使用到日期相关的函数，比如：统计某段代码执行花费的时间等等。头文件是 `<time.h>`。
+
+- 返回一个值，即格林尼治时间1970年1月1日00:00:00到当前时刻的时长，时长单位是秒。
+```c
+time_t time(time_t *t)
+```
+- 获取当前时间，返回一个表示当地时间的字符串(当地时间是基于参数timer的)。
+```c
+char *ctime(const time_t *timer)
+```
+- 计算time1和time2之间相差的秒数（time1-time2）
+```c
+double difftime(time_t time1, time_t time2)
+```
+
+示例：
+```c
+#include <time.h> //该头文件中，声明日期和时间相关的函数
+//  运行test函数，看看执行花费时间
+void test() {
+    int i = 0;
+    int sum = 0;
+    int j = 0;
+    for (i = 0; i < 10000000; i++) {
+        sum = 0;
+        for (j = 0; j < 100; j++) {
+            sum += j;
+        }
+    }
+}
+int main() {
+    printf("程序启动...\n");
+
+    time_t start_t;
+    //先得到执行test前的时间
+    time(&start_t); //获取当前时间
+
+    test(); //执行test
+
+    time_t end_t;
+    //再得到执行test后的时间
+    time(&end_t); //获取当前时间
+
+    double diff_t; //存放时间差
+    diff_t = difftime(end_t, start_t); //时间差，按秒 ent_t - start_t
+
+    //然后得到两个时间差就是耗用的时间
+    printf("%d\n",start_t); //1697026306
+    printf("%d\n",end_t); //1697026308
+    printf("执行test()函数 耗用了%.2f 秒\n", diff_t); //执行test()函数 耗用了2.00 秒
+
+    //获取时间对应的字符串的表示
+    char * startTimeStr = ctime(&start_t);
+    printf("%s\n",startTimeStr); //Wed Oct 11 20:11:48 2023
+
+    return 0;
+}
+```
+
+## 3、数学运算相关的函数
+
+`math.h`头文件定义了各种数学函数。在这个库中所有可用的功能都带有一个 double 类型的参数，且都返回 double 类型的结果。
+- double exp(double x) ：返回 e 的 x 次幂的值。
+- double log(double x) ：返回 x 的自然对数（基数为 e 的对数）
+- double pow(double x, double y) ：返回 x 的 y 次幂。
+- double sqrt(double x) ：返回 x 的平方根。
+- double fabs(double x) ：返回 x 的绝对值。
+```c
+#include <math.h>
+int main() {
+    double d1 = pow(2.0, 3.0);
+    double d2 = sqrt(5.0);
+
+    printf("d1=%.2f\n", d1); //d1=8.00
+    printf("d2=%f\n", d2);   //d2=2.236068
+    return 0;
+}
+```
+
+## 4、内存管理函数
+
+
 
 # 二、基本语法
 
