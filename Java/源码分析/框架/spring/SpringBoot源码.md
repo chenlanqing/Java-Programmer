@@ -802,14 +802,48 @@ public @interface TransactionalEventListener {
 
 # 6、banner配置
 
+- [patorjk-在线banner](https://patorjk.com/software/taag/#p=display)
+- [ASCII码-图案生成](https://www.bootschool.net/ascii)
+- [ASCII码](http://www.network-science.de/ascii/)
+- [图片生成ASCII码](https://www.degraeve.com/img2txt.php)
+- [上传图片生成ASCII码](https://www.fontke.com/tool/image2ascii/)
+
 ## 6.1、配置方式
 
-- 输出文本：在resources目录下创建文件：banner.txt，里面填入需要输入的文字；
-- 图片：可以再resources目录创建一个`banner.jpg(gif|png)`，也可以直接输出；
-- 在application.properties中增加如下配置：
-    - `spring.banner.location=favorite.txt`，在resources目录下有个文本文件：favorite.txt；
-    - `spring.banner.image.location=favorite.jpg`，在resources目录有个图片文件：favorite.jpg；
-- 如果需要关闭banner的打印，在application.properties增加配置：`spring.main.banner-mode=off`
+**输出文本**：在resources目录下创建文件：banner.txt，里面填入需要输入的文字；
+
+**图片**：可以再resources目录创建一个`banner.jpg(gif|png)`，也可以直接输出；
+
+**指定路径**：在application.properties中增加如下配置：
+- `spring.banner.location=favorite.txt`，在resources目录下有个文本文件：favorite.txt；
+- `spring.banner.image.location=favorite.jpg`，在resources目录有个图片文件：favorite.jpg；
+
+**颜色配置**：SpringBoot提供了AnsiColor 枚举类来控制banner.txt的颜色显示，只需要在banner前面加上：`${AnsiColor.BRIGHT_YELLOW}`即可，比如：
+```
+${AnsiColor.BRIGHT_YELLOW}                                        
+ ,---.                ,--.                
+'   .-'  ,---. ,--.--.`--',--,--,  ,---.  
+`.  `-. | .-. ||  .--',--.|      \| .-. | 
+.-'    || '-' '|  |   |  ||  ||  |' '-' ' 
+`-----' |  |-' `--'   `--'`--''--'.`-  /  
+        `--'                      `---'   
+```
+> 注：由于版本原因，小伙伴设置好之后可能颜色不会改变，可以在配置文件中新增配置：
+```
+spring.output.ansi.enabled=always
+```
+除了上面的的颜色设置之外，还可以在Banner.txt文件中加入一些属性
+- `${application.version}`   获取MANIDEST.MF文件中版本号
+- `${application.formatted-version}` 格式化后的`{application.version}版`本信息
+- `${spring-boot.version}`  SpringBoot的版本号
+- `${spring-boot.formatted-version}`  格式化后的`{spring-boot.version}`版本信息
+
+**关闭Banner**：如果需要关闭banner的打印，在`application.properties`增加配置：`spring.main.banner-mode=off`，或者在启动类中关闭：
+```java
+SpringApplication app = new SpringApplication(CustomBannerDemoApplication.class);
+app.setBannerMode(Banner.Mode.OFF);
+app.run(args);
+```
 
 ## 6.2、banner获取原理
 
