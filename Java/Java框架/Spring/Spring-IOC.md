@@ -778,3 +778,7 @@ public class ObjectProviderDemo {
     }
 }
 ```
+
+# 参考资料
+
+- [SpringBean异步初始化](https://juejin.cn/post/7370994785655701531)
