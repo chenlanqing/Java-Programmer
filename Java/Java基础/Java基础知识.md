@@ -5964,6 +5964,12 @@ JDK 提供给了我们两个方法用于载入库文件，一个是`System.load(
 
 https://www.kancloud.cn/xyang0917/blogjnindk/117014
 
+## 3、JNA-Java Native Access
+
+https://github.com/java-native-access/jna
+
+https://juejin.cn/post/7389651543719100468
+
 
 # 二十二、小技巧
 
