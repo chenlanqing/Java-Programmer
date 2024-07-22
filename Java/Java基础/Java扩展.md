@@ -809,7 +809,13 @@ public class MyBenchmark {
 
 JMH 对@Setup方法以及@TearDown方法的调用时机是可配置的。可供选择的粒度有在整个性能测试前后调用，在每个迭代前后调用，以及在每次调用测试方法前后调用。其中，最后一个粒度将影响测试数据的精度
 
-## 4、Maven依赖
+## 4、DCE-Dead Code Elimination
+
+死代码消除，现代编译器很智能，有的代码没啥用，就在编译器阶段被消除了。
+
+JMH提供了一个 BlackHoles，这样写就不会被编译器消除了：bh.consume
+
+## 5、Maven依赖
 
 maven依赖：
 ```xml
