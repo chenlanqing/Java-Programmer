@@ -867,6 +867,25 @@ public class BenchmarkDemo {
 }
 ```
 
+## 6、JMH可视化
+
+将JMH的结果输出到文件中，比如JSON，代码如下：
+```java
+public static void main(String[] args) throws Exception {
+    Options options = new OptionsBuilder()
+            .include(BenchmarkDemo.class.getSimpleName())
+            .result("result.json")
+            .resultFormat(ResultFormatType.JSON)
+            .build();
+    new Runner(options).run();
+}
+```
+然后将JSON文件上传到如下两个网站：
+- [JMH Visualizer](https://jmh.morethan.io/)
+- [JMH Visual chart](https://deepoove.com/jmh-visual-chart/)
+
+另外还可以通过PPT的图表功能来实现
+
 # 六、加密与解密
 
 - [加密与解密算法](https://juejin.cn/post/6844903638117122056)
