@@ -2949,6 +2949,17 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 - [Spring Boot 2.0 Migration Guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-2.0-Migration-Guide)
 - [Spring Boot 3.0 Migration Guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.0-Migration-Guide)
 
+## 3、SpringBoot启动优化
+
+* [SpringBoot启动过程优化](https://mp.weixin.qq.com/s/sm_9epIMi4nne84gGuyg3Q)
+* [SpringBoot 启动过程分析并生成报告](https://github.com/linyimin0812/spring-startup-analyzer)
+* [优化实战](https://heapdump.cn/article/4215905)
+* [SpringBoot启动优化实战](https://cloud.tencent.com/developer/article/2201787)
+
+使用 spring-startup-analyzer 分析时，在windows环境下：（路径需要双反斜杠）
+`-Dspring-startup-analyzer.app.health.check.endpoints=http://localhost:8020/actuator/health -javaagent:C:\\Users\\user\\spring-startup-analyzer\\lib\\spring-profiler-agent.jar`
+
+
 # 参考资料
 
 * [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
@@ -2957,8 +2968,5 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 * [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
 * [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)
 * [SofaBoot](https://www.sofastack.tech/sofa-boot/docs/Home)
-* [SpringBoot启动过程优化](https://mp.weixin.qq.com/s/sm_9epIMi4nne84gGuyg3Q)
-* [SpringBoot 启动过程分析并生成报告](https://github.com/linyimin0812/spring-startup-analyzer)
 * [SpringBoot 动态加载jar包，动态配置方案](https://mp.weixin.qq.com/s/ccsOrfI1tenYbnmq34lgDw)
 * [a simple springboot demo with some components for example: redis,solr,rockmq and so on.](https://github.com/Harries/springboot-demo)
-
