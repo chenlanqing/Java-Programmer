@@ -1684,56 +1684,56 @@ select * from t where c=N order by b limit 1;
 
 ![](image/MySQL-索引结构.png)
 
-- （1）order by 子句尽量使用 index 方式来排序，避免使用 fileSort 方式排序。mysql 支持两种方式的排序：filesort(效率低)，index(可以扫描索引本身完成排序，效率高)。order by 满足两种情况下，会使用 index 方式排序：
-	- order by 语句使用索引最左前列；
-	- 使用 where 子句与 order by 子句条件组合满足索引最左前列
+（1）order by 子句尽量使用 index 方式来排序，避免使用 fileSort 方式排序。mysql 支持两种方式的排序：filesort(效率低)，index(可以扫描索引本身完成排序，效率高)。order by 满足两种情况下，会使用 index 方式排序：
+- order by 语句使用索引最左前列；
+- 使用 where 子句与 order by 子句条件组合满足索引最左前列
 
-	*尽可能在索引上完成排序操作，遵照索引建的最左前列*
+*尽可能在索引上完成排序操作，遵照索引建的最左前列*
 
-	当mysql优化器发现全表扫描开销更低时，会直接使用全表扫描：`select * from employees order by first_name, last_name;`
+当mysql优化器发现全表扫描开销更低时，会直接使用全表扫描：`select * from employees order by first_name, last_name;`
 
-- （2）如果不在索引列上排序，fileSort有两种排序算法：双路排序和单路排序
+（2）如果不在索引列上排序，fileSort有两种排序算法：双路排序和单路排序
+- 双路排序：MySQL4.1之前是使用双路排序，字面意思是两次扫描磁盘，最终取得数据。读取行指针和order by 列，对他们进行排序，然后扫描已经排序好的列表，按照列表中的值重新从列表中读取对应的数据输出。取一批数据时，要对磁盘进行两次扫描，IO本身是很耗时的.
 
-	- 双路排序：MySQL4.1之前是使用双路排序，字面意思是两次扫描磁盘，最终取得数据。读取行指针和order by 列，对他们进行排序，然后扫描已经排序好的列表，按照列表中的值重新从列表中读取对应的数据输出。取一批数据时，要对磁盘进行两次扫描，IO本身是很耗时的.
+- 单路排序：从磁盘中读取查询需要的所有列，按照order by列在buffer 中进行排序，然后扫描排序后的列表进行输出。它的效率更块一些。避免了二次读取数据，并且把随机I/O变成了顺序IO，但它使用更多的空间；
+	- 单路排序的问题：在 sort_buffer 中，单路方法比双路方法要占用更多的空间，因为单路是把所有字段取出，所以有可能取出的数据超出了 sort_buffer的容量，导致了每次只能去sort_buffer容量大小的数据，进行排序(创建临时文件，多路合并)排序完再取 sort_buffer的容量大小，再排，从而多次IO；
+	- 针对单路排序：
+		- 增大 `sort_buffer_size` 参数的设置；
+		- 增大 `max_length_for_sort_data` 参数的设置；是 MySQL 中专门控制用于排序的行数据的长度的一个参数。它的意思是，如果单行的长度超过这个值，MySQL 就认为单行太大，要换一个算法
 
-	- 单路排序：从磁盘中读取查询需要的所有列，按照order by列在buffer 中进行排序，然后扫描排序后的列表进行输出。它的效率更块一些。避免了二次读取数据，并且把随机I/O变成了顺序IO，但它使用更多的空间；
-		- 单路排序的问题：在 sort_buffer 中，单路方法比双路方法要占用更多的空间，因为单路是把所有字段取出，所以有可能取出的数据超出了 sort_buffer的容量，导致了每次只能去sort_buffer容量大小的数据，进行排序(创建临时文件，多路合并)排序完再取 sort_buffer的容量大小，再排，从而多次IO；
-		- 针对单路排序：
-			- 增大 `sort_buffer_size` 参数的设置；
-			- 增大 `max_length_for_sort_data` 参数的设置；是 MySQL 中专门控制用于排序的行数据的长度的一个参数。它的意思是，如果单行的长度超过这个值，MySQL 就认为单行太大，要换一个算法
-- （3）提高 order by 速度：
-	- order by 时 `select *` 是一个大忌，只查询需要的字段，主要产生的影响：
-		- 当查询的字段大小总和小于 `max_length_for_sort_data` 而且排序字段不是 text|blob 类型时，会用改进后的算法，单路排序
-		- 两种算法的数据都可能超出 `sort_buffer`的容量，超出之后会创建临时文件进行多路合并，导致多次I/O使用单路排序算法风险更大；
-	- 尝试提高 `sort_buffer`的容量大小。根据系统能力来进行提高，因为这个参数是针对每个进程的.
-	- 尝试提高 `max_length_for_sort_data` 的大小：会增加改进算法的效率.但是如果设置的太高，数据总容量超出 sort_buffer_size的概率就增大。明显症状是高磁盘IO和低的处理器使用率；
+（3）提高 order by 速度：
+- order by 时 `select *` 是一个大忌，只查询需要的字段，主要产生的影响：
+	- 当查询的字段大小总和小于 `max_length_for_sort_data` 而且排序字段不是 text|blob 类型时，会用改进后的算法，单路排序
+	- 两种算法的数据都可能超出 `sort_buffer`的容量，超出之后会创建临时文件进行多路合并，导致多次I/O使用单路排序算法风险更大；
+- 尝试提高 `sort_buffer`的容量大小。根据系统能力来进行提高，因为这个参数是针对每个进程的.
+- 尝试提高 `max_length_for_sort_data` 的大小：会增加改进算法的效率.但是如果设置的太高，数据总容量超出 sort_buffer_size的概率就增大。明显症状是高磁盘IO和低的处理器使用率；
 
-- （4）总结：为排序使用索引，MySQL能为排序与查询使用相同的索引 
+（4）总结：为排序使用索引，MySQL能为排序与查询使用相同的索引
 
-	假设表有`(id, a, b, c)`四个字段，其中 id 为主键，另外三个字段为组合索引：`index a_b_c(a,b,c)`
-	- order by 能使用索引最左前缀
-		```sql
-		order by a
-		order by a,b
-		order by a,b,c
-		order by a desc, b desc, c desc
-		```
-	- 如果 where 子句使用索引的最左前缀为常量，order by 能使用索引：
-		```sql
-		where a= const order by b,c
-		where a= const and b = const order by c
-		where a= const and b > const order by b,c 
-		```
-	- 不能使用索引进行排序：
-		```sql
-		order by a asc, b desc, c desc --排序不一致 升降序不一致
-		where g = const order by b,c -- 丢失a 索引
-		where a = const order by c -- 丢失 b 索引
-		where a = const order by a,d -- d 不是索引的一部分
-		where a in (...) order by b,c -- 对于排序来说， 多个相等的条件也是范围查询
-		where a > 1 order by b  -- 无法利用索引避免排序【使用key_part1范围查询，使用key_part2排序】
-		order by a, id -- 不能使用索引，因为排序字段存在于多个索引中；
-		```
+假设表有`(id, a, b, c)`四个字段，其中 id 为主键，另外三个字段为组合索引：`index a_b_c(a,b,c)`
+- order by 能使用索引最左前缀
+	```sql
+	order by a
+	order by a,b
+	order by a,b,c
+	order by a desc, b desc, c desc
+	```
+- 如果 where 子句使用索引的最左前缀为常量，order by 能使用索引：
+	```sql
+	where a= const order by b,c
+	where a= const and b = const order by c
+	where a= const and b > const order by b,c 
+	```
+- 不能使用索引进行排序：
+	```sql
+	order by a asc, b desc, c desc --排序不一致 升降序不一致
+	where g = const order by b,c -- 丢失a 索引
+	where a = const order by c -- 丢失 b 索引
+	where a = const order by a,d -- d 不是索引的一部分
+	where a in (...) order by b,c -- 对于排序来说， 多个相等的条件也是范围查询
+	where a > 1 order by b  -- 无法利用索引避免排序【使用key_part1范围查询，使用key_part2排序】
+	order by a, id -- 不能使用索引，因为排序字段存在于多个索引中；
+	```
 		
 ### 8.4、group-by
 
@@ -1980,55 +1980,66 @@ explain select max(payment_date) from payment；
 
 ## 10、limit 优化
 
-- limit 常用于分页处理，时常会伴随 order by 从句使用，因此大多时候会使用 Filesorts 这样会造成大量的IO问题
-	```sql
-	explain select film_id，description from film order by title limit 50，5；
-	+----+-------------+-------+------+---------------+------+---------+------+------+----------------+
-	| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra          |
-	+----+-------------+-------+------+---------------+------+---------+------+------+----------------+
-	|  1 | SIMPLE      | film  | ALL  | NULL          | NULL | NULL    | NULL |  883 | Using filesort |
-	+----+-------------+-------+------+---------------+------+---------+------+------+----------------+
-	```
-- 优化：
-	- 优化步骤1：使用索引的列或主键进行 order by 操作
-		```sql
-		explain select film_id，description from film order by film_id limit 50，5；
-		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------+
-		| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | Extra |
-		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------+
-		|  1 | SIMPLE      | film  | index | NULL          | PRIMARY | 2       | NULL |   55 |       |
-		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------+
-		```
-	- 优化步骤2：记录上次返回的主键，在下次查询时使用主键过滤
-		```sql
-		explain select film_id，description from film where film_id>55 and film_id<=60 order by film_id limit 1，5；
-		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
-		| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | Extra       |
-		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
-		|  1 | SIMPLE      | film  | range | PRIMARY       | PRIMARY | 2       | NULL |    5 | Using where |
-		+----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
-		```
-		注意：这里的主键必须是有序的且中间没有缺失
-	- 优化方式3：使用覆盖索引 + join的方式
-		```sql
-		mysql> explain select * from employees e inner join ( select emp_no from employees limit 300000, 10) t on e.emp_no = t.emp_no;
-		+----+-------------+------------+------------+--------+---------------+---------+---------+----------+--------+----------+-------------+
-		| id | select_type | table      | partitions | type   | possible_keys | key     | key_len | ref      | rows   | filtered | Extra       |
-		+----+-------------+------------+------------+--------+---------------+---------+---------+----------+--------+----------+-------------+
-		|  1 | PRIMARY     | <derived2> | NULL       | ALL    | NULL          | NULL    | NULL    | NULL     | 299512 |   100.00 | NULL        |
-		|  1 | PRIMARY     | e          | NULL       | eq_ref | PRIMARY       | PRIMARY | 4       | t.emp_no |      1 |   100.00 | NULL        |
-		|  2 | DERIVED     | employees  | NULL       | index  | NULL          | PRIMARY | 4       | NULL     | 299512 |   100.00 | Using index |
-		```
-	- 优化方式4：范围查询 + limit语句，`select * from employees where emp_no > 10010 limit 10;`  这里关键点是需要获得上一次分页查询的最大的ID，这里是根据id排序的数据；
+limit 常用于分页处理，时常会伴随 order by 从句使用，因此大多时候会使用 Filesorts 这样会造成大量的IO问题
+```sql
+explain select film_id，description from film order by title limit 50，5；
++----+-------------+-------+------+---------------+------+---------+------+------+----------------+
+| id | select_type | table | type | possible_keys | key  | key_len | ref  | rows | Extra          |
++----+-------------+-------+------+---------------+------+---------+------+------+----------------+
+|  1 | SIMPLE      | film  | ALL  | NULL          | NULL | NULL    | NULL |  883 | Using filesort |
++----+-------------+-------+------+---------------+------+---------+------+------+----------------+
+```
+**优化步骤1：使用索引的列或主键进行 order by 操作**
+```sql
+explain select film_id，description from film order by film_id limit 50，5；
++----+-------------+-------+-------+---------------+---------+---------+------+------+-------+
+| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | Extra |
++----+-------------+-------+-------+---------------+---------+---------+------+------+-------+
+|  1 | SIMPLE      | film  | index | NULL          | PRIMARY | 2       | NULL |   55 |       |
++----+-------------+-------+-------+---------------+---------+---------+------+------+-------+
+```
+**优化步骤2：记录上次返回的主键，在下次查询时使用主键过滤**
+```sql
+explain select film_id，description from film where film_id>55 and film_id<=60 order by film_id limit 1，5；
++----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
+| id | select_type | table | type  | possible_keys | key     | key_len | ref  | rows | Extra       |
++----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
+|  1 | SIMPLE      | film  | range | PRIMARY       | PRIMARY | 2       | NULL |    5 | Using where |
++----+-------------+-------+-------+---------------+---------+---------+------+------+-------------+
+```
+注意：这里的主键必须是有序的且中间没有缺失
 
-		如果是根据其他字段排序，比如一般使用的创建时间（createTime）排序，因为 createTime不是唯一的，所以不能确定上一次最后一条记录对应的创建时间，哪些是下一页的，哪些是上一页的；这时候，增加一个请求参数`lastEndCount`：表示上一次查询最后一条记录对应的创建时间，有多少条是这同一时间的，这个根据上一次的数据统计；
+**优化方式3：使用覆盖索引 + join的方式**
+```sql
+mysql> explain select * from employees e inner join ( select emp_no from employees limit 300000, 10) t on e.emp_no = t.emp_no;
++----+-------------+------------+------------+--------+---------------+---------+---------+----------+--------+----------+-------------+
+| id | select_type | table      | partitions | type   | possible_keys | key     | key_len | ref      | rows   | filtered | Extra       |
++----+-------------+------------+------------+--------+---------------+---------+---------+----------+--------+----------+-------------+
+|  1 | PRIMARY     | <derived2> | NULL       | ALL    | NULL          | NULL    | NULL    | NULL     | 299512 |   100.00 | NULL        |
+|  1 | PRIMARY     | e          | NULL       | eq_ref | PRIMARY       | PRIMARY | 4       | t.emp_no |      1 |   100.00 | NULL        |
+|  2 | DERIVED     | employees  | NULL       | index  | NULL          | PRIMARY | 4       | NULL     | 299512 |   100.00 | Using index |
+```
+**优化方式4：范围查询 + limit语句**，`select * from employees where emp_no > 10010 limit 10;`  这里关键点是需要获得上一次分页查询的最大的ID，这里是根据id排序的数据；
 
+如果是根据其他字段排序，比如一般使用的创建时间（createTime）排序，因为 createTime不是唯一的，所以不能确定上一次最后一条记录对应的创建时间，哪些是下一页的，哪些是上一页的；这时候，增加一个请求参数`lastEndCount`：表示上一次查询最后一条记录对应的创建时间，有多少条是这同一时间的，这个根据上一次的数据统计；
 
-	- 优化方式5：如果获得起始主键 + 结束主键，使用范围查询
-	
-	- 优化方式6：限制分页的数量
+**优化方式5：如果获得起始主键 + 结束主键，使用范围查询**
+
+**优化方式6：限制分页的数量**
 
 在很多情况下我们已知数据仅存在一条，此时我们应该告知数据库只用查一条，否则将会转化为全表扫描，这时候可以使用：`limit 1`；
+
+### 10.1、order by...limit 问题
+
+- [Optimizer choose wrong index, sorting index instead of filtering index](https://bugs.mysql.com/bug.php?id=93845)
+- [order by limit 造成优化器选择索引错误](https://developer.aliyun.com/article/51065)
+- [order by bug分析](https://github.com/jmilktea/jtea/blob/master/mysql/%E6%88%91%E5%8F%88%E9%81%87%E5%88%B0order%20by%E7%9A%84%E5%9D%91%E4%BA%86.md)
+
+问题引发的原因：
+- 优化器先选择了 where 条件中字段的索引，该索引过滤性较好；
+- SQL 中必须有 order by limit 从而引导优化器尝试使用 order by 字段上的索引进行优化，最终因代价问题没有成功。
+
+如何解决该问题：在不修改 mysql 源码的情况下，可以通过 force index 强制指定索引规避这个bug
 
 ## 11、索引优化
 
