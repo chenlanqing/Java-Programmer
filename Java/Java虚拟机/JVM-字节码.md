@@ -426,14 +426,14 @@ idea的一个插件
 
 ## 3.1、ASM
 
-http://asm.itstack.org/#/
-
-https://asm.ow2.io/
-
-https://gitee.com/wensiqun/asmsupport
+- [ASM](https://asm.ow2.io/)
+- [ASMSupport](https://gitee.com/chenlanqing/asmsupport)
 
 
 ## 3.2、Javassist
+
+- [javassist](https://github.com/jboss-javassist/javassist)
+- [基于 Javassist 和 Javaagent 实现动态切面](https://www.cnblogs.com/chiangchou/p/javassist.html)
 
 ```java
 public class GenerateClass {
