@@ -992,6 +992,11 @@ Java刚创建出来的Thread对象就是NEW状态。NEW状态的线程不会被�
 
 ## 5、synchronized关键字
 
+* [Synchronized及其实现原理](http://www.cnblogs.com/paddix/p/5367116.html)
+* [synchronized关键字及实现细节](http://www.cnblogs.com/javaminer/p/3889023.html)
+* [synchronized底层实现分析](https://github.com/farmerjohngit/myblog/issues/12)
+* [JMV源码分析synchronized原理](https://www.cnblogs.com/kundeg/p/8422557.html)
+
 一句话介绍synchronized：JVM会自动通过monitor来加锁和解锁，保证了同时只有一个线程可以执行指定代码，从而保证了线程安全，同时具有可冲入和不可中断的性质；
 
 ![](image/synchronized.png)
@@ -2010,6 +2015,11 @@ FastThreadLocal利用字节填充来解决伪共享问题
 
 ## 12、深入理解ThreadLocal
 
+* [深入剖析ThreadLocal](http://www.cnblogs.com/dolphin0520/p/3920407.html，)
+* [深入理解ThreadLocal](https://vence.github.io/2016/05/28/threadlocal-info/)
+* [ThreadLocal 内部实现和应用场景](https://segmentfault.com/a/1190000000537475)
+* [ThreadLocal源码解读](https://www.cnblogs.com/micrari/p/6790229.html)
+
 ### 12.1、理解ThreadLocal
 
 ThreadLocal 在每个线程中对该变量会创建一个副本，即每个线程内部都会有一个该变量，且在线程内部任何地方都可以使用，线程之间互不影响，这样一来就不存在线程安全问题，也不会严重影响程序执行性能；
@@ -2243,6 +2253,8 @@ private void resize() {
 在ThreadLocal的需求场景即是TTL的潜在需求场景，如果你的业务需要『在使用线程池等会池化复用线程的组件情况下传递ThreadLocal』则是TTL目标场景
 
 ## 13、死锁
+
+* [类加载过程中死锁](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
 
 两个或更多线程阻塞着等待其它处于死锁状态的线程所持有的锁；
 
@@ -2820,11 +2832,32 @@ ReentrantLock中，有一个方法：hasQueuedPredecessors()，该方法主要�
 - 私有锁和对象锁也不会产生竞争。
 - 使用私有锁可以减小锁的细粒度，减少由锁产生的开销。
 
-### 2.8、无锁编程
+### 2.8、lock-free和无锁数据结构
+
+- [lock-free wiki](https://en.wikipedia.org/wiki/Non-blocking_algorithm#Lock-freedom)
+- [Lock free programming](https://preshing.com/20120612/an-introduction-to-lock-free-programming/)
+
+**锁同步的问题**：线程同步分为阻塞型同步和非阻塞型同步。
+- 互斥量、信号、条件变量这些系统提供的机制都属于阻塞型同步，在争用资源的时候，会导致调用线程阻塞。
+- 非阻塞型同步是指在无锁的情况下，通过某种算法和技术手段实现不用阻塞而同步。
+
+锁是阻塞同步机制，阻塞同步机制的缺陷是可能挂起你的程序，如果持有锁的线程崩溃或者hang住，则锁永远得不到释放，而其他线程则将陷入无限等待；另外，它也可能导致优先级倒转等问题。所以，我们需要lock-free这类非阻塞的同步机制
+
+**什么是lock-free**
+
+lock-free没有锁同步的问题，所有线程无阻碍的执行原子指令，而不是等待。比如一个线程读atomic类型变量，一个线程写atomic变量，它们没有任何等待，硬件原子指令确保不会出现数据不一致，写入数据不会出现半完成，读取数据也不会读一半。
+
+lock-free是对代码（算法）性质的描述，是属性；而无锁是说代码如何实现，是手段。
+
+lock-free的关键描述是：如果一个线程被暂停，那么其他线程应能继续前进，它需要有系统级（system-wide）的吞吐
+
+Lock-Free同步主要依靠CPU提供的read-modify-write原语，著名的“比较和交换”CAS（Compare And Swap）在X86机器上是通过cmpxchg系列指令实现的原子操作
 
 Lock-free：线程之间互相隔离（一个线程的延迟、阻塞、故障）不会影响其他线程，同一时刻且至少有一个线程可以进步（达成计算目标）
 - 场景：CLH队列，线程通过CAS竞争加入CLH队列
 - SynchrounousQueue：cas竞争实现 transfer操作（双向队列、双向栈）
+
+**无锁数据结构**：lock-free stack，无锁数据结构是通过非阻塞算法而非锁保护共享数据，非阻塞算法保证竞争共享资源的线程，不会因为互斥而让它们的执行无限期暂停；无阻塞算法是lock-free的，因为无论如何调度都能确保有系统级的进度
 
 ## 3、独占锁
 
@@ -4458,6 +4491,9 @@ ConcurrentSkipListMap是通过`HeadIndex`维护索引层次，通过`Index`从�
 ## 7、阻塞队列
 
 * [队列概览](https://juejin.im/post/6870298844425371655)
+* [Java-BlockingQueue](https://javadoop.com/post/java-concurrent-queue)
+* [生产者消费者的Java实现](https://blog.csdn.net/monkey_d_meng/article/details/6251879)
+* [一文看清楚生产者消费者](https://juejin.im/post/5aeec675f265da0b7c072c56)
 
 名称 | 类型 | 有界 | 线程安全 | 描述
 -----|-----|------|---------|----
@@ -4765,6 +4801,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 [AbstractQueuedSynchronizer](../源码分析/thread/AbstractQueuedSynchronizer.md)
 
 ## 2、CAS
+
+* [非阻塞同步算法与CAS(Compare and Swap)无锁算法](http://www.cnblogs.com/Mainz/p/3546347.html)
+* [Java CAS 和ABA问题](http://www.cnblogs.com/549294286/p/3766717.html)
+* [Unsafe与CAS](http://www.cnblogs.com/xrq730/p/4976007.html)
 
 ![](image/CAS.png)
 
@@ -5409,8 +5449,9 @@ public class ExchangerDemo {
 # 九、Disruptor
 
 - [高性能队列——Disruptor](https://tech.meituan.com/2016/11/18/disruptor.html)
-- [LMAX-架构](https://martinfowler.com/articles/lmax.html)
 - [Disruptor-使用指南](https://lmax-exchange.github.io/disruptor/user-guide/index.html)
+* [The LMAX Architecture](https://martinfowler.com/articles/lmax.html)
+* [LMAX架构](https://www.jianshu.com/p/5e0c4481efb7)
 
 ## 1、LMAX架构
 
@@ -5693,27 +5734,11 @@ JCStress（Java Concurrency Stress）它是OpenJDK中的一个高并发测试工
 # 参考文章
 
 * [Java并发专题](https://juejin.im/post/5aeed586f265da0b8262b019)
-* [非阻塞同步算法与CAS(Compare and Swap)无锁算法](http://www.cnblogs.com/Mainz/p/3546347.html)
-* [Java CAS 和ABA问题](http://www.cnblogs.com/549294286/p/3766717.html)
-* [Unsafe与CAS](http://www.cnblogs.com/xrq730/p/4976007.html)
 * [并发相关源码](http://www.cnblogs.com/xrq730/category/1021774.html)
 * [Java多线程系列](http://www.cnblogs.com/skywang12345/p/java_threads_category.html)
-* [Synchronized及其实现原理](http://www.cnblogs.com/paddix/p/5367116.html)
-* [synchronized关键字及实现细节](http://www.cnblogs.com/javaminer/p/3889023.html)
-* [synchronized底层实现分析](https://github.com/farmerjohngit/myblog/issues/12)
 * [Moniter的实现原理](http://www.hollischuang.com/archives/2030)
-* [JMV源码分析synchronized原理](https://www.cnblogs.com/kundeg/p/8422557.html)
 * [Java锁优化](http://luojinping.com/2015/07/09/java锁优化/)
-* [深入剖析ThreadLocal](http://www.cnblogs.com/dolphin0520/p/3920407.html，)
-* [深入理解ThreadLocal](https://vence.github.io/2016/05/28/threadlocal-info/)
-* [ThreadLocal 内部实现和应用场景](https://segmentfault.com/a/1190000000537475)
-* [ThreadLocal源码解读](https://www.cnblogs.com/micrari/p/6790229.html)
-* [类加载过程中死锁](https://docs.oracle.com/javase/7/docs/technotes/guides/lang/cl-mt.html)
 * [Java伪共享问题](https://www.cnblogs.com/cyfonly/p/5800758.html)
-* [Java-BlockingQueue](https://javadoop.com/post/java-concurrent-queue)
-* [The LMAX Architecture](https://martinfowler.com/articles/lmax.html)
-* [LMAX架构](https://www.jianshu.com/p/5e0c4481efb7)
-* [生产者消费者的Java实现](https://blog.csdn.net/monkey_d_meng/article/details/6251879)
-* [一文看清楚生产者消费者](https://juejin.im/post/5aeec675f265da0b7c072c56)
 * [透彻理解Java并发编程](https://segmentfault.com/blog/ressmix_multithread)
 * [一个专门研究并发算法的网站](http://concurrencyfreaks.blogspot.com/2016/10/self-linking-and-latency-life-of.html)
+* [一文讲清多线程和多线程同步](https://tech.meituan.com/2024/07/19/multi-threading-and-multi-thread-synchronization.html)
