@@ -426,8 +426,11 @@ idea的一个插件
 
 ## 3.1、ASM
 
-- [ASM](https://asm.ow2.io/)
-- [ASMSupport](https://gitee.com/chenlanqing/asmsupport)
+http://asm.itstack.org/#/
+
+https://asm.ow2.io/
+
+https://gitee.com/wensiqun/asmsupport
 
 
 ## 3.2、Javassist
@@ -587,106 +590,189 @@ Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了
 - Mock：测试时候对某些服务做Mock。
 - 性能诊断工具：比如bTrace就是利用Instrument，实现无侵入地跟踪一个正在运行的JVM，监控到类和方法级别的状态信息。
 
-# 5、字节码运用-JavaAgent
+# 5、JavaAgent
 
 * [字节码增强探索](https://tech.meituan.com/2019/09/05/java-bytecode-enhancement.html)
 * [Java探针技术](https://www.cnblogs.com/aspirant/p/8796974.html)
 * [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
 * [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
 
-## 1、Java agent
+## 5.1、Java Instrumentation
 
-JDK1.5之后引进的，也可以叫做Java代理，JavaAgent 是运行在 main方法之前的拦截器，它内定的方法名叫 premain ，也就是说先执行 premain 方法然后再执行 main 方法
+Instrumentation是Java提供的一个来自JVM的接口，该接口提供了一系列查看和操作Java类定义的方法，例如修改类的字节码、向classLoader的classpath下加入jar文件等。使得开发者可以通过Java语言来操作和监控JVM内部的一些状态，进而实现Java程序的监控分析，甚至实现一些特殊功能（如AOP、热部署）。
+ 
+Instrumentation的一些主要方法如下：
+```java
+public interface Instrumentation {
+    /**
+     * 注册一个Transformer，从此之后的类加载都会被Transformer拦截。
+     * Transformer可以直接对类的字节码byte[]进行修改
+     */
+    void addTransformer(ClassFileTransformer transformer);
+    /**
+     * 对JVM已经加载的类重新触发类加载。使用的就是上面注册的Transformer。
+     * retransformation可以修改方法体，但是不能变更方法签名、增加和删除方法/类的成员属性
+     */
+    void retransformClasses(Class<?>... classes) throws UnmodifiableClassException;
+    /**
+     * 获取一个对象的大小
+     */
+    long getObjectSize(Object objectToSize);
+    /**
+     * 将一个jar加入到bootstrap classloader的 classpath里
+     */
+    void appendToBootstrapClassLoaderSearch(JarFile jarfile);
+    /**
+     * 获取当前被JVM加载的所有类对象
+     */
+    Class[] getAllLoadedClasses();
+}
+```
+其中最常用的方法就是`addTransformer(ClassFileTransformer transformer)`了，这个方法可以在类加载时做拦截，对输入的类的字节码进行修改，其参数是一个ClassFileTransformer接口，定义如下：
+```java
+/**
+ * 传入参数表示一个即将被加载的类，包括了classloader，classname和字节码byte[]
+ * 返回值为需要被修改后的字节码byte[]
+ */
+byte[]
+transform(  ClassLoader         loader,
+            String              className,
+            Class<?>            classBeingRedefined,
+            ProtectionDomain    protectionDomain,
+            byte[]              classfileBuffer)  throws IllegalClassFormatException;
+```
+addTransformer方法配置之后，后续的类加载都会被Transformer拦截。对于已经加载过的类，可以执行retransformClasses来重新触发这个Transformer的拦截。类加载的字节码被修改后，除非再次被retransform，否则不会恢复。
+
+主流的JVM都提供了Instrumentation的实现，但是鉴于Instrumentation的特殊功能，并不适合直接提供在JDK的runtime里，而更适合出现在Java程序的外层，以上帝视角在合适的时机出现。因此如果想使用Instrumentation功能，拿到Instrumentation实例，必须通过Java agent
+
+## 5.2、Java agent
+
+Java agent是一种特殊的Java程序（Jar文件），它是Instrumentation的客户端。与普通Java程序通过main方法启动不同，agent并不是一个可以单独启动的程序，而必须依附在一个Java应用程序（JVM）上，与它运行在同一个进程中，通过Instrumentation API与虚拟机交互。
+
+Java agent与Instrumentation密不可分，二者也需要在一起使用。因为Instrumentation的实例会作为参数注入到Java agent的启动方法中。
+
+JavaAgent 是运行在 main方法之前的拦截器，它内定的方法名叫 premain ，也就是说先执行 premain 方法然后再执行 main 方法
 - 支持方法执行耗时范围抓取设置，根据耗时范围抓取系统运行时出现在设置耗时范围的代码运行轨迹。
 - 支持抓取特定的代码配置，方便对配置的特定方法进行抓取，过滤出关系的代码执行耗时情况。
 - 支持APP层入口方法过滤，配置入口运行前的方法进行监控，相当于监控特有的方法耗时，进行方法专题分析。
 - 支持入口方法参数输出功能，方便跟踪耗时高的时候对应的入参数。
 - 提供WEB页面展示接口耗时展示、代码调用关系图展示、方法耗时百分比展示、可疑方法凸显功能
 
-Java agent也是一个jar包，只是其启动方式和普通Jar包有所不同，Java agent并不能单独启动，必须依附在一个应用程序中运行；
+Java agent以jar包的形式部署在JVM中，jar文件的manifest需要指定agent的类名。根据不同的启动时机，agent类需要实现不同的方法（二选一）:
+```java
+/**
+ * 以vm参数的形式载入，在程序main方法执行之前执行
+ * 其jar包的manifest需要配置属性Premain-Class
+ */
+public static void premain(String agentArgs, Instrumentation inst);
+/**
+ * 以Attach的方式载入，在Java程序启动后执行
+ * 其jar包的manifest需要配置属性Agent-Class
+ */
+public static void agentmain(String agentArgs, Instrumentation inst);
+```
 
 **其原理：**
 我们利用Java代理和ASM字节码技术，在JVM加载class二进制文件的时候，利用ASM动态的修改加载的class文件，在监控的方法前后添加计时器功能，用于计算监控方法耗时，同时将方法耗时及内部调用情况放入处理器，处理器利用栈先进后出的特点对方法调用先后顺序做处理，当一个请求处理结束后，将耗时方法轨迹和入参map输出到文件中，然后根据map中相应参数或耗时方法轨迹中的关键代码区分出我们要抓取的耗时业务。最后将相应耗时轨迹文件取下来，转化为xml格式并进行解析，通过浏览器将代码分层结构展示出来，方便耗时分析
 
-## 2、手动编写java agent
+## 5.3、手动编写java agent
 
-- 在`META-INF`目录下创建`MANIFEST`文件
-    ```
-    Manifest-Version: 1.0
-    Agent-Class: com.blue.fish.agent.AgentBoot
-    Premain-Class: com.blue.fish.agent.AgentBoot
-    Can-Redefine-Classes: true
-    Can-Retransform-Classes: true
-    ```
-	如果不想手写该文件，可以使用maven来生成：
-	```xml
-	<plugin>
-		<artifactId>maven-assembly-plugin</artifactId>
-		<configuration>
-			<archive>
-				<manifestEntries>
-					<Premain-Class>com.blue.fish.agent.AgentBoot</Premain-Class>
-					<Agent-Class>com.blue.fish.agent.AgentBoot</Agent-Class>
-					<Can-Redefine-Classes>true</Can-Redefine-Classes>
-					<Can-Retransform-Classes>true</Can-Retransform-Classes>
-				</manifestEntries>
-			</archive>
-		</configuration>
-	</plugin>
-	```
-
-- 并在`MANIFEST`文件中指定Agent的启动类， 在加载Java Agent之后，会找到`Agent-Class`或者`Premain-Class`指定的类，并运行对应的agentmain或者premain方法
-
-    ```java
-    /**
-     * 以vm参数的方式载入，在Java程序的main方法执行之前执行
-     */
-    public static void premain(String agentArgs, Instrumentation inst);
-    /**
-     * 以Attach的方式载入，在Java程序启动后执行
-     */
-    public static void agentmain(String agentArgs, Instrumentation inst);
-    ```
-
-## 3、启动时加载Agent
-
-将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 `-javaagent:`，具体的使用方法可以使用“Java -Help”来查看
-
-## 4、运行时加载Agent
-
-运行时挂载Agent到目标JVM，就需要做一些额外的开发；
-
-`com.sun.tools.attach.VirtualMachine` 这个类代表一个JVM抽象，可以通过这个类找到目标JVM，并且将Agent挂载到目标JVM上。下面是使用`com.sun.tools.attach.VirtualMachine`进行动态挂载Agent的一般实现：
+在`META-INF`目录下创建`MANIFEST`文件
+```
+Manifest-Version: 1.0
+Agent-Class: com.blue.fish.agent.AgentBoot
+Premain-Class: com.blue.fish.agent.AgentBoot
+Can-Redefine-Classes: true
+Can-Retransform-Classes: true
+```
+如果不想手写该文件，可以使用maven来生成：
+```xml
+<plugin>
+    <artifactId>maven-assembly-plugin</artifactId>
+    <configuration>
+        <archive>
+            <manifestEntries>
+                <Premain-Class>com.blue.fish.agent.AgentBoot</Premain-Class>
+                <Agent-Class>com.blue.fish.agent.AgentBoot</Agent-Class>
+                <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                <Can-Retransform-Classes>true</Can-Retransform-Classes>
+            </manifestEntries>
+        </archive>
+    </configuration>
+</plugin>
+```
+并在`MANIFEST`文件中指定Agent的启动类， 在加载Java Agent之后，会找到`Agent-Class`或者`Premain-Class`指定的类，并运行对应的agentmain或者premain方法
 ```java
-private void attachAgentToTargetJVM() throws Exception {
-	List<VirtualMachineDescriptor> virtualMachineDescriptors = VirtualMachine.list();
-	VirtualMachineDescriptor targetVM = null;
-	for (VirtualMachineDescriptor descriptor : virtualMachineDescriptors) {
-		if (descriptor.id().equals(configure.getPid())) {
-			targetVM = descriptor;
-			break;
-		}
-	}
-	if (targetVM == null) {
-		throw new IllegalArgumentException("could not find the target jvm by process id:" + configure.getPid());
-	}
-	VirtualMachine virtualMachine = null;
-	try {
-		virtualMachine = VirtualMachine.attach(targetVM);
-		virtualMachine.loadAgent("{agent}", "{params}");
-	} catch (Exception e) {
-		if (virtualMachine != null) {
-			virtualMachine.detach();
-		}
-	}
-}
+/**
+ * 以vm参数的方式载入，在Java程序的main方法执行之前执行
+ */
+public static void premain(String agentArgs, Instrumentation inst);
+/**
+ * 以Attach的方式载入，在Java程序启动后执行
+ */
+public static void agentmain(String agentArgs, Instrumentation inst);
 ```
 
-首先通过指定的进程ID找到目标JVM，然后通过Attach挂载到目标JVM上，执行加载Agent操作。VirtualMachine的Attach方法就是用来将Agent挂载到目标JVM上去的，而Detach则是将Agent从目标JVM卸载；
+## 5.4、如何加载
 
-# 6、防止反编译
+- （1）启动时加载Agent：将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 `-javaagent:`，具体的使用方法可以使用“Java -Help”来查看
 
-https://mp.weixin.qq.com/s/lPDhZgEys6lTR215aXqlxg
+- （2）运行时加载Agent：运行时挂载Agent到目标JVM，就需要做一些额外的开发；
+
+    `com.sun.tools.attach.VirtualMachine` 这个类代表一个JVM抽象，可以通过这个类找到目标JVM，并且将Agent挂载到目标JVM上。下面是使用`com.sun.tools.attach.VirtualMachine`进行动态挂载Agent的一般实现：
+    ```java
+    private void attachAgentToTargetJVM() throws Exception {
+        List<VirtualMachineDescriptor> virtualMachineDescriptors = VirtualMachine.list();
+        VirtualMachineDescriptor targetVM = null;
+        for (VirtualMachineDescriptor descriptor : virtualMachineDescriptors) {
+            if (descriptor.id().equals(configure.getPid())) {
+                targetVM = descriptor;
+                break;
+            }
+        }
+        if (targetVM == null) {
+            throw new IllegalArgumentException("could not find the target jvm by process id:" + configure.getPid());
+        }
+        VirtualMachine virtualMachine = null;
+        try {
+            virtualMachine = VirtualMachine.attach(targetVM);
+            virtualMachine.loadAgent("{agent}", "{params}");
+        } catch (Exception e) {
+            if (virtualMachine != null) {
+                virtualMachine.detach();
+            }
+        }
+    }
+    ```
+    首先通过指定的进程ID找到目标JVM，然后通过Attach挂载到目标JVM上，执行加载Agent操作。VirtualMachine的Attach方法就是用来将Agent挂载到目标JVM上去的，而Detach则是将Agent从目标JVM卸载；
+
+agent加载时，Java agent的jar包先会被加入到system class path中，然后agent的类会被system class loader加载。没错，这个system class loader就是所在的Java程序的class loader，这样agent就可以很容易的获取到想要的class。
+- 对于VM启动时加载的Java agent，其premain方法会在程序main方法执行之前被调用，此时大部分Java类都没有被加载（“大部分”是因为，agent类本身和它依赖的类还是无法避免的会先加载的），是一个对类加载埋点做手脚（addTransformer）的好机会。如果此时premain方法执行失败或抛出异常，那么JVM的启动会被终止。
+- 对于VM启动后加载的Java agent，其agentmain方法会在加载之时立即执行。如果agentmain执行失败或抛出异常，JVM会忽略掉错误，不会影响到正在running的Java程序；
+
+# 6、Attach API
+
+Java agent可以在JVM启动后再加载，就是通过Attach API实现的。当然，Attach API可不仅仅是为了实现动态加载agent，Attach API其实是跨JVM进程通讯的工具，能够将某种指令从一个JVM进程发送给另一个JVM进程。
+
+加载agent只是Attach API发送的各种指令中的一种， 诸如jstack打印线程栈、jps列出Java进程、jmap做内存dump等功能，都属于Attach API可以发送的指令
+
+### 6.1、Attach API 用法
+
+由于是进程间通讯，那代表着使用Attach API的程序需要是一个独立的Java程序，通过attach目标进程，与其进行通讯。下面的代码表示了向进程pid为1234的JVM发起通讯，加载一个名为agent.jar的Java agent。
+```java
+// VirtualMachine等相关Class位于JDK的tools.jar
+VirtualMachine vm = VirtualMachine.attach("1234");  // 1234表示目标JVM进程pid
+try {
+    vm.loadAgent(".../agent.jar");    // 指定agent的jar包路径，发送给目标进程
+} finally {
+    vm.detach();
+}
+```
+vm.loadAgent之后，相应的agent就会被目标JVM进程加载，并执行agentmain方法
+
+### 6.2、Attach API 原理
+
+以Hotspot虚拟机，Linux系统为例。当external process执行VirtualMachine.attach时，需要通过操作系统提供的进程通信方法，例如信号、socket，进行握手和通信。其具体内部实现流程如下所示：
 
 # 7、编译java成汇编代码
 
@@ -769,6 +855,9 @@ java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+P
 
 > 如果出现 Assembly not found. Was -XX:+PrintAssembly option used? ，需要将 hsdis-amd64.dylib 拷贝的`$JAVA_HOME`下的lib目录下
 
+# 8、防止反编译
+
+https://mp.weixin.qq.com/s/lPDhZgEys6lTR215aXqlxg
 
 # 参考资料
 
@@ -777,7 +866,7 @@ java -server -Xcomp -XX:+UnlockDiagnosticVMOptions -XX:+TraceClassLoading -XX:+P
 * [byte-buddy](https://github.com/raphw/byte-buddy*)
 * [字节码开源库](https://java-source.net/open-source/bytecode-libraries)
 * [A Guide to Java Bytecode](https://www.baeldung.com/java-asm)
-* [JVM Tool Interface](https://docs.oracle.com/javase/8/docs/platform/jvmti/jvmti.html)
+* [JVM Tool Interface](https://docs.oracle.com/en/java/javase/17/docs/specs/jvmti.html)
 * [JVM Instruction Set](https://docs.oracle.com/javase/specs/jvms/se7/html/jvms-6.html)
 * [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
 * [Java源文件生成框架](https://github.com/square/javapoet)
