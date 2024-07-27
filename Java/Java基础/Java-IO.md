@@ -1637,4 +1637,4 @@ InputStream inputStream = ResourceReader.class.getClassLoader().getResourceAsStr
 * [Reactor设计模式分析](https://juejin.im/post/5ba3845e6fb9a05cdd2d03c0)
 * [Unix-IO模型](http://matt33.com/2017/08/06/unix-io/)
 * [文件IO的操作实践](https://www.cnkirito.moe/file-io-best-practise/)
-* [文件 I/O 简明概述](https://spongecaptain.cool/SimpleClearFileIO/)
+* [Zip4j-关于zip包处理](https://github.com/chenlanqing/zip4j)

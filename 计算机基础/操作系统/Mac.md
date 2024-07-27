@@ -58,11 +58,19 @@ https://xclient.info/
 - Visual Studio Code
 - VMware Fusion  虚拟机工具
 - WireShark   抓包工具
-- Xmin      脑图工具
+- Xmind     脑图工具
 - atom
 - worktile
 - sizeup
 - https://arctype.com/
+- Arc：浏览器
+- Grammarly Desktop：基础语法检验
+- iBar：刘海屏处理
+- App Cleaner & Uninstaller：强力软件卸载
+- Runcat：查看当前 CPU 等信息
+- Flomo：记录灵感，针对任务过程 or 结果进行复盘
+- FlowUs：复盘产出，读书笔记
+- uTools：效率平台
 
 ## 5、homebrew
 

@@ -731,3 +731,7 @@ Disruptor的RingBuffer，做到完全无锁是因为单线程写；注入Redis�
 对于YieldingWaitStrategy实现类，尝试去修改源代码，降低高性能对CPU和内存资源的损耗
 
 ### 6.8、EventProcessor核心机制
+
+# 参考资料
+
+- [并行框架开发](https://blog.csdn.net/tianyaleixiaowu/category_9637010.html)
