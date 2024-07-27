@@ -2963,7 +2963,6 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 # 参考资料
 
 * [Spring Boot启动流程分析](http://www.cnblogs.com/xinzhao/p/5551828.html)
-* [Spring Boot知识清单](https://www.jianshu.com/p/83693d3d0a65)
 * [Spring Boot 官方文档](https://docs.spring.io/spring-boot/docs/current/reference/htmlsingle/)
 * [SpringBoot样例](https://github.com/spring-projects/spring-boot/tree/master/spring-boot-samples)
 * [SpringBoot内存泄露](https://mp.weixin.qq.com/s/cs92_dRqsn2_jHAtcEB57g)

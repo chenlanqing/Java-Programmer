@@ -2707,9 +2707,7 @@ ParameterNameDiscoverer  LocalVariableTableParameterNameDiscoverer
 # 参考资料
 
 * [Spring整合其他组件文档](https://docs.spring.io/spring-data/)
-* [Spring框架的设计理念与设计模式分析](https：//www.ibm.com/developerworks/cn/java/j-lo-spring-principle/)
 * [Spring中涉及的设计模式](https://mp.weixin.qq.com/s/Hy-qxNT0nJzcAkanbH93eA)
-* [Spring中的设计模式](http://www.iocoder.cn/Spring/DesignPattern-1/)
 * [SpringIOC面试点](https://www.jianshu.com/p/17b66e6390fd)
 * [SpringAOP面试点](https://www.jianshu.com/p/e18fd44964eb)
 * [AOP理论知识](https://segmentfault.com/a/1190000007469968)

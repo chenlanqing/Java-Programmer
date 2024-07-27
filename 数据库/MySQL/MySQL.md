@@ -2174,18 +2174,15 @@ serverTimeZone的作用就是指定web服务器和mysql服务器的会话期间�
 
 # 参考文章
 
-* [MySQL官方中文文档](https://www.docs4dev.com/docs/zh/mysql/5.7/reference)
-* [MySQL底层架构](https://xie.infoq.cn/article/ed531f74ecfd44eacb1a98258)
-* [How does a relational database work](http://coding-geek.com/how-databases-work/)
-* [数据库事务的特性](http://www.cnblogs.com/fjdingsd/p/5273008.html)
+* [MySQL官方中文文档](https://www.docs4dev.com/docs/mysql/5.7/)
+* [洞悉 MySQL 底层架构：游走在缓冲与磁盘之](https://xie.infoq.cn/article/ed531f74ecfd44eacb1a98258)
 * [数据库分库分表思路](http://www.cnblogs.com/butterfly100/p/9034281.html)
 * [MySQL加锁分析](https://mp.weixin.qq.com/s/lmKnhBM78ZgEF70kuQiTLg)
 * [sakila文件地址](http://dev.mysql.com/doc/sakila/en/sakila-installation.html)
-* [Mysql主从同步延迟](https://www.cnblogs.com/cnmenglang/p/6393769.html)
 * [Mysql数据库主从](http://blog.51cto.com/wangwei007/965575)
-* [MySQL事务实现](https://juejin.im/post/5ede6436518825430c3acaf4)
+* [面试关于MySQL事务实现](https://juejin.im/post/5ede6436518825430c3acaf4)
 * [事务实现原理](https://www.cnblogs.com/kismetv/p/10331633.html)
 * [MySQL-GTID复制](https://dbaplus.cn/news-11-857-1.html)
 * [MySQL生成随机数据工具](https://github.com/Percona-Lab/mysql_random_data_load)
 * [数据库优化](https://mp.weixin.qq.com/s/4us0c3My6H7Yikgg6rPHnA)
-- [InnoDB结构分析工具](https://github.com/jeremycole/innodb_ruby)
+- [Innodb_Ruby-InnoDB结构分析工具](https://github.com/jeremycole/innodb_ruby)

@@ -2673,10 +2673,8 @@ https://www.npmjs.com/package/redis-dump
 - [Redis官方资料-命令](https://redis.io/commands)
 - [Redis集群规范](https://redis.io/topics/cluster-spec)
 - [Redis官方命令参考手册](https://redis.io/commands/)
-- [Redis命令参考手册-中文版](http://redisdoc.com/)
 - [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 - [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
-- [Redis容量估算](http://www.redis.cn/redis_memory/)
 - [解析Redis RDB文件、分析内存](https://github.com/sripathikrishnan/redis-rdb-tools)
 
 
