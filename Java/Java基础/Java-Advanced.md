@@ -1249,6 +1249,8 @@ Jar 包的本质是将多个文件聚集为一个 ZIP 包，与传统的 ZIP 文
 
 ## 3、MANIFEST.MF 文件解析
 
+- [JAR Manifest](https://docs.oracle.com/javase/6/docs/technotes/guides/jar/jar.html#JAR%20Manifest)
+
 该文件包含了该Jar包的版本、创建人和类搜索路径等信息，当然如果是可执行Jar包，会包含Main-Class属性，表明Main方法入口，下面是从commons-io.jar下的MANIFEST.MF内容
 ```yml
 Manifest-Version: 1.0

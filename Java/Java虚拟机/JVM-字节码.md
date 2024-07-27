@@ -593,6 +593,8 @@ Attach API 的作用是提供JVM进程间通信的能力，比如说我们为了
 * [Java Agent](https://www.jianshu.com/p/5bfe16c9ce4e)
 * [Java Agent类隔离](https://mp.weixin.qq.com/s/6dyHV2yyccJxgTEOKBUgTA)
 
+![](image/Java-agent-关联工具.jpg)
+
 ## 5.1、Java Instrumentation
 
 Instrumentation是Java提供的一个来自JVM的接口，该接口提供了一系列查看和操作Java类定义的方法，例如修改类的字节码、向classLoader的classpath下加入jar文件等。使得开发者可以通过Java语言来操作和监控JVM内部的一些状态，进而实现Java程序的监控分析，甚至实现一些特殊功能（如AOP、热部署）。
@@ -710,6 +712,8 @@ public static void agentmain(String agentArgs, Instrumentation inst);
 ```
 
 ## 5.4、如何加载
+
+![](image/Java-agent启动流程.png)
 
 - （1）启动时加载Agent：将编写的Agent打成jar包后，就可以挂载到目标JVM上去了。如果选择在目标JVM启动时加载Agent，则可以使用 `-javaagent:`，具体的使用方法可以使用“Java -Help”来查看
 
