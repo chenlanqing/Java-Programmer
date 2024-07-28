@@ -33,6 +33,7 @@ Spring 提供的 4 种 RedisSerializer（Redis 序列化器）：
 
 - [Spring-Retry官方文档](https://docs.spring.io/spring-batch/docs/current/reference/html/retry.html)
 - [Spring-Retry原理](https://blog.51cto.com/u_15127644/2880409)
+- [Fast-Retry：一个高性能任务重试框架](https://github.com/burukeYou/fast-retry)
 
 Spring系列的spring-retry是另一个实用程序模块，它可以以标准方式处理任何特定操作的重试。在spring-retry中，所有配置都是基于简单注解的
 

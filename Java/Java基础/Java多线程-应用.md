@@ -472,6 +472,7 @@ public class ExchangerDemo {
 - [Disruptor-使用指南](https://lmax-exchange.github.io/disruptor/user-guide/index.html)
 * [The LMAX Architecture](https://martinfowler.com/articles/lmax.html)
 * [LMAX架构](https://www.jianshu.com/p/5e0c4481efb7)
+* [Disruptor撮合交易](https://mp.weixin.qq.com/s/kmuG5azJnqjKRYlkiVHWqQ)
 
 ## 1、LMAX架构
 
