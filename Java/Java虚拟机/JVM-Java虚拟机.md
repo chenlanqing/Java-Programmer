@@ -2297,6 +2297,7 @@ public class FanxingTest{
 ## 10.4、JIT编译-后端编译
 
 - [Java即时编译器原理解析及实践](https://tech.meituan.com/2020/10/22/java-jit-practice-in-meituan.html)
+- [JVM-分层编译](https://mp.weixin.qq.com/s/ZNNyRrjjLlaeepuUByqaGQ)
 
 几个问题：
 - 为何HotSpot虚拟机要使用解释器和编译器并存的架构？
