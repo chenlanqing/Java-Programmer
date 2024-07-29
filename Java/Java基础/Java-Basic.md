@@ -868,11 +868,16 @@ else x= a;
 - 取出最小 0 位（Extract lowest unset bit）: `~s & (s + 1)`
 - 交换值: `x ^= y; y ^= x; x ^= y;`
 
-# 四、JDK各版本特性
+# 四、JDK版本
 
 * [JDK8概览](https://juejin.im/post/6861849472499417096)
 * [JDK8~17特性](https://advancedweb.hu/a-categorized-list-of-all-java-and-jvm-features-since-jdk-8-to-17/)
 * [JDK11-17新特性](https://mp.weixin.qq.com/s/SVleHYFQeePNT7q67UoL4Q)
+* [Java 21 新特性概览](https://javaguide.cn/java/new-features/java21.html)
+* [Migrating from JDK8/11 to JDK21](https://www.reddit.com/r/java/comments/18rwa6v/migrating_from_java_811_to_java_21_and_spring/)
+* [Java11 to 21](https://dzone.com/articles/java-11-to-21-a-visual-guide-for-seamless-migratio)
+
+JDK 21 于 2023 年 9 月 19 日 发布，这是一个非常重要的版本，里程碑式。JDK21 是 LTS（长期支持版），至此为止，目前有 JDK8、JDK11、JDK17 和 JDK21 这四个长期支持版了。
 
 ## 1、JDK8
 
@@ -1264,7 +1269,9 @@ groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项�
 
 ![](image/Stream-分类.png)
 
-#### 1.5.7、Stream源码
+#### 1.5.7、Stream原理
+
+- [Stream原理与执行流程探析](https://mp.weixin.qq.com/s/UGWoRO5-pFB0p01mc73wLA)
 
 #### 1.5.8、forEach中断操作
 
