@@ -769,14 +769,14 @@ private static void largerBufferOperation() throws IOException {
 
 ## 1、Java NIO 概述
 
-**1.1、核心概念：**
+### 1.1、核心概念
 
 NIO：非阻塞IO
 - Channels
 - Buffers
 - Selectors
 
-**1.2、Channel 和 Buffer：**
+### 1.2、Channel 和 Buffer
 
 - 基本上，所有的IO在NIO中都从一个Channel开始，数据可以从Channel读到Buffer中，也可以从Buffer写到Channel中
 - Channel的几种实现：<br>
@@ -794,28 +794,36 @@ NIO：非阻塞IO
 	ShortBuffer<br>
 	MappedByteBuffer<br>
 
-**1.3、Selector：Selector 允许单线程处理多个Channel**
+### 1.3、Selector：Selector 允许单线程处理多个Channel
 
 要使用Selector得向Selector注册Channel，然后调用它的select()方法个方法会一直阻塞到某个注册的通道有事件就绪。一旦这个方法返回，线程就可以处理这些事件，事件的例子有如新连接进来，数据接收；
 
 ## 2、Channel
 
+```java
+public interface Channel extends Closeable {
+    public boolean isOpen(); // Channel 是否开启
+    public void close() throws IOException;
+}
+```
+
 用于源节点与目标节点的连接。在 Java NIO 中负责缓冲区中数据的传输，本身不存储数据
 
-**2.1、与流类似，但有所不同：不能直接访问数据，可以与 Buffer 进行交互.**
+### 2.1、与流比较
 
+不能直接访问数据，可以与 Buffer 进行交互
 - 既可以从通道中读取数据，又可以写数据到通道.但流的读写通常是单向的
 - 通道可以异步地读写;
 - 通道中的数据总是要先读到一个 Buffer，或者总是要从一个 Buffer 中写入;
 
-**2.2、Java NIO 中最重要的通道的实现**
+### 2.2、实现
 
 - FileChannel：从文件中读写数据，一般从流中获取 Channel，不能切换成非阻塞模式，不能用于Selector
 - DatagramChannel：能通过UDP读写网络中的数据.
 - SocketChannel：能通过TCP读写网络中的数据.
 - ServerSocketChannel：可以监听新进来的TCP连接，像Web服务器那样.对每一个新进来的连接都会创建一个 SocketChannel
 
-**2.3、通道的获取：**
+### 2.3、获取Channel
 
 - Java 针对支持通道的类都提供了 getChannel() 的方法;<br>
 	输入输出流<br>
@@ -823,12 +831,15 @@ NIO：非阻塞IO
 - 在JDK7中NIO2.0 针对各个通道提供了静态的方法 open()
 - 在JDK7中NIO2.0 的 Files 工具类的 newByteChannel()
 
-**2.4、通道之间的数据传输：**
+### 2.4、Channel与Channel之间数据传输
 
-	transferFrom()
-	transferTo()
+在Java NIO中，两个channel中如果有一个channel是FileChannel，那么就可以把数据从一个channel传输到另外一个channel中去。FileChannel类中有transferTo()和transferFrom()两个方法可以做这个事情
 
-**2.5、字符集：**
+FileChannel有两个方法：
+- transferFrom()：这个方法把数据从一个源source读取到FileChannel中去
+- transferTo()：把数据从FileChannel中读到其它channel中去
+
+### 2.5、字符集
 ```
 (1).编码：字符串 --> 字节数组
 (2).解码：字节数组 --> 字符串
@@ -843,7 +854,43 @@ C.获取解码器：
 	CharBuffer cf = cd.decode(ByteBuffer);
 ```
 
+### 2.6、FileChannel
+
+Java NIO中的FileChannel是一个用来连接文件的channel。使用FileChannel可以从文件中读数据，也可以把数据写入到文件中去。Java NIO中的FileChannel类的相关API可以替换Java标准IO流的API。
+
+> 注意：FileChannel不能设置非阻塞模式，只能一直在阻塞模式下运行
+
+**打开FileChannel**
+
+FileChannel不能直接创建，而是要通过输入输出流（例如：InputStream, OutputStream、或者RandomAccessFile）来获取:
+```java
+RandomAccessFile aFile = new RandomAccessFile("data/nio-data.txt", "rw");
+FileChannel inChannel = aFile.getChannel();
+```
+**从FileChannel中读取数据**
+
+可通过调用FileChannel的read方法来读取数据，下面是一个例子：
+```java
+// 分配Buffer，数据是先从FileChannel中读到Buffer中去的
+ByteBuffer buf = ByteBuffer.allocate(48);
+// 调用FileChannel的read方法，把数据读到buffer中去。read方法返回的int整数表示读了多少数据到buffer中去，当该整数为-1时，表示数据已经被读完了
+int bytesRead = inChannel.read(buf);
+```
+**向FileChannel中写入数据**
+```java
+String newData = "New String to write to file..." + System.currentTimeMillis();
+ByteBuffer buf = ByteBuffer.allocate(48);
+buf.clear();
+buf.put(newData.getBytes());
+buf.flip();
+while(buf.hasRemaining()) {
+    channel.write(buf);
+}
+```
+
 ## 3、Buffer
+
+- [Guide to ByteBuffer](https://www.baeldung.com/java-bytebuffer)
 
 用于和NIO通道进行交互，缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存，底层实现是数组；一般读写都要通过channel和buffer，需要从channel中读取数据到buffer中，或者将数据从buffer中写到channel中
 
@@ -862,6 +909,8 @@ int remaining()	|返回position 和limit 之间的元素个数
 Buffer reset()|将位置position 转到以前设置的mark 所在的位置
 Buffer rewind()	|将位置设为为0，取消设置的mark
 
+主要使用的: ByteBuffer，从概念上讲，ByteBuffer 类是包装在对象内的字节数组
+
 ### 3.1、Buffer 的基本用法
 
 获取缓冲区的方法：(例子)ByteBuffer.allocate()
@@ -872,17 +921,18 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 	- ③、从 Buffer 中读取数据
 	- ④、调用clear()方法或者compact()方法
 
-- 当向buffer写入数据时，buffer会记录下写了多少数据。一旦要读取数据，需要通过flip()方法将Buffer从写模式切换到读模式；在读模式下，可以读取之前写入到buffer的所有数据；
+- 当向buffer写入数据时，buffer会记录下写了多少数据。一旦要读取数据，需要通过`flip()`方法将Buffer从写模式切换到读模式；在读模式下，可以读取之前写入到buffer的所有数据；
 
-- 一旦读完了所有的数据，就需要清空缓冲区，让它可以再次被写入。有两种方式能清空缓冲区：调用clear()或compact()方法。clear()方法会清空整个缓冲区。compact()方法只会清除已经读过的数据。任何未读的数据都被移到缓冲区的起始处，新写入的数据将放到缓冲区未读数据的后面；
+- 一旦读完了所有的数据，就需要清空缓冲区，让它可以再次被写入。有两种方式能清空缓冲区：调用clear()或compact()方法。
+    - clear()方法会清空整个缓冲区。
+    - compact()方法只会清除已经读过的数据。任何未读的数据都被移到缓冲区的起始处，新写入的数据将放到缓冲区未读数据的后面；
 
 - Buffer 的capacity，position和limit： 关键属性
 	- （1）缓冲区本质上是一块可以写入数据，然后可以从中读取数据的内存。这块内存被包装成 NIO Buffer 对象，并提供了一组方法，用来方便的访问该块内存
-	- （2）Buffer 对象的四个属性：
-		capacity、position、limit、mark；其中position和limit的含义取决于 Buffer 处在读模式还是写模式。不管Buffer处在什么模式，capacity的含义总是一样的
+	- （2）Buffer 对象的四个属性：capacity、position、limit、mark；其中`position`和`limit`的含义取决于 Buffer 处在读模式还是写模式。不管Buffer处在什么模式，capacity的含义总是一样的
 	- （3）capacity：最大存储数据的容量，一旦声明不能改变，且不会为负数；作为一个内存块，Buffer 有一个固定的大小值，也叫"capacity"。你只能往里写capacity个 byte、long，char 等类型；一旦Buffer满了，需要将其清空(通过读数据或者清除数据)才能继续写数据往里写数据
 	- （4）position：
-		- ①、当你写数据到 Buffer 中时，position表示当前的位置，初始的position值为0，当一个 byte、long 等数据写到 Buffer 后，position会向前移动到下一个可插入数据的 Buffer 单元。position最大可为capacity – 1。永远不会大于limit
+		- ①、当你写数据到 Buffer 中时，position表示当前的位置，初始的position值为0，当一个 byte、long 等数据写到 Buffer 后，position会向前移动到下一个可插入数据的 Buffer 单元。position最大可为`capacity – 1`。永远不会大于`limit`
 		- ②、当读取数据时，也是从某个特定位置读。当将Buffer从写模式切换到读模式，position会被重置为0；当从 Buffer的position处读取数据时，position向前移动到下一个可读的位置
 	- （5）limit：
 		- ①、在写模式下，Buffer 的limit表示你最多能往Buffer里写多少数据，永远不会超过capacity。写模式下，limit等于Buffer的capacity
@@ -895,17 +945,22 @@ Buffer rewind()	|将位置设为为0，取消设置的mark
 
 ### 3.3、Buffer 的分配
 
-因为JDK中所有跟基本数据类型相关的Buffer都是抽象类，不能直接通过new来创建，每一个 Buffer 类都有一个allocate方法。下面是一个分配48字节capacity的 ByteBuffer 的例子：
-`ByteBuffer buf = ByteBuffer.allocate(48);`
+因为JDK中所有跟基本数据类型相关的Buffer都是抽象类，不能直接通过new来创建，每一个 Buffer 类都有一个allocate方法。
+```java
+public static ByteBuffer allocateDirect(int capacity); // 分配直接内存
+public static ByteBuffer allocate(int capacity); // 分配capacity容量的buffer
+public static ByteBuffer wrap(byte[] array, int offset, int length);// 使用字节数组
+public static ByteBuffer wrap(byte[] array);
+```
 
 ### 3.4、向 Buffer 中写数据
 
-- 从 Channel 写到 Buffer：`int bytesRead = inChannel.read(buf); //read into buffer`
-- 通过 Buffer 的put()方法写到 Buffer 里：buf.put(127);
+- 从 Channel 写到 Buffer：`int bytesRead = inChannel.read(buf); // read into buffer`
+- 通过 Buffer 的put()方法写到 Buffer 里：`buf.put(127);`
 
 ### 3.5、flip()方法
 
-flip方法将 Buffer 从写模式切换到读模式。调用flip()方法会将position设回0，并将limit设置成之前position的值，即position现在用于标记读的位置，limit表示之前写进了多少个 byte、char，现在能读取多少个 byte、char 等
+flip方法将 Buffer 从写模式切换到读模式。调用`flip()`方法会将position设回0，并将limit设置成之前position的值，即position现在用于标记读的位置，limit表示之前写进了多少个 byte、char，现在能读取多少个 byte、char 等
 
 ### 3.6、从 Buffer 中读取数据
 
@@ -914,7 +969,7 @@ flip方法将 Buffer 从写模式切换到读模式。调用flip()方法会将po
 
 ### 3.7、rewind()方法
 
-Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数据。limit保持不变，仍然表示能从Buffer中读取多少个元素(byte、char等)
+`Buffer.rewind()`将position设回0，所以可以重读Buffer中的所有数据。limit保持不变，仍然表示能从Buffer中读取多少个元素(byte、char等)
 	
 ### 3.8、clear()与compact()方法
 
@@ -927,24 +982,21 @@ Buffer.rewind()将position设回0，所以你可以重读Buffer中的所有数�
 ### 3.9、更多方法
 
 - Buffer.mark()：通过调用 Buffer.mark()方法，可以标记 Buffer 中的一个特定position。之后可以通过调用 Buffer.reset()方法恢复到这个position
-
 - Buffer.slice()：与原有Buffer共享底层数组
 
 ### 3.10、equals()与compareTo()方法
 
 - equals()，当满足下列条件时，表示两个Buffer相等：<br>
-	有相同的类型（byte、char、int等）。
-	Buffer 中剩余的 byte、char 等的个数相等。
-	Buffer 中所有剩余的 byte、char 等都相同。
+	- 有相同的类型（byte、char、int等）。
+	- Buffer 中剩余的 byte、char 等的个数相等。
+	- Buffer 中所有剩余的 byte、char 等都相同。
 	==> 实际上，它只比较Buffer中的剩余元素(剩余元素是从 position到limit之间的元素)
 - compareTo()方法：<br>
 	compareTo()方法比较两个Buffer的剩余元素(byte、char等)， 如果满足下列条件，则认为一个Buffer"小于"另一个Buffer：第一个不相等的元素小于另一个Buffer中对应的元素；所有元素都相等，但第一个Buffer比另一个先耗尽(第一个Buffer的元素个数比另一个少)
 
 ### 3.11、只读Buffer
 
-一般是具体的实现buffer后面带上一个R。
-
-可以随时将一个普通Buffer调用asReadOnlyBuffer返回一个只读Buffer，但不能将一个只读Buffer转换为读写Buffer
+一般是具体的实现buffer后面带上一个R。可以随时将一个普通Buffer调用asReadOnlyBuffer返回一个只读Buffer，但不能将一个只读Buffer转换为读写Buffer
 
 ### 3.11、直接缓冲区（DirectBuffer）
 
@@ -1077,7 +1129,7 @@ boolean isInterestedInWrite   = interestSet & SelectionKey.OP_WRITE;
 
 ### 6.5、基本使用
 
-**服务端**：[NioServer](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioServer.java)
+**服务端**：
 ```java
 public class NioServer {
     private static Map<String, SocketChannel> clientMap = new ConcurrentHashMap<>();
@@ -1156,7 +1208,7 @@ public class NioServer {
 }
 ```
 
-**客户端**：[NioClient](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-socket/src/main/java/com/blue/fish/se/socket/nio/NioClient.java)
+**客户端**：
 ```java
 public class NioClient {
 
