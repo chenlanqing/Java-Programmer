@@ -288,6 +288,7 @@ private static void test1(int a, int b) {
 - [位运算高级应用](https://graphics.stanford.edu/~seander/bithacks.html)
 - [位运算](https://bugstack.cn/md/algorithm/logic/math/2022-10-30-bits.html)
 - [进制转化-支持浮点数](https://baseconvert.com/)
+- [位运算](http://www.nowcoder.com/courses/1/8/1)
 
 ## 1、进制基础
 
@@ -870,6 +871,9 @@ else x= a;
 
 # 四、JDK版本
 
+* [Java5~11各个版本特性最全总结](https://mp.weixin.qq.com/s/wQW3tZmCs50RjzMtbxOgpQ)
+* [Java8新特性](https://www.jianshu.com/p/5b800057f2d8)
+* [JDK8新特性指南](http://www.open-open.com/lib/view/open1403232177575.html)
 * [JDK8概览](https://juejin.im/post/6861849472499417096)
 * [JDK8~17特性](https://advancedweb.hu/a-categorized-list-of-all-java-and-jvm-features-since-jdk-8-to-17/)
 * [JDK11-17新特性](https://mp.weixin.qq.com/s/SVleHYFQeePNT7q67UoL4Q)
@@ -1347,6 +1351,8 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 
 ### 1.7、JDK8时间
 
+- [世界时区地图](https://24timezones.com/map_zh.php#/map)
+
 #### 1.7.1、旧版API存在问题
 
 - 非线程安全：`java.util.Date` 是非线程安全的，所有的日期类都是可变的，这是Java日期类最大的问题之一，包括 SimpleDateFormat 、Calendar等
@@ -1391,16 +1397,14 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 
 #### 1.7.2、JDK8新API
 
-##### 1.1、包分类
+**包分类**
+- `java.time`包: 这是新的 Java 日期/时间 API 的基础包，所有的主要基础类都是这个包的一部分，如:LocalDate, LocalTime, LocalDateTime, Instant, Period, Duration 等等。所有这些类都是不可变的和线程安全的，在绝大多数情况下，这些类能够有效地处理一些公共的需求。
+- `java.time.chrono`包: 这个包为非 ISO 的日历系统定义了一些泛化的 API，我们可以扩展 AbstractChronology 类来创建自己的日历系统。
+- `java.time.format`包: 这个包包含能够格式化和解析日期时间对象的类，在绝大多数情况下，不应该直接使用它们，因为 java.time 包中相应的类已经提供了格式化和解析的方法。
+- `java.time.temporal`包: 这个包包含一些时态对象，可以用其找出关于日期/时间对象的某个特定日期或时间， 比如说，可以找到某月的第一天或最后一天。可以非常容易地认出这些方法，因为它们都具有“withXXX”的格 式。
+- `java.time.zone`包：这个包包含支持不同时区以及相关规则的类
 
-- `java.time` 包:这是新的 Java 日期/时间 API 的基础包，所有的主要基础类都是这个包的一部分，如:LocalDate, LocalTime, LocalDateTime, Instant, Period, Duration 等等。所有这些类都是不可变的和线程安全的，在绝大多 数情况下，这些类能够有效地处理一些公共的需求。
-- `java.time.chrono` 包:这个包为非 ISO 的日历系统定义了一些泛化的 API，我们可以扩展 AbstractChronology 类来创建自己的日历系统。
-- `java.time.format` 包:这个包包含能够格式化和解析日期时间对象的类，在绝大多数情况下，我们不应该直接使 用它们，因为 java.time 包中相应的类已经提供了格式化和解析的方法。
-- `java.time.temporal`包:这个包包含一些时态对象，我们可以用其找出关于日期/时间对象的某个特定日期或时间， 比如说，可以找到某月的第一天或最后一天。你可以非常容易地认出这些方法，因为它们都具有“withXXX”的格 式。
-- `java.time.zone` 包:这个包包含支持不同时区以及相关规则的类
-
-##### 1.2、常见API**
-
+**常见API**
 - `java.time.LocalDate`：用来表示日期(年、月、日)，它表示默认格式(`yyyy-MM-dd`)的日期，LocalDate是不可变对象, 如果想改变对象的状态, 最终得到都是一个新的LocalDate对象, 并不会对旧的LocalDate对象产生影；使用 now()方法得到当前时间，也可以提供输入年份、月份和日期的输入参数来创建一个 LocalDate 实例；也可以传入 ZoneId 来获得指定时区的日期
 
 - `java.time.LocalTime`：LocalTime 是一个不可变的类，它的实例代表一个符合人类可读格式的时间，默认格式是 `hh:mm:ss.zzz`。像 LocalDate 一样，该类也提供了时区支持，同时也可以传入小时、分钟和秒等输入参数创建实例；
@@ -1414,59 +1418,70 @@ Optional<String> name = Optional.ofNullable(person).map(Person::getName);
 
 #### 1.7.3、新API基本操作
 
-##### 1.1、格式化时间：
-	```java
-	public static void main(String[] a){
-		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
-		LocalDateTime localDateTime = LocalDateTime.now();
-		System.out.println(formatter.format(localDateTime));
-	
-		String str = "2008年08月23日 23:59:59";
-		DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
-		LocalDateTime localDateTime2 = LocalDateTime.parse(str,formatter2);
-		System.out.println(localDateTime2);
-	
-	}
-	```
-- java8时间与老版本时间转换：
-	```java
-	public static void main(String[] args) {
-        // Date与Instant的相互转化
-        Instant instant = Instant.now();
-        Date date = Date.from(instant);
-        Instant instant2 = date.toInstant();
-	
-        //Date转为LocalDateTime
-        Date date2 = new Date();
-        LocalDateTime localDateTime2 = LocalDateTime.ofInstant(date2.toInstant(), ZoneId.systemDefault());
-	
-        //LocalDateTime转Date
-        LocalDateTime localDateTime3 = LocalDateTime.now();
-        Instant instant3 = localDateTime3.atZone(ZoneId.systemDefault()).toInstant();
-        Date date3 = Date.from(instant);
-	
-        //LocalDate转Date
-        //因为LocalDate不包含时间，所以转Date时，会默认转为当天的起始时间，00:00:00
-        LocalDate localDate4 = LocalDate.now();
-        Instant instant4 = localDate4.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
-        Date date4 = Date.from(instant);
-	
-        // Calendar to Instant
-        Instant time = Calendar.getInstance().toInstant();
-        System.out.println(time);
-	
-        // TimeZone to ZoneId
-        ZoneId defaultZone = TimeZone.getDefault().toZoneId();
-        System.out.println(defaultZone);
-	
-        // ZonedDateTime from specific Calendar
-        ZonedDateTime gregorianCalendarDateTime = new GregorianCalendar().toZonedDateTime();
-        GregorianCalendar gc = GregorianCalendar.from(gregorianCalendarDateTime);
-    }
-	```
+**格式化时间：**
+```java
+public static void main(String[] a){
+	DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
+	LocalDateTime localDateTime = LocalDateTime.now();
+	System.out.println(formatter.format(localDateTime));
 
-##### 1.2、转换为秒/毫秒
+	String str = "2008年08月23日 23:59:59";
+	DateTimeFormatter formatter2 = DateTimeFormatter.ofPattern("yyyy年MM月dd日 HH:mm:ss");
+	LocalDateTime localDateTime2 = LocalDateTime.parse(str,formatter2);
+	System.out.println(localDateTime2);
+}
+```
+java8时间与老版本时间转换：
+```java
+public static void main(String[] args) {
+	// Date与Instant的相互转化
+	Instant instant = Instant.now();
+	Date date = Date.from(instant);
+	Instant instant2 = date.toInstant();
 
+	//Date转为LocalDateTime
+	Date date2 = new Date();
+	LocalDateTime localDateTime2 = LocalDateTime.ofInstant(date2.toInstant(), ZoneId.systemDefault());
+
+	//LocalDateTime转Date
+	LocalDateTime localDateTime3 = LocalDateTime.now();
+	Instant instant3 = localDateTime3.atZone(ZoneId.systemDefault()).toInstant();
+	Date date3 = Date.from(instant);
+
+	//LocalDate转Date
+	//因为LocalDate不包含时间，所以转Date时，会默认转为当天的起始时间，00:00:00
+	LocalDate localDate4 = LocalDate.now();
+	Instant instant4 = localDate4.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant();
+	Date date4 = Date.from(instant);
+
+	// Calendar to Instant
+	Instant time = Calendar.getInstance().toInstant();
+	System.out.println(time);
+
+	// TimeZone to ZoneId
+	ZoneId defaultZone = TimeZone.getDefault().toZoneId();
+	System.out.println(defaultZone);
+
+	// ZonedDateTime from specific Calendar
+	ZonedDateTime gregorianCalendarDateTime = new GregorianCalendar().toZonedDateTime();
+	GregorianCalendar gc = GregorianCalendar.from(gregorianCalendarDateTime);
+}
+```
+**时区处理**
+```java
+// 获取指定时区的时间，同理，其他的 LocalDate、LocalTime 也可以如此处理
+LocalDateTime.now(ZoneId.of("GMT-6"));
+LocalDateTime.now(ZoneId.of("-6"));
+LocalDateTime.now(ZoneId.of("UTC-6"));
+LocalDateTime.now(ZoneId.of("America/Merida"));
+LocalDateTime.now(Clock.system(ZoneId.of("-6")))// 使用上面的更简洁
+LocalDateTime.ofInstant(Instant.now(), ZoneId.of("-6"))
+ZonedDateTime.now(ZoneId.of("-6"));
+// 给当前时间指定对应的时区：2024-05-30T15:10:08.314940700-06:00
+ZonedDateTime of = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("-6"));
+Instant instant = of.toInstant(); // 2024-07-30T21:10:08.314940700Z  UTC时间
+```
+**转换为秒/毫秒**
 ```java
 //获取秒数
 Long second = LocalDateTime.now().toEpochSecond(ZoneOffset.of("+8"));
@@ -3132,7 +3147,4 @@ public class Foo {
 # 参考文章
 
 * [枚举的线程安全性及序列化问题](http://www.hollischuang.com/archives/197)
-* [Java各个版本特性最全总结](https://mp.weixin.qq.com/s/wQW3tZmCs50RjzMtbxOgpQ)
-* [Java8新特性](https://www.jianshu.com/p/5b800057f2d8)
-* [JDK8新特性指南](http://www.open-open.com/lib/view/open1403232177575.html)
-* [位运算](http://www.nowcoder.com/courses/1/8/1)
+
