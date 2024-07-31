@@ -13,6 +13,9 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
 - [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
 
+# GPT
+
+- [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
  
 # Agent
 
