@@ -114,3 +114,8 @@ go get github.com/sirupsen/logrus
 
 - [go-zero](https://go-zero.dev/cn/)
 - [《The Go Programming Language》 ](https://books.studygolang.com/gopl-zh/)
+- [Go By Example](https://gobyexample.com/)
+- [Go 101](https://go101.org/article/101.html)
+- [Effective Go](https://go.dev/doc/effective_go)
+- [Go 精华文章列表](https://go.dev/wiki/Articles)
+- [Go 相关资源](https://github.com/avelino/awesome-go)
