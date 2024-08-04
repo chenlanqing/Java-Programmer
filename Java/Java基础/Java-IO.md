@@ -350,6 +350,8 @@ Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调
 
 ## 8、C10K与C1000K问题
 
+- [The C10K problem](http://www.kegel.com/c10k.html)
+
 C10K 和 C1000K 的首字母 C 是 Client 的缩写。
 - C10K 就是单机同时处理 1 万个请求（并发连接 1 万）的问题；
 - C1000K 也就是单机支持处理 100 万个请求（并发连接 100 万）的问题
