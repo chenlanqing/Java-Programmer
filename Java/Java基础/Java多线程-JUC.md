@@ -276,6 +276,8 @@ ReentrantLock中，有一个方法：hasQueuedPredecessors()，该方法主要�
 
 - [lock-free wiki](https://en.wikipedia.org/wiki/Non-blocking_algorithm#Lock-freedom)
 - [Lock free programming](https://preshing.com/20120612/an-introduction-to-lock-free-programming/)
+- [Dr.Dobb’s: Lock-Free Data Structures](https://www.drdobbs.com/lock-free-data-structures/184401865)
+- [Andrei Alexandrescu: Lock-Free Data Structures](http://erdani.org/publications/cuj-2004-10.pdf)
 
 **锁同步的问题**：线程同步分为阻塞型同步和非阻塞型同步。
 - 互斥量、信号、条件变量这些系统提供的机制都属于阻塞型同步，在争用资源的时候，会导致调用线程阻塞。

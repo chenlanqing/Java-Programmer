@@ -121,6 +121,10 @@ https://mp.weixin.qq.com/s/ZifCDDU-zdUa7fOFo7epiw
 
 # 6、内存管理
 
+- [Memory Barriers: a Hardware View for Software Hackers](https://www.puppetmastertrading.com/images/hwViewForSwHackers.pdf)
+- [A Tutorial Introduction to the ARM and POWER Relaxed Memory Models](https://www.cl.cam.ac.uk/~pes20/ppc-supplemental/test7.pdf)
+- [x86-TSO: A Rigorous and Usable Programmer’s Model for x86 Multiprocessors](https://www.cl.cam.ac.uk/~pes20/weakmemory/cacm.pdf)
+
 ## 6.1、分层存储体系
 
 ## 6.2、地址空间
@@ -156,3 +160,5 @@ MMU：内存管理单元
 * [一个64位操作系统的实现](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
 * [操作系统-3个部分](https://pages.cs.wisc.edu/~remzi/OSTEP/)
 * [Linux硬件-内核-网络](https://github.com/yanfeizhang/coder-kung-fu)
+* [Red Hat Enterprise Linux 文档](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9)
+* [What every programmer should know about memory](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf)

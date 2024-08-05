@@ -871,3 +871,5 @@ https://mp.weixin.qq.com/s/lPDhZgEys6lTR215aXqlxg
 * [动态调试原理](https://tech.meituan.com/2019/11/07/java-dynamic-debugging-technology.html)
 * [Java源文件生成框架](https://github.com/square/javapoet)
 * [深入浅出JVM字节码](https://github.com/wujiuye/JVMByteCodeGitBook)
+* [Introduction to Java Bytecode](https://dzone.com/articles/introduction-to-java-bytecode)
+* [Java Bytecode and JVMTI Examples](https://github.com/chenlanqing/bytecode-examples)

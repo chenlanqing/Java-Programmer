@@ -1,5 +1,7 @@
 # 一、I/O 模型
 
+- [Thousands of Threads and Blocking I/O: The Old Way to Write Java Servers Is New Again (and Way Better)](https://www.slideshare.net/slideshow/tyma-paulmultithreaded1/16359045)
+
 为什么有IO模型：因为用户空间无法直接从内核空间拷贝数据，而是由内核空间来操作，而IO模型就是解决谁触发拷贝、
 
 ## 1、异步与同步
@@ -157,6 +159,10 @@ epoll使用一个文件描述符管理多个描述符，将用户关系的文件
     - 在异步IO模型中，收到信号表示IO操作已经完成，不需要再在用户线程中调用iO函数进行实际的读写操作
 - 注意：异步IO是需要操作系统的底层支持，在Java 7中，提供了Asynchronous IO
 
+异步 I/O 模型的发展技术是： select -> poll -> epoll -> aio -> libevent -> libuv
+
+Windows I/O Completion Port
+
 ### 5.6、总结
 
 前面四种IO模型实际上都属于同步IO，只有最后一种是真正的异步IO；因为：前面四种模型中IO操作的第2个阶段都会引起用户线程阻塞，也就是说内核进行数据拷贝的过程都会让用户线程阻塞；
@@ -167,7 +173,10 @@ epoll使用一个文件描述符管理多个描述符，将用户关系的文件
 
 ### 6.1、Reactor
 
-具体可以参考文档：《Scalable IO in Java》，作者是：Doug Lea
+- [Understanding Reactor Pattern: Thread-Based and Event-Driven](https://dzone.com/articles/understanding-reactor-pattern-thread-based-and-eve)
+- [Reactor Pattern](https://www.dre.vanderbilt.edu/~schmidt/PDF/Reactor2-93.pdf)
+
+具体可以参考文档：[《Scalable IO in Java》](https://gee.cs.oswego.edu/dl/cpjslides/nio.pdf)，作者是：Doug Lea
 
 #### 6.1.1、概念
 
