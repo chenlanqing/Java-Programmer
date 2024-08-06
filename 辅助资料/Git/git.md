@@ -525,6 +525,27 @@ git config --global --unset https.proxy
 ```
 设置完以后重启一下编译器，成功解决！
 
+# 6、操作
+
+## 6.1、推送远程工程
+
+```bash
+# 进入你的项目目录
+cd /path/to/your/project
+# 初始化本地Git仓库
+git init
+# 添加远程仓库（URL替换为你GitLab工程的地址）
+git remote add origin https://gitlab.com/your-username/your-project.git
+# 创建新分支V1.0并切换到该分支
+git checkout -b V1.0
+# 添加所有文件到Git
+git add .
+# 提交代码到本地仓库
+git commit -m "Initial commit with code"
+# 推送V1.0分支到远程仓库
+git push origin V1.0
+```
+
 # 参考资料
 
 * [Git教程](https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
