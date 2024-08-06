@@ -162,6 +162,16 @@ public class Person {
 </dependency>
 ```
 
+关于Map的注入参考官方文档：[Binding Maps](https://docs.spring.io/spring-boot/reference/features/external-config.html#features.external-config.typesafe-configuration-properties.relaxed-binding.maps)
+
+如果使用yaml配置时，Map配置的处理，如果需要保留特殊字符，需要使用`"[]"`处理，比如：
+```yaml
+rest:
+	url-mapping:
+		"[/api/v1/test1]": /aa/bbb
+```
+不然SpringBoot在处理时，会讲特殊字符去掉，具体字符参考上面的文档
+
 ### 3.2、@Value获取值和@ConfigurationProperties获取值比较
 
 |            | @ConfigurationProperties | @Value |
@@ -596,7 +606,7 @@ Unconditional classes:
 
 ```
 
-# 三、SprinBoot-Web开发
+# 三、SpringBoot-Web开发
 
 ## 1、静态资源映射
 
