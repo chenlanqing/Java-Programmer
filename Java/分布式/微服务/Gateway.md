@@ -2,6 +2,7 @@
 
 - [一次Gateway调用过程](https://segmentfault.com/a/1190000040996359)
 - [Gateway使用示例](https://github.com/chenlanqing/spring-gateway-tutorial)
+- [Gateway Plugin](https://github.com/chenggangpro/spring-cloud-gateway-plugin)
 
 ## 1、概述
 
@@ -147,6 +148,8 @@ Predicate是Java8中引入的一个新功能，Predicate接收一个判断条件
 - 路由 Filter（对应接口：GatewayFilter）: 路由 Filter 是针对 Route 进行配置的，不同的 Route 可以使用不同的参数，因此会创建不同的实例
 
 ### 6.1、GlobalFilter
+
+- [Cache Request body](https://github.com/spring-cloud/spring-cloud-gateway/issues/1587)
 
 GlobalFilter只需要实现并配置`@Component`，则gateway能够自动识别，其对所有Route都是生效的；
 ```java
