@@ -2623,10 +2623,6 @@ OK
 ## 2、数据持久化的坑
 
 
-# 十六、Lua
-
-
-
 # 十七、Redis性能优化
 
 - [Redis真的变慢了吗？](https://mp.weixin.qq.com/s/nNEuYw0NlYGhuKKKKoWfcQ)
