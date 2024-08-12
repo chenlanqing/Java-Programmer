@@ -1853,6 +1853,20 @@ Hash Tag 是指加在键值对 key 中的一对花括号{}。这对括号会把 
 
 那么，Hash Tag 一般用在什么场景呢？其实，它主要是用在 Redis Cluster中，支持事务操作和范围查询。因为 Redis Cluster 本身并不支持跨实例的事务操作和范围查询，当业务应用有这些需求时，就只能先把这些数据读取到业务层进行事务处理，或者是逐个查询每个实例，得到范围查询的结果
 
+这种做法特别适合不同业务中同一个id对应不同key的情况。例如在redis中我们分别存储了玩家的等级和经验：level:{userid}和exp:{userid}，使用这种做法就可以让属于一个玩家的不同key都进入到同一个slot，方便在脚本中原子地操作。
+
+当然，使用这种做法可能会导致key的存储不平衡，最极端的例子就是hashtag内的key是同一个，那就会导致所有的数据都进入同一个slot
+
+如果你用的redis版本足够新（>7.0)，那么可以尝试如下的lua脚本
+```lua
+#!lua flags=allow-cross-slot-keys
+return redis.call('GET', ARGV[1]) + redis.call('GET', ARGV[2])
+```
+请注意，这里的lua flags只是使得我们可以跨slot访问key。如果没有这么赋值，一般会出现报错Lua script attempted to access a non local key in a cluster node。但是依旧不允许传入不在同一个节点的keys
+
+因此我们这里使用的是ARGV而非KEYS。
+
+
 ### 7.3、Redis集群通信机制
 
 #### 7.3.1、基础通信原理
