@@ -12,6 +12,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [Spring AI Tutorial](https://howtodoinjava.com/series/spring-ai-tutorial/)
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
 - [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
+- [Deep learning AI](https://learn.deeplearning.ai/)
 
 # GPT
 
