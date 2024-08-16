@@ -2160,6 +2160,8 @@ Lambda 表达式到函数式接口的转换是通过 invokedynamic 指令来实�
 
 # 10、Java编译
 
+- [Janino-super-small, super-fast Java™ compiler.](https://github.com/janino-compiler/janino)
+
 ## 10.1、编译步骤
 
 无论是物理机还是虚拟机，大部分程序代码从开始编译到最终转化成物理机的目标代码或虚拟机能执行的指令集之前，都会按如下步骤进行：<br>
