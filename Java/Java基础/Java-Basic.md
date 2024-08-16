@@ -1075,6 +1075,9 @@ JDK 21 于 2023 年 9 月 19 日 发布，这是一个非常重要的版本，�
 
 ### 1.5、Stream
 
+- [一个强大的类似生成器的 Java 流 API](https://github.com/wolray/seq)
+- [一个Java DataFrame的实现](https://github.com/burukeYou/JDFrame)
+
 `public interface Stream<T> extends BaseStream<T, Stream<T>>`
 
 #### 1.5.1、特性
