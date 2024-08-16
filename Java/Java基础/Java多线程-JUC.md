@@ -950,7 +950,12 @@ public class Semaphore implements java.io.Serializable {
 
 - 并不是必须由获取许可证的线程释放那个许可证，事实上，获取和释放许可证对线程并无要求；
 
-- 例子:
+- 在使用 Semaphore 时，没有获取到许可证的线程，调用了 release 方法，导致许可证凭空增加。
+
+- availablePermits：获取剩余可用许可证
+- drainPermits ：获取剩余可用许可证，拿走所有剩下的许可证
+
+例子:
 ```java
 @Slf4j
 public class SemaphoreDemo {
@@ -1001,7 +1006,7 @@ public class SemaphoreDemo {
 
 **semaphore初始化有2个令牌，一个线程调用1次release方法，然后一次性获取3个令牌，会获取到吗?**
 
-答案：能，原因是release会添加令牌，并不会以初始化的大小为准。Semaphore中release方法的调用并没有限制要在acquire后调用。
+答案：能，原因是release会添加令牌，并不会以初始化的大小为准。Semaphore中release方法的调用并没有限制要在acquire后调用。在使用 Semaphore 时，没有获取到许可证的线程，调用了 release 方法，导致许可证凭空增加。
 
 ## 8、Condition
 
