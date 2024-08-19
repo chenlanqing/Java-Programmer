@@ -2049,9 +2049,13 @@ Codis 集群中包含了 4 类关键组件：
 
 # 六、Redis内存
 
-## 1、Redis内存统计
+- [Redis-内存优化](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/)
 
-在redis-cli客户端中通过命令`info memory`可以查看内存使用情况
+## 1、内存与内存碎片
+
+### 1.1、查看内存统计
+
+在redis-cli客户端中通过命令 [info memory](https://redis.io/docs/latest/commands/info/) 可以查看内存使用情况
 ```
 127.0.0.1:6379> info memory
 # Memory
@@ -2078,6 +2082,26 @@ mem_allocator:libc
 active_defrag_running:0
 lazyfree_pending_objects:0
 ```
+
+### 1.2、内存碎片
+
+内存碎片可以从两个角度来理解：
+- **外部碎片**：这是指由于内存分配和释放模式造成的可用内存空间的不连续性。频繁修改 Redis 中的数据也会产生内存碎片；在 Redis 中，如果大量的小对象被分配和释放，但它们的分配和释放顺序不一致，就可能导致许多小的、不可用的内存区域散落在更大的、可使用的内存区域之间。这使得 Redis 在尝试分配大块内存时遇到困难，因为没有足够的连续内存空间；
+- **内部碎片**：是指分配给对象的内存块大于对象实际需要的大小。在 Redis 中，内内存分配器一般是按固定大小来分配内存，而不是完全按照应用程序申请的内存空间大小给程序分配，Redis 可以使用 libc、jemalloc、tcmalloc 多种内存分配器来分配内存，默认使用 jemalloc；如果 Redis 使用了一个最小分配单元为 16 字节的内存分配器，那么即使一个对象只需要 1 字节，它也会占用 16 字节的空间，从而产生内部碎片
+
+**如何查看内存碎片信息：**
+
+使用 info memory 命令即可查看 Redis 内存相关的信息
+```
+INFO memory
+# Memory
+used_memory:1073741736
+used_memory_human:1024.00M
+used_memory_rss:1997159792
+used_memory_rss_human:1.86G
+…
+mem_fragmentation_ratio:1.86
+```
 - `used_memory`：Redis分配器分配的内存总量（单位是字节），包括使用的虚拟内存（即swap）；`used_memory_human`只是显示更友好；
 - `used_memory_rss`：Redis进程占据操作系统的内存（单位是字节），与top及ps命令看到的值是一致的；除了分配器分配的内存之外，`used_memory_rss`还包括进程运行本身需要的内存、内存碎片等，但是不包括虚拟内存；
 
@@ -2089,9 +2113,42 @@ lazyfree_pending_objects:0
 
 	`mem_fragmentation_ratio`一般大于1，且该值越大，内存碎片比例越大。`mem_fragmentation_ratio< 1`，说明Redis使用了虚拟内存，由于虚拟内存的媒介是磁盘，比内存速度要慢很多，当这种情况出现时，应该及时排查，如果内存不足应该及时处理，如增加Redis节点、增加Redis服务器的内存、优化应用等。
 
-	一般来说，`mem_fragmentation_ratio`在1.03左右是比较健康的状态（对于jemalloc来说）；上面截图中的`mem_fragmentation_ratio`值很大，是因为还没有向Redis中存入数据，Redis进程本身运行的内存使得`used_memory_rss` 比`used_memory`大得多
+	一般来说，`mem_fragmentation_ratio`在1.03左右是比较健康的状态（对于jemalloc来说）；合理的范围是： mem_fragmentation_ratio 大于 1 但小于 1.5
+	
+	mem_fragmentation_ratio 大于 1.5 。这表明内存碎片率已经超过了 50%
 
-- `mem_allocator:Redis`使用的内存分配器，在编译时指定；可以是 `libc 、jemalloc或者tcmalloc`，默认是`jemalloc`；
+- `mem_allocator:Redis`使用的内存分配器，在编译时指定；可以是 `libc 、jemalloc或者tcmalloc`，默认是 [jemalloc](https://github.com/jemalloc/jemalloc)；
+
+**何清理内存碎片**
+
+当 Redis 发生内存碎片后，一个“简单粗暴”的方法就是重启 Redis 实例，但是这不是最好的方法：
+- 重启 Redis 会带来两个后果：如果 Redis 中的数据没有持久化，那么，数据就会丢失；
+- 即使 Redis 数据持久化了，还需要通过 AOF 或 RDB 进行恢复，恢复时长取决于 AOF 或 RDB 的大小，如果只有一个 Redis 实例，恢复阶段无法提供服务
+
+从 4.0-RC3 版本以后，只要使用的内存分配器是 jemalloc，可以开启内存碎片自动清理的功能，自动清理的原理很简单：就是内存不连续的时候，自动将分散的数据挪动到一起，这样剩余的空间就会形成连续空间；
+
+碎片清理是有代价的，操作系统需要把多份数据拷贝到新位置，把原有空间释放出来，这会带来时间开销。因为 Redis 是单线程，在数据拷贝时，Redis 只能等着，这就导致 Redis 无法及时处理请求，性能就会降低。而且，有的时候，数据拷贝还需要注意顺序
+
+如何解决这个问题？Redis 专门为自动内存碎片清理功机制设置的参数了。可以通过设置参数，来控制碎片清理的开始和结束时机，以及占用的 CPU 比例，从而减少碎片清理对 Redis 本身请求处理的性能影响：
+
+首先，Redis 需要启用自动内存碎片清理，可以把 activedefrag 配置项设置为 yes
+```conf
+config set activedefrag yes #命令只是启用了自动清理功能
+```
+具体什么时候清理需要通过下面两个参数控制：
+```conf
+# 内存碎片占用空间达到 500mb 的时候开始清理
+config set active-defrag-ignore-bytes 500mb
+# 表示内存碎片空间占操作系统分配给 Redis 的总空间比例达到 10% 时，开始清理。
+config set active-defrag-threshold-lower 10
+```
+通过 Redis 自动内存碎片清理机制可能会对 Redis 的性能产生影响，可以通过下面两个参数来减少对 Redis 性能的影响：
+```conf
+# 表示自动清理过程所用 CPU 时间的比例不低于 25%，保证清理能正常开展；
+config set active-defrag-cycle-min 25
+# 表示自动清理过程所用 CPU 时间的比例不高于 75%，一旦超过，就停止清理，从而避免在清理时，大量的内存拷贝阻塞 Redis，导致响应延迟升高
+config set active-defrag-cycle-max 75
+```
 
 ## 2、Redis单线程、高性能
 
