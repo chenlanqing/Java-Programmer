@@ -137,3 +137,7 @@ https://juejin.cn/post/7137092683125751815
 （2）Fils -> Settings
 
 ![](image/IDEA-Settings-Compile.png)
+
+# 参考资料
+
+- [IDEA高效使用指南](https://idea.javaguide.cn/tips/)
