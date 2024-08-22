@@ -1,4 +1,115 @@
-### 基本操作
+## 1、根据A表来更新B表的数据
+
+可以直接通过两个表关联，进行进行数据更新
+```sql
+update b join a on b.id = a.id set b.score = a.score
+```
+删除也可以用表关联来删除数据
+
+`delete e,d from e join d on e.id = d.eid and e.name=''`
+
+## 2、mysql加密解密
+
+```sql
+select aes_encrypt("需要加密的字符串","密钥");
+-- 此时的加密后的字符串是二进制，可以转成十六进制的使用函数：hex()
+select aes_decrypt("加密后的字符串","密钥");
+-- 将十六进制转换为二进制：unhex()
+```
+
+## 3、批量插入记录时忽略错误的记录
+
+`insert ignore into table() values(),(),();`
+
+## 4、插入时存在就更新
+
+`insert into table() value() on duplicate key update col=''`
+
+## 5、使用from语句替代子查询
+
+## 6、对字段值进行替换
+
+```sql
+SELECT
+	GROUP_CONCAT( `name` SEPARATOR ',' ) 
+FROM
+	t_a t 
+WHERE
+	FIND_IN_SET ( t.id, ( SELECT REPLACE ( TRIM( BOTH '#' FROM a_id ), '#', ',' ) FROM t_b t ))
+```
+将t_b表中的字段a_id与t_a表关联，并拼接起来
+
+t_a表中的数据：
+```
+1	喜剧
+2	动作
+3	爱情
+4	战争
+```
+t_b表中的数据：
+```
+1	醉拳	#1#2#3#
+```
+需要将`#1#2#3#`其展示为对应的类型的中文
+
+## 7、排名
+
+**比如获取某个学生成绩排名并计算该学生和上一名学生成绩差，是并列排名：**
+```sql
+SELECT *,
+	( SELECT count(DISTINCT score) FROM table_score AS b WHERE a.score < b.score) +1 AS rank, # 获取排名，并列
+	( SELECT b.score FROM table_score AS b WHERE b.score > a.score ORDER BY b.score LIMIT 1) - a.score AS subtract # 获取和上一名学生成绩的差 
+FROM table_score AS a WHERE a.s_id = 13; #获取学生周三的成绩排名和与上一名的成绩差
+```
+
+**获取所有学生成绩排名-并列排名**
+```sql
+SELECT *,
+	( SELECT count(DISTINCT score) FROM table_score AS b WHERE a.score < b.score) + 1 AS rank # 获取排名-并列
+FROM table_score AS a ORDER BY rank; #获取学生成绩排名
+```
+
+**获取所有学生成绩排名，不是并列排名。计算行号进行排名**
+```sql
+SELECT a.*,
+(@rowNum:=@rowNum+1) AS rank #计算行号
+FROM table_score AS a,
+( SELECT (@rowNum :=0) ) b
+ORDER BY a.score DESC;
+```
+
+## 8、分组获取数据
+
+https://www.xaprb.com/blog/2006/12/07/how-to-select-the-firstleastmax-row-per-group-in-sql/
+
+## 9、导入导出数据
+
+**导入本地文件**
+
+[load命令](https://dev.mysql.com/doc/refman/8.0/en/load-data.html)
+
+进入mysql命令行：
+```
+mysql> load data local infile '/ret.txt' into table user_sign_data fields TERMINATED  by ',' lines TERMINATED  by '\n';
+```
+
+**导入**
+进入mysql命令行：
+```
+mysql> source db.sql
+```
+或者在shell：`mysql -uroot -p < db.sql`
+
+**导出数据**
+```
+-- 连接本地机器
+mysql -uroot -p -e "select * from table_name" >> /data/soft/table.log
+-- 连接远程mysql
+mysql -uroot -p -h <remove_ip> -e "select * from table_name" >> /data/soft/table.log
+```
+
+
+## 基本操作
 
 ```sql
 /* Windows服务 */
@@ -12,7 +123,7 @@ SHOW PROCESSLIST -- 显示哪些线程正在运行
 SHOW VARIABLES -- 显示系统变量信息
 ```
 
-### 数据库操作
+## 数据库操作
 
 ```sql
 /* 数据库操作 */ ------------------
@@ -36,7 +147,7 @@ SHOW VARIABLES -- 显示系统变量信息
         同时删除该数据库相关的目录及其目录内容
 ```
 
-### 表的操作 
+## 表的操作 
 
 ```sql
 -- 创建表
@@ -117,7 +228,7 @@ SHOW VARIABLES -- 显示系统变量信息
     ANALYZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE tbl_name [, tbl_name] ...
 ```
 
-### 数据操作
+## 数据操作
 
 ```sql
 /* 数据操作 */ ------------------
@@ -139,7 +250,7 @@ SHOW VARIABLES -- 显示系统变量信息
     UPDATE 表名 SET 字段名=新值[, 字段名=新值] [更新条件]
 ```
 
-### 字符集编码
+## 字符集编码
 
 ```sql
 /* 字符集编码 */ ------------------
@@ -162,7 +273,7 @@ SET NAMES GBK;  -- 相当于完成以上三个设置
     COLLATE 校对集编码     设置校对集编码
 ```
 
-### 数据类型(列类型)
+## 数据类型(列类型)
 
 ```sql
 /* 数据类型（列类型） */ ------------------
@@ -264,7 +375,7 @@ set(val1, val2, val3...)
     当创建表时，SET成员值的尾部空格将自动被删除。
 ```
 
-### 列属性(列约束)
+## 列属性(列约束)
 
 ```sql
 /* 列属性（列约束） */ ------------------
@@ -319,7 +430,7 @@ set(val1, val2, val3...)
 
 ```
 
-### 建表规范
+## 建表规范
 
 ```sql
 /* 建表规范 */ ------------------
@@ -338,7 +449,7 @@ set(val1, val2, val3...)
         将一个实体信息的数据放在一个表内实现。
 ```
 
-### SELECT 
+## SELECT 
 
 ```sql
 /* SELECT */ ------------------
@@ -403,7 +514,7 @@ h. DISTINCT, ALL 选项
     默认为 all, 全部记录
 ```
 
-###  UNION
+##  UNION
 
 ```sql
 /* UNION */ ------------------
@@ -416,7 +527,7 @@ h. DISTINCT, ALL 选项
     每个select查询的字段列表(数量、类型)应一致，因为结果中的字段名以第一条select语句为准。
 ```
 
-### 子查询
+## 子查询
 
 ```sql
 /* 子查询 */ ------------------
@@ -450,7 +561,7 @@ h. DISTINCT, ALL 选项
     all, some 可以配合其他运算符一起使用。
 ```
 
-### 连接查询(join)
+## 连接查询(join)
 
 ```sql
 /* 连接查询(join) */ ------------------
@@ -479,7 +590,7 @@ h. DISTINCT, ALL 选项
 select info.id, info.name, info.stu_num, extra_info.hobby, extra_info.sex from info, extra_info where info.stu_num = extra_info.stu_id;
 ```
 
-### TRUNCATE 
+## TRUNCATE 
 
 ```sql
 /* TRUNCATE */ ------------------
@@ -493,7 +604,7 @@ TRUNCATE [TABLE] tbl_name
 4，当被用于带分区的表时，truncate 会保留分区
 ```
 
-### 备份与还原
+## 备份与还原
 
 ```sql
 /* 备份与还原 */ ------------------
@@ -519,7 +630,7 @@ mysqldump [options] --all--database
 　　mysql -u用户名 -p密码 库名 < 备份文件
 ```
 
-### 视图
+## 视图
 
 ```sql
 什么是视图：
@@ -553,7 +664,7 @@ CREATE [OR REPLACE] [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}] VIEW view_name
     UNDEFINED   未定义(默认)，指的是MySQL自主去选择相应的算法。
 ```
 
-### 事务(transaction) 
+## 事务(transaction) 
 
 ```sql
 事务是指逻辑上的一组操作，组成这组操作的各个单元，要不全成功要不全失败。
@@ -604,7 +715,7 @@ CREATE [OR REPLACE] [ALGORITHM = {UNDEFINED | MERGE | TEMPTABLE}] VIEW view_name
 
 ```
 
-### 锁表
+## 锁表
 
 ```sql
 /* 锁表 */
@@ -616,7 +727,7 @@ MyISAM 支持表锁，InnoDB 支持行锁
     UNLOCK TABLES
 ```
 
-### 触发器
+## 触发器
 
 ```sql
 /* 触发器 */ ------------------
@@ -669,7 +780,7 @@ end
 3. Replace 语法 如果有记录，则执行 before insert, before delete, after delete, after insert
 ```
 
-### SQL编程
+## SQL编程
 
 ```sql
 /* SQL编程 */ ------------------
@@ -804,7 +915,7 @@ INOUT，表示混合型
 注意，没有返回值。
 ```
 
-### 存储过程
+## 存储过程
 
 ```sql
 /* 存储过程 */ ------------------
@@ -825,7 +936,7 @@ BEGIN
 END
 ```
 
-### 用户和权限管理
+## 用户和权限管理
 
 ```sql
 /* 用户和权限管理 */ ------------------
@@ -907,7 +1018,7 @@ USAGE   -- “无权限”的同义词
 GRANT OPTION    -- 允许授予权限
 ```
 
-### 表维护
+## 表维护
 
 ```sql
 /* 表维护 */
@@ -920,7 +1031,7 @@ option = {QUICK | FAST | MEDIUM | EXTENDED | CHANGED}
 OPTIMIZE [LOCAL | NO_WRITE_TO_BINLOG] TABLE tbl_name [, tbl_name] ...
 ```
 
-### 杂项
+## 杂项
 
 ```sql
 /* 杂项 */ ------------------
