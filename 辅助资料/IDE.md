@@ -92,12 +92,12 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - Statistic
 - VisualVM Launcher
 - ASM
-- IDE Eval Reset
 - mybatisX
 - Rainbow Brackets ：括号插件
 - metricsreloaded
 - ANTLR
 - git commit message helper:标准化提交内容的插件
+- GitToolBox
 
 # 4、idea插件开发
 

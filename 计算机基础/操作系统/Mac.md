@@ -32,10 +32,30 @@ TIME_WAIT 1645
 
 https://xclient.info/
 
+### 4.1、文本编辑
+
+- MarkEditor  markdown文件编辑
+- Sublime
+- Typora    markdown编辑
+- Visual Studio Code
+- atom
+- worktile
+
+### 4.2、软件开发
+
 - idea
 - mat
 - DBeaver   数据库连接工具
 - postman
+- iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
+- another redis desktop manager- JProfiler
+- SecureCRT  SSH连接客户端
+- jclasslib bytecode viewer
+- electerm 终端工具
+- navicate lite
+
+### 4.3、其他软件
+
 - 百度网盘
 - 滴答清单
 - Alfred3
@@ -45,22 +65,13 @@ https://xclient.info/
 - CleanMyMac
 - Clipber  粘贴板
 - iState Menus
-- iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
-- JProfiler
-- MarkEditor  markdown文件编辑
-- rdm  redis客户端
-- SecureCRT  SSH连接客户端
 - StarUML       uml画图工具
-- Sublime
+- Snipast
 - SwitchHosts
 - The Unarchiver   解压缩工具
-- Typora    markdown编辑
-- Visual Studio Code
 - VMware Fusion  虚拟机工具
 - WireShark   抓包工具
 - Xmind     脑图工具
-- atom
-- worktile
 - sizeup
 - https://arctype.com/
 - Arc：浏览器
