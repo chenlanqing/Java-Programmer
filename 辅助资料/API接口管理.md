@@ -193,10 +193,14 @@ Caused by: java.lang.NoClassDefFoundError: javax/validation/constraints/NotBlank
 </dependency>
 ```
 
-二、SpringDoc
+# 二、SpringDoc
 
 - [springdoc-openapi v1.8.0](https://springdoc.org/v1/)
 - [springdoc-openapi v2.6.0](https://springdoc.org/)
+
+## 1、关于版本
+
+[SpringBoot与SpringDoc版本对应](https://springdoc.org/#what-is-the-compatibility-matrix-of-springdoc-openapi-with-spring-boot)
 
 # 参考资料
 
