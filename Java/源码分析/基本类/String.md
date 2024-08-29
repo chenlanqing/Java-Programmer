@@ -196,7 +196,7 @@ public static java.lang.String concat(java.lang.String);
       LineNumberTable:
         line 11: 0
 ```
-而在 JDK9 中，反编译的结果就会有点特别了，片段是：
+而在 JDK9之后的版本 中，反编译的结果就会有点特别了，片段是：
 ```
 public static java.lang.String concat(java.lang.String);
     descriptor: (Ljava/lang/String;)Ljava/lang/String;
@@ -216,7 +216,9 @@ BootstrapMethods:
   0: #15 REF_invokeStatic java/lang/invoke/StringConcatFactory.makeConcatWithConstants:(Ljava/lang/invoke/MethodHandles$Lookup;Ljava/lang/String;Ljava/lang/invoke/MethodType;Ljava/lang/String;[Ljava/lang/Object;)Ljava/lang/invoke/CallSite;
 ```
 从上面可以看到：
-非静态的拼接逻辑在 JDK 8 中会自动被 javac 转换为 StringBuilder 操作；而在 JDK 9 里面，则是体现了思路的变化。Java 9 利用 InvokeDynamic，将字符串拼接的优化与 javac 生成的字节码解耦，假设未来 JVM 增强相关运行时实现，将不需要依赖 javac 的任何修改
+非静态的拼接逻辑在 JDK 8 中会自动被 javac 转换为 StringBuilder 操作；而在 JDK 9 里面，则是体现了思路的变化。Java 9 利用 InvokeDynamic，将字符串拼接的优化与 javac 生成的字节码解耦，假设未来 JVM 增强相关运行时实现，将不需要依赖 javac 的任何修改；
+
+JDK11的版本中，是基于StringConcatFactory.makeConcatWithConstants动态生成一个方法来实现。这个会比StringBuilder更快，不需要创建StringBuilder对象，也会减少一次数组拷贝；这里由于是内部使用的数组，所以用了UNSAFE.allocateUninitializedArray的方式更快分配byte[]数组。通过：StringConcatFactory.makeConcatWithConstants
 
 #### 3.1.4、数据对比
 
@@ -856,10 +858,11 @@ public static String captureName(String name) {
 
 # 参考文章
 
-* [字符串常量池](http://blog.csdn.net/gaopeng0071/article/details/11741027)
 * [JDK7-String源码](http://www.hollischuang.com/archives/99)
-* [深入解析String#intern](https://tech.meituan.com/in_depth_understanding_string_intern.html)
 * [String、StringBuilder、StringBuffer](http://www.cnblogs.com/dolphin0520/p/3778589.html)
 * [String对象创建问题](http://rednaxelafx.iteye.com/blog/774673/)
 * [为什么计算Hash使用31](https://www.cnblogs.com/nullllun/p/8350178.html)
 * [深入解析String#intern](https://tech.meituan.com/2014/03/06/in-depth-understanding-string-intern.html)
+* [Java字符串拼接技术演进](https://mp.weixin.qq.com/s/JDil0hDZD3M7Zk_13Ppj9w)
+* [String全解析](http://keaper.cn/2020/09/08/java-string-mian-mian-guan/)
+* [String from JDK1~JDK21](https://www.unlogged.io/post/java-and-the-string-odyssey-navigating-changes-from-jdk-1-to-jdk-21)
