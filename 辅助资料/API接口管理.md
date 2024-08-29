@@ -202,6 +202,8 @@ Caused by: java.lang.NoClassDefFoundError: javax/validation/constraints/NotBlank
 
 [SpringBoot与SpringDoc版本对应](https://springdoc.org/#what-is-the-compatibility-matrix-of-springdoc-openapi-with-spring-boot)
 
+> 说明，SpringBoot:2.7.18 和 SpringDoc：1.8.0 不兼容
+
 # 参考资料
 
 - [mkdocs-material](https://github.com/squidfunk/mkdocs-material)
