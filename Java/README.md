@@ -4,6 +4,7 @@ Java 各个版本API比较： https://github.com/AdoptOpenJDK/jdk-api-diff
 
 - [Open JDK](https://openjdk.org/)
 - [Open JDK JEP Index-Java增强建议](https://openjdk.org/jeps/0)
+- [JEp-中文](https://jeps.dev/)
 - [Open JDK Bug System](https://bugs.openjdk.org/secure/Dashboard.jspa)
 - [Open JDK Wiki](https://wiki.openjdk.org/)
 - [Open JDK Source code](https://hg.openjdk.org/)
