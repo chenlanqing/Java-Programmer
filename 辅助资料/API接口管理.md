@@ -202,7 +202,44 @@ Caused by: java.lang.NoClassDefFoundError: javax/validation/constraints/NotBlank
 
 [SpringBoot与SpringDoc版本对应](https://springdoc.org/#what-is-the-compatibility-matrix-of-springdoc-openapi-with-spring-boot)
 
+`springdoc-openapi:2.x` 与 `spring-boot:3+` 兼容。
+
+springdoc-openapi 的 spring-boot 版本的详尽列表：
+
+spring-boot Versions  |	Minimum springdoc-openapi Versions
+----------------------|-----------------------------------
+3.0.x | 2.0.x+
+2.7.x, 1.5.x | 1.6.0+
+2.6.x, 1.5.x | 1.6.0+
+2.5.x, 1.5.x | 1.5.9+
+2.4.x, 1.5.x | 1.5.0+
+2.3.x, 1.5.x | 1.4.0+
+2.2.x, 1.5.x | 1.2.1+
+2.0.x, 1.5.x | 1.0.0+
+
 > 说明，SpringBoot:2.7.18 和 SpringDoc：1.8.0 不兼容
+> Springdoc-openapi v1.7.0 是支持 Spring Boot 2.x 和 1.x 的最后一个版本。
+
+## 2、Springfox迁移
+
+参考官方文档：[Migrating from SpringFox](https://springdoc.org/v1/#migrating-from-springfox)
+
+- 将swagger2注释替换为swagger3注释（它已包含在springdoc-openapi-ui依赖项中）, swagger 3注释的包是`io.swagger.v3.oas.annotations`
+    - `@Api` → `@Tag`
+    - `@ApiIgnore` → `@Parameter(hidden = true)` or `@Operation(hidden = true)` or `@Hidden`
+    - `@ApiImplicitParam` → `@Parameter`
+    - `@ApiImplicitParams` → `@Parameters`
+    - `@ApiModel` → `@Schema`
+    - `@ApiModelProperty(hidden = true, name="")` → `@Schema(accessMode = READ_ONLY, title="")`
+    - `@ApiModelProperty` → `@Schema`
+    - `@ApiOperation(value = "foo", notes = "bar")` → `@Operation(summary = "foo", description = "bar")`
+    - `@ApiParam` → `@Parameter`
+    - `@ApiResponse(code = 404, message = "foo")` → `@ApiResponse(responseCode = "404", description = "foo")`
+
+## 3、集成
+
+- [Spring Boot 3 OpenAPI Docs with Springdoc and Swagger](https://howtodoinjava.com/spring-boot/springdoc-openapi-rest-documentation/)
+
 
 # 参考资料
 
