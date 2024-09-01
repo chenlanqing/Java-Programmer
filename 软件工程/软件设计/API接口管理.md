@@ -7,6 +7,7 @@
 - [开源集成Swagger](https://swagger.io/tools/open-source/open-source-integrations/)
 - [Swagger](https://swagger.io/)
 - [Swagger specifications convert to AsciiDoc and PDF](https://blog.devgenius.io/swagger-specifications-convert-to-asciidoc-and-pdf-with-a-custom-font-8e734c6fdd8c)
+- [示例代码](https://github.com/chenlanqing/springboot-api-doc)
 
 ## 1、集成Swagger-UI
 
@@ -145,7 +146,7 @@ public static BeanPostProcessor springfoxHandlerProviderBeanPostProcessor() {
 }
 ```
 
-### 2、Swagger整合Knife4j
+## 2、Swagger整合Knife4j
 
 - [Swagger-Knife4j](https://javabetter.cn/gongju/knife4j.html)
 
@@ -195,6 +196,160 @@ Caused by: java.lang.NoClassDefFoundError: javax/validation/constraints/NotBlank
     <artifactId>validation-api</artifactId>
     <version>2.0.1.Final</version>
 </dependency>
+```
+
+## 3、Swagger多包分组
+
+分组的效果如下：
+
+![](image/Swagger-接口分组.png)
+
+分组逻辑主要设置：
+```java
+@Bean(value = "personDocket")
+public Docket personDocket() {
+    List<Response> responses = buildResponseList();
+    return new Docket(DocumentationType.OAS_30)
+            .apiInfo(apiInfo())
+            .groupName("Person API") // 设置分组名称
+            .enable(true)
+            .select()
+            //apis： 添加swagger接口提取范围
+            .apis(new Predicate<RequestHandler>() {
+                @Override
+                public boolean test(RequestHandler requestHandler) {
+                    // 可以实现匹配逻辑
+                    // 比如包路径、具体接口是否包含某个注解等
+                    return false;
+                }
+            })
+            .paths(PathSelectors.any())
+            .build();
+}
+```
+主要是设置 apis的匹配逻辑：
+```java
+public ApiSelectorBuilder apis(Predicate<RequestHandler> selector) {
+    this.requestHandlerSelector = this.requestHandlerSelector.and(selector);
+    return this;
+}
+public ApiSelectorBuilder paths(Predicate<String> selector) {
+    this.pathSelector = this.pathSelector.and(selector);
+    return this;
+}
+```
+当然也可以使用：RequestHandlerSelectors 静态方法来实现
+
+具体代码实现参考：[SwaggerConfig](https://github.com/chenlanqing/springboot-api-doc/blob/main/boot2-springfox-kinfe4j/src/main/java/com/qing/fan/config/SwaggerConfig.java)
+```java
+Configuration
+@EnableOpenApi
+public class SwaggerConfig {
+
+    @Bean(value = "userDocket")
+    public Docket userDocket() {
+        List<Response> responses = buildResponseList();
+        return new Docket(DocumentationType.OAS_30)
+                .useDefaultResponseMessages(false)
+                .globalResponses(HttpMethod.GET, responses)
+                .globalResponses(HttpMethod.POST, responses)
+                .apiInfo(apiInfo())
+                .groupName("User API")
+                .enable(true)
+                .select()
+                //apis： 添加swagger接口提取范围
+                .apis(RequestHandlerSelectors.basePackage("com.qing.fan.controller"))
+                .apis(basePackage("com.qing.fan.controller.user"))
+                .paths(PathSelectors.any())
+                .build();
+    }
+
+    @Bean(value = "personDocket")
+    public Docket personDocket() {
+        List<Response> responses = buildResponseList();
+        return new Docket(DocumentationType.OAS_30)
+                .useDefaultResponseMessages(false)
+                .globalResponses(HttpMethod.GET, responses)
+                .globalResponses(HttpMethod.POST, responses)
+                .apiInfo(apiInfo())
+                .groupName("Person API")
+                .enable(true)
+                .select()
+                //apis： 添加swagger接口提取范围
+                .apis(RequestHandlerSelectors.basePackage("com.qing.fan.controller"))
+                .apis(basePackage("com.qing.fan.controller.person"))
+                .paths(PathSelectors.any())
+                .build();
+    }
+    private ApiInfo apiInfo() {
+        return new ApiInfoBuilder()
+                .title("测试Swagger")
+                .description("Swagger")
+                .version("v1.0")
+                .build();
+    }
+    private List<Response> buildResponseList() {
+        List<Response> responseList = new ArrayList<>();
+        responseList.add(new ResponseBuilder().code("200").description("Success").build());
+        responseList.add(new ResponseBuilder().code("400").description("参数错误").build());
+        responseList.add(new ResponseBuilder().code("401").description("没有认证").build());
+        responseList.add(new ResponseBuilder().code("403").description("没有访问权限").build());
+        responseList.add(new ResponseBuilder().code("404").description("找不到资源").build());
+        responseList.add(new ResponseBuilder().code("500").description("服务器内部错误").build());
+        return responseList;
+    }
+    /**
+     * 重写basePackage方法，使能够实现多包访问
+     */
+    public static Predicate<RequestHandler> basePackage(final String basePackage) {
+        return new Predicate<RequestHandler>() {
+            @Override
+            public boolean test(RequestHandler requestHandler) {
+                Class<?> clazz = requestHandler.declaringClass();
+                // 匹配包
+                for (String packageStr : basePackage.split(";")) {
+                    boolean matched = clazz.getPackage().getName().startsWith(packageStr);
+                    if (matched) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+    }
+    @Bean
+    public static BeanPostProcessor springfoxHandlerProviderBeanPostProcessor() {
+        return new BeanPostProcessor() {
+
+            @Override
+            public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
+                if (bean instanceof WebMvcRequestHandlerProvider || bean instanceof WebFluxRequestHandlerProvider) {
+                    customizeSpringfoxHandlerMappings(getHandlerMappings(bean));
+                }
+                return bean;
+            }
+
+            private <T extends RequestMappingInfoHandlerMapping> void customizeSpringfoxHandlerMappings(List<T> mappings) {
+                List<T> copy = mappings.stream()
+                        .filter(mapping -> mapping.getPatternParser() == null)
+                        .collect(Collectors.toList());
+                mappings.clear();
+                mappings.addAll(copy);
+            }
+
+            @SuppressWarnings("unchecked")
+            private List<RequestMappingInfoHandlerMapping> getHandlerMappings(Object bean) {
+                try {
+                    Field field = ReflectionUtils.findField(bean.getClass(), "handlerMappings");
+                    field.setAccessible(true);
+                    return (List<RequestMappingInfoHandlerMapping>) field.get(bean);
+                } catch (IllegalArgumentException | IllegalAccessException e) {
+                    throw new IllegalStateException(e);
+                }
+            }
+        };
+    }
+}
 ```
 
 # 三、SpringDoc
