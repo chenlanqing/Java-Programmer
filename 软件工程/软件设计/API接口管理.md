@@ -1,4 +1,8 @@
-# 一、Swagger
+# 一、API设计
+
+[如何设计API](设计案例.md#二API设计)
+
+# 二、Swagger
 
 - [开源集成Swagger](https://swagger.io/tools/open-source/open-source-integrations/)
 - [Swagger](https://swagger.io/)
@@ -193,7 +197,7 @@ Caused by: java.lang.NoClassDefFoundError: javax/validation/constraints/NotBlank
 </dependency>
 ```
 
-# 二、SpringDoc
+# 三、SpringDoc
 
 - [springdoc-openapi v1.8.0](https://springdoc.org/v1/)
 - [springdoc-openapi v2.6.0](https://springdoc.org/)
@@ -246,3 +250,4 @@ spring-boot Versions  |	Minimum springdoc-openapi Versions
 - [mkdocs-material](https://github.com/squidfunk/mkdocs-material)
 - [YApi](https://github.com/YMFE/yapi)
 - [hoppscotch-开源API，对标Postman](https://github.com/hoppscotch/hoppscotch)
+- [API官方文档编写参考示例](https://github.com/longportapp/openapi-website)

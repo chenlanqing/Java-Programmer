@@ -1344,6 +1344,7 @@ protected ModelAndView resolveErrorView(HttpServletRequest request,
 
 ## 7、嵌入式Servlet
 
+- [Spring Boot中Tomcat、Jetty、Undertow哪个嵌入式服务器最好？](https://mp.weixin.qq.com/s/lSMmi7zGhxt4qxxylA_O9w)
 - [tomcat与servlet的版本对应关系](https://tomcat.apache.org/whichversion.html)
 
 Spring Boot 与内嵌 Tomcat 版本的对应关系大致如下（请注意，这些信息可能会随着新版本的发布而发生变化）：
