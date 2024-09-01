@@ -3069,3 +3069,4 @@ SubstrateVM：AOT编译框架
 * [堆外内存](https://www.jianshu.com/p/35cf0f348275)
 * [阿里龙井JDK](https://github.com/alibaba/dragonwell8)
 * [R大知乎](https://www.zhihu.com/people/rednaxelafx/columns)
+* [手写JVM](https://zachaxy.github.io/tags/JVM/page/2/)
