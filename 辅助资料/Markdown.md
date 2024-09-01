@@ -86,3 +86,4 @@ u音|	`&euml;`	| &euml;
 - [使用Datexify来画出想要的符号](http://detexify.kirelabs.org/classify.html)
 - [完整Latex符号列表](https://mirror.its.dal.ca/ctan/info/symbols/comprehensive/symbols-a4.pdf)
 - [ASCII Doc](https://asciidoc.org/)
+- [Slidev-Markdown2PPT](https://github.com/slidevjs/slidev)

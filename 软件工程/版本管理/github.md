@@ -1,4 +1,3 @@
-
 # 1、github上fork的项目与原项目同步
 
 [github上fork的项目与原项目同步](https://blog.csdn.net/qq1332479771/article/details/56087333)
@@ -20,3 +19,4 @@ https://cyfeng.science/2020/12/21/rename-github-branch-from-master-to-main/
 # 参考资料
 
 - [发现和分享有趣、入门级开源项目的平台](https://hellogithub.com/)
+- [Github实用小技巧](https://javaguide.cn/tools/git/github-tips.html)
