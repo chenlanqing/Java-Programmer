@@ -399,6 +399,11 @@ spring-boot Versions  |	Minimum springdoc-openapi Versions
 
 - [Spring Boot 3 OpenAPI Docs with Springdoc and Swagger](https://howtodoinjava.com/spring-boot/springdoc-openapi-rest-documentation/)
 
+# 四、Swagger生成PDF
+
+- [Swagger2Markup 生成PDF、HTML格式的API文档方法整理（中文支持）](https://blog.csdn.net/aaa_a_b_c/article/details/105482847)
+- [Swagger2Markup](https://github.com/Swagger2Markup/swagger2markup)
+
 
 # 参考资料
 
