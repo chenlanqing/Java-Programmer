@@ -12,6 +12,7 @@ import java.util.Random;
 
 /**
  * 依赖：commons-lang3
+ * code from here: https://github.com/rosmahajan/java-encryption-decryption
  */
 public class EncryptDecryptUtils {
 
