@@ -8,10 +8,10 @@
 
 # 一、计算机基础
 
-- [计算机组成](计算机组成/计算机组成.md)
-- [操作系统](计算机组成/操作系统)
-- [计算机网络](计算机网络/网络基础.md)
-- [编译原理](编译原理/编译原理.md)
+- [计算机组成](./计算机基础/计算机组成/计算机组成_.md)
+- [操作系统](./计算机基础/计算机系统/计算机系统.md)
+- [计算机网络](./计算机基础/计算机网络/网络基础.md)
+- [编译原理](./计算机基础/编译原理/编译原理.md)
 - [数据结构](算法与数据结构/数据结构)
 - [算法](算法与数据结构/算法)
 
@@ -19,7 +19,7 @@
 
 - [系统设计](软件工程/软件设计/系统设计.md)
 - [设计模式](软件工程/软件设计/设计模式.md)
-- [持续集成](软件工程/持续集成.md)
+- [持续集成](软件工程/质量管理/持续集成.md)
 
 # 三、Java体系技术
 
@@ -28,7 +28,7 @@
 - [Spring](Java/Java框架/Spring/Spring.md)
 - [Mybatis](Java/Java框架/Mybatis.md)
 - [Maven](Java/Java框架/Maven.md)
-- [Netty](Java/Java框架/NIO-Netty.md)
+- [Netty](Java/Java框架/Netty.md)
 - [Elasticsearch](Java/Java框架/搜索/Elasticsearch.md)
 - [性能优化](性能优化/性能优化.md)
 
@@ -40,15 +40,15 @@
 # 四、分布式
 
 - [一致性协议](Java/分布式/一致性协议)
-- [分布式-理论](Java/分布式/分布式.md#二分布式理论基础)
-- [分布式-事务](Java/分布式/分布式.md#三分布式事务)
-- [分布式-锁](Java/分布式/分布式.md#五分布式锁)
-- [分布式-缓存](Java/分布式/分布式.md#六分布式缓存)
-- [限流](Java/分布式/分布式.md#八限流)
-- [负载均衡](Java/分布式/分布式.md#九负载均衡)
-- [RPC](Java/分布式/分布式.md#十一RPC)
-- [分布式链路追踪](Java/分布式/分布式.md#十分布式链路追踪)
-- [微服务](Java/分布式/微服务.md)
+- [分布式-理论](Java/分布式/分布式_.md#二分布式理论基础)
+- [分布式-事务](Java/分布式/分布式_事务.md)
+- [分布式-锁](Java/分布式/分布式_锁.md)
+- [分布式-缓存](Java/分布式/分布式_缓存.md)
+- [限流](Java/分布式/分布式_服务治理.md#3限流)
+- [负载均衡](Java/分布式/分布式_负载均衡.md)
+- [RPC](Java/分布式/分布式_.md#十一RPC)
+- [分布式链路追踪](Java/分布式/分布式_.md#十分布式链路追踪)
+- [微服务](Java/分布式/微服务/)
   
 **[消息队列](Java/分布式/消息队列/消息中间件.md)：**
 - [Kafka](Java/分布式/消息队列/Kafka.md)
@@ -58,10 +58,10 @@
 # 五、数据库
 
 **关系型数据库**：
-- [MySQL](数据库/MySQL/MySQL.md)
-- [MySQL索引](数据库/MySQL/MySQL索引.md)
+- [MySQL](数据库/MySQL/MySQL_.md)
+- [MySQL索引](数据库/MySQL/MySQL_索引.md)
 
-- [Redis](Java/分布式/Redis与Memcached.md)
+- [Redis](./数据库/NoSQL/Redis/)
 
 # 六、大数据
 
@@ -87,12 +87,12 @@
 # 九、工具
 
 - [Markdown](辅助资料/Markdown.md)
-- [Git](辅助资料/Git)
+- [Git](./软件工程/版本管理/git.md)
 - [各类插件开发](辅助资料/插件开发.md)
 
 # 十、运维
 
-- [Docker](运维/容器化技术.md)
+- [Docker](运维/Docker.md)
 - [Kubernetes](运维/Kubernetes.md)
 
 # 十一、[技术选型](技术选型.md)
@@ -125,11 +125,11 @@
 
 ## 2、其他编程语言
 
-- [C语言](编程语言/C语言.md)
-- [Python](编程语言/Python/Python3/)
-- [C++](编程语言/C++.md)
-- [golang](编程语言/go.md)
-- [Rust](编程语言/Rust.md)
+- [C语言](./C-C++/C/)
+- [Python](./Language/Python/Python3/)
+- [C++](./C-C++/C++)
+- [golang](./Language/go.md)
+- [Rust](./Language/Rust/Rust.md)
 
 ## 3、学习路线
 
