@@ -595,11 +595,9 @@ public class WrapResponseFilter implements GlobalFilter, Ordered {
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
                 if (HttpStatus.OK.equals(getStatusCode()) && body instanceof Flux) {
-                    // 鑾峰彇ContentType锛屽垽鏂槸鍚﹁繑鍥濲SON鏍煎紡鏁版嵁
                     String originalResponseContentType = exchange.getAttribute(ORIGINAL_RESPONSE_CONTENT_TYPE_ATTR);
                     if (StringUtils.isNotBlank(originalResponseContentType) && originalResponseContentType.contains(APPLICATION_JSON_VALUE)) {
                         Flux<? extends DataBuffer> fluxBody = Flux.from(body);
-                        //锛堣繑鍥炴暟鎹唴濡傛灉瀛楃涓茶繃澶э紝榛樿浼氬垏鍓诧級瑙ｅ喅杩斿洖浣撳垎娈典紶杈�
                         return super.writeWith(fluxBody.buffer().map(dataBuffers -> {
                             List<String> list = Lists.newArrayList();
                             dataBuffers.forEach(dataBuffer -> {
