@@ -85,12 +85,8 @@ Predicate是Java8中引入的一个新功能，Predicate接收一个判断条件
 
 - 路径匹配：path断言是最常用的一个断言请求，几乎所有路由都要使用到它；
 ```java
-.route(r -> r.path("/gateway/**")
-             .uri("lb://FEIGN-SERVICE-PROVIDER/")
-)
-.route(r -> r.path("/baidu")
-             .uri("http://baidu.com:80/")
-)
+.route(r -> r.path("/gateway/**").uri("lb://FEIGN-SERVICE-PROVIDER/"))
+.route(r -> r.path("/baidu").uri("http://baidu.com:80/"))
 ```
 在path断言上填上一段URL匹配规则，当实际请求的URL和断言中的规则相匹配的时候，就下发到该路由URI指定的地址，这个地址可以是一个具体的HTTP地址，也可以是eureka中注册的服务名称；
 
@@ -115,14 +111,14 @@ Predicate是Java8中引入的一个新功能，Predicate接收一个判断条件
     - 属性值验证：`query("name","test");`它不仅会验证name属性是否存在，还会验证它的值是不是和断言相匹配，比如当前的断言会验证请求参数的中name属性值是不是test，第二个参数实际上是一个用作模式匹配的正则表达式；
 
 - header断言：这个断言会检查header中是否包含了响应的属性，通常可以用来验证请求是否携带了访问令牌
-    ```
+    ```java
     .route(r -> r.path("/gateway/**")
              .and().header("Authorization")
              .uri("lb://FEIGN-SERVICE-PROVIDER/")
     )
     ```
 - cookie断言：cookie验证的是cookie中保存的信息，cookie断言和前面介绍的两种断言方式大同小异，唯一不同的是它必须连同属性值一同验证，不能单独只验证属性是否存在
-    ```
+    ```java
     .route(r -> r.path("/gateway/**")
              .and().cookie("name", "test")
              .uri("lb://FEIGN-SERVICE-PROVIDER/")
@@ -152,8 +148,74 @@ Predicate是Java8中引入的一个新功能，Predicate接收一个判断条件
 - [Cache Request body](https://github.com/spring-cloud/spring-cloud-gateway/issues/1587)
 
 GlobalFilter只需要实现并配置`@Component`，则gateway能够自动识别，其对所有Route都是生效的；
-```java
 
+比如读取请求参数，并缓存起来：
+```java
+@Component
+@Slf4j
+public class CacheRequestBodyAndRequestFilter implements GlobalFilter, Ordered {
+
+    public static final String CACHED_REQUEST_BODY_X_WWW_FORM_URLENCODED_MAP_KEY = "cachedXWwwFormUrlEncodedMap";
+    public static final String CACHED_REQUEST_BODY_FORM_DATA_MAP_KEY = "cachedRequestBodyFormDataMap";
+
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        Supplier<? extends Mono<? extends Void>> supplier = () -> chain.filter(exchange);
+        Map<String, String> uriTemplateVariables = ServerWebExchangeUtils.getUriTemplateVariables(exchange);
+        MediaType contentType = exchange.getRequest().getHeaders().getContentType();
+        if (MediaType.APPLICATION_FORM_URLENCODED.isCompatibleWith(contentType)) {
+            return ServerWebExchangeUtils.cacheRequestBodyAndRequest(exchange,
+                    (serverHttpRequest) -> ServerRequest
+                            .create(exchange.mutate().request(serverHttpRequest).build(), HandlerStrategies.withDefaults().messageReaders())
+                            .bodyToMono(new ParameterizedTypeReference<MultiValueMap<String, String>>() {
+                            })
+                            .doOnNext(map -> {
+                                exchange.getAttributes().put(CACHED_REQUEST_BODY_X_WWW_FORM_URLENCODED_MAP_KEY, map);
+                                log.info("x-www-urlencoded: {}", toStringToStringListMap(map));
+                            })).then(Mono.defer(supplier));
+        } else if (MediaType.MULTIPART_FORM_DATA.isCompatibleWith(contentType)) {
+            return ServerWebExchangeUtils.cacheRequestBodyAndRequest(exchange,
+                    (serverHttpRequest) -> ServerRequest
+                            .create(exchange.mutate().request(serverHttpRequest).build(), HandlerStrategies.withDefaults().messageReaders())
+                            .bodyToMono(new ParameterizedTypeReference<MultiValueMap<String, Part>>() {
+                            })
+                            .doOnNext(map -> {
+                                exchange.getAttributes().put(CACHED_REQUEST_BODY_FORM_DATA_MAP_KEY, map);
+                                log.info("from-data: {}", toStringToStringListMap(map));
+                            })).then(Mono.defer(supplier));
+        } else if (MediaType.APPLICATION_JSON.isCompatibleWith(contentType)) {
+            return ServerWebExchangeUtils.cacheRequestBodyAndRequest(exchange,
+                    (serverHttpRequest) -> ServerRequest
+                            .create(exchange.mutate().request(serverHttpRequest).build(), HandlerStrategies.withDefaults().messageReaders())
+                            .bodyToMono(String.class)
+                            .doOnNext(objectValue -> {
+                                log.info("[GatewayContext]Read JsonBody:{}", objectValue);
+                            })).then(Mono.defer(supplier));
+        } else {
+            return chain.filter(exchange);
+        }
+    }
+    private Map<String, List<String>> toStringToStringListMap(MultiValueMap<String, ?> multiValueMap) {
+        Map<String, List<String>> map = new LinkedHashMap<>();
+        for (Map.Entry<String, ? extends List<?>> entry : multiValueMap.entrySet()) {
+            String key = entry.getKey();
+            List<?> valueList = entry.getValue();
+            map.put(key, valueList.stream().map(value -> {
+                if (value instanceof String) {
+                    return (String) value;
+                } else if (value instanceof FormFieldPart) {
+                    return ((FormFieldPart) value).value();
+                } else {
+                    return value.toString();
+                }
+            }).collect(Collectors.toList()));
+        }
+        return map;
+    }
+    @Override
+    public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE + 1; // After RemoveCachedBodyFilter, before AdaptCachedBodyGlobalFilter
+    }
+}
 ```
 
 ### 6.2、GatewayFilter
@@ -194,10 +256,59 @@ return chain.filter(exchange).then(Mono.fromRunnable(() -> {
 ```
 Gateway自带的过滤器基本实现都在包`org.springframework.cloud.gateway.filter.factory`
 
+### 6.4、路由与过滤器
+
+自定义了过滤器：
+```java
+public class CommonGatewayFilter implements GatewayFilter, Ordered {
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        // 重新构建请求转发到目标服务
+        String newUri = "http://www.1234567.com/123";
+        ServerHttpRequest request = exchange.getRequest().mutate()
+                .header("token", UUID.randomUUID().toString())
+                .build();
+        ServerWebExchange modifiedExchange = exchange.mutate()
+                .request(request)
+                .build();
+        exchange.getAttributes().put(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR, newUri);
+        return chain.filter(modifiedExchange);
+    }
+    @Override
+    public int getOrder() {
+        return RouteToRequestUrlFilter.ROUTE_TO_URL_FILTER_ORDER + 1; // After RouteToRequestUrlFilter
+    }
+}
+```
+配置路由：
+```java
+@Component
+@Configuration
+public class RouteConfig {
+    @Bean
+    public RouteLocator route(RouteLocatorBuilder builder) {
+        return builder.routes()
+                .route("user", r -> r.path("/user/**").filters(f -> f.filter(commonGatewayFilter())).uri("no://op"))
+                .build();
+    }
+    @Bean
+    public CommonGatewayFilter commonGatewayFilter() {
+        return new CommonGatewayFilter();
+    }
+}
+```
+说明：关于`no://op`
+- `no://op` 是一个特殊的 URI 协议，表示 "no operation"。
+- 当路由的 URI 配置为 "no://op" 时，Spring Cloud Gateway 不进行实际的请求转发。这种配置常用于实现自定义的过滤器逻辑或者断路器等场景，而不关心实际的目的地 URI。
+- 这里实际转发是通过重新构建请求来处理；
+
 ## 7、Gateway过滤器原理分析
 
-- 路由处理：`org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping#getHandlerInternal`
-- 过滤器核心处理：`org.springframework.cloud.gateway.handler.FilteringWebHandler#handle`
+- [GatewayFilter分析](https://github.com/TFdream/spring-cloud-tutorials/issues/22)
+
+路由处理：`org.springframework.cloud.gateway.handler.RoutePredicateHandlerMapping#getHandlerInternal`
+
+过滤器核心处理：`org.springframework.cloud.gateway.handler.FilteringWebHandler#handle`
 
 ### 7.1、过滤器执行顺序
 
@@ -218,16 +329,13 @@ public Mono<Void> handle(ServerWebExchange exchange) {
 
 ## 8、统一异常处理
 
+- [Gateway全局异常处理及请求响应监控](https://www.sharkchili.com/pages/8cc321/)
+
 网关层的异常分为两种：
 - 调用请求异常：通常是由调用请求直接抛出的异常；
 - 网关层异常：由网关层触发的异常，比如gateway通过服务发现找不到可用节点，或者任何网关层的异常，这部分异常通常是在实际调用请求发起之前发生的；
 
 实际场景中，网关层只应关注第二点，也就是自身的异常。对于业务调用中的异常情况，如果需要采用统一格式封装调用异常，那就交给每个具体的服务去定义结构；
-
-### 8.1、调用异常
-
-
-### 8.2、网关层异常
 
 网关层异常主要处理类：
 - 自动配置类：`org.springframework.boot.autoconfigure.web.reactive.error.ErrorWebFluxAutoConfiguration`
@@ -250,7 +358,6 @@ public class CommonErrorAttribute extends DefaultErrorAttributes {
         errorAttributes.put("error", errorStatus.getReasonPhrase());
         return errorAttributes;
     }
-
     private HttpStatus getHttpStatus(Throwable error, MergedAnnotation<ResponseStatus> responseStatusAnnotation) {
         if (error instanceof ResponseStatusException) {
             return ((ResponseStatusException) error).getStatus();
@@ -262,7 +369,6 @@ public class CommonErrorAttribute extends DefaultErrorAttributes {
 - 自定义异常处理类：
 ```java
 public class CustomExceptionHandler extends DefaultErrorWebExceptionHandler {
-
     public CustomExceptionHandler(ErrorAttributes errorAttributes, WebProperties.Resources resources, ErrorProperties errorProperties, ApplicationContext applicationContext) {
         super(errorAttributes, resources, errorProperties, applicationContext);
     }
@@ -335,18 +441,46 @@ public class CustomErrorAutoConfiguration {
 }
 ```
 
+### 更简便的方法
+
+```java
+@Slf4j
+@Order(-1)
+@Configuration
+@RequiredArgsConstructor(onConstructor = @__(@Autowired))
+public class GlobalErrorWebExceptionHandler implements ErrorWebExceptionHandler {
+    private final ObjectMapper objectMapper;
+
+    @Override
+    @SneakyThrows
+    public Mono<Void> handle(ServerWebExchange exchange, Throwable ex) {
+        Map<String, Object> results = new HashMap<>();
+        if (ex instanceof CustomException) {
+            // 可以区分不同的异常处理，自定义异常处理
+            results.put("code", "");
+            results.put("msg", ex.getMessage());
+        }
+        ServerHttpResponse response = exchange.getResponse();
+        response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR);
+        byte[] bytes = objectMapper.writeValueAsBytes(results);
+        DataBuffer buffer = exchange.getResponse().bufferFactory().wrap(bytes);
+        exchange.getResponse().getHeaders().setContentType(MediaType.APPLICATION_JSON);
+        return response.writeWith(Mono.just(buffer));
+    }
+}
+```
+
+
 ## 9、统一返回值
 
 - [Gateway统一返回值](https://blog.csdn.net/qq_37958845/article/details/119208909)
 
 统一返回值其实就是针对调用外部服务处理，调用外部有调用成功正常返回的，还有调用外部出现异常的，都可以生成统一的返回值，也就是响应的回写，需要关注的类：`NettyWriteResponseFilter`，该类的执行顺序是：-1，是排在最前面的，但是该类是最后执行的
-
-实现实例：
 ```java
 /**
  * <a href='https://blog.csdn.net/qq_37958845/article/details/119208909'>统一返回</a>
+ * https://blog.csdn.net/u013887008/article/details/116977308
  */
-@Slf4j
 @Component
 public class GlobalResponseWrite implements GlobalFilter, Ordered {
     @Override
@@ -365,7 +499,7 @@ public class GlobalResponseWrite implements GlobalFilter, Ordered {
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
                 URI url = exchange.getAttribute(ServerWebExchangeUtils.GATEWAY_REQUEST_URL_ATTR);
                 MediaType contentType = response.getHeaders().getContentType();
-		ContentDisposition contentDisposition = response.getHeaders().getContentDisposition();
+		        ContentDisposition contentDisposition = response.getHeaders().getContentDisposition();
                 ServerHttpRequest request = exchange.getRequest();
                 log.info("global filter HttpResponseBody, RequestPath: [{}],RequestMethod:[{}], Response status=[{}]",
                         url, request.getMethodValue(), getStatusCode());
@@ -446,9 +580,108 @@ public class GlobalResponseWrite implements GlobalFilter, Ordered {
 }
 ```
 
-## 10、原理分析
+### 另外一种写法
 
-### 10.1、请求路由原理
+```java
+@Component
+@Slf4j
+public class WrapResponseFilter implements GlobalFilter, Ordered {
+    private static final Joiner joiner = Joiner.on("");
+    @Override
+    public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+        ServerHttpResponse originalResponse = exchange.getResponse();
+        DataBufferFactory bufferFactory = originalResponse.bufferFactory();
+        ServerHttpResponseDecorator response = new ServerHttpResponseDecorator(originalResponse) {
+            @Override
+            public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
+                if (HttpStatus.OK.equals(getStatusCode()) && body instanceof Flux) {
+                    // 鑾峰彇ContentType锛屽垽鏂槸鍚﹁繑鍥濲SON鏍煎紡鏁版嵁
+                    String originalResponseContentType = exchange.getAttribute(ORIGINAL_RESPONSE_CONTENT_TYPE_ATTR);
+                    if (StringUtils.isNotBlank(originalResponseContentType) && originalResponseContentType.contains(APPLICATION_JSON_VALUE)) {
+                        Flux<? extends DataBuffer> fluxBody = Flux.from(body);
+                        //锛堣繑鍥炴暟鎹唴濡傛灉瀛楃涓茶繃澶э紝榛樿浼氬垏鍓诧級瑙ｅ喅杩斿洖浣撳垎娈典紶杈�
+                        return super.writeWith(fluxBody.buffer().map(dataBuffers -> {
+                            List<String> list = Lists.newArrayList();
+                            dataBuffers.forEach(dataBuffer -> {
+                                try {
+                                    byte[] content = new byte[dataBuffer.readableByteCount()];
+                                    dataBuffer.read(content);
+                                    DataBufferUtils.release(dataBuffer);
+                                    list.add(new String(content, StandardCharsets.UTF_8));
+                                } catch (Exception e) {
+                                    log.warn("Load response byte stream error, failed reason: {}", Throwables.getStackTraceAsString(e));
+                                    throw new CustomException("系统异常");
+                                }
+                            });
+                            String responseData = joiner.join(list);
+                            if (log.isDebugEnabled()) {
+                                log.debug("responseData锛歿}", responseData);
+                            }
+                            JSONObject modelResult = JSON.parseObject(responseData);
+                            if (modelResult.getIntValue("code") != 0) {
+                                HttpStatus httpStatus = HttpStatus.resolve(Integer.parseInt(modelResult.get("code")));
+                                if (Objects.nonNull(httpStatus)) {
+                                    throw new CustomException(modelResult.get("code"), modelResult.get("message"), httpStatus);
+                                }
+                                throw new CustomException("业务异常");
+                            }
+                            byte[] uppedContent = new String(JSON.toJSONString(modelResult).getBytes(), StandardCharsets.UTF_8).getBytes();
+                            originalResponse.getHeaders().setContentLength(uppedContent.length);
+                            return bufferFactory.wrap(uppedContent);
+                        }));
+                    }
+                } else {
+                    return super.writeWith(Mono.error(new CustomException(String.valueOf(getStatusCode().value()), getStatusCode().getReasonPhrase(), getStatusCode())));
+                }
+                return super.writeWith(body);
+            }
+
+            @Override
+            public Mono<Void> writeAndFlushWith(Publisher<? extends Publisher<? extends DataBuffer>> body) {
+                return writeWith(Flux.from(body).flatMapSequential(p -> p));
+            }
+        };
+        return chain.filter(exchange.mutate().response(response).build());
+    }
+
+    @Override
+    public int getOrder() {
+        return -2;
+    }
+}
+```
+
+## 10、全局缓存
+
+ServerWebExchange有一个getAttributes()方法，返回当前exchange的一些请求属性，如果需要实现类似 ThreadLocal 的功能，即在整个请求过程中都能获取到缓存的数据，可以通过：
+```java
+// 存储：cache_gateway_context 为 key， gatewayContext 为 value
+exchange.getAttributes().put("cache_gateway_context", gatewayContext);
+// 获取数据：
+exchange.getAttributeOrDefault("cache_gateway_context", new GetewayContext);
+```
+释放缓存一般在GlobalFilter 中 doFinally执行：
+```java
+// 参考：RemoveCachedBodyFilter
+public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {
+    return chain.filter(exchange).doFinally(s -> {
+        Object attribute = exchange.getAttributes().remove("cache_gateway_context");
+        if (attribute != null && attribute instanceof PooledDataBuffer) {
+            PooledDataBuffer dataBuffer = (PooledDataBuffer) attribute;
+            if (dataBuffer.isAllocated()) {
+                if (log.isTraceEnabled()) {
+                    log.trace("releasing cached body in exchange attribute");
+                }
+                dataBuffer.release();
+            }
+        }
+    });
+}
+```
+
+## 11、原理分析
+
+### 11.1、请求路由原理
 
 Gateway 使用了 Spring WebFlux 框架，该框架处理请求的入口在类 DispatcherHandler 。它会根据提供的 HandlerMapping 来获取处理请求的 Handler 方法。Gateway 应用对 HandlerMapping 的实现是 RoutePredicateHandlerMapping
 - 进来的请求由 DispatcherHandler 处理。
@@ -457,15 +690,15 @@ Gateway 使用了 Spring WebFlux 框架，该框架处理请求的入口在类 D
 - RoutePredicateHandlerMapping 把请求交给 FilteringWebHandler 处理。
 - FilteringWebHandler 从请求匹配的路由获取对应的路由 Filter，并和全局 Filter 合并构造 GatewayFilterChain，请求最终由 GatewayFilterChain 里的 Filter 按顺序处理
 
-## 11、动态路由配置
+## 12、动态路由配置
 
 一般结合Nacos来做
 
-## 12、负载均衡
+## 13、负载均衡
 
 可以结合spring-cloud-loadbanlacer
 
-## 13、网关限流
+## 14、网关限流
 
 # 参考资料
 
