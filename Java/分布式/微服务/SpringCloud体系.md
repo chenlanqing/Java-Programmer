@@ -1336,6 +1336,19 @@ zuul:
         mydept.path: /mydept/**
 ```
 
+## 2、Spring Cloud Gateway
+
+### 2.1、与Zuul对比
+
+- Zuul 基于 servlet 2.5（适用于 3.x）构建，使用阻塞 API。它不支持任何长期连接，例如 websocket。
+- Spring Cloud Gateway 是 Spring Cloud 微服务平台的一个子项目，属于 Spring 开源社区
+- Gateway 使用非阻塞 API 基于 Spring Framework 5、Project Reactor 和 Spring Boot 2 构建。支持 Websockets，并且由于它与 Spring 紧密集成，因此可以提供更好的开发人员体验。
+- Spring Cloud Gateway 是 Spring Cloud 微服务平台的一个子项目，属于 Spring 开源社区
+
+### 2.2、深入使用
+
+- [Spring Cloud Gateway](./Gateway.md#一SpringCloudGateway)
+
 # 七、配置中心
 
 ## 1、为什么要有配置中心
