@@ -98,6 +98,7 @@ Settings -> Build, Execution, Deployment -> Build Tools -> Maven
 - ANTLR
 - git commit message helper:标准化提交内容的插件
 - GitToolBox
+- Better Highlights
 
 # 4、idea插件开发
 
