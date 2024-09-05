@@ -4,7 +4,7 @@
 [![Issues](https://img.shields.io/github/issues/chenlanqing/Java-Programmer)](https://github.com/chenlanqing/Java-Programmer/issues)
 [![Stars](https://img.shields.io/github/stars/chenlanqing/Java-Programmer)](https://github.com/chenlanqing/Java-Programmer)
 
-**声明：这里都是学习笔记的资料，参考了很多资料，在对应的文档下面都有对应的参考文章或者资料的连接，如果有侵犯原作者权益的，请指明具体内容，然后联系：chenqing323@foxmail.com 删除** 
+**免责声明：这里都是学习笔记的资料，参考了很多资料，在对应的文档下面都有对应的参考文章或者资料的连接，如果有侵犯原作者权益的，请指明具体内容，然后联系：chenqing323@foxmail.com 删除** 
 
 # 一、计算机基础
 
