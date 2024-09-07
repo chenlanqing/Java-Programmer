@@ -404,6 +404,210 @@ spring-boot Versions  |	Minimum springdoc-openapi Versions
 - [Swagger2Markup 生成PDF、HTML格式的API文档方法整理（中文支持）](https://blog.csdn.net/aaa_a_b_c/article/details/105482847)
 - [Swagger2Markup](https://github.com/Swagger2Markup/swagger2markup)
 
+## 1、生成ASCIIDOC
+
+[ASCIIDOC](https://asciidoc.org/) 是一种轻型标记语言，类似于 Markdown；
+
+swagger2markup 提供了两种方式可以将swagger.json文件生成：
+- API
+- Maven插件
+
+获取swagger.json的方式，下图中是获取 v3 版本的数据，也可以获取 v2 版本的数据：http://localhost:8080/v2/api-docs
+
+![](image/Swagger-API地址.png)
+
+### 1.1、swagger2markup API 生成
+
+添加依赖：
+```xm
+<dependency>
+    <groupId>io.github.swagger2markup</groupId>
+    <artifactId>swagger2markup</artifactId>
+    <version>1.3.3</version>
+</dependency>
+```
+代码如下：
+```java
+public static void main(String[] args) throws Exception {
+    // 用于转换的swagger.json可以来自于本地文件，也可以来http 获取
+    URL remoteSwaggerFile = new URL("http://localhost:8080/v2/api-docs");
+
+    // asciidoc 输出文件夹
+    Path outputDir = Paths.get("./doc/asciidoc/generated");
+
+    // 转换配置设置
+    Swagger2MarkupConfig config = new Swagger2MarkupConfigBuilder()
+            .withMarkupLanguage(MarkupLanguage.ASCIIDOC) // ASCIIDOC
+            .withOutputLanguage(Language.ZH) // 中文
+            .withPathsGroupedBy(GroupBy.TAGS) // 分组标识
+            .build();
+
+    Swagger2MarkupConverter.from(remoteSwaggerFile)
+            .withConfig(config)
+            .build()
+            .toFolder(outputDir);
+}
+```
+完整属性列表参考官方文档：[3.2.5. Swagger2Markup properties](https://swagger2markup.github.io/swagger2markup/1.3.3/#_swagger2markup_properties)
+
+### 1.2、swagger2markup 插件生成
+
+pom.xml 添加插件如下:
+```xml
+<plugin>
+    <groupId>io.github.swagger2markup</groupId>
+    <artifactId>swagger2markup-maven-plugin</artifactId>
+    <version>1.3.3</version>
+    <dependencies>
+        <dependency>
+            <groupId>io.github.swagger2markup</groupId>
+            <artifactId>swagger2markup</artifactId>
+            <version>1.3.3</version>
+        </dependency>
+    </dependencies>
+    <configuration>
+        <!--本地 swagger.json 路径 或 远程访问地址-->
+        <swaggerInput>http://localhost:8080/v2/api-docs</swaggerInput>
+        <!-- 输出目录 -->
+        <outputDir>../doc/asciidoc/generated</outputDir>
+        <config>
+            <!--设置输出文件的语言：ASCIIDOC, MARKDOWN, CONFLUENCE_MARKUP-->
+            <swagger2markup.markupLanguage>ASCIIDOC</swagger2markup.markupLanguage>
+            <!--设置目录的展现方式-->
+            <swagger2markup.pathsGroupedBy>TAGS</swagger2markup.pathsGroupedBy>
+        </config>
+    </configuration>
+    <executions>
+        <execution>
+            <!--  -->
+            <phase>package</phase>
+            <goals>
+                <goal>convertSwagger2markup</goal>
+            </goals>
+        </execution>
+    </executions>
+</plugin>
+```
+生成的时间，修改此处即可：`<phase>package</phase>`
+
+### 1.3、生成的目录如下：
+
+![](image/AsciiDOC-生成文件目录.png)
+
+## 2、ASCIIDOC转PDF
+
+采用 [asciidoctor-maven-plugin](https://docs.asciidoctor.org/maven-tools/latest/) 插件的方式来转化Ascii文档。
+
+### 2.1、添加中文主题和字体文件夹
+
+下载字体[（RobotoMono 开头和 KaiGenGothicCN 开头的字体文件）和theme文件（Source code (zip)）](https://github.com/chloerei/asciidoctor-pdf-cjk-kai_gen_gothic/releases)。
+
+在项目的文档目录下创建fonts和themes两个目录，把下载的8个字体文件复制到fonts目录下，解压`asciidoctor-pdf-cjk-kai_gen_gothic-0.1.0-fonts.zip`文件，把`data\themes\`下的`cn-theme.yml`复制到themes目录下:
+
+![](image/AsciiDOC-字体和主题.png)
+
+### 2.2、创建index.adoc
+
+```adoc
+include::asciidoc/generated/overview.adoc[]
+include::asciidoc/generated/paths.adoc[]
+include::asciidoc/generated/security.adoc[]
+include::asciidoc/generated/definitions.adoc[]
+```
+此文件主要用于指引插件访问asciidoc文档
+
+### 2.3、插件配置
+
+```xml
+<plugin>
+    <groupId>org.asciidoctor</groupId>
+    <artifactId>asciidoctor-maven-plugin</artifactId>
+    <version>1.5.3</version>
+
+    <!-- Include Asciidoctor PDF for pdf generation -->
+    <dependencies>
+        <dependency>
+            <groupId>org.asciidoctor</groupId>
+            <artifactId>asciidoctorj-pdf</artifactId>
+            <version>1.5.0-alpha.11</version>
+        </dependency>
+        <!-- Comment this section to use the default jruby artifact provided by the plugin -->
+        <dependency>
+            <groupId>org.jruby</groupId>
+            <artifactId>jruby-complete</artifactId>
+            <version>9.1.8.0</version>
+        </dependency>
+        <!-- Comment this section to use the default AsciidoctorJ artifact provided by the plugin -->
+        <dependency>
+            <groupId>org.asciidoctor</groupId>
+            <artifactId>asciidoctorj</artifactId>
+            <version>1.5.4</version>
+        </dependency>
+    </dependencies>
+
+    <!-- Configure generic document generation settings -->
+    <configuration>
+        <!--默认指向 ${basedir}/src/main/asciidoc-->
+        <sourceDirectory>../doc/</sourceDirectory>
+        <!--an override to process a single source file; 默认指向 ${sourceDirectory} 中的所有文件-->
+        <sourceDocumentName>index.adoc</sourceDocumentName>
+        <attributes>
+            <doctype>book</doctype>
+            <toc>left</toc>
+            <toclevels>3</toclevels>
+            <numbered></numbered>
+            <hardbreaks></hardbreaks>
+            <sectlinks></sectlinks>
+            <sectanchors></sectanchors>
+        </attributes>
+    </configuration>
+    <!-- Since each execution can only handle one backend, run
+            separate executions for each desired output type -->
+    <executions>
+        <execution>
+            <id>output-html</id>
+            <phase>package</phase>
+            <goals>
+                <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+                <backend>html5</backend>
+                <outputDirectory>../doc/asciidoc/html</outputDirectory>
+                <sourceHighlighter>coderay</sourceHighlighter>
+            </configuration>
+        </execution>
+        <execution>
+            <id>output-pdf</id>
+            <phase>package</phase>
+            <goals>
+                <goal>process-asciidoc</goal>
+            </goals>
+            <configuration>
+                <backend>pdf</backend>
+                <outputDirectory>../doc/asciidoc/pdf</outputDirectory>
+                <sourceHighlighter>coderay</sourceHighlighter>
+                <doctype>book</doctype>
+                <attributes>
+                    <toc>left</toc>
+                    <toclevels>3</toclevels>
+                    <numbered></numbered>
+                    <hardbreaks></hardbreaks>
+                    <sectlinks></sectlinks>
+                    <sectanchors></sectanchors>
+                    <pdf-fontsdir>./fonts</pdf-fontsdir>
+                    <pdf-stylesdir>./themes</pdf-stylesdir>
+                    <pdf-style>cn</pdf-style>
+                </attributes>
+            </configuration>
+        </execution>
+    </executions>
+</plugin>
+```
+生成的时间，修改此处即可：`<phase>package</phase>`
+
+## 3、代码目录
+
+[swagger-document](https://github.com/chenlanqing/springboot-api-doc/tree/main/swagger-document)
 
 # 参考资料
 
