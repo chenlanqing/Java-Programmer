@@ -254,6 +254,7 @@ C 语言中的变量按照数据类型分为：
 int main() {
   int value = 3;
   printf("size of value: %llu\n", sizeof(value));
+  printf("size of value: %#x\n", &value); // 打印变量的地址，按照16进制打印
   return 0;
 }
 ```
