@@ -117,6 +117,7 @@ KEYS        # 虽然该命令的模糊匹配功能很强大，但只适用于小
 FLUSHDB     # 删除Redis中当前所在数据库中的所有记录，并且此命令不会执行失败
 FLUSHALL    # 删除Redis中所有数据库的记录，并且此命令不会失败
 CONFIG      # 客户端可修改Redis配置
+EVAL
 ```
 修改 redis.conf 文件，禁用远程修改 DB 文件地址，禁止一些高危的命令，在配置文件redis.conf中找到SECURITY区域，添加如下命令
 ```
@@ -131,6 +132,7 @@ rename-command EVAL ""
 ```
 groupadd -r redis && useradd -r -g redis redis
 ```
+限制 Redis 配置文件的目录访问权限
 
 ## 3、为 Redis 添加密码验证
 
@@ -276,7 +278,7 @@ Lettuce是一个高性能基于Java编写的Redis驱动框架，底层集成了P
 
 ### 3.2、
 
-# 五、Redis监控
+# 五、Redis监控与运维
 
 ## 1、Redis监控指标
 
@@ -327,6 +329,11 @@ Lettuce是一个高性能基于Java编写的Redis驱动框架，底层集成了P
 - `keyspace_misses`：key值查找失败(没有命中)次数
 - `master_link_down_since_seconds`：主从断开的持续时间（以秒为单位)
 
+### 1.6、其他指标
+
+- expired_keys， 自 Redis 实例启动以来，已经过期并被删除的键的总数。通过监控 expired_keys，你可以了解系统中过期键的频率。如果该值过高，可能表示有大量的键被设置了较短的过期时间，或 Redis 中存储了过多的短生命周期数据
+- latest_fork_usec：表示 Redis 最近一次执行 fork() 操作所花费的时间，单位是微秒（usec）。fork() 是操作系统中用于创建子进程的系统调用，Redis 在执行某些操作时（如生成 RDB 快照或执行 AOF 重写）会使用 fork() 创建一个子进程来处理这些任务；如果该值过大，可能意味着 Redis 占用了过多的内存，导致 fork() 操作时间延长，进而影响 Redis 的响应时间
+
 ## 2、监控方式
 
 - redis-benchmark
@@ -367,6 +374,42 @@ used_memory_peak_human:7.77M # redis内存消耗的峰值
 used_memory_lua_human:37.00K   # lua脚本引擎占用的内存大小
 ```
 ...
+
+## 3、日常运维
+
+主要注意如下几个方面：
+
+（1）**禁止使用 KEYS/FLUSHALL/FLUSHDB 命令**；
+
+（2）**扫描线上实例时，设置休眠时间**
+
+不管是使用 SCAN 扫描线上实例，还是对实例做 bigkey 统计分析，建议在扫描时一定记得设置休眠时间，防止在扫描过程中，实例 OPS 过高对 Redis 产生性能抖动；
+
+（3）**慎用 MONITOR 命令**
+
+但如果 Redis OPS 比较高，在执行 MONITOR 会导致 Redis 输出缓冲区的内存持续增长，这会严重消耗 Redis 的内存资源，甚至会导致实例内存超过 maxmemory，引发数据淘汰；
+
+（4）**从库必须设置为 slave-read-only**
+
+从库必须设置为 slave-read-only 状态，避免从库写入数据，导致主从数据不一致。除此之外，从库如果是非 read-only 状态，如果你使用的是 4.0 以下的 Redis，它存在这样的 Bug：从库写入了有过期时间的数据，不会做定时清理和释放内存。
+
+（5）**合理配置 timeout 和 tcp-keepalive 参数**
+
+如果因为网络原因，导致你的大量客户端连接与 Redis 意外中断，恰好你的 Redis 配置的 maxclients 参数比较小，此时有可能导致客户端无法与服务端建立新的连接（服务端认为超过了 maxclients）
+
+造成这个问题原因在于，客户端与服务端每建立一个连接，Redis 都会给这个客户端分配了一个 client fd。当客户端与服务端网络发生问题时，服务端并不会立即释放这个 client fd；
+
+什么时候释放呢？Redis 内部有一个定时任务，会定时检测所有 client 的空闲时间是否超过配置的 timeout 值。如果 Redis 没有开启 tcp-keepalive 的话，服务端直到配置的 timeout 时间后，才会清理释放这个 client fd。在没有清理之前，如果还有大量新连接进来，就有可能导致 Redis 服务端内部持有的 client fd 超过了 maxclients，这时新连接就会被拒绝，优化建议：
+- 不要配置过高的 timeout：让服务端尽快把无效的 client fd 清理掉
+- Redis 开启 tcp-keepalive：这样服务端会定时给客户端发送 TCP 心跳包，检测连接连通性，当网络异常时，可以尽快清理僵尸 client fd
+
+（6）**调整 maxmemory 时，注意主从库的调整顺序**
+
+Redis 5.0 以下版本存在这样一个问题：从库内存如果超过了 maxmemory，也会触发数据淘汰。某些场景下，从库是可能优先主库达到 maxmemory 的（例如在从库执行 MONITOR 命令，输出缓冲区占用大量内存），那么此时从库开始淘汰数据，主从库就会产生不一致。要想避免此问题，在调整 maxmemory 时，一定要注意主从库的修改顺序：
+- 调大 maxmemory：先修改从库，再修改主库
+- 调小 maxmemory：先修改主库，再修改从库
+
+直到 Redis 5.0，Redis 才增加了一个配置 replica-ignore-maxmemory，默认从库超过 maxmemory 不会淘汰数据，才解决了此问题。
 
 # 六、Redis6.0
 
