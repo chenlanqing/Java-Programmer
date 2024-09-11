@@ -237,3 +237,26 @@ ZPOPMIN redpacket_sortedset
 
 - [什么是线程池](../Java/源码分析/thread/线程池.md#7动态化线程池)
 - [如何设计一个动态线程池？](https://www.yuque.com/snailclimb/tangw3/neiydtd79u8pgple)
+
+主要思路是对线程池的核心参数实现自定义可配置。这三个核心参数是：
+- corePoolSize : 核心线程数线程数定义了最小可以同时运行的线程数量。
+- maximumPoolSize : 当队列中存放的任务达到队列容量的时候，当前可以同时运行的线程数量变为最大线程数。
+- workQueue: 当新任务来的时候会先判断当前运行的线程数量是否达到核心线程数，如果达到的话，新任务就会被存放在队列中。
+
+这三个参数是 ThreadPoolExecutor 最重要的参数，它们基本决定了线程池对于任务的处理策略
+
+要获取线程池的指标数据，可以使用以下方法：
+- getCorePoolSize()：获取核心线程数。
+- getMaximumPoolSize()：获取最大线程数。
+- getPoolSize()：获取线程池中的工作线程数（包括核心线程和非核心线程）。
+- getQueue()：获取线程池中的阻塞队列，可以从队列中获取任务的数量来了解队列积压情况。
+- getActiveCount()：获取活跃线程数，也就是正在执行任务的线程。
+- getLargestPoolSize()：获取线程池曾经到过的最大工作线程数。
+- getTaskCount()：获取历史已完成以及正在执行的总的任务数量。
+
+除了这些线程池指标相关的方法之外，还可以使用ThreadPoolExecutor的钩子方法进行扩展：
+- beforeExecute(Thread t, Runnable r)：在执行每个任务之前调用，可以在此处记录任务开始执行时间。
+- afterExecute(Runnable r, Throwable t)：在每个任务执行后调用，不论任务是否成功完成，可以用来记录任务执行结束时间。
+- terminated()：当线程池进入 TERMINATED 状态时调用，可以在此时进行资源清理、统计汇总等操作。
+
+如果想要实现一个支持可视化和告警的线程池监控，会比较麻烦，需要自己去写可视化界面和告警功能。Spring Boot 提供了 Actuator 模块来监控应用程序的运行状态，包括线程池的使用情况，通过定义自定义一个 Endpoint 类，手动暴露线程池相关指标信息，这样可以更加灵活和可控
