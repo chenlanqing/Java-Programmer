@@ -42,6 +42,8 @@
 
 # 二、场景设计题
 
+- [高频场景面试题](https://www.yuque.com/snailclimb/tangw3)
+
 ## 1、假如给你一个新产品，你将从哪些方面来保障它的质量？
 
 ### 1.1. **需求理解与沟通**
@@ -230,3 +232,8 @@ ZPOPMIN redpacket_sortedset
 ## 12、场景题：秒杀场景的设计
 
 参考[秒杀系统](../实际业务/业务系统.md#一秒杀系统)
+
+## 13、场景题：如何设计一个动态线程池？
+
+- [什么是线程池](../Java/源码分析/thread/线程池.md#7动态化线程池)
+- [如何设计一个动态线程池？](https://www.yuque.com/snailclimb/tangw3/neiydtd79u8pgple)
