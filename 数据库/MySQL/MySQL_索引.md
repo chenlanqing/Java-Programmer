@@ -2722,3 +2722,5 @@ pt-online-schema-change -uroot -proot123 --alter='drop column my_test_column int
 * [MySQL索引背后的数据结构及算法原理](http://blog.codinglabs.org/articles/theory-of-mysql-index.html)
 * [SQL调优](http://www.cnblogs.com/Qian123/p/5666569.html)
 * [SQL优化](https://mp.weixin.qq.com/s/hU2EkRW_PC3pRZ4vF4VvOw)
+* [MySQL 优化实施方案](https://www.cnblogs.com/clsn/p/8214048.html)
+* [Mybatis-SQL分析组件](https://github.com/jd-opensource/sql-analysis)
