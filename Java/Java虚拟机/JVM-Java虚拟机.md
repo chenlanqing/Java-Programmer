@@ -3070,3 +3070,4 @@ SubstrateVM：AOT编译框架
 * [阿里龙井JDK](https://github.com/alibaba/dragonwell8)
 * [R大知乎](https://www.zhihu.com/people/rednaxelafx/columns)
 * [手写JVM](https://zachaxy.github.io/tags/JVM/page/2/)
+* [Quick Tips for Fast Code on the JVM](https://gist.github.com/chenlanqing/3308498c9431cc06bcf7aaf488243ec6)
