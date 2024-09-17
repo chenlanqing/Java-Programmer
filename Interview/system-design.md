@@ -260,3 +260,14 @@ ZPOPMIN redpacket_sortedset
 - terminated()：当线程池进入 TERMINATED 状态时调用，可以在此时进行资源清理、统计汇总等操作。
 
 如果想要实现一个支持可视化和告警的线程池监控，会比较麻烦，需要自己去写可视化界面和告警功能。Spring Boot 提供了 Actuator 模块来监控应用程序的运行状态，包括线程池的使用情况，通过定义自定义一个 Endpoint 类，手动暴露线程池相关指标信息，这样可以更加灵活和可控
+
+## 14、场景题：设计埋点系统
+
+- [埋点代码](https://github.com/pengxurui/EasyTrack)
+- [西瓜视频埋点方案](https://mp.weixin.qq.com/s/iMn--4FNugtH26G90N1MaQ)
+- [GrowingioSDK源码设计](https://mp.weixin.qq.com/s/ZRbfx3zWkFfjp91hbgRbVA)
+
+由面到点
+- 后端埋点
+- 可视化埋点
+- 无痕埋点
