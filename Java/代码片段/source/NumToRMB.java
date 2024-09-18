@@ -1,3 +1,7 @@
+
+/**
+ * 金额转大写也可以参考：Hutool工具类：NumberChineseFormatter
+ */
 public class NumToRMB {
 
 	public static void main(String[] args) {

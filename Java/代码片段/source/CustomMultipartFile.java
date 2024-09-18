@@ -1,5 +1,9 @@
 import org.springframework.web.multipart.MultipartFile;
 import java.io.*;
+
+/**
+ * 自定义MultipartFile的实现类
+ */
 public class CustomMultipartFile implements MultipartFile {
 
     private final byte[] content;
