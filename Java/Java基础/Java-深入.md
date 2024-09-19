@@ -889,7 +889,7 @@ public static void main(String[] args) throws Exception {
 
 # 六、加密与解密
 
-- [加密与解密算法](https://juejin.cn/post/6844903638117122056)
+- [密码学](../../数学/密码学.md)
 
 数据的安全是基于密钥，而不是算法的保密。算法的是公开
 
