@@ -2420,3 +2420,7 @@ CAS 机制所保证的只是一个变量的原子性操作，而不能保证整�
 在jdk1.8中，直接使用了Unsafe的getAndAddInt方法，而在jdk1.7的Unsafe中，没有此方法
 - 1.8在调用getAndAddInt的时候，如果系统底层支持fetch-and-add，那么它执行的就是native方法，使用的是fetch-and-add；
 - 如果不支持，就按照上面的所看到的getAndAddInt方法体那样，以java代码的方式去执行，使用的是compare-and-swap；
+
+# 参考资料
+
+- [深入理解并发-Concurrency Deep Dives](https://concurrencydeepdives.com/)
