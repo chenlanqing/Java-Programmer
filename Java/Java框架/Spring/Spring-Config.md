@@ -1929,3 +1929,242 @@ public class App {
     }
 }
 ```
+
+# 14、SpringBoot配置过滤器
+
+在Spring中，Filter默认实现是：[OncePerRequestFilter](https://www.cnblogs.com/xfeiyun/p/15673721.html)
+
+在 Spring Boot 中配置 `Filter` 有几种常见的方式，主要包括通过 `@Component` 注解、使用 `FilterRegistrationBean`、以及在传统的 `web.xml` 中配置。下面详细介绍这几种方式：
+
+## 14.1、过滤器配置
+
+### 14.1.1、使用 `@Component` 注解
+
+这是 Spring Boot 中最简单的配置 `Filter` 的方式。你只需实现 `javax.servlet.Filter` 接口，并用 `@Component` 注解标注过滤器类，Spring Boot 会自动注册这个过滤器。
+```java
+@Component
+public class MyFilter implements Filter {
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+        // 初始化逻辑
+    }
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        // 过滤器逻辑
+        System.out.println("Request intercepted by MyFilter");
+        // 继续过滤链
+        chain.doFilter(request, response);
+    }
+    @Override
+    public void destroy() {
+        // 销毁逻辑
+    }
+}
+```
+> **注意**：默认情况下，`@Component` 注解注册的过滤器会拦截所有的请求 (`/*`)，并且按照默认顺序执行。
+
+### 14.1.2、使用 `FilterRegistrationBean` 配置过滤器
+
+如果需要更灵活的配置，比如指定 URL 路径、设置执行顺序、或者决定是否应用于异步请求，可以使用 `FilterRegistrationBean`。
+```java
+@Configuration
+public class FilterConfig {
+    @Bean
+    public FilterRegistrationBean<MyFilter> filterRegistrationBean() {
+        FilterRegistrationBean<MyFilter> registrationBean = new FilterRegistrationBean<>(new MyFilter());
+        // 设置 URL 路径匹配
+        registrationBean.addUrlPatterns("/api/*");        
+        // 设置过滤器的顺序，数字越小优先级越高
+        registrationBean.setOrder(1);        
+        // 也可以设置其他参数，如是否支持异步请求
+        registrationBean.setAsyncSupported(true);        
+        return registrationBean;
+    }
+}
+```
+
+### 14.1.3、使用 `@WebFilter` 和 `@ServletComponentScan`
+
+另一种配置方式是使用标准的 Servlet 注解 `@WebFilter`，但在 Spring Boot 中需要在主应用类上添加 `@ServletComponentScan` 注解来扫描这些过滤器。
+```java
+@WebFilter(urlPatterns = "/api/*")
+public class MyFilter implements Filter {
+    @Override
+    public void init(FilterConfig filterConfig) throws ServletException {
+    }
+    @Override
+    public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
+        System.out.println("Request intercepted by MyFilter");
+        chain.doFilter(request, response);
+    }
+    @Override
+    public void destroy() {
+    }
+}
+```
+主类需要加上 `@ServletComponentScan` 注解：
+```java
+@SpringBootApplication
+@ServletComponentScan
+public class MySpringBootApplication {
+    public static void main(String[] args) {
+        SpringApplication.run(MySpringBootApplication.class, args);
+    }
+}
+```
+
+### 14.1.4、在 `web.xml` 中配置过滤器
+
+虽然 Spring Boot 通常不使用 `web.xml`，但如果你有特定的需求，仍然可以通过传统的方式在 `src/main/webapp/WEB-INF/web.xml` 中配置过滤器。
+```xml
+<filter>
+    <filter-name>myFilter</filter-name>
+    <filter-class>com.example.MyFilter</filter-class>
+</filter>
+<filter-mapping>
+    <filter-name>myFilter</filter-name>
+    <url-pattern>/api/*</url-pattern>
+</filter-mapping>
+```
+
+### 14.1.5、总结
+
+- **@Component**：简单快速，用于默认拦截所有请求。
+- **FilterRegistrationBean**：灵活控制过滤器的配置，包括 URL 路径、执行顺序、异步支持等。
+- **@WebFilter + @ServletComponentScan**：标准的 Servlet 注解方式，需要启用 `@ServletComponentScan`。
+- **web.xml**：传统方式，不常用，但兼容需要使用传统配置的场景。
+
+## 14.2、DispatcherType配置
+
+```java
+public enum DispatcherType {
+	// 表示过滤器将应用于通过 RequestDispatcher.forward() 方法进行的请求转发
+	FORWARD,
+    // 表示过滤器将应用于通过 RequestDispatcher.include() 方法进行的请求包含
+	INCLUDE,
+    // 表示过滤器将应用于普通的客户端请求
+	REQUEST,
+    // 表示过滤器将应用于从 AsyncContext 派发的异步请求
+	ASYNC,
+    // 表示过滤器将应用于错误处理过程中
+	ERROR
+
+}
+```
+如果实现自 Filter，默认的 DispacherType 是 REQUEST ，SpringBoot中源码如下：
+```java
+// org.springframework.boot.web.servlet.AbstractFilterRegistrationBean#configure
+protected void configure(FilterRegistration.Dynamic registration) {
+    ...
+    EnumSet<DispatcherType> dispatcherTypes = this.dispatcherTypes;
+    if (dispatcherTypes == null) {
+        T filter = getFilter();
+        // 如果是 OncePerRequestFilter 的实现类，则是所有 DispatcherType
+        if (ClassUtils.isPresent("org.springframework.web.filter.OncePerRequestFilter", filter.getClass().getClassLoader()) && filter instanceof OncePerRequestFilter) {
+            dispatcherTypes = EnumSet.allOf(DispatcherType.class);
+        } else {
+            // 否则就是 REQUEST
+            dispatcherTypes = EnumSet.of(DispatcherType.REQUEST);
+        }
+    }
+    ...
+}
+```
+在Servlet的API中也有体现：如果 dispatcherTypes 为 null，则 REQUEST 为默认值
+```java
+// javax.servlet.FilterRegistration#addMappingForServletNames
+/**
+ * @param dispatcherTypes the dispatcher types of the filter mapping, or null if the default <tt>DispatcherType.REQUEST</tt> is to be used
+ */
+public void addMappingForServletNames(EnumSet<DispatcherType> dispatcherTypes, boolean isMatchAfter,  String... servletNames);
+```
+在WebFilter注解中也有体现：
+```java
+@Target({ElementType.TYPE})
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+public @interface WebFilter {
+    ...
+    DispatcherType[] dispatcherTypes() default {DispatcherType.REQUEST};
+    ...
+}
+```
+
+如何设置DispatcherType：
+
+### 14.2.1、`web.xml`
+
+```xml
+<filter-mapping>
+    <filter-name>myFilter</filter-name>
+    <url-pattern>/*</url-pattern>
+    <dispatcher>REQUEST</dispatcher>  <!-- 过滤器应用于普通请求 -->
+    <dispatcher>FORWARD</dispatcher>  <!-- 过滤器应用于请求转发 -->
+    <dispatcher>ERROR</dispatcher>    <!-- 过滤器应用于错误处理 -->
+</filter-mapping>
+```
+> 说明：这里需要 servlet2.5版本以上：
+```xml
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
+<web-app>
+```
+
+### 14.2.2、`@WbeFilter`
+
+```java
+@WebFilter(
+        urlPatterns = "/*",
+        dispatcherTypes = {DispatcherType.FORWARD, DispatcherType.REQUEST}
+)
+public class ComponentFilter implements Filter {}
+```
+
+### 14.2.3、代码处理
+
+前面提到可以使用 `FilterRegistrationBean` 注册 Filter，当然 FilterRegistrationBean 也可以设置 DispatcherType
+```java
+@Configuration
+public class FilterConfig {
+    @Bean
+    public FilterRegistrationBean<MyFilter> filterRegistrationBean() {
+        FilterRegistrationBean<MyFilter> registrationBean = new FilterRegistrationBean<>(new MyFilter());
+        ...
+        // javax.servlet.DispatcherType: 设置所有 DispatcherType
+        registrationBean.setDispatcherTypes(EnumSet.allOf(DispatcherType.class));
+        return registrationBean;
+    }
+}
+```
+
+### 14.2.4、OncePerRequestFilter
+
+上面三种都是针对实现 Filter 的处理方法， OncePerRequestFilter 是 Spring 中关于 Filter 的默认抽象实现，建议：若是在Spring环境下使用Filter的话，还是继承OncePerRequestFilter吧，而不是直接实现Filter接口，这是一个比较稳妥的选择：
+
+```java
+public abstract class OncePerRequestFilter extends GenericFilterBean {
+    // 如果要实现过滤器，只需要继承当前类，并实现该方法即可
+    protected abstract void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException;
+}
+```
+比如：
+```java
+@Component("helloFilter")
+public class HelloFilter extends OncePerRequestFilter {
+
+    @Override
+    protected void initFilterBean() throws ServletException {
+        System.out.println("Filter初始化...");
+    }
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
+        FilterConfig filterConfig = super.getFilterConfig();
+        ServletContext servletContext = super.getServletContext();
+        Environment environment = super.getEnvironment();
+
+        filterChain.doFilter(request, response);
+    }
+}
+```
