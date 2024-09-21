@@ -237,6 +237,7 @@ default_storage_engine=CSV
 # 二、InnoDB存储引擎
 
 - [InnoDB-architecture](https://dev.mysql.com/doc/refman/8.0/en/innodb-architecture.html)
+- [InnoDB内存结构](https://www.cnblogs.com/novwind/p/17489997.html)
 
 ## 1、InnoDB详述
 
@@ -284,7 +285,9 @@ InnoDB 存储引擎是基于磁盘存储的，并将其中的记录按照页的�
 - **Purge Thread**：回收已经使用并分配的 undo 页
 - **Page Cleaner Thread**：将之前版本中脏页的刷新操作都放入到单独的线程中来完成。其目的是为了减轻原 Master Thread 的工作及对于用户查询线程的阻塞，进一步提高 InnoDB 存储引擎的性能
 
-## 3、Buffer Pool
+## 3、[Buffer Pool](https://dev.mysql.com/doc/refman/8.0/en/innodb-buffer-pool.html)
+
+InnoDB中的缓存区叫innodb_buffer_pool，当读取数据时，就会先从缓存中查看是否数据的页（page）存在，不存在的话去磁盘上检索，查到后缓存到innodb_buffer_pool中
 
 MySQL以数据页为单位，从磁盘中读取数据。数据页被读取到内存中，所谓的内存其实就是Buffer Pool。Buffer Pool中维护的数据结构是缓存页，而且每个缓存页都有它对应的描述信息。InnoDB 访问表数据和索引数据的时候，会顺便把对应的数据页缓存到缓冲池中
 

@@ -1,16 +1,19 @@
-# 一、MySQL日志分类
+# 一、MySQL日志概述
 
 - [MySQL三大日志(binlog、redo log和undo log)的作用](https://mp.weixin.qq.com/s/KUv-Mx-FRrfQpx09Xv5Itg)
 
-MySQL 日志 主要包括错误日志、查询日志、慢查询日志、事务日志、二进制日志几大类。其中，比较重要的还要属：二进制日志 binlog（归档日志）、事务日志 redo log（重做日志）和 undo log（回滚日志）
+MySQL 日志 主要包括错误日志、查询日志、慢查询日志、事务日志、二进制日志几大类。其中，比较重要的还要属：
+- 二进制日志 binlog（归档日志）：实现一致性
+- 事务日志 redo log（重做日志）：实现持久性
+- undo log（回滚日志）：实现原子性和隔离性
 
-## 1、redo log
+# 二、redo log
 
 redo log（重做日志）是InnoDB存储引擎独有的，它让MySQL拥有了崩溃恢复能力；比如 MySQL 实例挂了或宕机了，重启时，InnoDB存储引擎会使用redo log恢复数据，保证数据的持久性与完整性；
 
 redo log 它是物理日志，记录内容是"在某个数据页上做了什么修改"，属于 InnoDB 存储引擎；
 
-### 1.1、概述
+## 1、概述
 
 - MySQL 中数据是以页为单位，你查询一条记录，会从硬盘把一页的数据加载出来，加载出来的数据叫数据页，会放入到 Buffer Pool 中；
 - 后续的查询都是先从 Buffer Pool 中找，没有命中再去硬盘加载，减少硬盘 IO 开销，提升性能；
@@ -19,7 +22,7 @@ redo log 它是物理日志，记录内容是"在某个数据页上做了什么�
 
 > 每条 redo 记录由`表空间号 + 数据页号 + 偏移量 + 修改数据长度 + 具体修改的数据`组成;
 
-### 1.2、redo log 刷盘时机
+## 2、redo log 刷盘时机
 
 InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_trx_commit` 参数，它支持三种策略：
 - `0` ：设置为 0 的时候，表示每次事务提交时不进行刷盘操作
@@ -52,7 +55,7 @@ InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_tr
 
 为了避免发生数据丢失的问题，当前事务数据库系统（并非 MySQL 所独有）普遍都采用了` WAL（Write Ahead Log，预写日志）`策略：即当事务提交时，先写重做日志（redo log），再修改页（先修改缓冲池，再刷新到磁盘）；当由于发生宕机而导致数据丢失时，通过 redo log 来完成数据的恢复。这也是事务 ACID 中 D（Durability 持久性）的要求
 
-### 1.3、日志文件组
+## 3、日志文件组
 
 通常我们说 MySQL 的`双 1`配置，指的就是 `sync_binlog` 和 `innodb_flush_log_at_trx_commit` 都设置成 1。也就是说，一个事务完整提交前，需要等待两次刷盘，一次是 redo log（prepare 阶段），一次是 binlog
 
@@ -72,7 +75,7 @@ InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_tr
 - write pos 和 checkpoint 之间的还空着的部分可以用来写入新的 redo log 记录；
 - 如果 write pos 追上 checkpoint ，表示日志文件组满了，这时候不能再写入新的 redo log 记录，MySQL 得停下来，清空一些记录，把 checkpoint 推进一下；
 
-### 1.4、总结
+## 4、总结
 
 问题：只要每次把修改后的数据页直接刷盘不就好了，还有 redo log 什么事？
 
@@ -84,66 +87,42 @@ InnoDB 存储引擎为 redo log 的刷盘策略提供了 `innodb_flush_log_at_tr
 
 所以用 redo log 形式记录修改内容，性能会远远超过刷数据页的方式，这也让数据库的并发能力更强；
 
-## 2、binlog
+# 三、undo log
 
-### 2.1、概述
+## 1、概述
 
-binlog 是逻辑日志，记录内容是语句的原始逻辑，类似于`给 ID=2 这一行的 c 字段加 1`，属于MySQL Server 层；不管用什么存储引擎，只要发生了表数据更新，都会产生 binlog 日志
+undolog一般叫回滚日志，事务回滚rollback功能就是通过 undolog实现的，通过undolog保证了为事务的原子性（隔离性），undolog主要功能如下：
+- 事务回滚
+- MVCC
 
-binlog作用：MySQL数据库的数据备份、主备、主主、主从都离不开binlog，需要依靠binlog来同步数据，保证数据一致性；binlog会记录所有涉及更新数据的逻辑操作，并且是顺序写
+## 2、事务回滚
 
-## 3、两阶段提交
+当开启一段事务还未提交时，事务中的操作可能会出现错误异常，这时候就可以通过undo log将事务中的操作进行回滚（rollback），意思是回到事务开启前那个状态
 
-### 3.1、redo log 和 binlog
+事务如何通过undo log进行回滚操作呢？只需要在undo log日志中记录事务中的反向操作即可，发生回滚时直接通过undolog中记录的反向操作进行恢复，例如：
+- 事务进行insert操作，undo log记录delete操作
+- 事务进行delete操作，undo log记录insert操作
+- 事务进行update操作（value1 改为value2 ），undolog记录update操作（value2 改为value1 ）
 
-- redo log（重做日志）让InnoDB存储引擎拥有了崩溃恢复能力。
-- binlog（归档日志）保证了MySQL集群架构的数据一致性；
-- binlog 是追加写入的，就是说 binlog 文件写到一定大小后会切换到下一个，并不会覆盖以前的日志；而 redo log 是循环写入的；
+undo log保存的是一个版本链，也就是使用DB_ROLL_PTR这个字段来连接的。多个事务的 undo-log 日志副本 (数据快照)，组成了一个 副本链
 
-虽然它们都属于持久化的保证，但是则重点不同；在执行更新语句过程，会记录`redo log`与`binlog`两块日志，以基本的事务为单位，redo log在事务执行过程中可以不断写入，而binlog只有在提交事务时才写入，所以`redo log`与`binlog`的写入时机不一样；
+![](image/MySQL-undolog-版本链.png)
 
-### 3.2、redo log与binlog两份日志之间的逻辑不一致，会出现什么问题？
+undo log版本链，数据页中的每行数据都会分配两个字段：trx_id和roll_pointer
+- trx_id代表事务id，记录了这一系列事务操作是基于哪个事务；
+- roll_pointer代表回滚指针，就是当要发生rollback回滚操作时，就通过roll_pointer进行回滚，这个链表称为版本链
 
-我们以update语句为例，假设id=2的记录，字段c值是0，把字段c值更新成1，SQL语句为`update T set c=1 where id=2`；
+为了 提升 Undo Log 读写性能， Undo Log 也在内存中进行了缓存，所处的位置在 [Buffer Pool](./MySQL_存储引擎.md#3buffer-pool) 中
 
-假设执行过程中写完`redo log`日志后，binlog日志写期间发生了异常，会出现什么情况呢？
+## 3、[MVCC](../数据库锁机制.md#1mvcc多版本并发控制)与事务隔离
 
-由于binlog没写完就异常，这时候binlog里面没有对应的修改记录。因此，之后用binlog日志恢复数据时，就会少这一次更新，恢复出来的这一行c值是0，而原库因为`redo log`日志恢复，这一行c值是1，最终数据不一致；
+如果多个事务并行的读写操作，每一个事务应该使用那个版本呢？MVCC 实现了自己 Copy-On-Write思想提升并发能力的时候， 也需要数据的副本，这里既然undo-log 有了那么多副本，MVCC 就借鸡生蛋， 复用 这些数据副本。
 
-为了解决两份日志之间的逻辑一致问题，InnoDB存储引擎使用两阶段提交方案；
+所以，undo log 中的副本，可以用于实现多版本并发控制（MVCC），提升事务的并发性能，同时每一个事务操作自己的副本，实现事务的隔离性
 
-### 3.3、两阶段提交
+MVCC 的实现依赖于：`隐藏字段`、`Read View`、`undo log`。在内部实现中，InnoDB 通过数据行的 `DB_TRX_ID` 和 `Read View` 来判断数据的可见性，如不可见，则通过数据行的 `DB_ROLL_PTR` 找到 `undo log` 中的历史版本。每个事务读到的数据版本可能是不一样的，在同一个事务中，用户只能看到该事务创建 `Read View` 之前已经提交的修改和该事务本身做的修改
 
-如果不采用两阶段提交：以`update T set c=c+1 where ID=2;`为例，假设当前 ID=2 的行，字段 c 的值是 0，再假设执行 update 语句过程中在写完第一个日志后，第二个日志还没有写完期间发生了 crash，会出现什么情况呢？
-- 先写 `redo log` 后写 `binlog`。假设在 redo log 写完，binlog 还没有写完的时候，MySQL 进程异常重启。前面说过的，redo log 写完之后，系统即使崩溃，仍然能够把数据恢复回来，所以恢复后这一行 c 的值是 1。但是由于 binlog 没写完就 crash 了，这时候 binlog 里面就没有记录这个语句。因此，之后备份日志的时候，存起来的 binlog 里面就没有这条语句。然后你会发现，如果需要用这个 binlog 来恢复临时库的话，由于这个语句的 binlog 丢失，这个临时库就会少了这一次更新，恢复出来的这一行 c 的值就是 0，与原库的值不同；
-- 先写 `binlog` 后写 `redo log`。如果在 binlog 写完之后 crash，由于 redo log 还没写，崩溃恢复以后这个事务无效，所以这一行 c 的值是 0。但是 binlog 里面已经记录了“把 c 从 0 改成 1”这个日志。所以，在之后用 binlog 来恢复的时候就多了一个事务出来，恢复出来的这一行 c 的值就是 1，与原库的值不同；
-
-什么是两阶段提交：原理很简单，将redo log的写入拆成了两个步骤prepare和commit；
-
-![](image/MySQL-日志两阶段提交.png)
-
-- 引擎将这行新数据更新到内存中，同时将这个更新操作记录到 redo log 里面，此时 redo log 处于 prepare 状态。然后告知执行器执行完成了，随时可以提交事务；
-- 执行器生成这个操作的 binlog，并把 binlog 写入磁盘
-- 执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交（commit）状态，更新完成；
-
-使用两阶段提交后，写入binlog时发生异常也不会有影响，因为MySQL根据redo log日志恢复数据时，发现redo log还处于prepare阶段，并且没有对应binlog日志，就会回滚该事务；
-
-再看一个问题：redo log的commit阶段发生异常，那会不会回滚事务呢？
-- 并不会回滚事务，它会执行上图框住的逻辑；虽然redo log是处于prepare阶段，但是能通过事务id找到对应的binlog日志，所以MySQL认为是完整的，就会提交事务恢复数据；
-
-### 3.4、总结
-
-redo log 用于保证 crash-safe 能力。`innodb_flush_log_at_trx_commit` 这个参数设置成 1 的时候，表示每次事务的 redo log 都直接持久化到磁盘。这个参数建议设置成 1，这样可以保证 MySQL 异常重启之后数据不丢失。
-
-sync_binlog 这个参数设置成 1 的时候，表示每次事务的binlog都持久化到磁盘。这个参数建议设置成1，这样可以保证 MySQL 异常重启之后 binlog 不丢失
-
-## 4、undo log
-
-InnodDB引擎的log文件，其是逻辑日志
-
-如果想要保证事务的原子性，就需要在异常发生时，对已经执行的操作进行回滚，在 MySQL 中，恢复机制是通过 回滚日志（undo log） 实现的，所有事务进行的修改都会先先记录到这个回滚日志中，然后再执行相关的操作。如果执行过程中遇到异常的话，我们直接利用 回滚日志 中的信息将数据回滚到修改之前的样子即可！并且，回滚日志会先于数据持久化到磁盘上。这样就保证了即使遇到数据库突然宕机等情况，当用户再次启动数据库的时候，数据库还能够通过查询回滚日志来回滚将之前未完成的事务。
-
-另外，MVCC 的实现依赖于：`隐藏字段`、`Read View`、`undo log`。在内部实现中，InnoDB 通过数据行的 `DB_TRX_ID` 和 `Read View` 来判断数据的可见性，如不可见，则通过数据行的 `DB_ROLL_PTR` 找到 `undo log` 中的历史版本。每个事务读到的数据版本可能是不一样的，在同一个事务中，用户只能看到该事务创建 `Read View` 之前已经提交的修改和该事务本身做的修改
+MVCC详细实现参考： [MVCC实现原理](../数据库锁机制.md#14mvcc的实现原理)
 
 **purge**
 
@@ -155,7 +134,11 @@ purge 过程主要分为以下两个步骤：
 
 purge 过程是一个后台任务，MySQL 会周期性地检查是否需要进行 purge 操作。如果发现需要进行 purge，MySQL 就会分配一个线程进行处理。purge 过程可能会影响数据库的性能，因此在高并发场景下，需要仔细调整 purge 窗口的大小，以平衡空间占用和性能
 
-# 二、BinaryLog
+# 四、binlog
+
+binlog 是逻辑日志，记录内容是语句的原始逻辑，类似于`给 ID=2 这一行的 c 字段加 1`，属于MySQL Server 层；不管用什么存储引擎，只要发生了表数据更新，都会产生 binlog 日志
+
+binlog作用：MySQL数据库的数据备份、主备、主主、主从都离不开binlog，需要依靠binlog来同步数据，保证数据一致性；binlog会记录所有涉及更新数据的逻辑操作，并且是顺序写
 
 ## 1、binlog概述
 
@@ -207,6 +190,8 @@ binlog 是通过追加的方式进行写入的，可以通过max_binlog_size 参
 - `reset master`：清空所有的binlog日志
 
 ## 4、binlog操作命令
+
+- [MySQL的binlog日志-使用操作](https://www.cnblogs.com/martinzhang/p/3454358.html)
 
 ### 4.1、通过MySQL客户端查binlog
 
@@ -447,7 +432,53 @@ mysql -u cisco -p < /home/mysql_backup/test_binlog_step1.sql
 mysql -u cisco -p < /home/mysql_backup/test_binlog_step2.sql
 ```
 
-# 三、Binlog 解析工具
+## 3、两阶段提交
+
+### 3.1、redo log 和 binlog
+
+- redo log（重做日志）让InnoDB存储引擎拥有了崩溃恢复能力。
+- binlog（归档日志）保证了MySQL集群架构的数据一致性；
+- binlog 是追加写入的，就是说 binlog 文件写到一定大小后会切换到下一个，并不会覆盖以前的日志；而 redo log 是循环写入的；
+
+虽然它们都属于持久化的保证，但是则重点不同；在执行更新语句过程，会记录`redo log`与`binlog`两块日志，以基本的事务为单位，redo log在事务执行过程中可以不断写入，而binlog只有在提交事务时才写入，所以`redo log`与`binlog`的写入时机不一样；
+
+### 3.2、redo log与binlog两份日志之间的逻辑不一致，会出现什么问题？
+
+我们以update语句为例，假设id=2的记录，字段c值是0，把字段c值更新成1，SQL语句为`update T set c=1 where id=2`；
+
+假设执行过程中写完`redo log`日志后，binlog日志写期间发生了异常，会出现什么情况呢？
+
+由于binlog没写完就异常，这时候binlog里面没有对应的修改记录。因此，之后用binlog日志恢复数据时，就会少这一次更新，恢复出来的这一行c值是0，而原库因为`redo log`日志恢复，这一行c值是1，最终数据不一致；
+
+为了解决两份日志之间的逻辑一致问题，InnoDB存储引擎使用两阶段提交方案；
+
+### 3.3、两阶段提交
+
+如果不采用两阶段提交：以`update T set c=c+1 where ID=2;`为例，假设当前 ID=2 的行，字段 c 的值是 0，再假设执行 update 语句过程中在写完第一个日志后，第二个日志还没有写完期间发生了 crash，会出现什么情况呢？
+- 先写 `redo log` 后写 `binlog`。假设在 redo log 写完，binlog 还没有写完的时候，MySQL 进程异常重启。前面说过的，redo log 写完之后，系统即使崩溃，仍然能够把数据恢复回来，所以恢复后这一行 c 的值是 1。但是由于 binlog 没写完就 crash 了，这时候 binlog 里面就没有记录这个语句。因此，之后备份日志的时候，存起来的 binlog 里面就没有这条语句。然后你会发现，如果需要用这个 binlog 来恢复临时库的话，由于这个语句的 binlog 丢失，这个临时库就会少了这一次更新，恢复出来的这一行 c 的值就是 0，与原库的值不同；
+- 先写 `binlog` 后写 `redo log`。如果在 binlog 写完之后 crash，由于 redo log 还没写，崩溃恢复以后这个事务无效，所以这一行 c 的值是 0。但是 binlog 里面已经记录了“把 c 从 0 改成 1”这个日志。所以，在之后用 binlog 来恢复的时候就多了一个事务出来，恢复出来的这一行 c 的值就是 1，与原库的值不同；
+
+什么是两阶段提交：原理很简单，将redo log的写入拆成了两个步骤prepare和commit；
+
+![](image/MySQL-日志两阶段提交.png)
+
+- 引擎将这行新数据更新到内存中，同时将这个更新操作记录到 redo log 里面，此时 redo log 处于 prepare 状态。然后告知执行器执行完成了，随时可以提交事务；
+- 执行器生成这个操作的 binlog，并把 binlog 写入磁盘
+- 执行器调用引擎的提交事务接口，引擎把刚刚写入的 redo log 改成提交（commit）状态，更新完成；
+
+使用两阶段提交后，写入binlog时发生异常也不会有影响，因为MySQL根据redo log日志恢复数据时，发现redo log还处于prepare阶段，并且没有对应binlog日志，就会回滚该事务；
+
+再看一个问题：redo log的commit阶段发生异常，那会不会回滚事务呢？
+- 并不会回滚事务，它会执行上图框住的逻辑；虽然redo log是处于prepare阶段，但是能通过事务id找到对应的binlog日志，所以MySQL认为是完整的，就会提交事务恢复数据；
+
+### 3.4、总结
+
+redo log 用于保证 crash-safe 能力。`innodb_flush_log_at_trx_commit` 这个参数设置成 1 的时候，表示每次事务的 redo log 都直接持久化到磁盘。这个参数建议设置成 1，这样可以保证 MySQL 异常重启之后数据不丢失。
+
+sync_binlog 这个参数设置成 1 的时候，表示每次事务的binlog都持久化到磁盘。这个参数建议设置成1，这样可以保证 MySQL 异常重启之后 binlog 不丢失
+
+
+# 五、Binlog 解析工具
 
 ## 1、MaxWell
 
@@ -532,4 +563,5 @@ DTS提供了数据迁移、实时数据订阅及数据实时同步等多种数�
 - [MySQL BinaryLog](https://dev.mysql.com/doc/internals/en/binary-log-overview.html)
 - [MySQL 的 Binlog 日志处理工具对比](https://mp.weixin.qq.com/s/EJVUY4qCqKFqMudLZ2y09g)
 - [庖丁解牛分析RedoLog](https://mp.weixin.qq.com/s/2G_2ZYAbQIblVJY7pmrhKg)
-- [MySQL的binlog日志](https://www.cnblogs.com/martinzhang/p/3454358.html)
+- [深入理解redo log/bin log/undo log](https://mp.weixin.qq.com/s/p1eHHIVPetADdrWe__Hdbw)
+- [数据库MySQL](https://www.xiaolincoding.com/mysql/log/how_update.html)
