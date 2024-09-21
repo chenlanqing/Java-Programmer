@@ -1,128 +1,4 @@
-# 一、Mysql概述
-
-基于C/S架构
-
-## 1、MySQL服务器参数
-
-* [MySQL Server配置](https://dev.mysql.com/doc/refman/5.6/en/server-system-variable-reference.html)
-
-### 1.1、内存配置相关参数
-
-- 确定可以使用的内存上限；
-- 确定MySQL的每个连接使用的内存<br>
-	sort_buffer_size ： 排序操作缓冲区<br>
-	join_buffer_size ： 连接缓冲区大小<br>
-	read_buffer_size ： 读缓冲区大小<br>
-	read_rnd_buffer_size ： 索引缓冲区大小<br>
-	上述参数是为每个线程分配的；
-- 确定需要为操作系统保留多少内存
-
-### 1.2、如何为缓存池分配内存
-
-innodb_buffer_pool_size -> 修改该配置 <br>
-总内存 - (每个线程所需要的内存 * 连接处数) - 系统保留内存
-
-mysql内存参数：https://www.cnblogs.com/kissdb/p/4009614.html
-
-### 1.3、I/O相关配置参数
-
-- InnoDB I/O相关配置：
-	- innodb_log_file_size：单个事务日志文件的大小
-	- innodb_log_files_in_group：事务日志文件的数量
-	- innodb_log_buffer_size：事务日志缓冲区
-	- innodb_flush_log_at_trx_commit：log写入cache并刷新到缓存
-	- innodb_flush_method：刷新方式
-	- innodb_file_per_table：设置表空间
-	- innodb_doublewrite：是否支持双写缓存
-
-- MyISAM I/O配置：delay_key_write：
-
-### 1.4、安全配置参数
-
-- expire_logs_days：指定自动清理binlog的天数
-- max_allowed_packet：控制mysql可以接收的包的大小
-- skip_name_resolve：禁用DNS查找
-- sysdate_is_now：确保sysdate()返回确定性日期
-- read_only：进行非uper权限的用户写权限
-- skip_slave_start：禁用slave自动恢复
-- sql_mode：设置mysql所使用的sql模式
-
-### 1.5、其他配置参数
-
-- sync_binlog：控制mysql如何向磁盘刷新binlog
-- tmp_table_size 和 max_heap_table_size：控制内存临时表大小
-- max_connections：控制允许的最大连接数
-
-## 2、MySQL版本
-
-### 2.1、MySQL常见的发行版本
-
-- MySQL官方版本-Oracle官方维护，包含社区版本和企业版本
-- Percona MySQL：同官方版本完全兼容，性能优于mysql官方版本
-- MariaDB
-
-上述三个版本的主要区别：
-- 服务器特性：都是开源，都支持分区表；Mysql是InnoDB引擎；其他是XtraDB引擎，两者是兼容的；
-- 高可用特性：基于日志点复制；基于gtid复制；但是MariaDB的gtid同mysql不兼容；
-- 安全特性：防火墙、审计、用户密码以及密码加密算法；
-
-### 2.2、版本升级
-
-- 升级之前需要考虑什么：
-	- 升级对业务的好处：是否解决业务上某一方面的痛点、是否解决运维上某一个方面的痛点；
-	- 升级对业务的影响：对原业务程序的支持是否有影响、对原业务程序的性能是否有影响；
-	- 数据库升级的方案：评估受影响的业务系统、升级的详细步骤、升级后的数据库环境检查、升级后的业务检查；
-	- 升级失败的回滚方案：升级失败回滚的步骤、回滚后的数据库环境检查、回滚后的业务检查；
-
-- 升级的步骤
-	- 对升级的数据库进行备份
-	- 升级slave服务器版本；
-	- 手动进行主从切换；
-	- 升级Master服务器版本；
-	- 升级完成后进行业务检查；
-
-### 2.3、MySQL版本特性
-
-- MySQL8.0特性
-	- 所有元数据使用InnoDB引擎存储，无frm文件；
-	- 系统表采用InnoDB存储并采用独立表空间；
-	- 支持定义资源管理组（目前仅支持CPU资源）；
-	- 支持不可见索引和降序索引，支持直方图优化；
-	- 支持窗口函数；
-	- 支持在线修改全局参数持久化；
-	- 默认使用caching_sha2_password认证插件；
-	- 新增支持定义角色（role）；
-	- 新增密码历史记录功能，限制重复使用密码；
-	- InnoDB DDL语句支持原子操作；
-	- 支持在线修改UNDO表空间；
-	- 新增管理试图用于建innodb表状态；
-	- 新增innodb_dedicated_server配置项
-
-## 3、MySQL与Oracle区别
-
-- 自动增长的数据类型处理：
-	- MYSQL有自动增长的数据类型，插入记录时不用操作此字段，会自动获得数据值；
-	- ORACLE没有自动增长的数据类型，需要建立一个自动增长的序列号，插入记录时要把序列号的下一个值赋于此字段。`CREATE SEQUENCE 序列号的名称 (最好是表名+序列号标记) `	`INCREMENT BY 1 START WITH 1 MAXVALUE 99999 CYCLE NOCACHE;`其中最大的值按字段的长度来定, 如果定义的自动增长的序列号 NUMBER(6)，最大值为`999999`；INSERT 语句插入这个字段值为: `序列号的名称.NEXTVAL`；
-
-- 分页的处理
-	- MYSQL处理翻页的SQL语句比较简单，用 LIMIT 开始位置, 记录个数；
-	- ORACLE处理翻页的SQL语句就比较繁琐了。每个结果集只有一个ROWNUM字段标明它的位置, 并且只能用`ROWNUM<100`, 不能用`ROWNUM>80`
-
-- 单引号的处理：MYSQL里可以用双引号包起字符串，ORACLE里只可以用单引号包起字符串。在插入和修改字符串前必须做单引号的替换：把所有出现的一个单引号替换成两个单引号；
-
-- 长字符串的处理：
-
-- 日期的处理：MYSQL日期字段分DATE和TIME、时间戳等多种，ORACLE日期字段只有DATE，包含年月日时分秒信息，用当前数据库的系统时间为SYSDATE, 精确到秒，或者用字符串转换成日期型函数；
-
-- 空字符的处理：MYSQL的非空字段也有空的内容，ORACLE里定义了非空字段就不容许有空的内容。按MySQL的NOT NULL来定义ORACLE表结构, 导数据的时候会产生错误。因此导数据时要对空字符进行判断，如果为NULL或空字符，需要把它改成一个空格的字符串；
-
-- 字符串的模糊比较： MYSQL里用 `字段名 like '%字符串%'`，ORACLE里也可以用` 字段名 like '%字符串%'` 但这种方法不能使用索引, 速度不快，用字符串比较函数 `instr(字段名,'字符串')>0` 会得到更精确的查找结果；
-
-## 4、MySQL日志
-
-[MySQL日志分类、使用等](./MySQL_日志.md)
-
-# 七、MySQL 存储引擎
+# 一、MySQL 存储引擎
 
 ## 1、MySQL 的数据库引擎
 
@@ -341,7 +217,28 @@ default_storage_engine=CSV
 
 不要混合使用存储引擎
 
-## 6、InnoDB详述
+## 6、表空间
+
+一个InnoDB表及其索引可以在建在系统表空间中，或者是在一个 独立表空间 中，或在 通用表空间
+- 当`innodb_file_per_table`启用时，通常是将表存放在独立表空间中，这是默认配置；
+- 当`innodb_file_per_table`禁用时，则会在系统表空间中创建表；
+- 要在通用表空间中创建表，请使用 `CREATE TABLE … TABLESPACE`语法
+
+表空间涉及的文件：相关文件默认在磁盘中的`innodb_data_home_dir`目录下：
+```
+|- ibdata1  // 系统表空间文件
+|- ibtmp1  // 默认临时表空间文件，可通过innodb_temp_data_file_path属性指定文件位置
+|- test/  // 数据库文件夹
+    |- db.opt  // test数据库配置文件，包含数据库字符集属性
+    |- t.frm  // 数据表元数据文件，不管是使用独立表空间还是系统表空间，每个表都对应有一个
+    |- t.ibd  // 数据库表独立表空间文件，如果使用的是独立表空间，则一个表对应一个ibd文件，否则保存在系统表空间文件中
+```
+
+# 二、InnoDB存储引擎
+
+- [InnoDB-architecture](https://dev.mysql.com/doc/refman/8.0/en/innodb-architecture.html)
+
+## 1、InnoDB详述
 
 - [InnoDB Startup Options and System Variables](https://dev.mysql.com/doc/refman/5.7/en/innodb-parameters.html)
 
@@ -349,17 +246,17 @@ InnoDB采用[MVCC](../数据库锁机制.md#1MVCC:多版本并发控制)来支�
 
 InnoDB是基于聚簇索引建立的。其二级索引（非主键索引）中必须包含主键列，如果主键列很大的话，其他的所有索引都会很大。若表上的索引较多的话，主键应当尽可能的小；
 
-### 6.1、存储方式
+### 1.1、存储方式
 
 InnoDB采取的方式是：将数据划分为若干个页，以页作为磁盘和内存之间交互的基本单位，InnoDB中页的大小一般为 16 KB。在一般情况下，一次最少从磁盘中读取16KB的内容到内存中，一次最少把内存中的16KB内容刷新到磁盘中；
 
-### 6.2、InnoDB最佳实践
+### 1.2、InnoDB最佳实践
 
 - 为表指定一个自增的主键；
 - 不要使用`LOCK TABLES`语句，如果需要锁定，可以使用 `SELECT ... FOR UPDATE` 锁定你需要操作的数据行；
 - `--sql_mode=NO_ENGINE_SUBSTITUTION`，防止在创建表或者修改表的时候存储引擎不支持
 
-### 6.3、InnoDB体系架构
+## 2、InnoDB体系架构
 
 InnoDB 存储引擎由内存池和一些后台线程组成
 
@@ -387,7 +284,7 @@ InnoDB 存储引擎是基于磁盘存储的，并将其中的记录按照页的�
 - **Purge Thread**：回收已经使用并分配的 undo 页
 - **Page Cleaner Thread**：将之前版本中脏页的刷新操作都放入到单独的线程中来完成。其目的是为了减轻原 Master Thread 的工作及对于用户查询线程的阻塞，进一步提高 InnoDB 存储引擎的性能
 
-### 6.4、Buffer Pool
+## 3、Buffer Pool
 
 MySQL以数据页为单位，从磁盘中读取数据。数据页被读取到内存中，所谓的内存其实就是Buffer Pool。Buffer Pool中维护的数据结构是缓存页，而且每个缓存页都有它对应的描述信息。InnoDB 访问表数据和索引数据的时候，会顺便把对应的数据页缓存到缓冲池中
 
@@ -408,24 +305,7 @@ Buffer Pool中存在三个双向链表。分别是FreeList、LRUList以及FlushL
 - `innodb_old_blocks_pct`：控制 LRU 列表中旧子列表的百分比，默认是 37，也就是 3/8，可选范围为 5~95；
 - `innodb_old_blocks_time` ：指定第一次访问页面后的时间窗口，该时间窗口内访问页面不会使其移动到 LRU 列表的最前面。默认是 1000，也就是 1 秒。
 
-## 7、表空间
-
-一个InnoDB表及其索引可以在建在系统表空间中，或者是在一个 独立表空间 中，或在 通用表空间
-- 当`innodb_file_per_table`启用时，通常是将表存放在独立表空间中，这是默认配置；
-- 当`innodb_file_per_table`禁用时，则会在系统表空间中创建表；
-- 要在通用表空间中创建表，请使用 `CREATE TABLE … TABLESPACE`语法
-
-表空间涉及的文件：相关文件默认在磁盘中的`innodb_data_home_dir`目录下：
-```
-|- ibdata1  // 系统表空间文件
-|- ibtmp1  // 默认临时表空间文件，可通过innodb_temp_data_file_path属性指定文件位置
-|- test/  // 数据库文件夹
-    |- db.opt  // test数据库配置文件，包含数据库字符集属性
-    |- t.frm  // 数据表元数据文件，不管是使用独立表空间还是系统表空间，每个表都对应有一个
-    |- t.ibd  // 数据库表独立表空间文件，如果使用的是独立表空间，则一个表对应一个ibd文件，否则保存在系统表空间文件中
-```
-
-# 八、MySQL事务
+# 三、MySQL事务
 
 数据库的事务：是指一组sql语句组成的数据库逻辑处理单元，在这组的sql操作中，要么全部执行成功，要么全部执行失败
 
@@ -587,327 +467,9 @@ MySQL InnoDB的可重复读并不保证避免幻读，需要应用使用加锁�
 
 `commit work and chain`：提交上一个事务，并且再开启一个新的事务。它的功能等效于：commit + begin
 
-# 九、数据库锁
+# 四、数据库锁
 
 [数据库锁机制](../数据库锁机制.md)
-
-# 十、数据库结构设计
-
-## 1、数据库结构设计的步骤
-
-- 需求分析：全面了解产品设计的存储需求，存储需求，数据处理需求，数据的安全性与完整性
-- 逻辑设计：设计数据的逻辑存储结构：数据实体之间的逻辑关系，解决数据冗余和数据维护异常
-- 物理设计：根据所使用的数据库特点进行表结构设计；
-
-## 2、数据库设计范式
-
-数据库三范式
-
-### 2.1、数据库设计第一范式
-
-- 数据库表中的所有字段都只具有单一属性；
-- 单一属性的列基本由基本数据类型所构成；
-- 设计出来的表都是简单的二维表；
-
-### 2.2、数据库设计第二范式
-
-要求数据库表中只有一个业务主键，符合第二范式的表不能存在非主键列只对部分主键的依赖关系
-
-### 2.3、数据库设计第三范式
-
-指每一个业务主键既不部分依赖于也不传递依赖于业务主键，也就是在第二范式的基础上消除了非主属性对主键的传递依赖
-
-## 3、反范式化设计
-
-所谓的反范式化是为了性能和读取效率的考虑而适当的对数据库设计范式的要求进行违反，而允许存在的少量的数据冗余，即反范式化就是使用空间来换取时间
-
-## 4、表设计原则
-
-- 注释：字段和表的注释；
-- 表数据量：
-	- 单表 >= 800W，可考虑分库分表；
-	- 如果没有分库分表的计划，可将数据归档到其他地方；
-- 表字段原则：
-	- 不保存大字段；
-	- 单表字段不宜过多，不建议超过30个；
-- 平衡冗余和范式设计
-
-## 5、索引原则
-
-- 索引个数：普通表不建议超过10个，写入频繁的表不建议超过5个；
-- 单个索引包含的字段不建议超过5个；
-- 组合索引：满足最左前缀原则，将区分度大的字段放在前面；
-- 不要在索引列进行计算；
-- join的字段创建索引，且拥有相同的类型和字符集，避免隐式转换；
-
-
-# 十一、MySQL系统库
-
-- [information-schema-introduction](https://dev.mysql.com/doc/refman/8.0/en/information-schema-introduction.html)
-
-## 1、information_schema
-
-information_schema 数据库中保存了MySQL服务器所有数据库的信息。如数据库名，数据库的表，表栏的数据类型与访问权限等。简而言之，这台MySQL服务器上，到底有哪些数据库、各个数据库有哪些表，每张表的字段类型是什么，各个数据库要什么权限才能访问，等等信息都保存在 information_schema 对应的表里面；
-
-information_schema 数据库中的数据是只读的，不能对其进行增删改操作，且其实际上都是视图，不是基表，数据库中没有文件与其关联
-
-主要的表：
-```
-mysql> show tables;
-+---------------------------------------+
-| Tables_in_information_schema          |
-+---------------------------------------+
-| CHARACTER_SETS                        |
-| COLLATIONS                            |
-| COLLATION_CHARACTER_SET_APPLICABILITY |
-| COLUMNS                               |
-| COLUMN_PRIVILEGES                     |
-| ENGINES                               |
-| EVENTS                                |
-| FILES                                 |
-| GLOBAL_STATUS                         |
-| GLOBAL_VARIABLES                      |
-| KEY_COLUMN_USAGE                      |
-| OPTIMIZER_TRACE                       |
-| PARAMETERS                            |
-| PARTITIONS                            |
-| PLUGINS                               |
-| PROCESSLIST                           |
-| PROFILING                             |
-| REFERENTIAL_CONSTRAINTS               |
-| ROUTINES                              |
-| SCHEMATA                              |
-| SCHEMA_PRIVILEGES                     |
-| SESSION_STATUS                        |
-| SESSION_VARIABLES                     |
-| STATISTICS                            |
-| TABLES                                |
-| TABLESPACES                           |
-| TABLE_CONSTRAINTS                     |
-| TABLE_PRIVILEGES                      |
-| TRIGGERS                              |
-| USER_PRIVILEGES                       |
-| VIEWS                                 |
-| INNODB_LOCKS                          |
-| INNODB_TRX                            |
-| INNODB_SYS_DATAFILES                  |
-| INNODB_FT_CONFIG                      |
-| INNODB_SYS_VIRTUAL                    |
-| INNODB_CMP                            |
-| INNODB_FT_BEING_DELETED               |
-| INNODB_CMP_RESET                      |
-| INNODB_CMP_PER_INDEX                  |
-| INNODB_CMPMEM_RESET                   |
-| INNODB_FT_DELETED                     |
-| INNODB_BUFFER_PAGE_LRU                |
-| INNODB_LOCK_WAITS                     |
-| INNODB_TEMP_TABLE_INFO                |
-| INNODB_SYS_INDEXES                    |
-| INNODB_SYS_TABLES                     |
-| INNODB_SYS_FIELDS                     |
-| INNODB_CMP_PER_INDEX_RESET            |
-| INNODB_BUFFER_PAGE                    |
-| INNODB_FT_DEFAULT_STOPWORD            |
-| INNODB_FT_INDEX_TABLE                 |
-| INNODB_FT_INDEX_CACHE                 |
-| INNODB_SYS_TABLESPACES                |
-| INNODB_METRICS                        |
-| INNODB_SYS_FOREIGN_COLS               |
-| INNODB_CMPMEM                         |
-| INNODB_BUFFER_POOL_STATS              |
-| INNODB_SYS_COLUMNS                    |
-| INNODB_SYS_FOREIGN                    |
-| INNODB_SYS_TABLESTATS                 |
-+---------------------------------------+
-61 rows in set (0.00 sec)
-```
-
-### 1.1、数据库元信息：SCHEMATA
-
-主要存储的是MySQL中所有数据库的元信息，比如数据库名称、编码等；
-
-表结构：
-```
-+----------------------------+--------------+------+-----+---------+-------+
-| Field                      | Type         | Null | Key | Default | Extra |
-+----------------------------+--------------+------+-----+---------+-------+
-| CATALOG_NAME               | varchar(512) | NO   |     |         |       |
-| SCHEMA_NAME                | varchar(64)  | NO   |     |         |       |
-| DEFAULT_CHARACTER_SET_NAME | varchar(32)  | NO   |     |         |       |
-| DEFAULT_COLLATION_NAME     | varchar(32)  | NO   |     |         |       |
-| SQL_PATH                   | varchar(512) | YES  |     | NULL    |       |
-+----------------------------+--------------+------+-----+---------+-------+
-```
-主要数据
-```
-mysql> select * from schemata;
-+--------------+--------------------+----------------------------+------------------------+----------+
-| CATALOG_NAME | SCHEMA_NAME        | DEFAULT_CHARACTER_SET_NAME | DEFAULT_COLLATION_NAME | SQL_PATH |
-+--------------+--------------------+----------------------------+------------------------+----------+
-| def          | information_schema | utf8                       | utf8_general_ci        | NULL     |
-| def          | imooc_ad_data      | utf8                       | utf8_general_ci        | NULL     |
-| def          | mysql              | latin1                     | latin1_swedish_ci      | NULL     |
-| def          | performance_schema | utf8                       | utf8_general_ci        | NULL     |
-| def          | sakila             | latin1                     | latin1_swedish_ci      | NULL     |
-| def          | sys                | utf8                       | utf8_general_ci        | NULL     |
-| def          | test               | utf8mb4                    | utf8mb4_general_ci     | NULL     |
-+--------------+--------------------+----------------------------+------------------------+----------+
-```
-
-### 1.2、表信息：TABLES
-
-主要是存储的是MySQL所有数据库表的元数据信息，比如：存储引擎、表的行数，还有自增序列的值
-
-表结构：
-```
-mysql> desc tables;
-+-----------------+---------------------+------+-----+---------+-------+
-| Field           | Type                | Null | Key | Default | Extra |
-+-----------------+---------------------+------+-----+---------+-------+
-| TABLE_CATALOG   | varchar(512)        | NO   |     |         |       |
-| TABLE_SCHEMA    | varchar(64)         | NO   |     |         | 数据库名称 |
-| TABLE_NAME      | varchar(64)         | NO   |     |         |表名    |
-| TABLE_TYPE      | varchar(64)         | NO   |     |         |       |
-| ENGINE          | varchar(64)         | YES  |     | NULL    |存储引擎 |
-| VERSION         | bigint(21) unsigned | YES  |     | NULL    |       |
-| ROW_FORMAT      | varchar(10)         | YES  |     | NULL    |       |
-| TABLE_ROWS      | bigint(21) unsigned | YES  |     | NULL    |       |
-| AVG_ROW_LENGTH  | bigint(21) unsigned | YES  |     | NULL    |       |
-| DATA_LENGTH     | bigint(21) unsigned | YES  |     | NULL    |       |
-| MAX_DATA_LENGTH | bigint(21) unsigned | YES  |     | NULL    |       |
-| INDEX_LENGTH    | bigint(21) unsigned | YES  |     | NULL    |       |
-| DATA_FREE       | bigint(21) unsigned | YES  |     | NULL    |       |
-| AUTO_INCREMENT  | bigint(21) unsigned | YES  |     | NULL    |       |
-| CREATE_TIME     | datetime            | YES  |     | NULL    |       |
-| UPDATE_TIME     | datetime            | YES  |     | NULL    |       |
-| CHECK_TIME      | datetime            | YES  |     | NULL    |       |
-| TABLE_COLLATION | varchar(32)         | YES  |     | NULL    |       |
-| CHECKSUM        | bigint(21) unsigned | YES  |     | NULL    |       |
-| CREATE_OPTIONS  | varchar(255)        | YES  |     | NULL    |       |
-| TABLE_COMMENT   | varchar(2048)       | NO   |     |         |       |
-+-----------------+---------------------+------+-----+---------+-------+
-```
-
-### 1.3、列信息：COLUMNS
-
-主要存储的是MySQL中所有表的列信息，主要是数据库名称、表名、列名称、列所处的位置、编码等信息，这个位置有在解析binlog时可以根据binlog去映射对应的列名称；
-
-```
-mysql> desc columns;
-+--------------------------+---------------------+------+-----+---------+-------+
-| Field                    | Type                | Null | Key | Default | Extra |
-+--------------------------+---------------------+------+-----+---------+-------+
-| TABLE_CATALOG            | varchar(512)        | NO   |     |         |       |
-| TABLE_SCHEMA             | varchar(64)         | NO   |     |         |       |
-| TABLE_NAME               | varchar(64)         | NO   |     |         |       |
-| COLUMN_NAME              | varchar(64)         | NO   |     |         |       |
-| ORDINAL_POSITION         | bigint(21) unsigned | NO   |     | 0       |       |
-| COLUMN_DEFAULT           | longtext            | YES  |     | NULL    |       |
-| IS_NULLABLE              | varchar(3)          | NO   |     |         |       |
-| DATA_TYPE                | varchar(64)         | NO   |     |         |       |
-| CHARACTER_MAXIMUM_LENGTH | bigint(21) unsigned | YES  |     | NULL    |       |
-| CHARACTER_OCTET_LENGTH   | bigint(21) unsigned | YES  |     | NULL    |       |
-| NUMERIC_PRECISION        | bigint(21) unsigned | YES  |     | NULL    |       |
-| NUMERIC_SCALE            | bigint(21) unsigned | YES  |     | NULL    |       |
-| DATETIME_PRECISION       | bigint(21) unsigned | YES  |     | NULL    |       |
-| CHARACTER_SET_NAME       | varchar(32)         | YES  |     | NULL    |       |
-| COLLATION_NAME           | varchar(32)         | YES  |     | NULL    |       |
-| COLUMN_TYPE              | longtext            | NO   |     | NULL    |       |
-| COLUMN_KEY               | varchar(3)          | NO   |     |         |       |
-| EXTRA                    | varchar(30)         | NO   |     |         |       |
-| PRIVILEGES               | varchar(80)         | NO   |     |         |       |
-| COLUMN_COMMENT           | varchar(1024)       | NO   |     |         |       |
-| GENERATION_EXPRESSION    | longtext            | NO   |     | NULL    |       |
-+--------------------------+---------------------+------+-----+---------+-------+
-```
-
-比如查询test库中user表的列信息：
-```
-mysql> select table_schema,table_name, column_name,ordinal_position from columns where table_schema ='test' and table_name='user';
-+--------------+------------+-------------+------------------+
-| table_schema | table_name | column_name | ordinal_position |
-+--------------+------------+-------------+------------------+
-| test         | user       | id          |                1 |
-| test         | user       | username    |                2 |
-| test         | user       | password    |                3 |
-+--------------+------------+-------------+------------------+
-```
-
-### 1.4、分区信息：PARTITIONS
-
-主要是存储的表的分区信息，在该表中的每一行对应于一个分区表的单个分区或子分区
-```
-mysql> desc partitions;
-+-------------------------------+---------------------+------+-----+---------+-------+
-| Field                         | Type                | Null | Key | Default | Extra |
-+-------------------------------+---------------------+------+-----+---------+-------+
-| TABLE_CATALOG                 | varchar(512)        | NO   |     |         |       |
-| TABLE_SCHEMA                  | varchar(64)         | NO   |     |         |       |
-| TABLE_NAME                    | varchar(64)         | NO   |     |         |       |
-| PARTITION_NAME                | varchar(64)         | YES  |     | NULL    |       |
-| SUBPARTITION_NAME             | varchar(64)         | YES  |     | NULL    |       |
-| PARTITION_ORDINAL_POSITION    | bigint(21) unsigned | YES  |     | NULL    |       |
-| SUBPARTITION_ORDINAL_POSITION | bigint(21) unsigned | YES  |     | NULL    |       |
-| PARTITION_METHOD              | varchar(18)         | YES  |     | NULL    |       |
-| SUBPARTITION_METHOD           | varchar(12)         | YES  |     | NULL    |       |
-| PARTITION_EXPRESSION          | longtext            | YES  |     | NULL    |       |
-| SUBPARTITION_EXPRESSION       | longtext            | YES  |     | NULL    |       |
-| PARTITION_DESCRIPTION         | longtext            | YES  |     | NULL    |       |
-| TABLE_ROWS                    | bigint(21) unsigned | NO   |     | 0       |       |
-| AVG_ROW_LENGTH                | bigint(21) unsigned | NO   |     | 0       |       |
-| DATA_LENGTH                   | bigint(21) unsigned | NO   |     | 0       |       |
-| MAX_DATA_LENGTH               | bigint(21) unsigned | YES  |     | NULL    |       |
-| INDEX_LENGTH                  | bigint(21) unsigned | NO   |     | 0       |       |
-| DATA_FREE                     | bigint(21) unsigned | NO   |     | 0       |       |
-| CREATE_TIME                   | datetime            | YES  |     | NULL    |       |
-| UPDATE_TIME                   | datetime            | YES  |     | NULL    |       |
-| CHECK_TIME                    | datetime            | YES  |     | NULL    |       |
-| CHECKSUM                      | bigint(21) unsigned | YES  |     | NULL    |       |
-| PARTITION_COMMENT             | varchar(80)         | NO   |     |         |       |
-| NODEGROUP                     | varchar(12)         | NO   |     |         |       |
-| TABLESPACE_NAME               | varchar(64)         | YES  |     | NULL    |       |
-+-------------------------------+---------------------+------+-----+---------+-------+
-```
-
-# 十三、其他
-
-## 1、关于时区
-
-- [Timezone引起的MySQL服务器高负载](https://plantegg.github.io/2023/10/03/time_zone是怎么打爆你的MySQL的/)
-
-### 1.1、数据库连接中时间问题
-
-数据库连接时的基本参数：
-```
-jdbc:mysql://127.0.0.1:3306/test?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&useSSL=false&zeroDateTimeBehavior=convertToNull&serverTimeZone=UTC
-```
-serverTimeZone的作用就是指定web服务器和mysql服务器的会话期间的mysql服务器时区，一般配置 serverTimeZone 跟MySQL服务器时间保持一致即可；
-- 如果MySQL服务器的时间为：UTC，则这里也需要指定 `serverTimeZone=UTC`；
-- 如果MySQL服务器时间为：UTC+8，则这里可以指定为：`serverTimeZone=Asia/Shanghai`
-
-### 1.2、时间零值异常
-
-如果发现如下异常：`com.mysql.cj.exceptions.DataReadException: Zero date value prohibited`，使用MyBatis从MySQL表中查询DATETIME类型的列数据，如果列值是0000-00-00 00:00:00，程序将抛出异常Java.sql.SQLException。
-
-异常 "com.mysql.cj.exceptions.DataReadException：当试图从MySQL数据库中读取一个已经被设置为 "零 "值的日期值时，会抛出 "零日期值被禁止 "的异常，这个日期值是'0000-00-00'。
-
-在MySQL中，日期的 "零 "值不是一个有效的日期，因此，不能用于日期计算或操作。当试图从数据库中读取日期值时，MySQL会抛出这个异常，以表明日期值是无效的，不能被使用。
-
-如何解决：
-- 确保存储在数据库中的所有日期值都是有效的日期，并且没有'零'值；
-- 将现有的'零'日期值更新为有效日期值；
-- 修改你的应用程序代码来处理这个异常，并向用户显示一个有意义的错误信息
-- 将零值日期设置为null：`jdbc:mysql://127.0.0.1/test?zeroDateTimeBehavior=convertToNull`
-- 将零日期将被转换为0001-01-01 00:00:00.0，相当于一年：`jdbc:mysql://127.0.0.1/test?zeroDateTimeBehavior=round`
-
-## 2、关于字符集
-
-- [Case Sensitivity in String Searches](https://dev.mysql.com/doc/refman/8.0/en/case-sensitivity.html)
-- [Character Sets, Collations, Unicode](https://dev.mysql.com/doc/refman/8.0/en/charset.html)
-
-常用的是utf8字符集：
-- utf8_bin：utf8_bin将字符串中的每一个字符用二进制数据存储，区分大小写。
-- utf8_general_ci：utf8_genera_ci不区分大小写，ci为case insensitive的缩写，即大小写不敏感。
 
 # 参考文章
 

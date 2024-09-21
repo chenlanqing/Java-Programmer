@@ -562,42 +562,7 @@ https://mp.weixin.qq.com/s/K40FKzM5gUJIVQCvX6YtnQ
 
 - [sharding-jdbc](../数据库中间件.md#二ShardingSphere)：当当开源的，属于 client 层方案，支持分库分表、读写分离、分布式 id 生成、柔性事务（最大努力送达型事务、TCC 事务）
 
-# 四、数据库编程
-
-## 1、存储过程
-
-最大的好处是不对票外暴露表结构
-
-```sql
--- 批量插入数据到表中
-delimiter ;;
-create procedure idata()
-begin
-  declare i int;
-  set i=1;
-  while(i<=100000)do
-    insert into t values(i, i, i);
-    set i=i+1;
-  end while;
-end;;
-delimiter ;
-call idata();
-```
-
-## 2、函数
-
-函数式特殊的存储过程
-
-## 3、触发器
-
-不需要手动调用，满足某个条件时会自动触发
-
-## 4、为什么放弃数据库编程
-
-- 在数据库集群场景里，因为存储过程、触发器和自定义函数都是在本地数据库执行，所以无法兼容集群场景；
-- 数据库编程，如存储过程只是单机时代的产物，并不适合互联网时代
-
-# 五、Mysql监控
+# 四、Mysql监控
 
 - [open falcon](http://open-falcon.org/)
 
@@ -642,7 +607,7 @@ sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192
 sysbench /usr/share/sysbench/tests/include/oltp_legacy/oltp.lua --mysql-host=192.168.99.202 --mysql-port=3306 --mysql-user=root --mysql-password=abc123456 --oltp-test-mode=complex --threads=10 --time=300 --report-interval=10 run >> /home/mysysbench.log
 ```
 
-# 六、MySQL默认配置
+# 五、MySQL默认配置
 
 ## 1、数据目录
 
@@ -708,7 +673,7 @@ Linux操作系统下默认文件存储：`/var/lib/mysql`
 └── undo_002
 ```
 
-# 七、MySQL架构
+# 六、MySQL架构
 
 ## 1、基础结构
 
@@ -752,7 +717,3 @@ MySQL Server 服务层（Service Layer）解析 SQL 语句、优化查询以及�
 - 执行器：根据计划调用存储引擎执行操作并返回结果。
 
 ![](image/MySQL-Server层流程.png)
-
-# 八、数据库选型
-
-[数据存储选型](https://mp.weixin.qq.com/s/YpRQa9YguOqJygJbdRZ-nA)
