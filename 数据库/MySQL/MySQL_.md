@@ -98,26 +98,7 @@ mysql内存参数：https://www.cnblogs.com/kissdb/p/4009614.html
 	- 新增管理试图用于建innodb表状态；
 	- 新增innodb_dedicated_server配置项
 
-## 3、MySQL架构
-
-### 3.1、如何设计关系型数据库
-
-- 存储文件系统
-- 程序实例
-	- 存储管理
-	- 缓存机制
-	- SQL解析
-	- 日志管理
-	- 权限划分
-	- 容灾机制
-	- 索引管理-优化效率
-	- 锁管理
-
-### 3.2、MySQL架构
-
-![](image/mysql架构.png)
-
-## 4、MySQL与Oracle区别
+## 3、MySQL与Oracle区别
 
 - 自动增长的数据类型处理：
 	- MYSQL有自动增长的数据类型，插入记录时不用操作此字段，会自动获得数据值；
@@ -137,17 +118,9 @@ mysql内存参数：https://www.cnblogs.com/kissdb/p/4009614.html
 
 - 字符串的模糊比较： MYSQL里用 `字段名 like '%字符串%'`，ORACLE里也可以用` 字段名 like '%字符串%'` 但这种方法不能使用索引, 速度不快，用字符串比较函数 `instr(字段名,'字符串')>0` 会得到更精确的查找结果；
 
-## 5、MySQL日志
+## 4、MySQL日志
 
-### 5.1、mysql日志分类
-
-mysql日志主要分为以下：
-- 错误日志（error_log）：记录mysql在启动、运行或停止时出现的问题；
-- 常规日志（general_log）：记录所有发现mysql的请求；
-- 慢查询日志（slow_query_log）：记录符合慢查询条件的日志；
-- 二进制日志（binary_log）：记录全部有效的数据修改日志；
-- 中继日志（raly_log）：用于主从复制，临时存储从主库同步的二进制日志；
-
+[MySQL日志分类、使用等](./MySQL_日志.md)
 
 # 七、MySQL 存储引擎
 
