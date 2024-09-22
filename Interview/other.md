@@ -211,6 +211,8 @@ public class Account extends User{
 
 # 五、面试资料
 
+- [字节面试题](https://mp.weixin.qq.com/s/zFkvx4OFvH-jleFcHGouNQ)
+
 ```
 一面：
 进程和线程的区别，进程间如何通讯，线程间如何通讯。
