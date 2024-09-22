@@ -2818,7 +2818,7 @@ System.out.println(al);
 - 一个类如果实现 Comparable 接口，那么他就具有了可比较性，意思就是说它的实例之间相互直接可以进行比较
 - 通常在两种情况下会定义一个实现 Comparator 类可以把一个Comparator的子类传递给`Collections.sort()`、`Arrays.sort()`等方法，用于自定义排序规则。用于初始化特定的数据结构。常见的有可排序的Set(TreeSet)和可排序的Map(TreeMap);
 
-# 二十、Java中的null
+# 十、Java中的null
 
 * [Java中的null](https://www.cnblogs.com/greatfish/p/5906617.html)
 
@@ -2862,3 +2862,7 @@ public class Null {
 - 用String转换后的null可以进行字符串运算，这是因为字符串进行连接的时候，编译器对`null`进行了特别的优，其实就是例化`StringBuilder`，在调用`append()`方法时对`null`的一个特别处理，当为null时，转化为“null”，最后调用`toString()`返回一个String对象；
 - 用八大基本类型转换后的`null`，不可以进行基本类型的运算，否则会出现编译或者运行错误；
 - `null`和`""`并不相等，因为下面的s并没有指向某一块内存，而s1指向了一块空字符串的内存；
+
+# 十一、发布Java程序
+
+- [如何将 Java 程序发布给 Windows 用户](https://juejin.cn/post/7399606877510631478)
