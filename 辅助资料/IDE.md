@@ -121,6 +121,41 @@ https://juejin.cn/post/7137092683125751815
 
 如果需要展示个性化logo，可以在目录中`.idea` 增加一个图片文件，命名：`icon.png` ，该工程会自动识别该文件
 
+## 5.3、修改idea默认配置路径
+
+- [Changing IDE default directories used for config, plugins, and caches storage](https://intellij-support.jetbrains.com/hc/en-us/articles/207240985-Changing-IDE-default-directories-used-for-config-plugins-and-caches-storage)
+
+以Windows为例，IDEA默认配置路径基本都是在C盘目录下的：
+```java
+// idea的相关配置、插件目录
+C:{user.home}/AppData/Roaming/JetBrains/IdeaIC2024.2
+// idea的相关系统配置目录：缓存、日志等
+C:{user.home}/AppData/Local/JetBrains/IdeaIC2024.2
+```
+修改 `IDE_HOME\bin\idea.properties` 文件中的注释更改默认值，确保取消注释定义这些属性的行：
+```properties
+idea.config.path=
+idea.system.path=
+idea.plugins.path=
+idea.log.path=
+```
+修改对应的配置为：
+```properties
+# 配置的目录
+idea.config.path=D:/cache/idea/trunk-config
+# 配置缓存的目录：index
+idea.system.path=D:/cache/idea/trunk-system 
+# 配置插件的目录，一般是在 config目录里面的
+idea.plugins.path=D:/cache/idea/trunk-config/plugins
+# 配置日志目录
+idea.log.path=D:/cache/idea/trunk-system/trunk-log
+```
+**如何将默认配置的数据移动到新目录中：**
+- 将`C:{user.home}/AppData/Roaming/JetBrains/IdeaIC2024.2` 移动到新的目录：`idea.config.path`
+- `C:{user.home}/AppData/Local/JetBrains/IdeaIC2024.2` 目录下的数据不需要移动；
+
+做完之后即可使用原有的目录配置数据
+
 # 6、idea运行报Java版本错误
 
 比如报如下错：`java: 警告: 源发行版 17 需要目标发行版 17`
