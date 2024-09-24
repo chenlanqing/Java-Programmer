@@ -1205,9 +1205,13 @@ Worker是一个继承AQS并实现了Runnable接口的内部类，主要有 Threa
 
 ### 5.8、线程的回收
 
+**keepAliveTime 对核心线程是否生效，是否能杀死核心线程?**
+
+默认情况下，核心线程是不会被销毁的，即使它们处于空闲状态。keepAliveTime 默认只适用于非核心线程，非核心线程在空闲时间超过 keepAliveTime 后会被销毁。
+
 **核心线程数会被回收吗？需要什么设置？**
 
-核心线程数默认是不会被回收的，如果需要回收核心线程数，需要调用方法：allowCoreThreadTimeout，其对应的参数默认值时false；
+核心线程数默认是不会被回收的，从 JDK 1.6 开始，ThreadPoolExecutor 类新增了一个 allowCoreThreadTimeOut 字段，允许核心线程的存活状态也受 keepAliveTime 控制。这个字段的默认值是 false，也就是说，核心线程即便空闲也会一直存活。如果你希望核心线程在空闲一段时间后也能被销毁，可以通过调用 ThreadPoolExecutor 的 allowCoreThreadTimeOut(true) 方法，让 keepAliveTime 对核心线程生效，核心线程在空闲超过 keepAliveTime 后也会被销毁。
 
 **空闲线程如何回收**
 
