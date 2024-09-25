@@ -129,6 +129,8 @@ CREATE TABLE `test`.`user`  (
 
 ## 3、分页查询优化
 
+- [MySQL深度分页方案](https://my.oschina.net/u/1428688/blog/3065681)
+
 ### 3.1、一般分页查询
 
 一般的分页查询使用简单的 limit 子句就可以实现。limit 子句声明如下：
@@ -176,7 +178,6 @@ select * from table where id>= 5000000 limit 10;
 select * from table where id>= 5000000 and i <= 5000000 + 10;
 select * from table where id > 15000000 ORDER BY `id` DESC limit 0, 100;
 ```
-
 这是前提条件：必须是主键自增的且是连续的；
 
 #### 3.2.2、使用临时表优化
@@ -185,7 +186,7 @@ select * from table where id > 15000000 ORDER BY `id` DESC limit 0, 100;
 
 #### 3.2.3、在业务上限定不可用查询早期的数据
 
-- 限制查询的总页数，比如淘宝、京东等搜索某个商品时是只能查询100页以内的数据；
+- 限制查询的总页数，比如淘宝、京东等搜索某个商品时是只能查询100页以内的数据，如果需要查询更到的数据，需要添加更多查询条件；
 - 改写超过特定阈值的SQL；
 
 #### 3.2.4、根据id排序，但是 id 不连续
@@ -199,8 +200,6 @@ select * from table where id > 15000000 ORDER BY `id` DESC limit 0, 100;
 **情况1：**跳转到下一页，增加查询条件：`id > lastEndId limit 10`；
 
 **情况2：**往下翻页，跳转到下任意页，算出新的`newOffset=offset-lastEndOffset`,增加查询条件：`id>lastEndId offset newOffset limit 10`，但是如果newOffset也还是很大，比如，直接从第一页跳转到最后一页，这时候我们可以根据id逆序（如果原来id是正序的换成倒序，如果是倒序就换成正序）查询，根据总数量算出逆序查询对应的offset和limit，那么 newOffset = totalCount - offset - limit， 查询条件：`id < lastEndId offset newOffset limit 10` ,然后再通过代码逆序，得到正确顺序的数据，注意：最后一页 `offset + limit>=totalCount` ，也就是算出来的newOffset 可能小于0, 所以最后一页的`newOffset=0，limit = totalCount - offset`；
-
-https://my.oschina.net/u/1428688/blog/3065681
 
 ## 4、在线修改数据库结构
 
