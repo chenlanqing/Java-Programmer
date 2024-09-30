@@ -1278,7 +1278,7 @@ groupingBy | `Map<K, List>` | 根据项目的一个属性的值对流中的项�
 
 #### 1.5.7、Stream原理
 
-- [Stream原理与执行流程探析](https://mp.weixin.qq.com/s/UGWoRO5-pFB0p01mc73wLA)
+[Stream源码分析](../源码分析/集合/Stream.md)
 
 #### 1.5.8、forEach中断操作
 
