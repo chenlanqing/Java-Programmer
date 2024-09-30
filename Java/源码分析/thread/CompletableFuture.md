@@ -1,15 +1,16 @@
 # 一、使用
 
-JDK1.8新增的，任务之间有聚合或者关系，可以使用CompletableFuture来解决。支持异步编程；
+Future 在实际使用过程中存在一些局限性比如不支持异步任务的编排组合、获取计算结果的 get() 方法为阻塞调用
 
-CompletableFuture 可以解决 Future 获取异步线程执行结果阻塞主线程的问题；
+Java 8 才被引入CompletableFuture 类可以解决Future 的这些缺陷。CompletableFuture 除了提供了更为好用和强大的 Future 特性之外，还提供了函数式编程、异步任务编排组合（可以将多个异步任务串联起来，组成一个完整的链式调用）等能力
 
 它实现了Future接口，也就是Future的功能特性CompletableFuture也有；除此之外，它也实现了 CompletionStage 接口，CompletionStage 接口定义了任务编排的方法，执行某一阶段，可以向下执行后续阶段。
 ```java
 public class CompletableFuture<T> implements Future<T>, CompletionStage<T> {
-    
 }
 ```
+CompletionStage 接口描述了一个异步计算的阶段。很多计算可以分成多个阶段或步骤，此时可以通过它将所有步骤组合起来，形成异步计算的流水线
+
 CompletableFuture相比于Future最大的改进就是提供了类似观察者模式的回调监听的功能，也就是当上一阶段任务执行结束之后，可以回调你指定的下一阶段任务，而不需要阻塞获取结果之后来处理结果
 
 ## 1、创建对象
@@ -101,7 +102,7 @@ CompletionStage<R> whenCompleteAsync(consumer);
 CompletionStage<R> handle(fn);
 CompletionStage<R> handleAsync(fn);
 ```
-- exceptionally() 的使用非常类似于 `try{}catch{}`中的 `catch{}`；
+- exceptionally() 的使用非常类似于 `try{}catch{}`中的 `catch{}`；方法可以处理异常并重新抛出，以便异常能够传播到后续阶段，而不是让异常被忽略或终止
 - `whenComplete()` 和 `handle()` 系列方法就类似于 `try{}finally{}`中的 finally{}，无论是否发生异常都会执行 whenComplete() 中的回调函数 consumer 和 handle() 中的回调函数 fn
 - whenComplete() 和 handle() 的区别在于 whenComplete() 不支持返回结果，而 handle() 是支持返回结果的
 
@@ -116,20 +117,47 @@ CompletableFuture<Integer> f0 = CompletableFuture.supplyAsync(() -> (7 / 0))
 System.out.println(f0.join());
 ```
 
-## 3、
+## 3、使用场景
 
-## 4、注意点
-
-CompletableFuture 在使用异步处理过程中，需要注意异常的处理，因为 CompletableFuture 很多方法都不能抛出异常，如果在异步执行过程中出现了异常，那么异常将被吞掉了，没有办法显示，为了处理异常，可以按照上述的方式来处理：
+比如任务之间存在依赖关系：一个任务需要依赖另外两个任务执行完之后再执行
 ```java
-CompletableFuture.supplyAsync(() -> (7 / 0))
-        .thenApply(r -> r * 10)
-        .exceptionally(throwable -> {
-            throwable.printStackTrace();
-            return 0;
-        });
+// T1
+CompletableFuture<Void> futureT1 = CompletableFuture.runAsync(() -> {
+    System.out.println("T1 is executing. Current time：" + DateUtil.now());
+    // 模拟耗时操作
+    ThreadUtil.sleep(1000);
+});
+// T2
+CompletableFuture<Void> futureT2 = CompletableFuture.runAsync(() -> {
+    System.out.println("T2 is executing. Current time：" + DateUtil.now());
+    ThreadUtil.sleep(1000);
+});
+// 使用allOf()方法合并T1和T2的CompletableFuture，等待它们都完成
+CompletableFuture<Void> bothCompleted = CompletableFuture.allOf(futureT1, futureT2);
+// 当T1和T2都完成后，执行T3
+bothCompleted.thenRunAsync(() -> System.out.println("T3 is executing after T1 and T2 have completed.Current time：" + DateUtil.now()));
+// 等待所有任务完成，验证效果
+ThreadUtil.sleep(3000);
 ```
-使用 exceptionally 或者 whenComplete 来实现来处理异常
+
+## 4、最佳实践
+
+- **使用自定义线程池**： CompletableFuture 默认使用 ForkJoinPool.commonPool() 作为执行器，这个线程池是全局共享的，可能会被其他任务占用，导致性能下降或者饥饿。因此，建议使用自定义的线程池来执行 CompletableFuture 的异步任务，可以提高并发度和灵活性；
+
+- **尽量避免使用 get()**： CompletableFuture的get()方法是阻塞的，尽量避免使用。如果必须要使用的话，需要添加超时时间，否则可能会导致主线程一直等待，无法执行其他任务
+
+- **正确进行异常处理**：CompletableFuture 在使用异步处理过程中，需要注意异常的处理，因为 CompletableFuture 很多方法都不能抛出异常，如果在异步执行过程中出现了异常，那么异常将被吞掉了，没有办法显示，为了处理异常，可以按照上述的方式来处理：
+    ```java
+    CompletableFuture.supplyAsync(() -> (7 / 0))
+            .thenApply(r -> r * 10)
+            .exceptionally(throwable -> {
+                throwable.printStackTrace();
+                return 0;
+            });
+    ```
+    使用 exceptionally 或者 whenComplete 来实现来处理异常
+
+- **合理组合多个异步任务**：正确使用 thenCompose() 、 thenCombine() 、acceptEither()、allOf()、anyOf() 等方法来组合多个异步任务，以满足实际业务的需求，提高程序执行效率
 
 # 二、源码分析
 
@@ -138,6 +166,12 @@ CompletableFuture.supplyAsync(() -> (7 / 0))
 CompletableFuture是由Java 8引入的，在Java8之前我们一般通过Future实现异步。
 - Future用于表示异步计算的结果，只能通过阻塞或者轮询的方式获取结果，而且不支持设置回调方法，Java 8之前若要设置回调一般会使用guava的ListenableFuture，回调的引入又会导致臭名昭著的回调地狱（下面的例子会通过ListenableFuture的使用来具体进行展示）。
 - CompletableFuture对Future进行了扩展，可以通过设置回调的方式处理计算结果，同时也支持组合操作，支持进一步的编排，同时一定程度解决了回调地狱的问题
+```java
+// 并行运行所有任务；方法可以组合多个 CompletableFuture，并统一处理所有任务的异常，而不是让异常处理过于冗长或重复
+CompletableFuture<Void> allOf(CompletableFuture<?>... cfs)
+// 任意一个任务完成
+CompletableFuture<Object> anyOf(CompletableFuture<?>... cfs)
+```
 
 # 参考资料
 
