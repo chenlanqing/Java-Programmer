@@ -2836,3 +2836,4 @@ private static <T> Invoker<T> buildInvokerChain(final Invoker<T> invoker, String
 # 参考资料
 
 - [Dubbo官方文档](http://dubbo.apache.org/zh-cn/docs/user/quick-start.html)
+- [Dubbo3.x调用过程分析](https://mp.weixin.qq.com/s/PetfSkwerfnlkOrgxHhA6A)

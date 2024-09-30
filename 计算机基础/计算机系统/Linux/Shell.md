@@ -1057,3 +1057,4 @@ until [ i -gt 100 ]
 
 - [Shell分析服务器日志](https://segmentfault.com/a/1190000009745139)
 - [Advanced Bash-Scripting Guide](https://tldp.org/LDP/abs/html/index.html)
+- [常用Shell脚本](https://mp.weixin.qq.com/s/K3FyXOWTAH9f7l5mui5nsA)

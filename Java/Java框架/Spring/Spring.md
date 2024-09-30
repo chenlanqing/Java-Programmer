@@ -1448,6 +1448,21 @@ https://mp.weixin.qq.com/s/zXAncSrthmbaxQNkfJdNKg
 
 ParameterNameDiscoverer  LocalVariableTableParameterNameDiscoverer 
 
+# 补充
+
+如果需要使用Spring的snapshot版本包，可以添加依赖：
+```xml
+<repositories>
+    <repository>
+        <id>spring-snapshots</id>
+        <url>https://repo.spring.io/snapshot</url>
+        <snapshots>
+            <enabled>true</enabled>
+        </snapshots>
+    </repository>
+</repositories>
+```
+
 # 参考资料
 
 * [Spring整合其他组件文档](https://docs.spring.io/spring-data/)
