@@ -1057,7 +1057,90 @@ Linux 操作系统提供了内存大页机制，其特点在于，每次应用�
 
 当 Redis 在做数据持久化时，会先 fork 一个子进程，此时主进程和子进程共享相同的内存地址空间。当主进程需要修改现有数据时，会采用写时复制（Copy On Write）的方式进行操作，在这个过程中，需要重新申请内存。如果申请内存单位变为了 2MB，那么势必会增加内存申请的耗时，如果此时主进程有大量写操作，需要修改原有的数据，那么在此期间，操作延迟就会变大；所以，为了避免出现这种问题，你需要在操作系统上关闭内存大页机制
 
-# 三、数据淘汰
+# 三、Redis性能优化
+
+- [Redis真的变慢了吗？](https://mp.weixin.qq.com/s/nNEuYw0NlYGhuKKKKoWfcQ)
+
+## 1、Redis为什么变慢
+
+需要对 Redis 进行基准性能测试
+
+为了避免业务服务器到 Redis 服务器之间的网络延迟，你需要直接在 Redis 服务器上测试实例的响应延迟情况。执行以下命令，就可以测试出这个实例 60 秒内的最大响应延迟：
+```
+./redis-cli --intrinsic-latency 120
+Max latency so far: 17 microseconds.
+Max latency so far: 44 microseconds.
+Max latency so far: 94 microseconds.
+Max latency so far: 110 microseconds.
+Max latency so far: 119 microseconds.
+
+36481658 total runs (avg latency: 3.2893 microseconds / 3289.32 nanoseconds per run).
+Worst run took 36x longer than the average latency.
+```
+从输出结果可以看到，这 60 秒内的最大响应延迟为 119 微秒（0.119毫秒）。你还可以使用以下命令，查看一段时间内 Redis 的最小、最大、平均访问延迟
+```
+$ redis-cli -h 127.0.0.1 -p 6379 --latency-history -i 1
+min: 0, max: 1, avg: 0.13 (100 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.12 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.13 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.10 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.13 (98 samples) -- 1.00 seconds range
+min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
+```
+如果你观察到的 Redis 运行时延迟是其基线性能的 2 倍及以上，就可以认定 Redis 变慢了。
+
+## 2、如何优化
+
+当我们发现了 Redis 比较慢之后，问题该如何解决呢？
+
+### 2.1、监控工具和日志分析
+
+- 使用 Redis 内置命令：如 INFO, DEBUG OBJECT <key>, SLOWLOG 等命令可以帮助诊断性能问题。
+- 监控工具：使用第三方监控工具如 Redis Commander, RedisInsight 或者 Grafana + Redis Exporter 等工具来监控 Redis 的运行状态。
+
+### 2.2、分析 Redis 配置
+
+- 检查配置文件：确认配置文件（redis.conf）中的设置是否合理，例如内存限制、持久化策略等。
+- 调整参数：根据实际情况调整如 maxmemory、maxmemory-policy、appendonly、aof-rewrite-incremental-fsync 等配置选项。
+
+### 2.3、数据结构和键空间分析
+
+- 键空间统计：使用 KEYS * （不推荐频繁使用，因为它可能影响性能）或 SCAN 命令来获取键空间信息。
+- 对象编码：使用 OBJECT ENCODING <key> 查看键的底层编码方式，了解数据结构是否适合当前的工作负载。
+- 大键检测：查找是否存在大键，因为大键可能导致内存浪费和性能问题。
+
+### 2.4、性能瓶颈定位
+
+- CPU 使用率：检查 Redis 进程的 CPU 使用率，判断是否存在计算密集型操作。
+- 内存使用：分析 Redis 的内存使用情况，确认是否有异常的内存增长。
+- 网络延迟：检查客户端与 Redis 服务器之间的网络延迟。
+- 磁盘 I/O：如果启用了持久化，检查磁盘 I/O 是否成为瓶颈。
+
+### 2.5、客户端分析
+
+- 客户端行为：检查客户端请求模式，是否频繁执行高成本命令。
+- 并发连接数：确认客户端并发连接数是否过高。
+- 命令执行时间：使用 MONITOR 命令观察命令执行时间和频率。
+- 客户端库：检查使用的客户端库是否高效，是否有性能问题。
+- 中间件：如果有使用任何中间件，确认它们没有引入额外的延迟。
+
+### 2.6、操作系统和硬件
+
+- 操作系统调优：确认操作系统配置是否合理，例如交换分区大小、文件系统类型等。
+- 硬件资源：检查 CPU、内存和磁盘等硬件资源是否充足。
+
+### 2.7、网络问题
+
+- 网络拓扑：确认网络拓扑是否导致延迟或带宽问题。
+- 防火墙和安全组：确认防火墙规则或安全组设置是否影响了 Redis 的正常通信。
+
+### 2.8、应用程序层面
+
+- 缓存策略：评估应用程序的缓存策略是否合理，是否有过多的重加载或不必要的缓存更新。
+- 业务逻辑：审查应用程序的业务逻辑是否可以优化以减少对 Redis 的访问需求。
+
+
+# 四、数据淘汰
 
 ## 1、Redis数据淘汰策略
 
