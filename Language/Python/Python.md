@@ -14,3 +14,4 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 - [Python Tutorial](https://www.pythontutorial.net/)
 - [pythoncheatsheet](https://www.pythoncheatsheet.org/cheatsheet/string-formatting)
 - [Python-dotenv](https://pypi.org/project/python-dotenv/)
+- [DrissionPage-是一个基于 python 的网页自动化工具)
