@@ -23,6 +23,12 @@ Redis的问题画像：
 
 https://blog.huangz.me/diary/2014/how-to-read-redis-source-code.html
 
+# 设计键值数据库
+
+- [如何设计键值数据库](../../../软件工程/软件设计/设计案例.md#九键值数据库设计)
+
+# 参考资料
+
 - [Redis高性能原因源码分析](https://heapdump.cn/article/3798624)
 - [Redis7源码分析](https://github.com/CN-annotation-team/redis7.0-chinese-annotated)
 - [读懂Redis源码](http://kaito-kidd.com/2021/09/23/read-redis-source-code/)
