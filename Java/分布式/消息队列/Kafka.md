@@ -2908,9 +2908,6 @@ Kafka 自定义了一组基于 TCP 的二进制协议，只要遵守这组协议
 - Google Docs：一篇是 [Kafka 事务的详细设计文档](https://docs.google.com/document/d/11Jqy_GjUGtdXJK94XGsEIK7CP1SnQGdp2eF0wSw9ra8/edit)，另一篇是[Controller 重设计文档](https://docs.google.com/document/d/1rLDmzDOGQQeSiMANP0rC2RYp_L7nUGHzFD9MQISgXYM/edit)
 - [OrcHome](https://www.orchome.com/kafka/issues)问答社区；
 
-# 12、技术对比
-
-https://nsq.io/
 
 # 参考资料
 
