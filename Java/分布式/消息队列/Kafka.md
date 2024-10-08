@@ -2897,7 +2897,7 @@ Kafka 监控 Lag 的层级是在分区上的。如果要计算主题级别的，
 
 Kafka 自定义了一组基于 TCP 的二进制协议，只要遵守这组协议的格式，就可以向 Kafka 发送消息，也可以从 Kafka 中拉取消息，或者做一些其他的事情，比如提交消费位移等
 
-# kafka学习资料
+# 12、kafka学习资料
 
 - [官方文档](https://kafka.apache.org/documentation/)，重点关注Configuration 篇、Operations 篇以及 Security 篇，特别是 Configuration 中的参数部分
 - Confluent 公司自己维护的[官方文档](https://docs.confluent.io/home/overview.html)，重点学习 Confluent 官网上关于Security 配置和Kafka Streams 组件的文档；
