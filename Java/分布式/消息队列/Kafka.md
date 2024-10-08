@@ -2897,7 +2897,25 @@ Kafka 监控 Lag 的层级是在分区上的。如果要计算主题级别的，
 
 Kafka 自定义了一组基于 TCP 的二进制协议，只要遵守这组协议的格式，就可以向 Kafka 发送消息，也可以从 Kafka 中拉取消息，或者做一些其他的事情，比如提交消费位移等
 
-# 12、kafka学习资料
+# 12、Kafka与Zookeeper
+
+Kafka为什么要放弃Zookeeper？Kakfa 官方研发 Kraft 的这样的一个架构来取代 Zookeeper
+
+## 12.1、Zookeeper 使用中的问题
+
+**（1）ZooKeeper 的 CP 属性决定写操作延时过高。**
+
+分布式有一个 CAP 理论,任何一个分布式的系统都不能同时满足 CAP 三个属性，只能同时满足最多两个属性。 AP 或者是CP，而ZooKeeper 其实就是一个 CP 的一个分布式的系统，这种属性其实就是仅仅是满足了分区种错性和一致性，但是它牺牲了高可用性。这种属性就决定了写的操作延时是比较高的，因为它要满足一致性就必须要多做一些工作，这个时候可能就会对于写不就不是很友好，它的延迟时间就比较高
+
+**（2）元数据过多会延长新 Controller 节点的启动时间，从而造成堵塞**
+
+Controller 这个角色主要是一个总控节点来负责整个集群的管理，比如 做partition 的选主的工作。 但是并不能保证 Controller 它一直是存活的，肯定要有一个故障转移的机制。然后如果 Controller 挂了的话，新的 Controller 要起来，这个时候新的 controller 节点要从 zookeeper 复制元数据，如果元数据过多的话，就会延长新的 Controller 节点的一个启动时间啊
+
+**（3）主题分区发生变化时，可能会产生大量的 Zookeeper 的写操作，这样也会引起一些阻塞**
+
+**（4）zookeeper 增加了运维的成本**
+
+# 13、kafka学习资料
 
 - [官方文档](https://kafka.apache.org/documentation/)，重点关注Configuration 篇、Operations 篇以及 Security 篇，特别是 Configuration 中的参数部分
 - Confluent 公司自己维护的[官方文档](https://docs.confluent.io/home/overview.html)，重点学习 Confluent 官网上关于Security 配置和Kafka Streams 组件的文档；
