@@ -275,3 +275,7 @@ ZPOPMIN redpacket_sortedset
 ## 15、场景题：设计一个权限系统
 
 [权限设计](../实际业务/业务系统.md#二十三权限设计)
+
+# 参考资料
+
+- [System Design Interviews 仓库](https://medium.com/javarevisited/10-best-github-repositories-to-prepare-for-system-design-interviews-6cc9d37d50f6)
