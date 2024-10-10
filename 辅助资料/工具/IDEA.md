@@ -117,6 +117,19 @@ idea.log.path=D:/cache/idea/trunk-system/trunk-log
 
 做完之后即可使用原有的目录配置数据
 
+### 5.4、自定义Tags
+
+![](image/IDEA-Custom-tags.png)
+
+如果在Java doc 添加了不支持的标签，比如：
+```java
+/**
+ * @date
+ * @description
+ */
+```
+idea会提示：Wrong tags，可以通过提示添加到自定义tags上
+
 ## 6、运行报错问题汇总
 
 ### 6.1、运行报Java版本错误
