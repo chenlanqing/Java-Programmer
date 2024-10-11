@@ -1718,7 +1718,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 - 解决方案：设置变量表示是否被通知过
 
-- [LostNotify.java](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-basis/src/main/java/com/blue/fish/se/basis/object/LostNotify.java)
+- [LostNotify.java](./code/LostNoitfy.java)
 
 ### 10.7、假唤醒
 
@@ -1726,7 +1726,7 @@ JDk 中采用轻量级锁和偏向锁等对 synchronized 的优化，但是这�
 
 - 为了防止假唤醒，保存信号的成员变量将在一个while循环里接受检查，而不是在if表达式里。这样的一个while循环叫做自旋锁；注意：这种做法要慎重，目前的JVM实现自旋会消耗CPU，如果长时间不调用doNotify方法，doWait方法会一直自旋，CPU会消耗太大
 
-- [EarlyNotify.java](https://github.com/chenlanqing/java-code/blob/master/java-se/java-se-basis/src/main/java/com/blue/fish/se/basis/object/EarlyNotify.java)
+- [EarlyNotify.java](./code/EarlyNotify.java)
 
 ### 10.8、多个线程等待相同信号
 
