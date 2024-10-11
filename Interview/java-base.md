@@ -2198,6 +2198,10 @@ public static void main(String[] args) {
 }
 ```
 
+## 2、交替打印
+
+详细代码参考：[AlternatePrint](./code/AlternatePrint.md)
+
 
 # 参考资料
 
