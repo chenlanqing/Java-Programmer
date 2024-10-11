@@ -879,6 +879,11 @@ mem_allocator:libc
 active_defrag_running:0
 lazyfree_pending_objects:0
 ```
+查看某个key的占用的内存：
+```
+redis> MEMORY USAGE 1101000051
+56
+```
 
 ### 1.2、内存碎片
 
