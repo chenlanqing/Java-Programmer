@@ -239,4 +239,5 @@ Redis4.0开始支持RDB和AOF的混合持久化（可以通过配置项 aof-use-
 ## 参考资料
 
 - [Redis持久化](https://redis.io/topics/persistence)
+- [解析Redis RDB文件、分析内存](https://github.com/sripathikrishnan/redis-rdb-tools)
 - [面试之Redis持久化](https://mp.weixin.qq.com/s/vfooUVhLSrpDLYdm3GDhRg)

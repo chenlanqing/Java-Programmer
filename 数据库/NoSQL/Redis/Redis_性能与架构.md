@@ -1,5 +1,7 @@
 # 一、Redis高可用架构
 
+- [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
+
 高可用、高性能：
 - 数据尽量少丢失；（AOF 和 RDB 保证）
 - 服务尽量少中断；
@@ -530,7 +532,7 @@ sentinel client-reconfig-script mymaster /var/redis/reconfig.sh
 
 ## 7、Redis Cluster
 
-- [Redis集群](http://www.redis.cn/topics/cluster-tutorial.html)
+- [Redis集群规范](https://redis.io/topics/cluster-spec)
 
 核心思路：通过消息的交互（Gossip）实现去中心化(指的是集群自身的实现，不是指数据)，通过Hash槽分配，实现集群线性可拓展；
 
@@ -847,6 +849,7 @@ Codis 集群中包含了 4 类关键组件：
 # 二、Redis内存与性能
 
 - [Redis-内存优化](https://redis.io/docs/latest/operate/oss_and_stack/management/optimization/memory-optimization/)
+- [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
 
 ## 1、内存与内存碎片
 

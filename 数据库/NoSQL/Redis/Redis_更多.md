@@ -514,15 +514,13 @@ OK
 - [Redis GUI Client](https://github.com/tiny-craft/tiny-rdm)
 - [Redis工具-AnotherRedisDesktopManager](https://github.com/qishibo/AnotherRedisDesktopManager)
 
-https://www.npmjs.com/package/redis-dump
+## 2、数据dump
+
+[使用命令行或node.js将redis数据库转储到redis命令或json中](https://www.npmjs.com/package/redis-dump)
 
 # 参考资料
 
 - [Redis官方资料-命令](https://redis.io/commands)
-- [Redis集群规范](https://redis.io/topics/cluster-spec)
-- [Redis官方命令参考手册](https://redis.io/commands/)
-- [Redis内存模型](https://www.cnblogs.com/kismetv/p/8654978.html)
-- [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
-- [解析Redis RDB文件、分析内存](https://github.com/sripathikrishnan/redis-rdb-tools)
+
 
 

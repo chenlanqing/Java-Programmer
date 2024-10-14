@@ -1157,5 +1157,4 @@ Set数据类型，使用`SUNIONSTORE、SDIFFSTORE、SINTERSTORE`做并集、差�
 
 # 参考资料
 
-- [Redis命令参考](http://redisdoc.com/)
-- [Redis设计与实现](http://redisbook.com/)
+- [Redis设计与实现](https://huangz.works/redisbook1e/)
