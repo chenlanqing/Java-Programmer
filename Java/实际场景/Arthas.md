@@ -8,7 +8,7 @@
 
 # 参考资料
 
-- [Arthas官方文档](https://arthas.aliyun.com/doc/arthas-tutorials.html?language=cn)
+- [Arthas官方文档](https://arthas.aliyun.com/doc/)
 - [Arthas原理](https://juejin.cn/post/6904280021632974856)
 - [Arthas用户案例](https://github.com/alibaba/arthas/issues?q=label%3Auser-case)
 - [Arthas命令使用场景](https://juejin.cn/post/7291931708920512527)
