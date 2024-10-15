@@ -1163,7 +1163,7 @@ Linux 操作系统提供了内存大页机制，其特点在于，每次应用�
 
 - [Redis真的变慢了吗？](https://mp.weixin.qq.com/s/nNEuYw0NlYGhuKKKKoWfcQ)
 
-## 1、Redis为什么变慢
+## 1、如何认定Redis变慢
 
 需要对 Redis 进行基准性能测试
 
@@ -1190,6 +1190,15 @@ min: 0, max: 1, avg: 0.13 (98 samples) -- 1.00 seconds range
 min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
 ```
 如果你观察到的 Redis 运行时延迟是其基线性能的 2 倍及以上，就可以认定 Redis 变慢了。
+
+## 2、影响Redis性能原因
+
+- Redis 内部的阻塞式操作；
+- CPU 核和 NUMA 架构的影响；
+- Redis 关键系统配置；
+- Redis 内存碎片；
+- Redis 缓冲区。
+
 
 ## 2、如何优化
 
@@ -1240,7 +1249,6 @@ min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
 
 - 缓存策略：评估应用程序的缓存策略是否合理，是否有过多的重加载或不必要的缓存更新。
 - 业务逻辑：审查应用程序的业务逻辑是否可以优化以减少对 Redis 的访问需求。
-
 
 # 四、数据淘汰
 
@@ -1321,8 +1329,12 @@ typedef struct redisDb {
 
 ## 4、Lazy-Free
 
-redis 4.0新加了4个参数，用来控制这种lazy free的行为
-- `lazyfree-lazy-eviction`：是否异步驱逐key，当内存达到上限，分配失败后；
-- `lazyfree-lazy-expire`：是否异步进行key过期事件的处理；
+lazy-free是4.0新增的功能，但是默认是关闭的，需要手动开启。新加了4个参数，用来控制这种lazy free的行为
+- `lazyfree-lazy-eviction`：内存达到maxmemory并设置了淘汰策略时尝试异步释放内存
+- `lazyfree-lazy-expire`：是否异步进行key过期事件的处理；key在过期删除时尝试异步释放内存
 - `lazyfree-lazy-server-del`：del命令是否异步执行删除操作，类似unlink；
 - `replica-lazy-flush`：replica client做全同步的时候，是否异步flush本地db；
+
+即使开启了lazy-free，如果直接使用DEL命令还是会同步删除key，只有使用UNLINK命令才会可能异步删除ke
+
+主要逻辑在：`lazyfree.c#lazyfreeGetFreeEffort`
