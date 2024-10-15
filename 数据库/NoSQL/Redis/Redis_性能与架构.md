@@ -856,7 +856,7 @@ Codis 集群中包含了 4 类关键组件：
 ### 1.1、查看内存统计
 
 在redis-cli客户端中通过命令 [info memory](https://redis.io/docs/latest/commands/info/) 可以查看内存使用情况
-```
+```bash
 127.0.0.1:6379> info memory
 # Memory
 used_memory:902686
@@ -866,10 +866,10 @@ used_memory_rss_human:2.32M
 used_memory_peak:902686
 used_memory_peak_human:881.53K
 used_memory_peak_perc:100.01%
-used_memory_overhead:902148
+used_memory_overhead:902148   # 这个值表示 Redis 开销的内存，包括缓冲区、连接和其他元数据
 used_memory_startup:852518
-used_memory_dataset:538
-used_memory_dataset_perc:1.07%
+used_memory_dataset:538  # 数据集占用
+used_memory_dataset_perc:1.07%  # 数据集占用比例
 total_system_memory:1027514368
 total_system_memory_human:979.91M
 used_memory_lua:37888
@@ -877,8 +877,11 @@ used_memory_lua_human:37.00K
 maxmemory:0
 maxmemory_human:0B
 maxmemory_policy:noeviction
-mem_fragmentation_ratio:2.70
+mem_fragmentation_ratio:2.70  # 内存碎片比率
 mem_allocator:libc
+mem_clients_slaves:0
+mem_clients_normal:3856  # 客户端缓冲区
+mem_cluster_links:0
 active_defrag_running:0
 lazyfree_pending_objects:0
 ```
@@ -1338,3 +1341,7 @@ lazy-free是4.0新增的功能，但是默认是关闭的，需要手动开启�
 即使开启了lazy-free，如果直接使用DEL命令还是会同步删除key，只有使用UNLINK命令才会可能异步删除ke
 
 主要逻辑在：`lazyfree.c#lazyfreeGetFreeEffort`
+
+# 参考资料
+
+- [Redis性能问题排查](https://mp.weixin.qq.com/s/4PUIqu-VDxeUkUWC7CvxdA)

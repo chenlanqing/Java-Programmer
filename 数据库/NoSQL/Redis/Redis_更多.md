@@ -521,6 +521,7 @@ OK
 # 参考资料
 
 - [Redis官方资料-命令](https://redis.io/commands)
+- [Redis-开发运维规范](https://help.aliyun.com/zh/redis/use-cases/development-and-o-and-m-standards-for-apsaradb-for-redis)
 
 
 
