@@ -1164,37 +1164,7 @@ Linux 操作系统提供了内存大页机制，其特点在于，每次应用�
 
 # 三、Redis性能优化
 
-- [Redis真的变慢了吗？](https://mp.weixin.qq.com/s/nNEuYw0NlYGhuKKKKoWfcQ)
-
-## 1、如何认定Redis变慢
-
-需要对 Redis 进行基准性能测试
-
-为了避免业务服务器到 Redis 服务器之间的网络延迟，你需要直接在 Redis 服务器上测试实例的响应延迟情况。执行以下命令，就可以测试出这个实例 60 秒内的最大响应延迟：
-```
-./redis-cli --intrinsic-latency 120
-Max latency so far: 17 microseconds.
-Max latency so far: 44 microseconds.
-Max latency so far: 94 microseconds.
-Max latency so far: 110 microseconds.
-Max latency so far: 119 microseconds.
-
-36481658 total runs (avg latency: 3.2893 microseconds / 3289.32 nanoseconds per run).
-Worst run took 36x longer than the average latency.
-```
-从输出结果可以看到，这 60 秒内的最大响应延迟为 119 微秒（0.119毫秒）。你还可以使用以下命令，查看一段时间内 Redis 的最小、最大、平均访问延迟
-```
-$ redis-cli -h 127.0.0.1 -p 6379 --latency-history -i 1
-min: 0, max: 1, avg: 0.13 (100 samples) -- 1.01 seconds range
-min: 0, max: 1, avg: 0.12 (99 samples) -- 1.01 seconds range
-min: 0, max: 1, avg: 0.13 (99 samples) -- 1.01 seconds range
-min: 0, max: 1, avg: 0.10 (99 samples) -- 1.01 seconds range
-min: 0, max: 1, avg: 0.13 (98 samples) -- 1.00 seconds range
-min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
-```
-如果你观察到的 Redis 运行时延迟是其基线性能的 2 倍及以上，就可以认定 Redis 变慢了。
-
-## 2、影响Redis性能原因
+## 1、影响Redis性能原因
 
 - Redis 内部的阻塞式操作；
 - CPU 核和 NUMA 架构的影响；
@@ -1202,7 +1172,7 @@ min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
 - Redis 内存碎片；
 - Redis 缓冲区。
 
-### 2.1、Redis阻塞
+## 2、Redis阻塞
 
 Redis 实例在运行时，要和许多对象进行交互，这些不同的交互就会涉及不同的操作，下面是 Redis 实例交互的对象，以及交互时会发生的操作。
 - 客户端：网络 IO，键值对增删改查操作，数据库操作；
@@ -1221,7 +1191,7 @@ Redis 实例在运行时，要和许多对象进行交互，这些不同的交�
 
 **主从节点交互时的阻塞点**： 加载 RDB 文件，在主从集群中，主库需要生成 RDB 文件，并传输给从库。主库在复制的过程中，创建和传输 RDB 文件都是由子进程来完成的，不会阻塞主线程。但是，对于从库来说，它在接收了 RDB 文件后，需要使用 FLUSHDB 命令清空当前数据库
 
-### 2.2、CPU架构
+## 3、CPU架构
 
 **CPU多核对Redis的影响**
 
@@ -1255,6 +1225,139 @@ Redis 实例和网络中断程序的数据交互：网络中断处理程序从�
 Redis 除了主线程以外，还有用于 RDB 生成和 AOF 重写的子进程，还有后台线程，当把 Redis 实例绑到一个 CPU 逻辑核上时，就会导致子进程、后台线程和 Redis 主线程竞争 CPU 资源，一旦子进程或后台线程占用 CPU 时，主线程就会被阻塞，导致 Redis 请求延迟增加，解决方案：
 - 一个 Redis 实例对应绑一个物理核：在给 Redis 实例绑核时，不要把一个实例和一个逻辑核绑定，而要和一个物理核绑定，也就是说，把一个物理核的 2 个逻辑核都用上。
 - 优化 Redis 源码：通过修改 Redis 源码，把子进程和后台线程绑到不同的 CPU 核上（Redis 6.0 出来后，可以支持 CPU 核绑定的配置操作了）
+
+## 4、Redis变慢
+
+- [Redis变慢](http://kaito-kidd.com/2021/01/23/redis-slow-latency-analysis/)
+- [Redis真的变慢了吗？](https://mp.weixin.qq.com/s/nNEuYw0NlYGhuKKKKoWfcQ)
+
+![](image/Redis性能排查与调优.png)
+
+### 4.1、Redis真的变慢了吗？
+
+需要对 Redis 进行基准性能测试
+
+为了避免业务服务器到 Redis 服务器之间的网络延迟，你需要直接在 Redis 服务器上测试实例的响应延迟情况。执行以下命令，就可以测试出这个实例 60 秒内的最大响应延迟：
+```
+./redis-cli --intrinsic-latency 120
+Max latency so far: 17 microseconds.
+Max latency so far: 44 microseconds.
+Max latency so far: 94 microseconds.
+Max latency so far: 110 microseconds.
+Max latency so far: 119 microseconds.
+
+36481658 total runs (avg latency: 3.2893 microseconds / 3289.32 nanoseconds per run).
+Worst run took 36x longer than the average latency.
+```
+从输出结果可以看到，这 60 秒内的最大响应延迟为 119 微秒（0.119毫秒）。你还可以使用以下命令，查看一段时间内 Redis 的最小、最大、平均访问延迟
+```
+$ redis-cli -h 127.0.0.1 -p 6379 --latency-history -i 1
+min: 0, max: 1, avg: 0.13 (100 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.12 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.13 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.10 (99 samples) -- 1.01 seconds range
+min: 0, max: 1, avg: 0.13 (98 samples) -- 1.00 seconds range
+min: 0, max: 1, avg: 0.08 (99 samples) -- 1.01 seconds range
+```
+如果你观察到的 Redis 运行时延迟是其基线性能的 2 倍及以上，就可以认定 Redis 变慢了。
+
+如果想了解网络对 Redis 性能的影响，一个简单的方法是用 [iPerf](https://iperf.fr/) 这样的工具，测量从 Redis 客户端到服务器端的网络延迟。如果这个延迟有几十毫秒甚至是几百毫秒，就说明，Redis 运行的网络环境中很可能有大流量的其他应用程序在运行，导致网络拥塞了。这个时候，你就需要协调网络运维，调整网络的流量分配了
+
+Redis性能三大要素：Redis 自身的操作特性、文件系统和操作系统
+
+### 4.2、Redis 自身操作特性的影响
+
+主要是：慢查询命令和过期 key 操作。
+
+**慢查询命令：** 就是指在 Redis 中执行速度慢的命令，这会导致 Redis 延迟增加。Redis 提供的命令操作很多，并不是所有命令都慢
+
+当发现 Redis 性能变慢时，可以通过 Redis 日志，或者是 latency monitor 工具，查询变慢的请求，根据请求对应的具体命令以及官方文档，确认下是否采用了复杂度高的慢查询命令，如果的确有大量的慢查询命令，有两种处理方式：
+- 用其他高效命令代替。比如说，如果需要返回一个 SET 中的所有成员时，不要使用 SMEMBERS 命令，而是要使用 SSCAN 多次迭代返回，避免一次返回大量数据，造成线程阻塞。
+- 当需要执行排序、交集、并集操作时，可以在客户端完成，而不要用 SORT、SUNION、SINTER 这些命令，以免拖慢 Redis 实例；
+
+另外KEYS 命令需要遍历存储的键值对，所以操作延时高。所以，*KEYS 命令一般不被建议用于生产环境中*
+
+**过期 key 操作**
+
+Redis 键值对的 key 可以设置过期时间。默认情况下，Redis 每 100 毫秒会删除一些过期 key，具体的算法如下：
+- 采样 `ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP` 个数的 key，并将其中过期的 key 全部删除；
+- 如果超过 25% 的 key 过期了，则重复删除的过程，直到过期 key 的比例降至 25% 以下。
+
+`ACTIVE_EXPIRE_CYCLE_LOOKUPS_PER_LOOP` 是 Redis 的一个参数，默认是 20，那么，一秒内基本有 200 个过期 key 会被删除
+
+### 4.3、文件系统：AOF
+
+为了保证数据可靠性，Redis 会采用 AOF 日志或 RDB 快照。其中，AOF 日志提供了三种日志写回策略：no、everysec、always。这三种写回策略依赖文件系统的两个系统调用完成，也就是 write 和 fsync。
+- write 只要把日志记录写到内核缓冲区，就可以返回了，并不需要等待日志实际写回到磁盘；
+- 而 fsync 需要把日志记录写回到磁盘后才能返回，时间较长
+
+采用高速的固态硬盘作为 AOF 日志的写入设备。
+
+### 4.4、操作系统的内存 swap
+
+内存 swap 是操作系统里将内存数据在内存和磁盘间来回换入和换出的机制，涉及到磁盘的读写，所以，一旦触发 swap，无论是被换入数据的进程，还是被换出数据的进程，其性能都会受到慢速磁盘读写的影响；
+
+Redis 的操作是直接通过访问内存就能完成，一旦 swap 被触发了，Redis 的请求操作需要等到磁盘数据读写完成才行。swap 触发后影响的是 Redis 主 IO 线程，这会极大地增加 Redis 的响应时间
+
+什么时候会触发 swap 呢？通常，触发 swap 的原因主要是**物理机器内存不足**，对于 Redis 而言，有两种常见的情况：
+- Redis 实例自身使用了大量的内存，导致物理机器的可用内存不足；
+- 和 Redis 实例在同一台机器上运行的其他进程，在进行大量的文件读写操作。文件读写本身会占用系统内存，这会导致分配给 Redis 实例的内存量变少，进而触发 Redis 发生 swap
+
+解决思路：增加机器的内存或者使用 Redis 集群。
+
+查看swap情况：
+```bash
+# 获取到redis的进程
+$ redis-cli info | grep process_id
+process_id: 5332
+$ cd /proc/5332
+# 查看该 Redis 进程的使用情况
+$cat smaps | egrep '^(Swap|Size)'
+Size: 584 kB
+Swap: 0 kB
+Size: 4 kB
+Swap: 4 kB
+Size: 4 kB
+Swap: 0 kB
+Size: 462044 kB
+Swap: 462008 kB
+Size: 21392 kB
+Swap: 0 kB
+```
+
+### 4.5、操作系统：内存大页
+
+Linux 内核从 2.6.38 开始支持内存大页机制，该机制支持 2MB 大小的内存页分配，而常规的内存页分配是按 4KB 的粒度来执行的
+
+Redis 为了提供数据可靠性保证，需要将数据做持久化保存。这个写入过程由额外的线程执行，所以，此时，Redis 主线程仍然可以接收客户端写请求。客户端的写请求可能会修改正在进行持久化的数据。在这一过程中，Redis 就会采用写时复制机制，也就是说，一旦有数据要被修改，Redis 并不会直接修改内存中的数据，而是将这些数据拷贝一份，然后再进行修改。
+
+如果采用了内存大页，那么，即使客户端请求只修改 100B 的数据，Redis 也需要拷贝 2MB 的大页。相反，如果是常规内存页机制，只用拷贝 4KB。两者相比，可以看到，当客户端请求修改或新写入数据较多时，内存大页机制将导致大量的拷贝，这就会影响 Redis 正常的访存操作，最终导致性能变慢。
+
+解决办法：**关闭内存大页**
+```bash
+# 在 Redis 实例运行的机器上执行如下命令
+cat /sys/kernel/mm/transparent_hugepage/enabled
+```
+如果执行结果是 always，就表明内存大页机制被启动了；如果是 never，就表示，内存大页机制被禁止；禁用内存大页命令：
+```bash
+echo never /sys/kernel/mm/transparent_hugepage/enabled
+```
+
+### 4.6、检查清单
+
+- 获取 Redis 实例在当前环境下的基线性能。
+- 是否用了慢查询命令？如果是的话，就使用其他命令替代慢查询命令，或者把聚合计算命令放在客户端做。
+- 是否对过期 key 设置了相同的过期时间？对于批量删除的 key，可以在每个 key 的过期时间上加一个随机数，避免同时删除。
+- 是否存在 bigkey？ 对于 bigkey 的删除操作，如果你的 Redis 是 4.0 及以上的版本，可以直接利用异步线程机制减少主线程阻塞；如果是 Redis 4.0 以前的版本，可以使用 SCAN 命令迭代删除；对于 bigkey 的集合查询和聚合操作，可以使用 SCAN 命令在客户端完成。
+- Redis AOF 配置级别是什么？业务层面是否的确需要这一可靠性级别？如果我们需要高性能，同时也允许数据丢失，可以将配置项 no-appendfsync-on-rewrite 设置为 yes，避免 AOF 重写和 fsync 竞争磁盘 IO 资源，导致 Redis 延迟增加。当然， 如果既需要高性能又需要高可靠性，最好使用高速固态盘作为 AOF 日志的写入盘。
+- Redis 实例的内存使用是否过大？发生 swap 了吗？如果是的话，就增加机器内存，或者是使用 Redis 集群，分摊单机 Redis 的键值对数量和内存压力。同时，要避免出现 Redis 和其他内存需求大的应用共享机器的情况。
+- 在 Redis 实例的运行环境中，是否启用了透明大页机制？如果是的话，直接关闭内存大页机制就行了。
+- 是否运行了 Redis 主从集群？如果是的话，把主库实例的数据量大小控制在 2~4GB，以免主从复制时，从库因加载大的 RDB 文件而阻塞。
+- 是否使用了多核 CPU 或 NUMA 架构的机器运行 Redis 实例？使用多核 CPU 时，可以给 Redis 实例绑定物理核；使用 NUMA 架构时，注意把 Redis 实例和网络中断处理程序运行在同一个 CPU Socket 上。
+
+## 5、内存碎片
+
+详细查看：[内存碎片对Redis的影响](#1内存与内存碎片)
 
 ## 2、如何优化
 
@@ -1377,13 +1480,7 @@ typedef struct redisDb {
 } redisDb;
 ```
 
-## 3、Redis变慢的原因
-
-- [Redis变慢](http://kaito-kidd.com/2021/01/23/redis-slow-latency-analysis/)
-
-![](image/Redis性能排查与调优.png)
-
-## 4、Lazy-Free
+## 3、Lazy-Free
 
 lazy-free是4.0新增的功能，但是默认是关闭的，需要手动开启。新加了4个参数，用来控制这种lazy free的行为
 - `lazyfree-lazy-eviction`：内存达到maxmemory并设置了淘汰策略时尝试异步释放内存
