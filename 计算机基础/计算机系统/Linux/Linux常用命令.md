@@ -737,6 +737,15 @@ PermitRootLogin yes
 - `netstat -nultp`：列出已经使用的端口号；
 - `lsof -i:端口号`
 
+## 21、配置别名
+
+```bash
+alias base="cd /home/root/software"
+alias webapps="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/webapps"
+alias log="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs/catalina.out"
+alias log2="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance2/logs/catalina.out"
+alias cdlog="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs"
+```
 
 # 四、Linux工具
 

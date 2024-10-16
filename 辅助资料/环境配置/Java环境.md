@@ -78,30 +78,29 @@
 
 ## 2、压缩包安装
 
-- 下载相应的压缩包：[jdk-8u191-linux-x64.tar.gz](http://download.oracle.com/otn-pub/java/jdk/8u191-b12/2787e4a523244c269598db4e85c51e0c/jdk-8u191-linux-x64.tar.gz)
-- 解压缩到相应的目录：/root/software/jdk1.8.0_191
-- 在当前登录用户下找到 .bash_profile文件，添加如下配置:
-	```bash
-	# 配置环境变量
-	PATH=$PATH:$HOME/bin
-	export PATH
-	export JAVA_HOME=/usr/local/jdk1.8.0_271
-	export PATH=$JAVA_HOME/bin:$PATH
-	export MAVEN_HOME=/usr/local/apache-maven-3.6.3
-	export PATH=${PATH}:${MAVEN_HOME}/bin
-	export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
-	
-	# 配置别名
-	alias base="cd /home/root/software"
-	alias webapps="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/webapps"
-	alias log="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs/catalina.out"
-	alias log2="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance2/logs/catalina.out"
-	alias cdlog="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs"
-	```
+（1）到官方网站下载 [OracleJDK](https://www.oracle.com/java/technologies/downloads/)，或者下载 [OpenJDK](https://jdk.java.net/archive/)，比如这里从OpenJDK下载：openjdk-17.0.1_linux-x64_bin.tar.gz
+
+（2）解压缩到相应的目录：/usr/local/jdk-17.0.1
+
+（3）在当前登录用户下找到 `.bash_profile` 或 `.bashrc`文件，添加如下配置:
+```bash
+# 配置环境变量
+PATH=$PATH:$HOME/bin
+export PATH
+export JAVA_HOME=/usr/local/jdk-17.0.1
+export PATH=$JAVA_HOME/bin:$PATH
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+```
+（4）运行命令使环境变量生效
+```bash
+source .bash_profile 
+```
 
 ## 3、包管理器安装
 
 ### 3.1、安装JDK
+
+> 下面方式安装的jdk缺少很多自带的命令，比如：jps、jhsdb等
 
 在 Linux 系统上安装 Java 的步骤如下：
 
@@ -202,7 +201,7 @@ export PATH=$JAVA_HOME/bin:$PATH
 source ~/.bashrc
 ```
 
-### 4、确定Java安装目录
+## 4、确定Java安装目录
 
 Debian/Ubuntu 系统上的 JDK 安装路径：`/usr/lib/jvm/`
 

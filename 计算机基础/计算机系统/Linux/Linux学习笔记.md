@@ -391,6 +391,12 @@ ln [源文件] [目标文件] ：同步更新；生成硬链接，不能跨分�
 - 替换：ab myemail chenlanq@qq.com：在文本编辑时输入 myemail， 回车或空格会自动替换为邮箱
 - 如果要使上述定义的=命令永久有效，则需要在用户的根目录下创建文件：.vimrc 里面可以存放编辑模式下的命令
 
+## 5、关于环境变量
+
+`.bash_profile`、`.bashrc`
+
+每次交互式登录时，Bash shell 都会执行 `.bash_profile`。如果在主目录中找不到 `.bash_profile`，Bash 将执行从 `.bash_login` 和 `.`. 中找到的第一个可读文件。而在每次交互式非登录 shell 启动时，Bash 都会执行 `.bashrc`
+
 # 三、软件管理
 
 ## 1、软件包管理简介
