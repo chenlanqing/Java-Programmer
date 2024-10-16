@@ -83,13 +83,13 @@
 - 在当前登录用户下找到 .bash_profile文件，添加如下配置:
 	```bash
 	# 配置环境变量
-PATH=$PATH:$HOME/bin
-export PATH
-export JAVA_HOME=/usr/local/jdk1.8.0_271
-export PATH=$JAVA_HOME/bin:$PATH
-export MAVEN_HOME=/usr/local/apache-maven-3.6.3
-export PATH=${PATH}:${MAVEN_HOME}/bin
-export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+	PATH=$PATH:$HOME/bin
+	export PATH
+	export JAVA_HOME=/usr/local/jdk1.8.0_271
+	export PATH=$JAVA_HOME/bin:$PATH
+	export MAVEN_HOME=/usr/local/apache-maven-3.6.3
+	export PATH=${PATH}:${MAVEN_HOME}/bin
+	export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
 	
 	# 配置别名
 	alias base="cd /home/root/software"
@@ -98,7 +98,127 @@ export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
 	alias log2="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance2/logs/catalina.out"
 	alias cdlog="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs"
 	```
-    	
+
+## 3、包管理器安装
+
+### 3.1、安装JDK
+
+在 Linux 系统上安装 Java 的步骤如下：
+
+- **更新包管理器**：在安装 Java 之前，确保系统的包管理器是最新的。打开终端并执行以下命令：
+```bash
+sudo apt update   # 对于基于 Debian/Ubuntu 的系统
+sudo yum update   # 对于基于 CentOS/RHEL 的系统
+```
+- **检查可用的 Java 版本**：可以使用以下命令来查看系统上的 Java 版本：
+```bash
+sudo apt list openjdk*   # Debian/Ubuntu
+sudo yum list java*      # CentOS/RHEL
+```
+- **安装 Java：**
+	- 安装 OpenJDK 11（常用版本）：
+	```bash
+	sudo apt install openjdk-11-jdk   # Debian/Ubuntu
+	sudo yum install java-11-openjdk   # CentOS/RHEL
+	```
+	- **安装 OpenJDK 17**（最新 LTS 版本）：
+	```bash
+	sudo apt install openjdk-17-jdk   # Debian/Ubuntu
+	sudo yum install java-17-openjdk   # CentOS/RHEL
+	```
+- **验证 Java 安装**：安装完成后，你可以通过运行以下命令来验证 Java 是否已正确安装：
+```bash
+java -version
+```
+显示你所安装的 Java 版本的信息。
+
+**设置 Java 环境变量（可选）**：有时可能需要手动设置 `JAVA_HOME` 环境变量。可以通过编辑 `~/.bashrc` 文件并添加以下行：
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64   # 或根据安装的路径
+export PATH=$JAVA_HOME/bin:$PATH
+```
+然后运行以下命令使更改生效：
+```bash
+source ~/.bashrc
+```
+
+### 3.2、卸载JDK
+
+卸载 OpenJDK（通过 `apt` 或 `yum`）
+
+（1）对于基于 **Debian/Ubuntu** 系统：
+- 首先，你需要列出系统上安装的所有 Java 相关的包：
+```bash
+sudo dpkg --list | grep -i jdk
+```
+- 找到你想卸载的 JDK 版本，然后执行以下命令卸载它：
+	- **卸载 OpenJDK 11**：
+	```bash
+	sudo apt remove openjdk-11-jdk
+	```
+	- **卸载 OpenJDK 17**：
+	```bash
+	sudo apt remove openjdk-17-jdk
+	```
+要清理与 JDK 相关的依赖文件和配置，执行以下命令：
+```bash
+sudo apt autoremove
+sudo apt purge openjdk-11-jdk  # 或其他版本
+```
+
+（2）对于基于 **CentOS/RHEL** 系统：
+- 列出所有安装的 Java 包：
+```bash
+sudo yum list installed | grep java
+```
+- 找到你想卸载的 Java 包，执行以下命令：
+	- **卸载 OpenJDK 11**：
+	```bash
+	sudo yum remove java-11-openjdk
+	```
+	- **卸载 OpenJDK 17**：
+	```bash
+	sudo yum remove java-17-openjdk
+	```
+
+**检查卸载是否成功**：运行以下命令，确认 Java 已被卸载：
+```bash
+java -version
+```
+如果输出显示 `command not found`，说明卸载已成功。
+
+**删除环境变量配置（可选）**：
+如果你之前手动设置了 `JAVA_HOME` 等环境变量，可以编辑 `~/.bashrc` 文件，移除相关行：
+```bash
+nano ~/.bashrc   # 或使用你偏好的文本编辑器
+```
+找到并删除类似以下内容的行：
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64   # 例子，视你的配置而定
+export PATH=$JAVA_HOME/bin:$PATH
+```
+然后运行以下命令使更改生效：
+```bash
+source ~/.bashrc
+```
+
+### 4、确定Java安装目录
+
+Debian/Ubuntu 系统上的 JDK 安装路径：`/usr/lib/jvm/`
+
+CentOS/RHEL 系统上的 JDK 安装路径： `/usr/lib/jvm/`
+
+检查当前系统的 Java 路径：
+```bash
+[root@bluefish ~]# update-alternatives --config java
+
+There is 1 program that provides 'java'.
+
+  Selection    Command
+-----------------------------------------------
+*+ 1           java-17-openjdk.x86_64 (/usr/lib/jvm/java-17-openjdk-17.0.12.0.7-2.0.2.1.al8.x86_64/bin/java)
+``` 	
+
 # 三、配置 Tomcat 服务器
 
 ## 1、安装说明 
