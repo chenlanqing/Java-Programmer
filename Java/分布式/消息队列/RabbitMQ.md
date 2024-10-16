@@ -392,11 +392,9 @@ public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
 
 
 
-
-
 # 参考资料
 
 * [RabbitMQ官方文档](http://www.rabbitmq.com/documentation.html)
 * [RabbitMQ命令操作](https://blog.csdn.net/noonebirdyou/article/details/54645755)
-* [RabbitMQ可靠消息投递方案](https://www.test.com/article/49814)
 * [AMQP协议](http://rabbitmq.mr-ping.com/AMQP/amqp-0-9-1-quickref.html)
+* [RabbitMQ保证消息可靠性](https://juejin.im/post/6862875289786662926)

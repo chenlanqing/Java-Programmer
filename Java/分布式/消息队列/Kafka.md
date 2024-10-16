@@ -2919,18 +2919,17 @@ Controller 这个角色主要是一个总控节点来负责整个集群的管理
 
 - [官方文档](https://kafka.apache.org/documentation/)，重点关注Configuration 篇、Operations 篇以及 Security 篇，特别是 Configuration 中的参数部分
 - Confluent 公司自己维护的[官方文档](https://docs.confluent.io/home/overview.html)，重点学习 Confluent 官网上关于Security 配置和Kafka Streams 组件的文档；
-- Kafka 的Jira 列表，也就是我们俗称的 Bug 列表
+- [Kafka 的Jira 列表](https://issues.apache.org/jira/projects/KAFKA/issues/KAFKA-17462?filter=allopenissues)
 - StackOverflow 的[Kafka 专区](https://stackoverflow.com/questions/tagged/apache-kafka?sort=newest&pageSize=15)
 - [Confluent 博客](https://www.confluent.io/blog/)
-- 社区维护的[Confluence 文档](https://cwiki.apache.org/confluence/display/KAFKA/Index)
+- [社区维护的Confluence 文档](https://cwiki.apache.org/confluence/display/KAFKA/Index)
 - Google Docs：一篇是 [Kafka 事务的详细设计文档](https://docs.google.com/document/d/11Jqy_GjUGtdXJK94XGsEIK7CP1SnQGdp2eF0wSw9ra8/edit)，另一篇是[Controller 重设计文档](https://docs.google.com/document/d/1rLDmzDOGQQeSiMANP0rC2RYp_L7nUGHzFD9MQISgXYM/edit)
-- [OrcHome](https://www.orchome.com/kafka/issues)问答社区；
+- [OrcHome-问答社区](https://www.orchome.com/kafka/issues)
 
 
 # 参考资料
 
 * [Kafka详解](https://mp.weixin.qq.com/s/d9KIz0xvp5I9rqnDAlZvXw)
-* [Kafka入门](https://blog.csdn.net/hmsiwtv/article/details/46960053)
 * [Kafka面试题](https://juejin.im/post/6844903837614997518)
 * [Kafka进阶面试题](https://mp.weixin.qq.com/s/CFzd7rwMFWtqc8xzCQ8vVw)
 * [Kafka进阶面试题2](https://mp.weixin.qq.com/s/2QA_UIE_ciTJDQ4kbUkl-A)

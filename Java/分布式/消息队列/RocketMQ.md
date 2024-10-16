@@ -535,7 +535,5 @@ RocketMWQ支持表达式过滤和类过滤两种模式，其中表达式又分�
 
 # 参考资料
 
-* [RocketMQ的原理与实践](https://www.jianshu.com/p/453c6e7ff81c)
-* [RocketMQ术语](http://jaskey.github.io/blog/2016/12/15/rocketmq-concept/)
 * [RocketMQ查缺补漏](https://juejin.im/post/6862865811137101837)
-* [RocketMQ保证消息可靠性](https://juejin.im/post/6862875289786662926)
+
