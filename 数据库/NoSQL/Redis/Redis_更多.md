@@ -375,6 +375,33 @@ used_memory_lua_human:37.00K   # lua脚本引擎占用的内存大小
 ```
 ...
 
+### 2.3、monitor
+
+基本语法：
+```bash
+redis 127.0.0.1:6379> MONITOR 
+```
+Redis MONITOR命令用于实时打印出 Redis 服务器接收到的命令 。MONITOR 用来帮助我们知道数库正在做什么。 可以通过 redis-cli 和 telnet 调用MONITOR 。
+
+当 Redis 用做数据库或者分布式缓存时，MONITOR 可以帮助我们发现程序中的 bug 
+```bash
+$ redis-cli monitor
+1339518083.107412 [0 127.0.0.1:60866] "keys" "*"
+1339518090.420270 [0 127.0.0.1:60866] "set" "x" "6"
+1339518096.506257 [0 127.0.0.1:60866] "get" "x"
+1339518099.363765 [0 127.0.0.1:60866] "del" "x"
+```
+
+需要注意的是，`MONITOR`命令虽然非常有用，但它会对Redis服务器的性能产生一定影响。
+
+因为MONITOR需要记录并输出所有命令，这会占用CPU资源和网络带宽。在高负载环境中，使用`MONITOR`命令可能会导致吞吐量显著下降。因此，在生产环境中应谨慎使用，并尽量缩短监控时间
+
+通过 redis-faina 工具实现 MONITOR 的分析与定位，redis-faina 通过解析 Redis 的 MONITOR 命令输出，帮助用户对 Redis 实例进行性能诊断。
+Facebook Instagram 开源的 redis-faina(Python)，提供了对 Monitor 的一些分析与定位。
+redis-faina 是由 Instagram 开发并开源的一个 Redis 查询分析工具
+
+出于安全方面的考虑，所有的管理相关的命令不会记录到MONITOR的输出者。下面几个命令也不会记录：AUTH、EXEC、HELLO、QUIT
+
 ## 3、日常运维
 
 主要注意如下几个方面：
