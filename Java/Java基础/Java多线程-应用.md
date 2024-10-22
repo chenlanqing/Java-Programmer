@@ -512,68 +512,65 @@ for (int i=0; i<bufferSize; i++){
 
 ## 3、Disruptor快速入门
 
-- （1）构架一个Event
-    ```java
-    @Data
-    public class OrderEvent {
-        private Long value;
+（1）构架一个Event
+```java
+@Data
+public class OrderEvent {
+    private Long value;
+}
+```
+（2）构建一个EventFactory
+```java
+public class OrderEventFactory implements EventFactory<OrderEvent> {
+    @Override
+    public OrderEvent newInstance() {
+        return new OrderEvent();
     }
-    ```
-- （2）构建一个EventFactory
-    ```java
-    public class OrderEventFactory implements EventFactory<OrderEvent> {
-        @Override
-        public OrderEvent newInstance() {
-            return new OrderEvent();
-        }
+}
+```
+（3）构建一个EventHandler
+```java
+public class OrderEventHandler implements EventHandler<OrderEvent> {
+    @Override
+    public void onEvent(OrderEvent event, long sequence, boolean endOfBatch) throws Exception {
+        System.out.println("消费者：" + event.getValue());
     }
-    ```
-
-- （3）构建一个EventHandler
-    ```java
-    public class OrderEventHandler implements EventHandler<OrderEvent> {
-        @Override
-        public void onEvent(OrderEvent event, long sequence, boolean endOfBatch) throws Exception {
-            System.out.println("消费者：" + event.getValue());
-        }
-    }
-    ```
-
-- （4）构建一个Disruptor
-    ```java
-    /**
-     * 1 eventFactory: 消息(event)工厂对象
-     * 2 ringBufferSize: 容器的长度
-     * 3 executor: 线程池(建议使用自定义线程池) RejectedExecutionHandler
-     * 4 ProducerType: 单生产者 还是 多生产者
-     * 5 waitStrategy: 等待策略
-     */
-    //1. 实例化disruptor对象
-    Disruptor<OrderEvent> disruptor = new Disruptor<OrderEvent>(orderEventFactory,
-            ringBufferSize,
-            executor,
-            ProducerType.SINGLE,
-            new BlockingWaitStrategy());
-    //2. 添加消费者的监听 (构建disruptor 与 消费者的一个关联关系)
-    disruptor.handleEventsWith(new OrderEventHandler());
-    //3. 启动disruptor
-    disruptor.start();
-    ```
-    关于RingBuffer的使用
-    ```java
-    //1 在生产者发送消息的时候, 首先 需要从我们的ringBuffer里面 获取一个可用的序号
-    long sequence = ringBuffer.next();	//0	
-    try {
-        //2 根据这个序号, 找到具体的 "OrderEvent" 元素 注意:此时获取的OrderEvent对象是一个没有被赋值的"空对象"
-        OrderEvent event = ringBuffer.get(sequence);
-        //3 进行实际的赋值处理
-        event.setValue(data.getLong(0));			
-    } finally {
-        //4 提交发布操作
-        ringBuffer.publish(sequence);			
-    }
-    ```
-
+}
+```
+（4）构建一个Disruptor
+```java
+/**
+    * 1 eventFactory: 消息(event)工厂对象
+    * 2 ringBufferSize: 容器的长度
+    * 3 executor: 线程池(建议使用自定义线程池) RejectedExecutionHandler
+    * 4 ProducerType: 单生产者 还是 多生产者
+    * 5 waitStrategy: 等待策略
+    */
+//1. 实例化disruptor对象
+Disruptor<OrderEvent> disruptor = new Disruptor<OrderEvent>(orderEventFactory,
+        ringBufferSize,
+        executor,
+        ProducerType.SINGLE,
+        new BlockingWaitStrategy());
+//2. 添加消费者的监听 (构建disruptor 与 消费者的一个关联关系)
+disruptor.handleEventsWith(new OrderEventHandler());
+//3. 启动disruptor
+disruptor.start();
+```
+关于RingBuffer的使用
+```java
+//1 在生产者发送消息的时候, 首先 需要从我们的ringBuffer里面 获取一个可用的序号
+long sequence = ringBuffer.next();	//0	
+try {
+    //2 根据这个序号, 找到具体的 "OrderEvent" 元素 注意:此时获取的OrderEvent对象是一个没有被赋值的"空对象"
+    OrderEvent event = ringBuffer.get(sequence);
+    //3 进行实际的赋值处理
+    event.setValue(data.getLong(0));			
+} finally {
+    //4 提交发布操作
+    ringBuffer.publish(sequence);			
+}
+```
 
 ## 4、Disruptor核心组件
 
