@@ -376,7 +376,6 @@ DDD分层架构主要有四层组成，从上到下依次是：用户接口层�
 
 # 参考资料
 
-- [洞见：DDD领域驱动](https://insights.thoughtworks.cn/tag/domain-driven-design/)
 - [淘技术：DDD领域驱动](https://mp.weixin.qq.com/s/1rdnkROdcNw5ro4ct99SqQ)
 - [dddsample-core](https://github.com/citerus/dddsample-core)
 - [DDD-Samples](https://github.com/ouchuangxin/leave-sample)
