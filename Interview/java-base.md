@@ -651,6 +651,23 @@ treeMap 线程不安全，但是因为需要排序，进行key的compareTo方法
 
 ## 6、Spring 的 ConcurrentReferenceHashMap，针对 Key 和 Value 支持软引用和弱引用两种方式。你觉得哪种方式更适合做缓存呢？
 
+## 7、如下代码会发生什么
+
+```java
+List list = ...
+for(Object obj : list) {
+    list.remove(obj);
+}
+```
+这段代码会发生什么？
+
+（1）如果 List 是 ArrayList，会抛出ConcurrentModificationException异常；
+
+（2）如果 List 是 CopyOnWriteArrayList，那么代码能够正常运行；
+
+这里是一个 [fail-fast 机制的问题](../Java/源码分析/集合/集合类.md#二fail-fast机制)
+
+
 # 三、IO与NIO
 
 ## 1、文件拷贝实现方式
