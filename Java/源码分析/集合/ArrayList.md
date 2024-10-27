@@ -1,7 +1,7 @@
 
 # 一、ArrayList
 
-## 1、Arraylist 类定义
+## 1、ArrayList 类定义
 
 ```java
 public class ArrayList<E> extends AbstractList<E> implements List<E>， RandomAccess， Cloneable， java.io.Serializable{}
@@ -309,7 +309,90 @@ while (enu.hasMoreElements()) {
 }
 ```
 
-# 三、面试题
+# 三、CopyOnWriteArrayList
+
+## 1、特性
+
+相当于线程安全的 ArrayList，和 ArrayList 一样，是个可变数组；不同的是，具有以下几个特性
+- 最适合于应用程序：List 大小通常保持很小，只读操作远多于可变操作，需要在遍历期间防止线程间的冲突；
+- 线程安全的；
+- 通过`锁 + 数组拷贝 + volatile关键字`保证线程安全；
+- 因为通常要复制整个基础数组，所以可变操作(add()、set() 和 remove() 等等)的开销很大；
+- 迭代器支持`hasNext()`、`next()`等不可变操作，但不支持可变`remove()`等操作；即迭代器是只读的；
+- 使用迭代器进行遍历的速度很快，并且不会与其他线程发生冲突。在构造迭代器时，迭代器依赖于不变的数组快照；**如果在迭代过程中修改了数据，正在迭代的过程中的数据还是老数据；**
+- 元素可以为null；
+
+## 2、签名
+
+```java
+public class CopyOnWriteArrayList<E>  implements List<E>, RandomAccess, Cloneable, Serializable{}
+```
+- `CopyOnWriteArrayList`实现了List接口，List接口定义了对列表的基本操作；同时实现了RandomAccess接口，表示可以随机访问(数组具有随机访问的特性)；同时实现了Cloneable接口，表示可克隆；同时也实现了Serializable接口，表示可被序列化；
+- 包含了成员lock。每一个CopyOnWriteArrayList都和一个互斥锁lock绑定，通过lock，实现了对`CopyOnWriteArrayList`的互斥访问
+- CopyOnWriteArrayList 本质上通过数组实现的
+
+## 3、实现原理
+
+- 动态数组：内部存在一个 volatile 数组来保存数据。在`添加/删除/修改`数据时，都会新建一个数组，并将更新后的数据拷贝到新建的数组中，最后再将该数组赋值给 `volatile数组`。由于它在`添加/修改/删除`数据时，都会新建数组，所以涉及到修改数据的操作，`CopyOnWriteArrayList`效率很低；但是单单只是进行遍历查找的话，效率比较高；
+
+    以add方法为例：
+    ```java
+    public boolean add(E e) {
+        final ReentrantLock lock = this.lock;
+        lock.lock(); // 加锁
+        try {
+            Object[] elements = getArray(); // 获取到当前存储数据的数组
+            int len = elements.length;
+            Object[] newElements = Arrays.copyOf(elements, len + 1); // 拷贝一个新的数组
+            newElements[len] = e;
+            setArray(newElements); // 将新的数组重新赋值到老的数组上，实现覆盖添加
+            return true;
+        } finally {
+            lock.unlock();
+        }
+    }
+    ```
+- 线程安全：是通过volatile和互斥锁来（ReentrantLock）实现的
+	- CopyOnWriteArrayList 是通过`volatile数组`来保存数据的；一个线程读取volatile数组时，总能看到其它线程对该volatile变量最后的写入。通过volatile提供了`读取到的数据总是最新的`这个机制的保证。
+	- 通过互斥锁来保护数据。在`添加/修改/删除`数据时，会先`获取互斥锁`，再修改完毕之后，先将数据更新到`volatile数组`中，然后再`释放互斥锁`
+
+内部类：COWIterator表示迭代器，其也有一个Object类型的数组作为CopyOnWriteArrayList数组的快照，这种快照风格的迭代器方法在创建迭代器时使用了对当时数组状态的引用。此数组在迭代器的生存期内不会更改，因此不可能发生冲突，并且迭代器保证不会抛出 `ConcurrentModificationException`。创建迭代器以后，迭代器就不会反映列表的添加、移除或者更改，在迭代器上进行的元素更改操作(remove、set 和 add)不受支持。这些方法将抛出 UnsupportedOperationException
+
+基本操作步骤时：
+- 加锁
+- 从原数组中拷贝出一份新数组；
+- 在新数组中操作，并把新数组赋值给数组容器；
+- 解锁
+
+## 4、ArrayList的线程安全集合
+
+Vector 和 SynchronizedList 都是线程安全的类，Vector是每个方法都有`synchronized`关键字；SynchronizedList是在方法内部加了`synchronized`关键字，他们在并发环境下不一定是线程安全的，看如下代码：
+```java
+// 得到Vector最后一个元素
+public static Object getLast(Vector list) {
+	int lastIndex = list.size() - 1;
+	return list.get(lastIndex);
+}
+// 删除Vector最后一个元素
+public static void deleteLast(Vector list) {
+	int lastIndex = list.size() - 1;
+	list.remove(lastIndex);
+}
+```
+在一个方法中同时调用上述两个方法，可能发生数组越界异常
+
+CopyOnWriteArrayList 则不存在这个问题
+
+## 5、CopyOnWriteArrayList缺点
+
+- 内存占用：如果CopyOnWriteArrayList经常要增删改里面的数据，经常要执行add()、set()、remove()的话，那是比较耗费内存的。因为每次`add()、set()、remove()`这些增删改操作都要复制一个数组出来；如果原数组的内容比较多的情况下，可能导致young gc或者full gc；
+- 数据一致性：不能用于实时读的场景，像拷贝数组、新增元素都需要时间，所以调用一个set操作后，读取到数据可能还是旧的,虽然CopyOnWriteArrayList 能做到最终一致性,但是还是没法满足实时性要求；
+
+CopyOnWriteArrayList 适合读多写少的场景，不过这类慎用：因为没法保证 CopyOnWriteArrayList 到底要放置多少数据，万一数据稍微有点多，每次`add/set`都要重新复制数组，这个代价实在太高昂了。在高性能的互联网应用中，这种操作分分钟引起故障；
+
+**CopyOnWriteArrayList为什么并发安全且性能比Vector好?** Vector对单独的add，remove等方法都是在方法上加了synchronized; 并且如果一个线程A调用size时，另一个线程B 执行了remove，然后size的值就不是最新的，然后线程A调用remove就会越界(这时就需要再加一个Synchronized)。这样就导致有了双重锁，效率大大降低，何必呢。于是vector废弃了，要用就用CopyOnWriteArrayList 吧
+
+# 四、面试题
 
 ## 1、ArrayList 与 Vector
 
