@@ -80,8 +80,6 @@ ORDER BY a.score DESC;
 
 ## 8、分组获取数据
 
-https://www.xaprb.com/blog/2006/12/07/how-to-select-the-firstleastmax-row-per-group-in-sql/
-
 ## 9、导入导出数据
 
 **导入本地文件**
@@ -108,6 +106,21 @@ mysql -uroot -p -e "select * from table_name" >> /data/soft/table.log
 mysql -uroot -p -h <remove_ip> -e "select * from table_name" >> /data/soft/table.log
 ```
 
+## 10、时间差
+
+比较时间差多少分钟，有如下写法：
+
+（1）TIMESTAMPDIFF
+```sql
+-- 筛选出 created_at 距离当前时间 (NOW()) 小于 60 分钟的数据，即过去 60 分钟内的记录
+where TIMESTAMPDIFF(MINUTE, created_at, now()) < 60;
+```
+上面写法存在一定问题，如果 created_at 包含索引，该写法无法使用到索引
+
+（2）INTERVAL:将时间差计算放在条件的右侧，这样可以利用索引
+```sql
+WHERE created_at >= NOW() - INTERVAL 60 MINUTE;
+```
 
 ## 基本操作
 
