@@ -189,6 +189,7 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 - git commit message helper:标准化提交内容的插件
 - GitToolBox
 - Better Highlights：代码认知复杂度
+- BinEd - Binary/Hex Editor 二进制文件查看
 
 ## 2、插件开发
 
