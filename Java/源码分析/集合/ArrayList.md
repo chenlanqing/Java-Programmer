@@ -261,9 +261,29 @@ public interface Predicate<T> {
 
 ### 5.7、toArray
 
+## 6、迭代器
 
+ArrayList 的内部迭代器：
+```java
+// 向后迭代
+private class Itr implements Iterator<E> {
+	int cursor;       // index of next element to return
+	int lastRet = -1; // index of last element returned; -1 if no such
+	int expectedModCount = modCount;
+	...
+}
+// 任意方向迭代
+private class ListItr extends Itr implements ListIterator<E> {
+}
+```
 
-## 6、ArrayList 安全隐患
+Iterator和ListIterator区别
+- 都是用于遍历集合的， Iterator 可以用于遍历 Set、List； ListIterator 只可用于 List；
+- ListIterator 继承自 Iterator 接口；
+- ListIterator 可向前和向后遍历； Iterator 只可向后遍历；
+- ListIterator 在遍历过程中还可以添加和删除元素；Iterator 只能删除元素
+
+## 7、ArrayList 安全隐患
 
 - **当传递 ArrayList 到某个方法中，或者某个方法返回 ArrayList，什么时候要考虑安全隐患？如何修复安全违规这个问题呢？**
 
@@ -448,8 +468,44 @@ public static void main(String[] args) {
 - 其返回的List是Arrays的一个内部类，是原来数组的视图，不支持增删操作；
 - 如果需要对其进行操作的话，可以通过ArrayList的构造器将其转为ArrayList；
 
-## 6、Iterator和ListIterator区别
+## 6、下面代码循环几次
 
-- 都是用于遍历集合的，Iterator可以用于遍历Set、List；ListIterator只可用于List；
-- ListIterator实现的Iterator接口；
-- ListIterator可向前和向后遍历；Iterator只可向后遍历；
+```java
+public static void iterator() {
+    List<String> list = new ArrayList<>();
+    list.add("11");
+    list.add("22");
+    System.out.println("Before: " + list);
+    Iterator<String> iterator = list.iterator();
+    int loopTime = 1;
+    while (iterator.hasNext()) {
+        System.out.println("loop...." + loopTime);
+        loopTime++;
+        String s = iterator.next();
+        if ("22".equals(s)) {
+            list.remove(s);
+        }
+    }
+}
+```
+输出结果：
+```
+Before: [11, 22]
+loop....1
+loop....2
+loop....3
+Exception in thread "main" java.util.ConcurrentModificationException
+```
+*为什么？*
+
+循环判断主要是判断 hasNext()
+```java
+public boolean hasNext() {
+	return cursor != size;
+}
+```
+- 第一次循环时， cursor = 0， size = 2，返回 true；调用 iterator.next()， cursor 加一
+- 第二次循环时， cursor = 1， size = 2，返回 true；调用 iterator.next()， cursor 加一；但是这里调用了 list.remove()（*这里不是调用的 iterator.remove()*），size 减一了；
+- 第三次循环时， cursor = 2， size = 1，返回 true；调用 iterator.next() 会检查 checkForComodification()，然后报错：fail-fast
+
+*为什么使用 cursor != size 判断是否有下一个元素？* 主要是触发 fail-fast机制，用 cursor < size返回的是false，则不会继续循环，所以不会触发fail-fast机制。如果用cursor !=size 返回的是true，会继续执行循环，所以会触发检查modCount的操作，触发fail-fast机制。
