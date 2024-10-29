@@ -778,6 +778,93 @@ PropertyTokenizer：利用迭代器模式实现一个属性解析器；Mybatis �
 
 - [Mybatis-Plus](https://baomidou.com/)
 
+# 九、实践
+
+## 1、打印SQL
+
+```properties
+logging.level.xxx.xxx.mapper = debug
+```
+上面的xxxx换成自己的mapper包的路径
+
+## 2、表达式错误
+
+在mybatis中的`OgnlOps.equal(0,"")`返回的是true
+
+有如下Mapper：
+```java
+List<Order> selectList(@Param("orderStatus") Integer orderStatus);
+```
+mybatis对应的xml为：
+```xml
+<select id="selectList" resultType="io.model.Order">
+    select * from tb_order
+    where 1= 1
+    <if test="orderStatus != null and orderStatus != '' ">
+        and order_status = #{orderStatus}
+    </if>
+</select>
+```
+请注意：如果这时候 selectList 的参数 orderStatus = 0 的话，则实际出来的SQL：
+```sql
+select * from tb_open_api_user where 1= 1
+```
+也就是说表达式没有生效；
+
+日志打印在 org.apache.ibatis.logging.jdbc.BaseJdbcLogger,debug方法中打印了日志：
+```java
+protected void debug(String text, boolean input) {
+    if (statementLog.isDebugEnabled()) {
+        statementLog.debug(prefix(input) + text);
+    }
+}
+```
+sql拼接处理：
+```java
+// org.apache.ibatis.executor.CachingExecutor#query()
+public <E> List<E> query(MappedStatement ms, Object parameterObject, RowBounds rowBounds, ResultHandler resultHandler) throws SQLException {
+    BoundSql boundSql = ms.getBoundSql(parameterObject);
+    CacheKey key = createCacheKey(ms, parameterObject, rowBounds, boundSql);
+    return query(ms, parameterObject, rowBounds, resultHandler, key, boundSql);
+}
+```
+关键源码：
+```java
+// org.apache.ibatis.ognl.ASTNotEq#getValueBody
+protected Object getValueBody(OgnlContext context, Object source) throws OgnlException {
+    Object v1 = this._children[0].getValue(context, source);
+    Object v2 = this._children[1].getValue(context, source);
+    return OgnlOps.equal(v1, v2) ? Boolean.FALSE : Boolean.TRUE;
+}
+```
+最终调用到：
+```java
+// org.apache.ibatis.ognl.OgnlOps#compareWithConversion
+double dv1 = doubleValue(v1);
+double dv2 = doubleValue(v2);
+return dv1 == dv2 ? 0 : (dv1 < dv2 ? -1 : 1);
+// org.apache.ibatis.ognl.OgnlOps#doubleValue
+public static double doubleValue(Object value) throws NumberFormatException {
+    if (value == null) {
+        return 0.0;
+    } else {
+        Class c = value.getClass();
+        if (c.getSuperclass() == Number.class) {
+            return ((Number)value).doubleValue();
+        } else if (c == Boolean.class) {
+            return (Boolean)value ? 1.0 : 0.0;
+        } else if (c == Character.class) {
+            return (double)(Character)value;
+        } else {
+            String s = stringValue(value, true); // 最终会走到这里
+            return s.length() == 0 ? 0.0 : Double.parseDouble(s);
+        }
+    }
+}
+```
+
+总结：如果在处理动态SQL时，除了字符串或者字符外，其余使用判断条件只需要判断是否为 null 即可，不需要判断 `!= ''`
+
 
 # 参考资料
 
