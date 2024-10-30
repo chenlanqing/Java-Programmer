@@ -8,6 +8,12 @@ Anaconda是⼀个开源的Python和R语⾔发⾏版，主要⾯向数据科学�
 pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted.org
 ```
 
+# Python应用
+
+## 量化交易
+
+- [VNPY-量化交易平台](https://github.com/vnpy/vnpy)
+
 # 参考资料
 
 - [Python数学库](https://github.com/manimCommunity/manim)
