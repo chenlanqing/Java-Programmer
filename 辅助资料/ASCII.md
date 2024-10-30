@@ -1,3 +1,4 @@
+[ASCII对照表](http://tool.oschina.net/commons?type=4)
 ```
 32			(Space)
 33			!
