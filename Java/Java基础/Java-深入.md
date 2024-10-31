@@ -1172,10 +1172,12 @@ public static LocalDateTime strToRfc3339(String str) throws Exception {
 输出：2022-04-12T15:20:50.520+08:00
 ```
 
-# 十二、Java桌面开发
+# 十二、JavaFX
 
 - [JavaFX开发教程](https://jenkov.com/tutorials/javafx/index.html)
-- [JavaFX中文站](http://javafxchina.net/main/)
+- [基于JavaFx搭建的实用小工具集合](https://github.com/864381832/xJavaFxTool)
+- [JavaFX](https://openjfx.io/)
+- [Java FX Central](https://www.jfx-central.com/)
 
 # 十三、浏览器
 
