@@ -1210,6 +1210,8 @@ IE:
 # 十五、静态代码扫描
 
 - [代码扫描原理](https://mp.weixin.qq.com/s/RwzprbY2AhdgslY8tbVL-A)
+- [如何进行静态代码分析](https://github.com/SugarP1g/Learning-Program-analysis)
+- [SootUp](https://github.com/soot-oss/SootUp/)
 
 ## 1、阿里巴巴P3C插件
 
