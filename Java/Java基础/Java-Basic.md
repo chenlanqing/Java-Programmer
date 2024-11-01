@@ -1802,6 +1802,26 @@ nums.forEach(integer -> System.out.println(integer));
 Callable<Integer> call = () -> 1 ;
 ```
 
+#### 1.9.2、支持异常的函数式
+
+上面的的接口如果有非运行时异常处理的写法：
+```java
+path -> {
+    try {
+        return new URI(path);
+    } catch (URISyntaxException e) {
+        throw new RuntimeException(e);
+    }
+}
+```
+使用 [Checked-Exceptions-enabled Java 8+ Functional](https://github.com/pivovarit/throwing-function) 提供的：
+```java
+ThrowingFunction<String, URI, URISyntaxException> toUri = URI::new;
+...stream()
+  .map(ThrowingFunction.unchecked(URI::new))
+  .forEach(System.out::println);
+```
+
 ## 2、JDK9
 
 ## 3、JDK10
