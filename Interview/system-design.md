@@ -276,6 +276,21 @@ ZPOPMIN redpacket_sortedset
 
 [权限设计](../实际业务/业务系统.md#二十三权限设计)
 
+## 16、负载均衡架构设计
+
+假设你来设计一个日活跃用户 1000 万的论坛的负载均衡集群，你的方案是什么？设计理由是什么？
+
+- 首先，流量评估：1000万DAU，换算成秒级，平均约等于116。考虑每个用户操作次数，假定10，换算成平均QPS=1160。
+    - 考虑峰值是均值倍数，假定10，换算成峰值QPS=11600。
+    - 考虑静态资源、图片资源、服务拆分等，流量放大效应，假定10，QPS*10=116000。 
+- 其次，容量规划。
+    - 考虑高可用、异地多活，QPS*2=232000。
+    - 考虑未来半年增长，QPS*1.5=348000。
+- 最后，方案设计。三级导流。
+    - 第一级，DNS，确定机房，以目前量级，可以不考虑。
+    - 第二级，确定集群，扩展优先，则选Haproxy/LVS，稳定优先则选F5。
+    - 第三级，Nginx+KeepAlived，确定实例。
+
 # 参考资料
 
 - [System Design Interviews 仓库](https://medium.com/javarevisited/10-best-github-repositories-to-prepare-for-system-design-interviews-6cc9d37d50f6)
