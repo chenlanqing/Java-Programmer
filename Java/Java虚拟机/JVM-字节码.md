@@ -420,7 +420,8 @@ idea的一个插件
 
 - BCEL：apache
 - ASM：轻量级的字节码操作框架，涉及到jvm底层的操作和指令
-- CGLIB：基于asm实现
+- CGLIB：基于asm实现（已不维护）
+- ByteBuddy
 - javaasist：性能比较差，使用简单
 - [asmtools](https://wiki.openjdk.org/display/CodeTools/asmtools)，如何安装，参考文章：[asmtools-安装](https://wenjie.store/archives/ant-asmtools-awk)
 
