@@ -201,59 +201,65 @@ Reactor模式中角色：
 
 #### 6.1.2、Reactor模式的三种实现
 
-- **Reactor单线程**
+**（1）Reactor单线程**
 
-    ![](image/Reactor单线程.png)
+![](image/Reactor单线程.png)
 
-    以上的`select，accept,read,send`是标准I/O复用模型的网络编程API，dispatch和"业务处理"是需要完成的操作；
+以上的`select，accept,read,send`是标准I/O复用模型的网络编程API，dispatch和"业务处理"是需要完成的操作；
 
-    方案具体操作步骤：
-    - Reactor对象通过select监控连接事件，收到事件后通过dispatch进行分发；
-    - 果是连接建立的事件，则交由 Acceptor 通过accept 处理连接请求，然后创建一个 Handler 对象处理连接完成后的后续业务处理；
-    - 如果不是建立连接事件，则 Reactor 会分发调用连接对应的 Handler来响应；
-    - Handler 会完成 read -> 业务处理 -> send 的完整业务流程
+方案具体操作步骤：
+- Reactor对象通过select监控连接事件，收到事件后通过dispatch进行分发；
+- 如果是连接建立的事件，则交由 Acceptor 通过accept 处理连接请求，然后创建一个 Handler 对象处理连接完成后的后续业务处理；
+- 如果不是建立连接事件，则 Reactor 会分发调用连接对应的 Handler来响应；
+- Handler 会完成 read -> 业务处理 -> send 的完整业务流程
 
-    单线程方案的优点：模型简单，没有多线程，进程通信，竞争的问题，全部都在一个线程中完成；
+单线程方案的优点：模型简单，没有多线程，进程通信，竞争的问题，全部都在一个线程中完成；
 
-    单线程方案的缺点：
-    - 只有一个进程，无法发挥多核 CPU的性能，只能采取部署多个系统来利用多核CPU,但这样会带来运维复杂度；
-    - Handler 在处理某个连接上的业务时，整个进程无法处理其他连接的事件，很容易导致性能瓶颈
+单线程方案的缺点：
+- 只有一个进程，无法发挥多核 CPU的性能，只能采取部署多个系统来利用多核CPU,但这样会带来运维复杂度；
+- Handler 在处理某个连接上的业务时，整个进程无法处理其他连接的事件，很容易导致性能瓶颈
 
-    应用场景：其在实践中应用场景不多，只适用于业务处理非常快速的场景，比如Redis；
+C 语言编写系统的一般使用单 Reactor 单进程
 
-    Reactor单线程在NIO中使用：
+应用场景：其在实践中应用场景不多，只适用于业务处理非常快速的场景，比如Redis；
 
-    ![](image/Reactor单线程-NIO流程图.png)
+Reactor单线程在NIO中使用：
 
-- **Reactor多线程**
+![](image/Reactor单线程-NIO流程图.png)
 
-    ![](image/Reactor多线程.png)
+**（2）单Reactor多线程**
 
-    方案步骤：
-    - 主线程中，Reactor对象通过select 监听连接事件，收到事件后通过 dispatch进行分发；
-    - 如果是连接建立的事件，则由Acceptor处理，Acceptor通过 accept接受连接，并创建一个 Handler 来处理连接后续的各种事件；
-    - 如果不是连接建立事件，则Reactor会调用连接对应的Handler来进行相应；
-    - Handler 只负责响应事件，不进行业务处理，Handler 通过 read 读取到数据后，会发给 processor 进行业务处理；
-    - Processor 会在独立的子线程中完成真正的 业务处理，然后将响应结果发给主进程的 Handler处理，Handler 收到响应后通过 send 将响应结果返回给 client；
+![](image/Reactor多线程.png)
 
-    多线程方案优点： 能够充分利用多核多 CPU的处理能力；
+方案步骤：
+- 主线程中，Reactor对象通过select 监听连接事件，收到事件后通过 dispatch进行分发；
+- 如果是连接建立的事件，则由Acceptor处理，Acceptor通过 accept接受连接，并创建一个 Handler 来处理连接后续的各种事件；
+- 如果不是连接建立事件，则Reactor会调用连接对应的Handler来进行相应；
+- Handler 只负责响应事件，不进行业务处理，Handler 通过 read 读取到数据后，会发给 processor 进行业务处理；
+- Processor 会在独立的子线程中完成真正的 业务处理，然后将响应结果发给主进程的 Handler处理，Handler 收到响应后通过 send 将响应结果返回给 client；
 
-    多线程方案缺点：多线程数据共享和访问比较复杂；Reactor 承担所有事件的监听和响应，只在主线程中运行，瞬间高并发时会成为性能瓶颈
+多线程方案优点： 能够充分利用多核多 CPU的处理能力；
 
-- **多Reactor多线程**
+多线程方案缺点：
+- 多线程数据共享和访问比较复杂；
+- Reactor 承担所有事件的监听和响应，只在主线程中运行，瞬间高并发时会成为性能瓶颈
 
-    ![](image/多Reactor多线程.png)
+**（3）多Reactor多线程**
 
-    方案步骤：
-    - 主进程中mainReactor对象通过 select监控连接建立事件，收到事件后通过 Acceptor接收，将新的连接分配给某个子进程；
-    - 子进程中的 subReactor 将 mainReactor 分配的连接加入连接队列进行监听，并创建一个 Handler 用于处理连接的各种事件；
-    - 当有新的事件发生时，subReactor 会调用里连接对应的 Handler 来响应；
-    - Handler完成 `read -> 业务处理 -> send` 的完整业务流程；
-    
-    特点：
-    - 主进程和子进程的职责非常明确，主进程只负责接收新连接，子进程负责完成后续的业务处理；
-    - 主进程和子进程的交互很简单，主进程只需要把新的连接传递给子进程，子进程无需返回数据；
-    - 子进程之间是相互独立的，无需同步共享之类的处理（这里仅限于网络模型相关的 select,read,send等无须同步共享，"业务处理"还是有可能需要同步共享的
+![](image/多Reactor多线程.png)
+
+方案步骤：
+- 主进程中mainReactor对象通过 select监控连接建立事件，收到事件后通过 Acceptor接收，将新的连接分配给某个子进程；
+- 子进程中的 subReactor 将 mainReactor 分配的连接加入连接队列进行监听，并创建一个 Handler 用于处理连接的各种事件；
+- 当有新的事件发生时，subReactor 会调用里连接对应的 Handler 来响应；
+- Handler完成 `read -> 业务处理 -> send` 的完整业务流程；
+
+特点：
+- 主进程和子进程的职责非常明确，主进程只负责接收新连接，子进程负责完成后续的业务处理；
+- 主进程和子进程的交互很简单，主进程只需要把新的连接传递给子进程，子进程无需返回数据；
+- 子进程之间是相互独立的，无需同步共享之类的处理（这里仅限于网络模型相关的 select,read,send等无须同步共享，"业务处理"还是有可能需要同步共享的
+
+目前著名的开源系统 Nginx 采用的是多 Reactor 多进程，采用多 Reactor 多线程的实现有 Memcache 和 Netty
 
 ### 6.2、Proactor
 
@@ -278,6 +284,8 @@ Proactor主动器模式包含如下角色
 Proactor性能更高，能够处理耗时长的并发场景；适用于异步接收和同时处理多个服务请求的事件驱动程序的场景；
 
 Proactor调用aoi_write后立刻返回，由内核负责写操作，写完后调用相应的回调函数处理后续逻辑；
+
+理论上 Proactor 比 Reactor 效率要高一些，异步 I/O 能够充分利用 DMA 特性，让 I/O 操作与计算重叠，但要实现真正的异步 I/O，操作系统需要做大量的工作。目前 Windows 下通过 IOCP 实现了真正的异步 I/O，而在 Linux 系统下的 AIO 并不完善，因此在 Linux 下实现高并发网络编程时都是以 Reactor 模式为主。所以即使 Boost.Asio 号称实现了 Proactor 模型，其实它在 Windows 下采用 IOCP，而在 Linux 下是用 Reactor 模式（采用 epoll）模拟出来的异步模型
 
 ## 7、Java中IO实现
 
