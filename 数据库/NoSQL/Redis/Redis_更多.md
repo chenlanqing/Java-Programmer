@@ -303,6 +303,8 @@ Lettuce是一个高性能基于Java编写的Redis驱动框架，底层集成了P
 
 # 五、Redis监控与运维
 
+- [Redis Info Command](https://redis.io/docs/latest/commands/info/)
+
 ## 1、Redis监控指标
 
 监控时最好重点关注以下指标：
@@ -460,6 +462,74 @@ Redis 5.0 以下版本存在这样一个问题：从库内存如果超过了 max
 - 调小 maxmemory：先修改主库，再修改从库
 
 直到 Redis 5.0，Redis 才增加了一个配置 replica-ignore-maxmemory，默认从库超过 maxmemory 不会淘汰数据，才解决了此问题。
+
+## 4、Redis命令统计
+
+`INFO COMMANDSTATS` 是 Redis 提供的一个命令，用于获取关于 Redis 命令的统计信息。这些统计信息包括每个命令的调用次数、总耗时和平均耗时等。通过这些信息，你可以了解哪些命令被频繁调用，以及它们的性能表现。
+```sh
+INFO COMMANDSTATS
+```
+`INFO COMMANDSTATS` 命令返回一个字符串，其中包含了各个命令的统计信息。每条统计信息的格式如下：
+```
+cmdstat_<command_name>: calls=XXX,usec=XXX,usec_per_call=XXX,rejected_calls=XXX,failed_calls=XXX
+```
+- `<command_name>`: 命令的名称。
+- `calls`: 该命令被调用的次数。
+- `usec`: 该命令所有调用的总耗时（微秒）。
+- `usec_per_call`: 该命令每次调用的平均耗时（微秒）。
+- `rejected_calls`：拒绝调用的数量（命令执行之前的错误）
+- `failed_calls`：失败调用的数量（命令执行中的错误）
+
+假设你执行了 `INFO COMMANDSTATS` 命令，返回的结果可能如下：
+```
+# Commandstats
+cmdstat_zcount:calls=526,usec=2918,usec_per_call=5.55,rejected_calls=0,failed_calls=0
+```
+**`cmdstat_zcount`**:
+- `calls=526`: `zcount` 命令被调用了 526 次。
+- `usec=2918`: `zcount` 命令所有调用的总耗时为 2918 微秒。
+- `usec_per_call=5.55`: `zcount` 命令每次调用的平均耗时为 5.55 微秒。
+- `rejected_calls=0`: `zcount` 命令拒绝的调用数量为 0。
+- `rejected_calls=0`: `zcount` 命令失败调用的数量0。
+
+**使用场景**
+- 性能分析：通过 `usec` 和 `usec_per_call` 字段，可以分析哪些命令的执行时间较长，从而优化性能。
+- 监控命令频率：通过 `calls` 字段，可以监控哪些命令被频繁调用，帮助发现潜在的热点操作。
+- 故障排查：在遇到性能问题时，可以通过 `INFO COMMANDSTATS` 命令快速定位哪些命令的执行时间异常，从而进行进一步的排查。
+
+**重置统计信息**：
+- 统计信息会持续累加，直到 Redis 重启或手动重置。可以使用 `CONFIG RESETSTAT` 命令重置所有统计信息。
+```sh
+CONFIG RESETSTAT
+```
+- 如果你使用了自定义命令（如 Lua 脚本中的 `EVAL` 和 `EVALSHA`），这些命令也会出现在 `INFO COMMANDSTATS` 的输出中。
+
+### 示例代码
+
+以下是一个简单的示例，展示如何在 Java 中使用 `Jedis` 客户端获取 `INFO COMMANDSTATS` 的信息：
+
+```java
+import redis.clients.jedis.Jedis;
+
+public class RedisInfoCommandStatsExample {
+
+    public static void main(String[] args) {
+        // 连接到 Redis 服务器
+        Jedis jedis = new Jedis("localhost", 6379);
+
+        // 获取命令统计信息
+        String commandStats = jedis.info("COMMANDSTATS");
+
+        // 打印统计信息
+        System.out.println(commandStats);
+
+        // 关闭连接
+        jedis.close();
+    }
+}
+```
+
+通过这种方式，你可以在应用程序中获取和分析 Redis 命令的统计信息，从而更好地进行性能优化和故障排查。
 
 # 六、Redis6.0
 
