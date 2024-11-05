@@ -1856,7 +1856,7 @@ ThrowingFunction<String, URI, URISyntaxException> toUri = URI::new;
 ^[A-Za-z0-9]+$　　//匹配由数字和26个英文字母组成的字符串
 ^w+$　　//匹配由数字、26个英文字母或者下划线组成的字符串
 
-验证Email地址：“^w+[-+.]w+)*@w+([-.]w+)*.w+([-.]w+)*$”
+验证Email地址：“^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$”
 验证InternetURL：“^http://([w-]+.)+[w-]+(/[w-./?%&=]*)?$”
 验证电话号码：“^((d{3,4})|d{3,4}-)?d{7,8}$”
 验证身份证号（15位或18位数字）：“^d{15}|d{}18$”
@@ -1867,7 +1867,6 @@ ThrowingFunction<String, URI, URISyntaxException> toUri = URI::new;
 匹配空行的正则表达式：n[s| ]*r
 匹配HTML标记的正则表达式：/< (.*)>.*|< (.*) />/
 匹配首尾空格的正则表达式：(^s*)|(s*$)
-匹配Email地址的正则表达式：w+([-+.]w+)*@w+([-.]w+)*.w+([-.]w+)*
 匹配网址URL的正则表达式：http://([w-]+.)+[w-]+(/[w- ./?%&=]*)?
 ```
 
