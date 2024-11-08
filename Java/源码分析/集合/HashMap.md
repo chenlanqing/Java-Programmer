@@ -785,6 +785,8 @@ JDK 1.8 在扩容时并没有像 JDK 1.7 那样，重新计算每个元素的哈
 
 # 六、HashSet
 
+## 1、基本使用
+
 HashSet 使用HashMap作为成员变量
 ```java
 // 把 HashMap 组合进来，key 是 Hashset 的 key，value 是下面的 PRESENT
@@ -812,10 +814,28 @@ public Set<K> keySet() {
 }
 ```
 
+## 2、CopyOnWriteArraySet
+
+CopyOnWriteArraySet 可以认为是 Set 的线程安全版本，因为每当我们执行任何操作时，它都会在内部创建一个新对象并将所有数据复制到新对象。
+```java
+public class CopyOnWriteArraySet<E> extends AbstractSet<E> implements java.io.Serializable {
+    private final CopyOnWriteArrayList<E> al;
+    public CopyOnWriteArraySet() {
+        al = new CopyOnWriteArrayList<E>();
+    }
+	...
+}
+```
+CopyOnWriteArraySet底层是使用CopyOnWriteArrayList存储元素的，所以它并不是使用Map来存储元素的。
+- CopyOnWriteArraySet是用CopyOnWriteArrayList实现的；
+- CopyOnWriteArraySet是有序的，因为底层其实是数组，数组是不是有序的？！
+- CopyOnWriteArraySet是并发安全的，而且实现了读写分离；
+- 它在创建迭代器时获取底层数组的快照，所以它不会抛出 ConcurrentModificationException。
+- CopyOnWriteArraySet通过调用 CopyOnWriteArrayList 的 addIfAbsent() 方法来保证元素不重复；
+
 # 参考资料
 
-* [Java8 HashMap实现原理](http://www.codeceo.com/article/java8-hashmap-learn.html)
-* [JDK8重新认识HashMap](https://tech.meituan.com/java-hashmap.html)
+* [JDK8重新认识HashMap](https://tech.meituan.com/2016/06/24/java-hashmap.html)
 * [HashMap完全解读](http://www.hollischuang.com/archives/82)
 * [Java HashMap工作原理及实现:(JDK8)](http://yikun.github.io/2015/04/01/Java-HashMap%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E5%AE%9E%E7%8E%B0/)
 * [hash()分析](http://www.hollischuang.com/archives/2091)
