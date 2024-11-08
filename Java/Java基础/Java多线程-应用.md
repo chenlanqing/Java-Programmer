@@ -31,7 +31,7 @@
 
 ## 2、实现
 
-* [各种实现代码](https://github.com/chenlanqing/example/blob/master/src/main/java/com/learning/example/thread/producer/readme.md)
+* [各种实现代码](https://github.com/chenlanqing/java-code/blob/main/concurrent/producer-consumer/README.md)
 
 ### 2.1、wait()/notify()方法
 
