@@ -7,3 +7,4 @@
 - [LWN’s kernel page](https://lwn.net/Kernel/Index/)
 - [Kernel Planet-Linux 内核开发者的 Blog](https://planet.kernel.org/)
 - [Linux源代码](https://mirrors.edge.kernel.org/pub/linux/kernel/)
+- [Linux性能介绍](https://unixism.net/2019/04/linux-applications-performance-introduction/)
