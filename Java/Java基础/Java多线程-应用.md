@@ -811,6 +811,11 @@ Disruptor的RingBuffer，做到完全无锁是因为单线程写；注入Redis�
 
 ### 6.8、EventProcessor核心机制
 
+# 四、高性能内存队列
+
+- [Chronicle-Queue：高性能、低延迟的日志和消息队列库](https://github.com/OpenHFT/Chronicle-Queue)
+- [Aeron：高吞吐量、低延迟、容错交易系统](https://github.com/real-logic/aeron)
+
 # 参考资料
 
 - [并行框架开发](https://blog.csdn.net/tianyaleixiaowu/category_9637010.html)
