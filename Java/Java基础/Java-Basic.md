@@ -1186,6 +1186,39 @@ Long second = LocalDateTime.now().toEpochSecond(ZoneOffset.of("+8"));
 Long milliSecond = LocalDateTime.now().toInstant(ZoneOffset.of("+8")).toEpochMilli();
 ```
 
+## 3、数据库映射变化
+
+java.util.Date和数据库映射：
+```xml
+<arg column="gmt_create" jdbcType="TIMESTAMP" javaType="java.util.Date"/>
+```
+java.time.*和数据库映射：
+```xml
+<arg column="gmt_create" jdbcType="TIMESTAMP" javaType="java.time.LocalDateTime"/>
+```
+- mybatis 3.5.0以后已经支持，有 LocalDateTimeTypeHandler 等类型处理器支持，不需要额外操作。
+- 比较老的mybatis版本可能会报错，需要添加相关的依赖。
+```xml
+<dependency>
+	<groupId>org.mybatis</groupId>
+	<artifactId>mybatis-typehandlers-jsr310</artifactId>
+	<version>1.0.2</version>
+</dependency>
+```
+
+好的，下面是表格形式展示 MyBatis 中时间相关的 JDBC 类型、Java 类型和 TypeHandler 的对照关系：
+
+| **JDBC Type**      | **Java Type**                        | **TypeHandler**                                    |
+|--------------------|--------------------------------------|----------------------------------------------------|
+| `DATE`  | `java.sql.Date` / `java.util.Date` / `java.time.LocalDate` | `org.apache.ibatis.type.DateTypeHandler`           |
+| `TIME`             | `java.sql.Time` | `org.apache.ibatis.type.TimeTypeHandler`           |
+| `TIMESTAMP`        | `java.sql.Timestamp` / `java.time.LocalDateTime` | `org.apache.ibatis.type.TimestampTypeHandler`      |
+| `TIME`             | `java.time.LocalTime` | `org.apache.ibatis.type.LocalTimeTypeHandler`      |
+| `TIMESTAMP`        | `java.time.LocalDateTime` | `org.apache.ibatis.type.LocalDateTimeTypeHandler`  |
+| `TIMESTAMP`        | `java.time.ZonedDateTime` | `org.apache.ibatis.type.ZonedDateTimeTypeHandler`  |
+| `TIMESTAMP`        | `java.time.OffsetDateTime` | `org.apache.ibatis.type.OffsetDateTimeTypeHandler` |
+| `TIMESTAMP`        | `java.time.Instant`   | `org.apache.ibatis.type.InstantTypeHandler`        |
+
 # 五、正则表达式
 
 ## 1、使用
