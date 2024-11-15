@@ -13,6 +13,7 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 ## 量化交易
 
 - [VNPY-量化交易平台](https://github.com/vnpy/vnpy)
+- [基于Java的AI开源量化交易平台](https://gitee.com/dromara/northstar/)
 
 # 参考资料
 
