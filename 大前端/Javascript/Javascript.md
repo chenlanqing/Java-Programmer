@@ -37,6 +37,10 @@ Array.splice(position, num,new_element_1,new_element_2,... ) | num > 0 表示要
 
 # 七、高级函数
 
+## fetch
+
+- [Fetch API-user guide](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+
 # 八、Promises & Async/Await
 
 # 九、Iterators & Generators
