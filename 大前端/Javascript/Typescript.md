@@ -934,7 +934,7 @@ interface Article {
 // Paritial 表示将 Pick 中的取到变为可选；
 // & 表示两个类型合并
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-
+// 使用 Optional 类型别名，将 Article 接口中 author、date 和 readCount 属性变为可选的
 type CreateArticle = Optional<Article, "author" | "date" | "readCount">;
 
 function createArticle(article: CreateArticle) {}
