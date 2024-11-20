@@ -37,6 +37,10 @@ Array.splice(position, num,new_element_1,new_element_2,... ) | num > 0 表示要
 
 # 七、高级函数
 
+## fetch
+
+- [Fetch API-user guide](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API)
+
 # 八、Promises & Async/Await
 
 # 九、Iterators & Generators
@@ -259,3 +263,4 @@ console.log(result);
 
 - [javascript tutorial](https://www.javascripttutorial.net/)
 - [V8 Engine](https://v8.dev/)
+- [Java基础到高级](https://medium.com/@omkartalekar1112/all-javascript-concepts-a-z-basic-to-advanced-7b7453d5b008)
