@@ -3,6 +3,8 @@
 
 # 二、UML类图
 
+* [UML类图关系](http://www.uml.org.cn/oobject/201609062.asp)
+
 用于表示类、接口、实例等相互之间的静态关系
 
 在UML类图中，常见的有以下几种关系: 泛化（Generalization）, 实现（Realization），关联（Association)，聚合（Aggregation），组合(Composition)，依赖(Dependency)
@@ -14,7 +16,6 @@
 【箭头指向】：带三角箭头的实线，箭头指向父类
 
 ![image](image/泛化关系图.png)
-
 
 ## 2、实现（Realization）
 
@@ -88,10 +89,13 @@
 - [如何画时序图](https://mp.weixin.qq.com/s/VVwN7IIQlYbZAaUG2ORiqg)
 - [sequenceDiagram](https://mermaid.js.org/syntax/sequenceDiagram.html)
 
+## 1、概述
+
+类图描述类之间的静态关系，而时序图则用来描述参与者之间的动态调用关系
+
 Sequence Diagram：是显示对象之间交互的图，这些对象是按时间顺序排列的，时序图中包括的建模元素主要有：对象、生命线、控制焦点、消息等
 
 # 参考资料
 
-* [UML类图关系](http://www.uml.org.cn/oobject/201609062.asp)
 * [UML神器](https://app.zenuml.com/)
 * [PlantUML](https://plantuml.com/zh/)
