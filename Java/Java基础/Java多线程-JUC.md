@@ -171,7 +171,7 @@ public void modifyPublicResource() {
 private AtomicInteger atomic = new AtomicInteger(); // 需要保证多个线程使用的是同一个AtomicInteger
 atomic.incrementAndGet();
 ```
-乐观锁如何不锁定同步资源实现线程同步呢？参考 [CAS](##2CAS)
+乐观锁如何不锁定同步资源实现线程同步呢？参考 [CAS](#2CAS)
 
 ### 2.2、自旋锁与适应性自旋锁
 
