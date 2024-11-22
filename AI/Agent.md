@@ -4,6 +4,7 @@
 - [coze ai agent](https://juejin.cn/post/7330426020997382184)
 - [Agent调研--19类Agent框架对比](https://mp.weixin.qq.com/s/rogMCoS1zDN0mAAC5EKhFQ)
 - [A list of AI autonomous agents](https://github.com/e2b-dev/awesome-ai-agents)
+- [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
 
 1.什么是ai agent：https://www.breezedeus.com/article/ai-agent-part1#33ddb6413e094280aaa4ac82634d01d9
 
@@ -36,3 +37,6 @@
 15.Multi Agent策略架构 基础:https://mp.weixin.qq.com/s?__biz=Mzk0MDU2OTk1Ng==&mid=2247483811&idx=1&sn=f92d1ecdb6f2ddcbc36e70e8ffe5efa2&chksm=c2dee5a8f5a96cbeaa66b8575540a416c80d66f7427f5095999f520a09717fa2906cfccddb59&scene=21#wechat_redirect
 
 16.《MetaGPT智能体开发入门》学习手册: https://deepwisdom.feishu.cn/wiki/BfS0wmk4piMXXIkHvn5czNT8nuh
+
+
+
