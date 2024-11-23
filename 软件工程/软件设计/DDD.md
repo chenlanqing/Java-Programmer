@@ -384,3 +384,4 @@ DDD分层架构主要有四层组成，从上到下依次是：用户接口层�
 - [DDD代码库](https://mp.weixin.qq.com/s/y7nBTNbDo8UguW231bORyQ)
 - [Lego：支持DDD的技术中台](https://mp.weixin.qq.com/s/3bvSKnHaQUxPwhqmxdZVHg)
 - [支持DDD的IDEA插件](https://mp.weixin.qq.com/s/RHkfw04TBJxydyvaUu4grQ)
+- 使用在线工具[domain-story-modeler](https://github.com/WPS/domain-story-modeler)，可以在线实践domain storytelling。
