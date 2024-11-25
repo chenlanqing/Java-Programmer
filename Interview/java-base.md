@@ -2121,6 +2121,31 @@ Spring Boot 在启动时会将关闭流程注册到 Java 关闭钩子中，并�
 
 Spring永远不会被垃圾回收
 
+## 28、实际中类加载中会遇到哪些问题？
+
+**ClassNotFoundException**
+
+ClassNotFoundException 表示类找不到异常，是一种 Exception，通常发生在载入阶段，当开发者主动调用 Class.forName()、ClassLoader.loadClass()或 ClassLoader.findSystemClass()动态加载指定类时候，类加载器就会去 classpath 下寻找类，如果找不到就会抛出此错误。
+
+还有另外一种情况是当一个类已经被某个类加载器加载到内存中，另外一个类加载器试图去加载时也会发生错误。
+
+ClassNotFoundException 是一个 exception 类，同时发生在主动执行动态加载时，所以我们应该去 catch 它，防止发生一些运行时错误
+
+**NoClassDefFoundError**
+
+NoClassDefFoundError 是一种和 ClassNotFoundException 很像的错误，只不过它是更严重的 error 类型。它发生在链接阶段，表示 jvm 在编译阶段可以找到相应的类，但在执行过程中却找不到相应的类：
+- 一种原因是由于在编译后运行前类被更改或者删除了；
+- 另外一种则是 classpath 本身被修改过了，这可以通过`System.getProperty("java.classpath")`来找到程序实际运行的 classpath，或者通过`-classpath` 命令来指定正确的 classpath。
+
+那如果是在 ide 中开发，很多时候出现的情况是我们可以通过 ide 编译通过，但在实际运行的 WEB-INF/lib 下却是没有的。所以排查的时候我们需要去实际的 war 包下面确定是否有类
+
+**NoSuchMethodError**
+
+我们还会遇到 NoSuchMethodError 错误，它表示找不到方法，但找不到方法归根结底是找到了不正确的类。
+
+通常情况下是因为 jar 包冲突问题，即加载了不匹配版本的类导致的。例如应用中有 A、B 两个二方包，A 依赖 C-v1 包，而 B 依赖 C-v2 包，如果 maven 仲裁最后使用的是 C-v1 包，那么当 B 加载到 C-v2 中有而 C-v1 中没有的方法时就会报 NoSuchMethodError
+
+
 # 六、设计模式
 
 ## 1、动态代理与静态代理区别以及使用场景
