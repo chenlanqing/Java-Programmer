@@ -14,3 +14,4 @@
 - [C++实现神经网络](https://www.jeremyong.com/cpp/machine-learning/2020/10/23/cpp-neural-network-in-a-weekend/)
 - [Muduo](https://github.com/hujiese/MuduoStudy)
 - [C++开源库学习](https://mp.weixin.qq.com/s/Igc15RXErNXmsjTjkRnVAA)
+- [Linux C++程序学习](https://mp.weixin.qq.com/s/VpKsmpmgo211WlvE3VWkMg)

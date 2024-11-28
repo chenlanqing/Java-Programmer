@@ -176,3 +176,4 @@ Linux 是一个开源的操作系统，有许多不同的发行版。以下是�
 * [Linux硬件-内核-网络](https://github.com/yanfeizhang/coder-kung-fu)
 * [Red Hat Enterprise Linux 文档](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9)
 * [What every programmer should know about memory](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf)
+* [Linux从入门到精通](https://github.com/ForceInjection/linux-from-beginner-to-master)
