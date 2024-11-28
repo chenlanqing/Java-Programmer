@@ -604,6 +604,8 @@ PFCOUNT page // 返回值 = 4
 ## 8、GEO地理类型
 
 - [GEO](https://juejin.cn/post/6982466335670272036)
+- [GeoHash](https://redis.io/docs/latest/commands/geohash/)
+- [Geohash算法](../../../算法与数据结构/算法/常见算法.md#十三geohash算法)
 
 主要是基于位置信息服务（Location-Based Service，LBS）的应用，一般使用场景是附近的人，其核心思想如下：
 - 以 “我” 为中心，搜索附近的 Ta；
