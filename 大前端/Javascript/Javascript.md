@@ -264,3 +264,4 @@ console.log(result);
 - [javascript tutorial](https://www.javascripttutorial.net/)
 - [V8 Engine](https://v8.dev/)
 - [Java基础到高级](https://medium.com/@omkartalekar1112/all-javascript-concepts-a-z-basic-to-advanced-7b7453d5b008)
+- [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)
