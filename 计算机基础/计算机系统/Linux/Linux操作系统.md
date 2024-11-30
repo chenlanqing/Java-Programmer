@@ -162,6 +162,8 @@ Linux 是一个开源的操作系统，有许多不同的发行版。以下是�
 - **Kali Linux**：Kali Linux 是一个基于 Debian 的发行版，专为渗透测试和安全审计而设计。官方网站：[Kali Linux](https://www.kali.org/)
 - **Linux Mint**：Linux Mint 是一个基于 Ubuntu 的发行版，以其易用性和美观的用户界面而闻名。官方网站：[Linux Mint](https://linuxmint.com/)
 
+
+
 # 参考资料
 
 * [内存寻址](https://liam.page/2016/05/01/Introduction-to-Memory-Addressing/)
@@ -177,3 +179,4 @@ Linux 是一个开源的操作系统，有许多不同的发行版。以下是�
 * [Red Hat Enterprise Linux 文档](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9)
 * [What every programmer should know about memory](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf)
 * [Linux从入门到精通](https://github.com/ForceInjection/linux-from-beginner-to-master)
+* [什么是Linux](https://www.linux.com/what-is-linux/)
