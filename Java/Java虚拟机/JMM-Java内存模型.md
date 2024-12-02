@@ -3,11 +3,37 @@
 
 ## 1、CPU多级缓存
 
-- 为什么需要CPU cache：CPU的频率太快，快到主存跟不上，这样在处理器时钟周期内，CPU通常需要等待主存，浪费资源。所以cache的出现是为了缓解CPU和内存之间速度不匹配问题。
+- [几种典型 CPU 缓存的访问速度](https://www.7-cpu.com/)
 
-- CPU cache的意义：
-	- 时间局部性：如果某个数据被访问，那么在不久的将来它很可能再次被访问；
-	- 空间局部性：如果某个数据被访问，那么与它相邻的数据很快也可能被访问；
+为什么需要CPU cache：CPU的频率太快，快到主存跟不上，这样在处理器时钟周期内，CPU通常需要等待主存，浪费资源。所以cache的出现是为了缓解CPU和内存之间速度不匹配问题。
+
+CPU缓存通常分为大小不等的三级缓存；
+
+查看CPU缓存的大小：
+- Linux：
+	```
+	[root@bluefish cache]# cat /sys/devices/system/cpu/cpu0/cache/index0/size
+	32K
+	[root@bluefish cache]# cat /sys/devices/system/cpu/cpu0/cache/index1/size
+	32K
+	[root@bluefish cache]# cat /sys/devices/system/cpu/cpu0/cache/index2/size
+	1024K
+	[root@bluefish cache]# cat /sys/devices/system/cpu/cpu0/cache/index3/size
+	33792K
+	```
+- Windows，可以通过[CPU-Z](https://www.cpuid.com/softwares/cpu-z.html) 工具
+
+三级缓存要比一、二级缓存大许多倍，这是因为当下的 CPU 都是多核心的，每个核心都有自己的一、二级缓存，但三级缓存却是一颗 CPU 上所有核心共享的；
+
+缓存要比内存快很多。CPU 访问一次内存通常需要 100 个时钟周期以上，而访问一级缓存只需要 4~5 个时钟周期，二级缓存大约 12 个时钟周期，三级缓存大约 30 个时钟周期；如果 CPU 所要操作的数据在缓存中，则直接读取，这称为缓存命中。命中缓存会带来很大的性能提升，因此，我们的代码优化目标是提升 CPU 缓存的命中率
+
+CPU cache的意义：
+- 时间局部性：如果某个数据被访问，那么在不久的将来它很可能再次被访问；
+- 空间局部性：如果某个数据被访问，那么与它相邻的数据很快也可能被访问；
+
+CPU 缓存分为数据缓存与指令缓存：
+- 对于数据缓存，应在循环体中尽量操作同一块内存上的数据，由于缓存是根据 CPU Cache Line 批量操作数据的，所以顺序地操作连续内存数据时也有性能提升。
+- 对于指令缓存，有规律的条件分支能够让 CPU 的分支预测发挥作用，进一步提升执行效率。对于多核系统，如果进程的缓存命中率非常高，则可以考虑绑定 CPU 来提升缓存命中
 
 ## 2、缓存一致性
 
@@ -27,7 +53,7 @@
 * 写失效：当一个CPU修改数据，如果有其他CPU修改数据，则通知其为无效；
 * 写更新：当一个CPU修改数据，如果有其他CPU有该数据，则通知其更新数据；
 
-### 2.2、缓存行cacheLine
+### 2.2、缓存行 CacheLine
 
 `cache line`是cache与内存数据交换的最小单位，根据操作系统一般是32byte或者64byte。在M-E-S-I协议中，状态可以是`M、E、S、I`；地址则是`cache line`中映射的内存地址，数据则是从内存读取的数据
 
@@ -49,6 +75,8 @@ cache_alignment : 64
 cache size      : 33792 KB
 cache_alignment : 64
 ```
+
+- 提升数据缓存的命中率：
 
 ### 2.3、状态介绍
 
