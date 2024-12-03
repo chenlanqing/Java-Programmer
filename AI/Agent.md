@@ -5,6 +5,7 @@
 - [Agent调研--19类Agent框架对比](https://mp.weixin.qq.com/s/rogMCoS1zDN0mAAC5EKhFQ)
 - [A list of AI autonomous agents](https://github.com/e2b-dev/awesome-ai-agents)
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
+- [Dify平台](https://dify.ai/zh)
 
 1.什么是ai agent：https://www.breezedeus.com/article/ai-agent-part1#33ddb6413e094280aaa4ac82634d01d9
 
