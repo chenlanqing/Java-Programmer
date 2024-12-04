@@ -419,13 +419,37 @@ JDK5之后新增的功能，用于为Java代码提供元数据。作为元数据
 
 ### 1.1、内置注解
 
-- @Override：重写
-- @Deprecated：过时
-- @SuppressWarnings：取消警告
+- `@Override`：重写
+- `@Deprecated`：过时
+- `@SuppressWarnings`：取消警告
 
 - 注解分为：
 	- 按运行机制：源码注解，编译时注解，运行时注解
 	- 按照来源注解：JDK，第三方，自定义注解；
+
+**@SuppressWarnings 注解**
+
+`@SuppressWarnings` 注解用于抑制编译器警告，它接受一个或多个字符串参数来指定要抑制的警告类型。不同的编译器和环境可能支持不同的警告类别，但以下是一些常见的、广泛支持的 `@SuppressWarnings` 参数值：
+- `unchecked`：抑制与未检查的转换相关的警告，例如当使用泛型时进行强制转换而没有提供足够的类型信息。
+- `rawtypes`：抑制与原始类型（raw type）相关的警告，即在应该使用泛型的地方使用了非参数化的类型。比如：` Map map = new HashMap();`
+- `deprecation`：抑制与使用已废弃（deprecated）API相关的警告。
+- `unused`：抑制与未使用的变量、方法参数、私有方法等相关的警告。请注意，此值并非所有编译器都默认支持，通常依赖于IDE配置（如Eclipse）。
+- `fallthrough`：抑制与switch语句中缺少break语句导致意外贯穿（fall-through）行为相关的警告；
+- `unchecked` 和 `rawtypes` 的组合：有时你会看到这两个值一起使用，以处理泛型相关的问题，特别是当你需要向后兼容旧代码时。
+- `serial`：抑制与序列化类缺少 `serialVersionUID` 字段相关的警告；
+- `finally`：抑制与 `finally` 语句中的返回语句可能导致异常控制流问题相关的警告。
+- `all`：抑制所有类型的警告。虽然可以这样做，但并不推荐，因为它会隐藏潜在的重要警告。
+```java
+@SuppressWarnings({"unchecked", "rawtypes"})
+public void addToList(List list, Object obj) {
+    list.add(obj);
+}
+```
+在这个例子中，`@SuppressWarnings` 注解被用来同时抑制 `unchecked` 和 `rawtypes` 类型的警告。
+
+注意事项：
+- 谨慎使用：虽然 `@SuppressWarnings` 可以帮助你消除不必要的警告，但它也可能隐藏重要的信息。因此，在使用这个注解时应非常小心，确保你确实理解并接受了相关风险。
+- 特定于工具：某些值（如 `"unused"`）可能是特定于开发工具（如 Eclipse 或 IntelliJ IDEA），而不是 Java 编译器本身的一部分。因此，这些值的效果可能会因使用的工具不同而有所差异。
 
 ### 1.2、自定义注解
 
