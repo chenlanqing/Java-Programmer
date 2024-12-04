@@ -338,7 +338,7 @@ Tomcat的Context组件、Servlet规范中的ServletContext以及Spring中的Appl
 
 # 二、HTTP协议	
 
-[HTTP协议](../../计算机网络/网络基础.md#四HTTP与HTTPS协议-应用层)	
+[HTTP协议](../../计算机基础/计算机网络/03_应用层.md#1HTTP协议)	
 
 # 三、Servlet高级应用
 
