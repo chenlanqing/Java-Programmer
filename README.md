@@ -138,3 +138,4 @@
 - [开放路线图精选列表](https://github.com/liuchong/awesome-roadmaps)
 - [GitHub Repositories Every Software Engineer Should Know](https://dev.to/jrmarcio_/github-repositories-every-software-engineer-should-know-2e80)
 - [CS-Self Learning](https://csdiy.wiki/)
+- [如何自学CS](https://github.com/chenlanqing/TeachYourselfCS-CN)
