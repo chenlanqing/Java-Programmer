@@ -783,3 +783,6 @@ Grafana
 - [AWK操作技巧](https://mp.weixin.qq.com/s/aRy3QlMUpSNOKf2pyN6Uuw)
 - [tldr-pages-简化man命令说明](https://github.com/tldr-pages/tldr)
 - [Linux沙箱纯净版](https://github.com/chenlanqing/instantbox)
+- [Linux基础](https://linuxtools-rst.readthedocs.io/zh-cn/latest/base/index.html)
+* [Linux从入门到精通](https://github.com/ForceInjection/linux-from-beginner-to-master)
+* [什么是Linux](https://www.linux.com/what-is-linux/)
