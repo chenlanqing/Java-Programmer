@@ -18,18 +18,20 @@
 
 # 二、Linux命令
 
+- [Master the command line, in one page](https://github.com/jlevy/the-art-of-command-line)
+
 - 命令格式： 命令 [-选项] [参数]
 - 简化选项： -a 或 -all
 
 ## 1、帮助命令
 
-- 查看 Shell 内部命令的帮助信息 - 使用 help
-- 查看命令的简要说明 - 使用 whatis
-- 查看命令的详细说明 - 使用 info
-- 查看命令的位置 - 使用 which
-- 定位指令的二进制程序、源代码文件和 man 手册页等相关文件的路径 - 使用 whereis
-- 查看命令的帮助手册（包含说明、用法等信息） - 使用 man
-- 只记得部分命令关键字 - 使用 man -k
+- 查看 Shell 内部命令的帮助信息：help
+- 查看命令的简要说明：whatis
+- 查看命令的详细说明：info
+- 查看命令的位置：which
+- 定位指令的二进制程序、源代码文件和 man 手册页等相关文件的路径：whereis
+- 查看命令的帮助手册（包含说明、用法等信息）：man
+- 只记得部分命令关键字：man -k
 
 **help**：用于查看 Shell 内部命令的帮助信息。而对于外部命令的帮助信息只能使用 man 或者 info 命令查看
 
@@ -142,18 +144,19 @@ d rwx rwx r-x
 
 - `touch`：创建的文件不具有可执行权限
 - `cat/tac`：-A 显示所有
-- `more` ： 分页显示文件内容
+- `more` ：显示文件内容，每次显示一屏
 	```
 	more [文件名]
 		f：翻页
 		回车：换行
 		q或Q退出
 	```
-- `less` ：可向上翻页
-- `head -n [行号]` ：查看前几行
-- `tail`：显示文件后面几行
+- `less` ：可向上翻页，显示文件内容，每次显示一屏
+- `head -n [行号]` ：显示指定文件的开头若干行
+- `tail`：显示指定文件的末尾若干行，常用于实时打印日志文件内容 
 - `stat`：显示文件信息
 - `file`：探测文件类型
+- `grep`：用正则表达式搜索文本，并把匹配的行打印出来
 
 ### 2.3、链接命令
 
@@ -251,22 +254,31 @@ ln [源文件] [目标文件] ：同步更新；生成硬链接，不能跨分�
 - `mv`：移动文件或目录
 - `rm`：删除文件或目录
 
-### 2.7、压缩
+### 2.7、打包与压缩
 
-- gzip [文件]：压缩文件，文件格式 .gz，只能压缩目录且不保留源文件；gunzip [压缩文件]：解压缩.gz文件
+- `gzip [文件]`：压缩文件，文件格式 .gz，只能压缩目录且不保留源文件；gunzip [压缩文件]：解压缩.gz文件
 
-- tar -zcvf 压缩后的文件名 目录： 打包目录， .tar.gz
+- `tar -zcvf` 压缩后的文件名 目录： 打包目录， `.tar.gz`
+	```bash
+	-c 打包
+	-x 解包
+	-v 显示详细信息
+	-f 指定的文件名/解压缩文件名
+	-z 打包同时压缩
+	-j 打包程.tar.bz2文件
+	示例：
+	tar -cvf log.tar log2012.log            # 仅打包，不压缩
+	tar -zcvf log.tar.gz log2012.log        # 打包后，以 gzip 压缩
+	tar -jcvf log.tar.bz2 log2012.log       # 打包后，以 bzip2 压缩
+
+	tar -ztvf log.tar.gz                    # 查阅上述 tar 包内有哪些文件
+	tar -zxvf log.tar.gz                    # 将 tar 包解压缩
+	tar -zxvf log30.tar.gz log2013.log      # 只将 tar 内的部分文件解压出来
 	```
-	-c ： 打包
-	-x ： 解包
-	-v ： 显示详细信息
-	-f ： 指定的文件名/解压缩文件名
-	-z ： 打包同时压缩
-	-j ： 打包程.tar.bz2文件
-	```
-- zip [-r] 压缩后的文件名 [文件或目录]：压缩命令，windows和linux都支持的压缩格式；-r ： 压缩目录
-- unzip 压缩文件：解压缩.zip文件
-- bzip2 -k [文件]：　只能压缩文件， .bz2
+
+- `zip [-r] 压缩后的文件名 [文件或目录]`：压缩命令，windows和linux都支持的压缩格式；-r ： 压缩目录
+- `unzip 压缩文件`：解压缩.zip文件
+- `bzip2 -k [文件]`：　只能压缩文件， .bz2
 	```
 	-k ：产生压缩文件后保留源文件
 	tar -cjf node-v4.2.1.tar.bz2 node-v4.2.1 ==> 压缩程 .tar.bz2 
@@ -367,12 +379,29 @@ ln [源文件] [目标文件] ：同步更新；生成硬链接，不能跨分�
 
 ## 4、磁盘管理
 
+- df ： 查看磁盘空间 - 使用 df
+- du ： 查看文件或目录的磁盘空间 - 使用 du
+
 ## 5、进程管理
+
+- ps
+- top
+- kill
 
 ## 6、性能监控
 
+- sar:
+- top
+- iotop
+- free
+
 ## 7、网络工具
 
+- curl、wget：下载文件或者访问远程地址
+- telnet ： telnet 方式登录远程主机，对远程主机进行管理
+- ip ： 查看或操纵 Linux 主机的路由、网络设备、策略路由和隧道
+- hostname：查看和设置系统的主机名
+- firewalld：查看、设置防火墙（Centos7）
 - write 用户名：给在线用户发信息，以 ctrl + D 保存结束
 - wall 信息：发广播信息，给所有用户发送信息；		
 - ping [-c] ip地址：测试网络连通性；-c：指定发送次数
@@ -380,6 +409,7 @@ ln [源文件] [目标文件] ：同步更新；生成硬链接，不能跨分�
 - mail 用户名：发送的电子邮件，mail：查看邮件
 - last：列出目前与过去登录系统的用户信息；lastlog -u [用户的uid]：查看所有或某个特定用户上次登录的时间	
 - traceroute：显示数据包到主机间的路径		
+- route：查看和设置 Linux 内核中的网络路由表
 - netstat [选项]：显示网络相关信息；
 	```		
 	-t ： TCP协议
@@ -392,34 +422,45 @@ ln [源文件] [目标文件] ：同步更新；生成硬链接，不能跨分�
 	netstat -rn ： 查看本机路由表	
 	```
 - setup：配置网络，永久生效[不是所有的Linux都有]		
-- mount [-t 文件系统] 设备文件名 挂载点：mount -t iso9960 /dev/sr0 /mnt/cdrom：挂载光盘到 cdrom挂载点	
-- umount 挂载点或者设备名：卸载
 
 ## 8、用户管理命令
 
-- useradd 用户名：添加新用户，只有管理员root可以操作
-- passwd 用户名：设置用户密码，普通用户只能改自己的密码
-- who：查看登录用户信息
-- w ： 查看登录用户的详细信息
+- `groupadd`：创建用户组
+- `groupdel`：删除用户组
+- `groupmod`：修改用户组信息
+- `useradd`：创建用户
+- `userdel`：删除用户
+- `usermod`：修改用户信息
+- `passwd`：设置用户认证信息
+- `su`：切换用户
+- `sudo`：当前用户想执行没有权限执行的命令时，使用其他用户身份去执行
 
 ## 9、系统管理
 
-- shutdown [选项] 时间
-	```
-	-c ： 取消前一个关机命令
-	-h ： 关机
-	-r ： 重启
-	```
-- 系统运行级别：
-	```
-	0 ： 关机
-	1 ： 单用户
-	2 ： 不完全用户，不含NFS服务
-	3 ： 完全多用户
-	4 ： 未分配
-	5 ： 图形界面
-	6 ： 重启
-	```
+- 查看 Linux 系统发行版本
+	- 使用 `lsb_release`（此命令适用于所有的 Linux 发行版本）
+	- 使用 `cat /etc/redhat-release`（此方法只适合 Redhat 系的 Linux）
+- 查看 CPU 信息：`cat /proc/cpuinfo`
+- 重新启动 Linux 操作系统：`reboot`
+- 退出 shell，并返回给定值：`exit`
+- 关闭系统：`shutdown`
+- 查看或设置系统时间与日期：`date`
+- 挂载文件系统：`mount`
+- 取消挂载文件系统：`umount`
+- 查看系统当前进程状态：`ps`
+- 删除当前正在运行的进程：`kill`
+- 启动、停止、重启、关闭、显示系统服务（Centos7），使用 `systemctl`
+- 启动、停止、重启、关闭、显示系统服务（Centos7 以前），使用 `service`
+- 管理需要周期性执行的任务，使用 `crontab`
+
+### 9.1、查询硬件信息
+
+- 查看CPU使用情况 [sar](https://www.geeksforgeeks.org/sar-command-linux-monitor-system-performance/): `$ sar -u 5 10`
+- 查询CPU信息:`$ cat /proc/cpuinfo`
+- 查看CPU的核的个数: `$ cat /proc/cpuinfo | grep processor | wc -l`
+- 查看内存信息:`$ cat /proc/meminfo`
+- 显示内存page大小（以KByte为单位）:`getconf PAGESIZE` 或者 `getconf PAGE_SIZE.`
+- 显示架构:`$ arch`
 
 ## 10、关于环境变量
 
