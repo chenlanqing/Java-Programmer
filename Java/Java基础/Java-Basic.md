@@ -1176,6 +1176,11 @@ ZonedDateTime.now(ZoneId.of("-6"));
 // 给当前时间指定对应的时区：2024-05-30T15:10:08.314940700-06:00
 ZonedDateTime of = ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("-6"));
 Instant instant = of.toInstant(); // 2024-07-30T21:10:08.314940700Z  UTC时间
+// LocalDateTime 时区转换
+LocalDateTime.now().atZone(ZoneId.systemDefault())// LocalDateTime 系统默认时区
+		.withZoneSameInstant(ZoneId.of("UTC")) // 设置为UTC时区
+		.toInstant()
+		.atZone(ZoneId.of("+10")); // 转换为 UTC+10 时区
 ```
 
 **转换为秒/毫秒**
