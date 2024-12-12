@@ -214,6 +214,24 @@ x86_64：硬件平台
 GNU/Linux：操作系统
 ```
 
+## 8、无法上传文件时该如何操作拷贝文件
+
+有的服务器无法上传文件，也无法下载文件，可以使用 base64 命令绕过，比如需要上传一个 .class 文件到linux服务器上：
+（1）在本地先转换.class文件为 base64，再保存为 result.txt
+```sh
+$ base64 < Test.class > result.txt
+```
+（2）到服务器上，新建并编辑result.txt，复制本地的内容，粘贴再保存； <br/>
+（3）把服务器上的 result.txt 还原为 .class
+```sh
+$ base64 -d < result.txt > Test.class
+```
+（4）用 md5 命令计算哈希值，校验是否一致
+```sh
+$ md5sum result.txt 
+5540be09ca04033f4e197807754f2ec1  result.txt
+```
+
 # 二、系统监控
 
 ## 1、top
