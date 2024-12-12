@@ -4,6 +4,10 @@
 
 ### 2.1、arthas排查死循环
 
+### 2.2、获取controller 所有信息：
+
+`watch org.springframework.web.servlet.DispatcherServlet doService '#httpRequest=params[0],#allHeaders={},#forEnumeration = :[#this.hasMoreElements()? (#headerName=#this.nextElement(),#allHeaders.add(#headerName+"="+#httpRequest.getHeader(#headerName)),#forEnumeration(#this)):null],#forEnumeration(#httpRequest.getHeaderNames()),#allHeaders'  -n 5  -x 3`
+
 ## 3、Arthas原理
 
 # 参考资料
