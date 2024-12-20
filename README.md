@@ -140,3 +140,4 @@
 - [CS-Self Learning](https://csdiy.wiki/)
 - [如何自学CS](https://github.com/chenlanqing/TeachYourselfCS-CN)
 - [To be best java programmer](https://github.com/crisxuan/bestJavaer)
+- [基于项目自学的教程](https://github.com/practical-tutorials/project-based-learning)
