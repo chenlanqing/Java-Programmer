@@ -134,10 +134,15 @@
 ## 3、学习路线
 
 - [各种技术学习路线汇总](https://www.yuque.com/snailclimb/dr6cvl/et904p)
-- [开发者路线图](https://github.com/kamranahmedse/developer-roadmap)
-- [开放路线图精选列表](https://github.com/liuchong/awesome-roadmaps)
 - [GitHub Repositories Every Software Engineer Should Know](https://dev.to/jrmarcio_/github-repositories-every-software-engineer-should-know-2e80)
 - [CS-Self Learning](https://csdiy.wiki/)
+
+## 4、Github资源
+
 - [如何自学CS](https://github.com/chenlanqing/TeachYourselfCS-CN)
 - [To be best java programmer](https://github.com/crisxuan/bestJavaer)
 - [基于项目自学的教程](https://github.com/practical-tutorials/project-based-learning)
+- [免费编程书籍](https://github.com/EbookFoundation/free-programming-books)
+- [GitHub 上高质量、有趣的开源项目](https://github.com/Wechat-ggGitHub/Awesome-GitHub-Repo)
+- [开放路线图精选列表](https://github.com/liuchong/awesome-roadmaps)
+- [开发者路线图](https://github.com/kamranahmedse/developer-roadmap)
