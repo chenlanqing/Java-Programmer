@@ -32,6 +32,8 @@ TIME_WAIT 1645
 
 https://xclient.info/
 
+[第三方软件管理](https://aerolite.dev/applite)
+
 ### 4.1、文本编辑
 
 - MarkEditor  markdown文件编辑
