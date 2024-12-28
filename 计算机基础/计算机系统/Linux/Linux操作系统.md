@@ -151,19 +151,6 @@ https://mp.weixin.qq.com/s/ZifCDDU-zdUa7fOFo7epiw
 
 MMU：内存管理单元
 
-# 发行版
-
-Linux 是一个开源的操作系统，有许多不同的发行版。以下是一些流行的 Linux 发行版，以及它们的官方网站链接：
-- **Ubuntu**：Ubuntu 是最流行的 Linux 发行版之一，以其易用性和广泛的软件库而闻名。官方网站：[Ubuntu](https://ubuntu.com/)
-- **Debian**：Debian 是一个稳定且可高度定制的 Linux 发行版，是许多其他发行版的基础。官方网站：[Debian](https://www.debian.org/)
--  **Fedora**：Fedora 是由 Red Hat 支持的社区驱动的 Linux 发行版，以其创新和快速更新而闻名。官方网站：[Fedora](https://getfedora.org/)
-- **CentOS**：CentOS 是一个基于 Red Hat Enterprise Linux (RHEL) 的免费企业级 Linux 发行版。官方网站：[CentOS](https://www.centos.org/)
-- **Arch Linux**：Arch Linux 是一个滚动发布的 Linux 发行版，以其简洁和强大的包管理器（AUR）而闻名。官方网站：[Arch Linux](https://www.archlinux.org/)
-- **openSUSE**：openSUSE 是一个由 Novell（现为 SUSE）维护的 Linux 发行版，以其易用性和强大的软件库而闻名。官方网站：[openSUSE](https://www.opensuse.org/)
-- **Manjaro**：Manjaro 是一个基于 Arch Linux 的发行版，旨在提供简单易用的安装过程和强大的软件库。最接口 OSX 系统的Linux发行版，官方网站：[Manjaro](https://manjaro.org/)
-- **Gentoo**：Gentoo 是一个高度可定制的 Linux 发行版，以其强大的包管理器和灵活的配置选项而闻名。官方网站：[Gentoo](https://www.gentoo.org/)
-- **Kali Linux**：Kali Linux 是一个基于 Debian 的发行版，专为渗透测试和安全审计而设计。官方网站：[Kali Linux](https://www.kali.org/)
-- **Linux Mint**：Linux Mint 是一个基于 Ubuntu 的发行版，以其易用性和美观的用户界面而闻名。官方网站：[Linux Mint](https://linuxmint.com/)
 
 # 7、CPU上下文
 
@@ -314,6 +301,21 @@ RES:    2450431    5279697   Rescheduling interrupts
 - 自愿上下文切换变多了，说明进程都在等待资源，有可能发生了 I/O 等其他问题；
 - 非自愿上下文切换变多了，说明进程都在被强制调度，也就是都在争抢 CPU，说明 CPU 的确成了瓶颈；
 - 中断次数变多了，说明 CPU 被中断处理程序占用，还需要通过查看 `/proc/interrupts` 文件来分析具体的中断类型
+
+
+# 发行版
+
+Linux 是一个开源的操作系统，有许多不同的发行版。以下是一些流行的 Linux 发行版，以及它们的官方网站链接：
+- **Ubuntu**：Ubuntu 是最流行的 Linux 发行版之一，以其易用性和广泛的软件库而闻名。官方网站：[Ubuntu](https://ubuntu.com/)
+- **Debian**：Debian 是一个稳定且可高度定制的 Linux 发行版，是许多其他发行版的基础。官方网站：[Debian](https://www.debian.org/)
+-  **Fedora**：Fedora 是由 Red Hat 支持的社区驱动的 Linux 发行版，以其创新和快速更新而闻名。官方网站：[Fedora](https://getfedora.org/)
+- **CentOS**：CentOS 是一个基于 Red Hat Enterprise Linux (RHEL) 的免费企业级 Linux 发行版。官方网站：[CentOS](https://www.centos.org/)
+- **Arch Linux**：Arch Linux 是一个滚动发布的 Linux 发行版，以其简洁和强大的包管理器（AUR）而闻名。官方网站：[Arch Linux](https://www.archlinux.org/)
+- **openSUSE**：openSUSE 是一个由 Novell（现为 SUSE）维护的 Linux 发行版，以其易用性和强大的软件库而闻名。官方网站：[openSUSE](https://www.opensuse.org/)
+- **Manjaro**：Manjaro 是一个基于 Arch Linux 的发行版，旨在提供简单易用的安装过程和强大的软件库。最接口 OSX 系统的Linux发行版，官方网站：[Manjaro](https://manjaro.org/)
+- **Gentoo**：Gentoo 是一个高度可定制的 Linux 发行版，以其强大的包管理器和灵活的配置选项而闻名。官方网站：[Gentoo](https://www.gentoo.org/)
+- **Kali Linux**：Kali Linux 是一个基于 Debian 的发行版，专为渗透测试和安全审计而设计。官方网站：[Kali Linux](https://www.kali.org/)
+- **Linux Mint**：Linux Mint 是一个基于 Ubuntu 的发行版，以其易用性和美观的用户界面而闻名。官方网站：[Linux Mint](https://linuxmint.com/)
 
 # 参考资料
 
