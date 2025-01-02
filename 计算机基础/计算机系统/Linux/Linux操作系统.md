@@ -353,6 +353,79 @@ $$ 平均CPU使用率 = 1 - \frac{空闲时间_{new} - 空闲时间_{old}}{总CP
 
 性能分析工具给出的都是间隔一段时间的平均 CPU 使用率，所以要注意间隔时间的设置
 
+## 8.3、查看CPU使用率
+
+top 和 ps 是最常用的性能分析工具：
+- top 显示了系统总体的 CPU 和内存使用情况，以及各个进程的资源使用情况。
+- ps 则只显示了每个进程的资源使用情况。
+
+top的输出格式为：
+```bash
+# 默认每 3 秒刷新一次
+$ top
+top - 11:58:59 up 9 days, 22:47,  1 user,  load average: 0.03, 0.02, 0.00
+Tasks: 123 total,   1 running,  72 sleeping,   0 stopped,   0 zombie
+%Cpu(s):  0.3 us,  0.3 sy,  0.0 ni, 99.3 id,  0.0 wa,  0.0 hi,  0.0 si,  0.0 st
+KiB Mem :  8169348 total,  5606884 free,   334640 used,  2227824 buff/cache
+KiB Swap:        0 total,        0 free,        0 used.  7497908 avail Mem
+ 
+  PID USER      PR  NI    VIRT    RES    SHR S  %CPU %MEM     TIME+ COMMAND
+    1 root      20   0   78088   9288   6696 S   0.0  0.1   0:16.83 systemd
+    2 root      20   0       0      0      0 S   0.0  0.0   0:00.05 kthreadd
+    4 root       0 -20       0      0      0 I   0.0  0.0   0:00.00 kworker/0:0H
+...
+```
+- 第三行 %Cpu 就是系统的 CPU 使用率，需要注意，top 默认显示的是所有 CPU 的平均值，这个时候你只需要按下数字 1 ，就可以切换到每个 CPU 的使用率了。
+- 空白行之后是进程的实时信息，每个进程都有一个 %CPU 列，表示进程的 CPU 使用率。它是用户态和内核态 CPU 使用率的总和，包括进程用户空间使用的 CPU、通过系统调用执行的内核空间 CPU 、以及在就绪队列等待运行的 CPU。在虚拟化环境中，它还包括了运行虚拟机占用的 CPU；
+
+top 并没有细分进程的用户态 CPU 和内核态 CPU，可以使用 pidstat ，它正是一个专门分析每个进程 CPU 使用情况的工具没，比如下面的 pidstat 命令，就间隔 1 秒展示了进程的 5 组 CPU 使用率，包括：
+- 用户态 CPU 使用率 （%usr）；
+- 内核态 CPU 使用率（%system）；
+- 运行虚拟机 CPU 使用率（%guest）；
+- 等待 CPU 使用率（%wait）；
+- 总的 CPU 使用率（%CPU）。
+```bash
+# 每隔 1 秒输出一组数据，共输出 5 组
+$ pidstat 1 5
+15:56:02      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+15:56:03        0     15006    0.00    0.99    0.00    0.00    0.99     1  dockerd
+...
+Average:      UID       PID    %usr %system  %guest   %wait    %CPU   CPU  Command
+Average:        0     15006    0.00    0.99    0.00    0.00    0.99     -  dockerd
+```
+
+## 8.4、CPU使用率过高
+
+通过 top、ps、pidstat 等工具，能够轻松找到 CPU 使用率较高（比如 100% ）的进程。接下来，如何知道占用 CPU 的到底是代码里的哪个函数呢？
+- GDB（The GNU Project Debugger），GDB 在调试程序错误方面很强大，但是因为 GDB 调试程序的过程会中断程序运行，这在线上环境往往是不允许的。所以，GDB 只适合用在性能分析的后期，当找到了出问题的大致函数后，线下再借助它来进一步调试函数内部的问题；
+- perf 是 Linux 2.6.31 以后内置的性能分析工具。它以性能事件采样为基础，不仅可以分析系统的各种事件和内核性能，还可以用来分析指定应用程序的性能问题，使用 perf 分析 CPU 性能问题，两种常见的用法：
+    -  perf top，类似于 top，它能够实时显示占用 CPU 时钟最多的函数或者指令，因此可以用来查找热点函数
+        ```bash
+        $ perf top
+        Samples: 833  of event 'cpu-clock', Event count (approx.): 97742399
+        Overhead  Shared Object       Symbol
+        7.28%  perf                [.] 0x00000000001f78a4
+        4.72%  [kernel]            [k] vsnprintf
+        4.32%  [kernel]            [k] module_get_kallsym
+        3.65%  [kernel]            [k] _raw_spin_unlock_irqrestore
+        ...
+        ```
+        输出结果中，第一行包含三个数据，分别是采样数（Samples）、事件类型（event）和事件总数量（Event count）。比如这个例子中，perf 总共采集了 833 个 CPU 时钟事件，而总事件数则为 97742399，表格式样的数据，每一行包含四列，分别是：
+        - 第一列 Overhead ，是该符号的性能事件在所有采样中的比例，用百分比来表示。
+        - 第二列 Shared ，是该函数或指令所在的动态共享对象（Dynamic Shared Object），如内核、进程名、动态链接库名、内核模块名等。
+        - 第三列 Object ，是动态共享对象的类型。比如 `[.]` 表示用户空间的可执行程序、或者动态链接库，而 `[k]` 则表示内核空间。
+        - 最后一列 Symbol 是符号名，也就是函数名。当函数名未知时，用十六进制的地址来表示。
+    - perf record 和 perf report：perf top 虽然实时展示了系统的性能信息，但它的缺点是并不保存数据，也就无法用于离线或者后续的分析。而 perf record 则提供了保存数据的功能，保存后的数据，需要你用 perf report 解析展示
+        ```bash
+        $ perf record # 按 Ctrl+C 终止采样
+        [ perf record: Woken up 1 times to write data ]
+        [ perf record: Captured and wrote 0.452 MB perf.data (6093 samples) ]
+        $ perf report # 展示类似于 perf top 的报告
+        ```
+        还可以 perf top 和 perf record 加上 `-g` 参数，开启调用关系的采样，方便根据调用链来分析性能问题
+
+
+
 # 发行版
 
 Linux 是一个开源的操作系统，有许多不同的发行版。以下是一些流行的 Linux 发行版，以及它们的官方网站链接：
