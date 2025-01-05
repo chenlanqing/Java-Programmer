@@ -315,6 +315,9 @@ top [参数]
 
 ## 2、ps 命令
 
+- [man ps command](https://man7.org/linux/man-pages/man1/ps.1.html)
+- [ps command exampls](https://www.tecmint.com/ps-command-examples-for-linux-process-monitoring/)
+
 用于报告当前系统的进程状态。可以搭配kill指令随时中断、删除不必要的程序。ps命令是最基本同时也是非常强大的进程查看命令，使用该命令可以确定有哪些进程正在运行和运行的状态、进程是否结束、进程有没有僵死、哪些进程占用了过多的资源等等，总之大部分信息都是可以通过执行该命令得到的
 
 **常用命令参数：**
