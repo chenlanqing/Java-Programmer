@@ -346,13 +346,24 @@ ps -o command -p 91730 | sed -n 2p # 通过进程id获取服务名称
 - `ps -ef | grep nginx | grep -v grep` 判断nginx进程是否存在，使用`echo $?` 返回1 
 
 将目前属于您自己这次登入的 PID 与相关信息列示出来
-```
+```bash
 [root@bluefish ~]# ps -l
 F S   UID   PID  PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
 4 S     0 11315  7342  0  80   0 -   993 poll_s pts/0    00:00:00 bash
 4 S     0 26278 26276  0  80   0 - 28992 do_wai pts/0    00:00:00 bash
 0 R     0 27483 26278  0  80   0 - 38301 -      pts/0    00:00:00 ps
 ```
+ps aux 查看进程时可能存在以下结果：
+```bash
+$ ps aux | grep /app
+root      4009  0.0  0.0   4376  1008 pts/0    Ss+  05:51   0:00 /app
+root      4287  0.6  0.4  37280 33660 pts/0    D+   05:54   0:00 /app
+root      4288  0.6  0.4  37280 33668 pts/0    D+   05:54   0:00 /app
+```
+其中 s 表示这个进程是一个会话的领导进程，而 `+` 表示前台进程组。进程组和会话。它们用来管理一组相互关联的进程，意思其实很好理解：
+- 进程组表示一组相互关联的进程，比如每个子进程都是父进程所在组的成员；
+- 会话是指共享同一个控制终端的一个或多个进程组。
+
 
 ## 3、netstat 命令
 
@@ -764,34 +775,6 @@ alias log="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/log
 alias log2="tail -f /home/root/software/apache-tomcat-7.0.69/tomcat_instance2/logs/catalina.out"
 alias cdlog="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs"
 ```
-
-# 四、Linux工具
-
-vmstat 可以获得有关进程、内存页面交换、虚拟内存、线程上下文切换、等待队列等信息。能够反映系统的负载情况。一般用来查看进程等待数量、内存换页情况、系统上下文切换是否频繁等
-
-iostat 工具可以对系统的磁盘操作活动进行监视，同时也可以显示 CPU 使用情况，一般用来排查与文件读写有关的问题，例如排查文件写入耗时较高时，可以查看 await 和 util 是否过高。iotop 是查看磁盘 I/O 使用状况的 top 类工具，想知道到底哪个进程产生了大量的 IO 时可以使用 iotop（安装：yum install sysstat）
-
-ifstat 是简洁的实时网络流量监控工具，可以查看系统的网络出口、入口使用情况。iftop 可以用来监控网卡的实时流量、反向解析 IP、显示端口信息等，通过iftop很容易找到哪个ip在霸占网络流量
-
-netstat 是一个监控系统网络状态的工具，它可以查看网络连接状态，监听了哪些接口、链接相关的进程等信息，能够显示与 IP、TCP、UDP 和 ICMP 协议相关的统计数据，是非常常用的网络工具
-
-dstat 是一个全能实时系统信息统计工具，能够统计 CPU 占用，内存占用，网络状况，系统负载，进程信息，磁盘信息等等，可以用来替换 vmstat、iostat、netstat 和i fstat 这些工具
-
-strace 是一个用于诊断、调试程序运行时系统调用的工具，可以动态跟踪程序的运行，能够清楚地看到一个程序运行时产生的系统调用过程及其使用的参数、返回值和执行耗时。JVM 执行 native 方法时，可以很方便的通过 strace 来进行调试，例如在执行系统读写时，线程卡住很长时间，就可以用 strace 来查看系统调用的参数和耗时
-
-GDB 是一个强大的命令行调试工具，可以让程序在受控的环境中运行，让被调试的程序在指定的断点处停住，也可以动态的改变程序的执行环境。当 JVM 因为未知原因 crash 时，可以通过 GDB 来分析 crash 时产生的 coredump 文件，来分析定位问题
-
-lsof 是一个列出当前系统打开文件的工具。Linux 中一切皆文件，包括设备、链接等都是以文件形式管理的，因此通过 lsof 工具查看文件列表对系统监测以及排错都很有帮助
-
-tcpdump 是一个强大的网络抓包工具，在分析服务之间调用时非常有用。可以将网络中传送的数据包抓取下来进行分析。tcpdump 提供灵活的抓取策略，支持针对网络层、协议、主机、网络或端口的过滤，并提供 and、or、not 等逻辑语句来去掉不想要的信息。
-
-traceroute 是一个网络路由分析工具，利用 ICMP 协议定位本地计算机和目标计算机之间的所有路由。traceroute 对服务，特别是经过公网的服务之间的网络问题排查非常有帮助
-
-# 五、Linux监控
-
-Prometheus
-
-Grafana
 
 # 参考资料
 

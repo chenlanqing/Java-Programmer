@@ -1,8 +1,10 @@
-# 1、快捷操作
+# 一、命令操作
+
+## 1、快捷操作
 
 sysdm.cpl 打开安全属性
 
-# 2、查看window端口占用情况
+## 2、查看window端口占用情况
 
 * [netstat命令](https://learn.microsoft.com/zh-cn/windows-server/administration/windows-commands/netstat)
 
@@ -12,7 +14,7 @@ sysdm.cpl 打开安全属性
 - tasklist|findstr "2720"  : 哪个进程或者程序占用了2720端口
 
 
-# 3、批量获取某个目录下的所有文件名称
+## 3、批量获取某个目录下的所有文件名称
 
 ```
 dir /a-d /b *.jpg>src.txt
@@ -20,11 +22,16 @@ echo attention, job has done
 pause
 ```
 
-# 4、删除windows上保存的凭据
+## 4、删除windows上保存的凭据
 
 打开 Windows 凭据管理器，请按下 Win+R 键，输入 `control /name Microsoft.CredentialManager`，然后按 Enter 键。
 
 在凭据管理器中，您可以查看、编辑和删除存储的凭据。如果您想删除 Git 存储的凭据，可以在凭据管理器中找到 Git 的凭据并将其删除
+
+# 二、Windows工具
+
+- [Windows文本比较工具](https://winmerge.org/)
+- [好用、优秀的 Windows 应用](https://github.com/stackia/best-windows-apps)
 
 
 # 参考资料
