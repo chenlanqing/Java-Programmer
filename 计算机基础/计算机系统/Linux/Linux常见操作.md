@@ -532,8 +532,25 @@ tmpfs           184M     0  184M   0% /run/user/0
 ## 5、free 命令
 
 
+## 6、[监控工具 sar](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
 
-## 6、[监控工具SAR](https://mp.weixin.qq.com/s/CyYhAJMET_8kYSkmJDcqWA)
+查看CPU使用情况 [sar](https://www.geeksforgeeks.org/sar-command-linux-monitor-system-performance/): `$ sar -u 5 10`
+
+sar 可以用来查看系统的网络收发情况，还有一个好处是，不仅可以观察网络收发的吞吐量（BPS，每秒收发的字节数），还可以观察网络收发的 PPS，即每秒收发的网络帧数
+```bash
+# -n DEV 表示显示网络收发的报告，间隔 1 秒输出一组数据
+$ sar -n DEV 1
+15:03:46        IFACE   rxpck/s   txpck/s    rxkB/s    txkB/s   rxcmp/s   txcmp/s  rxmcst/s   %ifutil
+15:03:47         eth0  12607.00   6304.00    664.86    358.11      0.00      0.00      0.00      0.01
+15:03:47      docker0   6302.00  12604.00    270.79    664.66      0.00      0.00      0.00      0.00
+15:03:47           lo      0.00      0.00      0.00      0.00      0.00      0.00      0.00      0.00
+15:03:47    veth9f6bbcd   6302.00  12604.00    356.95    664.66      0.00      0.00      0.00      0.05
+```
+内容意思：
+- 第一列：表示报告的时间。
+- 第二列：IFACE 表示网卡。
+- 第三、四列：rxpck/s 和 txpck/s 分别表示每秒接收、发送的网络帧数，也就是 PPS。
+- 第五、六列：rxkB/s 和 txkB/s 分别表示每秒接收、发送的千字节数，也就是 BPS。
 
 
 # 三、常用命令
