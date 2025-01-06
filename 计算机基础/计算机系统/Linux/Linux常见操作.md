@@ -557,7 +557,45 @@ $ sar -n DEV 1
 - [perf 工具](https://www.brendangregg.com/perf.html)
 
 
-# 三、常用命令
+### 常见问题
+
+**（1）使用 perf 工具时，看到的是 16 进制地址而不是函数名**
+
+使用 perf 工具看不到函数名，只能看到一些 16 进制格式的函数地址，有可能存在相关的警告信息：
+```bash
+Failed to open /opt/bitnami/php/lib/php/extensions/opcache.so, continuing without symbols
+```
+这说明，perf 找不到待分析进程依赖的库，这个问题，其实也是在分析 Docker 容器应用时，经常碰到的一个问题，因为容器应用依赖的库都在镜像里面，针对这种情况，有下面四个解决方法：
+- 在容器外面构建相同路径的依赖库：这种方法从原理上可行，但是并不推荐，一方面是因为找出这些依赖库比较麻烦，更重要的是，构建这些路径，会污染容器主机的环境；
+- 在容器内部运行 perf：不过，这需要容器运行在特权模式下，但实际的应用程序往往只以普通容器的方式运行。所以，容器内部一般没有权限执行 perf 分析，为了安全起见，也不推荐
+```bash
+$ perf_4.9 record -a -g
+perf_event_open(..., PERF_FLAG_FD_CLOEXEC) failed with unexpected error 1 (Operation not permitted)
+perf_event_open(..., 0) failed unexpectedly with error 1 (Operation not permitted)
+```
+- 指定符号路径为容器文件系统的路径
+- 在容器外面把分析纪录保存下来，再去容器里查看结果。这样，库和符号的路径也就都对了。
+
+**（2）如何用 perf 工具分析 Java 程序**
+
+像是 Java 这种通过 JVM 来运行的应用程序，运行堆栈用的都是 JVM 内置的函数和堆栈管理。所以，从系统层面你只能看到 JVM 的函数堆栈，而不能直接得到 Java 应用程序的堆栈
+
+perf_events 实际上已经支持了 JIT，但还需要一个 `/tmp/perf-PID.map` 文件，来进行符号翻译。当然，开源项目 [perf-map-agent](https://github.com/jvm-profiling-tools/perf-map-agent) 可以帮你生成这个符号表，为了生成全部调用栈，你还需要开启 JDK 的选项 `-XX:+PreserveFramePointer`，另外可以参考文章：[NETFLIX 的技术博客 Java in Flames](https://netflixtechblog.com/java-in-flames-e763b3d32166)
+
+**（3）为什么 perf 的报告中，很多符号都不显示调用栈**
+
+perf report 是一个可视化展示 perf.data 的工具，perf report 的输出中，只有 swapper 显示了调用栈，其他所有符号都不能查看堆栈情况；
+
+通过 man perf-report 命令，找到 `-g` 参数的说明，通过说明可以看到，`-g` 选项等同于 `--call-graph`，它的参数是后面那些被逗号隔开的选项，意思分别是输出类型、最小阈值、输出限制、排序方法、排序关键词、分支以及值的类型。默认的参数是 graph,0.5,caller,function,percent；
+
+堆栈显示不全，相关的参数当然就是最小阈值 threshold。通过手册中对 threshold 的说明，我们知道，当一个事件发生比例高于这个阈值时，它的调用栈才会显示出来。
+
+threshold 的默认值为 0.5%，也就是说，事件比例超过 0.5% 时，调用栈才能被显示。需要设置一个小于对应应用的调用栈阈值即可，比如你的事件比例是： 0.34%，那么设置一个小于该值的阈值即可：
+```bash
+$ perf report -g graph,0.3
+```
+
+# 三、各种命令
 
 ## 1、查看Linux发行版本
 
