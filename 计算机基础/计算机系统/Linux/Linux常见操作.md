@@ -552,6 +552,10 @@ $ sar -n DEV 1
 - 第三、四列：rxpck/s 和 txpck/s 分别表示每秒接收、发送的网络帧数，也就是 PPS。
 - 第五、六列：rxkB/s 和 txkB/s 分别表示每秒接收、发送的千字节数，也就是 BPS。
 
+## 7、perf
+
+- [perf 工具](https://www.brendangregg.com/perf.html)
+
 
 # 三、常用命令
 
