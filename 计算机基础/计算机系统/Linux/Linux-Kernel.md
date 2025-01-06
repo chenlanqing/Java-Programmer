@@ -11,3 +11,5 @@
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/v6.12.1/source)
 - [Linux内核学习资料](https://github.com/0voice/linux_kernel_wiki)
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/latest/source)
+- [eBPF-什么是eBPF](https://ebpf.io/zh-hans/what-is-ebpf/)
+- [eBPF](https://ebpf.io/)
