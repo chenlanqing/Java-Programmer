@@ -215,6 +215,7 @@ https://mp.weixin.qq.com/s/ZifCDDU-zdUa7fOFo7epiw
 - [Memory Barriers: a Hardware View for Software Hackers](https://www.puppetmastertrading.com/images/hwViewForSwHackers.pdf)
 - [A Tutorial Introduction to the ARM and POWER Relaxed Memory Models](https://www.cl.cam.ac.uk/~pes20/ppc-supplemental/test7.pdf)
 - [x86-TSO: A Rigorous and Usable Programmer’s Model for x86 Multiprocessors](https://www.cl.cam.ac.uk/~pes20/weakmemory/cacm.pdf)
+- [破解虚拟内存：malloc、堆和程序中断](https://blog.holbertonschool.com/hack-the-virtual-memory-malloc-the-heap-the-program-break/)
 
 内存管理也是操作系统最核心的功能之一。内存主要用来存储系统和应用程序的指令、数据、缓存等
 
@@ -357,6 +358,53 @@ top 输出界面的顶端，也显示了系统整体的内存使用情况，这�
 需要注意的是：
 - 虚拟内存通常并不会全部分配物理内存。从上面可以发现每个进程的虚拟内存都比常驻内存大得多。
 - 共享内存 SHR 并不一定是共享的，比方说，程序的代码段、非共享的动态链接库，也都算在 SHR 里。当然，SHR 也包括了进程间真正共享的内存。所以在计算多个进程的内存使用时，不要把所有进程的 SHR 直接相加得出结果；
+
+### 6.5、内存Buffer/Cache
+
+**free的数据来源**
+
+用 man 命令查询 free 的文档，就可以找到对应指标的详细说明。比如，执行 man free ，可以看到下面这个界面
+```bash
+buffers
+    Memory used by kernel buffers (Buffers in /proc/meminfo)
+cache
+    Memory used by the page cache and slabs (Cached and SReclaimable in /proc/meminfo)
+buff/cache
+    Sum of buffers and cache
+```
+从 free 的手册中，可以看到 buffer 和 cache 的说明。
+- Buffers 是内核缓冲区用到的内存，对应的是 `/proc/meminfo` 中的 Buffers 值。
+- Cache 是内核页缓存和 Slab 用到的内存，对应的是 `/proc/meminfo` 中的 Cached 与 SReclaimable 之和。
+
+**[proc 文件系统](https://man7.org/linux/man-pages/man5/procfs.5.html)**
+
+/proc 是 Linux 内核提供的一种特殊文件系统，是用户跟内核交互的接口。比方说，用户可以从 /proc 中查询内核的运行状态和配置选项，查询进程的运行状态、统计数据等，当然，你也可以通过 /proc 来修改内核的配置； proc 文件系统同时也是很多性能工具的最终数据来源
+
+[proc meminfo](https://man7.org/linux/man-pages/man5/proc_meminfo.5.html)，有如下内容：
+```bash
+Buffers %lu
+    Relatively temporary storage for raw disk blocks that shouldn't get tremendously large (20MB or so).
+Cached %lu
+   In-memory cache for files read from the disk (the page cache).  Doesn't include SwapCached.
+...
+SReclaimable %lu (since Linux 2.6.19)
+    Part of Slab, that might be reclaimed, such as caches.
+SUnreclaim %lu (since Linux 2.6.19)
+    Part of Slab, that cannot be reclaimed on memory pressure.
+```
+- Buffers 是对原始磁盘块的临时存储，也就是用来缓存磁盘的数据，通常不会特别大（20MB 左右）。这样，内核就可以把分散的写集中起来，统一优化磁盘的写入，比如可以把多次小的写合并成单次大的写等等。
+- Cached 是从磁盘读取文件的页缓存，也就是用来缓存从文件读取的数据。这样，下次访问这些文件数据时，就可以直接从内存中快速获取，而不需要再次访问缓慢的磁盘。
+- SReclaimable 是 Slab 的一部分。Slab 包括两部分，其中的可回收部分，用 SReclaimable 记录；而不可回收部分，用 SUnreclaim 记录。
+
+总结：
+- Buffer 既可以用作“将要写入磁盘数据的缓存”，也可以用作“从磁盘读取数据的缓存”。
+- Cache 既可以用作“从文件读取数据的页缓存”，也可以用作“写文件的页缓存”
+
+> **简单来说，Buffer 是对磁盘数据的缓存，而 Cache 是文件数据的缓存，它们既会用在读请求中，也会用在写请求中**
+
+Buffer 和 Cache 的设计目的，是为了提升系统的 I/O 性能。它们利用内存，充当起慢速磁盘与快速 CPU 之间的桥梁，可以加速 I/O 的访问速度；Buffer 和 Cache 分别缓存的是对磁盘和文件系统的读写数据。
+- 从写的角度来说，不仅可以优化磁盘和文件的写入，对应用程序也有好处，应用程序可以在数据真正落盘前，就返回去做其他工作。
+- 从读的角度来说，不仅可以提高那些频繁访问数据的读取速度，也降低了频繁 I/O 对磁盘的压力。
 
 # 7、CPU上下文
 
