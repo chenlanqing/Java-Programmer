@@ -3058,6 +3058,7 @@ SubstrateVM：AOT编译框架
 
 # 参考文章
 
+* [Java语言和虚拟机规范](https://docs.oracle.com/javase/specs/index.html)
 * [JVM 书单](https://github.com/deephacks/awesome-jvm)
 * [The Java® Virtual Machine Specification（Java SE 11 Edition）](https://docs.oracle.com/javase/specs/jvms/se11/html/index.html)
 * [《Java 虚拟机规范（第11版）》中文翻译及示例](https://github.com/waylau/java-virtual-machine-specification)

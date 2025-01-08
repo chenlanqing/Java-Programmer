@@ -406,6 +406,69 @@ Buffer 和 Cache 的设计目的，是为了提升系统的 I/O 性能。它们�
 - 从写的角度来说，不仅可以优化磁盘和文件的写入，对应用程序也有好处，应用程序可以在数据真正落盘前，就返回去做其他工作。
 - 从读的角度来说，不仅可以提高那些频繁访问数据的读取速度，也降低了频繁 I/O 对磁盘的压力。
 
+**缓存命中率**
+
+所谓缓存命中率，是指直接通过缓存获取数据的请求次数，占所有数据请求次数的百分比；命中率越高，表示使用缓存带来的收益越高，应用程序的性能也就越好。
+
+Linux 系统中并没有直接提供查询接口，方便我们随时查看缓存的命中情况，有两个工具：cachestat 和 cachetop ，它们正是查看系统缓存命中情况的工具。
+- cachestat 提供了整个操作系统缓存的读写命中情况。
+- cachetop 提供了每个进程的缓存命中情况。
+
+这两个工具都是 [bcc](https://github.com/iovisor/bcc) 软件包的一部分，它们基于 Linux 内核的 eBPF（extended Berkeley Packet Filters）机制，来跟踪内核中管理的缓存，并输出缓存的使用和命中情况；安装 [bcc](https://github.com/iovisor/bcc/blob/master/INSTALL.md)，安装完成之后 bcc 提供的所有工具就都安装到 `/usr/share/bcc/tools` 这个目录中了。需要注意的是 bcc 软件包默认不会把这些工具配置到系统的 PATH 路径中，所以得自己手动配置
+
+**cachestat 使用示例：**
+```bash
+# 以 1 秒的时间间隔，输出了 3 组缓存统计数据
+$ cachestat 1 3
+   TOTAL   MISSES     HITS  DIRTIES   BUFFERS_MB  CACHED_MB
+       2        0        2        1           17        279
+       2        0        2        1           17        279
+       2        0        2        1           17        279 
+```
+- TOTAL ，表示总的 I/O 次数；
+- MISSES ，表示缓存未命中的次数；
+- HITS ，表示缓存命中的次数；
+- DIRTIES， 表示新增到缓存中的脏页数；
+- BUFFERS_MB 表示 Buffers 的大小，以 MB 为单位；
+- CACHED_MB 表示 Cache 的大小，以 MB 为单位。
+
+**cachetop 使用**
+```bash
+$ cachetop
+11:58:50 Buffers MB: 258 / Cached MB: 347 / Sort: HITS / Order: ascending
+PID      UID      CMD              HITS     MISSES   DIRTIES  READ_HIT%  WRITE_HIT%
+   13029 root     python                  1        0        0     100.0%       0.0%
+```
+它的输出跟 top 类似，默认按照缓存的命中次数（HITS）排序，展示了每个进程的缓存命中情况。具体到每一个指标，这里的 `HITS`、`MISSES` 和 `DIRTIES` ，跟 cachestat 里的含义一样，分别代表间隔时间内的缓存命中次数、未命中次数以及新增到缓存中的脏页数。而 `READ_HIT` 和 `WRITE_HIT` ，分别表示读和写的缓存命中率
+
+**指定文件的缓存大小**
+
+除了缓存的命中率外，还有一个指标那就是指定文件在内存中的缓存大小。可以使用 pcstat 这个工具，来查看文件在内存中的缓存大小以及缓存比例。
+
+pcstat 是一个基于 Go 语言开发的工具
+```bash
+$ export GOPATH=~/go
+$ export PATH=~/go/bin:$PATH
+$ go get golang.org/x/sys/unix
+$ go get github.com/tobert/pcstat/pcstat
+```
+pcstat 运行的示例，它展示了 `/bin/ls` 这个文件的缓存情况
+```bash
+$ pcstat /bin/ls
++---------+----------------+------------+-----------+---------+
+| Name    | Size (bytes)   | Pages      | Cached    | Percent |
+|---------+----------------+------------+-----------+---------|
+| /bin/ls | 133792         | 33         | 0         | 000.000 |
++---------+----------------+------------+-----------+---------+
+```
+这个输出中，Cached 就是 `/bin/ls` 在缓存中的大小，而 Percent 则是缓存的百分比。你看到它们都是 0，这说明 /bin/ls 并不在缓存中
+
+**总结：**
+
+Buffers 和 Cache 都是操作系统来管理的，应用程序并不能直接控制这些缓存的内容和生命周期。所以，在应用程序开发中，一般要用专门的缓存组件，来进一步提升性能；
+
+另外做I/O操作的时，避免使用 直接 I/O，尽可能让应用程序缓存
+
 # 7、CPU上下文
 
 每个任务运行前，CPU 都需要知道任务从哪里加载、又从哪里开始运行，也就是说，需要系统事先帮它设置好 **CPU 寄存器和程序计数器（Program Counter，PC）**
