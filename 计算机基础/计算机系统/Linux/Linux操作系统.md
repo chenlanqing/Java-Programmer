@@ -609,25 +609,48 @@ Linux 使用伙伴系统来管理内存分配。伙伴系统也一样，以页�
 
 **内存回收**
 
-系统不会任由某个进程用完所有内存。在发现内存紧张时，系统就会通过一系列机制来回收内存，比如下面这三种方式：
-（1）回收缓存，比如使用 LRU（Least Recently Used）算法，回收最近使用最少的内存页面；
+系统不会任由某个进程用完所有内存。在发现内存紧张时，系统就会通过一系列机制来回收内存，比如下面这三种方式：<br/>
+*（1）回收缓存，比如使用 LRU（Least Recently Used）算法，回收最近使用最少的内存页面；*
 
-（2）回收不常访问的内存，把不常用的内存通过交换分区直接写到磁盘中；这方式回收内存会用到交换分区（以下简称 Swap）。
+*（2）回收不常访问的内存，把不常用的内存通过交换分区直接写到磁盘中；这方式回收内存会用到交换分区（以下简称 Swap）。*
 
 Swap 其实就是把一块磁盘空间当成内存来用。它可以把进程暂时不用的数据存储到磁盘中（这个过程称为换出），当进程访问这些内存时，再从磁盘读取这些数据到内存中（这个过程称为换入）。
 
 所以，Swap 把系统的可用内存变大了。不过要注意，通常只在内存不足时，才会发生 Swap 交换。并且由于磁盘读写的速度远比内存慢，Swap 会导致严重的内存性能问题。
 
-（3）杀死进程，内存紧张时系统还会通过 OOM（Out of Memory），直接杀掉占用大量内存的进程。OOM（Out of Memory），其实是内核的一种保护机制。它监控进程的内存使用情况，并且使用 oom_score 为每个进程的内存使用情况进行评分：
+*（3）杀死进程，内存紧张时系统还会通过 OOM（Out of Memory），直接杀掉占用大量内存的进程*。OOM（Out of Memory），其实是内核的一种保护机制。它监控进程的内存使用情况，并且使用 oom_score 为每个进程的内存使用情况进行评分：
 - 一个进程消耗的内存越大，oom_score 就越大；
 - 一个进程运行占用的 CPU 越多，oom_score 就越小。<br/>
-进程的 oom_score 越大，代表消耗的内存越多，也就越容易被 OOM 杀死，从而可以更好保护系统。
+进程的 oom_score 越大，代表消耗的内存越多，也就越容易被 OOM 杀死，从而可以更好保护系统。OOM 触发的时机基于虚拟内存。换句话说，进程在申请内存时，如果申请的虚拟内存加上服务器实际已用的内存之和，比总的物理内存还大，就会触发 OOM
 
 为了实际工作的需要，管理员可以通过 `/proc` 文件系统，手动设置进程的 `oom_adj` ，从而调整进程的 `oom_score`。`oom_adj` 的范围是 `[-17, 15]`，数值越大，表示进程越容易被 OOM 杀死；数值越小，表示进程越不容易被 OOM 杀死，其中 `-17` 表示禁止 OOM。
 
 比如用下面的命令，就可以把 sshd 进程的 oom_adj 调小为 -16，这样， sshd 进程就不容易被 OOM 杀死
 ```bash
 echo -16 > /proc/$(pidof sshd)/oom_adj
+```
+缓存回收和 Swap 回收，实际上都是基于 LRU 算法，也就是优先回收不常访问的内存。
+
+LRU 回收算法，实际上维护着 active 和 inactive 两个双向链表，其中：
+- active 记录活跃的内存页；
+- inactive 记录非活跃的内存页。
+
+越接近链表尾部，就表示内存页越不常访问。这样，在回收内存时，系统就可以根据活跃程度，优先回收不活跃的内存。活跃和非活跃的内存页，按照类型的不同，又分别分为文件页和匿名页，对应着缓存回收和 Swap 回收；从 /proc/meminfo 中，查询它们的大小
+```bash
+# grep 表示只保留包含 active 的指标（忽略大小写）
+# sort 表示按照字母顺序排序
+$ cat /proc/meminfo | grep -i active | sort
+Active(anon):     167976 kB
+Active(file):     971488 kB
+Active:          1139464 kB
+Inactive(anon):      720 kB
+Inactive(file):  2109536 kB
+Inactive:        2110256 kB
+```
+OOM 发生时，你可以在 dmesg 中看到 Out of memory 的信息，从而知道是哪些进程被 OOM 杀死了:
+```bash
+$ dmesg | grep -i "Out of memory"
+Out of memory: Kill process 9329 (java) score 321 or sacrifice child
 ```
 
 ## 4、查看内存使用情况
@@ -786,7 +809,7 @@ Buffers 和 Cache 都是操作系统来管理的，应用程序并不能直接�
 
 另外做I/O操作的时，避免使用 直接 I/O，尽可能让应用程序缓存
 
-## 6、内存问题排查
+## 6、内存泄露
 
 对应用程序来说，动态内存的分配和回收，是既核心又复杂的一个逻辑功能模块。管理内存的过程中，也很容易发生各种各样的“事故”，比如，
 - 没正确回收分配后的内存，导致了泄漏。
@@ -1009,6 +1032,21 @@ swapoff -a
 从性能工具出发，整理了这些常见工具能提供的内存指标
 
 ![](image/内存-根据工具找指标.png)
+
+## 10、如何统计所有进程的物理内存使用量
+
+可以在上面找到答案：[stackexchange](https://unix.stackexchange.com/questions/33381/getting-information-about-a-process-memory-usage-from-proc-pid-smaps)
+
+直接查 [proc 文件系统](https://www.kernel.org/doc/Documentation/filesystems/proc.txt)的文档：
+```bash
+The “proportional set size” (PSS) of a process is the count of pages it has in memory, where each page is divided by the number of processes sharing it. So if a process has 1000 pages all to itself, and 1000 shared with one other process, its PSS will be 1500.
+```
+每个进程的 PSS ，是指把共享内存平分到各个进程后，再加上进程本身的非共享内存大小的和，比如：一个进程的非共享内存为 1000 页，它和另一个进程的共享进程也是 1000 页，那么它的 PSS=1000/2+1000=1500 页；这样，就可以直接累加 PSS ，不用担心共享内存重复计算的问题了
+```bash
+# 使用 grep 查找 Pss 指标后，再用 awk 计算累加值
+$ grep Pss /proc/[1-9]*/smaps | awk '{total+=$2}; END {printf "%d kB\n", total }'
+391266 kB
+```
 
 # 三、I/O
 
