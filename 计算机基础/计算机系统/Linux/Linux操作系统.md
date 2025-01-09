@@ -512,9 +512,9 @@ Swap 直白来说，就是把一块磁盘空间或者一个本地文件，当成
 - 还有一个专门的内核线程用来定期回收内存，也就是**kswapd0**
 
 为了衡量内存的使用情况，kswapd0 定义了三个内存阈值（watermark，也称为水位），分别是：
-- 页最小阈值（pages_min）；
-- 页低阈值（pages_low）；
-- 页高阈值（pages_high）
+- 页最小阈值（pages_min），通过设置： `/proc/sys/vm/min_free_kbytes`
+- 页低阈值（pages_low），计算： pages_low = pages_min * 5 /4
+- 页高阈值（pages_high），计算： pages_high = pages_min * 3 / 2
 - 剩余内存，则使用 pages_free 表示。
 
 ![](image/内存-kswapd0阈值关系.png)
@@ -525,11 +525,7 @@ kswapd0 定期扫描内存的使用情况，并根据剩余内存落在这三个
 - 剩余内存落在**页低阈值** 和 **页高阈值**中间，说明内存有一定压力，但还可以满足新内存请求；
 - 剩余内存大于**页高阈值**，说明剩余内存比较多，没有内存压力；
 
-一旦剩余内存小于页低阈值，就会触发内存的回收。这个页低阈值，其实可以通过内核选项 `/proc/sys/vm/min_free_kbytes` 来间接设置。min_free_kbytes 设置了页最小阈值，而其他两个阈值，都是根据页最小阈值计算生成的，计算方法如下 ：
-```bash
-pages_low = pages_min*5/4
-pages_high = pages_min*3/2
-```
+一旦剩余内存小于页低阈值，就会触发内存的回收。这个页低阈值，其实可以通过内核选项 `/proc/sys/vm/min_free_kbytes` 来间接设置。min_free_kbytes 设置了页最小阈值，而其他两个阈值，都是根据页最小阈值计算生成的
 
 #### 6.7.2、NUMA 与 Swap
 
@@ -584,6 +580,74 @@ Node 0, zone   Normal
 swappiness 的范围是 0-100，数值越大，越积极使用 Swap，也就是更倾向于回收匿名页；数值越小，越消极使用 Swap，也就是更倾向于回收文件页；
 
 虽然 swappiness 的范围是 0-100，不过要注意，这并不是内存的百分比，而是调整 Swap 积极程度的权重，即使把它设置成 0，当 剩余内存 + 文件页 小于`页高阈值`时，还是会发生 Swap。
+
+#### 6.7.4、Swap案例
+
+通过 free 查看Swap使用情况：
+```bash
+$ free
+             total        used        free      shared  buff/cache   available
+Mem:        8169348      331668     6715972         696     1121708     7522896
+Swap:             0           0           0
+```
+从这个 free 输出你可以看到，Swap 的大小是 0，这说明机器没有配置 Swap;
+
+要开启 Swap，首先要清楚，Linux 本身支持两种类型的 Swap，即 Swap 分区和 Swap 文件。以 Swap 文件为例，配置 Swap 文件的大小为 8GB：
+```bash
+# 创建 Swap 文件
+$ fallocate -l 8G /mnt/swapfile
+# 修改权限只有根用户可以访问
+$ chmod 600 /mnt/swapfile
+# 配置 Swap 文件
+$ mkswap /mnt/swapfile
+# 开启 Swap
+$ swapon /mnt/swapfile
+$ free  # 确认 Swap 配置成功
+             total        used        free      shared  buff/cache   available
+Mem:        8169348      331668     6715972         696     1121708     7522896
+Swap:       8388604           0     8388604
+```
+现在模拟下大文件的读取：
+```bash
+# 写入空设备，实际上只有磁盘的读请求
+$ dd if=/dev/sda1 of=/dev/null bs=1G count=2048
+```
+运行 sar 命令，查看内存各个指标的变化情况
+```bash
+# 间隔 1 秒输出一组数据
+# -r 表示显示内存使用情况，-S 表示显示 Swap 使用情况
+$ sar -r -S 1
+04:39:56    kbmemfree   kbavail kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit  kbactive   kbinact   kbdirty
+04:39:57      6249676   6839824   1919632     23.50    740512     67316   1691736     10.22    815156    841868         4
+ 
+04:39:56    kbswpfree kbswpused  %swpused  kbswpcad   %swpcad
+04:39:57      8388604         0      0.00         0      0.00
+ 
+04:39:57    kbmemfree   kbavail kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit  kbactive   kbinact   kbdirty
+04:39:58      6184472   6807064   1984836     24.30    772768     67380   1691736     10.22    847932    874224        20
+ 
+04:39:57    kbswpfree kbswpused  %swpused  kbswpcad   %swpcad
+04:39:58      8388604         0      0.00         0      0.00
+…
+04:44:06    kbmemfree   kbavail kbmemused  %memused kbbuffers  kbcached  kbcommit   %commit  kbactive   kbinact   kbdirty
+04:44:07       152780   6525716   8016528     98.13   6530440     51316   1691736     10.22    867124   6869332         0
+ 
+04:44:06    kbswpfree kbswpused  %swpused  kbswpcad   %swpcad
+04:44:07      8384508      4096      0.05        52      1.27
+```
+sar 的输出结果是两个表格，第一个表格表示内存的使用情况，第二个表格表示 Swap 的使用情况。其中，各个指标名称前面的 kb 前缀，表示这些指标的单位是 KB
+- kbcommit，表示当前系统负载需要的内存。它实际上是为了保证系统内存不溢出，对需要内存的估计值。%commit，就是这个值相对总内存的百分比。
+- kbactive，表示活跃内存，也就是最近使用过的内存，一般不会被系统回收。
+- kbinact，表示非活跃内存，也就是不常访问的内存，有可能会被系统回收。
+
+**关闭Swap**
+```bash
+swapoff -a
+```
+**Swap对性能的影响：** 降低 Swap 的使用，可以提高系统的整体性能
+- 禁止 Swap，现在服务器的内存足够大，所以除非有必要，禁用 Swap 就可以了。随着云计算的普及，大部分云平台中的虚拟机都默认禁止 Swap。
+- 如果实在需要用到 Swap，可以尝试降低 swappiness 的值，减少内存回收时 Swap 的使用倾向。
+- 响应延迟敏感的应用，如果它们可能在开启 Swap 的服务器中运行，你还可以用库函数 mlock() 或者 mlockall() 锁定内存，阻止它们的内存换出。
 
 # 7、CPU上下文
 
