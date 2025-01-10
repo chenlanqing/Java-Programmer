@@ -3062,6 +3062,7 @@ SubstrateVM：AOT编译框架
 * [JVM 书单](https://github.com/deephacks/awesome-jvm)
 * [The Java® Virtual Machine Specification（Java SE 11 Edition）](https://docs.oracle.com/javase/specs/jvms/se11/html/index.html)
 * [《Java 虚拟机规范（第11版）》中文翻译及示例](https://github.com/waylau/java-virtual-machine-specification)
+* [JVM核心知识体系](https://mp.weixin.qq.com/s/DSqk4enXer1-RzGvNr6_GQ)
 * [JVM解剖公园](https://shipilev.net/jvm/anatomy-quarks/)
 * [OpenJDK 项目 Code Tools：实用小工具集](https://openjdk.org/projects/code-tools/)
 * [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
