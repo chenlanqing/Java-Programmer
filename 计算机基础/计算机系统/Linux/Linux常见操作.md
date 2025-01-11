@@ -328,6 +328,7 @@ ps aux | sort -nk 3  # 按 CPU 资源的使用量对进程进行排序
 ps -A # 显示所有进程信息
 ps -u root # 显示指定用户信息
 ps -efL # 查看线程数
+ps -efT | grep 514  # 查看线程 id = 514的
 ps -e -o "%C : %p :%z : %a"|sort -k5 -nr # 查看进程并按内存使用大小排列
 ps -ef # 显示所有进程信息，连同命令行
 ps -ef | grep ssh # ps 与grep 常用组合用法，查找特定进程
@@ -594,6 +595,11 @@ threshold 的默认值为 0.5%，也就是说，事件比例超过 0.5% 时，�
 ```bash
 $ perf report -g graph,0.3
 ```
+
+## 8、strace
+
+默认选项是不开启线程的：
+写文件是由子线程执行的，所以直接strace跟踪进程没有看到write系统调用，可以通过pstree查看进程的线程信息，再用strace跟踪。或者，通过`strace -fp pid` 跟踪所有线程。
 
 # 三、各种命令
 
