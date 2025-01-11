@@ -1074,10 +1074,8 @@ java -Djava.system.class.loader=your_class_loader HelloWorld
 - 双亲委派模型要求除了顶层的启动类加载器（Bootstrap ClassLoader）外，其余的类加载器都应该有自己的父类加载器，这里的类加载器之间的父子关系不是以继承的关系来实现的，而是都使用`组合关系`来复用父加载器的代码；启动类加载器(Bootstrap ClassLoader)本身没有父类加载器，但可以用作其它 ClassLoader 实例的的父类加载器；
 
 - 当一个 ClassLoader 实例需要加载某个类时，它会试图亲自搜索某个类之前，先把这个任务委托给它的父类加载器；
-
 - 这个过程是由上至下依次检查的：
-	如果一个类加载器收到了类加载的请求，首先并不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，
-	因此所有的加载请求最终都应该传送到顶层的启动类加载器中，只有当父类加载器反馈自己无法完成这个加载请求时，子类才会尝试自己去加载：
+	如果一个类加载器收到了类加载的请求，首先并不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，因此所有的加载请求最终都应该传送到顶层的`启动类加载器`中，只有当父类加载器反馈自己无法完成这个加载请求时，子类才会尝试自己去加载：
 	- ①、首先由最顶层的类加载器 Bootstrap ClassLoader 试图加载，如果没加载到，则把任务转交给 Extension ClassLoader 试图加载;
 	- ②、如果也没加载到，则转交给 App ClassLoader 进行加载，如果它也没有加载得到的话，则返回给委托的发起者;
 	- ③、由它到指定的文件系统或网络等URL中加载该类.如果它们都没有加载到这个类时，则抛出 ClassNotFoundException 异常.否则将这个找到的类生成一个类的定义，并将它加载到内存当中，最后返回这个类在内存中的 Class 实例对象
@@ -1118,10 +1116,11 @@ private ProtectionDomain preDefineClass(String name, ProtectionDomain pd){
 		return pd;
 }
 ```
+即使相同的类路径和类，但是由于是由自定义类加载器加载的，即使编译通过能被加载到内存，也无法使用，因为JVM核心类是由内置类加载器加载标志和使用的，从而保证了JVM的安全加载
 
 ### 6.3.4、如何替换jdk的类
 
-以HashMap为例，当 Java 的原生 API 不能满足需求时，比如我们要修改 HashMap 类，就必须要使用到 Java 的 endorsed 技术。我们需要将自己的 HashMap 类，打包成一个 jar 包，然后放到 -Djava.endorsed.dirs 指定的目录中。注意类名和包名，应该和 JDK 自带的是一样的。但是，java.lang 包下面的类除外，因为这些都是特殊保护的；
+以HashMap为例，当 Java 的原生 API 不能满足需求时，比如我们要修改 HashMap 类，就必须要使用到 Java 的 endorsed 技术。我们需要将自己的 HashMap 类，打包成一个 jar 包，然后放到 `-Djava.endorsed.dirs` 指定的目录中。注意类名和包名，应该和 JDK 自带的是一样的。但是，java.lang 包下面的类除外，因为这些都是特殊保护的；
 
 endorse的技术特点：
 - 能够覆盖的类是有限制的，其中不包括`java.lang`包中的类,比如`java.lang.String`这种 就不行；
@@ -1375,9 +1374,15 @@ public class NetworkClassLoader extends ClassLoader {
 
 ---
 
+那究竟什么时候JVM才会触发类加载器去加载外部的CLASS文件呢？通常有如下四种情况会触发到：
+- 显式字节码指令集(new/getstatic/putstatic/invokestatic):对应的场景就是创建对象或者调用到类文件的静态变量/静态方法/静态代码块
+- 反射：通过对象反射获取类对象时
+- 继承：创建子类触发父类加载
+- 入口：包含main方法的类首先被加载
+
 ### 6.8.2、Java 类的链接
 
-将 Java 类的二进制代码合并到 JVM 的运行状态之中的过程。在链接之前，这个类必须被成功加载，分为三部分：verification检测、preparation准备、resolution解析
+将 Java 类的二进制代码合并到 JVM 的运行状态之中的过程。在链接之前，这个类必须被成功加载，分为三部分：`verification验证`、`preparation准备`、`resolution解析`
 
 #### 6.8.2.1、验证：确保被加载的类的正确性
 
@@ -1497,6 +1502,11 @@ Java虚拟机将结束生命周期的几种情况
 - 程序正常执行结束；
 - 程序在执行过程中遇到了异常或错误而异常终止；
 - 由于操作系统出现错误而导致Java虚拟机进程终止；
+
+总体上有三个条件会触发垃圾回收期清理方法区的空间：
+- 类对应实例被回收
+- 类对应加载器被回收
+- 类无反射引用
 
 ## 6.9、Java 类的初始化
 
@@ -1631,6 +1641,7 @@ public class StaticTest{
 [Tomcat源码](https://github.com/chenlanqing/learningNote/blob/master/Java/Java源码解读/tomcat/Tomcat源码.md)
 
 ## 6.12、OSGI类加载
+
 http://www.javafxchina.net/blog/2016/12/osgi-08/
 https://blog.csdn.net/vking_wang/article/details/12875619
 http://osgi.com.cn/article/7289378
@@ -1691,9 +1702,25 @@ http://osgi.com.cn/article/7289378
 	Class.forName('全路径')
 	```
 
-## 6.17、热加载
+## 6.17、热部署
 
-通过classloader我们可以完成对变更内容的加载；常用的热加载方案有好几个，比如spring官方推荐的热加载方案：spring boot devtools
+热部署是应用容器自动更新应用的一种能力，热部署和热替换是两个完全不同概念
+
+热部署要达到的目的就是在服务没有重启的情况下更新应用，也就是把新的代码编译后产生的新类文件替换掉内存里的旧类文件
+
+要做的就是如何使用新的类，同时卸载旧的类及其对象，完成这两步其实也就是热部署的过程了。也即是通过使用新的类加载器，重新加载应用的类，从而达到新代码热部署；
+
+实现：
+- 实现自定义类加载器：将相同的类(包名+类名)，不同”版本“(类加载器不一样)的类同时加载进JVM内存方法区
+- 替换自定义类加载器
+- 回收自定义类加载器：通常情况下类加载器会持有该加载器加载过的所有类的引用，所有如果类是经过系统默认类加载器加载的话，那就很难被垃圾收集器回收，除非符合根节点不可达原则才会被回收
+- 隔离自定义类加载器
+
+实现热部署的通用解决方案：
+- OSGi
+- Groovy
+- Clojure
+
 
 # 7、字节码指令与执行引擎
 
