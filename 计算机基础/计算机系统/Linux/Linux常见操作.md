@@ -596,7 +596,10 @@ threshold 的默认值为 0.5%，也就是说，事件比例超过 0.5% 时，�
 $ perf report -g graph,0.3
 ```
 
-## 8、strace
+## 8、[strace](https://strace.io/)
+
+- [man strace](https://man7.org/linux/man-pages/man1/strace.1.html)
+- [strace examples](https://www.geeksforgeeks.org/strace-command-in-linux-with-examples/)
 
 默认选项是不开启线程的：
 写文件是由子线程执行的，所以直接strace跟踪进程没有看到write系统调用，可以通过pstree查看进程的线程信息，再用strace跟踪。或者，通过`strace -fp pid` 跟踪所有线程。
