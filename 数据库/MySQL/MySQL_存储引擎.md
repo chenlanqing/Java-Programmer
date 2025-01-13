@@ -16,6 +16,8 @@ repair table tableName 修复表
 	* 只读类应用，读操作远远大于写操作的场景；
 	* 空间类应用(空间函数：GPS数据等)
 
+MySQL 的 MyISAM 引擎，主要依赖系统缓存加速磁盘 I/O 的访问。可如果系统中还有其他应用同时运行， MyISAM 引擎很难充分利用系统缓存。缓存可能会被其他应用程序占用，甚至被清理掉；如果要使用 MyISAM 引擎，不要把应用程序的性能优化完全建立在系统缓存上。最好能在应用程序的内部分配内存，构建完全自主控制的缓存；或者使用第三方的缓存应用
+
 ### 1.2、InnoDB存储引擎
 
 [The InnoDB Storage Engine](https://dev.mysql.com/doc/refman/8.0/en/innodb-storage-engine.html)
