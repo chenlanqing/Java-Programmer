@@ -20,6 +20,8 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [Deep learning AI](https://learn.deeplearning.ai/)
 
 Google Gemini
+- [笔记类AI应用-NotebookLM](https://notebooklm.google/)
+- [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 
 # GPT
 
