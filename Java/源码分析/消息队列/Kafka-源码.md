@@ -18,5 +18,6 @@
 # 四、Controller模块
 
 
+# 参考资料
 
-https://mp.weixin.qq.com/s/UdzdvSymNeu_99JUTHMOuQ
+- [如何阅读Kafka源码](https://mp.weixin.qq.com/s/UdzdvSymNeu_99JUTHMOuQ)
