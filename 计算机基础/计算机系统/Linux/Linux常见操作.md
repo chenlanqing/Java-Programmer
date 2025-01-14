@@ -604,6 +604,8 @@ $ perf report -g graph,0.3
 默认选项是不开启线程的：
 写文件是由子线程执行的，所以直接strace跟踪进程没有看到write系统调用，可以通过pstree查看进程的线程信息，再用strace跟踪。或者，通过`strace -fp pid` 跟踪所有线程。
 
+## 9、sar命令
+
 # 三、各种命令
 
 ## 1、查看Linux发行版本
