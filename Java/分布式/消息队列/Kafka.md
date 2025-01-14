@@ -2929,11 +2929,7 @@ Controller 这个角色主要是一个总控节点来负责整个集群的管理
 
 # 参考资料
 
-* [Kafka详解](https://mp.weixin.qq.com/s/d9KIz0xvp5I9rqnDAlZvXw)
-* [Kafka面试题](https://juejin.im/post/6844903837614997518)
-* [Kafka进阶面试题](https://mp.weixin.qq.com/s/CFzd7rwMFWtqc8xzCQ8vVw)
-* [Kafka进阶面试题2](https://mp.weixin.qq.com/s/2QA_UIE_ciTJDQ4kbUkl-A)
-* [Kafka与RocketMQ](https://mp.weixin.qq.com/s/WwHnyrOnw_io7G3uviim3Q)
+* [Kafka深入理解核心原理](https://juejin.cn/book/6844733792683458573?enter_from=course_center&utm_source=course_center)
 * [Kafka高性能原因](https://mp.weixin.qq.com/s/XhJl90DnprNsI8KxFfdyVw)
 * [Kafka架构调优最常见的5个问题](https://heapdump.cn/article/3802138)
 * [Kafka: a Distributed Messaging System for Log Processing](https://notes.stephenholiday.com/Kafka.pdf)
