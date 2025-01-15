@@ -1849,15 +1849,142 @@ C1000K 的解决方法，本质上还是构建在 epoll 的非阻塞 I/O 模型�
 
 要解决这个问题，最重要就是**跳过内核协议栈的冗长路径，把网络包直接送到要处理的应用程序那里去**。这里有两种常见的机制，DPDK 和 XDP
 
-**第一种机制，DPDK，是用户态网络的标准**。它跳过内核协议栈，直接由用户态进程通过轮询的方式，来处理网络接收；在这里轮询的优势：
+**第一种机制，[DPDK](https://en.wikipedia.org/wiki/Data_Plane_Development_Kit)，是用户态网络的标准**。它跳过内核协议栈，直接由用户态进程通过轮询的方式，来处理网络接收；在这里轮询的优势：
 - 在 PPS 非常高的场景中，查询时间比实际工作时间少了很多，绝大部分时间都在处理网络包；
 - 而跳过内核协议栈后，就省去了繁杂的硬中断、软中断再到 Linux 网络协议栈逐层处理的过程，应用程序可以针对应用的实际场景，有针对性地优化网络包的处理逻辑，而不需要关注所有的细节
 
-此外，DPDK 还通过大页、CPU 绑定、内存对齐、流水线并发等多种机制，优化网络包的处理效率
+此外，DPDK 还通过大页、CPU 绑定、内存对齐、流水线并发等多种机制，优化网络包的处理效率；
 
-**第二种机制，XDP（eXpress Data Path），则是 Linux 内核提供的一种高性能网络数据路径**，它允许网络包，在进入内核协议栈之前，就进行处理，也可以带来更高的性能。XDP 底层跟 bcc-tools 一样，都是基于 Linux 内核的 eBPF 机制实现的
+DPDK 最主流的高性能网络方案，不过，这需要能支持 DPDK 的网卡配合使用。
+
+**第二种机制，[XDP（eXpress Data Path）](https://en.wikipedia.org/wiki/Express_Data_Path)，则是 Linux 内核提供的一种高性能网络数据路径**，它允许网络包，在进入内核协议栈之前，就进行处理，也可以带来更高的性能。XDP 底层跟 bcc-tools 一样，都是基于 Linux 内核的 eBPF 机制实现的
 
 XDP 对内核的要求比较高，需要的是 Linux 4.8 以上版本，并且它也不提供缓存队列。基于 XDP 的应用程序通常是专用的网络应用，常见的有 IDS（入侵检测系统）、DDoS 防御、 cilium 容器网络插件等
+
+## 11、网络基准测试
+
+首先需要确认应用程序基于协议栈的哪一层呢？比如：
+- 基于 HTTP 或者 HTTPS 的 Web 应用程序，显然属于应用层，需要我们测试 HTTP/HTTPS 的性能；
+- 而对大多数游戏服务器来说，为了支持更大的同时在线人数，通常会基于 TCP 或 UDP ，与客户端进行交互，这时就需要我们测试 TCP/UDP 的性能；
+- 当然，还有一些场景，是把 Linux 作为一个软交换机或者路由器来用的。这种情况下，更关注网络包的处理能力（即 PPS），重点关注网络层的转发性能；
+
+低层协议是其上的各层网络协议的基础。自然，低层协议的性能，也就决定了高层的网络性能
+
+### 11.1、转发性能
+
+网络接口层和网络层，它们主要负责网络包的封装、寻址、路由以及发送和接收。在这两个网络协议层中，每秒可处理的网络包数 PPS，就是最重要的性能指标；
+
+[hping3](https://www.kali.org/tools/hping3/)可以一个测试网络包处理能力的性能工具，另外 Linux 内核自带的高性能网络测试工具 [pktgen](https://wiki.linuxfoundation.org/networking/pktgen)。pktgen 支持丰富的自定义选项，方便你根据实际需要构造所需网络包，从而更准确地测试出目标服务器的性能。
+
+在 Linux 系统中，并不能直接找到 pktgen 命令。因为 pktgen 作为一个内核线程来运行，需要加载 pktgen 内核模块后，再通过 /proc 文件系统来交互。下面就是 pktgen 启动的两个内核线程和 /proc 文件系统的交互文件：
+```bash
+$ modprobe pktgen
+$ ps -ef | grep pktgen | grep -v grep
+root     26384     2  0 06:17 ?        00:00:00 [kpktgend_0]
+root     26385     2  0 06:17 ?        00:00:00 [kpktgend_1]
+$ ls /proc/net/pktgen/
+kpktgend_0  kpktgend_1  pgctrl
+```
+> 如果 modprobe 命令执行失败，说明内核没有配置 CONFIG_NET_PKTGEN 选项。需要配置 pktgen 内核模块（即 CONFIG_NET_PKTGEN=m）后，重新编译内核，才可以使用。
+
+pktgen 在每个 CPU 上启动一个内核线程，并可以通过 `/proc/net/pktgen` 下面的同名文件，跟这些线程交互；而 pgctrl 则主要用来控制这次测试的开启和停止
+
+在使用 pktgen 测试网络性能时，需要先给每个内核线程 kpktgend_X 以及测试网卡，配置 pktgen 选项，然后再通过 pgctrl 启动测试，发包测试结果：
+```bash
+$ cat /proc/net/pktgen/eth0
+Params: count 1000000  min_pkt_size: 64  max_pkt_size: 64
+     frags: 0  delay: 0  clone_skb: 0  ifname: eth0
+     flows: 0 flowlen: 0
+...
+Current:
+     pkts-sofar: 1000000  errors: 0
+     started: 1534853256071us  stopped: 1534861576098us idle: 70673us
+...
+Result: OK: 8320027(c8249354+d70673) usec, 1000000 (64byte,0frags)
+  120191pps 61Mb/sec (61537792bps) errors: 0
+```
+- 第一部分的 Params 是测试选项；
+- 第二部分的 Current 是测试进度，其中， packts so far（pkts-sofar）表示已经发送了 100 万个包，也就表明测试已完成。
+- 第三部分的 Result 是测试结果，包含测试所用时间、网络包数量和分片、PPS、吞吐量以及错误数。
+
+可以计算一下千兆交换机的 PPS。交换机可以达到线速（满负载时，无差错转发），它的 PPS 就是 1000Mbit 除以以太网帧的大小，即 1000Mbps/((64+20)*8bit) = 1.5 Mpps（其中，20B 为以太网帧前导和帧间距的大小）
+
+### 11.2、TCP/UDP 性能
+
+iperf 和 netperf 都是最常用的网络性能测试工具，测试 TCP 和 UDP 的吞吐量。它们都以客户端和服务器通信的方式，测试一段时间内的平均吞吐量
+
+目前，iperf 的最新版本为 iperf3，可以运行命令来安装：`yum install -y iperf3`，在目标机器上启动 iperf 服务端：
+```bash
+# -s 表示启动服务端，-i 表示汇报间隔，-p 表示监听端口
+$ iperf3 -s -i 1 -p 10000
+```
+接着，在另一台机器上运行 iperf 客户端，运行测试：
+```bash
+# -c 表示启动客户端，192.168.0.30 为目标服务器的 IP
+# -b 表示目标带宽 (单位是 bits/s)
+# -t 表示测试时间
+# -P 表示并发数，-p 表示目标服务器监听端口
+$ iperf3 -c 192.168.0.30 -b 1G -t 15 -P 2 -p 10000
+```
+测试结束，回到目标服务器，查看 iperf 的报告：
+```bash
+[ ID] Interval           Transfer     Bandwidth
+...
+[SUM]   0.00-15.04  sec  0.00 Bytes  0.00 bits/sec                  sender
+[SUM]   0.00-15.04  sec  1.51 GBytes   860 Mbits/sec                  receiver
+```
+最后的 SUM 行就是测试的汇总结果，包括测试时间、数据传输量以及带宽等。按照发送和接收，这一部分又分为了 sender 和 receiver 两行
+
+### 11.3、HTTP 性能
+
+要测试 HTTP 的性能，也有大量的工具可以使用，比如 ab、webbench 等，都是常用的 HTTP 压力测试工具。其中，ab 是 Apache 自带的 HTTP 压测工具，主要测试 HTTP 服务的每秒请求数、请求延迟、吞吐量以及请求延迟的分布情况等
+```bash
+# 安装
+yum install -y httpd-tools
+```
+比如运行Nginx，然后压测：
+```bash
+# -c 表示并发请求数为 1000，-n 表示总的请求数为 10000
+$ ab -c 1000 -n 10000 http://192.168.0.30/
+...
+Server Software:        nginx/1.15.8
+Server Hostname:        192.168.0.30
+Server Port:            80
+...
+Requests per second:    1078.54 [#/sec] (mean)
+Time per request:       927.183 [ms] (mean)
+Time per request:       0.927 [ms] (mean, across all concurrent requests)
+Transfer rate:          890.00 [Kbytes/sec] received
+ 
+Connection Times (ms)
+              min  mean[+/-sd] median   max
+Connect:        0   27 152.1      1    1038
+Processing:     9  207 843.0     22    9242
+Waiting:        8  207 843.0     22    9242
+Total:         15  233 857.7     23    9268
+ 
+Percentage of the requests served within a certain time (ms)
+  50%     23
+  66%     24
+  75%     24
+  80%     26
+  90%    274
+  95%   1195
+  98%   2335
+  99%   4663
+ 100%   9268 (longest request)
+```
+ab 的测试结果分为三个部分，分别是请求汇总、连接时间汇总还有请求延迟汇总
+- 在请求汇总部分:
+    - Requests per second 为 1074；
+    - 每个请求的延迟（Time per request）分为两行，第一行的 927 ms 表示平均延迟，包括了线程运行的调度时间和网络请求响应时间，而下一行的 0.927ms ，则表示实际请求的响应时间；
+    - Transfer rate 表示吞吐量（BPS）为 890 KB/s
+- 连接时间汇总部分，则是分别展示了建立连接、请求、等待以及汇总等的各类时间，包括最小、最大、平均以及中值处理时间
+- 最后的请求延迟汇总部分，则给出了不同时间段内处理请求的百分比，比如， 90% 的请求，都可以在 274ms 内完成
+
+### 11.4、应用负载性能
+
+为了得到应用程序的实际性能，就要求性能工具本身可以模拟用户的请求负载，而 iperf、ab 这类工具就无能为力了。但是还可以用 wrk、TCPCopy、Jmeter 或者 LoadRunner 等实现这个目标
 
 # 发行版
 
