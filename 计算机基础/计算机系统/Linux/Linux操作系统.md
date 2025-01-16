@@ -1518,6 +1518,10 @@ $ fio --name=replay --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin
 - [千万并发下，如何保障网络性能](https://mp.weixin.qq.com/s/lDhCoLN0mknquJcO15Fd2Q)
 
 同 CPU、内存以及 I/O 一样，网络也是 Linux 系统最核心的功能。网络是一种把不同计算机或网络设备连接到一起的技术，它本质上是一种进程间通信方式，特别是跨系统的进程间通信，必须要通过网络才能进行
+```bash
+# 查看网络参数
+ls /proc/sys/net/ipv4/
+```
 
 ## 1、[网络模型](../../计算机网络/00_网络基础.md#一osi-七层模型)
 

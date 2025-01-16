@@ -636,7 +636,7 @@ explain select * from salaries where from_date = '1986-06-26' order by emp_no;
 
 根据创建联合索引的顺序，以最左原则进行where检索，比如（age，name）以age=1 或 age= 1 and name=‘张三’可以使用索引，单以name=‘张三’ 不会使用索引，考虑到存储空间的问题，还请根据业务需求，将查找频繁的数据进行靠左创建索引；如果name 字段是比 age 字段大的 ，那我就建议你创建一个（name,age) 的联合索引和一个 (age) 的单字段索引
 
-**（4）索引下推（index condition pushdown ）简称ICP**：
+**（4）[索引下推（index condition pushdown ）](https://dev.mysql.com/doc/refman/8.4/en/index-condition-pushdown-optimization.html)简称ICP**：
 
 索引下推在非主键索引上的优化，可以有效减少回表的次数，大大提升了查询的效率；
 
@@ -686,7 +686,7 @@ ICP其实也存在一定的使用限制场景:
 - [优化用数据库](https://github.com/datacharmer/test_db)
 - [MySQL查询优化](https://tech.meituan.com/2014/06/30/mysql-index.html)
 - [一个SQL的分析](https://mp.weixin.qq.com/s/ZVY-oDl8A9Be6ixT1c16Ng)
-- [SQL优化官方文档](https://dev.mysql.com/doc/refman/8.0/en/statement-optimization.html)
+- [SQL优化官方文档](https://dev.mysql.com/doc/refman/8.4/en/optimization.html)
 
 ## 1、数据库优化的目的
 
