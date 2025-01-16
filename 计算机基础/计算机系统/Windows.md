@@ -12,7 +12,7 @@ sysdm.cpl 打开安全属性
 - netstat -ano : 列出所有端口的情况
 - netstat -aon|findstr "49157" :  查看被占用端口对应的PID, 49157 为对应的端口
 - tasklist|findstr "2720"  : 哪个进程或者程序占用了2720端口
-
+- 使用 PowerShell：`Get-NetTCPConnection | Where-Object { $_.LocalPort -eq 8080 }` ，显示本地端口为 8080 的所有 TCP 连接信息
 
 ## 3、批量获取某个目录下的所有文件名称
 

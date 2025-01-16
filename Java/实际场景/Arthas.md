@@ -8,6 +8,14 @@
 
 `watch org.springframework.web.servlet.DispatcherServlet doService '#httpRequest=params[0],#allHeaders={},#forEnumeration = :[#this.hasMoreElements()? (#headerName=#this.nextElement(),#allHeaders.add(#headerName+"="+#httpRequest.getHeader(#headerName)),#forEnumeration(#this)):null],#forEnumeration(#httpRequest.getHeaderNames()),#allHeaders'  -n 5  -x 3`
 
+### 2.3、获取ServerWebExchange类的数据
+
+`watch com.demo.filter.ParamGlobalFilter filter 'params[0].getRequest().getHeaders().entrySet().toString()' 'true'`
+
+### 类替换
+
+https://arthas.aliyun.com/doc/redefine.html
+
 ## 3、Arthas原理
 
 # 参考资料
