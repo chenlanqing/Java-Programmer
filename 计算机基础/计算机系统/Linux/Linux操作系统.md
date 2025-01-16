@@ -109,7 +109,7 @@ CPU不仅采用了扩充的存储器段式管理机制，而且还提供了可�
 
 ## 4、中断
 
-- [中断内核分析](https://arthurchiao.art/blog/linux-irq-softirq-zh/)
+- [Linux 中断（IRQ/softirq）基础：原理及内核实现](https://arthurchiao.art/blog/linux-irq-softirq-zh/)
 
 ### 4.1、概述
 
@@ -1514,7 +1514,6 @@ $ fio --name=replay --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin
 # 四、网络
 
 - [Linux 网络栈接收数据（RX）：原理及内核实现](https://arthurchiao.art/blog/linux-net-stack-implementation-rx-zh/)
-- [Linux 中断（IRQ/softirq）基础：原理及内核实现](https://arthurchiao.art/blog/linux-irq-softirq-zh/)
 - [千万并发下，如何保障网络性能](https://mp.weixin.qq.com/s/lDhCoLN0mknquJcO15Fd2Q)
 
 同 CPU、内存以及 I/O 一样，网络也是 Linux 系统最核心的功能。网络是一种把不同计算机或网络设备连接到一起的技术，它本质上是一种进程间通信方式，特别是跨系统的进程间通信，必须要通过网络才能进行
