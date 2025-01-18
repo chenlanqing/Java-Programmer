@@ -1,5 +1,7 @@
 # 一、CPU
 
+- [线程的调度](https://wizardforcel.gitbooks.io/wangdaokaoyan-os/content/8.html)
+
 ## 1、基础
 
 ## 2、进程与线程
@@ -529,6 +531,8 @@ Average:        0     15006    0.00    0.99    0.00    0.00    0.99     -  docke
 
 # 二、内存
 
+- [What every programmer should know about memory](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf)
+- [内存寻址](https://liam.page/2016/05/01/Introduction-to-Memory-Addressing/)
 - [Memory Barriers: a Hardware View for Software Hackers](https://www.puppetmastertrading.com/images/hwViewForSwHackers.pdf)
 - [A Tutorial Introduction to the ARM and POWER Relaxed Memory Models](https://www.cl.cam.ac.uk/~pes20/ppc-supplemental/test7.pdf)
 - [x86-TSO: A Rigorous and Usable Programmer’s Model for x86 Multiprocessors](https://www.cl.cam.ac.uk/~pes20/weakmemory/cacm.pdf)
@@ -1513,6 +1517,7 @@ $ fio --name=replay --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin
 
 # 四、网络
 
+- [Linux硬件-内核-网络](https://github.com/yanfeizhang/coder-kung-fu)
 - [Linux 网络栈接收数据（RX）：原理及内核实现](https://arthurchiao.art/blog/linux-net-stack-implementation-rx-zh/)
 - [千万并发下，如何保障网络性能](https://mp.weixin.qq.com/s/lDhCoLN0mknquJcO15Fd2Q)
 
@@ -2006,8 +2011,6 @@ Linux 是一个开源的操作系统，有许多不同的发行版。以下是�
 
 ## 参考资料
 
-* [内存寻址](https://liam.page/2016/05/01/Introduction-to-Memory-Addressing/)
-* [线程的调度](https://wizardforcel.gitbooks.io/wangdaokaoyan-os/content/8.html)
 * [Linux内核碎片](https://pingcap.com/zh/blog/linux-kernel-vs-memory-fragmentation-2)
 * [Linux 0.11-内核源码分析](https://github.com/dibingfa/flash-linux0.11-talk)
 * [Linux启动流程](https://mp.weixin.qq.com/s/s1YpeLc9K-tX59REh9Wz0A)
@@ -2015,7 +2018,5 @@ Linux 是一个开源的操作系统，有许多不同的发行版。以下是�
 * [Grub2 配置](https://opensource.com/article/17/3/introduction-grub2-configuration-linux)
 * [一个64位操作系统的实现](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
 * [操作系统-3个部分](https://pages.cs.wisc.edu/~remzi/OSTEP/)
-* [Linux硬件-内核-网络](https://github.com/yanfeizhang/coder-kung-fu)
 * [Red Hat Enterprise Linux 文档](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux/9)
-* [What every programmer should know about memory](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf)
 
