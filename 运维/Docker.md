@@ -223,11 +223,62 @@ OPTIONS说明：
 * `-f` 跟随最新的日志打印
 * `--tail` 数字 显示最后多少条
 
-#### 3.3.7、查看容器内运行的进程
+#### 3.3.7、查看容器
 
-查看容器内运行的进程：`docker top 容器ID`
+```bash
+docker inspect <容器或镜像名称>
+# 输出容器详细元数据
+```
+[`docker inspect`](https://docs.docker.com/reference/cli/docker/inspect/) 命令用于查看 Docker 容器、镜像、网络等的详细元数据，通常返回的是 JSON 格式的输出。如果只想获取某些特定的信息，可以结合 `-f`（`--format`）选项，使用 Go 模板语法来提取你需要的字段。
+```bash
+docker inspect -f '{{.字段路径}}' <容器或镜像名称>
+```
+`-f` 后面的模板语法让可以从 `docker inspect` 返回的 JSON 数据中提取指定的信息。通过 Go 模板，可以深入到 JSON 对象的各个嵌套字段。
 
-查看容器挂载信息：`docker inspect 容器ID`
+**获取容器的 IP 地址**：可以使用如下命令：
+```bash
+docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' <容器名称或ID>
+```
+
+**获取容器的状态（Running/Exited）**：如果需要获取容器的状态（是正在运行还是已停止），可以使用：
+```bash
+docker inspect -f '{{.State.Status}}' <容器名称或ID>
+```
+
+**获取容器的进程 ID (PID)**：
+```bash
+docker inspect -f '{{.State.Pid}}' <容器名称或ID>
+```
+
+**获取容器的创建时间**：
+```bash
+docker inspect -f '{{.Created}}' <容器名称或ID>
+```
+
+**获取容器的主机端口映射**：如果容器有端口映射，并且你想知道主机端口和容器端口的对应关系，可以使用：
+```bash
+docker inspect -f '{{.NetworkSettings.Ports}}' <容器名称或ID>
+```
+
+**获取容器的挂载卷**：
+```bash
+docker inspect -f '{{.Mounts}}' <容器名称或ID>
+```
+
+**获取容器的环境变量**：
+```bash
+docker inspect -f '{{range .Config.Env}}{{println .}}{{end}}' <容器名称或ID>
+```
+
+**获取容器的镜像名称**：
+```bash
+docker inspect -f '{{.Config.Image}}' <容器名称或ID>
+```
+
+**获取容器的所有挂载卷路径**：
+```bash
+docker inspect -f '{{.Mounts}}' <容器名称或ID>
+```
 
 #### 3.3.8、容器交互
 
@@ -252,6 +303,23 @@ OPTIONS说明：
 ```
 CONTAINER ID   NAME          CPU %     MEM USAGE / LIMIT     MEM %     NET I/O          BLOCK I/O        PIDS
 7706de4ef754   redis-stack   0.17%     117.7MiB / 1.715GiB   6.70%     116kB / 54.8kB   188kB / 57.3kB   22
+```
+另外也可以使用：
+```bash
+# 显示容器状态，jq 用来格式化 json 输出
+$ docker inspect tomcat -f '{{json .State}}' | jq
+{
+  "Status": "exited",
+  "Running": false,
+  "Paused": false,
+  "Restarting": false,
+  "OOMKilled": true,
+  "Dead": false,
+  "Pid": 0,
+  "ExitCode": 137,
+  "Error": "",
+  ...
+}
 ```
 
 #### 3.3.10、命令总结
@@ -791,5 +859,6 @@ Status: Downloaded newer image for portainer/helper-reset-password:latest
 
 ## 11、构建Docker私服
 
+# 参考资料
 
-
+- [Docker cli command](https://docs.docker.com/reference/cli/docker/)
