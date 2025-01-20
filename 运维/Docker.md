@@ -857,7 +857,16 @@ Status: Downloaded newer image for portainer/helper-reset-password:latest
 ```
 `:}RP1ABjl02!caDn)Tw>(~C8/Q34Jv65` 即为重置的密码
 
-## 11、构建Docker私服
+## 11、构建Docker私有仓库
+
+常见的Docker私有仓库：
+- [Harbor](https://goharbor.io/)：作为一个企业级的Docker Registry服务，Harbor提供了安全、可信赖的镜像存储和管理功能。它支持RBAC权限控制、镜像复制、镜像签名、漏洞扫描等功能。
+- Docker Trusted Registry (DTR)：由Docker官方推出的企业级Docker私有仓库服务，与Docker Engine紧密集成，支持高度的安全性和可靠性。
+- Portus：一个开源的Docker镜像管理和认证服务，提供用户管理、团队管理、镜像审核等功能，与Docker Registry兼容。
+- Nexus Repository Manager：虽然主要是用于构建和管理Java组件，但也可以用作Docker私有仓库。它具有强大的存储管理和权限控制功能。
+- GitLab Container Registry：GitLab集成了容器注册表功能，允许您存储、管理和分发Docker镜像。这是GitLab自带的功能，无需额外部署。
+- AWS Elastic Container Registry (ECR)：如果使用AWS云服务，可以考虑使用AWS ECR作为私有仓库。它与AWS的其他服务集成紧密，对AWS用户来说是一个方便的选择。
+
 
 # 参考资料
 
