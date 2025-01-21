@@ -557,7 +557,6 @@ $ sar -n DEV 1
 
 - [perf 工具](https://www.brendangregg.com/perf.html)
 
-
 ### 常见问题
 
 **（1）使用 perf 工具时，看到的是 16 进制地址而不是函数名**
