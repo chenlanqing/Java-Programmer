@@ -38,6 +38,7 @@ root         4     2  0 08:14 ?        00:00:00 [rcu_par_gp]
 - [SystemTap-Linux 的一种动态追踪框架](https://sourceware.org/systemtap/)
 - [DTrace Internals: Digging into DTrace](https://www.bsdcan.org/2017/schedule/attachments/433_dtrace_internals.html#(1))
 - [动态追踪技术漫谈](https://blog.openresty.com.cn/cn/dynamic-tracing/)
+- [long-last-linux-gets-dynamic-tracing](https://thenewstack.io/long-last-linux-gets-dynamic-tracing/)
 
 ### 概述
 
@@ -67,13 +68,14 @@ DTrace 的工作原理如下图所示。它的运行常驻在内核中，用户�
 
 **静态探针，是指事先在代码中定义好，并编译到应用程序或者内核中的探针**。这些探针只有在开启探测功能时，才会被执行到；未开启时并不会执行。常见的静态探针包括内核中的跟踪点（tracepoints）和 USDT（Userland Statically Defined Tracing）探针
 - 跟踪点（tracepoints），实际上就是在源码中插入的一些带有控制条件的探测点，这些探测点允许事后再添加处理函数。比如在内核中，最常见的静态跟踪方法就是 printk，即输出日志。Linux 内核定义了大量的跟踪点，可以通过内核编译选项，来开启或者关闭。
-- USDT 探针，全称是用户级静态定义跟踪，需要在源码中插入 DTRACE_PROBE() 代码，并编译到应用程序中。不过，也有很多应用程序内置了 USDT 探针，比如 MySQL、PostgreSQL 等
+- [USDT 探针](https://leezhenghui.github.io/linux/2019/03/05/exploring-usdt-on-linux.html)，全称是用户级静态定义跟踪，需要在源码中插入 DTRACE_PROBE() 代码，并编译到应用程序中。不过，也有很多应用程序内置了 USDT 探针，比如 MySQL、PostgreSQL 等
 
 **动态探针，则是指没有事先在代码中定义，但却可以在运行时动态添加的探针**，比如函数的调用和返回等。动态探针支持按需在内核或者应用程序中添加探测点，具有更高的灵活性。常见的动态探针有两种，即用于内核态的 kprobes 和用于用户态的 uprobes
 - kprobes 用来跟踪内核态的函数，包括用于函数调用的 kprobe 和用于函数返回的 kretprobe。
 - uprobes 用来跟踪用户态的函数，包括用于函数调用的 uprobe 和用于函数返回的 uretprobe。
 
 > 注意，kprobes 需要内核编译时开启 CONFIG_KPROBE_EVENTS；而 uprobes 则需要内核编译时开启 CONFIG_UPROBE_EVENTS
+
 
 ### 动态追踪机制
 
@@ -193,6 +195,125 @@ $ trace-cmd report
 ...
 ```
 
+#### [perf](./Linux常见操作.md#7perf)
+
+#### eBPF和BCC
+
+如何用 eBPF 和 BCC 实现同样的动态跟踪。
+
+通常，可以把 BCC 应用，拆分为下面这四个步骤。
+
+第一，跟所有的 Python 模块使用方法一样，在使用之前，先导入要用到的模块：
+```py
+from bcc import BPF
+```
+第二，需要定义事件以及处理事件的函数。这个函数需要用 C 语言来编写，作用是初始化刚才导入的 BPF 对象。这些用 C 语言编写的处理函数，要以字符串的形式送到 BPF 模块中处理：
+```py
+# define BPF program (""" is used for multi-line string).
+# '#' indicates comments for python, while '//' indicates comments for C.
+prog = """
+#include <uapi/linux/ptrace.h>
+#include <uapi/linux/limits.h>
+#include <linux/sched.h>
+// define output data structure in C
+struct data_t {
+    u32 pid;
+    u64 ts;
+    char comm[TASK_COMM_LEN];
+    char fname[NAME_MAX];
+};
+BPF_PERF_OUTPUT(events);
+ 
+// define the handler for do_sys_open.
+// ctx is required, while other params depends on traced function.
+int hello(struct pt_regs *ctx, int dfd, const char __user *filename, int flags){
+    struct data_t data = {};
+    data.pid = bpf_get_current_pid_tgid();
+    data.ts = bpf_ktime_get_ns();
+    if (bpf_get_current_comm(&data.comm, sizeof(data.comm)) == 0) {
+        bpf_probe_read(&data.fname, sizeof(data.fname), (void *)filename);
+    }
+    events.perf_submit(ctx, &data, sizeof(data));
+    return 0;
+}
+"""
+# load BPF program
+b = BPF(text=prog)
+# attach the kprobe for do_sys_open, and set handler to hello
+b.attach_kprobe(event="do_sys_open", fn_name="hello")
+```
+第三步，是定义一个输出函数，并把输出函数跟 BPF 事件绑定：
+```py
+# process event
+start = 0
+def print_event(cpu, data, size):
+    global start
+    # event’s type is data_t
+    event = b["events"].event(data)
+    if start == 0:
+            start = event.ts
+    time_s = (float(event.ts - start)) / 1000000000
+    print("%-18.9f %-16s %-6d %-16s" % (time_s, event.comm, event.pid, event.fname))
+ 
+# loop with callback to print_event
+b["events"].open_perf_buffer(print_event)
+```
+最后一步，就是执行事件循环，开始追踪 do_sys_open 的调用：
+```py
+# print header
+print("%-18s %-16s %-6s %-16s" % ("TIME(s)", "COMM", "PID", "FILE”))
+# start the event polling loop
+while 1:
+    try:
+        b.perf_buffer_poll()
+    except KeyboardInterrupt:
+        exit()
+```
+
+#### SystemTap 和 sysdig
+
+SystemTap 也是一种可以通过脚本进行自由扩展的动态追踪技术。在 eBPF 出现之前，SystemTap 是 Linux 系统中，功能最接近 DTrace 的动态追踪机制。不过要注意，SystemTap 在很长时间以来都游离于内核之外（而 eBPF 自诞生以来，一直根植在内核中）。
+
+所以，从稳定性上来说，SystemTap 只在 RHEL 系统中好用，在其他系统中则容易出现各种异常问题。当然，反过来说，支持 3.x 等旧版本的内核，也是 SystemTap 相对于 eBPF 的一个巨大优势。
+
+**sysdig 主要用于容器的动态追踪**。ysdig 的特点： sysdig = strace + tcpdump + htop + iftop + lsof + docker inspect。
+
+而在最新的版本中（内核版本 >= 4.14），sysdig 还可以通过 eBPF 来进行扩展，所以，也可以用来追踪内核中的各种函数和事件。
+
+### 如何选择追踪工具
+
+不同场景的工具选择问题
+- 在不需要很高灵活性的场景中，使用 perf 对性能事件进行采样，然后再配合火焰图辅助分析，就是最常用的一种方法；
+- 而需要对事件或函数调用进行统计分析（比如观察不同大小的 I/O 分布）时，就要用 SystemTap 或者 eBPF，通过一些自定义的脚本来进行数据处理。
+
+![](image/动态追踪-常用动态追踪场景和工具.png)
+
+## BPF
+
+- [eBPF-什么是eBPF](https://ebpf.io/zh-hans/what-is-ebpf/)
+- [eBPF](https://ebpf.io/)
+- [BCC](https://www.brendangregg.com/ebpf.html#bcc)
+- [BPF and XDP Reference Guide](https://docs.cilium.io/en/stable/reference-guides/bpf/index.html)
+
+### eBPF
+
+eBPF 就是 Linux 版的 DTrace，可以通过 C 语言自由扩展（这些扩展通过 LLVM 转换为 BPF 字节码后，加载到内核中执行）。下面这张图，就表示了 eBPF 追踪的工作原理：
+
+![](image/BPF-eBPF追踪.png)
+
+eBPF 的执行需要三步：
+- 从用户跟踪程序生成 BPF 字节码；
+- 加载到内核中运行；
+- 向用户空间输出结果。
+
+在 eBPF 执行过程中，编译、加载还有 maps 等操作，对所有的跟踪程序来说都是通用的。把这些过程通过 Python 抽象起来，也就诞生了 BCC（BPF Compiler Collection），BCC 把 eBPF 中的各种事件源（比如 kprobe、uprobe、tracepoint 等）和数据操作（称为 Maps），也都转换成了 Python 接口（也支持 lua）。这样，使用 BCC 进行动态追踪时，编写简单的脚本就可以了。
+```bash
+# BCC安装
+yum install bcc-tools
+```
+
+
+
 # 参考资料
 
 - [Linux Kernel内核归档](https://www.kernel.org/)
@@ -204,5 +325,4 @@ $ trace-cmd report
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/v6.12.1/source)
 - [Linux内核学习资料](https://github.com/0voice/linux_kernel_wiki)
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/latest/source)
-- [eBPF-什么是eBPF](https://ebpf.io/zh-hans/what-is-ebpf/)
-- [eBPF](https://ebpf.io/)
+

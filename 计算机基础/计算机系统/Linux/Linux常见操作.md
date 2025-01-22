@@ -557,6 +557,20 @@ $ sar -n DEV 1
 
 - [perf 工具](https://www.brendangregg.com/perf.html)
 
+### 7.1、概述
+
+### 7.2、使用
+
+perf record/top 时，都是先对事件进行采样，然后再根据采样数，评估各个函数的调用频率
+- perf 可以用来分析 CPU cache、CPU 迁移、分支预测、指令周期等各种硬件事件；
+- perf 也可以只对感兴趣的事件进行动态追踪
+
+查询所有支持的事件：
+```bash
+$ perf list
+```
+在 perf 的各个子命令中添加 `--event` 选项，设置追踪感兴趣的事件。如果这些预定义的事件不满足实际需要，还可以使用 perf probe 来动态添加。而且，除了追踪内核事件外，perf 还可以用来跟踪用户空间的函数
+
 ### 常见问题
 
 **（1）使用 perf 工具时，看到的是 16 进制地址而不是函数名**
@@ -602,6 +616,28 @@ $ perf report -g graph,0.3
 
 默认选项是不开启线程的：
 写文件是由子线程执行的，所以直接strace跟踪进程没有看到write系统调用，可以通过pstree查看进程的线程信息，再用strace跟踪。或者，通过`strace -fp pid` 跟踪所有线程。
+
+在使用 strace 跟踪进程的系统调用时，也经常会看到这些动态库的影子，使用 strace 跟踪 ls 时，你可以得到下面的结果：
+```bash
+$ strace ls
+...
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+access("/etc/ld.so.preload", R_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3
+...
+access("/etc/ld.so.nohwcap", F_OK)      = -1 ENOENT (No such file or directory)
+openat(AT_FDCWD, "/lib/x86_64-linux-gnu/libselinux.so.1", O_RDONLY|O_CLOEXEC) = 3
+...
+```
+从原理上来说，strace 基于系统调用 ptrace 实现，这就带来了两个问题
+- 由于 ptrace 是系统调用，就需要在内核态和用户态切换。当事件数量比较多时，繁忙的切换必然会影响原有服务的性能；
+- ptrace 需要借助 SIGSTOP 信号挂起目标进程。这种信号控制和进程挂起，会影响目标进程的行为。
+
+所以，在性能敏感的应用（比如数据库）中，不推荐使用 strace （或者其他基于 ptrace 的性能工具）去排查和调试；
+
+在 strace 的启发下，结合内核中的 utrace 机制， perf 也提供了一个 trace 子命令，是取代 strace 的首选工具。相对于 ptrace 机制来说，perf trace 基于内核事件，自然要比进程跟踪的性能好很多。
+
+perf trace 还可以进行系统级的系统调用跟踪（即跟踪所有进程），而 strace 只能跟踪特定的进程
 
 ## 9、sar命令
 
