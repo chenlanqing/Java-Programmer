@@ -554,7 +554,9 @@ String i3 = Integer.toString(i);
 
 ## 9、String intern()方法
 
+```java
 public native String intern();
+```
 
 ### 9.1、Java常量池
 
@@ -645,37 +647,44 @@ String s = new String("abc")这个语句创建了几个对象
 
 ### 9.4、intern 的使用
 
-- 正确使用：
-	```java
-	/**
-	 * Runtime Parameter：
-	 * -Xmx2g -Xms2g -Xmn1500M
-	 */
-	static final int MAX = 1000 * 10000;
-	static final String[] arr = new String[MAX];		 
-	public static void main(String[] args) throws Exception {
-		Integer[] DB_DATA = new Integer[10];
-		Random random = new Random(10 * 10000);
-		for (int i = 0; i < DB_DATA.length; i++) {
-			DB_DATA[i] = random.nextInt();
-		}
-		long t = System.currentTimeMillis();
-		for (int i = 0; i < MAX; i++) {
-			//arr[i] = new String(String.valueOf(DB_DATA[i % DB_DATA.length]));
-			arr[i] = new String(String.valueOf(DB_DATA[i % DB_DATA.length])).intern();
-		}
-		System.out.println((System.currentTimeMillis() - t) + "ms");
-		System.gc();
+**正确使用：**
+```java
+/**
+ * Runtime Parameter：
+ * -Xmx2g -Xms2g -Xmn1500M
+ */
+static final int MAX = 1000 * 10000;
+static final String[] arr = new String[MAX];		 
+public static void main(String[] args) throws Exception {
+	Integer[] DB_DATA = new Integer[10];
+	Random random = new Random(10 * 10000);
+	for (int i = 0; i < DB_DATA.length; i++) {
+		DB_DATA[i] = random.nextInt();
 	}
-	```
-	- 通过上述结果，我们发现不使用 intern 的代码生成了1000w 个字符串，占用了大约640m 空间。使用了 intern 的代码生成了1345个字符串，占用总空间 133k 左右。其实通过观察程序中只是用到了10个字符串，所以准确计算后应该是正好相差100w 倍
-	- 使用了 intern 方法后时间上有了一些增长，这是因为程序中每次都是用了 new String() 后，然后又进行 intern 操作的耗时时间，这一点如果在内存空间充足的情况下确实是无法避免的；
+	long t = System.currentTimeMillis();
+	for (int i = 0; i < MAX; i++) {
+		//arr[i] = new String(String.valueOf(DB_DATA[i % DB_DATA.length]));
+		arr[i] = new String(String.valueOf(DB_DATA[i % DB_DATA.length])).intern();
+	}
+	System.out.println((System.currentTimeMillis() - t) + "ms");
+	System.gc();
+}
+```
+- 通过上述结果，发现不使用 intern 的代码生成了1000w 个字符串，占用了大约640m 空间。使用了 intern 的代码生成了1345个字符串，占用总空间 133k 左右。其实通过观察程序中只是用到了10个字符串，所以准确计算后应该是正好相差100w 倍
+- 使用了 intern 方法后时间上有了一些增长，这是因为程序中每次都是用了 new String() 后，然后又进行 intern 操作的耗时时间，这一点如果在内存空间充足的情况下确实是无法避免的；
 
-- 不正确使用：
+> 使用 intern 方法需要注意的一点是，一定要结合实际场景。因为常量池的实现是类似于一个 HashTable 的实现方式，HashTable 存储的数据越大，遍历的时间复杂度就会增加。如果数据过大，会增加整个字符串常量池的负担
 
-	fastjson 中对所有的 json 的 key 使用了 intern 方法，缓存到了字符串常量池中，这样每次读取的时候就会非常快，大大减少时间和空间.而且 json 的 key 通常都是不变的.这个地方没有考虑到大量的 json key 如果是变化的，那就会给字符串常量池带来很大的负担
+**不正确使用：** fastjson 中对所有的 json 的 key 使用了 intern 方法，缓存到了字符串常量池中，这样每次读取的时候就会非常快，大大减少时间和空间.而且 json 的 key 通常都是不变的.这个地方没有考虑到大量的 json key 如果是变化的，那就会给字符串常量池带来很大的负担
 
 ## 10、indexOf方法
+
+## 11、split方法
+
+Split() 方法使用了正则表达式实现了其强大的分割功能，而正则表达式的性能是非常不稳定的，使用不恰当会引起回溯问题，很可能导致 CPU 居高不下。
+
+所以应该慎重使用 Split() 方法，可以用 String.indexOf() 方法代替 Split() 方法完成字符串的分割。如果实在无法满足需求，在使用 Split() 方法时，对回溯问题需要加以重视
+
 
 # 六、关于 String 需要注意的点
 
