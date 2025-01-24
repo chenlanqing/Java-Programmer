@@ -919,6 +919,8 @@ public class Controller {
 
 OpenFeign 的全称是 Spring Cloud OpenFeign，它是 Spring 官方推出的一种声明式服务调用和负载均衡组件。它的出现就是为了替代已经进入停更维护状态的 Feign(Netflix Feign)的。也就是说 OpenFeign(Spring Cloud OpenFeign)是 Feign 的升级版
 
+### 文件上传fegin调用
+
 > 注意：openfeign请求时，如果使用的是表单形式提交，即：`consumes = MediaType.MULTIPART_FORM_DATA_VALUE` ，那么客户端请求时编码使用的是 SpringEncoder，该编码器只支持有限的几种对象类型，如String、byte[]，诸如Map等是无法编码的，其会报对应的错误：`java.util.HashMap is not a type supported by this encoder`
 
 如果要通过feign接口上传文件，需要通过post表单的形式：配置 consumes
@@ -929,6 +931,8 @@ public interface OrderService {
     void createOrder(String order);
 }
 ```
+
+### feign日志
 
 打印Feign的请求日志：
 - 全部打印，增加如下配置：
@@ -963,6 +967,10 @@ Feign 支持四种日志级别：
 - `basic`：打印请求方法、URL、响应码及响应时间；
 - `headers`：同时打印请求和响应头的信息；
 - `full`：同时打印请求和响应体信息，以及其它附加的元信息；
+
+### 注意点
+
+- feign如果是POST调用时，且指定了注解 @RequestBody，则对应的 content-type就不需要设置了，其会自动设置 content-type=application/json 的
 
 # 五、Hystrix断路器
 
