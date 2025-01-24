@@ -232,35 +232,40 @@ List<String> colorList =  flowerList.stream()                     //获取流
                                     .filter(t->t.getPrice()<10)   //中间操作
                                     .limit(3)                     //中间操作
                                     .map(Flower::getColor)        //中间操作
-                                    .collect(Collectors.toList());//终端操作
+                                    .collect(Collectors.toList());//终结操作
 
 ```
 
-**中间操作：**
+**中间操作：** 只对操作进行了记录，即只会返回一个流，不会进行计算操作，中间操作又可以分为无状态（Stateless）与有状态（Stateful）操作：
+- 无状态操作是指元素的处理不受之前元素的影响；
+- 有状态操作是指该操作只有拿到所有元素之后才能继续下去
 
-操作 | 返回类型 |  操作参数
------|--------|---------
-filter | Stream | Predicate
-map | Stream | `Funcation<T, R>`
-sorted | Stream | Comparator 
-distinct | Stream | -
-skip  | Stream| long
-limit | Stream | long
-flatMap | Stream| `Funcation<T, Steam>`
+操作 | 返回类型 |  操作参数 | 状态类型
+-----|--------|---------|-----
+filter | Stream | Predicate | 无状态
+map | Stream | `Funcation<T, R>` | 无状态
+flatMap | Stream| `Funcation<T, Steam>`  | 无状态
+sorted | Stream | Comparator  | 有状态
+distinct | Stream | -  | 有状态
+skip  | Stream| long  | 有状态
+limit | Stream | long  | 有状态
 
-**终端操作**
 
-操作 | 返回类型 |  操作参数 
------|--------|---------
-forEach | void |Consumer 
-count   | long | - 
-collect | R |`Collector<T, A,R>`
-anyMatch | boolean | Predicate
-noneMatch | boolean |Predicate
-allMatch | boolean | Predicate
-findAny | Optional | -
-findFirst | Optional | - 
-reduce | Optional | BinaryOperator
+**终结操作**，实现了计算操作，终结操作又可以分为短路（Short-circuiting）与非短路（Unshort-circuiting）操作：
+- 短路操作是指遇到某些符合条件的元素就可以得到最终结果；
+- 非短路操作是指必须处理完所有元素才能得到最终结果
+
+操作 | 返回类型 |  操作参数 | 是否短路
+-----|--------|--------- |--------
+forEach | void |Consumer  | 非短路
+count   | long | -   | 非短路
+collect | R |`Collector<T, A,R>`  | 非短路
+reduce | Optional | BinaryOperator  | 非短路
+anyMatch | boolean | Predicate  | 短路
+noneMatch | boolean |Predicate  | 短路
+allMatch | boolean | Predicate  | 短路
+findAny | Optional | -  | 短路
+findFirst | Optional | -   | 短路
 
 ### 5.3、常见流的操作
 
@@ -368,7 +373,7 @@ Map<String, Map<String, List<Flower>>> collect = flowerList.stream().collect(Col
         })));
 ```
 
-Collectors常用的方法：
+Collectors 常用的方法：
 
 方法 | 返回类型 | 用途 
 ----|---------|-------
