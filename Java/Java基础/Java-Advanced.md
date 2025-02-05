@@ -2144,7 +2144,6 @@ System.out.println(t2.i);// 1
 - 如果子类实现`Serializable`接口，父类不实现，根据父类序列化规则，父类的字段数据将不被序列化，从而达到部分序列化的功能;
 - 在反序列化时仍会调用父类的构造器，只能调用父类的无参构造函数作为默认的父对象。如果父类没有默认构造方法则在反序列化时会出异常.
 - 如果父类实现了 Serializable 接口，要让子类不可序列化，可以在子类中写如下代码：(其实违反了里氏替换原则)
-
 ```java
 private void writeObject(java.io.ObjectOutputStream out) throws IOException{
 	throw new NotSerializableException("不可写");
@@ -2163,13 +2162,9 @@ private void readObject(java.io.ObjectInputStream in) throws IOException{
 
 `ArrayList`使用上述实现：为什么`ArrayList`要用这种方式来实现序列化呢？
 
-- 为什么 `transient Object[] elementData`？：
+- 为什么 `transient Object[] elementData`？：`ArrayList`实际上是动态数组，每次在放满以后自动增长设定的长度值，如果数组自动增长长度设为100，而实际只放了一个元素，那就会序列化99个null元素.为了保证在序列化的时候不会将这么多null同时进行序列化，ArrayList 把元素数组设置为transient
 
-	`ArrayList`实际上是动态数组，每次在放满以后自动增长设定的长度值，如果数组自动增长长度设为100，而实际只放了一个元素，那就会序列化99个null元素.为了保证在序列化的时候不会将这么多null同时进行序列化，ArrayList 把元素数组设置为transient
-
-- 为什么要写方法：`writeObject and readObject`
-
-	前面提到为了防止一个包含大量空对象的数组被序列化，为了优化存储，所以，ArrayList 使用 transient 来声明elementData作为一个集合，在序列化过程中还必须保证其中的元素可以被持久化下来，所以，通过重写writeObject 和 readObject方法的方式把其中的元素保留下来。writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中。readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
+- 为什么要写方法：`writeObject` 和 `readObject`：前面提到为了防止一个包含大量空对象的数组被序列化，为了优化存储，所以，ArrayList 使用 transient 来声明elementData作为一个集合，在序列化过程中还必须保证其中的元素可以被持久化下来，所以，通过重写writeObject 和 readObject方法的方式把其中的元素保留下来。writeObject方法把elementData数组中的元素遍历的保存到输出流(ObjectOutputStream)中。readObject方法从输入流(ObjectInputStream)中读出对象并保存赋值到elementData数组中
 
 ### 2.2、自定义序列化和反序列化策略
 
@@ -2178,7 +2173,7 @@ private void readObject(java.io.ObjectInputStream in) throws IOException{
 - 那么如果一个类中包含`writeObject`和`readObject`方法，那么这两个方法是怎么被调用的呢？
 
 	在使用 `ObjectOutputStream `的`writeObject`方法和` ObjectInputStream `的readObject方法时，会通过反射的方式调用
-	- ①、`ObjectOutputStream` 的`writeObject`的调用栈：`writeObject ---> writeObject0 --->writeOrdinaryObject--->writeSerialData--->invokeWriteObject`
+	- ①、`ObjectOutputStream` 的`writeObject`的调用栈：`writeObject ---> writeObject0 --->writeOrdinaryObject---> writeSerialData ---> invokeWriteObject`
 	- ②、这里看一下invokeWriteObject：其中`writeObjectMethod.invoke(obj， new Object[]{ out });`是关键，通过反射的方式调用`writeObjectMethod`方法
 
 ### 2.3、Serializable如何实现序列化与反序列化
@@ -2188,7 +2183,6 @@ Serializable 明明就是一个空的接口，它是怎么保证只有实现了�
 `writeObject ---> writeObject0 --->writeOrdinaryObject--->writeSerialData--->invokeWriteObject`
 
 `writeObject0`方法中有这么一段代码：
-
 ```java
 if (obj instanceof String) {
 	writeString((String) obj， unshared);
@@ -2211,20 +2205,19 @@ if (obj instanceof String) {
 
 ### 2.4、writeReplace()和readResolve()
 
-`Serializable`除提供了writeObject和readObject标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve)
+`Serializable`除提供了 writeObject 和 readObject 标记方法外还提供了另外两个标记方法可以实现序列化对象的替换(即 writeReplace 和 readResolve)
 
-- 2.4.1、writeReplace：序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象，该方法会返回替换后的对象。接着系统将再次调用另一个对象的 writeReplace 方法，直到该方法不再返回另一个对象为止，程序最后将调用该对象的writeObject() 方法来保存该对象的状态
+- writeReplace：序列化类一旦实现了 writeReplace 方法后则在序列化时就会先调用 writeReplace 方法将当前对象替换成另一个对象，该方法会返回替换后的对象。接着系统将再次调用另一个对象的 writeReplace 方法，直到该方法不再返回另一个对象为止，程序最后将调用该对象的 writeObject() 方法来保存该对象的状态
 	- 实现 writeReplace 的序列化类就不要再实现 writeObject 了，因为该类的 writeObject 方法就不会被调用；
 	- 实现 writeReplace 的返回对象必须是可序列化的对象；
 	- 通过 writeReplace 序列化替换的对象在反序列化中无论实现哪个方法都是无法恢复原对象的。
 	- 所以 writeObject 只和 readObject 配合使用，一旦实现了 writeReplace 在写入时进行替换就不再需要writeObject 和 readObject 了。
 
-- 2.4.2、readResolve：方法可以实现保护性复制整个对象，会紧挨着序列化类实现的 readObject() 之后被调用，该方法的返回值会代替原来反序列化的对象而原来序列化类中 readObject() 反序列化的对象将会立即丢弃。readObject()方法在序列化单例类时尤其有用，单例序列化都应该提供 readResolve() 方法，这样才可以保证反序列化的对象依然正常。
+- readResolve：方法可以实现保护性复制整个对象，会紧挨着序列化类实现的 readObject() 之后被调用，该方法的返回值会代替原来反序列化的对象而原来序列化类中 readObject() 反序列化的对象将会立即丢弃。readObject()方法在序列化单例类时尤其有用，单例序列化都应该提供 readResolve() 方法，这样才可以保证反序列化的对象依然正常。
 
 ## 3、serialVersionUID
 
 `private static final long serialVersionUID`：每个可序列化类相关联
-
 - 该序列号在反序列化过程中用于验证序列化对象的发送者和接收者是否为该对象加载了与序列化兼容的类;
 - 如果接收者加载的该对象的类的 serialVersionUID 与对应的发送者的类的版本号不同，则反序列化将会导致 InvalidClassException;
 - 为保证 serialVersionUID 值跨不同 java 编译器实现的一致性，序列化类必须声明一个明确的 serialVersionUID ;
@@ -2245,7 +2238,6 @@ if (obj instanceof String) {
 ## 5、序列化实现对象的拷贝
 
 内存中通过字节流的拷贝是比较容易实现的。把母对象写入到一个字节流中，再从字节流中将其读出来，这样就可以创建一个新的对象了，并且该新对象与母对象之间并不存在引用共享的问题，真正实现对象的深拷贝
-
 ```java
 public class CloneUtils {
 	@SuppressWarnings("unchecked")
@@ -2376,22 +2368,47 @@ public class Result {
 }
 ```
 
-## 8、序列化安全
+## 8、Java序列化的问题
 
-- 序列化在传输中是不安全的：因为序列化二进制格式完全编写在文档中且完全可逆，所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容，故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中。可能面临信息泄露、数据篡改、拒绝服务等
+**（1）无法跨语言**
 
-- 要解决序列化安全问题的核心原理就是避免在序列化中传递敏感数据，所以可以使用关键字 transient 修饰敏感数据的变量。或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
-	- 对序列化的流数据进行加密；
-	- 在传输的过程中使用TLS加密传输；
-	- 对序列化数据进行完整性校验；
-	- 针对信息泄露：使用transient标记敏感字段；
-	- 针对数据篡改：实现ObjectInputValidation接口并重写其方法；
-	- 针对整个对象伪造：通过重写ObjectInputStream的resolveClass来实现；
+**（2）易被攻击**
 
-## 9、Java默认序列化与二进制编码
+对象是通过在 ObjectInputStream 上调用 readObject() 方法进行反序列化的，这个方法其实是一个神奇的构造器，它可以将类路径上几乎所有实现了 Serializable 接口的对象都实例化，这也就意味着，在反序列化字节流的过程中，该方法可以执行任意类型的代码，这是非常危险的。
 
-- 字节码流大小
-- 序列化耗时
+对于需要长时间进行反序列化的对象，不需要执行任何代码，也可以发起一次攻击。攻击者可以创建循环对象链，然后将序列化后的对象传输到程序中反序列化，这种情况会导致 hashCode 方法被调用次数呈次方爆发式增长, 从而引发栈溢出异常；
+
+
+可以通过反序列化对象白名单来控制反序列化对象，可以重写 resolveClass 方法，并在该方法中校验对象名字
+```java
+@Override
+protected Class resolveClass(ObjectStreamClass desc) throws IOException,ClassNotFoundException {
+	if (!desc.getName().equals(Bicycle.class.getName())) {
+		throw new InvalidClassException("Unauthorized deserialization attempt", desc.getName());
+	}
+	return super.resolveClass(desc);
+}
+```
+
+序列化在传输中是不安全的：因为序列化二进制格式完全编写在文档中且完全可逆，所以只需将二进制序列化流的内容转储到控制台就可以看清类及其包含的内容，故序列化对象中的任何 private 字段几乎都是以明文的方式出现在序列化流中。可能面临信息泄露、数据篡改、拒绝服务等
+
+要解决序列化传输安全问题的核心原理就是避免在序列化中传递敏感数据，所以可以使用关键字 transient 修饰敏感数据的变量。或者通过自定义序列化相关流程对数据进行签名加密机制再存储或者传输
+- 对序列化的流数据进行加密；
+- 在传输的过程中使用TLS加密传输；
+- 对序列化数据进行完整性校验；
+- 针对信息泄露：使用transient标记敏感字段；
+- 针对数据篡改：实现ObjectInputValidation接口并重写其方法；
+- 针对整个对象伪造：通过重写ObjectInputStream的resolveClass来实现；
+
+**（3）序列化后的流太大**
+
+**（4）序列化性能太差**
+
+## 9、使用 [Protobuf](https://protobuf.dev/) 序列化替换 Java 序列化
+
+Protobuf 是由 Google 推出且支持多语言的序列化框架，Protobuf 以一个 `.proto` 后缀的文件为基础，这个文件描述了字段以及字段类型，通过工具可以生成不同语言的数据结构文件。在序列化该数据对象的时候，Protobuf 通过`.proto` 文件描述来生成 Protocol Buffers 格式的编码
+
+Protocol Buffers 是一种轻便高效的结构化数据存储格式。它使用 T-L-V（标识 - 长度 - 字段值）的数据格式来存储数据，T 代表字段的正数序列 (tag)，Protocol Buffers 将对象中的每个字段和正数序列对应起来，对应关系的信息是由生成的代码来保证的。在序列化的时候用整数值来代替字段名称，于是传输流量就可以大幅缩减；L 代表 Value 的字节长度，一般也只占一个字节；V 则代表字段值经过编码后的值。这种数据格式不需要分隔符，也不需要空格，同时减少了冗余字段名
 
 # 八、枚举类
 
