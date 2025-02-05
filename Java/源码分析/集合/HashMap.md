@@ -2,6 +2,11 @@
 # 一、HashMap 概述
 
 HashMap 是基于一个数组和多个链表来实现的，HashMap继承`AbstractMap`, 实现了 `Map、Cloneable、Serializable`
+```java
+public class HashMap<K,V> extends AbstractMap<K,V> implements Map<K,V>, Cloneable, Serializable {
+	...
+}
+```
 
 ## 1、HashMap的特点
 
@@ -27,18 +32,21 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承`Abstrac
 
 ## 2、HashMap和Hashtable的区别
 
-- Hashtable的方法是同步的，在方法的前面都有synchronized来同步，HashMap未经同步，所以在多线程场合要手动同步；
-- Hashtable不允许null值(key和value都不可以) ，HashMap允许null值(key和value都可以)。
-- Hashtable有一个contains(Object value)功能和containsValue(Object value)功能一样。
-- Hashtable是基于Dictionary类继承的；HashMap继承抽象类AbstractMap实现了Map接口；
-- Hashtable使用Enumeration进行遍历，HashMap使用Iterator进行遍历。
-- Hashtable中hash数组默认大小是11，增加的方式是 2n+1。HashMap中hash数组的默认大小是16，之后每次扩充是都是2的倍数。在取模计算时，如果模数是2的幂，那么我们可以直接使用位运算来得到结果，效率要大大高于做除法
+* [HashMap与Hashtable](https://mp.weixin.qq.com/s/h3Cg1O0pjfqp5E8ckDz_Jg)
+
+主要区别如下：
+- Hashtable 的方法是同步的，在方法的前面都有 synchronized 来同步， HashMap 非同步，所以在多线程环境中需要手动同步；
+- Hashtable 不允许null值(key和value都不可以，key不可以是计算hash时直接使用key的hashcode) ，HashMap 允许null值(key和value都可以)。
+- Hashtable 有一个 contains(Object value) 功能和 containsValue(Object value) 功能一样。
+- Hashtable 是基于 Dictionary 类继承的； HashMap 继承抽象类 AbstractMap 实现了Map接口；
+- Hashtable 支持 Iterator 和 Enumeration 进行遍历；HashMap使用Iterator进行遍历；（JDK8之前的版本中，Hashtable是没有fast-fail机制的。在JDK8及以后的版本中 ，HashTable也是使用fast-fail的）
+- Hashtable 中hash数组默认大小是11，增加的方式是 `2*n+1`。HashMap 中hash数组的默认大小是16，之后每次扩充是都是2的倍数。在取模计算时，如果模数是2的幂，那么我们可以直接使用位运算来得到结果，效率要大大高于做除法
 - 哈希值的使用不同，Hashtable 直接使用对象的 hashCode，代码是这样的：
 	```java
 	int hash = key.hashCode();
 	int index = (hash & 0x7FFFFFFF) % tab.length;
 	```
-	而 HashMap重新计算hash值，而且用 & 代替 % 求模
+	而 HashMap重新计算hash值，而且用 `&` 代替 `%` 求模
 	```java
 	int hash = hash(k);
 	int i = indexFor(hash, table.length);
@@ -54,44 +62,44 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承`Abstrac
 
 ## 3、HashMap与HashSet的关系
 
-- HashSet底层是采用HashMap实现的
-	```java
-	public HashSet() {
-		map = new HashMap<E,Object>();
-	}
-	```
-- 调用HashSet的add方法时，实际上是向HashMap中增加了一行(key-value对)，该行的key就是向HashSet增加的那个对象，该行的value就是一个Object类型的常量
-	```java
-	private static final Object PRESENT = new Object(); public boolean add(E e) { 
-		return map.put(e, PRESENT)==null; 
-	} 
-	public boolean remove(Object o) { 
-		return map.remove(o)==PRESENT; 
-	}
-	```
+HashSet底层是采用HashMap实现的
+```java
+public HashSet() {
+	map = new HashMap<E,Object>();
+}
+```
+调用HashSet的add方法时，实际上是向HashMap中增加了一行(key-value对)，该行的key就是向HashSet增加的那个对象，该行的value就是一个Object类型的常量
+```java
+private static final Object PRESENT = new Object(); public boolean add(E e) { 
+	return map.put(e, PRESENT)==null; 
+} 
+public boolean remove(Object o) { 
+	return map.remove(o)==PRESENT; 
+}
+```
 
-## 4、Hashtable和ConcurrentHashMap 的关系
+## 4、Hashtable 和 ConcurrentHashMap 的关系
 
 - ConcurrentHashMap 也是一种线程安全的集合类，他和 Hashtable 也是有区别的，主要区别：就是加锁的粒度以及如何加锁；ConcurrentHashMap 的加锁粒度要比 Hashtable 更细一点。将数据分成一段一段的存储，然后给每一段数据配一把锁，当一个线程占用锁访问其中一个段数据的时候，其他段的数据也能被其他线程访问
 - ConcurrentHashMap 如何实现写分段锁，如何实现弱一致性和读不加锁，不加锁情况能否保证每次获取的元素都是最新的？ConcurrentHashMap Segment
-- 为什么需要ConcurrentHashMap和CopyOnWriteArrayList
-	- 同步的集合类(Hashtable和Vector)同步的封装类(使用Collections.synchronizedMap()方法和 Collections.synchronizedList()方法返回的对象)可以创建出线程安全的Map和List。但是有些因素使得它们不适合高并发的系统。它们仅有单个锁，对整个集合加锁，以及为了防止ConcurrentModificationException异常经常要在迭代的时候要将集合锁定一段时间，这些特性对可扩展性来说都是障碍；
-	- ConcurrentHashMap和CopyOnWriteArrayList保留了线程安全的同时，也提供了更高的并发性。ConcurrentHashMap和 CopyOnWriteArrayList 并不是处处都需要用；大部分时候你只需要用到HashMap和ArrayList，它们用于应对一些普通的情况
+- 为什么需要 ConcurrentHashMap 和 CopyOnWriteArrayList
+	- 同步的集合类( Hashtable 和 Vector )同步的封装类(使用 Collections.synchronizedMap() 方法和 Collections.synchronizedList() 方法返回的对象)可以创建出线程安全的Map和List。但是有些因素使得它们不适合高并发的系统。它们仅有单个锁，对整个集合加锁，以及为了防止 ConcurrentModificationException 异常经常要在迭代的时候要将集合锁定一段时间，这些特性对可扩展性来说都是障碍；
+	- ConcurrentHashMap 和 CopyOnWriteArrayList 保留了线程安全的同时，也提供了更高的并发性。ConcurrentHashMap 和 CopyOnWriteArrayList 并不是处处都需要用；大部分时候你只需要用到 HashMap 和 ArrayList ，它们用于应对一些普通的情况
 
 ## 5、键的不变性
 
-- 为什么将字符串和整数作为HashMap的键是一种很好的实现？
+为什么将字符串和整数作为HashMap的键是一种很好的实现？
 
-	主要是因为它们是不可变的！如果你选择自己创建一个类作为键，但不能保证这个类是不可变的，那么你可能会在HashMap内部丢失数据
+主要是因为它们是不可变的！如果选择自己创建一个类作为键，但不能保证这个类是不可变的，那么你可能会在HashMap内部丢失数据
 
 ## 6、Java8 中 HashMap 的改进
 
-在 JDK 1.7 中 HashMap 是以数组加链表的形式组成的，JDK 1.8 之后新增了红黑树的组成结构，当链表大于 8 并且容量大于 64 时，链表结构会转换成红黑树结构
+在 JDK 1.7 中 HashMap 是以 **数组+链表** 的形式组成的，JDK 1.8 之后新增了 **红黑树** 的组成结构，当链表大于 8 并且容量大于 64 时，**链表结构会转换成红黑树结构**
 
 ### 6.1、底层数据结构变化
 
 - 在Java 8中，使用数组，但它会被保存在Node中，Node 中包含了和之前 Entry 对象一样的信息，并且也会使用链表
-- 和JDK7相比，最大区别在于 Node可以被扩展成TreeNode。TreeNode是一个红黑树的数据结构，它可以存储更多的信息这样我们可以在O(log(n))的复杂度下添加、删除或者获取一个元素；
+- 和JDK7相比，最大区别在于 Node 可以被扩展成 TreeNode。TreeNode 是一个红黑树的数据结构，它可以存储更多的信息，这样可以在 $O(log(n))$ 的复杂度下添加、删除或者获取一个元素；
 	```java
 	// 它继承自 LinkedHashMap.Entry,而 LinkedHashMap.Entry 继承自 HashMap.Node
 	static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
@@ -111,9 +119,7 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承`Abstrac
 - 红黑树是自平衡的二叉搜索树，不管是添加还是删除节点，它的内部机制可以保证它的长度总是`log(n)`。使用这种类型的树，最主要的好处是针对内部表中许多数据都具有相同索引（桶）的情况，这时对树进行搜索的复杂度是`O(log(n))`，而对于链表来说，执行相同的操作，复杂度是`O(n)`；
 
 - JDK8中HashMap有三个关于红黑树的关键参数：
-	* `TREEIFY_THRESHOLD = 8`：
-
-		一个桶的树化阈值，当桶中元素超过这个值时，使用红黑树节点替换链表节点值为8，应该跟加载因子类似；
+	* `TREEIFY_THRESHOLD = 8`：一个桶的树化阈值，当桶中元素超过这个值时，使用红黑树节点替换链表节点值为 8，应该跟加载因子类似；
 
 		理想情况下使用随机的哈希码，容器中节点分布在hash桶中的频率遵循泊松分布，按照泊松分布的计算公式计算出了桶中元素个数和概率的对照表，可以看到链表中元素个数为8时的概率已经非常小，再多的就更少了，所以原作者在选择链表元素个数时选择了8，是根据概率统计而选择的：
 		```
@@ -129,25 +135,19 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承`Abstrac
 		```
 		红黑树的平均查找长度是`log(n)`，长度为8，查找长度为`log(8)=3`，链表的平均查找长度为`n/2`，当长度为8时，平均查找长度为`8/2=4`，这才有转换成树的必要；链表长度如果是小于等于6，`6/2=3`，虽然速度也很快的，但是转化为树结构和生成树的时间并不会太短；
 
-	* `UNTREEIFY_THRESHOLD = 6`：
+	* `UNTREEIFY_THRESHOLD = 6`：一个树的链表还原阈值，当扩容时，桶中元素个数小于这个值，会把树形的桶元素还原为链表结构，这个值是6，应该比 `TREEIFY_THRESHOLD` 小
 
-		一个树的链表还原阈值，当扩容时，桶中元素个数小于这个值，会把树形的桶元素还原为链表结构，这个值是6，应该比 `TREEIFY_THRESHOLD` 小
+		**为什么是6和8？** 中间有个差值7可以防止链表和树之间频繁的转换。假设一下，如果设计成链表个数超过8则链表转换成树结构，链表个数小于8则树结构转换成链表，如果一个HashMap不停的插入、删除元素，链表个数在8左右徘徊，就会频繁的发生树转链表、链表转树，效率会很低。
 
-		为什么是6和8？中间有个差值7可以防止链表和树之间频繁的转换。假设一下，如果设计成链表个数超过8则链表转换成树结构，链表个数小于8则树结构转换成链表，如果一个HashMap不停的插入、删除元素，链表个数在8左右徘徊，就会频繁的发生树转链表、链表转树，效率会很低。
+	* `MIN_TREEIFY_CAPACITY = 64`：哈希表（数组）的最小树形化容量，当哈希表（数组）中的容量大于这个值时，表中的桶才能进行树形化，否则桶内元素太多时会扩容，而不是树形化。为了避免进行扩容、树形化选择的冲突，这个值不能小于 4*TREEIFY_THRESHOLD
 
-	* `MIN_TREEIFY_CAPACITY = 64`：
-	
-		哈希表（数组）的最小树形化容量，当哈希表（数组）中的容量大于这个值时，表中的桶才能进行树形化，否则桶内元素太多时会扩容，而不是树形化。为了避免进行扩容、树形化选择的冲突，这个值不能小于 4*TREEIFY_THRESHOLD
+- 为什么使用红黑树而不使用二叉树？之所以选择红黑树是为了解决二叉查找树的缺陷：二叉查找树在特殊情况下会变成一条线性结构（这就跟原来使用链表结构一样了，造成层次很深的问题），遍历查找会非常慢。而红黑树在插入新数据后可能需要通过左旋、右旋、变色这些操作来保持平衡。引入红黑树就是为了查找数据快，解决链表查询深度的问题；
 
-- 为什么使用红黑树而不使用二叉树？
+	红黑树的查询性能略微逊色于AVL树，因为他比 AVL 树会稍微不平衡最多一层，也就是说红黑树的查询性能只比相同内容的 AVL 树最多多一次比较，但是，红黑树在插入和删除上完爆avl树，avl树每次插入删除会进行大量的平衡度计算，而红黑树为了维持红黑性质所做的红黑变换和旋转的开销，相较于avl树为了维持平衡的开销要小得多；
 
-	之所以选择红黑树是为了解决二叉查找树的缺陷：二叉查找树在特殊情况下会变成一条线性结构（这就跟原来使用链表结构一样了，造成层次很深的问题），遍历查找会非常慢。而红黑树在插入新数据后可能需要通过左旋、右旋、变色这些操作来保持平衡。引入红黑树就是为了查找数据快，解决链表查询深度的问题；
-
-	红黑树的查询性能略微逊色于AVL树，因为他比avl树会稍微不平衡最多一层，也就是说红黑树的查询性能只比相同内容的avl树最多多一次比较，但是，红黑树在插入和删除上完爆avl树，avl树每次插入删除会进行大量的平衡度计算，而红黑树为了维持红黑性质所做的红黑变换和旋转的开销，相较于avl树为了维持平衡的开销要小得多；
-
-	**但是为什么会有链表与红黑树的相互转化？**
-	- 红黑树属于平衡二叉树，为了保持“平衡”是需要付出代价的，但是该代价所损耗的资源要比遍历线性链表要少。所以当长度大于8的时候，会使用红黑树；如果链表长度很短的话，根本不需要引入红黑树，引入反而会慢；
-	- 添加红黑树是因为一旦链表过长，会严重影响 HashMap 的性能，而红黑树具有快速增删改查的特点，这样就可以有效的解决链表过长时操作比较慢的问题；
+**为什么会有链表与红黑树的相互转化？**
+- 红黑树属于平衡二叉树，为了保持“平衡”是需要付出代价的，但是该代价所损耗的资源要比遍历线性链表要少。所以当长度大于8的时候，会使用红黑树；如果链表长度很短的话，根本不需要引入红黑树，引入反而会慢；
+- 添加红黑树是因为一旦链表过长，会严重影响 HashMap 的性能，而红黑树具有快速增删改查的特点，这样就可以有效的解决链表过长时操作比较慢的问题；
 
 ### 6.2、扩容时插入顺序的改进
 
@@ -155,13 +155,13 @@ HashMap 是基于一个数组和多个链表来实现的，HashMap继承`Abstrac
 
 ## 7、延迟加载机制
 
-从Java 7开始，HashMap 采用了延迟加载的机制：这意味着即使你为HashMap指定了大小，在我们第一次使用put()方法之前，记录使用的内部数组（耗费4*CAPACITY字节）也不会在内存中分配空间
+从Java 7开始，HashMap 采用了延迟加载的机制：这意味着即使为HashMap指定了大小，在第一次使用put()方法之前，记录使用的内部数组（耗费`4*CAPACITY`字节）也不会在内存中分配空间
 
 ## 8、初始化HashMap指定容量
 
 ### 8.1、为什么需要指定容量
 
-如果你需要存储大量数据，你应该在创建HashMap时指定一个初始的容量，这个容量应该接近你期望的大小。通过初始化时指定Map期望的大小，你可以避免调整大小操作带来的消耗。如果你不这样做，Map会使用默认的大小即16，factorLoad的值是0.75。前11次调用put()方法会非常快，但是第12次（16*0.75）调用时会创建一个新的长度为32的内部数组（以及对应的链表/树），第13次到第22次调用put()方法会很快；
+如果需要存储大量数据，应该在创建 HashMap 时指定一个初始的容量，这个容量应该接近期望的大小。通过初始化时指定Map期望的大小，可以避免调整大小操作带来的消耗。如果不这样做，Map会使用默认的大小即16，factorLoad的值是0.75。前11次调用put()方法会非常快，但是第12次（16*0.75）调用时会创建一个新的长度为32的内部数组（以及对应的链表/树），第13次到第22次调用put()方法会很快；
 
 ### 8.2、指定容量的数值多大合适
 
@@ -179,12 +179,11 @@ static final int tableSizeFor(int cap) {
 	return (n < 0) ? 1 : (n >= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1;
 }
 ```
-
 如果设置了 table 的初始容量，会在初始化 table 时，将扩容阈值 threshold 重新调整为 `table.size * loadFactor`。而 HashMap 是否扩容，由 threshold 决定，而 threshold 又由初始容量和 loadFactor 决定。如果我们预先知道 HashMap 数据量范围，可以预设 HashMap 的容量值来提升效率，但是需要注意要考虑装载因子的影响，才能保证不会触发预期之外的动态扩容；通常在初始化 HashMap 时，初始容量都是根据业务来的，而不会是一个固定值，为此我们需要有一个特殊处理的方式，就是将预期的初始容量，再除以 HashMap 的装载因子，默认时就是除以 0.75；
 
 例如：想要用 HashMap 存放 1k 条数据，应该设置 `1000 / 0.75`，实际传递进去的值是 1333，然后会被 tableSizeFor() 方法调整到 2048，足够存储数据而不会触发扩容；
 
-当我们明确知道 HashMap 中元素的个数的时候，把默认容量设置成 `expectedSize / 0.75F + 1.0F` 是一个在性能上相对好的选择，但 是，同时也会牺牲些内存；当然我们可以使用guava来创建HashMap：`Maps.newHashMapWithExpectedSize(7);`，其会按照 `expectedSize / 0.75F + 1.0F` 计算公式来计算：
+当明确知道 HashMap 中元素的个数的时候，把默认容量设置成 `expectedSize / 0.75F + 1.0F` 是一个在性能上相对好的选择，但是，同时也会牺牲些内存；当然可以使用guava来创建HashMap：`Maps.newHashMapWithExpectedSize(7);`，其会按照 `expectedSize / 0.75F + 1.0F` 计算公式来计算：
 ```java
 public static <K, V> HashMap<K, V> newHashMapWithExpectedSize(int expectedSize) {
 	return new HashMap<K, V>(capacity(expectedSize));
@@ -202,8 +201,7 @@ static int capacity(int expectedSize) {
 	return Integer.MAX_VALUE; // any large value
 }
 ```
-
-在JDK 1.7和JDK 1.8中，HashMap初始化这个容量的时机不同。JDK 1.8中，在调用HashMap的构造函数定义HashMap的时候，就会进行容量的设定。而在JDK 1.7中，要等到第一次put操作时才进行这一操作
+在JDK 1.7和JDK 1.8中，HashMap初始化这个容量的时机不同。JDK 1.8中，在调用HashMap的构造函数定义HashMap的时候，就会进行容量的设定。而在JDK 1.7中，要等到第一次put操作时才进行这一操作；
 
 ### 8.3、扩容触发条件
 
@@ -218,11 +216,9 @@ JDK8则只需要满足一个条件：当前存放新值（注意不是替换已�
 ```java
 public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable, Serializable
 ```
-
 - 实现标记接口 Cloneable，用于表明 HashMap 对象会重写 `java.lang.Object#clone()`方法，HashMap 实现的是浅拷贝(shallow copy)；
 - 实现标记接口 Serializable，用于表明 HashMap 对象可以被序列化；
 - HashMap 继承 AbstractMap 抽象类的同时又实现了 Map 接口：在语法层面继承接口Map是多余的，这么做仅仅是为了让阅读代码的人明确知道 HashMap 是属于 Map 体系的，起到了文档的作用AbstractMap 相当于个辅助类，Map 的一些操作这里面已经提供了默认实现，后面具体的子类如果没有特殊行为，可直接使用AbstractMap提供的实现；
-
 - AbstractMap 抽象类：对 Map 中的方法提供了一个基本实现，减少了实现Map接口的工作量
 	- 如果要实现个`不可变(unmodifiable)的map`，那么只需继承 AbstractMap，然后实现其entrySet方法，这个方法返回的set不支持add与remove，同时这个set的迭代器(iterator)不支持remove操作即可。
 	- 如果要实现个可变(modifiable)的map，首先继承 AbstractMa，然后重写 AbstractMap 的put方法，同时实现entrySet所返回set的迭代器的remove方法即可
@@ -249,7 +245,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>implements Map<K,V>, Cloneable
 
 ## 2、哈希表(hash table)
 
-HashMap是一种基于哈希表（hash table）实现的map，既满足了数据的查找方便，同时不占用太多的内容空间，
+HashMap 是一种基于哈希表（hash table）实现的map，既满足了数据的查找方便，同时不占用太多的内容空间，
 - 哈希表(也叫关联数组)一种通用的数据结构：key经过hash函数作用后得到一个槽(buckets或slots)的索引(index)，槽中保存着我们想要获取的值；
 - 一些不同的key经过同一hash函数后可能产生相同的索引，利用哈希表这种数据结构实现具体类时：设计个好的hash函数，使冲突尽可能的减少，其次是需要解决发生冲突后如何处理。
 
@@ -258,6 +254,9 @@ HashMap是一种基于哈希表（hash table）实现的map，既满足了数据
 可以理解为其存储数据的容器就是一个线性数组，HashMap里面实现一个静态内部类 Entry，其重要的属性有 key、value、next，从属性key、value我们就能很明显的看出来 Entry 就是 HashMap 键值对实现的一个基础bean，我们上面说到HashMap的基础就是一个线性数组，这个数组就是 Entry[],Map 里面的内容都保存在 Entry[]里面
 
 ***在 JDK8中，HashMap中内容保存在 Node[] 数组中的***
+```java
+transient Node<K,V>[] table;
+```
 
 ## 4、HashMap 的工作原理
 
@@ -374,6 +373,7 @@ public V put(K key, V value) {
 }
 final V putVal(int hash, K key, V value, boolean onlyIfAbsent, boolean evict)
 ```
+
 ### 1.1、JDK6和JDK7
 
 - （1）JDK7比JDK6增加了一个判断：
@@ -573,7 +573,7 @@ final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab, int h, K k, V 
 
 ## 2、get方法
 
-public V get(Object key)
+`public V get(Object key)`
 - JDK6
 ```java
 public V get(Object key) {
@@ -651,6 +651,7 @@ private V getForNullKey() {
 哈希函数每次在相同或相等的对象上应用哈希函数时，应每次返回相同的哈希码。换句话说，两个相等的对象必须一致地生成相同的哈希码；在get和put的过程中，计算下标时，先对hashCode进行hash操作，然后再通过hash值进一步计算下标
 
 ### 3.1、JDK6的实现
+
 ```java
 	static int hash(int h) {
 		h ^= (h >>> 20) ^ (h >>> 12);
@@ -660,6 +661,7 @@ private V getForNullKey() {
 为了了更有效的工作,内部数组的大小必须是2的幂值
 
 ### 3.2、JDK7的实现
+
 ```java
 final int hash(Object k) {
 	int h = hashSeed;
@@ -840,10 +842,8 @@ CopyOnWriteArraySet底层是使用CopyOnWriteArrayList存储元素的，所以�
 * [Java HashMap工作原理及实现:(JDK8)](http://yikun.github.io/2015/04/01/Java-HashMap%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86%E5%8F%8A%E5%AE%9E%E7%8E%B0/)
 * [hash()分析](http://www.hollischuang.com/archives/2091)
 * [HashMap 和 ConcurrentHashMap 全解析](https://javadoop.com/post/hashmap)
-* [加载因子是默认为0.75](https://blog.csdn.net/hcmony/article/details/56494527)
 * [高并发下的HashMap](https://www.jianshu.com/p/c15f7c180375)
 * [彻底理解HashMap](https://mp.weixin.qq.com/s/DfAoqmjh2tt5nZaUc8Dxwg)
-* [HashMap与Hashtable](https://mp.weixin.qq.com/s/h3Cg1O0pjfqp5E8ckDz_Jg)
 * [深入理解HashMap](https://xie.infoq.cn/article/b9e870e6083ef36abe230b8dd)
 
 
