@@ -160,7 +160,8 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 
 ## 1、Plugins
 
-- 阿里巴巴代码插件：Alibaba Java Coding Guidelines
+- 阿里巴巴代码插件：Alibaba Java Coding Guidelines、Alibaba Cloud Toolkit
+
 - 背景图片插件：Background Image Plus
 - 格式化xml：Eclipse Code Fromatter
 - Mybtis插件：Free Mybatis Plugin、Mybatis plugin、Mybatis xml validator、MyBatisCodeHelperPro
@@ -169,7 +170,7 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 - 代码扫描插件：SonarLint
 - CodeGlance：可以显示代码的缩略图
 - GenerateAllSetter：一键调用一个对的所有set方法
-- GrepConsole
+- GrepConsole：控制台日志增强(彩色,过滤等)
 - GsonFormat：可以将一个json字符串转成对象
 - HOCON
 - idea-mybatis-generator
@@ -188,10 +189,20 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 - metricsreloaded
 - ANTLR
 - git commit message helper:标准化提交内容的插件
-- GitToolBox
+- GitToolBox：Git工具箱(增强)
 - Better Highlights：代码认知复杂度
 - BinEd - Binary/Hex Editor 二进制文件查看
 - Arthas
+- Jump to Line：debug增强,允许在debug时访问任何一行代码
+- `.ignore`：生成git忽略文件
+- CheckStyle-IDEA
+- Ideolog：.log文件增强(高亮)
+- JRebel and XRebel
+- Smart Input
+- JDK Visual:可视化垃圾回收监控
+- Restful Fast Request -API Buddy：Restful Fast Request -API Buddy
+- Show Comment
+- HotSwapHelper
 
 ## 2、插件开发
 
@@ -202,6 +213,12 @@ https://github.com/judasn/IntelliJ-IDEA-Tutorial/blob/master/plugins-develop.md
 https://juejin.cn/post/6844904127990857742
 
 https://juejin.cn/post/7137092683125751815
+
+## 3、AI插件
+
+Continue 是一个适配 IntelliJ IDEA 的开源 AI 助手插件，旨在通过自然语言与代码的交互来提升开发效率。与 CodeGPT、GitHub Copilot 等类似，它基于大语言模型（如 OpenAI 、DeepSeek 或其他模型），为开发者提供实时代码生成、问题解决、单元测试生成等功能。
+
+CodeGPT 是一款人工智能代码助手，是 GitHub Copilot、AI Assistant、Codiumate 和其他 JetBrains 插件的强大替代品，支持集成市面上常见的大模型
 
 # 三、Spring源码导入
 
