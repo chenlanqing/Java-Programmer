@@ -178,6 +178,7 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 - Key Promoter X
 - Maven Helper
 - RestfulToolkit
+- RestfulTool：可以根据 URL 直接跳转到对应的方法，也可以通过 controller 复制出来对应的 url
 - SonarLint
 - Statistic
 - VisualVM Launcher
@@ -190,6 +191,7 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 - GitToolBox
 - Better Highlights：代码认知复杂度
 - BinEd - Binary/Hex Editor 二进制文件查看
+- Arthas
 
 ## 2、插件开发
 
