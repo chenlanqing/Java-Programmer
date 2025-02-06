@@ -23,6 +23,8 @@ Google Gemini
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 
+- [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
+
 # GPT
 
 - [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
