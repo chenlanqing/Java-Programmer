@@ -36,3 +36,4 @@ Google Gemini
 # 参考资料
 
 - [ChatGPT账号](https://chatgpt123.com/)
+- [秘塔AI搜索](https://metaso.cn/)

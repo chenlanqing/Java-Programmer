@@ -45,6 +45,8 @@ public class Hello {
 0000190: 0003 0008 0004 0001 001b 0000 0002 001c  ................
 ```
 
+反编译class文件后包含的完整内容如下：[字节码](../Java基础/Lambda-字节码.txt)
+
 ## 2.1、Class文件是一组以8位字节为基础单位的二进制流
 
 各个数据项目严格按照顺序紧凑地排列在 Class 文件中，中间没有添加任何分隔符，这使得整个 Class 文件中存储的内容几乎全部都是程序运行的必要数据；根据Java虚拟机规范的规定，Class 文件格式采用一种类似于C语言结构体的伪结构来存储，这种伪结构中只有两种数据类型：无符号数和表
@@ -83,7 +85,7 @@ magic、minor_version、major_version、constant_pool_count、constant_pool、ac
 
 ### 2.2.1、magic与version
 
-- ①、每个Class文件的头4个字节称为[魔数(magic)](../Java基础/Java基础知识.md#三十二Java魔数)，唯一作用是判断该文件是否为一个能被虚拟机接受的 Class 文件，它的值固定：`0xCAFEBABE`；魔数放在文件开头，JVM可以根据文件的开头来判断这个文件是否可能是一个.class文件，如果是，才会继续进行之后的操作
+- ①、每个Class文件的头4个字节称为[魔数(magic)](../Java基础/Java-深入.md#八Java魔数)，唯一作用是判断该文件是否为一个能被虚拟机接受的 Class 文件，它的值固定：`0xCAFEBABE`；魔数放在文件开头，JVM可以根据文件的开头来判断这个文件是否可能是一个.class文件，如果是，才会继续进行之后的操作
 - ②、紧接着magic的4个字节存储的是 Class 文件的次版本号（Minor Version）和主版本号（Major Version），高版本的JDK能向下兼容低版本的Class文件但不能运行更高版本的Class文件(即向下兼容)
 
 ### 2.2.2、constant_pool
