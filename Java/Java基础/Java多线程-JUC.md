@@ -1833,7 +1833,7 @@ take、poll都是和阻塞队列相关的，take()、poll() 都是从阻塞队�
 线程安全的有序的哈希表
 - ConcurrentSkipListMap 和 TreeMap，它们虽然都是有序的哈希表；但是 ConcurrentSkipListMap 是线程安全的，TreeMap 是线程不安全的；另外 ConcurrentSkipListMap 是通过跳表来实现的，而 TreeMap 是通过红黑树实现的。
 	- 跳表：平衡树的一种替代的数据结构，和红黑树不相同的是，跳表对于树的平衡的实现是基于一种随机化的算法的，这样也就是说跳表的插入和删除的工作是比较简单的.
-- TreeMap是基于红黑树实现的，要实现高效的并发是非常困难的，为了保证效率，当我们插入或者删除节点的时，会移动节点进行平衡操作，这导致在高并发场景中难以进行合理粒度的同步；
+- TreeMap 是基于红黑树实现的，要实现高效的并发是非常困难的，为了保证效率，当插入或者删除节点的时，会移动节点进行平衡操作，这导致在高并发场景中难以进行合理粒度的同步；
 - ConcurrentSkipListMap 的特点是存取平均时间复杂度是 O（log（n）），适用于大数据量存取的场景，最常见的是基于跳跃表实现的数据量比较大的缓存。
 
 ### 5.2、跳表
@@ -2161,9 +2161,20 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E> implements Queue<
 
 ## 8、三类并发容器比较
 
-- Concurrent类型是基于lock-free的，一般可以提供高吞吐量；Concurrent没有类似copyonwrite之类容器严重的修改开销；
-- 但是Concurrent往往有较低的遍历一致性，就是所谓的弱一致性，可能发生fail-fast
+- Concurrent 类型是基于lock-free的，一般可以提供高吞吐量；Concurrent 没有类似copyonwrite之类容器严重的修改开销；
+- 但是 Concurrent 往往有较低的遍历一致性，就是所谓的弱一致性，可能发生fail-fast
 - LinkedBlcokingQueue内部是基于锁的，并提供了BlockingQueue的等待方法；
+
+## 9、并发容器的选择
+
+Map容器：
+- 如果对数据有强一致要求，则需使用 Hashtable；
+- 在大部分场景通常都是弱一致性的情况下，使用 ConcurrentHashMap 即可；
+- 如果数据量在千万级别，且存在大量增删改操作，则可以考虑使用 ConcurrentSkipListMap
+
+List 容器：
+- 对数据强一致性有要求，使用 Vector
+- 读远大于写操作的场景，使用 CopyOnWriteArrayList、CopyOnWriteArraySet
 
 # 三、JUC包核心与算法
 
