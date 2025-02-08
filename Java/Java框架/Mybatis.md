@@ -285,6 +285,125 @@ SELECT * FROM class c, teacher t,student s WHERE c.teacher_id=t.t_id AND c.C_id=
 
 ### 6.4、数据分批 + JDBC批处理 + 事务
 
+### 6.5、MybatisPlus
+
+- [揭秘 MyBatis-Plus 批量插入的终极优化技巧](https://mp.weixin.qq.com/s/bmqRiv_LwZRgZDfiZInJpA?search_click_id=10949964162010497745-1733656064914-3638063004&poc_token=HOLypmejU_CaplX0pJoZbeTy3zRKcedFSzdBQk9R)
+
+修改数据库连接参数：[rewriteBatchedStatements=true]()
+```bash
+# 确保使用的 MySQL JDBC 驱动版本支持该参数（5.1.13 及以上）
+jdbc:mysql://localhost:3306/db_name?rewriteBatchedStatements=true
+```
+完整代码示例：
+```java
+@Service
+public class ExamServiceImpl implements ExamService {
+  private ExamMapper examMapper;
+  private QuestionService questionService;
+  private OptionService optionService;
+  private static final int BATCH_SIZE = 2000;
+  @Transactional(rollbackFor = Exception.class)
+  public void createExam(Exam exam, int questionCount, int optionCountPerQuestion) {
+        // 预先生成试卷 ID
+        long examId = zzidc.nextId();
+        exam.setId(examId);
+        examMapper.insert(exam);
+        List<Question> questionList = new ArrayList<>();
+        List<Option> allOptionList = new ArrayList<>();
+        for (int i = 0; i < questionCount; i++) {
+          // 预先生成题目 ID
+          long questionId = zzidc.nextId();
+          Question question = new Question();
+          question.setId(questionId);
+          question.setExamId(examId);
+          question.setContent("题目内容" + i);
+          questionList.add(question);
+          // 构建选项数据
+          for (int j = 0; j < optionCountPerQuestion; j++) {
+            Option option = new Option();
+            option.setQuestionId(questionId);
+            option.setContent("选项内容" + j);
+            allOptionList.add(option);
+          }
+      }
+      // 批量插入题目和选项
+      questionService.saveBatch(questionList, BATCH_SIZE);
+      optionService.saveBatch(allOptionList, BATCH_SIZE);
+  }
+}
+```
+
+**多线程并发插入的实现**
+
+直接在多线程中调用 saveBatch 方法，可能导致以下问题：
+- 程安全性：在 MyBatis 中，SqlSession 在默认情况下并非线程安全的。若在多线程环境下共享同一个 SqlSession，极有可能导致数据错误或引发异常。
+- 事务管理：对于多线程操作而言，需要独立的事务管理机制，以此来确保数据的一致性。
+- 资源竞争：过多的并发线程有可能致使数据库连接池被耗尽，进而降低性能。
+
+正确的多线程实现方式: 使用 `@Async` 异步方法，利用 Spring 的 `@Async` 注解，实现异步方法调用，每个异步方法都有自己的事务和 SqlSession
+```java
+@Configuration
+@EnableAsync
+public class AsyncConfig {
+@Bean(name = "taskExecutor")
+public Executor taskExecutor() {
+    ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(4); // 核心线程数
+    executor.setMaxPoolSize(8); // 最大线程数
+    executor.setQueueCapacity(100); // 队列容量
+    executor.setThreadNamePrefix("AsyncExecutor-");
+    executor.initialize();
+    return executor;
+  }
+}
+/**
+ * 修改批量插入方法
+ */ 
+@Service
+public class QuestionServiceImpl implements QuestionService {
+  private QuestionMapper questionMapper;
+  @Async("taskExecutor")
+  @Transactional(rollbackFor = Exception.class)
+  public CompletableFuture<Void> saveBatchAsync(List<Question> questionList) {
+    saveBatch(questionList, BATCH_SIZE);
+    return CompletableFuture.completedFuture(null);
+  }
+}
+/**
+ * 调用异步方法
+ */
+public void createExam(Exam exam, int questionCount, int optionCountPerQuestion) {
+  // ... 数据准备部分略 ...
+  // 将题目列表拆分成多个批次
+  List<List<Question>> questionBatches = Lists.partition(questionList, BATCH_SIZE);
+  List<List<Option>> optionBatches = Lists.partition(allOptionList, BATCH_SIZE);
+  List<CompletableFuture<Void>> futures = new ArrayList<>();
+  // 异步批量插入题目
+  for (List<Question> batch : questionBatches) {
+    CompletableFuture<Void> future = questionService.saveBatchAsync(batch);
+    futures.add(future);
+  }
+  // 异步批量插入选项
+  for (List<Option> batch : optionBatches) {
+    CompletableFuture<Void> future = optionService.saveBatchAsync(batch);
+    futures.add(future);
+  }
+  // 等待所有异步任务完成
+  CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+}
+```
+注意事项
+- 线程安全：每个异步方法均拥有自身独立的 SqlSession 和事务，从而有效地避免了线程安全方面的问题。
+- 事务管理：在异步方法上添加 @Transactional 注解，能够确保事务的独立性。
+- 异步结果处理：通过使用 CompletableFuture 来等待异步任务的完成，以此确保所有数据均已成功插入。
+- 增加连接池大小：在多线程并发的情形下，务必确保数据库连接池具备足够数量的连接可供使用。
+- 合理配置：应根据实际情况对连接池的最小连接数和最大连接数进行适当调整，以避免出现连接不足或者资源浪费的情况
+
+总结：
+- *将 rewriteBatchedStatements 配置为 true*：以此启用 JDBC 驱动的批处理重写功能，可显著提高批量插入的性能表现。
+- *预先生成 ID*：预先生成主键 ID，有效解决外键关系问题，进而支持批量插入操作。
+- *使用异步方法进行多线程批量插入*：运用异步方法来进行多线程批量插入，确保线程安全与事务独立，避免出现资源竞争的情况。
+- *调整数据库连接池和线程池参数*：对数据库连接池和线程池的参数进行调整，以满足多线程并发操作的实际需求。
 
 
 # 四、Mybatis与Spring整合
