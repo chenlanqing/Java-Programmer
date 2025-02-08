@@ -171,6 +171,7 @@ public void retryMethod() {
 - [Spring-Validation使用原理](https://www.redoc.top/article/803-Spring%20Validation%E5%8F%82%E6%95%B0%E6%A0%A1%E9%AA%8C%E7%9A%84%E4%BD%BF%E7%94%A8%E4%B8%8E%E5%8E%9F%E7%90%86)
 - [多字段联合校验](https://juejin.cn/post/6844903920699965447)
 - [SPEL表达式-参数校验](https://github.com/stick-i/spel-validator)
+- [Validate和Valid校验](https://mp.weixin.qq.com/s/4CrFSXTeIQboGKks2Chvfw)
 
 
 # 参考资料

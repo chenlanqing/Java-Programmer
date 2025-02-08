@@ -33,7 +33,6 @@
 ### 1.4、AOP
 
 该层支持面向切面编程。它包含以下模块：
-
 - AOP：通过配置管理特性，Spring AOP 模块直接将面向方面的编程功能集成到了 Spring 框架中。所以，可以很容易地使 Spring 框架管理的任何对象支持 AOP。Spring AOP 模块为基于 Spring 的应用程序中的对象提供了事务管理服务。通过使用 Spring AOP，不用依赖 EJB 组件，就可以将声明性事务管理集成到应用程序中；
 - Aspects：该模块为与 AspectJ 的集成提供支持；
 - Instrumentation：该层为类检测和类加载器实现提供支持
@@ -43,7 +42,6 @@
 - JMS (Java Messaging Service)：提供了一个 JMS 集成框架，简化了 JMS API 的使用。
 - Test：该模块为使用 JUnit 和 TestNG 进行测试提供支持；
 - Messaging：该模块为 STOMP 提供支持。它还支持注解编程模型，该模型用于从 WebSocket 客户端路由和处理 STOMP 消息
-
 
 # 二、IOC
 
@@ -66,17 +64,14 @@ Spring的IOC容器功能非常强大，负责Spring的Bean的创建和管理等�
 
 ![image](image/ApplicationContext-Bean的生命周期.png)
 
-面向开发者的，几乎大部分应用场景都是直接使用`ApplicationContext` 而非底层的`BeanFactory`
-
+几乎大部分应用场景都是直接使用`ApplicationContext` 而非底层的`BeanFactory`
 - （1）Bean的实例化：
 	* 首先容器启动后，会对`scope`为`singleton`且非懒加载的bean进行实例化；
-	* 容器在内部实现的时候，采用`策略模式`来决定采用何种方式初始化bean实例。通常，可以通过反射或者CGLIB动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 `CglibSubclassingInstantiationStrategy`。容器只要根据相应bean定义的`BeanDefinitio`n取得实例化信息，结合`CglibSubclassingInstantiationStrategy`以及不同的bean定义类型，就可以返回实例化完成的对象实例。但不是直接返回构造完成的对象实例，而是以BeanWrapper对构造完成的对象实例进行包裹，返回相应的`BeanWrapper`实例，这个`BeanWrapper`的实现类`BeanWrapperImpl`是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
+	* 容器在内部实现的时候，采用`策略模式`来决定采用何种方式初始化bean实例。通常，可以通过反射或者 CGLIB 动态字节码生成来初始化相应的bean实例或者动态生成其子类默认情况下，容器内部采用 `CglibSubclassingInstantiationStrategy`。容器只要根据相应bean定义的`BeanDefinitio`n取得实例化信息，结合`CglibSubclassingInstantiationStrategy`以及不同的bean定义类型，就可以返回实例化完成的对象实例。但不是直接返回构造完成的对象实例，而是以BeanWrapper对构造完成的对象实例进行包裹，返回相应的`BeanWrapper`实例，这个`BeanWrapper`的实现类`BeanWrapperImpl`是对某个bean进行包裹，然后对包裹后的bean进行操作，比如设置或获取bean的相应属性值；
 
-- （2）设置对象属性：
+- （2）设置对象属性：`BeanWrapper`继承了`PropertyAccessor`接口，可以以同一的方式对对象属性进行访问，同时又继承了`PropertyEditorRegistry`和`TypeConverter`接口，然后`BeanWrapper`就可以很方便地对bean注入属性了；
 
-	`BeanWrapper`继承了`PropertyAccessor`接口，可以以同一的方式对对象属性进行访问，同时又继承了`PropertyEditorRegistry`和`TypeConverter`接口，然后`BeanWrapper`就可以很方便地对bean注入属性了；
-
-- （3）如果`Bean`实现了`BeanNameAware`接口，会回调该接口的`setBeanName()`方法，传入该bean的id，此时该Bean就获得了自己在配置文件中的id；
+- （3）如果`Bean`实现了`BeanNameAware`接口，会回调该接口的`setBeanName()`方法，传入该bean的id，此时该Bean就获得了自己在配置文件中的id；在当前Bean中就能获取到在Spring容器中Bean的名称
 
 - （4）如果`Bean`实现了`BeanFactoryAware`接口，会回调该接口的`setBeanFactory()`方法，传入该Bean的BeanFactory，这样该Bean就获得了自己所在的BeanFactory
 
