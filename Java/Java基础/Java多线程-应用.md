@@ -549,14 +549,14 @@ for (int i=0; i<bufferSize; i++){
 
 ## 3、Disruptor快速入门
 
-（1）构架一个Event
+（1）构架一个Event：Event 是具体的数据实体，生产者生产 Event ，存入 RingBuffer，消费者从 RingBuffer 中消费它进行逻辑处理。Event 就是一个普通的 Java 对象，无需实现 Disruptor 内定义的接口
 ```java
 @Data
 public class OrderEvent {
     private Long value;
 }
 ```
-（2）构建一个EventFactory
+（2）构建一个EventFactory：用于创建 Event 对象
 ```java
 public class OrderEventFactory implements EventFactory<OrderEvent> {
     @Override
@@ -565,7 +565,32 @@ public class OrderEventFactory implements EventFactory<OrderEvent> {
     }
 }
 ```
-（3）构建一个EventHandler
+（3）定义生产者：生成者主要是持有 RingBuffer 对象进行数据的发布
+- RingBuffer 内部维护了一个 Object 数组（也就是真正存储数据的容器），在 RingBuffer 初始化时该 Object 数组就已经使用 EventFactory 初始化了一些空 Event，后续就不需要在运行时来创建了，提高性能。因此这里通过 RingBuffer 获取指定序号得到的是一个空对象，需要对它进行赋值后，才能进行发布。
+- 这里通过 RingBuffer 的 next 方法获取可用序号，如果 RingBuffer 空间不足会阻塞。
+- 通过 next 方法获取序号后，需要确保接下来使用 publish 方法发布数据
+```java
+public class OrderEventProducer {
+    private RingBuffer<OrderEvent> ringBuffer;
+    public OrderEventProducer(RingBuffer<OrderEvent> ringBuffer) {
+        this.ringBuffer = ringBuffer;
+    }
+    public void sendData(ByteBuffer data) {
+        // 1、在生产者发送消息的时候, 首先需要从我们的ringBuffer里面获取一个可用的序号
+        long sequence = ringBuffer.next();
+        try {
+            //2、注意此时获取的OrderEvent对象是一个没有被赋值的空对象
+            OrderEvent event = ringBuffer.get(sequence);
+            //3、进行实际的赋值处理
+            event.setValue(data.getLong(0));           
+        } finally {
+            //4、 提交发布操作
+            ringBuffer.publish(sequence);          
+        }
+    }
+}
+```
+（4）定义消费者：消费者可以实现 EventHandler 接口，定义自己的处理逻辑
 ```java
 public class OrderEventHandler implements EventHandler<OrderEvent> {
     @Override
@@ -574,7 +599,7 @@ public class OrderEventHandler implements EventHandler<OrderEvent> {
     }
 }
 ```
-（4）构建一个Disruptor
+（5）构建一个Disruptor
 ```java
 /**
     * 1 eventFactory: 消息(event)工厂对象
@@ -594,20 +619,11 @@ disruptor.handleEventsWith(new OrderEventHandler());
 //3. 启动disruptor
 disruptor.start();
 ```
-关于RingBuffer的使用
-```java
-//1 在生产者发送消息的时候, 首先 需要从我们的ringBuffer里面 获取一个可用的序号
-long sequence = ringBuffer.next();	//0	
-try {
-    //2 根据这个序号, 找到具体的 "OrderEvent" 元素 注意:此时获取的OrderEvent对象是一个没有被赋值的"空对象"
-    OrderEvent event = ringBuffer.get(sequence);
-    //3 进行实际的赋值处理
-    event.setValue(data.getLong(0));			
-} finally {
-    //4 提交发布操作
-    ringBuffer.publish(sequence);			
-}
-```
+（6）主流程：
+- 首先初始化一个 Disruptor 对象，Disruptor 有多个重载的构造函数。支持传入 EventFactory 、ringBufferSize （需要是2的幂次方）、executor（用于执行EventHandler 的事件处理逻辑，一个 EventHandler 对应一个线程，一个线程只服务于一个 EventHandler ）、生产者模式（支持单生产者、多生产者）、阻塞等待策略。在创建 Disruptor 对象时，内部会创建好指定 size 的 RingBuffer 对象。
+- 定义 Disruptor 对象之后，可以通过该对象添加消费者 EventHandler。
+- 启动 Disruptor，会将第2步添加的 EventHandler 消费者封装成 EventProcessor（实现了 Runnable 接口），提交到构建 Disruptor 时指定的 executor 对象中。由于 EventProcessor 的 run 方法是一个 while 循环，不断尝试从RingBuffer 中获取数据。因此可以说一个 EventHandler 对应一个线程，一个线程只服务于一个EventHandler。
+- 拿到 Disruptor 持有的 RingBuffer，然后就可以创建生产者，通过该RingBuffer就可以发布生产数据了，然后 EventProcessor 中启动的任务就可以消费到数据，交给 EventHandler 去处理了。
 
 ## 4、Disruptor核心组件
 
@@ -633,6 +649,21 @@ try {
 - 一个sequence用于跟踪标识某个特定的事件处理者（RingBuffer、Producer、Consumer）的处理进度
 - Sequence可以看成是一个AtomicLong用于标识进度；
 - 还有另外一个目的是防止不同的Sequence之间CPU缓存伪共享的问题
+
+Disruptor 中使用 Sequence 类的 value 字段来表示生产/消费进度，可以看到在该字段前后各填充了7个 long 类型的变量，来避免伪共享。另外，向 RingBuffer 内部的数组、
+
+SingleProducerSequencer 等也使用了该技术
+```java
+class LhsPadding {
+    protected long p1, p2, p3, p4, p5, p6, p7;
+}
+class Value extends LhsPadding {
+    protected volatile long value;
+}
+class RhsPadding extends Value {
+    protected long p9, p10, p11, p12, p13, p14, p15;
+}
+```
 
 ### 4.4、Sequencer
 
@@ -766,7 +797,7 @@ Disruptor可以实现串并行同时编码
 
 使用WorkPool来处理
 
-## 6、源码分析
+## 6、高性能原因
 
 ### 6.1、Disruptor底层性能特点
 
@@ -775,9 +806,11 @@ Disruptor可以实现串并行同时编码
 - 消除伪共享（填充缓存行）
 - 序号栅栏和序号配合使用来消除锁和CAS；
 
-### 6.2、数据结构与内存预加载机制
+### 6.2、空间预分配
 
-- RingBuffer使用数组Object[] entries作为存储元素
+RingBuffer 内部维护了一个 Object 数组（也就是真正存储数据的容器），在 RingBuffer 初始化时该 Object 数组就已经使用EventFactory 初始化了一些空 Event，后续就不需要在运行时来创建了，避免频繁GC。
+
+另外，RingBuffer 的数组中的元素是在初始化时一次性全部创建的，所以这些元素的内存地址大概率是连续的。消费者在消费时，是遵循空间局部性原理的。消费完第一个Event 时，很快就会消费第二个 Event，而在消费第一个 Event 时，CPU 会把内存中的第一个 Event 的后面的 Event 也加载进 Cache 中，这样当消费第二个 Event 时，它已经在 CPU Cache 中了，所以就不需要从内存中加载了，这样也可以大大提升性能
 
 ### 6.3、使用单线程写
 
@@ -809,7 +842,7 @@ Disruptor的RingBuffer，做到完全无锁是因为单线程写；注入Redis�
 
 对于YieldingWaitStrategy实现类，尝试去修改源代码，降低高性能对CPU和内存资源的损耗
 
-### 6.8、EventProcessor核心机制
+### 6.8、支持批量消费
 
 # 四、高性能内存队列
 
