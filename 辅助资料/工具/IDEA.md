@@ -161,7 +161,6 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 ## 1、Plugins
 
 - 阿里巴巴代码插件：Alibaba Java Coding Guidelines、Alibaba Cloud Toolkit
-
 - 背景图片插件：Background Image Plus
 - 格式化xml：Eclipse Code Fromatter
 - Mybtis插件：Free Mybatis Plugin、Mybatis plugin、Mybatis xml validator、MyBatisCodeHelperPro
@@ -180,7 +179,6 @@ IntelliJ 平台的 IDE 采用微内核的设计理念，其可扩展性极高。
 - Maven Helper
 - RestfulToolkit
 - RestfulTool：可以根据 URL 直接跳转到对应的方法，也可以通过 controller 复制出来对应的 url
-- SonarLint
 - Statistic
 - VisualVM Launcher
 - ASM
