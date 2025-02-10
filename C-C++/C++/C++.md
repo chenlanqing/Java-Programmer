@@ -8,6 +8,7 @@
 
 # 参考资料
 
+- [Bjarne Stroustrup：C++语言之父](https://www.stroustrup.com/bs_faq.html)
 - [C++ dev road map](https://roadmap.sh/cpp)
 - [Learn C++](https://www.learncpp.com/)
 - [可移植 C++ 源代码库](https://www.boost.org/)
@@ -18,3 +19,4 @@
 - [C++学习路线](https://mp.weixin.qq.com/s/Kpn6i3PuZdcygfo4WAEHdg)
 - [C++-Google命名规范](https://zh-google-styleguide.readthedocs.io/en/latest/google-cpp-styleguide/contents.html)
 - [LLVM-编译套件](https://llvm.org/)
+- [C++坑真的多吗？](https://coolshell.cn/articles/7992.html)
