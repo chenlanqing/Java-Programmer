@@ -538,7 +538,14 @@ rpm -e 包名：卸载
 
 ### 3.1、网络yum源
 
-`[root@localhost yum.repos.d]# vi /etc/yum.repos.d/CentOS-Base.repo`
+```bash
+[root@localhost yum.repos.d]# vi /etc/yum.repos.d/CentOS-Base.repo
+[base]
+name=CentOS-$releasever - Base - 163.com
+baseurl=http://mirrors.163.com/centos/$releasever/os/$basearch/
+gpgcheck=1
+gpgkey=http://mirrors.163.com/centos/RPM-GPG-KEY-CentOS-7
+```
 - `[base]`：容器名称，一定要放在[]中
 - name：容器说明，可以自己随便写
 - mirrorlist：镜像站点，这个可以注释掉
@@ -557,6 +564,7 @@ rpm -e 包名：卸载
 - `yum grouplist`：列出所有可用的软件组列表
 - `yum groupinstall 软件组名`：安装指定软件组，组名可以由grouplist查询出来
 - `yum groupremove 软件组名`：卸载指定软件组
+- `yum erase 包名`：写在 
 
 ### 3.3、搭建光盘源
 
@@ -594,6 +602,11 @@ rpm -e 包名：卸载
 
 
 ## 5、脚本安装包与软件包选择
+
+
+## 6、软件路径
+
+主执行文件会放在 `/usr/bin` 或者 `/usr/sbin` 下面，其他的库文件会放在 `/var` 下面，配置文件会放在 `/etc` 下面
 
 # 四、系统管理
 
