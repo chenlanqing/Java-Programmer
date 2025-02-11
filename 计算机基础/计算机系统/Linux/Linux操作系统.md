@@ -1,4 +1,22 @@
-# 一、CPU
+# 一、Linux系统概述
+
+## 1、Linux内核综述
+
+![](image/操作系统内核体系结构图.png)
+
+## 2、系统调用
+
+- 进程管理：
+    - 创建进程：父子进程、fork进程
+- 内存管理：进程内存空间
+- 文件管理：文件格式、一切皆文件
+- 信号处理
+- 进程间通信
+- 网络通信：TCP/IP 网络协议栈
+
+![](image/Linux系统调用.png)
+
+# 二、CPU
 
 - [线程的调度](https://wizardforcel.gitbooks.io/wangdaokaoyan-os/content/8.html)
 
@@ -529,7 +547,7 @@ Average:        0     15006    0.00    0.99    0.00    0.00    0.99     -  docke
 
 ![](image/CPU-根据工具查找指标.png)
 
-# 二、内存
+# 三、内存
 
 - [What every programmer should know about memory](https://people.freebsd.org/~lstewart/articles/cpumemory.pdf)
 - [内存寻址](https://liam.page/2016/05/01/Introduction-to-Memory-Addressing/)
@@ -1052,7 +1070,7 @@ $ grep Pss /proc/[1-9]*/smaps | awk '{total+=$2}; END {printf "%d kB\n", total }
 391266 kB
 ```
 
-# 三、I/O
+# 四、I/O
 
 磁盘和文件系统的管理，也是操作系统最核心的功能。
 - 磁盘为系统提供了最基本的持久化存储。
@@ -1078,6 +1096,17 @@ $ grep Pss /proc/[1-9]*/smaps | awk '{total+=$2}; END {printf "%d kB\n", total }
     - 超级块，存储整个文件系统的状态。
     - 索引节点区，用来存储索引节点。
     - 数据块区，则用来存储文件数据。
+
+
+Linux 里有一个特点，那就是一切皆文件。
+- 启动一个进程，需要一个程序文件，这是一个二进制文件。
+- 启动的时候，要加载一些配置文件，例如 yml、properties 等，这是文本文件；启动之后会打印一些日志，如果写到硬盘上，也是文本文件。
+- 但是如果我想把日志打印到交互控制台上，在命令行上唰唰地打印出来，这其实也是一个文件，是标准输出stdout 文件。
+- 这个进程的输出可以作为另一个进程的输入，这种方式称为管道，管道也是一个文件。
+- 进程可以通过网络和其他进程进行通信，建立的Socket，也是一个文件。
+- 进程需要访问外部设备，设备也是一个文件。
+- 文件都被存储在文件夹里面，其实文件夹也是一个文件。
+- 进程运行起来，要想看到进程运行的情况，会在 /proc 下面有对应的进程号，还是一系列文件。
 
 ### 1.2、虚拟文件系统
 
@@ -1515,7 +1544,7 @@ $ blkparse sdb -d sdb.bin
 $ fio --name=replay --filename=/dev/sdb --direct=1 --read_iolog=sdb.bin 
 ```
 
-# 四、网络
+# 五、网络
 
 - [Linux硬件-内核-网络](https://github.com/yanfeizhang/coder-kung-fu)
 - [Linux 网络栈接收数据（RX）：原理及内核实现](https://arthurchiao.art/blog/linux-net-stack-implementation-rx-zh/)
@@ -2008,7 +2037,7 @@ ab 的测试结果分为三个部分，分别是请求汇总、连接时间汇�
 
 ![](image/网络-根据工具查指标.png)
 
-# 五、系统监控
+# 六、系统监控
 
 从系统来说，监控系统要涵盖系统的整体资源使用情况，比如 CPU、内存、磁盘和文件系统、网络等各种系统资源；
 
