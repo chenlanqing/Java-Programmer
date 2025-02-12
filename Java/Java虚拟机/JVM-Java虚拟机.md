@@ -423,6 +423,68 @@ public class EmptyObject {
 24
 ```
 
+### 3.2.3、估算对象占用内存
+
+比如有如下类：
+```java
+@Data
+public class UserInfo {
+    private Long userId;
+    private String password;
+    private String salt;
+    private Integer status;
+    private AccountInfo accountInfo;
+}
+@Data
+public class AccountInfo {
+    private String name;
+    private Integer status;
+}
+```
+需要估算 UserInfo 实例的内存大小，需要考虑以下几个因素：
+- 基本数据类型的内存占用。
+- 对象的引用占用的内存。
+- 对象本身的开销（每个 Java 对象都会有一些额外的开销，如对象头）
+
+Java 中常见的内存占用如下：
+- **`Long`**: 8 字节（64 位）。
+- **`String`**: 每个 `String` 对象的内存占用比较复杂，主要由两部分组成：
+  - `String` 对象的本身：24 字节。
+  - `String` 内部的字符数组：每个字符占用 2 字节（由于 Java 中的 `String` 是基于 UTF-16 编码的，每个字符 2 字节）。
+  - 额外的引用指向 `String` 内部字符数组的地址。
+- **`Integer`**: 4 字节（32 位）。
+- **对象引用**: 每个对象引用占 4 字节（32 位系统）或 8 字节（64 位系统）。
+
+**算单个 `UserInfo` 实例的内存**
+```java
+@Data
+public class UserInfo {
+    private Long userId; // 8 字节
+    private String password; // 24 字节 (对象本身) + 2 字节 * 字符串长度
+    private String salt; // 24 字节 (对象本身) + 2 字节 * 字符串长度
+    private Integer status; // 4 字节
+    private AccountInfo accountInfo; // 4 字节 (对象引用)
+}
+@Data
+public class AccountInfo {
+    private String name; // 24 字节 (对象本身) + 2 字节 * 字符串长度
+    private Integer status; // 4 字节
+}
+```
+假设估算 `UserInfo` 和 `AccountInfo` 对象的内存大小，并假设某些字段的长度。
+- **`Long userId`**: 8 字节。
+- **`String password`**: 假设 `password` 字符串长度为 8 字符，那么 `String` 对象本身占用 24 字节，字符数组占用 `8 * 2 = 16` 字节。所以 `password` 占用大约 40 字节。
+- **`String salt`**: 假设 `salt` 字符串长度为 8 字符，那么同理 `salt` 占用 40 字节。
+- **`Integer status`**: 4 字节。
+- **`AccountInfo accountInfo`**:
+  - `AccountInfo` 对象占用的内存：`String name`（假设长度为 6 字符，24 + 12 = 36 字节）+ `Integer status`（4 字节），因此 `accountInfo` 占用 40 字节。
+  - `accountInfo` 本身是一个引用，占用 8 字节。
+
+使用工具：
+- JProfiler
+- MAT
+- VisualVM
+
 ## 3.3、对象的访问定位
 
 对象的访问定位也取决于具体的虚拟机实现。当我们在堆上创建一个对象实例后，就要通过虚拟机栈中的reference类型数据来操作堆上的对象。现在主流的访问方式有两种（HotSpot虚拟机采用的是第二种）：
