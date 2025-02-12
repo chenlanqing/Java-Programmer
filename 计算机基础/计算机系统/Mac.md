@@ -87,6 +87,8 @@ https://xclient.info/
 
 ## 5、homebrew
 
+- [homebrew-GUI](https://github.com/milanvarady/Applite)
+
 使用homebrew下载软件缓慢，可以使用国内镜像：
 ```
 -- 替换brew.git:
