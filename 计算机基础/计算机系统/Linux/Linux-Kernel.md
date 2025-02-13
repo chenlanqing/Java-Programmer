@@ -324,4 +324,5 @@ yum install bcc-tools
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/v6.12.1/source)
 - [Linux内核学习资料](https://github.com/0voice/linux_kernel_wiki)
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/latest/source)
+- [Linux内核学习](https://github.com/mengning/mykernel)
 

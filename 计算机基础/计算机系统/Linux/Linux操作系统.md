@@ -4,7 +4,7 @@
 
 ![](image/操作系统内核体系结构图.png)
 
-## 2、系统调用
+## 2、所有系统调用
 
 - 进程管理：
     - 创建进程：父子进程、fork进程
@@ -17,6 +17,11 @@
 ![](image/Linux系统调用.png)
 
 ## 3、系统初始化
+
+- [Linux Boot startup](https://opensource.com/article/17/2/linux-boot-and-startup)
+- [GRUB2 configuration for your Linux machine](https://opensource.com/article/17/3/introduction-grub2-configuration-linux)
+- [grub2详解(翻译和整理官方手册)](https://www.cnblogs.com/f-ck-need-u/p/7094693.html)
+- [GNU GRUB Manual 2.12](https://www.gnu.org/software/grub/manual/grub/html_node/index.html)
 
 ### 3.1、计算机工作模式
 
@@ -157,6 +162,65 @@ flowchart LR
     lzma_decompress.img_实模式切换到保护模式 --> Kernel_img
     Kernel_img --> 启动内核
 ```
+
+### 3.7、内核初始化
+
+内核的启动从入口函数 `start_kernel()` 开始。在 `init/main.c` 文件中，start_kernel 相当于内核的 main 函数，打开这个函数，里面是各种各样初始化函数 XXXX_init
+
+- **创始进程**：在操作系统里面，先要有个创始进程，有一行指令 `set_task_stack_end_magic(&init_task)`。这里面有一个参数 init_task，它的定义是 `struct task_struct init_task = INIT_TASK(init_task)`。它是系统创建的第一个进程，我们称为`0 号进程`。这是唯一一个没有通过 fork 或者 kernel_thread 产生的进程，是进程列表的第一个
+- **中断门**：`trap_init()`，里面设置了很多中断门（Interrupt Gate），用于处理各种中断。其中有一个 `set_system_intr_gate(IA32_SYSCALL_VECTOR, entry_INT80_32)`，这是系统调用的中断门。系统调用也是通过发送中断的方式进行的。当然，64 位的有另外的系统调用方法;
+- **初始化内存管理模块**：mm_init() 就是用来初始化内存管理模块；sched_init() 就是用于初始化调度模块；vfs_caches_init() 会用来初始化基于内存的文件系统 rootfs。在这个函数里面，会调用 `mnt_init()->init_rootfs()`。这里面有一行代码，`register_filesystem(&rootfs_fs_type)`。在 VFS 虚拟文件系统里面注册了一种类型，定义为 `struct file_system_type rootfs_fs_type`
+- 最后 start_kernel() 调用 rest_init()，用来做其他方面的初始化
+
+**初始化 1 号进程**
+
+rest_init 的第一大工作是，用 `kernel_thread(kernel_init, NULL, CLONE_FS)` 创建第二个进程，这个是1 号进程，这个是一个用户线程，有了用户线程之后，就需要区分资源，哪些资源用户线程能够使用，哪些资源不能使用，x86 提供了分层的权限机制，把区域分成了四个 Ring，越往里权限越高，越往外权限越低；
+
+![](image/CPU特权等级.png)
+
+操作系统很好地利用了这个机制，将能够访问关键资源的代码放在 Ring0，称为内核态（Kernel Mode）；将普通的程序代码放在 Ring3，称为用户态（User Mode）；
+
+当前系统处于保护模式，保护模式除了可访问空间大一些，还有另一个重要功能，就是“保护”，也就是说，当处于用户态的代码想要执行更高权限的指令，这种行为是被禁止的；
+
+用户态如何访问核心资源，比如：访问网卡发一个网络包
+- 暂停当前的运行，调用系统调用，接下来轮到内核中的代码运行；
+- 内核将从系统调用传过来的包，在网卡上排队，轮到的时候就发送；
+- 发送完了，系统调用就结束了，返回用户态，让暂停运行的程序接着运行
+
+![](image/用户态系统调用过程.png)
+
+这个过程就是这样的：用户态 - 系统调用 - 保存寄存器 - 内核态执行系统调用 - 恢复寄存器 - 返回用户态，然后接着运行
+
+**从内核态到用户态**
+
+kernel_thread 的参数是一个函数 kernel_init，也就是这个进程会运行这个函数。在 kernel_init 里面，会调用 kernel_init_freeable()，里面有这样的代码：
+```c
+if (!ramdisk_execute_command)
+    ramdisk_execute_command = "/init";
+```
+kernel_init 有这样的代码块：
+```c
+if (ramdisk_execute_command) {
+    ret = run_init_process(ramdisk_execute_command);
+......
+}
+......
+if (!try_to_run_init_process("/sbin/init") ||
+    !try_to_run_init_process("/etc/init") ||
+    !try_to_run_init_process("/bin/init") ||
+    !try_to_run_init_process("/bin/sh"))
+    return 0;
+```
+说明，1 号进程运行的是一个文件。如果打开 run_init_process 函数，会发现它调用的是 do_execve，execve 是一个系统调用，它的作用是运行一个执行文件。加一个 `do_` 的往往是内核系统调用的实现。没错，这就是一个系统调用，它会尝试运行 ramdisk 的“/init”，或者普通文件系统上的“/sbin/init”“/etc/init”“/bin/init”“/bin/sh”
+
+如何利用执行 init 文件的机会，从内核态回到用户态呢？
+`do_execve->do_execveat_common->exec_binprm->search_binary_handler`
+
+**ramdisk 的作用**
+
+**创建 2 号进程**
+
+函数 kthreadd，负责所有内核态的线程的调度和管理，是内核态所有线程运行的祖先
 
 # 二、CPU
 
