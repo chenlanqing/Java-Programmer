@@ -88,6 +88,76 @@ IP 寄存器就是指令指针寄存器（Instruction Pointer Register)，指向
 
 ### 3.4、BIOS
 
+在主板上，有一个东西叫**ROM**（Read Only Memory，只读存储器）。这和内存**RAM**（Random Access Memory，随机存取存储器）不同；ROM 是只读的，上面固化了一些初始化的程序，也就是**BIOS**（Basic Input and Output System，基本输入输出系统）。刚启动的时候，按某个组合键，显示器会弹出一个蓝色的界面。能够调整启动顺序的系统，就是 BIOS，然后就可以先执行它
+
+在 x86 系统中，将 1M 空间最上面的 0xF0000 到 0xFFFFF 这 64K 映射给 ROM，也就是说，到这部分地址访问的时候，会访问 ROM，当电脑刚加电的时候，会做一些重置的工作，将 CS 设置为 0xFFFF，将 IP 设置为 0x0000，所以第一条指令就会指向 0xFFFF0，正是在 ROM 的范围内。在这里，有一个 JMP 命令会跳到 ROM 中做初始化工作的代码，于是，BIOS 开始进行初始化的工作
+- BIOS 要检查一下系统的硬件是不是都好着呢
+- 要建立一个中断向量表和中断服务程序，因为现在还要用键盘和鼠标，这些都要通过中断进行的
+
+### 3.5、bootloader 时期
+
+在 BIOS 的界面上。会看到一个启动盘的选项。启动盘有什么特点呢？它一般在第一个扇区，占 512 字节，而且以 0xAA55 结束。这是一个约定，当满足这个条件的时候，就说明这是一个启动盘，在 512 字节以内会启动相关的代码。
+
+在 Linux 里面有一个工具，叫Grub2，全称 `Grand Unified Bootloader Version 2`。顾名思义，就是搞系统启动的，可以通过 `grub2-mkconfig -o /boot/grub2/grub.cfg` 来配置系统启动的选项，可以看到如下配置信息：
+```
+menuentry 'CentOS Linux (3.10.0-862.el7.x86_64) 7 (Core)' --class centos --class gnu-linux --class gnu --class os --unrestricted $menuentry_id_option 'gnulinux-3.10.0-862.el7.x86_64-advanced-b1aceb95-6b9e-464a-a589-bed66220ebee' {
+	load_video
+	set gfxpayload=keep
+	insmod gzio
+	insmod part_msdos
+	insmod ext2
+	set root='hd0,msdos1'
+	if [ x$feature_platform_search_hint = xy ]; then
+	  search --no-floppy --fs-uuid --set=root --hint='hd0,msdos1'  b1aceb95-6b9e-464a-a589-bed66220ebee
+	else
+	  search --no-floppy --fs-uuid --set=root b1aceb95-6b9e-464a-a589-bed66220ebee
+	fi
+	linux16 /boot/vmlinuz-3.10.0-862.el7.x86_64 root=UUID=b1aceb95-6b9e-464a-a589-bed66220ebee ro console=tty0 console=ttyS0,115200 crashkernel=auto net.ifnames=0 biosdevname=0 rhgb quiet 
+	initrd16 /boot/initramfs-3.10.0-862.el7.x86_64.img
+}
+```
+这里面的选项会在系统启动的时候，成为一个列表，让你选择从哪个系统启动。最终显示出来的结果就是下面这张图
+
+![](image/Linux-BootLoader-List.png)
+
+使用 `grub2-install /dev/sda`，可以将启动程序安装到相应的位置；
+
+grub2 第一个要安装的就是 `boot.img`。它由 `boot.S` 编译而成，一共 512 字节，正式安装到启动盘的第一个扇区。这个扇区通常称为`MBR`（Master Boot Record，主引导记录 / 扇区），BIOS 完成任务后，会将 `boot.img` 从硬盘加载到内存中的 0x7c00 来运，它能做的最重要的一个事情就是加载 grub2 的另一个镜像 `core.img`
+
+core.img 由 lzma_decompress.img、diskboot.img、kernel.img 和一系列的模块组成，功能比较丰富，能做很多事情
+
+![](image/Linux-BootLoader-img列表.png)
+
+- boot.img 先加载的是 core.img 的第一个扇区。如果从硬盘启动的话，这个扇区里面是 diskboot.img，对应的代码是 diskboot.S；
+- boot.img 将控制权交给 diskboot.img 后，diskboot.img 的任务就是将 core.img 的其他部分加载进来，先是解压缩程序 lzma_decompress.img，再往下是 kernel.img，最后是各个模块 module 对应的映像。这里需要注意，它不是 Linux 的内核，而是 grub 的内核
+- lzma_decompress.img 对应的代码是 startup_raw.S，本来 kernel.img 是压缩过的，现在执行的时候，需要解压缩，另外 lzma_decompress.img 做了一个重要的决定，就是调用 real_to_prot，切换到保护模式，这样就能在更大的寻址空间里面，加载更多的东西；
+
+### 3.6、从实模式切换到保护模式
+
+切换到保护模式后，大部分都与内存的访问方式有关了：
+- 第一项是**启用分段**，就是在内存里面建立段描述符表，将寄存器里面的**段寄存器**变成**段选择子**，指向某个段描述符，这样就能实现不同进程的切换了
+- 第二项是**启动分页**。能够管理的内存变大了，就需要将内存分成相等大小的块
+
+切换保护模式的函数 DATA32 call real_to_prot 会打开 Gate A20，也就是第 21 根地址线的控制线；
+
+有了足够的空间后，要对压缩过的 kernel.img 进行解压缩，然后跳转到 kernel.img 开始运行，kernel.img 对应的代码是 startup.S 以及一堆 c 文件，在 startup.S 中会调用 grub_main，这是 grub kernel 的主函数，在这个函数里面，grub_load_config() 开始解析 grub.conf 文件里的配置信息；
+
+如果是正常启动，grub_main 最后会调用 grub_command_execute (“normal”, 0, 0)，最终会调用 grub_normal_execute() 函数。在这个函数里面，grub_show_menu() 会显示出需要选择的那个操作系统的列表；
+
+一旦选择了启动某个操作系统，就要开始调用 grub_menu_execute_entry() ，开始解析并执行选择的那一项
+
+grub_command_execute (“boot”, 0, 0) 才开始真正地启动内核
+
+整个过程：
+```mermaid
+flowchart LR
+    BIOS --> 引导扇区_boot.img
+    引导扇区_boot.img --> diskboot_img
+    diskboot_img --> lzma_decompress.img_实模式切换到保护模式
+    lzma_decompress.img_实模式切换到保护模式 --> Kernel_img
+    Kernel_img --> 启动内核
+```
+
 # 二、CPU
 
 - [线程的调度](https://wizardforcel.gitbooks.io/wangdaokaoyan-os/content/8.html)
