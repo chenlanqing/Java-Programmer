@@ -222,6 +222,40 @@ if (!try_to_run_init_process("/sbin/init") ||
 
 函数 kthreadd，负责所有内核态的线程的调度和管理，是内核态所有线程运行的祖先
 
+### 3.8、glibc
+
+以打开一个文件为例：开始在用户态进程里面调用 open 函数
+```c
+int open(const char *pathname, int flags, mode_t mode)
+```
+在 glibc 的源代码中，有个文件 syscalls.list，里面列着所有 glibc 的函数对应的系统调用
+```c
+# File name Caller  Syscall name    Args    Strong name Weak names
+open		-	open		Ci:siv	__libc_open __open open
+```
+glibc 还有一个脚本 `make-syscall.sh`，可以根据上面的配置文件，对于每一个封装好的系统调用，生成一个文件。这个文件里面定义了一些宏，例如 `#define SYSCALL_NAME open`。
+
+**32 位系统调用过程**
+
+![](image/32位系统调用过程.png)
+
+**64 位系统调用过程**
+
+![](image/64位系统调用过程.png)
+
+**系统调用表**
+
+系统调用最终都会到*系统调用表*，那系统调用表 sys_call_table 是怎么形成的呢？
+- 32 位的系统调用表定义在面 arch/x86/entry/syscalls/syscall_32.tbl 文件里。例如 open 是这样定义的：
+```c
+5	i386	open			sys_open  compat_sys_open
+```
+- 64 位的系统调用定义在另一个文件 arch/x86/entry/syscalls/syscall_64.tbl 里。例如 open 是这样定义的：
+```c
+2	common	open			sys_open
+```
+第一列的数字是系统调用号。可以看出，32 位和 64 位的系统调用号是不一样的。第三列是系统调用的名字，第四列是系统调用在内核的实现函数。不过，它们都是以 sys_ 开头
+
 # 二、CPU
 
 - [线程的调度](https://wizardforcel.gitbooks.io/wangdaokaoyan-os/content/8.html)
