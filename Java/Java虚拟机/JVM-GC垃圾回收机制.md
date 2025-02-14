@@ -95,9 +95,9 @@ GC管理的主要区域是Java堆，一般情况下只针对堆进行垃圾回�
 JDK1.2以前，Java中的引用：如果reference类型的数据中存储的数值代表的是另一块内存的起始地址，就称为这块内存代表一个引用；
 
 JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Reference）、软引用（Soft Reference）、弱引用（Weak Reference）、虚引用（Phantom Reference），4种引用强度依次逐渐减弱；
-- 强引用(Strong Reference)：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
+- **强引用(Strong Reference)**：在代码中普遍存在的，类似 Object obj = new Object() 这类的引用，只要强引用还存在，垃圾收集器永远不会回收掉被引用的对象；当内存空间不足，Java 虚拟机宁愿抛出 OutOfMemoryError错误，使程序异常终止，也不会靠随意回收具有强引用的对象来解决内存不足的问题；
 
-- 软引用(Soft Reference)：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常，JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
+- **软引用(Soft Reference)**：用来描述一些还有用但并非必需的对象；对于软引用关联的对象，在系统将要发生内存溢出异常之前，将会把这些对象列进回收范围之中，进行第二次回收，如果这次回收还没有足够的内存，才会抛出内存溢出异常，JDK1.2 之后，提供了SoftReference类实现软引用；可以实现高速缓存；
     ```java
     Object o = new Object();
     SoftReference<Object> softReference = new SoftReference<>(o);
@@ -109,14 +109,20 @@ JDK1.2以后，Java对引用进行了扩充，分为：强引用（Strong Refere
     -XX:SoftRefLRUPolicyMSPerMB=<N>
     ```
 
-- 弱引用(Weak Reference)：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakReference 类来实现弱引用；
+- **弱引用(Weak Reference)**：用来描述非必需的对象，被弱引用关联的对象只能生存到下一个垃圾收集发生之前；当垃圾收集器工作时，无论当前内存是否足够，都会回收掉只被弱引用关联的对象；JDK1.2 之后，提供了 WeakReference 类来实现弱引用；
     ```java
     Object o = new Object();
     WeakReference<Object> weakReference = new WeakReference<>(o);
     ```
-    应用场景：弱应用同样可用于内存敏感的缓存。
+    应用场景：弱应用同样可用于内存敏感的缓存。JDK中使用场景：
+    - WeakHashMap（java.util包）：键（Key）通过弱引用保存，当键不再被外部强引用时，对应的键值对会自动被垃圾回收；适用场景：缓存键为对象的场景（如元数据缓存），但需注意值对象可能仍需手动管理；
+    - ThreadLocal 的内部实现：`ThreadLocal.ThreadLocalMap`中的Entry继承自`WeakReference<ThreadLocal<?>>`，将ThreadLocal对象作为弱引用键
+    - 缓存与资源管理
+    - 监听器与回调管理
+    - 动态代理与反射缓存
+    - 并发工具类
 
-- 虚引用(Phantom Reference)：虚引用并不会决定对象的生命周期，幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomReference 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；当虚引用被加入到引用队列的时候，说明这个对象已经被回收，可以在所引用的对象回收之后可以采取必要的行动
+- **虚引用(Phantom Reference)**：虚引用并不会决定对象的生命周期，幽灵引用或者幻影引用，它是最弱的一种引用关系；一个对象是否有虚引用的存在完全不会对其生存时间构成影响，也无法通过虚引用来取得一个对象实例；为一个对象设置虚引用关联的唯一目的：能在这个对象被垃圾收集器回收时收到一个系统通知；JDK1.2 之后，提供了 PhantomReference 类来实现弱引用；必须和引用队列ReferenceQueue 联合使用；跟着对象垃圾收集器回收的活动，起哨兵作用；当虚引用被加入到引用队列的时候，说明这个对象已经被回收，可以在所引用的对象回收之后可以采取必要的行动
     ```java
     Object o = new Object();
     // 必须结合引用队列
