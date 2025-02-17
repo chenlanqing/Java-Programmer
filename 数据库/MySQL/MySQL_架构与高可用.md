@@ -717,3 +717,7 @@ MySQL Server 服务层（Service Layer）解析 SQL 语句、优化查询以及�
 - 执行器：根据计划调用存储引擎执行操作并返回结果。
 
 ![](image/MySQL-Server层流程.png)
+
+# 参考资料
+
+- [database-scaling](https://planetscale.com/learn/courses/database-scaling/introduction/course-introduction)

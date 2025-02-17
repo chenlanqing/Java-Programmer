@@ -146,3 +146,4 @@
 - [GitHub 上高质量、有趣的开源项目](https://github.com/Wechat-ggGitHub/Awesome-GitHub-Repo)
 - [开放路线图精选列表](https://github.com/liuchong/awesome-roadmaps)
 - [开发者路线图](https://github.com/kamranahmedse/developer-roadmap)
+- [awesome-关于各种有趣主题的精彩列表](https://github.com/sindresorhus/awesome)
