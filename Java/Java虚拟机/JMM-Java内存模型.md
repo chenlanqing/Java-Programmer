@@ -496,13 +496,11 @@ stop = true;
 
 volatile也无法保证对变量的任何操作都是原子性的
 - 原子性：参考上面原子性
-- 自增操作不是原子性操作，而且volatile也无法保证对变量的任何操作都是原子性的。在java 1.5的 java.util.concurrent.atomic 包下提供了一些原子操作类，即对基本数据类型的自增(加1操作)，自减(减1操作)、以及加法操作(加一个数)，减法操作(减一个数)进行了封装，保证这些操作是原子性操作。atomic是利用 CAS 来实现原子性操作的(Compare And Swap)，CAS 实际上是利用处理器提供的 CMPXCHG 指令实现的，	而处理器执行 CMPXCHG 指令是一个原子性操作.
-	
+- 自增操作不是原子性操作，而且volatile也无法保证对变量的任何操作都是原子性的。在java 1.5的 java.util.concurrent.atomic 包下提供了一些原子操作类，即对基本数据类型的自增(加1操作)，自减(减1操作)、以及加法操作(加一个数)，减法操作(减一个数)进行了封装，保证这些操作是原子性操作。atomic是利用 CAS 来实现原子性操作的(Compare And Swap)，CAS 实际上是利用处理器提供的 CMPXCHG 指令实现的，而处理器执行 CMPXCHG 指令是一个原子性操作.
 
 *不要将volatile用于getAndOperate操作(这种场合不原子，需要加锁)。仅set或者get适合volatile*
 
 - 为什么volatile无法保证原子性，而atomic原子操作类能保证原子性。假设让一个volatile的Integer自增，要分成三步：
-
 	* 读取volatile变量到local
 	* 增加变量的值
 	* 把local的值写回，让其他线程可见
