@@ -32,6 +32,13 @@ Google Gemini
 - https://bewildcard.com/
 - [机器人应用](https://github.com/TyCoding/langchat)
  
+ # AI应用
+
+- [AI构建各种工具](https://bolt.new/)
+- [设计AI](https://readdy.ai/)
+- [想法转变为现实](https://lovable.dev/?via=typescript)
+- [Deepseek-API集成工具](https://github.com/deepseek-ai/awesome-deepseek-integration)
+- [AI-WebUI构建](https://github.com/open-webui/open-webui)
 
 # 参考资料
 

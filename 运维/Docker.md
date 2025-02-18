@@ -78,6 +78,28 @@ Docker 本身是一个容器运行载体或称之为管理引擎。把应用程�
 	- `systemctl daemon-reload`
 	- 重启docker：`systemctl restart docker`
 
+拉取镜像时报错：Error response from daemon: Get "https://registry-1.docker.io/v2/": net/http: request canceled while waiting for connection (Client.Timeout exceeded while awaiting headers)，可以添加更多镜像加速：
+```json
+{
+    "registry-mirrors": [
+        "https://docker.registry.cyou",
+        "https://docker-cf.registry.cyou",
+        "https://dockercf.jsdelivr.fyi",
+        "https://docker.jsdelivr.fyi",
+        "https://dockertest.jsdelivr.fyi",
+        "https://mirror.aliyuncs.com",
+        "https://dockerproxy.com",
+        "https://mirror.baidubce.com",
+        "https://docker.m.daocloud.io",
+        "https://docker.nju.edu.cn",
+        "https://docker.mirrors.sjtug.sjtu.edu.cn",
+        "https://docker.mirrors.ustc.edu.cn",
+        "https://mirror.iscas.ac.cn",
+        "https://docker.rainbond.cc"
+    ]
+}
+```
+
 ### 2.2、运行原理
 
 Docker是一个Client-Server结构的系统，Docker守护进程运行在主机上，然后通过Socket连接从客户端访问，守护进程从客户端接受命令并管理运行在主机上的容器。容器，是一个运行时环境，就是集装箱
@@ -815,7 +837,7 @@ docker pull portainer/portainer:1.23.2
 ```
 在单机上通过 docker 运行：
 ```bash
-docker run -d --net=host --restart=unless-stopped --name="portainer" -p 9000:9000 -v /var/run/docker.sock:/var/run/docker.sock -v /data/portainer_data:/data portainer/portainer:1.23.2
+docker run -d -p 9000:9000 --name=portainer --restart=unless-stopped -v /var/run/docker.sock:/var/run/docker.sock -v portainer_db:/data portainer/portainer
 
 -- 中文版本
 docker pull 6053537/portainer-ce    #拉取镜像

@@ -969,6 +969,9 @@ OK
 ## 6、Docker安装Redis
 
 https://redis.io/docs/latest/operate/oss_and_stack/install/install-stack/docker/
+```bash
+docker run -d --name redis-stack-server -p 6379:6379 redis/redis-stack-server
+```
 
 `docker exec -it redis-stack redis-cli`
 
