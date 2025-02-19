@@ -90,16 +90,16 @@ https://xclient.info/
 - [homebrew-GUI](https://github.com/milanvarady/Applite)
 
 使用homebrew下载软件缓慢，可以使用国内镜像：
-```
--- 替换brew.git:
+```bash
+## 替换brew.git:
 cd "$(brew --repo)"
 git remote set-url origin https://mirrors.cloud.tencent.com/homebrew/brew.git
 
--- 替换homebrew-core.git:
+## 替换homebrew-core.git:
 cd "$(brew --repo)/Library/Taps/homebrew/homebrew-core"
 git remote set-url origin https://mirrors.cloud.tencent.com/homebrew/homebrew-core.git
 
--- 刷新源
+## 刷新源
 brew update
 ```
 
@@ -115,4 +115,6 @@ sudo chmod -R a+rwx  /usr/local/mysql/data/
 
 ## 7、端口占用
 
+```bash
 sudo lsof -i tcp:port
+```
