@@ -17,7 +17,7 @@
 - [C++ dev road map](https://roadmap.sh/cpp)
 - [Learn C++](https://www.learncpp.com/)
 - [C++实现神经网络](https://www.jeremyong.com/cpp/machine-learning/2020/10/23/cpp-neural-network-in-a-weekend/)
-- [Linux C++程序学习](https://mp.weixin.qq.com/s/VpKsmpmgo211WlvE3VWkMg)
+- [Linux C++学习笔记](https://mp.weixin.qq.com/s/VpKsmpmgo211WlvE3VWkMg)
 - [C++学习路线](https://mp.weixin.qq.com/s/Kpn6i3PuZdcygfo4WAEHdg)
 - [C++-Google命名规范](https://zh-google-styleguide.readthedocs.io/en/latest/google-cpp-styleguide/contents.html)
 - [LLVM-编译套件](https://llvm.org/)
