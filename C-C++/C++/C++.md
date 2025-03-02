@@ -22,3 +22,5 @@
 - [C++-Google命名规范](https://zh-google-styleguide.readthedocs.io/en/latest/google-cpp-styleguide/contents.html)
 - [LLVM-编译套件](https://llvm.org/)
 - [C++坑真的多吗？](https://coolshell.cn/articles/7992.html)
+- [C++后端学习路线](https://github.com/youngyangyang04/TechCPP)
+- [C++内存模型](https://paul.pub/cpp-memory-model/)
