@@ -609,6 +609,26 @@ else:
 
 pass 可以用在 if、while、for、function、class 中；
 
+## 6、match
+
+- [What's new in Python3.10](https://peps.python.org/pep-0634/)
+
+Python 3.10 增加了 match...case 的条件判断，类似Java里的Switch
+```py
+match subject:
+    case <pattern_1>:
+        <action_1>
+    case <pattern_2>:
+        <action_2>
+    case pattern3 if condition:
+        # 处理pattern3并且满足condition的逻辑
+        <action_3>
+    case 401|403|404:    # 一个 case 也可以设置多个匹配条件，条件使用 ｜ 隔开
+        <action_4>
+    case _:    # default
+        <action_wildcard>
+```
+
 # 八、函数
 
 引用 python 内置函数，需要导入:[import](http://docs.python.org/3/library/functions.html)
