@@ -8,6 +8,10 @@ Anaconda是⼀个开源的Python和R语⾔发⾏版，主要⾯向数据科学�
 pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted.org
 ```
 
+# Python 代码风格
+
+[PEP 8 – Style Guide for Python Code](https://peps.python.org/pep-0008/)
+
 # Python应用
 
 ## 量化交易
@@ -17,8 +21,10 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 
 # 参考资料
 
+- [Python的资源列表](https://github.com/vinta/awesome-python)
 - [Python数学库](https://github.com/manimCommunity/manim)
 - [Python Tutorial](https://www.pythontutorial.net/)
 - [pythoncheatsheet](https://www.pythoncheatsheet.org/cheatsheet/string-formatting)
 - [Python-dotenv](https://pypi.org/project/python-dotenv/)
 - [DrissionPage-是一个基于 python 的网页自动化工具)
+- [25 Python Projects for Beginners – Easy Ideas to Get Started Coding Python](https://www.freecodecamp.org/news/python-projects-for-beginners/)
