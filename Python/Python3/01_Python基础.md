@@ -5,42 +5,33 @@
 - web网站和各种网站服务；
 - 系统工具和脚本
 - 把其他语言开放的模块包装；
+- 机器学习、AI
 
 ## 2、安装python
 
-- 2.x还是3.x ？
+2.x还是3.x ？
 
-	Python有两个版本，一个是`2.x`版，一个是`3.x`版，这两个版本是不兼容的，因为现在Python正在朝着3.x版本进化，在进化过程中，大量的针对2.x版本的代码要修改后才能运行，所以，目前有许多第三方库还暂时无法在3.x上使用
+在当前的Python生态中，强烈建议选择Python 3.x（推荐Python 3.7+），Python 2.x已于2020年1月1日停止官方支持，所有主流库和框架均已转向Python 3
 
-## 3、python编译器
+## 3、Python解释器
 
-- CPython
+CPython：从Python官方网站下载并安装好Python 2.7后，就直接获得了一个官方版本的解释器：CPython。这个解释器是用C语言开发的，所以叫CPython。在命令行下运行python就是启动CPython解释器。CPython是使用最广的Python解释器。教程的所有代码也都在CPython下执行。
 
-	当我们从Python官方网站下载并安装好Python 2.7后，我们就直接获得了一个官方版本的解释器：CPython。这个解释器是用C语言开发的，所以叫CPython。在命令行下运行python就是启动CPython解释器。CPython是使用最广的Python解释器。教程的所有代码也都在CPython下执行。
+IPython：IPython是基于CPython之上的一个交互式解释器，也就是说，IPython只是在交互方式上有所增强，但是执行Python代码的功能和CPython是完全一样的。好比很多国产浏览器虽然外观不同，但内核其实都是调用了IE。CPython用`>>>`作为提示符，而IPython用`In [序号]`:作为提示符。
 
-- IPython
+PyPy：PyPy是另一个Python解释器，它的目标是执行速度。PyPy采用JIT技术，对Python代码进行动态编译（注意不是解释），所以可以显著提高Python代码的执行速度。绝大部分Python代码都可以在PyPy下运行，但是PyPy和CPython有一些是不同的，这就导致相同的Python代码在两种解释器下执行可能会有不同的结果。如果你的代码要放到PyPy下执行，就需要了解PyPy和CPython的不同点。
 
-	IPython是基于CPython之上的一个交互式解释器，也就是说，IPython只是在交互方式上有所增强，但是执行Python代码的功能和CPython是完全一样的。好比很多国产浏览器虽然外观不同，但内核其实都是调用了IE。CPython用>>>作为提示符，而IPython用`In [序号]`:作为提示符。
+Jython：Jython是运行在Java平台上的Python解释器，可以直接把Python代码编译成Java字节码执行。
 
-- PyPy
-
-	PyPy是另一个Python解释器，它的目标是执行速度。PyPy采用JIT技术，对Python代码进行动态编译（注意不是解释），所以可以显著提高Python代码的执行速度。绝大部分Python代码都可以在PyPy下运行，但是PyPy和CPython有一些是不同的，这就导致相同的Python代码在两种解释器下执行可能会有不同的结果。如果你的代码要放到PyPy下执行，就需要了解PyPy和CPython的不同点。
-
-- Jython
-
-	Jython是运行在Java平台上的Python解释器，可以直接把Python代码编译成Java字节码执行。
-
-- IronPython
-
-	IronPython和Jython类似，只不过IronPython是运行在微软.Net平台上的Python解释器，可以直接把Python代码编译成.Net的字节码。
+IronPython：IronPython和Jython类似，只不过IronPython是运行在微软.Net平台上的Python解释器，可以直接把Python代码编译成.Net的字节码。
 		
 ## 4、直接运行py文件
 
-在Mac和Linux上是可以的，方法是在.py文件的第一行加上：`#!/usr/bin/env python3`
+在Mac和Linux上是可以的，方法是在`.py`文件的第一行加上：`#!/usr/bin/env python3`
 
 ## 5、Mac中Python安装目录
 
-- Mac系统自带python路径为`/System/Library/Frameworks/Python.framework/Version` 这里可能会有多个python版本，里面Current存放系统当前python版本，进入`Current/bin`，在终端输入`./python --version`即可查看系统当前python版本（注：若使用python --version命令是查看用户当前python版本而不是系统python版本）
+- Mac系统自带Python路径为`/System/Library/Frameworks/Python.framework/Version` 这里可能会有多个python版本，里面Current存放系统当前python版本，进入`Current/bin`，在终端输入`./python --version`即可查看系统当前python版本（注：若使用python --version命令是查看用户当前python版本而不是系统python版本）
 
 - HomeBrew安装python路径为`/usr/local/Cellar/python` 里面存放HomeBrew所安装版本，进入`2.7.13/bin`，在终端输入`./python --version` 即可查看用户当前使用的python版本。如果使用brew工具正确安装python的情况下，用户当前python版本会是新安装的python
 
@@ -399,7 +390,7 @@ print(f'The net price is ${net_price}')
 
 ## 1、输出
 
-`print(`)函数也可以跟上多个字符串，用逗号“，”隔开，就可以连成一串输出：`print('Hello World')`
+`print()`函数也可以跟上多个字符串，用逗号“，”隔开，就可以连成一串输出：`print('Hello World')`
 
 `print()`函数也可以接受多个字符串，用逗号“，”隔开，就可以连成一串输出，依次打印每个字符串，遇到逗号“，”会输出一个空格
 
@@ -417,7 +408,7 @@ print(f'The net price is ${net_price}')
 
 ## 2、输入
 
-如果要获取用户输入的数据(在python交互环境): `input()`--可以让用户输入字符串，并存放到一个变量里
+如果要获取用户输入的数据(在python交互环境): `input()`，可以让用户输入字符串，并存放到一个变量里
 ```
 >>> name = input()
 Michael
@@ -425,7 +416,7 @@ Michael
 ```
 *注意：*
 
-从input()读取的内容永远以字符串的形式返回；如果需要获得输入的为数字，先用int()或其他方法把字符串转换为我们想要的类型；
+从input()读取的内容永远以字符串的形式返回；如果需要获得输入的为数字，先用`int()`或其他方法把字符串转换为我们想要的类型；
 		
 # 四、注释
 
