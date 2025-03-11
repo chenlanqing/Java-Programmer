@@ -3147,6 +3147,7 @@ SubstrateVM：AOT编译框架
 
 # 参考文章
 
+* [深入理解JVM启动](https://inside.java/2025/01/28/jvm-start-up/)
 * [Java语言和虚拟机规范](https://docs.oracle.com/javase/specs/index.html)
 * [JVM 书单](https://github.com/deephacks/awesome-jvm)
 * [The Java® Virtual Machine Specification（Java SE 11 Edition）](https://docs.oracle.com/javase/specs/jvms/se11/html/index.html)
@@ -3154,9 +3155,7 @@ SubstrateVM：AOT编译框架
 * [JVM核心知识体系](https://mp.weixin.qq.com/s/DSqk4enXer1-RzGvNr6_GQ)
 * [JVM解剖公园](https://shipilev.net/jvm/anatomy-quarks/)
 * [OpenJDK 项目 Code Tools：实用小工具集](https://openjdk.org/projects/code-tools/)
-* [Java虚拟机内存优化实践](http://www.codeceo.com/article/java-jvm-memory.html)
 * [ClassLoader机制](http://www.hollischuang.com/archives/199)
-* [JVM字节码执行引擎](https://blog.csdn.net/dd864140130/article/details/49515403)
 * [内存管理工具Memory Analyzer的使用](https://www.zybuluo.com/frank-shaw/note/206287)
 * [堆外内存](https://www.jianshu.com/p/35cf0f348275)
 * [阿里龙井JDK](https://github.com/alibaba/dragonwell8)

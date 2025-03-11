@@ -38,6 +38,7 @@ Google Gemini
 - [设计AI](https://readdy.ai/)
 - [想法转变为现实](https://lovable.dev/?via=typescript)
 - [Deepseek-API集成工具](https://github.com/deepseek-ai/awesome-deepseek-integration)
+- [如何训练Deepseek](https://juejin.cn/post/7473309339294695460)
 - [AI-WebUI构建](https://github.com/open-webui/open-webui)
 
 # 参考资料
