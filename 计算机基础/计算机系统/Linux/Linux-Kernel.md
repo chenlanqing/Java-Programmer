@@ -328,4 +328,5 @@ yum install bcc-tools
 - [Linux内核导航图](https://makelinux.github.io/kernel/map/)
 - [用图学习Linux](https://github.com/ytcoode/linux-kernel-illustrated)
 - [Linux内核中文实验](https://github.com/linux-kernel-labs-zh)
+- [基于Rust的操作系统内核实验](https://github.com/chyyuu/os_kernel_lab)
 

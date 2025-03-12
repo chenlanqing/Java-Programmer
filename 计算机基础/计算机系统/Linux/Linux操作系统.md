@@ -103,7 +103,7 @@ IP 寄存器就是指令指针寄存器（Instruction Pointer Register)，指向
 
 ### 3.5、bootloader
 
-在 BIOS 的界面上。会看到一个启动盘的选项。启动盘有什么特点呢？它一般在第一个扇区，占 512 字节，而且以 0xAA55 结束。这是一个约定，当满足这个条件的时候，就说明这是一个启动盘，在 512 字节以内会启动相关的代码。
+在 BIOS 的界面上。有一个启动盘的选项。启动盘一般在第一个扇区，占 512 字节，而且以 `0xAA55` 结束。这是一个约定，当满足这个条件的时候，就说明这是一个启动盘，在 512 字节以内会启动相关的代码。
 
 在 Linux 里面有一个工具，叫Grub2，全称 `Grand Unified Bootloader Version 2`。顾名思义，就是搞系统启动的，可以通过 `grub2-mkconfig -o /boot/grub2/grub.cfg` 来配置系统启动的选项，可以看到如下配置信息：
 ```
@@ -129,7 +129,7 @@ menuentry 'CentOS Linux (3.10.0-862.el7.x86_64) 7 (Core)' --class centos --class
 
 使用 `grub2-install /dev/sda`，可以将启动程序安装到相应的位置；
 
-grub2 第一个要安装的就是 `boot.img`。它由 `boot.S` 编译而成，一共 512 字节，正式安装到启动盘的第一个扇区。这个扇区通常称为`MBR`（Master Boot Record，主引导记录 / 扇区），BIOS 完成任务后，会将 `boot.img` 从硬盘加载到内存中的 0x7c00 来运，它能做的最重要的一个事情就是加载 grub2 的另一个镜像 `core.img`
+grub2 第一个要安装的就是 `boot.img`。它由 `boot.S` 编译而成，一共 512 字节，正式安装到启动盘的第一个扇区。这个扇区通常称为`MBR`（Master Boot Record，主引导记录 / 扇区），BIOS 完成任务后，会将 `boot.img` 从硬盘加载到内存中的 `0x7c0`0 来运，它能做的最重要的一个事情就是加载 grub2 的另一个镜像 `core.img`
 
 core.img 由 lzma_decompress.img、diskboot.img、kernel.img 和一系列的模块组成，功能比较丰富，能做很多事情
 
@@ -142,7 +142,7 @@ core.img 由 lzma_decompress.img、diskboot.img、kernel.img 和一系列的模�
 ### 3.6、从实模式切换到保护模式
 
 切换到保护模式后，大部分都与内存的访问方式有关了：
-- 第一项是**启用分段**，就是在内存里面建立段描述符表，将寄存器里面的**段寄存器**变成**段选择子**，指向某个段描述符，这样就能实现不同进程的切换了
+- 第一项是**启用分段**，就是在内存里面建立段描述符表，将寄存器里面的**段寄存器** 变成**段选择子**，指向某个段描述符，这样就能实现不同进程的切换了
 - 第二项是**启动分页**。能够管理的内存变大了，就需要将内存分成相等大小的块
 
 切换保护模式的函数 DATA32 call real_to_prot 会打开 Gate A20，也就是第 21 根地址线的控制线；
@@ -2580,7 +2580,6 @@ Linux 是一个开源的操作系统，有许多不同的发行版。以下是�
 * [Linux内核碎片](https://pingcap.com/zh/blog/linux-kernel-vs-memory-fragmentation-2)
 * [Linux 0.11-内核源码分析](https://github.com/dibingfa/flash-linux0.11-talk)
 * [Linux启动流程](https://mp.weixin.qq.com/s/s1YpeLc9K-tX59REh9Wz0A)
-* [Linux启动](https://opensource.com/article/17/2/linux-boot-and-startup)
 * [Grub2 配置](https://opensource.com/article/17/3/introduction-grub2-configuration-linux)
 * [一个64位操作系统的实现](https://github.com/yifengyou/The-design-and-implementation-of-a-64-bit-os)
 * [操作系统-3个部分](https://pages.cs.wisc.edu/~remzi/OSTEP/)
