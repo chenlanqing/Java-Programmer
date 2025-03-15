@@ -168,10 +168,13 @@ flowchart LR
 ### 3.7、内核初始化
 
 内核的启动从入口函数 `start_kernel()` 开始。在 `init/main.c` 文件中，start_kernel 相当于内核的 main 函数，打开这个函数，里面是各种各样初始化函数 XXXX_init
-
+```c
+// init\main.c
+void start_kernel(void){}
+```
 - **创始进程**：在操作系统里面，先要有个创始进程，有一行指令 `set_task_stack_end_magic(&init_task)`。这里面有一个参数 init_task，它的定义是 `struct task_struct init_task = INIT_TASK(init_task)`。它是系统创建的第一个进程，我们称为`0 号进程`。这是唯一一个没有通过 fork 或者 kernel_thread 产生的进程，是进程列表的第一个
 - **中断门**：`trap_init()`，里面设置了很多中断门（Interrupt Gate），用于处理各种中断。其中有一个 `set_system_intr_gate(IA32_SYSCALL_VECTOR, entry_INT80_32)`，这是系统调用的中断门。系统调用也是通过发送中断的方式进行的。当然，64 位的有另外的系统调用方法;
-- **初始化内存管理模块**：mm_init() 就是用来初始化内存管理模块；sched_init() 就是用于初始化调度模块；vfs_caches_init() 会用来初始化基于内存的文件系统 rootfs。在这个函数里面，会调用 `mnt_init()->init_rootfs()`。这里面有一行代码，`register_filesystem(&rootfs_fs_type)`。在 VFS 虚拟文件系统里面注册了一种类型，定义为 `struct file_system_type rootfs_fs_type`
+- **初始化内存管理模块**：`mm_init()` 就是用来初始化内存管理模块；`sched_init()` 就是用于初始化调度模块；`vfs_caches_init()` 会用来初始化基于内存的文件系统 rootfs。在这个函数里面，会调用 `mnt_init()->init_rootfs()`。这里面有一行代码，`register_filesystem(&rootfs_fs_type)`。在 VFS 虚拟文件系统里面注册了一种类型，定义为 `struct file_system_type rootfs_fs_type`
 - 最后 start_kernel() 调用 rest_init()，用来做其他方面的初始化
 
 **初始化 1 号进程**
@@ -217,10 +220,40 @@ if (!try_to_run_init_process("/sbin/init") ||
 
 如何利用执行 init 文件的机会，从内核态回到用户态呢？
 `do_execve->do_execveat_common->exec_binprm->search_binary_handler`
+```c
+int search_binary_handler(struct linux_binprm *bprm)
+{
+  ......
+  struct linux_binfmt *fmt;
+  ......
+  retval = fmt->load_binary(bprm);
+  ......
+}
+```
+Linux 下一个常用的格式是 ELF（Executable and Linkable Format，可执行与可链接格式）
+```c
+static struct linux_binfmt elf_format = {
+.module  = THIS_MODULE,
+.load_binary  = load_elf_binary,
+.load_shlib  = load_elf_library,
+.core_dump  = elf_core_dump,
+.min_coredump  = ELF_EXEC_PAGESIZE,
+};
+```
 
 **ramdisk 的作用**
 
+init 终于从内核到用户态了。一开始到用户态的是 ramdisk 的 init，后来会启动真正根文件系统上的 init，成为所有用户态进程的祖先;
+
+为什么会有ramdisk 这个东西？
+
+init 程序是在文件系统上的，文件系统一定是在一个存储设备上的，例如硬盘。Linux 访问存储设备，要有驱动才能访问。如果存储系统数目很有限，那驱动可以直接放到内核里面，反正已经加载过内核到内存里了，现在可以直接对存储系统进行访问
+
+但是存储系统越来越多了，如果所有市面上的存储系统的驱动都默认放进内核，内核就太大了。这该怎么办呢？只好先弄一个基于内存的文件系统。内存访问是不需要驱动的，这个就是 ramdisk。这个时候，ramdisk 是根文件系统。然后，开始运行 ramdisk 上的 `/init`。等它运行完了就已经在用户态了。`/init` 这个程序会先根据存储系统的类型加载驱动，有了驱动就可以设置真正的根文件系统了。有了真正的根文件系统，ramdisk 上的 `/init` 会启动文件系统上的 init；
+
 **创建 2 号进程**
+
+从内核态来看，无论是进程，还是线程，我们都可以统称为任务（Task），都使用相同的数据结构，平放在同一个链表中
 
 函数 kthreadd，负责所有内核态的线程的调度和管理，是内核态所有线程运行的祖先
 
