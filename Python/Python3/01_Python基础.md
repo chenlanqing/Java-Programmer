@@ -2944,7 +2944,11 @@ urllib3==2.0.4
 ```bash
 (project_env) D:\test_env\web_crawler>deactivate
 D:\test_env\web_crawler>
-```			
+```		
+
+## 3、uv
+
+- [Rust编写的Python依赖管理](https://github.com/astral-sh/uv)
 
 # 十八、异常处理
 
