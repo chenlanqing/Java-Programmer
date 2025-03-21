@@ -40,6 +40,8 @@ Google Gemini
 - [Deepseek-API集成工具](https://github.com/deepseek-ai/awesome-deepseek-integration)
 - [如何训练Deepseek](https://juejin.cn/post/7473309339294695460)
 - [AI-WebUI构建](https://github.com/open-webui/open-webui)
+- [The AI Toolkit for TypeScript](https://sdk.vercel.ai/)
+- [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
 
 # 参考资料
 
