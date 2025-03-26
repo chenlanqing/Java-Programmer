@@ -1,3 +1,10 @@
+# Python安装
+
+## Linux源码安装
+
+- [Using Python on Unix platforms](https://docs.python.org/3/using/unix.html)
+
+## Anaconda
 
 Anaconda是⼀个开源的Python和R语⾔发⾏版，主要⾯向数据科学和机器学习任务
 
