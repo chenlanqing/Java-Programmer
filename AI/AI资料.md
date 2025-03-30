@@ -93,6 +93,18 @@ For pkg-config to find icu4c you may need to set:
 export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig"
 ```
 
+#### torch 版本问题
+
+```
+ERROR: Could not find a version that satisfies the requirement torch<3.0.0,>=2.5.0 (from versions: 2.0.0, 2.0.1, 2.1.0, 2.1.1, 2.1.2, 2.2.0, 2.2.1, 2.2.2)
+ERROR: No matching distribution found for torch<3.0.0,>=2.5.0
+```
+将 torch 的版本降低：
+```
+torch>=2.0.0,<3.0.0
+```
+
+
 # Java与AI
 
 - LangChain4j

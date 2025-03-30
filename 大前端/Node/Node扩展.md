@@ -235,4 +235,5 @@ $ sudo npm install npm@latest -g
 
 ## 3、nvm
 
+- [nvm](https://github.com/nvm-sh/nvm)
 - [Node版本管理](https://www.freecodecamp.org/news/node-version-manager-nvm-install-guide/)
