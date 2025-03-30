@@ -118,3 +118,7 @@ sudo chmod -R a+rwx  /usr/local/mysql/data/
 ```bash
 sudo lsof -i tcp:port
 ```
+
+# 其他
+
+brew install --build-from-source icu4c

@@ -16,6 +16,12 @@ conda activate myenv
 ```
 激活名为myenv的环境。
 
+
+直接关闭自动激活功能：
+```bash
+conda config --set auto_activate_base false
+```
+
 停用环境：
 ```bash
 conda deactivate
@@ -88,3 +94,6 @@ conda env export > environment.yml
 conda env create -f environment.yml
 ```
 从environment.yml文件创建环境。
+
+# 二、Jupyter
+
