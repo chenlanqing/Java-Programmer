@@ -47,6 +47,7 @@ Google Gemini
 - [The AI Toolkit for TypeScript](https://sdk.vercel.ai/)
 - [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
 - [AI工具集](https://ai-bot.cn/)
+- [ideas转为实现的AI工具](https://replit.com/)
 
 ## RAGFlow
 
