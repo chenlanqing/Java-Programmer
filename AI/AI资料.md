@@ -114,6 +114,7 @@ torch>=2.0.0,<3.0.0
 - https://github.com/mymagicpower/AIAS
 - https://gitee.com/dromara/wgai
 - https://gitee.com/langchat/langchat
+- [Java-AI入门资料](https://t.zsxq.com/vHopZ)
 
 # 参考资料
 
