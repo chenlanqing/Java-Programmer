@@ -144,7 +144,7 @@ ThreadUtil.sleep(3000);
 
 - **使用自定义线程池**： CompletableFuture 默认使用 ForkJoinPool.commonPool() 作为执行器，这个线程池是全局共享的，可能会被其他任务占用，导致性能下降或者饥饿。因此，建议使用自定义的线程池来执行 CompletableFuture 的异步任务，可以提高并发度和灵活性；
 
-- **尽量避免使用 get()**： CompletableFuture的get()方法是阻塞的，尽量避免使用。如果必须要使用的话，需要添加超时时间，否则可能会导致主线程一直等待，无法执行其他任务
+- **尽量避免使用 get()**： CompletableFuture的get() 方法是阻塞的，尽量避免使用。如果必须要使用的话，需要添加超时时间（`get(long timeout, TimeUnit unit)`），否则可能会导致主线程一直等待，无法执行其他任务；如果是JDK9以上，可以直接使用 orTimeout 和 completeOnTimeout 方法：`CompletableFuture.supplyAsync(() -> {}).orTimeout(3, TimeUnit.SECONDS);`
 
 - **正确进行异常处理**：CompletableFuture 在使用异步处理过程中，需要注意异常的处理，因为 CompletableFuture 很多方法都不能抛出异常，如果在异步执行过程中出现了异常，那么异常将被吞掉了，没有办法显示，为了处理异常，可以按照上述的方式来处理：
     ```java
@@ -158,6 +158,8 @@ ThreadUtil.sleep(3000);
     使用 exceptionally 或者 whenComplete 来实现来处理异常
 
 - **合理组合多个异步任务**：正确使用 thenCompose() 、 thenCombine() 、acceptEither()、allOf()、anyOf() 等方法来组合多个异步任务，以满足实际业务的需求，提高程序执行效率
+
+- **线程上下文传递问题：** CompletableFuture 默认不会传递线程上下文（如 ThreadLocal），这可能导致上下文丢失
 
 # 二、源码分析
 
