@@ -96,3 +96,4 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 - [探索MCP](https://v2ex.com/t/1119962)
 - [MCP+数据库](https://mp.weixin.qq.com/s/_HW4YQobEeBnIZMgrl7cLg)
 - [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
+- [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)

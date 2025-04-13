@@ -51,6 +51,7 @@ Google Gemini
 - [AI工具集](https://ai-bot.cn/)
 - [ideas转为实现的AI工具](https://replit.com/)
 - [AI 大模型自动化流程](https://yuju-ai.com/)
+- [具有本机AI功能的公平代码工作流程自动化平台](https://github.com/n8n-io/n8n)
 
 ## RAGFlow
 

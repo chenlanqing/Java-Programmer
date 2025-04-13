@@ -2981,3 +2981,4 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 * [SpringBoot 动态加载jar包，动态配置方案](https://mp.weixin.qq.com/s/ccsOrfI1tenYbnmq34lgDw)
 * [a simple springboot demo with some components for example: redis,solr,rockmq and so on.](https://github.com/Harries/springboot-demo)
 * [SpringBoot快速整合示例](https://github.com/vector4wang/spring-boot-quick)
+* [SpringBoot NoteBook](https://github.com/chengxy-nds/Springboot-Notebook)
