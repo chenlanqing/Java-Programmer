@@ -24,6 +24,8 @@ Google Gemini
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 
 - [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
+- [https://lmstudio.ai/](https://lmstudio.ai/)
+
 
 # GPT
 
@@ -48,6 +50,7 @@ Google Gemini
 - [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
 - [AI工具集](https://ai-bot.cn/)
 - [ideas转为实现的AI工具](https://replit.com/)
+- [AI 大模型自动化流程](https://yuju-ai.com/)
 
 ## RAGFlow
 

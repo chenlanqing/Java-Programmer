@@ -88,9 +88,11 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
 - [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)
-- [MetaGPT智能体开发入门](MetaGPT智能体开发入门)
+- [MetaGPT智能体开发入门](https://github.com/geekan/MetaGPT)
 
 # 三、MCP
 
 - [Model Context Protocol](https://modelcontextprotocol.io/introduction)
 - [探索MCP](https://v2ex.com/t/1119962)
+- [MCP+数据库](https://mp.weixin.qq.com/s/_HW4YQobEeBnIZMgrl7cLg)
+- [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
