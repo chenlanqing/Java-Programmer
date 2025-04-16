@@ -76,7 +76,7 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 - 企业数据安全： 调用本地模型和外部api，要评估数据的安全
 
 
-# 四、Agent
+# 三、Agent
 
 
 - [coze](https://www.coze.cn/store/bot)
@@ -90,10 +90,18 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 - [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)
 - [MetaGPT智能体开发入门](https://github.com/geekan/MetaGPT)
 
-# 三、MCP
+# 四、MCP
 
 - [Model Context Protocol](https://modelcontextprotocol.io/introduction)
 - [探索MCP](https://v2ex.com/t/1119962)
 - [MCP+数据库](https://mp.weixin.qq.com/s/_HW4YQobEeBnIZMgrl7cLg)
 - [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
 - [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
+- [Find Awesome MCP Servers and Clients](https://mcp.so/)
+
+## 1、基础
+
+MCP 是 Anthropic (Claude) 主导发布的一个开放的、通用的、有共识的协议标准。
+- MCP 是一个标准协议，就像给 AI 大模型装了一个 “万能接口”，让 AI 模型能够与不同的数据源和工具进行无缝交互。它就像 USB-C 接口一样，提供了一种标准化的方法，将 AI 模型连接到各种数据源和工具。
+- MCP 旨在替换碎片化的 Agent 代码集成，从而使 AI 系统更可靠，更有效。通过建立通用标准，服务商可以基于协议来推出它们自己服务的 AI 能力，从而支持开发者更快的构建更强大的 AI 应用。开发者也不需要重复造轮子，通过开源项目可以建立强大的 AI Agent 生态。
+- MCP 可以在不同的应用 / 服务之间保持上下文，增强整体自主执行任务的能力。
