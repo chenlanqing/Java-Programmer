@@ -23,16 +23,12 @@ Google Gemini
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 
-- [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
-- [https://lmstudio.ai/](https://lmstudio.ai/)
 
-
-# GPT
+# API Key
 
 - [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
-- [AI聊天工具](https://poe.com/)
+- [聚合优秀的AI大模型](https://www.apiyi.com/)
 - https://bewildcard.com/
-- [机器人应用](https://github.com/TyCoding/langchat)
 
 # Deepseek
 
@@ -52,6 +48,11 @@ Google Gemini
 - [ideas转为实现的AI工具](https://replit.com/)
 - [AI 大模型自动化流程](https://yuju-ai.com/)
 - [具有本机AI功能的公平代码工作流程自动化平台](https://github.com/n8n-io/n8n)
+- [AI聊天工具](https://poe.com/)
+- [机器人应用](https://github.com/TyCoding/langchat)
+- [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
+- [https://lmstudio.ai/](https://lmstudio.ai/)
+
 
 ## RAGFlow
 
