@@ -89,6 +89,11 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
 - [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)
 - [MetaGPT智能体开发入门](https://github.com/geekan/MetaGPT)
+- [A2A-Agent2Agent Protocol](https://mp.weixin.qq.com/s/7d-fQf0sgS3OZgaQZm7blw)
+- [A2A协议](https://google.github.io/A2A/#/)
+
+
+
 
 # 四、MCP
 
