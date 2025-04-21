@@ -52,6 +52,7 @@ Google Gemini
 - [机器人应用](https://github.com/TyCoding/langchat)
 - [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
 - [https://lmstudio.ai/](https://lmstudio.ai/)
+- [Chat V0](https://v0.dev/chat)
 
 
 ## RAGFlow

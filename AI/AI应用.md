@@ -46,6 +46,7 @@
 - [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
 - [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
 - [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)
+- [RAG](https://www.promptingguide.ai/zh/techniques/rag)
 
 RAG 检索增强生成（Retrieval Augmented Generation），已经成为当前最火热的LLM应用方案。理解起来不难，就是通过自有垂域数据库检索相关信息，然后合并成为提示模板，给大模型生成漂亮的回答。
 
