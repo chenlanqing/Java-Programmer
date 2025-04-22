@@ -2873,6 +2873,11 @@ pip uninstall <package_name>
 pip show <package_name>
 ```
 
+指定镜像源：
+```bash
+pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
+```
+
 ## 2、虚拟环境
 
 ### 2.1、为什么需要虚拟环境

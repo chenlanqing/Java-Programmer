@@ -99,3 +99,6 @@ conda env create -f environment.yml
 
 Jupyterlab：下一代笔记本接口Jupyterlab是最新的基于Web的交互式开发环境，用于笔记本电脑，代码和数据。它的灵活接口使用户可以在数据科学，科学计算，计算新闻学和机器学习中配置和安排工作流程。模块化设计邀请扩展以扩展和丰富功能。
 
+```
+jupyter lab
+```
