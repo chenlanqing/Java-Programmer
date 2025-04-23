@@ -131,7 +131,7 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主导发布的一个开放的、通用的、有共识的协议标准。
 - MCP 是一个标准协议，就像给 AI 大模型装了一个 “万能接口”，让 AI 模型能够与不同的数据源和工具进行无缝交互。它就像 USB-C 接口一样，提供了一种标准化的方法，将 AI 模型连接到各种数据源和工具。
 - MCP 旨在替换碎片化的 Agent 代码集成，从而使 AI 系统更可靠，更有效。通过建立通用标准，服务商可以基于协议来推出它们自己服务的 AI 能力，从而支持开发者更快的构建更强大的 AI 应用。开发者也不需要重复造轮子，通过开源项目可以建立强大的 AI Agent 生态。
-- MCP 可以在不同的应用 / 服务之间保持上下文，增强整体自主执行任务的能力。
+- MCP 是客户端-服务端架构，一个 Host 可以连接多个 MCP Server
 
 核心思想: 将 AI 模型的功能和对接到 AI 模型的工具(tool),数据(resource),提示(prompt)分离开, 独立部署, 让 AI 可以随意连接各种工具,数据以及使用各种提示!
 
@@ -144,10 +144,12 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
     - 向 MCP 服务器请求可用的工具、资源、提示等信息。
     - 根据 AI 模型的指令，调用 MCP 服务器提供的工具。
     - 将工具的执行结果返回给 AI 模型。
-- MCP 服务器 (MCP Server): 提供具体功能（工具）和数据（资源）的程序。你可以把它想象成一个“技能包”，AI 模型可以通过 MCP 客户端“调用”这些技能。MCP 服务器可以：
+- MCP 服务 (MCP Server): 提供具体功能（工具）和数据（资源）的程序。你可以把它想象成一个“技能包”，AI 模型可以通过 MCP 客户端“调用”这些技能。MCP 服务器可以：
     - 访问本地数据（文件、数据库等）。
     - 调用远程服务（ Web API 等）。
     - 执行自定义的逻辑。
+
+> MCP 提供给 LLM 所需的上下文：Resources 资源、Prompts 提示词、Tools 工具
 
 ## 2、MCP与Function call
 
@@ -157,3 +159,14 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
         图片来自文章：<a href='https://blog.dailydoseofds.com/p/function-calling-and-mcp-for-llms'>Function calling & MCP for LLMs</a>
     </div>
 </center>
+
+## 3、MCP协议细节
+
+MCP协议官方提供了两种主要通信方式：stdio（标准输入输出）和 SSE （Server-Sent Events，服务器发送事件）。这两种方式均采用全双工通信模式，通过独立的读写通道实现服务器消息的实时接收和发送
+- Stdio传输（标准输入/输出）：适用于本地进程间通信。
+- HTTP + SSE传输：
+    - 服务端→客户端：Server-Sent Events（SSE） 
+    - 客户端→服务端：HTTP POST 
+    - 适用于远程网络通信。
+
+所有传输均采用JSON-RPC 2.0进行消息交换
