@@ -148,3 +148,12 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
     - 访问本地数据（文件、数据库等）。
     - 调用远程服务（ Web API 等）。
     - 执行自定义的逻辑。
+
+## 2、MCP与Function call
+
+<center>
+    <img style="border-radius: 0.3125em; box-shadow: 0 2px 4px 0 rgba(34,36,38,.12),0 2px 10px 0 rgba(34,36,38,.08);" src="./image/MCP.vs.Function-Call.gif"><br>
+    <div style="color:orange; border-bottom: 1px solid #d9d9d9; display: inline-block; color: #999; padding: 2px;">
+        图片来自文章：<a href='https://blog.dailydoseofds.com/p/function-calling-and-mcp-for-llms'>Function calling & MCP for LLMs</a>
+    </div>
+</center>
