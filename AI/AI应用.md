@@ -138,6 +138,7 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
     - IDE 集成: 像 VS Code 、Cursor 等 IDE 可以通过插件支持 MCP 。
     - 自定义应用: 你自己开发的任何集成了 MCP 客户端的应用程序。
 - MCP 客户端 (MCP Client): 负责与 MCP 服务器通信的组件。它通常集成在 MCP 主机中。客户端的主要职责是：
+    - 充当MCP Server 和 LLM 之间的桥梁
     - 发现和连接 MCP 服务器。
     - 向 MCP 服务器请求可用的工具、资源、提示等信息。
     - 根据 AI 模型的指令，调用 MCP 服务器提供的工具。
@@ -158,7 +159,9 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
     </div>
 </center>
 
-## 3、MCP Servers
+## 3、MCP工具
+
+### 3.1、MCP Servers
 
 - [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
 - [Find Awesome MCP Servers and Clients](https://mcp.so/)
@@ -169,6 +172,18 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 - [cursor](https://cursor.directory)
 - [MCP.so](https://mcp.so/zh)
 - [阿里云百炼](https://bailian.console.aliyun.com/?tab=mcp#/mcp-market)
+
+### 3.2、MCP Clients
+
+[MCP 官网](https://modelcontextprotocol.io/clients)列出来一些支持 MCP 的 Clients。
+
+分为两类：
+- AI编程IDE：Cursor、Cline、Continue、Sourcegraph、Windsurf 等
+- 聊天客户端：Cherry Studio、Claude、Librechat、Chatwise等
+
+更多的Client参考这里：
+- [MCP Clients](https://www.pulsemcp.com/clients)
+- [Awesome MCP Clients](https://github.com/punkpeye/awesome-mcp-clients/)
 
 ## 4、应用场景
 
