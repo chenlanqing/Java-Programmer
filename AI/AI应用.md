@@ -123,8 +123,6 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 - [探索MCP](https://v2ex.com/t/1119962)
 - [MCP+数据库](https://mp.weixin.qq.com/s/_HW4YQobEeBnIZMgrl7cLg)
 - [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
-- [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
-- [Find Awesome MCP Servers and Clients](https://mcp.so/)
 
 ## 1、基础
 
@@ -163,10 +161,22 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 ## 3、MCP协议细节
 
 MCP协议官方提供了两种主要通信方式：stdio（标准输入输出）和 SSE （Server-Sent Events，服务器发送事件）。这两种方式均采用全双工通信模式，通过独立的读写通道实现服务器消息的实时接收和发送
-- Stdio传输（标准输入/输出）：适用于本地进程间通信。
+- Stdio传输（标准输入/输出）：适用于本地进程间通信，MCP默认的通信方式
 - HTTP + SSE传输：
     - 服务端→客户端：Server-Sent Events（SSE） 
     - 客户端→服务端：HTTP POST 
     - 适用于远程网络通信。
 
 所有传输均采用JSON-RPC 2.0进行消息交换
+
+## 4、MCP Servers
+
+- [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
+- [Find Awesome MCP Servers and Clients](https://mcp.so/)
+- [MCP官方资源](https://github.com/modelcontextprotocol/servers)
+- [MCP热门资源](https://github.com/punkpeye/awesome-mcp-servers)
+- [Glama](https://glama.ai/mcp/servers)
+- [Smithery](https://smithery.ai)
+- [cursor](https://cursor.directory)
+- [MCP.so](https://mcp.so/zh)
+- [阿里云百炼](https://bailian.console.aliyun.com/?tab=mcp#/mcp-market)
