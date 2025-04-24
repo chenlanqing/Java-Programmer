@@ -158,18 +158,7 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
     </div>
 </center>
 
-## 3、MCP协议细节
-
-MCP协议官方提供了两种主要通信方式：stdio（标准输入输出）和 SSE （Server-Sent Events，服务器发送事件）。这两种方式均采用全双工通信模式，通过独立的读写通道实现服务器消息的实时接收和发送
-- Stdio传输（标准输入/输出）：适用于本地进程间通信，MCP默认的通信方式
-- HTTP + SSE传输：
-    - 服务端→客户端：Server-Sent Events（SSE） 
-    - 客户端→服务端：HTTP POST 
-    - 适用于远程网络通信。
-
-所有传输均采用JSON-RPC 2.0进行消息交换
-
-## 4、MCP Servers
+## 3、MCP Servers
 
 - [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
 - [Find Awesome MCP Servers and Clients](https://mcp.so/)
@@ -180,3 +169,51 @@ MCP协议官方提供了两种主要通信方式：stdio（标准输入输出）
 - [cursor](https://cursor.directory)
 - [MCP.so](https://mcp.so/zh)
 - [阿里云百炼](https://bailian.console.aliyun.com/?tab=mcp#/mcp-market)
+
+## 4、应用场景
+
+应用领域 | 典型场景 | MCP价值 | 代表实现
+--------|--------|---------|------
+智能编程助手|代码生成、Bug修复、API集成|安全访问本地代码库、CI/CD系统|Cursor、VS Code插件
+数据分析工具|自然语言查询数据库、可视化生成|安全查询内部数据库、连接BI工具|XiYanSQL-MCP、数据库MCP服务器
+企业知识管理|知识库查询、文档生成、邮件撰写|安全访问内部文档、保护隐私数据|文件系统MCP、Email-MCP
+创意设计工具|3D建模、图形生成、UI设计|与专业软件无缝集成|BlenderMCP、浏览器自动化
+工作流自动化|多系统协调、事件驱动流程|跨系统安全协作Cloudflare |MCP、AWS自动化套件
+
+## 5、MCP协议细节
+
+MCP协议官方提供了两种主要通信方式：stdio（标准输入输出）和 SSE （Server-Sent Events，服务器发送事件）。这两种方式均采用全双工通信模式，通过独立的读写通道实现服务器消息的实时接收和发送
+- Stdio传输（标准输入/输出）：适用于本地进程间通信，MCP默认的通信方式
+- HTTP + SSE传输：
+    - 服务端→客户端：Server-Sent Events（SSE） 
+    - 客户端→服务端：HTTP POST 
+    - 适用于远程网络通信。
+
+所有传输均采用JSON-RPC 2.0进行消息交换
+
+### 5.1、stdio方式
+
+优点
+- 这种方式适用于客户端和服务器在同一台机器上运行的场景，简单。
+- stdio模式无需外部网络依赖，通信速度快，适合快速响应的本地应用。
+- 可靠性高，且易于调试
+
+缺点：
+- Stdio 的配置比较复杂，我们需要做些准备工作，你需要提前安装需要的命令行工具。
+- stdio模式为单进程通信，无法并行处理多个客户端请求，同时由于进程资源开销较大，不适合在本地运行大量服务。（限制了其在更复杂分布式场景中的使用）；
+
+stdio的本地环境有两种：
+- 一种是Python 编写的服务，
+- 一种用TypeScript 编写的服务。
+
+分别对应着uvx 和 npx 两种指令
+
+### 5.2、SSE方式
+
+场景
+- SSE方式适用于客户端和服务器位于不同物理位置的场景。
+- 适用于实时数据更新、消息推送、轻量级监控和实时日志流等场景
+- 对于分布式或远程部署的场景，基于 HTTP 和 SSE 的传输方式则更为合适。
+
+优点
+- 配置方式非常简单，基本上就一个链接就行，直接复制他的链接填上就行
