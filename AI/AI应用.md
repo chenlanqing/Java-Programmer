@@ -232,3 +232,52 @@ stdio的本地环境有两种：
 
 优点
 - 配置方式非常简单，基本上就一个链接就行，直接复制他的链接填上就行
+
+## 6、MCP 工作流程
+
+API 主要有两个
+- `tools/list`：列出 Server 支持的所有工具
+- `tools/call`：Client 请求 Server 去执行某个工具，并将结果返回
+
+```mermaid
+sequenceDiagram
+    autonumber
+    User ->>+ MCP Client: 启动客户端
+    Note over MCP Client,MCP Server: 初始化阶段
+    MCP Client ->>+ MCP Server: 连接服务器
+    MCP Server -->>+ MCP Client: 确认连接
+    MCP Client ->>+ MCP Server: 请求可用工具列表
+    MCP Server -->>+ MCP Client: 返回工具列表和描述
+    Note over MCP Client,LLM: 查询处理阶段
+    User ->>+ MCP Client: 输入查询
+    MCP Client ->>+ LLM : 发送查询和可用工具信息
+    loop 工具调用循环
+        LLM -->>+ MCP Client : 返回响应（返回或工具调用）
+        alt 是工具调用
+            MCP Client ->>+ MCP Server: 执行工具调用
+            MCP Server -->>+ MCP Client: 返回工具执行结果
+            MCP Client ->>+ LLM: 发送查询和工具结果
+        else 是文本响应
+            MCP Client -->>+ User: 显示响应
+        end
+    end
+```
+
+数据流向为：
+```mermaid
+flowchart TD
+    id1([用户]) -->|1.查询| id2(Host应用)
+    id1([用户]) -->|5.批准拒绝| id2(Host应用)
+    id2(Host应用)--> |4.请求审批|id1([用户])
+    id2(Host应用) --> |14.展示结果| id1([用户])
+    id2(Host应用) --> |2.查询+工具列表|id3(LLM)
+    id2(Host应用) --> |12.工具结果|id3(LLM)
+    id3(LLM) --> |3.工具调用请求|id2(Host应用)
+    id3(LLM) --> |13.最终响应|id2(Host应用)
+    id2(Host应用) --> |6.工具调用命令|id4(MCP Client)
+    id4(MCP Client) --> |11.传递结果|id2(Host应用)
+    id4(MCP Client) --> |7.执行请求|id5(MCP Server)
+    id5(MCP Server) --> |10.返回结果|id4(MCP Client)
+    id5(MCP Server) --> |8.API 调用|id6[(Database)]
+    id6[(Database)] --> |9.返回数据|id5(MCP Server)
+```
