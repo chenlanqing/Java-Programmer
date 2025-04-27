@@ -104,7 +104,6 @@ RAG 通过在 LLM 生成答案之前，先从外部知识源中检索相关信�
 
 - [agent directory](https://aiagentsdirectory.com/)
 - [coze](https://www.coze.cn/store/bot)
-- [coze ai agent](https://juejin.cn/post/7330426020997382184)
 - [Agent调研--19类Agent框架对比](https://mp.weixin.qq.com/s/rogMCoS1zDN0mAAC5EKhFQ)
 - [A list of AI autonomous agents](https://github.com/e2b-dev/awesome-ai-agents)
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)

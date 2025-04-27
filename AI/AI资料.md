@@ -53,7 +53,7 @@ Google Gemini
 - [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
 - [https://lmstudio.ai/](https://lmstudio.ai/)
 - [Chat V0](https://v0.dev/chat)
-
+- [AI 源码解读工具](https://deepwiki.com/)
 
 ## RAGFlow
 
