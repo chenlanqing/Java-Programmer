@@ -51,9 +51,16 @@ Google Gemini
 - [AI聊天工具](https://poe.com/)
 - [机器人应用](https://github.com/TyCoding/langchat)
 - [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
-- [https://lmstudio.ai/](https://lmstudio.ai/)
 - [Chat V0](https://v0.dev/chat)
 - [AI 源码解读工具](https://deepwiki.com/)
+- [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
+
+# AI 编辑器
+
+- windsurf：https://windsurf.com/editor
+- cursor
+- tare
+- [LMStudio](https://lmstudio.ai/)
 
 ## RAGFlow
 
