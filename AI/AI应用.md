@@ -248,6 +248,28 @@ stdio的本地环境有两种：
 优点
 - 配置方式非常简单，基本上就一个链接就行，直接复制他的链接填上就行
 
+
+### 5.3、Streamable HTTP
+
+- [Replace HTTP+SSE with new "Streamable HTTP" transport](https://github.com/modelcontextprotocol/modelcontextprotocol/pull/206)
+
+MCP 新增了一种方式：Streamable HTTP 传输层替代原有的 HTTP+SSE 传输层：
+- Streamable HTTP 相比 HTTP + SSE 具有更好的稳定性，在高并发场景下表现更优。
+- Streamable HTTP 在性能方面相比 HTTP + SSE 具有明显优势，响应时间更短且更稳定。
+- Streamable HTTP 客户端实现相比 HTTP + SSE 更简单，代码量更少，维护成本更低
+
+HTTP+SSE 存在的问题：
+
+HTTP+SSE 的传输过程实现中，客户端和服务器通过两个主要渠道进行通信：（1）HTTP 请求/响应：客户端通过标准的 HTTP 请求向服务器发送消息。（2）服务器发送事件（SSE）：服务器通过专门的 /sse 端点向客户端推送消息，这就导致存在下面三个问题：
+- 服务器必须维护长连接，在高并发情况下会导致显著的资源消耗。
+- 服务器消息只能通过 SSE 传递，造成了不必要的复杂性和开销。
+- 基础架构兼容性，许多现有的网络基础架构可能无法正确处理长期的 SSE 连接。企业防火墙可能会强制终止超时连接，导致服务不可靠。
+
+Streamable HTTP 的改进
+- 统一端点：移除了专门建立连接的 /sse 端点，将所有通信整合到统一的端点。
+- 按需流式传输：服务器可以灵活选择返回标准 HTTP 响应或通过 SSE 流式返回。
+- 状态管理：引入 session 机制以支持状态管理和恢复。
+
 ## 6、MCP 工作流程
 
 API 主要有两个
