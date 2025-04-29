@@ -5,6 +5,7 @@
 - [AI List Chat Prompt](https://www.itis.chat/)
 - [Prompt guide](https://www.promptingguide.ai/)
 - [掌握Prompt写作秘籍](https://mp.weixin.qq.com/s/r1_eUa0qm9UDOdAM8s5Kug)
+- [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
 
 ## 1、什么是 Prompt
 
