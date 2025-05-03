@@ -128,6 +128,7 @@ torch>=2.0.0,<3.0.0
 - https://gitee.com/dromara/wgai
 - https://gitee.com/langchat/langchat
 - [Java-AI入门资料](https://t.zsxq.com/vHopZ)
+- [Spring AI Alibaba](https://java2ai.com/)
 
 # 参考资料
 

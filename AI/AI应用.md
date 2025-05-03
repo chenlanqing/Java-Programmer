@@ -165,6 +165,8 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 
 > MCP 提供给 LLM 所需的上下文：Resources 资源、Prompts 提示词、Tools 工具
 
+> 整体的工作流程是这样的：AI 应用中集成 MCP 客户端，通过 MCP 协议向 MCP 服务端发起请求，MCP 服务端可以连接本地/远程的数据源，或者通过 API 访问其他服务，从而完成数据的获取，返回给 AI 应用去使用
+
 ## 2、MCP与Function call
 
 <center>
@@ -180,7 +182,7 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 
 - [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
 - [Find Awesome MCP Servers and Clients](https://mcp.so/)
-- [MCP官方资源](https://github.com/modelcontextprotocol/servers)
+- [MCP Server 官方示例](https://github.com/modelcontextprotocol/servers)
 - [MCP热门资源](https://github.com/punkpeye/awesome-mcp-servers)
 - [Glama](https://glama.ai/mcp/servers)
 - [Smithery](https://smithery.ai)
