@@ -23,6 +23,8 @@ Google Gemini
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 
+- [higress-AI网关](https://github.com/alibaba/higress)
+
 
 # API Key
 

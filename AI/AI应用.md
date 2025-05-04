@@ -110,11 +110,18 @@ RAG 是一种旨在结合大型语言模型 (LLM) 的生成能力和外部知识
 - 查询和检索模块：如何准确高效地检索出相关信息
 - 响应生成模块：如何利用检索出的相关信息来增强 LLM 的输出
 
-# 三、Agent
+# 三、AI Agent
 
 - [A2A-Agent2Agent Protocol](https://mp.weixin.qq.com/s/7d-fQf0sgS3OZgaQZm7blw)
 - [A2A协议](https://google.github.io/A2A/#/)
 - [agents.json](https://docs.wild-card.ai/agentsjson/introduction)
+- [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
+
+## 1、概念
+
+Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去处理相关事宜。例如我聘请你作为代理律师，那么你将以我的名义进行民事法律行为；再例如我今天休假了，设置同事作为我的代理，去处理审批流等任务。
+
+而 AI Agent 是指在普通代理的基础上，具备对任务的理解、环境的感知、信息的获取能力，并通过推理能力，自主进行决策和执行。AI Agent 就是 LLM + 客户端（Chatbot、AI IDE 等）组成的产品，代替我们去自主的完成下达的任务，这里的客户端具备规划、工具使用，甚至记忆的功能，目的都是为了更准确的执行任务。
 
 
 ## 应用
