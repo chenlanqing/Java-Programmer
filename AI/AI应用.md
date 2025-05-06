@@ -196,6 +196,7 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 - [cursor](https://cursor.directory)
 - [MCP.so](https://mcp.so/zh)
 - [阿里云百炼](https://bailian.console.aliyun.com/?tab=mcp#/mcp-market)
+- [阿里 Higress AI MCP](https://mcp.higress.ai/)
 
 ### 3.2、MCP Clients
 
@@ -327,3 +328,11 @@ flowchart TD
     id5(MCP Server) --> |8.API 调用|id6[(Database)]
     id6[(Database)] --> |9.返回数据|id5(MCP Server)
 ```
+
+## 7、Spring AI 使用 MCP
+
+Spring AI MCP 采用模块化架构，包括以下组件：
+- Spring AI 应用程序：使用 Spring AI 框架构建想要通过 MCP 访问数据的生成式 AI 应用程序
+- Spring MCP 客户端：MCP 协议的 Spring AI 实现，与服务器保持 1:1 连接
+
+通过 Spring AI MCP，可以快速搭建 MCP 客户端和服务端程序。
