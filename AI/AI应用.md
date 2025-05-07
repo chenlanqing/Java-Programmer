@@ -336,3 +336,7 @@ Spring AI MCP 采用模块化架构，包括以下组件：
 - Spring MCP 客户端：MCP 协议的 Spring AI 实现，与服务器保持 1:1 连接
 
 通过 Spring AI MCP，可以快速搭建 MCP 客户端和服务端程序。
+
+## 8、MCP 安全问题
+
+https://news.ycombinator.com/item?id=43600192
