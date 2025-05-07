@@ -116,6 +116,7 @@ RAG 是一种旨在结合大型语言模型 (LLM) 的生成能力和外部知识
 - [A2A协议](https://google.github.io/A2A/#/)
 - [agents.json](https://docs.wild-card.ai/agentsjson/introduction)
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
+- [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
 
 ## 1、概念
 
@@ -145,6 +146,8 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 - [探索MCP](https://v2ex.com/t/1119962)
 - [MCP+数据库](https://mp.weixin.qq.com/s/_HW4YQobEeBnIZMgrl7cLg)
 - [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
+- [MCP With LLMS](https://modelcontextprotocol.io/llms-full.txt)
+
 
 ## 1、基础
 
@@ -340,3 +343,7 @@ Spring AI MCP 采用模块化架构，包括以下组件：
 ## 8、MCP 安全问题
 
 https://news.ycombinator.com/item?id=43600192
+
+## 9、MCP和Agent
+
+- [MCP 构建 Agent](https://github.com/lastmile-ai/mcp-agent)
