@@ -117,6 +117,8 @@ RAG 是一种旨在结合大型语言模型 (LLM) 的生成能力和外部知识
 - [agents.json](https://docs.wild-card.ai/agentsjson/introduction)
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
+- [ReAct模式 = Reason + Act](https://www.promptingguide.ai/techniques/react)
+- [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
 
 ## 1、概念
 
@@ -147,6 +149,7 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 - [MCP+数据库](https://mp.weixin.qq.com/s/_HW4YQobEeBnIZMgrl7cLg)
 - [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
 - [MCP With LLMS](https://modelcontextprotocol.io/llms-full.txt)
+- [分析 Cline 与大模型的交互](https://www.youtube.com/watch?v=YyVkXrXxvX8)
 
 
 ## 1、基础
@@ -177,7 +180,7 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 
 > 整体的工作流程是这样的：AI 应用中集成 MCP 客户端，通过 MCP 协议向 MCP 服务端发起请求，MCP 服务端可以连接本地/远程的数据源，或者通过 API 访问其他服务，从而完成数据的获取，返回给 AI 应用去使用
 
-$ \color{red}{特别说明：MCP 并没有规定如何与大模型进行交互} $
+$ \color{red}{特别说明：MCP 并没有规定如何与大模型进行交互，其没有对模型与 MCP HOST 的交互进行规定} $
 
 ## 2、MCP与Function call
 
