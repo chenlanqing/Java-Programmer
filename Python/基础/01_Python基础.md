@@ -2822,7 +2822,7 @@ __all__ = email.__all__
 ```
 这样，mail 包只公开 `email.__all__` 变量中指定的 send() 函数。它从外部隐藏了 `attach_file()` 函数
 		
-# 十七、第三方模块
+# 十七、包管理
 
 ## 1、pip
 
@@ -2879,6 +2879,8 @@ pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requir
 ```
 
 ## 2、虚拟环境
+
+- [Python 相关环境](../Python环境.md)
 
 ### 2.1、为什么需要虚拟环境
 
@@ -2949,11 +2951,104 @@ urllib3==2.0.4
 ```bash
 (project_env) D:\test_env\web_crawler>deactivate
 D:\test_env\web_crawler>
-```		
+```	
 
-## 3、uv
+## 3、uv 和 anaconda
+
+选 UV：
+- 如果你主要做纯 Python 项目（比如 Web 开发、小工具），追求速度和简洁。
+- 不需要管理复杂的非 Python 依赖。
+- 想尝试现代化的工具和工作流。
+- 示例命令：uv init myproject, uv add numpy, uv run script.py。
+
+选 Conda：
+- 如果你在数据科学、AI 或科学计算领域，需要安装复杂的依赖（比如 TensorFlow、PyTorch 的 GPU 版）。
+- 项目需要在不同操作系统间保持一致性。
+- 你已经习惯 Conda 或团队依赖它的生态。
+- 示例命令：conda create -n myenv python=3.10, conda install numpy。
+
+混合使用：
+- 如果你既想要 Conda 的强大依赖管理，又想要 UV 的速度，可以在 Conda 环境里用 UV。
+- 方法：先用 Conda 创建环境（`conda create -n myenv python=3.10`），激活后安装 UV（c`onda activate myenv; pip install uv`），然后用 UV 管理 PyPI 包。
+
+## 4、uv
 
 - [Rust编写的Python依赖管理](https://github.com/astral-sh/uv)
+
+基本安装
+```bash
+# On macOS and Linux.
+curl -LsSf https://astral.sh/uv/install.sh | sh
+# On Windows.
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+# With pip.
+pip install uv
+```
+
+### 4.1、基本使用
+
+**初始化一个项目**
+```bash
+uv init test-uv
+```
+生成的目录结构：
+```bash
+test-uv
+    ├─ .git
+    ├─.gitignore
+    ├─.python-version  # 记录了当前项目使用的Python环境版本，可以自行编辑修改
+    ├─README.md
+    ├─main.py
+    ├─pyproject.toml # 项目配置信息，类似于JS中的package.json
+```
+
+**运行脚本**
+```bash
+uv run xxx
+```
+uv run 的执行逻辑为：
+- 检查当前目录中是否存在 `.venv`目录，若不存在则创建新环境；
+- 验证环境是否包含脚本所需依赖，如果缺失依赖则自动安装；
+- 在当前的虚拟环境中执行命令，不会与其他环境产生冲突；
+
+### 4.2、依赖管理
+
+**添加依赖**
+
+用于安装包并自动更新项目配置文件（pyproject.toml）和锁定文件（uv.lock）
+```bash
+# 安装最新版包
+uv add requests
+# 安装指定版本
+uv add "flask>=2.0.0"
+uv add git+https://github.com/psf/requests.git
+```
+uv add 可以理解为 uv pip install的增强版，底层同样是利用了pip进行安装，但是uv add额外增加了更新项目配置文件的功能
+
+**remove依赖**
+
+用于卸载包并更新项目配置
+```bash
+# 同步所有依赖（包括dev）
+uv sync
+# 仅同步生产依赖
+uv sync --production
+# 同步并清理多余包
+uv sync --clean
+```
+
+### 4.3、管理虚拟环境
+
+默认情况下，在工作目录中创建名为 `.venv` 的虚拟环境
+```bash
+uv venv [OPTIONS] [PATH]
+```
+如果目标路径中存在虚拟环境，则将删除该虚拟环境，并创建一个新的空虚拟环境；默认使用的 Python 最新版本；
+```bash
+uv venv --python 3.11.0
+uv pip install -r requirements.txt
+```
+
 
 # 十八、异常处理
 

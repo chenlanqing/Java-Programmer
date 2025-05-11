@@ -126,7 +126,7 @@
 ## 2、其他编程语言
 
 - [C语言](./C-C++/C/)
-- [Python](./Language/Python/Python3/)
+- [Python](./Python)
 - [C++](./C-C++/C++)
 - [golang](./Language/go.md)
 - [Rust](./Language/Rust/Rust.md)
