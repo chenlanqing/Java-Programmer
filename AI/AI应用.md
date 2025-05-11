@@ -177,6 +177,8 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 
 > 整体的工作流程是这样的：AI 应用中集成 MCP 客户端，通过 MCP 协议向 MCP 服务端发起请求，MCP 服务端可以连接本地/远程的数据源，或者通过 API 访问其他服务，从而完成数据的获取，返回给 AI 应用去使用
 
+$ \color{red}{特别说明：MCP 并没有规定如何与大模型进行交互} $
+
 ## 2、MCP与Function call
 
 <center>
