@@ -2906,13 +2906,14 @@ Python 使用虚拟环境为每个项目创建一个孤立的环境。换句话�
 
 ### 2.3、如何使用
 
-在一个Python目录下，执行如下命令，创建一个名为 project_env 的虚拟环境
+在一个Python目录下，执行如下命令，创建一个虚拟环境
 ```bash
-python -m venv project_env
+python -m venv project_venv
 ```
-运行 project_env/Scripts 目录中的 `activate.bat` 文件，激活虚拟环境：
+运行 project_venv/bin/activate 文件，激活虚拟环境：
 ```bash
-project_env\Scripts\activate
+#mac os
+source project_venv/bin/activate
 ```
 在终端中，可以看到如下信息：
 ```bash
