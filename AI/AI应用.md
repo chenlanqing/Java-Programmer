@@ -119,6 +119,7 @@ RAG 是一种旨在结合大型语言模型 (LLM) 的生成能力和外部知识
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
 - [ReAct模式 = Reason + Act](https://www.promptingguide.ai/techniques/react)
 - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
+- [Pocket Flow](https://github.com/The-Pocket/PocketFlow)
 
 ## 1、概念
 
