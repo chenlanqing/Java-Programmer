@@ -4,6 +4,7 @@
 - [LangChain-Java版](https://github.com/Starcloud-Cloud/java-langchain)
 - [LangChain4J](https://github.com/langchain4j/langchain4j)
 - [LangChain-Introduction](https://python.langchain.com/v0.2/docs/introduction/)
+- [LangChain Hub-用于上传、浏览、拉取和管理提示词(prompts)的地方](https://smith.langchain.com/hub)
 
 ## 1、概述
 
