@@ -58,6 +58,11 @@ Google Gemini
 - [AI 源码解读工具](https://deepwiki.com/)
 - [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
 
+# AI 商业
+
+- 可灵 AI：比如 AI 换衣
+- 即梦 AI、火山引擎：[图片换装](https://www.volcengine.com/docs/85128/1462743)、[单图音频驱动](https://www.volcengine.com/docs/85128/1433887)、[图形融合](https://www.volcengine.com/docs/6791/1337909)
+
 # AI 编辑器
 
 - windsurf：https://windsurf.com/editor
