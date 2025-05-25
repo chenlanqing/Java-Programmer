@@ -138,6 +138,38 @@ torch>=2.0.0,<3.0.0
 - [Java-AI入门资料](https://t.zsxq.com/vHopZ)
 - [Spring AI Alibaba](https://java2ai.com/)
 
+
+# AI与网关
+
+## 面临的挑战
+
+长连接、高延时、大带宽
+
+**长链接**
+- 大量使用 WebSocket和SSE等长连接协议
+- 网关配置更新时需要保持连接稳定
+- 必须确保业务连续性不受影响
+
+**高延时**
+- LLM推理响应时间远高于传统应用
+- 容易受到慢速请求和并发攻击的影响
+- 面临着攻击成本低但防御成本高的安全挑战
+
+**大带宽**
+- LLM上下文传输需要大量带宽
+- 高延时场景下带宽消耗倍增
+- 需要高效的流式处理能力
+- 必须做好内存管理以防止系统崩溃
+
+## [Higress](https://higress.cn/)
+
+Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
+
+# AI与前端
+
+- OpenWebUI
+- LobeChat
+
 # 参考资料
 
 - [ChatGPT账号](https://chatgpt123.com/)
