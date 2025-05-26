@@ -294,9 +294,9 @@ $ \color{red}{特别说明：MCP 并没有规定如何与大模型进行交互�
 - [阿里 Higress AI MCP](https://mcp.higress.ai/)
 
 MCP Server 相对比较独立，可以独立开发，独立部署，可以远程部署，也可以本地部署。它可以提供三种类型的功能：
-- 资源（Resources）：类似文件的数据，可以被客户端读取，如 API 响应或文件内容。
-- 工具（Tools）：可以被 LLM 调用的函数（需要用户批准）。
-- 提示（Prompts）：预先编写的模板，帮助用户完成特定任务。
+- 工具（Tools）：可以被 LLM 调用的函数（需要用户批准）。可以由大模型自主选择工具，无需人类进行干涉，整个过程是全自动的。
+- 资源（Resources）：类似文件的数据，可以被客户端读取，如 API 响应或文件内容。Resource 对接的是 MCP Hosts，需要 MCP Hosts 额外开发与 Resouce 的交互功能，并且由用户进行选择，才能直接使用
+- 提示（Prompts）：预先编写的模板，帮助用户完成特定任务。它与 Resource 类似，也是需要用户的介入才能使用
 
 ### 3.2、MCP Client && MCP Hosts
 
@@ -450,6 +450,53 @@ https://news.ycombinator.com/item?id=43600192
 ## 9、MCP和Agent
 
 - [MCP 构建 Agent](https://github.com/lastmile-ai/mcp-agent)
+
+## 10、MCP Server开发
+
+**安装依赖：**
+```bash
+# 下面两种方式选其一
+uv add "mcp[cli]"
+pip install "mcp[cli]"
+```
+
+**运行**
+
+运行 MCP 服务，假设新建了一个 MCP Server，文件名为：`server.py`
+```bash
+mcp dev server.py
+# Add dependencies
+mcp dev server.py --with pandas --with numpy
+# Mount local code
+mcp dev server.py --with-editable .
+```
+除了上面的方式，也可以直接运行，需要增加如下代码:
+```py
+...
+if __name__ == "__main__":
+    mcp.run()
+```
+然后执行如下命令：
+```bash
+python server.py
+# or
+mcp run server.py
+```
+请注意：`mcp run` 或 `mcp dev` 只支持 FastMCP
+
+### 10.1、Tools
+
+```py
+import httpx
+from mcp.server.fastmcp import FastMCP
+mcp = FastMCP("My App")
+@mcp.tool()
+async def fetch_weather(city: str) -> str:
+    """Fetch current weather for a city"""
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"https://api.weather.com/{city}")
+        return response.text
+```
 
 
 
