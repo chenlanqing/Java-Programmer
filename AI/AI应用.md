@@ -293,9 +293,20 @@ $ \color{red}{特别说明：MCP 并没有规定如何与大模型进行交互�
 - [阿里云百炼](https://bailian.console.aliyun.com/?tab=mcp#/mcp-market)
 - [阿里 Higress AI MCP](https://mcp.higress.ai/)
 
-### 3.2、MCP Clients
+MCP Server 相对比较独立，可以独立开发，独立部署，可以远程部署，也可以本地部署。它可以提供三种类型的功能：
+- 资源（Resources）：类似文件的数据，可以被客户端读取，如 API 响应或文件内容。
+- 工具（Tools）：可以被 LLM 调用的函数（需要用户批准）。
+- 提示（Prompts）：预先编写的模板，帮助用户完成特定任务。
+
+### 3.2、MCP Client && MCP Hosts
 
 [MCP 官网](https://modelcontextprotocol.io/clients)列出来一些支持 MCP 的 Clients。
+
+MCP Client 负责与 MCP Server 进行通信。而 MCP Hosts 则可以理解为是一个可对话的主机程序。
+
+当用户发送 prompt（例如：我要查询北京的天气） 到 MCP Hosts 时，MCP Hosts 会调用 MCP Client 与 MCP Server 进行通信，获取当前 MCP Server 具备哪些能力，然后连同用户的 prompt 一起发送给大模型，大模型就可以针对用户的提问，决定何时使用这些能力了。这个过程就类似，我们填充 ReAct 模板，发送给大模型。
+
+当大模型选择了合适的能力后，MCP Hosts 会调用 MCP Cient 与 MCP Server 进行通信，由 MCP Server 调用工具或者读取资源后，反馈给 MCP Client，然后再由 MCP Hosts 反馈给大模型，由大模型判断是否能解决用户的问题。如果解决了，则会生成自然语言响应，最终由 MCP Hosts 将响应展示给用户。
 
 分为两类：
 - AI编程IDE：Cursor、Cline、Continue、Sourcegraph、Windsurf 等
@@ -439,6 +450,8 @@ https://news.ycombinator.com/item?id=43600192
 ## 9、MCP和Agent
 
 - [MCP 构建 Agent](https://github.com/lastmile-ai/mcp-agent)
+
+
 
 # 五、AI数字人
 
