@@ -237,3 +237,5 @@ $ sudo npm install npm@latest -g
 
 - [nvm](https://github.com/nvm-sh/nvm)
 - [Node版本管理](https://www.freecodecamp.org/news/node-version-manager-nvm-install-guide/)
+
+nvm全英文也叫`node.js version management`，是一个nodejs的版本管理工具。nvm和n都是node.js版本管理工具，为了解决node.js各种版本存在不兼容现象可以通过它可以安装和切换不同版本的node.js

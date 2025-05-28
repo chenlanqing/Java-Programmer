@@ -23,8 +23,6 @@ Google Gemini
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 
-- [higress-AI网关](https://github.com/alibaba/higress)
-
 
 # API Key
 
@@ -39,14 +37,12 @@ Google Gemini
 - [如何训练Deepseek](https://juejin.cn/post/7473309339294695460)
 - [微调Deepseek](https://juejin.cn/post/7473309339294695460)
  
- # AI应用
+ # AI 应用
 
 - [AI构建各种工具](https://bolt.new/)
 - [设计AI](https://readdy.ai/)
 - [想法转变为现实](https://lovable.dev/?via=typescript)
-- [AI-WebUI构建](https://github.com/open-webui/open-webui)
 - [The AI Toolkit for TypeScript](https://sdk.vercel.ai/)
-- [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
 - [AI工具集](https://ai-bot.cn/)
 - [ideas转为实现的AI工具](https://replit.com/)
 - [AI 大模型自动化流程](https://yuju-ai.com/)
@@ -57,6 +53,12 @@ Google Gemini
 - [Chat V0](https://v0.dev/chat)
 - [AI 源码解读工具](https://deepwiki.com/)
 - [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
+
+# AI 工作平台
+
+- [Langfuse 是一个开源LLM 工程平台，可帮助团队协作调试、分析和迭代LLM 应用程序](https://github.com/langfuse/langfuse)
+- [anything-llm：这款全能的桌面和 Docker AI 应用程序内置了 RAG、AI 代理、无代码代理构建器、MCP 兼容性等功能](https://github.com/Mintplex-Labs/anything-llm)
+- [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
 
 # AI 商业
 
@@ -69,8 +71,9 @@ Google Gemini
 - cursor
 - tare
 - [LMStudio](https://lmstudio.ai/)
+- 美团 AI 编程: https://nocode.cn/#/
 
-## RAGFlow
+# RAGFlow
 
 ### Mac 部署的问题
 
@@ -167,7 +170,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 # AI与前端
 
-- OpenWebUI
+- [OpenWebUI](https://github.com/open-webui/open-webui)
 - LobeChat
 
 # 参考资料
