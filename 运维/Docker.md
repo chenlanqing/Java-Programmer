@@ -734,7 +734,7 @@ docker network create -d bridge --subnet=172.19.0.0/24 my-net
 $ docker run -it --rm --name busybox1 --network my-net busybox sh
 $ docker run -it --rm --name busybox2 --network my-net busybox sh
 ```
-更建议使用 docker-compose 来完成多个容器互联；
+更建议使用 docker compose 来完成多个容器互联；
 
 容器之间访问，使用的不是映射出去的端口，而是使用被映射的端口，比如下面：
 ```bash
@@ -749,28 +749,34 @@ docker run -d -p 88:80 --name app01 nginx
 - redis：`docker run -d --name redis -p 6379:6379 redis redis-server`
 - mysql：`docker run -d -p 3306:3306 --name mysql -e MYSQL_ROOT_PASSWORD=123456 mysql`
 
-## 9、docker-compose
+## 9、docker compose
 
 - [Install Compose standalone](https://docs.docker.com/compose/install/standalone/)
-- [Docker-compose 文件](https://docs.docker.com/compose/compose-file/)
+- [docker compose 文件](https://docs.docker.com/compose/compose-file/)
 
 ### 9.1、安装
 
-下载并安装：`curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose`
+下载并安装：`curl -SL https://github.com/docker/compose/releases/download/v2.27.0/docker compose-linux-x86_64 -o /usr/local/bin/docker compose`
 
-如果下载安装比较慢，可以先下载 [docker-compose](https://github.com/docker/compose/releases/download/v2.27.0/docker-compose-linux-x86_64)，然后执行如下命令：
+如果下载安装比较慢，可以先下载 [docker compose](https://github.com/docker/compose/releases/download/v2.27.0/docker compose-linux-x86_64)，然后执行如下命令：
 ```bash
-root# mv docker-compose-Linux-x86_64 /usr/local/bin/docker-compose
-root# chmod +x /usr/local/bin/docker-compose
+root# mv docker compose-Linux-x86_64 /usr/local/bin/docker compose
+root# chmod +x /usr/local/bin/docker compose
 ```
 ### 9.2、相关命令
 
-```
-docker-compose up  启动，加上 -d 是后台启动
-docker-compose stop  停止，但不会删除
-docker-compose down  停止并删除
-docker-compose logs -f  查看日志
-docker-compose scale x2=3  扩容
+```bash
+#启动，加上 -d 是后台启动
+docker compose up
+#停止，但不会删除
+docker compose stop  
+# 停止并删除
+docker compose down  
+# 查看日志
+docker compose logs -f
+docker compose scale x2=3  扩容
+# 删除镜像
+docker compose down --rmi all
 ```
 
 ### 9.3、yaml语法
