@@ -238,7 +238,7 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 - [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
 - [MCP With LLMS](https://modelcontextprotocol.io/llms-full.txt)
 - [分析 Cline 与大模型的交互](https://www.youtube.com/watch?v=YyVkXrXxvX8)
-
+- [A bridge between Streamable HTTP and stdio MCP transports](https://github.com/sparfenyuk/mcp-proxy)
 
 ## 1、基础
 
@@ -499,6 +499,9 @@ async def fetch_weather(city: str) -> str:
         return response.text
 ```
 
+## 总结
+
+无论是 MCP 协议还是 Agent、Function Calling 技术，本质上都在构建大模型与真实世界的交互桥梁；
 
 
 # 五、AI数字人
