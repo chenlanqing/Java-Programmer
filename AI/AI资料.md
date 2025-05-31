@@ -30,6 +30,7 @@ Google Gemini
 - [聚合优秀的AI大模型](https://www.apiyi.com/)
 - https://bewildcard.com/
 - [硅基流动](https://siliconflow.cn/)
+- openrouter
 
 # Deepseek
 

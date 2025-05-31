@@ -136,6 +136,7 @@
 - [各种技术学习路线汇总](https://www.yuque.com/snailclimb/dr6cvl/et904p)
 - [GitHub Repositories Every Software Engineer Should Know](https://dev.to/jrmarcio_/github-repositories-every-software-engineer-should-know-2e80)
 - [CS-Self Learning](https://csdiy.wiki/)
+- [计算机科学技术](https://github.com/ossu/computer-science)
 
 ## 4、Github资源
 
