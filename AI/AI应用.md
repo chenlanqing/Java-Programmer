@@ -214,6 +214,23 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 
 而 AI Agent 是指在普通代理的基础上，具备对任务的理解、环境的感知、信息的获取能力，并通过推理能力，自主进行决策和执行。AI Agent 就是 LLM + 客户端（Chatbot、AI IDE 等）组成的产品，代替我们去自主的完成下达的任务，这里的客户端具备规划、工具使用，甚至记忆的功能，目的都是为了更准确的执行任务。
 
+## 4、[A2A协议](https://github.com/google-a2a/A2A)
+
+- [Agent2Agent (A2A) Samples](https://github.com/google-a2a/a2a-samples)
+
+![](image/A2A-Protocol.png)
+
+上面图描述的 A2A 协议，首先，每一个独立的 Agent 都可以去调用自身的工具，调用工具的方法可以是传统的调用方式，也可以是 MCP。而 Agent 与 Agent 之间，还可以通过 Agent 之间进行互相调用
+
+A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的问题，这比 MCP 的维度更高。因此它们是互补的协议
+
+### 4.1、重要概念
+
+**[Agent Card](https://google-a2a.github.io/A2A/specification/#5-agent-discovery-the-agent-card)**，可以理解为是 Agent 的名片。也就是说一个 Agent 想要让另一个 Agent 了解自己的名称、能力等，就需要在名片上写清楚
+
+示例：[Sample Agent Card](https://google-a2a.github.io/A2A/specification/#56-sample-agent-card)
+
+**[Task](https://google-a2a.github.io/A2A/specification/#61-task-object)**，Task 可以理解为是一间洽谈室，由乙方（发起调用请求的 Agent）邀请甲方（接收调用请求的 Agent）进行会晤。但是会晤的结果（状态）是什么，是甲方立马执行，还是拒绝，还是安排到以后执行等等，这些细节都是由甲方说了算的。
 
 ## 应用
 
@@ -249,7 +266,7 @@ MCP (Model Context Protocol): 模型上下文协议，是 Anthropic (Claude) 主
 
 核心思想: 将 AI 模型的功能和对接到 AI 模型的工具(tool),数据(resource),提示(prompt)分离开, 独立部署, 让 AI 可以随意连接各种工具,数据以及使用各种提示!
 
-- MCP 主机 (MCP Host): 运行 AI 模型和 MCP 客户端的应用程序。常见的 MCP 主机有：
+- MCP 主机 (MCP Host): （可以认为是一个 Agent）运行 AI 模型和 MCP 客户端的应用程序。常见的 MCP 主机有：
     - Claude Desktop: Anthropic 公司的桌面客户端，内置了 MCP 支持。
     - IDE 集成: 像 VS Code 、Cursor 等 IDE 可以通过插件支持 MCP 。
     - 自定义应用: 你自己开发的任何集成了 MCP 客户端的应用程序。
