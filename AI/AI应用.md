@@ -4,8 +4,8 @@
 - [awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)，对应中文版：[awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh)
 - [AI List Chat Prompt](https://www.itis.chat/)
 - [Prompt guide](https://www.promptingguide.ai/)
-- [掌握Prompt写作秘籍](https://mp.weixin.qq.com/s/r1_eUa0qm9UDOdAM8s5Kug)
 - [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
+- [Prompt Engineer](https://github.com/anthropics/prompt-eng-interactive-tutorial)
 
 ## 1、什么是 Prompt
 
@@ -63,6 +63,14 @@
 - 语言和文化敏感性：跨文化交流，AI 落落大方。
 - 数据隐私和安全性：合规隐私，放心传递。
 - 约束设置：锁定目标，输出精准。
+
+## 4、Prompt 生成
+
+- [Snack Prompt](https://snackprompt.com)
+- [Free AI Prompt](https://flowgpt.com/)
+- [AI提示词大全](https://prompthero.com/)
+- [Stable Diffusion提示词](https://publicprompts.art/)
+- [学习提示词](https://learningprompt.wiki/)
 
 # 二、RAG
 
@@ -141,6 +149,7 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
 - [Pocket Flow](https://github.com/The-Pocket/PocketFlow)
 - [Mem0-Agent 内存](https://github.com/mem0ai/mem0)
+- [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
 
 ## 1、什么是 ReAct
 
@@ -260,6 +269,7 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 - [A list of AI autonomous agents](https://github.com/e2b-dev/awesome-ai-agents)
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
 - [Dify平台](https://dify.ai/zh)
+- [Dify DSL](https://github.com/svcvit/Awesome-Dify-Workflow)
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
 - [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)
