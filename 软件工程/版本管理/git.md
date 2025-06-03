@@ -644,6 +644,10 @@ git commit -m "Initial commit with code"
 git push origin V1.0
 ```
 
+# 7、多账号
+
+在本地环境配置多个 git 账号：https://www.yhz.me/posts/github-multiple-account/
+
 # 参考资料
 
 * [Git教程](https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
