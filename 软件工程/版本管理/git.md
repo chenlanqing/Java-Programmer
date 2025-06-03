@@ -51,11 +51,20 @@
 
 ## 2.6、配置
 
-- 用户信息
-```
+### 2.6.1、用户信息
+
+local > global > system, 如果 local 没设置，就会用 global 的信息。
+```bash
+# 单个项目设置
+git config --local user.name ''
+git config --local user.email ''
+# 全局设置
 git config --global user.name aaaaa@hotmail.com
 git config --global user.email aaaa@hotmail.com
 ```
+
+### 2.6.2、其他
+
 - 文本编辑器: `git config --global core.editor vim`
 - 差异分析工具: `git config --global merge.tool vimdiff`
 - 查看配置信息: `git config --list`
