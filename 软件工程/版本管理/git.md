@@ -657,6 +657,22 @@ git push origin V1.0
 
 在本地环境配置多个 git 账号：https://www.yhz.me/posts/github-multiple-account/
 
+在 `~/.ssh/config` 新增配置信息
+```bash
+# gitee server one
+Host github.com
+    HostName ssh.github.com
+    User git
+    PreferredAuthentications publickey
+    IdentityFile ~/.ssh/id_ed25519
+    Port 443
+HOST gitlab.com
+    HostName gitlab.com
+    User gitlab
+    PreferredAuthentications publickey
+    IdentityFile ~/.ssh/id_ed25519_gitlab
+```
+
 # 参考资料
 
 * [Git教程](https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
