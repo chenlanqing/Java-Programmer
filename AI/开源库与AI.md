@@ -237,3 +237,11 @@ LangChain 中支持的模型有三大类:
 ### 输出解析
 
 LangChain 的提示模板可以嵌入对输出格式的定义，以便在后续处理过程中比较方便地处理已经被格式化了的输出
+
+# 二、LangGraph
+
+- [Why LangGraph](https://langchain-ai.github.io/langgraph/concepts/why-langgraph/)
+
+## 1、介绍
+
+LangGraph是在LangChain之上构建的模块，LangGraph 是一种通过将状态机指定为图形来创建状态机的方法
