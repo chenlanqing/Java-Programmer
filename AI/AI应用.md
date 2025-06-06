@@ -148,8 +148,9 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [ReAct模式 = Reason + Act](https://www.promptingguide.ai/techniques/react)
 - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
 - [Pocket Flow](https://github.com/The-Pocket/PocketFlow)
-- [Mem0-Agent 内存](https://github.com/mem0ai/mem0)
+- [Mem0-Agent 记忆体](https://github.com/mem0ai/mem0)
 - [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
+- [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
 
 ## 1、什么是 ReAct
 
@@ -500,6 +501,8 @@ https://news.ycombinator.com/item?id=43600192
 - [MCP 构建 Agent](https://github.com/lastmile-ai/mcp-agent)
 
 ## 10、MCP Server开发
+
+- [MCP Server 工程开发参考](https://github.com/aliyun/alibaba-cloud-ops-mcp-server)
 
 **安装依赖：**
 ```bash
