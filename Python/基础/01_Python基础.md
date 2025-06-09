@@ -2822,6 +2822,10 @@ __all__ = email.__all__
 ```
 这样，mail 包只公开 `email.__all__` 变量中指定的 send() 函数。它从外部隐藏了 `attach_file()` 函数
 		
+## 9、运行模块
+
+在 Python 里，若要通过 `python -m` 命令执行一个包，该包需要包含 `__main__` 模块（即 `__main__.py` 文件）
+
 # 十七、包管理
 
 ## 1、pip
