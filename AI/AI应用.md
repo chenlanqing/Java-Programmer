@@ -149,14 +149,11 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [agents.json](https://docs.wild-card.ai/agentsjson/introduction)
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
-- [ReAct模式 = Reason + Act](https://www.promptingguide.ai/techniques/react)
-- [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
-- [Pocket Flow](https://github.com/The-Pocket/PocketFlow)
-- [Mem0-Agent 记忆体](https://github.com/mem0ai/mem0)
-- [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
-- [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
 
 ## 1、什么是 ReAct
+
+- [ReAct模式 = Reason + Act](https://www.promptingguide.ai/techniques/react)
+- [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
 
 ReAct 包含了 Reason 与 Act 两个部分。可以理解为就是思维链 + 外部工具调用；
 
@@ -248,6 +245,12 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 
 而 AI Agent 是指在普通代理的基础上，具备对任务的理解、环境的感知、信息的获取能力，并通过推理能力，自主进行决策和执行。AI Agent 就是 LLM + 客户端（Chatbot、AI IDE 等）组成的产品，代替我们去自主的完成下达的任务，这里的客户端具备规划、工具使用，甚至记忆的功能，目的都是为了更准确的执行任务。
 
+核心元素：
+- 大脑，即大模型
+- 定义角色
+- 配置技能
+- 工作流程 
+
 ## 4、[A2A协议](https://github.com/google-a2a/A2A)
 
 - [Agent2Agent (A2A) Samples](https://github.com/google-a2a/a2a-samples)
@@ -266,19 +269,26 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 
 **[Task](https://google-a2a.github.io/A2A/specification/#61-task-object)**，Task 可以理解为是一间洽谈室，由乙方（发起调用请求的 Agent）邀请甲方（接收调用请求的 Agent）进行会晤。但是会晤的结果（状态）是什么，是甲方立马执行，还是拒绝，还是安排到以后执行等等，这些细节都是由甲方说了算的。
 
+## 5、主流Agent 框架
+
+- 对于 C 端用户，可以考虑 [coze](https://www.coze.cn/store/bot)，缺点是没有开源
+- [Dify平台](https://dify.ai/zh)
+- [Dify DSL](https://github.com/svcvit/Awesome-Dify-Workflow)
+- [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)
+- [MetaGPT智能体开发入门](https://github.com/geekan/MetaGPT)
+- [Pocket Flow](https://github.com/The-Pocket/PocketFlow)
+- [Mem0-Agent 记忆体](https://github.com/mem0ai/mem0)
+- [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
+- [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
+
 ## 应用
 
 - [agent directory](https://aiagentsdirectory.com/)
-- [coze](https://www.coze.cn/store/bot)
 - [Agent调研--19类Agent框架对比](https://mp.weixin.qq.com/s/rogMCoS1zDN0mAAC5EKhFQ)
 - [A list of AI autonomous agents](https://github.com/e2b-dev/awesome-ai-agents)
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
-- [Dify平台](https://dify.ai/zh)
-- [Dify DSL](https://github.com/svcvit/Awesome-Dify-Workflow)
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
-- [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)
-- [MetaGPT智能体开发入门](https://github.com/geekan/MetaGPT)
 
 
 
