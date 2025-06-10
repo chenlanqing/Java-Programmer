@@ -218,6 +218,20 @@ There is 1 program that provides 'java'.
 *+ 1           java-17-openjdk.x86_64 (/usr/lib/jvm/java-17-openjdk-17.0.12.0.7-2.0.2.1.al8.x86_64/bin/java)
 ``` 	
 
+## 5、dnf 安装
+
+不同 Linux 发行版中，OpenJDK 开发包的命名可能不同。以常见系统为例：
+- Fedora/RHEL/CentOS/Rocky Linux：开发包通常为 java-17-openjdk-devel。
+- Debian/Ubuntu：开发包为 openjdk-17-jdk（使用 apt 安装）
+
+```bash
+# 下面只安装了jre，即 java 运行时环境
+dnf install java-17-openjdk
+# 安装 jdk，包含各种命令
+dnf install java-17-openjdk-devel
+```
+具体安装目录为：`/usr/lib/jvm/java-17-openjdk/bin/`
+
 # 三、配置 Tomcat 服务器
 
 ## 1、安装说明 
