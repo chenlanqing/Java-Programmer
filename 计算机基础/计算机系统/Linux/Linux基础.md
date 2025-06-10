@@ -587,6 +587,21 @@ gpgkey=http://mirrors.163.com/centos/RPM-GPG-KEY-CentOS-7
 	gpgcheck=1
 	enabled=1 #把enabled=0改为enabled=1，让这个yum源配置文件生效 gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-CentOS-6
 	```
+### 3.4、dnf
+
+DNF 是新一代的rpm软件包管理器，最近，它取代了yum，正式成为 Fedora 22 的包管理器。
+
+**安装 DNF 包管理器**
+
+DNF 并未默认安装在 RHEL 或 CentOS 7系统中，但是 Fedora 22 已经默认使用 DNF .
+- 为了安装 DNF ，必须先安装并启用 epel-release 依赖。在系统中执行以下命令：
+```bash
+yum install epel-release
+```
+- 使用 epel-release 依赖中的 YUM 命令来安装 DNF 包。在系统中执行以下命令：
+```bash
+yum install dnf
+```
 
 ## 4、源码包管理
 
