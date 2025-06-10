@@ -138,6 +138,10 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - 查询和检索模块：如何准确高效地检索出相关信息
 - 响应生成模块：如何利用检索出的相关信息来增强 LLM 的输出
 
+## [GraphRAG](https://github.com/microsoft/graphrag)
+
+
+
 # 三、AI Agent
 
 - [A2A-Agent2Agent Protocol](https://mp.weixin.qq.com/s/7d-fQf0sgS3OZgaQZm7blw)
