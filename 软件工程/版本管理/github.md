@@ -16,6 +16,23 @@ https://cyfeng.science/2020/12/21/rename-github-branch-from-master-to-main/
 
 github 用户排行榜：https://china-ranking.aolifu.org/
 
+# 5、开源项目
+
+## 5.1、日常生活
+
+## 5.2、休闲
+
+- [杂乱输出](https://github.com/svenstaro/genact)
+- [跨平台电子宠物](https://github.com/ayangweb/BongoCat)
+- [程序员在家做饭指南](https://github.com/Anduin2017/HowToCook)
+
+## 5.3、技术
+
+- [自动修正错误命令](https://github.com/nvbn/thefuck)
+
+## 5.4、设计
+
+- [LOGO生成](https://github.com/bestony/logoly)
 
 # 参考资料
 

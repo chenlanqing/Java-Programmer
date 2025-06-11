@@ -29,6 +29,7 @@
     - React Native：JS/TS ，跨 Android 和 IOS
     - Flutter：Dart （需要忍受）、跨所有平台，桌面只有一个窗口
     - Compose Multiplatform：Kotlin 、IOS 生态不足 ，好写，跨所有平台
+    - [Tauri](https://github.com/tauri-apps/tauri)，Tauri 是一个框架，用于为所有主要桌面平台构建微小、极快的二进制文件。开发人员可以集成任何编译为 HTML、JS 和 CSS 的前端框架，以构建他们的用户界面。应用程序的后端是一个 Rust 来源的二进制文件，带有前端可以与之交互的 API。
 - 不想跨平台
     - Jetpack Compose：Kotlin 、官方
     - View：如果你是老古董可以选择这个

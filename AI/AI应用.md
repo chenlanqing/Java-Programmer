@@ -144,11 +144,10 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 
 # 三、AI Agent
 
-- [A2A-Agent2Agent Protocol](https://mp.weixin.qq.com/s/7d-fQf0sgS3OZgaQZm7blw)
-- [A2A协议](https://google.github.io/A2A/#/)
 - [agents.json](https://docs.wild-card.ai/agentsjson/introduction)
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
+- [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners)
 
 ## 1、什么是 ReAct
 
@@ -254,6 +253,8 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 ## 4、[A2A协议](https://github.com/google-a2a/A2A)
 
 - [Agent2Agent (A2A) Samples](https://github.com/google-a2a/a2a-samples)
+- [A2A-Agent2Agent Protocol](https://mp.weixin.qq.com/s/7d-fQf0sgS3OZgaQZm7blw)
+- [A2A协议](https://google.github.io/A2A/#/)
 
 ![](image/A2A-Protocol.png)
 
@@ -280,6 +281,12 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 - [Mem0-Agent 记忆体](https://github.com/mem0ai/mem0)
 - [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
 - [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
+
+## 6、开源 Agent
+
+- [browser-use：AI 操作浏览器](https://github.com/browser-use/browser-use)
+- [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)
+- [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
 
 ## 应用
 
@@ -563,7 +570,18 @@ async def fetch_weather(city: str) -> str:
         return response.text
 ```
 
-## 总结
+## 11、MCP 资源
+
+- [交互式用户反馈 MCP-节省 Token 调用量](https://github.com/Minidoracat/mcp-feedback-enhanced)
+- [PromptX是一个系统性的，工程化的提示词管理框架](https://github.com/Deepractice/PromptX)
+- [微信读书 MCP](https://github.com/freestylefly/mcp-server-weread)
+- [控制 Mac 电脑的 MCP](https://github.com/ashwwwin/automation-mcp)
+- [吴恩达-MCP 学习](https://www.deeplearning.ai/short-courses/mcp-build-rich-context-ai-apps-with-anthropic/)
+- [FastAPI-MCP:api转 MCP](https://github.com/tadata-org/fastapi_mcp)
+- [ACI：为统一 MCP 服务器提供支持的开源基础设施](https://github.com/aipotheosis-labs/aci)
+- [Dive 是一个开源的 MCP Host Desktop 应用程序](https://github.com/OpenAgentPlatform/Dive)
+
+## 12、总结
 
 无论是 MCP 协议还是 Agent、Function Calling 技术，本质上都在构建大模型与真实世界的交互桥梁；
 
