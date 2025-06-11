@@ -1146,7 +1146,17 @@ http.cors.allow-origin: "*"
 ### 3.1、安装elasticsearch
 
 ```bash
-docker run --name elasticsearch -d -e ES_JAVA_OPTS="-Xms512m -Xmx512m" -e "discovery.type=single-node" -p 9200:9200 -p 9300:9300 elasticsearch:7.7.0
+# 1. 创建网络
+docker network create elastic
+# 2. 启动容器
+docker run --name elasticsearch -d \
+  --net elastic \
+  -e ES_JAVA_OPTS="-Xms1g -Xmx1g" \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.enabled=false" \
+  -p 9200:9200 -p 9300:9300 \
+  docker.elastic.co/elasticsearch/elasticsearch:9.0.2
+
 ```
 - `--name` 表示容器名称  
 - `-d`: 后台运行容器，并返回容器ID；
