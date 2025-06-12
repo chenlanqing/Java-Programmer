@@ -525,9 +525,18 @@ Text类型改造建议：
 - 在MySQL8之前的版本，如果某个列是允许为null，那么 `is not null` 是不会使用索引的，而 `is null` 则会使用索引；在Mysql8之后的版本都会使用索引；
 - NULL对索引的影响：存储大量的NULL值，除了计算更复杂之外，数据扫描的代价也会更高一些；如果要查询的值正好介于两个page的临界位置，那么需要多读取一个page；因为辅助索引是非唯一的，即便是在等值查询时，也需要再读取下一条记录，以确认已获取所有符合条件的数据。还有，当利用辅助索引读取数据时，如果要读取整行数据，则需要回表。也就是说，除了扫描辅助索引数据页之外，还需要扫描聚集索引数据页
 
-### 5.2、默认值属性：default value
+### 5.2、[默认值属性：default value](https://dev.mysql.com/doc/refman/8.0/en/data-type-defaults.html#data-type-defaults-explicit)
 
-只有在没有给字段设值的时才会使用默认值；常跟not null搭配
+- 对于 TIMESTAMP 和 DATETIME 列，您可以将 CURRENT_TIMESTAMP 函数指定为 默认值，不带括号
+- BLOB、text、 GEOMETRY 和 JSON 数据类型不能为 分配了默认值。（MySQL-8.13版本之前的），在 8.13之后，只有作为表达式时才能设置默认值
+```sql
+-- MySQL 8.0.13+ 允许表达式，但 TEXT 仍不支持字面量默认值（如 DEFAULT ''）
+ALTER TABLE your_table ADD COLUMN icon TEXT DEFAULT (JSON_ARRAY()); -- 示例：用 JSON 表达式
+```
+为什么 MySQL 要这样设计？
+- 存储效率：TEXT/BLOB 可能存储 GB 级数据，硬编码默认值会浪费空间。
+- 历史原因：早期版本中，这些类型的数据存储在表结构外部，静态默认值难以实现。
+- 数据完整性：大字段的默认值应通过程序逻辑或触发器控制，而非数据库层。
 
 ### 5.3、主键约束：primary key
 
