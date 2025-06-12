@@ -18,6 +18,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
 - [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
 - [Deep learning AI](https://learn.deeplearning.ai/)
+- [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
 
 Google Gemini
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)

@@ -6,6 +6,7 @@
 - [Prompt guide](https://www.promptingguide.ai/)
 - [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
 - [Prompt Engineer](https://github.com/anthropics/prompt-eng-interactive-tutorial)
+- [Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide)
 
 ## 1、什么是 Prompt
 
@@ -71,6 +72,8 @@
 - [AI提示词大全](https://prompthero.com/)
 - [Stable Diffusion提示词](https://publicprompts.art/)
 - [学习提示词](https://learningprompt.wiki/)
+- [UI Prompt Generator](https://uiprompt.art/ui-prompt-generator)
+- [自动提示词](https://github.com/AIDotNet/auto-prompt)
 
 # 二、RAG
 
@@ -148,6 +151,7 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
 - [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners)
+- [AG-UI Protocol](https://github.com/ag-ui-protocol/ag-ui)
 
 ## 1、什么是 ReAct
 
@@ -308,6 +312,7 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 - [MCP With LLMS](https://modelcontextprotocol.io/llms-full.txt)
 - [分析 Cline 与大模型的交互](https://www.youtube.com/watch?v=YyVkXrXxvX8)
 - [A bridge between Streamable HTTP and stdio MCP transports](https://github.com/sparfenyuk/mcp-proxy)
+
 
 ## 1、基础
 
@@ -580,6 +585,7 @@ async def fetch_weather(city: str) -> str:
 - [FastAPI-MCP:api转 MCP](https://github.com/tadata-org/fastapi_mcp)
 - [ACI：为统一 MCP 服务器提供支持的开源基础设施](https://github.com/aipotheosis-labs/aci)
 - [Dive 是一个开源的 MCP Host Desktop 应用程序](https://github.com/OpenAgentPlatform/Dive)
+- [OpenMemory-MCP 记忆体](https://github.com/mem0ai/mem0/openmemory)
 
 ## 12、总结
 
