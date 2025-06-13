@@ -175,6 +175,10 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [OpenWebUI](https://github.com/open-webui/open-webui)
 - LobeChat
 
+# AI 工程师
+
+- [成为 AI 工程师的路线图](https://dswharshit.medium.com/roadmap-to-become-an-ai-engineer-roadmap-6d9558d970cf)
+
 # 参考资料
 
 - [ChatGPT账号](https://chatgpt123.com/)
