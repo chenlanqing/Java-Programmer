@@ -179,3 +179,4 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 - [ChatGPT账号](https://chatgpt123.com/)
 - [秘塔AI搜索](https://metaso.cn/)
+- [软件开发代理平台](https://github.com/All-Hands-AI/OpenHands)

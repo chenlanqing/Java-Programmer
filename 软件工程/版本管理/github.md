@@ -34,6 +34,10 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 - [LOGO生成](https://github.com/bestony/logoly)
 
+## 5.5、其他
+
+- [Billion Mail: 一个开源的邮件服务器](https://github.com/aaPanel/BillionMail)
+
 # 参考资料
 
 - [发现和分享有趣、入门级开源项目的平台](https://hellogithub.com/)
