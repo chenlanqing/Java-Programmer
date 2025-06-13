@@ -1,7 +1,5 @@
 # 一、Redis高可用架构
 
-- [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
-
 高可用、高性能：
 - 数据尽量少丢失；（AOF 和 RDB 保证）
 - 服务尽量少中断；
@@ -1633,3 +1631,5 @@ lazy-free是4.0新增的功能，但是默认是关闭的，需要手动开启�
 # 参考资料
 
 - [Redis性能问题排查](https://mp.weixin.qq.com/s/4PUIqu-VDxeUkUWC7CvxdA)
+- [Redis架构](https://mp.weixin.qq.com/s/Fx9_aCp7DwfVXhtUU9dU0Q)
+- [Redis核心架构](https://mp.weixin.qq.com/s/kzgIMF_zebI14LOx0fxcew)
