@@ -74,63 +74,13 @@ Google Gemini
 - tare
 - [LMStudio](https://lmstudio.ai/)
 - 美团 AI 编程: https://nocode.cn/#/
+- claude code
 
-# RAGFlow
+# 语音处理
 
-### Mac 部署的问题
-
-#### icu依赖问题
-
-报错信息
-```bash
-Package icu-i18n was not found in the pkg-config search path.
-Perhaps you should add the directory containing `icu-i18n.pc'
-```
-解决方案：
-
-**1. 安装依赖项**
-- **(1) 安装 `pkg-config`**
-`pyicu` 构建需要 `pkg-config` 工具来定位 ICU 库：
-```bash
-brew install pkg-config
-```
-
-- **(2) 安装 ICU 库**
-`pyicu` 依赖于 ICU（International Components for Unicode）的 C++ 库：
-```bash
-brew install icu4c
-# 从源码编译
-brew install --build-from-source icu4c
-```
-添加到环境变量
-
-If you need to have icu4c first in your PATH, run:
-```bash
-echo 'export PATH="/usr/local/opt/icu4c/bin:$PATH"' >> ~/.zshrc
-echo 'export PATH="/usr/local/opt/icu4c/sbin:$PATH"' >> ~/.zshrc
-```
-
-For compilers to find icu4c you may need to set:
-```bash
-export LDFLAGS="-L/usr/local/opt/icu4c/lib"
-export CPPFLAGS="-I/usr/local/opt/icu4c/include"
-```
-For pkg-config to find icu4c you may need to set:
-```bash
-export PKG_CONFIG_PATH="/usr/local/opt/icu4c/lib/pkgconfig"
-```
-
-#### torch 版本问题
-
-```
-ERROR: Could not find a version that satisfies the requirement torch<3.0.0,>=2.5.0 (from versions: 2.0.0, 2.0.1, 2.1.0, 2.1.1, 2.1.2, 2.2.0, 2.2.1, 2.2.2)
-ERROR: No matching distribution found for torch<3.0.0,>=2.5.0
-```
-将 torch 的版本降低：
-```
-torch>=2.0.0,<3.0.0
-```
-
+- https://github.com/m-bain/whisperX/
+- https://github.com/modelscope/FunASR
+- https://github.com/alphacep/vosk-api
 
 # Java与AI
 
