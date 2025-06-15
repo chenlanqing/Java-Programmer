@@ -311,6 +311,7 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
+- [TradingAgents：基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
 
 
 
