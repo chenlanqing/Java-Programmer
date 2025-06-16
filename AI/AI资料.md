@@ -75,6 +75,7 @@ Google Gemini
 - [LMStudio](https://lmstudio.ai/)
 - 美团 AI 编程: https://nocode.cn/#/
 - claude code
+- https://xxchan.me/ai/2025/06/08/ai-coding.html
 
 # 语音处理
 

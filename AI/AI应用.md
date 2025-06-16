@@ -598,6 +598,8 @@ async def fetch_weather(city: str) -> str:
 - [ACI：为统一 MCP 服务器提供支持的开源基础设施](https://github.com/aipotheosis-labs/aci)
 - [Dive 是一个开源的 MCP Host Desktop 应用程序](https://github.com/OpenAgentPlatform/Dive)
 - [OpenMemory-MCP 记忆体](https://github.com/mem0ai/mem0/openmemory)
+- [Discover Awesome MCP Servers](https://himcp.ai/)
+- [Sequential Thinking MCP: How to Use Sequential Thinking MCP Servers](https://www.ontariomcp.ca/sequential-thinking-mcp)
 
 ## 12、总结
 
