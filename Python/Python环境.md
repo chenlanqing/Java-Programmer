@@ -8,6 +8,11 @@ conda create --name myenv
 ```
 创建一个名为myenv的新环境。
 
+指定python版本：
+```bash
+conda create -n llm python=3.13 -y
+```
+
 
 激活环境：
 ```bash
