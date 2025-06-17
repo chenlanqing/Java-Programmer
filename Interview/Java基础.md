@@ -1694,6 +1694,75 @@ synchronized就是非公平的，reentrantlock可以指定公平或者非公平
 
 缺点：
 
+## 23、线程池设计题
+
+线程池提交一万个任务(每个任务都是各自独立的，互相没有依赖关系，每个任务的耗时 100ms)，怎么定义线程池各个参数，服务器是 4 个核心每个任务都要调用外部接口获取数据，进行统计汇总后，写入到 MySQL 中，还需要对其中的每 100 个任务的执行结果是成功和失败等状态进行汇总统计。对于失败的任务该如何进一步处理？要求能够尽快的处理掉这 1w 个任务。
+
+问题：
+- 线程池参数
+- 每个任务的执行的情况进行汇总
+- 失败的任务该怎么进一步处理
+
+**线程池参数：**
+```java
+int corePoolSize = 8;       // 核心线程数。
+int maxPoolSize = 16;       // 最大线程数
+int queueCapacity = 1024;   // 队列容量
+ThreadPoolExecutor executor = new ThreadPoolExecutor(
+    corePoolSize,
+    maxPoolSize,
+    60L, TimeUnit.SECONDS, // 空闲线程存活时间
+    new ArrayBlockingQueue<>(queueCapacity),
+    new ThreadPoolExecutor.CallerRunsPolicy() // 拒绝策略
+);
+```
+- 线程池处理的任务类型我们可以判定为是 IO 密集型的，涉及到较为频繁的上下文切换，核心线程数可以设置的多一点，`核心线程数 = CPU核心数 * (1 + I/O等待时间/CPU计算时间)`，估算：`I/O占比约80% → 4 * (1 + 4) = 16，保守取8避免过载`
+- 最大线程数：应对突发流量，设为核心线程数2倍
+- 队列容量 (1024)：平衡吞吐量和内存消耗，过大导致响应延迟，过小触发频繁拒绝；
+- 拒绝策略 (CallerRunsPolicy)：线程池满时由提交线程直接执行任务，保证不丢失任务
+- 线程保活时间 (60s)：许回收非核心线程，避免空闲资源占用
+
+**每个任务的执行的情况进行汇总**
+
+```java
+// 线程安全的批次统计器
+class BatchStats {
+    private final int batchSize;
+    private final AtomicLong successCount = new AtomicLong();
+    private final AtomicLong failureCount = new AtomicLong();
+    private final AtomicInteger counter = new AtomicInteger();
+
+    public void record(boolean success) {
+        if (success) successCount.incrementAndGet();
+        else failureCount.incrementAndGet();
+        
+        if (counter.incrementAndGet() % batchSize == 0) {
+            // 每100个任务触发汇总
+            log.info("Batch {}: Success={}, Failure={}", 
+                counter.get() / batchSize,
+                successCount.getAndSet(0),  // 重置计数器
+                failureCount.getAndSet(0)
+            );
+        }
+    }
+}
+```
+- 每个任务完成后调用 batchStats.record(success)
+- 原子操作更新成功/失败计数
+- 每满100任务时：打印批次统计（实际生产可存入Redis/内存DB）<重置计数器避免重复统计
+- 最终汇总所有批次数据
+- 优化点：
+    - 使用 LongAdder 替代 AtomicLong 减少CAS竞争
+    - 批次统计异步化（提交到单独线程池），避免阻塞任务线程
+
+**失败任务处理方案**
+
+由于任务是从数据库捞出来的，所以可以给任务加一个状态字段，来标记任务是否处理成功。
+- 如果失败了，就把状态设置为失败。现在失败的数据都记录在案了，数据都有了，结合你的业务场景，想怎么处理就怎么处理啊。
+- 如果是可以重试，那就直接捞出来重试。
+
+
+
 ## 12、多线程面试题
 
 https://segmentfault.com/a/1190000013813740
