@@ -1,5 +1,8 @@
 # 一、Anaconda
 
+- [Anaconda Get started](https://www.anaconda.com/docs/getting-started/getting-started)
+- [我应该使用 Anaconda Distribution 还是 Miniconda](https://docs.anaconda.net.cn/distro-or-miniconda/)
+
 ## conda命令简单实用说明
 
 创建新环境：
