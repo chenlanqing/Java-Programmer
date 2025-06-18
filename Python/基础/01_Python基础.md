@@ -2881,6 +2881,9 @@ pip show <package_name>
 ```bash
 pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
 ```
+常见镜像源：
+- 清华：`pip install **** -i https://pypi.tuna.tsinghua.edu.cn/simple`
+- 阿里云：`pip install **** -i https://mirrors.aliyun.com/pypi/simple/`
 
 ## 2、虚拟环境
 
