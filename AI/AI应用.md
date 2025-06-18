@@ -290,7 +290,7 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 - 对于 C 端用户，可以考虑 [coze](https://www.coze.cn/store/bot)，缺点是没有开源
 - [Dify平台](https://dify.ai/zh)
 - [Dify DSL](https://github.com/svcvit/Awesome-Dify-Workflow)
-- [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)
+- [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)[autogenstudio ui --host 0.0.0.0 --port 8080 --appdir ./myapp]
 - [MetaGPT智能体开发入门](https://github.com/geekan/MetaGPT)
 - [Pocket Flow](https://github.com/The-Pocket/PocketFlow)
 - [Mem0-Agent 记忆体](https://github.com/mem0ai/mem0)

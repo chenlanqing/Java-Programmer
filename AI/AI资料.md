@@ -20,18 +20,16 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [Deep learning AI](https://learn.deeplearning.ai/)
 - [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
 
-Google Gemini
-- [笔记类AI应用-NotebookLM](https://notebooklm.google/)
-- [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
-
 
 # API Key
 
 - [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
 - [聚合优秀的AI大模型](https://www.apiyi.com/)
-- https://bewildcard.com/
+- [Wildcard-一键订阅](https://bewildcard.com/)
 - [硅基流动](https://siliconflow.cn/)
 - openrouter
+- deepseek
+- 阿里云百炼
 
 # Deepseek
 
@@ -55,6 +53,10 @@ Google Gemini
 - [Chat V0](https://v0.dev/chat)
 - [AI 源码解读工具](https://deepwiki.com/)
 - [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
+Google Gemini
+- [笔记类AI应用-NotebookLM](https://notebooklm.google/)
+- [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
+
 
 # AI 工作平台
 
