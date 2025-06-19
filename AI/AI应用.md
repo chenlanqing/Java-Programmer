@@ -8,6 +8,7 @@
 - [Prompt Engineer](https://github.com/anthropics/prompt-eng-interactive-tutorial)
 - [Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide)
 
+
 ## 1、什么是 Prompt
 
 在大规模语言模型（LLM, Large Language Models）领域，Prompt 是一种结构化的输入序列，用于引导预训练语言模型生成预期的输出。它通常包括明确的任务要求、背景信息、格式规定以及示例，以充分利用模型的能力在特定任务中生成高质量的响应
@@ -78,7 +79,78 @@
 
 通常建议只调整频率惩罚或存在惩罚，而不是两者都调整
 
-## Prompt 生成
+## 5、基础介绍
+
+### 5.1、Prompt格式
+
+一个标准的格式是：
+```
+<Question>?
+```
+或者
+```
+<Instruction>
+```
+可以将其格式化为问答（QA）格式，这在许多问答数据集中是标准的，如下所示：
+```
+Q: <Question>?
+A: 
+```
+在像上述那样提示时，也称为：`zero-shot prompting`，即你直接提示模型给出响应，而无需提供任何关于你想让它完成的任务的示例或演示。一些大型语言模型具有执行零样本提示的能力，但这取决于任务的复杂性和知识，以及模型被训练以擅长执行的任务。
+
+还有另外一种叫：`few-shot prompting`，即提供少量样例，少量样本提示能够实现情境学习，即语言模型在少量示例的指导下学习任务的能力
+```
+<Question>?
+<Answer>
+<Question>?
+<Answer>
+<Question>?
+<Answer>
+<Question>?
+```
+
+### 5.3、Prompt 元素
+
+提示包含以下任一要素：
+- Instruction：希望模型执行的具体任务或指令
+- 上下文：外部信息或额外上下文，可以引导模型产生更好的回复
+- Input Data：希望为其找到回复的输入或问题
+- Output Indicator：输出的类型或格式
+
+### 5.4、Prompt 通用设计技巧
+
+- 从简单开始：从简单的提示开始，并在追求更好结果的过程中不断添加更多元素和上下文。由于这个原因，在过程中迭代Prompt至关重要
+- 指令：可以通过使用命令来指导模型实现你的目标，从而为各种简单任务设计有效的提示，例如"写"、"分类"、"总结"、"翻译"、"排序"等。建议你将指令放在提示的开头。另一个建议是使用一些清晰的分隔符（如"###"）来分隔指令和上下文。
+    ```
+    ### Instruction ###
+    Translate the text below to Chinese:
+    Text: "hello!"
+    ```
+- 具体性：对于模型需要执行的具体指令和任务，应尽可能详细。提示越具体、越详细，结果就越好；设计提示时，还应考虑提示的长度，因为提示的长度存在限制
+- 避免不精确：通常来说，具体和直接更好。这里的类比非常类似于有效的沟通——越直接，信息传达得越有效
+- 做还是不做？设计提示时，另一个常见的技巧是避免说不要做什么，而是要说应该做什么。这能鼓励更具体的要求，并专注于那些能引导模型给出良好响应的细节
+
+## 6、Prompts 技巧
+
+- Zero-Shot Prompting：零样本提示词
+- Few-Shot Prompting：少量样本提示词
+- Chain-of-Thought Prompting：思维链提示词
+```
+The odd numbers in this group add up to an even number: 4, 8, 9, 15, 12, 2, 1.
+A: Adding all the odd numbers (9, 15, 1) gives 25. The answer is False.
+
+The odd numbers in this group add up to an even number: 17,  9, 10, 12, 13, 4, 2.
+A: Adding all the odd numbers (17, 9, 13) gives 39. The answer is False.
+
+The odd numbers in this group add up to an even number: 15, 32, 5, 13, 82, 7, 1. 
+A:
+```
+- [Meta Prompting](https://arxiv.org/pdf/2311.11482): 是一种高级提示技术，它关注任务和问题的结构和句法方面，而不是其具体内容细节。元提示的目标是构建一种更抽象、结构化的方式来与大型语言模型（LLMs）交互，强调信息的形式和模式，而不是传统的以内容为中心的方法。关键特征可以总结如下：
+    - Structure-oriented（结构导向）: 优先考虑问题和解决方案的格式和模式，而非具体内容。
+    - Syntax-focused: 使用语法作为预期响应或解决方案的指导模板。
+- Self-Consistency: 自洽性，路是通过少样本思维链采样多条多样的推理路径，并利用生成结果来选择最一致的答案。这有助于提升思维链提示在涉及算术和常识推理任务上的性能
+
+## Prompt 生成案例
 
 - [Snack Prompt](https://snackprompt.com)
 - [Free AI Prompt](https://flowgpt.com/)
@@ -315,6 +387,7 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 - [browser-use：AI 操作浏览器](https://github.com/browser-use/browser-use)
 - [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)
 - [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
+- [Suna-通用型 Agent](https://github.com/kortix-ai/suna)
 
 ## 应用
 
