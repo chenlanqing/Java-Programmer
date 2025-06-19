@@ -34,6 +34,8 @@ https://xclient.info/
 
 [第三方软件管理](https://aerolite.dev/applite)
 
+https://github.com/qianguyihao/Mac-list
+
 ### 4.1、文本编辑
 
 - MarkEditor  markdown文件编辑
@@ -51,21 +53,23 @@ https://xclient.info/
 - postman
 - iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
 - another redis desktop manager- JProfiler
-- SecureCRT  SSH连接客户端
+- termius  SSH连接客户端
+- [WindTerm](https://github.com/kingToolbox/WindTerm)
 - jclasslib bytecode viewer
-- electerm 终端工具
 - navicate lite
+- [chatwize：大模型聊天机器人](https://chatwise.app/)
+- [Surge：Mac & iOS 高级网络工具箱](https://nssurge.com/)
+- [Raycast-快速启动](https://www.raycast.com/)，包含粘贴板的功能
+- [Lepton：开源代码片段管理](https://hackjutsu.com/Lepton/)
 
 ### 4.3、其他软件
 
-- 百度网盘
-- 滴答清单
+- [Dozer：菜单栏隐藏](https://github.com/Mortennn/Dozer)
 - Alfred3
-- Charles
 - Cheatsheet
-- ClashX（VPN）
+- Clash Verge（VPN）
 - CleanMyMac
-- Clipber  粘贴板
+- [粘贴板-Maccy](https://maccy.app/)
 - iState Menus
 - StarUML       uml画图工具
 - Snipast
@@ -75,7 +79,6 @@ https://xclient.info/
 - WireShark   抓包工具
 - Xmind     脑图工具
 - sizeup
-- https://arctype.com/
 - Arc：浏览器
 - Grammarly Desktop：基础语法检验
 - iBar：刘海屏处理
@@ -84,6 +87,8 @@ https://xclient.info/
 - Flomo：记录灵感，针对任务过程 or 结果进行复盘
 - FlowUs：复盘产出，读书笔记
 - uTools：效率平台
+- [motrix-下载软件](https://motrix.app/)
+- [AirBattery-电量显示](https://github.com/lihaoyun6/AirBattery)
 
 ## 5、homebrew
 
