@@ -240,6 +240,8 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 ## 实践
 
 - [从数据解析到多路由器检索的工程实践](https://mp.weixin.qq.com/s/VPidqY02ngsrnXhpOol3_A)
+- [MinerU-PDF转换成Markdown和JSON格式](https://github.com/opendatalab/mineru)
+- [Deepdoc-文档处理](https://github.com/infiniflow/ragflow/tree/main/deepdoc)
 
 # 三、AI Agent
 
@@ -408,6 +410,7 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 - [Mem0-Agent 记忆体](https://github.com/mem0ai/mem0)
 - [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
 - [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
+- [深度拆解：Dify、FastGPT 和 Ragflow](https://huangf.org/posts/aiworkflow/)
 
 ## 6、开源 Agent
 
