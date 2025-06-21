@@ -363,15 +363,69 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 
 综上，Agent-to-Agent（A2A）协议是一种开放标准，用于让不同平台和框架下的 AI 智能代理能够“说同一种话”，实现无障碍的信息交换和协作
 
-### 4.1、重要概念
+### 4.1、A2A 核心设计原则
 
-**[Agent Card](https://google-a2a.github.io/A2A/specification/#5-agent-discovery-the-agent-card)**，可以理解为是 Agent 的名片。也就是说一个 Agent 想要让另一个 Agent 了解自己的名称、能力等，就需要在名片上写清楚
+**第一是拥抱 Agent 能力**：A2A 不仅仅是将远端 Agent 视为工具调用，而是允许 Agent 以自由、非结构化的方式交换消息，支持跨内存、跨上下文的真实协作。与此同时，Agent 无需共享内部思考、计划或工具，因此 Agent 相互之间成为黑盒，无需向对方暴露任何不想暴露的隐私。
+
+**第二是基于现有标准**：在 HTTP、Server-Sent Events、JSON-RPC 等成熟技术之上构建，确保与现有 IT 架构无缝集成。
+
+**第三是企业级安全**：A2A 内置与 OpenAPI 同级别的认证与授权机制，满足企业级安全与合规需求。
+
+**第四是长任务支持**：除了即时调用，还可管理需人机环节介入、耗时数小时甚至数天的深度研究任务，并实时反馈状态与结果。
+
+**第五是多模态无差别**：不仅限于文本，还原生支持音频、视频、富表单、嵌入式 iframe 等多种交互形式。
+
+### 4.2、A2A 协议的角色
+
+2A 协议定义了三个角色。
+- 用户（User）：最终用户（人类或服务），使用 Agent 系统完成任务。
+- 客户端（Client）：代表用户向远程 Agent 请求行动的实体。
+- 远程 Agent（Remote Agent）：作为 A2A 服务器的“黑盒”Agent。
+
+需要注意的是，在 A2A 框架中，客户端（Client）通常也是一个具有一定决策能力 Agent。它代表用户行事 ，可以是应用程序、服务或另一个 AI Agent，负责选择合适的远程 Agent 来完成特定任务，管理与远程 Agent 的通信、认证和任务状态。
+
+而远程 Agent（Remote Agent）则是执行实际任务的 Agent，作为“黑盒”存在 ，提供特定领域的专业能力，通过 AgentCard 声明自己的技能和接口，保持内部工作机制的不透明性。
+
+### 4.1、A2A 核心对象
+
+A2A 协议设计了一套完整的对象体系，包括 Agent Card、Task、Artifact 和 Message
+
+**[Agent Card](https://google-a2a.github.io/A2A/specification/#5-agent-discovery-the-agent-card)**
+
+可以理解为是 Agent 的名片。每个支持 A2A 的远程 Agent 需要发布一个 JSON 格式的 “Agent Card”，描述该 Agent 的能力和认证机制。Client 可以通过这些信息选择最适合的 Agent 来完成任务。
 
 示例：[Sample Agent Card](https://google-a2a.github.io/A2A/specification/#56-sample-agent-card)
 
-**[Task](https://google-a2a.github.io/A2A/specification/#61-task-object)**，Task 可以理解为是一间洽谈室，由乙方（发起调用请求的 Agent）邀请甲方（接收调用请求的 Agent）进行会晤。但是会晤的结果（状态）是什么，是甲方立马执行，还是拒绝，还是安排到以后执行等等，这些细节都是由甲方说了算的。
+**[Task](https://google-a2a.github.io/A2A/specification/#61-task-object)**
 
-### 4.2、MCP 与 A2A
+Task 是 Client 和 Remote Agent 之间协作的核心概念。一个 Task 代表一个需要完成的任务，包含状态、历史记录和结果。Task 的具体状态列表如下：
+- submitted（已提交）
+- working（处理中）
+- input-required（需要额外输入）
+- completed（已完成）
+- canceled（已取消）
+- failed（失败）
+- unknown（未知）
+
+**[Artifact](https://google-a2a.github.io/A2A/specification/#67-artifact-object)**
+
+Artifact 是 Remote Agent 生成的任务结果。Artifact 可以有多个部分（parts），可以是文本、图像等。
+
+**Message**
+
+Message 用于 Client 和 Remote Agent 之间的通信，可以包含指令、状态更新等内容。一个 Message 可以包含多个 parts，用于传递不同类型的内容。
+
+### 4.3、A2A 协议工作流程
+
+A2A 协议的典型工作流程如下：
+- **能力发现**：每个 Agent 通过一个 JSON 格式的 “Agent Card” 公布自己能执行的能力（如检索文档、调度会议等）。
+- **任务管理**：Agent 间围绕一个 “task” 对象展开协作。该对象有生命周期、状态更新和最终产物（artifact），支持即时完成与长跑任务两种模式。
+- **消息协作**：双方可互发消息，携带上下文、用户指令或中间产物；消息中包含若干 “parts”，每个 part 都指明内容类型，便于双方就 UI 呈现形式（如图片、表单、视频）进行协商。
+- **状态同步**：通过 SSE 等机制，Client Agent 与 Remote Agent 保持实时状态同步，确保用户看到最新的进度和结果。
+
+A2A 协议中，Agent 之间除了基本的任务处理外，A2A 还支持流式响应，使用 Server-Sent Events（SSE）实现流式传输结果；支持 Agent 请求额外信息的多轮交互对话和长时间运行任务的异步通知，以及多模态数据，如文本、文件、结构化数据等多种类型
+
+### 4.5、MCP 与 A2A
 
 相似之处在于都是标准化协议，都在大模型应用场景中实现信息交互和协作——而且解决的都是 AI 应用开发过程中的沟通协作问题
 
@@ -398,6 +452,11 @@ A2A 解决的是什么问题？是 Agent 间互相通信，形成多 Agent 的�
 上面图描述的 A2A 协议，首先，每一个独立的 Agent 都可以去调用自身的工具，调用工具的方法可以是传统的调用方式，也可以是 MCP。而 Agent 与 Agent 之间，还可以通过 Agent 之间进行互相调用
 
 > 总结：MCP 提供了统一的上下文管理与工具调用接口，整合了大模型驱动的概率计算与传统工具驱动的结构化计算。A2A 则为多 Agent 协同注入了开放标准。二者的结合，将单一 AI 应用推向分布式、模块化的智能生态。
+
+A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的智能代理生态系统。两者的关系可以这样理解：
+- LLM：是 Agent 毫无疑问的“大脑”，负责处理信息，推理，做决策。
+- MCP：负责模型与工具 / 资源的连接，是 Agent 的“手”，让 Agent 能够获取信息和执行操作。
+- A2A：负责 Agent 之间的通信，是 Agent 的“嘴”，让 Agent 能够相互交流、协作完成任务。
 
 ## 5、主流Agent 框架
 
