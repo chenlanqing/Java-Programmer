@@ -775,6 +775,7 @@ async def fetch_weather(city: str) -> str:
 - [OpenMemory-MCP 记忆体](https://github.com/mem0ai/mem0/openmemory)
 - [Discover Awesome MCP Servers](https://himcp.ai/)
 - [Sequential Thinking MCP: How to Use Sequential Thinking MCP Servers](https://www.ontariomcp.ca/sequential-thinking-mcp)
+- [海量好用 MCP Server](https://cloud.tencent.com/developer/mcp)
 
 ## 12、总结
 

@@ -81,6 +81,7 @@ Google Gemini
 
 # 语音处理
 
+- [Minimaxi](https://platform.minimaxi.com/user-center/basic-information/interface-key)
 - https://github.com/m-bain/whisperX/
 - https://github.com/modelscope/FunASR
 - https://github.com/alphacep/vosk-api
