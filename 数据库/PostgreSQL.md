@@ -70,6 +70,27 @@ psql 是 PostgreSQL 提供的交互式终端程序。它允许与 PostgreSQL 数
 
 退出交互界面：`postgres=# \q`
 
+## 5、对比其他数据库
+
+PostgreSQL 相比 MySQL 的主要优势（业界公认）：
+- 事务性 DDL：PostgreSQL 支持事务性 DDL（Data Definition Language），可以在事务中执行表结构变更，并支持回滚和保存点。MySQL 不支持，DDL 自动提交，一旦出错无法回退，风险高。
+- 自定义类型和域（Domain）：PostgreSQL 允许创建自定义类型（如枚举）、带验证规则的域（Domain），增强数据一致性和安全性。MySQL 的 ENUM 功能有限，缺乏类似 Domain 的机制。
+- 原生数组类型：PostgreSQL 支持数组字段，可直接进行查询、索引和操作，简化多对多关系模型。MySQL 不支持原生数组，需额外建表处理列表数据。
+- 空间数据支持（GIS）：PostgreSQL 配合 PostGIS 插件提供完整的地理空间功能，包括高效的空间索引、距离计算、KNN 搜索等。MySQL 虽有空间支持，但在深度和性能上远不如 PostgreSQL + PostGIS。
+- 向量数据支持（AI/ML）：PostgreSQL 提供 pgvector 扩展，支持向量存储和相似性搜索，适合嵌入 AI 应用。MySQL 最近加入 VECTOR 类型，但生态和性能仍落后于 PostgreSQL。
+- CTE（公共表表达式）：PostgreSQL 从 2009 年起就支持 CTE，且功能更完整，包括递归查询和性能控制提示（如 `MATERIALIZED`）。MySQL 到 2018 年才引入基本 CTE 支持，功能相对简单。
+- 行级安全策略（RLS）：PostgreSQL 原生支持 RLS，可在数据库层面实现细粒度的数据访问控制，适用于多租户、权限隔离等场景。MySQL 缺乏内置 RLS，需依赖应用程序或视图实现，容易出错。
+- 部分索引（Partial Index）：PostgreSQL 支持 WHERE 条件的索引，只索引特定数据子集，提高效率。MySQL 必须索引整列，无法按条件优化索引大小和性能。
+- 开源许可与社区开放性：PostgreSQL 使用 BSD 类似许可，自由度极高，适合嵌入、修改、商业化。社区公开透明，设计讨论、代码提交均公开可见。MySQL 使用 GPL + 商业双重许可，限制较多，Bug 跟踪不透明，社区参与受限。
+
+Postgres 不只是一个关系型数据库，它支持：
+- 队列系统（通过 `LISTEN/NOTIFY` 和事务机制）
+- 键值存储（通过 `JSONB` 类型）
+- 全文搜索（内置全文检索功能）
+- 实时通知（无需 WebSocket 服务器或 Redis Pub/Sub）
+
+使用 Redis、RabbitMQ、Elasticsearch 等工具虽然在特定高并发或大数据场景下有优势，但对大多数中小型项目来说，它们带来了不必要的复杂性和成本。这些工具需要额外的运维、监控、扩展和安全配置，而这些开销在使用单一 Postgres 时都可以避免。
+
 # 二、基础知识
 
 > 请注意，SQL 关键字不区分大小写。这意味着 SELECT 等同于 select 或 Select。按照惯例，将使用大写的所有 SQL 关键字，以便查询更容易阅读。分号不是 SQL 语句的一部分。它是 PostgreSQL 结束 SQL 语句的信号。分号也用于分隔两条 SQL 语句。
@@ -1280,3 +1301,4 @@ ALTER TABLE customers ADD COLUMN contact_name VARCHAR NOT NULL;
 - [Postgresql Tutorial](https://www.postgresqltutorial.com/)
 - [PostgreSQL作为搜索引擎](https://xata.io/blog/postgres-full-text-search-engine)
 - [Postgresql资料](https://www.sjkjc.com/postgresql/any/)
+- [从 Mysql切换 PostgreSQL 改造及踩坑记录](https://juejin.cn/post/7356108146632163339)
