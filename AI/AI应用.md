@@ -164,10 +164,9 @@ A:
 
 - [基于深度文档理解构建的开源 RAG（Retrieval-Augmented Generation）引擎](https://github.com/infiniflow/ragflow)
 - [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
-- [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
 - [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)
 - [RAG](https://www.promptingguide.ai/zh/techniques/rag)
-- [RAG-各种高级技术](https://github.com/NirDiamant/RAG_Techniques)
+
 
 RAG 检索增强生成（Retrieval Augmented Generation），已经成为当前最火热的LLM应用方案。理解起来不难，就是通过自有垂域数据库检索相关信息，然后合并成为提示模板，给大模型生成漂亮的回答。
 
@@ -235,11 +234,12 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - 检索 (Retrieval)：构建一个工具，根据用户查询查找并返回相关 数据，通常在向量数据库中进行语义搜索。
 - 回答 (Answering)：使用检索到的数据丰富用户的提示词（prompt）， 将其发送给 LLM，并返回最终答案。
 
+## RAG技术
 
-## [GraphRAG](https://github.com/microsoft/graphrag)
-
-## 实践
-
+- [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)
+- [GraphRAG](https://github.com/microsoft/graphrag)
+- [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
+- [RAG-各种高级技术](https://github.com/NirDiamant/RAG_Techniques)
 - [从数据解析到多路由器检索的工程实践](https://mp.weixin.qq.com/s/VPidqY02ngsrnXhpOol3_A)
 - [MinerU-PDF转换成Markdown和JSON格式](https://github.com/opendatalab/mineru)
 - [Deepdoc-文档处理](https://github.com/infiniflow/ragflow/tree/main/deepdoc)
@@ -475,7 +475,6 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 ## 6、开源 Agent
 
 - [browser-use：AI 操作浏览器](https://github.com/browser-use/browser-use)
-- [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)
 - [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
 - [Suna-通用型 Agent](https://github.com/kortix-ai/suna)
 

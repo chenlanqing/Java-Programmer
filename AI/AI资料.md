@@ -34,7 +34,6 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 # Deepseek
 
 - [Deepseek-API集成工具](https://github.com/deepseek-ai/awesome-deepseek-integration)
-- [如何训练Deepseek](https://juejin.cn/post/7473309339294695460)
 - [微调Deepseek](https://juejin.cn/post/7473309339294695460)
  
  # AI 应用
@@ -69,15 +68,17 @@ Google Gemini
 - 可灵 AI：比如 AI 换衣
 - 即梦 AI、火山引擎：[图片换装](https://www.volcengine.com/docs/85128/1462743)、[单图音频驱动](https://www.volcengine.com/docs/85128/1433887)、[图形融合](https://www.volcengine.com/docs/6791/1337909)
 
-# AI 编辑器
+# AI Coding 工具
 
 - windsurf：https://windsurf.com/editor
 - cursor
+    - [Cursor如何工作的](https://adityarohilla.com/2025/05/08/how-cursor-works-internally/)
+    - [Cursor编程经验分享](https://mp.weixin.qq.com/s/UQPcxiV4UsTxpPYRjaNZIA)
 - tare
 - [LMStudio](https://lmstudio.ai/)
 - 美团 AI 编程: https://nocode.cn/#/
 - claude code
-- https://xxchan.me/ai/2025/06/08/ai-coding.html
+- [AI Coding Agent 对比](https://xxchan.me/ai/2025/06/08/ai-coding.html)
 
 # 语音处理
 
