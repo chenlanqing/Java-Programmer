@@ -55,6 +55,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 Google Gemini
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
+- [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 
 
 # AI 工作平台
@@ -133,6 +134,10 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 # AI 工程师
 
 - [成为 AI 工程师的路线图](https://dswharshit.medium.com/roadmap-to-become-an-ai-engineer-roadmap-6d9558d970cf)
+
+# 机器人
+
+https://github.com/huggingface/lerobot
 
 # 参考资料
 
