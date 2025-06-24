@@ -4,11 +4,12 @@
 - [awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)，对应中文版：[awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh)
 - [AI List Chat Prompt](https://www.itis.chat/)
 - [Prompt guide](https://www.promptingguide.ai/)
-- [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
 - [Prompt Engineer](https://github.com/anthropics/prompt-eng-interactive-tutorial)
 - [Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide)
 - [Language of GPT-结构化提示词](https://github.com/langgptai/LangGPT)
 - [Learn Prompt Engineering](https://learnprompting.org/docs/introduction)
+- [Google-Prompting-Guide](https://services.google.com/fh/files/misc/gemini-for-google-workspace-prompting-guide-101.pdf)
+- [Prompt engineering overview](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview)
 
 ## 1、什么是 Prompt
 
@@ -247,8 +248,13 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 
 ## 8、Prompt 优化
 
+- [Claude Optimizer：自动分析Prompt结构并提出改进建议（如添加XML标签、调整逻辑层级）](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prompt-improver)
+- [火山方舟-Prompt 调优](https://console.volcengine.com/ark/region:ark+cn-beijing/autope/workbench/new)
+- [Prompt Pilot](https://promptpilot.volcengine.com/home)
+
 ## Prompt 生成案例
 
+- [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
 - [Snack Prompt](https://snackprompt.com)
 - [Free AI Prompt](https://flowgpt.com/)
 - [AI提示词大全](https://prompthero.com/)
