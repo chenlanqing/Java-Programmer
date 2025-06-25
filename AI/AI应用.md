@@ -880,6 +880,13 @@ async def fetch_weather(city: str) -> str:
 - [Discover Awesome MCP Servers](https://himcp.ai/)
 - [Sequential Thinking MCP: How to Use Sequential Thinking MCP Servers](https://www.ontariomcp.ca/sequential-thinking-mcp)
 - [海量好用 MCP Server](https://cloud.tencent.com/developer/mcp)
+- [EdgeOne Pages MCP-MCP部署网页](https://github.com/TencentEdgeOne/edgeone-pages-mcp)
+- [Chrome MCP](https://github.com/hangwin/mcp-chrome)
+- [Firecrawl MCP Server-网页抓取](https://github.com/mendableai/firecrawl-mcp-server)
+- [Context MCP：给 AI 提供最新文档](https://github.com/upstash/context7)
+- [Sequential Thinking MCP-顺序思考](https://github.com/arben-adm/mcp-sequential-thinking)
+- [Shrimp Task Manager MCP-把复杂任务拆解成可执行的小步骤的 MCP](https://github.com/cjo4m06/mcp-shrimp-task-manager)
+- [Interactive Feedback MCP：先确认再执行](https://github.com/noopstudios/interactive-feedback-mcp)
 
 ## 12、总结
 
