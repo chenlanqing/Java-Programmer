@@ -69,9 +69,12 @@ Google Gemini
 - 可灵 AI：比如 AI 换衣
 - 即梦 AI、火山引擎：[图片换装](https://www.volcengine.com/docs/85128/1462743)、[单图音频驱动](https://www.volcengine.com/docs/85128/1433887)、[图形融合](https://www.volcengine.com/docs/6791/1337909)
 
-# AI Coding 工具
+# AI 工具
+
+## 编程工具
 
 - windsurf：https://windsurf.com/editor
+- GitHub copilot
 - cursor
     - [Cursor如何工作的](https://adityarohilla.com/2025/05/08/how-cursor-works-internally/)
     - [Cursor编程经验分享](https://mp.weixin.qq.com/s/UQPcxiV4UsTxpPYRjaNZIA)
@@ -79,7 +82,15 @@ Google Gemini
 - [LMStudio](https://lmstudio.ai/)
 - 美团 AI 编程: https://nocode.cn/#/
 - claude code
+- 百度 comate
+- [腾讯 codebuddy](https://copilot.tencent.com/)
+- Augment Code
 - [AI Coding Agent 对比](https://xxchan.me/ai/2025/06/08/ai-coding.html)
+
+## 原型设计
+
+- [Readdy 原型](https://readdy.ai/)
+- [Figma](https://www.figma.com/)
 
 # 语音处理
 
