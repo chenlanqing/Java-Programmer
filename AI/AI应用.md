@@ -888,6 +888,7 @@ async def fetch_weather(city: str) -> str:
 - [Shrimp Task Manager MCP-把复杂任务拆解成可执行的小步骤的 MCP](https://github.com/cjo4m06/mcp-shrimp-task-manager)
 - [Interactive Feedback MCP：先确认再执行](https://github.com/noopstudios/interactive-feedback-mcp)
 - [MCP-联合查询引擎](https://github.com/mindsdb/mindsdb)
+- [AntVis-MCP Chart](https://github.com/antvis/mcp-server-chart)
 
 ## 12、总结
 
