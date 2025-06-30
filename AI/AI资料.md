@@ -100,6 +100,7 @@ Google Gemini
 - Augment Code
 - [AI Coding Agent 对比](https://xxchan.me/ai/2025/06/08/ai-coding.html)
 - [腾讯AI 开发套件](https://docs.cloudbase.net/ai/quickstart)
+- [GPT-Copilot](https://github.com/Pythagora-io/gpt-pilot)
 
 ## 原型设计
 

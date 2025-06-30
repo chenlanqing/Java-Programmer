@@ -901,6 +901,7 @@ async def fetch_weather(city: str) -> str:
 
 - [数字人资料整理](https://github.com/YUANZHUO-BNU/metahuman_overview)
 - [2025数字人方案](https://www.xmsumi.com/detail/764)
+- [淘宝直播数字人：TTS-语音合成技术](https://mp.weixin.qq.com/s/8jFx4wNQfTRLzlI8TIMH8A)
 
 ## 1、商用
 

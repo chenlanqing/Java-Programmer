@@ -34,10 +34,16 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 - [LOGO生成](https://github.com/bestony/logoly)
 
-## 5.5、其他
+## 5.5、生活
+
+- [程序员延寿指南](https://github.com/geekan/HowToLiveLonger)
+- [程序员在家做饭指南](https://github.com/Anduin2017/HowToCook)
+
+## 其他
 
 - [Billion Mail: 一个开源的邮件服务器](https://github.com/aaPanel/BillionMail)
 - [Harper：免费开源检测软件](https://github.com/automattic/harper)
+
 
 # 参考资料
 
