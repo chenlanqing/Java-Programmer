@@ -10,6 +10,19 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 
 - [Decision tree-Wikipedia](https://en.wikipedia.org/wiki/Decision_tree)
 
+# AI 学习路线
+
+- ML for Beginners: http://github.com/microsoft/ML-For-Beginners
+- AI for Beginners: http://github.com/microsoft/AI-For-Beginners
+- NN Zero to Hero: http://github.com/karpathy/nn-zero-to-hero
+- Paper implementations: http://github.com/labmlai
+- Made with ML: http://github.com/GokuMohandas/Made-With-ML
+- Hands-on LLMs: http://github.com/HandsOnLLM
+- Advanced RAG techniques: http://github.com/NirDiamant
+- Agents for Beginners: http://github.com/microsoft/ai-agents-for-beginners
+- Agents towards production: http://github.com/NirDiamant
+- AI Engg. Hub: http://github.com/patchy631/ai-engineering-hub
+
 # AI
 
 - [AI笔记](http://www.huaxiaozhuan.com/)
@@ -60,7 +73,7 @@ Google Gemini
 
 # AI 工作平台
 
-- [Langfuse 是一个开源LLM 工程平台，可帮助团队协作调试、分析和迭代LLM 应用程序](https://github.com/langfuse/langfuse)
+- [开源 LLM 工程平台：LLM 可观测性、指标、评估、提示管理、沙盒、数据集。与 OpenTelemetry、Langchain、OpenAI SDK、LiteLLM 等集成](https://github.com/langfuse/langfuse)
 - [anything-llm：这款全能的桌面和 Docker AI 应用程序内置了 RAG、AI 代理、无代码代理构建器、MCP 兼容性等功能](https://github.com/Mintplex-Labs/anything-llm)
 - [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
 
@@ -86,6 +99,7 @@ Google Gemini
 - [腾讯 codebuddy](https://copilot.tencent.com/)
 - Augment Code
 - [AI Coding Agent 对比](https://xxchan.me/ai/2025/06/08/ai-coding.html)
+- [腾讯AI 开发套件](https://docs.cloudbase.net/ai/quickstart)
 
 ## 原型设计
 

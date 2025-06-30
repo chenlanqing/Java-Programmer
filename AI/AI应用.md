@@ -581,6 +581,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [browser-use：AI 操作浏览器](https://github.com/browser-use/browser-use)
 - [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
 - [Suna-通用型 Agent](https://github.com/kortix-ai/suna)
+- [精选 Agent 代理框架](https://github.com/Arindam200/awesome-ai-apps)
 
 ## 应用
 
@@ -889,6 +890,7 @@ async def fetch_weather(city: str) -> str:
 - [Interactive Feedback MCP：先确认再执行](https://github.com/noopstudios/interactive-feedback-mcp)
 - [MCP-联合查询引擎](https://github.com/mindsdb/mindsdb)
 - [AntVis-MCP Chart](https://github.com/antvis/mcp-server-chart)
+- [基于 MCP 的机器人应用](https://github.com/78/xiaozhi-esp32)
 
 ## 12、总结
 
