@@ -26,13 +26,10 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 # AI
 
 - [AI笔记](http://www.huaxiaozhuan.com/)
-- [Spring AI](https://spring.io/projects/spring-ai)
-- [Spring AI Tutorial](https://howtodoinjava.com/series/spring-ai-tutorial/)
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
-- [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
 - [Deep learning AI](https://learn.deeplearning.ai/)
 - [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
-
+- [AI 入门课程](https://github.com/microsoft/generative-ai-for-beginners)
 
 # API Key
 
@@ -101,10 +98,11 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [腾讯AI 开发套件](https://docs.cloudbase.net/ai/quickstart)
 - [GPT-Copilot](https://github.com/Pythagora-io/gpt-pilot)
 
-## 原型设计
+## 绘画设计
 
 - [Readdy 原型](https://readdy.ai/)
 - [Figma](https://www.figma.com/)
+- [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
 
 # 语音处理
 

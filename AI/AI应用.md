@@ -561,6 +561,7 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [从数据解析到多路由器检索的工程实践](https://mp.weixin.qq.com/s/VPidqY02ngsrnXhpOol3_A)
 - [MinerU-PDF转换成Markdown和JSON格式](https://github.com/opendatalab/mineru)
 - [Deepdoc-文档处理](https://github.com/infiniflow/ragflow/tree/main/deepdoc)
+- [20种 RAG 技术分析](https://mp.weixin.qq.com/s/AW-vjOmPXYiv3xN57TWKsg)
 
 # 三、AI Agent
 
