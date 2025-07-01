@@ -70,6 +70,10 @@ Google Gemini
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 - [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 
+# AI 搜索
+
+- [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
+- [SearXNG:免费的互联网元搜索引擎](https://github.com/searxng/searxng)
 
 # AI 工作平台
 
@@ -126,7 +130,7 @@ Google Gemini
 - [Spring AI Alibaba](https://java2ai.com/)
 
 
-# AI与网关
+# AI 网关
 
 ## 面临的挑战
 

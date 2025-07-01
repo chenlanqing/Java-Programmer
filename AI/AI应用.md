@@ -556,7 +556,6 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 
 - [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)
 - [GraphRAG](https://github.com/microsoft/graphrag)
-- [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
 - [RAG-各种高级技术](https://github.com/NirDiamant/RAG_Techniques)
 - [所有 RAG 技术](https://github.com/FareedKhan-dev/all-rag-techniques)
 - [从数据解析到多路由器检索的工程实践](https://mp.weixin.qq.com/s/VPidqY02ngsrnXhpOol3_A)
