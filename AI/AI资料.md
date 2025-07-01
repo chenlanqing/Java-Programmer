@@ -59,13 +59,8 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [ideas转为实现的AI工具](https://replit.com/)
 - [AI 大模型自动化流程](https://yuju-ai.com/)
 - [具有本机AI功能的公平代码工作流程自动化平台](https://github.com/n8n-io/n8n)
-- [AI聊天工具](https://poe.com/)
-- [机器人应用](https://github.com/TyCoding/langchat)
-- [AI开源工具](https://qyxznlkmwx.feishu.cn/wiki/BwWIwsCOuiMWGmkUzNHcKLvPnPh)
-- [Chat V0](https://v0.dev/chat)
 - [AI 源码解读工具](https://deepwiki.com/)
 - [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
-Google Gemini
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 - [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
@@ -167,7 +162,10 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 # 机器人
 
-https://github.com/huggingface/lerobot
+- https://github.com/huggingface/lerobot
+- [AI聊天工具](https://poe.com/)
+- [LangChat是Java生态下企业级AIGC项目解决方案](https://github.com/TyCoding/langchat)
+- [Koishi 是一个跨平台、可扩展、高性能的聊天机器人框架](https://github.com/koishijs/koishi)
 
 # 参考资料
 
