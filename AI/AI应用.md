@@ -1107,7 +1107,12 @@ async def fetch_weather(city: str) -> str:
 - [AntVis-MCP Chart](https://github.com/antvis/mcp-server-chart)
 - [基于 MCP 的机器人应用](https://github.com/78/xiaozhi-esp32)
 
-## 12、总结
+## 12、RAG-MCP
+
+- [RAG-MCP: Mitigating Prompt Bloat in LLM Tool Selection via Retrieval-Augmented Generation](https://arxiv.org/pdf/2505.03275)
+
+
+## 13、总结
 
 无论是 MCP 协议还是 Agent、Function Calling 技术，本质上都在构建大模型与真实世界的交互桥梁；
 
