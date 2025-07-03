@@ -1106,6 +1106,7 @@ async def fetch_weather(city: str) -> str:
 - [MCP-联合查询引擎](https://github.com/mindsdb/mindsdb)
 - [AntVis-MCP Chart](https://github.com/antvis/mcp-server-chart)
 - [基于 MCP 的机器人应用](https://github.com/78/xiaozhi-esp32)
+- [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 
 ## 12、RAG-MCP
 
