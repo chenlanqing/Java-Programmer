@@ -106,6 +106,29 @@ conda env create -f environment.yml
 
 Jupyterlab：下一代笔记本接口Jupyterlab是最新的基于Web的交互式开发环境，用于笔记本电脑，代码和数据。它的灵活接口使用户可以在数据科学，科学计算，计算新闻学和机器学习中配置和安排工作流程。模块化设计邀请扩展以扩展和丰富功能。
 
-```
+```bash
 jupyter lab
+```
+直接运行上面的命令会提示：
+```bash
+Running as root is not recommended. Use --allow-root to bypass
+```
+可以运行如下命令：
+```bash
+jupyter lab --allow-root
+```
+如果在云服务器上配置的话，需要可以在外部访问：
+- 生成配置文件：
+```bash
+# 生成 Jupyter 配置文件（如果尚未生成）
+jupyter lab --generate-config
+```
+- 打开配置文件 `~/.jupyter/jupyter_lab_config.py`，并进行以下修改：
+```py
+# 允许远程访问
+c.ServerApp.ip = '0.0.0.0'
+# 禁用自动打开浏览器（服务器上不需要）
+c.ServerApp.open_browser = False
+# 设置端口（默认为8888，可自定义）
+c.ServerApp.port = 8888
 ```
