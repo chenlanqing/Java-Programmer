@@ -1702,14 +1702,17 @@ ConfigurationClassParser#doProcessConfigurationClass
 
 [starter原理](../../../Java框架/Spring/Spring.md#十三自定义Starter)
 
-
 # 13、自定义扩展点
 
-- [Spring/Boot 扩展点](https://mp.weixin.qq.com/s/oiVkngj5JYzK2CerB1JFqA)
+- [Spring Boot 扩展点](https://mp.weixin.qq.com/s/oiVkngj5JYzK2CerB1JFqA)
+- [Spring 有哪些扩展点](https://mp.weixin.qq.com/s/aWd19GjNKIK5gAPc-UK6oA)
 
-可扩展的接口启动调用顺序图：
+如果对于spring boot扩展点做大致分类，可以分为两类
+- 事件类 扩展点: 基于 观察者模式 的事件类扩展点 ， 被动接收模式
+- 非事件类扩展点: 基于 模版模式 的非事件类扩展点（比如后置处理器 BeanFactoryPostProcessor，CommandLineRunner等) ，主动调用模式
 
-![](image/Spring可扩展的接口启动调用顺序图.jpg)
+优先选择事件类扩展点的场景（推荐80%场景）
+
 
 ## 13.1、ApplicationContextInitializer
 
@@ -2031,10 +2034,17 @@ getObject方法的实现就是返回通过SqlSession获取到的Mapper接口的�
 
 使用场景：用户可以扩展此接口在对所有单例对象初始化完毕后，做一些后置的业务处理
 
-## 13.14、CommandLineRunner
+## 13.14、[CommandLineRunner 与 ApplicationRunner](#72启动加载器)
+
+**CommandLinerRunner**
 
 `org.springframework.boot.CommandLineRunner`
-
+```java
+@FunctionalInterface
+public interface CommandLineRunner extends Runner {
+	void run(String... args) throws Exception;
+}
+```
 这个接口也只有一个方法：run(String… args)，触发时机为整个项目启动完毕后，自动执行。如果有多个CommandLineRunner，可以利用@Order来进行排序。
 
 使用场景：用户扩展此接口，进行启动项目之后一些业务的预处理
@@ -2046,6 +2056,7 @@ public class TestCommandLineRunner implements CommandLineRunner {
     }
 }
 ```
+应用完全启动后，接收原始命令行参数
 
 ## 13.15、DisposableBean
 
@@ -2060,33 +2071,35 @@ public class TestDisposableBean implements DisposableBean {
 }
 ```
 
+**ApplicationRunner**
+
+
+
 ## 13.16、ApplicationListener
 
 `org.springframework.context.ApplicationListener`
+```java
+@FunctionalInterface
+public interface ApplicationListener<E extends ApplicationEvent> extends EventListener {
+	void onApplicationEvent(E event);
+	default boolean supportsAsyncExecution() {
+		return true;
+	}
+	static <T> ApplicationListener<PayloadApplicationEvent<T>> forPayload(Consumer<T> consumer) {
+		return event -> consumer.accept(event.getPayload());
+	}
+}
+```
+ApplicationListener 可以监听某个事件的event，触发时机可以穿插在业务方法执行过程中，用户可以自定义某个业务事件。但是 sprin g内部也有一些内置事件，这种事件，可以穿插在启动调用中。也可以利用这个特性，来自己做一些内置事件的监听器来达到和前面一些触发点大致相同的事情。
 
-ApplicationListener可以监听某个事件的event，触发时机可以穿插在业务方法执行过程中，用户可以自定义某个业务事件。但是spring内部也有一些内置事件，这种事件，可以穿插在启动调用中。我们也可以利用这个特性，来自己做一些内置事件的监听器来达到和前面一些触发点大致相同的事情。
+Spring主要的内置事件：
+- **ContextRefreshedEvent**：ApplicationContext 被初始化或刷新时，该事件被发布。这也可以在ConfigurableApplicationContext接口中使用 refresh()方法来发生。此处的初始化是指：所有的Bean被成功装载，后处理Bean被检测并激活，所有Singleton Bean 被预实例化，ApplicationContext容器已就绪可用。
+- **ContextStartedEvent**：当使用 ConfigurableApplicationContext （ApplicationContext子接口）接口中的 start() 方法启动 ApplicationContext时，该事件被发布。你可以调查你的数据库，或者你可以在接受到这个事件后重启任何停止的应用程序。
+- **ContextStoppedEvent**：当使用 ConfigurableApplicationContext接口中的 stop()停止ApplicationContext 时，发布这个事件。你可以在接受到这个事件后做必要的清理的工作
+- **ContextClosedEvent**：当使用 ConfigurableApplicationContext接口中的 close()方法关闭 ApplicationContext 时，该事件被发布。一个已关闭的上下文到达生命周期末端；它不能被刷新或重启
+- **RequestHandledEvent**：这是一个 web-specific 事件，告诉所有 bean HTTP 请求已经被服务。只能应用于使用DispatcherServlet的Web应用。在使用Spring作为前端的MVC控制器时，当Spring处理用户请求结束后，系统会自动触发该事件
 
-接下来罗列下spring主要的内置事件：
-
-ContextRefreshedEvent
-
-ApplicationContext 被初始化或刷新时，该事件被发布。这也可以在ConfigurableApplicationContext接口中使用 refresh()方法来发生。此处的初始化是指：所有的Bean被成功装载，后处理Bean被检测并激活，所有Singleton Bean 被预实例化，ApplicationContext容器已就绪可用。
-
-ContextStartedEvent
-
-当使用 ConfigurableApplicationContext （ApplicationContext子接口）接口中的 start() 方法启动 ApplicationContext时，该事件被发布。你可以调查你的数据库，或者你可以在接受到这个事件后重启任何停止的应用程序。
-
-ContextStoppedEvent
-
-当使用 ConfigurableApplicationContext接口中的 stop()停止ApplicationContext 时，发布这个事件。你可以在接受到这个事件后做必要的清理的工作
-
-ContextClosedEvent
-
-当使用 ConfigurableApplicationContext接口中的 close()方法关闭 ApplicationContext 时，该事件被发布。一个已关闭的上下文到达生命周期末端；它不能被刷新或重启
-
-RequestHandledEvent
-
-这是一个 web-specific 事件，告诉所有 bean HTTP 请求已经被服务。只能应用于使用DispatcherServlet的Web应用。在使用Spring作为前端的MVC控制器时，当Spring处理用户请求结束后，系统会自动触发该事件
+当然也可以利用 @EventListener，详细参考：[4、监听器](#4监听器)
 
 ## 13.17、其他扩展点
 
@@ -2155,6 +2168,10 @@ public class TestUserImport {
 > 其实不论是什么样的配置类，主要的作用就是往Spring容器中注册Bean，只不过注入的方式不同罢了；
 
 ImportSelector和ImportBeanDefinitionRegistrar的方法是有入参的，也就是注解的一些属性的封装，所以就可以根据注解的属性的配置，来决定应该返回样的配置类或者是应该往容器中注入什么样的类型的Bean，可以看一下 @EnableAsync 的实现，看看是如何根据@EnableAsync注解的属性来决定往容器中注入什么样的Bean
+
+## 13.18、总结
+
+![](image/Spring可扩展的接口启动调用顺序图.jpg)
 
 # 14、如何控制加载顺序
 
