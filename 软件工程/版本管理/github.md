@@ -43,7 +43,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 - [Billion Mail: 一个开源的邮件服务器](https://github.com/aaPanel/BillionMail)
 - [Harper：免费开源检测软件](https://github.com/automattic/harper)
-
+- [Pot-desktop: 一个跨平台的划词翻译和OCR软件](https://github.com/pot-app/pot-desktop)
 
 # 参考资料
 
