@@ -44,6 +44,8 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [Billion Mail: 一个开源的邮件服务器](https://github.com/aaPanel/BillionMail)
 - [Harper：免费开源检测软件](https://github.com/automattic/harper)
 - [Pot-desktop: 一个跨平台的划词翻译和OCR软件](https://github.com/pot-app/pot-desktop)
+- [Folo 是个信息聚合工具，能把你想关注的各种来源（文章、视频、动态等）都集中放在一个简洁的时间线里，告别到处切换的麻烦](https://github.com/RSSNext/Folo)
+- [Scira（原名 MiniPerplx），它是一个主打轻量级和 AI 驱动的搜索引擎。](https://github.com/zaidmukaddam/scira)
 
 # 参考资料
 
