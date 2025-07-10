@@ -39,6 +39,12 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [程序员延寿指南](https://github.com/geekan/HowToLiveLonger)
 - [程序员在家做饭指南](https://github.com/Anduin2017/HowToCook)
 
+## 5.6、微信
+
+- [一键下载微信公众号文章](https://github.com/qiye45/wechatDownload)
+- [AI 微信公众号自动化工具](https://github.com/iniwap/ai_auto_wxgzh)
+- [抓取公众号文章生成 RSS 订阅源](https://github.com/rachelos/we-mp-rss)
+
 ## 其他
 
 - [Billion Mail: 一个开源的邮件服务器](https://github.com/aaPanel/BillionMail)
