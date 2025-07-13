@@ -49,6 +49,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
  
  # AI 应用
 
+- [AI 辅助软件工程：实践与案例解析](https://aise.phodal.com/index.html)
 - [AI构建各种工具](https://bolt.new/)
 - [设计AI](https://readdy.ai/)
 - [想法转变为现实](https://lovable.dev/?via=typescript)
