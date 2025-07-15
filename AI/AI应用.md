@@ -252,6 +252,13 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 - [火山方舟-Prompt 调优](https://console.volcengine.com/ark/region:ark+cn-beijing/autope/workbench/new)
 - [Prompt Pilot](https://promptpilot.volcengine.com/home)
 
+## 9、魔法词
+
+在提示词领域，有一些类词被称为“魔法词”，使用后可以立竿见影的提升大模型的输出质量，让人直呼玄学的力量。通常是因为这些提示词会让大模型联想或使用到一些高质量的数据，所以才会产生较好的输出结果。常用到两种“魔法词”，分别是：
+- Let's think step by step.
+- Read the question again
+    - Re-Reading重读：Re-Reading Improves Reasoning in Large Language Models（https://arxiv.org/pdf/2309.06275）
+
 ## Prompt 生成案例
 
 - [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
@@ -262,6 +269,7 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 - [学习提示词](https://learningprompt.wiki/)
 - [UI Prompt Generator](https://uiprompt.art/ui-prompt-generator)
 - [自动提示词](https://github.com/AIDotNet/auto-prompt)
+- [大模型解谜游戏 LLM Riddles: https://zhuanlan.zhihu.com/p/665418646](https://modelscope.cn/studios/LLMRiddles/LLMRiddles/summary)
 
 # 二、RAG
 
@@ -814,7 +822,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
 - [TradingAgents：基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
-
+- [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
 
 
 # 四、MCP
