@@ -64,6 +64,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 - [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 - [邮件助手 Agent](https://github.com/langchain-ai/agents-from-scratch)
+- [一键生成视频](https://github.com/harry0703/MoneyPrinterTurbo)
 
 # AI 搜索
 

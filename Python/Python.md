@@ -26,6 +26,10 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 - [VNPY-量化交易平台](https://github.com/vnpy/vnpy)
 - [基于Java的AI开源量化交易平台](https://gitee.com/dromara/northstar/)
 
+# Python 库
+
+- [将其他文件转换为 Markdown](https://github.com/microsoft/markitdown)
+
 # 参考资料
 
 - [Python的资源列表](https://github.com/vinta/awesome-python)
@@ -35,3 +39,4 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 - [Python-dotenv](https://pypi.org/project/python-dotenv/)
 - [DrissionPage-是一个基于 python 的网页自动化工具)
 - [25 Python Projects for Beginners – Easy Ideas to Get Started Coding Python](https://www.freecodecamp.org/news/python-projects-for-beginners/)
+- [Python-100天学习](https://github.com/jackfrued/Python-100-Days)
