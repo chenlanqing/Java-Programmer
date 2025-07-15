@@ -812,6 +812,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
 - [Suna-通用型 Agent](https://github.com/kortix-ai/suna)
 - [精选 Agent 代理框架](https://github.com/Arindam200/awesome-ai-apps)
+- [WebAgent 信息检索系统：网页智能代理框架](https://github.com/Alibaba-NLP/WebAgent)
 
 ## 应用
 
