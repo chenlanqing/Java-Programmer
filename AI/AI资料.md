@@ -41,6 +41,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - openrouter
 - deepseek
 - 阿里云百炼
+- [Token 计算器](https://github.com/dqbd/tiktokenizer)
 
 # Deepseek
 
@@ -107,6 +108,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [Readdy 原型](https://readdy.ai/)
 - [Figma](https://www.figma.com/)
 - [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
+- https://www.codefather.cn/course/1907378983347892226/section/1928346946364375042#heading-0
 
 # 语音处理
 

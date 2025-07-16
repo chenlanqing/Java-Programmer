@@ -134,6 +134,8 @@ A:
 
 ## 6、Prompts 技巧
 
+- [语言模型 Prompt 工程-最佳实践](https://open.bigmodel.cn/dev/guidelines/LanguageModels)
+
 - Zero-Shot Prompting：零样本提示词
 - Few-Shot Prompting：少量样本提示词
 - Chain-of-Thought Prompting：思维链提示词
