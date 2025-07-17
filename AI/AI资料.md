@@ -6,6 +6,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [深度学习-逐行解读代码](https://github.com/labmlai/annotated_deep_learning_paper_implementations)
 - [machine learning](https://www.bbbdata.com/ml)
 - [机器学习入门资料](https://github.com/microsoft/ML-For-Beginners)
+- [动手深度学习](https://zh.d2l.ai/)
 
 ## 决策树
 

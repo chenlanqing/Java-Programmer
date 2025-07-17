@@ -30,11 +30,12 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 # Python 库
 
 - [将其他文件转换为 Markdown](https://github.com/microsoft/markitdown)
+- [Python类库列表](https://github.com/vinta/awesome-python)
+- [Python数学库](https://github.com/manimCommunity/manim)
 
 # 参考资料
 
-- [Python的资源列表](https://github.com/vinta/awesome-python)
-- [Python数学库](https://github.com/manimCommunity/manim)
+- [Python Language](https://www.geeksforgeeks.org/python/python-programming-language-tutorial/)
 - [Python Tutorial](https://www.pythontutorial.net/)
 - [pythoncheatsheet](https://www.pythoncheatsheet.org/cheatsheet/string-formatting)
 - [Python-dotenv](https://pypi.org/project/python-dotenv/)
