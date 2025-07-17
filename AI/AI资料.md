@@ -32,6 +32,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [Deep learning AI](https://learn.deeplearning.ai/)
 - [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
 - [AI 入门课程](https://github.com/microsoft/generative-ai-for-beginners)
+- https://github.com/Shubhamsaboo/awesome-llm-apps
 
 # API Key
 

@@ -33,6 +33,10 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 - [Python类库列表](https://github.com/vinta/awesome-python)
 - [Python数学库](https://github.com/manimCommunity/manim)
 
+# 数据科学
+
+[计算和推理思维：数据科学的基础](https://inferentialthinking.com/chapters/intro.html)
+
 # 参考资料
 
 - [Python Language](https://www.geeksforgeeks.org/python/python-programming-language-tutorial/)

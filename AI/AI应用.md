@@ -586,6 +586,8 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
 - [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners)
+- [Agent Master Class](https://github.com/coleam00/ai-agents-masterclass)
+- [构建自主 AI Agent](https://github.com/ed-donner/agents)
 - [AG-UI Protocol](https://github.com/ag-ui-protocol/ag-ui)
 
 ## 1、什么是 ReAct
@@ -807,6 +809,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
 - [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
 - [深度拆解：Dify、FastGPT 和 Ragflow](https://huangf.org/posts/aiworkflow/)
+- [agentUniverse 是一个基于大型语言模型的多智能体框架](https://github.com/agentuniverse-ai/agentUniverse)
 
 ## 6、开源 Agent
 
@@ -885,7 +888,6 @@ $ \color{red}{特别说明：MCP 并没有规定如何与大模型进行交互�
 - [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
 - [Find Awesome MCP Servers and Clients](https://mcp.so/)
 - [MCP Server 官方示例](https://github.com/modelcontextprotocol/servers)
-- [MCP热门资源](https://github.com/punkpeye/awesome-mcp-servers)
 - [Glama](https://glama.ai/mcp/servers)
 - [Smithery](https://smithery.ai)
 - [cursor](https://cursor.directory)
