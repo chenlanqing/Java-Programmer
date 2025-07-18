@@ -253,6 +253,7 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 - [Claude Optimizer：自动分析Prompt结构并提出改进建议（如添加XML标签、调整逻辑层级）](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prompt-improver)
 - [火山方舟-Prompt 调优](https://console.volcengine.com/ark/region:ark+cn-beijing/autope/workbench/new)
 - [Prompt Pilot](https://promptpilot.volcengine.com/home)
+- [提示词优化器](https://github.com/linshenkx/prompt-optimizer)
 
 ## 9、魔法词
 
@@ -809,7 +810,12 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
 - [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
 - [深度拆解：Dify、FastGPT 和 Ragflow](https://huangf.org/posts/aiworkflow/)
+
+## 5.1、Multi-Agent
+
 - [agentUniverse 是一个基于大型语言模型的多智能体框架](https://github.com/agentuniverse-ai/agentUniverse)
+- [crewAI-快速灵活的多代理自动化框架](https://github.com/crewAIInc/crewAI)
+- [OpenManus](https://github.com/FoundationAgents/OpenManus)
 
 ## 6、开源 Agent
 
@@ -829,6 +835,10 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
 - [TradingAgents：基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
 - [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
+
+## 构建 Agent 原则
+
+https://github.com/humanlayer/12-factor-agents
 
 
 # 四、MCP
@@ -1127,6 +1137,7 @@ async def fetch_weather(city: str) -> str:
 - [AntVis-MCP Chart](https://github.com/antvis/mcp-server-chart)
 - [基于 MCP 的机器人应用](https://github.com/78/xiaozhi-esp32)
 - [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
+- [可以安全操作数据库的 MCP Toolbox](https://github.com/googleapis/genai-toolbox)
 
 ## 12、RAG-MCP
 

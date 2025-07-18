@@ -118,6 +118,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - https://github.com/m-bain/whisperX/
 - https://github.com/modelscope/FunASR
 - https://github.com/alphacep/vosk-api
+- https://elevenlabs.io/
 
 # Java与AI
 
@@ -177,4 +178,4 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 - [ChatGPT账号](https://chatgpt123.com/)
 - [秘塔AI搜索](https://metaso.cn/)
-- [软件开发代理平台](https://github.com/All-Hands-AI/OpenHands)
+- [OpenHands（原 OpenDevin），这是一个由 AI 驱动的软件开发代理平台](https://github.com/All-Hands-AI/OpenHands)
