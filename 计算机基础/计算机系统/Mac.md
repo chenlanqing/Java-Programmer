@@ -10,7 +10,6 @@
 
 参考资料：https://www.oschina.net/translate/linux-netcat-command
 
-
 ## 3、Mac下查看TCP状态
 
 ```bash
@@ -127,12 +126,43 @@ sudo lsof -i tcp:port
 
 ## 8、JDK
 
+配置多个版本：
+```bash
+export JAVA_8_HOME=/Library/Java/JavaVirtualMachines/jdk1.8.0_151.jdk/Contents/Home
+export JAVA_11_HOME=/Library/Java/JavaVirtualMachines/jdk-11.0.8.jdk/Contents/Home
+export JAVA_17_HOME=/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+export JAVA_21_HOME=/Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
+export JAVA_23_HOME=/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
+export JAVA_HOME=$JAVA_17_HOME
+export CLASSPATH=.:$JAVA_HOME/lib/dt.jar:$JAVA_HOME/lib/tools.jar
+export PATH=$PATH:$JAVA_HOME/bin:$M2_HOME/bin
+
+alias jdk8='export JAVA_HOME=$JAVA_8_HOME'
+alias jdk11='export JAVA_HOME=$JAVA_11_HOME'
+alias jdk17='export JAVA_HOME=$JAVA_17_HOME'
+alias jdk21='export JAVA_HOME=$JAVA_21_HOME'
+alias jdk23='export JAVA_HOME=$JAVA_23_HOME'
+```
+每次使用 jdk8、jdk11、jdk17、jdk21、jdk23，命令切换 jdk 版本时，都可以输入 java -version 来查看是否已经成功。
+
 macOS下 JDK 默认安装在 `/Library/Java/JavaVirtualMachines`目录下，同时提供了一个小工具`/usr/libexec/java_home` 帮助我们快速的查看 JDK 相关的信息。
 
 默认情况下 MacOS 会自动选择 `/Library/Java/JavaVirtualMachines`目录下版本号最高的 JDK 做为默认 JDK
 ```bash
-~ /usr/libexec/java_home
+$ /usr/libexec/java_home
 /Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+# 列出 当前电脑上安装的所有 jdk 版本
+$ /usr/libexec/java_home -V
+Matching Java Virtual Machines (8):
+    23.0.2 (x86_64) "Oracle Corporation" - "Java SE 23.0.2" /Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
+    21.0.7 (x86_64) "Oracle Corporation" - "Java SE 21.0.7" /Library/Java/JavaVirtualMachines/jdk-21.jdk/Contents/Home
+    17 (x86_64) "Oracle Corporation" - "Java SE 17" /Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home
+    11.0.8 (x86_64) "Oracle Corporation" - "Java SE 11.0.8" /Library/Java/JavaVirtualMachines/jdk-11.0.8.jdk/Contents/Home
+    11.0.5 (x86_64) "Oracle Corporation" - "Java SE 11.0.5" /Library/Java/JavaVirtualMachines/jdk-11.0.5.jdk/Contents/Home
+    1.8.151.12 (x86_64) "Oracle Corporation" - "Java" /Library/Internet Plug-Ins/JavaAppletPlugin.plugin/Contents/Home
+    1.8.0_151 (x86_64) "Oracle Corporation" - "Java SE 8" /Library/Java/JavaVirtualMachines/jdk1.8.0_151.jdk/Contents/Home
+    1.7.0_80 (x86_64) "Oracle Corporation" - "Java SE 7" /Library/Java/JavaVirtualMachines/jdk1.7.0_80.jdk/Contents/Home
+/Library/Java/JavaVirtualMachines/jdk-23.jdk/Contents/Home
 ```
 可以通过java_home的exec选项来执行单次任务：`/usr/libexec/java_home -v version --exec command`
 
@@ -156,8 +186,3 @@ $ cd ~/.oh-my-zsh/plugins/git
 $ cat git.plugin.zsh
 ```
 `cat ~/.oh-my-zsh/plugins/git/git.plugin.zsh`
-
-
-# 其他
-
-brew install --build-from-source icu4c
