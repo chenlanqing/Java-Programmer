@@ -178,6 +178,28 @@ Some stuff
 $ cat result.txt | pbcopy
 ```
 
+### 9.2、open 命令
+
+打开目录：
+```bash
+$ open ~/Library/Preferences
+$ open /etc
+$ open ../..
+# 同时打开多个目录：
+$ open ~/Documents ~/Desktop ~/Downloads
+$ open ~/D*
+```
+
+打开文件，会使用默认的程序（通常是Preview），同样你也能一次性打开多个文件
+```bash
+$ open demo.txt
+```
+还能指定使用什么程序来打开文件，使用`-a`参数：
+```bash
+# 使用 vscode 打开 .zshrc 文件
+$ open -a "Visual Studio Code" .zshrc
+```
+
 ## 10、命令别名
 
 比如安装了 oh-my-zsh，查看 git 操作命令的别名：
