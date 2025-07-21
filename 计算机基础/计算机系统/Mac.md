@@ -52,6 +52,7 @@ https://github.com/qianguyihao/Mac-list
 - DBeaver   数据库连接工具
 - postman
 - iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
+- [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
 - another redis desktop manager- JProfiler
 - termius  SSH连接客户端
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
@@ -146,6 +147,15 @@ Some stuff
 ...
 $ cat result.txt | pbcopy
 ```
+
+## 10、命令别名
+
+比如安装了 oh-my-zsh，查看 git 操作命令的别名：
+```bash
+$ cd ~/.oh-my-zsh/plugins/git
+$ cat git.plugin.zsh
+```
+`cat ~/.oh-my-zsh/plugins/git/git.plugin.zsh`
 
 
 # 其他
