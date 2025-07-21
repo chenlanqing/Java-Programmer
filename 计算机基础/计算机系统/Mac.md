@@ -126,7 +126,7 @@ sudo lsof -i tcp:port
 
 ## 8、JDK
 
-macOS下 JDK 默认安装在 `/Library/Java/JavaVirtualMachines`目录下，同时提供了一个小工具/`usr/libexec/java_home` 帮助我们快速的查看 JDK 相关的信息。
+macOS下 JDK 默认安装在 `/Library/Java/JavaVirtualMachines`目录下，同时提供了一个小工具`/usr/libexec/java_home` 帮助我们快速的查看 JDK 相关的信息。
 
 默认情况下 MacOS 会自动选择 `/Library/Java/JavaVirtualMachines`目录下版本号最高的 JDK 做为默认 JDK
 ```bash
@@ -135,6 +135,17 @@ macOS下 JDK 默认安装在 `/Library/Java/JavaVirtualMachines`目录下，同�
 ```
 可以通过java_home的exec选项来执行单次任务：`/usr/libexec/java_home -v version --exec command`
 
+## 9、常用命令
+
+### 9.1、命令输出到粘贴板
+
+```bash
+$ cat result.txt
+...
+Some stuff
+...
+$ cat result.txt | pbcopy
+```
 
 
 # 其他
