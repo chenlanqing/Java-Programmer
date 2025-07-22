@@ -645,6 +645,17 @@ New input: {input}
 - Action Input: 工具可以理解为函数，通常会有入参，这里就是让大模型提供入参；
 - Observation: 在这里填入工具执行的结果，由大模型来判断结果是否有用；
 
+上面过程使用伪代码表达式为：
+```py
+while True:
+    # 1、（Thought）大模型调用，根据大模型输出，判断是否需要工具调用，调用哪个工具，入参是什么
+    if 无需调用工具:
+        break
+    # 2、（Action）工具调用
+
+    # 3、（Observation）拿到工具调用的执行结果，追加到prompt中，回到1，进行下一轮LLM调用
+```
+
 ReAct 的执行过程是一个与人类交互的过程。在 Action 和 Action Input 中，大模型会告诉人类需要执行什么工具、以及工具的入参是什么，而具体的工具执行，需要由人类完成。人类完成后，将工具执行结果填入到 Observation，反馈给大模型，直到大模型得到 Final Answer。
 
 
@@ -829,7 +840,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 
 - [agent directory](https://aiagentsdirectory.com/)
 - [Agent调研--19类Agent框架对比](https://mp.weixin.qq.com/s/rogMCoS1zDN0mAAC5EKhFQ)
-- [A list of AI autonomous agents](https://github.com/e2b-dev/awesome-ai-agents)
+- [自主 AI Agent 框架列表](https://github.com/e2b-dev/awesome-ai-agents)
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
