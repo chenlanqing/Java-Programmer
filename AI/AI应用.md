@@ -909,6 +909,7 @@ $ \color{red}{特别说明：MCP 并没有规定如何与大模型进行交互�
 - [Awesome MCP Server](https://github.com/punkpeye/awesome-mcp-servers)
 - [Find Awesome MCP Servers and Clients](https://mcp.so/)
 - [MCP Server 官方示例](https://github.com/modelcontextprotocol/servers)
+- [Awesome-MCP-ZH](https://github.com/yzfly/Awesome-MCP-ZH)
 - [Glama](https://glama.ai/mcp/servers)
 - [Smithery](https://smithery.ai)
 - [cursor](https://cursor.directory)

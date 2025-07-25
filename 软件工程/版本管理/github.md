@@ -29,6 +29,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 ## 5.3、技术
 
 - [自动修正错误命令](https://github.com/nvbn/thefuck)
+- [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
 
 ## 5.4、设计
 
@@ -38,6 +39,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 - [程序员延寿指南](https://github.com/geekan/HowToLiveLonger)
 - [程序员在家做饭指南](https://github.com/Anduin2017/HowToCook)
+- [个人财富管理](https://github.com/maybe-finance/maybe)
 
 ## 5.6、微信
 
