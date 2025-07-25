@@ -2868,6 +2868,8 @@ pip list --outdated
 卸载包：
 ```bash
 pip uninstall <package_name>
+# 批量卸载包：下面例子为 批量卸载 openai- 开头的包
+pip list | grep 'openai-' | awk '{print $1}' | xargs pip uninstall -y
 ```
 
 **列出软件包的依赖项**
