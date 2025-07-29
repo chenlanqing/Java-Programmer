@@ -851,6 +851,10 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 
 https://github.com/humanlayer/12-factor-agents
 
+## 垂直领域 Agent
+
+[Manus的技术实现原理浅析与简单复刻](https://developer.aliyun.com/article/1658152)
+
 
 # 四、MCP
 
