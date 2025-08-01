@@ -69,6 +69,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 - [邮件助手 Agent](https://github.com/langchain-ai/agents-from-scratch)
 - [一键生成视频](https://github.com/harry0703/MoneyPrinterTurbo)
+- [Magic:把企业办公需要的所有AI工具打包在一起](https://github.com/dtyq/magic)
 
 # AI 搜索
 

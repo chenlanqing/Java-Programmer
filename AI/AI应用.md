@@ -262,6 +262,10 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 - Read the question again
     - Re-Reading重读：Re-Reading Improves Reasoning in Large Language Models（https://arxiv.org/pdf/2309.06275）
 
+## 10、提示词评测
+
+- [AI 提示工程工作台，用于使用强大的分析工具制作、测试和系统评估提示](https://github.com/insaaniManav/prompt-forge)
+
 ## Prompt 生成案例
 
 - [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
@@ -273,6 +277,7 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 - [UI Prompt Generator](https://uiprompt.art/ui-prompt-generator)
 - [自动提示词](https://github.com/AIDotNet/auto-prompt)
 - [大模型解谜游戏 LLM Riddles: https://zhuanlan.zhihu.com/p/665418646](https://modelscope.cn/studios/LLMRiddles/LLMRiddles/summary)
+- [Manus 提示词](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
 
 # 二、RAG
 
@@ -828,6 +833,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [crewAI-快速灵活的多代理自动化框架](https://github.com/crewAIInc/crewAI)
 - [OpenManus](https://github.com/FoundationAgents/OpenManus)
 - [JoyAgent-JDGenie: 开源端到端的通用 Agent](https://github.com/jd-opensource/joyagent-jdgenie)
+- [agno：用于构建具有内存、知识和推理的Multi Agent的全栈框架](https://github.com/agno-agi/agno)
 
 ## 6、开源 Agent
 
@@ -836,6 +842,11 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [Suna-通用型 Agent](https://github.com/kortix-ai/suna)
 - [精选 Agent 代理框架](https://github.com/Arindam200/awesome-ai-apps)
 - [WebAgent 信息检索系统：网页智能代理框架](https://github.com/Alibaba-NLP/WebAgent)
+
+## 7、Agent 记忆
+
+- [Agent 常见 8 种 memory 实现](https://mp.weixin.qq.com/s/29SXiWyRgIZNGgpY3E0jdw)
+- [9 Different Ways to Optimize AI Agent Memories](https://github.com/FareedKhan-dev/optimize-ai-agent-memory)
 
 ## 应用
 
