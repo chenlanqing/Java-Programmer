@@ -32,7 +32,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [Deep learning AI](https://learn.deeplearning.ai/)
 - [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
 - [AI 入门课程](https://github.com/microsoft/generative-ai-for-beginners)
-- https://github.com/Shubhamsaboo/awesome-llm-apps
+- [各种使用 RAG、AI Agents、多智能体团队等技术的实战 LLM 应用示例](https://github.com/Shubhamsaboo/awesome-llm-apps)
 
 # API Key
 
@@ -175,6 +175,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [AI聊天工具](https://poe.com/)
 - [LangChat是Java生态下企业级AIGC项目解决方案](https://github.com/TyCoding/langchat)
 - [Koishi 是一个跨平台、可扩展、高性能的聊天机器人框架](https://github.com/koishijs/koishi)
+- [Genesis 是一个面向通用机器人学、具身人工智能 (Embodied AI) 和物理 AI 应用 的生成式物理模拟平台](https://github.com/Genesis-Embodied-AI/Genesis)
 
 # 参考资料
 
