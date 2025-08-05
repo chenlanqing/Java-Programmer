@@ -834,6 +834,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [OpenManus](https://github.com/FoundationAgents/OpenManus)
 - [JoyAgent-JDGenie: 开源端到端的通用 Agent](https://github.com/jd-opensource/joyagent-jdgenie)
 - [agno：用于构建具有内存、知识和推理的Multi Agent的全栈框架](https://github.com/agno-agi/agno)
+- [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
 
 ## 6、开源 Agent
 
