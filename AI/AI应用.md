@@ -595,6 +595,7 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [Agent Master Class](https://github.com/coleam00/ai-agents-masterclass)
 - [构建自主 AI Agent](https://github.com/ed-donner/agents)
 - [AG-UI Protocol](https://github.com/ag-ui-protocol/ag-ui)
+- [Routine框架：让企业级Agent告别“不靠谱”](https://arxiv.org/pdf/2507.14447)
 
 ## 1、什么是 ReAct
 
