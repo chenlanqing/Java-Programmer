@@ -867,8 +867,13 @@ https://github.com/humanlayer/12-factor-agents
 
 ## 垂直领域 Agent
 
-[Manus的技术实现原理浅析与简单复刻](https://developer.aliyun.com/article/1658152)
-
+### Manus 分析
+ 
+- [Manus的技术实现原理浅析与简单复刻](https://developer.aliyun.com/article/1658152)
+- [Manus 的调研与思考](https://blog.naaln.com/2025/03/Manus/)
+- https://zhuanlan.zhihu.com/p/29330461895
+- [Check Files Under /opt/.manus Path](https://manus.im/share/lLR5uWIR5Im3k9FCktVu0k)
+- [Manus 提示词](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
 
 # 四、MCP
 
