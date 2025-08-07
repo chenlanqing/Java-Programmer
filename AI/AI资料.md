@@ -12,7 +12,15 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 
 - [Decision tree-Wikipedia](https://en.wikipedia.org/wiki/Decision_tree)
 
-# AI 学习路线
+
+# AI
+
+- [36个 AI 概念](https://mp.weixin.qq.com/s/uM8I8nyDaCH5mvjZbvB7IA)
+- [AI算法工程师](http://www.huaxiaozhuan.com/)
+- [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
+- [各种使用 RAG、AI Agents、多智能体团队等技术的实战 LLM 应用示例](https://github.com/Shubhamsaboo/awesome-llm-apps)
+
+## AI 学习路线
 
 - ML for Beginners: http://github.com/microsoft/ML-For-Beginners
 - AI for Beginners: http://github.com/microsoft/AI-For-Beginners
@@ -25,16 +33,13 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - Agents towards production: http://github.com/NirDiamant
 - AI Engg. Hub: http://github.com/patchy631/ai-engineering-hub
 
-# AI
+## AI 课程
 
-- [AI笔记](http://www.huaxiaozhuan.com/)
-- [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
 - [Deep learning AI](https://learn.deeplearning.ai/)
 - [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
 - [AI 入门课程](https://github.com/microsoft/generative-ai-for-beginners)
-- [各种使用 RAG、AI Agents、多智能体团队等技术的实战 LLM 应用示例](https://github.com/Shubhamsaboo/awesome-llm-apps)
 
-# API Key
+## API Key
 
 - [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
 - [聚合优秀的AI大模型](https://www.apiyi.com/)
