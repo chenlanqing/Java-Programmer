@@ -57,6 +57,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
  
  # AI 应用
 
+- [AI 应用相关架构图](https://mp.weixin.qq.com/s/weOAlFqPjffS0yygQejDog)
 - [NextChat 是一款轻量、快速且开源的 AI 助手应用](https://github.com/ChatGPTNextWeb/NextChat)
 - [AI 辅助软件工程：实践与案例解析](https://aise.phodal.com/index.html)
 - [AI构建各种工具](https://bolt.new/)
