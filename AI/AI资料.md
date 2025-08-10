@@ -175,6 +175,26 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 - [成为 AI 工程师的路线图](https://dswharshit.medium.com/roadmap-to-become-an-ai-engineer-roadmap-6d9558d970cf)
 
+# AI数字人
+
+- [数字人资料整理](https://github.com/YUANZHUO-BNU/metahuman_overview)
+- [2025数字人方案](https://www.xmsumi.com/detail/764)
+- [淘宝直播数字人：TTS-语音合成技术](https://mp.weixin.qq.com/s/8jFx4wNQfTRLzlI8TIMH8A)
+
+## 1、商用
+
+- 即梦 AI
+- 可灵 AI
+- 闪剪
+- heygen ：https://www.heygen.com/  
+- 必剪 studio
+- 飞影数字人： https://flyworks.ai/  
+
+## 2、开源
+
+- HeyGem，本地部署： https://github.com/GuijiAI/HeyGem.ai/blob/main/README_zh.md
+- Fay是一个完整的开源项目，包含Fay控制器及数字人模型，可灵活组合出不同的应用场景：虚拟主播、现场推销货、商品导购、语音助理、远程语音助理、数字人互动、数字人面试官及心理测评、贾维斯、Her
+
 # 机器人
 
 - https://github.com/huggingface/lerobot
