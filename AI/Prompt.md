@@ -3,7 +3,6 @@
 - [awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)，对应中文版：[awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh)
 - [AI List Chat Prompt](https://www.itis.chat/)
 - [Prompt guide](https://www.promptingguide.ai/)
-- [Prompt Engineer](https://github.com/anthropics/prompt-eng-interactive-tutorial)
 - [Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide)
 - [Language of GPT-结构化提示词](https://github.com/langgptai/LangGPT)
 - [Learn Prompt Engineering](https://learnprompting.org/docs/introduction)
@@ -219,6 +218,8 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 
 ## 7.4、常用模板
 
+### 7.4.1、模板1
+
 ```markdown
 # 角色
 你是一个{{xxx}},你擅长{{xxx}}, 请按照要求完成下面的任务
@@ -247,6 +248,70 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 {输出格式, 比如：使用 Json 格式输出，包含 xx,yy 字段}
 ```
 
+### 7.4.2、模板2
+
+```md
+# Role:
+
+# Profile:
+
+## Background:
+
+## Goals:
+
+## Constrains:
+
+## Skills:
+
+## Workflows:
+
+## Initialization:
+```
+或者
+```md
+# 角色:
+
+# 简介:
+
+## 背景:
+
+## 目标:
+
+## 限制:
+
+## 能力:
+
+## 流程:
+
+# 初始化:
+```
+- Role（角色）：通常是让大模型扮演的角色，本质上是为了缩小词向量查找范围，让大模型在自己的词向量坐标中找到和此角色更贴近的词汇，角色一般用第二人称【你】：`## Role: 心理咨询专家`
+- Profile（简介）：可以介绍一些基本信息
+- Background（背景）：任务的背景信息，目的也是为了让大模型更好的“理解”我们的任务
+- Goals（目标）：任务的总体目标
+    ```md
+    ## Goals:
+    - 根据用户输入的信息，生成一篇小红书笔记
+    ```
+- Constrains（限制）：对大模型的输出内容做规范
+    ```md
+    ## Constrains:
+    - 不能有语气助词
+    - 必须要考虑中国人的文化背景
+    ```
+- Skills（能力）:对角色的进一步补充，我们给大模型指定角色的时候，大模型扮演这个的这个角色需要具备哪些能力才能更好的完成我们的任务，需要具备的能力都在这里指定
+- Workflows（流程）：大模型的工作流程，大模型会根据这里指定的流程，一步一步来往下执行
+- Initialization（初始化）：初始化内容，一般在这里设置大模型和用户打招呼的内容。
+
+提示词流程：
+```mermaid
+flowchart LR
+    id1(分析需求) --> id2(确定能力)
+    id2(分析需求) --> id3(设计流程)
+    id3(设计流程) --> id4(编写提示词)
+    id4(编写提示词) --> id5(持续迭代)
+```
+
 # 8、Prompt 优化
 
 - [Claude Optimizer：自动分析Prompt结构并提出改进建议（如添加XML标签、调整逻辑层级）](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prompt-improver)
@@ -267,12 +332,13 @@ Prompt 通用框架=定角色+说背景+下任务+提要求
 
 # Prompt 生成案例
 
+- [GPT 提示词](https://github.com/linexjlin/GPTs)
+- [AI 提示 模板](https://www.notion.com/zh-cn/templates/category/ai-prompts)
 - [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
 - [Snack Prompt](https://snackprompt.com)
 - [Free AI Prompt](https://flowgpt.com/)
 - [AI提示词大全](https://prompthero.com/)
 - [Stable Diffusion提示词](https://publicprompts.art/)
-- [学习提示词](https://learningprompt.wiki/)
 - [UI Prompt Generator](https://uiprompt.art/ui-prompt-generator)
 - [自动提示词](https://github.com/AIDotNet/auto-prompt)
 - [大模型解谜游戏 LLM Riddles: https://zhuanlan.zhihu.com/p/665418646](https://modelscope.cn/studios/LLMRiddles/LLMRiddles/summary)
