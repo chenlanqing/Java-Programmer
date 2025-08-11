@@ -11,7 +11,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 ## 决策树
 
 - [Decision tree-Wikipedia](https://en.wikipedia.org/wiki/Decision_tree)
-
+- [MCTS-Monte Carlo Tree Search, 蒙特卡洛树搜索](https://yey.world/2020/05/05/COMP90054-08/)
 
 # AI
 

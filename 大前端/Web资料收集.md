@@ -2,6 +2,7 @@
 
 - [Youware](https://www.youware.com/)
 - [Webvm-浏览器的 Linux 虚拟机](https://github.com/leaningtech/webvm)
+- [Xterm：在浏览器中构建 terminal](https://github.com/xtermjs/xterm.js)
 
 # 资源库
 

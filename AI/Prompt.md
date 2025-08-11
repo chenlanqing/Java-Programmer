@@ -8,6 +8,7 @@
 - [Learn Prompt Engineering](https://learnprompting.org/docs/introduction)
 - [Google-Prompting-Guide](https://services.google.com/fh/files/misc/gemini-for-google-workspace-prompting-guide-101.pdf)
 - [Prompt engineering overview](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview)
+- [Prompt 模式](https://github.com/phodal/prompt-patterns)
 
 # 1、什么是 Prompt
 

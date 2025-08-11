@@ -244,10 +244,12 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 
 - [agentUniverse 是一个基于大型语言模型的多智能体框架](https://github.com/agentuniverse-ai/agentUniverse)
 - [crewAI-快速灵活的多代理自动化框架](https://github.com/crewAIInc/crewAI)
+- [OWL：实际任务自动化中提供通用多智能体协助](https://github.com/camel-ai/owl)
 - [OpenManus](https://github.com/FoundationAgents/OpenManus)
 - [JoyAgent-JDGenie: 开源端到端的通用 Agent](https://github.com/jd-opensource/joyagent-jdgenie)
 - [agno：用于构建具有内存、知识和推理的Multi Agent的全栈框架](https://github.com/agno-agi/agno)
 - [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
+- [什么是 Computer Use Agent](https://zhuanlan.zhihu.com/p/31508157573)
 
 ## 6、开源 Agent
 
