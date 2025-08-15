@@ -34,6 +34,10 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 - [LOGO生成](https://github.com/bestony/logoly)
 
+## 统计
+
+- [umami：网站统计分析工具:谷歌分析的隐私平替](https://github.com/umami-software/umami)
+
 ## 生活
 
 - [程序员延寿指南](https://github.com/geekan/HowToLiveLonger)
