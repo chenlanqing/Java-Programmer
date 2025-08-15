@@ -76,6 +76,7 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [邮件助手 Agent](https://github.com/langchain-ai/agents-from-scratch)
 - [一键生成视频](https://github.com/harry0703/MoneyPrinterTurbo)
 - [Magic:把企业办公需要的所有AI工具打包在一起](https://github.com/dtyq/magic)
+- [Open Lovable 是一个开源的、基于 AI 的网站克隆神器:只需要输入一个网址，几秒钟后，你就能得到一个可以运行的、现代 React 代码版本](https://github.com/mendableai/open-lovable)
 
 # AI 搜索
 
@@ -194,6 +195,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 - HeyGem，本地部署： https://github.com/GuijiAI/HeyGem.ai/blob/main/README_zh.md
 - Fay是一个完整的开源项目，包含Fay控制器及数字人模型，可灵活组合出不同的应用场景：虚拟主播、现场推销货、商品导购、语音助理、远程语音助理、数字人互动、数字人面试官及心理测评、贾维斯、Her
+- [Open Avatar Chat: 模块化的交互数字人对话实现](https://github.com/HumanAIGC-Engineering/OpenAvatarChat)  
 
 # 机器人
 

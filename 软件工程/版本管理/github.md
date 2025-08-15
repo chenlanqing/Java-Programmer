@@ -18,31 +18,34 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 # 5、开源项目
 
-## 5.1、日常生活
-
-## 5.2、休闲
+## 休闲
 
 - [杂乱输出](https://github.com/svenstaro/genact)
 - [跨平台电子宠物](https://github.com/ayangweb/BongoCat)
 - [程序员在家做饭指南](https://github.com/Anduin2017/HowToCook)
 
-## 5.3、技术
+## 技术
 
 - [自动修正错误命令](https://github.com/nvbn/thefuck)
 - [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
--[ x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
+- [x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
 
-## 5.4、设计
+## Linux
+
+- [E2B-开源的 Sandbox](https://github.com/e2b-dev/e2b)
+
+
+## 设计
 
 - [LOGO生成](https://github.com/bestony/logoly)
 
-## 5.5、生活
+## 生活
 
 - [程序员延寿指南](https://github.com/geekan/HowToLiveLonger)
 - [程序员在家做饭指南](https://github.com/Anduin2017/HowToCook)
 - [个人财富管理](https://github.com/maybe-finance/maybe)
 
-## 5.6、微信
+## 微信
 
 - [一键下载微信公众号文章](https://github.com/qiye45/wechatDownload)
 - [AI 微信公众号自动化工具](https://github.com/iniwap/ai_auto_wxgzh)

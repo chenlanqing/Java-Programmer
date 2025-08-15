@@ -344,3 +344,4 @@ flowchart LR
 - [自动提示词](https://github.com/AIDotNet/auto-prompt)
 - [大模型解谜游戏 LLM Riddles: https://zhuanlan.zhihu.com/p/665418646](https://modelscope.cn/studios/LLMRiddles/LLMRiddles/summary)
 - [Manus 提示词](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
+- [gpt-5-coding-examples:GPT-5 一句话生成的各种小程序和应用](https://github.com/openai/gpt-5-coding-examples)
