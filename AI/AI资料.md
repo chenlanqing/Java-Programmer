@@ -83,6 +83,12 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
 - [SearXNG:免费的互联网元搜索引擎](https://github.com/searxng/searxng)
 
+
+# AI基础设施
+
+- [E2B-开源的 Linux Sandbox](https://github.com/e2b-dev/e2b)
+- [Daytona 是一个安全且有弹性的基础设施-Linux Sandbox](https://github.com/daytonaio/daytona)
+
 # AI 工作平台
 
 - [开源 LLM 工程平台：LLM 可观测性、指标、评估、提示管理、沙盒、数据集。与 OpenTelemetry、Langchain、OpenAI SDK、LiteLLM 等集成](https://github.com/langfuse/langfuse)

@@ -30,11 +30,6 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
 - [x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
 
-## Linux
-
-- [E2B-开源的 Sandbox](https://github.com/e2b-dev/e2b)
-
-
 ## 设计
 
 - [LOGO生成](https://github.com/bestony/logoly)
