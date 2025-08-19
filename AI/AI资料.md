@@ -203,6 +203,12 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - HeyGem，本地部署： https://github.com/GuijiAI/HeyGem.ai/blob/main/README_zh.md
 - Fay是一个完整的开源项目，包含Fay控制器及数字人模型，可灵活组合出不同的应用场景：虚拟主播、现场推销货、商品导购、语音助理、远程语音助理、数字人互动、数字人面试官及心理测评、贾维斯、Her
 - [Open Avatar Chat: 模块化的交互数字人对话实现](https://github.com/HumanAIGC-Engineering/OpenAvatarChat)  
+- [Face-Transformers：数字人脸“生成大师”](https://github.com/hukkelas/Face-Transformers)
+- [Live2D Cubism SDK：2D数字人“动效引擎”](https://github.com/Live2D/CubismSDK)
+- [Avatarify：实时数字人“变身神器”](https://github.com/alievk/avatarify.git)
+- [ChatGPT-4V Digital Human：会聊天的“智能数字人”](https://github.com/yangjianxin1/ChatGPT-4V-Digital-Human)
+- [PIFuHD：3D数字人“建模神器”](https://github.com/facebookresearch/pifuhd)
+
 
 # 机器人
 
