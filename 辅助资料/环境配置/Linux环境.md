@@ -290,12 +290,19 @@ mysql> select * from mysql.user where user='root'\G
 
 **授权**
 ```sql
-grant all privileges on *.* to 'root'@'%' identified by 'root密码';
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
 flush privileges;
 ```
 上面如果报错的话，可以登录控制台直接执行：
 ```sql
 UPDATE mysql.user set Insert_priv='Y', Delete_priv='Y',Create_priv='Y',Drop_priv='Y' where user='root';
+```
+如果是有 navicat 连接失败：2059 - Authentication plugin 'caching_sha2_password' cannot be loaded: '/usr/lib/.
+```sql
+-- 修改 root 用户认证方式
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
+-- 刷新权限
+FLUSH PRIVILEGES;
 ```
 
 # 二、MySQL主从复制

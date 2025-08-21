@@ -93,6 +93,7 @@ https://github.com/qianguyihao/Mac-list
 ## 5、homebrew
 
 - [homebrew-GUI](https://github.com/milanvarady/Applite)
+- [homebrew完整使用指南](https://mp.weixin.qq.com/s/oJqF_vq7BlUvxBe2U2mcjA)
 
 使用homebrew下载软件缓慢，可以使用国内镜像：
 ```bash
