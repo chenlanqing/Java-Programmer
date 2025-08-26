@@ -1,12 +1,3 @@
-# 机器学习
-
-Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开源项目，提供一些可扩展的机器学习领域经典算法的实现 ，旨在帮助开发人员更加方便快捷地创建智能应用程序
-
-- [Kaggle-机器学习数据集](https://www.kaggle.com/)
-- [深度学习-逐行解读代码](https://github.com/labmlai/annotated_deep_learning_paper_implementations)
-- [machine learning](https://www.bbbdata.com/ml)
-- [机器学习入门资料](https://github.com/microsoft/ML-For-Beginners)
-- [动手深度学习](https://zh.d2l.ai/)
 
 ## 决策树
 
