@@ -34,6 +34,7 @@ pause
 - [好用、优秀的 Windows 应用](https://github.com/stackia/best-windows-apps)
 - [Utools](https://www.u.tools/)
 - [剪切板历史工具](ditto 、EcoPaste 、贴贴)
+- [Windows效率外挂:窗口管理、批量重命名、屏幕取色全有](https://github.com/microsoft/PowerToys)
 
 
 # 参考资料

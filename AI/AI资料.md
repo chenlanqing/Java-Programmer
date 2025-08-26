@@ -76,9 +76,10 @@ Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）旗下的一个开�
 - [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 - [邮件助手 Agent](https://github.com/langchain-ai/agents-from-scratch)
 - [一键生成视频](https://github.com/harry0703/MoneyPrinterTurbo)
-- [Magic:把企业办公需要的所有AI工具打包在一起](https://github.com/dtyq/magic)
+- [Magic:开源全栈 AI 生产力矩阵](https://github.com/dtyq/magic)
 - [Open Lovable 是一个开源的、基于 AI 的网站克隆神器:只需要输入一个网址，几秒钟后，你就能得到一个可以运行的、现代 React 代码版本](https://github.com/mendableai/open-lovable)
 - [Qbot：AI智能量化投研平台](https://github.com/UFund-Me/Qbot)
+- [Bytebot 是一个自托管的 AI 桌面代理，它通过自然语言命令自动执行计算机任务，在容器化的 Linux 桌面环境中运行](https://github.com/bytebot-ai/bytebot)
 
 # AI 搜索
 

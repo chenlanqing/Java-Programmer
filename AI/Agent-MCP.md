@@ -441,7 +441,7 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 {"reason":"事件介绍了2024年巴黎奥运会，中国队的备战情况，属于奥运相关报道", "is_olympic":true}
 ```
 
-## 主流Agent 框架
+## Agent 框架
 
 - 对于 C 端用户，可以考虑 [coze](https://www.coze.cn/store/bot)，缺点是没有开源
 - [Dify平台](https://dify.ai/zh)
@@ -453,6 +453,7 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 - [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
 - [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
 - [深度拆解：Dify、FastGPT 和 Ragflow](https://huangf.org/posts/aiworkflow/)
+- [Parlant 是一个专注于 指令遵循可靠性 的开源 AI 智能体框架](https://github.com/emcie-co/parlant)
 
 ### Multi-Agent
 
