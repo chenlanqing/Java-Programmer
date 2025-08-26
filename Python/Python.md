@@ -26,6 +26,7 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 - [VNPY-量化交易平台](https://github.com/vnpy/vnpy)
 - [基于Java的AI开源量化交易平台](https://gitee.com/dromara/northstar/)
 - [Qlib 是一个以 AI 为导向的量化投资平台，旨在利用 AI 技术赋能量化研究，从探索想法到实施生产](https://github.com/microsoft/qlib)
+- [nautilus_trader-开源交易平台、策略回测](https://github.com/nautechsystems/nautilus_trader)
 
 # Python 库
 
