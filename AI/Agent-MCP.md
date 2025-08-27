@@ -776,6 +776,10 @@ async def fetch_weather(city: str) -> str:
 ## 11、MCP 资源
 
 - [交互式用户反馈 MCP-节省 Token 调用量](https://github.com/Minidoracat/mcp-feedback-enhanced)
+- [Sequential Thinking MCP-顺序思考](https://github.com/arben-adm/mcp-sequential-thinking)
+- [Shrimp Task Manager MCP-把复杂任务拆解成可执行的小步骤的 MCP](https://github.com/cjo4m06/mcp-shrimp-task-manager)
+- [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
+
 - [PromptX是一个系统性的，工程化的提示词管理框架](https://github.com/Deepractice/PromptX)
 - [微信读书 MCP](https://github.com/freestylefly/mcp-server-weread)
 - [控制 Mac 电脑的 MCP](https://github.com/ashwwwin/automation-mcp)
@@ -791,13 +795,10 @@ async def fetch_weather(city: str) -> str:
 - [Chrome MCP](https://github.com/hangwin/mcp-chrome)
 - [Firecrawl MCP Server-网页抓取](https://github.com/mendableai/firecrawl-mcp-server)
 - [Context MCP：给 AI 提供最新文档](https://github.com/upstash/context7)
-- [Sequential Thinking MCP-顺序思考](https://github.com/arben-adm/mcp-sequential-thinking)
-- [Shrimp Task Manager MCP-把复杂任务拆解成可执行的小步骤的 MCP](https://github.com/cjo4m06/mcp-shrimp-task-manager)
 - [Interactive Feedback MCP：先确认再执行](https://github.com/noopstudios/interactive-feedback-mcp)
 - [MCP-联合查询引擎](https://github.com/mindsdb/mindsdb)
 - [AntVis-MCP Chart](https://github.com/antvis/mcp-server-chart)
 - [基于 MCP 的机器人应用](https://github.com/78/xiaozhi-esp32)
-- [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 - [可以安全操作数据库的 MCP Toolbox](https://github.com/googleapis/genai-toolbox)
 
 ## 12、RAG-MCP
