@@ -302,3 +302,4 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [Deepdoc-文档处理](https://github.com/infiniflow/ragflow/tree/main/deepdoc)
 - [20种 RAG 技术分析](https://mp.weixin.qq.com/s/AW-vjOmPXYiv3xN57TWKsg)
 - [RAG-Anything-一站式 RAG方案](https://github.com/HKUDS/RAG-Anything)
+- [Ragflow+TextIn实战！高精度AI解析+OCR优化](https://mp.weixin.qq.com/s/7cW8Madv0rG0i3PoaFk1oA)
