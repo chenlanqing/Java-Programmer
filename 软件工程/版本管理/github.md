@@ -30,6 +30,19 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
 - [x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
 
+## 软件测试开源项目
+
+- [Selenium：Web 自动化测试的扛把子](https://github.com/SeleniumHQ/selenium)
+- [JMeter：性能测试的一把好手](https://github.com/apache/jmeter)
+- [Cucumber：行为驱动开发的得力助手](https://github.com/cucumber/cucumber)
+- [TestNG：Java 测试的利器](https://github.com/cbeust/testng)
+- [Behave：Python 的 BDD 好伙伴](https://github.com/behave/behave)
+- [Robot Framework：通用自动化测试框架](https://github.com/robotframework/robotframework)
+- [RunnerGo：全栈测试的新宠儿](https://github.com/Runner-Go-Team/RunnerGo)
+- [Gauge：灵活多变的测试框架](https://github.com/getgauge/gauge)
+- [Appium：移动应用测试的救星](https://github.com/appium/appium)
+
+
 ## 设计
 
 - [LOGO生成](https://github.com/bestony/logoly)
