@@ -9,7 +9,9 @@
 - [AG-UI Protocol](https://github.com/ag-ui-protocol/ag-ui)
 - [Routine框架：让企业级Agent告别“不靠谱”](https://arxiv.org/pdf/2507.14447)
 
-## 1、什么是 ReAct
+## 1、Agent 行为
+
+### 1.1、什么是 ReAct
 
 - [ReAct模式 = Reason + Act](https://www.promptingguide.ai/techniques/react)
 - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
@@ -18,7 +20,7 @@ ReAct 包含了 Reason 与 Act 两个部分。可以理解为就是思维链 + �
 
 ReAct 思想会让大模型把大问题拆分成小问题，一步步地解决，每一步都会尝试调用外部工具来解决问题，并且还会根据工具的反馈结果，思考工具调用是否出了问题。如果判断出问题了，大模型会尝试重新调用工具。这样经过一系列的工具调用后，最终完成目标；
 
-### 1.1、ReAct Prompt 模板
+#### 1.1.1、ReAct Prompt 模板
 
 要为大模型赋予 ReAct 能力，使其变成 Agent，需要在向大模型提问时，使用 ReAct Prompt，从而让大模型在思考如何解决提问时，能使用 ReAct 思想
 
@@ -76,6 +78,31 @@ while True:
 
 ReAct 的执行过程是一个与人类交互的过程。在 Action 和 Action Input 中，大模型会告诉人类需要执行什么工具、以及工具的入参是什么，而具体的工具执行，需要由人类完成。人类完成后，将工具执行结果填入到 Observation，反馈给大模型，直到大模型得到 Final Answer。
 
+### 1.2、[plan-and-execute](https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb)
+
+![](image/Plan-and-Execute.png)
+
+plan-and-execute旨在克服ReAct类代理的局限性，通过在执行任务前明确规划所有必要步骤。这种方法旨在提高效率、降低成本并提升整体性能。其核心工作流程包含三个阶段：
+- 规划阶段 ：接收用户输入，并生成一个用于完成大型任务的多步骤计划或任务清单；
+- 执行阶段 ：接收计划中的步骤，并调用一个或多个工具来按顺序完成每个子任务；
+- 重规划阶段：根据执行结果动态调整计划或返回；
+
+manus的Agent像是借鉴了这种思路，首先生成任务清单，再对着清单逐个执行
+
+### 1.3、[ReWOO（ Reasoning WithOut Observation ）](https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/rewoo/rewoo.ipynb)
+
+![](image/ReWoo.png)
+
+ReWOO是一种创新的增强语言模型 (Augmented Language Model, ALM) 框架。它将复杂任务的解决过程分解为三个独立的模块：
+- 规划器 (Planner)： 基于 LLM 推理，提前生成任务蓝图（步骤顺序与逻辑），无需工具实时反馈。
+- 执行器 (Worker)： 按蓝图并行调用外部工具（如搜索、计算器），收集证据。
+- 求解器 (Solver)： 综合分析蓝图和执行证据，生成最终答案（含纠错总结）。
+
+ReWOO 最显著的特点是拥有一个独立的 Solver 模块。它专门负责整合规划意图与工具执行结果，屏蔽 Worker 的执行细节，直接基于蓝图和证据生成最终答案；在执行阶段（Worker 步骤），ReWOO 不查看外部工具返回的中间结果细节
+
+与 Plan and Execute 关键区别：
+- ReWOO Worker 只负责执行工具调用，无需 LLM 驱动。
+- ReWOO 没有重新规划步骤（蓝图固定）
 
 ## 2、Function Calling
 
@@ -440,6 +467,11 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 ## 输出示例
 {"reason":"事件介绍了2024年巴黎奥运会，中国队的备战情况，属于奥运相关报道", "is_olympic":true}
 ```
+
+## 7、构建 Agent
+
+- [How to Build an Agent](https://blog.langchain.com/how-to-build-an-agent/)
+- [从 0 构建一个 Agent 的踩坑](https://mp.weixin.qq.com/s/7Lt3WKmHoQY5HifnPFjxoQ)
 
 ## Agent 框架
 

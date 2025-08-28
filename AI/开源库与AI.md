@@ -242,6 +242,7 @@ LangChain 的提示模板可以嵌入对输出格式的定义，以便在后续�
 # 二、LangGraph
 
 - [Why LangGraph](https://langchain-ai.github.io/langgraph/concepts/why-langgraph/)
+- [Build resilient language agents as graphs](https://github.com/langchain-ai/langgraph)
 
 ## 1、介绍
 
