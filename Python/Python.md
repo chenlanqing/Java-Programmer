@@ -28,12 +28,6 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 - [Qlib 是一个以 AI 为导向的量化投资平台，旨在利用 AI 技术赋能量化研究，从探索想法到实施生产](https://github.com/microsoft/qlib)
 - [nautilus_trader-开源交易平台、策略回测](https://github.com/nautechsystems/nautilus_trader)
 
-# Python 库
-
-- [将其他文件转换为 Markdown](https://github.com/microsoft/markitdown)
-- [Python类库列表](https://github.com/vinta/awesome-python)
-- [Python数学库](https://github.com/manimCommunity/manim)
-- [Prophet-数据预测，输入历史数据就能预测未来趋势，销量、流量预测超准](https://github.com/facebook/prophet)
 
 # 数据科学
 
