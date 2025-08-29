@@ -750,7 +750,9 @@ Spring AI MCP 采用模块化架构，包括以下组件：
 
 ## 8、MCP 安全问题
 
-https://news.ycombinator.com/item?id=43600192
+- [MCP的安全问题](https://news.ycombinator.com/item?id=43600192)
+- [企业级MCP Server接入OAuth授权服务器全流程解析](https://mp.weixin.qq.com/s/vm-7JBh6zu1YSYUS-0Y6Hw)
+- https://github.com/pingcy/mcp-oauth-demo
 
 ## 9、MCP和Agent
 
