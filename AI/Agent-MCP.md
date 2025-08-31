@@ -168,6 +168,11 @@ Agent系统由五个关键组件构成：
 - 知识库（RAG）
 - 工具（Tools）
 
+一个AI Agent其实是一个系统，包括以下三个核心内容：
+- 使用大语言模型（LLM）来推理。
+- 可以通过工具执行各类行动。
+- 执行思考（Think） -> 执行（Action）-> 自省（Observe） -> 纠错（既重复思考到自省的持续改进）这样一个循环
+
 ## 4、[A2A协议](https://github.com/google-a2a/A2A)
 
 - [Agent2Agent (A2A) Samples](https://github.com/google-a2a/a2a-samples)

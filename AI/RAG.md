@@ -1,9 +1,3 @@
-- [基于深度文档理解构建的开源 RAG（Retrieval-Augmented Generation）引擎](https://github.com/infiniflow/ragflow)
-- [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
-- [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)
-- [RAG](https://www.promptingguide.ai/zh/techniques/rag)
-
-
 RAG 检索增强生成（Retrieval Augmented Generation），已经成为当前最火热的LLM应用方案。理解起来不难，就是通过自有垂域数据库检索相关信息，然后合并成为提示模板，给大模型生成漂亮的回答。
 
 RAG（中文为检索增强生成） = 知识库 + 检索技术 + LLM 提示。
@@ -303,3 +297,10 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [20种 RAG 技术分析](https://mp.weixin.qq.com/s/AW-vjOmPXYiv3xN57TWKsg)
 - [RAG-Anything-一站式 RAG方案](https://github.com/HKUDS/RAG-Anything)
 - [Ragflow+TextIn实战！高精度AI解析+OCR优化](https://mp.weixin.qq.com/s/7cW8Madv0rG0i3PoaFk1oA)
+
+# 参考资料
+
+- [基于深度文档理解构建的开源 RAG（Retrieval-Augmented Generation）引擎](https://github.com/infiniflow/ragflow)
+- [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
+- [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)
+- [RAG](https://www.promptingguide.ai/zh/techniques/rag)

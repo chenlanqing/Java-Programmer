@@ -247,3 +247,8 @@ LangChain 的提示模板可以嵌入对输出格式的定义，以便在后续�
 ## 1、介绍
 
 LangGraph是在LangChain之上构建的模块，LangGraph 是一种通过将状态机指定为图形来创建状态机的方法
+
+
+# 参考资料
+
+- [从 0 到 1 开发，AI + LangChain4j 项目](https://github.com/liyupi/ai-code-helper)
