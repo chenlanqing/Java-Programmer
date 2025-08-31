@@ -11,7 +11,7 @@
 
 ## 1、Agent 行为
 
-### 1.1、什么是 ReAct
+### 1.1、ReAct模式
 
 - [ReAct模式 = Reason + Act](https://www.promptingguide.ai/techniques/react)
 - [ReAct: Synergizing Reasoning and Acting in Language Models](https://arxiv.org/pdf/2210.03629)
@@ -86,6 +86,12 @@ while True:
 ```
 
 ReAct 的执行过程是一个与人类交互的过程。在 Action 和 Action Input 中，大模型会告诉人类需要执行什么工具、以及工具的入参是什么，而具体的工具执行，需要由人类完成。人类完成后，将工具执行结果填入到 Observation，反馈给大模型，直到大模型得到 Final Answer。
+
+#### 1.1.2、极简实现
+
+
+
+
 
 ### 1.2、[plan-and-execute](https://github.com/langchain-ai/langgraph/blob/main/docs/docs/tutorials/plan-and-execute/plan-and-execute.ipynb)
 

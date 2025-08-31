@@ -46,6 +46,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 ## 设计
 
 - [LOGO生成](https://github.com/bestony/logoly)
+- [vRain-纵书排版-中文古籍刻本風格直排電子書製作工具](https://github.com/shanleiguang/vRain)
 
 ## 统计
 
