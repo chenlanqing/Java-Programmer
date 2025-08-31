@@ -1,19 +1,14 @@
+# 1、概念
 
-- [215+ ChatGPT Prompts & How to Write your Own](https://writesonic.com/blog/chatgpt-prompts)
-- [awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)，对应中文版：[awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh)
-- [AI List Chat Prompt](https://www.itis.chat/)
-- [Prompt guide](https://www.promptingguide.ai/)
-- [Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide)
-- [Language of GPT-结构化提示词](https://github.com/langgptai/LangGPT)
-- [Learn Prompt Engineering](https://learnprompting.org/docs/introduction)
-- [Google-Prompting-Guide](https://services.google.com/fh/files/misc/gemini-for-google-workspace-prompting-guide-101.pdf)
-- [Prompt engineering overview](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview)
-- [Prompt 模式](https://github.com/phodal/prompt-patterns)
-- [提示词教程](https://github.com/PandaBearLab/prompt-tutorial)
+## 1.1、什么是 Prompt
 
-# 1、什么是 Prompt
+在大规模语言模型（LLM, Large Language Models）领域，Prompt 是一种结构化的输入序列，用于引导预训练语言模型生成预期的输出。它通常包括明确的任务要求、背景信息、格式规定以及示例，以充分利用模型的能力在特定任务中生成高质量的响应；
 
-在大规模语言模型（LLM, Large Language Models）领域，Prompt 是一种结构化的输入序列，用于引导预训练语言模型生成预期的输出。它通常包括明确的任务要求、背景信息、格式规定以及示例，以充分利用模型的能力在特定任务中生成高质量的响应
+从本质上看，提示词是人与AI之间沟通的桥梁，是解锁并精确引导模型庞大认知能力的“钥匙”
+
+## 1.2、提示词工程
+
+提示词工程（Prompt Engineering），是一门关于如何设计、构建、测试、分析和迭代优化提示词的系统性方法论与实践学科，其最终目标是最大化提升大型语言模型在特定任务上的表现（Performance）、可靠性（Reliability）和安全性（Safety）
 
 # 2、Prompt的运行过程
 
@@ -111,48 +106,62 @@ A:
 <Question>?
 ```
 
-## 5.3、Prompt 元素
+## 5.2、Prompt 元素
 
 提示包含以下任一要素：
-- Instruction：希望模型执行的具体任务或指令
-- 上下文：外部信息或额外上下文，可以引导模型产生更好的回复
-- Input Data：希望为其找到回复的输入或问题
-- Output Indicator：输出的类型或格式
+- Role：角色
+    - 角色本身的描述；
+    - 角色所处的背景；
+    - 角色的任务
+- Instruction：指令（Instruction）是提示词的灵魂与核心，它明确、直接、无歧义地告知模型需要执行的具体任务
+- 上下文（背景信息）：外部信息或额外上下文，可以引导模型产生更好的回复，必须保持清晰、直接、具体
+- Input Data：是模型需要处理、分析、转换或作为参考依据的具体信息
+- Output Indicator：用于精确地定义模型输出的期望类型、格式、结构、长度、语言或风格
 
-## 5.4、Prompt 通用设计技巧
+## 5.3、Prompt 通用设计技巧
 
-- 从简单开始：从简单的提示开始，并在追求更好结果的过程中不断添加更多元素和上下文。由于这个原因，在过程中迭代Prompt至关重要
-- 指令：可以通过使用命令来指导模型实现你的目标，从而为各种简单任务设计有效的提示，例如"写"、"分类"、"总结"、"翻译"、"排序"等。建议你将指令放在提示的开头。另一个建议是使用一些清晰的分隔符（如"##"）来分隔指令和上下文。
-    ```
-    ## Instruction ##
-    Translate the text below to Chinese:
-    Text: "hello!"
-    ```
-- 具体性：对于模型需要执行的具体指令和任务，应尽可能详细。提示越具体、越详细，结果就越好；设计提示时，还应考虑提示的长度，因为提示的长度存在限制
-- 避免不精确：通常来说，具体和直接更好。这里的类比非常类似于有效的沟通——越直接，信息传达得越有效
-- 做还是不做？设计提示时，另一个常见的技巧是避免说不要做什么，而是要说应该做什么。这能鼓励更具体的要求，并专注于那些能引导模型给出良好响应的细节
+- **清晰具体，杜绝模糊**：使用精确、量化、无歧义的语言，避免使用“一些”、“大概”、“更好”、“分析一下”等含糊其词的词汇。研究表明，在大多数情况下，更长、更具体的提示词通常会比短而泛的提示词产生更高质量的输出；
+- **赋予角色，引导视角**：为模型设定一个具体、专业的角色，是最高效地调动其相关领域知识、并规范其输出口吻、深度和思考框架的方法
+```
+你是一位硅谷顶尖的增长黑客，曾成功将三款App的用户规模从零做到千万。现在，请向一位刚入行的产品经理，用最通俗易懂的语言解释什么是‘次日留存率’和‘七日留存率’。你的解释需要包含：1. 一个生动的比喻来解释其核心概念；2. 计算这两个指标需要哪些基础数据字段；3. 至少三种立即可行的、提升留存率的策略建议。
+```
+- **提供示例，明确模式**：在提示词中提供一到两个（或更多）完整的“输入 -> 输出”范例，能让模型通过上下文学习迅速“领悟”任务的内在模式，从而极大提升输出的准确性、一致性和可控性
+- **分解任务，循序渐进**：宏大的任务分解为一系列逻辑上连续的、更小、更简单的子任务，并明确要求模型“一步一步地思考”，先输出详细的推理过程，再给出最终答案。这种方法被称为“思维链”
+- **使用分隔符，厘清结构**：当提示词包含多个逻辑部分（如系统指令、上下文信息、用户问题、输出示例等）时，使用清晰、明确的分隔符（如三重引号`"""`、三重反引号`````、XML标签`<tag></tag>`、或简单的###）来划分不同的区域，可以带来两大好处：
+    - 结构清晰：帮助模型更好地理解提示词的层次结构，避免将指令误认为上下文，或将用户输入误认为示例。
+    - 提升安全：在一定程度上可以抵御“提示词注入”攻击，即用户试图通过输入恶意指令来覆盖或篡改你的原始系统指令
+- **明确约束，规避风险**：对于企业级应用而言，输出的可靠性和安全性至关重要。通过在提示词中加入明确的约束条件，可以有效地为模型的行为划定“护栏”，规避不希望出现的输出内容。约束可以分为两类：
+    - 正向约束（必须做什么）：`你的回答必须包含...`、`最终结果必须四舍五入到小数点后两位。`
+    - 负向约束（绝不能做什么）：`绝对不要...`、`避免使用...`、`禁止包含任何...`
+- **持续迭代，实验优化**
 
-# 6、Prompts 技巧
+## 5.4、Prompts 高级技巧
 
 - [语言模型 Prompt 工程-最佳实践](https://open.bigmodel.cn/dev/guidelines/LanguageModels)
 
-- Zero-Shot Prompting：零样本提示词
-- Few-Shot Prompting：少量样本提示词
-- Chain-of-Thought Prompting：思维链提示词
-```
-The odd numbers in this group add up to an even number: 4, 8, 9, 15, 12, 2, 1.
-A: Adding all the odd numbers (9, 15, 1) gives 25. The answer is False.
+前面提到了一些通用的设计技巧，还有一个业界公认的、能够显著提升模型性能的高级技巧
+- **思维链（Chain-of-Thought, CoT）**：其核心思想是在提示词中，不仅给出最终答案，还提供一个详细的、分步骤的推理过程作为范例。这能激发模型进行更深层次的、逻辑连贯的思考，而非仅仅依赖表层模式匹配。它迫使模型从直觉式的快速反应（System 1 thinking）切换到逻辑分析式的慢速思考（System 2 thinking），从而在算术、常识和符号推理等任务上取得惊人的性能提升；
 
-The odd numbers in this group add up to an even number: 17,  9, 10, 12, 13, 4, 2.
-A: Adding all the odd numbers (17, 9, 13) gives 39. The answer is False.
+- **零样本思维链（Zero-shot-CoT）**：CoT虽然强大，但需要精心构造推理范例，而零样本思维链无需在提示词中提供任何推理示例，只需在用户问题的末尾，简单地追加一句神奇的“咒语”：“让我们一步一步地思考”（Let's think step-by-step），模型便会自动采用分步推理的模式来解决问题。这是一种成本极低但效果显著的技巧，是所有复杂问题分析的起点；
 
-The odd numbers in this group add up to an even number: 15, 32, 5, 13, 82, 7, 1. 
-A:
-```
-- [Meta Prompting](https://arxiv.org/pdf/2311.11482): 是一种高级提示技术，它关注任务和问题的结构和句法方面，而不是其具体内容细节。元提示的目标是构建一种更抽象、结构化的方式来与大型语言模型（LLMs）交互，强调信息的形式和模式，而不是传统的以内容为中心的方法。关键特征可以总结如下：
+- **自我一致性（Self-Consistency）**：CoT的进一步增强版，其核心思想是：对于同一个需要推理的问题，我们使用思维链提示，并故意将模型的“温度”（Temperature，一个控制输出随机性的参数）调高（例如设置为0.7），然后让模型对同一个问题进行多次（例如5-10次）独立的解答。因为随机性的存在，模型会产生多个不同的推理路径和最终答案。最后，我们通过“少数服从多数”的投票原则，选择在这些答案中出现次数最多的那一个作为最终的、最可信的输出。这种方法极大地降低了因单次推理过程中偶然的逻辑谬误而导致最终结果错误的的概率。
+
+- **[ReAct（Reason and Act，思考与行动）](./Agent-MCP.md#11什么是-react)**：ReAct框架是构建能够与外部世界（如API、数据库、搜索引擎、代码执行器）进行动态交互的AI Agent的核心技术。它将模型的任务处理过程，从一个简单的“输入->输出”模式，转变为一个更加智能、更加动态的“思考（Thought） -> 行动（Action） -> 观察（Observation）”的交错循环
+
+- **生成知识提示（Generated Knowledge Prompting）**：对于需要特定、深入的领域背景知识才能准确回答的“知识密集型”问题，此技巧非常有效。它将一个复杂问题分解为两步：
+    - 知识生成：首先，让模型针对原始问题，生成一段相关的、它所知道的背景知识或事实。
+    - 知识整合回答：然后，将原始问题和第一步中刚刚生成的背景知识，一起作为新的、更丰富的提示词，再次向模型提问，让其基于这个更全面的上下文来进行最终的回答
+
+- **[Meta Prompting](https://arxiv.org/pdf/2311.11482)**: 是一种高级提示技术，它关注任务和问题的结构和句法方面，而不是其具体内容细节。元提示的目标是构建一种更抽象、结构化的方式来与大型语言模型（LLMs）交互，强调信息的形式和模式，而不是传统的以内容为中心的方法。关键特征可以总结如下：
     - Structure-oriented（结构导向）: 优先考虑问题和解决方案的格式和模式，而非具体内容。
     - Syntax-focused: 使用语法作为预期响应或解决方案的指导模板。
-- Self-Consistency: 自洽性，路是通过少样本思维链采样多条多样的推理路径，并利用生成结果来选择最一致的答案。这有助于提升思维链提示在涉及算术和常识推理任务上的性能
+
+## 5.5、总结
+
+- 提供充足的上下文：将论文的全文（或至少是摘要、引言和方法部分）作为上下文提供给LLM。
+- 迭代式对话： 在LLM回答后，随时可以追问：“能再详细解释一下第二点吗？”“你提到的这个局限性，论文中有数据支持吗？”“这个比喻不太好，能换一个吗？”
+- 交叉验证与事实核查： 大模型是理论来源，永远不要100%相信大。在涉及关键定义、数据和公式时，对照原始论文进行核查。
+- 建立个人Prompt库： 将认为高效的、针对不同类型论文（如综述、理论、实验性）的Prompt模板保存下来，形成自己的“学术研讨工具箱”
 
 # 7、Prompt框架
 
@@ -321,6 +330,12 @@ flowchart LR
 - [Prompt Pilot](https://promptpilot.volcengine.com/home)
 - [提示词优化器](https://github.com/linshenkx/prompt-optimizer)
 
+提示词优化器通过4个步骤增强您的提示词：
+- 添加示例：在提示词模板中添加与任务相关的示例
+- 思维链精炼：添加和完善详细的推理指令
+- 模板结构化：创建具有清晰章节和XML标签的结构化模板
+- 链式提示增强：展示从输入到输出的逐步推理
+
 # 9、魔法词
 
 在提示词领域，有一些类词被称为“魔法词”，使用后可以立竿见影的提升大模型的输出质量，让人直呼玄学的力量。通常是因为这些提示词会让大模型联想或使用到一些高质量的数据，所以才会产生较好的输出结果。常用到两种“魔法词”，分别是：
@@ -346,3 +361,19 @@ flowchart LR
 - [大模型解谜游戏 LLM Riddles: https://zhuanlan.zhihu.com/p/665418646](https://modelscope.cn/studios/LLMRiddles/LLMRiddles/summary)
 - [Manus 提示词](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
 - [gpt-5-coding-examples:GPT-5 一句话生成的各种小程序和应用](https://github.com/openai/gpt-5-coding-examples)
+
+# 参考资料
+
+
+- [215+ ChatGPT Prompts & How to Write your Own](https://writesonic.com/blog/chatgpt-prompts)
+- [awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)，对应中文版：[awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh)
+- [AI List Chat Prompt](https://www.itis.chat/)
+- [Prompt guide](https://www.promptingguide.ai/)
+- [Prompt Engineering Guide](https://github.com/dair-ai/Prompt-Engineering-Guide)
+- [Language of GPT-结构化提示词](https://github.com/langgptai/LangGPT)
+- [Learn Prompt Engineering](https://learnprompting.org/docs/introduction)
+- [Google-Prompting-Guide](https://services.google.com/fh/files/misc/gemini-for-google-workspace-prompting-guide-101.pdf)
+- [Prompt engineering overview](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview)
+- [Prompt 模式](https://github.com/phodal/prompt-patterns)
+- [提示词教程](https://github.com/PandaBearLab/prompt-tutorial)
+- [提示词新的指南](https://mp.weixin.qq.com/s/p-xDqD6U0fsh5r2fZn5dcg)
