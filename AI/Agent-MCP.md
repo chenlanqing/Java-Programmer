@@ -473,6 +473,15 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 - [How to Build an Agent](https://blog.langchain.com/how-to-build-an-agent/)
 - [从 0 构建一个 Agent 的踩坑](https://mp.weixin.qq.com/s/7Lt3WKmHoQY5HifnPFjxoQ)
 
+## 8、Multi-Agent
+
+- [如何基于Multi-Agent架构打造AI前端工程师](https://mp.weixin.qq.com/s/Huf3rfXM0hDqRe87VXiftg)
+
+Multi-Agent（MAS, Multi-Agent System）是由多个具备自主决策和交互能力的Agent组成的分布式架构。这些Agent通过协作、竞争或协商等方式，共同完成复杂任务或实现系统整体目标。
+- 自主性: 每个Agent拥有独立决策能力，能基于自身知识、目标和环境信息自主行动，不受其他Agent直接控制。
+- 协作性: Agent通过通信、协商或竞争解决冲突，例如在任务分解中分配角色（如产品经理、开发、测试等），或通过动态规则达成共识。
+- 分布性: 系统采用分布式架构，将复杂任务拆解为子任务，由不同Agent并行处理，降低系统复杂度（如MetaGPT将软件开发分解为需求分析、编码、测试等角色）
+
 ## Agent 框架
 
 - 对于 C 端用户，可以考虑 [coze](https://www.coze.cn/store/bot)，缺点是没有开源
