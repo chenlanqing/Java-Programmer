@@ -297,6 +297,7 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [20种 RAG 技术分析](https://mp.weixin.qq.com/s/AW-vjOmPXYiv3xN57TWKsg)
 - [RAG-Anything-一站式 RAG方案](https://github.com/HKUDS/RAG-Anything)
 - [Ragflow+TextIn实战！高精度AI解析+OCR优化](https://mp.weixin.qq.com/s/7cW8Madv0rG0i3PoaFk1oA)
+- [LlamaIndex 是用于在数据上构建 LLM 驱动的代理的领先框架](https://github.com/run-llama/llama_index)
 
 # 参考资料
 
