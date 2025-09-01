@@ -6,7 +6,7 @@
 - [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners)
 - [Agent Master Class](https://github.com/coleam00/ai-agents-masterclass)
 - [构建自主 AI Agent](https://github.com/ed-donner/agents)
-- [AG-UI Protocol](https://github.com/ag-ui-protocol/ag-ui)
+- [AG-UI 是一种轻量级的、基于事件的协议](https://github.com/ag-ui-protocol/ag-ui)
 - [Routine框架：让企业级Agent告别“不靠谱”](https://arxiv.org/pdf/2507.14447)
 
 ## 1、Agent 行为
@@ -525,6 +525,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [OpenAI Agents SDK](https://github.com/openai/openai-agents-python)
 - [深度拆解：Dify、FastGPT 和 Ragflow](https://huangf.org/posts/aiworkflow/)
 - [Parlant 是一个专注于 指令遵循可靠性 的开源 AI 智能体框架](https://github.com/emcie-co/parlant)
+- [MiroThinker是一个开源的智能体（Agent）模型系列，专为深度研究和复杂、长期问题解决而设计](https://github.com/MiroMindAI/MiroThinker)
 
 ### Multi-Agent
 
