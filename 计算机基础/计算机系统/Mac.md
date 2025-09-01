@@ -37,56 +37,74 @@ https://github.com/qianguyihao/Mac-list
 
 ### 4.1、文本编辑
 
-- MarkEditor  markdown文件编辑
 - Sublime
-- Typora    markdown编辑
 - Visual Studio Code
-- atom
 - worktile
 
-### 4.2、软件开发
+### 4.2、终端工具
+
+- iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
+- [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
+- termius  SSH连接客户端
+- [WindTerm](https://github.com/kingToolbox/WindTerm)
+
+### 4.3、开发工具
 
 - idea
+- pycharm
+- clion
 - mat
 - DBeaver   数据库连接工具
 - postman
-- iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
-- [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
 - another redis desktop manager- JProfiler
-- termius  SSH连接客户端
-- [WindTerm](https://github.com/kingToolbox/WindTerm)
 - jclasslib bytecode viewer
-- navicate lite
+- Navicate lite
 - [chatwize：大模型聊天机器人](https://chatwise.app/)
 - [Surge：Mac & iOS 高级网络工具箱](https://nssurge.com/)
-- [Raycast-快速启动](https://www.raycast.com/)，包含粘贴板的功能
 - [Lepton：开源代码片段管理](https://hackjutsu.com/Lepton/)
+- StarUML       uml画图工具
+- WireShark   抓包工具
+- Anaconda
+- Docker
 
-### 4.3、其他软件
+### 4.4、浏览器
 
+- Arc：浏览器
+- brave 浏览器
+
+### 4.5、AI 编程
+
+- cursor
+- Claude code
+- trae
+- Cherry Studio
+- Ollama
+- ima Copilot
+- Code buddy
+
+### 4.6、其他软件
+
+- 滴答清单
 - [Dozer：菜单栏隐藏](https://github.com/Mortennn/Dozer)
 - Alfred3
+- [Raycast-快速启动](https://www.raycast.com/)，包含粘贴板的功能
 - Cheatsheet
 - Clash Verge（VPN）
 - CleanMyMac
 - [粘贴板-Maccy](https://maccy.app/)
 - iState Menus
-- StarUML       uml画图工具
 - Snipast
 - SwitchHosts
 - The Unarchiver   解压缩工具
 - VMware Fusion  虚拟机工具
-- WireShark   抓包工具
 - Xmind     脑图工具
 - sizeup
-- Arc：浏览器
 - Grammarly Desktop：基础语法检验
 - iBar：刘海屏处理
 - App Cleaner & Uninstaller：强力软件卸载
 - Runcat：查看当前 CPU 等信息
 - Flomo：记录灵感，针对任务过程 or 结果进行复盘
 - FlowUs：复盘产出，读书笔记
-- uTools：效率平台
 - [motrix-下载软件](https://motrix.app/)
 - [AirBattery-电量显示](https://github.com/lihaoyun6/AirBattery)
 
