@@ -492,6 +492,7 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 
 - [How to Build an Agent](https://blog.langchain.com/how-to-build-an-agent/)
 - [从 0 构建一个 Agent 的踩坑](https://mp.weixin.qq.com/s/7Lt3WKmHoQY5HifnPFjxoQ)
+- [12-Factor-Agents：构建可靠 LLM 应用程序的原则](https://github.com/humanlayer/12-factor-agents)
 
 ## 8、Multi-Agent
 
@@ -557,9 +558,6 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
 - [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
 
-## 构建 Agent 原则
-
-https://github.com/humanlayer/12-factor-agents
 
 ## 垂直领域 Agent
 
