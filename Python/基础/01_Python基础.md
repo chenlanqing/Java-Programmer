@@ -2832,6 +2832,8 @@ __all__ = email.__all__
 
 - [Python Package Index.](https://pypi.org/)
 
+### 1.1、基本使用
+
 在Python中，安装第三方模块，是通过包管理工具pip完成的；
 
 Python 软件包使用由三部分组成的版本号：主版本、次版本和补丁：
@@ -2870,6 +2872,8 @@ pip list --outdated
 pip uninstall <package_name>
 # 批量卸载包：下面例子为 批量卸载 openai- 开头的包
 pip list | grep 'openai-' | awk '{print $1}' | xargs pip uninstall -y
+# 清空当前环境所有的依赖包
+pip freeze | sed 's/==.*//; s/@.*//; s/\[.*\]//' | xargs -n1 -r pip uninstall -y
 ```
 
 **列出软件包的依赖项**
@@ -2886,6 +2890,19 @@ pip install --no-cache-dir -i https://pypi.tuna.tsinghua.edu.cn/simple -r requir
 常见镜像源：
 - 清华：`pip install **** -i https://pypi.tuna.tsinghua.edu.cn/simple`
 - 阿里云：`pip install **** -i https://mirrors.aliyun.com/pypi/simple/`
+
+### 1.2、pip-sync
+
+pip-sync 是 pip-tools 工具集里的一个命令，常用来保证虚拟环境里的依赖版本和 requirements.txt 文件完全一致
+```bash
+#  安装
+pip install pip-tools
+# 使用
+pip-sync requirements.txt
+```
+- 安装 requirements.txt 里缺少的包；
+- 升级/降级到文件里指定的版本；
+- 卸载掉所有文件里未列出的包
 
 ## 2、虚拟环境
 
@@ -3058,6 +3075,47 @@ uv venv [OPTIONS] [PATH]
 uv venv --python 3.11.0
 uv pip install -r requirements.txt
 ```
+
+## 5、包冲突
+
+### ✅ 解决方案 1：调整 `sys.path` 顺序（推荐）
+
+在项目入口文件（比如 `main.py`）最开头，强制把 **site-packages 的路径** 提前：
+```python
+import sys
+import site
+
+# 把第三方依赖的路径插到 sys.path 前面
+site_packages = site.getsitepackages()[0]
+if site_packages not in sys.path:
+    sys.path.insert(0, site_packages)
+
+from langchain.globals import set_debug as langchain_set_debug
+```
+
+这样 Python 会先去 `site-packages/langchain` 找，而不是你本地的 `langchain` 模块。
+
+---
+
+### ✅ 解决方案 2：动态导入官方 `langchain`
+
+借助 `importlib`，你可以直接指定路径去加载 `site-packages` 里的 `langchain`：
+
+```python
+import importlib.util
+import site
+import os
+
+site_packages = site.getsitepackages()[0]
+langchain_path = os.path.join(site_packages, "langchain", "__init__.py")
+
+spec = importlib.util.spec_from_file_location("langchain_official", langchain_path)
+langchain = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(langchain)
+
+from langchain.globals import set_debug as langchain_set_debug
+```
+这样你就可以强制从官方库里加载，而不会用到你本地的 `langchain`。
 
 
 # 十八、异常处理
