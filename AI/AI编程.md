@@ -136,3 +136,4 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 # 参考资料
 
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)
+- [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)

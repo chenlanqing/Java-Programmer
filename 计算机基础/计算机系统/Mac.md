@@ -107,6 +107,7 @@ https://github.com/qianguyihao/Mac-list
 - FlowUs：复盘产出，读书笔记
 - [motrix-下载软件](https://motrix.app/)
 - [AirBattery-电量显示](https://github.com/lihaoyun6/AirBattery)
+- [适用于 macOS 的软件更新框架](https://github.com/sparkle-project/Sparkle)
 
 ## 5、homebrew
 

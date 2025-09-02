@@ -654,9 +654,7 @@ MCP Client 负责与 MCP Server 进行通信。而 MCP Hosts 则可以理解为�
 - AI编程IDE：Cursor、Cline、Continue、Sourcegraph、Windsurf 等
 - 聊天客户端：Cherry Studio、Claude、Librechat、Chatwise等
 
-更多的Client参考这里：
-- [MCP Clients](https://www.pulsemcp.com/clients)
-- [Awesome MCP Clients](https://github.com/punkpeye/awesome-mcp-clients/)
+更多的Client参考这里：[MCP-Client 开发](#11mcp-client开发)
 
 ## 4、应用场景
 
@@ -795,7 +793,7 @@ Spring AI MCP 采用模块化架构，包括以下组件：
 
 - [MCP 构建 Agent](https://github.com/lastmile-ai/mcp-agent)
 
-## 10、MCP Server开发
+## 10、MCP-Server开发
 
 - [MCP Server 工程开发参考](https://github.com/aliyun/alibaba-cloud-ops-mcp-server)
 
@@ -843,6 +841,12 @@ async def fetch_weather(city: str) -> str:
         response = await client.get(f"https://api.weather.com/{city}")
         return response.text
 ```
+
+## 11、MCP-Client开发
+
+- [MCP Clients](https://www.pulsemcp.com/clients)
+- [Awesome MCP Clients](https://github.com/punkpeye/awesome-mcp-clients/)
+- [The open source MCP client library. Connect any LLM to any MCP server.](https://github.com/mcp-use/mcp-use)
 
 ## 11、MCP 资源
 
