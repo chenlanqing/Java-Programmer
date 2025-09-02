@@ -280,6 +280,7 @@ print(chat_completion.choices[0].message.content)
 - [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
 - [大模型训练](https://github.com/hiyouga/LLaMA-Efficient-Tuning)
 - [2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
+- [Kronos 是首个面向金融市场的解读 K 线图基础模型](https://github.com/shiyu-coder/Kronos)
 
 ## 模型微调
 

@@ -128,6 +128,7 @@
 - https://github.com/modelscope/FunASR
 - https://github.com/alphacep/vosk-api
 - https://elevenlabs.io/
+- [WhisperLiveKit 是一个完全在你自己电脑上运行的实时语音转文字工具](https://github.com/QuentinFuxa/WhisperLiveKit)
 
 # Java与AI
 
