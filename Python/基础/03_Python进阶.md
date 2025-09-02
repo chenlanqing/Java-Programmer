@@ -1691,5 +1691,12 @@ class File:
         return False
 with File('data.txt', 'r') as f:
     print(int(next(f)))
+```
 
+# 十、Python 与字节码
+
+## 1、查看 Python 解释器字节码
+
+```bash
+python -m dis hello.py
 ```
