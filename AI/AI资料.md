@@ -120,6 +120,7 @@
 - [Figma](https://www.figma.com/)
 - [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
 - https://www.codefather.cn/course/1907378983347892226/section/1928346946364375042#heading-0
+- [Nano Banana](https://nanobanana.ai/)
 
 # 语音处理
 
