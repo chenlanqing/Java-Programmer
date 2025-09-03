@@ -601,6 +601,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [JoyAgent-JDGenie: 开源端到端的通用 Agent](https://github.com/jd-opensource/joyagent-jdgenie)
 - [agno：用于构建具有内存、知识和推理的Multi Agent的全栈框架](https://github.com/agno-agi/agno)
 - [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
+- [用于多代理工作流程的轻量级、功能强大的框架](https://github.com/openai/openai-agents-python)
 
 ### CUA
 
