@@ -79,6 +79,7 @@ u音|	`&euml;`	| &euml;
 
 # 参考资料
 
+- [Markdown Guide](https://www.markdownguide.org/)
 - [Cmd Markdown 公式指导手册](https://www.zybuluo.com/codeep/note/163962)
 - [Markdown 公式写法](https://www.jianshu.com/p/e74eb43960a1)
 - [Markdown-画图工具](https://mermaid-js.github.io/mermaid/#/)
