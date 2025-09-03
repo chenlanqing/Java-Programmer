@@ -1227,6 +1227,240 @@ Async实现原理：其主要实现类是 ThreadPoolTaskExecutor，Spring自己�
 
 Spring5.0 WebClient
 
+## 7.3、DeferredResult
+
+### 7.3.1、概述
+
+DeferredResult 是 Spring Web MVC (spring-web) 中提供的一种 异步请求处理机制；
+
+它的主要用途是：在不阻塞 Servlet 容器的工作线程的情况下，延迟返回请求的结果
+
+### 7.3.2、对比同步处理
+
+**传统的 Spring MVC 请求是 同步处理 的：**
+- DispatcherServlet 接收到请求。
+- 交给某个 Controller 方法。
+- Controller 直接返回一个 ModelAndView 或 ResponseBody。
+- 结果立刻被写入响应。
+
+> 种方式会 阻塞 Servlet 容器线程，如果处理耗时较长（如远程调用、消息队列、慢查询），会占用线程，导致吞吐量下降。
+
+*DeferredResult 的工作原理：* DeferredResult<T> 提供了一种方式，可以 立刻释放处理请求的容器线程，而结果稍后由其他线程设置：
+- Controller 方法返回一个 DeferredResult 对象。
+- DispatcherServlet 认为该请求还没完成，但释放了当前容器线程。
+- 后台线程（如业务线程池、消息监听器）完成耗时操作后，调用 `deferredResult.setResult(...)`。
+- Spring MVC 捕获到结果，重新分派（dispatch）请求，最终将结果写入 HTTP 响应。
+
+### 7.3.3、典型使用场景
+
+- 长轮询（Long Polling），例如：Web 聊天室、新消息提醒。
+- 消息队列结果回调，等待 MQ、Kafka、Redis 等异步消息返回结果。
+- 远程服务调用：当下游服务响应较慢时，避免阻塞 Tomcat/Jetty 工作线程。
+- 服务端推送（SSE + DeferredResult 结合）。
+
+### 7.3.4、对比 WebFlux
+
+| 特性      | DeferredResult (MVC)       | WebFlux (Mono/Flux)             |
+| ------- | -------------------------- | ------------------------------- |
+| 所属框架    | Spring MVC (Servlet stack) | Spring WebFlux (Reactive stack) |
+| 异步机制    | Servlet 3.0 AsyncContext   | Reactive Streams (Reactor)      |
+| 编程模型    | 命令式 + 回调                   | 声明式 + 流式操作                      |
+| 底层容器    | Tomcat/Jetty/Undertow (阻塞) | Reactor Netty (非阻塞 IO)          |
+| 背压支持    | ❌ 不支持                      | ✅ 原生支持                          |
+| 适用场景    | 局部异步化，长轮询                  | 高并发、数据流、微服务                     |
+| 学习/迁移成本 | 低（保持 MVC 编程习惯）             | 高（需要响应式编程思维）                    |
+
+可以这么理解：
+* `DeferredResult` = **MVC 异步补丁**（传统同步框架上的局部异步）。
+* `Mono/Flux` = **原生响应式模型**（为高并发 & 数据流量身打造）。
+
+### 7.3.5、示例代码
+
+```java
+@GetMapping("/async")
+public DeferredResult<String> asyncRequest() {
+    DeferredResult<String> deferredResult = new DeferredResult<>(5000L, "Timeout");
+    deferredResult.onTimeout(() -> {
+        System.out.println("超时了");
+    });
+    deferredResult.onCompletion(() -> {
+        System.out.println("完成了");
+    });
+    // 异步执行逻辑
+    CompletableFuture.runAsync(() -> {
+        try {
+            Thread.sleep(2000); // 模拟耗时操作
+            deferredResult.setResult("Hello, Async World!");
+        } catch (InterruptedException e) {
+            deferredResult.setErrorResult("Error occurred");
+        }
+    });
+    return deferredResult;
+}
+```
+
+### 7.3.6、原理分析
+
+（1）控制器方法的返回值都由对应的处理器进行处理，关于 DeferredResult，自然由 DeferredResultMethodReturnValueHandler 进行处理
+```java
+@Override
+public void handleReturnValue(@Nullable Object returnValue, MethodParameter returnType, ModelAndViewContainer mavContainer, NativeWebRequest webRequest) throws Exception {
+    if (returnValue == null) {
+        mavContainer.setRequestHandled(true);
+        return;
+    }
+    DeferredResult<?> result;
+    // 返回值类型为DeferredResult
+    if (returnValue instanceof DeferredResult<?> deferredResult) {
+        result = deferredResult;
+    } else if (returnValue instanceof org.springframework.util.concurrent.ListenableFuture<?> listenableFuture) {
+        // 返回值类型为ListenableFuture进行适配转换
+        result = adaptListenableFuture(listenableFuture);
+    } else if (returnValue instanceof CompletionStage<?> completionStage) {
+        // 返回值类型为CompletionStage进行适配转换
+        result = adaptCompletionStage(completionStage);
+    } else {
+        // Should not happen...
+        throw new IllegalStateException("Unexpected return value type: " + returnValue);
+    }
+    // 处理结果
+    WebAsyncUtils.getAsyncManager(webRequest).startDeferredResultProcessing(result, mavContainer);
+}
+```
+（2）设置 DeferredResultHandler
+```java
+// org.springframework.web.context.request.async.WebAsyncManager#startDeferredResultProcessing
+public void startDeferredResultProcessing(
+		final DeferredResult<?> deferredResult, Object... processingContext) throws Exception {
+	...
+	// // 1. 开启异步处理
+	startAsyncProcessing(processingContext);
+	try {
+		interceptorChain.applyPreProcess(this.asyncWebRequest, deferredResult);
+		// 2. 设置DeferredResultHandler
+		deferredResult.setResultHandler(result -> {
+			result = interceptorChain.applyPostProcess(this.asyncWebRequest, deferredResult, result);
+			setConcurrentResultAndDispatch(result);
+		});
+	}
+	catch (Throwable ex) {
+		setConcurrentResultAndDispatch(ex);
+	}
+}
+```
+（3）调用`setResult()`：当异步任务执行完成后，会调用`DeferredResult的setResult()`方法
+```java
+public boolean setResult(@Nullable T result) {
+    return setResultInternal(result);
+}
+private boolean setResultInternal(@Nullable Object result) {
+    // Immediate expiration check outside of the result lock
+    if (isSetOrExpired()) {
+        return false;
+    }
+    DeferredResultHandler resultHandlerToUse;
+    synchronized (this) {
+        // Got the lock in the meantime: double-check expiration status
+        if (isSetOrExpired()) {
+            return false;
+        }
+        // At this point, we got a new result to process
+        this.result = result;
+        resultHandlerToUse = this.resultHandler;
+        if (resultHandlerToUse == null) {
+            // No result handler set yet -> let the setResultHandler implementation
+            // pick up the result object and invoke the result handler for it.
+            return true;
+        }
+        // Result handler available -> let's clear the stored reference since
+        // we don't need it anymore.
+        this.resultHandler = null;
+    }
+    // If we get here, we need to process an existing result object immediately.
+    // The decision is made within the result lock; just the handle call outside
+    // of it, avoiding any deadlock potential with Servlet container locks.
+    resultHandlerToUse.handleResult(result);
+    return true;
+}
+```
+在前面设置了 DeferredResultHandler，因此会调用`setConcurrentResultAndDispatch()`
+```java
+private void setConcurrentResultAndDispatch(@Nullable Object result) {
+    Assert.state(this.asyncWebRequest != null, "AsyncWebRequest must not be null");
+    synchronized (WebAsyncManager.this) {
+        if (!this.state.compareAndSet(State.ASYNC_PROCESSING, State.RESULT_SET)) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Async result already set: [" + this.state.get() +
+                        "], ignored result for " + formatUri(this.asyncWebRequest));
+            }
+            return;
+        }
+        // 设置结果
+        this.concurrentResult = result;
+        ...
+        if (this.asyncWebRequest.isAsyncComplete()) {
+            if (logger.isDebugEnabled()) {
+                logger.debug("Async request already completed for " + formatUri(this.asyncWebRequest));
+            }
+            return;
+        }
+        ...
+        // 2.请求调度，就是模拟客户端再次向服务器端发起请求
+        this.asyncWebRequest.dispatch();
+    }
+}
+```
+（4）调度处理：
+```java
+// org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter#invokeHandlerMethod
+if (asyncManager.hasConcurrentResult()) {
+    Object result = asyncManager.getConcurrentResult();
+    Object[] resultContext = asyncManager.getConcurrentResultContext();
+    Assert.state(resultContext != null && resultContext.length > 0, "Missing result context");
+    mavContainer = (ModelAndViewContainer) resultContext[0];
+    asyncManager.clearConcurrentResult();
+    LogFormatUtils.traceDebug(logger, traceOn -> {
+        String formatted = LogFormatUtils.formatValue(result, !traceOn);
+        return "Resume with async result [" + formatted + "]";
+    });
+    invocableMethod = invocableMethod.wrapConcurrentResult(result);
+}
+
+invocableMethod.invokeAndHandle(webRequest, mavContainer);
+if (asyncManager.isConcurrentHandlingStarted()) {
+    return null;
+}
+```
+（5）构建ServletInvocableHandlerMethod
+```java
+// org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod#wrapConcurrentResult
+ServletInvocableHandlerMethod wrapConcurrentResult(@Nullable Object result) {
+    return new ConcurrentResultHandlerMethod(result, new ConcurrentResultMethodParameter(result));
+}
+private class ConcurrentResultHandlerMethod extends ServletInvocableHandlerMethod {
+    private final MethodParameter returnType;
+    public ConcurrentResultHandlerMethod(@Nullable Object result, ConcurrentResultMethodParameter returnType) {
+        super((Callable<Object>) () -> {
+            if (result instanceof Exception exception) {
+                throw exception;
+            }
+            else if (result instanceof Throwable throwable) {
+                throw new ServletException("Async processing failed: " + result, throwable);
+            }
+            return result;
+        }, CALLABLE_METHOD);
+
+        if (ServletInvocableHandlerMethod.this.returnValueHandlers != null) {
+            setHandlerMethodReturnValueHandlers(ServletInvocableHandlerMethod.this.returnValueHandlers);
+        }
+        this.returnType = returnType;
+    }
+    ...
+}
+```
+（6）调用目标方法：调用Callable的call()方法，得到返回结果，再使用返回值处理器处理返回值
+
+
 # 8、自定义请求体和响应体
 
 ## 8.1、请求体：RequestBodyAdvice
