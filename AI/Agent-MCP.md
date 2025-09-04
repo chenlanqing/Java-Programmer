@@ -916,11 +916,23 @@ async def fetch_weather(city: str) -> str:
 
 ## 11、MCP 资源
 
+### 11.1、MCP Sandbox & Virtualization
+
+- [E2B-开源的 Linux Sandbox](https://github.com/e2b-dev/mcp-server)
+- [轻松安全地执行不受信任的用户/AI 代码](https://github.com/microsandbox/microsandbox)
+- [Docker-MCP](https://github.com/QuantGeekDev/docker-mcp)
+
+### 任务拆解
+
+- [Sequential Thinking MCP: How to Use Sequential Thinking MCP Servers](https://www.ontariomcp.ca/sequential-thinking-mcp)
 - [交互式用户反馈 MCP-节省 Token 调用量](https://github.com/Minidoracat/mcp-feedback-enhanced)
 - [Sequential Thinking MCP-顺序思考](https://github.com/arben-adm/mcp-sequential-thinking)
 - [Shrimp Task Manager MCP-把复杂任务拆解成可执行的小步骤的 MCP](https://github.com/cjo4m06/mcp-shrimp-task-manager)
-- [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 
+### 其他
+
+- [提供专门的 AI Pieces ，让你轻松连接各种 AI 模型提供商](https://github.com/MCP-Mirror/activepieces_activepieces)
+- [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 - [PromptX是一个系统性的，工程化的提示词管理框架](https://github.com/Deepractice/PromptX)
 - [微信读书 MCP](https://github.com/freestylefly/mcp-server-weread)
 - [控制 Mac 电脑的 MCP](https://github.com/ashwwwin/automation-mcp)
@@ -930,7 +942,6 @@ async def fetch_weather(city: str) -> str:
 - [Dive 是一个开源的 MCP Host Desktop 应用程序](https://github.com/OpenAgentPlatform/Dive)
 - [OpenMemory-MCP 记忆体](https://github.com/mem0ai/mem0/openmemory)
 - [Discover Awesome MCP Servers](https://himcp.ai/)
-- [Sequential Thinking MCP: How to Use Sequential Thinking MCP Servers](https://www.ontariomcp.ca/sequential-thinking-mcp)
 - [海量好用 MCP Server](https://cloud.tencent.com/developer/mcp)
 - [EdgeOne Pages MCP-MCP部署网页](https://github.com/TencentEdgeOne/edgeone-pages-mcp)
 - [Chrome MCP](https://github.com/hangwin/mcp-chrome)

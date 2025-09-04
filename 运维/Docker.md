@@ -917,3 +917,5 @@ Status: Downloaded newer image for portainer/helper-reset-password:latest
 - [Docker cli command](https://docs.docker.com/reference/cli/docker/)
 - [OrbStack 是运行 Docker 容器和 Linux 的快速、轻便且简单的方法](https://orbstack.dev/)
 - [Docker 入门实战](https://github.com/yeasy/docker_practice)
+- [Docker 里运行 Windows](https://github.com/dockur/windows)
+- [Docker 里运行 MacOS](https://github.com/dockur/macos)

@@ -10,6 +10,8 @@
 - [AI算法工程师](http://www.huaxiaozhuan.com/)
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
 - [各种使用 RAG、AI Agents、多智能体团队等技术的实战 LLM 应用示例](https://github.com/Shubhamsaboo/awesome-llm-apps)
+- [人工智能工程书籍和其他资源](https://github.com/chiphuyen/aie-book)
+
 
 ## AI 学习路线
 
@@ -80,6 +82,10 @@
 
 # AI基础设施
 
+## Sandbox & Virtualization
+
+- [轻松安全地执行不受信任的用户/AI 代码](https://github.com/microsandbox/microsandbox)
+- [Docker-MCP](https://github.com/QuantGeekDev/docker-mcp)
 - [E2B-开源的 Linux Sandbox](https://github.com/e2b-dev/e2b)
 - [Daytona 是一个安全且有弹性的基础设施-Linux Sandbox](https://github.com/daytonaio/daytona)
 
@@ -88,6 +94,11 @@
 - [开源 LLM 工程平台：LLM 可观测性、指标、评估、提示管理、沙盒、数据集。与 OpenTelemetry、Langchain、OpenAI SDK、LiteLLM 等集成](https://github.com/langfuse/langfuse)
 - [anything-llm：这款全能的桌面和 Docker AI 应用程序内置了 RAG、AI 代理、无代码代理构建器、MCP 兼容性等功能](https://github.com/Mintplex-Labs/anything-llm)
 - [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
+
+# AI流程编排
+
+- [kestra: 通用工作流编排平台 — 任何语言的代码，可在任何地方运行](https://github.com/kestra-io/kestra)
+
 
 # AI 商业
 
