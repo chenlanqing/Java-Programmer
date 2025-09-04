@@ -575,6 +575,10 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 - **流程编排 (Flow Orchestration)**：这是Agent的“小脑和神经系统”，负责协调和执行复杂的多步骤任务。面对需要多个步骤才能完成的复杂分析任务，Agent并不会试图“一步到位”，而是会将其拆解为一系列逻辑上相互关联的子任务，并按照预设在提示词中的逻辑流程，依次执行。这种通过提示词实现的任务分解和流程编排，确保了Agent在处理复杂问题时的逻辑严谨性、过程透明性和结果可靠性。
 
+## 10、Agent 训练
+
+- [RAGEN：通过强化推理训练代理](https://github.com/RAGEN-AI/RAGEN)
+
 ## Agent 框架
 
 - 对于 C 端用户，可以考虑 [coze](https://www.coze.cn/store/bot)，缺点是没有开源
