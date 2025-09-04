@@ -265,6 +265,8 @@ docker run -id --name=mysql3306 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql
 docker run -id --name=mysql3307 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0.32
 ```
 
+
+
 ## 4、问题
 
 比如说如果出现这个问题：`INSERT command denied to user 'root'@'172.17.0.1' for table '<table_name>'`
@@ -302,6 +304,72 @@ UPDATE mysql.user set Insert_priv='Y', Delete_priv='Y',Create_priv='Y',Drop_priv
 -- 修改 root 用户认证方式
 ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY 'root';
 -- 刷新权限
+FLUSH PRIVILEGES;
+```
+
+**通过 docker compose 安装 MySQL**
+
+创建目录：
+```bash
+mkdir -p /opt/mysql/{data,conf,logs}
+cd /opt/mysql
+```
+在 `/opt/mysql/conf/my.cnf` 写入以下内容：
+```bash
+[client]
+port                    = 3306
+default-character-set   = utf8mb4
+
+[mysqld]
+bind-address            = 0.0.0.0
+user                    = mysql
+port                    = 3306
+sql_mode                = NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES
+
+default-storage-engine  = InnoDB
+default-authentication-plugin   = mysql_native_password
+character-set-server    = utf8mb4
+collation-server        = utf8mb4_0900_ai_ci
+init_connect            = 'SET NAMES utf8mb4'
+
+slow_query_log
+#long_query_time         = 3
+slow-query-log-file     = /var/log/mysql/mysql.slow.log
+log-error               = /var/log/mysql/mysql.error.log
+
+default-time-zone       = '+8:00'
+
+[mysql]
+default-character-set   = utf8mb4
+```
+新建 docker-compose.yaml，配置如下内容：
+```yaml
+version: '3.9'
+
+services:
+  mysql:
+    image: mysql:8.0.32
+    container_name: mysql
+    restart: always
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: 123456   # 修改为你的安全密码
+      MYSQL_DATABASE: demo      # 初始化数据库，可选
+      TZ: Asia/Shanghai                     # 设置时区
+    volumes:
+      - ./data:/var/lib/mysql
+      - ./conf:/etc/mysql/conf.d
+      - ./logs:/var/log/mysql
+
+volumes:
+  mysql_data:
+```
+
+权限问题依然按照上面问题解决：
+```mysql
+GRANT ALL PRIVILEGES ON *.* TO 'root'@'%' WITH GRANT OPTION;
+ALTER USER 'root'@'%' IDENTIFIED WITH mysql_native_password BY '123456';
 FLUSH PRIVILEGES;
 ```
 
