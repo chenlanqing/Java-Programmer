@@ -16,3 +16,4 @@
 - [快速编写CSS样式](https://tailwindcss.com/)
 - [css代码生成网站](https://www.51cto.com/article/709429.html)
 - [CSS Doodle库](https://css-doodle.com/)
+- [CSS属性完全指南](https://mp.weixin.qq.com/s/qMHY7GkaEmXPqZpTAxo2sQ)
