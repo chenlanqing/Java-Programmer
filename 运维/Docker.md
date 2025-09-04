@@ -547,6 +547,16 @@ docker run -d -p 99:80 \
 
 **结论：容器之间配置信息的传递，数据卷的生命周期一直持续到没有容器使用它为止**
 
+### 5.5、删除数据卷
+
+删除所有 volume：`docker volume rm $(docker volume ls -q)`
+
+强制删除指定的 volume：`docker volume rm -f <VOLUME_NAME>`
+
+删除未使用的 volume：`docker volume prune`
+
+删除指定的 volume：`docker volume rm <VOLUME_NAME>`，注意：如果有容器正在使用该 volume，会提示错误，必须先停止并删除容器
+
 ## 6、DockerFile
 
 - [Dockerfile reference](https://docs.docker.com/reference/dockerfile/)
