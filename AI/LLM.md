@@ -211,7 +211,6 @@ model.chat(
 - [机器学习（ML）和数据科学平台及社区](https://huggingface.co/)
 - [大模型部署电脑配置要求](https://www.zhihu.com/question/628771017)
 - [AutoDL部署 Deepseek](https://zhuanlan.zhihu.com/p/23213698282)
-- [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
 - [EXO-分布式 AI 集群](https://github.com/exo-explore/exo)
 - [计算 LLM 推理所需的 GPU 内存](https://selfhostllm.org/)
 - [llama.cpp](https://github.com/ggml-org/llama.cpp)
@@ -325,7 +324,8 @@ LLM的接口通常都遵循或类似于 OpenAI 的规范，在与大型模型交
 ## 推理模型
 
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
-
+- [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
+- [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
 
 llama.cpp 是一个模型推理框架，采用纯 C/C++ 实现，无需依赖 PyTorch、TensorFlow 等重型框架，通过静态编译生成单一可执行文件，在资源受限环境中展现出独特优势。
 
