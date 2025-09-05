@@ -1076,6 +1076,25 @@ docker run -d -p 6380:6379 \
 bitnami/redis
 ```
 
+### 6.2、docker compose 安装
+
+```yaml
+version: '3.9'
+
+services:
+  redis:
+    image: redis:7.0
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--requirepass", "123456", "--bind", "0.0.0.0"]
+    volumes:
+      - ./redis-data:/data
+```
+- 设置密码访问：`"--requirepass", "123456"`
+- 设置所有 IP 都可以访问：`"--bind", "0.0.0.0"`
+
 # 四、RabbitMQ
 
 ## 1、单机安装
@@ -1883,4 +1902,24 @@ server
         }
     }
 
+```
+
+# 十、MongoDB
+
+## 1、docker 安装
+
+```yaml
+services:
+  mongodb:
+    image: mongo:7.0
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    command: ["mongod", "--bind_ip_all"]   # 👈 新增
+    volumes:
+      - ./mongo-data:/data/db
 ```
