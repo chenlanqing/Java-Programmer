@@ -1543,9 +1543,11 @@ print(result) # Hi
 result = next(messenger)
 print(result) # How are you
 ```
-如果一个函数定义中包含yield关键字，那么这个函数就不再是一个普通函数，而是一个generator：最难理解的就是generator和函数的执行流程不一样.函数是顺序执行，遇到return语句或者最后一行函数语句就返回。而变成generator的函数，在每次调用next()的时候执行，遇到yield语句返回，再次执行时从上次返回的yield语句处继续执行；
+如果一个函数定义中包含`yield`关键字，那么这个函数就不再是一个普通函数，而是一个generator：最难理解的就是generator和函数的执行流程不一样：
+- 函数是顺序执行，遇到return语句或者最后一行函数语句就返回。
+- 变成generator的函数，在每次调用`next()`的时候执行，遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行；
 
-但是用for循环调用generator时，发现拿不到generator的return语句的返回值。如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在StopIteration的value中
+但是用for循环调用generator时，发现拿不到 generator 的 return 语句的返回值。如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在 StopIteration 的value中
 ```python
     while True:
 ...     try:
@@ -1567,9 +1569,9 @@ print(result) # How are you
 # 创建L和g的区别仅在于最外层的[]和()，L是一个list，而g是一个generator。
 # 笨方法:如果要一个一个打印出来，可以通过generator的next()方法：
 ```
-正确的方法是使用for循环，因为generator也是可迭代对象
+正确的方法是使用for循环，因为 generator 也是可迭代对象
 
-如果推算的算法比较复杂，用类似列表生成式的for循环无法实现的时候，还可以用函数来实现
+如果推算的算法比较复杂，用类似列表生成式的 for 循环无法实现的时候，还可以用函数来实现
 
 如:名的斐波拉契数列（Fibonacci）定义函数如下:
 ```python
