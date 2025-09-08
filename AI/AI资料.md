@@ -11,7 +11,7 @@
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
 - [各种使用 RAG、AI Agents、多智能体团队等技术的实战 LLM 应用示例](https://github.com/Shubhamsaboo/awesome-llm-apps)
 - [人工智能工程书籍和其他资源](https://github.com/chiphuyen/aie-book)
-
+- [Claude Code v1.0.33 进行逆向工程的完整研究和分析资料](https://github.com/chenlanqing/analysis_claude_code)
 
 ## AI 学习路线
 
@@ -220,6 +220,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 - https://github.com/huggingface/lerobot
 - [AI聊天工具](https://poe.com/)
+- [微信对话开放平台](https://chatbot.weixin.qq.com/login)
 - [LangChat是Java生态下企业级AIGC项目解决方案](https://github.com/TyCoding/langchat)
 - [Koishi 是一个跨平台、可扩展、高性能的聊天机器人框架](https://github.com/koishijs/koishi)
 - [Genesis 是一个面向通用机器人学、具身人工智能 (Embodied AI) 和物理 AI 应用 的生成式物理模拟平台](https://github.com/Genesis-Embodied-AI/Genesis)

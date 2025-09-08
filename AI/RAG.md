@@ -301,6 +301,7 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [GraphRAG + DeepSearch 实现与问答系统（Agent）构建](https://github.com/1517005260/graph-rag-agent)
 - [Ragflow+TextIn实战！高精度AI解析+OCR优化](https://mp.weixin.qq.com/s/7cW8Madv0rG0i3PoaFk1oA)
 - [LlamaIndex 是用于在数据上构建 LLM 驱动的代理的领先框架](https://github.com/run-llama/llama_index)
+- [WeKnora - 基于大模型的文档理解检索框架](https://github.com/Tencent/WeKnora)
 
 # 参考资料
 

@@ -12,6 +12,7 @@
 - [FastAI:基于 PyTorch 的深度学习库](https://github.com/fastai/fastai)
 - [AllenNLP:用于自然语言处理的深度学习框架](https://github.com/allenai/allennlp)
 - [Transformers:NLP 库，集合了大量预训练模型](https://github.com/huggingface/transformers)
+- [Gradio: 用Python构建机器学习网页APP](https://github.com/gradio-app/gradio)
 
 
 # 参考资料
