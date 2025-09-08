@@ -249,6 +249,28 @@ LangChain 的提示模板可以嵌入对输出格式的定义，以便在后续�
 LangGraph是在LangChain之上构建的模块，LangGraph 是一种通过将状态机指定为图形来创建状态机的方法
 
 
+# 三、[LiteLLM](https://github.com/BerriAI/litellm)
+
+使用 OpenAI 格式调用所有 LLM API [Bedrock、Huggingface、VertexAI、TogetherAI、Azure、OpenAI、Groq 等]
+
+```bash
+pip install litellm
+```
+基本使用：
+```py
+from litellm import completion
+import os
+## set ENV variables
+os.environ["OPENAI_API_KEY"] = "your-openai-key"
+os.environ["ANTHROPIC_API_KEY"] = "your-anthropic-key"
+messages = [{ "content": "Hello, how are you?","role": "user"}]
+# openai call
+response = completion(model="openai/gpt-4o", messages=messages)
+# anthropic call
+response = completion(model="anthropic/claude-sonnet-4-20250514", messages=messages)
+print(response)
+```
+
 # 参考资料
 
 - [从 0 到 1 开发，AI + LangChain4j 项目](https://github.com/liyupi/ai-code-helper)
