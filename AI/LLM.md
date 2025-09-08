@@ -291,8 +291,8 @@ print(chat_completion.choices[0].message.content)
 
 - [量化 LLM 的高效微调](https://github.com/artidoro/qlora)
 - [unsloth:模型微调框架](https://docs.unsloth.ai/)
-
-[LLama-factory](https://github.com/hiyouga/LLaMA-Factory) 是一款整合了主流的各种高效训练微调技术，适配市场主流开源模型，而形成的一个功能丰富、适配性好的训练框架。LLama-factory 提供了多个高层次抽象的调用接口，包含多阶段训练、推理测试、benchmark 评测、API Server 等，使开发者开箱即用。同时提供了基于 gradio 的网页版工作台，方便初学者迅速上手操作，开发出自己的第一个模型
+- [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 
+- [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
 
 **为什么要微调？**
 - 哪些情况是Prompt写到极致，RAG优化完还有什么问题是不能解决的呢，把问题定义出来才应该去思考怎么微调
