@@ -594,6 +594,8 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [Parlant 是一个专注于 指令遵循可靠性 的开源 AI 智能体框架](https://github.com/emcie-co/parlant)
 - [MiroThinker是一个开源的智能体（Agent）模型系列，专为深度研究和复杂、长期问题解决而设计](https://github.com/MiroMindAI/MiroThinker)
 - [Youtu-agent 是一个灵活、高性能的框架，用于构建、运行和评估自主智能体](https://github.com/TencentCloudADP/Youtu-agent)
+- [AgentScope 是 “多模态智能体神器”](https://github.com/agentscope-ai/agentscope)
+- [AI联网搜索](https://github.com/swirlai/swirl-search)
 
 ### Multi-Agent
 
@@ -602,6 +604,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [OWL：实际任务自动化中提供通用多智能体协助](https://github.com/camel-ai/owl)
 - [OpenManus](https://github.com/FoundationAgents/OpenManus)
 - [AI Manus 是一个通用的 AI Agent 系统，支持在沙盒环境中运行各种工具和作](https://github.com/Simpleyyt/ai-manus)
+- [AIPy 是Python-use概念的具体实现，是一个融合了大语言模型（LLM）与Python运行环境的开源工具](https://github.com/knownsec/aipyapp)
 - [JoyAgent-JDGenie: 开源端到端的通用 Agent](https://github.com/jd-opensource/joyagent-jdgenie)
 - [agno：用于构建具有内存、知识和推理的Multi Agent的全栈框架](https://github.com/agno-agi/agno)
 - [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
