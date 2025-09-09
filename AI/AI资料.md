@@ -134,6 +134,11 @@
 - https://www.codefather.cn/course/1907378983347892226/section/1928346946364375042#heading-0
 - [Nano Banana](https://nanobanana.ai/)
 
+Nano Banana 提示词
+- https://github.com/PicoTrex/Awesome-Nano-Banana-images
+- https://github.com/ZHO-ZHO-ZHO/ZHO-nano-banana-Creation
+- https://github.com/JimmyLv/awesome-nano-banana
+
 # 语音处理
 
 - [Minimaxi](https://platform.minimaxi.com/user-center/basic-information/interface-key)

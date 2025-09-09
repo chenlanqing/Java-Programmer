@@ -351,7 +351,7 @@ flowchart LR
 
 - [GPT 提示词](https://github.com/linexjlin/GPTs)
 - [AI 提示 模板](https://www.notion.com/zh-cn/templates/category/ai-prompts)
-- [AI工具的提示词](https://github.com/chenlanqing/system-prompts-and-models-of-ai-tools)
+- [AI工具的提示词](https://github.com/x1xhlol/system-prompts-and-models-of-ai-tools)
 - [Snack Prompt](https://snackprompt.com)
 - [Free AI Prompt](https://flowgpt.com/)
 - [AI提示词大全](https://prompthero.com/)
