@@ -43,7 +43,7 @@ https://github.com/qianguyihao/Mac-list
 
 ### 4.2、终端工具
 
-- iTerm   终端工具 【https://segmentfault.com/a/1190000014992947】
+- [iTerm 终端工具 ](https://zhuanlan.zhihu.com/p/550022490)
 - [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
 - termius  SSH连接客户端
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
