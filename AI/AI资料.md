@@ -62,6 +62,7 @@
 - [AI 大模型自动化流程](https://yuju-ai.com/)
 - [n8n-具有本机AI功能的公平代码工作流程自动化平台](https://github.com/n8n-io/n8n)
 - [n8n 模板集合](https://github.com/enescingoz/awesome-n8n-templates)
+- [N8N Workflow Collection & Documentation](https://github.com/Zie619/n8n-workflows)
 - [AI 源码解读工具](https://deepwiki.com/)
 - [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
