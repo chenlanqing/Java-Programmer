@@ -76,3 +76,4 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 - [发现和分享有趣、入门级开源项目的平台](https://hellogithub.com/)
 - [Github实用小技巧](https://javaguide.cn/tools/git/github-tips.html)
+- [发现开源项目](https://www.opensourceprojects.dev/)
