@@ -206,6 +206,7 @@ model.chat(
 - [Xinference-模型服务变得简单](https://github.com/xorbitsai/inference)
 - [huggingface-开源大模型](https://huggingface.co/)
 - [ollama-基本使用](https://github.com/datawhalechina/handy-ollama)
+- [Shimmy: The 5MB Alternative to Ollama](https://github.com/Michael-A-Kuykendall/shimmy)
 - [开源大模型食用（部署）指南](https://github.com/datawhalechina/self-llm)
 - [ModelScope是阿里巴巴推出的开源模型即服务（MaaS）平台](https://www.modelscope.cn/home)
 - [机器学习（ML）和数据科学平台及社区](https://huggingface.co/)
