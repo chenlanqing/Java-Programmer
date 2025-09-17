@@ -679,6 +679,7 @@ HOST gitlab.com
 * [Git与SVN](https://www.cnblogs.com/kevingrace/p/5904595.html)
 * [rebase 和 merge 区别](https://waynerv.com/posts/git-rebase-intro/#rebase-%E5%92%8C-merge-%E7%9A%84%E5%8C%BA%E5%88%AB)
 * [Git branch](https://learngitbranching.js.org/?locale=zh_CN)
+* [Oh-my-zsh git alias](https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git)
 
 
 
