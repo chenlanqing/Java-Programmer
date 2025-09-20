@@ -760,7 +760,7 @@ def say():
 
 此外，当 say 函数返回display 函数时，它实际上返回了一个闭包；下面的代码将 say 函数的返回值赋值给变量 fn。 由于 fn 是一个函数，因此可以执行它：
 ```py
-fn = say()
+fn = say() # <function say.<locals>.display at 0x10b762200>
 fn()
 ```
 换句话说，在执行 fn 函数时，say 函数的作用域已经消失了；由于 greeting 变量属于 say 函数的作用域，因此它也应随函数的作用域一起被销毁，但是，您仍然可以看到 fn 显示 message 变量的值

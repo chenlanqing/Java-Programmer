@@ -3078,7 +3078,7 @@ uv pip install -r requirements.txt
 
 ## 5、包冲突
 
-### ✅ 解决方案 1：调整 `sys.path` 顺序（推荐）
+### 解决方案 1：调整 `sys.path` 顺序
 
 在项目入口文件（比如 `main.py`）最开头，强制把 **site-packages 的路径** 提前：
 ```python
@@ -3097,7 +3097,7 @@ from langchain.globals import set_debug as langchain_set_debug
 
 ---
 
-### ✅ 解决方案 2：动态导入官方 `langchain`
+### 解决方案 2：动态导入
 
 借助 `importlib`，你可以直接指定路径去加载 `site-packages` 里的 `langchain`：
 
