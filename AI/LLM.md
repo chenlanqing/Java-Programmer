@@ -290,6 +290,7 @@ print(chat_completion.choices[0].message.content)
 
 ## 模型微调
 
+- [MLX LM 是一个 Python 包，用于使用 MLX 在 Apple 芯片上生成文本和微调大型语言模型](https://github.com/ml-explore/mlx-lm)
 - [量化 LLM 的高效微调](https://github.com/artidoro/qlora)
 - [unsloth:模型微调框架](https://docs.unsloth.ai/)
 - [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 

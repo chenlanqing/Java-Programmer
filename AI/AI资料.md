@@ -80,6 +80,10 @@
 - [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
 - [SearXNG:免费的互联网元搜索引擎](https://github.com/searxng/searxng)
 
+# DeepResearch
+
+- https://github.com/bytedance/deer-flow
+
 
 # AI基础设施
 
