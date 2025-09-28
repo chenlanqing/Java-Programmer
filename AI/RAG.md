@@ -13,7 +13,7 @@ RAG 是一种旨在结合大型语言模型 (LLM) 的生成能力和外部知识
 
 简单来说，就是给 LLM 提供外部数据库，对于用户问题 ( Query )，通过一些信息检索 ( Information Retrieval, IR ) 的技术，先从外部数据库中检索出和用户问题相关的信息，然后让 LLM 结合这些相关信息来生成结果
 
-![](image/传统RAG与智RAG.gif)
+![](image/RAG-传统RAG与智RAG.gif)
 
 ## 1.1、传统 RAG
 
@@ -288,7 +288,13 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 
 ## 4.3、整体核心流程
 
+![](image/RAG-核心流程.png)
 
+# RAG优化
+
+- [RAG优化策略总结](https://www.53ai.com/news/RAG/2025041523890.html)
+
+![](image/RAG-Optimize.png)
 
 # RAG技术
 
@@ -314,3 +320,4 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 - [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
 - [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)
 - [RAG](https://www.promptingguide.ai/zh/techniques/rag)
+- [RAG From Scratch](https://github.com/langchain-ai/rag-from-scratch)
