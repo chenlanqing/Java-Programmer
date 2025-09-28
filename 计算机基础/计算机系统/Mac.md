@@ -47,6 +47,7 @@ https://github.com/qianguyihao/Mac-list
 - [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
 - termius  SSH连接客户端
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
+- https://github.com/alacritty/alacritty
 
 ### 4.3、开发工具
 
