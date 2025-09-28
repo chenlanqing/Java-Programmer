@@ -133,6 +133,44 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 - [将任何 Git 存储库转换为其代码库的简单文本摘要](https://github.com/coderamp-labs/gitingest)
 
+# 二、Codex
+
+- [Codex getting started](https://github.com/openai/codex/blob/main/docs/getting-started.md)
+- [AGENTS.md — a simple, open format for guiding coding agents](https://github.com/openai/agents.md)
+
+## 1、安装
+
+```bash
+npm install -g @openai/codex
+```
+查看版本号：
+```bash
+codex --version
+```
+
+**设置环境变量**
+- 临时设置环境变量
+```bash
+export OPENAI_BASE_URL="OPEN AI URL"
+export OPENAI_API_KEY="你的API密钥"
+```
+- 永久设置
+```bash
+# 对于 bash (默认)
+echo 'export OPENAI_BASE_URL="OPEN AI URL"' >> ~/.bashrc
+echo 'export OPENAI_API_KEY="你的API密钥"' >> ~/.bashrc
+source ~/.bashrc
+# 对于 zsh
+echo 'export OPENAI_BASE_URL="OPEN AI URL"' >> ~/.zshrc
+echo 'export OPENAI_API_KEY="你的API密钥"' >> ~/.zshrc
+source ~/.zshrc
+```
+
+## 2、配置其他模型
+
+- [Config other models](https://github.com/openai/codex/blob/main/docs/config.md)
+- [Codex 支持的LLM](https://github.com/openai/codex/blob/main/codex-cli/README.md)
+
 # 参考资料
 
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)

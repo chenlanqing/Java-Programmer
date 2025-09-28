@@ -74,6 +74,7 @@
 - [Open Lovable 是一个开源的、基于 AI 的网站克隆神器:只需要输入一个网址，几秒钟后，你就能得到一个可以运行的、现代 React 代码版本](https://github.com/mendableai/open-lovable)
 - [Qbot：AI智能量化投研平台](https://github.com/UFund-Me/Qbot)
 - [Bytebot 是一个自托管的 AI 桌面代理，它通过自然语言命令自动执行计算机任务，在容器化的 Linux 桌面环境中运行](https://github.com/bytebot-ai/bytebot)
+- [找工作助手](https://github.com/loks666/get_jobs)
 
 # AI 搜索
 
@@ -235,6 +236,11 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [LangChat是Java生态下企业级AIGC项目解决方案](https://github.com/TyCoding/langchat)
 - [Koishi 是一个跨平台、可扩展、高性能的聊天机器人框架](https://github.com/koishijs/koishi)
 - [Genesis 是一个面向通用机器人学、具身人工智能 (Embodied AI) 和物理 AI 应用 的生成式物理模拟平台](https://github.com/Genesis-Embodied-AI/Genesis)
+
+# AI国内代理
+
+- [Claude Code、Codex镜像服务](https://aicoding.sh/)
+- [Ready to use Native AI](https://2233.ai/aicoding)
 
 # 参考资料
 
