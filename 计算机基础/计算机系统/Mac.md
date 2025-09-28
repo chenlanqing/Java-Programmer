@@ -220,6 +220,39 @@ $ open demo.txt
 $ open -a "Visual Studio Code" .zshrc
 ```
 
+### 9.3、查询系统运行时长
+
+在 macOS 中有多种方法可以查看系统运行时长（uptime）：
+
+####  uptime 命令
+
+```bash
+uptime
+```
+显示示例：`13:45  up 3 days,  2:30, 2 users, load averages: 1.25 1.40 1.50`
+- "up 3 days, 2:30" 表示系统已运行3天2小时30分钟
+
+#### system_profiler 命令
+```bash
+system_profiler SPSoftwareDataType | grep "Time"
+```
+显示系统启动时间
+
+#### sysctl 命令
+```bash
+sysctl -n kern.boottime
+```
+显示内核启动时间的时间戳
+
+#### last 命令
+
+```bash
+last reboot | head -1
+```
+查看最近一次重启的时间
+
+**推荐使用 `uptime` 命令**，这是最直接和准确的方法。
+
 ## 10、命令别名
 
 比如安装了 oh-my-zsh，查看 git 操作命令的别名：
