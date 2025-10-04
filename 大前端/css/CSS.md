@@ -9,6 +9,10 @@
 - 与less结合；
 - 良好的开发体验
 
+## 组件库
+
+- [Tailwind CSS生态的“原子化UI组件库”](https://github.com/shadcn/ui)
+
 # 参考资料
 
 - [CSS-国服第一切图崽](https://github.com/chokcoco/CSS-Inspiration)

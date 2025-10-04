@@ -27,3 +27,4 @@ Pydantic 用适度的实例化开销换来了强大的校验功能和开发便�
 - [Python数学库](https://github.com/manimCommunity/manim)
 - [Prophet-数据预测，输入历史数据就能预测未来趋势，销量、流量预测超准](https://github.com/facebook/prophet)
 - [Pathway：用于流处理、实时分析、LLM 管道和 RAG 的 Python ETL 框架](https://github.com/pathwaycom/pathway)
+- 数据并行计算：Dask

@@ -10,3 +10,4 @@
 - [DevOps](https://github.com/yangpeng14/DevOps)
 - [1Panel 是一个现代化、开源的 Linux 服务器运维管理面板](https://github.com/1Panel-dev/1Panel)
 - [Ansible 是一个非常简单的 IT 自动化系统](https://github.com/ansible/ansible)
+- [Terraform：云资源管家](https://github.com/hashicorp/terraform)

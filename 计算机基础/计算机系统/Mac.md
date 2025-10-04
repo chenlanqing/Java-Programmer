@@ -48,6 +48,7 @@ https://github.com/qianguyihao/Mac-list
 - termius  SSH连接客户端
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
 - https://github.com/alacritty/alacritty
+- [The minimal, blazing-fast, and infinitely customizable prompt for any shell!](https://github.com/starship/starship)
 
 ### 4.3、开发工具
 
