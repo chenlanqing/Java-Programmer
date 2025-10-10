@@ -6,6 +6,7 @@
 
 # 资源库
 
+- [前端入门到进阶知识库](https://github.com/qianguyihao/Web)
 - [拖拽库](https://github.com/Shopify/draggable)
 - [前端低代码框架，通过 JSON 配置就能生成各种页面](https://github.com/baidu/amis)
 - [Eggjs-为企业级框架和应用而生](https://www.eggjs.org/)
@@ -21,6 +22,7 @@
 - [uniapp](https://zh.uniapp.dcloud.io/)
 - [Antv](https://antv.antgroup.com/)
 - [很易用的中后台「表单 / 表格 / 图表」解决方案](https://github.com/alibaba/x-render)
+- [专注于前端的互联网大厂面试题的学习平台](https://q.shanyue.tech/)
 
 # 前端创意
 

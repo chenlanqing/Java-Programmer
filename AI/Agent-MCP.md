@@ -629,7 +629,8 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
-- [TradingAgents：基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
+- [TradingAgents-基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
+- [TradingAgents-中文增强版: 基于多智能体LLM的中文金融交易框架](https://github.com/hsliuping/TradingAgents-CN)
 - [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
 - [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
 
