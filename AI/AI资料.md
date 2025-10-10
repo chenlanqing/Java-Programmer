@@ -6,6 +6,7 @@
 
 # AI
 
+- [AI简报](https://github.com/sunface/beat-ai)
 - [36个 AI 概念](https://mp.weixin.qq.com/s/uM8I8nyDaCH5mvjZbvB7IA)
 - [AI算法工程师](http://www.huaxiaozhuan.com/)
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)

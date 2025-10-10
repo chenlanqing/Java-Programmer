@@ -23,3 +23,4 @@
 - [machine learning](https://www.bbbdata.com/ml)
 - [机器学习入门资料](https://github.com/microsoft/ML-For-Beginners)
 - [动手深度学习](https://zh.d2l.ai/)
+- [深度学习快速入门](https://www.rethink.fun/)

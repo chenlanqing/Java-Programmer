@@ -29,10 +29,34 @@ rustup update
 # 或者只更新稳定版
 rustup update stable
 ```
+
 更新自身：
 ```bash
 # 更新 rustup 工具
 rustup self update
+```
+
+查看工具链：
+```bash
+$ rustup show
+Default host: aarch64-apple-darwin
+rustup home:  /Users/user/.rustup
+
+installed toolchains
+--------------------
+stable-aarch64-apple-darwin
+stable-x86_64-apple-darwin (active, default)
+
+active toolchain
+----------------
+name: stable-x86_64-apple-darwin
+active because: it's the default toolchain
+installed targets:
+  x86_64-apple-darwin
+```
+设置稳定版为默认工具链：
+```bash
+rustup default stable
 ```
 
 # 参考资料
