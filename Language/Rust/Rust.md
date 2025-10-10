@@ -16,17 +16,34 @@
 - rust test lens：可以帮你快速运行某个 Rust 测试。
 - Tabnine：基于 AI 的自动补全，可以帮助你更快地撰写代码；
 
-
-
 ![](image/Rust-RustContainerCheatSheet.png)
+
+# [rustup](https://github.com/rust-lang/rustup)
+
+rustup 是 Rust 工具链安装程序
+
+通过 rustup 安装的 Rust 或者升级：
+```bash
+# 更新所有工具链（包括 cargo）
+rustup update
+# 或者只更新稳定版
+rustup update stable
+```
+更新自身：
+```bash
+# 更新 rustup 工具
+rustup self update
+```
 
 # 参考资料
 
-- [Rust Cheat Sheet](https://cheats.rs/)
-- [Rust程序设计语言](https://kaisery.github.io/trpl-zh-cn/title-page.html)
+- [The Rust Programming Language](https://doc.rust-lang.org/book/)
+- [Rust Language Cheat Sheet](https://cheats.rs/)
+- [The Rust Programming Language-中文版](https://kaisery.github.io/trpl-zh-cn/title-page.html)
 - [Rust](https://docs.rs/)
 - [Rust国内镜像](https://rsproxy.cn/)
 - [Rust Course](https://github.com/sunface/rust-course)
 - [Learn Rust](https://gist.github.com/chenlanqing/e86a450cde47227820f7579d0b0a285d)
 - [Rust Learning Resources](https://serokell.io/blog/learn-rust)
 - [Rust practice](https://github.com/sunface/rust-by-practice)
+- [Rusty Book(锈书)](https://rusty.course.rs/)
