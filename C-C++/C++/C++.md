@@ -11,6 +11,10 @@
 - [可移植 C++ 源代码库](https://www.boost.org/)
 - [Muduo](https://github.com/hujiese/MuduoStudy)
 
+# 最近实践
+
+- [20条C++性能陷阱与实用特性](https://mp.weixin.qq.com/s/fDb82xdDKk9ONGCKvDialg)
+
 # 参考资料
 
 - [Bjarne Stroustrup：C++语言之父](https://www.stroustrup.com/bs_faq.html)

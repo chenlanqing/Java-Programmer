@@ -169,6 +169,9 @@ Nano Banana 提示词
 
 # AI 网关
 
+- [A blazing fast AI Gateway with integrated guardrails](https://github.com/Portkey-AI/gateway)
+- [MCP Gateway - A lightweight gateway service](https://github.com/AmoyLab/Unla)
+
 ## 面临的挑战
 
 长连接、高延时、大带宽
