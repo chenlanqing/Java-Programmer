@@ -453,6 +453,7 @@ Memory 对 Agent 至关重要：
 - [MEM0](https://arxiv.org/abs/2504.19413)
 - [MemOS](https://arxiv.org/abs/2507.03724)
 - [MIRIX](https://arxiv.org/abs/2507.07957)
+- [MemU-内存框架](https://github.com/NevaMind-AI/memU)
 
 在技术实现方案上，有一些被验证的手段能够有效提升记忆的性能表现：
 - 精细化的记忆管理：记忆在场景、分类和形式上有明确的区分，『分而治之』的思路被证明是有效的优化手段，这个和 Multi-Agent 的优化思路是类似的
@@ -633,7 +634,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [TradingAgents-中文增强版: 基于多智能体LLM的中文金融交易框架](https://github.com/hsliuping/TradingAgents-CN)
 - [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
 - [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
-
+- [EvoAgentX-自动演进的Agents](https://github.com/EvoAgentX/EvoAgentX)
 
 ## 垂直领域 Agent
 
