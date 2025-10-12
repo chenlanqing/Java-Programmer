@@ -21,9 +21,8 @@
 - [设计模式](软件工程/软件设计/设计模式.md)
 - [持续集成](软件工程/质量管理/持续集成.md)
 
-# 三、Java体系技术
+# 三、Java
 
-- [Oracle Java doc](https://docs.oracle.com/en/java/javase/index.html)
 - [Java基础](Java/Java基础)
 - [Spring](Java/Java框架/Spring/Spring.md)
 - [Mybatis](Java/Java框架/Mybatis.md)
@@ -37,8 +36,7 @@
 - [Java虚拟机](Java/Java虚拟机/JVM-Java虚拟机.md)
 - [垃圾回收](Java/Java虚拟机/JVM-GC垃圾回收机制.md)
 
-# 四、分布式
-
+**分布式**
 - [一致性协议](Java/分布式/一致性协议)
 - [分布式-理论](Java/分布式/分布式_.md#二分布式理论基础)
 - [分布式-事务](Java/分布式/分布式_事务.md)
@@ -49,19 +47,26 @@
 - [RPC](Java/分布式/分布式_.md#十一RPC)
 - [分布式链路追踪](Java/分布式/分布式_.md#十分布式链路追踪)
 - [微服务](Java/分布式/微服务/)
-  
-**[消息队列](Java/分布式/消息队列/消息中间件.md)：**
+- [消息队列](Java/分布式/消息队列/消息中间件.md)
 - [Kafka](Java/分布式/消息队列/Kafka.md)
 - [Pulsar](Java/分布式/消息队列/Pulsar.md)
 - [RocketMQ](Java/分布式/消息队列/RocketMQ.md)
 
-# 五、数据库
+# 四、数据库
 
-**关系型数据库**：
 - [MySQL](数据库/MySQL/MySQL_.md)
 - [MySQL索引](数据库/MySQL/MySQL_索引.md)
-
 - [Redis](./数据库/NoSQL/Redis/)
+- [Oracle Java doc](https://docs.oracle.com/en/java/javase/index.html)
+
+# 五、AI
+
+- [大模型](AI/LLM.md)
+- [提示词工程](./AI/Prompts.md)
+- [MCP](./AI/Agent-MCP.md)
+- [Agent](./AI/Agent-MCP.md)
+- [RAG](./AI/RAG.md)
+- [深度学习与机器学习](./AI/Machine-Learning.md)
 
 # 六、大数据
 
@@ -70,6 +75,7 @@
 - [Spark](大数据/Spark.md)
 - [Hive](大数据/Hive.md)
 - [HBase](大数据/HBase.md)
+- [Flink](./大数据/Flink.md)
 - [数仓开发](大数据/数仓开发.md)
 
 # 七、业务相关
@@ -108,14 +114,14 @@
 - [DB Ranking](https://db-engines.com/en/ranking)
 - [TIOBE](https://www.tiobe.com/tiobe-index/)
 
-# 十二、Web
+# 十二、大前端
 
 ## 1、前端
 
-- [Vue3](Web前端/Vue3)
-- [React](Web前端/React)
+- [Vue3](大前端/Vue3)
+- [React](大前端/React)
 
-## 2、[小程序](小程序/微信小程序.md)
+## 2、[小程序](大前端/小程序/微信小程序.md)
 
 # 十三、扩展学习
 
