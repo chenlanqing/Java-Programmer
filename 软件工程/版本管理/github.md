@@ -2,9 +2,24 @@
 
 [github上fork的项目与原项目同步](https://blog.csdn.net/qq1332479771/article/details/56087333)
 
-# 2、解决mac git clone失败
+# 2、GitHub加速
 
-https://blog.hyperzsb.tech/git-ssl-error/
+使用反向代理：
+
+## 2.1、加速 git clone
+
+把 github.com 换成代理域名。
+```bash
+# 原始: 
+git clone https://github.com/crewAIInc/crewAI-examples.git
+# 加速: 
+git clone https://githubproxy.cc/https://github.com/crewAIInc/crewAI-examples.git
+```
+常用代理域名：
+- [githubproxy.cc](https://githubproxy.cc/)
+- [ghproxylist.com](https://ghproxylist.com/)
+- [ghfast.top](https://ghfast.top/)
+- [gh-proxy.com](https://gh-proxy.com/)
 
 # 3、access_token问题
 
