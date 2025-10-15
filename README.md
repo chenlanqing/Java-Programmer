@@ -154,3 +154,9 @@
 - [开放路线图精选列表](https://github.com/liuchong/awesome-roadmaps)
 - [开发者路线图](https://github.com/kamranahmedse/developer-roadmap)
 - [awesome-关于各种有趣主题的精彩列表](https://github.com/sindresorhus/awesome)
+
+## 5、开源项目
+
+- Redis（单线程I/O模型的典范）
+- Nginx（事件驱动架构的标杆）
+- SQLite（一个文件就是一个数据库，代码质量极高）。
