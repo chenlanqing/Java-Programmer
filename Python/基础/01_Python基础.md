@@ -326,6 +326,23 @@ In [9]: b = '4'
 In [11]: b.zfill(5)  # 5位，补位
 Out[11]: '00004'
 ```
+
+大小写相关操作
+```python
+s1 = 'hello, world!'
+# 字符串首字母大写
+print(s1.capitalize())  # Hello, world!
+# 字符串每个单词首字母大写
+print(s1.title())       # Hello, World!
+# 字符串变大写
+print(s1.upper())       # HELLO, WORLD!
+s2 = 'GOODBYE'
+# 字符串变小写
+print(s2.lower())       # goodbye
+# 检查s1和s2的值
+print(s1)               # hello, world
+print(s2)               # GOODBYE
+```
 			
 ## 4、布尔值
 
@@ -652,7 +669,1236 @@ match subject:
         <action_wildcard>
 ```
 
-# 八、函数
+# 八、List
+
+## 1、List
+
+list，Python内置的一种数据类型是列表，使用方括号 (`[]`) 表示列表。下面显示的是一个空 list
+```py
+empty_list = []
+empty_list = list()
+```
+- list是一种有序的集合，可以随时添加和删除其中的元素，list是可变的
+- 由于Python是动态语言，所以list中包含的元素并不要求都必须是同一种数据类型；使用len()可以获取list元素的个数
+- 按照索引访问list，当索引超出了范围时，Python会报一个IndexError错误；可以以负数作为索引，倒序获取集合的值；`"-1"`表示获取最后一个元素
+	`·`classmates[-1] => Tracy`
+
+`[]`的元素位置可以是`0`到`N - 1`的整数，也可以是`-1`到`-N`的整数，分别称为正向索引和反向索引，其中`N`代表列表元素的个数。对于正向索引，`[0]`可以访问列表中的第一个元素，`[N - 1]`可以访问最后一个元素；对于反向索引，`[-1]`可以访问列表中的最后一个元素，`[-N]`可以访问第一个元素
+
+**添加新元素**
+- `append()`：把新的元素添加到 list 的尾部
+- `insert()`：接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
+- `extend()`：把别的元素添加到 list 的尾部；
+```python
+# list.append():把新的元素添加到 list 的尾部
+>>>classmates = ['Michael'， 'Bob'， 'Tracy']
+>>>classmates.append('Adam')
+===>['Michael'， 'Bob'， 'Tracy'， 'Adam']
+# list.insert():接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
+>>> classmates.insert(1， 'Jack')
+['Michael'， 'Jack'， 'Bob'， 'Tracy'， 'Adam']
+```
+extend 与 append：
+- extend 参数是一个集合时，会将集合的元素拆开放到集合中；
+- append 参数是一个集合时，会将该集合作为一个整体放到集合中；
+```python
+In [1]: a = [4 , 5, 6]
+In [2]: b = [7, 8, 9]
+In [3]: c = ['a', 'b']
+In [4]: a.append(b)
+In [5]: a
+Out[5]: [4, 5, 6, [7, 8, 9]]
+In [6]: c.extend(b)
+In [7]: c
+Out[7]: ['a', 'b', 7, 8, 9]
+In [8]: b
+Out[8]: [7, 8, 9]
+```
+
+**删除元素**
+- del：删除指定位置的元素：`del numbers[0]`
+- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`，在使用`pop`方法删除元素时，如果索引的值超出了范围，会引发`IndexError`异常，导致程序崩溃
+- list.pop(index)：删除某个位置上的元素，并返回该元素；`classmates.pop(1) ===> 'Jack'`
+- list.remove(value)：删除列表list中第一个等于value的值，无返回值；用列表的`remove`方法从列表中删除指定元素，需要注意的是，如果要删除的元素并不在列表中，会引发`ValueError`错误导致程序崩溃
+
+**替换元素**：
+
+对list中的某一个索引赋值，就可以直接用新的元素替换掉原来的元素，list包含的元素个数保持不变；
+```py
+list[index] = new_value
+```
+
+**切片**：即取一个list部分数据(tuple也可以进行切片操作)，切片运算是形如`[start:end:stride]`的运算符，其中`start`代表访问列表元素的起始位置，`end`代表访问列表元素的终止位置（终止位置的元素无法访问），而`stride`则代表了跨度，如果`stride`值等于`1`，那么在使用切片运算符时也可以将其省略
+```python
+# Slice
+L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
+# L[0:3]:从索引0开始取，直到(不包括)索引3为止，即索引0，1，2，正好是3个元素
+L[0:3] ===> ['Adam'， 'Lisa'， 'Bart']
+# 如果第一个索引是0，还可以省略：
+L[:3]  ===> ['Adam'， 'Lisa'， 'Bart']
+# 只用一个 : ，表示从头到尾：
+L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
+```
+注意：切片操作还可以指定第三个参数：第三个参数表示每N个取一个
+`L[::2] ===> ['Adam'， 'Bart']`
+- 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
+- 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
+- 列表起始索引为：`0`，结束为`n-1`；起始为：`-n`，结束为 `-1`
+
+**判断元素**
+
+可以使用`in`或`not in`运算符判断一个元素在不在列表中：。
+```python
+items6 = [45, 58, 29]
+items7 = ['Python', 'Java', 'JavaScript']
+print(29 in items6)  # True
+print(99 in items6)  # False
+print('C++' not in items7)     # True
+print('Python' not in items7)  # False
+```
+
+两个列表还可以做关系运算，我们可以比较两个列表是否相等，也可以给两个列表比大小，代码如下所示
+```python
+nums1 = [1, 2, 3, 4]
+nums2 = list(range(1, 5))
+nums3 = [3, 2, 1]
+print(nums1 == nums2)  # True
+print(nums1 != nums2)  # False
+print(nums1 <= nums3)  # True
+print(nums2 >= nums3)  # False
+```
+
+**元素位置和频次**
+
+列表的`index`方法可以查找某个元素在列表中的索引位置，如果找不到指定的元素，`index`方法会引发`ValueError`错误；列表的`count`方法可以统计一个元素在列表中出现的次数，代码如下所示。
+
+```python
+items = ['Python', 'Java', 'Java', 'C++', 'Kotlin', 'Python']
+print(items.index('Python'))     # 0
+# 从索引位置1开始查找'Python'
+print(items.index('Python', 1))  # 5
+print(items.count('Python'))     # 2
+print(items.count('Kotlin'))     # 1
+print(items.count('Swfit'))      # 0
+# 从索引位置3开始查找'Java'
+print(items.index('Java', 3))    # ValueError: 'Java' is not in list
+```
+		
+## 2、Tuple-元祖
+
+Tuple 是一个不能改变的列表。Python 将不能改变的值称为不可变值。因此，根据定义，Tuple 是不可变的列表。
+
+Tuple与List相似，只是使用的是括号`()`而不是方括号`[]`：`
+```py
+classmates = ('Michael', 'Bob', 'Tracy')
+```
+获取 tuple 元素的方式和 list 是一模一样的，我们可以正常使用 `t[0]`，`t[-1]`等索引方式访问元素，但是不能赋值成别的元素；
+
+**创建单元素tuple:**<br/>
+`t = (1) # ==> 1`：t 不是 tuple ，而是整数1。为什么呢？ `()`既可以表示tuple，也可以作为括号表示运算的优先级，`(1)`被Python解释器计算出结果 1，导致我们得到的不是tuple，而是整数 1
+Python 规定，单元素 tuple 要多加一个逗号`,`，即 `t = (1,) # ==>(1,)`
+```py
+numbers = (3,)
+print(type(numbers))
+# <class 'tuple'>
+```
+
+**`可变`的tuple**：Tuple所谓的“不变”是说：tuple的每个元素，指向永远不变。即指向'a'，就不能改成指向'b'，指向一个list，就不能改成指向其他对象，但指向的这个list本身是可变的！
+
+理解了“指向不变”后，要创建一个内容也不变的tuple怎么做？那就必须保证tuple的每一个元素本身也不能变，如:
+```python
+t = ('a',， 'b', ['A', 'B'])
+L = t(2)
+L[0] = 'X'
+L[1] = 'Y'
+('a', 'b', ['X', 'Y'])
+```
+
+`()`表示空元组，但是如果元组中只有一个元素，需要加上一个逗号，否则`()`就不是代表元组的字面量语法，而是改变运算优先级的圆括号，所以`('hello', )`和`(100, )`才是一元组，而`('hello')`和`(100)`只是字符串和整数
+```python
+a = ()
+print(type(a))  # <class 'tuple'>
+b = ('hello')
+print(type(b))  # <class 'str'>
+c = (100)
+print(type(c))  # <class 'int'>
+d = ('hello', )
+print(type(d))  # <class 'tuple'>
+e = (100, )
+print(type(e))  # <class 'tuple'>
+```
+
+## 3、Sort List
+
+要对List排序，需要使用 sort() 方法：
+```py
+list.sort()
+```
+sort() 方法对List进行原位排序。这意味着，sort() 方法修改了列表中元素的顺序，默认是按从小到大排序；
+
+要对元素从高到低排序，您需要向 sort() 传递 reverse=True 参数。
+```py
+list.sort(reverse=True)
+```
+
+如果List包含字符串，则 `sort()` 方法会按字母顺序对字符串元素进行排序。
+```py
+guests = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer']
+guests.sort()
+print(guests)
+['James', 'Jennifer', 'John', 'Mary', 'Patricia', 'Robert']
+```
+
+**对tuple排序：**
+- 首先，指定一个sort key并将其传递给 sort() 方法。要定义排序键，需要创建一个函数，该函数接受一个元组，并返回要按以下方式排序的元素
+```py
+def sort_key(company):
+    return company[2]
+```
+- 其次，将 sort_key 函数传递给 sort() 方法：
+```py
+companies = [('Google', 2019, 134.81),
+             ('Apple', 2019, 260.2),
+             ('Facebook', 2019, 70.7)]
+# define a sort key
+def sort_key(company):
+    return company[2]
+# sort the companies by revenue
+companies.sort(key=sort_key, reverse=True)
+# show the sorted companies
+print(companies)
+```
+当然，上面的sort_key函数也可以使用 lambda表达式:
+```py
+companies.sort(key=lambda company: company[2], reverse=True)
+```
+
+## 4、sorted()函数
+
+前面的`list.sort()`会在原List上排序，即会改变原有List的元素顺序，要从原始列表返回新的排序列表，需要使用 sorted() 函数：
+```py
+sorted(list)
+```
+sorted(list) 不会改变原有List；默认情况下，sorted() 函数使用小于运算符 (<) 将列表元素从低到高排序。如果您想颠倒排序顺序，可以像下面这样将反向参数传递为 True
+```py
+sorted(list,reverse=True)
+```
+
+## 5、切片操作符
+
+```py
+sub_list = list[begin: end: step]
+```
+- begin索引默认为零，end索引默认为列表的长度，step索引默认为 1。
+- 切片操作符中的第一个数（冒号之前）表示切片开始的位置，第二个数（冒号之后）表示切片到哪里结束，第三个数（冒号之后）表示切片间隔数。	
+- 如果不指定第一个数，Python就从序列首开始。
+- 如果没有指定第二个数，则Python会停止在序列尾。
+- begin、end和step可以是正值或负值。正值将列表从第一个元素切到最后一个元素，而负值则将列表从最后一个元素切到第一个元素
+
+注意，返回的序列从开始位置开始，刚好在结束位置之前结束.即开始位置是包含在序列切片中的，而结束位置被排斥在切片外。
+
+### 5.1、要从列表中获取 n 个首元素，可以省略第一个参数
+
+```py
+list[:n] # 等价于 list[0:n]
+# 示例
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+sub_colors = colors[:3] # 等价于： colors[0:3]
+print(sub_colors)
+# ['red', 'orange', 'yellow']
+```
+
+### 5.2、要获取列表中倒数第 n 个元素，可以使用负索引
+
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+sub_colors = colors[-3:]
+print(sub_colors)
+# ['blue', 'indigo', 'violet']
+```
+
+### 5.3、使用 Python List slice 从列表中获取第 n 个元素
+
+下面的示例使用该步骤返回一个子列表，其中包括颜色列表中的每第二个元素：
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+sub_colors = colors[::2]
+print(sub_colors)
+# ['red', 'yellow', 'blue', 'violet']
+```
+
+### 5.4、使用slice反转列表
+
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+reversed_colors = colors[::-1]
+print(reversed_colors)
+# ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red']
+```
+
+### 5.5、使用 Python List slice 代替列表的一部分
+
+除了提取列表的一部分外，列表切片还可以更改列表元素。
+```py
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+colors[0:2] = ['black', 'white']
+print(colors)
+# ['black', 'white', 'yellow', 'green', 'blue', 'indigo', 'violet']
+```
+
+### 5.6、使用 Python List slice 部分替换和调整列表大小
+
+```py
+# 下面的示例使用 list slice 将第一个和第二个元素替换为新元素，并在列表中添加了一个新元素：
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+print(f"The list has {len(colors)} elements")
+
+colors[0:2] = ['black', 'white', 'gray']
+print(colors)
+print(f"The list now has {len(colors)} elements")
+```
+
+### 5.7、使用 Python List slice 删除元素
+
+```py
+# 删除 第3个、第4个、第5个元素
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
+del colors[2:5]
+print(colors)
+```
+
+`shoplist[1:3]`返回从位置1开始，包括位置2，但是停止在位置3的一个序列切片，因此返回一个含有两个项目的切片。类似地，`shoplist[:]`返回整个序列的拷贝。`shoplist[::3]`返回位置3，位置6，位置9…的序列切片。
+
+你可以用负数做切片。负数用在从序列尾开始计算的位置。例如，`shoplist[:-1]`会返回除了最后一个项目外包含所有项目的序列切片，`shoplist[::-1]`会返回倒序序列切片
+
+
+```py
+L = ['Michael','Sarah','Tracy','Bob','Jack']
+L[0:3] ==>  ['Michael'， 'Sarah'， 'Tracy'] # 从索引0开始取，直到索引3为止
+切片操作十分有用。我们先创建一个`0-99`的数列：
+>>> L = range(100)
+>>> L
+[0， 1， 2， 3， ...， 99]
+# 可以通过切片轻松取出某一段数列。比如前10个数：
+>>> L[:10]
+[0， 1， 2， 3， 4， 5， 6， 7， 8， 9]
+# 后10个数：
+>>> L[-10:]
+[90， 91， 92， 93， 94， 95， 96， 97， 98， 99]
+# 前11-20个数：
+>>> L[10:20]
+[10， 11， 12， 13， 14， 15， 16， 17， 18， 19]
+# 前10个数，每两个取一个：
+>>> L[:10:2]
+[0， 2， 4， 6， 8]
+#所有数，每5个取一个：
+>>> L[::5]
+[0， 5， 10， 15， 20， 25， 30， 35， 40， 45， 50， 55， 60， 65， 70， 75， 80， 85， 90， 95]
+#甚至什么都不写，只写[:]就可以原样复制一个list：
+>>> L[:]
+[0， 1， 2， 3， ...， 99]
+>>> L[:-1]
+[1， 2， 3， 4， 5， 6， 7， 8， 9]
+# 倒序切片
+>>> L[::-1]
+[10， 9， 8， 7， 6， 5， 4， 3， 2， 1]
+```
+
+## 6、List解包
+
+为了将List中每个元素赋值给变量，常规做法是：
+```py
+colors = ['red', 'blue', 'green']
+red = colors[0]
+blue = colors[1]
+green = colors[2]
+```
+
+python提供了更好做法，可以通过List unpacking的方式，可以将列表（以及元组）中的元素赋值给多个变量。例如
+```py
+red, blue, green = colors
+```
+该语句将颜色列表的第一、第二和第三个元素分别赋值给红、蓝和绿变量，在本例中，左侧变量的个数与右侧列表中元素的个数相同。如果在左侧使用的变量数量较少，就会出错。例如
+```py
+colors = ['red', 'blue', 'green']
+red, blue = colors
+# ValueError: too many values to unpack (expected 2)
+```
+
+如果您想解压缩列表的前几个元素，而不关心其他元素，可以：
+- 将所需元素解包为变量；
+- 将剩余的元素打包到一个新的列表中，并将其赋值给另一个变量
+
+在变量名前加上星号 (*)，就可以将剩余的元素打包成一个列表，并将它们赋值给一个变量，比如：
+```py
+colors = ['red', 'blue', 'green']
+red, blue, *other = colors
+
+print(red)
+print(blue)
+print(other)
+```
+解包语法对所有的序列都成立
+```python
+a, b, *c = range(1, 10)
+print(a, b, c)
+a, b, c = [1, 10, 100]
+print(a, b, c)
+a, *b, c = 'hello'
+print(a, b, c)
+```
+
+## 7、List迭代
+
+就是对于一个集合，无论该集合是有序还是无序，我们用 for 循环总是可以依次取出集合的每一个元素
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+for city in cities:
+    print(city)
+```
+
+如果在迭代过程中需要访问元素的索引：使用 `enumerate()` 函数，enumerate() 函数返回一个元组，其中包含当前索引和列表中的元素，迭代的每一个元素实际上是一个tuple
+```python
+L = ['Adam', 'Lisa', 'Bart', 'Paul']
+for index, name in enumerate(L):
+	print(index, '-',  name)
+
+#  注意:
+实际上，enumerate() 函数把：
+['Adam', 'Lisa', 'Bart', 'Paul']
+变成了类似：
+[(0, 'Adam'), (1, 'Lisa'), (2, 'Bart'), (3, 'Paul')]
+```
+索引迭代也不是真的按索引访问，而是由 enumerate() 函数自动把每个元素变成 (index,element) 这样的tuple，再迭代，就同时获得了索引和元素本身
+
+当使用 enumerate() 函数时也可以指定起始索引，默认为零。
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+for index, city in enumerate(cities,1):
+    print(f"{index}: {city}")
+```
+
+如果一个对象说自己可迭代，那我们就直接用 for 循环去迭代它，可见，迭代是一种抽象的数据操作，它不对迭代对象内部的数据有任何要求。
+
+默认情况下，dict迭代的是key。如果要迭代value，可以用`for value in d.values()`，如果要同时迭代key和value，可以用`for k， v in d.items()`；由于字符串也是可迭代对象，因此，也可以作用于for循环
+
+## 8、查找元素的索引
+
+要查找列表中某个元素的索引，可以使用 index() 函数
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+result = cities.index('Mumbai')
+print(result)
+```
+但是，如果尝试使用 index() 函数查找列表中不存在的元素，就会出现错误；
+
+要解决这个问题，需要使用 in 运算符。如果某个值在列表中，in 操作符将返回 True。否则，返回 False
+```py
+cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
+city = 'Osaka'
+if city in cities:
+    result = cities.index(city)
+    print(f"The {city} has an index of {result}.")
+else:
+    print(f"{city} doesn't exist in the list.")
+```
+
+## 9、map()函数
+
+在处理列表（或元组）时，您经常需要转换列表中的元素，并返回一个包含转换元素的新列表，为此，您可以使用 for 循环遍历元素，将每个元素处理之后，然后将其添加到新列表中；
+
+Python提供了一个map函数，map() 函数遍历列表（或元组）中的所有元素，对每个元素应用一个函数，然后返回一个包含新元素的新迭代器
+
+基本语法如下：
+```py
+iterator = map(fn, list)
+```
+比如：
+```py
+bonuses = [100, 200, 300]
+iterator = map(lambda bonus: bonus*2, bonuses)
+print(list(iterator)) # 将迭代器转换为list
+```
+
+## 10、filter()函数
+
+有时候需要在迭代一个列表的时候过滤符合条件的数据，通常做法是通过 for循环，然后通过if判断来过滤数据；
+
+Python 有一个内置函数 filter()，以一种更好的方式过滤列表（或元组）。
+```py
+filter(fn, list)
+```
+filter() 函数遍历列表中的元素，并对每个元素应用 fn() 函数。它会返回一个迭代器，用于迭代 fn() 返回 True 的元素。
+
+示例：
+```py
+scores = [70, 60, 80, 90, 50]
+filtered = filter(lambda score: score >= 70, scores)
+print(list(filtered))
+```
+
+## 11、reduce函数
+
+有时候，希望将一个list通过函数输出为一个值，通常做法都是通过循环来处理的；
+
+Python 提供了一个名为 reduce() 的函数，可以让您以更简洁的方式来reduce一个列表，语法：
+```py
+reduce(fn,list)
+```
+reduce() 函数将两个参数的 fn 函数从左到右累加应用于列表项，从而将列表还原为单一值；
+
+reduce() 并不是 Python 的内置函数。事实上，reduce() 函数属于 functools 模块，如果需要使用的话，需要导入functools模块
+```py
+from functools import reduce
+```
+示例：
+```py
+from functools import reduce
+def sum(a, b):
+    print(f"a={a}, b={b}, {a} + {b} ={a+b}")
+    return a + b
+scores = [75, 65, 80, 95, 50]
+total = reduce(sum, scores)
+# 或者使用 lambda expression
+total = reduce(lambda a, b: a + b, scores)
+print(total)
+```
+
+## 12、list comprehension
+
+list comprehension，列表推导式（或列表解析），为了帮助您根据现有 list 元素的变换创建一个 list，Python 提供了一个称为 list 解析的功能。
+
+下面代码演示了如何使用列表理解从数字列表中生成平方：
+```py
+numbers = [1, 2, 3, 4, 5]
+squares = [number**2 for number in numbers]
+print(squares)
+```
+列表解析基础语法如下：
+```py
+[output_expression for element in list]
+# 其等价于：
+output_list = []
+for element in list:
+    output_list.append(output_expression)
+```
+
+**带条件列表解析：**
+
+Python 列表理解提供了一个可选的predicate，允许您为列表元素包含在新列表中指定一个条件：
+```py
+[output_expression for element in list if condition]
+```
+示例：
+```py
+mountains = [
+    ['Makalu', 8485],
+    ['Lhotse', 8516],
+    ['Kanchendzonga', 8586],
+    ['K2', 8611],
+    ['Everest', 8848]
+]
+highest_mountains = [m for m in mountains if m[1] > 8600]
+print(highest_mountains)
+```
+
+## 13、Tuple解包
+
+回顾一下，可以使用 tuple() 或者 (1,)、`1,`等来表示空或者单元素的tuple；
+
+tuple 解包意味着将元组元素拆分成单个变量。例如
+```py
+x, y = (1, 2)
+# 左边 x,y 表示一个由 x 和 y 两个变量组成的元组；右边也是由两个整数 1 和 2 组成的元组
+```
+该表达式根据每个元素的相对位置，将右侧的元组元素（1，2）分配给左侧的每个变量（x，y）。
+```py
+numbers = 10, 20, 30
+print(type(numbers))
+# <class 'tuple'>
+```
+
+**使用解包元组交换两个变量的值**
+
+传统交换两个变量的值一般通过中间变量来处理，在python中可用使用解包元祖方式来处理：
+```py
+x = 10
+y = 20
+print(f'x={x}, y={y}')
+x, y = y, x
+print(f'x={x}, y={y}')
+```
+交换的关键在于：`x, y = y, x`
+
+**解包错误**
+```py
+x, y = 10, 20, 30
+# ValueError: too many values to unpack (expected 2)
+```
+出现这个错误的原因是，右侧返回三个值，而左侧只有两个变量。要解决可用按照如下方式：
+```py
+x, y, _ = 10, 20, 30
+```
+`_` 变量是 Python 中的一个常规变量。按照惯例，它被称为哑变量，如果有多个，默认是最后一个，比如：
+```py
+x, y,_ , _= 10, 20, 30, 40
+print(x, y, _, _) # 10 20 40 40
+```
+
+**使用 `*` 操作符扩展解包**
+
+有时候并不想解包元组中的每一个项目。例如，可能想解包第一个和第二个元素。在这种情况下，可以使用 * 操作符
+```py
+r, g, *other = (192, 210, 100, 0.5)
+192
+210
+[100, 0.5]
+```
+请注意，在解包赋值的左侧只能使用一次 `*` 操作符
+
+**右侧使用`*`操作符**
+
+Python 允许在右侧使用 * 操作符，假设有如下两个元祖：
+```py
+odd_numbers = (1, 3, 5)
+even_numbers = (2, 4, 6)
+```
+下面的示例使用 * 操作符解包这些元组，并将它们合并为一个元组：
+```py
+numbers = (*odd_numbers, *even_numbers)
+print(numbers)
+```
+
+# 九、可迭代与迭代器
+
+## 1、可以使用for循环的数据类型
+
+- 集合数据类型，如list、tuple、dict、set、str等；
+- generator，包括生成器和带yield的generator function。
+
+这些可以直接使用for循环的对象统称为可迭代对象: Iterable
+
+## 2、获取迭代器
+
+要从可迭代器中获取迭代器，可以使用 iter() 函数
+```py
+colors = ['red', 'green', 'blue']
+colors_iter = iter(colors)
+```
+有了迭代器之后，就可以使用 next() 从可迭代器中获取下一个元素
+```py
+colors = ['red', 'green', 'blue']
+colors_iter = iter(colors)
+color = next(colors_iter)
+print(color)
+```
+如果没有更多元素，而又调用 next() 函数，就会出现异常。
+```py
+colors = ['red', 'green', 'blue']
+colors_iter = iter(colors)
+color = next(colors_iter)
+color = next(colors_iter)
+color = next(colors_iter)
+# cause an exception
+color = next(colors_iter)
+print(color)
+
+```
+
+## 3、使用isinstance()
+
+判断一个对象是否是Iterable对象；
+```python
+>>> from collections import Iterable
+>>> isinstance([]， Iterable)
+True
+>>> isinstance({}， Iterable)
+True
+>>> isinstance('abc'， Iterable)
+True
+>>> isinstance((x for x in range(10))， Iterable)
+True
+>>> isinstance(100， Iterable)
+False
+```
+
+- 可以被next()函数调用并不断返回下一个值的对象称为迭代器：`Iterator [是惰性序列]`：可以使用isinstance()判断一个对象是否是Iterator对象
+
+- 生成器都是 Iterator 对象，但 list、dict、str 虽然是 Iterable，却不是 Iterator，但是可以使用 iter() 函数把 list、dict、str 等 Iterable 变成 Iterator：如果函数返回一个:Iterator，可以使用 函数:list()，tuple()等列出其数据
+
+- 为什么 list、dict、str 等数据类型不是Iterator
+
+	因为 Python 的 Iterator 对象表示的是一个数据流，Iterator对象可以被 next()函数调用并不断返回下一个数据，直到没有数据时抛出 StopIteration 错误。可以把这个数据流看做是一个有序序列，但我们却不能提前知道序列的长度，只能不断通过next()函数实现按需计算下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算
+
+## 4、Python的for循环本质
+
+Python的for循环本质上就是通过不断调用next()函数实现的
+
+```python
+for x in [1， 2， 3， 4， 5]:
+	pass
+	
+# 实际上等价于
+# 首先获得Iterator对象:
+it = iter([1， 2， 3， 4， 5])
+# 循环:
+while True:
+	try:
+		# 获得下一个值:
+		x = next(it)
+	except StopIteration:
+		# 遇到StopIteration就退出循环
+		break
+```		
+
+# 十、Dictionary
+
+## 1、基本概念
+
+- Python 字典是键值对的集合，其中每个键都与一个值相关联。
+- 键值对中的值可以是数字、字符串、列表、元组，甚至是另一个字典。事实上，您可以使用 Python 中任何有效类型的值作为键值对中的值。
+- 键值对中的键必须是不可变的。换句话说，键不能被更改，例如数字、字符串、元组等。
+
+特点：
+- dict查找速度快，无论dict有10个元素还是10万个元素，查找速度都一样.而list的查找速度随着元素增加而逐渐下降。
+	- dict的缺点是占用内存大，还会浪费很多内容；list正好相反，占用内存小，但是查找速度慢；
+	- 由于dict是按 key 查找，所以:在一个dict中，key不能重复
+- dict存储的key-value序对是没有顺序的；不能用dict存储有序的集合，dict内存数据的顺序和key的放入顺序无关.
+- 作为 key 的元素必须不可变，Python的基本类型如字符串、整数、浮点数都是不可变的，都可以作为 key；但是list是可变的，就不能作为 key；dict的作用是建立一组 key 和一组 value 的映射关系，dict的key是不能重复的
+	- 对于不变对象来说，调用对象自身的任意方法，也不会改变该对象自身的内容。
+	- 相反，这些方法会创建新的对象并返回，这样，就保证了不可变对象本身永远是不可变的
+
+基本定义：
+```py
+empty_dict = {}
+print(type(empty_dict))
+# output
+<class 'dict'>
+```
+花括号`{}` 表示这是一个dict，然后按照 key: value， 写出来即，最后一个 key: value 的逗号可以省略
+`len()`----计算集合的大小
+```python
+d = {
+	'Adam': 95，
+	'Lisa': 85，
+	'Bart': 59
+}
+```
+
+## 2、访问字典值
+
+### 2.1、使用`d[key]`
+
+可以使用`d[key]`形式来查找对应的 value；
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+print(person['first_name'])
+print(person['last_name'])
+```
+
+***注意: 通过 key 访问 dict 的value，只要 key 存在，dict就返回对应的value，如果key不存在.会直接报错:`KeyError`***
+
+**如何避免避免 `KeyError`**
+- 先判断一下 key 是否存在，用 in 操作符：
+	```python
+	if 'Paul' in d:
+		print d['Paul']
+	```
+
+### 2.2、使用get
+
+dict提供了一个 get 方法，在Key不存在的时候，返回None；如果键不存在，get() 方法也会返回默认值，方法是将默认值传递给第二个参数：`d.get('Thomas', -1)`
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+ssn = person.get('ssn', '000-00-0000')
+print(ssn)
+```
+
+## 3、添加key-value
+
+由于字典具有动态结构，因此可以随时添加新的键值对，添加方式也很简单：
+```py
+person['gender'] = 'Famale'
+```
+
+```py
+a.setdefault('a', [])
+```
+存在则取值，不存在则插入值，并返回值；
+
+## 4、修改value
+
+更新dict：直接赋值，如果存在相同的key，则替换以前的值；
+```py
+dict[key] = new_value
+```
+
+## 5、移除key
+
+删除一个key可以使用如下方式：
+```py
+del dict[key]
+```
+也可以调用dict.pop(key)方法，对应的value也会从dict中删除：
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+del person['active']
+# 或者如下方式：
+person.pop('active')
+print(person)
+```
+
+## 6、迭代
+
+当然可以使用 for循环来处理
+
+### 6.1、迭代key-value
+
+`items()`：把dict对象转换成了包含`tuple`的list，我们对这个list进行迭代，可以同时获得key和value
+```py
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+print(person.items())
+# dict_items([('first_name', 'John'), ('last_name', 'Doe'), ('age', 25), ('favorite_colors', ['blue', 'green']), ('active', True)])
+for key, value in person.items():
+    print(f'{key} -> {value}')
+```
+
+### 6.2、迭代key
+
+keys() 方法返回一个对象，其中包含字典中的键列表
+```py
+print(person.keys())
+# 输出：dict_keys(['first_name', 'last_name', 'age', 'favorite_colors', 'active'])
+```
+实际上，在循环字典时，默认行为是循环所有键。因此，你不需要使用 keys() 方法。
+```py
+for key in person:
+    print(key)
+```
+
+### 6.3、迭代value
+	
+用 for 循环直接迭代 dict，可以每次拿到dict的一个key，如果希望迭代 dict 的values的，使用`values()方法`：把dict转换成一个包含所有value的list
+```python
+person = {
+    'first_name': 'John',
+    'last_name': 'Doe',
+    'age': 25,
+    'favorite_colors': ['blue', 'green'],
+    'active': True
+}
+for value in person.values():
+    print(value)
+```
+
+## 7、Dictionary Comprehension
+
+Dictionary Comprehension，即字典解析。通过字典解析，可以在字典上运行 for 循环，对每个项目进行转换或过滤等操作，然后返回一个新的字典。
+
+基础语法如下：
+```py
+{key:value for (key,value) in dict.items() if condition}
+{key:expression(key) for (key) in iterator if condition}
+```
+该字典理解表达式返回一个新字典，其项由表达式 key: value 指定：
+```py
+stocks = {
+    'AAPL': 121,
+    'AMZN': 3380,
+    'MSFT': 219,
+    'BIIB': 280,
+    'QDEL': 266,
+    'LVGO': 144
+}
+new_stocks = {symbol: price * 1.02 for (symbol, price) in stocks.items()}
+print(new_stocks)
+```
+包含表达式：
+```py
+stocks = {
+    'AAPL': 121,
+    'AMZN': 3380,
+    'MSFT': 219,
+    'BIIB': 280,
+    'QDEL': 266,
+    'LVGO': 144
+}
+selected_stocks = {s: p for (s, p) in stocks.items() if p > 200}
+print(selected_stocks)
+```
+
+# 十一、Set
+
+## 1、Set类型
+
+- set 持有一系列元素，元素没有重复，而且是无序的，这点和 dict 的 key很像；set会自动去掉重复的元素；
+- set中的元素不能更改。例如，它们可以是number、string和tuple，但不能是list或dictionary。
+```py
+empty_set  = set()
+```
+创建 set 的方式是调用 set() 并传入一个 list，list的元素将作为set的元素；
+```py
+set(['A'，'B'，'C'])；
+# 或者：
+basket = {'Apple'，'Banana'，'Orange'，'Apple'}
+```
+一个空的set返回 False：
+```py
+skills = set()
+if not skills:
+    print('Empty sets are falsy')
+```
+
+使用len()获取set中元素的个数：
+```py
+len(set)
+```
+copy()函数：是深度拷贝的
+
+## 2、in运算符
+
+要检查set是否包含某个元素，可以使用 in 运算符：
+```py
+element in set
+```
+示例：
+```py
+ratings = {1, 2, 3, 4, 5}
+rating = 1
+if rating in ratings:
+    print(f'The set contains {rating}')
+```
+元素区分大小写；
+
+## 3、添加元素
+
+添加元素时，用set的add()方法：如果添加的元素已经存在于set中，add()不会报错，但是不会加进去了
+```py
+set.add(element)
+# 示例
+skills = {'Python programming', 'Software design'}
+skills.add('Problem solving')
+print(skills)
+```
+
+## 4、删除元素
+
+删除set中的元素时，用set的remove()方法：如果删除的元素不存在set中，remove()会报错；
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+skills.remove('Java')
+# Error
+# KeyError: 'Java'
+```
+因此使用remove()前需要判断；
+
+为了更方便，集合有 `discard()` 方法，可以删除元素。如果元素不在列表中，它也不会引发错误
+```py
+set.discard(element)
+```
+
+要从集合中删除并返回一个元素，需要使用 `pop()` 方法
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+skill = skills.pop()
+print(skill)
+```
+由于集合中的元素没有特定的顺序，因此 pop() 方法会从集合中删除一个未指定的元素；
+
+删除所有元素：
+```py
+set.clear()
+```
+
+## 5、冻结set
+
+要使集合不可变，可以使用名为 `frozenset()` 的内置函数。`frozenset()`会从现有的集合返回一个新的不可变集合
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+skills = frozenset(skills)
+skills.add('Django')
+# Error: AttributeError: 'frozenset' object has no attribute 'add'
+```
+
+## 6、迭代
+
+遍历set：直接使用 for 循环可以遍历 set 的元素
+```py
+s = set(['Adam'， 'Lisa'， 'Bart'])
+for name in s:
+	print(skill)
+```
+要访问循环内当前元素的索引，可以使用内置的 enumerate() 函数：
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+for index, skill in enumerate(skills):
+    print(f"{index}.{skill}")
+```
+默认情况下，索引从 0 开始。要改变这种情况，可以将起始值传递给 enumerate() 函数的第二个参数：
+```py
+skills = {'Problem solving', 'Software design', 'Python programming'}
+for index, skill in enumerate(skills, 1):
+    print(f"{index}.{skill}")
+```
+**请注意**：每次运行代码时，都会以不同的顺序获得集合元素。
+
+## 7、Set Comprehension
+
+Set Comprehension，即集合解析，为了使代码更加简洁，Python 提供了如下的集合理解语法：
+```py
+{expression for element in set if condition}
+```
+此外，集合解析功能允许您通过 if 子句中的条件选择应用表达式的元素:
+
+**请注意**：集合解析会返回一个新的集合，而不会修改原始集合；
+
+示例：
+```py
+tags = {'Django', 'Pandas', 'Numpy'}
+lowercase_tags = {tag.lower() for tag in tags}
+print(lowercase_tags)
+```
+带条件：
+```py
+tags = {'Django', 'Pandas', 'Numpy'}
+new_tags = {tag.lower() for tag in tags if tag != 'Numpy'}
+print(new_tags)
+```
+
+## 8、Set Union
+
+**union()方法：**
+
+两个集合的 union 返回一个新集合，其中包含两个集合中的不同元素，基本语法：
+```py
+new_set = set.union(another_set, ...)
+```
+
+**`|`运算符**
+
+Python 为您提供了集合联合运算符 |，它允许您联合两个集合：
+```py
+new_set = set1 | set2
+```
+集合联合运算符 (|) 返回一个由集合 1 和集合 2 中不同元素组成的新集合。
+```py
+s1 = {'Python', 'Java'}
+s2 = {'C#', 'Java'}
+s = s1 | s2
+print(s)
+```
+
+**这两者区别：**
+- union() 方法接受一个或多个iterables，将iterables转换为集合，然后执行联合；
+```py
+rates = {1, 2, 3}
+ranks = [2, 3, 4]
+ratings = rates.union(ranks)
+print(ratings)
+```
+- union 运算符 (`|`) 只允许使用集合，而不能像 union() 方法那样使用迭代；
+```py
+ratings = rates | ranks
+# TypeError: unsupported operand type(s) for |: 'set' and 'list'
+```
+
+> 总之，union() 方法接受迭代表，而 union 运算符只允许集合
+
+## 9、Set Intersection
+
+Set Intersection，即集合交集，在 Python 中，您可以使用集合 intersection() 方法或集合相交操作符 (`&`) 来相交两个或多个集合：
+```py
+new_set = set1.intersection(set2, set3, ...)
+new_set = set1 & set2 & set3 & ...
+# intersection() 方法和 & 运算符具有相同的性能。
+```
+两个操作都是返回新的集合；
+
+Set intersection() 方法与 Set 交集运算符 (`&`) 区别：
+- Set 交集运算符 (`&`) 只能是 Set；
+- intersection() 方法可以是任何 iterables，如字符串、列表和字典。
+
+如果向 intersection() 方法传递 iterables ，它会在交集之前将迭代表转换为集合；不过，如果将集合交集运算符 (&) 用于可迭代表，则会引发错误：
+```py
+numbers = {1, 2, 3}
+scores = [2, 3, 4]
+numbers = numbers & scores
+print(numbers)
+# Output
+# TypeError: unsupported operand type(s) for &: 'set' and 'list'
+```
+
+## 10、Set Difference
+
+两个集合之间的 difference 会产生一个新的集合，其中包含第一个集合中的元素，而第二个集合中没有这些元素；集合差不是交换式，即反过来结果是不一样的；
+
+在 Python 中，您可以使用集合 difference() 方法或集合差运算符 (`-`) 来查找集合之间的差值：
+```py
+set1.difference(s2, s3, ...)
+```
+示例：
+```py
+s1 = {'Python', 'Java', 'C++'}
+s2 = {'C#', 'Java', 'C++'}
+s = s1.difference(s2)
+print(s) # {'Python'}
+
+s = s2.difference(s1)
+print(s) # {'C#'}
+```
+
+除了上面的方法之外，Python也提供了差集运算符（`-`）：
+```py
+s = s1 - s2
+```
+示例：
+```py
+s1 = {'Python', 'Java', 'C++'}
+s2 = {'C#', 'Java', 'C++'}
+s = s1 - s2
+print(s)
+```
+
+同样的：
+- difference() 可以是任何可迭代的对象；
+- 差集运算符（`-`）只能应用于 Set
+
+## 11、Symmetric Difference
+
+Symmetric Difference，即对称差集，两个集合之间的对称差是指两个集合中任何一个集合都有的元素集合，但不在它们的交集中
+
+假设有两个集合：
+```py
+s1 = {'Python', 'Java', 'C++'}
+s2 = {'C#', 'Java', 'C++'}
+# s1 和 s2 的对称差返回下面的集合：
+{'C#', 'Python'}
+```
+从输出结果中可以清楚地看到，返回集合中的元素要么在 s1 中，要么在 s2 中，但不在它们的交集中
+
+在 Python 中，可以使用集合 symmetric_difference() 方法或对称差运算符 (^) 找出两个或多个集合的对称差。
+
+**symmetric_difference()**，基本语法如下：
+```py
+new_set = set1.symmetric_difference(set2, set3,...)
+```
+
+**对称差运算符 (^)**
+```py
+new_set = set1 ^ set2 ^...
+```
+
+两者的区别：
+- symmetric_difference() 方法接受一个或多个可迭代的字符串、列表或字典。如果迭代表不是集合，该方法将把它们转换为集合，然后返回它们的对称差值
+- 对称差运算符 (^) 只适用于集合，如果使用到其他不是集合的可迭代对象上，会报错；
+
+## 12、issubset
+
+假设有两个集合 A 和 B。如果集合 A 的所有元素都是集合 B 的元素，那么集合 A 就是集合 B 的子集。集合 A 和集合 B 可以相等。如果集合 A 和集合 B 不相等，则 A 是 B 的真子集；
+
+在 Python 中，您可以使用集合 issubset() 方法来检查一个集合是否是另一个集合的子集：
+```py
+set_a.issubset(set_b)
+```
+如果 set_a 是 set_b 的子集，则 issubset() 方法返回 True。否则，返回 False。
+
+根据定义，集合也是自身的子集。下面的示例返回 True：
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+print(numbers.issubset(scores))
+```
+
+除了使用 issubset() 方法，还可以使用子集操作符 (`<=`) 来检查一个集合是否是另一个集合的子集：
+```py
+set_a <= set_b
+```
+如果 set_a 是 set_b 的子集，子集运算符 (`<=`) 返回 True。否则，返回 False
+
+**真子集：**`set_a < set_b`：
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+
+result = scores < numbers
+print(result)  # True
+
+result = numbers < numbers
+print(result)  # False
+```
+
+## 13、issuperset
+
+假设有两个集合：A 和 B：如果集合 B 的所有元素都是集合 A 的元素，那么集合 A 就是集合 B 的超集。如果集合 A 和集合 B 不相等，则集合 A 是集合 B 的真超集。
+
+在 Python 中，您可以使用集合 issuperset() 方法来检查一个集合是否是另一个集合的超集
+```py
+set_a.issuperset(set_b)
+```
+如果 set_a 是 set_b 的超集，则 issuperset() 返回 True。否则返回 False
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+result = numbers.issuperset(scores)
+print(result)
+```
+> 由于分数集的所有元素都存在于数字集中，因此数字集是分数集的超集。
+
+**超集操作符：**`>=` 运算符确定一个集合是否是另一个集合的超集：
+```py
+set_a >= set_b
+```
+如果 set_a 是 set_b 的超集，则 `>=` 运算符返回 True。否则，返回 False;
+
+**检查是否是真超集**：要检查一个集合是否是另一个集合的真超集，可以使用 `>` 运算符：`set_a > set_b`
+```py
+numbers = {1, 2, 3, 4, 5}
+scores = {1, 2, 3}
+
+result = numbers > scores
+print(result)  # True
+
+result = numbers > numbers
+print(result)  # False
+```
+
+## 14、Disjoint Sets
+
+当两个集合没有共同元素时，它们就是不相交的。换句话说，两个不相交集合的交集是空集。
+
+Python isdisjoint() 方法用于检查两个集合是否相交：
+```py
+set_a.isdisjoint(set_b)
+```
+如果 set_a 和 set_b 不相交，则 isdisjoint() 方法返回 True。否则，返回 False。
+
+isdisjoint() 方法也接受任何可迭代对象，而不仅仅是集合。如果传递的是列表、元组或字典，isdisjoint() 方法会在检查前将其转换为集合。
+
+# 十二、函数
 
 引用 python 内置函数，需要导入:[import](http://docs.python.org/3/library/functions.html)
 
@@ -1039,1211 +2285,6 @@ add.__doc__
 	- 使用`*args`和`**kw`是Python的习惯写法，当然也可以用其他参数名，但最好使用习惯用法
 - 命名的关键字参数是为了限制调用者可以传入的参数名，同时可以提供默认值。定义命名的关键字参数不要忘了写分隔符`*`，否则定义的将是位置参数
 
-# 九、List
-
-## 1、List
-
-list，Python内置的一种数据类型是列表，使用方括号 (`[]`) 表示列表。下面显示的是一个空 list
-```py
-empty_list = []
-empty_list = list()
-```
-- list是一种有序的集合，可以随时添加和删除其中的元素，list是可变的
-- 由于Python是动态语言，所以list中包含的元素并不要求都必须是同一种数据类型；使用len()可以获取list元素的个数
-- 按照索引访问list，当索引超出了范围时，Python会报一个IndexError错误；可以以负数作为索引，倒序获取集合的值；`"-1"`表示获取最后一个元素
-	`·`classmates[-1] => Tracy`
-
-`[]`的元素位置可以是`0`到`N - 1`的整数，也可以是`-1`到`-N`的整数，分别称为正向索引和反向索引，其中`N`代表列表元素的个数。对于正向索引，`[0]`可以访问列表中的第一个元素，`[N - 1]`可以访问最后一个元素；对于反向索引，`[-1]`可以访问列表中的最后一个元素，`[-N]`可以访问第一个元素
-
-**添加新元素**
-- `append()`：把新的元素添加到 list 的尾部
-- `insert()`：接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
-- `extend()`：把别的元素添加到 list 的尾部；
-```python
-# list.append():把新的元素添加到 list 的尾部
->>>classmates = ['Michael'， 'Bob'， 'Tracy']
->>>classmates.append('Adam')
-===>['Michael'， 'Bob'， 'Tracy'， 'Adam']
-# list.insert():接受两个参数，第一个参数是索引号，第二个参数是待添加的新元素
->>> classmates.insert(1， 'Jack')
-['Michael'， 'Jack'， 'Bob'， 'Tracy'， 'Adam']
-```
-extend 与 append：
-- extend 参数是一个集合时，会将集合的元素拆开放到集合中；
-- append 参数是一个集合时，会将该集合作为一个整体放到集合中；
-```python
-In [1]: a = [4 , 5, 6]
-In [2]: b = [7, 8, 9]
-In [3]: c = ['a', 'b']
-In [4]: a.append(b)
-In [5]: a
-Out[5]: [4, 5, 6, [7, 8, 9]]
-In [6]: c.extend(b)
-In [7]: c
-Out[7]: ['a', 'b', 7, 8, 9]
-In [8]: b
-Out[8]: [7, 8, 9]
-```
-
-**删除元素**
-- del：删除指定位置的元素：`del numbers[0]`
-- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`，在使用`pop`方法删除元素时，如果索引的值超出了范围，会引发`IndexError`异常，导致程序崩溃
-- list.pop(index)：删除某个位置上的元素，并返回该元素；`classmates.pop(1) ===> 'Jack'`
-- list.remove(value)：删除列表list中第一个等于value的值，无返回值；用列表的`remove`方法从列表中删除指定元素，需要注意的是，如果要删除的元素并不在列表中，会引发`ValueError`错误导致程序崩溃
-
-**替换元素**：
-
-对list中的某一个索引赋值，就可以直接用新的元素替换掉原来的元素，list包含的元素个数保持不变；
-```py
-list[index] = new_value
-```
-
-**切片**：即取一个list部分数据(tuple也可以进行切片操作)，切片运算是形如`[start:end:stride]`的运算符，其中`start`代表访问列表元素的起始位置，`end`代表访问列表元素的终止位置（终止位置的元素无法访问），而`stride`则代表了跨度，如果`stride`值等于`1`，那么在使用切片运算符时也可以将其省略
-```python
-# Slice
-L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-# L[0:3]:从索引0开始取，直到(不包括)索引3为止，即索引0，1，2，正好是3个元素
-L[0:3] ===> ['Adam'， 'Lisa'， 'Bart']
-# 如果第一个索引是0，还可以省略：
-L[:3]  ===> ['Adam'， 'Lisa'， 'Bart']
-# 只用一个 : ，表示从头到尾：
-L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
-```
-注意：切片操作还可以指定第三个参数：第三个参数表示每N个取一个
-`L[::2] ===> ['Adam'， 'Bart']`
-- 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
-- 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
-- 列表起始索引为：`0`，结束为`n-1`；起始为：`-n`，结束为 `-1`
-
-**判断元素**
-
-可以使用`in`或`not in`运算符判断一个元素在不在列表中：。
-```python
-items6 = [45, 58, 29]
-items7 = ['Python', 'Java', 'JavaScript']
-print(29 in items6)  # True
-print(99 in items6)  # False
-print('C++' not in items7)     # True
-print('Python' not in items7)  # False
-```
-
-两个列表还可以做关系运算，我们可以比较两个列表是否相等，也可以给两个列表比大小，代码如下所示
-```python
-nums1 = [1, 2, 3, 4]
-nums2 = list(range(1, 5))
-nums3 = [3, 2, 1]
-print(nums1 == nums2)  # True
-print(nums1 != nums2)  # False
-print(nums1 <= nums3)  # True
-print(nums2 >= nums3)  # False
-```
-
-**元素位置和频次**
-
-列表的`index`方法可以查找某个元素在列表中的索引位置，如果找不到指定的元素，`index`方法会引发`ValueError`错误；列表的`count`方法可以统计一个元素在列表中出现的次数，代码如下所示。
-
-```python
-items = ['Python', 'Java', 'Java', 'C++', 'Kotlin', 'Python']
-print(items.index('Python'))     # 0
-# 从索引位置1开始查找'Python'
-print(items.index('Python', 1))  # 5
-print(items.count('Python'))     # 2
-print(items.count('Kotlin'))     # 1
-print(items.count('Swfit'))      # 0
-# 从索引位置3开始查找'Java'
-print(items.index('Java', 3))    # ValueError: 'Java' is not in list
-```
-		
-## 2、Tuple-元祖
-
-Tuple 是一个不能改变的列表。Python 将不能改变的值称为不可变值。因此，根据定义，Tuple 是不可变的列表。
-
-Tuple与List相似，只是使用的是括号`()`而不是方括号`[]`：`
-```py
-classmates = ('Michael', 'Bob', 'Tracy')
-```
-获取 tuple 元素的方式和 list 是一模一样的，我们可以正常使用 `t[0]`，`t[-1]`等索引方式访问元素，但是不能赋值成别的元素；
-
-**创建单元素tuple:**<br/>
-`t = (1) # ==> 1`：t 不是 tuple ，而是整数1。为什么呢？ `()`既可以表示tuple，也可以作为括号表示运算的优先级，`(1)`被Python解释器计算出结果 1，导致我们得到的不是tuple，而是整数 1
-Python 规定，单元素 tuple 要多加一个逗号`,`，即 `t = (1,) # ==>(1,)`
-```py
-numbers = (3,)
-print(type(numbers))
-# <class 'tuple'>
-```
-
-**`可变`的tuple**：Tuple所谓的“不变”是说：tuple的每个元素，指向永远不变。即指向'a'，就不能改成指向'b'，指向一个list，就不能改成指向其他对象，但指向的这个list本身是可变的！
-
-理解了“指向不变”后，要创建一个内容也不变的tuple怎么做？那就必须保证tuple的每一个元素本身也不能变，如:
-```python
-t = ('a',， 'b', ['A', 'B'])
-L = t(2)
-L[0] = 'X'
-L[1] = 'Y'
-('a', 'b', ['X', 'Y'])
-```
-
-## 3、Sort List
-
-要对List排序，需要使用 sort() 方法：
-```py
-list.sort()
-```
-sort() 方法对List进行原位排序。这意味着，sort() 方法修改了列表中元素的顺序，默认是按从小到大排序；
-
-要对元素从高到低排序，您需要向 sort() 传递 reverse=True 参数。
-```py
-list.sort(reverse=True)
-```
-
-如果List包含字符串，则 `sort()` 方法会按字母顺序对字符串元素进行排序。
-```py
-guests = ['James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer']
-guests.sort()
-print(guests)
-['James', 'Jennifer', 'John', 'Mary', 'Patricia', 'Robert']
-```
-
-**对tuple排序：**
-- 首先，指定一个sort key并将其传递给 sort() 方法。要定义排序键，需要创建一个函数，该函数接受一个元组，并返回要按以下方式排序的元素
-```py
-def sort_key(company):
-    return company[2]
-```
-- 其次，将 sort_key 函数传递给 sort() 方法：
-```py
-companies = [('Google', 2019, 134.81),
-             ('Apple', 2019, 260.2),
-             ('Facebook', 2019, 70.7)]
-# define a sort key
-def sort_key(company):
-    return company[2]
-# sort the companies by revenue
-companies.sort(key=sort_key, reverse=True)
-# show the sorted companies
-print(companies)
-```
-当然，上面的sort_key函数也可以使用 lambda表达式:
-```py
-companies.sort(key=lambda company: company[2], reverse=True)
-```
-
-## 4、sorted()函数
-
-前面的`list.sort()`会在原List上排序，即会改变原有List的元素顺序，要从原始列表返回新的排序列表，需要使用 sorted() 函数：
-```py
-sorted(list)
-```
-sorted(list) 不会改变原有List；默认情况下，sorted() 函数使用小于运算符 (<) 将列表元素从低到高排序。如果您想颠倒排序顺序，可以像下面这样将反向参数传递为 True
-```py
-sorted(list,reverse=True)
-```
-
-## 5、切片操作符
-
-```py
-sub_list = list[begin: end: step]
-```
-- begin索引默认为零，end索引默认为列表的长度，step索引默认为 1。
-- 切片操作符中的第一个数（冒号之前）表示切片开始的位置，第二个数（冒号之后）表示切片到哪里结束，第三个数（冒号之后）表示切片间隔数。	
-- 如果不指定第一个数，Python就从序列首开始。
-- 如果没有指定第二个数，则Python会停止在序列尾。
-- begin、end和step可以是正值或负值。正值将列表从第一个元素切到最后一个元素，而负值则将列表从最后一个元素切到第一个元素
-
-注意，返回的序列从开始位置开始，刚好在结束位置之前结束.即开始位置是包含在序列切片中的，而结束位置被排斥在切片外。
-
-### 5.1、要从列表中获取 n 个首元素，可以省略第一个参数
-
-```py
-list[:n] # 等价于 list[0:n]
-# 示例
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-sub_colors = colors[:3] # 等价于： colors[0:3]
-print(sub_colors)
-# ['red', 'orange', 'yellow']
-```
-
-### 5.2、要获取列表中倒数第 n 个元素，可以使用负索引
-
-```py
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-sub_colors = colors[-3:]
-print(sub_colors)
-# ['blue', 'indigo', 'violet']
-```
-
-### 5.3、使用 Python List slice 从列表中获取第 n 个元素
-
-下面的示例使用该步骤返回一个子列表，其中包括颜色列表中的每第二个元素：
-```py
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-sub_colors = colors[::2]
-print(sub_colors)
-# ['red', 'yellow', 'blue', 'violet']
-```
-
-### 5.4、使用slice反转列表
-
-```py
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-reversed_colors = colors[::-1]
-print(reversed_colors)
-# ['violet', 'indigo', 'blue', 'green', 'yellow', 'orange', 'red']
-```
-
-### 5.5、使用 Python List slice 代替列表的一部分
-
-除了提取列表的一部分外，列表切片还可以更改列表元素。
-```py
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-colors[0:2] = ['black', 'white']
-print(colors)
-# ['black', 'white', 'yellow', 'green', 'blue', 'indigo', 'violet']
-```
-
-### 5.6、使用 Python List slice 部分替换和调整列表大小
-
-```py
-# 下面的示例使用 list slice 将第一个和第二个元素替换为新元素，并在列表中添加了一个新元素：
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-print(f"The list has {len(colors)} elements")
-
-colors[0:2] = ['black', 'white', 'gray']
-print(colors)
-print(f"The list now has {len(colors)} elements")
-```
-
-### 5.7、使用 Python List slice 删除元素
-
-```py
-# 删除 第3个、第4个、第5个元素
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet']
-del colors[2:5]
-print(colors)
-```
-
-`shoplist[1:3]`返回从位置1开始，包括位置2，但是停止在位置3的一个序列切片，因此返回一个含有两个项目的切片。类似地，`shoplist[:]`返回整个序列的拷贝。`shoplist[::3]`返回位置3，位置6，位置9…的序列切片。
-
-你可以用负数做切片。负数用在从序列尾开始计算的位置。例如，`shoplist[:-1]`会返回除了最后一个项目外包含所有项目的序列切片，`shoplist[::-1]`会返回倒序序列切片
-
-
-```py
-L = ['Michael','Sarah','Tracy','Bob','Jack']
-L[0:3] ==>  ['Michael'， 'Sarah'， 'Tracy'] # 从索引0开始取，直到索引3为止
-切片操作十分有用。我们先创建一个`0-99`的数列：
->>> L = range(100)
->>> L
-[0， 1， 2， 3， ...， 99]
-# 可以通过切片轻松取出某一段数列。比如前10个数：
->>> L[:10]
-[0， 1， 2， 3， 4， 5， 6， 7， 8， 9]
-# 后10个数：
->>> L[-10:]
-[90， 91， 92， 93， 94， 95， 96， 97， 98， 99]
-# 前11-20个数：
->>> L[10:20]
-[10， 11， 12， 13， 14， 15， 16， 17， 18， 19]
-# 前10个数，每两个取一个：
->>> L[:10:2]
-[0， 2， 4， 6， 8]
-#所有数，每5个取一个：
->>> L[::5]
-[0， 5， 10， 15， 20， 25， 30， 35， 40， 45， 50， 55， 60， 65， 70， 75， 80， 85， 90， 95]
-#甚至什么都不写，只写[:]就可以原样复制一个list：
->>> L[:]
-[0， 1， 2， 3， ...， 99]
->>> L[:-1]
-[1， 2， 3， 4， 5， 6， 7， 8， 9]
-# 倒序切片
->>> L[::-1]
-[10， 9， 8， 7， 6， 5， 4， 3， 2， 1]
-```
-
-## 6、List解包
-
-为了将List中每个元素赋值给变量，常规做法是：
-```py
-colors = ['red', 'blue', 'green']
-red = colors[0]
-blue = colors[1]
-green = colors[2]
-```
-
-python提供了更好做法，可以通过List unpacking的方式，可以将列表（以及元组）中的元素赋值给多个变量。例如
-```py
-red, blue, green = colors
-```
-该语句将颜色列表的第一、第二和第三个元素分别赋值给红、蓝和绿变量，在本例中，左侧变量的个数与右侧列表中元素的个数相同。如果在左侧使用的变量数量较少，就会出错。例如
-```py
-colors = ['red', 'blue', 'green']
-red, blue = colors
-# ValueError: too many values to unpack (expected 2)
-```
-
-如果您想解压缩列表的前几个元素，而不关心其他元素，可以：
-- 将所需元素解包为变量；
-- 将剩余的元素打包到一个新的列表中，并将其赋值给另一个变量
-
-在变量名前加上星号 (*)，就可以将剩余的元素打包成一个列表，并将它们赋值给一个变量，比如：
-```py
-colors = ['red', 'blue', 'green']
-red, blue, *other = colors
-
-print(red)
-print(blue)
-print(other)
-```
-
-## 7、List迭代
-
-就是对于一个集合，无论该集合是有序还是无序，我们用 for 循环总是可以依次取出集合的每一个元素
-```py
-cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
-for city in cities:
-    print(city)
-```
-
-如果在迭代过程中需要访问元素的索引：使用 `enumerate()` 函数，enumerate() 函数返回一个元组，其中包含当前索引和列表中的元素，迭代的每一个元素实际上是一个tuple
-```python
-L = ['Adam', 'Lisa', 'Bart', 'Paul']
-for index, name in enumerate(L):
-	print(index, '-',  name)
-
-#  注意:
-实际上，enumerate() 函数把：
-['Adam', 'Lisa', 'Bart', 'Paul']
-变成了类似：
-[(0, 'Adam'), (1, 'Lisa'), (2, 'Bart'), (3, 'Paul')]
-```
-索引迭代也不是真的按索引访问，而是由 enumerate() 函数自动把每个元素变成 (index,element) 这样的tuple，再迭代，就同时获得了索引和元素本身
-
-当使用 enumerate() 函数时也可以指定起始索引，默认为零。
-```py
-cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
-for index, city in enumerate(cities,1):
-    print(f"{index}: {city}")
-```
-
-如果一个对象说自己可迭代，那我们就直接用 for 循环去迭代它，可见，迭代是一种抽象的数据操作，它不对迭代对象内部的数据有任何要求。
-
-默认情况下，dict迭代的是key。如果要迭代value，可以用`for value in d.values()`，如果要同时迭代key和value，可以用`for k， v in d.items()`；由于字符串也是可迭代对象，因此，也可以作用于for循环
-
-## 8、查找元素的索引
-
-要查找列表中某个元素的索引，可以使用 index() 函数
-```py
-cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
-result = cities.index('Mumbai')
-print(result)
-```
-但是，如果尝试使用 index() 函数查找列表中不存在的元素，就会出现错误；
-
-要解决这个问题，需要使用 in 运算符。如果某个值在列表中，in 操作符将返回 True。否则，返回 False
-```py
-cities = ['New York', 'Beijing', 'Cairo', 'Mumbai', 'Mexico']
-city = 'Osaka'
-if city in cities:
-    result = cities.index(city)
-    print(f"The {city} has an index of {result}.")
-else:
-    print(f"{city} doesn't exist in the list.")
-```
-
-## 9、map()函数
-
-在处理列表（或元组）时，您经常需要转换列表中的元素，并返回一个包含转换元素的新列表，为此，您可以使用 for 循环遍历元素，将每个元素处理之后，然后将其添加到新列表中；
-
-Python提供了一个map函数，map() 函数遍历列表（或元组）中的所有元素，对每个元素应用一个函数，然后返回一个包含新元素的新迭代器
-
-基本语法如下：
-```py
-iterator = map(fn, list)
-```
-比如：
-```py
-bonuses = [100, 200, 300]
-iterator = map(lambda bonus: bonus*2, bonuses)
-print(list(iterator)) # 将迭代器转换为list
-```
-
-## 10、filter()函数
-
-有时候需要在迭代一个列表的时候过滤符合条件的数据，通常做法是通过 for循环，然后通过if判断来过滤数据；
-
-Python 有一个内置函数 filter()，以一种更好的方式过滤列表（或元组）。
-```py
-filter(fn, list)
-```
-filter() 函数遍历列表中的元素，并对每个元素应用 fn() 函数。它会返回一个迭代器，用于迭代 fn() 返回 True 的元素。
-
-示例：
-```py
-scores = [70, 60, 80, 90, 50]
-filtered = filter(lambda score: score >= 70, scores)
-print(list(filtered))
-```
-
-## 11、reduce函数
-
-有时候，希望将一个list通过函数输出为一个值，通常做法都是通过循环来处理的；
-
-Python 提供了一个名为 reduce() 的函数，可以让您以更简洁的方式来reduce一个列表，语法：
-```py
-reduce(fn,list)
-```
-reduce() 函数将两个参数的 fn 函数从左到右累加应用于列表项，从而将列表还原为单一值；
-
-reduce() 并不是 Python 的内置函数。事实上，reduce() 函数属于 functools 模块，如果需要使用的话，需要导入functools模块
-```py
-from functools import reduce
-```
-示例：
-```py
-from functools import reduce
-def sum(a, b):
-    print(f"a={a}, b={b}, {a} + {b} ={a+b}")
-    return a + b
-scores = [75, 65, 80, 95, 50]
-total = reduce(sum, scores)
-# 或者使用 lambda expression
-total = reduce(lambda a, b: a + b, scores)
-print(total)
-```
-
-## 12、list comprehension
-
-list comprehension，列表推导式（或列表解析），为了帮助您根据现有 list 元素的变换创建一个 list，Python 提供了一个称为 list 解析的功能。
-
-下面代码演示了如何使用列表理解从数字列表中生成平方：
-```py
-numbers = [1, 2, 3, 4, 5]
-squares = [number**2 for number in numbers]
-print(squares)
-```
-列表解析基础语法如下：
-```py
-[output_expression for element in list]
-# 其等价于：
-output_list = []
-for element in list:
-    output_list.append(output_expression)
-```
-
-**带条件列表解析：**
-
-Python 列表理解提供了一个可选的predicate，允许您为列表元素包含在新列表中指定一个条件：
-```py
-[output_expression for element in list if condition]
-```
-示例：
-```py
-mountains = [
-    ['Makalu', 8485],
-    ['Lhotse', 8516],
-    ['Kanchendzonga', 8586],
-    ['K2', 8611],
-    ['Everest', 8848]
-]
-highest_mountains = [m for m in mountains if m[1] > 8600]
-print(highest_mountains)
-```
-
-## 13、Tuple解包
-
-回顾一下，可以使用 tuple() 或者 (1,)、`1,`等来表示空或者单元素的tuple；
-
-tuple 解包意味着将元组元素拆分成单个变量。例如
-```py
-x, y = (1, 2)
-# 左边 x,y 表示一个由 x 和 y 两个变量组成的元组；右边也是由两个整数 1 和 2 组成的元组
-```
-该表达式根据每个元素的相对位置，将右侧的元组元素（1，2）分配给左侧的每个变量（x，y）。
-```py
-numbers = 10, 20, 30
-print(type(numbers))
-# <class 'tuple'>
-```
-
-**使用解包元组交换两个变量的值**
-
-传统交换两个变量的值一般通过中间变量来处理，在python中可用使用解包元祖方式来处理：
-```py
-x = 10
-y = 20
-print(f'x={x}, y={y}')
-x, y = y, x
-print(f'x={x}, y={y}')
-```
-交换的关键在于：`x, y = y, x`
-
-**解包错误**
-```py
-x, y = 10, 20, 30
-# ValueError: too many values to unpack (expected 2)
-```
-出现这个错误的原因是，右侧返回三个值，而左侧只有两个变量。要解决可用按照如下方式：
-```py
-x, y, _ = 10, 20, 30
-```
-`_` 变量是 Python 中的一个常规变量。按照惯例，它被称为哑变量，如果有多个，默认是最后一个，比如：
-```py
-x, y,_ , _= 10, 20, 30, 40
-print(x, y, _, _) # 10 20 40 40
-```
-
-**使用 `*` 操作符扩展解包**
-
-有时候并不想解包元组中的每一个项目。例如，可能想解包第一个和第二个元素。在这种情况下，可以使用 * 操作符
-```py
-r, g, *other = (192, 210, 100, 0.5)
-192
-210
-[100, 0.5]
-```
-请注意，在解包赋值的左侧只能使用一次 `*` 操作符
-
-**右侧使用`*`操作符**
-
-Python 允许在右侧使用 * 操作符，假设有如下两个元祖：
-```py
-odd_numbers = (1, 3, 5)
-even_numbers = (2, 4, 6)
-```
-下面的示例使用 * 操作符解包这些元组，并将它们合并为一个元组：
-```py
-numbers = (*odd_numbers, *even_numbers)
-print(numbers)
-```
-
-# 十、可迭代与迭代器
-
-## 1、可以使用for循环的数据类型
-
-- 集合数据类型，如list、tuple、dict、set、str等；
-- generator，包括生成器和带yield的generator function。
-
-这些可以直接使用for循环的对象统称为可迭代对象: Iterable
-
-## 2、获取迭代器
-
-要从可迭代器中获取迭代器，可以使用 iter() 函数
-```py
-colors = ['red', 'green', 'blue']
-colors_iter = iter(colors)
-```
-有了迭代器之后，就可以使用 next() 从可迭代器中获取下一个元素
-```py
-colors = ['red', 'green', 'blue']
-colors_iter = iter(colors)
-color = next(colors_iter)
-print(color)
-```
-如果没有更多元素，而又调用 next() 函数，就会出现异常。
-```py
-colors = ['red', 'green', 'blue']
-colors_iter = iter(colors)
-color = next(colors_iter)
-color = next(colors_iter)
-color = next(colors_iter)
-# cause an exception
-color = next(colors_iter)
-print(color)
-
-```
-
-## 3、使用isinstance()
-
-判断一个对象是否是Iterable对象；
-```python
->>> from collections import Iterable
->>> isinstance([]， Iterable)
-True
->>> isinstance({}， Iterable)
-True
->>> isinstance('abc'， Iterable)
-True
->>> isinstance((x for x in range(10))， Iterable)
-True
->>> isinstance(100， Iterable)
-False
-```
-
-- 可以被next()函数调用并不断返回下一个值的对象称为迭代器：`Iterator [是惰性序列]`：可以使用isinstance()判断一个对象是否是Iterator对象
-
-- 生成器都是 Iterator 对象，但 list、dict、str 虽然是 Iterable，却不是 Iterator，但是可以使用 iter() 函数把 list、dict、str 等 Iterable 变成 Iterator：如果函数返回一个:Iterator，可以使用 函数:list()，tuple()等列出其数据
-
-- 为什么 list、dict、str 等数据类型不是Iterator
-
-	因为 Python 的 Iterator 对象表示的是一个数据流，Iterator对象可以被 next()函数调用并不断返回下一个数据，直到没有数据时抛出 StopIteration 错误。可以把这个数据流看做是一个有序序列，但我们却不能提前知道序列的长度，只能不断通过next()函数实现按需计算下一个数据，所以Iterator的计算是惰性的，只有在需要返回下一个数据时它才会计算
-
-## 4、Python的for循环本质
-
-Python的for循环本质上就是通过不断调用next()函数实现的
-
-```python
-for x in [1， 2， 3， 4， 5]:
-	pass
-	
-# 实际上等价于
-# 首先获得Iterator对象:
-it = iter([1， 2， 3， 4， 5])
-# 循环:
-while True:
-	try:
-		# 获得下一个值:
-		x = next(it)
-	except StopIteration:
-		# 遇到StopIteration就退出循环
-		break
-```		
-
-# 十一、Dictionary
-
-## 1、基本概念
-
-- Python 字典是键值对的集合，其中每个键都与一个值相关联。
-- 键值对中的值可以是数字、字符串、列表、元组，甚至是另一个字典。事实上，您可以使用 Python 中任何有效类型的值作为键值对中的值。
-- 键值对中的键必须是不可变的。换句话说，键不能被更改，例如数字、字符串、元组等。
-
-特点：
-- dict查找速度快，无论dict有10个元素还是10万个元素，查找速度都一样.而list的查找速度随着元素增加而逐渐下降。
-	- dict的缺点是占用内存大，还会浪费很多内容；list正好相反，占用内存小，但是查找速度慢；
-	- 由于dict是按 key 查找，所以:在一个dict中，key不能重复
-- dict存储的key-value序对是没有顺序的；不能用dict存储有序的集合，dict内存数据的顺序和key的放入顺序无关.
-- 作为 key 的元素必须不可变，Python的基本类型如字符串、整数、浮点数都是不可变的，都可以作为 key；但是list是可变的，就不能作为 key；dict的作用是建立一组 key 和一组 value 的映射关系，dict的key是不能重复的
-	- 对于不变对象来说，调用对象自身的任意方法，也不会改变该对象自身的内容。
-	- 相反，这些方法会创建新的对象并返回，这样，就保证了不可变对象本身永远是不可变的
-
-基本定义：
-```py
-empty_dict = {}
-print(type(empty_dict))
-# output
-<class 'dict'>
-```
-花括号`{}` 表示这是一个dict，然后按照 key: value， 写出来即，最后一个 key: value 的逗号可以省略
-`len()`----计算集合的大小
-```python
-d = {
-	'Adam': 95，
-	'Lisa': 85，
-	'Bart': 59
-}
-```
-
-## 2、访问字典值
-
-### 2.1、使用`d[key]`
-
-可以使用`d[key]`形式来查找对应的 value；
-```py
-person = {
-    'first_name': 'John',
-    'last_name': 'Doe',
-    'age': 25,
-    'favorite_colors': ['blue', 'green'],
-    'active': True
-}
-print(person['first_name'])
-print(person['last_name'])
-```
-
-***注意: 通过 key 访问 dict 的value，只要 key 存在，dict就返回对应的value，如果key不存在.会直接报错:`KeyError`***
-
-**如何避免避免 `KeyError`**
-- 先判断一下 key 是否存在，用 in 操作符：
-	```python
-	if 'Paul' in d:
-		print d['Paul']
-	```
-
-### 2.2、使用get
-
-dict提供了一个 get 方法，在Key不存在的时候，返回None；如果键不存在，get() 方法也会返回默认值，方法是将默认值传递给第二个参数：`d.get('Thomas', -1)`
-```py
-person = {
-    'first_name': 'John',
-    'last_name': 'Doe',
-    'age': 25,
-    'favorite_colors': ['blue', 'green'],
-    'active': True
-}
-ssn = person.get('ssn', '000-00-0000')
-print(ssn)
-```
-
-## 3、添加key-value
-
-由于字典具有动态结构，因此可以随时添加新的键值对，添加方式也很简单：
-```py
-person['gender'] = 'Famale'
-```
-
-```py
-a.setdefault('a', [])
-```
-存在则取值，不存在则插入值，并返回值；
-
-## 4、修改value
-
-更新dict：直接赋值，如果存在相同的key，则替换以前的值；
-```py
-dict[key] = new_value
-```
-
-## 5、移除key
-
-删除一个key可以使用如下方式：
-```py
-del dict[key]
-```
-也可以调用dict.pop(key)方法，对应的value也会从dict中删除：
-```py
-person = {
-    'first_name': 'John',
-    'last_name': 'Doe',
-    'age': 25,
-    'favorite_colors': ['blue', 'green'],
-    'active': True
-}
-del person['active']
-# 或者如下方式：
-person.pop('active')
-print(person)
-```
-
-## 6、迭代
-
-当然可以使用 for循环来处理
-
-### 6.1、迭代key-value
-
-`items()`：把dict对象转换成了包含`tuple`的list，我们对这个list进行迭代，可以同时获得key和value
-```py
-person = {
-    'first_name': 'John',
-    'last_name': 'Doe',
-    'age': 25,
-    'favorite_colors': ['blue', 'green'],
-    'active': True
-}
-print(person.items())
-# dict_items([('first_name', 'John'), ('last_name', 'Doe'), ('age', 25), ('favorite_colors', ['blue', 'green']), ('active', True)])
-for key, value in person.items():
-    print(f'{key} -> {value}')
-```
-
-### 6.2、迭代key
-
-keys() 方法返回一个对象，其中包含字典中的键列表
-```py
-print(person.keys())
-# 输出：dict_keys(['first_name', 'last_name', 'age', 'favorite_colors', 'active'])
-```
-实际上，在循环字典时，默认行为是循环所有键。因此，你不需要使用 keys() 方法。
-```py
-for key in person:
-    print(key)
-```
-
-### 6.3、迭代value
-	
-用 for 循环直接迭代 dict，可以每次拿到dict的一个key，如果希望迭代 dict 的values的，使用`values()方法`：把dict转换成一个包含所有value的list
-```python
-person = {
-    'first_name': 'John',
-    'last_name': 'Doe',
-    'age': 25,
-    'favorite_colors': ['blue', 'green'],
-    'active': True
-}
-for value in person.values():
-    print(value)
-```
-
-## 7、Dictionary Comprehension
-
-Dictionary Comprehension，即字典解析。通过字典解析，可以在字典上运行 for 循环，对每个项目进行转换或过滤等操作，然后返回一个新的字典。
-
-基础语法如下：
-```py
-{key:value for (key,value) in dict.items() if condition}
-{key:expression(key) for (key) in iterator if condition}
-```
-该字典理解表达式返回一个新字典，其项由表达式 key: value 指定：
-```py
-stocks = {
-    'AAPL': 121,
-    'AMZN': 3380,
-    'MSFT': 219,
-    'BIIB': 280,
-    'QDEL': 266,
-    'LVGO': 144
-}
-new_stocks = {symbol: price * 1.02 for (symbol, price) in stocks.items()}
-print(new_stocks)
-```
-包含表达式：
-```py
-stocks = {
-    'AAPL': 121,
-    'AMZN': 3380,
-    'MSFT': 219,
-    'BIIB': 280,
-    'QDEL': 266,
-    'LVGO': 144
-}
-selected_stocks = {s: p for (s, p) in stocks.items() if p > 200}
-print(selected_stocks)
-```
-
-# 十二、Set
-
-## 1、Set类型
-
-- set 持有一系列元素，元素没有重复，而且是无序的，这点和 dict 的 key很像；set会自动去掉重复的元素；
-- set中的元素不能更改。例如，它们可以是number、string和tuple，但不能是list或dictionary。
-```py
-empty_set  = set()
-```
-创建 set 的方式是调用 set() 并传入一个 list，list的元素将作为set的元素；
-```py
-set(['A'，'B'，'C'])；
-# 或者：
-basket = {'Apple'，'Banana'，'Orange'，'Apple'}
-```
-一个空的set返回 False：
-```py
-skills = set()
-if not skills:
-    print('Empty sets are falsy')
-```
-
-使用len()获取set中元素的个数：
-```py
-len(set)
-```
-copy()函数：是深度拷贝的
-
-## 2、in运算符
-
-要检查set是否包含某个元素，可以使用 in 运算符：
-```py
-element in set
-```
-示例：
-```py
-ratings = {1, 2, 3, 4, 5}
-rating = 1
-if rating in ratings:
-    print(f'The set contains {rating}')
-```
-元素区分大小写；
-
-## 3、添加元素
-
-添加元素时，用set的add()方法：如果添加的元素已经存在于set中，add()不会报错，但是不会加进去了
-```py
-set.add(element)
-# 示例
-skills = {'Python programming', 'Software design'}
-skills.add('Problem solving')
-print(skills)
-```
-
-## 4、删除元素
-
-删除set中的元素时，用set的remove()方法：如果删除的元素不存在set中，remove()会报错；
-```py
-skills = {'Problem solving', 'Software design', 'Python programming'}
-skills.remove('Java')
-# Error
-# KeyError: 'Java'
-```
-因此使用remove()前需要判断；
-
-为了更方便，集合有 `discard()` 方法，可以删除元素。如果元素不在列表中，它也不会引发错误
-```py
-set.discard(element)
-```
-
-要从集合中删除并返回一个元素，需要使用 `pop()` 方法
-```py
-skills = {'Problem solving', 'Software design', 'Python programming'}
-skill = skills.pop()
-print(skill)
-```
-由于集合中的元素没有特定的顺序，因此 pop() 方法会从集合中删除一个未指定的元素；
-
-删除所有元素：
-```py
-set.clear()
-```
-
-## 5、冻结set
-
-要使集合不可变，可以使用名为 `frozenset()` 的内置函数。`frozenset()`会从现有的集合返回一个新的不可变集合
-```py
-skills = {'Problem solving', 'Software design', 'Python programming'}
-skills = frozenset(skills)
-skills.add('Django')
-# Error: AttributeError: 'frozenset' object has no attribute 'add'
-```
-
-## 6、迭代
-
-遍历set：直接使用 for 循环可以遍历 set 的元素
-```py
-s = set(['Adam'， 'Lisa'， 'Bart'])
-for name in s:
-	print(skill)
-```
-要访问循环内当前元素的索引，可以使用内置的 enumerate() 函数：
-```py
-skills = {'Problem solving', 'Software design', 'Python programming'}
-for index, skill in enumerate(skills):
-    print(f"{index}.{skill}")
-```
-默认情况下，索引从 0 开始。要改变这种情况，可以将起始值传递给 enumerate() 函数的第二个参数：
-```py
-skills = {'Problem solving', 'Software design', 'Python programming'}
-for index, skill in enumerate(skills, 1):
-    print(f"{index}.{skill}")
-```
-**请注意**：每次运行代码时，都会以不同的顺序获得集合元素。
-
-## 7、Set Comprehension
-
-Set Comprehension，即集合解析，为了使代码更加简洁，Python 提供了如下的集合理解语法：
-```py
-{expression for element in set if condition}
-```
-此外，集合解析功能允许您通过 if 子句中的条件选择应用表达式的元素:
-
-**请注意**：集合解析会返回一个新的集合，而不会修改原始集合；
-
-示例：
-```py
-tags = {'Django', 'Pandas', 'Numpy'}
-lowercase_tags = {tag.lower() for tag in tags}
-print(lowercase_tags)
-```
-带条件：
-```py
-tags = {'Django', 'Pandas', 'Numpy'}
-new_tags = {tag.lower() for tag in tags if tag != 'Numpy'}
-print(new_tags)
-```
-
-## 8、Set Union
-
-**union()方法：**
-
-两个集合的 union 返回一个新集合，其中包含两个集合中的不同元素，基本语法：
-```py
-new_set = set.union(another_set, ...)
-```
-
-**`|`运算符**
-
-Python 为您提供了集合联合运算符 |，它允许您联合两个集合：
-```py
-new_set = set1 | set2
-```
-集合联合运算符 (|) 返回一个由集合 1 和集合 2 中不同元素组成的新集合。
-```py
-s1 = {'Python', 'Java'}
-s2 = {'C#', 'Java'}
-s = s1 | s2
-print(s)
-```
-
-**这两者区别：**
-- union() 方法接受一个或多个iterables，将iterables转换为集合，然后执行联合；
-```py
-rates = {1, 2, 3}
-ranks = [2, 3, 4]
-ratings = rates.union(ranks)
-print(ratings)
-```
-- union 运算符 (`|`) 只允许使用集合，而不能像 union() 方法那样使用迭代；
-```py
-ratings = rates | ranks
-# TypeError: unsupported operand type(s) for |: 'set' and 'list'
-```
-
-> 总之，union() 方法接受迭代表，而 union 运算符只允许集合
-
-## 9、Set Intersection
-
-Set Intersection，即集合交集，在 Python 中，您可以使用集合 intersection() 方法或集合相交操作符 (`&`) 来相交两个或多个集合：
-```py
-new_set = set1.intersection(set2, set3, ...)
-new_set = set1 & set2 & set3 & ...
-# intersection() 方法和 & 运算符具有相同的性能。
-```
-两个操作都是返回新的集合；
-
-Set intersection() 方法与 Set 交集运算符 (`&`) 区别：
-- Set 交集运算符 (`&`) 只能是 Set；
-- intersection() 方法可以是任何 iterables，如字符串、列表和字典。
-
-如果向 intersection() 方法传递 iterables ，它会在交集之前将迭代表转换为集合；不过，如果将集合交集运算符 (&) 用于可迭代表，则会引发错误：
-```py
-numbers = {1, 2, 3}
-scores = [2, 3, 4]
-numbers = numbers & scores
-print(numbers)
-# Output
-# TypeError: unsupported operand type(s) for &: 'set' and 'list'
-```
-
-## 10、Set Difference
-
-两个集合之间的 difference 会产生一个新的集合，其中包含第一个集合中的元素，而第二个集合中没有这些元素；集合差不是交换式，即反过来结果是不一样的；
-
-在 Python 中，您可以使用集合 difference() 方法或集合差运算符 (`-`) 来查找集合之间的差值：
-```py
-set1.difference(s2, s3, ...)
-```
-示例：
-```py
-s1 = {'Python', 'Java', 'C++'}
-s2 = {'C#', 'Java', 'C++'}
-s = s1.difference(s2)
-print(s) # {'Python'}
-
-s = s2.difference(s1)
-print(s) # {'C#'}
-```
-
-除了上面的方法之外，Python也提供了差集运算符（`-`）：
-```py
-s = s1 - s2
-```
-示例：
-```py
-s1 = {'Python', 'Java', 'C++'}
-s2 = {'C#', 'Java', 'C++'}
-s = s1 - s2
-print(s)
-```
-
-同样的：
-- difference() 可以是任何可迭代的对象；
-- 差集运算符（`-`）只能应用于 Set
-
-## 11、Symmetric Difference
-
-Symmetric Difference，即对称差集，两个集合之间的对称差是指两个集合中任何一个集合都有的元素集合，但不在它们的交集中
-
-假设有两个集合：
-```py
-s1 = {'Python', 'Java', 'C++'}
-s2 = {'C#', 'Java', 'C++'}
-# s1 和 s2 的对称差返回下面的集合：
-{'C#', 'Python'}
-```
-从输出结果中可以清楚地看到，返回集合中的元素要么在 s1 中，要么在 s2 中，但不在它们的交集中
-
-在 Python 中，可以使用集合 symmetric_difference() 方法或对称差运算符 (^) 找出两个或多个集合的对称差。
-
-**symmetric_difference()**，基本语法如下：
-```py
-new_set = set1.symmetric_difference(set2, set3,...)
-```
-
-**对称差运算符 (^)**
-```py
-new_set = set1 ^ set2 ^...
-```
-
-两者的区别：
-- symmetric_difference() 方法接受一个或多个可迭代的字符串、列表或字典。如果迭代表不是集合，该方法将把它们转换为集合，然后返回它们的对称差值
-- 对称差运算符 (^) 只适用于集合，如果使用到其他不是集合的可迭代对象上，会报错；
-
-## 12、issubset
-
-假设有两个集合 A 和 B。如果集合 A 的所有元素都是集合 B 的元素，那么集合 A 就是集合 B 的子集。集合 A 和集合 B 可以相等。如果集合 A 和集合 B 不相等，则 A 是 B 的真子集；
-
-在 Python 中，您可以使用集合 issubset() 方法来检查一个集合是否是另一个集合的子集：
-```py
-set_a.issubset(set_b)
-```
-如果 set_a 是 set_b 的子集，则 issubset() 方法返回 True。否则，返回 False。
-
-根据定义，集合也是自身的子集。下面的示例返回 True：
-```py
-numbers = {1, 2, 3, 4, 5}
-scores = {1, 2, 3}
-print(numbers.issubset(scores))
-```
-
-除了使用 issubset() 方法，还可以使用子集操作符 (`<=`) 来检查一个集合是否是另一个集合的子集：
-```py
-set_a <= set_b
-```
-如果 set_a 是 set_b 的子集，子集运算符 (`<=`) 返回 True。否则，返回 False
-
-**真子集：**`set_a < set_b`：
-```py
-numbers = {1, 2, 3, 4, 5}
-scores = {1, 2, 3}
-
-result = scores < numbers
-print(result)  # True
-
-result = numbers < numbers
-print(result)  # False
-```
-
-## 13、issuperset
-
-假设有两个集合：A 和 B：如果集合 B 的所有元素都是集合 A 的元素，那么集合 A 就是集合 B 的超集。如果集合 A 和集合 B 不相等，则集合 A 是集合 B 的真超集。
-
-在 Python 中，您可以使用集合 issuperset() 方法来检查一个集合是否是另一个集合的超集
-```py
-set_a.issuperset(set_b)
-```
-如果 set_a 是 set_b 的超集，则 issuperset() 返回 True。否则返回 False
-```py
-numbers = {1, 2, 3, 4, 5}
-scores = {1, 2, 3}
-result = numbers.issuperset(scores)
-print(result)
-```
-> 由于分数集的所有元素都存在于数字集中，因此数字集是分数集的超集。
-
-**超集操作符：**`>=` 运算符确定一个集合是否是另一个集合的超集：
-```py
-set_a >= set_b
-```
-如果 set_a 是 set_b 的超集，则 `>=` 运算符返回 True。否则，返回 False;
-
-**检查是否是真超集**：要检查一个集合是否是另一个集合的真超集，可以使用 `>` 运算符：`set_a > set_b`
-```py
-numbers = {1, 2, 3, 4, 5}
-scores = {1, 2, 3}
-
-result = numbers > scores
-print(result)  # True
-
-result = numbers > numbers
-print(result)  # False
-```
-
-## 14、Disjoint Sets
-
-当两个集合没有共同元素时，它们就是不相交的。换句话说，两个不相交集合的交集是空集。
-
-Python isdisjoint() 方法用于检查两个集合是否相交：
-```py
-set_a.isdisjoint(set_b)
-```
-如果 set_a 和 set_b 不相交，则 isdisjoint() 方法返回 True。否则，返回 False。
-
-isdisjoint() 方法也接受任何可迭代对象，而不仅仅是集合。如果传递的是列表、元组或字典，isdisjoint() 方法会在检查前将其转换为集合。
 
 # 十三、Loop With Else
 
