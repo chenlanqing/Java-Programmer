@@ -71,3 +71,4 @@ rustup default stable
 - [Rust Learning Resources](https://serokell.io/blog/learn-rust)
 - [Rust practice](https://github.com/sunface/rust-by-practice)
 - [Rusty Book(锈书)](https://rusty.course.rs/)
+- [A curated list of Rust code and resources.](https://github.com/rust-unofficial/awesome-rust)

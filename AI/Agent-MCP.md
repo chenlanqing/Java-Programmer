@@ -1,6 +1,6 @@
 # 一、AI Agent
 
-- [agents.json](https://docs.wild-card.ai/agentsjson/introduction)
+- [agents.json：Translate OpenAPI into LLM Tools](https://docs.wild-card.ai/agentsjson/introduction)
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
 - [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners)
@@ -646,6 +646,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 ## 开源 Agent
 
+- [500 个 各行各业 AI Agent用例的精选集合](https://github.com/ashishpatel26/500-AI-Agents-Projects)
 - [browser-use：AI 操作浏览器](https://github.com/browser-use/browser-use)
 - [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
 - [Suna-通用型 Agent](https://github.com/kortix-ai/suna)

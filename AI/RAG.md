@@ -293,6 +293,7 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 # RAG优化
 
 - [RAG优化策略总结](https://www.53ai.com/news/RAG/2025041523890.html)
+- [使用Agent优化动态知识库](https://github.com/FareedKhan-dev/temporal-ai-agent-pipeline)
 
 ![](image/RAG-Optimize.png)
 
