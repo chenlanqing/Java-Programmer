@@ -1046,11 +1046,14 @@ add.__doc__
 list，Python内置的一种数据类型是列表，使用方括号 (`[]`) 表示列表。下面显示的是一个空 list
 ```py
 empty_list = []
+empty_list = list()
 ```
 - list是一种有序的集合，可以随时添加和删除其中的元素，list是可变的
 - 由于Python是动态语言，所以list中包含的元素并不要求都必须是同一种数据类型；使用len()可以获取list元素的个数
 - 按照索引访问list，当索引超出了范围时，Python会报一个IndexError错误；可以以负数作为索引，倒序获取集合的值；`"-1"`表示获取最后一个元素
 	`·`classmates[-1] => Tracy`
+
+`[]`的元素位置可以是`0`到`N - 1`的整数，也可以是`-1`到`-N`的整数，分别称为正向索引和反向索引，其中`N`代表列表元素的个数。对于正向索引，`[0]`可以访问列表中的第一个元素，`[N - 1]`可以访问最后一个元素；对于反向索引，`[-1]`可以访问列表中的最后一个元素，`[-N]`可以访问第一个元素
 
 **添加新元素**
 - `append()`：把新的元素添加到 list 的尾部
@@ -1084,9 +1087,9 @@ Out[8]: [7, 8, 9]
 
 **删除元素**
 - del：删除指定位置的元素：`del numbers[0]`
-- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`
+- list.pop()：总是删除list的最后一个元素，并且返回最后一个元素:`classmates.pop() ===> 'Adam'`，在使用`pop`方法删除元素时，如果索引的值超出了范围，会引发`IndexError`异常，导致程序崩溃
 - list.pop(index)：删除某个位置上的元素，并返回该元素；`classmates.pop(1) ===> 'Jack'`
-- list.remove(value)：删除列表list中第一个等于value的值，无返回值；
+- list.remove(value)：删除列表list中第一个等于value的值，无返回值；用列表的`remove`方法从列表中删除指定元素，需要注意的是，如果要删除的元素并不在列表中，会引发`ValueError`错误导致程序崩溃
 
 **替换元素**：
 
@@ -1095,7 +1098,7 @@ Out[8]: [7, 8, 9]
 list[index] = new_value
 ```
 
-**切片**：即取一个list部分数据(tuple也可以进行切片操作)
+**切片**：即取一个list部分数据(tuple也可以进行切片操作)，切片运算是形如`[start:end:stride]`的运算符，其中`start`代表访问列表元素的起始位置，`end`代表访问列表元素的终止位置（终止位置的元素无法访问），而`stride`则代表了跨度，如果`stride`值等于`1`，那么在使用切片运算符时也可以将其省略
 ```python
 # Slice
 L = ['Adam'， 'Lisa'， 'Bart'， 'Paul']
@@ -1111,8 +1114,47 @@ L[:]   ===> ['Adam'， 'Lisa'， 'Bart'， 'Paul']
 - 倒序切片：记住倒数第一个元素的索引是-1。倒序切片包含起始索引，不包含结束索引：`L[::-1]`
 - 字符串的操作：字符串 `'xxx'`和 Unicode字符串 u'xxx'也可以看成是一种list，每个元素就是一个字符。因此，字符串也可以用切片操作，只是操作结果仍是字符串：`'ABCDEFG'[:3]`
 - 列表起始索引为：`0`，结束为`n-1`；起始为：`-n`，结束为 `-1`
+
+**判断元素**
+
+可以使用`in`或`not in`运算符判断一个元素在不在列表中：。
+```python
+items6 = [45, 58, 29]
+items7 = ['Python', 'Java', 'JavaScript']
+print(29 in items6)  # True
+print(99 in items6)  # False
+print('C++' not in items7)     # True
+print('Python' not in items7)  # False
+```
+
+两个列表还可以做关系运算，我们可以比较两个列表是否相等，也可以给两个列表比大小，代码如下所示
+```python
+nums1 = [1, 2, 3, 4]
+nums2 = list(range(1, 5))
+nums3 = [3, 2, 1]
+print(nums1 == nums2)  # True
+print(nums1 != nums2)  # False
+print(nums1 <= nums3)  # True
+print(nums2 >= nums3)  # False
+```
+
+**元素位置和频次**
+
+列表的`index`方法可以查找某个元素在列表中的索引位置，如果找不到指定的元素，`index`方法会引发`ValueError`错误；列表的`count`方法可以统计一个元素在列表中出现的次数，代码如下所示。
+
+```python
+items = ['Python', 'Java', 'Java', 'C++', 'Kotlin', 'Python']
+print(items.index('Python'))     # 0
+# 从索引位置1开始查找'Python'
+print(items.index('Python', 1))  # 5
+print(items.count('Python'))     # 2
+print(items.count('Kotlin'))     # 1
+print(items.count('Swfit'))      # 0
+# 从索引位置3开始查找'Java'
+print(items.index('Java', 3))    # ValueError: 'Java' is not in list
+```
 		
-## 2、Tuple
+## 2、Tuple-元祖
 
 Tuple 是一个不能改变的列表。Python 将不能改变的值称为不可变值。因此，根据定义，Tuple 是不可变的列表。
 
@@ -2433,7 +2475,6 @@ def log(message: str) -> None:
 ```
 
 # 十五、列表生成式
-
 
 ## 1、生成列表
 
