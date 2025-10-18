@@ -1979,7 +1979,6 @@ def power(x, n=2):
 ```py
 def function_name(param1=value1, param2, param3):
 ```
-
 如何设置默认参数：当函数有多个参数时，把变化大的参数放前面，变化小的参数放后面。变化小的参数就可以作为默认参数:
 
 有多个默认参数时，调用的时候，既可以按顺序提供默认参数，也可以不按顺序提供部分默认参数。当不按顺序提供部分默认参数时，需要把参数名写上：
@@ -1989,7 +1988,6 @@ def greet(name='there', message='Hi'):
 greeting = greet(message='Hello')
 print(greeting)
 ```
-
 默认参数很有用，但使用不当，也会掉坑里。默认参数有个最大的坑，如下:
 ```python
 def add_end(L=[]):
@@ -2024,7 +2022,7 @@ def calc(*numbers):
 		sum = sum + n * n
 	return sum
 ```			
-- Python解释器会把传入的一组参数组装成一个tuple传递给可变参数，因此，在函数内部，直接把变量 args 看成一个 tuple 就好了。
+- Python解释器会把传入的一组参数组装成一个 tuple 传递给可变参数，因此，在函数内部，直接把变量 args 看成一个 tuple 就好了。
 - 如果已经有一个list或tuple，要调用可变参数，python允许在list或tuple前面加上 `*` 号，把list或tuple变成可变参数；即解包操作
 	```python
 	num = [5,7,9,52]
@@ -2042,6 +2040,17 @@ add(10, 20, 30, 40, 50)
 def add(x, y, *args, z):
     return x + y + sum(args) + z
 add(10, 20, 30, 40, z=50)
+```
+
+希望通过“参数名=参数值”的形式传入若干个参数，具体有多少个参数也是不确定的，还可以给函数添加可变关键字参数，把传入的关键字参数组装到一个字典中，代码如下所示。
+```python
+# 参数列表中的**kwargs可以接收0个或任意多个关键字参数
+# 调用函数时传入的关键字参数会组装成一个字典（参数名是字典中的键，参数值是字典中的值）
+# 如果一个关键字参数都没有传入，那么kwargs会是一个空字典
+def foo(*args, **kwargs):
+    print(args)
+    print(kwargs)
+foo(3, 2.1, True, name='骆昊', age=43, gpa=4.95)
 ```
 
 ## 6、空函数
