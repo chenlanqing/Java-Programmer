@@ -5,10 +5,11 @@
 - [大模型基础](https://github.com/ZJU-LLMs/Foundations-of-LLMs)
 - [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
+- [「大模型」2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
 
-## 1、基本概念
+## 基本概念
 
-### 1.1、什么是大模型
+### 什么是大模型
 
 大语言模型是一种人工智能模型，通常使用深度学习技术，比如神经网络，来理解和生成人类语言。这些模型的“大”在于它们的参数数量非常多，可以达到数十亿甚至更多，这使得它们能够理解和生成高度复杂的语言模式；
 
@@ -16,7 +17,7 @@
 
 LangChain 是一个全方位的、基于大语言模型这种预测能力的应用开发工具，它的灵活性和模块化特性使得处理语言模型变得极其简便。不论你在何时何地，都能利用它流畅地调用语言模型，并基于语言模型的“预测”或者说“推理”能力开发新的应用；
 
-### 1.2、token
+### token
 
 LLM 把要预测的每一个字成为 token，现在 LLM 都是按照 token 来计费的，所有的 token 成为 vocab 词表；生成 token 的方式成为分词（Tokenizer）
 - BPE 分词法
@@ -33,7 +34,7 @@ token 是介于单词和字母之间的一个子词，语料中出现最频繁�
 - 虽然词表变少了，但是字母本身并没有很强的语意信息，增加了模型训练的难度；
 
 
-### 1.3、大模型技术原理
+### 大模型技术原理
 
 - [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 
@@ -41,7 +42,7 @@ token 是介于单词和字母之间的一个子词，语料中出现最频繁�
 
 大模型推理过程：加载分词算法 -> 加载模型参数 -> 推理生成答案
 
-### 1.4、[控制大语言模型的输出的随机性的参数](./AI应用.md#4大模型设置)
+### [控制大语言模型的输出的随机性的参数](./AI应用.md#4大模型设置)
 
 大语言模型预测下一个token时会先输出所有token的概率值，有不同的方法来控制选择哪一个token作为输出，主要以下4个参数
 - `温度（Temperature）`: 起到平滑调整概率的作用，temperature=1时，原始概率保持不变，temperature<1时，原来概率大的会变得更大（概率集中效果），temperature>1时,概率值越平均
@@ -65,27 +66,27 @@ if __name__ == "__main__":
     calculate(10)
 ```
 
-## 2、Transformer 架构
+## Transformer 架构
 
 - [How transformer architecture works](https://www.datacamp.com/tutorial/how-transformers-work)
 - [transformer 模型详解](https://zhuanlan.zhihu.com/p/338817680)
 - [深入理解Transformer技术原理](https://tech.dewu.com/article?id=109)
 - [transformer 整体指南](https://luxiangdong.com/2023/09/10/trans/)
 
-## 3、大模型预训练
+## 大模型预训练
 
-## 4、大模型数据
+## 大模型数据
 
-## 5、指令微调
+## 指令微调
 
-## 6、RLHF：强化学习
+## RLHF：强化学习
 
 - [RLHF的完整流程](https://mp.weixin.qq.com/s/wz2PXBl_pNcj8NWej14SMQ)
 
 
-## 7、大模型调用
+## 大模型调用
 
-### 7.1、CPU 与 GPU
+### CPU 与 GPU
 
 - [The difference between CPU and GPU](https://www.intel.com/content/www/us/en/products/docs/processors/cpu-vs-gpu.html)
 
@@ -115,11 +116,11 @@ CPU 拥有较大的缓存单元以及复杂的逻辑控制单元，相比之下�
 
 > CPU 更擅长一次处理一项任务，而 GPU 则可以同时处理多项任务。
 
-### 7.2、大模型文件
+### 大模型文件
 
 ![](image/大模型文件.png)
 
-### 7.3、通过 GPU 调用LLM
+### 通过 GPU 调用LLM
 
 如何查看 GPU：`nvidia-smi`，看机器上的nvidia显卡
 - 驱动
@@ -199,7 +200,7 @@ model.chat(
 )
 ```
 
-### 7.4、本地部署 CPU 调用 LLM
+### 本地部署 CPU 调用 LLM
 
 - [GPT4All：在任何设备上运行本地 LLM](https://github.com/nomic-ai/gpt4all)
 - [Ollama-运行大模型框架](https://ollama.com/)
@@ -236,7 +237,7 @@ chat_completion = client.chat.completions.create(
 print(chat_completion.choices[0].message.content)
 ```
 
-### 7.5、AI 厂商 API 调用大模型
+### AI 厂商 API 调用大模型
 
 ```py
 from openai import OpenAI
@@ -254,9 +255,9 @@ chat_completion = client.chat.completions.create(
 print(chat_completion.choices[0].message.content)
 ```
 
-## 8、大模型评测
+## 大模型评测
 
-### 8.1、如何分辨大模型的优劣
+### 如何分辨大模型的优劣
 
 模型大小对模型能力的影响：[涌现能力](https://arxiv.org/pdf/2206.07682)，什么是涌现能力？在较小的模型中不出现，而在较大的模型中出现的能力；
 主要表现在：
@@ -265,7 +266,7 @@ print(chat_completion.choices[0].message.content)
 
 涌现能力是指在AI模型规模达到特定阈值后突然显现出来的新的能力，这些能力在较小规模的模型中无法观察到或预测。当模型参数量、训练数据量或计算量超过某个临界点时，模型会突然展现出新的认知能力，如多步推理、代码理解、创意写作等。这种现象表明AI能力的发展并非线性增长，而是存在质的飞跃节点。涌现并非AI独有的现象，而是自然界普遍存在的规律。当某一物质达到一定规模后，会涌现出单一物质不具备的新能力，这一现象被称为涌现现象
 
-### 8.2、大模型评测
+### 大模型评测
 
 - [评估大模型的指标、框架和数据集](https://github.com/openai/evals)
 - [MMLU-Massive Multitask Language Understanding](https://arxiv.org/abs/2406.01574)
@@ -349,11 +350,11 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 - [向量数据量](../数据库/向量数据库.md)
 
-## 1、什么是向量
+## 什么是向量
 
 embedding是将数据对象(如文本)映射到固定大小的连续一维数字数组(向量空间)的技术。向量空间通常具有几百到几千的维度,每个维度代表某个语义特征或属性
 
-## 2、[向量数据库](../数据库/向量数据库.md)
+## [向量数据库](../数据库/向量数据库.md)
 
 向量数据库，也称为矢量数据库或者向量搜索引擎，是一种专门用于存储和搜索向量形式的数据的数据库。
 
@@ -371,7 +372,7 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - 欧氏距离度量的是**绝对距离**，它能很好地反映出向量的绝对差异。当我们关心数据的绝对大小，例如在物品推荐系统中，用户的购买量可能反映他们的偏好强度，此时可以考虑使用欧氏距离。同样，在数据集中各个向量的大小相似，且数据分布大致均匀时，使用欧氏距离也比较适合。
 - 余弦相似度度量的是**方向的相似性**，它更关心的是两个向量的角度差异，而不是它们的大小差异。在处理文本数据或者其他高维稀疏数据的时候，余弦相似度特别有用。比如在信息检索和文本分类等任务中，文本数据往往被表示为高维的词向量，词向量的方向更能反映其语义相似性，此时可以使用余弦相似度。
 
-## 3、Embedding模型
+## Embedding模型
 
 - [关于 embedding 模型](https://zhuanlan.zhihu.com/p/29949362142)
 

@@ -380,6 +380,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [Agent 常见 8 种 memory 实现](https://mp.weixin.qq.com/s/29SXiWyRgIZNGgpY3E0jdw)
 - [9 Different Ways to Optimize AI Agent Memories](https://github.com/FareedKhan-dev/optimize-ai-agent-memory)
 - [Memory系统演进之路](https://mp.weixin.qq.com/s/LYx4pV1L9aVjd5u5iiI2zg)
+- [Supermemory 是一个极快、可扩展的记忆引擎和应用](https://github.com/supermemoryai/supermemory)
 
 ### 概述
 

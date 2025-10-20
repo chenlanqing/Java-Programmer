@@ -51,6 +51,7 @@
  
  # AI 应用
 
+- [MineContext：洞察本质，激发创造](https://github.com/volcengine/MineContext)
 - [AI 应用相关架构图](https://mp.weixin.qq.com/s/weOAlFqPjffS0yygQejDog)
 - [NextChat 是一款轻量、快速且开源的 AI 助手应用](https://github.com/ChatGPTNextWeb/NextChat)
 - [AI 辅助软件工程：实践与案例解析](https://aise.phodal.com/index.html)
@@ -211,7 +212,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [2025数字人方案](https://www.xmsumi.com/detail/764)
 - [淘宝直播数字人：TTS-语音合成技术](https://mp.weixin.qq.com/s/8jFx4wNQfTRLzlI8TIMH8A)
 
-## 1、商用
+## 商用
 
 - 即梦 AI
 - 可灵 AI
@@ -220,7 +221,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - 必剪 studio
 - 飞影数字人： https://flyworks.ai/  
 
-## 2、开源
+## 开源
 
 - HeyGem，本地部署： https://github.com/GuijiAI/HeyGem.ai/blob/main/README_zh.md
 - Fay是一个完整的开源项目，包含Fay控制器及数字人模型，可灵活组合出不同的应用场景：虚拟主播、现场推销货、商品导购、语音助理、远程语音助理、数字人互动、数字人面试官及心理测评、贾维斯、Her
