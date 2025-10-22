@@ -90,6 +90,11 @@ npm i <package_name> -g   ## 上述方式的简写
 npm ls -g
 ## 查看全局安装目录
 npm config get prefix
+
+# 卸载指定的全局包
+npm uninstall -g <package-name>
+# 示例：卸载全局安装的 create-react-app
+npm uninstall -g create-react-app
 ```
 Mac默认全局安装目录：`/usr/local/lib/node_modules`
 
@@ -160,6 +165,10 @@ npm uninstall <package_name>
 ```sh
 ## 全局卸载
 npm uninstall express --global
+```
+清理缓存：
+```bash
+npm cache clean --force
 ```
 
 ### 1.8、publish
