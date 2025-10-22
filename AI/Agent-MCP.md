@@ -674,6 +674,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - https://zhuanlan.zhihu.com/p/29330461895
 - [Check Files Under /opt/.manus Path](https://manus.im/share/lLR5uWIR5Im3k9FCktVu0k)
 - [Manus 提示词](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
+- [一个高确定性的 无代码 Agent 开发框架](https://github.com/spring-ai-alibaba/JManus)
 
 # 二、MCP
 

@@ -175,3 +175,8 @@ source ~/.zshrc
 
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
+- [Claude Code、Codex镜像服务](https://aicoding.sh/)
+- [银河录像局](https://nf.video/)
+- [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
+- [Ready to use Native AI](https://2233.ai/aicoding)
+- [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
