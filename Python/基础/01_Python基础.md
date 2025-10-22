@@ -3443,24 +3443,51 @@ open() 函数有多个参数，但是一般只需要关注第一个：
 ```py
 # path_to_file 指定要读取文件的路径
 open(path_to_file, mode)
+# 示例：
+file = open('致橡树.txt', 'r', encoding='utf-8')
+for line in file:
+    print(line, end='')
+file.close()
+
+file = open('致橡树.txt', 'r', encoding='utf-8')
+lines = file.readlines()
+for line in lines:
+    print(line, end='')
+file.close()
 ```
 当然如果你的程序和需要读取的文件是在同一个文件夹中，只需要填写文件名称；要指定文件路径，即使是在 Windows 系统中，也要使用正斜线（'/'）。
 
 `mode`是一个可选参数。它是一个字符串，用于指定打开文件的模式。下表列出了打开文本文件的可用模式：
-- `r`：打开文本文件以读取文本；
-- `w`：打开文本文件以写文本；
-- `a`：打开文本文件以追加文本
+
+| 操作模式  | 具体含义             |
+| ----- | ---------------- |
+| `'r'` | 读取 （默认）          |
+| `'w'` | 写入（会先截断之前的内容）    |
+| `'x'` | 写入，如果文件已经存在会产生异常 |
+| `'a'` | 追加，将内容写入到已有文件的末尾 |
+| `'b'` | 二进制模式            |
+| `'t'` | 文本模式（默认）         |
+| `'+'` | 更新（既可以读又可以写）     |
 
 比如你要读取一个文件：`f = open('the-zen-of-python.txt','r')`；
 
-open() 函数返回一个文件对象，你可以用它从文本文件中读取文本。
+`open()` 函数返回一个文件对象，你可以用它从文本文件中读取文本。
 
 ### 1.2、读取文本的方法
 
 文件对象为您提供了三种从文本文件读取文本的方法：
 - `read(size)`：根据可选的大小读取文件的部分内容，并以字符串形式返回。如果省略 size，read() 方法会从上次读取的位置读取，直到文件结束。如果文件已结束，read() 方法将返回空字符串
 - `readline()`：从文本文件中读取一行，并以字符串形式返回。如果已到达文件末尾，readline() 将返回空字符串
-- `readlines()`：将文本文件的所有行添加到字符串列表中。如果您有一个小文件，但想操作该文件的全部文本，这种方法非常有用
+- `readlines()`：将文本文件的所有行添加到字符串列表中。如果您有一个小文件，但想操作该文件的全部文本，这种方法非常有用，这个返回的是一个list，每一行为list的一个元素；
+
+换行符问题：
+```sh
+with open('file.txt', 'r', encoding='utf-8') as file:
+# read()读取整个文件，splitlines()按行分割并去除换行符
+    lines = file.read().splitlines()
+    for line in lines:
+        print(line)
+```
 
 ### 1.3、close()方法
 
@@ -4071,7 +4098,69 @@ if __name__ == '__main__':
 ## 10、环境变量
 
 在操作系统中定义的环境变量，全部保存在 `os.environ` 这个变量中，可以直接查看；要获取某个环境变量的值，可以调用os.environ.get('key')；
+
+# 二十、JSON
+
+| JSON                         | Python                    |
+| ---------------------------- | ------------------------- |
+| `object`                     | `dict`                    |
+| `array`                      | `list`                    |
+| `string`                     | `str`                     |
+| `number `                    | `int` / `float`           |
+| `number` (real)              | `float`                   |
+| `boolean` (`true` / `false`) | `bool` (`True` / `False`) |
+| `null`                       | `None`                    |
 	
-				
+## 1、读写JSON格式的数据
+
+在Python中，如果要将字典处理成JSON格式（以字符串形式存在），可以使用`json`模块的`dumps`函数，代码如下所示。
+
+```python
+import json
+
+my_dict = {
+    'name': '骆昊',
+    'age': 40,
+    'friends': ['王大锤', '白元芳'],
+    'cars': [
+        {'brand': 'BMW', 'max_speed': 240},
+        {'brand': 'Audi', 'max_speed': 280},
+        {'brand': 'Benz', 'max_speed': 280}
+    ]
+}
+print(json.dumps(my_dict))
+```
+
+运行上面的代码，输出如下所示，可以注意到中文字符都是用Unicode编码显示的。
+
+```JSON
+{"name": "\u9a86\u660a", "age": 40, "friends": ["\u738b\u5927\u9524", "\u767d\u5143\u82b3"], "cars": [{"brand": "BMW", "max_speed": 240}, {"brand": "Audi", "max_speed": 280}, {"brand": "Benz", "max_speed": 280}]}
+```
+如果要将字典处理成JSON格式并写入文本文件，只需要将`dumps`函数换成`dump`函数并传入文件对象即可，代码如下所示。
+
+```python
+import json
+
+my_dict = {
+    'name': '骆昊',
+    'age': 40,
+    'friends': ['王大锤', '白元芳'],
+    'cars': [
+        {'brand': 'BMW', 'max_speed': 240},
+        {'brand': 'Audi', 'max_speed': 280},
+        {'brand': 'Benz', 'max_speed': 280}
+    ]
+}
+with open('data.json', 'w') as file:
+    json.dump(my_dict, file)
+```
+
+执行上面的代码，会创建`data.json`文件，文件的内容跟上面代码的输出是一样的。
+
+`json`模块有四个比较重要的函数，分别是：
+- `dump`：将Python对象按照JSON格式序列化到文件中
+- `dumps`：将Python对象处理成JSON格式的字符串
+- `load`：将文件中的JSON数据反序列化成对象
+- `loads`：将字符串的内容反序列化成Python对象	
 				
 				
