@@ -1,4 +1,4 @@
-# 一、大模型
+# 一、大模型基础
 
 - [OpenAI文档](https://platform.openai.com/docs/concepts)
 - [大模型理论基础](https://datawhalechina.github.io/so-large-lm/#/)
@@ -7,9 +7,9 @@
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
 - [「大模型」2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
 
-## 基本概念
+## 1、基本概念
 
-### 什么是大模型
+### 1.1、什么是大模型
 
 大语言模型是一种人工智能模型，通常使用深度学习技术，比如神经网络，来理解和生成人类语言。这些模型的“大”在于它们的参数数量非常多，可以达到数十亿甚至更多，这使得它们能够理解和生成高度复杂的语言模式；
 
@@ -17,7 +17,26 @@
 
 LangChain 是一个全方位的、基于大语言模型这种预测能力的应用开发工具，它的灵活性和模块化特性使得处理语言模型变得极其简便。不论你在何时何地，都能利用它流畅地调用语言模型，并基于语言模型的“预测”或者说“推理”能力开发新的应用；
 
-### token
+### 1.2、LLM应用场景
+
+### 1.3、主流大模型
+
+**国际知名**
+- Meta: Llama系列
+- OpenAI: GPT系列
+- Google: Gemini
+- Anthropic: Claude系列
+
+**国产主流**
+- 深度求索: DeepSeek
+- 阿里: QWen系列
+- 百度: 文心大模型
+- 智谱清言: GLM系列
+
+
+## 2、架构原理
+
+### 2.1、token
 
 - [Token 计算器](https://github.com/dqbd/tiktokenizer)
 
@@ -35,8 +54,7 @@ token 是介于单词和字母之间的一个子词，语料中出现最频繁�
 > 问题1：token 为什么不能是字符？
 - 虽然词表变少了，但是字母本身并没有很强的语意信息，增加了模型训练的难度；
 
-
-### 大模型技术原理
+### 2.2、大模型技术原理
 
 - [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 
@@ -44,7 +62,7 @@ token 是介于单词和字母之间的一个子词，语料中出现最频繁�
 
 大模型推理过程：加载分词算法 -> 加载模型参数 -> 推理生成答案
 
-### [控制LLM输出的随机性的参数](./AI应用.md#4大模型设置)
+### 2.3、[控制LLM输出的随机性的参数](./AI应用.md#4大模型设置)
 
 大语言模型预测下一个token时会先输出所有token的概率值，有不同的方法来控制选择哪一个token作为输出，主要以下4个参数
 - `温度（Temperature）`: 起到平滑调整概率的作用，temperature=1时，原始概率保持不变，temperature<1时，原来概率大的会变得更大（概率集中效果），temperature>1时,概率值越平均
@@ -68,69 +86,16 @@ if __name__ == "__main__":
     calculate(10)
 ```
 
-## Transformer 架构
+## 3、Transformer 架构
 
 - [How transformer architecture works](https://www.datacamp.com/tutorial/how-transformers-work)
 - [transformer 模型详解](https://zhuanlan.zhihu.com/p/338817680)
 - [深入理解Transformer技术原理](https://tech.dewu.com/article?id=109)
 - [transformer 整体指南](https://luxiangdong.com/2023/09/10/trans/)
 
-## 大模型预训练
+## 4、大模型调用
 
-
-
-## 大模型数据集
-
-- [LLMDataHub: Awesome Datasets for LLM Training](https://github.com/Zjh-819/LLMDataHub)
-- [用于后期训练的数据集和工具的精选列表](https://github.com/mlabonne/llm-datasets)
-- [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)
-
-### 网页数据处理
-
-[CCNet](https://arxiv.org/abs/1911.00359)、SlimPajama、MNBVC、RefineWeb
-
-我已经看到了图片中的表格内容。以下是将图片内容转换为markdown格式的表格：
-
-### 国外预训练语料库
-
-| 语料库 | 大小 | 开源状态 | 开源协议 |
-|--------|------|----------|----------|
-| RedPajama-1T | 5TB | 开源 | Apache-2.0 |
-| SlimPajama | 895 GB | 开源 | Apache 2.0 |
-| RedPajama-V2 | 180TB | 开源 | Apache-2.0 |
-| The Pile | 825.18 GB | 开源 | MIT |
-| Refinedweb | 5T | 部分开源 | ODC-BY-1.0 |
-| FineWeb | 44T | 开源 | ODC-BY-1.0 |
-| TigerBot pretrain en\|zh | 51 GB\|55 GB | 部分开源 | Apache-2.0 |
-| Dolma | 11.24 TB | 开源 | MR Agreement |
-| C4 | 806.87 GB | 开源 | Apache-2.0 |
-| MassiveText | 10.5 TB | 未开源 | - |
-| ROOTS | 1.61 TB | 开源 | BLOOM Open-RAIL-M |
-| OSCAR | 8.41 TB | 开源 | CC0 |
-| OpenWebMath | 26 GB | 开源 | ODC-BY-1.0 |
-
-### 国内预训练语料库
-
-| 语料库 | 大小 | 开源情况 | 开源协议 |
-|--------|------|----------|----------|
-| CLUECorpus2020 | 100GB | 开源 | MIT |
-| WuDaoCorpora-Text | 5TB | 部分开源 | CC-BY-NC-ND-4.0 |
-| CCI 1.0/2.0/3.0 | 100GB/500GB/1TB | 开源 | CC-BY-NC-ND-4.0 |
-| WanJuanText-1.0 | 1.1 TB | 开源 | CC-BY-4.0 |
-| MNBVC | 32.3TB | 开源 | MIT |
-| ChineseWebText | 1.42TB | 开源 | - |
-| SkyPile | 600GB | 开源 | Skywork Community License |
-
-## 指令微调
-
-## RLHF：强化学习
-
-- [RLHF的完整流程](https://mp.weixin.qq.com/s/wz2PXBl_pNcj8NWej14SMQ)
-
-
-## 大模型调用
-
-### CPU 与 GPU
+### 4.1、CPU 与 GPU
 
 - [The difference between CPU and GPU](https://www.intel.com/content/www/us/en/products/docs/processors/cpu-vs-gpu.html)
 
@@ -160,11 +125,11 @@ CPU 拥有较大的缓存单元以及复杂的逻辑控制单元，相比之下�
 
 > CPU 更擅长一次处理一项任务，而 GPU 则可以同时处理多项任务。
 
-### 大模型文件
+### 4.2、大模型文件
 
 ![](image/大模型文件.png)
 
-### 通过 GPU 调用LLM
+### 4.3、通过 GPU 调用LLM
 
 如何查看 GPU：`nvidia-smi`，看机器上的nvidia显卡
 - 驱动
@@ -244,7 +209,7 @@ model.chat(
 )
 ```
 
-### 本地部署 CPU 调用 LLM
+### 4.4、本地部署 CPU 调用 LLM
 
 - [GPT4All：在任何设备上运行本地 LLM](https://github.com/nomic-ai/gpt4all)
 - [Ollama-运行大模型框架](https://ollama.com/)
@@ -281,7 +246,7 @@ chat_completion = client.chat.completions.create(
 print(chat_completion.choices[0].message.content)
 ```
 
-### AI 厂商 API 调用大模型
+### 4.5、AI 厂商 API 调用大模型
 
 ```py
 from openai import OpenAI
@@ -299,76 +264,7 @@ chat_completion = client.chat.completions.create(
 print(chat_completion.choices[0].message.content)
 ```
 
-## 大模型评测
-
-### 如何分辨大模型的优劣
-
-模型大小对模型能力的影响：[涌现能力](https://arxiv.org/pdf/2206.07682)，什么是涌现能力？在较小的模型中不出现，而在较大的模型中出现的能力；
-主要表现在：
-- 突破规模的临界点后，表现大幅度提升；
-- 对某些 prompt 策略对小模型失效，而对大模型起作用
-
-涌现能力是指在AI模型规模达到特定阈值后突然显现出来的新的能力，这些能力在较小规模的模型中无法观察到或预测。当模型参数量、训练数据量或计算量超过某个临界点时，模型会突然展现出新的认知能力，如多步推理、代码理解、创意写作等。这种现象表明AI能力的发展并非线性增长，而是存在质的飞跃节点。涌现并非AI独有的现象，而是自然界普遍存在的规律。当某一物质达到一定规模后，会涌现出单一物质不具备的新能力，这一现象被称为涌现现象
-
-### 大模型评测
-
-- [评估大模型的指标、框架和数据集](https://github.com/openai/evals)
-- [MMLU-Massive Multitask Language Understanding](https://arxiv.org/abs/2406.01574)
-- [FlagEval-大模型评测平台](https://flageval.baai.ac.cn/#/home)
-- [Opencompass-司南-大模型评测体系](https://opencompass.org.cn/home)
-
-主要评测步骤：
-- 维度：评测哪些能力；
-- 数据：在什么数据上评测；
-- 指标：如何判断评测结果好坏；
-
-## 开源大模型
-
-- LlamaFactory，零代码 Web UI，一站式平台偏好 GUI 的初学者和快速原型验证
-- Unsloth，k2 倍速，省 70%显存，极致性能硬件资源有限但追求效率的个人/小团队
-- Axolotl，YAML 配置驱动，可复现性强注重工程化和实验对比的团队
-- DeepSpeed，ZeRO 分布式训练，支持万亿参数拥有大规模集群的企业和顶尖研究机构
-- [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
-- [大模型训练](https://github.com/hiyouga/LLaMA-Efficient-Tuning)
-- [2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
-- [Kronos 是首个面向金融市场的解读 K 线图基础模型](https://github.com/shiyu-coder/Kronos)
-
-## 模型微调
-
-- [MLX LM 是一个 Python 包，用于使用 MLX 在 Apple 芯片上生成文本和微调大型语言模型](https://github.com/ml-explore/mlx-lm)
-- [量化 LLM 的高效微调](https://github.com/artidoro/qlora)
-- [unsloth:模型微调框架](https://docs.unsloth.ai/)
-- [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 
-- [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
-
-**为什么要微调？**
-- 哪些情况是Prompt写到极致，RAG优化完还有什么问题是不能解决的呢，把问题定义出来才应该去思考怎么微调
-
-## 模型蒸馏
-
-蒸馏，本质上也是微调的一种类型；传统微调是为了让大模型获取一些私域知识，比如股票、医疗等等，这是让大模型的知识面增加了，但没有改变大模型的能力。而蒸馏不一样，蒸馏不光教知识，还要教能力。所谓授之以鱼，不如授之以渔，蒸馏就是要让被训练的模型能够学会教师模型的能力。
-
-### 蒸馏的流程
-
-- 首先，需要准备好一份传统的数据集；
-- 将这些数据喂给满血版的 `DeepSeek-R1:671B` 模型，让 `DeepSeek-R1:671B` 为我们输出带有思考过程和结果的回答，这便是我们的教学数据
-
-![](image/蒸馏的流程.png)
-
-## 大模型应用开发
-
-- [动手学大模型应用开发](https://github.com/datawhalechina/llm-universe)
-- [面向开发者的大模型](https://github.com/datawhalechina/llm-cookbook)
-
-LLM的接口通常都遵循或类似于 OpenAI 的规范，在与大型模型交互时，除了控制模型输出随机性的参数外，最核心的参数只有两个：messages 和 tools：
-- messages-大模型是怎么实现记忆的？messages是一个对话数组，其中角色主要有：
-    - system：代表当前对话的系统指令，一般放提示词
-    - user：用户指令
-    - assistant：LLM的回复
-- tools-是一个数组，包含了一堆工具集合，核心为工具的作用描述，和工具需要的参数
-
-
-## 推理模型
+## 5、推理模型
 
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
 - [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
@@ -386,11 +282,196 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 量化技术的核心在于权衡精度与效率。通过降低权重参数的精度，模型的计算量和存储需求大幅减少，但同时也可能引入一定的精度损失。因此，量化算法的设计需要在压缩率和模型性能之间找到最佳平衡点。
 
-## LLM 平台
+## 6、LLM 平台
 
 ![](image/LLM平台选型考虑.png)
 
-# 二、向量-Embedding
+## 7、大模型评测
+
+### 7.1、如何分辨大模型的优劣
+
+模型大小对模型能力的影响：[涌现能力](https://arxiv.org/pdf/2206.07682)，什么是涌现能力？在较小的模型中不出现，而在较大的模型中出现的能力；
+主要表现在：
+- 突破规模的临界点后，表现大幅度提升；
+- 对某些 prompt 策略对小模型失效，而对大模型起作用
+
+涌现能力是指在AI模型规模达到特定阈值后突然显现出来的新的能力，这些能力在较小规模的模型中无法观察到或预测。当模型参数量、训练数据量或计算量超过某个临界点时，模型会突然展现出新的认知能力，如多步推理、代码理解、创意写作等。这种现象表明AI能力的发展并非线性增长，而是存在质的飞跃节点。涌现并非AI独有的现象，而是自然界普遍存在的规律。当某一物质达到一定规模后，会涌现出单一物质不具备的新能力，这一现象被称为涌现现象
+
+### 7.2、大模型评测
+
+- [评估大模型的指标、框架和数据集](https://github.com/openai/evals)
+- [MMLU-Massive Multitask Language Understanding](https://arxiv.org/abs/2406.01574)
+- [FlagEval-大模型评测平台](https://flageval.baai.ac.cn/#/home)
+- [Opencompass-司南-大模型评测体系](https://opencompass.org.cn/home)
+
+主要评测步骤：
+- 维度：评测哪些能力；
+- 数据：在什么数据上评测；
+- 指标：如何判断评测结果好坏；
+
+## 8、专业LLM
+
+- [Kronos 是首个面向金融市场的解读 K 线图基础模型](https://github.com/shiyu-coder/Kronos)
+
+# 二、模型微调
+
+- [MLX LM 是一个 Python 包，用于使用 MLX 在 Apple 芯片上生成文本和微调大型语言模型](https://github.com/ml-explore/mlx-lm)
+- [量化 LLM 的高效微调](https://github.com/artidoro/qlora)
+- [unsloth:模型微调框架](https://docs.unsloth.ai/)
+- [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 
+- [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
+- Axolotl，YAML 配置驱动，可复现性强注重工程化和实验对比的团队
+- DeepSpeed，ZeRO 分布式训练，支持万亿参数拥有大规模集群的企业和顶尖研究机构
+- [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
+- [大模型训练](https://github.com/hiyouga/LLaMA-Efficient-Tuning)
+- [2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
+
+## 1、模型微调基础
+
+### 1.1、模型微调的概念
+
+- 模型微调的概念与意义
+- 微调和 RAG 的关系
+- 不同场景下微调的必要性
+- 什么是训练/预训练/微调/轻量化微调
+
+### 1.2、数据工程
+
+- 数据采集与清洗
+- 数据标注与增强
+- 数据集划分
+
+### 1.3、微调的核心流程
+
+- 数据准备与清洗：选择高质量的数据集
+- 微调技术要点：设置超参数、选择合适的训练方法
+- 模型评估与验证：确保微调后模型的效果
+
+### 1.4、微调框架的选择
+
+- pyTorch框架
+  - 张量的创建、索引、运算等操作
+  - 搭建神经网络，定义模型结构、前向传播、反向传播的流程
+  - 案例：基于 PyTorch 的模型构建与训练之手写数字识别
+- HuggingFace Transformers工具
+- unsloth框架
+  - unsloth 的开箱可用与高度可定制化
+- LLaMA-Factory框架
+- DeepSpeed
+
+## 2、大模型训练技术
+
+### 2.1、分布式训练
+
+- 数据并行与模型并行
+- 梯度累积与同步
+- DeepSeed分布式训练/Llama Factory/Xtuner
+
+### 2.2、混合精度训练
+
+- FP32与FP16混合使用
+- 动态损失缩放
+
+### 2.3、模型压缩与加速
+
+- 剪枝技术
+- 量化技术
+- 知识蒸馏
+
+## 3、微调技术与应用
+
+### 3.1、微调策略
+
+- 基于预训练模型的微调
+- 基于特定数据集进行模型微调，包括数据准备、参数设置、训练过程
+- 解决微调过程中过拟合、训练不收敛等常见问题的方法
+
+### 3.2、轻量化微调技术详解
+
+- Prompt Tuning、P-Tuning、Prefix Tuning
+- LoRA、QLoRA
+
+
+## Huggingface模块开发实战
+
+- Huggingface的安装和开发流程
+- 掌握Huggingface库中各种API的调用
+- Huggingface工具集：批量编码，Loading，评价指标，管道等
+- Transformer加载模型、数据集合预处理
+
+## 大模型数据集
+
+- [LLMDataHub: Awesome Datasets for LLM Training](https://github.com/Zjh-819/LLMDataHub)
+- [用于后期训练的数据集和工具的精选列表](https://github.com/mlabonne/llm-datasets)
+- [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)
+- [论文： Datasets for Large Language Models: A Comprehensive Survey](https://arxiv.org/pdf/2402.18041)
+
+### 网页数据处理
+
+[CCNet](https://arxiv.org/abs/1911.00359)、SlimPajama、MNBVC、RefineWeb
+
+我已经看到了图片中的表格内容。以下是将图片内容转换为markdown格式的表格：
+
+### 国外预训练语料库
+
+| 语料库 | 大小 | 开源状态 | 开源协议 |
+|--------|------|----------|----------|
+| RedPajama-1T | 5TB | 开源 | Apache-2.0 |
+| SlimPajama | 895 GB | 开源 | Apache 2.0 |
+| RedPajama-V2 | 180TB | 开源 | Apache-2.0 |
+| The Pile | 825.18 GB | 开源 | MIT |
+| Refinedweb | 5T | 部分开源 | ODC-BY-1.0 |
+| FineWeb | 44T | 开源 | ODC-BY-1.0 |
+| TigerBot pretrain en\|zh | 51 GB\|55 GB | 部分开源 | Apache-2.0 |
+| Dolma | 11.24 TB | 开源 | MR Agreement |
+| C4 | 806.87 GB | 开源 | Apache-2.0 |
+| MassiveText | 10.5 TB | 未开源 | - |
+| ROOTS | 1.61 TB | 开源 | BLOOM Open-RAIL-M |
+| OSCAR | 8.41 TB | 开源 | CC0 |
+| OpenWebMath | 26 GB | 开源 | ODC-BY-1.0 |
+
+### 国内预训练语料库
+
+| 语料库 | 大小 | 开源情况 | 开源协议 |
+|--------|------|----------|----------|
+| CLUECorpus2020 | 100GB | 开源 | MIT |
+| WuDaoCorpora-Text | 5TB | 部分开源 | CC-BY-NC-ND-4.0 |
+| CCI 1.0/2.0/3.0 | 100GB/500GB/1TB | 开源 | CC-BY-NC-ND-4.0 |
+| WanJuanText-1.0 | 1.1 TB | 开源 | CC-BY-4.0 |
+| MNBVC | 32.3TB | 开源 | MIT |
+| ChineseWebText | 1.42TB | 开源 | - |
+| SkyPile | 600GB | 开源 | Skywork Community License |
+
+## 指令微调
+
+## RLHF：强化学习
+
+- [RLHF的完整流程](https://mp.weixin.qq.com/s/wz2PXBl_pNcj8NWej14SMQ)
+
+## 模型蒸馏
+
+蒸馏，本质上也是微调的一种类型；传统微调是为了让大模型获取一些私域知识，比如股票、医疗等等，这是让大模型的知识面增加了，但没有改变大模型的能力。而蒸馏不一样，蒸馏不光教知识，还要教能力。所谓授之以鱼，不如授之以渔，蒸馏就是要让被训练的模型能够学会教师模型的能力。
+
+### 蒸馏的流程
+
+- 首先，需要准备好一份传统的数据集；
+- 将这些数据喂给满血版的 `DeepSeek-R1:671B` 模型，让 `DeepSeek-R1:671B` 为我们输出带有思考过程和结果的回答，这便是我们的教学数据
+
+![](image/蒸馏的流程.png)
+
+# 三、 大模型应用开发
+
+- [动手学大模型应用开发](https://github.com/datawhalechina/llm-universe)
+- [面向开发者的大模型](https://github.com/datawhalechina/llm-cookbook)
+
+LLM的接口通常都遵循或类似于 OpenAI 的规范，在与大型模型交互时，除了控制模型输出随机性的参数外，最核心的参数只有两个：messages 和 tools：
+- messages-大模型是怎么实现记忆的？messages是一个对话数组，其中角色主要有：
+    - system：代表当前对话的系统指令，一般放提示词
+    - user：用户指令
+    - assistant：LLM的回复
+- tools-是一个数组，包含了一堆工具集合，核心为工具的作用描述，和工具需要的参数
+
+# 四、向量-Embedding
 
 - [向量数据量](../数据库/向量数据库.md)
 
