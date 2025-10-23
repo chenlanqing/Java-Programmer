@@ -3585,7 +3585,7 @@ with open('quotes.txt', 'w', encoding='utf-8') as f:
     f.write(quote)
 ```
 
-## 3、io
+## 3、IO
 
 ### 3.1、StringIO
 
@@ -3626,7 +3626,7 @@ f.read()
 b'\xe4\xb8\xad\xe6\x96\x87'
 ```
 
-## 4、创建文件与判断文件是否存在
+## 4、文件处理
 
 ### 4.1、创建文件
 
@@ -3691,6 +3691,56 @@ else:
     print(f'The file {path_to_file} does not exist')
 ```
 
+### 4.3、删除文件
+
+要删除文件，需要使用 os 内置模块的 remove() 函数。例如，下面的代码使用 os.remove() 函数删除 readme.txt 文件
+```py
+import os
+os.remove('readme.txt')
+```
+如果 readme.txt 文件不存在，os.remove() 函数就会出错：
+```py
+FileNotFoundError: [Errno 2] No such file or directory: 'readme.txt'
+```
+为避免出现该错误，可以在删除文件前检查该文件是否存在，就像这样：
+```py
+import os
+filename = 'readme.txt'
+if os.path.exists(filename):
+    os.remove(filename)
+```
+或者使用异常处理的方式：
+```py
+import os
+try:
+    os.remove('readme.txt')
+except FileNotFoundError as e:
+    print(e)
+```
+
+### 4.4、文件重命名
+
+要重命名文件，需要使用 `os.rename()` 函数：
+```py
+os.rename(src,dst)
+```
+如果 src 文件不存在，`os.rename()` 函数会引发 `FileNotFound` 错误。同样，如果 dst 文件已经存在，`os.rename()` 函数会引发 FileExistsError 错误：
+```py
+import os
+os.rename('readme.txt', 'notes.txt')
+```
+示例：
+```py
+import os
+
+try:
+    os.rename('readme.txt', 'notes.txt')
+except FileNotFoundError as e:
+    print(e)
+except FileExistsError as e:
+    print(e)
+```
+
 ## 5、CSV文件处理
 
 CSV 是逗号分隔值的缩写。CSV 文件是一种使用逗号分隔数值的分隔文本文件。CSV 文件由一行或多行组成。每一行是一条数据记录。每条数据记录由一个或多个数值组成，以逗号分隔。此外，CSV 文件的所有行都有相同数量的值。
@@ -3746,6 +3796,17 @@ with open('country.csv', 'r') as f:
     # show the data
     for line in csv_reader:
         print(line)
+```
+基本demo：
+```python
+import csv
+with open('scores.csv', 'r') as file:
+    reader = csv.reader(file, delimiter='|')
+    for data_list in reader:
+        print(reader.line_num, end='\t')
+        for elem in data_list:
+            print(elem, end='\t')
+        print()
 ```
 
 ### 5.2、DictReader
@@ -3863,56 +3924,27 @@ with open('countries.csv', 'w', encoding='UTF8', newline='') as f:
     writer.writeheader()
     writer.writerows(rows)
 ```
-
-## 6、删除文件
-
-要删除文件，需要使用 os 内置模块的 remove() 函数。例如，下面的代码使用 os.remove() 函数删除 readme.txt 文件
+上面的`writer`函数，除了传入要写入数据的文件对象外，还可以`dialect`参数，它表示CSV文件的方言，默认值是`excel`。除此之外，还可以通过`delimiter`、`quotechar`、`quoting`参数来指定分隔符（默认是逗号）、包围值的字符（默认是双引号）以及包围的方式。其中，包围值的字符主要用于当字段中有特殊符号时，通过添加包围值的字符可以避免二义性。大家可以尝试将上面第5行代码修改为下面的代码，然后查看生成的CSV文件。
 ```py
-import os
-os.remove('readme.txt')
-```
-如果 readme.txt 文件不存在，os.remove() 函数就会出错：
-```py
-FileNotFoundError: [Errno 2] No such file or directory: 'readme.txt'
-```
-为避免出现该错误，可以在删除文件前检查该文件是否存在，就像这样：
-```py
-import os
-filename = 'readme.txt'
-if os.path.exists(filename):
-    os.remove(filename)
-```
-或者使用异常处理的方式：
-```py
-import os
-try:
-    os.remove('readme.txt')
-except FileNotFoundError as e:
-    print(e)
+writer = csv.writer(file, delimiter='|', quoting=csv.QUOTE_ALL)
 ```
 
-## 7、文件重命名
+## 6、[Excel文件](http://www.python-excel.org/)
 
-要重命名文件，需要使用 `os.rename()` 函数：
-```py
-os.rename(src,dst)
+Python 操作 Excel 需要三方库的支持，如果要兼容 Excel 2007 以前的版本，也就是`xls`格式的 Excel 文件，可以使用三方库`xlrd`和`xlwt`，前者用于读 Excel 文件，后者用于写 Excel 文件。如果使用较新版本的 Excel，即`xlsx`格式的 Excel 文件，可以使用[openpyxl](https://openpyxl.readthedocs.io/en/stable/)库，当然这个库不仅仅可以操作Excel，还可以操作其他基于 Office Open XML 的电子表格文件
+```Bash
+pip install xlwt xlrd xlutils
+# `openpyxl`并不支持操作 Office 2007 以前版本的 Excel 文件
+pip install openpyxl
 ```
-如果 src 文件不存在，`os.rename()` 函数会引发 `FileNotFound` 错误。同样，如果 dst 文件已经存在，`os.rename()` 函数会引发 FileExistsError 错误：
-```py
-import os
-os.rename('readme.txt', 'notes.txt')
-```
-示例：
-```py
-import os
 
-try:
-    os.rename('readme.txt', 'notes.txt')
-except FileNotFoundError as e:
-    print(e)
-except FileExistsError as e:
-    print(e)
-```
+## 7、Word与PPT
+
+### 7.1、Word
+
+
+
+
 
 ## 8、目录
 
@@ -4005,7 +4037,7 @@ for root, dirs, files in os.walk(path):
     print("{0} has {1} files".format(root, len(files)))
 ```
 
-## 9、文件列表
+### 8.8、文件列表
 
 如果要列出一个目录中的所有文件进行处理。
 
@@ -4097,7 +4129,7 @@ if __name__ == '__main__':
 
 ## 10、环境变量
 
-在操作系统中定义的环境变量，全部保存在 `os.environ` 这个变量中，可以直接查看；要获取某个环境变量的值，可以调用os.environ.get('key')；
+在操作系统中定义的环境变量，全部保存在 `os.environ` 这个变量中，可以直接查看；要获取某个环境变量的值，可以调用`os.environ.get('key')`；
 
 # 二十、JSON
 
