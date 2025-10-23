@@ -19,6 +19,8 @@ LangChain 是一个全方位的、基于大语言模型这种预测能力的应�
 
 ### token
 
+- [Token 计算器](https://github.com/dqbd/tiktokenizer)
+
 LLM 把要预测的每一个字成为 token，现在 LLM 都是按照 token 来计费的，所有的 token 成为 vocab 词表；生成 token 的方式成为分词（Tokenizer）
 - BPE 分词法
 
@@ -42,7 +44,7 @@ token 是介于单词和字母之间的一个子词，语料中出现最频繁�
 
 大模型推理过程：加载分词算法 -> 加载模型参数 -> 推理生成答案
 
-### [控制大语言模型的输出的随机性的参数](./AI应用.md#4大模型设置)
+### [控制LLM输出的随机性的参数](./AI应用.md#4大模型设置)
 
 大语言模型预测下一个token时会先输出所有token的概率值，有不同的方法来控制选择哪一个token作为输出，主要以下4个参数
 - `温度（Temperature）`: 起到平滑调整概率的作用，temperature=1时，原始概率保持不变，temperature<1时，原来概率大的会变得更大（概率集中效果），temperature>1时,概率值越平均
@@ -75,7 +77,49 @@ if __name__ == "__main__":
 
 ## 大模型预训练
 
-## 大模型数据
+
+
+## 大模型数据集
+
+- [LLMDataHub: Awesome Datasets for LLM Training](https://github.com/Zjh-819/LLMDataHub)
+- [用于后期训练的数据集和工具的精选列表](https://github.com/mlabonne/llm-datasets)
+- [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)
+
+### 网页数据处理
+
+[CCNet](https://arxiv.org/abs/1911.00359)、SlimPajama、MNBVC、RefineWeb
+
+我已经看到了图片中的表格内容。以下是将图片内容转换为markdown格式的表格：
+
+### 国外预训练语料库
+
+| 语料库 | 大小 | 开源状态 | 开源协议 |
+|--------|------|----------|----------|
+| RedPajama-1T | 5TB | 开源 | Apache-2.0 |
+| SlimPajama | 895 GB | 开源 | Apache 2.0 |
+| RedPajama-V2 | 180TB | 开源 | Apache-2.0 |
+| The Pile | 825.18 GB | 开源 | MIT |
+| Refinedweb | 5T | 部分开源 | ODC-BY-1.0 |
+| FineWeb | 44T | 开源 | ODC-BY-1.0 |
+| TigerBot pretrain en\|zh | 51 GB\|55 GB | 部分开源 | Apache-2.0 |
+| Dolma | 11.24 TB | 开源 | MR Agreement |
+| C4 | 806.87 GB | 开源 | Apache-2.0 |
+| MassiveText | 10.5 TB | 未开源 | - |
+| ROOTS | 1.61 TB | 开源 | BLOOM Open-RAIL-M |
+| OSCAR | 8.41 TB | 开源 | CC0 |
+| OpenWebMath | 26 GB | 开源 | ODC-BY-1.0 |
+
+### 国内预训练语料库
+
+| 语料库 | 大小 | 开源情况 | 开源协议 |
+|--------|------|----------|----------|
+| CLUECorpus2020 | 100GB | 开源 | MIT |
+| WuDaoCorpora-Text | 5TB | 部分开源 | CC-BY-NC-ND-4.0 |
+| CCI 1.0/2.0/3.0 | 100GB/500GB/1TB | 开源 | CC-BY-NC-ND-4.0 |
+| WanJuanText-1.0 | 1.1 TB | 开源 | CC-BY-4.0 |
+| MNBVC | 32.3TB | 开源 | MIT |
+| ChineseWebText | 1.42TB | 开源 | - |
+| SkyPile | 600GB | 开源 | Skywork Community License |
 
 ## 指令微调
 

@@ -42,7 +42,7 @@
 - openrouter
 - deepseek
 - 阿里云百炼
-- [Token 计算器](https://github.com/dqbd/tiktokenizer)
+
 
 # Deepseek
 
