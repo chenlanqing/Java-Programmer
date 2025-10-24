@@ -38,7 +38,66 @@
 
 ## 2、怎么在AI项目中引入deepsearch功能
 
+## 3、如何从零开始训练一个模型
+
+数据准备 → 预训练 → 后训练（或称对齐）
+
+https://mp.weixin.qq.com/s/O4KQPtYExtLcBbBximlffQ
+
+
 # 二、RAG
+
+## 用的向量模型是哪个？为什么选它？有没有做过评估对比？
+
+## Chunk 粒度你怎么切的？固定大小？内容语义？有没有做 sliding window？
+
+## 向量库召回效果好不好？有没有加 rerank？有没有 query rewrite？
+
+## Prompt 是怎么构造的？知识内容和用户问题怎么融合？有没有模板设计？
+
+## 向量库查询失败怎么办？有没有兜底？
+
+## 系统怎么部署的？支持并发吗？是否支持热更新？
+
+```
+                              用户问题
+                                 ↓
+                          Query Rewrite（可选）
+                                 ↓
+                ┌─────────────向量召回───────────────┐
+                ↓                                   ↓
+           多文档语义切分                       Embedding 模型
+                ↓                                   ↓
+           Chunk 压缩/筛选                  向量入库（Faiss/Qdrant）
+                ↓                                   ↓
+               TopK 检索结果 ←────────────← Query Embedding
+                ↓
+         Rerank（可选）/ 过滤低质量段落
+                ↓
+        拼接 Prompt（格式/长度控制等）
+                ↓
+        发送给 LLM（ChatGPT/DeepSeek）
+                ↓
+            返回最终答案
+```
+
+## 面试两点句式：
+
+系统描述型
+- 构建基于大语言模型的知识增强问答系统，支持文档解析、向量召回、Prompt 构造、答案生成全链路流程。
+- 项目采用 Faiss + text-embedding-3 构建向量库，实现毫秒级语义检索；结合 Prompt 工程提升上下文注入效果。
+
+技术挑战型
+- 针对知识重复、文本冗余问题，优化 Chunk 生成逻辑，引入 sliding window + 去重策略，有效提升知识利用率。
+- 使用 query rewrite 技术处理用户自然语言问题，提升召回准确率 12%。
+
+工程能力型
+- 使用 FastAPI + Streamlit 构建前后端分离系统，支持多轮问答、token 成本统计与错误日志追踪。
+- 项目支持私有化部署，封装为一键运行的 Docker 镜像，支持企业内网部署。
+
+效果指标型
+- 系统上线后在内部知识问答场景中覆盖率达 92%，用户满意度超 87%，平均响应时间小于 1.2 秒。
+- 在真实评测集上与 baseline（无 query rewrite + 无 rerank）相比，召回 Top-5 命中率提升 15%。
 
 
 # 三、MCP
@@ -71,6 +130,14 @@
 - 数据库事务管理
 - 状态快照机制
 - 故障恢复策略
+
+# 五、Transforms
+
+## 1、请描述一下 Transformer 的核心结构
+
+https://mp.weixin.qq.com/s/B2q6lVtr_2DR6uHkdqp7EA
+
+“Transformer 在做什么？” → “结构是怎样的？” → “为什么现在都用 Decoder-only？”
 
 # AI设计
 

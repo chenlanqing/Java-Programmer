@@ -211,21 +211,6 @@ model.chat(
 
 ### 4.4、本地部署 CPU 调用 LLM
 
-- [GPT4All：在任何设备上运行本地 LLM](https://github.com/nomic-ai/gpt4all)
-- [Ollama-运行大模型框架](https://ollama.com/)
-- [Xinference-模型服务变得简单](https://github.com/xorbitsai/inference)
-- [huggingface-开源大模型](https://huggingface.co/)
-- [ollama-基本使用](https://github.com/datawhalechina/handy-ollama)
-- [Shimmy: The 5MB Alternative to Ollama](https://github.com/Michael-A-Kuykendall/shimmy)
-- [开源大模型食用（部署）指南](https://github.com/datawhalechina/self-llm)
-- [ModelScope是阿里巴巴推出的开源模型即服务（MaaS）平台](https://www.modelscope.cn/home)
-- [机器学习（ML）和数据科学平台及社区](https://huggingface.co/)
-- [大模型部署电脑配置要求](https://www.zhihu.com/question/628771017)
-- [AutoDL部署 Deepseek](https://zhuanlan.zhihu.com/p/23213698282)
-- [EXO-分布式 AI 集群](https://github.com/exo-explore/exo)
-- [计算 LLM 推理所需的 GPU 内存](https://selfhostllm.org/)
-- [llama.cpp](https://github.com/ggml-org/llama.cpp)
-
 ![](image/大模型部署方式区别.png)
 
 可以使用 ollama 工具
@@ -282,9 +267,23 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 量化技术的核心在于权衡精度与效率。通过降低权重参数的精度，模型的计算量和存储需求大幅减少，但同时也可能引入一定的精度损失。因此，量化算法的设计需要在压缩率和模型性能之间找到最佳平衡点。
 
-## 6、LLM 平台
+## 6、大模型本地部署
 
-![](image/LLM平台选型考虑.png)
+- [GPT4All：在任何设备上运行本地 LLM](https://github.com/nomic-ai/gpt4all)
+- [Ollama-运行大模型框架](https://ollama.com/)
+- [Xinference-模型服务变得简单](https://github.com/xorbitsai/inference)
+- [huggingface-开源大模型](https://huggingface.co/)
+- [ollama-基本使用](https://github.com/datawhalechina/handy-ollama)
+- [Shimmy: The 5MB Alternative to Ollama](https://github.com/Michael-A-Kuykendall/shimmy)
+- [开源大模型食用（部署）指南](https://github.com/datawhalechina/self-llm)
+- [ModelScope是阿里巴巴推出的开源模型即服务（MaaS）平台](https://www.modelscope.cn/home)
+- [huggingface: 机器学习（ML）和数据科学平台及社区](https://huggingface.co/)
+- [大模型部署电脑配置要求](https://www.zhihu.com/question/628771017)
+- [AutoDL部署 Deepseek](https://zhuanlan.zhihu.com/p/23213698282)
+- [EXO-分布式 AI 集群](https://github.com/exo-explore/exo)
+- [计算 LLM 推理所需的 GPU 内存](https://selfhostllm.org/)
+- [llama.cpp](https://github.com/ggml-org/llama.cpp)
+- [如何拥有一个无限制、可联网、带本地知识库的私人 DeepSeek](https://mp.weixin.qq.com/s/qeKrwJXz_QJE6eNwUOhjsA)
 
 ## 7、大模型评测
 
@@ -315,25 +314,41 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 # 二、模型微调
 
+- [论文：从基础到突破微调LLM的终极指南](https://arxiv.org/pdf/2408.13296v1)
 - [MLX LM 是一个 Python 包，用于使用 MLX 在 Apple 芯片上生成文本和微调大型语言模型](https://github.com/ml-explore/mlx-lm)
-- [量化 LLM 的高效微调](https://github.com/artidoro/qlora)
-- [unsloth:模型微调框架](https://docs.unsloth.ai/)
+- [QLoRA：量化 LLM 的高效微调](https://github.com/artidoro/qlora)
+- [unsloth:模型微调框架](https://github.com/unslothai/unsloth)
 - [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 
 - [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
 - Axolotl，YAML 配置驱动，可复现性强注重工程化和实验对比的团队
 - DeepSpeed，ZeRO 分布式训练，支持万亿参数拥有大规模集群的企业和顶尖研究机构
 - [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
-- [大模型训练](https://github.com/hiyouga/LLaMA-Efficient-Tuning)
-- [2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
+- [Minimind-2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
+- [Colab 是一个基于云端的编程环境](https://colab.google/)
 
 ## 1、模型微调基础
 
 ### 1.1、模型微调的概念
 
-- 模型微调的概念与意义
-- 微调和 RAG 的关系
-- 不同场景下微调的必要性
-- 什么是训练/预训练/微调/轻量化微调
+微调是采用预训练模型并在特定领域数据集上进一步训练它的过程。Transformer 允许访问适合各种任务的大量预训练模型。微调这些模型是提高模型以更高的准确性执行特定任务（例如情感分析、问答或文档摘要）的能力的关键步骤
+
+**长文本、RAG、微调**
+
+| 对比维度 | 长文本处理 | 知识库 | 微调 |
+|---------|-----------|--------|------|
+| **核心目标** | 理解和生成长篇内容 | 提供背景知识，增强回答能力 | 优化模型在特定任务或领域的表现 |
+| **优点** | 连贯性强，适合复杂任务 | 灵活性高，可随时更新 | 性能提升，定制化强 |
+| **缺点** | 资源消耗大，上下文限制 | 依赖检索，实时性要求高 | 需要标注数据，硬件要求高 |
+| **适用场景** | 写作助手、阅读理解 | 智能客服、问答系统 | 专业领域、特定任务、风格定制 |
+| **额外数据** | 不需要，但可能需要优化上下文长度 | 需要知识库数据 | 需要特定领域的标注数据 |
+| **重新训练** | 不需要，但可能需要优化模型 | 不需要，只需更新知识库 | 需要对模型进行进一步训练 |
+| **技术实现** | 扩大上下文窗口 | 检索+生成（RAG） | 调整模型参数 |
+| **数据依赖** | 无需额外数据 | 依赖结构化知识库 | 需要大量标注数据 |
+| **实时性** | 静态（依赖输入内容） | 动态（知识库可随时更新） | 静态（训练后固定） |
+| **资源消耗** | 高（长文本计算成本高） | 中（需维护检索系统） | 高（训练算力需求大） |
+| **灵活性** | 中（适合单次长内容分析） | 高（可扩展多知识库） | 低（需重新训练适应变化） |
+
+为什么要做模型微调？通用大模型在特定领域或任务表现可能不佳，微调可实现领域专业化、适配不同任务、纠偏能力，还能保障数据安全，且成本效率高于从头训练，故需模型微调。相比长文本、知识库，微调能深度内化专业知识与任务逻辑，无需依赖实时检索或长文本处理，定制化强，显著提升特定场景性能，且数据安全可控，成本效率更高
 
 ### 1.2、数据工程
 
@@ -343,6 +358,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ### 1.3、微调的核心流程
 
+- 选择预训练模型
 - 数据准备与清洗：选择高质量的数据集
 - 微调技术要点：设置超参数、选择合适的训练方法
 - 模型评估与验证：确保微调后模型的效果
@@ -391,20 +407,19 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - Prompt Tuning、P-Tuning、Prefix Tuning
 - LoRA、QLoRA
 
+## 4、预训练模型
 
-## Huggingface模块开发实战
+## 5、大模型数据集
 
-- Huggingface的安装和开发流程
-- 掌握Huggingface库中各种API的调用
-- Huggingface工具集：批量编码，Loading，评价指标，管道等
-- Transformer加载模型、数据集合预处理
-
-## 大模型数据集
-
+- [LLM数据集生成工具](https://github.com/ConardLi/easy-dataset)
 - [LLMDataHub: Awesome Datasets for LLM Training](https://github.com/Zjh-819/LLMDataHub)
 - [用于后期训练的数据集和工具的精选列表](https://github.com/mlabonne/llm-datasets)
 - [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)
 - [论文： Datasets for Large Language Models: A Comprehensive Survey](https://arxiv.org/pdf/2402.18041)
+
+### 数据集格式
+
+模型微调数据集无明确格式要求，一般在代码中抹除差异，将其转为格式化字符串数组。主流格式有 Alpaca 和 ShareGPT：前者结构简洁，适用于单轮任务、指令微调；后者支持多轮对话与工具调用。
 
 ### 网页数据处理
 
@@ -442,6 +457,15 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 | ChineseWebText | 1.42TB | 开源 | - |
 | SkyPile | 600GB | 开源 | Skywork Community License |
 
+## 6、超参数
+
+- 训练轮数（Epochs）：指遍历训练数据次数，少则不熟、多则过拟合；
+- 学习率（Learning Rate）：决定参数调整幅度，大则进步快易走偏，小则稳定但慢；
+- 批量大小（Batch Size）：是每次更新用的样本数，大则快而粗、小则慢而细。实际需调参验证，小白用默认即可
+
+## 7、训练方法
+
+
 ## 指令微调
 
 ## RLHF：强化学习
@@ -451,6 +475,21 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 ## 模型蒸馏
 
 蒸馏，本质上也是微调的一种类型；传统微调是为了让大模型获取一些私域知识，比如股票、医疗等等，这是让大模型的知识面增加了，但没有改变大模型的能力。而蒸馏不一样，蒸馏不光教知识，还要教能力。所谓授之以鱼，不如授之以渔，蒸馏就是要让被训练的模型能够学会教师模型的能力。
+
+蒸馏版本的参数量从 1.5B 到 70B 不等，比如以下几种变体：
+```
+DeepSeek-R1-Distill-Qwen-1.5B
+DeepSeek-R1-Distill-Qwen-7B
+DeepSeek-R1-Distill-Qwen-14B
+DeepSeek-R1-Distill-Qwen-32B
+DeepSeek-R1-Distill-Llama-8B
+DeepSeek-R1-Distill-Llama-70B
+```
+- DeepSeek-R1 是主模型的名字；
+- Distill 的中文含义是 “蒸馏”，代表这是一个蒸馏后的版本；
+- 后面跟的名字是从哪个模型蒸馏来的版本；
+
+例如 `DeepSeek-R1-Distill-Qwen-32B` 代表是基于阿里的开源大模型千问（Qwen）蒸馏而来；最后的参数量（如 671B、32B、1.5B）：表示模型中可训练参数的数量（“B” 代表 “Billion” ，即十亿。因此，671B、32B、1.5B 分别表示模型的参数量为 6710亿、320亿和15亿。），参数量越大，模型的表达能力和复杂度越高，但对硬件资源的需求也越高。
 
 ### 蒸馏的流程
 
@@ -506,5 +545,5 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - [ChatGPT 替代品，可以在您的电脑上 100% 离线运行](https://github.com/menloresearch/jan)
 - [BCEmbedding: Bilingual and Crosslingual Embedding for RAG](https://github.com/netease-youdao/BCEmbedding)
 - [LangExtract：轻量却强大的结构化信息提取神器](https://github.com/google/langextract)
-
+- [Dolphin: Document Image Parsing via Heterogeneous Anchor Prompting](https://github.com/bytedance/Dolphin)
 
