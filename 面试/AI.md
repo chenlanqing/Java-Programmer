@@ -44,6 +44,43 @@
 
 https://mp.weixin.qq.com/s/O4KQPtYExtLcBbBximlffQ
 
+## 4、LLM能否自己做规划
+
+https://mp.weixin.qq.com/s/_WTjjSCKssTd20lBoGzycQ
+
+主要是考察：对 Agent 框架底层机制的理解深度
+
+### 4.1、现状
+
+在目前主流的 Agent 系统里，不论是 ReAct、BabyAGI 还是 AutoGPT，核心的 “Planning（规划）” 都是写在 Prompt 或代码结构里的
+```
+You are an AI assistant. To complete tasks, always think step by step, consider tools you have, and reason before acting.
+Use this format:
+Think
+Decide
+Act
+Observe
+```
+这其实就是在告诉模型如何“装作”会规划。模型的每一步行动、观察、反思，都是在模板引导下按部就班地产生。 它并不是在“主动思考”，而是在“填空题”
+
+现在的规划，不是 LLM 自己悟出来的，是我们写给它的
+
+### 4.2、LLM 能不能自己做规划
+
+能，但是不靠谱，真正的“Agent 规划”，要求的是：
+- 能动态调整计划；
+- 能看环境反馈再决定下一步；
+- 能持续修正目标。
+
+这些，目前 LLM 靠自己还做不到。
+
+所以我们才会看到各种框架都在帮它“补脑”：
+- ReAct：让它“想一步，做一步”；
+- MRKL：帮它“选工具”；
+- BabyAGI：帮它“维护任务列表”；
+- AutoGPT：帮它“循环执行命令”。
+
+它们的本质都一样，让 LLM 看起来像在思考，其实是被程序框架“拎着走”
 
 # 二、RAG
 
