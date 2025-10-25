@@ -312,6 +312,10 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 - [Kronos 是首个面向金融市场的解读 K 线图基础模型](https://github.com/shiyu-coder/Kronos)
 
+## 9、LLM安全
+
+- [专注于大型语言模型 （LLM） 的安全相关论文、文章和资源的精选列表](https://github.com/ydyjya/Awesome-LLM-Safety)
+
 # 二、模型微调
 
 - [论文：从基础到突破微调LLM的终极指南](https://arxiv.org/pdf/2408.13296v1)
@@ -375,6 +379,15 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - LLaMA-Factory框架
 - DeepSpeed
 
+**Unsloth 与 LLaMA Factory对比**
+- Unsloth 适合:
+    - **资源受限场景**: 由于其出色的内存优化能力和快速的微调速度，非常适合在资源受限的环境中使用，如个人开发者使用消费级 GPU 进行大模型微调，或者企业在低成本硬件上进行模型实验和开发。
+    - **快速迭代场景**: 对于需要快速迭代模型的场景，如学术研究中的实验验证、企业的快速原型开发等，Unsloth 的高效微调能力可以帮助用户在更短的时间内获得微调后的模型，加快项目进度。
+- LLaMA Factory 适合:
+    - **通用场景**: 由于其支持多种模型和训练算法，适用于各种通用的大语言模型训练和微调场景，无论是文本生成、情感分析还是机器翻译等任务，都可以使用 LLaMA Factory 进行模型的定制化训练。
+    - **企业级应用**: 提供了 API Server 和一站式 WebUI Board，方便企业进行模型的管理和部署。
+    - **零代码**: 适合不会写代码或代码基础比较弱的同学快速上手进行微调。
+
 ## 2、大模型训练技术
 
 ### 2.1、分布式训练
@@ -409,8 +422,36 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ## 4、预训练模型
 
+### 4.1、模型选择
+
+在微调前，选择一个合适的基座模型非常重要
+
+| 分类 | 标识 | 含义 | 示例 (模型名称) |
+|------|------|------|----------------|
+| **功能与任务类型** | -Base | 基础模型，未经过特定任务微调，提供原始能力（用于二次开发）。 | Qwen-14B-Base |
+| | -Chat | 对话优化模型，支持交互式聊天、问答，针对对话生成任务微调。 | DeepSeek-LLM-7B-Chat |
+| | -Instruct | 指令微调模型，擅长遵循具体任务指令（推理、生成、翻译等）。 | Qwen-3-0.6B-Instruct |
+| | -Distill | 知识蒸馏模型，通过蒸馏技术压缩，模型更小、推理更高效。 | DeepSeek-R1-1.5B-Distill |
+| | -Math | 专注数学推理任务，优化数值计算、公式解析、逻辑证明等能力。 | DeepSeek-Math-7B-Instruct |
+| | -Coder | 针对代码生成、编程任务优化，支持代码补全、漏洞检测、算法实现等。 | DeepSeek-Coder-V2-16B |
+| **多模态** | -VL | 视觉-语言多模态（Vision-Language），支持图文联合输入输出。 | Kimi-VL-A3B-Instruct |
+| | -Video | 视频多模态模型，结合视频帧与文本进行交互。 | LLaVA-NEXT-Video-7B-Chat |
+| | -Audio | 支持音频输入输出，涉及语音识别（ASR）或语音生成（TTS）。 | Qwen2-Audio-7B |
+| **技术特性与优化** | -Int8/-Int4 | 权重量化为8位/4位，降低显存占用，提升推理速度（适合低资源设备）。 | Qwen2-VL-2B-Instruct-GPTQ-Int8 |
+| | -AWQ/-GPTQ | 特定量化技术（自适应权重/GPTQ量化），优化低精度下的模型性能。 | Qwen2.5-VL-72B-Instruct-AWQ |
+| | -MoE | 混合专家模型（Mixture of Experts），包含多个专用模块处理复杂任务。 | DeepSeek-MoE-16B-Chat |
+| | -RL | 使用强化学习（Reinforcement Learning）优化，提升对话质量或任务响应。 | MiMo-7B-Instruct-RL |
+| **版本与变体标识** | -v0.1/-v0.2 | 模型版本号，标识开发阶段（alpha/beta/正式版）。 | Mistral-7B-v0.1 |
+| | -Pure | 纯净版模型，去除领域数据或保留原始能力，避免预训练偏差。 | Index-1.9B-Base |
+| | -Character | 角色对话模型，专注角色扮演或特定人设（如虚拟助手、动漫角色）。 | Index-1.9B-Character-Chat |
+| | -Long-Chat | 支持长上下文对话（通常>4k tokens），处理超长输入输出。 | Orion-14B-Long-Chat |
+| **领域与应用标识** | -RAG | 检索增强生成模型，结合外部知识库检索与生成能力。 | Orion-14B-RAG-Chat |
+| | -Chinese | 中文优化版本，支持中文分词、方言、拼音纠错等本土化能力。 | Llama-3-70B-Chinese-Chat |
+| | -MT | 机器翻译专用模型，支持多语言翻译任务（如中英、英日互译）。 | BLOOMZ-7B1-mt |
+
 ## 5、大模型数据集
 
+- [LLaMA Factory 微调教程：如何构建高质量数据集？](https://zhuanlan.zhihu.com/p/1916489160333714285)
 - [LLM数据集生成工具](https://github.com/ConardLi/easy-dataset)
 - [LLMDataHub: Awesome Datasets for LLM Training](https://github.com/Zjh-819/LLMDataHub)
 - [用于后期训练的数据集和工具的精选列表](https://github.com/mlabonne/llm-datasets)
