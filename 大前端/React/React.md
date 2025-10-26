@@ -2135,6 +2135,7 @@ const MemoChild = memo(Child)
 
 - [移动端-平滑滚动组件](https://github.com/ustbhuangyi/better-scroll)
 - [swiper-轮播图](https://swiper.com.cn/)
+- [React Bits: 超级炫酷的开源 UI 组件](https://github.com/DavidHDev/react-bits)
 
 # 参考资料
 
