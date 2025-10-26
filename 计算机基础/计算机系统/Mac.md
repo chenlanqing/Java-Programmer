@@ -29,11 +29,10 @@ TIME_WAIT 1645
 
 ## 4、Mac下装机软件
 
-https://xclient.info/
-
-[第三方软件管理](https://aerolite.dev/applite)
-
-https://github.com/qianguyihao/Mac-list
+- https://xclient.info/
+- [第三方软件管理](https://aerolite.dev/applite)
+- [Mac软件清单](https://github.com/qianguyihao/Mac-list)
+- [各种类别的优质软件](https://github.com/jaywcjlove/awesome-mac)
 
 ### 4.1、文本编辑
 
