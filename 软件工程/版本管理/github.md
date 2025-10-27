@@ -35,6 +35,8 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 - [zdoc:一个免费的工具，可将 GitHub 的 README 翻译成多种语言，并保持同步](https://www.zdoc.app/zh)
 - [Deepwiki:源码解读工具](https://deepwiki.com/)
+- [Stunning insights for your GitHub Repo](https://repobeats.axiom.co/)
+- [Github star history](https://www.star-history.com/)
 
 # 开源项目
 

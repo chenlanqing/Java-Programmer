@@ -160,3 +160,15 @@
 - Redis（单线程I/O模型的典范）
 - Nginx（事件驱动架构的标杆）
 - SQLite（一个文件就是一个数据库，代码质量极高）。
+
+## Star History
+
+<a href="https://www.star-history.com/#chenlanqing/Java-Programmer&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=chenlanqing/Java-Programmer&type=date&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=chenlanqing/Java-Programmer&type=date&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=chenlanqing/Java-Programmer&type=date&legend=top-left" />
+ </picture>
+</a>
+
+![Alt](https://repobeats.axiom.co/api/embed/74161422c09a834f11e08dd9b97fc9fcf0a5763b.svg "Repobeats analytics image")
