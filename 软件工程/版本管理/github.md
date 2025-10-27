@@ -31,7 +31,12 @@ https://cyfeng.science/2020/12/21/rename-github-branch-from-master-to-main/
 
 github 用户排行榜：https://china-ranking.aolifu.org/
 
-# 5、开源项目
+# 5、工具
+
+- [zdoc:一个免费的工具，可将 GitHub 的 README 翻译成多种语言，并保持同步](https://www.zdoc.app/zh)
+- [Deepwiki:源码解读工具](https://deepwiki.com/)
+
+# 开源项目
 
 ## 休闲
 

@@ -647,6 +647,8 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 ## 开源 Agent
 
+- [Deep Search Agent:一个无框架的深度搜索AI代理实现，能够通过多轮搜索和反思生成高质量的研究报告](https://github.com/666ghj/DeepSearchAgent-Demo)
+- [舆情检测Agents](https://github.com/666ghj/BettaFish)
 - [500 个 各行各业 AI Agent用例的精选集合](https://github.com/ashishpatel26/500-AI-Agents-Projects)
 - [browser-use：AI 操作浏览器](https://github.com/browser-use/browser-use)
 - [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
