@@ -290,6 +290,10 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 
 ![](image/RAG-核心流程.png)
 
+# RAG分块策略
+
+![](image/RAG-5种分块策略.gif)
+
 # RAG优化
 
 - [RAG优化策略总结](https://www.53ai.com/news/RAG/2025041523890.html)
