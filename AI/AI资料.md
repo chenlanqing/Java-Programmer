@@ -65,6 +65,7 @@
 - [AI 大模型自动化流程](https://yuju-ai.com/)
 - [n8n-具有本机AI功能的公平代码工作流程自动化平台](https://github.com/n8n-io/n8n)
 - [n8n 模板集合](https://github.com/enescingoz/awesome-n8n-templates)
+- https://github.com/Danitilahun/n8n-workflow-templates
 - [N8N Workflow Collection & Documentation](https://github.com/Zie619/n8n-workflows)
 - [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
@@ -92,10 +93,14 @@
 
 ## Sandbox & Virtualization
 
+沙盒与虚拟化
+
 - [轻松安全地执行不受信任的用户/AI 代码](https://github.com/microsandbox/microsandbox)
 - [Docker-MCP](https://github.com/QuantGeekDev/docker-mcp)
 - [E2B-开源的 Linux Sandbox](https://github.com/e2b-dev/e2b)
 - [Daytona 是一个安全且有弹性的基础设施-Linux Sandbox](https://github.com/daytonaio/daytona)
+- [gVisor：应用程序内核，使运行沙盒容器变得简单](https://github.com/google/gvisor)
+- [Firecracker 是一种开源虚拟化技术，专门用于创建和管理安全的多租户容器和基于功能的服务](https://github.com/firecracker-microvm/firecracker)
 
 # AI 工作平台
 

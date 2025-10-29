@@ -8,6 +8,7 @@
 - [构建自主 AI Agent](https://github.com/ed-donner/agents)
 - [AG-UI 是一种轻量级的、基于事件的协议](https://github.com/ag-ui-protocol/ag-ui)
 - [Routine框架：让企业级Agent告别“不靠谱”](https://arxiv.org/pdf/2507.14447)
+- [论文：Fundamentals of Building Autonomous LLM Agents](https://arxiv.org/abs/2510.09244)
 
 ## 概念
 
@@ -974,6 +975,7 @@ async def fetch_weather(city: str) -> str:
 
 ### 其他
 
+- [MCP Toolbox for Databases 是一个用于数据库的开源 MCP 服务器](https://github.com/googleapis/genai-toolbox)
 - [提供专门的 AI Pieces ，让你轻松连接各种 AI 模型提供商](https://github.com/MCP-Mirror/activepieces_activepieces)
 - [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 - [PromptX是一个系统性的，工程化的提示词管理框架](https://github.com/Deepractice/PromptX)
