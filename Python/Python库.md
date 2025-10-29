@@ -29,3 +29,4 @@ Pydantic 用适度的实例化开销换来了强大的校验功能和开发便�
 - [Pathway：用于流处理、实时分析、LLM 管道和 RAG 的 Python ETL 框架](https://github.com/pathwaycom/pathway)
 - 数据并行计算：Dask
 - [Python金融程序](https://github.com/shashankvemuri/Finance)
+- [blind-watermark：图片盲水印，提取水印无须原图！](https://github.com/guofei9987/blind_watermark)

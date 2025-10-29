@@ -51,6 +51,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [自动修正错误命令](https://github.com/nvbn/thefuck)
 - [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
 - [x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
+- [Ladybird 是真从零写的独立浏览器，不是 Chromium 换皮](https://github.com/LadybirdBrowser/ladybird)
 
 ## 软件测试开源项目
 
