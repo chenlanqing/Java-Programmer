@@ -75,9 +75,18 @@
 - [一键生成视频](https://github.com/harry0703/MoneyPrinterTurbo)
 - [Magic:开源全栈 AI 生产力矩阵](https://github.com/dtyq/magic)
 - [Open Lovable 是一个开源的、基于 AI 的网站克隆神器:只需要输入一个网址，几秒钟后，你就能得到一个可以运行的、现代 React 代码版本](https://github.com/mendableai/open-lovable)
-- [Qbot：AI智能量化投研平台](https://github.com/UFund-Me/Qbot)
 - [Bytebot 是一个自托管的 AI 桌面代理，它通过自然语言命令自动执行计算机任务，在容器化的 Linux 桌面环境中运行](https://github.com/bytebot-ai/bytebot)
 - [找工作助手](https://github.com/loks666/get_jobs)
+
+## 金融应用
+
+- [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
+- [Qbot：AI智能量化投研平台](https://github.com/UFund-Me/Qbot)
+- [AI-Trader：人工智能能否击败市场](https://github.com/HKUDS/AI-Trader)
+- [AI-交易大赛](https://nof1.ai/)
+- [TradingAgents-基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
+- [TradingAgents-中文增强版: 基于多智能体LLM的中文金融交易框架](https://github.com/hsliuping/TradingAgents-CN)
+- [ValueCell：多 Agent 平台，专为金融投资设计的](https://github.com/ValueCell-ai/valuecell)
 
 # AI 搜索
 

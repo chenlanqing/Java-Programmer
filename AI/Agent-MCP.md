@@ -638,7 +638,6 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [AIPy 是Python-use概念的具体实现，是一个融合了大语言模型（LLM）与Python运行环境的开源工具](https://github.com/knownsec/aipyapp)
 - [JoyAgent-JDGenie: 开源端到端的通用 Agent](https://github.com/jd-opensource/joyagent-jdgenie)
 - [agno：用于构建具有内存、知识和推理的Multi Agent的全栈框架](https://github.com/agno-agi/agno)
-- [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
 - [用于多代理工作流程的轻量级、功能强大的框架](https://github.com/openai/openai-agents-python)
 
 ### CUA
@@ -662,9 +661,6 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
 - [快速开发AI Agent](https://github.com/huggingface/smolagents)
 - [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
-- [TradingAgents-基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
-- [TradingAgents-中文增强版: 基于多智能体LLM的中文金融交易框架](https://github.com/hsliuping/TradingAgents-CN)
-- [ValueCell：多 Agent 平台，专为金融投资设计的](https://github.com/ValueCell-ai/valuecell)
 - [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
 - [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
 - [EvoAgentX-自动演进的Agents](https://github.com/EvoAgentX/EvoAgentX)
