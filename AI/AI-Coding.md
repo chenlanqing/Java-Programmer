@@ -133,7 +133,11 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 - [将任何 Git 存储库转换为其代码库的简单文本摘要](https://github.com/coderamp-labs/gitingest)
 
-# 二、Codex
+# 二、Claude Code
+
+- [使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
+
+# 三、Codex
 
 - [Codex getting started](https://github.com/openai/codex/blob/main/docs/getting-started.md)
 - [AGENTS.md — a simple, open format for guiding coding agents](https://github.com/openai/agents.md)
@@ -181,3 +185,6 @@ source ~/.zshrc
 - [Ready to use Native AI](https://2233.ai/aicoding)
 - [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
+- [SSD:规范驱动开发的工具包](https://github.com/github/spec-kit)
+- [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
+- [Killer, Claude Code](https://cc.deeptoai.com/)
