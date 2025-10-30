@@ -285,6 +285,22 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [llama.cpp](https://github.com/ggml-org/llama.cpp)
 - [如何拥有一个无限制、可联网、带本地知识库的私人 DeepSeek](https://mp.weixin.qq.com/s/qeKrwJXz_QJE6eNwUOhjsA)
 
+### 6.1、显卡需求和推荐模型
+
+使用 int4 + QLora 训练（效果并不会比Full-finetuning差多少，lora rank设置较大且应用到所有层）8K 上下文时，显存16GB的显卡则可以训练 20B 以下模型，显存24GB的显卡则可以训练 32B（含）以下模型。
+
+推荐微调 1-7B 模型。推荐性价比显卡：4090，计算能力和显存带宽都足够好，比L40等商业卡还好用。
+
+### 6.2. 服务商
+
+- [google：免费提供 T4 等显卡，显存16GB](https://colab.research.google.com/)
+- [新用户赠送 100h GPU 时间（16G、24G显卡）](https://modelscope.cn/)
+- [每日签到可以领取免费 GPU 时间，但是限制框架只能使用 Paddle](https://aistudio.baidu.com/)
+- [注册送 50元，4090显卡 2元/小时](https://console.ebcloud.com/)
+- [显卡型号众多（适合测试模型在不同显卡上的性能），4090 2-3元/小时](https://www.autodl.com/)
+- https://www.suanlix.cn/
+- https://www.runpod.io/
+
 ## 7、大模型评测
 
 ### 7.1、如何分辨大模型的优劣
@@ -476,7 +492,81 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 我已经看到了图片中的表格内容。以下是将图片内容转换为markdown格式的表格：
 
-### 国外预训练语料库
+### 高质量数据集
+
+#### 预训练数据集
+
+| 高质量数据集（有中文）                                                                                  | 大小                            | 特点                          |
+| -------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------- |
+| [IndustryCorpus2](https://huggingface.co/datasets/BAAI/IndustryCorpus2)                      | 1TB Chinese / 2.2TB English   | 进行行业分类（31个行业），并对数据质量评级。     |
+| [Fineweb-Edu-Chinese-V2.1](https://huggingface.co/datasets/opencsg/Fineweb-Edu-Chinese-V2.1) | =1.5TBtokens                  | 有4.6B Tokens 高质量教育语料        |
+| [m-a-p/Matrix](https://huggingface.co/datasets/m-a-p/Matrix)                                 | 4.69T tokens                  | 训练 MAP-Neo 模型的预训练数据集        |
+| [Ultra-FineWeb](https://huggingface.co/datasets/openbmb/Ultra-FineWeb)                       | en 1T tokens / zh 120B tokens | 最新的，过滤的更好的数据集               |
+| [opencsg/chinese-cosmopedia](https://huggingface.co/datasets/opencsg/chinese-cosmopedia)     | zh 60B tokens                 | 参考 CosMopedia 创建的中文合成预训练数据集 |
+
+**数据处理工具**：
+- https://github.com/huggingface/datatrove
+- https://github.com/modelscope/data-juicer
+- https://github.com/multimodal-art-projection/MAP-NEO/tree/main/Matrix
+- https://github.com/OpenDCAI/DataFlow
+
+#### SFT 数据集
+
+| SFT 数据集                                                                                                                 | 大小   | 语言       | 特点                             |
+| ----------------------------------------------------------------------------------------------------------------------- | ---- | -------- | ------------------------------ |
+| [m-a-p/neo_sft_phase2](https://huggingface.co/datasets/m-a-p/neo_sft_phase2)                                            | 109k | 中英       | MAP-Neo SFT 阶段2 Chat 数据，质量不错。  |
+| [OpenCoder-LLM/opc-sft-stage1](https://huggingface.co/datasets/OpenCoder-LLM/opc-sft-stage1)                            | 3.2M | 中英（中文较少） | 从多个数据集中过滤和合成而来，有通用指令，更关注代码类数据。 |
+| [OpenCoder-LLM/opc-sft-stage2](https://huggingface.co/datasets/OpenCoder-LLM/opc-sft-stage2)                            | 436k | 英        | 高质量的代码类数据。                     |
+| [BAAI/Infinity-Instruct](https://huggingface.co/datasets/BAAI/Infinity-Instruct)                                        | 7M   | 中英（中文较少） | 多个尺寸的指令和对话数据。                  |
+| [hfl/ruozhiba_gpt4](https://huggingface.co/datasets/hfl/ruozhiba_gpt4)                                                  | 4.9k | 中        | 著名的弱智吧+GPT4回答，对模型的能力有提升。       |
+| [Mxode/Chinese-Instruct](https://huggingface.co/datasets/Mxode/Chinese-Instruct)                                        | 485k | 中        | 从多个数据集中筛选的中文指令数据集，价值较高。        |
+| [SmolLM Instruct Datasets](https://huggingface.co/collections/HuggingFaceTB/instruct-datasets-66c12756198f9d79f2a60550) | -    | 英        | 多个开源数据集。其中自我认知部分值得参考。          |
+| [Magpie-Qwen2-Pro-200K-Chinese](https://huggingface.co/datasets/Magpie-Align/Magpie-Qwen2-Pro-200K-Chinese)             | 200k | 中        | 使用 MagPie 从 Qwen2-72B 中提取的指令集。 |
+| [lenML/longwriter-6k-filtered](https://huggingface.co/datasets/lenML/longwriter-6k-filtered)                            | 666  | 英        | 长文本输出（写作）                      |
+| [THUDM/LongAlign-10k](https://huggingface.co/datasets/THUDM/LongAlign-10k)                                              | 10k  | 中英       | 长文本输入                          |
+| [opencsg/smoltalk-chinese](https://huggingface.co/datasets/opencsg/smoltalk-chinese)                                    | 700k | 中        | 参考 SmolTalk 数据集创建的中文数据集        |
+- Yulan的[数据 Recipe](https://docs.google.com/spreadsheets/d/1YP8-loVUxgxo36UEpOwflR3GRHLieBnLlCy8g10g8RU/edit?gid=0#gid=0) 不错，详细说明了其数据来源，可参考。
+
+#### 偏好数据集
+
+| 偏好数据集                                                                                                          | 大小   | 语言  | 特点                                    |
+| -------------------------------------------------------------------------------------------------------------- | ---- | --- | ------------------------------------- |
+| [llamafactory/DPO-En-Zh-20k](https://huggingface.co/datasets/llamafactory/DPO-En-Zh-20k)                       | 20k  | 中英  | 多个来源整理，质量较高，中英各10k                    |
+| [unalignment-toxic-dpo-v0.2-zh_cn](https://huggingface.co/datasets/tastypear/unalignment-toxic-dpo-v0.2-zh_cn) | 541  | 中   | 去除模型安全逻辑                              |
+| [ultrafeedback_binarized](https://huggingface.co/datasets/HuggingFaceH4/ultrafeedback_binarized)               | 187k | 英   | 将 UltraFeedback改成二元偏好的数据集             |
+| [opencsg/UltraFeedback-chinese](https://huggingface.co/datasets/opencsg/UltraFeedback-chinese)                 | 58k  | 中   | 多个中文资源库中收集了约58k条中文指令，使用DeepSeek V3 评分 |
+ 
+#### 推理数据集
+
+| 推理数据集                                                                                                                  | 类型  | 大小   | 语言  | 特点                            |
+| ---------------------------------------------------------------------------------------------------------------------- | --- | ---- | --- | ----------------------------- |
+| [m-a-p/COIG-Writer](https://huggingface.co/datasets/m-a-p/COIG-Writer)                                                 | SFT | 914  | 中   | 高质量中文创作与思考过程蒸馏数据集             |
+| [INTELLECT-2-RL-Dataset](https://huggingface.co/datasets/PrimeIntellect/INTELLECT-2-RL-Dataset)                        | RL  | 285k | 英   | RL math/code 数据集带ground_truth |
+| [open-thoughts/OpenThoughts3-1.2M](https://huggingface.co/datasets/open-thoughts/OpenThoughts3-1.2M)                      | SFT | 1M   | 英   | DeepSeek 蒸馏出的大量数据             |
+| [Chinese-DeepSeek-R1-Distill-data-110k](https://huggingface.co/datasets/Congliu/Chinese-DeepSeek-R1-Distill-data-110k) | SFT | 110k | 中   | 中文的 DeepSeek 蒸馏推理数据集          |
+
+#### 评测数据集
+
+| 评测数据集                                                  | 类型            | 大小  | 语言  | 特点                        |
+| ------------------------------------------------------ | ------------- | --- | --- | ------------------------- |
+| LiveBench                                              | 综合（偏数学和代码）    |     | 英   | 定时更新的综合评测集，质量较高           |
+| [AlignBench](https://github.com/THUDM/AlignBench) v1.1 | 多轮对话          | 683 | 中   | 中文对齐评测集，需要LLM作为裁判         |
+| IFEval                                                 | 指令遵循          |     | 英   | 自动打分                      |
+| 大海捞针                                                   | 长上下文          |     | 英   | 通过插入针的方法评测长上下文能力          |
+| Arena-Hard                                             | 多轮对话          |     | 英   | Arena 中比较难的问题，需要 LLM 作为裁判 |
+| BFCL v3                                                | 函数调用          |     | 英   | 比较全面的函数调用评测集              |
+| MMLU-Redux                                             | 综合（世界知识）      |     | 英   | MMLU的增强版本                 |
+| GPQA-Diamond                                           | 综合（世界知识、复杂推理） |     | 英   | GPQA 中比较难的问题（博士级别）        |
+| AIME’24                                                | 数学推理          |     | 英   | 2024年的AIME数据集             |
+| LiveCodeBench v5                                       | 代码生成          |     | 英   | 定时更新的代码生成评测集              |
+| C-Eval                                                 | 综合（世界知识）      |     | 中   | 中文场景下的综合评测集，目前模型多过拟合。     |
+| CMMLU                                                  | 综合（世界知识）      |     | 中   | 中文场景下的综合评测集，目前模型多过拟合。     |
+| MATH-500                                               | 数学推理          |     | 英   | OpenAI 的MATH数据集           |
+| AIME’25                                                | 数学推理          |     | 英   | 2025年的AIME数据              |
+| RULER                                                  | 长上下文          |     | 英   | 评测模型上上下文的能力               |
+ 
+
+#### 国外预训练语料库
 
 | 语料库 | 大小 | 开源状态 | 开源协议 |
 |--------|------|----------|----------|
@@ -494,7 +584,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 | OSCAR | 8.41 TB | 开源 | CC0 |
 | OpenWebMath | 26 GB | 开源 | ODC-BY-1.0 |
 
-### 国内预训练语料库
+#### 国内预训练语料库
 
 | 语料库 | 大小 | 开源情况 | 开源协议 |
 |--------|------|----------|----------|
