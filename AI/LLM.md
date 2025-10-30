@@ -6,6 +6,7 @@
 - [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
 - [「大模型」2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
+- [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 
 ## 1、基本概念
 
@@ -55,8 +56,6 @@ token 是介于单词和字母之间的一个子词，语料中出现最频繁�
 - 虽然词表变少了，但是字母本身并没有很强的语意信息，增加了模型训练的难度；
 
 ### 2.2、大模型技术原理
-
-- [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 
 主要技术架构是基于 [transformer](https://en.wikipedia.org/wiki/Transformer_(deep_learning_architecture))
 
@@ -335,22 +334,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 # 二、模型微调
 
 - [论文：从基础到突破微调LLM的终极指南](https://arxiv.org/pdf/2408.13296v1)
-- [MLX LM 是一个 Python 包，用于使用 MLX 在 Apple 芯片上生成文本和微调大型语言模型](https://github.com/ml-explore/mlx-lm)
-- [QLoRA：量化 LLM 的高效微调](https://github.com/artidoro/qlora)
-- [unsloth:模型微调框架](https://github.com/unslothai/unsloth)
-- [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 
-- [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
-- Axolotl，YAML 配置驱动，可复现性强注重工程化和实验对比的团队
-- DeepSpeed，ZeRO 分布式训练，支持万亿参数拥有大规模集群的企业和顶尖研究机构
-- [Minimind-2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
-- [Colab 是一个基于云端的编程环境](https://colab.google/)
-- [LMFlow : 一个可扩展、方便和高效的工具箱，用于微调大型机器学习模型。支持所有 Decoder 模型的微调](https://github.com/OptimalScale/LMFlow)
-- [FastChat 是一个开放平台，用于训练、服务和评估基于大型语言模型的聊天机器人](https://github.com/lm-sys/FastChat)
-- [PEFT:参数高效微调工具库。支持 LoRA、Prefix Tuning、P-Tuning、Prompt Tuning、AdaLoRA等方法。](https://github.com/huggingface/peft)
-- [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
-- [BELLE: 基于 LLaMA 的中文模型及微调训练工具库。](https://github.com/LianjiaTech/BELLE)
-- [Linly: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型。](https://github.com/CVI-SZU/Linly)
-- [Chinese-LLaMA-Alpaca: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+- [The Comprehensive Guide to Fine-tuning LLM](https://medium.com/data-science-collective/comprehensive-guide-to-fine-tuning-llm-4a8fd4d0e0af)
 
 ## 1、模型微调基础
 
@@ -411,6 +395,23 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
     - **零代码**: 适合不会写代码或代码基础比较弱的同学快速上手进行微调。
 
 ## 2、大模型训练技术
+
+- [MLX LM 是一个 Python 包，用于使用 MLX 在 Apple 芯片上生成文本和微调大型语言模型](https://github.com/ml-explore/mlx-lm)
+- [QLoRA：量化 LLM 的高效微调](https://github.com/artidoro/qlora)
+- [unsloth:模型微调框架](https://github.com/unslothai/unsloth)
+- [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 
+- [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
+- Axolotl，YAML 配置驱动，可复现性强注重工程化和实验对比的团队
+- DeepSpeed，ZeRO 分布式训练，支持万亿参数拥有大规模集群的企业和顶尖研究机构
+- [Minimind-2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
+- [Colab 是一个基于云端的编程环境](https://colab.google/)
+- [LMFlow : 一个可扩展、方便和高效的工具箱，用于微调大型机器学习模型。支持所有 Decoder 模型的微调](https://github.com/OptimalScale/LMFlow)
+- [FastChat 是一个开放平台，用于训练、服务和评估基于大型语言模型的聊天机器人](https://github.com/lm-sys/FastChat)
+- [PEFT:参数高效微调工具库。支持 LoRA、Prefix Tuning、P-Tuning、Prompt Tuning、AdaLoRA等方法。](https://github.com/huggingface/peft)
+- [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
+- [BELLE: 基于 LLaMA 的中文模型及微调训练工具库。](https://github.com/LianjiaTech/BELLE)
+- [Linly: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型。](https://github.com/CVI-SZU/Linly)
+- [Chinese-LLaMA-Alpaca: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
 
 ### 2.1、分布式训练
 
