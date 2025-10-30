@@ -326,9 +326,15 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
 - Axolotl，YAML 配置驱动，可复现性强注重工程化和实验对比的团队
 - DeepSpeed，ZeRO 分布式训练，支持万亿参数拥有大规模集群的企业和顶尖研究机构
-- [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
 - [Minimind-2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
 - [Colab 是一个基于云端的编程环境](https://colab.google/)
+- [LMFlow : 一个可扩展、方便和高效的工具箱，用于微调大型机器学习模型。支持所有 Decoder 模型的微调](https://github.com/OptimalScale/LMFlow)
+- [FastChat 是一个开放平台，用于训练、服务和评估基于大型语言模型的聊天机器人](https://github.com/lm-sys/FastChat)
+- [PEFT:参数高效微调工具库。支持 LoRA、Prefix Tuning、P-Tuning、Prompt Tuning、AdaLoRA等方法。](https://github.com/huggingface/peft)
+- [LLaMA-Adapter](https://github.com/OpenGVLab/LLaMA-Adapter)
+- [BELLE: 基于 LLaMA 的中文模型及微调训练工具库。](https://github.com/LianjiaTech/BELLE)
+- [Linly: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型。](https://github.com/CVI-SZU/Linly)
+- [Chinese-LLaMA-Alpaca: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
 
 ## 1、模型微调基础
 
@@ -458,9 +464,11 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)
 - [论文： Datasets for Large Language Models: A Comprehensive Survey](https://arxiv.org/pdf/2402.18041)
 
-### 数据集格式
+### 1、数据集格式
 
-模型微调数据集无明确格式要求，一般在代码中抹除差异，将其转为格式化字符串数组。主流格式有 Alpaca 和 ShareGPT：前者结构简洁，适用于单轮任务、指令微调；后者支持多轮对话与工具调用。
+模型微调数据集无明确格式要求，一般在代码中抹除差异，将其转为格式化字符串数组。主流格式有 Alpaca 和 ShareGPT：
+- Alpaca：结构简洁，适用于单轮任务、指令微调；
+- ShareGPT：支持多轮对话与工具调用。
 
 ### 网页数据处理
 
