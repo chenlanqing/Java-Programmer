@@ -177,6 +177,7 @@ source ~/.zshrc
 
 # 参考资料
 
+- [Ruler — apply the same rules to all coding agents](https://github.com/intellectronica/ruler)
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
 - [Claude Code、Codex镜像服务](https://aicoding.sh/)

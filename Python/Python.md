@@ -27,7 +27,7 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 - [基于Java的AI开源量化交易平台](https://gitee.com/dromara/northstar/)
 - [Qlib 是一个以 AI 为导向的量化投资平台，旨在利用 AI 技术赋能量化研究，从探索想法到实施生产](https://github.com/microsoft/qlib)
 - [nautilus_trader-开源交易平台、策略回测](https://github.com/nautechsystems/nautilus_trader)
-
+- [Panda AI Agent-量化投资助手](https://www.pandaai.online/)
 
 # 数据科学
 

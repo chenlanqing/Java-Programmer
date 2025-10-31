@@ -972,6 +972,7 @@ async def fetch_weather(city: str) -> str:
 
 ### 其他
 
+- [DeepMCPAgent 是一个基于 LangChain/LangGraph 的 AI 智能体框架，完全通过 MCP 来驱动整体行为](https://github.com/cryxnet/DeepMCPAgent)
 - [MCP Toolbox for Databases 是一个用于数据库的开源 MCP 服务器](https://github.com/googleapis/genai-toolbox)
 - [提供专门的 AI Pieces ，让你轻松连接各种 AI 模型提供商](https://github.com/MCP-Mirror/activepieces_activepieces)
 - [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
