@@ -1,4 +1,47 @@
-# 一、Cursor
+# 一、AI编程
+
+## 1、拆解项目
+
+规划好项目架构：一般来说可以按层级来规划，最简单的模型可以分为三层：
+- 1️⃣ 数据存储层（Data Layer）
+  * 项目需要处理哪些数据？
+  * 使用什么框架和中间件存储？
+  * 是否需要关系型 / 非关系型数据库？是否引入消息队列？
+- 2️⃣ 业务逻辑层（Business Layer）
+  * 项目的核心业务逻辑是什么？
+  * 主流程如何？是否要拆分多个业务子系统？
+  * 模块间数据流转逻辑如何？
+- 3️⃣ 用户交互层（UI Layer）
+  * 项目如何与用户交互：客户端、Web端还是APP？
+  * 功能页面有哪些？信息流如何设计？
+
+**深入拆解时需考虑的关键问题**
+
+| 维度   | 关键问题                                           |
+| ---- | ---------------------------------------------- |
+| 功能设计 | 网站/系统有哪些功能单元？数据流转路径如何？                         |
+| 技术选型 | 后端语言：Java、Python、Node.js？框架：Spring Boot、Flask？ |
+| 数据建模 | 设计哪些数据库表？字段？是否要加索引？                            |
+| 核心流程 | 各核心模块的处理流程是怎样的？                                |
+| 账户体系 | 自建账户 or 第三方登录（微信等）？                            |
+| 文件存储 | 本地存储 or 云服务（OSS等）？                             |
+| 性能优化 | 是否对性能要求高？是否要考虑索引、缓存？                           |
+
+
+**AI编程的正确使用姿势**
+* **不要**“想到哪写哪”，这样会造成代码混乱、难以维护。
+* **要先设计架构蓝图**，再让AI在框架内实现。
+* 你的角色 = 架构师 & 产品经理
+  * AI的角色 = 执行者、代码工
+* 这样你可以随时纠偏，快速调整。
+
+## 2、工具选择
+
+- Codex
+- Claude Code
+- Claude Code + GLM4.5
+
+# 二、Cursor
 
 - [Cursor AI编程经验分享](https://mp.weixin.qq.com/s/UM3nBcX6JpYtnchSCdrxOA)
 
@@ -133,11 +176,12 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [Context7-LLMs 和 AI 代码编辑器的最新代码文档](https://github.com/upstash/context7)
 - [将任何 Git 存储库转换为其代码库的简单文本摘要](https://github.com/coderamp-labs/gitingest)
 
-# 二、Claude Code
+# 三、Claude Code
 
 - [使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
+- https://github.com/anthropics/claude-cookbooks
 
-# 三、Codex
+# 四、Codex
 
 - [Codex getting started](https://github.com/openai/codex/blob/main/docs/getting-started.md)
 - [AGENTS.md — a simple, open format for guiding coding agents](https://github.com/openai/agents.md)
