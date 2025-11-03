@@ -472,7 +472,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 | | -Chinese | 中文优化版本，支持中文分词、方言、拼音纠错等本土化能力。 | Llama-3-70B-Chinese-Chat |
 | | -MT | 机器翻译专用模型，支持多语言翻译任务（如中英、英日互译）。 | BLOOMZ-7B1-mt |
 
-## 5、大模型数据集
+## 5、LLM数据集
 
 - [LLaMA Factory 微调教程：如何构建高质量数据集？](https://zhuanlan.zhihu.com/p/1916489160333714285)
 - [LLM数据集生成工具](https://github.com/ConardLi/easy-dataset)
@@ -480,6 +480,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [用于后期训练的数据集和工具的精选列表](https://github.com/mlabonne/llm-datasets)
 - [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)
 - [论文： Datasets for Large Language Models: A Comprehensive Survey](https://arxiv.org/pdf/2402.18041)
+- [Toolkit for linearizing PDFs for LLM datasets/training](https://github.com/allenai/olmocr)
 
 ### 1、数据集格式
 
