@@ -596,7 +596,10 @@ Multi-Agent（MAS, Multi-Agent System）是由多个具备自主决策和交互�
 - 协作性: Agent通过通信、协商或竞争解决冲突，例如在任务分解中分配角色（如产品经理、开发、测试等），或通过动态规则达成共识。
 - 分布性: 系统采用分布式架构，将复杂任务拆解为子任务，由不同Agent并行处理，降低系统复杂度（如MetaGPT将软件开发分解为需求分析、编码、测试等角色）
 
-## Agent 的提示词工程架构
+## Agent提示词工程
+
+- [Agentic Context Engineering](https://arxiv.org/abs/2510.04618)
+- [Agentic 上下文工程实战](https://mp.weixin.qq.com/s/2ra6JQlUJQM0SLTi44ef8A)
 
 RAG + Tool Use + Orchestration 的三位一体：
 - **检索增强生成 (RAG)**：这是Agent的“长期记忆”和“知识中枢”。Agent的核心知识，来源于一个经过精心设计和向量化的私有知识库。当用户提问时，系统并非直接将问题抛给LLM，而是首先通过向量检索技术，从这个庞大的知识库中，精准地找到与问题最相关的若干信息片段。然后，这些被检索出的、高度可信的信息片段，会作为上下文（Context），与用户的原始问题一起，通过提示词注入LLM。这种“先查资料再回答”的模式，极大地缓解了LLM的“幻觉”问题，保证了Agent回答的专业性、时效性和准确性，使其说的每一句话都有据可查。
@@ -611,6 +614,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 ## Agent 框架
 
+- ACE (Agentic Context Engine)
 - 对于 C 端用户，可以考虑 [coze](https://www.coze.cn/store/bot)，缺点是没有开源
 - [Dify平台](https://dify.ai/zh)
 - [Dify DSL](https://github.com/svcvit/Awesome-Dify-Workflow)
@@ -665,6 +669,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
 - [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
 - [EvoAgentX-自动演进的Agents](https://github.com/EvoAgentX/EvoAgentX)
+- [DeepAnalyze：用于自主数据科学的代理大型语言模型](https://github.com/ruc-datalab/DeepAnalyze)
 
 ## 垂直领域 Agent
 

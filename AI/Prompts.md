@@ -378,3 +378,4 @@ flowchart LR
 - [提示词教程](https://github.com/PandaBearLab/prompt-tutorial)
 - [提示词新的指南](https://mp.weixin.qq.com/s/p-xDqD6U0fsh5r2fZn5dcg)
 - [Anthropic 交互式提示工程教程](https://github.com/anthropics/prompt-eng-interactive-tutorial)
+- [AI提示词](https://sth.ai/article/Codex.html)

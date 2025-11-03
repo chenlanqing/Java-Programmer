@@ -180,6 +180,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 
 - [使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
 - https://github.com/anthropics/claude-cookbooks
+- [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
 
 # 四、Codex
 

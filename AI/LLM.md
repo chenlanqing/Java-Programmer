@@ -638,7 +638,7 @@ DeepSeek-R1-Distill-Llama-70B
 
 ![](image/蒸馏的流程.png)
 
-# 三、 大模型应用开发
+# 三、大模型应用开发
 
 - [动手学大模型应用开发](https://github.com/datawhalechina/llm-universe)
 - [面向开发者的大模型](https://github.com/datawhalechina/llm-cookbook)
