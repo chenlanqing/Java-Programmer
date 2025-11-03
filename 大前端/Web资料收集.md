@@ -4,6 +4,13 @@
 - [Webvm-浏览器的 Linux 虚拟机](https://github.com/leaningtech/webvm)
 - [Xterm：在浏览器中构建 terminal](https://github.com/xtermjs/xterm.js)
 
+# UI
+
+- [shadcn:一组设计精美、可访问的组件和代码分发平台](https://github.com/shadcn-ui/ui)
+- [Web3D可视化](http://www.webgl3d.cn/)
+- [Antv](https://antv.antgroup.com/)
+- [很易用的中后台「表单 / 表格 / 图表」解决方案](https://github.com/alibaba/x-render)
+
 # 资源库
 
 - [前端入门到进阶知识库](https://github.com/qianguyihao/Web)
@@ -13,15 +20,13 @@
 - [纯原生JS](https://github.com/soyaine/JavaScript30.git)
 - [OMI框架](https://github.com/Tencent/omi)
 - [无界前端框架](https://github.com/Tencent/wujie)
-- [Web3D可视化](http://www.webgl3d.cn/)
+
 - [设计稿一键生成代码：imgcook](https://www.imgcook.com/)
 - [Swift开发](https://developer.apple.com/tutorials/develop-in-swift)
 - [模仿 抖音|TikTok 的移动端短视频项目](https://github.com/zyronon/douyin)
 - [深入理解浏览器原理](https://www.developers.pub/wiki/1006381/1002169)
 - [Web学习路线](https://github.com/qianguyihao/Web)
 - [uniapp](https://zh.uniapp.dcloud.io/)
-- [Antv](https://antv.antgroup.com/)
-- [很易用的中后台「表单 / 表格 / 图表」解决方案](https://github.com/alibaba/x-render)
 - [专注于前端的互联网大厂面试题的学习平台](https://q.shanyue.tech/)
 
 # 前端创意
