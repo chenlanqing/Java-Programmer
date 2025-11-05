@@ -51,6 +51,8 @@ TIME_WAIT 1645
 
 ### 4.3、开发工具
 
+- [mise：开发环境管理](https://github.com/jdx/mise)
+- [asdf：开发环境管理](https://github.com/asdf-vm/asdf)
 - idea
 - pycharm
 - clion
