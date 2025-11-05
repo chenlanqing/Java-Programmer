@@ -3938,13 +3938,11 @@ pip install xlwt xlrd xlutils
 pip install openpyxl
 ```
 
-## 7、Word与PPT
+## 7、文档处理
 
-### 7.1、Word
+### 7.1、pdf
 
-
-
-
+- [pypdf 是一个免费的开源纯 python PDF 库](https://github.com/py-pdf/pypdf)
 
 ## 8、目录
 
