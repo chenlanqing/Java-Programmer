@@ -29,6 +29,7 @@
 
 ## AI 课程
 
+- [LLM-斯坦福大学最新开设的 CME 295](https://cme295.stanford.edu/syllabus/)
 - [Easy AI - 让 AI 学习变得简单](https://github.com/ConardLi/easy-learn-ai)
 - [Deep learning AI](https://learn.deeplearning.ai/)
 - [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
@@ -160,6 +161,10 @@ Nano Banana 提示词
 - https://github.com/PicoTrex/Awesome-Nano-Banana-images
 - https://github.com/ZHO-ZHO-ZHO/ZHO-nano-banana-Creation
 - https://github.com/JimmyLv/awesome-nano-banana
+
+## 视频
+
+- https://www.skyreels.ai/home/my-library?refer=navbar
 
 # 语音处理
 
