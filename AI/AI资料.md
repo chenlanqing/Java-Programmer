@@ -87,6 +87,7 @@
 - [TradingAgents-基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)
 - [TradingAgents-中文增强版: 基于多智能体LLM的中文金融交易框架](https://github.com/hsliuping/TradingAgents-CN)
 - [ValueCell：多 Agent 平台，专为金融投资设计的](https://github.com/ValueCell-ai/valuecell)
+- [NOFX：定义下一代人工智能交易作系统。多交易所 AI 交易平台](https://github.com/NoFxAiOS/nofx)
 
 # AI 搜索
 
@@ -180,7 +181,8 @@ Nano Banana 提示词
 - https://gitee.com/langchat/langchat
 - [Java-AI入门资料](https://t.zsxq.com/vHopZ)
 - [Spring AI Alibaba](https://java2ai.com/)
-
+- [全栈式轻量级AI框架](https://github.com/Leavesfly/TinyAI)
+ 
 
 # AI 网关
 
