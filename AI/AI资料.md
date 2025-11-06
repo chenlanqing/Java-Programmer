@@ -13,6 +13,7 @@
 - [各种使用 RAG、AI Agents、多智能体团队等技术的实战 LLM 应用示例](https://github.com/Shubhamsaboo/awesome-llm-apps)
 - [人工智能工程书籍和其他资源](https://github.com/chiphuyen/aie-book)
 - [Claude Code v1.0.33 进行逆向工程的完整研究和分析资料](https://github.com/chenlanqing/analysis_claude_code)
+- https://github.com/ConardLi/easy-learn-ai
 
 ## AI 学习路线
 
@@ -29,6 +30,7 @@
 
 ## AI 课程
 
+- https://github.com/mlabonne/llm-course/
 - [LLM-斯坦福大学最新开设的 CME 295](https://cme295.stanford.edu/syllabus/)
 - [Easy AI - 让 AI 学习变得简单](https://github.com/ConardLi/easy-learn-ai)
 - [Deep learning AI](https://learn.deeplearning.ai/)

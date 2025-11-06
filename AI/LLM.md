@@ -475,7 +475,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 ## 5、LLM数据集
 
 - [LLaMA Factory 微调教程：如何构建高质量数据集？](https://zhuanlan.zhihu.com/p/1916489160333714285)
-- [LLM数据集生成工具](https://github.com/ConardLi/easy-dataset)
+- [easy-dataset：LLM数据集生成工具](https://github.com/ConardLi/easy-dataset)
 - [LLMDataHub: Awesome Datasets for LLM Training](https://github.com/Zjh-819/LLMDataHub)
 - [用于后期训练的数据集和工具的精选列表](https://github.com/mlabonne/llm-datasets)
 - [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)

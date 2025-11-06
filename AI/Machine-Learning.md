@@ -22,3 +22,4 @@
 - [machine learning](https://www.bbbdata.com/ml)
 - [机器学习入门资料](https://github.com/microsoft/ML-For-Beginners)
 - [Machine Learning Systems](https://www.mlsysbook.ai/)
+- [机器学习资料库](https://machine-learning-from-scratch.readthedocs.io/zh-cn/latest/index.html)
