@@ -251,3 +251,5 @@ source ~/.zshrc
 - [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
 - [Killer, Claude Code](https://cc.deeptoai.com/)
 - https://platform.minimaxi.com/docs/guides/text-ai-coding-tools
+- https://github.com/UfoMiao/zcf
+- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
