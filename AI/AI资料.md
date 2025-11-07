@@ -84,7 +84,6 @@
 ## 金融应用
 
 - [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
-- [Qbot：AI智能量化投研平台](https://github.com/UFund-Me/Qbot)
 - [AI-Trader：人工智能能否击败市场](https://github.com/HKUDS/AI-Trader)
 - [AI-交易大赛](https://nof1.ai/)
 - [TradingAgents-基于多智能体大语言模型的金融交易框架](https://github.com/TauricResearch/TradingAgents)

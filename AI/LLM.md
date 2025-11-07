@@ -687,4 +687,4 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - [BCEmbedding: Bilingual and Crosslingual Embedding for RAG](https://github.com/netease-youdao/BCEmbedding)
 - [LangExtract：轻量却强大的结构化信息提取神器](https://github.com/google/langextract)
 - [Dolphin: Document Image Parsing via Heterogeneous Anchor Prompting](https://github.com/bytedance/Dolphin)
-
+- [从命令行访问大型语言模型](https://github.com/simonw/llm)
