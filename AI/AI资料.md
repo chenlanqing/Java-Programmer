@@ -99,6 +99,7 @@
 # DeepResearch
 
 - https://github.com/bytedance/deer-flow
+- https://github.com/sagar-n/deepagents
 
 
 # AI基础设施

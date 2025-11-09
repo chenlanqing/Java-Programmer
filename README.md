@@ -143,6 +143,7 @@
 - [GitHub Repositories Every Software Engineer Should Know](https://dev.to/jrmarcio_/github-repositories-every-software-engineer-should-know-2e80)
 - [CS-Self Learning](https://csdiy.wiki/)
 - [计算机科学技术](https://github.com/ossu/computer-science)
+- [免费掌握新编程语言](https://langshift.dev/zh-cn)
 
 ## 4、Github资源
 

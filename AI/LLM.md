@@ -5,7 +5,6 @@
 - [大模型基础](https://github.com/ZJU-LLMs/Foundations-of-LLMs)
 - [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
-- [「大模型」2小时完全从0训练26M的小参数GPT](https://github.com/jingyaogong/minimind)
 - [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 
 ## 1、基本概念
