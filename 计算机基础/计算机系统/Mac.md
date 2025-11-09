@@ -39,6 +39,7 @@ TIME_WAIT 1645
 - Sublime
 - Visual Studio Code
 - worktile
+- 十六进制：https://imhex.werwolv.net/
 
 ### 4.2、终端工具
 

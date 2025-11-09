@@ -167,6 +167,10 @@ Nano Banana 提示词
 
 - https://www.skyreels.ai/home/my-library?refer=navbar
 
+## 翻译
+
+- [Paper Burner X - AI文献识别、翻译、阅读与智能分析工具](https://github.com/Feather-2/paper-burner-x)
+
 # 语音处理
 
 - [Minimaxi](https://platform.minimaxi.com/user-center/basic-information/interface-key)
