@@ -55,6 +55,8 @@
  
  # AI 应用
 
+- [HackGPT Enterprise 是一个专为企业安全团队设计的生产就绪、云原生 AI 驱动的渗透测试平台](https://github.com/yashab-cyber/HackGpt/)
+- [开源 AI 黑客](https://github.com/usestrix/strix)
 - [MineContext：洞察本质，激发创造](https://github.com/volcengine/MineContext)
 - [AI 应用相关架构图](https://mp.weixin.qq.com/s/weOAlFqPjffS0yygQejDog)
 - [NextChat 是一款轻量、快速且开源的 AI 助手应用](https://github.com/ChatGPTNextWeb/NextChat)
