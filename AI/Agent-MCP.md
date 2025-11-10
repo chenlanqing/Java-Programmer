@@ -670,6 +670,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
 - [EvoAgentX-自动演进的Agents](https://github.com/EvoAgentX/EvoAgentX)
 - [DeepAnalyze：用于自主数据科学的代理大型语言模型](https://github.com/ruc-datalab/DeepAnalyze)
+- [Google Agent Development Kit](https://google.github.io/adk-docs/)
 
 ## 垂直领域 Agent
 

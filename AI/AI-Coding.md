@@ -236,20 +236,23 @@ source ~/.zshrc
 - [Config other models](https://github.com/openai/codex/blob/main/docs/config.md)
 - [Codex 支持的LLM](https://github.com/openai/codex/blob/main/codex-cli/README.md)
 
+# 工具代理
+
+- [Claude Code、Codex镜像服务](https://aicoding.sh/)
+- [银河录像局](https://nf.video/)
+- https://github.com/UfoMiao/zcf
+- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
+- [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
+- [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
+
 # 参考资料
 
 - [Ruler — apply the same rules to all coding agents](https://github.com/intellectronica/ruler)
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
-- [Claude Code、Codex镜像服务](https://aicoding.sh/)
-- [银河录像局](https://nf.video/)
-- [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
 - [Ready to use Native AI](https://2233.ai/aicoding)
-- [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
 - [SSD:规范驱动开发的工具包](https://github.com/github/spec-kit)
-- [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
+- [规范驱动开发（SSD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
 - [Killer, Claude Code](https://cc.deeptoai.com/)
 - https://platform.minimaxi.com/docs/guides/text-ai-coding-tools
-- https://github.com/UfoMiao/zcf
-- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
