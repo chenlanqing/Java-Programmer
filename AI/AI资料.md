@@ -272,13 +272,16 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Genesis 是一个面向通用机器人学、具身人工智能 (Embodied AI) 和物理 AI 应用 的生成式物理模拟平台](https://github.com/Genesis-Embodied-AI/Genesis)
 - https://github.com/chatboxai/chatbox
 
-# AI国内代理
+# AI代理
 
 - [Claude Code、Codex镜像服务](https://aicoding.sh/)
 - [银河录像局](https://nf.video/)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
 - [Ready to use Native AI](https://2233.ai/aicoding)
 - [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
+- [Cpass](https://api.cpass.cc/console/topup)
+- [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
+- [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
 
 # 参考资料
 
