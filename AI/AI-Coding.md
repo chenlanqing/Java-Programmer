@@ -245,6 +245,10 @@ source ~/.zshrc
 - [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
 - [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
+- [ClaudeCodeCodex镜像服务](https://aicoding.sh/)
+- [Claude Code · CodeX · Gemini CLI](https://duckcoding.com/)
+- https://www.aicodemirror.com/
+- https://anyrouter.top/
 
 # 参考资料
 
