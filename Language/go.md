@@ -2,6 +2,8 @@
 
 ##  1、环境安装
 
+- [goenv:Go 环境管理](https://github.com/go-nv/goenv)
+
 ##  2、HelloWorld
 
 新建文件： main.go，文件增加如下内容
