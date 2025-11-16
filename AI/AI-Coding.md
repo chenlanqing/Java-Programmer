@@ -232,6 +232,29 @@ echo 'export OPENAI_API_KEY="你的API密钥"' >> ~/.zshrc
 source ~/.zshrc
 ```
 
+或者使用配置文件的方式:
+```bash
+# 创建 auth.json 文件
+cat > ~/.codex/auth.json << 'EOF'
+{
+  "OPENAI_API_KEY": "你的API密钥"
+}
+EOF
+# 创建 config.toml 文件
+cat > ~/.codex/config.toml << 'EOF'
+model_provider = "univibe"
+model = "gpt-5.1"
+model_reasoning_effort = "high"
+disable_response_storage = true
+preferred_auth_method = "apikey"
+
+[model_providers.univibe]
+name = "univibe"
+base_url = "https://api.univibe.cc/openai"
+wire_api = "responses"
+EOF
+```
+
 ## 2、配置其他模型
 
 - [Config other models](https://github.com/openai/codex/blob/main/docs/config.md)
