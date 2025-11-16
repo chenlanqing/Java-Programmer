@@ -52,6 +52,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
 - [x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
 - [Ladybird 是真从零写的独立浏览器，不是 Chromium 换皮](https://github.com/LadybirdBrowser/ladybird)
+- [警报处理工具：Alertmanager](https://github.com/prometheus/alertmanager)
 
 ## 软件测试开源项目
 
@@ -94,6 +95,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [Pot-desktop: 一个跨平台的划词翻译和OCR软件](https://github.com/pot-app/pot-desktop)
 - [Folo 是个信息聚合工具，能把你想关注的各种来源（文章、视频、动态等）都集中放在一个简洁的时间线里，告别到处切换的麻烦](https://github.com/RSSNext/Folo)
 - [Scira（原名 MiniPerplx），它是一个主打轻量级和 AI 驱动的搜索引擎。](https://github.com/zaidmukaddam/scira)
+- [ArchiveBox:网页时光机，网页归档](https://github.com/ArchiveBox/ArchiveBox)
 
 # 参考资料
 

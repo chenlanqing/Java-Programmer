@@ -29,6 +29,7 @@
 - [uniapp](https://zh.uniapp.dcloud.io/)
 - [专注于前端的互联网大厂面试题的学习平台](https://q.shanyue.tech/)
 - [Apple Store 网页端源码](https://github.com/rxliuli/apps.apple.com)
+- [轻松将任意网站/Vue/React等项目构建为轻量级](https://github.com/Sjj1024/PakePlus)
 
 # 前端创意
 

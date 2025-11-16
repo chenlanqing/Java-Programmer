@@ -6,6 +6,7 @@
 - [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
 - [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
+- [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
 
 ## 1、基本概念
 
@@ -253,6 +254,7 @@ print(chat_completion.choices[0].message.content)
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
 - [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
 - [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
+- [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 
 llama.cpp 是一个模型推理框架，采用纯 C/C++ 实现，无需依赖 PyTorch、TensorFlow 等重型框架，通过静态编译生成单一可执行文件，在资源受限环境中展现出独特优势。
 
@@ -335,6 +337,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 - [论文：从基础到突破微调LLM的终极指南](https://arxiv.org/pdf/2408.13296v1)
 - [The Comprehensive Guide to Fine-tuning LLM](https://medium.com/data-science-collective/comprehensive-guide-to-fine-tuning-llm-4a8fd4d0e0af)
+- [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 
 ## 1、模型微调基础
 
