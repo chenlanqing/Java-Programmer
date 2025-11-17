@@ -17,16 +17,16 @@
 
 ## AI 学习路线
 
-- ML for Beginners: http://github.com/microsoft/ML-For-Beginners
-- AI for Beginners: http://github.com/microsoft/AI-For-Beginners
-- NN Zero to Hero: http://github.com/karpathy/nn-zero-to-hero
-- Paper implementations: http://github.com/labmlai
-- Made with ML: http://github.com/GokuMohandas/Made-With-ML
-- Hands-on LLMs: http://github.com/HandsOnLLM
-- Advanced RAG techniques: http://github.com/NirDiamant
-- Agents for Beginners: http://github.com/microsoft/ai-agents-for-beginners
-- Agents towards production: http://github.com/NirDiamant
-- AI Engg. Hub: http://github.com/patchy631/ai-engineering-hub
+- ML for Beginners: https://github.com/microsoft/ML-For-Beginners
+- AI for Beginners: https://github.com/microsoft/AI-For-Beginners
+- NN Zero to Hero: https://github.com/karpathy/nn-zero-to-hero
+- Paper implementations: https://github.com/labmlai
+- Made with ML: https://github.com/GokuMohandas/Made-With-ML
+- Hands-on LLMs: https://github.com/HandsOnLLM
+- Advanced RAG techniques: https://github.com/NirDiamant
+- Agents for Beginners: https://github.com/microsoft/ai-agents-for-beginners
+- Agents towards production: https://github.com/NirDiamant
+- AI Engg. Hub: https://github.com/patchy631/ai-engineering-hub
 
 ## AI 课程
 
