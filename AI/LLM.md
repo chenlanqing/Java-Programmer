@@ -255,6 +255,7 @@ print(chat_completion.choices[0].message.content)
 - [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
 - [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
 - [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
+- [LMCache 是一个 LLM 服务引擎扩展，用于减少 TTFT 并提高吞吐量](https://github.com/LMCache/LMCache)
 
 llama.cpp 是一个模型推理框架，采用纯 C/C++ 实现，无需依赖 PyTorch、TensorFlow 等重型框架，通过静态编译生成单一可执行文件，在资源受限环境中展现出独特优势。
 

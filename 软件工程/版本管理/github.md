@@ -45,6 +45,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [杂乱输出](https://github.com/svenstaro/genact)
 - [跨平台电子宠物](https://github.com/ayangweb/BongoCat)
 - [程序员在家做饭指南](https://github.com/Anduin2017/HowToCook)
+- [B站 哔哩哔哩 视频下载器](https://github.com/nICEnnnnnnnLee/BilibiliDown)
 
 ## 技术
 

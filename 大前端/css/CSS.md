@@ -12,6 +12,7 @@
 ## 组件库
 
 - [Tailwind CSS生态的“原子化UI组件库”](https://github.com/shadcn/ui)
+- [A design system for building retro Apple interfaces](https://github.com/sakofchit/system.css)
 
 # 参考资料
 

@@ -272,6 +272,8 @@ EOF
 - [Claude Code · CodeX · Gemini CLI](https://duckcoding.com/)
 - https://www.aicodemirror.com/
 - https://anyrouter.top/
+- https://www.packyapi.com/pricing
+- https://codex.packycode.com/pricing
 
 # 参考资料
 
