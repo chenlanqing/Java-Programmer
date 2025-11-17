@@ -45,6 +45,7 @@ TIME_WAIT 1645
 
 - [iTerm 终端工具 ](https://zhuanlan.zhihu.com/p/550022490)
 - [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
+    - 安装插件：plugins=(git zsh-autosuggestions zsh-syntax-highlighting docker-compose docker)
 - termius  SSH连接客户端
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
 - https://github.com/alacritty/alacritty
