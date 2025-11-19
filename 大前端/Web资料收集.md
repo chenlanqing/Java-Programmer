@@ -3,6 +3,7 @@
 - [Youware](https://www.youware.com/)
 - [Webvm-浏览器的 Linux 虚拟机](https://github.com/leaningtech/webvm)
 - [Xterm：在浏览器中构建 terminal](https://github.com/xtermjs/xterm.js)
+- [Deploy Your Frontend in a Single Command](https://github.com/glitternetwork/pinme)
 
 # UI
 
