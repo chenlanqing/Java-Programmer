@@ -93,6 +93,7 @@
 - [TradingAgents-中文增强版: 基于多智能体LLM的中文金融交易框架](https://github.com/hsliuping/TradingAgents-CN)
 - [ValueCell：多 Agent 平台，专为金融投资设计的](https://github.com/ValueCell-ai/valuecell)
 - [NOFX：定义下一代人工智能交易作系统。多交易所 AI 交易平台](https://github.com/NoFxAiOS/nofx)
+- [A financial agent for investment research](https://github.com/virattt/ai-financial-agent/)
 
 # AI 搜索
 
@@ -133,6 +134,7 @@
 
 - 可灵 AI：比如 AI 换衣
 - 即梦 AI、火山引擎：[图片换装](https://www.volcengine.com/docs/85128/1462743)、[单图音频驱动](https://www.volcengine.com/docs/85128/1433887)、[图形融合](https://www.volcengine.com/docs/6791/1337909)
+- [Muset AI创作引擎工具](https://muset.ai/)
 
 # AI 工具
 
