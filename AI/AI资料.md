@@ -135,6 +135,8 @@
 - 可灵 AI：比如 AI 换衣
 - 即梦 AI、火山引擎：[图片换装](https://www.volcengine.com/docs/85128/1462743)、[单图音频驱动](https://www.volcengine.com/docs/85128/1433887)、[图形融合](https://www.volcengine.com/docs/6791/1337909)
 - [Muset AI创作引擎工具](https://muset.ai/)
+- Lovart 专攻视觉设计，帮设计师快速出图和做品牌VI
+- Youmind 管理创作流程，从素材收集到内容产出的全链路
 
 # AI 工具
 
