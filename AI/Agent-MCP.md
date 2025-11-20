@@ -637,6 +637,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 ### Multi-Agent
 
+- https://github.com/kyegomez/swarms
 - [agentUniverse 是一个基于大型语言模型的多智能体框架](https://github.com/agentuniverse-ai/agentUniverse)
 - [crewAI-快速灵活的多代理自动化框架](https://github.com/crewAIInc/crewAI)
 - [OWL：实际任务自动化中提供通用多智能体协助](https://github.com/camel-ai/owl)
@@ -671,6 +672,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
 - [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
 - [EvoAgentX-自动演进的Agents](https://github.com/EvoAgentX/EvoAgentX)
+- [AgentEvolver 是一个端到端、自我演进的培训框架](https://github.com/modelscope/AgentEvolver)
 - [DeepAnalyze：用于自主数据科学的代理大型语言模型](https://github.com/ruc-datalab/DeepAnalyze)
 - [Google Agent Development Kit](https://google.github.io/adk-docs/)
 

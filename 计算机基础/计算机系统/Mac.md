@@ -48,6 +48,11 @@ TIME_WAIT 1645
     - 高亮插件： `git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting`
     - 命令自动填充插件：` git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions    `
     - 安装插件：plugins=(git zsh-autosuggestions zsh-syntax-highlighting docker-compose docker)
+    - 修改终端： 
+        - 查看当前终端：`echo $SHELL`，查看所有终端：`cat /etc/shells`
+        - `sudo chsh -s /usr/bin/zsh`
+        - 编辑配置文件：`sudo vi /etc/passwd`，`root:x:0:0:root:/root:/bin/bash`，最后一段是默认 Shell 路径，修改为：
+        `root:x:0:0:root:/root:/usr/bin/zsh`
 - termius  SSH连接客户端
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
 - https://github.com/alacritty/alacritty

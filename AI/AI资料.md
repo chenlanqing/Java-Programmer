@@ -86,6 +86,7 @@
 
 ## 金融应用
 
+- [交易 AI 智能体](https://github.com/moondevonyt/moon-dev-ai-agents)
 - [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
 - [AI-Trader：人工智能能否击败市场](https://github.com/HKUDS/AI-Trader)
 - [AI-交易大赛](https://nof1.ai/)
