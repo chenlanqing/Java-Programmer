@@ -45,6 +45,8 @@ TIME_WAIT 1645
 
 - [iTerm 终端工具 ](https://zhuanlan.zhihu.com/p/550022490)
 - [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
+    - 高亮插件： `git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting`
+    - 命令自动填充插件：` git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions    `
     - 安装插件：plugins=(git zsh-autosuggestions zsh-syntax-highlighting docker-compose docker)
 - termius  SSH连接客户端
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
