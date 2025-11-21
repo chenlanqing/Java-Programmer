@@ -306,6 +306,9 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ## 7、大模型评测
 
+- [LMArena 是由 LMSYS 组织的大众盲测竞技场。用户输入问题，两个匿名模型回答，用户凭感觉选哪个好](https://lmarena.ai/leaderboard)
+- [GPQA Diamond (Graduate-Level Google-Proof Q&A) 是一套由领域专家编写的、Google 搜不到答案的博士级难题](https://www.vals.ai/benchmarks/gpqa)
+
 ### 7.1、如何分辨大模型的优劣
 
 模型大小对模型能力的影响：[涌现能力](https://arxiv.org/pdf/2206.07682)，什么是涌现能力？在较小的模型中不出现，而在较大的模型中出现的能力；

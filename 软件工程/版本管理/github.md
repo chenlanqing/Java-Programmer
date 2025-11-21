@@ -76,6 +76,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 ## 统计
 
 - [umami：网站统计分析工具:谷歌分析的隐私平替](https://github.com/umami-software/umami)
+- [ActivityWatch:The best free and open-source automated time tracker](https://github.com/ActivityWatch/activitywatch)
 
 ## 生活
 
