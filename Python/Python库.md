@@ -20,6 +20,10 @@ Pydantic 利用 Python 3.6+ 引入的类型提示 (Type Hints)，在运行时对
 
 Pydantic 用适度的实例化开销换来了强大的校验功能和开发便利性，在 API 边界等场景下是务实的选择。而在内部性能热点路径，msgspec 或 dataclasses 可能是更好的选择
 
+# Pandas
+
+- [Pandas User Guide](https://pandas.pydata.org/docs/user_guide/index.html#user-guide)
+
 # 参考资料
 
 - [将其他文件转换为 Markdown](https://github.com/microsoft/markitdown)
