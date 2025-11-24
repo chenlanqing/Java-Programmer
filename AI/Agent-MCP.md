@@ -675,6 +675,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [AgentEvolver 是一个端到端、自我演进的培训框架](https://github.com/modelscope/AgentEvolver)
 - [DeepAnalyze：用于自主数据科学的代理大型语言模型](https://github.com/ruc-datalab/DeepAnalyze)
 - [Google Agent Development Kit](https://google.github.io/adk-docs/)
+- [毕昇：开源AgentOps专攻办公效率场景](https://github.com/dataelement/bisheng)
 
 ## 垂直领域 Agent
 
