@@ -1517,11 +1517,13 @@ print(is_iterable('Python iter')) # True
 print(is_iterable(100)) # False
 ```
 
-# 八、Generator
+# 八、生成器与yield表达式
+
+## 1、基本描述
 
 要中途暂停函数并从暂停的位置继续运行，需要使用 yield 语句。
 
-当一个函数至少包含一条 yield 语句时，它就是一个Generator函数；根据定义，Generator是一个至少包含一个 yield 语句的函数，调用Generator函数时，它会返回一个新的Generator对象。但是，它不会启动函数；
+当一个函数至少包含一条 yield 语句时，它就是一个Generator函数；根据定义，Generator是一个至少包含一个 yield 语句的函数，调用Generator 函数时，它会返回一个新的 Generator 对象。但是，它不会启动函数；
 
 Generator 对象（或Generator）实现了迭代器协议。事实上，Generator是一种懒惰的迭代器。因此，要执行一个Generator函数，需要调用它的 next() 内置函数；
 
@@ -1547,18 +1549,7 @@ print(result) # How are you
 - 函数是顺序执行，遇到return语句或者最后一行函数语句就返回。
 - 变成generator的函数，在每次调用`next()`的时候执行，遇到`yield`语句返回，再次执行时从上次返回的`yield`语句处继续执行；
 
-但是用for循环调用generator时，发现拿不到 generator 的 return 语句的返回值。如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在 StopIteration 的value中
-```python
-    while True:
-...     try:
-...         x = next(g)
-...         print('g:'， x)
-...     except StopIteration as e:
-...         print('Generator return value:'， e.value)
-...         break
-```
-
-创建一个生成器(Generator)，只要把一个列表生成式的[]改成()，就创建了一个generator
+另外创建一个生成器(Generator)，可以直接把一个列表生成式的[]改成()，就创建了一个generator
 ```python
 >>> L = [x * x for x in range(10)]
 >>> L
@@ -1569,9 +1560,24 @@ print(result) # How are you
 # 创建L和g的区别仅在于最外层的[]和()，L是一个list，而g是一个generator。
 # 笨方法:如果要一个一个打印出来，可以通过generator的next()方法：
 ```
+
+## 2、生成器迭代
+
+但是用 for 循环调用 generator 时，发现拿不到 generator 的 return 语句的返回值。如果想要拿到返回值，必须捕获StopIteration错误，返回值包含在 StopIteration 的value中
+```python
+    while True:
+...     try:
+...         x = next(g)
+...         print('g:'， x)
+...     except StopIteration as e:
+...         print('Generator return value:'， e.value)
+...         break
+```
 正确的方法是使用for循环，因为 generator 也是可迭代对象
 
 如果推算的算法比较复杂，用类似列表生成式的 for 循环无法实现的时候，还可以用函数来实现
+
+## 3、普通函数转为生成器函数
 
 如:名的斐波拉契数列（Fibonacci）定义函数如下:
 ```python
@@ -1595,6 +1601,19 @@ def fib(max):
         #a， b = b， a + b
         n = n + 1
 ```
+
+## 4、原理
+
+当 Python 看到 `yield` 会：
+-  **编译器把函数编译成 generator function**
+- 调用函数不会执行代码，而是返回一个 **生成器对象（generator object）**
+- 生成器内部保存运行状态：
+   * 当前执行位置（程序计数器 PC）
+   * 局部变量
+   * 栈帧
+
+所以：
+> **生成器本质上是一个轻量级协程（coroutine）**
 
 # 九、Context Managers
 
