@@ -1681,6 +1681,18 @@ InputStream inputStream = Thread.currentThread().getContextClassLoader().getReso
 - [The jar Command](https://docs.oracle.com/en/java/javase/21/docs/specs/man/jar.html)
 - [jar 命令详解](https://blueblue233.github.io/blog/e7de86f3/)
 
+## 12、查看 jar 包下的文件
+
+如果需要查看 jar 包下的相关文件，比如配置文件，可以通过下面的命令查看：
+```bash
+# 查看 JAR 包内容（不解压）
+jar -tf your-app.jar | grep application.yml
+
+# 提取 application.yml
+jar -xf your-app.jar BOOT-INF/classes/application.yml
+cat BOOT-INF/classes/application.yml
+```
+
 # 五、JNI-本地方法(native)
 
 - [Linux下跨语言调用C++实践](https://mp.weixin.qq.com/s/vA69QGfZeKRlxZs_v_DQkw)
