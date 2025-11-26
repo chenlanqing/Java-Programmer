@@ -30,6 +30,7 @@
 
 ## AI 课程
 
+- [huggingface: LLM Course](https://huggingface.co/learn/llm-course/zh-CN/chapter0/1)
 - https://github.com/mlabonne/llm-course/
 - [LLM-斯坦福大学最新开设的 CME 295](https://cme295.stanford.edu/syllabus/)
 - [Easy AI - 让 AI 学习变得简单](https://github.com/ConardLi/easy-learn-ai)

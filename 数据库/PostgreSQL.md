@@ -921,6 +921,8 @@ PostgreSQL 提供两种 JSON 数据类型：JSON 和 JSONB 用于存储 JSON 数
 
 JSON 数据类型存储的是纯 JSON 数据，每次处理都需要重新解析；而 JSONB 数据类型存储的是二进制格式的 JSON 数据，处理速度更快，但插入较慢。此外，JSONB 支持索引，这也是一个优势。
 
+关于 jsonb 数据格式操作参考：[JSON Functions and Operators](https://www.postgresql.org/docs/9.6/functions-json.html)
+
 ## 7、UUID
 
 UUID 数据类型允许存储 RFC 4122 定义的通用唯一标识符。UUID 值比 SERIAL 值具有更好的唯一性，可用于隐藏暴露给公众的敏感数据，如 URL 中的 id 值。
