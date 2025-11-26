@@ -54,6 +54,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 - [x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
 - [Ladybird 是真从零写的独立浏览器，不是 Chromium 换皮](https://github.com/LadybirdBrowser/ladybird)
 - [警报处理工具：Alertmanager](https://github.com/prometheus/alertmanager)
+- [网站变更检测、网页监控和网站变更提醒的最佳且最简单的工具](https://github.com/dgtlmoon/changedetection.io)
 
 ## 软件测试开源项目
 

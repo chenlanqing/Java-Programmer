@@ -57,6 +57,7 @@ TIME_WAIT 1645
 - [WindTerm](https://github.com/kingToolbox/WindTerm)
 - https://github.com/alacritty/alacritty
 - [The minimal, blazing-fast, and infinitely customizable prompt for any shell!](https://github.com/starship/starship)
+- https://github.com/wavetermdev/waveterm
 
 ### 4.3、开发工具
 
