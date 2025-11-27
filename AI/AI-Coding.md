@@ -260,6 +260,19 @@ EOF
 - [Config other models](https://github.com/openai/codex/blob/main/docs/config.md)
 - [Codex 支持的LLM](https://github.com/openai/codex/blob/main/codex-cli/README.md)
 
+# AI风格
+
+## AI代码前端风格
+
+- [前端漂亮的 UI 风格设计](https://www.aura.build)
+
+为了解决 AI 编码中前端的风格审美疲劳的问题，可以找到你觉得好看的，直接让AI参考学习，这样成品率就会好很多。
+
+比如通过在 https://www.aura.build 上查看漂亮的设计，查看源码，保存下来，将其喂给 AI
+```md
+现在需要你按照这个网页里面的布局和UI风格改造网站，网页文件地址：beautifuL_web.htmL
+```
+
 # 工具代理
 
 - [Claude Code、Codex镜像服务](https://aicoding.sh/)

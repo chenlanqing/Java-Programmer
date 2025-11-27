@@ -49,6 +49,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 ## 技术
 
+- [SAAS 部署产品](https://github.com/Atarity/deploy-your-own-saas)
 - [自动修正错误命令](https://github.com/nvbn/thefuck)
 - [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
 - [x86 PC 模拟器和 x86-to-wasm JIT，在浏览器中运行](https://github.com/copy/v86)
