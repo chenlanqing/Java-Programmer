@@ -834,7 +834,9 @@ if __name__ == '__main__':
 ```
 请注意，要运行该程序，您需要安装 Pillow，这是一个用于图像处理的流行库，只需运行 pip 命令 pip install Pillow 即可。
 
-# 五、异步
+# 五、Asyncio
+
+- [Python Asyncio: The Complete Guide](https://superfastpython.com/python-asyncio/)
 
 ## 1、Event Loop
 
@@ -1332,3 +1334,7 @@ async def main():
 
 asyncio.run(main())
 ```
+
+# 参考资料
+
+- [Python并行编程](https://python-parallel-programmning-cookbook.readthedocs.io/zh-cn/latest/index.html)
