@@ -1,6 +1,49 @@
-# 1、github上fork的项目与原项目同步
+# 1、Github上fork的项目与原项目同步
 
 [github上fork的项目与原项目同步](https://blog.csdn.net/qq1332479771/article/details/56087333)
+
+## 页面操作
+
+- 在 Fork 的工程分支上，选择 Pull requests -> New pull request
+
+![](image/Github-NewPullRequest.png)
+
+- 选择 base repository：这里是fork 后的仓库地址
+- 选择 head repository：这是原始仓库地址；如果这两个无法选择，点击一下：compare across forks，就能展示所有可以同步的 commits
+
+![](image/Github-SyncForkSet.png)
+
+- 点击 Create pull request，出现如下界面
+
+![](image/Github-CreatPullRequest.png)
+
+- 再次点击 Create pull request，跳转到界面：
+
+![](image/Github-PullRequestDetail.png)
+
+- 合并分支
+
+![](image/Github-Merge.png)
+
+- 确认合并，完成整个同步
+
+![](image/Github-ConfirmMerge.png)
+
+## git 命令
+
+使用 git 命令查看远程仓库状态：
+```sh
+# 查看远程仓库信息
+git remote -v 
+# 添加远程源仓库地址
+git remote add upstream git@github.com:xxx/xxx.git
+# 从源仓库同步代码
+git fetch upstream
+# 合并源仓库代码到本地
+git merge upstream/master
+# 推送到 fork 的仓库
+git push 
+```
 
 # 2、GitHub加速
 
@@ -25,16 +68,33 @@ git clone https://githubproxy.cc/https://github.com/crewAIInc/crewAI-examples.gi
 
 https://blog.csdn.net/weixin_41010198/article/details/119698015
 
+Github 无法使用 账号和密码提交代码：remote: Support for password authentication was removed on August 13, 2021.
+
 # 4、修改默认分支
 
-https://cyfeng.science/2020/12/21/rename-github-branch-from-master-to-main/
+- [5步将 GitHub 默认分支从 Master 更改为 Main](https://cyfeng.science/2020/12/21/rename-github-branch-from-master-to-main/)
+```bash
+# Step 1: create main branch locally, taking the history from master
+git branch -m master main
 
-github 用户排行榜：https://china-ranking.aolifu.org/
+# Step 2: push the new local main branch to the remote repo (GitHub) 
+git push -u origin main
+
+# Step 3: switch the current HEAD to the main branch
+git symbolic-ref refs/remotes/origin/HEAD refs/remotes/origin/main
+
+# Step 4: change the default branch on GitHub to main
+# https://docs.github.com/en/github/administering-a-repository/setting-the-default-branch
+
+# Step 5: delete the master branch on the remote
+git push origin --delete master
+```
 
 # 5、工具
 
 - [zdoc:一个免费的工具，可将 GitHub 的 README 翻译成多种语言，并保持同步](https://www.zdoc.app/zh)
-- [Deepwiki:源码解读工具](https://deepwiki.com/)
+- [DeepWiki:源码解读工具](https://deepwiki.com/)
+- [DeepWiki 开源版本-源码分析](https://github.com/AsyncFuncAI/deepwiki-open)
 - [Stunning insights for your GitHub Repo](https://repobeats.axiom.co/)
 - [Github star history](https://www.star-history.com/)
 
@@ -49,6 +109,7 @@ github 用户排行榜：https://china-ranking.aolifu.org/
 
 ## 技术
 
+- [中国 Github 用户排行榜](https://china-ranking.aolifu.org/)
 - [SAAS 部署产品](https://github.com/Atarity/deploy-your-own-saas)
 - [自动修正错误命令](https://github.com/nvbn/thefuck)
 - [Supervision 是计算机视觉项目的「万能工具箱」](https://github.com/roboflow/supervision)
