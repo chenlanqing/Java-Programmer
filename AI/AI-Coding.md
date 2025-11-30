@@ -198,6 +198,22 @@ export ANTHROPIC_DEFAULT_SONNET_MODEL="MiniMax-M2"
 export ANTHROPIC_DEFAULT_OPUS_MODEL="MiniMax-M2"
 export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 ```
+或者在 ~/.claude 目录下修改配置 settings.json 文件：
+```json
+{
+    "env": {
+        "ANTHROPIC_BASE_URL": "https://api.minimaxi.com/anthropic",
+        "ANTHROPIC_AUTH_TOKEN": "Your Api Key",
+        "API_TIMEOUT_MS": "3000000",
+        "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": 1,
+        "ANTHROPIC_MODEL": "MiniMax-M2",
+        "ANTHROPIC_SMALL_FAST_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_SONNET_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_OPUS_MODEL": "MiniMax-M2",
+        "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M2"
+    }
+}
+```
 
 # 四、Codex
 
