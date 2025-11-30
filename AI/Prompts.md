@@ -349,6 +349,7 @@ flowchart LR
 
 # Prompt 生成案例
 
+- [Awesome Prompts; Nano Banana；Banana Pro](https://github.com/glidea/banana-prompt-quicker)
 - [Open Nano Banana提示词图库](https://opennana.com/awesome-prompt-gallery/)
 - [GPT 提示词](https://github.com/linexjlin/GPTs)
 - [AI 提示 模板](https://www.notion.com/zh-cn/templates/category/ai-prompts)
