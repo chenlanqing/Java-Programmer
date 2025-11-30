@@ -311,7 +311,7 @@ EOF
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
 - [Ready to use Native AI](https://2233.ai/aicoding)
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
-- [SSD:规范驱动开发的工具包](https://github.com/github/spec-kit)
-- [规范驱动开发（SSD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
+- [SDD:规范驱动开发的工具包](https://github.com/github/spec-kit)
+- [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
 - [Killer, Claude Code](https://cc.deeptoai.com/)
 - https://platform.minimaxi.com/docs/guides/text-ai-coding-tools
