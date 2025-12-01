@@ -384,6 +384,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [Supermemory 是一个极快、可扩展的记忆引擎和应用](https://github.com/supermemoryai/supermemory)
 - [Cognee 是一个专为 AI 智能体设计的内存管理系统](https://github.com/topoteretes/cognee)
 - [Memori: 用于 AI 的开源 SQL 原生内存引擎](https://github.com/GibsonAI/Memori)
+- [深度拆解与对比Mem0/Graphiti/Cognee三大开源Memory方案](https://mp.weixin.qq.com/s/sdi3rgDRiRWhsmbDWc-w-g)
 
 ### 概述
 
@@ -587,6 +588,7 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 
 - [How to Build an Agent](https://blog.langchain.com/how-to-build-an-agent/)
 - [从 0 构建一个 Agent 的踩坑](https://mp.weixin.qq.com/s/7Lt3WKmHoQY5HifnPFjxoQ)
+- [从零开始构建智能体](https://github.com/datawhalechina/hello-agents)
 - [12-Factor-Agents：构建可靠 LLM 应用程序的原则](https://github.com/humanlayer/12-factor-agents)
 
 ## Multi-Agent
