@@ -37,6 +37,7 @@
 - [Deep learning AI](https://learn.deeplearning.ai/)
 - [有关 LLM、RAG 和实际 AI 代理应用程序的深入教程](https://github.com/patchy631/ai-engineering-hub)
 - [AI 入门课程](https://github.com/microsoft/generative-ai-for-beginners)
+- [AI Agents | RAG | LLMs：Open-source Ecosystem for High-Leverage AI Builders](https://www.theunwindai.com/)
 
 ## API Key
 
@@ -48,6 +49,9 @@
 - deepseek
 - 阿里云百炼
 
+## AI数据库
+
+[OceanBase seekdb 是一个 AI 原生搜索数据库，将关系型、矢量型、文本、JSON 和 GIS 统一在一个引擎中](https://github.com/oceanbase/seekdb)
 
 # Deepseek
 

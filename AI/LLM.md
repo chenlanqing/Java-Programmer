@@ -7,7 +7,7 @@
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
 - [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 - [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
-- [论文：大模型基础](https://arxiv.org/pdf/2501.09223)
+- [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
 
 ## 1、基本概念
 
