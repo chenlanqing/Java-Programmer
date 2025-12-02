@@ -344,6 +344,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [The Comprehensive Guide to Fine-tuning LLM](https://medium.com/data-science-collective/comprehensive-guide-to-fine-tuning-llm-4a8fd4d0e0af)
 - [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 - [用于预训练和微调 AI 模型的深度学习框架](https://github.com/Lightning-AI/pytorch-lightning)
+- [SWIFT（用于微调的可扩展轻量级基础设施）](https://github.com/modelscope/ms-swift)
 
 ## 1、模型微调基础
 
