@@ -183,6 +183,8 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
 - [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
 - [Claude Skills Marketplace](https://skillsmp.com/zh)
+- [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
+- [Claude code core library](https://github.com/obra/superpowers)
 
 ## 1、安装配置
 
