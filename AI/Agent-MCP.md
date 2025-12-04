@@ -615,6 +615,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 ## Agent 训练
 
 - [RAGEN：通过强化推理训练代理](https://github.com/RAGEN-AI/RAGEN)
+- [Agent Lightning 是微软研究院推出的一个框架](https://github.com/microsoft/agent-lightning)
 
 ## Agent 框架
 

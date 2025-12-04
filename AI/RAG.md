@@ -301,6 +301,8 @@ RAG 分为前置的数据导入工作和后续的用户检索提问两个环节�
 
 ![](image/RAG-Optimize.png)
 
+`企业 RAG = 70% 工程 + 20% 领域知识 + 10% 模型 + ∞ 耐心`。毕竟，企业 RAG 不是一个纯技术问题，对行业的理解、对脏数据的处理能力、对工程细节的把控，都是绕不开的必修课
+
 # RAG技术
 
 - [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)

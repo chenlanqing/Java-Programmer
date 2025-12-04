@@ -176,6 +176,7 @@ Nano Banana 提示词
 - https://github.com/PicoTrex/Awesome-Nano-Banana-images
 - https://github.com/ZHO-ZHO-ZHO/ZHO-nano-banana-Creation
 - https://github.com/JimmyLv/awesome-nano-banana
+- https://github.com/ZeroLu/awesome-nanobanana-pro
 
 ## 视频
 

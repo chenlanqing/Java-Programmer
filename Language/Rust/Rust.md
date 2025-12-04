@@ -58,6 +58,9 @@ installed targets:
 ```bash
 rustup default stable
 ```
+# GUI
+
+- [GPUI Component 是一个基于 Rust 语言的 GUI 组件库](https://github.com/longbridge/gpui-component)
 
 # 参考资料
 
