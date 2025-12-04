@@ -294,6 +294,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Cpass](https://api.cpass.cc/console/topup)
 - [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
 - [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
+- [ChatOpens](https://www.chatopens.chat/Web/List.html)
 
 # 参考资料
 
