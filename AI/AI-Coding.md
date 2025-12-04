@@ -194,6 +194,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [Claude code core library](https://github.com/obra/superpowers)
 - [Claude Agent Skills: A First Principles Deep Dive](https://leehanchung.github.io/blogs/2025/10/26/claude-skills-deep-dive/)
 - [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
+- [Claude Code Templates](https://github.com/davila7/claude-code-templates)
 
 ## 1、安装配置
 
