@@ -58,6 +58,7 @@ TIME_WAIT 1645
 - https://github.com/alacritty/alacritty
 - [The minimal, blazing-fast, and infinitely customizable prompt for any shell!](https://github.com/starship/starship)
 - https://github.com/wavetermdev/waveterm
+- [eza: ls命令替代](https://github.com/eza-community/eza)，关于 mac 上显示字体问题：https://github.com/eza-community/eza/issues/1275
 
 ### 4.3、开发工具
 
@@ -269,9 +270,20 @@ last reboot | head -1
 
 ## 10、命令别名
 
+### 10.1、oh-my-zsh 别名
+
 比如安装了 oh-my-zsh，查看 git 操作命令的别名：
 ```bash
 $ cd ~/.oh-my-zsh/plugins/git
 $ cat git.plugin.zsh
 ```
 `cat ~/.oh-my-zsh/plugins/git/git.plugin.zsh`
+
+### 10.2、其他别名
+
+在 ~/.zsh 目录下创建文件：[dev-aliases.zsh](dev-alias.sh)
+
+然后在 `~/.zshrc` 新增如下内容：
+```sh
+source ~/.zsh/dev-aliases.zsh
+```

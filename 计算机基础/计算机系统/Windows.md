@@ -35,7 +35,7 @@ pause
 - [Utools](https://www.u.tools/)
 - [剪切板历史工具](ditto 、EcoPaste 、贴贴)
 - [Windows效率外挂:窗口管理、批量重命名、屏幕取色全有](https://github.com/microsoft/PowerToys)
-
+- [Windows 高效文件管理窗口](https://github.com/files-community/Files)
 
 # 参考资料
 
