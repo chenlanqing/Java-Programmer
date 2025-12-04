@@ -41,6 +41,13 @@
 - Claude Code
 - Claude Code + GLM4.5
 
+## 3、SDD：规范驱动开发
+
+- [SDD:规范驱动开发的工具包](https://github.com/github/spec-kit)
+- [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
+
+规范驱动开发 (Spec-Driven Development， SDD)，其核心理念似乎是指在利用 AI 编写代码之前，首先编写一份规范(spec)，即文档先行。这份规范将成为人类开发者与 AI 共同的事实来源。
+
 # 二、Cursor
 
 - [Cursor AI编程经验分享](https://mp.weixin.qq.com/s/UM3nBcX6JpYtnchSCdrxOA)
@@ -185,6 +192,8 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [Claude Skills Marketplace](https://skillsmp.com/zh)
 - [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
 - [Claude code core library](https://github.com/obra/superpowers)
+- [Claude Agent Skills: A First Principles Deep Dive](https://leehanchung.github.io/blogs/2025/10/26/claude-skills-deep-dive/)
+- [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
 
 ## 1、安装配置
 
@@ -313,7 +322,5 @@ EOF
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
 - [Ready to use Native AI](https://2233.ai/aicoding)
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
-- [SDD:规范驱动开发的工具包](https://github.com/github/spec-kit)
-- [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
 - [Killer, Claude Code](https://cc.deeptoai.com/)
 - https://platform.minimaxi.com/docs/guides/text-ai-coding-tools
