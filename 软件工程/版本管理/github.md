@@ -117,6 +117,7 @@ git push origin --delete master
 - [Ladybird 是真从零写的独立浏览器，不是 Chromium 换皮](https://github.com/LadybirdBrowser/ladybird)
 - [警报处理工具：Alertmanager](https://github.com/prometheus/alertmanager)
 - [网站变更检测、网页监控和网站变更提醒的最佳且最简单的工具](https://github.com/dgtlmoon/changedetection.io)
+- [技术 README 写作技巧](https://github.com/BolajiAyodeji/awesome-technical-writing)
 
 ## 软件测试开源项目
 

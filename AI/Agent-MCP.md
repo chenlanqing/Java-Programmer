@@ -385,6 +385,7 @@ A2A 与 MCP 各有专长，再加上 LLM，它们共同构成了一个完整的�
 - [Cognee 是一个专为 AI 智能体设计的内存管理系统](https://github.com/topoteretes/cognee)
 - [Memori: 用于 AI 的开源 SQL 原生内存引擎](https://github.com/GibsonAI/Memori)
 - [深度拆解与对比Mem0/Graphiti/Cognee三大开源Memory方案](https://mp.weixin.qq.com/s/sdi3rgDRiRWhsmbDWc-w-g)
+- [Official Code of Memento: Fine-tuning LLM Agents without Fine-tuning LLMs](https://github.com/Agent-on-the-Fly/Memento)
 
 ### 概述
 
