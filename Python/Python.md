@@ -21,6 +21,8 @@ pip3 install langchain --trusted-host pypi.org --trusted-host files.pythonhosted
 
 # Python应用
 
+- [Python 动手教程，包含 50+ Python 应用](https://github.com/qxresearch/qxresearch-event-1)
+
 
 # 数据科学
 

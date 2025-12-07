@@ -59,6 +59,7 @@
  
  # AI 应用
 
+- [一个基于 AI 技术的智能电子书解析工具，支持将 EPUB 和 PDF 格式的电子书转换为结构化的思维导图和文字总结](https://github.com/SSShooter/ebook-to-mindmap)
 - [一个可用于生产的模板，可在考虑结构和可扩展性的情况下启动您的生成式 AI 项目](https://github.com/HeyNina101/generative_ai_project)
 - [HackGPT Enterprise 是一个专为企业安全团队设计的生产就绪、云原生 AI 驱动的渗透测试平台](https://github.com/yashab-cyber/HackGpt/)
 - [开源 AI 黑客](https://github.com/usestrix/strix)

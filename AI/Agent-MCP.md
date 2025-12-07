@@ -18,6 +18,8 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 
 ### Agent核心架构定义
 
+- [17 Agent 架构实现](https://github.com/FareedKhan-dev/all-agentic-architectures)
+
 ![](image/Contruction-of-LLM-based-Agents.png)
 
 上图（来自[The Rise and Potential of Large Language Model Based Agents: A Survey](https://arxiv.org/pdf/2309.07864)）定义了 Agent 架构，其中包含几个重要部分：

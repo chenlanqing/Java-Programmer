@@ -195,6 +195,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [Claude Agent Skills: A First Principles Deep Dive](https://leehanchung.github.io/blogs/2025/10/26/claude-skills-deep-dive/)
 - [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
 - [Claude Code Templates](https://github.com/davila7/claude-code-templates)
+- [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
 
 ## 1、安装配置
 
@@ -323,5 +324,5 @@ EOF
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
 - [Ready to use Native AI](https://2233.ai/aicoding)
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
-- [Killer, Claude Code](https://cc.deeptoai.com/)
-- https://platform.minimaxi.com/docs/guides/text-ai-coding-tools
+- [Claude Code Cookbook: Killer, Claude Code](https://cc.deeptoai.com/)
+- [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
