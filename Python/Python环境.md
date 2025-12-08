@@ -106,6 +106,8 @@ conda env create -f environment.yml
 
 Jupyterlab：最新的基于Web的交互式开发环境，用于笔记本电脑，代码和数据。它的灵活接口使用户可以在数据科学，科学计算，计算新闻学和机器学习中配置和安排工作流程。模块化设计邀请扩展以扩展和丰富功能。
 
+## 1、基础命令
+
 ```bash
 jupyter lab
 ```
@@ -117,6 +119,15 @@ Running as root is not recommended. Use --allow-root to bypass
 ```bash
 jupyter lab --allow-root
 ```
+后台启动：
+```sh
+nohup jupyter lab --allow-root > ~/jupyter.log 2>&1 &
+```
+
+## 2、相关配置
+
+### 2.1、允许外网访问
+
 如果在云服务器上配置的话，需要可以在外部访问：
 - 生成配置文件：
 ```bash
@@ -131,4 +142,27 @@ c.ServerApp.ip = '0.0.0.0'
 c.ServerApp.open_browser = False
 # 设置端口（默认为8888，可自定义）
 c.ServerApp.port = 8888
+```
+如果遇到问题，可以再次检查防火墙：
+```bash
+firewall-cmd --list-ports
+firewall-cmd --add-port=8888/tcp --permanent
+firewall-cmd --reload
+```
+
+## 3、设置密码
+
+`jupyter lab password` 输入密码后，密码会存在：`/root/.jupyter/jupyter_server_config.json`
+```sh
+$ jupyter lab password
+Enter password: 
+Verify password: 
+[JupyterPasswordApp] Wrote hashed password to /root/.jupyter/jupyter_server_config.json
+```
+```json
+{
+  "IdentityProvider": {
+    "hashed_password": "<password hash>"
+  }
+}
 ```

@@ -3190,13 +3190,26 @@ uv sync --clean
 ### 4.3、管理虚拟环境
 
 默认情况下，在工作目录中创建名为 `.venv` 的虚拟环境
-```bash
+```sh
 uv venv [OPTIONS] [PATH]
 ```
 如果目标路径中存在虚拟环境，则将删除该虚拟环境，并创建一个新的空虚拟环境；默认使用的 Python 最新版本；
-```bash
+```sh
 uv venv --python 3.11.0
 uv pip install -r requirements.txt
+```
+
+### 4.4、指定镜像源
+
+在 project.toml 中添加如下配置：
+```toml
+[[tool.uv.index]]
+url = "https://mirrors.aliyun.com/pypi/simple/"
+```
+
+执行 uv 命令时添加参数：
+```sh
+uv sync --index-url https://mirrors.aliyun.com/pypi/simple/
 ```
 
 ## 5、包冲突
