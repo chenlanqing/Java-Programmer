@@ -185,17 +185,9 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 
 # 三、Claude Code
 
-- [使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
-- https://github.com/anthropics/claude-cookbooks
-- [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
-- [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
-- [Claude Skills Marketplace](https://skillsmp.com/zh)
-- [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
+- [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
 - [Claude code core library](https://github.com/obra/superpowers)
-- [Claude Agent Skills: A First Principles Deep Dive](https://leehanchung.github.io/blogs/2025/10/26/claude-skills-deep-dive/)
-- [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
 - [Claude Code Templates](https://github.com/davila7/claude-code-templates)
-- [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
 
 ## 1、安装配置
 
@@ -227,6 +219,19 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
     }
 }
 ```
+
+## 2、插件
+
+- [Git 相关流程：使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
+
+## 3、SKILL
+
+- [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
+- [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
+- [Claude Skills Marketplace](https://skillsmp.com/zh)
+- [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
+- [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
+- [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
 
 # 四、Codex
 

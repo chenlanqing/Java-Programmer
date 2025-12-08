@@ -240,6 +240,16 @@ ReWOO 最显著的特点是拥有一个独立的 Solver 模块。它专门负责
 - ReWOO Worker 只负责执行工具调用，无需 LLM 驱动。
 - ReWOO 没有重新规划步骤（蓝图固定）
 
+## Agent 架构
+
+Claude 的 Agent 架构：MCP + PTC、Skills 与 Subagents 的三维协同：
+- 主 Agent 接到一个复杂任务 ( “给这个项目生成完整报告 + 做代码审查 + 更新文档 + 汇总结果”)。
+- 主 Agent 将“代码审查”子任务交给 Review Subagent — 它用独立 Context +专属工具去分析代码库，不污染主 Context，也能并行处理多个文件。
+- 子任务里若需要格式化 /转换 /模板生成 (例如把分析结果生成 Markdown 报告)，Subagent 内部可以使用一个 Skill来完成。
+- 若子任务还需访问公司数据库 / APIs 获取数据 (例如Bug跟踪, 提交历史)，Subagent (或 Skill) 通过 MCP 工具/PTC（Programming Tool Calling） 来获得这些数据。
+- 子代理处理完，把最终结果以简洁总结形式返回给主 Agent。主 Agent 收集多个 Subagent 的结果，整合 / 合成最终输出给用户。
+
+
 ## Function Calling
 
 - [Function Calling-使模型能够获取数据并采取操作](https://platform.openai.com/docs/guides/function-calling)
