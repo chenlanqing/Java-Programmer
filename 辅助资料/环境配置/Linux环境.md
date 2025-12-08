@@ -264,7 +264,16 @@ mysql目前最新版是8.0，启动mysql后，在容器内通过：`mysql -uroot
 docker run -id --name=mysql3306 -p 3306:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0.32
 docker run -id --name=mysql3307 -p 3307:3306 -e MYSQL_ROOT_PASSWORD=123456 mysql:8.0.32
 ```
-
+或者如下：
+```sh
+docker run -d \
+  --name mysql3306 \
+  -p 3306:3306 \
+  -e MYSQL_ROOT_PASSWORD='StrongRootPass_123!' \
+  -v mysql3306_data:/var/lib/mysql \
+  --restart unless-stopped \
+  mysql:8.0.32
+```
 
 
 ## 4、问题
