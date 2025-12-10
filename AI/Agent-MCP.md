@@ -18,8 +18,6 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 
 ### Agent核心架构定义
 
-- [17 Agent 架构实现](https://github.com/FareedKhan-dev/all-agentic-architectures)
-
 ![](image/Contruction-of-LLM-based-Agents.png)
 
 上图（来自[The Rise and Potential of Large Language Model Based Agents: A Survey](https://arxiv.org/pdf/2309.07864)）定义了 Agent 架构，其中包含几个重要部分：
@@ -241,6 +239,8 @@ ReWOO 最显著的特点是拥有一个独立的 Solver 模块。它专门负责
 - ReWOO 没有重新规划步骤（蓝图固定）
 
 ## Agent 架构
+
+- [17 Agent 架构实现](https://github.com/FareedKhan-dev/all-agentic-architectures)
 
 Claude 的 Agent 架构：MCP + PTC、Skills 与 Subagents 的三维协同：
 - 主 Agent 接到一个复杂任务 ( “给这个项目生成完整报告 + 做代码审查 + 更新文档 + 汇总结果”)。

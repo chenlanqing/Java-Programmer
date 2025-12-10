@@ -8,3 +8,4 @@
 - [深度学习快速入门](https://www.rethink.fun/)
 - [深度学习-逐行解读代码](https://github.com/labmlai/annotated_deep_learning_paper_implementations)
 - [Practical Deep Learning](https://course.fast.ai/)
+- [Deep Learning Book Chinese Translation](https://github.com/exacity/deeplearningbook-chinese)

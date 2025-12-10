@@ -349,6 +349,7 @@ flowchart LR
 
 # Prompt 生成案例
 
+- [概念美术提示词生成器](https://github.com/TanShilongMario/PromptFill)
 - [Awesome Prompts; Nano Banana；Banana Pro](https://github.com/glidea/banana-prompt-quicker)
 - [Open Nano Banana提示词图库](https://opennana.com/awesome-prompt-gallery/)
 - [GPT 提示词](https://github.com/linexjlin/GPTs)

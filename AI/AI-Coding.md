@@ -223,6 +223,7 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 ## 2、插件
 
 - [Git 相关流程：使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
+- [Claude code 内存插件](https://github.com/thedotmack/claude-mem/)
 
 ## 3、SKILL
 
@@ -321,6 +322,7 @@ EOF
 - https://anyrouter.top/
 - https://www.packyapi.com/pricing
 - https://codex.packycode.com/pricing
+- [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
 
 # 参考资料
 
