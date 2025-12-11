@@ -188,6 +188,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
 - [Claude code core library](https://github.com/obra/superpowers)
 - [Claude Code Templates](https://github.com/davila7/claude-code-templates)
+- [Claude Quick starts](https://github.com/anthropics/claude-quickstarts)
 
 ## 1、安装配置
 
@@ -249,6 +250,7 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 ## 其他
 
 - [Claude 代码图形界面应用和工具包——创建自定义代理，管理交互式 Claude 代码会话，运行安全后台代理](https://github.com/winfunc/opcode)
+- [Claud Code 编程分享](https://blog.cosine.ren/post/my-claude-code-record-2)
 
 # 四、Codex
 
