@@ -225,6 +225,7 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 - [Git 相关流程：使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
 - [Claude code 内存插件](https://github.com/thedotmack/claude-mem/)
 
+
 ## 3、SKILL
 
 - [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
@@ -233,6 +234,21 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 - [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
 - [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
 - [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
+- [Public repository for Skills](https://github.com/anthropics/skills)
+
+## 4、自定义命令
+
+- [个人命令](https://code.claude.com/docs/zh-CN/slash-commands)
+
+[Claude Code CLI 的专业命令](https://github.com/brennercruvinel/CCPlugins) 提供了一些命令：
+- /cleanproject、/commit、/format、/scaffold、/test、/implement、/refactor 实现一键清理、初始化和重构等。
+- 代码质量与安全：/review、/security-scan、/predict-issues 等执行代码 Review，自动检测和修复安全漏洞、导入问题、TODO 等。
+- 高级分析：/understand、/explain-like-senior、/make-it-pretty 提供全局架构分析、高级代码解释和可读性优化。
+- 会话与项目管理：/session-start、/session-end、/docs、/todos-to-issues、/undo 增加会话持续性，保障开发过程可追溯和可回滚。
+
+## 其他
+
+- [Claude 代码图形界面应用和工具包——创建自定义代理，管理交互式 Claude 代码会话，运行安全后台代理](https://github.com/winfunc/opcode)
 
 # 四、Codex
 
@@ -333,3 +349,4 @@ EOF
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
 - [Claude Code Cookbook: Killer, Claude Code](https://cc.deeptoai.com/)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
+- [模型编程性能参考排行榜](https://lmarena.ai/zh/leaderboard/webdev)
