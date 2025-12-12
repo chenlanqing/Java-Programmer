@@ -285,7 +285,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Genesis 是一个面向通用机器人学、具身人工智能 (Embodied AI) 和物理 AI 应用 的生成式物理模拟平台](https://github.com/Genesis-Embodied-AI/Genesis)
 - https://github.com/chatboxai/chatbox
 
-# AI代理
+# AI 代理
 
 - [Claude Code、Codex镜像服务](https://aicoding.sh/)
 - [银河录像局](https://nf.video/)
@@ -296,6 +296,8 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
 - [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
 - [ChatOpens](https://www.chatopens.chat/Web/List.html)
+- https://console.aihubmix.com/token?aff=uTxe
+- https://www.aigocode.com/dashboard/console
 
 # 参考资料
 
