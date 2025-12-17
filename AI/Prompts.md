@@ -329,6 +329,7 @@ flowchart LR
 - [火山方舟-Prompt 调优](https://console.volcengine.com/ark/region:ark+cn-beijing/autope/workbench/new)
 - [Prompt Pilot](https://promptpilot.volcengine.com/home)
 - [提示词优化器](https://github.com/linshenkx/prompt-optimizer)
+- [An Automatic Prompt Optimization Framework for Large Language Models](https://github.com/SalesforceAIResearch/promptomatix)
 
 提示词优化器通过4个步骤增强您的提示词：
 - 添加示例：在提示词模板中添加与任务相关的示例

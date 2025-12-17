@@ -492,6 +492,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [论文：大语言模型训练数据](https://arxiv.org/pdf/2411.07715v1)
 - [论文： Datasets for Large Language Models: A Comprehensive Survey](https://arxiv.org/pdf/2402.18041)
 - [Toolkit for linearizing PDFs for LLM datasets/training](https://github.com/allenai/olmocr)
+- [大语言模型高质量数据集汇总](https://github.com/ninehills/blog/blob/gh-pages/articles/129.md)
 
 ### 1、数据集格式
 
