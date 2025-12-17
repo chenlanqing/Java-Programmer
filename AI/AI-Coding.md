@@ -262,6 +262,7 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 
 - [Claude 代码图形界面应用和工具包——创建自定义代理，管理交互式 Claude 代码会话，运行安全后台代理](https://github.com/winfunc/opcode)
 - [Claud Code 编程分享](https://blog.cosine.ren/post/my-claude-code-record-2)
+- [Claude Code 的智能自动化与多代理编排](https://github.com/wshobson/agents)
 
 # 四、Codex
 
