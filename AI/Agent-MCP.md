@@ -9,6 +9,7 @@
 - [AG-UI 是一种轻量级的、基于事件的协议](https://github.com/ag-ui-protocol/ag-ui)
 - [Routine框架：让企业级Agent告别“不靠谱”](https://arxiv.org/pdf/2507.14447)
 - [论文：Fundamentals of Building Autonomous LLM Agents](https://arxiv.org/abs/2510.09244)
+- [生成式 Agents](https://github.com/NirDiamant/GenAI_Agents)
 
 ## 概念
 

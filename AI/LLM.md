@@ -701,3 +701,4 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - [从命令行访问大型语言模型](https://github.com/simonw/llm)
 - [医学大型语言模型实用指南](https://github.com/AI-in-Health/MedLLMsPracticalGuide)
 - [大型语言模型的结构化输出](https://github.com/dottxt-ai/outlines)
+- [LLM Council](https://github.com/karpathy/llm-council)

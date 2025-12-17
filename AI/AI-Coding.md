@@ -247,6 +247,7 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 - [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
 - [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
 - [Public repository for Skills](https://github.com/anthropics/skills)
+- [Claude Skills Center](https://github.com/obra/superpowers/tree/main/skills)
 
 ## 4、自定义命令
 

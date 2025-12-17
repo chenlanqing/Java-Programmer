@@ -80,6 +80,7 @@
 - [N8N Workflow Collection & Documentation](https://github.com/Zie619/n8n-workflows)
 - [Exa-一个 API 用于搜索和抓取 Web，将其转换为应用的结构化数据](https://dashboard.exa.ai/playground)
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
+- [开源的 NotebookLM](https://github.com/lfnovo/open-notebook)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
 - [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 - [邮件助手 Agent](https://github.com/langchain-ai/agents-from-scratch)
