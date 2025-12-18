@@ -254,6 +254,7 @@ print(chat_completion.choices[0].message.content)
 
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
 - [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
+- [nano-vllm源码解析](https://mp.weixin.qq.com/s/nE_Pfrx2zzbCbakA_SP4_A)
 - [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
 - [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 - [LMCache 是一个 LLM 服务引擎扩展，用于减少 TTFT 并提高吞吐量](https://github.com/LMCache/LMCache)
@@ -273,10 +274,8 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 ## 6、大模型本地部署
 
 - [GPT4All：在任何设备上运行本地 LLM](https://github.com/nomic-ai/gpt4all)
-- [Ollama-运行大模型框架](https://ollama.com/)
 - [Xinference-模型服务变得简单](https://github.com/xorbitsai/inference)
 - [huggingface-开源大模型](https://huggingface.co/)
-- [ollama-基本使用](https://github.com/datawhalechina/handy-ollama)
 - [Shimmy: The 5MB Alternative to Ollama](https://github.com/Michael-A-Kuykendall/shimmy)
 - [开源大模型食用（部署）指南](https://github.com/datawhalechina/self-llm)
 - [ModelScope是阿里巴巴推出的开源模型即服务（MaaS）平台](https://www.modelscope.cn/home)
@@ -303,6 +302,11 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [显卡型号众多（适合测试模型在不同显卡上的性能），4090 2-3元/小时](https://www.autodl.com/)
 - https://www.suanlix.cn/
 - https://www.runpod.io/
+
+### 6.3、ollama
+
+- [Ollama-运行大模型框架](https://github.com/ollama/ollama)
+- [ollama-基本使用](https://github.com/datawhalechina/handy-ollama)
 
 ## 7、大模型评测
 

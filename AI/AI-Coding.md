@@ -164,7 +164,6 @@ cursor的表现取决于：有效的Rules、正确的开发流程、标准的Pro
 ### 1.5、生成单测
 
 ```md
-
 # 任务
 请你为《xx.java》文件生成单测。
 
@@ -176,6 +175,9 @@ cursor的表现取决于：有效的Rules、正确的开发流程、标准的Pro
 ```
 
 ## 2、rules
+
+- [Configuration files that enhance Cursor AI editor experience with custom rules and behaviors](https://github.com/PatrickJS/awesome-cursorrules)
+- [Curated list of awesome Cursor Rules .mdc files](https://github.com/sanjeed5/awesome-cursor-rules-mdc)
 
 rules 就是给 Cursor 定下的行为准则和沟通规范，rules 的核心价值：用具体可执行的约束替代模糊的预期，让 AI 的输出能够精准贴合实际开发需求；
 
@@ -198,8 +200,10 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 
 - [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
 - [Claude code core library](https://github.com/obra/superpowers)
-- [Claude Code Templates](https://github.com/davila7/claude-code-templates)
+- [CLI tool for configuring and monitoring Claude Code](https://github.com/davila7/claude-code-templates)
 - [Claude Quick starts](https://github.com/anthropics/claude-quickstarts)
+- [Claude Code router](https://github.com/musistudio/claude-code-router)
+- [A comprehensive directory for discovering plugin marketplaces](https://claudemarketplaces.com/)
 
 ## 1、安装配置
 
@@ -238,7 +242,7 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 - [Claude code 内存插件](https://github.com/thedotmack/claude-mem/)
 
 
-## 3、SKILL
+## 3、Skill
 
 - [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
 - [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
@@ -248,6 +252,44 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 - [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
 - [Public repository for Skills](https://github.com/anthropics/skills)
 - [Claude Skills Center](https://github.com/obra/superpowers/tree/main/skills)
+- [Claude Code Templates Skills](https://www.aitmpl.com/skills)
+
+### 3.1、什么是 Skill
+
+它是让 Claude 记住你希望它如何工作，并能长期复用的说明文件；
+
+Claude Skills 的真正突破在于——它让 AI 第一次从理解你的指令，变成掌握你的方法。你的要求、标准、风格全部能被体系化成文件，被反复调用、修改、优化。这让“怎么用 AI”从技能变成了可沉淀的个人资产。
+
+MCP、Skill、Projects 比较：
+- Claude 是“头脑”；
+- Skills 是它记住的做事方法；
+- MCP 是它能用的工具；
+- Project 是当前任务的个性化场景。
+
+### 3.2、如何安装
+
+```
+/plugin marketplace add anthropics/skills
+/plugin install document-skills@anthropic-agent-skills
+```
+
+### 3.3、如何创建
+
+- [Skill Creator: 通过Chat 创建 Skill](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
+
+### 示例
+
+https://github.com/obra/superpowers/tree/main/skills  
+https://github.com/ComposioHQ/awesome-claude-skills  
+https://github.com/BehiSecc/awesome-claude-skills  
+https://github.com/VoltAgent/awesome-claude-skills  
+https://github.com/travisvn/awesome-claude-skills  
+https://github.com/mrgoonie/claudekit-skills/tree/main/.claude/skills  
+https://github.com/K-Dense-AI/claude-scientific-skills  
+https://github.com/bear2u/my-skills/tree/master/skills  
+https://github.com/czlonkowski/n8n-skills  
+https://github.com/huggingface/skills  
+https://github.com/yusufkaraaslan/Skill_Seekers  
 
 ## 4、自定义命令
 
@@ -331,6 +373,7 @@ EOF
 ## AI代码前端风格
 
 - [前端漂亮的 UI 风格设计](https://www.aura.build)
+- https://shadcnthemer.com/
 
 为了解决 AI 编码中前端的风格审美疲劳的问题，可以找到你觉得好看的，直接让AI参考学习，这样成品率就会好很多。
 
@@ -365,3 +408,4 @@ EOF
 - [Claude Code Cookbook: Killer, Claude Code](https://cc.deeptoai.com/)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
 - [模型编程性能参考排行榜](https://lmarena.ai/zh/leaderboard/webdev)
+- [Continue: 编码 Agents](https://github.com/continuedev/continue)

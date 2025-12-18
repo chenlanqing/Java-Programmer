@@ -366,6 +366,7 @@ flowchart LR
 - [Manus 提示词](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
 - [gpt-5-coding-examples:GPT-5 一句话生成的各种小程序和应用](https://github.com/openai/gpt-5-coding-examples)
 - [Claude Code System Prompts](https://platform.claude.com/docs/zh-CN/release-notes/system-prompts)
+- [All parts of Claude Code's system prompt](https://github.com/Piebald-AI/claude-code-system-prompts)
 
 # 参考资料
 
