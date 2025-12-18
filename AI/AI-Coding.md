@@ -59,6 +59,16 @@
 
 **关键差异** 在于：先规范、后代码；AI 根据规范实现，开发者聚焦架构、需求与验证；质量通过系统化闸门把关；并通过持续反馈把错误信息融入规范，迭代提升输出质量
 
+## Vibe Coding
+
+- [Vibe Coding 指南](https://github.com/tukuaiai/vibe-coding-cn)
+- [零基础 AI 编程路线图，系统介绍 AI 时代的编程新范式](https://github.com/automata/aicodeguide)
+- [提供标准化工作流程和提示词模板，帮助快速构建 MVP](https://github.com/KhazP/vibe-coding-prompt-template)
+- [Claude Code 的设置、命令和技能集合](https://github.com/feiskyer/claude-code-settings)
+- [Vibe Coding 终极指南](https://github.com/EnzeD/vibe-coding)
+- [全球 AI 辅助编程工具汇总列表](https://github.com/filipecalegario/awesome-vibe-coding)
+
+
 # 二、Cursor
 
 - [Cursor AI编程经验分享](https://mp.weixin.qq.com/s/UM3nBcX6JpYtnchSCdrxOA)
