@@ -301,6 +301,13 @@ https://github.com/yusufkaraaslan/Skill_Seekers
 - 高级分析：/understand、/explain-like-senior、/make-it-pretty 提供全局架构分析、高级代码解释和可读性优化。
 - 会话与项目管理：/session-start、/session-end、/docs、/todos-to-issues、/undo 增加会话持续性，保障开发过程可追溯和可回滚。
 
+## 5、hooks
+
+- [Claude Code Hooks](https://code.claude.com/docs/zh-CN/hooks-guide)
+- [Claude Code hooks reference](https://code.claude.com/docs/en/hooks)
+- [掌握 Claude code hooks](https://github.com/disler/claude-code-hooks-mastery)
+- [How to Make Claude Code Skills Activate Reliably](https://scottspence.com/posts/how-to-make-claude-code-skills-activate-reliably)  
+
 ## 其他
 
 - [Claude 代码图形界面应用和工具包——创建自定义代理，管理交互式 Claude 代码会话，运行安全后台代理](https://github.com/winfunc/opcode)
@@ -400,6 +407,7 @@ EOF
 
 # 参考资料
 
+- [AGENTS.md 是一种简单、开放的编码代理指导格式](https://github.com/agentsmd/agents.md)
 - [Ruler — apply the same rules to all coding agents](https://github.com/intellectronica/ruler)
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
