@@ -59,6 +59,8 @@ TIME_WAIT 1645
 - [The minimal, blazing-fast, and infinitely customizable prompt for any shell!](https://github.com/starship/starship)
 - https://github.com/wavetermdev/waveterm
 - [eza: ls命令替代](https://github.com/eza-community/eza)，关于 mac 上显示字体问题：https://github.com/eza-community/eza/issues/1275
+- [btop:监控软件](https://github.com/aristocratos/btop)
+- [TMUX 是一种终端复用器](https://github.com/tmux/tmux)
 
 ### 4.3、开发工具
 
