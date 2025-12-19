@@ -10,7 +10,30 @@
 
 提示词工程（Prompt Engineering），是一门关于如何设计、构建、测试、分析和迭代优化提示词的系统性方法论与实践学科，其最终目标是最大化提升大型语言模型在特定任务上的表现（Performance）、可靠性（Reliability）和安全性（Safety）
 
-# 2、Prompt的运行过程
+## 1.3、User Prompt vs. System Prompt
+
+- [深度解析：User Prompt vs. System Prompt](https://www.53ai.com/news/tishicikuangjia/2025111293245.html)
+
+| 类型 | 作用 | 范围 | 遵循优先级 | 类比 | 示例 |
+|------|------|------|------------|------|------|
+| **System Prompt** | 定义AI的人设、行为准则和长期记忆 | 全局、持久（整个会话或应用） | P0（最高） | 公司章程、角色剧本、操作系统 | "你是一位严谨的法律顾问。所有回答必须引用具体法条，并以'免责声明'结尾。" |
+| **User Prompt** | 下达具体、临时的任务指令 | 局部、即时（单次问答） | P1（次高） | 领导分配的当日任务 | "帮我分析一下这份租赁合同中的潜在风险。" |
+
+System Prompt给AI搭了一个框架，让它有了一个稳定的“人格”。而User Prompt则是在这个框架里，驱动AI去完成一个个具体的任务。顺便说一句: 在我们平时玩的那些AI聊天工具里，Sys Prompt通常是藏起来的，是平台提前给你设定好的
+
+### 1.3.1、系统提示词 System Prompt
+
+首先必须谨记 三个原则：
+- 系统提示词并不一定非要长篇大论，需要根据需求去设定，每个模块甚至每句话都需要先想清楚是否必须
+- 提示词工程是需要迭代的：尝试编写提示，查看结果，然后逐步完善提示，以尽可能接近您需要的结果
+- 每一次调整可能都让结果更加偏离目标。记得备份每个版本是兜底，越调越偏，这种情况下，我倾向于放弃
+
+**系统提示词怎么写**
+- Markdown结构化
+
+### 1.3.2、用户提示词 User Prompt
+
+## 1.4、Prompt的运行过程
 
 **1.接收输入**
 - 用户或系统向语言模型提供一个Prompt，这个Prompt包含任务指令、背景信息、示例以及格式说明。
@@ -24,6 +47,10 @@
 
 **4、生成输出**
 - 模型根据计算结果，从生成的概率分布中采样下一个词汇。每个生成的词汇会迭代地输入回模型，以生成后续词汇。这个过程持续进行，直到满足输出条件（例如达到预定句子长度或遇到特殊结束符）。这一过程称为解码（Decoding），可以使用贪心搜索（Greedy Search）、束搜索（Beam Search）或其他采样方法（如随机采样和核采样），以生成最优的文本输出
+
+# 2、元提示词工程
+
+https://www.53ai.com/news/tishicikuangjia/2025120604297.html
 
 # 3、如何精准生成Prompt
 
@@ -323,7 +350,19 @@ flowchart LR
     id4(编写提示词) --> id5(持续迭代)
 ```
 
-# 8、Prompt 优化
+# [EARS 需求语法](https://alistairmavin.com/ears/)
+
+## 概述
+
+EARS （简易需求语法）是英国罗尔斯・罗伊斯公司于 2009 年创造的简易需求语法： 英文全称为 Easy Approach to Requirements Syntax。 其起源是该公司工程师在分析各种系统需求表述时，为了明确和简化需求，设定了一组初始的需求表述 “规则”。
+
+EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自然语言下的需求描述：将需求分解为实体、动作、关系、范围四个要素，通过强制使用：“系统应...”“当... 时” 等结构化句式，把自然语言的 “表述行为” 转化为 “指令行为”，使需求从 “描述性” 转变为 “规范性”。
+
+
+
+
+
+# Prompt 优化
 
 - [Claude Optimizer：自动分析Prompt结构并提出改进建议（如添加XML标签、调整逻辑层级）](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prompt-improver)
 - [火山方舟-Prompt 调优](https://console.volcengine.com/ark/region:ark+cn-beijing/autope/workbench/new)
@@ -337,14 +376,14 @@ flowchart LR
 - 模板结构化：创建具有清晰章节和XML标签的结构化模板
 - 链式提示增强：展示从输入到输出的逐步推理
 
-# 9、魔法词
+# 魔法词
 
 在提示词领域，有一些类词被称为“魔法词”，使用后可以立竿见影的提升大模型的输出质量，让人直呼玄学的力量。通常是因为这些提示词会让大模型联想或使用到一些高质量的数据，所以才会产生较好的输出结果。常用到两种“魔法词”，分别是：
 - Let's think step by step.
 - Read the question again
     - Re-Reading重读：Re-Reading Improves Reasoning in Large Language Models（https://arxiv.org/pdf/2309.06275）
 
-# 10、提示词评测
+# 提示词评测
 
 - [AI 提示工程工作台，用于使用强大的分析工具制作、测试和系统评估提示](https://github.com/insaaniManav/prompt-forge)
 
@@ -367,6 +406,7 @@ flowchart LR
 - [gpt-5-coding-examples:GPT-5 一句话生成的各种小程序和应用](https://github.com/openai/gpt-5-coding-examples)
 - [Claude Code System Prompts](https://platform.claude.com/docs/zh-CN/release-notes/system-prompts)
 - [All parts of Claude Code's system prompt](https://github.com/Piebald-AI/claude-code-system-prompts)
+- [OpenAI 官方出了 20 个万能模板](https://academy.openai.com/public/clubs/work-users-ynjqu/tags/prompt-packs-6849a0f98c613939acef841c)
 
 # 参考资料
 

@@ -43,8 +43,10 @@
 
 ## 3、SDD：规范驱动开发
 
-- [SDD:规范驱动开发的工具包](https://github.com/github/spec-kit)
+- [SDD:规范驱动开发的工具包-适合从0开始做新项目，更规范](https://github.com/github/spec-kit)
+- [Spec-driven development for AI coding assistants：适合集成到已有的项目中，更轻量](https://github.com/Fission-AI/OpenSpec)
 - [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
+- [Spec Workflow MCP](https://github.com/Pimzino/spec-workflow-mcp)
 
 ### 3.1、概述
 
@@ -58,6 +60,10 @@
 规范驱动开发将其变为“需求 → 详细规范 → AI 生成 → 验证”。
 
 **关键差异** 在于：先规范、后代码；AI 根据规范实现，开发者聚焦架构、需求与验证；质量通过系统化闸门把关；并通过持续反馈把错误信息融入规范，迭代提升输出质量
+
+### 3.3、注意事项
+
+- [Spec 编写注意事项](https://mp.weixin.qq.com/s/27x-6ruXLwNq3Spm68_G7A)
 
 ## Vibe Coding
 
@@ -214,6 +220,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [Claude Quick starts](https://github.com/anthropics/claude-quickstarts)
 - [Claude Code router](https://github.com/musistudio/claude-code-router)
 - [A comprehensive directory for discovering plugin marketplaces](https://claudemarketplaces.com/)
+- [Claude Code完全使用指南](https://mp.weixin.qq.com/s/Vpkzra5I8lvyTA8jX8l_2A)
 
 ## 1、安装配置
 
@@ -251,6 +258,46 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
 - [Git 相关流程：使 Claude Code 更有用的设置集合](https://github.com/wasabeef/claude-code-cookbook)
 - [Claude code 内存插件](https://github.com/thedotmack/claude-mem/)
 
+插件系统允许从市场安装或自己创建扩展，包括命令、代理、钩子和 MCP 服务器。
+
+**基本命令**
+```sh
+# 查看可用插件市场
+/plugin marketplace
+
+# 安装插件
+/plugin install owner/repo
+/plugin install owner/repo#branch  # 指定分支
+
+# 管理插件
+/plugin list                # 列出已安装插件
+/plugin enable plugin-name  # 启用插件
+/plugin disable plugin-name # 禁用插件
+/plugin uninstall plugin-name
+
+# 验证插件结构
+/plugin validate path/to/plugin
+```
+**插件结构**
+```
+my-plugin/
+├── plugin.json              # 插件清单
+├── commands/                # 斜杠命令
+│   └── my-command.md
+├── agents/                  # 自定义代理
+│   └── my-agent.md
+├── hooks/                   # 钩子配置
+│   └── hooks.json
+├── output-styles/           # 输出风格
+│   └── my-style.md
+└── mcp/                     # MCP 服务器配置
+    └── servers.json
+```
+最佳实践
+1. 版本控制：使用 git 标签管理插件版本
+2. 文档齐全：每个插件提供 README
+3. 团队共享：通过私有仓库分享团队插件
+4. 定期更新：保持插件与 Claude Code 版本兼容
 
 ## 3、Skill
 
@@ -283,9 +330,31 @@ MCP、Skill、Projects 比较：
 /plugin install document-skills@anthropic-agent-skills
 ```
 
-### 3.3、如何创建
+### 3.3、如何编写
 
 - [Skill Creator: 通过Chat 创建 Skill](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
+
+什么是的好的 Skill：skill 文档的开头的 name + description 部分需要回答三个问题：  
+① 它帮我干什么活？  
+② 什么时候它该出场？  
+③ 和我现在的项目有没有关系？  
+
+常见的骨架模式：  
+| 类型 | 结构 | 适用场景 |
+|------|------|----------|
+| **Workflow-based (流程型)** | Overview → Workflow decision tree → Step 1 → Step 2... | 适合「有固定顺序」的任务（比如DOCX Skill的"先决定是读/写/编辑，再按步骤走"） |
+| **Task-based (任务菜单型)** | Overview → Quick start → Task 1 → Task 2... | 适合「同一领域多种操作」的Skill（比如PDF: 提取文本/合并/拆分/表格识别...） |
+| **Reference / Guidelines (规范型)** | Overview → Guidelines → Specifications → Usage... | 用来固化「品牌规范、写作规范、代码风格」这类标准 |
+| **Capabilities-based (能力清单型)** | Overview → Core capabilities → 1, 2, 3... | 用于"产品管理/数据分析"这类综合性系统能力 |
+
+组织结构
+- SKILL.md 主体：保持简洁，建议控制在 500 行左右，多了就拆文件，但要注意避免多层嵌套引用。
+- FORMS.md (表单填写指南)
+- REFERENCE.md (详细的 API 参考)
+- Bundled Resources，需要时再读取：
+  - `scripts/`：重复写的代码、需要确定性执行的逻辑。
+  - `references/`：大块文档、API、schema、长规范。
+  - `assets/`：模板、pptx、html boilerplate、字体等。
 
 ### 示例
 
@@ -305,6 +374,47 @@ https://github.com/yusufkaraaslan/Skill_Seekers
 
 - [个人命令](https://code.claude.com/docs/zh-CN/slash-commands)
 
+在 `.claude/commands/` 目录创建 Markdown 文件，自动成为可用的斜杠命令，方便复用常用提示词
+```sh
+项目根目录/
+└── .claude/
+    └── commands/
+        ├── review.md          # /review 命令
+        ├── test.md            # /test 命令
+        └── frontend/
+            └── component.md   # /frontend:component 命令
+~/.claude/
+└── commands/
+    └── daily.md               # 全局 /daily 命令（所有项目可用）
+```
+示例：
+```sh
+---
+description: 代码审查，检查安全和性能问题
+model: opus                    # 可选：指定使用的模型
+allowed-tools: Read, Grep      # 可选：允许的工具
+argument-hint: <文件路径>       # 可选：参数提示
+---
+
+请对以下代码进行全面审查：
+
+@$ARGUMENTS
+
+审查要点：
+1. 安全漏洞（SQL注入、XSS、CSRF等）
+2. 性能问题（N+1查询、内存泄漏等）
+3. 代码规范（命名、注释、复杂度等）
+4. 测试覆盖（是否有遗漏的边界情况）
+
+请给出具体的改进建议和代码示例。
+```
+**最佳实践：**
+1. 按功能分组：使用子目录组织相关命令
+2. 写清晰的 description：帮助快速识别命令用途
+3. 合理指定模型：复杂任务用 opus，简单任务用 sonnet/haiku
+4. 使用 @提及：让命令支持动态文件参数
+5. 项目级 vs 全局：通用命令放 ~/.claude/commands/
+
 [Claude Code CLI 的专业命令](https://github.com/brennercruvinel/CCPlugins) 提供了一些命令：
 - /cleanproject、/commit、/format、/scaffold、/test、/implement、/refactor 实现一键清理、初始化和重构等。
 - 代码质量与安全：/review、/security-scan、/predict-issues 等执行代码 Review，自动检测和修复安全漏洞、导入问题、TODO 等。
@@ -317,6 +427,255 @@ https://github.com/yusufkaraaslan/Skill_Seekers
 - [Claude Code hooks reference](https://code.claude.com/docs/en/hooks)
 - [掌握 Claude code hooks](https://github.com/disler/claude-code-hooks-mastery)
 - [How to Make Claude Code Skills Activate Reliably](https://scottspence.com/posts/how-to-make-claude-code-skills-activate-reliably)  
+
+Hooks 允许在 Claude Code 特定事件发生时自动执行 shell 命令，实现自动化工作流
+
+**钩子类型：**
+| 钩子事件 | 触发时机 | 常用场景 |
+|----------|----------|----------|
+| **SessionStart** | 新会话开始 | 初始化环境、加载配置 |
+| **SessionEnd** | 会话结束 | 清理资源、生成报告 |
+| **PreToolUse** | 工具执行前 | 验证、修改工具输入 |
+| **PostToolUse** | 工具执行后 | 日志记录、触发后续操作 |
+| **UserPromptSubmit** | 用户提交提示后 | 添加上下文、权限检查 |
+| **PermissionRequest** | 请求权限时 | 自动审批/拒绝权限 |
+| **PreCompact** | 对话压缩前 | 保存重要信息 |
+| **SubagentStart** | 子代理启动 | 监控、日志 |
+| **SubagentStop** | 子代理停止 | 收集结果 |
+| **Stop** | Claude 停止工作 | 通知、清理 |
+| **Notification** | 通知事件 | 自定义通知处理 |
+
+**配置位置**
+```json
+// .claude/settings.json (项目级)
+// 或 ~/.claude/settings.json (用户级)
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "command": "echo '会话开始于 $(date)' >> ~/.claude/session.log"
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write",
+        "command": "echo '文件已修改: $CLAUDE_FILE_PATH'"
+      }
+    ]
+  }
+}
+```
+**钩子输入数据:** 钩子命令可通过环境变量访问上下文：
+```bash
+$CLAUDE_PROJECT_DIR    # 项目目录
+$CLAUDE_FILE_PATH      # 当前操作的文件路径
+$CLAUDE_TOOL_INPUT     # 工具输入参数 (JSON)
+$CLAUDE_TOOL_OUTPUT    # 工具输出结果 (JSON)
+```
+
+**最佳实践**
+1. 设置超时：避免钩子卡死整个会话
+2. 错误处理：钩子失败不应阻塞主流程
+3. 日志记录：记录钩子执行结果便于调试
+4. 最小权限：钩子只做必要的操作
+5. 测试钩子：先手动运行命令确保正确
+
+## 6、思考模式 (Thinking Mode)
+
+思考模式让 Claude 在回答前进行更深入的推理分析，适合复杂问题、架构设计、疑难 Bug 排查等场景
+
+触发方式：
+```sh
+# 方式一：在提示中加入关键词
+"think about how to implement user authentication"
+"think harder about this performance issue"
+"ultrathink about the architecture design"
+
+# 方式二：按 Tab 键切换思考模式（跨会话保持）
+
+# 方式三：在提示前加 /t 临时禁用思考模式
+/t 快速修复这个 typo
+```
+- think，标准，一般复杂问题
+- think harder，深度，架构设计、复杂算法
+- ultrathink，极深，系统级设计、疑难问题
+
+**最佳实践**
+1. 复杂问题才用深度思考：简单任务用 ultrathink 是浪费
+2. 结合具体问题描述：think about X 比单独 think 效果更好
+3. 观察思考过程：通过思考输出理解 Claude 的推理逻辑
+
+## 7、计划模式 (Plan Mode)
+
+计划模式将任务分为"计划"和"执行"两个阶段，Claude 先制定详细计划，获得你的批准后再执行。适合大型重构、新功能开发等场景
+
+**进入方式：**
+```sh
+# 方式一：使用快捷键
+# Mac: Shift + Tab
+# Windows: Alt + M 或 Shift + Tab
+
+# 方式二：直接请求
+"请先制定一个实现用户认证的计划"
+
+# 方式三：启动时指定
+claude --model opusplan  # Opus 计划 + Sonnet 执行
+```
+**最佳实践：**
+1. 大型任务必用计划模式：避免 Claude 走偏方向
+2. 提供明确的拒绝理由：帮助 Claude 理解你的期望
+3. 分阶段审查：复杂计划可以分多次审查
+4. 使用 Opus Plan 模式：计划用 Opus 质量高，执行用 Sonnet 速度快
+
+## 8、自定义代理 (Agents)
+
+自定义代理是具有专门能力和工具限制的 Claude 实例，适合将复杂任务委托给专门的"专家"
+
+**创建代理**
+```sh
+# 使用命令创建
+/agents
+# 或手动创建文件
+mkdir -p .claude/agents
+```
+**代理配置文件**
+```md
+<!-- .claude/agents/security-reviewer.md -->
+---
+description: 安全审计专家，专注于发现代码中的安全漏洞
+model: opus
+permissionMode: bypassPermissions
+disallowedTools:
+  - Bash
+  - Write
+skills:
+  - security-checklist
+---
+
+你是一位资深的安全审计专家，专注于：
+
+1.**OWASP Top 10** 漏洞检测
+   - SQL 注入
+   - XSS 跨站脚本
+   - CSRF 跨站请求伪造
+   - 不安全的反序列化
+
+2.**认证与授权**
+   - 弱密码策略
+   - 会话管理缺陷
+   - 权限提升漏洞
+
+3.**敏感数据处理**
+   - 硬编码密钥
+   - 明文存储密码
+   - 日志泄露敏感信息
+
+4.**依赖安全**
+   - 已知漏洞的依赖
+   - 过时的库版本
+
+审查时请：
+- 给出具体的代码位置和行号
+- 评估漏洞严重程度（Critical/High/Medium/Low）
+- 提供修复建议和代码示例
+```
+
+**调用代理**
+```sh
+# 方式一：@提及
+@security-reviewer 请审查 src/controllers/AuthController.java
+
+# 方式二：Task 工具自动选择
+"请对认证模块进行安全审计"  # Claude 会自动选择合适的代理
+```
+
+**代理模型选择策略**
+```sh
+# 按任务复杂度选择模型
+opus:     架构设计、安全审计、复杂重构
+sonnet:   日常开发、代码审查、测试编写
+haiku:    文档生成、简单修复、代码探索
+```
+**最佳实践**
+1. 单一职责：每个代理专注一个领域
+2. 限制工具：只给代理必要的工具权限
+3. 选择合适模型：简单任务用 haiku 节省资源
+4. 编写清晰指令：详细描述代理的能力边界
+5. 组合使用：复杂任务可串联多个代理
+
+## 9、MCP
+
+MCP (Model Context Protocol) 允许 Claude 连接外部服务，如数据库、API、文件系统等，扩展其能力边界。
+
+添加 MCP 服务器：
+```sh
+# 交互式添加
+claude mcp add
+# 从 Claude Desktop 导入
+claude mcp add-from-claude-desktop
+# 直接添加 JSON
+claude mcp add-json my-server '{"command":"node","args":["server.js"]}'
+# 使用配置文件启动
+claude --mcp-config path/to/mcp.json
+```
+
+配置文件格式：
+```json
+// .mcp.json (项目级，可提交到仓库)
+{
+  "mcpServers":{
+      "remote-service":{
+        "type":"sse",
+        "url":"https://mcp.example.com/sse",
+        "headers":{
+          "Authorization":"Bearer ${API_TOKEN}"
+        }
+      },
+      "http-service":{
+        "type":"http",
+        "url":"https://mcp.example.com/api"
+      },
+      // 动态 Headers
+      "oauth-service": {
+        "type": "sse",
+        "url": "https://api.example.com/mcp",
+        "headersHelper": "node ./scripts/get-oauth-token.js"
+      },
+      "filesystem":{
+        "command":"npx",
+        "args":["-y","@anthropic-ai/mcp-server-filesystem","/path/to/dir"]
+      },
+      "postgres":{
+        "command":"npx",
+        "args":["-y","@anthropic-ai/mcp-server-postgres"],
+        "env":{
+          "DATABASE_URL":"${DATABASE_URL}"  # 支持环境变量展开
+        }
+      },
+      "custom-api":{
+        "command":"node",
+        "args":["./mcp-servers/my-api-server.js"],
+        "timeout":30000
+      }
+  }
+}
+```
+管理 MCP 服务器：
+```sh
+# 查看已配置的服务器
+/mcp
+
+# 查看服务器详情和工具列表
+claude mcp list
+
+# @提及启用/禁用服务器
+@postgres  # 切换 postgres 服务器状态
+```
+最佳实践
+1. 敏感信息用环境变量：不要在配置中硬编码密钥
+2. 设置合理超时：避免慢服务器阻塞会话
+3. 项目级配置提交仓库：团队共享 .mcp.json
+4. 用户级配置存私密服务：个人 API 密钥放 ~/.claude/
 
 ## 其他
 
@@ -417,6 +776,7 @@ EOF
 
 # 参考资料
 
+- [AI编程工具包](https://github.com/TencentCloudBase/CloudBase-AI-ToolKit)
 - [AGENTS.md 是一种简单、开放的编码代理指导格式](https://github.com/agentsmd/agents.md)
 - [Ruler — apply the same rules to all coding agents](https://github.com/intellectronica/ruler)
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)

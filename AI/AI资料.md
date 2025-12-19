@@ -132,6 +132,8 @@
 - [开源 LLM 工程平台：LLM 可观测性、指标、评估、提示管理、沙盒、数据集。与 OpenTelemetry、Langchain、OpenAI SDK、LiteLLM 等集成](https://github.com/langfuse/langfuse)
 - [anything-llm：这款全能的桌面和 Docker AI 应用程序内置了 RAG、AI 代理、无代码代理构建器、MCP 兼容性等功能](https://github.com/Mintplex-Labs/anything-llm)
 - [Langflow 是用于构建和部署 AI 驱动的代理和工作流的强大工具](https://github.com/langflow-ai/langflow)
+- [53AI Hub 是一款开源的AI门户](https://github.com/53AI/53AIHub)
+
 
 # AI流程编排
 
