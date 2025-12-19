@@ -389,6 +389,8 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 
 # Prompt 生成案例
 
+- [提示词库 (在线表格)co](https://docs.google.com/spreadsheets/d/1ngoQOhJqdguwNAilCl1joNwTje7FWWN9WiI2bo5VhpU/edit?gid=2093180351#gid=2093180351&range=A1): 一个包含大量可直接复制使用的各类提示词的在线表格。
+- [元提示词](https://docs.google.com/spreadsheets/d/1ngoQOhJqdguwNAilCl1joNwTje7FWWN9WiI2bo5VhpU/edit?gid=1770874220#gid=1770874220): 用于生成提示词的高级提示词。
 - [概念美术提示词生成器](https://github.com/TanShilongMario/PromptFill)
 - [Awesome Prompts; Nano Banana；Banana Pro](https://github.com/glidea/banana-prompt-quicker)
 - [Open Nano Banana提示词图库](https://opennana.com/awesome-prompt-gallery/)

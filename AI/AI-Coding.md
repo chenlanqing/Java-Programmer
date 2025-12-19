@@ -74,6 +74,15 @@
 - [Vibe Coding 终极指南](https://github.com/EnzeD/vibe-coding)
 - [全球 AI 辅助编程工具汇总列表](https://github.com/filipecalegario/awesome-vibe-coding)
 
+## AI Coding 范式
+
+① 什么规范：指需遵循的技术规范，包括安全规范、设计原则、编码风格、约束条件等，确保生成的代码不仅能work、而且符合技术标准  
+② 在哪里：指现有的代码结构，包括代码仓库目录、代码层级结构、类/方法描述等，辅助模型精准定位代码路径、精确映射设计语义，确保生成的代码位置准确、架构合理  
+③ 做什么：指需实现的业务逻辑，包括概念定义、功能描述、代码生成范围等，辅助模型精准理解业务需求，精确生成功能代码（细致程度决定生成准确度）  
+④ 怎么做：指需完成的任务清单及验收标准，指导模型严格按照任务要求逐步实现，并按标准进行检查，确保生成的代码更可控  
+⑤ 做了啥：指AI总结，让模型在生成代码后，做个自我总结并存档，方便人工review生成的代码是否符合预期，且方便后续维护  
+
+结合原有研发流程，提炼AI Code核心范式可概括为：技术方案（①②③） → Prompt（④） → 生成代码 → AI总结（⑤）。该范式以技术方案为起点和依据，通过Prompt提示词作为关键转化，驱动代码生成这一核心环节，并以AI总结完成闭环，整个流程由Agent协同多种MCP工具一站式完成。
 
 # 二、Cursor
 
@@ -333,6 +342,9 @@ MCP、Skill、Projects 比较：
 ### 3.3、如何编写
 
 - [Skill Creator: 通过Chat 创建 Skill](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
+- [转换 pdf/document 为 Skill](https://github.com/yusufkaraaslan/Skill_Seekers)
+- [Skills 制作器](https://github.com/yusufkaraaslan/Skill_Seekers): 可根据需求生成定制化 Skills 的工具。
+- [元技能：Skills 的 Skills](./i18n/zh/skills/00-元技能/claude-skills/SKILL.md): 用于生成 Skills 的元技能。
 
 什么是的好的 Skill：skill 文档的开头的 name + description 部分需要回答三个问题：  
 ① 它帮我干什么活？  
