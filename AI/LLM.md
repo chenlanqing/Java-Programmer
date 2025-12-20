@@ -36,7 +36,9 @@ LangChain 是一个全方位的、基于大语言模型这种预测能力的应�
 - 智谱清言: GLM系列
 
 
-## 2、架构原理
+## 2、架构
+
+- [最全面的 LLM 架构技术解析](https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison)
 
 ### 2.1、token
 

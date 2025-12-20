@@ -82,6 +82,7 @@ TIME_WAIT 1645
 - WireShark   抓包工具
 - Anaconda
 - Docker
+- [ugit：腾讯自研 git 客户端](https://ugit.qq.com/zh/)
 
 ### 4.4、浏览器
 

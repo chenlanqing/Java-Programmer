@@ -319,6 +319,7 @@ my-plugin/
 - [Public repository for Skills](https://github.com/anthropics/skills)
 - [Claude Skills Center](https://github.com/obra/superpowers/tree/main/skills)
 - [Claude Code Templates Skills](https://www.aitmpl.com/skills)
+- [发现和探索 Claude Code Skills 各种编程技能和工具](https://ss.bytenote.net/)
 
 ### 3.1、什么是 Skill
 
