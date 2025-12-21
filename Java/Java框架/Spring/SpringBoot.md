@@ -2361,6 +2361,8 @@ public class ShutdownEndpoint implements ApplicationContextAware {
 
 # 四、自定义Starter
 
+- [开箱即用的SpringBoot starter项目](https://github.com/admin4j/admin4j-framework)
+
 ## 1、自动装配Bean
 
 SpringBoot 在启动时会扫描外部引用 jar 包中的`META-INF/spring.factories`文件，将文件中配置的类型信息加载到 Spring 容器（此处涉及到 JVM 类加载机制与 Spring 的容器知识），并执行类中定义的各种操作。对于外部 jar 来说，只需要按照 SpringBoot 定义的标准，就能将自己的功能装置进 SpringBoot
