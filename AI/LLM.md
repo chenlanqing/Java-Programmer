@@ -95,6 +95,7 @@ if __name__ == "__main__":
 - [transformer 模型详解](https://zhuanlan.zhihu.com/p/338817680)
 - [深入理解Transformer技术原理](https://tech.dewu.com/article?id=109)
 - [transformer 整体指南](https://luxiangdong.com/2023/09/10/trans/)
+- [LLM底层秘密—Transformer原理解析](https://mp.weixin.qq.com/s/x2aixxjfGJvA_epMR9mu2Q)
 
 ## 4、大模型调用
 

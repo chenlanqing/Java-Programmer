@@ -17,6 +17,10 @@ Agent，中文翻译为代理，顾名思义，代替用户在代理权限内去
 
 而 AI Agent 是指在普通代理的基础上，具备对任务的理解、环境的感知、信息的获取能力，并通过推理能力，自主进行决策和执行。AI Agent 就是 LLM + 客户端（Chatbot、AI IDE 等）组成的产品，代替我们去自主的完成下达的任务，这里的客户端具备规划、工具使用，甚至记忆的功能，目的都是为了更准确的执行任务。
 
+什么是 Agents：  
+1. 能够端到端地去替代人完成一个多步骤的任务，完整地结合行业know-how
+2. 具有规划、工具调用、记忆、行动、反思的能力，自主的完成任务
+
 ### Agent核心架构定义
 
 ![](image/Contruction-of-LLM-based-Agents.png)
@@ -601,9 +605,13 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 ## 构建 Agent
 
 - [How to Build an Agent](https://blog.langchain.com/how-to-build-an-agent/)
-- [从 0 构建一个 Agent 的踩坑](https://mp.weixin.qq.com/s/7Lt3WKmHoQY5HifnPFjxoQ)
 - [从零开始构建智能体](https://github.com/datawhalechina/hello-agents)
 - [12-Factor-Agents：构建可靠 LLM 应用程序的原则](https://github.com/humanlayer/12-factor-agents)
+
+### 需要注意的点
+
+- AI 能力的边界
+- Agent的行为范式
 
 ## Multi-Agent
 
