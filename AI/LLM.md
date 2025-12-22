@@ -43,6 +43,8 @@ LangChain 是一个全方位的、基于大语言模型这种预测能力的应�
 ### 2.1、token
 
 - [Token 计算器](https://github.com/dqbd/tiktokenizer)
+- [tiktoken is a fast BPE tokeniser for use with OpenAI's models](https://github.com/openai/tiktoken)
+- [AI 模型 Token 计算器](https://github.com/soulteary/ai-token-calculator)
 - [TOON 是一种为 LLM 输入而生的紧凑序列化格式，减少 Token](https://github.com/toon-format/toon)
 
 LLM 把要预测的每一个字成为 token，现在 LLM 都是按照 token 来计费的，所有的 token 成为 vocab 词表；生成 token 的方式成为分词（Tokenizer）

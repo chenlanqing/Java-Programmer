@@ -40,6 +40,9 @@
 - Codex
 - Claude Code
 - Claude Code + GLM4.5
+- Kiro
+- Aider
+- Windsurf
 
 ## 3、SDD：规范驱动开发
 
@@ -47,6 +50,7 @@
 - [Spec-driven development for AI coding assistants：适合集成到已有的项目中，更轻量](https://github.com/Fission-AI/OpenSpec)
 - [规范驱动开发（SDD）全解：从理念到实践](https://blog.dengqi.org/posts/%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91sdd%E5%85%A8%E8%A7%A3%E4%BB%8E%E7%90%86%E5%BF%B5%E5%88%B0%E5%AE%9E%E8%B7%B5%E7%BF%BB%E8%AF%91/)
 - [Spec Workflow MCP](https://github.com/Pimzino/spec-workflow-mcp)
+- [规范驱动开发（SDD）：用 AI 写生产级代码的完整指南](https://www.softwareseni.com/spec-driven-development-in-2025-the-complete-guide-to-using-ai-to-write-production-code/)
 
 ### 3.1、概述
 
@@ -64,6 +68,14 @@
 ### 3.3、注意事项
 
 - [Spec 编写注意事项](https://mp.weixin.qq.com/s/27x-6ruXLwNq3Spm68_G7A)
+
+### 3.4、工具选择
+
+- 新项目基本都可用，但可偏向 Windsurf/Kiro 等 AI 原生 IDE；
+- 存量/遗留代码更适合 AWS Kiro 或 Claude Code；
+- 前端开发适合 Cursor/Windsurf；
+- 后端服务适合 Aider/Claude Code 等 CLI；
+- 迁移项目考虑 Amazon Q Developer 或 Aider
 
 ## Vibe Coding
 
