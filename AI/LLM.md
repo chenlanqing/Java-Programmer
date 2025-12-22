@@ -8,6 +8,7 @@
 - [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 - [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
 - [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
+- [大模型知识分享](https://github.com/luhengshiwo/LLMForEverybody)
 
 ## 1、基本概念
 
@@ -40,17 +41,25 @@ LangChain 是一个全方位的、基于大语言模型这种预测能力的应�
 
 - [最全面的 LLM 架构技术解析](https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison)
 
-### 2.1、token
+### 2.1、Token
 
+- [tokenizers摘要](https://huggingface.co/docs/transformers/zh/tokenizer_summary)
 - [Token 计算器](https://github.com/dqbd/tiktokenizer)
 - [tiktoken is a fast BPE tokeniser for use with OpenAI's models](https://github.com/openai/tiktoken)
 - [AI 模型 Token 计算器](https://github.com/soulteary/ai-token-calculator)
 - [TOON 是一种为 LLM 输入而生的紧凑序列化格式，减少 Token](https://github.com/toon-format/toon)
+- [大模型分词器（Tokenizer）总结](https://github.com/luhengshiwo/LLMForEverybody/blob/main/01-%E7%AC%AC%E4%B8%80%E7%AB%A0-%E9%A2%84%E8%AE%AD%E7%BB%83/%E5%85%A8%E7%BD%91%E6%9C%80%E5%85%A8%E7%9A%84%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%88%86%E8%AF%8D%E5%99%A8%EF%BC%88Tokenizer%EF%BC%89%E6%80%BB%E7%BB%93.md)
 
 LLM 把要预测的每一个字成为 token，现在 LLM 都是按照 token 来计费的，所有的 token 成为 vocab 词表；生成 token 的方式成为分词（Tokenizer）
 - BPE 分词法
 
-token 是介于单词和字母之间的一个子词，语料中出现最频繁的部分，可以减少 token 的数量；
+Token 是介于单词和字母之间的一个子词，语料中出现最频繁的部分，可以减少 token 的数量；
+
+#### Token 计算方法
+
+- [如何计算 Token](https://help.apiyi.com/ai-api-local-token-calculation-guide.html)
+
+#### Token 相关问题
 
 > 问题1：token 为什么不能是单词？因为单次作为 token 有两个缺点：
 - 数量太大了，语义有重叠，每个单词还有不同的时态，词表一旦变大，模型的训练难度就会加大；
@@ -58,8 +67,10 @@ token 是介于单词和字母之间的一个子词，语料中出现最频繁�
 
 而子词可以通过多个 token来拼接新的词；
 
-> 问题1：token 为什么不能是字符？
+> 问题2：token 为什么不能是字符？
 - 虽然词表变少了，但是字母本身并没有很强的语意信息，增加了模型训练的难度；
+
+
 
 ### 2.2、大模型技术原理
 
