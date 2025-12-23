@@ -9,6 +9,7 @@
 
 - [shadcn:一组设计精美、可访问的组件和代码分发平台](https://github.com/shadcn-ui/ui)
 - [Web3D可视化](http://www.webgl3d.cn/)
+- [Easily display interactive 3D models on the web and in AR!](https://github.com/google/model-viewer)
 - [Antv](https://antv.antgroup.com/)
 - [很易用的中后台「表单 / 表格 / 图表」解决方案](https://github.com/alibaba/x-render)
 

@@ -104,6 +104,7 @@ if __name__ == "__main__":
 
 ## 3、Transformer 架构
 
+- [Transformers](https://github.com/huggingface/transformers)
 - [How transformer architecture works](https://www.datacamp.com/tutorial/how-transformers-work)
 - [transformer 模型详解](https://zhuanlan.zhihu.com/p/338817680)
 - [深入理解Transformer技术原理](https://tech.dewu.com/article?id=109)
