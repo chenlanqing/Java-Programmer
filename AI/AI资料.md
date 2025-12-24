@@ -120,6 +120,7 @@
 
 沙盒与虚拟化
 
+- https://github.com/anthropic-experimental/sandbox-runtime
 - [轻松安全地执行不受信任的用户/AI 代码](https://github.com/microsandbox/microsandbox)
 - [Docker-MCP](https://github.com/QuantGeekDev/docker-mcp)
 - [E2B-开源的 Linux Sandbox](https://github.com/e2b-dev/e2b)

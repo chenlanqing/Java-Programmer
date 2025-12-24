@@ -628,7 +628,7 @@ haiku:    文档生成、简单修复、代码探索
 4. 编写清晰指令：详细描述代理的能力边界
 5. 组合使用：复杂任务可串联多个代理
 
-## 9、MCP
+## 9、[MCP](https://code.claude.com/docs/zh-CN/mcp)
 
 MCP (Model Context Protocol) 允许 Claude 连接外部服务，如数据库、API、文件系统等，扩展其能力边界。
 
@@ -636,6 +636,7 @@ MCP (Model Context Protocol) 允许 Claude 连接外部服务，如数据库、A
 ```sh
 # 交互式添加
 claude mcp add
+  # claude mcp add -s user zai-mcp-server --env Z_AI_API_KEY=api_key -- npx -y "@z_ai/mcp-server"
 # 从 Claude Desktop 导入
 claude mcp add-from-claude-desktop
 # 直接添加 JSON
@@ -646,7 +647,7 @@ claude --mcp-config path/to/mcp.json
 
 配置文件格式：
 ```json
-// .mcp.json (项目级，可提交到仓库)
+// ~/.claude.json (项目级，可提交到仓库)
 {
   "mcpServers":{
       "remote-service":{
