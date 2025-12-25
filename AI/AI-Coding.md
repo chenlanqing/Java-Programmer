@@ -243,7 +243,9 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 - [A comprehensive directory for discovering plugin marketplaces](https://claudemarketplaces.com/)
 - [Claude Code完全使用指南](https://mp.weixin.qq.com/s/Vpkzra5I8lvyTA8jX8l_2A)
 
-## 1、安装配置
+## 1、基本使用
+
+### 1.1、安装配置
 
 ```bash
 npm install -g @anthropic-ai/claude-code
@@ -272,6 +274,21 @@ export ANTHROPIC_DEFAULT_HAIKU_MODEL="MiniMax-M2"
         "ANTHROPIC_DEFAULT_HAIKU_MODEL": "MiniMax-M2"
     }
 }
+```
+
+### 1.2、命令
+
+#### 查看历史会话
+
+```bash
+# 查看并选择最近的会话列表
+claude --resume
+# 继续最近一次会话
+claude -c
+# 或
+claude --continue
+# 恢复特定会话(需要会话ID)
+claude -r session-id-here
 ```
 
 ## 2、插件
