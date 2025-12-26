@@ -639,11 +639,14 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ## 7、训练方法
 
+- [Slime 是一个用于强化学习扩展的大型语言模型后培训框架](https://github.com/THUDM/slime)
 
 ## 指令微调
 
 ## RLHF：强化学习
 
+- [OpenRLHF 是基于 Ray、vLLM、ZeRO-3 和 HuggingFace Transformers 构建的开源高性能 RLHF 框架](https://github.com/OpenRLHF/OpenRLHF)
+- [字节 RLHF 开源工具](https://github.com/volcengine/verl)
 - [RLHF的完整流程](https://mp.weixin.qq.com/s/wz2PXBl_pNcj8NWej14SMQ)
 
 ## 模型蒸馏
