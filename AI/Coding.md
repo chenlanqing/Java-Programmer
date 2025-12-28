@@ -817,7 +817,7 @@ EOF
 - https://codex.packycode.com/pricing
 - [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
 
-# 参考资料
+# g参考资料
 
 - [AI编程工具包](https://github.com/TencentCloudBase/CloudBase-AI-ToolKit)
 - [AGENTS.md 是一种简单、开放的编码代理指导格式](https://github.com/agentsmd/agents.md)
