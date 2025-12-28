@@ -322,6 +322,8 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ## 7、大模型评测
 
+- [LLM Leaderboards-大模型评估排行榜](https://scale.com/leaderboard)
+- [LLM 评估标准](https://mp.weixin.qq.com/s/kQIcb6gggF5wf08qjuJcyQ)
 - [LMArena 是由 LMSYS 组织的大众盲测竞技场。用户输入问题，两个匿名模型回答，用户凭感觉选哪个好](https://lmarena.ai/leaderboard)
 - [GPQA Diamond (Graduate-Level Google-Proof Q&A) 是一套由领域专家编写的、Google 搜不到答案的博士级难题](https://www.vals.ai/benchmarks/gpqa)
 
@@ -714,6 +716,7 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 
 # 参考资料
 
+- [LLM Leaderboards-大模型评估排行榜](https://scale.com/leaderboard)
 - [ChatGPT 替代品，可以在您的电脑上 100% 离线运行](https://github.com/menloresearch/jan)
 - [BCEmbedding: Bilingual and Crosslingual Embedding for RAG](https://github.com/netease-youdao/BCEmbedding)
 - [LangExtract：轻量却强大的结构化信息提取神器](https://github.com/google/langextract)

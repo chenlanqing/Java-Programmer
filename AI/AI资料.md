@@ -152,6 +152,8 @@
 
 # AI 工具
 
+- [面向AI的数据转换工具](https://github.com/cocoindex-io/cocoindex)
+
 ## 编程工具
 
 - windsurf：https://windsurf.com/editor

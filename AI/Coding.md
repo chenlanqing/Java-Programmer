@@ -816,17 +816,17 @@ EOF
 - https://www.packyapi.com/pricing
 - https://codex.packycode.com/pricing
 - [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
+- [Ready to use Native AI](https://2233.ai/aicoding)
 
 # g参考资料
 
+- [模型编程性能参考排行榜](https://lmarena.ai/zh/leaderboard/webdev)
 - [AI编程工具包](https://github.com/TencentCloudBase/CloudBase-AI-ToolKit)
 - [AGENTS.md 是一种简单、开放的编码代理指导格式](https://github.com/agentsmd/agents.md)
 - [Ruler — apply the same rules to all coding agents](https://github.com/intellectronica/ruler)
 - [Claude Code 的相关开源资源精选列表，是 Awesome 系列](https://github.com/hesreallyhim/awesome-claude-code)
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
-- [Ready to use Native AI](https://2233.ai/aicoding)
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
 - [Claude Code Cookbook: Killer, Claude Code](https://cc.deeptoai.com/)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
-- [模型编程性能参考排行榜](https://lmarena.ai/zh/leaderboard/webdev)
 - [Continue: 编码 Agents](https://github.com/continuedev/continue)

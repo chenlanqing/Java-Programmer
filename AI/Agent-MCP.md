@@ -657,6 +657,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [Youtu-agent 是一个灵活、高性能的框架，用于构建、运行和评估自主智能体](https://github.com/TencentCloudADP/Youtu-agent)
 - [AgentScope 是 “多模态智能体神器”](https://github.com/agentscope-ai/agentscope)
 - [AI联网搜索](https://github.com/swirlai/swirl-search)
+- [Agent-To-User-Interface](https://github.com/google/A2UI)
 - [Bytebot-桌面Agent](https://github.com/bytebot-ai/bytebot)
 - [Flowise：可视化构建 AI/LLM 流程](https://github.com/FlowiseAI/Flowise)
 

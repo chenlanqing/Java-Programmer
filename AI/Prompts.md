@@ -413,7 +413,7 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 
 # 参考资料
 
-
+- [提示词管理平台](https://github.com/danielmiessler/Fabric)
 - [215+ ChatGPT Prompts & How to Write your Own](https://writesonic.com/blog/chatgpt-prompts)
 - [awesome-chatgpt-prompts](https://github.com/f/awesome-chatgpt-prompts)，对应中文版：[awesome-chatgpt-prompts-zh](https://github.com/PlexPt/awesome-chatgpt-prompts-zh)
 - [AI List Chat Prompt](https://www.itis.chat/)
@@ -428,4 +428,4 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 - [提示词新的指南](https://mp.weixin.qq.com/s/p-xDqD6U0fsh5r2fZn5dcg)
 - [Anthropic 交互式提示工程教程](https://github.com/anthropics/prompt-eng-interactive-tutorial)
 - [AI提示词](https://sth.ai/article/Codex.html)
-- [ Promptify：提示工程，使用 LLM 解决 NLP 问题](https://github.com/promptslab/Promptify)
+- [Promptify：提示工程，使用 LLM 解决 NLP 问题](https://github.com/promptslab/Promptify)
