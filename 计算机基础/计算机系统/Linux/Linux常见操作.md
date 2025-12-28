@@ -916,5 +916,6 @@ alias cdlog="cd /home/root/software/apache-tomcat-7.0.69/tomcat_instance1/logs"
 - [tldr-pages-简化man命令说明](https://github.com/tldr-pages/tldr)
 - [Linux沙箱纯净版](https://github.com/chenlanqing/instantbox)
 - [Linux基础](https://linuxtools-rst.readthedocs.io/zh-cn/latest/base/index.html)
-* [Linux从入门到精通](https://github.com/ForceInjection/linux-from-beginner-to-master)
-* [什么是Linux](https://www.linux.com/what-is-linux/)
+- [Linux从入门到精通](https://github.com/ForceInjection/linux-from-beginner-to-master)
+- [什么是Linux](https://www.linux.com/what-is-linux/)
+- [TuxMate 是一款基于网页的 Linux 应用安装程序，能够生成针对特定发行版的 shell 脚本](https://github.com/abusoww/tuxmate)
