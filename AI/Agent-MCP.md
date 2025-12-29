@@ -641,6 +641,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 ## Agent 框架
 
+- [Deepagents 是一款基于 langchain 和 langgraph 构建的Agents工具](https://github.com/langchain-ai/deepagents)
 - ACE (Agentic Context Engine)
 - 对于 C 端用户，可以考虑 [coze](https://www.coze.cn/store/bot)，缺点是没有开源
 - [Dify平台](https://dify.ai/zh)
