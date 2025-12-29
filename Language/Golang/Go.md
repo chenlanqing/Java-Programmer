@@ -283,3 +283,4 @@ for i := 0; i < 100000; i++ {
 - [Go lang learning](https://github.com/0voice/awesome_golang_learning)
 - [Go教程](https://github.com/jincheng9/go-tutorial)
 - [Golang 学习教程](https://golang.xiniushu.com/)
+- [golang-cheat-sheet是目前GitHub上最流行的golang代码速查表](https://github.com/jincheng9/golang-cheat-sheet-cn)
