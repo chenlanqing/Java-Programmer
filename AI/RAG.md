@@ -336,6 +336,7 @@ RAG与 LLM 微调对比 [模型微调长文本、RAG、微调对比](./LLM.md#11
 
 # 参考资料
 
+- [The Open Source RAG Stack](https://blog.dailydoseofds.com/p/the-open-source-rag-stack)
 - [基于深度文档理解构建的开源 RAG（Retrieval-Augmented Generation）引擎](https://github.com/infiniflow/ragflow)
 - [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
 - [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)

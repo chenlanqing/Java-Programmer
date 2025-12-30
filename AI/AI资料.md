@@ -89,6 +89,7 @@
 - [Open Lovable 是一个开源的、基于 AI 的网站克隆神器:只需要输入一个网址，几秒钟后，你就能得到一个可以运行的、现代 React 代码版本](https://github.com/mendableai/open-lovable)
 - [Bytebot 是一个自托管的 AI 桌面代理，它通过自然语言命令自动执行计算机任务，在容器化的 Linux 桌面环境中运行](https://github.com/bytebot-ai/bytebot)
 - [找工作助手](https://github.com/loks666/get_jobs)
+- [构建个人的 AI 助理](https://github.com/HKUDS/DeepTutor)
 
 ## 金融应用
 
