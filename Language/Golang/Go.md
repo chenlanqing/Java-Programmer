@@ -8,10 +8,24 @@
 
 新建文件： main.go，文件增加如下内容
 ```go
+// hello.go
+// package declaration
 package main
+// import package
 import "fmt"
+// function
+func add(a, b int) int {
+  return a+b
+}
+// global variable
+var g int = 100
+
 func main() {
-	fmt.Println("Hello world!")
+  a, b := 1, 2
+  res := add(a, b)
+  fmt.Println("a=", a, "b=", b, "a+b=", res)
+  fmt.Println("g=", g)
+  fmt.Println("hello world!")
 }
 ```
 
@@ -29,6 +43,7 @@ go run main.go
 - Go 包是 Go 语言的基本组成单元。一个 Go 程序就是一组包的集合，所有 Go 代码都位于包中；
 - Go 源码可以导入其他 Go 包，并使用其中的导出语法元素，包括类型、变量、函数、方法等，而且，main 函数是整个 Go 应用的入口函数；
 - Go 源码需要先编译，再分发和运行。如果是单 Go 源文件的情况，我们可以直接使用 go build 命令 +Go 源文件名的方式编译。不过，对于复杂的 Go 项目，我们需要在 Go Module 的帮助下完成项目的构建
+- `func main()`是程序开始执行的函数(但是如果有`func init()`函数，则会先执行`init`函数，再执行`main`函数)
 
 ##  3、go项目布局
 
@@ -113,9 +128,112 @@ go get github.com/sirupsen/logrus
 
 # 二、语法
 
-## 与 Java 对比
+## 1、与 Java 对比
 
 [Java 与 Go 语言完整对比指南](./Go&Java.md)
+
+## 数据类型
+
+https://github.com/jincheng9/go-tutorial/tree/main/workspace/lesson2
+
+## 条件
+
+说明：go 语言没有三目运算符
+
+### if
+
+基本
+```go
+if x > max {
+	x = max
+}
+// 嵌套
+if x <= y {
+	min = x
+} else {
+	min = y
+}
+```
+带初始化语句
+```go
+if x := f(); x <= y {
+	return x
+}
+```
+
+### switch
+
+每一个case分支都是唯一的，从上往下逐一判断，直到匹配为止。如果某些case分支条件重复了，编译会报错  
+默认情况下每个case分支最后自带break效果，匹配成功就不会执行其它case。  
+如果需要执行后面的case，可以使用 fallthrough。  
+> 使用 fallthrough 会强制执行紧接着的下一个 case 语句，不过fallthrough 不会去分析紧接着的下一条 case 的表达式结果是否满足条件，而是直接执行case里的语句块。
+```go
+// 写法 1：
+switch variable {
+  case value1:
+    do sth1
+  case value3, value4: // 可以匹配多个值，只要一个满足条件即可
+    do sth34
+  case value5:
+    do sth5
+  default:
+  	do sth
+}
+```
+```go
+// 写法 2：
+switch os := runtime.GOOS; os {
+	case "darwin":
+		fmt.Println("OS X.")
+	case "linux":
+		fmt.Println("Linux.")
+	default:
+		// freebsd, openbsd,
+		// plan9, windows...
+		fmt.Printf("%s.\n", os)
+}
+// 上面的写法和这个等价
+os := runtime.GOOS
+switch os {
+	case "darwin":
+		fmt.Println("OS X.")
+	case "linux":
+		fmt.Println("Linux.")
+	default:
+		// freebsd, openbsd,
+		// plan9, windows...
+		fmt.Printf("%s.\n", os)
+}
+```
+
+case分支的每个condition结果必须是一个bool值，要么为true，要么为false
+```go
+switch {
+  case condition1:
+  	do sth1
+  case condition2:
+  	do sth2
+  case condition3, condition4:
+  	do sth34
+  default:
+  	do sth
+}
+```
+
+只适用于interface的类型判断，而且{要和switch在同一行，{前面不能有分号;
+```go
+func main() {
+	var i interface{} = 10
+	switch t := i.(type) {
+	case bool:
+		fmt.Println("I'm a bool")
+	case int:
+		fmt.Println("I'm an int")
+	default:
+		fmt.Printf("Don't know type %T\n", t)
+	}
+}
+```
 
 ## 命名规范
 
