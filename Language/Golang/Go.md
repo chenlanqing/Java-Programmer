@@ -235,6 +235,72 @@ func main() {
 }
 ```
 
+## 循环
+
+### for
+
+### goto
+
+类似C++里的goto
+```go
+label: statement
+goto label
+```
+示例代码：
+```go
+func main() {
+	LOOP: 
+		println("Enter your age:")
+		var age int
+		_, err := fmt.Scan(&age) // 接受控制台输入
+		if err != nil {
+			println("error:", err)
+			goto LOOP
+		}
+		if age < 18 {
+			println("You are not eligible to vote!")
+			goto LOOP
+		} else {
+			println("You are eligible to vote!")
+		}
+		println("all finish")
+}
+```
+
+### break和label结合
+
+break和label结合使用，可以跳出二重或者多重for循环。
+
+break A直接跳出整个外层for循环，所以下面的例子只执行i=0, j=0这一次循环。
+```go
+// 最终输出 0 0 Hello, 世界
+func main() {
+A:
+	for i := 0; i < 2; i++ {
+		for j := 0; i < 2; j++ {
+			print(i, " ", j, " ")
+			break A
+		}
+
+	}
+	fmt.Println("Hello, 世界")
+}
+```
+下面的例子，break只能跳出位于里层的for循环，会执行i=0, j=0和i=1, j=0这2次循环。
+```go
+// 输出 0 0 1 0 Hello, 世界
+func main() {
+	for i := 0; i < 2; i++ {
+		for j := 0; i < 2; j++ {
+			print(i, " ", j, " ")
+			break
+		}
+
+	}
+	fmt.Println("Hello, 世界")
+}
+```
+
 ## 命名规范
 
 Go 语言强调简洁、统一和可读性，命名需尽可能短且具有清晰语义。Go 的命名规范核心是：简短、统一、可读。避免过度设计和冗长命名。
