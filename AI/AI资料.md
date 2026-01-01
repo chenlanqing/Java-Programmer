@@ -93,6 +93,7 @@
 
 ## 金融应用
 
+- [一个先进的多智能体人工智能系统用于金融市场分析](https://github.com/rockydant/ai-market/)
 - [人工智能对冲基金](https://github.com/virattt/ai-hedge-fund)
 - [交易 AI 智能体](https://github.com/moondevonyt/moon-dev-ai-agents)
 - [FinGenius - 首个A股博弈多智能体应用](https://github.com/HuaYaoAI/FinGenius)
@@ -197,6 +198,7 @@ Nano Banana 提示词
 
 # 语音处理
 
+- [实时语音框架：Chatterbox](https://github.com/resemble-ai/chatterbox)
 - [Minimaxi](https://platform.minimaxi.com/user-center/basic-information/interface-key)
 - https://github.com/m-bain/whisperX/
 - https://github.com/modelscope/FunASR

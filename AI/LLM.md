@@ -9,6 +9,7 @@
 - [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
 - [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
 - [大模型知识分享](https://github.com/luhengshiwo/LLMForEverybody)
+- [动手学大模型](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models)-[中文本](https://github.com/bbruceyuan/Hands-On-Large-Language-Models-CN)
 
 ## 1、基本概念
 

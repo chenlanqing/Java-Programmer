@@ -348,6 +348,7 @@ CodeGPT 是一款人工智能代码助手，是 GitHub Copilot、AI Assistant、
 - [source code Pro](https://github.com/adobe-fonts/source-code-pro)
 - [Cascadia Code](https://github.com/microsoft/cascadia-code)
 - [Fira Code](https://github.com/tonsky/FiraCode)
+- https://github.com/subframe7536/Maple-font
 
 # 参考资料
 * [IDEA导入Tomcat源码](http://www.jb51.net/article/95120.htm)
