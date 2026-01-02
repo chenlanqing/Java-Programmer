@@ -126,7 +126,7 @@ go get github.com/sirupsen/logrus
 ```
 这里的 go get 命令，不仅能将 logrus 包下载到 GOPATH 环境变量配置的目录下，它还会检查 logrus 的依赖包在本地是否存在，如果不存在，go get 也会一并将它们下载到本地
 
-# 二、语法
+# 二、基础
 
 ## 1、与 Java 对比
 
@@ -444,11 +444,167 @@ func main() {
 }
 ```
 
+## 函数
+
+### 基本定义
+
+```go
+func func_name([parameter list]) [return_types] {
+  // do sth
+}
+// 无参数
+func name() int {
+  do sth
+}
+// 无返回值
+func name(a int) {
+  do sth
+}
+// 返回多个值
+func name(a int) (int, string) {
+  //do sth
+}
+func name(a, b int) (int, string) {
+  //do sth
+}
+func name(a int, b string)(int, string) {
+  //do sth
+}
+func name(a, b int, c, d string) (int, string) {
+  //do sth
+}
+```
+
+### 返回值命名
+
+```go
+/*
+函数add的返回值有2个，类型是int，标识符分别是c和d
+可以在函数体内直接给c和d赋值，return后面可以带，也可以不带返回值
+*/
+func addAndSub(a int, b int) (c int, d int) {
+	c = a + b
+	d = a - b
+	return // 这一行写为 return c, d 也可以
+}
+func main() {
+	a1, b1 := 1, 2
+	c1, d1 := addAndSub(a1, b1)
+	/*输出结果是：3 -1*/
+	fmt.Println(c1, d1)
+}
+```
+- 函数的参数列表不允许部分形参有命名，部分形参没命名，如果违背这个原则，就会报如下的编译错误。
+- 函数的返回值列表不允许部分返回值变量有命名，部分返回值变量没命名，如果违背这个原则，就会报如下的编译错误
+```go
+syntax error: mixed named and unnamed function parameters
+```
+> 要么都不命名，要么都命名(都命名的情况下，允许形参或者返回值变量使用_作为命名)。
+
+### nil函数
+
+函数也是一种类型，函数变量的默认值是nil，执行nil函数会引发panic
+```go
+var f func()
+// f是一个函数类型，值是nil
+// 编译正常，运行报错panic: runtime error: invalid memory address or nil pointer dereference
+f() 
+```
+
+### [值传递](https://github.com/jincheng9/go-tutorial/tree/main/workspace/senior/p3)
+
+Go语言里没有引用变量和引用传递  
+在Go语言里，不可能有2个变量有相同的内存地址，也就不存在引用变量了。   
+> 注意：这里说的是不可能2个变量有相同的内存地址，但是2个变量指向同一个内存地址是可以的，这2个是不一样的。参考下面的例子：
+```go
+func main() {
+	a := 10
+	var p1 *int = &a
+	var p2 *int = &a
+	fmt.Println("p1 value:", p1, " address:", &p1)
+	fmt.Println("p2 value:", p2, " address:", &p2)
+}
+```
+在Go语言里是不存在引用变量的，也就自然没有引用传递了
+
+再看如下例子：
+```go
+func initMap(data map[string]int) {
+	data = make(map[string]int)
+	fmt.Println("in function initMap, data == nil:", data == nil)
+}
+func main() {
+	var data map[string]int
+	fmt.Println("before init, data == nil:", data == nil)
+	initMap(data)
+	fmt.Println("after init, data == nil:", data == nil)
+}
+```
+
+### 函数高级用法
+
+函数作为其它函数的实参：函数定义后可以作为另一个函数的实参，比如下例的函数realFunc作为函数calValue的实参
+```go
+// define function getSquareRoot1
+func getSquareRoot1(x float64) float64 {
+	return math.Sqrt(x)
+}
+// define a function variable
+var getSquareRoot2 = func(x float64) float64 {
+	return math.Sqrt(x)
+}
+// define a function type
+type callback_func func(int) int
+// function calValue accepts a function variable cb as its second argument
+func calValue(x int, cb callback_func) int{
+	fmt.Println("[func|calValue]")
+	return cb(x)
+}
+
+func realFunc(x int) int {
+	fmt.Println("[func|realFunc]callback function")
+	return x*x
+}
+func main() {
+	num := 100.00
+	result1 := getSquareRoot1(num)
+	result2 := getSquareRoot2(num)
+	fmt.Println("result1=", result1)
+	fmt.Println("result2=", result2)
+
+	value := 81
+	result3 := calValue(value, realFunc) // use function realFunc as argument of calValue
+	fmt.Println("result3=", result3)
+}
+```
+
 ## defer
 
 含义：defer 用于注册一个函数调用，使其在包含该 defer 的函数返回之前执行；  
 类似 Java 中的 try-finally 块（特别像 finally）  
 > defer = 注册一个延迟执行的函数，在函数 return 执行后、真正退出前执行。
+
+### 闭包
+
+匿名函数
+```go
+func main() {
+	/*
+	定义2个匿名函数，也就是闭包。
+	 闭包可以直接调用，也可以赋值给一个变量，后续调用
+	*/
+	result1 := func(a int, b int) int {
+		return a + b
+	}(1, 2) // 直接调用
+
+	var sub = func(a int, b int) int {
+		return a - b
+	}
+	result2 := sub(1, 2)
+	/*输出结果：3 -1*/
+	fmt.Println(result1, result2)
+}
+```
 
 ### defer 的执行时机
 
