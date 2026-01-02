@@ -211,6 +211,74 @@ string：
 
 值只能为true或false
 
+## 变量与常量
+
+**全局变量**：全局变量允许声明后不使用，编译不会报错
+```go
+var name type = value
+// 全局变量如果采用这个方式定义，那不能在全局范围内赋值，只能在函数体内给这个全局变量赋值
+var name type // value will be defaulted to 0, false, "" based on the type
+/* 如果定义上面的全局变量，就不能紧接着在下一行通过name=value的方式对变量name做赋值，
+比如 name = 10，会编译报错：
+ syntax error: non-declaration statement outside function body
+*/
+var (
+	v1 int = 10
+	v2 bool = true
+)
+var (
+	v5 int   // the value will be defaulted to 0
+	v6 bool  // the value will be defaulted to false
+)
+var (
+	v3 = 20
+	v4 = false
+)
+```
+
+局部变量多了一种定义方式：`name := value`
+- 局部变量定义后必须要被使用，否则编译报错，报错内容为declared but not used。
+
+### 初始值
+
+- 数值：所有数值类型的零值都是0
+- 整数，零值是0。byte, rune, uintptr也是整数类型，所以零值也是0。
+- 浮点数，零值是0
+- 复数，零值是0+0i
+- bool，零值是false
+- 字符串，零值是空串""
+- 指针：`var a *int`，零值是nil
+- 切片：var a []int，零值是nil
+- map：var a map[string] int，零值是nil
+- 函数：var a func(string) int，零值是nil
+- channel：var a chan int，通道channel，零值是nil
+- 接口：var a interface_type，接口interface，零值是nil
+- 结构体: var instance StructName，结构体里每个field的零值是对应field的类型的零值
+
+### 常量
+
+常量定义的时候必须赋值，定义后值不能被修改  
+常量(包括全局常量和局部常量)可以定义后不使用，局部变量定义后必须使用，否则编译报错  
+常量可以用来定义枚举  
+```go
+const a int = 10
+const b bool = false
+// 
+const a = 10
+const b = false
+// 
+const a, b int = 1, 2
+```
+
+定义枚举：
+```go
+const (
+  unknown = 0
+  male = 1
+  female = 2
+)
+```
+
 ## 条件
 
 说明：go 语言没有三目运算符
