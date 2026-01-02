@@ -134,7 +134,82 @@ go get github.com/sirupsen/logrus
 
 ## 数据类型
 
-https://github.com/jincheng9/go-tutorial/tree/main/workspace/lesson2
+### 数字
+
+- 整数：int, uint8, uint16, uint32, uint64, int8, int16, int32, int64
+- 浮点数：float32, float64
+- 复数：
+	- complex64：实部和虚部都是float32类型的值：`var v complex64 = 1 + 0.5i`
+	- 注意：虚部为1的情况，1不能省略，否则编译报错: `var v complex64 = 1 + i // compile error: undefined i`
+
+其他数字类型
+- byte：等价于uint8，数据范围0-255，定义的时候超过这个范围会编译报错
+- rune：等价于int32，数据范围-2147483648-2147483647，字符串里的每一个字符的类型就是rune类型，或者说int32类型
+- uint：在32位机器上等价于uint32，在64位机器上等价于uint64
+- uintptr: 无符号整数，是内存地址的十进制整数表示形式，应用代码一般用不到（https://stackoverflow.com/questions/59042646/whats-the-difference-between-uint-and-uintptr-in-golang）
+- reflect包的TypeOf函数或者fmt.Printf的%T可以用来获取变量的类型
+```go
+var b byte = 10
+var c = 'a'
+fmt.Println(reflect.TypeOf(b)) // uint8
+fmt.Println(reflect.TypeOf(c)) // int32
+fmt.Printf("%T\n", c) // int32
+```
+
+### 字符串
+
+string：
+- len(str)函数可以获取字符串长度
+- 注意：string是immutable的，不能在初始化string变量后，修改string里的值，除非对string变量重新赋值
+	```go
+	func main() {
+		str := "abc"
+		str = "def" // ok
+		/* 下面的就不行，编译报错：cannot assign to str[0] (strings are immutable)
+		str[0] = "d"
+		*/
+		fmt.Println(str)
+	}
+	```
+- 字符串里字符的访问可以通过str[index]下标索引或者range迭代的方式进行访问
+	```go
+	func main() {
+		str := "abc"
+		/*下标访问*/
+		size := len(str)
+		for i:=0; i<size; i++ {
+			fmt.Printf("%d ", str[i])
+		}
+		fmt.Println()
+		
+		/*range迭代访问*/
+		for _, value := range str {
+			fmt.Printf("%d ", value)
+		}
+		fmt.Println()
+	}
+	```
+- 不能对string里的某个字符取地址：如果s[i]是字符串s里的第i个字符，那&s[i]这种方式是非法的
+- string可以使用 `:` 来做字符串截取  
+	注意：这里和切片slice的截取有区别
+	- 字符串截取后赋值给新变量，对新变量的修改不会影响原字符串的值
+	- 切片截取后复制给新变量，对新变量的修改会影响原切片的值
+	```go
+	func strTest() {
+		s := "abc"
+		fmt.Println(len(s)) // 3
+		s1 := s[:]
+		s2 := s[:1]
+		s3 := s[0:]
+		s4 := s[0:2]
+		fmt.Println(s, s1, s2, s3, s4) // abc abc a abc ab
+	}
+	```
+- string可以用+做字符串拼接
+
+### bool
+
+值只能为true或false
 
 ## 条件
 
@@ -301,67 +376,6 @@ func main() {
 }
 ```
 
-## 命名规范
-
-Go 语言强调简洁、统一和可读性，命名需尽可能短且具有清晰语义。Go 的命名规范核心是：简短、统一、可读。避免过度设计和冗长命名。
-
-### 包（package）命名
-
-- 全部小写，不使用下划线或大写字母。
-- 名称应简短、有意义，如：fmt、io、http。
-- 导入时避免与常用名称冲突。
-
-### 变量命名
-
-- 尽量使用短变量名，尤其是局部变量：i、n、err。
-- 成员变量使用更具描述性的名称。
-- 使用驼峰命名（mixedCaps）。如：userName。
-
-### 常量命名
-
-- 使用驼峰命名。
-- 对于枚举型常量，一般与类型放在一起，并以类型名为前缀。
-
-### 函数命名
-
-- 使用驼峰命名。
-- Exported 函数首字母大写，如：Println。
-- Unexported 函数首字母小写，如：computeValue。
-
-### 接口命名
-
-- 单方法接口常以 “-er” 结尾，例如：Reader、Writer。
-- 接口名应体现行为，而非结构。
-
-### 结构体命名
-
-- 使用名词或名词短语，如：File、User、Config。
-
-### 方法命名
-
-- 动词开头，表达行为，如：Open、Close、Send。
-
-### 错误命名规范
-
-- 错误变量一般命名为 err。
-- 自定义 error 类型的变量采用驼峰命名，如：ErrNotFound。
-
-### 缩写使用
-
-- 固定缩写全部大写，但在驼峰结构中保持一律小写，例如：httpServer、urlReader。
-- Exported 名称仍保持首字母大写，例如：HTTPRequest。
-
-### 测试命名
-
-- 测试函数以 Test 开头：TestAdd。
-- 基准测试以 Benchmark 开头：BenchmarkSort。
-- 示例以 Example 开头：ExampleUsage。
-
-### 文件命名
-
-- 全部小写，使用下划线分隔：http_server.go、user_service.go。
-- 测试文件以 _test.go 结尾。
-
 ## defer
 
 含义：defer 用于注册一个函数调用，使其在包含该 defer 的函数返回之前执行；  
@@ -450,7 +464,68 @@ for i := 0; i < 100000; i++ {
 }
 ```
 
-# 三、指针
+# 命名规范
+
+Go 语言强调简洁、统一和可读性，命名需尽可能短且具有清晰语义。Go 的命名规范核心是：简短、统一、可读。避免过度设计和冗长命名。
+
+### 包（package）命名
+
+- 全部小写，不使用下划线或大写字母。
+- 名称应简短、有意义，如：fmt、io、http。
+- 导入时避免与常用名称冲突。
+
+### 变量命名
+
+- 尽量使用短变量名，尤其是局部变量：i、n、err。
+- 成员变量使用更具描述性的名称。
+- 使用驼峰命名（mixedCaps）。如：userName。
+
+### 常量命名
+
+- 使用驼峰命名。
+- 对于枚举型常量，一般与类型放在一起，并以类型名为前缀。
+
+### 函数命名
+
+- 使用驼峰命名。
+- Exported 函数首字母大写，如：Println。
+- Unexported 函数首字母小写，如：computeValue。
+
+### 接口命名
+
+- 单方法接口常以 “-er” 结尾，例如：Reader、Writer。
+- 接口名应体现行为，而非结构。
+
+### 结构体命名
+
+- 使用名词或名词短语，如：File、User、Config。
+
+### 方法命名
+
+- 动词开头，表达行为，如：Open、Close、Send。
+
+### 错误命名规范
+
+- 错误变量一般命名为 err。
+- 自定义 error 类型的变量采用驼峰命名，如：ErrNotFound。
+
+### 缩写使用
+
+- 固定缩写全部大写，但在驼峰结构中保持一律小写，例如：httpServer、urlReader。
+- Exported 名称仍保持首字母大写，例如：HTTPRequest。
+
+### 测试命名
+
+- 测试函数以 Test 开头：TestAdd。
+- 基准测试以 Benchmark 开头：BenchmarkSort。
+- 示例以 Example 开头：ExampleUsage。
+
+### 文件命名
+
+- 全部小写，使用下划线分隔：http_server.go、user_service.go。
+- 测试文件以 _test.go 结尾。
+
+# 指针
 
 区别于C/C++中的指针，Go语言中的指针不能进行偏移和运算，是安全指针。
 
