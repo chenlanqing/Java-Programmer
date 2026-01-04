@@ -451,7 +451,7 @@ a := [2][3]int{{1, 2, 3}, {4, 5, 6}}
 b := [...][2]int{{1, 1}, {2, 2}, {3, 3}} // 第 2 纬度不能用 "..."。
 ```
 
-## 切片Slice
+## 切片 Slice
 
 slice 并不是数组或数组指针。切片是对数组的抽象。Go数组的长度在定义后是固定的，不可改变的。  
 切片的长度和容量是不固定的，可以动态增加元素，切片的容量也会根据情况自动扩容，它通过内部指针和相关属性引用数组片段，以实现变长方案；   
@@ -485,6 +485,7 @@ s6 = arr[1:4]
 
 ### 切片初始化
 
+如果slice类型的变量定义后没有初始化赋值，那值就是默认值`nil`。对于`nil`切片，len和cap函数执行结果都是0
 ```go
 // 全局：
 var arr = [...]int{0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
@@ -555,6 +556,81 @@ type slice struct {
 	cap   int
 }
 ```
+
+### 常用函数
+
+len()和cap()函数：类似C++的vector里的size和capacity
+- len()：获取切片的长度，也就是实际存储了多少个元素
+- cap(): 获取切片的容量。如果切片的元素个数要超过当前容量，会自动扩容
+
+append()：通过append函数给切片加元素
+- append不改变原切片的值；
+- 只能对切片使用append()函数，不能对数组使用append()
+```go
+slice := []int{1, 2, 3}
+// 往原切片里加一个元素
+test := append(slice, 4)
+// append不会改变slice的值，除非把append的结果重新赋值给slice
+fmt.Println(slice) // [1 2 3]
+fmt.Println(test) // [1 2 3 4]
+
+// 通过append给切片添加切片
+temp := []int{1,2}
+test = append(test, temp...) // 注意，第2个参数有...结尾
+fmt.Println(test) // [1 2 3 4 1 2]
+
+/*下面对array数组做append就会报错:  first argument to append must be slice; have [3]int
+array := [3]int{1, 2, 3}
+array2 := append(array, 1)
+fmt.Println(array2)
+*/
+```
+copy()：拷贝一个切片里的数据到另一个切片  
+- 只从源切片srcSlice拷贝min(len(srcSlice), len(dstSlice))个元素到目标切片dstSlice里。如果dstSlice的长度是0，那一个都不会从srcSlice拷贝到dstSlice里。如果dstSlice的长度M小于srcSlice的长度N，则只会拷贝srcSlice里的前M个元素到目标切片dstSlice里
+
+### 作为函数参数
+
+slice切片如果是函数参数，函数体内对切片底层数组的修改会影响到实参；  
+如果在函数体内通过append直接对切片添加新元素，不会改变外部切片的值；但是如果函数使用切片指针作为参数，在函数体内可以通过切片指针修改外部切片的值
+```go
+func change1(param []int) {
+	param[0] = 100             // 这个会改变外部切片的值
+	param = append(param, 200) // append不会改变外部切片的值
+}
+func change2(param *[]int) {
+	*param = append(*param, 300) // 传切片指针，通过这种方式append可以改变外部切片的值
+}
+```
+
+### 数组与slice
+
+下面将 **Go 语言中数组（array）与切片（slice）的差异** 以一张对比表的形式进行总结，便于快速查阅与记忆。
+
+---
+
+### Go 数组（array） vs 切片（slice）差异对比表
+
+| 对比维度        | 数组（array）              | 切片（slice）                        |
+| ----------- | ---------------------- | -------------------------------- |
+| 定义方式        | `var a [3]int`         | `var s []int` / `make([]int, 3)` |
+| 长度是否固定      | **固定，编译期确定**           | **不固定，运行期可变**                    |
+| 长度是否是类型一部分  | 是（`[3]int` ≠ `[4]int`） | 否（`[]int` 是统一类型）                 |
+| 类型语义        | 值类型                    | 引用语义（底层数组的描述符）                   |
+| 赋值/函数传参     | 发生整体拷贝                 | 拷贝 slice 头，底层数据共享                |
+| 是否支持扩容      | 不支持                    | 支持 `append`                      |
+| 是否可基于其创建    | 可被 slice 引用            | 可基于 array / slice 再切片            |
+| 底层存储        | 自身即数据                  | 指向底层 array                       |
+| 是否共享内存      | 否                      | 是（除非发生扩容）                        |
+| `len()`     | 固定值                    | 可变                               |
+| `cap()`     | 等于长度                   | ≥ `len`，可能变化                     |
+| 是否支持比较 `==` | 支持（元素可比较）              | 不支持（只能与 `nil` 比较）                |
+| 零值          | 所有元素为零值                | `nil`                            |
+| 常见使用场景      | 固定大小缓冲区、底层结构           | 业务集合、函数参数、动态数据                   |
+| 工程实践使用频率    | 很少                     | **极高（Go 中最常用）**                  |
+
+> **array 是“定长值对象”，slice 是“可变长度、共享底层数组的集合抽象”，实际开发中几乎总是使用 slice。**
+
+数组是定长的值类型，长度是类型的一部分；切片是对数组的一个轻量级引用，长度可变，支持扩容，是 Go 中最常用的集合抽象
 
 ## 指针
 
@@ -686,6 +762,513 @@ fmt.Printf("%T, %v\n", c, c==nil)
 ```
 为什么slice是nil也可以直接append? 对于nil slice，append会对slice的底层数组做扩容，通过调用mallocgc向Go的内存管理器申请内存空间，再赋值给原来的nil slice
 
+## Map
+
+### 定义
+
+map是一种无序的基于key-value的数据结构，Go语言中的map是引用类型，必须初始化才能使用
+```go
+map[KeyType]ValueType
+// KeyType: 表示键的类型。
+// ValueType: 表示键对应的值的类型。
+```
+map类型的变量默认初始值为nil，需要使用make()函数来分配内存。语法为：
+```go
+make(map[KeyType]ValueType, [cap])
+// 其中 cap 表示 map的容量，该参数虽然不是必须的，但是我们应该在初始化map的时候就为其指定一个合适的容量
+```
+
+### 基本使用
+
+```go
+scoreMap := make(map[string]int, 8)
+scoreMap["张三"] = 90
+scoreMap["小明"] = 100
+fmt.Println(scoreMap)
+fmt.Println(scoreMap["小明"])
+fmt.Printf("type of a:%T\n", scoreMap)
+```
+map也支持在声明的时候填充元素，例如：
+```go
+userInfo := map[string]string{
+	"username": "pprof.cn",
+	"password": "123456",
+}
+fmt.Println(userInfo)
+```
+
+### 判断 key 是否存在
+
+Go语言中有个判断map中键是否存在的特殊写法，格式如下:
+```go
+value, ok := map[key]
+// 示例：
+scoreMap := make(map[string]int)
+scoreMap["张三"] = 90
+scoreMap["小明"] = 100
+// 如果key存在ok为true,v为对应的值；不存在ok为false,v为值类型的零值
+v, ok := scoreMap["张三"]
+if ok {
+	fmt.Println(v)
+} else {
+	fmt.Println("查无此人")
+}
+```
+
+### 遍历
+
+Go语言中使用for range遍历map
+```go
+scoreMap := make(map[string]int)
+scoreMap["张三"] = 90
+scoreMap["小明"] = 100
+scoreMap["王五"] = 60
+// 遍历 k,v
+for k, v := range scoreMap {
+	fmt.Println(k, v)
+}
+// 只遍历 key
+for k := range scoreMap {
+	fmt.Println(k)
+}
+// 遍历 value，忽略 key
+for _, v := range scoreMap {
+	fmt.Println(v)
+}
+```
+注意： 遍历map时的元素顺序与添加键值对的顺序无关
+
+### 删除
+
+使用delete()内建函数从map中删除一组键值对，delete()函数的格式如下：
+```go
+delete(map, key)
+// map:表示要删除键值对的map
+// key:表示要删除的键值对的键
+```
+
+### 按照指定顺序遍历map
+
+```go
+func main() {
+    r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var scoreMap = make(map[string]int, 200)
+	for i := 0; i < 100; i++ {
+		key := fmt.Sprintf("stu%02d", i) //生成stu开头的字符串
+		value := r.Intn(100)             //生成0~99的随机整数
+		scoreMap[key] = value
+	}
+	//取出map中的所有key存入切片keys
+	var keys = make([]string, 0, 200)
+	for key := range scoreMap {
+		keys = append(keys, key)
+	}
+	//对切片进行排序
+	sort.Strings(keys)
+	//按照排序后的key遍历map
+	for _, key := range keys {
+		fmt.Println(key, scoreMap[key])
+	}
+}
+```
+
+## 结构体
+
+Go语言中没有“类”的概念，也不支持“类”的继承等面向对象的概念。Go语言中通过结构体的内嵌再配合接口比面向对象具有更高的扩展性和灵活性
+
+### 自定义类型与类型别名
+
+**自定义类型**
+
+在Go语言中有一些基本的数据类型，如string、整型、浮点型、布尔等数据类型，Go语言中可以使用type关键字来定义自定义类型。
+
+自定义类型是定义了一个全新的类型。我们可以基于内置的基本类型定义，也可以通过struct定义
+```go
+//将MyInt定义为int类型
+type MyInt int
+```
+
+**类型别名**
+
+类型别名规定：TypeAlias只是Type的别名，本质上TypeAlias与Type是同一个类型
+```go
+type byte = uint8
+type rune = int32
+```
+
+**类型定义和类型别名的区别**
+```go
+//类型定义
+type NewInt int
+//类型别名
+type MyInt = int
+func main() {
+    var a NewInt
+    var b MyInt
+    fmt.Printf("type of a:%T\n", a) //type of a:main.NewInt
+    fmt.Printf("type of b:%T\n", b) //type of b:int
+}
+```
+结果显示a的类型是`main.NewInt`，表示main包下定义的NewInt类型。b的类型是int。MyInt类型只会在代码中存在，编译完成时并不会有MyInt类型
+
+### 结构体的定义
+
+使用type和struct关键字来定义结构体，具体代码格式如下：
+```go
+type 类型名 struct {
+	字段名 字段类型
+	字段名 字段类型
+	…
+}
+```
+1. 类型名：标识自定义结构体的名称，在同一个包内不能重复。
+2. 字段名：表示结构体字段名。结构体中的字段名必须唯一。
+3. 字段类型：表示结构体字段的具体类型。
+4. 同样类型的字段也可以写在一行
+5. 结构体中字段大写开头表示可公开访问，小写表示私有（仅在定义当前结构体的包中可访问）
+
+### 实例化
+
+只有当结构体实例化时，才会真正地分配内存。也就是必须实例化后才能使用结构体的字段。
+
+结构体本身也是一种类型，我们可以像声明内置类型一样使用var关键字声明结构体类型。
+```go
+var 结构体实例 结构体类型
+// 示例
+type person struct {
+    name string
+    city string
+    age  int8
+}
+func main() {
+    var p1 person
+    fmt.Printf("p1=%#v\n", p1) // p1=main.person{name:"", city:"", age:0}
+    p1.name = "pprof.cn"
+    p1.city = "北京"
+    p1.age = 18
+    fmt.Printf("p1=%v\n", p1)  //p1={pprof.cn 北京 18}
+    fmt.Printf("p1=%#v\n", p1) //p1=main.person{name:"pprof.cn", city:"北京", age:18}
+}
+```
+
+#### 指针类型结构体
+
+可以通过使用new关键字对结构体进行实例化，得到的是结构体的地址。 格式如下：
+```go
+var p2 = new(person)
+fmt.Printf("%T\n", p2)     //*main.person, p2是一个结构体指针
+fmt.Printf("p2=%#v\n", p2) //p2=&main.person{name:"", city:"", age:0}
+```
+在Go语言中支持对结构体指针直接使用.来访问结构体的成员。
+```go
+var p2 = new(person)
+p2.name = "测试"
+p2.age = 18
+p2.city = "北京"
+fmt.Printf("p2=%#v\n", p2) //p2=&main.person{name:"测试", city:"北京", age:18}
+```
+
+#### 取结构体的地址实例化
+
+使用`&`对结构体进行取地址操作相当于对该结构体类型进行了一次new实例化操作。
+```go
+p3 := &person{}
+fmt.Printf("%T\n", p3)     //*main.person
+fmt.Printf("p3=%#v\n", p3) //p3=&main.person{name:"", city:"", age:0}
+p3.name = "博客" // p3.name = "博客", 其实在底层是(*p3).name = "博客"，这是Go语言帮我们实现的语法糖
+p3.age = 30
+p3.city = "成都"
+fmt.Printf("p3=%#v\n", p3) //p3=&main.person{name:"博客", city:"成都", age:30}
+```
+
+#### 使用键值对初始化
+
+使用键值对对结构体进行初始化时，键对应结构体的字段，值对应该字段的初始值
+```go
+p5 := person{
+    name: "pprof.cn",
+    city: "北京",
+    age:  18,
+}
+fmt.Printf("p5=%#v\n", p5) //p5=main.person{name:"pprof.cn", city:"北京", age:18}
+```
+也可以对结构体指针进行键值对初始化，例如：
+```go
+p6 := &person{
+    name: "pprof.cn",
+    city: "北京",
+    age:  18,
+}
+fmt.Printf("p6=%#v\n", p6) //p6=&main.person{name:"pprof.cn", city:"北京", age:18}
+```
+当某些字段没有初始值的时候，该字段可以不写。此时，没有指定初始值的字段的值就是该字段类型的零值
+
+#### 使用值的列表初始化
+
+初始化结构体的时候可以简写，也就是初始化的时候不写键，直接写值：
+```go
+p8 := &person{
+    "pprof.cn",
+    "北京",
+    18,
+}
+fmt.Printf("p8=%#v\n", p8) //p8=&main.person{name:"pprof.cn", city:"北京", age:18}
+```
+需要注意的是：  
+1. 必须初始化结构体的所有字段。
+2. 初始值的填充顺序必须与字段在结构体中的声明顺序一致。
+3. 该方式不能和键值初始化方式混用。
+
+### 匿名结构体
+
+```go
+var user struct{Name string; Age int}
+user.Name = "pprof.cn"
+user.Age = 18
+fmt.Printf("%#v\n", user)
+```
+
+### 结构体内存布局
+
+```go
+type test struct {
+    a int8
+    b int8
+    c int8
+    d int8
+}
+n := test{
+    1, 2, 3, 4,
+}
+fmt.Printf("n.a %p\n", &n.a) // n.a 0x14000186074
+fmt.Printf("n.b %p\n", &n.b) // n.b 0x14000186075
+fmt.Printf("n.c %p\n", &n.c) // n.c 0x14000186076
+fmt.Printf("n.d %p\n", &n.d) // n.d 0x14000186077
+```
+
+### 构造函数
+
+Go语言的结构体没有构造函数，可以自己实现。例如，下方的代码就实现了一个person的构造函数。因为struct是值类型，如果结构体比较复杂的话，值拷贝性能开销会比较大，所以该构造函数返回的是结构体指针类型。
+```go
+func newPerson(name, city string, age int8) *person {
+    return &person{
+        name: name,
+        city: city,
+        age:  age,
+    }
+}
+```
+
+### 方法和接收者
+
+Go语言中的方法（Method）是一种作用于特定类型变量的函数。这种特定类型变量叫做`接收者（Receiver）`。接收者的概念就类似于其他语言中的this或者 self
+```go
+func (接收者变量 接收者类型) 方法名(参数列表) (返回参数) {
+	函数体
+}
+```
+1. 接收者变量：接收者中的参数变量名在命名时，官方建议使用接收者类型名的第一个小写字母，而不是self、this之类的命名。例如，Person类型的接收者变量应该命名为 p，Connector类型的接收者变量应该命名为c等。
+2. 接收者类型：接收者类型和参数类似，可以是指针类型和非指针类型。
+3. 方法名、参数列表、返回参数：具体格式与函数定义相同。
+```go
+//Person 结构体
+type Person struct {
+    name string
+    age  int8
+}
+//Dream Person做梦的方法
+func (p Person) Dream() {
+    fmt.Printf("%s的梦想是学好Go语言！\n", p.name)
+}
+
+func main() {
+    p1 := Person{"测试", 25}
+    p1.Dream()
+}
+```
+方法与函数的区别是：函数不属于任何类型，方法属于特定的类型
+
+#### 指针类型的接收者
+
+指针类型的接收者由一个结构体的指针组成，由于指针的特性，调用方法时修改接收者指针的任意成员变量，在方法结束后，修改都是有效的。这种方式就十分接近于其他语言中面向对象中的this或者self。 例如为Person添加一个SetAge方法，来修改实例变量的年龄。
+```go
+// SetAge 设置p的年龄
+// 使用指针接收者
+func (p *Person) SetAge(newAge int8) {
+	p.age = newAge
+}
+```
+**什么时候应该使用指针类型接收者**
+1. 需要修改接收者中的值
+2. 接收者是拷贝代价比较大的大对象
+3. 保证一致性，如果有某个方法使用了指针接收者，那么其他的方法也应该使用指针接收者。
+
+#### 值类型的接收者
+
+当方法作用于值类型接收者时，Go语言会在代码运行时将接收者的值复制一份。在值类型接收者的方法中可以获取接收者的成员值，但修改操作只是针对副本，无法修改接收者变量本身
+```go
+// SetAge2 设置p的年龄
+// 使用值接收者
+func (p Person) SetAge2(newAge int8) {
+    p.age = newAge
+}
+func main() {
+    p1 := NewPerson("测试", 25)
+    p1.Dream()
+    fmt.Println(p1.age) // 25
+    p1.SetAge2(30) // (*p1).SetAge2(30)
+    fmt.Println(p1.age) // 25
+}
+```
+
+### 任意类型添加方法
+
+在Go语言中，接收者的类型可以是任何类型，不仅仅是结构体，任何类型都可以拥有方法
+```go
+//MyInt 将int定义为自定义MyInt类型
+type MyInt int
+//SayHello 为MyInt添加一个SayHello的方法
+func (m MyInt) SayHello() {
+    fmt.Println("Hello, 我是一个int。")
+}
+func main() {
+    var m1 MyInt
+    m1.SayHello() //Hello, 我是一个int。
+    m1 = 100
+    fmt.Printf("%#v  %T\n", m1, m1) //100  main.MyInt
+}
+```
+
+### 结构体的匿名字段
+
+结构体允许其成员字段在声明时没有字段名而只有类型，这种没有名字的字段就称为匿名字段
+```go
+//Person 结构体Person类型
+type Person struct {
+    string
+    int
+}
+func main() {
+    p1 := Person{"pprof.cn", 18}
+    fmt.Printf("%#v\n", p1)        //main.Person{string:"pprof.cn", int:18}
+    fmt.Println(p1.string, p1.int) //pprof.cn 18
+}
+```
+匿名字段默认采用类型名作为字段名，结构体要求字段名称必须唯一，因此一个结构体中同种类型的匿名字段只能有一个
+
+### 嵌套结构体
+
+一个结构体中可以嵌套包含另一个结构体或结构体指针
+```go
+//Address 地址结构体
+type Address struct {
+    Province string
+    City     string
+}
+//User 用户结构体
+type User struct {
+    Name    string
+    Gender  string
+    Address Address
+}
+func main() {
+    user1 := User{
+        Name:   "pprof", Gender: "女",
+        Address: Address{Province: "黑龙江",City:     "哈尔滨",},
+    }
+    fmt.Printf("user1=%#v\n", user1)//user1=main.User{Name:"pprof", Gender:"女", Address:main.Address{Province:"黑龙江", City:"哈尔滨"}}
+}
+```
+
+### tag
+
+Tag是结构体的元信息，可以在运行的时候通过反射的机制读取出来。主要用于在运行时通过反射读取，以指导序列化、反序列化、校验、ORM 映射等框架行为
+
+Tag在结构体字段的后方定义，由一对反引号包裹起来，具体的格式如下： `key1:"value1" key2:"value2"`
+
+结构体标签由一个或多个键值对组成。键与值使用冒号分隔，值用双引号括起来。键值对之间使用一个空格分隔。   
+注意事项： 为结构体编写Tag时，必须严格遵守键值对的规则。结构体标签的解析代码的容错能力很差，一旦格式写错，编译和运行时都不会提示任何错误，通过反射也无法正确取值。例如不要在key和value之间添加空格
+```go
+//Student 学生
+type Student struct {
+    ID     int    `json:"id"` //通过指定tag实现json序列化该字段时的key
+    Gender string //json序列化是默认使用字段名作为key
+    name   string //私有不能被json包访问
+}
+func main() {
+    s1 := Student{
+        ID:     1,
+        Gender: "女",
+        name:   "pprof",
+    }
+    data, err := json.Marshal(s1)
+    if err != nil {
+        fmt.Println("json marshal failed!")
+        return
+    }
+    fmt.Printf("json str:%s\n", data) //json str:{"id":1,"Gender":"女"}
+}
+```
+tag 的核心作用：告诉“外部系统”如何理解字段
+
+#### 最常见的几类 tag
+
+**JSON（encoding/json）**
+```go
+type User struct {
+    ID     int    `json:"id"`
+    Name   string `json:"name"`
+    Email  string `json:"email,omitempty"` //  omitempty, 零值时不输出
+    Secret string `json:"-"` // 忽略该字段
+}
+// json:",string" 数值转字符串
+```
+
+**数据库 / ORM（如 GORM）**: tag 描述的是字段如何映射到数据库列
+```go
+type User struct {
+    ID    int64  `gorm:"column:user_id;primaryKey"`
+    Name  string `gorm:"size:64;not null"`
+}
+```
+
+**参数校验（validator）**
+```go
+type User struct {
+    Email string `validate:"required,email"`
+    Age   int    `validate:"gte=18"`
+}
+```
+
+**表单 / URL 参数**：常见于 Gin、Echo 等 Web 框架
+```go
+type LoginReq struct {
+    Username string `form:"username" query:"username"`
+    Password string `form:"password"`
+}
+```
+
+#### tag 的读取方式（反射原理）
+
+**通过 reflect 读取 tag**
+```go
+t := reflect.TypeOf(User{})
+field, _ := t.FieldByName("Name")
+fmt.Println(field.Tag.Get("json")) // 输出: name
+```
+Tag 的类型:`type StructTag string`，底层就是字符串，标准库仅提供解析工具
+
+#### 注意事项
+
+1. tag 只在运行时可用，编译期无法通过 tag 控制逻辑
+2. tag 不支持表达式："`json:"name" + suffix`"
+3. tag 与字段可见性有关：只有导出字段（首字母大写）tag 才有意义
+```go
+type User struct {
+    name string `json:"name"` // 无效，私有字段无法被反射导出
+}
+```
+
 # 流程控制
 
 ## 条件
@@ -787,9 +1370,83 @@ func main() {
 }
 ```
 
+### select 语句
+
+select 语句类似于 switch 语句，但是select会随机执行一个可运行的case。如果没有case可运行，它将阻塞，直到有case可运行。
+
+select是Go中的一个控制结构，类似于switch语句，用于处理异步IO操作。select会监听case语句中channel的读写操作，当case中channel读写操作为非阻塞状态（即能读写）时，将会触发相应的动作。 select中的case语句必须是一个channel操作
+
+select中的default子句总是可运行的。  
+如果有多个case都可以运行，select会随机公平地选出一个执行，其他不会执行。  
+如果没有可运行的case语句，且有default语句，那么就会执行default的动作。  
+如果没有可运行的case语句，且没有default语句，select将阻塞，直到某个case通信可以运行
+```go
+select {
+    case communication clause  :
+       statement(s);      
+    case communication clause  :
+       statement(s);
+    /* 你可以定义任意数量的 case */
+    default : /* 可选 */
+       statement(s);
+}
+```
+1. 每个case都必须是一个通信
+2. 所有channel表达式都会被求值
+3. 所有被发送的表达式都会被求值
+4. 如果任意某个通信可以进行，它就执行；其他被忽略。
+5. 如果有多个case都可以运行，Select会随机公平地选出一个执行。其他不会执行。
+6. 否则：
+	- 如果有default子句，则执行该语句。
+	- 如果没有default字句，select将阻塞，直到某个通信可以运行；Go不会重新对channel或值进行求值。
+
+select可以监听channel的数据流动  
+select的用法与switch语法非常类似，由select开始的一个新的选择块，每个选择条件由case语句来描述  
+与switch语句可以选择任何使用相等比较的条件相比，select由比较多的限制，其中最大的一条限制就是每个case语句里必须是一个IO操作  
+```go
+select { //不停的在这里检测
+    case <-chanl : //检测有没有数据可以读
+    //如果chanl成功读取到数据，则进行该case处理语句
+    case chan2 <- 1 : //检测有没有可以写
+    //如果成功向chan2写入数据，则进行该case处理语句
+    //假如没有default，那么在以上两个条件都不成立的情况下，就会在此阻塞//一般default会不写在里面，select中的default子句总是可运行的，因为会很消耗CPU资源
+    default:
+    //如果以上都没有符合条件，那么则进行default处理流程
+    }
+```
+
+**典型用法：**
+- 超时判断
+- 退出
+- 判断channel是否阻塞
+
 ## 循环
 
 ### for
+
+```go
+for init; condition; post { }
+for condition { }
+for { }
+```
+init： 一般为赋值表达式，给控制变量赋初值；  
+condition： 关系表达式或逻辑表达式，循环控制条件；  
+post： 一般为赋值表达式，给控制变量增量或减量。  
+for语句执行过程如下：  
+- ①先对表达式 init 赋初值；
+- ②判别赋值表达式 init 是否满足给定 condition 条件，若其值为真，满足循环条件，则执行循环体内语句，然后执行 post，进入第二次循环，再判别 condition；否则判断 condition 的值为假，不满足条件，就终止for循环，执行循环体外语句。
+
+### range
+
+Golang range类似迭代器操作，返回 (索引, 值) 或 (键, 值)。
+
+for 循环的 range 格式可以对 slice、map、数组、字符串等进行迭代循环。格式如下：
+```go
+for key, value := range oldMap {
+    newMap[key] = value
+}
+```
+可忽略不想要的返回值，或 "_" 这个特殊变量
 
 ### goto
 
