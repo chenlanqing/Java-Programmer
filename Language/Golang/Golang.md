@@ -1510,10 +1510,11 @@ func main() {
 }
 ```
 
-## 函数
+# 函数
 
-### 基本定义
+## 基本定义
 
+使用关键字 func 定义函数，左大括号依旧不能另起一行，类型相同的相邻参数，参数类型可合并。 多返回值必须用括号
 ```go
 func func_name([parameter list]) [return_types] {
   // do sth
@@ -1540,9 +1541,13 @@ func name(a, b int, c, d string) (int, string) {
   //do sth
 }
 ```
+1. 不支持 重载 (overload)   
+2. 不支持 默认参数 (default parameter)。
 
-### 返回值命名
+## 返回值命名
 
+"_"标识符，用来忽略函数的某个返回值  
+Go 的返回值可以被命名，并且就像在函数体开头声明的变量那样使用
 ```go
 /*
 函数add的返回值有2个，类型是int，标识符分别是c和d
@@ -1566,8 +1571,11 @@ func main() {
 syntax error: mixed named and unnamed function parameters
 ```
 > 要么都不命名，要么都命名(都命名的情况下，允许形参或者返回值变量使用_作为命名)。
+- Golang返回值不能用容器对象接收多返回值。只能用多个变量，或 "_" 忽略；
+- 命名返回参数可被同名局部变量遮蔽，此时需要显式返回；
+- 命名返回参数允许 defer 延迟调用通过闭包读取和修改
 
-### nil函数
+## nil函数
 
 函数也是一种类型，函数变量的默认值是nil，执行nil函数会引发panic
 ```go
@@ -1577,7 +1585,7 @@ var f func()
 f() 
 ```
 
-### [值传递](https://github.com/jincheng9/go-tutorial/tree/main/workspace/senior/p3)
+## [值传递](https://github.com/jincheng9/go-tutorial/tree/main/workspace/senior/p3)
 
 Go语言里没有引用变量和引用传递  
 在Go语言里，不可能有2个变量有相同的内存地址，也就不存在引用变量了。   
@@ -1607,7 +1615,7 @@ func main() {
 }
 ```
 
-### 函数高级用法
+## 函数高级用法
 
 函数作为其它函数的实参：函数定义后可以作为另一个函数的实参，比如下例的函数realFunc作为函数calValue的实参
 ```go
@@ -1644,33 +1652,58 @@ func main() {
 }
 ```
 
+## 闭包
+
+闭包是由函数及其相关引用环境组合而成的实体
+```go
+func f(i int) func() int {
+    return func() int {
+        i++
+        return i
+    }
+}
+```
+函数f返回了一个函数，返回的这个函数，返回的这个函数就是一个闭包。这个函数中本身是没有定义变量i的，而是引用了它所在的环境（函数f）中的变量i
+- 捕获的是“变量本身”，不是值:Go 闭包捕获的是变量的引用（准确说是地址）
+
+当 Go 编译器发现：内部函数引用了外部变量，它会自动进行 逃逸分析（escape analysis）：
+
+**使用场景**
+1. 函数式选项（Functional Options）
+```go
+type Option func(*Server)
+
+func WithTimeout(d time.Duration) Option {
+    return func(s *Server) {
+        s.timeout = d
+    }
+}
+```
+2. 延迟执行 / 回调
+```go
+func retry(fn func() error) {
+    for i := 0; i < 3; i++ {
+        if err := fn(); err == nil {
+            return
+        }
+    }
+}
+```
+3. 中间件（HTTP / RPC）
+```go
+func Logger(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        log.Println(r.URL)
+        next.ServeHTTP(w, r)
+    })
+}
+```
+
 ## defer
 
 含义：defer 用于注册一个函数调用，使其在包含该 defer 的函数返回之前执行；  
 类似 Java 中的 try-finally 块（特别像 finally）  
 > defer = 注册一个延迟执行的函数，在函数 return 执行后、真正退出前执行。
-
-### 闭包
-
-匿名函数
-```go
-func main() {
-	/*
-	定义2个匿名函数，也就是闭包。
-	 闭包可以直接调用，也可以赋值给一个变量，后续调用
-	*/
-	result1 := func(a int, b int) int {
-		return a + b
-	}(1, 2) // 直接调用
-
-	var sub = func(a int, b int) int {
-		return a - b
-	}
-	result2 := sub(1, 2)
-	/*输出结果：3 -1*/
-	fmt.Println(result1, result2)
-}
-```
 
 ### defer 的执行时机
 
