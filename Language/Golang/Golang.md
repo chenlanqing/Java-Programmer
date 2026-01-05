@@ -768,6 +768,11 @@ fmt.Printf("%T, %v\n", c, c==nil)
 
 map是一种无序的基于key-value的数据结构，Go语言中的map是引用类型，必须初始化才能使用
 ```go
+var map_var map[KeyType]ValueType = map[KeyType]ValueType{}
+var map_var = map[KeyType]ValueType{}
+map_var := map[KeyType]ValueType{}
+/*cap是map容量，超过后会自动扩容*/
+map_var := make(map[KeyType]ValueType, [cap]) 
 map[KeyType]ValueType
 // KeyType: 表示键的类型。
 // ValueType: 表示键对应的值的类型。
@@ -871,6 +876,12 @@ func main() {
 	}
 }
 ```
+
+### 注意事项
+
+- key必须支持==和!=比较，才能用作map的key。  
+因此切片slice，函数类型function，集合map，不能用作map的key
+- map不是并发安全的，并发读写要加锁
 
 ## 结构体
 
