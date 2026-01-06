@@ -399,6 +399,168 @@ const (
 const n5 = iota //0
 ```
 
+## 输入输出
+
+### 标准
+
+```go
+var (
+   Stdin  = NewFile(uintptr(syscall.Stdin), "/dev/stdin")
+   Stdout = NewFile(uintptr(syscall.Stdout), "/dev/stdout")
+   Stderr = NewFile(uintptr(syscall.Stderr), "/dev/stderr")
+)
+```
+在os包下有三个外暴露的文件描述符，其类型都是*File，分别是：
+1. Stdin - 标准输入  
+2. Stdout - 标准输出  
+3. Stderr - 标准错误  
+
+### 输出
+
+比较常用的有三种方法：  
+第一种是调用os.Stdout
+```go
+os.Stdout.WriteString("Hello 世界!")
+```
+第二种是使用内置函数println
+```go
+println("Hello 世界!")
+```
+第三种也是最推荐的一种就是调用fmt包下的Println函数
+```go
+fmt.Println("Hello 世界!")
+```
+`fmt.Println`会用到反射，因此输出的内容通常更容易使人阅读，不过性能很差强人意。
+
+### fmt格式化输出
+
+下面是 Go 目前所有的格式化动词。
+
+| 0   | 格式化    | 描述                                            | 接收类型           |
+| --- | --------- | ----------------------------------------------- | ------------------ |
+| 1   | **`%%`**  | 输出百分号`%`                                   | 任意               |
+| 2   | **`%s`**  | 输出`string`/`[] byte`值                        | `string`,`[] byte` |
+| 3   | **`%q`**  | 格式化字符串，输出的字符串两端有双引号`""`      | `string`,`[] byte` |
+| 4   | **`%d`**  | 输出十进制整型值                                | 整型               |
+| 5   | **`%f`**  | 输出浮点数                                      | 浮点               |
+| 6   | **`%e`**  | 输出科学计数法形式 ,也可以用于复数              | 浮点               |
+| 7   | **`%E`**  | 与`%e`相同                                      | 浮点               |
+| 8   | **`%g`**  | 根据实际情况判断输出`%f`或者`%e`,会去掉多余的 0 | 浮点               |
+| 9   | **`%b`**  | 输出整型的二进制表现形式                        | 数字               |
+| 10  | **`%#b`** | 输出二进制完整的表现形式                        | 数字               |
+| 11  | **`%o`**  | 输出整型的八进制表示                            | 整型               |
+| 12  | **`%#o`** | 输出整型的完整八进制表示                        | 整型               |
+| 13  | **`%x`**  | 输出整型的小写十六进制表示                      | 数字               |
+| 14  | **`%#x`** | 输出整型的完整小写十六进制表示                  | 数字               |
+| 15  | **`%X`**  | 输出整型的大写十六进制表示                      | 数字               |
+| 16  | **`%#X`** | 输出整型的完整大写十六进制表示                  | 数字               |
+| 17  | **`%v`**  | 输出值原本的形式，多用于数据结构的输出          | 任意               |
+| 18  | **`%+v`** | 输出结构体时将加上字段名                        | 任意               |
+| 19  | **`%#v`** | 输出完整 Go 语法格式的值                        | 任意               |
+| 20  | **`%t`**  | 输出布尔值                                      | 布尔               |
+| 21  | **`%T`**  | 输出值对应的 Go 语言类型值                      | 任意               |
+| 22  | **`%c`**  | 输出 Unicode 码对应的字符                       | `int32`            |
+| 23  | **`%U`**  | 输出字符对应的 Unicode 码                       | `rune`,`byte`      |
+| 24  | **`%p`**  | 输出指针所指向的地址                            | 指针               |
+
+在使用数字时，还可以自动补零。比如
+```go
+fmt.Printf("%09d", 1)
+// 000000001
+```
+二进制同理
+```go
+fmt.Printf("%09b", 1<<3)
+// 000001000
+```
+
+### 输入
+
+**read:** 可以像直接读文件一样，读取输入内容，如下
+```go
+func main() {
+  var buf [1024]byte
+  n, _ := os.Stdin.Read(buf[:])
+  os.Stdout.Write(buf[:n])
+}
+```
+
+**fmt**:可以使用`fmt`包提供的几个函数，用起来跟 C 差不多。
+```go
+// 扫描从os.Stdin读入的文本，根据空格分隔，换行也被当作空格
+func Scan(a ...any) (n int, err error)
+// 与Scan类似，但是遇到换行停止扫描
+func Scanln(a ...any) (n int, err error)
+// 根据格式化的字符串扫描
+func Scanf(format string, a ...any) (n int, err error)
+```
+> 需要注意的是，Go中输入的默认分隔符号是空格
+
+读取两个数字
+```go
+func main() {
+  var a, b int
+  fmt.Scanln(&a, &b)
+  fmt.Printf("%d + %d = %d\n", a, b, a+b)
+}
+```
+读取固定长度的数组
+```go
+func main() {
+  n := 10
+  s := make([]int, n)
+  for i := range n {
+    fmt.Scan(&s[i])
+  }
+  fmt.Println(s)
+}
+```
+```
+1 2 3 4 5 6 7 8 9 10
+[1 2 3 4 5 6 7 8 9 10]
+```
+```go
+func main() {
+   var s, s2, s3 string
+   scanf, err := fmt.Scanf("%s %s \n %s", &s, &s2, &s3)
+   if err != nil {
+      fmt.Println(scanf, err)
+   }
+   fmt.Println(s)
+   fmt.Println(s2)
+   fmt.Println(s3)
+}
+```
+
+**bufio**:在有大量输入需要读取的时候，就建议使用`bufio.Reader`来进行内容读取
+```go
+func main() {
+    reader := bufio.NewReader(os.Stdin)
+    var a, b int
+    fmt.Fscanln(reader, &a, &b)
+    fmt.Printf("%d + %d = %d\n", a, b, a+b)
+}
+// 按行读取
+func main() {
+   // 读
+    scanner := bufio.NewScanner(os.Stdin)
+    for scanner.Scan() {
+        line := scanner.Text()
+        if line == "exit" {
+        break
+        }
+        fmt.Println("scan", line)
+    }
+}
+func main() {
+   // 写
+   writer := bufio.NewWriter(os.Stdout)
+   writer.WriteString("hello world!\n")
+   writer.Flush()
+   fmt.Println(writer.Buffered())
+}
+```
+
 ## 数组
 
 golang 数组特性：  
