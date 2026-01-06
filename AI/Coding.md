@@ -817,8 +817,10 @@ EOF
 - https://codex.packycode.com/pricing
 - [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
 - [Ready to use Native AI](https://2233.ai/aicoding)
+- https://api.code-relay.com/register?aff=cPUm
+- https://cc.zhihuiapi.top/console
 
-# g参考资料
+# 参考资料
 
 - [模型编程性能参考排行榜](https://lmarena.ai/zh/leaderboard/webdev)
 - [AI编程工具包](https://github.com/TencentCloudBase/CloudBase-AI-ToolKit)
