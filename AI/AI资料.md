@@ -93,6 +93,7 @@
 
 ## 金融应用
 
+- [金融终端是一个为那些拒绝受传统软件限制的人打造的开源金融平台](https://github.com/Fincept-Corporation/FinceptTerminal)
 - [一个先进的多智能体人工智能系统用于金融市场分析](https://github.com/rockydant/ai-market/)
 - [人工智能对冲基金](https://github.com/virattt/ai-hedge-fund)
 - [交易 AI 智能体](https://github.com/moondevonyt/moon-dev-ai-agents)

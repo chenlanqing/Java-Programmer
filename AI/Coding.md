@@ -879,6 +879,11 @@ EOF
 - [Config other models](https://github.com/openai/codex/blob/main/docs/config.md)
 - [Codex 支持的LLM](https://github.com/openai/codex/blob/main/codex-cli/README.md)
 
+# OpenCode
+
+- [The open source coding agent.](https://github.com/anomalyco/opencode)
+- [启用 Opencode 通过 OAuth 认证 Antigravity](https://github.com/NoeFabris/opencode-antigravity-auth)
+
 # AI风格
 
 ## AI代码前端风格
