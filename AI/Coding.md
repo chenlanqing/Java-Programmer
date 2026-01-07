@@ -431,6 +431,7 @@ my-plugin/
 
 ## 3、Skill
 
+- https://mp.weixin.qq.com/s/jUylk813LYbKw0sLiIttTQ
 - [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
 - [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
 - [Claude Skills Marketplace](https://skillsmp.com/zh)
