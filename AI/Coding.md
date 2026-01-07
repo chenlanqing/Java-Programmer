@@ -52,30 +52,114 @@
 - [Spec Workflow MCP](https://github.com/Pimzino/spec-workflow-mcp)
 - [规范驱动开发（SDD）：用 AI 写生产级代码的完整指南](https://www.softwareseni.com/spec-driven-development-in-2025-the-complete-guide-to-using-ai-to-write-production-code/)
 
-### 3.1、概述
+### 概述
 
 规范驱动开发 (Spec-Driven Development， SDD)，其核心理念似乎是指在利用 AI 编写代码之前，首先编写一份规范(spec)，即文档先行。这份规范将成为人类开发者与 AI 共同的事实来源。
 
 规范驱动开发是一种方法论：用“形式化、详尽的规范”作为可执行蓝图，驱动 AI 进行代码生成。规范是事实来源，指导自动化的生成、校验与维护；编写清晰的需求，AI 负责实现。
+1. 规范优先 (Spec-first)：这是最基础的层面，开发者首先编写一份深思熟虑的规范，然后在当前任务的 AI 辅助开发工作流中使用这份规范。
+2. 规范锚定 (Spec-anchored)：在任务完成后，规范并不会被丢弃，而是被保留下来，以便在后续对该功能进行演进和维护时继续使用。
+3. 规范即源码 (Spec-as-source)：这是最激进的层面，规范在时间推移中成为项目的主要源文件，人类开发者只编辑规范，永远不会直接修改代码。
 
-### 3.2、与传统对比
+**与传统对比**
 
 传统开发通常是“开发者写需求 + 写代码”，流程为“需求 → 设计 → 手写代码 → 测试”。  
 规范驱动开发将其变为“需求 → 详细规范 → AI 生成 → 验证”。
 
 **关键差异** 在于：先规范、后代码；AI 根据规范实现，开发者聚焦架构、需求与验证；质量通过系统化闸门把关；并通过持续反馈把错误信息融入规范，迭代提升输出质量
 
-### 3.3、注意事项
+### Kiro
+
+Kiro 的 spec 流程被设计为三个步骤：需求 (Requirements) → 设计 (Design) → 任务 (Tasks)。每个工作流步骤都由一个 Markdown 文档表示，Kiro 会在引导你完成这三个步骤：
+1. 需求文档：它被构建为一个需求列表，每个需求代表一个“用户故事” (User Story)，采用“作为...（As a...）”的格式。同时，每个需求都配有验收标准，采用“假如... (GIVEN...) 当... (WHEN...) 则... (THEN...)”的格式；
+2. 设计文档：设计文档包含了组件架构图，以及诸如数据流、数据模型、错误处理、测试策略、实现方法和迁移策略等部分。（不确定这是一个固定的结构，还是会根据任务的不同而变化。）
+3. 任务文档：这是一个任务列表，这些任务可以追溯到需求文档中的编号。Kiro 为这些任务提供了一些额外的界面元素，允许你逐个运行任务，并审查每个任务带来的变更。每个任务本身是待办事项的列表，并以相关的需求编号（如 1.1, 1.2, 1.3）结尾
+
+### [SpecKit](https://github.com/github/spec-kit)
+
+#### 基本定义
+
+spec-kit 的工作流程是：宪章 (Constitution) → 循环执行 [ 规范 (Specify) → 计划 (Plan) → 任务 (Tasks) ]
+1. 宪章 (Constitution)应该包含那些不可变的且应始终应用于每次变更的高级原则。它基本上是一个非常强大的规则文件，在工作流程中被大量使用
+
+spec-kit 的一个特点是，一份规范是由许多文件组成的。例如，一个规范文件夹可能包含数据模型 (data-model)、计划 (plan)、任务 (tasks)、规范 (spec)、研究 (research)、API 和组件 (component) 等多个 Markdown 文件
+
+#### 安装
+
+```bash
+# 推荐用uv (一个快到飞起的Python包管理工具)
+uv tool install specify-cli --from git+https://github.com/github/spec-kit.git
+```
+
+#### 基本使用
+
+**1. 初始化项目**
+```bash
+# 创建一个叫 answer-question 的项目并初始化
+specify init answer-question
+cd answer-question
+```
+初始化的时候，它会让你选一个AI助手 (Claude) 和脚本类型（比如sh）。然后项目里会多出`.claude`/和`.specify/`这些文件夹
+
+**2. 项目开始前，先给它定好基本原则和约束**
+在AI编程助手中输入（比如使用Claude Code，注意工程路径中不要有中文！！）
+```bash
+/speckit.constitution 这是一个基于Vue+Python的答题系统，要注重简洁和用户体验。
+```
+AI会生成一份`constitution.md`文件，里面可能写着：
+- 技术栈偏好：优先用React Hooks，别用Class Components。
+- 代码风格：按Airbnb JavaScript Style Guide来。
+- 测试要求：核心功能必须有单元测试。
+- 用户体验原则：交互必须流畅，响应时间低于100ms。
+
+**3. 提需求**
+```bash
+/speckit.specify 我要做一个答题应用。
+核心功能：
+- 支持题目录入，题目类型包括单选、多选、判断、填空、编程题；
+- 对于单选、多选、判断题，系统能够自动批改并给出分数；
+- 对于填空题和编程题，系统能够将题目和答案存储在数据库中，等待人工批改；
+- 系统能够生成考试报告，包括每道题的正确答案、学生的答案和得分情况；
+- 每次用户答完一题，系统能够立即反馈正确答案和解析。
+...
+```
+Spec-Kit会立马开干：
+- 在`specs/`目录下创建一个新版本，比如 001-quiz-system。
+- 生成一份详细的`spec.md`（需求规格文档），里面有用户故事、验收标准、边界条件等等。
+- 自动给你创建一个新的Git分支，比如feat/001-quiz-system。
+
+**4. 清除疑点**
+
+这一步是可选的。如果需求描述得比较模糊（比如“好玩儿的动画”），可以运行这个命令，让AI主动问你问题，把细节弄清楚
+```bash
+/speckit.clarify
+```
+
+**5. 出方案**：AI 变身架构师
+```bash
+/speckit.plan
+```
+AI会根据“宪法”和“需求”，生成一套完整的技术方案文档，可能会有：
+- plan.md: 技术栈决策
+- data-model.md: 数据结构定义（比如Todo长啥样）。
+- contracts/: API接口或组件接口定义。
+- research.md: 为啥这么选型，做了哪些调研
+
+**6. 拆任务**：方案定了，接下来就是把它拆解成能干的活儿
+```bash
+/speckit.tasks
+```
+AI会把plan.md拆成一份详细的tasks.md文件，就像一个靠谱的项目经理，把工作安排得明明白白
+
+**7. 写代码**：让 AI 开始写代码
+```bash
+/speckit.implement
+```
+AI会严格按照tasks.md的任务列表，一个一个地完成编码、写测试，每搞定一个，就会在任务清单上打个勾[x]
+
+### 注意事项
 
 - [Spec 编写注意事项](https://mp.weixin.qq.com/s/27x-6ruXLwNq3Spm68_G7A)
-
-### 3.4、工具选择
-
-- 新项目基本都可用，但可偏向 Windsurf/Kiro 等 AI 原生 IDE；
-- 存量/遗留代码更适合 AWS Kiro 或 Claude Code；
-- 前端开发适合 Cursor/Windsurf；
-- 后端服务适合 Aider/Claude Code 等 CLI；
-- 迁移项目考虑 Amazon Q Developer 或 Aider
 
 ## Vibe Coding
 
@@ -95,6 +179,14 @@
 ⑤ 做了啥：指AI总结，让模型在生成代码后，做个自我总结并存档，方便人工review生成的代码是否符合预期，且方便后续维护  
 
 结合原有研发流程，提炼AI Code核心范式可概括为：技术方案（①②③） → Prompt（④） → 生成代码 → AI总结（⑤）。该范式以技术方案为起点和依据，通过Prompt提示词作为关键转化，驱动代码生成这一核心环节，并以AI总结完成闭环，整个流程由Agent协同多种MCP工具一站式完成。
+
+## 编程工具
+
+- 新项目基本都可用，但可偏向 Windsurf/Kiro 等 AI 原生 IDE；
+- 存量/遗留代码更适合 AWS Kiro 或 Claude Code；
+- 前端开发适合 Cursor/Windsurf；
+- 后端服务适合 Aider/Claude Code 等 CLI；
+- 迁移项目考虑 Amazon Q Developer 或 Aider
 
 # 二、Cursor
 
