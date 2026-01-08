@@ -474,3 +474,128 @@ type Int interface {
 }
 type TinyInt int8
 ```
+
+## 文件
+
+Go 语言提供文件处理的标准库大致以下几个：
+1. os库，负责 OS 文件系统交互的具体实现
+2. io库，读写 IO 的抽象层
+3. fs库，文件系统的抽象层
+
+### 打开文件
+
+使用os包提供的两个函数，Open函数返回值一个文件指针和一个错误
+```go
+// 读取的文件仅仅只是只读的，无法被修改
+func Open(name string) (*File, error)
+// OpenFile能够提供更加细粒度的控制，函数Open就是对OpenFile函数的一个简单封装
+func OpenFile(name string, flag int, perm FileMode) (*File, error)
+```
+文件的查找路径默认为项目`go.mod文`件所在的路径；
+
+因为 IO 错误的类型有很多，所以需要手动的去判断文件是否存在，同样的os包也为此提供了方便函数
+```go
+func main() {
+  file, err := os.Open("README.txt")
+  if os.IsNotExist(err) {
+    fmt.Println("文件不存在")
+  } else if err != nil {
+    fmt.Println("文件访问异常")
+  } else {
+    fmt.Println("文件读取成功", file)
+  }
+}
+```
+通过OpenFile函数可以控制更多细节，例如修改文件描述符和文件权限，关于文件描述符，os包下提供了以下常量以供使用
+```go
+const (
+   // 只读，只写，读写 三种必须指定一个
+   O_RDONLY int = syscall.O_RDONLY // 以只读的模式打开文件
+   O_WRONLY int = syscall.O_WRONLY // 以只写的模式打开文件
+   O_RDWR   int = syscall.O_RDWR   // 以读写的模式打开文件
+   // 剩余的值用于控制行为
+   O_APPEND int = syscall.O_APPEND // 当写入文件时，将数据添加到文件末尾
+   O_CREATE int = syscall.O_CREAT  // 如果文件不存在则创建文件
+   O_EXCL   int = syscall.O_EXCL   // 与O_CREATE一起使用, 文件必须不存在
+   O_SYNC   int = syscall.O_SYNC   // 以同步IO的方式打开文件
+   O_TRUNC  int = syscall.O_TRUNC  // 当打开的时候截断可写的文件
+)
+```
+关于文件权限的则提供了以下常量
+```go
+const (
+   ModeDir        = fs.ModeDir        // d: 目录
+   ModeAppend     = fs.ModeAppend     // a: 只能添加
+   ModeExclusive  = fs.ModeExclusive  // l: 专用
+   ModeTemporary  = fs.ModeTemporary  // T: 临时文件
+   ModeSymlink    = fs.ModeSymlink    // L: 符号链接
+   ModeDevice     = fs.ModeDevice     // D: 设备文件
+   ModeNamedPipe  = fs.ModeNamedPipe  // p: 具名管道 (FIFO)
+   ModeSocket     = fs.ModeSocket     // S: Unix 域套接字
+   ModeSetuid     = fs.ModeSetuid     // u: setuid
+   ModeSetgid     = fs.ModeSetgid     // g: setgid
+   ModeCharDevice = fs.ModeCharDevice // c: Unix 字符设备, 前提是设置了 ModeDevice
+   ModeSticky     = fs.ModeSticky     // t: 黏滞位
+   ModeIrregular  = fs.ModeIrregular  // ?: 非常规文件
+   // 类型位的掩码. 对于常规文件而言，什么都不会设置.
+   ModeType = fs.ModeType
+   ModePerm = fs.ModePerm // Unix 权限位, 0o777
+)
+```
+倘若只是想获取该文件的一些信息，并不想读取该文件，可以使用`os.Stat()`函数进行操作
+```go
+func main() {
+  fileInfo, err := os.Stat("README.txt")
+  if err != nil {
+    fmt.Println(err)
+  } else {
+    fmt.Println(fmt.Sprintf("%+v", fileInfo))
+  }
+}
+// &{name:README.txt FileAttributes:32 CreationTime:{LowDateTime:3603459389 HighDateTime:31016791} LastAccessTime:{LowDateTime:3603459389 HighDateTime:31016791} LastWriteTime:{LowDateTime:3603459389 HighDateTime:31016791} FileSizeHigh
+// :0 FileSizeLow:0 Reserved0:0 filetype:0 Mutex:{state:0 sema:0} path:README.txt vol:0 idxhi:0 idxlo:0 appendNameToPath:false}
+```
+
+> 说明：打开一个文件后永远要记得关闭该文件，通常关闭操作会放在defer语句里
+```go
+defer file.Close()
+```
+
+### 文件读取
+
+当成功的打开文件后，便可以进行读取操作了，关于读取文件的操作，*os.File类型提供了以下几个公开的方法
+```go
+// 将文件读进传入的字节切片
+func (f *File) Read(b []byte) (n int, err error)
+// 相较于第一种可以从指定偏移量读取
+func (f *File) ReadAt(b []byte, off int64) (n int, err error)
+```
+针对于第一种方法，需要自行编写逻辑来进行读取时切片的动态扩容
+```go
+func ReadFile(file *os.File) ([]byte, error) {
+  buffer := make([]byte, 0, 512)
+  for {
+    // 当容量不足时
+    if len(buffer) == cap(buffer) {
+      // 扩容
+      buffer = append(buffer, 0)[:len(buffer)]
+    }
+    // 继续读取文件
+    offset, err := file.Read(buffer[len(buffer):cap(buffer)])
+    // 将已写入的数据归入切片
+    buffer = buffer[:len(buffer)+offset]
+    // 发生错误时
+    if err != nil {
+      if errors.Is(err, io.EOF) {
+        err = nil
+      }
+      return buffer, err
+    }
+  }
+}
+```
+还可以使用两个方便函数来进行文件读取：
+- os包下的ReadFile函数，只需要提供文件路径即可；
+- io包下的ReadAll函数，需要提供一个io.Reader类型的实现；
+
+
