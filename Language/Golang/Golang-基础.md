@@ -1977,80 +1977,315 @@ for i := 0; i < 100000; i++ {
 }
 ```
 
-# 异常处理
+# 错误
 
-Golang 没有结构化异常，使用 panic 抛出错误，recover 捕获错误。 
-异常的使用场景简单描述：Go中可以抛出一个panic的异常，然后在defer中通过recover捕获这个异常，然后正常处理。
+在 Go 中的异常有三种级别：
+- error：正常的流程出错，需要处理，直接忽略掉不处理程序也不会崩溃
+- panic：很严重的问题，程序应该在处理完问题后立即退出
+- fatal：非常致命的问题，程序应该立即退出
 
-## panic
-
-1. 内置函数
-2. 假如函数F中书写了panic语句，会终止其后要执行的代码，在panic所在函数F内如果存在要执行的defer函数列表，按照defer的逆序执行
-3. 返回函数F的调用者G，在G中，调用函数F语句之后的代码不会执行，假如函数G中存在要执行的defer函数列表，按照defer的逆序执行
-4. 直到goroutine整个退出，并报告错误
-
-## recover
-
-1. 内置函数
-2. 用来控制一个goroutine的panicking行为，捕获panic，从而影响应用的行为
-3. 一般的调用建议  
-	a). 在defer函数中，通过recover来终止一个goroutine的panicking过程，从而恢复正常代码的执行  
-	b). 可以获取通过panic传递的error  
-
-## 注意
-
-1. 利用recover处理panic指令，defer 必须放在 panic 之前定义，另外 recover 只有在 defer 调用的函数中才有效。否则当panic时，recover无法捕获到panic，无法防止panic扩散。
-2. recover 处理异常后，逻辑并不会恢复到 panic 那个点去，函数跑到 defer 之后的那个点。
-3. 多个 defer 会形成 defer 栈，后定义的 defer 语句会被最先调用。
-
-## 类型
-
-由于 panic、recover 参数类型为 interface{}，因此可抛出任何类型对象
+准确的来说，Go 语言并没有异常，它是通过错误来体现，同样的，Go 中也并没有try-catch-finally这种语句，大多数情况会将其作为函数的返回值来返回
 ```go
-func panic(v interface{})
-func recover() interface{}
+func main() {
+  // 打开一个文件
+  if file, err := os.Open("README.txt"); err != nil {
+    fmt.Println(err)
+        return
+  }
+    fmt.Println(file.Name())
+}
 ```
+错误中没有堆栈信息（需要第三方包解决或者自己封装）
 
 ## error
 
-除用 panic 引发中断性错误外，还可返回 error 类型错误对象来表示函数调用状态。
+error 属于是一种正常的流程错误，它的出现是可以被接受的，大多数情况下应该对其进行处理，当然也可以忽略不管，error 的严重级别不足以停止整个程序的运行。error本身是一个预定义的接口，该接口下只有一个方法Error()，该方法的返回值是字符串，用于输出错误信息
 ```go
 type error interface {
-    Error() string
+   Error() string
 }
 ```
-标准库 errors.New 和 fmt.Errorf 函数用于创建实现 error 接口的错误对象。通过判断错误对象实例来确定具体错误类型。
+
+### 创建error
+
+1. 第一种是使用errors包下的New函数
 ```go
-package main
+err := errors.New("这是一个错误")
+```
+2. 第二种是使用fmt包下的`Errorf`函数，可以得到一个格式化参数的 error
+```go
+err := fmt.Errorf("这是%d个格式化参数的的错误", 1)
+```
+大部分情况，为了更好的维护性，一般都不会临时创建 error，而是会将常用的 error 当作全局变量使用，例如下方节选自`os\erros.go`文件的代码
+```go
+var (
+  ErrInvalid = fs.ErrInvalid // "invalid argument"
 
-import (
-    "errors"
-    "fmt"
+  ErrPermission = fs.ErrPermission // "permission denied"
+  ErrExist      = fs.ErrExist      // "file already exists"
+  ErrNotExist   = fs.ErrNotExist   // "file does not exist"
+  ErrClosed     = fs.ErrClosed     // "file already closed"
+
+  ErrNoDeadline       = errNoDeadline()       // "file type does not support deadline"
+  ErrDeadlineExceeded = errDeadlineExceeded() // "i/o timeout"
 )
+```
 
-var ErrDivByZero = errors.New("division by zero")
+### 自定义错误
 
-func div(x, y int) (int, error) {
-    if y == 0 {
-        return 0, ErrDivByZero
-    }
-    return x / y, nil
+通过实现`Error()`方法，可以很轻易的自定义 error，例如erros包下的errorString就是一个很简单的实现
+```go
+func New(text string) error {
+   return &errorString{text}
 }
-
-func main() {
-    defer func() {
-        fmt.Println(recover())
-    }()
-    switch z, err := div(10, 0); err {
-    case nil:
-        println(z)
-    case ErrDivByZero:
-        panic(err)
-    }
+// errorString结构体
+type errorString struct {
+   s string
+}
+func (e *errorString) Error() string {
+   return e.s
 }
 ```
-如何区别使用 panic 和 error 两种方式?
-- 导致关键流程出现不可修复性错误的使用 panic，其他使用 error
+因为errorString实现太过于简单，表达能力不足，所以很多开源库包括官方库都会选择自定义 error，以满足不同的错误需求
+
+### 传递
+
+在一些情况中，调用者调用的函数返回了一个错误，但是调用者本身不负责处理错误，于是也将错误作为返回值返回，抛给上一层调用者，这个过程叫传递，错误在传递的过程中可能会层层包装，当上层调用者想要判断错误的类型来做出不同的处理时，可能会无法判别错误的类别或者误判，而链式错误正是为了解决这种情况而出现的
+```go
+type wrapError struct {
+   msg string
+   err error
+}
+func (e *wrapError) Error() string {
+   return e.msg
+}
+func (e *wrapError) Unwrap() error {
+   return e.err
+}
+```
+wrapError同样实现了error接口，也多了一个方法Unwrap，用于返回其内部对于原 error 的引用，层层包装下就形成了一条错误链表，顺着链表上寻找，很容易就能找到原始错误。由于该结构体并不对外暴露，所以只能使用fmt.Errorf函数来进行创建，例如
+```go
+err := errors.New("这是一个原始错误")
+wrapErr := fmt.Errorf("错误，%w", err)
+```
+使用时，必须使用`%w`格式动词，且参数只能是一个有效的 error
+
+### 处理错误
+
+错误处理中的最后一步就是如何处理和检查错误，`errors`包提供了几个方便函数用于处理错误。
+```go
+func Unwrap(err error) error
+```
+`errors.Unwrap()`函数用于解包一个错误链，其内部实现也很简单
+```go
+func Unwrap(err error) error {
+   u, ok := err.(interface { // 类型断言，是否实现该方法
+      Unwrap() error
+   })
+   if !ok { //没有实现说明是一个基础的error
+      return nil
+   }
+   return u.Unwrap() // 否则调用Unwrap
+}
+```
+解包后会返回当前错误链所包裹的错误，被包裹的错误可能依旧是一个错误链，如果想要在错误链中找到对应的值或类型，可以递归进行查找匹配，不过标准库已经提供好了类似的函数。
+```go
+func Is(err, target error) bool
+```
+`errors.Is`函数的作用是判断错误链中是否包含指定的错误，例子如下
+```go
+var originalErr = errors.New("this is an error")
+func wrap1() error { // 包裹原始错误
+   return fmt.Errorf("wrapp error %w", wrap2())
+}
+func wrap2() error { // 原始错误
+   return originalErr
+}
+func main() {
+   err := wrap1()
+   if errors.Is(err, originalErr) { // 如果使用if err == originalErr 将会是false
+      fmt.Println("original")
+   }
+}
+```
+所以在判断错误时，不应该使用`==`操作符，而是应该使用`errors.Is()`。
+```go
+func As(err error, target any) bool
+```
+`errors.As()`函数的作用是在错误链中寻找第一个类型匹配的错误，并将值赋值给传入的`err`。有些情况下需要将`error`类型的错误转换为具体的错误实现类型，以获得更详细的错误细节，而对一个错误链使用类型断言是无效的，因为原始错误是被结构体包裹起来的，这也是为什么需要`As`函数的原因。例子如下
+```go
+type TimeError struct { // 自定义error
+   Msg  string
+   Time time.Time //记录发生错误的时间
+}
+func (m TimeError) Error() string {
+   return m.Msg
+}
+func NewMyError(msg string) error {
+   return &TimeError{
+      Msg:  msg,
+      Time: time.Now(),
+   }
+}
+func wrap1() error { // 包裹原始错误
+   return fmt.Errorf("wrapp error %w", wrap2())
+}
+func wrap2() error { // 原始错误
+   return NewMyError("original error")
+}
+func main() {
+   var myerr *TimeError
+   err := wrap1()
+   // 检查错误链中是否有*TimeError类型的错误
+   if errors.As(err, &myerr) { // 输出TimeError的时间
+      fmt.Println("original", myerr.Time)
+   }
+}
+```
+`target`必须是指向`error`的指针，由于在创建结构体时返回的是结构体指针，所以`error`实际上`*TimeError`类型的，那么`target`就必须是`**TimeError`类型的。
+
+不过官方提供的`errors`包其实并不够用，因为它没有堆栈信息，不能定位，一般会比较推荐使用官方的另一个增强包
+```
+github.com/pkg/errors
+```
+例子
+```go
+import (
+  "fmt"
+  "github.com/pkg/errors"
+)
+func Do() error {
+  return errors.New("error")
+}
+func main() {
+  if err := Do(); err != nil {
+    fmt.Printf("%+v", err)
+  }
+}
+```
+输出
+```
+some unexpected error happened
+main.Do
+        D:/WorkSpace/Code/GoLeran/golearn/main.go:9
+main.main
+        D:/WorkSpace/Code/GoLeran/golearn/main.go:13
+runtime.main
+        D:/WorkSpace/Library/go/root/go1.21.3/src/runtime/proc.go:267
+runtime.goexit
+        D:/WorkSpace/Library/go/root/go1.21.3/src/runtime/asm_amd64.s:1650
+```
+通过格式化输出，就可以看到堆栈信息了，默认情况下是不会输出堆栈的。这个包相当于是标准库`errors`包的加强版，同样都是官方写的；
+
+## panic
+
+panic中文译为恐慌，表示十分严重的程序问题，程序需要立即停止来处理该问题，否则程序立即停止运行并输出堆栈信息，panic是 Go 是运行时异常的表达形式，通常在一些危险操作中会出现，主要是为了及时止损，从而避免造成更加严重的后果。不过panic在退出之前会做好程序的善后工作，同时panic也可以被恢复来保证程序继续运行
+
+### 创建
+
+显式的创建panic十分简单，使用内置函数panic即可，函数签名如下：
+```go
+func panic(v any)
+```
+panic函数接收一个类型为 any的参数v，当输出错误堆栈信息时，v也会被输出
+```go
+func main() {
+  initDataBase("", 0)
+}
+func initDataBase(host string, port int) {
+  if len(host) == 0 || port == 0 {
+    panic("非法的数据链接参数")
+  }
+    // ...其他的逻辑
+}
+```
+
+### 后置处理
+
+程序因为panic退出之前会做一些善后工作，例如执行defer语句
+```go
+func main() {
+  defer fmt.Println("A")
+  defer func() {
+    func() {
+      panic("panicA")
+      defer fmt.Println("E")
+    }()
+  }()
+  fmt.Println("C")
+  dangerOp()
+  defer fmt.Println("D")
+}
+func dangerOp() {
+  defer fmt.Println(1)
+  defer fmt.Println(2)
+  panic("panicB")
+  defer fmt.Println(3)
+}
+```
+当发生panic时，会立即退出所在函数，并且执行当前函数的善后工作，例如defer，然后层层上抛，上游函数同样的也进行善后工作，直到程序停止运行。
+
+当子协程发生panic时，不会触发当前协程的善后工作，如果直到子协程退出都没有恢复panic，那么程序将会直接停止运行
+
+### 恢复
+
+当发生`panic`时，使用内置函数`recover()`可以及时的处理并且保证程序继续运行，必须要在defer语句中运行，使用示例如下
+```go
+func main() {
+   dangerOp()
+   fmt.Println("程序正常退出")
+}
+func dangerOp() {
+   defer func() {
+      if err := recover(); err != nil {
+         fmt.Println(err)
+         fmt.Println("panic恢复")
+      }
+   }()
+   panic("发生panic")
+}
+```
+但事实上`recover()`的使用有许多隐含的陷阱。例如在`defer`中再次闭包使用`recover`
+```go
+func main() {
+  dangerOp()
+  fmt.Println("程序正常退出")
+}
+func dangerOp() {
+  defer func() {
+    func() {
+      if err := recover(); err != nil {
+        fmt.Println(err)
+        fmt.Println("panic恢复")
+      }
+    }()
+  }()
+  panic("发生panic")
+}
+```
+除此之外，还有一种很极端的情况，那就是panic()的参数是nil。这种情况panic确实会恢复，但是不会输出任何的错误信息
+
+总的来说recover函数有几个注意点
+1. 必须在defer中使用
+2. 多次使用也只会有一个能恢复panic
+3. 闭包recover不会恢复外部函数的任何panic
+4. panic的参数禁止使用nil
+
+## fatal
+
+fatal是一种极其严重的问题，当发生fatal时，程序需要立刻停止运行，不会执行任何善后工作，通常情况下是调用os包下的Exit函数退出程序，如下所示
+```go
+func main() {
+  dangerOp("")
+}
+func dangerOp(str string) {
+  if len(str) == 0 {
+    fmt.Println("fatal")
+    os.Exit(1)
+  }
+  fmt.Println("正常逻辑")
+}
+```
 
 # 方法
 
