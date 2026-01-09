@@ -542,6 +542,10 @@ const (
    ModePerm = fs.ModePerm // Unix 权限位, 0o777
 )
 ```
+读取文件，不存在则创建：
+```go
+file, err := os.OpenFile("README.txt", os.O_RDWR|os.O_CREATE, 0666)
+```
 倘若只是想获取该文件的一些信息，并不想读取该文件，可以使用`os.Stat()`函数进行操作
 ```go
 func main() {
@@ -577,15 +581,11 @@ func ReadFile(file *os.File) ([]byte, error) {
   for {
     // 当容量不足时
     if len(buffer) == cap(buffer) {
-      // 扩容
-      buffer = append(buffer, 0)[:len(buffer)]
+      buffer = append(buffer, 0)[:len(buffer)] // 扩容
     }
-    // 继续读取文件
-    offset, err := file.Read(buffer[len(buffer):cap(buffer)])
-    // 将已写入的数据归入切片
-    buffer = buffer[:len(buffer)+offset]
-    // 发生错误时
-    if err != nil {
+    offset, err := file.Read(buffer[len(buffer):cap(buffer)])// 继续读取文件
+    buffer = buffer[:len(buffer)+offset]// 将已写入的数据归入切片
+    if err != nil { // 发生错误时
       if errors.Is(err, io.EOF) {
         err = nil
       }
@@ -595,7 +595,216 @@ func ReadFile(file *os.File) ([]byte, error) {
 }
 ```
 还可以使用两个方便函数来进行文件读取：
-- os包下的ReadFile函数，只需要提供文件路径即可；
-- io包下的ReadAll函数，需要提供一个io.Reader类型的实现；
+1. os包下的ReadFile函数，只需要提供文件路径即可；
+```go
+func ReadFile(name string) ([]byte, error)
+// 使用示例：
+bytes, err := os.ReadFile("README.txt")
+// 忽略错误判断
+fmt.Println(string(bytes))
+```
+2. io包下的ReadAll函数，需要提供一个io.Reader类型的实现
+```go
+func ReadAll(r Reader) ([]byte, error)
+// 使用示例：忽略错误判断
+file, _ := os.OpenFile("README.txt", os.O_RDWR|os.O_CREATE, 0666)
+fmt.Println("文件打开成功", file.Name())
+bytes, _ := io.ReadAll(file)
+fmt.Println(string(bytes))
+```
+
+### 写入
+
+`os.File` 结构体提供了以下几种方法以供写入数据
+```go
+// 写入字节切片
+func (f *File) Write(b []byte) (n int, err error)
+// 写入字符串
+func (f *File) WriteString(s string) (n int, err error)
+// 从指定位置开始写，当以 os.O_APPEND 模式打开时，会返回错误
+func (f *File) WriteAt(b []byte, off int64) (n int, err error)
+```
+如果想要对一个文件写入数据，则必须以`O_WRONLY`或`O_RDWR`的模式打开，否则无法成功写入文件
+```go
+// 如果未开启`O_WRONLY`或`O_RDWR`模式，报错： write README.txt: bad file descriptor
+func main() {
+  file, err := os.OpenFile("README.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND|os.O_TRUNC, 0666)
+  if err != nil {
+    fmt.Println("文件访问异常")
+  } else {
+    fmt.Println("文件打开成功", file.Name())
+    for i := 0; i < 5; i++ {
+      offset, err := file.WriteString("hello world!\n")
+      if err != nil {
+        fmt.Println(offset, err)
+      }
+    }
+    fmt.Println(file.Close())
+  }
+}
+```
+
+对于写入文件的操作标准库同样提供了方便函数，分别是：
+1. os.WriteFile
+```go
+func WriteFile(name string, data []byte, perm FileMode) error
+// 示例
+func main() {
+  err := os.WriteFile("README.txt", []byte("hello world!\n"), 0666)
+  if err != nil {
+    fmt.Println(err)
+  }
+}
+```
+2. io.WriteString
+```go
+func WriteString(w Writer, s string) (n int, err error)
+// 示例
+func main() {
+   file, err := os.OpenFile("README.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND|os.O_TRUNC, 0666)
+   fmt.Println("文件打开成功", file.Name())
+   for i := 0; i < 5; i++ {
+      offset, err := io.WriteString(file, "hello world!\n")
+      if err != nil {
+         fmt.Println(offset, err)
+      }
+   }
+   fmt.Println(file.Close())
+}
+```
+
+函数`os.Create`函数用于创建文件，本质上也是对OpenFile的封装
+```go
+func Create(name string) (*File, error) {
+   return OpenFile(name, O_RDWR|O_CREATE|O_TRUNC, 0666)
+}
+```
+
+> ⚠️ **注意**
+>
+> 在创建一个文件时，如果其父目录不存在，将创建失败并会返回错误。
+
+### 复制
+
+1. 将原文件中的数据读取出来，然后写入目标文件中
+```go
+func main() {
+   // 从原文件中读取数据
+   data, err := os.ReadFile("README.txt")
+   // 写入目标文件
+   err = os.WriteFile("README(1).txt", data, 0666)
+   fmt.Println("复制成功")
+}
+```
+2. 使用`os.File`提供的方法`ReadFrom`，打开文件时，一个只读，一个只写
+```go
+func (f *File) ReadFrom(r io.Reader) (n int64, err error)
+```
+示例
+```go
+func main() {
+  // 以只读的方式打开原文件
+  origin, err := os.OpenFile("README.txt", os.O_RDONLY, 0666)
+  defer origin.Close()
+  // 以只写的方式打开副本文件
+  target, err := os.OpenFile("README(1).txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+  defer target.Close()
+  // 从原文件中读取数据，然后写入副本文件
+  offset, err := target.ReadFrom(origin)
+  fmt.Println("文件复制成功", offset)
+}
+```
+> 文件特别大的时候不建议这么做
+
+3. 使用`io.Copy`函数，它则是一边读一边写，先将内容读到缓冲区中，再写入到目标文件中，缓冲区默认大小为 32KB
+```go
+func Copy(dst Writer, src Reader) (written int64, err error)
+// 示例
+func main() {
+   // 以只读的方式打开原文件
+   origin, err := os.OpenFile("README.txt", os.O_RDONLY, 0666)
+   defer origin.Close()
+   // 以只写的方式打开副本文件
+   target, err := os.OpenFile("README(1).txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
+   defer target.Close()
+   // 复制
+   written, err := io.Copy(target, origin)
+   fmt.Println(written)
+}
+```
+可以使用`io.CopyBuffer`来指定缓冲区大小
+
+### 重命名
+
+可以理解为移动文件，会用到os包下的Rename函数。
+```go
+func Rename(oldpath, newpath string) error
+```
+该函数对于文件夹也是同样的效果
+
+### 删除
+
+os包下的两个函数
+```go
+// 删除单个文件或者空目录，当目录不为空时会返回错误
+func Remove(name string) error
+// 删除指定目录的所有文件和目录包括子目录与子文件
+func RemoveAll(path string) error
+```
+
+### 刷新
+
+`os.Sync`这一个函数封装了底层的系统调用Fsync，用于将操作系统中缓存的 IO 写入落实到磁盘上
+```go
+func main() {
+  create, err := os.Create("test.txt")
+  defer create.Close()
+  _, err = create.Write([]byte("hello"))
+    // 刷盘
+  if err := create.Sync();err != nil {
+    return
+  }
+}
+```
+
+### 文件夹
+
+#### 读取
+
+1. `os.ReadDir`
+```go
+func ReadDir(name string) ([]DirEntry, error)
+// 
+func main() {
+	// 当前目录
+	dir, err := os.ReadDir(".")
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		for _, entry := range dir {
+			fmt.Println(entry.Name())
+		}
+	}
+}
+```
+
+2. `*os.File.ReadDir`函数：os.ReadDir本质上也只是对*os.File.ReadDir的一层简单封装。
+```go
+// n < 0时，则读取文件夹下所有的内容
+func (f *File) ReadDir(n int) ([]DirEntry, error)
+```
+
+#### 创建
+
+创建文件夹操作会用到os包下的两个函数
+```go
+// 用指定的权限创建指定名称的目录
+func Mkdir(name string, perm FileMode) error
+// 相较于前者该函数会创建一切必要的父目录
+func MkdirAll(path string, perm FileMode) error
+```
+
+## 反射
+
 
 
