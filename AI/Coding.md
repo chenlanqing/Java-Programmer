@@ -885,10 +885,16 @@ EOF
 - [The open source coding agent.](https://github.com/anomalyco/opencode)
 - [启用 Opencode 通过 OAuth 认证 Antigravity](https://github.com/NoeFabris/opencode-antigravity-auth)
 
+# SKILL
+
+- [An AI SKILL that provide design intelligence for building professional UI/UX multiple platforms](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+- [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
+
 # AI风格
 
 ## AI代码前端风格
 
+- [去除前端网站的 AI 味](https://mp.weixin.qq.com/s/75_VmclNkk_SYilbFpRWEw)
 - [前端漂亮的 UI 风格设计](https://www.aura.build)
 - https://shadcnthemer.com/
 
@@ -928,5 +934,4 @@ EOF
 - [AI 代码教练：CodeLlama](https://github.com/meta-llama/llama)
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
 - [Claude Code Cookbook: Killer, Claude Code](https://cc.deeptoai.com/)
-- [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
 - [Continue: 编码 Agents](https://github.com/continuedev/continue)
