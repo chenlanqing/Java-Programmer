@@ -493,4 +493,521 @@ func Do(ctx context.Context) {
 }
 ```
 
+### cancelCtx
 
+cancelCtx 以及 timerCtx 都实现了 canceler 接口，接口类型如下
+```go
+type canceler interface {
+    // removeFromParent 表示是否从父上下文中删除自身
+    // err 表示取消的原因
+  cancel(removeFromParent bool, err error)
+    // Done 返回一个管道，用于通知取消的原因
+  Done() <-chan struct{}
+}
+```
+cancel 方法不对外暴露，在创建上下文时通过闭包将其包装为返回值以供外界调用，就如 context.WithCancel 源代码中所示
+```go
+func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
+    if parent == nil {
+        panic("cannot create context from nil parent")
+    }
+    c := newCancelCtx(parent)
+    // 尝试将自身添加进父级的children中
+    propagateCancel(parent, &c)
+    // 返回context和一个函数
+    return &c, func() { c.cancel(true, Canceled) }
+}
+```
+cancelCtx 译为可取消的上下文，创建时，如果父级实现了 canceler，就会将自身添加进父级的 children 中，否则就一直向上查找。如果所有的父级都没有实现 canceler，就会启动一个协程等待父级取消，然后当父级结束时取消当前上下文。当调用 cancelFunc 时，Done 通道将会关闭，该上下文的任何子级也会随之取消，最后会将自身从父级中删除
+```go
+var waitGroup sync.WaitGroup
+func main() {
+	bkg := context.Background()
+	// 返回了一个cancelCtx和cancel函数
+	cancelCtx, cancel := context.WithCancel(bkg)
+	waitGroup.Add(1)
+	go func(ctx context.Context) {
+		defer waitGroup.Done()
+		for {
+			select {
+			case <-ctx.Done():
+				fmt.Println(ctx.Err())
+				return
+			default:
+				fmt.Println("等待取消中...")
+			}
+			time.Sleep(time.Millisecond * 200)
+		}
+	}(cancelCtx)
+	time.Sleep(time.Second)
+	cancel()
+	waitGroup.Wait()
+}
+```
+
+### timerCtx
+
+timerCtx 在 cancelCtx 的基础之上增加了超时机制，context 包下提供了两种创建的函数，分别是 WithDeadline 和 WithTimeout，两者功能类似，前者是指定一个具体的超时时间，比如指定一个具体时间 2023/3/20 16:32:00，后者是指定一个超时的时间间隔，比如 5 分钟后。两个函数的签名如下
+```go
+func WithDeadline(parent Context, d time.Time) (Context, CancelFunc)
+func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc)
+```
+timerCtx 会在时间到期后自动取消当前上下文，取消的流程除了要额外的关闭 timer 之外，基本与 cancelCtx 一致
+```go
+var wait sync.WaitGroup
+func main() {
+    deadline, cancel := context.WithDeadline(context.Background(), time.Now().Add(time.Second))
+    defer cancel() // 保险起见，最好手动取消上下文
+    wait.Add(1)
+    go func(ctx context.Context) {
+        defer wait.Done()
+        for {
+        select {
+        case <-ctx.Done():
+            fmt.Println("上下文取消", ctx.Err())
+            return
+        default:
+            fmt.Println("等待取消中...")
+        }
+        time.Sleep(time.Millisecond * 200)
+        }
+    }(deadline)
+    wait.Wait()
+}
+```
+WithTimeout 其实与 WithDealine 非常相似，它的实现也只是稍微封装了一下并调用 WithDeadline
+
+## select
+
+### 基本概念
+
+select 在 Linux 系统中，是一种 IO 多路复用的解决方案；类似的，在 Go 中，select 是一种管道多路复用的控制结构。什么是多路复用，简单的用一句话概括：在某一时刻，同时监测多个元素是否可用，被监测的可以是网络请求，文件 IO 等。**在 Go 中的 select 监测的元素就是管道，且只能是管道**。select 的语法与 switch 语句类似
+```go
+func main() {
+    // 创建三个管道
+    chA := make(chan int)
+    chB := make(chan int)
+    chC := make(chan int)
+    defer func() {
+        close(chA)
+        close(chB)
+        close(chC)
+    }()
+    select {
+    case n, ok := <-chA:
+        fmt.Println(n, ok)
+    case n, ok := <-chB:
+        fmt.Println(n, ok)
+    case n, ok := <-chC:
+        fmt.Println(n, ok)
+    default:
+        fmt.Println("所有管道都不可用")
+    }
+}
+```
+与 switch 类似：
+- select 由多个 case 和一个 default 组成，default 分支可以省略。
+- 每一个 case 只能操作一个管道，且只能进行一种操作，要么读要么写；
+- 当有多个 case 可用时，select 会伪随机的选择一个 case 来执行。
+- 如果所有 case 都不可用，就会执行 default 分支，倘若没有 default 分支，将会阻塞等待，直到至少有一个 case 可用。
+- 由于上例中没有对管道写入数据，自然所有的 case 都不可用，所以最终输出为 default 分支的执行结果
+```go
+func main() {
+    chA := make(chan int)
+    chB := make(chan int)
+    chC := make(chan int)
+    defer func() {
+        close(chA)
+        close(chB)
+        close(chC)
+    }()
+
+    l := make(chan struct{})
+
+    go Send(chA)
+    go Send(chB)
+    go Send(chC)
+
+    go func() {
+    Loop:
+        for {
+            select {
+                case n, ok := <-chA:
+                    fmt.Println("A", n, ok)
+                case n, ok := <-chB:
+                    fmt.Println("B", n, ok)
+                case n, ok := <-chC:
+                    fmt.Println("C", n, ok)
+                case <-time.After(time.Second): // 设置1秒的超时时间
+                    break Loop // 退出循环
+            }
+        }
+        l <- struct{}{} // 告诉主协程可以退出了
+    }()
+    <-l
+}
+func Send(ch chan<- int) {
+  for i := 0; i < 3; i++ {
+    time.Sleep(time.Millisecond)
+    ch <- i
+  }
+}
+```
+
+### 超时
+
+
+
+### 阻塞
+
+当 select 语句中什么都没有时，就会永久阻塞，例如
+```go
+func main() {
+    fmt.Println("start")
+    select {}
+    fmt.Println("end")
+}
+```
+end 永远也不会输出，主协程会一直阻塞，这种情况一般是有特殊用途
+
+在 select 的 case 中对值为 nil 的管道进行操作的话，并不会导致阻塞，该 case 则会被忽略，永远也不会被执行；
+
+### 非阻塞
+
+通过使用select的default分支配合管道，可以实现非阻塞的收发操作
+```go
+func TrySend(ch chan int, ele int) bool  {
+	select {
+	case ch <- ele:
+		return true
+	default:
+		return false
+	}
+}
+func TryRecv(ch chan int) (int, bool)  {
+	select {
+	case ele, ok := <-ch:
+		return ele, ok
+	default:
+		return 0, false
+	}
+}
+```
+可以实现非阻塞的判断一个context是否已经结束
+```go
+func IsDone(ctx context.Context) bool {
+	select {
+	case <-ctx.Done():
+		return true
+	default:
+		return false
+	}
+}
+```
+
+## 锁
+
+Go 中 sync 包下的 Mutex 与 RWMutex 提供了互斥锁与读写锁两种实现，且提供了非常简单易用的 API，加锁只需要 Lock()，解锁也只需要 Unlock()。需要注意的是，Go 所提供的锁都是非递归锁，也就是不可重入锁，所以重复加锁或重复解锁都会导致 fatal。锁的意义在于保护不变量，加锁是希望数据不会被其他协程修改，如下
+```go
+func DoSomething() {
+    Lock()
+    // 在这个过程中，数据不会被其他协程修改
+    Unlock()
+}
+```
+倘若是递归锁的话，就可能会发生如下情况
+```go
+func DoSomething() {
+    Lock()
+        DoOther()
+    Unlock()
+}
+func DoOther() {
+    Lock()
+    // do other
+    Unlock()
+}
+```
+DoSomething 函数显然不知道 DoOther 函数可能会对数据做点什么，从而修改了数据，比如再开几个子协程破坏了不变量。这在 Go 中是行不通的，一旦加锁以后就必须保证不变量的不变性，此时重复加锁解锁都会导致死锁。所以在编写代码时应该避免上述情况，必要时在加锁的同时立即使用 defer 语句解锁
+
+### 互斥锁
+
+`sync.Mutex` 是 Go 提供的互斥锁实现，其实现了 `sync.Locker` 接口
+```go
+type Locker interface {
+    // 加锁
+    Lock()
+    // 解锁
+    Unlock()
+}
+```
+示例：
+```go
+var wait sync.WaitGroup
+var count = 0
+
+var lock sync.Mutex
+
+func main() {
+  wait.Add(10)
+  for i := 0; i < 10; i++ {
+    go func(data *int) {
+      // 加锁
+      lock.Lock()
+      // 模拟访问耗时
+      time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
+      // 访问数据
+      temp := *data
+      // 模拟计算耗时
+      time.Sleep(time.Millisecond * time.Duration(rand.Intn(1000)))
+      ans := 1
+      // 修改数据
+      *data = temp + ans
+      // 解锁
+      lock.Unlock()
+      fmt.Println(*data)
+      wait.Done()
+    }(&count)
+  }
+  wait.Wait()
+  fmt.Println("最终结果", count)
+}
+```
+
+### 读写锁
+
+互斥锁适合读操作与写操作频率都差不多的情况，对于一些读多写少的数据，如果使用互斥锁，会造成大量的不必要的协程竞争锁，这会消耗很多的系统资源，这时候就需要用到读写锁，即读写互斥锁，对于一个协程而言：
+- 如果获得了读锁，其他协程进行写操作时会阻塞，其他协程进行读操作时不会阻塞
+- 如果获得了写锁，其他协程进行写操作时会阻塞，其他协程进行读操作时会阻塞
+
+Go 中读写互斥锁的实现是 sync.RWMutex，它也同样实现了 Locker 接口，但它提供了更多可用的方法，如下：
+```go
+// 加读锁
+func (rw *RWMutex) RLock()
+// 尝试加读锁
+func (rw *RWMutex) TryRLock() bool
+// 解读锁
+func (rw *RWMutex) RUnlock()
+// 加写锁
+func (rw *RWMutex) Lock()
+// 尝试加写锁
+func (rw *RWMutex) TryLock() bool
+// 解写锁
+func (rw *RWMutex) Unlock()
+```
+其中 TryRLock 与 TryLock 两个尝试加锁的操作是非阻塞式的，成功加锁会返回 true，无法获得锁时并不会阻塞而是返回 false。读写互斥锁内部实现依旧是互斥锁，并不是说分读锁和写锁就有两个锁，从始至终都只有一个锁
+
+> 对于锁而言，不应该将其作为值传递和存储，应该使用指针
+
+### 条件变量
+
+条件变量，与互斥锁一同出现和使用，所以有些人可能会误称为条件锁，但它并不是锁，是一种通讯机制。Go 中的 sync.Cond 对此提供了实现，而创建条件变量的函数签名如下：
+```go
+func NewCond(l Locker) *Cond
+```
+创建一个条件变量前提就是需要创建一个锁，sync.Cond 提供了如下的方法以供使用
+```go
+// 阻塞等待条件生效，直到被唤醒
+func (c *Cond) Wait()
+// 唤醒一个因条件阻塞的协程
+func (c *Cond) Signal()
+// 唤醒所有因条件阻塞的协程
+func (c *Cond) Broadcast()
+```
+> 对于条件变量，应该使用 for 而不是 if，应该使用循环来判断条件是否满足，因为协程被唤醒时并不能保证当前条件就已经满足了
+```go
+for !condition {
+    cond.Wait()
+}
+```
+
+## Once
+
+当在使用一些数据结构时，如果这些数据结构太过庞大，可以考虑采用懒加载的方式，即真正要用到它的时候才会初始化该数据结构
+```go
+type MySlice []int
+func (m *MySlice) Get(i int) (int, bool) {
+    if *m == nil {
+        return 0, false
+    } else {
+        return (*m)[i], true
+    }
+}
+func (m *MySlice) Add(i int) {
+   // 当真正用到切片的时候，才会考虑去初始化
+   if *m == nil {
+      *m = make([]int, 0, 10)
+   }
+   *m = append(*m, i)
+}
+```
+如果只有一个协程使用肯定是没有任何问题的，但是如果有多个协程访问的话就可能会出现问题了。比如协程 A 和 B 同时调用了 Add 方法，A 执行的稍微快一些，已经初始化完毕了，并且将数据成功添加，随后协程 B 又初始化了一遍，这样一来将协程 A 添加的数据直接覆盖掉了，这就是问题所在;
+
+这就是 sync.Once 要解决的问题，顾名思义，Once 译为一次，sync.Once 保证了在并发条件下指定操作只会执行一次。它的使用非常简单，只对外暴露了一个 Do 方法，签名如下：
+```go
+func (o *Once) Do(f func())
+```
+在使用时，只需要将初始化操作传入 Do 方法即可，其原理就是锁+原子操作。
+```go
+func (o *Once) Do(f func())
+```
+
+## Pool
+
+sync.Pool 的设计目的是用于存储临时对象以便后续的复用，是一个临时的并发安全对象池，将暂时用不到的对象放入池中，在后续使用中就不需要再额外的创建对象可以直接复用，减少内存的分配与释放频率，最重要的一点就是降低 GC 压力。sync.Pool 总共只有两个方法，如下：
+```go
+// 申请一个对象
+func (p *Pool) Get() any
+// 放入一个对象
+func (p *Pool) Put(x any)
+```
+并且 sync.Pool 有一个对外暴露的 New 字段，用于对象池在申请不到对象时初始化一个对象
+```go
+New func() any
+```
+示例
+```go
+var wait sync.WaitGroup
+// 临时对象池
+var pool sync.Pool
+// 用于计数过程中总共创建了多少个对象
+var numOfObject atomic.Int64
+// BigMemData 假设这是一个占用内存很大的结构体
+type BigMemData struct {
+     M string
+}
+func main() {
+    pool.New = func() any {
+        numOfObject.Add(1)
+        return BigMemData{"大内存"}
+    }
+    wait.Add(1000)
+    // 这里开启1000个协程
+    for i := 0; i < 1000; i++ {
+        go func() {
+            // 申请对象
+            val := pool.Get()
+            // 使用对象
+            _ = val.(BigMemData)
+            // 用完之后再释放对象
+            pool.Put(val)
+            wait.Done()
+        }()
+    }
+    wait.Wait()
+    fmt.Println(numOfObject.Load())
+}
+```
+在使用 sync.Pool 时需要注意几个点：
+- 临时对象：sync.Pool 只适合存放临时对象，池中的对象可能会在没有任何通知的情况下被 GC 移除，所以并不建议将网络链接，数据库连接这类存入 sync.Pool 中。
+- 不可预知：sync.Pool 在申请对象时，无法预知这个对象是新创建的还是复用的，也无法知晓池中有几个对象
+- 并发安全：官方保证 sync.Pool 一定是并发安全，但并不保证用于创建对象的 New 函数就一定是并发安全的，New 函数是由使用者传入的，所以 New 函数的并发安全性要由使用者自己来维护，这也是为什么上例中对象计数要用到原子值的原因。
+
+标准库 fmt 包下就有一个对象池的使用案例，在 `fmt.Fprintf` 函数中
+
+## Map
+
+sync.Map 是官方提供的一种并发安全 Map 的实现，开箱即用，使用起来十分的简单，下面是该结构体对外暴露的方法：
+```go
+// 根据一个key读取值，返回值会返回对应的值和该值是否存在
+func (m *Map) Load(key any) (value any, ok bool)
+// 存储一个键值对
+func (m *Map) Store(key, value any)
+// 删除一个键值对
+func (m *Map) Delete(key any)
+// 如果该key已存在，就返回原有的值，否则将新的值存入并返回，当成功读取到值时，loaded为true，否则为false
+func (m *Map) LoadOrStore(key, value any) (actual any, loaded bool)
+// 删除一个键值对，并返回其原有的值，loaded的值取决于key是否存在
+func (m *Map) LoadAndDelete(key any) (value any, loaded bool)
+// 遍历Map，当f()返回false时，就会停止遍历
+func (m *Map) Range(f func(key, value any) bool)
+```
+为了并发安全肯定需要做出一定的牺牲，sync.Map 的性能要比 map 低 10-100 倍左右
+
+## 原子
+
+### 类型
+
+Go 标准库 sync/atomic 包下已经提供了原子操作相关的 API，其提供了以下几种类型以供进行原子操作
+```go
+atomic.Bool{}
+atomic.Pointer[]{}
+atomic.Int32{}
+atomic.Int64{}
+atomic.Uint32{}
+atomic.Uint64{}
+atomic.Uintptr{}
+atomic.Value{}
+```
+其中 Pointer 原子类型支持泛型，Value 类型支持存储任何类型，除此之外，还提供了许多函数来方便操作。因为原子操作的粒度过细，在大多数情况下，更适合处理这些基础的数据类型  
+> atmoic 包下原子操作只有函数签名，没有具体实现，具体的实现是由 plan9 汇编编写
+
+### 使用
+
+每一个原子类型都会提供以下三个方法：
+- Load()：原子的获取值
+- Swap(newVal type) (old type)：原子的交换值，并且返回旧值
+- Store(val type)：原子的存储值
+
+不同的类型可能还会有其他的额外方法，比如整型类型都会提供 Add 方法来实现原子加减操作。下面以一个 int64 类型演示为例：
+```go
+func main() {
+    var aint64 atomic.Uint64
+    // 存储值
+    aint64.Store(64)
+    // 交换值
+    aint64.Swap(128)
+    // 增加
+    aint64.Add(112)
+    // 加载值
+    fmt.Println(aint64.Load())
+}
+// 直接使用函数
+func main() {
+    var aint64 int64
+    // 存储值
+    atomic.StoreInt64(&aint64, 64)
+    // 交换值
+    atomic.SwapInt64(&aint64, 128)
+    // 增加
+    atomic.AddInt64(&aint64, 112)
+    // 加载
+    fmt.Println(atomic.LoadInt64(&aint64))
+}
+```
+
+### CAS
+
+atomic 包还提供了 CompareAndSwap 操作，也就是 CAS。它是实现乐观锁和无锁数据结构的核心。  
+乐观锁本身并不是锁，是一种并发条件下无锁化并发控制方式：线程/协程在修改数据前，不会先加锁，而是先读取数据，进行计算，然后在提交修改时使用CAS来判断在此期间是否有其他线程修改过该数据。如果没有（值仍等于之前读取的值），则修改成功；否则，失败并重试。  
+因此之所以被称作乐观锁，是因为它总是乐观的假设共享数据不会被修改，仅当发现数据未被修改时才会去执行对应操作，而互斥量就是悲观锁，互斥量总是悲观的认为共享数据肯定会被修改，所以在操作时会加锁，操作完毕后就会解锁。  
+由于无锁化实现的并发，其安全性和效率相对于锁要高一些，许多并发安全的数据结构都采用了 CAS 来进行实现，不过真正的效率要结合具体使用场景来看
+```go
+var count int64
+func Add(num int64) {
+    for {
+        expect := atomic.LoadInt64(&count)
+        if atomic.CompareAndSwapInt64(&count, expect, expect+num) {
+            break
+        }
+    }
+}
+```
+对于 CAS 而言，有三个参数：内存值，期望值，新值。执行时，CAS 会将期望值与当前内存值进行比较，如果内存值与期望值相同，就会执行后续的操作，否则的话什么也不做。对于 Go 中 atomic 包下的原子操作，CAS 相关的函数则需要传入地址、期望值、新值，且会返回是否成功替换的布尔值。例如 int64 类型的 CAS 操作函数签名如下：
+```go
+func CompareAndSwapInt64(addr *int64, old, new int64) (swapped bool)
+```
+大多数情况下，仅仅只是比较值是无法做到并发安全的，比如因 CAS 引起 ABA 问题，就需要使用额外加入 version 来解决问题
+
+### Value
+
+atomic.Value 结构体，可以存储任意类型的值，结构体如下
+```go
+type Value struct {
+   // any类型
+   v any
+}
+```
+尽管可以存储任意类型，但是它不能存储 nil，并且前后存储的值类型应当一致
+
+> 需要注意的是，所有的原子类型都不应该复制值，而是应该使用它们的指针
