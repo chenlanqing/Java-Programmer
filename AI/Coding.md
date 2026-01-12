@@ -327,6 +327,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 
 # 三、Claude Code
 
+- [Claude Code](https://github.com/anthropics/claude-code)
 - [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)
 - [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
 - [Claude code core library](https://github.com/obra/superpowers)
@@ -891,6 +892,7 @@ EOF
 - [利用claude code agent框架一步一步实现deep research！很强大很简单的skills](https://github.com/liangdabiao/Claude-Code-Deep-Research-main)
 - [An AI SKILL that provide design intelligence for building professional UI/UX multiple platforms](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
+- [用于在 Rust 中使用 Makepad 框架构建跨平台 UI 应用的 Claude Code Skills](https://github.com/ZhangHanDong/makepad-skills)
 
 # AI风格
 
