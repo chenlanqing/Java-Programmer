@@ -501,7 +501,7 @@ Memory 对 Agent 至关重要：
 - [ZEP](https://arxiv.org/abs/2501.13956)
 - [A-MEM](https://arxiv.org/abs/2502.12110)
 - [MEM0](https://arxiv.org/abs/2504.19413)
-- [MemOS](https://arxiv.org/abs/2507.03724)
+- [MemOS](https://arxiv.org/abs/2507.03724)：[MemOS-人工智能代理的内存作系统](https://github.com/MemTensor/MemOS)
 - [MIRIX](https://arxiv.org/abs/2507.07957)
 - [MemU-内存框架](https://github.com/NevaMind-AI/memU)
 

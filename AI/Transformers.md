@@ -8,3 +8,4 @@
 - [深入理解Transformer技术原理](https://tech.dewu.com/article?id=109)
 - [transformer 整体指南](https://luxiangdong.com/2023/09/10/trans/)
 - [LLM底层秘密—Transformer原理解析](https://mp.weixin.qq.com/s/x2aixxjfGJvA_epMR9mu2Q)
+- [Attention Is All You Need](https://arxiv.org/pdf/1706.03762)

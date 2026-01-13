@@ -433,17 +433,7 @@ my-plugin/
 
 ## 3、Skill
 
-- https://mp.weixin.qq.com/s/jUylk813LYbKw0sLiIttTQ
-- [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
-- [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
-- [Claude Skills Marketplace](https://skillsmp.com/zh)
-- [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
 - [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
-- [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
-- [Public repository for Skills](https://github.com/anthropics/skills)
-- [Claude Skills Center](https://github.com/obra/superpowers/tree/main/skills)
-- [Claude Code Templates Skills](https://www.aitmpl.com/skills)
-- [发现和探索 Claude Code Skills 各种编程技能和工具](https://ss.bytenote.net/)
 
 ### 3.1、什么是 Skill
 
@@ -494,6 +484,16 @@ MCP、Skill、Projects 比较：
   - `assets/`：模板、pptx、html boilerplate、字体等。
 
 ### 示例
+
+- [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
+- [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
+- [Claude Skills Marketplace](https://skillsmp.com/zh)
+- [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
+- [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
+- [Public repository for Skills](https://github.com/anthropics/skills)
+- [Claude Skills Center](https://github.com/obra/superpowers/tree/main/skills)
+- [Claude Code Templates Skills](https://www.aitmpl.com/skills)
+- [发现和探索 Claude Code Skills 各种编程技能和工具](https://ss.bytenote.net/)
 
 https://github.com/obra/superpowers/tree/main/skills  
 https://github.com/ComposioHQ/awesome-claude-skills  
@@ -893,6 +893,10 @@ EOF
 - [An AI SKILL that provide design intelligence for building professional UI/UX multiple platforms](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
 - [用于在 Rust 中使用 Makepad 框架构建跨平台 UI 应用的 Claude Code Skills](https://github.com/ZhangHanDong/makepad-skills)
+
+## SKILL 安全
+
+- [skill-security-scan: 用于扫描和检测 Claude Skills 的安全风险](https://github.com/huifer/skill-security-scan)
 
 # AI风格
 
