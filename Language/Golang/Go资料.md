@@ -7,6 +7,7 @@
 
 # 参考资料
 
+- [Golang学习路径](https://github.com/xiaobaiTech/golangFamily)
 - [Go by Example 通过例子学 Golang](https://github.com/gobyexample-cn/gobyexample)
 - [Go 语言设计与实现](https://draven.co/golang/)
 - [一个云原生的 Go 微服务框架](https://github.com/zeromicro/go-zero)
