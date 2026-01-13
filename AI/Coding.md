@@ -483,6 +483,12 @@ MCP、Skill、Projects 比较：
   - `references/`：大块文档、API、schema、长规范。
   - `assets/`：模板、pptx、html boilerplate、字体等。
 
+### 编程 SKILL
+
+- [Professional Claude Code marketplace with 140 development tools](https://github.com/manutej/luxor-claude-marketplace)
+- [Go Coding Conventions Skills](https://github.com/fredrikaverpil/dotfiles/blob/main/stow/shared/.claude/skills/golang-style/SKILL.md)
+- [Effective Go Skills](https://github.com/openshift/hypershift/tree/main/.claude/skills/effective-go)
+
 ### 示例
 
 - [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
