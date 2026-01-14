@@ -132,6 +132,8 @@ TIME_WAIT 1645
 - [homebrew-GUI](https://github.com/milanvarady/Applite)
 - [homebrew完整使用指南](https://mp.weixin.qq.com/s/oJqF_vq7BlUvxBe2U2mcjA)
 
+### 5.1、基本使用
+
 使用homebrew下载软件缓慢，可以使用国内镜像：
 ```bash
 ## 替换brew.git:
@@ -145,6 +147,96 @@ git remote set-url origin https://mirrors.cloud.tencent.com/homebrew/homebrew-co
 ## 刷新源
 brew update
 ```
+
+### 5.2、arm 架构与 x86 架构
+
+#### 5.2.1、修改安装
+
+如果是从 x86 架构（Intel CPU）迁移到 arm（Apple Silicon）时，brew 还是继续生效的，通过 brew config 查看：
+```bash
+HOMEBREW_VERSION: 5.0.9
+ORIGIN: https://github.com/Homebrew/brew
+HOMEBREW_PREFIX: /usr/local
+HOMEBREW_REPOSITORY: /usr/local/Homebrew/homebrew
+HOMEBREW_CELLAR: /usr/local/Cellar
+CLT: 26.2.0.0.1.1764812424
+Xcode: 26.1
+Rosetta 2: true
+```
+可能会存在部分软件无法安装的问题，那如何安装成 arm 架构的？以 MacOS26.2版本为例：
+
+1. 下载 Xcode 26访问（需 Apple ID）：
+```
+https://developer.apple.com/download/all/
+```
+下载并安装：
+> **Xcode 26**
+
+2. 切换到 Xcode 26 工具链
+```bash
+sudo xcode-select --switch /Applications/Xcode.app
+```
+
+3. 验证（这是关键检查点）
+```bash
+xcodebuild -version
+xcode-select -p
+clang --version
+```
+看到类似：
+```
+Xcode 26.x
+/Applications/Xcode.app/Contents/Developer
+Apple clang version 26.x.x
+```
+4. 回到 Homebrew（不使用 sudo）
+```bash
+$ brew config # 看到类似效果
+HOMEBREW_PREFIX: /opt/homebrew
+macOS: 26.2-arm64
+Xcode: 26.1
+Metal Toolchain: N/A
+Rosetta 2: false
+```
+
+#### 5.2.2、软件安装问题
+
+上面切换安装成功之后，之前在通过 brew 安装的软件在 arm 重新安装之后就无法看见，我们可以检查一下状态：
+```bash
+which brew
+ls /usr/local/Homebrew >/dev/null 2>&1 && echo "Intel brew still exists"
+```
+如果需要卸载原来安装的软件，可以通过如下命令：
+```bash
+# 列出软件
+arch -x86_64 /usr/local/bin/brew list
+# 卸载软件
+arch -x86_64 /usr/local/bin/brew uninstall <formula>
+arch -x86_64 /usr/local/bin/brew uninstall --cask <cask>
+```
+全部卸载之后可以：
+```bash
+arch -x86_64 /usr/local/bin/brew uninstall --force $(arch -x86_64 /usr/local/bin/brew list)
+# 删除残余目录
+sudo rm -rf /usr/local/Homebrew /usr/local/Cellar /usr/local/Caskroom
+```
+
+### 5.3、卸载
+
+如果卸载软件时报错：
+```bash
+$ brew uninstall --cask sublime-text 
+Error: Unexpected method 'appcast' called on Cask sublime-text.
+```
+先找到旧 Cask 文件
+```bash
+brew edit sublime-text
+```
+会看到类似：
+```
+appcast "https://www.sublimetext.com/updates/stable_appcast.xml"
+```
+删除这一行 appcast，保存后卸载`brew uninstall --cask sublime-text `
 
 ## 6、关于权限
 
@@ -289,4 +381,23 @@ $ cat git.plugin.zsh
 然后在 `~/.zshrc` 新增如下内容：
 ```sh
 source ~/.zsh/dev-aliases.zsh
+```
+
+## 全局命令
+
+```bash
+npm install -g nrm
+npm install -g nvm
+npm install -g @openai/codex
+npm install -g @google/gemini-cli
+npm install -g @musistudio/claude-code-router
+npm install -g @fission-ai/openspec@latest
+npm install -g @qwen-code/qwen-code
+npm install -g hexo-cli
+npm install -g hexo
+npm install -g @vue/cli
+npm install -g typescript
+npm install -g vite
+npm install -g next
+npm install -g happy-coder
 ```

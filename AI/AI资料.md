@@ -309,6 +309,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [ChatOpens](https://www.chatopens.chat/Web/List.html)
 - https://console.aihubmix.com/token?aff=uTxe
 - https://www.aigocode.com/dashboard/console
+- [302.AI 是一个按用量付费的企业级 AI 资源平台](https://302.ai/dashboard/overview)
 
 # 参考资料
 

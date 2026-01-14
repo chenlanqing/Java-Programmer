@@ -895,6 +895,7 @@ EOF
 
 # SKILL
 
+- [Claude Code 技能实现了 Manus 风格的持久性降价规划](https://github.com/OthmanAdi/planning-with-files)
 - [利用claude code agent框架一步一步实现deep research！很强大很简单的skills](https://github.com/liangdabiao/Claude-Code-Deep-Research-main)
 - [An AI SKILL that provide design intelligence for building professional UI/UX multiple platforms](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
@@ -918,6 +919,10 @@ EOF
 ```md
 现在需要你按照这个网页里面的布局和UI风格改造网站，网页文件地址：beautifuL_web.htmL
 ```
+
+# 安全
+
+- [eepAudit：国内首个开源的代码漏洞挖掘多智能体系统](https://github.com/lintsinghua/DeepAudit)
 
 # 工具代理
 
