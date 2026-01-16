@@ -307,6 +307,8 @@ cursor的表现取决于：有效的Rules、正确的开发流程、标准的Pro
 
 - [Configuration files that enhance Cursor AI editor experience with custom rules and behaviors](https://github.com/PatrickJS/awesome-cursorrules)
 - [Curated list of awesome Cursor Rules .mdc files](https://github.com/sanjeed5/awesome-cursor-rules-mdc)
+- [Awesome Cursor Rules](https://github.com/PatrickJS/awesome-cursorrules)
+- [不同项目的Cursor规则文件，提供多种编程语言和框架的规则支持](https://github.com/flyeric0212/cursor-rules)
 
 rules 就是给 Cursor 定下的行为准则和沟通规范，rules 的核心价值：用具体可执行的约束替代模糊的预期，让 AI 的输出能够精准贴合实际开发需求；
 
@@ -433,6 +435,7 @@ my-plugin/
 
 ## 3、Skill
 
+- [Claude Agents Skills](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)
 - [Claude Agent Skills：第一性原理深度解析](https://skills.deeptoai.com/zh/docs/ai-ml/claude-agent-skills-first-principles-deep-dive)
 
 ### 3.1、什么是 Skill
@@ -446,6 +449,13 @@ MCP、Skill、Projects 比较：
 - Skills 是它记住的做事方法；
 - MCP 是它能用的工具；
 - Project 是当前任务的个性化场景。
+
+简单来说：SKILL 与 MCP 对比
+- SKILL 就是怎么做；MCP 是有什么工具、有什么功能。
+- SKILL 的话，主要是经验、最佳实践、流程的封装，而 MCP 是连接与交互的协议，主要是 API 调用、数据读写和工具等。
+- Skills主要是 Markdown 文件和一些脚本文件，优势在于渐进式加载，不需要服务器资源，适用性好；
+- MCP 主要是客户端和服务端的架构，启动时加载所有工具定义，集成外部功能，Tokens 消耗更高，使用起来更复杂。
+- 两者是互补的关系，Agent 可以通过 Skills 获取知识，通过 MCP 拓展功能
 
 ### 3.2、如何安装
 
@@ -491,6 +501,7 @@ MCP、Skill、Projects 比较：
 
 ### 示例
 
+- https://github.com/ailabs-393/ai-labs-claude-skills
 - [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
 - [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
 - [Claude Skills Marketplace](https://skillsmp.com/zh)
@@ -499,8 +510,7 @@ MCP、Skill、Projects 比较：
 - [Public repository for Skills](https://github.com/anthropics/skills)
 - [Claude Skills Center](https://github.com/obra/superpowers/tree/main/skills)
 - [Claude Code Templates Skills](https://www.aitmpl.com/skills)
-- [发现和探索 Claude Code Skills 各种编程技能和工具](https://ss.bytenote.net/)
-
+- [发现和探索 Claude Code Skills 各种编程技能和工具](https://ss.bytenote.net/)  
 https://github.com/obra/superpowers/tree/main/skills  
 https://github.com/ComposioHQ/awesome-claude-skills  
 https://github.com/BehiSecc/awesome-claude-skills  
@@ -893,11 +903,26 @@ EOF
 - [The open source coding agent.](https://github.com/anomalyco/opencode)
 - [启用 Opencode 通过 OAuth 认证 Antigravity](https://github.com/NoeFabris/opencode-antigravity-auth)
 
+```bash
+# 全局配置
+~/.config/opencode/opencode.json
+# 或项目特定配置
+./opencode.json
+```
+为了获得最佳效果，请在项目根目录下创建一个 AGENTS.md 文件。这有助于 OpenCode 了解：
+```
+你的项目结构
+编程规范
+首选的设计模式
+技术栈
+```
+
 # SKILL
 
-- [Claude Code 技能实现了 Manus 风格的持久性降价规划](https://github.com/OthmanAdi/planning-with-files)
+- [Skill Hub](https://www.skillhub.club/skills)
+- [一套全面的代理技能合集，涵盖上下文工程、多代理架构和生产代理系统](https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering)
+- [Claude Code skill implementing Manus-style persistent markdown planning](https://github.com/OthmanAdi/planning-with-files)
 - [利用claude code agent框架一步一步实现deep research！很强大很简单的skills](https://github.com/liangdabiao/Claude-Code-Deep-Research-main)
-- [An AI SKILL that provide design intelligence for building professional UI/UX multiple platforms](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
 - [用于在 Rust 中使用 Makepad 框架构建跨平台 UI 应用的 Claude Code Skills](https://github.com/ZhangHanDong/makepad-skills)
 
@@ -909,6 +934,7 @@ EOF
 
 ## AI代码前端风格
 
+- [An AI SKILL that provide design intelligence for building professional UI/UX multiple platforms](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
 - [去除前端网站的 AI 味](https://mp.weixin.qq.com/s/75_VmclNkk_SYilbFpRWEw)
 - [前端漂亮的 UI 风格设计](https://www.aura.build)
 - https://shadcnthemer.com/
@@ -926,9 +952,10 @@ EOF
 
 # 工具代理
 
+- [Claude Code 代理](https://foxcode.hshwk.org/)
 - [Claude Code、Codex镜像服务](https://aicoding.sh/)
 - [银河录像局](https://nf.video/)
-- https://github.com/UfoMiao/zcf
+- [ZCF - Zero-Config Code Flow](https://github.com/UfoMiao/zcf)
 - [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
 - [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)

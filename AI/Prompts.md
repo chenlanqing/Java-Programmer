@@ -388,8 +388,9 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 
 - [AI 提示工程工作台，用于使用强大的分析工具制作、测试和系统评估提示](https://github.com/insaaniManav/prompt-forge)
 
-# Prompt 生成案例
+# Prompt 案例
 
+- [Collection of leaked system prompts](https://github.com/jujumilk3/leaked-system-prompts)
 - [提示词库 (在线表格)co](https://docs.google.com/spreadsheets/d/1ngoQOhJqdguwNAilCl1joNwTje7FWWN9WiI2bo5VhpU/edit?gid=2093180351#gid=2093180351&range=A1): 一个包含大量可直接复制使用的各类提示词的在线表格。
 - [元提示词](https://docs.google.com/spreadsheets/d/1ngoQOhJqdguwNAilCl1joNwTje7FWWN9WiI2bo5VhpU/edit?gid=1770874220#gid=1770874220): 用于生成提示词的高级提示词。
 - [概念美术提示词生成器](https://github.com/TanShilongMario/PromptFill)
@@ -410,6 +411,7 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 - [Claude Code System Prompts](https://platform.claude.com/docs/zh-CN/release-notes/system-prompts)
 - [All parts of Claude Code's system prompt](https://github.com/Piebald-AI/claude-code-system-prompts)
 - [OpenAI 官方出了 20 个万能模板](https://academy.openai.com/public/clubs/work-users-ynjqu/tags/prompt-packs-6849a0f98c613939acef841c)
+- [AI 提示词工程与工作流集合](https://github.com/NeekChaw/RIPER-5)
 
 # 参考资料
 
