@@ -921,6 +921,7 @@ EOF
 
 - [Skill Hub](https://www.skillhub.club/skills)
 - [一套全面的代理技能合集，涵盖上下文工程、多代理架构和生产代理系统](https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering)
+- [Skill Market](https://skill0.atypica.ai/)
 - [Claude Code skill implementing Manus-style persistent markdown planning](https://github.com/OthmanAdi/planning-with-files)
 - [利用claude code agent框架一步一步实现deep research！很强大很简单的skills](https://github.com/liangdabiao/Claude-Code-Deep-Research-main)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
