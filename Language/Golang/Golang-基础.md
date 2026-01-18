@@ -1836,6 +1836,29 @@ func main() {
 }
 ```
 
+## 可变参数
+
+变参函数使用常规的调用方式，传入独立的参数。
+
+如果有一个含有多个值的 slice，想把它们作为参数使用，需要这样调用 `func(slice...)`
+```go
+func sum(nums ...int) {
+	fmt.Print(nums, " ")
+	total := 0
+	for _, num := range nums {
+		total += num
+	}
+	fmt.Println(total)
+}
+func main() {
+	sum(1, 2, 3)
+	sum(4, 5, 6)
+	// 也可以将一个切片传递给可变参数函数
+	nums := []int{7, 8, 9}
+	sum(nums...)
+}
+```
+
 ## 闭包
 
 闭包是由函数及其相关引用环境组合而成的实体

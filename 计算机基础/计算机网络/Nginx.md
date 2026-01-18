@@ -1397,7 +1397,7 @@ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 * [LVS官方文档](http://www.austintek.com/LVS/LVS-HOWTO/HOWTO/)
 * [深入理解LVS](https://blog.csdn.net/Ki8Qzvka6Gz4n450m/article/details/79119665)
 * [可视化配置 Nginx](https://github.com/digitalocean/nginxconfig.io)
-
+* [轻量级 Nginx 访问日志分析与可视化面板](https://github.com/likaia/nginxpulse)
 
 
 
