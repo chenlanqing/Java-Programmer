@@ -926,6 +926,7 @@ EOF
 - [利用claude code agent框架一步一步实现deep research！很强大很简单的skills](https://github.com/liangdabiao/Claude-Code-Deep-Research-main)
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
 - [用于在 Rust 中使用 Makepad 框架构建跨平台 UI 应用的 Claude Code Skills](https://github.com/ZhangHanDong/makepad-skills)
+- [Skill Category](https://www.myaiexp.com/zh?category=skills)
 
 ## SKILL 安全
 
