@@ -493,36 +493,6 @@ MCP、Skill、Projects 比较：
   - `references/`：大块文档、API、schema、长规范。
   - `assets/`：模板、pptx、html boilerplate、字体等。
 
-### 编程 SKILL
-
-- [Professional Claude Code marketplace with 140 development tools](https://github.com/manutej/luxor-claude-marketplace)
-- [Go Coding Conventions Skills](https://github.com/fredrikaverpil/dotfiles/blob/main/stow/shared/.claude/skills/golang-style/SKILL.md)
-- [Effective Go Skills](https://github.com/openshift/hypershift/tree/main/.claude/skills/effective-go)
-
-### 示例
-
-- https://github.com/ailabs-393/ai-labs-claude-skills
-- [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
-- [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
-- [Claude Skills Marketplace](https://skillsmp.com/zh)
-- [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
-- [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
-- [Public repository for Skills](https://github.com/anthropics/skills)
-- [Claude Skills Center](https://github.com/obra/superpowers/tree/main/skills)
-- [Claude Code Templates Skills](https://www.aitmpl.com/skills)
-- [发现和探索 Claude Code Skills 各种编程技能和工具](https://ss.bytenote.net/)  
-https://github.com/obra/superpowers/tree/main/skills  
-https://github.com/ComposioHQ/awesome-claude-skills  
-https://github.com/BehiSecc/awesome-claude-skills  
-https://github.com/VoltAgent/awesome-claude-skills  
-https://github.com/travisvn/awesome-claude-skills  
-https://github.com/mrgoonie/claudekit-skills/tree/main/.claude/skills  
-https://github.com/K-Dense-AI/claude-scientific-skills  
-https://github.com/bear2u/my-skills/tree/master/skills  
-https://github.com/czlonkowski/n8n-skills  
-https://github.com/huggingface/skills  
-https://github.com/yusufkaraaslan/Skill_Seekers  
-
 ## 4、自定义命令
 
 - [个人命令](https://code.claude.com/docs/zh-CN/slash-commands)
@@ -756,6 +726,21 @@ haiku:    文档生成、简单修复、代码探索
 4. 编写清晰指令：详细描述代理的能力边界
 5. 组合使用：复杂任务可串联多个代理
 
+**提示词**
+```md
+## 架构师（Architect）：
+你是架构师智能体。你的职责是分析需求，研究技术方案，规划系统架构，并将任务分解到 MULTI_AGENT_PLAN.md 文件中。你需要确保任务分解清晰、依赖关系明确、优先级合理。在做出重大架构决策时，记录你的理由。
+
+## 构建师（Builder）：
+你是构建者智能体。你的职责是根据 MULTI_AGENT_PLAN.md 中分配给你的任务，编写高质量的代码。完成任务后，更新计划文件中的状态。如果遇到架构层面的问题，在计划文件中 @architect 提问。
+
+## 验证者（Validator）：
+你是验证者智能体。你的职责是为已实现的功能编写测试，运行测试套件，报告问题，并协助调试。你需要覆盖正常路径和边缘情况。发现 bug 时，在计划文件中详细记录。
+
+## 记录员（Scribe）：
+你是记录员智能体。你的职责是为已完成的功能撰写清晰的文档，包括 API 文档、使用指南和代码注释。你还可以对代码进行可读性优化。
+```
+
 ## 9、[MCP](https://code.claude.com/docs/zh-CN/mcp)
 
 MCP (Model Context Protocol) 允许 Claude 连接外部服务，如数据库、API、文件系统等，扩展其能力边界。
@@ -919,6 +904,13 @@ EOF
 
 # SKILL
 
+## SKILL 安全
+
+- [skill-security-scan: 用于扫描和检测 Claude Skills 的安全风险](https://github.com/huifer/skill-security-scan)
+
+## SKILL 市场
+
+- [Skills Marketplace](https://skillsmp.com/zh)
 - [Skill Hub](https://www.skillhub.club/skills)
 - [一套全面的代理技能合集，涵盖上下文工程、多代理架构和生产代理系统](https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering)
 - [Skill Market](https://skill0.atypica.ai/)
@@ -928,9 +920,34 @@ EOF
 - [用于在 Rust 中使用 Makepad 框架构建跨平台 UI 应用的 Claude Code Skills](https://github.com/ZhangHanDong/makepad-skills)
 - [Skill Category](https://www.myaiexp.com/zh?category=skills)
 
-## SKILL 安全
+### 编程 SKILL
 
-- [skill-security-scan: 用于扫描和检测 Claude Skills 的安全风险](https://github.com/huifer/skill-security-scan)
+- [Professional Claude Code marketplace with 140 development tools](https://github.com/manutej/luxor-claude-marketplace)
+- [Go Coding Conventions Skills](https://github.com/fredrikaverpil/dotfiles/blob/main/stow/shared/.claude/skills/golang-style/SKILL.md)
+- [Effective Go Skills](https://github.com/openshift/hypershift/tree/main/.claude/skills/effective-go)
+
+### 各种 SKILL
+
+- [AI 写作去痕工具（中文版）](https://github.com/op7418/Humanizer-zh)、https://github.com/ForrestKnight/open-source-cs
+
+### SKILL合集
+
+- [A collection of reusable "skills" for Claude AI and developer tooling](https://github.com/ailabs-393/ai-labs-claude-skills)
+- [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
+- [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)
+- [Claude Scientific Skills](https://github.com/K-Dense-AI/claude-scientific-skills)
+- [A curated list of Claude Skills.](https://github.com/BehiSecc/awesome-claude-skills)
+- [Public repository for Skills](https://github.com/anthropics/skills)
+- [Claude Skills Center](https://github.com/obra/superpowers)
+- [Claude Code Templates Skills](https://www.aitmpl.com/skills)
+- https://github.com/ComposioHQ/awesome-claude-skills  
+- https://github.com/BehiSecc/awesome-claude-skills  
+- https://github.com/VoltAgent/awesome-claude-skills  
+- https://github.com/travisvn/awesome-claude-skills  
+- https://github.com/mrgoonie/claudekit-skills/tree/main/.claude/skills  
+- https://github.com/bear2u/my-skills
+- https://github.com/czlonkowski/n8n-skills  
+- https://github.com/huggingface/skills
 
 # AI风格
 

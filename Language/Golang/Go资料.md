@@ -4,6 +4,11 @@
 
 - [kitex: Go-RPC](https://github.com/cloudwego/kitex)
 
+# 资料
+
+- [优秀 Go 语言项目](https://github.com/hyper0x/awesome-go-China)
+- [轻量级、惯用且可组合的路由器，用于构建 Go HTTP 服务](https://github.com/go-chi/chi)
+
 # 学习
 
 - [Golang-每日编程挑战](https://github.com/MedUnes/go-kata)
