@@ -820,6 +820,22 @@ claude mcp list
 3. 项目级配置提交仓库：团队共享 .mcp.json
 4. 用户级配置存私密服务：个人 API 密钥放 ~/.claude/
 
+### 与 Codex 协作
+
+- [Claude Code 与 Codex 协作](https://github.com/GuDaStudio/codexmcp)
+
+### 与 Gemini 协作
+
+- [Claude Code 与 Gemini](https://github.com/jamubc/gemini-mcp-tool)
+
+## Claude Team
+
+- [Claude Code + Gemini + Codex](https://github.com/smart-lty/Claude-Team)
+
+📖 Claude：深度理解与全局统筹，负责阅读长文、撰写论文、协调团队  
+💻 Codex：代码实现与调试专家，从算法原型到生产级代码一气呵成  
+🔍 Gemini：超长文本处理专家，分析代码仓库、扫描千行日志、研读海量文档  
+
 ## 其他
 
 - [Claude 代码图形界面应用和工具包——创建自定义代理，管理交互式 Claude 代码会话，运行安全后台代理](https://github.com/winfunc/opcode)
@@ -977,7 +993,7 @@ EOF
 
 - [eepAudit：国内首个开源的代码漏洞挖掘多智能体系统](https://github.com/lintsinghua/DeepAudit)
 
-# 工具代理
+# 代理
 
 - [Claude Code 代理](https://foxcode.hshwk.org/)
 - [Claude Code、Codex镜像服务](https://aicoding.sh/)
