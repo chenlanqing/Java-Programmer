@@ -157,6 +157,10 @@ AI会把plan.md拆成一份详细的tasks.md文件，就像一个靠谱的项目
 ```
 AI会严格按照tasks.md的任务列表，一个一个地完成编码、写测试，每搞定一个，就会在任务清单上打个勾[x]
 
+### BMAD
+
+- [Breakthrough Method for Agile Ai Driven Development](https://github.com/bmad-code-org/BMAD-METHOD)
+
 ### 注意事项
 
 - [Spec 编写注意事项](https://mp.weixin.qq.com/s/27x-6ruXLwNq3Spm68_G7A)
@@ -904,6 +908,8 @@ EOF
 
 # SKILL
 
+- [Agent Skill Specification](https://github.com/agentskills/agentskills)
+
 ## SKILL 安全
 
 - [skill-security-scan: 用于扫描和检测 Claude Skills 的安全风险](https://github.com/huifer/skill-security-scan)
@@ -928,10 +934,12 @@ EOF
 
 ### 各种 SKILL
 
+- [专注于使用 Manim 生成动画教学视频的完整流程与专业建议](https://github.com/lispking/video-skills/tree/main/manim-video-teacher)
 - [AI 写作去痕工具（中文版）](https://github.com/op7418/Humanizer-zh)、https://github.com/ForrestKnight/open-source-cs
 
 ### SKILL合集
 
+- [技能分类](https://github.com/Freddy-CHEN-ux/00_claude_skills)
 - [A collection of reusable "skills" for Claude AI and developer tooling](https://github.com/ailabs-393/ai-labs-claude-skills)
 - [自动把文档网站、GitHub 仓库、PDF 转换等成 Claude AI Skills](https://github.com/yusufkaraaslan/Skill_Seekers)
 - [Deep Reading Analyst - Claude AI 深度阅读技能](https://github.com/ginobefun/deep-reading-analyst-skill)

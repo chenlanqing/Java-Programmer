@@ -164,6 +164,7 @@ git push origin --delete master
 - [Folo 是个信息聚合工具，能把你想关注的各种来源（文章、视频、动态等）都集中放在一个简洁的时间线里，告别到处切换的麻烦](https://github.com/RSSNext/Folo)
 - [Scira（原名 MiniPerplx），它是一个主打轻量级和 AI 驱动的搜索引擎。](https://github.com/zaidmukaddam/scira)
 - [ArchiveBox:网页时光机，网页归档](https://github.com/ArchiveBox/ArchiveBox)
+- [Github项目搜索](https://github.com/xiaoxiunique/1k-github-stars)
 
 # 参考资料
 
