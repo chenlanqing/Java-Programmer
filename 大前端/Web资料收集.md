@@ -5,6 +5,10 @@
 - [Xterm：在浏览器中构建 terminal](https://github.com/xtermjs/xterm.js)
 - [Deploy Your Frontend in a Single Command](https://github.com/glitternetwork/pinme)
 
+# 客户端
+
+- [Pake:一键打包网页生成轻量桌面应用，支持 macOS、Windows 和 Linux](https://github.com/tw93/Pake)
+
 # UI
 
 - [shadcn:一组设计精美、可访问的组件和代码分发平台](https://github.com/shadcn-ui/ui)
@@ -30,7 +34,6 @@
 - [Web学习路线](https://github.com/qianguyihao/Web)
 - [uniapp](https://zh.uniapp.dcloud.io/)
 - [专注于前端的互联网大厂面试题的学习平台](https://q.shanyue.tech/)
-- [Apple Store 网页端源码](https://github.com/rxliuli/apps.apple.com)
 - [轻松将任意网站/Vue/React等项目构建为轻量级](https://github.com/Sjj1024/PakePlus)
 
 # 前端创意

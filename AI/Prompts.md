@@ -193,6 +193,8 @@ A:
 
 # 7、Prompt框架
 
+- [Your guide to mastering All the different prompt frameworks](https://juuzt.ai/knowledge-base/prompt-frameworks/)
+
 ## 7.1、通用框架
 
 Prompt 通用框架=定角色+说背景+下任务+提要求

@@ -639,6 +639,10 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [RAGEN：通过强化推理训练代理](https://github.com/RAGEN-AI/RAGEN)
 - [Agent Lightning 是微软研究院推出的一个框架](https://github.com/microsoft/agent-lightning)
 
+## Agent 评估
+
+- [一个端到端的基础设施，用于培训和评估各种 LLM 代理](https://github.com/OpenBMB/AgentCPM)
+
 ## Agent 框架
 
 - [Deepagents 是一款基于 langchain 和 langgraph 构建的Agents工具](https://github.com/langchain-ai/deepagents)

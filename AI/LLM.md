@@ -10,6 +10,7 @@
 - [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
 - [大模型知识分享](https://github.com/luhengshiwo/LLMForEverybody)
 - [动手学大模型](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models)-[中文本](https://github.com/bbruceyuan/Hands-On-Large-Language-Models-CN)
+- [《动手学大模型》系列编程实践教程](https://github.com/Lordog/dive-into-llms)
 
 ## 1、基本概念
 
@@ -265,6 +266,7 @@ print(chat_completion.choices[0].message.content)
 
 ## 5、推理模型
 
+- [一款用于Apple M系列芯片的 AI 模型的高性能推理引擎](https://github.com/trymirai/uzu)
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
 - [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
 - [nano-vllm源码解析](https://mp.weixin.qq.com/s/nE_Pfrx2zzbCbakA_SP4_A)
@@ -675,6 +677,7 @@ DeepSeek-R1-Distill-Llama-70B
 
 # 三、大模型应用开发
 
+- [Ragas：评估和优化大型语言模型（LLM）应用的终极工具包](https://github.com/vibrantlabsai/ragas)
 - [动手学大模型应用开发](https://github.com/datawhalechina/llm-universe)
 - [面向开发者的大模型](https://github.com/datawhalechina/llm-cookbook)
 
@@ -727,3 +730,5 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - [大型语言模型的结构化输出](https://github.com/dottxt-ai/outlines)
 - [LLM Council](https://github.com/karpathy/llm-council)
 - [从零开发大模型](https://mp.weixin.qq.com/s/wcjYPzPq-lADvz-TeKZ7VQ)
+- [系统讲解大模型、强化学习](https://github.com/changyeyu/LLM-RL-Visualized)
+- [OpenBMB大模型公开课](https://openbmb.cn/community/course)

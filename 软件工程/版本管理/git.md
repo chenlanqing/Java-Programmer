@@ -673,6 +673,12 @@ HOST gitlab.com
     IdentityFile ~/.ssh/id_ed25519_gitlab
 ```
 
+# 8、玩转 Git
+
+## 8.1、Git Commit Replay
+
+- [Git 提交重放终端工具](https://github.com/unhappychoice/gitlogue)
+
 # 参考资料
 
 * [Git教程](https://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000)
