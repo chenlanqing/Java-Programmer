@@ -1,17 +1,5 @@
 # 一、大模型基础
 
-- [OpenAI文档](https://platform.openai.com/docs/concepts)
-- [大模型理论基础](https://datawhalechina.github.io/so-large-lm/#/)
-- [大模型基础](https://github.com/ZJU-LLMs/Foundations-of-LLMs)
-- [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
-- [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
-- [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
-- [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
-- [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
-- [大模型知识分享](https://github.com/luhengshiwo/LLMForEverybody)
-- [动手学大模型](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models)-[中文本](https://github.com/bbruceyuan/Hands-On-Large-Language-Models-CN)
-- [《动手学大模型》系列编程实践教程](https://github.com/Lordog/dive-into-llms)
-
 ## 1、基本概念
 
 ### 1.1、什么是大模型
@@ -718,6 +706,26 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 
 - [关于 embedding 模型](https://zhuanlan.zhihu.com/p/29949362142)
 
+# 学习资料
+
+## 入门学习
+
+- [每个人都能看懂的大模型知识分享](https://github.com/luhengshiwo/LLMForEverybody)
+- [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
+- [动手学大模型](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models)-[中文本](https://github.com/bbruceyuan/Hands-On-Large-Language-Models-CN)
+- [《动手学大模型》系列编程实践教程](https://github.com/Lordog/dive-into-llms)
+- [OpenBMB大模型公开课](https://openbmb.cn/community/course)
+
+## 深入学习
+
+- [系统讲解大模型、强化学习](https://github.com/changyeyu/LLM-RL-Visualized)
+- [大模型理论基础](https://datawhalechina.github.io/so-large-lm/#/)
+- [大模型基础](https://github.com/ZJU-LLMs/Foundations-of-LLMs)
+- [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
+- [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
+- [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
+- [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
+
 # 参考资料
 
 - [LLM Leaderboards-大模型评估排行榜](https://scale.com/leaderboard)
@@ -730,5 +738,3 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - [大型语言模型的结构化输出](https://github.com/dottxt-ai/outlines)
 - [LLM Council](https://github.com/karpathy/llm-council)
 - [从零开发大模型](https://mp.weixin.qq.com/s/wcjYPzPq-lADvz-TeKZ7VQ)
-- [系统讲解大模型、强化学习](https://github.com/changyeyu/LLM-RL-Visualized)
-- [OpenBMB大模型公开课](https://openbmb.cn/community/course)
