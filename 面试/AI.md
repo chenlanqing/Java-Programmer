@@ -84,6 +84,8 @@ Observe
 
 # 二、RAG
 
+- [35 道高频 RAG 面试题总结](https://articles.zsxq.com/id_h3529hb345rr.html)
+
 ## 用的向量模型是哪个？为什么选它？有没有做过评估对比？
 
 ## Chunk 粒度你怎么切的？固定大小？内容语义？有没有做 sliding window？

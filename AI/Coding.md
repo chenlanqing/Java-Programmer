@@ -333,6 +333,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 
 # 三、Claude Code
 
+- [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
 - [Claude Code](https://github.com/anthropics/claude-code)
 - [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)
 - [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
@@ -924,6 +925,8 @@ EOF
 
 # SKILL
 
+- [Add Skill](https://github.com/vercel-labs/add-skill)
+- [Skill Rank](https://skills.sh/)
 - [Agent Skill Specification](https://github.com/agentskills/agentskills)
 
 ## SKILL 安全
