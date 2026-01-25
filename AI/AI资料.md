@@ -6,7 +6,7 @@
 
 # AI
 
-- [AI简报](https://github.com/sunface/beat-ai)
+- [AI简报](https://github.com/OpenGenesisLab/beat-ai)
 - [36个 AI 概念](https://mp.weixin.qq.com/s/uM8I8nyDaCH5mvjZbvB7IA)
 - [AI算法工程师](http://www.huaxiaozhuan.com/)
 - [如果真的学习人工智能，应该做什么](https://mp.weixin.qq.com/s/wgHJnJzY7sjEFJcA9eCFfg)
@@ -15,8 +15,14 @@
 - [Claude Code v1.0.33 进行逆向工程的完整研究和分析资料](https://github.com/chenlanqing/analysis_claude_code)
 - https://github.com/ConardLi/easy-learn-ai
 
+## 论文
+
+- [Awesome Agentic Reasoning Papers](https://github.com/weitianxin/Awesome-Agentic-Reasoning)
+- [Agentic Reasoning for Large Language Models](https://arxiv.org/pdf/2601.12538)
+
 ## AI 学习路线
 
+- https://github.com/ninehills/blog/issues/97
 - ML for Beginners: https://github.com/microsoft/ML-For-Beginners
 - AI for Beginners: https://github.com/microsoft/AI-For-Beginners
 - NN Zero to Hero: https://github.com/karpathy/nn-zero-to-hero
