@@ -280,7 +280,6 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [Xinference-模型服务变得简单](https://github.com/xorbitsai/inference)
 - [huggingface-开源大模型](https://huggingface.co/)
 - [Shimmy: The 5MB Alternative to Ollama](https://github.com/Michael-A-Kuykendall/shimmy)
-- [开源大模型食用（部署）指南](https://github.com/datawhalechina/self-llm)
 - [ModelScope是阿里巴巴推出的开源模型即服务（MaaS）平台](https://www.modelscope.cn/home)
 - [huggingface: 机器学习（ML）和数据科学平台及社区](https://huggingface.co/)
 - [大模型部署电脑配置要求](https://www.zhihu.com/question/628771017)
@@ -710,6 +709,8 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 
 ## 入门学习
 
+- [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
+- [开源大模型指南](https://github.com/datawhalechina/self-llm)
 - [每个人都能看懂的大模型知识分享](https://github.com/luhengshiwo/LLMForEverybody)
 - [大模型相关技术原理以及实战经验](https://github.com/liguodongiot/llm-action)
 - [动手学大模型](https://github.com/HandsOnLLM/Hands-On-Large-Language-Models)-[中文本](https://github.com/bbruceyuan/Hands-On-Large-Language-Models-CN)
@@ -721,7 +722,6 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - [系统讲解大模型、强化学习](https://github.com/changyeyu/LLM-RL-Visualized)
 - [大模型理论基础](https://datawhalechina.github.io/so-large-lm/#/)
 - [大模型基础](https://github.com/ZJU-LLMs/Foundations-of-LLMs)
-- [从零开始的大语言模型原理与实践教程](https://github.com/datawhalechina/happy-llm)
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
 - [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
 - [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
