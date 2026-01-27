@@ -719,7 +719,7 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 
 ## 深入学习
 
-- [系统讲解大模型、强化学习](https://github.com/changyeyu/LLM-RL-Visualized)
+- [图解大模型算法：系统讲解大模型、强化学习](https://github.com/changyeyu/LLM-RL-Visualized)
 - [大模型理论基础](https://datawhalechina.github.io/so-large-lm/#/)
 - [大模型基础](https://github.com/ZJU-LLMs/Foundations-of-LLMs)
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)

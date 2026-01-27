@@ -474,7 +474,7 @@ MCP、Skill、Projects 比较：
 - [Skill Creator: 通过Chat 创建 Skill](https://github.com/anthropics/skills/tree/main/skills/skill-creator)
 - [转换 pdf/document 为 Skill](https://github.com/yusufkaraaslan/Skill_Seekers)
 - [Skills 制作器](https://github.com/yusufkaraaslan/Skill_Seekers): 可根据需求生成定制化 Skills 的工具。
-- [元技能：Skills 的 Skills](./i18n/zh/skills/00-元技能/claude-skills/SKILL.md): 用于生成 Skills 的元技能。
+- [标准作业程序（SOP）生成与规范化](https://github.com/tukuaiai/vibe-coding-cn/blob/273c2bb/i18n/zh/skills/00-%E5%85%83%E6%8A%80%E8%83%BD/sop-generator/SKILL.md): 用于生成 Skills 的元技能。
 
 什么是的好的 Skill：skill 文档的开头的 name + description 部分需要回答三个问题：  
 ① 它帮我干什么活？  
@@ -955,6 +955,7 @@ EOF
 
 - [专注于使用 Manim 生成动画教学视频的完整流程与专业建议](https://github.com/lispking/video-skills/tree/main/manim-video-teacher)
 - [AI 写作去痕工具（中文版）](https://github.com/op7418/Humanizer-zh)、https://github.com/ForrestKnight/open-source-cs
+- [全网新闻聚合 Skill](https://github.com/cclank/news-aggregator-skill)
 
 ### SKILL合集
 
@@ -994,7 +995,7 @@ EOF
 
 # 安全
 
-- [eepAudit：国内首个开源的代码漏洞挖掘多智能体系统](https://github.com/lintsinghua/DeepAudit)
+- [DeepAudit：国内首个开源的代码漏洞挖掘多智能体系统](https://github.com/lintsinghua/DeepAudit)
 
 # 代理
 
@@ -1015,6 +1016,7 @@ EOF
 - [Ready to use Native AI](https://2233.ai/aicoding)
 - https://api.code-relay.com/register?aff=cPUm
 - https://cc.zhihuiapi.top/console
+- https://aicodewith.com/zh/dashboard/welcome
 
 # 参考资料
 
