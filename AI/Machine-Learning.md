@@ -17,6 +17,7 @@
 
 # 参考资料
 
+- [](https://github.com/plexe-ai/plexe)
 - Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）提供一些可扩展的机器学习领域经典算法的实现
 - [Kaggle-机器学习数据集](https://www.kaggle.com/)
 - [machine learning](https://www.bbbdata.com/ml)

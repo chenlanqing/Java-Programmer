@@ -923,6 +923,18 @@ EOF
 技术栈
 ```
 
+# 语义
+
+## [LSP](https://github.com/Microsoft/language-server-protocol)
+
+LSP: Language Server Protocol
+
+## 工具
+
+[serena： 语义检索和编辑功能（MCP 服务器及其他集成）](https://github.com/oraios/serena)
+
+
+
 # SKILL
 
 - [Add Skill](https://github.com/vercel-labs/add-skill)
@@ -931,6 +943,7 @@ EOF
 
 ## SKILL 安全
 
+- [乌云漏洞 Skills](https://github.com/tanweai/wooyun-legacy)
 - [skill-security-scan: 用于扫描和检测 Claude Skills 的安全风险](https://github.com/huifer/skill-security-scan)
 
 ## SKILL 市场
@@ -950,12 +963,14 @@ EOF
 - [Professional Claude Code marketplace with 140 development tools](https://github.com/manutej/luxor-claude-marketplace)
 - [Go Coding Conventions Skills](https://github.com/fredrikaverpil/dotfiles/blob/main/stow/shared/.claude/skills/golang-style/SKILL.md)
 - [Effective Go Skills](https://github.com/openshift/hypershift/tree/main/.claude/skills/effective-go)
+- [LSP-Skills](https://github.com/lsp-client/lsp-skill)
 
 ### 各种 SKILL
 
 - [专注于使用 Manim 生成动画教学视频的完整流程与专业建议](https://github.com/lispking/video-skills/tree/main/manim-video-teacher)
 - [AI 写作去痕工具（中文版）](https://github.com/op7418/Humanizer-zh)、https://github.com/ForrestKnight/open-source-cs
 - [全网新闻聚合 Skill](https://github.com/cclank/news-aggregator-skill)
+- [关键字文章 Skill](https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/business-marketing/content-creator)
 
 ### SKILL合集
 
@@ -976,6 +991,8 @@ EOF
 - https://github.com/bear2u/my-skills
 - https://github.com/czlonkowski/n8n-skills  
 - https://github.com/huggingface/skills
+- https://agent-skills.md/
+- [营销 Skills](https://github.com/coreyhaines31/marketingskills)
 
 # AI风格
 
