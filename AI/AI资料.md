@@ -102,6 +102,7 @@
 
 ## 金融应用
 
+- [LLM驱动的 A/H/美股智能分析器](https://github.com/ZhuLinsen/daily_stock_analysis)
 - [金融终端是一个为那些拒绝受传统软件限制的人打造的开源金融平台](https://github.com/Fincept-Corporation/FinceptTerminal)
 - [一个先进的多智能体人工智能系统用于金融市场分析](https://github.com/rockydant/ai-market/)
 - [人工智能对冲基金](https://github.com/virattt/ai-hedge-fund)
@@ -119,6 +120,7 @@
 
 - [tavily.ai 是一个专为人工智能代理（如大型语言模型，LLMs）和检索增强生成（RAG）应用优化的搜索引擎](https://tavily.com/)
 - [SearXNG:免费的互联网元搜索引擎](https://github.com/searxng/searxng)
+- https://serpapi.com/manage-api-key
 
 # DeepResearch
 

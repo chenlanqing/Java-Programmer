@@ -120,6 +120,14 @@ git push origin --delete master
 - [技术 README 写作技巧](https://github.com/BolajiAyodeji/awesome-technical-writing)
 - [谷歌通用的 Java、C++和 JavaScript 库，用于解析、格式化和验证国际电话号码](https://github.com/google/libphonenumber)
 
+### 地图
+
+- [Leaflet 轻量级地图可视化 专注于移动端、核心库体积小（<40KB）、加载速度快、插件生态丰富](https://github.com/Leaflet/Leaflet)
+- [Geoserver 企业级GIS服务 基于Java开发，遵循OGC标准，可通过Web界面发布WMS、WFS等服务](https://github.com/geoserver/geoserver)
+- [PostGIS 空间数据库 作为PostgreSQL的扩展，为关系型数据库添加强大的空间数据存储和分析能力](https://github.com/postgis/postgis)
+- [Turf.js 前端空间分析 纯JavaScript库，无需后端支持，可在浏览器中直接进行缓冲区分析、距离计算等](https://github.com/Turfjs/turf)
+- [OSMnx 街道网络分析 基于Python，可从OpenStreetMap获取数据并进行路径规划、网络分析等](https://github.com/gboeing/osmnx)
+
 ## 软件测试开源项目
 
 - [Selenium：Web 自动化测试的扛把子](https://github.com/SeleniumHQ/selenium)
