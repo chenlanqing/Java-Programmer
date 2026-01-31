@@ -107,7 +107,7 @@ TIME_WAIT 1645
 - Alfred3
 - [Raycast-快速启动](https://www.raycast.com/)，包含粘贴板的功能
 - Cheatsheet
-- 代理： Clash Verge（VPN）、[Clash Party](https://github.com/mihomo-party-org/clash-party)、[Sparkle](https://github.com/xishang0128/sparkle)
+- 代理： Clash Verge（VPN）、[Clash Party](https://github.com/mihomo-party-org/clash-party)、[Sparkle](https://github.com/xishang0128/sparkle)、[ClashMac](https://clashmac.app/)
 - CleanMyMac
 - [粘贴板-Maccy](https://maccy.app/)
 - iState Menus

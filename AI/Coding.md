@@ -1035,6 +1035,7 @@ LSP: Language Server Protocol
 - https://api.code-relay.com/register?aff=cPUm
 - https://cc.zhihuiapi.top/console
 - https://aicodewith.com/zh/dashboard/welcome
+- https://aiberm.com/console
 
 # 参考资料
 
