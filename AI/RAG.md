@@ -316,6 +316,7 @@ RAG与 LLM 微调对比 [模型微调长文本、RAG、微调对比](./LLM.md#11
 
 # RAG技术
 
+- [PageIndex：无矢量、基于推理的 RAG 文档索引](https://github.com/VectifyAI/PageIndex)
 - [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)
 - [GraphRAG](https://github.com/microsoft/graphrag)
 - [RAG-各种高级技术](https://github.com/NirDiamant/RAG_Techniques)

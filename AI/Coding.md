@@ -462,6 +462,11 @@ MCP、Skill、Projects 比较：
 - MCP 主要是客户端和服务端的架构，启动时加载所有工具定义，集成外部功能，Tokens 消耗更高，使用起来更复杂。
 - 两者是互补的关系，Agent 可以通过 Skills 获取知识，通过 MCP 拓展功能
 
+渐进式披露机制：
+- 元数据：始终加载
+- 指令层：SKILL.md 中除名称和描述外的所有内容，按需加载
+- 资源层：根据 SKILL.md 按需加载
+
 ### 3.2、如何安装
 
 ```
@@ -492,11 +497,16 @@ MCP、Skill、Projects 比较：
 组织结构
 - SKILL.md 主体：保持简洁，建议控制在 500 行左右，多了就拆文件，但要注意避免多层嵌套引用。
 - FORMS.md (表单填写指南)
-- REFERENCE.md (详细的 API 参考)
+- REFERENCE.md：相关参考文件，比如在 SKILL.md 中，如果需要使用的时候可以指示指令按需加载数据；条件触发的
 - Bundled Resources，需要时再读取：
   - `scripts/`：重复写的代码、需要确定性执行的逻辑。
   - `references/`：大块文档、API、schema、长规范。
   - `assets/`：模板、pptx、html boilerplate、字体等。
+
+### 3.4、对比 MCP
+
+- MCP：给大模型供给数据
+- SKILL：教大模型如何处理数据
 
 ## 4、自定义命令
 
@@ -655,7 +665,7 @@ claude --model opusplan  # Opus 计划 + Sonnet 执行
 3. 分阶段审查：复杂计划可以分多次审查
 4. 使用 Opus Plan 模式：计划用 Opus 质量高，执行用 Sonnet 速度快
 
-## 8、自定义代理 (Agents)
+## 8、自定义代理 (Sub Agents)
 
 自定义代理是具有专门能力和工具限制的 Claude 实例，适合将复杂任务委托给专门的"专家"
 
@@ -746,6 +756,12 @@ haiku:    文档生成、简单修复、代码探索
 你是记录员智能体。你的职责是为已完成的功能撰写清晰的文档，包括 API 文档、使用指南和代码注释。你还可以对代码进行可读性优化。
 ```
 
+### SKILL 与 SubAgent 区别
+
+最大的区别在于：对上下文的处理方式不同
+- SKILL 最适合：与上下文关联大、对上下文影响比较小的场景
+- SubAgents 最适合：与上下文关联不大、对上下文影响比较大的场景 
+
 ## 9、[MCP](https://code.claude.com/docs/zh-CN/mcp)
 
 MCP (Model Context Protocol) 允许 Claude 连接外部服务，如数据库、API、文件系统等，扩展其能力边界。
@@ -835,7 +851,11 @@ claude mcp list
 
 📖 Claude：深度理解与全局统筹，负责阅读长文、撰写论文、协调团队  
 💻 Codex：代码实现与调试专家，从算法原型到生产级代码一气呵成  
-🔍 Gemini：超长文本处理专家，分析代码仓库、扫描千行日志、研读海量文档  
+🔍 Gemini：超长文本处理专家，分析代码仓库、扫描千行日志、研读海量文档 
+
+## Claude Memory
+
+- [Claude-Mem 通过自动捕获工具使用观察、生成语义摘要并使其可用于未来会话,无缝保留跨会话的上下文](https://github.com/thedotmack/claude-mem)
 
 ## 其他
 

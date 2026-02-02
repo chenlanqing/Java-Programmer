@@ -414,6 +414,7 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 - [All parts of Claude Code's system prompt](https://github.com/Piebald-AI/claude-code-system-prompts)
 - [OpenAI 官方出了 20 个万能模板](https://academy.openai.com/public/clubs/work-users-ynjqu/tags/prompt-packs-6849a0f98c613939acef841c)
 - [AI 提示词工程与工作流集合](https://github.com/NeekChaw/RIPER-5)
+- [研究型 Prompts](https://github.com/Leey21/awesome-ai-research-writing)
 
 # 参考资料
 
