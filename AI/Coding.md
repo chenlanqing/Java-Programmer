@@ -1013,6 +1013,10 @@ LSP: Language Server Protocol
 - https://github.com/czlonkowski/n8n-skills  
 - https://github.com/huggingface/skills
 - https://agent-skills.md/
+- https://agentskills.me/
+- https://github.com/ZhanlinCui/Ultimate-Agent-Skills-Collection
+- [中文友好的技能商店，上架技能都是经过安全审查的](https://skillstore.io/zh-hans)
+- [Reddit社区推荐的技能合集](https://www.skillsdirectory.com/)
 - [营销 Skills](https://github.com/coreyhaines31/marketingskills)
 
 # AI风格
