@@ -252,7 +252,7 @@ chat_completion = client.chat.completions.create(
 print(chat_completion.choices[0].message.content)
 ```
 
-## 5、推理模型
+## 5、推理
 
 - [一款用于Apple M系列芯片的 AI 模型的高性能推理引擎](https://github.com/trymirai/uzu)
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
@@ -262,7 +262,9 @@ print(chat_completion.choices[0].message.content)
 - [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 - [LMCache 是一个 LLM 服务引擎扩展，用于减少 TTFT 并提高吞吐量](https://github.com/LMCache/LMCache)
 
-llama.cpp 是一个模型推理框架，采用纯 C/C++ 实现，无需依赖 PyTorch、TensorFlow 等重型框架，通过静态编译生成单一可执行文件，在资源受限环境中展现出独特优势。
+### llama.cpp
+
+[llama.cpp](https://github.com/ggml-org/llama.cpp) 是一个模型推理框架，采用纯 C/C++ 实现，无需依赖 PyTorch、TensorFlow 等重型框架，通过静态编译生成单一可执行文件，在资源受限环境中展现出独特优势。
 
 **量化技术**：在深度神经网络模型的开发流程中，结构设计完成后，训练阶段的核心任务是通过大量数据调整模型的**权重参数**。这些权重通常以浮点数的形式存储，常见的精度包括 16 位（FP16）、32 位（FP32）和 64 位（FP64）。训练过程通常依赖 GPU 的强大算力来加速计算，但这也带来了较高的硬件需求。为了降低这些需求，量化技术应运而生。
 
@@ -273,6 +275,10 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 张量是多维数组的泛化形式，广泛用于 TensorFlow、PyTorch 等主流深度学习框架中。通过改用 C/C++ 实现，ggml 不仅支持更广泛的硬件平台，还显著提升了计算效率。这种高效的设计为 llama.cpp 的诞生提供了坚实的基础，使其能够在资源受限的环境中实现高性能的模型推理。
 
 量化技术的核心在于权衡精度与效率。通过降低权重参数的精度，模型的计算量和存储需求大幅减少，但同时也可能引入一定的精度损失。因此，量化算法的设计需要在压缩率和模型性能之间找到最佳平衡点。
+
+### vllm
+
+- [vLLM：基于PyTorch的高性能推理引擎](https://github.com/vllm-project/vllm)
 
 ## 6、大模型本地部署
 
@@ -309,6 +315,8 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 - [Ollama-运行大模型框架](https://github.com/ollama/ollama)
 - [ollama-基本使用](https://github.com/datawhalechina/handy-ollama)
+
+
 
 ## 7、大模型评测
 

@@ -467,6 +467,12 @@ MCP、Skill、Projects 比较：
 - 指令层：SKILL.md 中除名称和描述外的所有内容，按需加载
 - 资源层：根据 SKILL.md 按需加载
 
+完整流程：
+- 在 Agent 启动时，仅将所有 Skills 的基本描述加入 AI 的上下文
+- 当用户发出需求时，AI 会根据 Skill 的描述判断具体要调用哪个 Skill
+- 决定后再去读取这个 Skill 的使用说明（SKILL.md）
+- 然后再根据使用说明进一步读取更详细的参考文档，以及决定是否执行某个脚本来连接外部世界
+
 ### 3.2、如何安装
 
 ```
@@ -507,6 +513,10 @@ MCP、Skill、Projects 比较：
 
 - MCP：给大模型供给数据
 - SKILL：教大模型如何处理数据
+
+### 3.5、SKILL 与 RAG
+
+- [本地知识库检索 Skill](https://github.com/ConardLi/rag-skill)
 
 ## 4、自定义命令
 
@@ -954,9 +964,7 @@ LSP: Language Server Protocol
 
 [serena： 语义检索和编辑功能（MCP 服务器及其他集成）](https://github.com/oraios/serena)
 
-
-
-# SKILL
+# Agents SKILL
 
 - [Add Skill](https://github.com/vercel-labs/add-skill)
 - [Skill Rank](https://skills.sh/)
