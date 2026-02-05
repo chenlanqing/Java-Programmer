@@ -17,6 +17,7 @@
 
 ## 论文
 
+- [总结Prompt&LLM论文，开源数据&模型，AIGC应用](https://github.com/DSXiangLi/DecryptPrompt)
 - [Awesome Agentic Reasoning Papers](https://github.com/weitianxin/Awesome-Agentic-Reasoning)
 - [Agentic Reasoning for Large Language Models](https://arxiv.org/pdf/2601.12538)
 
