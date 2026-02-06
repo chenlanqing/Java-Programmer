@@ -426,7 +426,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [MLX LM 是一个 Python 包，用于使用 MLX 在 Apple 芯片上生成文本和微调大型语言模型](https://github.com/ml-explore/mlx-lm)
 - [QLoRA：量化 LLM 的高效微调](https://github.com/artidoro/qlora)
 - [unsloth:模型微调框架](https://github.com/unslothai/unsloth)
-- [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LLaMA-Factory) 
+- [LLama-factory:整合了主流的各种高效训练微调技术](https://github.com/hiyouga/LlamaFactory) 
 - [MS-Swift:魔搭社区提供的大模型与多模态大模型微调部署框架](https://github.com/modelscope/ms-swift) 
 - Axolotl，YAML 配置驱动，可复现性强注重工程化和实验对比的团队
 - DeepSpeed，ZeRO 分布式训练，支持万亿参数拥有大规模集群的企业和顶尖研究机构
