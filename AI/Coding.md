@@ -966,6 +966,7 @@ LSP: Language Server Protocol
 
 # Agents SKILL
 
+- [The open agent skills tool - npx skills](https://github.com/vercel-labs/skills)
 - [Add Skill](https://github.com/vercel-labs/add-skill)
 - [Skill Rank](https://skills.sh/)
 - [Agent Skill Specification](https://github.com/agentskills/agentskills)

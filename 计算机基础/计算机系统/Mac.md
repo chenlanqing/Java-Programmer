@@ -61,6 +61,7 @@ TIME_WAIT 1645
 - [eza: ls命令替代](https://github.com/eza-community/eza)，关于 mac 上显示字体问题：https://github.com/eza-community/eza/issues/1275
 - [btop:监控软件](https://github.com/aristocratos/btop)
 - [TMUX 是一种终端复用器](https://github.com/tmux/tmux)
+- https://ghostty.org/
 
 ### 4.3、开发工具
 
