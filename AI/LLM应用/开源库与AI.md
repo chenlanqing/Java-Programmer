@@ -64,11 +64,11 @@ OpenAI主要模型Chat Model 和 Text Model，这两类 Model，是大语言模�
 
 OpenAI的Text模型 client.completions.create 请求参数：
 
-![](image/OpenAI-Text-模型参数.png)
+![](../image/OpenAI-Text-模型参数.png)
 
 在使用 Text 模型（如 text-davinci-003）的情况下，响应对象的主要字段包括：
 
-![](image/OpenAI-Text-模型-响应参数.png)
+![](../image/OpenAI-Text-模型-响应参数.png)
 
 ### 3.2、调用Chat模型
 
@@ -197,7 +197,7 @@ qa_chain = RetrievalQA.from_chain_type(llm,retriever=retriever_from_llm)
 
 把对模型的使用过程拆解成三块，分别是输入提示（对应图中的 Format）、调用模型（对应图中的 Predict）和输出解析（对应图中的 Parse），这三块形成了一个整体，因此在 LangChain 中这个过程被统称为 Model I/O（Input/Output）
 
-![](image/Model-IO-从输入到输出.png)
+![](../image/Model-IO-从输入到输出.png)
 
 在模型 I/O 的每个环节，LangChain 都提供了模板和工具，快捷地形成调用各种语言模型的接口：
 - 提示模板：使用模型的第一个环节是把提示信息输入到模型中，可以创建 LangChain 模板，根据实际需求动态选择不同的输入，针对特定的任务和应用调整输入。

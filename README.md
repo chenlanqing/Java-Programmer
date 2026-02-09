@@ -61,12 +61,12 @@
 
 # 五、AI
 
-- [大模型](AI/LLM.md)
-- [提示词工程](./AI/Prompts.md)
-- [MCP](./AI/Agent-MCP.md)
-- [Agent](./AI/Agent-MCP.md)
-- [RAG](./AI/RAG.md)
-- [深度学习与机器学习](./AI/Machine-Learning.md)
+- [大模型](AI/NLP-模型架构//LLM.md)
+- [提示词工程](./AI/LLM应用/Prompts.md)
+- [MCP](./AI/LLM应用/Agent-MCP.md)
+- [Agent](./AI/LLM应用/Agent-MCP.md)
+- [RAG](./AI/LLM应用/RAG.md)
+- [深度学习与机器学习](./AI/基础学习/Machine-Learning.md)
 
 # 六、大数据
 

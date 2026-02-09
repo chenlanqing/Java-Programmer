@@ -13,7 +13,7 @@ RAG 是一种旨在结合大型语言模型 (LLM) 的生成能力和外部知识
 
 简单来说，就是给 LLM 提供外部数据库，对于用户问题 ( Query )，通过一些信息检索 ( Information Retrieval, IR ) 的技术，先从外部数据库中检索出和用户问题相关的信息，然后让 LLM 结合这些相关信息来生成结果
 
-![](image/RAG-传统RAG与智RAG.gif)
+![](../image/RAG-传统RAG与智RAG.gif)
 
 RAG技术的核心建立在向量空间模型（Vector Space Model, VSM）的基础上。在向量空间中，文本被表示为高维向量，相似度通过向量间的距离或角度来衡量
 
@@ -58,7 +58,7 @@ RAG与 LLM 微调对比 [模型微调长文本、RAG、微调对比](./LLM.md#11
 - 自适应知识更新：主动识别知识过时与矛盾，动态更新知识库。
 - 协作式RAG：多智能体协同工作，分解复杂任务，共同完成目标。
 
-![](image/RAG技术演进路线图.png)
+![](../image/RAG技术演进路线图.png)
 
 > RAG 技术发展趋势总结：随着 MCP（多模态、上下文增强、个性化）技术的爆发，RAG 技术这个从单一的检索工具向智能知识生态系统演进。未来 RAG 将更专注于多模态融合、知识推理、自主决策和领域专业化，为执法、医疗等专业场景提供更精准、可信和自适应的知识服务，实现从“检索增强生生成”到“知识增强智能”的跃进！
 
@@ -299,18 +299,18 @@ RAG与 LLM 微调对比 [模型微调长文本、RAG、微调对比](./LLM.md#11
 
 ## 整体核心流程
 
-![](image/RAG-核心流程.png)
+![](../image/RAG-核心流程.png)
 
 # RAG分块策略
 
-![](image/RAG-5种分块策略.gif)
+![](../image/RAG-5种分块策略.gif)
 
 # RAG优化
 
 - [RAG优化策略总结](https://www.53ai.com/news/RAG/2025041523890.html)
 - [使用Agent优化动态知识库](https://github.com/FareedKhan-dev/temporal-ai-agent-pipeline)
 
-![](image/RAG-Optimize.png)
+![](../image/RAG-Optimize.png)
 
 `企业 RAG = 70% 工程 + 20% 领域知识 + 10% 模型 + ∞ 耐心`。毕竟，企业 RAG 不是一个纯技术问题，对行业的理解、对脏数据的处理能力、对工程细节的把控，都是绕不开的必修课
 
