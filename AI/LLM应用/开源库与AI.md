@@ -13,7 +13,11 @@ LangChain 本质上就是对各种大模型提供的 API 的套壳，是为了�
 
 因此，要了解 LangChain 的底层逻辑，需要了解大模型的 API 的基本设计思路。而目前接口最完备的、同时也是最强大的大语言模型，当然是 OpenAI 提供的 GPT 家族模型
 
-## 2、安装LangChain
+![](../image/Langchain结构.png)
+
+### 1.1、安装
+
+安装LangChain
 
 以Python为例：
 ```
@@ -29,6 +33,16 @@ pip install langchain[llms]
 ```
 pip install --upgrade langchain
 ```
+
+## 2、核心组件
+
+LangChian 作为一个大语言模型开发框架，可以将 LLM 模型（对话模型、embedding 模型等）、向量数据库、交互层 Prompt、外部知识、外部代理工具整合到一起，进而可以自由构建 LLM 应用。 LangChain 主要由以下 6 个核心组件组成:
+- **模型输入/输出（Model I/O）**：与语言模型交互的接口
+- **数据连接（Data connection）**：与特定应用程序的数据进行交互的接口
+- **链（Chains）**：将组件组合实现端到端应用。比如后续我们会将搭建`检索问答链`来完成检索问答。
+- **记忆（Memory）**：用于链的多次运行之间持久化应用程序状态；
+- **代理（Agents）**：扩展模型的推理能力。用于复杂的应用的调用序列；
+- **回调（Callbacks）**：扩展模型的推理能力。用于复杂的应用的调用序列；
 
 ## 3、OpenAI
 
