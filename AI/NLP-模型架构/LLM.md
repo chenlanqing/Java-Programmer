@@ -354,6 +354,11 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 - [专注于大型语言模型 （LLM） 的安全相关论文、文章和资源的精选列表](https://github.com/ydyjya/Awesome-LLM-Safety)
 
+## 10、中文大模型
+
+- [开源的中文大语言模型](https://github.com/HqWu-HITCS/Awesome-Chinese-LLM)
+- [中文LLaMA模型和指令精调的Alpaca大模型](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
+
 # 二、模型微调
 
 - [论文：从基础到突破微调LLM的终极指南](https://arxiv.org/pdf/2408.13296v1)

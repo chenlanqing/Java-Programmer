@@ -17,7 +17,8 @@
 
 # 参考资料
 
-- [](https://github.com/plexe-ai/plexe)
+- [Build a machine learning model from a prompt](https://github.com/plexe-ai/plexe)
+- [AiLearning：数据分析+机器学习实战+线性代数+PyTorch+NLTK+TF2](https://github.com/apachecn/ailearning)
 - Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）提供一些可扩展的机器学习领域经典算法的实现
 - [Kaggle-机器学习数据集](https://www.kaggle.com/)
 - [machine learning](https://www.bbbdata.com/ml)

@@ -1,8 +1,12 @@
 
-## 决策树
+# 决策树
 
 - [Decision tree-Wikipedia](https://en.wikipedia.org/wiki/Decision_tree)
 - [MCTS-Monte Carlo Tree Search, 蒙特卡洛树搜索](https://yey.world/2020/05/05/COMP90054-08/)
+
+# 深度学习与机器学习与 NLP
+
+- [500个人工智能机器学习深度学习计算机视觉自然语言处理项目含代码](https://github.com/ashishpatel26/500-AI-Machine-learning-Deep-learning-Computer-vision-NLP-Projects-with-code)
 
 # AI
 
@@ -322,13 +326,17 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Ready to use Native AI](https://2233.ai/aicoding)
 - [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
 - [Cpass](https://api.cpass.cc/console/topup)
-- [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
-- [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
 - [ChatOpens](https://www.chatopens.chat/Web/List.html)
 - https://console.aihubmix.com/token?aff=uTxe
 - https://www.aigocode.com/dashboard/console
 - [302.AI 是一个按用量付费的企业级 AI 资源平台](https://302.ai/dashboard/overview)
 - [AI聚合网站](https://link3.cc/maynorai)
+
+# LLM 调用分发
+
+- [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
+- [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
+- [Personal LLM API 是一款轻量级的 LLM 接口服务](https://github.com/NLP-LOVE/personal-llm-api)
 
 # 参考资料
 
