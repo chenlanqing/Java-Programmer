@@ -275,12 +275,10 @@ chat_completion = client.chat.completions.create(
 print(chat_completion.choices[0].message.content)
 ```
 
-## 5、推理
+## 5、LLM推理
 
 - [一款用于Apple M系列芯片的 AI 模型的高性能推理引擎](https://github.com/trymirai/uzu)
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
-- [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
-- [nano-vllm源码解析](https://mp.weixin.qq.com/s/nE_Pfrx2zzbCbakA_SP4_A)
 - [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
 - [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 - [LMCache 是一个 LLM 服务引擎扩展，用于减少 TTFT 并提高吞吐量](https://github.com/LMCache/LMCache)
@@ -301,9 +299,18 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ### vllm
 
+- [vLLM Metal is a plugin that enables vLLM to run on Apple Silicon Macs](https://github.com/vllm-project/vllm-metal)
+- [深入理解 vLLM](https://www.aleksagordic.com/blog/vllm)
 - [vLLM：基于PyTorch的高性能推理引擎](https://github.com/vllm-project/vllm)
 
-## 6、大模型本地部署
+`vLLM` 框架是一个高效的大语言模型**推理和部署服务系统**，具备以下特性：
+- **高效的内存管理**：通过 `PagedAttention` 算法，`vLLM` 实现了对 `KV` 缓存的高效管理，减少了内存浪费，优化了模型的运行效率。
+- **高吞吐量**：`vLLM` 支持异步处理和连续批处理请求，显著提高了模型推理的吞吐量，加速了文本生成和处理速度。
+- **易用性**：`vLLM` 与 `HuggingFace` 模型无缝集成，支持多种流行的大型语言模型，简化了模型部署和推理的过程。兼容 `OpenAI` 的 `API` 服务器。
+- **分布式推理**：框架支持在多 `GPU` 环境中进行分布式推理，通过模型并行策略和高效的数据通信，提升了处理大型模型的能力。
+- **开源共享**：`vLLM` 由于其开源的属性，拥有活跃的社区支持，这也便于开发者贡献和改进，共同推动技术发展。
+
+## 6、LLM部署
 
 - [GPT4All：在任何设备上运行本地 LLM](https://github.com/nomic-ai/gpt4all)
 - [Xinference-模型服务变得简单](https://github.com/xorbitsai/inference)
@@ -312,10 +319,8 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 - [ModelScope是阿里巴巴推出的开源模型即服务（MaaS）平台](https://www.modelscope.cn/home)
 - [huggingface: 机器学习（ML）和数据科学平台及社区](https://huggingface.co/)
 - [大模型部署电脑配置要求](https://www.zhihu.com/question/628771017)
-- [AutoDL部署 Deepseek](https://zhuanlan.zhihu.com/p/23213698282)
 - [EXO-分布式 AI 集群](https://github.com/exo-explore/exo)
 - [计算 LLM 推理所需的 GPU 内存](https://selfhostllm.org/)
-- [llama.cpp](https://github.com/ggml-org/llama.cpp)
 - [如何拥有一个无限制、可联网、带本地知识库的私人 DeepSeek](https://mp.weixin.qq.com/s/qeKrwJXz_QJE6eNwUOhjsA)
 
 ### 6.1、显卡需求和推荐模型
@@ -326,6 +331,7 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ### 6.2. 服务商
 
+- [AutoDL部署 Deepseek](https://zhuanlan.zhihu.com/p/23213698282)
 - [google：免费提供 T4 等显卡，显存16GB](https://colab.research.google.com/)
 - [新用户赠送 100h GPU 时间（16G、24G显卡）](https://modelscope.cn/)
 - [每日签到可以领取免费 GPU 时间，但是限制框架只能使用 Paddle](https://aistudio.baidu.com/)
@@ -338,7 +344,6 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 - [Ollama-运行大模型框架](https://github.com/ollama/ollama)
 - [ollama-基本使用](https://github.com/datawhalechina/handy-ollama)
-
 
 
 ## 7、大模型评测
@@ -757,6 +762,27 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 
 - [关于 embedding 模型](https://zhuanlan.zhihu.com/p/29949362142)
 
+### 调用 Embedding 模型
+
+```py
+from openai import OpenAI
+# 指向 Ollama 的 API 端点
+client = OpenAI(
+    base_url='http://localhost:11434/v1',
+    api_key='ollama'  # Ollama 不需要真实的 API key，但必须提供一个值
+)
+def openai_embedding(text: str, model: str=None):
+    # ollama 部署的 qwen3 模型
+    if model is None:
+        model="qwen3-embedding:8b"
+    resp = client.embeddings.create(
+        input=text,
+        model=model
+    )
+    return resp
+response = openai_embedding(text='要生成 embedding 的输入文本，字符串形式。')
+```
+
 # 学习资料
 
 ## 入门学习
@@ -776,6 +802,7 @@ embedding是将数据对象(如文本)映射到固定大小的连续一维数字
 - [大模型基础](https://github.com/ZJU-LLMs/Foundations-of-LLMs)
 - [LLM基础、模型构建和应用部署](https://github.com/mlabonne/llm-course)
 - [从头开始构建的轻量级 vLLM 实现](https://github.com/GeeeekExplorer/nano-vllm)
+- [nano-vllm源码解析](https://mp.weixin.qq.com/s/nE_Pfrx2zzbCbakA_SP4_A)
 - [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
 
 # 参考资料
