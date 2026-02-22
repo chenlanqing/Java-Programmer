@@ -726,7 +726,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [MCP+数据库](https://mp.weixin.qq.com/s/_HW4YQobEeBnIZMgrl7cLg)
 - [MCP入门到精通](https://mp.weixin.qq.com/s/jwzEFeHuB_k9BA7go8bNVg)
 - [MCP With LLMS](https://modelcontextprotocol.io/llms-full.txt)
-- [分析 Cline 与大模型的交互](https://www.youtube.com/watch?v=YyVkXrXxvX8)
+- [分析 Cline 与大模型的交互](hhttps://www.bilibili.com/video/BV1v9V5zSEHA)
 - [A bridge between Streamable HTTP and stdio MCP transports](https://github.com/sparfenyuk/mcp-proxy)
 
 
