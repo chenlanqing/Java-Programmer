@@ -1,4 +1,7 @@
 
+
+自注意力机制（Self-Attention）是一种让每个词根据上下文来动态调整它的自身表示（即向量）的机制
+
 # 参考资料
 
 - [Transformers](https://github.com/huggingface/transformers)

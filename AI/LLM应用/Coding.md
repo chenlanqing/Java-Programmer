@@ -333,6 +333,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 
 # 三、Claude Code
 
+- [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
 - [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
 - [Claude Code](https://github.com/anthropics/claude-code)
 - [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)
@@ -994,6 +995,7 @@ LSP: Language Server Protocol
 - [Go Coding Conventions Skills](https://github.com/fredrikaverpil/dotfiles/blob/main/stow/shared/.claude/skills/golang-style/SKILL.md)
 - [Effective Go Skills](https://github.com/openshift/hypershift/tree/main/.claude/skills/effective-go)
 - [LSP-Skills](https://github.com/lsp-client/lsp-skill)
+- [66 Specialized Skills for Full-Stack Developers](https://github.com/Jeffallan/claude-skills)
 
 ### 各种 SKILL
 
@@ -1001,6 +1003,11 @@ LSP: Language Server Protocol
 - [AI 写作去痕工具（中文版）](https://github.com/op7418/Humanizer-zh)、https://github.com/ForrestKnight/open-source-cs
 - [全网新闻聚合 Skill](https://github.com/cclank/news-aggregator-skill)
 - [关键字文章 Skill](https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/business-marketing/content-creator)
+
+### 文档 Skill
+
+- [NanoBanana PPT Skills 基于 AI 自动生成高质量 PPT 图片和视频的强大工具](https://github.com/op7418/NanoBanana-PPT-Skills)
+- [自媒体内容创作全家桶](https://github.com/JimLiu/baoyu-skills)
 
 ### SKILL合集
 
@@ -1050,6 +1057,7 @@ LSP: Language Server Protocol
 
 # 代理
 
+- [AI 中转站评测比价](https://www.helpaio.com/transit)
 - [Claude Code 代理](https://foxcode.hshwk.org/)
 - [Claude Code、Codex镜像服务](https://aicoding.sh/)
 - [银河录像局](https://nf.video/)

@@ -372,6 +372,8 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 ## 8、专业LLM
 
+### 金融 LLM
+
 - [Kronos 是首个面向金融市场的解读 K 线图基础模型](https://github.com/shiyu-coder/Kronos)
 
 ## 9、LLM安全
