@@ -1055,28 +1055,6 @@ LSP: Language Server Protocol
 
 - [DeepAudit：国内首个开源的代码漏洞挖掘多智能体系统](https://github.com/lintsinghua/DeepAudit)
 
-# 代理
-
-- [AI 中转站评测比价](https://www.helpaio.com/transit)
-- [Claude Code 代理](https://foxcode.hshwk.org/)
-- [Claude Code、Codex镜像服务](https://aicoding.sh/)
-- [银河录像局](https://nf.video/)
-- [ZCF - Zero-Config Code Flow](https://github.com/UfoMiao/zcf)
-- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
-- [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
-- [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
-- [ClaudeCodeCodex镜像服务](https://aicoding.sh/)
-- [Claude Code · CodeX · Gemini CLI](https://duckcoding.com/)
-- https://www.aicodemirror.com/
-- https://anyrouter.top/
-- https://www.packyapi.com/pricing
-- https://codex.packycode.com/pricing
-- [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
-- [Ready to use Native AI](https://2233.ai/aicoding)
-- https://api.code-relay.com/register?aff=cPUm
-- https://cc.zhihuiapi.top/console
-- https://aicodewith.com/zh/dashboard/welcome
-- https://aiberm.com/console
 
 # 参考资料
 

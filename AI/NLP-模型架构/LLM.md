@@ -376,6 +376,10 @@ llama.cpp 的量化实现依赖于作者 Georgi Gerganov 开发的另一个库�
 
 - [Kronos 是首个面向金融市场的解读 K 线图基础模型](https://github.com/shiyu-coder/Kronos)
 
+### 其他
+
+- [医学大型语言模型实用指南](https://github.com/AI-in-Health/MedLLMsPracticalGuide)
+
 ## 9、LLM安全
 
 - [专注于大型语言模型 （LLM） 的安全相关论文、文章和资源的精选列表](https://github.com/ydyjya/Awesome-LLM-Safety)
@@ -817,7 +821,6 @@ response = openai_embedding(text='要生成 embedding 的输入文本，字符�
 - [LangExtract：轻量却强大的结构化信息提取神器](https://github.com/google/langextract)
 - [Dolphin: Document Image Parsing via Heterogeneous Anchor Prompting](https://github.com/bytedance/Dolphin)
 - [从命令行访问大型语言模型](https://github.com/simonw/llm)
-- [医学大型语言模型实用指南](https://github.com/AI-in-Health/MedLLMsPracticalGuide)
 - [大型语言模型的结构化输出](https://github.com/dottxt-ai/outlines)
 - [LLM Council](https://github.com/karpathy/llm-council)
 - [从零开发大模型](https://mp.weixin.qq.com/s/wcjYPzPq-lADvz-TeKZ7VQ)
