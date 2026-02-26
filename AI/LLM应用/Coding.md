@@ -195,6 +195,7 @@ AI会严格按照tasks.md的任务列表，一个一个地完成编码、写测�
 # 二、Cursor
 
 - [Cursor AI编程经验分享](https://mp.weixin.qq.com/s/UM3nBcX6JpYtnchSCdrxOA)
+- [Cursor AI 辅助开发实践指南 Wiki](https://github.com/Cyronlee/effective-cursor)
 
 cursor的表现取决于：有效的Rules、正确的开发流程、标准的Prompt
 
@@ -322,6 +323,10 @@ rules 通过提前明确 “能做什么”“不能做什么”，解决三个�
 - 统一协作标准：团队共用一套规则时，AI 输出的代码风格、文档格式能保持一致，减少整合成本。
 
 Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor/rules/*.mdc` 目录下添加专属规则，用 git 管理实现团队共享；用模块化语言编写规则，更利于大模型理解
+
+### 2.1、生成 Rules
+
+AI 生成的 rules 的元提示词：
 
 ## 3、常用 MCP
 
@@ -870,6 +875,7 @@ claude mcp list
 
 ## 其他
 
+- [一个 CLAUDE.md 生成器和维护工具，用于创建高质量的 CLAUDE.md 指令文件](https://github.com/alirezarezvani/ClaudeForge)
 - [Claude 代码图形界面应用和工具包——创建自定义代理，管理交互式 Claude 代码会话，运行安全后台代理](https://github.com/winfunc/opcode)
 - [Claud Code 编程分享](https://blog.cosine.ren/post/my-claude-code-record-2)
 - [Claude Code 的智能自动化与多代理编排](https://github.com/wshobson/agents)
