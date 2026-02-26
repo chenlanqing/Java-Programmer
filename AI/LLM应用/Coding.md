@@ -326,7 +326,7 @@ Cursor 的 rules 分为全局 rules 和项目 rules：不同项目可在`.cursor
 
 ### 2.1、生成 Rules
 
-AI 生成的 rules 的元提示词：
+AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 
 ## 3、常用 MCP
 
