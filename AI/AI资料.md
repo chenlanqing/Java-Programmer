@@ -167,7 +167,7 @@
 - [E2B-开源的 Linux Sandbox](https://github.com/e2b-dev/e2b)
 - [Daytona 是一个安全且有弹性的基础设施-Linux Sandbox](https://github.com/daytonaio/daytona)
 - [gVisor：应用程序内核，使运行沙盒容器变得简单](https://github.com/google/gvisor)
-- [Firecracker 是一种开源虚拟化技术，专门用于创建和管理安全的多租户容器和基于功能的服务](https://github.com/firecracker-microvm/firecracker)
+- [Firecracker 是一种开源虚拟化技术，专门用于创建和管理安全的多租户容器和基于功能的服务](https://github.com/firecracker-microvm/firecracker)-Manus使用
 - [VNC 客户端网页应用](https://github.com/novnc/noVNC)
 
 # AI 工作平台

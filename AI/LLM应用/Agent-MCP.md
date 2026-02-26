@@ -287,6 +287,10 @@ def send_messages(messages):
 
 对于不具备 Function Calling 能力的大模型，可以通过 Prompt Engineering 的方式实现类似的机制，在Prompt中指定可用的工具列表和描述，让大模型来判断是否需要调用工具。不过这种方式对于模型的推理能力和指令遵从能力要求比较高
 
+## Tool call
+
+目前更流行的是直接给 agent 一系列非常通用的工具，比如 write_file，bash等，然后 agent 就能通过写一段代码，再用命令行执行的方式，来实现广泛的任务。而其中一些高频的功能，就可以考虑做成预装工具放在虚拟机中方便 agent 直接调用
+
 ## [A2A协议](https://github.com/google-a2a/A2A)
 
 - [Agent2Agent (A2A) Samples](https://github.com/google-a2a/a2a-samples)

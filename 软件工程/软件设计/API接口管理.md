@@ -616,3 +616,4 @@ include::asciidoc/generated/definitions.adoc[]
 - [YApi](https://github.com/YMFE/yapi)
 - [hoppscotch-开源API，对标Postman](https://github.com/hoppscotch/hoppscotch)
 - [API官方文档编写参考示例](https://github.com/longportapp/openapi-website)
+- [Bruno 是一款全新且创新的 API 客户端](https://github.com/usebruno/bruno)
