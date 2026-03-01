@@ -713,6 +713,10 @@ RAG + Tool Use + Orchestration 的三位一体：
 - [Google Agent Development Kit](https://google.github.io/adk-docs/)
 - [毕昇：开源AgentOps专攻办公效率场景](https://github.com/dataelement/bisheng)
 
+### Agent 能力
+
+- [Agent Reach: 给你的 AI Agent 一键装上互联网能力](https://github.com/Panniantong/Agent-Reach)
+
 ## 垂直领域 Agent
 
 ### Manus 分析
