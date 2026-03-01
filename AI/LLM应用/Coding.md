@@ -338,6 +338,7 @@ AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 
 # 三、Claude Code
 
+- [从零到企业实战：Claude Code 官方编程神器+OpenClaw](https://github.com/KimYx0207/Claude-Code-x-OpenClaw-Guide-Zh)
 - [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
 - [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
 - [Claude Code](https://github.com/anthropics/claude-code)
@@ -872,6 +873,55 @@ claude mcp list
 ## Claude Memory
 
 - [Claude-Mem 通过自动捕获工具使用观察、生成语义摘要并使其可用于未来会话,无缝保留跨会话的上下文](https://github.com/thedotmack/claude-mem)
+
+## Claude 使用流程
+
+- [How I use claude code](https://boristane.com/blog/how-i-use-claude-code/)
+
+### 阶段1：深入研究
+
+要求 Claude 在做其他事情之前，彻底理解代码库中相关部分。而且总是要求写入持久化的 Markdown 文件，而不是仅仅在聊天中口头总结  
+常用提示词：  
+> read this folder in depth, understand how it works deeply, what it does and all its specificities. when that’s done, write a detailed report of your learnings and findings in research.md  
+
+> go through the task scheduling flow, understand it deeply and look for potential bugs. there definitely are bugs in the system as it sometimes runs tasks that should have been cancelled. keep researching the flow until you find all the bugs, don’t stop until all the bugs are found. when you’re done, write a detailed report of your findings in research.md
+
+research.md 文件很重要，我们需要确认 claude 是否理解透系统，并提取纠正错误
+
+### 阶段2：规划
+
+审查完研究后，要求一个详细的实施计划，放在一个单独的 markdown 文件里  
+> I want to build a new feature <name and description> that extends the system to perform <business outcome>. write a detailed plan.md document outlining how to implement this. include code snippets
+
+> the list endpoint should support cursor-based pagination instead of offset. write a detailed plan.md for how to achieve this. read source files before suggesting changes, base the plan on the actual codebase
+
+生成的计划总包含方法的详细说明、显示实际变更的代码片段、将要修改的文件路径，以及考虑事项和平衡。
+
+常见技巧：对于包含良好的功能，如果在开源仓库中看到了好的实现，把这些代码作为参考分享给计划请求。当 Claude 有一个具体的参考实现可以参考时，效果会好得多，而不是从零设计
+
+claude 写好计划之后，在对应的Markdown 文件中编辑，添加比较，纠正假设、添加约束，或者提供 claude 没有的领域知识；
+```mermaid
+flowchart TD
+    A(Claude writes plan.md) --> B(Review in editor)
+    B --> C(I add inline notes)
+    C --> D(Send claude back to the document)
+    D --> E(Claude updates plan)
+    E --> F{Satisfied?}
+    F --> |No|B
+    F --> |Yes|G(Request todo list)
+```
+
+**TodoList**
+
+> 在计划中添加详细的待办事项清单，包含完成计划所需的所有阶段和任务——暂时不要实施
+
+这会创建一个清单，作为实施过程中的进度跟踪工具。Claude 会在过程中标记项目为已完成，可以随时查看计划，准确看到进展
+
+### 阶段3：实施
+
+计划准备之后，开始实施  
+> implement it all. when you’re done with a task or phase, mark it as completed in the plan document. do not stop until all tasks and phases are completed. do not add unnecessary comments or docs, do not use any or unknown types. continuously run typecheck to make sure you’re not introducing new issues.
+
 
 ## 其他
 
