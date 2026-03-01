@@ -125,6 +125,7 @@
 ## 个人应用
 
 - [构建个人的 AI 助理](https://github.com/HKUDS/DeepTutor)
+- OpenClaw
 
 ## 金融应用
 
