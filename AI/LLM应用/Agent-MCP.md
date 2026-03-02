@@ -638,6 +638,12 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 - **流程编排 (Flow Orchestration)**：这是Agent的“小脑和神经系统”，负责协调和执行复杂的多步骤任务。面对需要多个步骤才能完成的复杂分析任务，Agent并不会试图“一步到位”，而是会将其拆解为一系列逻辑上相互关联的子任务，并按照预设在提示词中的逻辑流程，依次执行。这种通过提示词实现的任务分解和流程编排，确保了Agent在处理复杂问题时的逻辑严谨性、过程透明性和结果可靠性。
 
+### Context Engineering
+
+- [Context Engineering](https://blog.langchain.com/context-engineering-for-agents/)
+
+优化大模型输入：保存 Context -> 选择 Context -> 压缩 Context -> 隔离 Context
+
 ## Agent 训练
 
 - [RAGEN：通过强化推理训练代理](https://github.com/RAGEN-AI/RAGEN)
@@ -671,6 +677,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 ### Multi-Agent
 
 - https://github.com/kyegomez/swarms
+- [三省六部 · Edict: 多 Agent 协作全流程](https://github.com/cft0808/edict)
 - [agentUniverse 是一个基于大型语言模型的多智能体框架](https://github.com/agentuniverse-ai/agentUniverse)
 - [crewAI-快速灵活的多代理自动化框架](https://github.com/crewAIInc/crewAI)
 - [OWL：实际任务自动化中提供通用多智能体协助](https://github.com/camel-ai/owl)
@@ -688,6 +695,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 ## 开源 Agent
 
+- [OpenFang: Open-source Agent OS built in Rust](https://github.com/RightNow-AI/openfang)
 - [ClawWork: OpenClaw as Your AI Coworker](https://github.com/HKUDS/ClawWork)
 - [实时全球情报仪表盘——基于 AI 驱动的新闻聚合、地缘政治监控和基础设施跟踪，统一态势感知界面](https://github.com/koala73/worldmonitor)
 - [Deep Search Agent:一个无框架的深度搜索AI代理实现，能够通过多轮搜索和反思生成高质量的研究报告](https://github.com/666ghj/DeepSearchAgent-Demo)
