@@ -114,6 +114,31 @@ gdb --version
 }
 ```
 
+# 二、设置
+
+## 关闭预览模式
+
+默认情况下，单击文件时会以 *预览标签页* 打开，新打开的文件会复用当前 tab，而不是新建一个 tab
+
+### 操作步骤
+
+- 打开 VS Code 设置
+- 搜索：
+```
+enable preview
+```
+- 关闭下面两个选项：
+    * ❌ **Workbench › Editor: Enable Preview**
+    * ❌ **Workbench › Editor: Enable Preview From Quick Open**
+
+**或者直接修改 settings.json** ： 打开 `settings.json`，添加：
+```json
+{
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.enablePreviewFromQuickOpen": false
+}
+```
+
 # 参考资料
 
 - [官方文档](https://code.visualstudio.com/docs)
