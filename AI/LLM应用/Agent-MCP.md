@@ -725,10 +725,7 @@ RAG + Tool Use + Orchestration 的三位一体：
 
 - [Agent Reach: 给你的 AI Agent 一键装上互联网能力](https://github.com/Panniantong/Agent-Reach)
 
-## 垂直领域 Agent
 
-- [Aitoearn：一人公司的AI内容营销智能体](https://github.com/yikart/AiToEarn):支持渠道：
-抖音、小红书（Rednote）、视频号、快手、哔哩哔哩、微信公众号、TikTok、YouTube、Facebook、Instagram、Threads、Twitter（X）、Pinterest、LinkedIn
 
 ### Manus 分析
  

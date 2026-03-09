@@ -40,7 +40,7 @@ LLM 典型的涌现能力：
 - 百度: 文心大模型
 - 智谱清言: GLM系列
 
-## 2、架构
+## 2、原理
 
 - [最全面的 LLM 架构技术解析](https://magazine.sebastianraschka.com/p/the-big-llm-architecture-comparison)
 

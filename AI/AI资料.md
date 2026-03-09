@@ -362,6 +362,15 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
 - [Personal LLM API 是一款轻量级的 LLM 接口服务](https://github.com/NLP-LOVE/personal-llm-api)
 
+# 自媒体
+
+- [MCP for 小红书 / xiaohongshu.com](https://github.com/xpzouying/xiaohongshu-mcp)
+- [Aitoearn：一人公司的AI内容营销智能体](https://github.com/yikart/AiToEarn):支持渠道：
+抖音、小红书（Rednote）、视频号、快手、哔哩哔哩、微信公众号、TikTok、YouTube、Facebook、Instagram、Threads、Twitter（X）、Pinterest、LinkedIn
+- [专业的小红书数据采集解决方案，支持笔记爬取，保存格式为excel或者media](https://github.com/cv-cat/Spider_XHS)
+- [自媒体平台爬虫](https://github.com/NanmiCoder/MediaCrawler)-小红书笔记、抖音视频、快手视频、B 站视频、微博帖子、百度贴吧帖子、百度贴吧评论回复爬虫、知乎问答文章
+
+
 # 参考资料
 
 - [ChatGPT账号](https://chatgpt123.com/)
