@@ -684,7 +684,7 @@ claude --model opusplan  # Opus 计划 + Sonnet 执行
 
 ## 8、自定义代理 (Sub Agents)
 
-- [Claude Agents](https://github.com/msitarzewski/agency-agents)
+- [AI 专家角色库：Claude Agents](https://github.com/msitarzewski/agency-agents)
 
 自定义代理是具有专门能力和工具限制的 Claude 实例，适合将复杂任务委托给专门的"专家"
 

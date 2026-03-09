@@ -361,6 +361,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
 - [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
 - [Personal LLM API 是一款轻量级的 LLM 接口服务](https://github.com/NLP-LOVE/personal-llm-api)
+- [Sub2API-CRS2 一站式开源中转服务](https://github.com/Wei-Shaw/sub2api)
 
 # 自媒体
 
