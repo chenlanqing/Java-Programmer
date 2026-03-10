@@ -49,37 +49,6 @@
 - [AI 入门课程](https://github.com/microsoft/generative-ai-for-beginners)
 - [AI Agents | RAG | LLMs：Open-source Ecosystem for High-Leverage AI Builders](https://www.theunwindai.com/)
 
-## API Key
-
-- [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
-- [聚合优秀的AI大模型](https://www.apiyi.com/)
-- [Wildcard-一键订阅](https://bewildcard.com/)
-- [硅基流动](https://siliconflow.cn/)
-- [openrouter](https://openrouter.ai/)
-- deepseek
-- 阿里云百炼
-- [Claude Code 代理](https://foxcode.hshwk.org/)
-- [Claude Code、Codex镜像服务](https://aicoding.sh/)
-- [银河录像局](https://nf.video/)
-- [ZCF - Zero-Config Code Flow](https://github.com/UfoMiao/zcf)
-- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
-- [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
-- [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
-- [ClaudeCodeCodex镜像服务](https://aicoding.sh/)
-- [Claude Code · CodeX · Gemini CLI](https://duckcoding.com/)
-- https://www.aicodemirror.com/
-- https://anyrouter.top/
-- https://www.packyapi.com/pricing
-- https://codex.packycode.com/pricing
-- [Ready to use Native AI](https://2233.ai/aicoding)
-- https://api.code-relay.com/register?aff=cPUm
-- https://cc.zhihuiapi.top/console
-- https://aicodewith.com/zh/dashboard/welcome
-- https://aiberm.com/console
-- [代理中转站评测](https://www.getcheapai.com/zh-cn)
-- [AI 中转站评测比价](https://www.helpaio.com/transit)
-- [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
-
 ## AI数据库
 
 [OceanBase seekdb 是一个 AI 原生搜索数据库，将关系型、矢量型、文本、JSON 和 GIS 统一在一个引擎中](https://github.com/oceanbase/seekdb)
@@ -355,6 +324,33 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - https://www.aigocode.com/dashboard/console
 - [302.AI 是一个按用量付费的企业级 AI 资源平台](https://302.ai/dashboard/overview)
 - [AI聚合网站](https://link3.cc/maynorai)
+- [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
+- [聚合优秀的AI大模型](https://www.apiyi.com/)
+- [Wildcard-一键订阅](https://bewildcard.com/)
+- [硅基流动](https://siliconflow.cn/)
+- [openrouter](https://openrouter.ai/)
+- [Claude Code 代理](https://foxcode.hshwk.org/)
+- [Claude Code、Codex镜像服务](https://aicoding.sh/)
+- [银河录像局](https://nf.video/)
+- [ZCF - Zero-Config Code Flow](https://github.com/UfoMiao/zcf)
+- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
+- [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
+- [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
+- [ClaudeCodeCodex镜像服务](https://aicoding.sh/)
+- [Claude Code · CodeX · Gemini CLI](https://duckcoding.com/)
+- https://www.aicodemirror.com/
+- https://anyrouter.top/
+- https://www.packyapi.com/pricing
+- https://codex.packycode.com/pricing
+- [Ready to use Native AI](https://2233.ai/aicoding)
+- https://api.code-relay.com/register?aff=cPUm
+- https://cc.zhihuiapi.top/console
+- https://aicodewith.com/zh/dashboard/welcome
+- https://aiberm.com/console
+- [代理中转站评测](https://www.getcheapai.com/zh-cn)
+- [AI 中转站评测比价](https://www.helpaio.com/transit)
+- [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
+
 
 # LLM 调用分发
 
@@ -362,6 +358,8 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
 - [Personal LLM API 是一款轻量级的 LLM 接口服务](https://github.com/NLP-LOVE/personal-llm-api)
 - [Sub2API-CRS2 一站式开源中转服务](https://github.com/Wei-Shaw/sub2api)
+- [CLI 代理 API](https://github.com/router-for-me/CLIProxyAPI)
+- [OmniRoute — 免费 AI 网关](https://github.com/diegosouzapw/OmniRoute)
 
 # 自媒体
 
