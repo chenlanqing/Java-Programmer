@@ -60,6 +60,7 @@
  
  # AI 应用
 
+- [Vane 是一款专注于隐私的 AI 答录引擎](https://github.com/ItzCrazyKns/Vane)
 - [一个基于 AI 技术的智能电子书解析工具，支持将 EPUB 和 PDF 格式的电子书转换为结构化的思维导图和文字总结](https://github.com/SSShooter/ebook-to-mindmap)
 - [一个可用于生产的模板，可在考虑结构和可扩展性的情况下启动您的生成式 AI 项目](https://github.com/HeyNina101/generative_ai_project)
 - [HackGPT Enterprise 是一个专为企业安全团队设计的生产就绪、云原生 AI 驱动的渗透测试平台](https://github.com/yashab-cyber/HackGpt/)
@@ -130,6 +131,7 @@
 
 沙盒与虚拟化
 
+- [Agent Safehouse – macOS 原生本地代理安全沙箱](https://github.com/eugene1g/agent-safehouse)
 - https://github.com/alibaba/OpenSandbox
 - https://github.com/anthropic-experimental/sandbox-runtime
 - [轻松安全地执行不受信任的用户/AI 代码](https://github.com/microsandbox/microsandbox)
