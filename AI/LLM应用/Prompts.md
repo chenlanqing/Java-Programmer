@@ -392,6 +392,10 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 
 - [AI 提示工程工作台，用于使用强大的分析工具制作、测试和系统评估提示](https://github.com/insaaniManav/prompt-forge)
 
+# 各种提示词
+
+- [“学习模式”Prompt](https://yousali.com/posts/20250805-study-mode-prompt/)
+
 # Prompt 案例
 
 - [AI 提示词的自由](https://prompts.chat/)
