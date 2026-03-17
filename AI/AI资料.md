@@ -371,6 +371,10 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [专业的小红书数据采集解决方案，支持笔记爬取，保存格式为excel或者media](https://github.com/cv-cat/Spider_XHS)
 - [自媒体平台爬虫](https://github.com/NanmiCoder/MediaCrawler)-小红书笔记、抖音视频、快手视频、B 站视频、微博帖子、百度贴吧帖子、百度贴吧评论回复爬虫、知乎问答文章
 
+# AI 技术选型
+
+- NextJS
+- Supabase
 
 # 参考资料
 
