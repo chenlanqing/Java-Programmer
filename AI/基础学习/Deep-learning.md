@@ -10,3 +10,4 @@
 - [Practical Deep Learning](https://course.fast.ai/)
 - [Deep Learning Book Chinese Translation](https://github.com/exacity/deeplearningbook-chinese)
 - [深度学习入门教程, 优秀文章, Deep Learning Tutorial](https://github.com/Mikoto10032/DeepLearning)
+- [《Hands-On Machine Learning with Scikit-LeSirand TensorFlow ](https://www.deeplearningbook.org/)
