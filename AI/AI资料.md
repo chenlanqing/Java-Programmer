@@ -204,6 +204,7 @@ Nano Banana 提示词
 
 - https://www.skyreels.ai/home/my-library?refer=navbar
 - [豆包大模型：SeedDance-生成视频提示词](https://youmind.com/zh-CN/seedance-2-0-prompts?utm_source=nav)
+- https://www.liblib.tv/
 
 ## 翻译
 
@@ -315,7 +316,6 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 # AI 代理
 
 - [Claude 自建代理](https://github.com/Wei-Shaw/claude-relay-service)
-- [Claude Code、Codex镜像服务](https://aicoding.sh/)
 - [银河录像局](https://nf.video/)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
 - [Ready to use Native AI](https://2233.ai/aicoding)
@@ -332,7 +332,6 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [硅基流动](https://siliconflow.cn/)
 - [openrouter](https://openrouter.ai/)
 - [Claude Code 代理](https://foxcode.hshwk.org/)
-- [Claude Code、Codex镜像服务](https://aicoding.sh/)
 - [银河录像局](https://nf.video/)
 - [ZCF - Zero-Config Code Flow](https://github.com/UfoMiao/zcf)
 - [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)

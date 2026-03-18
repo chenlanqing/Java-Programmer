@@ -25,8 +25,9 @@ AI Agent（人工智能智能体）是一种能够感知环境、进行决策并
 
 ### Agent、传统编程、Workflow 区别
 
-Agent、传统编程、Workflow 三者的本质区别是：传统编程和 Workflow 都是人在做决策、提前设计好所有逻辑，而 Agent 是 AI 在做决策。
+- [Agent、传统编程、Workflow 区别](https://mp.weixin.qq.com/s/4-p6yujL0nrwihnbkilZLw)
 
+Agent、传统编程、Workflow 三者的本质区别是：传统编程和 Workflow 都是人在做决策、提前设计好所有逻辑，而 Agent 是 AI 在做决策。
 
 ### Agent核心架构定义
 

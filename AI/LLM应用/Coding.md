@@ -343,7 +343,7 @@ AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 - [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
 - [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
 - [Claude Code](https://github.com/anthropics/claude-code)
-- [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)
+- [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)-https://learn.shareai.run/zh/
 - [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
 - [Claude code core library](https://github.com/obra/superpowers)
 - [CLI tool for configuring and monitoring Claude Code](https://github.com/davila7/claude-code-templates)
