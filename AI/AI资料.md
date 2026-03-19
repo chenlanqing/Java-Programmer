@@ -351,6 +351,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [代理中转站评测](https://www.getcheapai.com/zh-cn)
 - [AI 中转站评测比价](https://www.helpaio.com/transit)
 - [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
+- [AIClient2API 是一个突破客户端限制的 API 代理服务](https://github.com/justlovemaki/AIClient-2-API)
 
 
 # LLM 调用分发

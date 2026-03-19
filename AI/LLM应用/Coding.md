@@ -342,6 +342,7 @@ AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 - [从零到企业实战：Claude Code 官方编程神器+OpenClaw](https://github.com/KimYx0207/Claude-Code-x-OpenClaw-Guide-Zh)
 - [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
 - [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
+- [Claude Code 相关配置](https://github.com/garrytan/gstack)
 - [Claude Code](https://github.com/anthropics/claude-code)
 - [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)-https://learn.shareai.run/zh/
 - [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
