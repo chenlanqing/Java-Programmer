@@ -927,6 +927,51 @@ flowchart TD
 计划准备之后，开始实施  
 > implement it all. when you’re done with a task or phase, mark it as completed in the plan document. do not stop until all tasks and phases are completed. do not add unnecessary comments or docs, do not use any or unknown types. continuously run typecheck to make sure you’re not introducing new issues.
 
+## Claude Code 好用命令
+
+- [Claude Code 隐藏命令](https://mp.weixin.qq.com/s/XopaISgwzSgoqZctym_Ajg)
+
+### `/btw`
+
+可以在Claude Code 正在干活的时候插一个问题进去，但这个问题不会被加入对话历史
+
+如何使用：
+```
+/btw <你的问题>
+```
+完全不会中断你之前发送的任务，上下两个进程，是纯粹的并行状态;
+
+回答完以后，这段就没用了，可以按空格或者回车，直接把这一段消除掉；
+
+### `/rewind`
+
+rewind，也就是按两下Esc，可以理解成撤销或者回退，也就是很多设计软件里面的Ctrl+Z。`/rewind`会弹出菜单让你选，是只回退代码还是只回退对话
+
+### `/insights`
+
+它会生成一份HTML报告，分析过去一个月使用Claude Code的习惯，包括最常用哪些命令，有哪些重复性的操作模式，然后推荐一些自定义命令和Skills
+
+### `/model opusplan`
+
+会在需要复杂推理时自动以plan模式使用Claude Opus 4.6，然后切换到Claude Sonnet 4.6进行执行
+
+### `/simplify`
+
+`/simplify`可以理解成一个三合一的代码审查工具，本质上其实是个Skills。
+
+你输入`/simplify`之后，Claude Code会同时启动三个平行的Agent，分别从代码复用、代码质量、运行效率三个角度审查你的改动。
+
+### `/branch`
+
+可以把当前对话分叉出一个新会话，原来的会话不受影响;
+
+这个适合你在跟Claude聊到一半，突然想试另一个方向，但又不想丢掉当前对话进度的时候。
+
+比如Claude刚帮你梳理完一个方案的思路，你想沿着这个思路试两种不同的实现方式，/branch一下，两个会话各走一边，最后挑效果好的那个
+
+### `/loop`
+
+可以让Claude定时重复执行某个任务。用法是`/loop`后面跟时间间隔和你要它做的事情
 
 ## 其他
 
