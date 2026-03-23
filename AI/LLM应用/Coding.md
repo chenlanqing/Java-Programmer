@@ -352,6 +352,7 @@ AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 - [Claude Code router](https://github.com/musistudio/claude-code-router)
 - [A comprehensive directory for discovering plugin marketplaces](https://claudemarketplaces.com/)
 - [Claude Code完全使用指南](https://mp.weixin.qq.com/s/Vpkzra5I8lvyTA8jX8l_2A)
+- [Claude Code 实时状态栏](https://github.com/jarrodwatts/claude-hud)
 
 ## 1、基本使用
 
