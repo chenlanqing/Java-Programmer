@@ -3161,6 +3161,11 @@ uv run 的执行逻辑为：
 - 验证环境是否包含脚本所需依赖，如果缺失依赖则自动安装；
 - 在当前的虚拟环境中执行命令，不会与其他环境产生冲突；
 
+**查看已安装版本**
+```bash
+uv python list
+```
+
 ### 4.2、依赖管理
 
 **添加依赖**
@@ -3185,6 +3190,10 @@ uv sync
 uv sync --production
 # 同步并清理多余包
 uv sync --clean
+# 导出依赖（锁版本）
+uv pip freeze > requirements.txt
+# 解析依赖：
+uv pip compile pyproject.toml
 ```
 
 ### 4.3、管理虚拟环境
@@ -3211,6 +3220,25 @@ url = "https://mirrors.aliyun.com/pypi/simple/"
 ```sh
 uv sync --index-url https://mirrors.aliyun.com/pypi/simple/
 ```
+
+### 4.5、工具管理
+
+```bash
+# 安装工具
+uv tool install lsp-cli
+# 列出工具
+uv tool list
+# 升级工具
+uv tool upgrade lsp-cli
+uv tool upgrade --all
+# 卸载工具
+uv tool uninstall kimi-cli
+# 运行工具
+uvx ruff check .
+uvx black .
+```
+
+
 
 ## 5、包冲突
 
