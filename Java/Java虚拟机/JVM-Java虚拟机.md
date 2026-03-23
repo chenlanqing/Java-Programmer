@@ -3146,6 +3146,10 @@ SubstrateVM：AOT编译框架
 	
 # 18、AOT
 
+# 19、基准测试
+
+- [JVM 上序列化库的基准比较](https://github.com/eishay/jvm-serializers)
+
 # 参考文章
 
 * [深入理解JVM启动](https://inside.java/2025/01/28/jvm-start-up/)
