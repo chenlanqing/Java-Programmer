@@ -32,3 +32,4 @@
 - [LLM底层秘密—Transformer原理解析](https://mp.weixin.qq.com/s/x2aixxjfGJvA_epMR9mu2Q)
 - [Attention Is All You Need](https://arxiv.org/pdf/1706.03762)
 - [Transformers 快速入门](https://transformers.run/)
+- [The Illustrated Transformer](https://jalammar.github.io/illustrated-transformer/)

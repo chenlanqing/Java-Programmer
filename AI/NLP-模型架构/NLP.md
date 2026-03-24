@@ -14,6 +14,7 @@
 
 [Word2Vec](https://en.wikipedia.org/wiki/Word2vec)是Google于2013年开源推出的一个用于获取词向量（word vector）的工具包。它是语言模型中的一种，从大量文本预料中以无监督方式学习语义知识的模型，被广泛地应用于自然语言处理中
 
+# 预训练模型
 
 
 # 参考资料
