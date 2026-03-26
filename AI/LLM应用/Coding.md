@@ -1071,8 +1071,6 @@ LSP: Language Server Protocol
 
 [serena： 语义检索和编辑功能（MCP 服务器及其他集成）](https://github.com/oraios/serena)
 
-g
-
 # AI风格
 
 ## AI代码前端风格
