@@ -46,7 +46,7 @@ TIME_WAIT 1645
 - [iTerm 终端工具 ](https://zhuanlan.zhihu.com/p/550022490)
 - [ohmyzsh](https://github.com/ohmyzsh/ohmyzsh)
     - 高亮插件： `git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting`
-    - 命令自动填充插件：` git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions    `
+    - 命令自动填充插件：`git clone https://github.com/zsh-users/zsh-autosuggestions ~/.oh-my-zsh/custom/plugins/zsh-autosuggestions`
     - 安装插件：plugins=(git zsh-autosuggestions zsh-syntax-highlighting docker-compose docker)
     - 修改终端： 
         - 查看当前终端：`echo $SHELL`，查看所有终端：`cat /etc/shells`
