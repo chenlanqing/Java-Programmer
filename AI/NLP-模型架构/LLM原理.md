@@ -152,6 +152,8 @@ Let, ', s, do, some, NLP, tasks, .
 
 ### 基于子词（Sub-Word-Based）
 
+- [21. BPE vs WordPiece：理解 Tokenizer 的工作原理与子词分割方法.md](https://github.com/Hoper-J/AI-Guide-and-Demos-zh_CN/blob/master/Guide/21.%20BPE%20vs%20WordPiece：理解%20Tokenizer%20的工作原理与子词分割方法.md)
+
 基于子词（subword）的 tokenization 算法依赖于这样一个原则：常用词不应被分解为更小的子词，但罕见词应被分解为有意义的子词；
 
 Sub-Word 分词方式使模型相对合理的词汇量（不会太多也不会太少），同时能够学习有意义的与上下文无关的表示形式（另外，该分词方式通过将模型分解成已知的子词，使模型能够处理以前从未见过的词（oov问题得到了很大程度上的缓解）
@@ -258,7 +260,7 @@ $$
 
 ##### 基本代码实现
 
-
+[BPE_Implement](./code/bpe_algorithm.py)
 
 #### WordPiece
 
@@ -285,6 +287,157 @@ $$
    - 将新符号添加到词汇表 $V = V \cup \{xy\}$。
    - 更新语料库中的单词表示，重复统计和合并过程，直到满足停止条件。
 
+示例：使用与 BPE 示例相同的语料库
+
+**步骤 1：初始化词汇表**
+
+- **将单词拆分为字符序列**：
+  ```plaintext
+  ('l', '##o', '##w'), 5                       # "low"
+  ('l', '##o', '##w', '##e', '##r'), 2         # "lower"
+  ('n', '##e', '##w', '##e', '##s', '##t'), 6  # "newest"
+  ('w', '##i', '##d', '##e', '##s', '##t'), 3  # "widest"
+  ```
+- **词汇表 $V$**：
+  ```plaintext
+  {'l', '##o', '##w', '##e', '##r', 'n', '##s', '##t', 'w', '##i', '##d'}
+  ```
+
+**步骤 2：统计字符和字符对的频次，计算 Score**
+可以设计一个函数完成这个步骤（直接运行查看输出）：
+```python
+from collections import defaultdict
+def count_char_pairs_wordpiece(word_freq):
+    """
+    计算字符对的频次和单个字符的频次。
+    参数：
+        word_freq: List of tuples, 每个元组包含单词（列表形式）和其频次
+    返回：
+        两个字典，分别为字符对频次和单个字符频次
+    """
+    pair_freq = defaultdict(int)
+    char_freq = defaultdict(int)
+    for word, freq in word_freq:
+        for i in range(len(word)):
+            char_freq[word[i]] += freq
+            if i < len(word) - 1:
+                pair = (word[i], word[i + 1])
+                pair_freq[pair] += freq
+    return pair_freq, char_freq
+
+def compute_wordpiece_score(freq_xy, freq_x, freq_y):
+    """
+    根据 WordPiece 的定义计算 Score。
+    参数：
+        freq_xy: 符号对的频次
+        freq_x: 符号 x 的频次
+        freq_y: 符号 y 的频次
+    返回：
+        计算得到的 Score
+    """
+    if freq_x == 0 or freq_y == 0:
+        return 0
+    return freq_xy / (freq_x * freq_y)
+
+# 示例词汇表和单词频次
+word_freq = [
+    (['l', '##o', '##w'], 5),
+    (['l', '##o', '##w', '##e', '##r'], 2),
+    (['n', '##e', '##w', '##e', '##s', '##t'], 6),
+    (['w', '##i', '##d', '##e', '##s', '##t'], 3)
+]
+# 统计字符对频次和单个字符频次
+pair_freq, char_freq = count_char_pairs_wordpiece(word_freq)
+# 计算每对字符的 Score
+scores = {}
+for pair in pair_freq:
+    freq_xy = pair_freq[pair]
+    freq_x = char_freq[pair[0]]
+    freq_y = char_freq[pair[1]]
+    score = compute_wordpiece_score(freq_xy, freq_x, freq_y)
+    scores[pair] = score
+
+# 输出结果
+print("字符对频次统计结果:")
+for pair, freq in pair_freq.items():
+    print(f"{pair}: {freq}")
+
+print("\n单个字符频次统计结果:")
+for char, freq in char_freq.items():
+    print(f"{char}: {freq}")
+
+print("\n字符对 Score 计算结果:")
+for pair, score in scores.items():
+    print(f"{pair}: {score:.4f}")
+```
+
+**输出**：
+```python
+字符对频次统计结果:
+('l', '##o'): 7
+('##o', '##w'): 7
+('##w', '##e'): 8
+('##e', '##r'): 2
+('n', '##e'): 6
+('##e', '##w'): 6
+('##e', '##s'): 9
+('##s', '##t'): 9
+('w', '##i'): 3
+('##i', '##d'): 3
+('##d', '##e'): 3
+
+单个字符频次统计结果:
+l: 7
+##o: 7
+##w: 13
+##e: 17
+##r: 2
+n: 6
+##s: 9
+##t: 9
+w: 3
+##i: 3
+##d: 3
+
+字符对 Score 计算结果:
+('l', '##o'): 0.1429
+('##o', '##w'): 0.0769
+('##w', '##e'): 0.0362
+('##e', '##r'): 0.0588
+('n', '##e'): 0.0588
+('##e', '##w'): 0.0271
+('##e', '##s'): 0.0588
+('##s', '##t'): 0.1111
+('w', '##i'): 0.3333
+('##i', '##d'): 0.3333
+('##d', '##e'): 0.0588
+```
+- **选择频次最高的字符对**：
+  -  `('w', '##i')` 和 `('##i', '##d')`，Score 都为 0.3333。可以任选其一进行合并，假设选择排序第一的： `("w", "##i")`。
+- **合并 `('w', '##i')` 为新符号 `wi`**
+  - 注意：合并时，若第二个符号以 `##` 开头，合并后的新符号为第一个符号加上第二个符号去掉 `##` 前缀的部分。
+- **记录合并操作：**
+  ```plaintext
+  Merge 1: ('w', '##i') -> 'wi'
+  ```
+
+**步骤 4：更新词汇表并重复**
+- **更新词汇表 $V$**：
+  ```plaintext
+  {'l', '##o', '##w', '##e', '##r', 'n', '##s', '##t', 'w', '##i', '##d', 'wi'}
+  ```
+- **更新单词序列**：
+  ```plaintext
+  ('l', '##o', '##w'), 5                       # "low"
+  ('l', '##o', '##w', '##e', '##r'), 2         # "lower"
+  ('n', '##e', '##w', '##e', '##s', '##t'), 6  # "newest"
+  ('wi', '##d', '##e', '##s', '##t'), 3        # "widest"
+  ```
+- **重复步骤 2 到 4，直到达到预定的词汇表大小**。
+
+##### 基本代码实现
+
+[Word Piece](./code/word_piece_algorithm.py)
 
 #### Unigram Language Model
 
