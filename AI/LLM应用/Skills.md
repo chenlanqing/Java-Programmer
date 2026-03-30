@@ -29,9 +29,11 @@
 - [Effective Go Skills](https://github.com/openshift/hypershift/tree/main/.claude/skills/effective-go)
 - [LSP-Skills](https://github.com/lsp-client/lsp-skill)
 - [66 Specialized Skills for Full-Stack Developers](https://github.com/Jeffallan/claude-skills)
+- [给 Claude Code 装上完整联网能力的 skill：三层通道调度 + 浏览器 CDP + 并行分治](https://github.com/eze-is/web-access)
 
 ## 各种 SKILL
 
+- [PUA Skills](https://github.com/tanweai/pua)
 - [专注于使用 Manim 生成动画教学视频的完整流程与专业建议](https://github.com/lispking/video-skills/tree/main/manim-video-teacher)
 - [AI 写作去痕工具（中文版）](https://github.com/op7418/Humanizer-zh)、https://github.com/ForrestKnight/open-source-cs
 - [全网新闻聚合 Skill](https://github.com/cclank/news-aggregator-skill)
