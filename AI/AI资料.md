@@ -329,6 +329,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
 - [聚合优秀的AI大模型](https://www.apiyi.com/)
 - [Wildcard-一键订阅](https://bewildcard.com/)
+- https://bewild.ai/
 - [硅基流动](https://siliconflow.cn/)
 - [openrouter](https://openrouter.ai/)
 - [Claude Code 代理](https://foxcode.hshwk.org/)
