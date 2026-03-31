@@ -210,7 +210,7 @@ Nano Banana 提示词
 
 - [Paper Burner X - AI文献识别、翻译、阅读与智能分析工具](https://github.com/Feather-2/paper-burner-x)
 
-# 语音处理
+## 语音处理
 
 - [实时语音框架：Chatterbox](https://github.com/resemble-ai/chatterbox)
 - [Minimaxi](https://platform.minimaxi.com/user-center/basic-information/interface-key)
@@ -220,6 +220,10 @@ Nano Banana 提示词
 - https://elevenlabs.io/
 - [WhisperLiveKit 是一个完全在你自己电脑上运行的实时语音转文字工具](https://github.com/QuentinFuxa/WhisperLiveKit)
 - https://github.com/microsoft/VibeVoice
+
+## 其他
+
+- [OpenCli-把任何网站、本地工具、Electron 应用变成能够让 AI 调用的命令行，支持 65 个网站](https://github.com/jackwener/opencli)
 
 # Java与AI
 

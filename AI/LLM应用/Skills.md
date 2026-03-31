@@ -21,6 +21,7 @@
 - [通用 Open skills 处理器](https://github.com/numman-ali/openskills)
 - [用于在 Rust 中使用 Makepad 框架构建跨平台 UI 应用的 Claude Code Skills](https://github.com/ZhangHanDong/makepad-skills)
 - [Skill Category](https://www.myaiexp.com/zh?category=skills)
+- https://agentskillsfinder.com/zh
 
 ## 编程 SKILL
 
@@ -38,6 +39,7 @@
 - [AI 写作去痕工具（中文版）](https://github.com/op7418/Humanizer-zh)、https://github.com/ForrestKnight/open-source-cs
 - [全网新闻聚合 Skill](https://github.com/cclank/news-aggregator-skill)
 - [关键字文章 Skill](https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/business-marketing/content-creator)
+- [同事.skill](https://github.com/titanwings/colleague-skill)
 
 ## 文档 Skill
 
