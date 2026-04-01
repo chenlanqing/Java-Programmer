@@ -1,4 +1,26 @@
-# 概述
+# 前置知识
+
+## 神经网络
+
+## 梯度下降
+
+## 反向传播
+
+## 激活函数
+
+### Sigmoid函数
+
+### ReLU 函数
+
+### Softmax 函数
+
+### Tanh 函数
+
+### Silu 函数
+
+## LayerNorm
+
+## RMSNorm
 
 # Transformer 模型结构
 
