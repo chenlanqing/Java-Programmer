@@ -119,6 +119,10 @@
 - [SearXNG:免费的互联网元搜索引擎](https://github.com/searxng/searxng)
 - https://serpapi.com/manage-api-key
 
+# Harness
+
+- [开源的 super agent harness](https://github.com/bytedance/deer-flow)
+
 # DeepResearch
 
 - https://github.com/bytedance/deer-flow

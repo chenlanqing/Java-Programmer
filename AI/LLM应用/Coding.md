@@ -338,7 +338,8 @@ AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 
 # 三、Claude Code
 
-- https://github.com/doccker/cc-use-exp
+- [学习 Claude Code 源码](https://www.xuanyuancode.com/learn-claude-code)
+- [AI 编码助手配置体系](https://github.com/doccker/cc-use-exp)
 - [从零到企业实战：Claude Code 官方编程神器+OpenClaw](https://github.com/KimYx0207/Claude-Code-x-OpenClaw-Guide-Zh)
 - [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
 - [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
@@ -351,7 +352,7 @@ AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 - [Claude Quick starts](https://github.com/anthropics/claude-quickstarts)
 - [Claude Code router](https://github.com/musistudio/claude-code-router)
 - [A comprehensive directory for discovering plugin marketplaces](https://claudemarketplaces.com/)
-- [Claude Code完全使用指南](https://mp.weixin.qq.com/s/Vpkzra5I8lvyTA8jX8l_2A)
+- [Claude Code 完全使用指南](https://mp.weixin.qq.com/s/Vpkzra5I8lvyTA8jX8l_2A)
 - [Claude Code 实时状态栏](https://github.com/jarrodwatts/claude-hud)
 
 ## 1、基本使用
@@ -697,6 +698,15 @@ claude --model opusplan  # Opus 计划 + Sonnet 执行
 3. 分阶段审查：复杂计划可以分多次审查
 4. 使用 Opus Plan 模式：计划用 Opus 质量高，执行用 Sonnet 速度快
 
+特别适合下面这些场景：
+- 改动跨多个模块
+- 涉及数据库、权限、接口联动
+- 你自己也没想清楚具体实现
+- 你想先让 Claude 给出完整步骤
+- 你担心它没想清楚就直接改代码
+
+一个简单判断标准：如果你脑子里都已经觉得“这个任务有点大”，那就先 /plan。Plan Mode 最大的价值不是更正式，而是帮你把“想法”变成“执行顺序”
+
 ### 自定义代理 (Sub Agents)
 
 - [AI 专家角色库：Claude Agents](https://github.com/msitarzewski/agency-agents)
@@ -890,6 +900,137 @@ claude mcp list
 ## Claude Memory
 
 - [Claude-Mem 通过自动捕获工具使用观察、生成语义摘要并使其可用于未来会话,无缝保留跨会话的上下文](https://github.com/thedotmack/claude-mem)
+
+## 工作流
+
+- [ClaudeCode 进阶使用方式：工作流](https://www.xuanyuancode.com/learn-claude-code/tutorials/cu4)
+
+### 如何使用
+
+让 Claude 先理解，再规划，再执行，再验证
+```mermaid
+flowchart LR
+    A[先让 Claude 理解项目] --> B[输出方案，不立刻改]
+    B --> C[确认文件范围和风险]
+    C --> D[开始修改]
+    D --> E[运行 build / test 验证]
+    E --> F["/review 再审一遍"]
+    F --> G["/diff 看改动"]
+    G --> H["/commit 提交"]
+```
+很好用的任务模板：
+```md
+先分析这个需求会涉及哪些文件，给出实现方案和风险点，先不要改代码。
+
+确认后再开始修改。修改完成后运行 build 和相关测试。
+
+最后从 code review 角度再检查一遍潜在问题。
+```
+
+### 工作流 1：新功能开发
+
+**适用场景**
+- 新增页面
+- 增加一个接口
+- 给现有模块加新能力
+- 需要改多个文件，但边界还算清晰
+
+**推荐步骤**
+1.  先让 Claude 理解相关模块
+2.  输出实现方案和涉及文件
+3.  确认后开始改代码
+4.  跑构建和测试
+5.  做一次 review
+6.  查看 diff 并提交
+
+**配套命令**
+- `/plan`
+- `/diff`
+- `/review`
+- `/commit`
+
+**推荐提问方式**
+```
+先看一下这个功能会影响哪些文件，给出一个最小实现方案，先不要改代码。
+我确认后你再开始改，改完运行 build 和相关测试，最后再 review 一遍。
+```
+
+### 工作流 2：bug 修复
+
+“先定位，再修复，再复现验证”
+
+**适用场景**
+- 页面报错
+- 接口异常
+- 状态错乱
+- 某个场景偶现 bug
+
+**推荐步骤**
+- 让 Claude 先复述问题和排查方向
+- 搜索相关调用链和报错位置
+- 给出 root cause 推断
+- 先说修法，再动代码
+- 用最接近真实问题的方式验证
+
+**提问方式**
+```md
+先不要改代码，先帮我定位这个 bug 可能在哪几层。
+把最可能的根因、相关文件和修复思路列出来。确认后再改。
+改完后请尽量复现并验证这个问题是否真的解决。
+```
+
+### 工作流 3：重构与代码整理
+
+**适用场景**
+- 文件太大想拆分
+- 重复逻辑太多
+- 命名和结构混乱
+- 组件、服务、工具函数边界不清
+
+**推荐步骤**
+- 先让 Claude 评估当前结构问题
+- 明确“这次只做哪一类重构”
+- 先列拆分方案
+- 分批改，不要一轮重构整个系统
+- 每批都验证
+
+**推荐提问方式**
+```md
+先评估这个模块当前最主要的结构问题，只给我 2 到 3 个最值得做的重构点。
+
+这次只做最小一轮，不要顺手改太多无关内容。
+
+改完后说明具体拆了哪些职责，并运行验证。
+```
+
+**重构任务里最重要的一条**
+
+一定要限制范围。否则 Claude 很容易“顺手优化”出一大坨额外改动
+
+### 工作流 4：陌生项目接手
+
+**适用场景**
+- 第一次接手某个仓库
+- 别人的项目临时要你修点东西
+- 公司老项目你不熟
+- 想快速知道某个功能在哪实现
+
+**推荐步骤**
+- 先让 Claude 建项目地图
+- 再锁定和当前目标最相关的目录与文件
+- 再进入方案和修改
+
+提问方式：
+```md
+先帮我快速理解这个项目：
+
+1. 技术栈是什么
+2. 主要目录分别负责什么
+3. 这个需求最可能涉及哪些文件
+
+先不要改代码。
+```
+让 Claude 顺手帮你沉淀 CLAUDE.md
 
 ## Claude 使用流程
 
