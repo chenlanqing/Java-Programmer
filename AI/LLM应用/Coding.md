@@ -1249,6 +1249,7 @@ Project/
 - [Claud Code 编程分享](https://blog.cosine.ren/post/my-claude-code-record-2)
 - [Claude Code 的智能自动化与多代理编排](https://github.com/wshobson/agents)
 - [Claude Code 与光标的一体化 AI 框架与工具包](https://github.com/mindfold-ai/Trellis)
+- [Claude Code 源码泄露问题](https://www.ccleaks.com/)
 
 # 四、Codex
 

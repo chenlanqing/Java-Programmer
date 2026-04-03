@@ -40,6 +40,11 @@
 - [全网新闻聚合 Skill](https://github.com/cclank/news-aggregator-skill)
 - [关键字文章 Skill](https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/business-marketing/content-creator)
 - [同事.skill](https://github.com/titanwings/colleague-skill)
+- [将任意 URL 转为干净的 Markdown，支持需要登录的页面](https://github.com/joeseesun/markdown-proxy)
+
+## 资讯 SKILL
+
+- [last30days-cn 是一个 AI Agent 技能（Skill），能够自动搜索中国互联网 8 大主流平台最近 30 天的内容，综合分析后生成有据可查的研究报告](https://github.com/ChiTing111/last30days-skill-cn.git)
 
 ## 文档 Skill
 
