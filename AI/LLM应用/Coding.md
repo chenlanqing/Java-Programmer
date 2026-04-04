@@ -1250,11 +1250,14 @@ Project/
 - [Claude Code 的智能自动化与多代理编排](https://github.com/wshobson/agents)
 - [Claude Code 与光标的一体化 AI 框架与工具包](https://github.com/mindfold-ai/Trellis)
 - [Claude Code 源码泄露问题](https://www.ccleaks.com/)
+- [Master Claude Code in a Weekend](https://github.com/luongnv89/claude-howto)
+- [Claude Code 的多智能体编排系统。零学习曲线](https://github.com/Yeachan-Heo/oh-my-claudecode)
 
 # 四、Codex
 
 - [Codex getting started](https://github.com/openai/codex/blob/main/docs/getting-started.md)
 - [AGENTS.md — a simple, open format for guiding coding agents](https://github.com/openai/agents.md)
+- [Codex-学习指南](https://github.com/Yeachan-Heo/oh-my-codex)
 
 ## 1、安装
 
