@@ -338,23 +338,6 @@ AI 生成的 rules 的[元提示词](./prompts/cursor-generate-rules.md)
 
 # 三、Claude Code
 
-- [学习 Claude Code 源码](https://www.xuanyuancode.com/learn-claude-code)
-- [AI 编码助手配置体系](https://github.com/doccker/cc-use-exp)
-- [从零到企业实战：Claude Code 官方编程神器+OpenClaw](https://github.com/KimYx0207/Claude-Code-x-OpenClaw-Guide-Zh)
-- [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
-- [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
-- [Claude Code 相关配置](https://github.com/garrytan/gstack)
-- [Claude Code](https://github.com/anthropics/claude-code)
-- [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)-https://learn.shareai.run/zh/
-- [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
-- [Claude code core library](https://github.com/obra/superpowers)
-- [CLI tool for configuring and monitoring Claude Code](https://github.com/davila7/claude-code-templates)
-- [Claude Quick starts](https://github.com/anthropics/claude-quickstarts)
-- [Claude Code router](https://github.com/musistudio/claude-code-router)
-- [A comprehensive directory for discovering plugin marketplaces](https://claudemarketplaces.com/)
-- [Claude Code 完全使用指南](https://mp.weixin.qq.com/s/Vpkzra5I8lvyTA8jX8l_2A)
-- [Claude Code 实时状态栏](https://github.com/jarrodwatts/claude-hud)
-
 ## 1、基本使用
 
 ### 1.1、安装配置
@@ -1252,6 +1235,26 @@ Project/
 - [Claude Code 源码泄露问题](https://www.ccleaks.com/)
 - [Master Claude Code in a Weekend](https://github.com/luongnv89/claude-howto)
 - [Claude Code 的多智能体编排系统。零学习曲线](https://github.com/Yeachan-Heo/oh-my-claudecode)
+
+## 参考资料
+
+- [学习 Claude Code 源码](https://www.xuanyuancode.com/learn-claude-code)
+- [AI 编码助手配置体系](https://github.com/doccker/cc-use-exp)
+- [从零到企业实战：Claude Code 官方编程神器+OpenClaw](https://github.com/KimYx0207/Claude-Code-x-OpenClaw-Guide-Zh)
+- [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
+- [完整 Claude Code 配置合集](https://github.com/affaan-m/everything-claude-code)
+- [Claude Code 相关配置](https://github.com/garrytan/gstack)
+- [Claude Code](https://github.com/anthropics/claude-code)
+- [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)-https://learn.shareai.run/zh/
+- [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
+- [Claude code core library](https://github.com/obra/superpowers)
+- [CLI tool for configuring and monitoring Claude Code](https://github.com/davila7/claude-code-templates)
+- [Claude Quick starts](https://github.com/anthropics/claude-quickstarts)
+- [Claude Code router](https://github.com/musistudio/claude-code-router)
+- [A comprehensive directory for discovering plugin marketplaces](https://claudemarketplaces.com/)
+- [Claude Code 完全使用指南](https://mp.weixin.qq.com/s/Vpkzra5I8lvyTA8jX8l_2A)
+- [Claude Code 实时状态栏](https://github.com/jarrodwatts/claude-hud)
+- [The Claude Code Handbook: A Professional Introduction to Building with AI-Assisted Development](https://www.bestblogs.dev/article/199cbc01)
 
 # 四、Codex
 

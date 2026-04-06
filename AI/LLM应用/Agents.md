@@ -1061,7 +1061,89 @@ AGENTS.md 是 OpenClaw 里最关键的 workspace 文件之一，明确了 AI 处
 4. 一起打开 SOUL.md，把真正的性格和边界写进去
 5. （可选）引导用户接入渠道——WhatsApp、Telegram 等
 
+### Memory
 
+```
+~/.openclaw/workspace/memory
+```
+OpenClaw 现在常见的记忆方案，主要有两种：
+1. builtin：默认方案。原始记忆还是那些 Markdown 文件，只不过系统会顺手维护一份本地索引，方便后面检索。
+2. qmd：底层还是围着 workspace 里的 Markdown 文件转，只是换了一套更强的检索/索引方式来帮你“想起来”，并且会在 agent 运行目录里额外存一些索引状态  
+
+运转流程：
+```md
+对话发生
+    ↓
+Agent 通过普通文件工具把重要信息写入 `memory/` 或 `MEMORY.md`
+    ↓
+下次对话开始
+    ↓
+Agent 通过 `memory_search` / `memory_get` 检索相关记忆
+    ↓
+相关记忆被注入到当前对话的上下文里
+    ↓
+Agent 表现出"我记得你说过……"的能力
+```
+对 Agent 来说，真正算数的长期记忆，是 workspace 里那些 Markdown 文件，不是什么看不见摸不着的黑盒数据库，常见会有两层：
+1. memory/YYYY-MM-DD.md：按天滚动的工作记忆
+2. MEMORY.md（或兼容小写 memory.md）：更稳定、更整理过的长期知识
+
+**手动初始化记忆**
+
+除了让 Agent 自动积累记忆，用户也可以手动往 `memory/` 里写入初始化信息——也就是"预埋记忆"
+
+### SKILLS
+
+在多 Agent 系统里，skills 不是一个一股脑的全局列表，而是分层的：  
+**第一层：OpenClaw 内置 / bundled skills**  
+跟系统一起装进来的，默认大家都“看得到”。但“看得到”不等于最后一定“用得到”，还要看 skills.allowBundled、skills.entries.*.enabled，以及 agent 自己那层 skills 过滤配置。
+
+**第二层：共享 skills**  
+放在 ~`/.openclaw/skills/` 里，当前机器上的所有 Agent 都能访问。也可以通过 skills.load.extraDirs 再挂额外目录。适合"多个 Agent 都需要用到"的通用流程。
+
+**第三层：workspace 私有 skills**  
+放在某个具体 Agent 的 `workspace/skills/` 里，只有这个 Agent 能看到。适合某个 Agent 专属的工作流程。
+
+> 关键原则：想让多个 Agent 共享一个 skill，就放到共享层；想让某个 Agent 专属拥有一个 skill，就放到它的 workspace 里。不要把需要共享的 skill 只放在某个 Agent 的私有目录里，然后疑惑"为什么其他 Agent 用不到"。
+
+### openclaw.json
+
+所有 workspace 文件都偏内容，而 openclaw.json 是负责把这些内容接上线、接到对的位置上的总控文件。
+
+一个完整的 openclaw.json 包含以下几个核心模块：
+```json
+{
+  "gateway": {
+    "port": 18789,
+    "auth": { "mode": "token" }
+  },
+  "models": {
+    "providers": {
+      "anthropic": { "apiKey": "sk-ant-..." }
+    }
+  },
+  "channels": {
+    "feishu": { "enabled":true, ... },
+    "telegram": { "enabled":true, ... }
+  },
+  "agents": {
+    "defaults": {
+      "workspace": "~/.openclaw/workspace"
+    },
+    "list": [
+      {
+        "id": "main",
+        "workspace": "~/.openclaw/workspace",
+        "agentDir": "~/.openclaw/agents/main/agent"
+      }
+    ]
+  }
+}
+```
+
+#### agents.list：每个 Agent 的定义
+
+这是 workspace 配置里最关键的入口。每个 Agent 至少得有一个 id；至于 workspace 和 agentDir，你可以自己写死，也可以不写，让 OpenClaw 按默认规则去补。
 
 ### 安全指南
 

@@ -197,6 +197,7 @@
 - [AI Painting](https://github.com/hua1995116/awesome-ai-painting)
 - https://www.codefather.cn/course/1907378983347892226/section/1928346946364375042#heading-0
 - [Nano Banana](https://nanobanana.ai/)
+- https://github.com/VoltAgent/awesome-design-md
 
 Nano Banana 提示词
 - https://github.com/PicoTrex/Awesome-Nano-Banana-images
