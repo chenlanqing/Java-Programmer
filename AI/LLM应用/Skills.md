@@ -41,6 +41,7 @@
 - [关键字文章 Skill](https://github.com/davila7/claude-code-templates/tree/main/cli-tool/components/skills/business-marketing/content-creator)
 - [同事.skill](https://github.com/titanwings/colleague-skill)
 - [将任意 URL 转为干净的 Markdown，支持需要登录的页面](https://github.com/joeseesun/markdown-proxy)
+- [基于 Claude 代码构建的 AI 驱动求职系统](https://github.com/santifer/career-ops)
 
 ## 资讯 SKILL
 
