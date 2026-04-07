@@ -97,6 +97,7 @@ git push origin --delete master
 - [DeepWiki 开源版本-源码分析](https://github.com/AsyncFuncAI/deepwiki-open)
 - [Stunning insights for your GitHub Repo](https://repobeats.axiom.co/)
 - [Github star history](https://www.star-history.com/)
+- [Zread Cli](https://zread.ai/cli)
 
 # 开源项目
 
