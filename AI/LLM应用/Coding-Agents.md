@@ -1373,7 +1373,7 @@ LSP: Language Server Protocol
 
 # 参考资料
 
-- [模型编程性能参考排行榜](https://lmarena.ai/zh/leaderboard/webdev)
+- [模型编程性能参考排行榜](https://arena.ai/leaderboard/code)
 - [AI编程工具包](https://github.com/TencentCloudBase/CloudBase-AI-ToolKit)
 - [AGENTS.md 是一种简单、开放的编码代理指导格式](https://github.com/agentsmd/agents.md)
 - [Ruler — apply the same rules to all coding agents](https://github.com/intellectronica/ruler)

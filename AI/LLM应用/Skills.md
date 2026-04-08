@@ -12,6 +12,7 @@
 
 # SKILL 市场
 
+- [SkillHub 是一个自托管平台，为团队提供私有的、受治理的智能体技能共享空间](https://github.com/iflytek/skillhub)
 - [Skills Marketplace](https://skillsmp.com/zh)
 - [Skill Hub](https://www.skillhub.club/skills)
 - [一套全面的代理技能合集，涵盖上下文工程、多代理架构和生产代理系统](https://github.com/muratcankoylan/Agent-Skills-for-Context-Engineering)
