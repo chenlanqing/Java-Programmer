@@ -1231,6 +1231,7 @@ Project/
 
 ## 其他
 
+- [SuperClaude 框架:将Claude Code转换为结构化开发平台](https://github.com/SuperClaude-Org/SuperClaude_Framework)
 - [一个 CLAUDE.md 生成器和维护工具，用于创建高质量的 CLAUDE.md 指令文件](https://github.com/alirezarezvani/ClaudeForge)
 - [Claude 代码图形界面应用和工具包——创建自定义代理，管理交互式 Claude 代码会话，运行安全后台代理](https://github.com/winfunc/opcode)
 - [Claud Code 编程分享](https://blog.cosine.ren/post/my-claude-code-record-2)
