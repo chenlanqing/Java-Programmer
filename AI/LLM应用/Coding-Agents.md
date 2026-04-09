@@ -1243,6 +1243,7 @@ Project/
 
 ## 参考资料
 
+- [Claude Code 的各种使用技巧和工作流](https://github.com/shanraisshan/claude-code-best-practice)
 - [AI 编码助手配置体系](https://github.com/doccker/cc-use-exp)
 - [从零到企业实战：Claude Code 官方编程神器+OpenClaw](https://github.com/KimYx0207/Claude-Code-x-OpenClaw-Guide-Zh)
 - [Claude Code like agent for study](https://github.com/YYHDBL/MyCodeAgent)
