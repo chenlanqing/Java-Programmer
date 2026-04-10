@@ -324,6 +324,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 # AI 代理
 
+- [AI中转站代理鉴定-最专业的 Claude 检测平台](https://cctest.ai/zh)
 - [Claude 自建代理](https://github.com/Wei-Shaw/claude-relay-service)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
 - [Ready to use Native AI](https://2233.ai/aicoding)

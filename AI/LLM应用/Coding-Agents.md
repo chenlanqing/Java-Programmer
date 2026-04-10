@@ -1241,7 +1241,7 @@ Project/
 - [Master Claude Code in a Weekend](https://github.com/luongnv89/claude-howto)
 - [Claude Code 的多智能体编排系统。零学习曲线](https://github.com/Yeachan-Heo/oh-my-claudecode)
 
-## 参考资料
+## 使用指南
 
 - [Claude Code 的各种使用技巧和工作流](https://github.com/shanraisshan/claude-code-best-practice)
 - [AI 编码助手配置体系](https://github.com/doccker/cc-use-exp)
