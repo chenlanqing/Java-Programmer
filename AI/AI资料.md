@@ -229,6 +229,8 @@ Nano Banana 提示词
 ## 其他
 
 - [OpenCli-把任何网站、本地工具、Electron 应用变成能够让 AI 调用的命令行，支持 65 个网站](https://github.com/jackwener/opencli)
+- [Cloc: 统计了许多编程语言中的空行、注释行和物理源代码行](https://github.com/aldanial/cloc)
+- ripgrep
 
 # Java与AI
 
