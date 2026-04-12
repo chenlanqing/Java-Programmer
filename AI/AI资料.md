@@ -198,6 +198,7 @@
 - https://www.codefather.cn/course/1907378983347892226/section/1928346946364375042#heading-0
 - [Nano Banana](https://nanobanana.ai/)
 - https://github.com/VoltAgent/awesome-design-md
+- [nano-banana 创意玩法大合集](https://github.com/ZHO-ZHO-ZHO/ZHO-nano-banana-Creation)
 
 Nano Banana 提示词
 - https://github.com/PicoTrex/Awesome-Nano-Banana-images
