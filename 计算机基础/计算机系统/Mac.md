@@ -62,6 +62,7 @@ TIME_WAIT 1645
 - [btop:监控软件](https://github.com/aristocratos/btop)
 - [TMUX 是一种终端复用器](https://github.com/tmux/tmux)
 - https://ghostty.org/
+- https://github.com/wezterm/wezterm
 
 ### 4.3、开发工具
 
