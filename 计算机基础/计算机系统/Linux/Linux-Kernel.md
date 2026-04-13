@@ -322,7 +322,7 @@ yum install bcc-tools
 - [Linux源代码](https://mirrors.edge.kernel.org/pub/linux/kernel/)
 - [Linux性能介绍](https://unixism.net/2019/04/linux-applications-performance-introduction/)
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/v6.12.1/source)
-- [Linux内核学习资料](https://github.com/0voice/linux_kernel_wiki)
+- [《Linux内核精通》笔记](https://github.com/0voice/linux_kernel_wiki)
 - [Linux源码在线查看网站](https://elixir.bootlin.com/linux/latest/source)
 - [Linux内核学习](https://github.com/mengning/mykernel)
 - [Linux内核导航图](https://makelinux.github.io/kernel/map/)

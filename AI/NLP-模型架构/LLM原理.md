@@ -12,6 +12,7 @@
 - [AI 模型 Token 计算器](https://github.com/soulteary/ai-token-calculator)
 - [TOON 是一种为 LLM 输入而生的紧凑序列化格式，减少 Token](https://github.com/toon-format/toon)
 - [大模型分词器（Tokenizer）总结](https://github.com/luhengshiwo/LLMForEverybody/blob/main/01-第一章-预训练/全网最全的大模型分词器（Tokenizer）总结.md)
+- [The official unofficial tokenizer for Claude](https://claude-tokenizer.vercel.app/)
 
 计算机不像人类那样理解词语和句子。它们处理的是数字。因此，让机器处理语言的首要障碍是将文本转换为模型可以实际操作的数字形式。这个过程包含两个主要步骤：
 - 将文本分解为易于处理的小块，称作分词 (tokenization)；

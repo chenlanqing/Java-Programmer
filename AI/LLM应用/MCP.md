@@ -837,6 +837,10 @@ MCP 和 Skills 不是非此即彼的关系，而是可以互补使用：
 
 - [RAG-MCP: Mitigating Prompt Bloat in LLM Tool Selection via Retrieval-Augmented Generation](https://arxiv.org/pdf/2505.03275)
 
+## CLI-Command Line Interface
+
+- [MCP vs CLI](https://community.ibm.com/community/user/blogs/jia-qi/2026/04/08/mcp-vs-cli)
+
 
 ## 总结
 
