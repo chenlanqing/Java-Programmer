@@ -1228,6 +1228,13 @@ Project/
 | 自治范围过宽但治理不足 | 多 agent、外部工具全开，但缺乏权限边界和结果回收边界 | permissions + sandbox + hooks + subagent 组合边界 |
 | 已批准命令堆积不清理 | `settings.json` 里残留 `rm -rf` 等危险操作，一旦触发不可逆 | 定期审查 `.claude/settings.json` 的 `allowedTools` 列表 |
 
+## 代码分析
+
+- [Real-time Claude Code session log viewer and monitor](https://github.com/delexw/claude-code-trace)
+- [CC-Viewer: Claude Code 请求监控系统](https://github.com/weiesky/cc-viewer)
+- [Claude Code 源码泄露问题](https://www.ccleaks.com/)
+- [Learn Claude Code](https://www.xuanyuancode.com/learn-claude-code)
+
 
 ## 其他
 
@@ -1237,7 +1244,6 @@ Project/
 - [Claud Code 编程分享](https://blog.cosine.ren/post/my-claude-code-record-2)
 - [Claude Code 的智能自动化与多代理编排](https://github.com/wshobson/agents)
 - [Claude Code 与光标的一体化 AI 框架与工具包](https://github.com/mindfold-ai/Trellis)
-- [Claude Code 源码泄露问题](https://www.ccleaks.com/)
 - [Master Claude Code in a Weekend](https://github.com/luongnv89/claude-howto)
 - [Claude Code 的多智能体编排系统。零学习曲线](https://github.com/Yeachan-Heo/oh-my-claudecode)
 
@@ -1340,6 +1346,48 @@ EOF
 编程规范
 首选的设计模式
 技术栈
+```
+
+# Coding Review
+
+## Code-review-graph
+
+**[code-review-graph](https://github.com/tirth8205/code-review-graph)** 是一款基于 [Tree-sitter](https://github.com/tree-sitter/tree-sitter) 的增量式代码知识图谱构建工具，专门为 AI 辅助代码评审场景优化。
+
+它用 Tree-sitter 构建代码的结构映射，逐步跟踪变化，并通过 MCP 给 AI 助手精确的上下文，只读取重要的内容，它能够解析 19 种编程语言的代码结构，将函数、类、变量、调用关系等信息存储到 SQLite 数据库中，通过 MCP（Model Context Protocol）接口为 Claude 等大模型提供精准、低 token 消耗的上下文服务，让 AI 在代码评审时只需花费原来 1/10 的 token 就能获取完整的项目结构信息
+
+基本使用：
+```bash
+# 使用uv安装（推荐）
+uv pip install code-review-graph
+# 或者使用pip
+pip install code-review-graph
+
+# 1. 进入项目根目录，首次构建代码图谱
+cd your-project/
+code-review-graph build
+
+# 2. 查看图谱状态
+code-review-graph status
+
+# 3. 启动MCP服务，供Claude Code调用
+code-review-graph serve
+
+# 4. 代码修改后增量更新
+code-review-graph update
+
+# 5. 生成项目架构wiki
+code-review-graph wiki
+
+# 6. 分析代码变更影响
+code-review-graph detect-changes
+```
+
+### 配合 Claude Code
+
+在 Claude Code 中配置好 MCP 服务后，只需调用 get_minimal_context(task="你的评审任务描述") 即可快速获取所需的全部上下文，后续工具调用默认使用 detail_level="minimal" 保持 token 高效。
+```bash
+code-review-graph install --platform claude-code  # configure only Claude Code
 ```
 
 # 语义
