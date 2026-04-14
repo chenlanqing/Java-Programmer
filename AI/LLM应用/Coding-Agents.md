@@ -1234,6 +1234,8 @@ Project/
 - [CC-Viewer: Claude Code 请求监控系统](https://github.com/weiesky/cc-viewer)
 - [Claude Code 源码泄露问题](https://www.ccleaks.com/)
 - [Learn Claude Code](https://www.xuanyuancode.com/learn-claude-code)
+- [Harness Engineering From Claude Code source code to AI Coding](https://github.com/ZhangHanDong/harness-engineering-from-cc-to-ai-coding)
+- https://github.com/tvytlx/ai-agent-deep-dive
 
 
 ## 其他

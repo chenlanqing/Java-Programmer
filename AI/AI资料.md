@@ -56,6 +56,7 @@
 # LLM Token
 
 - [rtk: 高性能 CLI 代理，将 LLM token 消耗降低 60-90%，节省 Token](https://github.com/rtk-ai/rtk)
+- [Caveman：省 token](https://github.com/JuliusBrussee/caveman)
 
 # Deepseek
 
