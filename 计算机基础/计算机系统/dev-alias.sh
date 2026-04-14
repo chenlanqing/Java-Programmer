@@ -28,6 +28,18 @@ on-zsh-git-search() {
 }
 
 ###############################################
+#                 Mac Homebrew
+###############################################
+alias bl='brew list'
+alias blv='brew list --versions'
+alias blc='brew list --cask'
+alias bud='brew upgrade'
+alias bi='brew install'
+alias bic='brew install --cask'
+alias brm='brew uninstall'
+alias brmc='brew uninstall --cask'
+
+###############################################
 #                 Java / Maven
 ###############################################
 # Java 环境切换
