@@ -53,6 +53,10 @@
 
 [OceanBase seekdb 是一个 AI 原生搜索数据库，将关系型、矢量型、文本、JSON 和 GIS 统一在一个引擎中](https://github.com/oceanbase/seekdb)
 
+# LLM Token
+
+- [rtk: 高性能 CLI 代理，将 LLM token 消耗降低 60-90%，节省 Token](https://github.com/rtk-ai/rtk)
+
 # Deepseek
 
 - [Deepseek-API集成工具](https://github.com/deepseek-ai/awesome-deepseek-integration)
