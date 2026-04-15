@@ -1274,6 +1274,7 @@ Project/
 - [Codex getting started](https://github.com/openai/codex/blob/main/docs/getting-started.md)
 - [AGENTS.md — a simple, open format for guiding coding agents](https://github.com/openai/agents.md)
 - [Codex-学习指南](https://github.com/Yeachan-Heo/oh-my-codex)
+- [Oh My codeX-CodeX 增强](https://github.com/Yeachan-Heo/oh-my-codex)
 
 ## 1、安装
 
