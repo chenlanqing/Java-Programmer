@@ -1122,6 +1122,7 @@ GraphRAG 的评估体系是多维度的，主要涵盖三个方面。
 
 # RAG框架
 
+- [Quivr:Opiniated RAG for integrating GenAI in your apps](https://github.com/QuivrHQ/quivr)
 - [RAGFlow-基于深度文档理解构建的开源 RAG（Retrieval-Augmented Generation）引擎](https://github.com/infiniflow/ragflow)
 - [PageIndex：无矢量、基于推理的 RAG 文档索引](https://github.com/VectifyAI/PageIndex)
 - [Anything-LLM：智能文档助手](https://github.com/Mintplex-Labs/anything-llm)
@@ -1136,8 +1137,6 @@ GraphRAG 的评估体系是多维度的，主要涵盖三个方面。
 
 # 参考资料
 
-- [The Open Source RAG Stack](https://blog.dailydoseofds.com/p/the-open-source-rag-stack)
 - [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
 - [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)
-- [RAG](https://www.promptingguide.ai/zh/techniques/rag)
 - [RAG From Scratch](https://github.com/langchain-ai/rag-from-scratch)

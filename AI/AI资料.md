@@ -177,6 +177,11 @@
 
 - [面向AI的数据转换工具](https://github.com/cocoindex-io/cocoindex)
 
+## 命令行工具
+
+- [OpenCli-把任何网站、本地工具、Electron 应用变成能够让 AI 调用的命令行，支持 65 个网站](https://github.com/jackwener/opencli)
+- [AutoCli-基于 OpenCli 使用 Rust 重写](https://github.com/nashsu/AutoCLI)
+
 ## 编程工具
 
 - windsurf：https://windsurf.com/editor
@@ -234,7 +239,6 @@ Nano Banana 提示词
 
 ## 其他
 
-- [OpenCli-把任何网站、本地工具、Electron 应用变成能够让 AI 调用的命令行，支持 65 个网站](https://github.com/jackwener/opencli)
 - [Cloc: 统计了许多编程语言中的空行、注释行和物理源代码行](https://github.com/aldanial/cloc)
 - ripgrep
 
@@ -332,6 +336,13 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 # AI 代理
 
+## 可免费用模型
+
+- [openrouter](https://openrouter.ai/)
+- [AI-hub](https://aihubmix.com/?aff=efCQ)
+
+## 其他
+
 - [AI中转站代理鉴定-最专业的 Claude 检测平台](https://cctest.ai/zh)
 - [Claude 自建代理](https://github.com/Wei-Shaw/claude-relay-service)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
@@ -339,7 +350,6 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
 - [Cpass](https://api.cpass.cc/console/topup)
 - [ChatOpens](https://www.chatopens.chat/Web/List.html)
-- https://console.aihubmix.com/token?aff=uTxe
 - https://www.aigocode.com/dashboard/console
 - [302.AI 是一个按用量付费的企业级 AI 资源平台](https://302.ai/dashboard/overview)
 - [AI聚合网站](https://link3.cc/maynorai)
@@ -348,7 +358,6 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Wildcard-一键订阅](https://bewildcard.com/)
 - https://bewild.ai/
 - [硅基流动](https://siliconflow.cn/)
-- [openrouter](https://openrouter.ai/)
 - [Claude Code 代理](https://foxcode.hshwk.org/)
 - [银河录像局](https://nf.video/)
 - [ZCF - Zero-Config Code Flow](https://github.com/UfoMiao/zcf)

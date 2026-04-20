@@ -446,6 +446,24 @@ w: 3
 
 - [如何计算 Token](https://help.apiyi.com/ai-api-local-token-calculation-guide.html)
 
+经验估算：
+- 英文：1 Token 大约对应 3~4 个字符（与文本类型相关）。
+- 中文：1 Token 常见在 1~2 个汉字上下波动（与混排比例强相关）。
+
+**token 计费**
+
+大多数供应商对输入 Token和输出 Token采用不同的计费标准，通常输出价格是输入的 2~4 倍
+- 长 Prompt + 短输出 = 更经济的调用方式  
+- RAG 场景要控制检索片段数量，避免输入 Token 激增  
+- 思维链模型的 reasoning tokens 通常按输出价格计费，成本更高  
+
+## Token 预算
+
+最实用的预算方式是：window ≥ input_tokens + max_output_tokens
+
+对于思维链模型，公式应调整为：window ≥ input_tokens + reasoning_tokens + max_output_tokens  
+其中 reasoning_tokens（思考链 Token 数）难以精确预估，建议按 max_output_tokens 的 2~3 倍预留
+
 ## Token 相关问题
 
 > 问题1：token 为什么不能是单词？因为单次作为 token 有两个缺点：
