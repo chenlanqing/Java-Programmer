@@ -244,9 +244,12 @@ Nano Banana 提示词
 
 # Java与AI
 
+- [Java/Go 开发者的 AI 应用开发/Agent学习路线(后端通用)](https://articles.zsxq.com/id_zf7jjxl0s11g.html)
+
+## 框架
+
 - LangChain4j
-- Springai
-- [Java+LangChain](https://mp.weixin.qq.com/s/n_89sQ_1XxnUvP4HKzgxhA)
+- SpringAI
 - https://github.com/mymagicpower/AIAS
 - https://gitee.com/dromara/wgai
 - https://gitee.com/langchat/langchat
