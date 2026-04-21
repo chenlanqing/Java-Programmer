@@ -105,6 +105,7 @@ TIME_WAIT 1645
 
 - 滴答清单
 - Mac 深度清理软件： https://github.com/tw93/Mole 
+- [Mac 清理软件](https://github.com/momenbasel/PureMac)
 - [Dozer：菜单栏隐藏](https://github.com/Mortennn/Dozer)
 - Alfred3
 - [Raycast-快速启动](https://www.raycast.com/)，包含粘贴板的功能
