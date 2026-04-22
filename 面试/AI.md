@@ -95,10 +95,11 @@ Observe
 ## 提示词注入
 
 
-
 # RAG
 
 - [35 道高频 RAG 面试题总结](https://articles.zsxq.com/id_h3529hb345rr.html)
+- [RAG 相关面试题](https://mp.weixin.qq.com/s/BqOdWsCjtXoUllUuFVb29w)
+- [GraphRAG](https://mp.weixin.qq.com/s/f8M0MWpdcH4AeauZrdxgqw)
 
 ## 用的向量模型是哪个？为什么选它？有没有做过评估对比？
 
