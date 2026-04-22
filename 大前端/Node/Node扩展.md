@@ -248,3 +248,47 @@ $ sudo npm install npm@latest -g
 - [Node版本管理](https://www.freecodecamp.org/news/node-version-manager-nvm-install-guide/)
 
 nvm全英文也叫`node.js version management`，是一个nodejs的版本管理工具。nvm和n都是node.js版本管理工具，为了解决node.js各种版本存在不兼容现象可以通过它可以安装和切换不同版本的node.js
+
+### 安装 Node
+
+```bash
+nvm install node          # 安装最新版
+nvm install --lts         # 安装最新 LTS
+nvm install lts/krypton   # 安装指定 LTS 代号
+nvm install 22            # 安装指定大版本（自动取最新小版本）
+nvm install 22.14.0       # 安装精确版本
+```
+
+### 版本切换
+
+```bash
+nvm use 22                # 切换到 v22（当前终端生效）
+nvm use --lts             # 切换到最新 LTS
+nvm use lts/iron          # 切换到指定 LTS 代号
+```
+
+### 全局 Package
+
+nvm 有内置命令专门处理这个场景：
+```bash
+# 安装新版本 node，并自动迁移当前版本的全局包
+nvm install 24 --reinstall-packages-from=22
+```
+`--reinstall-packages-from` 会自动读取旧版本的全局包列表，在新版本安装完成后逐一重新安装，一步到位。
+
+如果已经装好了新版本，补救方式：
+```bash
+# 切换到新版本
+nvm use 24
+# 从旧版本迁移全局包
+nvm reinstall-packages 22
+```
+
+迁移完成后验证一下：
+```bash
+npm list -g --depth=0
+```
+> **注意**：`corepack` 和 `npm` 本身是 Node 自带的，迁移时会跳过，这是正常现象。
+
+### nvm 升级
+
