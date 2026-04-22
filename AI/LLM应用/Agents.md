@@ -440,7 +440,7 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
     - 狭义：系统提示词的编排（如 Rules、角色的 Markdown 文档等）。
     - 广义：动态记忆注入、用户会话状态管理、工具与 Skills 描述的动态组装。
 
-## 工具调用
+# 工具调用
 
 目前更流行的是直接给 agent 一系列非常通用的工具，比如 write_file，bash等，然后 agent 就能通过写一段代码，再用命令行执行的方式，来实现广泛的任务。而其中一些高频的功能，就可以考虑做成预装工具放在虚拟机中方便 agent 直接调用；
 
@@ -448,7 +448,7 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 1. 数据格式层：OpenAI Function Calling Schema：LLM 在推理时只认特定的数据结构；**核心机制：**通过 JSON Schema 严格定义工具的描述和参数规范。LLM 在推理时只消费这部分 JSON Schema 来理解工具的功能边界，从而决定"是否调用"以及"如何填充参数"；工具描述的质量直接决定 Agent 的决策准确性。 模型是否调用工具、调用哪个工具、如何填充参数，完全依赖对 description 字段的语义理解。好的工具描述应明确说明"何时该调用"和"何时不该调用"，参数的 description 应包含格式要求和典型示例值； 另外更高级的用法是 SKILL 封装；
 2. 通信接入层：MCP (Model Context Protocol)：Function Calling Schema 解决了"模型如何听懂工具请求"的问题，MCP 则解决了"工具如何标准化接入宿主程序"的问题
 
-### Function Calling
+## Function Calling
 
 - [Function Calling-使模型能够获取数据并采取操作](https://platform.openai.com/docs/guides/function-calling)
 - [Function Calling with LLMS](https://www.promptingguide.ai/applications/function_calling)
@@ -480,7 +480,26 @@ def send_messages(messages):
 
 对于不具备 Function Calling 能力的大模型，可以通过 Prompt Engineering 的方式实现类似的机制，在Prompt中指定可用的工具列表和描述，让大模型来判断是否需要调用工具。不过这种方式对于模型的推理能力和指令遵从能力要求比较高
 
-### [MCP](#二mcp)
+Function Call 就是 Agent 能力的最底层技术基础
+
+### 基本原理
+
+工作流程分四步
+1. 定义函数。开发者预先告诉 LLM「你手边有哪些工具可以用」，用 JSON 格式描述每个函数的名字、功能说明和参数；
+2. 模型判断。用户提问后，LLM 分析用户的意图，自己判断「要回答这个问题，我需要调用哪个函数」
+3. 执行函数。注意，这一步非常关键，LLM 自己并不执行函数。它只是输出了「我想调用这个函数，参数是这些」的结构化指令。真正执行函数的是你的应用程序
+4. 生成回答。LLM 有了函数调用的数据，根据数据总结回答；
+
+### 存在的问题
+
+想象一下，你开发了一个 Agent，需要它能连 Slack 发消息、查 Google Drive 的文档、读 GitHub 的代码、查 Postgres 数据库。
+
+用 Function Call 的方式，你需要为每一个服务单独写适配代码，为 Slack 写一套函数定义和调用逻辑、为 Google Drive 写一套、为 GitHub 写一套、为数据库又写一套。如果你有 N 个 AI 应用，要对接 M 个外部服务，就需要写 N × M 个定制集成。这在实际中完全不可扩展。更头疼的是，每个 LLM 厂商的 Function Call 格式还不完全一样，OpenAI 用 tool_calls，Anthropic 用 tool_use content block，参数结构也有差异
+
+为了解决这个问题，Anthropic 在 2024 年 11 月开源了 MCP（Model Context Protocol，模型上下文协议）。你可以把 MCP 理解为「AI 界的 USB-C 接口」
+
+## [MCP](./MCP.md)
+
 
 # Multi-Agent
 
@@ -923,6 +942,8 @@ A2A 协议的典型工作流程如下：
 A2A 协议中，Agent 之间除了基本的任务处理外，A2A 还支持流式响应，使用 Server-Sent Events（SSE）实现流式传输结果；支持 Agent 请求额外信息的多轮交互对话和长时间运行任务的异步通知，以及多模态数据，如文本、文件、结构化数据等多种类型
 
 ## MCP 与 A2A
+
+MCP 是「竖向」的，处理 Agent 到工具的连接；A2A 是「横向」的，处理 Agent 到 Agent 的协作。
 
 相似之处在于都是标准化协议，都在大模型应用场景中实现信息交互和协作——而且解决的都是 AI 应用开发过程中的沟通协作问题
 
