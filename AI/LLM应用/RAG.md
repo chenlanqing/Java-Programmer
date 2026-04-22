@@ -1134,6 +1134,7 @@ GraphRAG 的评估体系是多维度的，主要涵盖三个方面。
 - [20种 RAG 技术分析](https://mp.weixin.qq.com/s/AW-vjOmPXYiv3xN57TWKsg)
 - [RAG-各种高级技术](https://github.com/NirDiamant/RAG_Techniques)
 - [从数据解析到多路由器检索的工程实践](https://mp.weixin.qq.com/s/VPidqY02ngsrnXhpOol3_A)
+- [RAG From Scratch](https://github.com/langchain-ai/rag-from-scratch)
 
 # RAG框架
 
@@ -1154,4 +1155,3 @@ GraphRAG 的评估体系是多维度的，主要涵盖三个方面。
 
 - [RAG变体](https://www.53ai.com/news/RAG/2025031889753.html)
 - [RAG + Tool Use](https://cohere.com/llmu/from-rag-to-tool-use)
-- [RAG From Scratch](https://github.com/langchain-ai/rag-from-scratch)
