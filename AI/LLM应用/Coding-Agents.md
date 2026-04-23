@@ -1262,6 +1262,10 @@ Project/
 | 自治范围过宽但治理不足 | 多 agent、外部工具全开，但缺乏权限边界和结果回收边界 | permissions + sandbox + hooks + subagent 组合边界 |
 | 已批准命令堆积不清理 | `settings.json` 里残留 `rm -rf` 等危险操作，一旦触发不可逆 | 定期审查 `.claude/settings.json` 的 `allowedTools` 列表 |
 
+### Hook
+
+- 生成完 mermaid 格式文件之后做语法格式校验；
+
 ## 代码分析
 
 - [Real-time Claude Code session log viewer and monitor](https://github.com/delexw/claude-code-trace)

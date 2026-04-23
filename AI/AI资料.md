@@ -343,9 +343,18 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [openrouter](https://openrouter.ai/)
 - [AI-hub](https://aihubmix.com/?aff=efCQ)
 
+## 国外付费
+
+- - https://bewild.ai/
+- [Wildcard-一键订阅](https://bewildcard.com/)
+
 ## 其他
 
+- [硅基流动](https://siliconflow.cn/)
+- [银河录像局](https://nf.video/)
+- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
 - [AI中转站代理鉴定-最专业的 Claude 检测平台](https://cctest.ai/zh)
+
 - [Claude 自建代理](https://github.com/Wei-Shaw/claude-relay-service)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
 - [Ready to use Native AI](https://2233.ai/aicoding)
@@ -357,14 +366,8 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [AI聚合网站](https://link3.cc/maynorai)
 - [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
 - [聚合优秀的AI大模型](https://www.apiyi.com/)
-- [Wildcard-一键订阅](https://bewildcard.com/)
-- https://bewild.ai/
-- [硅基流动](https://siliconflow.cn/)
 - [Claude Code 代理](https://foxcode.hshwk.org/)
-- [银河录像局](https://nf.video/)
 - [ZCF - Zero-Config Code Flow](https://github.com/UfoMiao/zcf)
-- [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
-- [Claude Code 独立站](https://cc.yhlxj.com/claude/web/dashboard)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
 - [ClaudeCodeCodex镜像服务](https://aicoding.sh/)
 - [Claude Code · CodeX · Gemini CLI](https://duckcoding.com/)
