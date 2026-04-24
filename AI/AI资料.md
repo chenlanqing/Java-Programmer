@@ -345,7 +345,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 ## 国外付费
 
-- - https://bewild.ai/
+- https://bewild.ai/
 - [Wildcard-一键订阅](https://bewildcard.com/)
 
 ## 其他
