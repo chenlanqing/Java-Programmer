@@ -435,7 +435,7 @@ mlx_lm.server \
 - [评估大模型的指标、框架和数据集](https://github.com/openai/evals)
 - [MMLU-Massive Multitask Language Understanding](https://arxiv.org/abs/2406.01574)
 - [FlagEval-大模型评测平台](https://flageval.baai.ac.cn/#/home)
-- [Opencompass-司南-大模型评测体系](https://opencompass.org.cn/home)
+- [Opencompass-OpenCompass是由上海人工智能实验室开发的开源大模型评测平台，支持100+评测数据集和多种主流模型](https://opencompass.org.cn/home)
 
 主要评测步骤：
 - 维度：评测哪些能力；
