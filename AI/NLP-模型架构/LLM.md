@@ -421,6 +421,7 @@ mlx_lm.server \
 
 ## 大模型评测
 
+- [One-Eval 是一个面向大模型的自动化评测框架，核心目标是实现 NL2Eval：一句话从用户需求到优雅的模型评测报告](https://github.com/OpenDCAI/One-Eval)-[One-Eval 配置指南](https://wcny4qa9krto.feishu.cn/wiki/AJX6w5SbGiJxctkQQdfckVqKnYf)
 - [LLM Leaderboards-大模型评估排行榜](https://scale.com/leaderboard)
 - [LLM 评估标准](https://mp.weixin.qq.com/s/kQIcb6gggF5wf08qjuJcyQ)
 - [LMArena 是由 LMSYS 组织的大众盲测竞技场。用户输入问题，两个匿名模型回答，用户凭感觉选哪个好](https://lmarena.ai/leaderboard)
