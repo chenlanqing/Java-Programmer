@@ -643,6 +643,7 @@ LlamaIndex 提出了一种实用的索引策略——[句子窗口检索（Sente
 
 - [RAG优化策略总结](https://www.53ai.com/news/RAG/2025041523890.html)
 - [使用Agent优化动态知识库](https://github.com/FareedKhan-dev/temporal-ai-agent-pipeline)
+- [20种 RAG 优化思路](https://mp.weixin.qq.com/s/HR-Y1IEbHix_N3m0VBo9IQ)
 
 ![](../image/RAG-Optimize.png)
 
