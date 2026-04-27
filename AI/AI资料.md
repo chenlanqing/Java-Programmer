@@ -18,6 +18,10 @@
 - [人工智能工程书籍和其他资源](https://github.com/chiphuyen/aie-book)
 - [Claude Code v1.0.33 进行逆向工程的完整研究和分析资料](https://github.com/chenlanqing/analysis_claude_code)
 
+## AI Infrastructure
+
+- [AI Infra领域相关知识，内容涵盖：训练/推理框架🧩、性能加速🚀、深度学习🧠、基础硬件](https://github.com/CalvinXKY/InfraTech)
+
 ## 论文
 
 - [总结Prompt&LLM论文，开源数据&模型，AIGC应用](https://github.com/DSXiangLi/DecryptPrompt)

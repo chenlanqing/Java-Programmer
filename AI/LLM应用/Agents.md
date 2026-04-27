@@ -402,6 +402,7 @@ ${ASR}_{加固增益} = \frac{{ASR}_{原始} - {ASR}_{加固}}{{ASR}_{原始}}$
 
 # 构建 Agent
 
+- [Pi-dev: 用于构建 AI 代理和管理 LLM 部署的工具](https://github.com/badlogic/pi-mono)
 - [How to Build an Agent](https://blog.langchain.com/how-to-build-an-agent/)
 - [从零开始构建智能体](https://github.com/datawhalechina/hello-agents)
 - [12-Factor-Agents：构建可靠 LLM 应用程序的原则](https://github.com/humanlayer/12-factor-agents)
@@ -739,6 +740,7 @@ Hooks 的典型应用场景包括：
 - [Memori: 用于 AI 的开源 SQL 原生内存引擎](https://github.com/GibsonAI/Memori)
 - [深度拆解与对比Mem0/Graphiti/Cognee三大开源Memory方案](https://mp.weixin.qq.com/s/sdi3rgDRiRWhsmbDWc-w-g)
 - [Official Code of Memento: Fine-tuning LLM Agents without Fine-tuning LLMs](https://github.com/Agent-on-the-Fly/Memento)
+- [OpenChronicle 为 AI 代理提供了一个基于真实屏幕和应用上下文构建的本地可检查内存](https://github.com/Einsia/OpenChronicle)
 
 ## 概述
 
