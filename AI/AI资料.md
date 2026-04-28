@@ -127,9 +127,6 @@
 - [SearXNG:免费的互联网元搜索引擎](https://github.com/searxng/searxng)
 - https://serpapi.com/manage-api-key
 
-# Harness
-
-- [开源的 super agent harness](https://github.com/bytedance/deer-flow)
 
 # DeepResearch
 
@@ -173,7 +170,7 @@
 - 可灵 AI：比如 AI 换衣
 - 即梦 AI、火山引擎：[图片换装](https://www.volcengine.com/docs/85128/1462743)、[单图音频驱动](https://www.volcengine.com/docs/85128/1433887)、[图形融合](https://www.volcengine.com/docs/6791/1337909)
 - [Muset AI创作引擎工具](https://muset.ai/)
-- Lovart 专攻视觉设计，帮设计师快速出图和做品牌VI
+- [Lovart 专攻视觉设计，帮设计师快速出图和做品牌VI](https://www.lovart.ai/zh/home)
 - Youmind 管理创作流程，从素材收集到内容产出的全链路
 
 # AI 工具
@@ -358,6 +355,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [银河录像局](https://nf.video/)
 - [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
 - [AI中转站代理鉴定-最专业的 Claude 检测平台](https://cctest.ai/zh)
+- [302.AI 是一个按用量付费的企业级 AI 资源平台](https://302.ai/dashboard/overview)
 
 - [Claude 自建代理](https://github.com/Wei-Shaw/claude-relay-service)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)
@@ -366,7 +364,6 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [Cpass](https://api.cpass.cc/console/topup)
 - [ChatOpens](https://www.chatopens.chat/Web/List.html)
 - https://www.aigocode.com/dashboard/console
-- [302.AI 是一个按用量付费的企业级 AI 资源平台](https://302.ai/dashboard/overview)
 - [AI聚合网站](https://link3.cc/maynorai)
 - [Free ChatGPT API Key，免费ChatGPT API](https://github.com/chatanywhere/GPT_API_free)
 - [聚合优秀的AI大模型](https://www.apiyi.com/)
