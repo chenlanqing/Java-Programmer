@@ -267,7 +267,7 @@ nvm use --lts             # 切换到最新 LTS
 nvm use lts/iron          # 切换到指定 LTS 代号
 ```
 
-### 全局 Package
+### nvm切换版本安装原全局 Package
 
 nvm 有内置命令专门处理这个场景：
 ```bash
@@ -292,3 +292,29 @@ npm list -g --depth=0
 
 ### nvm 升级
 
+一键升级所有 npm 全局包
+```bash
+# 安装工具
+npm install -g npm-check-updates
+# 检查全局包的可用更新
+ncu -g
+# 一键升级所有全局包
+ncu -g --install always
+```
+示例：
+```bash
+$ ncu -g
+[====================] 20/20 100%
+
+ @google/gemini-cli     0.38.2  →   0.39.1
+ @openai/codex         0.122.0  →  0.125.0
+ @qwen-code/qwen-code   0.14.5  →   0.15.3
+ npm                   11.12.1  →  11.13.0
+ npm-check-updates      21.0.3  →   22.0.1
+ vite                    8.0.9  →   8.0.10
+ zread_cli              0.2.10  →   0.2.12
+
+ncu itself cannot upgrade global packages. Run the following to upgrade all global packages:
+
+npm -g install @google/gemini-cli@0.39.1 @openai/codex@0.125.0 @qwen-code/qwen-code@0.15.3 npm-check-updates@22.0.1 npm@11.13.0 vite@8.0.10 zread_cli@0.2.12
+```
