@@ -260,6 +260,7 @@ MCP、Skill、Projects 比较：
 
 ## 设计 SKILL
 
+- [Garden Skills](https://github.com/ConardLi/garden-skills)
 - [Web Design Engineer Skill](https://github.com/ConardLi/web-design-skill)
 - [GPT Image 2 Agentic Skill](https://github.com/wuyoscar/gpt_image_2_skill)
 

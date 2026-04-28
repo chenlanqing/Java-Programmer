@@ -200,7 +200,7 @@
 - [腾讯AI 开发套件](https://docs.cloudbase.net/ai/quickstart)
 - [GPT-Copilot](https://github.com/Pythagora-io/gpt-pilot)
 
-## 绘画设计
+## 图片设计
 
 - [Readdy 原型](https://readdy.ai/)
 - [Figma](https://www.figma.com/)
