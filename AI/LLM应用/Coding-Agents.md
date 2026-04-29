@@ -832,6 +832,36 @@ claude mcp list
 
 - [Claude-Mem 通过自动捕获工具使用观察、生成语义摘要并使其可用于未来会话,无缝保留跨会话的上下文](https://github.com/thedotmack/claude-mem)
 
+## CLAUDE.md
+
+- [Writing a good CLAUDE.md](https://www.humanlayer.dev/blog/writing-a-good-claude-md)
+
+CLAUDE.md 在看来像是你和 Claude 之间的协作契约，一开始甚至可以什么都不写。先用起来，等发现老是在重复同一件事，再把它补进去。加法也不复杂，输入 `#` 可以把当前对话里的内容直接追加进 CLAUDE.md，或者直接告诉 Claude「把这条加到项目的 CLAUDE.md 里」，它会知道该改哪个文件
+
+### 放什么
+
+- 怎么 build、怎么 test、怎么跑（最核心）
+- 关键目录结构与模块边界
+- 代码风格和命名约束
+- 那些不明显的环境坑
+- 绝对不能干的事（NEVER 列表）
+- 压缩时必须保留的信息（Compact Instructions）  
+
+### 不该放什么
+
+- 大段背景介绍
+- 完整 API 文档
+- 空泛原则，如”写高质量代码”
+- Claude 通过读仓库即可推断的显然信息
+- 大量背景资料和低频任务知识（这些放到 Skills）
+
+### 示例
+
+[CLAUDE.md 模板](./prompts/claude-template.md)
+
+> 每次纠正 Claude 的错误后，让它自己更新 CLAUDE.md
+
+
 ## 工作流
 
 - [ClaudeCode 进阶使用方式：工作流](https://www.xuanyuancode.com/learn-claude-code/tutorials/cu4)
@@ -1118,25 +1148,7 @@ Claude Code 的 200K 上下文并非全部可用
 
 ### CLAUDE.md文件
 
-CLAUDE.md 在看来像是你和 Claude 之间的协作契约，一开始甚至可以什么都不写。先用起来，等发现老是在重复同一件事，再把它补进去。加法也不复杂，输入 `#` 可以把当前对话里的内容直接追加进 CLAUDE.md，或者直接告诉 Claude「把这条加到项目的 CLAUDE.md 里」，它会知道该改哪个文件
-
-1. 应该放什么
-- 怎么 build、怎么 test、怎么跑（最核心）
-- 关键目录结构与模块边界
-- 代码风格和命名约束
-- 那些不明显的环境坑
-- 绝对不能干的事（NEVER 列表）
-- 压缩时必须保留的信息（Compact Instructions）  
-2. 不该放什么
-- 大段背景介绍
-- 完整 API 文档
-- 空泛原则，如”写高质量代码”
-- Claude 通过读仓库即可推断的显然信息
-- 大量背景资料和低频任务知识（这些放到 Skills）
-
-3. [CLAUDE.md 模板](./prompts/claude-template.md)
-
-> 每次纠正 Claude 的错误后，让它自己更新 CLAUDE.md
+- [如何写好 Claude.md 文件](#claudemd)
 
 ### 工程布局
 
@@ -1202,6 +1214,7 @@ Project/
 - [Claude Code 与光标的一体化 AI 框架与工具包](https://github.com/mindfold-ai/Trellis)
 - [Master Claude Code in a Weekend](https://github.com/luongnv89/claude-howto)
 - [Claude Code 的多智能体编排系统。零学习曲线](https://github.com/Yeachan-Heo/oh-my-claudecode)
+- [一个单 CLAUDE.md 文件，旨在改进 Claude Code 的行为，源自 Andrej Karpathy 对 LLM 编码陷阱的观察](https://github.com/forrestchang/andrej-karpathy-skills)
 
 ## 使用指南
 
