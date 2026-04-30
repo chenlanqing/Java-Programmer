@@ -1,4 +1,13 @@
+机器学习就是归纳法
 
+机器学习分类
+
+| 门派 | 类比 | 关键点 | 典型例子 |
+| --- | --- | --- | --- |
+| 监督学习（Supervised Learning） | 有老师批改作业 | 有数据 + 标签（答案），照着学（最成熟、最常用） | 分类、回归（如房价预测） |
+| 无监督学习（Unsupervised Learning） | 自己看书做归纳 | 只有数据、没有标签，自己找结构 | 聚类、降维（以及部分推荐） |
+| 强化学习（Reinforcement Learning） | 在环境里试错 | 用奖励/惩罚信号学策略 | AlphaGo、机器人控制 |
+| 自监督学习（Self-Supervised Learning） | 做完形填空/文字接龙 | 用数据“自己生成标签”再学习 | GPT 等大模型的预训练 |
 
 # 开源项目
 
@@ -22,7 +31,6 @@
 - [AiLearning：数据分析+机器学习实战+线性代数+PyTorch+NLTK+TF2](https://github.com/apachecn/ailearning)
 - Mahout:Apache Mahout 是 Apache Software Foundation（ASF ）提供一些可扩展的机器学习领域经典算法的实现
 - [Kaggle-机器学习数据集](https://www.kaggle.com/)
-- [machine learning](https://www.bbbdata.com/ml)
 - [机器学习入门资料](https://github.com/microsoft/ML-For-Beginners)
-- [Machine Learning Systems](https://www.mlsysbook.ai/)
+- [Machine Learning Systems](https://github.com/harvard-edge/cs249r_book)
 - [机器学习资料库](https://machine-learning-from-scratch.readthedocs.io/zh-cn/latest/index.html)

@@ -1,5 +1,7 @@
 # 一、大模型基础
 
+大模型本质：Next Token Prediction（预测下一个词）
+
 ## 基本概念
 
 ### 什么是大模型
@@ -421,6 +423,8 @@ mlx_lm.server \
 
 ## 大模型评测
 
+- [Benchmark Leaderboard Race](https://huggingface.co/spaces/davanstrien/benchmark-race)
+- [开源大模型 Benchmark](https://mp.weixin.qq.com/s/TNWcjmognQ01zEVcNo-KDA)
 - [One-Eval 是一个面向大模型的自动化评测框架，核心目标是实现 NL2Eval：一句话从用户需求到优雅的模型评测报告](https://github.com/OpenDCAI/One-Eval)-[One-Eval 配置指南](https://wcny4qa9krto.feishu.cn/wiki/AJX6w5SbGiJxctkQQdfckVqKnYf)
 - [LLM Leaderboards-大模型评估排行榜](https://scale.com/leaderboard)
 - [LLM 评估标准](https://mp.weixin.qq.com/s/kQIcb6gggF5wf08qjuJcyQ)
