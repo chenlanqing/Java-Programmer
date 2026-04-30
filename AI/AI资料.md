@@ -348,6 +348,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 - https://bewild.ai/
 - [Wildcard-一键订阅](https://bewildcard.com/)
+- [AI 订阅](https://gpt-bingo.top/)
 
 ## 其他
 
@@ -408,6 +409,60 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 
 - NextJS
 - Supabase
+
+# LLM选择
+
+**1. 知识问答**
+- 海外：GPT-5.5（幻觉极低）
+- 国内：豆包
+
+**2. 内容创作与知识管理**
+- 海外：Claude Opus 4.6（被评价为“独一档的夯”，并建议别用Opus 4.7）
+- 国内：DeepSeek V4 Pro
+
+**3. 数据分析**
+- 海外：Codex + GPT-5.5
+- 国内：Claude Code + GLM-5.1
+
+**4. 前端设计**
+- 海外：Gemini 3.1 Pro
+- 国内：Kimi K2.6
+
+**5. 架构规划**
+- 海外：Claude Code + Claude Opus 4.7
+- 国内：Claude Code + GLM-5.1
+
+**6. 代码开发执行**
+- 海外：Codex + GPT-5.5
+- 国内：Claude Code + GLM-5.1
+- 备注：作者的个人工作流是先使用Claude Code + Opus 4.7做规划，再用Codex + GPT-5.5进行详细开发和执行。
+
+**7. 深度研究**
+- 海外：ChatGPT DeepResearch
+- 国内：豆包
+
+**8. 图片与平面设计**
+- 海外：GPT-image-2（被评价为“独一档的夯”）
+- 国内：即梦Seedream-5.0-lite
+
+**9. 视频生成与编辑**（均为国内产品）
+- Seedance 2.0（运动质感）
+- 可灵3.0（电影质感，原生4k）
+
+**10. 音乐生成**
+- 海外：Suno v5.5
+- 国内：MiniMax Music 2.6
+
+**11. 3D生成**
+- TripoAI（文中未提及国内替代品）
+
+**12. AI输入法**
+- 豆包输入法（特别提到其语音输入功能很强）
+
+**13. AI硬件**
+- 飞书录音豆：用于将语音对话转为飞书会议纪要。
+- GetSeed录音卡：用于每日获取新认知。
+
 
 # 参考资料
 

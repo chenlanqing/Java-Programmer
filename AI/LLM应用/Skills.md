@@ -258,6 +258,8 @@ MCP、Skill、Projects 比较：
 
 ## 前端 SKILL
 
+- [Huashu Design: HTML 原生的设计 skill · 高保真原型 / 幻灯片 / 动画 ](https://github.com/alchaincyf/huashu-design)
+
 ## 设计 SKILL
 
 - [Garden Skills](https://github.com/ConardLi/garden-skills)
