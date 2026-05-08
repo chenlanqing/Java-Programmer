@@ -357,6 +357,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [UniVibe 镜像站](https://www.univibe.cc/console/auth?type=register&invite=WE97SG)
 - [AI中转站代理鉴定-最专业的 Claude 检测平台](https://cctest.ai/zh)
 - [302.AI 是一个按用量付费的企业级 AI 资源平台](https://302.ai/dashboard/overview)
+- [国内 CodingPlan 排行榜](https://coding-plans.jqknono.com/#domestic)
 
 - [Claude 自建代理](https://github.com/Wei-Shaw/claude-relay-service)
 - [Galaxy Code Switch：一键配置 Claude Code、Codex 和 GalaxyCode 的命令行工具](https://www.npmjs.com/package/galaxycodeswitch?activeTab=readme)

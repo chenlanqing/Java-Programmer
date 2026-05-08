@@ -1202,6 +1202,7 @@ Project/
 - [Learn Claude Code](https://www.xuanyuancode.com/learn-claude-code)
 - [Harness Engineering From Claude Code source code to AI Coding](https://github.com/ZhangHanDong/harness-engineering-from-cc-to-ai-coding)
 - https://github.com/tvytlx/ai-agent-deep-dive
+- [《御舆：解码 Agent Harness》42万字拆解 AI Agent 的Harness骨架与神经](https://github.com/lintsinghua/claude-code-book)
 
 
 ## 其他
