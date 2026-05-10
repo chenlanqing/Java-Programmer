@@ -393,6 +393,8 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 
 ## Prompt Caching
 
+- [提示词缓存前缀设计](https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything)
+
 当你的请求中存在大量重复的固定前缀（如 System Prompt、长 RAG Context），可以用 Prompt Caching（提示词缓存）显著降低成本。
 
 原理：供应商会缓存你请求中“可复用的前缀部分”。下次请求如果前缀相同，这部分就不重新计费，只收“缓存读取”的费用（通常是正常价格的 10%~50%）。

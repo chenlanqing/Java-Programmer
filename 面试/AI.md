@@ -296,3 +296,6 @@ https://mp.weixin.qq.com/s/B2q6lVtr_2DR6uHkdqp7EA
 
 ## 1、什么是 AI-Native 应用（AI原生应用）？如何设计一个 AI原生应用？
 
+# 参考资料
+
+- 面试题-微信公众号：小林coding、卡码大模型、吴师兄学大模型、吴师兄学算法、JavaGuide

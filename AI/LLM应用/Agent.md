@@ -551,6 +551,7 @@ Multi-Agent（MAS, Multi-Agent System）是由多个具备自主决策和交互�
 
 # Agent Harness Engineering
 
+- [Learn Harness Engineering](https://github.com/walkinglabs/learn-harness-engineering)
 - [开源的 super agent harness](https://github.com/bytedance/deer-flow)
 - [OpenHarness: Open Agent Harness](https://github.com/HKUDS/OpenHarness)
 - [Harness Engineering: 基于 Claude Code 的完全指南](https://wanlanglin.github.io/-awesome-cc-harness/zh/)
