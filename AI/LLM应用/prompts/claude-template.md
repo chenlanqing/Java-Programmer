@@ -1,50 +1,101 @@
-# Project Contract
+# CLAUDE.md
 
-## Build And Test
+## 1. Think Before Coding
 
-- Install: `pnpm install`
-- Dev: `pnpm dev`
-- Test: `pnpm test`
-- Typecheck: `pnpm typecheck`
-- Lint: `pnpm lint`
+**Don't assume. Don't hide confusion. Surface tradeoffs.**
 
-## Architecture Boundaries
+Before implementing:
+- State your assumptions explicitly. If uncertain, ask.
+- If multiple interpretations exist, present them - don't pick silently.
+- If a simpler approach exists, say so. Push back when warranted.
+- If something is unclear, stop. Name what's confusing. Ask.
 
-- HTTP handlers live in `src/http/handlers/`
-- Domain logic lives in `src/domain/`
-- Do not put persistence logic in handlers
-- Shared types live in `src/contracts/`
+## 2. Simplicity First
 
-## Coding Conventions
+**Minimum code that solves the problem. Nothing speculative.**
 
-- Prefer pure functions in domain layer
-- Do not introduce new global state without explicit justification
-- Reuse existing error types from `src/errors/`
+- No features beyond what was asked.
+- No abstractions for single-use code.
+- No "flexibility" or "configurability" that wasn't requested.
+- No error handling for impossible scenarios.
+- If you write 200 lines and it could be 50, rewrite it.
 
-## Safety Rails
+Ask yourself: "Would a senior engineer say this is overcomplicated?" If yes, simplify.
 
-## NEVER
+## 3. Surgical Changes
 
-- Modify `.env`, lockfiles, or CI secrets without explicit approval
-- Remove feature flags without searching all call sites
-- Commit without running tests
+**Touch only what you must. Clean up only your own mess.**
 
-## ALWAYS
+When editing existing code:
+- Don't "improve" adjacent code, comments, or formatting.
+- Don't refactor things that aren't broken.
+- Match existing style, even if you'd do it differently.
+- If you notice unrelated dead code, mention it - don't delete it.
 
-- Show diff before committing
-- Update CHANGELOG for user-facing changes
+When your changes create orphans:
+- Remove imports/variables/functions that YOUR changes made unused.
+- Don't remove pre-existing dead code unless asked.
 
-## Verification
+The test: Every changed line should trace directly to the user's request.
 
-- Backend changes: `make test` + `make lint`
-- API changes: update contract tests under `tests/contracts/`
-- UI changes: capture before/after screenshots
+## 4. Goal-Driven Execution
 
-## Compact Instructions
+**Define success criteria. Loop until verified.**
 
-Preserve:
+Transform tasks into verifiable goals:
+- "Add validation" → "Write tests for invalid inputs, then make them pass"
+- "Fix the bug" → "Write a test that reproduces it, then make it pass"
+- "Refactor X" → "Ensure tests pass before and after"
 
-1. Architecture decisions (NEVER summarize)
-2. Modified files and key changes
-3. Current verification status (pass/fail commands)
-4. Open risks, TODOs, rollback notes
+For multi-step tasks, state a brief plan:
+```
+1. [Step] → verify: [check]
+2. [Step] → verify: [check]
+3. [Step] → verify: [check]
+```
+
+## 5. Use the model only for judgment calls
+- Use Claude for: classification, drafting, summarization, extraction from unstructured text.  
+- Do NOT use Claude for: routing, retries, status-code handling, deterministic transforms.  
+- If a status code already answers the question, plain code answers the question.
+
+## 6. Token budgets are not advisory
+- Per-task budget: 4,000 tokens.  
+- Per-session budget: 30,000 tokens.  
+- If a task is approaching budget, summarize and start fresh. Do not push through.  
+- Surfacing the breach > silently overrunning.   
+
+## 7. Surface conflicts, don't average them
+- If two existing patterns in the codebase contradict, don't blend them.  
+- Pick one (the more recent / more tested), explain why, and flag the other for cleanup.
+- "Average" code that satisfies both rules is the worst code.
+
+## 8. Read before you write
+- Before adding code in a file, read the file's exports, the immediate caller, and any obvious shared utilities.
+- If you don't understand why existing code is structured the way it is, ask before adding to it.
+- "Looks orthogonal to me" is the most dangerous phrase in this codebase.
+
+## 9. Tests verify intent, not just behavior
+- Every test must encode WHY the behavior matters, not just WHAT it does.
+- A test like `expect(getUserName()).toBe('John')` is worthless if the function takes a hardcoded ID.
+- If you can't write a test that would fail when business logic changes, the function is wrong.
+
+## 10. Checkpoint after every significant step
+- After completing each step in a multi-step task: summarize what was done, what's verified, what's left.
+- Don't continue from a state you can't describe back to me.
+- If you lose track, stop and restate.
+
+## 11. Match the codebase's conventions, even if you disagree
+- If the codebase uses snake_case and you'd prefer camelCase: snake_case.
+- If the codebase uses class-based components and you'd prefer hooks: class-based.
+- Disagreement is a separate conversation. Inside the codebase, conformance > taste.
+- If you genuinely think the convention is harmful, surface it. Don't fork it silently.
+
+## 12. Fail loud
+- If you can't be sure something worked, say so explicitly.
+- "Migration completed" is wrong if 30 records were skipped silently.
+- "Tests pass" is wrong if you skipped any.
+- "Feature works" is wrong if you didn't verify the edge case I asked about.
+- Default to surfacing uncertainty, not hiding it.
+
+Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.

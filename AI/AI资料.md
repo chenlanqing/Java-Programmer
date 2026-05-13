@@ -182,6 +182,7 @@
 
 - [OpenCli-把任何网站、本地工具、Electron 应用变成能够让 AI 调用的命令行，支持 65 个网站](https://github.com/jackwener/opencli)
 - [AutoCli-基于 OpenCli 使用 Rust 重写](https://github.com/nashsu/AutoCLI)
+- [Summarize: 总结内容](https://github.com/steipete/summarize)
 
 ## 编程工具
 
