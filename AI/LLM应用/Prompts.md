@@ -404,10 +404,26 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 - RAG 应用（检索片段重复率高）
 - 批量评估（同一份 System Prompt，不同的简历/文章）
 
-**实践：**
-- 把不变的内容放前面（System Prompt、工具定义、RAG Context），把变化的内容放后面（User Prompt）
-- 监控 cache_read_tokens 和 cache_creation_tokens 指标，验证缓存命中率
-- 批量任务尽量在缓存时间窗口内完成
+最佳实践：越不容易变的东西越放前
+- 第一层：System Prompts + Tool Definition
+- 第二层：项目文档（CLAUDE.md、AGENTS.md）
+- 第三层：会话上下文
+- 第四层：对话消息
+- 主对话从始至终使用一个模型，需要其他模型时开启子 Agent 
+
+几个容易踩坑的点：
+- 在固定指令里面嵌入了当前时间，当前时间在变；
+- 工具定义使用 dict/set 等无序集合；
+- 工具参数动一个字段；
+- 在对话过程中切换模型，缓存是跟模型绑定的；
+
+如果确实有变的东西，别去改系统指令，直接塞到下一轮对话中，在下一条用户消息里附一段`<system-reminder>`·系统指令纹丝不动
+```xml
+<system-reminder>
+    current_time: 2026-05-13 11:30
+    file_status: 3 modified · 1 staged
+</system-reminder>
+```
 
 ## 基础优化
 
