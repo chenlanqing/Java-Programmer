@@ -644,7 +644,9 @@ claude --model opusplan  # Opus 计划 + Sonnet 执行
 
 一个简单判断标准：如果你脑子里都已经觉得“这个任务有点大”，那就先 /plan。Plan Mode 最大的价值不是更正式，而是帮你把“想法”变成“执行顺序”
 
-### 自定义代理 (Sub Agents)
+### 自定义代理
+
+#### SubAgents
 
 - [AI 专家角色库：Claude Agents](https://github.com/msitarzewski/agency-agents)
 
@@ -737,11 +739,96 @@ haiku:    文档生成、简单修复、代码探索
 你是记录员智能体。你的职责是为已完成的功能撰写清晰的文档，包括 API 文档、使用指南和代码注释。你还可以对代码进行可读性优化。
 ```
 
-#### SKILL 与 SubAgent 区别
+##### SKILL 与 SubAgent 区别
 
 最大的区别在于：对上下文的处理方式不同
 - SKILL 最适合：与上下文关联大、对上下文影响比较小的场景
 - SubAgents 最适合：与上下文关联不大、对上下文影响比较大的场景 
+
+#### Agent Teams
+
+Agent Teams 是一个实验性功能，允许你编排多个 Claude Code Session 协同工作在同一个项目上。一个 Session 充当 "team lead"，负责协调工作、分配任务、综合结果；其他 "teammates" 各自独立运行在自己的 context window 中，并可以彼此直接通信
+
+ClaudeCode 版本需要 v2.1.32+
+
+1. 启用功能（`~/.claude/settings.json`）
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  }
+}
+```
+2. 配置显示模式：Agent Teams 支持两种显示模式：in-process（所有 teammate 在主 terminal 内，Shift+Down 切换）；split panes（每个 teammate 独立 pane，需要 tmux 或 iTerm2）。默认 "auto"——若已在 tmux 中则用 split panes，否则用 in-process
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "tmux"
+}
+```
+teammateMode 可选值："auto" / "tmux" / "in-process"，推荐使用 tmux
+
+单次临时覆盖：`claude --teammate-mode in-process`
+
+3. 配置 permissions，否则 teammate 会卡住：permissions 是最常见的卡点——没有 allowlist 的情况下，teammates 会反复触发权限提示，但没有人来批准，导致全部卡死
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "tmux",
+  "allowedTools": [
+    "Bash",
+    "Read",
+    "Write",
+    "Edit",
+    "Glob",
+    "Grep"
+  ]
+}
+```
+或者用于测试的极简方式（跳过所有权限检查，生产环境慎用）：`claude --dangerously-skip-permissions`
+4. 配置默认 teammate 模型：Teammates 默认不继承 lead 的 /model 选择。可以在 /config 里设置 Default teammate model，选 Default (leader's model) 让 teammates 跟随 lead 的模型。也可以在 prompt 里明确指定：
+```
+Create a team with 3 teammates. Use Sonnet for each teammate.
+```
+5. 启动 Agent Team，配置完成后，用自然语言描述任务和团队结构
+```md
+Create an agent team to refactor the payment module.
+Spawn 3 teammates:
+- teammate 1: API layer (src/api/)
+- teammate 2: database migrations (src/db/)
+- teammate 3: test coverage (tests/)
+Use Sonnet for teammates, require plan approval before any changes.
+```
+> 注意事项：几个需要注意的已知问题：/resume 和 /rewind 不会恢复 in-process 的 teammates，resume 后 lead 可能尝试联系已不存在的 teammate，此时告诉 lead 重新 spawn；task 状态有时滞后，teammate 完成后没有标记完成导致依赖任务阻塞，可手动更新状态或让 lead nudge teammate；team 结束后 tmux session 可能残留，需手动清理
+```bash
+tmux list-sessions         # 列出所有 session
+tmux kill-session -t <name>  # 杀掉由 team 创建的 session
+```
+
+适合用 Agent Teams 的场景：
+- **跨层重构**：前端/后端/测试/文档由不同 teammate 各自负责
+- **并行调试**：多个 teammates 测试不同假设并互相验证
+- **多组件新功能**：每个 teammate 负责独立的模块，不产生文件冲突
+- **架构决策辩论**：多个 teammates 各持观点，收敛出最优方案
+
+不建议用的场景：顺序任务、同一文件修改、依赖紧密的任务——此时单 session 或普通 subagents 更经济。
+
+#### Agent Teams 与 Subagents 的核心区别
+
+Agent Teams 的协调方式很独特——agents 之间不直接发消息，而是通过读写磁盘上的共享文件（task list）来通信，文件本身就是协调层。这与需要 orchestrator 轮询每个 subagent 的多智能体方案有本质不同，agents 通过状态协调，而非持续的消息往来。
+
+| 维度 | Subagents | Agent Teams |
+|------|-----------|-------------|
+| 通信方式 | 结果汇报给主 agent | teammates 直接互发消息 |
+| 协调机制 | 主 agent 统一管理 | 共享 task list 自协调 |
+| 适用场景 | 只关心结果的专注任务 | 需要讨论和协作的复杂任务 |
+| Token 消耗 | 较低 | 较高（每个 teammate 是独立实例） |
+| 通信拓扑 | Hub-and-spoke | Mesh（任意 teammate 间） |
+
 
 ### [MCP](https://code.claude.com/docs/zh-CN/mcp)
 
