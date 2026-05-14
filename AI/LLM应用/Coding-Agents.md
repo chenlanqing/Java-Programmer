@@ -648,6 +648,10 @@ claude --model opusplan  # Opus 计划 + Sonnet 执行
 
 #### SubAgents
 
+SubAgent 更像一个子进程。主 Agent 把一个任务分出去，子 Agent 在自己的一个完全独立的上下文里完成，然后把结果交回来；
+
+这种方式适合结果导向的任务。比如并行开发多个章节，或者一次性检查某段代码。它比较省 Token，也比较容易调度
+
 - [AI 专家角色库：Claude Agents](https://github.com/msitarzewski/agency-agents)
 
 自定义代理是具有专门能力和工具限制的 Claude 实例，适合将复杂任务委托给专门的"专家"
@@ -746,6 +750,10 @@ haiku:    文档生成、简单修复、代码探索
 - SubAgents 最适合：与上下文关联不大、对上下文影响比较大的场景 
 
 #### Agent Teams
+
+Agent Teams 则更像一个小项目组，一个组长，加几个组员。每个组员都是独立会话，但它们之间可以互相发消息，也可以共享任务列表。这种方式适合需要来回反馈的任务；
+
+代价也很明显：Token 开销更高。因为每个组员都是一个完整会话。
 
 Agent Teams 是一个实验性功能，允许你编排多个 Claude Code Session 协同工作在同一个项目上。一个 Session 充当 "team lead"，负责协调工作、分配任务、综合结果；其他 "teammates" 各自独立运行在自己的 context window 中，并可以彼此直接通信
 

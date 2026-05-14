@@ -92,7 +92,6 @@
 - [笔记类AI应用-NotebookLM](https://notebooklm.google/)
 - [开源的 NotebookLM](https://github.com/lfnovo/open-notebook)
 - [Learn About 是 Google 基于 AI 研发的一个互动式学习网站](https://learning.google.com/experiments/learn-about?src=signup) 
-- [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 - [邮件助手 Agent](https://github.com/langchain-ai/agents-from-scratch)
 - [一键生成视频](https://github.com/harry0703/MoneyPrinterTurbo)
 - [Magic:开源全栈 AI 生产力矩阵](https://github.com/dtyq/magic)
@@ -407,6 +406,7 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 抖音、小红书（Rednote）、视频号、快手、哔哩哔哩、微信公众号、TikTok、YouTube、Facebook、Instagram、Threads、Twitter（X）、Pinterest、LinkedIn
 - [专业的小红书数据采集解决方案，支持笔记爬取，保存格式为excel或者media](https://github.com/cv-cat/Spider_XHS)
 - [自媒体平台爬虫](https://github.com/NanmiCoder/MediaCrawler)-小红书笔记、抖音视频、快手视频、B 站视频、微博帖子、百度贴吧帖子、百度贴吧评论回复爬虫、知乎问答文章
+- [轻松提取 Youtube 的字幕](https://github.com/jdepoix/youtube-transcript-api)
 
 # AI 技术选型
 
