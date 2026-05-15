@@ -113,11 +113,31 @@ description 写作要点：
 
 ## 如何安装
 
-在 Claude 中安装：
+在 Claude Code中安装：
 ```
 /plugin marketplace add anthropics/skills
 /plugin install document-skills@anthropic-agent-skills
 ```
+
+使用 [npx skills](https://github.com/vercel-labs/skills) 命令安装
+
+```bash
+npx skills add vercel-labs/agent-skills
+# GitHub shorthand (owner/repo)
+npx skills add vercel-labs/agent-skills
+# Full GitHub URL
+npx skills add https://github.com/vercel-labs/agent-skills
+# Direct path to a skill in a repo
+npx skills add https://github.com/vercel-labs/agent-skills/tree/main/skills/web-design-guidelines
+# GitLab URL
+npx skills add https://gitlab.com/org/repo
+# Any git URL
+npx skills add git@github.com:vercel-labs/agent-skills.git
+# Local path
+npx skills add ./my-local-skills
+```
+
+
 
 ## 创建 SKILL
 
