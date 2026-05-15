@@ -187,6 +187,56 @@ npm unpublish [<@scope>/]<package_name>[@<version>]
 npm deprecate <package_name>[@<version>] <deprecation_message>
 ```
 
+### 1.9、npx
+
+npx 是 Node Package eXecute 的缩写，随 npm 5.2+ 一起内置，用于执行 npm 包中的可执行文件，无需全局安装
+
+工作流程：
+```md
+npx <command>
+       │
+       ▼
+1. 检查本地 node_modules/.bin/ 有没有
+       │
+       ├─ 有 → 直接执行
+       │
+       └─ 没有
+           │
+           ▼
+       2. 检查全局安装里有没有
+           │
+           ├─ 有 → 直接执行
+           │
+           └─ 没有
+               │
+               ▼
+           3. 从 npm registry 临时下载 → 执行 → 用完丢弃
+```
+使用场景
+1. 执行本地项目工具（最常用）
+```bash
+# 不用 npx，必须这样写：
+./node_modules/.bin/tsc --version
+# 用 npx，直接：
+npx tsc --version
+```
+
+与 npm exec 的关系
+```
+npx create-react-app my-app
+# 等价于
+npm exec -- create-react-app my-app
+```
+
+注意事项：临时下载执行意味着每次都可能拉到最新版，如果包被恶意篡改（supply chain attack），你会直接中招
+```bash
+# ⚠️ 危险：随意执行来源不明的包
+npx some-random-package
+# ✅ 安全做法：先查包信息再执行
+npm info some-package
+# 确认是官方包、下载量正常、发布时间合理再运行
+```
+
 ## 2、Node-dev
 
 [(Node-dev)-automatically restarts](https://github.com/fgnass/node-dev)
