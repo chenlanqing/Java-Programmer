@@ -177,6 +177,10 @@
 
 - [面向AI的数据转换工具](https://github.com/cocoindex-io/cocoindex)
 
+## AI写作
+
+- [SVG 动画生成器](https://svganimate.ai/zh/home)
+
 ## 命令行工具
 
 - [OpenCli-把任何网站、本地工具、Electron 应用变成能够让 AI 调用的命令行，支持 65 个网站](https://github.com/jackwener/opencli)
