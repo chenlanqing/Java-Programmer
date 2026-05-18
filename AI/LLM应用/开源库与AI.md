@@ -5,7 +5,6 @@
 - [LangChain4J](https://github.com/langchain4j/langchain4j)
 - [LangChain-Introduction](https://python.langchain.com/docs/introduction/)
 - [LangChain Hub-用于上传、浏览、拉取和管理提示词(prompts)的地方](https://smith.langchain.com/hub)
-- [LangSmith-构建生产级 LLM 应用程序的平台](https://www.langchain.com/langsmith)
 
 ## 1、概述
 
