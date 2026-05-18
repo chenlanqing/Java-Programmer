@@ -111,6 +111,7 @@ TIME_WAIT 1645
 - [Raycast-快速启动](https://www.raycast.com/)，包含粘贴板的功能
 - Cheatsheet
 - 代理： [Clash Verge（VPN）](https://github.com/clash-verge-rev/clash-verge-rev)、[Clash Party](https://github.com/mihomo-party-org/clash-party)、[Sparkle](https://github.com/xishang0128/sparkle)、[ClashMac](https://clashmac.app/)
+- Linux 上的 vpn：[mihomo](https://github.com/MetaCubeX/mihomo)，复制代理的配置文件，配置的到对应的
 - CleanMyMac
 - [粘贴板-Maccy](https://maccy.app/)
 - iState Menus
