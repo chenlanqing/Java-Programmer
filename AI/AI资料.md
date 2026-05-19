@@ -41,6 +41,7 @@
 - Agents for Beginners: https://github.com/microsoft/ai-agents-for-beginners
 - Agents towards production: https://github.com/NirDiamant
 - AI Engg. Hub: https://github.com/patchy631/ai-engineering-hub
+- [Agents 学习路线](https://github.com/adongwanai/AgentGuide/blob/main/docs/05-roadmaps/learning-roadmap-development.md)
 
 ## AI 课程
 
@@ -55,6 +56,10 @@
 ## AI数据库
 
 [OceanBase seekdb 是一个 AI 原生搜索数据库，将关系型、矢量型、文本、JSON 和 GIS 统一在一个引擎中](https://github.com/oceanbase/seekdb)
+
+## html 与 markdown
+
+- [Markdown 是草稿, HTML 才是给人读的成品 —— 让本地 agent 直接写 HTML](https://github.com/nexu-io/html-anything)
 
 # LLM Token
 
@@ -343,6 +348,8 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - https://github.com/chatboxai/chatbox
 
 # AI 代理
+
+- [api-relay-audit 用来审计第三方 AI API 中转站](https://github.com/toby-bridges/api-relay-audit)
 
 ## 可免费用模型
 
