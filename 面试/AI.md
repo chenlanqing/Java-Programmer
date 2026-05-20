@@ -231,6 +231,14 @@ https://mp.weixin.qq.com/s/uI4j2MAvNPmshdZ8uzPnCQ
 
 # Agent
 
+## Agent 对接业务系统API的最佳方案是什么
+
+一般来说：
+- 公司里的业务服务的http、rpc接口，要做成 mcp 服务；
+- 规范、标准、提示、流程等要做 skills
+
+
+
 ## Agent 的核心组成
 
 - 第一个是大脑，也就是 LLM，负责理解意图、推理判断、决定下一步行动。
