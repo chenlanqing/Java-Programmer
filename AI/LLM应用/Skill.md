@@ -172,6 +172,10 @@ Writing-Skills 是 Superpowers 中的元技能——教 Agent 如何创建新的
 - 从技术本质来看，Function Call 是一种 API 协议，LLM 输出结构化的调用请求，应用程序执行后返回结果。MCP 是一种通信标准，定义了 Client 和 Server 之间如何发现和调用工具。Skills 是一种提示词扩展，用自然语言编写的行为指令，加载到 Agent 的上下文中。
 - 从标准化程度来看，Function Call 在各 LLM 厂商之间格式不统一（OpenAI 和 Anthropic 的格式就不一样）。MCP 是统一的开放标准，跨厂商通用。Skills 目前还没有统一标准，各个 Agent 平台有自己的 Skill 格式。
 
+理解三者的协作关系，它们不是竞争关系，而是分层互补的；Function Call 是底层基础。MCP 建立在 Function Call 之上，提供了标准化的包装。当你的 Agent 通过 MCP 调用一个工具时，底层其实还是在做 Function Call，只不过格式和通信方式被 MCP 统一了。
+
+Skills 则在一个完全不同的维度上工作，它不参与工具调用的过程，而是指导 Agent"什么时候该调用工具""用什么策略来完成任务"
+
 简单来说：SKILL 与 MCP 对比
 - SKILL 就是怎么做；MCP 是有什么工具、有什么功能。
 - SKILL 的话，主要是经验、最佳实践、流程的封装，而 MCP 是连接与交互的协议，主要是 API 调用、数据读写和工具等。
