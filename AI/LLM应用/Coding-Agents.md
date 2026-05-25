@@ -1760,6 +1760,10 @@ function getAutoCompactThreshold(model: string): number {
 
 越往下代价越高，但效果也越强。
 
+### 源码参考文章
+
+- [小林coding-ClaudeCode 源码基本分析](https://mp.weixin.qq.com/s/qGfSdDEjzKM6zrtaPBM-7w)
+
 ## 其他
 
 - [SuperClaude 框架:将Claude Code转换为结构化开发平台](https://github.com/SuperClaude-Org/SuperClaude_Framework)
