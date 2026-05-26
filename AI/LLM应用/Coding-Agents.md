@@ -2195,6 +2195,10 @@ EOF
 - [Config other models](https://github.com/openai/codex/blob/main/docs/config.md)
 - [Codex 支持的LLM](https://github.com/openai/codex/blob/main/codex-cli/README.md)
 
+# [PI](https://github.com/can1357/oh-my-pi)
+
+打磨 Harness：A coding agent with the IDE wired in
+
 # OpenCode
 
 - [The open source coding agent.](https://github.com/anomalyco/opencode)
