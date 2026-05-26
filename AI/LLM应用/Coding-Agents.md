@@ -1856,9 +1856,13 @@ sequenceDiagram
 - 第二句是「存索引，按需加载详情」。MEMORY.md 作为轻量索引始终常驻在 System Prompt 里，但每条记忆的具体内容是独立文件，用到的时候才加载。这样既让 Agent 知道有哪些记忆可用，又不会撑爆上下文。
 - 第三句是「用小模型做秘书，大模型做决策」。Sonnet 负责并行预取和选择记忆，Opus 只管做决策，加上陈旧度检测机制，实现了零延迟、低成本、高可靠
 
-### 上下文窗口管理
+### [上下文窗口管理](./Agent.md#上下文管理方案)
 
-Claude Code 的核心理念是：压缩一定有信息损失，所以能不压就不压，必须压的时候从最轻的手段开始；
+- [Claude Code 的上下文窗口管理实现原理](https://mp.weixin.qq.com/s/NBR6dRr3iO7KCTEChk8QUg)
+
+system prompt、所有历史对话、当前问题 组合起来的就是上下文窗口，单位是 token
+
+Claude Code 的核心理念是：压缩一定有信息损失，所以能不压就不压，必须压的时候从最轻的手段开始；不是「保留加召回」，是「重写整段对话」。
 
 #### 分步压缩
 
@@ -1961,7 +1965,14 @@ Context Collapse 引入了一个非常巧妙的概念，读时投影（Read-Time
 
 问题是什么？ 当前面四层都不够用，上下文实在太大了，必须做一次彻底的压缩。这是代价最高但效果最强的一层。
 
-什么时候触发？ Claude Code 用一个公式计算触发阈值：
+**核心就是三件事：**
+- 绝对阈值触发。不按轮数、不按百分比，按 token 数距离窗口上限的固定缓冲。
+- 全量重写对话。这个最反直觉：所有历史消息，不分新旧，全部送进摘要器重新写一份。
+- 关键信息走另外的恢复通道。文件内容、记忆文件（也就是 CLAUDE.md 这类）、异步任务的状态，这些东西不靠摘要保住，靠「重新注入」。
+
+![](../image/ClaudeCode-AutoCompact-消息压缩处理.png)
+
+**什么时候触发？** Claude Code 用一个公式计算触发阈值：
 ```ts
 function getAutoCompactThreshold(model: string): number {
   const effectiveContextWindow = getEffectiveContextWindowSize(model)
@@ -1969,16 +1980,109 @@ function getAutoCompactThreshold(model: string): number {
   return effectiveContextWindow - 13_000
 }
 ```
-以 200K Token 的模型为例：有效窗口大约 180K（预留 20K 给输出），减去 13K 缓冲区，当上下文达到 167K Token 时触发。
+拿到模型的有效上下文窗口（比如某个模型是 200k），减去一个固定值 13k，得到的就是触发阈值。token 数一旦超过这条线，就开始压，
+以 200K Token 的模型为例：有效窗口大约 180K（预留 20K 给输出），减去 13K 缓冲区，当上下文达到 167K Token 时触发。13k 这个缓冲，是基于模型在做摘要时的 p99.99 输出长度算出来的；
 
 触发全量摘要之后
 - **第一步：生成摘要**。调用大模型，把整段对话总结成一段结构化摘要。Claude Code 用一个精心设计的 Prompt 要求模型按多个维度来总结：用户的主要请求和意图、关键技术概念、涉及的文件和代码片段、遇到的错误和修复方案、问题解决过程、用户的所有消息（不能遗漏任何一条）、待完成的任务、当前工作状态、建议的下一步。
 - **第二步：替换旧消息**。把压缩边界之前的所有消息删掉，替换为刚才生成的摘要。同时插入一条边界标记消息，记录压缩前的 Token 数，方便后续追踪
 - **第三步：Post-Compact Restoration（压缩后恢复）**。这是整个流程中最关键的一步，压缩完不是就完了，还要主动恢复最重要的上下文
 
-还有一个兜底机制：如果全量摘要连续失败 3 次（比如 API 超时），系统会自动放弃，不会无限重试，这就是熔断器 模式，防止一个失败的压缩操作拖垮整个 Agent
+##### 手动触发与自动触发
+
+除了自动触发，ClaudeCode 还提供了一个命令：/compact，处理逻辑：核心压缩函数是同一个，但传入的参数不一样
+- 手动模式：可以传一段 customInstructions（直译就是「自定义指令」），告诉摘要器「这次压缩，请特别关注 XXX 方面」。比如你正在调一个特定 bug，希望摘要的时候把这个 bug 的上下文重点保留。
+- 自动模式：不接受用户指令，而且会偷偷打开一个开关叫 suppressFollowUpQuestions（直译就是「禁止生成后续提问」）
+
+自动模式还多了一个安全机制：**circuit breaker（电路断路器）**。如果 auto-compact 连续失败 3 次，系统就停止重试，会自动放弃，不会无限重试，这就是熔断器 模式，防止一个失败的压缩操作拖垮整个 Agent；
+
+**递归守卫**：Claude Code 在跑摘要任务的时候，本质上也是开了一个子 agent 去调模型生成摘要。这个子 agent 自己也是要消耗 token 的，那它会不会因为消耗多了又触发 auto-compact，进入死循环？**不会**，压缩任务跑起来时会被标成 compact，会话记忆任务会被标成 session_memory。一旦判断来源是这两种之一，直接 return false 不再触发压缩。短短三行，就把无限递归这个坑堵死了
+```ts
+if (querySource === 'session_memory' || querySource === 'compact') {
+  return false
+}
+```
+
+##### 全量重写对话
+
+ClaudeCode 的做法是把全部消息都丢进摘要器里，重新写一份；压缩之后的整个对话历史，被重写成了四段式结构
+```ts
+export function buildPostCompactMessages(result: CompactionResult): Message[] {
+  return [
+    result.boundaryMarker,      // 压缩边界标记
+    ...result.summaryMessages,  // 摘要消息
+    ...result.attachments,      // 文件、技能、计划等附件
+    ...result.hookResults,      // hook 执行结果
+  ]
+}
+```
+- 第一段，边界标记：一个特殊消息，记录这次压缩是自动还是手动、压缩前 token 是多少、最后一条消息的 ID 是啥。等于打个时间戳。
+- 第二段，摘要消息：这就是大头，前面 200 轮全部被压缩进这里。
+- 第三段，附件：包括最近读过的文件、当前的计划文件、激活的技能、正在运行的异步任务状态等等。这就是「另外的恢复通道」。
+- 第四段，hook 结果：用户配置的 hooks 在压缩时也会执行，结果一并注入
+
+##### microcompact 预处理
+
+Auto-Compact 真要跑之前，还会先做一步预处理，叫 microcompact，就是先把对话里那些占大头的「工具调用结果」清空，只留一个元数据占位符。
+
+然后再把瘦完之后的对话送进摘要器，摘要器的负担也小很多，生成的摘要质量也更高
+
+##### 文件恢复
+
+```ts
+export const POST_COMPACT_MAX_TOKENS_PER_FILE = 5_000
+export const POST_COMPACT_TOKEN_BUDGET = 50_000
+export const POST_COMPACT_MAX_FILES_TO_RESTORE = 5
+```
+压缩之后，最多重新加载 5 个文件；每个文件最多塞 5k token；总预算不超过 50k token；
+
+如何选 5 个文件：按「最近活跃度」排，最近被 Read 过的优先
+
+##### CLAUDE.md 不进摘要
+
+CLAUDE.md 不会被注入到压缩后的消息里。生效逻辑：通过「清空缓存」让它在下一轮对话自动重新加载。
+
+Claude Code 内部有个叫 getUserContext 的缓存（用来存「用户级上下文」，CLAUDE.md 的内容就放在这）。每次对话开始，会先查这个缓存。压缩的时候，系统把这个缓存清掉。这样下一轮对话发起的时候，Claude Code 发现缓存空了，就会从磁盘重新读 CLAUDE.md
+
+因为 CLAUDE.md 是「永久存活」的上下文，每一轮都会自动重新加载，不需要塞到压缩后的消息里占地方。这种「全局指令」和「当下对话」是两套机制管理的，互不干扰。
+
+##### system prompt 和异步任务
+
+system prompt 完全不参与压缩。压缩之后，会用一个叫 buildEffectiveSystemPrompt 的方法（直译就是「构建有效的 system prompt」）重新构造一份新的，注入最新的工具列表、最新的权限设置、最新的 MCP server 列表。等于压缩完顺便把「操作手册」刷一遍
+
+对于异步任务，Claude Code 把这些任务的状态（正在跑、跑完了、出错了）作为附件重新注入，确保压缩之后主 agent 依然能看到子任务的进度；
+
+##### 摘要 Prompt 设计
+
+Claude Code 的摘要 prompt 长达两百多行
+
+**防呆设计：禁止工具调用**
+```md
+CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
+- Do NOT use Read, Bash, Grep, Glob, Edit, Write, or ANY other tool.
+- Tool calls will be REJECTED and will waste your only turn.
+- Your entire response must be plain text.
+```
+**输出格式：XML + 9 部分清单**
+```md
+<analysis>
+[模型的推理草稿，分析对话哪些重要]
+</analysis>
+
+<summary>
+[结构化的摘要，按 9 个清单分块]
+</summary>
+```
+- `<analysis>` 块是「草稿区」，让模型先想清楚再写。这块最终会被剥离掉，不进入压缩后的对话。它的存在纯粹是为了让模型有个「思考的空间」，写出来的摘要质量更高。
+- `<summary>` 块才是真正进入对话的内容
+
 
 #### 总结
+
+这种「从轻到重」的设计有个隐藏的好处：绝大部分场景根本走不到第 5 层。每一层都在替下一层「减负」：
+- 大文件没塞进上下文，Snip 不会触发
+- Snip 已经释放了空间，Auto-Compact 不会被激活
+- Context Collapse 把上下文压到阈值以下，Auto-Compact 同样不需要跑
 
 回顾一下这五步压缩策略，它们体现了一个核心设计哲学：**能轻则轻，逐步加码**。
 
