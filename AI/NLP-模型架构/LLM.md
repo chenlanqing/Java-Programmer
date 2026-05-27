@@ -421,6 +421,10 @@ mlx_lm.server \
   --port 8080
 ```
 
+## 大模型调优
+
+- [垂域大模型 SFT/RAG 调优效率翻倍](https://mp.weixin.qq.com/s/EBpHyP5O7LWHVe9mf6DB7w)
+
 ## 大模型评测
 
 - [Benchmark Leaderboard Race](https://huggingface.co/spaces/davanstrien/benchmark-race)

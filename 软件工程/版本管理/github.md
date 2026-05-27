@@ -96,6 +96,10 @@ git push origin --delete master
 - [Stunning insights for your GitHub Repo](https://repobeats.axiom.co/)
 - [Github star history](https://www.star-history.com/)
 
+# github趋势
+
+- [Github Trending Repositories](https://trendingrepos.glup3.dev/?time=daily)
+
 # 开源项目
 
 ## 源码分析
