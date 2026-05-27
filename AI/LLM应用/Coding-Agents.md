@@ -2141,7 +2141,6 @@ CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
 - [Claude Code](https://github.com/anthropics/claude-code)
 - [Learn Claude Code](https://github.com/shareAI-lab/learn-claude-code/blob/main/README_zh.md)-https://learn.shareai.run/zh/
 - [有趣且有效的使用 Claude 的方法](https://github.com/anthropics/claude-cookbooks)
-- [Claude code core library](https://github.com/obra/superpowers)
 - [CLI tool for configuring and monitoring Claude Code](https://github.com/davila7/claude-code-templates)
 - [Claude Quick starts](https://github.com/anthropics/claude-quickstarts)
 - [Claude Code router](https://github.com/musistudio/claude-code-router)
