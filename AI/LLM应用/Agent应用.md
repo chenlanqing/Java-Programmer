@@ -371,3 +371,68 @@ npm rm -g openclaw
 pnpm remove -g openclaw
 bun remove -g openclaw
 ```
+
+## 设计哲学
+
+- [OpenClaw 在 Prompt / Context / Harness 三个维度中的设计哲学与实践](https://mp.weixin.qq.com/s/JycTfNd7EnmWCnJK-QCf0Q)
+
+# Hermes-Agent
+
+- [Hermes Agents](https://github.com/NousResearch/hermes-agent)
+- [Hermes Ecosystem](https://github.com/ksimback/hermes-ecosystem)
+- [Hermes Agent 从入门到精通 ](https://github.com/alchaincyf/hermes-agent-orange-book)
+- [Hermes Agent 白皮书 —— 养马从入门到精通](https://github.com/jwangkun/hermes-agent-guide)
+
+## 核心架构
+
+![](../image/Hermes-Agent核心架构.png)
+
+与 OpenClaw 不同的是，Hermes-Agent 的 Gateway 并不作为核心模块，如果你不接入外部消息渠道，甚至无需启动它
+
+## Skill 机制
+
+### 如何植入 Skill 自我学习意识
+
+在 Agent 的启动与初始化入口（代码：run_agent.py） 有一条明确的系统提示组装流水线，其中一个重要工序就是把 Agent 应该如何学习技能、使用技能和修复技能这套意识植入
+```py
+SKILLS_GUIDANCE = (
+    "当你完成一个复杂任务（例如需要多次调用工具，通常为 5 次及以上）、"
+    "解决了一个棘手错误，或发现了一套非显而易见但可复用的工作流程时，"
+    "请使用 skill_manage 将该方法保存为一个技能（skill），"
+    "以便下次在类似场景中复用。\n"
+    "当你在使用某个技能时，如果发现它已经过时、不完整或存在错误，"
+    "请立即使用 skill_manage(action='patch') 对其进行修补，"
+    "不要等到被要求时才处理。"
+    "如果技能得不到维护，它最终就会从资产变成负担。"
+)
+```
+
+### Skill自学习完整链路与触发时机
+
+自学习 Skill 并不意味着每次调完工具或者完成任务，就立刻判断要不要写 Skill的这种机械逻辑。Hermes-Agent 采用“前台自觉+后台巡检”的双重机制：- 前台自觉：这就是上面注入的系统提示的作用。在完成复杂任务、发现复杂工作流时，模型应主动考虑创建成 skill（调用 Skill_manage 工具）。
+- 后台巡检：即便模型在这轮没主动沉淀，主控流程仍会根据工具调用的计数器，在后续的适当时机触发后台复盘（异步兜底）。
+
+注意：后台触发看的是多次任务的 tool-calling 累计计数(_iters_since_skill)，当其到达阀值（默认10），就会触发一次后台的异步巡检
+
+![](../image/Hermes-Agent-Skill触发流程.png)
+
+当进入后台兜底反思过程时，它是如何决定“要不要把某些经验沉淀出新的 Skill”？这依赖于 review_agent 的提示：
+```py
+_SKILL_REVIEW_PROMPT = (
+    "回顾上面的对话内容，判断是否有必要保存或更新某个技能。\n\n"
+    "重点关注：在完成任务的过程中，是否采用了非显而易见的方法，"
+    "是否经历了反复试错，或在实践过程中因为经验反馈而调整了方向，"
+    "或者用户是否期望或需要一种不同的方法或结果？\n\n"
+    "如果已经存在相关技能，请基于当前经验对其进行更新；"
+    "如果不存在且该方法具备可复用性，则创建一个新的技能。\n"
+    "如果没有值得保存的内容，请直接输出：'Nothing to save.' 并停止。"
+)
+```
+
+### 自动修复机制
+
+Hermes-Agent 给 Skill 设计了自动修复的机制。它是一种 Agent 在使用技能时，由系统提示和工具（skill_manage）共同驱动的自修复行为
+
+核心逻辑是：当模型判断到“问题在于 Skill 本身而不是其他环境问题”，就启动 Skill 修复 — 调用 skill_manager(action ='patch'）工具
+
+打补丁的动作本质上就是字符串替换，比如对 SKILL.md 中有问题的部分进行重写（当然也可能修改其他 Skill 相关文件）

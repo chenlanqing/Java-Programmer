@@ -1306,10 +1306,7 @@ Trace 里需要记录什么
 
 ## Hermes
 
-- [Hermes Agents](https://github.com/NousResearch/hermes-agent)
-- [Hermes Ecosystem](https://github.com/ksimback/hermes-ecosystem)
-- [Hermes Agent 从入门到精通 ](https://github.com/alchaincyf/hermes-agent-orange-book)
-- [Hermes Agent 白皮书 —— 养马从入门到精通](https://github.com/jwangkun/hermes-agent-guide)
+[深入研究 Hermes](./Agent应用.md#hermes)
 
 ## Generic Agent
 
