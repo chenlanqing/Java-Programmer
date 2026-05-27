@@ -244,6 +244,18 @@ https://mp.weixin.qq.com/s/uI4j2MAvNPmshdZ8uzPnCQ
 - 第三个是记忆模块，负责存储和检索信息，让 Agent 能在长时间任务中保持连贯。
 - 第四个是工具模块，是 Agent 的「手和脚」，让它能跟外部世界互动。
 
+## MCP 解决了 Function Call 的什么问题
+
+MCP 和 Function Calling 不在同一层。 一个是协议，一个是 API 字段。比较它们的"feature 差异"是错的，要比较的是"抽象层级"
+
+MCP 解决的是 N×M → N+M 的工程复杂度问题。 Function Calling 形态下，每个客户端要为每个工具单独适配，复杂度乘法增长；MCP 协议层引入后变成加法增长
+
+MCP 让"工具"成为可复用资产。 写一份 Server 实现，被任意 Client 复用。这件事 Function Calling 在它的形态下做不到——因为它跟模型厂商强绑定
+
+MCP 不是 Function Calling 的升级版，是 Agent 时代必需的协议层抽象——就像 LSP 之于 IDE，HTTP 之于 Web。
+
+MCP 是 Agent 时代的协议层，跟 Function Calling 不在同一层抽象——FC 是各家 API 私有字段，N×M 重复适配；MCP 是基于 JSON-RPC 2.0 的开放协议，N+M 收敛复杂度。我们项目里把内部数据库工具包成 MCP Server 之后，Claude Code、Cursor、Cline 三个客户端都能复用同一份实现，升级时只改 Server 不动 Client，工具就真的变成了可复用资产
+
 ## Tools、Workflow 和 Agent 三者的区别是什么？
 
 - [Agent、传统编程、Workflow 区别](https://mp.weixin.qq.com/s/4-p6yujL0nrwihnbkilZLw)
