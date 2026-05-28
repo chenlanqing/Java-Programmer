@@ -1072,6 +1072,14 @@ Claude Code 会读取引用的文件并将其内容纳入上下文。
 缺点： 需要管理更多文件，引用的文件必须存在于指定路径。  
 适用场景： 大型项目、monorepo，或 CLAUDE.md 超过 200 行时。  
 
+#### 让 Claude 维护自己的 CLAUDE.md
+
+每次纠正 Claude 的错误后，让它自己更新 CLAUDE.md：
+```
+“Update your CLAUDE.md so you don’t make that mistake again.”
+```
+Claude 在给自己补这类规则时其实还挺好用，用久了确实越来越少犯同样的错。不过也要定期 review，时间一长总会有些条目慢慢过时，当初有用的限制现在未必还适合
+
 ### 示例
 
 [CLAUDE.md 模板](./prompts/claude-template.md)

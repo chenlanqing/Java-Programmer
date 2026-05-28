@@ -103,6 +103,7 @@ TIME_WAIT 1645
 
 ### 4.6、其他软件
 
+- 截图：https://shottr.cc/
 - 滴答清单
 - Mac 深度清理软件： https://github.com/tw93/Mole 
 - [Mac 清理软件](https://github.com/momenbasel/PureMac)
