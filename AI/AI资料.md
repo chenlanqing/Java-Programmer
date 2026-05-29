@@ -267,11 +267,9 @@ Nano Banana 提示词
 - [Spring AI Alibaba](https://java2ai.com/)
 - [全栈式轻量级AI框架](https://github.com/Leavesfly/TinyAI)
  
-## Java Agent
+## [Java Agent](./LLM应用/Agent.md#java-agents)
 
-- [Assistant Agent 是一个基于 Spring AI Alibaba 构建的企业级智能助手框架](https://github.com/spring-ai-alibaba/AssistantAgent)
-- [DataAgent: 基于 Spring AI Alibaba 的企业级智能数据分析师](https://github.com/spring-ai-alibaba/DataAgent)
-- https://github.com/agentscope-ai/agentscope-java
+
 
 # AI 网关
 

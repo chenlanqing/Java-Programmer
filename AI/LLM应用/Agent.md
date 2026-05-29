@@ -1458,6 +1458,13 @@ Trace 里需要记录什么
 - [什么是 Computer Use Agent](https://zhuanlan.zhihu.com/p/31508157573)
 - [Awesome Computer Use Agents](https://github.com/ranpox/awesome-computer-use)
 
+## Java Agents
+
+- [Agent framework for the JVM.](https://github.com/embabel/embabel-agent)
+- [Assistant Agent 是一个基于 Spring AI Alibaba 构建的企业级智能助手框架](https://github.com/spring-ai-alibaba/AssistantAgent)
+- [DataAgent: 基于 Spring AI Alibaba 的企业级智能数据分析师](https://github.com/spring-ai-alibaba/DataAgent)
+- https://github.com/agentscope-ai/agentscope-java
+
 # 开源 Agent
 
 - [OpenFang: Open-source Agent OS built in Rust](https://github.com/RightNow-AI/openfang)
@@ -1490,7 +1497,6 @@ Trace 里需要记录什么
 ## Agent 能力
 
 - [Agent Reach: 给你的 AI Agent 一键装上互联网能力](https://github.com/Panniantong/Agent-Reach)
-
 
 ## Manus 分析
  
