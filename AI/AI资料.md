@@ -30,6 +30,7 @@
 
 ## AI 学习路线
 
+- [Learn it. Build it. Ship it for others.](https://github.com/rohitg00/ai-engineering-from-scratch)
 - https://github.com/ninehills/blog/issues/97
 - ML for Beginners: https://github.com/microsoft/ML-For-Beginners
 - AI for Beginners: https://github.com/microsoft/AI-For-Beginners
