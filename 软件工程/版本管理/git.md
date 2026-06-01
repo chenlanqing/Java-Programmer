@@ -622,7 +622,7 @@ $ git config --global alias.lg "log --color --graph --pretty=format:'%Cred%h%Cre
 git log --author="username"  --since=2022-04-01 --until=2022-08-30 --format='%aN' | sort -u | while read name; do echo -en "$name\t"; git log --author="$name" --pretty=tformat: --numstat | grep "\(.html\|.java\|.xml\|.properties\)$" | awk '{ add += $1; subs += $2; loc += $1 - $2 } END { printf "added lines: %s， removed lines: %s， total lines: %s\n"， add， subs， loc }' -; done
 ```
 
-## 5.3、代理问题
+## 5.4、代理问题
 
 解决：OpenSSL SSL_connect: SSL_ERROR_SYSCALL in connection to github.com:443
 ```
@@ -632,9 +632,7 @@ git config --global --unset https.proxy
 ```
 设置完以后重启一下编译器，成功解决！
 
-# 6、操作
-
-## 6.1、推送远程工程
+## 5.5、推送远程工程
 
 ```bash
 # 进入你的项目目录
@@ -653,7 +651,19 @@ git commit -m "Initial commit with code"
 git push origin V1.0
 ```
 
-# 7、多账号
+## 5.6、只 clone 部分文件夹
+
+用 sparse-checkout：
+```bash
+git clone --no-checkout --depth=1 https://github.com/chromium/chromium.git
+cd chromium
+git sparse-checkout init --cone
+git sparse-checkout set agents
+git checkout
+```
+--depth=1 只拉最新一次 commit，--no-checkout 避免先检出所有文件，sparse-checkout set agents 只检出 agents 目录
+
+# 6、多账号
 
 在本地环境配置多个 git 账号：https://www.yhz.me/posts/github-multiple-account/
 
@@ -673,9 +683,9 @@ HOST gitlab.com
     IdentityFile ~/.ssh/id_ed25519_gitlab
 ```
 
-# 8、玩转 Git
+# 7、玩转 Git
 
-## 8.1、Git Commit Replay
+## 7.1、Git Commit Replay
 
 - [Git 提交重放终端工具](https://github.com/unhappychoice/gitlogue)
 
