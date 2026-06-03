@@ -67,6 +67,7 @@
 
 - [rtk: 高性能 CLI 代理，将 LLM token 消耗降低 60-90%，节省 Token](https://github.com/rtk-ai/rtk)
 - [Caveman：省 token](https://github.com/JuliusBrussee/caveman)
+- [统计 Token 使用量](https://codexbar.app/)
 
 # Deepseek
 
@@ -242,11 +243,11 @@ Nano Banana 提示词
 - [实时语音框架：Chatterbox](https://github.com/resemble-ai/chatterbox)
 - [Minimaxi](https://platform.minimaxi.com/user-center/basic-information/interface-key)
 - https://github.com/m-bain/whisperX/
-- https://github.com/modelscope/FunASR
 - https://github.com/alphacep/vosk-api
 - https://elevenlabs.io/
 - [WhisperLiveKit 是一个完全在你自己电脑上运行的实时语音转文字工具](https://github.com/QuentinFuxa/WhisperLiveKit)
 - https://github.com/microsoft/VibeVoice
+- [工业级语音识别。比 Whisper 快 170 倍](https://github.com/modelscope/FunASR/)
 
 ## 其他
 
