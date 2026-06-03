@@ -1230,6 +1230,7 @@ Function Call 就是 Agent 能力的最底层技术基础
 
 # Multi-Agent
 
+- [从零设计生产级 Multi-Agent Harness：架构、评估、记忆、成本与 MCP 工具接入全拆解](https://mp.weixin.qq.com/s/JPhcyDc4JwRmnMQ-76A-FQ)
 - [如何基于Multi-Agent架构打造AI前端工程师](https://mp.weixin.qq.com/s/Huf3rfXM0hDqRe87VXiftg)
 
 Multi-Agent（MAS, Multi-Agent System）是由多个具备自主决策和交互能力的Agent组成的分布式架构。这些Agent通过协作、竞争或协商等方式，共同完成复杂任务或实现系统整体目标。
