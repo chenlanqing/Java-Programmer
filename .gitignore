@@ -7,3 +7,5 @@
 .claude/
 
 graphify-out/
+
+.env

@@ -1,0 +1,5 @@
+dotenv
+requests
+tavily-python
+openai
+google-search-results
