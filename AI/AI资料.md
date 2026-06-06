@@ -114,6 +114,7 @@
 
 ## 金融应用
 
+- [全球首个AI Native金融数据](https://mp.weixin.qq.com/s/gnCUDLoY0xvVUue4jEnjGw)
 - https://github.com/LLMQuant/awesome-trading-agents
 - [LLM驱动的 A/H/美股智能分析器](https://github.com/ZhuLinsen/daily_stock_analysis)
 - [金融终端是一个为那些拒绝受传统软件限制的人打造的开源金融平台](https://github.com/Fincept-Corporation/FinceptTerminal)
