@@ -256,6 +256,7 @@ Nano Banana 提示词
 
 # Java与AI
 
+- [Java AI技术选型](https://mp.weixin.qq.com/s/WVecJ5KUgOeMnY9TbO2NzQ)
 - [Java/Go 开发者的 AI 应用开发/Agent学习路线(后端通用)](https://articles.zsxq.com/id_zf7jjxl0s11g.html)
 
 ## 框架
