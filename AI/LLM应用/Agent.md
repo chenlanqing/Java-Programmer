@@ -1561,6 +1561,7 @@ Trace 里需要记录什么
 
 ## Generic Agent
 
+- [GenericAgent 是一个极简的、自我演化的自主智能体框架](https://github.com/lsdefine/GenericAgent)
 - [Hello, Generic Agent.](https://datawhalechina.github.io/hello-generic-agent/)
 
 ## Multi-Agent
@@ -1642,3 +1643,4 @@ Trace 里需要记录什么
 - https://github.com/code-yeongyu/oh-my-openagent
 - https://github.com/Yeachan-Heo/oh-my-codex
 - https://github.com/can1357/oh-my-pi
+- [Agentic Engineering 技巧](https://mp.weixin.qq.com/s/Oo0iksfTXvUSFNnBrWOOpw)

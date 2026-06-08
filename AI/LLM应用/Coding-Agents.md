@@ -2142,6 +2142,58 @@ CRITICAL: Respond with TEXT ONLY. Do NOT call any tools.
 
 - [小林coding-ClaudeCode 源码基本分析](https://mp.weixin.qq.com/s/qGfSdDEjzKM6zrtaPBM-7w)
 
+## 代码检索
+
+- [为什么代码检索不用 RAG](../../面试/AI.md#为什么-claude-code不用-rag-索引代码而是用-grep)
+
+Anthropic 官方文档里列出的 Claude Code 工具，能看到 Glob、Grep、Read、Task这些工具，其中 Glob是按模式找文件，Grep是搜文件内容，Read是读取文件，Task是跑子 Agent 处理复杂多步任务，这几个工具合起来，就是 Claude Code 代码理解的底层动作；
+
+为什么拆成多个工具：
+- 权限边界清楚：Grep和 Read是只读工具；Write、Edit是会改文件的工具。这种边界对安全非常关键；
+- 返回结果可控：普通 shell 输出是纯文本，工具可以控制输出结构，比如文件路径、行号、匹配内容、截断策略；它需要干净、稳定、可预测的观察结果；
+- 提示词可以教模型怎么用：工具描述会进入模型上下文，告诉模型什么时候用、参数怎么填、什么情况不要用；也就是说：工具定义本身就是 Agent 行为的一部分；
+
+> Grep 是一个带权限、带输出约束、带使用规范的代码搜索能力
+
+### grep 工具
+
+Grep 不是简单 grep，而是受控的代码搜索工具
+
+### Glob 和 Read 解决的是"文件入口"和"上下文边界"
+
+Claude Code 不是只靠 grep，它靠的是三件套
+- Glob：先找可能相关的文件，Glob 解决的是文件入口问题，有时候你不知道内容关键词，只知道文件形态，项目越规范，Glob 越好用；
+- Read：只读需要的上下文，Read 解决的是上下文边界问题；真正合理的方式是：
+  - 先 Grep 命中行号。
+  - 再 Read 命中行附近几十行。
+  - 如果发现需要函数定义，再扩大一点。
+  - 如果发现调用另一个文件，再跳过去读。  
+  这叫按需读取，代码理解不是把仓库倒进模型，而是把模型需要的证据逐步拿出来；
+
+### 代码搜索标准流程
+
+用户说："登录接口加一个验证码校验。"，Claude Code 大概率不是直接写代码，它会先探索：
+1. 用 Glob 找路由和登录相关文件，比如 **/*auth*、**/*login*
+2. 用 Grep 搜 login、signin、token、password
+3. 用 Read 读取命中文件附近逻辑
+4. 发现登录调用了 AuthService
+5. 再 Grep AuthService
+6. Read service 实现
+7. 找到测试文件
+8. 修改代码
+9. 跑测试或读取测试逻辑验证
+
+### 代码检索处在 AgentLoop 中
+
+Claude Code 的检索发生在 Agent Loop 里，Claude Code 的底层形态就是多轮循环：模型思考下一步，调用工具，拿到工具结果，再继续判断，代码检索放进这个循环以后，就变成了动态搜索。
+
+动态搜索和 RAG 的差别很大；
+
+**RAG 是一次性给材料：** 用户问题 → 向量召回 Top-K → 拼 Prompt → 模型回答。它的问题是，召回阶段一旦选错，模型没有机会修正检索策略。当然，Agentic RAG 可以多轮检索；
+
+**Agent 检索是边看边改方向**：Agent 检索是：用户问题 → 模型决定先搜什么 → 工具返回结果 → 模型看结果 → 决定下一步读哪里或换什么关键词。在多轮循环中，工具结果不是答案，而是下一轮决策的证据
+
+
 ## 其他
 
 - [SuperClaude 框架:将Claude Code转换为结构化开发平台](https://github.com/SuperClaude-Org/SuperClaude_Framework)
@@ -2391,3 +2443,4 @@ LSP: Language Server Protocol
 - [Rules and Knowledge to work better with agents such as Claude Code or Cursor](https://github.com/steipete/agent-rules)
 - [Claude Code Cookbook: Killer, Claude Code](https://cc.deeptoai.com/)
 - [Continue: 编码 Agents](https://github.com/continuedev/continue)
+- [claude-tap 是给 AI 编程 agent 用的本地代理和 trace 查看器。把 CLI 通过它启动，就能看到真实 API 流量](https://github.com/liaohch3/claude-tap)
