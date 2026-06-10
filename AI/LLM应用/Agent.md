@@ -697,6 +697,7 @@ System Prompt 有两个常见的极端得避开：
 - [Anthropic 关于 Harness 落地](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
 - [Harness Engineering 深入理解](https://mp.weixin.qq.com/s/9cKWyTcK-BORuyn1JK4Ysw)
 - [Harness 完整实现论文](https://mp.weixin.qq.com/s/pG39PRnZFjSIxwYcPKD47A)
+- [Agent Harness Engineering: A Survey](https://picrew.github.io/LLM-Harness/)
 
 ## Harness 和 Prompt/Context Engineering
 
