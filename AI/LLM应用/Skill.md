@@ -610,6 +610,7 @@ my-skill/
 # SKILL 进化
 
 - [达尔文.skill 2.0:像训练模型一样优化你的 Agent Skills。](https://github.com/alchaincyf/darwin-skill)
+- [SkillOpt，一个把 Agent 技能文档当作「可训练参数」的文本空间优化框架](https://github.com/microsoft/SkillOpt)
 
 # SKILL 蒸馏
 
