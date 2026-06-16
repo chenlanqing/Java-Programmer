@@ -391,7 +391,7 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 - 模板结构化：创建具有清晰章节和XML标签的结构化模板
 - 链式提示增强：展示从输入到输出的逐步推理
 
-## Prompt Caching
+## Prompt Cache
 
 - [提示词缓存前缀设计](https://claude.com/blog/lessons-from-building-claude-code-prompt-caching-is-everything)
 
