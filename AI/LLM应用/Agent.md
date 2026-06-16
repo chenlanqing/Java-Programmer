@@ -1727,6 +1727,37 @@ Prompt Cache：是所有优化的基础;
     - 去重合并：「连接超时」重复 10 次 → 「连接超时（×10）」
 - Caveman：压缩输出端的废话，RTK 压缩的是命令输出（输入 Token），Caveman 压缩的是 AI 回复（输出 Token）。两者方向不同，可以叠加
 - headroom：压“进上下文的所有内容”：headroom 压的是第三个方向：所有读进上下文的内容——文件内容、工具调用返回值、会话历史；
+
+    ```mermaid
+    flowchart TD
+        A["你的 Agent"] -->|提示词·工具输出·日志·RAG结果·文件| B1[Headroom-本地代理]
+        
+        subgraph Headroom-本地代理
+            B1["缓存对齐器 CacheAligner"]
+            B2["内容路由器 ContentRouter"]
+            C1["上下文压缩与召回 CCR"]
+            C2["智能粉碎器 SmartCrusher (JSON)"]
+            C3["代码压缩器 CodeCompressor (AST)"]
+            C4["通用压缩器 Kompress-base (文本/HF)"]
+            D["压缩后上下文"]
+            
+            B1 --> B2
+            B2 --> C1
+            B2 --> C2
+            B2 --> C3
+            B2 --> C4
+            C1 --> D
+            C2 --> D
+            C3 --> D
+            C4 --> D
+        end
+        
+        D --> E["大模型供应商<br>(GLM / DeepSeek ...)"]
+        
+        %% 样式：黄色背景区分本地代理区域
+        classDef headroom fill:#fff9cc,stroke:#d4b800
+        class B,B1,B2,C1,C2,C3,C4,D headroom
+    ```
     - headroom 首先是代理层，不只是压缩器——Agent 不直接连 LLM，而是先经过本地的 headroom 代理入口。提示词、工具输出、日志、RAG 结果、文件等上下文，都会先在这里被接住、处理、再转发。
     - 代理层内部是一条处理流水线——先由 CacheAligner 稳定前缀，帮助 Prompt Cache 命中；再由 ContentRouter 判断内容类型，把 JSON、代码、文本分别交给 SmartCrusher、CodeCompressor、Kompress-base。
     - CCR 负责“可逆压缩”——原始数据全部保留在本地，模型只收到压缩版；需要细节时再通过 headroom_retrieve 按需取回。不是删掉信息，而是延后加载细节。
