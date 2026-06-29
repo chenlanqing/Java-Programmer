@@ -250,6 +250,10 @@ Nano Banana 提示词
 - https://github.com/microsoft/VibeVoice
 - [工业级语音识别。比 Whisper 快 170 倍](https://github.com/modelscope/FunASR/)
 
+## 求职
+
+- [基于 Claude 代码构建的 AI 驱动求职系统](https://github.com/santifer/career-ops)
+
 ## 其他
 
 - [Cloc: 统计了许多编程语言中的空行、注释行和物理源代码行](https://github.com/aldanial/cloc)
