@@ -306,6 +306,54 @@ Memory 和 RAG 的关系:
 
 # MCP
 
+## MCP 的消息格式：JSON-RPC 2.0
+
+为什么？MCP 需要一种「Client 调用 Server 的方法，Server 返回结果」的通信模式，这本质上就是远程过程调用（RPC）
+
+JSON-RPC 2.0 是现成的、足够轻量的 RPC 规范，用 JSON 格式易读易调试，任何编程语言都能实现，不管 Server 是 Python 写的还是 TypeScript 写的，消息格式都一样，不需要额外的序列化工具。
+
+每条消息就是一个 JSON 对象，格式固定：
+```json
+// 请求消息（Client -> Server）
+{
+  "jsonrpc": "2.0",
+  "id": 1,                        // 请求 ID，用于匹配响应
+  "method": "tools/call",         // 调用的方法名
+  "params": {
+    "name": "take_screenshot",    // 工具名
+    "arguments": {"url": "https://example.com"}
+  }
+}
+
+// 响应消息（Server -> Client）
+{
+  "jsonrpc": "2.0",
+  "id": 1,                        // 对应请求的 ID
+  "result": {
+    "content": [{"type": "image", "data": "...base64..."}]
+  }
+}
+```
+JSON-RPC 本身只定义消息格式，不关心底层怎么传输，MCP 在此基础上定义了两种传输层实现
+
+## MCP 协议通常采用什么通信方式？
+
+MCP 支持两种主要的传输方式，分别适用于不同场景。
+- 本地场景用 stdio，Client 把 Server 作为子进程启动，通过标准输入输出通信，延迟极低，不用开端口，也没有网络安全问题，我用 Claude Desktop 接本地工具走的就是这种方式。
+- 远程场景现在推荐用 Streamable HTTP，Server 作为独立的 HTTP 服务部署，多个 Client 可以共享同一个 Server，适合团队统一管理工具服务。
+
+MCP 早期版本（2024-11-05 规范）的远程传输是「HTTP + SSE」双端点方案，2025 年 3 月的规范更新里被标记为 deprecated（保留向后兼容但不推荐新项目使用），Streamable HTTP 成为了推荐的远程传输方式。不管哪种传输方式，底层消息格式都统一用 JSON-RPC 2.0，传输方式只影响「怎么传」，消息协议本身不变
+
+## 为什么 SSE 被弃用了
+
+在 2025 年 3 月的规范更新里被标记为 deprecated，仍然保留向后兼容，但新项目应该直接用 Streamable HTTP；
+
+为什么要替换？原因是架构上有一个小尴尬：Client 向 Server 发请求要走 POST 端点，Server 向 Client 推数据要走另一条 SSE 长连接端点，同一个对话被拆成了两条通道。这带来的具体问题是状态管理复杂，比如 Client POST 了一条消息之后网络突然断了，那条消息到底被处理了没、SSE 流会不会推回结果，Client 没有一个简单的办法判断，出问题时排查链路很长；
+
+Streamable HTTP 的做法是把这两条通道合并成一个端点：Client 照样 POST 发请求，Server 根据情况决定返回「一个普通 JSON」还是「一条 SSE 流」，不需要 Client 提前开另一条连接；
+
+注意这里的关键：Streamable HTTP 并没有抛弃 SSE，流式推送的部分底层还是 SSE（Content-Type: text/event-stream），只是把端点从两个合成一个。架构更简洁、对负载均衡和 serverless 环境都更友好
+
 # Agent
 
 ## Agent 对接业务系统API的最佳方案是什么
