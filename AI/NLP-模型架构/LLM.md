@@ -452,6 +452,18 @@ mlx_lm.server \
 - 数据：在什么数据上评测；
 - 指标：如何判断评测结果好坏；
 
+### 大模型评测指标
+
+#### 主流学术 Benchmark
+
+- **MMLU / MMLU-Pro** 是最广泛引用的综合能力测试。MMLU 涵盖 57 个学科领域，从高中数学、历史、法律到医学和计算机科学，全部是四选一的单项选择题。MMLU-Pro 难度更高、选项更多，也更强调推理。可以把它理解成一套超全面的「文化水平考试」，考的是模型的知识广度和推理基础；
+- **HumanEval、MBPP 和 SWE-bench Verified** 是代码能力的基准测试。HumanEval 由 OpenAI 设计，包含 164 道编程题，每道题给出函数签名和 docstring，要求生成完整的函数实现，然后用隐藏的测试用例验证正确性。SWE-bench Verified 更接近真实软件工程，让模型修真实 GitHub issue，能更好评估代码理解、修改和测试能力。Pass@k 是常见指标，表示生成 k 个候选代码，至少 1 个能通过所有测试的比例；
+- GSM8K、MATH、GPQA 测试数学和科学推理能力。GSM8K 是小学数学应用题，考基础的四则运算和逻辑推理；MATH 是竞赛数学，包含代数、几何、组合数学等；GPQA 更偏研究生级别的科学问答，很多题需要物理、化学、生物等专业知识和多步推理；
+- MT-Bench、Arena、τ-bench 更偏对话和 Agent / Tool Use 能力。MT-Bench 设计了一系列需要多轮交互的场景，用「LLM-as-Judge」方式给回答打分；Chatbot Arena 更像用户真实偏好投票；τ-bench 这类评测会看模型在工具调用、多轮状态管理、业务流程里的表现，更贴近 Agent 应用；
+- HELM、LiveBench、Humanity’s Last Exam 是更综合或更新型的评测。HELM 覆盖准确率、鲁棒性、公平性、有害性等多个维度；LiveBench 会持续更新题目，降低数据污染；Humanity’s Last Exam 则主打更难、更广的综合知识和推理。它们比单一指标更全面，但也更复杂。然而，这些看起来很权威的指标，有一个很难回避的系统性缺陷；
+
+> Benchmark 的局限性：数据污染问题
+
 ## 专业LLM
 
 ### 金融 LLM
