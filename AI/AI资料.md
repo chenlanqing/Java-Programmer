@@ -149,6 +149,7 @@
 
 沙盒与虚拟化
 
+- [Cube Sandbox 是一款基于 RustVMM 与 KVM 构建的高性能、开箱即用的安全沙箱服务](https://github.com/tencentcloud/CubeSandbox)
 - [Agent Safehouse – macOS 原生本地代理安全沙箱](https://github.com/eugene1g/agent-safehouse)
 - https://github.com/alibaba/OpenSandbox
 - https://github.com/anthropic-experimental/sandbox-runtime
