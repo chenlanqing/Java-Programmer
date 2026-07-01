@@ -44,6 +44,32 @@
 
 https://mp.weixin.qq.com/s/O4KQPtYExtLcBbBximlffQ
 
+## [大模型部署有哪些主流方案](https://mp.weixin.qq.com/s/z_Pen3M-ycP3mHYYKzAp9g)
+
+大模型部署框架的本质问题是：怎么在固定的硬件上跑得更快、更省显存、支持更多并发用户？
+
+主流框架按定位分四类
+1. vLLM：当前生产部署里很常见的框架，UC Berkeley 出品。核心创新是 PagedAttention，把 KV Cache 像操作系统虚拟内存一样分页管理，大幅减少碎片，显存利用率能明显提高。配合 Continuous Batching 实现很高的吞吐量，是很多团队部署 LLM API 时会优先评估的方案。
+2. SGLang：vLLM 之后的新一代推理框架，LMSYS 出品。核心创新是 RadixAttention，把多请求的共享前缀（如 System Prompt、Few-shot 示例、对话历史）组织成树结构，相同前缀只存一份 KV Cache。在 Agent、多轮对话、批量 Prompt 场景下比 vLLM 显存更省、首 token 延迟更低。
+3. TGI（Text Generation Inference）：HuggingFace 出品，与整个 HF 生态深度集成。优点是开箱即用、支持各种 HF Hub 上的模型、企业级 API 接口（鉴权、metrics、健康检查）。但要注意它近两年的增长势头不如 vLLM / SGLang，选它更多是看中 HF 生态和既有系统集成，而不是追求极致性能。
+4. llama.cpp：CPU / 边缘设备部署的事实标准。用 C++ 重写整个推理栈，配合 GGUF 量化文件格式，可以让 7B 模型在 MacBook Pro 上跑、在树莓派上跑、在手机上跑。是个人开发者和边缘部署的首选。
+
+如何选择：
+- 生产高吞吐 LLM API：vLLM 默认
+- Agent / 多轮对话 / Few-shot：SGLang 更省
+- 拥抱 HuggingFace 生态、企业级：TGI
+- 本地 / Mac / 边缘 / 无 GPU：llama.cpp
+- 极致性能、自家定制：TensorRT-LLM（NVIDIA 官方）
+
+### 直接用 transformers 库跑模型」会有什么问题
+
+最朴素的部署方式是写个 Python 脚本，加载 HF transformers 的 AutoModelForCausalLM，调 model.generate()。能跑起来，但效率会很糟糕，三个核心痛点：
+- **KV Cache 显存碎片严重**：每来一个请求，朴素实现会预分配「最大可能长度」（比如 4096 tokens）的 KV Cache 显存。但实际上大多数请求只用 200-500 tokens，剩下的 3500+ tokens 显存就空着浪费了。一台 80GB H100 理论能跑 100 个并发请求，实际只能跑 30 个，显存白白浪费 60-70%
+- **批量推理调度低效**：朴素批量处理（static batching）是「凑齐 N 个请求一起跑、所有请求一起结束」。但每个请求生成长度不同（有的 50 tokens 就完了、有的要 1000 tokens），短的请求等长的请求，GPU 大量时间在「跑了一半在等」。吞吐率上不去
+- **重复计算**：如果每个用户都用同一段 System Prompt（比如 1000 tokens 的产品知识库），朴素实现每次都要重新算这 1000 tokens 的 KV Cache，浪费极大
+
+部署框架就是为了解决这三个痛点。三大优化方向：内存高效（显存碎片）+ 批量调度（吞吐率）+ 缓存复用（重复计算）。每个主流框架在这三个方向上都有自己的创新。
+
 ## LLM能否自己做规划
 
 https://mp.weixin.qq.com/s/_WTjjSCKssTd20lBoGzycQ
