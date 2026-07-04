@@ -1,3 +1,108 @@
+# Agent 框架
+
+- [Deep-agents 是一款基于 langchain 和 langgraph 构建的Agents工具](https://github.com/langchain-ai/deepagents)
+- ACE (Agentic Context Engine)
+- [Dify DSL](https://github.com/svcvit/Awesome-Dify-Workflow)
+- [Autogen的基本框架](https://limoncc.com/post/3271c9aecd8f7df1/)[autogenstudio ui --host 0.0.0.0 --port 8080 --appdir ./myapp]
+- [MetaGPT智能体开发入门](https://github.com/geekan/MetaGPT)
+- [Pocket Flow](https://github.com/The-Pocket/PocketFlow)
+- [Mem0-Agent 记忆体](https://github.com/mem0ai/mem0)
+- [Qwen-Agent](https://github.com/QwenLM/Qwen-Agent)
+- [深度拆解：Dify、FastGPT 和 Ragflow](https://huangf.org/posts/aiworkflow/)
+- [Parlant 是一个专注于 指令遵循可靠性 的开源 AI 智能体框架](https://github.com/emcie-co/parlant)
+- [MiroThinker是一个开源的智能体（Agent）模型系列，专为深度研究和复杂、长期问题解决而设计](https://github.com/MiroMindAI/MiroThinker)
+- [Youtu-agent 是一个灵活、高性能的框架，用于构建、运行和评估自主智能体](https://github.com/TencentCloudADP/Youtu-agent)
+- [AgentScope 是 “多模态智能体神器”](https://github.com/agentscope-ai/agentscope)
+- [AI联网搜索](https://github.com/swirlai/swirl-search)
+- [Agent-To-User-Interface](https://github.com/google/A2UI)
+- [Bytebot-桌面Agent](https://github.com/bytebot-ai/bytebot)
+- [Flowise：可视化构建 AI/LLM 流程](https://github.com/FlowiseAI/Flowise)
+
+## Hermes
+
+[深入研究 Hermes](./Agent应用.md#hermes)
+
+## Generic Agent
+
+- [GenericAgent 是一个极简的、自我演化的自主智能体框架](https://github.com/lsdefine/GenericAgent)
+- [Hello, Generic Agent.](https://datawhalechina.github.io/hello-generic-agent/)
+
+## Multi-Agent
+
+- https://github.com/kyegomez/swarms
+- [三省六部 · Edict: 多 Agent 协作全流程](https://github.com/cft0808/edict)
+- [agentUniverse 是一个基于大型语言模型的多智能体框架](https://github.com/agentuniverse-ai/agentUniverse)
+- [crewAI-快速灵活的多代理自动化框架](https://github.com/crewAIInc/crewAI)
+- [OWL：实际任务自动化中提供通用多智能体协助](https://github.com/camel-ai/owl)
+- [OpenManus](https://github.com/FoundationAgents/OpenManus)
+- [AI Manus 是一个通用的 AI Agent 系统，支持在沙盒环境中运行各种工具和作](https://github.com/Simpleyyt/ai-manus)
+- [AIPy 是Python-use概念的具体实现，是一个融合了大语言模型（LLM）与Python运行环境的开源工具](https://github.com/knownsec/aipyapp)
+- [JoyAgent-JDGenie: 开源端到端的通用 Agent](https://github.com/jd-opensource/joyagent-jdgenie)
+- [OpenAI Agents 用于多代理工作流程的轻量级、功能强大的框架](https://github.com/openai/openai-agents-python)
+
+## 营销 Agent
+
+- [Aitoearn：AI内容营销智能体](https://github.com/yikart/AiToEarn)
+
+## CUA
+
+- [什么是 Computer Use Agent](https://zhuanlan.zhihu.com/p/31508157573)
+- [Awesome Computer Use Agents](https://github.com/ranpox/awesome-computer-use)
+
+## Java Agents
+
+- [Agent framework for the JVM.](https://github.com/embabel/embabel-agent)
+- [Assistant Agent 是一个基于 Spring AI Alibaba 构建的企业级智能助手框架](https://github.com/spring-ai-alibaba/AssistantAgent)
+- [DataAgent: 基于 Spring AI Alibaba 的企业级智能数据分析师](https://github.com/spring-ai-alibaba/DataAgent)
+- https://github.com/agentscope-ai/agentscope-java
+
+## 舆情 Agent
+
+- [实时全球情报仪表盘——基于 AI 驱动的新闻聚合、地缘政治监控和基础设施跟踪，统一态势感知界面](https://github.com/koala73/worldmonitor)
+- [MiroFish 是一款基于多智能体技术的新一代 AI 预测引擎](https://github.com/666ghj/MiroFish)
+- [“微舆” 是一个从0实现的创新型 多智能体 舆情分析系统](https://github.com/666ghj/BettaFish)
+
+## 其他
+
+- [500 个 各行各业 AI Agent用例的精选集合](https://github.com/ashishpatel26/500-AI-Agents-Projects)
+- [OpenFang: Open-source Agent OS built in Rust](https://github.com/RightNow-AI/openfang)
+- [ClawWork: OpenClaw as Your AI Coworker](https://github.com/HKUDS/ClawWork)
+- [Wiseflow: 即刻拥有一只 7×24 在线工作的 AI 员工团队](https://github.com/TeamWiseFlow/wiseflow)
+- [Deep Search Agent:一个无框架的深度搜索AI代理实现，能够通过多轮搜索和反思生成高质量的研究报告](https://github.com/666ghj/DeepSearchAgent-Demo)
+- [browser-use：AI 操作浏览器](https://github.com/browser-use/browser-use)
+- [AI 编程引擎 Plandex](https://github.com/plandex-ai/plandex)
+- [Suna-通用型 Agent](https://github.com/kortix-ai/suna)
+- [精选 Agent 代理框架](https://github.com/Arindam200/awesome-ai-apps)
+- [WebAgent 信息检索系统：网页智能代理框架](https://github.com/Alibaba-NLP/WebAgent)
+- [agent directory](https://aiagentsdirectory.com/)
+- [Agent调研--19类Agent框架对比](https://mp.weixin.qq.com/s/rogMCoS1zDN0mAAC5EKhFQ)
+- [自主 AI Agent 框架列表](https://github.com/e2b-dev/awesome-ai-agents)
+- [复杂表格多Agent方案](https://mp.weixin.qq.com/s/lEbFZTPCdFPW-X22253ZPg)
+- [快速开发AI Agent](https://github.com/huggingface/smolagents)
+- [What Are Agentic Workflows? Patterns, Use Cases, Examples, and More](https://weaviate.io/blog/what-are-agentic-workflows)
+- [BrowserOS:开源浏览器 Agent](https://github.com/browseros-ai/BrowserOS)
+- [MultiAgentPPT 是一个集成了 A2A（Agent2Agent）+ MCP（Model Context Protocol）+ ADK（Agent Development Kit） 架构的智能化演示文稿生成系统，支持通过多智能体协作和流式并发机制](https://github.com/johnson7788/MultiAgentPPT)
+- [EvoAgentX-自动演进的Agents](https://github.com/EvoAgentX/EvoAgentX)
+- [AgentEvolver 是一个端到端、自我演进的培训框架](https://github.com/modelscope/AgentEvolver)
+- [DeepAnalyze：用于自主数据科学的代理大型语言模型](https://github.com/ruc-datalab/DeepAnalyze)
+- [Google Agent Development Kit](https://google.github.io/adk-docs/)
+- [毕昇：开源AgentOps专攻办公效率场景](https://github.com/dataelement/bisheng)
+- [OpenSquilla — 高效的 Token AI Agents](https://github.com/opensquilla/opensquilla)
+
+## Agent 能力
+
+- [Agent Reach: 给你的 AI Agent 一键装上互联网能力](https://github.com/Panniantong/Agent-Reach)
+
+## Manus 分析
+ 
+- [Manus的技术实现原理浅析与简单复刻](https://developer.aliyun.com/article/1658152)
+- [Manus 的调研与思考](https://blog.naaln.com/2025/03/Manus/)
+- https://zhuanlan.zhihu.com/p/29330461895
+- [Check Files Under /opt/.manus Path](https://manus.im/share/lLR5uWIR5Im3k9FCktVu0k)
+- [Manus 提示词](https://gist.github.com/jlia0/db0a9695b3ca7609c9b1a08dcbf872c9)
+- [一个高确定性的 无代码 Agent 开发框架](https://github.com/spring-ai-alibaba/JManus)
+- [AgenticSeek: Private, Local Manus Alternative.](https://github.com/Fosowl/agenticSeek)
+
 # OpenClaw
 
 - [OpenClaw AI 智能体最佳真实用例大全](https://github.com/AlexAnys/awesome-openclaw-usecases-zh)
