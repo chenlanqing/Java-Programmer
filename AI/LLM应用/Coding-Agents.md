@@ -2518,6 +2518,7 @@ LSP: Language Server Protocol
 - [去除前端网站的 AI 味](https://mp.weixin.qq.com/s/75_VmclNkk_SYilbFpRWEw)
 - [前端漂亮的 UI 风格设计](https://www.aura.build)
 - https://shadcnthemer.com/
+- [配色](https://www.bairesdev.com/tools/ai-colors)
 
 为了解决 AI 编码中前端的风格审美疲劳的问题，可以找到你觉得好看的，直接让AI参考学习，这样成品率就会好很多。
 
