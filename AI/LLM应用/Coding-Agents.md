@@ -1328,6 +1328,10 @@ flowchart LR
 ```
 让 Claude 顺手帮你沉淀 CLAUDE.md
 
+### 动态工作流
+
+动态工作流让 Claude 能够即时编写自定义的智能体编排程序，解决单个上下文窗口无法处理的任务
+
 ## Claude 使用流程
 
 - [How I use claude code](https://boristane.com/blog/how-i-use-claude-code/)

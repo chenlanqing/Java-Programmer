@@ -924,6 +924,10 @@ MCP 和 Skills 不是非此即彼的关系，而是可以互补使用：
 - [Sequential Thinking MCP-顺序思考](https://github.com/arben-adm/mcp-sequential-thinking)
 - [Shrimp Task Manager MCP-把复杂任务拆解成可执行的小步骤的 MCP](https://github.com/cjo4m06/mcp-shrimp-task-manager)
 
+## 代码MCP
+
+- [高性能代码智能 MCP 服务器](https://github.com/DeusData/codebase-memory-mcp)
+
 ## 其他
 
 - [DeepMCPAgent 是一个基于 LangChain/LangGraph 的 AI 智能体框架，完全通过 MCP 来驱动整体行为](https://github.com/cryxnet/DeepMCPAgent)
