@@ -980,11 +980,19 @@ harness 最痛的痛点——编辑工具（Edit Tool），Agent 写代码的核
 ```
 模型编辑时引用这些标签，如果文件在读取后被修改，哈希不匹配，编辑直接被拒绝
 
+## Harness 架构
+
+harness一般组织架构：
+
+![](../image/Harness-常见架构组织.png)
+
 ## Harness产品
 
 - [Claude Managed Agents](https://claude.com/blog/claude-managed-agents)，一套用于构建和部署云托管 Agent 的可组合 API 套件
 
 ## Harness 实践
+
+绝不把系统的安全性寄希望于大模型的理智，而是在底层的工具实现中强制兜底
 
 - [Claude Code 云端架构封装](https://mp.weixin.qq.com/s/gaBKZFIZetj9H9eqyhT13g?click_id=2010367378)
 
