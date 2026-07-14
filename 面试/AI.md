@@ -1001,9 +1001,54 @@ flowchart LR
 
 更健壮的 Harness 并发策略可以是：由 Harness 引擎（而非模型本身）在分发 ToolCall 批次时，检查本批次是否全部为只读工具调用。若是，则启用并发 Goroutine；若批次中存在任何写操作，则退化为顺序执行。这种“只读并发、涉写串行”的策略，以极低的复杂度，在绝大多数场景下同时保证了性能与正确性
 
+## 敏感 Tool 执行如何拦截？
+
+- 在本地单机开发时（CLI 场景）： 总是通过弹窗进行人工审批，效率极低，会严重打断开发者的心流。在这一场景下，业界公认的“既要效率、又要安全”的做法是：*沙箱（Sandboxing） + YOLO 机制*。开发者可以将 Agent 运行在隔离的 Docker 容器、轻量级沙箱或 MicroVM 中。由于环境是完全物理隔离且易于销毁重置的，Agent 即使在里面执行了 rm -rf / 也无伤大雅。这种“物理层隔离”打消了权限配置的顾虑，让 Agent 能在沙箱内享受极致的 YOLO 执行快感
+- 在云端自动化运维时（AgentOps 场景）：当 Agent 操作的是团队共享的公共服务器或生产数据库时，单纯靠沙箱是不够的，因为操作的后果是真实且不可逆的。此时，必须引入细粒度的权限体系（Permission System）。 可以通过 allow / ask / deny 的三态控制：
+- allow：白名单命令（如 git status），直接放行。
+- ask：敏感操作（比如git push），必须触发“人工审批”挂起，可以通过类似飞书审批，当然也可以在 TUI 上给出选项，让人工选择；
+- deny：黑名单操作，直接拦截并报错；
+
+底层依赖的 Harness 架构支点是完全一样的——那就是 Middleware 机制
+
+```mermaid
+sequenceDiagram
+    actor LLM as 大模型（Provider）
+    participant TR as Tool Registry
+    participant MW as Middleware（安全拦截）
+    participant FS as 企业 IM（Reporter & Bot）
+    actor OPS as 团队运维（用户）
+
+    LLM->>TR: 1. 发起 ToolCall：bash "rm -rf /logs"
+    TR->>MW: 2. 触发 Pre-Execute Middleware
+
+    rect rgb(255, 230, 230)
+        Note over MW: 命中高危黑名单，触发人工审批！
+        MW->>FS: 3. 通过 Reporter 发送企业 IM 审批请求
+        FS->>OPS: 4. 弹出提示：[Approve] / [Reject]
+        Note over TR,MW: 5. 当前协程死死挂起，等待 Channel 信号<br/>（<- approvalChan）
+        OPS->>FS: 6. 检查后回复 "reject call_123"
+        FS->>MW: 7. Webhook 收到事件，向 Channel 发送 Reject 信号
+    end
+
+    MW-->>TR: 8. 拦截成功，返回 Error Result
+    TR-->>LLM: 9. 组装 Message："人类拒绝了该操作：风险过高"
+```
+
 ## Agent 的上下文工程（Context Engineering）
 
+## 为什么 System Prompt 拦不住死循环？
 
+“既然我们在每一轮循环的开头，都把 System Prompt 重新塞进了上下文数组的最前面，大模型怎么可能会忘记写在里面的规则呢?”
+
+导致死循环的真正原因，是Agent工程中极具挑战性的两个大模型行为陷阱：
+- 上下文内容分布偏移：当模型连续几次遇到同一个棘手的 Error 时，上下文末尾会堆积大量结构相似的错误信息（ToolResult）。这些高度重复的 token 在内容分布上占据了绝对主导，使得模型的下一步生成被这些近期输入强力牵引，表现出“只想解决眼前报错”的行为倾向。这并非注意力机制本身发生了结构性故障，而是输入内容的分布决定了输出的走向
+- 近因偏差（Recency Bias）：当关键信息位于长上下文的头部或中部时，模型对其的响应权重会显著低于位于上下文末尾的信息（即 Lost in the Middle 效应）。相比于写在上下文最顶端、长达数千字的、泛泛而谈的系统规则，模型更倾向于对距离它最近的输入（即刚刚返回的那个 ToolResult 报错信息）做出强烈反应
+
+**如何解决这个问题？**
+- System Reminders：在它做决定的前一刻（Point of decision），也就是即将发起下一次 LLM 推理调用的地方，将高优先级的引导指令伪装成最新的一条 User Message，直接怼到它的脸上
+
+![](./image/Harness-SystemReminders.png)
 
 ## Agent 上下文污染怎么办？
 
