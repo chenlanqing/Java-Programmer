@@ -617,7 +617,7 @@ DPO，全称 Direct Preference Optimization，直接偏好优化，DPO 直接用
     - **企业级应用**: 提供了 API Server 和一站式 WebUI Board，方便企业进行模型的管理和部署。
     - **零代码**: 适合不会写代码或代码基础比较弱的同学快速上手进行微调。
 
-## 2、大模型训练技术
+## 2、大模型训练
 
 - [QLoRA：量化 LLM 的高效微调](https://github.com/artidoro/qlora)
 - [unsloth:模型微调框架](https://github.com/unslothai/unsloth)
@@ -634,22 +634,13 @@ DPO，全称 Direct Preference Optimization，直接偏好优化，DPO 直接用
 - [Linly: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型。](https://github.com/CVI-SZU/Linly)
 - [Chinese-LLaMA-Alpaca: 基于 LLaMA 使用中文增量预训练以及微调训练的中文模型](https://github.com/ymcui/Chinese-LLaMA-Alpaca)
 
-### 2.1、分布式训练
+### 模型训练基本过程
 
-- 数据并行与模型并行
-- 梯度累积与同步
-- DeepSeed分布式训练/Llama Factory/Xtuner
+大模型训练是一个三阶段流水线：预训练（Pre-training）→ 监督微调（SFT）→ 人类反馈强化学习（RLHF）。每个阶段的目标、数据、方法都不同
 
-### 2.2、混合精度训练
+### 阶段一：预训练（Pre-training）——"读万卷书"
 
-- FP32与FP16混合使用
-- 动态损失缩放
 
-### 2.3、模型压缩与加速
-
-- 剪枝技术
-- 量化技术
-- 知识蒸馏
 
 ## 3、微调技术与应用
 
