@@ -368,6 +368,10 @@ last reboot | head -1
 
 **推荐使用 `uptime` 命令**，这是最直接和准确的方法。
 
+### 在 macOS Finder 中快速显示/隐藏文件
+
+`Command + Shift + .`
+
 ## 10、命令别名
 
 ### 10.1、oh-my-zsh 别名

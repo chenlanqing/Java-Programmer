@@ -2546,3 +2546,4 @@ LSP: Language Server Protocol
 - [Continue: 编码 Agents](https://github.com/continuedev/continue)
 - [claude-tap 是给 AI 编程 agent 用的本地代理和 trace 查看器。把 CLI 通过它启动，就能看到真实 API 流量](https://github.com/liaohch3/claude-tap)
 - [面向终端的 DeepSeek 原生 AI coding agent](https://github.com/esengine/DeepSeek-Reasonix)
+- [Agent 开源编程终端](https://github.com/Helvesec/rmux)

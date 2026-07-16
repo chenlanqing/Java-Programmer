@@ -235,6 +235,15 @@ https://mp.weixin.qq.com/s/O4KQPtYExtLcBbBximlffQ
 
 Transformer 是 2017 年 Google 论文《Attention Is All You Need》提出的架构，核心创新是完全抛弃 RNN 和 CNN，仅用 Attention 机制处理序列
 
+## 大模型训练流程
+
+三句话框架：
+- ① 预训练——用万亿级无标注文本做 Next Token Prediction，让模型学会语言和世界知识（占 99% 算力）；
+- ② SFT——用几万条高质量指令-回答对微调，让模型从"续写"变成"对话"；
+- ③ RLHF/DPO——用人类偏好数据优化，让模型"回答得更好、更安全"。
+
+然后补一句"SFT 教格式，RLHF 教质量"，面试官会觉得你理解到位。
+
 ## 大模型的 DPO 和 PPO 的区别是什么？
 
 DPO 和 PPO 都是大模型对齐训练里的方法，都是在 SFT 之后让模型的输出更符合人类期望。
