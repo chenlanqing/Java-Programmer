@@ -283,6 +283,13 @@ Nano Banana 提示词
 # AI 网关
 
 - [A blazing fast AI Gateway with integrated guardrails](https://github.com/Portkey-AI/gateway)
+- [AI 网关 · 统一模型配置和负载](https://github.com/fuzhengwei/WaLiAPI)
+- [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
+- [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
+- [Personal LLM API 是一款轻量级的 LLM 接口服务](https://github.com/NLP-LOVE/personal-llm-api)
+- [Sub2API-CRS2 一站式开源中转服务](https://github.com/Wei-Shaw/sub2api)
+- [CLI 代理 API](https://github.com/router-for-me/CLIProxyAPI)
+- [OmniRoute — 免费 AI 网关](https://github.com/diegosouzapw/OmniRoute)
 
 ## 面临的挑战
 
@@ -406,16 +413,6 @@ Higress 是一款云原生 API 网关，内核基于 Istio 和 Envoy
 - [AI 中转站评测比价](https://www.helpaio.com/transit)
 - [基于真实调用的 LLM 服务质量观测台](https://github.com/prehisle/relay-pulse)
 - [AIClient2API 是一个突破客户端限制的 API 代理服务](https://github.com/justlovemaki/AIClient-2-API)
-
-
-# LLM 调用分发
-
-- [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
-- [OneAPI：通过标准的 OpenAI API 格式访问所有的大模型，开箱即用](https://github.com/songquanpeng/one-api)
-- [Personal LLM API 是一款轻量级的 LLM 接口服务](https://github.com/NLP-LOVE/personal-llm-api)
-- [Sub2API-CRS2 一站式开源中转服务](https://github.com/Wei-Shaw/sub2api)
-- [CLI 代理 API](https://github.com/router-for-me/CLIProxyAPI)
-- [OmniRoute — 免费 AI 网关](https://github.com/diegosouzapw/OmniRoute)
 
 # 自媒体
 
