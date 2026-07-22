@@ -966,10 +966,11 @@ C-RAG 的工作流程可以概括为 “检索-评估-行动” 三个阶段：
 # RAG系统评估
 
 - [Evaluation and Tracking for LLM Experiments and AI Agents](https://github.com/truera/trulens)
+- [如何做 RAG 系统评估](https://mp.weixin.qq.com/s/aaN3i5OilJur-_871SBbmQ)
 
 主要从几个维度进行量化评估：
-- 首先是检索相关性（找到的内容是否包含答案）；
-- 其次是生成质量，又可以细分：
+- 首先是检索相关性（找到的内容是否包含答案）；要看召回率、精准率、排序质量;
+- 其次是生成质量，又可以细分，要看 答案忠实度、相关性、上下文利用率
     - 为语义准确性（回答的意思是否正确）；
     - 词汇匹配度（专业术语是否使用得当）
 
