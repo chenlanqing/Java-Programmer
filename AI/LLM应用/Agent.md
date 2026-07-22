@@ -2235,6 +2235,7 @@ Agent 的自主性带来了三个传统软件没有的问题：
 
 # 参考资料
 
+- [深入理解 AI Agent：设计原理与工程实践](https://github.com/bojieli/ai-agent-book)
 - [如何使用 AI Agents](https://www.howtoaiagents.com/zh)
 - [GBrain-OpenClaw](https://github.com/garrytan/gbrain)
 - [Warp: AI编程终端](https://github.com/warpdotdev/warp)
