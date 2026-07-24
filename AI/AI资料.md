@@ -290,6 +290,7 @@ Nano Banana 提示词
 - [Sub2API-CRS2 一站式开源中转服务](https://github.com/Wei-Shaw/sub2api)
 - [CLI 代理 API](https://github.com/router-for-me/CLIProxyAPI)
 - [OmniRoute — 免费 AI 网关](https://github.com/diegosouzapw/OmniRoute)
+- [Octafuse Gateway是可自托管的开源 AI Gateway](https://github.com/OctaFuse/octafuse-gateway)
 
 ## 面临的挑战
 

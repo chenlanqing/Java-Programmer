@@ -556,6 +556,7 @@ grep -rn "old-http-client" . --include="*.go" | wc -l
 - [SkillsBench: Benchmarking How Well Skills Work Across Diverse Tasks](https://www.skillsbench.ai/)
 - [Trace skill 每月评选](https://view.inews.qq.com/a/LNK2026052107305300?sessionid=)
 - [如何评估 Skills](https://developers.openai.com/blog/eval-skills)
+- [skill-up 是面向 Agent Skill 开发者的 CLI 评测框架](https://github.com/alibaba/skill-up.git)
 
 Skill Creator 不只是"帮你生成 SKILL.md"的工具了。它最近新增了工程化评估能力，能系统化地评估 Skill 的触发准确率和执行效果。说白了，就是从"写完凭感觉觉得还行"升级到"跑一套测试，用数据告诉你行不行"
 

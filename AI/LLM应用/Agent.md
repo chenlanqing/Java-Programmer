@@ -1287,6 +1287,12 @@ Claude Code认为干净的代码库是loop能高效工作的前提。
 
 Agent不是凭空理解你的项目的。它通过读取现有代码、分析文件结构、学习代码风格来建立上下文。如果代码库本身混乱，风格不统一、命名不规范、到处都是死代码，Agent的理解就会出错，基于错误理解做出的修改自然好不到哪去
 
+# Agent Graph Engineering
+
+- [什么是 Graph Engineering](https://mp.weixin.qq.com/s/EEr4ErhWHwcs57-xgSC7uQ)
+
+它按照任务之间的依赖关系，用 graph 来编排整个流程，该串行的串行，该并行的并行，每一块交给一个职责明确的节点去完成
+
 # Agent Memory
 
 - [Agent 常见 8 种 memory 实现](https://mp.weixin.qq.com/s/29SXiWyRgIZNGgpY3E0jdw)
