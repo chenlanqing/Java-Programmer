@@ -2512,7 +2512,7 @@ LSP: Language Server Protocol
 
 ## 工具
 
-[serena： 语义检索和编辑功能（MCP 服务器及其他集成）](https://github.com/oraios/serena)
+- [serena： 语义检索和编辑功能（MCP 服务器及其他集成）](https://github.com/oraios/serena)
 
 # AI风格
 
