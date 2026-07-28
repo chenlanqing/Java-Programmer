@@ -377,6 +377,129 @@ EARS （简易需求语法）的核心理念是用特定逻辑句式来约束自
 | 输出侧防护（Guardrails） | LLM 输出进入业务逻辑前，经过内容安全过滤（敏感信息、PII 泄露、有害内容）；可用规则引擎或专门的安全模型做二次校验 |
 | Prompt 版本管理与灰度 | Prompt 变更等同于业务规则变更，需要版本号管理、灰度发布、A/B 对比验证效果后再全量上线 |
 
+## Jinja2 模板化提示词
+
+```py
+AGENT_PROMPT = """你是一个 {{ agent_name }}。
+
+## 角色
+{{ role_description }}
+
+## 可用工具
+{% for tool in tools %}
+### {{ tool.name }}
+{{ tool.description }}
+参数：
+{% for param in tool.parameters %}
+- {{ param.name }} ({{ param.type }}): {{ param.description }}
+{% endfor %}
+{% endfor %}
+
+## 约束
+{% for rule in constraints %}
+- {{ rule }}
+{% endfor %}
+
+{% if examples %}
+## 示例
+{% for ex in examples %}
+用户: {{ ex.user }}
+助手: {{ ex.assistant }}
+{% endfor %}
+{% endif %}
+
+## 输出格式
+请用以下 JSON 格式回答：
+{{ output_schema }}
+"""
+
+from jinja2 import Template
+
+template = Template(AGENT_PROMPT)
+prompt = template.render(
+    agent_name="天气助手",
+    role_description="专业的气象服务 Agent",
+    tools=[
+        {"name": "get_weather", "description": "查询指定城市天气",
+         "parameters": [
+            {"name": "city", "type": "string", "description": "城市名称"},
+            {"name": "date", "type": "string", "description": "日期，默认今天"}
+         ]}
+    ],
+    constraints=[
+        "只能回答天气相关问题",
+        "如果查询不到数据，如实告知用户",
+        "输出必须是合法 JSON"
+    ],
+    examples=[
+        {"user": "北京今天天气怎么样？",
+         "assistant": '{"action":"call_tool","tool":"get_weather","args":{"city":"北京"}}'}
+    ],
+    output_schema='{"action": "call_tool|respond", "tool": "工具名", "args": {}, "answer": ""}'
+)
+```
+
+## Prompt 管理化
+
+当有 10+ 个 Prompt 模板、5+ 个 Agent 角色、频繁的迭代需求时，"改一个词 → 手动测试 → 上线 → 发现回退"的原始流程就不够用了。需要 PromptOps——把提示词当代码管理
+
+在 Agent 系统中，每个 Prompt 都是一个接口——有输入契约、输出约定、错误处理和版本控制：
+
+| 设计要素 | 含义 | 类比 API |
+| ---- | ---- | ---- |
+| 输入契约 | 模板变量 + 类型约束 + 必填校验 | API 请求参数 |
+| 输出约定 | JSON Schema / 格式约束 + 字段说明 | API 响应格式 |
+| 错误处理 | 解析失败重试、降级策略、超时处理 | API 错误码 |
+| 版本控制 | 语义化版本 + 变更日志 + 回滚能力 | API 版本号 |
+
+### 完整生命周期
+
+```mermaid
+flowchart LR
+    A["💻 开发<br/>编写 Prompt<br/>本地测试"]
+    B["👀 审查<br/>PR Review<br/>对比基线"]
+    C["🧪 测试<br/>回归评测<br/>指标分析"]
+
+    subgraph ONLINE[" "]
+        direction TB
+        D["🚀 部署<br/>灰度发布<br/>监控指标"]
+        E["📊 反馈<br/>用户评分<br/>错误日志"]
+        D -. "线上运行" .-> E
+    end
+
+    A -. "提交 PR" .-> B
+    B -. "审查通过" .-> C
+    C -. "指标达标" .-> D
+    E -- "反馈回流" --> A
+
+    style ONLINE fill:none,stroke:none
+    classDef nodeStyle fill:#fff,stroke:#cbd5e1,stroke-width:1.5px,color:#111827,rx:10,ry:10
+    class A,B,C,D,E nodeStyle
+
+    linkStyle 0,1,2,3 stroke:#5146e5,stroke-width:2.5px
+    linkStyle 4 stroke:#cbd5e1,stroke-width:1.5px
+```
+
+### 生产环境可观测
+
+生产环境中，每次 Prompt 调用都应记录完整的运行日志，便于调试和优化：
+```json
+{
+  "timestamp": "2026-07-13T10:00:00Z",
+  "prompt_name": "weather_agent_system",
+  "prompt_version": "1.2.0",
+  "model": "gpt-4o",
+  "temperature": 0.2,
+  "input_tokens": 350,
+  "output_tokens": 180,
+  "response_time_ms": 950,
+  "quality_score": 0.87,
+  "parse_success": true,
+  "retry_count": 0,
+  "user_feedback": null
+}
+```
+
 # Prompt 优化
 
 - [Claude Optimizer：自动分析Prompt结构并提出改进建议（如添加XML标签、调整逻辑层级）](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/prompt-improver)
