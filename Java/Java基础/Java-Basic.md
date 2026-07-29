@@ -2586,6 +2586,8 @@ public class C implements A， B {
 
 * [多态一道面试题](http://blog.csdn.net/clqyhy/article/details/78978785)
 
+Java 多态就是父类或接口引用可以指向不同的子类对象，编译时根据引用类型检查方法是否合法，运行时根据对象实际类型执行被重写的方法。它的本质是动态绑定，主要作用是面向抽象编程、降低模块耦合并提高系统扩展性。
+
 当超类对象引用变量引用子类对象时，被引用对象的类型而不是引用变量的类型决定了调用谁的成员方法，但是这个被调用的方法必须是在超类中定义过的，也就是说被子类覆盖的方法：优先级由高到低依次为：`this.show(O)、super.show(O)、this.show((super)O)、super.show((super)O)`
 
 ```java

@@ -805,7 +805,7 @@ String在运行期也是有限制的，也就是 `Integer.MAX_VALUE`，约为4G�
 
 如果字符串中包含的汉字超过 Latin-1 可表示范围内的字符，byte 和 char 所占用的空间是一样的；
 
-## 27、关于String +和StringBuffer的比较
+## 7、关于String +和StringBuffer的比较
 
 在 String+写成一个表达式的时候(更准确的说，是写成一个赋值语句的时候)效率其实比 Stringbuffer更快
 
@@ -857,6 +857,18 @@ string = stringBuffer.toString();
 	`return new String(0， count + otherLen， buf);`这同样也创建了 10 W 个字符串对象，这是它变慢的根本原因
 
 - append() 方法拼接字符串：并没有产生新的字符串对象；
+
+## 8、各个版本的变化
+
+Java 对 String 的优化主要经历了几个阶段：
+- JDK 7 修改 substring()，由共享大数组改为复制子数组，并把字符串池从永久代移到普通堆；
+- JDK 8u20 在 G1 中加入字符串去重；
+- JDK 9 是最重要的一次升级，通过 Compact Strings 将底层 char[] 改为 byte[] + coder，并通过 invokedynamic 和 StringConcatFactory 优化字符串拼接，同时支持在 CDS 中归档驻留字符串；
+- JDK 11、15 增加了高效字符串处理 API；
+- JDK 18 扩展了字符串去重支持；
+- JDK 24、25 又通过 intern() 路径和紧凑对象头进一步降低复制与对象开销。
+
+> 核心方向始终是减少内存占用、中间对象、数组复制和字符串池管理成本
 
 # 八、String的使用技巧
 

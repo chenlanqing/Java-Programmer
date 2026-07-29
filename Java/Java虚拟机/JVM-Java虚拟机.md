@@ -2879,6 +2879,36 @@ HotSpot 虚拟机定义了三百多个 intrinsic。其中比较特殊的有Unsaf
 	- 裁剪未被选择的；
 - 即时编译后的 Java 程序的执行效率，是可能超过 C++ 程序的。这是因为与静态编译相比，即时编译拥有程序的运行时信息，并且能够根据这个信息做出相应的优化；比如：虚方法是用来实现面向对象语言多态性的。对于一个虚方法调用，尽管它有很多个目标方法，但在实际运行过程中它可能只调用其中的一个。这个信息便可以被即时编译器所利用，来规避虚方法调用的开销，从而达到比静态编译的 C++ 程序更高的性能
 
+## 10.7、反编译
+
+- [JD-gui](http://java-decompiler.github.io/)
+- [Dex to Java decompiler](https://github.com/chenlanqing/jadx)
+- [CFR - Another Java Decompiler](https://github.com/leibnitz27/cfr)
+
+通过 CFR 反编译工具，有如下 Java 代码，一个 Lambda 表达式（关闭 Lambda 语法还原）
+```java
+public class LambdaDemo {
+    public static void main(String... args) {
+        List<String> strList = ImmutableList.of("RAG", "LLM", "MCP");
+        strList.forEach(s -> {System.out.println(s);});
+    }
+}
+```
+通过 CFR 反编译工具：
+```bash
+$ java -jar cfr-0.152.jar target/classes/com/lambda/LambdaDemo.class --decodelambdas false
+public class LambdaDemo {
+    public static void main(String ... args) {
+        ImmutableList strList = ImmutableList.of((Object)"RAG", (Object)"LLM", (Object)"MCP");
+        strList.forEach((Consumer<String>)LambdaMetafactory.metafactory(null, null, null, (Ljava/lang/Object;)V, lambda$main$0(java.lang.String ), (Ljava/lang/String;)V)());
+    }
+
+    private static /* synthetic */ void lambda$main$0(String s) {
+        System.out.println(s);
+    }
+}
+```
+
 # 11、垃圾回收
 
 [GC垃圾回收](JVM-GC垃圾回收机制.md)
