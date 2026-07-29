@@ -244,6 +244,14 @@ public static void createInstanceByReflect() throws Exception {
 }
 ```
 
+## `List<?>`, `List<Object>`, `List` 之间的区别
+
+1. `List<?>` 是一个未知类型的List，而`List<Object>`其实是任意类型的List。可以把`List<String>`, `List<Integer>`赋值给`List<?>`，却不能把`List<String>`赋值给`List<Object>`。
+
+2. 可以把任何带参数的类型传递给原始类型`List`，但却不能把`List<String>`赋值给`List<Object>`，因为会产生编译错误（不支持协变）。
+
+3. `List<?>`由于不确定列表中元素的具体类型，因此只能从这种列表中读取数据，而不能往里面添加除了`null`之外的任何元素。
+
 # 二、集合
 
 ## 1、HashMap、Hashtable、LinkedHashMap

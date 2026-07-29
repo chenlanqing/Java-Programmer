@@ -1,3 +1,20 @@
+# Redis 代码编译
+
+- [Redis Github](https://github.com/redis/redis)
+
+```bash
+make CFLAGS="-g -O0" MALLOC=jemalloc
+```
+报错可以按照如下执行
+``` bash
+env -u CFLAGS -u CPPFLAGS -u LDFLAGS \
+  make OPTIMIZATION="-O0" \
+  REDIS_CFLAGS="-D_DARWIN_C_SOURCE" \
+  MALLOC=jemalloc \
+  -j$(sysctl -n hw.ncpu)
+```
+
+
 # Redis全景图
 
 简单概括为：“两大维度，三大主线”
