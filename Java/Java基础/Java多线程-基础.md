@@ -2673,6 +2673,90 @@ Java 的线程调度是不分时的，同时启动多个线程后，不能保证
 
 JCStress（Java Concurrency Stress）它是OpenJDK中的一个高并发测试工具，它可以帮助我们研究在高并发场景下JVM，类库以及硬件等状况
 
+# 虚拟线程
+
+- [虚拟线程分析](https://tech.dewu.com/article?id=89)
+
+JDK 中 java.lang.Thread 的每个实例都是一个平台线程。平台线程在底层操作系统线程上运行 Java 代码，并在代码的整个生命周期内独占操作系统线程，平台线程实例本质是由系统内核的线程调度程序进行调度，并且平台线程的数量受限于操作系统线程的数量。
+
+而虚拟线程(Virtual Thread)它不与特定的操作系统线程相绑定。它在平台线程上运行 Java 代码，但在代码的整个生命周期内不独占平台线程。**这意味着许多虚拟线程可以在同一个平台线程上运行他们的 Java 代码，共享同一个平台线程。** 同时虚拟线程的成本很低，虚拟线程的数量可以比平台线程的数量大得多。
+
+JDK21 引入的虚拟线程，是JDK实现的轻量级线程，可以避免上下文切换带来的额外耗费。实现原理其实是：JDK不再是每一个线程都一对一的对应一个操作系统的线程了，而是会将多个虚拟线程映射到少量操作系统线程中，通过有效的调度来避免那些上下文切换。
+
+而且，可以在应用程序中创建非常多的虚拟线程，而不依赖于平台线程的数量。这些虚拟线程是由JVM管理的，因此它们不会增加额外的上下文切换开销，因为它们作为普通Java对象存储在RAM中。
+
+## 术语
+
+- 操作系统线程（OS Thread）：由操作系统管理，是操作系统调度的基本单位。
+- 平台线程（Platform Thread）：Java.Lang.Thread 类的每个实例，都是一个平台线程，是 Java 对操作系统线程的包装，与操作系统是 1:1 映射。
+- 虚拟线程（Virtual Thread）：一种轻量级，由 JVM 管理的线程。对应的实例 java.lang.VirtualThread 这个类。
+- 载体线程（Carrier Thread）：指真正负责执行虚拟线程中任务的平台线程。一个虚拟线程装载到一个平台线程之后，那么这个平台线程就被称为虚拟线程的载体线程。
+
+## 虚拟线程和平台线程区别
+
+- 首先，虚拟线程总是守护线程。setDaemon(false)方法不能将虚拟线程更改为非守护线程。所以，需要注意的是，当所有启动的非守护线程都终止时，JVM将终止。这意味着JVM不会等待虚拟线程完成后才退出。
+- 其次，即使使用setPriority()方法，虚拟线程始终具有normal的优先级，且不能更改优先级。在虚拟线程上调用此方法没有效果。
+- 还有就是，虚拟线程是不支持stop()、suspend()或resume()等方法。这些方法在虚拟线程上调用时会抛出UnsupportedOperationException常.
+
+## 创建虚拟线程
+
+方法一：直接创建虚拟线程
+```java
+Thread vt = Thread.startVirtualThread(() -> {
+    System.out.println("hello wolrd virtual thread");
+});
+```
+方法二：创建虚拟线程但不自动运行，手动调用start()开始运行
+```java
+Thread.ofVirtual().unstarted(() -> {
+    System.out.println("hello wolrd virtual thread");
+});
+vt.start();
+```
+方法三：通过虚拟线程的 ThreadFactory 创建虚拟线程
+```java
+ThreadFactory tf = Thread.ofVirtual().factory();
+Thread vt = tf.newThread(() -> {
+    System.out.println("Start virtual thread...");
+    Thread.sleep(1000);
+    System.out.println("End virtual thread. ");
+});
+vt.start();
+```
+方法四：Executors.newVirtualThreadPer -TaskExecutor()
+```java
+ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor();
+executor.submit(() -> {
+    System.out.println("Start virtual thread...");
+    Thread.sleep(1000);
+    System.out.println("End virtual thread.");
+    return true;
+});
+```
+
+## 实现原理
+
+虚拟线程是由 Java 虚拟机调度，而不是操作系统。虚拟线程占用空间小，同时使用轻量级的任务队列来调度虚拟线程，避免了线程间基于内核的上下文切换开销，因此可以极大量地创建和使用。
+
+简单来看，虚拟线程实现如下：virtual thread =continuation+scheduler+runnable
+
+虚拟线程会把任务（java.lang.Runnable实例）包装到一个 Continuation 实例中:
+- 当任务需要阻塞挂起的时候，会调用 Continuation 的 yield 操作进行阻塞，虚拟线程会从平台线程卸载。
+- 当任务解除阻塞继续执行的时候，调用 Continuation.run 会从阻塞点继续执行。
+
+Scheduler 也就是执行器，由它将任务提交到具体的载体线程池中执行。
+- 它是 java.util.concurrent.Executor 的子类。
+- 虚拟线程框架提供了一个默认的 FIFO 的 ForkJoinPool 用于执行虚拟线程任务。
+
+Runnable 则是真正的任务包装器，由 Scheduler 负责提交到载体线程池中执行。
+
+JVM 把虚拟线程分配给平台线程的操作称为 mount（挂载），取消分配平台线程的操作称为 unmount（卸载）：
+
+mount 操作：虚拟线程挂载到平台线程，虚拟线程中包装的 Continuation 堆栈帧数据会被拷贝到平台线程的线程栈，这是一个从堆复制到栈的过程。
+
+unmount 操作：虚拟线程从平台线程卸载，此时虚拟线程的任务还没有执行完成，所以虚拟线程中包装的 Continuation 栈数据帧会会留在堆内存中。
+
+从 Java 代码的角度来看，其实是看不到虚拟线程及载体线程共享操作系统线程的，会认为虚拟线程及其载体都在同一个线程上运行，因此，在同一虚拟线程上多次调用的代码可能会在每次调用时挂载的载体线程都不一样。JDK 中使用了 FIFO 模式的 ForkJoinPool 作为虚拟线程的调度器，
 
 # 参考文章
 
