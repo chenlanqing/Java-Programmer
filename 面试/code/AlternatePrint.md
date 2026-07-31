@@ -53,8 +53,52 @@ public class AlternatePrint {
 }
 ```
 
-是的，除了使用 `wait()` 和 `notify()` 进行线程间的同步外，还可以使用其他方式来实现交替打印 1 到 100，比如：
+多个线程
+```java
+public class NotifyOrderPrint {
 
+    private static final Object lock = new Object();
+    private static volatile int count = 0;
+    private static final int MAX = 100;
+
+    public static void main(String[] args) {
+        Thread t1 = new Thread(new NotifyRunnable(0), "Thread-1");
+        Thread t2 = new Thread(new NotifyRunnable(1), "Thread-2");
+        Thread t3 = new Thread(new NotifyRunnable(2), "Thread-3");
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+
+    public static class NotifyRunnable implements Runnable {
+        private final int index;
+
+        public NotifyRunnable(int index) {
+            this.index = index;
+        }
+
+        @Override
+        public void run() {
+            while (count < MAX) {
+                synchronized (lock) {
+                    while (count % 3 != index) {
+                        try {
+                            lock.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    if (count <= MAX) {
+                        System.out.println(count);
+                    }
+                    count++;
+                    lock.notifyAll();
+                }
+            }
+        }
+    }
+}
+```
 ## 2、**使用 `ReentrantLock` 和 `Condition`**
 
 `ReentrantLock` 提供了一种更灵活的锁机制，可以创建多个 `Condition` 对象，类似于 `wait()` 和 `notify()` 的机制。
@@ -109,6 +153,73 @@ public class AlternatePrintWithLock {
 }
 ```
 
+多个线程进行打印：
+
+```java
+public class ConditionOrderPrint {
+
+    private static final int MAX = 100;
+    private static int count = 0;
+    private static final ReentrantLock LOCK = new ReentrantLock();
+
+    public static void main(String[] args) {
+        Condition[] conditions = new Condition[3];
+        for (int i = 0; i < 3; i++) {
+            conditions[i] = LOCK.newCondition();
+        }
+        ConditionRunnable c1 = new ConditionRunnable(conditions, 0);
+        ConditionRunnable c2 = new ConditionRunnable(conditions, 1);
+        ConditionRunnable c3 = new ConditionRunnable(conditions, 2);
+        Thread t1 = new Thread(c1, "Thread-1");
+        Thread t2 = new Thread(c2, "Thread-2");
+        Thread t3 = new Thread(c3, "Thread-3");
+        t1.start();
+        t2.start();
+        t3.start();
+    }
+
+    private static class ConditionRunnable implements Runnable {
+        private final Condition[] conditions;
+        private final int index;
+
+        private ConditionRunnable(Condition[] conditions, int index) {
+            this.conditions = conditions;
+            this.index = index;
+        }
+
+        private void signalAll() {
+            for (Condition condition : conditions) {
+                condition.signalAll();
+            }
+        }
+
+        @Override
+        public void run() {
+            while (count < MAX) {
+                LOCK.lock();
+                try {
+                    while (count < MAX &&count % 3 != index) {
+                        conditions[index].await();
+                    }
+                    if (count > MAX) {
+                        signalAll();
+                        return;
+                    }
+                    System.out.println(count);
+                    count++;
+                    int nextIndex = (index + 1) % conditions.length;
+                    conditions[nextIndex].signalAll();
+                } catch (InterruptedException e) {
+                    signalAll();
+                } finally {
+                    LOCK.unlock();
+                }
+            }
+        }
+    }
+}
+```
+
 ## 3、**使用 `Semaphore`**
 
 `Semaphore` 允许线程通过控制许可证的数量来同步进程。可以用来限制某一时刻只有一个线程打印。
@@ -155,6 +266,45 @@ public class AlternatePrintWithSemaphore {
 
         oddThread.start();
         evenThread.start();
+    }
+}
+```
+3 个线程打印
+```java
+public class SemaphoreOrderPrint {
+
+    public static void main(String[] args) throws InterruptedException {
+        Semaphore semaphore = new Semaphore(1);
+        SemaphoreRunnable semaphoreRunnable = new SemaphoreRunnable(semaphore);
+        Thread t1 = new Thread(semaphoreRunnable, "Thread-1");
+        Thread t2 = new Thread(semaphoreRunnable, "Thread-2");
+        Thread t3 = new Thread(semaphoreRunnable, "Thread-3");
+        semaphore.acquire();
+        t1.start();
+        semaphore.acquire();
+        t2.start();
+        semaphore.acquire();
+        t3.start();
+    }
+
+    public static class SemaphoreRunnable implements Runnable {
+        private final Semaphore semaphore;
+
+        public SemaphoreRunnable(Semaphore semaphore) {
+            this.semaphore = semaphore;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(1000);
+                System.out.println(Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } finally {
+                semaphore.release();
+            }
+        }
     }
 }
 ```
@@ -234,7 +384,97 @@ public class AlternatePrintWithQueue {
 }
 ```
 
-## 6、总结
+## 6、使用CountdownLatch
+
+```java
+public class CountdownLatchOrderPrint {
+
+    public static void main(String[] args) throws InterruptedException {
+        CountDownLatch c1 = new CountDownLatch(1);
+        CountDownLatch c2 = new CountDownLatch(1);
+        CountDownLatch c3 = new CountDownLatch(1);
+
+        Thread t1 = new Thread(new CountdownLatchRunnable(c1), "Thread-1");
+        Thread t2 = new Thread(new CountdownLatchRunnable(c2), "Thread-2");
+        Thread t3 = new Thread(new CountdownLatchRunnable(c3), "Thread-3");
+
+        t1.start();
+        c1.await();
+        t2.start();
+        c2.await();
+        t3.start();
+        c3.await();
+    }
+
+    public static class CountdownLatchRunnable implements Runnable {
+
+        private final CountDownLatch latchDownLatch;
+
+        public CountdownLatchRunnable(CountDownLatch latchDownLatch) {
+            this.latchDownLatch = latchDownLatch;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println(Thread.currentThread().getName());
+            latchDownLatch.countDown();
+        }
+    }
+}
+```
+
+## 7、使用CycleBarrier
+
+```java
+public class CycleBarrierOrderPrint {
+
+    public static void main(String[] args) throws InterruptedException, BrokenBarrierException {
+        CyclicBarrier cycleBarrier = new CyclicBarrier(2);
+        Thread t1 = new Thread(new CycleBarrierRunnable(cycleBarrier), "Thread-1");
+        Thread t2 = new Thread(new CycleBarrierRunnable(cycleBarrier), "Thread-2");
+        Thread t3 = new Thread(new CycleBarrierRunnable(cycleBarrier), "Thread-3");
+        t1.start();
+        cycleBarrier.await();
+        t2.start();
+        cycleBarrier.await();
+        t3.start();
+        cycleBarrier.await();
+    }
+
+    public static class CycleBarrierRunnable implements Runnable {
+
+        private final CyclicBarrier cycleBarrier;
+
+        public CycleBarrierRunnable(CyclicBarrier cycleBarrier) {
+            this.cycleBarrier = cycleBarrier;
+        }
+
+        @Override
+        public void run() {
+            try {
+                Thread.sleep(1000);
+                System.out.println(Thread.currentThread().getName());
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } finally {
+                try {
+                    cycleBarrier.await();
+                } catch (InterruptedException | BrokenBarrierException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+    }
+}
+```
+
+## 总结
 
 不同的方案适用于不同的场景：
 - `wait/notify` 和 `ReentrantLock` 更适合传统同步。

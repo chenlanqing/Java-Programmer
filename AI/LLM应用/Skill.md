@@ -713,6 +713,7 @@ Skill 的脚本可能会读取外部数据（文件名、环境变量值、API �
 - [已经熟悉的工程习惯，转化为Claude Code 可以操控的技能](https://github.com/tw93/waza)
 - [AI 编程必备 Skills 推荐：TDD、代码审查与网页自动化实战](https://javaguide.cn/ai-coding/programmer-essential-skills.html)
 - [CodeReviewSkills](https://github.com/MageByte-Zero/magebyte-power/blob/main/skills/cross-verified-feature-development/SKILL.md)
+- [源码级融合 OpenSpec 规划引擎 + Superpowers 执行纪律的 AI 编程工作流插件](https://github.com/MageByte-Zero/spec-superflow)
 
 ### Java SKILLS
 

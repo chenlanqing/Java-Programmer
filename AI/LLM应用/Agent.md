@@ -1,14 +1,3 @@
-- [agents.json：Translate OpenAPI into LLM Tools](https://docs.wild-card.ai/agentsjson/introduction)
-- [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
-- [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
-- [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners)
-- [Agent Master Class](https://github.com/coleam00/ai-agents-masterclass)
-- [构建自主 AI Agent](https://github.com/ed-donner/agents)
-- [AG-UI 是一种轻量级的、基于事件的协议](https://github.com/ag-ui-protocol/ag-ui)
-- [Routine框架：让企业级Agent告别“不靠谱”](https://arxiv.org/pdf/2507.14447)
-- [论文：Fundamentals of Building Autonomous LLM Agents](https://arxiv.org/abs/2510.09244)
-- [生成式 Agents](https://github.com/NirDiamant/GenAI_Agents)
-
 # 概念
 
 ## 基本概念
@@ -2681,8 +2670,18 @@ Agent 的自主性带来了三个传统软件没有的问题：
 └─────────────────────────────────────┘
 ```
 
-# 参考资料
+# 学习资料
 
+- [agents.json：Translate OpenAPI into LLM Tools](https://docs.wild-card.ai/agentsjson/introduction)
+- [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
+- [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
+- [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners) - [学习心得](https://mp.weixin.qq.com/s/Ux5FJ_ZLWUcxPE6CkF8XGA)
+- [Agent Master Class](https://github.com/coleam00/ai-agents-masterclass)
+- [构建自主 AI Agent](https://github.com/ed-donner/agents)
+- [AG-UI 是一种轻量级的、基于事件的协议](https://github.com/ag-ui-protocol/ag-ui)
+- [Routine框架：让企业级Agent告别“不靠谱”](https://arxiv.org/pdf/2507.14447)
+- [论文：Fundamentals of Building Autonomous LLM Agents](https://arxiv.org/abs/2510.09244)
+- [生成式 Agents](https://github.com/NirDiamant/GenAI_Agents)
 - [深入理解 AI Agent：设计原理与工程实践](https://github.com/bojieli/ai-agent-book)
 - [如何使用 AI Agents](https://www.howtoaiagents.com/zh)
 - [GBrain-OpenClaw](https://github.com/garrytan/gbrain)

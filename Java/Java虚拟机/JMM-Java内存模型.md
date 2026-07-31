@@ -547,6 +547,8 @@ volatile也无法保证对变量的任何操作都是原子性的
 	```
 	AtomicXXX 却能保证原子性：CAS指令，其实AtomicLong的源码里也用到了volatile，但只是用来读取或写入
 
+	> 因为 volatile 只能保证每次读取和写入的可见性，不能把多个操作合并成一个不可分割的整体
+
 - 原子操作：
 	- 除long和double之外的基本类型的赋值操作；long和double在单个写入视为两个单独的写入，在32位机器上的JVM的long和double的操作不是原子的；因此，日常long和double变量设置为volatile类型，这样能保证任何情况下对long和double的单次读/写操作都具有原子性
 	- 所有的reference的赋值操作；

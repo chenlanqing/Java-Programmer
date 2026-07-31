@@ -340,6 +340,12 @@ static int pageCount(long size) {
 
 Slice使用Unsafe#copyMemory实现了高效的内存拷贝：  https://github.com/airlift/slice
 
+# 4、版本变化
+
+随着 VarHandle、原子类和 Foreign Function & Memory API 等标准能力成熟，JDK 从 JDK 23 开始逐步废弃其内存访问方法，但截至 JDK 26 还没有完全移除
+
+[JEP 471](https://openjdk.org/jeps/471) 明确将 VarHandle 和 Foreign Function & Memory API 作为内存访问方法的主要替代方案
+
 # 参考资料
 
 - [Java魔法类Unsafe](https://tech.meituan.com/2019/02/14/talk-about-java-magic-class-unsafe.html)
