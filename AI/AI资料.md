@@ -114,6 +114,8 @@
 
 ## 金融应用
 
+- [QuantMind 是一个智能的知识提取和检索量化金融框架](https://github.com/LLMQuant/quant-mind)
+- https://github.com/LLMQuant/llmquant-hermes
 - [全球首个AI Native金融数据](https://mp.weixin.qq.com/s/gnCUDLoY0xvVUue4jEnjGw)
 - https://github.com/LLMQuant/awesome-trading-agents
 - [LLM驱动的 A/H/美股智能分析器](https://github.com/ZhuLinsen/daily_stock_analysis)

@@ -2405,6 +2405,7 @@ Prompt Cache：是所有优化的基础;
 # Agent 可观测性
 
 - [关于 Agent Harness 可观测性](https://mp.weixin.qq.com/s/hjI8n6UMy7lyQpeAxcdBrw)
+- [AgentLoop提供Agent全栈观测与审计、评估与实验、持续优化等能力](https://www.aliyun.com/product/agentloop) - [AgentLoop 体验中心](https://sls.aliyun.com/doc/playground/agentloopdemo.html)
 
 Agent 能跑起来，只是第一步。真正难的是：它能不能长期稳定地跑？能不能正确执行长链路复杂任务？出了错，你能不能知道它到底错在哪？
 > 没有可观测性的 Agent，不是生产系统，是一个会自动花钱的黑盒
@@ -2672,10 +2673,11 @@ Agent 的自主性带来了三个传统软件没有的问题：
 
 # 学习资料
 
+- [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners) - [学习心得](https://mp.weixin.qq.com/s/Ux5FJ_ZLWUcxPE6CkF8XGA)
+- [agency-agents 中文版（AI 智能体专家团队）](https://github.com/jnMetaCode/agency-agents-zh)
 - [agents.json：Translate OpenAPI into LLM Tools](https://docs.wild-card.ai/agentsjson/introduction)
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
 - [构建有效 Agent](https://www.anthropic.com/engineering/building-effective-agents)
-- [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners) - [学习心得](https://mp.weixin.qq.com/s/Ux5FJ_ZLWUcxPE6CkF8XGA)
 - [Agent Master Class](https://github.com/coleam00/ai-agents-masterclass)
 - [构建自主 AI Agent](https://github.com/ed-donner/agents)
 - [AG-UI 是一种轻量级的、基于事件的协议](https://github.com/ag-ui-protocol/ag-ui)
