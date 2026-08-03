@@ -163,9 +163,11 @@ ThreadUtil.sleep(3000);
 
 # 二、源码分析
 
+CompletableFuture 底层通过 ForkJoinPool 执行异步任务，使用 volatile + CAS 管理任务状态，通过 Completion 回调节点维护任务依赖链，在任务完成后触发后续任务，从而实现无锁化的异步编排
+
 ## 1、解决问题
 
-CompletableFuture是由Java 8引入的，在Java8之前我们一般通过Future实现异步。
+CompletableFuture 是由Java 8引入的，在Java8之前我们一般通过Future实现异步。
 - Future用于表示异步计算的结果，只能通过阻塞或者轮询的方式获取结果，而且不支持设置回调方法，Java 8之前若要设置回调一般会使用guava的ListenableFuture，回调的引入又会导致臭名昭著的回调地狱（下面的例子会通过ListenableFuture的使用来具体进行展示）。
 - CompletableFuture对Future进行了扩展，可以通过设置回调的方式处理计算结果，同时也支持组合操作，支持进一步的编排，同时一定程度解决了回调地狱的问题
 ```java
@@ -174,6 +176,7 @@ CompletableFuture<Void> allOf(CompletableFuture<?>... cfs)
 // 任意一个任务完成
 CompletableFuture<Object> anyOf(CompletableFuture<?>... cfs)
 ```
+
 
 # 参考资料
 

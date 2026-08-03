@@ -2014,6 +2014,25 @@ public class ParentThreadSharedDataWithSon {
 
 每次使用完ThreadLocal，都调用它的remove()方法，清除数据。在使用线程池的情况下，没有及时清理ThreadLocal，不仅是内存泄漏的问题，更严重的是可能导致业务逻辑出现问题。
 
+#### 11.4.5、替代版本
+
+ThreadLocal 内存泄漏的原因是 ThreadLocalMap 中 Entry 的 key 使用弱引用，而 value 使用强引用。当 ThreadLocal 被 GC 后，key 会变成 null，但如果线程池中的线程长期存活，value 仍然通过 Thread → ThreadLocalMap → Entry 被强引用，无法及时 GC。因此 ThreadLocal 使用后必须在 finally 中调用 remove()。
+
+[JDK 25 正式引入 ScopedValue](https://openjdk.org/jeps/506)，对于 UserContext、TraceContext 等只读上下文传递场景，可以替代 ThreadLocal，它的生命周期由代码作用域限定，退出作用域后自动解除绑定，从机制上避免忘记 remove 的问题；
+
+| 特性     | ThreadLocal   | ScopedValue |
+| ------ | ------------- | ----------- |
+| JDK    | 很早就有          | JDK 25 正式   |
+| 生命周期   | 与线程关联         | 与代码作用域关联    |
+| 清理     | 手动 `remove()` | 自动          |
+| 数据修改   | 可以 `set()` 修改 | 绑定后不可修改     |
+| 内存泄漏风险 | 较高            | 很低          |
+| 虚拟线程   | 不太理想          | 非常适合        |
+| 上下文传递  | 支持            | 支持          |
+| 缓存对象   | 适合            | 不适合         |
+
+不可变的绑定链（Snapshot/Carrier） + Thread 保存当前绑定指针 + 小型线程级缓存 + run/call 自动恢复现场
+
 ### 11.5、ThreadLocal的应用场景
 
 使用场合主要解决多线程中数据数据因并发产生不一致问题

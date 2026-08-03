@@ -288,6 +288,8 @@ JMM本质上可以理解为，Java 内存模型规范了 JVM 如何提供按需�
 
 ### 3.4、JMM内存屏障
 
+深入阅读：[The JSR-133 Cookbook for Compiler Writers](https://gee.cs.oswego.edu/dl/jmm/cookbook.html)
+
 是一种屏障指令，它使CPU或编译器对屏障指令之前和之后发出的内存操作执行一个排序约束
 - `LoadLoad Barriers`
 	- 抽象示例：`Load1; LoadLoad; Load2` 
@@ -626,6 +628,8 @@ volatile 变量的正确使用：确保它们自身状态的可见性，确保�
 - 当第一个操作是volatile写，第二个操作是volatile读时，不能重排序
 
 **3.3、为了实现volatile的内存语义，编译器在生成字节码时，会在指令序列中插入内存屏障来禁止特定类型的处理器重排序：**
+
+在 JDK 中，有 MemoryBarriers 类中有关于内存屏障
 
 下面是基于保守策略的 JMM 内存屏障插入策略
 - 在每个volatile写操作的前面插入一个StoreStore屏障：保证在volatile写之前，其前面的所有普通写操作已经对任意处理器可见了，因为StoreStore屏障将保障上面所有的普通写在volatile写之前刷新到主内存；

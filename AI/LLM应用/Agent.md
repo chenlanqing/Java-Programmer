@@ -2671,6 +2671,14 @@ Agent 的自主性带来了三个传统软件没有的问题：
 └─────────────────────────────────────┘
 ```
 
+# Agent 模型选择
+
+1. 主Agent使用DeepSeek-V4-Flash。价格非常便宜，跟不要钱似得，而且非常快，经过这次Agentic能力升级之后，完成一些常见的任务非常给力。
+
+2. 需要优秀的前端能力的，比如要生成用户可见的内容，推荐Gemini-3.6-Flash模型。Gemini虽然拉了很久了，但是在前端领域依然有一席之地。其他一些模型或许在排行榜上超过了Gemini-3.6-Flash，但我的感觉是实际使用还是Gemini更稳。
+
+3. 需要视觉能力做分析的，之前我会推荐Gemini-3-Flash。但这次GPT降价之后，我会推荐GPT-5.6-luna，在有多模态视觉能力的模型中，GPT-5.6-luna价格非常香。
+
 # 学习资料
 
 - [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners) - [学习心得](https://mp.weixin.qq.com/s/Ux5FJ_ZLWUcxPE6CkF8XGA)
