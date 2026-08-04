@@ -675,6 +675,45 @@ for(Object obj : list) {
 
 这里是一个 [fail-fast 机制的问题](../Java/源码分析/集合/集合类.md#二fail-fast机制)
 
+## 8、Stream
+
+### Stream 流是怎么实现的？
+
+Java Stream 底层是一个基于 Spliterator + AbstractPipeline + Sink + TerminalOp 的流水线计算模型。中间操作通过 AbstractPipeline 构建 Pipeline，并采用惰性计算；终止操作触发 evaluate，把多个 Stage 包装成 Sink 链，然后由 Spliterator 驱动数据逐元素通过整个流水线。filter/map 等无状态操作可以融合到一次遍历中，而 sorted/distinct 属于有状态操作，需要维护中间状态。对于 parallelStream，则利用 Spliterator 的 trySplit() 拆分数据，并基于 ForkJoinPool 执行并行任务，最后完成结果合并。
+
+```
+Collection.stream()
+→ Spliterator
+→ ReferencePipeline.Head
+→ filter/map 构造 AbstractPipeline
+→ TerminalOp
+→ evaluate()
+→ wrapSink()
+→ Sink Chain
+→ copyInto()
+→ Spliterator.tryAdvance()
+```
+
+### 为什么 Stream 流只能消费一次？
+
+Java Stream 是一个一次性的数据处理流水线。终止操作执行后，整个 Pipeline 会被标记为已经消费或关闭，后续再次对该 Stream 执行操作会抛出 IllegalStateException；
+
+Stream 是一次性的计算管道，而不是可以反复遍历的数据集合
+
+### filter().map() 为什么通常只遍历一次集合？
+
+因为 Stream 中间操作采用惰性计算，filter()、map() 调用时只是在构建 Pipeline，不会立即遍历集合。终止操作触发后，多个 Stage 会被组合成 Sink 调用链，每个元素一次进入整条流水线，因此通常只需要遍历一次数据源。
+
+### sorted() 为什么不能完全流式处理？
+
+因为 sorted() 属于有状态中间操作 Stateful Intermediate Operation。排序必须看到全部数据，或者至少掌握足够的全局数据之后，才能确定元素最终顺序，因此无法像 filter()、map() 一样逐个元素立即向下游输出。
+
+### Spliterator 和 Iterator 有什么区别？
+
+Iterator 主要解决串行遍历问题，而 Spliterator 是 Java 8 为 Stream 设计的高级遍历器，除了遍历之外，还支持数据拆分，因此它是 parallelStream 并行计算的重要基础。
+
+### 
+
 
 # 三、IO与NIO
 
