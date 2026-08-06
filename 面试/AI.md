@@ -1619,6 +1619,40 @@ SSE 之所以成为 LLM 流式输出的行业标准，还有一个很关键但�
 - 用户隔离：用户 A 不能看到用户 B 的记忆；
 - 合规删除：用户注销，数据安全
 
+## Agent 框架选择
+
+重点了解过 LangChain、LangGraph 和 LlamaIndex。
+- LangChain 提供模型、Prompt、工具、Agent 和中间件等通用抽象，集成范围比较广，适合快速构建工具调用、RAG、SQL 查询等 AI 应用。
+- LangGraph 更偏底层的状态与流程编排。面对循环、分支、并行、断点恢复和人工审批等复杂流程时，可以使用图结构显式控制 Agent 的执行路径。现在 LangChain 的 Agent 也运行在 LangGraph 之上，因此二者更多是上下层关系，而不是互相替代的竞争关系。
+- LlamaIndex 的优势集中在数据接入、文档解析、索引和检索，适合企业知识库、文档问答和复杂 RAG 等数据密集型应用。
+
+除此之外，了解 OpenAI Agents SDK 和 CrewAI。前者适合以 OpenAI 模型为主的轻量 Agent，后者擅长使用角色和任务表达多 Agent 协作。不过在通用 Python Agent 开发岗位中，我会优先掌握 LangChain、LangGraph 和 LlamaIndex，再根据公司的技术栈补充其他框架
+
+**三大核心框架详解（面试重点掌握）**
+| 框架 | 核心定位 | 解决问题 | 典型适用场景 |
+|------|----------|----------|--------------|
+| LangChain | 通用组件与快速集成 | 封装模型、Prompt、工具、Agent等通用抽象，减少协议适配成本 | 工具型Agent、RAG问答、SQL查询Agent等快速开发场景 |
+| LangGraph | 有状态图式流程编排 | 解决复杂流程中的循环、分支、并行、断点恢复、人工审批等问题 | 报销审批、多步校验等需要精细控制执行路径的业务 |
+| LlamaIndex | 数据接入与检索增强 | 专注文档解析、数据索引、召回重排等全链路数据处理能力 | 企业知识库、文档Agent、复杂RAG等数据密集型应用 |
+
+- LangChain 的定位已经不只是早期的「把多个 Prompt 串成 Chain」。它提供模型、消息、Prompt、工具、结构化输出、中间件和 Agent 等通用抽象，并集成了大量模型供应商、向量数据库和外部工具。它最大的价值是集成范围广、开发速度快。例如，我们需要切换不同模型，接入搜索、数据库或 MCP 工具，快速实现 RAG Agent、SQL Agent 或客服助手时，LangChain 可以减少大量协议适配和样板代码
+- LangGraph 使用 State + Node + Edge 表达 Agent 工作流：State 保存共享状态，Node 负责执行模型或工具，Edge 决定下一步运行哪个节点。它重点解决的是循环、条件分支、并行执行、持久化、暂停恢复和人工介入等问题；
+
+  可以把 LangChain 理解为常用组件和预制路线，把 LangGraph 理解为支撑这些路线的道路系统：简单 Agent 优先使用 LangChain；需要精细控制时，再下沉到 LangGraph
+
+- LlamaIndex 更强调在私有数据之上构建 AI 应用。它长期积累了数据连接、文档解析、切分、索引、检索、重排、Query Engine 和结构化数据访问等能力，也可以把 RAG Pipeline 封装为 Agent 使用的工具
+
+三者并非互斥关系：LlamaIndex可负责数据处理，LangChain封装检索能力为工具，LangGraph编排整体执行流程，分层协作避免重复造轮子。
+
+- **OpenAI Agents SDK**：轻量SDK，适配OpenAI技术栈，适合客服分流、语音助手等轻量Agent开发。
+- **CrewAI**：以“角色-任务”模式实现多Agent协作，适合研究、内容生产等多角色分工场景，但存在调用成本高、协作不确定性问题。
+- AutoGen、Semantic Kernel等偏微软生态，Dify属于低代码平台，通用Python Agent面试无需重点展开。
+
+**选型核心逻辑**
+1. 先判断是否需要Agent：步骤固定、规则明确的场景用普通函数/工作流更稳定，无需引入Agent增加不确定性。
+2. 再匹配核心痛点：模型/工具接入繁琐选LangChain，数据检索质量差选LlamaIndex，流程复杂需状态控制选LangGraph。
+3. 兼顾生产约束：需考虑断点恢复、敏感操作审批、数据隔离、出错可追溯等原型阶段易忽略的工程问题。
+
 # SKILLS
 
 ## 如果你的 Agent 里面有很多 Skill，Skill 之间还存在依赖关系的话，你打算怎么去设计来解决这个问题？
