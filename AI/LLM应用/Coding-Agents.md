@@ -2463,6 +2463,7 @@ AGENTS.md 是一个简单的开放格式，用于指导 AI Coding Agent 在你�
 
 - [DeepAudit：国内首个开源的代码漏洞挖掘多智能体系统](https://github.com/lintsinghua/DeepAudit)
 - [Open Code Review 是一款 AI 驱动的代码审查 CLI 工具](https://github.com/alibaba/open-code-review)
+- [OpenAI's Codex Security CLI and TypeScript SDK for finding](https://github.com/openai/codex-security)
 
 ## Code-review-graph
 

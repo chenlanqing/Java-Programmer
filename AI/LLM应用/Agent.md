@@ -1577,6 +1577,7 @@ Agent不是凭空理解你的项目的。它通过读取现有代码、分析文
 - [深度拆解与对比Mem0/Graphiti/Cognee三大开源Memory方案](https://mp.weixin.qq.com/s/sdi3rgDRiRWhsmbDWc-w-g)
 - [Official Code of Memento: Fine-tuning LLM Agents without Fine-tuning LLMs](https://github.com/Agent-on-the-Fly/Memento)
 - [OpenChronicle 为 AI 代理提供了一个基于真实屏幕和应用上下文构建的本地可检查内存](https://github.com/Einsia/OpenChronicle)
+- [TencentDB Agent Memory](https://github.com/TencentCloud/TencentDB-Agent-Memory)
 
 ## 概述
 
