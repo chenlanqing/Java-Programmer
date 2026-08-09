@@ -475,6 +475,16 @@ LM 网关区别于普通 API 网关的一个亮点功能：用向量相似度匹
 | One API | 开源，Go | 国内社区活跃，支持国产模型，部署简单 |
 | Nginx/Envoy 自研 | 自研 | 灵活但工作量大，适合有特殊需求的大厂 |
 
+## Claude Code 如何反蒸馏的
+
+该机制并非单一开关，而是沿 API 生命周期设三道。区分三者要看两点：改写的是哪一段数据，以及改写在哪里执行。前两道由 Anthropic 服务端执行，分别作用于请求携带的工具定义和响应中的中间推理；第三道在客户端本地执行，作用于返回给调用方的输出流。三者叠加构成纵深防御。
+
+第一层作用于请求中的工具定义，改写由服务端完成。开关打开时，Claude Code 在请求体中带上字段 anti_distillation: ['fake_tools']，指示服务端向本次请求的工具定义中注入并不存在的「诱饵工具」。注入发生在 Anthropic 服务端，而非客户端本地，因此诱饵是动态生成的，不出现在开源代码里，无法靠静态分析剔除。录制这些交互用于训练，学生模型就会习得指向不存在工具的调用：生成的工具调用无法执行，且难以定位原因，因为在不了解该防御的前提下，这些工具看起来与真实工具无异。
+
+第二层作用于响应中的中间推理，改写同样由服务端完成。Claude 在两次工具调用之间会生成一段文本，用于判断下一步操作、分析上一步结果，即所谓 connector text。这是蒸馏最看重的训练信号，因为它暴露的是决策过程而非仅是动作。该层启用后，Anthropic 服务端会缓冲这段推理，压缩为摘要，并附加一枚加密签名。签名使服务端能在后续轮次凭其还原原文，保持模型自身的上下文连续性；外部观察者只能获取摘要。该签名机制复用扩展思考（thinking blocks）已有的基础设施——思考内容原本就需签名才能验证和还原，connector text 沿用同一套。一个佐证是签名与 API key 绑定：用户 /login 切换账号时，客户端调用 stripSignatureBlocks() 清除所有 connector_text 和 thinking 块，否则旧签名在新 key 下会被 API 以 400 拒绝。相关代码位于 src/utils/betas.ts 第 279 至 297 行，且当前限定在 USER_TYPE=ant，即 Anthropic 内部员工；代码注释提到仍在观测 TTFT 与 TTLT 指标以衡量成本，表明其处于评估阶段。
+
+第三层作用于返回给调用方的输出流，改写在客户端本地执行，与服务端无关。Claude Code 以精简模式运行（例如通过 Agent SDK 调用）时，客户端的输出转换器将每次工具调用的细节替换为不透明摘要。原本可见的信息——Grep 的匹配模式、Read 的文件与行数、Bash 的命令与退出码——被折叠成一句按类别累加的计数，如「搜索 1 次、读 2 个文件、跑 1 条命令」。转换器将所有工具归入五类：搜索、读取、写入、命令、其它；计数在连续的纯工具消息中累加，出现文本内容时清零。结果是，观察 SDK 输出流的一方无法还原读取了哪个文件、使用了什么搜索模式、执行了什么命令，仅能得到各类别的总数。
+
 # Prompts
 
 ## 提示词注入
@@ -1941,6 +1951,250 @@ WebRTC 内置的音频处理能力。回声消除（AEC）、噪声抑制（NS�
 - 第四，接入自动验证：不要只让 AI 写代码，还要让它跑测试、启动项目、调接口、看日志。前端可以用 Playwright，后端可以用单测、集成测试、接口测试、静态检查。没有验证闭环，AI 写得再快也不稳定。
 
 - 第五，先从低风险场景试点：比如后台管理、配置类需求、简单 CRUD、报表查询、数据导入导出、接口适配、单测补全、文档生成。这些场景更容易做到 50%-80% 的提效。复杂核心链路、交易、风控、资金、安全相关逻辑，不建议一开始就让 AI 扛主力。
+
+# AI 面试分类
+
+
+可以归纳为 9 大类：
+
+1. Agent 基础与架构
+
+* Agent、ChatBot、RAG、Workflow 的区别
+* Function Calling 和 Agent 的关系
+* ReAct、Plan-Act-Observe-Reflect 的运行机制
+* Workflow 和自主 Agent 如何选型
+* 哪些场景不适合 Agent
+* 单 Agent / 多 Agent 的适用场景
+
+核心考察：是否理解 Agent 本质是“LLM + 状态 + 工具 + 决策循环”，而不是简单调用大模型。
+
+2. RAG 工程能力
+   不能只会：
+   `切分 → Embedding → 向量库 → 检索 → LLM`
+
+还需要掌握：
+
+* PDF / Word / Excel / HTML 等多格式解析
+* Chunk 切分策略
+* Hybrid Search：向量检索 + BM25
+* Rerank 重排
+* Metadata Filter / 多租户权限过滤
+* 召回率低如何定位问题
+
+核心考察：RAG 效果不好时，能否定位到底是解析、切分、Embedding、召回、重排还是生成阶段的问题。
+
+3. Tool Calling
+   需要解决的不只是“模型会不会调用工具”，而是：
+
+* Tool Schema 如何设计
+* 如何降低选错工具概率
+* 参数校验
+* 工具异常处理
+* 超时、重试、熔断、降级
+* 幂等
+* 高风险操作人工审批
+* Prompt Injection 防护
+
+核心原则：
+
+```text
+LLM 负责“决定调用什么”
+业务系统负责“决定能不能执行”
+```
+
+4. Agent Workflow / 状态管理
+   LangChain 会用 ≠ 会设计 Agent。
+
+需要考虑：
+
+* Agent 状态如何持久化
+* 服务重启后如何恢复任务
+* 如何避免 Tool 重复执行
+* 暂停 / 恢复 / 取消任务
+* 死循环控制
+* 最大步骤数
+* 超时控制
+
+本质上 Agent 是一个“可恢复的有状态工作流系统”。
+
+5. MCP
+   不能只背 MCP 定义。
+
+需要理解完整链路：
+
+```mermaid
+flowchart LR
+A[LLM/Agent] --> B[MCP Client]
+B --> C[MCP Server]
+C --> D[Tools]
+C --> E[Resources]
+C --> F[Prompts]
+```
+
+重点包括：
+
+* MCP 和 Function Calling 的关系
+* MCP 与 OpenAPI 的区别
+* Client / Server 架构
+* Authentication / Authorization
+* 恶意 MCP Server
+* 数据泄露
+* Tool 权限控制
+
+6. Agent 安全
+   不能只在 Prompt 里写一句：
+
+> 不要泄露敏感信息
+
+真正要做系统级防护：
+
+* RAG 文档中的 Prompt Injection
+* 网页内容中的恶意指令
+* Tool 返回结果中的恶意内容
+* Text2SQL AST 校验
+* 数据库只读账号
+* 敏感信息识别 / 脱敏
+* Token / 成本限制
+* 操作审计
+* 高风险操作审批
+* 操作撤销与事故处理
+
+本质上：
+
+```text
+Prompt 安全 < 应用层安全 < 权限系统 < 基础设施安全
+```
+
+7. Agent 评测
+   不能只评价“回答看起来不错”。
+
+需要建立指标：
+
+* Task Success Rate：任务成功率
+* Tool Selection Accuracy：工具选择准确率
+* Unnecessary Tool Call Rate：无效工具调用率
+* Citation Accuracy：引用准确率
+* Faithfulness：事实一致性
+* Human Handoff Rate：人工接管率
+* TTFT：首 Token 延迟
+* Task Latency：任务总耗时
+* Token Cost：Token 成本
+
+即从：
+
+```text
+效果 + 正确性 + 性能 + 成本 + 安全
+```
+
+多个维度评价 Agent。
+
+8. 生产环境工程问题
+   这部分最能区分“Demo Agent”和“生产 Agent”。
+
+例如：
+
+* SSE 断线重连
+* 流式响应断点续传
+* 用户停止生成后真正取消后端推理
+* 多模型路由
+* Rate Limit
+* Circuit Breaker
+* 降级
+* Prompt Cache
+* Semantic Cache
+* Token Budget
+* Tenant Cost Control
+
+典型架构可以理解为：
+
+```mermaid
+flowchart LR
+A[用户请求] --> B[Agent Gateway]
+B --> C[限流/鉴权]
+C --> D[模型路由]
+D --> E[LLM]
+D --> F[备用模型]
+E --> G[Tool / RAG]
+G --> H[流式返回]
+```
+
+9. 真实故障场景
+   面试中最有价值的是这类问题：
+
+* Agent 重复退款两次，如何止损与复盘
+* 文档已经删除，为什么 RAG 还能召回
+* 更换 Embedding 模型后召回率下降
+* Agent 显示任务失败，但订单实际上已经创建
+* 多 Agent 相互调用形成死循环
+
+这些题本质上考察四个能力：
+
+```text
+幂等
+一致性
+可观测性
+故障恢复
+```
+
+最终可以把整张图浓缩成一套 Agent 面试知识体系：
+
+```mermaid
+mindmap
+  root((Agent工程能力))
+    基础
+      Agent/Workflow/RAG
+      ReAct
+      单Agent/多Agent
+    RAG
+      文档解析
+      Chunk
+      Hybrid Search
+      Rerank
+      权限过滤
+    Tool
+      Schema
+      参数校验
+      幂等
+      重试熔断
+      人工审批
+    Workflow
+      状态机
+      Checkpoint
+      恢复
+      暂停取消
+      死循环控制
+    MCP
+      Client/Server
+      Function Calling
+      OpenAPI
+      权限安全
+    Security
+      Prompt Injection
+      数据脱敏
+      权限控制
+      审计
+    Eval
+      成功率
+      工具准确率
+      引用准确率
+      延迟
+      成本
+    Production
+      SSE
+      模型路由
+      限流
+      熔断降级
+      Cache
+    Incident
+      重复执行
+      数据一致性
+      索引残留
+      多Agent死循环
+```
+
+一句话概括这张图：
+
+**现在 Agent 面试已经从“会 LangChain、会 RAG”升级到了“能否把 Agent 设计成一个安全、可靠、可恢复、可评测、可观测的生产级分布式系统”。**
 
 # 相关面试题
 
