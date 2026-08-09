@@ -330,6 +330,7 @@ public class FinalizeEscapeGC {
 
 ### 5.2、安全点
 
+- [HotSpot Glossary of Terms](https://openjdk.org/groups/hotspot/docs/HotSpotGlossary.html)
 - [理解安全点](https://tech.dewu.com/article?id=47)
 - [Safepoints: Meaning, Side Effects and Overheads](http://psy-lob-saw.blogspot.com/2015/12/safepoints.html)
 - [安全点引起的代码问题](https://mp.weixin.qq.com/s/KDUccdLALWdjNBrFjVR74Q)
@@ -346,13 +347,8 @@ public class FinalizeEscapeGC {
 对于安全点，另一个需要考虑的问题就是如何在GC发生时让所有线程（这里不包括执行JNI调用的线程）都“跑”到最近的安全点上再停顿下来。
 
 两种解决方案：
-- 抢先式中断（Preemptive Suspension）
-
-    抢先式中断不需要线程的执行代码主动去配合，在GC发生时，首先把所有线程全部中断，如果发现有线程中断的地方不在安全点上，就恢复线程，让它“跑”到安全点上。现在几乎没有虚拟机采用这种方式来暂停线程从而响应GC事件。
-
-- 主动式中断（Voluntary Suspension）
-
-    主动式中断的思想是当GC需要中断线程的时候，不直接对线程操作，仅仅简单地设置一个标志，各个线程执行时主动去轮询这个标志，发现中断标志为真时就自己中断挂起。轮询标志地地方和安全点是重合的，另外再加上创建对象需要分配内存的地方
+- 抢先式中断（Preemptive Suspension）：抢先式中断不需要线程的执行代码主动去配合，在GC发生时，首先把所有线程全部中断，如果发现有线程中断的地方不在安全点上，就恢复线程，让它“跑”到安全点上。现在几乎没有虚拟机采用这种方式来暂停线程从而响应GC事件。
+- 主动式中断（Voluntary Suspension）：主动式中断的思想是当GC需要中断线程的时候，不直接对线程操作，仅仅简单地设置一个标志，各个线程执行时主动去轮询这个标志，发现中断标志为真时就自己中断挂起。轮询标志地地方和安全点是重合的，另外再加上创建对象需要分配内存的地方
 
 ### 5.3、安全区域（Safe Region）
 
@@ -569,7 +565,6 @@ Serial收集器对于新生代采用复制算法实现，对于老年代采用�
 - 容忍延迟：不在意卡顿；
 - 单核、内存小：0~100M
 
-
 ## 2、ParNew 收集器
 
 - 算法：新生代采用复制算法
@@ -594,7 +589,6 @@ Serial收集器对于新生代采用复制算法实现，对于老年代采用�
 ## 4、Serial Old 收集器
 
 Serial 收集器的老年代版本，采用标记-整理算法实现（-XX:+UseSerialOldGC）
-
 - 主要是在 Client 模式下的虚拟机使用，在 Server 模式下，有两大用途：
 	- 在 JDK1.5 以及之前的版本中与 Parallel Scavenge 收集器搭配使用；
 	- 作为 CMS 收集器的后备预案在并发收集发生 Concurrent Mode Failure 时使用；
@@ -702,10 +696,12 @@ G1 最主要的设计目标是：实现可预期及可配置的 STW 停顿时间
 
 CMS 垃圾回收器在发生 Young GC 时，由于 Survivor 区已经放不下了，多出的对象只能提升（promotion）到老年代。但是此时老年代因为空间碎片的缘故，会发生 concurrent mode failure 的错误。这个时候，就需要降级为 Serail Old 垃圾回收器进行收集。这就是比 concurrent mode failure 更加严重的 promotion failed 问题；一次简单的 Young GC，竟然能演化成耗时最长的 Full GC。最要命的是，这个停顿时间是不可预知的
 
+> G1是 JDK1.9 之后的默认垃圾收集器
+
 ### 7.1、特点
 
-- 并行与并发
-- 分代收集
+- 并行与并发：G1能充分利用CPU、多核环境下的硬件优势,使用多个CPU(CPU或者CPU核心)来缩短Stop The World 的停顿时间。部分其他收集器原本需要停顿Java线程执行的GC动作，G1收集器仍然可以通过并发的方式让Java程序继续执行；
+- 分代收集：分代概念在G1中依然得以保留。虽然G1可以不需要其它收集器配合就能独立管理整个GC堆，但它能够采用不同的方式去处理新创建的对象和已经存活了一段时间、熬过多次GC的旧对象以获取更好的收集效果。也就是说G1可以自己管理新生代和老年代了；
 - 空间整合：整体上看来是基于“标记-整理”算法实现的，从局部（两个Region）上看来是基于“复制”算法实现的；这两种算法意味着G1运行期间不会产生内存空间碎片；
 - 可预测停顿：降低停顿时间，G1收集器可以非常精确地控制停顿，既能让使用者明确指定在一个长度为M毫秒的时间片段内，消耗在垃圾收集上的时间不得超过N毫秒，这几乎已经是实时Java的垃圾收集器的特征；
 - G1将整个Java堆（包括新生代、老年代）划分为多个大小相等的内存块（Region），每个Region 是逻辑连续的一段内存，在后台维护一个优先列表，每次根据允许的收集时间，优先回收垃圾最多的区域；进行垃圾回收时，将Region作为单次回收的最小单元，每次收集到的内存空间都是Region大小的整数倍，可以有计划的避免在整个Java堆中进行全区域的垃圾收集；
@@ -777,7 +773,6 @@ Card Table 在底层数据结构以 Bit Map实现
 G1 GC是一个响应时间优先的GC算法，它与CMS最大的不同是，用户可以设定整个GC过程的期望停顿时间，参数`-XX:MaxGCPauseMillis`指定一个G1收集过程目标停顿时间，默认值200ms，不过它不是硬性条件，只是期望值。
 
 G1根据这个模型统计计算出来的历史数据来预测本次收集需要选择的Region数量，从而尽量满足用户设定的目标停顿时间，停顿预测模型是以衰减标准偏差为理论基础实现的
-
 
 ### 7.3、G1 GC过程
 
@@ -900,6 +895,13 @@ G1 的正常处理流程中没有 Full GC，只有在垃圾回收处理不过来
 - CMS：与Parallel Scavenge 收集器搭配使用；注重吞吐量。jdk7、jdk8 默认使用该收集器作为老年代收集器，使用 -XX:+UseParallelOldGC 来指定使用 Parallel Old 收集器；
 - G1：要求尽可能可控GC停顿时间；内存占用较大的应用。可以用 `-XX:+UseG1GC` 使用 G1 收集器，jdk9 默认使用 G1 收集器；
 
+**面试回答**  
+CMS 和 G1 都是以低停顿为目标的垃圾回收器，但设计思路不同。CMS 基于传统分代模型，老年代采用标记-清除算法，通过并发标记和并发清除减少 STW，因此最大问题是内存碎片以及 Concurrent Mode Failure 导致的 Full GC。
+
+G1 则把整个堆划分成多个 Region，通过 Region 化管理 Young、Old 和 Humongous 对象，采用标记-整理和复制算法避免严重碎片，同时通过 Mixed GC 优先回收垃圾最多的 Region，并结合 MaxGCPauseMillis 对停顿时间进行预测和控制。
+
+所以简单来说：CMS 是“并发清除，降低停顿”，G1 是“Region 化管理 + 按收益回收 + 可预测停顿”。现代 JDK 中一般优先使用 G1，而 CMS 已经被移除。
+
 ## 8、ZGC
 
 * [ZGC垃圾收集器](https://www.jianshu.com/p/6f89fd5842bf)
@@ -976,40 +978,44 @@ ZGC也采用基于Region的堆内存布局，但与它们不同的是，ZGC的Re
 
 ## 9、垃圾收集器比较
 
-- 收集器比较
+**收集器比较**
 
-	|收集器|运行机制|区域|算法|目标|适用场景|
-	|-----|--------|----|----|----|------|
-	|Serial|串行|新生代|复制算法|响应速度优先|单CPU环境下的Client模式|
-	|Serial Old|串行|老年代|标记-整理|响应速度优先|单CPU环境下的client模式、CMS的后备预案|
-	|ParNew|并行|新生代|复制算法|响应速度优先|多CPU环境时在Server模式下与CMS配合|
-	|Parallel Scavenge|并行|新生代|复制算法|吞吐量优先|在后台运算而不需要太多的交互的任务|
-	|Parallel Old|并行|老年代|标记-整理|吞吐量优先|在后台运算而不需要太多的交互的任务|
-	|CMS|并发|老年代|标记-清除|响应速度优先|集中在互联网站或B/S系统服务端上的java应用|
-	|G1|并发|both|标记-整理+复制|响应速度优先|面向服务端应用，将来替换CMS|
+|收集器|运行机制|区域|算法|目标|适用场景|
+|-----|--------|----|----|----|------|
+|Serial|串行|新生代|复制算法|响应速度优先|单CPU环境下的Client模式|
+|Serial Old|串行|老年代|标记-整理|响应速度优先|单CPU环境下的client模式、CMS的后备预案|
+|ParNew|并行|新生代|复制算法|响应速度优先|多CPU环境时在Server模式下与CMS配合|
+|Parallel Scavenge|并行|新生代|复制算法|吞吐量优先|在后台运算而不需要太多的交互的任务|
+|Parallel Old|并行|老年代|标记-整理|吞吐量优先|在后台运算而不需要太多的交互的任务|
+|CMS|并发|老年代|标记-清除|响应速度优先|集中在互联网站或B/S系统服务端上的java应用|
+|G1|并发|both|标记-整理+复制|响应速度优先|面向服务端应用，将来替换CMS|
 
-- 收集器如何搭配
+**收集器如何搭配**
 
-	![image](image/GC搭配.png)
+![image](image/GC搭配.png)
 
-- 新生代收集器还是老年代收集器：
-	- 新生代收集器：Serial、ParNew、Parallel Scavenge；
-	- 老年代收集器：Serial Old、Parallel Old、CMS；
-	- 整堆收集器：G1
-- 吞吐量优先、停顿时间优先：
-	- 吞吐量优先：Parallel Scavenge收集器、Parallel Old 收集器。
-	- 停顿时间优先：CMS（Concurrent Mark-Sweep）收集器。
-- 吞吐量与停顿时间适用场景：
-	- 停顿时间优先：交互多，对响应速度要求高
-	- 吞吐量优先：交互少，计算多，适合在后台运算的场景。
-- 串行并行并发：
-	- 串行：Serial、Serial Old
-	- 并行：ParNew、Parallel Scavenge、Parallel Old
-	- 并发：CMS、G1
-- 算法
-	- 复制算法：Serial、ParNew、Parallel Scavenge、G1
-	- 标记-清除：CMS
-	- 标记-整理：Serial Old、Parallel Old、G1
+新生代收集器还是老年代收集器：
+- 新生代收集器：Serial、ParNew、Parallel Scavenge；
+- 老年代收集器：Serial Old、Parallel Old、CMS；
+- 整堆收集器：G1
+
+吞吐量优先、停顿时间优先：
+- 吞吐量优先：Parallel Scavenge收集器、Parallel Old 收集器。
+- 停顿时间优先：CMS（Concurrent Mark-Sweep）收集器。
+
+吞吐量与停顿时间适用场景：
+- 停顿时间优先：交互多，对响应速度要求高
+- 吞吐量优先：交互少，计算多，适合在后台运算的场景。
+
+串行并行并发：
+- 串行：Serial、Serial Old
+- 并行：ParNew、Parallel Scavenge、Parallel Old
+- 并发：CMS、G1
+
+算法
+- 复制算法：Serial、ParNew、Parallel Scavenge、G1
+- 标记-清除：CMS
+- 标记-整理：Serial Old、Parallel Old、G1
 
 ## 10、如何选择垃圾收集器
 
@@ -1336,6 +1342,40 @@ JVM 什么样的条件下选择进行 GC 操作，具体 Cause 的分类可以�
 ### 7.1、CMS GC触发
 
 什么时机使用这些 Cause 触发回收，大家可以看一下 CMS 的代码，这里就不讨论了，具体在 `/src/hotspot/share/gc/cms/concurrentMarkSweepGeneration.cpp` 中
+
+## 完整的 GC 流程
+
+```mermaid
+flowchart LR
+    A[新对象分配] --> B{大对象?}
+
+    B -- Y --> C{老年代代放得下?}
+    B -- N --> D{Eden区放得下?}
+
+    D -- N --> F{Survivor放得下?}
+    D -- Y --> E[在Eden区分配内存创建对象]
+
+    F -- Y --> G[Young GC]
+    F -- N --> C
+
+    G --> H{对象年龄超过进入老年代阈值}
+    H -- Y --> C
+    H -- N --> D
+
+    C -- Y --> I[在老年代分配内存创建对象]
+    C -- N --> J[Full GC]
+
+    J --> K{老年代放得下?}
+
+    K -- Y --> I
+    K -- N --> L[OOM]
+```
+
+JVM 一次完整 GC 首先发生在对象分配阶段，当 Eden 区空间不足时触发 Minor GC。GC 首先通过 GC Root 可达性分析判断对象是否存活，然后使用复制算法将存活对象移动到 Survivor 区，同时对象年龄增加。经过多次 Minor GC 后，如果对象达到晋升条件，会进入老年代。
+
+当老年代空间不足时，会触发 Major GC 或 Full GC。Full GC 会回收整个堆以及 Metaspace，通常伴随着 Stop-The-World，对应用产生较大影响。
+
+不同垃圾收集器实现不同，例如 CMS 使用标记-清除，G1 使用 Region 化管理和混合回收，但核心流程都是：识别垃圾 → 标记存活 → 回收垃圾 → 整理空间 → 继续分配
 
 # 六、详解 finalize()方法
 
