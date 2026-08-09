@@ -42,6 +42,10 @@ Agent系统由五个关键组件构成：
 - 可以通过工具执行各类行动。
 - 执行思考（Think） -> 执行（Action）-> 自省（Observe） -> 纠错（既重复思考到自省的持续改进）这样一个循环
 
+## 完整组成
+
+![](../image/Agent组成.png)
+
 # Agent设计模式
 
 - [《Agentic Design Patterns》中文翻译版](https://github.com/ginobefun/agentic-design-patterns-cn)
