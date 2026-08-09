@@ -44,6 +44,8 @@ Agent系统由五个关键组件构成：
 
 ## 完整组成
 
+Agent = LLM + Context + Skill + Memory + RAG + Tools + Loop + 工程化
+
 ![](../image/Agent组成.png)
 
 # Agent设计模式

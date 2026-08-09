@@ -2553,7 +2553,9 @@ starter实现自动化配置的流程：
 
 https://www.cnblogs.com/paddix/p/8204916.html
 
-# 七、SpringBoot监控
+# 七、SpringBoot
+
+- [StatLite:一个开源的 Spring Boot 应用的服务器仪表板](https://github.com/PVRLabs/statlite)
 
 ## 1、Actuator
 
