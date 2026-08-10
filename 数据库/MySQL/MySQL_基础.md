@@ -1618,3 +1618,55 @@ serverTimeZone的作用就是指定web服务器和mysql服务器的会话期间�
 ## 3、数据库选型
 
 [数据存储选型](https://mp.weixin.qq.com/s/YpRQa9YguOqJygJbdRZ-nA)
+
+# MySQL8.0
+
+## [窗口函数](https://dev.mysql.com/doc/refman/8.0/en/window-functions.html)
+
+### 基本语法
+
+```sql
+函数名() OVER (
+    PARTITION BY 分组字段
+    ORDER BY 排序字段
+)
+```
+比如：
+```sql
+SELECT
+    name,
+    salary,
+    department,
+    RANK() OVER(
+        PARTITION BY department
+        ORDER BY salary DESC
+    ) AS rank_no
+FROM employee;
+```
+含义：
+1. 按 `department` 分组
+2. 每组按照 `salary` 降序排序
+3. 计算排名
+
+在不改变结果集行数的情况下，对当前行关联的数据集合进行计算
+
+### 典型应用
+
+- 排名：第几名、Top N
+- 分组排序
+- 累计求和
+- 环比计算
+- 前后行数据比较
+- 分组取最新记录
+
+### 常用函数
+
+| 场景    | 函数                        |
+| ----- | ------------------------- |
+| 分页    | ROW_NUMBER                |
+| Top N | ROW_NUMBER + PARTITION BY |
+| 排名    | RANK/DENSE_RANK           |
+| 累计    | SUM OVER                  |
+| 移动平均  | AVG OVER                  |
+| 同比环比  | LAG/LEAD                  |
+| 取首尾   | FIRST_VALUE/LAST_VALUE    |
