@@ -2975,6 +2975,44 @@ Spring Boot的一个主要特性是使用自动配置。这是Spring Boot的一�
 使用 spring-startup-analyzer 分析时，在windows环境下：（路径需要双反斜杠）
 `-Dspring-startup-analyzer.app.health.check.endpoints=http://localhost:8020/actuator/health -javaagent:C:\\Users\\user\\spring-startup-analyzer\\lib\\spring-profiler-agent.jar`
 
+# SpringBoot 版本
+
+## 主要版本的区别
+
+| 对比项          | Spring Boot 2.0  | Spring Boot 3.0| Spring Boot 4.0         |
+| ------------ | --------- | ----------- | ---------------- |
+| 发布时间         | 2018  | 2022| 2025         |
+| 基础框架         | Spring Framework 5          | Spring Framework 6        | Spring Framework 7      |
+| 最低 JDK 要求    | Java 8| Java 17        | Java 17+（推荐 Java 21）    |
+| 核心定位         | 响应式编程、云原生基础      | Java EE → Jakarta EE 迁移、现代 Java      | 模块化、云原生、AI 应用时代         |
+| 最大变化         | 引入 WebFlux       | javax → jakarta 全面迁移      | 更强模块化和现代化架构  |
+| Web 技术栈      | Spring MVC + Spring WebFlux | Spring MVC + WebFlux（基于 Jakarta）     | Web MVC/WebFlux 模块进一步拆分优化          |
+| 响应式编程        | ⭐ 引入 WebFlux     | 持续增强 Reactor 支持| 进一步优化响应式和云原生场景          |
+| Servlet 容器   | Tomcat 8.5/9     | Tomcat 10+     | Jakarta Servlet 新版本     |
+| API 命名空间     | javax.*          | jakarta.*      | jakarta.*    |
+| 数据访问         | Spring Data 2.x  | Spring Data 3.x| Spring Data 新版本         |
+| ORM          | Hibernate 5      | Hibernate 6    | Hibernate 7（生态升级）       |
+| 默认连接池        | HikariCP         | HikariCP       | HikariCP     |
+| 配置绑定         | Binder API       | Binder API 增强  | 配置体系进一步模块化   |
+| Actuator     | 重构监控端点| 增强 Observability          | 深度云原生可观测性    |
+| 监控体系         | Micrometer       | Micrometer Observation + Tracing     | OpenTelemetry 深度集成      |
+| 链路追踪         | Spring Cloud Sleuth         | Micrometer Tracing        | OpenTelemetry 标准化       |
+| HTTP Client  | RestTemplate 主流  | 引入 HTTP Interface Client  | HTTP Client 能力增强        |
+| HTTP/2       | 支持    | 增强  | 默认云原生优化      |
+| Native Image | 实验阶段（Spring Native）         | 正式支持 GraalVM Native Image | AOT 能力进一步增强  |
+| AOT 编译       | 不支持/实验| 正式支持| 深度优化         |
+| 启动速度优化       | 传统 JVM 启动        | Lazy Init、AOT 支持          | 模块化 + AOT + Native 优化   |
+| Docker 支持    | 基础支持  | 优化镜像构建         | 云原生镜像进一步优化   |
+| 优雅停机         | Spring Boot 2.3 引入          | 默认能力增强         | Kubernetes 生命周期优化       |
+| 循环依赖         | 默认允许  | 默认禁止| 延续限制         |
+| 虚拟线程         | 不支持   | 可手动使用 JDK21    | 深度支持（重点方向）   |
+| Java 新特性支持   | Java 8 Lambda    | Record、Sealed Class、Pattern Matching | Java 21 Virtual Thread、现代语法        |
+| GraalVM      | 实验探索  | 生产可用| 更成熟          |
+| 云原生支持        | 基础 Actuator + Docker        | Kubernetes、Observability增强| Kubernetes、Serverless、Service Mesh |
+| AI 集成        | 无     | Spring AI 初步生态 | Spring AI 深度集成          |
+| 典型应用场景       | 传统微服务 | 企业级云原生服务       | AI Agent、云原生平台          |
+
+
 
 # 参考资料
 
