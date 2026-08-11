@@ -253,6 +253,19 @@ InnoDB是基于聚簇索引建立的。其二级索引（非主键索引）中�
 
 InnoDB采取的方式是：将数据划分为若干个页，以页作为磁盘和内存之间交互的基本单位，InnoDB中页的大小一般为 16 KB。在一般情况下，一次最少从磁盘中读取16KB的内容到内存中，一次最少把内存中的16KB内容刷新到磁盘中；
 
+InnoDB 支持 Redundant、Compact、Dynamic、Compressed 四种行格式。Redundant 是早期格式，Compact 优化了变长字段和 NULL 存储，Dynamic 是 MySQL 5.7 以后默认格式，它优化了大字段存储方式，长字段只保留 20 字节指针放到溢出页中，提高索引和 Buffer Pool 利用率。Compressed 在 Dynamic 基础上增加页压缩，适合读多写少场景。
+
+| 特性     | Redundant | Compact | Dynamic  | Compressed |
+| ------ | --------- | ------- | -------- | ---------- |
+| 引入版本   | 5.0之前     | 5.0     | 5.7      | 5.7        |
+| 默认     | 否         | 老版本默认   | MySQL8默认 | 否          |
+| NULL优化 | ❌         | ✅       | ✅        | ✅          |
+| 变长字段优化 | ❌         | ✅       | ✅        | ✅          |
+| 大字段溢出  | 部分        | 768字节前缀 | 只保存指针    | 只保存指针      |
+| 空间利用率  | 低         | 中       | 高        | 最高         |
+| CPU消耗  | 低         | 低       | 低        | 高          |
+
+
 ### 1.2、InnoDB最佳实践
 
 - 为表指定一个自增的主键；
@@ -434,6 +447,8 @@ InnoDB实现的RR，通过锁机制、数据的隐藏列、undo log和类next-ke
 - 查看MySQL事务隔离级别：`select @@transaction_isolation;` 或者 `show variables like 'transaction_isolation'`；
 - 设置事务隔离级别：`set  [global | session]  transaction isolation level 隔离级别名称`;
 - 设置事务隔离级别：`set transaction_isolation='隔离级别名称;'`
+
+MySQL InnoDB 默认选择 REPEATABLE READ，主要是因为它在一致性和并发性能之间做了比较好的平衡。RR 通过 MVCC 保证同一个事务多次快照读看到一致的数据版本，同时 InnoDB 又通过 Next-Key Lock 处理当前读下的范围并发问题。相比 SERIALIZABLE，它不会让大量普通查询都产生严重的锁竞争；相比 READ COMMITTED，它能够提供更强的事务一致性。此外，RR 也是 InnoDB 长期以来的默认行为，和 MySQL 的历史兼容性以及传统复制机制有关。
 
 ### 2.4、隔离级别性能比较
 

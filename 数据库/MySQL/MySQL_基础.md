@@ -666,6 +666,8 @@ ALTER TABLE your_table ADD COLUMN icon TEXT DEFAULT (JSON_ARRAY()); -- 示例：
 
 - [MySQL执行顺序](https://mp.weixin.qq.com/s/eFmqxhlgvYOtTPDOFHHbUg)
 
+一句话：MySQL 执行一条 SQL，首先客户端通过连接器建立连接并完成权限验证，然后经过 SQL 解析器进行词法和语法分析，生成解析树。随后优化器根据统计信息选择最优执行计划，例如选择哪个索引。执行器根据执行计划调用存储引擎接口，InnoDB 首先查询 Buffer Pool，如果缓存不存在则从磁盘加载数据页，然后返回结果。最后 MySQL Server 将结果返回客户端。
+
 ## 1、一般SQL的写的顺序
 
 ```sql
