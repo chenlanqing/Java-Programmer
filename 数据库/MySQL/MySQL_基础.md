@@ -1026,6 +1026,8 @@ select * from emp a right join dept b on a.deptId=b.id order by id desc
 
 ### 4.2、列转行
 
+通常通过 union 来实现
+
 ![](image/数据行2.png)
 
 将上面的数据按照下列各式转换：
