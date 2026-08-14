@@ -633,6 +633,50 @@ GEO 类型的底层数据结构用 Sorted Set 来实现的；
 
 - [Redis 流简介](https://redis.io/docs/latest/develop/data-types/streams/)
 
+### 介绍
+
+Redis Stream 是 Redis 5.0 版本新增加的数据结构，主要用于处理有序的、可追溯的消息流。
+
+Stream数据结构可以被视为一个日志或消息队列，其中每个消息都有一个唯一的ID，并且按照添加的顺序进行排序。开发人员可以向Stream中添加消息、读取消息、删除消息以及订阅消息。Stream数据结构还支持消费者组，可以让多个消费者并发地处理消息流。
+
+在Redis 5.0之前，通过Redis的发布订阅（pub/sub）可以实现消息队列的功能，但它有个缺点就是消息无法持久化，如果出现网络断开、Redis 宕机等，消息就会被丢弃。
+
+而 Redis Stream 提供了消息的持久化和主备复制功能，可以让任何客户端访问任何时刻的数据，并且能记住每一个客户端的访问位置，还能保证消息不丢失。
+
+他的特点是支持持久化、消息具有有序性，并且支持分组。主要可以用来做消息队列、日志收集、实时数据处理和聊天室应用等。
+- **有序性**：消息可以按照发布时间排序，消费者可以按照消息发布的时间顺序进行消费。
+- **多消费者支持**：多个消费者可以订阅同一个Stream并独立消费消息，支持竞争式消费和共享式消费两种消费模式。
+- **持久化**：Stream支持消息持久化，即使Redis服务器重启或崩溃，之前的消息仍然可以恢复。
+- **消息分组**：Stream支持消息分组功能，可以将消息分配到不同的消费组中，从而实现更灵活的消息消费。
+
+### 使用
+
+Stream底层采用了类似于日志的数据结构，每个Stream都是由一个或多个日志实现的。每个日志包含多个消息，每个消息包含一个唯一的ID和一些附加的字段，如消息体、时间戳等。
+
+Redis提供了一系列的Stream命令，用于创建Stream、发布/消费消息。
+
+**消息队列相关命令：**
+- `XADD` - 添加消息到末尾
+- `XTRIM` - 对流进行修剪，限制长度
+- `XDEL` - 删除消息
+- `XLEN` - 获取流包含的元素数量，即消息长度
+- `XRANGE` - 获取消息列表，会自动过滤已经删除的消息
+- `XREVRANGE` - 反向获取消息列表，ID 从大到小
+- `XREAD` - 以阻塞或非阻塞方式获取消息列表
+
+**消费者组相关命令：**
+- `XGROUP CREATE` - 创建消费者组
+- `XREADGROUP GROUP` - 读取消费者组中的消息
+- `XACK` - 将消息标记为"已处理"
+- `XGROUP SETID` - 为消费者组设置新的最后递送消息ID
+- `XGROUP DELCONSUMER` - 删除消费者
+- `XGROUP DESTROY` - 删除消费者组
+- `XPENDING` - 显示待处理消息的相关信息
+- `XCLAIM` - 转移消息的归属权
+- `XINFO` - 查看流和消费者组的相关信息;
+- `XINFO GROUPS` - 打印消费者组的信息;
+- `XINFO STREAM` - 打印流信息
+
 ## 10、时间序列
 
 - [Time series](https://redis.io/docs/latest/develop/data-types/timeseries/)
@@ -849,9 +893,45 @@ ziplist是redis为了`节约内存`而开发的顺序型数据结构。压缩列
 - 元素个数小于 `zset-max-ziplist-entries` 配置，默认128；
 - 所有值都小于 `zset-max-ziplist-value` 配置，默认64。
 
+### 级联更新问题
+
+ZipList 的级联更新问题主要源于 Entry 中的 prevlen 字段。每个 Entry 都保存前一个 Entry 的长度，而且 prevlen 根据前一个 Entry 的长度采用不同大小的编码。当某个 Entry 从小于临界值变成超过临界值时，它后面的 Entry 的 prevlen 可能需要从 1 字节扩展到 5 字节。后面的 Entry 变大后，又可能导致再后一个 Entry 的 prevlen 发生变化，从而形成连锁更新。由于 ZipList 是连续内存结构，过程中还可能发生大量内存移动，因此最坏情况下单次操作可能达到 O(N)。ListPack 正是为了解决 ZipList 的这类结构性问题而设计的。
+
 ## 8、快速列表(quicklist)
 
 一个由ziplist组成的双向链表。但是一个quicklist可以有多个quicklist节点，它很像B树的存储方式。是在redis3.2版本中新加的数据结构，用在列表的底层实现
+
+## ListPack
+
+ZipList 的改进版，同样采用连续内存，但解决了 ZipList 的一些结构性问题，结构类似：
+```text
+┌────────┬────────┬────────┬────────┐
+│ entry1 │ entry2 │ entry3 │ entry4 │
+└────────┴────────┴────────┴────────┘
+```
+但是 ListPack 不再使用 ZipList 那种：
+```text
+prevlen
+```
+去记录前一个 Entry 的长度。而是 Entry 自己记录自己的长度信息。
+
+简化理解：
+```text
+ZipList：
+
+Entry
+├── prevlen
+├── encoding
+└── data
+
+ListPack：
+
+Entry
+├── encoding
+├── data
+└── entry_length
+```
+因此 ListPack 可以避免 ZipList 的典型“连锁更新”问题
 
 # 四、深入理解
 
@@ -1040,7 +1120,7 @@ Set 集合采用了整数集合和字典两种方式来实现的，当满足如�
 
 ## 5、Redis有序集合
 
-**实现原理：**
+### 5.1、实现原理
 
 zset的两种实现方式
 - `ziplist（压缩列表）`：满足以下两个条件的时候
@@ -1050,6 +1130,17 @@ zset的两种实现方式
     - map用来存储member到score的映射，这样就可以在O(1)时间内找到member对应的分数
   	- skiplist按从小到大的顺序存储分数
   	- skiplist每个元素的值都是`[score,value]`对
+- 在Redis5.0 中新增了一个 listpack(紧凑列表)的数据结构，这种数据结构就是为了替代 ziplist 的，而在之后 Redis7.0 的发布中,在Zset的实现中，已经彻底不再使用 zipList 了。
+
+当ZSet的元素数量比较少时，Redis会采用ZipList (ListPack)来存储ZSet的数据。ZipList (ListPack)是一种紧凑的列表结构，它通过连续存储元素来节约内存空间。当ZSet的元素数量增多时，Redis会自动将 ZipList(ListPack)转换为SkipList，以保持元素的有序性和支持范围查查询操作。
+
+在这个过程中，Redis会遍历ZipList (ListPack)中的所有元素，按照元素的分数值依次将它们插入到 SkipList中，这样就可以保持元素的有序性。
+
+在Redis的ZSET具体实现中，SkipList的这种实现，不仅用到了跳表，还会用到dict(字典)
+- SkipList用来实现有序集合，其中每个元素按照其分值大/小在跳表中进行排序。跳表的插入、删除和查找操作的时间复杂度都是O(logn)，可以保证较好的性能。
+- dict 用来实现元素到分值的映射关系，其中元素作为键，分值作为值。哈希表的插入、删除和查找操作的时间复杂度都是O(1)，具有非常高的性能。
+
+### 5.2、更多细节
 
 **有序集合类似于集合和哈希的混合体的一种数据类型；有序集合由唯一的，不重复的字符串元素组成，在某种意义上，有序集合也就是集合**
 - 集合中的每个元素是无序的，但有序集合中的每个元素都关联了一个浮点值，称为分数（score，这就是为什么该类型也类似于哈希，因为每一个元素都映射到一个值）；
