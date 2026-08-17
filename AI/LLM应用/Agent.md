@@ -2686,6 +2686,10 @@ Agent 的自主性带来了三个传统软件没有的问题：
 
 3. 需要视觉能力做分析的，之前我会推荐Gemini-3-Flash。但这次GPT降价之后，我会推荐GPT-5.6-luna，在有多模态视觉能力的模型中，GPT-5.6-luna价格非常香。
 
+# Agent 安全
+
+- [Agent 防火墙](https://github.com/peg/rampart)
+
 # 学习资料
 
 - [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners) - [学习心得](https://mp.weixin.qq.com/s/Ux5FJ_ZLWUcxPE6CkF8XGA)
