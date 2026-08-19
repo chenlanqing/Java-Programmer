@@ -585,6 +585,16 @@ https://mp.weixin.qq.com/s/uI4j2MAvNPmshdZ8uzPnCQ
 
 比如：5000 份文档约 3500 万 token，远超窗口只能 RAG；但有个客户只有 200 份文档、每月查询不到 50 次，我建议他直接用 Gemini 长上下文，省了搭 Milvus 的运维成本"
 
+## RAG 检索到 20 个相关 chunk，加上对话历史，拼进 Prompt 后超过了模型的上下文窗口，如何解决？
+
+我不会直接把 Top20 Chunk 全部拼进 Prompt。首先通过 Reranker 对召回结果进行二次排序，过滤掉低相关 Chunk；然后对高相关 Chunk 做 Context Compression，只保留与当前 Query 相关的信息。
+
+同时历史对话也不能无限累积，可以采用“最近 N 轮 + 历史摘要”的方式压缩。
+
+最后建立 Token Budget 管理机制，根据模型 Context Window 动态分配 System Prompt、History、RAG Context 和 Output 的 Token 配额。如果 RAG Context 超过预算，就按照 Rerank Score 从高到低逐个加入，直到达到预算。
+
+所以整体策略就是：召回 → 重排 → 压缩 → 历史摘要 → Token Budget → 动态组装 Context
+
 ## 假设你的系统答案准确率从 85% 掉到 72% 了。问题出在哪？
 
 有 3 种可能：

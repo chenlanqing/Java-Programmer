@@ -1058,6 +1058,24 @@ System Prompt 有两个常见的极端得避开：
 
 ### Token 预算：单次调用内怎么排优先级
 
+## Token Budget 管理机制
+
+在把 System Prompt、历史对话、RAG 内容、用户问题发送给 LLM 之前，先给每一部分“分配最多允许使用多少 Token”，然后动态裁剪，确保最终 Prompt 不超过模型 Context Window。
+
+例如模型 Context Window 是 32K：
+```
+32K Context Window
+│
+├── System Prompt：2K
+├── 历史对话：4K
+├── RAG Context：10K
+├── User Query：1K
+└── Output：8K
+         ↓
+       总计 25K
+```
+剩余 7K 可以作为安全 buffer
+
 ### 总结
 
 先把最简单的方案跑通：先把 System Prompt 和工具边界写清楚；再把 RAG 检索做准；然后加摘要压缩和上下文预算；等长任务真的遇到瓶颈了，再考虑引入记忆层、Sub-agent 或者更复杂的运行时检索。上下文给对了，中等模型也能完成不少复杂任务。上下文给烂了，再贵的模型也会输出一堆看起来像答案的噪声。
@@ -2094,6 +2112,10 @@ Function Calling效果的好坏，很大程度上取决于工具描述的质量
 - 选择合适的模型：简单任务用 gpt-4o-mini，复杂任务用 gpt-4o
 
 工具越多、循环越多，成本和延迟越高
+
+## RAG 与 Agent
+
+最简单的 RAG 是"每次提问都检索"，但有些问题不需要检索（如"你好"、"1+1=?"）。把 RAG 包装成 Agent 的一个工具，让 Agent 自主决定何时检索。
 
 # Multi-Agent
 

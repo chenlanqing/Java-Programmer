@@ -292,6 +292,15 @@ RAG 与传统搜索引擎虽然都涉及信息获取，但它们在检索机制�
     - 复杂决策场景自动化
     - 人机写作新范式；
 
+**何时触发 RAG？**
+
+Agent 通过以下信号判断是否触发检索：
+- 问题类型判断：事实性问题 → 检索；闲聊/算术 → 跳过，"今天天气" → 检索；"1+1" → 跳过
+- 知识边界检测：问题涉及模型训练截止后的信息 → 检索，"2025年新发布模型" → 检索
+- 领域关键词匹配：问题包含企业专有名词 → 检索内部知识库，"我们的SLA策略" → 检索
+- 反思触发再检索：已有文档不足以回答 → 改写Query重搜，第1轮只有限流，缺降级 → 第2轮搜降级
+- 用户显式要求：用户要求查证或引用来源 → 检索，"帮我查一下文档" → 检索
+
 # RAG 技术原理
 
 （1）**检索阶段：寻找“非参数化知识”**
@@ -939,13 +948,190 @@ ColBERT（Contextualized Late Interaction over BERT）是一种创新的重排�
 | **交互粒度** | 无（仅排名） | 概念/语义级 | 句子级（Query-Doc Pair） | Token 级 |
 | **适用场景** | 多路召回结果融合 | 高价值语义理解场景 | Top-K 精排 | Top-K 重排 |
 
-## 压缩
+## 上下文窗口管理
 
-“压缩”技术旨在解决一个常见问题：初步检索到的文档块（Chunks）虽然整体上与查询相关，但可能包含大量无关的“噪音”文本。将这些未经处理的、冗长的上下文直接提供给 LLM，不仅会增加 API 调用的成本和延迟，还可能因为信息过载而降低最终生成答案的质量。
+RAG 检索到 20 个相关 chunk，加上对话历史，拼进 Prompt 后超过了模型的上下文窗口，这是 RAG 系统中非常经典的问题——核心矛盾是「检索召回率」和「上下文窗口有限」之间的张力。解决方案需要从检索侧、Chunk 侧、Prompt 侧、模型侧、工程侧多个层面入手。
 
-压缩的目标就是对检索到的内容进行“压缩”和“提炼”，只保留与用户查询最直接相关的信息。这可以通过两种主要方式实现：
-1.  **内容提取**：从文档中只抽出与查询相关的句子或段落。
-2.  **文档过滤**：完全丢弃那些虽然被初步召回，但经过更精细判断后认为不相关的整个文档。
+![](../image/ContextWindow-管理内容.png)
+
+### 问题分析
+
+上下文溢出的 Token 消耗主要来自三个部分：
+- **System Prompt**：系统指令，通常是固定的；
+- **对话历史（Conversation History）**：多轮对话累积的上下文，是"隐形"的消耗大户；
+- **检索到的 Chunks**：RAG 召回的文档片段，数量越多、每个越大，消耗越大。
+
+一个典型的 Token 预算分配：
+```
+模型上下文窗口：128K tokens
+├── System Prompt：~2K tokens
+├── 对话历史：~10K tokens（10轮对话）
+├── 检索 Chunks：~100K tokens（20个chunk × ~5K tokens）
+└── 输出预留：~4K tokens
+─────────────────────────────
+合计极易超过 128K
+```
+
+### 检索侧：减少送入 LLM 的 Chunk 数量
+
+#### 精排（Rerank）
+
+20 个 chunk 是粗排（如向量检索 Top-K）的结果，按相似度排序但不一定都"真正相关"。加一个 Reranker 做精排：
+- **交叉编码器 Reranker**：如 `bge-reranker`、`Cohere Rerank`，用 query 和 chunk 拼接后打分，精度远高于向量相似度。
+- **LLM Rerank**：让小模型做相关性二分类/打分，代价高但效果好。
+- 精排后取 Top-N（N=5~8），通常能砍掉一半以上冗余 chunk 而不损失答案质量。
+
+> Rerank 的详细方法参见 [重排序 (Re-ranking)](#重排序-re-ranking)
+
+#### 动态调整 Top-K
+
+不要固定 K=20，根据 query 复杂度动态决定：
+- 简单问答 → K=3~5
+- 复杂推理/多跳问题 → K=10~15
+- 可以用一个小模型/规则先判断 query 类型。
+
+#### 检索过滤
+
+- **MMR（Maximal Marginal Relevance）**：在相似度和多样性之间做权衡，避免多个 chunk 讲同一件事挤占窗口。
+- **相似度阈值截断**：低于阈值的 chunk 直接丢弃，不凑数。
+- **元数据过滤**：按时间、文档类型、权限等提前过滤，缩小检索空间。
+
+### Chunk 侧：压缩每个 Chunk 的体积
+
+#### 上下文压缩（Context Compression）
+
+用 LLM 或小模型对检索到的 chunk 做"提取式压缩"，只保留与 query 相关的句子：
+
+```python
+# 伪代码：LLMLingua / LongLLMLingua 思路
+compressed_chunks = []
+for chunk in retrieved_chunks:
+    relevant_part = compressor.compress(chunk, query)  # 只保留与query相关的片段
+    compressed_chunks.append(relevant_part)
+```
+
+代表方案：
+- **LLMLingua / LongLLMLingua**：token 级压缩，可压 2~4 倍，利用小模型计算每个 token 的互信息，移除信息量低的 token；
+- **RECOMP**：摘要式压缩，用 LLM 对每个 chunk 生成与 query 相关的摘要。
+
+#### 句子级过滤
+
+对每个 chunk 做句子切分，只保留与 query 相似度高于阈值的句子，丢弃无关句子。比整 chunk 丢弃更细粒度。
+
+#### 优化 Chunk 策略
+
+- **更小的 chunk**：从 512 tokens 降到 256 tokens，减少每个 chunk 的冗余。
+- **Sentence-Window / Parent-Document Retrieval**：检索小 chunk（精准），但送入 LLM 时扩展到周围窗口/父文档（保证上下文完整性），避免无关内容。参见 [上下文扩展](#上下文扩展)
+- **语义分块**：按语义边界切分，而不是固定长度，减少一个 chunk 内混入多个主题的情况。参见 [分块策略](#分块策略)
+
+### Prompt 侧：精简上下文组织
+
+#### 对话历史滑动窗口
+
+对话历史是"隐形"的上下文消耗大户，需要专门管理：
+- **滑动窗口**：只保留最近 N 轮对话（如最近 5~10 轮），更早的轮次直接丢弃。
+- **摘要压缩**：对更早的轮次做摘要压缩，用 1~2 句总结，而非保留原文。
+- **智能裁剪**：区分"系统指令/知识"和"闲聊"，闲聊可丢弃或大幅压缩。
+
+Claude Code 的 AutoCompact 机制就是一个典型实践：
+- 当上下文接近窗口上限时，自动触发压缩；
+- 将历史对话摘要为紧凑的总结消息；
+- 保留系统指令和最近的关键消息；
+- 压缩后继续对话，用户无感知。
+
+![](../image/ClaudeCode-AutoCompact-消息压缩处理.png)
+
+#### 去重与合并
+
+- 多个 chunk 可能包含重复内容，先去重。
+- 相邻/相似 chunk 合并，避免重复表述。
+
+#### Prompt 结构精简
+
+- 精简 system prompt，去掉冗余指令。
+- 用更紧凑的格式（如 JSON 而非自然语言描述）组织检索结果。
+
+### 模型侧：突破窗口限制
+
+#### 使用长上下文模型
+
+如果预算允许，换用更大上下文窗口的模型：
+- GPT-4o (128K)、Claude 3.5 Sonnet (200K)、Gemini 1.5 Pro (1M+)
+- 国产模型如 Qwen2.5-72B-Instruct (128K)、DeepSeek-V3 (128K)
+
+> ⚠️ 注意：长上下文 ≠ 长上下文"有效利用"。研究表明模型在上下文中间位置的召回率明显下降（Lost in the Middle 现象），单纯堆窗口大小不是银弹。使用长上下文模型时，需要注意 chunk 的位置编排——把最相关的 chunk 放在上下文的开头和结尾，可以缓解中间信息丢失问题。
+
+#### Map-Reduce / 分治处理
+
+当 chunk 实在太多时，不让模型一次性回答，而是分治：
+
+```
+Map 阶段：将 20 个 chunk 分成 4 组，每组 5 个，分别让 LLM 基于该组回答 query
+Reduce 阶段：将 4 个中间答案汇总，让 LLM 整合出最终答案
+```
+
+代表方案：
+- **Map-Reduce**：分批处理，最终汇总；
+- **Refine**：逐 chunk 迭代精炼答案，每次把当前答案和新 chunk 一起输入；
+- **Map-Rerank**：每个 chunk 独立回答并打分，取最高分的答案。
+
+这种策略本质上是用多次 LLM 调用来换取单次上下文窗口的限制，但会增加延迟和成本。
+
+#### Self-RAG / 迭代检索
+
+不是一次性检索 20 个 chunk 全塞进去，而是：
+1. 先检索少量 chunk → 让 LLM 判断信息是否足够；
+2. 不够 → 生成更精确的查询 → 再检索补充；
+3. 循环直到信息充分或达到步数上限。
+
+这种方式可以避免"一次性塞入过多无关 chunk"的问题，每轮只送入最相关的少量内容。
+
+### 工程侧：Token 预算管理
+
+建立 Token Budget 机制，在组装 Prompt 前做精确计算，动态决定送入多少内容：
+
+```python
+MAX_CONTEXT_TOKENS = 128000      # 模型上下文窗口
+RESERVED_FOR_OUTPUT = 4096       # 预留输出 token
+
+# 计算已用预算
+used_tokens = count_tokens(system_prompt) + count_tokens(chat_history)
+available_for_chunks = MAX_CONTEXT_TOKENS - used_tokens - RESERVED_FOR_OUTPUT
+
+# 按相关性优先级填充 chunk，直到预算用完
+selected_chunks = []
+for chunk in reranked_chunks:  # 已经按相关性排序
+    chunk_tokens = count_tokens(chunk)
+    if available_for_chunks >= chunk_tokens:
+        selected_chunks.append(chunk)
+        available_for_chunks -= chunk_tokens
+    else:
+        # 可选：对最后一个 chunk 做截断压缩，塞入能容纳的部分
+        break
+```
+
+Token Budget 的核心原则是：**优先级排序 → 贪心填充 → 预算用尽即停**。优先级一般为：System Prompt > 当前问题 > 最近对话历史 > Rerank 后的 Chunks > 较早对话历史。
+
+### Lost in the Middle 问题
+
+在处理上下文窗口时，还需要注意一个重要现象：大模型对上下文中不同位置的信息利用率并不均匀。研究发现，模型对位于上下文**开头**和**结尾**的信息利用率最高，而对**中间**部分的信息容易"遗忘"——这就是 "Lost in the Middle" 现象。
+
+这意味着在组织 Prompt 时：
+- **最相关的 chunk 应该放在上下文的开头或结尾**，而不是按检索顺序全部堆在中间；
+- 可以将 Top-1、Top-2 最相关的 chunk 放在最前面，Top-3、Top-4 放在最后面，中间放次相关的；
+- 对话历史中，最近的一轮对话天然位于末尾，利用率最高，这和滑动窗口策略是一致的。
+
+### 实战推荐组合
+
+| 场景 | 推荐方案 |
+|---|---|
+| **快速见效** | Rerank + Top-N 截断 + 对话历史滑动窗口 |
+| **精度优先** | Rerank + 上下文压缩(LLMLingua) + 句子级过滤 |
+| **文档量大、多跳问题** | 迭代检索(Self-RAG) + Map-Reduce |
+| **预算充足** | 长上下文模型 + Rerank（注意 Lost in the Middle，把最相关 chunk 放首尾） |
+| **生产系统标配** | Token Budget 管理 + Rerank + 动态 Top-K + 对话历史摘要 |
+
+**最经典且性价比最高的组合是：Rerank 精排 + 对话历史压缩 + Token Budget 动态截断**，这三步通常能解决 80% 以上的上下文溢出问题，且工程实现成本不高。
 
 ## 校正 (Correcting)
 
@@ -1200,6 +1386,14 @@ Phoenix 的核心价值在于**从海量生产数据中发现问题、监控性�
 3. 定期评估，持续监控。RAG 的效果会随着知识库的更新、模型版本的变化而波动，需要建立持续评估和监控的机制。
 4. 把评估自动化。把 RAG 评估融入 CI/CD 流程，每次更新都自动跑一轮评估，发现效果下降及时报警。
 
+# RAG架构
+
+- 数据接入层：文档加载器（PDF/Word/HTML/Confluence）→ 文档清洗 → 元数据提取
+- 索引层：分块 → 向量化 → 写入向量数据库（增量更新、版本管理）
+- 检索层：Query 改写 → 混合检索（BM25 + 向量）→ 重排序 → 上下文组装
+- 生成层：Prompt 模板 → LLM 生成 → 回答后处理（去幻觉、加引用）
+- 评估层：检索准确率、回答忠实度、用户反馈 → 持续优化
+
 # GraphRAG
 
 - [GraphRAG 知识点](https://mp.weixin.qq.com/s/f8M0MWpdcH4AeauZrdxgqw)
@@ -1244,6 +1438,12 @@ Phoenix 的核心价值在于**从海量生产数据中发现问题、监控性�
 广义上，它指的是所有基于知识图谱做 RAG 的方法
 
 一句话：GraphRAG 就是用 LLM 把文档「读成一张知识图谱」，然后基于这张图谱来做检索和回答。
+
+适合使用场景：
+- 多跳推理问答："A 公司的 CEO 毕业于哪所大学？" → 需要跨文档追溯
+- 关系分析："这个故障影响了哪些下游服务？" → 微服务依赖图
+- 全局摘要："整个系统架构包含哪些模块？" → 需要全局视角
+- 因果追溯："为什么这个指标下降了？" → 因果链路遍历
 
 ## GraphRAG的优势
 

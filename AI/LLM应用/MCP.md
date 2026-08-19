@@ -959,6 +959,51 @@ MCP 和 Skills 不是非此即彼的关系，而是可以互补使用：
 - [RAG-MCP: Mitigating Prompt Bloat in LLM Tool Selection via Retrieval-Augmented Generation](https://arxiv.org/pdf/2505.03275)
 - [MCP + 数据库，一种比 RAG 检索效果更好的新方式！](https://mp.weixin.qq.com/s/jV46NMDfcJRiklUG_RLsmQ)
 
+## 知识孤岛
+
+你花了一周建好知识库，上传了所有项目文档，RAG 问答也跑通了。然后：
+- 用 Claude Desktop？连不上你的知识库。
+- 用 Cursor？得自己写插件。
+- 用 Copilot？没有知识库接口。
+- 自研 Agent？从头对接一遍。
+
+每个工具都要单独对接，N 个工具 = N 套对接代码。
+
+## MCP 接口
+
+| 分类 | 工具名 | 说明 |
+| ---- | ---- | ---- |
+| 检索问答 | search | 语义搜索知识库 |
+| | ask | RAG 问答（检索 + 生成） |
+| | list_knowledge_bases | 列出所有知识库 |
+| 文档管理 | read_document | 读取文档内容 |
+| | upload_document | 上传文档 |
+| | delete_document | 删除文档 |
+| | list_documents | 列出知识库的文档 |
+| 知识库管理 | create_kb | 创建知识库 |
+| | update_kb | 更新知识库配置 |
+| | delete_kb | 删除知识库 |
+| | get_kb_stats | 获取知识库统计 |
+| | build_index | 构建 HNSW 索引 |
+| 来源导入 | import_source | 从 Git/URL/本地目录导入 |
+
+## 指令
+
+```md
+你已连接到知识库 MCP 服务。
+
+**优先使用以下工具：**
+- ask: 直接提问，系统会自动检索+生成回答
+- search: 语义搜索知识库内容
+
+**反模式提醒：**
+- ❌ 不要用 read_document 读取整个文档再自己分析
+- ❌ 不要用 list_documents 遍历所有文档
+- ✅ 直接用 ask 提问，让系统检索最相关内容
+
+**支持的文件格式：** md, txt, pdf, docx, code (rs/py/ts/js/go/java)
+```
+
 # CLI-Command Line Interface
 
 - [MCP vs CLI](https://community.ibm.com/community/user/blogs/jia-qi/2026/04/08/mcp-vs-cli)
