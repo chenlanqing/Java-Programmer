@@ -231,3 +231,4 @@ Agent 依赖上下文运行，在生产环境中可以从以下三个维度构�
 - [一站式 AI 红队安全测试平台](https://github.com/Tencent/AI-Infra-Guard)
 - [AI 安全指南](https://yeasy.gitbook.io/ai_security_guide)
 - [ClawGuard 是一款面向自主 Agent 的安全防护工具包](https://github.com/SafeAgent-Beihang/clawguard)
+- [开源 AI 渗透测试工具。自主 AI 黑客，发现并修复您应用程序的漏洞](https://github.com/usestrix/strix)

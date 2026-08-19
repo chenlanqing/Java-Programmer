@@ -2029,6 +2029,30 @@ Function Calling效果的好坏，很大程度上取决于工具描述的质量
 - 解锁"行动"能力
 - 实现"多步骤推理"
 
+### Structured Output
+
+Function Calling 天然就是 Structured Output——LLM 输出 JSON 格式的函数调用。但实际场景中，我们还需要对输出做更严格的约束：参数类型校验、必填检查、格式验证；
+
+输出格式技巧：
+1. JSON Schema 约束：Function Calling 自带的 JSON Schema 描述参数类型。最基础也是最有效的约束。
+2. Pydantic 双重验证：LLM 输出 → JSON Schema 格式校验 → Pydantic 语义校验（正则、范围、必填）。两层过滤，几乎杜绝格式错误。
+3. 参数枚举约束：对有限选项的参数使用 enum。如单位参数只允许 ["metric", "imperial"]，LLM 不会输出奇怪值。
+4. 错误重提示循环：校验失败时不直接报错，而是把具体错误信息反馈给 LLM，让它自行修正。最多重试 2~3 次，成功率极高。
+5. 降级兜底：重试次数用尽后，用默认值填充缺失参数或跳过可选参数。不让一个格式错误导致整个 Agent 流程中断。
+
+### 多协议适配
+
+不同 LLM 厂商的 API 协议各不相同——OpenAI 用 messages 数组，Anthropic 用 system + messages 分离，Ollama 用 prompt 字段，OpenAI Responses API 用 input 字段。如果 Agent 代码直接绑定某一协议，切换模型意味着大规模重写。
+
+| 协议 | 厂商 | 消息字段 | 工具调用 | 流式格式 |
+| ---- | ---- | ---- | ---- | ---- |
+| Chat Completions | OpenAI / DeepSeek / Qwen | messages[] | tools[].function | data: {choices[0].delta} |
+| Messages API | Anthropic Claude | system + messages[] | tools[] + tool_use block | event: content_block_delta |
+| Responses API | OpenAI (2025+) | input (字符串/数组) | tools[].type (内置+自定义) | response.output_text.delta |
+| Generate API | Ollama / vLLM | prompt 或 messages[] | 支持 OpenAI 兼容模式 | 逐 Token 流式 |
+
+使用时采用策略模式（Strategy Pattern）实现多协议适配——定义统一接口，每个协议一个实现类，运行时动态切换
+
 ### 存在的问题
 
 想象一下，你开发了一个 Agent，需要它能连 Slack 发消息、查 Google Drive 的文档、读 GitHub 的代码、查 Postgres 数据库。
@@ -2066,6 +2090,10 @@ Function Calling效果的好坏，很大程度上取决于工具描述的质量
 #### 不知道什么时候该用工具
 
 优化工具描述和使用提示
+
+### 与 SKILL
+
+Function Calling 是单次工具调用的基础。但当 Agent 需要组合多个工具、形成可复用的能力包时，就进入了 Skills 的领域——Skill 的定义、三层结构、匹配与路由、分层体系、沉淀机制等完整内容
 
 ## [MCP](./MCP.md)
 
