@@ -1309,6 +1309,13 @@ def openai_embedding(text: str, model: str=None):
 response = openai_embedding(text='要生成 embedding 的输入文本，字符串形式。')
 ```
 
+### Embedding选型
+
+- 中文为主 → BGE 系列(BAAI 北京智源),中文语义理解显著优于 OpenAI 模型
+- 成本敏感 → 本地模型(bge / MiniLM),零 API 费用,但需要 GPU 或 CPU 推理
+- 追求最高质量 → OpenAI text-embedding-3-large,MTEB 排行榜领先
+- 平衡成本与质量 → OpenAI text-embedding-3-small,性价比最优
+
 # 学习资料
 
 ## 入门学习

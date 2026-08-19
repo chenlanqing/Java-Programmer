@@ -55,6 +55,7 @@
 - [Assistant Agent 是一个基于 Spring AI Alibaba 构建的企业级智能助手框架](https://github.com/spring-ai-alibaba/AssistantAgent)
 - [DataAgent: 基于 Spring AI Alibaba 的企业级智能数据分析师](https://github.com/spring-ai-alibaba/DataAgent)
 - https://github.com/agentscope-ai/agentscope-java
+- [Solo-面向全场景的 Java 企业级应用开发框架](https://github.com/opensolon/solon)
 
 ## 舆情 Agent
 

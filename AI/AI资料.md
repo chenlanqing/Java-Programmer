@@ -278,7 +278,7 @@ Nano Banana 提示词
 - [Spring AI Alibaba](https://java2ai.com/)
 - [全栈式轻量级AI框架](https://github.com/Leavesfly/TinyAI)
  
-## [Java Agent](./LLM应用/Agent.md#java-agents)
+## [Java Agent](./LLM应用/Agent应用.md#java-agents)
 
 
 
