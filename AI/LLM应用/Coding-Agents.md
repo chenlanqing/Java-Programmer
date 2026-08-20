@@ -12,12 +12,8 @@
 ```mermaid
 %%{init: {
   "theme": "forest",
-  "mindmap": {
-    "useMaxWidth": true
-  },
   "themeVariables": {
-    "fontFamily": "Inter, Arial, sans-serif",
-    "fontSize": "16px"
+    "fontFamily": "Inter, Arial, sans-serif"
   }
 }}%%
 
