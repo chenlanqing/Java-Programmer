@@ -1,4 +1,73 @@
-# 一、AI编程
+# 一、AI Coding
+
+## 理解 AI Coding
+
+- [SWE-bench 的任务是真实 GitHub Issue](https://github.com/SWE-bench/SWE-bench)
+- [OpenHands:一个完整的 AI Software Engineer](https://github.com/OpenHands/OpenHands)
+- [mini-SWE-agent: 试图把 Coding Agent 压缩成非常简单的 Agent Loop](https://github.com/SWE-agent/mini-swe-agent)
+- [Aider: AI 如何理解一个真实 Git Repository](https://github.com/Aider-AI/aider)
+- [Cline: IDE + Agent + MCP](https://github.com/cline/cline)
+
+知识地图：
+```mermaid
+%%{init: {
+  "theme": "forest",
+  "mindmap": {
+    "useMaxWidth": true
+  },
+  "themeVariables": {
+    "fontFamily": "Inter, Arial, sans-serif",
+    "fontSize": "16px"
+  }
+}}%%
+
+mindmap
+  root((AI Coding))
+    LLM
+      Code Model
+      Context Window
+      Tool Calling
+      Structured Output
+    Agent
+      ReAct
+      Planning
+      Reflection
+      Agent Loop
+    Codebase
+      Repository Map
+      Code Search
+      AST
+      Dependency Graph
+      Context Engineering
+    Tools
+      File System
+      Shell
+      Git
+      Browser
+      MCP
+    Execution
+      Sandbox
+      Docker
+      Runtime
+      Terminal
+    Verification
+      Compile
+      Unit Test
+      Integration Test
+      Lint
+      Static Analysis
+    Evaluation
+      SWE-bench
+      Terminal-Bench
+      Pass@1
+      Cost
+      Latency
+    Engineering
+      Git Diff
+      Code Review
+      Security
+      Rollback
+```
 
 ## 拆解项目
 
