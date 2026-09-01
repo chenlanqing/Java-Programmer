@@ -698,6 +698,7 @@ Skill 的脚本可能会读取外部数据（文件名、环境变量值、API �
 
 ## 通用 SKILL
 
+- [ELI5 是「Explain Like I’m 5」:把我当成一个对这个主题完全不了解的人，用大图和少量文字，做成一个 HTML 页面讲给我看](https://github.com/anthropics/claude-plugins-community/blob/main/eli5/README.md)
 - [BrowserAct: 浏览器访问和知识沉淀 SKILL](https://github.com/browser-act/skills)
 - [book-to-skill: Turn any technical book, document folder](https://github.com/virgiliojr94/book-to-skill)
 
