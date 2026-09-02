@@ -2798,6 +2798,7 @@ Langfuse + Phoenix 的组合基本能覆盖 80% 的 Agent 可观测性需求，�
 - [Demystifying evals for AI agents](https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents)
 - [Agent 测评](https://mp.weixin.qq.com/s/PUbGqheJhFMmb6hGj1ZtOw)
 - [Agent评测方法论](https://mp.weixin.qq.com/s/7a2L-GatYYwI6s1uK9mTjA)
+- [Commerce Agent Bench 评估代理是否能够完成长时程业务流程](https://github.com/Accio-org/RealReplicaBench)
 
 Agent 评估很复杂，需要考虑多步推理、工具调用链、任务完成率等：
 - Task Success Rate：最终任务是否完成？
