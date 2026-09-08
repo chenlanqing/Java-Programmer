@@ -778,6 +778,22 @@ G1根据这个模型统计计算出来的历史数据来预测本次收集需要
 
 G1 还有一个 CSet 的概念。这个就比较好理解了，它的全称是 Collection Set，即收集集合，保存一次 GC 中将执行垃圾回收的区间（Region）。GC 是在 CSet 中的所有存活数据（Live Data）都会被转移
 
+```
+Young GC
+  ↓
+只回收年轻代 Region
+  ↓
+发现老年代垃圾开始增多
+  ↓
+Concurrent Mark
+  ↓
+确定哪些 Old Region 垃圾最多
+  ↓
+Mixed GC
+  ↓
+Young + 部分 Old Region 一起回收
+```
+
 #### 7.3.1、GC模式
 
 G1提供了两种GC模式，Young GC和Mixed GC，两种都是完全Stop The World的
@@ -819,7 +835,7 @@ JVM 启动时，G1 会先准备好 Eden 区，程序在运行过程中不断创�
 
 #### 7.3.4、G1 GC发生时机
 
-**1、YoungGC发生时机**
+##### 1、YoungGC发生时机
 
 当新生代的空间不足时，G1 触发 Young GC 回收新生代空间。
 
@@ -827,7 +843,7 @@ Young GC 主要是对 Eden 区进行 GC，它在 Eden 空间耗尽时触发，�
 
 同时计算下次 Young GC 所需的 Eden 区和 Survivor 区的空间，动态调整新生代所占 Region 个数来控制 Young GC 开销
 
-**2、Mixed GC发生时机**
+##### 2、Mixed GC发生时机
 
 其实是由一些参数控制着的,另外也控制着哪些老年代Region会被选入CSet
 - `G1HeapWastePercent`：global concurrent marking结束之后，可以知道old gen regions中有多少空间要被回收，在每次YGC之后和再次发生Mixed GC之前，会检查垃圾占比是否达到此参数，只有达到了，下次才会发生Mixed GC；
@@ -1196,7 +1212,31 @@ public class JVM {
 
 Old GC：只清理老年代空间的 GC 事件，只有 CMS 的并发收集是这个模式；
 
-Mixed GC：清理整个新生代以及部分老年代的 GC，只有 G1 有这个模式；
+### Mixed GC
+
+Mixed GC 是 G1（Garbage-First）垃圾收集器中的一种 GC 类型，Mixed GC = 同时回收 Young 区 + 部分 Old 区的 GC；
+
+它的核心目的，是在不进行 Full GC 的情况下，逐步回收老年代中垃圾较多的 Region
+
+Mixed GC 是 G1 垃圾收集器中的一种 GC 类型。在完成老年代并发标记之后，G1 会根据各个 Old Region 的垃圾占比和回收收益进行筛选，在一次 GC 中同时回收 Young Region 和部分 Old Region，而不是一次性回收整个老年代。这样可以通过多次增量回收控制 STW 停顿时间。
+
+如果生产环境出现 Mixed GC 频繁并且伴随长暂停，我会重点关注 Old Region 回收效率、并发标记周期、晋升速率、堆占用增长速度以及 IHOP 等参数。
+
+### 为什么 Mixed GC 不直接回收整个 Old？
+
+这样暂停时间会很长,通过多次 Mixed GC 增量式地清理老年代，控制 STW Pause
+
+### Mixed GC 对比 Full GC
+
+| 对比    | Mixed GC  | Full GC            |
+| ----- | --------- | ------------------ |
+| Young | 回收        | 回收                 |
+| Old   | 部分 Region | 基本整个堆              |
+| STW   | 有，但通常可控   | 通常非常严重             |
+| 是否并发  | 前面有并发标记阶段 | 主要是 Stop-The-World |
+| 目标    | 增量回收 Old  | 彻底回收               |
+| 正常情况  | G1 正常工作流程 | 应尽量避免              |
+
 
 ## 3、Full-GC
 

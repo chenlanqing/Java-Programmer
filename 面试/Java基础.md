@@ -2423,9 +2423,22 @@ private Object rightGroovy(String script, String method, Object... args) {
     - 如果发现发生OOM的位置是创建对象，调用构造方法之类的代码，那一定是堆OOM。`<init>`就是构造方法的字节码格式；
     - 如果发现发生OOM的位置是类加载器那些方法，那一定是元空间OOM；
 
+OOM 排查流程：
+1. Heap Dump 文件通过 MAT 分析 Dominator Tree 找到占用最大的对象；
+2. 检查是否有集合类无限增长、ThreadLocal 未清理、大缓存无淘汰策略等常见泄漏模式；
+3. 结合 -XX:+PrintClassHistogramBeforeFullGC 分析对象分布；
+4. 区分内存泄漏（对象无法回收）vs 内存溢出（确实需要更多堆），前者修复代码，后者考虑升配或优化数据结构。
+
 ## 22、调优建议
 
 - 调优参数务必加上`-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=`，发生OOM让JVM自动dump出内存，方便后续分析问题解决问题
+
+### GC 如何调优？
+
+1. 通过 GC 日志分析工具（GCEasy/GCViewer）统计吞吐量、各类型 GC 频率和暂停分布；
+2. 重点关注 Mixed GC 频率和 Old Gen 回收效率，若 Mixed GC 后 Old Gen 下降不明显，可能存在内存泄漏或大对象；
+3. 通过 jcmd <pid> GC.heap_info 观察 Region 分布和 Humongous Object 数量；
+4. 通过 Arthas dashboard/jfr 实时监控线程状态和内存变化
 
 ## 23、如果有一个数据结构需要在多个线程中访问，可以把它放在栈上吗？为什么
 
@@ -2547,6 +2560,24 @@ YoungGC次数，100+/分钟，YoungGC耗时，20ms左右
 ## JVM 跨代问题如何解决？
 
 JVM 存在跨代引用问题，是因为年轻代 GC 时为了提高效率不会扫描整个老年代，如果老年代对象引用了年轻代对象，可能导致年轻代存活对象被误回收。HotSpot 通过 Remembered Set 和 Card Table 记录老年代到年轻代的引用关系，并通过写屏障在对象引用发生变化时维护这些信息，使 Minor GC 时只扫描相关区域，而不用遍历整个老年代
+
+##  Mixed GC 频繁触发且伴随长暂停，如何定位
+
+定位 Mixed GC 频繁且暂停长的两个维度分析：
+
+一、为什么频繁触发：
+1. IHOP（-XX:InitiatingHeapOccupancyPercent）设置过高或自适应 IHOP 失效，导致 Old Gen 占用超过阈值才触发并发标记，Mixed GC 来不及回收 → 调低 IHOP 或检查 G1UseAdaptiveIHOP 是否生效
+2. Humongous Object 直接进入 Old Gen，快速推高 Old Gen 占用 → 通过 jcmd GC.heap_info 检查 Humongous Region 数量，优化大对象（拆分大数组/大字符串），或增大 -XX:G1HeapRegionSize（默认 1-32MB 自适应）
+3. Survivor 太小导致对象过早晋升 → 调整 -XX:G1NewSizePercent 和 SurvivorRatio
+4. 并发标记周期过慢导致 Mixed GC 跟不上 → 增加 -XX:ConcGCThreads
+
+二、为什么单次 Mixed GC 慢：
+1. CSet（回收集合）过大 → 调整 -XX:G1MixedGCCountTarget（分多次回收）和 -XX:G1OldCSetRegionThresholdPercent
+2. Region 中存活对象比例高导致复制成本大 → 调整 -XX:G1MixedGCLiveThresholdPercent（默认 85%，低于此值的 Region 才参与 Mixed GC）
+3. Refinement 线程不足导致 RS 更新积压 → 调整 -XX:G1ConcRefinementThreads
+4. Remark 阶段慢 → 检查 -XX:+G1UseAdaptiveConcRefinement，考虑在 Remark 前强制执行一次 Young GC
+
+工具链：jcmd GC.heap_info / GC.class_histogram、Arthas dashboard & heapdump、GC 日志通过 GCEasy/GCViewer 分析暂停分布和回收效率。
 
 # 六、设计模式
 
