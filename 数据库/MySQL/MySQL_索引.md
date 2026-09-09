@@ -639,7 +639,7 @@ explain select * from salaries where from_date = '1986-06-26' order by emp_no;
 
 根据创建联合索引的顺序，以最左原则进行where检索，比如（age，name）以age=1 或 age= 1 and name=‘张三’可以使用索引，单以name=‘张三’ 不会使用索引，考虑到存储空间的问题，还请根据业务需求，将查找频繁的数据进行靠左创建索引；如果name 字段是比 age 字段大的 ，那我就建议你创建一个（name,age) 的联合索引和一个 (age) 的单字段索引
 
-**（4）[索引下推（index condition pushdown ）](https://dev.mysql.com/doc/refman/8.4/en/index-condition-pushdown-optimization.html)简称ICP**：
+### [索引下推（index condition pushdown ）](https://dev.mysql.com/doc/refman/8.4/en/index-condition-pushdown-optimization.html)简称ICP**：
 
 索引下推在非主键索引上的优化，可以有效减少回表的次数，大大提升了查询的效率；原本需要“回表后再判断”的 WHERE 条件，现在尽量先在索引层判断，只有满足条件的记录才回表。
 
@@ -669,7 +669,7 @@ ICP其实也存在一定的使用限制场景:
 
 关闭索引下推功能：`set optimizer_switch='index_condition_pushdown=off';`
 
-### 11.8、普通索引与唯一索引
+### 普通索引与唯一索引
 
 - 普通索引和唯一索引在读性能上，相差无几，由于普通索引还需要多做一些检索和判断操作，性能稍差，但可忽略，因为大概率这些操作是在内存中的数据页上进行操作的；
 - 普通索引和唯一索引在写性能上，也相差无几，由于唯一索引需要做唯一性校验，性能稍差，不过由于不能利用change buffer来优化性能，相比而言普通索引的写性能稍差，普通索引可以借助change buffer来优化性能，写性能更好；
