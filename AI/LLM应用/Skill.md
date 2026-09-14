@@ -766,6 +766,7 @@ Skill 的脚本可能会读取外部数据（文件名、环境变量值、API �
 
 ## 资讯 SKILL
 
+- [知识星球 Skill](https://github.com/unnoo/zsxq-skill)
 - [last30days-cn 是一个 AI Agent 技能（Skill），能够自动搜索中国互联网 8 大主流平台最近 30 天的内容，综合分析后生成有据可查的研究报告](https://github.com/ChiTing111/last30days-skill-cn.git)
 
 ## 文档 Skill
