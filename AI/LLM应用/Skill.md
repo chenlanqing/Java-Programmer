@@ -239,6 +239,18 @@ Writing-Skills 是 Superpowers 中的元技能——教 Agent 如何创建新的
 - 所有对话都该遵守的（如"SQL 必须参数化"、"提交信息用英文"）→ 写 Rule
 - 特定任务才需要的（如"从 v2 迁移到 v3"、"生成 API 文档"）→ 写 Skill
 
+我理解 Skill 和 Rule 的核心区别是：Rule 负责约束 Agent 的行为，Skill 负责提供 Agent 在特定场景下的专业能力和执行方法。
+
+Rule 更偏 Policy，也就是告诉 Agent 什么能做、什么不能做，以及必须遵守哪些规范。比如代码修改后必须执行测试、不能直接操作生产数据库、涉及敏感数据不能输出等。这类规则通常是全局或者项目级的，需要持续生效。
+
+Skill 更偏 Capability 或 Procedure，它描述的是 Agent 在某一类任务下应该怎么做。比如 SQL 优化 Skill，可以规定先执行 EXPLAIN，再分析索引、执行计划、扫描行数和 Extra，最后给出优化方案并重新验证。它通常是按任务场景动态加载的。
+
+所以从架构上，我会把 Rule 看成约束层，把 Skill 看成能力层，把 Tool 看成执行层：
+
+User Task → Agent → Rules + Skills → Tools → Execution
+
+这样设计的好处是职责比较清晰。Rules 不需要塞大量业务流程，避免 Prompt 越来越大；Skill 也不需要承担安全和权限约束，可以按需加载，从而降低上下文成本，同时方便 Skill 的复用和扩展。
+
 ## SKILL 与 RAG
 
 - [本地知识库检索 Skill](https://github.com/ConardLi/rag-skill)
