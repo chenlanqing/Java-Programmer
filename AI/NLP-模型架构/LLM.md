@@ -1344,6 +1344,7 @@ response = openai_embedding(text='要生成 embedding 的输入文本，字符�
 - [nano-vllm源码解析](https://mp.weixin.qq.com/s/nE_Pfrx2zzbCbakA_SP4_A)
 - [论文：Foundation of Large Language Models](https://arxiv.org/pdf/2501.09223)
 - [Implement a ChatGPT-like LLM in PyTorch from scratch, step by step](https://github.com/rasbt/LLMs-from-scratch)
+- [深入理解 AI Infra：量化分析与系统设计](https://github.com/bojieli/ai-infra-book)
 
 # 参考资料
 
