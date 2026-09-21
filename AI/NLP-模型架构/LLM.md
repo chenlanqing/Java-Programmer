@@ -1099,6 +1099,7 @@ DeepSeek-R1-Distill-Llama-70B
 
 # 三、大模型应用开发
 
+- [程序员的大模型全栈学习路线](https://github.com/youngyangyang04/llm-master)
 - [Ragas：评估和优化大型语言模型（LLM）应用的终极工具包](https://github.com/vibrantlabsai/ragas)
 - [动手学大模型应用开发](https://github.com/datawhalechina/llm-universe)
 - [面向开发者的大模型](https://github.com/datawhalechina/llm-cookbook)
