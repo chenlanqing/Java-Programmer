@@ -1319,6 +1319,10 @@ response = openai_embedding(text='要生成 embedding 的输入文本，字符�
 - 追求最高质量 → OpenAI text-embedding-3-large,MTEB 排行榜领先
 - 平衡成本与质量 → OpenAI text-embedding-3-small,性价比最优
 
+# [RSI](https://mp.weixin.qq.com/s/rlfTKyWhALsNONhAwGih1A)
+
+递归自我改进（Recursive Self-Improvement，RSI）
+
 # 学习资料
 
 ## 入门学习
