@@ -374,6 +374,200 @@ DDD分层架构主要有四层组成，从上到下依次是：用户接口层�
 
 **第三个问题是，每个步骤的颗粒度应该有多大？**
 
+# 如何熟悉DDD
+
+```
+这个需求属于哪个领域？
+        ↓
+应该修改哪个模块？
+        ↓
+应该在哪一层修改？
+        ↓
+需要修改 Entity / Aggregate / Domain Service 吗？
+        ↓
+Repository 怎么用？
+        ↓
+是否需要 MQ / RPC / DB？
+        ↓
+怎么写单测？
+        ↓
+怎么验证不会影响原有业务？
+```
+
+## 先建立“项目地图”
+
+搞清楚这个项目“是什么、分成什么、代码在哪里”
+
+### 1、先看项目整体结构
+
+```java
+模块
+服务
+DDD 分层
+领域划分
+数据库
+RPC
+MQ
+配置中心
+公共组件
+
+// 比如：
+xxx-service
+├── interfaces
+├── application
+├── domain
+├── infrastructure
+└── common
+```
+不要只看目录，要搞清楚分别承担什么职责
+```text
+interfaces -> application -> domain -> infrastructure
+```
+
+### 2、找个核心业务对象
+
+例如：
+```text
+Order
+User
+Payment
+```
+然后建立自己的项目地图：
+```text
+领域：
+  ├── 用户域
+  ├── 订单域
+  ├── 支付域
+  └── 营销域
+
+核心服务：
+  ├── xxx-service
+  ├── xxx-service
+  └── xxx-service
+
+核心表：
+  ├── xxx
+  ├── xxx
+  └── xxx
+```
+输出：
+```mermaid
+flowchart LR
+    A[API] --> B[Application]
+    B --> C[Domain]
+    C --> D[Repository]
+    D --> E[Infrastructure]
+    E --> F[(MySQL)]
+    C --> G[Domain Event]
+    G --> H[MQ]
+```
+
+## 重点理解一个完整业务链路
+
+选择一个核心业务，比如：创建订单，从 Controller 一直跟到数据库，画调用链
+```mermaid
+flowchart LR
+    A[Controller] --> B[ApplicationService]
+    B --> C[DomainService]
+    C --> D[Aggregate]
+    C --> E[Repository]
+    E --> F[Mapper]
+    F --> G[(MySQL)]
+```
+继续看：有没有 RPC？有没有 MQ？有没有 Redis？有没有领域事件？有没有事务？有没有异常处理？有没有幂等？
+```text
+HTTP
+ ↓
+Controller
+ ↓
+ApplicationService
+ ↓
+DomainService
+ ↓
+Aggregate
+ ↓
+Repository
+ ↓
+MySQL
+        ↓
+      MQ/RPC
+```
+搞懂 5 个问题：
+1. Application Service 到底负责什么？
+2. Domain Service 到底负责什么？
+3. Entity/Aggregate 到底负责什么？
+4. Repository 在哪里？
+5. Infrastructure 到底做什么？
+
+## 研究一个核心 Aggregate
+
+比如：OrderAggregate，把所有相关代码找出来：
+```text
+Order
+OrderItem
+OrderRepository
+OrderDomainService
+OrderApplicationService
+OrderFactory
+OrderEvent
+```
+
+### Aggregate Root 是谁？
+
+例如：
+```text
+Order
+ ├── OrderItem
+ ├── Address
+ └── PaymentInfo
+
+Order = Aggregate Root
+```
+
+### 哪些业务规则由 Aggregate 保证？
+
+例如：
+```java
+order.pay();
+order.cancel();
+order.addItem();
+order.removeItem();
+// 而不是
+order.setStatus(PAID);
+```
+
+### 哪些逻辑放 Domain Service？
+
+例如：订单 + 库存 + 营销规则，如果一个业务规则无法自然归属于 Order：
+```java
+OrderDomainService.calculateAmount(...)
+```
+
+### Repository 怎么使用？
+
+```java
+Order order = repository.findById(id);
+order.pay();
+repository.save(order);
+```
+还是：
+```java
+repository.updateStatus(id, PAID);
+```
+
+## 真实需求
+
+找项目里一个已经上线的简单需求，最好是：
+```text
+新增一个字段
+新增一个查询条件
+新增一个简单接口
+修改一个状态
+增加一个业务校验
+```
+
+
+
 # 参考资料
 
 - [淘技术：DDD领域驱动](https://mp.weixin.qq.com/s/1rdnkROdcNw5ro4ct99SqQ)
