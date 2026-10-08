@@ -2788,6 +2788,7 @@ Langfuse + Phoenix 的组合基本能覆盖 80% 的 Agent 可观测性需求，�
 
 # Agent 评测
 
+- [一个把 Agent 能力转化为可复现任务结果、可审计证据和可执行优化计划的测评工具](https://github.com/fuzhengwei/xfg-agent-review-skills)
 - [一个端到端的基础设施，用于培训和评估各种 LLM 代理](https://github.com/OpenBMB/AgentCPM)
 - [终端复杂任务中 LLM 的基准测试](https://github.com/harbor-framework/terminal-bench)
 - [Evaluation and Tracking for LLM Experiments and AI Agents](https://github.com/truera/trulens)
