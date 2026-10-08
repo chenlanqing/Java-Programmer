@@ -570,6 +570,7 @@ repository.updateStatus(id, PAID);
 
 # 参考资料
 
+- [COLA架构-整洁面向对象分层架构-应用案例](https://github.com/alibaba/COLA)
 - [淘技术：DDD领域驱动](https://mp.weixin.qq.com/s/1rdnkROdcNw5ro4ct99SqQ)
 - [dddsample-core](https://github.com/citerus/dddsample-core)
 - [DDD-Samples](https://github.com/ouchuangxin/leave-sample)
