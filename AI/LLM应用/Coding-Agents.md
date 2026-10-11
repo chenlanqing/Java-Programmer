@@ -2599,7 +2599,7 @@ LSP: Language Server Protocol
 
 # 参考资料
 
-
+- [Ponytail 是一个给 Claude Code、Codex 这类 AI coding agent 用的约束插件](https://github.com/DietrichGebert/ponytail)
 - [模型编程性能参考排行榜](https://arena.ai/leaderboard/code)
 - [将专家的技能写进 Agent 里面](https://github.com/K-Dense-AI/mimeo)
 - [AI编程工具包](https://github.com/TencentCloudBase/CloudBase-AI-ToolKit)
