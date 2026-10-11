@@ -330,6 +330,7 @@ print(chat_completion.choices[0].message.content)
 - [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
 - [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 - [LMCache 是一个 LLM 服务引擎扩展，用于减少 TTFT 并提高吞吐量](https://github.com/LMCache/LMCache)
+- [AirLLM 大幅降低了推理内存占用，让 70B 大语言模型能在单张 4GB 显卡上运行](https://github.com/lyogavin/airllm)
 
 ### llama.cpp
 

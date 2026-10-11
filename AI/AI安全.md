@@ -227,6 +227,7 @@ Agent 依赖上下文运行，在生产环境中可以从以下三个维度构�
 
 # 参考资料
 
+- [OSS Scanner-扫描关键开源代码库中的安全漏洞](https://github.com/anthropics/oss-scanner)
 - [企业级自动化 AI 红队验证平台](https://innora.ai/zh)
 - [一站式 AI 红队安全测试平台](https://github.com/Tencent/AI-Infra-Guard)
 - [AI 安全指南](https://yeasy.gitbook.io/ai_security_guide)
