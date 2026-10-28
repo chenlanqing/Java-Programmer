@@ -283,6 +283,7 @@ Nano Banana 提示词
 
 # AI 网关
 
+- [magpie:CC-Switch 替代](https://github.com/yetone/magpie)
 - [A blazing fast AI Gateway with integrated guardrails](https://github.com/Portkey-AI/gateway)
 - [AI 网关 · 统一模型配置和负载](https://github.com/fuzhengwei/WaLiAPI)
 - [New API：新一代大模型网关与AI资产管理系统](https://github.com/QuantumNous/new-api)
