@@ -376,6 +376,12 @@ DDD分层架构主要有四层组成，从上到下依次是：用户接口层�
 
 # 如何熟悉DDD
 
+- [领域驱动设计初始建模流程](https://github.com/ddd-crew/ddd-starter-modelling-process)
+- [The Bounded Context Canvas](https://github.com/ddd-crew/bounded-context-canvas)
+- [A comprehensive Domain-Driven Design example](https://github.com/ddd-by-examples/library)
+- [DDDSample](https://github.com/citerus/dddsample-core)
+- [Domain-Driven Hexagon](https://github.com/Sairyss/domain-driven-hexagon)
+
 ```
 这个需求属于哪个领域？
         ↓
