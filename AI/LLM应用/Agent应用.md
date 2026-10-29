@@ -104,6 +104,10 @@
 - [一个高确定性的 无代码 Agent 开发框架](https://github.com/spring-ai-alibaba/JManus)
 - [AgenticSeek: Private, Local Manus Alternative.](https://github.com/Fosowl/agenticSeek)
 
+# 企业 AI
+
+- [企业 AI 设计新范式](https://mp.weixin.qq.com/s/lS_J1MMeZ0Ghdmw0Gcfr3g)
+
 # OpenClaw
 
 - [OpenClaw AI 智能体最佳真实用例大全](https://github.com/AlexAnys/awesome-openclaw-usecases-zh)

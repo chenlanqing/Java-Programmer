@@ -12,7 +12,7 @@ LLM 通常指包含数百亿（或更多）参数的语言模型，它们在海�
 
 可以**将大语言模型想象成一个巨大的预测机器，其训练过程主要基于“猜词”**：给定一段文本的开头，它的任务就是预测下一个词是什么。模型会根据大量的训练数据（例如在互联网上爬取的文本），试图理解词语和词组在语言中的用法和含义，以及它们如何组合形成意义。它会通过不断地学习和调整参数，使得自己的预测越来越准确；
 
-通常大模型由三个阶段构成：预训练、后训练和在线推理
+一个大模型从无到有，大致要经过四个阶段。先是预训练，用海量文本让模型学会语言和知识；再是后训练，通过监督微调、强化学习、蒸馏等手段，让模型学会遵循指令、使用工具、完成特定任务；然后是评测，确认模型在目标任务上的表现达标；最后是部署上线，以 API 或私有化服务的形式被应用调用，并在运行中持续监控、迭代。
 
 ### 涌现能力
 
@@ -325,12 +325,19 @@ print(chat_completion.choices[0].message.content)
 
 ## 大模型推理
 
+- [推理框架 DeepInfer-DeepSeek 开源](https://github.com/deepseek-ai/DeepInfer)
 - [一款用于Apple M系列芯片的 AI 模型的高性能推理引擎](https://github.com/trymirai/uzu)
 - [LLM推理优化技术](https://mp.weixin.qq.com/s/KRUfF4r1_e3I32FzSSlypg)
 - [一文梳理主流大模型推理部署框架：vLLM、SGLang、TensorRT-LLM、ollama、XInference](https://mp.weixin.qq.com/s/Fsaz7PAUSiKizl_lw-KSeg)
 - [LLM 推理/微调优化的灵活框架](https://github.com/kvcache-ai/ktransformers)
 - [LMCache 是一个 LLM 服务引擎扩展，用于减少 TTFT 并提高吞吐量](https://github.com/LMCache/LMCache)
 - [AirLLM 大幅降低了推理内存占用，让 70B 大语言模型能在单张 4GB 显卡上运行](https://github.com/lyogavin/airllm)
+
+### 概述
+
+所谓推理，指的是对模型的推理。就是用训练好的模型，根据输入、计算输出的过程。
+
+推理框架，则是负责把这件事做好：把模型加载到各类硬件和软件环境上，接收请求、组织计算，并返回结果。
 
 ### llama.cpp
 

@@ -739,6 +739,10 @@ few-shot 不需要很多，关键是覆盖容易混淆的边界。比如说下�
 
 结合检索，先缩小候选意图集合：
 
+# Agent 决策
+
+
+
 # Agent Prompt 安全
 
 智能体的系统提示词加固是指通过优化，补充，约束系统提示词的内容和结构，增强其对模型“约束力”和“指导性”，让智能体在收到用户的请求时通过安全研判后来决定返回的内容，确保模型在复杂场景下行为可控、安全合规、效果稳定
@@ -2880,6 +2884,7 @@ Agent 的自主性带来了三个传统软件没有的问题：
 # 学习资料
 
 - [微软：Agent 入门学习](https://github.com/microsoft/ai-agents-for-beginners) - [学习心得](https://mp.weixin.qq.com/s/Ux5FJ_ZLWUcxPE6CkF8XGA)
+- [阿里 AI Agent 白皮书](https://github.com/aliyun/ai-agent-handbook)
 - [agency-agents 中文版（AI 智能体专家团队）](https://github.com/jnMetaCode/agency-agents-zh)
 - [agents.json：Translate OpenAPI into LLM Tools](https://docs.wild-card.ai/agentsjson/introduction)
 - [AI Agent 十问十答，降低认知摩擦](https://mp.weixin.qq.com/s/keZ4H12NElW-Ew0R1Puayg)
