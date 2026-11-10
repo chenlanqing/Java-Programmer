@@ -236,6 +236,7 @@ Nano Banana 提示词
 - https://www.skyreels.ai/home/my-library?refer=navbar
 - [豆包大模型：SeedDance-生成视频提示词](https://youmind.com/zh-CN/seedance-2-0-prompts?utm_source=nav)
 - https://www.liblib.tv/
+- [YouTube到AcFun和bilibili自动化搬运工具](https://github.com/fqscfqj/Y2A-Auto)
 
 ## 翻译
 
